@@ -6,7 +6,6 @@
 
 #include <kernel/bitcoinkernel.h>
 
-#include <attributes.h>
 #include <chain.h>
 #include <coins.h>
 #include <consensus/tx_check.h>
@@ -43,14 +42,11 @@
 #include <validation.h>
 #include <validationinterface.h>
 
-#include <algorithm>
 #include <atomic>
 #include <cstddef>
 #include <cstring>
 #include <exception>
-#include <iterator>
 #include <limits>
-#include <list>
 #include <memory>
 #include <optional>
 #include <span>
@@ -388,13 +384,62 @@ protected:
     }
 };
 
-//! Count a context using the logging connection (delta 1), or no longer using it (delta -1).
-//! Defined below, after KernelLogger.
-void AddContextUse(btck_LoggingConnection* connection, int delta);
+struct UserDataDeleter {
+    btck_DestroyCallback destroy;
+    void operator()(void* user_data) const
+    {
+        if (destroy) destroy(user_data);
+    }
+};
+//! Owns a caller-provided user_data pointer and frees it with its destroy callback.
+using UserData = std::unique_ptr<void, UserDataDeleter>;
+
+//! A logging connection: delivers log entries to a btck_LogCallback. It is also the
+//! util::log::Logger that the kernel objects of contexts using the connection log to, so each entry
+//! only reaches the connection of the context it comes from. Every util::log::Logger passed to
+//! kernel code by this library is a LogConnection (see the util::log::hooks definitions).
+class LogConnection : public util::log::Logger
+{
+    const btck_LogCallback m_fn;
+    const UserData m_user_data;
+    //! Serializes invocations of the callback.
+    mutable StdMutex m_mutex;
+    //! Entries below this level are not delivered.
+    std::atomic<util::log::Level> m_min_level{util::log::Level::Info};
+    //! Number of contexts using this connection.
+    std::atomic<int> m_uses{0};
+
+public:
+    //! Construct a connection without a callback, which discards all entries.
+    LogConnection() : m_fn{nullptr}, m_user_data{nullptr, {nullptr}} {}
+    //! Construct a connection that delivers entries to fn. Takes ownership of user_data.
+    LogConnection(btck_LogCallback fn, UserData user_data) : m_fn{fn}, m_user_data{std::move(user_data)} {}
+    ~LogConnection()
+    {
+        // Contexts refer to the connection they use, so it must outlive them (see
+        // btck_context_options_set_logger). Abort instead of leaving them with a dangling pointer.
+        assert(m_uses == 0);
+    }
+    LogConnection(const LogConnection&) = delete;
+    LogConnection& operator=(const LogConnection&) = delete;
+
+    void SetMinLevel(util::log::Level level) { m_min_level.store(level, std::memory_order_relaxed); }
+    //! Count a context using this connection (delta 1), or no longer using it (delta -1).
+    void AddUse(int delta) { m_uses += delta; }
+
+    //! Whether an entry at this level would be delivered.
+    bool ShouldLog(util::log::Level level) const
+    {
+        return m_fn && level >= m_min_level.load(std::memory_order_relaxed);
+    }
+    //! Deliver the entry to the callback if ShouldLog() passes for its level. Exceptions from the
+    //! callback are swallowed.
+    void Log(const util::log::Entry& entry) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+};
 
 struct ContextOptions {
     mutable Mutex m_mutex;
-    btck_LoggingConnection* m_log_connection GUARDED_BY(m_mutex){nullptr};
+    LogConnection* m_log_connection GUARDED_BY(m_mutex){nullptr};
     std::unique_ptr<const CChainParams> m_chainparams GUARDED_BY(m_mutex);
     std::shared_ptr<KernelNotifications> m_notifications GUARDED_BY(m_mutex);
     std::shared_ptr<KernelValidationInterface> m_validation_interface GUARDED_BY(m_mutex);
@@ -416,7 +461,14 @@ public:
     std::shared_ptr<KernelValidationInterface> m_validation_interface;
 
     //! Logging connection from the context options, if any. It must outlive the context.
-    btck_LoggingConnection* m_log_connection{nullptr};
+    LogConnection* m_log_connection{nullptr};
+    //! Discards log entries if the context was created without a logging connection.
+    mutable LogConnection m_discard_logger;
+    //! Log context for the C API functions operating on this context and objects created with it.
+    util::log::Context m_log;
+
+    //! Logger that the context's kernel objects log to.
+    LogConnection& Logger() const { return m_log_connection ? *m_log_connection : m_discard_logger; }
 
     Context(const ContextOptions* options, bool& sane)
         : m_context{std::make_unique<kernel::Context>()},
@@ -438,6 +490,8 @@ public:
             }
         }
 
+        m_log = util::log::Context{BCLog::KERNEL, &Logger()};
+
         if (!m_chainparams) {
             m_chainparams = CChainParams::Main();
         }
@@ -451,12 +505,12 @@ public:
         }
 
         // Last, so the destructor always undoes it.
-        if (m_log_connection) AddContextUse(m_log_connection, 1);
+        if (m_log_connection) m_log_connection->AddUse(1);
     }
 
     ~Context()
     {
-        if (m_log_connection) AddContextUse(m_log_connection, -1);
+        if (m_log_connection) m_log_connection->AddUse(-1);
         if (m_signals) {
             m_signals->UnregisterSharedValidationInterface(m_validation_interface);
         }
@@ -499,155 +553,13 @@ struct ChainMan {
         : m_chainman(std::move(chainman)), m_context(std::move(context)) {}
 };
 
-struct UserDataDeleter {
-    btck_DestroyCallback destroy;
-    void operator()(void* user_data) const
-    {
-        if (destroy) destroy(user_data);
-    }
-};
-//! Owns a caller-provided user_data pointer and frees it with its destroy callback.
-using UserData = std::unique_ptr<void, UserDataDeleter>;
-
-//! Holds state for kernel logging subscribers: the registered callbacks and their minimum levels.
-//! Shared by all btck_LoggingConnection instances. Kernel objects that take a util::log::Logger are
-//! passed this instance.
-class KernelLogger : public util::log::Logger
+void LogConnection::Log(const util::log::Entry& entry) const
 {
-    //! A registered btck_LogCallback. Owns user_data.
-    struct Callback {
-        btck_LogCallback fn;
-        UserData user_data;
-        //! Entries below this level are not delivered to this callback. Guarded by m_mutex.
-        util::log::Level min_level{util::log::Level::Info};
-        //! Number of contexts using this connection. Entries are only delivered to connections used
-        //! by at least one context. Guarded by m_mutex.
-        int contexts{0};
+    if (!ShouldLog(entry.level)) return;
 
-        void operator()(const btck_LogEntry* entry) const { fn(user_data.get(), entry); }
-    };
-
-    mutable StdMutex m_mutex;
-    //! All registered callbacks that are executed through Log.
-    std::list<Callback> m_callbacks GUARDED_BY(m_mutex);
-    //! Value of m_min_level when no callbacks are registered: above every level, so nothing is logged.
-    static constexpr util::log::Level NO_CALLBACKS{static_cast<int>(util::log::Level::Error) + 1};
-    //! Lowest min_level of any registered callback. Lets ShouldLog() skip formatting entries, and
-    //! Log() skip locking m_mutex, when no callback would accept the entry.
-    std::atomic<util::log::Level> m_min_level{NO_CALLBACKS};
-
-    //! Recompute m_min_level after m_callbacks or a callback's min_level changes.
-    void UpdateMinLevel() EXCLUSIVE_LOCKS_REQUIRED(m_mutex)
-    {
-        auto level{NO_CALLBACKS};
-        for (const auto& callback : m_callbacks) {
-            if (callback.contexts > 0) level = std::min(level, callback.min_level);
-        }
-        m_min_level.store(level, std::memory_order_relaxed);
-    }
-
-    //! Unregisters and destroys the callback. Waits for an in-flight Log to finish, then destroys
-    //! the callback (and its user_data) outside m_mutex.
-    void UnregisterCallback(std::list<Callback>::iterator it) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
-
-public:
-    //! Owns a registered logging callback. Unregisters it on destruction. A moved-from handle
-    //! owns nothing and does not unregister.
-    class CallbackHandle
-    {
-        KernelLogger* m_logger;
-        std::list<Callback>::iterator m_it;
-
-    public:
-        CallbackHandle(KernelLogger& logger LIFETIMEBOUND, std::list<Callback>::iterator it)
-            : m_logger{&logger}, m_it{it} {}
-        CallbackHandle(CallbackHandle&& other) noexcept
-            : m_logger{std::exchange(other.m_logger, nullptr)}, m_it{other.m_it} {}
-        CallbackHandle& operator=(CallbackHandle&&) = delete;
-        ~CallbackHandle()
-        {
-            if (m_logger) m_logger->UnregisterCallback(m_it);
-        }
-
-        //! Set the minimum level of entries delivered to this callback.
-        void SetMinLevel(util::log::Level level) const
-        {
-            m_logger->SetMinLevel(m_it, level);
-        }
-
-        //! Count a context using this connection (delta 1), or no longer using it (delta -1).
-        void AddContextUse(int delta) const
-        {
-            m_logger->AddContextUse(m_it, delta);
-        }
-    };
-
-    //! Registers a logging callback. Takes ownership of user_data, also when registration fails.
-    [[nodiscard]] CallbackHandle RegisterCallback(btck_LogCallback fn, UserData user_data) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
-    //! Set the minimum log level of a registered callback.
-    void SetMinLevel(std::list<Callback>::iterator it, util::log::Level level) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
-    {
-        STDLOCK(m_mutex);
-        it->min_level = level;
-        UpdateMinLevel();
-    }
-
-    //! Count a context using a registered callback's connection (delta 1), or no longer using it
-    //! (delta -1).
-    void AddContextUse(std::list<Callback>::iterator it, int delta) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
-    {
-        STDLOCK(m_mutex);
-        it->contexts += delta;
-        UpdateMinLevel();
-    }
-
-    //! Whether any registered callback accepts entries at this level.
-    bool ShouldLog(util::log::Level level) const
-    {
-        return level >= m_min_level.load(std::memory_order_relaxed);
-    }
-    //! Deliver the entry to every registered callback that accepts its level, while holding
-    //! m_mutex. Exceptions from callbacks are swallowed.
-    void Log(const util::log::Entry& entry) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
-    //! Log() the entry if ShouldLog() passes for its level.
-    void MaybeLog(const util::log::Entry& entry) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
-    {
-        if (ShouldLog(entry.level)) {
-            Log(entry);
-        }
-    }
-};
-
-KernelLogger::CallbackHandle KernelLogger::RegisterCallback(btck_LogCallback fn, UserData user_data)
-{
-    // Construct before locking so that a failed push_back destroys user_data outside m_mutex.
-    Callback cb{fn, std::move(user_data)};
-    STDLOCK(m_mutex);
-    m_callbacks.push_back(std::move(cb));
-    UpdateMinLevel();
-    return {*this, std::prev(m_callbacks.end())};
-}
-
-void KernelLogger::UnregisterCallback(std::list<Callback>::iterator it)
-{
-    // Avoid running the callback destructor while holding m_mutex.
-    std::list<Callback> dying;
-    {
-        STDLOCK(m_mutex);
-        // Contexts refer to the connection they use, so it must outlive them (see
-        // btck_context_options_set_logger). Abort instead of leaving them with a dangling pointer.
-        assert(it->contexts == 0);
-        dying.splice(dying.begin(), m_callbacks, it);
-        UpdateMinLevel();
-    }
-}
-
-void KernelLogger::Log(const util::log::Entry& entry) const
-{
     // Some log statements are manually suffixed with a newline.
     std::string_view message{util::RemoveSuffixView(entry.message, "\n")};
     std::string_view thread_name{entry.thread_name};
-    const auto timestamp_ns{TicksSinceEpoch<std::chrono::nanoseconds>(entry.timestamp)};
     std::string_view file_name{entry.source_loc.file_name()};
     std::string_view function_name{entry.source_loc.function_name_short()};
 
@@ -656,7 +568,7 @@ void KernelLogger::Log(const util::log::Entry& entry) const
         .message_len = message.size(),
         .thread_name = thread_name.data(),
         .thread_name_len = thread_name.size(),
-        .timestamp_ns = timestamp_ns,
+        .timestamp_ns = TicksSinceEpoch<std::chrono::nanoseconds>(entry.timestamp),
         .mocktime_s = entry.mocktime.count(),
         .file_name = file_name.data(),
         .file_name_len = file_name.size(),
@@ -668,14 +580,9 @@ void KernelLogger::Log(const util::log::Entry& entry) const
     };
 
     STDLOCK(m_mutex);
-    for (const auto& callback : m_callbacks) {
-        if (callback.contexts == 0 || entry.level < callback.min_level) continue;
-        try {
-            callback(&btck_entry);
-        } catch (...) {
-            // Can't log the error here because we're already inside the logging path (would
-            // deadlock on m_mutex).
-        }
+    try {
+        m_fn(m_user_data.get(), &btck_entry);
+    } catch (...) {
     }
 }
 
@@ -684,7 +591,7 @@ void KernelLogger::Log(const util::log::Entry& entry) const
 struct btck_Transaction : Handle<btck_Transaction, std::shared_ptr<const CTransaction>> {};
 struct btck_TransactionOutput : Handle<btck_TransactionOutput, CTxOut> {};
 struct btck_ScriptPubkey : Handle<btck_ScriptPubkey, CScript> {};
-struct btck_LoggingConnection : Handle<btck_LoggingConnection, KernelLogger::CallbackHandle> {};
+struct btck_LoggingConnection : Handle<btck_LoggingConnection, LogConnection> {};
 struct btck_ContextOptions : Handle<btck_ContextOptions, ContextOptions> {};
 struct btck_Context : Handle<btck_Context, std::shared_ptr<const Context>> {};
 struct btck_ChainParameters : Handle<btck_ChainParameters, CChainParams> {};
@@ -1018,36 +925,21 @@ void btck_wtxid_destroy(btck_Wtxid* wtxid)
     delete wtxid;
 }
 
-namespace {
-//! The process-wide kernel logger. Intentionally leaked to avoid static destruction order issues,
-//! matching the node's LogInstance().
-KernelLogger& GetKernelLogger()
-{
-    static KernelLogger* logger{new KernelLogger};
-    return *logger;
-}
-
-void AddContextUse(btck_LoggingConnection* connection, int delta)
-{
-    btck_LoggingConnection::get(connection).AddContextUse(delta);
-}
-} // namespace
-
 namespace util::log::hooks {
-// Kernel filters on level only. The category is delivered as part of the entry, so consumers can
-// filter on it in their callback. All kernel log output goes to the same KernelLogger, so the
-// logger argument is ignored.
-bool ShouldLog(Logger* /*logger*/, Category /*category*/, Level level)
+// Deliver each entry to the logging connection of the context it comes from, which is the logger
+// argument, and drop entries logged without one, from code that isn't passed a log context. Every
+// logger this library passes to kernel code is a LogConnection. Only the level is filtered; the
+// category is delivered as part of the entry, so consumers can filter on it in their callback.
+bool ShouldLog(Logger* logger, Category /*category*/, Level level)
 {
-    return GetKernelLogger().ShouldLog(level);
+    return logger && static_cast<const LogConnection*>(logger)->ShouldLog(level);
 }
 
-void Log(Logger* /*logger*/, const Options& /*options*/, Entry entry)
+void Log(Logger* logger, const Options& /*options*/, Entry entry)
 {
-    GetKernelLogger().MaybeLog(entry);
+    if (logger) static_cast<const LogConnection*>(logger)->Log(entry);
 }
 } // namespace util::log::hooks
-
 
 void btck_logging_set_min_level(btck_LoggingConnection* connection, btck_LogLevel level)
 {
@@ -1060,9 +952,7 @@ btck_LoggingConnection* btck_logging_connection_create(btck_LogCallback callback
     try {
         // Take ownership before anything can throw, so that user_data is always freed on error.
         UserData data{user_data, {user_data_destroy_callback}};
-        auto handle{GetKernelLogger().RegisterCallback(callback, std::move(data))};
-        LogDebug(BCLog::KERNEL, "Logger connected.");
-        return btck_LoggingConnection::create(std::move(handle));
+        return btck_LoggingConnection::create(callback, std::move(data));
     } catch (...) {
         return nullptr;
     }
@@ -1070,8 +960,6 @@ btck_LoggingConnection* btck_logging_connection_create(btck_LogCallback callback
 
 void btck_logging_connection_destroy(btck_LoggingConnection* connection)
 {
-    if (!connection) return;
-    LogDebug(BCLog::KERNEL, "Logger disconnecting.");
     delete connection;
 }
 
@@ -1137,7 +1025,7 @@ void btck_context_options_set_chainparams(btck_ContextOptions* options, const bt
 void btck_context_options_set_logger(btck_ContextOptions* options, btck_LoggingConnection* logging_connection)
 {
     LOCK(btck_ContextOptions::get(options).m_mutex);
-    btck_ContextOptions::get(options).m_log_connection = logging_connection;
+    btck_ContextOptions::get(options).m_log_connection = &btck_LoggingConnection::get(logging_connection);
 }
 
 void btck_context_options_set_notifications(btck_ContextOptions* options, btck_NotificationInterfaceCallbacks notifications)
@@ -1164,7 +1052,7 @@ btck_Context* btck_context_create(const btck_ContextOptions* options)
     const ContextOptions* opts = options ? &btck_ContextOptions::get(options) : nullptr;
     auto context{std::make_shared<const Context>(opts, sane)};
     if (!sane) {
-        LogError("Kernel context sanity check failed.");
+        LogError(context->m_log, "Kernel context sanity check failed.");
         return nullptr;
     }
     return btck_Context::create(context);
@@ -1188,7 +1076,6 @@ void btck_context_destroy(btck_Context* context)
 const btck_BlockTreeEntry* btck_block_tree_entry_get_previous(const btck_BlockTreeEntry* entry)
 {
     if (!btck_BlockTreeEntry::get(entry).pprev) {
-        LogInfo("Genesis block has no previous.");
         return nullptr;
     }
 
@@ -1256,7 +1143,7 @@ btck_ChainstateManagerOptions* btck_chainstate_manager_options_create(const btck
     assert(data_dir != nullptr || data_dir_len == 0);
     assert(blocks_dir != nullptr || blocks_dir_len == 0);
     if (data_dir_len == 0 || blocks_dir_len == 0) {
-        LogError("Failed to create chainstate manager options: dir must be non-null and non-empty");
+        LogError(btck_Context::get(context)->m_log, "Failed to create chainstate manager options: dir must be non-null and non-empty");
         return nullptr;
     }
     try {
@@ -1266,7 +1153,7 @@ btck_ChainstateManagerOptions* btck_chainstate_manager_options_create(const btck
         fs::create_directories(abs_blocks_dir);
         return btck_ChainstateManagerOptions::create(btck_Context::get(context), abs_data_dir, abs_blocks_dir);
     } catch (const std::exception& e) {
-        LogError("Failed to create chainstate manager options: %s", e.what());
+        LogError(btck_Context::get(context)->m_log, "Failed to create chainstate manager options: %s", e.what());
         return nullptr;
     }
 }
@@ -1279,12 +1166,12 @@ void btck_chainstate_manager_options_set_worker_threads_num(btck_ChainstateManag
 
 int btck_chainstate_manager_options_set_database_cache_bytes(btck_ChainstateManagerOptions* chainman_opts, uint64_t database_cache_bytes)
 {
+    auto& opts{btck_ChainstateManagerOptions::get(chainman_opts)};
     if (database_cache_bytes < MIN_DBCACHE_BYTES || database_cache_bytes > MAX_DBCACHE_BYTES) {
-        LogError("Failed to set database cache: size is outside the supported range.");
+        LogError(opts.m_context->m_log, "Failed to set database cache: size is outside the supported range.");
         return -1;
     }
 
-    auto& opts{btck_ChainstateManagerOptions::get(chainman_opts)};
     LOCK(opts.m_mutex);
     opts.m_db_cache_bytes = database_cache_bytes;
     opts.m_blockman_options.block_tree_db_params.cache_bytes = kernel::CacheSizes{database_cache_bytes}.block_tree_db;
@@ -1298,11 +1185,11 @@ void btck_chainstate_manager_options_destroy(btck_ChainstateManagerOptions* opti
 
 int btck_chainstate_manager_options_set_wipe_dbs(btck_ChainstateManagerOptions* chainman_opts, int wipe_block_tree_db, int wipe_chainstate_db)
 {
+    auto& opts{btck_ChainstateManagerOptions::get(chainman_opts)};
     if (wipe_block_tree_db == 1 && wipe_chainstate_db != 1) {
-        LogError("Wiping the block tree db without also wiping the chainstate db is currently unsupported.");
+        LogError(opts.m_context->m_log, "Wiping the block tree db without also wiping the chainstate db is currently unsupported.");
         return -1;
     }
-    auto& opts{btck_ChainstateManagerOptions::get(chainman_opts)};
     LOCK(opts.m_mutex);
     opts.m_blockman_options.block_tree_db_params.wipe_data = wipe_block_tree_db == 1;
     opts.m_chainstate_load_options.wipe_chainstate_db = wipe_chainstate_db == 1;
@@ -1334,9 +1221,9 @@ btck_ChainstateManager* btck_chainstate_manager_create(
     std::unique_ptr<ChainstateManager> chainman;
     try {
         LOCK(opts.m_mutex);
-        chainman = std::make_unique<ChainstateManager>(GetKernelLogger(), *opts.m_context->m_interrupt, opts.m_chainman_options, opts.m_blockman_options);
+        chainman = std::make_unique<ChainstateManager>(opts.m_context->Logger(), *opts.m_context->m_interrupt, opts.m_chainman_options, opts.m_blockman_options);
     } catch (const std::exception& e) {
-        LogError("Failed to create chainstate manager: %s", e.what());
+        LogError(opts.m_context->m_log, "Failed to create chainstate manager: %s", e.what());
         return nullptr;
     }
 
@@ -1346,20 +1233,20 @@ btck_ChainstateManager* btck_chainstate_manager_create(
         const kernel::CacheSizes cache_sizes{WITH_LOCK(opts.m_mutex, return opts.m_db_cache_bytes)};
         auto [status, chainstate_err]{node::LoadChainstate(*chainman, cache_sizes, chainstate_load_opts)};
         if (status != node::ChainstateLoadStatus::SUCCESS) {
-            LogError("Failed to load chain state from your data directory: %s", chainstate_err.original);
+            LogError(opts.m_context->m_log, "Failed to load chain state from your data directory: %s", chainstate_err.original);
             return nullptr;
         }
         std::tie(status, chainstate_err) = node::VerifyLoadedChainstate(*chainman, chainstate_load_opts);
         if (status != node::ChainstateLoadStatus::SUCCESS) {
-            LogError("Failed to verify loaded chain state from your datadir: %s", chainstate_err.original);
+            LogError(opts.m_context->m_log, "Failed to verify loaded chain state from your datadir: %s", chainstate_err.original);
             return nullptr;
         }
         if (auto result = chainman->ActivateBestChains(); !result) {
-            LogError("%s", util::ErrorString(result).original);
+            LogError(opts.m_context->m_log, "%s", util::ErrorString(result).original);
             return nullptr;
         }
     } catch (const std::exception& e) {
-        LogError("Failed to load chainstate: %s", e.what());
+        LogError(opts.m_context->m_log, "Failed to load chainstate: %s", e.what());
         return nullptr;
     }
 
@@ -1371,7 +1258,7 @@ const btck_BlockTreeEntry* btck_chainstate_manager_get_block_tree_entry_by_hash(
     auto block_index = WITH_LOCK(btck_ChainstateManager::get(chainman).m_chainman->GetMutex(),
                                  return btck_ChainstateManager::get(chainman).m_chainman->m_blockman.LookupBlockIndex(btck_BlockHash::get(block_hash)));
     if (!block_index) {
-        LogDebug(BCLog::KERNEL, "A block with the given hash is not indexed.");
+        LogDebug(btck_ChainstateManager::get(chainman).m_context->m_log, "A block with the given hash is not indexed.");
         return nullptr;
     }
     return btck_BlockTreeEntry::ref(block_index);
@@ -1412,7 +1299,7 @@ int btck_chainstate_manager_import_blocks(btck_ChainstateManager* chainman, cons
         node::ImportBlocks(chainman_ref, import_files);
         WITH_LOCK(::cs_main, chainman_ref.UpdateIBDStatus());
     } catch (const std::exception& e) {
-        LogError("Failed to import blocks: %s", e.what());
+        LogError(btck_ChainstateManager::get(chainman).m_context->m_log, "Failed to import blocks: %s", e.what());
         return -1;
     }
     return 0;
@@ -1428,7 +1315,6 @@ btck_Block* btck_block_create(const void* raw_block, size_t raw_block_length)
     try {
         stream >> TX_WITH_WITNESS(*block);
     } catch (...) {
-        LogDebug(BCLog::KERNEL, "Block decode failed.");
         return nullptr;
     }
 
@@ -1495,7 +1381,7 @@ btck_Block* btck_block_read(const btck_ChainstateManager* chainman, const btck_B
 {
     auto block{std::make_shared<CBlock>()};
     if (!btck_ChainstateManager::get(chainman).m_chainman->m_blockman.ReadBlock(*block, btck_BlockTreeEntry::get(entry))) {
-        LogError("Failed to read block.");
+        LogError(btck_ChainstateManager::get(chainman).m_context->m_log, "Failed to read block.");
         return nullptr;
     }
     return btck_Block::create(block);
@@ -1550,11 +1436,11 @@ btck_BlockSpentOutputs* btck_block_spent_outputs_read(const btck_ChainstateManag
 {
     auto block_undo{std::make_shared<CBlockUndo>()};
     if (btck_BlockTreeEntry::get(entry).nHeight < 1) {
-        LogDebug(BCLog::KERNEL, "The genesis block does not have any spent outputs.");
+        LogDebug(btck_ChainstateManager::get(chainman).m_context->m_log, "The genesis block does not have any spent outputs.");
         return btck_BlockSpentOutputs::create(block_undo);
     }
     if (!btck_ChainstateManager::get(chainman).m_chainman->m_blockman.ReadBlockUndo(*block_undo, btck_BlockTreeEntry::get(entry))) {
-        LogError("Failed to read block spent outputs data.");
+        LogError(btck_ChainstateManager::get(chainman).m_context->m_log, "Failed to read block spent outputs data.");
         return nullptr;
     }
     return btck_BlockSpentOutputs::create(block_undo);
@@ -1654,7 +1540,7 @@ btck_BlockValidationState* btck_chainstate_manager_process_block_header(
         assert(result == btck_BlockValidationState::get(state).IsValid());
         return state;
     } catch (const std::exception& e) {
-        LogError("Failed to process block header: %s", e.what());
+        LogError(btck_ChainstateManager::get(chainstate_manager).m_context->m_log, "Failed to process block header: %s", e.what());
         return nullptr;
     }
 }
@@ -1691,7 +1577,6 @@ btck_BlockHeader* btck_block_header_create(const void* raw_block_header, size_t 
     try {
         stream >> *header;
     } catch (...) {
-        LogError("Block header decode failed.");
         return nullptr;
     }
 
