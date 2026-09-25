@@ -1328,8 +1328,9 @@ class PSBTTest(BitcoinTestFramework):
 
         # Combiner test
         for combiner in combiners:
-            combined = self.nodes[2].combinepsbt(combiner['combine'])
-            assert_equal(combined, combiner['result'])
+            for psbts in (combiner['combine'], combiner['combine'][::-1]):
+                combined = self.nodes[2].combinepsbt(psbts)
+                assert_equal(combined, combiner['result'])
 
         # Empty combiner test
         assert_raises_rpc_error(-8, "Parameter 'txs' cannot be empty", self.nodes[0].combinepsbt, [])
