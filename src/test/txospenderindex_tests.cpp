@@ -15,7 +15,7 @@ BOOST_FIXTURE_TEST_CASE(txospenderindex_initial_sync, TestChain100Setup)
 {
     // Setup phase:
     // Mine blocks for coinbase maturity, so we can spend some coinbase outputs in the test.
-    const CScript& coinbase_script = m_coinbase_txns[0]->vout[0].scriptPubKey;
+    const CScript& coinbase_script = m_coinbase_txns[0]->GetOutputs()[0].scriptPubKey;
     for (int i = 0; i < 10; i++) CreateAndProcessBlock({}, coinbase_script);
 
     // Spend 10 outputs
