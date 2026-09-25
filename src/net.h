@@ -77,6 +77,8 @@ inline constexpr int MAX_FEELER_CONNECTIONS = 1;
 inline constexpr size_t MAX_PRIVATE_BROADCAST_CONNECTIONS{64};
 /** -listen default */
 inline constexpr bool DEFAULT_LISTEN = true;
+/** -v2onlyclearnet default */
+inline constexpr bool DEFAULT_V2_ONLY_CLEARNET{false};
 /** The maximum number of peer connections to maintain. */
 inline constexpr unsigned int DEFAULT_MAX_PEER_CONNECTIONS{200};
 /** Default percentage of inbound connection slots that tx-relaying peers can use */
@@ -1113,6 +1115,7 @@ public:
         bool whitelist_forcerelay = DEFAULT_WHITELISTFORCERELAY;
         bool whitelist_relay = DEFAULT_WHITELISTRELAY;
         bool m_capture_messages = false;
+        bool m_v2only_clearnet = DEFAULT_V2_ONLY_CLEARNET;
     };
 
     void Init(const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_total_bytes_sent_mutex)
@@ -1152,6 +1155,7 @@ public:
         whitelist_forcerelay = connOptions.whitelist_forcerelay;
         whitelist_relay = connOptions.whitelist_relay;
         m_capture_messages = connOptions.m_capture_messages;
+        m_v2only_clearnet = connOptions.m_v2only_clearnet;
     }
 
     // test only
@@ -1429,7 +1433,34 @@ public:
 
     bool MultipleManualOrFullOutboundConns(Network net) const EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
 
+    /**
+     * Whether a connection with a peer on this network must be v2 only.
+     *
+     * Returns true when -v2onlyclearnet is set and the peer is reached over
+     * clearnet (IPv4/IPv6), whose traffic is visible to passive network
+     * observers. Tor/I2P/CJDNS peers are already encrypted, and non-routable
+     * (local/loopback) traffic never leaves the LAN, so both can be v1.
+     *
+     * @param net network the peer is connected through. Use RequiresV2Dest()
+     * when opening one, since the destination network may not be known locally.
+     */
+    bool RequiresV2Peer(Network net) const;
+
 private:
+    /**
+     * Whether an outbound connection to this destination must be v2 only.
+     *
+     * Same as RequiresV2Peer(), except that when bitcoind delegates DNS to a
+     * name proxy (ex: Tor) the destination is left unresolved for the proxy to
+     * look up, so its network isn't known locally. Assume the worst case there
+     * and require v2, rather than send plaintext to what is most likely a
+     * clearnet peer.
+     *
+     * @param addr      target address, invalid if left for a name proxy to resolve
+     * @param dest_name destination string, empty if connecting by resolved address
+     */
+    bool RequiresV2Dest(const CNetAddr& addr, std::string_view dest_name) const;
+
     struct ListenSocket {
     public:
         std::shared_ptr<Sock> sock;
@@ -1812,6 +1843,13 @@ private:
      * flag for whether messages are captured
      */
     bool m_capture_messages{false};
+
+    /**
+     * option for restricting outbound and inbound clearnet connections (IPv4/IPv6) to v2 only.
+     * connections to IPv4/IPv6 need to be v2 connections.
+     * connections to Tor/I2P/CJDNS can be v1 or v2 connections.
+     */
+    bool m_v2only_clearnet{DEFAULT_V2_ONLY_CLEARNET};
 
     /**
      * Mutex protecting m_i2p_sam_sessions.
