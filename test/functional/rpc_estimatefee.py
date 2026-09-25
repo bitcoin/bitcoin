@@ -36,6 +36,9 @@ class EstimateFeeTest(BitcoinTestFramework):
             assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", self.nodes[0].estimaterawfee, 1, 'foo')
 
         assert_raises_rpc_error(-8, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"', self.nodes[0].estimatesmartfee, 1, 'foo')
+        for fee_rate_estimator in ["foo", "none", ""]:
+            assert_raises_rpc_error(-8, 'Invalid fee_rate_estimator parameter, must be one of: "auto", "block_policy", "mempool_policy"',
+                                    self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', {'fee_rate_estimator': fee_rate_estimator})
         assert_raises_rpc_error(-8, "Unknown named parameter fee_rate_estimator", self.nodes[0].estimatesmartfee, 1, fee_rate_estimator=True)
         assert_raises_rpc_error(-3, "Unexpected key block_policy_only", self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', {'block_policy_only': True})
         # extra params
@@ -54,8 +57,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.nodes[0].estimatesmartfee(1, 'conservative')
         self.nodes[0].estimatesmartfee(1, 'ECONOMICAL', {"fee_rate_estimator": "block_policy"})
         self.nodes[0].estimatesmartfee(1, 'ECONOMICAL', {"fee_rate_estimator": "mempool_policy"})
-        self.nodes[0].estimatesmartfee(1, 'ECONOMICAL', {"fee_rate_estimator": "foo"})
-        self.nodes[0].estimatesmartfee(1, 'ECONOMICAL', {'verbosity': 1, 'fee_rate_estimator': "none"})
+        self.nodes[0].estimatesmartfee(1, 'ECONOMICAL', {'verbosity': 1, 'fee_rate_estimator': "auto"})
 
         self.nodes[0].estimaterawfee(1)
         self.nodes[0].estimaterawfee(1, None)

@@ -9,6 +9,7 @@
 #include <util/expected.h>
 #include <util/feefrac.h>
 
+#include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -34,7 +35,7 @@ enum class FeeReason {
  * Identifier for fee rate estimator.
  */
 enum class FeeRateEstimatorType {
-    NONE,
+    AUTO,
     BLOCK_POLICY,
     MEMPOOL_POLICY,
 };
@@ -90,6 +91,6 @@ inline const FeeRateEstimation& FeeRateEstimationRef(const util::Expected<FeeRat
 }
 
 std::string_view FeeRateEstimatorTypeToString(FeeRateEstimatorType feerate_estimator_type);
-FeeRateEstimatorType FeeRateEstimatorTypeFromString(std::string_view feerate_estimator_type);
+std::optional<FeeRateEstimatorType> FeeRateEstimatorTypeFromString(std::string_view feerate_estimator_type);
 
 #endif // BITCOIN_UTIL_FEES_H
