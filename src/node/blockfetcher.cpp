@@ -15,9 +15,12 @@
 #include <util/threadpool.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <exception>
+#include <iterator>
 #include <memory>
 #include <utility>
+#include <vector>
 
 namespace node {
 BlockFetcher::BlockFetcher(ReadBlockFn read_block, int32_t thread_count)
@@ -51,14 +54,17 @@ void BlockFetcher::FillQueue(const CBlockIndex* last_index, int next_height)
         Clear();
         return;
     }
-    if (m_followups.size()) return;
-    const auto* next{last_index->GetAncestor(next_height)};
-    if (!next || !(next->nStatus & BLOCK_HAVE_DATA)) return;
-    if (auto followup{m_pool.Submit([this, hash = next->GetBlockHash(), pos = next->GetBlockPos()]() -> std::shared_ptr<const CBlock> {
-        try {
-            if (auto block{std::make_shared<CBlock>()}; m_read_block(*block, pos, hash)) return block;
-        } catch (std::exception&) {} // Retry synchronously when needed
-        return nullptr;
-    })}) m_followups.emplace_back(std::move(*followup));
+    std::vector<ReadTask> tasks;
+    for (size_t i{m_followups.size()}; i < m_thread_count * BLOCKS_PER_READ_AHEAD_THREAD; ++i) {
+        const auto* next{last_index->GetAncestor(next_height + i)};
+        if (!next || !(next->nStatus & BLOCK_HAVE_DATA)) break;
+        tasks.emplace_back([this, hash = next->GetBlockHash(), pos = next->GetBlockPos()] {
+            try {
+                if (auto block{std::make_shared<CBlock>()}; m_read_block(*block, pos, hash)) return block;
+            } catch (std::exception&) {} // Retry synchronously when needed
+            return std::shared_ptr<CBlock>{};
+        });
+    }
+    if (auto followups{m_pool.Submit(std::move(tasks))}) std::ranges::move(*followups, std::back_inserter(m_followups));
 }
 } // namespace node
