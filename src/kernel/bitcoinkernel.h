@@ -152,9 +152,8 @@ typedef struct btck_TransactionOutput btck_TransactionOutput;
  * @ref btck_logging_set_min_level). It must outlive the context options and
  * contexts it is set on.
  *
- * Currently, while a connection is attached to at least one context, it may
- * also receive entries from other kernel operations in the process, including
- * operations of other contexts. This will be narrowed in the future.
+ * Entries logged by code that doesn't run on behalf of a context, such as
+ * some low-level utility code, are not delivered to any connection.
  */
 typedef struct btck_LoggingConnection btck_LoggingConnection;
 
@@ -1062,8 +1061,7 @@ BITCOINKERNEL_API void btck_context_options_set_chainparams(
  * @brief Set the logging connection for the context options. Log entries from
  * operations of the context created with the options are delivered to this
  * connection. Without a logging connection, the context's log entries are not
- * delivered to any connection (currently, other connections attached to other
- * contexts may still receive them).
+ * delivered to any connection.
  *
  * The logging connection must outlive the context options and every context
  * created with them. A context also stays alive while chainstate managers
