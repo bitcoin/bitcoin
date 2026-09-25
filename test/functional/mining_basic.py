@@ -424,6 +424,12 @@ class MiningTest(BitcoinTestFramework):
         assert_equal(block["tx"][0]["locktime"], block["height"] - 1)
         assert_equal(block["tx"][0]["vin"][0]["sequence"], MAX_SEQUENCE_NONFINAL)
 
+    def test_mining_log_category(self):
+        self.log.info("Test that the block-template summary is logged under the mining category")
+        node = self.nodes[0]
+        with node.assert_debug_log(expected_msgs=["[mining] CreateNewBlock(): block weight"]):
+            self.generatetoaddress(node, 1, node.get_deterministic_priv_key().address, sync_fun=self.no_op)
+
     def run_test(self):
         node = self.nodes[0]
         self.wallet = MiniWallet(node)
@@ -568,6 +574,7 @@ class MiningTest(BitcoinTestFramework):
         self.test_murch_zawy_mintime()
         self.test_pruning()
         self.test_height_in_locktime()
+        self.test_mining_log_category()
 
 
 if __name__ == '__main__':
