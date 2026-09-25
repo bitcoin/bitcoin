@@ -17,6 +17,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -1014,17 +1015,36 @@ concept Log = requires(T a, std::string_view message) {
     { a.LogMessage(message) } -> std::same_as<void>;
 };
 
-template <Log T>
-class Logger : UniqueHandle<btck_LoggingConnection, btck_logging_connection_destroy>
+//! Owns the global logging callback, resets it on destruction. Only one Logger may exist at a time.
+class Logger
 {
+    //! True if a Logger already exists.
+    inline static bool s_active{false};
+
 public:
-    Logger(std::unique_ptr<T> log)
-        : UniqueHandle{btck_logging_connection_create(
-              +[](void* user_data, const char* message, size_t message_len) { static_cast<T*>(user_data)->LogMessage({message, message_len}); },
-              log.release(),
-              +[](void* user_data) { delete static_cast<T*>(user_data); })}
+    template <Log T>
+    explicit Logger(std::unique_ptr<T> log)
     {
+        if (s_active) throw std::logic_error("Only one Logger may exist at a time");
+        if (btck_logging_set_callback(
+                +[](void* user_data, const char* message, size_t message_len) {
+                    static_cast<T*>(user_data)->LogMessage({message, message_len});
+                },
+                log.release(),
+                +[](void* user_data) { delete static_cast<T*>(user_data); }) != 0) {
+            throw std::runtime_error("Failed to set logging callback");
+        }
+        s_active = true;
     }
+    ~Logger()
+    {
+        // Nothing to do on failure in a destructor.
+        std::ignore = btck_logging_set_callback(nullptr, nullptr, nullptr);
+        s_active = false;
+    }
+
+    Logger(const Logger&) = delete;
+    Logger& operator=(const Logger&) = delete;
 };
 
 class BlockTreeEntry : public View<btck_BlockTreeEntry>
