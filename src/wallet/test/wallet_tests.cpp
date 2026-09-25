@@ -20,13 +20,14 @@
 #include <addresstype.h>
 #include <blockfilter.h>
 #include <chain.h>
+#include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <index/blockfilterindex.h>
 #include <interfaces/chain.h>
 #include <key_io.h>
-#include <logging.h>
 #include <node/blockstorage.h>
 #include <node/types.h>
+#include <policy/feerate.h>
 #include <policy/policy.h>
 #include <rpc/server.h>
 #include <script/descriptor.h>
@@ -51,7 +52,6 @@
 #include <wallet/test/wallet_test_fixture.h>
 
 #include <boost/test/unit_test.hpp>
-#include <univalue.h>
 
 using node::MAX_BLOCKFILE_SIZE;
 
@@ -76,6 +76,18 @@ static CMutableTransaction TestSimpleSpend(const CTransaction& from, uint32_t in
     std::map<int, bilingual_str> input_errors;
     BOOST_CHECK(SignTransaction(mtx, &keystore, coins, {.sighash_type = SIGHASH_ALL}, input_errors));
     return mtx;
+}
+
+static bool BroadcastTestSimpleSpend(interfaces::Chain& chain, ChainstateManager& chainman, const CMutableTransaction& tx, std::string& error)
+{
+    const auto tx_ref{MakeTransactionRef(tx)};
+    const auto tx_sigops = WITH_LOCK(::cs_main, return GetTransactionSigOpCost(
+                                                    *tx_ref, chainman.ActiveChainstate().CoinsTip(), STANDARD_SCRIPT_VERIFY_FLAGS));
+    const auto tx_vsize{GetVirtualTransactionSize(*tx_ref, tx_sigops, nBytesPerSigOp)};
+    const auto tx_feerate{CFeeRate{DEFAULT_TRANSACTION_MAXFEE, static_cast<int32_t>(tx_vsize)}};
+    // TestSimpleSpend pays a high fee; use a limit just above its feerate.
+    const auto tx_feerate_limit{CFeeRate{tx_feerate.GetFeePerK() + 1}};
+    return chain.broadcastTransaction(tx_ref, DEFAULT_TRANSACTION_MAXFEE, tx_feerate_limit, node::TxBroadcast::MEMPOOL_NO_BROADCAST, error);
 }
 
 static void AddKey(CWallet& wallet, const CKey& key)
@@ -1289,8 +1301,7 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
     auto block_tx = TestSimpleSpend(*m_coinbase_txns[0], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
     m_coinbase_txns.push_back(CreateAndProcessBlock({block_tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
     auto mempool_tx = TestSimpleSpend(*m_coinbase_txns[1], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
-    BOOST_CHECK(m_node.chain->broadcastTransaction(MakeTransactionRef(mempool_tx), DEFAULT_TRANSACTION_MAXFEE, node::TxBroadcast::MEMPOOL_NO_BROADCAST, error));
-
+    BOOST_CHECK(BroadcastTestSimpleSpend(*m_node.chain, *Assert(m_node.chainman), mempool_tx, error));
 
     // Reload wallet and make sure new transactions are detected despite events
     // being blocked
@@ -1331,7 +1342,7 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
             block_tx = TestSimpleSpend(*m_coinbase_txns[2], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
             m_coinbase_txns.push_back(CreateAndProcessBlock({block_tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
             mempool_tx = TestSimpleSpend(*m_coinbase_txns[3], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
-            BOOST_CHECK(m_node.chain->broadcastTransaction(MakeTransactionRef(mempool_tx), DEFAULT_TRANSACTION_MAXFEE, node::TxBroadcast::MEMPOOL_NO_BROADCAST, error));
+            BOOST_CHECK(BroadcastTestSimpleSpend(*m_node.chain, *Assert(m_node.chainman), mempool_tx, error));
             m_node.validation_signals->SyncWithValidationInterfaceQueue();
         });
     wallet = TestLoadWallet(context);
