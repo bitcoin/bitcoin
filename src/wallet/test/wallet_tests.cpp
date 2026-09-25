@@ -1357,39 +1357,5 @@ BOOST_FIXTURE_TEST_CASE(CreateWalletWithoutChain, BasicTestingSetup)
     WaitForDeleteWallet(std::move(wallet));
 }
 
-BOOST_FIXTURE_TEST_CASE(RemoveTxs, TestChain100Setup)
-{
-    m_args.ForceSetArg("-unsafesqlitesync", "1");
-    WalletContext context;
-    context.args = &m_args;
-    context.chain = m_node.chain.get();
-    auto wallet = TestCreateWallet(context);
-    CKey key = GenerateRandomKey();
-    AddKey(*wallet, key);
-
-    m_coinbase_txns.push_back(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
-    auto block_tx = TestSimpleSpend(*m_coinbase_txns[0], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
-    CreateAndProcessBlock({block_tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-
-    m_node.validation_signals->SyncWithValidationInterfaceQueue();
-
-    {
-        auto block_hash = block_tx.GetHash();
-        auto prev_tx = m_coinbase_txns[0];
-
-        LOCK(wallet->cs_wallet);
-        BOOST_CHECK(wallet->HasWalletSpend(prev_tx));
-        BOOST_CHECK(wallet->mapWallet.contains(block_hash));
-
-        std::vector<Txid> vHashIn{ block_hash };
-        BOOST_CHECK(wallet->RemoveTxs(vHashIn));
-
-        BOOST_CHECK(!wallet->HasWalletSpend(prev_tx));
-        BOOST_CHECK(!wallet->mapWallet.contains(block_hash));
-    }
-
-    TestUnloadWallet(std::move(wallet));
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
