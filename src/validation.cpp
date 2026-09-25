@@ -3211,6 +3211,10 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex&
     const CBlockIndex* pindexFork = m_chain.FindFork(index_most_work);
     // Stop before a block supplied by the caller, which does not need to be read from disk.
     const CBlockIndex* read_ahead_tip{provided_block ? index_most_work.pprev : &index_most_work};
+    if (pindexFork && pindexFork != pindexOldTip) {
+        m_block_fetcher->Clear();
+        if (read_ahead_tip) m_block_fetcher->FillQueue(*read_ahead_tip, pindexFork->nHeight + 1);
+    }
 
     // Disconnect active blocks which are no longer in the best chain.
     bool fBlocksDisconnected = false;

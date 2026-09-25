@@ -130,7 +130,7 @@ class ReindexTest(BitcoinTestFramework):
 
         log_start = node.debug_log_size(encoding='utf-8')
         assert_equal(node.submitblock(fork_tip.serialize().hex()), None)
-        assert_equal(cached_block_count(node, log_start), 1)  # TODO: The sibling still requires a synchronous disk read during reorg
+        assert_equal(cached_block_count(node, log_start), 2)
         assert_equal(node.getbestblockhash(), fork_tip.hash_hex)
 
     def run_test(self):
