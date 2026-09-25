@@ -1400,7 +1400,7 @@ BOOST_AUTO_TEST_CASE(outbound_message_limits)
 
     auto queued{0U};
     for (auto& [msg, reject] : std::array{
-             std::pair{MakeNetMessage(std::string{MAX_MESSAGE_TYPE} + 'x', /*payload_size=*/1), false}, // TODO: Reject types longer than the wire field
+             std::pair{MakeNetMessage(std::string{MAX_MESSAGE_TYPE} + 'x', /*payload_size=*/1), true},
              std::pair{MakeNetMessage(MAX_MESSAGE_TYPE, MAX_PROTOCOL_MESSAGE_LENGTH + 1), false}, // TODO: Reject payloads that peers cannot receive
              std::pair{MakeNetMessage(MAX_MESSAGE_TYPE, MAX_PROTOCOL_MESSAGE_LENGTH), false}}) {
         test_only_CheckFailuresAreExceptionsNotAborts mock_checks;
