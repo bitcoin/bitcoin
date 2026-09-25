@@ -126,7 +126,7 @@ using Oracle = std::map<uint16_t, uint32_t, LevelDBBytewiseU16Cmp>;
 
 struct FailUnserialize {
     template <typename Stream>
-    void Unserialize(Stream&) { throw std::ios_base::failure{"always fail"}; }
+    [[noreturn]] void Unserialize(Stream&) { throw std::ios_base::failure{"always fail"}; }
 };
 
 uint16_t ConsumeKey(FuzzedDataProvider& provider) { return provider.ConsumeIntegral<uint16_t>(); }
