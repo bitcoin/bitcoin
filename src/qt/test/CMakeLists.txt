@@ -44,7 +44,9 @@ if(WIN32 AND VCPKG_TARGET_TRIPLET)
   set_property(TEST test_bitcoin-qt APPEND PROPERTY
     ENVIRONMENT_MODIFICATION
       # On Windows, vcpkg configures Qt with `-opengl dynamic`, which makes
-      # the "minimal" platform plugin unusable due to internal Qt bugs.
+      # the otherwise appropriate headless "minimal" platform plugin unusable
+      # due to internal Qt bugs. So override to "windows" plugin in order to
+      # make it work when built in that configuration (VCPKG_TARGET_TRIPLET).
       QT_QPA_PLATFORM=set:windows
       QT_PLUGIN_PATH=set:${plugin_path}
   )
