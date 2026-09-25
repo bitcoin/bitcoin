@@ -1867,7 +1867,7 @@ Chainstate::Chainstate(
     std::optional<uint256> from_snapshot_blockhash)
     : m_block_fetcher{std::make_unique<node::BlockFetcher>([blockman = &blockman](CBlock& block, const FlatFilePos& pos, const uint256& hash) {
           return blockman->ReadBlock(block, pos, hash);
-      })},
+      }, chainman.m_options.block_fetch_threads_num)},
       m_mempool(mempool),
       m_blockman(blockman),
       m_chainman(chainman),
