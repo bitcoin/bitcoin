@@ -246,6 +246,17 @@ class SendallTest(BitcoinTestFramework):
             inputs=[foreign_utxo])
 
     @cleanup
+    def sendall_fails_on_duplicate_input(self):
+        self.log.info("Test sendall fails if the same UTXO is given twice in inputs")
+        self.add_utxos([17, 4])
+        utxo = self.wallet.listunspent()[0]
+
+        assert_raises_rpc_error(-8,
+                "Invalid parameter, duplicated input: {}:{}".format(utxo["txid"], utxo["vout"]),
+                self.wallet.sendall, recipients=[self.remainder_target], inputs=[utxo, utxo])
+        assert_equal(self.wallet.getbalances()["mine"]["untrusted_pending"], 0)
+
+    @cleanup
     def sendall_fails_on_no_address(self):
         self.log.info("Test sendall fails because no address is provided")
         self.add_utxos([19, 2])
@@ -549,6 +560,9 @@ class SendallTest(BitcoinTestFramework):
 
         # Fails for the right reasons on missing or previously spent UTXOs
         self.sendall_fails_on_missing_input()
+
+        # Sendall fails when the same input is given twice
+        self.sendall_fails_on_duplicate_input()
 
         # Sendall fails when no address is provided
         self.sendall_fails_on_no_address()
