@@ -19,7 +19,6 @@
 
 #include <cassert>
 #include <chrono>
-#include <cstdlib>
 #include <exception>
 #include <future>
 #include <iterator>
@@ -85,36 +84,18 @@ void CCoinsViewDB::ResizeCache(size_t new_cache_size)
     }
 }
 
-std::optional<Coin> CCoinsViewDB::GetCoin(const COutPoint& outpoint) const
+std::optional<Coin> CCoinsViewDB::GetCoin(const COutPoint& outpoint) const noexcept
 {
-    Coin coin;
-    const CDBWrapper::ReadStatus res = m_db->TryRead(CoinEntry(&outpoint), coin);
-    if (!res) {
-        // Propagate errors so CCoinsViewErrorCatcher triggers a clean shutdown.
-        switch (const auto& [err_code, err_msg] = res.error(); err_code) {
-            case CDBWrapper::ReadFailure::Code::DeserializationError:
-                throw dbwrapper_error{strprintf("Coin deserialization failure: %s", err_msg)};
-            case CDBWrapper::ReadFailure::Code::DatabaseError:
-                throw dbwrapper_error{strprintf("Coin DB read failure: %s", err_msg)};
-        } // no default case, so the compiler can warn about missing cases
-        std::abort(); // unreachable
+    if (Coin coin; m_db->Read(CoinEntry(&outpoint), coin)) {
+        Assert(!coin.IsSpent()); // The UTXO database should never contain spent coins
+        return coin;
     }
-
-    // Check whether the coin exists
-    if (!res.value()) return std::nullopt;
-    // Coin found, ensure UTXO database never contains spent coins
-    Assert(!coin.IsSpent());
-    return coin;
+    return std::nullopt;
 }
 
-std::optional<Coin> CCoinsViewDB::PeekCoin(const COutPoint& outpoint) const
+std::optional<Coin> CCoinsViewDB::PeekCoin(const COutPoint& outpoint) const noexcept
 {
     return GetCoin(outpoint);
-}
-
-bool CCoinsViewDB::HaveCoin(const COutPoint& outpoint) const
-{
-    return m_db->Exists(CoinEntry(&outpoint));
 }
 
 uint256 CCoinsViewDB::GetBestBlock() const {
