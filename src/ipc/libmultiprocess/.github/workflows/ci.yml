@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-netbsd:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     name: build • netbsd ${{ matrix.release }}
     defaults:
       run:
@@ -66,7 +66,7 @@ jobs:
           CI_CONFIG="ci/configs/netbsd.bash" bash ci/scripts/ci.sh
 
   build-openbsd:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     name: build • openbsd
     defaults:
       run:
@@ -88,7 +88,7 @@ jobs:
           CI_CONFIG="ci/configs/openbsd.bash" bash ci/scripts/ci.sh
 
   build-freebsd:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     name: build • freebsd
     defaults:
       run:
@@ -128,7 +128,7 @@ jobs:
           CI_CONFIG="ci/configs/macos.bash" bash ci/scripts/ci.sh
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     env:
       NIXPKGS_CHANNEL: nixos-25.05

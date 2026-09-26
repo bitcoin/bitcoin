@@ -60,7 +60,7 @@ jobs:
       matrix:
         include:
           - arch: x64
-            runner: ubuntu-latest
+            runner: ubuntu-26.04
           - arch: arm64
             runner: ubuntu-24.04-arm
 
@@ -85,7 +85,7 @@ jobs:
 
   x86_64-debian:
     name: "x86_64: Linux (Debian stable)"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: docker_cache
 
     strategy:
@@ -137,7 +137,7 @@ jobs:
 
   i686_debian:
     name: "i686: Linux (Debian stable)"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: docker_cache
 
     strategy:
@@ -166,7 +166,7 @@ jobs:
 
   s390x_debian:
     name: "s390x (big-endian): Linux (Debian stable, QEMU)"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: docker_cache
 
     strategy:
@@ -194,7 +194,7 @@ jobs:
 
   arm32_debian:
     name: "ARM32: Linux (Debian stable, QEMU)"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: docker_cache
 
     strategy:
@@ -257,7 +257,7 @@ jobs:
 
   ppc64le_debian:
     name: "ppc64le: Linux (Debian stable, QEMU)"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: docker_cache
 
     strategy:
@@ -292,19 +292,19 @@ jobs:
       fail-fast: false
       matrix:
         configuration:
-          - runner: ubuntu-latest
+          - runner: ubuntu-26.04
             binary_arch: x64
             env_vars: { CC: 'clang',                                      ASM: 'auto' }
-          - runner: ubuntu-latest
+          - runner: ubuntu-26.04
             binary_arch: i686
             env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'auto' }
           - runner: ubuntu-24.04-arm
             binary_arch: arm64
             env_vars: { CC: 'clang',                                      ASM: 'auto' }
-          - runner: ubuntu-latest
+          - runner: ubuntu-26.04
             binary_arch: x64
             env_vars: { CC: 'clang',                                      ASM: 'no', ECMULTGENKB: 2, ECMULTWINDOW: 2 }
-          - runner: ubuntu-latest
+          - runner: ubuntu-26.04
             binary_arch: i686
             env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'no', ECMULTGENKB: 2, ECMULTWINDOW: 2 }
           - runner: ubuntu-24.04-arm
@@ -331,7 +331,7 @@ jobs:
 
   sanitizers_debian:
     name: "UBSan, ASan, LSan"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: docker_cache
 
     strategy:
@@ -365,7 +365,7 @@ jobs:
 
   msan_debian:
     name: "MSan"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: docker_cache
 
     strategy:
@@ -409,7 +409,7 @@ jobs:
 
   mingw_debian:
     name: ${{ matrix.configuration.job_name }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: docker_cache
 
     env:
@@ -610,7 +610,7 @@ jobs:
 
   cxx_fpermissive_debian:
     name: "C++ -fpermissive (entire project)"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: docker_cache
 
     strategy:
@@ -637,7 +637,7 @@ jobs:
 
   cxx_headers_debian:
     name: "C++ (public headers)"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: docker_cache
 
     steps:
@@ -654,7 +654,7 @@ jobs:
 
   sage:
     name: "SageMath prover"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     container:
       image: sagemath/sagemath:latest
       options: --user root
@@ -668,7 +668,7 @@ jobs:
           sage prove_group_implementations.sage
 
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
       - *CHECKOUT

@@ -22,7 +22,7 @@ jobs:
       fail-fast: false
       matrix:
         compiler: [clang, gcc, msvc]
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-26.04, macos-latest, windows-latest]
         optimized: [true, false]
         shared_lib: [true, false]
         use_glog: [true, false]
@@ -31,7 +31,7 @@ jobs:
         - use_glog: true
           shared_lib: true
         # MSVC only works on Windows.
-        - os: ubuntu-latest
+        - os: ubuntu-26.04
           compiler: msvc
         - os: macos-latest
           compiler: msvc
@@ -72,7 +72,7 @@ jobs:
         matrix.optimized && 'RelWithDebInfo' || 'Debug') }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
