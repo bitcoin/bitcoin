@@ -391,7 +391,7 @@ void MinerTestingSetup::TestSigOpsAdjustedWeightChunkLimit(const CScript& script
     BOOST_CHECK(block.vtx[1]->GetHash() == tx.GetHash());
 
     options.block_max_weight = DEFAULT_BLOCK_RESERVED_WEIGHT + sigop_entry.GetTxWeight();
-    BOOST_CHECK_EQUAL(mining->createNewBlock(options, /*cooldown=*/false)->getBlock().vtx.size(), 1); // TODO: A chunk that reaches the weight limit should be mined
+    BOOST_CHECK_EQUAL(mining->createNewBlock(options, /*cooldown=*/false)->getBlock().vtx.size(), 2);
     options.block_max_weight = DEFAULT_BLOCK_RESERVED_WEIGHT + sigop_entry.GetTxWeight() - 1;
     BOOST_CHECK_EQUAL(mining->createNewBlock(options, /*cooldown=*/false)->getBlock().vtx.size(), 1);
 }
