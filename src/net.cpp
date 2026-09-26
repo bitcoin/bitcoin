@@ -356,6 +356,25 @@ bool CConnman::AlreadyConnectedToAddress(const CNetAddr& addr) const
     return std::ranges::any_of(m_nodes, [&addr](CNode* node) { return node->addr == addr; });
 }
 
+std::string CConnman::ManualConnectionKey(const std::string& dest) const
+{
+    const CService resolved{MaybeFlipIPv6toCJDNS(LookupNumeric(dest, GetDefaultPort(dest)))};
+    return resolved.IsValid() ? resolved.ToStringAddrPort() : dest;
+}
+
+bool CConnman::MarkManualConnectionInProgress(const std::string& key) EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex)
+{
+    LOCK(m_nodes_mutex);
+    return m_manual_connection_in_progress.insert(key).second;
+}
+
+void CConnman::ClearManualConnectionInProgress(const std::string& key) EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex)
+{
+    LOCK(m_nodes_mutex);
+    const auto erased{m_manual_connection_in_progress.erase(key)};
+    Assume(erased == 1);
+}
+
 bool CConnman::CheckIncomingNonce(uint64_t nonce)
 {
     LOCK(m_nodes_mutex);
@@ -3113,9 +3132,30 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect,
     }
     if (!pszDest) {
         bool banned_or_discouraged = m_banman && (m_banman->IsDiscouraged(addrConnect) || m_banman->IsBanned(addrConnect));
-        if (IsLocal(addrConnect) || banned_or_discouraged || AlreadyConnectedToAddress(addrConnect)) {
+        if (IsLocal(addrConnect) || banned_or_discouraged) return false;
+    }
+
+    std::optional<std::string> manual_connection;
+    if (conn_type == ConnectionType::MANUAL) {
+        if (pszDest) {
+            manual_connection = ManualConnectionKey(pszDest);
+        } else if (addrConnect.IsValid()) {
+            manual_connection = addrConnect.ToStringAddrPort();
+        }
+        if (manual_connection && !MarkManualConnectionInProgress(*manual_connection)) {
+            LogInfo("Not opening manual connection to %s, connection already in progress\n",
+                    pszDest ? pszDest : addrConnect.ToStringAddrPort());
             return false;
         }
+    }
+    struct ManualConnectionGuard {
+        CConnman& connman;
+        const std::optional<std::string>& key;
+        ~ManualConnectionGuard() { if (key) connman.ClearManualConnectionInProgress(*key); }
+    } guard{*this, manual_connection};
+
+    if (!pszDest) {
+        if (AlreadyConnectedToAddress(addrConnect)) return false;
     } else if (AlreadyConnectedToHost(pszDest)) {
         return false;
     }
