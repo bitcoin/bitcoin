@@ -53,9 +53,11 @@ struct CreatedTransactionResult
     CAmount fee;
     FeeReason fee_reason;
     std::optional<unsigned int> change_pos;
+    //! Whether the selection spends only some of the available UTXOs at any scriptPubKey (only populated if the wallet may add inputs)
+    bool has_partial_spend{false};
 
-    CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, std::optional<unsigned int> _change_pos, FeeReason _fee_reason)
-        : tx(_tx), fee(_fee), fee_reason(_fee_reason), change_pos(_change_pos) {}
+    CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, std::optional<unsigned int> _change_pos, FeeReason _fee_reason, bool _has_partial_spend)
+        : tx(_tx), fee(_fee), fee_reason(_fee_reason), change_pos(_change_pos), has_partial_spend(_has_partial_spend) {}
 };
 
 //! Machine-readable wallet error codes.
