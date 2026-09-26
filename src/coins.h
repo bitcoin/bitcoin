@@ -18,12 +18,12 @@
 #include <uint256.h>
 #include <util/check.h>
 #include <util/log.h>
+#include <util/not_null.h>
 #include <util/overflow.h>
 
+#include <atomic>
 #include <cassert>
 #include <cstdint>
-
-#include <atomic>
 #include <functional>
 #include <future>
 #include <memory>
@@ -739,8 +739,8 @@ private:
         return base->PeekCoin(outpoint);
     }
 
-    //! Non-null. May have zero workers when input fetching is disabled.
-    std::shared_ptr<ThreadPool> m_thread_pool;
+    /// May have zero workers when input fetching is disabled.
+    util::NotNullSharedPtr<ThreadPool> m_thread_pool;
     std::vector<std::future<void>> m_futures{};
 
 protected:
@@ -754,11 +754,10 @@ protected:
     }
 
 public:
-    explicit CoinsViewOverlay(CCoinsView* in_base, std::shared_ptr<ThreadPool> thread_pool,
+    explicit CoinsViewOverlay(CCoinsView* in_base, util::NotNullSharedPtr<ThreadPool> thread_pool,
                               bool deterministic = false) noexcept
         : CCoinsViewCache{in_base, deterministic}, m_thread_pool{std::move(thread_pool)}
     {
-        Assert(m_thread_pool);
     }
 
     ~CoinsViewOverlay() noexcept override { StopFetching(); }
