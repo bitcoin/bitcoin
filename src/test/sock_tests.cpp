@@ -160,10 +160,26 @@ BOOST_AUTO_TEST_CASE(wait_large_timeout)
     TcpSocketPair socks{};
     BOOST_REQUIRE_EQUAL(socks.sender.Send("a", 1, 0), 1);
 
-    // bitcoin-cli uses a 5 year timeout for -rpcclienttimeout=0. The data is already
-    // there, so the wait must succeed right away instead of failing on the timeout value.
+    // Too large for poll() and select(). The data is already there, so the wait
+    // must succeed right away instead of failing on the timeout value.
     Sock::Event occurred{0};
     BOOST_CHECK(socks.receiver.Wait(std::chrono::years{5}, Sock::RecvEvent, &occurred));
+    BOOST_CHECK(occurred & Sock::RecvEvent);
+}
+
+BOOST_AUTO_TEST_CASE(wait_no_timeout)
+{
+    TcpSocketPair socks{};
+
+    Sock::Event occurred{0};
+    bool ok{false};
+    std::thread waiter([&] { ok = socks.receiver.Wait(Sock::NO_TIMEOUT, Sock::RecvEvent, &occurred); });
+
+    std::this_thread::sleep_for(100ms);
+    BOOST_REQUIRE_EQUAL(socks.sender.Send("a", 1, 0), 1);
+
+    waiter.join();
+    BOOST_CHECK(ok);
     BOOST_CHECK(occurred & Sock::RecvEvent);
 }
 
