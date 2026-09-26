@@ -38,7 +38,6 @@
 #include <uint256.h>
 #include <univalue.h>
 #include <util/check.h>
-#include <util/expected.h>
 #include <util/feefrac.h>
 #include <util/fs.h>
 #include <util/moneystr.h>

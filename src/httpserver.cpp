@@ -388,7 +388,7 @@ bool HTTPRequest::LoadControlData(LineReader& reader)
     // NUL is not a valid tchar and would silently truncate
     // C-string-based parsers rather than being rejected as malformed.
     // tchar: https://www.rfc-editor.org/info/rfc7230/#section-3.2.6
-    if (request_line.find('\0') != std::string_view::npos) throw std::runtime_error("Invalid request line contains NUL");
+    if (request_line.contains('\0')) throw std::runtime_error("Invalid request line contains NUL");
 
     const std::vector<std::string_view> parts{Split<std::string_view>(request_line, " ")};
     if (parts.size() != 3) throw std::runtime_error("HTTP request line malformed");

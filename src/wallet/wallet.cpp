@@ -590,7 +590,7 @@ static bool DecryptMasterKey(const SecureString& wallet_passphrase, const CMaste
 static util::Unexpected<WalletError> UnlockPassphraseError(const SecureString& passphrase)
 {
     bilingual_str message;
-    if (passphrase.find('\0') != std::string::npos) {
+    if (passphrase.contains('\0')) {
         // The passphrase has a null character (see #27067 for details)
         message = _("Error: The wallet passphrase entered is incorrect. "
                     "It contains a null character (ie - a zero byte). "

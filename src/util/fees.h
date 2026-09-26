@@ -9,6 +9,7 @@
 #include <util/expected.h>
 #include <util/feefrac.h>
 
+#include <expected>
 #include <string>
 #include <string_view>
 #include <utility>

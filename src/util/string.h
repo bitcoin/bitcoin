@@ -123,7 +123,7 @@ std::vector<T> Split(std::span<const char> sp LIFETIMEBOUND, std::string_view se
     auto it = sp.begin();
     auto start = it;
     while (it != sp.end()) {
-        if (separators.find(*it) != std::string::npos) {
+        if (separators.contains(*it)) {
             if (include_sep) {
                 ret.emplace_back(start, it + 1);
             } else {
