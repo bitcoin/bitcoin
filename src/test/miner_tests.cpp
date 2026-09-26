@@ -382,13 +382,18 @@ void MinerTestingSetup::TestSigOpsAdjustedWeightChunkLimit(const CScript& script
     TryAddToMempool(tx_mempool, sigop_entry);
 
     BlockCreateOptions options{
-        // +1 because TestChunkBlockLimits rejects on >= (exact fit doesn't count).
+        // Keep the adjusted-weight check independent of exact-limit behavior.
         .block_max_weight = DEFAULT_BLOCK_RESERVED_WEIGHT + sigop_entry.GetTxWeight() + 1,
         .coinbase_output_script = scriptPubKey,
     };
     const CBlock block{mining->createNewBlock(options, /*cooldown=*/false)->getBlock()};
-    BOOST_CHECK_EQUAL(block.vtx.size(), 2U);
+    BOOST_CHECK_EQUAL(block.vtx.size(), 2);
     BOOST_CHECK(block.vtx[1]->GetHash() == tx.GetHash());
+
+    options.block_max_weight = DEFAULT_BLOCK_RESERVED_WEIGHT + sigop_entry.GetTxWeight();
+    BOOST_CHECK_EQUAL(mining->createNewBlock(options, /*cooldown=*/false)->getBlock().vtx.size(), 1); // TODO: A chunk that reaches the weight limit should be mined
+    options.block_max_weight = DEFAULT_BLOCK_RESERVED_WEIGHT + sigop_entry.GetTxWeight() - 1;
+    BOOST_CHECK_EQUAL(mining->createNewBlock(options, /*cooldown=*/false)->getBlock().vtx.size(), 1);
 }
 
 void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight)
