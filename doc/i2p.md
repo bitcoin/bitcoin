@@ -83,7 +83,8 @@ generates a persistent I2P address and its corresponding private key by default,
 unless `-i2pacceptincoming=0` is set.  The private key is saved in a file named
 `i2p_private_key` in the Bitcoin Core data directory.  The persistent I2P
 address is used for making outbound connections and accepting inbound
-connections.
+connections, except for `-privatebroadcast` connections (see below), which
+always use a one-time transient address regardless of `-i2pacceptincoming`.
 
 In the I2P network, the receiver of an inbound connection sees the address of
 the initiator. This is unlike the Tor network, where the recipient does not
@@ -97,6 +98,11 @@ fingerprint or analyze it based on its I2P address.
 I2P addresses are designed to be long-lived.  Waiting for tunnels to be built
 for every peer connection adds delay to connection setup time.  Therefore, I2P
 listening should only be turned off if really needed.
+
+Independently of `-i2pacceptincoming`, if `-privatebroadcast` is enabled, each
+connection opened to relay a transaction via this mechanism uses its own
+one-time transient I2P address, even if a persistent I2P address is otherwise
+in use for other connections.
 
 ## Fetching I2P-related information from Bitcoin Core
 
