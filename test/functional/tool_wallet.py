@@ -221,6 +221,9 @@ class ToolWalletTest(BitcoinTestFramework):
         assert_equal(shasum_before, shasum_after)
         self.log.debug('Wallet file shasum unchanged\n')
 
+        self.log.info('Calling wallet tool create on a wallet that already exists, testing error')
+        self.assert_raises_tool_error('Database already exists.', '-wallet=foo', 'create')
+
     def test_getwalletinfo_on_different_wallet(self):
         self.log.info('Starting node with arg -wallet=foo')
         self.start_node(0, ['-nowallet', '-wallet=foo'])
