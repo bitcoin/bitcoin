@@ -10,7 +10,10 @@ from decimal import Decimal
 import random
 import time
 
-from test_framework.blocktools import MAX_STANDARD_TX_WEIGHT
+from test_framework.blocktools import (
+    MAX_STANDARD_TX_WEIGHT,
+    WITNESS_SCALE_FACTOR,
+)
 from test_framework.mempool_util import (
     create_large_orphan,
     DEFAULT_MIN_RELAY_TX_FEE,
@@ -235,6 +238,62 @@ class PackageRelayTest(BitcoinTestFramework):
         assert low_fee_parent["txid"] in node_mempool
         assert high_fee_child["txid"] in node_mempool
         assert med_fee_child["txid"] not in node_mempool
+
+    @cleanup
+    def test_trimmed_package(self):
+        self.log.info("Check that a 1p1c package evicted right after submission can be bumped by another child")
+        node = self.nodes[0]
+        node.setmocktime(int(time.time()))
+        mempoolmin_feerate = node.getmempoolinfo()["mempoolminfee"]
+        worst_feerate_btcvb = min(entry["fees"]["chunk"] * WITNESS_SCALE_FACTOR / entry["chunkweight"] for entry in node.getrawmempool(verbose=True).values())
+        # Large enough to trigger eviction
+        target_vsize_each = 50000
+        assert_greater_than(target_vsize_each * 2, node.getmempoolinfo()["maxmempool"] - node.getmempoolinfo()["usage"])
+        # The parent is just below mempoolminfee. Parent + child are above mempoolminfee but are the
+        # worst chunk once submitted, so they are evicted immediately.
+        low_fee_parent = self.wallet.create_self_transfer(fee_rate=mempoolmin_feerate - Decimal("0.0000001"), target_vsize=target_vsize_each, confirmed_only=True)
+        low_fee_child = self.wallet.create_self_transfer(utxo_to_spend=low_fee_parent["new_utxo"], fee_rate=worst_feerate_btcvb * 1000 - Decimal("0.0000001"), target_vsize=target_vsize_each)
+        package_feerate_btcvb = (low_fee_parent["fee"] + low_fee_child["fee"]) / (low_fee_parent["tx"].get_vsize() + low_fee_child["tx"].get_vsize())
+        assert_greater_than(worst_feerate_btcvb, package_feerate_btcvb)
+        assert_greater_than(package_feerate_btcvb, mempoolmin_feerate / 1000)
+        high_fee_child = self.wallet.create_self_transfer(utxo_to_spend=low_fee_parent["new_utxo"], fee=Decimal("0.01"))
+
+        peer_sender = node.add_outbound_p2p_connection(P2PInterface(), p2p_idx=1, connection_type="outbound-full-relay")
+
+        # 1. Send parent, rejected for being low feerate.
+        parent_wtxid_int = low_fee_parent["tx"].wtxid_int
+        peer_sender.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=parent_wtxid_int)]))
+        peer_sender.wait_for_getdata([parent_wtxid_int])
+        peer_sender.send_and_ping(msg_tx(low_fee_parent["tx"]))
+        assert low_fee_parent["txid"] not in node.getrawmempool()
+
+        # 2. Send the (orphan) child.
+        low_child_wtxid_int = low_fee_child["tx"].wtxid_int
+        peer_sender.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=low_child_wtxid_int)]))
+        peer_sender.wait_for_getdata([low_child_wtxid_int])
+        peer_sender.send_and_ping(msg_tx(low_fee_child["tx"]))
+
+        # 3. The parent + child are submitted as a package, accepted, and then evicted.
+        parent_txid_int = int(low_fee_parent["txid"], 16)
+        node.bumpmocktime(TXID_RELAY_DELAY)
+        peer_sender.wait_for_getdata([parent_txid_int])
+        peer_sender.send_and_ping(msg_tx(low_fee_parent["tx"]))
+        assert low_fee_parent["txid"] not in node.getrawmempool()
+        assert low_fee_child["txid"] not in node.getrawmempool()
+        assert_greater_than(node.getmempoolinfo()["mempoolminfee"], package_feerate_btcvb * 1000)
+
+        # 4. Send a high feerate (orphan) child. The parent is requested and reconsidered with it.
+        high_child_wtxid_int = high_fee_child["tx"].wtxid_int
+        peer_sender.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=high_child_wtxid_int)]))
+        peer_sender.wait_for_getdata([high_child_wtxid_int])
+        peer_sender.send_and_ping(msg_tx(high_fee_child["tx"]))
+        node.bumpmocktime(TXID_RELAY_DELAY)
+        peer_sender.wait_for_getdata([parent_txid_int])
+        peer_sender.send_and_ping(msg_tx(low_fee_parent["tx"]))
+
+        node_mempool = node.getrawmempool()
+        assert low_fee_parent["txid"] in node_mempool
+        assert high_fee_child["txid"] in node_mempool
 
     @cleanup
     def test_orphan_consensus_failure(self):
@@ -641,6 +700,7 @@ class PackageRelayTest(BitcoinTestFramework):
 
         self.test_orphanage_dos_large()
         self.test_orphanage_dos_many()
+        self.test_trimmed_package()
 
 
 if __name__ == '__main__':

@@ -16,6 +16,7 @@
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
+#include <util/translation.h>
 #include <test/util/txmempool.h>
 #include <validation.h>
 
@@ -1235,6 +1236,115 @@ BOOST_AUTO_TEST_CASE(package_rbf_tests)
         LOCK(m_node.mempool->cs);
         BOOST_CHECK(m_node.mempool->GetIter(tx_parent_1->GetHash()).has_value());
         BOOST_CHECK(m_node.mempool->GetIter(tx_child_1->GetHash()).has_value());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(package_trim_tests)
+{
+    mineBlocks(5);
+    LOCK(::cs_main);
+    Chainstate& chainstate{m_node.chainman->ActiveChainstate()};
+    // Package transactions that are in the mempool when AcceptPackage() limits the mempool size at the
+    // end, however they got there, are TX_RECONSIDERABLE if evicted, with the fee information of the
+    // transaction that was evicted. Each case uses a mempool with no room, which evicts everything.
+    const auto make_pool{[&] {
+        CTxMemPool::Options opts{MemPoolOptionsForTest(m_node)};
+        opts.max_size_bytes = 0;
+        bilingual_str error;
+        auto pool{std::make_unique<CTxMemPool>(std::move(opts), error)};
+        BOOST_REQUIRE(error.empty());
+        return pool;
+    }};
+    const auto check_evicted{[](const PackageMempoolAcceptResult& result, const CTransactionRef& tx,
+                                const CFeeRate& effective_feerate, const std::vector<Wtxid>& wtxids_fee_calculations) {
+        const auto& tx_result{result.m_tx_results.at(tx->GetWitnessHash())};
+        BOOST_CHECK_EQUAL(tx_result.m_state.GetResult(), TxValidationResult::TX_RECONSIDERABLE);
+        BOOST_CHECK_EQUAL(tx_result.m_state.GetRejectReason(), "mempool full");
+        BOOST_CHECK(tx_result.m_effective_feerate == effective_feerate);
+        BOOST_CHECK(tx_result.m_wtxids_fee_calculations == wtxids_fee_calculations);
+    }};
+
+    CKey parent_key{GenerateRandomKey()};
+    const CScript parent_spk{GetScriptForDestination(WitnessV0KeyHash(parent_key.GetPubKey()))};
+    const CScript child_spk{GetScriptForDestination(WitnessV0KeyHash(GenerateRandomKey().GetPubKey()))};
+    const CAmount coinbase_value{50 * COIN};
+    const CAmount parent_fee{1000};
+    const CAmount child_fee{2000};
+    const auto make_parent{[&](const CTransactionRef& coinbase, CAmount fee) {
+        return MakeTransactionRef(CreateValidMempoolTransaction(coinbase, /*input_vout=*/0, /*input_height=*/0, coinbaseKey,
+                                                                parent_spk, coinbase_value - fee, /*submit=*/false));
+    }};
+    const auto make_child{[&](const CTransactionRef& parent) {
+        return MakeTransactionRef(CreateValidMempoolTransaction(parent, /*input_vout=*/0, /*input_height=*/101, parent_key,
+                                                                child_spk, parent->vout[0].nValue - child_fee, /*submit=*/false));
+    }};
+    const auto submit{[&](CTxMemPool& pool, const Package& package) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        const auto result{ProcessNewPackage(chainstate, pool, package, /*test_accept=*/false, /*client_maxfeerate=*/{})};
+        if (auto err{CheckPackageMempoolAcceptResult(package, result, /*expect_valid=*/false, &pool)}) {
+            BOOST_ERROR(err.value());
+        }
+        BOOST_CHECK(result.m_state.IsInvalid());
+        BOOST_CHECK_EQUAL(pool.size(), 0);
+        return result;
+    }};
+
+    // Submitted together: the parent pays no fee.
+    {
+        auto pool{make_pool()};
+        const auto tx_parent{make_parent(m_coinbase_txns[0], /*fee=*/0)};
+        const auto tx_child{make_child(tx_parent)};
+        const auto result{submit(*pool, {tx_parent, tx_child})};
+        const CFeeRate package_feerate(child_fee, GetVirtualTransactionSize(*tx_parent) + GetVirtualTransactionSize(*tx_child));
+        check_evicted(result, tx_parent, package_feerate, {tx_parent->GetWitnessHash(), tx_child->GetWitnessHash()});
+        check_evicted(result, tx_child, package_feerate, {tx_parent->GetWitnessHash(), tx_child->GetWitnessHash()});
+    }
+
+    // Accepted by themselves earlier in the same call.
+    {
+        auto pool{make_pool()};
+        const auto tx_parent{make_parent(m_coinbase_txns[1], parent_fee)};
+        const auto tx_child{make_child(tx_parent)};
+        const auto result{submit(*pool, {tx_parent, tx_child})};
+        check_evicted(result, tx_parent, CFeeRate(parent_fee, GetVirtualTransactionSize(*tx_parent)), {tx_parent->GetWitnessHash()});
+        check_evicted(result, tx_child, CFeeRate(child_fee, GetVirtualTransactionSize(*tx_child)), {tx_child->GetWitnessHash()});
+    }
+
+    // The parent was already in the mempool, with a fee delta.
+    {
+        auto pool{make_pool()};
+        const auto tx_parent{make_parent(m_coinbase_txns[2], parent_fee)};
+        TryAddToMempool(*pool, TestMemPoolEntryHelper{}.Fee(parent_fee).Time(Now<NodeSeconds>()).FromTx(tx_parent));
+        const CAmount delta{500};
+        pool->PrioritiseTransaction(tx_parent->GetHash(), delta);
+        const auto tx_child{make_child(tx_parent)};
+        const auto result{submit(*pool, {tx_parent, tx_child})};
+        check_evicted(result, tx_parent, CFeeRate(parent_fee + delta, GetVirtualTransactionSize(*tx_parent)), {tx_parent->GetWitnessHash()});
+        check_evicted(result, tx_child, CFeeRate(child_fee, GetVirtualTransactionSize(*tx_child)), {tx_child->GetWitnessHash()});
+    }
+
+    // A transaction with the parent's txid and a larger witness was already in the mempool. The parent
+    // is reported with the feerate it would have been considered at: the same fee over its own size.
+    {
+        auto pool{make_pool()};
+        const CScript witness_script{CScript() << OP_DROP << OP_TRUE};
+        const auto tx_funding{MakeTransactionRef(CreateValidMempoolTransaction(m_coinbase_txns[3], /*input_vout=*/0, /*input_height=*/0, coinbaseKey,
+                                                                               GetScriptForDestination(WitnessV0ScriptHash(witness_script)),
+                                                                               coinbase_value - parent_fee, /*submit=*/false))};
+        TryAddToMempool(*pool, TestMemPoolEntryHelper{}.Fee(parent_fee).Time(Now<NodeSeconds>()).FromTx(tx_funding));
+        CMutableTransaction mtx_parent;
+        mtx_parent.vin.emplace_back(COutPoint{tx_funding->GetHash(), 0});
+        mtx_parent.vin[0].scriptWitness.stack = {{0x01}, {witness_script.begin(), witness_script.end()}};
+        mtx_parent.vout.emplace_back(tx_funding->vout[0].nValue - parent_fee, parent_spk);
+        const auto tx_parent{MakeTransactionRef(mtx_parent)};
+        mtx_parent.vin[0].scriptWitness.stack[0].assign(100, 0x02);
+        const auto tx_parent_mempool{MakeTransactionRef(mtx_parent)};
+        BOOST_CHECK_EQUAL(tx_parent->GetHash(), tx_parent_mempool->GetHash());
+        BOOST_CHECK_LT(GetVirtualTransactionSize(*tx_parent), GetVirtualTransactionSize(*tx_parent_mempool));
+        TryAddToMempool(*pool, TestMemPoolEntryHelper{}.Fee(parent_fee).Time(Now<NodeSeconds>()).FromTx(tx_parent_mempool));
+        const auto tx_child{make_child(tx_parent)};
+        const auto result{submit(*pool, {tx_parent, tx_child})};
+        check_evicted(result, tx_parent, CFeeRate(parent_fee, GetVirtualTransactionSize(*tx_parent)), {tx_parent->GetWitnessHash()});
+        check_evicted(result, tx_child, CFeeRate(child_fee, GetVirtualTransactionSize(*tx_child)), {tx_child->GetWitnessHash()});
     }
 }
 BOOST_AUTO_TEST_SUITE_END()
