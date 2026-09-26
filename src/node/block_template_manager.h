@@ -6,11 +6,13 @@
 #define BITCOIN_NODE_BLOCK_TEMPLATE_MANAGER_H
 
 #include <node/mining_types.h>
+#include <primitives/transaction_identifier.h>
 #include <util/time.h>
 
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 class CBlock;
 class ChainstateManager;
@@ -24,6 +26,7 @@ struct BlockRef;
 namespace node {
 class KernelNotifications;
 struct CBlockTemplate;
+class TxCollection;
 
 /**
  * Creates block templates, submits solved blocks, and provides tip-waiting
@@ -48,6 +51,9 @@ public:
 
     /** Create a fresh block template, applying init-time defaults to any unset options. */
     std::unique_ptr<CBlockTemplate> CreateNewTemplate(const BlockCreateOptions& options);
+
+    /** Create a client-owned collection of transactions in the requested order. */
+    std::unique_ptr<TxCollection> CreateTxCollection(std::vector<Wtxid> wtxids);
 
     /** Submit a block via ProcessNewBlock and capture validation state.
      *  @return whether the block was accepted as a new valid block. */
