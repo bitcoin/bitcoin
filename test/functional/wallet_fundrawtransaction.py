@@ -16,6 +16,7 @@ from test_framework.messages import (
     COIN,
     CTransaction,
     CTxOut,
+    MAX_MONEY,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -159,8 +160,26 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_feerate_rounding()
         self.test_input_confs_control()
         self.test_duplicate_outputs()
+        self.test_outputs_above_max_money()
         self.test_watchonly_cannot_grind_r()
         self.test_cannot_cover_fees()
+
+    def test_outputs_above_max_money(self):
+        self.log.info("Test funding a transaction whose outputs exceed MAX_MONEY")
+        spk = bytearray(address_to_scriptpubkey(self.nodes[0].getnewaddress()))
+        err = "Transaction amounts exceed the maximum money supply"
+
+        tx = CTransaction()
+        tx.vout = [CTxOut(MAX_MONEY + 1, spk)]
+        assert_raises_rpc_error(-4, err, self.nodes[0].fundrawtransaction, tx.serialize().hex())
+
+        # Each output is valid on its own, but the sum is above MAX_MONEY
+        tx.vout = [CTxOut(MAX_MONEY, spk), CTxOut(1, spk)]
+        assert_raises_rpc_error(-4, err, self.nodes[0].fundrawtransaction, tx.serialize().hex())
+
+        # The sum overflows int64
+        tx.vout = [CTxOut(2**62, spk)] * 2
+        assert_raises_rpc_error(-4, err, self.nodes[0].fundrawtransaction, tx.serialize().hex())
 
     def test_duplicate_outputs(self):
         self.log.info("Test deserializing and funding a transaction with duplicate outputs")
