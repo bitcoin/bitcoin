@@ -24,6 +24,7 @@ add_executable(test_bitcoin
   blockencodings_tests.cpp
   blockfilter_index_tests.cpp
   blockfilter_tests.cpp
+  cfilter_race_tests.cpp
   blockmanager_tests.cpp
   blockpolicyestimator_tests.cpp
   bloom_tests.cpp
