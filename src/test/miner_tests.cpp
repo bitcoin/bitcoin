@@ -397,7 +397,7 @@ void MinerTestingSetup::TestChunkLimits(const CScript& scriptPubKey, const std::
 
     options.block_max_weight = MAX_BLOCK_WEIGHT;
     options.coinbase_output_max_additional_sigops = MAX_BLOCK_SIGOPS_COST - sigop_entry.GetSigOpCost();
-    BOOST_CHECK_EQUAL(mining->createNewBlock(options, /*cooldown=*/false)->getBlock().vtx.size(), 1); // TODO: A chunk that reaches the sigops limit should be mined
+    BOOST_CHECK_EQUAL(mining->createNewBlock(options, /*cooldown=*/false)->getBlock().vtx.size(), 2);
     options.coinbase_output_max_additional_sigops = MAX_BLOCK_SIGOPS_COST - sigop_entry.GetSigOpCost() + 1;
     BOOST_CHECK_EQUAL(mining->createNewBlock(options, /*cooldown=*/false)->getBlock().vtx.size(), 1);
 }
