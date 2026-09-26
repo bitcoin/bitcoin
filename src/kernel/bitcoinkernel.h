@@ -417,6 +417,7 @@ typedef uint32_t btck_BlockValidationResult;
 #define btck_BlockValidationResult_INVALID_PREV ((btck_BlockValidationResult)(6))    //!< A block this one builds on is invalid
 #define btck_BlockValidationResult_TIME_FUTURE ((btck_BlockValidationResult)(7))     //!< block timestamp was > 2 hours in the future (or our clock is bad)
 #define btck_BlockValidationResult_HEADER_LOW_WORK ((btck_BlockValidationResult)(8)) //!< the block header may be on a too-little-work chain
+#define btck_BlockValidationResult_INCONCLUSIVE ((btck_BlockValidationResult)(9))    //!< validity could not be determined
 
 /**
  * Indicates the reason why a transaction failed validation. The subset of
