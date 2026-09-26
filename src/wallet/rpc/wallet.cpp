@@ -700,7 +700,6 @@ RPCMethod gethdkeys()
             std::map<CExtPubKey, CExtKey> wallet_xprvs;
             for (const auto& [xpub, spkms] : wallet->GetHDPubKeys(active_only ? HDKeyFilter::Active : HDKeyFilter::All)) {
                 for (auto* desc_spkm : spkms) {
-                    LOCK(desc_spkm->cs_desc_man);
                     std::string desc_str;
                     bool ok = desc_spkm->GetDescriptorString(desc_str, /*priv=*/false);
                     CHECK_NONFATAL(ok);
