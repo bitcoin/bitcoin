@@ -162,8 +162,15 @@ public:
     static constexpr Event ErrorEvent = 0b100;
 
     /**
+     * If passed as `timeout` to `Wait()` or `WaitMany()`, then they will block until one of
+     * the requested events occurs, without a time limit.
+     */
+    static constexpr std::chrono::milliseconds NO_TIMEOUT{std::chrono::milliseconds::max()};
+
+    /**
      * Wait for readiness for input (recv) or output (send).
-     * @param[in] timeout Wait this much for at least one of the requested events to occur.
+     * @param[in] timeout Wait this much for at least one of the requested events to occur,
+     * or `NO_TIMEOUT` to wait without a time limit.
      * @param[in] requested Wait for those events, bitwise-or of `RecvEvent` and `SendEvent`.
      * @param[out] occurred If not nullptr and the function returns `true`, then this
      * indicates which of the requested events occurred (`ErrorEvent` will be added, even if

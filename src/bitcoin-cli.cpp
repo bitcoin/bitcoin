@@ -848,13 +848,20 @@ private:
 
     std::unique_ptr<Sock> m_socket;
     std::string m_host;
-    std::chrono::seconds m_timeout;
+    std::chrono::seconds m_timeout; //!< 0 means no timeout
 
     HTTPClient(std::unique_ptr<Sock>&& socket, const std::string& host, std::chrono::seconds timeout)
         : m_socket(std::move(socket)), m_host(host), m_timeout(timeout) {}
     bool SendRequest(std::string_view request);
     HTTPResponse ReadResponse();
     std::optional<std::string> Recv(std::chrono::time_point<std::chrono::steady_clock> deadline);
+
+    //! Time left until `deadline`, or Sock::NO_TIMEOUT if `timeout` is 0.
+    static std::chrono::milliseconds TimeLeft(std::chrono::seconds timeout, std::chrono::time_point<std::chrono::steady_clock> deadline)
+    {
+        if (timeout == 0s) return Sock::NO_TIMEOUT;
+        return std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::steady_clock::now());
+    }
 };
 
 HTTPClient HTTPClient::Connect(const std::string& host, uint16_t port, std::chrono::seconds timeout)
@@ -866,7 +873,7 @@ HTTPClient HTTPClient::Connect(const std::string& host, uint16_t port, std::chro
 
     const auto deadline{std::chrono::steady_clock::now() + timeout};
     for (const CService& service : services) {
-        const auto time_left{std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::steady_clock::now())};
+        const auto time_left{TimeLeft(timeout, deadline)};
         if (time_left.count() <= 0) break;
 
         auto sock = ConnectDirectly(service, /*manual_connection=*/true, time_left);
@@ -910,8 +917,7 @@ bool HTTPClient::SendRequest(std::string_view request)
 
     while (!request.empty()) {
         Sock::Event event{0};
-        auto time_left = std::chrono::duration_cast<std::chrono::milliseconds>(
-            deadline - std::chrono::steady_clock::now());
+        auto time_left = TimeLeft(m_timeout, deadline);
         if (time_left.count() <= 0 || !m_socket->Wait(time_left, Sock::SendEvent, &event)) {
             return false;
         }
@@ -1128,8 +1134,7 @@ std::optional<std::string> HTTPClient::Recv(const std::chrono::time_point<std::c
         return (event & Sock::RecvEvent) != 0;
     }};
 
-    auto time_left = std::chrono::duration_cast<std::chrono::milliseconds>(
-        deadline - std::chrono::steady_clock::now());
+    auto time_left = TimeLeft(m_timeout, deadline);
     if (time_left.count() <= 0 || !wait_for_readable(time_left)) {
         throw CConnectionFailed{"timeout"};
     }
@@ -1198,13 +1203,8 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
 
     // Set connection timeout
     const int timeout = gArgs.GetIntArg("-rpcclienttimeout", DEFAULT_HTTP_CLIENT_TIMEOUT);
-    std::chrono::seconds timeout_duration;
-    if (timeout > 0) {
-        timeout_duration = std::chrono::seconds(timeout);
-    } else {
-        // Use 5 year timeout for "indefinite"
-        timeout_duration = std::chrono::years(5);
-    }
+    // 0 (or a negative value) means no timeout
+    const std::chrono::seconds timeout_duration{std::max(timeout, 0)};
 
     // Get credentials
     std::string rpc_credentials;

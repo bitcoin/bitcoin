@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <compare>
 #include <exception>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -162,6 +163,14 @@ bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occur
 
 bool Sock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const
 {
+    // NO_TIMEOUT is passed as -1 to poll() and as a null pointer to select().
+    const bool no_timeout{timeout == NO_TIMEOUT};
+
+    // poll() takes the timeout as an int, and select() fails with EINVAL on some systems
+    // (e.g. macOS) for timeouts above 10^8 seconds. POSIX only requires select() to accept
+    // up to 31 days, so cap the timeout at INT_MAX milliseconds (about 24.8 days).
+    timeout = std::min(timeout, std::chrono::milliseconds{std::numeric_limits<int>::max()});
+
 #ifdef USE_POLL
     std::vector<pollfd> pfds;
     for (const auto& [sock, events] : events_per_sock) {
@@ -176,7 +185,7 @@ bool Sock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per
         }
     }
 
-    if (poll(pfds.data(), pfds.size(), count_milliseconds(timeout)) == SOCKET_ERROR) {
+    if (poll(pfds.data(), pfds.size(), no_timeout ? -1 : count_milliseconds(timeout)) == SOCKET_ERROR) {
         return false;
     }
 
@@ -224,7 +233,7 @@ bool Sock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per
 
     timeval tv = MillisToTimeval(timeout);
 
-    if (select(socket_max + 1, &recv, &send, &err, &tv) == SOCKET_ERROR) {
+    if (select(socket_max + 1, &recv, &send, &err, no_timeout ? nullptr : &tv) == SOCKET_ERROR) {
         return false;
     }
 
