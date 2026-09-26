@@ -206,7 +206,7 @@ BASE_SCRIPTS = [
     'p2p_block_times.py',
     'wallet_createwallet.py --usecli',
     'wallet_createwallet.py',
-    'wallet_reindex.py',
+    'wallet_birthtime.py',
     'wallet_reorgsrestore.py',
     'interface_http.py',
     'interface_rpc.py',
