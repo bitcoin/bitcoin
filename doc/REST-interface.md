@@ -38,7 +38,7 @@ Supported API
 `GET /rest/tx/<TX-HASH>.<bin|hex|json>`
 
 Given a transaction hash: returns a transaction in binary, hex-encoded binary, or JSON formats.
-Responds with 404 if the transaction doesn't exist.
+Responds with 404 if the transaction doesn't exist or is in a block which has been pruned.
 
 By default, this endpoint will only search the mempool.
 To query for a confirmed transaction, enable the transaction index via "txindex=1" command line / configuration option.

@@ -17,6 +17,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -31,7 +32,15 @@ struct IndexSummary {
     std::string name;
     bool synced{false};
     int best_block_height{0};
+    int32_t first_block_height{0};
     uint256 best_block_hash;
+};
+
+/** Whether an index may run under block pruning, and how much history it requires. */
+enum class IndexPrunePolicy : uint8_t {
+    Disallowed,     //!< Cannot run when pruning is enabled.
+    FullHistory,    //!< May run pruned, but must sync from genesis.
+    PartialHistory, //!< May run pruned and start from the earliest unpruned block.
 };
 namespace interfaces {
 struct BlockRef;
@@ -91,6 +100,9 @@ private:
     /// The last block in the chain that the index is in sync with.
     std::atomic<const CBlockIndex*> m_best_block_index{nullptr};
 
+    /// The initial sync starting height. May be non-zero only if IndexPrunePolicy is PartialHistory.
+    std::atomic<int32_t> m_first_block_height{0};
+
     std::thread m_thread_sync;
     CThreadInterrupt m_interrupt;
 
@@ -105,7 +117,7 @@ private:
 
     bool ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data = nullptr);
 
-    virtual bool AllowPrune() const = 0;
+    virtual IndexPrunePolicy GetPrunePolicy() const = 0;
 
     template <typename... Args>
     void FatalErrorf(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args);
