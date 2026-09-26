@@ -880,6 +880,33 @@ class PSBTTest(BitcoinTestFramework):
         # Load the default wallet back for later test cases.
         self.nodes[0].loadwallet(self.default_wallet_name)
 
+    def test_finalizepsbt_invalid_final_witness(self):
+        self.log.info("Test finalizepsbt does not report an input with an invalid final scriptwitness as complete")
+        wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+        addr = wallet.getnewaddress(address_type="bech32")
+        txid = wallet.sendtoaddress(addr, 1)
+        self.generate(self.nodes[0], 1)
+        utxo = [u for u in wallet.listunspent() if u["txid"] == txid and u["address"] == addr][0]
+        psbt = wallet.createpsbt([utxo], [{wallet.getnewaddress(): 0.99}], psbt_version=0)
+        signed = wallet.walletprocesspsbt(psbt=psbt, finalize=True)
+        assert_equal(signed["complete"], True)
+        assert_equal(self.nodes[0].finalizepsbt(signed["psbt"])["complete"], True)
+
+        # The segwit v0 input keeps its non_witness_utxo, so the finalizer relies on the final fields alone.
+        flawed_psbt = PSBT.from_base64(signed["psbt"])
+        valid_witness = flawed_psbt.i[0].map[PSBT_IN_FINAL_SCRIPTWITNESS]
+        # P2WPKH witness: [0x02] [sig_len] [signature] [0x21] [pubkey]
+        assert_equal(valid_witness[0], 2)
+        sig_len = valid_witness[1]
+        signature = valid_witness[2:2 + sig_len]
+        flawed_psbt.i[0].map[PSBT_IN_FINAL_SCRIPTWITNESS] = valid_witness[:2] + bitflipper(signature) + valid_witness[2 + sig_len:]
+        invalid_sig_psbt = flawed_psbt.to_base64()
+
+        assert_equal(self.nodes[0].analyzepsbt(invalid_sig_psbt)["inputs"][0]["is_final"], False)
+        result = self.nodes[0].finalizepsbt(invalid_sig_psbt)
+        assert_equal(result["complete"], False)
+        assert_equal("hex" in result, False)
+
     def run_test(self):
         # Create and fund a raw tx for sending 10 BTC
         psbtx1 = self.nodes[0].walletcreatefundedpsbt([], {self.nodes[2].getnewaddress():10})['psbt']
@@ -1821,6 +1848,7 @@ class PSBTTest(BitcoinTestFramework):
         self.test_psbt_named_parameter_handling()
         self.test_psbt_roundtrip()
         self.test_psbt_version()
+        self.test_finalizepsbt_invalid_final_witness()
         self.test_psbt_with_invalid_signature()
         self.test_musig2_untrusted_derivation()
 
