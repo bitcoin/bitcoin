@@ -266,7 +266,7 @@ static std::string LogCategoryToStr(BCLog::LogFlags category)
     return it->second;
 }
 
-static std::optional<BCLog::Level> GetLogLevel(std::string_view level_str)
+std::optional<BCLog::Level> BCLog::Logger::GetLogLevel(std::string_view level_str)
 {
     if (level_str == "trace") {
         return BCLog::Level::Trace;
@@ -288,7 +288,19 @@ std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
     std::vector<LogCategory> ret;
     ret.reserve(LOG_CATEGORIES_BY_STR.size());
     for (const auto& [category, flag] : LOG_CATEGORIES_BY_STR) {
-        ret.push_back(LogCategory{.category = category, .active = WillLogCategory(flag)});
+        auto level = WillLogCategoryLevel(flag, BCLog::Level::Trace) ? BCLog::Level::Trace :
+                     WillLogCategoryLevel(flag, BCLog::Level::Debug) ? BCLog::Level::Debug : BCLog::Level::Info;
+        ret.push_back(LogCategory{.category = category, .level = level});
+    }
+    return ret;
+}
+
+std::string BCLog::Logger::LogCategoriesString()
+{
+    std::string ret;
+    for (const auto& [category, flag] : LOG_CATEGORIES_BY_STR) {
+        if (!ret.empty()) ret += ", ";
+        ret += category;
     }
     return ret;
 }
