@@ -394,6 +394,18 @@ BOOST_AUTO_TEST_CASE(addrman_new_multiplicity)
     BOOST_CHECK_EQUAL(addr_pos.multiplicity, 1U);
     BOOST_CHECK_EQUAL(addrman->Size(), 1U);
 
+    // the same holds if a time penalty is applied (e.g. when the same announcement
+    // is received from several peers due to addr gossip relay)
+    CAddress addr_penalty{CAddress(ResolveService("253.4.4.4", 8333), NODE_NONE)};
+    addr_penalty.nTime = start_time;
+    for (unsigned int i = 1; i < 20; ++i) {
+        CNetAddr source{ResolveIP(ToString(i) + ".2.2.2")};
+        addrman->Add({addr_penalty}, source, /*time_penalty=*/2h);
+    }
+    AddressPosition addr_pos_penalty = addrman->FindAddressEntry(addr_penalty).value();
+    BOOST_CHECK_EQUAL(addr_pos_penalty.multiplicity, 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(), 2U);
+
     // if nTime increases, an addr can occur in up to 8 buckets
     // The acceptance probability decreases exponentially with existing multiplicity -
     // choose number of iterations such that it gets to 8 with deterministic addrman.
@@ -406,7 +418,7 @@ BOOST_AUTO_TEST_CASE(addrman_new_multiplicity)
     AddressPosition addr_pos_multi = addrman->FindAddressEntry(addr).value();
     BOOST_CHECK_EQUAL(addr_pos_multi.multiplicity, 8U);
     // multiplicity doesn't affect size
-    BOOST_CHECK_EQUAL(addrman->Size(), 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(), 2U);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_tried_collisions)
