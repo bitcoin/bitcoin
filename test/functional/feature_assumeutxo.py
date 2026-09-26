@@ -88,7 +88,7 @@ class AssumeutxoTest(BitcoinTestFramework):
             assert_raises_rpc_error(-32603, f"Unable to load UTXO snapshot: Population failed: {msg}", node.loadtxoutset, bad_snapshot_path)
 
         self.log.info("  - snapshot file with invalid file magic")
-        parsing_error_code = -22
+        parsing_error_code = -32603
         bad_magic = 0xf00f00f000
         with open(bad_snapshot_path, 'wb') as f:
             f.write(bad_magic.to_bytes(5, "big") + valid_snapshot_contents[5:])
@@ -211,7 +211,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.log.info("Test bitcoind should fail when file path is invalid.")
         node = self.nodes[0]
         path = node.datadir_path / node.chain / "invalid" / "path"
-        assert_raises_rpc_error(-8, "Couldn't open file {} for reading.".format(path), node.loadtxoutset, path)
+        assert_raises_rpc_error(-32603, "Couldn't open file {} for reading.".format(path), node.loadtxoutset, path)
 
     def test_snapshot_with_less_work(self, dump_output_path):
         self.log.info("Test bitcoind should fail when snapshot has less accumulated work than this node.")
