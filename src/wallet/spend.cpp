@@ -1460,6 +1460,15 @@ util::Result<CreatedTransactionResult> CreateTransaction(
         return util::Error{_("Transaction amounts must not be negative")};
     }
 
+    // Each amount and the running sum stay within MoneyRange, so the sum can't overflow.
+    CAmount recipients_sum{0};
+    for (const auto& recipient : vecSend) {
+        if (!MoneyRange(recipient.nAmount) || !MoneyRange(recipients_sum + recipient.nAmount)) {
+            return util::Error{_("Transaction amounts exceed the maximum money supply")};
+        }
+        recipients_sum += recipient.nAmount;
+    }
+
     LOCK(wallet.cs_wallet);
 
     auto res = CreateTransactionInternal(wallet, vecSend, change_pos, coin_control, sign);
