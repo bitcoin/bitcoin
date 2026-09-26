@@ -24,8 +24,8 @@
 
 #include <algorithm>
 #include <iterator>
-#include <numeric>
 #include <optional>
+#include <ranges>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -299,20 +299,16 @@ void MemPoolFeeRateEstimator::MempoolTxsRemovedForBlock(const std::shared_ptr<co
 {
     LOCK(cs);
     Assert(!block->vtx.empty());
-    // Accumulate total block weight and removed mempool tx weight, both excluding the coinbase.
-    const auto get_tx_weight = [](const CTransactionRef& tx) {
-        return static_cast<uint64_t>(GetTransactionWeight(*tx));
-    };
-    // Skip vtx[0], which is the coinbase.
-    const uint64_t block_weight = std::accumulate(std::next(block->vtx.begin()), block->vtx.end(), uint64_t{0},
-                                                  [&](uint64_t acc, const CTransactionRef& tx) {
-                                                      return acc + get_tx_weight(tx);
-                                                  });
-    const uint64_t removed_weight = std::accumulate(
-        txs_removed_for_block.begin(), txs_removed_for_block.end(), uint64_t{0},
-        [&](uint64_t acc, const RemovedMempoolTransactionInfo& tx) {
-            return acc + get_tx_weight(tx.info.m_tx);
-        });
+    auto removed_it{txs_removed_for_block.begin()}; // removeForBlock returns entries in block order
+    uint64_t block_weight{0}, removed_weight{0};
+    for (const auto& tx : block->vtx | std::views::drop(1)) { // Skip coinbase
+        const auto tx_weight{GetTransactionWeight(*tx)};
+        block_weight += tx_weight;
+        if (removed_it != txs_removed_for_block.end() && tx->GetHash() == removed_it->info.m_tx->GetHash()) {
+            removed_weight += tx_weight;
+            ++removed_it;
+        }
+    }
     AddMinedBlockStats(m_prev_mined_blocks, {block_height, removed_weight, block_weight});
     m_mined_blocks_tip_hash = block->GetHash();
     m_cache.Clear();
