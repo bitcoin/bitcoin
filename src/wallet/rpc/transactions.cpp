@@ -581,7 +581,7 @@ RPCMethod listtransactions()
         {
             CWalletTx *const pwtx = (*it).second;
             ListTransactions(*pwallet, *pwtx, 0, true, ret, filter_label);
-            if ((int)ret.size() >= (nCount+nFrom)) break;
+            if (int64_t(ret.size()) >= int64_t{nCount} + nFrom) break;
         }
     }
 
@@ -589,7 +589,7 @@ RPCMethod listtransactions()
 
     if (nFrom > (int)ret.size())
         nFrom = ret.size();
-    if ((nFrom + nCount) > (int)ret.size())
+    if (int64_t{nFrom} + nCount > int64_t(ret.size()))
         nCount = ret.size() - nFrom;
 
     auto txs_rev_it{std::make_move_iterator(ret.rend())};

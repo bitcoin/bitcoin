@@ -190,6 +190,13 @@ class ListTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Negative count", self.nodes[0].listtransactions, count=-1)
         assert_raises_rpc_error(-8, "Negative from", self.nodes[0].listtransactions, skip=-1)
 
+        self.log.info("Test listtransactions with count + skip above INT_MAX")
+        INT_MAX = 2**31 - 1
+        all_but_newest = self.nodes[0].listtransactions(count=1000000, skip=1)
+        assert_equal(self.nodes[0].listtransactions(count=INT_MAX, skip=1), all_but_newest)
+        assert_equal(self.nodes[0].listtransactions(count=INT_MAX, skip=INT_MAX), [])
+        assert_equal(self.nodes[0].listtransactions(count=1, skip=INT_MAX), [])
+
     def test_op_return(self):
         """Test if OP_RETURN outputs will be displayed correctly."""
         raw_tx = self.nodes[0].createrawtransaction([], [{'data': 'aa'}])
