@@ -34,7 +34,6 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/check.h>
-#include <util/task_runner.h>
 #include <util/time.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -48,7 +47,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <thread>
 #include <utility>
 #include <vector>
 
@@ -104,27 +102,19 @@ public:
 };
 
 
-//! Used to run tasks in a std::thread to avoid DEBUG_LOCKORDER false positives.
-class ImmediateBackgroundTaskRunner : public util::TaskRunnerInterface
-{
-public:
-    void insert(std::function<void()> func) override { std::thread(std::move(func)).join(); }
-    void flush() override {}
-    size_t size() override { return 0; }
-};
-
 } // namespace
 
 extern void MakeRandDeterministicDANGEROUS(const uint256& seed) noexcept;
 
 void initialize_cmpctblock()
 {
+    FakeNodeClock init_clock{}; // Uses the existing mock time
     static const auto testing_setup = MakeNoLogFileContext<TestingSetup>();
     g_setup = testing_setup.get();
     g_nBits = Params().GenesisBlock().nBits;
     // Replace validation_signals before creating chainman and mempool so they use it.
     testing_setup->m_node.validation_signals = std::make_unique<ValidationSignals>(std::make_unique<ImmediateBackgroundTaskRunner>());
-    g_mature_coinbase = ResetChainmanAndMempool(*g_setup);
+    g_mature_coinbase = ResetChainmanAndMempool(*g_setup, init_clock);
 }
 
 FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
@@ -132,10 +122,12 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
-    GetFakeNodeClock().set(1610000000s);
+    FakeNodeClock node_clock{1610000000s}; // 2021-01-07, arbitrary
     FakeSteadyClock steady_clock;
 
     auto setup = g_setup;
+    auto& connman = *static_cast<ConnmanTestMsg*>(setup->m_node.connman.get());
+    connman.Reset();
     auto& mempool = *setup->m_node.mempool;
     auto& chainman = static_cast<TestChainstateManager&>(*setup->m_node.chainman);
     chainman.ResetIbd();
@@ -143,7 +135,6 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
     const size_t initial_index_size{WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())};
 
     AddrMan addrman{*setup->m_node.netgroupman, /*deterministic=*/true, /*consistency_check_ratio=*/0};
-    auto& connman = *static_cast<ConnmanTestMsg*>(setup->m_node.connman.get());
     auto peerman = PeerManager::make(connman, addrman,
                                      /*banman=*/nullptr, chainman,
                                      mempool, *setup->m_node.warnings,
@@ -422,10 +413,10 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
             [&]() {
                 // Set mock time randomly or to tip's time.
                 if (fuzzed_data_provider.ConsumeBool()) {
-                    GetFakeNodeClock().set(ConsumeTime(fuzzed_data_provider));
+                    node_clock.set(ConsumeTime(fuzzed_data_provider));
                 } else {
                     const NodeSeconds tip_time = WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()->Time());
-                    GetFakeNodeClock().set(tip_time);
+                    node_clock.set(tip_time);
                 }
 
                 sent_net_msg = false;
@@ -478,6 +469,6 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
 
     if (initial_index_size != end_index_size || initial_sequence != end_sequence) {
         MakeRandDeterministicDANGEROUS(uint256::ZERO);
-        g_mature_coinbase = ResetChainmanAndMempool(*g_setup);
+        g_mature_coinbase = ResetChainmanAndMempool(*g_setup, node_clock);
     }
 }

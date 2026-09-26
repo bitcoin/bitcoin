@@ -21,8 +21,8 @@
 class CChainParams;
 class ValidationSignals;
 
-static constexpr auto DEFAULT_MAX_TIP_AGE{24h};
-static constexpr int32_t DEFAULT_PREVOUTFETCH_THREADS{8};
+inline constexpr auto DEFAULT_MAX_TIP_AGE{24h};
+inline constexpr int32_t DEFAULT_PREVOUTFETCH_THREADS{8};
 
 namespace kernel {
 

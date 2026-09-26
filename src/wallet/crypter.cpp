@@ -12,7 +12,7 @@
 #include <vector>
 
 namespace wallet {
-int CCrypter::BytesToKeySHA512AES(const std::span<const unsigned char> salt, const SecureString& key_data, int count, unsigned char* key, unsigned char* iv) const
+int CCrypter::BytesToKeySHA512AES(const std::span<const unsigned char> salt, const SecureString& key_data, unsigned int count, unsigned char* key, unsigned char* iv) const
 {
     // This mimics the behavior of openssl's EVP_BytesToKey with an aes256cbc
     // cipher and sha512 message digest. Because sha512's output size (64b) is
@@ -29,7 +29,7 @@ int CCrypter::BytesToKeySHA512AES(const std::span<const unsigned char> salt, con
     di.Write(salt.data(), salt.size());
     di.Finalize(buf);
 
-    for(int i = 0; i != count - 1; i++)
+    for (unsigned int i = 0; i != count - 1; ++i)
         di.Reset().Write(buf, sizeof(buf)).Finalize(buf);
 
     memcpy(key, buf, WALLET_CRYPTO_KEY_SIZE);
@@ -40,7 +40,7 @@ int CCrypter::BytesToKeySHA512AES(const std::span<const unsigned char> salt, con
 
 bool CCrypter::SetKeyFromPassphrase(const SecureString& key_data, const std::span<const unsigned char> salt, const unsigned int rounds, const unsigned int derivation_method)
 {
-    if (rounds < 1 || salt.size() != WALLET_CRYPTO_SALT_SIZE) {
+    if (!rounds || salt.size() != WALLET_CRYPTO_SALT_SIZE) {
         return false;
     }
 

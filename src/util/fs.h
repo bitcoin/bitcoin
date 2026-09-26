@@ -5,9 +5,7 @@
 #ifndef BITCOIN_UTIL_FS_H
 #define BITCOIN_UTIL_FS_H
 
-// IWYU incorrectly suggests removing this header.
-// See https://github.com/include-what-you-use/include-what-you-use/issues/1931.
-#include <tinyformat.h> // IWYU pragma: keep
+#include <tinyformat.h>
 
 #include <cstdio>
 // The `util/fs.h` header is designed to be a drop-in replacement for `filesystem`.

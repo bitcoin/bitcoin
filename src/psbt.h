@@ -18,6 +18,7 @@
 #include <streams.h>
 #include <uint256.h>
 #include <util/result.h>
+#include <util/expected.h>
 
 #include <optional>
 #include <bitset>
@@ -29,71 +30,71 @@ enum class TransactionError;
 using common::PSBTError;
 
 // Magic bytes
-static constexpr uint8_t PSBT_MAGIC_BYTES[5] = {'p', 's', 'b', 't', 0xff};
+inline constexpr uint8_t PSBT_MAGIC_BYTES[5] = {'p', 's', 'b', 't', 0xff};
 
 // Global types
-static constexpr uint8_t PSBT_GLOBAL_UNSIGNED_TX = 0x00;
-static constexpr uint8_t PSBT_GLOBAL_XPUB = 0x01;
-static constexpr uint8_t PSBT_GLOBAL_TX_VERSION = 0x02;
-static constexpr uint8_t PSBT_GLOBAL_FALLBACK_LOCKTIME = 0x03;
-static constexpr uint8_t PSBT_GLOBAL_INPUT_COUNT = 0x04;
-static constexpr uint8_t PSBT_GLOBAL_OUTPUT_COUNT = 0x05;
-static constexpr uint8_t PSBT_GLOBAL_TX_MODIFIABLE = 0x06;
-static constexpr uint8_t PSBT_GLOBAL_VERSION = 0xFB;
-static constexpr uint8_t PSBT_GLOBAL_PROPRIETARY = 0xFC;
+inline constexpr uint8_t PSBT_GLOBAL_UNSIGNED_TX = 0x00;
+inline constexpr uint8_t PSBT_GLOBAL_XPUB = 0x01;
+inline constexpr uint8_t PSBT_GLOBAL_TX_VERSION = 0x02;
+inline constexpr uint8_t PSBT_GLOBAL_FALLBACK_LOCKTIME = 0x03;
+inline constexpr uint8_t PSBT_GLOBAL_INPUT_COUNT = 0x04;
+inline constexpr uint8_t PSBT_GLOBAL_OUTPUT_COUNT = 0x05;
+inline constexpr uint8_t PSBT_GLOBAL_TX_MODIFIABLE = 0x06;
+inline constexpr uint8_t PSBT_GLOBAL_VERSION = 0xFB;
+inline constexpr uint8_t PSBT_GLOBAL_PROPRIETARY = 0xFC;
 
 // Input types
-static constexpr uint8_t PSBT_IN_NON_WITNESS_UTXO = 0x00;
-static constexpr uint8_t PSBT_IN_WITNESS_UTXO = 0x01;
-static constexpr uint8_t PSBT_IN_PARTIAL_SIG = 0x02;
-static constexpr uint8_t PSBT_IN_SIGHASH = 0x03;
-static constexpr uint8_t PSBT_IN_REDEEMSCRIPT = 0x04;
-static constexpr uint8_t PSBT_IN_WITNESSSCRIPT = 0x05;
-static constexpr uint8_t PSBT_IN_BIP32_DERIVATION = 0x06;
-static constexpr uint8_t PSBT_IN_SCRIPTSIG = 0x07;
-static constexpr uint8_t PSBT_IN_SCRIPTWITNESS = 0x08;
-static constexpr uint8_t PSBT_IN_RIPEMD160 = 0x0A;
-static constexpr uint8_t PSBT_IN_SHA256 = 0x0B;
-static constexpr uint8_t PSBT_IN_HASH160 = 0x0C;
-static constexpr uint8_t PSBT_IN_HASH256 = 0x0D;
-static constexpr uint8_t PSBT_IN_PREVIOUS_TXID = 0x0e;
-static constexpr uint8_t PSBT_IN_OUTPUT_INDEX = 0x0f;
-static constexpr uint8_t PSBT_IN_SEQUENCE = 0x10;
-static constexpr uint8_t PSBT_IN_REQUIRED_TIME_LOCKTIME = 0x11;
-static constexpr uint8_t PSBT_IN_REQUIRED_HEIGHT_LOCKTIME = 0x12;
-static constexpr uint8_t PSBT_IN_TAP_KEY_SIG = 0x13;
-static constexpr uint8_t PSBT_IN_TAP_SCRIPT_SIG = 0x14;
-static constexpr uint8_t PSBT_IN_TAP_LEAF_SCRIPT = 0x15;
-static constexpr uint8_t PSBT_IN_TAP_BIP32_DERIVATION = 0x16;
-static constexpr uint8_t PSBT_IN_TAP_INTERNAL_KEY = 0x17;
-static constexpr uint8_t PSBT_IN_TAP_MERKLE_ROOT = 0x18;
-static constexpr uint8_t PSBT_IN_MUSIG2_PARTICIPANT_PUBKEYS = 0x1a;
-static constexpr uint8_t PSBT_IN_MUSIG2_PUB_NONCE = 0x1b;
-static constexpr uint8_t PSBT_IN_MUSIG2_PARTIAL_SIG = 0x1c;
-static constexpr uint8_t PSBT_IN_PROPRIETARY = 0xFC;
+inline constexpr uint8_t PSBT_IN_NON_WITNESS_UTXO = 0x00;
+inline constexpr uint8_t PSBT_IN_WITNESS_UTXO = 0x01;
+inline constexpr uint8_t PSBT_IN_PARTIAL_SIG = 0x02;
+inline constexpr uint8_t PSBT_IN_SIGHASH = 0x03;
+inline constexpr uint8_t PSBT_IN_REDEEMSCRIPT = 0x04;
+inline constexpr uint8_t PSBT_IN_WITNESSSCRIPT = 0x05;
+inline constexpr uint8_t PSBT_IN_BIP32_DERIVATION = 0x06;
+inline constexpr uint8_t PSBT_IN_SCRIPTSIG = 0x07;
+inline constexpr uint8_t PSBT_IN_SCRIPTWITNESS = 0x08;
+inline constexpr uint8_t PSBT_IN_RIPEMD160 = 0x0A;
+inline constexpr uint8_t PSBT_IN_SHA256 = 0x0B;
+inline constexpr uint8_t PSBT_IN_HASH160 = 0x0C;
+inline constexpr uint8_t PSBT_IN_HASH256 = 0x0D;
+inline constexpr uint8_t PSBT_IN_PREVIOUS_TXID = 0x0e;
+inline constexpr uint8_t PSBT_IN_OUTPUT_INDEX = 0x0f;
+inline constexpr uint8_t PSBT_IN_SEQUENCE = 0x10;
+inline constexpr uint8_t PSBT_IN_REQUIRED_TIME_LOCKTIME = 0x11;
+inline constexpr uint8_t PSBT_IN_REQUIRED_HEIGHT_LOCKTIME = 0x12;
+inline constexpr uint8_t PSBT_IN_TAP_KEY_SIG = 0x13;
+inline constexpr uint8_t PSBT_IN_TAP_SCRIPT_SIG = 0x14;
+inline constexpr uint8_t PSBT_IN_TAP_LEAF_SCRIPT = 0x15;
+inline constexpr uint8_t PSBT_IN_TAP_BIP32_DERIVATION = 0x16;
+inline constexpr uint8_t PSBT_IN_TAP_INTERNAL_KEY = 0x17;
+inline constexpr uint8_t PSBT_IN_TAP_MERKLE_ROOT = 0x18;
+inline constexpr uint8_t PSBT_IN_MUSIG2_PARTICIPANT_PUBKEYS = 0x1a;
+inline constexpr uint8_t PSBT_IN_MUSIG2_PUB_NONCE = 0x1b;
+inline constexpr uint8_t PSBT_IN_MUSIG2_PARTIAL_SIG = 0x1c;
+inline constexpr uint8_t PSBT_IN_PROPRIETARY = 0xFC;
 
 // Output types
-static constexpr uint8_t PSBT_OUT_REDEEMSCRIPT = 0x00;
-static constexpr uint8_t PSBT_OUT_WITNESSSCRIPT = 0x01;
-static constexpr uint8_t PSBT_OUT_BIP32_DERIVATION = 0x02;
-static constexpr uint8_t PSBT_OUT_AMOUNT = 0x03;
-static constexpr uint8_t PSBT_OUT_SCRIPT = 0x04;
-static constexpr uint8_t PSBT_OUT_TAP_INTERNAL_KEY = 0x05;
-static constexpr uint8_t PSBT_OUT_TAP_TREE = 0x06;
-static constexpr uint8_t PSBT_OUT_TAP_BIP32_DERIVATION = 0x07;
-static constexpr uint8_t PSBT_OUT_MUSIG2_PARTICIPANT_PUBKEYS = 0x08;
-static constexpr uint8_t PSBT_OUT_PROPRIETARY = 0xFC;
+inline constexpr uint8_t PSBT_OUT_REDEEMSCRIPT = 0x00;
+inline constexpr uint8_t PSBT_OUT_WITNESSSCRIPT = 0x01;
+inline constexpr uint8_t PSBT_OUT_BIP32_DERIVATION = 0x02;
+inline constexpr uint8_t PSBT_OUT_AMOUNT = 0x03;
+inline constexpr uint8_t PSBT_OUT_SCRIPT = 0x04;
+inline constexpr uint8_t PSBT_OUT_TAP_INTERNAL_KEY = 0x05;
+inline constexpr uint8_t PSBT_OUT_TAP_TREE = 0x06;
+inline constexpr uint8_t PSBT_OUT_TAP_BIP32_DERIVATION = 0x07;
+inline constexpr uint8_t PSBT_OUT_MUSIG2_PARTICIPANT_PUBKEYS = 0x08;
+inline constexpr uint8_t PSBT_OUT_PROPRIETARY = 0xFC;
 
 // The separator is 0x00. Reading this in means that the unserializer can interpret it
 // as a 0 length key which indicates that this is the separator. The separator has no value.
-static constexpr uint8_t PSBT_SEPARATOR = 0x00;
+inline constexpr uint8_t PSBT_SEPARATOR = 0x00;
 
 // BIP 174 does not specify a maximum file size, but we set a limit anyway
 // to prevent reading a stream indefinitely and running out of memory.
-const std::streamsize MAX_FILE_SIZE_PSBT = 100000000; // 100 MB
+inline constexpr std::streamsize MAX_FILE_SIZE_PSBT{100'000'000}; // 100 MB
 
 // PSBT version number
-static constexpr uint32_t PSBT_HIGHEST_VERSION = 2;
+inline constexpr uint32_t PSBT_HIGHEST_VERSION = 2;
 
 /** A structure for PSBT proprietary types */
 struct PSBTProprietary
@@ -321,10 +322,9 @@ public:
     std::set<PSBTProprietary> m_proprietary;
     std::optional<int> sighash_type;
 
-    bool IsNull() const;
     void FillSignatureData(SignatureData& sigdata) const;
     void FromSignatureData(const SignatureData& sigdata);
-    [[nodiscard]] bool Merge(const PSBTInput& input);
+    void Merge(const PSBTInput& input);
     uint32_t GetVersion() const { return m_psbt_version; }
     COutPoint GetOutPoint() const;
     /**
@@ -956,10 +956,9 @@ public:
     CAmount amount;
     CScript script;
 
-    bool IsNull() const;
     void FillSignatureData(SignatureData& sigdata) const;
     void FromSignatureData(const SignatureData& sigdata);
-    [[nodiscard]] bool Merge(const PSBTOutput& output);
+    void Merge(const PSBTOutput& output);
     uint32_t GetVersion() const { return m_psbt_version; }
 
     explicit PSBTOutput(uint32_t psbt_version, CAmount amount, const CScript& script)
@@ -1254,12 +1253,14 @@ public:
     uint32_t tx_version;
     std::optional<uint32_t> fallback_locktime;
 
-    bool IsNull() const;
     uint32_t GetVersion() const;
 
     /** Merge psbt into this. The two psbts must have the same underlying CTransaction (i.e. the
       * same actual Bitcoin transaction.) Returns true if the merge succeeded, false otherwise. */
     [[nodiscard]] bool Merge(const PartiallySignedTransaction& psbt);
+    /** Merge the global xpubs of psbt into this, keeping the existing origin for an xpub
+      * seen again with a different one, as the serialized records are keyed by xpub. */
+    void MergeGlobalXPubs(const PartiallySignedTransaction& psbt);
     bool AddInput(const PSBTInput& psbtin);
     bool AddOutput(const PSBTOutput& psbtout);
     std::optional<uint32_t> ComputeTimeLock() const;
@@ -1284,11 +1285,9 @@ public:
         // Write xpubs
         for (const auto& xpub_pair : m_xpubs) {
             for (const auto& xpub : xpub_pair.second) {
-                unsigned char ser_xpub[BIP32_EXTKEY_WITH_VERSION_SIZE];
-                xpub.EncodeWithVersion(ser_xpub);
                 // Note that the serialization swaps the key and value
                 // The xpub is the key (for uniqueness) while the path is the value
-                SerializeToVector(s, PSBT_GLOBAL_XPUB, ser_xpub);
+                SerializeToVector(s, PSBT_GLOBAL_XPUB, xpub.version, xpub);
                 SerializeHDKeypath(s, xpub_pair.first);
             }
         }
@@ -1356,9 +1355,6 @@ public:
 
         // Used for duplicate key detection
         std::set<std::vector<unsigned char>> key_lookup;
-
-        // Track the global xpubs we have already seen. Just for sanity checking
-        std::set<CExtPubKey> global_xpubs;
 
         // Read global data
         bool found_sep = false;
@@ -1458,11 +1454,10 @@ public:
                     ExpectedKeySize("Global XPUB", key, BIP32_EXTKEY_WITH_VERSION_SIZE + 1);
                     // Read in the xpub from key
                     CExtPubKey xpub;
-                    xpub.DecodeWithVersion(&key.data()[1]);
+                    SpanReader{std::span{key}.subspan(1)} >> xpub.version >> xpub;
                     if (!xpub.pubkey.IsFullyValid()) {
                        throw std::ios_base::failure("Invalid pubkey");
                     }
-                    global_xpubs.insert(xpub);
                     // Read in the keypath from stream
                     KeyOriginInfo keypath;
                     DeserializeHDKeypath(s, keypath);
@@ -1646,7 +1641,7 @@ bool PSBTInputSignedAndVerified(const PartiallySignedTransaction& psbt, unsigned
  * txdata should be the output of PrecomputePSBTData (which can be shared across
  * multiple SignPSBTInput calls). If it is nullptr, a dummy signature will be created.
  **/
-[[nodiscard]] PSBTError SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, const common::PSBTFillOptions& options, SignatureData* out_sigdata = nullptr);
+[[nodiscard]] util::Expected<void, PSBTError> SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, const common::PSBTFillOptions& options, SignatureData* out_sigdata = nullptr);
 
 /**  Reduces the size of the PSBT by dropping unnecessary `non_witness_utxos` (i.e. complete previous transactions) from a psbt when all inputs are segwit v1. */
 void RemoveUnnecessaryTransactions(PartiallySignedTransaction& psbtx);

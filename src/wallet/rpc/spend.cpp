@@ -195,7 +195,7 @@ UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vecto
     if (verbose) {
         UniValue entry(UniValue::VOBJ);
         entry.pushKV("txid", tx->GetHash().GetHex());
-        entry.pushKV("fee_reason", StringForFeeReason(res->fee_calc.reason));
+        entry.pushKV("fee_reason", StringForFeeReason(res->fee_reason));
         return entry;
     }
     return tx->GetHash().GetHex();
@@ -235,7 +235,7 @@ static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const Un
         throw JSONRPCError(RPC_INVALID_PARAMETER, InvalidEstimateModeErrorMessage());
     }
     if (!conf_target.isNull()) {
-        cc.m_confirm_target = ParseConfirmTarget(conf_target, wallet.chain().estimateMaxBlocks());
+        cc.m_confirm_target = ParseConfirmTarget(conf_target, wallet.chain().maximumFeeEstimationTargetBlocks());
     }
 }
 
@@ -272,7 +272,7 @@ RPCMethod sendtoaddress()
                         RPCResult::Type::OBJ, "", "",
                         {
                             {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
-                            {RPCResult::Type::STR, "fee_reason", "The transaction fee reason."}
+                            {RPCResult::Type::STR, "fee_reason", "The reason the wallet selected this fee rate (e.g. fee rate estimator, mempool minimum, fallback, or minimum required)."}
                         },
                     },
                 },
@@ -382,7 +382,7 @@ RPCMethod sendmany()
                         {
                             {RPCResult::Type::STR_HEX, "txid", "The transaction id for the send. Only 1 transaction is created regardless of\n"
                 "the number of addresses."},
-                            {RPCResult::Type::STR, "fee_reason", "The transaction fee reason."}
+                            {RPCResult::Type::STR, "fee_reason", "The reason the wallet selected this fee rate (e.g. fee rate estimator, mempool minimum, fallback, or minimum required)."}
                         },
                     },
                 },
@@ -864,7 +864,7 @@ RPCMethod signrawtransactionwithwallet()
                             },
                         },
                     },
-                    {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"DEFAULT for Taproot, ALL otherwise"}, "The signature hash type. Must be one of\n"
+                    {"sighashtype", RPCArg::Type::STR, RPCArg::DefaultHint{"DEFAULT for Taproot, ALL otherwise"}, "The signature hash type. Must be one of\n"
             "       \"DEFAULT\"\n"
             "       \"ALL\"\n"
             "       \"NONE\"\n"
@@ -1207,7 +1207,7 @@ RPCMethod send()
                     {"change_position", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
                     {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if change_address is not specified. Options are " + FormatAllOutputTypes() + "."},
                     {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB.", RPCArgOptions{.also_positional = true}},
-                    {"include_watching", RPCArg::Type::BOOL, RPCArg::Default{"false"}, "(DEPRECATED) No longer used"},
+                    {"include_watching", RPCArg::Type::BOOL, RPCArg::Default{false}, "(DEPRECATED) No longer used"},
                     {"inputs", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Specify inputs instead of adding them automatically.",
                         {
                           {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "", {
@@ -1439,8 +1439,7 @@ RPCMethod sendall()
 
             const bool rbf{options.exists("replaceable") ? options["replaceable"].get_bool() : pwallet->m_signal_rbf};
 
-            FeeCalculation fee_calc_out;
-            CFeeRate fee_rate{GetMinimumFeeRate(*pwallet, coin_control, &fee_calc_out)};
+            auto [fee_rate, fee_reason, returned_target] = GetMinimumFeeRate(*pwallet, coin_control);
             // Do not, ever, assume that it's fine to change the fee rate if the user has explicitly
             // provided one
             if (coin_control.m_feerate && fee_rate > *coin_control.m_feerate) {
@@ -1448,14 +1447,14 @@ RPCMethod sendall()
                 auto msg{strprintf("Fee rate (%s) is lower than the minimum fee rate setting (%s).",
                     coin_control.m_feerate->ToString(feerate_format),
                     fee_rate.ToString(feerate_format))};
-                if (fee_calc_out.reason == FeeReason::REQUIRED) {
+                if (fee_reason == FeeReason::REQUIRED) {
                     msg += strprintf("\nConsider modifying -mintxfee (%s) or -minrelaytxfee (%s).",
                         pwallet->m_min_fee.ToString(feerate_format),
                         pwallet->chain().relayMinFee().ToString(feerate_format));
                 }
                 throw JSONRPCError(RPC_INVALID_PARAMETER, msg);
             }
-            if (fee_calc_out.reason == FeeReason::FALLBACK && !pwallet->m_allow_fallback_fee) {
+            if (fee_reason == FeeReason::FALLBACK && !pwallet->m_allow_fallback_fee) {
                 // eventually allow a fallback fee
                 throw JSONRPCError(RPC_WALLET_ERROR, "Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.");
             }
@@ -1518,10 +1517,14 @@ RPCMethod sendall()
             }
             const CAmount fee_from_size{fee_rate.GetFee(tx_size.vsize)};
             const std::optional<CAmount> total_bump_fees{pwallet->chain().calculateCombinedBumpFee(outpoints_spent, fee_rate)};
-            CAmount effective_value = total_input_value - fee_from_size - total_bump_fees.value_or(0);
+            const CAmount actual_fee{fee_from_size + total_bump_fees.value_or(0)};
+            CAmount effective_value = total_input_value - actual_fee;
 
-            if (fee_from_size > pwallet->m_default_max_tx_fee) {
+            if (actual_fee > pwallet->m_max_tx_fee) {
                 throw JSONRPCError(RPC_WALLET_ERROR, TransactionErrorString(TransactionError::MAX_FEE_EXCEEDED).original);
+            }
+            if (actual_fee > pwallet->m_max_tx_fee_rate.GetFee(tx_size.vsize)) {
+                throw JSONRPCError(RPC_WALLET_ERROR, TransactionErrorString(TransactionError::MAX_FEE_RATE_EXCEEDED).original);
             }
 
             if (effective_value <= 0) {
@@ -1598,7 +1601,7 @@ RPCMethod walletprocesspsbt()
                 {
                     {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction base64 string"},
                     {"sign", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also sign the transaction when updating (requires wallet to be unlocked)"},
-                    {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"DEFAULT for Taproot, ALL otherwise"}, "The signature hash type to sign with if not specified by the PSBT. Must be one of\n"
+                    {"sighashtype", RPCArg::Type::STR, RPCArg::DefaultHint{"DEFAULT for Taproot, ALL otherwise"}, "The signature hash type to sign with if not specified by the PSBT. Must be one of\n"
             "       \"DEFAULT\"\n"
             "       \"ALL\"\n"
             "       \"NONE\"\n"

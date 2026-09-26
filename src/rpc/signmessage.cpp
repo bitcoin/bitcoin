@@ -4,6 +4,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <common/signmessage.h>
+#include <rpc/register.h> // IWYU pragma: associated
+
 #include <key.h>
 #include <key_io.h>
 #include <rpc/protocol.h>
@@ -13,6 +15,8 @@
 #include <univalue.h>
 
 #include <string>
+#include <string_view>
+#include <vector>
 
 static RPCMethod verifymessage()
 {

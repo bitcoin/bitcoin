@@ -7,7 +7,6 @@
 
 #include <outputtype.h>
 #include <policy/feerate.h>
-#include <policy/fees/block_policy_estimator.h>
 #include <primitives/transaction.h>
 #include <script/keyorigin.h>
 #include <script/signingprovider.h>
@@ -19,13 +18,13 @@
 #include <set>
 
 namespace wallet {
-const int DEFAULT_MIN_DEPTH = 0;
-const int DEFAULT_MAX_DEPTH = 9999999;
+inline constexpr int DEFAULT_MIN_DEPTH = 0;
+inline constexpr int DEFAULT_MAX_DEPTH = 9'999'999;
 
-const int DEFAULT_WALLET_TX_VERSION = CTransaction::CURRENT_VERSION;
+inline constexpr int DEFAULT_WALLET_TX_VERSION = CTransaction::CURRENT_VERSION;
 
 //! Default for -avoidpartialspends
-static constexpr bool DEFAULT_AVOIDPARTIALSPENDS = false;
+inline constexpr bool DEFAULT_AVOIDPARTIALSPENDS = false;
 
 class PreselectedInput
 {
@@ -104,7 +103,7 @@ public:
     bool m_avoid_partial_spends = DEFAULT_AVOIDPARTIALSPENDS;
     //! Forbids inclusion of dirty (previously used) addresses
     bool m_avoid_address_reuse = false;
-    //! Fee estimation mode to control arguments to estimateSmartFee
+    //! Fee estimation mode.
     FeeEstimateMode m_fee_mode = FeeEstimateMode::UNSET;
     //! Minimum chain depth value for coin availability
     int m_min_depth = DEFAULT_MIN_DEPTH;

@@ -33,6 +33,7 @@
 #include <net_types.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <node/block_template_manager.h>
 #include <node/blockstorage.h>
 #include <node/coin.h>
 #include <node/context.h>
@@ -40,13 +41,12 @@
 #include <node/kernel_notifications.h>
 #include <node/miner.h>
 #include <node/mini_miner.h>
-#include <node/mining_args.h>
 #include <node/mining_types.h>
 #include <node/transaction.h>
 #include <node/types.h>
 #include <node/warnings.h>
 #include <policy/feerate.h>
-#include <policy/fees/block_policy_estimator.h>
+#include <policy/fees/estimator_man.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <primitives/block.h>
@@ -61,6 +61,8 @@
 #include <univalue.h>
 #include <util/btcsignals.h>
 #include <util/check.h>
+#include <util/expected.h>
+#include <util/fees.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/string.h>
@@ -95,7 +97,6 @@ using interfaces::Node;
 using interfaces::Rpc;
 using interfaces::WalletLoader;
 using kernel::ChainstateRole;
-using node::BlockAssembler;
 using node::BlockCreateOptions;
 using node::BlockWaitOptions;
 using node::CoinbaseTx;
@@ -371,14 +372,9 @@ public:
         LOCK(::cs_main);
         return chainman().ActiveChainstate().CoinsTip().GetCoin(output);
     }
-    TransactionError broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, std::string& err_string) override
+    TransactionError broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, CFeeRate max_tx_fee_rate, std::string& err_string) override
     {
-        return BroadcastTransaction(*m_context,
-                                    std::move(tx),
-                                    err_string,
-                                    max_tx_fee,
-                                    TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL,
-                                    /*wait_callback=*/false);
+        return BroadcastTransaction(*m_context, std::move(tx), err_string, max_tx_fee, max_tx_fee_rate, /*broadcast_method=*/TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL, /*wait_callback=*/false);
     }
     WalletLoader& walletLoader() override
     {
@@ -683,11 +679,12 @@ public:
         return m_node.mempool->HasDescendants(txid);
     }
     bool broadcastTransaction(const CTransactionRef& tx,
-        const CAmount& max_tx_fee,
-        TxBroadcast broadcast_method,
-        std::string& err_string) override
+                              const CAmount& max_tx_fee,
+                              const CFeeRate& max_tx_fee_rate,
+                              TxBroadcast broadcast_method,
+                              std::string& err_string) override
     {
-        const TransactionError err = BroadcastTransaction(m_node, tx, err_string, max_tx_fee, broadcast_method, /*wait_callback=*/false);
+        const TransactionError err = BroadcastTransaction(m_node, tx, err_string, max_tx_fee, max_tx_fee_rate, broadcast_method, /*wait_callback=*/false);
         // Chain clients only care about failures to accept the tx to the mempool. Disregard non-mempool related failures.
         // Note: this will need to be updated if BroadcastTransactions() is updated to return other non-mempool failures
         // that Chain clients do not need to know about.
@@ -736,15 +733,15 @@ public:
         }
         return {};
     }
-    CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc) override
+    util::Expected<FeeRateEstimation, FeeRateEstimationError> getFeeRateEstimate(int num_blocks, bool conservative) const override
     {
-        if (!m_node.fee_estimator) return {};
-        return m_node.fee_estimator->estimateSmartFee(num_blocks, calc, conservative);
+        if (!m_node.fee_estimator_man) return EstimationError(FeeRateEstimatorType::NONE, /*returned_target=*/0, /*error=*/{});
+        return m_node.fee_estimator_man->GetFeeRateEstimate(num_blocks, conservative);
     }
-    unsigned int estimateMaxBlocks() override
+    unsigned int maximumFeeEstimationTargetBlocks() const override
     {
-        if (!m_node.fee_estimator) return 0;
-        return m_node.fee_estimator->HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
+        if (!m_node.fee_estimator_man) return 0;
+        return m_node.fee_estimator_man->MaximumTarget();
     }
     CFeeRate mempoolMinFee() override
     {
@@ -841,7 +838,7 @@ public:
         });
         if (!action) return false;
         // Now dump value to disk if requested
-        return *action != interfaces::SettingsAction::WRITE || args().WriteSettingsFile();
+        return *action != interfaces::SettingsAction::WRITE || (args().GetSettingsPath() && args().WriteSettingsFile());
     }
     bool overwriteRwSetting(const std::string& name, common::SettingsValue value, interfaces::SettingsAction action) override
     {
@@ -921,25 +918,20 @@ public:
     {
         if (!coinbase) return false;
         AddMerkleRootAndCoinbase(m_block_template->block, std::move(coinbase), version, timestamp, nonce);
-        return SubmitBlock(chainman(), std::make_shared<const CBlock>(m_block_template->block), reason, debug);
+        return block_template_manager().SubmitBlock(std::make_shared<const CBlock>(m_block_template->block), reason, debug);
     }
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
     {
-        auto new_template = WaitAndCreateNewBlock(chainman(),
-                                                  notifications(),
-                                                  m_node.mempool.get(),
-                                                  m_block_template,
-                                                  /*wait_options=*/options,
-                                                  /*create_options=*/m_create_options,
-                                                  /*interrupt_wait=*/m_interrupt_wait);
+        auto new_template = block_template_manager().WaitAndCreateNewBlock(
+            m_block_template, options, m_create_options, m_interrupt_wait);
         if (new_template) return std::make_unique<BlockTemplateImpl>(m_create_options, std::move(new_template), m_node);
         return nullptr;
     }
 
     void interruptWait() override
     {
-        InterruptWait(notifications(), m_interrupt_wait);
+        block_template_manager().InterruptWait(m_interrupt_wait);
     }
 
     const BlockCreateOptions m_create_options;
@@ -947,8 +939,7 @@ public:
     const std::unique_ptr<CBlockTemplate> m_block_template;
 
     bool m_interrupt_wait{false};
-    ChainstateManager& chainman() { return *Assert(m_node.chainman); }
-    KernelNotifications& notifications() { return *Assert(m_node.notifications); }
+    node::BlockTemplateManager& block_template_manager() { return *Assert(m_node.block_template_manager); }
     const NodeContext& m_node;
 };
 
@@ -969,12 +960,12 @@ public:
 
     std::optional<BlockRef> getTip() override
     {
-        return GetTip(chainman());
+        return block_template_manager().GetTip();
     }
 
     std::optional<BlockRef> waitTipChanged(uint256 current_tip, MillisecondsDouble timeout) override
     {
-        return WaitTipChanged(chainman(), notifications(), current_tip, timeout, m_interrupt_mining);
+        return block_template_manager().WaitTipChanged(current_tip, timeout, m_interrupt_mining);
     }
 
     std::unique_ptr<BlockTemplate> createNewBlock(const BlockCreateOptions& options, bool cooldown) override
@@ -996,21 +987,15 @@ public:
             }
 
             // Also wait during the final catch-up moments after IBD.
-            if (!CooldownIfHeadersAhead(chainman(), notifications(), *maybe_tip, m_interrupt_mining)) return {};
+            if (!block_template_manager().CooldownIfHeadersAhead(*maybe_tip, m_interrupt_mining)) return {};
         }
-        const BlockCreateOptions create_options{MergeMiningOptions(options, m_node.mining_args)};
-        return std::make_unique<BlockTemplateImpl>(create_options,
-                                                   BlockAssembler{
-                                                       chainman().ActiveChainstate(),
-                                                       m_node.mempool.get(),
-                                                       create_options,
-                                                   }.CreateNewBlock(),
-                                                   m_node);
+        auto new_template = block_template_manager().CreateNewTemplate(options);
+        return std::make_unique<BlockTemplateImpl>(options, std::move(new_template), m_node);
     }
 
     void interrupt() override
     {
-        InterruptWait(notifications(), m_interrupt_mining);
+        block_template_manager().InterruptWait(m_interrupt_mining);
     }
 
     bool checkBlock(const CBlock& block, const node::BlockCheckOptions& options, std::string& reason, std::string& debug) override
@@ -1024,7 +1009,7 @@ public:
 
     bool submitBlock(const CBlock& block_in, std::string& reason, std::string& debug) override
     {
-        return SubmitBlock(chainman(), std::make_shared<const CBlock>(block_in), reason, debug);
+        return block_template_manager().SubmitBlock(std::make_shared<const CBlock>(block_in), reason, debug);
     }
 
     std::vector<CTransactionRef> getTransactionsByTxID(const std::vector<Txid>& txids) override
@@ -1056,6 +1041,7 @@ public:
     const NodeContext* context() override { return &m_node; }
     ChainstateManager& chainman() { return *Assert(m_node.chainman); }
     KernelNotifications& notifications() { return *Assert(m_node.notifications); }
+    node::BlockTemplateManager& block_template_manager() { return *Assert(m_node.block_template_manager); }
     // Treat as if guarded by notifications().m_tip_block_mutex
     bool m_interrupt_mining{false};
     const NodeContext& m_node;

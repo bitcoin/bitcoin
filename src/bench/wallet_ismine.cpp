@@ -20,7 +20,6 @@
 #include <wallet/walletutil.h>
 
 #include <cstdint>
-#include <functional>
 #include <memory>
 #include <string>
 #include <utility>

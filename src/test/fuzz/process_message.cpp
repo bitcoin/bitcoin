@@ -48,6 +48,7 @@ extern void MakeRandDeterministicDANGEROUS(const uint256& seed) noexcept;
 
 void initialize_process_message()
 {
+    FakeNodeClock init_clock{}; // Uses the existing mock time
     if (const auto val{std::getenv("LIMIT_TO_MESSAGE_TYPE")}) {
         LIMIT_TO_MESSAGE_TYPE = val;
         Assert(std::count(ALL_NET_MESSAGE_TYPES.begin(), ALL_NET_MESSAGE_TYPES.end(), LIMIT_TO_MESSAGE_TYPE)); // Unknown message type passed
@@ -59,7 +60,7 @@ void initialize_process_message()
             {}),
     };
     g_setup = testing_setup.get();
-    ResetChainmanAndMempool(*g_setup);
+    ResetChainmanAndMempool(*g_setup, init_clock);
 }
 
 FUZZ_TARGET(process_message, .init = initialize_process_message)
@@ -73,7 +74,7 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
     auto& chainman{static_cast<TestChainstateManager&>(*node.chainman)};
     const auto block_index_size{WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())};
     const auto initial_sequence{WITH_LOCK(node.mempool->cs, return node.mempool->GetSequence())};
-    GetFakeNodeClock().set(1610000000s); // 2021-01-07, arbitrary
+    FakeNodeClock node_clock{1610000000s}; // 2021-01-07, arbitrary
     FakeSteadyClock steady_clock;
     chainman.ResetIbd();
     chainman.DisableNextWrite();
@@ -107,7 +108,7 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
     connman.AddTestNode(p2p_node);
     FillNode(fuzzed_data_provider, connman, p2p_node);
 
-    GetFakeNodeClock().set(ConsumeTime(fuzzed_data_provider));
+    node_clock.set(ConsumeTime(fuzzed_data_provider));
 
     CSerializedNetMsg net_msg;
     net_msg.m_type = random_message_type;
@@ -136,6 +137,6 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
     if (block_index_size != WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size()) || initial_sequence != end_sequence) {
         // Reuse the global chainman and mempool, but reset them when dirty.
         MakeRandDeterministicDANGEROUS(uint256::ZERO);
-        ResetChainmanAndMempool(*g_setup);
+        ResetChainmanAndMempool(*g_setup, node_clock);
     }
 }

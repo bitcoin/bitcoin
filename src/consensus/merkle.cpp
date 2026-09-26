@@ -11,7 +11,6 @@
 #include <util/check.h>
 
 #include <cstddef>
-#include <memory>
 #include <utility>
 
 /*     WARNING! If you're reading this because you're learning about crypto
@@ -49,12 +48,15 @@
        known ways of changing the transactions without affecting the merkle
        root.
 */
-
-
 uint256 ComputeMerkleRoot(std::vector<uint256> hashes, bool* mutated) {
     bool mutation = false;
     while (hashes.size() > 1) {
         if (mutated) {
+            // Check every level because equal pairs can appear above the leaves,
+            // as in the [1,2,3,4,5,6,5,6] construction described above.
+            // Continuing after finding one is redundant, but mutated blocks should
+            // not propagate through the network anyway, and the total number of
+            // comparisons is the same as for an unmutated input of the same length.
             for (size_t pos = 0; pos + 1 < hashes.size(); pos += 2) {
                 if (hashes[pos] == hashes[pos + 1]) mutation = true;
             }

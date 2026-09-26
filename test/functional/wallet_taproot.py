@@ -56,6 +56,7 @@ class WalletTaprootTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
+        self.wallet_names = []
         self.extra_args = [['-keypool=100'], ['-keypool=100']]
 
     def skip_test_if_missing_module(self):
@@ -63,9 +64,6 @@ class WalletTaprootTest(BitcoinTestFramework):
 
     def setup_network(self):
         self.setup_nodes()
-
-    def init_wallet(self, *, node):
-        pass
 
     @staticmethod
     def make_desc(pattern, privmap, keys, pub_only = False):
@@ -165,8 +163,9 @@ class WalletTaprootTest(BitcoinTestFramework):
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
             assert rpc_online.gettransaction(res)["confirmations"] > 0
 
-        # Cleanup
-        txid = rpc_online.sendall(recipients=[self.boring.getnewaddress()])["txid"]
+        # Match the framework fallbackfee; otherwise the underestimated taproot
+        # script-path spend size can produce an effective feerate below min relay.
+        txid = rpc_online.sendall(recipients=[self.boring.getnewaddress()], fee_rate=20)["txid"]
         self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
         assert rpc_online.gettransaction(txid)["confirmations"] > 0
         rpc_online.unloadwallet()
@@ -238,8 +237,9 @@ class WalletTaprootTest(BitcoinTestFramework):
             self.generatetoaddress(self.nodes[0], 1, self.boring.getnewaddress(), sync_fun=self.no_op)
             assert psbt_online.gettransaction(txid)['confirmations'] > 0
 
-        # Cleanup
-        psbt = psbt_online.sendall(recipients=[self.boring.getnewaddress()], psbt=True)["psbt"]
+        # Match the framework fallbackfee; otherwise the underestimated taproot
+        # script-path spend size can produce an effective feerate below min relay.
+        psbt = psbt_online.sendall(recipients=[self.boring.getnewaddress()], psbt=True, fee_rate=20)["psbt"]
         res = psbt_offline.walletprocesspsbt(psbt=psbt, finalize=False)
         rawtx = self.nodes[0].finalizepsbt(res['psbt'])['hex']
         txid = self.nodes[0].sendrawtransaction(rawtx)

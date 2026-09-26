@@ -10,7 +10,7 @@ FROM mirror.gcr.io/ubuntu:26.04
 # https://docs.astral.sh/uv/reference/policies/versioning/
 # https://docs.astral.sh/ruff/versioning/
 COPY --from=ghcr.io/astral-sh/uv:0.11 /uv /uvx /bin/
-COPY --from=ghcr.io/astral-sh/ruff:0.15 /ruff /bin/
+COPY --from=ghcr.io/astral-sh/ruff:0.16 /ruff /bin/
 
 COPY ./ci/retry/retry /ci_retry
 COPY ./.python-version /.python-version

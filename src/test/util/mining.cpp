@@ -9,9 +9,10 @@
 #include <chainparams.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
-#include <interfaces/mining.h>
 #include <key_io.h>
+#include <node/block_template_manager.h>
 #include <node/context.h>
+#include <node/miner.h>
 #include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -75,6 +76,47 @@ std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const
     return ret;
 }
 
+bool BuildChain(const NodeContext& node, const CBlockIndex* pindex,
+    const CScript& coinbase_script_pub_key,
+    size_t length,
+    std::vector<std::shared_ptr<CBlock>>& chain)
+{
+    auto& block_template_manager{*Assert(node.block_template_manager)};
+    const Consensus::Params& consensus{Assert(node.chainman)->GetConsensus()};
+
+    chain.resize(length);
+    for (auto& chain_block : chain) {
+        auto block_template{block_template_manager.CreateNewTemplate({
+            .use_mempool = false,
+            .coinbase_output_script = coinbase_script_pub_key,
+        })};
+        CBlock block{Assert(block_template)->block};
+
+        // The template is built on the active tip, so repoint it at pindex and
+        // redo the fields that depend on the predecessor.
+        block.hashPrevBlock = pindex->GetBlockHash();
+        block.nTime = pindex->nTime + 1;
+        {
+            CMutableTransaction tx_coinbase{*block.vtx.at(0)};
+            tx_coinbase.nLockTime = static_cast<uint32_t>(pindex->nHeight);
+            tx_coinbase.vin.at(0).scriptSig = CScript{} << pindex->nHeight + 1;
+            block.vtx.at(0) = MakeTransactionRef(std::move(tx_coinbase));
+            block.hashMerkleRoot = BlockMerkleRoot(block);
+        }
+
+        while (!CheckProofOfWork(block.GetHash(), block.nBits, consensus)) ++block.nNonce;
+
+        chain_block = std::make_shared<CBlock>(std::move(block));
+
+        BlockValidationState state;
+        if (!Assert(node.chainman)->ProcessNewBlockHeaders({{*chain_block}}, true, state, &pindex)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 COutPoint MineBlock(const NodeContext& node, const node::BlockCreateOptions& assembler_options)
 {
     auto block = PrepareBlock(node, assembler_options);
@@ -131,9 +173,9 @@ COutPoint ProcessBlock(const NodeContext& node, const std::shared_ptr<CBlock>& b
 std::shared_ptr<CBlock> PrepareBlock(const NodeContext& node,
                                      const node::BlockCreateOptions& assembler_options)
 {
-    auto mining = interfaces::MakeMining(node);
-    auto block_template = mining->createNewBlock(assembler_options, /*cooldown=*/false);
-    auto block = std::make_shared<CBlock>(Assert(block_template)->getBlock());
+    auto& block_template_manager = *Assert(node.block_template_manager);
+    auto block_template = block_template_manager.CreateNewTemplate(assembler_options);
+    auto block = std::make_shared<CBlock>(Assert(block_template)->block);
 
     LOCK(cs_main);
     block->nTime = Assert(node.chainman)->ActiveChain().Tip()->GetMedianTimePast() + 1;

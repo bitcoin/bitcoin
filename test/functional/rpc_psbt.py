@@ -8,10 +8,12 @@ from decimal import Decimal
 from itertools import product
 from random import randbytes
 
+from test_framework.address import base58_to_byte
 from test_framework.blocktools import (
     MAX_STANDARD_TX_WEIGHT,
 )
 from test_framework.descriptors import descsum_create
+from test_framework.extendedkey import hardened
 from test_framework.key import H_POINT
 from test_framework.messages import (
     COutPoint,
@@ -28,6 +30,7 @@ from test_framework.psbt import (
     PSBT_GLOBAL_PROPRIETARY,
     PSBT_GLOBAL_UNSIGNED_TX,
     PSBT_GLOBAL_VERSION,
+    PSBT_GLOBAL_XPUB,
     PSBT_IN_RIPEMD160,
     PSBT_IN_SHA256,
     PSBT_IN_SIGHASH_TYPE,
@@ -38,6 +41,9 @@ from test_framework.psbt import (
     PSBT_IN_MUSIG2_PUB_NONCE,
     PSBT_IN_NON_WITNESS_UTXO,
     PSBT_IN_PROPRIETARY,
+    PSBT_IN_TAP_BIP32_DERIVATION,
+    PSBT_IN_TAP_INTERNAL_KEY,
+    PSBT_IN_TAP_LEAF_SCRIPT,
     PSBT_IN_WITNESS_UTXO,
     PSBT_IN_FINAL_SCRIPTWITNESS,
     PSBT_OUT_MUSIG2_PARTICIPANT_PUBKEYS,
@@ -45,8 +51,8 @@ from test_framework.psbt import (
     PSBT_OUT_TAP_TREE,
     PSBT_OUT_SCRIPT,
 )
-from test_framework.script import CScript, OP_TRUE, SIGHASH_ALL, SIGHASH_ANYONECANPAY
-from test_framework.script_util import MIN_STANDARD_TX_NONWITNESS_SIZE
+from test_framework.script import CScript, LEAF_VERSION_TAPSCRIPT, OP_TRUE, SIGHASH_ALL, SIGHASH_ANYONECANPAY, hash160
+from test_framework.script_util import MIN_STANDARD_TX_NONWITNESS_SIZE, output_key_to_p2tr_script
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
@@ -72,10 +78,12 @@ import os
 class PSBTTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
+        # Set a high -maxfeerate value for nodes' wallets; some tests require
+        # creating and broadcasting transactions with a high fee rate that exceeds the default.
         self.extra_args = [
             [],
-            ["-changetype=legacy"],
-            []
+            ["-changetype=legacy", "-maxfeerate=1"],
+            ["-maxfeerate=1"]
         ]
         # whitelist peers to speed up tx relay / mempool sync
         for args in self.extra_args:
@@ -300,6 +308,25 @@ class PSBTTest(BitcoinTestFramework):
         assert "participant_pubkeys" in out_participant_pks
         assert_equal(out_participant_pks["participant_pubkeys"], [out_pubkey1.hex(), out_pubkey2.hex()])
 
+    def test_musig2_untrusted_derivation(self):
+        self.log.info("Test MuSig2 aggregate derivation from untrusted PSBT fields")
+        node = self.nodes[0]
+
+        script_pubkey = bytes.fromhex(H_POINT)
+        _, aggregate_pubkey = generate_keypair()
+        _, participant_pubkey = generate_keypair()
+
+        # Both have a matching aggregate fingerprint but cannot derive the script pubkey: 0 derives a different key, hardened(0) cannot be derived at all
+        for index in [0, hardened(0)]:
+            psbt = self.create_psbt(inputs={
+                PSBT_IN_WITNESS_UTXO: CTxOut(nValue=1, scriptPubKey=output_key_to_p2tr_script(script_pubkey)).serialize(),
+                bytes([PSBT_IN_TAP_BIP32_DERIVATION]) + script_pubkey: ser_compact_size(0) + hash160(aggregate_pubkey)[:4] + index.to_bytes(4, "little"),
+                PSBT_IN_TAP_INTERNAL_KEY: script_pubkey,
+                bytes([PSBT_IN_MUSIG2_PARTICIPANT_PUBKEYS]) + aggregate_pubkey: [participant_pubkey],
+            }).to_base64()
+            assert_equal(node.analyzepsbt(psbt)["inputs"][0]["is_final"], False)
+            assert_equal(node.finalizepsbt(psbt)["complete"], False)
+
     def test_combinepsbt_preserves_proprietary_fields(self):
         self.log.info("Test that combining PSBTs preserves proprietary fields")
 
@@ -358,6 +385,220 @@ class PSBTTest(BitcoinTestFramework):
             proprietary_entry(key=output_key_a, value=b"\xcc", identifier=b"out", subtype=5),
             proprietary_entry(key=output_key_b, value=b"\xff", identifier=b"out", subtype=6),
         ])
+
+    def test_combinepsbt_global_xpub_origin_conflict(self):
+        self.log.info("Test that combining PSBTs with conflicting origins for the same xpub keeps a single record")
+
+        tx = CTransaction()
+        tx.vin = [CTxIn(outpoint=COutPoint(hash=int('aa' * 32, 16), n=0), scriptSig=b"")]
+        tx.vout = [CTxOut(nValue=0, scriptPubKey=b"")]
+
+        xpub = "tpubD6NzVbkrYhZ4XgiXtGrdW5XDAPFCL9h7we1vwNCpn8tGbBcgfVYjXyhWo4E1xkh56hjod1RhGjxbaTLV3X4FyWuejifB9jusQ46QzG87VKp"
+        xpub_data, xpub_version = base58_to_byte(xpub)
+        xpub_key = bytes([PSBT_GLOBAL_XPUB]) + bytes([xpub_version]) + xpub_data
+
+        def psbt_with_origin(fingerprint):
+            return PSBT(
+                g=PSBTMap({
+                    PSBT_GLOBAL_UNSIGNED_TX: tx.serialize(),
+                    xpub_key: fingerprint,
+                }),
+                i=[PSBTMap({})],
+                o=[PSBTMap({})],
+            ).to_base64()
+
+        combined = self.nodes[0].combinepsbt([psbt_with_origin(b"\x00\x00\x00\x00"), psbt_with_origin(b"\x11\x11\x11\x11")])
+        # The same xpub under both origins would serialize as duplicate keys, making the combined PSBT unparseable
+        decoded = self.nodes[0].decodepsbt(combined)
+        assert_equal(decoded["global_xpubs"], [{"xpub": xpub, "master_fingerprint": "00000000", "path": "m"}])
+
+    def test_combinepsbt_tap_leaf_script_conflict(self):
+        self.log.info("Test that combining PSBTs with conflicting leaf scripts for the same control block keeps a single record")
+
+        tx = CTransaction()
+        tx.vin = [CTxIn(outpoint=COutPoint(hash=int('aa' * 32, 16), n=0), scriptSig=b"")]
+        tx.vout = [CTxOut(nValue=0, scriptPubKey=b"")]
+
+        def psbt_with_leaf_scripts(*records):
+            return PSBT(
+                g=PSBTMap({PSBT_GLOBAL_UNSIGNED_TX: tx.serialize()}),
+                i=[PSBTMap({
+                    bytes([PSBT_IN_TAP_LEAF_SCRIPT]) + control_block: bytes(leaf_script) + bytes([LEAF_VERSION_TAPSCRIPT])
+                    for leaf_script, control_block in records
+                })],
+                o=[PSBTMap({})],
+            ).to_base64()
+
+        def combined_tap_scripts(psbts):
+            return self.nodes[0].decodepsbt(self.nodes[0].combinepsbt(psbts))["inputs"][0]["taproot_scripts"]
+
+        def tap_script(leaf_script, control_blocks):
+            return {"script": leaf_script.hex(), "leaf_ver": LEAF_VERSION_TAPSCRIPT, "control_blocks": [cb.hex() for cb in control_blocks]}
+
+        control_block = bytes([LEAF_VERSION_TAPSCRIPT]) + bytes.fromhex(H_POINT)
+        control_block_with_path = control_block + bytes(32)
+        control_block_with_longer_path = control_block + bytes(64)
+        leaf_script_a = CScript([OP_TRUE])
+        leaf_script_b = CScript([OP_TRUE, OP_TRUE])
+        leaf_script_c = CScript([OP_TRUE, OP_TRUE, OP_TRUE])
+
+        psbt_a = psbt_with_leaf_scripts((leaf_script_a, control_block))
+        psbt_b = psbt_with_leaf_scripts((leaf_script_b, control_block))
+        psbt_c = psbt_with_leaf_scripts((leaf_script_c, control_block))
+
+        # The same control block under two leaf scripts would serialize as duplicate keys
+        assert_equal(combined_tap_scripts([psbt_a, psbt_b]), [tap_script(leaf_script_a, [control_block])])
+        # Reversed, so the leaf script kept is decided by the argument order and not by its content
+        assert_equal(combined_tap_scripts([psbt_b, psbt_a]), [tap_script(leaf_script_b, [control_block])])
+        # A third PSBT conflicting with what the first merge kept is dropped the same way
+        assert_equal(combined_tap_scripts([psbt_a, psbt_b, psbt_c]), [tap_script(leaf_script_a, [control_block])])
+        # Combining a PSBT with itself leaves it untouched
+        assert_equal(self.nodes[0].combinepsbt([psbt_a, psbt_a]), psbt_a)
+
+        # Records that do not conflict are all kept, whether or not they share a leaf script
+        psbt_same_leaf = psbt_with_leaf_scripts((leaf_script_a, control_block_with_path))
+        assert_equal(combined_tap_scripts([psbt_a, psbt_same_leaf]), [tap_script(leaf_script_a, [control_block, control_block_with_path])])
+        psbt_other_leaf = psbt_with_leaf_scripts((leaf_script_b, control_block_with_path))
+        assert_equal(combined_tap_scripts([psbt_a, psbt_other_leaf]), [
+            tap_script(leaf_script_a, [control_block]),
+            tap_script(leaf_script_b, [control_block_with_path]),
+        ])
+
+        # Only the conflicting control block of an incoming leaf script is dropped, not all of them
+        psbt_leaf_a_two_blocks = psbt_with_leaf_scripts((leaf_script_a, control_block), (leaf_script_a, control_block_with_path))
+        psbt_leaf_b_two_blocks = psbt_with_leaf_scripts((leaf_script_b, control_block_with_path), (leaf_script_b, control_block_with_longer_path))
+        assert_equal(combined_tap_scripts([psbt_leaf_a_two_blocks, psbt_leaf_b_two_blocks]), [
+            tap_script(leaf_script_a, [control_block, control_block_with_path]),
+            tap_script(leaf_script_b, [control_block_with_longer_path]),
+        ])
+
+    def test_combinepsbt_preserves_unknown_fields(self):
+        self.log.info("Test that combining PSBTs preserves unknown fields with the same and with distinct values per map.")
+
+        def unknown_key(key_type, key_data):
+            return bytes([key_type]) + key_data
+
+        def unknown_fields(*entries):
+            return {key.hex(): value.hex() for key, value in entries}
+
+        def build_psbt(key, global_value, input_value, output_value):
+            # A value of None leaves the corresponding map without the unknown field
+            psbt = PSBT.from_base64(base_psbt)
+            if global_value is not None:
+                psbt.g.map[key] = global_value
+            if input_value is not None:
+                psbt.i[0].map[key] = input_value
+            if output_value is not None:
+                psbt.o[0].map[key] = output_value
+            return psbt
+
+        unknown_key_a = unknown_key(0xf0, bytes.fromhex("010203040506070809"))
+        unknown_key_b = unknown_key(0xf0, bytes.fromhex("010203040506070810"))
+
+        # Distinct values per (psbt, map)
+        global_value_a = bytes.fromhex("0102030405060708090a0b0c0d0e0f")
+        global_value_b = bytes.fromhex("1112131415161718191a1b1c1d1e1f")
+        input_value_a = bytes.fromhex("2122232425262728292a2b2c2d2e2f")
+        input_value_b = bytes.fromhex("3132333435363738393a3b3c3d3e3f")
+        output_value_a = bytes.fromhex("4142434445464748494a4b4c4d4e4f")
+        output_value_b = bytes.fromhex("5152535455565758595a5b5c5d5e5f")
+
+        inputs = [{"txid": "ff" * 32, "vout": 0, "sequence": 0xffffffff}]
+        outputs = [{"data": "00"}]
+        for psbt_version in [0, 2]:
+            base_psbt = self.nodes[0].createpsbt(inputs=inputs, outputs=outputs, psbt_version=psbt_version)
+
+            # Combining the PSBTs with unknown keys and fields with the same values
+            combined_duplicated_psbt = self.nodes[0].combinepsbt([
+                build_psbt(unknown_key_a, global_value_a, global_value_a, global_value_a).to_base64(),
+                build_psbt(unknown_key_a, global_value_a, global_value_a, global_value_a).to_base64(),
+            ])
+            decoded = self.nodes[0].decodepsbt(combined_duplicated_psbt)
+            assert_equal(decoded["psbt_version"], psbt_version)
+            assert_equal(decoded["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a)
+            ))
+            assert_equal(decoded["inputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a)
+            ))
+            assert_equal(decoded["outputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a)
+            ))
+
+            # Combining PSBTs with the same unknown keys but distinct values (first PSBT wins).
+            combined_psbt_same_keys = self.nodes[0].combinepsbt([
+                build_psbt(unknown_key_a, global_value_a, global_value_a, global_value_a).to_base64(),
+                build_psbt(unknown_key_a, global_value_b, global_value_b, global_value_b).to_base64(),
+            ])
+            decoded = self.nodes[0].decodepsbt(combined_psbt_same_keys)
+            assert_equal(decoded["psbt_version"], psbt_version)
+            assert_equal(decoded["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a)
+            ))
+            assert_equal(decoded["inputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a)
+            ))
+            assert_equal(decoded["outputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a)
+            ))
+
+            # Combining PSBTs with unknown fields with the same values
+            combined_psbt_same_fields = self.nodes[0].combinepsbt([
+                build_psbt(unknown_key_a, global_value_a, global_value_a, global_value_a).to_base64(),
+                build_psbt(unknown_key_b, global_value_a, global_value_a, global_value_a).to_base64(),
+            ])
+            decoded = self.nodes[0].decodepsbt(combined_psbt_same_fields)
+            assert_equal(decoded["psbt_version"], psbt_version)
+            assert_equal(decoded["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a),
+                (unknown_key_b, global_value_a),
+            ))
+            assert_equal(decoded["inputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a),
+                (unknown_key_b, global_value_a),
+            ))
+            assert_equal(decoded["outputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a),
+                (unknown_key_b, global_value_a),
+            ))
+
+            # Combining PSBTs preserves unknown fields with distinct values
+            combined_psbt = self.nodes[0].combinepsbt([
+                build_psbt(unknown_key_a, global_value_a, input_value_a, output_value_a).to_base64(),
+                build_psbt(unknown_key_b, global_value_b, input_value_b, output_value_b).to_base64(),
+            ])
+            decoded = self.nodes[0].decodepsbt(combined_psbt)
+            assert_equal(decoded["psbt_version"], psbt_version)
+            assert_equal(decoded["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a),
+                (unknown_key_b, global_value_b),
+            ))
+            assert_equal(decoded["inputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, input_value_a),
+                (unknown_key_b, input_value_b),
+            ))
+            assert_equal(decoded["outputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, output_value_a),
+                (unknown_key_b, output_value_b),
+            ))
+
+            # Combining PSBTs with unknown fields missing from the maps of the other PSBT
+            # The fields of each map are preserved regardless of which PSBT they come from
+            combined_psbt = self.nodes[0].combinepsbt([
+                build_psbt(unknown_key_a, global_value_a, None, None).to_base64(),
+                build_psbt(unknown_key_a, None, input_value_b, output_value_b).to_base64(),
+            ])
+            decoded = self.nodes[0].decodepsbt(combined_psbt)
+            assert_equal(decoded["psbt_version"], psbt_version)
+            assert_equal(decoded["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a)
+            ))
+            assert_equal(decoded["inputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, input_value_b)
+            ))
+            assert_equal(decoded["outputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, output_value_b)
+            ))
 
     def test_sighash_mismatch(self):
         self.log.info("Test sighash type mismatches")
@@ -446,6 +687,68 @@ class PSBTTest(BitcoinTestFramework):
 
         wallet.unloadwallet()
 
+    def test_decodepsbt_long_sighash_type(self):
+        self.log.info("Test that decodepsbt rejects invalid trailing bytes in the sighash type field")
+        node = self.nodes[0]
+        psbt = PSBT.from_base64(node.createpsbt([{"txid": "00" * 32, "vout": 0}], [{"data": "00"}]))
+        # The first byte of this sighash type is ALL, but the type itself is not
+        psbt.i[0].map[PSBT_IN_SIGHASH_TYPE] = (0x101).to_bytes(4, "little")
+        assert_equal(node.decodepsbt(psbt.to_base64())["inputs"][0]["sighash"], "")
+
+    def test_combinepsbt_sighash_type(self):
+        self.log.info("Test that combining PSBTs preserves the sighash type field regardless of order")
+        node = self.nodes[0]
+        node.createwallet("combine_sighash")
+        wallet = node.get_wallet_rpc("combine_sighash")
+        def_wallet = node.get_wallet_rpc(self.default_wallet_name)
+
+        def_wallet.send([{wallet.getnewaddress(address_type="bech32"): 1}])
+        self.generate(node, 1)
+        psbt = wallet.walletcreatefundedpsbt(wallet.listunspent(), [{def_wallet.getnewaddress(): 0.5}])["psbt"]
+
+        signed = wallet.walletprocesspsbt(psbt=psbt, sighashtype="ALL|ANYONECANPAY", finalize=False)["psbt"]
+        assert_equal(node.decodepsbt(signed)["inputs"][0].get("sighash"), "ALL|ANYONECANPAY")
+        updated = wallet.walletprocesspsbt(psbt=psbt, sign=False)["psbt"]
+        assert "sighash" not in node.decodepsbt(updated)["inputs"][0]
+
+        finalized = []
+        for psbts in [[signed, updated], [updated, signed]]:
+            combined = node.combinepsbt(psbts)
+            assert_equal(node.decodepsbt(combined)["inputs"][0].get("sighash"), "ALL|ANYONECANPAY")
+            fin_res = node.finalizepsbt(combined)
+            assert_equal(fin_res["complete"], True)
+            assert_equal(node.testmempoolaccept([fin_res["hex"]])[0]["allowed"], True)
+            finalized.append(fin_res["hex"])
+        assert_equal(finalized[0], finalized[1])
+
+        wallet.unloadwallet()
+
+    def test_sighash_single(self):
+        self.log.info("Test that SIGHASH_SINGLE won't sign an input with no matching output")
+        node = self.nodes[0]
+        node.createwallet("sighash_single")
+        wallet = node.get_wallet_rpc("sighash_single")
+        def_wallet = node.get_wallet_rpc(self.default_wallet_name)
+
+        for addr_type in ["legacy", "bech32", "bech32m"]:
+            addrs = [wallet.getnewaddress("", addr_type) for _ in range(2)]
+            for addr in addrs:
+                def_wallet.sendtoaddress(addr, 1)
+            self.generatetoaddress(node, 1, def_wallet.getnewaddress())
+            node.syncwithvalidationinterfacequeue()
+            ins = [{"txid": u["txid"], "vout": u["vout"]} for u in wallet.listunspent(addresses=addrs)]
+            assert_equal(len(ins), 2)
+
+            raw = node.createrawtransaction(ins, [{wallet.getnewaddress(): 1.9999}])
+            signed = wallet.walletprocesspsbt(node.converttopsbt(raw), True, "SINGLE")["psbt"]
+            state = wallet.analyzepsbt(signed)["inputs"]
+            # Output at index 0 exist, so input 0 signs and finalizes
+            assert state[0]["is_final"]
+            # No output at index 1, so SIGHASH_SINGLE won't sign input 1
+            assert not state[1]["is_final"]
+
+        wallet.unloadwallet()
+
     def assert_change_type(self, psbtx, expected_type):
         """Assert that the given PSBT has a change output with the given type."""
 
@@ -493,7 +796,8 @@ class PSBTTest(BitcoinTestFramework):
 
     def test_psbt_roundtrip(self):
         self.log.info("Test that PSBTs roundtrip when RPC does nothing")
-        utxo = self.nodes[0].listunspent()[0]
+        # Pick mature coinbase so unspent ordering do not affect the test behavior
+        utxo = next(out for out in self.nodes[0].listunspent() if out["amount"] == Decimal(50))
         for ver in [0, 2]:
             psbt = self.nodes[0].walletcreatefundedpsbt(inputs=[utxo], outputs=[{self.nodes[0].getnewaddress(): utxo["amount"] / 2}], psbt_version=ver)["psbt"]
 
@@ -509,7 +813,8 @@ class PSBTTest(BitcoinTestFramework):
 
     def test_psbt_version(self):
         tobump = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
-        utxo = self.nodes[0].listunspent()[0]
+        # Pick mature coinbase so unspent ordering do not affect the test behavior
+        utxo = next(out for out in self.nodes[0].listunspent() if out["amount"] == Decimal(50))
         outputs = [{self.nodes[0].getnewaddress(): utxo["amount"] / 2}]
         rawtx = self.nodes[0].createrawtransaction(inputs=[utxo], outputs=outputs)
         for ver in [0, 2]:
@@ -761,7 +1066,7 @@ class PSBTTest(BitcoinTestFramework):
 
         self.log.info("Test invalid fee rate settings")
         for param, value in {("fee_rate", 100000), ("feeRate", 1)}:
-            assert_raises_rpc_error(-4, "Fee exceeds maximum configured by user (e.g. -maxtxfee, maxfeerate)",
+            assert_raises_rpc_error(-4, "Fee exceeds maximum configured by user (maxtxfee)",
                 self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {param: value, "add_inputs": True})
             assert_raises_rpc_error(-3, "Amount out of range",
                 self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {param: -1, "add_inputs": True})
@@ -815,7 +1120,7 @@ class PSBTTest(BitcoinTestFramework):
         self.log.info("Test walletcreatefundedpsbt with too-high fee rate produces total fee well above -maxtxfee and raises RPC error")
         # previously this was silently capped at -maxtxfee
         for bool_add, outputs_array in {True: outputs, False: [{self.nodes[1].getnewaddress(): 1}]}.items():
-            msg = "Fee exceeds maximum configured by user (e.g. -maxtxfee, maxfeerate)"
+            msg = "Fee exceeds maximum configured by user (maxtxfee)"
             assert_raises_rpc_error(-4, msg, self.nodes[1].walletcreatefundedpsbt, inputs, outputs_array, 0, {"fee_rate": 1000000, "add_inputs": bool_add})
             assert_raises_rpc_error(-4, msg, self.nodes[1].walletcreatefundedpsbt, inputs, outputs_array, 0, {"feeRate": 1, "add_inputs": bool_add})
 
@@ -1130,6 +1435,45 @@ class PSBTTest(BitcoinTestFramework):
                 break
         assert shuffled
 
+        # Check that joining preserves global xpub and proprietary records
+        def global_xpub_key(extended_pubkey):
+            xpub_data, xpub_version = base58_to_byte(extended_pubkey)
+            return bytes([PSBT_GLOBAL_XPUB]) + bytes([xpub_version]) + xpub_data
+
+        xpub1 = "tpubD6NzVbkrYhZ4XgiXtGrdW5XDAPFCL9h7we1vwNCpn8tGbBcgfVYjXyhWo4E1xkh56hjod1RhGjxbaTLV3X4FyWuejifB9jusQ46QzG87VKp"
+        xpub_key1 = global_xpub_key(xpub1)
+        xpub_key2 = global_xpub_key("tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B")
+        xpub_value = b"\x00\x00\x00\x00"  # master key fingerprint with an empty derivation path
+        global_prop_key = bytes([PSBT_GLOBAL_PROPRIETARY]) + b"\x02\x01\x02\x00"  # identifier "0102", subtype 0
+        global_prop_value = b"\xde\xad\xbe\xef"
+
+        psbt1_obj = PSBT.from_base64(psbt1)
+        psbt1_obj.g.map[xpub_key1] = xpub_value
+        psbt1_obj.g.map[global_prop_key] = global_prop_value
+        psbt2_obj = PSBT.from_base64(psbt2)
+        psbt2_obj.g.map[xpub_key2] = xpub_value
+        joined_globals = PSBT.from_base64(self.nodes[0].joinpsbts([psbt1_obj.to_base64(), psbt2_obj.to_base64()]))
+        assert_equal(joined_globals.g.map[xpub_key1], xpub_value)
+        assert_equal(joined_globals.g.map[xpub_key2], xpub_value)
+        assert_equal(joined_globals.g.map[global_prop_key], global_prop_value)
+
+        # Same proprietary key in both PSBTs with different values: the first PSBT's value wins
+        collide_key = bytes([PSBT_GLOBAL_PROPRIETARY]) + b"\x02\x03\x04\x00"
+        psbt_first_obj = PSBT.from_base64(psbt1)
+        psbt_first_obj.g.map[collide_key] = b"\x11\x11\x11\x11"
+        psbt_second_obj = PSBT.from_base64(psbt2)
+        psbt_second_obj.g.map[collide_key] = b"\x22\x22\x22\x22"
+        joined_collision = PSBT.from_base64(self.nodes[0].joinpsbts([psbt_first_obj.to_base64(), psbt_second_obj.to_base64()]))
+        assert_equal(joined_collision.g.map[collide_key], b"\x11\x11\x11\x11")
+
+        # Same xpub with conflicting origins: the first PSBT's origin is kept, avoiding duplicate keys
+        conflict_first_obj = PSBT.from_base64(psbt1)
+        conflict_first_obj.g.map[xpub_key1] = xpub_value
+        conflict_second_obj = PSBT.from_base64(psbt2)
+        conflict_second_obj.g.map[xpub_key1] = b"\x11\x11\x11\x11"
+        joined_conflict = self.nodes[0].joinpsbts([conflict_first_obj.to_base64(), conflict_second_obj.to_base64()])
+        assert_equal(self.nodes[0].decodepsbt(joined_conflict)["global_xpubs"], [{"xpub": xpub1, "master_fingerprint": "00000000", "path": "m"}])
+
         # Newly created PSBT needs UTXOs and updating
         addr = self.nodes[1].getnewaddress("", "p2sh-segwit")
         utxo = self.create_outpoints(self.nodes[0], outputs=[{addr: 7}])[0]
@@ -1380,6 +1724,10 @@ class PSBTTest(BitcoinTestFramework):
         self.test_decodepsbt_musig2_input_output_types()
 
         self.test_combinepsbt_preserves_proprietary_fields()
+        self.test_combinepsbt_global_xpub_origin_conflict()
+        self.test_combinepsbt_tap_leaf_script_conflict()
+
+        self.test_combinepsbt_preserves_unknown_fields()
 
         self.log.info("Test that combining PSBTs with different transactions fails")
         tx = CTransaction()
@@ -1424,6 +1772,14 @@ class PSBTTest(BitcoinTestFramework):
         utxo = self.create_outpoints(self.nodes[0], outputs=[{address: 1}])[0]
         self.sync_all()
 
+        self.log.info("Test descriptorprocesspsbt updates PSBT outputs")
+        for has_input in [False, True]:
+            output_psbt = self.nodes[2].createpsbt([utxo] if has_input else [], {address: 1})
+            processed = self.nodes[2].descriptorprocesspsbt(psbt=output_psbt, descriptors=[descriptor], finalize=False)
+            decoded = self.nodes[2].decodepsbt(processed["psbt"])
+            assert_equal(len(decoded["inputs"]), int(has_input))
+            assert_equal(len(decoded["outputs"][0]["bip32_derivs"]), 1)
+
         psbt = self.nodes[2].createpsbt([utxo], {self.nodes[0].getnewaddress(): 0.99999})
         decoded = self.nodes[2].decodepsbt(psbt)
         test_psbt_input_keys(decoded['inputs'][0], [])
@@ -1459,10 +1815,14 @@ class PSBTTest(BitcoinTestFramework):
         if not self.options.usecli:
             self.test_sighash_mismatch()
         self.test_sighash_adding()
+        self.test_sighash_single()
+        self.test_decodepsbt_long_sighash_type()
+        self.test_combinepsbt_sighash_type()
         self.test_psbt_named_parameter_handling()
         self.test_psbt_roundtrip()
         self.test_psbt_version()
         self.test_psbt_with_invalid_signature()
+        self.test_musig2_untrusted_derivation()
 
 if __name__ == '__main__':
     PSBTTest(__file__).main()

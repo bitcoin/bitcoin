@@ -169,6 +169,86 @@ BOOST_AUTO_TEST_CASE(stale_unpicked_tx)
     BOOST_CHECK_EQUAL(stale_state[0], tx);
 }
 
+BOOST_AUTO_TEST_CASE(send_attempt_limit)
+{
+    FakeNodeClock clock{};
+
+    constexpr size_t max_attempts{5};
+    PrivateBroadcast pb{PrivateBroadcast::MAX_TRANSACTIONS, max_attempts};
+    const auto tx{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
+    BOOST_REQUIRE_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::Added);
+
+    in_addr ipv4_addr;
+    ipv4_addr.s_addr = 0xa0b0c001;
+    const CService address{ipv4_addr, 1111};
+
+    NodeId node_id{0};
+    for (size_t attempt{0}; attempt < max_attempts; ++attempt) {
+        BOOST_CHECK(pb.HavePendingTransactions());
+        BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/node_id++, address).value(), tx);
+    }
+
+    // The transaction and its complete send history remain available, but no
+    // further connections should be opened for it.
+    BOOST_CHECK(!pb.HavePendingTransactions());
+    BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/node_id++, address).has_value());
+    const auto info{pb.GetBroadcastInfo()};
+    BOOST_REQUIRE_EQUAL(info.size(), 1);
+    BOOST_CHECK_EQUAL(info[0].peers.size(), max_attempts);
+    BOOST_CHECK_EQUAL(info[0].attempts_remaining, 0);
+
+    clock += PrivateBroadcast::INITIAL_STALE_DURATION + 1min;
+    BOOST_CHECK(pb.GetStale().empty());
+
+    // An exhausted transaction does not prevent another transaction from being sent.
+    const auto next_tx{MakeDummyTx(/*id=*/2, /*num_witness=*/0)};
+    BOOST_REQUIRE_EQUAL(pb.Add(next_tx), PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK(pb.HavePendingTransactions());
+    BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/node_id++, address).value(), next_tx);
+
+    // Re-adding an exhausted transaction resets its state and starts a fresh
+    // initial stale period.
+    BOOST_REQUIRE_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK(pb.HavePendingTransactions());
+    BOOST_CHECK(pb.GetStale().empty());
+    const auto reset_info{pb.GetBroadcastInfo()};
+    const auto reset_tx_info{std::ranges::find(reset_info, tx->GetWitnessHash(), [](const auto& entry) { return entry.tx->GetWitnessHash(); })};
+    BOOST_REQUIRE(reset_tx_info != reset_info.end());
+    BOOST_CHECK(reset_tx_info->peers.empty());
+    BOOST_CHECK_EQUAL(reset_tx_info->attempts_remaining, max_attempts);
+    BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/node_id++, address).value(), tx);
+}
+
+BOOST_AUTO_TEST_CASE(reset_with_equivalent_transaction_reference)
+{
+    PrivateBroadcast pb{PrivateBroadcast::MAX_TRANSACTIONS, /*max_send_attempts=*/1};
+    const auto tx{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
+    const auto equivalent_tx{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
+    BOOST_REQUIRE(tx != equivalent_tx);
+    BOOST_REQUIRE(tx->GetWitnessHash() == equivalent_tx->GetWitnessHash());
+
+    in_addr ipv4_addr;
+    ipv4_addr.s_addr = 0xa0b0c001;
+    const CService address{ipv4_addr, 1111};
+    BOOST_REQUIRE_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::Added);
+    BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/0, address).value(), tx);
+    pb.NodeConfirmedReception(/*nodeid=*/0);
+    BOOST_CHECK(pb.DidNodeConfirmReception(/*nodeid=*/0));
+    BOOST_CHECK(!pb.HavePendingTransactions());
+
+    // A distinct CTransactionRef with the same WTXID must reset the exhausted
+    // transaction, including its send and confirmation history.
+    BOOST_REQUIRE_EQUAL(pb.Add(equivalent_tx), PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK(pb.HavePendingTransactions());
+    BOOST_CHECK(!pb.GetTxForNode(/*nodeid=*/0).has_value());
+    BOOST_CHECK(!pb.DidNodeConfirmReception(/*nodeid=*/0));
+    const auto info{pb.GetBroadcastInfo()};
+    BOOST_REQUIRE_EQUAL(info.size(), 1);
+    BOOST_CHECK(info[0].tx->GetWitnessHash() == tx->GetWitnessHash());
+    BOOST_CHECK(info[0].peers.empty());
+    BOOST_CHECK_EQUAL(pb.Remove(equivalent_tx).value(), 0);
+}
+
 BOOST_AUTO_TEST_CASE(rejection_at_cap)
 {
     PrivateBroadcast pb;

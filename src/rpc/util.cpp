@@ -2,25 +2,28 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <rpc/util.h>
+
+#include <arith_uint256.h>
 #include <chain.h>
 #include <common/args.h>
 #include <common/messages.h>
 #include <common/types.h>
 #include <consensus/amount.h>
 #include <core_io.h>
-#include <key_io.h>
+#include <crypto/hex_base.h>
 #include <node/types.h>
 #include <outputtype.h>
 #include <pow.h>
-#include <rpc/util.h>
 #include <script/descriptor.h>
-#include <script/interpreter.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
 #include <tinyformat.h>
 #include <uint256.h>
 #include <univalue.h>
+#include <util/bip32.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <util/result.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -28,6 +31,9 @@
 
 #include <algorithm>
 #include <iterator>
+#include <memory>
+#include <set>
+#include <span>
 #include <string_view>
 #include <tuple>
 #include <utility>
@@ -1314,7 +1320,6 @@ static std::pair<int64_t, int64_t> ParseRange(const UniValue& value)
     if (value.isArray() && value.size() == 2 && value[0].isNum() && value[1].isNum()) {
         int64_t low = value[0].getInt<int64_t>();
         int64_t high = value[1].getInt<int64_t>();
-        if (low > high) throw JSONRPCError(RPC_INVALID_PARAMETER, "Range specified as [begin,end] must not have begin after end");
         return {low, high};
     }
     throw JSONRPCError(RPC_INVALID_PARAMETER, "Range must be specified as end or as [begin,end]");
@@ -1324,14 +1329,8 @@ std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value)
 {
     int64_t low, high;
     std::tie(low, high) = ParseRange(value);
-    if (low < 0) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Range should be greater or equal than 0");
-    }
-    if ((high >> 31) != 0) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "End of range is too high");
-    }
-    if (high >= low + 1000000) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Range is too large");
+    if (auto res = CheckDescriptorRangeBounds(low, high); !res) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, res.error());
     }
     return {low, high};
 }
@@ -1377,6 +1376,15 @@ std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, Fl
         }
     }
     return ret;
+}
+
+std::vector<uint32_t> ParsePathBIP32(const std::string& path)
+{
+    std::vector<uint32_t> out;
+    if (!ParseHDKeypath(path, out)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid BIP32 keypath");
+    }
+    return out;
 }
 
 /** Convert a vector of bilingual strings to a UniValue::VARR containing their original untranslated values. */

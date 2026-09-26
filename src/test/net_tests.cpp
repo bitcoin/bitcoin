@@ -1400,9 +1400,14 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         tester.SendMessage(uint8_t(4), msg_data_1); // cmpctblock short id
         tester.SendMessage(0, {}); // Invalidly encoded message
         tester.SendMessage("tx", msg_data_2); // 12-character encoded message type
+        // Message type containing 0x7F (DEL): outside the printable-ASCII range
+        // accepted by the v1 transport, so must be rejected here as well.
+        tester.SendMessage(std::string{"t\x7f"}, msg_data_2);
+        // Message type containing 0x7E ('~'): at the boundary, still valid.
+        tester.SendMessage("t~", msg_data_2);
         ret = tester.Interact();
         BOOST_REQUIRE(ret);
-        BOOST_REQUIRE(ret->size() == 3);
+        BOOST_REQUIRE(ret->size() == 5);
         BOOST_REQUIRE((*ret)[0]);
         BOOST_CHECK((*ret)[0]->m_type == "cmpctblock");
         BOOST_CHECK(std::ranges::equal((*ret)[0]->m_recv, MakeByteSpan(msg_data_1)));
@@ -1410,6 +1415,10 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         BOOST_REQUIRE((*ret)[2]);
         BOOST_CHECK((*ret)[2]->m_type == "tx");
         BOOST_CHECK(std::ranges::equal((*ret)[2]->m_recv, MakeByteSpan(msg_data_2)));
+        BOOST_CHECK(!(*ret)[3]);
+        BOOST_REQUIRE((*ret)[4]);
+        BOOST_CHECK((*ret)[4]->m_type == "t~");
+        BOOST_CHECK(std::ranges::equal((*ret)[4]->m_recv, MakeByteSpan(msg_data_2)));
 
         // Then send a message with a bit error, expecting failure. It's possible this failure does
         // not occur immediately (when the length descriptor was modified), but it should come

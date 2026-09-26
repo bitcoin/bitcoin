@@ -15,7 +15,7 @@ class CChainParams;
 
 namespace kernel {
 
-static constexpr bool DEFAULT_XOR_BLOCKSDIR{true};
+inline constexpr bool DEFAULT_XOR_BLOCKSDIR{true};
 
 /**
  * An options struct for `BlockManager`, more ergonomically referred to as

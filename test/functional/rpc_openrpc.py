@@ -52,7 +52,7 @@ class OpenRPCDocTest(BitcoinTestFramework):
         self.log.info("Checking type_str override schemas")
         getblockstats = find_method(openrpc, "getblockstats")
         hash_or_height = find_param(getblockstats, "hash_or_height")
-        assert_equal(hash_or_height["schema"], {"oneOf": [{"type": "number"}, {"type": "string"}]})
+        assert_equal(hash_or_height["schema"], {"oneOf": [{"type": "integer"}, {"type": "string"}]})
 
         self.log.info("Checking fixed-length array schemas")
         deriveaddresses = find_method(openrpc, "deriveaddresses")
@@ -75,7 +75,11 @@ class OpenRPCDocTest(BitcoinTestFramework):
         self.log.info("Checking relaxed schemas for unchecked RPC types")
         createrawtransaction = find_method(openrpc, "createrawtransaction")
         outputs = find_param(createrawtransaction, "outputs")
-        assert_equal(outputs["schema"], {"oneOf": [{"type": "array"}, {"type": "object"}]})
+        address_description = "A key-value pair. The key (string) is the bitcoin address, the value (float or string) is the amount in BTC"
+        address_obj = {"type": "object", "additionalProperties": {"oneOf": [{"type": "number"},{"type": "string"}]}, "description": address_description}
+        data_description = "A key-value pair. The key must be \"data\", the value is hex-encoded data that becomes a part of an OP_RETURN output"
+        data_obj = {"type": "object", "properties": { "data": {"type": "string", "pattern": "^[0-9a-fA-F]+$", "description": data_description}}, "additionalProperties": False, "required": ["data"]}
+        assert_equal(outputs["schema"], {"oneOf": [{"type": "array", "items": {"anyOf": [address_obj, data_obj]}}, {"type": "object"}]})
 
         getdescriptoractivity = find_method(openrpc, "getdescriptoractivity")
         activity = getdescriptoractivity["result"]["schema"]["properties"]["activity"]

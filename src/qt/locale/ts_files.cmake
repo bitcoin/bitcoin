@@ -48,6 +48,7 @@ set(ts_files
   bitcoin_ko.ts
   bitcoin_ku.ts
   bitcoin_ku_IQ.ts
+  bitcoin_la.ts
   bitcoin_lt.ts
   bitcoin_lv.ts
   bitcoin_mi.ts
@@ -90,8 +91,8 @@ set(ts_files
   bitcoin_uz@Cyrl.ts
   bitcoin_uz@Latn.ts
   bitcoin_ve.ts
+  bitcoin_vi.ts
   bitcoin_yi.ts
-  bitcoin_yo.ts
   bitcoin_yue.ts
   bitcoin_zh-Hans.ts
   bitcoin_zh-Hant.ts

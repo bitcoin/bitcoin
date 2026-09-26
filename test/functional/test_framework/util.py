@@ -557,15 +557,18 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
             f.write("connect=0\n")
         # Limit max connections to mitigate test failures on some systems caused by the warning:
         # "Warning: Reducing -maxconnections from <...> to <...> due to system limitations".
-        # The value is calculated as follows:
-        #  available_fds = 256          // Same as FD_SETSIZE on NetBSD.
-        #  MIN_CORE_FDS = 151           // Number of file descriptors required for core functionality.
-        #  MAX_ADDNODE_CONNECTIONS = 8  // Maximum number of -addnode outgoing nodes.
-        #  nBind == 3                   // Maximum number of bound interfaces used in a test.
+        # For details, consult the `AppInitParameterInteraction` function in src/init.cpp.
+        #  available_fds = 256                // Same as FD_SETSIZE on NetBSD.
+        #  MIN_CORE_FDS = 151                 // Number of file descriptors required for core functionality.
+        #  MAX_ADDNODE_CONNECTIONS = 8        // Maximum number of -addnode outgoing nodes.
+        #  num_p2p_bind = 3                   // Maximum number of bound P2P interfaces (-bind and -whitebind) used in a test.
+        #  num_rpc_bind = 2                   // Maximum number of HTTP sockets used in a test.
+        #  DEFAULT_MAX_HTTP_CONNECTIONS = 16  // Reserved for connected HTTP clients.
         #
-        #  min_required_fds = MIN_CORE_FDS + MAX_ADDNODE_CONNECTIONS + nBind = 151 + 8 + 3 = 162;
-        #  nMaxConnections = available_fds - min_required_fds = 256 - 161 = 94;
-        f.write("maxconnections=94\n")
+        #  min_required_fds = MIN_CORE_FDS + MAX_ADDNODE_CONNECTIONS + num_p2p_bind + num_rpc_bind + DEFAULT_MAX_HTTP_CONNECTIONS =
+        #    = 151 + 8 + 3 + 2 + 16 = 180;
+        #  num_p2p_max_connections = available_fds - min_required_fds = 256 - 180 = 76;
+        f.write("maxconnections=76\n")
         f.write("par=" + str(min(2, os.cpu_count())) + "\n")
         # Use a single prevoutfetch worker thread to keep per-node resource usage low.
         f.write("prevoutfetchthreads=1\n")

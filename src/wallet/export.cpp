@@ -36,8 +36,9 @@ util::Expected<std::vector<WalletDescInfo>, std::string> ExportDescriptors(const
             wallet_descriptor.creation_time,
             wallet.IsActiveScriptPubKeyMan(*desc_spk_man),
             wallet.IsInternalScriptPubKeyMan(desc_spk_man),
-            is_range ? std::optional(std::make_pair(wallet_descriptor.range_start, wallet_descriptor.range_end)) : std::nullopt,
-            wallet_descriptor.next_index
+            is_range ? std::optional(std::make_pair(wallet_descriptor.GetStart(), wallet_descriptor.GetEnd())) : std::nullopt,
+            wallet_descriptor.GetNext(),
+            wallet_descriptor.cache
         );
     }
     return wallet_descriptors;
@@ -105,15 +106,14 @@ util::Result<std::string> ExportWatchOnlyWallet(const CWallet& wallet, const fs:
 
             WalletDescriptor w_desc(std::move(descs.at(0)), desc_info.creation_time, range_start, range_end, desc_info.next_index);
 
-            // For descriptors that cannot self expand (i.e. needs private keys or cache), retrieve the cache
-            uint256 desc_id = w_desc.id;
+            // For descriptors that cannot self expand (i.e. needs private keys or cache), set the cache
             if (!w_desc.descriptor->CanSelfExpand()) {
-                DescriptorScriptPubKeyMan* desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(wallet.GetScriptPubKeyMan(desc_id));
-                w_desc.cache = WITH_LOCK(desc_spkm->cs_desc_man, return desc_spkm->GetWalletDescriptor().cache);
+                w_desc.cache = desc_info.cache;
             }
 
             // Add to the watchonly wallet
-            if (auto spkm_res = watchonly_wallet->AddWalletDescriptor(w_desc, dummy_keys, /*label=*/"", /*internal=*/false); !spkm_res) {
+            auto spkm_res = watchonly_wallet->AddWalletDescriptor(w_desc, dummy_keys, /*label=*/"", /*internal=*/false);
+            if (!spkm_res) {
                 return util::Error{util::ErrorString(spkm_res)};
             }
 
@@ -125,7 +125,7 @@ util::Result<std::string> ExportWatchOnlyWallet(const CWallet& wallet, const fs:
                 if (desc_info.internal) {
                     internal = *desc_info.internal;
                 }
-                watchonly_wallet->AddActiveScriptPubKeyMan(desc_id, *Assert(w_desc.descriptor->GetOutputType()), internal);
+                watchonly_wallet->AddActiveScriptPubKeyMan(spkm_res->get().GetID(), *Assert(w_desc.descriptor->GetOutputType()), internal);
             }
         }
 
@@ -165,7 +165,7 @@ util::Result<std::string> ExportWatchOnlyWallet(const CWallet& wallet, const fs:
                 if (!watchonly_wallet->LoadToWallet(std::move(copy_wtx))) {
                     return util::Error{strprintf(_("Error: Could not add tx %s to watchonly wallet"), txid.GetHex())};
                 }
-                watchonly_batch.WriteTx(watchonly_wallet->mapWallet.at(txid));
+                watchonly_batch.WriteFullTx(watchonly_wallet->mapWallet.at(txid));
             }
 
             // Copy address book

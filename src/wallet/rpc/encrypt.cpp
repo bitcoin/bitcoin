@@ -6,6 +6,7 @@
 #include <scheduler.h>
 #include <wallet/context.h>
 #include <wallet/rpc/util.h>
+#include <wallet/scan.h>
 #include <wallet/wallet.h>
 
 
@@ -70,18 +71,8 @@ RPCMethod walletpassphrase()
             throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase cannot be empty");
         }
 
-        if (!pwallet->Unlock(strWalletPass)) {
-            // Check if the passphrase has a null character (see #27067 for details)
-            if (strWalletPass.find('\0') == std::string::npos) {
-                throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
-            } else {
-                throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered is incorrect. "
-                                                                    "It contains a null character (ie - a zero byte). "
-                                                                    "If the passphrase was set with a version of this software prior to 25.0, "
-                                                                    "please try again with only the characters up to — but not including — "
-                                                                    "the first null character. If this is successful, please set a new "
-                                                                    "passphrase to avoid this issue in the future.");
-            }
+        if (auto unlocked{pwallet->Unlock(strWalletPass)}; !unlocked) {
+            throw JSONRPCError(HandleWalletErrorCode(unlocked.error().code), unlocked.error().message.original);
         }
 
         pwallet->TopUpKeyPool();
@@ -138,7 +129,7 @@ RPCMethod walletpassphrasechange()
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletpassphrasechange was called.");
     }
 
-    if (pwallet->IsScanningWithPassphrase()) {
+    if (pwallet->Scanner().IsScanningWithPassphrase()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before changing the passphrase.");
     }
 
@@ -156,17 +147,8 @@ RPCMethod walletpassphrasechange()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "passphrase cannot be empty");
     }
 
-    if (!pwallet->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass)) {
-        // Check if the old passphrase had a null character (see #27067 for details)
-        if (strOldWalletPass.find('\0') == std::string::npos) {
-            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
-        } else {
-            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The old wallet passphrase entered is incorrect. "
-                                                                "It contains a null character (ie - a zero byte). "
-                                                                "If the old passphrase was set with a version of this software prior to 25.0, "
-                                                                "please try again with only the characters up to — but not including — "
-                                                                "the first null character.");
-        }
+    if (auto changed{pwallet->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass)}; !changed) {
+        throw JSONRPCError(HandleWalletErrorCode(changed.error().code), changed.error().message.original);
     }
 
     return UniValue::VNULL;
@@ -203,7 +185,7 @@ RPCMethod walletlock()
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletlock was called.");
     }
 
-    if (pwallet->IsScanningWithPassphrase()) {
+    if (pwallet->Scanner().IsScanningWithPassphrase()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before locking the wallet.");
     }
 
@@ -260,7 +242,7 @@ RPCMethod encryptwallet()
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an encrypted wallet, but encryptwallet was called.");
     }
 
-    if (pwallet->IsScanningWithPassphrase()) {
+    if (pwallet->Scanner().IsScanningWithPassphrase()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before encrypting the wallet.");
     }
 

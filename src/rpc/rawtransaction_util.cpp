@@ -8,20 +8,29 @@
 #include <coins.h>
 #include <consensus/amount.h>
 #include <core_io.h>
+#include <crypto/hex_base.h>
 #include <key_io.h>
+#include <policy/feerate.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
+#include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <rpc/util.h>
+#include <script/interpreter.h>
+#include <script/script.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <tinyformat.h>
 #include <univalue.h>
 #include <util/check.h>
 #include <util/rbf.h>
-#include <util/string.h>
-#include <util/strencodings.h>
 #include <util/translation.h>
+#include <util/vector.h>
+
+#include <cstddef>
+#include <set>
+#include <span>
+#include <variant>
 
 void AddInputs(CMutableTransaction& rawTx, const UniValue& inputs_in, std::optional<bool> rbf)
 {
@@ -105,19 +114,23 @@ std::vector<std::pair<CTxDestination, CAmount>> ParseOutputs(const UniValue& out
     std::set<CTxDestination> destinations;
     std::vector<std::pair<CTxDestination, CAmount>> parsed_outputs;
     bool has_data{false};
-    for (const std::string& name_ : outputs.getKeys()) {
+    const auto& keys{outputs.getKeys()};
+    const auto& values{outputs.getValues()};
+    for (size_t i{0}; i < keys.size(); ++i) {
+        const auto& name_{keys[i]};
+        const auto& value{values[i]};
         if (name_ == "data") {
             if (has_data) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, duplicate key: data");
             }
             has_data = true;
-            std::vector<unsigned char> data = ParseHexV(outputs[name_].getValStr(), "Data");
+            std::vector<unsigned char> data = ParseHexV(value.getValStr(), "Data");
             CTxDestination destination{CNoDestination{CScript() << OP_RETURN << data}};
             CAmount amount{0};
             parsed_outputs.emplace_back(destination, amount);
         } else {
             CTxDestination destination{DecodeDestination(name_)};
-            CAmount amount{AmountFromValue(outputs[name_])};
+            CAmount amount{AmountFromValue(value)};
             if (!IsValidDestination(destination)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ") + name_);
             }

@@ -12,8 +12,8 @@ extern "C" {
 #include <crypto/ctaes/ctaes.h>
 }
 
-static const int AES_BLOCKSIZE = 16;
-static const int AES256_KEYSIZE = 32;
+inline constexpr int AES_BLOCKSIZE = 16;
+inline constexpr int AES256_KEYSIZE = 32;
 
 /** An encryption class for AES-256. */
 class AES256Encrypt

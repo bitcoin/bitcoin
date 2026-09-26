@@ -3,20 +3,35 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <rpc/register.h> // IWYU pragma: associated
+
 #include <chain.h>
-#include <chainparams.h>
 #include <coins.h>
+#include <crypto/hex_base.h>
 #include <index/txindex.h>
 #include <merkleblock.h>
 #include <node/blockstorage.h>
+#include <node/transaction.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <rpc/blockchain.h>
+#include <rpc/protocol.h>
+#include <rpc/request.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
+#include <streams.h>
+#include <sync.h>
+#include <uint256.h>
 #include <univalue.h>
-#include <util/strencodings.h>
 #include <validation.h>
+
+#include <memory>
+#include <set>
+#include <span>
+#include <string>
+#include <utility>
+#include <vector>
 
 using node::GetTransaction;
 

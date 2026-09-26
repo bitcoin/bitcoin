@@ -27,6 +27,7 @@
 #include <mp/type-struct.h>
 #include <mp/type-threadmap.h>
 #include <mp/type-vector.h>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 
@@ -123,7 +124,9 @@ decltype(auto) CustomReadField(TypeList<UniValue>, Priority<1>, InvokeContext& i
 {
     return read_dest.update([&](auto& value) {
         auto data = input.get();
-        value.read(std::string_view{data.begin(), data.size()});
+        if (!value.read(std::string_view{data.begin(), data.size()})) {
+            throw std::runtime_error{"invalid JSON received over IPC"};
+        }
     });
 }
 

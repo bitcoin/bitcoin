@@ -190,7 +190,7 @@ T check(T ptr)
     return ptr;
 }
 
-template <typename Collection, typename ValueType>
+template <typename Collection, typename ValueType, auto GetFunc>
 class Iterator
 {
 public:
@@ -209,8 +209,7 @@ public:
     Iterator(const Collection* ptr, size_t idx) : m_collection{ptr}, m_idx{idx} {}
 
     // This is just a view, so return a copy.
-    auto operator*() const { return (*m_collection)[m_idx]; }
-    auto operator->() const { return (*m_collection)[m_idx]; }
+    auto operator*() const { return std::invoke(GetFunc, *m_collection, m_idx); }
 
     auto& operator++() { m_idx++; return *this; }
     auto operator++(int) { Iterator tmp = *this; ++(*this); return tmp; }
@@ -226,7 +225,7 @@ public:
 
     auto operator-(const Iterator& other) const { return static_cast<difference_type>(m_idx) - static_cast<difference_type>(other.m_idx); }
 
-    ValueType operator[](difference_type n) const { return (*m_collection)[m_idx + n]; }
+    ValueType operator[](difference_type n) const { return *(*this + n); }
 
     auto operator<=>(const Iterator& other) const { return m_idx <=> other.m_idx; }
 
@@ -249,7 +248,7 @@ class Range
 public:
     using value_type = std::invoke_result_t<decltype(GetFunc), const Container&, size_t>;
     using difference_type = std::ptrdiff_t;
-    using iterator = Iterator<Range, value_type>;
+    using iterator = Iterator<Container, value_type, GetFunc>;
     using const_iterator = iterator;
 
 private:
@@ -261,8 +260,8 @@ public:
         static_assert(std::ranges::random_access_range<Range>);
     }
 
-    iterator begin() const { return iterator(this, 0); }
-    iterator end() const { return iterator(this, size()); }
+    iterator begin() const { return iterator(m_container, 0); }
+    iterator end() const { return iterator(m_container, size()); }
 
     const_iterator cbegin() const { return begin(); }
     const_iterator cend() const { return end(); }
@@ -529,6 +528,50 @@ public:
 };
 
 template <typename Derived>
+class WtxidApi
+{
+private:
+    auto impl() const
+    {
+        return static_cast<const Derived*>(this)->get();
+    }
+
+    friend Derived;
+    WtxidApi() = default;
+
+public:
+    bool operator==(const WtxidApi& other) const
+    {
+        return btck_wtxid_equals(impl(), other.impl()) != 0;
+    }
+
+    bool operator!=(const WtxidApi& other) const
+    {
+        return btck_wtxid_equals(impl(), other.impl()) == 0;
+    }
+
+    std::array<std::byte, 32> ToBytes() const
+    {
+        std::array<std::byte, 32> hash;
+        btck_wtxid_to_bytes(impl(), reinterpret_cast<unsigned char*>(hash.data()));
+        return hash;
+    }
+};
+
+class WtxidView : public View<btck_Wtxid>, public WtxidApi<WtxidView>
+{
+public:
+    explicit WtxidView(const btck_Wtxid* ptr) : View{ptr} {}
+};
+
+class Wtxid : public Handle<btck_Wtxid, btck_wtxid_copy, btck_wtxid_destroy>, public WtxidApi<Wtxid>
+{
+public:
+    Wtxid(const WtxidView& view)
+        : Handle(view) {}
+};
+
+template <typename Derived>
 class OutPointApi
 {
 private:
@@ -685,14 +728,29 @@ public:
         return TransactionInputView{btck_transaction_get_input_at(impl(), index)};
     }
 
+    uint32_t GetVersion() const
+    {
+        return btck_transaction_get_version(impl());
+    }
+
     uint32_t GetLocktime() const
     {
         return btck_transaction_get_locktime(impl());
     }
 
+    bool HasWitness() const
+    {
+        return btck_transaction_has_witness(impl()) != 0;
+    }
+
     TxidView Txid() const
     {
         return TxidView{btck_transaction_get_txid(impl())};
+    }
+
+    WtxidView Wtxid() const
+    {
+        return WtxidView{btck_transaction_get_wtxid(impl())};
     }
 
     MAKE_RANGE_METHOD(Outputs, Derived, &TransactionApi<Derived>::CountOutputs, &TransactionApi<Derived>::GetOutput, *static_cast<const Derived*>(this))
@@ -819,6 +877,13 @@ public:
     BlockHashView PrevHash() const
     {
         return BlockHashView{btck_block_header_get_prev_hash(impl())};
+    }
+
+    std::array<std::byte, 32> MerkleRoot() const
+    {
+        std::array<std::byte, 32> merkle_root;
+        btck_block_header_get_merkle_root(impl(), reinterpret_cast<unsigned char*>(merkle_root.data()));
+        return merkle_root;
     }
 
     uint32_t Timestamp() const

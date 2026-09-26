@@ -41,17 +41,9 @@ def check_imports():
 
     # Ensure the executable is linked against the expected C runtime.
     dlls = {name.lower() for name in dlls}
-    uses_msvcrt = "msvcrt.dll" in dlls
     uses_ucrt = any(name.startswith("api-ms-win-crt-") for name in dlls)
-    crt = os.environ["CRT"]
-    if crt == "msvcrt":
-        crt_ok = uses_msvcrt and not uses_ucrt
-    elif crt == "ucrt":
-        crt_ok = uses_ucrt and not uses_msvcrt
-    else:
-        sys.exit(f"Unexpected CRT value: {crt!r}")
-    if not crt_ok:
-        sys.exit(f"Imported DLLs do not match the expected {crt!r} C runtime.")
+    if not uses_ucrt:
+        sys.exit("Imported DLLs do not match the expected UCRT C runtime.")
 
 
 def check_manifests():
@@ -99,12 +91,9 @@ def prepare_tests():
     content = "\n".join(lines) + "\n"
     config_path.write_text(content)
     print(content)
-    previous_releases_dir = Path(os.environ["PREVIOUS_RELEASES_DIR"])
     cmd_download_prev_rel = [
         sys.executable,
         str(workspace / "test" / "get_previous_releases.py"),
-        "--target-dir",
-        str(previous_releases_dir),
     ]
     run(cmd_download_prev_rel)
     run([sys.executable, "-m", "pip", "install", "pyzmq"])

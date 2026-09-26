@@ -69,6 +69,11 @@ bool MutableTransactionSignatureCreator::CreateSig(const SigningProvider& provid
     // BASE/WITNESS_V0 signatures don't support explicit SIGHASH_DEFAULT, use SIGHASH_ALL instead.
     const int hashtype = m_options.sighash_type == SIGHASH_DEFAULT ? SIGHASH_ALL : m_options.sighash_type;
 
+    // If an input is signed with SIGHASH_SINGLE but there is no output at the same index, the
+    // signature commits to no output at all. Which means such a signature stays valid if the
+    // output is swapped, which is a footgun. So don't produce it.
+    if ((hashtype & SIGHASH_OUTPUT_MASK) == SIGHASH_SINGLE && nIn >= m_txto.vout.size()) return false;
+
     uint256 hash = SignatureHash(scriptCode, m_txto, nIn, hashtype, amount, sigversion, m_txdata);
     if (!key.Sign(hash, vchSig))
         return false;
@@ -318,14 +323,15 @@ static bool SignMuSig2(const BaseSignatureCreator& creator, SignatureData& sigda
             }
             // Get the BIP32 derivation tweaks
             CExtPubKey extpub = CreateMuSig2SyntheticXpub(agg_pub);
-            for (const int i : agg_info.path) {
+            for (const uint32_t i : agg_info.path) {
+                if (i >> 31) return false; // Hardened derivation is not possible from a public key
                 auto& [t, xonly] = tweaks.emplace_back();
                 xonly = false;
                 if (!extpub.Derive(extpub, i, &t)) {
                     return false;
                 }
             }
-            Assert(XOnlyPubKey(extpub.pubkey) == script_pubkey);
+            if (XOnlyPubKey(extpub.pubkey) != script_pubkey) continue;
             plain_pub = extpub.pubkey;
         }
 
@@ -1023,8 +1029,6 @@ bool IsSegWitOutput(const SigningProvider& provider, const CScript& script)
 
 bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, const std::map<COutPoint, Coin>& coins, const SignOptions& options, std::map<int, bilingual_str>& input_errors)
 {
-    bool fHashSingle = ((options.sighash_type & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);
-
     // Use CTransaction for the constant parts of the
     // transaction to avoid rehashing.
     const CTransaction txConst(mtx);
@@ -1057,10 +1061,7 @@ bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
         const CAmount& amount = coin->second.out.nValue;
 
         SignatureData sigdata = DataFromTransaction(mtx, i, coin->second.out);
-        // Only sign SIGHASH_SINGLE if there's a corresponding output:
-        if (!fHashSingle || (i < mtx.vout.size())) {
-            ProduceSignature(*keystore, MutableTransactionSignatureCreator(mtx, i, amount, &txdata, options), prevPubKey, sigdata);
-        }
+        ProduceSignature(*keystore, MutableTransactionSignatureCreator(mtx, i, amount, &txdata, options), prevPubKey, sigdata);
 
         UpdateInput(txin, sigdata);
 

@@ -19,11 +19,13 @@ add_executable(test_bitcoin
   bech32_tests.cpp
   bip32_tests.cpp
   bip324_tests.cpp
+  bip352_tests.cpp
   blockchain_tests.cpp
   blockencodings_tests.cpp
   blockfilter_index_tests.cpp
   blockfilter_tests.cpp
   blockmanager_tests.cpp
+  blockpolicyestimator_tests.cpp
   bloom_tests.cpp
   bswap_tests.cpp
   btcsignals_tests.cpp
@@ -44,6 +46,7 @@ add_executable(test_bitcoin
   denialofservice_tests.cpp
   descriptor_tests.cpp
   disconnected_transactions.cpp
+  fees_util_tests.cpp
   feefrac_tests.cpp
   feerounder_tests.cpp
   flatfile_tests.cpp
@@ -58,6 +61,7 @@ add_executable(test_bitcoin
   key_tests.cpp
   logging_tests.cpp
   mempool_tests.cpp
+  mempool_fee_estimator_tests.cpp
   merkle_tests.cpp
   merkleblock_tests.cpp
   miner_tests.cpp
@@ -76,7 +80,6 @@ add_executable(test_bitcoin
   pcp_tests.cpp
   peerman_tests.cpp
   pmt_tests.cpp
-  policyestimator_tests.cpp
   pool_tests.cpp
   pow_tests.cpp
   prevector_tests.cpp
@@ -144,6 +147,7 @@ include(TargetDataSources)
 target_json_data_sources(test_bitcoin
   data/base58_encode_decode.json
   data/bip341_wallet_vectors.json
+  data/bip352_send_and_receive_vectors.json
   data/blockfilters.json
   data/key_io_invalid.json
   data/key_io_valid.json

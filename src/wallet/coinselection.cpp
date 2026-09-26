@@ -1027,11 +1027,6 @@ bool SelectionResult::operator<(SelectionResult other) const
     return *m_waste < *other.m_waste || (*m_waste == *other.m_waste && m_selected_inputs.size() > other.m_selected_inputs.size());
 }
 
-std::string COutput::ToString() const
-{
-    return strprintf("COutput(%s, %d, %d) [%s]", outpoint.hash.ToString(), outpoint.n, depth, FormatMoney(txout.nValue));
-}
-
 std::string GetAlgorithmName(const SelectionAlgorithm algo)
 {
     switch (algo)

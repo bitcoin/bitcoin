@@ -118,7 +118,7 @@ public:
 };
 
 /** Witness program for Pay-to-Anchor output script type */
-static const std::vector<unsigned char> ANCHOR_BYTES{0x4e, 0x73};
+inline const std::vector<unsigned char> ANCHOR_BYTES{0x4e, 0x73};
 
 struct PayToAnchor : public WitnessUnknown
 {

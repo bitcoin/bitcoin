@@ -12,6 +12,7 @@
 #include <interfaces/mining.h>
 #include <interfaces/types.h>
 #include <kernel/chainparams.h>
+#include <node/block_template_manager.h>
 #include <node/miner.h>
 #include <node/mining_args.h>
 #include <node/mining_types.h>
@@ -53,7 +54,6 @@
 using namespace util::hex_literals;
 using interfaces::BlockTemplate;
 using interfaces::Mining;
-using node::BlockAssembler;
 using node::BlockCreateOptions;
 
 namespace miner_tests {
@@ -61,6 +61,7 @@ struct MinerTestingSetup : public TestingSetup {
     void TestPackageSelection(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     void TestBasicMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     void TestPrioritisedMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void TestSigOpsAdjustedWeightChunkLimit(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool TestSequenceLocks(const CTransaction& tx, CTxMemPool& tx_mempool) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         CCoinsViewMemPool view_mempool{&m_node.chainman->ActiveChainstate().CoinsTip(), tx_mempool};
@@ -70,6 +71,7 @@ struct MinerTestingSetup : public TestingSetup {
     }
     CTxMemPool& MakeMempool()
     {
+        m_node.block_template_manager.reset();
         // Delete the previous mempool to ensure with valgrind that the old
         // pointer is not accessed, when the new one should be accessed
         // instead.
@@ -82,6 +84,7 @@ struct MinerTestingSetup : public TestingSetup {
         opts.limits.cluster_size_vbytes = 1'200'000;
         m_node.mempool = std::make_unique<CTxMemPool>(opts, error);
         Assert(error.empty());
+        CreateBlockTemplateManager();
         return *m_node.mempool;
     }
     std::unique_ptr<Mining> MakeMining()
@@ -216,11 +219,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
 
     // Test the inclusion of package feerates in the block template and ensure they are sequential.
     // Can't use the Mining interface because it needs access to m_package_feerates.
-    const auto block_package_feerates = BlockAssembler{
-        m_node.chainman->ActiveChainstate(),
-        &tx_mempool,
-        MergeMiningOptions(options, m_node.mining_args),
-    }.CreateNewBlock()->m_package_feerates;
+    const auto block_package_feerates = Assert(m_node.block_template_manager)->CreateNewTemplate(options)->m_package_feerates;
     BOOST_CHECK(block_package_feerates.size() == 2);
 
     // parent_tx and high_fee_tx are added to the block as a package.
@@ -320,6 +319,22 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     BOOST_CHECK(block.vtx[8]->GetHash() == hashLowFeeTx2);
 }
 
+// One sigop-dense tx spending `input`: num_outputs bare CHECKMULTISIG outputs,
+// i.e. 20 * num_outputs legacy sigops (OP_NOP forces the inaccurate max-20 count).
+static CMutableTransaction CreateBigSigOpsTx(const COutPoint& input, unsigned int num_outputs)
+{
+    CMutableTransaction tx;
+    tx.vin.resize(1);
+    tx.vin[0].prevout = input;
+    tx.vin[0].scriptSig = CScript() << OP_1;
+    tx.vout.resize(num_outputs);
+    for (auto& out : tx.vout) {
+        out.nValue = 0;
+        out.scriptPubKey = CScript() << OP_0 << OP_0 << OP_0 << OP_NOP << OP_CHECKMULTISIG << OP_1;
+    }
+    return tx;
+}
+
 std::vector<CTransactionRef> CreateBigSigOpsCluster(const CTransactionRef& first_tx)
 {
     std::vector<CTransactionRef> ret;
@@ -346,20 +361,34 @@ std::vector<CTransactionRef> CreateBigSigOpsCluster(const CTransactionRef& first
     // Tx2-51 has 400 sigops: 1 input, 20 CHECKMULTISIG outputs
     // Total: 1000 CHECKMULTISIG + 1
     for (unsigned int i = 0; i < 50; ++i) {
-        auto tx2 = tx;
-        tx2.vin.resize(1);
-        tx2.vin[0].prevout.hash = parent_tx->GetHash();
-        tx2.vin[0].prevout.n = i;
-        tx2.vin[0].scriptSig = CScript() << OP_1;
-        tx2.vout.resize(20);
-        tx2.vout[0].nValue = parent_tx->vout[i].nValue - CENT;
-        for (auto &out : tx2.vout) {
-            out.nValue = 0;
-            out.scriptPubKey = CScript() << OP_0 << OP_0 << OP_0 << OP_NOP << OP_CHECKMULTISIG << OP_1;
-        }
-        ret.push_back(MakeTransactionRef(tx2));
+        ret.push_back(MakeTransactionRef(CreateBigSigOpsTx(COutPoint{parent_tx->GetHash(), i}, /*num_outputs=*/20)));
     }
     return ret;
+}
+
+void MinerTestingSetup::TestSigOpsAdjustedWeightChunkLimit(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst)
+{
+    auto mining{MakeMining()};
+    BOOST_REQUIRE(mining);
+
+    CTxMemPool& tx_mempool{MakeMempool()};
+    LOCK(tx_mempool.cs);
+    TestMemPoolEntryHelper entry;
+
+    const auto tx{CreateBigSigOpsTx(COutPoint{txFirst[0]->GetHash(), 0}, /*num_outputs=*/50)};
+    const auto sigop_entry{entry.Fee(COIN).SpendsCoinbase(true).SigOpsCost(GetLegacySigOpCount(CTransaction(tx)) * WITNESS_SCALE_FACTOR).FromTx(tx)};
+    BOOST_REQUIRE(sigop_entry.GetAdjustedWeight() > sigop_entry.GetTxWeight());
+    BOOST_REQUIRE(sigop_entry.GetSigOpCost() < MAX_BLOCK_SIGOPS_COST);
+    TryAddToMempool(tx_mempool, sigop_entry);
+
+    BlockCreateOptions options{
+        // +1 because TestChunkBlockLimits rejects on >= (exact fit doesn't count).
+        .block_max_weight = DEFAULT_BLOCK_RESERVED_WEIGHT + sigop_entry.GetTxWeight() + 1,
+        .coinbase_output_script = scriptPubKey,
+    };
+    const CBlock block{mining->createNewBlock(options, /*cooldown=*/false)->getBlock()};
+    BOOST_CHECK_EQUAL(block.vtx.size(), 2U);
+    BOOST_CHECK(block.vtx[1]->GetHash() == tx.GetHash());
 }
 
 void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight)
@@ -933,6 +962,24 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     m_node.chainman->ActiveChain().Tip()->nHeight--;
 
     TestPrioritisedMining(scriptPubKey, txFirst);
+
+    TestSigOpsAdjustedWeightChunkLimit(scriptPubKey, txFirst);
+}
+
+BOOST_AUTO_TEST_CASE(block_template_manager)
+{
+    auto& block_template_manager = *Assert(m_node.block_template_manager);
+    BlockCreateOptions options;
+    options.use_mempool = false;
+    auto block_template = block_template_manager.CreateNewTemplate(options);
+    BOOST_REQUIRE(block_template);
+    const CBlock& block{block_template->block};
+    // Without the mempool the template holds only the coinbase, and the per-tx
+    // fee/sigops vectors exclude it.
+    BOOST_CHECK_EQUAL(block.vtx.size(), 1U);
+    BOOST_CHECK(block.vtx[0]->IsCoinBase());
+    BOOST_CHECK(block_template->vTxFees.empty());
+    BOOST_CHECK(block_template->vTxSigOpsCost.empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

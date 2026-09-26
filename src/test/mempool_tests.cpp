@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     clock += HALFLIFE;
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), maxFeeRateRemoved.GetFeePerK() + DEFAULT_INCREMENTAL_RELAY_FEE);
     // ... we should keep the same min fee until we get a block
-    pool.removeForBlock(vtx, 1);
+    pool.removeForBlock(vtx);
     clock += HALFLIFE;
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), llround((maxFeeRateRemoved.GetFeePerK() + DEFAULT_INCREMENTAL_RELAY_FEE)/2.0));
     // ... then feerate should drop 1/2 each halflife
@@ -524,6 +524,23 @@ BOOST_AUTO_TEST_CASE(MempoolAncestryTestsDiamond)
     pool.GetTransactionAncestry(td->GetHash(), ancestors, descendants);
     BOOST_CHECK_EQUAL(ancestors, 4ULL);
     BOOST_CHECK_EQUAL(descendants, 4ULL);
+}
+
+BOOST_AUTO_TEST_CASE(MempoolUnbroadcastMemoryUsage)
+{
+    CTxMemPool& pool{*Assert(m_node.mempool)};
+    LOCK2(cs_main, pool.cs);
+
+    auto tx{make_tx({10 * COIN})};
+    auto txid{tx->GetHash()};
+    TryAddToMempool(pool, TestMemPoolEntryHelper{}.Fee(1000).FromTx(tx));
+
+    auto usage_before{pool.DynamicMemoryUsage()};
+    pool.AddUnbroadcastTx(txid);
+    BOOST_CHECK_GT(pool.DynamicMemoryUsage(), usage_before);
+
+    pool.RemoveUnbroadcastTx(txid);
+    BOOST_CHECK_EQUAL(pool.DynamicMemoryUsage(), usage_before);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -50,9 +50,8 @@ static void MempoolCheckEphemeralSpends(benchmark::Bench& bench)
     tx1.vin.resize(1);
     tx1.vout.resize(number_outputs);
     for (size_t i = 0; i < tx1.vout.size(); i++) {
-        tx1.vout[i].scriptPubKey = CScript();
         // Each output progressively larger
-        tx1.vout[i].nValue = i * CENT;
+        tx1.vout[i] = CTxOut{CAmount(i) * CENT, CScript()};
     }
 
     const auto& parent_txid = tx1.GetHash();
@@ -60,9 +59,8 @@ static void MempoolCheckEphemeralSpends(benchmark::Bench& bench)
     // Spends all outputs of tx1, other details don't matter
     CMutableTransaction tx2;
     tx2.vin.resize(tx1.vout.size());
-    for (size_t i = 0; i < tx2.vin.size(); i++) {
-        tx2.vin[i].prevout.hash = parent_txid;
-        tx2.vin[i].prevout.n = i;
+    for (uint32_t i{0}; i < tx2.vin.size(); ++i) {
+        tx2.vin[i].prevout = COutPoint{parent_txid, i};
     }
     tx2.vout.resize(1);
 

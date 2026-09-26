@@ -473,7 +473,7 @@ void ellswift_xdh_ctx_sha256_tests(void) {
 /* Test hash initializers */
 void ellswift_hash_init_tests(void) {
     secp256k1_sha256 sha_optimized;
-    const secp256k1_hash_ctx *hash_ctx = secp256k1_get_hash_context(CTX);
+    const secp256k1_hash_ctx *hash_ctx = &CTX->hash_ctx;
     /* "secp256k1_ellswift_encode" */
     static const unsigned char encode_tag[] = {'s', 'e', 'c', 'p', '2', '5', '6', 'k', '1', '_', 'e', 'l', 'l', 's', 'w', 'i', 'f', 't', '_', 'e', 'n', 'c', 'o', 'd', 'e'};
     /* "secp256k1_ellswift_create" */

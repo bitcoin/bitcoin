@@ -7,17 +7,43 @@
 #include <tinyformat.h>
 #include <util/strencodings.h>
 
+#include <algorithm>
 #include <cstdint>
-#include <cstdio>
 #include <optional>
+#include <span>
 #include <sstream>
+#include <string_view>
+
+util::Expected<KeyPathElement, std::string> ParseKeyPathElement(std::span<const char> elem)
+{
+    const std::string_view raw{elem.begin(), elem.end()};
+    if (elem.empty()) {
+        return util::Unexpected{strprintf("Key path value '%s' is not valid", raw)};
+    }
+
+    bool is_hardened = false;
+    const char last = elem.back();
+    if (last == '\'' || last == 'h') {
+        elem = elem.first(elem.size() - 1);
+        is_hardened = true;
+    }
+
+    const auto number{ToIntegral<uint32_t>(std::string_view{elem.begin(), elem.end()})};
+    if (!number) {
+        return util::Unexpected{strprintf("Key path value '%s' is not a valid uint32", raw)};
+    }
+    if (*number >= BIP32_HARDENED_FLAG) {
+        return util::Unexpected{strprintf("Key path value %u is out of range", *number)};
+    }
+    return KeyPathElement{*number, is_hardened};
+}
 
 bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath)
 {
     std::stringstream ss(keypath_str);
     std::string item;
     bool first = true;
-    while (std::getline(ss, item, '/')) {
+    while (std::getline(ss, item, '/') || std::getline(ss, item, 'h')) {
         if (item.compare("m") == 0) {
             if (first) {
                 first = false;
@@ -25,26 +51,9 @@ bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypa
             }
             return false;
         }
-        // Finds whether it is hardened
-        uint32_t path = 0;
-        size_t pos = item.find('\'');
-        if (pos != std::string::npos) {
-            // The hardened tick can only be in the last index of the string
-            if (pos != item.size() - 1) {
-                return false;
-            }
-            path |= 0x80000000;
-            item = item.substr(0, item.size() - 1); // Drop the last character which is the hardened tick
-        }
-
-        // Ensure this is only numbers
-        const auto number{ToIntegral<uint32_t>(item)};
-        if (!number) {
-            return false;
-        }
-        path |= *number;
-
-        keypath.push_back(path);
+        const auto parsed{ParseKeyPathElement(std::span<const char>{item.data(), item.size()})};
+        if (!parsed) return false;
+        keypath.push_back(parsed->ChildNumber());
         first = false;
     }
     return true;
@@ -63,4 +72,11 @@ std::string FormatHDKeypath(const std::vector<uint32_t>& path, bool apostrophe)
 std::string WriteHDKeypath(const std::vector<uint32_t>& keypath, bool apostrophe)
 {
     return "m" + FormatHDKeypath(keypath, apostrophe);
+}
+
+bool HasHardenedDerivation(std::span<const uint32_t> keypath)
+{
+    return std::any_of(keypath.begin(), keypath.end(), [](uint32_t index) {
+        return index >> 31;
+    });
 }

@@ -569,8 +569,9 @@ MuHash3072& MuHash3072::operator*=(const MuHash3072& mul) noexcept
 
 MuHash3072& MuHash3072::operator/=(const MuHash3072& div) noexcept
 {
+    const Num3072 div_numerator{div.m_numerator}; // div may alias *this
     m_numerator.Multiply(div.m_denominator);
-    m_denominator.Multiply(div.m_numerator);
+    m_denominator.Multiply(div_numerator);
     return *this;
 }
 

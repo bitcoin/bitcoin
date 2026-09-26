@@ -11,7 +11,6 @@
 #include <support/allocators/secure.h>
 #include <util/fs.h>
 
-#include <atomic>
 #include <memory>
 #include <optional>
 #include <string>
@@ -136,9 +135,6 @@ public:
     /** Open the database if it is not already opened. */
     virtual void Open() = 0;
 
-    //! Counts the number of active database users to be sure that the database is not closed while someone is using it
-    std::atomic<int> m_refcount{0};
-
     /** Rewrite the entire database on disk
      */
     virtual bool Rewrite() = 0;
@@ -179,8 +175,6 @@ struct DatabaseOptions {
     // Specialized options. Not every option is supported by every backend.
     bool verify = true;             //!< Check data integrity on load.
     bool use_unsafe_sync = false;   //!< Disable file sync for faster performance.
-    bool use_shared_memory = false; //!< Let other processes access the database.
-    int64_t max_log_mb = 100;       //!< Max log size to allow before consolidating.
 };
 
 enum class DatabaseStatus {

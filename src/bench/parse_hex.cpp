@@ -10,7 +10,6 @@
 #include <cstddef>
 #include <optional>
 #include <string>
-#include <vector>
 
 std::string generateHexString(size_t length) {
     const auto hex_digits = "0123456789ABCDEF";

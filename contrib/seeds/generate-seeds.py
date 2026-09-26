@@ -22,9 +22,9 @@ These files must consist of lines in the format
 
 The output will be several data structures with the peers in binary format:
 
-   static const uint8_t chainparams_seed_{main,signet,test,testnet4}[]={
-   ...
-   }
+   inline constexpr uint8_t chainparams_seed_{main,signet,test,testnet4}[]{
+       ...
+   };
 
 These should be pasted into `src/chainparamsseeds.h`.
 '''
@@ -137,7 +137,7 @@ def bip155_serialize(spec):
     return r
 
 def process_nodes(g, f, structname):
-    g.write('static const uint8_t %s[] = {\n' % structname)
+    g.write("inline constexpr uint8_t %s[]{\n" % structname)
     for line in f:
         comment = line.find('#')
         if comment != -1:

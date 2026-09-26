@@ -6,7 +6,6 @@
 #define BITCOIN_WALLET_SPEND_H
 
 #include <consensus/amount.h>
-#include <policy/fees/block_policy_estimator.h>
 #include <util/result.h>
 #include <wallet/coinselection.h>
 #include <wallet/transaction.h>
@@ -120,6 +119,15 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
                           const CoinsResult& coins,
                           const CoinSelectionParams& coin_sel_params,
                           const std::vector<SelectionFilter>& filters);
+
+/**
+ * Group coins by the provided filters, groups that pass no filter are appended to `ret_discarded_groups`.
+ */
+FilteredOutputGroups GroupOutputs(const CWallet& wallet,
+                                  const CoinsResult& coins,
+                                  const CoinSelectionParams& coin_sel_params,
+                                  const std::vector<SelectionFilter>& filters,
+                                  std::vector<OutputGroup>& ret_discarded_groups);
 
 /**
  * Attempt to find a valid input set that preserves privacy by not mixing OutputTypes.

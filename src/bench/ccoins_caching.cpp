@@ -14,6 +14,7 @@
 #include <test/util/transaction_utils.h>
 #include <util/check.h>
 
+#include <array>
 #include <span>
 #include <vector>
 

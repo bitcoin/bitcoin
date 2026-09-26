@@ -49,7 +49,6 @@ NodeClock::time_point NodeClock::now() noexcept
     return time_point{ret};
 };
 
-void SetMockTime(int64_t nMockTimeIn) { SetMockTime(std::chrono::seconds{nMockTimeIn}); }
 void SetMockTime(std::chrono::time_point<NodeClock, std::chrono::seconds> mock) { SetMockTime(mock.time_since_epoch()); }
 void SetMockTime(std::chrono::seconds mock_time_in)
 {

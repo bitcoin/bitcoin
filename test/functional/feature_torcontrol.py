@@ -131,6 +131,8 @@ class TorControlTest(BitcoinTestFramework):
         yield
 
         if expect:
+            # No reconnect before the initial reconnect timeout of 1s has passed
+            ensure_for(duration=0.5, f=lambda: len(mock_tor.received_commands) == initial_len)
             # Expect to receive a PROTOCOLINFO 1 on reconnect, bumping the received
             # commands length.
             self.wait_until(lambda: len(mock_tor.received_commands) == initial_len + 1)
@@ -256,12 +258,26 @@ class TorControlTest(BitcoinTestFramework):
 
         mock_tor.stop()
 
+    def test_reconnect_backoff(self):
+        self.log.info("Test that a connection closed by Tor is re-established with backoff")
+
+        mock_tor = MockTorControlServer(self.next_port(), manual_mode=True)
+        self.restart_with_mock(mock_tor)
+
+        with self.expect_disconnect(True, mock_tor):
+            # Reply before closing, like Tor does after a failed AUTHENTICATE
+            mock_tor.send_raw("515 Authentication failed\r\n")
+            mock_tor.conn.shutdown(socket.SHUT_WR)
+
+        mock_tor.stop()
+
     def run_test(self):
         self.test_basic()
         self.test_partial_data()
         self.test_pow_fallback()
         self.test_oversized_line()
         self.test_overmany_lines()
+        self.test_reconnect_backoff()
 
 
 if __name__ == '__main__':

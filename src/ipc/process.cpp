@@ -17,6 +17,7 @@
 #include <cerrno>
 #include <exception>
 #include <iostream>
+#include <optional>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -38,30 +39,29 @@ public:
             fs::path path = argv0_path;
             path.remove_filename();
             path /= fs::PathFromString(new_exe_name);
-            return std::vector<std::string>{fs::PathToString(path), "-ipcfd", std::move(connect_info)};
+            return std::vector<std::string>{fs::PathToString(path), "-ipcchild", std::move(connect_info)};
         });
     }
     int waitSpawned(mp::ProcessId pid) override { return mp::WaitProcess(pid); }
-    bool checkSpawned(int argc, char* argv[], mp::SocketId& socket) override
+    std::optional<mp::SocketId> checkSpawned(int argc, char* argv[]) override
     {
-        // If this process was not started with a single -ipcfd argument, it is
-        // not a process spawned by the spawn() call above, so return false and
-        // do not try to serve requests.
-        if (argc != 3 || strcmp(argv[1], "-ipcfd") != 0) {
-            return false;
+        // If this process was not started with a single -ipcchild argument, it
+        // is not a process spawned by the spawn() call above, so return
+        // std::nullopt and do not try to serve requests.
+        if (argc != 3 || strcmp(argv[1], "-ipcchild") != 0) {
+            return std::nullopt;
         }
-        // If a single -ipcfd argument was provided, return true and get the
-        // file descriptor so Protocol::serve() can be called to handle
-        // requests from the parent process. The -ipcfd argument is not valid
-        // in combination with other arguments because the parent process
-        // should be able to control the child process through the IPC protocol
-        // without passing information out of band.
+        // If a single -ipcchild argument was provided, return the socket id so
+        // Protocol::serve() can be called to handle requests from the parent
+        // process. The -ipcchild argument is not valid in combination with
+        // other arguments because the parent process should be able to control
+        // the child process through the IPC protocol without passing
+        // information out of band.
         try {
-           socket = mp::StartSpawned(argv[2]);
+            return mp::StartSpawned(argv[2]);
         } catch (const std::exception& e) {
-           throw std::runtime_error(strprintf("Invalid -ipcfd number '%s' (%s)", argv[2], e.what()));
+            throw std::runtime_error(strprintf("Invalid -ipcchild value '%s' (%s)", argv[2], e.what()));
         }
-        return true;
     }
     mp::SocketId connect(const fs::path& data_dir,
                 const std::string& dest_exe_name,

@@ -846,11 +846,12 @@ std::unique_ptr<DescriptorScriptPubKeyMan> DescriptorScriptPubKeyMan::CreateFrom
     return spkm;
 }
 
-DescriptorScriptPubKeyMan::DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys)
+DescriptorScriptPubKeyMan::DescriptorScriptPubKeyMan(WalletStorage& storage, const uint256& id, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys)
     : ScriptPubKeyMan(storage),
     m_map_keys(keys),
     m_map_crypted_keys(ckeys),
     m_keypool_size(keypool_size),
+    m_id(id),
     m_wallet_descriptor(descriptor)
 {
     if (!keys.empty() && !ckeys.empty()) {
@@ -859,16 +860,74 @@ DescriptorScriptPubKeyMan::DescriptorScriptPubKeyMan(WalletStorage& storage, Wal
     Load();
 }
 
-std::unique_ptr<DescriptorScriptPubKeyMan> DescriptorScriptPubKeyMan::LoadFromStorage(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys)
+std::unique_ptr<DescriptorScriptPubKeyMan> DescriptorScriptPubKeyMan::LoadFromStorage(WalletStorage& storage, const uint256& id, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys)
 {
-    return std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(storage, descriptor, keypool_size, keys, ckeys));
+    return std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(storage, id, descriptor, keypool_size, keys, ckeys));
 }
 
 std::unique_ptr<DescriptorScriptPubKeyMan> DescriptorScriptPubKeyMan::GenerateNewSingleSig(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, const CExtKey& master_key, OutputType addr_type, bool internal)
 {
-    auto spkm = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(storage, keypool_size));
-    spkm->SetupDescriptorGeneration(batch, master_key, addr_type, internal);
+    WalletDescriptor desc = GenerateWalletDescriptor(master_key.Neuter(), addr_type, internal);
+
+    auto spkm = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(storage, desc, keypool_size));
+
+    LOCK(spkm->cs_desc_man);
+    Assert(spkm->m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
+
+    // Store the master private key, and descriptor
+    if (!spkm->AddDescriptorKeyWithDB(batch, master_key.key, master_key.key.GetPubKey())) {
+        throw std::runtime_error(std::string(__func__) + ": writing descriptor master private key failed");
+    }
+    if (!batch.WriteDescriptor(spkm->GetID(), spkm->m_wallet_descriptor)) {
+        throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
+    }
+
+    // Set m_decryption_thoroughly_checked for encrypted wallets
+    if (spkm->m_storage.HasEncryptionKeys()) {
+        spkm->m_decryption_thoroughly_checked = true;
+    }
+
+    // TopUp
+    spkm->TopUpWithDB(batch);
+
+    spkm->m_storage.UnsetBlankWalletFlag(batch);
     return spkm;
+}
+
+void DescriptorScriptPubKeyMan::IncIndex()
+{
+    AssertLockHeld(cs_desc_man);
+
+    const auto old_can = CanGetAddresses();
+    m_wallet_descriptor.IncNext();
+    const auto new_can = CanGetAddresses();
+    if (old_can != new_can) {
+        NotifyCanGetAddressesChanged();
+    }
+}
+
+void DescriptorScriptPubKeyMan::DecIndex()
+{
+    AssertLockHeld(cs_desc_man);
+
+    const auto old_can = CanGetAddresses();
+    m_wallet_descriptor.DecNext();
+    const auto new_can = CanGetAddresses();
+    if (old_can != new_can) {
+        NotifyCanGetAddressesChanged();
+    }
+}
+
+void DescriptorScriptPubKeyMan::SetRangeEnd(int32_t end)
+{
+    AssertLockHeld(cs_desc_man);
+
+    const auto old_can = CanGetAddresses();
+    m_wallet_descriptor.SetEnd(end);
+    const auto new_can = CanGetAddresses();
+    if (old_can != new_can) {
+        NotifyCanGetAddressesChanged();
+    }
 }
 
 util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const OutputType type)
@@ -891,11 +950,11 @@ util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const 
         // Get the scriptPubKey from the descriptor
         FlatSigningProvider out_keys;
         std::vector<CScript> scripts_temp;
-        if (m_wallet_descriptor.range_end <= m_max_cached_index && !TopUp(1)) {
+        if (m_wallet_descriptor.GetEnd() <= m_max_cached_index && !TopUp(1)) {
             // We can't generate anymore keys
             return util::Error{_("Error: Keypool ran out, please call keypoolrefill first")};
         }
-        if (!m_wallet_descriptor.descriptor->ExpandFromCache(m_wallet_descriptor.next_index, m_wallet_descriptor.cache, scripts_temp, out_keys)) {
+        if (!m_wallet_descriptor.descriptor->ExpandFromCache(m_wallet_descriptor.GetNext(), m_wallet_descriptor.cache, scripts_temp, out_keys)) {
             // We can't generate anymore keys
             return util::Error{_("Error: Keypool ran out, please call keypoolrefill first")};
         }
@@ -904,7 +963,7 @@ util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const 
         if (!ExtractDestination(scripts_temp[0], dest)) {
             return util::Error{_("Error: Cannot extract destination from the generated scriptpubkey")}; // shouldn't happen
         }
-        m_wallet_descriptor.next_index++;
+        IncIndex();
         WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
         return dest;
     }
@@ -955,6 +1014,7 @@ bool DescriptorScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, Walle
         return false;
     }
 
+    CryptedKeyMap crypted_keys;
     for (const KeyMap::value_type& key_in : m_map_keys)
     {
         const CKey &key = key_in.second;
@@ -964,10 +1024,19 @@ bool DescriptorScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, Walle
         if (!EncryptSecret(master_key, secret, pubkey.GetHash(), crypted_secret)) {
             return false;
         }
-        m_map_crypted_keys[pubkey.GetID()] = make_pair(pubkey, crypted_secret);
-        batch->WriteCryptedDescriptorKey(GetID(), pubkey, crypted_secret);
+        if (!batch->WriteCryptedDescriptorKey(GetID(), pubkey, crypted_secret)) {
+            return false;
+        }
+        crypted_keys[pubkey.GetID()] = make_pair(pubkey, std::move(crypted_secret));
     }
-    m_map_keys.clear();
+
+    batch->RegisterTxnListener({
+        .on_commit = [this, keys = std::move(crypted_keys)]() mutable {
+            LOCK(cs_desc_man);
+            m_map_crypted_keys = std::move(keys);
+            m_map_keys.clear();
+        },
+        .on_abort = [] {}});
     return true;
 }
 
@@ -975,7 +1044,7 @@ util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetReservedDestination(c
 {
     LOCK(cs_desc_man);
     auto op_dest = GetNewDestination(type);
-    index = m_wallet_descriptor.next_index - 1;
+    index = m_wallet_descriptor.GetNext() - 1;
     return op_dest;
 }
 
@@ -983,11 +1052,10 @@ void DescriptorScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, 
 {
     LOCK(cs_desc_man);
     // Only return when the index was the most recent
-    if (m_wallet_descriptor.next_index - 1 == index) {
-        m_wallet_descriptor.next_index--;
+    if (m_wallet_descriptor.GetNext() - 1 == index) {
+        DecIndex();
     }
     WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
-    NotifyCanGetAddressesChanged();
 }
 
 std::map<CKeyID, CKey> DescriptorScriptPubKeyMan::GetKeys() const
@@ -1060,13 +1128,11 @@ bool DescriptorScriptPubKeyMan::TopUpWithDB(WalletBatch& batch, unsigned int siz
     }
 
     // Calculate the new range_end
-    int32_t new_range_end = std::max(m_wallet_descriptor.next_index + (int32_t)target_size, m_wallet_descriptor.range_end);
+    int32_t new_range_end = std::max(m_wallet_descriptor.GetNext() + (int32_t)target_size, m_wallet_descriptor.GetEnd());
 
     // If the descriptor is not ranged, we actually just want to fill the first cache item
     if (!m_wallet_descriptor.descriptor->IsRange()) {
         new_range_end = 1;
-        m_wallet_descriptor.range_end = 1;
-        m_wallet_descriptor.range_start = 0;
     }
 
     FlatSigningProvider provider;
@@ -1102,14 +1168,13 @@ bool DescriptorScriptPubKeyMan::TopUpWithDB(WalletBatch& batch, unsigned int siz
         }
         m_max_cached_index++;
     }
-    m_wallet_descriptor.range_end = new_range_end;
+    SetRangeEnd(new_range_end);
     batch.WriteDescriptor(GetID(), m_wallet_descriptor);
 
     // By this point, the cache size should be the size of the entire range
-    assert(m_wallet_descriptor.range_end - 1 == m_max_cached_index);
+    assert(m_wallet_descriptor.GetEnd() - 1 == m_max_cached_index);
 
     m_storage.TopUpCallback(new_spks, this);
-    NotifyCanGetAddressesChanged();
     return true;
 }
 
@@ -1119,18 +1184,18 @@ std::vector<WalletDestination> DescriptorScriptPubKeyMan::MarkUnusedAddresses(co
     std::vector<WalletDestination> result;
     if (IsMine(script)) {
         int32_t index = m_map_script_pub_keys[script];
-        if (index >= m_wallet_descriptor.next_index) {
+        if (index >= m_wallet_descriptor.GetNext()) {
             WalletLogPrintf("%s: Detected a used keypool item at index %d, mark all keypool items up to this item as used\n", __func__, index);
             auto out_keys = std::make_unique<FlatSigningProvider>();
             std::vector<CScript> scripts_temp;
-            while (index >= m_wallet_descriptor.next_index) {
-                if (!m_wallet_descriptor.descriptor->ExpandFromCache(m_wallet_descriptor.next_index, m_wallet_descriptor.cache, scripts_temp, *out_keys)) {
+            while (index >= m_wallet_descriptor.GetNext()) {
+                if (!m_wallet_descriptor.descriptor->ExpandFromCache(m_wallet_descriptor.GetNext(), m_wallet_descriptor.cache, scripts_temp, *out_keys)) {
                     throw std::runtime_error(std::string(__func__) + ": Unable to expand descriptor from cache");
                 }
                 CTxDestination dest;
                 ExtractDestination(scripts_temp[0], dest);
                 result.push_back({dest, std::nullopt});
-                m_wallet_descriptor.next_index++;
+                IncIndex();
             }
         }
         if (!TopUp()) {
@@ -1139,15 +1204,6 @@ std::vector<WalletDestination> DescriptorScriptPubKeyMan::MarkUnusedAddresses(co
     }
 
     return result;
-}
-
-void DescriptorScriptPubKeyMan::AddDescriptorKey(const CKey& key, const CPubKey &pubkey)
-{
-    LOCK(cs_desc_man);
-    WalletBatch batch(m_storage.GetDatabase());
-    if (!AddDescriptorKeyWithDB(batch, key, pubkey)) {
-        throw std::runtime_error(std::string(__func__) + ": writing descriptor private key failed");
-    }
 }
 
 bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const CKey& key, const CPubKey &pubkey)
@@ -1174,39 +1230,17 @@ bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const
             return false;
         }
 
-        m_map_crypted_keys[pubkey.GetID()] = make_pair(pubkey, crypted_secret);
-        return batch.WriteCryptedDescriptorKey(GetID(), pubkey, crypted_secret);
+        if (!batch.WriteCryptedDescriptorKey(GetID(), pubkey, crypted_secret)) {
+            return false;
+        }
+        m_map_crypted_keys[pubkey.GetID()] = make_pair(pubkey, std::move(crypted_secret));
     } else {
+        if (!batch.WriteDescriptorKey(GetID(), pubkey, key.GetPrivKey())) {
+            return false;
+        }
         m_map_keys[pubkey.GetID()] = key;
-        return batch.WriteDescriptorKey(GetID(), pubkey, key.GetPrivKey());
     }
-}
-
-void DescriptorScriptPubKeyMan::SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal)
-{
-    LOCK(cs_desc_man);
-    Assert(m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
-    Assert(!m_wallet_descriptor.descriptor);
-
-    m_wallet_descriptor = GenerateWalletDescriptor(master_key.Neuter(), addr_type, internal);
-
-    // Store the master private key, and descriptor
-    if (!AddDescriptorKeyWithDB(batch, master_key.key, master_key.key.GetPubKey())) {
-        throw std::runtime_error(std::string(__func__) + ": writing descriptor master private key failed");
-    }
-    if (!batch.WriteDescriptor(GetID(), m_wallet_descriptor)) {
-        throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
-    }
-
-    // Set m_decryption_thoroughly_checked for encrypted wallets
-    if (m_storage.HasEncryptionKeys()) {
-        m_decryption_thoroughly_checked = true;
-    }
-
-    // TopUp
-    TopUpWithDB(batch);
-
-    m_storage.UnsetBlankWalletFlag(batch);
+    return true;
 }
 
 bool DescriptorScriptPubKeyMan::IsHDEnabled() const
@@ -1222,7 +1256,7 @@ bool DescriptorScriptPubKeyMan::CanGetAddresses(bool internal) const
     LOCK(cs_desc_man);
     return m_wallet_descriptor.descriptor->IsSingleType() &&
            m_wallet_descriptor.descriptor->IsRange() &&
-           (HavePrivateKeys() || m_wallet_descriptor.next_index < m_wallet_descriptor.range_end || m_wallet_descriptor.descriptor->CanSelfExpand());
+           (HavePrivateKeys() || m_wallet_descriptor.GetNext() < m_wallet_descriptor.GetEnd() || m_wallet_descriptor.descriptor->CanSelfExpand());
 }
 
 bool DescriptorScriptPubKeyMan::HavePrivateKeys() const
@@ -1240,7 +1274,7 @@ bool DescriptorScriptPubKeyMan::HaveCryptedKeys() const
 unsigned int DescriptorScriptPubKeyMan::GetKeyPoolSize() const
 {
     LOCK(cs_desc_man);
-    return m_wallet_descriptor.range_end - m_wallet_descriptor.next_index;
+    return m_wallet_descriptor.GetEnd() - m_wallet_descriptor.GetNext();
 }
 
 int64_t DescriptorScriptPubKeyMan::GetTimeFirstKey() const
@@ -1425,9 +1459,9 @@ std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTran
             }
         }
 
-        PSBTError res = SignPSBTInput(HidingSigningProvider(keys.get(), /*hide_secret=*/!options.sign, /*hide_origin=*/!options.bip32_derivs), psbtx, i, &txdata, options, /*out_sigdata=*/nullptr);
-        if (res != PSBTError::OK && res != PSBTError::INCOMPLETE) {
-            return res;
+        const auto sign_result = SignPSBTInput(HidingSigningProvider(keys.get(), /*hide_secret=*/!options.sign, /*hide_origin=*/!options.bip32_derivs), psbtx, i, &txdata, options, /*out_sigdata=*/nullptr);
+        if (!sign_result.has_value() && sign_result.error() != PSBTError::INCOMPLETE) {
+            return sign_result.error();
         }
 
         bool signed_one = PSBTInputSigned(input);
@@ -1471,15 +1505,14 @@ std::unique_ptr<CKeyMetadata> DescriptorScriptPubKeyMan::GetMetadata(const CTxDe
 
 uint256 DescriptorScriptPubKeyMan::GetID() const
 {
-    LOCK(cs_desc_man);
-    return m_wallet_descriptor.id;
+    return m_id;
 }
 
 void DescriptorScriptPubKeyMan::Load()
 {
     LOCK(cs_desc_man);
     std::set<CScript> new_spks;
-    for (int32_t i = m_wallet_descriptor.range_start; i < m_wallet_descriptor.range_end; ++i) {
+    for (int32_t i = m_wallet_descriptor.GetStart(); i < m_wallet_descriptor.GetEnd(); ++i) {
         FlatSigningProvider out_keys;
         std::vector<CScript> scripts_temp;
         if (!m_wallet_descriptor.descriptor->ExpandFromCache(i, m_wallet_descriptor.cache, scripts_temp, out_keys)) {
@@ -1511,7 +1544,7 @@ void DescriptorScriptPubKeyMan::Load()
 bool DescriptorScriptPubKeyMan::HasWalletDescriptor(const WalletDescriptor& desc) const
 {
     LOCK(cs_desc_man);
-    return !m_wallet_descriptor.id.IsNull() && !desc.id.IsNull() && m_wallet_descriptor.id == desc.id;
+    return m_wallet_descriptor.IsCanonicallyEquivalent(desc);
 }
 
 void DescriptorScriptPubKeyMan::WriteDescriptor()
@@ -1607,7 +1640,7 @@ util::Result<void> DescriptorScriptPubKeyMan::UpdateWalletDescriptor(WalletDescr
     m_map_pubkeys.clear();
     m_map_script_pub_keys.clear();
     m_max_cached_index = -1;
-    m_wallet_descriptor = descriptor;
+    m_wallet_descriptor.UpdateFrom(descriptor);
 
     WalletBatch batch(m_storage.GetDatabase());
     UpdateWithSigningProvider(batch, provider);
@@ -1645,12 +1678,12 @@ bool DescriptorScriptPubKeyMan::CanUpdateToWalletDescriptor(const WalletDescript
         return true;
     }
 
-    if (descriptor.range_start > m_wallet_descriptor.range_start ||
-        descriptor.range_end < m_wallet_descriptor.range_end) {
+    if (descriptor.GetStart() > m_wallet_descriptor.GetStart() ||
+        descriptor.GetEnd() < m_wallet_descriptor.GetEnd()) {
         // Use inclusive range for error
         error = strprintf("new range must include current range = [%d,%d]",
-                          m_wallet_descriptor.range_start,
-                          m_wallet_descriptor.range_end - 1);
+                          m_wallet_descriptor.GetStart(),
+                          m_wallet_descriptor.GetEnd() - 1);
         return false;
     }
 

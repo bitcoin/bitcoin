@@ -4,15 +4,16 @@
 
 #include <common/system.h>
 #include <support/lockedpool.h>
+#include <test/util/common.h>
+#include <util/byte_units.h>
+
+#include <boost/test/unit_test.hpp>
 
 #include <limits>
 #include <memory>
 #include <stdexcept>
-#include <util/byte_units.h>
 #include <utility>
 #include <vector>
-
-#include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(allocator_tests)
 
@@ -36,12 +37,7 @@ BOOST_AUTO_TEST_CASE(arena_tests)
 #endif
     BOOST_CHECK(b.stats().used == 0);
     BOOST_CHECK(b.stats().free == synth_size);
-    try { // Test exception on double-free
-        b.free(chunk);
-        BOOST_CHECK(0);
-    } catch(std::runtime_error &)
-    {
-    }
+    BOOST_CHECK_EXCEPTION(b.free(chunk), std::runtime_error, HasReason{"Arena: invalid or double free"});
 
     void *a0 = b.alloc(128);
     void *a1 = b.alloc(256);
@@ -225,12 +221,7 @@ BOOST_AUTO_TEST_CASE(lockedpool_tests_live)
     BOOST_CHECK(*((uint32_t*)a0) == 0x1234);
 
     pool.free(a0);
-    try { // Test exception on double-free
-        pool.free(a0);
-        BOOST_CHECK(0);
-    } catch(std::runtime_error &)
-    {
-    }
+    BOOST_CHECK_EXCEPTION(pool.free(a0), std::runtime_error, HasReason{"Arena: invalid or double free"});
     // If more than one new arena was allocated for the above tests, something is wrong
     BOOST_CHECK(pool.stats().total <= (initial.total + LockedPool::ARENA_SIZE));
     // Usage must be back to where it started

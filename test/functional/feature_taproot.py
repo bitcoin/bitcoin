@@ -1206,6 +1206,7 @@ def spenders_taproot_active():
         add_spender(spenders, "opsuccess/bigpush", standard=False, tap=tap, leaf="bigpush_success", failure={"leaf": "bigpush_nop"}, **ERR_PUSH_SIZE)
         add_spender(spenders, "opsuccess/1001push", standard=False, tap=tap, leaf="1001push_success", failure={"leaf": "1001push_nop"}, **ERR_STACK_SIZE)
         add_spender(spenders, "opsuccess/1001inputs", standard=False, tap=tap, leaf="bare_success", inputs=[b'']*1001, failure={"leaf": "bare_nop"}, **ERR_STACK_SIZE)
+        add_spender(spenders, "opsuccess/bigstackelem", standard=False, tap=tap, leaf="bare_success", inputs=[random.randbytes(MAX_SCRIPT_ELEMENT_SIZE+1)], failure={"leaf": "bare_nop"}, **ERR_PUSH_SIZE)
 
     # Non-OP_SUCCESSx (verify that those aren't accidentally treated as OP_SUCCESSx)
     for opval in range(0, 0x100):

@@ -38,21 +38,21 @@ class Warnings;
 } // namespace node
 
 /** Whether transaction reconciliation protocol should be enabled by default. */
-static constexpr bool DEFAULT_TXRECONCILIATION_ENABLE{false};
+inline constexpr bool DEFAULT_TXRECONCILIATION_ENABLE{false};
 /** Default number of non-mempool transactions to keep around for block reconstruction. Includes
     orphan, replaced, and rejected transactions. */
-static const uint32_t DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN{100};
+inline constexpr uint32_t DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN{100};
 /** Default maximum per-second rate for sending transaction inventory to peers. */
-static constexpr unsigned int DEFAULT_TX_SEND_RATE{14};
-static const bool DEFAULT_PEERBLOOMFILTERS = false;
-static const bool DEFAULT_PEERBLOCKFILTERS = false;
+inline constexpr unsigned int DEFAULT_TX_SEND_RATE{14};
+inline constexpr bool DEFAULT_PEERBLOOMFILTERS = false;
+inline constexpr bool DEFAULT_PEERBLOCKFILTERS = false;
 /** Maximum number of outstanding CMPCTBLOCK requests for the same block. */
-static const unsigned int MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK = 3;
+inline constexpr unsigned int MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK = 3;
 /** Number of headers sent in one getheaders result. We rely on the assumption that if a peer sends
  *  less than this number, we reached its tip. Changing this value is a protocol upgrade. */
-static const unsigned int MAX_HEADERS_RESULTS = 2000;
+inline constexpr unsigned int MAX_HEADERS_RESULTS = 2000;
 /** The compactblocks version we support. See BIP 152. */
-static constexpr uint64_t CMPCTBLOCKS_VERSION{2};
+inline constexpr uint64_t CMPCTBLOCKS_VERSION{2};
 
 struct CNodeStateStats {
     int nSyncHeight = -1;
@@ -69,6 +69,7 @@ struct CNodeStateStats {
     ServiceFlags their_services;
     int64_t presync_height{-1};
     std::chrono::seconds time_offset{0};
+    NodeClock::time_point m_last_block_announcement;
 };
 
 struct PeerManagerInfo {
@@ -182,7 +183,7 @@ public:
     virtual void CheckForStaleTipAndEvictPeers() = 0;
 
     /** This function is used for testing the stale tip eviction logic, see denialofservice_tests.cpp */
-    virtual void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) = 0;
+    virtual void UpdateLastBlockAnnounceTime(NodeId node, NodeClock::time_point time) = 0;
 
     /**
      * Gets the set of service flags which are "desirable" for a given peer.

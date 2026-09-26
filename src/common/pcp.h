@@ -20,7 +20,7 @@ class CThreadInterrupt;
 // NAT-PMP and PCP use network byte order (big-endian).
 
 //! Mapping nonce size in bytes (see RFC6887 section 11.1).
-constexpr size_t PCP_MAP_NONCE_SIZE = 12;
+inline constexpr size_t PCP_MAP_NONCE_SIZE = 12;
 
 //! PCP mapping nonce. Arbitrary data chosen by the client to identify a mapping.
 typedef std::array<uint8_t, PCP_MAP_NONCE_SIZE> PCPMappingNonce;

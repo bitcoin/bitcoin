@@ -102,6 +102,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   coins.cpp
   common/args.cpp
   common/bloom.cpp
+  common/bip352.cpp
   common/config.cpp
   common/init.cpp
   common/interfaces.cpp
@@ -214,6 +215,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   net_processing.cpp
   netgroup.cpp
   node/abort.cpp
+  node/block_template_manager.cpp
   node/blockmanager_args.cpp
   node/blockstorage.cpp
   node/caches.cpp
@@ -247,7 +249,9 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   noui.cpp
   policy/ephemeral_policy.cpp
   policy/fees/block_policy_estimator.cpp
-  policy/fees/block_policy_estimator_args.cpp
+  policy/fees/estimator_args.cpp
+  policy/fees/estimator_man.cpp
+  policy/fees/mempool_estimator.cpp
   policy/packages.cpp
   policy/rbf.cpp
   policy/settings.cpp

@@ -18,14 +18,14 @@
 #include <type_traits>
 #include <utility>
 
-constexpr bool G_FUZZING_BUILD{
+inline constexpr bool G_FUZZING_BUILD{
 #ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
     true
 #else
     false
 #endif
 };
-constexpr bool G_ABORT_ON_FAILED_ASSUME{G_FUZZING_BUILD ||
+inline constexpr bool G_ABORT_ON_FAILED_ASSUME{G_FUZZING_BUILD ||
 #ifdef ABORT_ON_FAILED_ASSUME
     true
 #else

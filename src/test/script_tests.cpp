@@ -24,6 +24,7 @@
 #include <test/util/setup_common.h>
 #include <test/util/transaction_utils.h>
 #include <univalue.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -1632,7 +1633,7 @@ BOOST_AUTO_TEST_CASE(script_HasValidOps)
 BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
 {
     UniValue tests;
-    tests.read(json_tests::bip341_wallet_vectors);
+    Assert(tests.read(json_tests::bip341_wallet_vectors));
 
     const auto& vectors = tests["keyPathSpending"];
 

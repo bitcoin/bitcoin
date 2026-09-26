@@ -99,9 +99,9 @@ public:
     /** If this chain allows time to be mocked */
     bool IsMockableChain() const { return m_is_mockable_chain; }
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
-    /** Minimum free space (in GB) needed for data directory */
+    /** Minimum free space (in GiB) needed for data directory */
     uint64_t AssumedBlockchainSize() const { return m_assumed_blockchain_size; }
-    /** Minimum free space (in GB) needed for data directory when pruned; Does not include prune target*/
+    /** Minimum free space (in GiB) needed for data directory when pruned; Does not include prune target*/
     uint64_t AssumedChainStateSize() const { return m_assumed_chain_state_size; }
     /** Whether it is possible to mine blocks on demand (no retargeting) */
     bool MineBlocksOnDemand() const { return consensus.fPowNoRetargeting; }
@@ -113,6 +113,7 @@ public:
     const std::vector<std::string>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::string& Bech32HRP() const { return bech32_hrp; }
+    const std::string& SilentPaymentsHRP() const { return silent_payments_hrp; }
     const std::vector<uint8_t>& FixedSeeds() const { return vFixedSeeds; }
     const HeadersSyncParams& HeadersSync() const { return m_headers_sync_params; }
 
@@ -190,6 +191,7 @@ protected:
     std::vector<std::string> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
     std::string bech32_hrp;
+    std::string silent_payments_hrp;
     ChainType m_chain_type;
     CBlock genesis;
     std::vector<uint8_t> vFixedSeeds;

@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <wallet/transaction.h>
+#include <wallet/walletdb.h>
 
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
@@ -10,19 +11,9 @@
 using interfaces::FoundBlock;
 
 namespace wallet {
-bool CWalletTx::IsEquivalentTo(const CWalletTx& _tx) const
+bool CWalletTx::IsMalleation(const CWalletTx& _tx) const
 {
-        CMutableTransaction tx1 {*this->GetTx()};
-        CMutableTransaction tx2 {*_tx.GetTx()};
-        for (auto& txin : tx1.vin) {
-            txin.scriptSig = CScript();
-            txin.scriptWitness.SetNull();
-        }
-        for (auto& txin : tx2.vin) {
-            txin.scriptSig = CScript();
-            txin.scriptWitness.SetNull();
-        }
-        return CTransaction(tx1) == CTransaction(tx2);
+    return GetTx()->Equals(*_tx.GetTx(), {.include_script_sig = false, .include_witness_data = false});
 }
 
 bool CWalletTx::InMempool() const
@@ -61,16 +52,17 @@ void CWalletTx::updateState(interfaces::Chain& chain)
     if (!isConfirmed()) RecomputeCanonical();
 }
 
-bool CWalletTx::Update(CTransactionRef new_tx, const TxState& new_state)
+bool CWalletTx::Update(CTransactionRef new_tx, const TxState& new_state, WalletBatch& batch, bool metadata_changed)
 {
     Assert(new_tx);
     if (!Assume(GetHash() == new_tx->GetHash())) {
         return false;
     }
-    bool ret = false;
-    const auto& [tx_pair, inserted] = m_txs.emplace(new_tx->GetWitnessHash(), std::move(new_tx));
-    if (inserted) {
-        ret = true;
+    const auto& [tx_pair, new_variant] = m_txs.emplace(new_tx->GetWitnessHash(), std::move(new_tx));
+    if (new_variant) {
+        if (!batch.WriteWtxVariant(GetHash(), tx_pair->second)) {
+            throw std::ios_base::failure("Unable to write wtxvariant record");
+        }
     }
     const auto& [wtxid, tx] = *tx_pair;
 
@@ -79,7 +71,7 @@ bool CWalletTx::Update(CTransactionRef new_tx, const TxState& new_state)
         if (state<TxStateConfirmed>()) {
             m_canonical_wtxid = wtxid;
         }
-        ret = true;
+        metadata_changed = true;
     } else {
         assert(TxStateSerializedIndex(m_state) == TxStateSerializedIndex(new_state));
         assert(TxStateSerializedBlockHash(m_state) == TxStateSerializedBlockHash(new_state));
@@ -90,11 +82,17 @@ bool CWalletTx::Update(CTransactionRef new_tx, const TxState& new_state)
         const Wtxid prev_canonical = m_canonical_wtxid;
         RecomputeCanonical();
         if (m_canonical_wtxid != prev_canonical) {
-            ret = true;
+            metadata_changed = true;
         }
     }
 
-    return ret;
+    if (metadata_changed) {
+        if (!batch.WriteTxMetadata(*this)) {
+            throw std::ios_base::failure("Unable to write tx record");
+        }
+    }
+
+    return new_variant || metadata_changed;
 }
 
 void CWalletTx::RecomputeCanonical()

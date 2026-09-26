@@ -22,7 +22,7 @@ repository must have been cloned. Finally, a fuzz target has to be picked
 before running the tool:
 
 ```
-cargo run --manifest-path ./contrib/devtools/deterministic-fuzz-coverage/Cargo.toml -- $PWD/build_dir $PWD/qa-assets/fuzz_corpora fuzz_target_name
+cargo run --manifest-path ./contrib/devtools/deterministic-fuzz-coverage/Cargo.toml -- $PWD/build_dir $PWD/qa-assets/fuzz_corpora fuzz_target_name [parallelism] [--mode=<both|single|combined>]
 ```
 
 deterministic-unittest-coverage

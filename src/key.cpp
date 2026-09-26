@@ -16,6 +16,8 @@
 #include <secp256k1_recovery.h>
 #include <secp256k1_schnorrsig.h>
 
+#include <algorithm>
+
 static secp256k1_context* secp256k1_context_sign = nullptr;
 
 /** These functions are taken from the libsecp256k1 distribution and are very ugly. */
@@ -364,6 +366,18 @@ bool CExtKey::Derive(CExtKey &out, unsigned int _nChild) const {
     return key.Derive(out.key, out.chaincode, _nChild, chaincode);
 }
 
+std::optional<std::pair<CExtKey, KeyOriginInfo>> DeriveExtKey(const CExtKey& ext_key, const std::vector<uint32_t>& path)
+{
+    CExtKey descendant = ext_key;
+    KeyOriginInfo origin;
+    origin.fingerprint = ext_key.id_key_fingerprint();
+    origin.path = path;
+    for (uint32_t i : path) {
+        if (!descendant.Derive(descendant, i)) return std::nullopt;
+    }
+    return std::make_pair(descendant, origin);
+}
+
 void CExtKey::SetSeed(std::span<const std::byte> seed)
 {
     Assert(16 <= seed.size() && seed.size() <= 64);
@@ -385,25 +399,6 @@ CExtPubKey CExtKey::Neuter() const {
     ret.pubkey = key.GetPubKey();
     ret.chaincode = chaincode;
     return ret;
-}
-
-void CExtKey::Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const {
-    code[0] = nDepth;
-    std::ranges::copy(fingerprint, code+1);
-    WriteBE32(code+5, nChild);
-    memcpy(code+9, chaincode.begin(), 32);
-    code[41] = 0;
-    assert(key.size() == 32);
-    memcpy(code+42, key.begin(), 32);
-}
-
-void CExtKey::Decode(const unsigned char code[BIP32_EXTKEY_SIZE]) {
-    nDepth = code[0];
-    std::copy_n(code + 1, fingerprint.size(), fingerprint.begin());
-    nChild = ReadBE32(code+5);
-    memcpy(chaincode.begin(), code+9, 32);
-    key.Set(code+42, code+BIP32_EXTKEY_SIZE, true);
-    if ((nDepth == 0 && (nChild != 0 || ReadLE32(fingerprint.data()) != 0)) || code[41] != 0) key = CKey();
 }
 
 KeyPair::KeyPair(const CKey& key, const uint256* merkle_root)

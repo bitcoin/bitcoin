@@ -21,13 +21,12 @@ class UniValue;
 struct bilingual_str;
 
 namespace wallet {
-class LegacyScriptPubKeyMan;
 enum class DatabaseStatus;
 struct WalletContext;
 
 extern const std::string HELP_REQUIRING_PASSPHRASE;
 
-static const RPCResult RESULT_LAST_PROCESSED_BLOCK { RPCResult::Type::OBJ, "lastprocessedblock", "hash and height of the block this information was generated on",{
+inline const RPCResult RESULT_LAST_PROCESSED_BLOCK { RPCResult::Type::OBJ, "lastprocessedblock", "hash and height of the block this information was generated on",{
     {RPCResult::Type::STR_HEX, "hash", "hash of the block this information was generated on"},
     {RPCResult::Type::NUM, "height", "height of the block this information was generated on"}}
 };
@@ -55,6 +54,7 @@ std::string LabelFromValue(const UniValue& value);
 void PushParentDescriptors(const CWallet& wallet, const CScript& script_pubkey, UniValue& entry);
 
 void HandleWalletError(const std::shared_ptr<CWallet>& wallet, DatabaseStatus& status, bilingual_str& error);
+RPCErrorCode HandleWalletErrorCode(WalletErrorCode code);
 void AppendLastProcessedBlock(UniValue& entry, const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 } //  namespace wallet
 

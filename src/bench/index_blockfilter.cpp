@@ -19,8 +19,10 @@
 #include <uint256.h>
 #include <util/check.h>
 #include <util/strencodings.h>
+#include <util/time.h>
 #include <validation.h>
 
+#include <array>
 #include <memory>
 #include <span>
 #include <vector>

@@ -8,7 +8,6 @@
 #include <common/system.h>
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
-#include <policy/fees/block_policy_estimator.h>
 #include <policy/policy.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
@@ -107,8 +106,15 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CMutableTrans
         return feebumper::Result::INVALID_PARAMETER;
     }
 
+    const CFeeRate new_feerate{new_total_fee, static_cast<int32_t>(maxTxSize)};
+    if (new_feerate > wallet.m_max_tx_fee_rate) {
+        errors.push_back(Untranslated(strprintf("New fee rate %s %s/kvB is too high (cannot be higher than -maxfeerate %s %s/kvB)",
+                                                FormatMoney(new_feerate.GetFeePerK()), CURRENCY_UNIT, FormatMoney(wallet.m_max_tx_fee_rate.GetFeePerK()), CURRENCY_UNIT)));
+        return feebumper::Result::WALLET_ERROR;
+    }
+
     // Check that in all cases the new fee doesn't violate maxTxFee
-    const CAmount max_tx_fee = wallet.m_default_max_tx_fee;
+    const CAmount max_tx_fee = wallet.m_max_tx_fee;
     if (new_total_fee > max_tx_fee) {
         errors.push_back(Untranslated(strprintf("Specified or calculated fee %s is too high (cannot be higher than -maxtxfee %s)",
             FormatMoney(new_total_fee), FormatMoney(max_tx_fee))));
@@ -139,7 +145,7 @@ static CFeeRate EstimateFeeRate(const CWallet& wallet, const CWalletTx& wtx, con
     feerate += std::max(node_incremental_relay_fee, wallet_incremental_relay_fee);
 
     // Fee rate must also be at least the wallet's GetMinimumFeeRate
-    CFeeRate min_feerate(GetMinimumFeeRate(wallet, coin_control, /*feeCalc=*/nullptr));
+    CFeeRate min_feerate(GetMinimumFeeRate(wallet, coin_control).fee_rate);
 
     // Set the required fee rate for the replacement transaction in coin control.
     return std::max(feerate, min_feerate);

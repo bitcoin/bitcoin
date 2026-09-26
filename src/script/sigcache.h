@@ -11,9 +11,7 @@
 #include <cuckoocache.h>
 #include <script/interpreter.h>
 #include <uint256.h>
-// IWYU incorrectly suggests removing this header.
-// See https://github.com/include-what-you-use/include-what-you-use/issues/2014.
-#include <util/byte_units.h> // IWYU pragma: keep
+#include <util/byte_units.h>
 #include <util/hasher.h>
 
 #include <cstddef>
@@ -28,9 +26,9 @@ class XOnlyPubKey;
 // DoS prevention: limit cache size to 32MiB (over 1000000 entries on 64-bit
 // systems). Due to how we count cache size, actual memory usage is slightly
 // more (~32.25 MiB)
-static constexpr size_t DEFAULT_VALIDATION_CACHE_BYTES{32_MiB};
-static constexpr size_t DEFAULT_SIGNATURE_CACHE_BYTES{DEFAULT_VALIDATION_CACHE_BYTES / 2};
-static constexpr size_t DEFAULT_SCRIPT_EXECUTION_CACHE_BYTES{DEFAULT_VALIDATION_CACHE_BYTES / 2};
+inline constexpr size_t DEFAULT_VALIDATION_CACHE_BYTES{32_MiB};
+inline constexpr size_t DEFAULT_SIGNATURE_CACHE_BYTES{DEFAULT_VALIDATION_CACHE_BYTES / 2};
+inline constexpr size_t DEFAULT_SCRIPT_EXECUTION_CACHE_BYTES{DEFAULT_VALIDATION_CACHE_BYTES / 2};
 static_assert(DEFAULT_VALIDATION_CACHE_BYTES == DEFAULT_SIGNATURE_CACHE_BYTES + DEFAULT_SCRIPT_EXECUTION_CACHE_BYTES);
 
 /**

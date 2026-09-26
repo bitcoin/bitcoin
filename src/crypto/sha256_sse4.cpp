@@ -7,8 +7,8 @@
 
 #if defined(__x86_64__) || defined(__amd64__)
 
+#include <cstddef>
 #include <cstdint>
-#include <cstdlib>
 
 namespace sha256_sse4
 {

@@ -72,17 +72,17 @@ ELF_INTERPRETER_NAMES: dict[lief.ELF.ARCH, dict[lief.Header.ENDIANNESS, str]] = 
 
 ELF_ABIS: dict[lief.ELF.ARCH, dict[lief.Header.ENDIANNESS, list[int]]] = {
     lief.ELF.ARCH.X86_64: {
-        lief.Header.ENDIANNESS.LITTLE: [3,2,0],
+        lief.Header.ENDIANNESS.LITTLE: [3,17,0],
     },
     lief.ELF.ARCH.ARM: {
-        lief.Header.ENDIANNESS.LITTLE: [3,2,0],
+        lief.Header.ENDIANNESS.LITTLE: [3,17,0],
     },
     lief.ELF.ARCH.AARCH64: {
-        lief.Header.ENDIANNESS.LITTLE: [3,7,0],
+        lief.Header.ENDIANNESS.LITTLE: [3,17,0],
     },
     lief.ELF.ARCH.PPC64: {
-        lief.Header.ENDIANNESS.LITTLE: [3,10,0],
-        lief.Header.ENDIANNESS.BIG: [3,2,0],
+        lief.Header.ENDIANNESS.LITTLE: [3,17,0],
+        lief.Header.ENDIANNESS.BIG: [3,17,0],
     },
     lief.ELF.ARCH.RISCV: {
         lief.Header.ENDIANNESS.LITTLE: [4,15,0],
@@ -134,11 +134,23 @@ MACHO_ALLOWED_LIBRARIES = {
 }
 
 PE_ALLOWED_LIBRARIES = {
+'api-ms-win-crt-convert-l1-1-0.dll',
+'api-ms-win-crt-environment-l1-1-0.dll',
+'api-ms-win-crt-filesystem-l1-1-0.dll',
+'api-ms-win-crt-heap-l1-1-0.dll',
+'api-ms-win-crt-locale-l1-1-0.dll',
+'api-ms-win-crt-math-l1-1-0.dll',
+'api-ms-win-crt-private-l1-1-0.dll',
+'api-ms-win-crt-process-l1-1-0.dll',
+'api-ms-win-crt-runtime-l1-1-0.dll',
+'api-ms-win-crt-stdio-l1-1-0.dll',
+'api-ms-win-crt-string-l1-1-0.dll',
+'api-ms-win-crt-time-l1-1-0.dll',
+'api-ms-win-crt-utility-l1-1-0.dll',
 'ADVAPI32.dll', # legacy security & registry
 'bcrypt.dll', # newer security and identity API
 'IPHLPAPI.DLL', # IP helper API
 'KERNEL32.dll', # win32 base APIs
-'msvcrt.dll', # C standard library for MSVC
 'SHELL32.dll', # shell API
 'WS2_32.dll', # sockets
 # bitcoin-qt only

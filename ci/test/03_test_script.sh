@@ -96,7 +96,7 @@ if [ -z "$NO_DEPENDS" ]; then
   bash -c "$SHELL_OPTS make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS LOG=1"
 fi
 if [ "$DOWNLOAD_PREVIOUS_RELEASES" = "true" ]; then
-  test/get_previous_releases.py --target-dir "$PREVIOUS_RELEASES_DIR"
+  test/get_previous_releases.py
 fi
 
 BITCOIN_CONFIG_ALL="-DCMAKE_COMPILE_WARNING_AS_ERROR=ON -DBUILD_BENCH=ON -DBUILD_FUZZ_BINARY=ON"
@@ -123,15 +123,16 @@ cmake -S "$BASE_ROOT_DIR" -B "$BASE_BUILD_DIR" "${CMAKE_ARGS[@]}" || (
   false
 )
 
-if [[ "${GOAL}" != all && "${GOAL}" != codegen ]]; then
-  GOAL="all ${GOAL}"
+BUILD_TARGETS="${GOAL}"
+if [[ "${GOAL}" != all && "${GOAL}" != *codegen* ]]; then
+  BUILD_TARGETS="all ${GOAL}"
 fi
 
 # shellcheck disable=SC2086
-cmake --build "${BASE_BUILD_DIR}" "$MAKEJOBS" --target $GOAL || (
+cmake --build "${BASE_BUILD_DIR}" "$MAKEJOBS" --target $BUILD_TARGETS || (
   echo "Build failure. Verbose build follows."
   # shellcheck disable=SC2086
-  cmake --build "${BASE_BUILD_DIR}" -j1 --target $GOAL --verbose
+  cmake --build "${BASE_BUILD_DIR}" -j1 --target $BUILD_TARGETS --verbose
   false
 )
 
@@ -180,12 +181,9 @@ if [ "$RUN_CHECK_DEPS" = "true" ]; then
   "${BASE_ROOT_DIR}/contrib/devtools/check-deps.sh" "${BASE_BUILD_DIR}"
 fi
 
-if [[ "$CI_OS_NAME" == "macos" && "${GOAL}" = "install deploy" ]]; then
+if [[ "$RUN_MACOS_CODESIGN" == "true" ]]; then
   unzip "${BASE_BUILD_DIR}/bitcoin-macos-app.zip" -d "${BASE_BUILD_DIR}/deploy"
-  if ! ( codesign --verify "${BASE_BUILD_DIR}/deploy/Bitcoin-Qt.app" ); then
-    echo "Codesigning failed."
-    false
-  fi
+  codesign --verify --deep --strict "${BASE_BUILD_DIR}/deploy/Bitcoin-Qt.app"
 fi
 
 if [ "$RUN_UNIT_TESTS" = "true" ]; then
@@ -234,7 +232,7 @@ fi
 
 if [[ "${RUN_IWYU}" == true ]]; then
   # TODO: Consider enforcing IWYU across the entire codebase.
-  FILES_WITH_ENFORCED_IWYU='/src/((bench|common|consensus|crypto|index|kernel|primitives|script|univalue/(lib|test)|util|zmq)/.*|node/(blockstorage|interfaces|miner|mining_args|utxo_snapshot)|rpc/mining|clientversion|core_io|signet|init)\.cpp'
+  FILES_WITH_ENFORCED_IWYU='/src/((bench|common|consensus|crypto|index|init|kernel|primitives|rpc|script|univalue/(lib|test)|util|zmq)/.*|node/(block_template_manager|blockstorage|interfaces|miner|mining_args|utxo_snapshot)|test/fuzz/(kitchen_sink|minisketch|parse_univalue)|clientversion|core_io|rest|signet|init)\.cpp'
   jq --arg patterns "$FILES_WITH_ENFORCED_IWYU" 'map(select(.file | test($patterns)))' "${BASE_BUILD_DIR}/compile_commands.json" > "${BASE_BUILD_DIR}/compile_commands_iwyu_errors.json"
   jq --arg patterns "$FILES_WITH_ENFORCED_IWYU" 'map(select(.file | test($patterns) | not))' "${BASE_BUILD_DIR}/compile_commands.json" > "${BASE_BUILD_DIR}/compile_commands_iwyu_warnings.json"
 
@@ -243,16 +241,28 @@ if [[ "${RUN_IWYU}" == true ]]; then
   run_iwyu() {
     mv "${BASE_BUILD_DIR}/$1" "${BASE_BUILD_DIR}/compile_commands.json"
     {
-      python3 "/include-what-you-use/iwyu_tool.py" \
-             -p "${BASE_BUILD_DIR}" "${MAKEJOBS}" \
-             -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_ROOT_DIR}/contrib/devtools/iwyu/bitcoin.core.imp" \
+      python3 /include-what-you-use/mapgen/iwyu-mapgen-clang-intrin.py --lang imp "$("clang-${IWYU_LLVM_V}" -print-resource-dir)/include" > "${BASE_BUILD_DIR}/clang.intrinsics.imp"
+      python3 /include-what-you-use/iwyu_tool.py \
+             -p "${BASE_BUILD_DIR}" "${MAKEJOBS}" -- \
+             -Xiwyu --cxx17ns \
+             -Xiwyu --mapping_file="${BASE_ROOT_DIR}/contrib/devtools/iwyu/bitcoin.core.imp" \
+             -Xiwyu --mapping_file="${BASE_BUILD_DIR}/clang.intrinsics.imp" \
              -Xiwyu --max_line_length=160 \
              -Xiwyu --check_also='*/common/types\.h' \
              -Xiwyu --check_also='*/consensus/*\.h' \
+             -Xiwyu --check_also='*/interfaces/*\.h' \
              -Xiwyu --check_also='*/primitives/transaction_identifier\.h' \
+             -Xiwyu --check_also='*/rpc/protocol\.h' \
              2>&1 || true
     } | tee /tmp/iwyu_ci.out
     python3 "/include-what-you-use/fix_includes.py" --nosafe_headers < /tmp/iwyu_ci.out
+    python3 -c '
+import runpy
+import subprocess
+
+subtrees = runpy.run_path("test/lint/lint_ignore_dirs.py")["SHARED_EXCLUDED_SUBTREES"]
+subprocess.run(["git", "restore", "--", *subtrees], check=True)
+'
     git diff -U1 | ./contrib/devtools/clang-format-diff.py -binary="clang-format-${IWYU_LLVM_V}" -p1 -i -v
   }
 

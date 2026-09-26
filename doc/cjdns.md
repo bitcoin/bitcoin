@@ -73,7 +73,11 @@ connections are not affected by this option. It can be specified multiple times
 to allow multiple networks, e.g. onlynet=cjdns, onlynet=i2p, onlynet=onion.
 
 CJDNS support was added to Bitcoin Core in version 23.0 and there may be fewer
-CJDNS peers than Tor or IP ones. You can use `bitcoin-cli -addrinfo` to see the
+CJDNS peers than Tor or IP ones. Therefore, using CJDNS alone without other
+networks is discouraged: a node may be unable to fill its outbound connection slots
+but will repeatedly try the few addresses it knows and is more susceptible to
+[Sybil attacks](https://en.bitcoin.it/wiki/Weaknesses#Sybil_attack).
+You can use `bitcoin-cli -addrinfo` to see the
 number of CJDNS addresses known to your node.
 
 In general, a node can be run with both an onion service and CJDNS (or any/all

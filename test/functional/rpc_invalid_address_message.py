@@ -68,7 +68,7 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
         self.check_invalid(BECH32_INVALID_BECH32M, 'Version 0 witness address must use Bech32 checksum')
         self.check_invalid(BECH32_INVALID_VERSION, 'Invalid Bech32 address witness version')
         self.check_invalid(BECH32_INVALID_V0_SIZE, "Invalid Bech32 v0 address program size (21 bytes), per BIP141")
-        self.check_invalid(BECH32_TOO_LONG, 'Bech32 string too long', list(range(90, 108)))
+        self.check_invalid(BECH32_TOO_LONG, 'Bech32 string too long', [90])
         self.check_invalid(BECH32_ONE_ERROR, 'Invalid Bech32 checksum', [9])
         self.check_invalid(BECH32_TWO_ERRORS, 'Invalid Bech32 checksum', [22, 43])
         self.check_invalid(BECH32_ONE_ERROR_CAPITALS, 'Invalid Bech32 checksum', [38])

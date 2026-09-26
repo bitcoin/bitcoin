@@ -9,10 +9,8 @@
 #include <util/feefrac.h>
 
 #include <algorithm>
-#include <compare>
 #include <cstddef>
 #include <cstdint>
-#include <functional>
 #include <memory>
 #include <utility>
 #include <vector>

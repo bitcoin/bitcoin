@@ -15,7 +15,7 @@
 #include <vector>
 
 /** Maximum bytes for transactions to store for processing during reorg */
-static const unsigned int MAX_DISCONNECTED_TX_POOL_BYTES{20'000'000};
+inline constexpr unsigned int MAX_DISCONNECTED_TX_POOL_BYTES{20'000'000};
 /**
  * DisconnectedBlockTransactions
 

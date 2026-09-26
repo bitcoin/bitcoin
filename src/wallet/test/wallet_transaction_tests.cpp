@@ -47,12 +47,7 @@ BOOST_AUTO_TEST_CASE(deserialize_rejects_mismatched_variant_txid)
 
     // A variant whose txid doesn't match the canonical txid must be rejected.
     std::map<Wtxid, CTransactionRef> bad_variants{{tx_b->GetWitnessHash(), tx_b}};
-    try {
-        CWalletTx(deserialize, ss, bad_variants);
-        BOOST_FAIL("expected std::runtime_error was not thrown");
-    } catch (const std::runtime_error& e) {
-        BOOST_CHECK_EQUAL(std::string(e.what()), "variant txid does not match wallet txid");
-    }
+    BOOST_CHECK_EXCEPTION(CWalletTx(deserialize, ss, bad_variants), std::runtime_error, HasReason{"variant txid does not match wallet txid"});
 }
 
 BOOST_AUTO_TEST_SUITE_END()

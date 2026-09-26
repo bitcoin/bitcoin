@@ -26,7 +26,7 @@ enum class Warning;
 namespace node {
 
 class Warnings;
-static constexpr int DEFAULT_STOPATHEIGHT{0};
+inline constexpr int DEFAULT_STOPATHEIGHT{0};
 
 //! State tracked by the KernelNotifications interface meant to be used by
 //! mining code, index code, RPCs, and other code sitting above the validation

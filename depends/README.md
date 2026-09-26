@@ -125,28 +125,27 @@ without gcc/g++), you could use the following to build all packages using clang:
 
 ## Cross compilation
 
-To build for another arch/OS:
+To build for another arch+OS:
 
     make HOST=host-platform-triplet
 
 For example:
 
-    make HOST=x86_64-w64-mingw32 -j4
+    make HOST=x86_64-w64-mingw32ucrt -j4
 
 Common `host-platform-triplet`s for cross compilation are:
 
-- `i686-pc-linux-gnu` for Linux x86 32 bit
-- `x86_64-pc-linux-gnu` for Linux x86 64 bit
-- `x86_64-w64-mingw32` for Windows using MSVCRT
+- `i686-linux-gnu` for Linux x86 32-bit
+- `x86_64-linux-gnu` for Linux x86 64-bit
 - `x86_64-w64-mingw32ucrt` for Windows using UCRT
 - `x86_64-apple-darwin` for Intel macOS
 - `arm64-apple-darwin` for ARM macOS
-- `arm-linux-gnueabihf` for Linux ARM 32 bit
-- `aarch64-linux-gnu` for Linux ARM 64 bit
-- `powerpc64-linux-gnu` for Linux POWER 64 bit (big endian)
-- `powerpc64le-linux-gnu` for Linux POWER 64 bit (little endian)
-- `riscv32-linux-gnu` for Linux RISC-V 32 bit
-- `riscv64-linux-gnu` for Linux RISC-V 64 bit
+- `arm-linux-gnueabihf` for Linux ARM 32-bit
+- `aarch64-linux-gnu` for Linux ARM 64-bit
+- `powerpc64-linux-gnu` for Linux POWER 64-bit (big endian)
+- `powerpc64le-linux-gnu` for Linux POWER 64-bit (little endian)
+- `riscv32-linux-gnu` for Linux RISC-V 32-bit
+- `riscv64-linux-gnu` for Linux RISC-V 64-bit
 - `s390x-linux-gnu` for Linux S390X
 
 The paths are automatically configured and no other options are needed.
@@ -160,37 +159,46 @@ proceeding with a cross-compile. Under the depends directory, create a
 subdirectory named `SDKs`. Then, place the extracted SDK under this new directory.
 For more information, see [SDK Extraction](../contrib/macdeploy/README.md#sdk-extraction).
 
-#### For Windows cross compilation using MSVCRT
-
-    apt install g++-mingw-w64-x86-64-posix
-
-#### For Windows cross compilation using UCRT
+#### For Windows cross compilation
 
     apt install g++-mingw-w64-ucrt64
 
-#### For linux (including i386, ARM) cross compilation
+Some Ubuntu or Debian versions may not offer a working package. In this case,
+you may install `nix-bin` and use the Nix shell from the repository root:
 
-Common linux dependencies:
+    apt install nix-bin
+    NIX_BUILD_SHELL=bash HOST=x86_64-w64-mingw32 nix-shell contrib/devtools/shell-win64-cross.nix  # MSVCRT
+    NIX_BUILD_SHELL=bash HOST=x86_64-w64-mingw32ucrt nix-shell contrib/devtools/shell-win64-cross.nix  # UCRT
 
-    sudo apt-get install g++-multilib binutils
+#### For Linux cross compilation
 
-For linux ARM cross compilation:
+Please note that package availability might depend on the arch+OS you are building on.
+
+For Linux x86 32-bit cross compilation:
+
+    sudo apt-get install g++-i686-linux-gnu binutils-i686-linux-gnu
+
+For Linux x86 64-bit cross compilation:
+
+    sudo apt-get install g++-x86-64-linux-gnu binutils-x86-64-linux-gnu
+
+For Linux ARM 32-bit cross compilation:
 
     sudo apt-get install g++-arm-linux-gnueabihf binutils-arm-linux-gnueabihf
 
-For linux AARCH64 cross compilation:
+For Linux ARM 64-bit cross compilation:
 
     sudo apt-get install g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
 
-For linux POWER 64-bit cross compilation (there are no packages for 32-bit):
+For Linux POWER 64-bit cross compilation (there are no packages for 32-bit):
 
     sudo apt-get install g++-powerpc64-linux-gnu binutils-powerpc64-linux-gnu g++-powerpc64le-linux-gnu binutils-powerpc64le-linux-gnu
 
-For linux RISC-V 64-bit cross compilation (there are no packages for 32-bit):
+For Linux RISC-V 64-bit cross compilation (there are no packages for 32-bit):
 
     sudo apt-get install g++-riscv64-linux-gnu binutils-riscv64-linux-gnu
 
-For linux S390X cross compilation:
+For Linux S390X cross compilation:
 
     sudo apt-get install g++-s390x-linux-gnu binutils-s390x-linux-gnu
 

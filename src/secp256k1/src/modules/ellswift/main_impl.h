@@ -346,14 +346,14 @@ static void secp256k1_ellswift_xelligatorswift_var(const secp256k1_context *ctx,
         secp256k1_fe u;
         /* If the pool of branch values is empty, populate it. */
         if (branches_left == 0) {
-            secp256k1_ellswift_prng(secp256k1_get_hash_context(ctx), branch_hash, hasher, cnt++);
+            secp256k1_ellswift_prng(&ctx->hash_ctx, branch_hash, hasher, cnt++);
             branches_left = 64;
         }
         /* Take a 3-bit branch value from the branch pool (top bit is discarded). */
         --branches_left;
         branch = (branch_hash[branches_left >> 1] >> ((branches_left & 1) << 2)) & 7;
         /* Compute a new u value by hashing. */
-        secp256k1_ellswift_prng(secp256k1_get_hash_context(ctx), u32, hasher, cnt++);
+        secp256k1_ellswift_prng(&ctx->hash_ctx, u32, hasher, cnt++);
         /* overflow is not a problem (we prefer uniform u32 over uniform u). */
         secp256k1_fe_set_b32_mod(&u, u32);
         /* Since u is the output of a hash, it should practically never be 0. We could apply the
@@ -405,9 +405,9 @@ int secp256k1_ellswift_encode(const secp256k1_context *ctx, unsigned char *ell64
         /* Set up hasher state; the used RNG is H(pubkey || "\x00"*31 || rnd32 || cnt++), using
          * BIP340 tagged hash with tag "secp256k1_ellswift_encode". */
         secp256k1_ellswift_sha256_init_encode(&hash);
-        secp256k1_eckey_pubkey_serialize33(&p, p64);
-        secp256k1_sha256_write(secp256k1_get_hash_context(ctx), &hash, p64, sizeof(p64));
-        secp256k1_sha256_write(secp256k1_get_hash_context(ctx), &hash, rnd32, 32);
+        secp256k1_ge_serialize33(&p, p64);
+        secp256k1_sha256_write(&ctx->hash_ctx, &hash, p64, sizeof(p64));
+        secp256k1_sha256_write(&ctx->hash_ctx, &hash, rnd32, 32);
 
         /* Compute ElligatorSwift encoding and construct output. */
         secp256k1_ellswift_elligatorswift_var(ctx, ell64, &t, &p, &hash); /* puts u in ell64[0..32] */
@@ -452,11 +452,11 @@ int secp256k1_ellswift_create(const secp256k1_context *ctx, unsigned char *ell64
     /* Set up hasher state. The used RNG is H(seckey32 || "\x00"*32 [|| auxrnd32] || cnt++),
      * using BIP340 tagged hash with tag "secp256k1_ellswift_create". */
     secp256k1_ellswift_sha256_init_create(&hash);
-    secp256k1_sha256_write(secp256k1_get_hash_context(ctx), &hash, seckey32, 32);
-    secp256k1_sha256_write(secp256k1_get_hash_context(ctx), &hash, zero32, sizeof(zero32));
+    secp256k1_sha256_write(&ctx->hash_ctx, &hash, seckey32, 32);
+    secp256k1_sha256_write(&ctx->hash_ctx, &hash, zero32, sizeof(zero32));
     /* Declassify only hash state. seckey32 has been hashed, but copy remains in the hash buffer */
     secp256k1_declassify(ctx, &hash.s, sizeof(hash.s));
-    if (auxrnd32) secp256k1_sha256_write(secp256k1_get_hash_context(ctx), &hash, auxrnd32, 32);
+    if (auxrnd32) secp256k1_sha256_write(&ctx->hash_ctx, &hash, auxrnd32, 32);
 
     /* Compute ElligatorSwift encoding and construct output. */
     secp256k1_ellswift_elligatorswift_var(ctx, ell64, &t, &p, &hash); /* puts u in ell64[0..32] */
@@ -499,7 +499,7 @@ static int ellswift_xdh_hash_function_prefix_impl(const secp256k1_hash_ctx *hash
 }
 
 static int ellswift_xdh_hash_function_prefix(unsigned char *output, const unsigned char *x32, const unsigned char *ell_a64, const unsigned char *ell_b64, void *data) {
-    return ellswift_xdh_hash_function_prefix_impl(secp256k1_get_hash_context(secp256k1_context_static), output, x32, ell_a64, ell_b64, data);
+    return ellswift_xdh_hash_function_prefix_impl(&secp256k1_context_static->hash_ctx, output, x32, ell_a64, ell_b64, data);
 }
 
 /** Set hash state to the BIP340 tagged hash midstate for "bip324_ellswift_xonly_ecdh". */
@@ -527,7 +527,7 @@ static int ellswift_xdh_hash_function_bip324_impl(const secp256k1_hash_ctx *hash
 }
 
 static int ellswift_xdh_hash_function_bip324(unsigned char* output, const unsigned char *x32, const unsigned char *ell_a64, const unsigned char *ell_b64, void *data) {
-    return ellswift_xdh_hash_function_bip324_impl(secp256k1_get_hash_context(secp256k1_context_static), output, x32, ell_a64, ell_b64, data);
+    return ellswift_xdh_hash_function_bip324_impl(&secp256k1_context_static->hash_ctx, output, x32, ell_a64, ell_b64, data);
 }
 
 const secp256k1_ellswift_xdh_hash_function secp256k1_ellswift_xdh_hash_function_prefix = ellswift_xdh_hash_function_prefix;
@@ -535,7 +535,7 @@ const secp256k1_ellswift_xdh_hash_function secp256k1_ellswift_xdh_hash_function_
 
 int secp256k1_ellswift_xdh(const secp256k1_context *ctx, unsigned char *output, const unsigned char *ell_a64, const unsigned char *ell_b64, const unsigned char *seckey32, int party, secp256k1_ellswift_xdh_hash_function hashfp, void *data) {
     int ret = 0;
-    int overflow;
+    int is_sec_valid;
     secp256k1_scalar s;
     secp256k1_fe xn, xd, px, u, t;
     unsigned char sx[32];
@@ -555,9 +555,8 @@ int secp256k1_ellswift_xdh(const secp256k1_context *ctx, unsigned char *output, 
     secp256k1_ellswift_xswiftec_frac_var(&xn, &xd, &u, &t);
 
     /* Load private key (using one if invalid). */
-    secp256k1_scalar_set_b32(&s, seckey32, &overflow);
-    overflow |= secp256k1_scalar_is_zero(&s);
-    secp256k1_scalar_cmov(&s, &secp256k1_scalar_one, overflow);
+    is_sec_valid = secp256k1_scalar_set_b32_seckey(&s, seckey32);
+    secp256k1_scalar_cmov(&s, &secp256k1_scalar_one, !is_sec_valid);
 
     /* Compute shared X coordinate. */
     secp256k1_ecmult_const_xonly(&px, &xn, &xd, &s, 1);
@@ -566,9 +565,9 @@ int secp256k1_ellswift_xdh(const secp256k1_context *ctx, unsigned char *output, 
 
     /* Invoke hasher. Use ctx-aware function by default */
     if (hashfp == secp256k1_ellswift_xdh_hash_function_bip324) {
-        ret = ellswift_xdh_hash_function_bip324_impl(secp256k1_get_hash_context(ctx), output, sx, ell_a64, ell_b64, data);
+        ret = ellswift_xdh_hash_function_bip324_impl(&ctx->hash_ctx, output, sx, ell_a64, ell_b64, data);
     } else if (hashfp == secp256k1_ellswift_xdh_hash_function_prefix) {
-        ret = ellswift_xdh_hash_function_prefix_impl(secp256k1_get_hash_context(ctx), output, sx, ell_a64, ell_b64, data);
+        ret = ellswift_xdh_hash_function_prefix_impl(&ctx->hash_ctx, output, sx, ell_a64, ell_b64, data);
     } else {
         ret = hashfp(output, sx, ell_a64, ell_b64, data);
     }
@@ -577,7 +576,7 @@ int secp256k1_ellswift_xdh(const secp256k1_context *ctx, unsigned char *output, 
     secp256k1_fe_clear(&px);
     secp256k1_scalar_clear(&s);
 
-    return !!ret & !overflow;
+    return (!!ret) & is_sec_valid;
 }
 
 #endif

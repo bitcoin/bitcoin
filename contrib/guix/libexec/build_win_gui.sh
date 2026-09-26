@@ -11,6 +11,8 @@ source "$(dirname "${BASH_SOURCE[0]}")/setup.sh"
 # setup mingw-w64 toolchain
 mingw_w64_toolchain
 
+BASE_CACHE="${BASE_CACHE:-$PWD/depends/built}/GUIX/GUI"
+
 # Build the depends tree
 make -C depends --jobs="$JOBS" HOST="$HOST" \
                                    ${V:+V=1} \

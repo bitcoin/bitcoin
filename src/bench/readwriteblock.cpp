@@ -12,12 +12,10 @@
 #include <streams.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
-#include <uint256.h>
 #include <util/check.h>
 #include <validation.h>
 
 #include <memory>
-#include <optional>
 #include <span>
 
 static CBlock CreateTestBlock()

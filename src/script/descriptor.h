@@ -8,6 +8,7 @@
 #include <outputtype.h>
 #include <pubkey.h>
 #include <uint256.h>
+#include <util/expected.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -118,6 +119,11 @@ struct Descriptor {
     /** Convert the descriptor back to a string, undoing parsing. */
     virtual std::string ToString(bool compat_format=false) const = 0;
 
+    /** Convert the descriptor to the canonical string.
+     * The canonical string is the same as the public string but always uses h as the hardened indicator
+     */
+    virtual std::string ToCanonicalString() const = 0;
+
     /** Whether this descriptor will return at most one scriptPubKey or multiple (aka is or is not combo) */
     virtual bool IsSingleType() const = 0;
 
@@ -205,6 +211,13 @@ struct Descriptor {
     virtual size_t GetKeyCount() const = 0;
 };
 
+/** Validate the numeric bounds of a descriptor key-expression range
+ *  [low, high] (high inclusive). On success returns an Expected with no
+ *  value; on failure returns the first violated invariant's user-facing
+ *  message.
+ */
+util::Expected<void, std::string> CheckDescriptorRangeBounds(int64_t low, int64_t high);
+
 /** Parse a `descriptor` string. Included private keys are put in `out`.
  *
  * If the descriptor has a checksum, it must be valid. If `require_checksum`
@@ -239,9 +252,12 @@ std::string GetDescriptorChecksum(const std::string& descriptor);
  */
 std::unique_ptr<Descriptor> InferDescriptor(const CScript& script, const SigningProvider& provider);
 
-/** Unique identifier that may not change over time, unless explicitly marked as not backwards compatible.
-*   This is not part of BIP 380, not guaranteed to be interoperable and should not be exposed to the user.
+/** Hash of the COMPAT string representation of the descriptor that is not supposed to change over time.
+ * Due to the hash's usage in previous versions, the COMPAT string is computed with some quirks.
+ *
+ * The hash is the sha256 of the public descriptor using apostrophes as the hardened indicator, except inside of
+ * Miniscript expressions, where the public serialization is used as provided.
 */
-uint256 DescriptorID(const Descriptor& desc);
+uint256 CompatDescriptorHash(const Descriptor& desc);
 
 #endif // BITCOIN_SCRIPT_DESCRIPTOR_H

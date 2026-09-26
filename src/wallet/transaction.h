@@ -28,6 +28,8 @@ class Chain;
 } // namespace interfaces
 
 namespace wallet {
+class WalletBatch;
+
 //! State of transaction confirmed in a block.
 struct TxStateConfirmed {
     uint256 confirmed_block_hash;
@@ -352,7 +354,7 @@ public:
     // If the given transaction has a different wtxid, the transaction is stored if it has not been seen before.
     // The canonical wtxid is also updated. The tx that is confirmed becomes canonical. For unconfirmed txs,
     // those with witnesses are preferred, followed by least weight.
-    bool Update(CTransactionRef tx, const TxState& new_state);
+    bool Update(CTransactionRef tx, const TxState& new_state, WalletBatch& batch, bool metadata_changed);
 
     //! make sure balances are recalculated
     void MarkDirty()
@@ -364,8 +366,9 @@ public:
         m_cached_from_me = std::nullopt;
     }
 
-    /** True if only scriptSigs are different */
-    bool IsEquivalentTo(const CWalletTx& tx) const;
+    /** True if tx is a malleation of this, i.e. it has the exact same version, locktime,
+     * input order, input outpoints, input sequences, and outputs. Input scriptSigs and input scriptWitnesses may differ. */
+    bool IsMalleation(const CWalletTx& tx) const;
 
     bool InMempool() const;
 

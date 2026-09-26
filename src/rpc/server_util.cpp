@@ -5,19 +5,22 @@
 #include <rpc/server_util.h>
 
 #include <chain.h>
-#include <common/args.h>
-#include <net_processing.h>
 #include <node/context.h>
 #include <node/miner.h>
-#include <policy/fees/block_policy_estimator.h>
 #include <pow.h>
+#include <primitives/block.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
-#include <txmempool.h>
+#include <uint256.h>
 #include <util/any.h>
-#include <validation.h>
 
 #include <any>
+#include <memory>
+#include <string>
+
+namespace Consensus {
+struct Params;
+} // namespace Consensus
 
 using node::NodeContext;
 using node::UpdateTime;
@@ -84,17 +87,17 @@ ChainstateManager& EnsureAnyChainman(const std::any& context)
     return EnsureChainman(EnsureAnyNodeContext(context));
 }
 
-CBlockPolicyEstimator& EnsureFeeEstimator(const NodeContext& node)
+FeeRateEstimatorManager& EnsureFeeEstimatorMan(const NodeContext& node)
 {
-    if (!node.fee_estimator) {
+    if (!node.fee_estimator_man) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Fee estimation disabled");
     }
-    return *node.fee_estimator;
+    return *node.fee_estimator_man;
 }
 
-CBlockPolicyEstimator& EnsureAnyFeeEstimator(const std::any& context)
+FeeRateEstimatorManager& EnsureAnyFeeEstimatorMan(const std::any& context)
 {
-    return EnsureFeeEstimator(EnsureAnyNodeContext(context));
+    return EnsureFeeEstimatorMan(EnsureAnyNodeContext(context));
 }
 
 CConnman& EnsureConnman(const NodeContext& node)
@@ -105,12 +108,12 @@ CConnman& EnsureConnman(const NodeContext& node)
     return *node.connman;
 }
 
-interfaces::Mining& EnsureMining(const NodeContext& node)
+node::BlockTemplateManager& EnsureBlockTemplateManager(const NodeContext& node)
 {
-    if (!node.mining) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Node miner not found");
+    if (!node.block_template_manager) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Block template manager not found");
     }
-    return *node.mining;
+    return *node.block_template_manager;
 }
 
 PeerManager& EnsurePeerman(const NodeContext& node)

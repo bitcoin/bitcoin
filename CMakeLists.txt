@@ -27,7 +27,7 @@ get_directory_property(precious_variables CACHE_VARIABLES)
 # Project / Package metadata
 #=============================
 set(CLIENT_NAME "Bitcoin Core")
-set(CLIENT_VERSION_MAJOR 31)
+set(CLIENT_VERSION_MAJOR 32)
 set(CLIENT_VERSION_MINOR 99)
 set(CLIENT_VERSION_BUILD 0)
 set(CLIENT_VERSION_RC 0)
@@ -371,7 +371,6 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_SIZEOF_VOID_P EQUAL 4)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-  target_compile_definitions(core_interface INTERFACE OBJC_OLD_DISPATCH_PROTOTYPES=0)
   # These flags are specific to ld64, and may cause issues with other linkers.
   # For example: GNU ld will interpret -dead_strip as -de and then try and use
   # "ad_strip" as the symbol for the entry point.

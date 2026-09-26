@@ -85,4 +85,31 @@ WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const Ou
     return w_desc;
 }
 
+void WalletDescriptor::UpdateFrom(const WalletDescriptor& other)
+{
+    if (!IsCanonicallyEquivalent(other)) {
+        return;
+    }
+    range_start = other.range_start;
+    next_index = other.next_index;
+    range_end = other.range_end;
+    creation_time = other.creation_time;
+    cache = other.cache;
+}
+
+uint256 WalletDescriptor::GetCanonicalHash() const
+{
+    if (!m_canonical_hash) {
+        m_canonical_hash.emplace();
+        std::string canonical = descriptor->ToCanonicalString();
+        CSHA256().Write((unsigned char*)canonical.data(), canonical.size()).Finalize(m_canonical_hash->begin());
+    }
+    return *m_canonical_hash;
+}
+
+bool WalletDescriptor::IsCanonicallyEquivalent(const WalletDescriptor& other) const
+{
+    return GetCanonicalHash() == other.GetCanonicalHash();
+}
+
 } // namespace wallet

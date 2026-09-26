@@ -114,8 +114,7 @@ static CTransactionRef CreatePlaceholderTx(bool segwit)
 BOOST_FIXTURE_TEST_CASE(tx_rejection_types, TestChain100Setup)
 {
     CTxMemPool& pool = *Assert(m_node.mempool);
-    FastRandomContext det_rand{true};
-    node::TxDownloadOptions DEFAULT_OPTS{pool, det_rand, true};
+    node::TxDownloadOptions DEFAULT_OPTS{.m_mempool = pool, .m_deterministic_txrequest = true};
 
     // A new TxDownloadManagerImpl is created for each tx so we can just reuse the same one.
     TxValidationState state;
@@ -172,8 +171,7 @@ BOOST_FIXTURE_TEST_CASE(tx_rejection_types, TestChain100Setup)
 BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
 {
     CTxMemPool& pool = *Assert(m_node.mempool);
-    FastRandomContext det_rand{true};
-    node::TxDownloadOptions DEFAULT_OPTS{pool, det_rand, true};
+    node::TxDownloadOptions DEFAULT_OPTS{.m_mempool = pool, .m_deterministic_txrequest = true};
     NodeId nodeid{1};
     node::TxDownloadConnectionInfo DEFAULT_CONN{/*m_preferred=*/false, /*m_relay_permissions=*/false, /*m_wtxid_relay=*/true};
 

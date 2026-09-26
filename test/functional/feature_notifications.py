@@ -42,6 +42,7 @@ class NotificationsTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.setup_clean_chain = True
         self.uses_wallet = None
+        self.noban_tx_relay = True
 
     def setup_network(self):
         self.wallet = ''.join(chr(i) for i in range(FILE_CHAR_START, FILE_CHAR_END) if chr(i) not in FILE_CHARS_DISALLOWED)
@@ -174,6 +175,19 @@ class NotificationsTest(BitcoinTestFramework):
             self.sync_blocks()
             self.expect_wallet_notify([(bump2, blockheight2, blockhash2), (tx2, -1, UNCONFIRMED_HASH_STRING)])
             assert_equal(self.nodes[1].gettransaction(bump2)["confirmations"], 1)
+
+            if platform.system() != 'Windows':
+                self.log.info("test -walletnotify replacement metacharacters in wallet name")
+                self.nodes[1].unloadwallet(self.wallet)
+                command_marker = os.path.join(self.options.tmpdir, "walletnotify_injected")
+                # The previous regex replacement expanded `$'` to the command suffix, breaking the shell-escaped wallet name's quote accounting
+                wallet_name = self.nodes[1].createwallet(f"$'$'; echo Pwned > {os.path.basename(command_marker)}; #")["name"]
+                txid = self.nodes[0].sendtoaddress(self.nodes[1].get_wallet_rpc(wallet_name).getnewaddress(), 1)
+                self.sync_mempools()
+                notify_path = os.path.join(self.walletnotify_dir, notify_outputname(wallet_name, txid))
+                self.wait_until(lambda: os.path.exists(command_marker) or os.path.exists(notify_path), timeout=10)
+                assert not os.path.exists(command_marker)
+                assert os.path.exists(notify_path)
 
         self.log.info("test -alertnotify with large work invalid chain")
         # create a bunch of invalid blocks

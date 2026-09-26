@@ -12,6 +12,7 @@
 #include <netgroup.h>
 #include <random.h>
 #include <test/data/asmap.raw.h>
+#include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <util/asmap.h>
@@ -1075,20 +1076,15 @@ BOOST_AUTO_TEST_CASE(load_addrman)
 
     // Test that the de-serialization does not throw an exception.
     auto ssPeers1{AddrmanToStream(addrman)};
-    bool exceptionThrown = false;
     AddrMan addrman1{EMPTY_NETGROUPMAN, !DETERMINISTIC, GetCheckRatio(m_node)};
 
     BOOST_CHECK(addrman1.Size() == 0);
-    try {
+    {
         unsigned char pchMsgTmp[4];
-        ssPeers1 >> pchMsgTmp;
-        ssPeers1 >> addrman1;
-    } catch (const std::exception&) {
-        exceptionThrown = true;
+        BOOST_CHECK_NO_THROW(ssPeers1 >> pchMsgTmp >> addrman1);
     }
 
     BOOST_CHECK(addrman1.Size() == 3);
-    BOOST_CHECK(exceptionThrown == false);
 
     // Test that ReadFromStream creates an addrman with the correct number of addrs.
     DataStream ssPeers2 = AddrmanToStream(addrman);
@@ -1130,17 +1126,14 @@ BOOST_AUTO_TEST_CASE(load_addrman_corrupted)
 {
     // Test that the de-serialization of corrupted peers.dat throws an exception.
     auto ssPeers1{MakeCorruptPeersDat()};
-    bool exceptionThrown = false;
     AddrMan addrman1{EMPTY_NETGROUPMAN, !DETERMINISTIC, GetCheckRatio(m_node)};
     BOOST_CHECK(addrman1.Size() == 0);
-    try {
+    BOOST_CHECK_EXCEPTION([&]
+    {
         unsigned char pchMsgTmp[4];
         ssPeers1 >> pchMsgTmp;
         ssPeers1 >> addrman1;
-    } catch (const std::exception&) {
-        exceptionThrown = true;
-    }
-    BOOST_CHECK(exceptionThrown);
+    }(), std::ios_base::failure, HasReason{"end of data"});
 
     // Test that ReadFromStream fails if peers.dat is corrupt
     auto ssPeers2{MakeCorruptPeersDat()};

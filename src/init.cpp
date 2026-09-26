@@ -33,7 +33,6 @@
 #include <interfaces/chain.h>
 #include <interfaces/init.h>
 #include <interfaces/ipc.h>
-#include <interfaces/mining.h>
 #include <interfaces/node.h>
 #include <ipc/exception.h>
 #include <kernel/blockmanager_opts.h>
@@ -51,6 +50,7 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <netgroup.h>
+#include <node/block_template_manager.h>
 #include <node/blockmanager_args.h>
 #include <node/blockstorage.h>
 #include <node/caches.h>
@@ -63,11 +63,11 @@
 #include <node/mempool_persist.h>
 #include <node/mempool_persist_args.h>
 #include <node/mining_args.h>
-#include <node/mining_types.h>
 #include <node/peerman_args.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
-#include <policy/fees/block_policy_estimator_args.h>
+#include <policy/fees/estimator_args.h>
+#include <policy/fees/estimator_man.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <protocol.h>
@@ -86,11 +86,13 @@
 #include <util/asmap.h>
 #include <util/batchpriority.h>
 #include <util/btcsignals.h>
+#include <util/byte_units.h>
 #include <util/chaintype.h>
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/moneystr.h>
+#include <util/overflow.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
@@ -113,7 +115,7 @@
 #include <exception>
 #include <fstream>
 #include <functional>
-#include <initializer_list>
+#include <limits>
 #include <list>
 #include <memory>
 #include <new>
@@ -125,7 +127,6 @@
 #include <thread>
 #include <tuple>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #ifndef WIN32
@@ -145,10 +146,6 @@
 using common::InvalidPortErrMsg;
 using common::ResolveErrMsg;
 
-using http_bitcoin::InitHTTPServer;
-using http_bitcoin::InterruptHTTPServer;
-using http_bitcoin::StartHTTPServer;
-using http_bitcoin::StopHTTPServer;
 using node::ApplyArgsManOptions;
 using node::BlockManager;
 using node::CalculateCacheSizes;
@@ -366,15 +363,6 @@ void Shutdown(NodeContext& node)
         DumpMempool(*node.mempool, MempoolPath(*node.args));
     }
 
-    // Drop transactions we were still watching, record fee estimations and unregister
-    // fee estimator from validation interface.
-    if (node.fee_estimator) {
-        node.fee_estimator->Flush();
-        if (node.validation_signals) {
-            node.validation_signals->UnregisterValidationInterface(node.fee_estimator.get());
-        }
-    }
-
     // FlushStateToDisk generates a ChainStateFlushed callback, which we should avoid missing
     if (node.chainman) {
         LOCK(cs_main);
@@ -389,6 +377,14 @@ void Shutdown(NodeContext& node)
     // CValidationInterface callbacks, flush them...
     if (node.validation_signals) node.validation_signals->FlushBackgroundCallbacks();
 
+    // Once callbacks drain, drop tracked transactions, save estimates, and unregister the estimator
+    if (node.fee_estimator_man) {
+        node.fee_estimator_man->ShutdownFlush();
+        if (node.validation_signals) {
+            node.validation_signals->UnregisterValidationInterface(node.fee_estimator_man.get());
+        }
+    }
+
     // Stop and delete all indexes only after flushing background callbacks.
     for (auto* index : node.indexes) index->Stop();
     if (g_txindex) g_txindex.reset();
@@ -397,12 +393,7 @@ void Shutdown(NodeContext& node)
     DestroyAllBlockFilterIndexes();
     node.indexes.clear(); // all instances are nullptr now
 
-    // Any future callbacks will be dropped. This should absolutely be safe - if
-    // missing a callback results in an unrecoverable situation, unclean shutdown
-    // would too. The only reason to do the above flushes is to let the wallet catch
-    // up with our current chain to avoid any strange pruning edge cases and make
-    // next startup faster by avoiding rescan.
-
+    // Callbacks queued by this final chainstate flush will not run during shutdown
     if (node.chainman) {
         LOCK(cs_main);
         for (const auto& chainstate : node.chainman->m_chainstates) {
@@ -430,8 +421,9 @@ void Shutdown(NodeContext& node)
     if (node.validation_signals) {
         node.validation_signals->UnregisterAllValidationInterfaces();
     }
+    node.fee_estimator_man.reset();
+    node.block_template_manager.reset();
     node.mempool.reset();
-    node.fee_estimator.reset();
     node.chainman.reset();
     node.validation_signals.reset();
     node.scheduler.reset();
@@ -490,11 +482,11 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
 
     init::AddLoggingArgs(argsman);
 
-    const auto defaultBaseParams = CreateBaseChainParams(ChainType::MAIN);
-    const auto testnetBaseParams = CreateBaseChainParams(ChainType::TESTNET);
-    const auto testnet4BaseParams = CreateBaseChainParams(ChainType::TESTNET4);
-    const auto signetBaseParams = CreateBaseChainParams(ChainType::SIGNET);
-    const auto regtestBaseParams = CreateBaseChainParams(ChainType::REGTEST);
+    const auto defaultBaseParams = CreateBaseChainParams(argsman, ChainType::MAIN);
+    const auto testnetBaseParams = CreateBaseChainParams(argsman, ChainType::TESTNET);
+    const auto testnet4BaseParams = CreateBaseChainParams(argsman, ChainType::TESTNET4);
+    const auto signetBaseParams = CreateBaseChainParams(argsman, ChainType::SIGNET);
+    const auto regtestBaseParams = CreateBaseChainParams(argsman, ChainType::REGTEST);
     const auto defaultChainParams = CreateChainParams(argsman, ChainType::MAIN);
     const auto testnetChainParams = CreateChainParams(argsman, ChainType::TESTNET);
     const auto testnet4ChainParams = CreateChainParams(argsman, ChainType::TESTNET4);
@@ -522,7 +514,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
                    ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-fastprune", "Use smaller block files and lower minimum prune height for testing purposes", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
 #if HAVE_SYSTEM
-    argsman.AddArg("-blocknotify=<cmd>", "Execute command when the best block changes (%s in cmd is replaced by block hash)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-blocknotify=<cmd>", "Execute command when the best block changes (%s in cmd is replaced by block hash). Not run for blocks connected during initial block download or reindexing.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #endif
     argsman.AddArg("-blockreconstructionextratxn=<n>", strprintf("Extra transactions to keep in memory for compact block reconstructions (default: %u)", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-blocksonly", strprintf("Whether to reject transactions from network peers. Disables automatic broadcast and rebroadcast of transactions, unless the source peer has the 'forcerelay' permission. RPC transactions are not affected. (default: %u)", DEFAULT_BLOCKSONLY), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -723,8 +715,9 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
                    ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-privatebroadcast",
                    strprintf(
-                       "Broadcast transactions submitted via sendrawtransaction RPC using short-lived "
+                       "EXPERIMENTAL: Broadcast transactions submitted via sendrawtransaction RPC using short-lived "
                        "connections through the Tor or I2P networks, without putting them in the mempool first. "
+                       "This provides best-effort concealment of the transaction's origin. "
                        "Transactions submitted through the wallet are not affected by this option "
                        "(default: %u)",
                    DEFAULT_PRIVATE_BROADCAST),
@@ -746,6 +739,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-rpcdoccheck", strprintf("Throw a non-fatal error at runtime if the documentation for an RPC is incorrect (default: %u)", DEFAULT_RPC_DOC_CHECK), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
     argsman.AddArg("-rpccookiefile=<loc>", "Location of the auth cookie. Relative paths will be prefixed by a net-specific datadir location. (default: data dir)", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-rpccookieperms=<readable-by>", strprintf("Set permissions on the RPC auth cookie file so that it is readable by [owner|group|all] (default: owner [via umask 0077])"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    argsman.AddArg("-rpcmaxconnections=<n>", strprintf("The maximum number of connected HTTP clients (default: %d)", DEFAULT_MAX_HTTP_CONNECTIONS), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-rpcpassword=<pw>", "Password for JSON-RPC connections", ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE, OptionsCategory::RPC);
     argsman.AddArg("-rpcport=<port>", strprintf("Listen for JSON-RPC connections on <port> (default: %u, testnet3: %u, testnet4: %u, signet: %u, regtest: %u)", defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort(), testnet4BaseParams->RPCPort(), signetBaseParams->RPCPort(), regtestBaseParams->RPCPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::RPC);
     argsman.AddArg("-rpcservertimeout=<n>", strprintf("Timeout during HTTP requests (default: %d)", DEFAULT_HTTP_SERVER_TIMEOUT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
@@ -895,7 +889,7 @@ void InitLogging(const ArgsManager& args)
 
 namespace { // Variables internal to initialization process only
 
-int nMaxConnections;
+int num_p2p_max_connections;
 int available_fds;
 ServiceFlags g_local_services = ServiceFlags(NODE_NETWORK_LIMITED | NODE_WITNESS);
 int64_t peer_connect_timeout;
@@ -1051,8 +1045,8 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
 
     // -bind and -whitebind can't be set when not listening
-    size_t nUserBind = args.GetArgs("-bind").size() + args.GetArgs("-whitebind").size();
-    if (nUserBind != 0 && !args.GetBoolArg("-listen", DEFAULT_LISTEN)) {
+    size_t num_user_p2p_bind = args.GetArgs("-bind").size() + args.GetArgs("-whitebind").size();
+    if (num_user_p2p_bind != 0 && !args.GetBoolArg("-listen", DEFAULT_LISTEN)) {
         return InitError(Untranslated("Cannot set -bind or -whitebind together with -listen=0"));
     }
 
@@ -1065,32 +1059,76 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // plus all manual connections and all bound interfaces. Any remainder will be available for connection sockets
 
     // Number of bound interfaces (we have at least one)
-    int nBind = std::max(nUserBind, size_t(1));
+    int num_p2p_bind = std::max(num_user_p2p_bind, size_t(1));
     // Maximum number of connections with other nodes, this accounts for all types of outbounds and inbounds except for manual
-    int user_max_connection = args.GetIntArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
-    if (user_max_connection < 0) {
+    int user_p2p_max_connections = args.GetIntArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
+    if (user_p2p_max_connections < 0) {
         return InitError(Untranslated("-maxconnections must be greater or equal than zero"));
     }
     const size_t max_private{args.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)
                              ? MAX_PRIVATE_BROADCAST_CONNECTIONS
                              : 0};
-    // Reserve enough FDs to account for the bare minimum, plus any manual connections, plus the bound interfaces
-    int min_required_fds = MIN_CORE_FDS + MAX_ADDNODE_CONNECTIONS + nBind;
 
-    // Try raising the FD limit to what we need (available_fds may be smaller than the requested amount if this fails)
-    available_fds = RaiseFileDescriptorLimit(user_max_connection + max_private + min_required_fds);
+    // HTTP server listen sockets: by default two (IPv4 and IPv6 loopback), or one per -rpcbind entry
+    int num_rpc_bind = std::max(args.GetArgs("-rpcbind").size(), size_t(2));
+    // HTTP server connected client sockets
+    int user_rpc_max_connections = args.GetArg<int>("-rpcmaxconnections", DEFAULT_MAX_HTTP_CONNECTIONS);
+    if (user_rpc_max_connections < 1) {
+        return InitError(Untranslated("-rpcmaxconnections must be greater than zero. Use -server=0 to disable HTTP."));
+    }
+    if (!args.GetBoolArg("-server", false)) {
+        num_rpc_bind = 0;
+        user_rpc_max_connections = 0;
+    }
+
+    // Reserve enough FDs to account for the bare minimum, plus any manual connections, plus the bound interfaces.
+    // Every element is an int >= 0 so summing in int64_t cannot overflow.
+    // RaiseFileDescriptorLimit() accepts an int so we check that limit before casting.
+    const int64_t total_fds = int64_t{MIN_CORE_FDS} +
+                              MAX_ADDNODE_CONNECTIONS +
+                              num_p2p_bind +
+                              num_rpc_bind +
+                              user_rpc_max_connections +
+                              user_p2p_max_connections +
+                              static_cast<int64_t>(max_private);
+    if (total_fds > std::numeric_limits<int>::max()) {
+        return InitError(Untranslated("Too many file descriptors requested. Try lower values for -rpcmaxconnections "
+                                      "or -maxconnections, or fewer settings of "
+                                      "-rpcbind, -bind and -whitebind"));
+    }
+
+    // Subset of total_fds must also be a safe int
+    int min_required_fds = MIN_CORE_FDS +
+                           MAX_ADDNODE_CONNECTIONS +
+                           num_p2p_bind +
+                           num_rpc_bind +
+                           user_rpc_max_connections;
+
+    // Try raising the FD limit to what the user wants (available_fds may be smaller than the requested amount if this fails)
+    available_fds = RaiseFileDescriptorLimit(static_cast<int>(total_fds));
     // If we are using select instead of poll, our actual limit may be even smaller
 #ifndef USE_POLL
     available_fds = std::min(FD_SETSIZE, available_fds);
 #endif
+    // The system can't support our bare minimum
     if (available_fds < min_required_fds)
         return InitError(strprintf(_("Not enough file descriptors available. %d available, %d required."), available_fds, min_required_fds));
 
-    // Trim requested connection counts, to fit into system limitations
-    nMaxConnections = std::min(available_fds - min_required_fds, user_max_connection);
+    // The system can support our minimum but not the full amount the user requested.
+    if (available_fds < total_fds) {
+        // If the user is requesting extra HTTP connections, abort. They need to change that.
+        if (user_rpc_max_connections > DEFAULT_MAX_HTTP_CONNECTIONS) {
+            return InitError(strprintf(_("Not enough file descriptors available. "
+                                         "Try reducing -rpcmaxconnections or using the default value of %d"),
+                                         DEFAULT_MAX_HTTP_CONNECTIONS));
+        }
+    }
 
-    if (nMaxConnections < user_max_connection)
-        InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), user_max_connection, nMaxConnections));
+    // Trim requested connection counts, to fit into system limitations
+    num_p2p_max_connections = std::min(available_fds - min_required_fds, user_p2p_max_connections);
+
+    if (num_p2p_max_connections < user_p2p_max_connections)
+        InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), user_p2p_max_connections, num_p2p_max_connections));
 
     // ********************************************************* Step 3: parameter-to-internal-flags
     if (auto result{init::SetLoggingCategories(args)}; !result) return InitError(util::ErrorString(result));
@@ -1236,9 +1274,6 @@ bool AppInitLockDirectories()
 bool AppInitInterfaces(NodeContext& node)
 {
     node.chain = interfaces::MakeChain(node);
-    // Specify wait_loaded=false so internal mining interface can be initialized
-    // on early startup and does not need to be tied to chainstate loading.
-    node.mining = interfaces::MakeMining(node, /*wait_loaded=*/false);
     return true;
 }
 
@@ -1336,6 +1371,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
 {
     // This function may be called twice, so any dirty state must be reset.
     node.notifications->setChainstateLoaded(false); // Drop state, such as a cached tip block
+    node.block_template_manager.reset();
     node.mempool.reset();
     node.chainman.reset(); // Drop state, such as an initialized m_block_tree_db
 
@@ -1352,9 +1388,6 @@ static ChainstateLoadResult InitAndLoadChainstate(
     if (!mempool_error.empty()) {
         return {ChainstateLoadStatus::FAILURE_FATAL, mempool_error};
     }
-    auto mining_args{node::ReadMiningArgs(args)};
-    Assert(mining_args); // no error can happen, already checked in AppInitParameterInteraction
-    node.mining_args = std::move(*mining_args);
     LogInfo("* Using %.1f MiB for in-memory UTXO set (plus up to %.1f MiB of unused mempool space)",
             cache_sizes.coins / double(1_MiB),
             mempool_opts.max_size_bytes / double(1_MiB));
@@ -1444,6 +1477,10 @@ static ChainstateLoadResult InitAndLoadChainstate(
         std::tie(status, error) = catch_exceptions([&] { return VerifyLoadedChainstate(chainman, options); });
         if (status == node::ChainstateLoadStatus::SUCCESS) {
             LogInfo("Block index and chainstate loaded");
+            auto mining_args{node::ReadMiningArgs(args)};
+            Assert(mining_args); // no error can happen, already checked in AppInitParameterInteraction
+            // Must be set before setChainstateLoaded(true), which unblocks MakeMining waiters that assume it is non-null.
+            node.block_template_manager = std::make_unique<node::BlockTemplateManager>(*node.mempool, chainman, *node.notifications, std::move(*mining_args));
             node.notifications->setChainstateLoaded(true);
         }
     }
@@ -1470,7 +1507,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         return false;
     }
 
-    LogInfo("Using at most %i automatic connections (%i file descriptors available)", nMaxConnections, available_fds);
+    LogInfo("Using at most %i automatic connections (%i file descriptors available)", num_p2p_max_connections, available_fds);
 
     // Warn about relative -datadir path.
     if (args.IsArgSet("-datadir") && !args.GetPathArg("-datadir").is_absolute()) {
@@ -1617,7 +1654,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         // Netgroupman with or without it
         assert(!node.netgroupman);
         if (args.IsArgSet("-asmap") && !args.IsArgNegated("-asmap")) {
-            uint256 asmap_version{};
             if (!args.GetBoolArg("-asmap", false)) {
                 fs::path asmap_path = args.GetPathArg("-asmap");
                 if (!asmap_path.is_absolute()) {
@@ -1637,7 +1673,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     InitError(strprintf(_("Could not parse asmap file %s"), fs::quoted(fs::PathToString(asmap_path))));
                     return false;
                 }
-                asmap_version = AsmapVersion(asmap);
                 node.netgroupman = std::make_unique<NetGroupManager>(NetGroupManager::WithLoadedAsmap(std::move(asmap)));
             } else {
                 #ifdef ENABLE_EMBEDDED_ASMAP
@@ -1648,7 +1683,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                         return false;
                     }
                     node.netgroupman = std::make_unique<NetGroupManager>(NetGroupManager::WithEmbeddedAsmap(asmap));
-                    asmap_version = AsmapVersion(asmap);
                     LogInfo("Opened asmap data (%zu bytes) from embedded byte array\n", asmap.size());
                 #else
                     // If there is no embedded data, fail and report it since
@@ -1657,7 +1691,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     return false;
                 #endif
             }
-            LogInfo("Using asmap version %s for IP bucketing", asmap_version.ToString());
+            LogInfo("Using asmap version %s for IP bucketing", HexStr(node.netgroupman->GetAsmapVersion()));
         } else {
             node.netgroupman = std::make_unique<NetGroupManager>(NetGroupManager::NoAsmap());
             LogInfo("Using /16 prefix for IP bucketing");
@@ -1678,22 +1712,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     node.connman = std::make_unique<CConnman>(rng.rand64(),
                                               rng.rand64(),
                                               *node.addrman, *node.netgroupman, chainparams, args.GetBoolArg("-networkactive", true));
-
-    assert(!node.fee_estimator);
-    // Don't initialize fee estimation with old data if we don't relay transactions,
-    // as they would never get updated.
-    if (!peerman_opts.ignore_incoming_txs) {
-        bool read_stale_estimates = args.GetBoolArg("-acceptstalefeeestimates", DEFAULT_ACCEPT_STALE_FEE_ESTIMATES);
-        if (read_stale_estimates && (chainparams.GetChainType() != ChainType::REGTEST)) {
-            return InitError(strprintf(_("acceptstalefeeestimates is not supported on %s chain."), chainparams.GetChainTypeString()));
-        }
-        node.fee_estimator = std::make_unique<CBlockPolicyEstimator>(FeeestPath(args), read_stale_estimates);
-
-        // Flush estimates to disk periodically
-        CBlockPolicyEstimator* fee_estimator = node.fee_estimator.get();
-        scheduler.scheduleEvery([fee_estimator] { fee_estimator->FlushFeeEstimates(); }, FEE_FLUSH_INTERVAL);
-        validation_signals.RegisterValidationInterface(fee_estimator);
-    }
 
     for (const std::string& socket_addr : args.GetArgs("-bind")) {
         std::string host_out;
@@ -1878,6 +1896,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     assert(!node.mempool);
     assert(!node.chainman);
+    assert(!node.block_template_manager);
 
     bool do_reindex{args.GetBoolArg("-reindex", false)};
     const bool do_reindex_chainstate{args.GetBoolArg("-reindex-chainstate", false)};
@@ -1894,7 +1913,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         bool do_retry{HasTestOption(args, "reindex_after_failure_noninteractive_yes") ||
             uiInterface.ThreadSafeQuestion(
             error + Untranslated(".\n\n") + _("Do you want to rebuild the databases now?"),
-            error.original + ".\nPlease restart with -reindex or -reindex-chainstate to recover.",
+            error.original + (args.GetIntArg("-prune", 0) ? ".\nPlease restart with -reindex to recover." : ".\nPlease restart with -reindex or -reindex-chainstate to recover."),
             CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT)};
         if (!do_retry) {
             return false;
@@ -1922,6 +1941,24 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     ChainstateManager& chainman = *Assert(node.chainman);
+
+    assert(!node.fee_estimator_man);
+    // Don't initialize fee estimation with old data if we don't relay transactions,
+    // as they would never get updated.
+    if (!peerman_opts.ignore_incoming_txs) {
+        bool read_stale_estimates = args.GetBoolArg("-acceptstalefeeestimates", DEFAULT_ACCEPT_STALE_FEE_ESTIMATES);
+        if (read_stale_estimates && (chainparams.GetChainType() != ChainType::REGTEST)) {
+            return InitError(strprintf(_("acceptstalefeeestimates is not supported on %s chain."), chainparams.GetChainTypeString()));
+        }
+        MaybeMigrateLegacyFeeEstimates(args);
+        node.fee_estimator_man = std::make_unique<FeeRateEstimatorManager>(BlockPolicyFeeEstPath(args), read_stale_estimates, MempoolPolicyEstimatorPath(args), *Assert(node.mempool), chainman);
+
+        // Flush estimates to disk periodically
+        FeeRateEstimatorManager* fee_estimator_man = node.fee_estimator_man.get();
+        scheduler.scheduleEvery([fee_estimator_man] { fee_estimator_man->IntervalFlush(); }, FEE_FLUSH_INTERVAL);
+        validation_signals.RegisterValidationInterface(fee_estimator_man);
+    }
+
     auto& kernel_notifications{*Assert(node.notifications)};
 
     assert(!node.peerman);
@@ -2009,10 +2046,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (!CheckDiskSpace(args.GetBlocksDirPath(), additional_bytes_needed)) {
             InitWarning(strprintf(_(
                     "Disk space for %s may not accommodate the block files. " \
-                    "Approximately %u GB of data will be stored in this directory."
+                    "Approximately %u GiB of data will be stored in this directory."
                 ),
                 fs::quoted(fs::PathToString(args.GetBlocksDirPath())),
-                chainparams.AssumedBlockchainSize()
+                CeilDiv(additional_bytes_needed, 1_GiB)
             ));
         }
     }
@@ -2137,7 +2174,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     CConnman::Options connOptions;
     connOptions.m_local_services = g_local_services;
-    connOptions.m_max_automatic_connections = nMaxConnections;
+    connOptions.m_max_automatic_connections = num_p2p_max_connections;
     connOptions.m_full_relay_inbound_percent = std::clamp<int>(args.GetIntArg("-inboundrelaypercent", DEFAULT_FULL_RELAY_INBOUND_PCT), 0, 100);
     connOptions.uiInterface = &uiInterface;
     connOptions.m_banman = node.banman.get();
@@ -2342,7 +2379,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (!proxyRandomize && (g_reachable_nets.Contains(NET_ONION) || onion_may_become_reachable)) {
             InitWarning(_("Private broadcast of own transactions requested (-privatebroadcast) and "
                           "-proxyrandomize is disabled. Tor circuits for private broadcast connections "
-                          "may be correlated to other connections over Tor. For maximum privacy set "
+                          "may be correlated to other connections over Tor. To reduce this risk, set "
                           "-proxyrandomize=1."));
         }
     }

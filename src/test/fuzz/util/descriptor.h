@@ -49,7 +49,7 @@ public:
 };
 
 //! Default maximum number of derivation indexes in a single derivation path when limiting its depth.
-constexpr int MAX_DEPTH{2};
+inline constexpr int MAX_DEPTH{2};
 
 /**
  * Whether the buffer, if it represents a valid descriptor, contains a derivation path deeper than
@@ -58,9 +58,9 @@ constexpr int MAX_DEPTH{2};
 bool HasDeepDerivPath(std::span<const uint8_t> buff, int max_depth = MAX_DEPTH);
 
 //! Default maximum number of sub-fragments.
-constexpr int MAX_SUBS{1'000};
+inline constexpr int MAX_SUBS{1'000};
 //! Maximum number of nested sub-fragments we'll allow in a descriptor.
-constexpr size_t MAX_NESTED_SUBS{10'000};
+inline constexpr size_t MAX_NESTED_SUBS{10'000};
 
 /**
  * Whether the buffer, if it represents a valid descriptor, contains a fragment with more
@@ -70,7 +70,7 @@ bool HasTooManySubFrag(std::span<const uint8_t> buff, int max_subs = MAX_SUBS,
                        size_t max_nested_subs = MAX_NESTED_SUBS);
 
 //! Default maximum number of wrappers per fragment.
-constexpr int MAX_WRAPPERS{100};
+inline constexpr int MAX_WRAPPERS{100};
 
 /**
  * Whether the buffer, if it represents a valid descriptor, contains a fragment with more
@@ -80,7 +80,7 @@ bool HasTooManyWrappers(std::span<const uint8_t> buff, int max_wrappers = MAX_WR
 
 /// Default maximum leaf size. This should be large enough to cover an extended
 /// key, including paths "/", inside and outside of "[]".
-constexpr uint32_t MAX_LEAF_SIZE{200};
+inline constexpr uint32_t MAX_LEAF_SIZE{200};
 
 /// Whether the expanded buffer (after calling GetDescriptor() in
 /// MockedDescriptorConverter) has a leaf size too large.

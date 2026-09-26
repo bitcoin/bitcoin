@@ -25,7 +25,12 @@ fn exit_help(err: &str) -> AppError {
         r#"
 Error: {err}
 
-Usage: program ./build_dir ./qa-assets/fuzz_corpora fuzz_target_name [parallelism={DEFAULT_PAR}]
+Usage: program ./build_dir ./qa-assets/fuzz_corpora fuzz_target_name [parallelism={DEFAULT_PAR}] [--mode=both]
+
+--mode:
+  both      Check each input individually and all inputs in one go
+  single    Check each input individually
+  combined  Check all inputs in one go
 
 Refer to the devtools/README.md for more details."#
     )
@@ -74,8 +79,24 @@ fn app() -> AppResult {
         None => DEFAULT_PAR,
     }
     .max(1);
-    if args.get(5).is_some() {
-        Err(exit_help("Too many args"))?;
+    let mut run_single = true;
+    let mut run_combined = true;
+    // All arguments after the positional arguments must be named arguments.
+    for arg in args.iter().skip(5) {
+        if let Some(value) = arg.strip_prefix("--mode=") {
+            (run_single, run_combined) = match value {
+                "both" => (true, true),
+                "single" => (true, false),
+                "combined" => (false, true),
+                other => Err(exit_help(&format!(
+                    "Invalid coverage check mode '{other}'. Expected 'both', 'single', or 'combined'"
+                )))?,
+            };
+        } else {
+            Err(exit_help(&format!(
+                "Too many args, or unknown named arg: {arg}"
+            )))?;
+        }
     }
 
     let build_dir = Path::new(build_dir);
@@ -84,7 +105,15 @@ fn app() -> AppResult {
 
     sanity_check(corpora_dir, &fuzz_exe)?;
 
-    deterministic_coverage(build_dir, corpora_dir, &fuzz_exe, fuzz_target, par)
+    deterministic_coverage(
+        build_dir,
+        corpora_dir,
+        &fuzz_exe,
+        fuzz_target,
+        par,
+        run_single,
+        run_combined,
+    )
 }
 
 fn using_libfuzzer(fuzz_exe: &Path) -> Result<bool, AppError> {
@@ -106,6 +135,8 @@ fn deterministic_coverage(
     fuzz_exe: &Path,
     fuzz_target: &str,
     par: usize,
+    run_single: bool,
+    run_combined: bool,
 ) -> AppResult {
     let using_libfuzzer = using_libfuzzer(fuzz_exe)?;
     if using_libfuzzer {
@@ -125,7 +156,7 @@ fn deterministic_coverage(
         .map(|entry| entry.expect("IO error"))
         .collect::<Vec<_>>();
     entries.sort_by_key(|entry| entry.file_name());
-    let run_single = |run_id: char, entry: &Path, thread_id: usize| -> Result<PathBuf, AppError> {
+    let run_once = |run_id: char, entry: &Path, thread_id: usize| -> Result<PathBuf, AppError> {
         let cov_txt_path = build_dir.join(format!("fuzz_det_cov.show.t{thread_id}.{run_id}.txt"));
         let profraw_file = build_dir.join(format!("fuzz_det_cov.t{thread_id}.{run_id}.profraw"));
         let profdata_file = build_dir.join(format!("fuzz_det_cov.t{thread_id}.{run_id}.profdata"));
@@ -210,56 +241,58 @@ The coverage was not deterministic between runs.
     //
     // Also, This can catch issues where several fuzz inputs are non-deterministic, but the sum of
     // their overall coverage trace remains the same across runs and thus remains undetected.
-    println!(
-        "Check each fuzz input individually ... ({} inputs with parallelism {par})",
-        entries.len()
-    );
-    let check_individual = |entry: &DirEntry, thread_id: usize| -> AppResult {
-        let entry = entry.path();
-        if !entry.is_file() {
-            Err(format!("{} should be a file", entry.display()))?;
-        }
-        let cov_txt_base = run_single('a', &entry, thread_id)?;
-        let cov_txt_repeat = run_single('b', &entry, thread_id)?;
-        check_diff(
-            &cov_txt_base,
-            &cov_txt_repeat,
-            &format!("The fuzz target input was {}.", entry.display()),
-        )?;
-        Ok(())
-    };
-    thread::scope(|s| -> AppResult {
-        let mut handles = VecDeque::with_capacity(par);
-        let mut res = Ok(());
-        for (i, entry) in entries.iter().enumerate() {
-            println!("[{}/{}]", i + 1, entries.len());
-            handles.push_back(s.spawn(move || check_individual(entry, i % par)));
-            while handles.len() >= par || i == (entries.len() - 1) || res.is_err() {
-                if let Some(th) = handles.pop_front() {
-                    let thread_result = match th.join() {
-                        Err(_e) => Err("A scoped thread panicked".to_string()),
-                        Ok(r) => r,
-                    };
-                    if thread_result.is_err() {
-                        res = thread_result;
+    if run_single {
+        println!(
+            "Check each fuzz input individually ... ({} inputs with parallelism {par})",
+            entries.len()
+        );
+        let check_individual = |entry: &DirEntry, thread_id: usize| -> AppResult {
+            let entry = entry.path();
+            if !entry.is_file() {
+                Err(format!("{} should be a file", entry.display()))?;
+            }
+            let cov_txt_base = run_once('a', &entry, thread_id)?;
+            let cov_txt_repeat = run_once('b', &entry, thread_id)?;
+            check_diff(
+                &cov_txt_base,
+                &cov_txt_repeat,
+                &format!("The fuzz target input was {}.", entry.display()),
+            )?;
+            Ok(())
+        };
+        thread::scope(|s| -> AppResult {
+            let mut handles = VecDeque::with_capacity(par);
+            let mut res = Ok(());
+            for (i, entry) in entries.iter().enumerate() {
+                println!("[{}/{}]", i + 1, entries.len());
+                handles.push_back(s.spawn(move || check_individual(entry, i % par)));
+                while handles.len() >= par || i == (entries.len() - 1) || res.is_err() {
+                    if let Some(th) = handles.pop_front() {
+                        let thread_result = match th.join() {
+                            Err(_e) => Err("A scoped thread panicked".to_string()),
+                            Ok(r) => r,
+                        };
+                        if thread_result.is_err() {
+                            res = thread_result;
+                        }
+                    } else {
+                        return res;
                     }
-                } else {
-                    return res;
                 }
             }
-        }
-        res
-    })?;
+            res
+        })?;
+    }
     // Finally, check that running over all fuzz inputs in one process is deterministic as well.
     // This can catch issues where mutable global state is leaked from one fuzz input execution to
     // the next.
-    println!("Check all fuzz inputs in one go ...");
-    {
+    if run_combined {
+        println!("Check all fuzz inputs in one go ...");
         if !corpus_dir.is_dir() {
             Err(format!("{} should be a folder", corpus_dir.display()))?;
         }
-        let cov_txt_base = run_single('a', &corpus_dir, 0)?;
-        let cov_txt_repeat = run_single('b', &corpus_dir, 0)?;
+        let cov_txt_base = run_once('a', &corpus_dir, 0)?;
+        let cov_txt_repeat = run_once('b', &corpus_dir, 0)?;
         check_diff(
             &cov_txt_base,
             &cov_txt_repeat,

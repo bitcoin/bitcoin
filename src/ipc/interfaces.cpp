@@ -19,6 +19,7 @@
 #include <cstring>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -74,12 +75,12 @@ public:
     bool startSpawnedProcess(int argc, char* argv[], int& exit_status) override
     {
         exit_status = EXIT_FAILURE;
-        mp::SocketId socket{mp::SocketError};
-        if (!m_process->checkSpawned(argc, argv, socket)) {
+        std::optional<mp::SocketId> socket{m_process->checkSpawned(argc, argv)};
+        if (!socket) {
             return false;
         }
         IgnoreCtrlC(strprintf("[%s] SIGINT received — waiting for parent to shut down.\n", m_exe_name));
-        m_protocol->serve(m_init, [&] { return m_protocol->makeStream(socket); } );
+        m_protocol->serve(m_init, [&] { return m_protocol->makeStream(*socket); } );
         exit_status = EXIT_SUCCESS;
         return true;
     }

@@ -384,6 +384,31 @@ class OrphanHandlingTest(BitcoinTestFramework):
         peer.wait_for_parent_requests([int(missing_parent["txid"], 16)])
 
     @cleanup
+    def test_orphan_parent_confirmed(self):
+        node = self.nodes[0]
+        peer = node.add_p2p_connection(PeerTxRelayer())
+
+        parent = self.wallet.create_self_transfer(fee_rate=0)
+        child = self.wallet.create_self_transfer(utxo_to_spend=parent["new_utxo"])
+
+        self.log.info("Test orphan reconsideration when its missing parent is confirmed")
+        self.relay_transaction(peer, child["tx"])
+        assert tx_in_orphanage(node, child["tx"])
+
+        # Withhold the requested parent so it can only become available through the block.
+        node.bumpmocktime(TXREQUEST_TIME_SKIP)
+        peer.wait_for_parent_requests([parent["tx"].txid_int])
+        assert_equal(node.getrawmempool(), [])
+
+        self.generateblock(
+            node,
+            output=self.wallet.get_address(),
+            transactions=[parent["hex"]],
+        )
+        self.wait_until(lambda: child["txid"] in node.getrawmempool())
+        assert not tx_in_orphanage(node, child["tx"])
+
+    @cleanup
     def test_orphan_inherit_rejection(self):
         node = self.nodes[0]
         peer1 = node.add_p2p_connection(PeerTxRelayer())
@@ -826,6 +851,7 @@ class OrphanHandlingTest(BitcoinTestFramework):
         self.test_orphan_multiple_parents()
         self.test_orphans_overlapping_parents()
         self.test_orphan_of_orphan()
+        self.test_orphan_parent_confirmed()
         self.test_orphan_inherit_rejection()
         self.test_same_txid_orphan()
         self.test_same_txid_orphan_of_orphan()

@@ -38,7 +38,7 @@ static void run_nonce_function_bip340_tests(void) {
     unsigned char *args[5];
     int i;
 
-    const secp256k1_hash_ctx *hash_ctx = secp256k1_get_hash_context(CTX);
+    const secp256k1_hash_ctx *hash_ctx = &CTX->hash_ctx;
 
     /* Check that hash initialized by
      * secp256k1_nonce_function_bip340_sha256_tagged has the expected
@@ -164,7 +164,7 @@ static void test_schnorrsig_sha256_tagged(void) {
     unsigned char tag[] = {'B', 'I', 'P', '0', '3', '4', '0', '/', 'c', 'h', 'a', 'l', 'l', 'e', 'n', 'g', 'e'};
     secp256k1_sha256 sha;
     secp256k1_sha256 sha_optimized;
-    const secp256k1_hash_ctx *hash_ctx = secp256k1_get_hash_context(CTX);
+    const secp256k1_hash_ctx *hash_ctx = &CTX->hash_ctx;
 
     secp256k1_sha256_initialize_tagged(hash_ctx, &sha, (unsigned char *) tag, sizeof(tag));
     secp256k1_schnorrsig_sha256_tagged(&sha_optimized);

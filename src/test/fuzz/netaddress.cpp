@@ -55,7 +55,7 @@ FUZZ_TARGET(netaddress)
         assert(net_addr.IsIPv4());
     }
     (void)net_addr.IsRFC2544();
-    if (net_addr.IsRFC3849() || net_addr.IsRFC3964() || net_addr.IsRFC4380() || net_addr.IsRFC4843() || net_addr.IsRFC7343() || net_addr.IsRFC4862() || net_addr.IsRFC6052() || net_addr.IsRFC6145()) {
+    if (net_addr.IsRFC3849() || net_addr.IsRFC3964() || net_addr.IsRFC4380() || net_addr.IsRFC4843() || net_addr.IsRFC7343() || net_addr.IsRFC4862() || net_addr.IsRFC6052() || net_addr.IsRFC6145() || net_addr.IsRFC9637()) {
         assert(net_addr.IsIPv6());
     }
     (void)net_addr.IsRFC3927();
@@ -71,7 +71,9 @@ FUZZ_TARGET(netaddress)
     (void)net_addr.IsRFC6145();
     (void)net_addr.IsRFC6598();
     (void)net_addr.IsRFC7343();
-    if (!net_addr.IsRoutable()) {
+    (void)net_addr.IsRFC9637();
+    const bool routable{net_addr.IsRoutable()};
+    if (!routable) {
         assert(net_addr.GetNetwork() == Network::NET_UNROUTABLE || net_addr.GetNetwork() == Network::NET_INTERNAL);
     }
     if (net_addr.IsTor()) {
@@ -83,7 +85,9 @@ FUZZ_TARGET(netaddress)
     if (net_addr.IsCJDNS()) {
         assert(net_addr.GetNetwork() == Network::NET_CJDNS);
     }
-    (void)net_addr.IsValid();
+    if (!net_addr.IsValid()) {
+        assert(!routable);
+    }
     (void)net_addr.ToStringAddr();
 
     const CSubNet sub_net{net_addr, fuzzed_data_provider.ConsumeIntegral<uint8_t>()};

@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <bitcoin-build-config.h> // IWYU pragma: keep
+
 #include <util/threadnames.h>
 #include <util/check.h>
 
@@ -18,6 +20,10 @@
 #include <sys/prctl.h>
 #endif
 
+#ifdef HAVE_SETTHREADDESCRIPTION
+#include <windows.h>
+#endif
+
 //! Set the thread's name at the process level. Does not affect the
 //! internal name.
 static void SetThreadName(const char* name)
@@ -29,6 +35,11 @@ static void SetThreadName(const char* name)
     pthread_set_name_np(pthread_self(), name);
 #elif defined(__APPLE__)
     pthread_setname_np(name);
+#elif defined(HAVE_SETTHREADDESCRIPTION)
+    // Thread names are ASCII-only, so widening each character is sufficient as
+    // a conversion to UTF-16.
+    const std::wstring wname{name, name + std::strlen(name)};
+    ::SetThreadDescription(::GetCurrentThread(), wname.c_str());
 #else
     // Prevent warnings for unused parameters...
     (void)name;

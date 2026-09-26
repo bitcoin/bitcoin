@@ -25,7 +25,6 @@
 #include <span>
 #include <tuple>
 #include <utility>
-#include <variant>
 #include <vector>
 
 class MuSig2SecNonce;
@@ -301,7 +300,7 @@ protected:
      * payments.
      *
      * The FillableSigningProvider::mapScripts script map should not be confused
-     * with LegacyScriptPubKeyMan::setWatchOnly script set. The two collections
+     * with the wallet::LegacyDataSPKM::setWatchOnly script set. The two collections
      * can hold the same scripts, but they serve different purposes. The
      * setWatchOnly script set is intended to expand the set of outputs the
      * wallet considers payments. Every output with a script it contains is

@@ -9,6 +9,7 @@
 #include <key_io.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
+#include <util/bip32.h>
 #include <util/strencodings.h>
 
 #include <string>
@@ -42,13 +43,13 @@ TestVector test1 =
   TestVector("000102030405060708090a0b0c0d0e0f")
     ("xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8",
      "xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi",
-     0x80000000)
+     BIP32_HARDENED_FLAG)
     ("xpub68Gmy5EdvgibQVfPdqkBBCHxA5htiqg55crXYuXoQRKfDBFA1WEjWgP6LHhwBZeNK1VTsfTFUHCdrfp1bgwQ9xv5ski8PX9rL2dZXvgGDnw",
      "xprv9uHRZZhk6KAJC1avXpDAp4MDc3sQKNxDiPvvkX8Br5ngLNv1TxvUxt4cV1rGL5hj6KCesnDYUhd7oWgT11eZG7XnxHrnYeSvkzY7d2bhkJ7",
      1)
     ("xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ",
      "xprv9wTYmMFdV23N2TdNG573QoEsfRrWKQgWeibmLntzniatZvR9BmLnvSxqu53Kw1UmYPxLgboyZQaXwTCg8MSY3H2EU4pWcQDnRnrVA1xe8fs",
-     0x80000002)
+     BIP32_HARDENED_FLAG | 2)
     ("xpub6D4BDPcP2GT577Vvch3R8wDkScZWzQzMMUm3PWbmWvVJrZwQY4VUNgqFJPMM3No2dFDFGTsxxpG5uJh7n7epu4trkrX7x7DogT5Uv6fcLW5",
      "xprv9z4pot5VBttmtdRTWfWQmoH1taj2axGVzFqSb8C9xaxKymcFzXBDptWmT7FwuEzG3ryjH4ktypQSAewRiNMjANTtpgP4mLTj34bhnZX7UiM",
      2)
@@ -84,7 +85,7 @@ TestVector test3 =
   TestVector("4b381541583be4423346c643850da4b320e46a87ae3d2a4e6da11eba819cd4acba45d239319ac14f863b8d5ab5a0d0c64d2e8a1e7d1457df2e5a3c51c73235be")
     ("xpub661MyMwAqRbcEZVB4dScxMAdx6d4nFc9nvyvH3v4gJL378CSRZiYmhRoP7mBy6gSPSCYk6SzXPTf3ND1cZAceL7SfJ1Z3GC8vBgp2epUt13",
      "xprv9s21ZrQH143K25QhxbucbDDuQ4naNntJRi4KUfWT7xo4EKsHt2QJDu7KXp1A3u7Bi1j8ph3EGsZ9Xvz9dGuVrtHHs7pXeTzjuxBrCmmhgC6",
-      0x80000000)
+      BIP32_HARDENED_FLAG)
     ("xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y",
      "xprv9uPDJpEQgRQfDcW7BkF7eTya6RPxXeJCqCJGHuCJ4GiRVLzkTXBAJMu2qaMWPrS7AANYqdq6vcBcBUdJCVVFceUvJFjaPdGZ2y9WACViL4L",
       0);
@@ -93,10 +94,10 @@ TestVector test4 =
   TestVector("3ddd5602285899a946114506157c7997e5444528f3003f6134712147db19b678")
     ("xpub661MyMwAqRbcGczjuMoRm6dXaLDEhW1u34gKenbeYqAix21mdUKJyuyu5F1rzYGVxyL6tmgBUAEPrEz92mBXjByMRiJdba9wpnN37RLLAXa",
      "xprv9s21ZrQH143K48vGoLGRPxgo2JNkJ3J3fqkirQC2zVdk5Dgd5w14S7fRDyHH4dWNHUgkvsvNDCkvAwcSHNAQwhwgNMgZhLtQC63zxwhQmRv",
-     0x80000000)
+     BIP32_HARDENED_FLAG)
     ("xpub69AUMk3qDBi3uW1sXgjCmVjJ2G6WQoYSnNHyzkmdCHEhSZ4tBok37xfFEqHd2AddP56Tqp4o56AePAgCjYdvpW2PU2jbUPFKsav5ut6Ch1m",
      "xprv9vB7xEWwNp9kh1wQRfCCQMnZUEG21LpbR9NPCNN1dwhiZkjjeGRnaALmPXCX7SgjFTiCTT6bXes17boXtjq3xLpcDjzEuGLQBM5ohqkao9G",
-     0x80000001)
+     BIP32_HARDENED_FLAG | 1)
     ("xpub6BJA1jSqiukeaesWfxe6sNK9CCGaujFFSJLomWHprUL9DePQ4JDkM5d88n49sMGJxrhpjazuXYWdMf17C9T5XnxkopaeS7jGk1GyyVziaMt",
      "xprv9xJocDuwtYCMNAo3Zw76WENQeAS6WGXQ55RCy7tDJ8oALr4FWkuVoHJeHVAcAqiZLE7Je3vZJHxspZdFHfnBEjHqU5hG1Jaj32dVoS6XLT1",
      0);
@@ -128,9 +129,17 @@ void RunTest(const TestVector& test)
     key.SetSeed(seed);
     pubkey = key.Neuter();
     for (const TestDerivation &derive : test.vDerive) {
-        unsigned char data[74];
-        key.Encode(data);
-        pubkey.Encode(data);
+        // Test serialization round trip
+        DataStream ss{};
+        ss << key;
+        ss << pubkey;
+        BOOST_CHECK_EQUAL(ss.size(), 2 * BIP32_EXTKEY_SIZE);
+        CExtKey key_deser;
+        CExtPubKey pubkey_deser;
+        ss >> key_deser;
+        ss >> pubkey_deser;
+        BOOST_CHECK(key_deser == key);
+        BOOST_CHECK(pubkey_deser == pubkey);
 
         // Test private key
         BOOST_CHECK(EncodeExtKey(key) == derive.prv);
@@ -144,7 +153,7 @@ void RunTest(const TestVector& test)
         CExtKey keyNew;
         BOOST_CHECK(key.Derive(keyNew, derive.nChild));
         CExtPubKey pubkeyNew = keyNew.Neuter();
-        if (!(derive.nChild & 0x80000000)) {
+        if (!(derive.nChild & BIP32_HARDENED_FLAG)) {
             // Compare with public derivation
             CExtPubKey pubkeyNew2;
             BOOST_CHECK(pubkey.Derive(pubkeyNew2, derive.nChild));
@@ -184,6 +193,149 @@ BOOST_AUTO_TEST_CASE(bip32_test5) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(bip32_deserialize_invalid)
+{
+    // A serialized extended key is exactly BIP32_EXTKEY_SIZE bytes. A shorter
+    // stream must throw rather than read past the end.
+    for (size_t len{0}; len < BIP32_EXTKEY_SIZE; ++len) {
+        CExtKey key;
+        CExtPubKey pubkey;
+        DataStream ss_key{std::vector<unsigned char>(len)};
+        DataStream ss_pubkey{std::vector<unsigned char>(len)};
+        BOOST_CHECK_THROW(ss_key >> key, std::ios_base::failure);
+        BOOST_CHECK_THROW(ss_pubkey >> pubkey, std::ios_base::failure);
+    }
+
+    // Serialize a valid depth-0 xprv/xpub to mutate below.
+    const CExtKey master{DecodeExtKey(test1.vDerive[0].prv)};
+    const CExtPubKey master_pub{master.Neuter()};
+    BOOST_REQUIRE(master.nDepth == 0);
+    std::vector<unsigned char> key_bytes, pubkey_bytes;
+    {
+        DataStream ss{};
+        ss << master;
+        const auto ss_span{MakeUCharSpan(ss)};
+        key_bytes.assign(ss_span.begin(), ss_span.end());
+        DataStream sp{};
+        sp << master_pub;
+        const auto sp_span{MakeUCharSpan(sp)};
+        pubkey_bytes.assign(sp_span.begin(), sp_span.end());
+    }
+    BOOST_CHECK_EQUAL(key_bytes.size(), BIP32_EXTKEY_SIZE);
+    BOOST_CHECK_EQUAL(pubkey_bytes.size(), BIP32_EXTKEY_SIZE);
+
+    // A longer stream is not invalid: exactly BIP32_EXTKEY_SIZE bytes are consumed
+    // and the trailing byte is left unread.
+    {
+        std::vector<unsigned char> extra{key_bytes};
+        extra.push_back(0);
+        DataStream ss{extra};
+        CExtKey key;
+        ss >> key;
+        BOOST_CHECK(key == master);
+        BOOST_CHECK_EQUAL(ss.size(), 1);
+    }
+    {
+        std::vector<unsigned char> extra{pubkey_bytes};
+        extra.push_back(0);
+        DataStream ss{extra};
+        CExtPubKey pubkey;
+        ss >> pubkey;
+        BOOST_CHECK(pubkey == master_pub);
+        BOOST_CHECK_EQUAL(ss.size(), 1);
+    }
+
+    const auto deser_extkey{[](std::vector<unsigned char> bytes) {
+        DataStream ss{bytes};
+        CExtKey key;
+        ss >> key;
+        return key;
+    }};
+    const auto deser_extpubkey{[](std::vector<unsigned char> bytes) {
+        DataStream ss{bytes};
+        CExtPubKey pubkey;
+        ss >> pubkey;
+        return pubkey;
+    }};
+
+    // Non-zero private key prefix (offset 41) => invalid.
+    {
+        auto bytes{key_bytes};
+        bytes[41] = 1;
+        BOOST_CHECK(!deser_extkey(bytes).key.IsValid());
+    }
+    // Non-zero child index with nDepth == 0 (offset 8) => invalid.
+    {
+        auto bytes{key_bytes};
+        bytes[8] = 1;
+        BOOST_CHECK(!deser_extkey(bytes).key.IsValid());
+    }
+    // Non-zero parent fingerprint with nDepth == 0 (offset 1) => invalid.
+    {
+        auto bytes{key_bytes};
+        bytes[1] = 1;
+        BOOST_CHECK(!deser_extkey(bytes).key.IsValid());
+    }
+    // Invalid public key header (offset 41) => invalid.
+    {
+        auto bytes{pubkey_bytes};
+        bytes[41] = 0;
+        BOOST_CHECK(!deser_extpubkey(bytes).pubkey.IsValid());
+    }
+    // Non-zero child index with nDepth == 0 (offset 8) => invalid.
+    {
+        auto bytes{pubkey_bytes};
+        bytes[8] = 1;
+        BOOST_CHECK(!deser_extpubkey(bytes).pubkey.IsValid());
+    }
+    // Non-zero parent fingerprint with nDepth == 0 (offset 1) => invalid.
+    {
+        auto bytes{pubkey_bytes};
+        bytes[1] = 1;
+        BOOST_CHECK(!deser_extpubkey(bytes).pubkey.IsValid());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(bip32_derive_ext_key)
+{
+    const CExtKey master{DecodeExtKey(test1.vDerive[0].prv)};
+    const std::vector<uint32_t> path{test1.vDerive[0].nChild, test1.vDerive[1].nChild};
+    const auto derived{DeriveExtKey(master, path)};
+    BOOST_REQUIRE(derived);
+    BOOST_CHECK(EncodeExtKey(derived->first) == test1.vDerive[2].prv);
+
+    KeyOriginInfo expected_origin;
+    expected_origin.fingerprint = master.id_key_fingerprint();
+    expected_origin.path = path;
+    BOOST_CHECK(derived->second == expected_origin);
+
+    const auto root{DeriveExtKey(master, {})};
+    BOOST_REQUIRE(root);
+    BOOST_CHECK(root->first == master);
+    expected_origin.path.clear();
+    BOOST_CHECK(root->second == expected_origin);
+
+    CExtKey max_depth{master};
+    for (auto i{0}; i++ < 255;) {
+        CExtKey next_key;
+        BOOST_REQUIRE(max_depth.Derive(next_key, 0));
+        max_depth = next_key;
+    }
+    BOOST_CHECK(!DeriveExtKey(max_depth, {0}));
+}
+
+BOOST_AUTO_TEST_CASE(bip32_has_hardened_derivation)
+{
+    const std::vector<uint32_t> empty;
+    const std::vector<uint32_t> unhardened{0, 1, 2};
+    const std::vector<uint32_t> hardened{BIP32_HARDENED_FLAG};
+    const std::vector<uint32_t> mixed{0, BIP32_HARDENED_FLAG | 1, 2};
+    BOOST_CHECK(!HasHardenedDerivation(empty));
+    BOOST_CHECK(!HasHardenedDerivation(unhardened));
+    BOOST_CHECK(HasHardenedDerivation(hardened));
+    BOOST_CHECK(HasHardenedDerivation(mixed));
+}
+
 BOOST_AUTO_TEST_CASE(bip32_max_depth) {
     CExtKey key_parent{DecodeExtKey(test1.vDerive[0].prv)}, key_child;
     CExtPubKey pubkey_parent{DecodeExtPubKey(test1.vDerive[0].pub)}, pubkey_child;
@@ -201,6 +353,106 @@ BOOST_AUTO_TEST_CASE(bip32_max_depth) {
     BOOST_CHECK(pubkey_parent.nDepth == 255);
     BOOST_CHECK(!key_parent.Derive(key_child, 0));
     BOOST_CHECK(!pubkey_parent.Derive(pubkey_child, 0));
+}
+
+BOOST_AUTO_TEST_CASE(parse_hd_keypath)
+{
+    std::vector<uint32_t> keypath;
+
+    BOOST_CHECK(ParseHDKeypath("1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1", keypath));
+    BOOST_CHECK(!ParseHDKeypath("///////////////////////////", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1'/1", keypath));
+    BOOST_CHECK(!ParseHDKeypath("//////////////////////////'/", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/", keypath));
+    BOOST_CHECK(!ParseHDKeypath("1///////////////////////////", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1'/", keypath));
+    BOOST_CHECK(!ParseHDKeypath("1/'//////////////////////////", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("", keypath));
+    BOOST_CHECK(!ParseHDKeypath(" ", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("0", keypath));
+    BOOST_CHECK(!ParseHDKeypath("O", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("0000'/0000'/0000'", keypath));
+    BOOST_CHECK(!ParseHDKeypath("0000,/0000,/0000,", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("01234", keypath));
+    BOOST_CHECK(!ParseHDKeypath("0x1234", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("1", keypath));
+    BOOST_CHECK(!ParseHDKeypath(" 1", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("42", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m42", keypath));
+
+    // A path element's numeric part is capped at 2^31-1; the top bit is
+    // reserved for the hardened marker (h or ').
+    BOOST_CHECK(ParseHDKeypath("2147483647", keypath));  // 0x7fffffff, largest normal index
+    BOOST_CHECK(!ParseHDKeypath("2147483648", keypath)); // 0x80000000, would set the hardened bit
+    BOOST_CHECK(!ParseHDKeypath("4294967295", keypath)); // 0xffffffff
+    BOOST_CHECK(!ParseHDKeypath("4294967296", keypath)); // uint32_t max + 1
+
+    BOOST_CHECK(ParseHDKeypath("m", keypath));
+    BOOST_CHECK(!ParseHDKeypath("n", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/", keypath));
+    BOOST_CHECK(!ParseHDKeypath("n/", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0", keypath));
+    BOOST_CHECK(!ParseHDKeypath("n/0", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0'", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0''", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0h", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0hh", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0x", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0a", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0G", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/h0", keypath));
+
+    keypath.clear();
+    BOOST_REQUIRE(ParseHDKeypath("m/0h/1h/2h", keypath));
+    BOOST_REQUIRE_EQUAL(keypath.size(), 3);
+    BOOST_CHECK_EQUAL(keypath[0], BIP32_HARDENED_FLAG);
+    BOOST_CHECK_EQUAL(keypath[1], BIP32_HARDENED_FLAG | 1);
+    BOOST_CHECK_EQUAL(keypath[2], BIP32_HARDENED_FLAG | 2);
+
+    BOOST_CHECK(ParseHDKeypath("m/0'/0'", keypath));
+    BOOST_CHECK(ParseHDKeypath("m/0h/0h", keypath));
+    BOOST_CHECK(ParseHDKeypath("m/0'/0h", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/'0/0'", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/h0/0'", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0/0", keypath));
+    BOOST_CHECK(!ParseHDKeypath("n/0/0", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0/0/00", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0/0/f00", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0/0/000000000000000000000000000000000000000000000000000000000000000000000000000000000000", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/1/1/111111111111111111111111111111111111111111111111111111111111111111111111111111111111", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0/00/0", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0'/00/'0", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/1/", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/1//", keypath));
+
+    // The cap applies to every element, wherever it sits in the path.
+    BOOST_CHECK(ParseHDKeypath("m/2147483647", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/2147483648", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/4294967295", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/4294967296", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0/2147483647", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0/2147483648", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0/4294967295", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0/4294967296", keypath));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
