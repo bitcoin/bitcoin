@@ -19,15 +19,14 @@ export PIP_PACKAGES="--break-system-packages pycapnp pyzmq"
 export DEP_OPTS="DEBUG=1 NO_QT=1 CC=clang CXX=clang++ CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}'"
 export GOAL="install"
 export CI_LIMIT_STACK_SIZE=1
-# Setting CMAKE_{C,CXX}_FLAGS_DEBUG flags to an empty string ensures that the flags set in MSAN_FLAGS remain unaltered.
-# _FORTIFY_SOURCE is not compatible with MSAN.
-export BITCOIN_CONFIG="\
+printf -v BITCOIN_CONFIG "%q " \
  --preset=dev-mode \
  -DBUILD_GUI=OFF \
  -DCMAKE_BUILD_TYPE=Debug \
- -DCMAKE_C_FLAGS_DEBUG='' \
- -DCMAKE_CXX_FLAGS_DEBUG='' \
+ `# Setting CMAKE_{C,CXX}_FLAGS_DEBUG flags to an empty string ensures that the flags set in MSAN_FLAGS remain unaltered` \
+ -DCMAKE_C_FLAGS_DEBUG= \
+ -DCMAKE_CXX_FLAGS_DEBUG= \
  -DSANITIZERS=memory \
- -DAPPEND_CPPFLAGS='-U_FORTIFY_SOURCE' \
-"
+ -DAPPEND_CPPFLAGS=-U_FORTIFY_SOURCE  `# _FORTIFY_SOURCE is not compatible with MSAN`
+export BITCOIN_CONFIG
 export USE_INSTRUMENTED_LIBCPP="MemoryWithOrigins"

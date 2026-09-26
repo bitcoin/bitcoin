@@ -277,10 +277,10 @@ subprocess.run(["git", "restore", "--", *subtrees], check=True)
 fi
 
 if [ "$RUN_FUZZ_TESTS" = "true" ]; then
-  # shellcheck disable=SC2086
+  eval "FUZZ_TESTS_ARGS=($FUZZ_TESTS_CONFIG)"
   LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \
   "${BASE_BUILD_DIR}/test/fuzz/test_runner.py" \
-    ${FUZZ_TESTS_CONFIG} \
+    "${FUZZ_TESTS_ARGS[@]}" \
     "${MAKEJOBS}" \
     -l DEBUG \
     "${DIR_FUZZ_IN}" \
