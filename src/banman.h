@@ -10,13 +10,14 @@
 #include <net_types.h>
 #include <sync.h>
 #include <util/fs.h>
+#include <util/time.h>
 
 #include <chrono>
 #include <cstdint>
 #include <memory>
 
 // NOTE: When adjusting this, update rpcnet:setban's help ("24h")
-inline constexpr unsigned int DEFAULT_MISBEHAVING_BANTIME = 60 * 60 * 24; // Default 24-hour ban
+inline constexpr unsigned int DEFAULT_MISBEHAVING_BANTIME{std::chrono::days{1} / 1s};
 
 /// How often to dump banned addresses/subnets to disk.
 inline constexpr std::chrono::minutes DUMP_BANS_INTERVAL{15};
