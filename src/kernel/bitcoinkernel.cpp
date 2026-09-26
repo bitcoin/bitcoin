@@ -645,21 +645,16 @@ btck_PrecomputedTransactionData* btck_precomputed_transaction_data_create(
 {
     try {
         const CTransaction& tx{*btck_Transaction::get(tx_to)};
-        auto txdata{btck_PrecomputedTransactionData::create()};
+        std::vector<CTxOut> spent_outputs;
         if (spent_outputs_ != nullptr && spent_outputs_len > 0) {
             assert(spent_outputs_len == tx.vin.size());
-            std::vector<CTxOut> spent_outputs;
             spent_outputs.reserve(spent_outputs_len);
             for (size_t i = 0; i < spent_outputs_len; i++) {
                 const CTxOut& tx_out{btck_TransactionOutput::get(spent_outputs_[i])};
                 spent_outputs.push_back(tx_out);
             }
-            btck_PrecomputedTransactionData::get(txdata).Init(tx, std::move(spent_outputs));
-        } else {
-            btck_PrecomputedTransactionData::get(txdata).Init(tx, {});
         }
-
-        return txdata;
+        return btck_PrecomputedTransactionData::create(tx, std::move(spent_outputs));
     } catch (...) {
         return nullptr;
     }
@@ -694,7 +689,8 @@ int btck_script_pubkey_verify(const btck_ScriptPubkey* script_pubkey,
     const CTransaction& tx{*btck_Transaction::get(tx_to)};
     assert(input_index < tx.vin.size());
 
-    const PrecomputedTransactionData& txdata{precomputed_txdata ? btck_PrecomputedTransactionData::get(precomputed_txdata) : PrecomputedTransactionData(tx)};
+    std::optional<PrecomputedTransactionData> owned_txdata;
+    const PrecomputedTransactionData& txdata{precomputed_txdata ? btck_PrecomputedTransactionData::get(precomputed_txdata) : owned_txdata.emplace(tx)};
 
     if (flags & btck_ScriptVerificationFlags_TAPROOT && txdata.m_spent_outputs.empty()) {
         if (status) *status = btck_ScriptVerifyStatus_ERROR_SPENT_OUTPUTS_REQUIRED;
