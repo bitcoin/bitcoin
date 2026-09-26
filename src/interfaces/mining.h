@@ -94,12 +94,14 @@ public:
      * On testnet this will additionally return a template with difficulty 1 if
      * the tip is more than 20 minutes old.
      */
-    virtual std::unique_ptr<BlockTemplate> waitNext(node::BlockWaitOptions options = {}) = 0;
+    virtual std::unique_ptr<BlockTemplate> waitNext(node::BlockWaitOptions options = {}, CancelArg cancel = {}) = 0;
 
-    /**
-     * Interrupts the current wait for the next block template.
-    */
-    virtual void interruptWait() = 0;
+    //! Deprecated older method preserved to return an explicit error for IPC
+    //! clients using mining.capnp @9.
+    virtual void interruptWaitOld9()
+    {
+        throw std::runtime_error("Old interruptWait (@9) not supported. Please update your client!");
+    }
 };
 
 //! Interface giving clients (RPC, Stratum v2 Template Provider in the future)
@@ -127,11 +129,11 @@ public:
      * @param[in] timeout     how long to wait for a new tip (default is forever)
      *
      * @retval BlockRef hash and height of the current chain tip after this call.
-     * @retval std::nullopt if the node is shut down or interrupt() is called.
+     * @retval std::nullopt if the node is shut down or the call is canceled.
      */
-    virtual std::optional<BlockRef> waitTipChanged(uint256 current_tip, MillisecondsDouble timeout = MillisecondsDouble::max()) = 0;
+    virtual std::optional<BlockRef> waitTipChanged(uint256 current_tip, MillisecondsDouble timeout = MillisecondsDouble::max(), CancelArg cancel = {}) = 0;
 
-   /**
+    /**
      * Construct a new block template.
      *
      * @param[in] options options for creating the block
@@ -141,14 +143,16 @@ public:
      *                     regtest and signets with only one miner, as these
      *                     could stall.
      * @retval BlockTemplate a block template.
-     * @retval std::nullptr if the node is shut down or interrupt() is called.
+     * @retval std::nullptr if the node is shut down or the call is canceled.
      */
-    virtual std::unique_ptr<BlockTemplate> createNewBlock(const node::BlockCreateOptions& options = {}, bool cooldown = true) = 0;
+    virtual std::unique_ptr<BlockTemplate> createNewBlock(const node::BlockCreateOptions& options = {}, bool cooldown = true, CancelArg cancel = {}) = 0;
 
-    /**
-     * Interrupts createNewBlock and waitTipChanged.
-     */
-    virtual void interrupt() = 0;
+    //! Deprecated older method preserved to return an explicit error for IPC
+    //! clients using mining.capnp @6.
+    virtual void interruptOld6()
+    {
+        throw std::runtime_error("Old interrupt (@6) not supported. Please update your client!");
+    }
 
     /**
      * Checks if a given block is valid.

@@ -5,12 +5,15 @@
 #ifndef MP_UTIL_H
 #define MP_UTIL_H
 
+#include <array>
 #include <capnp/schema.h>
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
 #include <exception>
 #include <functional>
+#include <kj/async-io.h>
+#include <kj/memory.h>
 #include <kj/string-tree.h>
 #include <mutex>
 #include <string>
@@ -29,6 +32,21 @@
 namespace mp {
 
 //! Generic utility functions used by capnp code.
+
+// std::cmp_less_equal/cmp_greater_equal only accept integer types (C++20 §[utility.intcmp]).
+// These wrappers fall back to regular comparison for floating-point types.
+template <typename A, typename B>
+constexpr bool safe_less_equal(A a, B b)
+{
+    if constexpr (std::is_floating_point_v<A> || std::is_floating_point_v<B>) return a <= b;
+    else return std::cmp_less_equal(a, b);
+}
+template <typename A, typename B>
+constexpr bool safe_greater_equal(A a, B b)
+{
+    if constexpr (std::is_floating_point_v<A> || std::is_floating_point_v<B>) return a >= b;
+    else return std::cmp_greater_equal(a, b);
+}
 
 //! Type holding a list of types.
 //!
@@ -91,6 +109,16 @@ using RemoveCvRef = std::remove_cv_t<std::remove_reference_t<T>>;
 template <typename T>
 using Decay = std::decay_t<T>;
 
+//! Concept satisfied when T's .get() method returns exactly type U.
+//! Used to constrain overloads that handle a specific capnp field type.
+template <typename T, typename U>
+concept FieldTypeIs = std::is_same_v<decltype(std::declval<T>().get()), U>;
+
+//! Concept satisfied when T's .get() method returns a capnp interface type
+//! (i.e., a type that exposes a nested ::Calls type in generated code).
+template <typename T>
+concept InterfaceField = requires { typename Decay<decltype(std::declval<T>().get())>::Calls; };
+
 //! SFINAE helper, see using Require below.
 template <typename SfinaeExpr, typename Result_>
 struct _Require
@@ -142,7 +170,10 @@ struct PtrOrValue {
     std::variant<T*, T> data;
 
     template <typename... Args>
-    PtrOrValue(T* ptr, Args&&... args) : data(ptr ? ptr : std::variant<T*, T>{std::in_place_type<T>, std::forward<Args>(args)...}) {}
+    PtrOrValue(T* ptr, Args&&... args) : data(std::in_place_type<T*>, ptr)
+    {
+        if (!ptr) data.template emplace<T>(std::forward<Args>(args)...);
+    }
 
     T& operator*() { return data.index() ? std::get<T>(data) : *std::get<T*>(data); }
     T* operator->() { return &**this; }
@@ -248,6 +279,9 @@ decltype(auto) TryFinally(Fn&& fn, After&& after)
     }
 }
 
+//! Set the OS-level name of the current thread
+void SetOsThreadName(const char* name);
+
 //! Format current thread name as "{exe_name}-{$pid}/{thread_name}-{$tid}".
 std::string ThreadName(const char* exe_name);
 
@@ -255,25 +289,39 @@ std::string ThreadName(const char* exe_name);
 //! errors in python unit tests.
 std::string LogEscape(const kj::StringTree& string, size_t max_size);
 
+using Stream = kj::Own<kj::AsyncIoStream>;
+
+using ProcessId = int;
+using SocketId = int;
+constexpr SocketId SocketError{-1};
+
+//! Information about parent process passed to child process as a command-line
+//! argument. On unix this is the child socket fd number formatted as a string.
+using SpawnConnectInfo = std::string;
+
 //! Callback type used by SpawnProcess below.
-using FdToArgsFn = std::function<std::vector<std::string>(int fd)>;
+using SpawnConnectInfoToArgsFn = std::function<std::vector<std::string>(const SpawnConnectInfo&)>;
 
 //! Spawn a new process that communicates with the current process over a socket
-//! pair. Returns pid through an output argument, and file descriptor for the
-//! local side of the socket.
-//! The fd_to_args callback is invoked in the parent process before fork().
-//! It must not rely on child pid/state, and must return the command line
-//! arguments that should be used to execute the process. Embed the remote file
-//! descriptor number in whatever format the child process expects.
-int SpawnProcess(int& pid, FdToArgsFn&& fd_to_args);
+//! pair. Calls connect_info_to_args callback with a connection string that
+//! needs to be passed to the child process, and executes the argv command line
+//! it returns. Returns child process id and socket id.
+std::tuple<ProcessId, SocketId> SpawnProcess(SpawnConnectInfoToArgsFn&& connect_info_to_args);
 
-//! Call execvp with vector args.
-//! Not safe to call in a post-fork child of a multi-threaded process.
-//! Currently only used by mpgen at build time.
-void ExecProcess(const std::vector<std::string>& args);
+//! Initialize spawned child process using the SpawnConnectInfo string passed to it,
+//! returning a socket id for communicating with the parent process.
+SocketId StartSpawned(const SpawnConnectInfo& connect_info);
+
+//! Create a socket pair that can be used to communicate within a process or
+//! between parent and child processes.
+std::array<SocketId, 2> SocketPair();
+
+//! Start a process and return its process id. Caller should call WaitProcess
+//! on the returned id.
+ProcessId StartProcess(const std::vector<std::string>& args);
 
 //! Wait for a process to exit and return its exit code.
-int WaitProcess(int pid);
+int WaitProcess(ProcessId pid);
 
 inline char* CharCast(char* c) { return c; }
 inline char* CharCast(unsigned char* c) { return (char*)c; }
@@ -311,12 +359,10 @@ struct InterruptException final : std::exception {
 
 class CancelProbe;
 
-//! Helper class that detects when a promise is canceled. Used to detect
-//! canceled requests and prevent potential crashes on unclean disconnects.
-//!
-//! In the future, this could also be used to support a way for wrapped C++
-//! methods to detect cancellation (like approach #4 in
-//! https://github.com/bitcoin/bitcoin/issues/33575).
+//! Helper class that reports request cancellation when the promise executing
+//! its IPC method is destroyed. Cap'n Proto abandons a call by destroying
+//! that promise so the paired `CancelProbe` is attached to it, and its
+//! destructor notifies this class.
 class CancelMonitor
 {
 public:
