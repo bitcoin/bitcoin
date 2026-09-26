@@ -311,6 +311,7 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
             // and dangling thread handles if AFL forks after initialization.
             .worker_threads_num = EnableFuzzDeterminism() ? 0 : 2,
             .prevoutfetch_threads_num = EnableFuzzDeterminism() ? 0 : 2,
+            .block_fetch_threads_num = EnableFuzzDeterminism() ? 0 : 2,
         };
         if (opts.min_validation_cache) {
             chainman_opts.script_execution_cache_bytes = 0;

@@ -50,6 +50,7 @@ threads take up 8MiB for the thread stack on a 64-bit system, and 4MiB in a
 - `-par=<n>` - the number of script verification threads, defaults to the number of cores in the system minus one.
 - `-rpcthreads=<n>` - the number of threads used for processing RPC requests, defaults to `16`.
 - `-prevoutfetchthreads=<n>` - the number of threads used to fetch block input prevouts, defaults to `8`.
+- `-blockreadahead=<n>` - the number of block read-ahead threads per chainstate, defaults to `2`. Each thread allows up to two queued blocks. Lower values reduce memory used by threads and queued blocks during initial sync and reindexing, but can slow block connection. Set to `0` to disable read-ahead.
 
 ## Linux specific
 
