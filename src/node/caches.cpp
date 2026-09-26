@@ -82,7 +82,7 @@ CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes)
     return {index_sizes, kernel::CacheSizes{total_cache}};
 }
 
-void LogOversizedDbCache(const ArgsManager& args) noexcept
+void LogOversizedDbCache(const ArgsManager& args)
 {
     if (const auto total_ram{TryGetTotalRam()}) {
         const uint64_t db_cache{CalculateDbCacheBytes(args)};
