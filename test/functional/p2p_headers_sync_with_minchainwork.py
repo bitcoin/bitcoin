@@ -8,9 +8,11 @@ from test_framework.test_framework import BitcoinTestFramework
 
 from test_framework.p2p import (
     P2PInterface,
+    p2p_lock,
 )
 
 from test_framework.messages import (
+    CBlockHeader,
     msg_headers,
 )
 
@@ -27,6 +29,19 @@ import time
 
 NODE1_BLOCKS_REQUIRED = 15
 NODE2_BLOCKS_REQUIRED = 2047
+MAX_HEADERS_RESULTS = 2000
+REGTEST_TARGET = 0x7fffff << (8 * (0x20 - 3))
+
+
+class HeadersServer(P2PInterface):
+    def __init__(self):
+        super().__init__()
+        self.getheaders_count = 0
+        self.last_locator = []
+
+    def on_getheaders(self, message):
+        self.getheaders_count += 1
+        self.last_locator = message.locator.vHave
 
 
 class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
@@ -55,6 +70,55 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
     def mocktime_all(self, time):
         for n in self.nodes:
             n.setmocktime(time)
+
+    def test_presync_peer_not_evicted(self):
+        self.log.info("Test that an outbound peer serving presync headers isn't evicted by the chain sync timeout")
+        self.disconnect_all()
+        # Each regtest header adds 2 work, so this needs 65536 headers. Serving
+        # one full headers message per minute for 25 minutes is longer than
+        # CHAIN_SYNC_TIMEOUT + HEADERS_RESPONSE_TIME, but doesn't finish presync.
+        num_msgs = 25
+        self.restart_node(1, extra_args=["-minimumchainwork=0x20000", "-checkblockindex=0"])
+        node = self.nodes[1]
+        genesis = node.getblockheader(node.getblockhash(0))
+        headers = []
+        prev_hash = int(genesis["hash"], 16)
+        for i in range(MAX_HEADERS_RESULTS * num_msgs):
+            header = CBlockHeader()
+            header.nVersion = 4
+            header.hashPrevBlock = prev_hash
+            header.nTime = genesis["time"] + i + 1
+            header.nBits = 0x207fffff
+            while header.hash_int > REGTEST_TARGET:
+                header.nNonce += 1
+            prev_hash = header.hash_int
+            headers.append(header)
+        position = {header.hash_int: i for i, header in enumerate(headers)}
+
+        now = int(time.time())
+        node.setmocktime(now)
+        peer = node.add_outbound_p2p_connection(HeadersServer(), p2p_idx=0, connection_type="outbound-full-relay")
+        peer.wait_until(lambda: peer.getheaders_count >= 1)
+        for _ in range(num_msgs):
+            with p2p_lock:
+                getheaders_count = peer.getheaders_count
+                locator = peer.last_locator
+            start = next((position[h] + 1 for h in locator if h in position), 0)
+            peer.send_without_ping(msg_headers(headers[start:start + MAX_HEADERS_RESULTS]))
+            peer.wait_until(lambda: peer.getheaders_count > getheaders_count or not peer.is_connected)
+            assert peer.is_connected
+            now += 60
+            node.setmocktime(now)
+            peer.sync_with_ping()
+
+        info = node.getpeerinfo()[0]
+        assert_equal(info["presynced_headers"], MAX_HEADERS_RESULTS * num_msgs)
+        assert_equal(info["synced_headers"], -1)
+        peer.sync_with_ping()
+        assert peer.is_connected
+
+        self.restart_node(1, extra_args=self.extra_args[1])
+        self.reconnect_all()
 
     def test_chains_sync_when_long_enough(self):
         self.log.info("Generate blocks on the node with no required chainwork, and verify nodes 1 and 2 have no new headers in their headers tree")
@@ -180,6 +244,8 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
 
 
     def run_test(self):
+        self.test_presync_peer_not_evicted()
+
         self.test_chains_sync_when_long_enough()
 
         self.test_large_reorgs_can_succeed()
