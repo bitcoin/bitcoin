@@ -3392,12 +3392,23 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
         return false;
     }
 
+#ifdef WIN32
+    // Prevent another process from binding to the same address and port,
+    // which could allow it to intercept incoming P2P connections. On Windows,
+    // SO_REUSEADDR is NOT exclusive, so another process running under the same
+    // user account could bind to the same port.
+    if (sock->SetSockOpt(SOL_SOCKET, SO_EXCLUSIVEADDRUSE, &nOne, sizeof(int)) == SOCKET_ERROR) {
+        strError = Untranslated(strprintf("Error setting SO_EXCLUSIVEADDRUSE on socket: %s, continuing anyway", NetworkErrorString(WSAGetLastError())));
+        LogInfo("%s\n", strError.original);
+    }
+#else
     // Allow binding if the port is still in TIME_WAIT state after
     // the program was closed and restarted.
     if (sock->SetSockOpt(SOL_SOCKET, SO_REUSEADDR, &nOne, sizeof(int)) == SOCKET_ERROR) {
         strError = Untranslated(strprintf("Error setting SO_REUSEADDR on socket: %s, continuing anyway", NetworkErrorString(WSAGetLastError())));
         LogInfo("%s\n", strError.original);
     }
+#endif
 
     // some systems don't have IPV6_V6ONLY but are always v6only; others do have the option
     // and enable it by default or not. Try to enable it, if possible.
