@@ -621,6 +621,12 @@ private:
     //! `m_keep_alive=true` can be overridden `by HTTPServer.m_disconnect_all_clients` (we disconnect).
     std::atomic_bool m_keep_alive{false};
 
+    //! A reply that closes the connection (e.g. to a "Connection: close" request)
+    //! has been queued. No further requests are read from this client, whether
+    //! or not that reply has been flushed yet. Set by a worker thread and checked
+    //! in the HTTPServer I/O loop; never reset.
+    std::atomic_bool m_closing{false};
+
     //! Flag this client for disconnection on next loop.
     //! Either we have encountered a permanent error, or both sides of the socket are done
     //! with the connection, e.g. our reply to a "Connection: close" request has been sent.
