@@ -3193,8 +3193,11 @@ static RPCMethod dumptxoutset()
             const CBlockIndex* current_tip{node.chainman->ActiveChain().Tip()};
             // After loadtxoutset the tip is the snapshot base block, which has
             // no block or undo data until it is downloaded.
-            if ((current_tip->nStatus & BLOCK_HAVE_MASK) != BLOCK_HAVE_MASK ||
-                node.chainman->m_blockman.GetFirstBlock(*current_tip, /*status_mask=*/BLOCK_HAVE_MASK).nHeight > target_index->nHeight) {
+            if ((current_tip->nStatus & BLOCK_HAVE_MASK) != BLOCK_HAVE_MASK) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Could not roll back to requested height since block data for the current tip is not available.");
+            }
+            const CBlockIndex& first_block{node.chainman->m_blockman.GetFirstBlock(*current_tip, /*status_mask=*/BLOCK_HAVE_MASK)};
+            if (first_block.nHeight > target_index->nHeight) {
                 throw JSONRPCError(RPC_MISC_ERROR, "Could not roll back to requested height since necessary block data is already pruned.");
             }
             temp_prune_lock.emplace(node.chainman->m_blockman, target_index->nHeight);
