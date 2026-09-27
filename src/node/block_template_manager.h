@@ -10,6 +10,7 @@
 #include <threadsafety.h>
 #include <util/time.h>
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -37,10 +38,19 @@ struct CachedBlockTemplate {
     std::shared_ptr<const CBlockTemplate> block_template;
 };
 
+/** Size of the last block template built by BlockTemplateManager, reported by getmininginfo. */
+struct LastBlockStats {
+    //! Number of transactions, excluding the coinbase.
+    int64_t num_txs;
+    //! Weight, including the reserved weight for the block header, transaction count and coinbase.
+    int64_t weight;
+};
+
 /**
  * Creates block templates, submits solved blocks, and provides tip-waiting
- * helpers for mining code. Owns the init-time block creation args and the
- * template cached for getblocktemplate.
+ * helpers for mining code. Owns the init-time block creation args, the
+ * template cached for getblocktemplate, and the size of the last template
+ * built.
  */
 class BlockTemplateManager
 {
@@ -50,6 +60,7 @@ private:
     KernelNotifications& m_notifications;
     const BlockCreateOptions m_block_create_args;
     CachedBlockTemplate m_cached_template GUARDED_BY(::cs_main);
+    std::optional<LastBlockStats> m_last_block_stats GUARDED_BY(::cs_main);
 
 public:
     explicit BlockTemplateManager(CTxMemPool& mempool,
@@ -60,8 +71,13 @@ public:
     /** @return the block creation args set during node init. */
     const BlockCreateOptions& BlockCreateArgs() const { return m_block_create_args; }
 
-    /** Create a fresh block template, applying init-time defaults to any unset options. */
+    /** Create a fresh block template, applying init-time defaults to any unset
+     *  options, and record its size for GetLastBlockStats(). Locks cs_main. */
     std::unique_ptr<CBlockTemplate> CreateNewTemplate(const BlockCreateOptions& options);
+
+    /** @return the size of the last template built by CreateNewTemplate(), or
+     *  nullopt if none was built yet. */
+    std::optional<LastBlockStats> GetLastBlockStats() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** @return CTxMemPool::GetTransactionsUpdated() as sampled before the last
      *  getblocktemplate template build attempt, for longpolling. */

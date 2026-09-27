@@ -43,11 +43,26 @@ BlockTemplateManager::BlockTemplateManager(CTxMemPool& mempool, ChainstateManage
 
 std::unique_ptr<CBlockTemplate> BlockTemplateManager::CreateNewTemplate(const BlockCreateOptions& options)
 {
-    return BlockAssembler{
+    // CreateNewBlock() locks cs_main anyway. Holding it across the whole call
+    // also keeps concurrent builds from recording their stats out of order.
+    LOCK(::cs_main);
+    BlockAssembler assembler{
         m_chainman.ActiveChainstate(),
         &m_mempool,
         MergeMiningOptions(options, m_block_create_args),
-    }.CreateNewBlock();
+    };
+    std::unique_ptr<CBlockTemplate> block_template{assembler.CreateNewBlock()};
+    m_last_block_stats = LastBlockStats{
+        .num_txs = *Assert(assembler.m_last_block_num_txs),
+        .weight = *Assert(assembler.m_last_block_weight),
+    };
+    return block_template;
+}
+
+std::optional<LastBlockStats> BlockTemplateManager::GetLastBlockStats() const
+{
+    AssertLockHeld(::cs_main);
+    return m_last_block_stats;
 }
 
 unsigned int BlockTemplateManager::GetCachedTransactionsUpdated() const

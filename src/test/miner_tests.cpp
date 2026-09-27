@@ -1046,4 +1046,31 @@ BOOST_FIXTURE_TEST_CASE(block_template_manager_cached_template, RegTestingSetup)
     BOOST_CHECK_EQUAL(fifth.block_template->block.hashPrevBlock, new_tip);
 }
 
+BOOST_AUTO_TEST_CASE(block_template_manager_last_block_stats)
+{
+    auto& block_template_manager{*Assert(m_node.block_template_manager)};
+    const auto last_block_stats{[&] { return WITH_LOCK(::cs_main, return block_template_manager.GetLastBlockStats()); }};
+
+    // Nothing is recorded before the first template is built.
+    BOOST_CHECK(!last_block_stats());
+
+    // A template built by the manager records its size. With an empty mempool
+    // the weight is the reserved weight alone.
+    const auto first{block_template_manager.CreateNewTemplate({.block_reserved_weight = 10'000})};
+    BOOST_REQUIRE_EQUAL(first->block.vtx.size(), 1U);
+    BOOST_REQUIRE(last_block_stats());
+    BOOST_CHECK_EQUAL(last_block_stats()->num_txs, 0);
+    BOOST_CHECK_EQUAL(last_block_stats()->weight, 10'000);
+
+    // A template built with BlockAssembler directly, as the mempool fee
+    // estimator does, is not recorded.
+    const auto direct{node::BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get(), {.block_reserved_weight = 12'000}}.CreateNewBlock()};
+    BOOST_REQUIRE(direct);
+    BOOST_CHECK_EQUAL(last_block_stats()->weight, 10'000);
+
+    // The next template built by the manager replaces the recorded size.
+    const auto second{block_template_manager.CreateNewTemplate({.block_reserved_weight = 14'000})};
+    BOOST_CHECK_EQUAL(last_block_stats()->weight, 14'000);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

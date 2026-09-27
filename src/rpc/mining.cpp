@@ -78,7 +78,6 @@
 #include <vector>
 
 using interfaces::BlockRef;
-using node::BlockAssembler;
 using node::GetMinimumTime;
 using node::NodeContext;
 using node::RegenerateCommitments;
@@ -453,8 +452,8 @@ static RPCMethod getmininginfo()
                     {
                         {RPCResult::Type::NUM, "blocks", "The current block"},
                         {RPCResult::Type::STR_HEX, "bestblockhash", "The hash of the current best block"},
-                        {RPCResult::Type::NUM, "currentblockweight", /*optional=*/true, "The block weight (including reserved weight for block header, txs count and coinbase tx) of the last assembled block (only present if a block was ever assembled)"},
-                        {RPCResult::Type::NUM, "currentblocktx", /*optional=*/true, "The number of block transactions (excluding coinbase) of the last assembled block (only present if a block was ever assembled)"},
+                        {RPCResult::Type::NUM, "currentblockweight", /*optional=*/true, "The block weight (including reserved weight for block header, txs count and coinbase tx) of the last block template built for mining (only present if one was ever built)"},
+                        {RPCResult::Type::NUM, "currentblocktx", /*optional=*/true, "The number of block transactions (excluding coinbase) of the last block template built for mining (only present if one was ever built)"},
                         {RPCResult::Type::STR_HEX, "bits", "The current nBits, compact representation of the block difficulty target"},
                         {RPCResult::Type::NUM, "difficulty", "The current difficulty"},
                         {RPCResult::Type::STR_HEX, "target", "The current target"},
@@ -495,8 +494,10 @@ static RPCMethod getmininginfo()
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("blocks", active_chain.Height());
     obj.pushKV("bestblockhash", tip.GetBlockHash().GetHex());
-    if (BlockAssembler::m_last_block_weight) obj.pushKV("currentblockweight", *BlockAssembler::m_last_block_weight);
-    if (BlockAssembler::m_last_block_num_txs) obj.pushKV("currentblocktx", *BlockAssembler::m_last_block_num_txs);
+    if (const auto last_block_stats{EnsureBlockTemplateManager(node).GetLastBlockStats()}) {
+        obj.pushKV("currentblockweight", last_block_stats->weight);
+        obj.pushKV("currentblocktx", last_block_stats->num_txs);
+    }
     obj.pushKV("bits", strprintf("%08x", tip.nBits));
     obj.pushKV("difficulty", GetDifficulty(tip));
     obj.pushKV("target", GetTarget(tip, chainman.GetConsensus().powLimit).GetHex());
