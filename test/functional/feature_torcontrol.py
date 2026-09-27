@@ -179,12 +179,12 @@ class TorControlTest(BitcoinTestFramework):
         self.log.info("Test a later ADD_ONION reply without a service ID")
         mock_tor.service_id = None
         mock_tor.private_key = VALID_PRIVATE_KEY
-        with self.nodes[0].assert_debug_log([f"Got tor service ID {SERVICE_ID}"], timeout=10):  # TODO: Reject a reply without its own service ID
+        with self.nodes[0].assert_debug_log(["Error parsing ADD_ONION parameters:"], timeout=10):
             mock_tor.conn.shutdown(socket.SHUT_WR)
             self.wait_until(lambda: len(mock_tor.add_onion_keys()) >= 2, timeout=10)
         mock_tor.conn.shutdown(socket.SHUT_WR)
         self.wait_until(lambda: len(mock_tor.add_onion_keys()) >= 3, timeout=10)
-        assert_equal(mock_tor.add_onion_keys()[2], VALID_PRIVATE_KEY)  # TODO: Do not adopt a key from a reply without a service ID
+        assert_equal(mock_tor.add_onion_keys()[2], "NEW:ED25519-V3")
 
         # Clean up
         mock_tor.stop()
