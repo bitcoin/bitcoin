@@ -103,14 +103,14 @@ class WalletStartupTest(BitcoinTestFramework):
             assert_raises_rpc_error(None, None, node.createwallet, wallet_name, load_on_startup=True)
             return
 
-        with node.assert_debug_log([f"[{wallet_name}]"]):  # TODO: A wallet name can forge a creation log line
+        with node.assert_debug_log([f"[{wallet_name}]".replace("\n", "\\x0a")]):
             assert_equal(node.createwallet(wallet_name=wallet_name, load_on_startup=True)["name"], wallet_name)
         self.stop_node(0)
 
         wallet_path = node.wallets_path / wallet_name
         self.cleanup_folder(wallet_path)
         warning = f"Skipping -wallet path that doesn't exist. Failed to load database path '{wallet_path}'. Path does not exist."
-        with node.assert_debug_log([warning], unexpected_msgs=[f"[warning] {forged_log_line}"]):  # TODO: A wallet name can forge a startup log line
+        with node.assert_debug_log([warning.replace("\n", "\\x0a")], unexpected_msgs=[f"[warning] {forged_log_line}"]):
             self.start_node(0)
         self.stop_node(0, expected_stderr=f"Warning: {warning}")
 
