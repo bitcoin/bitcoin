@@ -300,12 +300,12 @@ class TorControlTest(BitcoinTestFramework):
         mock_tor = MockTorControlServer(self.next_port(), private_key=VALID_PRIVATE_KEY, service_id=invalid_service_id)
 
         self.log.info("Test an invalid service ID returned by ADD_ONION")
-        with self.nodes[0].assert_debug_log([f"Got tor service ID {invalid_service_id}"], timeout=10):  # TODO: Reject the invalid service ID
+        with self.nodes[0].assert_debug_log(["ADD_ONION returned an invalid service ID"], timeout=10):
             self.restart_with_mock(mock_tor)
-        assert key_path.exists()  # TODO: Do not cache a key for an invalid service ID
+        assert not key_path.exists()
         mock_tor.conn.shutdown(socket.SHUT_WR)
         self.wait_until(lambda: len(mock_tor.add_onion_keys()) >= 2, timeout=10)
-        assert_equal(mock_tor.add_onion_keys()[1], VALID_PRIVATE_KEY)  # TODO: Discard the key when rejecting an invalid service ID
+        assert_equal(mock_tor.add_onion_keys()[1], "NEW:ED25519-V3")
         mock_tor.stop()
 
     def test_private_key_tor_command_injection(self):

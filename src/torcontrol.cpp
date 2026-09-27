@@ -528,8 +528,13 @@ void TorController::add_onion_cb(TorControlConnection& _conn, const TorControlRe
             }
             return;
         }
+        const auto service{LookupNumeric(service_id + ".onion", Params().GetDefaultPort())};
+        if (!service.IsTor()) {
+            LogWarning("tor: ADD_ONION returned an invalid service ID");
+            return;
+        }
         if (!private_key.empty()) m_private_key = std::move(private_key);
-        m_service = LookupNumeric(service_id + ".onion", Params().GetDefaultPort());
+        m_service = service;
         LogInfo("Got tor service ID %s, advertising service %s", service_id, m_service.ToStringAddrPort());
         if (WriteBinaryFile(GetPrivateKeyFile(), m_private_key)) {
             LogDebug(BCLog::TOR, "Cached service private key to %s", fs::PathToString(GetPrivateKeyFile()));
