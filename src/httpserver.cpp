@@ -598,8 +598,13 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
         keep_alive = false;
     }
 
+    // A HEAD response has the same header section as the GET response,
+    // Content-Length included, but no body (RFC 9110 section 9.3.2).
+    const std::span<const std::byte> body_to_send{
+        m_method == HTTPRequestMethod::HEAD ? std::span<const std::byte>{} : reply_body};
+
     if (std::shared_ptr client{m_client.lock()}) {
-        client->Send(res, reply_body, keep_alive);
+        client->Send(res, body_to_send, keep_alive);
     }
 }
 
