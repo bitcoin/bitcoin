@@ -1362,7 +1362,7 @@ public:
     uint32_t GetMappedAS(const CNetAddr& addr) const;
     void GetNodeStats(std::vector<CNodeStats>& vstats) const;
     bool DisconnectNode(std::string_view node);
-    bool DisconnectNode(const CSubNet& subnet);
+    bool DisconnectNode(const CSubNet& subnet, bool disconnect_private_broadcast = true);
     bool DisconnectNode(const CNetAddr& addr);
     bool DisconnectNode(NodeId id);
 
