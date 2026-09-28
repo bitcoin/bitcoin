@@ -10,6 +10,7 @@
 #include <compat/compat.h>
 #include <sync.h>
 #include <tinyformat.h>
+#include <util/fs.h>
 #include <util/log.h>
 #include <util/overloaded.h>
 #include <util/sock.h>
@@ -880,6 +881,15 @@ std::string SocketAddr::GetHost() const
                         [](const CService& svc) { return svc.ToStringAddr(); }
                     },
                     m_addr);
+}
+
+util::Expected<void, std::string> SocketAddr::PreparePath() const
+{
+    return std::visit(util::Overloaded{
+                          [](const UnixSocketAddr& addr) { return addr.PreparePath(); },
+                          [](const CService&) { return util::Expected<void, std::string>{}; }
+                      },
+                      m_addr);
 }
 
 bool SetProxy(enum Network net, const Proxy &addrProxy) {

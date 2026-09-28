@@ -1324,35 +1324,46 @@ bool CheckHostPortOptions(const ArgsManager& args) {
         }
     }
 
-    for ([[maybe_unused]] const auto& [param_name, unix, suffix_allowed] : std::vector<std::tuple<std::string, bool, bool>>{
-        // arg name          UNIX socket support  =suffix allowed
-        {"-i2psam",          false,               false},
-        {"-onion",           true,                false},
-        {"-proxy",           true,                true},
-        {"-bind",            false,               true},
-        {"-rpcbind",         false,               false},
-        {"-torcontrol",      false,               false},
-        {"-whitebind",       false,               false},
-        {"-zmqpubhashblock", true,                false},
-        {"-zmqpubhashtx",    true,                false},
-        {"-zmqpubrawblock",  true,                false},
-        {"-zmqpubrawtx",     true,                false},
-        {"-zmqpubsequence",  true,                false},
+    // How an option accepts unix domain sockets
+    enum class UnixSupport {
+        NO,      //!< host[:port] only
+        PATH,    //!< also unix:<path>
+        KEYWORD, //!< also the bare keyword "unix" for a default path (see ResolveUnixSocketAddr())
+    };
+    for ([[maybe_unused]] const auto& [param_name, unix_support, suffix_allowed] : std::vector<std::tuple<std::string, UnixSupport, bool>>{
+        // arg name          UNIX socket support    =suffix allowed
+        {"-i2psam",          UnixSupport::NO,       false},
+        {"-onion",           UnixSupport::PATH,     false},
+        {"-proxy",           UnixSupport::PATH,     true},
+        {"-bind",            UnixSupport::NO,       true},
+        {"-rpcbind",         UnixSupport::KEYWORD,  false},
+        {"-torcontrol",      UnixSupport::NO,       false},
+        {"-whitebind",       UnixSupport::NO,       false},
+        {"-zmqpubhashblock", UnixSupport::PATH,     false},
+        {"-zmqpubhashtx",    UnixSupport::PATH,     false},
+        {"-zmqpubrawblock",  UnixSupport::PATH,     false},
+        {"-zmqpubrawtx",     UnixSupport::PATH,     false},
+        {"-zmqpubsequence",  UnixSupport::PATH,     false},
     }) {
         for (const std::string& param_value : args.GetArgs(param_name)) {
             const std::string param_value_hostport{
                 suffix_allowed ? param_value.substr(0, param_value.rfind('=')) : param_value};
+            // Classify before parsing as host:port: some unix socket values,
+            // e.g. "unix:8080" or a path containing ':', also parse as host:port.
+            if (unix_support != UnixSupport::NO &&
+                IsUnixSocketValue(param_value_hostport, /*allow_default=*/unix_support == UnixSupport::KEYWORD)) {
+#ifdef HAVE_SOCKADDR_UN
+                // Paths are resolved and validated where the option is consumed
+                continue;
+#else
+                // Without unix socket support the value can only be a malformed host:port
+                return InitError(InvalidPortErrMsg(param_name, param_value));
+#endif
+            }
             std::string host_out;
             uint16_t port_out{0};
             if (!SplitHostPort(param_value_hostport, port_out, host_out)) {
-#ifdef HAVE_SOCKADDR_UN
-                // Allow unix domain sockets for some options e.g. unix:/some/file/path
-                if (!unix || !param_value.starts_with(ADDR_PREFIX_UNIX)) {
-                    return InitError(InvalidPortErrMsg(param_name, param_value));
-                }
-#else
                 return InitError(InvalidPortErrMsg(param_name, param_value));
-#endif
             }
         }
     }
