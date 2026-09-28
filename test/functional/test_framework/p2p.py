@@ -485,12 +485,12 @@ class P2PInterface(P2PConnection):
         # If the peer supports wtxid-relay
         self.wtxidrelay = wtxidrelay
 
-    def peer_connect_send_version(self, services):
+    def peer_connect_send_version(self, services, txrelay=True):
         # Send a version msg
         vt = msg_version()
         vt.nVersion = P2P_VERSION
         vt.strSubVer = P2P_SUBVERSION
-        vt.relay = P2P_VERSION_RELAY
+        vt.relay = P2P_VERSION_RELAY if txrelay else 0
         vt.nServices = services
         vt.addrTo.ip = self.dstaddr
         vt.addrTo.port = self.dstport
@@ -507,8 +507,9 @@ class P2PInterface(P2PConnection):
         return create_conn
 
     def peer_accept_connection(self, *args, services=P2P_SERVICES, **kwargs):
+        txrelay = kwargs.pop('txrelay', True)
         create_conn = super().peer_accept_connection(*args, **kwargs)
-        self.peer_connect_send_version(services)
+        self.peer_connect_send_version(services, txrelay)
 
         return create_conn
 

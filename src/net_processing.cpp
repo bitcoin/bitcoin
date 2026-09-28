@@ -469,6 +469,7 @@ struct CNodeState {
       * Any peer protected (m_protect = true) is not chosen for eviction. A peer is
       * marked as protected if all of these are true:
       *   - its connection type is IsBlockOnlyConn() == false
+      *   - it participates in tx relay, or we are in -blocksonly mode
       *   - it gave us a valid connecting header
       *   - we haven't reached MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT yet
       *   - its chain tip has at least as much work as ours
@@ -3203,7 +3204,9 @@ void PeerManagerImpl::UpdatePeerStateForReceivedHeaders(CNode& pfrom,
     // Note that outbound block-relay peers are excluded from this protection, and
     // thus always subject to eviction under the bad/lagging chain logic.
     // See ChainSyncTimeoutState.
-    if (!pfrom.fDisconnect && pfrom.IsFullOutboundConn() && nodestate->pindexBestKnownBlock != nullptr) {
+    // Peers not relaying txs are excluded too, so that they can be replaced.
+    if (!pfrom.fDisconnect && pfrom.IsFullOutboundConn() && nodestate->pindexBestKnownBlock != nullptr &&
+        (m_opts.ignore_incoming_txs || pfrom.m_relays_txs)) {
         if (m_outbound_peers_with_protect_from_disconnect < MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT && nodestate->pindexBestKnownBlock->nChainWork >= m_chainman.ActiveChain().Tip()->nChainWork && !nodestate->m_chain_sync.m_protect) {
             LogDebug(BCLog::NET, "Protecting outbound peer=%d from eviction\n", pfrom.GetId());
             nodestate->m_chain_sync.m_protect = true;
