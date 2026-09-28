@@ -92,6 +92,14 @@ def get_mock_wallet():
     assert all(r["success"] for r in result)
     return wallet
 
+def get_mock_sign_mode():
+    # The test can instruct us to sign in a specific, possibly misbehaving, way
+    sign_mode_path = os.path.join(os.getcwd(), "mock_sign_mode")
+    if os.path.isfile(sign_mode_path):
+        with open(sign_mode_path, "r", encoding="utf8") as f:
+            return f.read().strip()
+    return None
+
 def signtx(args):
     if args.fingerprint != "00000001":
         return sys.stdout.write(json.dumps({"error": "Unexpected fingerprint", "fingerprint": args.fingerprint}))
