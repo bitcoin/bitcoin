@@ -18,6 +18,7 @@
 #include <test/util/setup_common.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <validation.h>
 
 #include <algorithm>
@@ -93,9 +94,8 @@ static void BlockWithoutWitnessRead(benchmark::Bench& bench, bool witness)
     const auto pos{WITH_LOCK(::cs_main, return blockman.WriteBlock(fixture, /*nHeight=*/0))};
     const auto expected_size{GetSerializeSize(TX_NO_WITNESS(fixture))};
     bench.unit("block").run([&] {
-        CBlock block;
-        Assert(blockman.ReadBlock(block, pos, hash));
-        const auto message{NetMsg::Make(NetMsgType::BLOCK, TX_NO_WITNESS(block))};
+        const auto data{Assert(blockman.ReadBlockWithoutWitness(pos, hash))};
+        const auto message{NetMsg::Make(NetMsgType::BLOCK, std::span{*data})};
         assert(message.data.size() == expected_size);
     });
 }
