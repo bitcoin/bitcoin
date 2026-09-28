@@ -47,6 +47,7 @@ public:
     bool CanSelfExpand() const final { return false; }
     std::vector<std::unique_ptr<Descriptor>> GetMultipathExpansion() const override { return {}; }
     bool IsMultipath() const override { return false; }
+    std::unique_ptr<Descriptor> ReconstructMultipath(const std::vector<const Descriptor*>& relatives) const override { return nullptr; }
 };
 
 BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)

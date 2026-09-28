@@ -207,6 +207,9 @@ struct Descriptor {
     /** Get the multipath descriptor expansion for this descriptor */
     virtual std::vector<std::unique_ptr<Descriptor>> GetMultipathExpansion() const = 0;
 
+    /** Given the additional multipath expansion descriptors, reconstruct a multipath descriptor */
+    virtual std::unique_ptr<Descriptor> ReconstructMultipath(const std::vector<const Descriptor*>& relatives) const = 0;
+
     virtual bool IsMultipath() const = 0;
 
     /** Get the maximum key expression index. Used only for tests */
