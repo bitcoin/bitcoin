@@ -93,9 +93,18 @@ FUZZ_TARGET(mocked_descriptor_parse, .init = initialize_mocked_descriptor_parse)
         const auto desc = Parse(*descriptor, signing_provider, error);
         std::optional<bool> is_ranged;
         std::optional<bool> is_solvable;
-        for (const auto& d : desc->GetMultipathExpansion()) {
+        auto mp_exp = desc->GetMultipathExpansion();
+        for (const auto& d : mp_exp) {
             assert(d);
             TestDescriptor(*d, signing_provider, error, is_ranged, is_solvable);
+        }
+        if (mp_exp.size() > 1) {
+            std::vector<const Descriptor*> rels;
+            for (size_t i = 1; i < mp_exp.size(); ++i) {
+                rels.push_back(mp_exp.at(i).get());
+            }
+            std::unique_ptr<Descriptor> mp = mp_exp.at(0)->ReconstructMultipath(rels);
+            Assert(desc->ToString() == mp->ToString());
         }
     }
 }
@@ -111,9 +120,18 @@ FUZZ_TARGET(descriptor_parse, .init = initialize_descriptor_parse)
         const auto desc = Parse(descriptor, signing_provider, error, require_checksum);
         std::optional<bool> is_ranged;
         std::optional<bool> is_solvable;
-        for (const auto& d : desc->GetMultipathExpansion()) {
+        auto mp_exp = desc->GetMultipathExpansion();
+        for (const auto& d : mp_exp) {
             assert(d);
             TestDescriptor(*d, signing_provider, error, is_ranged, is_solvable);
+        }
+        if (mp_exp.size() > 1) {
+            std::vector<const Descriptor*> rels;
+            for (size_t i = 1; i < mp_exp.size(); ++i) {
+                rels.push_back(mp_exp.at(i).get());
+            }
+            std::unique_ptr<Descriptor> mp = mp_exp.at(0)->ReconstructMultipath(rels);
+            Assert(desc->ToString() == mp->ToString());
         }
     }
 }
