@@ -87,6 +87,7 @@ class WalletSignerTest(BitcoinTestFramework):
         self.test_signer_psbt_version()
         self.test_signer_stripped_psbt()
         self.test_misbehaving_signer()
+        self.test_finalized_signer()
         self.test_disconnected_signer()
         self.restart_node(1, [f"-signer={self.mock_invalid_signer_path()}", "-keypool=10"])
         self.test_invalid_signer()
@@ -266,6 +267,26 @@ class WalletSignerTest(BitcoinTestFramework):
         # The same transaction is accepted from a well-behaved signer
         res = hww.send(outputs={dest: 1.5}, inputs=inputs, add_inputs=False, add_to_wallet=False)
         assert res["complete"]
+
+    def test_finalized_signer(self):
+        hww = self.nodes[1].get_wallet_rpc('hww')
+        # Exercise final_script_sig and final_script_witness independently.
+        for address_type in ["legacy", "bech32m"]:
+            self.log.info(f'Test finalized signer inputs for {address_type}')
+            addresses = [hww.getnewaddress(address_type=address_type) for _ in range(2)]
+            inputs = self.create_outpoints(self.nodes[0], outputs=[{address: 1} for address in addresses])
+            self.generate(self.nodes[0], 1, sync_fun=self.sync_except_mock)
+            dest = self.nodes[0].getnewaddress()
+
+            for mode in ["finalized", "partially_finalized"]:
+                self.set_mock_sign_mode(self.nodes[1], mode)
+                with self.nodes[1].assert_debug_log(["Signer returned a PSBT with finalized inputs"]):
+                    assert_raises_rpc_error(-25, "External signer failed to sign", hww.send, outputs={dest: 1.5}, inputs=inputs, add_inputs=False)
+
+            self.clear_mock_sign_mode(self.nodes[1])
+            res = hww.send(outputs={dest: 1.5}, inputs=inputs, add_inputs=False, add_to_wallet=False)
+            assert res["complete"]
+            assert hww.testmempoolaccept([res["hex"]])[0]["allowed"]
 
     def test_disconnected_signer(self):
         self.log.info('Test disconnected external signer')

@@ -126,6 +126,11 @@ bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::str
         return false;
     }
 
+    if (std::ranges::any_of(signer_psbtx->inputs, PSBTInputSigned)) {
+        error = "Signer returned a PSBT with finalized inputs";
+        return false;
+    }
+
     if (!psbtx.Merge(*signer_psbtx)) {
         error = "Signer returned a PSBT for a different transaction";
         return false;
