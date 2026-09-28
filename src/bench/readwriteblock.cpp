@@ -76,9 +76,8 @@ BENCHMARK(ReadRawBlockBench);
 
 static CSerializedNetMsg ReadBlockMessageWithoutWitness(const node::BlockManager& blockman, const FlatFilePos& pos, const uint256& hash)
 {
-    CBlock block;
-    Assert(blockman.ReadBlock(block, pos, hash));
-    return NetMsg::Make(NetMsgType::BLOCK, TX_NO_WITNESS(block));
+    const auto data{Assert(blockman.ReadBlockWithoutWitness(pos, hash))};
+    return NetMsg::Make(NetMsgType::BLOCK, std::span{*data});
 }
 
 static void BlockWithoutWitnessRead(benchmark::Bench& bench, bool witness)
