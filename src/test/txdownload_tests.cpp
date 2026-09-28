@@ -4,12 +4,14 @@
 
 #include <addresstype.h>
 #include <consensus/validation.h>
+#include <kernel/mempool_removal_reason.h>
 #include <net_processing.h>
 #include <node/txdownloadman_impl.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <test/util/common.h>
 #include <test/util/random.h>
+#include <test/util/script.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
 
@@ -390,6 +392,178 @@ BOOST_FIXTURE_TEST_CASE(orphan_parent_request_survives_reject_from_other_peer, T
         BOOST_CHECK(!requests[0].IsWtxid());
         BOOST_CHECK(requests[0].ToUint256() == parent->GetHash().ToUint256());
     }
+}
+
+BOOST_FIXTURE_TEST_CASE(missing_parents_only_actually_missing, TestChain100Setup)
+{
+    // A confirmed transaction FUND with an unspent output in the coins cache, and a confirmed coin for
+    // the parent. Neither block is fed to the download manager, so FUND is not in its
+    // recently-confirmed filter (as any transaction confirmed more than a few blocks ago).
+    const auto fund_input_mtx = CreateValidMempoolTransaction(m_coinbase_txns[0], /*input_vout=*/0, /*input_height=*/1, coinbaseKey, P2WSH_OP_TRUE, 49 * COIN, /*submit=*/false);
+    CreateAndProcessBlock({fund_input_mtx}, CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG);
+    // The second coinbase is mature from height 102.
+    const auto parent_input_mtx = CreateValidMempoolTransaction(m_coinbase_txns[1], /*input_vout=*/0, /*input_height=*/2, coinbaseKey, P2WSH_OP_TRUE, 49 * COIN, /*submit=*/false);
+    CMutableTransaction fund_mtx;
+    fund_mtx.vin.emplace_back(fund_input_mtx.GetHash(), 0);
+    fund_mtx.vin[0].scriptWitness.stack.push_back(WITNESS_STACK_ELEM_OP_TRUE);
+    fund_mtx.vout.emplace_back(24 * COIN, P2WSH_OP_TRUE);
+    fund_mtx.vout.emplace_back(24 * COIN, P2WSH_OP_TRUE);
+    const auto fund = MakeTransactionRef(fund_mtx);
+    const auto fund_block = CreateAndProcessBlock({fund_mtx, parent_input_mtx}, CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG);
+    BOOST_REQUIRE(WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->GetBlockHash()) == fund_block.GetHash());
+
+    // Zero-fee parent, and a child paying for the pair from FUND's second output.
+    CMutableTransaction parent_mtx;
+    parent_mtx.vin.emplace_back(parent_input_mtx.GetHash(), 0);
+    parent_mtx.vin[0].scriptWitness.stack.push_back(WITNESS_STACK_ELEM_OP_TRUE);
+    parent_mtx.vout.emplace_back(49 * COIN, P2WSH_OP_TRUE);
+    const auto parent = MakeTransactionRef(parent_mtx);
+    CMutableTransaction child_mtx;
+    child_mtx.vin.emplace_back(parent->GetHash(), 0);
+    child_mtx.vin.emplace_back(fund->GetHash(), 1);
+    for (auto& input : child_mtx.vin) input.scriptWitness.stack.push_back(WITNESS_STACK_ELEM_OP_TRUE);
+    child_mtx.vout.emplace_back(49 * COIN + 24 * COIN - 10000, P2WSH_OP_TRUE);
+    const auto child = MakeTransactionRef(child_mtx);
+
+    // A witness-stripped copy of FUND: same txid, and wtxid == txid.
+    CMutableTransaction fund_stripped_mtx{fund_mtx};
+    fund_stripped_mtx.vin[0].scriptWitness.SetNull();
+    const auto fund_stripped = MakeTransactionRef(fund_stripped_mtx);
+    BOOST_REQUIRE(fund_stripped->GetWitnessHash().ToUint256() == fund->GetHash().ToUint256());
+
+    LOCK(cs_main);
+    CTxMemPool& pool = *Assert(m_node.mempool);
+    node::TxDownloadManagerImpl txdownload_impl{node::TxDownloadOptions{.m_mempool = pool, .m_deterministic_txrequest = true}};
+    constexpr NodeId honest{1}, other{2};
+    txdownload_impl.ConnectedPeer(honest, {/*m_preferred=*/true, /*m_relay_permissions=*/false, /*m_wtxid_relay=*/true});
+    txdownload_impl.ConnectedPeer(other, {/*m_preferred=*/false, /*m_relay_permissions=*/false, /*m_wtxid_relay=*/true});
+
+    // Validation reports only the parent as missing: FUND's output is in the UTXO set.
+    const auto child_result = m_node.chainman->ProcessTransaction(child);
+    BOOST_REQUIRE(child_result.m_state.GetResult() == TxValidationResult::TX_MISSING_INPUTS);
+    BOOST_REQUIRE(child_result.m_missing_parents.has_value());
+    BOOST_CHECK(*child_result.m_missing_parents == std::vector<Txid>{parent->GetHash()});
+
+    // One of FUND's outputs is in the coins cache, as after the block creating it was connected or after
+    // any transaction spending it was validated. Another peer sends the stripped copy of FUND: its inputs
+    // are spent and an output is cached, so it is rejected as already known before its missing witness
+    // could be noticed, and its wtxid (== txid) lands in the reject filter.
+    auto& coins_tip = m_node.chainman->ActiveChainstate().CoinsTip();
+    coins_tip.AccessCoin(COutPoint{fund->GetHash(), 0});
+    BOOST_REQUIRE(coins_tip.HaveCoinInCache(COutPoint{fund->GetHash(), 0}));
+    BOOST_REQUIRE(txdownload_impl.ReceivedTx(other, fund_stripped).first);
+    const auto fund_result = m_node.chainman->ProcessTransaction(fund_stripped);
+    BOOST_REQUIRE_MESSAGE(fund_result.m_state.GetResult() == TxValidationResult::TX_CONFLICT, fund_result.m_state.ToString());
+    txdownload_impl.MempoolRejectedTx(fund_stripped, fund_result.m_state, other, /*first_time_failure=*/true, AllParents(*fund_stripped));
+    // Whether or not that rejection put FUND's txid in the reject filter, a stripped copy of a confirmed
+    // transaction failing a check before the known-transaction check (a coinbase, or one no longer
+    // meeting current standardness) would have: make sure it is there, to show it does not matter.
+    txdownload_impl.RecentRejectsFilter().insert(fund->GetHash().ToUint256());
+    BOOST_REQUIRE(txdownload_impl.RecentRejectsFilter().contains(fund->GetHash().ToUint256()));
+
+    // The honest child arrives. FUND's txid being in the reject filter is irrelevant: FUND is not a
+    // missing parent. The child is stored, only the parent is requested, and the child is not rejected.
+    BOOST_REQUIRE(txdownload_impl.ReceivedTx(honest, child).first);
+    const auto todo = txdownload_impl.MempoolRejectedTx(child, child_result.m_state, honest, /*first_time_failure=*/true, *child_result.m_missing_parents);
+    BOOST_CHECK(txdownload_impl.m_orphanage->HaveTxFromPeer(child->GetWitnessHash(), honest));
+    BOOST_CHECK(!txdownload_impl.RecentRejectsFilter().contains(child->GetHash().ToUint256()));
+    BOOST_CHECK(todo.m_unique_parents == std::vector<Txid>{parent->GetHash()});
+
+    // The honest parent then finds its child, and the pair is acceptable.
+    BOOST_REQUIRE(txdownload_impl.ReceivedTx(honest, parent).first);
+    const auto parent_result = m_node.chainman->ProcessTransaction(parent);
+    BOOST_REQUIRE(parent_result.m_state.GetResult() == TxValidationResult::TX_RECONSIDERABLE);
+    const auto parent_todo = txdownload_impl.MempoolRejectedTx(parent, parent_result.m_state, honest, /*first_time_failure=*/true, AllParents(*parent));
+    BOOST_CHECK(parent_todo.m_package_to_validate.has_value());
+    const auto package_result = ProcessNewPackage(m_node.chainman->ActiveChainstate(), pool, {parent, child}, /*test_accept=*/false, std::nullopt);
+    BOOST_CHECK(package_result.m_state.IsValid());
+}
+
+BOOST_FIXTURE_TEST_CASE(rejected_parent_check_ignores_present_parents, TestChain100Setup)
+{
+    // Whatever put a present parent's txid into the reject filter (any hard rejection of a witnessless
+    // copy of it: already-known, coinbase, currently nonstandard, ...), a child is only judged by the
+    // parents that are actually missing.
+    CTxMemPool& pool = *Assert(m_node.mempool);
+    node::TxDownloadManagerImpl txdownload_impl{node::TxDownloadOptions{.m_mempool = pool, .m_deterministic_txrequest = true}};
+    constexpr NodeId honest{1}, other{2};
+    txdownload_impl.ConnectedPeer(honest, {/*m_preferred=*/true, /*m_relay_permissions=*/false, /*m_wtxid_relay=*/true});
+    txdownload_impl.ConnectedPeer(other, {/*m_preferred=*/false, /*m_relay_permissions=*/false, /*m_wtxid_relay=*/true});
+    TxValidationState state_orphan, state_consensus;
+    state_orphan.Invalid(TxValidationResult::TX_MISSING_INPUTS, "");
+    state_consensus.Invalid(TxValidationResult::TX_CONSENSUS, "");
+
+    const auto present_parent = CreatePlaceholderTx(/*segwit=*/false); // witnessless: wtxid == txid
+    const auto missing_parent = CreatePlaceholderTx(/*segwit=*/true);
+    CMutableTransaction child_mtx;
+    child_mtx.vin.emplace_back(missing_parent->GetHash(), 0);
+    child_mtx.vin.emplace_back(present_parent->GetHash(), 0);
+    child_mtx.vin[0].scriptWitness.stack.push_back({1});
+    child_mtx.vout.emplace_back(CENT, CScript());
+    const auto child = MakeTransactionRef(child_mtx);
+
+    // The present parent's txid is hard-rejected.
+    txdownload_impl.MempoolRejectedTx(present_parent, state_consensus, other, /*first_time_failure=*/true, AllParents(*present_parent));
+    BOOST_REQUIRE(txdownload_impl.RecentRejectsFilter().contains(present_parent->GetHash().ToUint256()));
+
+    // Without knowing which parents are missing, the child is treated as having a rejected parent...
+    {
+        node::TxDownloadManagerImpl control{node::TxDownloadOptions{.m_mempool = pool, .m_deterministic_txrequest = true}};
+        control.ConnectedPeer(honest, {/*m_preferred=*/true, /*m_relay_permissions=*/false, /*m_wtxid_relay=*/true});
+        control.MempoolRejectedTx(present_parent, state_consensus, honest, /*first_time_failure=*/true, AllParents(*present_parent));
+        control.MempoolRejectedTx(child, state_orphan, honest, /*first_time_failure=*/true, AllParents(*child));
+        BOOST_CHECK(!control.m_orphanage->HaveTx(child->GetWitnessHash()));
+        BOOST_CHECK(control.RecentRejectsFilter().contains(child->GetHash().ToUint256()));
+    }
+    // ...but with validation's set of actually missing parents, it is stored and only they are requested.
+    const auto todo = txdownload_impl.MempoolRejectedTx(child, state_orphan, honest, /*first_time_failure=*/true, std::vector<Txid>{missing_parent->GetHash()});
+    BOOST_CHECK(txdownload_impl.m_orphanage->HaveTxFromPeer(child->GetWitnessHash(), honest));
+    BOOST_CHECK(!txdownload_impl.RecentRejectsFilter().contains(child->GetHash().ToUint256()));
+    BOOST_CHECK(todo.m_unique_parents == std::vector<Txid>{missing_parent->GetHash()});
+}
+
+BOOST_FIXTURE_TEST_CASE(missing_parents_reports_all_missing_once, TestChain100Setup)
+{
+    // Confirmed FUND with two outputs; two zero-fee parents spending confirmed coins.
+    const auto fund_input_mtx = CreateValidMempoolTransaction(m_coinbase_txns[0], /*input_vout=*/0, /*input_height=*/1, coinbaseKey, P2WSH_OP_TRUE, 49 * COIN, /*submit=*/false);
+    CreateAndProcessBlock({fund_input_mtx}, CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG);
+    const auto p1_input_mtx = CreateValidMempoolTransaction(m_coinbase_txns[1], /*input_vout=*/0, /*input_height=*/2, coinbaseKey, P2WSH_OP_TRUE, 49 * COIN, /*submit=*/false);
+    CMutableTransaction fund_mtx;
+    fund_mtx.vin.emplace_back(fund_input_mtx.GetHash(), 0);
+    fund_mtx.vin[0].scriptWitness.stack.push_back(WITNESS_STACK_ELEM_OP_TRUE);
+    fund_mtx.vout.emplace_back(24 * COIN, P2WSH_OP_TRUE);
+    fund_mtx.vout.emplace_back(24 * COIN, P2WSH_OP_TRUE);
+    const auto fund = MakeTransactionRef(fund_mtx);
+    const auto block = CreateAndProcessBlock({fund_mtx, p1_input_mtx}, CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG);
+    BOOST_REQUIRE(WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->GetBlockHash()) == block.GetHash());
+
+    auto spend = [](const Txid& txid, uint32_t n, std::vector<CAmount> outs) {
+        CMutableTransaction mtx;
+        mtx.vin.emplace_back(txid, n);
+        mtx.vin[0].scriptWitness.stack.push_back(WITNESS_STACK_ELEM_OP_TRUE);
+        for (const auto out : outs) mtx.vout.emplace_back(out, P2WSH_OP_TRUE);
+        return MakeTransactionRef(mtx);
+    };
+    const auto p1 = spend(p1_input_mtx.GetHash(), 0, {24 * COIN, 24 * COIN}); // missing, two outputs
+    const auto p2 = spend(fund->GetHash(), 0, {24 * COIN});                    // missing
+    // Child spends two outputs of the missing p1 (parent reported once), the missing p2, and the
+    // present FUND:1.
+    CMutableTransaction child_mtx;
+    child_mtx.vin.emplace_back(p1->GetHash(), 0);
+    child_mtx.vin.emplace_back(fund->GetHash(), 1);
+    child_mtx.vin.emplace_back(p2->GetHash(), 0);
+    child_mtx.vin.emplace_back(p1->GetHash(), 1);
+    for (auto& in : child_mtx.vin) in.scriptWitness.stack.push_back(WITNESS_STACK_ELEM_OP_TRUE);
+    child_mtx.vout.emplace_back(10 * COIN, P2WSH_OP_TRUE);
+    const auto child = MakeTransactionRef(child_mtx);
+
+    LOCK(cs_main);
+    const auto result = m_node.chainman->ProcessTransaction(child);
+    BOOST_REQUIRE(result.m_state.GetResult() == TxValidationResult::TX_MISSING_INPUTS);
+    BOOST_REQUIRE(result.m_missing_parents.has_value());
+    std::vector<Txid> expected{p1->GetHash(), p2->GetHash()};
+    std::sort(expected.begin(), expected.end());
+    BOOST_CHECK(*result.m_missing_parents == expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

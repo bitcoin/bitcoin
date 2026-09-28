@@ -542,7 +542,18 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                                        NoTrimmingPossible(*txdownload_impl.m_orphanage, *rand_tx) :
                                        NoTrimmingAfterErase(*txdownload_impl.m_orphanage, announcers_before, {rand_tx->GetWitnessHash()})};
 
-                node::RejectedTxTodo todo = txdownload_impl.MempoolRejectedTx(rand_tx, state, rand_peer, first_time_failure, UniqueParents(*rand_tx));
+                // For a missing-inputs failure, validation tells us which parents are missing: a random
+                // non-empty subset of the transaction's parents.
+                std::vector<Txid> missing_parents;
+                if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
+                    const auto all_parents{UniqueParents(*rand_tx)};
+                    for (const auto& parent : all_parents) {
+                        if (fuzzed_data_provider.ConsumeBool()) missing_parents.push_back(parent);
+                    }
+                    if (missing_parents.empty()) missing_parents.push_back(all_parents.front());
+                }
+
+                node::RejectedTxTodo todo = txdownload_impl.MempoolRejectedTx(rand_tx, state, rand_peer, first_time_failure, missing_parents);
                 Assert(first_time_failure || !todo.m_should_add_extra_compact_tx);
                 if (!reject_contains_wtxid) Assert(todo.m_unique_parents.size() <= rand_tx->vin.size());
                 CheckRequestsKept(requests_before, txdownload_impl.m_txrequest, allowed_hashes);
