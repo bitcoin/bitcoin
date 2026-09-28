@@ -11,18 +11,21 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <protocol.h>
+#include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <validation.h>
 
 #include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <span>
+#include <string>
 #include <utility>
 #include <vector>
 
