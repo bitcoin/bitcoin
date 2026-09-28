@@ -53,6 +53,8 @@ static UniValue JSONErrorReply(UniValue objError, const JSONRPCRequest& jreq, HT
         nStatus = HTTP_BAD_REQUEST;
     else if (code == RPC_METHOD_NOT_FOUND)
         nStatus = HTTP_NOT_FOUND;
+    else if (code == RPC_METHOD_NOT_PERMITTED)
+        nStatus = HTTP_FORBIDDEN;
 
     return JSONRPCReplyObj(NullUniValue, std::move(objError), jreq.id, jreq.m_json_version);
 }
@@ -100,31 +102,49 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     return CheckUserAuthorized(user, pass);
 }
 
+/**
+ * Check whether -rpcwhitelist lets `user` call `method`.
+ *
+ * Returns the reason the call is refused, after logging it, or std::nullopt if
+ * the call is allowed.
+ */
+static std::optional<std::string> WhitelistDenial(const std::string& user, const std::string& method)
+{
+    const auto whitelist{g_rpc_whitelist.find(user)};
+    if (whitelist == g_rpc_whitelist.end()) {
+        if (!g_rpc_whitelist_default) return std::nullopt;
+        LogWarning("RPC User %s not allowed to call any methods", user);
+        return "User is not permitted to call any methods";
+    }
+    if (whitelist->second.contains(method)) return std::nullopt;
+    LogWarning("RPC User %s not allowed to call method %s", user, method);
+    return strprintf("User is not permitted to call method %s", method);
+}
+
 UniValue ExecuteHTTPRPC(const UniValue& valRequest, JSONRPCRequest& jreq, HTTPStatusCode& status)
 {
     status = HTTP_OK;
     try {
-        bool user_has_whitelist = g_rpc_whitelist.contains(jreq.authUser);
-        if (!user_has_whitelist && g_rpc_whitelist_default) {
-            LogWarning("RPC User %s not allowed to call any methods", jreq.authUser);
-            status = HTTP_FORBIDDEN;
-            return {};
-
         // singleton request
-        } else if (valRequest.isObject()) {
+        if (valRequest.isObject()) {
             jreq.parse(valRequest);
-            if (user_has_whitelist && !g_rpc_whitelist[jreq.authUser].contains(jreq.strMethod)) {
-                LogWarning("RPC User %s not allowed to call method %s", jreq.authUser, jreq.strMethod);
-                status = HTTP_FORBIDDEN;
-                return {};
-            }
 
             // Legacy 1.0/1.1 behavior is for failed requests to throw
             // exceptions which return HTTP errors and RPC errors to the client.
             // 2.0 behavior is to catch exceptions and return HTTP success with
             // RPC errors, as long as there is not an actual HTTP server error.
             const bool catch_errors{jreq.m_json_version == JSONRPCVersion::V2};
-            UniValue reply{JSONRPCExec(jreq, catch_errors)};
+            UniValue reply;
+            if (auto denial{WhitelistDenial(jreq.authUser, jreq.strMethod)}) {
+                // Report a refused method like an error thrown by the method:
+                // legacy requests throw, so the catch below sets the HTTP status
+                // (403), and 2.0 requests get the error in the reply.
+                UniValue error{JSONRPCError(RPC_METHOD_NOT_PERMITTED, *denial)};
+                if (!catch_errors) throw error;
+                reply = JSONRPCReplyObj(NullUniValue, std::move(error), jreq.id, jreq.m_json_version);
+            } else {
+                reply = JSONRPCExec(jreq, catch_errors);
+            }
             if (jreq.IsNotification()) {
                 // Even though we do execute notifications, we do not respond to them
                 status = HTTP_NO_CONTENT;
@@ -134,7 +154,7 @@ UniValue ExecuteHTTPRPC(const UniValue& valRequest, JSONRPCRequest& jreq, HTTPSt
         // array of requests
         } else if (valRequest.isArray()) {
             // Check authorization for each request's method
-            if (user_has_whitelist) {
+            if (g_rpc_whitelist.contains(jreq.authUser) || g_rpc_whitelist_default) {
                 for (unsigned int reqIdx = 0; reqIdx < valRequest.size(); reqIdx++) {
                     if (!valRequest[reqIdx].isObject()) {
                         throw JSONRPCError(RPC_INVALID_REQUEST, "Invalid Request object");
@@ -142,10 +162,13 @@ UniValue ExecuteHTTPRPC(const UniValue& valRequest, JSONRPCRequest& jreq, HTTPSt
                         const UniValue& request = valRequest[reqIdx].get_obj();
                         // Parse method
                         std::string strMethod = request.find_value("method").get_str();
-                        if (!g_rpc_whitelist[jreq.authUser].contains(strMethod)) {
-                            LogWarning("RPC User %s not allowed to call method %s", jreq.authUser, strMethod);
-                            status = HTTP_FORBIDDEN;
-                            return {};
+                        if (auto denial{WhitelistDenial(jreq.authUser, strMethod)}) {
+                            // Reject the whole batch, as before, rather than
+                            // running the permitted requests and reporting an
+                            // error for this one. Changing that would change
+                            // which requests execute, not just what is
+                            // reported.
+                            throw JSONRPCError(RPC_METHOD_NOT_PERMITTED, std::move(*denial));
                         }
                     }
                 }

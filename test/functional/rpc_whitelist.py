@@ -8,23 +8,40 @@ A test for RPC users with restricted permissions
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_raises_rpc_error,
     str_to_b64str,
 )
 import http.client
 import json
 import urllib.parse
 
+# RPC_METHOD_NOT_PERMITTED from src/rpc/protocol.h
+RPC_METHOD_NOT_PERMITTED = -38
 
-def rpccall(node, user, method, *, batch=False):
+
+def rpcpost(node, user, body):
     url = urllib.parse.urlparse(node.url)
     headers = {"Authorization": "Basic " + str_to_b64str('{}:{}'.format(user[0], user[3]))}
-    request = {"method": method}
     conn = http.client.HTTPConnection(url.hostname, url.port, timeout=node.rpc_timeout)
     conn.connect()
-    conn.request('POST', '/', json.dumps([request] if batch else request), headers)
+    conn.request('POST', '/', body, headers)
     resp = conn.getresponse()
+    # Read the body before closing the connection so callers can inspect it.
+    resp.body = resp.read()
     conn.close()
     return resp
+
+
+def rpccall(node, user, method, *, batch=False):
+    request = {"method": method}
+    return rpcpost(node, user, json.dumps([request] if batch else request))
+
+
+def rpccall_v2(node, user, method, *, notification=False):
+    request = {"jsonrpc": "2.0", "method": method}
+    if not notification:
+        request["id"] = 1
+    return rpcpost(node, user, json.dumps(request))
 
 
 def get_permissions(whitelist):
@@ -91,6 +108,29 @@ class RPCWhitelistTest(BitcoinTestFramework):
         self.log.info("Strange test 5")
         assert_equal(200, rpccall(self.nodes[0], self.strange_users[4], "getblockcount").status)
 
+        self.log.info("Denied methods report a JSON-RPC error, not just an HTTP status")
+        resp = rpccall(self.nodes[0], self.users[0], "getblockchaininfo")
+        assert_equal(403, resp.status)
+        error = json.loads(resp.body)["error"]
+        assert_equal(RPC_METHOD_NOT_PERMITTED, error["code"])
+        assert "getblockchaininfo" in error["message"]
+
+        self.log.info("A denied JSON-RPC 2.0 request gets HTTP 200 with the error, like other failed 2.0 requests")
+        resp = rpccall_v2(self.nodes[0], self.users[0], "getblockchaininfo")
+        assert_equal(200, resp.status)
+        error = json.loads(resp.body)["error"]
+        assert_equal(RPC_METHOD_NOT_PERMITTED, error["code"])
+        assert "getblockchaininfo" in error["message"]
+
+        self.log.info("A denied JSON-RPC 2.0 notification gets no response")
+        resp = rpccall_v2(self.nodes[0], self.users[0], "getblockchaininfo", notification=True)
+        assert_equal(204, resp.status)
+        assert_equal(b"", resp.body)
+
+        self.log.info("bitcoin-cli reports the denial")
+        cli = self.nodes[0].cli(f"-rpcuser={self.users[0][0]}", f"-rpcpassword={self.users[0][3]}")
+        assert_raises_rpc_error(RPC_METHOD_NOT_PERMITTED, "User is not permitted to call method getblockchaininfo", cli.getblockchaininfo)
+
         self.test_users_permissions()
         self.test_rpcwhitelistdefault_permissions(0, 200)
         self.test_rejected_method_logging()
@@ -149,6 +189,10 @@ class RPCWhitelistTest(BitcoinTestFramework):
         for permission in ["getbestblockhash", "getblockchaininfo"]:
             self.log.info(f"[{user[0]}]: Testing rpcwhitelistdefault={default_value} no specified permission ({permission})")
             assert_equal(expected_status, rpccall(self.nodes[0], user, permission).status)
+            resp = rpccall_v2(self.nodes[0], user, permission)
+            assert_equal(200, resp.status)
+            if default_value:
+                assert_equal(RPC_METHOD_NOT_PERMITTED, json.loads(resp.body)["error"]["code"])
 
 
 if __name__ == "__main__":
