@@ -5611,6 +5611,9 @@ void PeerManagerImpl::EvictExtraOutboundPeers(NodeClock::time_point now)
         });
     }
 
+    // Tx relay doesn't matter in -blocksonly mode or during IBD.
+    const bool replace_no_tx_relay{!m_opts.ignore_incoming_txs && !m_chainman.IsInitialBlockDownload()};
+
     // Check whether we have too many outbound-full-relay peers
     if (m_connman.GetExtraFullOutboundCount() > 0) {
         // If we have more outbound-full-relay peers than we target, disconnect one.
@@ -5622,6 +5625,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(NodeClock::time_point now)
         struct WorstPeer {
             NodeId node;
             NodeClock::time_point oldest_block_announcement;
+            bool no_tx_relay;
         };
         std::optional<WorstPeer> worst_peer;
 
@@ -5637,10 +5641,13 @@ void PeerManagerImpl::EvictExtraOutboundPeers(NodeClock::time_point now)
             // If this is the only connection on a particular network that is
             // OUTBOUND_FULL_RELAY or MANUAL, protect it.
             if (!m_connman.MultipleManualOrFullOutboundConns(pnode->addr.GetNetwork())) return;
-            if (!worst_peer.has_value() ||
+            // Evict peers not relaying txs first
+            const bool no_tx_relay{replace_no_tx_relay && !pnode->m_relays_txs};
+            if (worst_peer.has_value() && (*worst_peer).no_tx_relay && !no_tx_relay) return;
+            if (!worst_peer.has_value() || (no_tx_relay && !(*worst_peer).no_tx_relay) ||
                 (state->m_last_block_announcement < (*worst_peer).oldest_block_announcement) ||
                 ((state->m_last_block_announcement == (*worst_peer).oldest_block_announcement) && pnode->GetId() > (*worst_peer).node)) {
-                worst_peer = WorstPeer{pnode->GetId(), state->m_last_block_announcement};
+                worst_peer = WorstPeer{pnode->GetId(), state->m_last_block_announcement, no_tx_relay};
             }
         });
         if (worst_peer.has_value()) {
@@ -5674,6 +5681,17 @@ void PeerManagerImpl::EvictExtraOutboundPeers(NodeClock::time_point now)
             }
         }
     }
+
+    // Request a replacement if the eviction above would pick a peer not relaying txs.
+    bool have_no_tx_relay_peer{false};
+    if (replace_no_tx_relay) {
+        m_connman.ForEachFullyConnectedNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(m_connman.GetNodesMutex()) {
+            if (!pnode->IsFullOutboundConn() || pnode->m_relays_txs) return;
+            if (!m_connman.MultipleManualOrFullOutboundConns(pnode->addr.GetNetwork())) return;
+            have_no_tx_relay_peer = true;
+        });
+    }
+    m_connman.SetReplaceNoTxRelayPeer(have_no_tx_relay_peer);
 }
 
 void PeerManagerImpl::CheckForStaleTipAndEvictPeers()
