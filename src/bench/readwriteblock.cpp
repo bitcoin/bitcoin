@@ -18,6 +18,7 @@
 #include <test/util/setup_common.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <validation.h>
 
 #include <algorithm>
@@ -78,9 +79,8 @@ BENCHMARK(ReadRawBlockBench);
 
 static CSerializedNetMsg ReadBlockMessageWithoutWitness(const node::BlockManager& blockman, const FlatFilePos& pos, const uint256& hash)
 {
-    CBlock block;
-    Assert(blockman.ReadBlock(block, pos, hash));
-    return NetMsg::Make(NetMsgType::BLOCK, TX_NO_WITNESS(block));
+    const auto data{Assert(blockman.ReadBlockWithoutWitness(pos, hash))};
+    return NetMsg::Make(NetMsgType::BLOCK, std::span{*data});
 }
 
 static void BlockWithoutWitnessRead(benchmark::Bench& bench, bool witness)
