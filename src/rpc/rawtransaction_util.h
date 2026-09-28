@@ -57,8 +57,8 @@ std::vector<std::pair<CTxDestination, CAmount>> ParseOutputs(const UniValue& out
 /** Normalize, parse, and add outputs to the transaction */
 void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in);
 
-/** Create a transaction from univalue parameters */
-CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, std::optional<bool> rbf, uint32_t version);
+/** Create a transaction from univalue parameters. If outputs_in is std::nullopt, the transaction has no outputs. */
+CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const std::optional<UniValue>& outputs_in, const UniValue& locktime, std::optional<bool> rbf, uint32_t version);
 
 enum class ElisionMode {
     None,        ///< no elision, all top-level fields rendered normally
