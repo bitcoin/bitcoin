@@ -8,14 +8,19 @@
 #include <node/blockstorage.h>
 #include <node/context.h>
 #include <node/kernel_notifications.h>
+#include <node/mining_types.h>
 #include <script/solver.h>
 #include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <serialize.h>
+#include <streams.h>
 #include <util/chaintype.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 #include <test/util/common.h>
 #include <test/util/logging.h>
+#include <test/util/mining.h>
 #include <test/util/setup_common.h>
 
 using kernel::CBlockFileInfo;
@@ -230,6 +235,40 @@ BOOST_FIXTURE_TEST_CASE(blockmanager_readblock_hash_mismatch, TestingSetup)
     ASSERT_DEBUG_LOG("GetHash() doesn't match index");
     CBlock block;
     BOOST_CHECK(!m_node.chainman->m_blockman.ReadBlock(block, index));
+}
+
+BOOST_FIXTURE_TEST_CASE(blockmanager_readblock_validation, RegTestingSetup)
+{
+    MineBlock(m_node, {}); // Adds a block with a coinbase witness on top of genesis
+    LOCK(cs_main);
+    auto& blockman{m_node.chainman->m_blockman};
+    const auto check_read_fails{[&](const FlatFilePos& pos, const uint256& hash, const char* error) {
+        {
+            ASSERT_DEBUG_LOG(error);
+            CBlock block;
+            BOOST_CHECK(!blockman.ReadBlock(block, pos, hash));
+        }
+    }};
+    for (const auto* index : {m_node.chainman->ActiveChain()[0], m_node.chainman->ActiveTip()}) {
+        CBlock block;
+        BOOST_REQUIRE(blockman.ReadBlock(block, *index));
+        BOOST_CHECK_EQUAL(block.vtx[0]->HasWitness(), index->nHeight > 0);
+    }
+    check_read_fails(FlatFilePos{}, uint256::ZERO, "while reading raw block storage header");
+
+    const auto& genesis{Params().GenesisBlock()};
+    CBlock corrupt{genesis};
+    corrupt.nBits = 0; // Invalid proof-of-work target, with an otherwise intact block
+    check_read_fails(blockman.WriteBlock(corrupt, 0), corrupt.GetHash(), "Errors in block header");
+
+    const auto genesis_pos{blockman.WriteBlock(genesis, 0)};
+    // WriteBlock returns the payload position, after the storage magic and size.
+    auto file{blockman.OpenBlockFile({genesis_pos.nFile, genesis_pos.nPos - STORAGE_HEADER_BYTES}, false)};
+    BOOST_REQUIRE(!file.IsNull());
+    // Shorten the recorded size to end before the first transaction, without truncating the file.
+    file << Params().MessageStart() << unsigned(GetSerializeSize(CBlockHeader{}) + GetSizeOfCompactSize(genesis.vtx.size()));
+    BOOST_REQUIRE_EQUAL(file.fclose(), 0);
+    check_read_fails(genesis_pos, genesis.GetHash(), "Deserialize or I/O error");
 }
 
 BOOST_AUTO_TEST_CASE(blockmanager_flush_block_file)
