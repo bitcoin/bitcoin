@@ -51,9 +51,11 @@ class TestBitcoinIpcCli(BitcoinTestFramework):
         args = [f"-ipcconnect=unix:{self.nodes[0].ipc_socket_path}", "-rpcuser=ipcuser"]
         # A permitted method still works, so the whitelist is in force.
         self.test_cli(args, call=["getblockcount"], expected="0\n")
-        # The reply to a denied method has an empty body, which bitcoin-cli
-        # reports as a JSON type error.
-        self.test_cli(args, error="error: JSON value of type null is not of expected type object")
+        # Before the denial carried a JSON-RPC error object, the reply body was
+        # empty over IPC and bitcoin-cli reported a JSON type error instead.
+        self.test_cli(args,
+                      error="error code: -38\nerror message:\nUser is not permitted to call method echo",
+                      returncode=38)
         self.restart_node(0)
 
     def run_test(self):

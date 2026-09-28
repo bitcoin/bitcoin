@@ -75,6 +75,8 @@ enum RPCErrorCode
     RPC_IN_WARMUP                   = -28, //!< Client still warming up
     RPC_METHOD_DEPRECATED           = -32, //!< RPC method is deprecated
     RPC_LIMIT_EXCEEDED              = -37, //!< A bounded resource is currently at capacity
+    // RPC_METHOD_NOT_PERMITTED is internally mapped to HTTP_FORBIDDEN (403).
+    RPC_METHOD_NOT_PERMITTED        = -38, //!< Caller is not permitted to call the method by -rpcwhitelist
 
     //! Aliases for backward compatibility
     RPC_TRANSACTION_ERROR           = RPC_VERIFY_ERROR,

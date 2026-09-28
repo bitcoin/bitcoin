@@ -9,12 +9,15 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_process_error,
+    assert_raises_rpc_error,
     str_to_b64str,
 )
 import http.client
 import json
 import urllib.parse
 
+# RPC_METHOD_NOT_PERMITTED from src/rpc/protocol.h
+RPC_METHOD_NOT_PERMITTED = -38
 
 def rpcpost(node, user, body):
     url = urllib.parse.urlparse(node.url)
@@ -148,23 +151,25 @@ class RPCWhitelistTest(BitcoinTestFramework):
     def test_denied_requests(self):
         """Replies to single requests for a method the user may not call."""
         self.log.info("A denied request")
-        assert_equal(reply(rpccall(self.nodes[0], self.users[0], "getblockchaininfo")), (403, None))
+        assert_equal(reply(rpccall(self.nodes[0], self.users[0], "getblockchaininfo")),
+                     (403, {"result": None, "error": {"code": RPC_METHOD_NOT_PERMITTED, "message": "User is not permitted to call method getblockchaininfo"}}))
 
         self.log.info("A denied JSON-RPC 2.0 request")
-        assert_equal(reply(rpccall_v2(self.nodes[0], self.users[0], "getblockchaininfo")), (403, None))
+        assert_equal(reply(rpccall_v2(self.nodes[0], self.users[0], "getblockchaininfo")),
+                     (200, {"jsonrpc": "2.0", "error": {"code": RPC_METHOD_NOT_PERMITTED, "message": "User is not permitted to call method getblockchaininfo"}, "id": 1}))
 
         self.log.info("A denied JSON-RPC 2.0 notification")
-        assert_equal(reply(rpccall_v2(self.nodes[0], self.users[0], "getblockchaininfo", notification=True)), (403, None))
+        assert_equal(reply(rpccall_v2(self.nodes[0], self.users[0], "getblockchaininfo", notification=True)), (204, None))
 
         self.log.info("bitcoin-cli reports a denied request")
         cli = self.nodes[0].cli(f"-rpcuser={self.users[0][0]}", f"-rpcpassword={self.users[0][3]}")
-        assert_raises_process_error(1, "server returned HTTP error 403", cli.getblockchaininfo)
+        assert_raises_rpc_error(RPC_METHOD_NOT_PERMITTED, "User is not permitted to call method getblockchaininfo", cli.getblockchaininfo)
 
         if self.is_wallet_compiled():
             self.log.info("bitcoin-cli -generate reports a denied generatetoaddress call")
             self.nodes[0].createwallet("generate")
             cli = self.nodes[0].cli(f"-rpcuser={self.batch_user[0]}", f"-rpcpassword={self.batch_user[3]}")
-            assert_raises_process_error(1, "server returned HTTP error 403", cli("-generate").send_cli)
+            assert_raises_rpc_error(RPC_METHOD_NOT_PERMITTED, "User is not permitted to call method generatetoaddress", cli("-generate").send_cli)
             self.nodes[0].unloadwallet("generate")
 
     def test_denied_batches(self):
@@ -172,7 +177,7 @@ class RPCWhitelistTest(BitcoinTestFramework):
         self.log.info("A batch including a denied request")
         # user1 may call getblockcount but not getblockchaininfo or getnetworkinfo.
         assert_equal(reply(rpcbatch(self.nodes[0], self.users[0], ["getblockcount", "getblockchaininfo", "getblockcount", "getnetworkinfo"])),
-                     (403, None))
+                     (403, {"result": None, "error": {"code": RPC_METHOD_NOT_PERMITTED, "message": "User is not permitted to call method getblockchaininfo"}, "id": None}))
 
         self.log.info("bitcoin-cli -getinfo, which sends a batch, reports a denied request")
         cli = self.nodes[0].cli(f"-rpcuser={self.users[0][0]}", f"-rpcpassword={self.users[0][3]}")
@@ -185,7 +190,7 @@ class RPCWhitelistTest(BitcoinTestFramework):
         self.log.info("A batch including a denied request has no effect")
         resp = rpcpost(self.nodes[0], self.batch_user,
                        '[{"method": "setnetworkactive", "params": [false], "id": 0}, {"method": "getbestblockhash", "id": 1}]')
-        assert_equal(reply(resp), (403, None))
+        assert_equal(reply(resp), (403, {"result": None, "error": {"code": RPC_METHOD_NOT_PERMITTED, "message": "User is not permitted to call method getbestblockhash"}, "id": None}))
         assert_equal(True, self.nodes[0].getnetworkinfo()["networkactive"])
 
         self.log.info("A batch with a request missing its method, and a denied request")
@@ -237,7 +242,10 @@ class RPCWhitelistTest(BitcoinTestFramework):
         for permission in ["getbestblockhash", "getblockchaininfo"]:
             self.log.info(f"[{user[0]}]: Testing rpcwhitelistdefault={default_value} no specified permission ({permission})")
             assert_equal(expected_status, rpccall(self.nodes[0], user, permission).status)
-            assert_equal(expected_status, rpccall_v2(self.nodes[0], user, permission).status)
+            resp = rpccall_v2(self.nodes[0], user, permission)
+            assert_equal(200, resp.status)
+            if default_value:
+                assert_equal(RPC_METHOD_NOT_PERMITTED, json.loads(resp.body)["error"]["code"])
 
 
 if __name__ == "__main__":
