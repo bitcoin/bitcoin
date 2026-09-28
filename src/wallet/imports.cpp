@@ -121,6 +121,8 @@ ImportResult ImportDescriptor(CWallet& wallet, const ImportDescriptorRequest& re
         );
     }
 
+    std::vector<uint256> mp_ids;
+    std::vector<std::reference_wrapper<DescriptorScriptPubKeyMan>> mp_spkms;
     std::vector<std::unique_ptr<Descriptor>> mp_expansion = parsed->GetMultipathExpansion();
     for (size_t j = 0; j < mp_expansion.size(); ++j) {
         auto parsed_desc = std::move(mp_expansion[j]);
@@ -213,6 +215,13 @@ ImportResult ImportDescriptor(CWallet& wallet, const ImportDescriptorRequest& re
                 wallet.DeactivateScriptPubKeyMan(spk_manager.GetID(), *w_desc.descriptor->GetOutputType(), desc_internal);
             }
         }
+
+        mp_ids.push_back(spk_manager.GetID());
+        mp_spkms.emplace_back(spk_manager);
+    }
+
+    for (const auto& spkm : mp_spkms) {
+        spkm.get().SetMultipathRelatives(mp_ids);
     }
 
     ImportResult result;
