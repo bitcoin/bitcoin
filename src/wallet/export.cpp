@@ -31,6 +31,9 @@ util::Expected<std::vector<WalletDescInfo>, std::string> ExportDescriptors(const
             return util::Unexpected{"Can't get descriptor string."};
         }
         const bool is_range = wallet_descriptor.descriptor->IsRange();
+
+        const auto mp_rel_ids = wallet_descriptor.GetMultipathRelativesIDs();
+
         wallet_descriptors.emplace_back(
             descriptor,
             wallet_descriptor.creation_time,
@@ -38,7 +41,9 @@ util::Expected<std::vector<WalletDescInfo>, std::string> ExportDescriptors(const
             wallet.IsInternalScriptPubKeyMan(desc_spk_man),
             is_range ? std::optional(std::make_pair(wallet_descriptor.GetStart(), wallet_descriptor.GetEnd())) : std::nullopt,
             wallet_descriptor.GetNext(),
-            wallet_descriptor.cache
+            wallet_descriptor.cache,
+            desc_spk_man->GetID(),
+            mp_rel_ids
         );
     }
     return wallet_descriptors;
@@ -86,9 +91,12 @@ util::Result<std::string> ExportWatchOnlyWallet(const CWallet& wallet, const fs:
 
     {
         LOCK(watchonly_wallet->cs_wallet);
+        Assert(exported);
+
+        std::map<uint256, std::reference_wrapper<DescriptorScriptPubKeyMan>> id_to_spkm;
 
         // Parse the descriptors and add them to the new wallet
-        for (const WalletDescInfo& desc_info : *Assert(exported)) {
+        for (const WalletDescInfo& desc_info : *exported) {
             // Parse the descriptor
             FlatSigningProvider dummy_keys;
             std::string dummy_err;
@@ -128,6 +136,20 @@ util::Result<std::string> ExportWatchOnlyWallet(const CWallet& wallet, const fs:
                 }
                 watchonly_wallet->AddActiveScriptPubKeyMan(spkm_res->get().GetID(), *Assert(w_desc.descriptor->GetOutputType()), internal);
             }
+
+            id_to_spkm.emplace(desc_info.spkm_id, *spkm_res);
+        }
+
+        // Now that we have SPKM IDs, we can populate the multipath relative IDs for each descriptor
+        for (const WalletDescInfo& desc_info : *exported) {
+            std::vector<uint256> new_rel_ids;
+            new_rel_ids.reserve(desc_info.mp_rel_ids.size());
+            for (const uint256& orig_rel_id : desc_info.mp_rel_ids) {
+                new_rel_ids.emplace_back(id_to_spkm.at(orig_rel_id).get().GetID());
+            }
+            auto& spkm = id_to_spkm.at(desc_info.spkm_id).get();
+            spkm.SetMultipathRelatives(new_rel_ids);
+            spkm.WriteDescriptor();
         }
 
         // Copy locked coins that are persisted
