@@ -14,6 +14,7 @@
 #include <common/system.h>
 #include <compat/compat.h>
 #include <core_io.h>
+#include <crypto/sha256.h>
 #include <streams.h>
 #include <univalue.h>
 #include <util/exception.h>
@@ -213,6 +214,7 @@ MAIN_FUNCTION
 {
     ArgsManager& args = gArgs;
     SetupEnvironment();
+    SHA256AutoDetect();
 
     try {
         int ret = AppInitUtil(args, argc, argv);
