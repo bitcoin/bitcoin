@@ -158,7 +158,7 @@ void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in)
     }
 }
 
-CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, std::optional<bool> rbf, const uint32_t version)
+CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const std::optional<UniValue>& outputs_in, const UniValue& locktime, std::optional<bool> rbf, const uint32_t version)
 {
     CMutableTransaction rawTx;
 
@@ -175,7 +175,7 @@ CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniVal
     rawTx.version = version;
 
     AddInputs(rawTx, inputs_in, rbf);
-    AddOutputs(rawTx, outputs_in);
+    if (outputs_in) AddOutputs(rawTx, *outputs_in);
 
     if (rbf.has_value() && rbf.value() && rawTx.vin.size() > 0 && !SignalsOptInRBF(CTransaction(rawTx))) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter combination: Sequence number(s) contradict replaceable option");
