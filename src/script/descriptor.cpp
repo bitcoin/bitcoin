@@ -1363,7 +1363,9 @@ public:
                     }
                     pk_rel.push_back(rel->m_pubkey_args.at(i).get());
                 }
-                sub->m_pubkey_args.at(i)->ReconstructMultipath(pk_rel);
+                if (!sub->m_pubkey_args.at(i)->ReconstructMultipath(pk_rel)) {
+                    return nullptr;
+                }
                 size_t mp_len = sub->m_pubkey_args.at(i)->GetMultipathLen();
                 if (mp_len > 1) {
                     if (multipath_len.has_value() && *multipath_len != mp_len) {
