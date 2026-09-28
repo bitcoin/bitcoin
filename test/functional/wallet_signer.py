@@ -66,6 +66,13 @@ class WalletSignerTest(BitcoinTestFramework):
     def clear_mock_result(self, node):
         os.remove(os.path.join(node.cwd, "mock_result"))
 
+    def set_mock_sign_mode(self, node, mode):
+        with open(os.path.join(node.cwd, "mock_sign_mode"), "w") as f:
+            f.write(mode)
+
+    def clear_mock_sign_mode(self, node):
+        os.remove(os.path.join(node.cwd, "mock_sign_mode"))
+
     def init_mock_node(self):
         """Hand the signer mock its dedicated offline node, on which it
         creates the wallet it signs with."""
