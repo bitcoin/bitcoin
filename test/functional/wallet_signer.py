@@ -150,7 +150,7 @@ class WalletSignerTest(BitcoinTestFramework):
         )
 
         self.log.info('Prepare mock PSBT')
-        self.nodes[0].sendtoaddress(address4, 1)
+        self.create_outpoints(self.nodes[0], outputs=[{address4: 1}])
         self.generate(self.nodes[0], 1)
 
         # Load private key into wallet to generate a signed PSBT for the mock
@@ -230,7 +230,7 @@ class WalletSignerTest(BitcoinTestFramework):
         assert_equal(hww.getwalletinfo()["external_signer"], True)
 
         # Fund wallet
-        self.nodes[0].sendtoaddress(hww.getnewaddress(address_type="bech32m"), 1)
+        self.create_outpoints(self.nodes[0], outputs=[{hww.getnewaddress(address_type="bech32m"): 1}])
         self.generate(self.nodes[0], 1)
 
         # Restart node with no signer connected
