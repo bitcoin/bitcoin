@@ -563,6 +563,60 @@ void CheckMultipath(const std::string& prv,
     desc->ToString();
     std::vector<CScript> out_scripts;
     desc->Expand(0, prov, out_scripts, out);
+
+    // Check reconstruction roundtrip
+    std::unique_ptr<Descriptor> parse_pub = Parse(pub, prov, error);
+    BOOST_CHECK_MESSAGE(parse_pub, "Failed to parse " + pub);
+    std::unique_ptr<Descriptor> parse_prv = Parse(prv, prov, error);
+    BOOST_CHECK_MESSAGE(parse_prv, "Failed to parse " + prv);
+
+    std::vector<std::unique_ptr<Descriptor>> mp_pub = parse_pub->GetMultipathExpansion();
+    std::vector<const Descriptor*> pub_rels;
+    for (size_t i = 1; i < mp_pub.size(); ++i) {
+        pub_rels.push_back(mp_pub.at(i).get());
+    }
+    std::unique_ptr<Descriptor> recon_pub = mp_pub.at(0)->ReconstructMultipath(pub_rels);
+    BOOST_CHECK_MESSAGE(recon_pub, "Failed multipath reconstruction of " + pub);
+    std::string recon_pub_str = recon_pub->ToString();
+    BOOST_CHECK_MESSAGE(EqualDescriptor(pub, recon_pub_str), "Expected: " + pub + " got: " + recon_pub_str);
+    std::string recon_pub_privs;
+    BOOST_CHECK_MESSAGE(recon_pub->ToPrivateString(prov, recon_pub_privs), "Failed reconstructed to private string: " + recon_pub_str);
+    BOOST_CHECK_MESSAGE(EqualDescriptor(prv, recon_pub_privs), "Expected: " + prv + " got: " + recon_pub_privs);
+
+    std::vector<std::unique_ptr<Descriptor>> mp_prv = parse_prv->GetMultipathExpansion();
+    std::vector<const Descriptor*> prv_rels;
+    for (size_t i = 1; i < mp_prv.size(); ++i) {
+        prv_rels.push_back(mp_prv.at(i).get());
+    }
+    std::unique_ptr<Descriptor> recon_prv = mp_pub.at(0)->ReconstructMultipath(prv_rels);
+    BOOST_CHECK_MESSAGE(recon_prv, "Failed multipath reconstruction of " + prv);
+    std::string recon_prv_str = recon_prv->ToString();
+    BOOST_CHECK_MESSAGE(EqualDescriptor(pub, recon_prv_str), "Expected: " + pub + " got: " + recon_prv_str);
+    std::string recon_prv_privs;
+    BOOST_CHECK_MESSAGE(recon_prv->ToPrivateString(prov, recon_prv_privs), "Failed reconstrcted to private string: " + recon_prv_str);
+    BOOST_CHECK_MESSAGE(EqualDescriptor(prv, recon_prv_privs), "Expected: " + prv + " got: " + recon_prv_privs);
+
+    // Reconstruct from expanded strings
+    std::vector<std::unique_ptr<Descriptor>> parsed_exp_pub;
+    parsed_exp_pub.reserve(expanded_pubs.size());
+    for (const auto& s : expanded_pubs) {
+        auto d = Parse(s, prov, error);
+        BOOST_CHECK_MESSAGE(d, "Failed to parse " + s);
+        parsed_exp_pub.emplace_back(std::move(d));
+    }
+    std::vector<const Descriptor*> exp_pub_rels;
+    for (size_t i = 1; i < mp_pub.size(); ++i) {
+        exp_pub_rels.push_back(parsed_exp_pub.at(i).get());
+    }
+
+    std::unique_ptr<Descriptor> exp_recon_pub = parsed_exp_pub.at(0)->ReconstructMultipath(exp_pub_rels);
+    BOOST_CHECK_MESSAGE(exp_recon_pub, "Failed multipath reconstruction from expansion of " + pub);
+    std::string exp_recon_pub_str = exp_recon_pub->ToString();
+    BOOST_CHECK_MESSAGE(EqualDescriptor(pub, exp_recon_pub_str), "Expected: " + pub + " got: " + exp_recon_pub_str);
+    std::string exp_recon_pub_privs;
+    BOOST_CHECK_MESSAGE(recon_pub->ToPrivateString(prov, exp_recon_pub_privs), "Failed reconstructed to private string: " + exp_recon_pub_str);
+    BOOST_CHECK_MESSAGE(EqualDescriptor(prv, recon_pub_privs), "Expected: " + prv + " got: " + exp_recon_pub_privs);
+
 }
 
 void CheckInferDescriptor(const std::string& script_hex, const std::string& expected_desc, const std::vector<std::string>& hex_scripts, const std::vector<std::pair<std::string, std::string>>& origin_pubkeys)
