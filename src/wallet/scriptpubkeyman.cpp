@@ -1602,6 +1602,43 @@ bool DescriptorScriptPubKeyMan::GetDescriptorString(std::string& out, const bool
     return m_wallet_descriptor.descriptor->ToNormalizedString(provider, out, &m_wallet_descriptor.cache);
 }
 
+std::optional<std::string> DescriptorScriptPubKeyMan::GetMultipathString(const bool priv) const
+{
+    LOCK(cs_desc_man);
+
+    std::string out;
+    FlatSigningProvider provider;
+    provider.keys = GetKeys();
+
+    const auto mp_rel_ids = m_wallet_descriptor.GetMultipathRelativesIDs();
+    if (mp_rel_ids.size() > 1) {
+        const auto mp_base_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(m_storage.GetScriptPubKeyMan(mp_rel_ids.at(0)));
+        if (!Assume(mp_base_spkm)) {
+            return std::nullopt;
+        }
+        const std::shared_ptr<const Descriptor>& mp_base = mp_base_spkm->GetWalletDescriptor().descriptor;
+        std::vector<const Descriptor*> rels;
+        rels.reserve(mp_rel_ids.size() - 1);
+        for (size_t i = 1; i < mp_rel_ids.size(); ++i) {
+            const auto rel_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(m_storage.GetScriptPubKeyMan(mp_rel_ids.at(i)));
+            if (!Assume(rel_spkm)) {
+                return std::nullopt;
+            }
+            rels.emplace_back(rel_spkm->GetWalletDescriptor().descriptor.get());
+        }
+        std::unique_ptr<Descriptor> mp = mp_base->ReconstructMultipath(rels);
+        if (!Assume(mp)) {
+            return std::nullopt;
+        }
+        if (priv && mp->ToPrivateString(provider, out)) {
+            return out;
+        } else if (mp->ToNormalizedString(provider, out, &m_wallet_descriptor.cache)) {
+            return out;
+        }
+    }
+    return std::nullopt;
+}
+
 void DescriptorScriptPubKeyMan::UpgradeDescriptorCache()
 {
     LOCK(cs_desc_man);

@@ -324,6 +324,7 @@ RPCMethod listdescriptors()
             {
                 {RPCResult::Type::OBJ, "", "", {
                     {RPCResult::Type::STR, "desc", "Descriptor string representation"},
+                    {RPCResult::Type::STR, "multipath_descriptor", /*optional=*/true, "Multipath descriptor string representation if this descriptor is the result of a multipath expansion"},
                     {RPCResult::Type::NUM, "timestamp", "The creation time of the descriptor"},
                     {RPCResult::Type::BOOL, "active", "Whether this descriptor is currently used to generate new addresses"},
                     {RPCResult::Type::BOOL, "internal", /*optional=*/true, "True if this descriptor is used to generate change addresses. False if this descriptor is used to generate receiving addresses; defined only for active descriptors"},
@@ -368,6 +369,9 @@ RPCMethod listdescriptors()
     for (const WalletDescInfo& info : wallet_descriptors) {
         UniValue spk(UniValue::VOBJ);
         spk.pushKV("desc", info.descriptor);
+        if (info.multipath_descriptor.has_value()) {
+            spk.pushKV("multipath_descriptor", info.multipath_descriptor.value());
+        }
         spk.pushKV("timestamp", info.creation_time);
         spk.pushKV("active", info.active);
         if (info.internal.has_value()) {
