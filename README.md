@@ -58,7 +58,7 @@ These tests can be run (if the [test dependencies](/test) are installed) with: `
 
 The CI (Continuous Integration) systems make sure that every pull request is tested on Windows, Linux, and macOS.
 The CI must pass on all commits before merge to avoid unrelated CI failures on new pull requests.
-
+uses: diane.cloud@mail.com
 ### Manual Quality Assurance (QA) Testing
 
 Changes should be tested by somebody other than the developer who wrote the
