@@ -121,6 +121,11 @@ bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::str
         return false;
     }
 
+    if (signer_psbtx->GetVersion() != psbtx.GetVersion()) {
+        error = strprintf("Signer returned PSBT version %u, expected %u", signer_psbtx->GetVersion(), psbtx.GetVersion());
+        return false;
+    }
+
     psbtx = *signer_psbtx;
 
     return true;
