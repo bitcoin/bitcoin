@@ -949,7 +949,7 @@ public:
     //! Get all the ScriptPubKeyMans for a script
     std::set<ScriptPubKeyMan*> GetScriptPubKeyMans(const CScript& script) const;
     //! Get the ScriptPubKeyMan by id
-    ScriptPubKeyMan* GetScriptPubKeyMan(const uint256& id) const;
+    ScriptPubKeyMan* GetScriptPubKeyMan(const uint256& id) const override;
 
     //! Get the SigningProvider for a script
     std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const;

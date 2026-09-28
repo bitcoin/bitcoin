@@ -55,6 +55,7 @@ public:
     virtual bool IsLocked() const = 0;
     //! Callback function for after TopUp completes containing any scripts that were added by a SPKMan
     virtual void TopUpCallback(const std::set<CScript>&, ScriptPubKeyMan*) = 0;
+    virtual ScriptPubKeyMan* GetScriptPubKeyMan(const uint256& id) const = 0;
 };
 
 //! Constant representing an unknown spkm creation time
@@ -405,6 +406,7 @@ public:
     void SetMultipathRelatives(const std::vector<uint256>& ids);
 
     [[nodiscard]] bool GetDescriptorString(std::string& out, bool priv) const;
+    std::optional<std::string> GetMultipathString(bool priv) const;
 
     void UpgradeDescriptorCache();
 };
