@@ -104,10 +104,17 @@ def signtx(args):
     if args.fingerprint != "00000001":
         return sys.stdout.write(json.dumps({"error": "Unexpected fingerprint", "fingerprint": args.fingerprint}))
 
+    mode = get_mock_sign_mode()
     psbt = args.psbt
     wallet = get_mock_wallet()
     result = wallet.walletprocesspsbt(psbt=psbt, sign=True, bip32derivs=False, finalize=False)
     reply = result["psbt"]
+
+    if mode == "psbt_v0":
+        # Return the same transaction as a v0 PSBT.
+        tx = wallet.finalizepsbt(reply)["hex"]
+        # The conversion discards signatures; the version check runs first.
+        reply = wallet.converttopsbt(tx, permitsigdata=True, psbt_version=0)
 
     sys.stdout.write(json.dumps({"psbt": reply}))
 
