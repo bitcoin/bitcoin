@@ -4,19 +4,29 @@
 
 #include <external_signer.h>
 
-#include <chainparams.h>
 #include <common/run_command.h>
 #include <core_io.h>
 #include <psbt.h>
+#include <pubkey.h>
 #include <script/interpreter.h>
+#include <script/keyorigin.h>
+#include <streams.h>
+#include <tinyformat.h>
+#include <uint256.h>
+#include <util/result.h>
 #include <util/strencodings.h>
 #include <util/subprocess.h>
+#include <util/translation.h>
+#include <util/vector.h>
 
 #include <algorithm>
 #include <cstdint>
+#include <map>
 #include <optional>
+#include <set>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 ExternalSigner::ExternalSigner(std::vector<std::string> command, std::string chain, std::string fingerprint, std::string name)
