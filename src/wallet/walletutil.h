@@ -93,6 +93,19 @@ private:
 
     uint256 GetCanonicalHash() const;
 
+    // The SPKM IDs of the multipath relatives for multipath reconstruction
+    // Includes the SPKM ID for this descriptor, in its position in the multipath
+    std::vector<uint256> m_relative_ids;
+
+    WalletDescriptor(std::shared_ptr<Descriptor> descriptor, uint64_t creation_time, int32_t range_start, int32_t range_end, int32_t next_index, const std::vector<uint256>& relative_ids)
+    : range_start(descriptor->IsRange() ? range_start : 0),
+      next_index(next_index),
+      range_end(descriptor->IsRange() ? range_end : 1),
+      m_relative_ids(relative_ids),
+      descriptor(descriptor),
+      creation_time(creation_time)
+    {}
+
 public:
     const std::shared_ptr<const Descriptor> descriptor;
     uint64_t creation_time = 0;
@@ -127,7 +140,7 @@ public:
     void Serialize(Stream& s) const
     {
         std::string descriptor_str = descriptor->ToString();
-        s << descriptor_str << creation_time << next_index << range_start << range_end;
+        s << descriptor_str << creation_time << next_index << range_start << range_end << m_relative_ids;
     }
 
     template <typename Stream>
@@ -136,7 +149,12 @@ public:
         std::string descriptor_str;
         uint64_t creation_time;
         int32_t next_index, range_start, range_end;
+        std::vector<uint256> relative_ids;
         s >> descriptor_str >> creation_time >> next_index >> range_start >> range_end;
+
+        if (!s.empty()) {
+            s >> relative_ids;
+        }
 
         std::string error;
         FlatSigningProvider keys;
@@ -147,16 +165,12 @@ public:
         if (desc->IsMultipath()) {
             throw std::ios_base::failure("Can't load a multipath descriptor from databases");
         }
-        return WalletDescriptor(std::move(desc), creation_time, range_start, range_end, next_index);
+        return WalletDescriptor(std::move(desc), creation_time, range_start, range_end, next_index, relative_ids);
     }
 
     WalletDescriptor() = delete;
     WalletDescriptor(std::shared_ptr<Descriptor> descriptor, uint64_t creation_time, int32_t range_start, int32_t range_end, int32_t next_index)
-    : range_start(descriptor->IsRange() ? range_start : 0),
-      next_index(next_index),
-      range_end(descriptor->IsRange() ? range_end : 1),
-      descriptor(descriptor),
-      creation_time(creation_time)
+    : WalletDescriptor(descriptor, creation_time, range_start, range_end, next_index, {})
     {}
 
     /** Replaces all metadata (range, start, end, creation time), and cache from another WalletDescriptor if it has the same canonical descriptor string.
