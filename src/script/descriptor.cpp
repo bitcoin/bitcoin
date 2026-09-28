@@ -269,6 +269,9 @@ public:
 
     virtual void ChooseMultipath(size_t pos) {}
 
+    /** Given the multipath relatives, insert the multipath elements into this PubkeyProvider */
+    virtual bool ReconstructMultipath(const std::vector<const PubkeyProvider*>& relatives) = 0;
+
 protected:
     static std::optional<char> DetermineHardenedChar(StringType type, bool normalized)
     {
@@ -370,6 +373,17 @@ public:
     bool CanSelfExpand() const override { return m_provider->CanSelfExpand(); }
     size_t GetMultipathLen() const override { return m_provider->GetMultipathLen(); }
     void ChooseMultipath(size_t pos) override { return m_provider->ChooseMultipath(pos); }
+    bool ReconstructMultipath(const std::vector<const PubkeyProvider*>& relatives) override
+    {
+        std::vector<const PubkeyProvider*> sub_rel;
+        for (const auto& rel : relatives) {
+            const OriginPubkeyProvider* r = dynamic_cast<const OriginPubkeyProvider*>(rel);
+            if (!r) return false;
+            if (m_origin != r->m_origin) return false;
+            sub_rel.push_back(r->m_provider.get());
+        }
+        return m_provider->ReconstructMultipath(sub_rel);
+    }
 };
 
 /** An object representing a parsed constant public key in a descriptor. */
@@ -435,6 +449,15 @@ public:
         return std::make_unique<ConstPubkeyProvider>(m_expr_index, m_pubkey, m_xonly);
     }
     bool CanSelfExpand() const final { return true; }
+    bool ReconstructMultipath(const std::vector<const PubkeyProvider*>& relatives) override
+    {
+        for (const auto& rel : relatives) {
+            const ConstPubkeyProvider* r = dynamic_cast<const ConstPubkeyProvider*>(rel);
+            if (!r) return false;
+            if (m_pubkey != r->m_pubkey || m_xonly != r->m_xonly) return false;
+        }
+        return true;
+    }
 };
 
 enum class DeriveType {
@@ -658,6 +681,29 @@ public:
     bool CanSelfExpand() const override { return !IsHardened(); }
     size_t GetMultipathLen() const override { return m_path.MultipathLen(); }
     void ChooseMultipath(size_t pos) override { m_path = m_path.ChooseMultipath(pos); }
+    bool ReconstructMultipath(const std::vector<const PubkeyProvider*>& relatives) override
+    {
+        std::optional<size_t> multipath_pos;
+        for (const auto& rel : relatives) {
+            const BIP32PubkeyProvider* r = dynamic_cast<const BIP32PubkeyProvider*>(rel);
+            if (!r) return false;
+            if (m_root_extkey != r->m_root_extkey || m_derive != r->m_derive || m_path.size() != r->m_path.size()) return false;
+            for (size_t i = 0; i < m_path.size(); ++i) {
+                auto& p = m_path.at(i);
+                const auto& rp = r->m_path.at(i);
+                if (p != rp) {
+                    if (multipath_pos.has_value() && *multipath_pos != i) {
+                        return false;
+                    }
+                    multipath_pos = i;
+                    p.AddMultipathIndex(rp.Index(0));
+                } else if (multipath_pos.has_value() && *multipath_pos == i) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 };
 
 /** PubkeyProvider for a musig() expression */
@@ -893,6 +939,44 @@ public:
         for (auto& pub : m_participants) {
             pub->ChooseMultipath(pos);
         }
+    }
+    bool ReconstructMultipath(const std::vector<const PubkeyProvider*>& relatives) override
+    {
+        std::optional<size_t> multipath_pos;
+        std::vector<std::vector<const PubkeyProvider*>> part_rels(m_participants.size());
+        for (const auto& rel : relatives) {
+            const MuSigPubkeyProvider* r = dynamic_cast<const MuSigPubkeyProvider*>(rel);
+            if (!r) return false;
+            if (m_participants.size() != r->m_participants.size() || m_derive != r->m_derive || m_path.size() != r->m_path.size()) return false;
+            for (size_t i = 0; i < m_path.size(); ++i) {
+                auto& p = m_path.at(i);
+                const auto& rp = r->m_path.at(i);
+                if (p != rp) {
+                    if (multipath_pos.has_value() && *multipath_pos != i) {
+                        return false;
+                    }
+                    multipath_pos = i;
+                    p.AddMultipathIndex(rp.Index(0));
+                } else if (multipath_pos.has_value() && *multipath_pos == i) {
+                    return false;
+                }
+            }
+            for (size_t i = 0; i < r->m_participants.size(); ++i) {
+                part_rels.at(i).push_back(r->m_participants.at(i).get());
+            }
+        }
+        std::optional<size_t> multipath_len;
+        for (size_t i = 0; i < m_participants.size(); ++i) {
+            auto& part = m_participants.at(i);
+            if (!part->ReconstructMultipath(part_rels.at(i))) return false;
+            size_t mp_len = part->GetMultipathLen();
+            if (mp_len > 1) {
+                if (multipath_pos.has_value()) return false;
+                if (multipath_len.has_value() && mp_len != *multipath_len) return false;
+                multipath_len = mp_len;
+            }
+        }
+        return true;
     }
 };
 
@@ -1251,6 +1335,57 @@ public:
     }
 
     bool IsMultipath() const override { return GetMultipathLen() > 1; }
+
+    /** Check that the descriptor expression itself is equivalent, but does not check any pubkeys within the expression. Used for multipath reconstruction */
+    virtual bool CheckMultipathEquivalent(const std::vector<const DescriptorImpl*>& relatives) const = 0;
+
+    std::unique_ptr<Descriptor> ReconstructMultipath(const std::vector<const Descriptor*>& relatives) const override
+    {
+        std::unique_ptr<DescriptorImpl> out = Clone();
+        std::vector<std::pair<DescriptorImpl*, std::vector<const DescriptorImpl*>>> todo = {{out.get(), {}}};
+        for (const auto& rel : relatives) {
+            const DescriptorImpl* r = dynamic_cast<const DescriptorImpl*>(rel);
+            Assert(r);
+            todo.back().second.push_back(r);
+        }
+        std::optional<size_t> multipath_len;
+        while (!todo.empty()) {
+            auto [sub, sub_rel] = todo.back();
+            todo.pop_back();
+
+            if (!sub->CheckMultipathEquivalent(sub_rel)) return nullptr;
+
+            for (size_t i = 0; i < sub->m_pubkey_args.size(); ++i) {
+                std::vector<const PubkeyProvider*> pk_rel;
+                for (const auto& rel : sub_rel) {
+                    if (sub->m_pubkey_args.size() != rel->m_pubkey_args.size()) {
+                        return nullptr;
+                    }
+                    pk_rel.push_back(rel->m_pubkey_args.at(i).get());
+                }
+                sub->m_pubkey_args.at(i)->ReconstructMultipath(pk_rel);
+                size_t mp_len = sub->m_pubkey_args.at(i)->GetMultipathLen();
+                if (mp_len > 1) {
+                    if (multipath_len.has_value() && *multipath_len != mp_len) {
+                        return nullptr;
+                    }
+                    multipath_len = mp_len;
+                }
+            }
+
+            for (size_t i = 0; i < sub->m_subdescriptor_args.size(); ++i) {
+                todo.emplace_back(sub->m_subdescriptor_args.at(i).get(), std::vector<const DescriptorImpl*>{});
+                for (const auto& rel : sub_rel) {
+                    if (sub->m_subdescriptor_args.size() != rel->m_subdescriptor_args.size()) {
+                        return nullptr;
+                    }
+                    todo.back().second.push_back(rel->m_subdescriptor_args.at(i).get());
+                }
+            }
+        }
+
+        return out;
+    }
 };
 
 /** A parsed addr(A) descriptor. */
@@ -1275,6 +1410,15 @@ public:
     std::unique_ptr<DescriptorImpl> Clone() const override
     {
         return std::make_unique<AddressDescriptor>(m_destination);
+    }
+    bool CheckMultipathEquivalent(const std::vector<const DescriptorImpl*>& relatives) const override
+    {
+        for (const auto& rel : relatives) {
+            const AddressDescriptor* r = dynamic_cast<const AddressDescriptor*>(rel);
+            if (!r) return false;
+            if (m_destination != r->m_destination) return false;
+        }
+        return true;
     }
 };
 
@@ -1303,6 +1447,15 @@ public:
     std::unique_ptr<DescriptorImpl> Clone() const override
     {
         return std::make_unique<RawDescriptor>(m_script);
+    }
+    bool CheckMultipathEquivalent(const std::vector<const DescriptorImpl*>& relatives) const override
+    {
+        for (const auto& rel : relatives) {
+            const RawDescriptor* r = dynamic_cast<const RawDescriptor*>(rel);
+            if (!r) return false;
+            if (m_script != r->m_script) return false;
+        }
+        return true;
     }
 };
 
@@ -1344,6 +1497,15 @@ public:
     {
         return std::make_unique<PKDescriptor>(m_pubkey_args.at(0)->Clone(), m_xonly);
     }
+    bool CheckMultipathEquivalent(const std::vector<const DescriptorImpl*>& relatives) const override
+    {
+        for (const auto& rel : relatives) {
+            const PKDescriptor* r = dynamic_cast<const PKDescriptor*>(rel);
+            if (!r) return false;
+            if (m_xonly != r->m_xonly) return false;
+        }
+        return true;
+    }
 };
 
 /** A parsed pkh(P) descriptor. */
@@ -1376,6 +1538,14 @@ public:
     std::unique_ptr<DescriptorImpl> Clone() const override
     {
         return std::make_unique<PKHDescriptor>(m_pubkey_args.at(0)->Clone());
+    }
+    bool CheckMultipathEquivalent(const std::vector<const DescriptorImpl*>& relatives) const override
+    {
+        for (const auto& rel : relatives) {
+            const PKHDescriptor* r = dynamic_cast<const PKHDescriptor*>(rel);
+            if (!r) return false;
+        }
+        return true;
     }
 };
 
@@ -1410,6 +1580,14 @@ public:
     {
         return std::make_unique<WPKHDescriptor>(m_pubkey_args.at(0)->Clone());
     }
+    bool CheckMultipathEquivalent(const std::vector<const DescriptorImpl*>& relatives) const override
+    {
+        for (const auto& rel : relatives) {
+            const WPKHDescriptor* r = dynamic_cast<const WPKHDescriptor*>(rel);
+            if (!r) return false;
+        }
+        return true;
+    }
 };
 
 /** A parsed combo(P) descriptor. */
@@ -1436,6 +1614,14 @@ public:
     std::unique_ptr<DescriptorImpl> Clone() const override
     {
         return std::make_unique<ComboDescriptor>(m_pubkey_args.at(0)->Clone());
+    }
+    bool CheckMultipathEquivalent(const std::vector<const DescriptorImpl*>& relatives) const override
+    {
+        for (const auto& rel : relatives) {
+            const ComboDescriptor* r = dynamic_cast<const ComboDescriptor*>(rel);
+            if (!r) return false;
+        }
+        return true;
     }
 };
 
@@ -1483,6 +1669,15 @@ public:
         std::transform(m_pubkey_args.begin(), m_pubkey_args.end(), std::back_inserter(providers), [](const std::unique_ptr<PubkeyProvider>& p) { return p->Clone(); });
         return std::make_unique<MultisigDescriptor>(m_threshold, std::move(providers), m_sorted);
     }
+    bool CheckMultipathEquivalent(const std::vector<const DescriptorImpl*>& relatives) const override
+    {
+        for (const auto& rel : relatives) {
+            const MultisigDescriptor* r = dynamic_cast<const MultisigDescriptor*>(rel);
+            if (!r) return false;
+            if (m_threshold != r->m_threshold || m_sorted != r->m_sorted) return false;
+        }
+        return true;
+    }
 };
 
 /** A parsed (sorted)multi_a(...) descriptor. Always uses x-only pubkeys. */
@@ -1528,6 +1723,15 @@ public:
             providers.push_back(arg->Clone());
         }
         return std::make_unique<MultiADescriptor>(m_threshold, std::move(providers), m_sorted);
+    }
+    bool CheckMultipathEquivalent(const std::vector<const DescriptorImpl*>& relatives) const override
+    {
+        for (const auto& rel : relatives) {
+            const MultiADescriptor* r = dynamic_cast<const MultiADescriptor*>(rel);
+            if (!r) return false;
+            if (m_threshold != r->m_threshold || m_sorted != r->m_sorted) return false;
+        }
+        return true;
     }
 };
 
@@ -1579,6 +1783,14 @@ public:
     {
         return std::make_unique<SHDescriptor>(m_subdescriptor_args.at(0)->Clone());
     }
+    bool CheckMultipathEquivalent(const std::vector<const DescriptorImpl*>& relatives) const override
+    {
+        for (const auto& rel : relatives) {
+            const SHDescriptor* r = dynamic_cast<const SHDescriptor*>(rel);
+            if (!r) return false;
+        }
+        return true;
+    }
 };
 
 /** A parsed wsh(...) descriptor. */
@@ -1619,6 +1831,14 @@ public:
     std::unique_ptr<DescriptorImpl> Clone() const override
     {
         return std::make_unique<WSHDescriptor>(m_subdescriptor_args.at(0)->Clone());
+    }
+    bool CheckMultipathEquivalent(const std::vector<const DescriptorImpl*>& relatives) const override
+    {
+        for (const auto& rel : relatives) {
+            const WSHDescriptor* r = dynamic_cast<const WSHDescriptor*>(rel);
+            if (!r) return false;
+        }
+        return true;
     }
 };
 
@@ -1705,6 +1925,15 @@ public:
         subdescs.reserve(m_subdescriptor_args.size());
         std::transform(m_subdescriptor_args.begin(), m_subdescriptor_args.end(), std::back_inserter(subdescs), [](const std::unique_ptr<DescriptorImpl>& d) { return d->Clone(); });
         return std::make_unique<TRDescriptor>(m_pubkey_args.at(0)->Clone(), std::move(subdescs), m_depths);
+    }
+    bool CheckMultipathEquivalent(const std::vector<const DescriptorImpl*>& relatives) const override
+    {
+        for (const auto& rel : relatives) {
+            const TRDescriptor* r = dynamic_cast<const TRDescriptor*>(rel);
+            if (!r) return false;
+            if (m_depths != r->m_depths) return false;
+        }
+        return true;
     }
 };
 
@@ -1878,6 +2107,15 @@ public:
         }
         return std::make_unique<MiniscriptDescriptor>(std::move(providers), m_node.Clone());
     }
+    bool CheckMultipathEquivalent(const std::vector<const DescriptorImpl*>& relatives) const override
+    {
+        for (const auto& rel : relatives) {
+            const MiniscriptDescriptor* r = dynamic_cast<const MiniscriptDescriptor*>(rel);
+            if (!r) return false;
+            if (m_node != r->m_node) return false;
+        }
+        return true;
+    }
 };
 
 /** A parsed rawtr(...) descriptor. */
@@ -1913,6 +2151,14 @@ public:
     {
         return std::make_unique<RawTRDescriptor>(m_pubkey_args.at(0)->Clone());
     }
+    bool CheckMultipathEquivalent(const std::vector<const DescriptorImpl*>& relatives) const override
+    {
+        for (const auto& rel : relatives) {
+            const RawTRDescriptor* r = dynamic_cast<const RawTRDescriptor*>(rel);
+            if (!r) return false;
+        }
+        return true;
+    }
 };
 
 /** A parsed unused(KEY) descriptor */
@@ -1928,6 +2174,14 @@ public:
     std::unique_ptr<DescriptorImpl> Clone() const override
     {
         return std::make_unique<UnusedDescriptor>(m_pubkey_args.at(0)->Clone());
+    }
+    bool CheckMultipathEquivalent(const std::vector<const DescriptorImpl*>& relatives) const override
+    {
+        for (const auto& rel : relatives) {
+            const UnusedDescriptor* r = dynamic_cast<const UnusedDescriptor*>(rel);
+            if (!r) return false;
+        }
+        return true;
     }
 };
 
