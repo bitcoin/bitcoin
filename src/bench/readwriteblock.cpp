@@ -5,18 +5,26 @@
 #include <bench/bench.h>
 #include <bench/data/block413567.raw.h>
 #include <flatfile.h>
+#include <net.h>
+#include <netmessagemaker.h>
 #include <node/blockstorage.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <protocol.h>
+#include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
+#include <uint256.h>
 #include <util/check.h>
 #include <validation.h>
 
 #include <memory>
 #include <span>
+#include <string>
+#include <utility>
+#include <vector>
 
 static CBlock CreateTestBlock()
 {
@@ -65,3 +73,32 @@ static void ReadRawBlockBench(benchmark::Bench& bench)
 BENCHMARK(WriteBlockBench);
 BENCHMARK(ReadBlockBench);
 BENCHMARK(ReadRawBlockBench);
+
+static void BlockWithoutWitnessRead(benchmark::Bench& bench, bool witness)
+{
+    const auto testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN)};
+    auto& blockman{testing_setup->m_node.chainman->m_blockman};
+    CBlock fixture{CreateTestBlock()};
+    if (witness) {
+        for (auto& transaction : fixture.vtx) {
+            CMutableTransaction tx{*transaction};
+            for (auto& input : tx.vin) input.scriptWitness = CScriptWitness{{std::vector<unsigned char>(512, 0x42), {}}};
+            transaction = MakeTransactionRef(std::move(tx));
+        }
+    }
+    const auto hash{fixture.GetHash()};
+    const auto pos{WITH_LOCK(::cs_main, return blockman.WriteBlock(fixture, /*nHeight=*/0))};
+    const auto expected_size{GetSerializeSize(TX_NO_WITNESS(fixture))};
+    bench.unit("block").run([&] {
+        CBlock block;
+        Assert(blockman.ReadBlock(block, pos, hash));
+        const auto message{NetMsg::Make(NetMsgType::BLOCK, TX_NO_WITNESS(block))};
+        assert(message.data.size() == expected_size);
+    });
+}
+
+static void BlockWithoutWitnessRead_Legacy(benchmark::Bench& bench) { BlockWithoutWitnessRead(bench, /*witness=*/false); }
+static void BlockWithoutWitnessRead_Witness(benchmark::Bench& bench) { BlockWithoutWitnessRead(bench, /*witness=*/true); }
+
+BENCHMARK(BlockWithoutWitnessRead_Legacy);
+BENCHMARK(BlockWithoutWitnessRead_Witness);
