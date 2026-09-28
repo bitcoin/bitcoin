@@ -45,6 +45,7 @@
 #include <compare>
 #include <cstddef>
 #include <cstdio>
+#include <cstring>
 #include <exception>
 #include <map>
 #include <optional>
@@ -1102,12 +1103,12 @@ std::vector<std::byte> StripBlockWitness(std::vector<std::byte> data)
 {
     SpanReader reader{data};
     const auto pos{[&]() -> uint64_t { return data.size() - reader.size(); }};
-    std::vector<std::byte> stripped;
-    stripped.reserve(data.size());
-    uint64_t copy_begin{0};
+    uint64_t copy_begin{0}, write_pos{0};
     // Keep [copy_begin, gap_begin), then drop the already-read gap [gap_begin, pos()).
     const auto drop_from{[&](uint64_t gap_begin) {
-        stripped.insert(stripped.end(), data.begin() + copy_begin, data.begin() + gap_begin);
+        const auto count{gap_begin - copy_begin};
+        if (write_pos != copy_begin) std::memmove(data.data() + write_pos, data.data() + copy_begin, count);
+        write_pos += count;
         copy_begin = pos();
     }};
 
@@ -1148,7 +1149,8 @@ std::vector<std::byte> StripBlockWitness(std::vector<std::byte> data)
         reader.ignore(sizeof(CTransaction::nLockTime));
     }
     drop_from(pos());
-    return stripped;
+    data.erase(data.begin() + write_pos, data.end());
+    return data;
 }
 
 BlockManager::ReadRawBlockResult BlockManager::ReadBlockWithoutWitness(const FlatFilePos& pos, const uint256& expected_hash) const
