@@ -402,6 +402,7 @@ public:
     std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const override;
     std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys(int32_t minimum_index) const;
     int32_t GetEndRange() const;
+    void SetMultipathRelatives(const std::vector<uint256>& ids);
 
     [[nodiscard]] bool GetDescriptorString(std::string& out, bool priv) const;
 

@@ -181,6 +181,12 @@ public:
 
     // Compare by using the canonical string to make the hardened indicators consistent for comparison
     bool IsCanonicallyEquivalent(const WalletDescriptor& other) const;
+
+    // Add the id of a multipath relative
+    // Note that this does not validate whether the relative is actually a relative.
+    // Callers must be sure that the multipath can be reconstructed before calling this function.
+    void SetMultipathRelatives(const std::vector<uint256>& ids) { m_relative_ids = ids; }
+    std::vector<uint256> GetMultipathRelativesIDs() const { return m_relative_ids; }
 };
 
 WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& output_type, bool internal);

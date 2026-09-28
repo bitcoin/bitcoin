@@ -1698,4 +1698,9 @@ bool DescriptorScriptPubKeyMan::CanUpdateToWalletDescriptor(const WalletDescript
 
     return true;
 }
+
+void DescriptorScriptPubKeyMan::SetMultipathRelatives(const std::vector<uint256>& ids)
+{
+    m_wallet_descriptor.SetMultipathRelatives(ids);
+}
 } // namespace wallet
