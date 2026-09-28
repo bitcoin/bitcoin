@@ -9,14 +9,23 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <core_memusage.h>
+#include <node/blockstorage.h>
+#include <primitives/transaction.h>
 #include <pubkey.h>
+#include <serialize.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
 #include <util/chaintype.h>
 #include <util/check.h>
 #include <validation.h>
 
+#include <algorithm>
+#include <cstddef>
+#include <ios>
+#include <optional>
+#include <span>
 #include <string>
+#include <vector>
 
 void initialize_block()
 {
@@ -25,12 +34,20 @@ void initialize_block()
 
 FUZZ_TARGET(block, .init = initialize_block)
 {
+    std::optional<std::vector<std::byte>> stripped;
+    try {
+        const auto bytes{std::as_bytes(buffer)};
+        stripped = node::StripBlockWitness({bytes.begin(), bytes.end()});
+    } catch (const std::ios_base::failure&) {
+    }
     CBlock block;
     try {
         SpanReader{buffer} >> TX_WITH_WITNESS(block);
     } catch (const std::ios_base::failure&) {
+        assert(!stripped);
         return;
     }
+    assert(std::ranges::equal(*Assert(stripped), DataStream{} << TX_NO_WITNESS(block)));
     const Consensus::Params& consensus_params = Params().GetConsensus();
     BlockValidationState validation_state_pow_and_merkle;
     const bool valid_incl_pow_and_merkle = CheckBlock(block, validation_state_pow_and_merkle, consensus_params, /* fCheckPOW= */ true, /* fCheckMerkleRoot= */ true);
