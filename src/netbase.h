@@ -36,6 +36,9 @@ inline constexpr int DEFAULT_NAME_LOOKUP = true;
 
 /** Prefix for unix domain socket addresses (which are local filesystem paths) */
 inline const std::string ADDR_PREFIX_UNIX = "unix:";
+/** File name of the HTTP (JSON-RPC and REST) unix socket in the network data directory,
+ *  selected by -rpcbind=unix and bitcoin-cli -rpcconnect=unix */
+inline const std::string DEFAULT_HTTP_UNIX_SOCKET_NAME = "http.sock";
 
 enum class ConnectionDirection {
     None = 0,
@@ -223,6 +226,9 @@ public:
      * port (IPv6 is not bracketed), or "localhost" for a UNIX socket address.
      */
     [[nodiscard]] std::string GetHost() const;
+
+    /** See UnixSocketAddr::PreparePath(). No-op (success) for an IP address. */
+    util::Expected<void, std::string> PreparePath() const;
 
 private:
     std::variant<CService, UnixSocketAddr> m_addr;
