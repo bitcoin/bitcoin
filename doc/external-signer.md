@@ -148,6 +148,8 @@ A future extension could add an optional return field `reachable`, in case `<cmd
 
 This command reads request `<base64-encoded psbt>` and MUST return a JSON object. On success, it MUST contain `{"psbt": "<base64-encoded psbt>"}` updated to include any new signatures. On failure, it SHOULD contain `{"error": "<message>"}`. Presence of a key `error` with value `null` is not considered an error.
 
+The returned PSBT MUST use the same PSBT version as the request.
+
 PSBT SHOULD include BIP32 derivations. The command SHOULD fail if none of the BIP32 derivations match a key owned by the device.
 
 The command SHOULD fail if the user cancels.

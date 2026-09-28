@@ -84,6 +84,7 @@ class WalletSignerTest(BitcoinTestFramework):
     def run_test(self):
         self.init_mock_node()
         self.test_valid_signer()
+        self.test_signer_psbt_version()
         self.test_disconnected_signer()
         self.restart_node(1, [f"-signer={self.mock_invalid_signer_path()}", "-keypool=10"])
         self.test_invalid_signer()
@@ -208,6 +209,19 @@ class WalletSignerTest(BitcoinTestFramework):
         assert_greater_than(res["fee"], res["origfee"])
         assert_equal(res["errors"], [])
 
+
+    def test_signer_psbt_version(self):
+        hww = self.nodes[1].get_wallet_rpc('hww')
+        inputs = self.create_outpoints(self.nodes[0], outputs=[{hww.getnewaddress(): 2}])
+        self.generate(self.nodes[0], 1, sync_fun=self.sync_except_mock)
+        dest = self.nodes[0].getnewaddress()
+
+        self.log.info('The signer must preserve the PSBT version')
+        self.set_mock_sign_mode(self.nodes[1], "psbt_v0")
+        with self.nodes[1].assert_debug_log(["Signer returned PSBT version 0, expected 2"]):
+            assert_raises_rpc_error(-25, "External signer failed to sign", hww.send, outputs={dest: 1.5}, inputs=inputs, add_inputs=False)
+
+        self.clear_mock_sign_mode(self.nodes[1])
 
     def test_disconnected_signer(self):
         self.log.info('Test disconnected external signer')
