@@ -475,7 +475,7 @@ public:
     bool ReadBlock(CBlock& block, const CBlockIndex& index) const;
     ReadRawBlockResult ReadRawBlock(const FlatFilePos& pos, std::optional<std::pair<size_t, size_t>> block_part = std::nullopt) const;
     //! Return a stored block's non-witness serialization after proof-of-work and expected-hash checks.
-    //! Requires non-Signet consensus because it does not check the Signet block solution.
+    //! Omits ReadBlock's Signet solution check, so Signet callers must use ReadBlock.
     //! Temporary serving payload. Must not be stored as block data.
     ReadRawBlockResult ReadBlockWithoutWitness(const FlatFilePos& pos, const uint256& expected_hash) const;
 

@@ -2650,10 +2650,10 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
     std::shared_ptr<const CBlock> pblock;
     if (a_recent_block && a_recent_block->GetHash() == inv.hash) {
         pblock = a_recent_block;
-    } else if (inv.IsMsgWitnessBlk()) {
-        // Fast-path: in this case it is possible to serve the block directly from disk,
-        // as the network format matches the format on disk
-        const auto block_data{blockman.ReadRawBlock(block_pos)};
+    } else if (inv.IsMsgWitnessBlk() || (inv.IsMsgBlk() && !m_chainparams.GetConsensus().signet_blocks)) {
+        // Serve MSG_WITNESS_BLOCK directly from on-disk serialization.
+        // Strip witnesses for MSG_BLOCK, except on Signet where ReadBlock below checks the block solution.
+        const auto block_data{inv.IsMsgBlk() ? blockman.ReadBlockWithoutWitness(block_pos, inv.hash) : blockman.ReadRawBlock(block_pos)};
         if (block_data) {
             MakeAndPushMessage(pfrom, NetMsgType::BLOCK, std::span{*block_data});
         } else {
