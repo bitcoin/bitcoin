@@ -121,6 +121,61 @@ static std::optional<std::string> WhitelistDenial(const std::string& user, const
     return strprintf("User is not permitted to call method %s", method);
 }
 
+/**
+ * Build the reply for a batch rejected by -rpcwhitelist.
+ *
+ * A batch containing a method the caller may not use is refused as a whole,
+ * before any of its requests run, so that a refused batch has no partial
+ * effect. Report that per request rather than as one error for the batch:
+ * `denied[i]` holds the reason request i was refused, or is empty if the
+ * request was only held back by another one. Batch clients can then read the
+ * reply in the shape they already expect and show a reason against each
+ * request.
+ */
+static UniValue WhitelistErrorBatch(const UniValue& valRequest, const std::vector<std::string>& denied, const JSONRPCRequest& jreq, HTTPStatusCode& status)
+{
+    // Name the denied methods in the errors for the held-back requests too,
+    // because clients like bitcoin-cli -getinfo show only the first error in
+    // a batch.
+    std::vector<std::string> denied_methods;
+    for (size_t i{0}; i < valRequest.size(); ++i) {
+        if (denied[i].empty()) continue;
+        const std::string& method{valRequest[i].find_value("method").get_str()};
+        if (std::ranges::find(denied_methods, method) == denied_methods.end()) denied_methods.push_back(method);
+    }
+    const std::string not_executed{strprintf("Not executed because the batch includes methods the user is not permitted to call: %s", util::Join(denied_methods, ", "))};
+
+    // Batches report every error in an HTTP 200 response, whatever the
+    // JSON-RPC version, like the batch execution loop in ExecuteHTTPRPC().
+    status = HTTP_OK;
+    UniValue reply(UniValue::VARR);
+    for (size_t i{0}; i < valRequest.size(); ++i) {
+        // Work on a copy, so the caller's request is unchanged.
+        JSONRPCRequest req{jreq};
+        UniValue error;
+        try {
+            req.parse(valRequest[i]);
+            error = denied[i].empty() ? JSONRPCError(RPC_REQUEST_NOT_EXECUTED, not_executed) :
+                                        JSONRPCError(RPC_METHOD_NOT_PERMITTED, denied[i]);
+        } catch (UniValue& e) {
+            // Report a malformed request's parse error, like the execution
+            // loop does, because it could not have run anyway. parse() reads
+            // the id and version before it validates the rest.
+            error = std::move(e);
+        } catch (const std::exception& e) {
+            error = JSONRPCError(RPC_PARSE_ERROR, e.what());
+        }
+        if (req.IsNotification()) continue;
+        reply.push_back(JSONRPCReplyObj(NullUniValue, std::move(error), req.id, req.m_json_version));
+    }
+    // Like the execution loop, send no response for a batch of notifications.
+    if (reply.empty() && !valRequest.empty()) {
+        status = HTTP_NO_CONTENT;
+        return {};
+    }
+    return reply;
+}
+
 UniValue ExecuteHTTPRPC(const UniValue& valRequest, JSONRPCRequest& jreq, HTTPStatusCode& status)
 {
     status = HTTP_OK;
@@ -153,26 +208,27 @@ UniValue ExecuteHTTPRPC(const UniValue& valRequest, JSONRPCRequest& jreq, HTTPSt
             return reply;
         // array of requests
         } else if (valRequest.isArray()) {
-            // Check authorization for each request's method
-            if (g_rpc_whitelist.contains(jreq.authUser) || g_rpc_whitelist_default) {
-                for (unsigned int reqIdx = 0; reqIdx < valRequest.size(); reqIdx++) {
-                    if (!valRequest[reqIdx].isObject()) {
-                        throw JSONRPCError(RPC_INVALID_REQUEST, "Invalid Request object");
-                    } else {
-                        const UniValue& request = valRequest[reqIdx].get_obj();
-                        // Parse method
-                        std::string strMethod = request.find_value("method").get_str();
-                        if (auto denial{WhitelistDenial(jreq.authUser, strMethod)}) {
-                            // Reject the whole batch, as before, rather than
-                            // running the permitted requests and reporting an
-                            // error for this one. Changing that would change
-                            // which requests execute, not just what is
-                            // reported.
-                            throw JSONRPCError(RPC_METHOD_NOT_PERMITTED, std::move(*denial));
-                        }
-                    }
+            // Check authorization for every request's method before running
+            // any of them, so a batch holding a method the user may not call
+            // has no effect at all. Collect all the denials rather than
+            // stopping at the first, so one reply can name every method the
+            // user needs to remove.
+            std::vector<std::string> denied(valRequest.size());
+            bool any_denied{false};
+            for (size_t i{0}; i < valRequest.size(); ++i) {
+                // Leave malformed requests to the execution loop below, which
+                // reports them per request. They cannot slip past this check,
+                // because parsing them there fails before the method would run.
+                const UniValue& request{valRequest[i]};
+                if (!request.isObject()) continue;
+                const UniValue& method{request.find_value("method")};
+                if (!method.isStr()) continue;
+                if (auto denial{WhitelistDenial(jreq.authUser, method.get_str())}) {
+                    denied[i] = std::move(*denial);
+                    any_denied = true;
                 }
             }
+            if (any_denied) return WhitelistErrorBatch(valRequest, denied, jreq, status);
 
             // Execute each request
             UniValue reply = UniValue::VARR;

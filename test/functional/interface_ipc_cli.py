@@ -24,16 +24,39 @@ class TestBitcoinIpcCli(BitcoinTestFramework):
         self.extra_init = [{"ipcbind": True}]
         super().setup_nodes()
 
-    def test_cli(self, args, error=None):
+    def test_cli(self, args, error=None, call=None, expected=None, returncode=None):
         # Intentionally set wrong RPC password so only IPC not HTTP connections work
-        args = [self.binary_paths.bitcoincli, f"-datadir={self.nodes[0].datadir_path}", "-rpcpassword=wrong"] + args + ["echo", "foo"]
+        args = [self.binary_paths.bitcoincli, f"-datadir={self.nodes[0].datadir_path}", "-rpcpassword=wrong"] + args + (call or ["echo", "foo"])
         result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         if error is None:
-            assert_equal(result.stdout, '[\n  "foo"\n]\n')
+            assert_equal(result.stdout, expected if expected is not None else '[\n  "foo"\n]\n')
         else:
             assert result.stdout.startswith(error), f"Output didn't start with the expected error {error!r}:\n{result.stdout}"
         assert_equal(result.stderr, None)
-        assert_equal(result.returncode, 0 if error is None else 1)
+        assert_equal(result.returncode, returncode if returncode is not None else (0 if error is None else 1))
+
+    def test_whitelist(self):
+        """A method the caller may not use is reported as a permission error over IPC.
+
+        The username bitcoin-cli sends over IPC is the -rpcuser value; it selects
+        which -rpcwhitelist applies and is not authenticated.
+        """
+        self.log.info("Testing -rpcwhitelist denials over IPC")
+        # -rpcwhitelistdefault=0 so the whitelist applies only to ipcuser and the
+        # test framework's own cookie connection keeps working.
+        self.restart_node(0, extra_args=["-rpcwhitelistdefault=0", "-rpcwhitelist=ipcuser:getblockcount"])
+        # Name the socket explicitly, because -ipcconnect=auto does not find it
+        # when the datadir path is too long and the socket is in a temporary
+        # directory instead.
+        args = [f"-ipcconnect=unix:{self.nodes[0].ipc_socket_path}", "-rpcuser=ipcuser"]
+        # A permitted method still works, so the whitelist is in force.
+        self.test_cli(args, call=["getblockcount"], expected="0\n")
+        # Before the denial carried a JSON-RPC error object, the reply body was
+        # empty over IPC and bitcoin-cli reported a JSON type error instead.
+        self.test_cli(args,
+                      error="error code: -38\nerror message:\nUser is not permitted to call method echo",
+                      returncode=38)
+        self.restart_node(0)
 
     def run_test(self):
         node = self.nodes[0]
@@ -62,6 +85,9 @@ class TestBitcoinIpcCli(BitcoinTestFramework):
             self.test_cli(["-ipcconnect=unix", "-rpcconnect=127.0.0.1"], ipc_http_conflict)
 
             self.stop_node(0)
+
+        self.start_node(0)
+        self.test_whitelist()
 
 
 if __name__ == '__main__':

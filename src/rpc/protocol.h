@@ -77,6 +77,7 @@ enum RPCErrorCode
     RPC_LIMIT_EXCEEDED              = -37, //!< A bounded resource is currently at capacity
     // RPC_METHOD_NOT_PERMITTED is internally mapped to HTTP_FORBIDDEN (403).
     RPC_METHOD_NOT_PERMITTED        = -38, //!< Caller is not permitted to call the method by -rpcwhitelist
+    RPC_REQUEST_NOT_EXECUTED        = -39, //!< Request was not run because another request in the same batch was refused
 
     //! Aliases for backward compatibility
     RPC_TRANSACTION_ERROR           = RPC_VERIFY_ERROR,
