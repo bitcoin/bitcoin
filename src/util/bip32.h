@@ -90,6 +90,8 @@ public:
     bool operator<(const KeyPathElement& other) const { return m_indexes < other.m_indexes; }
     bool operator==(const KeyPathElement& other) const { return m_indexes == other.m_indexes; }
 
+    void AddMultipathIndex(const SingleKeyPathElement& e) { m_indexes.emplace_back(e); }
+
     /** Serialize and Unserialize are for backwards compatibility and only serialize the first index.
      *  There is no serialization of multipath indexes
      */
