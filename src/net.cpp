@@ -91,6 +91,9 @@ static constexpr auto FEELER_SLEEP_WINDOW{1s};
 /** Frequency to attempt extra connections to reachable networks we're not connected to yet **/
 static constexpr auto EXTRA_NETWORK_PEER_INTERVAL{5min};
 
+/** Frequency of extra connections to replace peers not relaying txs **/
+static constexpr auto NO_TX_RELAY_REPLACEMENT_INTERVAL{5min};
+
 /** Used to pass flags to the Bind() function */
 enum BindFlags {
     BF_NONE         = 0,
@@ -2479,6 +2482,18 @@ void CConnman::SetTryNewOutboundPeer(bool flag)
     LogDebug(BCLog::NET, "setting try another outbound peer=%s\n", flag ? "true" : "false");
 }
 
+bool CConnman::GetReplaceNoTxRelayPeer() const
+{
+    return m_replace_no_tx_relay_peer;
+}
+
+void CConnman::SetReplaceNoTxRelayPeer(bool flag)
+{
+    if (m_replace_no_tx_relay_peer.exchange(flag) != flag) {
+        LogDebug(BCLog::NET, "setting replace no-tx-relay peer=%s", flag ? "true" : "false");
+    }
+}
+
 void CConnman::StartExtraBlockRelayPeers()
 {
     LogDebug(BCLog::NET, "enabling extra block-relay-only peers\n");
@@ -2637,6 +2652,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
     auto next_feeler = start + rng.rand_exp_duration(FEELER_INTERVAL);
     auto next_extra_block_relay = start + rng.rand_exp_duration(EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL);
     auto next_extra_network_peer{start + rng.rand_exp_duration(EXTRA_NETWORK_PEER_INTERVAL)};
+    auto next_no_tx_relay_replacement{start + rng.rand_exp_duration(NO_TX_RELAY_REPLACEMENT_INTERVAL)};
     const bool dnsseed = gArgs.GetBoolArg("-dnsseed", DEFAULT_DNSSEED);
     bool add_fixed_seeds = gArgs.GetBoolArg("-fixedseeds", DEFAULT_FIXEDSEEDS);
     const bool use_seednodes{!gArgs.GetArgs("-seednode").empty()};
@@ -2837,6 +2853,11 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
             // so low that less than MAX_OUTBOUND_FULL_RELAY_CONNECTIONS are made,
             // to prevent interactions with otherwise protected outbound peers.
             next_extra_network_peer = now + rng.rand_exp_duration(EXTRA_NETWORK_PEER_INTERVAL);
+        } else if (nOutboundFullRelay == m_max_outbound_full_relay &&
+                   now > next_no_tx_relay_replacement &&
+                   GetReplaceNoTxRelayPeer()) {
+            // The peer being replaced is evicted in EvictExtraOutboundPeers.
+            next_no_tx_relay_replacement = now + rng.rand_exp_duration(NO_TX_RELAY_REPLACEMENT_INTERVAL);
         } else {
             // skip to next iteration of while loop
             continue;

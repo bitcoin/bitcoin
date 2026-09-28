@@ -217,6 +217,11 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 connman.SetTryNewOutboundPeer(fuzzed_data_provider.ConsumeBool());
             },
             [&] {
+                const auto replace{fuzzed_data_provider.ConsumeBool()};
+                connman.SetReplaceNoTxRelayPeer(replace);
+                assert(connman.GetReplaceNoTxRelayPeer() == replace);
+            },
+            [&] {
                 const auto services{ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS)};
                 const auto before{connman.GetLocalServices()};
                 if (fuzzed_data_provider.ConsumeBool()) {
