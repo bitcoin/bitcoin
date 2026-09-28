@@ -150,6 +150,17 @@ def signtx(args):
                 if key == PSBT_IN_TAP_KEY_SIG or (isinstance(key, bytes) and key[0] == PSBT_IN_PARTIAL_SIG):
                     stripped_in.map[key] = value
         reply = stripped.to_base64()
+    elif mode in ("finalized", "partially_finalized"):
+        finalized = wallet.finalizepsbt(reply, extract=False)
+        assert finalized["complete"]
+        if mode == "finalized":
+            reply = finalized["psbt"]
+        else:
+            # Finalize only one input, leaving the rest unfinalized.
+            signed = PSBT.from_base64(reply)
+            assert len(signed.i) > 1
+            signed.i[0] = PSBT.from_base64(finalized["psbt"]).i[0]
+            reply = signed.to_base64()
 
     sys.stdout.write(json.dumps({"psbt": reply}))
 
