@@ -111,6 +111,17 @@ static CTransactionRef CreatePlaceholderTx(bool segwit)
     return ptx;
 }
 
+/** All parent txids of tx, sorted and unique: what validation reports when every input is missing. */
+static std::vector<Txid> AllParents(const CTransaction& tx)
+{
+    std::vector<Txid> parents;
+    parents.reserve(tx.vin.size());
+    for (const auto& input : tx.vin) parents.push_back(input.prevout.hash);
+    std::sort(parents.begin(), parents.end());
+    parents.erase(std::unique(parents.begin(), parents.end()), parents.end());
+    return parents;
+}
+
 BOOST_FIXTURE_TEST_CASE(tx_rejection_types, TestChain100Setup)
 {
     CTxMemPool& pool = *Assert(m_node.mempool);
@@ -136,7 +147,7 @@ BOOST_FIXTURE_TEST_CASE(tx_rejection_types, TestChain100Setup)
                 txdownload_impl.ConnectedPeer(nodeid, connection_info);
                 // Parent failure
                 state.Invalid(result, "");
-                const auto& [keep, unique_txids, package_to_validate] = txdownload_impl.MempoolRejectedTx(ptx_parent, state, nodeid, /*first_time_failure=*/true);
+                const auto& [keep, unique_txids, package_to_validate] = txdownload_impl.MempoolRejectedTx(ptx_parent, state, nodeid, /*first_time_failure=*/true, AllParents(*ptx_parent));
 
                 // No distinction between txid and wtxid caching for nonsegwit transactions, so only test these specific
                 // behaviors for segwit transactions.
@@ -154,7 +165,7 @@ BOOST_FIXTURE_TEST_CASE(tx_rejection_types, TestChain100Setup)
 
                 // Later, a child of this transaction fails for missing inputs
                 state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "");
-                txdownload_impl.MempoolRejectedTx(ptx_child, state, nodeid, /*first_time_failure=*/true);
+                txdownload_impl.MempoolRejectedTx(ptx_child, state, nodeid, /*first_time_failure=*/true, AllParents(*ptx_child));
 
                 // If parent (by txid) was rejected, child is too.
                 const bool parent_txid_rejected{segwit_parent ? expected_behavior.m_txid_in_rejects : expected_behavior.m_wtxid_in_rejects};
@@ -234,7 +245,7 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
         // If we don't expect to keep the orphan then expected_parents is 0.
         // !expect_keep_orphan => (expected_parents == 0)
         BOOST_CHECK(expect_keep_orphan || expected_parents == 0);
-        const auto ret_1p1c = txdownload_impl.MempoolRejectedTx(orphan, state_orphan, nodeid, /*first_time_failure=*/true);
+        const auto ret_1p1c = txdownload_impl.MempoolRejectedTx(orphan, state_orphan, nodeid, /*first_time_failure=*/true, AllParents(*orphan));
         std::string err_msg;
         const bool ok = CheckOrphanBehavior(txdownload_impl, orphan, ret_1p1c, err_msg,
                                             /*expect_orphan=*/expect_keep_orphan, /*expect_keep=*/true, /*expected_parents=*/expected_parents);
@@ -265,7 +276,7 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
             txdownload_impl.ConnectedPeer(nodeid, DEFAULT_CONN);
 
             txdownload_impl.RecentRejectsReconsiderableFilter().insert(parents[0]->GetHash().ToUint256());
-            const auto ret_1p1c_parent_reconsiderable = txdownload_impl.MempoolRejectedTx(orphan, state_orphan, nodeid, /*first_time_failure=*/true);
+            const auto ret_1p1c_parent_reconsiderable = txdownload_impl.MempoolRejectedTx(orphan, state_orphan, nodeid, /*first_time_failure=*/true, AllParents(*orphan));
             std::string err_msg;
             const bool ok = CheckOrphanBehavior(txdownload_impl, orphan, ret_1p1c_parent_reconsiderable, err_msg,
                                                 /*expect_orphan=*/true, /*expect_keep=*/true, /*expected_parents=*/num_parents);
@@ -283,7 +294,7 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
             }
             const unsigned int expected_parents = 1;
 
-            const auto ret_1recon_conf = txdownload_impl.MempoolRejectedTx(orphan, state_orphan, nodeid, /*first_time_failure=*/true);
+            const auto ret_1recon_conf = txdownload_impl.MempoolRejectedTx(orphan, state_orphan, nodeid, /*first_time_failure=*/true, AllParents(*orphan));
             std::string err_msg;
             const bool ok = CheckOrphanBehavior(txdownload_impl, orphan, ret_1recon_conf, err_msg,
                                                 /*expect_orphan=*/true, /*expect_keep=*/true, /*expected_parents=*/expected_parents);
@@ -305,7 +316,7 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
                 txdownload_impl.RecentRejectsFilter().insert(alreadyhave_parent->GetHash().ToUint256());
             }
 
-            const auto ret_2_problems = txdownload_impl.MempoolRejectedTx(orphan, state_orphan, nodeid, /*first_time_failure=*/true);
+            const auto ret_2_problems = txdownload_impl.MempoolRejectedTx(orphan, state_orphan, nodeid, /*first_time_failure=*/true, AllParents(*orphan));
             std::string err_msg;
             const bool ok = CheckOrphanBehavior(txdownload_impl, orphan, ret_2_problems, err_msg,
                                                 /*expect_orphan=*/false, /*expect_keep=*/true, /*expected_parents=*/0);
@@ -328,7 +339,7 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
             txdownload_impl.ConnectedPeer(nodeid, DEFAULT_CONN);
 
             txdownload_impl.RecentRejectsReconsiderableFilter().insert(parent_2outputs->GetHash().ToUint256());
-            const auto ret_1p1c_2reconsiderable = txdownload_impl.MempoolRejectedTx(orphan, state_orphan, nodeid, /*first_time_failure=*/true);
+            const auto ret_1p1c_2reconsiderable = txdownload_impl.MempoolRejectedTx(orphan, state_orphan, nodeid, /*first_time_failure=*/true, AllParents(*orphan));
             std::string err_msg;
             const bool ok = CheckOrphanBehavior(txdownload_impl, orphan, ret_1p1c_2reconsiderable, err_msg,
                                                 /*expect_orphan=*/true, /*expect_keep=*/true, /*expected_parents=*/1);
@@ -362,13 +373,13 @@ BOOST_FIXTURE_TEST_CASE(orphan_parent_request_survives_reject_from_other_peer, T
 
         // Honest peer delivers the child. It is an orphan; the parent will be requested by txid.
         BOOST_REQUIRE(txdownload_impl.ReceivedTx(honest, child).first);
-        txdownload_impl.MempoolRejectedTx(child, state_orphan, honest, /*first_time_failure=*/true);
+        txdownload_impl.MempoolRejectedTx(child, state_orphan, honest, /*first_time_failure=*/true, AllParents(*child));
         BOOST_REQUIRE(txdownload_impl.m_orphanage->HaveTxFromPeer(child->GetWitnessHash(), honest));
 
         // Before that request is sent, another peer (not an announcer of the child) delivers the
         // parent unsolicited and it fails for low feerate.
         BOOST_REQUIRE(txdownload_impl.ReceivedTx(other, parent).first);
-        const auto ret = txdownload_impl.MempoolRejectedTx(parent, state_reconsiderable, other, /*first_time_failure=*/true);
+        const auto ret = txdownload_impl.MempoolRejectedTx(parent, state_reconsiderable, other, /*first_time_failure=*/true, AllParents(*parent));
         BOOST_CHECK(!ret.m_package_to_validate.has_value());
         BOOST_CHECK(txdownload_impl.m_orphanage->HaveTxFromPeer(child->GetWitnessHash(), honest));
 

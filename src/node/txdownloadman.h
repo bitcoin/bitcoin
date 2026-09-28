@@ -11,6 +11,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 
 class CBlock;
 class CRollingBloomFilter;
@@ -144,8 +145,11 @@ public:
     /** Respond to successful transaction submission to mempool */
     void MempoolAcceptedTx(const CTransactionRef& tx);
 
-    /** Respond to transaction rejected from mempool */
-    RejectedTxTodo MempoolRejectedTx(const CTransactionRef& ptx, const TxValidationState& state, NodeId nodeid, bool first_time_failure);
+    /** Respond to transaction rejected from mempool
+     * @param[in] missing_parents  For TX_MISSING_INPUTS, the parents validation found missing (see
+     *                             MempoolAcceptResult::m_missing_parents); unused for other results. */
+    RejectedTxTodo MempoolRejectedTx(const CTransactionRef& ptx, const TxValidationState& state, NodeId nodeid, bool first_time_failure,
+                                     const std::vector<Txid>& missing_parents);
 
     /** Respond to package rejected from mempool */
     void MempoolRejectedPackage(const Package& package);
