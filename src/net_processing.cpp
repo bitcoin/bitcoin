@@ -3659,7 +3659,7 @@ void PeerManagerImpl::ProcessGetCFCheckPt(CNode& node, Peer& peer, DataStream& v
 
     // Populate headers.
     const CBlockIndex* block_index = stop_index;
-    for (int i = headers.size() - 1; i >= 0; i--) {
+    for (int i = int(headers.size()) - 1; i >= 0; i--) {
         int height = (i + 1) * CFCHECKPT_INTERVAL;
         block_index = block_index->GetAncestor(height);
 
