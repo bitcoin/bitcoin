@@ -1558,6 +1558,14 @@ void DescriptorScriptPubKeyMan::WriteDescriptor()
     }
 }
 
+void DescriptorScriptPubKeyMan::WriteDescriptor(WalletBatch& batch)
+{
+    LOCK(cs_desc_man);
+    if (!batch.WriteDescriptor(GetID(), m_wallet_descriptor)) {
+        throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
+    }
+}
+
 WalletDescriptor DescriptorScriptPubKeyMan::GetWalletDescriptor() const
 {
     return m_wallet_descriptor;

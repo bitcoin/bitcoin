@@ -222,6 +222,7 @@ ImportResult ImportDescriptor(CWallet& wallet, const ImportDescriptorRequest& re
 
     for (const auto& spkm : mp_spkms) {
         spkm.get().SetMultipathRelatives(mp_ids);
+        spkm.get().WriteDescriptor();
     }
 
     ImportResult result;
