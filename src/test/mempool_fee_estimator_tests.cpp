@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(calculate_max_weight_percentiles)
         } else if (i < 8) {
             chunk_feerates.emplace_back(medium_fee_rate);
             // Once 50% coverage is reached but 75% is not, only the p50 (conservative)
-            // percentile is populated; p75 (economical) is left empty for the caller to floor.
+            // percentile is populated; p75 (economical) is left empty.
             if (i < 7) {
                 const auto partial = MemPoolFeeRateEstimator::CalculateMaxWeightPercentiles(chunk_feerates);
                 BOOST_CHECK_EQUAL(partial.p50.fee, high_fee_rate.fee);
@@ -109,23 +109,22 @@ BOOST_AUTO_TEST_CASE(mempool_fee_rate_estimator_cache)
     MemPoolFeeRateEstimatorCache cache;
     const uint256 tip_hash{uint256::ONE};
     const uint256 next_tip_hash{uint256{2}};
-    const FeePerVSize conservative{2, 1};
-    const FeePerVSize economical{1, 1};
+    const FeePerVSize p50{2, 1};
 
     BOOST_CHECK(cache.IsStale());
-    BOOST_CHECK(!cache.GetCachedEstimate(tip_hash));
+    BOOST_CHECK(!cache.GetCachedPercentiles(tip_hash));
 
-    cache.Update(conservative, economical, tip_hash);
+    cache.Update({p50, FeePerVSize{}}, tip_hash);
     BOOST_CHECK(!cache.IsStale());
-    const auto cached{cache.GetCachedEstimate(tip_hash)};
+    const auto cached{cache.GetCachedPercentiles(tip_hash)};
     BOOST_REQUIRE(cached);
-    BOOST_CHECK(cached->m_conservative == conservative);
-    BOOST_CHECK(cached->m_economical == economical);
-    BOOST_CHECK(!cache.GetCachedEstimate(next_tip_hash));
+    BOOST_CHECK(cached->p50 == p50);
+    BOOST_CHECK(cached->p75.IsEmpty());
+    BOOST_CHECK(!cache.GetCachedPercentiles(next_tip_hash));
 
     clock += CACHE_LIFE + std::chrono::seconds{1};
     BOOST_CHECK(cache.IsStale());
-    BOOST_CHECK(!cache.GetCachedEstimate(tip_hash));
+    BOOST_CHECK(!cache.GetCachedPercentiles(tip_hash));
 }
 
 BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
@@ -242,21 +241,14 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
         LOCK(m_node.mempool->cs);
         BOOST_CHECK_EQUAL(m_node.mempool->GetTotalTxSize(), 0);
     }
-    // With an empty mempool there is nothing to build a feerate estimate from, so both
-    // estimates fall back to the floor fee rate: the higher of the minimum relay fee rate
-    // and the current mempool minimum fee rate.
-    const FeePerVSize floor{std::max(m_node.mempool->m_opts.min_relay_feerate, m_node.mempool->GetMinFee()).GetFeePerVSize()};
+    // With an empty mempool there is nothing to build a fee rate estimate from, so estimation
+    // returns an error rather than a fee rate.
+    const std::string sparse_err{strprintf("%s: Insufficient mempool transaction data",
+                                           FeeRateEstimatorTypeToString(FeeRateEstimatorType::MEMPOOL_POLICY))};
     {
         const auto result = mempool_estimator.EstimateFeeRate(/*conservative=*/true);
-        BOOST_REQUIRE(result.has_value());
-        BOOST_CHECK(result->feerate == floor);
-        BOOST_CHECK(result->feerate_estimator == FeeRateEstimatorType::MEMPOOL_POLICY);
-        BOOST_CHECK_EQUAL(result->returned_target, MEMPOOL_FEE_ESTIMATOR_MAX_TARGET);
-
-        // The floor estimate is cached like any other; a second call returns the same value.
-        const auto cached_result = mempool_estimator.EstimateFeeRate(/*conservative=*/true);
-        BOOST_REQUIRE(cached_result.has_value());
-        BOOST_CHECK(cached_result->feerate == floor);
+        BOOST_CHECK(!result);
+        BOOST_CHECK_EQUAL(result.error().reason, sparse_err);
     }
     TestMemPoolEntryHelper entry;
     const auto tx_vsize = entry.FromTx(MakeRandomTx()).GetTxSize();
@@ -265,7 +257,7 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
     const CAmount high_fee{CENT / 10};
     const CAmount very_high_fee{CENT};
     // A mempool that cannot fill 50% of a block leaves both percentiles empty,
-    // so both estimate still fall back to the floor.
+    // so estimation still returns an error.
     {
         // Add high_fee transactions until mempool weight exceeds 25% of DEFAULT_BLOCK_MAX_WEIGHT.
         {
@@ -274,14 +266,14 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
                 TryAddToMempool(*m_node.mempool, entry.Fee(high_fee).FromTx(MakeRandomTx()));
             }
         }
-        // Expire the cached floor estimate so the denser mempool is observed.
+        // Expire the cached percentiles so the denser mempool is observed.
         SetMockTime(GetTime<std::chrono::seconds>() + CACHE_LIFE + std::chrono::seconds{1});
         const auto result = mempool_estimator.EstimateFeeRate(/*conservative=*/true);
-        BOOST_REQUIRE(result.has_value());
-        BOOST_CHECK(result->feerate == floor);
+        BOOST_CHECK(!result);
+        BOOST_CHECK_EQUAL(result.error().reason, sparse_err);
     }
-    // A mempool that fills 50% of a block but not 75% has a conservative (p50)
-    // estimate, while the economical (p75) estimate falls back to the floor.
+    // A mempool that fills 50% of a block but not 75% leaves the p75 percentile empty,
+    // so both estimates return an error rather than serving only the conservative (p50) one.
     {
         // Add med_fee transactions until mempool weight exceeds 50% of DEFAULT_BLOCK_MAX_WEIGHT.
         {
@@ -293,10 +285,10 @@ BOOST_AUTO_TEST_CASE(MempoolFeeRateEstimator)
         SetMockTime(GetTime<std::chrono::seconds>() + CACHE_LIFE + std::chrono::seconds{1});
         const auto conservative = mempool_estimator.EstimateFeeRate(/*conservative=*/true);
         const auto economical = mempool_estimator.EstimateFeeRate(/*conservative=*/false);
-        BOOST_REQUIRE(conservative.has_value());
-        BOOST_REQUIRE(economical.has_value());
-        BOOST_CHECK(conservative->feerate == FeeFrac(med_fee, tx_vsize));
-        BOOST_CHECK(economical->feerate == floor);
+        BOOST_CHECK(!conservative);
+        BOOST_CHECK_EQUAL(conservative.error().reason, sparse_err);
+        BOOST_CHECK(!economical);
+        BOOST_CHECK_EQUAL(economical.error().reason, sparse_err);
     }
     // Mempool transactions are enough to provide both feerate estimates.
     {
