@@ -647,10 +647,10 @@ BOOST_AUTO_TEST_CASE(rpc_arg_helper)
         // Default arg
         {"def_uint64_t", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_UINT64_T}, ""},
         {"def_string", RPCArg::Type::STR, RPCArg::Default{DEFAULT_STRING}, ""},
-        {"def_bool", RPCArg::Type::BOOL, RPCArg::Default{DEFAULT_BOOL}, ""},
+        {"def_bool|legacy_def_bool", RPCArg::Type::BOOL, RPCArg::Default{DEFAULT_BOOL}, ""},
         // Optional arg without default
         {"opt_double", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, ""},
-        {"opt_string", RPCArg::Type::STR, RPCArg::Optional::OMITTED, ""}
+        {"opt_string", RPCArg::Type::STR, RPCArg::Optional::OMITTED, ""},
     };
 
     //! Check that `self.Arg` returns the same value as the `request.params` accessors
@@ -660,6 +660,10 @@ BOOST_AUTO_TEST_CASE(rpc_arg_helper)
             BOOST_CHECK_EQUAL(self.Arg<uint64_t>("def_uint64_t"), request.params[2].isNull() ? DEFAULT_UINT64_T : request.params[2].getInt<uint64_t>());
             BOOST_CHECK_EQUAL(self.Arg<std::string_view>("def_string"), request.params[3].isNull() ? DEFAULT_STRING : request.params[3].get_str());
             BOOST_CHECK_EQUAL(self.Arg<bool>("def_bool"), request.params[4].isNull() ? DEFAULT_BOOL : request.params[4].get_bool());
+            {
+                test_only_CheckFailuresAreExceptionsNotAborts mock_checks{};
+                BOOST_CHECK_EXCEPTION(self.Arg<bool>("legacy_def_bool"), NonFatalCheckError, HasReason{"Internal bug detected:"});
+            }
             if (!request.params[5].isNull()) {
                 BOOST_CHECK_EQUAL(self.MaybeArg<double>("opt_double").value(), request.params[5].get_real());
             } else {
