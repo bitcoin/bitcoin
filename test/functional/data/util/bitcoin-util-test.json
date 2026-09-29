@@ -436,6 +436,18 @@
     "description": "Create a new transaction with a single output script (OP_DROP) in a P2WSH"
   },
   { "exec": "./bitcoin-tx",
+    "args": ["-create", "outscript=0:OP_DROP:S:", "nversion=1"],
+    "return_code": 1,
+    "error_txt": "error: Invalid format, expected outscript=VALUE:SCRIPT[:FLAGS]",
+    "description": "Malformed outscript argument (too many separators). Expected to fail."
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:1:1"],
+    "return_code": 1,
+    "error_txt": "error: Invalid format, expected in=TXID:VOUT[:SEQUENCE_NUMBER]",
+    "description": "Malformed input argument (too many separators). Expected to fail."
+  },
+  { "exec": "./bitcoin-tx",
     "args": ["-json", "-create", "outscript=0:OP_DROP:W", "nversion=1"],
     "output_cmp": "txcreatescript3.json",
     "description": "Create a new transaction with a single output script (OP_DROP) in a P2WSH (output as json)"
