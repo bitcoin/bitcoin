@@ -735,7 +735,9 @@ TMPL_INST(nullptr, std::optional<std::string_view>, maybe_arg ? std::optional<st
 // Required arg or optional arg with default value.
 TMPL_INST(CheckRequiredOrDefault, const UniValue&, *CHECK_NONFATAL(maybe_arg););
 TMPL_INST(CheckRequiredOrDefault, bool, CHECK_NONFATAL(maybe_arg)->get_bool(););
+TMPL_INST(CheckRequiredOrDefault, double, CHECK_NONFATAL(maybe_arg)->get_real(););
 TMPL_INST(CheckRequiredOrDefault, int, CHECK_NONFATAL(maybe_arg)->getInt<int>(););
+TMPL_INST(CheckRequiredOrDefault, int64_t, CHECK_NONFATAL(maybe_arg)->getInt<int64_t>(););
 TMPL_INST(CheckRequiredOrDefault, uint64_t, CHECK_NONFATAL(maybe_arg)->getInt<uint64_t>(););
 TMPL_INST(CheckRequiredOrDefault, uint32_t, CHECK_NONFATAL(maybe_arg)->getInt<uint32_t>(););
 TMPL_INST(CheckRequiredOrDefault, std::string_view, CHECK_NONFATAL(maybe_arg)->get_str(););

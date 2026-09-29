@@ -349,9 +349,7 @@ static RPCMethod waitfornewblock()
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
-    int timeout = 0;
-    if (!request.params[0].isNull())
-        timeout = request.params[0].getInt<int>();
+    const int timeout{self.Arg<int>("timeout")};
     if (timeout < 0) throw JSONRPCError(RPC_MISC_ERROR, "Negative timeout");
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -408,12 +406,10 @@ static RPCMethod waitforblock()
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
-    int timeout = 0;
+    const int timeout{self.Arg<int>("timeout")};
 
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
 
-    if (!request.params[1].isNull())
-        timeout = request.params[1].getInt<int>();
     if (timeout < 0) throw JSONRPCError(RPC_MISC_ERROR, "Negative timeout");
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -470,12 +466,10 @@ static RPCMethod waitforblockheight()
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
-    int timeout = 0;
+    const int timeout{self.Arg<int>("timeout")};
 
     int height = request.params[0].getInt<int>();
 
-    if (!request.params[1].isNull())
-        timeout = request.params[1].getInt<int>();
     if (timeout < 0) throw JSONRPCError(RPC_MISC_ERROR, "Negative timeout");
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -677,9 +671,7 @@ static RPCMethod getblockheader()
 {
     uint256 hash(ParseHashV(request.params[0], "hash"));
 
-    bool fVerbose = true;
-    if (!request.params[1].isNull())
-        fVerbose = request.params[1].get_bool();
+    const bool fVerbose{self.Arg<bool>("verbose")};
 
     const CBlockIndex* pblockindex;
     const CBlockIndex* tip;
@@ -1105,7 +1097,7 @@ static RPCMethod gettxoutsetinfo()
     UniValue ret(UniValue::VOBJ);
 
     const CoinStatsHashType hash_type{ParseHashType(self.Arg<std::string_view>("hash_type"))};
-    bool index_requested = request.params[2].isNull() || request.params[2].get_bool();
+    const bool index_requested{self.Arg<bool>("use_index")};
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
@@ -1257,9 +1249,7 @@ static RPCMethod gettxout()
 
     auto hash{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
     COutPoint out{hash, request.params[1].getInt<uint32_t>()};
-    bool fMempool = true;
-    if (!request.params[2].isNull())
-        fMempool = request.params[2].get_bool();
+    const bool fMempool{self.Arg<bool>("include_mempool")};
 
     Chainstate& active_chainstate = chainman.ActiveChainstate();
     CCoinsViewCache* coins_view = &active_chainstate.CoinsTip();
@@ -2662,13 +2652,10 @@ static RPCMethod scanblocks()
         {
             LOCK(cs_main);
             CChain& active_chain = chainman.ActiveChain();
-            start_index = active_chain.Genesis();
+            start_index = active_chain[self.Arg<int>("start_height")];
             stop_block = active_chain.Tip(); // If no stop block is provided, stop at the chain tip.
-            if (!request.params[2].isNull()) {
-                start_index = active_chain[request.params[2].getInt<int>()];
-                if (!start_index) {
-                    throw JSONRPCError(RPC_MISC_ERROR, "Invalid start_height");
-                }
+            if (!start_index) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Invalid start_height");
             }
             if (!request.params[3].isNull()) {
                 stop_block = active_chain[request.params[3].getInt<int>()];
@@ -2932,10 +2919,7 @@ static RPCMethod getdescriptoractivity()
         }
     }
 
-    bool search_mempool = true;
-    if (!request.params[2].isNull()) {
-        search_mempool = request.params[2].get_bool();
-    }
+    const bool search_mempool{self.Arg<bool>("include_mempool")};
 
     if (search_mempool) {
         const CTxMemPool& mempool = EnsureMemPool(node);
