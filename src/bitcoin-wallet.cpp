@@ -11,6 +11,7 @@
 #include <common/license_info.h>
 #include <common/system.h>
 #include <compat/compat.h>
+#include <crypto/sha256.h>
 #include <interfaces/init.h>
 #include <key.h>
 #include <logging.h>
@@ -103,6 +104,7 @@ MAIN_FUNCTION
     }
 
     SetupEnvironment();
+    SHA256AutoDetect();
     RandomInit();
     try {
         if (const auto maybe_exit{WalletAppInit(args, argc, argv)}) return *maybe_exit;
