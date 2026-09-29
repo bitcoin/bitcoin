@@ -3443,7 +3443,7 @@ void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc, 
     AddScriptPubKeyMan(id, std::move(spk_manager));
 }
 
-DescriptorScriptPubKeyMan& CWallet::SetupDescriptorScriptPubKeyMan(WalletBatch& batch, const CExtKey& master_key, const OutputType& output_type, bool internal)
+DescriptorScriptPubKeyMan& CWallet::SetupDescriptorScriptPubKeyMan(WalletBatch& batch, const CExtKey& master_key, const OutputType& output_type, bool internal, std::optional<uint256> mp_external_rel)
 {
     AssertLockHeld(cs_wallet);
     if (IsLocked()) {
@@ -3452,6 +3452,20 @@ DescriptorScriptPubKeyMan& CWallet::SetupDescriptorScriptPubKeyMan(WalletBatch& 
     auto spk_manager = DescriptorScriptPubKeyMan::GenerateNewSingleSig(*this, batch, m_keypool_size, master_key, output_type, internal);
     DescriptorScriptPubKeyMan* out = spk_manager.get();
     uint256 id = spk_manager->GetID();
+
+    std::vector<uint256> mp_rels;
+    if (mp_external_rel.has_value()) mp_rels.emplace_back(mp_external_rel.value());
+    mp_rels.emplace_back(id);
+    out->SetMultipathRelatives(mp_rels);
+    out->WriteDescriptor(batch);
+    if (mp_external_rel.has_value()) {
+        ScriptPubKeyMan* ext_spkm = GetScriptPubKeyMan(mp_external_rel.value());
+        DescriptorScriptPubKeyMan* ext_d_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(ext_spkm);
+        Assert(ext_d_spkm);
+        ext_d_spkm->SetMultipathRelatives(mp_rels);
+        ext_d_spkm->WriteDescriptor(batch);
+    }
+
     AddScriptPubKeyMan(id, std::move(spk_manager));
     AddActiveScriptPubKeyManWithDb(batch, id, output_type, internal);
     return *out;
@@ -3460,9 +3474,13 @@ DescriptorScriptPubKeyMan& CWallet::SetupDescriptorScriptPubKeyMan(WalletBatch& 
 void CWallet::SetupDescriptorScriptPubKeyMans(WalletBatch& batch, const CExtKey& master_key)
 {
     AssertLockHeld(cs_wallet);
-    for (bool internal : {false, true}) {
-        for (OutputType t : OUTPUT_TYPES) {
-            SetupDescriptorScriptPubKeyMan(batch, master_key, t, internal);
+    for (OutputType t : OUTPUT_TYPES) {
+        std::optional<uint256> mp_rel;
+        for (bool internal : {false, true}) {
+            auto& spkm = SetupDescriptorScriptPubKeyMan(batch, master_key, t, internal, mp_rel);
+            if (!internal) {
+                mp_rel = spkm.GetID();
+            }
         }
     }
 }
