@@ -1298,12 +1298,12 @@ static RPCMethod verifychain()
     return RPCMethod{
         "verifychain",
         "Verifies blockchain database.\n",
-                {
-                    {"checklevel", RPCArg::Type::NUM, RPCArg::DefaultHint{strprintf("%d, range=0-4", DEFAULT_CHECKLEVEL)},
-                        strprintf("How thorough the block verification is:\n%s", MakeUnorderedList(CHECKLEVEL_DOC))},
-                    {"nblocks", RPCArg::Type::NUM, RPCArg::DefaultHint{strprintf("%d, 0=all", DEFAULT_CHECKBLOCKS)}, "The number of blocks to check."},
-                },
-                RPCResult{
+        {
+            {"checklevel", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_CHECKLEVEL},
+                strprintf("How thorough the block verification is (range 0-4):\n%s", MakeUnorderedList(CHECKLEVEL_DOC))},
+            {"nblocks", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_CHECKBLOCKS}, "The number of blocks to check (0=all)."},
+        },
+        RPCResult{
                     RPCResult::Type::BOOL, "", "Verification finished successfully. If false, check debug log for reason."},
                 RPCExamples{
                     HelpExampleCli("verifychain", "")
@@ -1311,8 +1311,8 @@ static RPCMethod verifychain()
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
-    const int check_level{request.params[0].isNull() ? DEFAULT_CHECKLEVEL : request.params[0].getInt<int>()};
-    const int check_depth{request.params[1].isNull() ? DEFAULT_CHECKBLOCKS : request.params[1].getInt<int>()};
+    const int check_level{self.Arg<int>("checklevel")};
+    const int check_depth{self.Arg<int>("nblocks")};
 
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
