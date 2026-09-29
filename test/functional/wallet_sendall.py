@@ -91,6 +91,19 @@ class SendallTest(BitcoinTestFramework):
         self.assert_balance_swept_completely(tx_from_wallet, pre_sendall_balance)
 
     @cleanup
+    def sendall_uppercase_address(self):
+        self.log.info("Testing sendall to an uppercase bech32 address without amount")
+        pre_sendall_balance = self.add_utxos([10, 11])
+        tx_from_wallet = self.test_sendall_success(sendall_args=[self.remainder_target.upper()])
+
+        self.assert_tx_has_outputs(tx=tx_from_wallet,
+            expected_outputs=[
+                {"address": self.remainder_target, "value": pre_sendall_balance + tx_from_wallet["fee"]}
+            ]
+        )
+        self.assert_balance_swept_completely(tx_from_wallet, pre_sendall_balance)
+
+    @cleanup
     def sendall_split(self):
         self.log.info("Testing sendall where two recipients have unspecified amount")
         pre_sendall_balance = self.add_utxos([1, 2, 3, 15])
@@ -522,6 +535,9 @@ class SendallTest(BitcoinTestFramework):
 
         # Basic sweep: everything to one address
         self.sendall_two_utxos()
+
+        # Sendall to an uppercase bech32 address
+        self.sendall_uppercase_address()
 
         # Split remainder to two addresses with equal amounts
         self.sendall_split()

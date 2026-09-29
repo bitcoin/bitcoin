@@ -1387,7 +1387,7 @@ RPCMethod sendall()
             PreventOutdatedOptions(options);
 
 
-            std::set<std::string> addresses_without_amount;
+            std::set<CTxDestination> addresses_without_amount;
             UniValue recipient_key_value_pairs(UniValue::VARR);
             const UniValue& recipients{request.params[0]};
             for (unsigned int i = 0; i < recipients.size(); ++i) {
@@ -1396,7 +1396,9 @@ RPCMethod sendall()
                     UniValue rkvp(UniValue::VOBJ);
                     rkvp.pushKV(recipient.get_str(), 0);
                     recipient_key_value_pairs.push_back(std::move(rkvp));
-                    addresses_without_amount.insert(recipient.get_str());
+                    // Store the decoded destination, so it matches the outputs below
+                    // also when the address was given in another case (e.g. uppercase bech32)
+                    addresses_without_amount.insert(DecodeDestination(recipient.get_str()));
                 } else {
                     recipient_key_value_pairs.push_back(recipient);
                 }
@@ -1560,8 +1562,7 @@ RPCMethod sendall()
             for (CTxOut& out : rawTx.vout) {
                 CTxDestination dest;
                 ExtractDestination(out.scriptPubKey, dest);
-                std::string addr{EncodeDestination(dest)};
-                if (addresses_without_amount.contains(addr)) {
+                if (addresses_without_amount.contains(dest)) {
                     out.nValue = per_output_without_amount;
                     if (!gave_remaining_to_first) {
                         out.nValue += remainder % addresses_without_amount.size();
@@ -1574,7 +1575,7 @@ RPCMethod sendall()
                 } else {
                     if (IsDust(out, pwallet->chain().relayDustFee())) {
                         // Specified output amount is dust
-                        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Specified output amount to %s is below dust threshold.", addr));
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Specified output amount to %s is below dust threshold.", EncodeDestination(dest)));
                     }
                 }
             }
