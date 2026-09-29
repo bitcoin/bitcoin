@@ -240,9 +240,8 @@ if [[ "${RUN_IWYU}" == true ]]; then
 
   run_iwyu() {
     mv "${BASE_BUILD_DIR}/$1" "${BASE_BUILD_DIR}/compile_commands.json"
-    {
-      python3 /include-what-you-use/mapgen/iwyu-mapgen-clang-intrin.py --lang imp "$("clang-${IWYU_LLVM_V}" -print-resource-dir)/include" > "${BASE_BUILD_DIR}/clang.intrinsics.imp"
-      python3 /include-what-you-use/iwyu_tool.py \
+    python3 /include-what-you-use/mapgen/iwyu-mapgen-clang-intrin.py --lang imp "$("clang-${IWYU_LLVM_V}" -print-resource-dir)/include" > "${BASE_BUILD_DIR}/clang.intrinsics.imp"
+    python3 /include-what-you-use/iwyu_tool.py \
              -p "${BASE_BUILD_DIR}" "${MAKEJOBS}" -- \
              -Xiwyu --cxx17ns \
              -Xiwyu --mapping_file="${BASE_ROOT_DIR}/contrib/devtools/iwyu/bitcoin.core.imp" \
@@ -253,8 +252,7 @@ if [[ "${RUN_IWYU}" == true ]]; then
              -Xiwyu --check_also='*/interfaces/*\.h' \
              -Xiwyu --check_also='*/primitives/transaction_identifier\.h' \
              -Xiwyu --check_also='*/rpc/protocol\.h' \
-             2>&1 || true
-    } | tee /tmp/iwyu_ci.out
+             2>&1 | tee /tmp/iwyu_ci.out
     python3 "/include-what-you-use/fix_includes.py" --nosafe_headers < /tmp/iwyu_ci.out
     python3 -c '
 import runpy
