@@ -50,7 +50,6 @@ static constexpr auto SELECT_TIMEOUT{50ms};
 //! Explicit alias for setting socket option methods.
 static constexpr int SOCKET_OPTION_TRUE{1};
 
-using common::InvalidPortErrMsg;
 using util::LineReader;
 using namespace bitcoin_http;
 
@@ -212,52 +211,66 @@ static void RejectRequest(std::unique_ptr<HTTPRequest> hreq)
 
 static std::vector<SocketAddr> GetBindAddresses()
 {
-    uint16_t http_port{static_cast<uint16_t>(gArgs.GetIntArg("-rpcport", BaseParams().RPCPort()))};
-    std::vector<SocketAddr> endpoints;
+    const uint16_t http_port{static_cast<uint16_t>(gArgs.GetIntArg("-rpcport", BaseParams().RPCPort()))};
+    const auto binds{gArgs.GetArgs("-rpcbind")};
+    const bool has_allowip{!gArgs.GetArgs("-rpcallowip").empty()};
 
-    // Determine what addresses to bind to
-    // To prevent misconfiguration and accidental exposure of the RPC
-    // interface, require -rpcallowip and -rpcbind to both be specified
-    // together. If either is missing, ignore both values, bind to localhost
-    // instead, and log warnings.
-    if (gArgs.GetArgs("-rpcallowip").empty() || gArgs.GetArgs("-rpcbind").empty()) { // Default to loopback if not allowing external IPs
-        endpoints.emplace_back(Lookup("::1", http_port, false).value());
-        endpoints.emplace_back(Lookup("127.0.0.1", http_port, false).value());
-        if (!gArgs.GetArgs("-rpcallowip").empty()) {
+    // Little lambda to construct loopback endpoints if -rpcbind is empty
+    const auto localhost_endpoints{[http_port]() -> std::vector<SocketAddr> {
+        return {SocketAddr{Lookup("::1", http_port, false).value()},
+                SocketAddr{Lookup("127.0.0.1", http_port, false).value()}};
+    }};
+
+    // Default to loopback when no rpc binds are provided
+    if (binds.empty()) {
+        if (has_allowip) {
             LogWarning("Option -rpcallowip was specified without -rpcbind; this doesn't usually make sense");
         }
-        if (!gArgs.GetArgs("-rpcbind").empty()) {
-            LogWarning("Option -rpcbind was ignored because -rpcallowip was not specified, refusing to allow everyone to connect");
-        }
-    } else { // Specific bind addresses
-        for (const std::string& strRPCBind : gArgs.GetArgs("-rpcbind")) {
-            if (IsUnixSocketValue(strRPCBind, /*allow_default=*/true)) {
-                // UNIX socket is a filesystem path, resolved like -ipcbind
-                const auto unix_addr{ResolveUnixSocketAddr(strRPCBind, gArgs.GetDataDirNet(), DEFAULT_HTTP_UNIX_SOCKET_NAME)};
-                if (!unix_addr) {
-                    LogError("Invalid unix socket path specified in -rpcbind: '%s' (%s)", strRPCBind, unix_addr.error());
-                    return {}; // empty, refuse to start with a misconfigured bind
-                }
-                endpoints.emplace_back(*unix_addr);
-                continue;
-            }
-            // IPv4 or IPv6 address
-            uint16_t port{http_port};
-            std::string host;
-            if (!SplitHostPort(strRPCBind, port, host)) {
-                LogError("%s\n", InvalidPortErrMsg("-rpcbind", strRPCBind).original);
+        return localhost_endpoints();
+    }
+
+    std::vector<SocketAddr> endpoints;
+    // Set before parsing or looking up, so that a failure can never make
+    // a TCP bind request look like a unix-socket-only configuration.
+    bool has_ip{false};
+
+    // Specific bind addresses provided by configuration
+    for (const std::string& bind : binds) {
+        if (IsUnixSocketValue(bind, /*allow_default=*/true)) {
+            // UNIX socket is a filesystem path, resolved like -ipcbind
+            const auto unix_addr{ResolveUnixSocketAddr(bind, gArgs.GetDataDirNet(), DEFAULT_HTTP_UNIX_SOCKET_NAME)};
+            if (!unix_addr) {
+                LogError("Invalid unix socket path specified in -rpcbind: '%s' (%s)", bind, unix_addr.error());
                 return {}; // empty, refuse to start with a misconfigured bind
             }
-            const std::optional<CService> addr{Lookup(strRPCBind, port, false)};
-            if (!addr) {
-                LogWarning("Could not bind RPC on address %s port %i: Address lookup failed.", strRPCBind, port);
-                continue;
-            }
-            if (addr->IsBindAny()) {
-                LogWarning("The RPC server is not safe to expose to untrusted networks such as the public internet");
-            }
-            endpoints.emplace_back(addr.value());
+            endpoints.emplace_back(*unix_addr);
+            continue;
         }
+        // IPv4 or IPv6 address
+        has_ip = true;
+        uint16_t port{http_port};
+        std::string host;
+        // Already validated by CheckHostPortOptions() in init.cpp
+        Assume(SplitHostPort(bind, port, host));
+        const std::optional<CService> addr{Lookup(host, port, false)};
+        if (!addr) {
+            LogWarning("Could not bind RPC on address %s port %i: Address lookup failed.", host, port);
+            continue;
+        }
+        if (addr->IsBindAny()) {
+            LogWarning("The RPC server is not safe to expose to untrusted networks such as the public internet");
+        }
+        endpoints.emplace_back(addr.value());
+    }
+
+    // Access to unix sockets is controlled by filesystem permissions, so if we
+    // are ONLY binding to unix sockets -rpcallowip is not required.
+    // Otherwise, to prevent misconfiguration and accidental exposure of the HTTP
+    // interface, require -rpcallowip whenever an IP address is bound.
+    // If the user is misconfigured we restrict HTTP to localhost and log a warning.
+    if (has_ip && !has_allowip) {
+        LogWarning("Option -rpcbind was ignored because -rpcallowip was not specified, refusing to allow everyone to connect");
+        return localhost_endpoints();
     }
     return endpoints;
 }
