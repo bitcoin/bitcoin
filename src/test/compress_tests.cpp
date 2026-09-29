@@ -176,7 +176,8 @@ BOOST_AUTO_TEST_CASE(compress_oversized_script)
     BOOST_CHECK(!restored.IsUnspendable());
     DataStream oversized_compressed{DataStream{} << Using<ScriptCompression>(CScript{} << std::vector(MAX_SCRIPT_SIZE + 1, uint8_t{0}))};
     oversized_compressed >> Using<ScriptCompression>(restored);
-    BOOST_CHECK(!restored.IsUnspendable()); // TODO: Oversized scripts should decode to an unspendable script
+    BOOST_CHECK(restored.IsUnspendable());
+    BOOST_CHECK(restored == CScript{OP_RETURN});
 }
 
 BOOST_AUTO_TEST_SUITE_END()
