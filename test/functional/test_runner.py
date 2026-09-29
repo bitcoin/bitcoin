@@ -185,6 +185,7 @@ BASE_SCRIPTS = [
     'rpc_invalid_address_message.py',
     'rpc_validateaddress.py',
     'interface_bitcoin_cli.py',
+    'interface_bitcoin_cli.py --httpunix',
     'feature_bind_extra.py',
     'feature_maxtipage.py',
     'feature_csv_activation.py',
