@@ -1910,6 +1910,19 @@ uint256 ComputeTaprootMerkleRoot(std::span<const unsigned char> control, const u
     return k;
 }
 
+TapLeafCandidateError CheckTapLeafCandidate(int leaf_ver, std::span<const unsigned char> control_block, std::span<const unsigned char> script, std::optional<uint256> merkle_root)
+{
+    if (leaf_ver < 0 || leaf_ver >= 0x100 || leaf_ver & 1) return TapLeafCandidateError::BAD_LEAF_VERSION;
+    if (control_block.size() < TAPROOT_CONTROL_BASE_SIZE || control_block.size() > TAPROOT_CONTROL_MAX_SIZE ||
+        ((control_block.size() - TAPROOT_CONTROL_BASE_SIZE) % TAPROOT_CONTROL_NODE_SIZE) != 0) return TapLeafCandidateError::BAD_CONTROL_BLOCK_SIZE;
+    if ((control_block[0] & TAPROOT_LEAF_MASK) != leaf_ver) return TapLeafCandidateError::LEAF_VERSION_MISMATCH;
+    if (merkle_root.has_value()) {
+        const uint256 leaf_hash{ComputeTapleafHash(static_cast<uint8_t>(leaf_ver), script)};
+        if (ComputeTaprootMerkleRoot(control_block, leaf_hash) != *merkle_root) return TapLeafCandidateError::MERKLE_ROOT_MISMATCH;
+    }
+    return TapLeafCandidateError::NONE;
+}
+
 static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, const std::vector<unsigned char>& program, const uint256& tapleaf_hash)
 {
     assert(control.size() >= TAPROOT_CONTROL_BASE_SIZE);
