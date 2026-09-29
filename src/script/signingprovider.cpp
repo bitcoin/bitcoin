@@ -531,17 +531,12 @@ std::optional<std::vector<std::tuple<int, std::vector<unsigned char>, int>>> Inf
     for (const auto& [key, control_blocks] : spenddata.scripts) {
         const auto& [script, leaf_ver] = key;
         for (const auto& control : control_blocks) {
-            // Skip script records with nonsensical leaf version.
-            if (leaf_ver < 0 || leaf_ver >= 0x100 || leaf_ver & 1) continue;
-            // Skip script records with invalid control block sizes.
-            if (control.size() < TAPROOT_CONTROL_BASE_SIZE || control.size() > TAPROOT_CONTROL_MAX_SIZE ||
-                ((control.size() - TAPROOT_CONTROL_BASE_SIZE) % TAPROOT_CONTROL_NODE_SIZE) != 0) continue;
-            // Skip script records that don't match the control block.
-            if ((control[0] & TAPROOT_LEAF_MASK) != leaf_ver) continue;
-            // Skip script records that don't match the provided Merkle root.
+            // Skip script records that could not be a genuine leaf of this tree: one with a
+            // nonsensical leaf version, an invalid control block size, a control block that
+            // doesn't match the leaf version, or a Merkle root that doesn't match the one
+            // provided in spenddata.
+            if (CheckTapLeafCandidate(leaf_ver, control, script, spenddata.merkle_root) != TapLeafCandidateError::NONE) continue;
             const uint256 leaf_hash = ComputeTapleafHash(leaf_ver, script);
-            const uint256 merkle_root = ComputeTaprootMerkleRoot(control, leaf_hash);
-            if (merkle_root != spenddata.merkle_root) continue;
 
             TreeNode* node = &root;
             size_t levels = (control.size() - TAPROOT_CONTROL_BASE_SIZE) / TAPROOT_CONTROL_NODE_SIZE;
