@@ -1796,7 +1796,7 @@ RPCMethod walletcreatefundedpsbt()
 
     PartiallySignedTransaction psbtx(CMutableTransaction(*txr.tx), psbt_version);
 
-    // Fill transaction with out data but don't sign
+    // Fill transaction with our data but don't sign
     const bool bip32derivs{self.Arg<bool>("bip32derivs")};
     bool complete = true;
     const auto err{wallet.FillPSBT(psbtx, {.sign = false, .bip32_derivs = bip32derivs}, complete)};
