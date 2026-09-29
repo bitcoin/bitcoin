@@ -1628,6 +1628,46 @@ BOOST_AUTO_TEST_CASE(script_HasValidOps)
     BOOST_CHECK(!script.HasValidOps());
     script = ToScript("88acc0"_hex); // Script with undefined opcode
     BOOST_CHECK(!script.HasValidOps());
+    script = CScript() << OP_NOP10; // MAX_OPCODE boundary is valid
+    BOOST_CHECK(script.HasValidOps());
+    script = ToScript("ba"_hex); // MAX_OPCODE + 1 is invalid
+    BOOST_CHECK(!script.HasValidOps());
+}
+
+BOOST_AUTO_TEST_CASE(script_GetOp_truncated)
+{
+    // Test that GetOp returns false on truncated OP_PUSHDATA opcodes
+    opcodetype opcode;
+    std::vector<unsigned char> data;
+
+    // Truncated OP_PUSHDATA1 (missing length byte)
+    CScript s1 = ToScript("4c"_hex);
+    CScript::const_iterator it1 = s1.begin();
+    BOOST_CHECK(!s1.GetOp(it1, opcode, data));
+
+    // Truncated OP_PUSHDATA2 (missing 2nd byte of length)
+    CScript s2 = ToScript("4d01"_hex);
+    CScript::const_iterator it2 = s2.begin();
+    BOOST_CHECK(!s2.GetOp(it2, opcode, data));
+
+    // Truncated OP_PUSHDATA4 (missing remaining length bytes)
+    CScript s4 = ToScript("4e0100"_hex);
+    CScript::const_iterator it4 = s4.begin();
+    BOOST_CHECK(!s4.GetOp(it4, opcode, data));
+}
+
+BOOST_AUTO_TEST_CASE(script_witness_ToString)
+{
+    CScriptWitness wit_empty;
+    BOOST_CHECK_EQUAL(wit_empty.ToString(), "CScriptWitness()");
+
+    CScriptWitness wit_single;
+    wit_single.stack = {{0x01, 0x02}};
+    BOOST_CHECK_EQUAL(wit_single.ToString(), "CScriptWitness(0102)");
+
+    CScriptWitness wit_multi;
+    wit_multi.stack = {{0x01, 0x02}, {0xab, 0xcd}};
+    BOOST_CHECK_EQUAL(wit_multi.ToString(), "CScriptWitness(0102, abcd)");
 }
 
 BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
