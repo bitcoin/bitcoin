@@ -345,7 +345,7 @@ RPCMethod listdescriptors()
     const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return UniValue::VNULL;
 
-    const bool priv = !request.params[0].isNull() && request.params[0].get_bool();
+    const bool priv{self.Arg<bool>("private")};
     if (wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && priv) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Can't get private descriptor string for watch-only wallets");
     }
