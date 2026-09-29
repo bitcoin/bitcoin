@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <rpc/register.h> // IWYU pragma: associated
+#include <util/fees.h>
 
 #include <common/messages.h>
 #include <core_io.h>
@@ -13,6 +13,7 @@
 #include <policy/fees/estimator_man.h>
 #include <policy/fees/mempool_estimator.h>
 #include <rpc/protocol.h>
+#include <rpc/register.h> // IWYU pragma: associated
 #include <rpc/request.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
@@ -21,13 +22,13 @@
 #include <univalue.h>
 #include <util/check.h>
 #include <util/expected.h>
-#include <util/fees.h>
 #include <validationinterface.h>
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <map>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -52,14 +53,14 @@ static RPCMethod estimatesmartfee()
               + FeeModesDetail(std::string("default mode will be used"))},
             {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
                 {
-                    {"fee_rate_estimator", RPCArg::Type::STR, RPCArg::Default{"none"},
+                    {"fee_rate_estimator", RPCArg::Type::STR, RPCArg::Default{"auto"},
                      "Selects which fee rate estimator to use.\n"
-                     "\"none\" returns the lower of the block policy and mempool estimates. If the mempool\n"
-                     "estimate is unavailable, it returns that error instead of falling back to the block\n"
-                     "policy estimate; use \"block_policy\" in that case to get the block policy estimate.\n"
+                     "\"auto\" (the default) combines both estimators, returning the lower of the block policy and\n"
+                     "mempool fee rate estimates. If the mempool fee rate estimator cannot produce an estimate, the\n"
+                     "block policy fee rate estimate is returned instead. An error is returned only if the block\n"
+                     "policy fee rate estimate is unavailable.\n"
                      "\"block_policy\" uses only the block policy fee rate estimator.\n"
-                     "\"mempool_policy\" uses only the mempool fee rate estimator.\n"
-                     "Unknown values are treated as \"none\"."},
+                     "\"mempool_policy\" uses only the mempool fee rate estimator."},
                     {"verbosity", RPCArg::Type::NUM, RPCArg::Default{1},
                      "1 returns feerate or errors. 2 also returns \"mempool_health_statistics\"."},
                 },
@@ -69,7 +70,7 @@ static RPCMethod estimatesmartfee()
             RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::NUM, "feerate", /*optional=*/true, "estimate fee rate in " + CURRENCY_UNIT + "/kvB (only present if no errors were encountered)"},
-                {RPCResult::Type::STR, "estimator", /*optional=*/true, "the fee estimator used to produce the result (only present for successful estimates when fee_rate_estimator is \"none\")"},
+                {RPCResult::Type::STR, "estimator", /*optional=*/true, "the fee estimator used to produce the result (only present for successful estimates when fee_rate_estimator is \"auto\")"},
                 {RPCResult::Type::ARR, "errors", /*optional=*/true, "Errors encountered during processing (if there are any)",
                     {
                         {RPCResult::Type::STR, "", "error"},
@@ -111,8 +112,12 @@ static RPCMethod estimatesmartfee()
                                 {"fee_rate_estimator", UniValueType(UniValue::VSTR)},
                                 {"verbosity", UniValueType(UniValue::VNUM)},
                             }, /*fAllowNull=*/true, /*fStrict=*/true);
-            const auto fee_rate_estimator{FeeRateEstimatorTypeFromString(
-                options["fee_rate_estimator"].isNull() ? "none" : options["fee_rate_estimator"].get_str())};
+            const auto parsed_fee_rate_estimator{FeeRateEstimatorTypeFromString(
+                options["fee_rate_estimator"].isNull() ? "auto" : options["fee_rate_estimator"].get_str())};
+            if (!parsed_fee_rate_estimator) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid fee_rate_estimator parameter, must be one of: \"auto\", \"block_policy\", \"mempool_policy\"");
+            }
+            const FeeRateEstimatorType fee_rate_estimator{*parsed_fee_rate_estimator};
             bool conservative{fee_mode == FeeEstimateMode::CONSERVATIVE};
             int verbosity{ParseVerbosity(options["verbosity"], /*default_verbosity=*/1, /*allow_bool=*/false)};
             UniValue result(UniValue::VOBJ);
@@ -127,7 +132,7 @@ static RPCMethod estimatesmartfee()
                 errors.push_back(estimate.error().reason);
                 result.pushKV("errors", std::move(errors));
             }
-            if (estimate && fee_rate_estimator == FeeRateEstimatorType::NONE) {
+            if (estimate && fee_rate_estimator == FeeRateEstimatorType::AUTO) {
                 result.pushKV("estimator", FeeRateEstimatorTypeToString(estimate->feerate_estimator));
             }
             const FeeRateEstimation& estimation{FeeRateEstimationRef(estimate)};
