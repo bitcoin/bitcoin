@@ -15,6 +15,7 @@
 #include <consensus/validation.h>
 #include <crypto/hex_base.h>
 #include <dbwrapper.h>
+#include <index/blockfilterindex.h>
 #include <init.h>
 #include <interfaces/chain.h>
 #include <kernel/caches.h>
@@ -345,6 +346,7 @@ ChainTestingSetup::~ChainTestingSetup()
 {
     if (m_node.scheduler) m_node.scheduler->stop();
     if (m_node.validation_signals) m_node.validation_signals->FlushBackgroundCallbacks();
+    DestroyAllBlockFilterIndexes();
     m_node.block_template_manager.reset();
     m_node.connman.reset();
     m_node.banman.reset();
