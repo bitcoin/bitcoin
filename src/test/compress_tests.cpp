@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(compress_oversized_script)
     // Test the fallback directly, since normal UTXO insertion excludes oversized scripts
     CScript restored{ParseScript("0x01")}; // Incomplete push: appending OP_RETURN would make it pushed data
     (DataStream{} << Using<ScriptCompression>(CScript{CScript() << std::vector(MAX_SCRIPT_SIZE + 1, uint8_t{0})})) >> Using<ScriptCompression>(restored);
-    BOOST_CHECK(!restored.IsUnspendable()); // TODO: Oversized scripts should decode to an unspendable script
+    BOOST_CHECK(restored.IsUnspendable());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
