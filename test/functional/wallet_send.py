@@ -222,7 +222,7 @@ class WalletSendTest(BitcoinTestFramework):
         self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), amount=1, fee_rate=9)
 
         self.restart_node(0, extra_args=['-maxfeerate=0.00001009'])
-        self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), amount=1, fee_rate=Decimal("1.009"))
+        self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), amount=1, fee_rate=Decimal("1.000"))
 
     def run_test(self):
         self.log.info("Setup wallets...")
