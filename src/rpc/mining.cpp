@@ -400,7 +400,7 @@ static RPCMethod generateblock()
         }
     }
 
-    const bool process_new_block{request.params[2].isNull() ? true : request.params[2].get_bool()};
+    const bool process_new_block{self.Arg<bool>("submit")};
     CBlock block;
 
     ChainstateManager& chainman = EnsureChainman(node);

@@ -1693,7 +1693,7 @@ static RPCMethod finalizepsbt()
     }
     PartiallySignedTransaction psbtx = *psbt_res;
 
-    bool extract = request.params[1].isNull() || (!request.params[1].isNull() && request.params[1].get_bool());
+    const bool extract{self.Arg<bool>("extract")};
 
     CMutableTransaction mtx;
     bool complete = FinalizeAndExtractPSBT(psbtx, mtx);
@@ -1794,7 +1794,7 @@ static RPCMethod converttopsbt()
 {
     // parse hex string from parameter
     CMutableTransaction tx;
-    bool permitsigdata = request.params[1].isNull() ? false : request.params[1].get_bool();
+    const bool permitsigdata{self.Arg<bool>("permitsigdata")};
     bool witness_specified = !request.params[2].isNull();
     bool iswitness = witness_specified ? request.params[2].get_bool() : false;
     const bool try_witness = witness_specified ? iswitness : true;
@@ -2117,8 +2117,8 @@ RPCMethod descriptorprocesspsbt()
     }
 
     std::optional<int> sighash_type = ParseSighashString(request.params[2]);
-    bool bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
-    bool finalize = request.params[4].isNull() ? true : request.params[4].get_bool();
+    const bool bip32derivs{self.Arg<bool>("bip32derivs")};
+    const bool finalize{self.Arg<bool>("finalize")};
 
     const PartiallySignedTransaction& psbtx = ProcessPSBT(
         request.params[0].get_str(),

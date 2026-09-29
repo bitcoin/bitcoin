@@ -126,7 +126,7 @@ static RPCMethod sendrawtransaction()
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
-            const CAmount max_burn_amount = request.params[2].isNull() ? 0 : AmountFromValue(request.params[2]);
+            const CAmount max_burn_amount{AmountFromValue(self.Arg<UniValue>("maxburnamount"))};
 
             CMutableTransaction mtx;
             if (!DecodeHexTx(mtx, request.params[0].get_str())) {
@@ -753,14 +753,8 @@ static RPCMethod getrawmempool()
         },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
-    bool fVerbose = false;
-    if (!request.params[0].isNull())
-        fVerbose = request.params[0].get_bool();
-
-    bool include_mempool_sequence = false;
-    if (!request.params[1].isNull()) {
-        include_mempool_sequence = request.params[1].get_bool();
-    }
+    const bool fVerbose{self.Arg<bool>("verbose")};
+    const bool include_mempool_sequence{self.Arg<bool>("mempool_sequence")};
 
     return MempoolToJSON(EnsureAnyMemPool(request.context), fVerbose, include_mempool_sequence);
 },
@@ -792,9 +786,7 @@ static RPCMethod getmempoolancestors()
         },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
-    bool fVerbose = false;
-    if (!request.params[1].isNull())
-        fVerbose = request.params[1].get_bool();
+    const bool fVerbose{self.Arg<bool>("verbose")};
 
     auto txid{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
 
@@ -853,9 +845,7 @@ static RPCMethod getmempooldescendants()
         },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
-    bool fVerbose = false;
-    if (!request.params[1].isNull())
-        fVerbose = request.params[1].get_bool();
+    const bool fVerbose{self.Arg<bool>("verbose")};
 
     auto txid{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
 
@@ -1449,7 +1439,7 @@ static RPCMethod submitpackage()
             }
 
             // Burn sanity check is run with no context
-            const CAmount max_burn_amount = request.params[2].isNull() ? 0 : AmountFromValue(request.params[2]);
+            const CAmount max_burn_amount{AmountFromValue(self.Arg<UniValue>("maxburnamount"))};
 
             std::vector<CTransactionRef> txns;
             txns.reserve(raw_transactions.size());
