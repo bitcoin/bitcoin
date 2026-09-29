@@ -360,6 +360,8 @@ class TestNode():
             return rpc
         else:  # mode==CLI
             extra_args = [arg for arg in self.extra_args if arg.startswith("-signetchallenge")]
+            if self.http_unix_socket_path:
+                host = 'unix:' + str(self.http_unix_socket_path)
             return TestNodeCLI(self.binaries)(
                 f"-datadir={self.datadir_path}",
                 f"-rpcclienttimeout={client_timeout}",
