@@ -153,7 +153,7 @@ target_link_libraries(bitcoinqt
     Boost::headers
     $<TARGET_NAME_IF_EXISTS:QRencode::QRencode>
     $<$<PLATFORM_ID:Darwin>:-framework\ AppKit>
-    $<$<CXX_COMPILER_ID:MSVC>:shlwapi>
+    $<$<BOOL:${MSVC}>:shlwapi>
 )
 
 if(ENABLE_WALLET)
