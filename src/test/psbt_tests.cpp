@@ -6,6 +6,7 @@
 #include <key.h>
 #include <psbt.h>
 #include <script/descriptor.h>
+#include <script/interpreter.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
@@ -310,6 +311,76 @@ BOOST_AUTO_TEST_CASE(update_psbt_output_taproot)
         auto out{test.UpdateOutput(has_input)};
         BOOST_CHECK(out.m_tap_bip32_paths.contains(XOnlyPubKey{test.pubkey}));
         BOOST_CHECK(out.hd_keypaths.empty());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(infer_taproot_tree)
+{
+    // InferTaprootTree() filters each (script, leaf_ver, control_block) candidate recorded for a
+    // taproot input through four independent structural checks (see the "Skip script records
+    // that ..." comments in script/signingprovider.cpp) before trusting it as a genuine leaf of
+    // the tree committed to by TaprootSpendData's Merkle root. This locks down that a candidate
+    // failing any one of those checks is rejected -- which, since the tree can then no longer be
+    // fully explored, currently surfaces as InferTaprootTree() returning std::nullopt for the
+    // whole input -- while an uncorrupted two-leaf tree is inferred successfully.
+    const int leaf_ver{TAPROOT_LEAF_TAPSCRIPT};
+    const std::vector<unsigned char> script1{ToByteVector(CScript() << OP_1)};
+    const std::vector<unsigned char> script2{ToByteVector(CScript() << OP_2)};
+
+    TaprootBuilder builder;
+    builder.Add(/*depth=*/1, script1, leaf_ver);
+    builder.Add(/*depth=*/1, script2, leaf_ver);
+    builder.Finalize(XOnlyPubKey::NUMS_H);
+    const XOnlyPubKey output{builder.GetOutput()};
+    const TaprootSpendData good{builder.GetSpendData()};
+
+    // Sanity check the fixture before corrupting it: both leaves are correctly inferred.
+    {
+        const auto inferred{InferTaprootTree(good, output)};
+        BOOST_REQUIRE(inferred.has_value());
+        BOOST_CHECK_EQUAL(inferred->size(), 2U);
+    }
+
+    const auto it1{good.scripts.find({script1, leaf_ver})};
+    BOOST_REQUIRE(it1 != good.scripts.end());
+    BOOST_REQUIRE_EQUAL(it1->second.size(), 1U);
+    const std::vector<unsigned char> good_control_block{*it1->second.begin()};
+    // One Merkle branch node (the sibling leaf, script2) on top of the base control block.
+    BOOST_REQUIRE_EQUAL(good_control_block.size(), TAPROOT_CONTROL_BASE_SIZE + TAPROOT_CONTROL_NODE_SIZE);
+
+    // Replace script1's only control block with a corrupted one (optionally also moving it to a
+    // corrupted leaf version), leaving script2's entry and the Merkle root / internal key
+    // untouched, and check that inference now fails: script1's node is never explored, so the
+    // overall tree is incomplete.
+    auto check_rejected = [&](std::vector<unsigned char> corrupted_control_block, int corrupted_leaf_ver) {
+        TaprootSpendData corrupted{good};
+        corrupted.scripts.erase({script1, leaf_ver});
+        corrupted.scripts[{script1, corrupted_leaf_ver}] = {std::move(corrupted_control_block)};
+        BOOST_CHECK(!InferTaprootTree(corrupted, output).has_value());
+    };
+
+    // Skip script records with nonsensical leaf version.
+    check_rejected(good_control_block, /*corrupted_leaf_ver=*/leaf_ver + 1);
+
+    // Skip script records with invalid control block sizes.
+    {
+        std::vector<unsigned char> too_short{good_control_block};
+        too_short.pop_back();
+        check_rejected(too_short, leaf_ver);
+    }
+
+    // Skip script records that don't match the control block.
+    {
+        std::vector<unsigned char> mismatched_leaf_version{good_control_block};
+        mismatched_leaf_version[0] ^= 0x04;
+        check_rejected(mismatched_leaf_version, leaf_ver);
+    }
+
+    // Skip script records that don't match the provided Merkle root.
+    {
+        std::vector<unsigned char> wrong_merkle_root{good_control_block};
+        wrong_merkle_root.back() ^= 0x01;
+        check_rejected(wrong_merkle_root, leaf_ver);
     }
 }
 
