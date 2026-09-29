@@ -216,10 +216,7 @@ static RPCMethod estimaterawfee()
             CHECK_NONFATAL(node.validation_signals)->SyncWithValidationInterfaceQueue();
             unsigned int max_target = fee_estimator_man.MaximumTarget();
             unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
-            double threshold = 0.95;
-            if (!request.params[1].isNull()) {
-                threshold = request.params[1].get_real();
-            }
+            const double threshold{self.Arg<double>("threshold")};
             if (threshold < 0 || threshold > 1) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid threshold");
             }
