@@ -134,6 +134,7 @@ inline constexpr unsigned int DEFAULT_TX_CONFIRM_TARGET = 6;
 //! -walletrbf default
 inline constexpr bool DEFAULT_WALLET_RBF = true;
 inline constexpr bool DEFAULT_WALLETBROADCAST = true;
+inline constexpr bool DEFAULT_WALLETREBROADCAST{false};
 inline constexpr bool DEFAULT_DISABLE_WALLET = false;
 inline constexpr bool DEFAULT_WALLETCROSSCHAIN = false;
 //! -maxtxfee default
@@ -325,9 +326,10 @@ private:
 
     /** The next scheduled rebroadcast of wallet transactions. */
     NodeClock::time_point m_next_resend{GetDefaultNextResend()};
-    /** Whether this wallet will submit newly created transactions to the node's mempool and
-     * prompt rebroadcasts (see ResendWalletTransactions()). */
+    /** Whether this wallet will submit newly created transactions to the node's mempool. */
     bool fBroadcastTransactions = false;
+    /** Whether this wallet will prompt rebroadcasts (@see MaybeResendWalletTxs()). */
+    bool m_rebroadcast_transactions{false};
     // Local time that the tip block was received. Used to schedule wallet rebroadcasts.
     std::atomic<int64_t> m_best_block_time {0};
 
@@ -842,6 +844,9 @@ public:
     bool GetBroadcastTransactions() const { return fBroadcastTransactions; }
     /** Set whether this wallet broadcasts transactions. */
     void SetBroadcastTransactions(bool broadcast) { fBroadcastTransactions = broadcast; }
+
+    /** Set whether this wallet rebroadcasts transactions. */
+    void SetRebroadcastTransactions(bool rebroadcast) { m_rebroadcast_transactions = rebroadcast; }
 
     /** Return whether transaction can be abandoned */
     bool TransactionCanBeAbandoned(const Txid& hashTx) const;
