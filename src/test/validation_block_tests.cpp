@@ -101,9 +101,6 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
     txCoinbase.vout[1].nValue = txCoinbase.vout[0].nValue;
     txCoinbase.vout[0].nValue = 0;
     txCoinbase.vin[0].scriptWitness.SetNull();
-    // Always pad with OP_0 as dummy extraNonce (also avoids bad-cb-length error for block <=16)
-    const int prev_height{WITH_LOCK(::cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(prev_hash)->nHeight)};
-    txCoinbase.vin[0].scriptSig = CScript{} << prev_height + 1 << OP_0;
     pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
 
     return pblock;
@@ -411,13 +408,13 @@ BOOST_FIXTURE_TEST_CASE(rebuild_block_for_parent_coinbase, RegTestingSetup)
     const int length{consensus.nSubsidyHalvingInterval};
     std::vector<std::shared_ptr<CBlock>> chain;
     BOOST_REQUIRE(BuildChain(m_node, genesis, CScript{} << OP_TRUE, length, chain));
-    BOOST_CHECK_EQUAL(chain[0]->vtx[0]->vin[0].scriptSig.size(), 1); // TODO: A fork coinbase must meet the minimum input-script length
+    BOOST_CHECK_EQUAL(chain[0]->vtx[0]->vin[0].scriptSig.size(), 2);
     for (int i{0}; i < length; ++i) {
         const auto& block{chain[i]};
         BOOST_CHECK_EQUAL(block->vtx[0]->nLockTime, i);
         BOOST_CHECK_EQUAL(block->vtx[0]->vout[0].nValue, GetBlockSubsidy(i + 1, consensus));
-        BOOST_REQUIRE(m_node.chainman->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr) == (i >= 16)); // TODO: Every generated fork block must be accepted
+        BOOST_REQUIRE(m_node.chainman->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
     }
-    BOOST_CHECK_EQUAL(WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Height()), 0); // TODO: The generated fork must connect through the halving
+    BOOST_CHECK_EQUAL(WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Height()), length);
 }
 BOOST_AUTO_TEST_SUITE_END()
