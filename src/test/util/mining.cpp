@@ -89,7 +89,8 @@ void SwitchBlockParent(CBlock& block, const CBlockIndex& parent, uint32_t new_ti
     const int height{parent.nHeight + 1};
     CMutableTransaction tx_coinbase{*block.vtx.at(0)};
     tx_coinbase.nLockTime = static_cast<uint32_t>(parent.nHeight);
-    tx_coinbase.vin.at(0).scriptSig = CScript{} << height;
+    // Always pad with OP_0 as dummy extraNonce (also avoids bad-cb-length error for block <=16)
+    tx_coinbase.vin.at(0).scriptSig = CScript{} << height << OP_0;
     tx_coinbase.vout.at(0).nValue = GetBlockSubsidy(height, params);
     block.vtx.at(0) = MakeTransactionRef(std::move(tx_coinbase));
     block.hashMerkleRoot = BlockMerkleRoot(block);
