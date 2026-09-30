@@ -100,7 +100,7 @@ class MultiWalletTest(BitcoinTestFramework):
         self.test_balances_and_fees(node, wallet_names, in_wallet_dir)
         w1, w2 = self.test_loading(node, wallet_names)
         self.test_creation(node, in_wallet_dir)
-        self.test_unloading(node, in_wallet_dir, w1, w2)
+        self.test_unloading(node, in_wallet_dir, w1)
         self.test_backup_and_restore(node, wallet_names, empty_wallet, empty_created_wallet)
         self.test_lock_file_closed(node)
 
@@ -156,14 +156,17 @@ class MultiWalletTest(BitcoinTestFramework):
         #   w7_symlink - to verify symlinked wallet path is initialized correctly
         #   w8         - to verify existing wallet file is loaded correctly. Not tested for SQLite wallets as this is a deprecated BDB behavior.
         #   ''         - to verify default wallet file is created correctly
+        #   encrypted  - to verify loading and unloading encrypted wallets.
         to_create = ['w1', 'w2', 'w3', 'w', 'sub/w5', 'w7_symlink']
         in_wallet_dir = [w.replace('/', os.path.sep) for w in to_create]  # Wallets in the wallet dir
         in_wallet_dir.append('w7')  # w7 is not loaded or created, but will be listed by listwalletdir because w7_symlink
         to_create.append(os.path.join(self.options.tmpdir, 'extern/w6'))  # External, not in the wallet dir, so we need to avoid adding it to in_wallet_dir
-        to_load = [self.default_wallet_name]
+        to_load = [self.default_wallet_name, "encrypted"]
         wallet_names = to_create + to_load  # Wallet names loaded in the wallet
         in_wallet_dir += to_load  # The loaded wallets are also in the wallet dir
         self.start_node(0)
+        node.createwallet("encrypted", passphrase=self.default_wallet_pass)
+        node.unloadwallet("encrypted")
         for wallet_name in to_create:
             node.createwallet(wallet_name)
         for wallet_name in to_load:
@@ -390,7 +393,7 @@ class MultiWalletTest(BitcoinTestFramework):
 
         assert new_wallet_name in node.listwallets()
 
-    def test_unloading(self, node, in_wallet_dir, w1, w2):
+    def test_unloading(self, node, in_wallet_dir, w1):
         self.log.info("Test dynamic wallet unloading")
 
         # Test `unloadwallet` errors
@@ -409,12 +412,13 @@ class MultiWalletTest(BitcoinTestFramework):
         w1.unloadwallet("w1")
         assert 'w1' not in node.listwallets()
 
-        # Successfully unload the wallet referenced by the request endpoint
+        assert 'encrypted' in node.listwallets()
+        encrypted_wallet = node.get_wallet_rpc("encrypted")
+        # Successfully unload the wallet referenced by a request endpoint
         # Also ensure unload works during walletpassphrase timeout
-        w2.encryptwallet('test')
-        w2.walletpassphrase('test', 1)
-        w2.unloadwallet()
-        ensure_for(duration=1.1, f=lambda: 'w2' not in node.listwallets())
+        encrypted_wallet.walletpassphrase(self.default_wallet_pass, 1)
+        encrypted_wallet.unloadwallet()
+        ensure_for(duration=1.1, f=lambda: 'encrypted' not in node.listwallets())
 
         # Successfully unload all wallets
         for wallet_name in node.listwallets():

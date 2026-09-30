@@ -46,6 +46,11 @@ class WalletEncryptionTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "passphrase cannot be empty", self.nodes[0].walletpassphrase, '', 1)
         assert_raises_rpc_error(-8, "passphrase cannot be empty", self.nodes[0].walletpassphrasechange, '', 'ff')
 
+        self.log.info("Test encryptwallet persistence")
+        self.nodes[0].unloadwallet(self.default_wallet_name)
+        self.nodes[0].loadwallet(self.default_wallet_name)
+        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].signmessage, address, msg)
+
         # Check that walletpassphrase works
         self.nodes[0].walletpassphrase(passphrase, 2)
         sig = self.nodes[0].signmessage(address, msg)
