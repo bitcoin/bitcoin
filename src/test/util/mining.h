@@ -28,8 +28,8 @@ struct NodeContext;
 std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const CChainParams& params);
 
 /**
- * Switch a block template to a different parent and timestamp.
- * Rebuild the difficulty, coinbase height, locktime and input script, then update the merkle root.
+ * Switch a coinbase-only block template to a different parent and timestamp.
+ * Rebuild the difficulty, coinbase height, locktime, subsidy and input script, then update the merkle root.
  */
 void SwitchBlockParent(CBlock& block, const CBlockIndex& parent, uint32_t new_time, const Consensus::Params& params);
 
