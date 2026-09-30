@@ -399,9 +399,9 @@ BOOST_FIXTURE_TEST_CASE(switch_block_parent_target, RegTestingSetup)
 
     const auto threshold{parent.nTime + uint32_t(2 * consensus.nPowTargetSpacing)};
     CBlock block{genesis};
-    SwitchBlockParent(block, parent, threshold);
-    BOOST_CHECK_EQUAL(block.nBits, genesis.nBits); // TODO: The child target must follow its actual parent and timestamp
-    SwitchBlockParent(block, parent, threshold + 1);
+    SwitchBlockParent(block, parent, threshold, consensus);
+    BOOST_CHECK_EQUAL(block.nBits, parent.nBits);
+    SwitchBlockParent(block, parent, threshold + 1, consensus);
     BOOST_CHECK_EQUAL(block.nBits, genesis.nBits);
 }
 
