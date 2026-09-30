@@ -1200,7 +1200,7 @@ class PSBTTest(BitcoinTestFramework):
         self.nodes[0].sendrawtransaction(finalized)
         self.generate(self.nodes[0], 6)
 
-        # Test additional args in walletcreatepsbt
+        # Test additional args in walletcreatefundedpsbt
         # Make sure both pre-included and funded inputs
         # have the correct sequence numbers based on
         # replaceable arg
