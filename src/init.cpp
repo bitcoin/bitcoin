@@ -1653,6 +1653,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     PeerManager::Options peerman_opts{};
     ApplyArgsManOptions(args, peerman_opts);
+    peerman_opts.get_block_filter_index = [](BlockFilterType filter_type) {
+        return GetBlockFilterIndex(filter_type);
+    };
 
     {
         // Read asmap file if configured or embedded asmap data and initialize

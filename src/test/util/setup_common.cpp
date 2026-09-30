@@ -16,6 +16,7 @@
 #include <crypto/hex_base.h>
 #include <dbwrapper.h>
 #include <init.h>
+#include <index/blockfilterindex.h>
 #include <interfaces/chain.h>
 #include <interfaces/mining.h>
 #include <kernel/caches.h>
@@ -400,6 +401,9 @@ TestingSetup::TestingSetup(
     PeerManager::Options peerman_opts;
     ApplyArgsManOptions(*m_node.args, peerman_opts);
     peerman_opts.deterministic_rng = true;
+    peerman_opts.get_block_filter_index = [](BlockFilterType filter_type) {
+        return GetBlockFilterIndex(filter_type);
+    };
     m_node.peerman = PeerManager::make(*m_node.connman, *m_node.addrman,
                                        m_node.banman.get(), *m_node.chainman,
                                        *m_node.mempool, *m_node.warnings,
