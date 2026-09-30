@@ -23,6 +23,7 @@
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
+#include <variant>
 #include <vector>
 
 extern int nConnectTimeout;
@@ -141,6 +142,91 @@ private:
  *          the resolved path is too long for sockaddr_un::sun_path
  */
 util::Expected<UnixSocketAddr, std::string> ResolveUnixSocketAddr(std::string_view value, const fs::path& datadir, std::string_view default_name);
+
+/**
+ * A socket endpoint that is either an IP address and port (CService) or a
+ * UNIX domain socket path (UnixSocketAddr), with a uniform API for creating,
+ * binding and connecting sockets. Unlike CService it carries no bitcoin p2p
+ * properties (network type, reachability, etc).
+ *
+ * A default-constructed SocketAddr holds an invalid CService.
+ */
+class SocketAddr
+{
+public:
+    SocketAddr() = default;
+    explicit SocketAddr(const CService& addr) : m_addr(addr) {}
+    explicit SocketAddr(const UnixSocketAddr& addr) : m_addr(addr) {}
+
+    [[nodiscard]] bool IsValid() const
+    {
+        return std::visit([](const auto& addr) { return addr.IsValid(); }, m_addr);
+    }
+
+    [[nodiscard]] bool IsIPv4() const
+    {
+        return std::visit([](const auto& addr) { return addr.IsIPv4(); }, m_addr);
+    }
+
+    [[nodiscard]] bool IsIPv6() const
+    {
+        return std::visit([](const auto& addr) { return addr.IsIPv6(); }, m_addr);
+    }
+
+    /** Whether this holds a UnixSocketAddr (valid or not) */
+    [[nodiscard]] bool IsUnix() const
+    {
+        return std::holds_alternative<UnixSocketAddr>(m_addr);
+    }
+
+    [[nodiscard]] sa_family_t GetSAFamily() const
+    {
+        return std::visit([](const auto& addr) { return addr.GetSAFamily(); }, m_addr);
+    }
+
+    [[nodiscard]] std::string ToStringAddrPort() const
+    {
+        return std::visit([](const auto& addr) { return addr.ToStringAddrPort(); }, m_addr);
+    }
+
+    /** The filesystem path for a UNIX socket address, without the "unix:" prefix. Empty for IP addresses. */
+    [[nodiscard]] std::string GetUnixPath() const
+    {
+        if (const auto* addr = std::get_if<UnixSocketAddr>(&m_addr)) {
+            return addr->GetDestString();
+        }
+        return {};
+    }
+
+    bool GetSockAddr(struct sockaddr* paddr, socklen_t* addrlen) const
+    {
+        return std::visit([paddr, addrlen](const auto& addr) { return addr.GetSockAddr(paddr, addrlen); }, m_addr);
+    }
+
+    /**
+     * Set this address from a sockaddr, selecting the alternative by
+     * sa_family. On failure the current value is left unchanged.
+     */
+    bool SetSockAddr(const struct sockaddr* paddr, socklen_t addrlen);
+
+    /** Connect directly (no proxy) with the default -timeout */
+    std::unique_ptr<Sock> Connect() const;
+    /** Connect directly (no proxy). Returns nullptr if invalid or on failure. */
+    std::unique_ptr<Sock> Connect(std::chrono::milliseconds timeout) const;
+    /**
+     * The IP address without the port, for subnet matching. Returns a
+     * default (invalid) CNetAddr for a UNIX socket address.
+     */
+    [[nodiscard]] CNetAddr GetCNetAddr() const;
+    /**
+     * A hostname suitable for an HTTP Host header: the IP address without
+     * port (IPv6 is not bracketed), or "localhost" for a UNIX socket address.
+     */
+    [[nodiscard]] std::string GetHost() const;
+
+private:
+    std::variant<CService, UnixSocketAddr> m_addr;
+};
 
 class Proxy
 {
