@@ -385,6 +385,26 @@ BOOST_AUTO_TEST_CASE(witness_commitment_index)
 
     BOOST_CHECK_EQUAL(GetWitnessCommitmentIndex(pblock), 2);
 }
+
+BOOST_FIXTURE_TEST_CASE(switch_block_parent_target, RegTestingSetup)
+{
+    const auto& consensus{Params().GetConsensus()};
+    const auto& genesis{Params().GenesisBlock()};
+    const auto parent_hash{genesis.GetHash()};
+    CBlockIndex parent{genesis};
+    parent.phashBlock = &parent_hash;
+    // Regtest disables retargeting, so this synthetic target cannot occur in a real regtest chain.
+    // Its testnet-style 20-minute min-difficulty rule still applies, restoring the pow limit only above the threshold.
+    --parent.nBits;
+
+    const auto threshold{uint32_t(2 * consensus.nPowTargetSpacing)};
+    for (auto delay : {threshold, threshold + 1}) {
+        CBlock block{genesis};
+        SwitchBlockParent(block, parent, parent.nTime + delay);
+        BOOST_CHECK_EQUAL(block.nBits, genesis.nBits); // TODO: The child target must follow its actual parent and timestamp
+    }
+}
+
 BOOST_FIXTURE_TEST_CASE(switch_block_parent_coinbase, RegTestingSetup)
 {
     const auto& consensus{Params().GetConsensus()};
