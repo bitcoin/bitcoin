@@ -1078,6 +1078,44 @@ BOOST_AUTO_TEST_CASE(btck_check_block_context_free)
     auto truncated_block_data = hex_string_to_byte_vec("010000006fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000982051fd1e4ba744bbbe680e1fee14677ba1a3c3540bf7b1cdb606e857233e0e61bc6649ffff001d01e36299");
     BOOST_CHECK_EXCEPTION(Block{truncated_block_data}, std::runtime_error,
                           HasReason{"failed to instantiate btck object"});
+
+    // A block that passed the checks under one set of consensus parameters
+    // must still be checked against the parameters of a later call.
+    ChainParams regtest_params{ChainType::REGTEST};
+    Block regtest_block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[0])};
+    BOOST_CHECK(!regtest_block.Check(consensus_params, BlockCheckFlags::POW, state));
+    BOOST_CHECK(regtest_block.Check(regtest_params.GetConsensusParams(), BlockCheckFlags::ALL, state));
+    BOOST_CHECK(!regtest_block.Check(consensus_params, BlockCheckFlags::ALL, state));
+    BOOST_CHECK(state.GetBlockValidationResult() == BlockValidationResult::INVALID_HEADER);
+}
+
+BOOST_AUTO_TEST_CASE(btck_process_block_signet_challenge)
+{
+    // Signet block 1 with a valid proof of work and no signet solution, so it
+    // satisfies the OP_TRUE challenge but not the OP_RETURN challenge.
+    Block block{hex_string_to_byte_vec("00000020f61eee3b63a380a477a063af32b2bbc97c9ff9f01f2c4225e973988108000000581a619dd0f9a719e089efd7b72c5b5060436f07d75bf3914fc6dd320d8cbe6d00105e5fae77031ec7bc0b0001010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff025100ffffffff02000000000000000001510000000000000000266a24aa21a9ede2f61c3f71d1defd3fa999dfa36953755c690689799962b48bebd836974e8cf90120000000000000000000000000000000000000000000000000000000000000000000000000")};
+
+    auto process{[&](std::string_view challenge_hex, std::string dir_name) {
+        auto test_directory{TestDirectory{dir_name}};
+        ChainParams params{hex_string_to_byte_vec(challenge_hex)};
+        ContextOptions options{};
+        options.SetChainParams(params);
+        options.SetNotifications(std::make_shared<TestKernelNotifications>());
+        Context context{options};
+        auto chainman{create_chainman(test_directory, /*reindex=*/false, /*wipe_chainstate=*/false,
+                                      /*block_tree_db_in_memory=*/true, /*chainstate_db_in_memory=*/true, context)};
+        bool new_block{false};
+        chainman->ProcessBlock(block, &new_block);
+        return chainman->GetChain().Height();
+    }};
+
+    BOOST_CHECK_EQUAL(process("51", "signet_op_true_test_bitcoin_kernel"), 1);
+    // The same block object must be rejected by a signet with another challenge.
+    BOOST_CHECK_EQUAL(process("6a", "signet_op_return_test_bitcoin_kernel"), 0);
+    BlockValidationState state;
+    ChainParams op_return_params{hex_string_to_byte_vec("6a")};
+    BOOST_CHECK(!block.Check(op_return_params.GetConsensusParams(), BlockCheckFlags::ALL, state));
+    BOOST_CHECK(state.GetBlockValidationResult() == BlockValidationResult::CONSENSUS);
 }
 
 BOOST_AUTO_TEST_CASE(btck_chainman_mainnet_tests)
