@@ -8,6 +8,8 @@
 #include <compat/compat.h>
 #include <netaddress.h>
 #include <serialize.h>
+#include <util/expected.h>
+#include <util/fs.h>
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
 
@@ -17,8 +19,10 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 extern int nConnectTimeout;
@@ -53,9 +57,90 @@ static inline bool operator&(ConnectionDirection a, ConnectionDirection b) {
  *
  * @param      name     The string provided by the user representing a local path
  *
- * @returns Whether the string has proper format, length, and points to an existing file path
+ * @returns Whether the string has the "unix:" prefix and a path short enough
+ *          to fit in sockaddr_un::sun_path. The filesystem is not consulted.
  */
 bool IsUnixSocketPath(const std::string& name);
+
+/**
+ * Whether an option value names a unix domain socket rather than a host[:port].
+ * Purely syntactic: platform support and path length are not checked. Callers
+ * should classify a value with this before attempting to parse it as host:port,
+ * because some unix socket values (e.g. "unix:8080") are also valid host:port.
+ *
+ * @param[in] value          The option value
+ * @param[in] allow_default  Also accept the bare keyword "unix", meaning a default path
+ */
+bool IsUnixSocketValue(std::string_view value, bool allow_default);
+
+/**
+ * A UNIX domain socket address (a local filesystem path), exposing the subset
+ * of the CService API needed to create, bind and connect sockets.
+ *
+ * Like CService, an instance may be invalid: constructing from a string that
+ * is not a valid "unix:" path (see IsUnixSocketPath()) yields an object for
+ * which IsValid() returns false. Callers must check IsValid() before use.
+ */
+class UnixSocketAddr
+{
+public:
+    UnixSocketAddr() = default;
+    /** @param[in] path Full address string including the "unix:" prefix */
+    explicit UnixSocketAddr(std::string path) : m_path(std::move(path)) {}
+
+    [[nodiscard]] bool IsValid() const { return IsUnixSocketPath(m_path); }
+    [[nodiscard]] sa_family_t GetSAFamily() const { return AF_UNIX; }
+    /** The full address string including the "unix:" prefix.
+     *  Unix sockets don't have a port but we like to match the CService API. */
+    [[nodiscard]] std::string ToStringAddrPort() const { return m_path; }
+    /**
+     * Fill a sockaddr_un with this address.
+     * @param[out]    paddr   Buffer to fill, must be at least sizeof(sockaddr_un)
+     * @param[in,out] addrlen Capacity of paddr on input, bytes written on output
+     * @returns false if the address is invalid or the buffer is too small
+     */
+    bool GetSockAddr(struct sockaddr* paddr, socklen_t* addrlen) const;
+    /**
+     * Set this address from a sockaddr_un as returned by accept().
+     * @returns false if the family or length is wrong, or if the path fills
+     *          sun_path entirely leaving no room for a terminator
+     */
+    bool SetSockAddr(const struct sockaddr* paddr, socklen_t addrlen);
+    /** The filesystem path without the "unix:" prefix, or "" if invalid */
+    [[nodiscard]] std::string GetDestString() const
+    {
+        if (!IsValid()) return {};
+        return m_path.substr(ADDR_PREFIX_UNIX.length());
+    }
+    [[nodiscard]] bool IsIPv4() const { return false; }
+    [[nodiscard]] bool IsIPv6() const { return false; }
+
+    /**
+     * Prepare the filesystem for bind(): create missing parent directories and
+     * remove a stale socket file left by a previous run. Fails if the path
+     * exists and is anything other than a socket, so that a misconfigured path
+     * never deletes a user's file.
+     * @returns an error message on failure
+     */
+    util::Expected<void, std::string> PreparePath() const;
+
+private:
+    std::string m_path;
+};
+
+/**
+ * Resolve a unix socket option value the same way as -ipcbind:
+ * "unix" or "unix:" select <datadir>/<default_name>, a relative "unix:<path>"
+ * is interpreted relative to datadir, and an absolute "unix:<path>" is used as is.
+ *
+ * @param[in] value         The option value, see IsUnixSocketValue()
+ * @param[in] datadir       Directory that relative paths and the default name are resolved against
+ * @param[in] default_name  File name used for the bare "unix" keyword
+ * @returns the resolved address, or an error message if value is not a unix
+ *          socket value, unix sockets are not supported on this platform, or
+ *          the resolved path is too long for sockaddr_un::sun_path
+ */
+util::Expected<UnixSocketAddr, std::string> ResolveUnixSocketAddr(std::string_view value, const fs::path& datadir, std::string_view default_name);
 
 class Proxy
 {

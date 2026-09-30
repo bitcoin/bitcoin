@@ -16,12 +16,17 @@
 #include <util/string.h>
 #include <util/time.h>
 
+#include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <functional>
 #include <limits>
 #include <memory>
+#include <string_view>
+#include <system_error>
 
 #ifdef HAVE_SOCKADDR_UN
 #include <sys/un.h>
@@ -239,6 +244,12 @@ bool IsUnixSocketPath(const std::string& name)
 #else
     return false;
 #endif
+}
+
+bool IsUnixSocketValue(std::string_view value, bool allow_default)
+{
+    if (value.starts_with(ADDR_PREFIX_UNIX)) return true;
+    return allow_default && value == "unix";
 }
 
 /** SOCKS version */
@@ -675,6 +686,125 @@ std::unique_ptr<Sock> ConnectDirectly(const CService& dest,
     }
 
     return sock;
+}
+
+bool UnixSocketAddr::GetSockAddr(struct sockaddr* paddr, socklen_t* addrlen) const
+{
+#ifdef HAVE_SOCKADDR_UN
+    if (!IsValid()) return false;
+    if (*addrlen < static_cast<socklen_t>(sizeof(sockaddr_un))) return false;
+    *addrlen = sizeof(sockaddr_un);
+    auto* paddrun{reinterpret_cast<sockaddr_un*>(paddr)};
+    std::memset(paddrun, 0, *addrlen);
+    paddrun->sun_family = AF_UNIX;
+    const std::string path{GetDestString()};
+    // leave the last char in sun_path[] to be always '\0'
+    std::memcpy(paddrun->sun_path, path.c_str(), std::min(sizeof(paddrun->sun_path) - 1, path.length()));
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool UnixSocketAddr::SetSockAddr(const struct sockaddr* paddr, socklen_t addrlen)
+{
+#ifdef HAVE_SOCKADDR_UN
+    // Where does the filesystem path start inside the struct
+    constexpr size_t offset = offsetof(sockaddr_un, sun_path);
+    // Caller provided an invalid-sized sockaddr
+    if (addrlen < offset || addrlen > sizeof(sockaddr_un)) return false;
+    if (paddr->sa_family != AF_UNIX) return false;
+    // Extract the filesystem path from the sockaddr
+    const auto* sun = reinterpret_cast<const sockaddr_un*>(paddr);
+    // The path may or may not be NUL-terminated within addrlen, and may be
+    // followed by any number of NUL padding bytes (e.g. from GetSockAddr()).
+    const size_t len{strnlen(sun->sun_path, addrlen - offset)};
+    std::string path;
+    if (len == 0) {
+        // Common outcome because Unix sockets can connect() without bind() and
+        // on Linux because abstract-namespace clients have a leading NUL in
+        // sun_path, so there is no user-visible source address.
+        // This only affects how a remote client is displayed in logs.
+        path = "unix";
+    } else {
+        path = std::string(sun->sun_path, len);
+        // The client path goes into logs and JSONRPCRequest::peerAddr; reject
+        // control characters a local client could place there to forge log
+        // lines (e.g. a Linux abstract-namespace name with a \0 prefix).
+        if (std::any_of(path.begin(), path.end(), [](char c) { return c < 0x20 || c == 0x7F; })) {
+            path = "unix";
+        }
+    }
+    // Restore the "unix:" prefix to pass IsValid() and IsUnixSocketPath()
+    path = ADDR_PREFIX_UNIX + path;
+    // Reject paths that fill sun_path entirely with no room for a terminator
+    if (!IsUnixSocketPath(path)) return false;
+    *this = UnixSocketAddr(path);
+    return true;
+#else
+    return false;
+#endif
+}
+
+util::Expected<UnixSocketAddr, std::string> ResolveUnixSocketAddr(std::string_view value, const fs::path& datadir, std::string_view default_name)
+{
+    if (!IsUnixSocketValue(value, /*allow_default=*/true)) {
+        return util::Unexpected{strprintf("'%s' is not a unix socket address", value)};
+    }
+#ifdef HAVE_SOCKADDR_UN
+    // "unix" and "unix:" both select the default name, as in -ipcbind
+    const std::string_view name{value.size() <= ADDR_PREFIX_UNIX.size() ? default_name : value.substr(ADDR_PREFIX_UNIX.size())};
+    // fs::path::operator/ discards datadir when name is an absolute path
+    const fs::path path{datadir / fs::PathFromString(std::string{name})};
+    UnixSocketAddr addr{ADDR_PREFIX_UNIX + fs::PathToString(path)};
+    if (!addr.IsValid()) {
+        return util::Unexpected{strprintf("path %s exceeds the maximum unix socket path length of %u bytes",
+                                          fs::quoted(fs::PathToString(path)), sizeof(sockaddr_un::sun_path) - 1)};
+    }
+    return addr;
+#else
+    return util::Unexpected{std::string{"unix sockets are not supported on this platform"}};
+#endif
+}
+
+util::Expected<void, std::string> UnixSocketAddr::PreparePath() const
+{
+#ifdef HAVE_SOCKADDR_UN
+    if (!IsValid()) return util::Unexpected{"invalid unix socket path"};
+    const fs::path path{fs::PathFromString(GetDestString())};
+    std::error_code ec;
+
+    // Adapted from src/ipc/process.cpp ProcessImpl::bind()
+    if (path.has_parent_path()) {
+        fs::create_directories(path.parent_path(), ec);
+        if (ec) {
+            return util::Unexpected{strprintf("cannot create directory %s: %s",
+                                              fs::PathToString(path.parent_path()), ec.message())};
+        }
+    }
+
+    // Use symlink_status so that a symlink is examined itself rather than followed
+    const fs::file_type type{fs::symlink_status(path, ec).type()};
+    if (type == fs::file_type::not_found) return {};
+    if (ec) {
+        return util::Unexpected{strprintf("cannot stat %s: %s", fs::PathToString(path), ec.message())};
+    }
+    if (type != fs::file_type::socket) {
+        // Never delete something that isn't a socket; the user may have given
+        // the wrong path or something else lives there.
+        return util::Unexpected{strprintf("%s already exists and is not a socket", fs::PathToString(path))};
+    }
+
+    // A stale socket file from a previous run would make bind() fail with EADDRINUSE
+    fs::remove(path, ec);
+    if (ec) {
+        return util::Unexpected{strprintf("cannot remove stale socket file %s: %s",
+                                          fs::PathToString(path), ec.message())};
+    }
+    return {};
+#else
+    return util::Unexpected{"unix sockets not supported on this platform"};
+#endif
 }
 
 std::unique_ptr<Sock> Proxy::Connect() const
