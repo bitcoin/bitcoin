@@ -19,21 +19,21 @@ public:
 };
 
 template <typename Output>
+    requires FieldTypeIs<Output, ThreadMap::Client>
 void CustomBuildField(TypeList<>,
     Priority<1>,
     InvokeContext& invoke_context,
-    Output&& output,
-    typename std::enable_if<std::is_same<decltype(output.get()), ThreadMap::Client>::value>::type* enable = nullptr)
+    Output&& output)
 {
     output.set(kj::heap<ProxyServer<ThreadMap>>(invoke_context.connection));
 }
 
 template <typename Input>
+    requires FieldTypeIs<Input, ThreadMap::Client>
 decltype(auto) CustomReadField(TypeList<>,
     Priority<1>,
     InvokeContext& invoke_context,
-    Input&& input,
-    typename std::enable_if<std::is_same<decltype(input.get()), ThreadMap::Client>::value>::type* enable = nullptr)
+    Input&& input)
 {
     invoke_context.connection.m_thread_map = input.get();
 }
