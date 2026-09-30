@@ -78,12 +78,15 @@ std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const
 
 void RebuildBlockForParent(CBlock& block, const CBlockIndex& parent, uint32_t time, const Consensus::Params& params)
 {
+    Assert(block.vtx.size() == 1);
     block.hashPrevBlock = parent.GetBlockHash();
     block.nTime = time;
     block.nBits = GetNextWorkRequired(&parent, &block, params);
+    const int height{parent.nHeight + 1};
     CMutableTransaction tx_coinbase{*block.vtx.at(0)};
     tx_coinbase.nLockTime = static_cast<uint32_t>(parent.nHeight);
-    tx_coinbase.vin.at(0).scriptSig = CScript{} << parent.nHeight + 1;
+    tx_coinbase.vin.at(0).scriptSig = CScript{} << height;
+    tx_coinbase.vout.at(0).nValue = GetBlockSubsidy(height, params);
     block.vtx.at(0) = MakeTransactionRef(std::move(tx_coinbase));
     block.hashMerkleRoot = BlockMerkleRoot(block);
 }
