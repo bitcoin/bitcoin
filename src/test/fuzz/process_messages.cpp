@@ -4,6 +4,8 @@
 
 #include <addrman.h>
 #include <banman.h>
+#include <blockfilter.h>
+#include <index/blockfilterindex.h>
 #include <kernel/chainparams.h>
 #include <net.h>
 #include <net_processing.h>
@@ -87,6 +89,9 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
                                      PeerManager::Options{
                                          .reconcile_txs = true,
                                          .deterministic_rng = true,
+                                         .get_block_filter_index = [](BlockFilterType filter_type) {
+                                             return GetBlockFilterIndex(filter_type);
+                                         },
                                      });
     connman.SetMsgProc(node.peerman.get());
     connman.SetAddrman(*node.addrman);
