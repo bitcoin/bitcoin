@@ -17,6 +17,7 @@
 #include <script/script.h>
 #include <sync.h>
 #include <test/util/common.h>
+#include <test/util/mining.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
@@ -383,5 +384,21 @@ BOOST_AUTO_TEST_CASE(witness_commitment_index)
     pblock.vtx[0] = MakeTransactionRef(std::move(txCoinbase));
 
     BOOST_CHECK_EQUAL(GetWitnessCommitmentIndex(pblock), 2);
+}
+BOOST_FIXTURE_TEST_CASE(rebuild_block_for_parent_coinbase, RegTestingSetup)
+{
+    const auto& consensus{Params().GetConsensus()};
+    const CBlockIndex* genesis{WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Genesis())};
+    const int length{consensus.nSubsidyHalvingInterval};
+    std::vector<std::shared_ptr<CBlock>> chain;
+    BOOST_REQUIRE(BuildChain(m_node, genesis, CScript{} << OP_TRUE, length, chain));
+    BOOST_CHECK_EQUAL(chain[0]->vtx[0]->vin[0].scriptSig.size(), 1); // TODO: A fork coinbase must meet the minimum input-script length
+    for (int i{0}; i < length; ++i) {
+        const auto& block{chain[i]};
+        BOOST_CHECK_EQUAL(block->vtx[0]->nLockTime, i);
+        BOOST_CHECK_EQUAL(block->vtx[0]->vout[0].nValue, GetBlockSubsidy(1, consensus)); // TODO: A fork coinbase must pay the subsidy at its own height
+        BOOST_REQUIRE(m_node.chainman->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr) == (i >= 16)); // TODO: Every generated fork block must be accepted
+    }
+    BOOST_CHECK_EQUAL(WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Height()), 0); // TODO: The generated fork must connect through the halving
 }
 BOOST_AUTO_TEST_SUITE_END()
