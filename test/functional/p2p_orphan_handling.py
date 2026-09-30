@@ -423,8 +423,11 @@ class OrphanHandlingTest(BitcoinTestFramework):
         assert_not_equal(child["txid"], child["tx"].wtxid_hex)
         assert_not_equal(grandchild["txid"], grandchild["tx"].wtxid_hex)
 
-        # Relay the parent. It should be rejected because it pays 0 fees.
-        self.relay_transaction(peer1, parent_overly_large_nonsegwit["tx"])
+        # Relay the parent. It should be rejected because it exceeds the maximum standard weight.
+        # Relay it from peer2: below, we check that the node does not ask peer1 for the parent after
+        # peer1 relays the child. Relaying the parent from peer1 would make that check fail, since the
+        # node requests the parent from the relaying peer by wtxid, which equals its txid.
+        self.relay_transaction(peer2, parent_overly_large_nonsegwit["tx"])
         assert parent_overly_large_nonsegwit["txid"] not in node.getrawmempool()
 
         # Relay the child. It should be rejected for having missing parents, and this rejection is
@@ -432,20 +435,22 @@ class OrphanHandlingTest(BitcoinTestFramework):
         self.relay_transaction(peer1, child["tx"])
         assert_equal(0, len(node.getrawmempool()))
         assert not tx_in_orphanage(node, child["tx"])
-        peer1.assert_never_requested(parent_overly_large_nonsegwit["txid"])
+        self.nodes[0].bumpmocktime(TXREQUEST_TIME_SKIP)
+        peer1.assert_never_requested(parent_overly_large_nonsegwit["tx"].txid_int)
 
         # Grandchild should also not be kept in orphanage because its parent has been rejected.
         self.relay_transaction(peer2, grandchild["tx"])
         assert_equal(0, len(node.getrawmempool()))
         assert not tx_in_orphanage(node, grandchild["tx"])
-        peer2.assert_never_requested(child["txid"])
-        peer2.assert_never_requested(child["tx"].wtxid_hex)
+        self.nodes[0].bumpmocktime(TXREQUEST_TIME_SKIP)
+        peer2.assert_never_requested(child["tx"].txid_int)
+        peer2.assert_never_requested(child["tx"].wtxid_int)
 
         # The child should never be requested, even if announced again with potentially different witness.
         # Sync with ping to ensure orphans are reconsidered
         peer3.send_and_ping(msg_inv([CInv(t=MSG_TX, h=int(child["txid"], 16))]))
         self.nodes[0].bumpmocktime(TXREQUEST_TIME_SKIP)
-        peer3.assert_never_requested(child["txid"])
+        peer3.assert_never_requested(child["tx"].txid_int)
 
     @cleanup
     def test_same_txid_orphan(self):
