@@ -13,6 +13,7 @@
 #include <serialize.h>
 #include <streams.h>
 #include <test/util/common.h>
+#include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
@@ -20,6 +21,7 @@
 #include <algorithm>
 #include <concepts>
 #include <cstring>
+#include <memory>
 #include <string>
 #include <numeric>
 
@@ -627,7 +629,7 @@ BOOST_AUTO_TEST_CASE(isbadport)
     BOOST_CHECK_EQUAL(std::ranges::count_if(ports, IsBadPort), 85);
 }
 
-/** The socket address API shared by CService and UnixSocketAddr */
+/** The socket address API shared by CService, UnixSocketAddr and SocketAddr */
 template <typename T>
 concept SockAddrLike = requires(T addr, const T caddr, sockaddr* paddr, const sockaddr* cpaddr, socklen_t* paddrlen, socklen_t addrlen) {
     { caddr.IsValid() } -> std::same_as<bool>;
@@ -640,6 +642,7 @@ concept SockAddrLike = requires(T addr, const T caddr, sockaddr* paddr, const so
 };
 static_assert(SockAddrLike<CService>);
 static_assert(SockAddrLike<UnixSocketAddr>);
+static_assert(SockAddrLike<SocketAddr>);
 
 template <SockAddrLike T>
 static void CheckSockAddrRoundTrip(const T& addr, sa_family_t family, socklen_t expected_len)
@@ -673,17 +676,28 @@ BOOST_AUTO_TEST_CASE(sockaddr_api)
     CheckSockAddrRoundTrip(ipv4, AF_INET, sizeof(sockaddr_in));
     BOOST_CHECK(ipv4.IsIPv4());
     BOOST_CHECK(!ipv4.IsIPv6());
+    CheckSockAddrRoundTrip(SocketAddr{ipv4}, AF_INET, sizeof(sockaddr_in));
+    BOOST_CHECK(SocketAddr{ipv4}.IsIPv4());
+    BOOST_CHECK(!SocketAddr{ipv4}.IsIPv6());
 
     const CService ipv6{LookupNumeric("2607:f8b0:4006:80f::200e", 8333)};
     CheckSockAddrRoundTrip(ipv6, AF_INET6, sizeof(sockaddr_in6));
     BOOST_CHECK(!ipv6.IsIPv4());
     BOOST_CHECK(ipv6.IsIPv6());
+    CheckSockAddrRoundTrip(SocketAddr{ipv6}, AF_INET6, sizeof(sockaddr_in6));
+    BOOST_CHECK(!SocketAddr{ipv6}.IsIPv4());
+    BOOST_CHECK(SocketAddr{ipv6}.IsIPv6());
 
 #ifdef HAVE_SOCKADDR_UN
     const UnixSocketAddr unix_addr{"unix:/tmp/bitcoin.sock"};
     CheckSockAddrRoundTrip(unix_addr, AF_UNIX, sizeof(sockaddr_un));
     BOOST_CHECK(!unix_addr.IsIPv4());
     BOOST_CHECK(!unix_addr.IsIPv6());
+    // Round trip starts from a default SocketAddr, which holds a CService,
+    // so this also checks that SetSockAddr() switches the variant alternative.
+    CheckSockAddrRoundTrip(SocketAddr{unix_addr}, AF_UNIX, sizeof(sockaddr_un));
+    BOOST_CHECK(!SocketAddr{unix_addr}.IsIPv4());
+    BOOST_CHECK(!SocketAddr{unix_addr}.IsIPv6());
 
     // Each type rejects the other's sockaddr
     sockaddr_storage storage;
@@ -860,6 +874,152 @@ BOOST_AUTO_TEST_CASE(unix_socket_value)
     const auto unsupported{ResolveUnixSocketAddr("unix", datadir, "http.sock")};
     BOOST_REQUIRE(!unsupported);
     BOOST_CHECK_EQUAL(unsupported.error(), "unix sockets are not supported on this platform");
+#endif
+}
+
+BOOST_AUTO_TEST_CASE(socket_addr)
+{
+    const CService ipv4{LookupNumeric("142.250.217.142", 8333)};
+    const CService ipv6{LookupNumeric("2607:f8b0:4006:80f::200e", 8333)};
+
+    sockaddr_storage storage;
+    auto* paddr{reinterpret_cast<sockaddr*>(&storage)};
+    socklen_t len{sizeof(storage)};
+
+    // Default-constructed holds an invalid CService
+    const SocketAddr empty;
+    BOOST_CHECK(!empty.IsValid());
+    BOOST_CHECK(!empty.IsUnix());
+    // CService default values
+    BOOST_CHECK_EQUAL(empty.GetSAFamily(), AF_INET6);
+    BOOST_CHECK(empty.GetSockAddr(paddr, &len));
+
+    // IP addresses delegate to CService
+    for (const CService& ip : {ipv4, ipv6}) {
+        const SocketAddr addr{ip};
+        BOOST_CHECK(addr.IsValid());
+        BOOST_CHECK(!addr.IsUnix());
+        BOOST_CHECK_EQUAL(addr.GetSAFamily(), ip.GetSAFamily());
+        BOOST_CHECK_EQUAL(addr.ToStringAddrPort(), ip.ToStringAddrPort());
+        BOOST_CHECK_EQUAL(addr.GetHost(), ip.ToStringAddr());
+        BOOST_CHECK(addr.GetCNetAddr() == static_cast<CNetAddr>(ip));
+    }
+    BOOST_CHECK_EQUAL(SocketAddr{ipv4}.GetHost(), "142.250.217.142");
+    BOOST_CHECK_EQUAL(SocketAddr{ipv6}.GetHost(), "2607:f8b0:4006:80f::200e");
+    BOOST_CHECK_EQUAL(SocketAddr{ipv6}.ToStringAddrPort(), "[2607:f8b0:4006:80f::200e]:8333");
+
+#ifdef HAVE_SOCKADDR_UN
+    // Unix socket addresses delegate to UnixSocketAddr
+    const UnixSocketAddr unix_addr{"unix:/tmp/bitcoin.sock"};
+    {
+        const SocketAddr addr{unix_addr};
+        BOOST_CHECK(addr.IsValid());
+        BOOST_CHECK(addr.IsUnix());
+        BOOST_CHECK_EQUAL(addr.GetSAFamily(), AF_UNIX);
+        BOOST_CHECK_EQUAL(addr.ToStringAddrPort(), "unix:/tmp/bitcoin.sock");
+        BOOST_CHECK_EQUAL(addr.GetHost(), "localhost");
+        BOOST_CHECK(!addr.GetCNetAddr().IsValid());
+        BOOST_CHECK(addr.GetCNetAddr() == CNetAddr{});
+    }
+
+    // SetSockAddr() switches between alternatives in both directions
+    SocketAddr addr{ipv4};
+    len = sizeof(storage);
+    BOOST_REQUIRE(unix_addr.GetSockAddr(paddr, &len));
+    BOOST_REQUIRE(addr.SetSockAddr(paddr, len));
+    BOOST_CHECK(addr.IsUnix());
+    BOOST_CHECK_EQUAL(addr.ToStringAddrPort(), unix_addr.ToStringAddrPort());
+
+    len = sizeof(storage);
+    BOOST_REQUIRE(ipv6.GetSockAddr(paddr, &len));
+    BOOST_REQUIRE(addr.SetSockAddr(paddr, len));
+    BOOST_CHECK(!addr.IsUnix());
+    BOOST_CHECK(addr.IsIPv6());
+    BOOST_CHECK_EQUAL(addr.ToStringAddrPort(), ipv6.ToStringAddrPort());
+
+    // A failed SetSockAddr() leaves the unix address unchanged
+    addr = SocketAddr{unix_addr};
+    len = sizeof(storage);
+    BOOST_REQUIRE(unix_addr.GetSockAddr(paddr, &len));
+    BOOST_CHECK(!addr.SetSockAddr(paddr, len + 1));
+    BOOST_CHECK_EQUAL(addr.ToStringAddrPort(), unix_addr.ToStringAddrPort());
+#endif
+
+    // A failed SetSockAddr() leaves the IP address unchanged
+    SocketAddr ip_addr{ipv4};
+    len = sizeof(storage);
+    BOOST_REQUIRE(ipv4.GetSockAddr(paddr, &len));
+    BOOST_CHECK(!ip_addr.SetSockAddr(paddr, len - 1));
+    std::memset(&storage, 0, sizeof(storage));
+    paddr->sa_family = AF_UNSPEC;
+    BOOST_CHECK(!ip_addr.SetSockAddr(paddr, sizeof(storage)));
+    BOOST_CHECK_EQUAL(ip_addr.ToStringAddrPort(), ipv4.ToStringAddrPort());
+}
+
+/** A ZeroSock that records how it was created and the address passed to Connect() */
+class ConnectRecordingSock : public ZeroSock
+{
+public:
+    ConnectRecordingSock(int domain, int type, int protocol)
+        : m_domain{domain}, m_type{type}, m_protocol{protocol} {}
+
+    int Connect(const sockaddr* addr, socklen_t len) const override
+    {
+        m_connected_len = std::min<socklen_t>(len, sizeof(m_connected_addr));
+        std::memcpy(&m_connected_addr, addr, m_connected_len);
+        return 0;
+    }
+
+    const int m_domain;
+    const int m_type;
+    const int m_protocol;
+    // Written by Connect(), which is const
+    mutable sockaddr_storage m_connected_addr{};
+    mutable socklen_t m_connected_len{0};
+private:
+    using Sock::operator=;
+};
+
+struct ConnectRecordingSockTestingSetup : public SocketTestingSetup {
+    ConnectRecordingSockTestingSetup()
+    {
+        CreateSock = [](int d, int t, int p) -> std::unique_ptr<Sock> {
+            return std::make_unique<ConnectRecordingSock>(d, t, p);
+        };
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(socket_addr_connect, ConnectRecordingSockTestingSetup)
+{
+    // Checks that Connect() creates the expected kind of socket and connects it
+    // to the sockaddr that SocketAddr represents
+    const auto check_connect{[&](const SocketAddr& addr, int expected_domain, int expected_protocol) {
+        const auto sock{addr.Connect()};
+        BOOST_REQUIRE(sock != nullptr);
+        const auto* recording_sock{dynamic_cast<const ConnectRecordingSock*>(sock.get())};
+        BOOST_REQUIRE(recording_sock != nullptr);
+        BOOST_CHECK_EQUAL(recording_sock->m_domain, expected_domain);
+        BOOST_CHECK_EQUAL(recording_sock->m_type, SOCK_STREAM);
+        BOOST_CHECK_EQUAL(recording_sock->m_protocol, expected_protocol);
+        SocketAddr connected;
+        BOOST_REQUIRE(connected.SetSockAddr(reinterpret_cast<const sockaddr*>(&recording_sock->m_connected_addr), recording_sock->m_connected_len));
+        BOOST_CHECK_EQUAL(connected.ToStringAddrPort(), addr.ToStringAddrPort());
+    }};
+
+    check_connect(SocketAddr{LookupNumeric("142.250.217.142", 8333)}, AF_INET, IPPROTO_TCP);
+    check_connect(SocketAddr{LookupNumeric("2607:f8b0:4006:80f::200e", 8333)}, AF_INET6, IPPROTO_TCP);
+#ifdef HAVE_SOCKADDR_UN
+    check_connect(SocketAddr{UnixSocketAddr{"unix:/tmp/bitcoin.sock"}}, AF_UNIX, 0);
+#endif
+
+    // Invalid address doesn't even create a socket
+    BOOST_CHECK(SocketAddr{}.Connect() == nullptr);
+
+    // Failure to create a socket is handled
+    CreateSock = [](int, int, int) -> std::unique_ptr<Sock> { return nullptr; };
+    BOOST_CHECK(SocketAddr{LookupNumeric("142.250.217.142", 8333)}.Connect() == nullptr);
+#ifdef HAVE_SOCKADDR_UN
+    BOOST_CHECK(SocketAddr{UnixSocketAddr{"unix:/tmp/bitcoin.sock"}}.Connect() == nullptr);
 #endif
 }
 
