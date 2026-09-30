@@ -62,6 +62,10 @@ Notable changes
 
 - #61(bitcoin-core/leveldb): Disable seek compaction
 
+### Private Broadcast
+
+- #36309 private broadcast: clarify claims, mark as experimental
+
 ### P2P
 
 - #34873 net: fix premature stale flagging of unpicked private broadcast txs
@@ -94,6 +98,7 @@ Notable changes
 
 - #35908 doc: Update NetBSD Build Guide
 - #35928 doc: mention -DWITH_ZMQ=ON in macOS build guide
+- #36377 doc: add 461 (Deterministic ECDSA signatures with low-R grinding) to bips.md
 
 ### Misc
 
@@ -116,6 +121,7 @@ Thanks to everyone who directly contributed to this release:
 - Lőrinc
 - Martin Zumsande
 - Mccalabrese
+- Sebastian Falbesoner
 - sipa
 - stickies-v
 
