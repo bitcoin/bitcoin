@@ -411,6 +411,23 @@ if(BUILD_UTIL)
 endif()
 
 
+if(BUILD_PRIVBCAST)
+  add_executable(bitcoin-privbcast
+    bitcoin-privbcast.cpp
+    bitcoin-privbcast-res.rc
+  )
+  add_windows_application_manifest(bitcoin-privbcast)
+  target_link_libraries(bitcoin-privbcast
+    core_interface
+    bitcoin_privbcast
+    bitcoin_common
+    bitcoin_util
+    univalue
+  )
+  install_binary_component(bitcoin-privbcast HAS_MANPAGE)
+endif()
+
+
 if(BUILD_GUI)
   add_subdirectory(qt)
 endif()
