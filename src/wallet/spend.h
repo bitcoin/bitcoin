@@ -222,6 +222,13 @@ util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& av
 void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, interfaces::Chain& chain, const uint256& block_hash, int block_height);
 
 /**
+ * Whether a coin can be spent in a silent payments transaction, or why not.
+ *
+ * @param[in] provider  The wallet's signing provider for the coin, or nullptr for an external coin
+ */
+util::Result<void> CheckSilentPaymentsInput(const COutPoint& outpoint, const CTxOut& txout, const SigningProvider* provider);
+
+/**
  * Create a new transaction paying the recipients with a set of coins
  * selected by SelectCoins(); Also create the change output, when needed
  * @note passing change_pos as std::nullopt will result in setting a random position
