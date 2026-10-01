@@ -205,6 +205,9 @@ static constexpr size_t MAX_ADDR_PROCESSING_TOKEN_BUCKET{MAX_ADDR_TO_SEND};
 static constexpr size_t NUM_PRIVATE_BROADCAST_PER_TX{3};
 /** Private broadcast connections must complete within this time. Disconnect the peer if it takes longer. */
 static constexpr auto PRIVATE_BROADCAST_MAX_CONNECTION_LIFETIME{3min};
+/** Check for delayed private broadcast transactions that are due for release at this
+ *  interval, plus a random jitter of up to the same duration. */
+static constexpr auto PRIVATE_BROADCAST_RELEASE_INTERVAL{15s};
 
 // Internal stuff
 namespace {
@@ -608,7 +611,7 @@ public:
     std::vector<CTransactionRef> AbortPrivateBroadcast(const uint256& id) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void InitiateTxBroadcastToAll(const Wtxid& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_inv_to_send_mutex);
-    node::TransactionError InitiateTxBroadcastPrivate(const CTransactionRef& tx) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    node::TransactionError InitiateTxBroadcastPrivate(const CTransactionRef& tx, std::chrono::seconds delay) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SetBestBlock(int height, std::chrono::seconds time) override
     {
         m_best_height = height;
@@ -634,6 +637,10 @@ private:
 
     /** Rebroadcast stale private transactions (already broadcast but not received back from the network). */
     void ReattemptPrivateBroadcast(CScheduler& scheduler);
+
+    /** Release delayed private broadcast transactions that are due, after re-validating them,
+     *  and request connections for them. Re-schedules itself. */
+    void ReleaseDelayedPrivateBroadcast(CScheduler& scheduler);
 
     /** Get a shared pointer to the Peer object.
      *  May return an empty shared_ptr if the Peer object can't be found. */
@@ -1777,6 +1784,39 @@ void PeerManagerImpl::ReattemptPrivateBroadcast(CScheduler& scheduler)
     scheduler.scheduleFromNow([&] { ReattemptPrivateBroadcast(scheduler); }, delta);
 }
 
+void PeerManagerImpl::ReleaseDelayedPrivateBroadcast(CScheduler& scheduler)
+{
+    size_t num_released{0};
+    for (const auto& tx : m_tx_for_private_broadcast.ReleaseDue()) {
+        // The transaction was validated when it was added, but it may have become invalid
+        // since (e.g. its inputs got spent or the mempool minimum fee increased).
+        // Only hold lock per single submission
+        LOCK(cs_main);
+        const auto mempool_acceptable{m_chainman.ProcessTransaction(tx, /*test_accept=*/true)};
+        if (mempool_acceptable.m_result_type == MempoolAcceptResult::ResultType::VALID) {
+            LogDebug(BCLog::PRIVBROADCAST, "Releasing delayed txid=%s wtxid=%s for private broadcast",
+                     tx->GetHash().ToString(), tx->GetWitnessHash().ToString());
+            ++num_released;
+        } else {
+            LogDebug(BCLog::PRIVBROADCAST, "Dropping delayed txid=%s wtxid=%s at release: %s",
+                     tx->GetHash().ToString(), tx->GetWitnessHash().ToString(),
+                     mempool_acceptable.m_state.ToString());
+            m_tx_for_private_broadcast.Remove(tx);
+        }
+    }
+
+    if (num_released > 0) {
+        if (!g_reachable_nets.Contains(NET_ONION) && !g_reachable_nets.Contains(NET_I2P)) {
+            LogWarning("Released %u delayed transaction(s) for private broadcast, but none of the Tor or I2P networks is reachable",
+                       num_released);
+        }
+        m_connman.m_private_broadcast.NumToOpenAdd(num_released * NUM_PRIVATE_BROADCAST_PER_TX);
+    }
+
+    const auto delta{PRIVATE_BROADCAST_RELEASE_INTERVAL + FastRandomContext().randrange<std::chrono::milliseconds>(PRIVATE_BROADCAST_RELEASE_INTERVAL)};
+    scheduler.scheduleFromNow([&] { ReleaseDelayedPrivateBroadcast(scheduler); }, delta);
+}
+
 void PeerManagerImpl::FinalizeNode(const CNode& node)
 {
     NodeId nodeid = node.GetId();
@@ -1993,7 +2033,8 @@ std::vector<CTransactionRef> PeerManagerImpl::AbortPrivateBroadcast(const uint25
         if (tx->GetHash().ToUint256() != id && tx->GetWitnessHash().ToUint256() != id) continue;
         if (const auto peer_acks{m_tx_for_private_broadcast.Remove(tx)}) {
             removed_txs.push_back(tx);
-            if (NUM_PRIVATE_BROADCAST_PER_TX > peer_acks->num_confirmed) {
+            // Connections are only requested for a transaction once it is released.
+            if (peer_acks->released && NUM_PRIVATE_BROADCAST_PER_TX > peer_acks->num_confirmed) {
                 connections_cancelled += (NUM_PRIVATE_BROADCAST_PER_TX - peer_acks->num_confirmed);
             }
         }
@@ -2168,6 +2209,7 @@ void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
 
     if (m_opts.private_broadcast) {
         scheduler.scheduleFromNow([&] { ReattemptPrivateBroadcast(scheduler); }, 0min);
+        scheduler.scheduleFromNow([&] { ReleaseDelayedPrivateBroadcast(scheduler); }, PRIVATE_BROADCAST_RELEASE_INTERVAL);
     }
 }
 
@@ -2493,11 +2535,20 @@ void PeerManagerImpl::InitiateTxBroadcastToAll(const Wtxid& wtxid)
     ProcessInvBacklog(NodeClock::now(), /*backlog_bumped=*/true);
 }
 
-node::TransactionError PeerManagerImpl::InitiateTxBroadcastPrivate(const CTransactionRef& tx)
+node::TransactionError PeerManagerImpl::InitiateTxBroadcastPrivate(const CTransactionRef& tx, std::chrono::seconds delay)
 {
     const auto txstr{strprintf("txid=%s, wtxid=%s", tx->GetHash().ToString(), tx->GetWitnessHash().ToString())};
-    switch (m_tx_for_private_broadcast.Add(tx)) {
+    std::optional<NodeClock::time_point> release_time;
+    if (delay > 0s) {
+        release_time = NodeClock::now() + delay;
+    }
+    switch (m_tx_for_private_broadcast.Add(tx, release_time)) {
     case PrivateBroadcast::AddResult::Added:
+        if (release_time) {
+            // Connections will be requested by ReleaseDelayedPrivateBroadcast() when it is due.
+            LogDebug(BCLog::PRIVBROADCAST, "Delaying private broadcast by %d seconds: %s", count_seconds(delay), txstr);
+            return node::TransactionError::OK;
+        }
         LogDebug(BCLog::PRIVBROADCAST, "Requesting %d new connections due to %s", NUM_PRIVATE_BROADCAST_PER_TX, txstr);
         m_connman.m_private_broadcast.NumToOpenAdd(NUM_PRIVATE_BROADCAST_PER_TX);
         return node::TransactionError::OK;
@@ -4728,9 +4779,10 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             LogDebug(BCLog::PRIVBROADCAST, "Received our privately broadcast transaction (txid=%s) from the "
                                            "network from %s; stopping private broadcast attempts",
                      txid.ToString(), pfrom.LogPeer());
-            if (NUM_PRIVATE_BROADCAST_PER_TX > num_broadcasted->num_confirmed) {
+            if (num_broadcasted->released && NUM_PRIVATE_BROADCAST_PER_TX > num_broadcasted->num_confirmed) {
                 // Not all of the initial NUM_PRIVATE_BROADCAST_PER_TX connections were needed.
                 // Tell CConnman it does not need to start the remaining ones.
+                // Connections are only requested for a transaction once it is released.
                 m_connman.m_private_broadcast.NumToOpenSub(NUM_PRIVATE_BROADCAST_PER_TX - num_broadcasted->num_confirmed);
             }
         }

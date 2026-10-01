@@ -82,7 +82,7 @@ FUZZ_TARGET(p2p_private_broadcast, .init = ::initialize)
     std::vector<CTransactionRef> seeded_txs;
     for (int i = 0; i < num_txs; ++i) {
         auto tx{MakeTransactionRef(ConsumeTransaction(fuzzed_data_provider, /*prevout_txids=*/std::nullopt))};
-        (void)node.peerman->InitiateTxBroadcastPrivate(tx);
+        (void)node.peerman->InitiateTxBroadcastPrivate(tx, /*delay=*/0s);
         seeded_txs.push_back(tx);
     }
 
@@ -197,7 +197,8 @@ FUZZ_TARGET(p2p_private_broadcast, .init = ::initialize)
             },
             [&] {
                 (void)node.peerman->InitiateTxBroadcastPrivate(
-                    MakeTransactionRef(ConsumeTransaction(fuzzed_data_provider, /*prevout_txids=*/std::nullopt)));
+                    MakeTransactionRef(ConsumeTransaction(fuzzed_data_provider, /*prevout_txids=*/std::nullopt)),
+                    /*delay=*/0s);
             },
             [&] {
                 // Construct a valid GETDATA for a seeded tx to exercise the TX send path.
