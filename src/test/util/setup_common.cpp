@@ -327,7 +327,10 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
                 .wipe_data = m_args.GetBoolArg("-reindex", false),
             },
         };
-        m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown_signal), chainman_opts, blockman_opts);
+        Assert(!m_node.chainman);
+        m_node.blockman.reset();
+        m_node.blockman = std::make_unique<BlockManager>(*Assert(m_node.shutdown_signal), blockman_opts);
+        m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown_signal), chainman_opts, *m_node.blockman);
     };
     m_make_chainman();
     CreateBlockTemplateManager();
@@ -354,6 +357,7 @@ ChainTestingSetup::~ChainTestingSetup()
     m_node.mempool.reset();
     Assert(!m_node.fee_estimator_man); // Each test must create a local object, if they wish to use the fee_estimator_man
     m_node.chainman.reset();
+    m_node.blockman.reset();
     m_node.validation_signals.reset();
     m_node.scheduler.reset();
 }

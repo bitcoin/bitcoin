@@ -479,11 +479,12 @@ struct ChainstateManagerOptions {
 };
 
 struct ChainMan {
+    std::unique_ptr<node::BlockManager> m_blockman;
     std::unique_ptr<ChainstateManager> m_chainman;
     std::shared_ptr<const Context> m_context;
 
-    ChainMan(std::unique_ptr<ChainstateManager> chainman, std::shared_ptr<const Context> context)
-        : m_chainman(std::move(chainman)), m_context(std::move(context)) {}
+    ChainMan(std::unique_ptr<node::BlockManager> blockman, std::unique_ptr<ChainstateManager> chainman, std::shared_ptr<const Context> context)
+        : m_blockman(std::move(blockman)), m_chainman(std::move(chainman)), m_context(std::move(context)) {}
 };
 
 } // namespace
@@ -1124,10 +1125,12 @@ btck_ChainstateManager* btck_chainstate_manager_create(
     const btck_ChainstateManagerOptions* chainman_opts)
 {
     auto& opts{btck_ChainstateManagerOptions::get(chainman_opts)};
+    std::unique_ptr<node::BlockManager> blockman;
     std::unique_ptr<ChainstateManager> chainman;
     try {
         LOCK(opts.m_mutex);
-        chainman = std::make_unique<ChainstateManager>(*opts.m_context->m_interrupt, opts.m_chainman_options, opts.m_blockman_options);
+        blockman = std::make_unique<node::BlockManager>(*opts.m_context->m_interrupt, opts.m_blockman_options);
+        chainman = std::make_unique<ChainstateManager>(*opts.m_context->m_interrupt, opts.m_chainman_options, *blockman);
     } catch (const std::exception& e) {
         LogError("Failed to create chainstate manager: %s", e.what());
         return nullptr;
@@ -1156,7 +1159,7 @@ btck_ChainstateManager* btck_chainstate_manager_create(
         return nullptr;
     }
 
-    return btck_ChainstateManager::create(std::move(chainman), opts.m_context);
+    return btck_ChainstateManager::create(std::move(blockman), std::move(chainman), opts.m_context);
 }
 
 const btck_BlockTreeEntry* btck_chainstate_manager_get_block_tree_entry_by_hash(const btck_ChainstateManager* chainman, const btck_BlockHash* block_hash)

@@ -40,6 +40,7 @@ class SignalInterrupt;
 }
 
 namespace node {
+class BlockManager;
 class BlockTemplateManager;
 class KernelNotifications;
 class Warnings;
@@ -71,6 +72,7 @@ struct NodeContext {
     std::unique_ptr<FeeRateEstimatorManager> fee_estimator_man;
     std::unique_ptr<PeerManager> peerman;
     std::unique_ptr<TorController> tor_controller;
+    std::unique_ptr<BlockManager> blockman;
     std::unique_ptr<ChainstateManager> chainman;
     std::unique_ptr<BanMan> banman;
     ArgsManager* args{nullptr}; // Currently a raw pointer because the memory is not managed by this struct

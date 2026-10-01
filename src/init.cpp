@@ -425,6 +425,7 @@ void Shutdown(NodeContext& node)
     node.block_template_manager.reset();
     node.mempool.reset();
     node.chainman.reset();
+    node.blockman.reset();
     node.validation_signals.reset();
     node.scheduler.reset();
     node.ecc_context.reset();
@@ -1373,7 +1374,8 @@ static ChainstateLoadResult InitAndLoadChainstate(
     node.notifications->setChainstateLoaded(false); // Drop state, such as a cached tip block
     node.block_template_manager.reset();
     node.mempool.reset();
-    node.chainman.reset(); // Drop state, such as an initialized m_block_tree_db
+    node.chainman.reset();
+    node.blockman.reset(); // Drop state, such as an initialized m_block_tree_db
 
     const CChainParams& chainparams = Params();
 
@@ -1411,12 +1413,13 @@ static ChainstateLoadResult InitAndLoadChainstate(
     };
     Assert(ApplyArgsManOptions(args, blockman_opts)); // no error can happen, already checked in AppInitParameterInteraction
 
-    // Creating the chainstate manager internally creates a BlockManager, opens
-    // the blocks tree db, and wipes existing block files in case of a reindex.
-    // The coinsdb is opened at a later point on LoadChainstate.
-    Assert(!node.chainman); // Was reset above
+    // Creating the BlockManager opens the blocks tree db, and wipes existing
+    // block files in case of a reindex. The coinsdb is opened at a later point
+    // on LoadChainstate.
+    Assert(!node.blockman && !node.chainman); // Were reset above
     try {
-        node.chainman = std::make_unique<ChainstateManager>(*Assert(node.shutdown_signal), chainman_opts, blockman_opts);
+        node.blockman = std::make_unique<BlockManager>(*Assert(node.shutdown_signal), blockman_opts);
+        node.chainman = std::make_unique<ChainstateManager>(*Assert(node.shutdown_signal), chainman_opts, *node.blockman);
     } catch (dbwrapper_error& e) {
         LogError("%s", e.what());
         return {ChainstateLoadStatus::FAILURE, _("Error opening block database")};
