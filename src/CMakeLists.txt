@@ -260,8 +260,10 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   private_broadcast.cpp
   privbcast/assign.cpp
   privbcast/attempt.cpp
+  privbcast/discovery.cpp
   privbcast/plan.cpp
   privbcast/socks5.cpp
+  privbcast/stream.cpp
   rest.cpp
   rpc/blockchain.cpp
   rpc/external_signer.cpp
