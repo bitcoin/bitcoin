@@ -481,9 +481,6 @@ public:
 
     void CleanupBlockRevFiles() const;
 };
-
-// Calls ActivateBestChain() even if no blocks are imported.
-void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_paths);
 } // namespace node
 
 #endif // BITCOIN_NODE_BLOCKSTORAGE_H
