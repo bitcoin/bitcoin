@@ -30,6 +30,7 @@
 #include <logging/timer.h>
 #include <net.h>
 #include <net_processing.h>
+#include <net_transport.h>
 #include <node/block_template_manager.h>
 #include <node/blockstorage.h>
 #include <node/context.h>

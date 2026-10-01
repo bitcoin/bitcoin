@@ -15,6 +15,7 @@
 #include <net.h>
 #include <net_permissions.h>
 #include <net_processing.h>
+#include <net_transport.h>
 #include <net_types.h>
 #include <netaddress.h>
 #include <netbase.h>
