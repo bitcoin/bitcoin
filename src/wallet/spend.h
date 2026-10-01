@@ -195,10 +195,26 @@ util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& av
                                           const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /**
+ * Like 'SelectCoins', but for a silent payments transaction, which needs at least one input eligible for
+ * the BIP352 shared secret derivation. If the selection has none, an eligible coin is preset and the
+ * rest is selected again.
+ */
+util::Result<SelectionResult> SelectCoinsForSilentPayments(const CWallet& wallet, CoinsResult& available_coins, const CoinsResult& pre_set_inputs,
+                                                           const CAmount& nTargetValue, const CCoinControl& coin_control,
+                                                           const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+
+/**
  * Set a height-based locktime for new transactions (uses the height of the
  * current chain tip unless we are not synced with the current chain
  */
 void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, interfaces::Chain& chain, const uint256& block_hash, int block_height);
+
+/**
+ * Whether a coin can be spent in a silent payments transaction, or why not.
+ *
+ * @param[in] provider  The wallet's signing provider for the coin, or nullptr for an external coin
+ */
+util::Result<void> CheckSilentPaymentsInput(const COutPoint& outpoint, const CTxOut& txout, const SigningProvider* provider);
 
 /**
  * Create a new transaction paying the recipients with a set of coins
