@@ -236,6 +236,9 @@ void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, 
 /** Whether the input is used for the silent payments shared secret derivation (BIP352 eligible) */
 bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet& wallet);
 
+/** Get the silent payments destinations the recipients pay to */
+std::vector<bip352::SilentPaymentsDestination> GetSilentPaymentsDestinations(const std::vector<CRecipient>& recipients);
+
 /**
  * Generate the actual taproot output scripts for silent payment recipients by deriving
  * the shared secret from the selected inputs and SP destinations.

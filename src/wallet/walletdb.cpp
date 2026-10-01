@@ -59,6 +59,7 @@ const std::string WALLETDESCRIPTORCACHE{"walletdescriptorcache"};
 const std::string WALLETDESCRIPTORLHCACHE{"walletdescriptorlhcache"};
 const std::string WALLETDESCRIPTORCKEY{"walletdescriptorckey"};
 const std::string WALLETDESCRIPTORKEY{"walletdescriptorkey"};
+const std::string SP_RECIPIENTS{"sprecipients"};
 const std::string WATCHMETA{"watchmeta"};
 const std::string WATCHS{"watchs"};
 const std::unordered_set<std::string> LEGACY_TYPES{CRYPTED_KEY, CSCRIPT, DEFAULTKEY, HDCHAIN, KEYMETA, KEY, OLD_KEY, POOL, WATCHMETA, WATCHS};
@@ -103,14 +104,18 @@ bool WalletBatch::WriteFullTx(const CWalletTx& wtx)
     for (const auto& [wtxid, tx] : wtx.GetTxs()) {
         if (!WriteWtxVariant(txid, tx)) return false;
     }
+    // Write the SP recipients before the tx, so the tx is never stored as a silent payments tx
+    // without them. A record left without its tx is ignored on load.
+    if (!wtx.m_sprecipients.empty() && !WriteSpRecipients(txid, wtx.m_sprecipients)) return false;
     return WriteIC(std::make_pair(DBKeys::TX, txid), wtx);
 }
 
 bool WalletBatch::EraseTx(Txid hash)
 {
     if (!EraseIC(std::make_pair(DBKeys::TX, hash.ToUint256()))) return false;
-    // Drop all witness variant records too, so none are left dangling
-    return m_batch->ErasePrefix(DataStream() << DBKeys::WTX_VARIANT << hash);
+    // Drop all witness variant and silent payments recipients records too, so none are left dangling
+    if (!m_batch->ErasePrefix(DataStream() << DBKeys::WTX_VARIANT << hash)) return false;
+    return EraseSpRecipients(hash);
 }
 
 bool WalletBatch::WriteWtxVariant(const Txid& txid, const CTransactionRef& tx)
@@ -304,6 +309,16 @@ bool WalletBatch::WriteLockedUTXO(const COutPoint& output)
 bool WalletBatch::EraseLockedUTXO(const COutPoint& output)
 {
     return EraseIC(std::make_pair(DBKeys::LOCKED_UTXO, std::make_pair(output.hash, output.n)));
+}
+
+bool WalletBatch::WriteSpRecipients(const Txid& txid, const std::vector<bip352::SilentPaymentsDestination>& recipients)
+{
+    return WriteIC(std::make_pair(DBKeys::SP_RECIPIENTS, txid), recipients);
+}
+
+bool WalletBatch::EraseSpRecipients(const Txid& txid)
+{
+    return EraseIC(std::make_pair(DBKeys::SP_RECIPIENTS, txid));
 }
 
 bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
@@ -1189,6 +1204,21 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
         // Load tx records
         result = std::max(LoadTxRecords(pwallet, *m_batch, any_unordered), result);
+
+        // Load SP recipients records (must come after TX records so mapWallet is populated)
+        LoadResult sp_res = LoadRecords(pwallet, *m_batch, DBKeys::SP_RECIPIENTS,
+            [](CWallet* pwallet, DataStream& key, DataStream& value, std::string& err) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+            Txid txid;
+            key >> txid;
+            // SilentPaymentsDestination is not default constructible, so deserialize the vector by hand
+            std::vector<bip352::SilentPaymentsDestination> recipients;
+            for (uint64_t n{ReadCompactSize(value)}; n > 0; --n) {
+                recipients.emplace_back(deserialize, value);
+            }
+            pwallet->LoadSpRecipients(txid, std::move(recipients));
+            return DBErrors::LOAD_OK;
+        });
+        result = std::max(result, sp_res.m_result);
     } catch (std::runtime_error& e) {
         // Exceptions that can be ignored or treated as non-critical are handled by the individual loading functions.
         // Any uncaught exceptions will be caught here and treated as critical.

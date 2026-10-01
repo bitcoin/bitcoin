@@ -2131,7 +2131,8 @@ void CWallet::CommitTransaction(
     std::optional<std::string> comment,
     std::optional<std::string> comment_to,
     const std::vector<std::string>& messages,
-    const std::vector<std::string>& payment_requests
+    const std::vector<std::string>& payment_requests,
+    const std::vector<bip352::SilentPaymentsDestination>& sp_recipients
 )
 {
     LOCK(cs_wallet);
@@ -2145,6 +2146,12 @@ void CWallet::CommitTransaction(
         if (comment_to) wtx.m_comment_to = comment_to;
         if (!messages.empty()) wtx.m_messages = messages;
         if (!payment_requests.empty()) wtx.m_payment_requests = payment_requests;
+        if (!sp_recipients.empty()) {
+            // The recipients are only written with a new tx, see WalletBatch::WriteFullTx
+            Assume(new_tx);
+            wtx.m_is_sp_tx = true;
+            wtx.m_sprecipients = sp_recipients;
+        }
         return true;
     });
 
@@ -2542,6 +2549,17 @@ void CWallet::LoadLockedCoin(const COutPoint& coin, bool persistent)
 {
     AssertLockHeld(cs_wallet);
     m_locked_coins.emplace(coin, persistent);
+}
+
+void CWallet::LoadSpRecipients(const Txid& txid, std::vector<bip352::SilentPaymentsDestination> recipients)
+{
+    AssertLockHeld(cs_wallet);
+    auto it = mapWallet.find(txid);
+    if (it == mapWallet.end()) {
+        WalletLogPrintf("Ignoring orphaned sprecipients record for tx %s\n", txid.ToString());
+        return;
+    }
+    it->second.m_sprecipients = std::move(recipients);
 }
 
 bool CWallet::LockCoin(const COutPoint& output, bool persist)

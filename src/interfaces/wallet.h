@@ -41,6 +41,10 @@ enum class OutputType;
 struct bilingual_str;
 struct CExtKey;
 
+namespace bip352 {
+struct SilentPaymentsDestination;
+} // namespace bip352
+
 namespace wallet {
 class CCoinControl;
 class CWallet;
@@ -166,13 +170,15 @@ public:
     //! Return whether transaction can be bumped.
     virtual bool transactionCanBeBumped(const Txid& txid) = 0;
 
-    //! Create bump transaction.
+    //! Create bump transaction. sp_recipients are the silent payments
+    //! recipients of the bump transaction, to pass to commitBumpTransaction.
     virtual bool createBumpTransaction(const Txid& txid,
         const wallet::CCoinControl& coin_control,
         std::vector<bilingual_str>& errors,
         CAmount& old_fee,
         CAmount& new_fee,
-        CMutableTransaction& mtx) = 0;
+        CMutableTransaction& mtx,
+        std::vector<bip352::SilentPaymentsDestination>& sp_recipients) = 0;
 
     //! Sign bump transaction.
     virtual bool signBumpTransaction(CMutableTransaction& mtx) = 0;
@@ -181,7 +187,8 @@ public:
     virtual bool commitBumpTransaction(const Txid& txid,
         CMutableTransaction&& mtx,
         std::vector<bilingual_str>& errors,
-        Txid& bumped_txid) = 0;
+        Txid& bumped_txid,
+        const std::vector<bip352::SilentPaymentsDestination>& sp_recipients) = 0;
 
     //! Get a transaction.
     virtual CTransactionRef getTx(const Txid& txid) = 0;
@@ -407,6 +414,7 @@ struct WalletTx
     std::optional<std::string> comment;
     std::optional<std::string> comment_to;
     bool is_coinbase;
+    bool is_silent_payments;
 
     bool operator<(const WalletTx& a) const { return tx->GetHash() < a.tx->GetHash(); }
 };

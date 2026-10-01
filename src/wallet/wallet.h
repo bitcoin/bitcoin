@@ -7,6 +7,7 @@
 #define BITCOIN_WALLET_WALLET_H
 
 #include <addresstype.h>
+#include <common/bip352.h>
 #include <common/paymentdestination.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
@@ -554,6 +555,8 @@ public:
 
     bool IsLockedCoin(const COutPoint& output) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void LoadLockedCoin(const COutPoint& coin, bool persistent) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    //! Load the silent payments recipients of a wallet transaction. A record whose transaction is not in the wallet is logged and ignored.
+    void LoadSpRecipients(const Txid& txid, std::vector<bip352::SilentPaymentsDestination> recipients) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool LockCoin(const COutPoint& output, bool persist) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool UnlockCoin(const COutPoint& output) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool UnlockAllCoins() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -670,6 +673,7 @@ public:
      * @param[in] comment The user's comment for this transaction
      * @param[in] comment_to The comment for this transaction indicating where coins are sent to
      * @param[in] messages The BIP 21 URI messages to attach to this transaction
+     * @param[in] sp_recipients The SilentPaymentsDestination that this transaction pays to
      */
     void CommitTransaction(
         CTransactionRef tx,
@@ -677,7 +681,8 @@ public:
         std::optional<std::string> comment = std::nullopt,
         std::optional<std::string> comment_to = std::nullopt,
         const std::vector<std::string>& messages = {},
-        const std::vector<std::string>& payment_requests = {}
+        const std::vector<std::string>& payment_requests = {},
+        const std::vector<bip352::SilentPaymentsDestination>& sp_recipients = {}
     );
 
     /** Pass this transaction to node for optional mempool insertion and relay to peers. */
