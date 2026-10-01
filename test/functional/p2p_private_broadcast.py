@@ -6,6 +6,7 @@
 Test how locally submitted transactions are sent to the network when private broadcast is used.
 """
 
+from decimal import Decimal
 import time
 import threading
 
@@ -47,6 +48,9 @@ from test_framework.wallet import (
 P2P_PRIVATE_VERSION = 70016
 NUM_PRIVATE_BROADCAST_PER_TX = 3
 MAX_PRIVATE_BROADCAST_ATTEMPTS = 1000
+# Must match PrivateBroadcast::DELAY_RANDOMIZATION_PERCENT and MIN_DELAY_RANDOMIZATION.
+DELAY_RANDOMIZATION_PERCENT = 50
+MIN_DELAY_RANDOMIZATION = 5 * 60
 
 
 class NoRelayP2PInterface(P2PInterface):
@@ -231,6 +235,103 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         assert all("address" in p and "sent" in p for p in peers)
         assert_greater_than_or_equal(sum(1 for p in peers if "received" in p), broadcasts_to_expect)
 
+    def advance_mocktime_until(self, node, start, end, predicate, step=30):
+        """
+        Advance node's mocktime from start to end in steps, firing the scheduler at each step,
+        until predicate() is true. Small steps make sure that a released transaction does not
+        also become stale (and gets rebroadcast) while advancing.
+        """
+        mocktime = start
+        while mocktime <= end:
+            node.setmocktime(mocktime)
+            node.mockscheduler(step)
+            if predicate():
+                return
+            mocktime += step
+        assert False, f"predicate not satisfied up to mocktime {end}"
+
+    def test_delayed_broadcast(self, wallet, tx_returner):
+        tx_originator = self.nodes[0]
+        delay_for = 60
+        max_actual_delay = delay_for + max(delay_for * DELAY_RANDOMIZATION_PERCENT // 100, MIN_DELAY_RANDOMIZATION)
+
+        def pb_entry(tx):
+            entries = [t for t in tx_originator.getprivatebroadcastinfo()["transactions"] if t["wtxid"] == tx["wtxid"]]
+            assert len(entries) <= 1
+            return entries[0] if entries else None
+
+        def log_contains(msg, offset):
+            with open(tx_originator.debug_log_path, encoding="utf-8", errors="replace") as dl:
+                dl.seek(offset)
+                return msg in dl.read()
+
+        def submit_delayed(tx):
+            """Submit with a delay and return the bounds of the submission time."""
+            time_before = int(time.time())
+            tx_originator.sendrawtransaction(hexstring=tx["hex"], maxfeerate=0.1, delay_for=delay_for)
+            time_after = int(time.time()) + 1
+            entry = pb_entry(tx)
+            assert entry is not None
+            assert_equal(entry["peers"], [])
+            return time_before, time_after
+
+        self.log.info("Delayed broadcast: aborting pending private broadcasts, so they do not compete")
+        for t in tx_originator.getprivatebroadcastinfo()["transactions"]:
+            tx_originator.abortprivatebroadcast(t["wtxid"])
+        assert_equal(tx_originator.getprivatebroadcastinfo()["transactions"], [])
+
+        self.log.info("Delayed broadcast: the transaction is held back until its release time")
+        tx = wallet.create_self_transfer()
+        release_msg = f"Releasing delayed txid={tx['txid']} wtxid={tx['wtxid']}"
+        log_offset = tx_originator.debug_log_size(encoding="utf-8")
+        time_before, time_after = submit_delayed(tx)
+        # The release time is at least delay_for after the submission.
+        tx_originator.setmocktime(time_before + delay_for - 1)
+        tx_originator.mockscheduler(60)
+        assert not log_contains(release_msg, log_offset)
+        assert_equal(pb_entry(tx)["peers"], [])
+        self.advance_mocktime_until(tx_originator, time_before + delay_for, time_after + max_actual_delay,
+                                    lambda: log_contains(release_msg, log_offset))
+        self.log.info("Delayed broadcast: released, waiting for it to be sent")
+        self.wait_until(lambda: any("received" in p for p in pb_entry(tx)["peers"]))
+        tx_originator.abortprivatebroadcast(tx["wtxid"])
+        tx_originator.setmocktime(0)
+
+        self.log.info("Delayed broadcast: a transaction aborted before its release time is not sent")
+        tx = wallet.create_self_transfer()
+        release_msg = f"Releasing delayed txid={tx['txid']} wtxid={tx['wtxid']}"
+        log_offset = tx_originator.debug_log_size(encoding="utf-8")
+        _, time_after = submit_delayed(tx)
+        abort_res = tx_originator.abortprivatebroadcast(tx["txid"])
+        assert_equal([t["wtxid"] for t in abort_res["removed_transactions"]], [tx["wtxid"]])
+        assert pb_entry(tx) is None
+        tx_originator.setmocktime(time_after + max_actual_delay)
+        tx_originator.mockscheduler(60)
+        assert not log_contains(release_msg, log_offset)
+        assert pb_entry(tx) is None
+        tx_originator.setmocktime(0)
+
+        self.log.info("Delayed broadcast: a competing transaction sent without delay invalidates the delayed one")
+        utxo = wallet.get_utxo()
+        tx_delayed = wallet.create_self_transfer(utxo_to_spend=utxo)
+        tx_competing = wallet.create_self_transfer(utxo_to_spend=utxo, fee_rate=Decimal("0.01"))
+        assert_not_equal(tx_delayed["txid"], tx_competing["txid"])
+        release_msg = f"Releasing delayed txid={tx_delayed['txid']} wtxid={tx_delayed['wtxid']}"
+        drop_msg = f"Dropping delayed txid={tx_delayed['txid']} wtxid={tx_delayed['wtxid']} at release"
+        log_offset = tx_originator.debug_log_size(encoding="utf-8")
+        time_before, time_after = submit_delayed(tx_delayed)
+        # The delayed transaction is not in the mempool, so the competing one is accepted.
+        tx_originator.sendrawtransaction(hexstring=tx_competing["hex"], maxfeerate=0.1)
+        # Let the competing transaction come back from the network, into the mempool.
+        tx_returner.send_without_ping(msg_tx(tx_competing["tx"]))
+        self.wait_until(lambda: tx_competing["txid"] in tx_originator.getrawmempool())
+        assert pb_entry(tx_competing) is None
+        self.advance_mocktime_until(tx_originator, time_before + delay_for, time_after + max_actual_delay,
+                                    lambda: log_contains(drop_msg, log_offset))
+        assert not log_contains(release_msg, log_offset)
+        assert pb_entry(tx_delayed) is None
+        tx_originator.setmocktime(0)
+
     def run_test(self):
         tx_originator = self.nodes[0]
         tx_receiver = self.nodes[1]
@@ -404,6 +505,8 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
             self.no_relay_peer.wait_until(lambda: self.no_relay_peer.message_count["version"] == 1, check_connected=False)
             self.no_relay_peer.wait_for_disconnect()
         assert_equal(self.no_relay_peer.message_count, {"version": 1})
+
+        self.test_delayed_broadcast(wallet, tx_returner)
 
         # Stop the SOCKS5 proxy server to avoid it being upset by the bitcoin
         # node disconnecting in the middle of the SOCKS5 handshake when we
