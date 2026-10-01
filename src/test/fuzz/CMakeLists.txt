@@ -100,6 +100,7 @@ add_executable(fuzz
   privbcast_attempt.cpp
   privbcast_discovery.cpp
   privbcast_input.cpp
+  privbcast_queue.cpp
   privbcast_socks5.cpp
   process_message.cpp
   process_messages.cpp
