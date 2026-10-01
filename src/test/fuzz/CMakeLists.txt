@@ -97,6 +97,7 @@ add_executable(fuzz
   prevector.cpp
   primitives_transaction.cpp
   private_broadcast.cpp
+  privbcast_socks5.cpp
   process_message.cpp
   process_messages.cpp
   protocol.cpp
@@ -155,6 +156,7 @@ target_link_libraries(fuzz
   test_fuzz
   bitcoin_cli
   bitcoin_common
+  bitcoin_privbcast
   bitcoin_util
   minisketch
   leveldb
