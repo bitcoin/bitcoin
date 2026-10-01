@@ -7,7 +7,9 @@ add_library(bitcoin_privbcast STATIC EXCLUDE_FROM_ALL
   assign.cpp
   attempt.cpp
   discovery.cpp
+  job.cpp
   plan.cpp
+  report.cpp
   socks5.cpp
   stream.cpp
 )
