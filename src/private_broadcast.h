@@ -64,6 +64,8 @@ public:
     struct TxBroadcastInfo {
         CTransactionRef tx;
         NodeClock::time_point time_added;
+        //! The earliest time the transaction may be sent (same as time_added if not delayed).
+        NodeClock::time_point release_time;
         /// Number of additional send attempts allowed for this transaction (0 if exhausted).
         size_t attempts_remaining;
         std::vector<PeerSendInfo> peers;
@@ -79,25 +81,46 @@ public:
         QueueFull,
     };
 
+    /// Outcome of a successful Remove().
+    struct RemoveResult {
+        //! The number of times the transaction was sent and confirmed by the recipient.
+        size_t num_confirmed;
+        //! Whether the transaction had been released for sending (see ReleaseDue()).
+        bool released;
+    };
+
     /**
      * Add a transaction to the storage, or reset an exhausted transaction so it
      * can be broadcast again.
      * @param[in] tx The transaction to add.
+     * @param[in] release_time If set and in the future, the transaction is held back
+     * and not considered for sending until it is released by ReleaseDue() at or after
+     * this time. Otherwise the transaction is released immediately.
      * @return Whether the transaction was newly added or reset, was already
      * present with send attempts remaining, or was rejected because the queue is
-     * full (see AddResult).
+     * full (see AddResult). An already present transaction keeps its release time.
      */
-    [[nodiscard]] AddResult Add(const CTransactionRef& tx)
+    [[nodiscard]] AddResult Add(const CTransactionRef& tx,
+                                std::optional<NodeClock::time_point> release_time = std::nullopt)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
      * Forget a transaction.
      * @param[in] tx Transaction to forget.
-     * @retval !nullopt The number of times the transaction was sent and confirmed
-     * by the recipient (if the transaction existed and was removed).
+     * @retval !nullopt The transaction existed and was removed, see RemoveResult.
      * @retval nullopt The transaction was not in the storage.
      */
-    std::optional<size_t> Remove(const CTransactionRef& tx)
+    std::optional<RemoveResult> Remove(const CTransactionRef& tx)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /**
+     * Release the delayed transactions whose release time has been reached, so
+     * that they become eligible for sending. Each transaction is returned at most
+     * once. Transactions added without a delay are released at Add() and are
+     * never returned.
+     * @return The newly released transactions.
+     */
+    std::vector<CTransactionRef> ReleaseDue()
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
@@ -109,8 +132,8 @@ public:
      * transaction to one node would be a privacy leak.
      * @param[in] will_send_to_address Address of the peer to which this transaction
      * will be sent.
-     * @return Most urgent transaction or nullopt if there are no transactions
-     * with send attempts remaining.
+     * @return Most urgent transaction or nullopt if there are no released
+     * transactions with send attempts remaining.
      */
     std::optional<CTransactionRef> PickTxForSend(const NodeId& will_send_to_nodeid, const CService& will_send_to_address)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
@@ -140,14 +163,15 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
-     * Check if there are transactions with send attempts remaining.
+     * Check if there are released transactions with send attempts remaining.
      */
     bool HavePendingTransactions()
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
-     * Get the transactions that have not been broadcast recently and have send
-     * attempts remaining.
+     * Get the released transactions that have not been broadcast recently and have
+     * send attempts remaining. For a transaction not yet confirmed by any recipient,
+     * staleness is measured from its release time.
      */
     std::vector<CTransactionRef> GetStale() const
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
@@ -227,9 +251,16 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
     struct TxSendStatus {
         NodeClock::time_point time_added{NodeClock::now()};
+        //! The earliest time the transaction may be sent, never earlier than time_added.
+        NodeClock::time_point release_time{time_added};
+        //! Whether the transaction is eligible for sending (see ReleaseDue()).
+        bool released{true};
         std::vector<SendStatus> send_statuses;
     };
+    /// Whether the transaction has send attempts remaining.
     bool IsPending(const TxSendStatus& status) const;
+    /// Whether the transaction is released and has send attempts remaining.
+    bool IsSendable(const TxSendStatus& status) const;
     /// Cap on the number of simultaneously tracked transactions (see Add()).
     const size_t m_max_transactions;
     /// Cap on the number of send attempts per transaction (see PickTxForSend()).

@@ -129,10 +129,11 @@ FUZZ_TARGET(private_broadcast)
                     }
                 }
 
-                const auto opt_num_confirmed{pb.Remove(tx)};
+                const auto opt_removed{pb.Remove(tx)};
 
-                Assert(opt_num_confirmed.has_value());
-                Assert(opt_num_confirmed.value() == num_nodes_that_confirmed_tx);
+                Assert(opt_removed.has_value());
+                Assert(opt_removed->num_confirmed == num_nodes_that_confirmed_tx);
+                Assert(opt_removed->released);
                 Assert(!pb.Remove(tx).has_value());
                 transactions.erase(transactions_it);
             },
