@@ -1069,6 +1069,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if not self.is_bitcoin_util_compiled():
             raise SkipTest("bitcoin-util has not been compiled")
 
+    def skip_if_no_bitcoin_privbcast(self):
+        """Skip the running test if bitcoin-privbcast has not been compiled."""
+        if not self.is_bitcoin_privbcast_compiled():
+            raise SkipTest("bitcoin-privbcast has not been compiled")
+
     def skip_if_no_bitcoin_chainstate(self):
         """Skip the running test if bitcoin-chainstate has not been compiled."""
         if not self.is_bitcoin_chainstate_compiled():
@@ -1155,6 +1160,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_bitcoin_util_compiled(self):
         """Checks whether bitcoin-util was compiled."""
         return self.config.getboolean("components", "ENABLE_BITCOIN_UTIL")
+
+    def is_bitcoin_privbcast_compiled(self):
+        """Checks whether bitcoin-privbcast was compiled."""
+        return self.config.getboolean("components", "ENABLE_BITCOIN_PRIVBCAST")
 
     def is_bitcoin_chainstate_compiled(self):
         """Checks whether bitcoin-chainstate was compiled."""
