@@ -20,7 +20,6 @@
 #include <common/messages.h>
 #include <common/system.h>
 #include <compat/compat.h>
-#include <consensus/params.h>
 #include <crypto/hex_base.h>
 #include <dbwrapper.h>
 #include <httprpc.h>
@@ -67,25 +66,20 @@
 #include <node/mempool_persist_args.h>
 #include <node/mining_args.h>
 #include <node/peerman_args.h>
-#include <policy/feerate.h>
-#include <policy/fees/block_policy_estimator.h>
 #include <policy/fees/estimator_args.h>
 #include <policy/fees/estimator_man.h>
-#include <policy/policy.h>
 #include <policy/settings.h>
 #include <protocol.h>
 #include <random.h>
 #include <rpc/register.h>
 #include <rpc/server.h>
-#include <rpc/util.h>
 #include <scheduler.h>
-#include <script/sigcache.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <torcontrol.h>
-#include <txgraph.h>
 #include <txmempool.h>
 #include <uint256.h>
+#include <univalue.h>
 #include <util/asmap.h>
 #include <util/batchpriority.h>
 #include <util/btcsignals.h>
@@ -94,7 +88,6 @@
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
-#include <util/moneystr.h>
 #include <util/overflow.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
@@ -137,7 +130,6 @@
 #endif
 
 #ifdef ENABLE_ZMQ
-#include <zmq/zmqabstractnotifier.h>
 #include <zmq/zmqnotificationinterface.h>
 #include <zmq/zmqrpc.h>
 #endif
