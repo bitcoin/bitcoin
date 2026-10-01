@@ -225,6 +225,12 @@ void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, 
 bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet& wallet);
 
 /**
+ * Get the silent payments destinations a created transaction pays to, in the order their outputs
+ * are derived: the recipients, then the change destination if the transaction has a change output.
+ */
+std::vector<bip352::SilentPaymentsDestination> GetSilentPaymentsDestinations(const std::vector<CRecipient>& recipients, const CCoinControl& coin_control, const CreatedTransactionResult& txr);
+
+/**
  * Whether a coin can be spent in a silent payments transaction, or why not. An eligible coin
  * requires its private key, since the outputs are derived from it.
  *

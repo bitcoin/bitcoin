@@ -186,7 +186,10 @@ class SendallTest(BitcoinTestFramework):
         self.log.info("Test sending more than balance")
         pre_sendall_balance = self.add_utxos([7, 14])
 
-        expected_tx = self.wallet.sendall(recipients=[{self.recipient: 5}, self.remainder_target], add_to_wallet=False)
+        # A silent payments transaction must be added to the wallet, so preview it with a taproot
+        # address instead, whose output has the same size, to compute the fee
+        fee_target = self.def_wallet.getnewaddress(address_type="bech32m") if self.target_is_sp else self.remainder_target
+        expected_tx = self.wallet.sendall(recipients=[{self.recipient: 5}, fee_target], add_to_wallet=False)
         tx = self.wallet.decoderawtransaction(expected_tx['hex'])
         fee = 21 - sum([o["value"] for o in tx["vout"]])
 

@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_TRANSACTION_H
 
 #include <attributes.h>
+#include <common/bip352.h>
 #include <consensus/amount.h>
 #include <primitives/transaction.h>
 #include <tinyformat.h>
@@ -165,6 +166,8 @@ struct CachableAmount
     }
 };
 
+static const char* SILENT_PAYMENTS_TX_TAG_STRING = "000000000000000000000000000000000073696c656e74207061796d656e7473";
+static const Txid SILENT_PAYMENTS_TX_TAG = Txid::FromHex(SILENT_PAYMENTS_TX_TAG_STRING).value();
 
 /** Legacy class used for deserializing vtxPrev for backwards compatibility.
  * vtxPrev was removed in commit 93a18a3650292afbb441a47d1fa1b94aeb0164e3,
@@ -207,6 +210,13 @@ public:
     std::vector<std::string> m_messages;
     // BIP 70 Payment Request (deprecated, field kept to preserve metadata from old wallets)
     std::vector<std::string> m_payment_requests;
+    std::vector<bip352::SilentPaymentsDestination> m_sprecipients; //!< original SP recipients used for RBF output recomputation
+    /**
+     * True if a replacement of this tx must recompute its silent payments outputs, since it pays
+     * to at least one silent payments address. Not kept once the tx is replaced. It is not stored
+     * as a value of its own, but as a placeholder replaced_by_txid, see Serialize.
+     */
+    bool m_rbf_needs_sp_outputs{false};
     unsigned int nTimeReceived; //!< time received by this node
     /**
      * Stable timestamp that never changes, and reflects the order a transaction
@@ -257,6 +267,8 @@ public:
         Assert(m_txs.contains(GetWitnessHash()));
     }
 
+    bool RBFNeedsSilentPayments() const { return m_rbf_needs_sp_outputs; }
+
     TxState m_state;
 
     // Set of mempool transactions that conflict
@@ -280,7 +292,17 @@ public:
         if (m_comment) string_values["comment"] = *m_comment;
         if (m_comment_to) string_values["to"] = *m_comment_to;
         if (m_replaces_txid) string_values["replaces_txid"] = m_replaces_txid->ToString();
-        if (m_replaced_by_txid) string_values["replaced_by_txid"] = m_replaced_by_txid->ToString();
+        if (m_replaced_by_txid) {
+            string_values["replaced_by_txid"] = m_replaced_by_txid->ToString();
+        } else if (m_rbf_needs_sp_outputs) {
+            // Older releases don't know about silent payments and could fee bump this tx by
+            // adding inputs, which would invalidate its silent payments outputs. Mark it as
+            // replaced by SILENT_PAYMENTS_TX_TAG so they refuse to bump it. On load, this
+            // placeholder flags the tx as a silent payments tx. A new value is not used to
+            // flag it, since releases that throw on unknown values could not load the wallet.
+            // Once the tx is replaced, the flag is not kept, since it can no longer be bumped.
+            string_values["replaced_by_txid"] = SILENT_PAYMENTS_TX_TAG_STRING;
+        }
         string_values["fromaccount"] = "";
         if (nOrderPos != -1) string_values["n"] = util::ToString(nOrderPos);
         if (nTimeSmart) string_values["timesmart"] = strprintf("%u", nTimeSmart);
@@ -333,7 +355,15 @@ public:
             else if (key == "comment") m_comment = value;
             else if (key == "to") m_comment_to = value;
             else if (key == "replaces_txid") m_replaces_txid = Txid::FromHex(value);
-            else if (key == "replaced_by_txid") m_replaced_by_txid = Txid::FromHex(value);
+            else if (key == "replaced_by_txid") {
+                // All silent payments txs are replaced by SILENT_PAYMENTS_TX_TAG, see Serialize
+                const auto txid{Txid::FromHex(value)};
+                if (txid == SILENT_PAYMENTS_TX_TAG) {
+                    m_rbf_needs_sp_outputs = true;
+                } else {
+                    m_replaced_by_txid = txid;
+                }
+            }
             else {
                 throw std::runtime_error("Unexpected value in CWalletTx strings value map");
             }
@@ -410,6 +440,8 @@ private:
         fChangeCached = false;
         nChangeCached = 0;
         nOrderPos = -1;
+        m_sprecipients.clear();
+        m_rbf_needs_sp_outputs = false;
     }
 
     void Init()

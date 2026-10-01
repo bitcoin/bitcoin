@@ -95,7 +95,23 @@ std::set<int> InterpretSubtractFeeFromOutputInstructions(const UniValue& sffo_in
     return sffo_set;
 }
 
-static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const UniValue& options, CMutableTransaction& rawTx)
+/**
+ * Silent payments transactions must be added to the wallet when they are created. The wallet
+ * records their recipients, which are needed to fee bump them without invalidating their
+ * silent payments outputs. A transaction it learns about later, e.g. from the mempool, has no
+ * such record and would be fee bumped as if it paid to regular taproot outputs.
+ */
+static void EnsureSilentPaymentsTxIsAddedToWallet(const UniValue& options)
+{
+    if (options.exists("psbt") && options["psbt"].get_bool()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "psbt=true is not supported for silent payments transactions, which must be added to the wallet");
+    }
+    if (options.exists("add_to_wallet") && !options["add_to_wallet"].get_bool()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "add_to_wallet=false is not supported for silent payments transactions, which must be added to the wallet");
+    }
+}
+
+static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const UniValue& options, CMutableTransaction& rawTx, std::vector<SilentPaymentsDestination> sp_recipients = {})
 {
     bool can_anti_fee_snipe = !options.exists("locktime");
 
@@ -124,6 +140,10 @@ static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const 
 
     CMutableTransaction mtx;
     complete = FinalizeAndExtractPSBT(psbtx, mtx);
+    if (!complete && !sp_recipients.empty()) {
+        // An incomplete transaction is returned as a PSBT and not added to the wallet
+        throw JSONRPCError(RPC_WALLET_ERROR, "Silent payments transactions must be fully signed by the wallet");
+    }
 
     UniValue result(UniValue::VOBJ);
 
@@ -141,7 +161,7 @@ static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const 
         CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
         result.pushKV("txid", tx->GetHash().GetHex());
         if (add_to_wallet && !psbt_opt_in) {
-            pwallet->CommitTransaction(tx);
+            pwallet->CommitTransaction(tx, /*replaces_txid=*/std::nullopt, /*comment=*/std::nullopt, /*comment_to=*/std::nullopt, /*messages=*/{}, /*payment_requests=*/{}, sp_recipients);
         } else {
             result.pushKV("hex", hex);
         }
@@ -179,10 +199,11 @@ static void EnableSilentPayments(const CWallet& wallet, CCoinControl& coin_contr
     coin_control.m_silent_payments = true;
 }
 
-//! Enable silent payments in coin_control if any recipient is a silent payments destination
+//! Enable silent payments in coin_control if any recipient or the change is a silent payments destination
 static void MaybeEnableSilentPayments(const CWallet& wallet, CCoinControl& coin_control, const std::vector<CRecipient>& recipients)
 {
-    if (std::ranges::any_of(recipients, [](const auto& r) { return r.dest.IsSilentPayment(); })) {
+    if (std::ranges::any_of(recipients, [](const auto& r) { return r.dest.IsSilentPayment(); }) ||
+        (coin_control.destChange && coin_control.destChange->IsSilentPayment())) {
         EnableSilentPayments(wallet, coin_control);
     }
 }
@@ -212,7 +233,7 @@ UniValue SendMoney(CWallet& wallet, CCoinControl &coin_control, std::vector<CRec
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, util::ErrorString(res).original);
     }
     const CTransactionRef& tx = res->tx;
-    wallet.CommitTransaction(tx, /*replaces_txid=*/std::nullopt, comment, comment_to);
+    wallet.CommitTransaction(tx, /*replaces_txid=*/std::nullopt, comment, comment_to, /*messages=*/{}, /*payment_requests=*/{}, GetSilentPaymentsDestinations(recipients, coin_control, *res));
     if (verbose) {
         UniValue entry(UniValue::VOBJ);
         entry.pushKV("txid", tx->GetHash().GetHex());
@@ -545,13 +566,12 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
 
         if (options.exists("changeAddress") || options.exists("change_address")) {
             const std::string change_address_str = (options.exists("change_address") ? options["change_address"] : options["changeAddress"]).get_str();
-            CTxDestination dest = DecodeDestination(change_address_str);
-
-            if (!IsValidDestination(dest)) {
+            auto dest{PaymentDestination::FromString(change_address_str)};
+            if (!dest) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Change address must be a valid bitcoin address");
             }
 
-            coinControl.destChange = PaymentDestination{dest};
+            coinControl.destChange = std::move(*dest);
         }
 
         if (options.exists("changePosition") || options.exists("change_position")) {
@@ -705,7 +725,9 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
 
     MaybeEnableSilentPayments(wallet, coinControl, recipients);
 
-    auto txr = FundTransaction(wallet, tx, recipients, change_position, lockUnspents, coinControl);
+    // A silent payments transaction is added to the wallet, which spends its inputs, so they
+    // don't need to be locked. Locking them would leave them locked if it cannot be fully signed.
+    auto txr = FundTransaction(wallet, tx, recipients, change_position, lockUnspents && !coinControl.m_silent_payments, coinControl);
     if (!txr) {
         throw JSONRPCError(RPC_WALLET_ERROR, ErrorString(txr).original);
     }
@@ -852,6 +874,13 @@ RPCMethod fundrawtransaction()
     // This sets us up for a future PR to completely remove tx from the function signature in favor of passing inputs directly
     tx.vout.clear();
     auto txr = FundTransaction(*pwallet, tx, recipients, options, coin_control, /*override_min_fee=*/true);
+    // Outputs taken from the raw transaction are plain scripts, so silent payments can only be
+    // enabled here by a silent payments changeAddress. Reject it: the funded transaction is not
+    // added to the wallet and its inputs may change before signing, see
+    // EnsureSilentPaymentsTxIsAddedToWallet.
+    if (coin_control.m_silent_payments) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "fundrawtransaction does not support silent payments change addresses, use send instead");
+    }
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("hex", EncodeHexTx(*txr.tx));
@@ -1069,7 +1098,7 @@ static RPCMethod bumpfee_helper(std::string method_name)
     CCoinControl coin_control;
     // optional parameters
     coin_control.m_signal_bip125_rbf = true;
-    std::vector<CTxOut> outputs;
+    std::vector<std::pair<PaymentDestination, CAmount>> outputs;
 
     std::optional<uint32_t> original_change_index;
 
@@ -1101,14 +1130,15 @@ static RPCMethod bumpfee_helper(std::string method_name)
         }
         SetFeeEstimateMode(*pwallet, coin_control, conf_target, options["estimate_mode"], options["fee_rate"], /*override_min_fee=*/false);
 
-        // Prepare new outputs by creating a temporary tx and calling AddOutputs().
         if (!options["outputs"].isNull()) {
             if (options["outputs"].isArray() && options["outputs"].empty()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, output argument cannot be an empty array");
             }
-            CMutableTransaction tempTx;
-            AddOutputs(tempTx, options["outputs"]);
-            outputs = tempTx.vout;
+            // Silent payments outputs are derived from the private keys of the transaction's
+            // inputs, and the transaction must be added to the wallet when it is created, see
+            // EnsureSilentPaymentsTxIsAddedToWallet. A PSBT may be signed elsewhere and its inputs
+            // may change before signing, so only allow silent payments addresses for bumpfee RPC.
+            outputs = ParseOutputs(NormalizeOutputs(options["outputs"]), /*allow_silent_payments=*/!want_psbt);
         }
 
         if (options.exists("original_change_index")) {
@@ -1131,6 +1161,14 @@ static RPCMethod bumpfee_helper(std::string method_name)
 
     EnsureWalletIsUnlocked(*pwallet);
 
+
+    if (want_psbt) {
+        // A PSBT is not added to the wallet when it is created, see EnsureSilentPaymentsTxIsAddedToWallet,
+        // so a silent payments transaction can only be bumped with bumpfee
+        if (const CWalletTx* wtx{pwallet->GetWalletTx(hash)}; wtx && wtx->RBFNeedsSilentPayments()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "psbtbumpfee does not support silent payments transactions, use bumpfee instead");
+        }
+    }
 
     // Targeting feerate bump.
     auto bump{feebumper::CreateRateBumpTransaction(*pwallet, hash, coin_control, /*require_mine=*/ !want_psbt, outputs, original_change_index)};
@@ -1168,7 +1206,7 @@ static RPCMethod bumpfee_helper(std::string method_name)
         }
 
         Txid txid;
-        if (feebumper::CommitTransaction(*pwallet, hash, std::move(mtx), errors, txid) != feebumper::Result::OK) {
+        if (feebumper::CommitTransaction(*pwallet, hash, std::move(mtx), errors, txid, bump->sp_recipients) != feebumper::Result::OK) {
             throw JSONRPCError(RPC_WALLET_ERROR, errors[0].original);
         }
 
@@ -1313,9 +1351,10 @@ RPCMethod send()
 
             SetOptionsInputWeights(options["inputs"], options);
             auto txr = FundTransaction(*pwallet, rawTx, recipients, options, coin_control, /*override_min_fee=*/false);
+            if (coin_control.m_silent_payments) EnsureSilentPaymentsTxIsAddedToWallet(options);
 
             CMutableTransaction tx = CMutableTransaction(*txr.tx);
-            return FinishTransaction(pwallet, options, tx);
+            return FinishTransaction(pwallet, options, tx, GetSilentPaymentsDestinations(recipients, coin_control, txr));
         }
     };
 }
@@ -1495,7 +1534,10 @@ RPCMethod sendall()
                     sp_destinations.emplace(i, *sp);
                 }
             }
-            if (!sp_destinations.empty()) EnableSilentPayments(*pwallet, coin_control);
+            if (!sp_destinations.empty()) {
+                EnsureSilentPaymentsTxIsAddedToWallet(options);
+                EnableSilentPayments(*pwallet, coin_control);
+            }
 
             LOCK(pwallet->cs_wallet);
             CAmount total_input_value(0);
@@ -1652,14 +1694,21 @@ RPCMethod sendall()
                 }
             }
 
+            // A silent payments transaction is added to the wallet, which spends its inputs, so they
+            // don't need to be locked. Locking them would leave them locked if it cannot be fully signed.
             const bool lock_unspents{options.exists("lock_unspents") ? options["lock_unspents"].get_bool() : false};
-            if (lock_unspents) {
+            if (lock_unspents && sp_destinations.empty()) {
                 for (const CTxIn& txin : rawTx.vin) {
                     pwallet->LockCoin(txin.prevout, /*persist=*/false);
                 }
             }
 
-            return FinishTransaction(pwallet, options, rawTx);
+            std::vector<SilentPaymentsDestination> sp_dests;
+            sp_dests.reserve(sp_destinations.size());
+            for (auto& [idx, dest] : sp_destinations) {
+                sp_dests.emplace_back(std::move(dest));
+            }
+            return FinishTransaction(pwallet, options, rawTx, std::move(sp_dests));
         }
     };
 }
@@ -1857,6 +1906,12 @@ RPCMethod walletcreatefundedpsbt()
     coin_control.m_allow_other_inputs = rawTx.vin.size() == 0;
     SetOptionsInputWeights(request.params[0], options);
     auto txr = FundTransaction(wallet, rawTx, recipients, options, coin_control, /*override_min_fee=*/true);
+    // Silent payments recipients are rejected by ParseOutputs, so silent payments can only be
+    // enabled here by a silent payments changeAddress. Reject it: the PSBT is not added to the
+    // wallet and its inputs may change before signing, see EnsureSilentPaymentsTxIsAddedToWallet.
+    if (coin_control.m_silent_payments) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "walletcreatefundedpsbt does not support silent payments change addresses, use send instead");
+    }
 
     // Make a blank psbt
     uint32_t psbt_version = 2;
