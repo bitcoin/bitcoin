@@ -46,6 +46,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <exception>
+#include <limits>
 #include <map>
 #include <optional>
 #include <ostream>
@@ -170,6 +171,12 @@ std::string CBlockFileInfo::ToString() const
 } // namespace kernel
 
 namespace node {
+/** The number of blocks to keep below the deepest prune lock.
+ *  There is nothing special about this number. It is higher than what we
+ *  expect to see in regular mainnet reorgs, but not so high that it would
+ *  noticeably interfere with the pruning mechanism.
+ * */
+static constexpr int PRUNE_LOCK_BUFFER{10};
 
 bool CBlockIndexWorkComparator::operator()(const CBlockIndex* pa, const CBlockIndex* pb) const
 {
@@ -419,6 +426,38 @@ bool BlockManager::DeletePruneLock(const std::string& name)
 {
     AssertLockHeld(::cs_main);
     return m_prune_locks.erase(name) > 0;
+}
+
+int BlockManager::GetLastPrunableHeight(int last_prune) const
+{
+    AssertLockHeld(::cs_main);
+    std::optional<std::string> limiting_lock; // prune lock that actually was the limiting factor, only used for logging
+
+    for (const auto& prune_lock : m_prune_locks) {
+        if (prune_lock.second.height_first == std::numeric_limits<int>::max()) continue;
+        // Remove the buffer and one additional block here to get actual height that is outside of the buffer
+        const int lock_height{prune_lock.second.height_first - PRUNE_LOCK_BUFFER - 1};
+        last_prune = std::max(1, std::min(last_prune, lock_height));
+        if (last_prune == lock_height) {
+            limiting_lock = prune_lock.first;
+        }
+    }
+
+    if (limiting_lock) {
+        LogDebug(BCLog::PRUNE, "%s limited pruning to height %d\n", limiting_lock.value(), last_prune);
+    }
+    return last_prune;
+}
+
+void BlockManager::MovePruneLocksBack(int max_height_first)
+{
+    AssertLockHeld(::cs_main);
+    for (auto& prune_lock : m_prune_locks) {
+        if (prune_lock.second.height_first <= max_height_first) continue;
+
+        prune_lock.second.height_first = max_height_first;
+        LogDebug(BCLog::PRUNE, "%s prune lock moved back to %d\n", prune_lock.first, max_height_first);
+    }
 }
 
 CBlockIndex* BlockManager::InsertBlockIndex(const uint256& hash)

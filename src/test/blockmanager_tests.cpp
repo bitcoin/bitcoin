@@ -308,14 +308,25 @@ BOOST_FIXTURE_TEST_CASE(prune_lock_update_and_delete, TestingSetup)
     auto& chainman{*Assert(m_node.chainman)};
     auto& blockman{chainman.m_blockman};
 
+    // Without a prune lock, pruning is limited only by the requested height
+    BOOST_CHECK_EQUAL(blockman.GetLastPrunableHeight(1000), 1000);
+
     // Create a prune lock
     blockman.UpdatePruneLock("test_lock", node::PruneLockInfo{.height_first = 100});
+    const int last_prunable{blockman.GetLastPrunableHeight(1000)};
+    BOOST_CHECK(last_prunable > 0 && last_prunable < 100);
 
     // Update it to a new height
     blockman.UpdatePruneLock("test_lock", node::PruneLockInfo{.height_first = 200});
+    BOOST_CHECK_EQUAL(blockman.GetLastPrunableHeight(1000), last_prunable + 100);
+
+    // Move it back, as disconnecting a block does
+    blockman.MovePruneLocksBack(100);
+    BOOST_CHECK_EQUAL(blockman.GetLastPrunableHeight(1000), last_prunable);
 
     // Delete existing prune lock
     BOOST_CHECK(blockman.DeletePruneLock("test_lock"));
+    BOOST_CHECK_EQUAL(blockman.GetLastPrunableHeight(1000), 1000);
 
     // Verify deletion worked by trying to delete the same lock again
     BOOST_CHECK(!blockman.DeletePruneLock("test_lock"));
