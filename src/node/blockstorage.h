@@ -150,6 +150,20 @@ struct PruneLockInfo {
     int height_first{std::numeric_limits<int>::max()};
 };
 
+/** Non-negative height range for a manual prune. */
+struct ManualPruneLimits {
+    int min_height; //!< Lowest height a pruned file may contain
+    int max_height; //!< Highest height a pruned file may contain
+};
+
+/** Non-negative height range and sizes for pruning below a target. */
+struct TargetPruneLimits {
+    int min_height;       //!< Lowest height a pruned file may contain
+    int max_height;       //!< Highest height a pruned file may contain
+    uint64_t target;
+    uint64_t extra_space; //!< Extra space to free below the target when pruning
+};
+
 enum BlockfileType {
     // Values used as array indexes - do not change carelessly.
     NORMAL = 0,
@@ -226,34 +240,6 @@ private:
     [[nodiscard]] bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     AutoFile OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false) const;
-
-    /* Calculate the block/rev files to delete based on height specified by user with RPC command pruneblockchain */
-    void FindFilesToPruneManual(
-        std::set<int>& setFilesToPrune,
-        int nManualPruneHeight,
-        const Chainstate& chain);
-
-    /**
-     * Prune block and undo files (blk???.dat and rev???.dat) so that the disk space used is less than a user-defined target.
-     * The user sets the target (in MB) on the command line or in config file.  This will be run on startup and whenever new
-     * space is allocated in a block or undo file, staying below the target. Changing back to unpruned requires a reindex
-     * (which in this case means the blockchain must be re-downloaded.)
-     *
-     * Pruning functions are called from FlushStateToDisk when the m_check_for_pruning flag has been set.
-     * Block and undo files are deleted in lock-step (when blk00003.dat is deleted, so is rev00003.dat.)
-     * Pruning cannot take place until the longest chain is at least a certain length (CChainParams::nPruneAfterHeight).
-     * Pruning will never delete a block within a defined distance (currently 288) from the active chain's tip.
-     * The block index is updated by unsetting HAVE_DATA and HAVE_UNDO for any blocks that were stored in the deleted files.
-     * A db flag records the fact that at least some block files have been pruned.
-     *
-     * @param[out]   setFilesToPrune   The set of file indices that can be unlinked will be returned
-     * @param        last_prune        The last height we're able to prune, according to the prune locks
-     */
-    void FindFilesToPrune(
-        std::set<int>& setFilesToPrune,
-        int last_prune,
-        const Chainstate& chain,
-        ChainstateManager& chainman);
 
     //! Since assumedvalid chainstates may be syncing a range of the chain that is very
     //! far away from the normal/background validation process, we should segment blockfiles
@@ -378,6 +364,22 @@ public:
     CBlockIndex* AddToBlockIndex(const CBlockHeader& block, CBlockIndex*& best_header) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     /** Create a new block index entry for a given block hash */
     CBlockIndex* InsertBlockIndex(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /** Mark the files whose blocks all lie within `limits` as pruned. */
+    void FindFilesToPruneManual(
+        std::set<int>& setFilesToPrune,
+        ManualPruneLimits limits);
+
+    /**
+     * Prune block and undo files (blk???.dat and rev???.dat) so that the disk space used is less than `limits.target`.
+     * Block and undo files are deleted in lock-step (when blk00003.dat is deleted, so is rev00003.dat.)
+     * The block index is updated by unsetting HAVE_DATA and HAVE_UNDO for any blocks that were stored in the deleted files.
+     *
+     * @param[out]   setFilesToPrune   The set of file indices that can be unlinked will be returned
+     */
+    void FindFilesToPrune(
+        std::set<int>& setFilesToPrune,
+        TargetPruneLimits limits);
 
     //! Mark one block file as pruned (modify associated database entries)
     void PruneOneBlockFile(int fileNumber) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
