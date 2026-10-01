@@ -29,10 +29,14 @@
 #include <optional>
 #include <unordered_map>
 #include <unordered_set>
+#include <variant>
 
 enum class OutputType;
 
 namespace wallet {
+//! The private key of an input used by a silent payments sender. Taproot keys are tweaked key pairs.
+using SilentPaymentsKey = std::variant<CKey, KeyPair>;
+
 struct MigrationData;
 class ScriptPubKeyMan;
 
@@ -86,6 +90,8 @@ public:
     virtual ~ScriptPubKeyMan() = default;
     virtual util::Result<CTxDestination> GetNewDestination(const OutputType type) { return util::Error{Untranslated("Not supported")}; }
     virtual bool IsMine(const CScript& script) const { return false; }
+    //! Get the private key whose public key a silent payments sender uses for this scriptPubKey, if known
+    virtual std::optional<SilentPaymentsKey> GetPrivKeyForSilentPayments(const CScript& scriptPubKey) const { return std::nullopt; }
 
     //! Check that the given decryption key is valid for this ScriptPubKeyMan, i.e. it decrypts all of the keys handled by it.
     virtual bool CheckDecryptionKey(const CKeyingMaterial& master_key) { return false; }
@@ -392,6 +398,8 @@ public:
     std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, const common::PSBTFillOptions& options, int* n_signed = nullptr) const override;
 
     uint256 GetID() const override;
+
+    std::optional<SilentPaymentsKey> GetPrivKeyForSilentPayments(const CScript& scriptPubKey) const override;
 
     bool HasWalletDescriptor(const WalletDescriptor& desc) const;
     util::Result<void> UpdateWalletDescriptor(WalletDescriptor& descriptor, const FlatSigningProvider& provider);
