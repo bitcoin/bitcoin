@@ -45,7 +45,7 @@ class TxnMallTest(BitcoinTestFramework):
         # blockchain sync later in the test when nodes are connected, due to
         # timing issues.
         for n in self.nodes:
-            assert_equal(n.getblockchaininfo()["initialblockdownload"], False)
+            assert_false(n.getblockchaininfo()["initialblockdownload"])
 
         for i in range(3):
             assert_equal(self.nodes[i].getbalance(), starting_balance)
@@ -76,7 +76,7 @@ class TxnMallTest(BitcoinTestFramework):
         outputs[change_address] = 1248 - 1240 + doublespend_fee
         rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
         doublespend = self.nodes[0].signrawtransactionwithwallet(rawtx)
-        assert_equal(doublespend["complete"], True)
+        assert_true(doublespend["complete"])
 
         # Create two spends using 1 50 BTC coin each
         txid1 = self.spend_utxo(fund_foo_utxo, {node1_address: 40})

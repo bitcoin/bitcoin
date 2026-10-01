@@ -22,9 +22,9 @@ class DisableWalletTest (BitcoinTestFramework):
         # Make sure wallet is really disabled
         assert_raises_rpc_error(-32601, 'Method not found', self.nodes[0].getwalletinfo)
         x = self.nodes[0].validateaddress('3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy')
-        assert_equal(x['isvalid'], False)
+        assert_false(x['isvalid'])
         x = self.nodes[0].validateaddress('mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ')
-        assert_equal(x['isvalid'], True)
+        assert_true(x['isvalid'])
 
 
 if __name__ == '__main__':

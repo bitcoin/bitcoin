@@ -394,7 +394,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 n.submitblock(block)
                 chain_info = n.getblockchaininfo()
                 assert_equal(chain_info["blocks"], 200)
-                assert_equal(chain_info["initialblockdownload"], False)
+                assert_false(chain_info["initialblockdownload"])
 
     def import_deterministic_coinbase_privkeys(self):
         for i in range(self.num_nodes):

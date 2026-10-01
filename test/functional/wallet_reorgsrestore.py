@@ -86,11 +86,11 @@ class ReorgsRestoreTest(BitcoinTestFramework):
 
         # Verify the coinbase tx was marked as abandoned and balance correctly computed
         tx_info = wallet0.gettransaction(node0_coinbase_tx_hash)['details'][0]
-        assert_equal(tx_info['abandoned'], True)
+        assert_true(tx_info['abandoned'])
         assert_equal(tx_info['category'], 'orphan')
         assert(wallet0.getbalances()['mine']['trusted'] == 0)
         # Verify the coinbase descendant was also marked as abandoned
-        assert_equal(wallet0.gettransaction(descendant_tx_id)['details'][0]['abandoned'], True)
+        assert_true(wallet0.gettransaction(descendant_tx_id)['details'][0]['abandoned'])
 
     def test_reorg_handling_during_unclean_shutdown(self):
         self.log.info("Test that wallet transactions are un-abandoned in case of temporarily invalidated blocks and wallet doesn't crash due to a duplicate block disconnection event after an unclean shutdown")
@@ -114,7 +114,7 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         # Tip was disconnected, ensure coinbase has been abandoned
         assert_equal(wallet.getbalances()["mine"]["immature"], 0)
         coinbase_tx_id = wallet.getblock(tip, verbose=1)["tx"][0]
-        assert_equal(wallet.gettransaction(coinbase_tx_id)['details'][0]['abandoned'], True)
+        assert_true(wallet.gettransaction(coinbase_tx_id)['details'][0]['abandoned'])
 
         # Abort process abruptly to mimic an unclean shutdown (no chain state flush to disk)
         node.kill_process()
@@ -129,7 +129,7 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         # Upon reload after the crash, since the chainstate was not flushed, the tip contains the previously abandoned
         # coinbase. This was rescanned and now un-abandoned.
         wallet = node.get_wallet_rpc("reorg_crash")
-        assert_equal(wallet.gettransaction(coinbase_tx_id)['details'][0]['abandoned'], False)
+        assert_false(wallet.gettransaction(coinbase_tx_id)['details'][0]['abandoned'])
         assert_greater_than(wallet.getbalances()["mine"]["immature"], 0)
 
         # Previously, a bug caused the node to crash if two block disconnection events occurred consecutively.
@@ -137,12 +137,12 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         node.invalidateblock(tip)
         assert(node.getbestblockhash() != tip)
         # Ensure wallet state is consistent now
-        assert_equal(wallet.gettransaction(coinbase_tx_id)['details'][0]['abandoned'], True)
+        assert_true(wallet.gettransaction(coinbase_tx_id)['details'][0]['abandoned'])
         assert_equal(wallet.getbalances()["mine"]["immature"], 0)
 
         # And finally, verify the state if the block ends up being into the best chain again
         node.reconsiderblock(tip)
-        assert_equal(wallet.gettransaction(coinbase_tx_id)['details'][0]['abandoned'], False)
+        assert_false(wallet.gettransaction(coinbase_tx_id)['details'][0]['abandoned'])
         assert_greater_than(wallet.getbalances()["mine"]["immature"], 0)
 
     def run_test(self):

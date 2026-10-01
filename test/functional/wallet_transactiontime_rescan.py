@@ -68,7 +68,7 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
                 {"desc": wo3_desc, "timestamp": "now"},
             ]
         )
-        assert_equal(all([r["success"] for r in import_res]), True)
+        assert_true(all([r["success"] for r in import_res]))
 
         self.log.info('Start transactions')
 
@@ -147,11 +147,11 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
                 {"desc": wo3_desc, "timestamp": "now"},
             ]
         )
-        assert_equal(all([r["success"] for r in import_res]), True)
+        assert_true(all([r["success"] for r in import_res]))
 
         self.log.info('Testing abortrescan when no rescan is in progress')
-        assert_equal(restorewo_wallet.getwalletinfo()['scanning'], False)
-        assert_equal(restorewo_wallet.abortrescan(), False)
+        assert_false(restorewo_wallet.getwalletinfo()['scanning'])
+        assert_false(restorewo_wallet.abortrescan())
 
         # check user has 0 balance and no transactions
         assert_equal(restorewo_wallet.getbalance(), 0)

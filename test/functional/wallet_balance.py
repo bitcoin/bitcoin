@@ -45,7 +45,7 @@ def create_transactions(node, address, amt, fees):
             outputs[node.getrawchangeaddress()] = ins_total - amt - fee
         raw_tx = node.createrawtransaction(inputs, outputs, 0, True)
         raw_tx = node.signrawtransactionwithwallet(raw_tx)
-        assert_equal(raw_tx['complete'], True)
+        assert_true(raw_tx['complete'])
         txs.append(raw_tx)
 
     return txs
@@ -223,7 +223,7 @@ class WalletTest(BitcoinTestFramework):
 
         self.log.info('Check that wallet txs not in the mempool are untrusted')
         assert txid not in self.nodes[0].getrawmempool()
-        assert_equal(self.nodes[0].gettransaction(txid)['trusted'], False)
+        assert_false(self.nodes[0].gettransaction(txid)['trusted'])
         assert_equal(self.nodes[0].getbalance(minconf=0), 0)
 
         self.log.info("Test replacement and reorg of non-mempool tx")
@@ -266,7 +266,7 @@ class WalletTest(BitcoinTestFramework):
         self.generatetoaddress(self.nodes[0], 5, self.nodes[0].get_deterministic_priv_key().address)
         lastblock = self.nodes[0].getbalances()['lastprocessedblock']
         assert_is_hash_string(lastblock['hash'])
-        assert_equal((prev_hash == lastblock['hash']), False)
+        assert_false((prev_hash == lastblock['hash']))
         assert_equal(lastblock['height'], prev_height + 5)
 
         prev_hash = self.nodes[0].getbestblockhash()

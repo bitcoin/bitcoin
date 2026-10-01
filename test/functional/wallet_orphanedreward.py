@@ -49,12 +49,12 @@ class OrphanedBlockRewardTest(BitcoinTestFramework):
           "nonmempool": 0,
         })
         # And the unconfirmed tx to be abandoned
-        assert_equal(self.nodes[1].gettransaction(txid)["details"][0]["abandoned"], True)
+        assert_true(self.nodes[1].gettransaction(txid)["details"][0]["abandoned"])
 
         # The abandoning should persist through reloading
         self.nodes[1].unloadwallet(self.default_wallet_name)
         self.nodes[1].loadwallet(self.default_wallet_name)
-        assert_equal(self.nodes[1].gettransaction(txid)["details"][0]["abandoned"], True)
+        assert_true(self.nodes[1].gettransaction(txid)["details"][0]["abandoned"])
 
         # If the orphaned reward is reorged back into the main chain, any unconfirmed
         # descendant txs at the time of the original reorg remain abandoned.
@@ -67,7 +67,7 @@ class OrphanedBlockRewardTest(BitcoinTestFramework):
         del balances["lastprocessedblock"]
         del pre_reorg_conf_bals["lastprocessedblock"]
         assert_equal(balances, pre_reorg_conf_bals)
-        assert_equal(self.nodes[1].gettransaction(txid)["details"][0]["abandoned"], True)
+        assert_true(self.nodes[1].gettransaction(txid)["details"][0]["abandoned"])
 
 
 if __name__ == '__main__':

@@ -161,7 +161,7 @@ class WalletEncryptionTest(BitcoinTestFramework):
             do_wallet_tool("-wallet=noprivs_enc", f"-dumpfile={dumpfile_path}", "dump")
             with open(dumpfile_path, "r") as f:
                 # Check there's nothing with an 'mkey' prefix
-                assert_equal(all([not line.startswith("046d6b6579") for line in f]), True)
+                assert_true(all([not line.startswith("046d6b6579") for line in f]))
 
 
 if __name__ == '__main__':

@@ -99,7 +99,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         assert_equal(sigop_equivalent_vsize, tx.get_vsize())
 
         res = self.nodes[0].testmempoolaccept([tx.serialize().hex()])[0]
-        assert_equal(res['allowed'], True)
+        assert_true(res['allowed'])
         assert_equal(sigop_equivalent_vsize, tx.get_vsize())
         assert_equal(res['vsize'], sigop_equivalent_vsize)
         assert_equal(res['vsize_adjusted'], sigop_equivalent_vsize)
@@ -109,7 +109,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         # => tx's vsize in mempool should also grow accordingly
         tx.vout[0].scriptPubKey = CScript([OP_RETURN, b'X'*(256+vsize_to_pad+1)])
         res = self.nodes[0].testmempoolaccept([tx.serialize().hex()])[0]
-        assert_equal(res['allowed'], True)
+        assert_true(res['allowed'])
         assert_equal(sigop_equivalent_vsize + 1, tx.get_vsize())
         assert_equal(res['vsize'], sigop_equivalent_vsize+1)
         assert_equal(res['vsize_adjusted'], sigop_equivalent_vsize + 1)
@@ -121,7 +121,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         # (the maximum of both is taken)
         tx.vout[0].scriptPubKey = CScript([OP_RETURN, b'X'*(256+vsize_to_pad-1)])
         res = self.nodes[0].testmempoolaccept([tx.serialize().hex()])[0]
-        assert_equal(res['allowed'], True)
+        assert_true(res['allowed'])
         assert_not_equal(sigop_equivalent_vsize, tx.get_vsize())
         assert_equal(res['vsize'], sigop_equivalent_vsize)
         assert_equal(res['vsize_adjusted'], sigop_equivalent_vsize)

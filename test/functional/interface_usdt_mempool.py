@@ -289,7 +289,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
         assert_equal(bytes(event.replacement_hash)[::-1].hex(), replacement_tx["txid"])
         assert_equal(event.replacement_vsize, replacement_tx["tx"].get_vsize())
         assert_equal(event.replacement_fee, replacement_fee)
-        assert_equal(event.replaced_by_transaction, True)
+        assert_true(event.replaced_by_transaction)
 
         bpf.cleanup()
         self.generate(self.wallet, 1)

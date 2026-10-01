@@ -57,7 +57,7 @@ class SignRawTransactionWithKeyTest(BitcoinTestFramework):
     def assert_signing_completed_successfully(self, signed_tx):
         assert 'errors' not in signed_tx
         assert 'complete' in signed_tx
-        assert_equal(signed_tx['complete'], True)
+        assert_true(signed_tx['complete'])
 
     def successful_signing_test(self):
         """Create and sign a valid raw transaction with one input.

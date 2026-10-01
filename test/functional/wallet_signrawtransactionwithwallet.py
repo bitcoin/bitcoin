@@ -153,9 +153,9 @@ class SignRawTransactionWithWalletTest(BitcoinTestFramework):
         rawtx = self.nodes[0].createrawtransaction([], [{self.nodes[0].getnewaddress(): 10}])
         fundedtx = self.nodes[0].fundrawtransaction(rawtx)
         signedtx = self.nodes[0].signrawtransactionwithwallet(fundedtx["hex"])
-        assert_equal(signedtx["complete"], True)
+        assert_true(signedtx["complete"])
         signedtx2 = self.nodes[0].signrawtransactionwithwallet(signedtx["hex"])
-        assert_equal(signedtx2["complete"], True)
+        assert_true(signedtx2["complete"])
         assert_equal(signedtx["hex"], signedtx2["hex"])
         self.nodes[0].walletlock()
 
@@ -209,7 +209,7 @@ class SignRawTransactionWithWalletTest(BitcoinTestFramework):
 
         # Sign and send the transaction
         signed = self.nodes[0].signrawtransactionwithwallet(tx)
-        assert_equal(signed["complete"], True)
+        assert_true(signed["complete"])
         self.nodes[0].sendrawtransaction(signed["hex"])
 
     def test_signing_with_cltv(self):
@@ -243,7 +243,7 @@ class SignRawTransactionWithWalletTest(BitcoinTestFramework):
 
         # Sign and send the transaction
         signed = self.nodes[0].signrawtransactionwithwallet(tx)
-        assert_equal(signed["complete"], True)
+        assert_true(signed["complete"])
         self.nodes[0].sendrawtransaction(signed["hex"])
 
     def test_signing_with_missing_prevtx_info(self):

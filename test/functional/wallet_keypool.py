@@ -156,7 +156,7 @@ class KeyPoolTest(BitcoinTestFramework):
         address = addr.pop()
         desc = w1.getaddressinfo(address)['desc']
         res = w2.importdescriptors([{'desc': desc, 'timestamp': 'now'}])
-        assert_equal(res[0]['success'], True)
+        assert_true(res[0]['success'])
 
         with WalletUnlock(w1, 'test'):
             res = w1.sendtoaddress(address=address, amount=0.00010000)
@@ -169,27 +169,27 @@ class KeyPoolTest(BitcoinTestFramework):
 
         # creating a 10,000 sat transaction without change, with a manual input, should still be possible
         res = w2.walletcreatefundedpsbt(inputs=w2.listunspent(), outputs=[{destination: 0.00010000}], subtractFeeFromOutputs=[0], feeRate=0.00010)
-        assert_equal("psbt" in res, True)
+        assert_true("psbt" in res)
 
         # creating a 10,000 sat transaction without change should still be possible
         res = w2.walletcreatefundedpsbt(inputs=[], outputs=[{destination: 0.00010000}], subtractFeeFromOutputs=[0], feeRate=0.00010)
-        assert_equal("psbt" in res, True)
+        assert_true("psbt" in res)
         # should work without subtractFeeFromOutputs if the exact fee is subtracted from the amount
         res = w2.walletcreatefundedpsbt(inputs=[], outputs=[{destination: 0.00008900}], feeRate=0.00010)
-        assert_equal("psbt" in res, True)
+        assert_true("psbt" in res)
 
         # dust change should be removed
         res = w2.walletcreatefundedpsbt(inputs=[], outputs=[{destination: 0.00008800}], feeRate=0.00010)
-        assert_equal("psbt" in res, True)
+        assert_true("psbt" in res)
 
         # create a transaction without change at the maximum fee rate, such that the output is still spendable:
         res = w2.walletcreatefundedpsbt(inputs=[], outputs=[{destination: 0.00010000}], subtractFeeFromOutputs=[0], feeRate=0.0008823)
-        assert_equal("psbt" in res, True)
+        assert_true("psbt" in res)
         assert_equal(res["fee"], Decimal("0.00009706"))
 
         # creating a 10,000 sat transaction with a manual change address should be possible
         res = w2.walletcreatefundedpsbt(inputs=[], outputs=[{destination: 0.00010000}], subtractFeeFromOutputs=[0], feeRate=0.00010, changeAddress=addr.pop())
-        assert_equal("psbt" in res, True)
+        assert_true("psbt" in res)
 
 if __name__ == '__main__':
     KeyPoolTest(__file__).main()

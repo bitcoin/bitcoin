@@ -409,7 +409,7 @@ class RESTTest (BitcoinTestFramework):
             for vin in tx_obj["vin"]:
                 if "coinbase" not in vin:
                     assert "prevout" in vin
-                    assert_equal(vin["prevout"]["generated"], False)
+                    assert_false(vin["prevout"]["generated"])
                 else:
                     assert "prevout" not in vin
 

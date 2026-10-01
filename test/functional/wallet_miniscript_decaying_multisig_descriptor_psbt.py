@@ -104,7 +104,7 @@ class WalletMiniscriptDecayingMultisigDescriptorPSBTTest(BitcoinTestFramework):
 
             if self.M < self.N:
                 self.log.info(f"Check that the time-locked transaction is too immature to spend with {self.M}-of-{self.N} at block height {current_height}...")
-                assert_equal(current_height >= locktime, False)
+                assert_false(current_height >= locktime)
                 assert_raises_rpc_error(-26, "non-final", multisig.sendrawtransaction, psbt["hex"])
 
                 self.log.info(f"Generate blocks to reach the time-lock block height {locktime} and broadcast the transaction...")
