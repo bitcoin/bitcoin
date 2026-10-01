@@ -2,13 +2,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/args.h>
+#include <consensus/amount.h>
+#include <kernel/chainparams.h>
 #include <netbase.h>
 #include <node/privbcast.h>
+#include <node/transaction.h>
+#include <node/types.h>
+#include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <privbcast/job.h>
 #include <privbcast/params.h>
 #include <privbcast/report.h>
 #include <script/script.h>
+#include <script/solver.h>
 #include <sync.h>
 #include <test/util/privbcast_queue.h>
 #include <test/util/setup_common.h>
@@ -603,6 +610,74 @@ BOOST_AUTO_TEST_CASE(no_proxy_drops_the_queue)
         BOOST_CHECK(!job.time_started && !job.report);
     }
     BOOST_CHECK_EQUAL(stub.Runs(), 0U);
+}
+
+BOOST_FIXTURE_TEST_CASE(seed_names, BasicTestingSetup)
+{
+    // A seed name SOCKS5 cannot carry fails startup, as it fails the tool: an override's whenever
+    // given, the chain's own (here a custom signet's) only with -privatebroadcast. The overrides
+    // fail startup on other chains (U1).
+    const auto regtest{CChainParams::RegTest()};
+    const auto with_seed{[&](const std::string& name) {
+        ArgsManager args;
+        args.ForceSetArg("-privatebroadcastseed", name);
+        return node::GetPrivbcastSeeds(args, *regtest);
+    }};
+    const std::string longest(255, 'a');
+    const auto accepted{with_seed(longest)};
+    BOOST_REQUIRE(accepted);
+    BOOST_CHECK(accepted->dns_seeds == std::vector<std::string>{longest});
+    BOOST_CHECK(!with_seed(std::string(256, 'a')));
+
+    const ArgsManager none;
+    BOOST_CHECK(node::GetPrivbcastSeeds(none, *regtest));
+    ArgsManager enabled;
+    enabled.ForceSetArg("-privatebroadcast", "1");
+    CChainParams::SigNetOptions options;
+    options.seeds = std::vector<std::string>{std::string(255, 'a')};
+    BOOST_CHECK(node::GetPrivbcastSeeds(enabled, *CChainParams::SigNet(options)));
+    options.seeds = std::vector<std::string>{std::string(256, 'a')};
+    BOOST_CHECK(!node::GetPrivbcastSeeds(enabled, *CChainParams::SigNet(options)));
+    const auto seeds{node::GetPrivbcastSeeds(none, *CChainParams::SigNet(options))};
+    BOOST_REQUIRE(seeds);
+    BOOST_CHECK(seeds->dns_seeds == *options.seeds);
+
+    ArgsManager args;
+    args.ForceSetArg("-privatebroadcastseed", "a.seed.");
+    BOOST_CHECK(node::GetPrivbcastSeeds(args, *regtest));
+    BOOST_CHECK(!node::GetPrivbcastSeeds(args, *CChainParams::SigNet({})));
+}
+
+BOOST_FIXTURE_TEST_CASE(covered_after_validation, TestChain100Setup)
+{
+    // Interface/Node, N5: a submission is validated, with its call's limits, before a queued job
+    // can cover it: confirmed, or with an input spent by a confirmed transaction, it fails.
+    m_node.privbcast = std::make_unique<PrivbcastQueue>(
+        Seeds(), [] { return true; }, [] { return std::optional{NodeProxy()}; }, [](const Txid&) { return false; });
+    // Two mature coinbases to spend.
+    mineBlocks(1);
+    const CScript script{GetScriptForRawPubKey(coinbaseKey.GetPubKey())};
+    const CTransactionRef confirmed{MakeTransactionRef(CreateValidMempoolTransaction(m_coinbase_txns[0], 0, 0, coinbaseKey, script, 49 * COIN, /*submit=*/false))};
+    const CTransactionRef conflicted{MakeTransactionRef(CreateValidMempoolTransaction(m_coinbase_txns[1], 0, 0, coinbaseKey, script, 49 * COIN, /*submit=*/false))};
+    const CMutableTransaction conflict{CreateValidMempoolTransaction(m_coinbase_txns[1], 0, 0, coinbaseKey, script, 48 * COIN, /*submit=*/false)};
+    const auto broadcast{[&](const CTransactionRef& tx, CAmount max_tx_fee = 0, CFeeRate max_tx_fee_rate = CFeeRate{0}) {
+        std::string error;
+        return node::BroadcastTransaction(m_node, tx, error, max_tx_fee, max_tx_fee_rate, node::TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST, /*wait_callback=*/false);
+    }};
+    BOOST_CHECK(broadcast(confirmed) == node::TransactionError::OK);
+    BOOST_CHECK(broadcast(conflicted) == node::TransactionError::OK);
+    BOOST_CHECK(broadcast(confirmed) == node::TransactionError::OK);
+    // It pays a coin in fees.
+    BOOST_CHECK(broadcast(confirmed, /*max_tx_fee=*/COIN / 2) == node::TransactionError::MAX_FEE_EXCEEDED);
+    BOOST_CHECK(broadcast(confirmed, /*max_tx_fee=*/0, /*max_tx_fee_rate=*/CFeeRate{COIN}) == node::TransactionError::MAX_FEE_RATE_EXCEEDED);
+    BOOST_CHECK_EQUAL(m_node.privbcast->Info().size(), 2U);
+
+    CreateAndProcessBlock({CMutableTransaction{*confirmed}, conflict}, script);
+    BOOST_CHECK(broadcast(confirmed) == node::TransactionError::ALREADY_IN_UTXO_SET);
+    BOOST_CHECK(broadcast(conflicted) == node::TransactionError::MISSING_INPUTS);
+    BOOST_CHECK_EQUAL(m_node.privbcast->Info().size(), 2U);
+    for (const PrivbcastQueue::JobInfo& job : m_node.privbcast->Info()) BOOST_CHECK_EQUAL(job.state, "queued");
+    m_node.privbcast.reset();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

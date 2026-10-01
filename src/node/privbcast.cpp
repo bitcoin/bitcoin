@@ -4,19 +4,27 @@
 
 #include <node/privbcast.h>
 
+#include <common/args.h>
+#include <kernel/chainparams.h>
 #include <kernel/mempool_entry.h>
+#include <net.h>
 #include <netbase.h>
 #include <primitives/transaction.h>
+#include <privbcast/input.h>
 #include <privbcast/job.h>
 #include <privbcast/params.h>
 #include <privbcast/report.h>
 #include <sync.h>
+#include <tinyformat.h>
 #include <uint256.h>
 #include <univalue.h>
+#include <util/chaintype.h>
 #include <util/check.h>
 #include <util/log.h>
+#include <util/result.h>
 #include <util/thread.h>
 #include <util/time.h>
+#include <util/translation.h>
 
 #include <algorithm>
 #include <cassert>
@@ -40,6 +48,28 @@ std::optional<int64_t> UnixSeconds(const std::optional<NodeClock::time_point>& t
 }
 
 } // namespace
+
+util::Result<privbcast::SeedMaterial> GetPrivbcastSeeds(const ArgsManager& args, const CChainParams& chainparams)
+{
+    // Only jobs query the chain's own names, so a node that runs none starts with any -signetseednode.
+    return privbcast::GetSeedMaterial(args, chainparams, "-privatebroadcastseed",
+                                      /*check_chain_names=*/args.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST));
+}
+
+util::Result<void> CheckPrivbcastSettings(const ArgsManager& args, const CChainParams& chainparams)
+{
+    if (!args.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)) return {};
+    if (args.IsArgSet("-signetseednode")) {
+        return util::Error{_("-privatebroadcast cannot be used with -signetseednode: private broadcast jobs query only the chain's own DNS seeds.")};
+    }
+    if (args.IsArgSet("-signetchallenge")) {
+        return util::Error{_("-privatebroadcast cannot be used with -signetchallenge: a custom signet has no DNS seeds for private broadcast jobs to query.")};
+    }
+    if (args.GetIntArg("-mocktime", 0) != 0 && chainparams.GetChainType() != ChainType::REGTEST) {
+        return util::Error{Untranslated("-privatebroadcast cannot be used with -mocktime except on regtest: the node's clock schedules every private broadcast job.")};
+    }
+    return {};
+}
 
 PrivbcastQueue::PrivbcastQueue(privbcast::SeedMaterial seeds,
                                std::function<bool()> network_active,

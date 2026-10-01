@@ -11,6 +11,7 @@
 #include <net_processing.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
+#include <node/privbcast.h>
 #include <node/types.h>
 #include <policy/feerate.h>
 #include <txmempool.h>
@@ -29,6 +30,22 @@ static TransactionError HandleATMPError(const TxValidationState& state, std::str
     } else {
         return TransactionError::MEMPOOL_ERROR;
     }
+}
+
+static TransactionError SubmitPrivateBroadcast(PrivbcastQueue& queue, const CTransactionRef& tx)
+{
+    switch (queue.Submit(tx)) {
+    case PrivbcastQueue::SubmitResult::Queued:
+    case PrivbcastQueue::SubmitResult::Covered:
+        return TransactionError::OK;
+    case PrivbcastQueue::SubmitResult::QueueFull:
+        return TransactionError::PRIVATE_BROADCAST_FULL;
+    case PrivbcastQueue::SubmitResult::NetworkOff:
+        return TransactionError::PRIVATE_BROADCAST_NETWORK_OFF;
+    case PrivbcastQueue::SubmitResult::ShuttingDown:
+        return TransactionError::PRIVATE_BROADCAST_SHUTTING_DOWN;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, const CFeeRate& max_tx_fee_rate, TxBroadcast broadcast_method, bool wait_callback)
@@ -133,7 +150,10 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         node.peerman->InitiateTxBroadcastToAll(wtxid);
         break;
     case TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST:
-        return node.peerman->InitiateTxBroadcastPrivate(tx);
+        // The job sends the transaction as submitted, even when the mempool holds its txid with
+        // another witness (N2).
+        assert(node.privbcast);
+        return SubmitPrivateBroadcast(*node.privbcast, tx);
     }
 
     return TransactionError::OK;
