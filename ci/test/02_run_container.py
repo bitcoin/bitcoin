@@ -191,7 +191,7 @@ def main():
             "nix-shell",
             f"{os.environ['BASE_ROOT_DIR']}/contrib/devtools/shell-win64-cross.nix",
             "--run",
-            f"exec bash {shlex.quote(test_script)}",
+            f"echo 'Windows cross compiler:' && \"$CXX\" -v && exec bash {shlex.quote(test_script)}",
         ])
     else:
         ci_exec([test_script])

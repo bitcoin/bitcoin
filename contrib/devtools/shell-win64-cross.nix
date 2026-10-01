@@ -9,24 +9,38 @@
 
 let
   host = builtins.getEnv "HOST";
-  crossPkgs = if host == "x86_64-w64-mingw32ucrt"
+  baseCrossPkgs = if host == "x86_64-w64-mingw32ucrt"
     then pkgs.pkgsCross.ucrt64
     else if host == "x86_64-w64-mingw32"
       then pkgs.pkgsCross.mingwW64
       else throw "Unsupported HOST: ${host}";
+  crossPkgs = baseCrossPkgs.extend (_: _: {
+    threads = {
+      model = "posix";
+      package = null;
+    };
+  });
   toolchain = crossPkgs.stdenv.cc.targetPrefix;
   pthreads = crossPkgs.windows.pthreads;
+  crossGcc = crossPkgs.buildPackages.gcc14;
+  gcc = crossGcc.override {
+    cc = crossGcc.cc.overrideAttrs (old: {
+      # Keep target pthread headers out of GCC's native build tools.
+      env = old.env // {
+        EXTRA_FLAGS_FOR_TARGET =
+          "${old.env.EXTRA_FLAGS_FOR_TARGET} -idirafter ${pthreads}/include -B${pthreads}/lib";
+        EXTRA_LDFLAGS_FOR_TARGET =
+          "${old.env.EXTRA_LDFLAGS_FOR_TARGET} -Wl,-L${pthreads}/lib";
+      };
+    });
+    extraPackages = [ pthreads ];
+  };
 in
 
 pkgs.mkShellNoCC {
-  packages = [
-    crossPkgs.gcc14
-    pkgs.nsis
-  ];
+  packages = [ gcc pkgs.nsis ];
 
   shellHook = ''
-    export NIX_CFLAGS_COMPILE="-isystem ${pthreads}/include $NIX_CFLAGS_COMPILE"
-    export NIX_LDFLAGS="-L${pthreads}/lib $NIX_LDFLAGS"
     export CC=$(command -v ${toolchain}gcc)
     export CXX=$(command -v ${toolchain}g++)
     export LD=$(command -v ${toolchain}ld)

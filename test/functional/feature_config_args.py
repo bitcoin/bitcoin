@@ -449,7 +449,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.stop_node(0, expected_stderr=(
             "Warning: Private broadcast of own transactions requested (-privatebroadcast) and "
             "-proxyrandomize is disabled. Tor circuits for private broadcast connections may "
-            "be correlated to other connections over Tor. For maximum privacy set -proxyrandomize=1."))
+            "be correlated to other connections over Tor. To reduce this risk, set -proxyrandomize=1."))
 
     def test_ignored_conf(self):
         self.log.info('Test error is triggered when the datadir in use contains a bitcoin.conf file that would be ignored '

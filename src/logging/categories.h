@@ -45,6 +45,7 @@ enum LogFlags : CategoryMask {
     TXPACKAGES = (CategoryMask{1} << 27),
     KERNEL = (CategoryMask{1} << 28),
     PRIVBROADCAST = (CategoryMask{1} << 29),
+    MINING = (CategoryMask{1} << 30),
     ALL = ~NONE,
 };
 

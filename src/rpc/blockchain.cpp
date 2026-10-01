@@ -1548,7 +1548,7 @@ RPCMethod getdeploymentinfo()
         "Returns an object containing various state info regarding deployments of consensus changes.\n"
         "Consensus changes for which the new rules are enforced from genesis are not listed in \"deployments\".",
         {
-            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Default{"hash of current chain tip"}, "The block hash at which to query deployment state"},
+            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::DefaultHint{"hash of current chain tip"}, "The block hash at which to query deployment state"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "", {

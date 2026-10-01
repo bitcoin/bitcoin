@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
 
     const CNetAddr other_addr{ip(0xa0b0ff01)}; // Not any of addr[].
 
-    std::array<CNode*, 3> nodes;
+    std::array<CNode*, 5> nodes;
 
     banman->ClearBanned();
     NodeId id{0};
@@ -389,6 +389,20 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     peerLogic->InitializeNode(*nodes[2], NODE_NETWORK);
     nodes[2]->fSuccessfullyConnected = true;
     connman->AddTestNode(*nodes[2]);
+
+    nodes[3] = new CNode{/*id=*/id++,
+                         /*sock=*/nullptr,
+                         /*addrIn=*/addr[2],
+                         /*nKeyedNetGroupIn=*/0,
+                         /*nLocalHostNonceIn=*/0,
+                         /*addrBindIn=*/CAddress{},
+                         /*addrNameIn=*/"",
+                         /*conn_type_in=*/ConnectionType::PRIVATE_BROADCAST,
+                         /*inbound_onion=*/false,
+                         /*network_key=*/0};
+    peerLogic->InitializeNode(*nodes[3], NODE_NETWORK);
+    connman->AddTestNode(*nodes[3]);
+
     peerLogic->UnitTestMisbehaving(nodes[2]->GetId());
     BOOST_CHECK(peerLogic->SendMessages(*nodes[2]));
     BOOST_CHECK(banman->IsDiscouraged(addr[0]));
@@ -397,6 +411,25 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     BOOST_CHECK(nodes[0]->fDisconnect);
     BOOST_CHECK(nodes[1]->fDisconnect);
     BOOST_CHECK(nodes[2]->fDisconnect);
+    BOOST_CHECK(!nodes[3]->fDisconnect);
+
+    nodes[4] = new CNode{/*id=*/id++,
+                         /*sock=*/nullptr,
+                         /*addrIn=*/CAddress{CService{other_addr, Params().GetDefaultPort()}, NODE_NONE},
+                         /*nKeyedNetGroupIn=*/0,
+                         /*nLocalHostNonceIn=*/0,
+                         /*addrBindIn=*/CAddress{},
+                         /*addrNameIn=*/"",
+                         /*conn_type_in=*/ConnectionType::PRIVATE_BROADCAST,
+                         /*inbound_onion=*/false,
+                         /*network_key=*/0};
+    peerLogic->InitializeNode(*nodes[4], NODE_NETWORK);
+    connman->AddTestNode(*nodes[4]);
+
+    peerLogic->UnitTestMisbehaving(nodes[4]->GetId());
+    BOOST_CHECK(peerLogic->SendMessages(*nodes[4]));
+    BOOST_CHECK(nodes[4]->fDisconnect);
+    BOOST_CHECK(!banman->IsDiscouraged(other_addr));
 
     for (CNode* node : nodes) {
         peerLogic->FinalizeNode(*node);

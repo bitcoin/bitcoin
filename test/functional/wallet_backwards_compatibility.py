@@ -36,11 +36,12 @@ LAST_KEYPOOL_INDEX = 9 # Index of the last derived address with the keypool size
 class BackwardsCompatibilityTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 10
+        self.num_nodes = 11
         # Add new version after each release:
         self.extra_args = [
             ["-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # Pre-release: use to mine blocks. noban for immediate tx relay
             ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # Pre-release: use to receive coins, swap wallets, etc
+            ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v31.1
             ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v31.0
             ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v30.2
             ["-nowallet", "-addresstype=bech32", "-whitelist=noban@127.0.0.1"], # v25.0
@@ -60,6 +61,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.add_nodes(self.num_nodes, extra_args=self.extra_args, versions=[
             None,
             None,
+            310100,
             310000,
             300200,
             250000,
@@ -365,11 +367,11 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                     continue
                 # Also try to reopen on master after opening on old
                 for n in [node, node_master]:
-                    # 31.0 has a descriptor id calculation incompatibility.
+                    # 31.0 and 31.1 have a descriptor id calculation incompatibility.
                     # Miniscript descriptors imported into node versions other than 31.0 will
-                    # result in wallets that cannot be loaded into 31.0.
+                    # result in wallets that cannot be loaded into 31.0 and 31.1.
                     # These wallets will emit a "Wallet corrupted" error.
-                    if wallet_name == "miniscript" and n.version == 310000:
+                    if wallet_name == "miniscript" and n.version in (310000, 310100):
                         assert_raises_rpc_error(-4, "Wallet corrupted", n.loadwallet, wallet_name)
                         continue
 
@@ -398,11 +400,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                         assert_equal(info['private_keys_enabled'], True)
                         assert_equal(info['keypoolsize'], 0)
                     elif wallet_name == "miniscript":
-                        for desc in wallet.listdescriptors()["descriptors"]:
-                            if desc["desc"].startswith("wsh(or_b(pk"):
-                                break
-                        else:
-                            assert False, "Did not find miniscript descriptor"
+                        descs = wallet.listdescriptors()["descriptors"]
+                        assert any(desc["desc"].startswith("wsh(or_b(pk") for desc in descs), "Miniscript descriptor missing"
 
                     # Copy back to master
                     wallet.unloadwallet()
@@ -466,11 +465,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             assert_equal(info["desc"], descsum_create(descriptor))
 
             if self.major_version_at_least(node, 24):
-                for desc in wallet.listdescriptors()["descriptors"]:
-                    if desc["desc"].startswith("wsh(or_b(pk"):
-                        break
-                else:
-                    assert False, "Did not find miniscript descriptor"
+                descs = wallet.listdescriptors()["descriptors"]
+                assert any(desc["desc"].startswith("wsh(or_b(pk") for desc in descs), "Miniscript descriptor missing"
 
             # Make backup so the wallet can be copied back to old node
             down_wallet_name = f"re_down_{node.version}"

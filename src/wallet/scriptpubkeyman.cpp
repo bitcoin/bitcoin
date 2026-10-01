@@ -1529,8 +1529,7 @@ void DescriptorScriptPubKeyMan::Load()
 bool DescriptorScriptPubKeyMan::HasWalletDescriptor(const WalletDescriptor& desc) const
 {
     LOCK(cs_desc_man);
-    // Compare by using the canonical string to make the hardened indicators consistent for comparison
-    return m_wallet_descriptor.descriptor->ToCanonicalString() == desc.descriptor->ToCanonicalString();
+    return m_wallet_descriptor.IsCanonicallyEquivalent(desc);
 }
 
 void DescriptorScriptPubKeyMan::WriteDescriptor()

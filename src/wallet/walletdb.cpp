@@ -769,9 +769,9 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
 
         uint256 id;
         key >> id;
-        WalletDescriptor desc;
+        std::optional<WalletDescriptor> desc;
         try {
-            value >> desc;
+            desc.emplace(WalletDescriptor::FromStream(deserialize, value));
         } catch (const std::ios_base::failure& e) {
             strErr = strprintf("Error: Unrecognized descriptor found in wallet %s. ", pwallet->GetName());
             strErr += (last_client > CLIENT_VERSION) ? "The wallet might have been created on a newer version. " :
@@ -837,7 +837,7 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
         result = std::max(result, lh_cache_res.m_result);
 
         // Set the cache to the WalletDescriptor
-        desc.cache = cache;
+        desc->cache = cache;
 
         // Get unencrypted keys
         KeyMap keys;
@@ -906,7 +906,7 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
         num_ckeys = ckey_res.m_records;
 
         try {
-            pwallet->LoadDescriptorScriptPubKeyMan(id, desc, keys, ckeys);
+            pwallet->LoadDescriptorScriptPubKeyMan(id, *desc, keys, ckeys);
         } catch (std::runtime_error& e) {
             strErr = e.what();
             return DBErrors::CORRUPT;

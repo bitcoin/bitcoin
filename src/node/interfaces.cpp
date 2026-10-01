@@ -740,7 +740,7 @@ public:
     }
     util::Expected<FeeRateEstimation, FeeRateEstimationError> getFeeRateEstimate(int num_blocks, bool conservative) const override
     {
-        if (!m_node.fee_estimator_man) return EstimationError(FeeRateEstimatorType::NONE, /*returned_target=*/0, /*error=*/{});
+        if (!m_node.fee_estimator_man) return EstimationError(FeeRateEstimatorType::AUTO, /*returned_target=*/0, /*error=*/{});
         return m_node.fee_estimator_man->GetFeeRateEstimate(num_blocks, conservative);
     }
     unsigned int maximumFeeEstimationTargetBlocks() const override

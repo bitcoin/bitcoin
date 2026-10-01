@@ -830,22 +830,25 @@ class HTTPBasicsTest (BitcoinTestFramework):
 
         # Open the debug log and count how many of the batch requests were processed.
         # Expect progress to stall after a few seconds.
-        tries = 6
+        count = 0
         prev_count = -1
         min_count = MAX_BODY_SIZE // response_body_size
-        with open(self.node.debug_log_path, encoding="utf-8", errors="replace") as dl:
-            while True:
+
+        def progress_stalled():
+            nonlocal count, prev_count
+            with open(self.node.debug_log_path, encoding="utf-8", errors="replace") as dl:
                 dl.seek(dl_start_size)
-                log = dl.read()
-                count = log.count(URI)
+                count = dl.read().count(f"Received a GET request for {URI} ")
                 if count == prev_count and count > min_count:
                     self.log.info(f"Response progress stalled after {count} requests were handled.")
                     assert count < num_req, f"Server handled the whole batch of {num_req}: nothing was throttled"
-                    break
+                    return True
                 prev_count = count
-                tries -= 1
-                assert tries > 0, f"Progress failed to stall after {count} requests were handled."
-                time.sleep(5)
+                return False
+
+        # Large enough interval, to ensure throttling occurred, rather than
+        # merely slow JSON serialization.
+        self.wait_until(progress_stalled, check_interval=5)
 
         # Drain the responses that were handled up to the stall point,
         # plus a few more to confirm that pulling out the cork restores the flow.
