@@ -1331,6 +1331,17 @@ bool IsDust(const CRecipient& recipient, const CFeeRate& dustRelayFee)
     return ::IsDust(GetDummyTxOut(recipient.dest, recipient.nAmount), dustRelayFee);
 }
 
+std::vector<SilentPaymentsDestination> GetSilentPaymentsDestinations(const std::vector<CRecipient>& recipients)
+{
+    std::vector<SilentPaymentsDestination> sp_dests;
+    for (const auto& recipient : recipients) {
+        if (const auto* sp = recipient.dest.GetSilentPaymentsDestination()) {
+            sp_dests.push_back(*sp);
+        }
+    }
+    return sp_dests;
+}
+
 util::Result<std::map<size_t, WitnessV1Taproot>> CreateSilentPaymentsOutputs(
     const CWallet& wallet,
     const std::map<size_t, SilentPaymentsDestination>& silent_payments_destinations,

@@ -49,20 +49,25 @@ const secp256k1_silentpayments_prevouts_summary* PrevoutsSummary::Get() const
     return m_prevouts_summary.get();
 }
 
+bool SilentPaymentsDestination::IsValid() const
+{
+    if (m_version >= 31) return false;
+    // V0 address has no extension data
+    if (m_version == 0 && !m_extension_data.empty()) return false;
+    if (!m_scan_pubkey.IsFullyValid() || !m_scan_pubkey.IsCompressed()) return false;
+    if (!m_spend_pubkey.IsFullyValid() || !m_spend_pubkey.IsCompressed()) return false;
+    return true;
+}
+
 std::optional<SilentPaymentsDestination> SilentPaymentsDestination::From(
     const CPubKey& scan_pubkey,
     const CPubKey& spend_pubkey,
     uint8_t version,
     std::span<const unsigned char> extension_data
 ) {
-    if (version >= 31) return std::nullopt;
-    if (version == 0 && !extension_data.empty()) {
-        // V0 address has no extension data
-        return std::nullopt;
-    }
-    if (!scan_pubkey.IsFullyValid() || !scan_pubkey.IsCompressed()) return std::nullopt;
-    if (!spend_pubkey.IsFullyValid() || !spend_pubkey.IsCompressed()) return std::nullopt;
-    return SilentPaymentsDestination(version, scan_pubkey, spend_pubkey, extension_data);
+    SilentPaymentsDestination dest(version, scan_pubkey, spend_pubkey, extension_data);
+    if (!dest.IsValid()) return std::nullopt;
+    return dest;
 }
 
 util::Expected<SilentPaymentsDestination, std::string> DecodeSilentPaymentsAddress(

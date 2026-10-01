@@ -11,6 +11,7 @@
 #include <key.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
+#include <serialize.h>
 #include <uint256.h>
 #include <util/expected.h>
 
@@ -19,6 +20,7 @@
 #include <cstdint>
 #include <cstring>
 #include <functional>
+#include <ios>
 #include <map>
 #include <memory>
 #include <optional>
@@ -82,6 +84,8 @@ private:
     ) : m_version(version), m_scan_pubkey(scan_pubkey),
         m_spend_pubkey(spend_pubkey),
         m_extension_data(extension_data.begin(), extension_data.end()) {};
+
+    bool IsValid() const;
 public:
     static std::optional<SilentPaymentsDestination> From(
         const CPubKey& scan_pubkey,
@@ -94,6 +98,19 @@ public:
     const CPubKey& GetScanPubKey() const { return m_scan_pubkey; }
     const CPubKey& GetSpendPubKey() const { return m_spend_pubkey; }
     std::span<const unsigned char> GetExtensionData() const { return m_extension_data; }
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << m_version << m_scan_pubkey << m_spend_pubkey << m_extension_data;
+    }
+
+    template <typename Stream>
+    SilentPaymentsDestination(deserialize_type, Stream& s)
+    {
+        s >> m_version >> m_scan_pubkey >> m_spend_pubkey >> m_extension_data;
+        if (!IsValid()) throw std::ios_base::failure("Invalid silent payments destination");
+    }
 
     bool operator==(const SilentPaymentsDestination&) const = default;
 
