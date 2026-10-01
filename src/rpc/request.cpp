@@ -142,8 +142,8 @@ AuthCookieResult GenerateAuthCookie(const std::optional<fs::perms>& cookie_perms
     }
 
     g_generated_cookie = true;
-    LogInfo("Generated RPC authentication cookie %s\n", fs::PathToString(filepath));
-    LogInfo("Permissions used for cookie: %s\n", PermsToSymbolicString(fs::status(filepath).permissions()));
+    LogInfo("Generated RPC authentication cookie %s", fs::PathToString(filepath));
+    LogInfo("Permissions used for cookie: %s", PermsToSymbolicString(fs::status(filepath).permissions()));
 
     user = COOKIEAUTH_USER;
     pass = rand_pwd_hex;
@@ -174,7 +174,7 @@ void DeleteAuthCookie()
             fs::remove(GetAuthCookieFile());
         }
     } catch (const fs::filesystem_error& e) {
-        LogWarning("Unable to remove random auth cookie file %s: %s\n", fs::PathToString(e.path1()), e.code().message());
+        LogWarning("Unable to remove random auth cookie file %s: %s", fs::PathToString(e.path1()), e.code().message());
     }
 }
 

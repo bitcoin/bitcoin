@@ -190,7 +190,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros_CategoryName, LogSetup)
 
     std::vector<std::string> expected;
     for (const auto& [category, name] : expected_category_names) {
-        LogDebug(category, "foo: %s\n", "bar");
+        LogDebug(category, "foo: %s", "bar");
         std::string expected_log = "[";
         expected_log += name;
         expected_log += "] foo: bar";
@@ -398,16 +398,16 @@ enum class Location {
 void LogFromLocation(Location location, const std::string& message) {
     switch (location) {
     case Location::INFO_1:
-        LogInfo("%s\n", message);
+        LogInfo("%s", message);
         return;
     case Location::INFO_2:
-        LogInfo("%s\n", message);
+        LogInfo("%s", message);
         return;
     case Location::DEBUG_LOG:
-        LogDebug(BCLog::LogFlags::HTTP, "%s\n", message);
+        LogDebug(BCLog::LogFlags::HTTP, "%s", message);
         return;
     case Location::INFO_NOLIMIT:
-        LogInfo(util::log::NO_RATE_LIMIT, "%s\n", message);
+        LogInfo(util::log::NO_RATE_LIMIT, "%s", message);
         return;
     } // no default case, so the compiler can warn about missing cases
     assert(false);

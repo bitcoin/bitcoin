@@ -145,7 +145,7 @@ void CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block
         std::vector<uint256> old_heads = GetHeadBlocks();
         if (old_heads.size() == 2) {
             if (old_heads[0] != block_hash) {
-                LogError("The coins database detected an inconsistent state, likely due to a previous crash or shutdown. You will need to restart bitcoind with the -reindex-chainstate or -reindex configuration option.\n");
+                LogError("The coins database detected an inconsistent state, likely due to a previous crash or shutdown. You will need to restart bitcoind with the -reindex-chainstate or -reindex configuration option.");
             }
             assert(old_heads[0] == block_hash);
             old_tip = old_heads[1];
@@ -175,7 +175,7 @@ void CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block
         count++;
         it = cursor.NextAndMaybeErase(*it);
         if (batch.ApproximateSize() > m_options.batch_write_bytes) {
-            LogDebug(BCLog::COINDB, "Writing partial batch of %.2f MiB\n", batch.ApproximateSize() / double(1_MiB));
+            LogDebug(BCLog::COINDB, "Writing partial batch of %.2f MiB", batch.ApproximateSize() / double(1_MiB));
 
             m_db->WriteBatch(batch);
             batch.Clear();
@@ -193,7 +193,7 @@ void CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block
     batch.Erase(DB_HEAD_BLOCKS);
     batch.Write(DB_BEST_BLOCK, block_hash);
 
-    LogDebug(BCLog::COINDB, "Writing final batch of %.2f MiB\n", batch.ApproximateSize() / double(1_MiB));
+    LogDebug(BCLog::COINDB, "Writing final batch of %.2f MiB", batch.ApproximateSize() / double(1_MiB));
     m_db->WriteBatch(batch);
     LogDebug(BCLog::COINDB, "Committed %u changed transaction outputs (out of %u) to coin database...", (unsigned int)dirty_count, (unsigned int)count);
 }

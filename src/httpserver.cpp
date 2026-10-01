@@ -109,7 +109,7 @@ bool HTTPServer::InitHTTPAllowList()
     std::string strAllowed;
     for (const CSubNet& subnet : m_allow_subnets)
         strAllowed += subnet.ToString() + " ";
-    LogDebug(BCLog::HTTP, "Allowing HTTP connections from: %s\n", strAllowed);
+    LogDebug(BCLog::HTTP, "Allowing HTTP connections from: %s", strAllowed);
     return true;
 }
 
@@ -137,7 +137,7 @@ static void MaybeDispatchRequestToWorker(std::shared_ptr<HTTPRequest> hreq)
 {
     // Early reject unknown HTTP methods
     if (hreq->GetRequestMethod() == HTTPRequestMethod::UNKNOWN) {
-        LogDebug(BCLog::HTTP, "HTTP request from %s rejected: Unknown HTTP request method\n",
+        LogDebug(BCLog::HTTP, "HTTP request from %s rejected: Unknown HTTP request method",
                  hreq->GetPeer().ToStringAddrPort());
         WriteNoStoreErrorReply(*hreq, HTTP_BAD_METHOD);
         return;
@@ -229,7 +229,7 @@ static std::vector<std::pair<std::string, uint16_t>> GetBindAddresses()
             uint16_t port{http_port};
             std::string host;
             if (!SplitHostPort(strRPCBind, port, host)) {
-                LogError("%s\n", InvalidPortErrMsg("-rpcbind", strRPCBind).original);
+                LogError("%s", InvalidPortErrMsg("-rpcbind", strRPCBind).original);
                 return {}; // empty
             }
             endpoints.emplace_back(host, port);
@@ -240,7 +240,7 @@ static std::vector<std::pair<std::string, uint16_t>> GetBindAddresses()
 
 void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPRequestHandler &handler)
 {
-    LogDebug(BCLog::HTTP, "Registering HTTP handler for %s (exactmatch %d)\n", prefix, exactMatch);
+    LogDebug(BCLog::HTTP, "Registering HTTP handler for %s (exactmatch %d)", prefix, exactMatch);
     LOCK(g_httppathhandlers_mutex);
     pathHandlers.emplace_back(prefix, exactMatch, handler);
 }
@@ -255,7 +255,7 @@ void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch)
             break;
     if (i != iend)
     {
-        LogDebug(BCLog::HTTP, "Unregistering HTTP handler for %s (exactmatch %d)\n", prefix, exactMatch);
+        LogDebug(BCLog::HTTP, "Unregistering HTTP handler for %s (exactmatch %d)", prefix, exactMatch);
         pathHandlers.erase(i);
     }
 }
@@ -846,7 +846,7 @@ std::unique_ptr<Sock> HTTPServer::AcceptConnection(const Sock& listen_sock, CSer
 
     // Early address-based allow check
     if (!ClientAllowed(addr)) {
-        LogDebug(BCLog::HTTP, "Connection from %s rejected: Client network is not allowed HTTP access\n",
+        LogDebug(BCLog::HTTP, "Connection from %s rejected: Client network is not allowed HTTP access",
                  addr.ToStringAddrPort());
         // Socket destroyed, connection aborted
         return {};
@@ -1379,7 +1379,7 @@ bool InitHTTPServer()
     LogDebug(BCLog::HTTP, "Initialized HTTP server");
 
     g_max_queue_depth = std::max(gArgs.GetArg<int>("-rpcworkqueue", DEFAULT_HTTP_WORKQUEUE), 1);
-    LogDebug(BCLog::HTTP, "set work queue of depth %d\n", g_max_queue_depth);
+    LogDebug(BCLog::HTTP, "set work queue of depth %d", g_max_queue_depth);
 
     return true;
 }
@@ -1408,7 +1408,7 @@ void StopHTTPServer()
 {
     LogDebug(BCLog::HTTP, "Stopping HTTP server");
 
-    LogDebug(BCLog::HTTP, "Waiting for HTTP worker threads to exit\n");
+    LogDebug(BCLog::HTTP, "Waiting for HTTP worker threads to exit");
     g_threadpool_http.Stop();
 
     if (g_http_server) {

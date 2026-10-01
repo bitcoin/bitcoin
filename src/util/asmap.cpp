@@ -308,7 +308,7 @@ bool SanityCheckAsmap(const std::span<const std::byte> asmap, int bits)
 bool CheckStandardAsmap(const std::span<const std::byte> data)
 {
     if (!SanityCheckAsmap(data, 128)) {
-        LogWarning("Sanity check of asmap data failed\n");
+        LogWarning("Sanity check of asmap data failed");
         return false;
     }
     return true;

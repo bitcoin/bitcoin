@@ -26,18 +26,18 @@ void noui_ThreadSafeMessageBox(const bilingual_str& message, unsigned int style)
     switch (style) {
     case CClientUIInterface::MSG_ERROR:
         strCaption = "Error: ";
-        if (!fSecure) LogError("%s\n", message.original);
+        if (!fSecure) LogError("%s", message.original);
         break;
     case CClientUIInterface::MSG_WARNING:
         strCaption = "Warning: ";
-        if (!fSecure) LogWarning("%s\n", message.original);
+        if (!fSecure) LogWarning("%s", message.original);
         break;
     case CClientUIInterface::MSG_INFORMATION:
         strCaption = "Information: ";
-        if (!fSecure) LogInfo("%s\n", message.original);
+        if (!fSecure) LogInfo("%s", message.original);
         break;
     default:
-        if (!fSecure) LogInfo("%s%s\n", strCaption, message.original);
+        if (!fSecure) LogInfo("%s%s", strCaption, message.original);
     }
 
     tfm::format(std::cerr, "%s%s\n", strCaption, message.original);

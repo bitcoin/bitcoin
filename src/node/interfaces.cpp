@@ -155,7 +155,7 @@ public:
     {
         NodeContext& ctx{*Assert(m_context)};
         if (!(Assert(ctx.shutdown_request))()) {
-            LogError("Failed to send shutdown signal\n");
+            LogError("Failed to send shutdown signal");
         }
         Interrupt(*m_context);
     }
