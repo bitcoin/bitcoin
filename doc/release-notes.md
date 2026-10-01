@@ -61,6 +61,11 @@ Notable changes
 
 - #35679 fuzz: Remove unused DeserializeFromFuzzingInput params overload
 
+### Doc
+
+- #36377 doc: add 461 (Deterministic ECDSA signatures with low-R grinding) to bips.md
+- #36441 doc: fix How to Upgrade section for bitcoin wrapper and libexec
+
 Credits
 =======
 
@@ -71,7 +76,9 @@ Thanks to everyone who directly contributed to this release:
 - fanquake
 - Hennadii Stepanov
 - Martin Zumsande
+- Sebastian Falbesoner
 - sipa
+- spidey279
 
 As well as to everyone that helped with translations on
 [Transifex](https://explore.transifex.com/bitcoin/bitcoin/).
