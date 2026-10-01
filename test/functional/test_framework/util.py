@@ -63,8 +63,9 @@ def assert_fee_amount(fee, tx_size, feerate_BTC_kvB):
     target_fee = get_fee(tx_size, feerate_BTC_kvB)
     if fee < target_fee:
         raise AssertionError("Fee of %s BTC too low! (Should be %s BTC)" % (str(fee), str(target_fee)))
-    # allow the wallet's estimation to be at most 2 bytes off
-    high_fee = get_fee(tx_size + 2, feerate_BTC_kvB)
+    # Allow the wallet's estimate to be up to 3 bytes over: a low-R ECDSA
+    # signature can be shorter than the 71 bytes the wallet assumes.
+    high_fee = get_fee(tx_size + 3, feerate_BTC_kvB)
     if fee > high_fee:
         raise AssertionError("Fee of %s BTC too high! (Should be %s BTC)" % (str(fee), str(target_fee)))
 
