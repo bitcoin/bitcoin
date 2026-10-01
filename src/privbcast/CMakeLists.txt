@@ -5,6 +5,7 @@
 # Private broadcast jobs (doc/design/private-broadcast-tool.md).
 add_library(bitcoin_privbcast STATIC EXCLUDE_FROM_ALL
   assign.cpp
+  attempt.cpp
   plan.cpp
   socks5.cpp
 )
