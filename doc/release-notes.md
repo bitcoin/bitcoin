@@ -61,6 +61,10 @@ Notable changes
 
 - #35679 fuzz: Remove unused DeserializeFromFuzzingInput params overload
 
+### Doc
+
+- #36377 doc: add 461 (Deterministic ECDSA signatures with low-R grinding) to bips.md
+
 Credits
 =======
 
@@ -71,6 +75,7 @@ Thanks to everyone who directly contributed to this release:
 - fanquake
 - Hennadii Stepanov
 - Martin Zumsande
+- Sebastian Falbesoner
 - sipa
 
 As well as to everyone that helped with translations on
