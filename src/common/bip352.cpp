@@ -23,6 +23,7 @@
 #include <streams.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <util/overflow.h>
 #include <util/strencodings.h>
 
 #include <algorithm>
@@ -102,6 +103,24 @@ util::Expected<SilentPaymentsDestination, std::string> DecodeSilentPaymentsAddre
         return util::Unexpected{"Invalid Silent payments address"};
     }
     return *sp_dest;
+}
+
+std::string EncodeSilentPaymentsAddress(const SilentPaymentsDestination& dest, const CChainParams& params)
+{
+    std::vector<unsigned char> data_in;
+    const auto& scan_pubkey{dest.GetScanPubKey()};
+    const auto& spend_pubkey{dest.GetSpendPubKey()};
+    const auto extension_data{dest.GetExtensionData()};
+
+    data_in.reserve(scan_pubkey.size() + spend_pubkey.size() + extension_data.size());
+    data_in.insert(data_in.end(), scan_pubkey.begin(), scan_pubkey.end());
+    data_in.insert(data_in.end(), spend_pubkey.begin(), spend_pubkey.end());
+    data_in.insert(data_in.end(), extension_data.begin(), extension_data.end());
+
+    std::vector<unsigned char> data_out = {dest.GetVersion()};
+    data_out.reserve(1 + CeilDiv(data_in.size() * 8, 5u));
+    ConvertBits<8, 5, true>([&](unsigned char c) { data_out.push_back(c); }, data_in.begin(), data_in.end());
+    return bech32::Encode(bech32::Encoding::BECH32M, params.SilentPaymentsHRP(), data_out);
 }
 
 SilentPaymentsLabel::SilentPaymentsLabel(const secp256k1_silentpayments_label& label) {

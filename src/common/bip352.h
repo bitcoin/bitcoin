@@ -96,11 +96,23 @@ public:
     std::span<const unsigned char> GetExtensionData() const { return m_extension_data; }
 
     bool operator==(const SilentPaymentsDestination&) const = default;
+
+    friend bool operator<(const SilentPaymentsDestination& a, const SilentPaymentsDestination& b) {
+        if (a.m_version != b.m_version) return a.m_version < b.m_version;
+        if (a.m_scan_pubkey < b.m_scan_pubkey) return true;
+        if (a.m_scan_pubkey > b.m_scan_pubkey) return false;
+        if (a.m_spend_pubkey < b.m_spend_pubkey) return true;
+        if (a.m_spend_pubkey > b.m_spend_pubkey) return false;
+        return a.m_extension_data < b.m_extension_data;
+    }
 };
 
 //! Decode a BIP352 "sp1..." address. Returns the destination, or an error message on failure.
 util::Expected<SilentPaymentsDestination, std::string> DecodeSilentPaymentsAddress(
     const std::string& str, const CChainParams& params);
+
+//! Encode a destination as a BIP352 "sp1..." address.
+std::string EncodeSilentPaymentsAddress(const SilentPaymentsDestination& dest, const CChainParams& params);
 
 class SilentPaymentsLabel {
 private:

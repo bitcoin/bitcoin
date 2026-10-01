@@ -6,6 +6,9 @@
 #include <rpc/register.h> // IWYU pragma: associated
 
 #include <addresstype.h>
+#include <chainparams.h>
+#include <common/bip352.h>
+#include <common/paymentdestination.h>
 #include <crypto/hex_base.h>
 #include <key.h>
 #include <key_io.h>
@@ -66,28 +69,35 @@ static RPCMethod validateaddress()
         },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
-            std::string error_msg;
             std::vector<int> error_locations;
-            CTxDestination dest = DecodeDestination(request.params[0].get_str(), error_msg, &error_locations);
-            const bool isValid = IsValidDestination(dest);
-            CHECK_NONFATAL(isValid == error_msg.empty());
+            const auto dest{PaymentDestination::FromString(request.params[0].get_str(), &error_locations)};
+            const bool isValid = dest.has_value();
+            CHECK_NONFATAL(isValid || !dest.error().empty());
 
             UniValue ret(UniValue::VOBJ);
             ret.pushKV("isvalid", isValid);
             if (isValid) {
-                std::string currentAddress = EncodeDestination(dest);
-                ret.pushKV("address", currentAddress);
+                if (const auto* sp_dest{dest->GetSilentPaymentsDestination()}) {
+                    ret.pushKV("address", bip352::EncodeSilentPaymentsAddress(*sp_dest, Params()));
+                    // A silent payments address has no fixed scriptPubKey
+                    ret.pushKV("isscript", false);
+                    ret.pushKV("iswitness", false);
+                } else {
+                    const CTxDestination& tx_dest{*CHECK_NONFATAL(dest->GetTxDestination())};
+                    std::string currentAddress = EncodeDestination(tx_dest);
+                    ret.pushKV("address", currentAddress);
 
-                CScript scriptPubKey = GetScriptForDestination(dest);
-                ret.pushKV("scriptPubKey", HexStr(scriptPubKey));
+                    CScript scriptPubKey = GetScriptForDestination(tx_dest);
+                    ret.pushKV("scriptPubKey", HexStr(scriptPubKey));
 
-                UniValue detail = DescribeAddress(dest);
-                ret.pushKVs(std::move(detail));
+                    UniValue detail = DescribeAddress(tx_dest);
+                    ret.pushKVs(std::move(detail));
+                }
             } else {
                 UniValue error_indices(UniValue::VARR);
                 for (int i : error_locations) error_indices.push_back(i);
                 ret.pushKV("error_locations", std::move(error_indices));
-                ret.pushKV("error", error_msg);
+                ret.pushKV("error", dest.error());
             }
 
             return ret;

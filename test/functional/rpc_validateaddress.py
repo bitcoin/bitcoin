@@ -173,6 +173,25 @@ VALID_DATA = [
     ),
 ]
 
+SP_ADDRESS = "sp1qq22l5s6l9460ww6t4tkzsy2a7zejurcmzz35pt0ffrzk5erlaykdcqugecjjnjqf7ggq39vl6wexjlm00n66z94v675n7wcux6d2krr68gdjvfn2"
+
+INVALID_SP_DATA = [
+    # Bad checksum
+    (SP_ADDRESS[:-1] + "3", "Invalid Bech32m checksum", [115]),
+    # Valid checksum, invalid scan pubkey
+    (
+        "sp1qqgqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq2qugecjjnjqf7ggq39vl6wexjlm00n66z94v675n7wcux6d2krr68g25havg",
+        "Invalid Silent payments address",
+        [],
+    ),
+    # Testnet silent payments address
+    (
+        "tsp1qqthpye3hdcnydp9temp7yduy6uw5h2nw8u9fz677ccrna280qwj3uq60zeqs3zfpj3age62h4ljq2lyawwdecmk8a545yysk4x3tu3skjqm2thu6",
+        "Invalid or unsupported Segwit (Bech32) or Base58 encoding.",
+        [],
+    ),
+]
+
 
 class ValidateAddressMainTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -188,6 +207,16 @@ class ValidateAddressMainTest(BitcoinTestFramework):
         assert "error" not in info
         assert "error_locations" not in info
 
+    def check_valid_sp(self, addr, normalized_addr):
+        info = self.nodes[0].validateaddress(addr)
+        # A silent payments address has no fixed scriptPubKey
+        assert_equal(info, {
+            "isvalid": True,
+            "address": normalized_addr,
+            "isscript": False,
+            "iswitness": False,
+        })
+
     def check_invalid(self, addr, error_str, error_locations):
         res = self.nodes[0].validateaddress(addr)
         assert_equal(res["isvalid"], False)
@@ -200,8 +229,15 @@ class ValidateAddressMainTest(BitcoinTestFramework):
         for (addr, spk) in VALID_DATA:
             self.check_valid(addr, spk)
 
+    def test_validateaddress_silent_payments(self):
+        self.check_valid_sp(SP_ADDRESS, SP_ADDRESS)
+        self.check_valid_sp(SP_ADDRESS.upper(), SP_ADDRESS)
+        for (addr, error, locs) in INVALID_SP_DATA:
+            self.check_invalid(addr, error, locs)
+
     def run_test(self):
         self.test_validateaddress()
+        self.test_validateaddress_silent_payments()
 
 
 if __name__ == "__main__":
