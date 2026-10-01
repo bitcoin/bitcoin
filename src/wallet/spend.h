@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_SPEND_H
 #define BITCOIN_WALLET_SPEND_H
 
+#include <common/paymentdestination.h>
 #include <consensus/amount.h>
 #include <util/expected.h>
 #include <util/result.h>
@@ -214,6 +215,14 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
 util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& available_coins, const CoinsResult& pre_set_inputs,
                                           const CAmount& nTargetValue, const CCoinControl& coin_control,
                                           const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+
+/**
+ * Return an output of the same size as the one paying amount to dest, to estimate the
+ * transaction size or check for dust before the inputs are known. A silent payments output
+ * script is derived from the inputs, so a P2TR output is returned for a silent payments
+ * destination, since BIP352 v0 outputs are P2TR outputs.
+ */
+CTxOut GetDummyTxOut(const PaymentDestination& dest, CAmount amount);
 
 /**
  * Set a height-based locktime for new transactions (uses the height of the
