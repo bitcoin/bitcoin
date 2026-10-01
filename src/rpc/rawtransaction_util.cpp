@@ -5,11 +5,12 @@
 
 #include <rpc/rawtransaction_util.h>
 
+#include <addresstype.h>
 #include <coins.h>
+#include <common/paymentdestination.h>
 #include <consensus/amount.h>
 #include <core_io.h>
 #include <crypto/hex_base.h>
-#include <key_io.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
@@ -23,14 +24,16 @@
 #include <tinyformat.h>
 #include <univalue.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <util/rbf.h>
 #include <util/translation.h>
 #include <util/vector.h>
 
 #include <cstddef>
+#include <optional>
 #include <set>
 #include <span>
-#include <variant>
+#include <string>
 
 void AddInputs(CMutableTransaction& rawTx, const UniValue& inputs_in, std::optional<bool> rbf)
 {
@@ -108,11 +111,11 @@ UniValue NormalizeOutputs(const UniValue& outputs_in)
     return outputs;
 }
 
-std::vector<std::pair<CTxDestination, CAmount>> ParseOutputs(const UniValue& outputs)
+std::vector<std::pair<PaymentDestination, CAmount>> ParseOutputs(const UniValue& outputs, bool allow_silent_payments)
 {
     // Duplicate checking
-    std::set<CTxDestination> destinations;
-    std::vector<std::pair<CTxDestination, CAmount>> parsed_outputs;
+    std::set<PaymentDestination> destinations;
+    std::vector<std::pair<PaymentDestination, CAmount>> parsed_outputs;
     bool has_data{false};
     const auto& keys{outputs.getKeys()};
     const auto& values{outputs.getValues()};
@@ -125,20 +128,23 @@ std::vector<std::pair<CTxDestination, CAmount>> ParseOutputs(const UniValue& out
             }
             has_data = true;
             std::vector<unsigned char> data = ParseHexV(value.getValStr(), "Data");
-            CTxDestination destination{CNoDestination{CScript() << OP_RETURN << data}};
+            PaymentDestination destination{CNoDestination{CScript() << OP_RETURN << data}};
             CAmount amount{0};
             parsed_outputs.emplace_back(destination, amount);
         } else {
-            CTxDestination destination{DecodeDestination(name_)};
+            auto destination{PaymentDestination::FromString(name_)};
             CAmount amount{AmountFromValue(value)};
-            if (!IsValidDestination(destination)) {
+            if (!destination) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ") + name_);
             }
+            if (!allow_silent_payments && destination->IsSilentPayment()) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Silent payments are not supported by this RPC");
+            }
 
-            if (!destinations.insert(destination).second) {
+            if (!destinations.insert(*destination).second) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + name_);
             }
-            parsed_outputs.emplace_back(destination, amount);
+            parsed_outputs.emplace_back(std::move(*destination), amount);
         }
     }
     return parsed_outputs;
@@ -149,9 +155,9 @@ void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in)
     UniValue outputs(UniValue::VOBJ);
     outputs = NormalizeOutputs(outputs_in);
 
-    std::vector<std::pair<CTxDestination, CAmount>> parsed_outputs = ParseOutputs(outputs);
+    std::vector<std::pair<PaymentDestination, CAmount>> parsed_outputs = ParseOutputs(outputs, /*allow_silent_payments=*/false);
     for (const auto& [destination, nAmount] : parsed_outputs) {
-        CScript scriptPubKey = GetScriptForDestination(destination);
+        CScript scriptPubKey = *CHECK_NONFATAL(destination.GetStaticScript());
 
         CTxOut out(nAmount, scriptPubKey);
         rawTx.vout.push_back(out);
