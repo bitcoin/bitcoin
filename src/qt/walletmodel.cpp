@@ -182,7 +182,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             setAddress.insert(rcp.address);
             ++nAddresses;
 
-            vecSend.emplace_back(CRecipient{DecodeDestination(rcp.address.toStdString()), rcp.amount, rcp.fSubtractFeeFromAmount});
+            vecSend.emplace_back(CRecipient{PaymentDestination{DecodeDestination(rcp.address.toStdString())}, rcp.amount, rcp.fSubtractFeeFromAmount});
 
             total += rcp.amount;
         }

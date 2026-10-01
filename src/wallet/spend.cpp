@@ -1050,12 +1050,12 @@ void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
 
 uint64_t GetSerializeSizeForRecipient(const CRecipient& recipient)
 {
-    return ::GetSerializeSize(CTxOut(recipient.nAmount, GetScriptForDestination(recipient.dest)));
+    return ::GetSerializeSize(CTxOut(recipient.nAmount, *Assert(recipient.dest.GetStaticScript())));
 }
 
 bool IsDust(const CRecipient& recipient, const CFeeRate& dustRelayFee)
 {
-    return ::IsDust(CTxOut(recipient.nAmount, GetScriptForDestination(recipient.dest)), dustRelayFee);
+    return ::IsDust(CTxOut(recipient.nAmount, *Assert(recipient.dest.GetStaticScript())), dustRelayFee);
 }
 
 static util::Result<CreatedTransactionResult> CreateTransactionInternal(
@@ -1110,8 +1110,8 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     bilingual_str error; // possible error str
 
     // coin control: send change to custom address
-    if (!std::get_if<CNoDestination>(&coin_control.destChange)) {
-        scriptChange = GetScriptForDestination(coin_control.destChange);
+    if (coin_control.destChange.IsValid()) {
+        scriptChange = *Assert(coin_control.destChange.GetStaticScript());
     } else { // no coin control: send change to newly generated address
         // Note: We use a new key here to keep it from being obvious which side is the change.
         //  The drawback is that by not reusing a previous key, the change may be lost if a
@@ -1254,7 +1254,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     txNew.vout.reserve(vecSend.size() + 1); // + 1 because of possible later insert
     for (const auto& recipient : vecSend)
     {
-        txNew.vout.emplace_back(recipient.nAmount, GetScriptForDestination(recipient.dest));
+        txNew.vout.emplace_back(recipient.nAmount, *Assert(recipient.dest.GetStaticScript()));
     }
     const CAmount change_amount = result.GetChange(coin_selection_params.min_viable_change, coin_selection_params.m_change_fee);
     if (change_amount > 0) {
@@ -1478,7 +1478,9 @@ util::Result<CreatedTransactionResult> CreateTransaction(
 
         // Reuse the change destination from the first creation attempt to avoid skipping BIP44 indexes
         if (txr_ungrouped.change_pos) {
-            ExtractDestination(txr_ungrouped.tx->vout[*txr_ungrouped.change_pos].scriptPubKey, tmp_cc.destChange);
+            CTxDestination change_dest;
+            ExtractDestination(txr_ungrouped.tx->vout[*txr_ungrouped.change_pos].scriptPubKey, change_dest);
+            tmp_cc.destChange = PaymentDestination{change_dest};
         }
 
         auto txr_grouped = CreateTransactionInternal(wallet, vecSend, change_pos, tmp_cc, sign);

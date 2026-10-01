@@ -263,9 +263,9 @@ util::Expected<BumpTransaction, BumpError> CreateRateBumpTransaction(CWallet& wa
         CTxDestination dest;
         ExtractDestination(output.scriptPubKey, dest);
         if (original_change_index.has_value() ?  original_change_index.value() == i : OutputIsChange(wallet, output)) {
-            new_coin_control.destChange = dest;
+            new_coin_control.destChange = PaymentDestination{dest};
         } else {
-            CRecipient recipient = {dest, output.nValue, false};
+            CRecipient recipient = {PaymentDestination{dest}, output.nValue, false};
             recipients.push_back(recipient);
         }
         new_outputs_value += output.nValue;
@@ -274,7 +274,7 @@ util::Expected<BumpTransaction, BumpError> CreateRateBumpTransaction(CWallet& wa
     // If no recipients, means that we are sending coins to a change address
     if (recipients.empty()) {
         // Just as a sanity check, ensure that the change address exist
-        if (std::get_if<CNoDestination>(&new_coin_control.destChange)) {
+        if (!new_coin_control.destChange.IsValid()) {
             errors.emplace_back(Untranslated("Unable to create transaction. Transaction must have at least one recipient"));
             return util::Unexpected{BumpError{Result::INVALID_PARAMETER, std::move(errors)}};
         }
@@ -282,7 +282,7 @@ util::Expected<BumpTransaction, BumpError> CreateRateBumpTransaction(CWallet& wa
         // Add change as recipient with SFFO flag enabled, so fees are deduced from it.
         // If the output differs from the original tx output (because the user customized it) a new change output will be created.
         recipients.emplace_back(CRecipient{new_coin_control.destChange, new_outputs_value, /*fSubtractFeeFromAmount=*/true});
-        new_coin_control.destChange = CNoDestination();
+        new_coin_control.destChange = PaymentDestination{};
     }
 
     if (coin_control.m_feerate) {
