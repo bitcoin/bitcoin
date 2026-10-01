@@ -48,6 +48,7 @@ from test_framework.script_util import (
 )
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_greater_than,
     assert_raises_rpc_error,
     sync_txindex,

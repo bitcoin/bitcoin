@@ -34,8 +34,10 @@ from test_framework.script import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_greater_than,
     assert_raises_rpc_error,
+    assert_true,
     sync_txindex,
 )
 from test_framework.wallet import (

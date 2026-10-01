@@ -43,6 +43,7 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     assert_not_equal,
     assert_raises_rpc_error,
+    assert_true,
 )
 from test_framework.wallet import MiniWallet
 from test_framework.wallet_util import generate_keypair

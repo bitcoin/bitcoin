@@ -8,6 +8,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    assert_true,
 )
 from test_framework.wallet_util import WalletUnlock
 

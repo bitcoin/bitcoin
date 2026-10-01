@@ -52,6 +52,7 @@ from test_framework.script_util import (
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
+    assert_true,
     get_fee,
 )
 from test_framework.wallet_util import (

@@ -15,8 +15,9 @@ from test_framework.messages import COIN
 from test_framework.script_util import keys_to_multisig_script
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_raises_rpc_error,
     assert_equal,
+    assert_false,
+    assert_raises_rpc_error,
 )
 from test_framework.wallet_util import generate_keypair
 from test_framework.wallet import (

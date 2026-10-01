@@ -98,6 +98,7 @@ from test_framework.p2p import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
 )
 
 DIRECT_FETCH_RESPONSE_TIME = 0.05
