@@ -227,6 +227,12 @@ typedef struct btck_ChainstateManagerOptions btck_ChainstateManagerOptions;
 typedef struct btck_ChainstateManager btck_ChainstateManager;
 
 /**
+ * Opaque data structure for holding a block manager, which stores blocks and
+ * their spent outputs on disk. It is owned by a chainstate manager.
+ */
+typedef struct btck_BlockManager btck_BlockManager;
+
+/**
  * Opaque data structure for holding a block.
  */
 typedef struct btck_Block btck_Block;
@@ -1383,6 +1389,17 @@ BITCOINKERNEL_API const btck_Chain* btck_chainstate_manager_get_active_chain(
     const btck_ChainstateManager* chainstate_manager) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
+ * @brief Get the block manager that stores the blocks of a chainstate manager.
+ * It is owned by the chainstate manager and must not be used after it is
+ * destroyed.
+ *
+ * @param[in] chainstate_manager Non-null.
+ * @return                       The block manager.
+ */
+BITCOINKERNEL_API btck_BlockManager* btck_chainstate_manager_get_block_manager(
+    btck_ChainstateManager* chainstate_manager) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
  * @brief Retrieve a block tree entry by its block hash.
  *
  * @param[in] chainstate_manager Non-null.
@@ -1410,12 +1427,12 @@ BITCOINKERNEL_API void btck_chainstate_manager_destroy(btck_ChainstateManager* c
  * @brief Reads the block the passed in block tree entry points to from disk and
  * returns it.
  *
- * @param[in] chainstate_manager Non-null.
- * @param[in] block_tree_entry   Non-null.
- * @return                       The read out block, or null on error.
+ * @param[in] block_manager    Non-null.
+ * @param[in] block_tree_entry Non-null.
+ * @return                     The read out block, or null on error.
  */
 BITCOINKERNEL_API btck_Block* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_read(
-    const btck_ChainstateManager* chainstate_manager,
+    const btck_BlockManager* block_manager,
     const btck_BlockTreeEntry* block_tree_entry) BITCOINKERNEL_ARG_NONNULL(1, 2);
 
 /**
@@ -1624,12 +1641,12 @@ BITCOINKERNEL_API int btck_chain_contains(
  * @brief Reads the block spent coins data the passed in block tree entry points to from
  * disk and returns it.
  *
- * @param[in] chainstate_manager Non-null.
- * @param[in] block_tree_entry   Non-null.
- * @return                       The read out block spent outputs, or null on error.
+ * @param[in] block_manager    Non-null.
+ * @param[in] block_tree_entry Non-null.
+ * @return                     The read out block spent outputs, or null on error.
  */
 BITCOINKERNEL_API btck_BlockSpentOutputs* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_spent_outputs_read(
-    const btck_ChainstateManager* chainstate_manager,
+    const btck_BlockManager* block_manager,
     const btck_BlockTreeEntry* block_tree_entry) BITCOINKERNEL_ARG_NONNULL(1, 2);
 
 /**

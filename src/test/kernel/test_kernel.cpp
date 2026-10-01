@@ -912,23 +912,24 @@ void chainman_reindex_test(TestDirectory& test_directory)
 
     // Sanity check some block retrievals
     auto chain{chainman->GetChain()};
+    auto blockman{chainman->GetBlockManager()};
     BOOST_CHECK_THROW(chain.GetByHeight(1000), std::runtime_error);
     auto genesis_index{chain.Entries().front()};
     BOOST_CHECK(!genesis_index.GetPrevious());
-    auto genesis_block_raw{chainman->ReadBlock(genesis_index).value().ToBytes()};
+    auto genesis_block_raw{blockman.ReadBlock(genesis_index).value().ToBytes()};
     auto first_index{chain.GetByHeight(0)};
-    auto first_block_raw{chainman->ReadBlock(genesis_index).value().ToBytes()};
+    auto first_block_raw{blockman.ReadBlock(genesis_index).value().ToBytes()};
     check_equal(genesis_block_raw, first_block_raw);
     auto height{first_index.GetHeight()};
     BOOST_CHECK_EQUAL(height, 0);
 
     auto next_index{chain.GetByHeight(first_index.GetHeight() + 1)};
     BOOST_CHECK(chain.Contains(next_index));
-    auto next_block_data{chainman->ReadBlock(next_index).value().ToBytes()};
+    auto next_block_data{blockman.ReadBlock(next_index).value().ToBytes()};
     auto tip_index{chain.Entries().back()};
-    auto tip_block_data{chainman->ReadBlock(tip_index).value().ToBytes()};
+    auto tip_block_data{blockman.ReadBlock(tip_index).value().ToBytes()};
     auto second_index{chain.GetByHeight(1)};
-    auto second_block{chainman->ReadBlock(second_index).value()};
+    auto second_block{blockman.ReadBlock(second_index).value()};
     auto second_block_data{second_block.ToBytes()};
     auto second_height{second_index.GetHeight()};
     BOOST_CHECK_EQUAL(second_height, 1);
@@ -1001,17 +1002,18 @@ void chainman_mainnet_validation_test(TestDirectory& test_directory)
     BOOST_CHECK(!new_block);
 
     auto chain{chainman->GetChain()};
+    auto blockman{chainman->GetBlockManager()};
     BOOST_CHECK_EQUAL(chain.Height(), 1);
     auto tip{chain.Entries().back()};
-    auto read_block{chainman->ReadBlock(tip)};
+    auto read_block{blockman.ReadBlock(tip)};
     BOOST_REQUIRE(read_block);
     check_equal(read_block.value().ToBytes(), raw_block);
 
     // Check that we can read the previous block
     BlockTreeEntry tip_2{*tip.GetPrevious()};
-    Block read_block_2{*chainman->ReadBlock(tip_2)};
-    BOOST_CHECK_EQUAL(chainman->ReadBlockSpentOutputs(tip_2).Count(), 0);
-    BOOST_CHECK_EQUAL(chainman->ReadBlockSpentOutputs(tip).Count(), 0);
+    Block read_block_2{*blockman.ReadBlock(tip_2)};
+    BOOST_CHECK_EQUAL(blockman.ReadBlockSpentOutputs(tip_2).Count(), 0);
+    BOOST_CHECK_EQUAL(blockman.ReadBlockSpentOutputs(tip).Count(), 0);
 
     // It should be an error if we go another block back, since the genesis has no ancestor
     BOOST_CHECK(!tip_2.GetPrevious());
@@ -1228,12 +1230,13 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     }
 
     auto chain = chainman->GetChain();
+    auto blockman = chainman->GetBlockManager();
     auto tip = chain.Entries().back();
-    auto read_block = chainman->ReadBlock(tip).value();
+    auto read_block = blockman.ReadBlock(tip).value();
     check_equal(read_block.ToBytes(), hex_string_to_byte_vec(REGTEST_BLOCK_DATA[REGTEST_BLOCK_DATA.size() - 1]));
 
     auto tip_2 = tip.GetPrevious().value();
-    auto read_block_2 = chainman->ReadBlock(tip_2).value();
+    auto read_block_2 = blockman.ReadBlock(tip_2).value();
     check_equal(read_block_2.ToBytes(), hex_string_to_byte_vec(REGTEST_BLOCK_DATA[REGTEST_BLOCK_DATA.size() - 2]));
 
     Txid txid = read_block.Transactions()[0].Txid();
@@ -1245,7 +1248,7 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     auto find_transaction = [&chainman](const TxidView& target_txid) -> std::optional<Transaction> {
         auto chain = chainman->GetChain();
         for (const auto block_tree_entry : chain.Entries()) {
-            auto block{chainman->ReadBlock(block_tree_entry)};
+            auto block{chainman->GetBlockManager().ReadBlock(block_tree_entry)};
             for (const TransactionView transaction : block->Transactions()) {
                 if (transaction.Txid() == target_txid) {
                     return Transaction{transaction};
@@ -1256,7 +1259,7 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     };
 
     for (const auto block_tree_entry : chain.Entries()) {
-        auto block{chainman->ReadBlock(block_tree_entry)};
+        auto block{blockman.ReadBlock(block_tree_entry)};
         for (const auto transaction : block->Transactions()) {
             std::vector<TransactionInput> inputs;
             std::vector<TransactionOutput> spent_outputs;
@@ -1282,8 +1285,8 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     }
 
     // Read spent outputs for current tip and its previous block
-    BlockSpentOutputs block_spent_outputs{chainman->ReadBlockSpentOutputs(tip)};
-    BlockSpentOutputs block_spent_outputs_prev{chainman->ReadBlockSpentOutputs(*tip.GetPrevious())};
+    BlockSpentOutputs block_spent_outputs{blockman.ReadBlockSpentOutputs(tip)};
+    BlockSpentOutputs block_spent_outputs_prev{blockman.ReadBlockSpentOutputs(*tip.GetPrevious())};
     CheckHandle(block_spent_outputs, block_spent_outputs_prev);
     CheckRange(block_spent_outputs_prev.TxsSpentOutputs(), block_spent_outputs_prev.Count());
     BOOST_CHECK_EQUAL(block_spent_outputs.Count(), 1);
@@ -1324,7 +1327,7 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     CheckRange(chain.Entries(), chain.CountEntries());
 
     for (const BlockTreeEntry entry : chain.Entries()) {
-        std::optional<Block> block{chainman->ReadBlock(entry)};
+        std::optional<Block> block{blockman.ReadBlock(entry)};
         if (block) {
             for (const TransactionView transaction : block->Transactions()) {
                 for (const TransactionOutputView output : transaction.Outputs()) {
@@ -1347,9 +1350,9 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
 
 
     fs::remove(test_directory.m_directory / "blocks" / "blk00000.dat");
-    BOOST_CHECK(!chainman->ReadBlock(tip_2).has_value());
+    BOOST_CHECK(!blockman.ReadBlock(tip_2).has_value());
     fs::remove(test_directory.m_directory / "blocks" / "rev00000.dat");
-    BOOST_CHECK_THROW(chainman->ReadBlockSpentOutputs(tip), std::runtime_error);
+    BOOST_CHECK_THROW(blockman.ReadBlockSpentOutputs(tip), std::runtime_error);
 }
 
 // -----------------------------------------------------------------------------

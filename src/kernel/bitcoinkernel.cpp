@@ -498,6 +498,8 @@ struct btck_Context : Handle<btck_Context, std::shared_ptr<const Context>> {};
 struct btck_ChainParameters : Handle<btck_ChainParameters, CChainParams> {};
 struct btck_ChainstateManagerOptions : Handle<btck_ChainstateManagerOptions, ChainstateManagerOptions> {};
 struct btck_ChainstateManager : Handle<btck_ChainstateManager, ChainMan> {};
+// The block storage of a chainstate manager, viewed through the object that owns both
+struct btck_BlockManager : Handle<btck_BlockManager, ChainMan> {};
 struct btck_Chain : Handle<btck_Chain, CChain> {};
 struct btck_BlockSpentOutputs : Handle<btck_BlockSpentOutputs, std::shared_ptr<CBlockUndo>> {};
 struct btck_TransactionSpentOutputs : Handle<btck_TransactionSpentOutputs, CTxUndo> {};
@@ -1287,10 +1289,10 @@ void btck_block_destroy(btck_Block* block)
     delete block;
 }
 
-btck_Block* btck_block_read(const btck_ChainstateManager* chainman, const btck_BlockTreeEntry* entry)
+btck_Block* btck_block_read(const btck_BlockManager* block_manager, const btck_BlockTreeEntry* entry)
 {
     auto block{std::make_shared<CBlock>()};
-    if (!btck_ChainstateManager::get(chainman).m_chainman->m_blockman.ReadBlock(*block, btck_BlockTreeEntry::get(entry))) {
+    if (!btck_BlockManager::get(block_manager).m_blockman->ReadBlock(*block, btck_BlockTreeEntry::get(entry))) {
         LogError("Failed to read block.");
         return nullptr;
     }
@@ -1342,14 +1344,14 @@ void btck_block_hash_destroy(btck_BlockHash* hash)
     delete hash;
 }
 
-btck_BlockSpentOutputs* btck_block_spent_outputs_read(const btck_ChainstateManager* chainman, const btck_BlockTreeEntry* entry)
+btck_BlockSpentOutputs* btck_block_spent_outputs_read(const btck_BlockManager* block_manager, const btck_BlockTreeEntry* entry)
 {
     auto block_undo{std::make_shared<CBlockUndo>()};
     if (btck_BlockTreeEntry::get(entry).nHeight < 1) {
         LogDebug(BCLog::KERNEL, "The genesis block does not have any spent outputs.");
         return btck_BlockSpentOutputs::create(block_undo);
     }
-    if (!btck_ChainstateManager::get(chainman).m_chainman->m_blockman.ReadBlockUndo(*block_undo, btck_BlockTreeEntry::get(entry))) {
+    if (!btck_BlockManager::get(block_manager).m_blockman->ReadBlockUndo(*block_undo, btck_BlockTreeEntry::get(entry))) {
         LogError("Failed to read block spent outputs data.");
         return nullptr;
     }
@@ -1458,6 +1460,11 @@ btck_BlockValidationState* btck_chainstate_manager_process_block_header(
 const btck_Chain* btck_chainstate_manager_get_active_chain(const btck_ChainstateManager* chainman)
 {
     return btck_Chain::ref(&WITH_LOCK(btck_ChainstateManager::get(chainman).m_chainman->GetMutex(), return btck_ChainstateManager::get(chainman).m_chainman->ActiveChain()));
+}
+
+btck_BlockManager* btck_chainstate_manager_get_block_manager(btck_ChainstateManager* chainstate_manager)
+{
+    return btck_BlockManager::ref(&btck_ChainstateManager::get(chainstate_manager));
 }
 
 int32_t btck_chain_get_height(const btck_Chain* chain)
