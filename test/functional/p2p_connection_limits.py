@@ -3,17 +3,23 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+import time
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import (
     msg_version,
-    msg_filterload
+    msg_filterload,
+    msg_mempool,
 )
 from test_framework.p2p import (
     P2PInterface,
+    P2PTxInvStore,
     P2P_SERVICES,
     P2P_SUBVERSION,
     P2P_VERSION,
 )
+from test_framework.util import assert_equal
+from test_framework.wallet import MiniWallet
 
 
 class P2PConnectionLimits(BitcoinTestFramework):
@@ -79,6 +85,21 @@ class P2PConnectionLimits(BitcoinTestFramework):
         with node.assert_debug_log(['connection dropped after filterload message'], timeout=2):
             peer1.send_without_ping(msg_filterload(data=b'\xbb'*(100)))
         self.wait_until(lambda: len(node.getpeerinfo()) == 1)
+
+        self.log.info('Check BIP35 requests before transaction relay, with and without mempool permission')
+        for mempool_permission in (False, True):
+            args = ['-maxconnections=13', '-peerbloomfilters']
+            if mempool_permission:
+                args.append('-whitelist=mempool@127.0.0.1')
+            self.restart_node(0, args)
+            MiniWallet(node).send_self_transfer(from_node=node)
+            peer1 = node.add_p2p_connection(P2PTxInvStore(), send_version=False, wait_for_verack=False)
+            peer1.send_without_ping(self.create_blocks_only_version())
+            peer1.wait_for_verack()
+            peer1.send_and_ping(msg_mempool())
+            node.setmocktime(int(time.time()) + 60)  # jump past the inv trickle interval
+            peer1.sync_with_ping()
+            assert_equal(bool(peer1.get_invs()), True)  # TODO: Only permitted BIP35 requests should bypass disabled transaction relay
 
         self.log.info('Test different values of inboundrelaypercent')
         self.restart_node(0, ['-maxconnections=13', '-inboundrelaypercent=0'])

@@ -157,10 +157,15 @@ class FilterTest(BitcoinTestFramework):
     def test_frelay_false(self, filter_peer):
         self.log.info("Check that a node with fRelay set to false does not receive invs until the filter is set")
         filter_peer.tx_received = False
-        self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=filter_peer.watch_script_pubkey, amount=9 * COIN)
+        txid = self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=filter_peer.watch_script_pubkey, amount=9 * COIN)["txid"]
         # Sync to make sure the reason filter_peer doesn't receive the tx is not p2p delays
         filter_peer.sync_with_ping()
         assert not filter_peer.tx_received
+
+        # Preserve bitcoinj's filterload-then-mempool sequence for fRelay=false peers.
+        filter_peer.send_and_ping(filter_peer.watch_filter_init)
+        filter_peer.send_without_ping(msg_mempool())
+        filter_peer.wait_for_tx(txid)
 
         # Clear the mempool so that this transaction does not impact subsequent tests
         self.generate(self.nodes[0], 1)
