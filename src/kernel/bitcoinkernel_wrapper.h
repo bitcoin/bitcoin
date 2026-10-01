@@ -1285,6 +1285,11 @@ public:
     {
         btck_chainstate_manager_options_update_chainstate_db_in_memory(get(), chainstate_db_in_memory);
     }
+
+    void UpdatePrune(bool prune)
+    {
+        btck_chainstate_manager_options_update_prune(get(), prune);
+    }
 };
 
 class ChainView : public View<btck_Chain>
@@ -1435,6 +1440,21 @@ public:
     BlockSpentOutputs ReadBlockSpentOutputs(const BlockTreeEntry& entry) const
     {
         return btck_block_spent_outputs_read(get(), entry.get());
+    }
+
+    bool PruneUpToHeight(int32_t height) const
+    {
+        return btck_block_manager_prune_up_to_height(get(), height) == 0;
+    }
+
+    void UpdatePruneLock(std::string_view name, int32_t height) const
+    {
+        btck_block_manager_update_prune_lock(get(), name.data(), name.length(), height);
+    }
+
+    bool DeletePruneLock(std::string_view name) const
+    {
+        return btck_block_manager_delete_prune_lock(get(), name.data(), name.length()) == 1;
     }
 };
 

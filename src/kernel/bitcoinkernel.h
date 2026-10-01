@@ -1290,6 +1290,18 @@ BITCOINKERNEL_API void btck_chainstate_manager_options_update_chainstate_db_in_m
     int chainstate_db_in_memory) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
+ * @brief Sets pruning in the options. Blocks are then deleted by
+ * @ref btck_block_manager_prune_up_to_height. Once blocks have been deleted,
+ * the data directory only opens with pruning set.
+ *
+ * @param[in] chainstate_manager_options Non-null, created by @ref btck_chainstate_manager_options_create.
+ * @param[in] prune                      Set pruning.
+ */
+BITCOINKERNEL_API void btck_chainstate_manager_options_update_prune(
+    btck_ChainstateManagerOptions* chainstate_manager_options,
+    int prune) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
  * Destroy the chainstate manager options.
  */
 BITCOINKERNEL_API void btck_chainstate_manager_options_destroy(btck_ChainstateManagerOptions* chainstate_manager_options);
@@ -1415,6 +1427,54 @@ BITCOINKERNEL_API const btck_BlockTreeEntry* btck_chainstate_manager_get_block_t
  * Destroy the chainstate manager.
  */
 BITCOINKERNEL_API void btck_chainstate_manager_destroy(btck_ChainstateManager* chainstate_manager);
+
+///@}
+
+/** @name BlockManager
+ * Functions for working with block managers.
+ */
+///@{
+
+/**
+ * @brief Delete the blocks and spent outputs up to and including the given
+ * height, except the 288 most recent. Some blocks at or below the height may
+ * be kept, and heights below 1 delete nothing.
+ *
+ * @param[in] block_manager Non-null.
+ * @param[in] height        The highest height to delete.
+ * @return                  0 on success, non-zero if pruning is not enabled or
+ *                          writing to disk failed.
+ */
+BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_manager_prune_up_to_height(
+    btck_BlockManager* block_manager,
+    int32_t height) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Keep the blocks at and above a height, with their spent outputs,
+ * from being pruned until the lock is updated or deleted. Locks are kept in
+ * memory only, so they must be set again after a restart.
+ *
+ * @param[in] block_manager Non-null.
+ * @param[in] name          Identifies the lock.
+ * @param[in] name_len      Length of name.
+ * @param[in] height        The lowest height to keep.
+ */
+BITCOINKERNEL_API void btck_block_manager_update_prune_lock(
+    btck_BlockManager* block_manager,
+    const char* name, size_t name_len,
+    int32_t height) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Delete a lock set with @ref btck_block_manager_update_prune_lock.
+ *
+ * @param[in] block_manager Non-null.
+ * @param[in] name          Identifies the lock.
+ * @param[in] name_len      Length of name.
+ * @return                  1 if the lock existed, 0 otherwise.
+ */
+BITCOINKERNEL_API int btck_block_manager_delete_prune_lock(
+    btck_BlockManager* block_manager,
+    const char* name, size_t name_len) BITCOINKERNEL_ARG_NONNULL(1);
 
 ///@}
 

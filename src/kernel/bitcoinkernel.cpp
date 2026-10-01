@@ -1123,6 +1123,25 @@ void btck_chainstate_manager_options_update_chainstate_db_in_memory(
     opts.m_chainstate_load_options.coins_db_in_memory = chainstate_db_in_memory == 1;
 }
 
+void btck_chainstate_manager_options_update_prune(
+    btck_ChainstateManagerOptions* chainman_opts,
+    int prune)
+{
+    auto& opts{btck_ChainstateManagerOptions::get(chainman_opts)};
+    LOCK(opts.m_mutex);
+    opts.m_blockman_options.prune_target = prune == 1 ? node::BlockManager::PRUNE_TARGET_MANUAL : 0;
+}
+
+// Exported for test_kernel only, so it is not declared in bitcoinkernel.h
+extern "C" BITCOINKERNEL_API void btck_chainstate_manager_options_update_fast_prune_for_testing(
+    btck_ChainstateManagerOptions* chainman_opts,
+    int fast_prune)
+{
+    auto& opts{btck_ChainstateManagerOptions::get(chainman_opts)};
+    LOCK(opts.m_mutex);
+    opts.m_blockman_options.fast_prune = fast_prune == 1;
+}
+
 btck_ChainstateManager* btck_chainstate_manager_create(
     const btck_ChainstateManagerOptions* chainman_opts)
 {
@@ -1465,6 +1484,39 @@ const btck_Chain* btck_chainstate_manager_get_active_chain(const btck_Chainstate
 btck_BlockManager* btck_chainstate_manager_get_block_manager(btck_ChainstateManager* chainstate_manager)
 {
     return btck_BlockManager::ref(&btck_ChainstateManager::get(chainstate_manager));
+}
+
+int btck_block_manager_prune_up_to_height(btck_BlockManager* block_manager, int32_t height)
+{
+    if (!btck_BlockManager::get(block_manager).m_blockman->IsPruneMode()) {
+        LogError("Failed to prune: pruning is not enabled.");
+        return -1;
+    }
+    // FlushStateToDisk treats a manual prune height of 0 as a request for automatic pruning
+    if (height < 1) return 0;
+
+    auto& chainman{*btck_BlockManager::get(block_manager).m_chainman};
+    LOCK(chainman.GetMutex());
+    BlockValidationState state;
+    if (!chainman.ActiveChainstate().FlushStateToDisk(state, FlushStateMode::NONE, height)) {
+        LogError("Failed to prune: %s", state.ToString());
+        return -1;
+    }
+    return 0;
+}
+
+void btck_block_manager_update_prune_lock(btck_BlockManager* block_manager, const char* name, size_t name_len, int32_t height)
+{
+    assert(name != nullptr || name_len == 0);
+    LOCK(::cs_main);
+    btck_BlockManager::get(block_manager).m_blockman->UpdatePruneLock(std::string{name, name_len}, {.height_first = height});
+}
+
+int btck_block_manager_delete_prune_lock(btck_BlockManager* block_manager, const char* name, size_t name_len)
+{
+    assert(name != nullptr || name_len == 0);
+    LOCK(::cs_main);
+    return btck_BlockManager::get(block_manager).m_blockman->DeletePruneLock(std::string{name, name_len}) ? 1 : 0;
 }
 
 int32_t btck_chain_get_height(const btck_Chain* chain)

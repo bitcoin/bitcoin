@@ -80,6 +80,57 @@ std::string byte_span_to_hex_string_reversed(std::span<const std::byte> bytes)
     return oss.str();
 }
 
+extern "C" BITCOINKERNEL_API void btck_chainstate_manager_options_update_fast_prune_for_testing(
+    btck_ChainstateManagerOptions* chainstate_manager_options, int fast_prune);
+
+//! Pruning keeps this many of the most recent blocks.
+constexpr int32_t PRUNE_KEEP_BLOCKS{288};
+
+void append_le32(std::vector<std::byte>& bytes, uint32_t value)
+{
+    for (int i{0}; i < 4; ++i) bytes.push_back(std::byte(value >> (8 * i)));
+}
+
+Block create_regtest_block(std::span<const std::byte, 32> prev_hash, int32_t height, uint32_t time)
+{
+    assert(height > 16); // lower heights are pushed as OP_1 to OP_16
+    std::vector<std::byte> height_push;
+    for (auto h{static_cast<uint32_t>(height)}; h > 0; h >>= 8) height_push.push_back(std::byte(h));
+    if ((height_push.back() & std::byte{0x80}) != std::byte{0}) height_push.push_back(std::byte{0});
+
+    // Null prevout with the BIP34 height push, and one zero value OP_TRUE output
+    std::vector<std::byte> coinbase;
+    append_le32(coinbase, 1);
+    coinbase.push_back(std::byte{1});
+    coinbase.insert(coinbase.end(), 32, std::byte{0});
+    append_le32(coinbase, 0xffffffff);
+    coinbase.push_back(std::byte(height_push.size() + 1));
+    coinbase.push_back(std::byte(height_push.size()));
+    coinbase.insert(coinbase.end(), height_push.begin(), height_push.end());
+    append_le32(coinbase, 0xffffffff);
+    coinbase.push_back(std::byte{1});
+    coinbase.insert(coinbase.end(), 8, std::byte{0});
+    coinbase.push_back(std::byte{1});
+    coinbase.push_back(std::byte{0x51});
+    append_le32(coinbase, 0);
+
+    const auto merkle_root{Transaction{coinbase}.Txid().ToBytes()};
+    std::vector<std::byte> block;
+    append_le32(block, 0x20000000);
+    block.insert(block.end(), prev_hash.begin(), prev_hash.end());
+    block.insert(block.end(), merkle_root.begin(), merkle_root.end());
+    append_le32(block, time);
+    append_le32(block, 0x207fffff); // regtest proof of work limit
+    append_le32(block, 0);
+    // Below the regtest target when the most significant byte is below 0x7f
+    for (uint32_t nonce{1}; BlockHeader{block}.Hash().ToBytes()[31] >= std::byte{0x7f}; ++nonce) {
+        for (int i{0}; i < 4; ++i) block[76 + i] = std::byte(nonce >> (8 * i));
+    }
+    block.push_back(std::byte{1});
+    block.insert(block.end(), coinbase.begin(), coinbase.end());
+    return Block{block};
+}
+
 constexpr auto VERIFY_ALL_PRE_SEGWIT{ScriptVerificationFlags::P2SH | ScriptVerificationFlags::DERSIG |
                                      ScriptVerificationFlags::NULLDUMMY | ScriptVerificationFlags::CHECKLOCKTIMEVERIFY |
                                      ScriptVerificationFlags::CHECKSEQUENCEVERIFY};
@@ -871,6 +922,8 @@ BOOST_AUTO_TEST_CASE(btck_chainman_tests)
     BOOST_CHECK(chainman_opts.SetWipeDbs(/*wipe_block_tree=*/false, /*wipe_chainstate=*/true));
     BOOST_CHECK(chainman_opts.SetWipeDbs(/*wipe_block_tree=*/false, /*wipe_chainstate=*/false));
     ChainMan chainman{context, chainman_opts};
+    auto blockman{chainman.GetBlockManager()};
+    BOOST_CHECK(!blockman.PruneUpToHeight(1));
 }
 
 std::unique_ptr<ChainMan> create_chainman(TestDirectory& test_directory,
@@ -1174,6 +1227,65 @@ BOOST_AUTO_TEST_CASE(btck_chainman_in_memory_tests)
     BOOST_CHECK(!fs::exists(in_memory_test_directory.m_directory / "chainstate"));
 
     BOOST_CHECK(context.interrupt());
+}
+
+BOOST_AUTO_TEST_CASE(btck_chainman_prune_tests)
+{
+    auto test_directory{TestDirectory{"prune_test_bitcoin_kernel"}};
+    auto notifications{std::make_shared<TestKernelNotifications>()};
+    auto context{create_context(notifications, ChainType::REGTEST)};
+
+    const auto create_pruning_chainman{[&] {
+        ChainstateManagerOptions chainman_opts{context, PathToString(test_directory.m_directory), PathToString(test_directory.m_directory / "blocks")};
+        chainman_opts.UpdatePrune(true);
+        btck_chainstate_manager_options_update_fast_prune_for_testing(chainman_opts.get(), 1);
+        return std::make_unique<ChainMan>(context, chainman_opts);
+    }};
+
+    int32_t tip_height;
+    {
+        auto chainman{create_pruning_chainman()};
+        for (const auto& raw_block : REGTEST_BLOCK_DATA) {
+            BOOST_REQUIRE(chainman->ProcessBlock(Block{hex_string_to_byte_vec(raw_block)}, nullptr));
+        }
+        const auto chain{chainman->GetChain()};
+        const auto blockman{chainman->GetBlockManager()};
+        BOOST_CHECK(blockman.PruneUpToHeight(0));
+
+        // The first block file is below the tip but holds recent blocks, so it is kept
+        BOOST_REQUIRE(fs::exists(test_directory.m_directory / "blocks" / "blk00001.dat"));
+        BOOST_CHECK(blockman.PruneUpToHeight(chain.Height()));
+        BOOST_CHECK(blockman.ReadBlock(chain.GetByHeight(1)));
+
+        Block last_block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA.back())};
+        auto prev_hash{last_block.GetHash().ToBytes()};
+        auto time{last_block.GetHeader().Timestamp()};
+        for (int i{0}; i < 300; ++i) {
+            Block block{create_regtest_block(prev_hash, chain.Height() + 1, ++time)};
+            BOOST_REQUIRE(chainman->ProcessBlock(block, nullptr));
+            prev_hash = block.GetHash().ToBytes();
+        }
+        tip_height = chain.Height();
+
+        blockman.UpdatePruneLock("test", 1);
+        BOOST_CHECK(blockman.PruneUpToHeight(tip_height - PRUNE_KEEP_BLOCKS));
+        BOOST_CHECK(blockman.ReadBlock(chain.GetByHeight(1)));
+
+        BOOST_CHECK(blockman.DeletePruneLock("test"));
+        BOOST_CHECK(!blockman.DeletePruneLock("test"));
+        BOOST_CHECK(blockman.PruneUpToHeight(tip_height - PRUNE_KEEP_BLOCKS));
+        BOOST_CHECK(!blockman.ReadBlock(chain.GetByHeight(1)));
+        BOOST_CHECK_THROW(blockman.ReadBlockSpentOutputs(chain.GetByHeight(1)), std::runtime_error);
+        BOOST_CHECK(blockman.ReadBlock(chain.GetByHeight(tip_height - PRUNE_KEEP_BLOCKS + 1)));
+    }
+
+    BOOST_CHECK_THROW(create_chainman(test_directory, /*reindex=*/false, /*wipe_chainstate=*/false,
+                                      /*block_tree_db_in_memory=*/false, /*chainstate_db_in_memory=*/false, context),
+                      std::runtime_error);
+    auto chainman{create_pruning_chainman()};
+    const auto chain{chainman->GetChain()};
+    BOOST_CHECK_EQUAL(chain.Height(), tip_height);
+    BOOST_CHECK(!chainman->GetBlockManager().ReadBlock(chain.GetByHeight(1)));
 }
 
 BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
