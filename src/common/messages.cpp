@@ -149,6 +149,10 @@ bilingual_str TransactionErrorString(const TransactionError err)
             return Untranslated("Transaction rejected due to invalid package");
         case TransactionError::PRIVATE_BROADCAST_FULL:
             return Untranslated("Private broadcast queue is full");
+        case TransactionError::PRIVATE_BROADCAST_NETWORK_OFF:
+            return Untranslated("Private broadcast queues nothing while networking is disabled");
+        case TransactionError::PRIVATE_BROADCAST_SHUTTING_DOWN:
+            return Untranslated("Private broadcast queues nothing while the node is shutting down");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }

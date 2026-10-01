@@ -15,6 +15,7 @@
 #include <threadsafety.h>
 #include <uint256.h>
 #include <univalue.h>
+#include <util/result.h>
 #include <util/threadpool.h>
 #include <util/time.h>
 #include <validationinterface.h>
@@ -32,7 +33,26 @@
 #include <thread>
 #include <vector>
 
+class ArgsManager;
+class CChainParams;
+
 namespace node {
+
+/** The seed material of the node's jobs (A1): the chain's, or on regtest the DNS seed names that
+ *  -privatebroadcastseed gives, which other chains refuse (U1). Fails on a DNS seed name that SOCKS5
+ *  cannot carry (privbcast::Socks5CanCarry()): an override's always, the chain's own only with
+ *  -privatebroadcast. */
+util::Result<privbcast::SeedMaterial> GetPrivbcastSeeds(const ArgsManager& args, const CChainParams& chainparams);
+
+/** The timing of the node's jobs: on regtest, -privatebroadcasttimedivisor, from 1 to
+ *  privbcast::MAX_TIME_DIVISOR, divides every duration of their plans; other chains refuse it (U1). */
+util::Result<privbcast::Timing> GetPrivbcastTiming(const ArgsManager& args, const CChainParams& chainparams);
+
+/** Whether -privatebroadcast, if set, can be used with the node's other settings. Only the regtest
+ *  test overrides may change a job's seed material or timing (U1), so on signet -signetseednode
+ *  and -signetchallenge, and off regtest a -mocktime other than 0, are refused; on regtest, which
+ *  has no DNS seeds, -privatebroadcastseed is required. */
+util::Result<void> CheckPrivbcastSettings(const ArgsManager& args, const CChainParams& chainparams);
 
 /**
  * The node's private broadcast jobs (doc/design/private-broadcast.md, section N): submitted

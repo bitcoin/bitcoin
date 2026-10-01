@@ -4,19 +4,27 @@
 
 #include <node/privbcast.h>
 
+#include <common/args.h>
+#include <kernel/chainparams.h>
 #include <kernel/mempool_entry.h>
+#include <net.h>
 #include <netbase.h>
 #include <primitives/transaction.h>
 #include <privbcast/job.h>
 #include <privbcast/params.h>
 #include <privbcast/report.h>
+#include <privbcast/socks5.h>
 #include <sync.h>
+#include <tinyformat.h>
 #include <uint256.h>
 #include <univalue.h>
+#include <util/chaintype.h>
 #include <util/check.h>
 #include <util/log.h>
+#include <util/result.h>
 #include <util/thread.h>
 #include <util/time.h>
+#include <util/translation.h>
 
 #include <algorithm>
 #include <cassert>
@@ -40,6 +48,63 @@ std::optional<int64_t> UnixSeconds(const std::optional<NodeClock::time_point>& t
 }
 
 } // namespace
+
+util::Result<privbcast::SeedMaterial> GetPrivbcastSeeds(const ArgsManager& args, const CChainParams& chainparams)
+{
+    const bool overridden{args.IsArgSet("-privatebroadcastseed")};
+    if (overridden && chainparams.GetChainType() != ChainType::REGTEST) {
+        return util::Error{Untranslated("-privatebroadcastseed is only available on regtest")};
+    }
+    privbcast::SeedMaterial seeds{
+        .dns_seeds = overridden ? args.GetArgs("-privatebroadcastseed") : chainparams.DNSSeeds(),
+        .default_port = chainparams.GetDefaultPort(),
+        .chain = chainparams.GetChainTypeString(),
+    };
+    // A name that SOCKS5 cannot carry is a usage error, not a query that fails. Only jobs query the
+    // chain's own names, so a node that runs none starts with any -signetseednode.
+    if (overridden || args.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)) {
+        for (const std::string& name : seeds.dns_seeds) {
+            if (!privbcast::Socks5CanCarry(name)) {
+                return util::Error{Untranslated(strprintf("cannot query a DNS seed name of %d bytes: SOCKS5 carries 1 to 255 bytes, none of them NUL", name.size()))};
+            }
+        }
+    }
+    return seeds;
+}
+
+util::Result<privbcast::Timing> GetPrivbcastTiming(const ArgsManager& args, const CChainParams& chainparams)
+{
+    if (!args.IsArgSet("-privatebroadcasttimedivisor")) return privbcast::Timing{};
+    if (chainparams.GetChainType() != ChainType::REGTEST) {
+        return util::Error{Untranslated("-privatebroadcasttimedivisor is only available on regtest")};
+    }
+    const int64_t divisor{args.GetIntArg("-privatebroadcasttimedivisor", 1)};
+    if (divisor < 1 || divisor > privbcast::MAX_TIME_DIVISOR) {
+        return util::Error{Untranslated(strprintf("-privatebroadcasttimedivisor must be from 1 to %d", privbcast::MAX_TIME_DIVISOR))};
+    }
+    return privbcast::Timing{static_cast<int>(divisor)};
+}
+
+util::Result<void> CheckPrivbcastSettings(const ArgsManager& args, const CChainParams& chainparams)
+{
+    if (!args.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)) return {};
+    // Only on signet do they change the seeds; other chains ignore them.
+    const bool signet{chainparams.GetChainType() == ChainType::SIGNET};
+    if (signet && args.IsArgSet("-signetseednode")) {
+        return util::Error{_("-privatebroadcast cannot be used with -signetseednode: private broadcast jobs query only the chain's own DNS seeds.")};
+    }
+    if (signet && args.IsArgSet("-signetchallenge")) {
+        return util::Error{_("-privatebroadcast cannot be used with -signetchallenge: a custom signet has no DNS seeds for private broadcast jobs to query.")};
+    }
+    if (args.GetIntArg("-mocktime", 0) != 0 && chainparams.GetChainType() != ChainType::REGTEST) {
+        return util::Error{Untranslated("-privatebroadcast cannot be used with -mocktime except on regtest: the node's clock schedules every private broadcast job.")};
+    }
+    // Regtest's seed list is a placeholder: without an override no job could ever send (U1).
+    if (chainparams.GetChainType() == ChainType::REGTEST && args.GetArgs("-privatebroadcastseed").empty()) {
+        return util::Error{Untranslated("-privatebroadcast on regtest needs -privatebroadcastseed: regtest has no DNS seeds")};
+    }
+    return {};
+}
 
 PrivbcastQueue::PrivbcastQueue(privbcast::SeedMaterial seeds,
                                privbcast::Timing timing,
