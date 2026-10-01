@@ -21,12 +21,12 @@ kj::Own<typename Interface::Server> CustomMakeProxyServer(InvokeContext& context
 }
 
 template <typename Impl, typename Value, typename Output>
+    requires InterfaceField<Output>
 void CustomBuildField(TypeList<std::unique_ptr<Impl>>,
     Priority<1>,
     InvokeContext& invoke_context,
     Value&& value,
-    Output&& output,
-    typename Decay<decltype(output.get())>::Calls* enable = nullptr)
+    Output&& output)
 {
     if (value) {
         using Interface = typename decltype(output.get())::Calls;
@@ -35,12 +35,12 @@ void CustomBuildField(TypeList<std::unique_ptr<Impl>>,
 }
 
 template <typename Impl, typename Value, typename Output>
+    requires InterfaceField<Output>
 void CustomBuildField(TypeList<std::shared_ptr<Impl>>,
     Priority<2>,
     InvokeContext& invoke_context,
     Value&& value,
-    Output&& output,
-    typename Decay<decltype(output.get())>::Calls* enable = nullptr)
+    Output&& output)
 {
     if (value) {
         using Interface = typename decltype(output.get())::Calls;
@@ -49,12 +49,12 @@ void CustomBuildField(TypeList<std::shared_ptr<Impl>>,
 }
 
 template <typename Impl, typename Output>
+    requires InterfaceField<Output>
 void CustomBuildField(TypeList<Impl&>,
     Priority<1>,
     InvokeContext& invoke_context,
     Impl& value,
-    Output&& output,
-    typename decltype(output.get())::Calls* enable = nullptr)
+    Output&& output)
 {
     // Disable deleter so proxy server object doesn't attempt to delete the
     // wrapped implementation when the proxy client is destroyed or
@@ -77,12 +77,12 @@ std::unique_ptr<Impl> CustomMakeProxyClient(InvokeContext& context, typename Int
 }
 
 template <typename LocalType, typename Input, typename ReadDest>
+    requires InterfaceField<Input>
 decltype(auto) CustomReadField(TypeList<std::unique_ptr<LocalType>>,
     Priority<1>,
     InvokeContext& invoke_context,
     Input&& input,
-    ReadDest&& read_dest,
-    typename Decay<decltype(input.get())>::Calls* enable = nullptr)
+    ReadDest&& read_dest)
 {
     using Interface = typename Decay<decltype(input.get())>::Calls;
     if (CustomHasField(TypeList<LocalType>(), invoke_context, input)) {
@@ -93,12 +93,12 @@ decltype(auto) CustomReadField(TypeList<std::unique_ptr<LocalType>>,
 }
 
 template <typename LocalType, typename Input, typename ReadDest>
+    requires InterfaceField<Input>
 decltype(auto) CustomReadField(TypeList<std::shared_ptr<LocalType>>,
     Priority<1>,
     InvokeContext& invoke_context,
     Input&& input,
-    ReadDest&& read_dest,
-    typename Decay<decltype(input.get())>::Calls* enable = nullptr)
+    ReadDest&& read_dest)
 {
     using Interface = typename Decay<decltype(input.get())>::Calls;
     if (CustomHasField(TypeList<LocalType>(), invoke_context, input)) {
