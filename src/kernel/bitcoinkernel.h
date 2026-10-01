@@ -1291,8 +1291,9 @@ BITCOINKERNEL_API void btck_chainstate_manager_options_update_chainstate_db_in_m
 
 /**
  * @brief Sets pruning in the options. Blocks are then deleted by
- * @ref btck_block_manager_prune_up_to_height. Once blocks have been deleted,
- * the data directory only opens with pruning set.
+ * @ref btck_block_manager_prune_up_to_height, and automatically if a target is
+ * set with @ref btck_chainstate_manager_options_set_prune_target_bytes. Once
+ * blocks have been deleted, the data directory only opens with pruning set.
  *
  * @param[in] chainstate_manager_options Non-null, created by @ref btck_chainstate_manager_options_create.
  * @param[in] prune                      Set pruning.
@@ -1300,6 +1301,36 @@ BITCOINKERNEL_API void btck_chainstate_manager_options_update_chainstate_db_in_m
 BITCOINKERNEL_API void btck_chainstate_manager_options_update_prune(
     btck_ChainstateManagerOptions* chainstate_manager_options,
     int prune) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Set a target size for the blocks and spent outputs kept on disk. With
+ * pruning set, older blocks are then also deleted automatically to stay below
+ * it, except the 288 most recent and those kept by prune locks, which can keep
+ * the size above the target.
+ *
+ * @param[in] chainstate_manager_options Non-null, options to be set.
+ * @param[in] prune_target_bytes         The target size in bytes, or 0 for no automatic pruning.
+ *                                       Other values below 550 MiB are rejected.
+ * @return                               0 if the set was successful, non-zero if the set failed.
+ */
+BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_options_set_prune_target_bytes(
+    btck_ChainstateManagerOptions* chainstate_manager_options,
+    uint64_t prune_target_bytes) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Sets a prune lock that is in place before the chainstate manager
+ * loads, which can already prune automatically. The lock can be changed later
+ * with @ref btck_block_manager_update_prune_lock.
+ *
+ * @param[in] chainstate_manager_options Non-null, created by @ref btck_chainstate_manager_options_create.
+ * @param[in] name                       Identifies the lock.
+ * @param[in] name_len                   Length of name.
+ * @param[in] height                     The lowest height to keep.
+ */
+BITCOINKERNEL_API void btck_chainstate_manager_options_update_prune_lock(
+    btck_ChainstateManagerOptions* chainstate_manager_options,
+    const char* name, size_t name_len,
+    int32_t height) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
  * Destroy the chainstate manager options.

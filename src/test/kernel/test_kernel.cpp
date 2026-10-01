@@ -917,6 +917,10 @@ BOOST_AUTO_TEST_CASE(btck_chainman_tests)
     BOOST_CHECK(!chainman_opts.SetDatabaseCacheBytes(4_MiB - 1));
     if constexpr (sizeof(void*) == 4) BOOST_CHECK(!chainman_opts.SetDatabaseCacheBytes(2_GiB));
     BOOST_CHECK(chainman_opts.SetDatabaseCacheBytes(4_MiB));
+    BOOST_CHECK(!chainman_opts.SetPruneTargetBytes(550_MiB - 1));
+    BOOST_CHECK(chainman_opts.SetPruneTargetBytes(0));
+    BOOST_CHECK(chainman_opts.SetPruneTargetBytes(550_MiB));
+    chainman_opts.UpdatePruneLock("startup", 1);
     BOOST_CHECK(!chainman_opts.SetWipeDbs(/*wipe_block_tree=*/true, /*wipe_chainstate=*/false));
     BOOST_CHECK(chainman_opts.SetWipeDbs(/*wipe_block_tree=*/true, /*wipe_chainstate=*/true));
     BOOST_CHECK(chainman_opts.SetWipeDbs(/*wipe_block_tree=*/false, /*wipe_chainstate=*/true));
@@ -924,6 +928,7 @@ BOOST_AUTO_TEST_CASE(btck_chainman_tests)
     ChainMan chainman{context, chainman_opts};
     auto blockman{chainman.GetBlockManager()};
     BOOST_CHECK(!blockman.PruneUpToHeight(1));
+    BOOST_CHECK(blockman.DeletePruneLock("startup"));
 }
 
 std::unique_ptr<ChainMan> create_chainman(TestDirectory& test_directory,

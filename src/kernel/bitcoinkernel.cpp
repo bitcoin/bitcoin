@@ -51,6 +51,7 @@
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -458,6 +459,8 @@ struct ChainstateManagerOptions {
     std::shared_ptr<const Context> m_context;
     node::ChainstateLoadOptions m_chainstate_load_options GUARDED_BY(m_mutex);
     uint64_t m_db_cache_bytes GUARDED_BY(m_mutex){DEFAULT_KERNEL_CACHE};
+    uint64_t m_prune_target_bytes GUARDED_BY(m_mutex){0};
+    std::unordered_map<std::string, node::PruneLockInfo> m_prune_locks GUARDED_BY(m_mutex);
 
     ChainstateManagerOptions(const std::shared_ptr<const Context>& context, const fs::path& data_dir, const fs::path& blocks_dir)
         : m_chainman_options{ChainstateManager::Options{
@@ -1132,6 +1135,26 @@ void btck_chainstate_manager_options_update_prune(
     opts.m_blockman_options.prune_target = prune == 1 ? node::BlockManager::PRUNE_TARGET_MANUAL : 0;
 }
 
+int btck_chainstate_manager_options_set_prune_target_bytes(btck_ChainstateManagerOptions* chainman_opts, uint64_t prune_target_bytes)
+{
+    if (prune_target_bytes != 0 && prune_target_bytes < MIN_DISK_SPACE_FOR_BLOCK_FILES) {
+        LogError("Failed to set prune target: size is below the supported minimum.");
+        return -1;
+    }
+    auto& opts{btck_ChainstateManagerOptions::get(chainman_opts)};
+    LOCK(opts.m_mutex);
+    opts.m_prune_target_bytes = prune_target_bytes;
+    return 0;
+}
+
+void btck_chainstate_manager_options_update_prune_lock(btck_ChainstateManagerOptions* chainman_opts, const char* name, size_t name_len, int32_t height)
+{
+    assert(name != nullptr || name_len == 0);
+    auto& opts{btck_ChainstateManagerOptions::get(chainman_opts)};
+    LOCK(opts.m_mutex);
+    opts.m_prune_locks[std::string{name, name_len}] = {.height_first = height};
+}
+
 // Exported for test_kernel only, so it is not declared in bitcoinkernel.h
 extern "C" BITCOINKERNEL_API void btck_chainstate_manager_options_update_fast_prune_for_testing(
     btck_ChainstateManagerOptions* chainman_opts,
@@ -1150,7 +1173,15 @@ btck_ChainstateManager* btck_chainstate_manager_create(
     std::unique_ptr<ChainstateManager> chainman;
     try {
         LOCK(opts.m_mutex);
-        blockman = std::make_unique<node::BlockManager>(*opts.m_context->m_interrupt, opts.m_blockman_options);
+        auto blockman_options{opts.m_blockman_options};
+        if (blockman_options.prune_target != 0 && opts.m_prune_target_bytes != 0) {
+            blockman_options.prune_target = opts.m_prune_target_bytes;
+        }
+        blockman = std::make_unique<node::BlockManager>(*opts.m_context->m_interrupt, blockman_options);
+        {
+            LOCK(::cs_main);
+            for (const auto& [name, lock_info] : opts.m_prune_locks) blockman->UpdatePruneLock(name, lock_info);
+        }
         chainman = std::make_unique<ChainstateManager>(*opts.m_context->m_interrupt, opts.m_chainman_options, *blockman);
     } catch (const std::exception& e) {
         LogError("Failed to create chainstate manager: %s", e.what());

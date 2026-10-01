@@ -1290,6 +1290,16 @@ public:
     {
         btck_chainstate_manager_options_update_prune(get(), prune);
     }
+
+    bool SetPruneTargetBytes(uint64_t prune_target_bytes)
+    {
+        return btck_chainstate_manager_options_set_prune_target_bytes(get(), prune_target_bytes) == 0;
+    }
+
+    void UpdatePruneLock(std::string_view name, int32_t height)
+    {
+        btck_chainstate_manager_options_update_prune_lock(get(), name.data(), name.length(), height);
+    }
 };
 
 class ChainView : public View<btck_Chain>
