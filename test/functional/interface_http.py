@@ -9,7 +9,6 @@ from test_framework.netutil import NETWORK_ERRORS
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
-    assert_greater_than_or_equal,
     assert_raises,
     mine_large_block,
     str_to_b64str
@@ -99,8 +98,8 @@ class BitcoinHTTPConnection:
         # not immediately, and not too far over the configured duration.
         # This allows for some jitter in the test between client and server.
         duration = stop - start
-        assert_greater_than_or_equal(seconds + 2, duration)
-        assert_greater_than_or_equal(duration, seconds - 1)
+        assert duration <= seconds + 2, f"Server disconnected too slow: {duration} > {seconds}"
+        assert duration >= seconds - 1, f"Server disconnected too fast: {duration} < {seconds}"
         # The connection is definitely closed.
         assert self.sock_closed()
 
