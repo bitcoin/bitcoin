@@ -115,6 +115,7 @@ BASE_SCRIPTS = [
     'mempool_persist.py',
     # vv Tests less than 60s vv
     'interface_http.py',
+    'interface_http.py --httpunix',
     'rpc_psbt.py',
     'wallet_fundrawtransaction.py',
     'wallet_bumpfee.py',
@@ -136,6 +137,7 @@ BASE_SCRIPTS = [
     'rpc_packages.py',
     'rpc_bind.py --ipv4',
     'rpc_bind.py --ipv6',
+    'rpc_bind.py --httpunix',
     'rpc_bind.py --nonloopback',
     'p2p_headers_sync_with_minchainwork.py',
     'p2p_feefilter.py',
