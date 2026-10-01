@@ -6,8 +6,10 @@
 add_library(bitcoin_privbcast STATIC EXCLUDE_FROM_ALL
   assign.cpp
   attempt.cpp
+  discovery.cpp
   plan.cpp
   socks5.cpp
+  stream.cpp
 )
 target_link_libraries(bitcoin_privbcast
   PUBLIC

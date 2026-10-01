@@ -15,9 +15,17 @@
 #include <serialize.h>
 #include <span.h>
 #include <sync.h>
+#include <util/check.h>
 
+#include <algorithm>
+#include <cassert>
 #include <chrono>
+#include <cstring>
 #include <optional>
+#include <span>
+#include <stdexcept>
+#include <string>
+#include <utility>
 #include <vector>
 
 void ConnmanTestMsg::Handshake(CNode& node,
@@ -131,6 +139,108 @@ CNode* ConnmanTestMsg::ConnectNodePublic(PeerManager& peerman, const char* pszDe
     node->fSuccessfullyConnected = true;
     AddTestNode(*node);
     return node;
+}
+
+std::vector<uint8_t> Socks5Responder::Received(std::span<const uint8_t> bytes)
+{
+    m_unparsed.insert(m_unparsed.end(), bytes.begin(), bytes.end());
+    std::vector<uint8_t> answer;
+    const auto& in{m_unparsed};
+    const auto consume{[&](size_t n) { m_unparsed.erase(m_unparsed.begin(), m_unparsed.begin() + n); }};
+    for (bool more{true}; more && !m_failed;) {
+        more = false;
+        switch (m_stage) {
+        case Stage::Greeting: {
+            // VER NMETHODS METHODS
+            if (in.size() < 2 || in.size() < 2 + size_t{in[1]}) break;
+            const auto methods{std::span{in}.subspan(2, in[1])};
+            if (in[0] != 0x05 || std::ranges::find(methods, 0x02) == methods.end()) {
+                m_failed = true;
+                break;
+            }
+            consume(2 + methods.size());
+            answer.insert(answer.end(), {0x05, 0x02});
+            m_stage = Stage::Auth;
+            more = true;
+            break;
+        }
+        case Stage::Auth: {
+            // VER ULEN UNAME PLEN PASSWD
+            if (in.size() < 2) break;
+            const size_t ulen{in[1]};
+            if (in.size() < 3 + ulen) break;
+            const size_t plen{in[2 + ulen]};
+            if (in.size() < 3 + ulen + plen) break;
+            if (in[0] != 0x01) {
+                m_failed = true;
+                break;
+            }
+            m_parsed.username.assign(in.begin() + 2, in.begin() + 2 + ulen);
+            m_parsed.password.assign(in.begin() + 3 + ulen, in.begin() + 3 + ulen + plen);
+            consume(3 + ulen + plen);
+            answer.insert(answer.end(), {0x01, 0x00});
+            m_stage = Stage::Request;
+            more = true;
+            break;
+        }
+        case Stage::Request: {
+            // VER CMD RSV ATYP DST.ADDR DST.PORT
+            if (in.size() < 5) break;
+            size_t addr_len{0};
+            switch (in[3]) {
+            case 0x01: addr_len = 4; break;
+            case 0x03: addr_len = 1 + size_t{in[4]}; break;
+            case 0x04: addr_len = 16; break;
+            default: m_failed = true;
+            }
+            if (m_failed || in.size() < 4 + addr_len + 2) break;
+            if (in[0] != 0x05 || in[2] != 0x00) {
+                m_failed = true;
+                break;
+            }
+            if (in[3] == 0x03) {
+                m_parsed.host.assign(in.begin() + 5, in.begin() + 4 + addr_len);
+            } else {
+                char text[INET6_ADDRSTRLEN]{};
+                inet_ntop(in[3] == 0x01 ? AF_INET : AF_INET6, in.data() + 4, text, sizeof(text));
+                m_parsed.host = text;
+            }
+            m_parsed.command = in[1];
+            consume(4 + addr_len + 2);
+            m_request = m_parsed;
+            m_stage = Stage::Done;
+            break;
+        }
+        case Stage::Done:
+            break;
+        }
+    }
+    return answer;
+}
+
+std::vector<uint8_t> Socks5Responder::ReplyAddress(const std::string& address)
+{
+    std::vector<uint8_t> reply{0x05, 0x00, 0x00, 0x01};
+    uint8_t addr[4];
+    const int parsed{inet_pton(AF_INET, address.c_str(), addr)};
+    assert(parsed == 1);
+    reply.insert(reply.end(), addr, addr + 4);
+    reply.insert(reply.end(), {0x00, 0x00});
+    return reply;
+}
+
+std::vector<uint8_t> Socks5Responder::ReplyName(const std::string& name)
+{
+    std::vector<uint8_t> reply{0x05, 0x00, 0x00, 0x03};
+    reply.push_back(static_cast<uint8_t>(name.size()));
+    reply.insert(reply.end(), name.begin(), name.end());
+    reply.insert(reply.end(), {0x00, 0x00});
+    return reply;
+}
+
+std::vector<uint8_t> Socks5Responder::ReplyError(uint8_t code)
+{
+    return {0x05, code, 0x00, 0x01, 0, 0, 0, 0, 0, 0};
 }
 
 std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candidates, FastRandomContext& random_context)
@@ -430,4 +540,101 @@ DynSock& DynSock::operator=(Sock&&)
 {
     assert(false && "Move of Sock into DynSock not allowed.");
     return *this;
+}
+
+/** Report err as the error of the last socket call, as the platform does. */
+static void SetSocketError(int err)
+{
+#ifdef WIN32
+    WSASetLastError(err);
+#else
+    errno = err;
+#endif
+}
+
+ConnectingSock::ConnectingSock(std::shared_ptr<Pipes> pipes, std::shared_ptr<Connection> connection)
+    : DynSock{pipes}, m_pipes{std::move(pipes)}, m_connection{std::move(connection)}
+{
+}
+
+ConnectingSock::~ConnectingSock()
+{
+    if (on_close) on_close();
+}
+
+ssize_t ConnectingSock::Recv(void* buf, size_t len, int flags) const
+{
+    if (on_io) on_io();
+    if (m_connection->recv_throws) throw std::runtime_error{*m_connection->recv_throws};
+    const ssize_t ret{DynSock::Recv(buf, len, flags)};
+    // An empty pipe sets errno, which is not where Windows code looks.
+    if (ret < 0) SetSocketError(WSAEWOULDBLOCK);
+    return ret;
+}
+
+ssize_t ConnectingSock::Send(const void* buf, size_t len, int flags) const
+{
+    if (on_io) on_io();
+    if (m_connection->send_error == 0) return DynSock::Send(buf, len, flags);
+    SetSocketError(m_connection->send_error);
+    return -1;
+}
+
+int ConnectingSock::Connect(const sockaddr* addr, socklen_t addr_len) const
+{
+    const auto* bytes{reinterpret_cast<const uint8_t*>(addr)};
+    m_connection->address.assign(bytes, bytes + addr_len);
+    if (m_connection->connect_error == 0) return 0;
+    SetSocketError(m_connection->connect_error);
+    return -1;
+}
+
+int ConnectingSock::GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const
+{
+    if (level == SOL_SOCKET && opt_name == SO_ERROR && *opt_len >= static_cast<socklen_t>(sizeof(int))) {
+        const int error{InProgress() ? 0 : m_connection->so_error};
+        std::memcpy(opt_val, &error, sizeof(error));
+        *opt_len = sizeof(error);
+        return 0;
+    }
+    return DynSock::GetSockOpt(level, opt_name, opt_val, opt_len);
+}
+
+bool ConnectingSock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const
+{
+    if (on_wait) on_wait();
+    for (auto& [sock, events] : events_per_sock) {
+        const auto& s{*Assert(dynamic_cast<const ConnectingSock*>(sock.get()))};
+        if (s.m_connection->wait_throws) throw std::runtime_error{*s.m_connection->wait_throws};
+        events.occurred = 0;
+        if (s.InProgress()) continue;
+        if (events.requested & SendEvent) events.occurred |= SendEvent;
+        if ((events.requested & RecvEvent) && s.Readable()) events.occurred |= RecvEvent;
+    }
+    return true;
+}
+
+ConnectingSock& ConnectingSock::operator=(Sock&&)
+{
+    assert(false && "Move of Sock into ConnectingSock not allowed.");
+    return *this;
+}
+
+bool ConnectingSock::InProgress() const
+{
+    return m_connection->connect_error == WSAEINPROGRESS && m_connection->in_progress;
+}
+
+bool ConnectingSock::Readable() const
+{
+    uint8_t byte;
+    return m_pipes->recv.GetBytes(&byte, 1, MSG_PEEK) >= 0;
+}
+
+std::vector<uint8_t> ReadAll(DynSock::Pipe& pipe)
+{
+    std::vector<uint8_t> bytes;
+    uint8_t buf[4096];
+    for (ssize_t n; (n = pipe.GetBytes(buf, sizeof(buf))) > 0;) bytes.insert(bytes.end(), buf, buf + n);
+    return bytes;
 }

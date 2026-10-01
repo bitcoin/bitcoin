@@ -98,6 +98,7 @@ add_executable(fuzz
   primitives_transaction.cpp
   private_broadcast.cpp
   privbcast_attempt.cpp
+  privbcast_discovery.cpp
   privbcast_socks5.cpp
   process_message.cpp
   process_messages.cpp

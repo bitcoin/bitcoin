@@ -25,8 +25,10 @@
 #include <condition_variable>
 #include <cstdint>
 #include <cstring>
+#include <functional>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -390,6 +392,107 @@ void DynSock::Pipe::PushNetMsg(const std::string& type, Args&&... payload)
 
     m_cond.notify_all();
 }
+
+/**
+ * A DynSock that connects as a non-blocking socket does, as the test scripts it, and whose
+ * WaitMany() reports what poll() would, without waiting: the test moves time.
+ *
+ * Connect() records the address it is given in the socket's Connection, then succeeds, or fails
+ * with the Connection's error. After WSAEINPROGRESS the connect is in progress until the test
+ * clears `in_progress`, and getsockopt(SO_ERROR) then reports `so_error`. While its connect is in
+ * progress the socket reports no event; otherwise it is ready to send, and ready to receive when
+ * its receive pipe holds data or has ended. The sockets waited on together must all be
+ * ConnectingSocks. Send() fails with `send_error` if it is set. Recv() throws `recv_throws`, and
+ * WaitMany() `wait_throws` of any socket waited on, as a std::runtime_error, if it is set.
+ */
+class ConnectingSock : public DynSock
+{
+public:
+    /** How the socket connects, shared with the test. Not thread-safe. */
+    struct Connection {
+        /** Connect() fails with this error, or succeeds if it is 0. */
+        int connect_error{0};
+        /** After WSAEINPROGRESS, the connect is in progress while this is true. */
+        bool in_progress{true};
+        /** What getsockopt(SO_ERROR) reports once the connect is no longer in progress. */
+        int so_error{0};
+        /** Send() fails with this error, unless it is 0. */
+        int send_error{0};
+        /** What Recv() and WaitMany() throw, if set. */
+        std::optional<std::string> recv_throws;
+        std::optional<std::string> wait_throws;
+        /** The address Connect() was given. Empty before. */
+        std::vector<uint8_t> address;
+    };
+
+    ConnectingSock(std::shared_ptr<Pipes> pipes, std::shared_ptr<Connection> connection);
+    ~ConnectingSock() override;
+
+    /** What the test runs when the code under test waits on this socket, before the events are
+     *  read; when it writes to or reads from it; and when it closes it. */
+    std::function<void()> on_wait, on_io, on_close;
+
+    ssize_t Recv(void* buf, size_t len, int flags) const override;
+
+    ssize_t Send(const void* buf, size_t len, int flags) const override;
+
+    int Connect(const sockaddr* addr, socklen_t addr_len) const override;
+
+    int GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const override;
+
+    bool WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const override;
+
+private:
+    ConnectingSock& operator=(Sock&& other) override;
+
+    bool InProgress() const;
+    /** The receive pipe holds data or has ended. */
+    bool Readable() const;
+
+    const std::shared_ptr<Pipes> m_pipes;
+    const std::shared_ptr<Connection> m_connection;
+};
+
+/** Everything the pipe holds, taken out of it. */
+std::vector<uint8_t> ReadAll(DynSock::Pipe& pipe);
+
+/**
+ * The proxy's side of one SOCKS5 exchange (RFC 1928) with username and password authentication
+ * (RFC 1929), for tests. Received() takes what the client wrote and returns the proxy's answers
+ * to the greeting and the authentication, accepting any credentials. The request, once complete,
+ * is left for the test to answer with one of the replies below.
+ */
+class Socks5Responder
+{
+public:
+    struct Request {
+        std::string username;
+        std::string password;
+        uint8_t command{0};
+        /** A domain name, or an IPv4 or IPv6 address as text. */
+        std::string host;
+    };
+
+    /** Take bytes the client wrote, and return what the proxy answers. */
+    std::vector<uint8_t> Received(std::span<const uint8_t> bytes);
+    /** The request, once the client has written it in full. */
+    const std::optional<Request>& GetRequest() const { return m_request; }
+
+    /** A success reply whose bound address is this IPv4 address, with port 0. */
+    static std::vector<uint8_t> ReplyAddress(const std::string& address);
+    /** A success reply whose bound address is this domain name, with port 0. */
+    static std::vector<uint8_t> ReplyName(const std::string& name);
+    /** A failure reply with this code. */
+    static std::vector<uint8_t> ReplyError(uint8_t code);
+
+private:
+    enum class Stage { Greeting, Auth, Request, Done };
+    Stage m_stage{Stage::Greeting};
+    std::vector<uint8_t> m_unparsed;
+    Request m_parsed;
+    std::optional<Request> m_request;
+    bool m_failed{false};
+};
 
 std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candidates, FastRandomContext& random_context);
 
