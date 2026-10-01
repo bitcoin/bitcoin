@@ -19,6 +19,7 @@
 #include <util/translation.h>
 
 #include <algorithm>
+#include <cerrno>
 #include <concepts>
 #include <cstring>
 #include <memory>
@@ -956,6 +957,19 @@ BOOST_AUTO_TEST_CASE(socket_addr)
     BOOST_CHECK_EQUAL(ip_addr.ToStringAddrPort(), ipv4.ToStringAddrPort());
 }
 
+/** A Sock whose Connect() always fails with ECONNREFUSED */
+class ConnectFailingSock : public ZeroSock
+{
+public:
+    int Connect(const sockaddr*, socklen_t) const override
+    {
+        errno = ECONNREFUSED;
+        return SOCKET_ERROR;
+    }
+private:
+    using Sock::operator=;
+};
+
 /** A ZeroSock that records how it was created and the address passed to Connect() */
 class ConnectRecordingSock : public ZeroSock
 {
@@ -989,27 +1003,35 @@ struct ConnectRecordingSockTestingSetup : public SocketTestingSetup {
     }
 };
 
+/**
+ * Checks that Connect() creates the expected kind of socket and connects it
+ * to the sockaddr described by expected_addr. Requires CreateSock to return
+ * a ConnectRecordingSock.
+ */
+template <typename T>
+static void CheckConnect(const T& connectable, int expected_domain, int expected_protocol, const std::string& expected_addr)
+{
+    const auto sock{connectable.Connect()};
+    BOOST_REQUIRE(sock != nullptr);
+    const auto* recording_sock{dynamic_cast<const ConnectRecordingSock*>(sock.get())};
+    BOOST_REQUIRE(recording_sock != nullptr);
+    BOOST_CHECK_EQUAL(recording_sock->m_domain, expected_domain);
+    BOOST_CHECK_EQUAL(recording_sock->m_type, SOCK_STREAM);
+    BOOST_CHECK_EQUAL(recording_sock->m_protocol, expected_protocol);
+    SocketAddr connected;
+    BOOST_REQUIRE(connected.SetSockAddr(reinterpret_cast<const sockaddr*>(&recording_sock->m_connected_addr), recording_sock->m_connected_len));
+    BOOST_CHECK_EQUAL(connected.ToStringAddrPort(), expected_addr);
+}
+
 BOOST_FIXTURE_TEST_CASE(socket_addr_connect, ConnectRecordingSockTestingSetup)
 {
-    // Checks that Connect() creates the expected kind of socket and connects it
-    // to the sockaddr that SocketAddr represents
-    const auto check_connect{[&](const SocketAddr& addr, int expected_domain, int expected_protocol) {
-        const auto sock{addr.Connect()};
-        BOOST_REQUIRE(sock != nullptr);
-        const auto* recording_sock{dynamic_cast<const ConnectRecordingSock*>(sock.get())};
-        BOOST_REQUIRE(recording_sock != nullptr);
-        BOOST_CHECK_EQUAL(recording_sock->m_domain, expected_domain);
-        BOOST_CHECK_EQUAL(recording_sock->m_type, SOCK_STREAM);
-        BOOST_CHECK_EQUAL(recording_sock->m_protocol, expected_protocol);
-        SocketAddr connected;
-        BOOST_REQUIRE(connected.SetSockAddr(reinterpret_cast<const sockaddr*>(&recording_sock->m_connected_addr), recording_sock->m_connected_len));
-        BOOST_CHECK_EQUAL(connected.ToStringAddrPort(), addr.ToStringAddrPort());
-    }};
-
-    check_connect(SocketAddr{LookupNumeric("142.250.217.142", 8333)}, AF_INET, IPPROTO_TCP);
-    check_connect(SocketAddr{LookupNumeric("2607:f8b0:4006:80f::200e", 8333)}, AF_INET6, IPPROTO_TCP);
+    const SocketAddr ipv4{LookupNumeric("142.250.217.142", 8333)};
+    CheckConnect(ipv4, AF_INET, IPPROTO_TCP, ipv4.ToStringAddrPort());
+    const SocketAddr ipv6{LookupNumeric("2607:f8b0:4006:80f::200e", 8333)};
+    CheckConnect(ipv6, AF_INET6, IPPROTO_TCP, ipv6.ToStringAddrPort());
 #ifdef HAVE_SOCKADDR_UN
-    check_connect(SocketAddr{UnixSocketAddr{"unix:/tmp/bitcoin.sock"}}, AF_UNIX, 0);
+    const SocketAddr unix_addr{UnixSocketAddr{"unix:/tmp/bitcoin.sock"}};
+    CheckConnect(unix_addr, AF_UNIX, 0, unix_addr.ToStringAddrPort());
 #endif
 
     // Invalid address doesn't even create a socket
@@ -1020,6 +1042,82 @@ BOOST_FIXTURE_TEST_CASE(socket_addr_connect, ConnectRecordingSockTestingSetup)
     BOOST_CHECK(SocketAddr{LookupNumeric("142.250.217.142", 8333)}.Connect() == nullptr);
 #ifdef HAVE_SOCKADDR_UN
     BOOST_CHECK(SocketAddr{UnixSocketAddr{"unix:/tmp/bitcoin.sock"}}.Connect() == nullptr);
+#endif
+}
+
+BOOST_FIXTURE_TEST_CASE(proxy_api, ConnectRecordingSockTestingSetup)
+{
+    // Default-constructed proxy is invalid and can't connect
+    const Proxy empty;
+    BOOST_CHECK(!empty.IsValid());
+    BOOST_CHECK(!empty.m_tor_stream_isolation);
+    BOOST_CHECK(empty.Connect() == nullptr);
+    // An invalid CService makes an invalid proxy
+    BOOST_CHECK(!Proxy{CService{}}.IsValid());
+    BOOST_CHECK(Proxy{CService{}}.Connect() == nullptr);
+
+    // IP proxies
+    const CService ipv4{LookupNumeric("127.0.0.1", 9050)};
+    const CService ipv6{LookupNumeric("::1", 9050)};
+    const Proxy proxy4{ipv4};
+    BOOST_CHECK(proxy4.IsValid());
+    BOOST_CHECK_EQUAL(proxy4.GetFamily(), AF_INET);
+    BOOST_CHECK_EQUAL(proxy4.ToString(), "127.0.0.1:9050");
+    CheckConnect(proxy4, AF_INET, IPPROTO_TCP, "127.0.0.1:9050");
+
+    const Proxy proxy6{ipv6};
+    BOOST_CHECK(proxy6.IsValid());
+    BOOST_CHECK_EQUAL(proxy6.GetFamily(), AF_INET6);
+    BOOST_CHECK_EQUAL(proxy6.ToString(), "[::1]:9050");
+    CheckConnect(proxy6, AF_INET6, IPPROTO_TCP, "[::1]:9050");
+
+    const std::string path{"unix:/tmp/tor/socks.sock"};
+#ifdef HAVE_SOCKADDR_UN
+    // Unix socket proxies
+    const Proxy proxy_unix{path};
+    BOOST_CHECK(proxy_unix.IsValid());
+    BOOST_CHECK_EQUAL(proxy_unix.GetFamily(), AF_UNIX);
+    BOOST_CHECK_EQUAL(proxy_unix.ToString(), path);
+    CheckConnect(proxy_unix, AF_UNIX, 0, path);
+
+    // A path without the "unix:" prefix, or too long for sun_path, is invalid
+    for (const std::string& bad_path : {std::string{"/tmp/tor/socks.sock"},
+                                        ADDR_PREFIX_UNIX + std::string(sizeof(sockaddr_un::sun_path), 'a')}) {
+        const Proxy bad{bad_path};
+        BOOST_CHECK(!bad.IsValid());
+        BOOST_CHECK_EQUAL(bad.GetFamily(), AF_UNIX);
+        BOOST_CHECK_EQUAL(bad.ToString(), bad_path);
+        BOOST_CHECK(bad.Connect() == nullptr);
+    }
+#else
+    // Without unix socket support every unix path is invalid
+    const Proxy proxy_unix{path};
+    BOOST_CHECK(!proxy_unix.IsValid());
+    BOOST_CHECK(proxy_unix.Connect() == nullptr);
+#endif
+
+    // The isolation flag is stored and doesn't affect the address
+    for (const bool isolation : {false, true}) {
+        BOOST_CHECK_EQUAL(Proxy(ipv4, isolation).m_tor_stream_isolation, isolation);
+        BOOST_CHECK_EQUAL(Proxy(ipv6, isolation).m_tor_stream_isolation, isolation);
+        BOOST_CHECK_EQUAL(Proxy(path, isolation).m_tor_stream_isolation, isolation);
+        BOOST_CHECK_EQUAL(Proxy(ipv4, isolation).ToString(), proxy4.ToString());
+        BOOST_CHECK_EQUAL(Proxy(path, isolation).ToString(), proxy_unix.ToString());
+    }
+
+    // Failure to connect is handled: no half-initialized socket is returned
+    CreateSock = [](int, int, int) -> std::unique_ptr<Sock> { return std::make_unique<ConnectFailingSock>(); };
+    BOOST_CHECK(proxy4.Connect() == nullptr);
+    BOOST_CHECK(proxy6.Connect() == nullptr);
+#ifdef HAVE_SOCKADDR_UN
+    BOOST_CHECK(proxy_unix.Connect() == nullptr);
+#endif
+
+    // Failure to create a socket is handled
+    CreateSock = [](int, int, int) -> std::unique_ptr<Sock> { return nullptr; };
+    BOOST_CHECK(proxy4.Connect() == nullptr);
+#ifdef HAVE_SOCKADDR_UN
+    BOOST_CHECK(proxy_unix.Connect() == nullptr);
 #endif
 }
 
