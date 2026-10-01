@@ -501,25 +501,31 @@ class PackageRelayTest(BitcoinTestFramework):
 
         peer_normal = node.add_p2p_connection(P2PInterface())
 
-        # The first set of peers all send the same batch_size orphans. Then a single peer sends
+        # The first set of peers all announce the same batch_size orphans. Then a single peer sends
         # batch_single_doser distinct orphans.
         batch_size = 51
         num_peers_shared = 60
         batch_single_doser = 100
-        assert_greater_than(num_peers_shared * batch_size + batch_single_doser, 3000)
         # 60 peers * 51 orphans = 3060 announcements
         shared_orphans = [self.create_small_orphan() for _ in range(batch_size)]
         self.log.info(f"Send the same {batch_size} orphans from {num_peers_shared} DoSy peers (may take a while)")
         peer_doser_shared = [node.add_p2p_connection(P2PInterface()) for _ in range(num_peers_shared)]
-        for i in range(num_peers_shared):
-            for orphan in shared_orphans:
-                peer_doser_shared[i].send_without_ping(msg_tx(orphan))
+        # A tx that is already an orphan is ignored without recording its sender, so after the first
+        # peer sends the orphans, the others announce them by inv.
+        for orphan in shared_orphans:
+            peer_doser_shared[0].send_without_ping(msg_tx(orphan))
+        peer_doser_shared[0].sync_with_ping()
+        shared_inv = msg_inv([CInv(t=MSG_WTX, h=tx.wtxid_int) for tx in shared_orphans])
+        for i in range(1, num_peers_shared):
+            peer_doser_shared[i].send_without_ping(shared_inv)
 
         # We sync peers to make sure we have processed as many orphans as possible. Ensure at least
         # one of the orphans was processed.
         for peer_doser in peer_doser_shared:
             peer_doser.sync_with_ping()
         self.wait_until(lambda: any([tx.txid_hex in node.getorphantxs() for tx in shared_orphans]))
+        # Each announcement of a small orphan adds 1 to the latency score, which is capped at 3000.
+        assert_equal(sum(len(orphan["from"]) for orphan in node.getorphantxs(verbosity=2)), 3000)
 
         self.log.info("Send an orphan from a non-DoSy peer. Its orphan should not be evicted.")
         low_fee_parent = self.create_tx_below_mempoolminfee(self.wallet)
