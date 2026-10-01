@@ -126,7 +126,7 @@ BOOST_FIXTURE_TEST_CASE(invalidate_block, TestChain100Setup)
     auto* orig_tip = active.Tip();
     int height_to_invalidate = orig_tip->nHeight - 10;
     auto* tip_to_invalidate = active[height_to_invalidate];
-    m_node.chainman->ActiveChainstate().InvalidateBlock(state, tip_to_invalidate);
+    BOOST_CHECK(m_node.chainman->ActiveChainstate().InvalidateBlock(state, tip_to_invalidate));
 
     // tip_to_invalidate just got invalidated, so it's BLOCK_FAILED_VALID
     WITH_LOCK(::cs_main, assert(tip_to_invalidate->nStatus & BLOCK_FAILED_VALID));
