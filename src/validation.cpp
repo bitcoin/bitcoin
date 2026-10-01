@@ -2832,7 +2832,7 @@ bool Chainstate::FlushStateToDisk(
                      FlushStateModeNames[size_t(mode)], fFlushForPrune, fCacheLarge, fCacheCritical, fPeriodicWrite);
 
             // Ensure we can write block index
-            if (!CheckDiskSpace(m_blockman.m_opts.blocks_dir)) {
+            if (!CheckDiskSpace(m_blockman.GetBlocksDir())) {
                 return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
             }
             {
