@@ -96,6 +96,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   addresstype.cpp
   base58.cpp
   bech32.cpp
+  bip324.cpp
   chain.cpp
   chainparams.cpp
   chainparamsbase.cpp
@@ -187,7 +188,6 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   addrdb.cpp
   addrman.cpp
   banman.cpp
-  bip324.cpp
   blockencodings.cpp
   blockfilter.cpp
   consensus/tx_verify.cpp
