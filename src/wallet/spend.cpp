@@ -260,6 +260,66 @@ static OutputType GetOutputType(TxoutType type, bool is_from_p2sh)
     }
 }
 
+//! Whether script path spend data is known for a taproot output, i.e. it may not be spent via the key path
+static bool HasTaprootScriptPath(const SigningProvider& provider, const std::vector<unsigned char>& output_key)
+{
+    TaprootSpendData spenddata;
+    return provider.GetTaprootSpendData(XOnlyPubKey(output_key), spenddata) && !spenddata.scripts.empty();
+}
+
+static bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet& wallet)
+{
+    std::vector<std::vector<unsigned char>> solutions;
+    TxoutType type = Solver(input, solutions);
+
+    switch (type) {
+        // First check the conditional inputs: P2TR and P2SH
+        case TxoutType::SCRIPTHASH:
+            {
+                // Only P2SH-P2WPKH is supported. If it is any other type of P2SH, skip the input
+                // To determine if this input is a P2SH-P2WPKH, get the redeemScript and check the
+                // TxOutType. If we can't get the redeemScript, we have no way of knowing what type
+                // the P2SH is, and don't have access to the spending data, anyways.
+                std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(input);
+                CScript script;
+                if (!provider || !provider->GetCScript(CScriptID(uint160(solutions[0])), script)) return false;
+                type = Solver(script, solutions);
+                if (type == TxoutType::WITNESS_V0_KEYHASH) return true;
+                return false;
+            }
+        case TxoutType::WITNESS_V1_TAPROOT:
+            {
+                // An output whose internal key is H (the NUMS point defined in the BIP) can only be
+                // spent via the script path, and BIP352 skips such script path spends
+                std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(input);
+                TaprootSpendData spenddata;
+                if (provider && provider->GetTaprootSpendData(XOnlyPubKey{solutions[0]}, spenddata) &&
+                    spenddata.internal_key == XOnlyPubKey::NUMS_H) return false;
+                return true;
+            }
+        case TxoutType::PUBKEYHASH:
+            {
+                // BIP352 skips P2PKH inputs with an uncompressed public key
+                std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(input);
+                CPubKey pubkey;
+                if (provider && provider->GetPubKey(CKeyID{uint160{solutions[0]}}, pubkey)) return pubkey.IsCompressed();
+                return true;
+            }
+        case TxoutType::WITNESS_V0_KEYHASH: { return true; }
+        // For all the rest, these can be included as inputs but
+        // are not used when deriving the shared secret
+        case TxoutType::WITNESS_V0_SCRIPTHASH:
+        case TxoutType::MULTISIG:
+        case TxoutType::PUBKEY:
+        case TxoutType::NONSTANDARD:
+        case TxoutType::ANCHOR:
+        case TxoutType::NULL_DATA:
+        case TxoutType::WITNESS_UNKNOWN: { return false; }
+    }
+    // No default case so the compiler can warn us if we've missed something
+    assert(false);
+}
+
 // Fetch and validate the coin control selected inputs.
 // Coins could be internal (from the wallet) or external.
 util::Result<CoinsResult> FetchSelectedInputs(const CWallet& wallet, const CCoinControl& coin_control,
@@ -304,6 +364,24 @@ util::Result<CoinsResult> FetchSelectedInputs(const CWallet& wallet, const CCoin
         if (input_bytes == -1) {
             return util::Error{strprintf(_("Not solvable pre-selected input %s"), outpoint.ToString())}; // Not solvable, can't estimate size for fee
         }
+        if (coin_control.m_silent_payments) {
+            std::vector<std::vector<uint8_t>> solutions;
+            TxoutType type = Solver(txout.scriptPubKey, solutions);
+            std::unique_ptr<SigningProvider> provider{wallet.GetSolvingProvider(txout.scriptPubKey)};
+            if (type == TxoutType::WITNESS_UNKNOWN) {
+                return util::Error{strprintf(_("%s has an unknown witness version and cannot be used in a silent payments transaction"), outpoint.ToString())};
+            } else if (!provider) {
+                // The outputs are derived from the private keys of the eligible inputs, which the wallet
+                // does not have for external inputs. An external P2SH input may be eligible as well,
+                // since the wallet cannot tell whether it is a P2SH-P2WPKH.
+                if (type == TxoutType::WITNESS_V1_TAPROOT || type == TxoutType::WITNESS_V0_KEYHASH ||
+                    type == TxoutType::PUBKEYHASH || type == TxoutType::SCRIPTHASH) {
+                    return util::Error{strprintf(_("External input %s cannot be used in a silent payments transaction"), outpoint.ToString())};
+                }
+            } else if (type == TxoutType::WITNESS_V1_TAPROOT && HasTaprootScriptPath(*provider, solutions[0])) {
+                return util::Error{strprintf(_("Found script data for %s. Only key path spends are allowed when funding a silent payments transaction, please choose a different input"), outpoint.ToString())};
+            }
+        }
 
         /* Set some defaults for depth, solvable, safe, time, and from_me as these don't matter for preset inputs since no selection is being done. */
         COutput output(outpoint, txout, /*depth=*/0, input_bytes, /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/false, coin_selection_params.m_effective_feerate);
@@ -330,6 +408,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     const int min_depth = {coinControl ? coinControl->m_min_depth : DEFAULT_MIN_DEPTH};
     const int max_depth = {coinControl ? coinControl->m_max_depth : DEFAULT_MAX_DEPTH};
     const bool only_safe = {coinControl ? !coinControl->m_include_unsafe_inputs : true};
+    const bool silent_payments = {coinControl ? coinControl->m_silent_payments : false};
     const bool can_grind_r = wallet.CanGrindR();
     std::vector<COutPoint> outpoints;
 
@@ -465,6 +544,14 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             type = Solver(script, script_solutions);
             is_from_p2sh = true;
         }
+        // Very unlikely we'd be spending a witness unknown output, but if we are trying to pay a
+        // silent payments v0 address, this can't be included
+        if (silent_payments && type == TxoutType::WITNESS_UNKNOWN) continue;
+        // If we have scriptpath spend data for the taproot output, just skip it for now. Only keypath
+        // spends can be used with silent payments and at this point we don't know if the keypath or script path is going to be used
+        // so if there's even a chance the script path will be used, better to skip the output for now.
+        // Without a provider, it is unknown whether there is script path spend data, so skip it too.
+        if (silent_payments && type == TxoutType::WITNESS_V1_TAPROOT && (!provider || HasTaprootScriptPath(*provider, script_solutions[0]))) continue;
 
         auto available_output_type = GetOutputType(type, is_from_p2sh);
         auto available_output = COutput(outpoint, output, nDepth, input_bytes, solvable, tx_safe, wtx.GetTxTime(), tx_from_me, feerate);
@@ -832,8 +919,19 @@ util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& av
         preset_coin_set.insert(std::make_shared<COutput>(output));
     }
 
-    // Return if we can cover the target only with the preset inputs
-    if (selection_target <= 0) {
+    // A silent payments transaction needs at least one eligible input. If a preset input is
+    // eligible, the automatically selected inputs don't need to be. This only affects the
+    // selection: the transaction is still built as a silent payments transaction.
+    CoinSelectionParams auto_selection_params{coin_selection_params};
+    if (auto_selection_params.m_silent_payments && std::ranges::any_of(preset_coin_set, [&](const auto& output) {
+            return IsInputForSharedSecretDerivation(output->txout.scriptPubKey, wallet);
+        })) {
+        auto_selection_params.m_silent_payments = false;
+    }
+
+    // Return if we can cover the target only with the preset inputs, unless the transaction
+    // still needs an eligible input that can be automatically selected
+    if (selection_target <= 0 && (!auto_selection_params.m_silent_payments || !coin_control.m_allow_other_inputs)) {
         SelectionResult result(nTargetValue, SelectionAlgorithm::MANUAL);
         result.AddInputs(preset_coin_set, coin_selection_params.m_subtract_fee_outputs);
         result.RecalculateWaste(coin_selection_params.min_viable_change, coin_selection_params.m_cost_of_change, coin_selection_params.m_change_fee);
@@ -847,15 +945,19 @@ util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& av
         return util::Error(); // Insufficient funds
     }
 
+    // The preset inputs cover the target but none of them is eligible for silent payments, so
+    // select an eligible input with a minimal target. The surplus goes to change.
+    if (selection_target <= 0) selection_target = 1;
+
     // Start wallet Coin Selection procedure
-    auto op_selection_result = AutomaticCoinSelection(wallet, available_coins, selection_target, coin_selection_params);
+    auto op_selection_result = AutomaticCoinSelection(wallet, available_coins, selection_target, auto_selection_params);
     if (!op_selection_result) return op_selection_result;
 
     // If needed, add preset inputs to the automatic coin selection result
     if (!pre_set_inputs.coins.empty()) {
-        auto preset_total = pre_set_inputs.GetAppropriateTotal(coin_selection_params.m_subtract_fee_outputs);
-        assert(preset_total.has_value());
-        SelectionResult preselected(preset_total.value(), SelectionAlgorithm::MANUAL);
+        // The preset inputs fund the part of the target that the automatic selection did not.
+        // This is their total, unless they alone cover the target.
+        SelectionResult preselected(nTargetValue - selection_target, SelectionAlgorithm::MANUAL);
         preselected.AddInputs(preset_coin_set, coin_selection_params.m_subtract_fee_outputs);
         op_selection_result->Merge(preselected);
         op_selection_result->RecalculateWaste(coin_selection_params.min_viable_change,
@@ -870,6 +972,143 @@ util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& av
         }
     }
     return op_selection_result;
+}
+
+//! Copy the groups for which predicate returns true
+static OutputGroupTypeMap FilterGroups(const OutputGroupTypeMap& groups, const std::function<bool(const OutputGroup&)>& predicate)
+{
+    OutputGroupTypeMap filtered;
+    for (const auto& [type, type_groups] : groups.groups_by_type) {
+        for (const auto& group : type_groups.positive_group) {
+            if (predicate(group)) filtered.Push(group, type, /*insert_positive=*/true, /*insert_mixed=*/false);
+        }
+        for (const auto& group : type_groups.mixed_group) {
+            if (predicate(group)) filtered.Push(group, type, /*insert_positive=*/false, /*insert_mixed=*/true);
+        }
+    }
+    return filtered;
+}
+
+// Two-phase coin selection for silent payments transactions, enforcing BIP352's requirement
+// that at least one eligible input appears in the final selection.
+//
+// Phase 1: run normal selection restricted to the eligible groups. Succeeds when eligible UTXOs
+//          alone can cover the target within the weight budget.
+// Phase 2: if Phase 1 fails for any reason (insufficient funds or weight constraints), try
+//          eligible anchor candidates in descending value order. For each, select the remainder
+//          from all other groups with a reduced m_max_tx_weight budget. A heavier anchor may
+//          leave no room for the remainder, so on a weight error we fall back to the next
+//          candidate. If the remainder cannot be funded, no other candidate can fund it
+//          either, so we stop.
+//
+// Returns a successful SelectionResult, or the first error other than INSUFFICIENT_FUNDS of the
+// attempts if there is one, or an INSUFFICIENT_FUNDS error meaning "try the next eligibility filter".
+static util::Expected<SelectionResult, SelectionError> AttemptSelectionSP(
+    const CWallet& wallet,
+    const CAmount& value_to_select,
+    const OutputGroupTypeMap& groups,
+    const CoinSelectionParams& coin_selection_params,
+    const SelectionFilter& select_filter)
+{
+    // Eligibility is determined by the scriptPubKey, and grouped outputs share one.
+    OutputGroupTypeMap eligible_groups{FilterGroups(groups, [&](const OutputGroup& group) {
+        return IsInputForSharedSecretDerivation(group.m_outputs.front()->txout.scriptPubKey, wallet);
+    })};
+
+    // The first error other than INSUFFICIENT_FUNDS of the attempts, returned if no selection is found
+    std::optional<SelectionError> first_error;
+
+    // Phase 1: eligible-only selection (covers the case where the wallet holds
+    // only eligible UTXOs). Any failure — including ErrorMaxWeightExceeded for heavy
+    // eligible coins — falls through to Phase 2, which anchors a smaller eligible coin
+    // and selects the remainder from the full pool.
+    if (auto res{AttemptSelection(wallet.chain(), value_to_select, eligible_groups,
+                                  coin_selection_params, select_filter.allow_mixed_output_types)}) {
+        return res;
+    } else if (res.error().type != SelectionErrorType::INSUFFICIENT_FUNDS) {
+        first_error = std::move(res.error());
+    }
+    const auto error{[&]() -> util::Expected<SelectionResult, SelectionError> {
+        if (first_error) return util::Unexpected{*first_error};
+        return util::Unexpected{SelectionError{SelectionErrorType::INSUFFICIENT_FUNDS, {}}};
+    }};
+
+    // Phase 2: eligible funds insufficient. Anchor the best-fitting eligible group, then
+    // select the remaining target from the full coin pool.
+    const int max_tx_weight = coin_selection_params.m_max_tx_weight.value_or(MAX_STANDARD_TX_WEIGHT);
+    const int max_selection_weight = max_tx_weight
+        - coin_selection_params.tx_noinputs_size * WITNESS_SCALE_FACTOR
+        - coin_selection_params.change_output_size * WITNESS_SCALE_FACTOR;
+
+    // Collect eligible anchor candidates within the weight budget and sort them by descending
+    // effective value. We prefer higher-value anchors (smaller remainder), but if a candidate
+    // leaves insufficient weight budget for the remainder we fall back to the next one.
+    //
+    // Running AttemptSelection for each candidate can take very long in a wallet with many
+    // eligible coins, since every attempt runs all the selection algorithms over the full pool,
+    // and this is repeated for every eligibility filter.
+    std::vector<const OutputGroup*> candidates;
+    for (const auto& group : eligible_groups.all_groups.positive_group) {
+        if (group.m_weight <= max_selection_weight) candidates.push_back(&group);
+    }
+    if (candidates.empty()) return error();
+
+    std::sort(candidates.begin(), candidates.end(), [](const OutputGroup* a, const OutputGroup* b) {
+        return a->effective_value > b->effective_value;
+    });
+
+    for (const OutputGroup* anchor : candidates) {
+        OutputSet anchor_set{anchor->m_outputs.begin(), anchor->m_outputs.end()};
+
+        CAmount remainder_target = value_to_select - anchor->GetSelectionAmount();
+        if (remainder_target <= 0) {
+            // The anchor covers the whole target, which the change is computed against
+            SelectionResult result(value_to_select, SelectionAlgorithm::MANUAL);
+            result.AddInputs(anchor_set, coin_selection_params.m_subtract_fee_outputs);
+            result.RecalculateWaste(coin_selection_params.min_viable_change,
+                                    coin_selection_params.m_cost_of_change,
+                                    coin_selection_params.m_change_fee);
+            return result;
+        }
+
+        // The anchor's target is its own amount, so the merged result's target is value_to_select
+        SelectionResult anchor_result(anchor->GetSelectionAmount(), SelectionAlgorithm::MANUAL);
+        anchor_result.AddInputs(anchor_set, coin_selection_params.m_subtract_fee_outputs);
+
+        OutputGroupTypeMap remainder_groups{FilterGroups(groups, [&](const OutputGroup& group) {
+            return std::ranges::none_of(group.m_outputs, [&](const auto& output) { return anchor_set.contains(output); });
+        })};
+
+        CoinSelectionParams remainder_params = coin_selection_params;
+        remainder_params.m_max_tx_weight = max_tx_weight - anchor->m_weight;
+
+        auto res{AttemptSelection(wallet.chain(), remainder_target, remainder_groups, remainder_params, /*allow_mixed_output_types=*/true)};
+        if (!res) {
+            // Only weight errors depend on the anchor, since a lighter one leaves more weight
+            // for the remainder, so only they are worth retrying with the next candidate
+            switch (res.error().type) {
+            case SelectionErrorType::INSUFFICIENT_FUNDS:
+                // The anchor's value cancels out of the remainder's shortfall, so every
+                // candidate falls short by the same amount
+                return error();
+            case SelectionErrorType::MAX_WEIGHT_EXCEEDED:
+            case SelectionErrorType::MAX_WEIGHT_TOO_LOW:
+                if (!first_error) first_error = std::move(res.error());
+                continue;
+            case SelectionErrorType::BUMP_FEE_FAILED:
+                return res;
+            } // no default case, so the compiler can warn about missing cases
+            assert(false);
+        }
+
+        res->Merge(anchor_result);
+        res->RecalculateWaste(coin_selection_params.min_viable_change,
+                              coin_selection_params.m_cost_of_change,
+                              coin_selection_params.m_change_fee);
+        return res;
+    }
+
+    return error();
 }
 
 util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, CoinsResult& available_coins, const CAmount& value_to_select, const CoinSelectionParams& coin_selection_params)
@@ -891,6 +1130,13 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
     // explicitly shuffling the outputs before processing
     if (coin_selection_params.m_avoid_partial_spends && available_coins.Size() > OUTPUT_GROUP_MAX_ENTRIES) {
         available_coins.Shuffle(coin_selection_params.rng_fast);
+    }
+
+    // For silent payments, at least one BIP352-eligible input must appear in the final selection.
+    if (coin_selection_params.m_silent_payments && std::ranges::none_of(available_coins.coins, [&](const auto& entry) {
+            return std::ranges::any_of(entry.second, [&](const COutput& output) { return IsInputForSharedSecretDerivation(output.txout.scriptPubKey, wallet); });
+        })) {
+        return util::Error{_("No silent payment eligible inputs were found.")};
     }
 
     // Coin Selection attempts to select inputs from a pool of eligible UTXOs to fund the
@@ -963,6 +1209,14 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
                     updated_selection_params.m_max_tx_weight = TRUC_CHILD_MAX_WEIGHT;
                 }
             }
+
+            if (coin_selection_params.m_silent_payments) {
+                auto res{AttemptSelectionSP(wallet, value_to_select, it->second, updated_selection_params, select_filter)};
+                if (res) return std::move(*res);
+                if (res.error().type != SelectionErrorType::INSUFFICIENT_FUNDS) res_detailed_errors.push_back(std::move(res.error()));
+                continue;
+            }
+
             if (auto res{AttemptSelection(wallet.chain(), value_to_select, it->second,
                                           updated_selection_params, select_filter.allow_mixed_output_types)}) {
                 return std::move(*res); // result found
@@ -1082,6 +1336,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     coin_selection_params.m_include_unsafe_inputs = coin_control.m_include_unsafe_inputs;
     coin_selection_params.m_max_tx_weight = coin_control.m_max_tx_weight.value_or(MAX_STANDARD_TX_WEIGHT);
     coin_selection_params.m_version = coin_control.m_version;
+    coin_selection_params.m_silent_payments = coin_control.m_silent_payments;
     int minimum_tx_weight = MIN_STANDARD_TX_NONWITNESS_SIZE * WITNESS_SCALE_FACTOR;
     if (coin_selection_params.m_max_tx_weight.value() < minimum_tx_weight || coin_selection_params.m_max_tx_weight.value() > MAX_STANDARD_TX_WEIGHT) {
         return util::Error{strprintf(_("Maximum transaction weight must be between %d and %d"), minimum_tx_weight, MAX_STANDARD_TX_WEIGHT)};
