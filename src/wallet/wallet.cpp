@@ -1901,6 +1901,11 @@ NodeClock::time_point CWallet::GetDefaultNextResend() { return FastRandomContext
 // We do this on a random timer to slightly obfuscate which transactions
 // come from our wallet.
 //
+// Transactions that don't spend any of our inputs (i.e. that only pay us) are
+// never resubmitted: anyone can create such a transaction, and our node being the
+// only one to rebroadcast it, or to still have it in its mempool after the rest of
+// the network dropped it, would link our node to our wallet.
+//
 // TODO: Ideally, we'd only resend transactions that we think should have been
 // mined in the most recent block. Any transaction that wasn't in the top
 // blockweight of transactions in the mempool shouldn't have been mined,
@@ -1908,8 +1913,8 @@ NodeClock::time_point CWallet::GetDefaultNextResend() { return FastRandomContext
 // Rebroadcasting does nothing to speed up confirmation and only damages
 // privacy.
 //
-// The `force` option results in all unconfirmed transactions being submitted to
-// the mempool. This does not necessarily result in those transactions being relayed,
+// The `force` option results in all unconfirmed transactions created by us being
+// submitted to the mempool. This does not necessarily result in those transactions being relayed,
 // that depends on the `broadcast_method` option. Periodic rebroadcast uses the pattern
 // broadcast_method=TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL force=false, while loading into
 // the mempool (on start, or after import) uses
@@ -1935,6 +1940,9 @@ void CWallet::ResubmitWalletTransactions(node::TxBroadcast broadcast_method, boo
             // Attempt to rebroadcast all txes more than 5 minutes older than
             // the last block, or all txs if forcing.
             if (!force && wtx.nTimeReceived > m_best_block_time - 5 * 60) continue;
+
+            // Don't resubmit transactions that weren't created by us.
+            if (!IsFromMe(*wtx.GetTx())) continue;
             to_submit.insert(&wtx);
         }
         // Now try submitting the transactions to the memory pool and (optionally) relay them.
