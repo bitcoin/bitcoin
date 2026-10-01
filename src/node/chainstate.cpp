@@ -58,7 +58,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
 
     // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
     // in the past, but is now trying to run unpruned.
-    if (chainman.m_blockman.m_have_pruned && !options.prune) {
+    if (chainman.m_blockman.m_have_pruned && !chainman.m_blockman.IsPruneMode()) {
         return {ChainstateLoadStatus::FAILURE, _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain")};
     }
 
