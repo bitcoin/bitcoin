@@ -2691,6 +2691,87 @@ CoinsCacheSizeState Chainstate::GetCoinsCacheSizeState(
     return CoinsCacheSizeState::OK;
 }
 
+/* Calculate the block/rev files to delete based on height specified by user with RPC command pruneblockchain */
+static void FindFilesToPruneManual(
+    std::set<int>& setFilesToPrune,
+    int nManualPruneHeight,
+    const Chainstate& chain) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+{
+    assert(nManualPruneHeight > 0);
+
+    if (chain.m_chain.Height() < 0) {
+        return;
+    }
+
+    const auto [min_block_to_prune, last_block_can_prune] = chain.GetPruneRange(nManualPruneHeight);
+    chain.m_blockman.FindFilesToPruneManual(setFilesToPrune, min_block_to_prune, last_block_can_prune);
+    LogInfo("[%s] Prune (Manual): prune_height=%d removed %d blk/rev pairs",
+        chain.GetRole(), last_block_can_prune, setFilesToPrune.size());
+}
+
+/**
+ * Prune block and undo files so that the disk space used is less than a user-defined target.
+ * The user sets the target (in MB) on the command line or in config file.  This will be run on startup and whenever new
+ * space is allocated in a block or undo file, staying below the target. Changing back to unpruned requires a reindex
+ * (which in this case means the blockchain must be re-downloaded.)
+ *
+ * Pruning functions are called from FlushStateToDisk when the m_check_for_pruning flag has been set.
+ * Pruning cannot take place until the longest chain is at least a certain length (CChainParams::nPruneAfterHeight).
+ * Pruning will never delete a block within a defined distance (currently 288) from the active chain's tip.
+ * A db flag records the fact that at least some block files have been pruned.
+ *
+ * @param[out]   setFilesToPrune   The set of file indices that can be unlinked will be returned
+ * @param        last_prune        The last height we're able to prune, according to the prune locks
+ */
+static void FindFilesToPrune(
+    std::set<int>& setFilesToPrune,
+    int last_prune,
+    const Chainstate& chain,
+    const ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+{
+    // Compute `target` value with maximum size (in bytes) of blocks below the
+    // `last_prune` height which should be preserved and not pruned. The
+    // `target` value will be derived from the -prune preference provided by the
+    // user. If there is a historical chainstate being used to populate indexes
+    // and validate the snapshot, the target is divided by two so half of the
+    // block storage will be reserved for the historical chainstate, and the
+    // other half will be reserved for the most-work chainstate.
+    const int num_chainstates{chainman.HistoricalChainstate() ? 2 : 1};
+    const auto target = std::max(
+        MIN_DISK_SPACE_FOR_BLOCK_FILES, chain.m_blockman.GetPruneTarget() / num_chainstates);
+    const uint64_t target_sync_height = chainman.m_best_header->nHeight;
+
+    if (chain.m_chain.Height() < 0 || target == 0) {
+        return;
+    }
+    if (static_cast<uint64_t>(chain.m_chain.Height()) <= chainman.GetParams().PruneAfterHeight()) {
+        return;
+    }
+
+    const auto [min_block_to_prune, last_block_can_prune] = chain.GetPruneRange(last_prune);
+
+    // On a prune event, the chainstate DB is flushed.
+    // To avoid excessive prune events negating the benefit of high dbcache
+    // values, we should not prune too rapidly.
+    // So when pruning in IBD, increase the buffer to avoid a re-prune too soon.
+    uint64_t ibd_buffer{0};
+    const auto chain_tip_height = chain.m_chain.Height();
+    if (chainman.IsInitialBlockDownload() && target_sync_height > (uint64_t)chain_tip_height) {
+        // Since this is only relevant during IBD, we assume blocks are at least 1 MB on average
+        static constexpr uint64_t average_block_size = 1000000;  /* 1 MB */
+        const uint64_t remaining_blocks = target_sync_height - chain_tip_height;
+        ibd_buffer = average_block_size * remaining_blocks;
+    }
+
+    chain.m_blockman.FindFilesToPrune(setFilesToPrune, min_block_to_prune, last_block_can_prune, target, ibd_buffer);
+
+    const uint64_t usage{chain.m_blockman.CalculateCurrentUsage()};
+    LogDebug(BCLog::PRUNE, "[%s] target=%dMiB actual=%dMiB diff=%dMiB min_height=%d max_prune_height=%d removed %d blk/rev pairs\n",
+             chain.GetRole(), target / 1_MiB, usage / 1_MiB,
+             (int64_t(target) - int64_t(usage)) / int64_t(1_MiB),
+             min_block_to_prune, last_block_can_prune, setFilesToPrune.size());
+}
+
 bool Chainstate::FlushStateToDisk(
     BlockValidationState &state,
     FlushStateMode mode,
@@ -2717,14 +2798,14 @@ bool Chainstate::FlushStateToDisk(
             if (nManualPruneHeight > 0) {
                 LOG_TIME_MILLIS_WITH_CATEGORY("find files to prune (manual)", BCLog::BENCH);
 
-                m_blockman.FindFilesToPruneManual(
+                FindFilesToPruneManual(
                     setFilesToPrune,
                     std::min(last_prune, nManualPruneHeight),
                     *this);
             } else {
                 LOG_TIME_MILLIS_WITH_CATEGORY("find files to prune", BCLog::BENCH);
 
-                m_blockman.FindFilesToPrune(setFilesToPrune, last_prune, *this, m_chainman);
+                FindFilesToPrune(setFilesToPrune, last_prune, *this, m_chainman);
                 m_blockman.m_check_for_pruning = false;
             }
             if (!setFilesToPrune.empty()) {

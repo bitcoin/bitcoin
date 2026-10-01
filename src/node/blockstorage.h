@@ -227,34 +227,6 @@ private:
 
     AutoFile OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false) const;
 
-    /* Calculate the block/rev files to delete based on height specified by user with RPC command pruneblockchain */
-    void FindFilesToPruneManual(
-        std::set<int>& setFilesToPrune,
-        int nManualPruneHeight,
-        const Chainstate& chain);
-
-    /**
-     * Prune block and undo files (blk???.dat and rev???.dat) so that the disk space used is less than a user-defined target.
-     * The user sets the target (in MB) on the command line or in config file.  This will be run on startup and whenever new
-     * space is allocated in a block or undo file, staying below the target. Changing back to unpruned requires a reindex
-     * (which in this case means the blockchain must be re-downloaded.)
-     *
-     * Pruning functions are called from FlushStateToDisk when the m_check_for_pruning flag has been set.
-     * Block and undo files are deleted in lock-step (when blk00003.dat is deleted, so is rev00003.dat.)
-     * Pruning cannot take place until the longest chain is at least a certain length (CChainParams::nPruneAfterHeight).
-     * Pruning will never delete a block within a defined distance (currently 288) from the active chain's tip.
-     * The block index is updated by unsetting HAVE_DATA and HAVE_UNDO for any blocks that were stored in the deleted files.
-     * A db flag records the fact that at least some block files have been pruned.
-     *
-     * @param[out]   setFilesToPrune   The set of file indices that can be unlinked will be returned
-     * @param        last_prune        The last height we're able to prune, according to the prune locks
-     */
-    void FindFilesToPrune(
-        std::set<int>& setFilesToPrune,
-        int last_prune,
-        const Chainstate& chain,
-        ChainstateManager& chainman);
-
     //! Since assumedvalid chainstates may be syncing a range of the chain that is very
     //! far away from the normal/background validation process, we should segment blockfiles
     //! for assumed chainstates. Otherwise, we might have wildly different height ranges
@@ -370,6 +342,30 @@ public:
     CBlockIndex* AddToBlockIndex(const CBlockHeader& block, CBlockIndex*& best_header) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     /** Create a new block index entry for a given block hash */
     CBlockIndex* InsertBlockIndex(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /** Mark all block and undo files whose blocks are within [min_height, max_height] as pruned. */
+    void FindFilesToPruneManual(
+        std::set<int>& setFilesToPrune,
+        int min_height,
+        int max_height);
+
+    /**
+     * Prune block and undo files (blk???.dat and rev???.dat) so that the disk space used is less than a target.
+     * Block and undo files are deleted in lock-step (when blk00003.dat is deleted, so is rev00003.dat.)
+     * The block index is updated by unsetting HAVE_DATA and HAVE_UNDO for any blocks that were stored in the deleted files.
+     *
+     * @param[out]   setFilesToPrune   The set of file indices that can be unlinked will be returned
+     * @param        min_height        Only files whose blocks are all at or above this height are pruned
+     * @param        max_height        Only files whose blocks are all at or below this height are pruned
+     * @param        target            The disk space to stay below
+     * @param        extra_space       Additional space to free below the target once pruning is needed
+     */
+    void FindFilesToPrune(
+        std::set<int>& setFilesToPrune,
+        int min_height,
+        int max_height,
+        uint64_t target,
+        uint64_t extra_space);
 
     //! Mark one block file as pruned (modify associated database entries)
     void PruneOneBlockFile(int fileNumber) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
