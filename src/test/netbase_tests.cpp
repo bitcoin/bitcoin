@@ -1072,7 +1072,7 @@ BOOST_FIXTURE_TEST_CASE(proxy_api, ConnectRecordingSockTestingSetup)
     const std::string path{"unix:/tmp/tor/socks.sock"};
 #ifdef HAVE_SOCKADDR_UN
     // Unix socket proxies
-    const Proxy proxy_unix{path};
+    const Proxy proxy_unix{UnixSocketAddr(path)};
     BOOST_CHECK(proxy_unix.IsValid());
     BOOST_CHECK_EQUAL(proxy_unix.ToString(), path);
     CheckConnect(proxy_unix, AF_UNIX, 0, path);
@@ -1080,14 +1080,14 @@ BOOST_FIXTURE_TEST_CASE(proxy_api, ConnectRecordingSockTestingSetup)
     // A path without the "unix:" prefix, or too long for sun_path, is invalid
     for (const std::string& bad_path : {std::string{"/tmp/tor/socks.sock"},
                                         ADDR_PREFIX_UNIX + std::string(sizeof(sockaddr_un::sun_path), 'a')}) {
-        const Proxy bad{bad_path};
+        const Proxy bad{UnixSocketAddr(bad_path)};
         BOOST_CHECK(!bad.IsValid());
         BOOST_CHECK_EQUAL(bad.ToString(), bad_path);
         BOOST_CHECK(bad.Connect() == nullptr);
     }
 #else
     // Without unix socket support every unix path is invalid
-    const Proxy proxy_unix{path};
+    const Proxy proxy_unix{UnixSocketAddr(path)};
     BOOST_CHECK(!proxy_unix.IsValid());
     BOOST_CHECK(proxy_unix.Connect() == nullptr);
 #endif
@@ -1096,9 +1096,9 @@ BOOST_FIXTURE_TEST_CASE(proxy_api, ConnectRecordingSockTestingSetup)
     for (const bool isolation : {false, true}) {
         BOOST_CHECK_EQUAL(Proxy(ipv4, isolation).m_tor_stream_isolation, isolation);
         BOOST_CHECK_EQUAL(Proxy(ipv6, isolation).m_tor_stream_isolation, isolation);
-        BOOST_CHECK_EQUAL(Proxy(path, isolation).m_tor_stream_isolation, isolation);
+        BOOST_CHECK_EQUAL(Proxy(UnixSocketAddr(path), isolation).m_tor_stream_isolation, isolation);
         BOOST_CHECK_EQUAL(Proxy(ipv4, isolation).ToString(), proxy4.ToString());
-        BOOST_CHECK_EQUAL(Proxy(path, isolation).ToString(), proxy_unix.ToString());
+        BOOST_CHECK_EQUAL(Proxy(UnixSocketAddr(path), isolation).ToString(), proxy_unix.ToString());
     }
 
     // Failure to connect is handled: no half-initialized socket is returned
