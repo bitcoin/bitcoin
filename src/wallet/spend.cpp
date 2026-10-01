@@ -260,6 +260,109 @@ static OutputType GetOutputType(TxoutType type, bool is_from_p2sh)
     }
 }
 
+static bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet& wallet)
+{
+    std::vector<std::vector<unsigned char>> solutions;
+    TxoutType type = Solver(input, solutions);
+
+    switch (type) {
+        // First check the conditional inputs: P2TR and P2SH
+        case TxoutType::SCRIPTHASH:
+            {
+                // Only P2SH-P2WPKH is supported. If it is any other type of P2SH, skip the input
+                // To determine if this input is a P2SH-P2WPKH, get the redeemScript and check the
+                // TxOutType. If we can't get the redeemScript, we have no way of knowing what type
+                // the P2SH is, and don't have access to the spending data, anyways.
+                std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(input);
+                CScript script;
+                if (!provider || !provider->GetCScript(CScriptID(uint160(solutions[0])), script)) return false;
+                type = Solver(script, solutions);
+                if (type == TxoutType::WITNESS_V0_KEYHASH) return true;
+                return false;
+            }
+        case TxoutType::WITNESS_V1_TAPROOT:
+            {
+                // An output whose internal key is H (the NUMS point defined in the BIP) can only be
+                // spent via the script path, and BIP352 skips such script path spends
+                std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(input);
+                TaprootSpendData spenddata;
+                if (provider && provider->GetTaprootSpendData(XOnlyPubKey{solutions[0]}, spenddata) &&
+                    spenddata.internal_key == XOnlyPubKey::NUMS_H) return false;
+                return true;
+            }
+        case TxoutType::PUBKEYHASH:
+            {
+                // BIP352 skips P2PKH inputs with an uncompressed public key
+                std::unique_ptr<SigningProvider> provider = wallet.GetSolvingProvider(input);
+                CPubKey pubkey;
+                if (provider && provider->GetPubKey(CKeyID{uint160{solutions[0]}}, pubkey)) return pubkey.IsCompressed();
+                return true;
+            }
+        case TxoutType::WITNESS_V0_KEYHASH: { return true; }
+        // For all the rest, these can be included as inputs but
+        // are not used when deriving the shared secret
+        case TxoutType::WITNESS_V0_SCRIPTHASH:
+        case TxoutType::MULTISIG:
+        case TxoutType::PUBKEY:
+        case TxoutType::NONSTANDARD:
+        case TxoutType::ANCHOR:
+        case TxoutType::NULL_DATA:
+        case TxoutType::WITNESS_UNKNOWN: { return false; }
+    }
+    // No default case so the compiler can warn us if we've missed something
+    assert(false);
+}
+
+//! Get the private key of a silent payments eligible script from the first ScriptPubKeyMan that has it
+static std::optional<SilentPaymentsKey> GetSilentPaymentsKey(const CWallet& wallet, const CScript& script)
+{
+    for (const ScriptPubKeyMan* spk_manager : wallet.GetScriptPubKeyMans(script)) {
+        if (auto key{spk_manager->GetPrivKeyForSilentPayments(script)}) return key;
+    }
+    return std::nullopt;
+}
+
+util::Result<void> CheckSilentPaymentsInput(const CWallet& wallet, const COutPoint& outpoint, const CTxOut& txout,
+                                            std::map<std::set<ScriptPubKeyMan*>, bool>* has_key_cache)
+{
+    std::vector<std::vector<unsigned char>> solutions;
+    TxoutType type = Solver(txout.scriptPubKey, solutions);
+    const std::unique_ptr<SigningProvider> provider{wallet.GetSolvingProvider(txout.scriptPubKey)};
+    if (!provider) {
+        // The outputs are derived from the private keys of the eligible inputs, which the wallet
+        // does not have for external inputs. An external P2SH input may be eligible as well,
+        // since the wallet cannot tell whether it is a P2SH-P2WPKH.
+        if (type == TxoutType::WITNESS_V1_TAPROOT || type == TxoutType::WITNESS_V0_KEYHASH ||
+            type == TxoutType::PUBKEYHASH || type == TxoutType::SCRIPTHASH) {
+            return util::Error{strprintf(_("External input %s cannot be used in a silent payments transaction"), outpoint.ToString())};
+        }
+    } else if (type == TxoutType::SCRIPTHASH) {
+        // A P2SH input is checked by its redeemScript, if it is known
+        CScript script;
+        if (provider->GetCScript(CScriptID{uint160{solutions[0]}}, script)) type = Solver(script, solutions);
+    }
+    // BIP352 receivers skip transactions spending outputs of an unknown witness version
+    if (type == TxoutType::WITNESS_UNKNOWN) {
+        return util::Error{strprintf(_("%s has an unknown witness version and cannot be used in a silent payments transaction"), outpoint.ToString())};
+    }
+    // The outputs are derived from the private keys of the eligible inputs
+    if (provider && IsInputForSharedSecretDerivation(txout.scriptPubKey, wallet)) {
+        if (wallet.IsLocked()) {
+            return util::Error{strprintf(_("Cannot check the private key of silent payments eligible input %s while the wallet is locked."), outpoint.ToString())};
+        }
+        const auto has_key{[&] {
+            if (!has_key_cache) return GetSilentPaymentsKey(wallet, txout.scriptPubKey).has_value();
+            auto [it, inserted]{has_key_cache->try_emplace(wallet.GetScriptPubKeyMans(txout.scriptPubKey))};
+            if (inserted) it->second = GetSilentPaymentsKey(wallet, txout.scriptPubKey).has_value();
+            return it->second;
+        }};
+        if (!has_key()) {
+            return util::Error{strprintf(_("Missing the private key of silent payments eligible input %s."), outpoint.ToString())};
+        }
+    }
+    return {};
+}
+
 // Fetch and validate the coin control selected inputs.
 // Coins could be internal (from the wallet) or external.
 util::Result<CoinsResult> FetchSelectedInputs(const CWallet& wallet, const CCoinControl& coin_control,
@@ -304,6 +407,11 @@ util::Result<CoinsResult> FetchSelectedInputs(const CWallet& wallet, const CCoin
         if (input_bytes == -1) {
             return util::Error{strprintf(_("Not solvable pre-selected input %s"), outpoint.ToString())}; // Not solvable, can't estimate size for fee
         }
+        if (coin_control.m_silent_payments) {
+            if (auto res{CheckSilentPaymentsInput(wallet, outpoint, txout)}; !res) {
+                return util::Error{util::ErrorString(res)};
+            }
+        }
 
         /* Set some defaults for depth, solvable, safe, time, and from_me as these don't matter for preset inputs since no selection is being done. */
         COutput output(outpoint, txout, /*depth=*/0, input_bytes, /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/false, coin_selection_params.m_effective_feerate);
@@ -330,6 +438,9 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     const int min_depth = {coinControl ? coinControl->m_min_depth : DEFAULT_MIN_DEPTH};
     const int max_depth = {coinControl ? coinControl->m_max_depth : DEFAULT_MAX_DEPTH};
     const bool only_safe = {coinControl ? !coinControl->m_include_unsafe_inputs : true};
+    const bool silent_payments = {coinControl ? coinControl->m_silent_payments : false};
+    // Avoids deriving the private key of every coin, see CheckSilentPaymentsInput
+    std::map<std::set<ScriptPubKeyMan*>, bool> sp_has_key_cache;
     const bool can_grind_r = wallet.CanGrindR();
     std::vector<COutPoint> outpoints;
 
@@ -465,6 +576,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             type = Solver(script, script_solutions);
             is_from_p2sh = true;
         }
+        if (silent_payments && !CheckSilentPaymentsInput(wallet, outpoint, output, &sp_has_key_cache)) continue;
 
         auto available_output_type = GetOutputType(type, is_from_p2sh);
         auto available_output = COutput(outpoint, output, nDepth, input_bytes, solvable, tx_safe, wtx.GetTxTime(), tx_from_me, feerate);

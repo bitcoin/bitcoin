@@ -201,6 +201,18 @@ util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& av
 void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, interfaces::Chain& chain, const uint256& block_hash, int block_height);
 
 /**
+ * Whether a coin can be spent in a silent payments transaction, or why not. An eligible coin
+ * requires its private key, since the outputs are derived from it.
+ *
+ * @param[in,out] has_key_cache  Whether any of a set of ScriptPubKeyMans has the private keys of the
+ *                               eligible scripts they all manage. Every script of a descriptor is
+ *                               derived from the same keys, so checking one script per set is enough.
+ *                               Pass it when checking many coins.
+ */
+util::Result<void> CheckSilentPaymentsInput(const CWallet& wallet, const COutPoint& outpoint, const CTxOut& txout,
+                                            std::map<std::set<ScriptPubKeyMan*>, bool>* has_key_cache = nullptr);
+
+/**
  * Create a new transaction paying the recipients with a set of coins
  * selected by SelectCoins(); Also create the change output, when needed
  * @note passing change_pos as std::nullopt will result in setting a random position
