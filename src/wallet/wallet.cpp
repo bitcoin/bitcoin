@@ -2082,7 +2082,7 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
 
     for (const auto& recipient : vecSend) {
         const CTxDestination* dest{recipient.dest.GetTxDestination()};
-        if (std::get_if<WitnessV1Taproot>(dest)) {
+        if (std::get_if<WitnessV1Taproot>(dest) || recipient.dest.IsSilentPayment()) {
             any_tr = true;
         } else if (std::get_if<WitnessV0KeyHash>(dest)) {
             any_wpkh = true;
