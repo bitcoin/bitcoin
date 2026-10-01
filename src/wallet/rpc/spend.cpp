@@ -33,12 +33,12 @@ using common::TransactionErrorString;
 using node::TransactionError;
 
 namespace wallet {
-std::vector<CRecipient> CreateRecipients(const std::vector<std::pair<CTxDestination, CAmount>>& outputs, const std::set<int>& subtract_fee_outputs)
+std::vector<CRecipient> CreateRecipients(const std::vector<std::pair<PaymentDestination, CAmount>>& outputs, const std::set<int>& subtract_fee_outputs)
 {
     std::vector<CRecipient> recipients;
     for (size_t i = 0; i < outputs.size(); ++i) {
         const auto& [destination, amount] = outputs.at(i);
-        CRecipient recipient{PaymentDestination{destination}, amount, subtract_fee_outputs.contains(i)};
+        CRecipient recipient{destination, amount, subtract_fee_outputs.contains(i)};
         recipients.push_back(recipient);
     }
     return recipients;
@@ -169,7 +169,24 @@ static void PreventOutdatedOptions(const UniValue& options)
     }
 }
 
-UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vector<CRecipient> &recipients, std::optional<std::string> comment, std::optional<std::string> comment_to, bool verbose)
+static void EnableSilentPayments(const CWallet& wallet, CCoinControl& coin_control)
+{
+    if (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) || wallet.IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Silent payments require access to private keys to build transactions.");
+    }
+    EnsureWalletIsUnlocked(wallet);
+    coin_control.m_silent_payments = true;
+}
+
+//! Enable silent payments in coin_control if any recipient is a silent payments destination
+static void MaybeEnableSilentPayments(const CWallet& wallet, CCoinControl& coin_control, const std::vector<CRecipient>& recipients)
+{
+    if (std::ranges::any_of(recipients, [](const auto& r) { return r.dest.IsSilentPayment(); })) {
+        EnableSilentPayments(wallet, coin_control);
+    }
+}
+
+UniValue SendMoney(CWallet& wallet, CCoinControl &coin_control, std::vector<CRecipient> &recipients, std::optional<std::string> comment, std::optional<std::string> comment_to, bool verbose)
 {
     EnsureWalletIsUnlocked(wallet);
 
@@ -182,6 +199,8 @@ UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vecto
     if (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: Private keys are disabled for this wallet");
     }
+
+    MaybeEnableSilentPayments(wallet, coin_control, recipients);
 
     // Shuffle recipient list
     std::shuffle(recipients.begin(), recipients.end(), FastRandomContext());
@@ -331,7 +350,7 @@ RPCMethod sendtoaddress()
         sffo_set.insert(0);
     }
 
-    std::vector<CRecipient> recipients{CreateRecipients(ParseOutputs(address_amounts), sffo_set)};
+    std::vector<CRecipient> recipients{CreateRecipients(ParseOutputs(address_amounts, /*allow_silent_payments=*/true), sffo_set)};
     const bool verbose{request.params[10].isNull() ? false : request.params[10].get_bool()};
 
     return SendMoney(*pwallet, coin_control, recipients, comment, comment_to, verbose);
@@ -425,7 +444,7 @@ RPCMethod sendmany()
     SetFeeEstimateMode(*pwallet, coin_control, /*conf_target=*/request.params[6], /*estimate_mode=*/request.params[7], /*fee_rate=*/request.params[8], /*override_min_fee=*/false);
 
     std::vector<CRecipient> recipients = CreateRecipients(
-            ParseOutputs(sendTo),
+            ParseOutputs(sendTo, /*allow_silent_payments=*/true),
             InterpretSubtractFeeFromOutputInstructions(request.params[4], sendTo.getKeys())
     );
     const bool verbose{request.params[9].isNull() ? false : request.params[9].get_bool()};
@@ -683,6 +702,8 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
     if (recipients.empty())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
 
+    MaybeEnableSilentPayments(wallet, coinControl, recipients);
+
     auto txr = FundTransaction(wallet, tx, recipients, change_position, lockUnspents, coinControl);
     if (!txr) {
         throw JSONRPCError(RPC_WALLET_ERROR, ErrorString(txr).original);
@@ -812,11 +833,11 @@ RPCMethod fundrawtransaction()
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
     }
     UniValue options = request.params[1];
-    std::vector<std::pair<CTxDestination, CAmount>> destinations;
+    std::vector<std::pair<PaymentDestination, CAmount>> destinations;
     for (const auto& tx_out : tx.vout) {
         CTxDestination dest;
         ExtractDestination(tx_out.scriptPubKey, dest);
-        destinations.emplace_back(dest, tx_out.nValue);
+        destinations.emplace_back(PaymentDestination{dest}, tx_out.nValue);
     }
     std::vector<std::string> dummy(destinations.size(), "dummy");
     std::vector<CRecipient> recipients = CreateRecipients(
@@ -1276,7 +1297,7 @@ RPCMethod send()
             UniValue outputs(UniValue::VOBJ);
             outputs = NormalizeOutputs(request.params[0]);
             std::vector<CRecipient> recipients = CreateRecipients(
-                    ParseOutputs(outputs),
+                    ParseOutputs(outputs, /*allow_silent_payments=*/true),
                     InterpretSubtractFeeFromOutputInstructions(options["subtract_fee_from_outputs"], outputs.getKeys())
             );
             CCoinControl coin_control;
@@ -1775,7 +1796,7 @@ RPCMethod walletcreatefundedpsbt()
     UniValue outputs(UniValue::VOBJ);
     outputs = NormalizeOutputs(request.params[1]);
     std::vector<CRecipient> recipients = CreateRecipients(
-            ParseOutputs(outputs),
+            ParseOutputs(outputs, /*allow_silent_payments=*/false),
             InterpretSubtractFeeFromOutputInstructions(options["subtractFeeFromOutputs"], outputs.getKeys())
     );
     // Automatically select coins, unless at least one is manually selected. Can
