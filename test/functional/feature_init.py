@@ -427,6 +427,12 @@ class InitTest(BitcoinTestFramework):
                 match=ErrorMatch.PARTIAL_REGEX
             )
 
+            self.log.info("Checking -privatebroadcast is refused rather than given descriptors ordinary connections need")
+            node.assert_start_raises_init_error(
+                extra_args=["-privatebroadcast", "-onion=127.0.0.1:1", f"-maxconnections={soft}"],
+                expected_msg=None,
+            )
+
     def run_test(self):
         self.init_pid_test()
         self.init_stress_test_interrupt()
