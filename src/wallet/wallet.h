@@ -931,9 +931,9 @@ public:
     void LogStats() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
         AssertLockHeld(cs_wallet);
-        WalletLogPrintf("setKeyPool.size() = %u\n",      GetKeyPoolSize());
-        WalletLogPrintf("mapWallet.size() = %u\n",       mapWallet.size());
-        WalletLogPrintf("m_address_book.size() = %u\n",  m_address_book.size());
+        WalletLogPrintf("setKeyPool.size() = %u",      GetKeyPoolSize());
+        WalletLogPrintf("mapWallet.size() = %u",       mapWallet.size());
+        WalletLogPrintf("m_address_book.size() = %u",  m_address_book.size());
     };
 
     //! Returns all unique ScriptPubKeyMans in m_internal_spk_managers and m_external_spk_managers
