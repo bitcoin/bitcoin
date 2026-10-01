@@ -5,6 +5,8 @@
 #ifndef BITCOIN_WALLET_FEEBUMPER_H
 #define BITCOIN_WALLET_FEEBUMPER_H
 
+#include <common/bip352.h>
+#include <common/paymentdestination.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <script/interpreter.h>
@@ -52,6 +54,8 @@ struct BumpTransaction {
     CAmount new_fee;
     //! The bump transaction itself
     CMutableTransaction mtx;
+    //! The silent payments recipients the bump transaction pays to
+    std::vector<bip352::SilentPaymentsDestination> sp_recipients;
 };
 
 /** Create bumpfee transaction based on feerate estimates.
@@ -68,7 +72,7 @@ util::Expected<BumpTransaction, BumpError> CreateRateBumpTransaction(CWallet& wa
     const Txid& txid,
     const CCoinControl& coin_control,
     bool require_mine,
-    const std::vector<CTxOut>& outputs,
+    const std::vector<std::pair<PaymentDestination, CAmount>>& outputs,
     std::optional<uint32_t> original_change_index = std::nullopt);
 
 //! Sign the new transaction,
@@ -80,11 +84,14 @@ bool SignTransaction(CWallet& wallet, CMutableTransaction& mtx);
 //! @return success in case of CWallet::CommitTransaction was successful,
 //! but sets errors if the tx could not be added to the mempool (will try later)
 //! or if the old transaction could not be marked as replaced.
+//! sp_recipients are the silent payments recipients of the bump transaction, as
+//! returned by CreateRateBumpTransaction.
 Result CommitTransaction(CWallet& wallet,
     const Txid& txid,
     CMutableTransaction&& mtx,
     std::vector<bilingual_str>& errors,
-    Txid& bumped_txid);
+    Txid& bumped_txid,
+    const std::vector<bip352::SilentPaymentsDestination>& sp_recipients);
 
 struct SignatureWeights
 {
