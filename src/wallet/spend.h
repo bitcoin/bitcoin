@@ -45,6 +45,8 @@ TxSize CalculateMaximumSignedTxSize(const CTransaction& tx, const CWallet* walle
  */
 struct CoinsResult {
     std::map<OutputType, std::vector<COutput>> coins;
+    /** Whether coins were skipped because they cannot be spent in a silent payments transaction */
+    bool skipped_silent_payments_ineligible{false};
 
     /** Concatenate and return all COutputs as one vector */
     std::vector<COutput> All() const;
@@ -213,6 +215,18 @@ void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, 
  * are derived: the recipients, then the change destination if the transaction has a change output.
  */
 std::vector<bip352::SilentPaymentsDestination> GetSilentPaymentsDestinations(const std::vector<CRecipient>& recipients, const CCoinControl& coin_control, const CreatedTransactionResult& txr);
+
+/**
+ * Whether a coin can be spent in a silent payments transaction, or why not. An eligible coin
+ * requires its private key, since the outputs are derived from it.
+ *
+ * @param[in,out] has_key_cache  Whether any of a set of ScriptPubKeyMans has the private keys of the
+ *                               eligible scripts they all manage. Every script of a descriptor is
+ *                               derived from the same keys, so checking one script per set is enough.
+ *                               Pass it when checking many coins.
+ */
+util::Result<void> CheckSilentPaymentsInput(const CWallet& wallet, const COutPoint& outpoint, const CTxOut& txout,
+                                            std::map<std::set<ScriptPubKeyMan*>, bool>* has_key_cache = nullptr);
 
 /**
  * Create a new transaction paying the recipients with a set of coins
