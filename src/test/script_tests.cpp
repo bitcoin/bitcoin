@@ -1678,13 +1678,20 @@ BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
             XOnlyPubKey pubkey{key.GetPubKey()};
             BOOST_CHECK_EQUAL(HexStr(pubkey), input["intermediary"]["internalPubkey"].get_str());
 
-            // Sign and verify signature.
+            // Sign and verify signature. The vectors use all-zero auxiliary randomness.
             FlatSigningProvider provider;
             provider.keys[key.GetPubKey().GetID()] = key;
-            MutableTransactionSignatureCreator creator(tx, txinpos, utxos[txinpos].nValue, &txdata, {.sighash_type = hashtype});
+            MutableTransactionSignatureCreator creator(tx, txinpos, utxos[txinpos].nValue, &txdata, {.sighash_type = hashtype, .aux_rand = uint256{}});
             std::vector<unsigned char> signature;
             BOOST_CHECK(creator.CreateSchnorrSig(provider, signature, pubkey, nullptr, &merkle_root, SigVersion::TAPROOT));
             BOOST_CHECK_EQUAL(HexStr(signature), input["expected"]["witness"][0].get_str());
+
+            // By default, fresh auxiliary randomness makes the signatures differ.
+            MutableTransactionSignatureCreator random_creator(tx, txinpos, utxos[txinpos].nValue, &txdata, {.sighash_type = hashtype});
+            std::vector<unsigned char> random_sig1, random_sig2;
+            BOOST_CHECK(random_creator.CreateSchnorrSig(provider, random_sig1, pubkey, nullptr, &merkle_root, SigVersion::TAPROOT));
+            BOOST_CHECK(random_creator.CreateSchnorrSig(provider, random_sig2, pubkey, nullptr, &merkle_root, SigVersion::TAPROOT));
+            BOOST_CHECK(random_sig1 != random_sig2);
 
             // We can't observe the tweak used inside the signing logic, so verify by recomputing it.
             BOOST_CHECK_EQUAL(HexStr(pubkey.ComputeTapTweakHash(merkle_root.IsNull() ? nullptr : &merkle_root)), input["intermediary"]["tweak"].get_str());
