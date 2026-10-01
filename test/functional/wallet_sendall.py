@@ -283,6 +283,14 @@ class SendallTest(BitcoinTestFramework):
             inputs=[utxo], send_max=True)
 
     @cleanup
+    def sendall_fails_on_invalid_options(self):
+        self.log.info("Test sendall fails on unknown options or options of the wrong type")
+        assert_raises_rpc_error(-3, "Unexpected key add_to_wllt",
+                self.wallet.sendall, recipients=[self.remainder_target], options={"add_to_wllt": "false"})
+        assert_raises_rpc_error(-3, "JSON value of type string for field add_to_wallet is not of expected type bool",
+                self.wallet.sendall, recipients=[self.remainder_target], options={"add_to_wallet": "false"})
+
+    @cleanup
     def sendall_fails_on_high_fee(self):
         self.log.info("Test sendall fails if the transaction fee exceeds the maxtxfee")
         self.add_utxos([21])
@@ -571,6 +579,9 @@ class SendallTest(BitcoinTestFramework):
 
         # Sendall fails when using send_max while specifying inputs
         self.sendall_fails_on_specific_inputs_with_send_max()
+
+        # Sendall fails on unknown options or options of the wrong type
+        self.sendall_fails_on_invalid_options()
 
         # Sendall fails when providing a fee that is too high
         self.sendall_fails_on_high_fee()
