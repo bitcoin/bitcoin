@@ -467,6 +467,10 @@ public:
     //! Delete a prune lock identified by its name. Returns true if the lock existed.
     bool DeletePruneLock(const std::string& name) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+    int GetLastPrunableHeight(int last_prune) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    void MovePruneLocksBack(int max_height_first) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
     /** Open a block file (blk?????.dat) */
     AutoFile OpenBlockFile(const FlatFilePos& pos, bool fReadOnly) const;
 
