@@ -965,6 +965,7 @@ void chainman_reindex_test(TestDirectory& test_directory)
         test_directory, /*reindex=*/true, /*wipe_chainstate=*/false,
         /*block_tree_db_in_memory=*/false, /*chainstate_db_in_memory=*/false, context)};
 
+    BOOST_CHECK(!chainman->GetFirstAvailableEntry());
     std::vector<std::string> import_files;
     BOOST_CHECK(chainman->ImportBlocks(import_files));
 
@@ -1248,6 +1249,7 @@ BOOST_AUTO_TEST_CASE(btck_chainman_prune_tests)
     }};
 
     int32_t tip_height;
+    int32_t first_available_height;
     {
         auto chainman{create_pruning_chainman()};
         for (const auto& raw_block : REGTEST_BLOCK_DATA) {
@@ -1255,6 +1257,7 @@ BOOST_AUTO_TEST_CASE(btck_chainman_prune_tests)
         }
         const auto chain{chainman->GetChain()};
         const auto blockman{chainman->GetBlockManager()};
+        BOOST_CHECK(chainman->GetFirstAvailableEntry() == chain.GetByHeight(0));
         BOOST_CHECK(blockman.PruneUpToHeight(0));
 
         // The first block file is below the tip but holds recent blocks, so it is kept
@@ -1282,6 +1285,20 @@ BOOST_AUTO_TEST_CASE(btck_chainman_prune_tests)
         BOOST_CHECK(!blockman.ReadBlock(chain.GetByHeight(1)));
         BOOST_CHECK_THROW(blockman.ReadBlockSpentOutputs(chain.GetByHeight(1)), std::runtime_error);
         BOOST_CHECK(blockman.ReadBlock(chain.GetByHeight(tip_height - PRUNE_KEEP_BLOCKS + 1)));
+
+        const auto first_available{chainman->GetFirstAvailableEntry()};
+        BOOST_REQUIRE(first_available);
+        first_available_height = first_available->GetHeight();
+        BOOST_CHECK(first_available_height > 1 && first_available_height <= tip_height - PRUNE_KEEP_BLOCKS + 1);
+        BOOST_CHECK(blockman.ReadBlock(*first_available));
+        BOOST_CHECK(!blockman.ReadBlock(chain.GetByHeight(first_available_height - 1)));
+
+        // Processing a pruned block again restores the block but not its spent outputs
+        Block pruned_block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA.at(first_available_height - 2))};
+        BOOST_CHECK(chainman->ProcessBlock(pruned_block, nullptr));
+        BOOST_CHECK(blockman.ReadBlock(chain.GetByHeight(first_available_height - 1)));
+        BOOST_CHECK_THROW(blockman.ReadBlockSpentOutputs(chain.GetByHeight(first_available_height - 1)), std::runtime_error);
+        BOOST_CHECK(chainman->GetFirstAvailableEntry() == first_available);
     }
 
     BOOST_CHECK_THROW(create_chainman(test_directory, /*reindex=*/false, /*wipe_chainstate=*/false,
@@ -1291,6 +1308,7 @@ BOOST_AUTO_TEST_CASE(btck_chainman_prune_tests)
     const auto chain{chainman->GetChain()};
     BOOST_CHECK_EQUAL(chain.Height(), tip_height);
     BOOST_CHECK(!chainman->GetBlockManager().ReadBlock(chain.GetByHeight(1)));
+    BOOST_CHECK(chainman->GetFirstAvailableEntry() == chain.GetByHeight(first_available_height));
 }
 
 BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)

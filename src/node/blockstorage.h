@@ -478,6 +478,9 @@ public:
 
     void CleanupBlockRevFiles() const;
 };
+
+//! Return height of highest block that has been pruned, or std::nullopt if no blocks have been pruned
+std::optional<int> GetPruneHeight(const BlockManager& blockman, const CChain& chain) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 } // namespace node
 
 #endif // BITCOIN_NODE_BLOCKSTORAGE_H

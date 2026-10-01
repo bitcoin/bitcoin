@@ -1455,6 +1455,17 @@ BITCOINKERNEL_API const btck_BlockTreeEntry* btck_chainstate_manager_get_block_t
     const btck_BlockHash* block_hash) BITCOINKERNEL_ARG_NONNULL(1, 2);
 
 /**
+ * @brief Get the lowest entry of the active chain from which every block up to
+ * the tip can be read together with its spent outputs. This is the genesis
+ * block if nothing has been pruned.
+ *
+ * @param[in] chainstate_manager Non-null.
+ * @return                       The block tree entry, or null if there is none.
+ */
+BITCOINKERNEL_API const btck_BlockTreeEntry* btck_chainstate_manager_get_first_available_entry(
+    const btck_ChainstateManager* chainstate_manager) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
  * Destroy the chainstate manager.
  */
 BITCOINKERNEL_API void btck_chainstate_manager_destroy(btck_ChainstateManager* chainstate_manager);

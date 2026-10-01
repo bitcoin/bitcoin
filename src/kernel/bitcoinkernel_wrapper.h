@@ -1521,6 +1521,13 @@ public:
         return entry;
     }
 
+    std::optional<BlockTreeEntry> GetFirstAvailableEntry() const
+    {
+        auto entry{btck_chainstate_manager_get_first_available_entry(get())};
+        if (!entry) return std::nullopt;
+        return entry;
+    }
+
     BlockTreeEntry GetBestEntry() const
     {
         return btck_chainstate_manager_get_best_entry(get());

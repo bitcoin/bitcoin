@@ -918,32 +918,6 @@ static RPCMethod getblock()
     };
 }
 
-//! Return height of highest block that has been pruned, or std::nullopt if no blocks have been pruned
-std::optional<int> GetPruneHeight(const BlockManager& blockman, const CChain& chain) {
-    AssertLockHeld(::cs_main);
-
-    // Search for the last block missing block data or undo data. Don't let the
-    // search consider the genesis block, because the genesis block does not
-    // have undo data, but should not be considered pruned.
-    const CBlockIndex* first_block{chain[1]};
-    const CBlockIndex* chain_tip{chain.Tip()};
-
-    // If there are no blocks after the genesis block, or no blocks at all, nothing is pruned.
-    if (!first_block || !chain_tip) return std::nullopt;
-
-    // If the chain tip is pruned, everything is pruned.
-    if ((chain_tip->nStatus & BLOCK_HAVE_MASK) != BLOCK_HAVE_MASK) return chain_tip->nHeight;
-
-    const auto& first_unpruned{blockman.GetFirstBlock(*chain_tip, /*status_mask=*/BLOCK_HAVE_MASK, first_block)};
-    if (&first_unpruned == first_block) {
-        // All blocks between first_block and chain_tip have data, so nothing is pruned.
-        return std::nullopt;
-    }
-
-    // Block before the first unpruned block is the last pruned block.
-    return CHECK_NONFATAL(first_unpruned.pprev)->nHeight;
-}
-
 static RPCMethod pruneblockchain()
 {
     return RPCMethod{"pruneblockchain",

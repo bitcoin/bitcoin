@@ -1225,6 +1225,15 @@ const btck_BlockTreeEntry* btck_chainstate_manager_get_block_tree_entry_by_hash(
     return btck_BlockTreeEntry::ref(block_index);
 }
 
+const btck_BlockTreeEntry* btck_chainstate_manager_get_first_available_entry(const btck_ChainstateManager* chainstate_manager)
+{
+    auto& chainman = *btck_ChainstateManager::get(chainstate_manager).m_chainman;
+    LOCK(chainman.GetMutex());
+    const CChain& chain{chainman.ActiveChain()};
+    const auto prune_height{node::GetPruneHeight(chainman.m_blockman, chain)};
+    return btck_BlockTreeEntry::ref(chain[prune_height ? *prune_height + 1 : 0]);
+}
+
 const btck_BlockTreeEntry* btck_chainstate_manager_get_best_entry(const btck_ChainstateManager* chainstate_manager)
 {
     auto& chainman = *btck_ChainstateManager::get(chainstate_manager).m_chainman;
