@@ -114,6 +114,7 @@ class TestNode():
         uses_wallet=False,
         ipcbind=False,
         use_gui=False,
+        http_unix=False,
     ):
         self.index = i
         self.datadir_path = datadir_path
@@ -162,6 +163,20 @@ class TestNode():
                 self.ipc_tmp_dir = tempfile.TemporaryDirectory(prefix="test-ipc-")
                 self.ipc_socket_path = Path(self.ipc_tmp_dir.name) / "node.sock"
                 self.args.append(f"-ipcbind=unix:{self.ipc_socket_path}")
+
+        self.http_unix_tmp_dir = None
+        self.http_unix_socket_path = None
+        if http_unix:
+            # Default path for -rpcbind=unix, like -ipcbind=unix above
+            self.http_unix_socket_path = self.chain_path / "http.sock"
+            if len(os.fsencode(self.http_unix_socket_path)) < UNIX_PATH_MAX:
+                self.args.append("-rpcbind=unix")
+            else:
+                # Work around default CI path exceeding maximum socket path length.
+                # The directory (and the socket file in it) is removed with the TestNode.
+                self.http_unix_tmp_dir = tempfile.TemporaryDirectory(prefix="test-http-")
+                self.http_unix_socket_path = Path(self.http_unix_tmp_dir.name) / "http.sock"
+                self.args.append(f"-rpcbind=unix:{self.http_unix_socket_path}")
 
         if self.version_is_at_least(190000):
             self.args.append("-logthreadnames")
@@ -318,6 +333,8 @@ class TestNode():
 
         self.running = True
         self.log.debug("bitcoind started, waiting for RPC to come up")
+        if self.http_unix_socket_path:
+            self.log.debug(f"Using http unix socket path: {self.http_unix_socket_path}")
 
     def create_new_rpc_connection(self, *, mode="AUTO", client_timeout=None):
         """Create an additional RPC connection, likely to be used in a new thread."""
@@ -336,7 +353,7 @@ class TestNode():
         if mode == RPCConnectionType.AUTHPROXY:
             rpc_u, rpc_p = get_auth_cookie(self.datadir_path, self.chain_dir)
             url = f"http://{rpc_u}:{rpc_p}@{host}:{port}"
-            proxy = AuthServiceProxy(url, timeout=int(client_timeout))
+            proxy = AuthServiceProxy(url, timeout=int(client_timeout), http_unix_socket_path=self.http_unix_socket_path)
             coverage_logfile = coverage.get_filename(self.coverage_dir, self.index) if self.coverage_dir else None
             rpc = coverage.AuthServiceProxyWrapper(proxy, url, coverage_logfile)
             rpc.auth_service_proxy_instance.reuse_http_connections = self.reuse_http_connections
@@ -433,7 +450,8 @@ class TestNode():
                     errno.ECONNRESET,   # This might happen when the RPC server is in warmup,
                                         # but shut down before the call to getblockcount succeeds.
                     errno.ETIMEDOUT,    # Treat identical to ECONNRESET
-                    errno.ECONNREFUSED  # Port not yet open?
+                    errno.ECONNREFUSED, # Port not yet open?
+                    errno.ENOENT,       # Unix socket file not yet created?
                 ]:
                     raise  # unknown OS error
                 latest_error = suppress_error(f"OSError {errno.errorcode[error_num]}", e)

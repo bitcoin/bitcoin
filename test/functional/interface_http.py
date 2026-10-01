@@ -5,7 +5,7 @@
 """Test the HTTP server basics."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.netutil import NETWORK_ERRORS
+from test_framework.netutil import NETWORK_ERRORS, UnixHTTPConnection
 from test_framework.util import (
     assert_equal,
     assert_raises,
@@ -17,7 +17,9 @@ from test_framework.wallet import MiniWallet
 import concurrent.futures
 import http.client
 import re
+import os
 import socket
+import stat
 import threading
 import time
 import urllib.parse
@@ -30,13 +32,17 @@ MAX_BODY_SIZE = 32 * 1024 * 1024
 
 class BitcoinHTTPConnection:
     def __init__(self, node):
+        self.node = node
         self.url = urllib.parse.urlparse(node.url)
         self.authpair = f'{self.url.username}:{self.url.password}'
         self.headers = {"Authorization": f"Basic {str_to_b64str(self.authpair)}"}
         self.reset_conn()
 
     def reset_conn(self):
-        self.conn = http.client.HTTPConnection(self.url.hostname, self.url.port)
+        if self.node.http_unix_socket_path:
+            self.conn = UnixHTTPConnection(self.url.hostname, str(self.node.http_unix_socket_path))
+        else:
+            self.conn = http.client.HTTPConnection(self.url.hostname, self.url.port)
         self.conn.connect()
 
     def sock_closed(self):
@@ -126,9 +132,24 @@ class HTTPBasicsTest (BitcoinTestFramework):
                 # Drain server response
                 response.read()
                 conn.set_timeout(2)
+                # Confirm closed
+                assert conn.sock_closed()
             except NETWORK_ERRORS:
                 self.log.info(f"Client did not receive expected {http.client.BAD_REQUEST} response before connection was terminated")
-        assert conn.sock_closed()
+                # http.client may be stuck mid-request: the body write can fail after
+                # the server already replied and closed (unix sockets report this
+                # immediately but TCP reports it only after a round trip).
+                # Confirm the server closed by reading the raw socket to EOF.
+                # If the server kept the connection open, recv times out
+                # and the test fails.
+                if conn.conn.sock is not None:
+                    conn.set_timeout(2)
+                    try:
+                        while conn.recv_raw():
+                            pass
+                    except NETWORK_ERRORS:
+                        pass
+                    return
 
 
     def run_test(self):
@@ -184,15 +205,22 @@ class HTTPBasicsTest (BitcoinTestFramework):
 
 
     def check_socket_exclusivity(self):
-        self.log.info("Checking that another process cannot bind the HTTP listen port")
-        url = urllib.parse.urlparse(self.node.url)
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as competing_listener:
-            competing_listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            # Ill-configured sockets permit port reuse unless the original
-            # listener requested exclusive address use.
-            assert_raises(
-                OSError,
-                lambda: competing_listener.bind((url.hostname, url.port)))
+        if self.options.httpunix:
+            # bind() on an existing unix socket path always fails with EADDRINUSE,
+            # whether or not anyone is listening, so there is no exclusivity
+            # option to exercise. Just check that bitcoind created a socket.
+            self.log.info("Checking that the HTTP unix socket path is a socket")
+            assert stat.S_ISSOCK(os.stat(self.node.http_unix_socket_path).st_mode)
+        else:
+            self.log.info("Checking that another process cannot bind the HTTP listen port")
+            url = urllib.parse.urlparse(self.node.url)
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as competing_listener:
+                competing_listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                # Ill-configured sockets permit port reuse unless the original
+                # listener requested exclusive address use.
+                assert_raises(
+                    OSError,
+                    lambda: competing_listener.bind((url.hostname, url.port)))
 
 
     def check_keepalive_connection(self):
@@ -727,15 +755,33 @@ class HTTPBasicsTest (BitcoinTestFramework):
 
         conn = BitcoinHTTPConnection(self.node)
 
+        # The server logs each socket read with the connection id. Find this
+        # connection's id from a uniquely addressed request, because the peer
+        # address alone doesn't identify it: every unnamed unix socket client
+        # logs as "unix:unix". The server logs the request URI with the id
+        # before routing it, then answers 404 and keeps the connection open.
+        marker_log_start = self.node.debug_log_size(encoding="utf-8")
+        response = conn.get("/hello")
+        response.read()
+        assert_equal(response.status, http.client.NOT_FOUND)
+        conn_id = None
+
+        def find_conn_id():
+            nonlocal conn_id
+            with open(self.node.debug_log_path, encoding="utf-8", errors="replace") as dl:
+                dl.seek(marker_log_start)
+                match = re.search(r"Received a GET request for /hello from .+? \(id=(\d+)\)", dl.read())
+            if match:
+                conn_id = match.group(1)
+            return conn_id is not None
+
+        self.wait_until(find_conn_id)
+        self.log.debug(f"Flood connection id={conn_id}")
+
         # A blocking RPC request: the server reads it fully and it enters the
         # worker pool as "in flight" (m_req_busy) until a new block arrives.
         tip_height = self.node.getblockcount()
         conn.post_raw('/', f'{{"method": "waitforblockheight", "params": [{tip_height + 1}]}}')
-
-        # The server logs each successful socket read with the peer's address
-        # (our ephemeral port) and the connection id. The port uniquely
-        # identifies the flood connection's log lines.
-        local_port = conn.conn.sock.getsockname()[1]
 
         # Flood the same connection with big pipelined requests:
         # Large garbage submitblock (just under MAX_BODY_SIZE each, including HTTP/jsonrpc overhead)
@@ -808,7 +854,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
                 dl.seek(dl_start_size)
                 log = dl.read()
                 matches = re.findall(
-                    rf"Received \d+ bytes from [^\s]*:{local_port} \(id=\d+\): total=(\d+) buffered=(\d+)",
+                    rf"Received \d+ bytes from .+? \(id={conn_id}\): total=(\d+) buffered=(\d+)",
                     log)
                 total = max((int(m[0]) for m in matches), default=total)
                 buffered = max((int(m[1]) for m in matches), default=buffered)
