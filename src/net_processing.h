@@ -162,10 +162,12 @@ public:
     /**
      * Initiate a private transaction broadcast. This is done
      * asynchronously via short-lived connections to peers on privacy networks.
+     * @param[in] tx The transaction to broadcast.
+     * @param[in] delay If positive, hold back the broadcast for this duration.
      * @retval node::TransactionError::OK The transaction is scheduled for private broadcast (or was already scheduled).
      * @retval node::TransactionError::PRIVATE_BROADCAST_FULL Rejected because the private broadcast queue is full.
      */
-    [[nodiscard]] virtual node::TransactionError InitiateTxBroadcastPrivate(const CTransactionRef& tx) = 0;
+    [[nodiscard]] virtual node::TransactionError InitiateTxBroadcastPrivate(const CTransactionRef& tx, std::chrono::seconds delay) = 0;
 
     /** Send ping message to all peers */
     virtual void SendPings() = 0;

@@ -133,7 +133,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         node.peerman->InitiateTxBroadcastToAll(wtxid);
         break;
     case TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST:
-        return node.peerman->InitiateTxBroadcastPrivate(tx);
+        return node.peerman->InitiateTxBroadcastPrivate(tx, /*delay=*/0s);
     }
 
     return TransactionError::OK;
