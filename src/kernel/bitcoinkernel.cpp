@@ -1032,26 +1032,20 @@ void AddContextUse(btck_LoggingConnection* connection, int delta)
 }
 } // namespace
 
-namespace util::log {
+namespace util::log::hooks {
 // Kernel filters on level only. The category is delivered as part of the entry, so consumers can
-// filter on it in their callback.
-bool ShouldDebugLog(Category /*category*/)
+// filter on it in their callback. All kernel log output goes to the same KernelLogger, so the
+// logger argument is ignored.
+bool ShouldLog(Logger* /*logger*/, Category /*category*/, Level level)
 {
-    return GetKernelLogger().ShouldLog(Level::Debug);
+    return GetKernelLogger().ShouldLog(level);
 }
 
-bool ShouldTraceLog(Category /*category*/)
+void Log(Logger* /*logger*/, const Options& /*options*/, Entry entry)
 {
-    return GetKernelLogger().ShouldLog(Level::Trace);
-}
-
-void Log(Entry entry)
-{
-    // Conditional logging, because the util::log framework doesn't allow us to check if the
-    // minimum level exceeds Info.
     GetKernelLogger().MaybeLog(entry);
 }
-} // namespace util::log
+} // namespace util::log::hooks
 
 
 void btck_logging_set_min_level(btck_LoggingConnection* connection, btck_LogLevel level)
