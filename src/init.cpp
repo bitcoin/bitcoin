@@ -1803,7 +1803,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         Proxy proxy;
         if (!proxy_str.empty() && proxy_str != "0") {
             if (IsUnixSocketPath(proxy_str)) {
-                proxy = Proxy{proxy_str, /*tor_stream_isolation=*/proxyRandomize};
+                proxy = Proxy{UnixSocketAddr(proxy_str), /*tor_stream_isolation=*/proxyRandomize};
             } else {
                 const std::optional<CService> addr{Lookup(proxy_str, DEFAULT_TOR_SOCKS_PORT, fNameLookup)};
                 if (!addr.has_value()) {
@@ -1859,7 +1859,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             }
         } else {
             if (IsUnixSocketPath(onionArg)) {
-                onion_proxy = Proxy(onionArg, /*tor_stream_isolation=*/proxyRandomize);
+                onion_proxy = Proxy(UnixSocketAddr(onionArg), /*tor_stream_isolation=*/proxyRandomize);
             } else {
                 const std::optional<CService> addr{Lookup(onionArg, DEFAULT_TOR_SOCKS_PORT, fNameLookup)};
                 if (!addr.has_value() || !addr->IsValid()) {

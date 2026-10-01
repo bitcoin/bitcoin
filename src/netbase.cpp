@@ -882,43 +882,6 @@ std::string SocketAddr::GetHost() const
                     m_addr);
 }
 
-std::unique_ptr<Sock> Proxy::Connect() const
-{
-    if (!IsValid()) return {};
-
-    if (!m_is_unix_socket) return ConnectDirectly(proxy, /*manual_connection=*/true);
-
-#ifdef HAVE_SOCKADDR_UN
-    auto sock = CreateSock(AF_UNIX, SOCK_STREAM, 0);
-    if (!sock) {
-        LogWarnThenDebug(BCLog::PROXY, "Cannot create a socket for connecting to %s", m_unix_socket_path);
-        return {};
-    }
-
-    const std::string path{m_unix_socket_path.substr(ADDR_PREFIX_UNIX.length())};
-
-    struct sockaddr_un addrun;
-    memset(&addrun, 0, sizeof(addrun));
-    addrun.sun_family = AF_UNIX;
-    // leave the last char in addrun.sun_path[] to be always '\0'
-    memcpy(addrun.sun_path, path.c_str(), std::min(sizeof(addrun.sun_path) - 1, path.length()));
-    socklen_t len = sizeof(addrun);
-
-    if (!ConnectToSocket(*sock,
-                         (struct sockaddr*)&addrun,
-                         len,
-                         path,
-                         /*manual_connection=*/true,
-                         std::chrono::milliseconds{nConnectTimeout})) {
-        return {};
-    }
-
-    return sock;
-#else
-    return {};
-#endif
-}
-
 bool SetProxy(enum Network net, const Proxy &addrProxy) {
     assert(net >= 0 && net < NET_MAX);
     if (!addrProxy.IsValid())
@@ -963,7 +926,7 @@ bool HaveNameProxy() {
 bool IsProxy(const CNetAddr &addr) {
     LOCK(g_proxyinfo_mutex);
     for (int i = 0; i < NET_MAX; i++) {
-        if (addr == static_cast<CNetAddr>(proxyInfo[i].proxy))
+        if (addr == proxyInfo[i].GetCNetAddr())
             return true;
     }
     return false;

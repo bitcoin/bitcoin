@@ -1061,37 +1061,37 @@ BOOST_FIXTURE_TEST_CASE(proxy_api, ConnectRecordingSockTestingSetup)
     const CService ipv6{LookupNumeric("::1", 9050)};
     const Proxy proxy4{ipv4};
     BOOST_CHECK(proxy4.IsValid());
-    BOOST_CHECK_EQUAL(proxy4.GetFamily(), AF_INET);
+    BOOST_CHECK_EQUAL(proxy4.GetSAFamily(), AF_INET);
     BOOST_CHECK_EQUAL(proxy4.ToString(), "127.0.0.1:9050");
     CheckConnect(proxy4, AF_INET, IPPROTO_TCP, "127.0.0.1:9050");
 
     const Proxy proxy6{ipv6};
     BOOST_CHECK(proxy6.IsValid());
-    BOOST_CHECK_EQUAL(proxy6.GetFamily(), AF_INET6);
+    BOOST_CHECK_EQUAL(proxy6.GetSAFamily(), AF_INET6);
     BOOST_CHECK_EQUAL(proxy6.ToString(), "[::1]:9050");
     CheckConnect(proxy6, AF_INET6, IPPROTO_TCP, "[::1]:9050");
 
     const std::string path{"unix:/tmp/tor/socks.sock"};
 #ifdef HAVE_SOCKADDR_UN
     // Unix socket proxies
-    const Proxy proxy_unix{path};
+    const Proxy proxy_unix{UnixSocketAddr(path)};
     BOOST_CHECK(proxy_unix.IsValid());
-    BOOST_CHECK_EQUAL(proxy_unix.GetFamily(), AF_UNIX);
+    BOOST_CHECK_EQUAL(proxy_unix.GetSAFamily(), AF_UNIX);
     BOOST_CHECK_EQUAL(proxy_unix.ToString(), path);
     CheckConnect(proxy_unix, AF_UNIX, 0, path);
 
     // A path without the "unix:" prefix, or too long for sun_path, is invalid
     for (const std::string& bad_path : {std::string{"/tmp/tor/socks.sock"},
                                         ADDR_PREFIX_UNIX + std::string(sizeof(sockaddr_un::sun_path), 'a')}) {
-        const Proxy bad{bad_path};
+        const Proxy bad{UnixSocketAddr(bad_path)};
         BOOST_CHECK(!bad.IsValid());
-        BOOST_CHECK_EQUAL(bad.GetFamily(), AF_UNIX);
+        BOOST_CHECK_EQUAL(bad.GetSAFamily(), AF_UNIX);
         BOOST_CHECK_EQUAL(bad.ToString(), bad_path);
         BOOST_CHECK(bad.Connect() == nullptr);
     }
 #else
     // Without unix socket support every unix path is invalid
-    const Proxy proxy_unix{path};
+    const Proxy proxy_unix{UnixSocketAddr(path)};
     BOOST_CHECK(!proxy_unix.IsValid());
     BOOST_CHECK(proxy_unix.Connect() == nullptr);
 #endif
@@ -1100,9 +1100,9 @@ BOOST_FIXTURE_TEST_CASE(proxy_api, ConnectRecordingSockTestingSetup)
     for (const bool isolation : {false, true}) {
         BOOST_CHECK_EQUAL(Proxy(ipv4, isolation).m_tor_stream_isolation, isolation);
         BOOST_CHECK_EQUAL(Proxy(ipv6, isolation).m_tor_stream_isolation, isolation);
-        BOOST_CHECK_EQUAL(Proxy(path, isolation).m_tor_stream_isolation, isolation);
+        BOOST_CHECK_EQUAL(Proxy(UnixSocketAddr(path), isolation).m_tor_stream_isolation, isolation);
         BOOST_CHECK_EQUAL(Proxy(ipv4, isolation).ToString(), proxy4.ToString());
-        BOOST_CHECK_EQUAL(Proxy(path, isolation).ToString(), proxy_unix.ToString());
+        BOOST_CHECK_EQUAL(Proxy(UnixSocketAddr(path), isolation).ToString(), proxy_unix.ToString());
     }
 
     // Failure to connect is handled: no half-initialized socket is returned

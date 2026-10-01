@@ -228,38 +228,30 @@ private:
     std::variant<CService, UnixSocketAddr> m_addr;
 };
 
+/**
+ * A SOCKS5 proxy endpoint: an IP address and port or a UNIX socket path, plus
+ * whether to request Tor stream isolation (random credentials per connection).
+ */
 class Proxy
 {
 public:
-    Proxy() : m_is_unix_socket(false), m_tor_stream_isolation(false) {}
-    explicit Proxy(const CService& _proxy, bool tor_stream_isolation = false) : proxy(_proxy), m_is_unix_socket(false), m_tor_stream_isolation(tor_stream_isolation) {}
-    explicit Proxy(std::string path, bool tor_stream_isolation = false)
-        : m_unix_socket_path(std::move(path)), m_is_unix_socket(true), m_tor_stream_isolation(tor_stream_isolation) {}
+    Proxy() = default;
+    explicit Proxy(const SocketAddr& proxy, bool tor_stream_isolation = false) : m_tor_stream_isolation(tor_stream_isolation), m_proxy(proxy) {}
+    explicit Proxy(const CService& addr, bool tor_stream_isolation = false) : m_tor_stream_isolation(tor_stream_isolation), m_proxy(addr) {}
+    explicit Proxy(const UnixSocketAddr& addr, bool tor_stream_isolation = false) : m_tor_stream_isolation(tor_stream_isolation), m_proxy(addr) {}
 
-    CService proxy;
-    std::string m_unix_socket_path;
-    bool m_is_unix_socket;
-    bool m_tor_stream_isolation;
+    bool m_tor_stream_isolation{false};
 
-    bool IsValid() const
-    {
-        if (m_is_unix_socket) return IsUnixSocketPath(m_unix_socket_path);
-        return proxy.IsValid();
-    }
+    [[nodiscard]] bool IsValid() const { return m_proxy.IsValid(); }
+    [[nodiscard]] sa_family_t GetSAFamily() const { return m_proxy.GetSAFamily(); }
+    [[nodiscard]] std::string ToString() const { return m_proxy.ToStringAddrPort(); }
+    std::unique_ptr<Sock> Connect() const { return m_proxy.Connect(); }
+    /** The proxy IP address without port, or an invalid CNetAddr for a UNIX socket proxy */
+    [[nodiscard]] CNetAddr GetCNetAddr() const { return m_proxy.GetCNetAddr(); }
 
-    sa_family_t GetFamily() const
-    {
-        if (m_is_unix_socket) return AF_UNIX;
-        return proxy.GetSAFamily();
-    }
-
-    std::string ToString() const
-    {
-        if (m_is_unix_socket) return m_unix_socket_path;
-        return proxy.ToStringAddrPort();
-    }
-
-    std::unique_ptr<Sock> Connect() const;
+private:
+    //! Default-constructed SocketAddr holds an invalid CService
+    SocketAddr m_proxy;
 };
 
 /** Credentials for proxy authentication */
