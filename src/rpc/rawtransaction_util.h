@@ -6,6 +6,7 @@
 #define BITCOIN_RPC_RAWTRANSACTION_UTIL_H
 
 #include <addresstype.h>
+#include <common/paymentdestination.h>
 #include <consensus/amount.h>
 #include <rpc/util.h>
 
@@ -51,8 +52,11 @@ void AddInputs(CMutableTransaction& rawTx, const UniValue& inputs_in, bool rbf);
 /** Normalize univalue-represented outputs */
 UniValue NormalizeOutputs(const UniValue& outputs_in);
 
-/** Parse normalized outputs into destination, amount tuples */
+/** Parse normalized outputs into destination, amount tuples. Silent payments addresses are rejected. */
 std::vector<std::pair<CTxDestination, CAmount>> ParseOutputs(const UniValue& outputs);
+
+/** Parse normalized outputs into destination, amount tuples, accepting silent payments addresses */
+std::vector<std::pair<PaymentDestination, CAmount>> ParsePaymentOutputs(const UniValue& outputs);
 
 /** Normalize, parse, and add outputs to the transaction */
 void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in);
