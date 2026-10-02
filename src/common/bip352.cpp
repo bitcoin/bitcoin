@@ -8,6 +8,7 @@
 #include <bech32.h>
 #include <chainparams.h>
 #include <coins.h>
+#include <hash.h>
 #include <key.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
@@ -172,9 +173,10 @@ std::optional<PubKey> GetPubKeyFromInput(const CTxIn& txin, const CScript& spk)
 
     if (type == TxoutType::WITNESS_V0_KEYHASH) {
         const auto& stack = txin.scriptWitness.stack;
-        if (stack.empty()) return std::nullopt;
+        if (stack.size() != 2) return std::nullopt;
         CPubKey key{stack.back()};
         if (!key.IsCompressed() || !key.IsFullyValid()) return std::nullopt;
+        if (Hash160(key) != uint160{solutions[0]}) return std::nullopt;
         return PubKey{key};
     }
 
@@ -191,16 +193,19 @@ std::optional<PubKey> GetPubKeyFromInput(const CTxIn& txin, const CScript& spk)
 
     if (type == TxoutType::SCRIPTHASH) {
         // P2SH-P2WPKH only: eval scriptSig, verify redeem script is P2WPKH.
+        const uint160 expected_script_hash{solutions[0]};
         std::vector<std::vector<unsigned char>> stack;
         if (!EvalScript(stack, txin.scriptSig, SCRIPT_VERIFY_NONE, DUMMY_CHECKER, SigVersion::BASE)) {
             return std::nullopt;
         }
-        if (stack.empty()) return std::nullopt;
+        if (stack.size() != 1) return std::nullopt;
+        if (Hash160(stack.back()) != expected_script_hash) return std::nullopt;
         CScript redeem{stack.back().begin(), stack.back().end()};
         if (Solver(redeem, solutions) != TxoutType::WITNESS_V0_KEYHASH) return std::nullopt;
-        if (txin.scriptWitness.stack.empty()) return std::nullopt;
+        if (txin.scriptWitness.stack.size() != 2) return std::nullopt;
         CPubKey key{txin.scriptWitness.stack.back()};
         if (!key.IsCompressed() || !key.IsFullyValid()) return std::nullopt;
+        if (Hash160(key) != uint160{solutions[0]}) return std::nullopt;
         return PubKey{key};
     }
 
