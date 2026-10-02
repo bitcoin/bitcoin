@@ -1109,29 +1109,29 @@ static RPCMethod bumpfee_helper(std::string method_name)
     EnsureWalletIsUnlocked(*pwallet);
 
 
-    std::vector<bilingual_str> errors;
-    CAmount old_fee;
-    CAmount new_fee;
-    CMutableTransaction mtx;
     // Targeting feerate bump.
-    [&](){
-        switch (feebumper::CreateRateBumpTransaction(*pwallet, hash, coin_control, errors, old_fee, new_fee, mtx, /*require_mine=*/ !want_psbt, outputs, original_change_index)) {
+    auto bump{feebumper::CreateRateBumpTransaction(*pwallet, hash, coin_control, /*require_mine=*/ !want_psbt, outputs, original_change_index)};
+    if (!bump) {
+        const std::string& error{bump.error().errors[0].original};
+        switch (bump.error().result) {
             case feebumper::Result::OK:
-                return;
+                break;
             case feebumper::Result::INVALID_ADDRESS_OR_KEY:
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errors[0].original);
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
             case feebumper::Result::INVALID_REQUEST:
-                throw JSONRPCError(RPC_INVALID_REQUEST, errors[0].original);
+                throw JSONRPCError(RPC_INVALID_REQUEST, error);
             case feebumper::Result::INVALID_PARAMETER:
-                throw JSONRPCError(RPC_INVALID_PARAMETER, errors[0].original);
+                throw JSONRPCError(RPC_INVALID_PARAMETER, error);
             case feebumper::Result::WALLET_ERROR:
-                throw JSONRPCError(RPC_WALLET_ERROR, errors[0].original);
+                throw JSONRPCError(RPC_WALLET_ERROR, error);
             case feebumper::Result::MISC_ERROR:
-                throw JSONRPCError(RPC_MISC_ERROR, errors[0].original);
+                throw JSONRPCError(RPC_MISC_ERROR, error);
         } // no default case, so the compiler can warn about missing cases
         NONFATAL_UNREACHABLE();
-    }();
+    }
+    CMutableTransaction& mtx{bump->mtx};
 
+    std::vector<bilingual_str> errors;
     UniValue result(UniValue::VOBJ);
 
     // For bumpfee, return the new transaction id.
@@ -1161,8 +1161,8 @@ static RPCMethod bumpfee_helper(std::string method_name)
         result.pushKV("psbt", EncodeBase64(ssTx.str()));
     }
 
-    result.pushKV("origfee", ValueFromAmount(old_fee));
-    result.pushKV("fee", ValueFromAmount(new_fee));
+    result.pushKV("origfee", ValueFromAmount(bump->old_fee));
+    result.pushKV("fee", ValueFromAmount(bump->new_fee));
     UniValue result_errors(UniValue::VARR);
     for (const bilingual_str& error : errors) {
         result_errors.push_back(error.original);
