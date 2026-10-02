@@ -114,7 +114,7 @@ void SetupPrivbcastArgs(ArgsManager& argsman)
     argsman.AddArg("-timedivisor=<n>", strprintf("Divide every duration of the job, its internal timeouts included, by <n>, from 1 to %d (default: 1; regtest only)", privbcast::MAX_TIME_DIVISOR),
                    ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::DEBUG_TEST);
 
-    argsman.AddCommand("send", "Broadcast the transaction given in hex on stdin, then print the report");
+    argsman.AddCommand("send", "Broadcast the transaction given in hex on stdin, or a parent and its child, then print the report");
     argsman.AddCommand("discover", "Run only the peer discovery of a job, then print the candidates found");
 
     SetupChainParamsBaseOptions(argsman);
@@ -145,6 +145,8 @@ int AppInitPrivbcast(ArgsManager& args, int argc, char* argv[])
                 "Usage:  bitcoin-privbcast [options] send < <hex-transaction-file>\n"
                 "or:     bitcoin-privbcast [options] discover\n"
                 "\n"
+                "send also takes two transactions, an unconfirmed parent and its child in either order: it then\n"
+                "announces the child and serves the parent to peers that ask for it.\n"
                 "send prints its report on stdout and exits with status 0 if at least one peer was sent the\n"
                 "announcement in full, even if the job failed afterwards; otherwise 1 on an error or if the job\n"
                 "failed, and 2 if it ran without failing. Progress lines go to stderr.\n";
@@ -213,8 +215,9 @@ util::Result<privbcast::JobInputs> GetJobInputs(const ArgsManager& args)
     return inputs;
 }
 
-/** The transaction on stdin, read up to its bound and checked (D3). */
-util::Result<CTransactionRef> ReadTransaction(CAmount max_burn)
+/** The transaction on stdin, or a parent and its child in either order, read up to its bound and
+ *  checked (D3). Sets the job's transaction, and for two its parent. */
+util::Result<void> ReadTransactions(CAmount max_burn, privbcast::JobInputs& inputs)
 {
 #ifdef WIN32
     // In text mode the C runtime ends the input at a control-Z and turns CRLF into LF: a valid
@@ -231,9 +234,17 @@ util::Result<CTransactionRef> ReadTransaction(CAmount max_burn)
     if (std::ferror(stdin)) return util::Error{Untranslated("reading the input failed")};
     auto txs{privbcast::ParseTransactions(*text)};
     if (!txs) return util::Error{util::ErrorString(txs)};
+    if (txs->size() == 2) {
+        auto package{privbcast::CheckPackage((*txs)[0], (*txs)[1], max_burn)};
+        if (!package) return util::Error{util::ErrorString(package)};
+        inputs.tx = package->child;
+        inputs.parent = package->parent;
+        return {};
+    }
     const CTransactionRef tx{txs->front()};
     if (auto checked{privbcast::CheckForBroadcast(*tx, max_burn)}; !checked) return util::Error{util::ErrorString(checked)};
-    return tx;
+    inputs.tx = tx;
+    return {};
 }
 
 #ifndef WIN32
@@ -280,9 +291,7 @@ int Run(const ArgsManager& args)
     if (auto logging{SetLogCategories(args)}; !logging) return Fail(util::ErrorString(logging).original);
     const bool send{cmd->command == "send"};
     if (send) {
-        auto tx{ReadTransaction(*max_burn)};
-        if (!tx) return Fail(util::ErrorString(tx).original);
-        inputs->tx = *tx;
+        if (auto read{ReadTransactions(*max_burn, *inputs)}; !read) return Fail(util::ErrorString(read).original);
     }
 
     SetupSignalHandlers();

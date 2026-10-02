@@ -25,7 +25,8 @@ namespace privbcast {
 
 /**
  * The transactions in text: hex strings separated by whitespace, with nothing but whitespace
- * around them (Interface: bitcoin-privbcast). Exactly one for now. Each must decode in full.
+ * around them (Interface: bitcoin-privbcast). One, or two for a parent and its child in either
+ * order. Each must decode in full.
  */
 util::Result<std::vector<CTransactionRef>> ParseTransactions(std::string_view text);
 
@@ -35,6 +36,22 @@ util::Result<std::vector<CTransactionRef>> ParseTransactions(std::string_view te
  * whose script is provably unspendable.
  */
 util::Result<void> CheckForBroadcast(const CTransaction& tx, CAmount max_burn);
+
+/** A child and the parent it spends. */
+struct ParentAndChild {
+    CTransactionRef parent;
+    CTransactionRef child;
+};
+
+/**
+ * Whether a and b, in either order, are a parent and its child that may be broadcast together
+ * (Extension: Interface): they differ and exactly one spends the other; every input of the child
+ * that spends the parent names an output the parent has; they share no input; each may be
+ * broadcast (CheckForBroadcast); and together they weigh at most MAX_PACKAGE_WEIGHT.
+ *
+ * @returns the two, the parent being the one whose output the other spends
+ */
+util::Result<ParentAndChild> CheckPackage(const CTransactionRef& a, const CTransactionRef& b, CAmount max_burn);
 
 /**
  * Read in to its end, unless it holds more than bound bytes. At most bound + 1 bytes are read, so

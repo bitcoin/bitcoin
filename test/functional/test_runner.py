@@ -107,6 +107,7 @@ BASE_SCRIPTS = [
     'feature_block.py',
     'mempool_ephemeral_dust.py',
     'p2p_opportunistic_1p1c.py',
+    'tool_privbcast_package.py',
     'tool_privbcast.py',
     'tool_privbcast_peers.py',
     'tool_privbcast_proxy.py',

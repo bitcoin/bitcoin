@@ -9,6 +9,7 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <netbase.h>
+#include <policy/packages.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <privbcast/input.h>
@@ -68,6 +69,46 @@ std::string Hex(const CMutableTransaction& mtx)
     return EncodeHexTx(CTransaction{mtx});
 }
 
+/** A parent with two outputs to witness programs. */
+CMutableTransaction MakeParent()
+{
+    CMutableTransaction mtx{MakeTx()};
+    mtx.vout.emplace_back(5'000, CScript() << OP_0 << std::vector<unsigned char>(20, 0x43));
+    return mtx;
+}
+
+/** A child that spends output n of parent. */
+CMutableTransaction MakeChild(const CMutableTransaction& parent, uint32_t n = 0)
+{
+    CMutableTransaction mtx;
+    mtx.version = 2;
+    mtx.vin.emplace_back(COutPoint{parent.GetHash(), n});
+    mtx.vout.emplace_back(4'000, CScript() << OP_0 << std::vector<unsigned char>(20, 0x44));
+    return mtx;
+}
+
+/** Whether CheckPackage accepts a and b, which it must decide the same in either order. */
+bool Accepted(const CMutableTransaction& a, const CMutableTransaction& b, CAmount max_burn = 0)
+{
+    const bool ab{CheckPackage(MakeTransactionRef(a), MakeTransactionRef(b), max_burn).has_value()};
+    const bool ba{CheckPackage(MakeTransactionRef(b), MakeTransactionRef(a), max_burn).has_value()};
+    BOOST_CHECK_EQUAL(ab, ba);
+    return ab;
+}
+
+/** Give mtx's first input one witness item sized so that mtx weighs exactly weight units: each
+ *  witness byte weighs one. The item starts at a size whose length is encoded in as many bytes as
+ *  the final size's. */
+void Weigh(CMutableTransaction& mtx, int64_t weight)
+{
+    const int64_t start{weight > 70'000 ? 100'000 : 1'000};
+    std::vector<std::vector<unsigned char>>& stack{mtx.vin.front().scriptWitness.stack};
+    stack.assign(1, std::vector<unsigned char>(start, 0x01));
+    const int64_t base{GetTransactionWeight(CTransaction{mtx})};
+    stack.front().resize(start + weight - base);
+    BOOST_REQUIRE_EQUAL(GetTransactionWeight(CTransaction{mtx}), weight);
+}
+
 /** A stream buffer that gives text, then fails as a read error does. */
 class FailingBuf : public std::streambuf
 {
@@ -104,9 +145,15 @@ BOOST_AUTO_TEST_CASE(parse)
     // Upper case hex is hex.
     BOOST_CHECK(ParseTransactions(ToUpper(hex)));
 
-    // Two transactions are refused, and so is one given twice.
-    BOOST_CHECK(!ParseTransactions(hex + "\n" + Hex(MakeTx(/*burn=*/0))));
-    BOOST_CHECK(!ParseTransactions(hex + " " + hex));
+    // Two transactions, in the order given; CheckPackage checks whether they are a parent and its
+    // child. Three are refused.
+    const auto two{ParseTransactions(hex + "\n" + Hex(MakeTx(/*burn=*/0)))};
+    BOOST_REQUIRE(two);
+    BOOST_REQUIRE_EQUAL(two->size(), 2U);
+    BOOST_CHECK((*two)[0]->GetWitnessHash() == CTransaction{mtx}.GetWitnessHash());
+    BOOST_CHECK((*two)[1]->GetWitnessHash() == CTransaction{MakeTx(/*burn=*/0)}.GetWitnessHash());
+    BOOST_CHECK(ParseTransactions(" " + hex + "\t\r\n" + hex + " "));
+    BOOST_CHECK(!ParseTransactions(hex + " " + hex + " " + hex));
 
     // Nothing, or nothing but whitespace.
     BOOST_CHECK(!ParseTransactions(""));
@@ -157,17 +204,10 @@ BOOST_AUTO_TEST_CASE(check)
 
 BOOST_AUTO_TEST_CASE(weight)
 {
-    // A witness item sized so that the transaction weighs exactly MAX_STANDARD_TX_WEIGHT: each
-    // witness byte weighs one unit.
     CMutableTransaction mtx{MakeTx()};
-    mtx.vin.front().scriptWitness.stack.emplace_back(100'000, 0x01);
-    const int32_t base{GetTransactionWeight(CTransaction{mtx})};
-    mtx.vin.front().scriptWitness.stack.front().resize(100'000 + MAX_STANDARD_TX_WEIGHT - base);
-    BOOST_REQUIRE_EQUAL(GetTransactionWeight(CTransaction{mtx}), MAX_STANDARD_TX_WEIGHT);
+    Weigh(mtx, MAX_STANDARD_TX_WEIGHT);
     BOOST_CHECK(CheckForBroadcast(CTransaction{mtx}, 0));
-
-    mtx.vin.front().scriptWitness.stack.front().push_back(0x01);
-    BOOST_REQUIRE_EQUAL(GetTransactionWeight(CTransaction{mtx}), MAX_STANDARD_TX_WEIGHT + 1);
+    Weigh(mtx, MAX_STANDARD_TX_WEIGHT + 1);
     BOOST_CHECK(!CheckForBroadcast(CTransaction{mtx}, 0));
 
     // As read from hex.
@@ -198,6 +238,115 @@ BOOST_AUTO_TEST_CASE(burn)
     too_long.vout.front().scriptPubKey = CScript(ones.begin(), ones.end());
     BOOST_CHECK(!CheckForBroadcast(CTransaction{too_long}, 0));
     BOOST_CHECK(CheckForBroadcast(CTransaction{too_long}, 10'000));
+}
+
+BOOST_AUTO_TEST_CASE(package)
+{
+    // A parent and its child, in either order, come back as parent and child.
+    const CMutableTransaction parent{MakeParent()};
+    const CMutableTransaction child{MakeChild(parent)};
+    const CTransactionRef p{MakeTransactionRef(parent)};
+    const CTransactionRef c{MakeTransactionRef(child)};
+    for (const auto& [a, b] : {std::pair{p, c}, std::pair{c, p}}) {
+        const auto package{CheckPackage(a, b, /*max_burn=*/0)};
+        BOOST_REQUIRE(package);
+        BOOST_CHECK(package->parent == p);
+        BOOST_CHECK(package->child == c);
+    }
+    // As read from hex.
+    const auto parsed{ParseTransactions(Hex(child) + "\n" + Hex(parent))};
+    BOOST_REQUIRE(parsed);
+    const auto from_hex{CheckPackage((*parsed)[0], (*parsed)[1], 0)};
+    BOOST_REQUIRE(from_hex);
+    BOOST_CHECK(from_hex->parent->GetWitnessHash() == p->GetWitnessHash());
+    BOOST_CHECK(from_hex->child->GetWitnessHash() == c->GetWitnessHash());
+    // The child may spend both of the parent's outputs, and other coins too.
+    CMutableTransaction both{child};
+    both.vin.emplace_back(COutPoint{parent.GetHash(), 1});
+    both.vin.emplace_back(COutPoint{Txid::FromUint256(uint256{2}), 0});
+    BOOST_CHECK(Accepted(parent, both));
+}
+
+BOOST_AUTO_TEST_CASE(package_refused)
+{
+    const CMutableTransaction parent{MakeParent()};
+    const CMutableTransaction child{MakeChild(parent)};
+    BOOST_REQUIRE(Accepted(parent, child));
+
+    // The same transaction twice, also with another witness.
+    BOOST_CHECK(!Accepted(parent, parent));
+    CMutableTransaction witnessed{parent};
+    witnessed.vin.front().scriptWitness.stack.push_back({1});
+    BOOST_CHECK(!Accepted(parent, witnessed));
+
+    // Unrelated transactions, and a grandchild: neither spends the other.
+    CMutableTransaction unrelated{MakeTx()};
+    unrelated.vin.front().prevout = COutPoint{Txid::FromUint256(uint256{2}), 0};
+    BOOST_CHECK(!Accepted(parent, unrelated));
+    BOOST_CHECK(!Accepted(parent, MakeChild(child)));
+
+    // A child that spends an output the parent does not have.
+    BOOST_CHECK(Accepted(parent, MakeChild(parent, 1)));
+    BOOST_CHECK(!Accepted(parent, MakeChild(parent, 2)));
+    CMutableTransaction missing{child};
+    missing.vin.emplace_back(COutPoint{parent.GetHash(), 7});
+    BOOST_CHECK(!Accepted(parent, missing));
+
+    // But one the parent has may be spent whatever its script: an OP_RETURN output, one with an
+    // invalid opcode, one longer than MAX_SCRIPT_SIZE. Only the parent's own burn check applies.
+    const std::vector<unsigned char> ones(MAX_SCRIPT_SIZE + 1, OP_1);
+    for (const CScript& script : {CScript() << OP_RETURN, CScript() << OP_INVALIDOPCODE, CScript(ones.begin(), ones.end())}) {
+        CMutableTransaction burning{parent};
+        burning.vout[1].scriptPubKey = script;
+        BOOST_CHECK(Accepted(burning, MakeChild(burning, 1), MAX_MONEY));
+        BOOST_CHECK(!Accepted(burning, MakeChild(burning, 1), 0));
+    }
+
+    // The two spend the same coin.
+    CMutableTransaction sharing{child};
+    sharing.vin.push_back(parent.vin.front());
+    BOOST_CHECK(!Accepted(parent, sharing));
+
+    // Each must be fit to broadcast on its own: a parent or a child that burns more than allowed,
+    // or a child without outputs.
+    const CMutableTransaction burns{MakeTx(/*burn=*/1'000)};
+    BOOST_CHECK(Accepted(burns, MakeChild(burns), 1'000));
+    BOOST_CHECK(!Accepted(burns, MakeChild(burns), 999));
+    CMutableTransaction child_burns{child};
+    child_burns.vout.emplace_back(1'000, CScript() << OP_RETURN);
+    BOOST_CHECK(Accepted(parent, child_burns, 1'000));
+    BOOST_CHECK(!Accepted(parent, child_burns, 999));
+    CMutableTransaction no_outputs{child};
+    no_outputs.vout.clear();
+    BOOST_CHECK(!Accepted(parent, no_outputs));
+}
+
+BOOST_AUTO_TEST_CASE(package_weight)
+{
+    // Together the two weigh at most MAX_PACKAGE_WEIGHT.
+    CMutableTransaction parent{MakeParent()};
+    Weigh(parent, 10'000);
+    CMutableTransaction child{MakeChild(parent)};
+    Weigh(child, MAX_PACKAGE_WEIGHT - 10'000);
+    BOOST_CHECK(Accepted(parent, child));
+    Weigh(child, MAX_PACKAGE_WEIGHT - 10'000 + 1);
+    BOOST_CHECK(!Accepted(parent, child));
+
+    // Each one at most MAX_STANDARD_TX_WEIGHT, within the package weight too. A witness does not
+    // change the txid the child spends.
+    const CMutableTransaction light{MakeParent()};
+    BOOST_REQUIRE(int64_t{GetTransactionWeight(CTransaction{light})} + MAX_STANDARD_TX_WEIGHT + 1 <= int64_t{MAX_PACKAGE_WEIGHT});
+    CMutableTransaction heavy{MakeChild(light)};
+    Weigh(heavy, MAX_STANDARD_TX_WEIGHT);
+    BOOST_CHECK(Accepted(light, heavy));
+    Weigh(heavy, MAX_STANDARD_TX_WEIGHT + 1);
+    BOOST_CHECK(!Accepted(light, heavy));
+    CMutableTransaction heavy_parent{MakeParent()};
+    const CMutableTransaction light_child{MakeChild(heavy_parent)};
+    Weigh(heavy_parent, MAX_STANDARD_TX_WEIGHT);
+    BOOST_CHECK(Accepted(heavy_parent, light_child));
+    Weigh(heavy_parent, MAX_STANDARD_TX_WEIGHT + 1);
+    BOOST_CHECK(!Accepted(heavy_parent, light_child));
 }
 
 BOOST_AUTO_TEST_CASE(read_bounded)

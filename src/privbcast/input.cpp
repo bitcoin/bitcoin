@@ -12,6 +12,7 @@
 #include <kernel/chainparams.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <policy/packages.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <privbcast/socks5.h>
@@ -25,6 +26,7 @@
 
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <ios>
 #include <istream>
 #include <string>
@@ -56,7 +58,7 @@ util::Result<std::vector<CTransactionRef>> ParseTransactions(std::string_view te
     std::vector<std::string_view> tokens{util::Split<std::string_view>(text, " \f\n\r\t\v")};
     std::erase(tokens, std::string_view{});
     if (tokens.empty()) return util::Error{Untranslated("no transaction given")};
-    if (tokens.size() > 1) return util::Error{Untranslated(strprintf("%d transactions given, expected one", tokens.size()))};
+    if (tokens.size() > 2) return util::Error{Untranslated(strprintf("%d transactions given, expected one, or a parent and its child", tokens.size()))};
 
     std::vector<CTransactionRef> txs;
     for (const std::string_view token : tokens) {
@@ -88,6 +90,34 @@ util::Result<void> CheckForBroadcast(const CTransaction& tx, CAmount max_burn)
         }
     }
     return {};
+}
+
+util::Result<ParentAndChild> CheckPackage(const CTransactionRef& a, const CTransactionRef& b, CAmount max_burn)
+{
+    ParentAndChild package;
+    if (IsChildWithParents({a, b})) {
+        package = {a, b};
+    } else if (IsChildWithParents({b, a})) {
+        package = {b, a};
+    } else {
+        return util::Error{Untranslated("the two transactions are not a parent and its child: exactly one must spend the other")};
+    }
+    const CTransaction& parent{*package.parent};
+    for (const CTxIn& in : package.child->vin) {
+        if (in.prevout.hash == parent.GetHash() && in.prevout.n >= parent.vout.size()) {
+            return util::Error{Untranslated(strprintf("the child spends output %d of the parent, which has %d", in.prevout.n, parent.vout.size()))};
+        }
+    }
+    // Two different transactions, sharing no input, together at most MAX_PACKAGE_WEIGHT.
+    if (PackageValidationState state; !IsWellFormedPackage({package.parent, package.child}, state)) {
+        return util::Error{Untranslated(strprintf("the parent and the child: %s", state.ToString()))};
+    }
+    for (const auto& [name, tx] : {std::pair{"parent", package.parent}, std::pair{"child", package.child}}) {
+        if (auto checked{CheckForBroadcast(*tx, max_burn)}; !checked) {
+            return util::Error{Untranslated(strprintf("the %s: %s", name, util::ErrorString(checked).original))};
+        }
+    }
+    return package;
 }
 
 util::Result<std::string> ReadBounded(std::istream& in, size_t bound)
