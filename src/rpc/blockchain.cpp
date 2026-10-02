@@ -1713,6 +1713,9 @@ static RPCMethod preciousblock()
     return RPCMethod{
         "preciousblock",
         "Treats a block as if it were received before others with the same work.\n"
+                "\nThis only breaks ties between chains with equal work. If the specified block has the same work as the current tip, "
+                "the node switches its active chain to it. If the specified block has less work than the current tip (including any "
+                "ancestor of the tip), the call has no effect. If another chain later gains more work, the node switches to it as usual.\n"
                 "\nA later preciousblock call can override the effect of an earlier one.\n"
                 "\nThe effects of preciousblock are not retained across restarts.\n",
                 {
