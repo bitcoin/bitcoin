@@ -75,8 +75,7 @@ const std::vector<std::string> CONNECTION_TYPE_DOC{
         "inbound (initiated by the peer)",
         "manual (added via addnode RPC or -addnode/-connect configuration options)",
         "addr-fetch (short-lived automatic connection for soliciting addresses)",
-        "feeler (short-lived automatic connection for testing addresses)",
-        "private-broadcast (short-lived automatic connection for broadcasting privacy-sensitive transactions)"
+        "feeler (short-lived automatic connection for testing addresses)"
 };
 
 const std::vector<std::string> TRANSPORT_TYPE_DOC{
@@ -394,8 +393,7 @@ static RPCMethod addnode()
                                       /*grant_outbound=*/{},
                                       /*pszDest=*/std::string{node_arg}.c_str(),
                                       /*conn_type=*/ConnectionType::MANUAL,
-                                      /*use_v2transport=*/use_v2transport,
-                                      /*proxy_override=*/std::nullopt);
+                                      /*use_v2transport=*/use_v2transport);
         return UniValue::VNULL;
     }
 
