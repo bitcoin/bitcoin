@@ -9,6 +9,7 @@
 #include <privbcast/attempt.h>
 #include <privbcast/params.h>
 #include <privbcast/plan.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 
 #include <univalue.h>
@@ -58,7 +59,7 @@ std::string OutcomeName(Outcome outcome)
     assert(false);
 }
 
-UniValue AttemptToUniValue(const AttemptReport& attempt)
+UniValue AttemptToUniValue(const AttemptReport& attempt, bool package)
 {
     UniValue obj{UniValue::VOBJ};
     obj.pushKV("endpoint", attempt.candidate.endpoint.ToStringAddrPort());
@@ -74,6 +75,11 @@ UniValue AttemptToUniValue(const AttemptReport& attempt)
     obj.pushKV("inv_written_ms", Time(attempt.times.inv_written));
     obj.pushKV("getdata_ms", Time(attempt.times.getdata));
     obj.pushKV("tx_written_ms", Time(attempt.times.tx_written));
+    if (package) {
+        obj.pushKV("parent_getdata_ms", Time(attempt.times.parent_getdata));
+        obj.pushKV("parent_tx_written_ms", Time(attempt.times.parent_tx_written));
+        obj.pushKV("parent_hold_expired_ms", Time(attempt.times.parent_hold_expired));
+    }
     obj.pushKV("ping_written_ms", Time(attempt.times.ping_written));
     obj.pushKV("pong_ms", Time(attempt.times.pong));
     obj.pushKV("ended_ms", Time(attempt.times.ended));
@@ -83,7 +89,7 @@ UniValue AttemptToUniValue(const AttemptReport& attempt)
     return obj;
 }
 
-UniValue SlotToUniValue(const SlotReport& slot)
+UniValue SlotToUniValue(const SlotReport& slot, bool package)
 {
     UniValue obj{UniValue::VOBJ};
     obj.pushKV("slot", slot.schedule.index);
@@ -96,7 +102,7 @@ UniValue SlotToUniValue(const SlotReport& slot)
     obj.pushKV("missed_opportunities", slot.missed_opportunities);
     obj.pushKV("interrupted", slot.interrupted);
     UniValue attempts{UniValue::VARR};
-    for (const AttemptReport& attempt : slot.attempts) attempts.push_back(AttemptToUniValue(attempt));
+    for (const AttemptReport& attempt : slot.attempts) attempts.push_back(AttemptToUniValue(attempt, package));
     obj.pushKV("attempts", std::move(attempts));
     return obj;
 }
@@ -130,10 +136,16 @@ UniValue ToUniValue(const Report& report)
     UniValue obj{UniValue::VOBJ};
     obj.pushKV("txid", report.txid.GetHex());
     obj.pushKV("wtxid", report.wtxid.GetHex());
+    // Package mode only (Extension).
+    const bool package{report.parent_txid.has_value()};
+    if (package) {
+        obj.pushKV("parent_txid", report.parent_txid->GetHex());
+        obj.pushKV("parent_wtxid", Assert(report.parent_wtxid)->GetHex());
+    }
     obj.pushKV("chain", report.chain);
     obj.pushKV("discovery", ToUniValue(report.discovery, /*candidates=*/false));
     UniValue slots{UniValue::VARR};
-    for (const SlotReport& slot : report.slots) slots.push_back(SlotToUniValue(slot));
+    for (const SlotReport& slot : report.slots) slots.push_back(SlotToUniValue(slot, package));
     obj.pushKV("slots", std::move(slots));
     UniValue summary{UniValue::VOBJ};
     summary.pushKV("connections", report.summary.connections);
@@ -141,6 +153,7 @@ UniValue ToUniValue(const Report& report)
     summary.pushKV("announcements_written", report.summary.announcements_written);
     summary.pushKV("tx_written", report.summary.tx_written);
     summary.pushKV("pongs", report.summary.pongs);
+    if (package) summary.pushKV("parents_served", report.summary.parents_served);
     summary.pushKV("slots_completed", report.summary.slots_completed);
     summary.pushKV("interrupted", report.summary.interrupted);
     summary.pushKV("error", report.summary.error ? UniValue{*report.summary.error} : UniValue{});

@@ -44,13 +44,23 @@ inline V2Transport MakeResponder(FastRandomContext& rng)
     return V2Transport{NodeId{1}, /*initiating=*/false, keys.key, MakeByteSpan(keys.ellswift_entropy), std::move(keys.garbage)};
 }
 
-/** The transaction the tests announce. It has a witness, so that its txid and wtxid differ. */
+/** The transaction the tests announce, and in package mode its parent. Both have witnesses, so
+ *  that each one's txid and wtxid differ. */
 inline CTransactionRef MakeTx()
 {
     CMutableTransaction tx;
     tx.vin.emplace_back(COutPoint{Txid::FromUint256(uint256{7}), 1});
     tx.vin[0].scriptWitness.stack.push_back({1, 2, 3});
     tx.vout.emplace_back(10'000, CScript{} << OP_TRUE);
+    return MakeTransactionRef(std::move(tx));
+}
+
+inline CTransactionRef MakeParent()
+{
+    CMutableTransaction tx;
+    tx.vin.emplace_back(COutPoint{Txid::FromUint256(uint256{8}), 0});
+    tx.vin[0].scriptWitness.stack.push_back({4, 5, 6});
+    tx.vout.emplace_back(20'000, CScript{} << OP_TRUE);
     return MakeTransactionRef(std::move(tx));
 }
 

@@ -45,6 +45,9 @@ struct SeedMaterial {
 struct JobInputs {
     /** The transaction to broadcast. Null for a job that only runs discovery (RunDiscoveryOnly()). */
     CTransactionRef tx;
+    /** Package mode: the transaction's parent, never announced and served only on request (F1,
+     *  F2). Null for a job without one. */
+    CTransactionRef parent{};
     /** The SOCKS5 proxy that every stream goes through (B1). */
     Proxy proxy;
     SeedMaterial seeds;

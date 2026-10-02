@@ -43,6 +43,16 @@ constexpr uint64_t PEER_SERVICES{NODE_NETWORK | NODE_WITNESS};
 
 using Types = std::vector<std::string>;
 
+/** Package mode: a child of MakeParent()'s transaction, with a witness too. */
+CTransactionRef MakeChild(const CTransaction& parent)
+{
+    CMutableTransaction tx;
+    tx.vin.emplace_back(COutPoint{parent.GetHash(), 0});
+    tx.vin[0].scriptWitness.stack.push_back({7, 8, 9});
+    tx.vout.emplace_back(10'000, CScript{} << OP_TRUE);
+    return MakeTransactionRef(std::move(tx));
+}
+
 CSerializedNetMsg Msg(std::string type, std::vector<uint8_t> payload = {})
 {
     CSerializedNetMsg msg;
@@ -74,6 +84,38 @@ struct Message {
     std::vector<uint8_t> payload;
 };
 
+/** The entries of an INV, GETDATA or NOTFOUND, as type and hash, which compare. */
+using Entries = std::vector<std::pair<uint32_t, uint256>>;
+
+Entries ToEntries(const std::vector<CInv>& inv)
+{
+    Entries entries;
+    for (const CInv& entry : inv) entries.emplace_back(entry.type, entry.hash);
+    return entries;
+}
+
+/** The entries of a NOTFOUND the peer received. */
+Entries NotFound(const Message& msg)
+{
+    BOOST_REQUIRE_EQUAL(msg.type, NetMsgType::NOTFOUND);
+    std::vector<CInv> inv;
+    DataStream stream{msg.payload};
+    stream >> inv;
+    BOOST_CHECK(stream.empty());
+    return ToEntries(inv);
+}
+
+/** The wtxid of the transaction, with its witness, in a TX the peer received. */
+Wtxid Served(const Message& msg)
+{
+    BOOST_REQUIRE_EQUAL(msg.type, NetMsgType::TX);
+    CMutableTransaction sent;
+    DataStream stream{msg.payload};
+    stream >> TX_WITH_WITNESS(sent);
+    BOOST_CHECK(stream.empty());
+    return CTransaction{sent}.GetWitnessHash();
+}
+
 /** The recipient's end of an attempt's connection: a BIP324 responder, as a node runs one. It
  *  decodes what the attempt writes and sends the messages a test scripts. */
 class Peer
@@ -99,6 +141,23 @@ public:
             m_delivered += chunk.size();
         }
         return total;
+    }
+
+    /** Pass all of the peer's queued messages to the attempt at now in one read, as a socket read
+     *  that returns several messages at once. Returns how many bytes. */
+    size_t DeliverInOneRead(Attempt& attempt, milliseconds now)
+    {
+        std::vector<uint8_t> read;
+        while (true) {
+            if (!m_queue.empty() && m_transport.SetMessageToSend(m_queue.front())) m_queue.pop_front();
+            const auto& [bytes, _more, _type]{m_transport.GetBytesToSend(/*have_next_message=*/!m_queue.empty())};
+            if (bytes.empty()) break;
+            read.insert(read.end(), bytes.begin(), bytes.end());
+            m_transport.MarkBytesSent(bytes.size());
+        }
+        if (!read.empty()) attempt.Received(read, now);
+        m_delivered += read.size();
+        return read.size();
     }
 
     /** Write up to max of the bytes the attempt offers, marking them sent at now, and decode them.
@@ -175,9 +234,22 @@ const Types ANNOUNCED{NetMsgType::VERSION, NetMsgType::WTXIDRELAY, NetMsgType::V
 const Types SERVED{NetMsgType::VERSION, NetMsgType::WTXIDRELAY, NetMsgType::VERACK, NetMsgType::INV,
                    NetMsgType::TX, NetMsgType::PING};
 
+Types Then(Types types, const Types& more)
+{
+    types.insert(types.end(), more.begin(), more.end());
+    return types;
+}
+
 struct AttemptSetup : public BasicTestingSetup {
     const CTransactionRef tx{MakeTx()};
     const uint256 wtxid{tx->GetWitnessHash().ToUint256()};
+    /** Package mode. */
+    const CTransactionRef parent{MakeParent()};
+    const CTransactionRef child{MakeChild(*parent)};
+    const uint256 parent_txid{parent->GetHash().ToUint256()};
+    const uint256 parent_wtxid{parent->GetWitnessHash().ToUint256()};
+    const uint256 child_txid{child->GetHash().ToUint256()};
+    const uint256 child_wtxid{child->GetWitnessHash().ToUint256()};
 };
 
 } // namespace
@@ -586,6 +658,167 @@ BOOST_AUTO_TEST_CASE(nonces_per_attempt)
     }
     BOOST_CHECK(versions[0] != versions[1]);
     BOOST_CHECK(pings[0] != pings[1]);
+}
+
+BOOST_AUTO_TEST_CASE(package_parent_before_child)
+{
+    // F2 (b), F4: before the child is served, a request for the parent that names no child id
+    // serves it once, with NOTFOUND for unknown entries, then the PING; after it, never the child.
+    FastRandomContext rng{uint256{32}};
+    const uint256 unknown{0xab};
+    {
+        Attempt attempt{child, START, Timing{}, rng, KeysFrom(rng), NodeId{0}, parent};
+        Peer peer{rng};
+        Announce(attempt, peer, START);
+        // Ignored entirely, without NOTFOUND.
+        const std::vector<std::vector<CInv>> ignored{
+            {CInv{MSG_WTX, child_wtxid}, CInv{MSG_WITNESS_TX, parent_txid}},
+            {CInv{MSG_WITNESS_TX, parent_txid}, CInv{MSG_WITNESS_TX, child_txid}},
+            {CInv{MSG_WITNESS_TX, parent_txid}, CInv{MSG_TX, child_wtxid}},
+            {CInv{MSG_WITNESS_TX, parent_txid}, CInv{MSG_BLOCK, child_txid}},
+            {CInv{MSG_WITNESS_TX, child_txid}},
+            {CInv{MSG_TX, parent_txid}},
+            {CInv{MSG_WTX, parent_wtxid}},
+            {CInv{MSG_WITNESS_TX, parent_wtxid}},
+            {CInv{MSG_WITNESS_TX, unknown}, CInv{MSG_TX, unknown}},
+        };
+        int extra{0};
+        for (const std::vector<CInv>& request : ignored) {
+            peer.Send(GetData(request));
+            peer.Exchange(attempt, START + 1s);
+            BOOST_CHECK_EQUAL(attempt.ExtraRequests(), ++extra);
+            BOOST_CHECK(peer.ReceivedTypes() == ANNOUNCED);
+        }
+        BOOST_CHECK(!attempt.Times().getdata);
+        BOOST_CHECK(!attempt.Times().parent_getdata);
+        peer.Send(GetData({CInv{MSG_WITNESS_TX, parent_txid}, CInv{MSG_WITNESS_TX, unknown}, CInv{MSG_WITNESS_TX, parent_txid},
+                           CInv{MSG_TX, parent_txid}}));
+        peer.Exchange(attempt, START + 2s);
+        // The parent, then the PING (F2); F4 does not place the NOTFOUND.
+        const Types served{peer.ReceivedTypes()};
+        Types types{served};
+        const auto notfound{std::ranges::find(types, std::string{NetMsgType::NOTFOUND})};
+        BOOST_REQUIRE(notfound != types.end());
+        BOOST_CHECK(NotFound(peer.Received()[notfound - types.begin()]) == (Entries{{MSG_WITNESS_TX, unknown}}));
+        types.erase(notfound);
+        BOOST_REQUIRE(types == Then(ANNOUNCED, {NetMsgType::TX, NetMsgType::PING}));
+        BOOST_CHECK(Served(*std::ranges::find(peer.Received(), std::string{NetMsgType::TX}, &Message::type)) == parent->GetWitnessHash());
+        const uint64_t nonce{Nonce(std::ranges::find(peer.Received(), std::string{NetMsgType::PING}, &Message::type)->payload)};
+        BOOST_CHECK(attempt.Times().parent_getdata == START + 2s);
+        BOOST_CHECK(attempt.Times().parent_tx_written == START + 2s);
+        BOOST_CHECK(attempt.Times().ping_written == START + 2s);
+        BOOST_CHECK_EQUAL(attempt.ExtraRequests(), extra);
+        // The child is never served on this connection.
+        peer.Send(GetData({CInv{MSG_WTX, child_wtxid}}));
+        peer.Exchange(attempt, START + 3s);
+        BOOST_CHECK_EQUAL(attempt.ExtraRequests(), extra + 1);
+        BOOST_CHECK(peer.ReceivedTypes() == served);
+        peer.Send(Pong(nonce));
+        peer.Exchange(attempt, START + 4s);
+        BOOST_CHECK(attempt.GetOutcome() == Outcome::PongReceived);
+        BOOST_CHECK(!attempt.Times().getdata);
+        BOOST_CHECK(!attempt.Times().tx_written);
+        BOOST_CHECK(!attempt.Times().parent_hold_expired);
+    }
+    {
+        // After the request that named both, the child alone, then the parent: served in turn.
+        Attempt attempt{child, START, Timing{}, rng, KeysFrom(rng), NodeId{0}, parent};
+        Peer peer{rng};
+        Announce(attempt, peer, START);
+        peer.Send(GetData({CInv{MSG_WTX, child_wtxid}, CInv{MSG_WITNESS_TX, parent_txid}}));
+        peer.Send(GetData({CInv{MSG_WTX, child_wtxid}}));
+        peer.Exchange(attempt, START + 1s);
+        BOOST_CHECK_EQUAL(attempt.ExtraRequests(), 1);
+        BOOST_REQUIRE(peer.ReceivedTypes() == Then(ANNOUNCED, {NetMsgType::TX}));
+        BOOST_CHECK(Served(peer.Received()[4]) == child->GetWitnessHash());
+        peer.Send(GetData({CInv{MSG_WITNESS_TX, parent_txid}}));
+        peer.Exchange(attempt, START + 2s);
+        BOOST_REQUIRE(peer.ReceivedTypes() == Then(ANNOUNCED, {NetMsgType::TX, NetMsgType::TX, NetMsgType::PING}));
+        BOOST_CHECK(Served(peer.Received()[5]) == parent->GetWitnessHash());
+        BOOST_CHECK_EQUAL(attempt.ExtraRequests(), 1);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(package_hold)
+{
+    // F2, F3: a parent request during the hold is served; once the hold has run out, one is not.
+    FastRandomContext rng{uint256{33}};
+    for (const bool in_time : {true, false}) {
+        Attempt attempt{child, START, Timing{}, rng, KeysFrom(rng), NodeId{0}, parent};
+        Peer peer{rng};
+        Announce(attempt, peer, START);
+        peer.Send(GetData({CInv{MSG_WTX, child_wtxid}}));
+        peer.Exchange(attempt, START + 1ms);
+        const milliseconds hold_end{START + 1ms + PARENT_HOLD};
+        BOOST_REQUIRE(attempt.NextDeadline() == hold_end);
+        const milliseconds at{in_time ? hold_end - 10s : hold_end + 1s};
+        peer.Send(GetData({CInv{MSG_WITNESS_TX, parent_txid}}));
+        peer.Exchange(attempt, at);
+        BOOST_CHECK(attempt.Times().ping_written == at);
+        if (in_time) {
+            BOOST_CHECK(peer.ReceivedTypes() == Then(ANNOUNCED, {NetMsgType::TX, NetMsgType::TX, NetMsgType::PING}));
+            BOOST_CHECK(attempt.Times().parent_getdata == at);
+            BOOST_CHECK(!attempt.Times().parent_hold_expired);
+            BOOST_CHECK_EQUAL(attempt.ExtraRequests(), 0);
+        } else {
+            BOOST_CHECK(peer.ReceivedTypes() == Then(ANNOUNCED, {NetMsgType::TX, NetMsgType::PING}));
+            BOOST_CHECK(!attempt.Times().parent_getdata);
+            BOOST_CHECK(attempt.Times().parent_hold_expired);
+            BOOST_CHECK_EQUAL(attempt.ExtraRequests(), 1);
+        }
+        BOOST_CHECK(attempt.NextDeadline() == at + PONG_WAIT);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(package_request_at_cut)
+{
+    // F3, D2: a hold never runs into the request window's last PONG_WAIT. A child served before it is
+    // held only until it; after a child request inside it the PING follows the TX at once, and a
+    // parent request after it is not served, in the same read or the next.
+    FastRandomContext rng{uint256{37}};
+    const milliseconds cut{START + REQUEST_WINDOW - PONG_WAIT};
+    {
+        Attempt attempt{child, START, Timing{}, rng, KeysFrom(rng), NodeId{0}, parent};
+        Peer peer{rng};
+        Announce(attempt, peer, START);
+        peer.Send(GetData({CInv{MSG_WTX, child_wtxid}}));
+        peer.Exchange(attempt, cut - 10s);
+        BOOST_REQUIRE(peer.ReceivedTypes() == Then(ANNOUNCED, {NetMsgType::TX}));
+        attempt.Tick(cut - 1s);
+        peer.Exchange(attempt, cut - 1s);
+        BOOST_CHECK(peer.ReceivedTypes() == Then(ANNOUNCED, {NetMsgType::TX}));
+        attempt.Tick(cut + 1s);
+        peer.Exchange(attempt, cut + 1s);
+        BOOST_CHECK(peer.ReceivedTypes() == Then(ANNOUNCED, {NetMsgType::TX, NetMsgType::PING}));
+        BOOST_CHECK(attempt.Times().parent_hold_expired == cut + 1s);
+    }
+    const milliseconds at{cut + PONG_WAIT / 2};
+    for (const bool one_read : {true, false}) {
+        Attempt attempt{child, START, Timing{}, rng, KeysFrom(rng), NodeId{0}, parent};
+        Peer peer{rng};
+        Announce(attempt, peer, START);
+        peer.Send(GetData({CInv{MSG_WTX, child_wtxid}}));
+        peer.Send(GetData({CInv{MSG_WITNESS_TX, parent_txid}}));
+        if (one_read) {
+            peer.DeliverInOneRead(attempt, at);
+        } else {
+            peer.Deliver(attempt, at);
+        }
+        BOOST_CHECK(attempt.Times().getdata == at);
+        BOOST_CHECK(!attempt.Times().parent_getdata);
+        BOOST_CHECK_EQUAL(attempt.ExtraRequests(), 1);
+        peer.Exchange(attempt, at);
+        BOOST_REQUIRE(peer.ReceivedTypes() == Then(ANNOUNCED, {NetMsgType::TX, NetMsgType::PING}));
+        BOOST_CHECK(Served(peer.Received()[4]) == child->GetWitnessHash());
+        BOOST_CHECK(attempt.Times().tx_written == at);
+        BOOST_CHECK(attempt.Times().ping_written == at);
+        BOOST_CHECK(!attempt.Times().parent_tx_written);
+        BOOST_CHECK(!attempt.Times().parent_hold_expired);
+        BOOST_CHECK(attempt.NextDeadline() == at + PONG_WAIT);
+        peer.Send(Pong(Nonce(peer.Received().back().payload)));
+        peer.Exchange(attempt, at + 1s);
+        BOOST_CHECK(attempt.GetOutcome() == Outcome::PongReceived);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

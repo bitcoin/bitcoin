@@ -24,6 +24,7 @@
 #include <util/chaintype.h>
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <chrono>
 #include <cstddef>
@@ -44,12 +45,22 @@ using std::chrono::milliseconds;
 namespace {
 
 CTransactionRef g_tx;
+/** Package mode: g_tx's parent. */
+CTransactionRef g_parent;
 
 void initialize_privbcast_attempt()
 {
     static ECC_Context ecc_context{};
     SelectParams(ChainType::REGTEST);
+    g_parent = MakeParent();
     g_tx = MakeTx();
+}
+
+/** The ids of the transaction and of its parent. */
+std::array<uint256, 4> Ids()
+{
+    return {g_tx->GetWitnessHash().ToUint256(), g_tx->GetHash().ToUint256(),
+            g_parent->GetHash().ToUint256(), g_parent->GetWitnessHash().ToUint256()};
 }
 
 /** Whether the attempt acts on messages of this type in some state (E2, E5, E6). It ignores any
@@ -101,12 +112,13 @@ std::pair<CSerializedNetMsg, PeerMessage> ConsumeMessage(FuzzedDataProvider& pro
         },
         [&] { msg = NetMsg::Make(NetMsgType::VERACK); },
         [&] { msg = NetMsg::Make(NetMsgType::GETDATA, std::vector<CInv>{CInv{MSG_WTX, wtxid}}); },
+        [&] { msg = NetMsg::Make(NetMsgType::GETDATA, std::vector<CInv>{CInv{MSG_WITNESS_TX, g_parent->GetHash().ToUint256()}}); },
         [&] {
             std::vector<CInv> request;
-            LIMITED_WHILE(provider.ConsumeBool(), 3) {
+            LIMITED_WHILE(provider.ConsumeBool(), 4) {
                 const GetDataMsg type{provider.PickValueInArray({MSG_TX, MSG_WTX, MSG_WITNESS_TX, MSG_BLOCK})};
-                // Another id needs to differ from the transaction's only.
-                request.emplace_back(type, provider.ConsumeBool() ? wtxid : uint256{provider.ConsumeIntegral<uint8_t>()});
+                // Another id needs to differ from the transactions' only.
+                request.emplace_back(type, provider.ConsumeBool() ? provider.PickValueInArray(Ids()) : uint256{provider.ConsumeIntegral<uint8_t>()});
             }
             msg = NetMsg::Make(NetMsgType::GETDATA, request);
         },
@@ -148,6 +160,14 @@ void CheckVersion(DataStream& payload)
     assert(payload.empty());
 }
 
+/** Whether one of the peer's requests names this entry. */
+bool Requested(const std::vector<std::vector<CInv>>& requests, const CInv& entry)
+{
+    return std::ranges::any_of(requests, [&](const std::vector<CInv>& request) {
+        return std::ranges::any_of(request, [&](const CInv& inv) { return inv.type == entry.type && inv.hash == entry.hash; });
+    });
+}
+
 /** The twins are the same in everything they offer, record and report, but for the bytes only the
  *  twin read. */
 void CheckTwins(const Attempt& attempt, const Attempt& twin, uint64_t extra)
@@ -176,13 +196,15 @@ FUZZ_TARGET(privbcast_attempt, .init = initialize_privbcast_attempt)
     const Timing timing{provider.ConsumeIntegralInRange<int>(1, MAX_TIME_DIVISOR)};
     // Times on the attempt's own scale, so that its phases are reached at every divisor.
     milliseconds now{0};
+    milliseconds latest{now};
     const milliseconds scheduled_start{now + timing.Scale(milliseconds{provider.ConsumeIntegralInRange<int64_t>(-1'000, 1'000)})};
+    const bool package{provider.ConsumeBool()};
     // A2: twins, each with a generator of its own, seeded alike, and a key source that draws from
     // it. They get the same calls, with the same bytes at the same times, but for messages of types
     // the attempt acts on in no state, which the twin alone gets.
     FastRandomContext rng{seed}, twin_rng{seed};
-    Attempt attempt{g_tx, scheduled_start, timing, rng, KeysFrom(rng), NodeId{0}};
-    Attempt twin{g_tx, scheduled_start, timing, twin_rng, KeysFrom(twin_rng), NodeId{0}};
+    Attempt attempt{g_tx, scheduled_start, timing, rng, KeysFrom(rng), NodeId{0}, package ? g_parent : nullptr};
+    Attempt twin{g_tx, scheduled_start, timing, twin_rng, KeysFrom(twin_rng), NodeId{0}, package ? g_parent : nullptr};
     // Their recipients, alike too.
     V2Transport peer(MakeResponder(rng));
     V2Transport twin_peer(MakeResponder(twin_rng));
@@ -205,20 +227,24 @@ FUZZ_TARGET(privbcast_attempt, .init = initialize_privbcast_attempt)
     bool twin_capped{false};
 
     // What the recipient decoded of the attempt's bytes.
-    const std::set<std::string> allowed{NetMsgType::VERSION, NetMsgType::WTXIDRELAY, NetMsgType::VERACK,
-                                        NetMsgType::INV, NetMsgType::TX, NetMsgType::PING};
+    std::set<std::string> allowed{NetMsgType::VERSION, NetMsgType::WTXIDRELAY, NetMsgType::VERACK,
+                                  NetMsgType::INV, NetMsgType::TX, NetMsgType::PING};
+    if (package) allowed.insert(NetMsgType::NOTFOUND);
     std::map<std::string, int> count;
+    std::set<Wtxid> served;
     std::optional<uint64_t> ping_nonce;
 
     // The attempt takes bytes only once the proxy connected it.
     const auto can_receive{[&] { return attempt.Times().connected || attempt.Ended(); }};
 
-    // Only these messages, each at most once and in this order (E1-E7). Each is the release profile
-    // byte for byte, but for the nonces of the VERSION and the PING.
+    // Only these messages, each at most once and in this order (E1-E7); in package mode a TX for each
+    // transaction, and NOTFOUNDs (F2, F4). Each is the release profile byte for byte, but for the
+    // nonces of the VERSION and the PING.
     const auto check_message{[&](CNetMessage& msg) {
         const std::string& type{msg.m_type};
         assert(allowed.contains(type));
-        assert(++count[type] == 1);
+        const int n{++count[type]};
+        assert(n == 1 || type == NetMsgType::TX || type == NetMsgType::NOTFOUND);
         const std::span<const uint8_t> payload{MakeUCharSpan(msg.m_recv)};
         if (type == NetMsgType::VERSION) CheckVersion(msg.m_recv);
         if (type == NetMsgType::WTXIDRELAY) assert(count[NetMsgType::VERSION] == 1 && payload.empty());
@@ -235,16 +261,35 @@ FUZZ_TARGET(privbcast_attempt, .init = initialize_privbcast_attempt)
             assert(std::ranges::equal(payload, NetMsg::Make(NetMsgType::INV, std::vector<CInv>{CInv{MSG_WTX, g_tx->GetWitnessHash().ToUint256()}}).data));
         }
         // No TX before the INV (E4), and only in answer to a request for it: a single-entry MSG_WTX
-        // for the transaction (E5). The PING after the TX (E6).
+        // for the transaction (E5), MSG_WITNESS_TX by txid for the parent (F2). Each transaction at
+        // most once, the child never after the parent (F2), and nothing more after the PING (E6).
         if (type == NetMsgType::TX) {
-            assert(count[NetMsgType::INV] == 1);
-            assert(std::ranges::equal(payload, NetMsg::Make(NetMsgType::TX, TX_WITH_WITNESS(*g_tx)).data));
-            assert(std::ranges::any_of(requests, [](const std::vector<CInv>& request) {
-                return request.size() == 1 && request[0].IsMsgWtx() && request[0].hash == g_tx->GetWitnessHash().ToUint256();
-            }));
+            assert(count[NetMsgType::INV] == 1 && count[NetMsgType::PING] == 0);
+            const bool child{std::ranges::equal(payload, NetMsg::Make(NetMsgType::TX, TX_WITH_WITNESS(*g_tx)).data)};
+            assert(child || (package && std::ranges::equal(payload, NetMsg::Make(NetMsgType::TX, TX_WITH_WITNESS(*g_parent)).data)));
+            assert(served.insert(child ? g_tx->GetWitnessHash() : g_parent->GetWitnessHash()).second);
+            if (child) {
+                assert(!served.contains(g_parent->GetWitnessHash()));
+                assert(std::ranges::any_of(requests, [](const std::vector<CInv>& request) {
+                    return request.size() == 1 && request[0].IsMsgWtx() && request[0].hash == g_tx->GetWitnessHash().ToUint256();
+                }));
+            } else {
+                assert(Requested(requests, CInv{MSG_WITNESS_TX, g_parent->GetHash().ToUint256()}));
+            }
+        }
+        // Only for requested transaction entries that are neither transaction's, before the PING (F4).
+        if (type == NetMsgType::NOTFOUND) {
+            assert(count[NetMsgType::INV] == 1 && count[NetMsgType::PING] == 0);
+            std::vector<CInv> entries;
+            msg.m_recv >> entries;
+            assert(!entries.empty() && msg.m_recv.empty());
+            for (const CInv& inv : entries) {
+                assert(inv.IsGenTxMsg() && Requested(requests, inv));
+                for (const uint256& id : Ids()) assert(inv.hash != id);
+            }
         }
         if (type == NetMsgType::PING) {
-            assert(count[NetMsgType::TX] == 1);
+            assert(count[NetMsgType::TX] >= 1);
             assert(payload.size() == sizeof(uint64_t));
             uint64_t nonce{0};
             msg.m_recv >> nonce;
@@ -410,13 +455,28 @@ FUZZ_TARGET(privbcast_attempt, .init = initialize_privbcast_attempt)
                 attempt.Interrupt(now, "fuzz");
                 twin.Interrupt(now, "fuzz");
             });
+        latest = std::max(latest, now);
         if (extra > 0 && twin.BytesRecv() > MAX_RECV_BYTES) twin_capped = true;
         if (!twin_capped) CheckTwins(attempt, twin, extra);
 
         const AttemptTimes& times{attempt.Times()};
-        if (times.inv_written || times.getdata) assert(times.inv_handed);
+        if (times.inv_written || times.getdata || times.parent_getdata) assert(times.inv_handed);
         if (times.tx_written) assert(times.inv_written && times.getdata);
-        if (times.ping_written) assert(times.tx_written);
+        if (times.parent_tx_written) assert(times.inv_written && times.parent_getdata);
+        if (!package) assert(!times.parent_getdata && !times.parent_hold_expired);
+        // The parent is served or the hold ends, not both. A hold runs from the last byte of the
+        // child's TX, if that comes before the request window's last PONG_WAIT, for PARENT_HOLD or
+        // until that PONG_WAIT (F3).
+        assert(!(times.parent_getdata && times.parent_hold_expired));
+        const auto last{[&] { return *times.inv_handed + timing.Scale(REQUEST_WINDOW) - timing.Scale(PONG_WAIT); }};
+        if (times.parent_hold_expired) {
+            assert(times.tx_written && *times.tx_written < last());
+            assert(*times.parent_hold_expired >= std::min(*times.tx_written + timing.Scale(PARENT_HOLD), last()));
+        }
+        if (times.ping_written) assert(times.tx_written || times.parent_tx_written);
+        // In package mode the PING waits for the parent phase (F3), which ends at the start of the
+        // request window's last PONG_WAIT at the latest.
+        if (package && times.ping_written && !times.parent_getdata && !times.parent_hold_expired) assert(latest >= last());
         // D2: nothing is acted on once a phase deadline has passed. Each call is a step, so a call at
         // the deadline itself may still act (the invariants hold to the precision of a step).
         if (times.inv_handed) assert(*times.inv_handed <= scheduled_start + timing.Scale(HANDSHAKE_BUDGET));

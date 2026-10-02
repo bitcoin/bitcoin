@@ -47,11 +47,24 @@ V2Transport MakeTransport(NodeId id, const KeySource& keys)
     return V2Transport{id, /*initiating=*/true, drawn.key, MakeByteSpan(drawn.ellswift_entropy), std::move(drawn.garbage)};
 }
 
+/** Whether the entry names tx: its txid or its wtxid, whatever the entry's type. */
+bool Names(const CInv& inv, const CTransaction& tx)
+{
+    return inv.hash == tx.GetHash().ToUint256() || inv.hash == tx.GetWitnessHash().ToUint256();
+}
+
+/** Whether the entry asks for the parent as F2 serves it: MSG_WITNESS_TX with its txid. */
+bool AsksForParent(const CInv& inv, const CTransaction& parent)
+{
+    return inv.type == MSG_WITNESS_TX && inv.hash == parent.GetHash().ToUint256();
+}
+
 } // namespace
 
 Attempt::Attempt(CTransactionRef tx, std::chrono::milliseconds scheduled_start, const Timing& timing,
-                 FastRandomContext& rng, const KeySource& keys, NodeId id)
+                 FastRandomContext& rng, const KeySource& keys, NodeId id, CTransactionRef parent)
     : m_tx{std::move(tx)},
+      m_parent{std::move(parent)},
       m_scheduled_start{scheduled_start},
       m_timing{timing},
       m_transport(MakeTransport(id, keys)), // V2Transport cannot be moved: initialized from the prvalue
@@ -129,10 +142,8 @@ void Attempt::MarkSent(size_t n, std::chrono::milliseconds now)
     if (!BytesToSend().empty()) return Tick(now);
     // The transport has written all it held. A message whose last byte went is written, at a
     // deadline too (C6, Interface/Report).
-    if (m_in_transport == NetMsgType::INV) m_times.inv_written = now;
-    if (m_in_transport == NetMsgType::TX) m_times.tx_written = now;
-    if (m_in_transport == NetMsgType::PING) m_times.ping_written = now;
-    m_in_transport.clear();
+    if (const Event written{m_in_transport.value_or(nullptr)}) m_times.*written = now;
+    m_in_transport.reset();
     // Then the deadlines: once one has passed, nothing more goes to the transport (D2).
     Tick(now);
     HandOff(now);
@@ -140,16 +151,19 @@ void Attempt::MarkSent(size_t n, std::chrono::milliseconds now)
 
 void Attempt::Tick(std::chrono::milliseconds now)
 {
-    const std::optional<std::chrono::milliseconds> deadline{NextDeadline()};
-    if (!deadline || now < *deadline) return;
+    if (Ended()) return;
+    const std::chrono::milliseconds deadline{EndDeadline()};
+    if (now < deadline) return CheckParentHold(now);
     std::string reason{"no PONG in time"};
     if (!m_times.inv_handed) {
         reason = "not announced by the handshake deadline";
-    } else if (!m_times.getdata) {
+    } else if (!m_times.getdata && !m_times.parent_getdata) {
         reason = "no request in the request window";
-    } else if (!m_times.tx_written) {
+    } else if (m_times.getdata && !m_times.tx_written) {
         reason = "TX not written in the request window";
-    } else if (!m_times.ping_written || *m_times.ping_written >= *deadline) {
+    } else if (m_times.parent_getdata && !m_times.parent_tx_written) {
+        reason = "the parent's TX not written in the request window";
+    } else if (!m_times.ping_written || *m_times.ping_written >= deadline) {
         reason = "PING not written in the request window";
     }
     End(now, StateOutcome(), std::move(reason));
@@ -170,6 +184,12 @@ void Attempt::Interrupt(std::chrono::milliseconds now, std::string reason)
 std::optional<std::chrono::milliseconds> Attempt::NextDeadline() const
 {
     if (Ended()) return std::nullopt;
+    // The hold ends before the request window's last PONG_WAIT, so before the attempt can.
+    return WaitingForParent() ? ParentDeadline() : EndDeadline();
+}
+
+std::chrono::milliseconds Attempt::EndDeadline() const
+{
     // The handshake budget, then the request window, by whose end the TX and the PING are written
     // (E6), then the PONG wait. A PING written at the window's end opens no PONG wait.
     std::chrono::milliseconds phase_end{m_scheduled_start + m_timing.Scale(HANDSHAKE_BUDGET)};
@@ -178,6 +198,26 @@ std::optional<std::chrono::milliseconds> Attempt::NextDeadline() const
         phase_end = *m_times.ping_written + m_timing.Scale(PONG_WAIT);
     }
     return std::min(phase_end, m_scheduled_start + m_timing.Scale(ATTEMPT_MAX));
+}
+
+std::chrono::milliseconds Attempt::ParentDeadline() const
+{
+    // The PING goes out by the start of the request window's last PONG_WAIT, so that the PONG wait
+    // fits in the window. Until the child's TX is written, that is the only bound.
+    const std::chrono::milliseconds last{*Assert(m_times.inv_handed) + m_timing.Scale(REQUEST_WINDOW) - m_timing.Scale(PONG_WAIT)};
+    if (!m_times.tx_written) return last;
+    return std::min(*m_times.tx_written + m_timing.Scale(PARENT_HOLD), last);
+}
+
+void Attempt::CheckParentHold(std::chrono::milliseconds now)
+{
+    // The hold begins with the last byte of the child's TX: when the window's last PONG_WAIT
+    // begins before that, no hold has expired, and the PING just follows the TX.
+    if (!WaitingForParent()) return;
+    const std::chrono::milliseconds end{ParentDeadline()};
+    if (now < end) return;
+    if (m_times.tx_written && *m_times.tx_written < end) m_times.parent_hold_expired = now;
+    QueuePing(now);
 }
 
 Outcome Attempt::StateOutcome() const
@@ -202,21 +242,27 @@ void Attempt::Fail(std::chrono::milliseconds now, std::string reason)
     End(now, m_times.inv_handed ? Outcome::PostAnnouncementFailure : Outcome::NotAnnounced, std::move(reason));
 }
 
-void Attempt::Queue(CSerializedNetMsg msg, std::chrono::milliseconds now)
+void Attempt::Queue(CSerializedNetMsg msg, std::chrono::milliseconds now, Event written)
 {
-    m_queue.push_back(std::move(msg));
+    m_queue.push_back({std::move(msg), written});
     HandOff(now);
+}
+
+void Attempt::QueuePing(std::chrono::milliseconds now)
+{
+    m_ping_queued = true;
+    Queue(NetMsg::Make(NetMsgType::PING, m_ping_nonce), now, &AttemptTimes::ping_written);
 }
 
 void Attempt::HandOff(std::chrono::milliseconds now)
 {
-    if (Ended() || !m_in_transport.empty() || m_queue.empty()) return;
-    std::string type{m_queue.front().m_type};
-    if (!m_transport.SetMessageToSend(m_queue.front())) return;
+    if (Ended() || m_in_transport || m_queue.empty()) return;
+    const bool inv{m_queue.front().msg.m_type == NetMsgType::INV};
+    if (!m_transport.SetMessageToSend(m_queue.front().msg)) return;
+    m_in_transport = m_queue.front().written;
     m_queue.pop_front();
     // The announcement point: the request window starts.
-    if (type == NetMsgType::INV) m_times.inv_handed = now;
-    m_in_transport = std::move(type);
+    if (inv) m_times.inv_handed = now;
 }
 
 void Attempt::Process(const std::string& type, DataStream& payload, std::chrono::milliseconds now)
@@ -231,13 +277,14 @@ void Attempt::Process(const std::string& type, DataStream& payload, std::chrono:
         } else if (type == NetMsgType::VERACK) {
             m_peer_verack = true;
             if (!m_peer_wtxidrelay) return End(now, Outcome::NotAnnounced, "no WTXIDRELAY before the peer's VERACK");
-            // One INV with one entry, MSG_WTX for the wtxid (E3).
-            Queue(NetMsg::Make(NetMsgType::INV, std::vector<CInv>{CInv{MSG_WTX, m_tx->GetWitnessHash().ToUint256()}}), now);
+            // One INV with one entry, MSG_WTX for the wtxid (E3); in package mode the child's (F1).
+            Queue(NetMsg::Make(NetMsgType::INV, std::vector<CInv>{CInv{MSG_WTX, m_tx->GetWitnessHash().ToUint256()}}), now,
+                  &AttemptTimes::inv_written);
         }
     } else if (m_times.inv_handed) {
-        // Before the announcement point, a GETDATA is ignored and not counted (E4). Once one was
-        // served, another is counted without being parsed: nothing more is served (E5).
-        if (type == NetMsgType::GETDATA && m_times.getdata) {
+        // Before the announcement point, a GETDATA is ignored and not counted (E4). Once the PING
+        // is queued, another is counted without being parsed: nothing more is served (E6, F2).
+        if (type == NetMsgType::GETDATA && m_ping_queued) {
             ++m_extra_requests;
         } else if (type == NetMsgType::GETDATA) {
             ProcessGetData(payload, now);
@@ -285,14 +332,55 @@ void Attempt::ProcessGetData(DataStream& payload, std::chrono::milliseconds now)
         ++m_extra_requests;
         return Fail(now, "malformed GETDATA");
     }
-    // Served once, only for a single-entry MSG_WTX naming the wtxid (E5); TX, then a PING (E6).
+    // Package mode, once the child was served: the parent, NOTFOUND or nothing (F2 (a), F4).
+    if (WaitingForParent()) {
+        if (!AnswerForParent(request, now)) ++m_extra_requests;
+        return;
+    }
+    // Served once, only for a single-entry MSG_WTX naming the wtxid (E5); TX, then a PING (E6),
+    // which in package mode follows the parent phase (F3).
     if (request.size() == 1 && request[0].IsMsgWtx() && request[0].hash == m_tx->GetWitnessHash().ToUint256()) {
         m_times.getdata = now;
-        Queue(NetMsg::Make(NetMsgType::TX, TX_WITH_WITNESS(*m_tx)), now);
-        Queue(NetMsg::Make(NetMsgType::PING, m_ping_nonce), now);
-    } else {
-        ++m_extra_requests;
+        Queue(NetMsg::Make(NetMsgType::TX, TX_WITH_WITNESS(*m_tx)), now, &AttemptTimes::tx_written);
+        if (!m_parent) {
+            QueuePing(now);
+        } else {
+            // The parent phase opens, its deadline in force at once: at or after it, the PING
+            // follows the TX, and a parent request in the same read is not served (F3).
+            CheckParentHold(now);
+        }
+        return;
     }
+    // Before the child, the parent is served only for a request that names neither of the
+    // child's ids (F2 (b)). Any other request is ignored entirely.
+    if (m_parent && std::ranges::any_of(request, [&](const CInv& inv) { return AsksForParent(inv, *m_parent); }) &&
+        std::ranges::none_of(request, [&](const CInv& inv) { return Names(inv, *m_tx); })) {
+        AnswerForParent(request, now);
+        return;
+    }
+    ++m_extra_requests;
+}
+
+bool Attempt::AnswerForParent(const std::vector<CInv>& request, std::chrono::milliseconds now)
+{
+    bool parent{false};
+    std::vector<CInv> notfound;
+    for (const CInv& inv : request) {
+        if (!parent && AsksForParent(inv, *m_parent)) {
+            parent = true;
+        } else if (inv.IsGenTxMsg() && !Names(inv, *m_tx) && !Names(inv, *m_parent)) {
+            // A transaction the job does not have (F4).
+            notfound.push_back(inv);
+        }
+    }
+    if (parent) {
+        m_times.parent_getdata = now;
+        Queue(NetMsg::Make(NetMsgType::TX, TX_WITH_WITNESS(*m_parent)), now, &AttemptTimes::parent_tx_written);
+    }
+    if (!notfound.empty()) Queue(NetMsg::Make(NetMsgType::NOTFOUND, notfound), now);
+    // After the parent, the PING: nothing more is served (F2).
+    if (parent) QueuePing(now);
+    return parent || !notfound.empty();
 }
 
 void Attempt::ProcessPong(DataStream& payload, std::chrono::milliseconds now)

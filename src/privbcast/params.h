@@ -71,6 +71,10 @@ static_assert(BACKUP_RANGE.min == HANDSHAKE_BUDGET + START_GRACE, "a failure bef
 inline constexpr std::chrono::seconds REQUEST_WINDOW{75};
 /** The wait for the PONG after the PING is written (E6). */
 inline constexpr std::chrono::seconds PONG_WAIT{10};
+/** Package mode: how long the PING is held for the parent request after the child is fully
+ *  written, at most (F3). */
+inline constexpr std::chrono::seconds PARENT_HOLD{30};
+static_assert(PARENT_HOLD + PONG_WAIT <= REQUEST_WINDOW, "a child requested promptly gets the whole hold");
 /** A connection that has received more than this after the proxy connected it is ended (D3). */
 inline constexpr uint64_t MAX_RECV_BYTES{128 * 1024};
 

@@ -124,6 +124,9 @@ enum class Behaviour {
     NoRequest,
     /** Requests the transaction and never answers the PING. */
     NoPong,
+    /** As Honest, and once the transaction has arrived, asks for its parent as a node lacking it
+     *  does: by txid, as MSG_WITNESS_TX. */
+    AsksParent,
     /** Answers the job's VERSION only LATE_BY after it, then as Honest. */
     Late,
     /** Closes the connection on the INV. */
@@ -143,8 +146,8 @@ constexpr std::chrono::seconds LATE_BY{30};
 class Recipient
 {
 public:
-    Recipient(Behaviour behaviour, std::string user_agent, FastRandomContext& rng, const Wtxid& wtxid)
-        : m_behaviour{behaviour}, m_user_agent{std::move(user_agent)}, m_transport(MakeResponder(rng)), m_wtxid{wtxid} {}
+    Recipient(Behaviour behaviour, std::string user_agent, FastRandomContext& rng, const Wtxid& wtxid, const Txid& parent_txid)
+        : m_behaviour{behaviour}, m_user_agent{std::move(user_agent)}, m_transport(MakeResponder(rng)), m_wtxid{wtxid}, m_parent_txid{parent_txid} {}
 
     /** What the job wrote. */
     void Received(std::span<const uint8_t> bytes)
@@ -182,14 +185,19 @@ public:
     void Send(CSerializedNetMsg msg) { m_queue.push_back(std::move(msg)); }
     /** The recipient closes the connection. */
     bool Closing() const { return m_closing; }
+    /** The types of the messages the job sent, in order. */
+    const std::vector<std::string>& Messages() const { return m_messages; }
 
 private:
     const Behaviour m_behaviour;
     const std::string m_user_agent;
     V2Transport m_transport;
     const Wtxid m_wtxid;
+    const Txid m_parent_txid;
     std::deque<CSerializedNetMsg> m_queue;
+    std::vector<std::string> m_messages;
     std::optional<NodeClock::time_point> m_answer_at;
+    bool m_asked_parent{false};
     bool m_closing{false};
 
     void Handshake()
@@ -201,6 +209,7 @@ private:
 
     void Process(const std::string& type, DataStream& payload)
     {
+        m_messages.push_back(type);
         if (type == NetMsgType::VERSION) {
             if (m_behaviour == Behaviour::Late) {
                 m_answer_at = NodeClock::now() + LATE_BY;
@@ -213,6 +222,9 @@ private:
             } else if (m_behaviour != Behaviour::NoRequest) {
                 m_queue.push_back(NetMsg::Make(NetMsgType::GETDATA, std::vector<CInv>{CInv{MSG_WTX, m_wtxid.ToUint256()}}));
             }
+        } else if (type == NetMsgType::TX && m_behaviour == Behaviour::AsksParent && !m_asked_parent) {
+            m_asked_parent = true;
+            m_queue.push_back(NetMsg::Make(NetMsgType::GETDATA, std::vector<CInv>{CInv{MSG_WITNESS_TX, m_parent_txid.ToUint256()}}));
         } else if (type == NetMsgType::PING && m_behaviour != Behaviour::NoPong) {
             uint64_t nonce{0};
             payload >> nonce;
@@ -258,6 +270,8 @@ public:
     /** Hold back the RESOLVE answers until Release(). */
     bool hold{false};
     Wtxid wtxid;
+    /** What an AsksParent recipient asks for. */
+    Txid parent_txid;
     /** Run once, when the job next writes to or reads from one of its sockets: time that passes
      *  inside a step. */
     std::function<void()> on_io;
@@ -364,7 +378,7 @@ private:
         Push(stream, Socks5Responder::ReplyAddress("0.0.0.0"));
         if (behaviour == Behaviour::Closes) return Close(stream);
         const auto agent{user_agents.find(request.host)};
-        stream.recipient = std::make_unique<Recipient>(behaviour, agent == user_agents.end() ? PEER_USER_AGENT : agent->second, m_rng, wtxid);
+        stream.recipient = std::make_unique<Recipient>(behaviour, agent == user_agents.end() ? PEER_USER_AGENT : agent->second, m_rng, wtxid, parent_txid);
     }
 };
 
@@ -1298,6 +1312,72 @@ BOOST_AUTO_TEST_CASE(report_interface)
     UniValue parsed;
     BOOST_CHECK(parsed.read(text));
     CheckNoTxBytes(text, *tx);
+}
+
+BOOST_AUTO_TEST_CASE(package_report)
+{
+    // F1-F3: recipients get the parent only by asking after the child; for the others the PING
+    // waits out the hold. The report adds the parent's ids, its times and parents_served.
+    const CTransactionRef parent{MakeParent()};
+    JobInputs inputs{Inputs()};
+    inputs.parent = parent;
+    tor.parent_txid = parent->GetHash();
+    Job job = MakeJob(std::move(inputs), 19);
+    const Assignment expected{Expected(job.GetPlan())};
+    const std::set<std::string> asking{Host(expected.opportunities[0][0]->endpoint), Host(expected.opportunities[2][0]->endpoint)};
+    for (const std::string& host : asking) tor.behaviours[host] = Behaviour::AsksParent;
+    const Report report{RunToEnd(job)};
+    const UniValue json{ToUniValue(report)};
+    const std::string text{json.write()};
+
+    BOOST_CHECK(Keys(json) == (std::set<std::string>{"txid", "wtxid", "parent_txid", "parent_wtxid", "chain", "discovery", "slots", "summary"}));
+    BOOST_CHECK_EQUAL(json["txid"].get_str(), tx->GetHash().GetHex());
+    BOOST_CHECK_EQUAL(json["parent_txid"].get_str(), parent->GetHash().GetHex());
+    BOOST_CHECK_EQUAL(json["parent_wtxid"].get_str(), parent->GetWitnessHash().GetHex());
+    std::set<std::string> attempt_keys{ATTEMPT_KEYS};
+    attempt_keys.insert({"parent_getdata_ms", "parent_tx_written_ms", "parent_hold_expired_ms"});
+    const int64_t hold{count_milliseconds(PARENT_HOLD)};
+    int attempts{0};
+    for (const UniValue& slot : json["slots"].getValues()) {
+        for (const UniValue& attempt : slot["attempts"].getValues()) {
+            ++attempts;
+            BOOST_CHECK(Keys(attempt) == attempt_keys);
+            BOOST_CHECK_EQUAL(attempt["outcome"].get_str(), "pong_received");
+            const std::string endpoint{attempt["endpoint"].get_str()};
+            const int64_t tx_written{attempt["tx_written_ms"].getInt<int64_t>()};
+            const int64_t ping_written{attempt["ping_written_ms"].getInt<int64_t>()};
+            if (asking.contains(endpoint.substr(0, endpoint.rfind(':')))) {
+                BOOST_CHECK(attempt["parent_getdata_ms"].getInt<int64_t>() >= attempt["getdata_ms"].getInt<int64_t>());
+                BOOST_CHECK(attempt["parent_tx_written_ms"].getInt<int64_t>() >= tx_written);
+                BOOST_CHECK(attempt["parent_hold_expired_ms"].isNull());
+                BOOST_CHECK(ping_written < tx_written + hold);
+            } else {
+                BOOST_CHECK(attempt["parent_getdata_ms"].isNull());
+                BOOST_CHECK(attempt["parent_tx_written_ms"].isNull());
+                // The hold ends in the first step at or after PARENT_HOLD; the job steps each second.
+                const int64_t expired{attempt["parent_hold_expired_ms"].getInt<int64_t>()};
+                BOOST_CHECK(expired >= tx_written + hold && expired <= tx_written + hold + 1000);
+                BOOST_CHECK_EQUAL(ping_written, expired);
+            }
+        }
+    }
+    BOOST_CHECK_EQUAL(attempts, int(SLOTS));
+    std::set<std::string> summary_keys{SUMMARY_KEYS};
+    summary_keys.insert("parents_served");
+    BOOST_CHECK(Keys(json["summary"]) == summary_keys);
+    BOOST_CHECK_EQUAL(json["summary"]["parents_served"].getInt<int>(), 2);
+    BOOST_CHECK_EQUAL(json["summary"]["pongs"].getInt<int>(), int(SLOTS));
+
+    // One announcement each, and the parent only to those who asked for it.
+    BOOST_CHECK_EQUAL(tor.Attempts().size(), SLOTS);
+    for (const FakeStream* stream : tor.Attempts()) {
+        BOOST_REQUIRE(stream->recipient);
+        const std::vector<std::string>& sent{stream->recipient->Messages()};
+        BOOST_CHECK_EQUAL(std::ranges::count(sent, std::string{NetMsgType::INV}), 1);
+        BOOST_CHECK_EQUAL(std::ranges::count(sent, std::string{NetMsgType::TX}), asking.contains(stream->socks.GetRequest()->host) ? 2 : 1);
+    }
+    // H3: neither the transaction's nor the parent's serialization appears in the report.
+    for (const CTransactionRef& sent : {tx, parent}) CheckNoTxBytes(text, *sent);
 }
 
 BOOST_AUTO_TEST_CASE(discovery_only)

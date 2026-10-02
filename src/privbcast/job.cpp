@@ -267,7 +267,7 @@ void Job::Dial(size_t index, size_t opportunity, std::chrono::milliseconds now, 
     Slot& slot{m_slots[index]};
     const Candidate& candidate{*m_assignment->opportunities[index][opportunity]};
     // Fresh BIP324 keys, nonces and proxy credentials for every attempt (A4, B2).
-    auto attempt{std::make_unique<Attempt>(m_inputs.tx, m_plan.slots[index].scheduled[opportunity], m_plan.timing, *m_rng, m_inputs.keys, m_next_id++)};
+    auto attempt{std::make_unique<Attempt>(m_inputs.tx, m_plan.slots[index].scheduled[opportunity], m_plan.timing, *m_rng, m_inputs.keys, m_next_id++, m_inputs.parent)};
     ProxyStream stream{m_inputs.proxy,
                        Socks5Client{Socks5Client::Command::Connect, candidate.endpoint.ToStringAddr(), candidate.endpoint.GetPort(), *m_rng},
                        m_plan.timing, steady_now};
@@ -450,6 +450,10 @@ void Job::Finish(std::chrono::milliseconds now)
         report.txid = m_inputs.tx->GetHash();
         report.wtxid = m_inputs.tx->GetWitnessHash();
     }
+    if (m_inputs.parent) {
+        report.parent_txid = m_inputs.parent->GetHash();
+        report.parent_wtxid = m_inputs.parent->GetWitnessHash();
+    }
     report.chain = m_inputs.seeds.chain;
 
     DiscoveryReport& discovery{report.discovery};
@@ -471,6 +475,7 @@ void Job::Finish(std::chrono::milliseconds now)
             if (attempt.times.inv_handed) ++summary.announcements_handed;
             if (attempt.times.inv_written) ++summary.announcements_written;
             if (attempt.times.tx_written) ++summary.tx_written;
+            if (attempt.times.parent_tx_written) ++summary.parents_served;
             if (attempt.times.pong) ++summary.pongs;
         }
     }
