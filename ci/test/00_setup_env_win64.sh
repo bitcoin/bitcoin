@@ -17,6 +17,5 @@ printf -v BITCOIN_CONFIG "%q " \
   --preset=dev-mode \
   -DENABLE_IPC=OFF \
   -DWITH_USDT=OFF \
-  -DREDUCE_EXPORTS=ON \
-  -DCMAKE_CXX_FLAGS=-Wno-error=maybe-uninitialized
+  -DREDUCE_EXPORTS=ON
 export BITCOIN_CONFIG
