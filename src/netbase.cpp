@@ -393,9 +393,9 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
 {
     try {
         IntrRecvError recvr;
-        LogDebug(BCLog::NET, "SOCKS5 connecting %s\n", strDest);
+        LogDebug(BCLog::NET, "SOCKS5 connecting %s", strDest);
         if (strDest.size() > 255) {
-            LogError("Hostname too long\n");
+            LogError("Hostname too long");
             return false;
         }
         // Construct the version identifier/method selection message
@@ -412,11 +412,11 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
         sock.SendComplete(vSocks5Init, g_socks5_recv_timeout, g_socks5_interrupt);
         uint8_t pchRet1[2];
         if (InterruptibleRecv(pchRet1, 2, g_socks5_recv_timeout, sock) != IntrRecvError::OK) {
-            LogInfo("Socks5() connect to %s:%d failed: InterruptibleRecv() timeout or other failure\n", strDest, port);
+            LogInfo("Socks5() connect to %s:%d failed: InterruptibleRecv() timeout or other failure", strDest, port);
             return false;
         }
         if (pchRet1[0] != SOCKSVersion::SOCKS5) {
-            LogError("Proxy failed to initialize\n");
+            LogError("Proxy failed to initialize");
             return false;
         }
         if (pchRet1[1] == SOCKS5Method::USER_PASS && auth) {
@@ -424,28 +424,28 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
             std::vector<uint8_t> vAuth;
             vAuth.push_back(0x01); // Current (and only) version of user/pass subnegotiation
             if (auth->username.size() > 255 || auth->password.size() > 255) {
-                LogError("Proxy username or password too long\n");
+                LogError("Proxy username or password too long");
                 return false;
             }
             vAuth.push_back(auth->username.size());
             vAuth.insert(vAuth.end(), auth->username.begin(), auth->username.end());
             vAuth.push_back(auth->password.size());
             vAuth.insert(vAuth.end(), auth->password.begin(), auth->password.end());
-            LogDebug(BCLog::PROXY, "SOCKS5 sending username/password authentication\n");
+            LogDebug(BCLog::PROXY, "SOCKS5 sending username/password authentication");
             sock.SendComplete(vAuth, g_socks5_recv_timeout, g_socks5_interrupt);
             uint8_t pchRetA[2];
             if (InterruptibleRecv(pchRetA, 2, g_socks5_recv_timeout, sock) != IntrRecvError::OK) {
-                LogError("Error reading proxy authentication response\n");
+                LogError("Error reading proxy authentication response");
                 return false;
             }
             if (pchRetA[0] != 0x01 || pchRetA[1] != 0x00) {
-                LogError("Proxy authentication unsuccessful\n");
+                LogError("Proxy authentication unsuccessful");
                 return false;
             }
         } else if (pchRet1[1] == SOCKS5Method::NOAUTH) {
             // Perform no authentication
         } else {
-            LogError("Proxy requested wrong authentication method %02x\n", pchRet1[1]);
+            LogError("Proxy requested wrong authentication method %02x", pchRet1[1]);
             return false;
         }
         std::vector<uint8_t> vSocks5;
@@ -466,12 +466,12 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
                  * error message. */
                 return false;
             } else {
-                LogError("Error while reading proxy response\n");
+                LogError("Error while reading proxy response");
                 return false;
             }
         }
         if (pchRet2[0] != SOCKSVersion::SOCKS5) {
-            LogError("Proxy failed to accept request\n");
+            LogError("Proxy failed to accept request");
             return false;
         }
         if (pchRet2[1] != SOCKS5Reply::SUCCEEDED) {
@@ -481,7 +481,7 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
             return false;
         }
         if (pchRet2[2] != 0x00) { // Reserved field must be 0
-            LogError("Error: malformed proxy response\n");
+            LogError("Error: malformed proxy response");
             return false;
         }
         uint8_t pchRet3[256];
@@ -491,7 +491,7 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
         case SOCKS5Atyp::DOMAINNAME: {
             recvr = InterruptibleRecv(pchRet3, 1, g_socks5_recv_timeout, sock);
             if (recvr != IntrRecvError::OK) {
-                LogError("Error reading from proxy\n");
+                LogError("Error reading from proxy");
                 return false;
             }
             int nRecv = pchRet3[0];
@@ -499,22 +499,22 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
             break;
         }
         default: {
-            LogError("Error: malformed proxy response\n");
+            LogError("Error: malformed proxy response");
             return false;
         }
         }
         if (recvr != IntrRecvError::OK) {
-            LogError("Error reading from proxy\n");
+            LogError("Error reading from proxy");
             return false;
         }
         if (InterruptibleRecv(pchRet3, 2, g_socks5_recv_timeout, sock) != IntrRecvError::OK) {
-            LogError("Error reading from proxy\n");
+            LogError("Error reading from proxy");
             return false;
         }
-        LogDebug(BCLog::NET, "SOCKS5 connected %s\n", strDest);
+        LogDebug(BCLog::NET, "SOCKS5 connected %s", strDest);
         return true;
     } catch (const std::runtime_error& e) {
-        LogError("Error during SOCKS5 proxy handshake: %s\n", e.what());
+        LogError("Error during SOCKS5 proxy handshake: %s", e.what());
         return false;
     }
 }
@@ -539,7 +539,7 @@ std::unique_ptr<Sock> CreateSockOS(int domain, int type, int protocol)
     // Ensure that waiting for I/O on this socket won't result in undefined
     // behavior.
     if (!sock->IsSelectable()) {
-        LogInfo("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)\n");
+        LogInfo("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)");
         return nullptr;
     }
 
@@ -548,14 +548,14 @@ std::unique_ptr<Sock> CreateSockOS(int domain, int type, int protocol)
     // Set the no-sigpipe option on the socket for BSD systems, other UNIXes
     // should use the MSG_NOSIGNAL flag for every send.
     if (sock->SetSockOpt(SOL_SOCKET, SO_NOSIGPIPE, &set, sizeof(int)) == SOCKET_ERROR) {
-        LogInfo("Error setting SO_NOSIGPIPE on socket: %s, continuing anyway\n",
+        LogInfo("Error setting SO_NOSIGPIPE on socket: %s, continuing anyway",
                   NetworkErrorString(WSAGetLastError()));
     }
 #endif
 
     // Set the non-blocking option on the socket.
     if (!sock->SetNonBlocking()) {
-        LogInfo("Error setting socket to non-blocking: %s\n", NetworkErrorString(WSAGetLastError()));
+        LogInfo("Error setting socket to non-blocking: %s", NetworkErrorString(WSAGetLastError()));
         return nullptr;
     }
 
@@ -567,7 +567,7 @@ std::unique_ptr<Sock> CreateSockOS(int domain, int type, int protocol)
         // Set the no-delay option (disable Nagle's algorithm) on the TCP socket.
         const int on{1};
         if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == SOCKET_ERROR) {
-            LogDebug(BCLog::NET, "Unable to set TCP_NODELAY on a newly created socket, continuing anyway\n");
+            LogDebug(BCLog::NET, "Unable to set TCP_NODELAY on a newly created socket, continuing anyway");
         }
     }
 
@@ -581,9 +581,9 @@ static void LogConnectFailure(bool manual_connection, util::ConstevalFormatStrin
 {
     std::string error_message = tfm::format(fmt, args...);
     if (manual_connection) {
-        LogInfo("%s\n", error_message);
+        LogInfo("%s", error_message);
     } else {
-        LogDebug(BCLog::NET, "%s\n", error_message);
+        LogDebug(BCLog::NET, "%s", error_message);
     }
 }
 
@@ -606,12 +606,12 @@ static bool ConnectToSocket(const Sock& sock,
             const Sock::Event requested = Sock::RecvEvent | Sock::SendEvent;
             Sock::Event occurred;
             if (!sock.Wait(timeout, requested, &occurred)) {
-                LogInfo("wait for connect to %s failed: %s\n",
+                LogInfo("wait for connect to %s failed: %s",
                           dest_str,
                           NetworkErrorString(WSAGetLastError()));
                 return false;
             } else if (occurred == 0) {
-                LogDebug(BCLog::NET, "connection attempt to %s timed out\n", dest_str);
+                LogDebug(BCLog::NET, "connection attempt to %s timed out", dest_str);
                 return false;
             }
 
@@ -623,7 +623,7 @@ static bool ConnectToSocket(const Sock& sock,
             socklen_t sockerr_len = sizeof(sockerr);
             if (sock.GetSockOpt(SOL_SOCKET, SO_ERROR, &sockerr, &sockerr_len) ==
                 SOCKET_ERROR) {
-                LogInfo("getsockopt() for %s failed: %s\n", dest_str, NetworkErrorString(WSAGetLastError()));
+                LogInfo("getsockopt() for %s failed: %s", dest_str, NetworkErrorString(WSAGetLastError()));
                 return false;
             }
             if (sockerr != 0) {
@@ -658,7 +658,7 @@ std::unique_ptr<Sock> ConnectDirectly(const CService& dest,
 {
     auto sock = CreateSock(dest.GetSAFamily(), SOCK_STREAM, IPPROTO_TCP);
     if (!sock) {
-        LogError("Cannot create a socket for connecting to %s\n", dest.ToStringAddrPort());
+        LogError("Cannot create a socket for connecting to %s", dest.ToStringAddrPort());
         return {};
     }
 
@@ -666,7 +666,7 @@ std::unique_ptr<Sock> ConnectDirectly(const CService& dest,
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
     if (!dest.GetSockAddr((struct sockaddr*)&sockaddr, &len)) {
-        LogInfo("Cannot get sockaddr for %s: unsupported network\n", dest.ToStringAddrPort());
+        LogInfo("Cannot get sockaddr for %s: unsupported network", dest.ToStringAddrPort());
         return {};
     }
 
@@ -686,7 +686,7 @@ std::unique_ptr<Sock> Proxy::Connect() const
 #ifdef HAVE_SOCKADDR_UN
     auto sock = CreateSock(AF_UNIX, SOCK_STREAM, 0);
     if (!sock) {
-        LogError("Cannot create a socket for connecting to %s\n", m_unix_socket_path);
+        LogError("Cannot create a socket for connecting to %s", m_unix_socket_path);
         return {};
     }
 
@@ -978,7 +978,7 @@ CService GetBindAddress(const Sock& sock)
     if (sock.GetSockName(sa, &len) == 0) {
         addr_bind.SetSockAddr(sa, len);
     } else {
-        LogWarning("getsockname failed\n");
+        LogWarning("getsockname failed");
     }
     return addr_bind;
 }

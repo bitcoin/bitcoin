@@ -188,7 +188,7 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
 {
     Q_UNUSED(context);
     if (type == QtDebugMsg) {
-        LogDebug(BCLog::QT, "GUI: %s\n", msg.toStdString());
+        LogDebug(BCLog::QT, "GUI: %s", msg.toStdString());
     } else {
         LogInfo("GUI: %s", msg.toStdString());
     }

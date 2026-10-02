@@ -456,7 +456,7 @@ static void HandleSIGHUP(int)
 static BOOL WINAPI consoleCtrlHandler(DWORD dwCtrlType)
 {
     if (!(*Assert(g_shutdown))()) {
-        LogError("Failed to send shutdown signal on Ctrl-C\n");
+        LogError("Failed to send shutdown signal on Ctrl-C");
         return false;
     }
     Sleep(INFINITE);
@@ -798,70 +798,70 @@ void InitParameterInteraction(ArgsManager& args)
     // even when -connect or -proxy is specified
     if (!args.GetArgs("-bind").empty()) {
         if (args.SoftSetBoolArg("-listen", true))
-            LogInfo("parameter interaction: -bind set -> setting -listen=1\n");
+            LogInfo("parameter interaction: -bind set -> setting -listen=1");
     }
     if (!args.GetArgs("-whitebind").empty()) {
         if (args.SoftSetBoolArg("-listen", true))
-            LogInfo("parameter interaction: -whitebind set -> setting -listen=1\n");
+            LogInfo("parameter interaction: -whitebind set -> setting -listen=1");
     }
 
     if (!args.GetArgs("-connect").empty() || args.IsArgNegated("-connect") || args.GetIntArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) <= 0) {
         // when only connecting to trusted nodes, do not seed via DNS, or listen by default
         // do the same when connections are disabled
         if (args.SoftSetBoolArg("-dnsseed", false))
-            LogInfo("parameter interaction: -connect or -maxconnections=0 set -> setting -dnsseed=0\n");
+            LogInfo("parameter interaction: -connect or -maxconnections=0 set -> setting -dnsseed=0");
         if (args.SoftSetBoolArg("-listen", false))
-            LogInfo("parameter interaction: -connect or -maxconnections=0 set -> setting -listen=0\n");
+            LogInfo("parameter interaction: -connect or -maxconnections=0 set -> setting -listen=0");
     }
 
     std::string proxy_arg = args.GetArg("-proxy", "");
     if (proxy_arg != "" && proxy_arg != "0") {
         // to protect privacy, do not listen by default if a default proxy server is specified
         if (args.SoftSetBoolArg("-listen", false))
-            LogInfo("parameter interaction: -proxy set -> setting -listen=0\n");
+            LogInfo("parameter interaction: -proxy set -> setting -listen=0");
         // to protect privacy, do not map ports when a proxy is set. The user may still specify -listen=1
         // to listen locally, so don't rely on this happening through -listen below.
         if (args.SoftSetBoolArg("-natpmp", false)) {
-            LogInfo("parameter interaction: -proxy set -> setting -natpmp=0\n");
+            LogInfo("parameter interaction: -proxy set -> setting -natpmp=0");
         }
         // to protect privacy, do not discover addresses by default
         if (args.SoftSetBoolArg("-discover", false))
-            LogInfo("parameter interaction: -proxy set -> setting -discover=0\n");
+            LogInfo("parameter interaction: -proxy set -> setting -discover=0");
     }
 
     if (!args.GetBoolArg("-listen", DEFAULT_LISTEN)) {
         // do not map ports or try to retrieve public IP when not listening (pointless)
         if (args.SoftSetBoolArg("-natpmp", false)) {
-            LogInfo("parameter interaction: -listen=0 -> setting -natpmp=0\n");
+            LogInfo("parameter interaction: -listen=0 -> setting -natpmp=0");
         }
         if (args.SoftSetBoolArg("-discover", false))
-            LogInfo("parameter interaction: -listen=0 -> setting -discover=0\n");
+            LogInfo("parameter interaction: -listen=0 -> setting -discover=0");
         if (args.SoftSetBoolArg("-listenonion", false))
-            LogInfo("parameter interaction: -listen=0 -> setting -listenonion=0\n");
+            LogInfo("parameter interaction: -listen=0 -> setting -listenonion=0");
         if (args.SoftSetBoolArg("-i2pacceptincoming", false)) {
-            LogInfo("parameter interaction: -listen=0 -> setting -i2pacceptincoming=0\n");
+            LogInfo("parameter interaction: -listen=0 -> setting -i2pacceptincoming=0");
         }
     }
 
     if (!args.GetArgs("-externalip").empty()) {
         // if an explicit public IP is specified, do not try to find others
         if (args.SoftSetBoolArg("-discover", false))
-            LogInfo("parameter interaction: -externalip set -> setting -discover=0\n");
+            LogInfo("parameter interaction: -externalip set -> setting -discover=0");
     }
 
     if (args.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)) {
         // disable whitelistrelay in blocksonly mode
         if (args.SoftSetBoolArg("-whitelistrelay", false))
-            LogInfo("parameter interaction: -blocksonly=1 -> setting -whitelistrelay=0\n");
+            LogInfo("parameter interaction: -blocksonly=1 -> setting -whitelistrelay=0");
         // Reduce default mempool size in blocksonly mode to avoid unexpected resource usage
         if (args.SoftSetArg("-maxmempool", ToString(DEFAULT_BLOCKSONLY_MAX_MEMPOOL_SIZE_MB)))
-            LogInfo("parameter interaction: -blocksonly=1 -> setting -maxmempool=%d\n", DEFAULT_BLOCKSONLY_MAX_MEMPOOL_SIZE_MB);
+            LogInfo("parameter interaction: -blocksonly=1 -> setting -maxmempool=%d", DEFAULT_BLOCKSONLY_MAX_MEMPOOL_SIZE_MB);
     }
 
     // Forcing relay from whitelisted hosts implies we will accept relays from them in the first place.
     if (args.GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY)) {
         if (args.SoftSetBoolArg("-whitelistrelay", true))
-            LogInfo("parameter interaction: -whitelistforcerelay=1 -> setting -whitelistrelay=1\n");
+            LogInfo("parameter interaction: -whitelistforcerelay=1 -> setting -whitelistrelay=1");
     }
     const auto onlynets = args.GetArgs("-onlynet");
     if (!onlynets.empty()) {
@@ -870,7 +870,7 @@ void InitParameterInteraction(ArgsManager& args)
             return n == NET_IPV4 || n == NET_IPV6;
         });
         if (!clearnet_reachable && args.SoftSetBoolArg("-dnsseed", false)) {
-            LogInfo("parameter interaction: -onlynet excludes IPv4 and IPv6 -> setting -dnsseed=0\n");
+            LogInfo("parameter interaction: -onlynet excludes IPv4 and IPv6 -> setting -dnsseed=0");
         }
     }
 }
@@ -904,7 +904,7 @@ std::set<BlockFilterType> g_enabled_filter_types;
     // Since logging may itself allocate memory, set the handler directly
     // to terminate first.
     std::set_new_handler(std::terminate);
-    LogError("Out of memory. Terminating.\n");
+    LogError("Out of memory. Terminating.");
 
     // The log was successful, terminate now.
     std::terminate();
@@ -983,7 +983,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 
     // Testnet3 deprecation warning
     if (chain == ChainType::TESTNET) {
-        LogInfo("Warning: Support for testnet3 is deprecated and will be removed in an upcoming release. Consider switching to testnet4.\n");
+        LogInfo("Warning: Support for testnet3 is deprecated and will be removed in an upcoming release. Consider switching to testnet4.");
     }
 
     // Warn if unrecognized section name are present in the config file.
@@ -1463,7 +1463,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
         try {
             return f();
         } catch (const std::exception& e) {
-            LogError("%s\n", e.what());
+            LogError("%s", e.what());
             return std::make_tuple(node::ChainstateLoadStatus::FAILURE, _("Error loading databases"));
         }
     };
@@ -1471,7 +1471,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
     if (status == node::ChainstateLoadStatus::SUCCESS) {
         uiInterface.InitMessage(_("Verifying blocks…"));
         if (chainman.m_blockman.m_have_pruned && options.check_blocks > MIN_BLOCKS_TO_KEEP) {
-            LogWarning("pruned datadir may not have more than %d blocks; only checking available blocks\n",
+            LogWarning("pruned datadir may not have more than %d blocks; only checking available blocks",
                        MIN_BLOCKS_TO_KEEP);
         }
         std::tie(status, error) = catch_exceptions([&] { return VerifyLoadedChainstate(chainman, options); });
@@ -1534,9 +1534,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     scheduler.scheduleEvery([&args, &node]{
         constexpr uint64_t min_disk_space{50_MiB};
         if (!CheckDiskSpace(args.GetBlocksDirPath(), min_disk_space)) {
-            LogError("Shutting down due to lack of disk space!\n");
+            LogError("Shutting down due to lack of disk space!");
             if (!(Assert(node.shutdown_request))()) {
-                LogError("Failed to send shutdown signal after disk space check\n");
+                LogError("Failed to send shutdown signal after disk space check");
             }
         }
     }, std::chrono::minutes{5});
@@ -1683,7 +1683,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                         return false;
                     }
                     node.netgroupman = std::make_unique<NetGroupManager>(NetGroupManager::WithEmbeddedAsmap(asmap));
-                    LogInfo("Opened asmap data (%zu bytes) from embedded byte array\n", asmap.size());
+                    LogInfo("Opened asmap data (%zu bytes) from embedded byte array", asmap.size());
                 #else
                     // If there is no embedded data, fail and report it since
                     // the user tried to use it
@@ -1920,7 +1920,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
         do_reindex = true;
         if (!Assert(node.shutdown_signal)->reset()) {
-            LogError("Internal error: failed to reset shutdown signal.\n");
+            LogError("Internal error: failed to reset shutdown signal.");
         }
         std::tie(status, error) = InitAndLoadChainstate(
             node,
@@ -2107,7 +2107,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (args.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
             LogInfo("Stopping after block import");
             if (!(Assert(node.shutdown_request))()) {
-                LogError("Failed to send shutdown signal after finishing block import\n");
+                LogError("Failed to send shutdown signal after finishing block import");
             }
             return;
         }

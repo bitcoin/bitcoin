@@ -46,7 +46,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
 
     AutoFile file{opts.mockable_fopen_function(load_path, "rb")};
     if (file.IsNull()) {
-        LogInfo("Failed to open mempool file. Continuing anyway.\n");
+        LogInfo("Failed to open mempool file. Continuing anyway.");
         return false;
     }
 
@@ -74,12 +74,12 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
         uint64_t total_txns_to_load;
         file >> total_txns_to_load;
         uint64_t txns_tried = 0;
-        LogInfo("Loading %u mempool transactions from file...\n", total_txns_to_load);
+        LogInfo("Loading %u mempool transactions from file...", total_txns_to_load);
         int next_tenth_to_report = 0;
         while (txns_tried < total_txns_to_load) {
             const int percentage_done(100.0 * txns_tried / total_txns_to_load);
             if (next_tenth_to_report < percentage_done / 10) {
-                LogInfo("Progress loading mempool transactions from file: %d%% (tried %u, %u remaining)\n",
+                LogInfo("Progress loading mempool transactions from file: %d%% (tried %u, %u remaining)",
                         percentage_done, txns_tried, total_txns_to_load - txns_tried);
                 next_tenth_to_report = percentage_done / 10;
             }
@@ -142,11 +142,11 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             }
         }
     } catch (const std::exception& e) {
-        LogInfo("Failed to deserialize mempool data on file: %s. Continuing anyway.\n", e.what());
+        LogInfo("Failed to deserialize mempool data on file: %s. Continuing anyway.", e.what());
         return false;
     }
 
-    LogInfo("Imported mempool transactions from file: %i succeeded, %i failed, %i expired, %i already there, %i waiting for initial broadcast\n", count, failed, expired, already_there, unbroadcast);
+    LogInfo("Imported mempool transactions from file: %i succeeded, %i failed, %i expired, %i already there, %i waiting for initial broadcast", count, failed, expired, already_there, unbroadcast);
     return true;
 }
 
@@ -192,7 +192,7 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
 
         uint64_t mempool_transactions_to_write(vinfo.size());
         file << mempool_transactions_to_write;
-        LogInfo("Writing %u mempool transactions to file...\n", mempool_transactions_to_write);
+        LogInfo("Writing %u mempool transactions to file...", mempool_transactions_to_write);
         for (const auto& i : vinfo) {
             file << TX_WITH_WITNESS(*(i.tx));
             file << int64_t{count_seconds(i.m_time)};
@@ -202,7 +202,7 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
 
         file << mapDeltas;
 
-        LogInfo("Writing %d unbroadcast transactions to file.\n", unbroadcast_txids.size());
+        LogInfo("Writing %d unbroadcast transactions to file.", unbroadcast_txids.size());
         file << unbroadcast_txids;
 
         if (!skip_file_commit && !file.Commit()) {
@@ -218,12 +218,12 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
         }
         auto last = SteadyClock::now();
 
-        LogInfo("Dumped mempool: %.3fs to copy, %.3fs to dump, %d bytes dumped to file\n",
+        LogInfo("Dumped mempool: %.3fs to copy, %.3fs to dump, %d bytes dumped to file",
                   Ticks<SecondsDouble>(mid - start),
                   Ticks<SecondsDouble>(last - mid),
                   fs::file_size(dump_path));
     } catch (const std::exception& e) {
-        LogInfo("Failed to dump mempool: %s. Continuing anyway.\n", e.what());
+        LogInfo("Failed to dump mempool: %s. Continuing anyway.", e.what());
         (void)file.fclose();
         return false;
     }

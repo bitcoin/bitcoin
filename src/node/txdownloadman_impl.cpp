@@ -260,7 +260,7 @@ bool TxDownloadManagerImpl::MaybeAddOrphanResolutionCandidate(const std::vector<
     for (const auto& parent_txid : unique_parents) {
         m_txrequest.ReceivedInv(nodeid, parent_txid, info.m_preferred, now + delay);
     }
-    LogDebug(BCLog::TXPACKAGES, "added peer=%d as a candidate for resolving orphan %s\n", nodeid, wtxid.ToString());
+    LogDebug(BCLog::TXPACKAGES, "added peer=%d as a candidate for resolving orphan %s", nodeid, wtxid.ToString());
     return true;
 }
 
@@ -270,12 +270,12 @@ std::vector<GenTxid> TxDownloadManagerImpl::GetRequestsToSend(NodeId nodeid, std
     std::vector<std::pair<NodeId, GenTxid>> expired;
     auto requestable = m_txrequest.GetRequestable(nodeid, current_time, &expired);
     for (const auto& [expired_nodeid, gtxid] : expired) {
-        LogDebug(BCLog::NET, "timeout of inflight %s %s from peer=%d\n", gtxid.IsWtxid() ? "wtx" : "tx",
+        LogDebug(BCLog::NET, "timeout of inflight %s %s from peer=%d", gtxid.IsWtxid() ? "wtx" : "tx",
                  gtxid.ToUint256().ToString(), expired_nodeid);
     }
     for (const GenTxid& gtxid : requestable) {
         if (!AlreadyHaveTx(gtxid, /*include_reconsiderable=*/false)) {
-            LogDebug(BCLog::NET, "Requesting %s %s peer=%d\n", gtxid.IsWtxid() ? "wtx" : "tx",
+            LogDebug(BCLog::NET, "Requesting %s %s peer=%d", gtxid.IsWtxid() ? "wtx" : "tx",
                      gtxid.ToUint256().ToString(), nodeid);
             requests.emplace_back(gtxid);
             m_txrequest.RequestedTx(nodeid, gtxid.ToUint256(), current_time + GETDATA_TX_INTERVAL);
@@ -423,7 +423,7 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
                 m_txrequest.ForgetTxHash(tx.GetWitnessHash().ToUint256());
             } else {
                 unique_parents.clear();
-                LogDebug(BCLog::MEMPOOL, "not keeping orphan with rejected parents %s (wtxid=%s)\n",
+                LogDebug(BCLog::MEMPOOL, "not keeping orphan with rejected parents %s (wtxid=%s)",
                          tx.GetHash().ToString(),
                          tx.GetWitnessHash().ToString());
                 // We will continue to reject this tx since it has rejected
@@ -463,7 +463,7 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
             if (first_time_failure) {
                 // When a transaction fails for TX_RECONSIDERABLE, look for a matching child in the
                 // orphanage, as it is possible that they succeed as a package.
-                LogDebug(BCLog::TXPACKAGES, "tx %s (wtxid=%s) failed but reconsiderable, looking for child in orphanage\n",
+                LogDebug(BCLog::TXPACKAGES, "tx %s (wtxid=%s) failed but reconsiderable, looking for child in orphanage",
                          ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString());
                 package_to_validate = Find1P1CPackage(ptx, nodeid);
             }
@@ -490,7 +490,7 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
     // If the tx failed in ProcessOrphanTx, it should be removed from the orphanage unless the
     // tx was still missing inputs. If the tx was not in the orphanage, EraseTx does nothing and returns 0.
     if (state.GetResult() != TxValidationResult::TX_MISSING_INPUTS && m_orphanage->EraseTx(ptx->GetWitnessHash())) {
-        LogDebug(BCLog::TXPACKAGES, "   removed orphan tx %s (wtxid=%s)\n", ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString());
+        LogDebug(BCLog::TXPACKAGES, "   removed orphan tx %s (wtxid=%s)", ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString());
     }
 
     return RejectedTxTodo{
@@ -548,7 +548,7 @@ std::pair<bool, std::optional<PackageToValidate>> TxDownloadManagerImpl::Receive
         // When a transaction is already in m_lazy_recent_rejects_reconsiderable, we shouldn't submit
         // it by itself again. However, look for a matching child in the orphanage, as it is
         // possible that they succeed as a package.
-        LogDebug(BCLog::TXPACKAGES, "found tx %s (wtxid=%s) in reconsiderable rejects, looking for child in orphanage\n",
+        LogDebug(BCLog::TXPACKAGES, "found tx %s (wtxid=%s) in reconsiderable rejects, looking for child in orphanage",
                  txid.ToString(), wtxid.ToString());
         return {false, Find1P1CPackage(ptx, nodeid)};
     }

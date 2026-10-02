@@ -649,7 +649,7 @@ bool CRPCTable::removeCommand(const std::string& name, const CRPCCommand* pcmd)
 
 void StartRPC()
 {
-    LogDebug(BCLog::RPC, "Starting RPC\n");
+    LogDebug(BCLog::RPC, "Starting RPC");
     g_rpc_running = true;
 }
 
@@ -658,7 +658,7 @@ void InterruptRPC()
     static std::once_flag g_rpc_interrupt_flag;
     // This function could be called twice if the GUI has been started with -server=1.
     std::call_once(g_rpc_interrupt_flag, []() {
-        LogDebug(BCLog::RPC, "Interrupting RPC\n");
+        LogDebug(BCLog::RPC, "Interrupting RPC");
         // Interrupt e.g. running longpolls
         g_rpc_running = false;
     });
@@ -670,9 +670,9 @@ void StopRPC()
     // This function could be called twice if the GUI has been started with -server=1.
     assert(!g_rpc_running);
     std::call_once(g_rpc_stop_flag, [&]() {
-        LogDebug(BCLog::RPC, "Stopping RPC\n");
+        LogDebug(BCLog::RPC, "Stopping RPC");
         DeleteAuthCookie();
-        LogDebug(BCLog::RPC, "RPC stopped.\n");
+        LogDebug(BCLog::RPC, "RPC stopped.");
     });
 }
 

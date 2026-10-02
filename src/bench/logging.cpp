@@ -30,30 +30,30 @@ static void Logging(benchmark::Bench& bench, const std::vector<const char*>& ext
 
 static void LogWithDebug(benchmark::Bench& bench)
 {
-    Logging(bench, {"-logthreadnames=0", "-debug=net"}, [] { LogDebug(BCLog::NET, "%s\n", "test"); });
+    Logging(bench, {"-logthreadnames=0", "-debug=net"}, [] { LogDebug(BCLog::NET, "%s", "test"); });
 }
 
 static void LogWithoutDebug(benchmark::Bench& bench)
 {
-    Logging(bench, {"-logthreadnames=0", "-debug=0"}, [] { LogDebug(BCLog::NET, "%s\n", "test"); });
+    Logging(bench, {"-logthreadnames=0", "-debug=0"}, [] { LogDebug(BCLog::NET, "%s", "test"); });
 }
 
 static void LogWithThreadNames(benchmark::Bench& bench)
 {
-    Logging(bench, {"-logthreadnames=1"}, [] { LogInfo("%s\n", "test"); });
+    Logging(bench, {"-logthreadnames=1"}, [] { LogInfo("%s", "test"); });
 }
 
 static void LogWithoutThreadNames(benchmark::Bench& bench)
 {
-    Logging(bench, {"-logthreadnames=0"}, [] { LogInfo("%s\n", "test"); });
+    Logging(bench, {"-logthreadnames=0"}, [] { LogInfo("%s", "test"); });
 }
 
 static void LogWithoutWriteToFile(benchmark::Bench& bench)
 {
     // Disable writing the log to a file, as used for unit tests and fuzzing in `MakeNoLogFileContext`.
     Logging(bench, {"-nodebuglogfile", "-debug=1"}, [] {
-        LogInfo("%s\n", "test");
-        LogDebug(BCLog::NET, "%s\n", "test");
+        LogInfo("%s", "test");
+        LogDebug(BCLog::NET, "%s", "test");
     });
 }
 

@@ -146,13 +146,13 @@ bool BlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, s
                 pindexNew->nTx            = diskindex.nTx;
 
                 if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, consensusParams)) {
-                    LogError("%s: CheckProofOfWork failed: %s\n", __func__, pindexNew->ToString());
+                    LogError("%s: CheckProofOfWork failed: %s", __func__, pindexNew->ToString());
                     return false;
                 }
 
                 pcursor->Next();
             } else {
-                LogError("%s: failed to read value\n", __func__);
+                LogError("%s: failed to read value", __func__);
                 return false;
             }
         } else {
@@ -404,7 +404,7 @@ void BlockManager::FindFilesToPrune(
         }
     }
 
-    LogDebug(BCLog::PRUNE, "[%s] target=%dMiB actual=%dMiB diff=%dMiB min_height=%d max_prune_height=%d removed %d blk/rev pairs\n",
+    LogDebug(BCLog::PRUNE, "[%s] target=%dMiB actual=%dMiB diff=%dMiB min_height=%d max_prune_height=%d removed %d blk/rev pairs",
              chain.GetRole(), target / 1_MiB, nCurrentUsage / 1_MiB,
              (int64_t(target) - int64_t(nCurrentUsage)) / int64_t(1_MiB),
              min_block_to_prune, last_block_can_prune, count);
@@ -477,7 +477,7 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
     for (CBlockIndex* pindex : vSortedByHeight) {
         if (m_interrupt) return false;
         if (previous_index && pindex->nHeight > previous_index->nHeight + 1) {
-            LogError("%s: block index is non-contiguous, index of height %d missing\n", __func__, previous_index->nHeight + 1);
+            LogError("%s: block index is non-contiguous, index of height %d missing", __func__, previous_index->nHeight + 1);
             return false;
         }
         previous_index = pindex;
@@ -826,7 +826,7 @@ void BlockManager::UnlinkPrunedFiles(const std::set<int>& setFilesToPrune) const
         const bool removed_blockfile{fs::remove(m_block_file_seq.FileName(pos), ec)};
         const bool removed_undofile{fs::remove(m_undo_file_seq.FileName(pos), ec)};
         if (removed_blockfile || removed_undofile) {
-            LogDebug(BCLog::BLOCKSTORAGE, "Prune: %s deleted blk/rev (%05u)\n", __func__, *it);
+            LogDebug(BCLog::BLOCKSTORAGE, "Prune: %s deleted blk/rev (%05u)", __func__, *it);
         }
     }
 }
@@ -857,7 +857,7 @@ FlatFilePos BlockManager::FindNextBlockPos(unsigned int nAddSize, unsigned int n
         assert(chain_type == BlockfileType::ASSUMED);
         const auto new_cursor = BlockfileCursor{this->MaxBlockfileNum() + 1};
         m_blockfile_cursors[chain_type] = new_cursor;
-        LogDebug(BCLog::BLOCKSTORAGE, "[%s] initializing blockfile cursor to %s\n", chain_type, new_cursor);
+        LogDebug(BCLog::BLOCKSTORAGE, "[%s] initializing blockfile cursor to %s", chain_type, new_cursor);
     }
     const int last_blockfile = m_blockfile_cursors[chain_type]->file_num;
 
@@ -900,7 +900,7 @@ FlatFilePos BlockManager::FindNextBlockPos(unsigned int nAddSize, unsigned int n
     pos.nPos = m_blockfile_info[nFile].nSize;
 
     if (nFile != last_blockfile) {
-        LogDebug(BCLog::BLOCKSTORAGE, "Leaving block file %i: %s (onto %i) (height %i)\n",
+        LogDebug(BCLog::BLOCKSTORAGE, "Leaving block file %i: %s (onto %i) (height %i)",
                  last_blockfile, m_blockfile_info[last_blockfile].ToString(), nFile, nHeight);
 
         // Do not propagate the return code. The flush concerns a previous block
@@ -1033,7 +1033,7 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
             // fact it is. Note though, that a failed flush might leave the data
             // file untrimmed.
             if (!FlushUndoFile(pos.nFile, true)) {
-                LogWarning("Failed to flush undo file %05i\n", pos.nFile);
+                LogWarning("Failed to flush undo file %05i", pos.nFile);
             }
         } else if (pos.nFile == cursor.file_num && block.nHeight > cursor.undo_height) {
             cursor.undo_height = block.nHeight;
@@ -1226,7 +1226,7 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
                       HexStr(obfuscation), fs::PathToString(xor_key_path)),
         };
     }
-    LogInfo("Using obfuscation key for blocksdir *.dat files (%s): '%s'\n", fs::PathToString(opts.blocks_dir), HexStr(obfuscation));
+    LogInfo("Using obfuscation key for blocksdir *.dat files (%s): '%s'", fs::PathToString(opts.blocks_dir), HexStr(obfuscation));
     return Obfuscation{obfuscation};
 }
 

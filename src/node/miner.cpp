@@ -220,7 +220,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
         coinbase_tx.required_outputs.push_back(final_coinbase->vout[witness_index]);
     }
 
-    LogDebug(BCLog::MINING, "CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
+    LogDebug(BCLog::MINING, "CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d", GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
 
     // Fill in header
     pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
@@ -235,7 +235,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     }
     const auto time_2{SteadyClock::now()};
 
-    LogDebug(BCLog::BENCH, "CreateNewBlock() chunks: %.2fms, validity: %.2fms (total %.2fms)\n",
+    LogDebug(BCLog::BENCH, "CreateNewBlock() chunks: %.2fms, validity: %.2fms (total %.2fms)",
              Ticks<MillisecondsDouble>(time_1 - time_start),
              Ticks<MillisecondsDouble>(time_2 - time_1),
              Ticks<MillisecondsDouble>(time_2 - time_start));
@@ -279,7 +279,7 @@ void BlockAssembler::AddToBlock(const CTxMemPoolEntry& entry)
     nFees += entry.GetFee();
 
     if (*m_options.print_modified_fee) {
-        LogInfo("fee rate %s txid %s\n",
+        LogInfo("fee rate %s txid %s",
                   CFeeRate(entry.GetModifiedFee(), entry.GetTxSize()).ToString(),
                   entry.GetTx().GetHash().ToString());
     }

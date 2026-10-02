@@ -45,6 +45,6 @@ void SeedRandomStateForTest(SeedRand seedtype)
         Assert(!g_used_g_prng);       // The global PRNG must not have been used before SeedRandomStateForTest(SeedRand::ZEROS)
     }
     const uint256& seed{seedtype == SeedRand::FIXED_SEED ? g_ctx_seed.value() : uint256::ZERO};
-    LogInfo("Setting random seed for current tests to %s=%s\n", RANDOM_CTX_SEED, seed.GetHex());
+    LogInfo("Setting random seed for current tests to %s=%s", RANDOM_CTX_SEED, seed.GetHex());
     MakeRandDeterministicDANGEROUS(seed);
 }
