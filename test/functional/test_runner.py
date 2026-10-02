@@ -328,6 +328,7 @@ BASE_SCRIPTS = [
     'feature_minchainwork.py',
     'rpc_estimatefee.py',
     'p2p_private_broadcast.py',
+    'p2p_private_broadcast.py --package',
     'p2p_private_broadcast_cap.py',
     'rpc_getblockstats.py',
     'feature_port.py',

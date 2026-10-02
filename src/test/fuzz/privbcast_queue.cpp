@@ -401,6 +401,7 @@ FUZZ_TARGET(privbcast_queue)
     // when it started on the steady clock. With each, its entry as Info() last showed it.
     struct Job {
         size_t tx{0};
+        std::optional<size_t> parent{};
         size_t run{0};
         bool cancel{false};
         bool discovery_done{false};
@@ -439,10 +440,16 @@ FUZZ_TARGET(privbcast_queue)
     }};
 
     // A submission (N5, N6). The pool is too small to fill the queue: the bound is a unit case.
-    const auto submit{[&](size_t tx) {
+    const auto submit{[&](size_t tx, std::optional<size_t> parent) {
+        // A transaction does not spend itself.
+        if (parent && pool[*parent]->GetHash() == pool[tx]->GetHash()) parent.reset();
+        const CTransactionRef parent_tx{parent ? pool[*parent] : nullptr};
         // N5: a queued job, or a running one not being aborted, with the same wtxid covers the
-        // submission.
-        const auto covers{[&](const Job& job) { return pool[job.tx]->GetWitnessHash() == pool[tx]->GetWitnessHash(); }};
+        // submission; with a parent, only one with the same parent does.
+        const auto covers{[&](const Job& job) {
+            return pool[job.tx]->GetWitnessHash() == pool[tx]->GetWitnessHash() &&
+                   (!parent || (job.parent && pool[*job.parent]->GetWitnessHash() == pool[*parent]->GetWitnessHash()));
+        }};
         SubmitResult expected{SubmitResult::Queued};
         if (interrupted) {
             expected = SubmitResult::ShuttingDown;
@@ -451,22 +458,23 @@ FUZZ_TARGET(privbcast_queue)
         } else if (std::ranges::any_of(queued, covers) || std::ranges::any_of(running, [&](const Job& job) { return !job.cancel && covers(job); })) {
             expected = SubmitResult::Covered;
         }
-        assert(queue.Submit(pool[tx]) == expected);
+        assert(queue.Submit(pool[tx], parent_tx) == expected);
         if (expected != SubmitResult::Queued) return;
         // Added now, and seen from its submission if the mempool holds its txid (N7, Interface/Node).
         PrivbcastQueue::JobInfo info;
         info.txid = pool[tx]->GetHash();
         info.wtxid = pool[tx]->GetWitnessHash();
+        if (parent) info.parent_txid = pool[*parent]->GetHash();
         info.state = "queued";
         info.time_added = ToUnix(now);
         if (mempool.contains(info.txid)) info.seen_in_mempool = info.time_added;
-        queued.push_back({.tx = tx, .info = std::move(info)});
+        queued.push_back({.tx = tx, .parent = parent, .info = std::move(info)});
         // N5: the same submission again queues nothing.
-        assert(queue.Submit(pool[tx]) == SubmitResult::Covered);
+        assert(queue.Submit(pool[tx], parent_tx) == SubmitResult::Covered);
     }};
     // abortprivatebroadcast: it lists the jobs that Info() shows queued or running whose
-    // transaction has the id as its txid or wtxid. The queued ones end aborted; the running ones
-    // are cancelled.
+    // transaction, the child for a package, has the id as its txid or wtxid. The queued ones end
+    // aborted; the running ones are cancelled.
     const auto abort_job{[&](const uint256& id) {
         std::vector<PrivbcastQueue::Removed> expected;
         for (const PrivbcastQueue::JobInfo& info : queue.Info()) {
@@ -497,8 +505,11 @@ FUZZ_TARGET(privbcast_queue)
         CallOneOf(
             provider,
             [&] {
-                // sendrawtransaction.
-                submit(provider.ConsumeIntegralInRange<size_t>(0, pool.size() - 1));
+                // sendrawtransaction, or submitpackage with a parent.
+                const size_t tx{provider.ConsumeIntegralInRange<size_t>(0, pool.size() - 1)};
+                std::optional<size_t> parent;
+                if (provider.ConsumeBool()) parent = provider.ConsumeIntegralInRange<size_t>(0, pool.size() - 1);
+                submit(tx, parent);
             },
             [&] {
                 // abortprivatebroadcast, by txid or wtxid.
@@ -513,7 +524,7 @@ FUZZ_TARGET(privbcast_queue)
                 // Many submissions, each aborted at once, to fill the finished jobs (D3).
                 for (int n{provider.ConsumeIntegralInRange<int>(0, 60)}; n > 0; --n) {
                     const size_t tx{static_cast<size_t>(n) % pool.size()};
-                    submit(tx);
+                    submit(tx, std::nullopt);
                     abort_job(pool[tx]->GetWitnessHash().ToUint256());
                 }
             },
@@ -637,7 +648,7 @@ FUZZ_TARGET(privbcast_queue)
         // was added, and when it started, ended and was seen in the mempool once set, but for the
         // first arrival in the mempool the queue was told of (N7, Interface/Node).
         const auto kept{[&](const PrivbcastQueue::JobInfo& was, const PrivbcastQueue::JobInfo& is) {
-            assert(is.txid == was.txid && is.wtxid == was.wtxid && is.time_added == was.time_added);
+            assert(is.txid == was.txid && is.wtxid == was.wtxid && is.parent_txid == was.parent_txid && is.time_added == was.time_added);
             if (was.time_started) assert(is.time_started == was.time_started);
             if (was.time_ended) assert(is.time_ended == was.time_ended);
             if (!was.seen_in_mempool && arrived == was.txid) {
@@ -690,7 +701,7 @@ FUZZ_TARGET(privbcast_queue)
         arrived.reset();
         // N9: a transaction is held only while a job that carries it is queued or running.
         for (size_t tx{0}; tx < pool.size(); ++tx) {
-            const auto carries{[&](const Job& job) { return job.tx == tx; }};
+            const auto carries{[&](const Job& job) { return job.tx == tx || job.parent == tx; }};
             const bool held{std::ranges::any_of(queued, carries) || std::ranges::any_of(running, carries)};
             assert(held == (pool[tx].use_count() > 1));
         }

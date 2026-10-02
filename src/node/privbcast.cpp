@@ -118,10 +118,11 @@ void PrivbcastQueue::Stop()
     m_job_pool.Stop();
 }
 
-PrivbcastQueue::SubmitResult PrivbcastQueue::Submit(CTransactionRef tx)
+PrivbcastQueue::SubmitResult PrivbcastQueue::Submit(CTransactionRef tx, CTransactionRef parent)
 {
     const Txid txid{tx->GetHash()};
     const Wtxid wtxid{tx->GetWitnessHash()};
+    const std::optional<Wtxid> parent_wtxid{parent ? std::optional{parent->GetWitnessHash()} : std::nullopt};
     // A transaction the mempool holds at submission is seen from then on (N7). The mempool, which
     // can be busy for a while, is asked without the queue's lock, so that the scheduler and the jobs
     // never wait for it: before the record is queued and, unless it held the transaction then, once
@@ -132,15 +133,16 @@ PrivbcastQueue::SubmitResult PrivbcastQueue::Submit(CTransactionRef tx)
         LOCK(m_mutex);
         if (m_interrupted) return SubmitResult::ShuttingDown;
         if (!m_network_active()) return SubmitResult::NetworkOff;
-        if (HasJobFor(wtxid)) return SubmitResult::Covered;
+        if (HasJobFor(wtxid, parent_wtxid)) return SubmitResult::Covered;
         if (m_queued.size() >= privbcast::MAX_QUEUED_JOBS) return SubmitResult::QueueFull;
-        auto record{std::make_unique<JobRecord>(std::move(tx), NodeClock::now())};
+        auto record{std::make_unique<JobRecord>(std::move(tx), std::move(parent), NodeClock::now())};
         if (held) record->seen_in_mempool = record->time_added;
         sequence = record->sequence = ++m_submissions;
         m_queued.push_back(std::move(record));
         m_wake = true;
-        LogDebug(BCLog::PRIVBROADCAST, "Queued the private broadcast of txid=%s wtxid=%s, %d queued",
-                 txid.ToString(), wtxid.ToString(), m_queued.size());
+        LogDebug(BCLog::PRIVBROADCAST, "Queued the private broadcast of txid=%s wtxid=%s%s, %d queued",
+                 txid.ToString(), wtxid.ToString(), parent_wtxid ? strprintf(" with its parent wtxid=%s", parent_wtxid->ToString()) : "",
+                 m_queued.size());
     }
     m_cv.notify_all();
     if (!held && m_in_mempool(txid)) {
@@ -165,6 +167,7 @@ std::vector<PrivbcastQueue::JobInfo> PrivbcastQueue::Info() const
             JobInfo& info{jobs.emplace_back()};
             info.txid = record->txid;
             info.wtxid = record->wtxid;
+            info.parent_txid = record->parent_txid;
             info.state = StateName(record->state);
             info.time_added = TicksSinceEpoch<std::chrono::seconds>(record->time_added);
             info.time_started = UnixSeconds(record->time_started);
@@ -207,6 +210,11 @@ std::vector<PrivbcastQueue::Removed> PrivbcastQueue::Abort(const uint256& id)
         }
     }
     return removed;
+}
+
+bool PrivbcastQueue::HasProxy() const
+{
+    return m_onion_proxy().has_value();
 }
 
 size_t PrivbcastQueue::FileDescriptorBudget(size_t num_dns_seeds, size_t max_concurrent)
@@ -327,6 +335,7 @@ void PrivbcastQueue::StartJob(const Proxy& proxy, NodeClock::time_point now, Moc
     // late its thread gets going (N3, D2).
     privbcast::JobInputs inputs{
         .tx = record.tx,
+        .parent = record.parent,
         .proxy = proxy,
         .seeds = m_seeds,
         .timing = privbcast::Timing{1},
@@ -361,6 +370,7 @@ void PrivbcastQueue::ThreadJob(JobRecord& record, privbcast::JobInputs inputs)
         error = "unknown exception";
     }
     inputs.tx.reset();
+    inputs.parent.reset();
     {
         LOCK(m_mutex);
         const auto it{std::ranges::find_if(m_running, [&](const auto& running) { return running.get() == &record; })};
@@ -409,16 +419,17 @@ void PrivbcastQueue::Finish(std::unique_ptr<JobRecord> record, State state, Node
     record->state = state;
     record->time_ended = now;
     record->tx.reset();
+    record->parent.reset();
     m_finished.push_back(std::move(record));
     while (m_finished.size() > privbcast::MAX_FINISHED_JOBS) m_finished.pop_front();
 }
 
-bool PrivbcastQueue::HasJobFor(const Wtxid& wtxid) const
+bool PrivbcastQueue::HasJobFor(const Wtxid& wtxid, const std::optional<Wtxid>& parent) const
 {
     AssertLockHeld(m_mutex);
-    // A job that is still to deliver covers the submission; one being aborted does not (N5).
-    return std::ranges::any_of(m_queued, [&](const auto& record) { return record->wtxid == wtxid; }) ||
-           std::ranges::any_of(m_running, [&](const auto& record) { return record->wtxid == wtxid && !record->cancel; });
+    const auto same{[&](const JobRecord& record) { return record.wtxid == wtxid && (!parent || (record.parent && record.parent->GetWitnessHash() == *parent)); }};
+    return std::ranges::any_of(m_queued, [&](const auto& record) { return same(*record); }) ||
+           std::ranges::any_of(m_running, [&](const auto& record) { return same(*record) && !record->cancel; });
 }
 
 std::chrono::milliseconds PrivbcastQueue::DrawSpacing()

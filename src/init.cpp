@@ -720,8 +720,8 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
                    ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-privatebroadcast",
                    strprintf(
-                       "Broadcast transactions submitted via sendrawtransaction RPC as private broadcast jobs, which "
-                       "send each one to a few peers through Tor without revealing the node's addresses. The "
+                       "Broadcast transactions submitted via the sendrawtransaction and submitpackage RPCs as private "
+                       "broadcast jobs, which send each one to a few peers through Tor without revealing the node's addresses. The "
                        "transaction is not put in the mempool or announced to the node's peers first. Requires a Tor "
                        "proxy for onion (-proxy, -onion, or -listenonion with -torcontrol); I2P is not used. "
                        "Transactions submitted through the wallet are not affected by this option "

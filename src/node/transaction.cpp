@@ -32,9 +32,9 @@ static TransactionError HandleATMPError(const TxValidationState& state, std::str
     }
 }
 
-static TransactionError SubmitPrivateBroadcast(PrivbcastQueue& queue, const CTransactionRef& tx)
+TransactionError SubmitPrivateBroadcast(PrivbcastQueue& queue, const CTransactionRef& tx, const CTransactionRef& parent)
 {
-    switch (queue.Submit(tx)) {
+    switch (queue.Submit(tx, parent)) {
     case PrivbcastQueue::SubmitResult::Queued:
     case PrivbcastQueue::SubmitResult::Covered:
         return TransactionError::OK;

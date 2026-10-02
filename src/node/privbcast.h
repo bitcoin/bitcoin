@@ -65,7 +65,7 @@ public:
     enum class SubmitResult {
         /** A new job was queued. */
         Queued,
-        /** A queued job, or a running one that is not being aborted, has the same wtxid (N5). */
+        /** A queued job, or a running one that is not being aborted, covers the submission (N5). */
         Covered,
         /** MAX_QUEUED_JOBS jobs are queued already (D3). */
         QueueFull,
@@ -79,6 +79,8 @@ public:
     struct JobInfo {
         Txid txid;
         Wtxid wtxid;
+        /** Package mode: the parent's txid. */
+        std::optional<Txid> parent_txid;
         /** queued, running, done or aborted. */
         std::string state;
         int64_t time_added{0};
@@ -98,7 +100,7 @@ public:
     struct Removed {
         Txid txid;
         Wtxid wtxid;
-        /** The submitted transaction. */
+        /** The submitted transaction, the child in package mode. */
         CTransactionRef tx;
         /** The job's state after the call: aborted for a queued job, running for a running one,
          *  which stops shortly. */
@@ -191,14 +193,19 @@ public:
     /** Interrupt(), then wait for the scheduler and every job to end. */
     void Stop() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
-    /** Queue a job for this transaction, as submitted (N2, N5, N6, D3). */
-    SubmitResult Submit(CTransactionRef tx) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    /** Queue a job for this transaction, as submitted, which in package mode carries its parent
+     *  (N2, N5, N6, D3). A submission with a parent is covered only by a job with the same parent;
+     *  one without is covered by a job with any parent or none (Extension: N5). */
+    SubmitResult Submit(CTransactionRef tx, CTransactionRef parent) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
     /** Every job: the retained finished ones, oldest first, then the running ones in the order
      *  they started, then the queued ones in submission order. */
     std::vector<JobInfo> Info() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
-    /** Abort every queued or running job whose txid or wtxid is id. A queued job is dropped at
-     *  once; a running one is cancelled and ends shortly, with a report. Empty if none matched. */
+    /** Abort every queued or running job whose txid or wtxid is id, in package mode the child's: a
+     *  parent's ids match nothing, as packages can share a parent. A queued job is dropped at once;
+     *  a running one is cancelled and ends shortly, with a report. Empty if none matched. */
     std::vector<Removed> Abort(const uint256& id) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    /** Whether the node has an onion proxy for jobs now: the one a job would get if it started. */
+    bool HasProxy() const;
 
     /** The file descriptors jobs can use at once (N10): every recipient connection of
      *  max_concurrent jobs (D1) and the RESOLVE streams of one discovery (N4). */
@@ -212,13 +219,19 @@ private:
     /** One job, from submission until it is trimmed from the finished ones. Guarded by m_mutex,
      *  except that the job reads cancel without it. */
     struct JobRecord {
-        JobRecord(CTransactionRef tx_in, NodeClock::time_point added)
-            : txid{tx_in->GetHash()}, wtxid{tx_in->GetWitnessHash()}, tx{std::move(tx_in)}, time_added{added} {}
+        JobRecord(CTransactionRef tx_in, CTransactionRef parent_in, NodeClock::time_point added)
+            : txid{tx_in->GetHash()}, wtxid{tx_in->GetWitnessHash()},
+              parent_txid{parent_in ? std::optional{parent_in->GetHash()} : std::nullopt},
+              tx{std::move(tx_in)}, parent{std::move(parent_in)}, time_added{added} {}
 
         const Txid txid;
         const Wtxid wtxid;
-        /** The submitted transaction, held while the job is queued or running (N9). */
+        /** Package mode: the parent's txid. */
+        const std::optional<Txid> parent_txid;
+        /** The submitted transaction, and in package mode its parent, held while the job is queued
+         *  or running (N9). */
         CTransactionRef tx;
+        CTransactionRef parent;
         State state{State::Queued};
         NodeClock::time_point time_added;
         std::optional<NodeClock::time_point> time_started;
@@ -278,11 +291,12 @@ private:
     void StartJob(const Proxy& proxy, NodeClock::time_point now, MockableSteadyClock::time_point steady_now) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
     /** Cancel every running job not cancelled yet, and drop every queued one, with this error. */
     void CancelAll(const std::string& error) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
-    /** Keep the record of a job that has ended, dropping its transaction (N9), and trim the
+    /** Keep the record of a job that has ended, dropping its transactions (N9), and trim the
      *  finished ones, oldest first (D3). */
     void Finish(std::unique_ptr<JobRecord> record, State state, NodeClock::time_point now) EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
-    /** A queued job, or a running one that is not being aborted, has this wtxid (N5). */
-    bool HasJobFor(const Wtxid& wtxid) const EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
+    /** A queued job, or a running one that is not being aborted, has this wtxid, and the parent
+     *  wtxid if one is given (N5). */
+    bool HasJobFor(const Wtxid& wtxid, const std::optional<Wtxid>& parent) const EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
     /** A window's length, drawn in [START_SPACING_MIN, START_SPACING_MAX) (N3). */
     std::chrono::milliseconds DrawSpacing() EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
     static std::string StateName(State state);

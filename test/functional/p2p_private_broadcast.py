@@ -27,6 +27,7 @@ import time
 
 from test_framework.address import address_to_scriptpubkey
 from test_framework.messages import (
+    CTxOut,
     msg_tx,
     tx_from_hex,
 )
@@ -73,6 +74,9 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         self.num_nodes = 2
         self.setup_clean_chain = True
         self.uses_wallet = None  # the wallet section runs when the wallet is compiled
+
+    def add_options(self, parser):
+        parser.add_argument("--package", action="store_true", help="test one-parent-one-child package mode (the extension) only")
 
     def setup_nodes(self):
         self.listeners = {}
@@ -237,11 +241,234 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
             self.end_jobs(batch)
             ids = [i for i in ids if i not in batch]
 
+    def test_package(self):
+        self.log.info("submitpackage with a low-fee parent and its child queues one job that serves the parent on request")
+        # The recipient asks for a missing parent after its orphan-resolution delays: 2 s for a non-preferred
+        # announcer plus 2 s because it has wtxid-relay peers (the private broadcast connection is one), well
+        # inside the 30 s parent hold. Take the ordinary node0-node1 link away for this part. And let node1
+        # be reached through one endpoint only: with several connections from the same job, node1 may ask
+        # a connection that has not served the child for the parent, which the protocol does not answer
+        # (one parent, one child, on one connection).
+        self.disconnect_nodes(0, 1)
+        with self.lock:
+            self.exit_path_active = [self.exit_path[0]]
+        parent = self.wallet.create_self_transfer(fee_rate=Decimal("0"))
+        child = self.wallet.create_self_transfer(utxo_to_spend=parent["new_utxo"])
+        res = self.nodes[0].submitpackage([parent["hex"], child["hex"]])
+        assert_equal(res["package_msg"], "success")
+        assert_equal(sorted(res["tx-results"][child["wtxid"]]["fees"]["effective-includes"]), sorted([parent["wtxid"], child["wtxid"]]))
+        job_id = child["wtxid"]
+        assert_equal(self.jobs()[job_id]["parent_txid"], parent["txid"])
+        # The same package submitted while its job is queued or running is covered by that job.
+        before = len(self.entries())
+        assert_equal(self.nodes[0].submitpackage([parent["hex"], child["hex"]])["package_msg"], "success")
+        assert_equal(len(self.entries()), before)
+        # Abort matches a package job by its child only, never by the parent, which several jobs can share.
+        for parent_id in (parent["txid"], parent["wtxid"]):
+            assert_raises_rpc_error(-5, None, self.nodes[0].abortprivatebroadcast, parent_id)
+        assert self.jobs()[job_id]["state"] in ("queued", "running")
+        assert parent["txid"] not in self.nodes[0].getrawmempool()
+        self.start_delivery([job_id])
+        self.tick_until(lambda: child["txid"] in self.nodes[1].getrawmempool() and parent["txid"] in self.nodes[1].getrawmempool())
+        job = self.end_jobs([job_id])[0]
+        assert_equal(job["report"]["summary"]["parents_served"], 1)  # node1's one endpoint, dialled once (R4)
+        assert child["txid"] not in self.nodes[0].getrawmempool()
+
+        self.log.info("A parent already in the mempool counts as accepted, and the job serves it as given")
+        parent = self.wallet.create_self_transfer()
+        child = self.wallet.create_self_transfer(utxo_to_spend=parent["new_utxo"])
+        self.nodes[0].add_p2p_connection(P2PInterface()).send_and_ping(msg_tx(parent["tx"]))
+        assert parent["txid"] in self.nodes[0].getrawmempool()
+        assert parent["txid"] not in self.nodes[1].getrawmempool()
+        res = self.nodes[0].submitpackage([parent["hex"], child["hex"]])
+        assert_equal(res["package_msg"], "success")
+        assert "error" not in res["tx-results"][parent["wtxid"]]
+        assert "fees" in res["tx-results"][child["wtxid"]]
+        assert_equal(self.jobs()[child["wtxid"]]["parent_txid"], parent["txid"])
+        self.start_delivery([child["wtxid"]])
+        self.tick_until(lambda: child["txid"] in self.nodes[1].getrawmempool() and parent["txid"] in self.nodes[1].getrawmempool())
+        job = self.end_jobs([child["wtxid"]])[0]
+        assert_equal(job["report"]["summary"]["parents_served"], 1)
+        self.nodes[0].disconnect_p2ps()
+        # node1 does not announce transactions it already had when a peer connects, so node0 is not
+        # expected to learn these two; receipt-back is covered above.
+        self.connect_nodes(0, 1)
+
+        self.log.info("submitpackage sends a copy whose txid is in the mempool with another witness as given")
+        tx = self.wallet.create_self_transfer()
+        self.nodes[0].add_p2p_connection(P2PInterface()).send_and_ping(msg_tx(tx["tx"]))
+        other = self.witness_variant(tx)
+        res = self.nodes[0].submitpackage([other.serialize().hex()])
+        assert_equal(res["tx-results"][other.wtxid_hex]["other-wtxid"], tx["wtxid"])
+        assert_equal(self.jobs()[other.wtxid_hex]["txid"], tx["txid"])
+        self.nodes[0].abortprivatebroadcast(other.wtxid_hex)
+        self.nodes[0].disconnect_p2ps()
+
+        self.log.info("With a parent that fails alone, maxfeerate still holds for the child")
+        parent = self.wallet.create_self_transfer(fee_rate=Decimal("0"))
+        child = self.wallet.create_self_transfer(utxo_to_spend=parent["new_utxo"], fee_rate=Decimal("0.01"))
+        before = len(self.entries())
+        res = self.nodes[0].submitpackage([parent["hex"], child["hex"]], maxfeerate=Decimal("0.005"))
+        assert res["tx-results"][child["wtxid"]]["error"]
+        assert_equal(len(self.entries()), before)
+
+        self.log.info("With a parent that fails alone, a child with an input the node cannot find is refused")
+        parent = self.wallet.create_self_transfer(fee_rate=Decimal("0"))
+        unknown = {"txid": "ee" * 32, "vout": 0, "value": Decimal("0.0001")}
+        child = self.wallet.create_self_transfer_multi(utxos_to_spend=[parent["new_utxo"], unknown])
+        res = self.nodes[0].submitpackage([parent["hex"], child["hex"]])
+        assert res["tx-results"][child["wtxid"]]["error"]
+        assert_equal(len(self.entries()), before)
+        with self.lock:
+            self.exit_path_active = self.exit_path[:6]
+
+        self.log.info("A one-transaction package may replace a mempool transaction, as with sendrawtransaction")
+        coin = self.wallet.get_utxo()
+        original = self.wallet.create_self_transfer(utxo_to_spend=coin)
+        replacement = self.wallet.create_self_transfer(utxo_to_spend=coin, fee_rate=Decimal("0.01"))
+        self.nodes[0].add_p2p_connection(P2PInterface()).send_and_ping(msg_tx(original["tx"]))
+        assert original["txid"] in self.nodes[0].getrawmempool()
+        res = self.nodes[0].submitpackage([replacement["hex"]])
+        assert_equal(res["package_msg"], "success")
+        assert "fees" in res["tx-results"][replacement["wtxid"]]
+        assert self.jobs()[replacement["wtxid"]]["state"] in ("queued", "running")
+        self.nodes[0].abortprivatebroadcast(replacement["wtxid"])
+        self.nodes[0].disconnect_p2ps()
+        self.open_gate()
+
+        self.log.info("Other submitpackage combinations: what counts as accepted, what fails, and how many jobs result")
+        peer = self.nodes[0].add_p2p_connection(P2PInterface())
+
+        def to_mempool(*txs):
+            for t in txs:
+                peer.send_and_ping(msg_tx(t["tx"]))
+                assert t["txid"] in self.nodes[0].getrawmempool()
+
+        def live(t):
+            return [j for j in self.entries() if j["wtxid"] == t["wtxid"] and j["state"] in ("queued", "running")]
+
+        def clean(t):
+            if live(t):
+                self.nodes[0].abortprivatebroadcast(t["wtxid"])
+
+        def check(txs, msg, errors, jobs):
+            """msg None: any failure. Each of errors: "" for none, None for any, else validation's reason."""
+            res = self.nodes[0].submitpackage([t["hex"] for t in txs])
+            if msg is None:
+                assert res["package_msg"] != "success", res
+            else:
+                assert_equal(res["package_msg"].split(",")[0], msg)
+            got = [res["tx-results"][t["wtxid"]].get("error", "").split(",")[0] for t in txs]
+            assert_equal(len(got), len(errors))
+            for g, want in zip(got, errors):
+                if want is None:
+                    assert g, got
+                else:
+                    assert_equal(g, want)
+            assert_equal(len(live(txs[-1])), jobs)
+            clean(txs[-1])
+
+        def pair(parent_fee_rate=Decimal("0.003"), child_fee_rate=Decimal("0.003")):
+            parent = self.wallet.create_self_transfer(fee_rate=parent_fee_rate)
+            return parent, self.wallet.create_self_transfer(utxo_to_spend=parent["new_utxo"], fee_rate=child_fee_rate)
+
+        check([self.wallet.create_self_transfer()], "success", [""], 1)
+        in_mempool = self.wallet.create_self_transfer()
+        to_mempool(in_mempool)
+        check([in_mempool], "success", [""], 1)  # rebroadcast, sent as given
+        check([self.wallet.create_self_transfer(fee_rate=Decimal("0"))], None, ["min relay fee not met"], 0)
+        check(pair(), "success", ["", ""], 1)
+        check(pair(Decimal("0"), Decimal("0")), None, ["min relay fee not met", None], 0)
+
+        # A child that pays for its parent is checked in full, as validation checks the two at their
+        # package feerate: one it rejects for its witness, a dust output or its TRUC size queues nothing.
+        def altered(t):
+            return {**t, "hex": t["tx"].serialize().hex(), "wtxid": t["tx"].wtxid_hex}
+
+        parent, child = pair(Decimal("0"), Decimal("0.01"))
+        child["tx"].wit.vtxinwit[0].scriptWitness.stack = [b"\x00"]
+        check([parent, altered(child)], None, ["min relay fee not met", None], 0)
+        parent, child = pair(Decimal("0"), Decimal("0.01"))
+        child["tx"].vout[0].nValue -= 1
+        child["tx"].vout.append(CTxOut(1, child["tx"].vout[0].scriptPubKey))
+        check([parent, altered(child)], None, ["min relay fee not met", "dust"], 0)
+        parent = self.wallet.create_self_transfer(fee_rate=Decimal("0"), version=3)
+        child = self.wallet.create_self_transfer(utxo_to_spend=parent["new_utxo"], version=3, target_vsize=1500)
+        check([parent, child], "TRUC-violation", ["min relay fee not met", None], 0)
+        # And replacements go as a peer takes them: a TRUC parent that pays nothing replaces a mempool
+        # transaction, its child paying for both; a parent that pays for itself replaces one, its
+        # child paying less per vbyte; and a child replaces one.
+        coin = self.wallet.get_utxo(confirmed_only=True)
+        to_mempool(self.wallet.create_self_transfer(utxo_to_spend=coin, version=3))
+        parent = self.wallet.create_self_transfer(utxo_to_spend=coin, fee_rate=Decimal("0"), version=3)
+        check([parent, self.wallet.create_self_transfer(utxo_to_spend=parent["new_utxo"], fee_rate=Decimal("0.01"), version=3)], "success", ["", ""], 1)
+        coin = self.wallet.get_utxo(confirmed_only=True)
+        to_mempool(self.wallet.create_self_transfer(utxo_to_spend=coin))
+        parent = self.wallet.create_self_transfer(utxo_to_spend=coin, fee_rate=Decimal("0.05"))
+        check([parent, self.wallet.create_self_transfer(utxo_to_spend=parent["new_utxo"])], "success", ["", ""], 1)
+        coin = self.wallet.get_utxo(confirmed_only=True)
+        to_mempool(self.wallet.create_self_transfer(utxo_to_spend=coin))
+        parent = self.wallet.create_self_transfer()
+        check([parent, self.wallet.create_self_transfer_multi(utxos_to_spend=[parent["new_utxo"], coin], fee_per_output=50000)], "success", ["", ""], 1)
+        parent, child = pair(child_fee_rate=Decimal("0"))
+        to_mempool(parent)
+        check([parent, child], None, ["", "min relay fee not met"], 0)
+        parent, child = pair()
+        to_mempool(parent, child)
+        check([parent, child], "success", ["", ""], 1)
+        assert_raises_rpc_error(-25, None, self.nodes[0].submitpackage,
+                                [self.wallet.create_self_transfer()["hex"], self.wallet.create_self_transfer()["hex"]])
+
+        # A job that serves the parent also covers the child submitted on its own; a job for the child
+        # alone does not cover the package, which asks for the parent to be served.
+        parent, child = pair()
+        to_mempool(parent)
+        self.nodes[0].submitpackage([parent["hex"], child["hex"]])
+        self.nodes[0].sendrawtransaction(child["hex"])
+        assert_equal(len(live(child)), 1)
+        clean(child)
+        parent, child = pair()
+        to_mempool(parent)
+        self.nodes[0].sendrawtransaction(child["hex"])
+        self.nodes[0].submitpackage([parent["hex"], child["hex"]])
+        assert_equal(len(live(child)), 2)
+        clean(child)
+        self.nodes[0].disconnect_p2ps()
+        self.open_gate()
+
     def run_test(self):
         self.mocktime = int(time.time())
         self.advance(0)
         self.wallet = MiniWallet(self.nodes[0])
         self.generate(self.wallet, 260)  # enough mature coins for the retention section
+        if self.options.package:
+            self.log.info("Under -privatebroadcast a package is at most one parent and its child, and a valid single transaction also works")
+            p1 = self.wallet.create_self_transfer()
+            p2 = self.wallet.create_self_transfer()
+            c = self.wallet.create_self_transfer_multi(utxos_to_spend=[p1["new_utxo"], p2["new_utxo"]])
+            assert_raises_rpc_error(-8, None, self.nodes[0].submitpackage, [p1["hex"], p2["hex"], c["hex"]])
+            single = self.wallet.create_self_transfer()
+            res = self.nodes[0].submitpackage([single["hex"]])
+            assert_equal(res["package_msg"], "success")
+            assert "fees" in res["tx-results"][single["wtxid"]]
+            assert "parent_txid" not in self.jobs()[single["wtxid"]]
+            assert single["txid"] not in self.nodes[0].getrawmempool()
+            self.finish([single["wtxid"]])
+
+            self.log.info("A package that validation rejects as a whole, before any per-transaction result, queues no job")
+            before = set(self.jobs())
+            coin = self.wallet.get_utxo()
+            parent = self.wallet.create_self_transfer(utxo_to_spend=coin)
+            double_spend = self.wallet.create_self_transfer_multi(utxos_to_spend=[parent["new_utxo"], coin])
+            res = self.nodes[0].submitpackage([parent["hex"], double_spend["hex"]])
+            assert_equal(res["package_msg"].split(",")[0], "conflict-in-package")
+            for t in (parent, double_spend):
+                assert res["tx-results"][t["wtxid"]]["error"]
+            assert_equal(set(self.jobs()), before)
+
+            self.test_package()
+            self.socks5_server.stop()
+            return
 
         self.log.info("The RPCs are unavailable without -privatebroadcast")
         assert_raises_rpc_error(-32601, None, self.nodes[1].getprivatebroadcastinfo)

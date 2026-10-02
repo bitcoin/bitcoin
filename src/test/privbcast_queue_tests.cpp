@@ -23,6 +23,7 @@
 #include <uint256.h>
 #include <univalue.h>
 #include <util/time.h>
+#include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -121,6 +122,7 @@ public:
         report.summary.error = run.error;
         // A run keeps no transaction past its job.
         run.inputs.tx.reset();
+        run.inputs.parent.reset();
         m_cv.notify_all();
         if (run.thrown) throw std::runtime_error{*run.error};
         return report;
@@ -219,7 +221,7 @@ struct QueueSetup : public BasicTestingSetup {
 
     void Poll() { node::PrivbcastQueueTest::Poll(*queue); }
     void AddToMempool(const CTransactionRef& tx) { node::PrivbcastQueueTest::TransactionAddedToMempool(*queue, tx); }
-    SubmitResult Submit(const CTransactionRef& tx) { return queue->Submit(tx); }
+    SubmitResult Submit(const CTransactionRef& tx) { return queue->Submit(tx, nullptr); }
 
     /** The latest job of this transaction: the last one listed with its wtxid. */
     PrivbcastQueue::JobInfo Job(const CTransactionRef& tx)
@@ -677,6 +679,19 @@ BOOST_FIXTURE_TEST_CASE(covered_after_validation, TestChain100Setup)
     BOOST_CHECK(broadcast(conflicted) == node::TransactionError::MISSING_INPUTS);
     BOOST_CHECK_EQUAL(m_node.privbcast->Info().size(), 2U);
     for (const PrivbcastQueue::JobInfo& job : m_node.privbcast->Info()) BOOST_CHECK_EQUAL(job.state, "queued");
+
+    // Extension, N5: a package job covers its child submitted alone once that passes validation:
+    // refused for its missing input until the parent is in the mempool, then covered.
+    const CTransactionRef parent{MakeTransactionRef(CreateValidMempoolTransaction(m_coinbase_txns[2], 0, 0, coinbaseKey, script, 49 * COIN, /*submit=*/false))};
+    const CTransactionRef child{MakeTransactionRef(CreateValidMempoolTransaction(parent, 0, 0, coinbaseKey, script, 48 * COIN, /*submit=*/false))};
+    BOOST_CHECK(m_node.privbcast->Submit(child, parent) == SubmitResult::Queued);
+    BOOST_CHECK(broadcast(child) == node::TransactionError::MISSING_INPUTS);
+    {
+        LOCK(cs_main);
+        BOOST_REQUIRE(m_node.chainman->ProcessTransaction(parent).m_result_type == MempoolAcceptResult::ResultType::VALID);
+    }
+    BOOST_CHECK(broadcast(child) == node::TransactionError::OK);
+    BOOST_CHECK_EQUAL(m_node.privbcast->Info().size(), 3U);
     m_node.privbcast.reset();
 }
 
