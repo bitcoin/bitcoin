@@ -173,9 +173,10 @@ std::optional<PubKey> GetPubKeyFromInput(const CTxIn& txin, const CScript& spk)
 
     if (type == TxoutType::WITNESS_V0_KEYHASH) {
         const auto& stack = txin.scriptWitness.stack;
-        if (stack.empty()) return std::nullopt;
+        if (stack.size() != 2) return std::nullopt;
         CPubKey key{stack.back()};
         if (!key.IsCompressed() || !key.IsFullyValid()) return std::nullopt;
+        if (Hash160(key) != uint160{solutions[0]}) return std::nullopt;
         return PubKey{key};
     }
 
@@ -210,16 +211,20 @@ std::optional<PubKey> GetPubKeyFromInput(const CTxIn& txin, const CScript& spk)
         // P2SH-P2WPKH only: eval scriptSig, verify redeem script is P2WPKH. Unlike P2PKH above,
         // evaluating is safe here, as consensus (BIP-141) requires the scriptSig to be a single
         // push of the redeem script.
+        if (!txin.scriptSig.IsPushOnly()) return std::nullopt;
+        const uint160 expected_script_hash{solutions[0]};
         std::vector<std::vector<unsigned char>> stack;
         if (!EvalScript(stack, txin.scriptSig, SCRIPT_VERIFY_NONE, DUMMY_CHECKER, SigVersion::BASE)) {
             return std::nullopt;
         }
-        if (stack.empty()) return std::nullopt;
+        if (stack.size() != 1) return std::nullopt;
+        if (Hash160(stack.back()) != expected_script_hash) return std::nullopt;
         CScript redeem{stack.back().begin(), stack.back().end()};
         if (Solver(redeem, solutions) != TxoutType::WITNESS_V0_KEYHASH) return std::nullopt;
-        if (txin.scriptWitness.stack.empty()) return std::nullopt;
+        if (txin.scriptWitness.stack.size() != 2) return std::nullopt;
         CPubKey key{txin.scriptWitness.stack.back()};
         if (!key.IsCompressed() || !key.IsFullyValid()) return std::nullopt;
+        if (Hash160(key) != uint160{solutions[0]}) return std::nullopt;
         return PubKey{key};
     }
 
