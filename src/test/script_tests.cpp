@@ -6,6 +6,8 @@
 #include <compressor.h>
 #include <core_io.h>
 #include <key.h>
+#include <primitives/transaction.h>
+#include <pubkey.h>
 #include <rpc/util.h>
 #include <script/interpreter.h>
 #include <script/script.h>
@@ -23,7 +25,9 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/transaction_utils.h>
+#include <uint256.h>
 #include <univalue.h>
+#include <util/byte_units.h>
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/strencodings.h>
@@ -31,8 +35,12 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
 #include <cstdint>
+#include <initializer_list>
+#include <span>
 #include <string>
+#include <utility>
 #include <vector>
 
 // Uncomment if you want to output updated JSON tests.
@@ -121,6 +129,8 @@ static ScriptError_t ParseScriptError(const std::string& name)
 }
 
 struct ScriptTest : BasicTestingSetup {
+SignatureCache m_signature_cache{1_MiB};
+
 void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScriptWitness& scriptWitness, script_verify_flags flags, const std::string& message, int scriptError, CAmount nValue = 0)
 {
     bool expect = (scriptError == SCRIPT_ERR_OK);
@@ -130,18 +140,32 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
     }
     ScriptError err;
     const CTransaction txCredit{BuildCreditingTransaction(scriptPubKey, nValue)};
-    CMutableTransaction tx = BuildSpendingTransaction(scriptSig, scriptWitness, txCredit);
-    BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err) == expect, message);
-    BOOST_CHECK_MESSAGE(err == scriptError, FormatScriptError(err) + " where " + FormatScriptError((ScriptError_t)scriptError) + " expected: " + message);
+    const CTransaction tx{BuildSpendingTransaction(scriptSig, scriptWitness, txCredit)};
+    PrecomputedTransactionData txdata;
+    txdata.Init(tx, {txCredit.vout[0]});
+    const auto check{[&](const BaseSignatureChecker& checker, const std::string& suffix) {
+        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, flags, checker, &err) == expect, message + suffix);
+        BOOST_CHECK_MESSAGE(err == scriptError, FormatScriptError(err) + " where " + FormatScriptError((ScriptError_t)scriptError) + " expected: " + message + suffix);
+    }};
+    const TransactionSignatureChecker uncached_checker{&tx, 0, nValue, txdata, MissingDataBehavior::ASSERT_FAIL};
+    check(uncached_checker, "");
 
-    // Verify that removing flags from a passing test or adding flags to a failing test does not change the result.
+    // Repeat with signature caching, including a second pass after any successful signatures are stored
+    const CachingTransactionSignatureChecker caching_checker{&tx, 0, nValue, /*storeIn=*/true, m_signature_cache, txdata};
+    check(caching_checker, " (caching, first pass)");
+    check(caching_checker, " (caching, second pass)");
+
+    // Removing flags from a passing test or adding flags to a failing test must preserve the result, including with caching
     for (int i = 0; i < 256; ++i) {
         script_verify_flags extra_flags = script_verify_flags::from_int(m_rng.randbits(MAX_SCRIPT_VERIFY_FLAGS_BITS));
         script_verify_flags combined_flags{expect ? (flags & ~extra_flags) : (flags | extra_flags)};
         // Weed out some invalid flag combinations.
         if (combined_flags & SCRIPT_VERIFY_CLEANSTACK && ~combined_flags & (SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS)) continue;
         if (combined_flags & SCRIPT_VERIFY_WITNESS && ~combined_flags & SCRIPT_VERIFY_P2SH) continue;
-        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, &scriptWitness, combined_flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err) == expect, message + strprintf(" (with flags %x)", combined_flags.as_int()));
+        const bool caching{i % 2 != 0};
+        const TransactionSignatureChecker& checker{caching ? caching_checker : uncached_checker};
+        bool result{VerifyScript(scriptSig, scriptPubKey, &scriptWitness, combined_flags, checker, &err)};
+        BOOST_CHECK_MESSAGE(result == expect, message + strprintf(" (with flags %x%s)", combined_flags.as_int(), caching ? ", caching" : ""));
     }
 }
 }; // struct ScriptTest
@@ -595,6 +619,10 @@ BOOST_AUTO_TEST_CASE(script_build)
     tests.push_back(TestBuilder(CScript() << ToByteVector(keys.pubkey2C) << OP_CHECKSIG,
                                 "P2PK with multi-byte hashtype, with DERSIG", SCRIPT_VERIFY_DERSIG
                                ).PushSig(keys.key2, SIGHASH_ALL).EditPush(70, "01", "0101").ScriptError(SCRIPT_ERR_SIG_DER));
+    const std::string sig_padding{HexStr(std::vector<unsigned char>(256 - 70, 0))}; // Pads the 70-byte DER signature past 255 bytes
+    tests.push_back(TestBuilder(CScript() << ToByteVector(keys.pubkey2C) << OP_CHECKSIG,
+                                "P2PK with signature padded past 255 bytes, without DERSIG", 0
+                               ).PushSig(keys.key2, SIGHASH_ALL).EditPush(70, "01", sig_padding + "01"));
 
     tests.push_back(TestBuilder(CScript() << ToByteVector(keys.pubkey2C) << OP_CHECKSIG,
                                 "P2PK with high S but no LOW_S", 0
@@ -1659,9 +1687,10 @@ BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
         BOOST_CHECK_EQUAL(HexStr(txdata.m_spent_scripts_single_hash), vec["intermediary"]["hashScriptPubkeys"].get_str());
         BOOST_CHECK_EQUAL(HexStr(txdata.m_sequences_single_hash), vec["intermediary"]["hashSequences"].get_str());
 
+        const CTransaction spending_tx{tx};
         for (const auto& input : vec["inputSpending"].getValues()) {
-            int txinpos = input["given"]["txinIndex"].getInt<int>();
-            int hashtype = input["given"]["hashType"].getInt<int>();
+            const auto txinpos{input["given"]["txinIndex"].getInt<uint32_t>()};
+            const auto hashtype{input["given"]["hashType"].getInt<int32_t>()};
 
             // Load key.
             auto privkey = ParseHex(input["given"]["internalPrivkey"].get_str());
@@ -1683,7 +1712,7 @@ BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
             provider.keys[key.GetPubKey().GetID()] = key;
             MutableTransactionSignatureCreator creator(tx, txinpos, utxos[txinpos].nValue, &txdata, {.sighash_type = hashtype});
             std::vector<unsigned char> signature;
-            BOOST_CHECK(creator.CreateSchnorrSig(provider, signature, pubkey, nullptr, &merkle_root, SigVersion::TAPROOT));
+            BOOST_REQUIRE(creator.CreateSchnorrSig(provider, signature, pubkey, nullptr, &merkle_root, SigVersion::TAPROOT));
             BOOST_CHECK_EQUAL(HexStr(signature), input["expected"]["witness"][0].get_str());
 
             // We can't observe the tweak used inside the signing logic, so verify by recomputing it.
@@ -1699,6 +1728,56 @@ BOOST_AUTO_TEST_CASE(bip341_keypath_test_vectors)
 
             // To verify the sigmsg, hash the expected sigmsg, and compare it with the (expected) sighash.
             BOOST_CHECK_EQUAL(HexStr((HashWriter{HASHER_TAPSIGHASH} << std::span<const uint8_t>{ParseHex(input["intermediary"]["sigMsg"].get_str())}).GetSHA256()), input["intermediary"]["sigHash"].get_str());
+
+            // Exercise cached verification of both 64- and 65-byte signatures from the vectors
+            const auto& script{utxos[txinpos].scriptPubKey};
+            BOOST_REQUIRE(script.IsPayToTaproot());
+            const XOnlyPubKey output_pubkey{std::span{script}.subspan(2)};
+            const auto flags{SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_TAPROOT};
+            const auto verify{[&](const std::vector<unsigned char>& sig, bool store, ScriptError expected_error = SCRIPT_ERR_OK) {
+                CScriptWitness witness;
+                witness.stack = {sig};
+                const CachingTransactionSignatureChecker checker{&spending_tx, txinpos, utxos[txinpos].nValue, store, m_signature_cache, txdata};
+                ScriptError error;
+                BOOST_CHECK_EQUAL(VerifyScript({}, script, &witness, flags, checker, &error), expected_error == SCRIPT_ERR_OK);
+                BOOST_CHECK_MESSAGE(error == expected_error, ScriptErrorString(error) + " where " + ScriptErrorString(expected_error) + " expected");
+            }};
+            const auto entry_for{[&](const std::vector<unsigned char>& sig, const XOnlyPubKey& key) {
+                return m_signature_cache.ComputeEntrySchnorr(sighash, std::span{sig}.first(64), key);
+            }};
+            const auto is_cached{[&](const uint256& entry) { return m_signature_cache.Get(entry, /*erase=*/false); }};
+
+            const auto output_key_entry{entry_for(signature, output_pubkey)};
+            BOOST_CHECK(!is_cached(output_key_entry));
+            verify(signature, /*store=*/false); // Miss without storing
+            BOOST_CHECK(!is_cached(output_key_entry));
+            verify(signature, /*store=*/true); // Miss, stored
+            BOOST_CHECK( is_cached(output_key_entry));
+            verify(signature, /*store=*/true); // Hit
+            BOOST_CHECK( is_cached(output_key_entry));
+            verify(signature, /*store=*/false); // A hit without storing only marks the entry erasable, so it stays cached
+            BOOST_CHECK( is_cached(output_key_entry));
+
+            // Changing only the public key or sighash must miss the cached entry
+            BOOST_CHECK(!is_cached(entry_for(signature, pubkey)));
+            auto different_sighash{sighash};
+            different_sighash.begin()[0] ^= 1;
+            const auto different_sighash_entry{m_signature_cache.ComputeEntrySchnorr(different_sighash, std::span{signature}.first(64), output_pubkey)};
+            BOOST_CHECK(!is_cached(different_sighash_entry));
+
+            // A correctly sized invalid signature must not be cached
+            std::vector<unsigned char> invalid_sig{signature};
+            std::fill_n(invalid_sig.begin(), 64, 0xff);
+            const auto invalid_entry{entry_for(invalid_sig, output_pubkey)};
+            BOOST_CHECK(!is_cached(invalid_entry));
+            verify(invalid_sig, /*store=*/true, SCRIPT_ERR_SCHNORR_SIG);
+            BOOST_CHECK(!is_cached(invalid_entry));
+
+            for (const auto& [size, error] : {std::pair{63, SCRIPT_ERR_SCHNORR_SIG_SIZE},
+                                             std::pair{65, SCRIPT_ERR_SCHNORR_SIG_HASHTYPE}, // An explicit SIGHASH_DEFAULT byte
+                                             std::pair{66, SCRIPT_ERR_SCHNORR_SIG_SIZE}}) {
+                verify(std::vector<unsigned char>(size, 0), /*store=*/true, error);
+            }
         }
     }
 }
