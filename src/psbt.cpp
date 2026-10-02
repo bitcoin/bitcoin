@@ -180,6 +180,10 @@ bool PartiallySignedTransaction::AddInput(const PSBTInput& psbtin)
         inputs.back().partial_sigs.clear();
         inputs.back().final_script_sig.clear();
         inputs.back().final_script_witness.SetNull();
+        inputs.back().m_tap_key_sig.clear();
+        inputs.back().m_tap_script_sigs.clear();
+        inputs.back().m_musig2_pubnonces.clear();
+        inputs.back().m_musig2_partial_sigs.clear();
         return true;
     }
 
