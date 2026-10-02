@@ -37,6 +37,11 @@ if(BUILD_TESTING AND TARGET CapnProto::kj-test)
   target_include_directories(mptest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
   target_link_libraries(mptest PRIVATE CapnProto::kj-test)
   target_link_libraries(mptest PRIVATE Threads::Threads)
+  # The generated foo.capnp.proxy-server.c++ has more sections than MSVC's
+  # default object file format allows (error C1128).
+  if(MSVC)
+    target_compile_options(mptest PRIVATE /bigobj)
+  endif()
 
   add_dependencies(mptests mptest)
   add_test(NAME mptest COMMAND mptest)
