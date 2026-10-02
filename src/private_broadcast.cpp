@@ -4,6 +4,7 @@
 
 #include <private_broadcast.h>
 
+#include <random.h>
 #include <util/check.h>
 
 #include <algorithm>
@@ -62,6 +63,14 @@ std::vector<CTransactionRef> PrivateBroadcast::ReleaseDue()
         due.push_back(tx);
     }
     return due;
+}
+
+std::chrono::seconds PrivateBroadcast::RandomizeDelay(std::chrono::seconds requested, FastRandomContext& rng)
+{
+    if (requested <= 0s) return 0s;
+    requested = std::min(requested, MAX_DELAY);
+    const std::chrono::seconds range{std::max(requested * DELAY_RANDOMIZATION_PERCENT / 100, MIN_DELAY_RANDOMIZATION)};
+    return requested + rng.randrange<std::chrono::seconds>(range + 1s);
 }
 
 std::optional<CTransactionRef> PrivateBroadcast::PickTxForSend(const NodeId& will_send_to_nodeid, const CService& will_send_to_address)

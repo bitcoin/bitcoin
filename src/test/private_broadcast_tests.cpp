@@ -4,6 +4,7 @@
 
 #include <primitives/transaction.h>
 #include <private_broadcast.h>
+#include <random.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <util/time.h>
@@ -394,6 +395,40 @@ BOOST_AUTO_TEST_CASE(delayed_readd_exhausted)
     clock += 10min;
     BOOST_CHECK_EQUAL(pb.ReleaseDue().size(), 1);
     BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/2, address).value(), tx);
+}
+
+BOOST_AUTO_TEST_CASE(randomize_delay)
+{
+    FastRandomContext rng{/*fDeterministic=*/true};
+
+    // No delay requested.
+    BOOST_CHECK(PrivateBroadcast::RandomizeDelay(0s, rng) == 0s);
+    BOOST_CHECK(PrivateBroadcast::RandomizeDelay(-1s, rng) == 0s);
+
+    const auto check_range{[&](std::chrono::seconds requested, std::chrono::seconds lower, std::chrono::seconds upper) {
+        bool hit_lower_half{false};
+        bool hit_upper_half{false};
+        for (int i{0}; i < 1000; ++i) {
+            const auto delay{PrivateBroadcast::RandomizeDelay(requested, rng)};
+            BOOST_CHECK(delay >= lower);
+            BOOST_CHECK(delay <= upper);
+            if (delay < (lower + upper) / 2) hit_lower_half = true;
+            if (delay > (lower + upper) / 2) hit_upper_half = true;
+        }
+        BOOST_CHECK(hit_lower_half);
+        BOOST_CHECK(hit_upper_half);
+    }};
+
+    // Typical delay: up to +50%, never shorter than requested.
+    check_range(60min, 60min, 90min);
+    check_range(100min, 100min, 150min);
+    // Small delay: the jitter range is at least MIN_DELAY_RANDOMIZATION.
+    check_range(8min, 8min, 13min);
+    check_range(1min, 1min, 6min);
+    check_range(1s, 1s, 5min + 1s);
+    // Requested delay is capped at MAX_DELAY.
+    check_range(PrivateBroadcast::MAX_DELAY, 12h, 18h);
+    check_range(PrivateBroadcast::MAX_DELAY + 1h, 12h, 18h);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
