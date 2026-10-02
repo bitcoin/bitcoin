@@ -5,13 +5,18 @@
 #ifndef BITCOIN_WALLET_FEEBUMPER_H
 #define BITCOIN_WALLET_FEEBUMPER_H
 
+#include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <script/interpreter.h>
 #include <primitives/transaction.h>
+#include <util/expected.h>
+#include <util/translation.h>
+
+#include <optional>
+#include <vector>
 
 class uint256;
 enum class FeeEstimateMode;
-struct bilingual_str;
 
 namespace wallet {
 class CCoinControl;
@@ -33,26 +38,35 @@ enum class Result
 //! Return whether transaction can be bumped.
 bool TransactionCanBeBumped(const CWallet& wallet, const Txid& txid);
 
+//! Error returned by CreateRateBumpTransaction
+struct BumpError {
+    Result result;
+    std::vector<bilingual_str> errors;
+};
+
+//! Bump transaction returned by CreateRateBumpTransaction
+struct BumpTransaction {
+    //! The fee the original transaction pays
+    CAmount old_fee;
+    //! The fee that the bump transaction pays
+    CAmount new_fee;
+    //! The bump transaction itself
+    CMutableTransaction mtx;
+};
+
 /** Create bumpfee transaction based on feerate estimates.
  *
  * @param[in] wallet The wallet to use for this bumping
  * @param[in] txid The txid of the transaction to bump
  * @param[in] coin_control A CCoinControl object which provides feerates and other information used for coin selection
- * @param[out] errors Errors
- * @param[out] old_fee The fee the original transaction pays
- * @param[out] new_fee the fee that the bump transaction pays
- * @param[out] mtx The bump transaction itself
  * @param[in] require_mine Whether the original transaction must consist of inputs that can be spent by the wallet
  * @param[in] outputs Vector of new outputs to replace the bumped transaction's outputs
  * @param[in] original_change_index The position of the change output to deduct the fee from in the transaction being bumped
+ * @return The bump transaction, or the error that prevented creating it
  */
-Result CreateRateBumpTransaction(CWallet& wallet,
+util::Expected<BumpTransaction, BumpError> CreateRateBumpTransaction(CWallet& wallet,
     const Txid& txid,
     const CCoinControl& coin_control,
-    std::vector<bilingual_str>& errors,
-    CAmount& old_fee,
-    CAmount& new_fee,
-    CMutableTransaction& mtx,
     bool require_mine,
     const std::vector<CTxOut>& outputs,
     std::optional<uint32_t> original_change_index = std::nullopt);

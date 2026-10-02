@@ -164,24 +164,24 @@ bool TransactionCanBeBumped(const CWallet& wallet, const Txid& txid)
     return res == feebumper::Result::OK;
 }
 
-Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinControl& coin_control, std::vector<bilingual_str>& errors,
-                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, bool require_mine, const std::vector<CTxOut>& outputs, std::optional<uint32_t> original_change_index)
+util::Expected<BumpTransaction, BumpError> CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinControl& coin_control, bool require_mine,
+                                                                     const std::vector<CTxOut>& outputs, std::optional<uint32_t> original_change_index)
 {
+    std::vector<bilingual_str> errors;
     // For now, cannot specify both new outputs to use and an output index to send change
     if (!outputs.empty() && original_change_index.has_value()) {
         errors.emplace_back(Untranslated("The options 'outputs' and 'original_change_index' are incompatible. You can only either specify a new set of outputs, or designate a change output to be recycled."));
-        return Result::INVALID_PARAMETER;
+        return util::Unexpected{BumpError{Result::INVALID_PARAMETER, std::move(errors)}};
     }
 
     // We are going to modify coin control later, copy to reuse
     CCoinControl new_coin_control(coin_control);
 
     LOCK(wallet.cs_wallet);
-    errors.clear();
     auto it = wallet.mapWallet.find(txid);
     if (it == wallet.mapWallet.end()) {
         errors.emplace_back(Untranslated("Invalid or non-wallet transaction id"));
-        return Result::INVALID_ADDRESS_OR_KEY;
+        return util::Unexpected{BumpError{Result::INVALID_ADDRESS_OR_KEY, std::move(errors)}};
     }
     const CWalletTx& wtx = it->second;
     const CTransactionRef& tx = wtx.GetTx();
@@ -189,7 +189,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
     // Make sure that original_change_index is valid
     if (original_change_index.has_value() && original_change_index.value() >= tx->vout.size()) {
         errors.emplace_back(Untranslated("Change position is out of range"));
-        return Result::INVALID_PARAMETER;
+        return util::Unexpected{BumpError{Result::INVALID_PARAMETER, std::move(errors)}};
     }
 
     // Retrieve all of the UTXOs and add them to coin control
@@ -205,7 +205,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
         const Coin& coin = coins.at(txin.prevout);
         if (coin.out.IsNull()) {
             errors.emplace_back(Untranslated(strprintf("%s:%u is already spent", txin.prevout.hash.GetHex(), txin.prevout.n)));
-            return Result::MISC_ERROR;
+            return util::Unexpected{BumpError{Result::MISC_ERROR, std::move(errors)}};
         }
         PreselectedInput& preset_txin = new_coin_control.Select(txin.prevout);
         if (!wallet.IsMine(txin.prevout)) {
@@ -241,7 +241,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
 
     Result result = PreconditionChecks(wallet, wtx, require_mine, errors);
     if (result != Result::OK) {
-        return result;
+        return util::Unexpected{BumpError{result, std::move(errors)}};
     }
 
     // Calculate the old output amount.
@@ -250,7 +250,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
         output_value += old_output.nValue;
     }
 
-    old_fee = input_value - output_value;
+    const CAmount old_fee{input_value - output_value};
 
     // Fill in recipients (and preserve a single change key if there
     // is one). If outputs vector is non-empty, replace original
@@ -276,7 +276,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
         // Just as a sanity check, ensure that the change address exist
         if (std::get_if<CNoDestination>(&new_coin_control.destChange)) {
             errors.emplace_back(Untranslated("Unable to create transaction. Transaction must have at least one recipient"));
-            return Result::INVALID_PARAMETER;
+            return util::Unexpected{BumpError{Result::INVALID_PARAMETER, std::move(errors)}};
         }
 
         // Add change as recipient with SFFO flag enabled, so fees are deduced from it.
@@ -298,7 +298,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
         const int64_t maxTxSize{CalculateMaximumSignedTxSize(CTransaction(temp_mtx), &wallet, &new_coin_control).vsize};
         Result res = CheckFeeRate(wallet, temp_mtx, *new_coin_control.m_feerate, maxTxSize, old_fee, errors);
         if (res != Result::OK) {
-            return res;
+            return util::Unexpected{BumpError{res, std::move(errors)}};
         }
     } else {
         // The user did not provide a feeRate argument
@@ -323,17 +323,15 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
     auto res = CreateTransaction(wallet, recipients, /*change_pos=*/std::nullopt, new_coin_control, false);
     if (!res) {
         errors.emplace_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + util::ErrorString(res));
-        return Result::WALLET_ERROR;
+        return util::Unexpected{BumpError{Result::WALLET_ERROR, std::move(errors)}};
     }
 
     const auto& txr = *res;
-    // Write back new fee if successful
-    new_fee = txr.fee;
-
-    // Write back transaction
-    mtx = CMutableTransaction(*txr.tx);
-
-    return Result::OK;
+    return BumpTransaction{
+        .old_fee = old_fee,
+        .new_fee = txr.fee,
+        .mtx = CMutableTransaction(*txr.tx),
+    };
 }
 
 bool SignTransaction(CWallet& wallet, CMutableTransaction& mtx) {
