@@ -24,6 +24,11 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <algorithm>
+#include <map>
+#include <optional>
+#include <set>
+
 namespace {
 
 const TestingSetup* g_setup;
@@ -49,6 +54,9 @@ static TxValidationResult TESTED_TX_RESULTS[] = {
 
 // Precomputed transactions. Some may conflict with each other.
 std::vector<CTransactionRef> TRANSACTIONS;
+// COINS plus the outputs of TRANSACTIONS, so that randomly generated transactions can be children
+// of the premade ones.
+std::vector<COutPoint> OUTPOINTS;
 
 // Limit the total number of peers because we don't expect coverage to change much with lots more peers.
 constexpr int NUM_PEERS = 16;
@@ -69,12 +77,22 @@ static CTransactionRef MakeTransactionSpending(const std::vector<COutPoint>& out
     for (size_t o = 0; o < num_outputs; ++o) tx.vout.emplace_back(CENT, P2WSH_OP_TRUE);
     return MakeTransactionRef(tx);
 }
+/** All parent txids of tx, sorted and unique (what validation reports when every input is missing). */
+static std::vector<Txid> UniqueParents(const CTransaction& tx)
+{
+    std::vector<Txid> parents;
+    parents.reserve(tx.vin.size());
+    for (const auto& in : tx.vin) parents.push_back(in.prevout.hash);
+    std::ranges::sort(parents);
+    parents.erase(std::unique(parents.begin(), parents.end()), parents.end());
+    return parents;
+}
 static std::vector<COutPoint> PickCoins(FuzzedDataProvider& fuzzed_data_provider)
 {
     std::vector<COutPoint> ret;
-    ret.push_back(fuzzed_data_provider.PickValueInArray(COINS));
+    ret.push_back(PickValue(fuzzed_data_provider, OUTPOINTS));
     LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 10) {
-        ret.push_back(fuzzed_data_provider.PickValueInArray(COINS));
+        ret.push_back(PickValue(fuzzed_data_provider, OUTPOINTS));
     }
     return ret;
 }
@@ -136,6 +154,11 @@ void initialize()
     // or have the same txid.
     for (const auto& outpoint : COINS) {
         TRANSACTIONS.emplace_back(MakeTransactionSpending({outpoint}, /*num_outputs=*/1, /*add_witness=*/true));
+    }
+
+    OUTPOINTS.assign(std::begin(COINS), std::end(COINS));
+    for (const auto& tx : TRANSACTIONS) {
+        for (uint32_t o = 0; o < tx->vout.size(); ++o) OUTPOINTS.emplace_back(tx->GetHash(), o);
     }
 
     // Create random-looking time jumps
@@ -221,7 +244,7 @@ FUZZ_TARGET(txdownloadman, .init = initialize)
                 state.Invalid(fuzzed_data_provider.PickValueInArray(TESTED_TX_RESULTS), "");
                 bool first_time_failure{fuzzed_data_provider.ConsumeBool()};
 
-                node::RejectedTxTodo todo = txdownloadman.MempoolRejectedTx(rand_tx, state, rand_peer, first_time_failure);
+                node::RejectedTxTodo todo = txdownloadman.MempoolRejectedTx(rand_tx, state, rand_peer, first_time_failure, UniqueParents(*rand_tx));
                 Assert(first_time_failure || !todo.m_should_add_extra_compact_tx);
             },
             [&] {
@@ -276,6 +299,80 @@ FUZZ_TARGET(txdownloadman, .init = initialize)
 // peer without tracking anything (this is only for the txdownload_impl target).
 static bool HasRelayPermissions(NodeId peer) { return peer == 0; }
 
+/** Non-completed announcements per txhash, for the given hashes. */
+using RequestSnapshot = std::map<uint256, std::vector<NodeId>>;
+static RequestSnapshot SnapshotRequests(const TxRequestTracker& txrequest, const std::set<uint256>& hashes)
+{
+    RequestSnapshot ret;
+    for (const auto& hash : hashes) {
+        std::vector<NodeId> peers;
+        txrequest.GetCandidatePeers(hash, peers);
+        if (!peers.empty()) ret.emplace(hash, std::move(peers));
+    }
+    return ret;
+}
+/** Every peer's announcement present before must still be present, unless its hash was allowed to be forgotten. */
+static void CheckRequestsKept(const RequestSnapshot& before, const TxRequestTracker& txrequest,
+                              const std::set<uint256>& allowed_hashes, std::optional<NodeId> allowed_peer = std::nullopt)
+{
+    for (const auto& [hash, peers_before] : before) {
+        if (allowed_hashes.contains(hash)) continue;
+        std::vector<NodeId> peers_after;
+        txrequest.GetCandidatePeers(hash, peers_after);
+        for (const NodeId peer : peers_before) {
+            if (peer == allowed_peer) continue;
+            Assert(std::ranges::find(peers_after, peer) != peers_after.end());
+        }
+    }
+}
+
+/** Announcers per orphan. */
+using AnnouncerSnapshot = std::map<Wtxid, std::set<NodeId>>;
+static AnnouncerSnapshot SnapshotAnnouncers(const node::TxOrphanage& orphanage)
+{
+    AnnouncerSnapshot ret;
+    for (const auto& info : orphanage.GetOrphanTransactions()) {
+        ret.emplace(info.tx->GetWitnessHash(), info.announcers);
+    }
+    return ret;
+}
+/** Every orphan announcement present before must still be present, unless the orphan was allowed to be erased. */
+static void CheckAnnouncersKept(const AnnouncerSnapshot& before, const node::TxOrphanage& orphanage,
+                                const std::set<Wtxid>& allowed_erased, std::optional<NodeId> allowed_peer = std::nullopt)
+{
+    const auto after{SnapshotAnnouncers(orphanage)};
+    for (const auto& [wtxid, announcers_before] : before) {
+        if (allowed_erased.contains(wtxid)) continue;
+        const auto it{after.find(wtxid)};
+        for (const NodeId peer : announcers_before) {
+            if (peer == allowed_peer) continue;
+            Assert(it != after.end() && it->second.contains(peer));
+        }
+    }
+}
+/** Whether erasing exactly the given orphans is guaranteed not to trigger trimming: the global capacity
+ * shrinks by one peer's reservation for every peer left without any announcement. */
+static bool NoTrimmingAfterErase(const node::TxOrphanage& orphanage, const AnnouncerSnapshot& before, const std::set<Wtxid>& erased)
+{
+    std::set<NodeId> all_peers, peers_keeping_some;
+    for (const auto& [wtxid, announcers] : before) {
+        for (const NodeId peer : announcers) {
+            all_peers.insert(peer);
+            if (!erased.contains(wtxid)) peers_keeping_some.insert(peer);
+        }
+    }
+    const int64_t leaving{static_cast<int64_t>(all_peers.size() - peers_keeping_some.size())};
+    return orphanage.TotalOrphanUsage() <= orphanage.MaxGlobalUsage() - leaving * orphanage.ReservedPeerUsage();
+}
+/** Whether adding tx as an orphan for up to NUM_PEERS announcers is guaranteed not to trigger trimming. */
+static bool NoTrimmingPossible(const node::TxOrphanage& orphanage, const CTransaction& tx)
+{
+    const auto usage{NUM_PEERS * GetTransactionWeight(tx)};
+    const auto latency{NUM_PEERS * (1 + tx.vin.size() / 10)};
+    return orphanage.TotalOrphanUsage() + usage <= orphanage.MaxGlobalUsage() &&
+           orphanage.TotalLatencyScore() + latency <= orphanage.MaxGlobalLatencyScore();
+}
+
 static void CheckInvariants(const node::TxDownloadManagerImpl& txdownload_impl)
 {
     txdownload_impl.m_orphanage->SanityCheck();
@@ -300,16 +397,40 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
     node::TxDownloadManagerImpl txdownload_impl{node::TxDownloadOptions{.m_mempool = pool, .m_deterministic_txrequest = true}};
 
     std::chrono::microseconds time{244466666};
+    // All txhashes that may have entered m_txrequest: announced txids/wtxids and parent txids of orphans.
+    std::set<uint256> seen_hashes;
+
+    // Start with all peers connected so that multi-step interactions (e.g. storing an orphan for one
+    // peer, then rejecting its parent from another) are reachable; peers may still (dis)connect later.
+    for (NodeId peer = 0; peer < NUM_PEERS; ++peer) {
+        txdownload_impl.ConnectedPeer(peer, node::TxDownloadConnectionInfo{
+            .m_preferred = fuzzed_data_provider.ConsumeBool(),
+            .m_relay_permissions = HasRelayPermissions(peer),
+            .m_wtxid_relay = fuzzed_data_provider.ConsumeBool()});
+    }
 
     LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 500) {
         NodeId rand_peer = fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(0, NUM_PEERS - 1);
 
-        // Transaction can be one of the premade ones or a randomly generated one
+        // Transaction can be one of the premade ones or a randomly generated one. Sometimes pick a
+        // premade transaction that is the missing parent of a current orphan, so that orphan
+        // resolution (parent arriving after child) is exercised often.
         auto rand_tx = fuzzed_data_provider.ConsumeBool() ?
             MakeTransactionSpending(PickCoins(fuzzed_data_provider),
                                     /*num_outputs=*/fuzzed_data_provider.ConsumeIntegralInRange(1, 500),
                                     /*add_witness=*/fuzzed_data_provider.ConsumeBool()) :
             TRANSACTIONS.at(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, TRANSACTIONS.size() - 1));
+        if (fuzzed_data_provider.ConsumeBool()) {
+            std::vector<CTransactionRef> orphan_parents;
+            for (const auto& tx : TRANSACTIONS) {
+                if (txdownload_impl.m_orphanage->HaveChildren(*tx)) orphan_parents.push_back(tx);
+            }
+            if (!orphan_parents.empty()) rand_tx = PickValue(fuzzed_data_provider, orphan_parents);
+        }
+        seen_hashes.insert(rand_tx->GetHash().ToUint256());
+        seen_hashes.insert(rand_tx->GetWitnessHash().ToUint256());
+        for (const auto& input : rand_tx->vin) seen_hashes.insert(input.prevout.hash.ToUint256());
+        const std::set<uint256> rand_tx_hashes{rand_tx->GetHash().ToUint256(), rand_tx->GetWitnessHash().ToUint256()};
 
         CallOneOf(
             fuzzed_data_provider,
@@ -322,11 +443,19 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                 txdownload_impl.ConnectedPeer(rand_peer, info);
             },
             [&] {
+                const auto requests_before{SnapshotRequests(txdownload_impl.m_txrequest, seen_hashes)};
                 txdownload_impl.DisconnectedPeer(rand_peer);
                 txdownload_impl.CheckIsEmpty(rand_peer);
+                // Only this peer's requests go away.
+                CheckRequestsKept(requests_before, txdownload_impl.m_txrequest, /*allowed_hashes=*/{}, rand_peer);
             },
             [&] {
+                const auto requests_before{SnapshotRequests(txdownload_impl.m_txrequest, seen_hashes)};
+                const auto announcers_before{SnapshotAnnouncers(*txdownload_impl.m_orphanage)};
                 txdownload_impl.ActiveTipChange();
+                // A tip change only resets the rejection filters.
+                CheckRequestsKept(requests_before, txdownload_impl.m_txrequest, /*allowed_hashes=*/{});
+                CheckAnnouncersKept(announcers_before, *txdownload_impl.m_orphanage, /*allowed_erased=*/{});
                 // After a block update, nothing should be in the rejection caches
                 for (const auto& tx : TRANSACTIONS) {
                     Assert(!txdownload_impl.RecentRejectsFilter().contains(tx->GetWitnessHash().ToUint256()));
@@ -338,9 +467,24 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
             [&] {
                 CBlock block;
                 block.vtx.push_back(rand_tx);
+                const auto requests_before{SnapshotRequests(txdownload_impl.m_txrequest, seen_hashes)};
+                const auto announcers_before{SnapshotAnnouncers(*txdownload_impl.m_orphanage)};
+                // Orphans included in or conflicting with the block may be erased.
+                std::set<Wtxid> allowed_erased{rand_tx->GetWitnessHash()};
+                for (const auto& [wtxid, _] : announcers_before) {
+                    const auto orphan{txdownload_impl.m_orphanage->GetTx(wtxid)};
+                    if (std::ranges::any_of(orphan->vin, [&](const auto& in) {
+                            return std::ranges::any_of(rand_tx->vin, [&](const auto& block_in) { return in.prevout == block_in.prevout; });
+                        })) {
+                        allowed_erased.insert(wtxid);
+                    }
+                }
+                const bool no_trimming{NoTrimmingAfterErase(*txdownload_impl.m_orphanage, announcers_before, allowed_erased)};
                 txdownload_impl.BlockConnected(std::make_shared<CBlock>(block));
                 // Block transactions must be removed from orphanage
                 Assert(!txdownload_impl.m_orphanage->HaveTx(rand_tx->GetWitnessHash()));
+                CheckRequestsKept(requests_before, txdownload_impl.m_txrequest, rand_tx_hashes);
+                if (no_trimming) CheckAnnouncersKept(announcers_before, *txdownload_impl.m_orphanage, allowed_erased);
             },
             [&] {
                 txdownload_impl.BlockDisconnected();
@@ -348,18 +492,72 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                 Assert(!txdownload_impl.RecentConfirmedTransactionsFilter().contains(rand_tx->GetHash().ToUint256()));
             },
             [&] {
+                const auto requests_before{SnapshotRequests(txdownload_impl.m_txrequest, seen_hashes)};
+                const auto announcers_before{SnapshotAnnouncers(*txdownload_impl.m_orphanage)};
+                const bool no_trimming{NoTrimmingAfterErase(*txdownload_impl.m_orphanage, announcers_before, {rand_tx->GetWitnessHash()})};
                 txdownload_impl.MempoolAcceptedTx(rand_tx);
+                // Only this tx's requests and orphan entry go away.
+                CheckRequestsKept(requests_before, txdownload_impl.m_txrequest, rand_tx_hashes);
+                if (no_trimming) CheckAnnouncersKept(announcers_before, *txdownload_impl.m_orphanage, {rand_tx->GetWitnessHash()});
             },
             [&] {
                 TxValidationState state;
-                state.Invalid(fuzzed_data_provider.PickValueInArray(TESTED_TX_RESULTS), "");
+                // Bias towards the results that drive orphan storage and package evaluation.
+                state.Invalid(fuzzed_data_provider.ConsumeBool() ?
+                              (fuzzed_data_provider.ConsumeBool() ? TxValidationResult::TX_MISSING_INPUTS : TxValidationResult::TX_RECONSIDERABLE) :
+                              fuzzed_data_provider.PickValueInArray(TESTED_TX_RESULTS), "");
                 bool first_time_failure{fuzzed_data_provider.ConsumeBool()};
 
                 bool reject_contains_wtxid{txdownload_impl.RecentRejectsFilter().contains(rand_tx->GetWitnessHash().ToUint256())};
+                const auto requests_before{SnapshotRequests(txdownload_impl.m_txrequest, seen_hashes)};
+                const auto announcers_before{SnapshotAnnouncers(*txdownload_impl.m_orphanage)};
 
-                node::RejectedTxTodo todo = txdownload_impl.MempoolRejectedTx(rand_tx, state, rand_peer, first_time_failure);
+                // Which of this tx's hashes a rejection may forget in m_txrequest, for all peers.
+                std::set<uint256> allowed_hashes;
+                const bool witnessless{!rand_tx->HasWitness()};
+                switch (state.GetResult()) {
+                case TxValidationResult::TX_MISSING_INPUTS:
+                    // Stored as orphan, or rejected along with its parents: both hashes.
+                    allowed_hashes = rand_tx_hashes;
+                    break;
+                case TxValidationResult::TX_WITNESS_STRIPPED:
+                    break;
+                case TxValidationResult::TX_INPUTS_NOT_STANDARD:
+                    // Witness-independent failure: both hashes.
+                    allowed_hashes = rand_tx_hashes;
+                    break;
+                case TxValidationResult::TX_RECONSIDERABLE:
+                    // A witnessless tx that is the missing parent of an orphan keeps the (txid) orphan
+                    // resolution requests of other peers.
+                    if (!(witnessless && txdownload_impl.m_orphanage->HaveChildren(*rand_tx))) {
+                        allowed_hashes.insert(rand_tx->GetWitnessHash().ToUint256());
+                    }
+                    break;
+                default:
+                    allowed_hashes.insert(rand_tx->GetWitnessHash().ToUint256());
+                }
+                // Only the rejected tx's own orphan entry may be erased. Storing it as a new orphan, or
+                // erasing it, may trim other peers' announcements when the orphanage is near its limits.
+                const bool no_trimming{state.GetResult() == TxValidationResult::TX_MISSING_INPUTS ?
+                                       NoTrimmingPossible(*txdownload_impl.m_orphanage, *rand_tx) :
+                                       NoTrimmingAfterErase(*txdownload_impl.m_orphanage, announcers_before, {rand_tx->GetWitnessHash()})};
+
+                // For a missing-inputs failure, validation tells us which parents are missing: a random
+                // non-empty subset of the transaction's parents.
+                std::vector<Txid> missing_parents;
+                if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
+                    const auto all_parents{UniqueParents(*rand_tx)};
+                    for (const auto& parent : all_parents) {
+                        if (fuzzed_data_provider.ConsumeBool()) missing_parents.push_back(parent);
+                    }
+                    if (missing_parents.empty()) missing_parents.push_back(all_parents.front());
+                }
+
+                node::RejectedTxTodo todo = txdownload_impl.MempoolRejectedTx(rand_tx, state, rand_peer, first_time_failure, missing_parents);
                 Assert(first_time_failure || !todo.m_should_add_extra_compact_tx);
                 if (!reject_contains_wtxid) Assert(todo.m_unique_parents.size() <= rand_tx->vin.size());
+                CheckRequestsKept(requests_before, txdownload_impl.m_txrequest, allowed_hashes);
+                if (no_trimming) CheckAnnouncersKept(announcers_before, *txdownload_impl.m_orphanage, {rand_tx->GetWitnessHash()});
             },
             [&] {
                 auto gtxid = fuzzed_data_provider.ConsumeBool() ?
@@ -419,7 +617,7 @@ FUZZ_TARGET(txdownloadman_impl, .init = initialize)
                     // MempoolRejectedTx with a different error.
                     TxValidationState state_missing_inputs;
                     state_missing_inputs.Invalid(TxValidationResult::TX_MISSING_INPUTS, "");
-                    txdownload_impl.MempoolRejectedTx(ptx, state_missing_inputs, rand_peer, fuzzed_data_provider.ConsumeBool());
+                    txdownload_impl.MempoolRejectedTx(ptx, state_missing_inputs, rand_peer, fuzzed_data_provider.ConsumeBool(), UniqueParents(*ptx));
                 }
             });
 

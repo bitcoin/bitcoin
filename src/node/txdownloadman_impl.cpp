@@ -55,9 +55,10 @@ void TxDownloadManager::MempoolAcceptedTx(const CTransactionRef& tx)
 {
     m_impl->MempoolAcceptedTx(tx);
 }
-RejectedTxTodo TxDownloadManager::MempoolRejectedTx(const CTransactionRef& ptx, const TxValidationState& state, NodeId nodeid, bool first_time_failure)
+RejectedTxTodo TxDownloadManager::MempoolRejectedTx(const CTransactionRef& ptx, const TxValidationState& state, NodeId nodeid, bool first_time_failure,
+                                                    const std::vector<Txid>& missing_parents)
 {
-    return m_impl->MempoolRejectedTx(ptx, state, nodeid, first_time_failure);
+    return m_impl->MempoolRejectedTx(ptx, state, nodeid, first_time_failure, missing_parents);
 }
 void TxDownloadManager::MempoolRejectedPackage(const Package& package)
 {
@@ -350,7 +351,8 @@ std::vector<Txid> TxDownloadManagerImpl::GetUniqueParents(const CTransaction& tx
     return unique_parents;
 }
 
-node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransactionRef& ptx, const TxValidationState& state, NodeId nodeid, bool first_time_failure)
+node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransactionRef& ptx, const TxValidationState& state, NodeId nodeid, bool first_time_failure,
+                                                        const std::vector<Txid>& missing_parents)
 {
     const CTransaction& tx{*ptx};
     // Results returned to caller
@@ -367,9 +369,12 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
         if (first_time_failure && !RecentRejectsFilter().contains(ptx->GetWitnessHash().ToUint256())) {
             bool fRejectedParents = false; // It may be the case that the orphans parents have all been rejected
 
-            // Deduplicate parent txids, so that we don't have to loop over
-            // the same parent txid more than once down below.
-            unique_parents = GetUniqueParents(tx);
+            // Only the parents that are actually missing matter: a parent whose outputs are present
+            // (e.g. confirmed) is neither requested nor held against this transaction, whatever the
+            // reject filters say about its txid (a witnessless copy of a known transaction may have put
+            // it there). Validation reports them sorted and deduplicated.
+            Assume(!missing_parents.empty());
+            unique_parents = missing_parents;
 
             // Distinguish between parents in m_lazy_recent_rejects and m_lazy_recent_rejects_reconsiderable.
             // We can tolerate having up to 1 parent in m_lazy_recent_rejects_reconsiderable since we
@@ -467,10 +472,23 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
                          ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString());
                 package_to_validate = Find1P1CPackage(ptx, nodeid);
             }
-        } else {
+        } else if (state.GetResult() != TxValidationResult::TX_CONFLICT) {
+            // TX_CONFLICT means the transaction is already known (in the mempool, in the mempool with a
+            // different witness, or confirmed), not that it is invalid: don't add it to the reject
+            // filter. For a transaction without witness data the wtxid is also the txid, and if the
+            // known transaction later leaves the mempool, a txid in the filter marks every orphan
+            // spending it as having a rejected parent.
             RecentRejectsFilter().insert(ptx->GetWitnessHash().ToUint256());
         }
-        m_txrequest.ForgetTxHash(ptx->GetWitnessHash().ToUint256());
+        // If this tx has no witness, its wtxid is also the txid by which orphan resolution requests
+        // the missing parent of an orphan. If this tx is such a parent, ForgetTxHash would cancel
+        // every other peer's request for it, leaving the orphan unresolvable when this peer never
+        // announced the child (so no package is tried here). Keep those requests: the witness may
+        // have been stripped by this peer, and another peer's version of the parent (or the same
+        // parent, with their child) may still be accepted as a package.
+        if (!(state.GetResult() == TxValidationResult::TX_RECONSIDERABLE && !ptx->HasWitness() && m_orphanage->HaveChildren(*ptx))) {
+            m_txrequest.ForgetTxHash(ptx->GetWitnessHash().ToUint256());
+        }
         // If the transaction failed for TX_INPUTS_NOT_STANDARD,
         // then we know that the witness was irrelevant to the policy
         // failure, since this check depends only on the txid

@@ -167,8 +167,17 @@ struct MempoolAcceptResult {
     /** The wtxid of the transaction in the mempool which has the same txid but different witness. */
     const std::optional<Wtxid> m_other_wtxid;
 
+    /** The txids of the parents at least one of whose spent outputs could not be found (not in the
+     * UTXO set, the mempool, or earlier transactions of the same package). Sorted and unique. Only
+     * present when m_state's result is TX_MISSING_INPUTS. */
+    const std::optional<std::vector<Txid>> m_missing_parents;
+
     static MempoolAcceptResult Failure(TxValidationState state) {
         return MempoolAcceptResult(state);
+    }
+
+    static MempoolAcceptResult MissingInputs(TxValidationState state, std::vector<Txid>&& missing_parents) {
+        return MempoolAcceptResult(state, std::move(missing_parents));
     }
 
     static MempoolAcceptResult FeeFailure(TxValidationState state,
@@ -200,6 +209,13 @@ private:
     explicit MempoolAcceptResult(TxValidationState state)
         : m_result_type(ResultType::INVALID), m_state(state) {
             Assume(!state.IsValid()); // Can be invalid or error
+        }
+
+    /** Constructor for the missing inputs failure case */
+    explicit MempoolAcceptResult(TxValidationState state, std::vector<Txid>&& missing_parents)
+        : m_result_type(ResultType::INVALID), m_state(state), m_missing_parents(std::move(missing_parents)) {
+            Assume(state.GetResult() == TxValidationResult::TX_MISSING_INPUTS);
+            Assume(!m_missing_parents->empty());
         }
 
     /** Constructor for success case */
