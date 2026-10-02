@@ -7,7 +7,6 @@
 #include <common/args.h>
 #include <kernel/chainparams.h>
 #include <kernel/mempool_entry.h>
-#include <net.h>
 #include <netbase.h>
 #include <primitives/transaction.h>
 #include <privbcast/job.h>
