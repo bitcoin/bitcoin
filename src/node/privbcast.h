@@ -36,6 +36,9 @@
 class ArgsManager;
 class CChainParams;
 
+/** Default for -privatebroadcast. */
+inline constexpr bool DEFAULT_PRIVATE_BROADCAST{false};
+
 namespace node {
 
 /** The seed material of the node's jobs (A1): the chain's, or on regtest the DNS seed names that
