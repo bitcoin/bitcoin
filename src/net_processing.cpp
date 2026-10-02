@@ -2541,14 +2541,17 @@ node::TransactionError PeerManagerImpl::InitiateTxBroadcastPrivate(const CTransa
 {
     const auto txstr{strprintf("txid=%s, wtxid=%s", tx->GetHash().ToString(), tx->GetWitnessHash().ToString())};
     std::optional<NodeClock::time_point> release_time;
+    std::chrono::seconds randomized_delay{0};
     if (delay > 0s) {
-        release_time = NodeClock::now() + delay;
+        FastRandomContext rng;
+        randomized_delay = PrivateBroadcast::RandomizeDelay(delay, rng);
+        release_time = NodeClock::now() + randomized_delay;
     }
     switch (m_tx_for_private_broadcast.Add(tx, release_time)) {
     case PrivateBroadcast::AddResult::Added:
         if (release_time) {
             // Connections will be requested by ReleaseDelayedPrivateBroadcast() when it is due.
-            LogDebug(BCLog::PRIVBROADCAST, "Delaying private broadcast by %d seconds: %s", count_seconds(delay), txstr);
+            LogDebug(BCLog::PRIVBROADCAST, "Delaying private broadcast by %d seconds: %s", count_seconds(randomized_delay), txstr);
             return node::TransactionError::OK;
         }
         LogDebug(BCLog::PRIVBROADCAST, "Requesting %d new connections due to %s", PrivateBroadcast::INITIAL_CONNECTION_COUNT, txstr);

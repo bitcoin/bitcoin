@@ -16,6 +16,8 @@
 #include <unordered_map>
 #include <vector>
 
+class FastRandomContext;
+
 /**
  * Store a list of transactions to be broadcast privately. Supports the following operations:
  * - Add a new transaction
@@ -51,6 +53,15 @@ public:
     /// reached, the transaction remains tracked but is not sent again unless
     /// explicitly re-added.
     static constexpr size_t MAX_SEND_ATTEMPTS{1'000};
+
+    /// Delay randomization factor. The randomized jitter is added to the requested delay.
+    static constexpr int DELAY_RANDOMIZATION_PERCENT{50};
+
+    /// Lower bound for the randomized jitter range of a non-zero delay.
+    static constexpr std::chrono::seconds MIN_DELAY_RANDOMIZATION{5min};
+
+    /// Maximum requested delay for a delayed broadcast (see RandomizeDelay()).
+    static constexpr std::chrono::seconds MAX_DELAY{12h};
 
     /// @param[in] max_transactions Cap on the number of simultaneously tracked
     /// transactions. Defaults to MAX_TRANSACTIONS.
@@ -152,6 +163,17 @@ public:
      */
     bool TryGrantRetry(const CTransactionRef& tx)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /**
+     * Compute a randomized delay from a requested one. The result is picked uniformly
+     * from [requested, requested + r], where r is DELAY_RANDOMIZATION_PERCENT of the
+     * requested delay, but at least MIN_DELAY_RANDOMIZATION. The result is thus never
+     * shorter than requested. The requested delay is capped at MAX_DELAY.
+     * @param[in] requested The requested delay. Zero or negative means no delay.
+     * @param[in] rng Source of randomness.
+     * @return The randomized delay, or zero if no delay was requested.
+     */
+    static std::chrono::seconds RandomizeDelay(std::chrono::seconds requested, FastRandomContext& rng);
 
     /**
      * Pick the transaction with the fewest send attempts, and confirmations,
