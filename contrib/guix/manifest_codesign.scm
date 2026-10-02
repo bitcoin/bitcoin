@@ -111,7 +111,12 @@
                #t))
            (replace 'check
              (lambda _
-               (invoke "python" "run.py" "tests")
+               ;; TODO: revert when https://github.com/LRGH/elfesteem/commit/000d6bbcd3a4b3d132ad6d932eedb3158b3313e9
+               ;; lands in our time-machine bump.
+               ;; Bypass the custom test loader, which uses the removed imp module.
+               (substitute* "tests/__init__.py"
+                 (("^import imp") ""))
+               (invoke "python" "-m" "unittest" "discover" "-s" "tests" "-t" ".")
                #t)))))
       (home-page "https://github.com/wbond/certvalidator")
       (synopsis "Python library for validating X.509 certificates and paths")
