@@ -27,9 +27,7 @@
 
 #include <cstdint>
 #include <cstdlib>
-#include <locale>
 #include <optional>
-#include <stdexcept>
 #include <string>
 #include <thread>
 
@@ -67,15 +65,8 @@ void SetupEnvironment()
         mallopt(M_ARENA_MAX, 1);
     }
 #endif
-    // On most POSIX systems (e.g. Linux, but not BSD) the environment's locale
-    // may be invalid, in which case the "C.UTF-8" locale is used as fallback.
-#if !defined(WIN32) && !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__NetBSD__)
-    try {
-        std::locale(""); // Raises a runtime error if current locale is invalid
-    } catch (const std::runtime_error&) {
-        setenv("LC_ALL", "C.UTF-8", 1);
-    }
-#elif defined(WIN32)
+
+#if defined(WIN32)
     assert(GetACP() == CP_UTF8);
     // Set the default input/output charset is utf-8
     SetConsoleCP(CP_UTF8);
