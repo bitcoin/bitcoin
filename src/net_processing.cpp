@@ -1627,26 +1627,19 @@ void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, c
 
 void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
 {
-    uint64_t my_services;
-    int64_t my_time;
-    uint64_t your_services;
-    CService your_addr;
-    std::string my_user_agent;
-    int my_height;
-    bool my_tx_relay;
     const CAddress& addr{pnode.addr};
-    my_services = peer.m_our_services;
-    my_time = TicksSinceEpoch<std::chrono::seconds>(NodeClock::now());
-    your_services = addr.nServices;
-    your_addr = addr.IsRoutable() && !IsProxy(addr) && addr.IsAddrV1Compatible() ? CService{addr} : CService{};
-    my_user_agent = strSubVersion;
-    my_height = m_best_height;
-    my_tx_relay = !RejectIncomingTxs(pnode);
+    const uint64_t my_services{peer.m_our_services};
+    const int64_t my_time{TicksSinceEpoch<std::chrono::seconds>(NodeClock::now())};
+    const uint64_t your_services{addr.nServices};
+    const CService your_addr{addr.IsRoutable() && !IsProxy(addr) && addr.IsAddrV1Compatible() ? CService{addr} : CService{}};
+    const std::string my_user_agent{strSubVersion};
+    const int my_height{m_best_height};
+    const bool my_tx_relay{!RejectIncomingTxs(pnode)};
 
     MakeAndPushMessage(
         pnode,
         NetMsgType::VERSION,
-        pnode.AdvertisedVersion(),
+        PROTOCOL_VERSION,
         my_services,
         my_time,
         // your_services + CNetAddr::V1(your_addr) is the pre-version-31402 serialization of your_addr (without nTime)
@@ -1660,7 +1653,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
 
     LogDebug(
         BCLog::NET, "send version message: version=%d, blocks=%d%s, txrelay=%d, peer=%d\n",
-        pnode.AdvertisedVersion(), my_height,
+        PROTOCOL_VERSION, my_height,
         fLogIPs ? strprintf(", them=%s", your_addr.ToStringAddrPort()) : "",
         my_tx_relay, pnode.GetId());
 }
@@ -3780,7 +3773,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         }
 
         // Change version
-        const int greatest_common_version = std::min(nVersion, pfrom.AdvertisedVersion());
+        const int greatest_common_version = std::min(nVersion, PROTOCOL_VERSION);
         pfrom.SetCommonVersion(greatest_common_version);
         pfrom.nVersion = nVersion;
 

@@ -821,12 +821,6 @@ public:
         return m_conn_type == ConnectionType::ADDR_FETCH;
     }
 
-    /** Protocol version advertised in our VERSION message. */
-    int AdvertisedVersion() const
-    {
-        return PROTOCOL_VERSION;
-    }
-
     bool IsInboundConn() const {
         return m_conn_type == ConnectionType::INBOUND;
     }
