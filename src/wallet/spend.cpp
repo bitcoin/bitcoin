@@ -696,17 +696,20 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
 // Returns true if the result contains an error and the message is not empty
 static bool HasErrorMsg(const util::Result<SelectionResult>& res) { return !util::ErrorString(res).empty(); }
 
-util::Result<SelectionResult> AttemptSelection(interfaces::Chain& chain, const CAmount& nTargetValue, OutputGroupTypeMap& groups,
+util::Expected<SelectionResult, SelectionError> AttemptSelection(interfaces::Chain& chain, const CAmount& nTargetValue, OutputGroupTypeMap& groups,
                                const CoinSelectionParams& coin_selection_params, bool allow_mixed_output_types)
 {
     // Run coin selection on each OutputType and compute the Waste Metric
     std::vector<SelectionResult> results;
     for (auto& [type, group] : groups.groups_by_type) {
         auto result{ChooseSelectionResult(chain, nTargetValue, group, coin_selection_params)};
-        // If any specific error message appears here, then something particularly wrong happened.
-        if (HasErrorMsg(result)) return result; // So let's return the specific error.
+        if (!result) {
+            // If anything other than insufficient funds happened, then something particularly wrong happened.
+            if (result.error().type != SelectionErrorType::INSUFFICIENT_FUNDS) return result; // So let's return the specific error.
+            continue;
+        }
         // Append the favorable result.
-        if (result) results.push_back(*result);
+        results.push_back(*result);
     }
     // If we have at least one solution for funding the transaction without mixing, choose the minimum one according to waste metric
     // and return the result
@@ -720,19 +723,20 @@ util::Result<SelectionResult> AttemptSelection(interfaces::Chain& chain, const C
     }
     // Either mixing is not allowed and we couldn't find a solution from any single OutputType, or mixing was allowed and we still couldn't
     // find a solution using all available coins
-    return util::Error();
+    return util::Unexpected{SelectionError{SelectionErrorType::INSUFFICIENT_FUNDS, {}}};
 };
 
-util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, const CAmount& nTargetValue, Groups& groups, const CoinSelectionParams& coin_selection_params)
+util::Expected<SelectionResult, SelectionError> ChooseSelectionResult(interfaces::Chain& chain, const CAmount& nTargetValue, Groups& groups, const CoinSelectionParams& coin_selection_params)
 {
     // Vector of results. We will choose the best one based on waste.
     std::vector<SelectionResult> results;
-    std::vector<util::Result<SelectionResult>> errors;
+    std::vector<SelectionError> errors;
     auto append_error = [&] (util::Result<SelectionResult>&& result) {
-        // If any specific error message appears here, then something different from a simple "no selection found" happened.
+        // The selection algorithms only fail with an error message when a selection reaching the target exceeds the
+        // maximum weight. Without a message, they found no selection reaching the target.
         // Let's save it, so it can be retrieved to the user if no other selection algorithm succeeded.
         if (HasErrorMsg(result)) {
-            errors.emplace_back(std::move(result));
+            errors.push_back({SelectionErrorType::MAX_WEIGHT_EXCEEDED, util::ErrorString(result)});
         }
     };
 
@@ -741,7 +745,7 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
     int tx_weight_no_input = coin_selection_params.tx_noinputs_size * WITNESS_SCALE_FACTOR;
     int max_selection_weight = max_transaction_weight - tx_weight_no_input;
     if (max_selection_weight <= 0) {
-        return util::Error{_("Maximum transaction weight is less than transaction weight without inputs")};
+        return util::Unexpected{SelectionError{SelectionErrorType::MAX_WEIGHT_TOO_LOW, _("Maximum transaction weight is less than transaction weight without inputs")}};
     }
 
     // SFFO frequently causes issues in the context of changeless input sets: skip BnB when SFFO is active
@@ -755,7 +759,7 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
     int change_outputs_weight = coin_selection_params.change_output_size * WITNESS_SCALE_FACTOR;
     max_selection_weight -= change_outputs_weight;
     if (max_selection_weight < 0 && results.empty()) {
-        return util::Error{_("Maximum transaction weight is too low, can not accommodate change output")};
+        return util::Unexpected{SelectionError{SelectionErrorType::MAX_WEIGHT_TOO_LOW, _("Maximum transaction weight is too low, can not accommodate change output")}};
     }
 
     // The knapsack solver has some legacy behavior where it will spend dust outputs. We retain this behavior, so don't filter for positive only here.
@@ -779,7 +783,8 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
     if (results.empty()) {
         // No solution found, retrieve the first explicit error (if any).
         // future: add 'severity level' to errors so the worst one can be retrieved instead of the first one.
-        return errors.empty() ? util::Error() : std::move(errors.front());
+        if (errors.empty()) return util::Unexpected{SelectionError{SelectionErrorType::INSUFFICIENT_FUNDS, {}}};
+        return util::Unexpected{std::move(errors.front())};
     }
 
     // If the chosen input set has unconfirmed inputs, check for synergies from overlapping ancestry
@@ -794,7 +799,7 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
         }
         std::optional<CAmount> combined_bump_fee = chain.calculateCombinedBumpFee(outpoints, coin_selection_params.m_effective_feerate);
         if (!combined_bump_fee.has_value()) {
-            return util::Error{_("Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.")};
+            return util::Unexpected{SelectionError{SelectionErrorType::BUMP_FEE_FAILED, _("Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.")}};
         }
         CAmount bump_fee_overestimate = summed_bump_fees - combined_bump_fee.value();
         // Avoid negative discount if mempool changed between the two bump fee snapshots.
@@ -948,7 +953,7 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
         // Walk-through the filters until the solution gets found.
         // If no solution is found, return the first detailed error (if any).
         // future: add "error level" so the worst one can be picked instead.
-        std::vector<util::Result<SelectionResult>> res_detailed_errors;
+        std::vector<SelectionError> res_detailed_errors;
         CoinSelectionParams updated_selection_params = coin_selection_params;
         for (const auto& select_filter : ordered_filters) {
             auto it = filtered_groups.find(select_filter.filter);
@@ -960,17 +965,17 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
             }
             if (auto res{AttemptSelection(wallet.chain(), value_to_select, it->second,
                                           updated_selection_params, select_filter.allow_mixed_output_types)}) {
-                return res; // result found
-            } else {
-                // If any specific error message appears here, then something particularly wrong might have happened.
+                return std::move(*res); // result found
+            } else if (res.error().type != SelectionErrorType::INSUFFICIENT_FUNDS) {
+                // If anything other than insufficient funds happened, then something particularly wrong might have happened.
                 // Save the error and continue the selection process. So if no solutions gets found, we can return
                 // the detailed error to the upper layers.
-                if (HasErrorMsg(res)) res_detailed_errors.emplace_back(std::move(res));
+                res_detailed_errors.push_back(std::move(res.error()));
             }
         }
 
         // Return right away if we have a detailed error
-        if (!res_detailed_errors.empty()) return std::move(res_detailed_errors.front());
+        if (!res_detailed_errors.empty()) return util::Error{std::move(res_detailed_errors.front().message)};
 
 
         // General "Insufficient Funds"
