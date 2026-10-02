@@ -244,12 +244,60 @@ class P2POutEvict(BitcoinTestFramework):
         node.disconnect_p2ps()
 
 
+    def test_outbound_eviction_no_tx_relay(self):
+        # Outbound-full-relay peers that don't participate in tx relay are not granted protection,
+        # unless we are in -blocksonly mode ourselves
+        node = self.nodes[0]
+        cur_mock_time = node.mocktime
+        tip_header = from_hex(CBlockHeader(), node.getblockheader(node.getbestblockhash(), False))
+
+        self.log.info("Create an outbound-full-relay connection to a peer that shares our tip but doesn't relay txs")
+        peer = node.add_outbound_p2p_connection(P2PInterface(), p2p_idx=0, connection_type="outbound-full-relay", txrelay=False)
+        peer.send_and_ping(msg_headers([tip_header]))
+
+        self.log.info("Mine a new block and sync with our peer")
+        self.generateblock(node, output="raw(42)", transactions=[])
+        peer.sync_with_ping()
+
+        self.log.info("Let enough time pass for the timeouts to go off")
+        cur_mock_time += (CHAIN_SYNC_TIMEOUT + 1)
+        node.setmocktime(cur_mock_time)
+        peer.sync_with_ping()
+        peer.wait_for_getheaders(block_hash=tip_header.hash_int)
+        cur_mock_time += (HEADERS_RESPONSE_TIME + 1)
+        node.setmocktime(cur_mock_time)
+        self.log.info("Test that the peer gets evicted")
+        peer.wait_for_disconnect()
+
+        node.disconnect_p2ps()
+
+        self.log.info("Check that such a peer is granted protection if we are in -blocksonly mode")
+        self.restart_node(0, ["-blocksonly", f"-mocktime={cur_mock_time}"])
+        tip_header = from_hex(CBlockHeader(), node.getblockheader(node.getbestblockhash(), False))
+        peer = node.add_outbound_p2p_connection(P2PInterface(), p2p_idx=0, connection_type="outbound-full-relay", txrelay=False)
+        peer.send_and_ping(msg_headers([tip_header]))
+
+        self.generateblock(node, output="raw(42)", transactions=[])
+        peer.sync_with_ping()
+
+        cur_mock_time += (CHAIN_SYNC_TIMEOUT + 1)
+        node.setmocktime(cur_mock_time)
+        peer.sync_with_ping()
+        peer.wait_for_getheaders(block_hash=tip_header.hashPrevBlock)
+        cur_mock_time += (HEADERS_RESPONSE_TIME + 1)
+        node.setmocktime(cur_mock_time)
+        self.log.info("Test that the peer does not get evicted")
+        peer.sync_with_ping()
+
+        node.disconnect_p2ps()
+
     def run_test(self):
         self.nodes[0].setmocktime(int(time.time()))
         self.test_outbound_eviction_unprotected()
         self.test_outbound_eviction_protected()
         self.test_outbound_eviction_mixed()
         self.test_outbound_eviction_blocks_relay_only()
+        self.test_outbound_eviction_no_tx_relay()
 
 
 if __name__ == '__main__':
