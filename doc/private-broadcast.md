@@ -3,7 +3,7 @@
 Bitcoin Core can send a transaction to the network without revealing your IP address, onion address
 or node identity, either with the standalone `bitcoin-privbcast` program or with
 `bitcoind -privatebroadcast`, which runs the same jobs for transactions submitted through
-`sendrawtransaction`. Each broadcast is a job: it finds peers through the
+`sendrawtransaction` and `submitpackage`. Each broadcast is a job: it finds peers through the
 release DNS seeds (resolved through Tor), connects to a small, fixed number of them through Tor on a
 schedule drawn when the job starts, announces the transaction, and stops. A job does not retry.
 
@@ -57,19 +57,40 @@ terminal holds the job up until the line is written.
 `bitcoin-privbcast discover` runs only the peer discovery and prints the candidates it found. It
 makes the same queries as a job.
 
+## A parent and its child
+
+A parent too cheap to enter mempools on its own can be carried by a child that pays for both, if
+the recipient evaluates the two together. Give the tool both transactions, separated by whitespace,
+in either order. The job announces the child and serves the parent to a peer that asks for it.
+
+- Bitcoin Core 31 and later accept a parent below the minimum relay feerate in such a package
+  whatever its version; versions 28 to 30 only if it is TRUC (version 3); older versions drop it.
+  Whether the package reaches miners depends on what they run.
+- `testmempoolaccept` checks each transaction on its own. It rejects a low-fee parent ("min relay
+  fee not met", or "mempool min fee not met") even when the package would be accepted, and then does
+  not evaluate the child. The tool checks no fees, so work out the package feerate yourself. The
+  node checks the pair as `submitpackage` would without `-privatebroadcast` (see below).
+- Peers can tell that you used package mode: a peer that fetches the child sees the job wait before
+  its PING, and a peer that asks for the parent is sent it. That the two transactions belong
+  together is visible on chain anyway.
+
 ## bitcoind -privatebroadcast
 
-With `-privatebroadcast`, `sendrawtransaction` queues a job instead of adding the transaction to the
-mempool and announcing it to the node's peers. The transaction enters the node's mempool only when
-it comes back from the network, and is then relayed like any other. Wallet sends and `submitpackage`
-are not affected: they add to the mempool and announce to the node's peers as before.
+With `-privatebroadcast`, `sendrawtransaction` and `submitpackage` queue a job instead of adding the
+transaction to the mempool and announcing it to the node's peers. The transaction enters the node's
+mempool only when it comes back from the network, and is then relayed like any other. Wallet sends
+are not affected: the wallet adds to the mempool and rebroadcasts from there.
 
-- `sendrawtransaction` test-accepts the transaction, then queues it. A transaction whose txid is
-  already in the mempool counts as accepted and is sent as you gave it.
+- `sendrawtransaction` test-accepts the transaction, then queues it. `submitpackage` takes one
+  transaction, or one parent and its child. A transaction whose txid is already in the mempool
+  counts as accepted and is sent as you gave it. A new parent too cheap on its own goes out with its
+  child if the node would accept the two as a package, each within `maxfeerate`.
 - Jobs start in submission order, 35 to 55 seconds (drawn at random) after the previous start. A
   job submitted after that time, with nothing waiting, starts at once.
 - A transaction whose job is still queued or running is not queued again. The match is by wtxid, so
-  a witness variant gets its own job. Once a job has ended, the same transaction can be queued again.
+  a witness variant gets its own job. A job for a parent and child also covers the child submitted
+  alone, once the parent is in the mempool; before that, `sendrawtransaction` refuses the child for
+  its missing input. Once a job has ended, the same transaction can be queued again.
 - A job runs until its schedule is over, at most ten minutes, and does not retry. If
   `getprivatebroadcastinfo` shows a finished job with `announced` false, or the transaction does not
   arrive, submit it again.
