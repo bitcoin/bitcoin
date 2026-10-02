@@ -114,6 +114,7 @@ class PeerTxRelayer(P2PTxInvStore):
 
     def assert_never_requested(self, txhash):
         """Check that the node has never sent us a getdata for this hash (int type)"""
+        assert isinstance(txhash, int), f"txhash must be an int, got {type(txhash).__name__}"
         self.sync_with_ping()
         for getdata in self.getdata_received:
             for request in getdata.inv:
