@@ -4,7 +4,9 @@
 sender. This document states what a job must guarantee (invariants), the values peers and observers
 see (parameters), what the design relies on (assumptions) and what it does not attempt (non-goals).
 How to use it is in [private-broadcast.md](../private-broadcast.md).
-A job carries one transaction. The rationale at the end is not normative.
+The base specifies one transaction per job. The section "Extension: one parent, one child" adds
+package mode on top of it and changes nothing for a job without a parent. The rationale at the end
+is not normative.
 
 ## Goals
 
@@ -428,6 +430,104 @@ anything else, or null if the event did not happen.
 - Local users of the host, who can see connections to the proxy, process arguments and the tool's
   output.
 - Authenticating recipients. Exits and seeds are untrusted.
+
+## Extension: one parent, one child
+
+A parent too cheap to enter mempools on its own can be carried by a child that pays for both, when
+the recipient evaluates the two together. Package mode adds that to the base: a job then carries the
+child and its unconfirmed parent. For a job without a parent, nothing in the base changes.
+
+### Terms and threat model
+
+- **Package mode**: a job that carries a child and its parent. Where the base says "the
+  transaction", read the child, except in A1, A2 and A4, which cover both transactions.
+- A recipient in package mode is sent the child, and the parent if it asks for it.
+
+### Invariants
+
+- **F1.** In package mode only the child is announced.
+- **F2.** The parent is served at most once per connection, and only for a GETDATA containing
+  MSG_WITNESS_TX for the parent's txid, either (a) after the child was served and before the PING,
+  or (b) before the child was served, when the GETDATA names neither of the child's ids. A GETDATA
+  naming both before the child is served is ignored entirely. After the parent is served, the PING
+  goes out and nothing more is served.
+- **F3.** After the child is fully written, the PING is held until the parent is served or
+  PARENT_HOLD has passed, but never into the last PONG_WAIT of the request window.
+- **F4.** A GETDATA received while the job waits for the parent request (from serving the child
+  until the PING), or handled under F2 (b), is answered with NOTFOUND for exactly its transaction
+  entries that are neither id of either of the job's transactions, and with none if there are no
+  such entries. No other NOTFOUND is sent.
+- The base changes in package mode as follows:
+  - E6: the PING follows the parent phase (F2, F3).
+  - E7: the job also sends NOTFOUND, as F4 says.
+  - E8: the job also serves the parent on the first request F2 allows, and the PING waits for the
+    hold (F3). A Bitcoin Core recipient ends up with the package when its policy accepts it.
+  - N5: a submission with a parent is covered only by a job with the same parent; one without a
+    parent is covered by a job with any parent.
+  - N11: `submitpackage` queues jobs too.
+
+### Parameters
+
+| Parameter | Value | Seen by |
+|---|---|---|
+| PARENT_HOLD | 30 s | recipients |
+
+PARENT_HOLD + PONG_WAIT is at most the request window, so a child requested promptly gets the whole
+hold.
+
+### Interface
+
+- `bitcoin-privbcast send` also takes two transactions, a parent and its child in either order,
+  separated by whitespace. They must differ and one must spend the other. Every input of the child
+  that spends the parent must name an output the parent has, the two must share no input, and
+  together they must weigh at most 404,000 weight units.
+- The report adds `parent_txid` and `parent_wtxid`; per attempt `parent_getdata_ms` (the request
+  the parent was served for), `parent_tx_written_ms` and `parent_hold_expired_ms` (the PING went out
+  without a parent request at the end of a hold, F3); and `summary.parents_served`. `outcome` stays
+  the child's: an attempt that served only the parent ends `announced_not_requested` unless its
+  PONG arrives or the connection fails.
+- `getprivatebroadcastinfo` adds `parent_txid` for a package job.
+- `abortprivatebroadcast` matches a package job by its child's txid or wtxid only, never by the
+  parent's, which several jobs can share. `removed_transactions` has one entry per job, for its
+  child.
+- `submitpackage` takes one transaction, or one parent and its child. More than two fail with
+  RPC_INVALID_PARAMETER, and two that are not a parent and its child with RPC_VERIFY_ERROR, as
+  without `-privatebroadcast`. Bitcoin Core's package rules that need no context, weight included,
+  apply to the two as submitted, whatever the mempool holds. A transaction whose txid is in the
+  mempool counts as accepted and is sent as given. What remains is test-accepted: one transaction
+  alone, as by `sendrawtransaction`; two as Bitcoin Core's `submitpackage` evaluates them, without
+  entering the mempool (a parent that passes alone is tested with its child, each paying for
+  itself, their replacements checked together). `maxfeerate` holds for each of two
+  on validation's fees and sizes (modified fees, sigop-adjusted sizes). A package rejected as a
+  whole queues nothing. The result has `package_msg` (`success` or an error) and `tx-results`,
+  keyed by wtxid, and a job is queued only when the package is acceptable. Each entry of
+  `tx-results` has `txid`; `other-wtxid` when the
+  mempool holds the txid with another witness; `vsize_adjusted`, `vsize`, `vsize_bip141` and `fees`
+  when the transaction was test-accepted, as without `-privatebroadcast`; and `error` when it was
+  not accepted, carrying validation's reject reason when validation rejected it.
+  It fails as `sendrawtransaction` does when a job cannot be queued or no Tor proxy is configured.
+
+### Assumptions
+
+- Recipients (Bitcoin Core) ask for a missing parent about 4 s after receiving the child (2 s for a
+  non-preferred peer, 2 s for a request by txid). From version 29 they ask only for the parent when
+  they already hold the child as an orphan learned from another peer. They accept a parent below the
+  minimum relay feerate in a package from version 31 whatever its version, and in versions 28 to 30
+  only if it is TRUC; older versions drop it.
+
+### Non-goals
+
+- Hiding package mode. A recipient that fetches the child can tell from the held PING, and one that
+  asks for the parent is served it. The pairing is visible on chain anyway.
+- Validating a package in the tool, which checks no fees.
+
+### Rationale (not normative)
+
+- Only the child is announced: announcing the parent would invite a request for it before the child,
+  and a low-fee parent received alone is rejected.
+- A peer that has not been sent the child cannot have learned its inputs from the job, so a request
+  naming both was not caused by the announcement (F2).
+- The 30 s parent hold is several times a recipient's orphan-parent delay plus a Tor round trip.
 
 ## Rationale (not normative)
 
