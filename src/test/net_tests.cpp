@@ -29,11 +29,13 @@
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
+#include <atomic>
 #include <cstdint>
 #include <ios>
 #include <memory>
 #include <optional>
 #include <string>
+#include <thread>
 
 using namespace std::literals;
 using namespace util::hex_literals;
@@ -138,6 +140,80 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     BOOST_CHECK(pnode4->IsInboundConn() == true);
     BOOST_CHECK(pnode4->m_inbound_onion == true);
     BOOST_CHECK_EQUAL(pnode4->ConnectedThroughNetwork(), Network::NET_ONION);
+}
+
+BOOST_AUTO_TEST_CASE(connman_networkactive_callbacks_are_serialized)
+{
+    ConnmanTestMsg connman{0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params()};
+
+    std::atomic<int> callbacks_active{0};
+    std::atomic<int> callback_overlaps{0};
+    std::atomic<bool> last_mapport_active{false};
+    std::atomic<bool> last_tor_active{false};
+
+    const auto record_callback = [&](std::atomic<bool>& last_active, bool active) {
+        if (callbacks_active.fetch_add(1) != 0) {
+            callback_overlaps.fetch_add(1);
+        }
+        last_active = active;
+        for (int i{0}; i < 64; ++i) {
+            std::this_thread::yield();
+        }
+        callbacks_active.fetch_sub(1);
+    };
+
+    CConnman::Options options;
+    options.m_mapport = [&](bool active) { record_callback(last_mapport_active, active); };
+    options.m_mapport_enabled = true;
+    options.m_tor_control = [&](bool active) { record_callback(last_tor_active, active); };
+    connman.Init(options);
+
+    std::atomic<bool> start{false};
+    const auto wait_for_start = [&] {
+        while (!start) {
+            std::this_thread::yield();
+        }
+    };
+
+    const auto toggle_network_active = [&] {
+        wait_for_start();
+        for (int i{0}; i < 200; ++i) {
+            connman.SetNetworkActive(i % 2 == 0);
+        }
+    };
+
+    std::thread network_active_thread_1{toggle_network_active};
+    std::thread network_active_thread_2{toggle_network_active};
+    std::thread mapport_thread{[&] {
+        wait_for_start();
+        for (int i{0}; i < 200; ++i) {
+            connman.SetMapPortEnabled(i % 2 == 0);
+        }
+    }};
+
+    start = true;
+    network_active_thread_1.join();
+    network_active_thread_2.join();
+    mapport_thread.join();
+
+    BOOST_CHECK_EQUAL(callback_overlaps.load(), 0);
+    BOOST_CHECK_EQUAL(callbacks_active.load(), 0);
+    BOOST_CHECK(!connman.GetNetworkActive());
+    BOOST_CHECK(!last_mapport_active);
+    BOOST_CHECK(!last_tor_active);
+
+    connman.SetNetworkActive(/*active=*/true);
+    connman.SetMapPortEnabled(/*enable=*/true);
+    connman.SetNetworkActive(/*active=*/false);
+    BOOST_CHECK(!connman.GetNetworkActive());
+    BOOST_CHECK(!last_mapport_active);
+    BOOST_CHECK(!last_tor_active);
+
+    connman.SetMapPortEnabled(/*enable=*/false);
+    connman.SetNetworkActive(/*active=*/true);
+    BOOST_CHECK(connman.GetNetworkActive());
+    BOOST_CHECK(!last_mapport_active);
+    BOOST_CHECK(last_tor_active);
 }
 
 BOOST_AUTO_TEST_CASE(cnetaddr_basic)
