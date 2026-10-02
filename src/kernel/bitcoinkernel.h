@@ -391,6 +391,10 @@ typedef void (*btck_ValidationInterfaceBlockDisconnected)(void* user_data, btck_
 /**
  * Function signature for serializing data.
  *
+ * The bytes pointer may be null when size is zero. Callers that construct a
+ * language-level slice or array view from the arguments must handle that
+ * case, as some languages require a non-null pointer even for an empty view.
+ *
  * Returns 0 to indicate success.
  */
 typedef int (*btck_WriteBytes)(const void* bytes, size_t size, void* userdata);
