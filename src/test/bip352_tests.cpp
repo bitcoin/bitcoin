@@ -7,6 +7,10 @@
 #include <coins.h>
 #include <span.h>
 #include <addresstype.h>
+#include <policy/policy.h>
+#include <script/interpreter.h>
+#include <script/script.h>
+#include <script/script_error.h>
 #include <script/solver.h>
 #include <test/data/bip352_send_and_receive_vectors.json.h>
 
@@ -271,6 +275,41 @@ BOOST_AUTO_TEST_CASE(bip352_scan_skips_invalid_taproot_outputs)
     BOOST_REQUIRE(found_outputs.has_value());
     BOOST_REQUIRE_EQUAL(found_outputs->size(), 1);
     BOOST_CHECK(found_outputs->front().output == expected_output);
+}
+
+BOOST_AUTO_TEST_CASE(bip352_p2pkh_pubkey_extraction_with_checksig_in_scriptsig)
+{
+    // P2PKH scriptSigs are third-party malleable. Construct one that contains an OP_CHECKSIG with a
+    // bogus (but strictly DER-encoded) signature, followed by a conditional push of a wrong pubkey:
+    //
+    //   <sig> <pubkey> <bogus_sig> OP_OVER OP_CHECKSIG OP_IF <wrong_pubkey> OP_ENDIF
+    //
+    // In real validation the OP_CHECKSIG fails, the OP_IF branch is skipped and the final stack is
+    // <sig> <pubkey>, i.e. the spend is still valid and the pubkey must be extracted from it.
+    const CKey key = ParseHexToCKey("0000000000000000000000000000000000000000000000000000000000000001");
+    const CPubKey pubkey = key.GetPubKey();
+    const CPubKey wrong_pubkey = ParseHexToCKey("0000000000000000000000000000000000000000000000000000000000000002").GetPubKey();
+    const CScript spk{GetScriptForDestination(PKHash{pubkey})};
+
+    CMutableTransaction tx;
+    tx.vin.emplace_back(COutPoint{Txid::FromHex("0000000000000000000000000000000000000000000000000000000000000001").value(), 0});
+    std::vector<unsigned char> sig;
+    BOOST_REQUIRE(key.Sign(SignatureHash(spk, tx, 0, SIGHASH_ALL, /*amount=*/0, SigVersion::BASE), sig));
+    sig.push_back(SIGHASH_ALL);
+    const std::vector<unsigned char> bogus_sig{ParseHex("300602010102010101")}; // r=1, s=1, SIGHASH_ALL
+    tx.vin[0].scriptSig = CScript() << sig << ToByteVector(pubkey) << bogus_sig << OP_OVER << OP_CHECKSIG
+                                    << OP_IF << ToByteVector(wrong_pubkey) << OP_ENDIF;
+    const CTxIn& txin{tx.vin[0]};
+
+    // Verify that the malleated spend is consensus-valid
+    ScriptError serror = SCRIPT_ERR_OK;
+    BOOST_CHECK_MESSAGE(VerifyScript(txin.scriptSig, spk, nullptr, MANDATORY_SCRIPT_VERIFY_FLAGS,
+                                     MutableTransactionSignatureChecker(&tx, 0, /*amountIn=*/0, MissingDataBehavior::ASSERT_FAIL), &serror),
+                        ScriptErrorString(serror));
+
+    const auto extracted_pubkey = GetPubKeyFromInput(txin, spk);
+    BOOST_REQUIRE(extracted_pubkey.has_value());
+    BOOST_CHECK(std::get<CPubKey>(*extracted_pubkey) == pubkey);
 }
 
 BOOST_AUTO_TEST_CASE(bip352_label_serialize_roundtrip)
