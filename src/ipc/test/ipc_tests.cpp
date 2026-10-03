@@ -67,19 +67,9 @@ void IpcPipeTest()
     std::thread thread([&]() {
         mp::EventLoop loop("IpcPipeTest", [](bool raise, const std::string& log) { LogInfo("LOG%i: %s", raise, log); });
         auto pipe = loop.m_io_context.provider->newTwoWayPipe();
-
-        auto connection_client = std::make_unique<mp::Connection>(loop, kj::mv(pipe.ends[0]));
-        auto foo_client = std::make_unique<mp::ProxyClient<gen::FooInterface>>(
-            connection_client->m_rpc_system->bootstrap(mp::ServerVatId().vat_id).castAs<gen::FooInterface>(),
-            connection_client.get(), /* destroy_connection= */ true);
-        (void)connection_client.release();
+        auto foo_client = mp::ConnectStream<gen::FooInterface>(loop, kj::mv(pipe.ends[0]));
         foo_promise.set_value(std::move(foo_client));
-
-        auto connection_server = std::make_unique<mp::Connection>(loop, kj::mv(pipe.ends[1]), [&](mp::Connection& connection) {
-            auto foo_server = kj::heap<mp::ProxyServer<gen::FooInterface>>(std::make_shared<FooImplementation>(), connection);
-            return capnp::Capability::Client(kj::mv(foo_server));
-        });
-        connection_server->onDisconnect([&] { connection_server.reset(); });
+        mp::ServeStream<gen::FooInterface>(loop, kj::mv(pipe.ends[1]), std::make_shared<FooImplementation>());
         loop.loop();
     });
     std::unique_ptr<mp::ProxyClient<gen::FooInterface>> foo{foo_promise.get_future().get()};
