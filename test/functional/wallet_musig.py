@@ -253,6 +253,11 @@ class WalletMuSigTest(BitcoinTestFramework):
                 assert_equal(utxo, wallet.listunspent()[0])
         psbt = wallets[0].walletcreatefundedpsbt(outputs=[{self.def_wallet.getnewaddress(): 5}], inputs=[utxo], change_type="bech32m", changePosition=1, locktime=self.nodes[0].getblockcount())["psbt"]
 
+        if comment == "tr(H, pk(musig(keys/*)))":
+            analysis = self.nodes[0].analyzepsbt(psbt)
+            assert_equal(analysis["next"], "updater")
+            assert_equal(analysis["inputs"][0]["next"], "updater")
+
         dec_psbt = self.nodes[0].decodepsbt(psbt)
         assert_equal(len(dec_psbt["inputs"]), 1)
         assert_equal(len(dec_psbt["inputs"][0]["musig2_participant_pubkeys"]), expected_participant_maps)
