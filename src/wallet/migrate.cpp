@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <optional>
 #include <stdexcept>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -379,10 +380,11 @@ public:
 class RecordsPage
 {
 public:
-    RecordsPage(const PageHeader& header) : m_header(header) {}
+    RecordsPage(const PageHeader& header, uint32_t page_size) : m_header(header), m_page_size(page_size) {}
     RecordsPage() = delete;
 
     PageHeader m_header;
+    uint32_t m_page_size;
 
     std::vector<uint16_t> indexes;
     std::vector<std::variant<DataRecord, OverflowRecord>> records;
@@ -392,6 +394,11 @@ public:
     {
         // Current position within the page
         int64_t pos = PageHeader::SIZE;
+
+        // In a valid page the records do not overlap, so their total size cannot
+        // exceed the page. Track it to reject a page whose entries point at the same
+        // record, which would otherwise be read and kept once per entry.
+        int64_t records_size{0};
 
         // Get the items
         for (uint32_t i = 0; i < m_header.entries; ++i) {
@@ -422,6 +429,7 @@ public:
                 s >> record;
                 records.emplace_back(record);
                 to_jump += rec_hdr.len;
+                records_size += RecordHeader::SIZE + rec_hdr.len;
                 break;
             }
             case RecordType::OVERFLOW_DATA: {
@@ -429,10 +437,15 @@ public:
                 s >> record;
                 records.emplace_back(record);
                 to_jump += OverflowRecord::SIZE;
+                records_size += RecordHeader::SIZE + OverflowRecord::SIZE;
                 break;
             }
             default:
                 throw std::runtime_error("Unknown record type in records page");
+            }
+
+            if (records_size > m_page_size) {
+                throw std::runtime_error("Data records exceed page size");
             }
 
             // Go back to the indexes
@@ -469,10 +482,11 @@ public:
 class InternalPage
 {
 public:
-    InternalPage(const PageHeader& header) : m_header(header) {}
+    InternalPage(const PageHeader& header, uint32_t page_size) : m_header(header), m_page_size(page_size) {}
     InternalPage() = delete;
 
     PageHeader m_header;
+    uint32_t m_page_size;
 
     std::vector<uint16_t> indexes;
     std::vector<InternalRecord> records;
@@ -482,6 +496,11 @@ public:
     {
         // Current position within the page
         int64_t pos = PageHeader::SIZE;
+
+        // In a valid page the records do not overlap, so their total size cannot
+        // exceed the page. Track it to reject a page whose entries point at the same
+        // record, which would otherwise be read and kept once per entry.
+        int64_t records_size{0};
 
         // Get the items
         for (uint32_t i = 0; i < m_header.entries; ++i) {
@@ -513,6 +532,11 @@ public:
             s >> record;
             records.emplace_back(record);
             to_jump += InternalRecord::FIXED_SIZE + rec_hdr.len;
+
+            records_size += RecordHeader::SIZE + InternalRecord::FIXED_SIZE + rec_hdr.len;
+            if (records_size > m_page_size) {
+                throw std::runtime_error("Internal records exceed page size");
+            }
 
             // Go back to the indexes
             s.seek(-to_jump, SEEK_CUR);
@@ -593,7 +617,7 @@ void BerkeleyRODatabase::Open()
     if (header.entries != 2) {
         throw std::runtime_error("Unexpected number of entries in outer database root page");
     }
-    RecordsPage page(header);
+    RecordsPage page(header, page_size);
     db_file >> page;
 
     // First record should be the string "main"
@@ -639,9 +663,15 @@ void BerkeleyRODatabase::Open()
     PageHeader root_header(inner_meta.root, inner_meta.other_endian);
     db_file >> root_header;
 
-    // Do a DFS through the BTree, starting at root
-    // We track the expected level of each page in order to avoid loops
+    // Do a DFS through the BTree, starting at root.
+    // The expected level of each page is tracked to reject cycles, but that is not
+    // sufficient on its own: a page reachable through more than one parent is
+    // level-consistent, passes the level check, and would be re-parsed once per path
+    // to it, so a small file can describe an exponential amount of work. Track the
+    // visited pages and reject any seen more than once, as a valid BTree references
+    // each page exactly once.
     std::vector<std::pair<uint32_t, uint32_t>> pages{{inner_meta.root, root_header.level}};
+    std::unordered_set<uint32_t> visited_pages;
     while (pages.size() > 0) {
         auto [curr_page, expected_level] = pages.back();
         // It turns out BDB completely ignores this last_page field and doesn't actually update it to the correct
@@ -651,6 +681,9 @@ void BerkeleyRODatabase::Open()
         //     throw std::runtime_error("Page number is greater than subdatabase last page");
         // }
         pages.pop_back();
+        if (!visited_pages.insert(curr_page).second) {
+            throw std::runtime_error("BTree page referenced more than once");
+        }
         SeekToPage(db_file, curr_page, page_size);
         PageHeader header(curr_page, inner_meta.other_endian);
         db_file >> header;
@@ -659,7 +692,7 @@ void BerkeleyRODatabase::Open()
         }
         switch (header.type) {
         case PageType::BTREE_INTERNAL: {
-            InternalPage int_page(header);
+            InternalPage int_page(header, page_size);
             db_file >> int_page;
             for (const InternalRecord& rec : int_page.records) {
                 if (rec.m_header.deleted) continue;
@@ -671,7 +704,7 @@ void BerkeleyRODatabase::Open()
             if (header.level != 1) {
                 throw std::runtime_error("BTree Leaf page is not at level 1");
             }
-            RecordsPage rec_page(header);
+            RecordsPage rec_page(header, page_size);
             db_file >> rec_page;
             if (rec_page.records.size() % 2 != 0) {
                 // BDB stores key value pairs in consecutive records, thus an odd number of records is unexpected
@@ -690,7 +723,14 @@ void BerkeleyRODatabase::Open()
                     if (orec->item_len > max_data_size) {
                         throw std::runtime_error("Overflow record has an impossible length");
                     }
+                    // Overflow pages that carry no data do not grow the accumulated
+                    // size, so the length check above cannot bound a chain of them.
+                    // Track visited pages to reject a chain that references one twice.
+                    std::unordered_set<uint32_t> visited_overflow;
                     while (next_page != 0) {
+                        if (!visited_overflow.insert(next_page).second) {
+                            throw std::runtime_error("Overflow page referenced more than once");
+                        }
                         SeekToPage(db_file, next_page, page_size);
                         PageHeader opage_header(next_page, inner_meta.other_endian);
                         db_file >> opage_header;
