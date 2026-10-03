@@ -57,6 +57,7 @@ struct test_only_CheckFailuresAreExceptionsNotAborts {
 };
 
 std::string StrFormatInternalBug(std::string_view msg, const std::source_location& loc);
+std::string StrFormatFailedCheck(std::string_view assertion);
 
 class NonFatalCheckError : public std::runtime_error
 {
@@ -65,17 +66,17 @@ public:
 };
 
 /// Internal helper. The noreturn enables optimizers to discard invalid paths.
-[[noreturn]] void assertion_fail(const std::source_location& loc, std::string_view assertion);
+[[noreturn]] void internal_abort_helper(const std::source_location& loc, std::string_view error_msg);
+
+/** Helper for CHECK_NONFATAL() and NONFATAL_UNREACHABLE() */
+[[noreturn]] void check_non_fatal_fail(const std::source_location& loc, std::string_view error_msg);
 
 /** Helper for CHECK_NONFATAL() */
 template <typename T>
 T&& inline_check_non_fatal(LIFETIMEBOUND T&& val, const std::source_location& loc, std::string_view assertion)
 {
     if (!val) {
-        if constexpr (G_ABORT_ON_FAILED_ASSUME) {
-            assertion_fail(loc, assertion);
-        }
-        throw NonFatalCheckError{assertion, loc};
+        check_non_fatal_fail(loc, StrFormatFailedCheck(assertion));
     }
     return std::forward<T>(val);
 }
@@ -90,7 +91,7 @@ constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] con
 {
     if (IS_ASSERT || std::is_constant_evaluated() || G_ABORT_ON_FAILED_ASSUME) {
         if (!val) {
-            assertion_fail(loc, assertion);
+            internal_abort_helper(loc, StrFormatFailedCheck(assertion));
         }
     }
     return std::forward<T>(val);
@@ -108,6 +109,9 @@ constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] con
  * For example in RPC code, where it is undesirable to crash the whole program, this can be generally used to replace
  * asserts or recoverable logic errors. A NonFatalCheckError in RPC code is caught and passed as a string to the RPC
  * caller, which can then report the issue to the developers.
+ *
+ * Note: in certain test environments an abort is triggered instead
+ * (in fuzz tests, when ABORT_ON_FAILED_ASSUME is set, etc.; see G_ABORT_ON_FAILED_ASSUME).
  */
 #define CHECK_NONFATAL(condition) \
     inline_check_non_fatal(condition, std::source_location::current(), #condition)
@@ -129,9 +133,13 @@ constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] con
 
 /**
  * NONFATAL_UNREACHABLE() is a macro that is used to mark unreachable code. It throws a NonFatalCheckError.
+ * Control flow will not continue past this macro.
+ *
+ * Note: in certain test environments an abort is triggered instead
+ * (in fuzz tests, when ABORT_ON_FAILED_ASSUME is set, etc.; see G_ABORT_ON_FAILED_ASSUME).
  */
 #define NONFATAL_UNREACHABLE() \
-    throw NonFatalCheckError { "Unreachable code reached (non-fatal)", std::source_location::current() }
+    check_non_fatal_fail(std::source_location::current(), "unreachable")
 
 #if defined(__has_feature)
 #    if __has_feature(address_sanitizer)
