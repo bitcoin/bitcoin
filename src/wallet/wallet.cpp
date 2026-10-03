@@ -1110,7 +1110,6 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
             // Break caches since we have changed the state
             desc_tx->MarkDirty();
             batch.WriteTxMetadata(*desc_tx);
-            MarkInputsDirty(desc_tx->GetTx());
             for (unsigned int i = 0; i < desc_tx->GetTx()->vout.size(); ++i) {
                 COutPoint outpoint(desc_tx->GetHash(), i);
                 std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(outpoint);
@@ -1292,16 +1291,6 @@ void CWallet::UpdateTrucSiblingConflicts(const CWalletTx& parent_wtx, const Txid
     }
 }
 
-void CWallet::MarkInputsDirty(const CTransactionRef& tx)
-{
-    for (const CTxIn& txin : tx->vin) {
-        auto it = mapWallet.find(txin.prevout.hash);
-        if (it != mapWallet.end()) {
-            it->second.MarkDirty();
-        }
-    }
-}
-
 bool CWallet::AbandonTransaction(const Txid& hashTx)
 {
     LOCK(cs_wallet);
@@ -1406,10 +1395,6 @@ void CWallet::RecursiveUpdateTxState(WalletBatch* batch, const Txid& tx_hash, co
             if (update_state == TxUpdate::NOTIFY_CHANGED) {
                 NotifyTransactionChanged(wtx.GetHash(), CT_UPDATED);
             }
-
-            // If a transaction changes its tx state, that usually changes the balance
-            // available of the outputs it spends. So force those to be recomputed
-            MarkInputsDirty(wtx.GetTx());
         }
     }
 }
@@ -1419,10 +1404,6 @@ bool CWallet::SyncTransaction(const CTransactionRef& ptx, const SyncTxState& sta
     if (!AddToWalletIfInvolvingMe(ptx, state, rescanning_old_block))
         return false; // Not one of ours
 
-    // If a transaction changes 'conflicted' state, that changes the balance
-    // available of the outputs it spends. So force those to be
-    // recomputed, also:
-    MarkInputsDirty(ptx);
     return true;
 }
 
@@ -2150,13 +2131,6 @@ void CWallet::CommitTransaction(
     // wtx can only be null if the db write failed.
     if (!wtx) {
         throw std::runtime_error(std::string(__func__) + ": Wallet db error, transaction commit failed");
-    }
-
-    // Notify that old coins are spent
-    for (const CTxIn& txin : tx->vin) {
-        CWalletTx &coin = mapWallet.at(txin.prevout.hash);
-        coin.MarkDirty();
-        NotifyTransactionChanged(coin.GetHash(), CT_UPDATED);
     }
 
     if (!fBroadcastTransactions) {
