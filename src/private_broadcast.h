@@ -9,6 +9,7 @@
 #include <primitives/transaction.h>
 #include <primitives/transaction_identifier.h>
 #include <sync.h>
+#include <util/hasher.h>
 #include <util/time.h>
 
 #include <optional>
@@ -202,13 +203,6 @@ private:
         size_t operator()(const CTransactionRef& tx) const
         {
             return static_cast<size_t>(tx->GetWitnessHash().ToUint256().GetUint64(0));
-        }
-    };
-
-    struct CTransactionRefComp {
-        bool operator()(const CTransactionRef& a, const CTransactionRef& b) const
-        {
-            return a->GetWitnessHash() == b->GetWitnessHash(); // If wtxid equals, then txid also equals.
         }
     };
 
