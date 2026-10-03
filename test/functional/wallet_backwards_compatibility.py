@@ -22,7 +22,9 @@ from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.extendedkey import ExtendedPrivateKey
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import descsum_create
+from test_framework.key import ECKey
 from test_framework.messages import ser_string
+from test_framework.segwit_addr import bech32_encode, convertbits, Encoding
 
 from test_framework.util import (
     assert_equal,
@@ -259,6 +261,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         old_wallet.invalidateblock(block_hash)
         old_wallet.syncwithvalidationinterfacequeue()
         old_wallet.unloadwallet()
+        # Restore the old node's chain so it keeps syncing with the other nodes
+        node_old.reconsiderblock(block_hash)
 
         # Re-open on master: the alternate must still be there
         self.cleanup_folder(node_master.wallets_path / wallet_name)
@@ -268,6 +272,65 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         assert_equal(wallet.gettransaction(txid)["alternate_wtxids"], [script_path_wtxid])
         wallet.unloadwallet()
 
+
+    def test_downgrade_bumpfee_silent_payments_tx(self, node_master, node_miner, old_nodes):
+        # Older releases know nothing about silent payments. Fee bumping a silent payments
+        # tx could add inputs and invalidate its silent payments outputs, so they must refuse.
+        self.log.info("Test that a silent payments tx made on master cannot be fee bumped after a downgrade to:")
+
+        scan_key, spend_key = ECKey(), ECKey()
+        scan_key.generate()
+        spend_key.generate()
+        payload = scan_key.get_pubkey().get_bytes() + spend_key.get_pubkey().get_bytes()
+        sp_addr = bech32_encode(Encoding.BECH32M, "sprt", [0] + convertbits(list(payload), 8, 5))
+
+        def scan_sp_outputs(tx_hex):
+            return node_master.scantxforsilentpayments(tx_hex, scan_key.get_bytes().hex(), spend_key.get_pubkey().get_bytes().hex())
+
+        for node_old in old_nodes:
+            self.log.info(f"- {node_old.version}")
+            wallet_name = f"sp_rbf_{node_old.version}"
+            node_master.createwallet(wallet_name)
+            wallet = node_master.get_wallet_rpc(wallet_name)
+            node_miner.sendtoaddress(wallet.getnewaddress(), 10)
+            self.generate(node_miner, 1, sync_fun=self.no_op)
+            self.sync_blocks([node_miner, node_master, node_old])
+            wallet.syncwithvalidationinterfacequeue()
+
+            # Send to a silent payments address on master
+            txid = wallet.sendtoaddress(sp_addr, 1)
+            tx_hex = wallet.gettransaction(txid)["hex"]
+            assert_equal(len(scan_sp_outputs(tx_hex)), 1)
+            # The placeholder that stops older releases from bumping is not exposed on master
+            assert "replaced_by_txid" not in wallet.gettransaction(txid)
+            wallet.unloadwallet()
+
+            # Downgrade: the old release sees the tx as already replaced and refuses to bump it
+            shutil.copytree(node_master.wallets_path / wallet_name, node_old.wallets_path / wallet_name)
+            node_old.sendrawtransaction(tx_hex)
+            node_old.loadwallet(wallet_name)
+            old_wallet = node_old.get_wallet_rpc(wallet_name)
+            assert_raises_rpc_error(-4, f"Cannot bump transaction {txid} which was already bumped by transaction {txid}", old_wallet.bumpfee, txid)
+            assert_raises_rpc_error(-4, f"Cannot bump transaction {txid} which was already bumped by transaction {txid}", old_wallet.psbtbumpfee, txid)
+            old_wallet.unloadwallet()
+
+            # Upgrade again: master still has the recipient data and can bump the tx
+            self.cleanup_folder(node_master.wallets_path / wallet_name)
+            shutil.copytree(node_old.wallets_path / wallet_name, node_master.wallets_path / wallet_name)
+            node_master.loadwallet(wallet_name)
+            wallet = node_master.get_wallet_rpc(wallet_name)
+            assert "replaced_by_txid" not in wallet.gettransaction(txid)
+            bumped_txid = wallet.bumpfee(txid)["txid"]
+            assert_equal(wallet.gettransaction(txid)["replaced_by_txid"], bumped_txid)
+            bumped_hex = wallet.gettransaction(bumped_txid)["hex"]
+            assert_equal(len(scan_sp_outputs(bumped_hex)), 1)
+
+            # Confirm the replacement
+            self.generateblock(node_miner, node_miner.getnewaddress(), [bumped_hex], sync_fun=self.no_op)
+            self.sync_blocks([node_miner, node_master, node_old])
+            wallet.syncwithvalidationinterfacequeue()
+            assert_equal(wallet.gettransaction(bumped_txid)["confirmations"], 1)
+            wallet.unloadwallet()
 
     def run_test(self):
         node_miner = self.nodes[0]
@@ -547,6 +610,8 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.test_ignore_legacy_during_startup(legacy_nodes, node_master)
         node_v25 = self.nodes[2] # note: could be any node prior to v32
         self.test_downgrade_preserves_witness_variants(node_master, node_miner, node_v25)
+        # Silent payments sending requires taproot descriptors (default on master), which 0.21 cannot load
+        self.test_downgrade_bumpfee_silent_payments_tx(node_master, node_miner, [n for n in descriptors_nodes if self.major_version_at_least(n, 22)])
 
 if __name__ == '__main__':
     BackwardsCompatibilityTest(__file__).main()

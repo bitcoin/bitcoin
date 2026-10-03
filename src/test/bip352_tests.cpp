@@ -337,6 +337,7 @@ BOOST_AUTO_TEST_CASE(bip352_decode_address)
         BOOST_CHECK_EQUAL(HexStr(sp->GetScanPubKey()), vec.scan_pubkey);
         BOOST_CHECK_EQUAL(HexStr(sp->GetSpendPubKey()), vec.spend_pubkey);
         BOOST_CHECK_EQUAL(HexStr(sp->GetExtensionData()), vec.extension_data);
+        BOOST_CHECK_EQUAL(EncodeSilentPaymentsAddress(*sp, Params()), vec.address);
 
         // Bech32(m) is case-insensitive as a whole; an all-uppercase address must decode identically.
         std::string flipped = ToUpper(vec.address);

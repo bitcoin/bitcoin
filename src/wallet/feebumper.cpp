@@ -5,6 +5,7 @@
 #include <wallet/feebumper.h>
 
 #include <coins.h>
+#include <common/bip352.h>
 #include <common/system.h>
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
@@ -164,24 +165,24 @@ bool TransactionCanBeBumped(const CWallet& wallet, const Txid& txid)
     return res == feebumper::Result::OK;
 }
 
-Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinControl& coin_control, std::vector<bilingual_str>& errors,
-                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, bool require_mine, const std::vector<CTxOut>& outputs, std::optional<uint32_t> original_change_index)
+util::Expected<BumpTransaction, BumpError> CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinControl& coin_control, bool require_mine,
+                                                                     const std::vector<std::pair<PaymentDestination, CAmount>>& outputs, std::optional<uint32_t> original_change_index)
 {
+    std::vector<bilingual_str> errors;
     // For now, cannot specify both new outputs to use and an output index to send change
     if (!outputs.empty() && original_change_index.has_value()) {
         errors.emplace_back(Untranslated("The options 'outputs' and 'original_change_index' are incompatible. You can only either specify a new set of outputs, or designate a change output to be recycled."));
-        return Result::INVALID_PARAMETER;
+        return util::Unexpected{BumpError{Result::INVALID_PARAMETER, std::move(errors)}};
     }
 
     // We are going to modify coin control later, copy to reuse
     CCoinControl new_coin_control(coin_control);
 
     LOCK(wallet.cs_wallet);
-    errors.clear();
     auto it = wallet.mapWallet.find(txid);
     if (it == wallet.mapWallet.end()) {
         errors.emplace_back(Untranslated("Invalid or non-wallet transaction id"));
-        return Result::INVALID_ADDRESS_OR_KEY;
+        return util::Unexpected{BumpError{Result::INVALID_ADDRESS_OR_KEY, std::move(errors)}};
     }
     const CWalletTx& wtx = it->second;
     const CTransactionRef& tx = wtx.GetTx();
@@ -189,7 +190,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
     // Make sure that original_change_index is valid
     if (original_change_index.has_value() && original_change_index.value() >= tx->vout.size()) {
         errors.emplace_back(Untranslated("Change position is out of range"));
-        return Result::INVALID_PARAMETER;
+        return util::Unexpected{BumpError{Result::INVALID_PARAMETER, std::move(errors)}};
     }
 
     // Retrieve all of the UTXOs and add them to coin control
@@ -205,7 +206,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
         const Coin& coin = coins.at(txin.prevout);
         if (coin.out.IsNull()) {
             errors.emplace_back(Untranslated(strprintf("%s:%u is already spent", txin.prevout.hash.GetHex(), txin.prevout.n)));
-            return Result::MISC_ERROR;
+            return util::Unexpected{BumpError{Result::MISC_ERROR, std::move(errors)}};
         }
         PreselectedInput& preset_txin = new_coin_control.Select(txin.prevout);
         if (!wallet.IsMine(txin.prevout)) {
@@ -241,7 +242,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
 
     Result result = PreconditionChecks(wallet, wtx, require_mine, errors);
     if (result != Result::OK) {
-        return result;
+        return util::Unexpected{BumpError{result, std::move(errors)}};
     }
 
     // Calculate the old output amount.
@@ -250,39 +251,101 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
         output_value += old_output.nValue;
     }
 
-    old_fee = input_value - output_value;
+    const CAmount old_fee{input_value - output_value};
+
+    // Obtain original silent payments destinations from wallet tx by
+    // matching tx outputs against recomputed silent payments outputs.
+    // This will allow the outputs in the new transaction to be
+    // correctly computed if new inputs are added. If new outputs are
+    // given, they replace all the original outputs, so the original
+    // destinations are not needed.
+    std::map<CScript, size_t> sp_scripts;
+    if (outputs.empty() && wtx.IsSilentPaymentsTx() && wtx.m_sprecipients.empty()) {
+        errors.emplace_back(Untranslated("Unable to bump fee: silent payments recipient data is missing for this transaction"));
+        return util::Unexpected{BumpError{Result::WALLET_ERROR, std::move(errors)}};
+    }
+    if (outputs.empty() && !wtx.m_sprecipients.empty()) {
+        std::map<size_t, bip352::SilentPaymentsDestination> sp_dests;
+        for (size_t i = 0; i < wtx.m_sprecipients.size(); ++i) {
+            sp_dests.emplace(i, wtx.m_sprecipients[i]);
+        }
+        OutputSet input_coins;
+        for (const CTxIn& txin : tx->vin) {
+            const Coin& coin = coins.at(txin.prevout);
+            input_coins.insert(std::make_shared<COutput>(txin.prevout, coin.out, /*depth=*/1, /*input_bytes=*/-1,
+                /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/true));
+        }
+        const auto sp_result{CreateSilentPaymentsOutputs(wallet, sp_dests, input_coins)};
+        if (!sp_result) {
+            errors.push_back(util::ErrorString(sp_result));
+            return util::Unexpected{BumpError{Result::WALLET_ERROR, std::move(errors)}};
+        }
+        for (const auto& [idx, taproot_dest] : *sp_result) {
+            sp_scripts.emplace(GetScriptForDestination(taproot_dest), idx);
+        }
+        // An output that is not recognized would be kept as a regular taproot output, which the
+        // recipient cannot find if the inputs change, so every recomputed output must be found
+        const bool all_found{std::ranges::all_of(sp_scripts, [&](const auto& sp_script) {
+            return std::ranges::any_of(tx->vout, [&](const CTxOut& txout) { return txout.scriptPubKey == sp_script.first; });
+        })};
+        if (!all_found) {
+            errors.emplace_back(Untranslated("Unable to bump fee: the silent payments outputs of this transaction do not match its recipient data"));
+            return util::Unexpected{BumpError{Result::WALLET_ERROR, std::move(errors)}};
+        }
+    }
 
     // Fill in recipients (and preserve a single change key if there
     // is one). If outputs vector is non-empty, replace original
     // outputs with its contents, otherwise use original outputs.
     std::vector<CRecipient> recipients;
     CAmount new_outputs_value = 0;
-    const auto& txouts = outputs.empty() ? tx->vout : outputs;
-    for (size_t i = 0; i < txouts.size(); ++i) {
-        const CTxOut& output = txouts.at(i);
-        CTxDestination dest;
-        ExtractDestination(output.scriptPubKey, dest);
-        if (original_change_index.has_value() ?  original_change_index.value() == i : OutputIsChange(wallet, output)) {
-            new_coin_control.destChange = dest;
-        } else {
-            CRecipient recipient = {dest, output.nValue, false};
-            recipients.push_back(recipient);
+    if (!outputs.empty()) {
+        for (const auto& [dest, amount] : outputs) {
+            const bool is_sp{dest.IsSilentPayment()};
+            // The wallet cannot have silent payments change
+            if (!is_sp && ScriptIsChange(wallet, *Assert(dest.GetStaticScript()))) {
+                new_coin_control.destChange = dest;
+            } else {
+                new_coin_control.m_silent_payments |= is_sp;
+                recipients.push_back({dest, amount, false});
+            }
+            new_outputs_value += amount;
         }
-        new_outputs_value += output.nValue;
+    } else {
+        for (size_t i = 0; i < tx->vout.size(); ++i) {
+            const CTxOut& output = tx->vout[i];
+
+            PaymentDestination dest;
+            if (const auto it = sp_scripts.find(output.scriptPubKey); it != sp_scripts.end()) {
+                dest = PaymentDestination{wtx.m_sprecipients[it->second]};
+                new_coin_control.m_silent_payments = true;
+            } else {
+                CTxDestination tx_dest;
+                ExtractDestination(output.scriptPubKey, tx_dest);
+                dest = PaymentDestination{tx_dest};
+            }
+
+            if (original_change_index.has_value() ? original_change_index.value() == i : OutputIsChange(wallet, output)) {
+                new_coin_control.destChange = dest;
+            } else {
+                recipients.push_back({dest, output.nValue, false});
+            }
+            new_outputs_value += output.nValue;
+        }
     }
 
     // If no recipients, means that we are sending coins to a change address
     if (recipients.empty()) {
         // Just as a sanity check, ensure that the change address exist
-        if (std::get_if<CNoDestination>(&new_coin_control.destChange)) {
+        if (!new_coin_control.destChange.IsValid()) {
             errors.emplace_back(Untranslated("Unable to create transaction. Transaction must have at least one recipient"));
-            return Result::INVALID_PARAMETER;
+            return util::Unexpected{BumpError{Result::INVALID_PARAMETER, std::move(errors)}};
         }
 
         // Add change as recipient with SFFO flag enabled, so fees are deduced from it.
         // If the output differs from the original tx output (because the user customized it) a new change output will be created.
         recipients.emplace_back(CRecipient{new_coin_control.destChange, new_outputs_value, /*fSubtractFeeFromAmount=*/true});
-        new_coin_control.destChange = CNoDestination();
+        new_coin_control.destChange = PaymentDestination{};
     }
 
     if (coin_control.m_feerate) {
@@ -294,11 +357,17 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
             txin.scriptSig.clear();
             txin.scriptWitness.SetNull();
         }
-        temp_mtx.vout = txouts;
+        if (!outputs.empty()) {
+            temp_mtx.vout.clear();
+            for (const auto& [dest, amount] : outputs) {
+                temp_mtx.vout.push_back(GetDummyTxOut(dest, amount));
+            }
+        }
+
         const int64_t maxTxSize{CalculateMaximumSignedTxSize(CTransaction(temp_mtx), &wallet, &new_coin_control).vsize};
         Result res = CheckFeeRate(wallet, temp_mtx, *new_coin_control.m_feerate, maxTxSize, old_fee, errors);
         if (res != Result::OK) {
-            return res;
+            return util::Unexpected{BumpError{res, std::move(errors)}};
         }
     } else {
         // The user did not provide a feeRate argument
@@ -323,17 +392,24 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
     auto res = CreateTransaction(wallet, recipients, /*change_pos=*/std::nullopt, new_coin_control, false);
     if (!res) {
         errors.emplace_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + util::ErrorString(res));
-        return Result::WALLET_ERROR;
+        return util::Unexpected{BumpError{Result::WALLET_ERROR, std::move(errors)}};
     }
 
     const auto& txr = *res;
-    // Write back new fee if successful
-    new_fee = txr.fee;
+    // The silent payments recipients the new transaction pays to, in the same order as
+    // CreateTransaction: recipients first, then a silent payments change destination if the
+    // transaction has a change output
+    std::vector<bip352::SilentPaymentsDestination> sp_recipients{GetSilentPaymentsDestinations(recipients)};
+    if (const auto* sp = new_coin_control.destChange.GetSilentPaymentsDestination(); sp && txr.change_pos) {
+        sp_recipients.push_back(*sp);
+    }
 
-    // Write back transaction
-    mtx = CMutableTransaction(*txr.tx);
-
-    return Result::OK;
+    return BumpTransaction{
+        .old_fee = old_fee,
+        .new_fee = txr.fee,
+        .mtx = CMutableTransaction(*txr.tx),
+        .sp_recipients = std::move(sp_recipients),
+    };
 }
 
 bool SignTransaction(CWallet& wallet, CMutableTransaction& mtx) {
@@ -356,7 +432,7 @@ bool SignTransaction(CWallet& wallet, CMutableTransaction& mtx) {
     }
 }
 
-Result CommitTransaction(CWallet& wallet, const Txid& txid, CMutableTransaction&& mtx, std::vector<bilingual_str>& errors, Txid& bumped_txid)
+Result CommitTransaction(CWallet& wallet, const Txid& txid, CMutableTransaction&& mtx, std::vector<bilingual_str>& errors, Txid& bumped_txid, const std::vector<bip352::SilentPaymentsDestination>& sp_recipients)
 {
     LOCK(wallet.cs_wallet);
     if (!errors.empty()) {
@@ -377,7 +453,13 @@ Result CommitTransaction(CWallet& wallet, const Txid& txid, CMutableTransaction&
 
     // commit/broadcast the tx
     CTransactionRef tx = MakeTransactionRef(std::move(mtx));
-    wallet.CommitTransaction(tx, oldWtx.GetHash(), oldWtx.m_comment, oldWtx.m_comment_to, oldWtx.m_messages, oldWtx.m_payment_requests);
+    wallet.CommitTransaction(tx, oldWtx.GetHash(), oldWtx.m_comment, oldWtx.m_comment_to, oldWtx.m_messages, oldWtx.m_payment_requests, sp_recipients);
+
+    // Erase the old tx's SP recipients record; the replacement tx has its own record.
+    // A record left behind is harmless, since the old tx can no longer be bumped.
+    if (oldWtx.IsSilentPaymentsTx() && !WalletBatch(wallet.GetDatabase()).EraseSpRecipients(oldWtx.GetHash())) {
+        wallet.WalletLogPrintf("Failed to erase SP recipients for replaced tx %s\n", oldWtx.GetHash().ToString());
+    }
 
     // mark the original tx as bumped
     bumped_txid = tx->GetHash();

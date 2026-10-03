@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_COINCONTROL_H
 #define BITCOIN_WALLET_COINCONTROL_H
 
+#include <common/paymentdestination.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
@@ -83,7 +84,7 @@ class CCoinControl
 {
 public:
     //! Custom change destination, if not set an address is generated
-    CTxDestination destChange = CNoDestination();
+    PaymentDestination destChange;
     //! Override the default change type if set, ignored if destChange is set
     std::optional<OutputType> m_change_type;
     //! If false, only safe inputs will be used
@@ -91,6 +92,8 @@ public:
     //! If true, the selection process can add extra unselected inputs from the wallet
     //! while requires all selected inputs be used
     bool m_allow_other_inputs = true;
+    //! True if we are doing coin selection to fund a silent payments transaction
+    bool m_silent_payments = false;
     //! Override automatic min/max checks on fee, m_feerate must be set if true
     bool fOverrideFeeRate = false;
     //! Override the wallet's fee rate if set
