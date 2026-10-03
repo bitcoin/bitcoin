@@ -169,6 +169,9 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_equal(['foo', 'bar'], self.nodes[0].cli(f'-rpcuser={user}', '-stdin', '-stdinrpcpass', input=f'{password}\nfoo\nbar').echo())
         assert_raises_process_error(1, 'Incorrect rpcuser or rpcpassword were specified', self.nodes[0].cli(f'-rpcuser={user}', '-stdin', '-stdinrpcpass', input='foo').echo)
 
+        self.log.info("Test -rpcclienttimeout=0 (no timeout)")
+        assert_equal(BLOCKS, self.nodes[0].cli('-rpcclienttimeout=0').getblockcount())
+
         self.log.info("Test connecting to a non-existing server")
         assert_raises_process_error(1, "Could not connect to the server", self.nodes[0].cli('-rpcport=1').echo)
 
