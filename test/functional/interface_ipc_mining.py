@@ -24,6 +24,7 @@ from test_framework.messages import (
     DEFAULT_BLOCK_RESERVED_WEIGHT,
     MAX_BLOCK_SIGOPS_COST,
     MAX_BLOCK_WEIGHT,
+    MAX_MONEY,
     from_hex,
     msg_headers,
     ser_uint256,
@@ -267,25 +268,40 @@ class IPCMiningTest(BitcoinTestFramework):
                 txsigops = await template.getTxSigops(ctx)
                 assert_equal(len(txsigops.result), 0)
 
-                self.log.debug("Wait for a new template")
+                self.log.debug("Wait for a new template, get one after the tip updates")
                 waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
-                waitoptions.timeout = self.default_ipc_timeout
-                waitoptions.feeThreshold = 1
+                # Ignore fee increases, wait only for the tip update
+                waitoptions.feeThreshold = MAX_MONEY
+                # Keep the wait alive past the first one-second fee tick.
+                waitoptions.timeout = 2000.0 * self.options.timeout_factor
+                self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
                 template2 = await wait_and_do(
                     mining_wait_next_template(template, stack, ctx, waitoptions),
-                    lambda: self.generate(self.nodes[0], 1))
+                    # This mines the transaction, so it won't be in the next template
+                    lambda: self.generate(self.nodes[0], 1),
+                    # Mine after that tick, so waitNext would return early for
+                    # the fee increase if MAX_MONEY was ignored.
+                    sleep_time=1.1 * self.options.timeout_factor)
                 assert template2 is not None
                 block2 = await mining_get_block(template2, ctx)
+                # If waitNext had returned for a fee increase instead of tip
+                # update, this template would include the mempool transaction.
                 assert_equal(len(block2.vtx), 1)
 
                 self.log.debug("Wait for another, but time out")
-                template3 = await mining_wait_next_template(template2, stack, ctx, waitoptions)
+                # Temporarily decrease the timeout so the wait reaches its
+                # deadline quickly. MAX_MONEY skips creating a new template,
+                # even when there are new fees in the mempool.
+                waitoptions.timeout = 100
+                self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
+                with self.nodes[0].assert_debug_log(expected_msgs=[], unexpected_msgs=["CreateNewBlock()"]):
+                    template3 = await mining_wait_next_template(template2, stack, ctx, waitoptions)
                 assert template3 is None
 
-                self.log.debug("Wait for another, get one after increase in fees in the mempool")
-                template4 = await wait_and_do(
-                    mining_wait_next_template(template2, stack, ctx, waitoptions),
-                    lambda: self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0]))
+                waitoptions.timeout = self.default_ipc_timeout
+                self.log.debug("Wait for another, get one for the fees already in the mempool")
+                waitoptions.feeThreshold = 1
+                template4 = await mining_wait_next_template(template2, stack, ctx, waitoptions)
                 assert template4 is not None
                 block3 = await mining_get_block(template4, ctx)
                 assert_equal(len(block3.vtx), 2)
