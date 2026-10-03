@@ -68,10 +68,13 @@ fi
 ################
 # Execute "$@" in a pinned, possibly older version of Guix, for reproducibility
 # across time.
+export GUIX_TIME_MACHINE_URL=https://codeberg.org/guix/guix.git
+export GUIX_TIME_MACHINE_COMMIT=60f6956aeffa7f30285745bd0ea615e9acfc74f8
+
 time-machine() {
     # shellcheck disable=SC2086
-    guix time-machine --url=https://codeberg.org/guix/guix.git \
-                      --commit=60f6956aeffa7f30285745bd0ea615e9acfc74f8 \
+    guix time-machine --url="$GUIX_TIME_MACHINE_URL" \
+                      --commit="$GUIX_TIME_MACHINE_COMMIT" \
                       --cores="$JOBS" \
                       --keep-failed \
                       --fallback \
