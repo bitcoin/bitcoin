@@ -135,6 +135,28 @@ class InvalidateTest(BitcoinTestFramework):
         # Should report consistent blockchain info
         assert_equal(self.nodes[1].getblockchaininfo()["headers"], self.nodes[1].getblockchaininfo()["blocks"])
 
+        self.log.info("Verify that invalidating a block that never was in the active chain flags its descendants")
+        node = self.nodes[1]
+        tip_hash = node.getbestblockhash()
+        tip_height = node.getblockcount()
+        # Submit two headers building on the tip
+        block_time = node.getblock(tip_hash)["time"] + 1
+        header1 = create_block(int(tip_hash, 16), height=tip_height + 1, ntime=block_time)
+        header1.solve()
+        node.submitheader(header1.serialize().hex())
+        header2 = create_block(header1.hash_int, height=tip_height + 2, ntime=block_time + 1)
+        header2.solve()
+        node.submitheader(header2.serialize().hex())
+        assert_equal(node.getblockchaininfo()["headers"], tip_height + 2)
+
+        # Invalidating the first header must also mark its descendant as invalid and move the
+        # best header back to the tip of the active chain.
+        node.invalidateblock(header1.hash_hex)
+        chaintips = {chaintip["hash"]: chaintip["status"] for chaintip in node.getchaintips()}
+        assert_equal(chaintips[header2.hash_hex], "invalid")
+        assert_equal(node.getblockchaininfo()["headers"], tip_height)
+        assert_equal(node.getbestblockhash(), tip_hash)
+
         self.log.info("Verify that invalidating an unknown block throws an error")
         assert_raises_rpc_error(-5, "Block not found", self.nodes[1].invalidateblock, "00" * 32)
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
