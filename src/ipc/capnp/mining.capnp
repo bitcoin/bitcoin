@@ -28,6 +28,14 @@ interface Mining $Proxy.wrap("interfaces::Mining") {
     submitBlock @7 (context :Proxy.Context, block: Data) -> (reason: Text, debug: Text, result: Bool);
     getTransactionsByTxID @8 (context :Proxy.Context, txids: List(Data)) -> (result: List(Data));
     getTransactionsByWitnessID @9 (context :Proxy.Context, wtxids: List(Data)) -> (result: List(Data));
+    collectTxs @10 (context :Proxy.Context, wtxids: List(Data)) -> (result: TxCollection);
+}
+
+interface TxCollection $Proxy.wrap("interfaces::TxCollection") {
+    destroy @0 (context :Proxy.Context) -> ();
+    unknownTxPos @1 (context: Proxy.Context) -> (result: List(UInt32));
+    addMissingTxs @2 (context: Proxy.Context, txs: List(Data)) -> ();
+    makeTemplate @3 (context: Proxy.Context, prevhash: Data, coinbase: Data) -> (reason: Text, debug: Text, result: BlockTemplate);
 }
 
 interface BlockTemplate $Proxy.wrap("interfaces::BlockTemplate") {
