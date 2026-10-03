@@ -432,6 +432,12 @@ class ToolWalletTest(BitcoinTestFramework):
         self.assert_raises_tool_error("Wallet name cannot be empty", "-wallet=", "-dumpfile=wallet.dump", "createfromdump")
         assert not (self.nodes[0].wallets_path / "wallet.dat").exists()
 
+        self.assert_raises_tool_error("Wallet name cannot be empty", "-wallet=    ", "create")
+        assert not (self.nodes[0].wallets_path / "wallet.dat").exists()
+
+        self.assert_raises_tool_error("Wallet name cannot be empty", "-wallet=    ", "-dumpfile=wallet.dump", "createfromdump")
+        assert not (self.nodes[0].wallets_path / "wallet.dat").exists()
+
     def run_test(self):
         self.wallet_path = self.nodes[0].wallets_path / self.default_wallet_name / self.wallet_data_filename
         self.test_invalid_tool_commands_and_args()
