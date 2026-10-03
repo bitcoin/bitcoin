@@ -7,9 +7,12 @@
 #include <core_io.h>
 #include <key_io.h>
 #include <rpc/util.h>
+#include <script/descriptor.h>
 #include <script/script.h>
+#include <script/signingprovider.h>
 #include <script/solver.h>
 #include <util/bip32.h>
+#include <util/strencodings.h>
 #include <util/translation.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/util.h>
@@ -461,6 +464,12 @@ RPCMethod getaddressinfo()
                         {
                             {RPCResult::Type::STR, "label name", "Label name (defaults to \"\")."},
                         }},
+                        {RPCResult::Type::OBJ_DYN, "key_labels", "Per-key labels keyed by master fingerprint (see setkeylabel) for the keys securing\n"
+                            "this address. Multisig addresses report one entry per participant. Empty when no securing\n"
+                            "key has a per-key label set.",
+                        {
+                            {RPCResult::Type::STR, "fingerprint", "The label associated with this 8-hex-character master key fingerprint."},
+                        }},
                     }
                 },
                 RPCExamples{
@@ -498,8 +507,9 @@ RPCMethod getaddressinfo()
     bool mine = pwallet->IsMine(dest);
     ret.pushKV("ismine", mine);
 
+    std::unique_ptr<Descriptor> inferred;
     if (provider) {
-        auto inferred = InferDescriptor(scriptPubKey, *provider);
+        inferred = InferDescriptor(scriptPubKey, *provider);
         bool solvable = inferred->IsSolvable();
         ret.pushKV("solvable", solvable);
         if (solvable) {
@@ -554,6 +564,148 @@ RPCMethod getaddressinfo()
     }
     ret.pushKV("labels", std::move(labels));
 
+    // Per-key labels keyed by master fingerprint for every key corresponding to this address.
+    // Expanding the inferred descriptor yields the origins of all securing keys,
+    // so multisig addresses report one entry per multisig participant.
+    UniValue key_labels(UniValue::VOBJ);
+    if (inferred) {
+        FlatSigningProvider out;
+        std::vector<CScript> scripts;
+        inferred->Expand(0, *provider, scripts, out);
+        std::map<KeyFingerprint, std::string> labels_by_fingerprint;
+        for (const auto& origin : out.origins) {
+            const KeyFingerprint& fingerprint = origin.second.second.fingerprint;
+            if (labels_by_fingerprint.contains(fingerprint)) continue;
+            if (const std::optional<std::string> label = pwallet->GetKeyLabel(fingerprint)) {
+                labels_by_fingerprint.emplace(fingerprint, label.value());
+            }
+        }
+        for (const auto& [fingerprint, label] : labels_by_fingerprint) {
+            key_labels.pushKV(HexStr(fingerprint), label);
+        }
+    }
+    ret.pushKV("key_labels", std::move(key_labels));
+
+    return ret;
+},
+    };
+}
+
+// Parse an 8-hex-character (4-byte) master key fingerprint from an RPC string.
+static KeyFingerprint DecodeKeyFingerprint(const std::string& hex)
+{
+    const auto bytes{TryParseHex(hex)};
+    if (!bytes || bytes->size() != 4) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "fingerprint must be 8 hex characters (4 bytes)");
+    }
+    KeyFingerprint fingerprint;
+    for (size_t i = 0; i < fingerprint.size(); ++i) {
+        fingerprint[i] = static_cast<unsigned char>((*bytes)[i]);
+    }
+    return fingerprint;
+}
+
+RPCMethod setkeylabel()
+{
+    return RPCMethod{
+        "setkeylabel",
+        "Sets the label associated with a master key fingerprint.\n"
+                "Every address corresponding to a key derived from that master key inherits the label.\n"
+                "This augments, does not replace, per-address labels set with setlabel.\n"
+                "Passing an empty string clears the label.\n",
+                {
+                    {"fingerprint", RPCArg::Type::STR, RPCArg::Optional::NO, "The master key fingerprint as 8 hex characters."},
+                    {"label", RPCArg::Type::STR, RPCArg::Optional::NO, "The label to assign (empty string to clear the label)."},
+                },
+                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+                    HelpExampleCli("setkeylabel", "\"deadbeef\" \"my hardware wallet\"")
+            + HelpExampleRpc("setkeylabel", "\"deadbeef\", \"my hardware wallet\"")
+                },
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+{
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return UniValue::VNULL;
+
+    const KeyFingerprint fingerprint = DecodeKeyFingerprint(request.params[0].get_str());
+    const std::string label{LabelFromValue(request.params[1])};
+
+    LOCK(pwallet->cs_wallet);
+
+    if (label.empty()) {
+        if (!pwallet->DelKeyLabel(fingerprint)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error: failed to clear per-key label");
+        }
+    } else if (!pwallet->SetKeyLabel(fingerprint, label)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: failed to set per-key label");
+    }
+
+    return UniValue::VNULL;
+},
+    };
+}
+
+RPCMethod getkeylabel()
+{
+    return RPCMethod{
+        "getkeylabel",
+        "Returns the label associated with a master key fingerprint, if any.\n",
+                {
+                    {"fingerprint", RPCArg::Type::STR, RPCArg::Optional::NO, "The master key fingerprint as 8 hex characters."},
+                },
+                {
+                    RPCResult{"if a label is set for the fingerprint",
+                        RPCResult::Type::STR, "label", "The label associated with the fingerprint."},
+                    RPCResult{"if no label is set for the fingerprint",
+                        RPCResult::Type::NONE, "", "JSON null."},
+                },
+                RPCExamples{
+                    HelpExampleCli("getkeylabel", "\"deadbeef\"")
+            + HelpExampleRpc("getkeylabel", "\"deadbeef\"")
+                },
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+{
+    const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return UniValue::VNULL;
+
+    const KeyFingerprint fingerprint = DecodeKeyFingerprint(request.params[0].get_str());
+
+    LOCK(pwallet->cs_wallet);
+
+    const std::optional<std::string> label{pwallet->GetKeyLabel(fingerprint)};
+
+    return label.has_value() ? UniValue{label.value()} : UniValue::VNULL;
+},
+    };
+}
+
+RPCMethod listkeylabels()
+{
+    return RPCMethod{
+        "listkeylabels",
+        "Lists all per-key labels set on this wallet, keyed by master fingerprint.\n",
+                {},
+                RPCResult{
+                    RPCResult::Type::OBJ_DYN, "", "json object with fingerprints (8 hex characters) as keys and labels as values",
+                    {
+                        {RPCResult::Type::STR, "fingerprint", "The label associated with the fingerprint."},
+                    },
+                },
+                RPCExamples{
+                    HelpExampleCli("listkeylabels", "")
+            + HelpExampleRpc("listkeylabels", "")
+                },
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+{
+    const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return UniValue::VNULL;
+
+    LOCK(pwallet->cs_wallet);
+
+    UniValue ret(UniValue::VOBJ);
+    for (const auto& [fingerprint, label] : pwallet->GetKeyLabels()) {
+        ret.pushKV(HexStr(fingerprint), label);
+    }
     return ret;
 },
     };
