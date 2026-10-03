@@ -6,11 +6,13 @@
 #define BITCOIN_PRIMITIVES_TRANSACTION_IDENTIFIER_H
 
 #include <attributes.h>
+#include <span.h>
 #include <uint256.h>
 
 #include <compare>
 #include <cstddef>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -30,6 +32,7 @@ class transaction_identifier
 public:
     transaction_identifier() : m_wrapped{} {}
     consteval explicit transaction_identifier(std::string_view hex_str) : m_wrapped{uint256{hex_str}} {}
+    explicit transaction_identifier(std::span<const std::byte> sp) : m_wrapped(UCharSpanCast(sp)) {}
 
     constexpr bool operator==(const transaction_identifier&) const = default;
     constexpr auto operator<=>(const transaction_identifier&) const = default;
