@@ -133,7 +133,18 @@ public:
 class PartiallyDownloadedBlock {
 protected:
     std::vector<CTransactionRef> txn_available;
+
+    // All of these count and size values are only set if logging is enabled.
+    // If you want to use them for something else, change that.
     size_t prefilled_count = 0, mempool_count = 0, extra_count = 0;
+    size_t prefilled_size = 0, mempool_size = 0, extra_size = 0;
+
+    // For tracking redundant prefills, only set if logging is enabled.
+    // Either it was already present in our mempool...
+    size_t redundant_prefilled_mempool_count = 0, redundant_prefilled_mempool_size = 0;
+    // or maybe it was present in our extrapool...
+    size_t redundant_prefilled_extrapool_count = 0, redundant_prefilled_extrapool_size = 0;
+
     const CTxMemPool* pool;
 public:
     CBlockHeader header;
