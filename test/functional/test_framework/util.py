@@ -83,6 +83,15 @@ def summarise_dict_differences(thing1, thing2):
             d2[k] = thing2[k]
     return d1, d2
 
+def assert_true(expression: bool):
+    """Differs from built-in assert in that it cannot be optimized away."""
+    if expression is not True:
+        raise AssertionError("Expression was not True")
+
+def assert_false(expression: bool):
+    if expression is not False:
+        raise AssertionError("Expression was not False")
+
 def assert_equal(thing1, thing2, *args):
     if thing1 != thing2 and not args and isinstance(thing1, dict) and isinstance(thing2, dict):
         d1,d2 = summarise_dict_differences(thing1, thing2)
@@ -727,7 +736,7 @@ def wallet_importprivkey(wallet_rpc, privkey, timestamp, *, label=""):
         "label": label,
     }]
     import_res = wallet_rpc.importdescriptors(req)
-    assert_equal(import_res[0]["success"], True)
+    assert_true(import_res[0]["success"])
 
 def is_dir_writable(dir_path: pathlib.Path) -> bool:
     """Return True if we can create a file in the directory, False otherwise"""

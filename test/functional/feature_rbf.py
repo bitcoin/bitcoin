@@ -13,6 +13,7 @@ from test_framework.messages import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_greater_than,
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
@@ -544,7 +545,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             sequence=MAX_BIP125_RBF_SEQUENCE + 1,
             fee_rate=Decimal('0.01'),
         )
-        assert_equal(False, self.nodes[0].getmempoolentry(optout_tx['txid'])['bip125-replaceable'])
+        assert_false(self.nodes[0].getmempoolentry(optout_tx['txid'])['bip125-replaceable'])
 
         conflicting_tx = self.wallet.create_self_transfer(
                 utxo_to_spend=confirmed_utxo,

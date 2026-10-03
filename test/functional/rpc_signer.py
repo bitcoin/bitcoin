@@ -15,6 +15,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    assert_true,
 )
 
 
@@ -91,7 +92,7 @@ class RPCSignerTest(BitcoinTestFramework):
             assert_raises_rpc_error(-1, 'invalid fingerprint', self.nodes[1].enumeratesigners)
             self.clear_mock_result(self.nodes[1])
 
-        assert_equal({'fingerprint': '00000001', 'name': 'trezor_t'} in self.nodes[1].enumeratesigners()['signers'], True)
+        assert_true({'fingerprint': '00000001', 'name': 'trezor_t'} in self.nodes[1].enumeratesigners()['signers'])
 
 if __name__ == '__main__':
     RPCSignerTest(__file__).main()

@@ -31,8 +31,10 @@ from test_framework.messages import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_greater_than_or_equal,
     assert_not_equal,
+    assert_true,
 )
 from test_framework.wallet import MiniWallet
 from test_framework.p2p import P2PInterface
@@ -233,7 +235,7 @@ class IPCMiningTest(BitcoinTestFramework):
                     block_hex = self.nodes[1].getblock(node1_block_hash, False)
                     self.nodes[0].submitblock(block_hex)
                 await wait_and_do(wait_fn(), do_fn)
-                assert_equal(success, True)
+                assert_true(success)
                 if self.options.timeout_factor <= 1:
                     assert duration < 3.0, f"createNewBlock took {duration:.2f}s, did not wake up promptly after tip advances"
                 else:
@@ -243,7 +245,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 async def create_block():
                     result = await mining.createNewBlock(ctx, self.default_block_create_options)
                     # interrupt() causes createNewBlock to return nullptr
-                    assert_equal(result._has("result"), False)
+                    assert_false(result._has("result"))
 
                 await wait_and_do(create_block(), mining.interrupt())
 
@@ -520,7 +522,7 @@ class IPCMiningTest(BitcoinTestFramework):
 
                 self.log.debug("submitSolution should reject an empty coinbase")
                 submitted = (await template.submitSolution(ctx, 0, 0, 0, b"")).result
-                assert_equal(submitted, False)
+                assert_false(submitted)
 
                 self.log.debug("Submit solution that can't be deserialized")
                 await assert_capnp_raises(lambda: template.submitSolution(ctx, 0, 0, 0, b"\x00"),
@@ -530,12 +532,12 @@ class IPCMiningTest(BitcoinTestFramework):
                 block.nVersion = 0
                 block.solve()
                 check = await mining.checkBlock(ctx, block.serialize(), check_opts)
-                assert_equal(check.result, False)
+                assert_false(check.result)
                 assert_equal(check.reason, "bad-version(0x00000000)")
                 assert_equal(check.debug, "rejected nVersion=0x00000000 block")
                 self.log.debug("submitSolution should reject a bad-version block")
                 result = await template.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
-                assert_equal(result.result, False)
+                assert_false(result.result)
                 assert_equal(result.reason, "bad-version(0x00000000)")
                 assert_equal(result.debug, "rejected nVersion=0x00000000 block")
                 self.log.debug("submitBlock should reject a bad-version block")
@@ -553,7 +555,7 @@ class IPCMiningTest(BitcoinTestFramework):
 
                 self.log.debug("First call checkBlock()")
                 block_valid = (await mining.checkBlock(ctx, block.serialize(), check_opts)).result
-                assert_equal(block_valid, True)
+                assert_true(block_valid)
 
                 # The remote template block will be mutated, capture the original:
                 remote_block_before = await mining_get_block(template, ctx)
@@ -571,7 +573,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 missing_witness_block.solve()
                 self.log.debug("submitSolution should reject a coinbase missing witness")
                 result = await template.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize_without_witness())
-                assert_equal(result.result, False)
+                assert_false(result.result)
                 assert_equal(result.reason, "bad-witness-nonce-size")
                 assert_equal(result.debug, "CheckWitnessMalleation : invalid witness reserved value size")
 
@@ -593,7 +595,7 @@ class IPCMiningTest(BitcoinTestFramework):
 
                 self.log.debug("Submit again, with the witness")
                 result = await template.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
-                assert_equal(result.result, True)
+                assert_true(result.result)
                 assert_equal(result.reason, "")
                 assert_equal(result.debug, "")
 
@@ -619,7 +621,7 @@ class IPCMiningTest(BitcoinTestFramework):
             assert_equal(self.miniwallet.get_balance(), balance + 1)
             self.log.debug("Check block should fail now, since it is a duplicate")
             check = await mining.checkBlock(ctx, block.serialize(), check_opts)
-            assert_equal(check.result, False)
+            assert_false(check.result)
             assert_equal(check.reason, "inconclusive-not-best-prevblk")
             self.log.debug("submitBlock on the same node should fail with duplicate after submitSolution succeeds")
             await self.assert_submit_block(mining, ctx, block, result=False, reason="duplicate")
@@ -634,7 +636,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 self.nodes[2].waitforblockheight(current_block_height + 2)
                 self.log.debug("submitSolution should reject the duplicate block")
                 result = await template2.submitSolution(ctx2, duplicate_block.nVersion, duplicate_block.nTime, duplicate_block.nNonce, duplicate_coinbase.serialize())
-                assert_equal(result.result, False)
+                assert_false(result.result)
                 assert_equal(result.reason, "duplicate")
                 assert_equal(result.debug, "")
             self.sync_all()
@@ -675,7 +677,7 @@ class IPCMiningTest(BitcoinTestFramework):
                     solution_block.nNonce,
                     solution_coinbase.serialize(),
                 )
-                assert_equal(result.result, False)
+                assert_false(result.result)
                 assert_equal(result.reason, "inconclusive")
                 assert_equal(result.debug, "")
 
@@ -715,7 +717,7 @@ class IPCMiningTest(BitcoinTestFramework):
             self.log.debug("Submit empty block data")
             await assert_capnp_raises(lambda: mining2.submitBlock(ctx2, b""),
                                       "remote exception: std::exception: SpanReader::read(): end of data:")
-            assert_equal(self.nodes[2].is_node_stopped(), False)
+            assert_false(self.nodes[2].is_node_stopped())
 
         asyncio.run(capnp.run(async_routine()))
 
@@ -789,7 +791,7 @@ class IPCMiningTest(BitcoinTestFramework):
                     block.hashMerkleRoot = block.calc_merkle_root()
                     block.solve()
                     result = await template.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())
-                    assert_equal(result.result, True)
+                    assert_true(result.result)
                     assert_equal(result.reason, "")
                     assert_equal(result.debug, "")
                     assert_equal(node.getblockcount(), height)

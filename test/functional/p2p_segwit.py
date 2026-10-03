@@ -85,6 +85,7 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     assert_equal,
     assert_raises_rpc_error,
+    assert_true,
     ensure_for,
     softfork_active,
 )
@@ -2066,7 +2067,7 @@ class SegWitTest(BitcoinTestFramework):
         test_transaction_acceptance(self.nodes[0], self.wtx_node, tx, with_witness=False, accepted=True)
 
         # Check tx2 is there now
-        assert_equal(tx2.txid_hex in self.nodes[0].getrawmempool(), True)
+        assert_true(tx2.txid_hex in self.nodes[0].getrawmempool())
 
 
 if __name__ == '__main__':

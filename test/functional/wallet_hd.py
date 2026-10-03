@@ -11,6 +11,7 @@ from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
     wallet_importprivkey,
     assert_raises_rpc_error,
 )
@@ -65,7 +66,7 @@ class WalletHDTest(BitcoinTestFramework):
 
         for d in wallet.listdescriptors()["descriptors"]:
             if d["desc"] == expected_unused_desc:
-                assert_equal(d["active"], False)
+                assert_false(d["active"])
                 break
         else:
             assert False, "Added HD key's descriptor was not found in wallet"
