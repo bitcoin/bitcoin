@@ -1352,6 +1352,9 @@ BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_i
  * be retrieved by registering the `block_checked` callback in the validation
  * interface.
  *
+ * The block is not modified, and earlier checks of it (e.g. under other
+ * consensus params) do not affect the result.
+ *
  * @param[in] chainstate_manager Non-null.
  * @param[in] block              Non-null, block to be validated.
  *
@@ -1454,6 +1457,9 @@ typedef uint32_t btck_BlockCheckFlags;
  * and can be toggled via @p flags. Note that this does not include any
  * transaction script, timestamps, order, or other checks that may require more
  * context.
+ *
+ * The block is not modified, and earlier checks of it (e.g. under other
+ * consensus params) do not affect the result.
  *
  * @param[in]     block             Non-null, btck_Block to validate.
  * @param[in]     consensus_params  Non-null, btck_ConsensusParams for validation.

@@ -155,6 +155,17 @@ struct btck_TxValidationState : Handle<btck_TxValidationState, TxValidationState
 
 namespace {
 
+//! Copy a block without its memory-only validation caches (fChecked,
+//! m_checked_merkle_root, m_checked_witness_commitment). A btck_Block may be
+//! shared between callers, chainstate managers and consensus parameters, so
+//! a check that passed in one of those contexts must not be reused in another.
+std::shared_ptr<const CBlock> CopyBlockWithoutCache(const CBlock& block)
+{
+    auto copy{std::make_shared<CBlock>(static_cast<const CBlockHeader&>(block))};
+    copy->vtx = block.vtx;
+    return copy;
+}
+
 BCLog::Level get_bclog_level(btck_LogLevel level)
 {
     switch (level) {
@@ -1241,7 +1252,7 @@ int btck_block_check(const btck_Block* block, const btck_ConsensusParams* consen
     const bool check_pow    = (flags & btck_BlockCheckFlags_POW) != 0;
     const bool check_merkle = (flags & btck_BlockCheckFlags_MERKLE) != 0;
 
-    const bool result = CheckBlock(*btck_Block::get(block), state, btck_ConsensusParams::get(consensus_params), /*fCheckPOW=*/check_pow, /*fCheckMerkleRoot=*/check_merkle);
+    const bool result = CheckBlock(*CopyBlockWithoutCache(*btck_Block::get(block)), state, btck_ConsensusParams::get(consensus_params), /*fCheckPOW=*/check_pow, /*fCheckMerkleRoot=*/check_merkle);
 
     return result ? 1 : 0;
 }
@@ -1428,7 +1439,7 @@ int btck_chainstate_manager_process_block(
     int* _new_block)
 {
     bool new_block;
-    auto result = btck_ChainstateManager::get(chainman).m_chainman->ProcessNewBlock(btck_Block::get(block), /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
+    auto result = btck_ChainstateManager::get(chainman).m_chainman->ProcessNewBlock(CopyBlockWithoutCache(*btck_Block::get(block)), /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
     if (_new_block) {
         *_new_block = new_block ? 1 : 0;
     }
