@@ -24,6 +24,9 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.noban_tx_relay = True  # Needed due to mocktime
+        self.extra_args = [[
+            "-walletrebroadcast=1",
+        ]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()

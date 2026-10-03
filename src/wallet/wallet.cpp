@@ -1872,8 +1872,8 @@ std::set<Txid> CWallet::GetTxConflicts(const CWalletTx& wtx) const
 
 bool CWallet::ShouldResend() const
 {
-    // Don't attempt to resubmit if the wallet is configured to not broadcast
-    if (!fBroadcastTransactions) return false;
+    // Don't attempt to resubmit if the wallet is configured to not rebroadcast.
+    if (!m_rebroadcast_transactions) return false;
 
     // During reindex, importing and IBD, old wallet transactions become
     // unconfirmed. Don't resend them as that would spam other nodes.
@@ -1890,7 +1890,7 @@ bool CWallet::ShouldResend() const
 NodeClock::time_point CWallet::GetDefaultNextResend() { return FastRandomContext{}.rand_uniform_delay(NodeClock::now() + 12h, 24h); }
 
 // Resubmit transactions from the wallet to the mempool, optionally asking the
-// mempool to relay them. On startup, we will do this for all unconfirmed
+// mempool to relay them (but see NOTE below). On startup, we will do this for all unconfirmed
 // transactions but will not ask the mempool to relay them. We do this on startup
 // to ensure that our own mempool is aware of our transactions. There
 // is a privacy side effect here as not broadcasting on startup also means that we won't
@@ -1909,16 +1909,17 @@ NodeClock::time_point CWallet::GetDefaultNextResend() { return FastRandomContext
 // privacy.
 //
 // The `force` option results in all unconfirmed transactions being submitted to
-// the mempool. This does not necessarily result in those transactions being relayed,
+// the mempool (but see NOTE below). This does not necessarily result in those transactions being relayed,
 // that depends on the `broadcast_method` option. Periodic rebroadcast uses the pattern
 // broadcast_method=TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL force=false, while loading into
 // the mempool (on start, or after import) uses
 // broadcast_method=TxBroadcast::MEMPOOL_NO_BROADCAST force=true.
+//
+// NOTE: This function does nothing if the wallet is configured to not rebroadcast transactions.
 void CWallet::ResubmitWalletTransactions(node::TxBroadcast broadcast_method, bool force)
 {
-    // Don't attempt to resubmit if the wallet is configured to not broadcast,
-    // even if forcing.
-    if (!fBroadcastTransactions) return;
+    // Don't attempt to resubmit if the wallet is configured to not rebroadcast, even if forcing.
+    if (!m_rebroadcast_transactions) return;
 
     int submitted_tx_count = 0;
 
@@ -2918,6 +2919,7 @@ bool CWallet::LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContex
     wallet->m_keypool_size = std::max(args.GetIntArg("-keypool", DEFAULT_KEYPOOL_SIZE), int64_t{1});
     wallet->m_notify_tx_changed_script = args.GetArg("-walletnotify", "");
     wallet->SetBroadcastTransactions(args.GetBoolArg("-walletbroadcast", DEFAULT_WALLETBROADCAST));
+    wallet->SetRebroadcastTransactions(args.GetBoolArg("-walletrebroadcast", DEFAULT_WALLETREBROADCAST));
 
     return true;
 }
