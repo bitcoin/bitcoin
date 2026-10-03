@@ -16,7 +16,9 @@ import urllib.parse
 from test_framework.messages import (
     BLOCK_HEADER_SIZE,
     COIN,
+    COutPoint,
     deser_block_spent_outputs,
+    ser_vector,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -158,12 +160,12 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(len(json_obj['utxos']), 1)
         assert_equal(json_obj['bitmap'], "10")
 
-        self.log.info("Query the TXOs using the /getutxos URI with a binary response")
+        self.log.info("Compare binary GET and POST /getutxos responses for the same TXOs")
 
-        bin_request = b'\x01\x02'
-        for txid, n in [spending, spent]:
-            bin_request += bytes.fromhex(txid)
-            bin_request += n.to_bytes(4, 'little')
+        outpoints = [spending, spent]
+        uri_outpoints = '/'.join(f"{txid}-{n}" for txid, n in outpoints)
+        bin_uri_response = self.test_rest_request(f"/getutxos/checkmempool/{uri_outpoints}", req_type=ReqType.BIN, ret_type=RetType.BYTES)
+        bin_request = b'\x01' + ser_vector([COutPoint(int(txid, 16), n) for txid, n in outpoints])
 
         bin_response = self.test_rest_request("/getutxos", http_method='POST', req_type=ReqType.BIN, body=bin_request, ret_type=RetType.BYTES)
         chain_height = int.from_bytes(bin_response[0:4], 'little')
@@ -171,6 +173,7 @@ class RESTTest (BitcoinTestFramework):
 
         assert_equal(bb_hash, response_hash)  # check if getutxo's chaintip during calculation was fine
         assert_equal(chain_height, 201)  # chain height must be 201 (pre-mined chain [200] + generated block [1])
+        assert_equal(bin_response, bin_uri_response)
 
         self.log.info("Test the /getutxos URI with and without /checkmempool")
         # Create a transaction, check that it's found with /checkmempool, but

@@ -27,6 +27,7 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <serialize.h>
+#include <span.h>
 #include <streams.h>
 #include <sync.h>
 #include <tinyformat.h>
@@ -1011,10 +1012,7 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
                 if (fInputParsed) //don't allow sending input over URI and HTTP RAW DATA
                     return RESTERR(req, HTTP_BAD_REQUEST, "Combination of URI scheme inputs and raw post data is not allowed");
 
-                DataStream oss{};
-                oss << strRequestMutable;
-                oss >> fCheckMemPool;
-                oss >> vOutPoints;
+                SpanReader{MakeByteSpan(strRequestMutable)} >> fCheckMemPool >> LIMITED_VECTOR(vOutPoints, MAX_GETUTXOS_OUTPOINTS);
             }
         } catch (const std::ios_base::failure&) {
             // abort in case of unreadable binary data
