@@ -8,6 +8,7 @@
 #include <chain.h>
 #include <coins.h>
 #include <crypto/hex_base.h>
+#include <index/tx_lookup_result.h>
 #include <index/txindex.h>
 #include <merkleblock.h>
 #include <node/blockstorage.h>
@@ -26,11 +27,13 @@
 #include <univalue.h>
 #include <validation.h>
 
+#include <array>
 #include <memory>
 #include <set>
 #include <span>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 using node::GetTransaction;
@@ -101,10 +104,16 @@ static RPCMethod gettxoutproof()
             }
 
             if (pblockindex == nullptr) {
-                const CTransactionRef tx = GetTransaction(/*block_index=*/nullptr, /*mempool=*/nullptr, *setTxids.begin(), chainman.m_blockman, hashBlock);
-                if (!tx || hashBlock.IsNull()) {
+                const TxLookupResult result{GetTransaction(/*block_index=*/nullptr, /*mempool=*/nullptr, *setTxids.begin(), chainman.m_blockman)};
+                const auto* found{std::get_if<TxFound>(&result)};
+                if (!found || found->block_hash.IsNull()) {
+                    if (const auto* miss{std::get_if<TxMiss>(&result)}; miss && !miss->pruned_block_hashes.empty()) {
+                        throw JSONRPCError(RPC_MISC_ERROR, PrunedBlocksErrorMessage(miss->pruned_block_hashes),
+                                           PrunedBlocksErrorData(miss->pruned_block_hashes));
+                    }
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
                 }
+                hashBlock = found->block_hash;
 
                 LOCK(cs_main);
                 pblockindex = chainman.m_blockman.LookupBlockIndex(hashBlock);
@@ -115,6 +124,11 @@ static RPCMethod gettxoutproof()
 
             {
                 LOCK(cs_main);
+                if (chainman.m_blockman.IsBlockPruned(*pblockindex)) {
+                    const std::array block_hashes{pblockindex->GetBlockHash()};
+                    throw JSONRPCError(RPC_MISC_ERROR, PrunedBlocksErrorMessage(block_hashes),
+                                       PrunedBlocksErrorData(block_hashes));
+                }
                 CheckBlockDataAvailability(chainman.m_blockman, *pblockindex, /*check_for_undo=*/false);
             }
             CBlock block;
