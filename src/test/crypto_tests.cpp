@@ -468,6 +468,8 @@ BOOST_AUTO_TEST_CASE(sha512_testvectors) {
 }
 
 BOOST_AUTO_TEST_CASE(hmac_sha256_testvectors) {
+    // HMAC with an empty key and message
+    TestHMACSHA256("", "", "b613679a0814d9ec772f95d778c35fc5ff1697c493715653c6c712144292c5ad");
     // test cases 1, 2, 3, 4, 6 and 7 of RFC 4231
     TestHMACSHA256("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
                    "4869205468657265",
@@ -521,6 +523,8 @@ BOOST_AUTO_TEST_CASE(hmac_sha256_testvectors) {
 }
 
 BOOST_AUTO_TEST_CASE(hmac_sha512_testvectors) {
+    // HMAC with an empty key and message
+    TestHMACSHA512("", "", "b936cee86c9f87aa5d3c6f2e84cb5a4239a5fe50480a6ec66b70ab5b1f4ac6730c6c515421b327ec1d69402e53dfb49ad7381eb067b338fd7b0cb22247225d47");
     // test cases 1, 2, 3, 4, 6 and 7 of RFC 4231
     TestHMACSHA512("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
                    "4869205468657265",
