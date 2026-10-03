@@ -5,6 +5,7 @@
 add_library(test_util STATIC EXCLUDE_FROM_ALL
   blockfilter.cpp
   coins.cpp
+  common.cpp
   coverage.cpp
   json.cpp
   logging.cpp
