@@ -515,8 +515,11 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
         BOOST_CHECK(!client->GetRequest());
 
+        // keep-alive, otherwise the reply to the first request closes the
+        // connection and the second request is not read
         client->Receive("POST / HTTP/1.0\n"
                         "Host: 127.0.0.1\n"
+                        "Connection: keep-alive\n"
                         "Content-Length: 10\n\n"
                         "I miss");
         BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
@@ -545,6 +548,69 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
         BOOST_CHECK_EQUAL(req->ReadBody().size(), 0);
         // Buffer is cleared
         BOOST_CHECK_EQUAL(client->GetRecvBuffer().size(), 0);
+    }
+    {
+        // A request pipelined behind a request whose reply closes the
+        // connection is not read once that reply has been sent
+        std::shared_ptr<DummyClient> client{std::make_shared<DummyClient>()};
+        BOOST_CHECK(!client->GetRequest());
+
+        client->Receive("GET / HTTP/1.0\n\n"
+                        "GET /endpoint HTTP/1.0\n\n");
+        auto req{HTTPRemoteClient::TryReadRequest(client)};
+        BOOST_REQUIRE(req);
+        BOOST_CHECK_EQUAL(req->GetState(), Complete);
+        BOOST_CHECK_EQUAL(req->GetURI(), "/");
+        // Second request sitting in buffer
+        BOOST_CHECK_EQUAL(client->GetRecvBuffer().size(), 24);
+
+        // HTTP/1.0 without keep-alive: sending the reply flags the client for disconnection
+        req->WriteReply(HTTP_OK, "");
+
+        // The pipelined request is left unread
+        BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
+        BOOST_CHECK(!client->GetRequest());
+        BOOST_CHECK_EQUAL(client->GetRecvBuffer().size(), 24);
+    }
+    {
+        // Same, but the socket does not accept data so the closing reply stays
+        // in the send buffer: the pipelined request must still not be read
+        class StalledSock : public ZeroSock
+        {
+        public:
+            ZeroSock& operator=(Sock&&) override { assert(false); return *this; }
+            ssize_t Send(const void*, size_t, int) const override
+            {
+                #ifdef WIN32
+                WSASetLastError(WSAEWOULDBLOCK);
+                #else
+                errno = WSAEAGAIN;
+                #endif
+                return -1;
+            }
+        };
+        class StalledClient : public HTTPRemoteClient
+        {
+        public:
+            StalledClient() : HTTPRemoteClient{/*id=*/0, /*addr=*/CService(), /*socket=*/std::make_unique<StalledSock>()} {}
+            void Receive(std::string_view s) { MutateRecvBuffer().append(s); }
+        };
+        std::shared_ptr<StalledClient> client{std::make_shared<StalledClient>()};
+
+        client->Receive("GET / HTTP/1.0\n\n"
+                        "GET /endpoint HTTP/1.0\n\n");
+        auto req{HTTPRemoteClient::TryReadRequest(client)};
+        BOOST_REQUIRE(req);
+        BOOST_CHECK_EQUAL(client->GetRecvBuffer().size(), 24);
+
+        // The optimistic send fails, the reply is still queued and the client
+        // is not flagged for disconnection yet
+        req->WriteReply(HTTP_OK, "");
+        BOOST_CHECK(client->ReadyToSend());
+
+        BOOST_CHECK(!HTTPRemoteClient::TryReadRequest(client));
+        BOOST_CHECK(!client->GetRequest());
+        BOOST_CHECK_EQUAL(client->GetRecvBuffer().size(), 24);
     }
     {
         // A Content-Length body is drained out of the receive buffer as it
