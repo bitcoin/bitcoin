@@ -343,6 +343,7 @@ void ChainTestingSetup::CreateBlockTemplateManager()
 
 ChainTestingSetup::~ChainTestingSetup()
 {
+    if (m_node.chainman) m_node.chainman->StopBlockProcessing();
     if (m_node.scheduler) m_node.scheduler->stop();
     if (m_node.validation_signals) m_node.validation_signals->FlushBackgroundCallbacks();
     m_node.block_template_manager.reset();
@@ -381,6 +382,8 @@ void ChainTestingSetup::LoadVerifyActivateChainstate()
     if (!chainman.ActiveChainstate().ActivateBestChain(state)) {
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
     }
+    // AFL can fork after fixture initialization; keep fuzzing free of worker threads.
+    if (!EnableFuzzDeterminism()) chainman.StartBlockProcessing();
 }
 
 TestingSetup::TestingSetup(
@@ -479,7 +482,8 @@ CBlock TestChain100Setup::CreateAndProcessBlock(
 {
     CBlock block = this->CreateBlock(txns, scriptPubKey);
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr);
+    BlockValidationState state;
+    (void)Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, state, true, true).get();
 
     return block;
 }

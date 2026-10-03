@@ -267,9 +267,19 @@ void ValidationSignals::ChainStateFlushed(const ChainstateRole& role, const CBlo
 
 void ValidationSignals::BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& state)
 {
-    LOG_EVENT("%s: block hash=%s state=%s", __func__,
-              block->GetHash().ToString(), state.ToString());
-    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BlockChecked(block, state); });
+    auto log_msg = LOG_MSG("%s: block hash=%s state=%s", __func__,
+                          block->GetHash().ToString(), state.ToString());
+    auto event = [block, state, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BlockChecked(block, state); });
+    };
+    ENQUEUE_AND_LOG_EVENT(std::move(event), std::move(log_msg));
+}
+
+void ValidationSignals::BlockProcessed()
+{
+    m_internals->m_task_runner->insert([this] {
+        m_internals->Iterate([](CValidationInterface& callbacks) { callbacks.BlockProcessed(); });
+    });
 }
 
 void ValidationSignals::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock> &block) {

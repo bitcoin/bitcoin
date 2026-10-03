@@ -5,6 +5,7 @@
 #include <index/txospenderindex.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
+#include <test/util/validation.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -50,6 +51,7 @@ BOOST_FIXTURE_TEST_CASE(txospenderindex_initial_sync, TestChain100Setup)
 
     // Now we concluded the setup phase, run index
     TxoSpenderIndex txospenderindex(interfaces::MakeChain(m_node), 1 << 20, true);
+    IndexTestGuard guard{txospenderindex, *m_node.validation_signals};
     BOOST_REQUIRE(txospenderindex.Init());
     BOOST_CHECK(!txospenderindex.BlockUntilSyncedToCurrentChain()); // false when not synced
     BOOST_CHECK_NE(txospenderindex.GetSummary().best_block_hash, tip_hash);
