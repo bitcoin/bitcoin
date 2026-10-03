@@ -1139,7 +1139,10 @@ bool DescriptorScriptPubKeyMan::TopUpWithDB(WalletBatch& batch, unsigned int siz
     provider.keys = GetKeys();
 
     uint256 id = GetID();
-    for (int32_t i = m_max_cached_index + 1; i < new_range_end; ++i) {
+    // Only expand indexes that belong to the descriptor's range. m_max_cached_index starts at -1,
+    // so without the lower bound a descriptor with a high range_start would derive and watch
+    // every index from 0 up to it, which Load() does not do when the wallet is reopened.
+    for (int32_t i = std::max(m_max_cached_index + 1, m_wallet_descriptor.GetStart()); i < new_range_end; ++i) {
         FlatSigningProvider out_keys;
         std::vector<CScript> scripts_temp;
         DescriptorCache temp_cache;
@@ -1166,7 +1169,7 @@ bool DescriptorScriptPubKeyMan::TopUpWithDB(WalletBatch& batch, unsigned int siz
         if (!batch.WriteDescriptorCacheItems(id, new_items)) {
             throw std::runtime_error(std::string(__func__) + ": writing cache items failed");
         }
-        m_max_cached_index++;
+        m_max_cached_index = i;
     }
     SetRangeEnd(new_range_end);
     batch.WriteDescriptor(GetID(), m_wallet_descriptor);
@@ -1535,7 +1538,7 @@ void DescriptorScriptPubKeyMan::Load()
             }
             m_map_pubkeys[pubkey] = i;
         }
-        m_max_cached_index++;
+        m_max_cached_index = i;
     }
     // Make sure the wallet knows about our new spks
     m_storage.TopUpCallback(new_spks, this);
