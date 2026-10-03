@@ -61,7 +61,7 @@ inline constexpr std::chrono::minutes TIMEOUT_INTERVAL{20};
 inline constexpr auto FEELER_INTERVAL = 2min;
 /** Run the extra block-relay-only connection loop once every 5 minutes. **/
 inline constexpr auto EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL = 5min;
-/** Maximum length of incoming protocol messages (no message over 4 MB is currently acceptable). */
+/** Maximum length of protocol message payloads (no message over 4 MB is currently acceptable). */
 inline constexpr unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 4 * 1000 * 1000;
 /** Maximum length of the user agent string in `version` message */
 inline constexpr unsigned int MAX_SUBVERSION_LENGTH = 256;
@@ -119,6 +119,10 @@ struct AddedNodeInfo {
 class CNodeStats;
 class CClientUIInterface;
 
+/**
+ * A serialized message ready to be passed to the outbound send path.
+ * Callers must ensure the message is within the protocol's type and payload limits.
+ */
 struct CSerializedNetMsg {
     CSerializedNetMsg() = default;
     CSerializedNetMsg(CSerializedNetMsg&&) = default;
@@ -137,6 +141,11 @@ struct CSerializedNetMsg {
 
     std::vector<unsigned char> data;
     std::string m_type;
+
+    bool IsWithinLimits() const noexcept
+    {
+        return m_type.size() <= CMessageHeader::MESSAGE_TYPE_SIZE && data.size() <= MAX_PROTOCOL_MESSAGE_LENGTH;
+    }
 
     /** Compute total memory usage of this object (own memory + any dynamic memory). */
     size_t GetMemoryUsage() const noexcept;
