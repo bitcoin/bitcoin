@@ -151,6 +151,8 @@ protected:
     virtual void ChainStateFlushed(const kernel::ChainstateRole& role, const CBlockLocator& locator) {}
     /**
      * Notifies listeners of a block validation result.
+     * Fatal processing errors are reported through Notifications::fatalError
+     * instead of this callback.
      * If the provided BlockValidationState IsValid, the provided block
      * is guaranteed to be the current best block at the time the
      * callback was generated (not necessarily now).

@@ -396,13 +396,11 @@ typedef void (*btck_ValidationInterfaceBlockDisconnected)(void* user_data, btck_
 typedef int (*btck_WriteBytes)(const void* bytes, size_t size, void* userdata);
 
 /**
- * Whether a validated data structure is valid, invalid, or an error was
- * encountered during processing.
+ * Whether a validated data structure is valid or invalid.
  */
 typedef uint8_t btck_ValidationMode;
 #define btck_ValidationMode_VALID ((btck_ValidationMode)(0))
 #define btck_ValidationMode_INVALID ((btck_ValidationMode)(1))
-#define btck_ValidationMode_INTERNAL_ERROR ((btck_ValidationMode)(2))
 
 /**
  * A granular "reason" why a block was invalid.
@@ -449,7 +447,8 @@ typedef struct {
                                                                   //!< user_data is passed to the created context options and subsequently context.
     btck_DestroyCallback user_data_destroy;                       //!< Frees the provided user data structure.
     btck_ValidationInterfaceBlockChecked block_checked;           //!< Called when a new block has been fully validated. Contains the
-                                                                  //!< result of its validation.
+                                                                  //!< result of its validation. Fatal processing failures are reported
+                                                                  //!< through fatal_error instead of this callback.
     btck_ValidationInterfacePoWValidBlock pow_valid_block;        //!< Called when a new block extends the header chain and has a valid transaction
                                                                   //!< and segwit merkle root.
     btck_ValidationInterfaceBlockConnected block_connected;       //!< Called when a block is valid and has now been connected to the best chain.

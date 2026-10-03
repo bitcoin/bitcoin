@@ -7,6 +7,7 @@
 #include <consensus/merkle.h>
 #include <core_io.h>
 #include <hash.h>
+#include <kernel/notifications_interface.h>
 #include <net.h>
 #include <signet.h>
 #include <uint256.h>
@@ -14,12 +15,59 @@
 #include <validation.h>
 
 #include <string>
+#include <type_traits>
+#include <utility>
 
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(validation_tests, BasicTestingSetup)
+
+BOOST_AUTO_TEST_CASE(raised_fatal_error_token)
+{
+    static_assert(!std::is_copy_constructible_v<kernel::FatalError>);
+    static_assert(std::is_move_constructible_v<kernel::FatalError>);
+
+    struct CountingNotifications : kernel::Notifications {
+        int fatal_errors{0};
+        void fatalError(const bilingual_str&) override { ++fatal_errors; }
+    } notifications;
+
+    util::Expected<void, kernel::FatalError> inner{
+        kernel::FatalError::Raise(notifications, Untranslated("fatal error"))};
+    BOOST_REQUIRE(!inner);
+    BOOST_CHECK_EQUAL(notifications.fatal_errors, 1);
+
+    auto propagate{[](util::Expected<void, kernel::FatalError> result) -> util::Expected<void, kernel::FatalError> {
+        if (!result) return util::Unexpected(std::move(result.error()));
+        return {};
+    }};
+    auto outer{propagate(std::move(inner))};
+    BOOST_REQUIRE(!outer);
+    BOOST_CHECK_EQUAL(outer.error().message(), "fatal error");
+    BOOST_CHECK_EQUAL(notifications.fatal_errors, 1);
+}
+
+BOOST_AUTO_TEST_CASE(fatal_error_caller_diagnostic)
+{
+    struct CountingNotifications : kernel::Notifications {
+        int fatal_errors{0};
+        std::string message;
+        void fatalError(const bilingual_str& error) override
+        {
+            ++fatal_errors;
+            message = error.original;
+        }
+    } notifications;
+
+    util::Expected<void, kernel::FatalError> result{
+        kernel::FatalError::Raise(notifications, Untranslated("disk failure"))};
+    auto error{std::move(result.error()).ReplaceMessage("block write failed")};
+    BOOST_CHECK_EQUAL(error.message(), "block write failed");
+    BOOST_CHECK_EQUAL(notifications.message, "disk failure");
+    BOOST_CHECK_EQUAL(notifications.fatal_errors, 1);
+}
 
 static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
 {
