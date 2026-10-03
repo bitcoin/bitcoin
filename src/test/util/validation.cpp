@@ -6,6 +6,8 @@
 
 #include <coins.h>
 #include <consensus/consensus.h>
+#include <index/blockfilterindex.h>
+#include <interfaces/chain.h>
 #include <node/block_template_manager.h>
 #include <node/blockstorage.h>
 #include <node/mining_types.h>
@@ -15,6 +17,7 @@
 #include <test/util/time.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
+#include <util/byte_units.h>
 #include <util/check.h>
 #include <util/time.h>
 #include <validation.h>
@@ -106,9 +109,11 @@ void TestChainstateManager::ResetBestInvalid()
     m_best_invalid = nullptr;
 }
 
-std::vector<std::pair<COutPoint, CAmount>> ResetChainmanAndMempool(TestingSetup& setup, FakeNodeClock& node_clock)
+std::vector<std::pair<COutPoint, CAmount>> ResetChainmanAndMempool(TestingSetup& setup, FakeNodeClock& node_clock, const ResetOptions& opts)
 {
     node_clock.set(setup.m_node.chainman->GetParams().GenesisBlock().Time());
+
+    DestroyAllBlockFilterIndexes();
 
     bilingual_str error{};
     setup.m_node.block_template_manager.reset();
@@ -133,5 +138,17 @@ std::vector<std::pair<COutPoint, CAmount>> ResetChainmanAndMempool(TestingSetup&
             mature_coinbase.emplace_back(prevout, subsidy);
         }
     }
+
+    if (opts.init_block_filter_basic) {
+        Assert(InitBlockFilterIndex([&] { return interfaces::MakeChain(setup.m_node); }, BlockFilterType::BASIC, 1_MiB, /*f_memory=*/true, /*f_wipe=*/true));
+        auto& index = *Assert(GetBlockFilterIndex(BlockFilterType::BASIC));
+        Assert(index.Init());
+        index.Sync();
+        // The index serves the static setup chain only. Leaving it registered
+        // deadlocks with ImmediateBackgroundTaskRunner when a fuzzed block
+        // connects under cs_main.
+        index.Stop();
+    }
+
     return mature_coinbase;
 }
