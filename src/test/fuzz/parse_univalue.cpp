@@ -12,7 +12,7 @@
 #include <functional>
 #include <limits>
 #include <stdexcept>
-#include <string>
+#include <string_view>
 
 void initialize_parse_univalue()
 {
@@ -21,7 +21,8 @@ void initialize_parse_univalue()
 
 FUZZ_TARGET(parse_univalue, .init = initialize_parse_univalue)
 {
-    const std::string random_string(buffer.begin(), buffer.end());
+    const std::string_view random_string{
+        reinterpret_cast<const char*>(buffer.data()), buffer.size()};
     bool valid = true;
     const UniValue univalue = [&] {
         UniValue uv;
