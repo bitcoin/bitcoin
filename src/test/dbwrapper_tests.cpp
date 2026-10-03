@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_read_throws_on_db_error)
     CDBWrapper::ReadStatus status = db.TryRead(key, result);
     BOOST_REQUIRE(!status);
     BOOST_CHECK(status.error().status == CDBWrapper::ReadFailure::Code::DatabaseError);
-    BOOST_CHECK(status.error().err_msg.find("Fatal LevelDB error") != std::string::npos);
+    BOOST_CHECK(status.error().err_msg.contains("Fatal LevelDB error"));
 }
 
 // Exercise TryRead() return values directly: found, absent and DeserializationError.

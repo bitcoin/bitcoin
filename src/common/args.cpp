@@ -632,7 +632,7 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
 
 void ArgsManager::AddCommand(const std::string& cmd, const std::string& help, std::set<std::string> options)
 {
-    Assert(cmd.find('=') == std::string::npos);
+    Assert(!cmd.contains('='));
     Assert(cmd.at(0) != '-');
 
     LOCK(cs_args);
