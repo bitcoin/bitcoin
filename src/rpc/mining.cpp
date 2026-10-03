@@ -78,7 +78,6 @@
 #include <vector>
 
 using interfaces::BlockRef;
-using node::BlockAssembler;
 using node::GetMinimumTime;
 using node::NodeContext;
 using node::RegenerateCommitments;
@@ -453,8 +452,8 @@ static RPCMethod getmininginfo()
                     {
                         {RPCResult::Type::NUM, "blocks", "The current block"},
                         {RPCResult::Type::STR_HEX, "bestblockhash", "The hash of the current best block"},
-                        {RPCResult::Type::NUM, "currentblockweight", /*optional=*/true, "The block weight (including reserved weight for block header, txs count and coinbase tx) of the last assembled block (only present if a block was ever assembled)"},
-                        {RPCResult::Type::NUM, "currentblocktx", /*optional=*/true, "The number of block transactions (excluding coinbase) of the last assembled block (only present if a block was ever assembled)"},
+                        {RPCResult::Type::NUM, "currentblockweight", /*optional=*/true, "The block weight (including reserved weight for block header, txs count and coinbase tx) of the last block template built for mining (only present if one was ever built)"},
+                        {RPCResult::Type::NUM, "currentblocktx", /*optional=*/true, "The number of block transactions (excluding coinbase) of the last block template built for mining (only present if one was ever built)"},
                         {RPCResult::Type::STR_HEX, "bits", "The current nBits, compact representation of the block difficulty target"},
                         {RPCResult::Type::NUM, "difficulty", "The current difficulty"},
                         {RPCResult::Type::STR_HEX, "target", "The current target"},
@@ -495,8 +494,10 @@ static RPCMethod getmininginfo()
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("blocks", active_chain.Height());
     obj.pushKV("bestblockhash", tip.GetBlockHash().GetHex());
-    if (BlockAssembler::m_last_block_weight) obj.pushKV("currentblockweight", *BlockAssembler::m_last_block_weight);
-    if (BlockAssembler::m_last_block_num_txs) obj.pushKV("currentblocktx", *BlockAssembler::m_last_block_num_txs);
+    if (const auto last_block_stats{EnsureBlockTemplateManager(node).GetLastBlockStats()}) {
+        obj.pushKV("currentblockweight", last_block_stats->weight);
+        obj.pushKV("currentblocktx", last_block_stats->num_txs);
+    }
     obj.pushKV("bits", strprintf("%08x", tip.nBits));
     obj.pushKV("difficulty", GetDifficulty(tip));
     obj.pushKV("target", GetTarget(tip, chainman.GetConsensus().powLimit).GetHex());
@@ -805,7 +806,6 @@ static RPCMethod getblocktemplate()
         }
     }
 
-    static unsigned int nTransactionsUpdatedLast;
     const CTxMemPool& mempool = EnsureMemPool(node);
 
     WAIT_LOCK(cs_main, cs_main_lock);
@@ -832,7 +832,7 @@ static RPCMethod getblocktemplate()
 
         if (lpval.isStr())
         {
-            // Format: <hashBestChain><nTransactionsUpdatedLast>
+            // Format: <hashBestChain><transactions_updated>
             const std::string& lpstr = lpval.get_str();
 
             // Assume the longpollid is a block hash. If it's not then we return
@@ -844,7 +844,7 @@ static RPCMethod getblocktemplate()
         {
             // NOTE: Spec does not specify behaviour for non-string longpollid, but this makes testing easier
             hashWatchedChain = tip;
-            nTransactionsUpdatedLastLP = nTransactionsUpdatedLast;
+            nTransactionsUpdatedLastLP = block_template_manager.GetCachedTransactionsUpdated();
         }
 
         // Release lock while waiting
@@ -868,7 +868,6 @@ static RPCMethod getblocktemplate()
                 checktxtime = std::chrono::seconds(10);
             }
         }
-        tip = CHECK_NONFATAL(block_template_manager.GetTip()).value().hash;
 
         if (!IsRPCRunning())
             throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Shutting down");
@@ -888,32 +887,9 @@ static RPCMethod getblocktemplate()
     }
 
     // Update block
-    static CBlockIndex* pindexPrev;
-    static int64_t time_start;
-    static std::unique_ptr<node::CBlockTemplate> block_template;
-    if (!pindexPrev || pindexPrev->GetBlockHash() != tip ||
-        (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - time_start > 5))
-    {
-        // Clear pindexPrev so future calls make a new block, despite any failures from here on
-        pindexPrev = nullptr;
-
-        // Store the pindexBest used before createNewBlock, to avoid races
-        nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
-        CBlockIndex* pindexPrevNew = chainman.m_blockman.LookupBlockIndex(tip);
-        time_start = GetTime();
-
-        // Create new block. Opt-out of cooldown mechanism, because it would add
-        // a delay to each getblocktemplate call. This differs from typical
-        // long-lived IPC usage, where the overhead is paid only when creating
-        // the initial template.
-        block_template = block_template_manager.CreateNewTemplate({});
-        CHECK_NONFATAL(block_template);
-
-
-        // Need to update only after we know createNewBlock succeeded
-        pindexPrev = pindexPrevNew;
-    }
-    CHECK_NONFATAL(pindexPrev);
+    const node::CachedBlockTemplate cached{block_template_manager.RefreshCachedTemplate()};
+    const std::shared_ptr<const node::CBlockTemplate> block_template{CHECK_NONFATAL(cached.block_template)};
+    const CBlockIndex* const pindexPrev{CHECK_NONFATAL(chainman.m_blockman.LookupBlockIndex(block_template->block.hashPrevBlock))};
     CBlockHeader block_header{block_template->block};
 
     // Update nTime
@@ -1030,7 +1006,7 @@ static RPCMethod getblocktemplate()
     result.pushKV("transactions", std::move(transactions));
     result.pushKV("coinbaseaux", std::move(aux));
     result.pushKV("coinbasevalue", block_template->block.vtx[0]->vout[0].nValue);
-    result.pushKV("longpollid", tip.GetHex() + ToString(nTransactionsUpdatedLast));
+    result.pushKV("longpollid", block_template->block.hashPrevBlock.GetHex() + ToString(cached.transactions_updated));
     result.pushKV("target", hashTarget.GetHex());
     result.pushKV("mintime", GetMinimumTime(pindexPrev, consensusParams.DifficultyAdjustmentInterval()));
     result.pushKV("mutable", std::move(aMutable));
