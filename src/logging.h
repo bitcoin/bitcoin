@@ -202,12 +202,6 @@ namespace BCLog {
             m_print_callbacks.erase(it);
         }
 
-        size_t NumConnections() EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
-        {
-            STDLOCK(m_cs);
-            return m_print_callbacks.size();
-        }
-
         /** Start logging (and flush all buffered messages) */
         bool StartLogging() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
         /** Only for testing */
@@ -222,7 +216,6 @@ namespace BCLog {
         /** Disable logging
          * This offers a slight speedup and slightly smaller memory usage
          * compared to leaving the logging system in its default state.
-         * Mostly intended for libbitcoin-kernel apps that don't want any logging.
          * Should be used instead of StartLogging().
          */
         void DisableLogging() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
