@@ -24,7 +24,6 @@ util::Expected<std::vector<WalletDescInfo>, std::string> ExportDescriptors(const
         if (!desc_spk_man) {
             return util::Unexpected{"Unexpected ScriptPubKey manager type."};
         }
-        LOCK(desc_spk_man->cs_desc_man);
         const auto& wallet_descriptor = desc_spk_man->GetWalletDescriptor();
         std::string descriptor;
         if (!Assume(desc_spk_man->GetDescriptorString(descriptor, export_private))) {
