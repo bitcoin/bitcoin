@@ -8,8 +8,10 @@
 #include <interfaces/init.h>
 #include <ipc/util.h>
 
+#include <cstddef>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <typeindex>
 
 namespace ipc {
@@ -38,7 +40,7 @@ public:
     //! Listen for connections on provided socket id, accept them, and handle
     //! requests on accepted connections. This method doesn't block, and
     //! performs I/O on a background thread.
-    virtual void listen(mp::SocketId listen_fd, interfaces::Init& init) = 0;
+    virtual void listen(mp::SocketId listen_fd, interfaces::Init& init, std::optional<size_t> max_connections = std::nullopt) = 0;
 
     //! Handle requests from a stream provided by the make_stream callback,
     //! forwarding them to the provided Init interface. Socket communication is
