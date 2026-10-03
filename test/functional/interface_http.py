@@ -152,6 +152,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         self.check_auth_required()
         self.check_wrong_credentials()
         self.check_malformed_auth_headers()
+        self.check_auth_failures_do_not_block_worker()
         self.check_disallowed_http_methods()
         self.check_path_traversal()
         self.check_request_smuggling_cl_te()
@@ -506,6 +507,41 @@ class HTTPBasicsTest (BitcoinTestFramework):
             response = conn.post('/', '{"method": "getbestblockhash"}')
             assert_equal(response.status, http.client.UNAUTHORIZED)
             assert response.getheader('WWW-Authenticate') is not None
+
+
+    def check_auth_failures_do_not_block_worker(self):
+        self.log.info("Check that authentication failures do not delay valid RPCs with one worker")
+        self.restart_node(0, extra_args=["-rpcthreads=1"])
+
+        conn = BitcoinHTTPConnection(self.node)
+        invalid_auth_values = [
+            "Basic !!!notbase64!!!",
+            f"Basic {str_to_b64str(f'{conn.url.username}_unknown:password')}",
+            f"Basic {str_to_b64str(f'{conn.url.username}:wrong_password')}",
+        ]
+        for auth_value in invalid_auth_values:
+            invalid_conn = BitcoinHTTPConnection(self.node)
+            invalid_conn.headers = {"Authorization": auth_value}
+            with self.node.busy_wait_for_debug_log([b"incorrect password attempt"]):
+                invalid_conn.conn.request(
+                    method="POST",
+                    url="/",
+                    body='{"method": "getblockcount"}',
+                    headers=invalid_conn.headers,
+                )
+
+            valid_conn = BitcoinHTTPConnection(self.node)
+            start = time.perf_counter()
+            valid_response = valid_conn.post('/', '{"method": "getblockcount"}')
+            valid_response.read()
+            latency = time.perf_counter() - start
+
+            assert_equal(valid_response.status, http.client.OK)
+            assert latency < 0.2, f"Valid RPC was delayed by an authentication failure: {latency:.3f}s"
+
+            invalid_response = invalid_conn.conn.getresponse()
+            invalid_response.read()
+            assert_equal(invalid_response.status, http.client.UNAUTHORIZED)
 
 
     def check_disallowed_http_methods(self):
