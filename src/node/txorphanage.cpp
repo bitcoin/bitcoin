@@ -230,6 +230,7 @@ public:
     std::vector<std::pair<Wtxid, NodeId>> AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext& rng) override;
     bool HaveTxToReconsider(NodeId peer) override;
     std::vector<CTransactionRef> GetChildrenFromSamePeer(const CTransactionRef& parent, NodeId nodeid) const override;
+    bool HaveChildren(const CTransaction& parent) const override;
     std::vector<OrphanInfo> GetOrphanTransactions() const override;
     TxOrphanage::Usage TotalOrphanUsage() const override;
     void SanityCheck() const override;
@@ -647,6 +648,15 @@ void TxOrphanageImpl::EraseForBlock(const CBlock& block)
 
     // Deletions can cause the orphanage's MaxGlobalUsage to decrease, so we may need to trim here.
     LimitOrphans();
+}
+
+bool TxOrphanageImpl::HaveChildren(const CTransaction& parent) const
+{
+    const auto& parent_txid{parent.GetHash()};
+    for (unsigned int i = 0; i < parent.vout.size(); ++i) {
+        if (m_outpoint_to_orphan_wtxids.contains(COutPoint{parent_txid, i})) return true;
+    }
+    return false;
 }
 
 std::vector<CTransactionRef> TxOrphanageImpl::GetChildrenFromSamePeer(const CTransactionRef& parent, NodeId peer) const
