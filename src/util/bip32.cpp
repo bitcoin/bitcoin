@@ -38,7 +38,7 @@ util::Expected<KeyPathElement, std::string> ParseKeyPathElement(std::span<const 
     return KeyPathElement{*number, is_hardened};
 }
 
-bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath)
+bool ParseHDKeypathLegacy(const std::string& keypath_str, std::vector<uint32_t>& keypath)
 {
     std::stringstream ss(keypath_str);
     std::string item;
