@@ -1,0 +1,83 @@
+# Copyright (c) 2026-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or https://opensource.org/license/mit.
+
+name: Silent Merge Periodic Check
+
+on:
+  schedule:
+    - cron: "37 */6 * * *" # Every 6 hours at minute 37
+  workflow_dispatch:
+
+jobs:
+  verify-prs:
+    name: 'Verify open PRs for silent merge conflicts'
+    if: github.repository == 'bitcoin/bitcoin'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      contents: read
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang mold ccache build-essential cmake ninja-build pkgconf \
+            python3-zmq libevent-dev libboost-dev libsqlite3-dev systemtap-sdt-dev libzmq3-dev \
+            qt6-base-dev qt6-tools-dev qt6-l10n-tools libqrencode-dev capnproto libcapnp-dev
+          sudo pip3 install --break-system-packages pycapnp
+
+      - name: Restore ccache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ccache
+          key: ccache-silent-merge-${{ github.run_id }}
+          restore-keys: ccache-silent-merge-
+
+      - name: Configure ccache
+        run: |
+          ccache --set-config=max_size=500M
+          ccache --zero-stats
+
+      - name: Set up GitHub CLI
+        run: gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Run silent merge check
+        run: python3 ./.github/silent-merge-test.py
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: silent-merge-results
+          path: silent-merge-results.json
+          if-no-files-found: ignore
+
+  report:
+    name: 'Post silent merge check results'
+    needs: [verify-prs]
+    if: always()
+    runs-on: ubuntu-slim
+    permissions:
+      checks: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Download results
+        uses: actions/download-artifact@v8
+        with:
+          name: silent-merge-results
+        continue-on-error: true
+
+      - name: Set up GitHub CLI
+        run: gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Post check runs
+        run: python3 ./.github/silent-merge-report.py
