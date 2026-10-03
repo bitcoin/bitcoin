@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <ranges>
 #include <string>
+#include <system_error>
 #include <vector>
 
 using util::SplitString;
@@ -124,7 +125,14 @@ bool StartLogging(const ArgsManager& args)
         LogInfo("Startup time: %s", FormatISO8601DateTime(GetTime()));
     }
     LogInfo("Default data directory %s", fs::PathToString(GetDefaultDataDir()));
-    LogInfo("Using data directory %s", fs::PathToString(gArgs.GetDataDirNet()));
+    const fs::path datadir{gArgs.GetDataDirNet()};
+    std::error_code ec;
+    const fs::path real_datadir{fs::canonical(datadir, ec)};
+    if (!ec && real_datadir != datadir) {
+        LogInfo("Using data directory %s (%s)", fs::PathToString(datadir), fs::PathToString(real_datadir));
+    } else {
+        LogInfo("Using data directory %s", fs::PathToString(datadir));
+    }
 
     // Only log conf file usage message if conf file actually exists.
     fs::path config_file_path = args.GetConfigFilePath();
