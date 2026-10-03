@@ -179,16 +179,11 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
     }
 
     try {
-        const uint64_t version{pool.m_opts.persist_v1_dat ? MEMPOOL_DUMP_VERSION_NO_XOR_KEY : MEMPOOL_DUMP_VERSION};
-        file << version;
+        file << MEMPOOL_DUMP_VERSION;
 
-        if (!pool.m_opts.persist_v1_dat) {
-            const Obfuscation obfuscation{FastRandomContext{}.randbytes<Obfuscation::KEY_SIZE>()};
-            file << obfuscation;
-            file.SetObfuscation(obfuscation);
-        } else {
-            file.SetObfuscation({});
-        }
+        const Obfuscation obfuscation{FastRandomContext{}.randbytes<Obfuscation::KEY_SIZE>()};
+        file << obfuscation;
+        file.SetObfuscation(obfuscation);
 
         uint64_t mempool_transactions_to_write(vinfo.size());
         file << mempool_transactions_to_write;
