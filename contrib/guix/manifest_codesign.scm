@@ -2,7 +2,7 @@
              ((gnu packages compression) #:select (gzip zip))
              ((gnu packages crypto) #:select (osslsigncode))
              ((gnu packages nss) #:select (nss-certs))
-             ((gnu packages python-build) #:select (python-poetry-core))
+             ((gnu packages python-build) #:select (python-poetry-core python-setuptools))
              ((gnu packages python-crypto) #:select (python-asn1crypto python-oscrypto))
              ((gnu packages tls) #:select (openssl))
              ((gnu packages version-control) #:select (git-minimal))
@@ -28,6 +28,7 @@
           (base32
            "07x6p8clh11z8s1n2kdxrqwqm2almgc5qpkcr9ckb6y5ivjdr5r6"))))
       (build-system python-build-system)
+      (native-inputs (list python-setuptools))
       ;; There are no tests, but attempting to run python setup.py test leads to
       ;; PYTHONPATH problems, just disable the test
       (arguments '(#:tests? #f))
@@ -66,6 +67,7 @@
           (base32
            "1qw2k7xis53179lpqdqyylbcmp76lj7sagp883wmxg5i7chhc96k"))))
       (build-system python-build-system)
+      (native-inputs (list python-setuptools))
       (propagated-inputs
         (list openssl
               python-asn1crypto
@@ -109,7 +111,12 @@
                #t))
            (replace 'check
              (lambda _
-               (invoke "python" "run.py" "tests")
+               ;; TODO: revert when https://github.com/LRGH/elfesteem/commit/000d6bbcd3a4b3d132ad6d932eedb3158b3313e9
+               ;; lands in our time-machine bump.
+               ;; Bypass the custom test loader, which uses the removed imp module.
+               (substitute* "tests/__init__.py"
+                 (("^import imp") ""))
+               (invoke "python" "-m" "unittest" "discover" "-s" "tests" "-t" ".")
                #t)))))
       (home-page "https://github.com/wbond/certvalidator")
       (synopsis "Python library for validating X.509 certificates and paths")
