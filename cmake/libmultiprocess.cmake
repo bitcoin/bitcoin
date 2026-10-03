@@ -34,5 +34,9 @@ function(add_libmultiprocess subdir)
   # exclusion, tools like clang-tidy and IWYU that make use of compilation
   # database would complain that the generated c++ source files do not exist. An
   # alternate fix could build "mpexamples" by default like "mptests" above.
-  set_target_properties(mpcalculator mpprinter mpexample PROPERTIES EXPORT_COMPILE_COMMANDS OFF)
+  foreach(target mpcalculator mpprinter mpexample)
+    if(TARGET ${target})
+      set_target_properties(${target} PROPERTIES EXPORT_COMPILE_COMMANDS OFF)
+    endif()
+  endforeach()
 endfunction()
