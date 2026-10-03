@@ -153,6 +153,7 @@ target_link_libraries(bitcoin_common
     bitcoin_util
     univalue
     secp256k1
+    $<TARGET_NAME_IF_EXISTS:libevent::core>
     $<TARGET_NAME_IF_EXISTS:USDT::headers>
     $<$<PLATFORM_ID:Windows>:ws2_32>
 )
@@ -175,6 +176,7 @@ if(ENABLE_WALLET)
       bitcoin_wallet
       bitcoin_common
       bitcoin_util
+      univalue
     )
     install_binary_component(bitcoin-wallet HAS_MANPAGE)
   endif()
@@ -245,6 +247,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   node/txorphanage.cpp
   node/txreconciliation.cpp
   node/utxo_snapshot.cpp
+  node/settings.cpp
   node/warnings.cpp
   noui.cpp
   policy/ephemeral_policy.cpp
@@ -311,7 +314,14 @@ if(BUILD_BITCOIN_BIN)
     bitcoin-res.rc
   )
   add_windows_application_manifest(bitcoin)
-  target_link_libraries(bitcoin core_interface bitcoin_common bitcoin_util)
+  target_link_libraries(bitcoin
+    core_interface
+    bitcoin_common
+    bitcoin_util
+    $<TARGET_NAME_IF_EXISTS:libevent::core>
+    Boost::headers
+    univalue
+  )
   install_binary_component(bitcoin HAS_MANPAGE)
 endif()
 
@@ -327,6 +337,9 @@ if(BUILD_DAEMON)
     core_interface
     bitcoin_node
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
+    $<TARGET_NAME_IF_EXISTS:libevent::core>
+    Boost::headers
+    univalue
   )
   install_binary_component(bitcoind HAS_MANPAGE)
 endif()
@@ -340,6 +353,9 @@ if(ENABLE_IPC AND BUILD_DAEMON)
     bitcoin_node
     bitcoin_ipc
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
+    $<TARGET_NAME_IF_EXISTS:libevent::core>
+    Boost::headers
+    univalue
   )
   install_binary_component(bitcoin-node INTERNAL)
 endif()

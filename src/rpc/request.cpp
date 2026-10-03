@@ -7,6 +7,7 @@
 
 #include <common/args.h>
 #include <crypto/hex_base.h>
+#include <init_settings.h>
 #include <logging.h>
 #include <random.h>
 #include <rpc/protocol.h>
@@ -90,7 +91,7 @@ static const char* const COOKIEAUTH_FILE = ".cookie";
 /** Get name of RPC authentication cookie file */
 static fs::path GetAuthCookieFile(bool temp=false)
 {
-    fs::path arg = gArgs.GetPathArg("-rpccookiefile", COOKIEAUTH_FILE);
+    fs::path arg = RpcCookieFileSetting::Get(gArgs, COOKIEAUTH_FILE);
     if (arg.empty()) {
         return {}; // -norpccookiefile was specified
     }

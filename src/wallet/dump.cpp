@@ -4,6 +4,7 @@
 
 #include <wallet/dump.h>
 
+#include <bitcoin-wallet_settings.h>
 #include <common/args.h>
 #include <util/fs.h>
 #include <util/translation.h>
@@ -24,7 +25,7 @@ uint32_t DUMP_VERSION = 1;
 bool DumpWallet(const ArgsManager& args, WalletDatabase& db, bilingual_str& error)
 {
     // Get the dumpfile
-    std::string dump_filename = args.GetArg("-dumpfile", "");
+    std::string dump_filename = DumpFileSetting::Get(args);
     if (dump_filename.empty()) {
         error = _("No dump file provided. To use dump, -dumpfile=<filename> must be provided.");
         return false;
@@ -127,7 +128,7 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
     }
 
     // Get the dumpfile
-    std::string dump_filename = args.GetArg("-dumpfile", "");
+    std::string dump_filename = DumpFileSetting::Get(args);
     if (dump_filename.empty()) {
         error = _("No dump file provided. To use createfromdump, -dumpfile=<filename> must be provided.");
         return false;
