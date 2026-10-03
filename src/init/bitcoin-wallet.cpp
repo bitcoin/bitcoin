@@ -7,7 +7,7 @@
 #include <memory>
 
 namespace interfaces {
-std::unique_ptr<Init> MakeWalletInit(int argc, char* argv[], int& exit_status)
+std::unique_ptr<Init> MakeWalletInit(int, char*[], int&)
 {
     return std::make_unique<Init>();
 }

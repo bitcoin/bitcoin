@@ -204,7 +204,7 @@ struct ReadDestUpdate
 //! can only be used to disable ReadField() calls in certain contexts like
 //! std::optional and pointer contexts.
 template <typename... LocalTypes, typename Input>
-bool CustomHasField(TypeList<LocalTypes...>, InvokeContext& invoke_context, const Input& input)
+bool CustomHasField(TypeList<LocalTypes...>, InvokeContext&, const Input& input)
 {
     return input.has();
 }
@@ -227,7 +227,7 @@ void ThrowField(TypeList<LocalType>, InvokeContext& invoke_context, Input&& inpu
 //! be created directly. Rethrow as std::runtime_error so callers expecting it
 //! will still catch it.
 template <typename Input>
-void ThrowField(TypeList<std::exception>, InvokeContext& invoke_context, Input&& input)
+void ThrowField(TypeList<std::exception>, InvokeContext&, Input&& input)
 {
     auto data = input.get();
     throw std::runtime_error(std::string(CharCast(data.begin()), data.size()));
@@ -241,7 +241,7 @@ void ThrowField(TypeList<std::exception>, InvokeContext& invoke_context, Input&&
 //! way to represent them in Cap'n Proto and a null Data field is a convenient
 //! representation.
 template <typename... Values>
-bool CustomHasValue(InvokeContext& invoke_context, const Values&... value)
+bool CustomHasValue(InvokeContext&, const Values&...)
 {
     return true;
 }
@@ -434,7 +434,7 @@ struct ClientException
     struct BuildParams : IterateFieldsHelper<BuildParams, 0>
     {
         template <typename Params, typename ParamList>
-        void handleField(InvokeContext& invoke_context, Params& params, ParamList)
+        void handleField(InvokeContext&, Params&, ParamList)
         {
         }
 
@@ -599,7 +599,7 @@ struct ServerExcept : Parent
 //! Helper for CustomPassField below. Call Accessor::get method if it has one,
 //! otherwise return capnp::Void.
 template <typename Accessor, typename Message>
-decltype(auto) MaybeGet(Message&& message, decltype(Accessor::get(message))* enable = nullptr)
+decltype(auto) MaybeGet(Message&& message, decltype(Accessor::get(message))* = nullptr)
 {
     return Accessor::get(message);
 }

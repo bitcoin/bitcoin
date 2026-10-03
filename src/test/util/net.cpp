@@ -170,7 +170,7 @@ ZeroSock::~ZeroSock() { m_socket = INVALID_SOCKET; }
 
 ssize_t ZeroSock::Send(const void*, size_t len, int) const { return len; }
 
-ssize_t ZeroSock::Recv(void* buf, size_t len, int flags) const
+ssize_t ZeroSock::Recv(void* buf, size_t len, int /*flags*/) const
 {
     memset(buf, 0x0, len);
     return len;
@@ -199,7 +199,7 @@ std::unique_ptr<Sock> ZeroSock::Accept(sockaddr* addr, socklen_t* addr_len) cons
     return std::make_unique<ZeroSock>();
 }
 
-int ZeroSock::GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const
+int ZeroSock::GetSockOpt(int /*level*/, int /*opt_name*/, void* opt_val, socklen_t* opt_len) const
 {
     std::memset(opt_val, 0x0, *opt_len);
     return 0;
@@ -217,7 +217,7 @@ bool ZeroSock::SetNonBlocking() const { return true; }
 
 bool ZeroSock::IsSelectable() const { return true; }
 
-bool ZeroSock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
+bool ZeroSock::Wait(std::chrono::milliseconds /*timeout*/, Event requested, Event* occurred) const
 {
     if (occurred != nullptr) {
         *occurred = requested;
@@ -225,7 +225,7 @@ bool ZeroSock::Wait(std::chrono::milliseconds timeout, Event requested, Event* o
     return true;
 }
 
-bool ZeroSock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const
+bool ZeroSock::WaitMany(std::chrono::milliseconds /*timeout*/, EventsPerSock& events_per_sock) const
 {
     for (auto& [sock, events] : events_per_sock) {
         (void)sock;
@@ -234,7 +234,7 @@ bool ZeroSock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events
     return true;
 }
 
-ZeroSock& ZeroSock::operator=(Sock&& other)
+ZeroSock& ZeroSock::operator=(Sock&&)
 {
     assert(false && "Move of Sock into ZeroSock not allowed.");
     return *this;
@@ -255,7 +255,7 @@ ssize_t StaticContentsSock::Recv(void* buf, size_t len, int flags) const
     return consume_bytes;
 }
 
-StaticContentsSock& StaticContentsSock::operator=(Sock&& other)
+StaticContentsSock& StaticContentsSock::operator=(Sock&&)
 {
     assert(false && "Move of Sock into StaticContentsSock not allowed.");
     return *this;
