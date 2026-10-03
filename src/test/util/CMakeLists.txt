@@ -5,6 +5,7 @@
 add_library(test_util STATIC EXCLUDE_FROM_ALL
   blockfilter.cpp
   coins.cpp
+  common.cpp
   coverage.cpp
   json.cpp
   logging.cpp
@@ -27,4 +28,13 @@ target_link_libraries(test_util
     $<$<BOOL:${ENABLE_WALLET}>:SQLite3::SQLite3>
   PUBLIC
     univalue
+)
+
+add_library(test_framework STATIC EXCLUDE_FROM_ALL
+  framework.cpp
+)
+
+target_link_libraries(test_framework
+  PUBLIC
+    core_interface
 )

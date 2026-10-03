@@ -166,6 +166,7 @@ add_windows_application_manifest(test_bitcoin)
 target_link_libraries(test_bitcoin
   core_interface
   test_util
+  test_framework
   bitcoin_cli
   bitcoin_node
   bitcoin_consensus

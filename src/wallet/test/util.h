@@ -7,12 +7,14 @@
 
 #include <addresstype.h>
 #include <streams.h>
+#include <tinyformat.h>
 #include <wallet/db.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/sqlite.h>
 
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <string>
 #include <utility>
 
@@ -28,6 +30,11 @@ namespace wallet {
 class CWallet;
 class WalletDatabase;
 struct WalletContext;
+
+inline std::ostream& operator<<(std::ostream& os, const WalletError& e)
+{
+    return os << strprintf("WalletError(code=%d, message=%s)", static_cast<int>(e.code), e.message.original);
+}
 
 inline constexpr DatabaseFormat DATABASE_FORMATS[] = {
        DatabaseFormat::SQLITE,
