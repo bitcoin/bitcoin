@@ -664,6 +664,8 @@ void TorController::protocolinfo_cb(TorControlConnection& _conn, const TorContro
         if (!torpassword.empty()) {
             if (methods.contains("HASHEDPASSWORD")) {
                 LogDebug(BCLog::TOR, "Using HASHEDPASSWORD authentication");
+                // Send as a QuotedString (control-spec): escape backslashes first, then quotes
+                ReplaceAll(torpassword, "\\", "\\\\");
                 ReplaceAll(torpassword, "\"", "\\\"");
                 _conn.Command("AUTHENTICATE \"" + torpassword + "\"", std::bind_front(&TorController::auth_cb, this));
             } else {
