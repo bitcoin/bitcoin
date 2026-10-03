@@ -57,7 +57,7 @@ struct SourceLocationHasher {
 
 struct LogCategory {
     std::string category;
-    bool active;
+    BCLog::Level level;
 };
 
 namespace BCLog {
@@ -261,16 +261,15 @@ namespace BCLog {
         bool WillLogCategoryLevel(LogFlags category, Level level) const EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         /** Returns a vector of the log categories in alphabetical order. */
-        std::vector<LogCategory> LogCategoriesList() const;
+        std::vector<LogCategory> LogCategoriesList() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
         /** Returns a string with the log categories in alphabetical order. */
-        std::string LogCategoriesString() const
-        {
-            return util::Join(LogCategoriesList(), ", ", [&](const LogCategory& i) { return i.category; });
-        };
+        static std::string LogCategoriesString();
 
         //! Returns a string with all user-selectable log levels.
         std::string LogLevelsString() const;
 
+        //! Returns the log level corresponding to a string, or nullopt if unrecognized.
+        static std::optional<BCLog::Level> GetLogLevel(std::string_view str);
         //! Returns the string representation of a log level.
         static std::string LogLevelToStr(BCLog::Level level);
 
