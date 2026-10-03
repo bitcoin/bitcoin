@@ -9,15 +9,15 @@
 #include <hash.h>
 #include <net.h>
 #include <signet.h>
+#include <test/util/setup_common.h>
 #include <uint256.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 #include <validation.h>
 
-#include <string>
-
-#include <test/util/setup_common.h>
-
 #include <boost/test/unit_test.hpp>
+
+#include <string>
 
 BOOST_FIXTURE_TEST_SUITE(validation_tests, BasicTestingSetup)
 

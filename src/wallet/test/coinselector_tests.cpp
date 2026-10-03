@@ -9,6 +9,7 @@
 #include <random.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/coinselection.h>
@@ -17,8 +18,9 @@
 #include <wallet/test/wallet_test_fixture.h>
 #include <wallet/wallet.h>
 
-#include <algorithm>
 #include <boost/test/unit_test.hpp>
+
+#include <algorithm>
 #include <random>
 
 namespace wallet {

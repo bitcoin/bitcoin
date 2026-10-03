@@ -9,7 +9,6 @@
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
 
-#include <cassert>
 
 FUZZ_TARGET(tx_in)
 {

@@ -11,11 +11,12 @@
 #include <test/util/common.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <validation.h>
 
-#include <array>
-
 #include <boost/test/unit_test.hpp>
+
+#include <array>
 
 BOOST_AUTO_TEST_SUITE(txdownload_tests)
 

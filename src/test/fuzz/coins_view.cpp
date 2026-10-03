@@ -19,10 +19,10 @@
 #include <test/util/coins.h>
 #include <test/util/setup_common.h>
 #include <txdb.h>
+#include <util/check.h>
 #include <util/hasher.h>
 #include <util/threadpool.h>
 
-#include <cassert>
 #include <algorithm>
 #include <cstdint>
 #include <functional>

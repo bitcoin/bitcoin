@@ -4,9 +4,9 @@
 
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <util/check.h>
 #include <util/time.h>
 
-#include <cassert>
 #include <cstdint>
 #include <string>
 #include <vector>

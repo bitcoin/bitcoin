@@ -13,7 +13,6 @@
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 
-#include <cassert>
 #include <cstdint>
 #include <memory>
 #include <string>
