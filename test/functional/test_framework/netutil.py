@@ -8,6 +8,7 @@ Roughly based on https://web.archive.org/web/20190424172231/http://voorloopnul.c
 """
 
 import http.client
+import ipaddress
 import sys
 import socket
 import struct
@@ -169,30 +170,8 @@ def addr_to_hex(addr):
     '''
     Convert string IPv4 or IPv6 address to binary address as returned by
     get_bind_addrs.
-    Very naive implementation that certainly doesn't work for all IPv6 variants.
     '''
-    if '.' in addr: # IPv4
-        addr = [int(x) for x in addr.split('.')]
-    elif ':' in addr: # IPv6
-        sub = [[], []] # prefix, suffix
-        x = 0
-        addr = addr.split(':')
-        for i,comp in enumerate(addr):
-            if comp == '':
-                if i == 0 or i == (len(addr)-1): # skip empty component at beginning or end
-                    continue
-                x += 1 # :: skips to suffix
-                assert x < 2
-            else: # two bytes per component
-                val = int(comp, 16)
-                sub[x].append(val >> 8)
-                sub[x].append(val & 0xff)
-        nullbytes = 16 - len(sub[0]) - len(sub[1])
-        assert (x == 0 and nullbytes == 0) or (x == 1 and nullbytes > 0)
-        addr = sub[0] + ([0] * nullbytes) + sub[1]
-    else:
-        raise ValueError('Could not parse address %s' % addr)
-    return bytearray(addr).hex()
+    return ipaddress.ip_address(addr).packed.hex()
 
 def test_ipv6_local():
     '''
