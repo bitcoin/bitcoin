@@ -9,11 +9,16 @@
 #include <util/time.h>
 
 #include <atomic>
+#include <chrono>
 #include <functional>
+#include <memory>
+#include <vector>
 #include <optional>
 
 namespace wallet {
 class CWallet;
+class FastWalletRescanFilter;
+class ParallelFilterChecker;
 
 /** Result of a wallet scan */
 struct ScanResult {
@@ -65,19 +70,70 @@ private:
     std::atomic<double> m_scanning_progress{0};
 
     //! Progress window and tip tracked across Scan loop iterations. The
-    //! current block's progress is a plain local in Scan; only the window
-    //! bounds are shared with the helpers, and UpdateTipIfChanged is the
-    //! sole mutator.
+    //! current scanning progress lives in ScanContext::progress_current
+    //! instead, since the read/filter helpers need to update it; these
+    //! window bounds are only ever mutated by UpdateTipIfChanged.
     struct LoopState {
         double progress_begin{0};
         double progress_end{0};
         uint256 tip_hash;
     };
 
-    //! Locate block_hash in the chain, queueing its active-chain successor
-    //! into next_block if it exists and is within the scan range. Returns
-    //! whether the block itself is still in the active chain.
-    bool QueueNextBlock(const uint256& block_hash, int block_height, std::optional<std::pair<uint256, int>>& next_block, std::optional<int> max_height);
+    //! A block queued for filtering and scanning. still_active records
+    //! whether the block was in the active chain when it was queued.
+    struct QueuedBlock {
+        uint256 hash;
+        int height;
+        bool still_active;
+    };
+
+    //! State of a single Scan() call, local to Scan() and passed through the
+    //! scan helpers.
+    struct ScanContext {
+        //! Defined in scan.cpp where ParallelFilterChecker is complete, as
+        //! required by the checker member's destructor.
+        ScanContext(const WalletRescanReserver& reserver_in, std::chrono::steady_clock::time_point current_time_in, std::optional<int> max_height_in);
+
+        ScanResult result;
+        //! Reserver of the scan, used as its clock.
+        const WalletRescanReserver& reserver;
+        //! Time progress was last logged and saved; maintained by Scan().
+        std::chrono::steady_clock::time_point current_time;
+        //! Optional height limit of the scan range.
+        const std::optional<int> max_height;
+        //! The next block to read, if any.
+        std::optional<std::pair<uint256, int>> next_block;
+        std::unique_ptr<FastWalletRescanFilter> filter;
+        //! Checks block filters in parallel on its own thread pool; only set
+        //! when the wallet is configured with more than one thread..
+        std::unique_ptr<ParallelFilterChecker> checker;
+        //! Verification progress of the most recently scanned or
+        //! filter-skipped block.
+        double progress_current{0};
+        //! @return true if it is time to log progress and save progress to
+        //!         disk
+        bool IsNextInterval() const;
+    };
+
+    friend class ParallelFilterChecker;
+
+    //! Consume ctx.next_block: record whether it is still in the active
+    //! chain, and queue its active-chain successor into ctx.next_block if it
+    //! exists and is within the scan range.
+    std::optional<QueuedBlock> ReadNextBlock(ScanContext& ctx);
+    /**
+     * Read and filter the next block, recording filter-skipped block as
+     * scanned.
+     * @return the next block to be scanned or std::nullopt if there are
+     * no more blocks to read.
+     */
+    std::optional<ChainScanner::QueuedBlock> ReadAndFilterNextBlock(ScanContext& ctx);
+    /**
+     * Read and filter the next batch of blocks, recording filter-skipped blocks as
+     * scanned.
+     * @return the blocks that are ready to be scanned
+     */
+    std::vector<QueuedBlock> ReadAndFilterNextBlocks(ScanContext& ctx);
     bool ScanBlock(const uint256& block_hash, int block_height, bool save_progress);
     void UpdateProgress(const LoopState& state, double progress_current, int block_height);
     void UpdateTipIfChanged(LoopState& state);
