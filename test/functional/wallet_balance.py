@@ -248,7 +248,9 @@ class WalletTest(BitcoinTestFramework):
         self.generatetoaddress(self.nodes[0], 1, ADDRESS_WATCHONLY, sync_fun=self.no_op)
 
         # Now confirm tx_orig
-        self.restart_node(1, ['-persistmempool=0'])
+        # Note: extra_args is inherited from self.extra_args[1] so that the
+        # immediate-tx-relay whitelist is not dropped by this restart.
+        self.restart_node(1, extra_args=self.extra_args[1] + ['-persistmempool=0'])
         self.connect_nodes(0, 1)
         self.sync_blocks()
         self.nodes[1].sendrawtransaction(tx_orig)

@@ -31,6 +31,7 @@ class PackageRBFTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
+        self.noban_tx_relay = True
         # Required for fill_mempool()
         self.extra_args = [[
             "-maxmempool=5",
