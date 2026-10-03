@@ -237,7 +237,8 @@ bool LegacyDataSPKM::CheckDecryptionKey(const CKeyingMaterial& master_key)
                 break;
             else {
                 // Rewrite these encrypted keys with checksums
-                batch.WriteCryptedKey(vchPubKey, vchCryptedSecret, mapKeyMetadata[vchPubKey.GetID()]);
+                // Write failure is ok, the wallet will redo this on next load but no data is missing from disk
+                (void)batch.WriteCryptedKey(vchPubKey, vchCryptedSecret, mapKeyMetadata[vchPubKey.GetID()]);
             }
         }
         if (keyPass && keyFail)
@@ -964,7 +965,10 @@ util::Result<CTxDestination> DescriptorScriptPubKeyMan::GetNewDestination(const 
             return util::Error{_("Error: Cannot extract destination from the generated scriptpubkey")}; // shouldn't happen
         }
         IncIndex();
-        WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
+        if (!WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor)) {
+            DecIndex();
+            return util::Error{_("Error: Unable to update database with new address")};
+        }
         return dest;
     }
 }
@@ -1055,7 +1059,7 @@ void DescriptorScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, 
     if (m_wallet_descriptor.GetNext() - 1 == index) {
         DecIndex();
     }
-    WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
+    (void)WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
 }
 
 std::map<CKeyID, CKey> DescriptorScriptPubKeyMan::GetKeys() const
@@ -1169,7 +1173,9 @@ bool DescriptorScriptPubKeyMan::TopUpWithDB(WalletBatch& batch, unsigned int siz
         m_max_cached_index++;
     }
     SetRangeEnd(new_range_end);
-    batch.WriteDescriptor(GetID(), m_wallet_descriptor);
+    if (!batch.WriteDescriptor(GetID(), m_wallet_descriptor)) {
+        throw std::runtime_error(std::string(__func__) + ": updating descriptor failed");
+    }
 
     // By this point, the cache size should be the size of the entire range
     assert(m_wallet_descriptor.GetEnd() - 1 == m_max_cached_index);
