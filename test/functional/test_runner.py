@@ -555,6 +555,11 @@ def main():
         # Remove it, and expand it for each bench in the list
         test_list.remove(TOOL_BENCH_SANITY_CHECK)
         bench_cmd = Binaries(get_binary_paths(config), bin_dir=None).bench_argv() + ["-list"]
+        bench_cmd = [
+            sys.executable,
+            pathlib.Path(config["environment"]["BUILDDIR"]) / "test" / "with_sanitizer_env.py",
+            *bench_cmd,
+        ]
         bench_list = subprocess.check_output(bench_cmd, text=True).splitlines()
         bench_list = [f"{TOOL_BENCH_SANITY_CHECK} --bench={b}" for b in bench_list]
         # Start with special scripts (variable, unknown runtime)
