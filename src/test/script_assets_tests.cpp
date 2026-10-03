@@ -114,8 +114,7 @@ static void AssetTest(const UniValue& test, SignatureCache& signature_cache)
         mtx.vin[idx].scriptSig = ScriptFromHex(test["success"]["scriptSig"].get_str());
         mtx.vin[idx].scriptWitness = ScriptWitnessFromJSON(test["success"]["witness"]);
         CTransaction tx(mtx);
-        PrecomputedTransactionData txdata;
-        txdata.Init(tx, std::vector<CTxOut>(prevouts));
+        PrecomputedTransactionData txdata{tx, std::vector<CTxOut>(prevouts)};
         CachingTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].nValue, true, signature_cache, txdata);
 
         for (const auto flags : ALL_CONSENSUS_FLAGS) {
@@ -132,8 +131,7 @@ static void AssetTest(const UniValue& test, SignatureCache& signature_cache)
         mtx.vin[idx].scriptSig = ScriptFromHex(test["failure"]["scriptSig"].get_str());
         mtx.vin[idx].scriptWitness = ScriptWitnessFromJSON(test["failure"]["witness"]);
         CTransaction tx(mtx);
-        PrecomputedTransactionData txdata;
-        txdata.Init(tx, std::vector<CTxOut>(prevouts));
+        PrecomputedTransactionData txdata{tx, std::vector<CTxOut>(prevouts)};
         CachingTransactionSignatureChecker txcheck(&tx, idx, prevouts[idx].nValue, true, signature_cache, txdata);
 
         for (const auto flags : ALL_CONSENSUS_FLAGS) {
