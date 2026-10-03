@@ -11,6 +11,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/mempool.h>
+#include <test/fuzz/util/reachability.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <test/util/txmempool.h>
@@ -29,10 +30,14 @@
 
 namespace {
 const TestingSetup* g_setup;
+constexpr ReachabilityGoal COMPACT_BLOCK_INITIALIZATION_SUCCEEDS{"compact block initialization succeeds"};
+constexpr ReachabilityGoal COMPACT_BLOCK_RECONSTRUCTION_SUCCEEDS{"compact block reconstruction succeeds"};
 } // namespace
 
 void initialize_pdb()
 {
+    RegisterReachabilityGoal(COMPACT_BLOCK_INITIALIZATION_SUCCEEDS);
+    RegisterReachabilityGoal(COMPACT_BLOCK_RECONSTRUCTION_SUCCEEDS);
     static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
     g_setup = testing_setup.get();
 }
@@ -88,6 +93,7 @@ FUZZ_TARGET(partially_downloaded_block, .init = initialize_pdb)
     }
 
     auto init_status{pdb.InitData(cmpctblock, extra_txn)};
+    ObserveReachabilityGoal(init_status == READ_STATUS_OK, COMPACT_BLOCK_INITIALIZATION_SUCCEEDS);
 
     std::vector<CTransactionRef> missing;
     // Whether we skipped a transaction that should be included in `missing`.
@@ -120,6 +126,7 @@ FUZZ_TARGET(partially_downloaded_block, .init = initialize_pdb)
 
     CBlock reconstructed_block;
     auto fill_status{pdb.FillBlock(reconstructed_block, missing, segwit_active)};
+    ObserveReachabilityGoal(fill_status == READ_STATUS_OK, COMPACT_BLOCK_RECONSTRUCTION_SUCCEEDS);
     switch (fill_status) {
     case READ_STATUS_OK:
         assert(!skipped_missing);

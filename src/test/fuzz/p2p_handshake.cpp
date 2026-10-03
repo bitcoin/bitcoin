@@ -11,6 +11,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
+#include <test/fuzz/util/reachability.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
@@ -24,9 +25,11 @@
 
 namespace {
 TestingSetup* g_setup;
+constexpr ReachabilityGoal P2P_HANDSHAKE_COMPLETES{"p2p_handshake completes a handshake"};
 
 void initialize()
 {
+    RegisterReachabilityGoal(P2P_HANDSHAKE_COMPLETES);
     static const auto testing_setup = MakeNoLogFileContext<TestingSetup>(
         /*chain_type=*/ChainType::REGTEST);
     g_setup = testing_setup.get();
@@ -113,5 +116,10 @@ FUZZ_TARGET(p2p_handshake, .init = ::initialize)
         }
     }
 
+    bool completed_handshake{false};
+    for (const CNode* peer : peers) {
+        completed_handshake |= peer->fSuccessfullyConnected;
+    }
+    ObserveReachabilityGoal(completed_handshake, P2P_HANDSHAKE_COMPLETES);
     node.connman->StopNodes();
 }
