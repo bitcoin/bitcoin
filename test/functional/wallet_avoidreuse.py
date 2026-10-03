@@ -139,6 +139,9 @@ class AvoidReuseTest(BitcoinTestFramework):
         # Attempt to set the disable_private_keys flag; this should not work
         assert_raises_rpc_error(-8, "Wallet flag is immutable", self.nodes[1].setwalletflag, 'disable_private_keys')
 
+        if not self.is_external_signer_compiled():
+            assert_raises_rpc_error(-4, "Compiled without external signing support", self.nodes[1].setwalletflag, "external_signer")
+
         tempwallet = ".wallet_avoidreuse.py_test_immutable_wallet.dat"
 
         # Create a wallet with disable_private_keys set; this should work
