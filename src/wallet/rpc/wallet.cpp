@@ -317,7 +317,7 @@ static RPCMethod setwalletflag()
     if (!pwallet) return UniValue::VNULL;
 
     std::string flag_str = request.params[0].get_str();
-    bool value = request.params[1].isNull() || request.params[1].get_bool();
+    const bool value{self.Arg<bool>("value")};
 
     if (!STRING_TO_WALLET_FLAG.contains(flag_str)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unknown wallet flag: %s", flag_str));
@@ -388,11 +388,11 @@ static RPCMethod createwallet()
 {
     WalletContext& context = EnsureWalletContext(request.context);
     uint64_t flags = 0;
-    if (!request.params[1].isNull() && request.params[1].get_bool()) {
+    if (self.Arg<bool>("disable_private_keys")) {
         flags |= WALLET_FLAG_DISABLE_PRIVATE_KEYS;
     }
 
-    if (!request.params[2].isNull() && request.params[2].get_bool()) {
+    if (self.Arg<bool>("blank")) {
         flags |= WALLET_FLAG_BLANK_WALLET;
     }
     SecureString passphrase;
@@ -406,14 +406,14 @@ static RPCMethod createwallet()
         }
     }
 
-    if (!request.params[4].isNull() && request.params[4].get_bool()) {
+    if (self.Arg<bool>("avoid_reuse")) {
         flags |= WALLET_FLAG_AVOID_REUSE;
     }
     flags |= WALLET_FLAG_DESCRIPTORS;
     if (!self.Arg<bool>("descriptors")) {
         throw JSONRPCError(RPC_WALLET_ERROR, "descriptors argument must be set to \"true\"; it is no longer possible to create a legacy wallet.");
     }
-    if (!request.params[7].isNull() && request.params[7].get_bool()) {
+    if (self.Arg<bool>("external_signer")) {
 #ifdef ENABLE_EXTERNAL_SIGNER
         flags |= WALLET_FLAG_EXTERNAL_SIGNER;
 #else
