@@ -15,6 +15,7 @@ Exports:
 * G: the secp256k1 generator point
 """
 
+import functools
 import unittest
 from hashlib import sha256
 from test_framework.util import assert_equal, assert_not_equal
@@ -230,7 +231,7 @@ class GE:
     def __rmul__(self, a):
         """Multiply an integer with a group element."""
         if self == G:
-            return FAST_G.mul(a)
+            return mul_G(a % GE.ORDER)
         return GE.mul((a, self))
 
     def __neg__(self):
@@ -322,31 +323,43 @@ G = GE.lift_x(0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798
 class FastGEMul:
     """Table for fast multiplication with a constant group element.
 
-    Speed up scalar multiplication with a fixed point P by using a precomputed lookup table with
-    its powers of 2:
+    Speed up scalar multiplication with a fixed point P by using a precomputed lookup table.
+    The scalar is split into WINDOW-bit chunks, and for every chunk position i the table holds
+    a row [(0 * 2^(WINDOW*i)) * P, (1 * 2^(WINDOW*i)) * P, ..., ((2^WINDOW-1) * 2^(WINDOW*i)) * P]:
 
-        table = [P, 2*P, 4*P, (2^3)*P, (2^4)*P, ..., (2^255)*P]
+        table[i][j] = j * (2^(WINDOW*i)) * P
 
-    During multiplication, the points corresponding to each bit set in the scalar are added up,
-    i.e. on average ~128 point additions take place.
+    During multiplication, one table entry per chunk is added up, i.e. 256/WINDOW point
+    additions take place (instead of ~128 on average for a bit-by-bit approach).
     """
 
+    WINDOW = 4
+
     def __init__(self, p):
-        self.table = [p]  # table[i] = (2^i) * p
-        for _ in range(255):
-            p = p + p
-            self.table.append(p)
+        self.table = []  # table[i][j] = j * (2^(WINDOW*i)) * p
+        for _ in range((256 + self.WINDOW - 1) // self.WINDOW):
+            row = [GE()]
+            for _ in range((1 << self.WINDOW) - 1):
+                row.append(row[-1] + p)
+            self.table.append(row)
+            for _ in range(self.WINDOW):
+                p = p + p
 
     def mul(self, a):
         result = GE()
         a = a % GE.ORDER
-        for bit in range(a.bit_length()):
-            if a & (1 << bit):
-                result += self.table[bit]
+        mask = (1 << self.WINDOW) - 1
+        for row in self.table:
+            result += row[a & mask]
+            a >>= self.WINDOW
         return result
 
 # Precomputed table with multiples of G for fast multiplication
 FAST_G = FastGEMul(G)
+
+@functools.lru_cache(maxsize=1024)
+def mul_G(a):
+    return FAST_G.mul(a)
 
 class TestFrameworkSecp256k1(unittest.TestCase):
     def test_H(self):
