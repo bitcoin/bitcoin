@@ -273,6 +273,33 @@ BOOST_AUTO_TEST_CASE(bip352_scan_skips_invalid_taproot_outputs)
     BOOST_CHECK(found_outputs->front().output == expected_output);
 }
 
+BOOST_AUTO_TEST_CASE(bip352_p2sh_pubkey_extraction_mismatched_redeem_script)
+{
+    // A P2SH output whose scriptPubKey does not commit to the provided P2WPKH redeem script
+    // must not be treated as an eligible silent payments input.
+    const CKey key = ParseHexToCKey("0000000000000000000000000000000000000000000000000000000000000001");
+    const CPubKey pubkey = key.GetPubKey();
+
+    // 1. Construct a P2SH scriptPubKey for a multisig script
+    const CScript multisig_script = CScript() << OP_2 << ToByteVector(pubkey) << ToByteVector(pubkey) << OP_2 << OP_CHECKMULTISIG;
+    const CScript p2sh_spk = GetScriptForDestination(ScriptHash(multisig_script));
+
+    // 2. Construct a scriptSig that pushes a valid P2WPKH redeem script (hash does NOT match p2sh_spk)
+    const CScript p2wpkh_redeem = GetScriptForDestination(WitnessV0KeyHash(pubkey));
+    CMutableTransaction tx;
+    tx.vin.emplace_back(COutPoint{Txid::FromHex("0000000000000000000000000000000000000000000000000000000000000001").value(), 0});
+    tx.vin[0].scriptSig = CScript() << ToByteVector(p2wpkh_redeem);
+    tx.vin[0].scriptWitness.stack.emplace_back(std::vector<unsigned char>{0x30, 0x06, 0x02, 0x01, 0x01, 0x02, 0x01, 0x01, 0x01});
+    tx.vin[0].scriptWitness.stack.emplace_back(pubkey.begin(), pubkey.end());
+
+    // 3. Extraction MUST return std::nullopt
+    BOOST_CHECK(!GetPubKeyFromInput(tx.vin[0], p2sh_spk).has_value());
+
+    // 4. Extraction with matching P2SH-P2WPKH scriptPubKey MUST succeed
+    const CScript valid_p2sh_spk = GetScriptForDestination(ScriptHash(p2wpkh_redeem));
+    BOOST_CHECK(GetPubKeyFromInput(tx.vin[0], valid_p2sh_spk).has_value());
+}
+
 BOOST_AUTO_TEST_CASE(bip352_label_serialize_roundtrip)
 {
     CKey scan_key = ParseHexToCKey("0000000000000000000000000000000000000000000000000000000000000002");
