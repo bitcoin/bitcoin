@@ -13,6 +13,7 @@
   #:use-module ((guix utils) #:select (substitute-keyword-arguments))
   #:export (building-on
             glibc-2.31
+            glibc-2.44
             make-bitcoin-cross-toolchain
             make-mingw-pthreads-cross-toolchain))
 
@@ -22,6 +23,16 @@ FILE-NAME found in ./patches relative to the current file."
   (parameterize
       ((%patch-path (list (string-append (dirname (current-filename)) "/patches"))))
     (list (search-patch file-name) ...)))
+
+;; Return a string of ` -ffile-prefix-map=OLD=/usr' flags.
+(define-syntax-rule (guix-store-prefix-map-flags)
+  '(begin
+     (use-modules (ice-9 popen) (ice-9 rdelim))
+     (let* ((port (open-input-pipe
+                    "find /gnu/store -maxdepth 1 -mindepth 1 -type d -exec echo -n ' -ffile-prefix-map={}=/usr' \\;"))
+            (mapping (read-line port)))
+       (close-pipe port)
+       mapping)))
 
 (define building-on (string-append "--build=" (list-ref (string-split (%current-system) #\-) 0) "-guix-linux-gnu"))
 
@@ -281,3 +292,60 @@ chain for " target " development."))
                     (string-append out "/etc/rpc" suffix "\n"))
                    (("^install-others =.*$")
                     (string-append "install-others = " out "/etc/rpc\n")))))))))))))
+
+(define glibc-2.44
+  (let ((commit "07dc0a64a3256151beb20a2b4ebc77ee74ebe0dc"))
+  (package
+    (inherit glibc) ;; 2.41
+    (version "2.44")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://sourceware.org/git/glibc.git")
+                    (commit commit)))
+              (file-name (git-file-name "glibc" commit))
+              (sha256
+               (base32
+                "1n7kpwd6xa1f3qsa0xx4x2kq4balv4pvcjjr783d1namjz4jgpbq"))
+              (patches (search-our-patches "glibc-guix-store-paths.patch"
+                                           "glibc-nss-nodlopen.patch"))))
+    (arguments
+      (substitute-keyword-arguments (package-arguments glibc)
+        ((#:configure-flags flags)
+          `(append
+            ;; Drop the Guix-specific complocaledir
+            (remove (lambda (flag)
+                      (string-prefix? "libc_cv_complocaledir=" flag))
+                    ,flags)
+            ;; https://sourceware.org/glibc/manual/latest/html_node/Configuring-and-compiling.html
+            (list "--enable-bind-now",
+                  "--enable-cet=yes",
+                  "--enable-fortify-source",
+                  "--enable-kernel=3.17.0",
+                  "--enable-stack-protector=all",
+                  "--disable-nscd",
+                  "--disable-profile",
+                  "--disable-pt_chown",
+                  "--disable-timezone-tools",
+                  "--disable-werror",
+                  building-on)))
+        ((#:phases phases)
+          `(modify-phases ,phases
+             (add-before 'configure 'remap-guix-store-paths
+               (lambda _
+                 (let ((mapping ,(guix-store-prefix-map-flags)))
+                   (for-each (lambda (var)
+                               (setenv var (string-append "-O2 -g" (or (getenv var) "") mapping)))
+                             '("CFLAGS" "CPPFLAGS")))
+                 #t))
+             (add-after 'pre-configure 'use-portable-shell
+               (lambda _
+                 ;; Revert the shell path changes we inherit from Guix
+                 ;; https://codeberg.org/guix/guix/src/commit/c5eee3336cc1d10a3cc1c97fde2809c3451624d3/gnu/packages/base.scm#L1011
+                 (substitute* "sysdeps/posix/system.c"
+                   (("#define[ \t]+SHELL_PATH.*$")
+                    "#define SHELL_PATH \"/bin/sh\"\n"))
+                 (substitute* (find-files "." "^paths\\.h$")
+                   (("#define[ \t]+_PATH_BSHELL[ \t]+.*$")
+                    "#define _PATH_BSHELL \"/bin/sh\"\n"))
+                 #t)))))))))
