@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <httpserver.h>
 #include <rest.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
@@ -9,6 +10,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <string>
+
+using http_bitcoin::HTTPRequest;
 
 BOOST_FIXTURE_TEST_SUITE(rest_tests, BasicTestingSetup)
 
@@ -46,4 +49,45 @@ BOOST_AUTO_TEST_CASE(test_query_string)
     BOOST_CHECK_EQUAL(param, "/rest/endpoint/someresource");
     BOOST_CHECK_EQUAL(rf, RESTResponseFormat::UNDEF);
 }
+
+BOOST_AUTO_TEST_CASE(test_bool_parsing)
+{
+    HTTPRequest req;
+    util::Expected<bool, std::string> ret;
+    constexpr auto param = "verbose";
+
+    // If no value is set, the default is used.
+    req.m_target = "/rest/endpoint/resource?someotherparam=false";
+    ret = RESTParseBoolParam(&req, param, /*default_val=*/true);
+    BOOST_CHECK(ret.has_value());
+    BOOST_CHECK_EQUAL(*ret, true);
+
+    ret = RESTParseBoolParam(&req, param, /*default_val=*/false);
+    BOOST_CHECK(ret.has_value());
+    BOOST_CHECK_EQUAL(*ret, false);
+
+    // All the checks will use this format string strprintf'ing in the param
+    // and val.
+    static constexpr char fmt_str[] = "/rest/endpoint/resource?%s=%s";
+
+    // Happy case, true
+    req.m_target = strprintf(fmt_str, param, "true");
+    ret = RESTParseBoolParam(&req, param, /*default_val=*/true);
+    BOOST_CHECK(ret.has_value());
+    BOOST_CHECK_EQUAL(*ret, true);
+
+    // Happy case, false
+    req.m_target = strprintf(fmt_str, param, "false");
+    ret = RESTParseBoolParam(&req, param, /*default_val=*/true);
+    BOOST_CHECK(ret.has_value());
+    BOOST_CHECK_EQUAL(*ret, false);
+
+    // Error when some other value is used
+    req.m_target = strprintf(fmt_str, param, "happiness");
+    ret = RESTParseBoolParam(&req, param, /*default_val=*/true);
+    BOOST_CHECK(!ret.has_value());
+    auto err_str = strprintf("The \"%s\" query parameter must be either \"true\" or \"false\".", param);
+    BOOST_CHECK_EQUAL(ret.error(), err_str);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
