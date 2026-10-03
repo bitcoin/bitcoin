@@ -95,12 +95,28 @@ class BindExtraTest(BitcoinTestFramework):
 
         self.stop_node(0)
 
+        self.log.info("Test -listenonion with a normal bind and no dedicated onion bind")
+        self.stop_node(2)
+        self.nodes[2].assert_start_raises_init_error(
+            self.expected[2][0] + ["-listenonion=1", "-torcontrol=127.0.0.1:1"],
+            "Error: The automatic Tor onion service requires a dedicated onion bind when -bind is set. Use a specific address such as -bind=127.0.0.1:<port>=onion, or disable the service with -listenonion=0.",
+        )
+
+        self.log.info("Test -bind with dedicated onion bind starts when -listenonion=1")
+        self.restart_node(1, extra_args=self.expected[1][0] + ["-listenonion=1", "-torcontrol=127.0.0.1:1"])
+
         addr = "127.0.0.1:11012"
         for opt1, opt2 in combinations_with_replacement([f"-bind={addr}", f"-bind={addr}=onion", f"-whitebind=noban@{addr}"], 2):
             self.nodes[0].assert_start_raises_init_error(
                         [opt1, opt2],
                         "Error: Duplicate binding configuration",
                         match=ErrorMatch.PARTIAL_REGEX)
+
+        self.log.info("Test wildcard onion bind with -listenonion=1")
+        self.nodes[0].assert_start_raises_init_error(
+            [f"-bind=0.0.0.0:{p2p_port(0)}=onion", "-listenonion=1", "-torcontrol=127.0.0.1:1"],
+            "Error: The automatic Tor onion service cannot use a wildcard onion bind because incoming Tor connections would not be identified. Use a specific address such as -bind=127.0.0.1:<port>=onion, or disable the service with -listenonion=0.",
+        )
 
 if __name__ == '__main__':
     BindExtraTest(__file__).main()
