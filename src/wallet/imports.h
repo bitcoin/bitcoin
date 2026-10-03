@@ -22,8 +22,12 @@ struct ImportError {
     //! processed (e.g. wallet is already rescanning, or wallet is locked).
     //! Callers that support top-level errors should surface this as a
     //! top-level / call-wide error rather than a per-descriptor failure.
-    bool is_general_error;
+    bool is_general_error{false};
 
+    // Default constructor needed because libmultiprocess currently requires
+    // types it deserializes to be default-constructible. Can be dropped after
+    // https://github.com/bitcoin-core/libmultiprocess/pull/337.
+    ImportError() = default;
     ImportError(WalletErrorCode r, bilingual_str e, bool is_wallet_error)
         : wallet_error{r, std::move(e)},
         is_general_error{is_wallet_error}
