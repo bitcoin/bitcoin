@@ -37,7 +37,6 @@ struct CTransactionRefComp {
 
 FUZZ_TARGET(private_broadcast)
 {
-    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fdp(buffer.data(), buffer.size());
     FakeNodeClock clock_ctx{ConsumeTime(fdp)};
 
