@@ -11,6 +11,7 @@ from test_framework.blocktools import NORMAL_GBT_REQUEST_PARAMS
 from test_framework.messages import (
     COIN,
     MAX_BLOCK_WEIGHT,
+    MAX_MONEY,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -87,6 +88,33 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         )
         self.generate(self.nodes[0], 1)
         assert_equal(self.nodes[0].getprioritisedtransactions(), {})
+
+    def test_fee_delta_limits(self):
+        self.log.info("Test that fee deltas are limited to the money range")
+        node = self.nodes[0]
+        parent = self.wallet.send_self_transfer(from_node=node)
+        child = self.wallet.send_self_transfer(from_node=node, utxo_to_spend=parent["new_utxo"])
+
+        for fee_delta in [MAX_MONEY + 1, -MAX_MONEY - 1, 2**62]:
+            assert_raises_rpc_error(-8, "fee_delta out of range", node.prioritisetransaction, txid=parent["txid"], fee_delta=fee_delta)
+
+        # Deltas stack, but the total is capped at MAX_MONEY
+        for _ in range(3):
+            node.prioritisetransaction(txid=parent["txid"], fee_delta=MAX_MONEY)
+        node.prioritisetransaction(txid=child["txid"], fee_delta=MAX_MONEY)
+        assert_equal(node.getprioritisedtransactions()[parent["txid"]]["fee_delta"], MAX_MONEY)
+        assert_equal(node.getrawmempool(verbose=True)[parent["txid"]]["fees"]["modified"], parent["fee"] + Decimal(MAX_MONEY) / COIN)
+
+        # The cluster's chunk fees add up correctly and both transactions are included in a block template
+        chunks = node.getmempoolcluster(parent["txid"])["chunks"]
+        assert_equal(sum(chunk["chunkfee"] for chunk in chunks), parent["fee"] + child["fee"] + 2 * Decimal(MAX_MONEY) / COIN)
+        template_txids = [tx["txid"] for tx in node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)["transactions"]]
+        assert parent["txid"] in template_txids and child["txid"] in template_txids
+
+        node.prioritisetransaction(txid=parent["txid"], fee_delta=-MAX_MONEY)
+        node.prioritisetransaction(txid=child["txid"], fee_delta=-MAX_MONEY)
+        assert_equal(node.getprioritisedtransactions(), {})
+        self.generate(node, 1)
 
     def test_replacement(self):
         self.log.info("Test tx prioritisation stays after a tx is replaced")
@@ -228,6 +256,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", self.nodes[0].prioritisetransaction, txid=txid, fee_delta='foo')
 
         self.test_large_fee_bump()
+        self.test_fee_delta_limits()
         self.test_replacement()
         self.test_diamond()
 
