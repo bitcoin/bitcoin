@@ -4,6 +4,7 @@
 
 #include <primitives/transaction.h>
 #include <private_broadcast.h>
+#include <random.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <util/time.h>
@@ -141,9 +142,9 @@ BOOST_AUTO_TEST_CASE(basic)
 
     BOOST_CHECK_EQUAL(pb.GetStale().size(), 2);
 
-    BOOST_CHECK_EQUAL(pb.Remove(tx_for_recipient1).value(), 1);
+    BOOST_CHECK_EQUAL(pb.Remove(tx_for_recipient1)->num_confirmed, 1);
     BOOST_CHECK(!pb.Remove(tx_for_recipient1).has_value());
-    BOOST_CHECK_EQUAL(pb.Remove(tx_for_recipient2).value(), 0);
+    BOOST_CHECK_EQUAL(pb.Remove(tx_for_recipient2)->num_confirmed, 0);
     BOOST_CHECK(!pb.Remove(tx_for_recipient2).has_value());
 
     BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), 0);
@@ -246,7 +247,7 @@ BOOST_AUTO_TEST_CASE(reset_with_equivalent_transaction_reference)
     BOOST_REQUIRE_EQUAL(info.size(), 1);
     BOOST_CHECK(info[0].tx->GetWitnessHash() == tx->GetWitnessHash());
     BOOST_CHECK(info[0].peers.empty());
-    BOOST_CHECK_EQUAL(pb.Remove(equivalent_tx).value(), 0);
+    BOOST_CHECK_EQUAL(pb.Remove(equivalent_tx)->num_confirmed, 0);
 }
 
 BOOST_AUTO_TEST_CASE(rejection_at_cap)
@@ -299,6 +300,135 @@ BOOST_AUTO_TEST_CASE(rejection_at_cap)
     BOOST_REQUIRE(pb.Remove(fresh).has_value());
     BOOST_CHECK_EQUAL(pb.Add(fresh), PrivateBroadcast::AddResult::Added);
     BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), num_cap);
+}
+
+BOOST_AUTO_TEST_CASE(delayed_release)
+{
+    FakeNodeClock clock{};
+
+    PrivateBroadcast pb;
+    in_addr ipv4_addr;
+    ipv4_addr.s_addr = 0xa0b0c001;
+    const CService address{ipv4_addr, 1111};
+    NodeId node_id{0};
+
+    // A release time in the past or now releases the transaction immediately.
+    const auto tx_now{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
+    BOOST_REQUIRE_EQUAL(pb.Add(tx_now, NodeClock::now()), PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK(pb.ReleaseDue().empty());
+    BOOST_CHECK(pb.HavePendingTransactions());
+    BOOST_CHECK_EQUAL(pb.Remove(tx_now)->released, true);
+
+    const auto tx{MakeDummyTx(/*id=*/2, /*num_witness=*/0)};
+    const auto release_time{NodeClock::now() + 1h};
+    BOOST_REQUIRE_EQUAL(pb.Add(tx, release_time), PrivateBroadcast::AddResult::Added);
+
+    // Adding again keeps the original release time.
+    BOOST_CHECK_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::AlreadyPresent);
+    const auto info{pb.GetBroadcastInfo()};
+    BOOST_REQUIRE_EQUAL(info.size(), 1);
+    BOOST_CHECK(info[0].release_time == release_time);
+    BOOST_CHECK(info[0].time_added < info[0].release_time);
+
+    // Not sendable, nor stale, before its release.
+    BOOST_CHECK(!pb.HavePendingTransactions());
+    BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/node_id++, address).has_value());
+    BOOST_CHECK(pb.ReleaseDue().empty());
+    clock += 1h - 1s;
+    BOOST_CHECK(pb.ReleaseDue().empty());
+    BOOST_CHECK(pb.GetStale().empty());
+
+    // Reaching the release time does not by itself make it sendable; ReleaseDue() does.
+    clock += 1s;
+    BOOST_CHECK(!pb.HavePendingTransactions());
+    const auto released{pb.ReleaseDue()};
+    BOOST_REQUIRE_EQUAL(released.size(), 1);
+    BOOST_CHECK_EQUAL(released[0], tx);
+    BOOST_CHECK(pb.ReleaseDue().empty());
+    BOOST_CHECK(pb.HavePendingTransactions());
+
+    // Staleness is measured from the release time, not from when it was added.
+    BOOST_CHECK(pb.GetStale().empty());
+    clock += PrivateBroadcast::INITIAL_STALE_DURATION + 1s;
+    BOOST_CHECK_EQUAL(pb.GetStale().size(), 1);
+
+    BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/node_id++, address).value(), tx);
+    BOOST_CHECK_EQUAL(pb.Remove(tx)->released, true);
+}
+
+BOOST_AUTO_TEST_CASE(delayed_remove_before_release)
+{
+    FakeNodeClock clock{};
+
+    PrivateBroadcast pb;
+    const auto tx{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
+    BOOST_REQUIRE_EQUAL(pb.Add(tx, NodeClock::now() + 10min), PrivateBroadcast::AddResult::Added);
+
+    const auto removed{pb.Remove(tx)};
+    BOOST_REQUIRE(removed.has_value());
+    BOOST_CHECK_EQUAL(removed->released, false);
+    BOOST_CHECK_EQUAL(removed->num_confirmed, 0);
+
+    // A removed delayed transaction is not released later.
+    clock += 1h;
+    BOOST_CHECK(pb.ReleaseDue().empty());
+}
+
+BOOST_AUTO_TEST_CASE(delayed_readd_exhausted)
+{
+    FakeNodeClock clock{};
+
+    PrivateBroadcast pb{PrivateBroadcast::MAX_TRANSACTIONS, /*max_send_attempts=*/1};
+    in_addr ipv4_addr;
+    ipv4_addr.s_addr = 0xa0b0c001;
+    const CService address{ipv4_addr, 1111};
+
+    const auto tx{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
+    BOOST_REQUIRE_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::Added);
+    BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/0, address).value(), tx);
+    BOOST_CHECK(!pb.HavePendingTransactions());
+
+    // Re-adding an exhausted transaction with a delay holds it back again.
+    BOOST_REQUIRE_EQUAL(pb.Add(tx, NodeClock::now() + 10min), PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK(!pb.HavePendingTransactions());
+    BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/1, address).has_value());
+    clock += 10min;
+    BOOST_CHECK_EQUAL(pb.ReleaseDue().size(), 1);
+    BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/2, address).value(), tx);
+}
+
+BOOST_AUTO_TEST_CASE(randomize_delay)
+{
+    FastRandomContext rng{/*fDeterministic=*/true};
+
+    // No delay requested.
+    BOOST_CHECK(PrivateBroadcast::RandomizeDelay(0s, rng) == 0s);
+    BOOST_CHECK(PrivateBroadcast::RandomizeDelay(-1s, rng) == 0s);
+
+    const auto check_range{[&](std::chrono::seconds requested, std::chrono::seconds lower, std::chrono::seconds upper) {
+        bool hit_lower_half{false};
+        bool hit_upper_half{false};
+        for (int i{0}; i < 1000; ++i) {
+            const auto delay{PrivateBroadcast::RandomizeDelay(requested, rng)};
+            BOOST_CHECK(delay >= lower);
+            BOOST_CHECK(delay <= upper);
+            if (delay < (lower + upper) / 2) hit_lower_half = true;
+            if (delay > (lower + upper) / 2) hit_upper_half = true;
+        }
+        BOOST_CHECK(hit_lower_half);
+        BOOST_CHECK(hit_upper_half);
+    }};
+
+    // Typical delay: up to +50%, never shorter than requested.
+    check_range(60min, 60min, 90min);
+    check_range(100min, 100min, 150min);
+    // Small delay: the jitter range is at least MIN_DELAY_RANDOMIZATION.
+    check_range(8min, 8min, 13min);
+    check_range(1min, 1min, 6min);
+    check_range(1s, 1s, 5min + 1s);
+    // Requested delay is capped at MAX_DELAY.
+    check_range(PrivateBroadcast::MAX_DELAY, 12h, 18h);
+    check_range(PrivateBroadcast::MAX_DELAY + 1h, 12h, 18h);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
