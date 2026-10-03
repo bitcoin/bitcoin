@@ -5,11 +5,15 @@
 #ifndef BITCOIN_IPC_TEST_IPC_TEST_H
 #define BITCOIN_IPC_TEST_IPC_TEST_H
 
+#include <interfaces/types.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <univalue.h>
 #include <util/fs.h>
 #include <validation.h>
+
+#include <condition_variable>
+#include <mutex>
 
 class FooImplementation
 {
@@ -22,6 +26,19 @@ public:
     std::vector<char> passVectorChar(std::vector<char> v) { return v; }
     BlockValidationState passBlockState(BlockValidationState s) { return s; }
     CScript passScript(CScript s) { return s; }
+    void waitCancel(interfaces::CancelArg cancel)
+    {
+        std::mutex mutex;
+        std::condition_variable cv;
+        bool canceled{false};
+        const interfaces::CancelGuard guard{cancel([&] {
+            const std::lock_guard lock{mutex};
+            canceled = true;
+            cv.notify_all();
+        })};
+        std::unique_lock lock{mutex};
+        cv.wait(lock, [&] { return canceled; });
+    }
 };
 
 #endif // BITCOIN_IPC_TEST_IPC_TEST_H
