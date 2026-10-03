@@ -3,26 +3,54 @@
 # file COPYING or https://opensource.org/license/mit/.
 
 add_library(bitcoin_ipc STATIC EXCLUDE_FROM_ALL
+  capnp/chain.cpp
+  capnp/common.cpp
+  capnp/init.cpp
   capnp/mining.cpp
+  capnp/node.cpp
   capnp/protocol.cpp
   interfaces.cpp
   process.cpp
 )
 
 target_capnp_sources(bitcoin_ipc ${CMAKE_CURRENT_SOURCE_DIR}
+  capnp/chain.capnp
   capnp/common.capnp
   capnp/echo.capnp
+  capnp/handler.capnp
   capnp/init.capnp
   capnp/mining.capnp
+  capnp/node.capnp
   capnp/rpc.capnp
 )
+
+if (ENABLE_WALLET)
+  target_sources(bitcoin_ipc PRIVATE capnp/wallet.cpp)
+  target_capnp_sources(bitcoin_ipc ${PROJECT_SOURCE_DIR} capnp/wallet.capnp)
+else()
+  target_capnp_sources(bitcoin_ipc ${PROJECT_SOURCE_DIR} ONLY_CAPNP capnp/wallet.capnp)
+endif()
+# Make bitcoin_ipc_headers generate the wallet.capnp headers too. Currently
+# target_capnp_sources only adds headers from its first call for a target to
+# TARGET_headers, so without this, building just bitcoin_ipc_headers (as the
+# CI iwyu job does) would not generate wallet.capnp.h. This can be removed
+# after libmultiprocess "cmake: Include headers from every
+# target_capnp_sources call in TARGET_headers"
+# (bitcoin-core/libmultiprocess#NNN) is merged and included in the subtree.
+add_custom_target(bitcoin_ipc_wallet_headers DEPENDS capnp/wallet.capnp.h)
+add_dependencies(bitcoin_ipc_headers bitcoin_ipc_wallet_headers)
 
 target_link_libraries(bitcoin_ipc
   PRIVATE
     core_interface
     univalue
     Boost::headers
+  PUBLIC
+    bitcoin_common
 )
+if(ENABLE_WALLET)
+  target_link_libraries(bitcoin_ipc PUBLIC bitcoin_wallet)
+endif()
 
 if(BUILD_TESTS)
   # bitcoin_ipc_test library target is defined here in src/ipc/CMakeLists.txt
