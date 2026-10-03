@@ -72,7 +72,4 @@ public:
     std::optional<kernel::CCoinsStats> LookUpStats(const CBlockIndex& block_index) const;
 };
 
-/// The global UTXO set hash object.
-extern std::unique_ptr<CoinStatsIndex> g_coin_stats_index;
-
 #endif // BITCOIN_INDEX_COINSTATSINDEX_H
