@@ -4645,28 +4645,27 @@ static void test_point_times_order(const secp256k1_gej *point) {
  *   - For b in [-3, -1, 1, 3]:
  *     - Output (a*LAMBDA + (ORDER+b)/2) % ORDER
  */
-static const secp256k1_scalar scalars_near_split_bounds[20] = {
-    SECP256K1_SCALAR_CONST(0xd938a566, 0x7f479e3e, 0xb5b3c7fa, 0xefdb3749, 0x3aa0585c, 0xc5ea2367, 0xe1b660db, 0x0209e6fc),
-    SECP256K1_SCALAR_CONST(0xd938a566, 0x7f479e3e, 0xb5b3c7fa, 0xefdb3749, 0x3aa0585c, 0xc5ea2367, 0xe1b660db, 0x0209e6fd),
-    SECP256K1_SCALAR_CONST(0xd938a566, 0x7f479e3e, 0xb5b3c7fa, 0xefdb3749, 0x3aa0585c, 0xc5ea2367, 0xe1b660db, 0x0209e6fe),
-    SECP256K1_SCALAR_CONST(0xd938a566, 0x7f479e3e, 0xb5b3c7fa, 0xefdb3749, 0x3aa0585c, 0xc5ea2367, 0xe1b660db, 0x0209e6ff),
-    SECP256K1_SCALAR_CONST(0x2c9c52b3, 0x3fa3cf1f, 0x5ad9e3fd, 0x77ed9ba5, 0xb294b893, 0x3722e9a5, 0x00e698ca, 0x4cf7632d),
-    SECP256K1_SCALAR_CONST(0x2c9c52b3, 0x3fa3cf1f, 0x5ad9e3fd, 0x77ed9ba5, 0xb294b893, 0x3722e9a5, 0x00e698ca, 0x4cf7632e),
-    SECP256K1_SCALAR_CONST(0x2c9c52b3, 0x3fa3cf1f, 0x5ad9e3fd, 0x77ed9ba5, 0xb294b893, 0x3722e9a5, 0x00e698ca, 0x4cf7632f),
-    SECP256K1_SCALAR_CONST(0x2c9c52b3, 0x3fa3cf1f, 0x5ad9e3fd, 0x77ed9ba5, 0xb294b893, 0x3722e9a5, 0x00e698ca, 0x4cf76330),
-    SECP256K1_SCALAR_CONST(0x7fffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xd576e735, 0x57a4501d, 0xdfe92f46, 0x681b209f),
-    SECP256K1_SCALAR_CONST(0x7fffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xd576e735, 0x57a4501d, 0xdfe92f46, 0x681b20a0),
-    SECP256K1_SCALAR_CONST(0x7fffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xd576e735, 0x57a4501d, 0xdfe92f46, 0x681b20a1),
-    SECP256K1_SCALAR_CONST(0x7fffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xd576e735, 0x57a4501d, 0xdfe92f46, 0x681b20a2),
-    SECP256K1_SCALAR_CONST(0xd363ad4c, 0xc05c30e0, 0xa5261c02, 0x88126459, 0xf85915d7, 0x7825b696, 0xbeebc5c2, 0x833ede11),
-    SECP256K1_SCALAR_CONST(0xd363ad4c, 0xc05c30e0, 0xa5261c02, 0x88126459, 0xf85915d7, 0x7825b696, 0xbeebc5c2, 0x833ede12),
-    SECP256K1_SCALAR_CONST(0xd363ad4c, 0xc05c30e0, 0xa5261c02, 0x88126459, 0xf85915d7, 0x7825b696, 0xbeebc5c2, 0x833ede13),
-    SECP256K1_SCALAR_CONST(0xd363ad4c, 0xc05c30e0, 0xa5261c02, 0x88126459, 0xf85915d7, 0x7825b696, 0xbeebc5c2, 0x833ede14),
-    SECP256K1_SCALAR_CONST(0x26c75a99, 0x80b861c1, 0x4a4c3805, 0x1024c8b4, 0x704d760e, 0xe95e7cd3, 0xde1bfdb1, 0xce2c5a42),
-    SECP256K1_SCALAR_CONST(0x26c75a99, 0x80b861c1, 0x4a4c3805, 0x1024c8b4, 0x704d760e, 0xe95e7cd3, 0xde1bfdb1, 0xce2c5a43),
-    SECP256K1_SCALAR_CONST(0x26c75a99, 0x80b861c1, 0x4a4c3805, 0x1024c8b4, 0x704d760e, 0xe95e7cd3, 0xde1bfdb1, 0xce2c5a44),
-    SECP256K1_SCALAR_CONST(0x26c75a99, 0x80b861c1, 0x4a4c3805, 0x1024c8b4, 0x704d760e, 0xe95e7cd3, 0xde1bfdb1, 0xce2c5a45)
-};
+static void fill_scalars_near_split_bounds(secp256k1_scalar scalars20[20]) {
+    static const int a_values[] = {-2, -1, 0, 1, 2};
+    static const int b_values[] = {-3, -1, 1, 3};
+    size_t i, j;
+    for (i = 0; i < ARRAY_SIZE(a_values); ++i) {
+        for (j = 0; j < ARRAY_SIZE(b_values); ++j) {
+            secp256k1_scalar a, b;
+            secp256k1_scalar_set_int(&a, a_values[i] < 0 ? -a_values[i] : a_values[i]);
+            if (a_values[i] < 0) {
+                secp256k1_scalar_negate(&a, &a);
+            }
+            secp256k1_scalar_mul(&a, &a, &secp256k1_const_lambda);
+            secp256k1_scalar_set_int(&b, b_values[j] < 0 ? -b_values[j] : b_values[j]);
+            if (b_values[j] < 0) {
+                secp256k1_scalar_negate(&b, &b);
+            }
+            secp256k1_scalar_half(&b, &b);
+            secp256k1_scalar_add(&scalars20[i * ARRAY_SIZE(b_values) + j], &a, &b);
+        }
+    }
+}
 
 static void test_ecmult_target(const secp256k1_scalar* target, int mode) {
     /* Mode: 0=ecmult_gen, 1=ecmult, 2=ecmult_const */
@@ -4709,6 +4708,8 @@ static void test_ecmult_target(const secp256k1_scalar* target, int mode) {
 static void run_ecmult_near_split_bound(void) {
     int i;
     unsigned j;
+    secp256k1_scalar scalars_near_split_bounds[20];
+    fill_scalars_near_split_bounds(scalars_near_split_bounds);
     for (i = 0; i < 4*COUNT; ++i) {
         for (j = 0; j < ARRAY_SIZE(scalars_near_split_bounds); ++j) {
             test_ecmult_target(&scalars_near_split_bounds[j], 0);
@@ -4834,7 +4835,10 @@ static void ecmult_const_edges(void) {
     secp256k1_ge point;
     secp256k1_gej res;
     size_t i;
-    size_t cases = 1 + ARRAY_SIZE(scalars_near_split_bounds);
+    size_t cases;
+    secp256k1_scalar scalars_near_split_bounds[20];
+    fill_scalars_near_split_bounds(scalars_near_split_bounds);
+    cases = 1 + ARRAY_SIZE(scalars_near_split_bounds);
 
     /* We are trying to reach the following edge cases (variables are defined as
      * in ecmult_const_impl.h):
@@ -5994,6 +5998,8 @@ static void test_scalar_split(const secp256k1_scalar* full) {
 static void run_endomorphism_tests(void) {
     unsigned i;
     static secp256k1_scalar s;
+    secp256k1_scalar scalars_near_split_bounds[20];
+    fill_scalars_near_split_bounds(scalars_near_split_bounds);
     test_scalar_split(&secp256k1_scalar_zero);
     test_scalar_split(&secp256k1_scalar_one);
     secp256k1_scalar_negate(&s,&secp256k1_scalar_one);
@@ -6258,6 +6264,12 @@ static void run_ec_pubkey_parse_test(void) {
         0xA8, 0xFD, 0x17, 0xB4, 0x48, 0xA6, 0x85, 0x54, 0x19, 0x9C, 0x47, 0xD0, 0x8F, 0xFB, 0x10, 0xD4,
         0xB8, 0x00
     };
+    const unsigned char pubkeyc_comp[34] = {
+        /* Compressed serialization of G (y is even, so prefix is 0x02). */
+        0x02, 0x79, 0xBE, 0x66, 0x7E, 0xF9, 0xDC, 0xBB, 0xAC, 0x55, 0xA0, 0x62, 0x95, 0xCE, 0x87, 0x0B,
+        0x07, 0x02, 0x9B, 0xFC, 0xDB, 0x2D, 0xCE, 0x28, 0xD9, 0x59, 0xF2, 0x81, 0x5B, 0x16, 0xF8, 0x17,
+        0x98, 0x00
+    };
     unsigned char sout[65];
     unsigned char shortkey[2] = { 0 };
     secp256k1_ge ge;
@@ -6265,8 +6277,9 @@ static void run_ec_pubkey_parse_test(void) {
     size_t len;
     int32_t i;
 
-    /* Nothing should be reading this far into pubkeyc. */
+    /* Nothing should be reading this far into pubkeyc and pubkeyc_comp. */
     SECP256K1_CHECKMEM_UNDEFINE(&pubkeyc[65], 1);
+    SECP256K1_CHECKMEM_UNDEFINE(&pubkeyc_comp[33], 1);
     /* Zero length claimed, fail, zeroize, no illegal arg error. */
     memset(&pubkey, 0xfe, sizeof(pubkey));
     SECP256K1_CHECKMEM_UNDEFINE(shortkey, 2);
@@ -6294,6 +6307,8 @@ static void run_ec_pubkey_parse_test(void) {
         SECP256K1_CHECKMEM_CHECK(&pubkey, sizeof(pubkey));
         CHECK_ILLEGAL(CTX, secp256k1_pubkey_load(CTX, &ge, &pubkey));
     }
+
+    /* Uncompressed public key parsing and serialization. */
     memset(&pubkey, 0xfe, sizeof(pubkey));
     SECP256K1_CHECKMEM_UNDEFINE(&pubkey, sizeof(pubkey));
     /* 33 bytes claimed on otherwise valid input starting with 0x04, fail, zeroize output, no illegal arg error. */
@@ -6352,6 +6367,44 @@ static void run_ec_pubkey_parse_test(void) {
     CHECK(len == 65);
     /* Multiple illegal args. Should still set arg error only once. */
     CHECK_ILLEGAL(CTX, secp256k1_ec_pubkey_parse(CTX, NULL, NULL, 65));
+
+    /* Compressed public key parsing and serialization. */
+    /* 32 bytes claimed on otherwise valid compressed input starting with 0x02, fail, zeroize output, no illegal arg error. */
+    memset(&pubkey, 0xfe, sizeof(pubkey));
+    SECP256K1_CHECKMEM_UNDEFINE(&pubkey, sizeof(pubkey));
+    CHECK(secp256k1_ec_pubkey_parse(CTX, &pubkey, pubkeyc_comp, 32) == 0);
+    SECP256K1_CHECKMEM_CHECK(&pubkey, sizeof(pubkey));
+    CHECK_ILLEGAL(CTX, secp256k1_pubkey_load(CTX, &ge, &pubkey));
+    /* 34 bytes claimed on otherwise valid compressed input starting with 0x02, fail, zeroize output, no illegal arg error. */
+    memset(&pubkey, 0xfe, sizeof(pubkey));
+    SECP256K1_CHECKMEM_UNDEFINE(&pubkey, sizeof(pubkey));
+    CHECK(secp256k1_ec_pubkey_parse(CTX, &pubkey, pubkeyc_comp, 34) == 0);
+    SECP256K1_CHECKMEM_CHECK(&pubkey, sizeof(pubkey));
+    CHECK_ILLEGAL(CTX, secp256k1_pubkey_load(CTX, &ge, &pubkey));
+    /* Valid compressed parse at length 33. */
+    memset(&pubkey, 0, sizeof(pubkey));
+    SECP256K1_CHECKMEM_UNDEFINE(&pubkey, sizeof(pubkey));
+    CHECK(secp256k1_ec_pubkey_parse(CTX, &pubkey, pubkeyc_comp, 33) == 1);
+    CHECK(secp256k1_ec_pubkey_parse(secp256k1_context_static, &pubkey, pubkeyc_comp, 33) == 1);
+    SECP256K1_CHECKMEM_CHECK(&pubkey, sizeof(pubkey));
+    SECP256K1_CHECKMEM_UNDEFINE(&ge, sizeof(ge));
+    CHECK(secp256k1_pubkey_load(CTX, &ge, &pubkey) == 1);
+    SECP256K1_CHECKMEM_CHECK(&ge.x, sizeof(ge.x));
+    SECP256K1_CHECKMEM_CHECK(&ge.y, sizeof(ge.y));
+    SECP256K1_CHECKMEM_CHECK(&ge.infinity, sizeof(ge.infinity));
+    CHECK(secp256k1_ge_eq_var(&ge, &secp256k1_ge_const_g));
+    /* secp256k1_ec_pubkey_serialize with too small output buffer, illegal arg error. Length is left untouched. */
+    len = 32;
+    CHECK_ILLEGAL(CTX, secp256k1_ec_pubkey_serialize(CTX, sout, &len, &pubkey, SECP256K1_EC_COMPRESSED));
+    CHECK(len == 32);
+    /* Valid compressed serialization, must round-trip to the input. */
+    len = 33;
+    SECP256K1_CHECKMEM_UNDEFINE(sout, 65);
+    CHECK(secp256k1_ec_pubkey_serialize(CTX, sout, &len, &pubkey, SECP256K1_EC_COMPRESSED) == 1);
+    SECP256K1_CHECKMEM_CHECK(sout, 33);
+    CHECK(len == 33);
+    CHECK(secp256k1_memcmp_var(sout, pubkeyc_comp, 33) == 0);
+
     /* Try a bunch of prefabbed points with all possible encodings. */
     for (i = 0; i < SECP256K1_EC_PARSE_TEST_NVALID; i++) {
         ec_pubkey_parse_pointtest(valid[i], 1, 1);
@@ -6852,11 +6905,9 @@ static void test_random_pubkeys(void) {
     secp256k1_ge elem;
     secp256k1_ge elem2;
     unsigned char in[65];
-    /* Generate some randomly sized pubkeys. */
-    size_t len = testrand_bits(2) == 0 ? 65 : 33;
-    if (testrand_bits(2) == 0) {
-        len = testrand_bits(6);
-    }
+    int res;
+    /* Generate some random pubkeys with the two supported serialization sizes. */
+    size_t len = testrand_bits(1) == 0 ? 65 : 33;
     if (len == 65) {
       in[0] = testrand_bits(1) ? 4 : (testrand_bits(1) ? 6 : 7);
     } else {
@@ -6865,17 +6916,14 @@ static void test_random_pubkeys(void) {
     if (testrand_bits(3) == 0) {
         in[0] = testrand_bits(8);
     }
-    if (len > 1) {
-        testrand256(&in[1]);
-    }
-    if (len > 33) {
+    testrand256(&in[1]);
+    if (len == 65) {
         testrand256(&in[33]);
     }
-    if (secp256k1_ge_parse(&elem, in, len)) {
+    res = (len == 33) ? secp256k1_ge_parse33(&elem, in) : secp256k1_ge_parse_with_hybrid65(&elem, in);
+    if (res) {
         unsigned char out[65];
         unsigned char firstb;
-        int res;
-        size_t size = len;
         firstb = in[0];
         /* If the pubkey can be parsed, it should round-trip... */
         if (len == 33) {
@@ -6888,13 +6936,13 @@ static void test_random_pubkeys(void) {
         if ((in[0] != 6) && (in[0] != 7)) {
             CHECK(in[0] == out[0]);
         }
-        size = 65;
         secp256k1_ge_serialize65(&elem, in);
-        CHECK(secp256k1_ge_parse(&elem2, in, size));
+        CHECK(secp256k1_ge_parse65(&elem2, in));
         CHECK(secp256k1_ge_eq_var(&elem2, &elem));
         /* Check that the X9.62 hybrid type is checked. */
         in[0] = testrand_bits(1) ? 6 : 7;
-        res = secp256k1_ge_parse(&elem2, in, size);
+        CHECK(secp256k1_ge_parse65(&elem2, in) == 0);
+        res = secp256k1_ge_parse_with_hybrid65(&elem2, in);
         if (firstb == 2 || firstb == 3) {
             if (in[0] == firstb + 4) {
               CHECK(res);
@@ -7550,7 +7598,7 @@ static void run_ecdsa_edge_cases(void) {
         secp256k1_scalar_set_int(&ss, 1);
         secp256k1_scalar_set_int(&msg, 0);
         secp256k1_scalar_set_int(&sr, 0);
-        CHECK(secp256k1_ge_parse(&key, pubkey_mods_zero, 33));
+        CHECK(secp256k1_ge_parse33(&key, pubkey_mods_zero));
         CHECK(secp256k1_ecdsa_sig_verify( &sr, &ss, &key, &msg) == 0);
     }
 
@@ -7569,7 +7617,7 @@ static void run_ecdsa_edge_cases(void) {
         secp256k1_scalar_set_int(&ss, 0);
         secp256k1_scalar_set_int(&msg, 0);
         secp256k1_scalar_set_int(&sr, 1);
-        CHECK(secp256k1_ge_parse(&key, pubkey, 33));
+        CHECK(secp256k1_ge_parse33(&key, pubkey));
         CHECK(secp256k1_ecdsa_sig_verify(&sr, &ss, &key, &msg) == 0);
     }
 
@@ -7596,8 +7644,8 @@ static void run_ecdsa_edge_cases(void) {
         secp256k1_scalar_set_int(&ss, 2);
         secp256k1_scalar_set_int(&msg, 0);
         secp256k1_scalar_set_int(&sr, 2);
-        CHECK(secp256k1_ge_parse(&key, pubkey, 33));
-        CHECK(secp256k1_ge_parse(&key2, pubkey2, 33));
+        CHECK(secp256k1_ge_parse33(&key, pubkey));
+        CHECK(secp256k1_ge_parse33(&key2, pubkey2));
         CHECK(secp256k1_ecdsa_sig_verify(&sr, &ss, &key, &msg) == 1);
         CHECK(secp256k1_ecdsa_sig_verify(&sr, &ss, &key2, &msg) == 1);
         secp256k1_scalar_negate(&ss, &ss);
@@ -7637,8 +7685,8 @@ static void run_ecdsa_edge_cases(void) {
         secp256k1_scalar_set_int(&ss, 1);
         secp256k1_scalar_set_int(&msg, 1);
         secp256k1_scalar_set_b32(&sr, csr, NULL);
-        CHECK(secp256k1_ge_parse(&key, pubkey, 33));
-        CHECK(secp256k1_ge_parse(&key2, pubkey2, 33));
+        CHECK(secp256k1_ge_parse33(&key, pubkey));
+        CHECK(secp256k1_ge_parse33(&key2, pubkey2));
         CHECK(secp256k1_ecdsa_sig_verify(&sr, &ss, &key, &msg) == 1);
         CHECK(secp256k1_ecdsa_sig_verify(&sr, &ss, &key2, &msg) == 1);
         secp256k1_scalar_negate(&ss, &ss);
@@ -7672,7 +7720,7 @@ static void run_ecdsa_edge_cases(void) {
         secp256k1_scalar_set_int(&msg, 1);
         secp256k1_scalar_negate(&msg, &msg);
         secp256k1_scalar_set_b32(&sr, csr, NULL);
-        CHECK(secp256k1_ge_parse(&key, pubkey, 33));
+        CHECK(secp256k1_ge_parse33(&key, pubkey));
         CHECK(secp256k1_ecdsa_sig_verify(&sr, &ss, &key, &msg) == 1);
         secp256k1_scalar_negate(&ss, &ss);
         CHECK(secp256k1_ecdsa_sig_verify(&sr, &ss, &key, &msg) == 1);
@@ -7922,6 +7970,14 @@ static void run_ecdsa_wycheproof(void) {
 
 #ifdef ENABLE_MODULE_SCHNORRSIG
 # include "modules/schnorrsig/tests_impl.h"
+#endif
+
+#ifdef ENABLE_MODULE_FULLAGG
+# include "modules/fullagg/tests_impl.h"
+#endif
+
+#ifdef ENABLE_MODULE_SCHNORRSIG_HALFAGG
+# include "modules/schnorrsig_halfagg/tests_impl.h"
 #endif
 
 #ifdef ENABLE_MODULE_MUSIG
@@ -8272,6 +8328,12 @@ static const struct tf_test_module registry_modules[] = {
 #endif
 #ifdef ENABLE_MODULE_SCHNORRSIG
     MAKE_TEST_MODULE(schnorrsig),
+#endif
+#ifdef ENABLE_MODULE_FULLAGG
+    MAKE_TEST_MODULE(fullagg),
+#endif
+#ifdef ENABLE_MODULE_SCHNORRSIG_HALFAGG
+    MAKE_TEST_MODULE(schnorrsig_halfagg),
 #endif
 #ifdef ENABLE_MODULE_MUSIG
     MAKE_TEST_MODULE(musig),

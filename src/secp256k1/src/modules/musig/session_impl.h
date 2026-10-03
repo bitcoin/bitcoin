@@ -168,7 +168,7 @@ int secp256k1_musig_pubnonce_parse(const secp256k1_context* ctx, secp256k1_musig
     ARG_CHECK(in66 != NULL);
 
     for (i = 0; i < 2; i++) {
-        if (!secp256k1_ge_parse(&ges[i], &in66[33*i], 33)) {
+        if (!secp256k1_ge_parse33(&ges[i], &in66[33*i])) {
             return 0;
         }
         if (!secp256k1_ge_is_in_correct_subgroup(&ges[i])) {
