@@ -35,10 +35,13 @@ CExtPubKey CreateMuSig2SyntheticXpub(const CPubKey& pubkey);
  * So this class handles the secure allocation of the secp256k1_musig_secnonce object
  * that libsecp256k1 uses, and only gives out references to this object to avoid
  * any possibility of copies being made. Furthermore, objects of this class are not
- * copyable to avoid nonce reuse.
+ * copyable to avoid nonce reuse, and the secret nonce is populated only by
+ * CreateMuSig2Nonce until Invalidate() clears it (including after CreateMuSig2PartialSig).
 */
 class MuSig2SecNonce
 {
+    friend std::vector<uint8_t> CreateMuSig2Nonce(MuSig2SecNonce& secnonce, const uint256& sighash, const CKey& our_seckey, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys);
+
 private:
     std::unique_ptr<MuSig2SecNonceImpl> m_impl;
 
@@ -54,7 +57,8 @@ public:
 
     secp256k1_musig_secnonce* Get() const;
     void Invalidate();
-    bool IsValid();
+    //! True after a successful CreateMuSig2Nonce. False after Invalidate().
+    bool IsValid() const;
 };
 
 /**
