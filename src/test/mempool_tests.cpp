@@ -280,6 +280,7 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     std::vector<CTransactionRef> vtx;
     FakeNodeClock clock{42s};
     constexpr std::chrono::seconds HALFLIFE{CTxMemPool::ROLLING_FEE_HALFLIFE};
+    BOOST_CHECK_EQUAL(HALFLIFE.count(), 12 * 60 * 60);
     clock += HALFLIFE;
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), maxFeeRateRemoved.GetFeePerK() + DEFAULT_INCREMENTAL_RELAY_FEE);
     // ... we should keep the same min fee until we get a block

@@ -780,39 +780,24 @@ QString formatTimeOffset(int64_t time_offset)
   return QObject::tr("%1 s").arg(QString::number((int)time_offset, 10));
 }
 
-QString formatNiceTimeOffset(qint64 secs)
+QString formatNiceTimeOffset(std::chrono::seconds secs)
 {
     // Represent time from last generated block in human readable text
     QString timeBehindText;
-    const int HOUR_IN_SECONDS = 60*60;
-    const int DAY_IN_SECONDS = 24*60*60;
-    const int WEEK_IN_SECONDS = 7*24*60*60;
-    const int YEAR_IN_SECONDS = 31556952; // Average length of year in Gregorian calendar
-    if(secs < 60)
-    {
-        timeBehindText = QObject::tr("%n second(s)","",secs);
-    }
-    else if(secs < 2*HOUR_IN_SECONDS)
-    {
-        timeBehindText = QObject::tr("%n minute(s)","",secs/60);
-    }
-    else if(secs < 2*DAY_IN_SECONDS)
-    {
-        timeBehindText = QObject::tr("%n hour(s)","",secs/HOUR_IN_SECONDS);
-    }
-    else if(secs < 2*WEEK_IN_SECONDS)
-    {
-        timeBehindText = QObject::tr("%n day(s)","",secs/DAY_IN_SECONDS);
-    }
-    else if(secs < YEAR_IN_SECONDS)
-    {
-        timeBehindText = QObject::tr("%n week(s)","",secs/WEEK_IN_SECONDS);
-    }
-    else
-    {
-        qint64 years = secs / YEAR_IN_SECONDS;
-        qint64 remainder = secs % YEAR_IN_SECONDS;
-        timeBehindText = QObject::tr("%1 and %2").arg(QObject::tr("%n year(s)", "", years)).arg(QObject::tr("%n week(s)","", remainder/WEEK_IN_SECONDS));
+    if (secs < 1min) {
+        timeBehindText = QObject::tr("%n second(s)", "", secs / 1s);
+    } else if (secs < 2h) {
+        timeBehindText = QObject::tr("%n minute(s)", "", secs / 1min);
+    } else if (secs < std::chrono::days{2}) {
+        timeBehindText = QObject::tr("%n hour(s)", "", secs / 1h);
+    } else if (secs < std::chrono::weeks{2}) {
+        timeBehindText = QObject::tr("%n day(s)", "", secs / std::chrono::days{1});
+    } else if (secs < std::chrono::years{1}) {
+        timeBehindText = QObject::tr("%n week(s)", "", secs / std::chrono::weeks{1});
+    } else {
+        auto years{secs / std::chrono::years{1}};
+        auto remainder{secs % std::chrono::years{1}};
+        timeBehindText = QObject::tr("%1 and %2").arg(QObject::tr("%n year(s)", "", years)).arg(QObject::tr("%n week(s)", "", remainder / std::chrono::weeks{1}));
     }
     return timeBehindText;
 }
