@@ -618,8 +618,11 @@ private:
 
     //! Client has requested to keep the connection open after all requests have been responded to.
     //! Set by (potentially multiple) worker threads and checked in the HTTPServer I/O loop.
+    //! Guarded by m_send_mutex so it stays consistent with m_send_buffer: it is
+    //! updated together with the response being appended, and read when the
+    //! buffer has been drained to empty to decide whether to disconnect.
     //! `m_keep_alive=true` can be overridden `by HTTPServer.m_disconnect_all_clients` (we disconnect).
-    std::atomic_bool m_keep_alive{false};
+    bool m_keep_alive GUARDED_BY(m_send_mutex){false};
 
     //! Flag this client for disconnection on next loop.
     //! Either we have encountered a permanent error, or both sides of the socket are done
