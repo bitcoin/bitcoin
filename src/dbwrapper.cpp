@@ -188,7 +188,7 @@ CDBBatch::CDBBatch(const CDBWrapper& _parent)
     m_key_scratch.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
     m_value_scratch.reserve(DBWRAPPER_PREALLOC_VALUE_SIZE);
     Clear();
-};
+}
 
 CDBBatch::~CDBBatch() = default;
 

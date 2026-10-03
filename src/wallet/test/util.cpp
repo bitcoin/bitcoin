@@ -141,5 +141,5 @@ wallet::DescriptorScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std
     LOCK(keystore.cs_wallet);
     auto spkm = Assert(keystore.AddWalletDescriptor(w_desc, keys,/*label=*/"", /*internal=*/false));
     return &spkm.value().get();
-};
+}
 } // namespace wallet

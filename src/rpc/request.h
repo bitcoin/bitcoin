@@ -65,7 +65,7 @@ public:
     JSONRPCVersion m_json_version = JSONRPCVersion::V1_LEGACY;
 
     void parse(const UniValue& valRequest);
-    [[nodiscard]] bool IsNotification() const { return !id.has_value() && m_json_version == JSONRPCVersion::V2; };
+    [[nodiscard]] bool IsNotification() const { return !id.has_value() && m_json_version == JSONRPCVersion::V2; }
 };
 
 #endif // BITCOIN_RPC_REQUEST_H
