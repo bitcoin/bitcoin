@@ -1002,6 +1002,9 @@ private:
     SteadyClock::duration GUARDED_BY(::cs_main) time_chainstate{};
     SteadyClock::duration GUARDED_BY(::cs_main) time_post_connect{};
 
+    /** Determine the potential consensus script flags rules for the chain */
+    static script_verify_flags GetAllConsensusScriptFlags(const Consensus::Params& params);
+
 protected:
     CBlockIndex* m_best_invalid GUARDED_BY(::cs_main){nullptr};
 
@@ -1046,6 +1049,8 @@ public:
     //! A single BlockManager instance is shared across each constructed
     //! chainstate to avoid duplicating block metadata.
     node::BlockManager m_blockman;
+
+    const script_verify_flags m_all_consensus_script_flags;
 
     ValidationCache m_validation_cache;
 
@@ -1423,5 +1428,26 @@ bool IsBIP30Unspendable(const uint256& block_hash, int block_height);
 
 // Returns the script flags which should be checked for a given block
 script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const ChainstateManager& chainman);
+
+/** The context CheckInputScripts is called in, which decides how a
+ *  script failure is reported: as a consensus failure for blocks,
+ *  or as a standardness failure for the mempool. The flags alone can't
+ *  determine this, as the mempool may check with consensus flags only
+ *  (-acceptnonstdtxn).
+ */
+enum class CheckInputScriptsFor {
+    Block,
+    Mempool,
+};
+
+bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
+                       const CCoinsViewCache& inputs,
+                       script_verify_flags flags,
+                       CheckInputScriptsFor check_for,
+                       bool cacheSigStore,
+                       bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
+                       ValidationCache& validation_cache,
+                       std::vector<CScriptCheck>* pvChecks = nullptr)
+                       EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 #endif // BITCOIN_VALIDATION_H
