@@ -172,6 +172,35 @@ static ImportDescriptorRequest ProcessUniValueDescriptor(const UniValue& data, s
     return request;
 }
 
+static UniValue GetUTXOVerificationInfo(const UTXOVerificationResult& verification)
+{
+    UniValue info{UniValue::VOBJ};
+    info.pushKV("status", verification.status);
+    if (verification.matched) info.pushKV("utxo_check", *verification.matched);
+    info.pushKV("scanned_blocks", verification.blocks_scanned);
+    info.pushKV("wallet_utxos", verification.wallet_utxos);
+    info.pushKV("chain_utxos", verification.chain_utxos);
+    if (verification.scan_start_height) info.pushKV("scan_start_height", *verification.scan_start_height);
+    if (verification.snapshot_block) info.pushKV("snapshot_block", verification.snapshot_block->GetHex());
+    if (verification.snapshot_height) info.pushKV("snapshot_height", *verification.snapshot_height);
+    if (verification.recovery_start_height) info.pushKV("recovery_start_height", *verification.recovery_start_height);
+    return info;
+}
+
+static std::string GetUTXOVerificationFailureMessage(const UTXOVerificationResult& verification)
+{
+    const std::string reason{verification.status == "unmatched" ? strprintf(
+        "The wallet and chainstate scan contain different UTXO outpoints (wallet: %u, chainstate: %u). "
+        "Changes to relevant UTXOs during verification can cause this even if the wallet is up to date. ",
+        verification.wallet_utxos, verification.chain_utxos) : ""};
+    return strprintf(
+        "Descriptor imported, but UTXO verification did not succeed (%s). %s"
+        "Any transactions already discovered remain in the wallet. No fallback rescan was performed. "
+        "Retry importdescriptors with verify_balance=true, or explicitly run rescanblockchain from height 0 "
+        "to recover full history once the required blocks are available.",
+        verification.status, reason);
+}
+
 RPCMethod importdescriptors()
 {
     return RPCMethod{
@@ -203,6 +232,11 @@ RPCMethod importdescriptors()
                             },
                         },
                         RPCArgOptions{.oneline_description="requests"}},
+                    {"verify_balance", RPCArg::Type::BOOL, RPCArg::Default{false},
+                        "Scan the UTXO set to verify known wallet outputs, extending the rescan to the earliest missing output if needed.\n"
+                        "Adds a UTXO-set scan and does not guarantee complete transaction history.\n"
+                        "Compares the wallet's confirmed mature UTXOs after rescanning with the UTXO set scanned before rescanning.\n"
+                        "Verification failures leave descriptors imported; no automatic retry is performed."}
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "Response is an array with the same size as the input that has the execution result",
@@ -219,6 +253,18 @@ RPCMethod importdescriptors()
                                 {RPCResult::Type::NUM, "code", "JSONRPC error code"},
                                 {RPCResult::Type::STR, "message", "JSONRPC error message"},
                             }},
+                            {RPCResult::Type::OBJ, "info", /*optional=*/true, "UTXO verification details, present when verify_balance is true and the descriptor import succeeded.",
+                            {
+                                {RPCResult::Type::STR, "status", "Verification outcome: matched, matched after recovery, unmatched, rescan failed, utxo scan failed, or blocks unavailable."},
+                                {RPCResult::Type::BOOL, "utxo_check", /*optional=*/true, "Whether the wallet's confirmed mature UTXO outpoints after rescanning equal those in the earlier chainstate scan."},
+                                {RPCResult::Type::NUM, "scanned_blocks", "Number of heights covered by the rescan."},
+                                {RPCResult::Type::NUM, "wallet_utxos", "Number of confirmed mature wallet UTXOs matching scanned scripts at the last wallet check."},
+                                {RPCResult::Type::NUM, "chain_utxos", "Number of mature chainstate UTXOs matching known wallet scripts in the initial scan."},
+                                {RPCResult::Type::NUM, "scan_start_height", /*optional=*/true, "Planned starting height of the rescan."},
+                                {RPCResult::Type::STR_HEX, "snapshot_block", /*optional=*/true, "Block hash of the initial chainstate scan."},
+                                {RPCResult::Type::NUM, "snapshot_height", /*optional=*/true, "Block height of the initial chainstate scan."},
+                                {RPCResult::Type::NUM, "recovery_start_height", /*optional=*/true, "Earliest missing UTXO height requiring an extended rescan."},
+                            }},
                         }},
                     }
                 },
@@ -226,12 +272,15 @@ RPCMethod importdescriptors()
                     HelpExampleCli("importdescriptors", "'[{ \"desc\": \"<my descriptor>\", \"timestamp\":1455191478, \"internal\": true }, "
                                           "{ \"desc\": \"<my descriptor 2>\", \"label\": \"example 2\", \"timestamp\": 1455191480 }]'") +
                     HelpExampleCli("importdescriptors", "'[{ \"desc\": \"<my descriptor>\", \"timestamp\":1455191478, \"active\": true, \"range\": [0,100], \"label\": \"<my bech32 wallet>\" }]'")
+                    + HelpExampleCli("importdescriptors", "'[{ \"desc\": \"<my descriptor>\", \"timestamp\":1455191478, \"active\": true, \"range\": [0,100], \"label\": \"<my bech32 wallet>\" }]' true")
+                    + HelpExampleRpc("importdescriptors", "[{ \"desc\": \"<my descriptor>\", \"timestamp\":1455191478, \"active\": true, \"range\": [0,100], \"label\": \"<my bech32 wallet>\" }], true")
                 },
         [](const RPCMethod& self, const JSONRPCRequest& main_request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(main_request);
     if (!pwallet) return UniValue::VNULL;
     CWallet& wallet{*pwallet};
+    const bool verify_balance{!main_request.params[1].isNull() && main_request.params[1].get_bool()};
 
     const UniValue& univalue_requests = main_request.params[0];
     // One result per input, in input order.
@@ -264,7 +313,7 @@ RPCMethod importdescriptors()
         descriptor_requests.push_back(std::move(parsed.request));
     }
 
-    std::vector<ImportResult> import_results{ProcessDescriptorsImport(wallet, descriptor_requests)};
+    std::vector<ImportResult> import_results{ProcessDescriptorsImport(wallet, descriptor_requests, verify_balance)};
 
     // Wallet-wide precondition failure (e.g. already rescanning, or locked):
     // surface as a top-level RPC error.
@@ -284,6 +333,7 @@ RPCMethod importdescriptors()
         const ImportResult& import_result = import_results[k];
         result = UniValue(UniValue::VOBJ);
         UniValue warnings(UniValue::VARR);
+        const std::optional<UTXOVerificationResult>& verification{import_result.verification};
         if (import_result.has_error()) {
             const WalletError& error = import_result.error.value().wallet_error;
             auto write_error = [&result, &error](int code) {
@@ -292,6 +342,9 @@ RPCMethod importdescriptors()
             };
             if (error.code == WalletErrorCode::UnlockNeeded) NONFATAL_UNREACHABLE();
             write_error(HandleWalletErrorCode(error.code));
+        } else if (verification && !verification->matched.value_or(false)) {
+            result.pushKV("success", false);
+            result.pushKV("error", JSONRPCError(RPC_WALLET_ERROR, GetUTXOVerificationFailureMessage(*verification)));
         } else {
             result.pushKV("success", true);
         }
@@ -299,6 +352,7 @@ RPCMethod importdescriptors()
             warnings.push_back(w);
         }
         PushWarnings(warnings, result);
+        if (verification) result.pushKV("info", GetUTXOVerificationInfo(*verification));
     }
 
     UniValue response(UniValue::VARR);

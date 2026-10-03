@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_RECEIVE_H
 #define BITCOIN_WALLET_RECEIVE_H
 
+#include <coins.h>
 #include <consensus/amount.h>
 #include <primitives/transaction_identifier.h>
 #include <wallet/transaction.h>
@@ -51,6 +52,16 @@ struct Balance {
     CAmount m_mine_nonmempool{0};        //!< Coins spent by wallet txs that are not in the mempool
 };
 Balance GetBalance(const CWallet& wallet, int min_depth = 0, bool avoid_reuse = true, bool include_nonmempool = false);
+
+struct WalletUTXOScanResult {
+    uint256 best_block;
+    int best_block_height{-1};
+    std::map<COutPoint, Coin> coins;
+    std::set<CScript> scripts;
+};
+
+/** Scan a chainstate snapshot for mature UTXOs paying to known wallet scripts. */
+std::optional<WalletUTXOScanResult> ScanWalletUTXOSet(const CWallet& wallet);
 
 std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet);
 std::set<std::set<CTxDestination>> GetAddressGroupings(const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
