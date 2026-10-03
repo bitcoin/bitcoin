@@ -4957,10 +4957,21 @@ bool ChainstateManager::LoadGenesisBlock()
     }
 
     try {
-        FlatFilePos blockPos{m_blockman.WriteBlock(genesis_block, 0)};
-        if (blockPos.IsNull()) {
-            LogError("Writing genesis block to disk failed");
-            return false;
+        FlatFilePos blockPos{0, 0};
+        // The block index may be missing or corrupted (e.g. after an
+        // incomplete shutdown or manual recovery) while block file 0
+        // still contains a valid genesis block from a previous run.
+        // Check for that first. Otherwise, WriteBlock() eventually
+        // reaches AllocateFileRange(), whose fallback on platforms without
+        // a real preallocation syscall cannot tell that the file already
+        // contains data beyond this point and may zero it out.
+        CBlock existing_block;
+        if (!m_blockman.ReadBlock(existing_block, blockPos, genesis_block.GetHash())) {
+            blockPos = m_blockman.WriteBlock(genesis_block, 0);
+            if (blockPos.IsNull()) {
+                LogError("Writing genesis block to disk failed");
+                return false;
+            }
         }
         CBlockIndex* pindex{m_blockman.AddToBlockIndex(genesis_block, m_best_header)};
         ReceivedBlockTransactions(genesis_block, pindex, blockPos);
