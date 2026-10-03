@@ -2067,6 +2067,9 @@ void PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidati
         return;
     case BlockValidationResult::BLOCK_TIME_FUTURE:
         break;
+    case BlockValidationResult::BLOCK_INCONCLUSIVE:
+        // Not derived from network data; validity could not be determined.
+        break;
     }
     if (message != "") {
         LogDebug(BCLog::NET, "peer=%d: %s\n", nodeid, message);

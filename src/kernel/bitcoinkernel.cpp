@@ -1040,6 +1040,8 @@ btck_BlockValidationResult btck_block_validation_state_get_block_validation_resu
         return btck_BlockValidationResult_TIME_FUTURE;
     case BlockValidationResult::BLOCK_HEADER_LOW_WORK:
         return btck_BlockValidationResult_HEADER_LOW_WORK;
+    case BlockValidationResult::BLOCK_INCONCLUSIVE:
+        return btck_BlockValidationResult_INCONCLUSIVE;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
