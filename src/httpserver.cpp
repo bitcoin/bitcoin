@@ -966,6 +966,16 @@ void HTTPRemoteClient::Receive()
             m_recv_buffer.end(),
             buf,
             buf + nrecv);
+
+        m_total_bytes_received += static_cast<uint64_t>(nrecv);
+        LogDebug(
+            BCLog::HTTP,
+            "Received %d bytes from %s (id=%llu): total=%llu buffered=%zu",
+            nrecv,
+            m_origin,
+            m_id,
+            m_total_bytes_received,
+            m_recv_buffer.size());
     }
 }
 
