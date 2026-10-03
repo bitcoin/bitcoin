@@ -184,12 +184,12 @@ BOOST_AUTO_TEST_CASE(multisig_IsStandard)
 BOOST_AUTO_TEST_CASE(multisig_Sign)
 {
     // Test SignSignature() (and therefore the version of Solver() that signs transactions)
-    FillableSigningProvider keystore;
+    FlatSigningProvider keystore;
     CKey key[4];
     for (int i = 0; i < 4; i++)
     {
         key[i].MakeNewKey(true);
-        BOOST_CHECK(keystore.AddKey(key[i]));
+        BOOST_CHECK(keystore.keys.emplace(key[i].GetPubKey().GetID(), key[i]).second);
     }
 
     CScript a_and_b;

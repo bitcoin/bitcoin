@@ -79,10 +79,16 @@ FUZZ_TARGET(script_sign, .init = initialize_script_sign)
         signature_data_1.MergeSignatureData(signature_data_2);
     }
 
-    FillableSigningProvider provider;
+    FlatSigningProvider provider;
     CKey k = ConsumePrivateKey(fuzzed_data_provider);
     if (k.IsValid()) {
-        provider.AddKey(k);
+        CPubKey pub = k.GetPubKey();
+        provider.keys.emplace(pub.GetID(), k);
+        provider.pubkeys.emplace(pub.GetID(), pub);
+        if (pub.IsCompressed()) {
+            CScript p2wpkh = GetScriptForDestination(WitnessV0KeyHash(pub.GetID()));
+            provider.scripts.emplace(CScriptID(p2wpkh), p2wpkh);
+        }
     }
 
     {
