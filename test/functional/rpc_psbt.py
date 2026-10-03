@@ -66,6 +66,7 @@ from test_framework.util import (
     bitflipper
 )
 from test_framework.wallet_util import (
+    WalletUnlock,
     calculate_input_weight,
     generate_keypair,
     get_generate_key,
@@ -238,6 +239,33 @@ class PSBTTest(BitcoinTestFramework):
         assert txid2 in mempool
 
         wallet.unloadwallet()
+
+    def test_walletprocesspsbt_encrypted(self):
+        self.log.info("Test walletprocesspsbt with an encrypted wallet")
+
+        # Create and fund an encrypted wallet
+        self.nodes[0].createwallet("encrypted", passphrase=self.default_wallet_pass)
+        encrypted_wallet = self.nodes[0].get_wallet_rpc("encrypted")
+        # Need to get a handle for the default wallet since we'll have multiple wallets loaded during this test.
+        def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+        def_wallet.sendtoaddress(encrypted_wallet.getnewaddress(), 1)
+        self.generate(self.nodes[0], 1)
+
+        self.log.info("- Does not work when sign = true (default) and the wallet is locked.")
+        encrypted_wallet_psbt = encrypted_wallet.walletcreatefundedpsbt([], {self.nodes[2].getnewaddress():0.9})['psbt']
+        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", encrypted_wallet.walletprocesspsbt, encrypted_wallet_psbt)
+        self.log.info("- Works when sign = false and the wallet is locked.")
+        processed = encrypted_wallet.walletprocesspsbt(psbt=encrypted_wallet_psbt, sign=False)
+        assert_equal(processed['complete'], False)
+
+        self.log.info("- Is able to sign and finalize when the wallet is unlocked.")
+        with WalletUnlock(encrypted_wallet, self.default_wallet_pass):
+            processed_finalized_psbt = encrypted_wallet.walletprocesspsbt(psbt=encrypted_wallet_psbt, finalize=True)
+        assert_equal(processed_finalized_psbt['complete'], True)
+        self.nodes[0].sendrawtransaction(processed_finalized_psbt['hex'])
+
+        # Clean up
+        encrypted_wallet.unloadwallet()
 
     def test_decodepsbt_musig2_input_output_types(self):
         self.log.info("Test decoding PSBT with MuSig2 per-input and per-output types")
@@ -942,15 +970,6 @@ class PSBTTest(BitcoinTestFramework):
         psbtx = self.nodes[1].walletprocesspsbt(psbtx1)['psbt']
         assert_equal(psbtx1, psbtx)
 
-        # Node 0 should not be able to sign the transaction with the wallet is locked
-        self.nodes[0].encryptwallet("password")
-        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].walletprocesspsbt, psbtx)
-
-        # Node 0 should be able to process without signing though
-        unsigned_tx = self.nodes[0].walletprocesspsbt(psbtx, False)
-        assert_equal(unsigned_tx['complete'], False)
-
-        self.nodes[0].walletpassphrase(passphrase="password", timeout=1000000)
 
         # Sign the transaction but don't finalize
         processed_psbt = self.nodes[0].walletprocesspsbt(psbt=psbtx, finalize=False)
@@ -967,6 +986,9 @@ class PSBTTest(BitcoinTestFramework):
         finalized_psbt_hex = processed_finalized_psbt['hex']
         assert_not_equal(signed_psbt, finalized_psbt)
         assert_equal(finalized_psbt_hex, finalized_hex)
+
+        # Test signing and finalizing when the wallet is encrypted
+        self.test_walletprocesspsbt_encrypted()
 
         # Manually selected inputs can be locked:
         assert_equal(len(self.nodes[0].listlockunspent()), 0)
