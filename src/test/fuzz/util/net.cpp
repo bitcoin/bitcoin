@@ -131,7 +131,6 @@ FuzzedSock::~FuzzedSock()
 FuzzedSock& FuzzedSock::operator=(Sock&& other)
 {
     assert(false && "Move of Sock into FuzzedSock not allowed.");
-    return *this;
 }
 
 ssize_t FuzzedSock::Send(const void* data, size_t len, int flags) const
