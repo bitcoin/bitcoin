@@ -16,6 +16,7 @@
 #include <core_io.h>
 #include <crypto/sha256.h>
 #include <key_io.h>
+#include <logging.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -858,6 +859,7 @@ static int CommandLineRawTx(int argc, char* argv[])
 
 MAIN_FUNCTION
 {
+    BCLog::Logger logger;
     SetupEnvironment();
     SHA256AutoDetect();
 
