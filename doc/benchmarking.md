@@ -71,6 +71,44 @@ restricted to the same input set (introducing bias). [Fuzz
 tests](/doc/fuzzing.md) are better suited for this purpose, as they are
 specifically aimed at exploring the possible input space.
 
+Measuring I/O and memory cost
+-----------------------------
+
+The framework reports time and, where hardware counters are available, cycles
+and instructions. It does not report syscalls, bytes written or peak memory. For
+a change aimed at I/O or memory rather than CPU, measure those with standard
+tools around `bench_bitcoin`. The commands below are Linux/GNU specific.
+
+The data directory defaults to a temporary directory, often a RAM-backed
+`tmpfs` where nothing reaches a real disk. Point it elsewhere first:
+
+    build/bin/bench_bitcoin -filter='<benchmark>' -testdatadir=/path/on/disk
+
+Write syscalls. A run covers several iterations, so compare between builds
+rather than reading the absolute count:
+
+    strace -f -c -e trace=write,pwrite64,fsync,fdatasync \
+        build/bin/bench_bitcoin -filter='<benchmark>' -testdatadir=/path/on/disk
+
+Peak resident memory:
+
+    /usr/bin/time -v build/bin/bench_bitcoin -filter='<benchmark>' \
+        -testdatadir=/path/on/disk 2>&1 | grep 'Maximum resident set size'
+
+On-disk size. This one needs `-testdatadir`: without it the setup deletes the
+data directory on teardown, leaving nothing to measure. Each benchmark gets its
+own directory, named after it:
+
+    du -sb '<testdatadir>/test_common bitcoin/<benchmark>/datadir/regtest/<dir>'
+
+The test setups keep the chainstate and the block index in memory, so `<dir>` is
+`blocks` or `indexes/<name>`. Beware that `blocks` and the block filter index
+preallocate their flat files, so `du` there reports the reservation rather than
+the data; it only tracks content for plain LevelDB directories.
+
+To profile where time is spent, use `perf` as described in [Performance
+profiling with perf](/doc/developer-notes.md#performance-profiling-with-perf).
+
 Going Further
 --------------------
 
