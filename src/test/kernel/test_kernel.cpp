@@ -711,14 +711,20 @@ BOOST_AUTO_TEST_CASE(logging_tests)
     logging_enable_category(LogCategory::VALIDATION);
     logging_disable_category(LogCategory::VALIDATION);
 
-    // Check that connecting, connecting another, and then disconnecting and connecting a logger again works.
+    // Logger destroys its log object when it resets the callback on destruction, and only one
+    // Logger may exist at a time.
+    int destroyed{0};
+    struct CountingLog {
+        int& m_destroyed;
+        ~CountingLog() { ++m_destroyed; }
+        void LogMessage(std::string_view) {}
+    };
     {
-        logging_set_level_category(LogCategory::KERNEL, LogLevel::TRACE_LEVEL);
-        logging_enable_category(LogCategory::KERNEL);
-        Logger logger{std::make_unique<TestLog>()};
-        Logger logger_2{std::make_unique<TestLog>()};
+        Logger logger{std::make_unique<CountingLog>(destroyed)};
+        BOOST_CHECK_THROW(Logger{std::make_unique<CountingLog>(destroyed)}, std::logic_error);
+        BOOST_CHECK_EQUAL(destroyed, 1);
     }
-    Logger logger{std::make_unique<TestLog>()};
+    BOOST_CHECK_EQUAL(destroyed, 2);
 }
 
 BOOST_AUTO_TEST_CASE(btck_chainparams_tests)
