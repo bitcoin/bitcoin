@@ -4719,7 +4719,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         if (m_chainman.IsInitialBlockDownload()) return;
 
         CTransactionRef ptx;
-        vRecv >> TX_WITH_WITNESS(ptx);
+        vRecv >> TX_WITH_WITNESS_P2P(ptx);
 
         const Txid& txid = ptx->GetHash();
         const Wtxid& wtxid = ptx->GetWitnessHash();
@@ -5111,7 +5111,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         }
 
         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
-        vRecv >> TX_WITH_WITNESS(*pblock);
+        vRecv >> TX_WITH_WITNESS_P2P(*pblock);
 
         LogDebug(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom.GetId());
 
