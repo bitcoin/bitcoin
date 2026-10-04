@@ -26,6 +26,7 @@
 
 using common::FeeModeFromString;
 using common::FeeModesDetail;
+using common::FeeReasons;
 using common::InvalidEstimateModeErrorMessage;
 using common::StringForFeeReason;
 using common::TransactionErrorString;
@@ -272,7 +273,7 @@ RPCMethod sendtoaddress()
                         RPCResult::Type::OBJ, "", "",
                         {
                             {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
-                            {RPCResult::Type::STR, "fee_reason", "The reason the wallet selected this fee rate (e.g. fee rate estimator, mempool minimum, fallback, or minimum required)."}
+                            {RPCResult::Type::STR, "fee_reason", "The reason the wallet selected this fee rate (\"" + FeeReasons("\", \"") + "\")."}
                         },
                     },
                 },
@@ -382,7 +383,7 @@ RPCMethod sendmany()
                         {
                             {RPCResult::Type::STR_HEX, "txid", "The transaction id for the send. Only 1 transaction is created regardless of\n"
                 "the number of addresses."},
-                            {RPCResult::Type::STR, "fee_reason", "The reason the wallet selected this fee rate (e.g. fee rate estimator, mempool minimum, fallback, or minimum required)."}
+                            {RPCResult::Type::STR, "fee_reason", "The reason the wallet selected this fee rate (\"" + FeeReasons("\", \"") + "\")."}
                         },
                     },
                 },
