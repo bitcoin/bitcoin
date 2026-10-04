@@ -576,11 +576,17 @@ public:
     /** Removes a transaction from the unbroadcast set */
     void RemoveUnbroadcastTx(const Txid& txid, bool unchecked = false);
 
-    /** Returns transactions in unbroadcast set */
+    /** Returns a copy of the unbroadcast txid set */
     std::set<Txid> GetUnbroadcastTxs() const
     {
         LOCK(cs);
         return m_unbroadcast_txids;
+    }
+
+    size_t GetUnbroadcastTxCount() const
+    {
+        LOCK(cs);
+        return m_unbroadcast_txids.size();
     }
 
     /** Returns whether a txid is in the unbroadcast set */
