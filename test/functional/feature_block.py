@@ -199,10 +199,13 @@ class FullBlockTest(BitcoinTestFramework):
             reject_reason = (template.block_reject_reason or template.reject_reason)
             if reject_reason.startswith("mempool-script-verify-flag-failed"):
                 reject_reason = "block-script-verify-flag-failed" + reject_reason[33:]
+            # Blocks that fail deserialization are ignored, without disconnecting the peer.
             self.send_blocks(
                 [badblock], success=False,
-                reject_reason=reject_reason,
-                reconnect=True, timeout=2)
+                reject_reason=template.p2p_deserialization_error or reject_reason,
+                reconnect=template.p2p_deserialization_error is None, timeout=2)
+            if template.p2p_deserialization_error:
+                assert_equal(self.nodes[0].submitblock(badblock.serialize().hex()), reject_reason)
 
             self.move_tip(2)
 

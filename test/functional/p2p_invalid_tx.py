@@ -78,9 +78,9 @@ class InvalidTxRequestTest(BitcoinTestFramework):
             tx = template.get_tx()
             node.p2ps[0].send_txs_and_test(
                 [tx], node, success=False,
-                reject_reason=template.reject_reason,
+                reject_reason=template.p2p_deserialization_error or template.reject_reason,
             )
-            std_reject = template.std_reject_reason or template.reject_reason
+            std_reject = template.p2p_deserialization_error or template.std_reject_reason or template.reject_reason
             std_node.p2ps[0].send_txs_and_test(
                 [tx], std_node, success=False,
                 reject_reason=std_reject,
