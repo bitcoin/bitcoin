@@ -177,10 +177,17 @@ struct CMutableTransaction;
 
 struct TransactionSerParams {
     const bool allow_witness;
+    /** When deserializing, reject transactions without inputs or without outputs (which are never
+     *  valid) as soon as that is known, rather than first allocating memory for whatever else they
+     *  contain. */
+    const bool reject_empty{false};
     SER_PARAMS_OPFUNC
 };
 inline constexpr TransactionSerParams TX_WITH_WITNESS{.allow_witness = true};
 inline constexpr TransactionSerParams TX_NO_WITNESS{.allow_witness = false};
+/** TX_WITH_WITNESS, but rejecting transactions without inputs or outputs. For data received from
+ *  P2P peers. */
+inline constexpr TransactionSerParams TX_WITH_WITNESS_P2P{.allow_witness = true, .reject_empty = true};
 
 /** The minimum weight of a transaction input: its prevout (36 bytes), an empty scriptSig (1), and its nSequence (4). */
 inline constexpr uint64_t MIN_WEIGHT_PER_TXIN{WITNESS_SCALE_FACTOR * (36 + 1 + 4)};
@@ -224,6 +231,7 @@ void UnserializeTransaction(TxType& tx, Stream& s, const TransactionSerParams& p
     // Fail without reading them if more inputs or outputs are claimed than can fit in a block. This also bounds the
     // memory allocated for them.
     if (num_inputs > MAX_BLOCK_WEIGHT / MIN_WEIGHT_PER_TXIN) throw std::ios_base::failure("Too many transaction inputs");
+    if (num_inputs == 0 && params.reject_empty) throw std::ios_base::failure("Transaction without inputs");
     // Read the transaction inputs.
     tx.vin.resize(num_inputs);
     for (auto& txin : tx.vin) s >> txin;
@@ -232,6 +240,7 @@ void UnserializeTransaction(TxType& tx, Stream& s, const TransactionSerParams& p
     // flags are not zero, there is witness data without inputs, which fails below).
     auto num_outputs = (num_inputs == 0 && fAllowWitness) ? uint64_t{0} : ReadCompactSize(s);
     if (num_outputs > MAX_BLOCK_WEIGHT / MIN_WEIGHT_PER_TXOUT) throw std::ios_base::failure("Too many transaction outputs");
+    if (num_outputs == 0 && params.reject_empty) throw std::ios_base::failure("Transaction without outputs");
     // Read the transaction outputs.
     tx.vout.resize(num_outputs);
     for (auto& txout : tx.vout) s >> txout;

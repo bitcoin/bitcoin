@@ -73,7 +73,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
             tx = template.get_tx()
             node.p2ps[0].send_txs_and_test(
                 [tx], node, success=False,
-                reject_reason=template.reject_reason,
+                reject_reason=template.p2p_deserialization_error or template.reject_reason,
             )
 
         # Make two p2p connections to provide the node with orphans

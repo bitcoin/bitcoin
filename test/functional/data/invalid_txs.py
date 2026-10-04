@@ -76,6 +76,10 @@ class BadTxTemplate:
     # Only specified if it differs from mempool acceptance error.
     block_reject_reason = ""
 
+    # Only specified if the transaction already fails deserialization when received over P2P (in which case the
+    # sending peer is not disconnected).
+    p2p_deserialization_error: Optional[str] = None
+
     # Is this tx considered valid when included in a block, but not for acceptance into
     # the mempool (i.e. does it violate policy but not consensus)?
     valid_in_block = False
@@ -93,6 +97,7 @@ class BadTxTemplate:
 
 class OutputMissing(BadTxTemplate):
     reject_reason = "bad-txns-vout-empty"
+    p2p_deserialization_error = "Transaction without outputs"
 
     def get_tx(self):
         tx = CTransaction()
@@ -102,6 +107,7 @@ class OutputMissing(BadTxTemplate):
 
 class InputMissing(BadTxTemplate):
     reject_reason = "bad-txns-vin-empty"
+    p2p_deserialization_error = "Transaction without inputs"
 
     # We use a blank transaction here to make sure
     # it is interpreted as a non-witness transaction.
