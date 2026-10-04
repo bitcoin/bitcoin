@@ -6,9 +6,12 @@
 """
 import hmac
 import importlib
+import json
 import os
 import re
 import sys
+from io import StringIO
+from unittest.mock import patch
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
@@ -31,6 +34,7 @@ class RpcAuthTest(BitcoinTestFramework):
         self.test_generate_salt()
         self.test_generate_password()
         self.test_check_password_hmac()
+        self.test_cli_output()
 
     def test_generate_salt(self):
         for i in range(16, 32 + 1):
@@ -51,6 +55,35 @@ class RpcAuthTest(BitcoinTestFramework):
         expected_password_hmac = m.hexdigest()
 
         assert_equal(expected_password_hmac, password_hmac)
+
+    def test_cli_output(self):
+        generated_password = "generated_password_for_test"
+        with patch.object(sys, "argv", ["rpcauth.py", "generated-user"]), \
+                patch.object(self.rpcauth, "generate_password", return_value=generated_password), \
+                patch.object(sys, "stdout", new=StringIO()) as generated_output:
+            self.rpcauth.main()
+        assert generated_password in generated_output.getvalue()
+
+        supplied_password = "supplied_password_must_not_be_echoed"
+        with patch.object(sys, "argv", ["rpcauth.py", "supplied-user", supplied_password]), \
+                patch.object(sys, "stdout", new=StringIO()) as supplied_output:
+            self.rpcauth.main()
+        assert supplied_password not in supplied_output.getvalue()
+
+        prompted_password = "prompted_password_must_not_be_echoed"
+        with patch.object(sys, "argv", ["rpcauth.py", "prompted-user", "-"]), \
+                patch.object(self.rpcauth, "getpass", return_value=prompted_password), \
+                patch.object(sys, "stdout", new=StringIO()) as prompted_output:
+            self.rpcauth.main()
+        assert prompted_password not in prompted_output.getvalue()
+
+        with patch.object(sys, "argv", ["rpcauth.py", "--json", "json-user", supplied_password]), \
+                patch.object(sys, "stdout", new=StringIO()) as json_output:
+            self.rpcauth.main()
+        json_result = json.loads(json_output.getvalue())
+        assert_equal(json_result["username"], "json-user")
+        assert_equal(json_result["password"], supplied_password)
+        assert json_result["rpcauth"].startswith("json-user:")
 
 
 if __name__ == '__main__':

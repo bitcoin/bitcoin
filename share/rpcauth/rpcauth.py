@@ -28,7 +28,8 @@ def main():
     parser.add_argument("-j", "--json", help="output to json instead of plain-text", action='store_true')
     args = parser.parse_args()
 
-    if not args.password:
+    password_generated = not args.password
+    if password_generated:
         args.password = generate_password()
     elif args.password == '-':
         args.password = getpass()
@@ -43,7 +44,8 @@ def main():
     else:
         print('String to be appended to bitcoin.conf:')
         print(f'rpcauth={args.username}:{salt}${password_hmac}')
-        print(f'Your password:\n{args.password}')
+        if password_generated:
+            print(f'Your password:\n{args.password}')
 
 if __name__ == '__main__':
     main()
