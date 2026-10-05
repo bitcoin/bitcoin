@@ -90,6 +90,9 @@ bool CWalletTx::Update(CTransactionRef new_tx, const TxState& new_state, WalletB
         if (!batch.WriteTxMetadata(*this)) {
             throw std::ios_base::failure("Unable to write tx record");
         }
+        if (!batch.SQLUpdateTxState(*this)) {
+            throw std::ios_base::failure("Unable to write tx record");
+        }
     }
 
     return new_variant || metadata_changed;
@@ -105,5 +108,68 @@ void CWalletTx::RecomputeCanonical()
     m_canonical_wtxid = std::ranges::min_element(m_txs, std::less{}, [](const auto& entry) {
                             return std::make_pair(!entry.second->HasWitness(), GetTransactionWeight(*entry.second));
                         })->first;
+}
+
+int32_t GetTxStateType(const TxState& state)
+{
+    return std::visit(util::Overloaded{
+        [](const TxStateConfirmed& confirmed) { return 0; },
+        // Inactive and InMempool use the same type as on reloading we cannot know whether an unconfirmed tx is still in the mempool.
+        [](const TxStateInactive& inactive) { return 1; },
+        [](const TxStateInMempool& in_mempool) { return 1;},
+        [](const TxStateBlockConflicted& conflicted) { return 2; },
+        [](const TxStateUnrecognized& unrecognized) { return unrecognized.index; }
+    }, state);
+}
+
+class TxStateDataVisitor
+{
+public:
+    // InMempool needs to be written as InActive(abandoned=false)
+    std::vector<unsigned char> operator()(const TxStateInMempool& state)
+    {
+        return operator()(TxStateInactive{/*abandoned=*/false});
+    }
+
+    template<typename State>
+    std::vector<unsigned char> operator()(const State& state)
+    {
+        std::vector<unsigned char> data;
+        VectorWriter stream(data, 0);
+        stream << state;
+        return data;
+    }
+};
+
+std::vector<unsigned char> GetTxStateData(const TxState& state)
+{
+    return std::visit(TxStateDataVisitor(), state);
+}
+
+TxState ConstructTxState(int32_t type, std::vector<unsigned char> data)
+{
+    SpanReader stream(data);
+    switch (type) {
+        case 0: {
+            TxStateConfirmed confirmed;
+            stream >> confirmed;
+            return confirmed;
+        }
+        case 1:{
+            TxStateInactive inactive;
+            stream >> inactive;
+            return inactive;
+        }
+        case 2: {
+            TxStateBlockConflicted conflicted;
+            stream >> conflicted;
+            return conflicted;
+        }
+        default: {
+            TxStateUnrecognized unrecognized(type);
+            stream >> unrecognized;
+            return unrecognized;
+        }
+    }
 }
 } // namespace wallet
