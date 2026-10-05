@@ -9,7 +9,6 @@
 
 export LC_ALL=C.UTF-8
 
-export CONTAINER_NAME=ci_native_chimera_musl
 export CI_IMAGE_NAME_TAG="mirror.gcr.io/chimeralinux/chimera"
 export CI_BASE_PACKAGES="ccache chimerautils chimerautils-extra clang cmake curl e2fsprogs git gmake gtar linux-headers procps python-devel python-pip rsync util-linux util-linux-lscpu"
 export PIP_PACKAGES="--break-system-packages pyzmq pycapnp"

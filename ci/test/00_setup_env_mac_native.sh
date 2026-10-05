@@ -6,7 +6,6 @@
 
 export LC_ALL=C.UTF-8
 
-export CONTAINER_NAME="ci_mac_native"  # macos does not use a container, but the env var is needed for logging
 export PIP_PACKAGES="--break-system-packages pycapnp pyzmq"
 export GOAL="install deploy"
 export RUN_MACOS_CODESIGN=true

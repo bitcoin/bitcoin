@@ -8,6 +8,9 @@ export LC_ALL=C.UTF-8
 
 set -o errexit -o nounset -o pipefail -o xtrace
 
+CONTAINER_NAME="ci_$(basename "${FILE_ENV/00_setup_env_/}" .sh)"
+export CONTAINER_NAME
+
 # The source root dir, usually from git, usually read-only.
 # The ci system copies this folder.
 BASE_READ_ONLY_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )"/../../ >/dev/null 2>&1 && pwd )
