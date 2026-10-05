@@ -38,16 +38,46 @@ class ListDescriptorsTest(BitcoinTestFramework):
 
         self.log.info('Test the command for a default descriptors wallet.')
         node.createwallet(wallet_name='w3')
-        result = node.get_wallet_rpc('w3').listdescriptors()
-        assert_equal("w3", result['wallet_name'])
-        assert_equal(8, len(result['descriptors']))
-        assert_equal(8, len([d for d in result['descriptors'] if d['active']]))
-        assert_equal(4, len([d for d in result['descriptors'] if d['internal']]))
-        for item in result['descriptors']:
-            assert_not_equal(item['desc'], '')
-            assert_equal(item['next_index'], 0)
-            assert_equal(item['range'], [0, 0])
-            assert item['timestamp'] is not None
+        wallet = node.get_wallet_rpc('w3')
+
+        desc_paths = [
+            ("m/44h/1h/0h", "pkh(", ")"),
+            ("m/49h/1h/0h", "sh(wpkh(", "))"),
+            ("m/84h/1h/0h", "wpkh(", ")"),
+            ("m/86h/1h/0h", "tr(", ")")
+        ]
+        expected_descs = []
+        expected_priv_descs = []
+        expected_multipath = []
+        expected_priv_multipath = []
+        for path, prefix, suffix in desc_paths:
+            derived = wallet.derivehdkey(path)
+            xprv = wallet.gethdkeys(private=True)[0]["xprv"]
+            expected_descs.append(descsum_create(f"{prefix}{derived['origin']}{derived['xpub']}/0/*{suffix}"))
+            expected_descs.append(descsum_create(f"{prefix}{derived['origin']}{derived['xpub']}/1/*{suffix}"))
+            expected_priv_descs.append(descsum_create(f"{prefix}{xprv}{path[1:]}/0/*{suffix}"))
+            expected_priv_descs.append(descsum_create(f"{prefix}{xprv}{path[1:]}/1/*{suffix}"))
+            expected_multipath.append(descsum_create(f"{prefix}{derived['origin']}{derived['xpub']}/<0;1>/*{suffix}"))
+            expected_multipath.append(descsum_create(f"{prefix}{derived['origin']}{derived['xpub']}/<0;1>/*{suffix}"))
+            expected_priv_multipath.append(descsum_create(f"{prefix}{xprv}{path[1:]}/<0;1>/*{suffix}"))
+            expected_priv_multipath.append(descsum_create(f"{prefix}{xprv}{path[1:]}/<0;1>/*{suffix}"))
+
+        for priv in [False, True]:
+            result = wallet.listdescriptors(private=priv)
+            assert_equal("w3", result['wallet_name'])
+            assert_equal(8, len(result['descriptors']))
+            assert_equal(8, len([d for d in result['descriptors'] if d['active']]))
+            assert_equal(4, len([d for d in result['descriptors'] if d['internal']]))
+            for item in result['descriptors']:
+                if priv:
+                    expected_priv_descs.remove(item["desc"])
+                    expected_priv_multipath.remove(item["multipath_descriptor"])
+                else:
+                    expected_descs.remove(item["desc"])
+                    expected_multipath.remove(item["multipath_descriptor"])
+                assert_equal(item['next_index'], 0)
+                assert_equal(item['range'], [0, 0])
+                assert item['timestamp'] is not None
 
         self.log.info('Test that descriptor strings are returned in lexicographically sorted order.')
         descriptor_strings = [descriptor['desc'] for descriptor in result['descriptors']]
