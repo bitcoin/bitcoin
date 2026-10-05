@@ -6,6 +6,7 @@
 #include <logging.h>
 #include <random.h>
 #include <test/util/common.h>
+#include <test/util/setup_common.h>
 #include <util/string.h>
 #include <util/threadpool.h>
 #include <util/time.h>
@@ -18,12 +19,17 @@
 #include <ranges>
 #include <semaphore>
 
+// Undefine Windows WAIT_TIMEOUT macro (WinError.h) to avoid name collision.
+#ifdef WAIT_TIMEOUT
+#undef WAIT_TIMEOUT
+#endif
+
 // General test values
 int NUM_WORKERS_DEFAULT = 0;
 constexpr char POOL_NAME[] = "test";
 constexpr auto TEST_WAIT_TIMEOUT = 120s;
 
-struct ThreadPoolFixture {
+struct ThreadPoolFixture : public BasicTestingSetup {
     ThreadPoolFixture() {
         NUM_WORKERS_DEFAULT = FastRandomContext().randrange(GetNumCores()) + 1;
         LogInfo("thread pool workers count: %d", NUM_WORKERS_DEFAULT);

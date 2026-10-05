@@ -403,7 +403,7 @@ CCoinsViewCache::ResetGuard CoinsViewOverlay::StartFetching(const CBlock& block 
                 // Submit can fail if a shared owner of the thread pool outside of this class calls Stop() or
                 // Interrupt() on a different thread after we call WorkersCount() above. In that case parallel
                 // fetching will not make progress, so we clear the inputs to fall back to single threaded fetching.
-                LogWarning("Failed to submit prevout fetch tasks (%s); falling back to single-threaded fetching for this block.", SubmitErrorString(futures.error()));
+                LogWarning(m_log, "Failed to submit prevout fetch tasks (%s); falling back to single-threaded fetching for this block.", SubmitErrorString(futures.error()));
                 m_inputs.clear();
                 StopFetching(); // Assert nothing changed if we failed to start tasks.
             }
@@ -427,7 +427,7 @@ const Coin& AccessByTxid(const CCoinsViewCache& view, const Txid& txid)
 }
 
 template <typename ReturnType, typename Func>
-static ReturnType ExecuteBackedWrapper(Func func, const std::vector<std::function<void()>>& err_callbacks)
+static ReturnType ExecuteBackedWrapper(const util::log::Context& log, Func func, const std::vector<std::function<void()>>& err_callbacks)
 {
     try {
         return func();
@@ -435,7 +435,7 @@ static ReturnType ExecuteBackedWrapper(Func func, const std::vector<std::functio
         for (const auto& f : err_callbacks) {
             f();
         }
-        LogError("Error reading from database: %s\n", e.what());
+        LogError(log, "Error reading from database: %s\n", e.what());
         // Starting the shutdown sequence and returning false to the caller would be
         // interpreted as 'entry not found' (as opposed to unable to read data), and
         // could lead to invalid interpretation. Just exit immediately, as we can't
@@ -446,15 +446,15 @@ static ReturnType ExecuteBackedWrapper(Func func, const std::vector<std::functio
 
 std::optional<Coin> CCoinsViewErrorCatcher::GetCoin(const COutPoint& outpoint) const
 {
-    return ExecuteBackedWrapper<std::optional<Coin>>([&]() { return CCoinsViewBacked::GetCoin(outpoint); }, m_err_callbacks);
+    return ExecuteBackedWrapper<std::optional<Coin>>(m_log, [&]() { return CCoinsViewBacked::GetCoin(outpoint); }, m_err_callbacks);
 }
 
 bool CCoinsViewErrorCatcher::HaveCoin(const COutPoint& outpoint) const
 {
-    return ExecuteBackedWrapper<bool>([&]() { return CCoinsViewBacked::HaveCoin(outpoint); }, m_err_callbacks);
+    return ExecuteBackedWrapper<bool>(m_log, [&]() { return CCoinsViewBacked::HaveCoin(outpoint); }, m_err_callbacks);
 }
 
 std::optional<Coin> CCoinsViewErrorCatcher::PeekCoin(const COutPoint& outpoint) const
 {
-    return ExecuteBackedWrapper<std::optional<Coin>>([&]() { return CCoinsViewBacked::PeekCoin(outpoint); }, m_err_callbacks);
+    return ExecuteBackedWrapper<std::optional<Coin>>(m_log, [&]() { return CCoinsViewBacked::PeekCoin(outpoint); }, m_err_callbacks);
 }

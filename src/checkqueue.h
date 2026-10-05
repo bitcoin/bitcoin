@@ -7,7 +7,6 @@
 
 #include <sync.h>
 #include <tinyformat.h>
-#include <util/log.h>
 #include <util/threadnames.h>
 
 #include <algorithm>
@@ -145,7 +144,6 @@ public:
     explicit CCheckQueue(unsigned int batch_size, int worker_threads_num)
         : nBatchSize(batch_size)
     {
-        LogInfo("Script verification uses %d additional threads", worker_threads_num);
         m_worker_threads.reserve(worker_threads_num);
         for (int n = 0; n < worker_threads_num; ++n) {
             m_worker_threads.emplace_back([this, n]() {
