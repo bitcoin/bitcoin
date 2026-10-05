@@ -16,10 +16,10 @@ export RUN_FUNCTIONAL_TESTS=false
 export RUN_FUZZ_TESTS=false
 export RUN_CHECK_DEPS=false
 export RUN_IWYU=true
-# Adding non-codegen targets to the build goal is a workaround
+# Adding non-codegen build targets is a workaround
 # for https://gitlab.kitware.com/cmake/cmake/-/work_items/27862
 # and https://github.com/bitcoin-core/libmultiprocess/issues/284.
-export GOAL="codegen bitcoin_node_raw_data_headers mp_headers mptest_headers bitcoin_ipc_headers bitcoin_ipc_test_headers bitcoin_ipc_fuzz_headers"
+export BUILD_TARGETS="codegen bitcoin_node_raw_data_headers mp_headers mptest_headers bitcoin_ipc_headers bitcoin_ipc_test_headers bitcoin_ipc_fuzz_headers"
 printf -v BITCOIN_CONFIG "%q " \
  --preset dev-mode -DBUILD_GUI=OFF \
  -DCMAKE_C_COMPILER=clang-${IWYU_LLVM_V} \

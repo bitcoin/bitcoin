@@ -11,7 +11,7 @@ export HOST=x86_64-w64-mingw32ucrt
 export PACKAGES="nix-bin nix-setup-systemd"
 export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
-export GOAL="deploy"
+export BUILD_TARGETS="all deploy"
 printf -v BITCOIN_CONFIG "%q " \
   --preset=dev-mode \
   -DENABLE_IPC=OFF \

@@ -16,7 +16,7 @@ export XCODE_BUILD_ID=17B100
 export OSX_SDK_SHA256=9600fa93644df674ee916b5e2c8a6ba8dacf631996a65dc922d003b98b5ea3b1
 export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
-export GOAL="deploy"
+export BUILD_TARGETS="all deploy"
 printf -v BITCOIN_CONFIG "%q " \
  --preset=dev-mode \
  -DWITH_USDT=OFF \
