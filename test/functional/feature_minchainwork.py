@@ -13,10 +13,19 @@ has more work than nMinimumChainWork.
 While in initial block download, nodes won't relay blocks to their peers, so
 test that this parameter functions as intended by verifying that block relay
 only succeeds past a given node once its nMinimumChainWork has been exceeded.
+
+While in initial block download, nodes disconnect outbound (full-relay and
+block-relay-only) peers whose headers chain has less work than
+nMinimumChainWork.
 """
 
 import time
 
+from test_framework.messages import (
+    CBlockHeader,
+    from_hex,
+    msg_headers,
+)
 from test_framework.p2p import P2PInterface, msg_getheaders
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -48,6 +57,32 @@ class MinimumChainWorkTest(BitcoinTestFramework):
 
         # Set clock of node2 2 days ahead, to keep it in IBD during this test.
         self.nodes[2].setmocktime(int(time.time()) + 48*60*60)
+
+    def test_outbound_insufficient_work_disconnect(self):
+        self.log.info("Test that outbound peers serving an insufficient work chain are disconnected during IBD")
+        # Restart node2 with a minimum chain work above its current chain, so
+        # that it stays in IBD and its own chain has insufficient work.
+        self.restart_node(2, extra_args=["-minimumchainwork=0x1000"])
+        node = self.nodes[2]
+        assert_equal(node.getblockchaininfo()['initialblockdownload'], True)
+        # Headers already in node2's block index (ancestors of its tip) skip the
+        # low-work headers sync, so they reach the insufficient work check.
+        headers = [from_hex(CBlockHeader(), node.getblockheader(node.getblockhash(height), False))
+                   for height in range(1, node.getblockcount() + 1)]
+        self.log.info("Check that inbound and manual peers are not disconnected")
+        with node.assert_debug_log(expected_msgs=[], unexpected_msgs=["outbound peer headers chain has insufficient work"]):
+            inbound_peer = node.add_p2p_connection(P2PInterface())
+            manual_peer = node.add_outbound_p2p_connection(P2PInterface(), p2p_idx=0, connection_type="manual")
+            for peer in [inbound_peer, manual_peer]:
+                peer.send_and_ping(msg_headers(headers))
+                assert peer.is_connected
+        node.disconnect_p2ps()
+        for p2p_idx, conn_type in enumerate(["outbound-full-relay", "block-relay-only"]):
+            self.log.info(f"Check that the {conn_type} peer is disconnected")
+            peer = node.add_outbound_p2p_connection(P2PInterface(), p2p_idx=p2p_idx, connection_type=conn_type)
+            with node.assert_debug_log(["outbound peer headers chain has insufficient work"]):
+                peer.send_without_ping(msg_headers(headers))
+                peer.wait_for_disconnect()
 
     def run_test(self):
         # Start building a chain on node0.  node2 shouldn't be able to sync until node1's
@@ -111,6 +146,8 @@ class MinimumChainWorkTest(BitcoinTestFramework):
             ["-minimumchainwork=test"],
             expected_msg='Error: Invalid minimum work specified (test), must be up to 64 hex digits',
         )
+
+        self.test_outbound_insufficient_work_disconnect()
 
 
 if __name__ == '__main__':
