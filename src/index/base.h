@@ -12,6 +12,7 @@
 #include <sync.h>
 #include <uint256.h>
 #include <util/fs.h>
+#include <util/string.h>
 #include <util/threadinterrupt.h>
 #include <validationinterface.h>
 
@@ -36,11 +37,6 @@ struct IndexSummary {
 namespace interfaces {
 struct BlockRef;
 }
-namespace util {
-template <unsigned int num_params>
-struct ConstevalFormatString;
-}
-
 /**
  * Base class for indices of blockchain data. This implements
  * CValidationInterface and ensures blocks are indexed sequentially according
