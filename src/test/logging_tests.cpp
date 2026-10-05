@@ -14,6 +14,8 @@
 #include <util/fs_helpers.h>
 #include <util/string.h>
 
+#include <boost/test/unit_test.hpp>
+
 #include <chrono>
 #include <fstream>
 #include <future>
@@ -21,11 +23,10 @@
 #include <iostream>
 #include <source_location>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include <boost/test/unit_test.hpp>
 
 using util::SplitString;
 using util::TrimString;
@@ -34,6 +35,12 @@ using util::TrimString;
 namespace BCLog {
     std::string LogEscapeMessage(std::string_view str);
 }
+
+template <auto str>
+concept IsLogFormatString = requires { typename std::bool_constant<(util::log::FormatString<0>{str()}, true)>; };
+
+static_assert(IsLogFormatString<[] { return "format string without a trailing newline"; }>);
+static_assert(!IsLogFormatString<[] { return "format string ending in a newline\n"; }>);
 
 BOOST_FIXTURE_TEST_SUITE(logging_tests, BasicTestingSetup)
 
