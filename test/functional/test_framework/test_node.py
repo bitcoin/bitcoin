@@ -353,8 +353,8 @@ class TestNode():
 
     def wait_for_rpc_connection(self, *, wait_for_import=True):
         """Sets up an RPC connection to the bitcoind process. Returns False if unable to connect."""
-        # Poll at a rate of four times per second
-        poll_per_s = 4
+        # Poll at a rate of twenty times per second
+        poll_per_s = 20
 
         suppressed_errors = collections.defaultdict(int)
         latest_error = None
@@ -362,7 +362,8 @@ class TestNode():
             suppressed_errors[category] += 1
             return (category, repr(e))
 
-        for _ in range(poll_per_s * self.rpc_timeout):
+        stop_time = time.time() + self.rpc_timeout
+        while time.time() <= stop_time:
             if self.process.poll() is not None:
                 # Attach abrupt shutdown error/s to the exception message
                 self.stderr.seek(0)
