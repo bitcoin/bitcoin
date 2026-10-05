@@ -207,9 +207,12 @@ bool ChainScanner::ScanBlock(const uint256& block_hash, int block_height, bool s
         }
 
         if (!loc.IsNull()) {
-            m_wallet.WalletLogPrintf("Saving scan progress %d.\n", block_height);
             WalletBatch batch(m_wallet.GetDatabase());
-            batch.WriteBestBlock(loc);
+            if (!batch.WriteBestBlock(loc)) {
+                m_wallet.WalletLogPrintf("Unable to save scan progress\n");
+            } else {
+                m_wallet.WalletLogPrintf("Saving scan progress %d.\n", block_height);
+            }
         }
     }
     return true;

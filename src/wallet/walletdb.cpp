@@ -242,7 +242,7 @@ bool WalletBatch::WriteCryptedDescriptorKey(const uint256& desc_id, const CPubKe
     const bool own_txn{!HasActiveTxn()};
     if (own_txn && !TxnBegin()) return false;
     if (!WriteIC(encrypted_key, secret, /*fOverwrite=*/false) || !EraseIC(plaintext_key) || (own_txn && !TxnCommit())) {
-        if (own_txn) TxnAbort();
+        if (own_txn) (void)TxnAbort();
         return false;
     }
     return true;
@@ -1206,8 +1206,15 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     if (result != DBErrors::LOAD_OK)
         return result;
 
-    if (!has_last_client || last_client != CLIENT_VERSION) // Update
-        this->WriteVersion(CLIENT_VERSION);
+    if (!has_last_client || last_client != CLIENT_VERSION) {// Update
+        if (!this->WriteVersion(CLIENT_VERSION)) {
+            // This is the first time we write to this wallet, if there's a write failure now,
+            // there will likely be write failures in the future. Better to stop loading the wallet
+            // and not let the user use it at this time.
+            pwallet->WalletLogPrintf("Error: Unable to update the wallet last client version");
+            return DBErrors::CORRUPT;
+        }
+    }
 
     if (any_unordered)
         result = pwallet->ReorderTransactions();
@@ -1248,7 +1255,8 @@ static bool RunWithinTxn(WalletBatch& batch, std::string_view process_desc, cons
     // Run procedure
     if (!func(batch)) {
         LogDebug(BCLog::WALLETDB, "Error: %s failed\n", process_desc);
-        batch.TxnAbort();
+        // Transaction abort failure will be handled by destructors when the WalletBatch goes out of scope
+        (void)batch.TxnAbort();
         return false;
     }
 
