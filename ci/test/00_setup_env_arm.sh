@@ -12,7 +12,6 @@ export PACKAGES="python3-pip python3-zmq g++-arm-linux-gnueabihf libc6:armhf lib
 export PIP_PACKAGES="--break-system-packages pycapnp"
 export CI_IMAGE_NAME_TAG="mirror.gcr.io/debian:trixie"  # Check that https://packages.debian.org/trixie/g++-arm-linux-gnueabihf (version 14.x, similar to guix) can cross-compile
 export CI_IMAGE_PLATFORM="linux/arm64"
-export GOAL="install"
 export CI_LIMIT_STACK_SIZE=1
 printf -v BITCOIN_CONFIG "%q " \
   --preset=dev-mode \

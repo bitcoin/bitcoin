@@ -16,7 +16,6 @@ export RUN_FUNCTIONAL_TESTS=false
 export RUN_FUZZ_TESTS=false
 export RUN_CHECK_DEPS=true
 export RUN_TIDY=true
-export GOAL="install"
 printf -v BITCOIN_CONFIG "%q " \
  --preset dev-mode \
  -DCMAKE_C_COMPILER=clang-${TIDY_LLVM_V} \

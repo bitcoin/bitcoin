@@ -11,7 +11,6 @@ export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:24.04"
 export PACKAGES="python3-zmq python3-pip clang-17 llvm-17 libc++abi-17-dev libc++-17-dev"
 export PIP_PACKAGES="--break-system-packages pycapnp"
 export DEP_OPTS="NO_WALLET=1 CC=clang-17 CXX='clang++-17 -stdlib=libc++'"
-export GOAL="install"
 printf -v BITCOIN_CONFIG "%q " \
   --preset=dev-mode \
   -DREDUCE_EXPORTS=ON \

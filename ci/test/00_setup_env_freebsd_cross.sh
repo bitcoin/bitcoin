@@ -24,7 +24,6 @@ export DEP_OPTS="build_CC=clang build_CXX=clang++ \
  OBJDUMP=llvm-objdump-${APT_LLVM_V} \
  RANLIB=llvm-ranlib-${APT_LLVM_V} \
  STRIP=llvm-strip-${APT_LLVM_V}"
-export GOAL="install"
 printf -v BITCOIN_CONFIG "%q " \
  --preset=dev-mode \
  -DCMAKE_LINKER_TYPE=LLD \

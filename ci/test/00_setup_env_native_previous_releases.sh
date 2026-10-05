@@ -12,7 +12,6 @@ export PACKAGES="gcc-12 g++-12 python3-zmq libleveldb-dev python3-pip"
 export DEP_OPTS="CC=gcc-12 CXX=g++-12"
 export PIP_PACKAGES="plyvel"
 export TEST_RUNNER_EXTRA="--previous-releases --coverage --extended --exclude feature_dbcrash"  # Run extended tests so that coverage does not fail, but exclude the very slow dbcrash
-export GOAL="install"
 export CI_LIMIT_STACK_SIZE=1
 export DOWNLOAD_PREVIOUS_RELEASES=true
 printf -v BITCOIN_CONFIG "%q " \
