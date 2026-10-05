@@ -857,12 +857,38 @@ BOOST_AUTO_TEST_CASE(peer_worksets)
             assigned_peer = node2;
         }
 
-        // EraseForPeer also removes that tx from the workset.
+        // EraseForPeer hands the tx over to the workset of the remaining announcer with the lowest
+        // NodeId, so that the assigned peer cannot stop it from being processed by disconnecting.
         orphanage->EraseForPeer(assigned_peer);
-        BOOST_CHECK_EQUAL(orphanage->GetTxToReconsider(node0), nullptr);
+        orphanage->SanityCheck();
+        const NodeId next_peer{assigned_peer == node0 ? node1 : node0};
+        for (NodeId node = node0; node <= node2; ++node) {
+            BOOST_CHECK_EQUAL(orphanage->HaveTxToReconsider(node), node == next_peer);
+        }
+
+        // Again when that peer disconnects.
+        orphanage->EraseForPeer(next_peer);
+        orphanage->SanityCheck();
+        const NodeId last_peer{node0 + node1 + node2 - assigned_peer - next_peer};
+        for (NodeId node = node0; node <= node2; ++node) {
+            BOOST_CHECK_EQUAL(orphanage->HaveTxToReconsider(node), node == last_peer);
+        }
+        BOOST_CHECK_EQUAL(orphanage->GetTxToReconsider(last_peer), tx_orphan);
+        BOOST_CHECK(!orphanage->HaveTxToReconsider(last_peer));
+
+        // Once processed, the tx is no longer handed over.
+        BOOST_CHECK(orphanage->AddAnnouncer(orphan_wtxid, assigned_peer));
+        orphanage->EraseForPeer(last_peer);
+        orphanage->SanityCheck();
+        BOOST_CHECK(!orphanage->HaveTxToReconsider(assigned_peer));
+
+        // Erasing the tx while it is reconsiderable leaves nothing to reconsider.
+        BOOST_CHECK_EQUAL(orphanage->AddChildrenToWorkSet(*tx_missing_parent, det_rand).size(), 1);
+        BOOST_CHECK(orphanage->HaveTxToReconsider(assigned_peer));
 
         // Delete this tx, clearing the orphanage.
         BOOST_CHECK_EQUAL(orphanage->EraseTx(orphan_wtxid), 1);
+        orphanage->SanityCheck();
         BOOST_CHECK_EQUAL(orphanage->CountUniqueOrphans(), 0);
         for (NodeId node = node0; node <= node2; ++node) {
             BOOST_CHECK_EQUAL(orphanage->GetTxToReconsider(node), nullptr);
