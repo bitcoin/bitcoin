@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
+import ipaddress
 from pathlib import Path
 import os
 import shlex
@@ -32,8 +33,21 @@ def main():
     # they will not be passed on.
     settings.update([
         "BASE_BUILD_DIR",
+        "BIND_TEST_ROUTABLE_IPV4",
+        "BIND_TEST_ROUTABLE_IPV6",
         "CI_FAILFAST_TEST_LEAVE_DANGLING",
     ])
+
+    ci_idx = sorted(path.name for path in Path(__file__).parent.glob("00_setup_env_*.sh")).index(Path(os.environ["FILE_ENV"]).name)
+    subnet_id = ci_idx % 256
+    ip4_subnet = ipaddress.IPv4Network(f"11.11.{subnet_id}.0/24")
+    ip4_addr = ip4_subnet[5]
+    ip6_subnet = ipaddress.IPv6Network(f"1111:1111:{subnet_id:x}::/112")
+    ip6_addr = ip6_subnet[5]
+
+    if not os.getenv("DANGER_RUN_CI_ON_HOST"):
+        os.environ["BIND_TEST_ROUTABLE_IPV4"] = str(ip4_addr)
+        os.environ["BIND_TEST_ROUTABLE_IPV6"] = str(ip6_addr)
 
     # Append $USER to /tmp/env to support multi-user systems and $CONTAINER_NAME
     # to allow support starting multiple runs simultaneously by the same user.
@@ -115,7 +129,7 @@ def main():
             CI_CCACHE_MOUNT = f"type=bind,src={os.environ['CCACHE_DIR']},dst={os.environ['CCACHE_DIR']}"
 
         network_name = f"{os.environ['CONTAINER_NAME']}-net"
-        run(["docker", "network", "create", "--ipv6", "--subnet", "1111:1111::/112", "--subnet", "1.1.1.0/24", network_name])
+        run(["docker", "network", "create", "--ipv6", f"--subnet={ip6_subnet}", f"--subnet={ip4_subnet}", network_name])
 
         if os.getenv("RESTART_CI_DOCKER_BEFORE_RUN"):
             print("Restart docker before run to stop and clear all containers started with --rm")
@@ -145,8 +159,8 @@ def main():
             f"--env-file={env_file}",
             f"--name={os.environ['CONTAINER_NAME']}",
             f"--network={network_name}",
-            "--ip=1.1.1.5",  # Used by some of the tests, don't change it just here (keep them in sync).
-            "--ip6=1111:1111::5", # Used by some of the tests, don't change it just here (keep them in sync).
+            f"--ip={ip4_addr}",
+            f"--ip6={ip6_addr}",
             f"--platform={os.environ['CI_IMAGE_PLATFORM']}",
             os.environ["CONTAINER_NAME"],
         ]
