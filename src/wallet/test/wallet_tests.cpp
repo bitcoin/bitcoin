@@ -319,7 +319,6 @@ BOOST_FIXTURE_TEST_CASE(update_non_range_descriptor, TestingSetup)
     }
 }
 
-
 // This test verifies that wallet settings can be added and removed
 // concurrently, ensuring no race conditions occur during either process.
 BOOST_FIXTURE_TEST_CASE(write_wallet_settings_concurrently, TestingSetup)
