@@ -216,7 +216,7 @@ std::shared_ptr<CWallet> SetupDescriptorsWallet(interfaces::Node& node, TestChai
     wallet->SetAddressBook(dest, "", wallet::AddressPurpose::RECEIVE);
     wallet->SetLastBlockProcessed(105, WITH_LOCK(node.context()->chainman->GetMutex(), return node.context()->chainman->ActiveChain().Tip()->GetBlockHash()));
     SyncUpWallet(wallet, node);
-    wallet->SetBroadcastTransactions(true);
+    wallet->SetBroadcastWhen(CWallet::BroadcastWhen::INITIAL_AND_PERIODIC);
     return wallet;
 }
 
