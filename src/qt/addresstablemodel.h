@@ -96,7 +96,7 @@ private:
     EditStatus editStatus = OK;
 
     /** Look up address book data given an address string. */
-    bool getAddressData(const QString &address, std::string* name, wallet::AddressPurpose* purpose) const;
+    [[nodiscard]] bool getAddressData(const QString& address, std::string* name, wallet::AddressPurpose* purpose) const;
 
     /** Notify listeners that data changed. */
     void emitDataChanged(int index);

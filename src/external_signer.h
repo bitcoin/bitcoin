@@ -63,7 +63,7 @@ public:
     //! Calls `<command> --stdin --fingerprint <fingerprint> --chain <chain>` and passes the
     //! `signtx` command and PSBT via stdin.
     //! @param[in,out] psbt  PartiallySignedTransaction to be signed
-    bool SignTransaction(PartiallySignedTransaction& psbt, std::string& error);
+    [[nodiscard]] bool SignTransaction(PartiallySignedTransaction& psbt, std::string& error);
 };
 
 #endif // BITCOIN_EXTERNAL_SIGNER_H
