@@ -324,15 +324,9 @@ FUZZ_TARGET(p2p_1p1c_liveness, .init = ::initialize)
         //! completed every request for it, and retrying the orphan with the input missing again
         //! requests nothing, so the parent is not fetched again.
         bool parent_left_with_orphan{false};
-        //! A peer that announced the child left while the child waited in the orphanage to be retried
-        //! (its parent being in the mempool) and other announcers remained. The retry is assigned to
-        //! one announcer at random and erased with that announcer's announcements, so if it was this
-        //! one, the child is not retried.
-        bool reconsideration_lost{false};
         bool Any() const
         {
-            return parent_stripped || known_parent_replayed || confirmed_parent_stripped || package_with_other_parent || parent_left_with_orphan ||
-                   reconsideration_lost;
+            return parent_stripped || known_parent_replayed || confirmed_parent_stripped || package_with_other_parent || parent_left_with_orphan;
         }
     } holes;
     // Adversaries that announced or delivered the child, and that delivered another version of the
@@ -346,15 +340,6 @@ FUZZ_TARGET(p2p_1p1c_liveness, .init = ::initialize)
     // The honest peer is in sync with us (it announces our tip, and answers pings below), so that it
     // is not disconnected as an outbound peer with an old chain or for a ping timeout.
     receive(*honest, NetMsg::Make(NetMsgType::HEADERS, TX_WITH_WITNESS(std::vector<CBlock>{CBlock{active_tip->GetBlockHeader()}})));
-    // Called before a peer leaves (disconnecting, or disconnected by us).
-    auto peer_leaving = [&](NodeId id) {
-        for (const auto& orphan : peerman->GetOrphanTransactions()) {
-            if (orphan.tx->GetWitnessHash() == cast.child->GetWitnessHash() && orphan.announcers.contains(id) &&
-                orphan.announcers.size() > 1 && mempool.exists(cast.parent->GetHash())) {
-                holes.reconsideration_lost = true;
-            }
-        }
-    };
     // Let the node process everything pending and send its messages. The honest peer answers our
     // requests immediately with the honest transactions; adversaries never answer here. Peers are
     // serviced round-robin from a fuzzer-chosen peer, as the message handler (which shuffles them) may
@@ -404,7 +389,6 @@ FUZZ_TARGET(p2p_1p1c_liveness, .init = ::initialize)
         }
         for (auto& peer : peers) {
             if (peer && peer != honest && peer->fDisconnect) {
-                peer_leaving(peer->GetId());
                 peerman->FinalizeNode(*peer);
                 peer = nullptr;
             }
@@ -495,7 +479,6 @@ FUZZ_TARGET(p2p_1p1c_liveness, .init = ::initialize)
             },
             [&] {
                 if (adversary) {
-                    peer_leaving(adversary->GetId());
                     peerman->FinalizeNode(*adversary);
                     adversary->fDisconnect = true;
                     peers[idx] = nullptr;

@@ -548,6 +548,19 @@ FUZZ_TARGET(txorphanage_sim)
         }
         return sim_announcements.end();
     };
+    /** Erase an announcement from the simulation. If it was reconsiderable, the remaining announcement
+     *  of the same tx with the lowest NodeId (if any) becomes reconsiderable. */
+    auto erase_announce_fn = [&](std::vector<SimAnnouncement>::iterator it) {
+        const unsigned tx{it->tx};
+        const bool reconsider{it->reconsider};
+        sim_announcements.erase(it);
+        if (!reconsider) return;
+        auto next_it = sim_announcements.end();
+        for (auto it2 = sim_announcements.begin(); it2 != sim_announcements.end(); ++it2) {
+            if (it2->tx == tx && (next_it == sim_announcements.end() || it2->announcer < next_it->announcer)) next_it = it2;
+        }
+        if (next_it != sim_announcements.end()) next_it->reconsider = true;
+    };
     /** Compute a peer's DoS score according to simulation data. */
     auto dos_score_fn = [&](NodeId peer, int32_t max_count, int32_t max_usage) -> FeeFrac {
         int64_t count{0};
@@ -600,7 +613,14 @@ FUZZ_TARGET(txorphanage_sim)
                 // EraseForPeer
                 auto peer = read_peer_fn();
                 real->EraseForPeer(peer);
-                std::erase_if(sim_announcements, [&](auto& ann) { return ann.announcer == peer; });
+                for (auto it = sim_announcements.begin(); it != sim_announcements.end();) {
+                    if (it->announcer == peer) {
+                        erase_announce_fn(it);
+                        it = sim_announcements.begin();
+                    } else {
+                        ++it;
+                    }
+                }
                 break;
             } else if (command-- == 0) {
                 // EraseForBlock
@@ -721,7 +741,7 @@ FUZZ_TARGET(txorphanage_sim)
             for (int reconsider = 0; reconsider < 2; ++reconsider) {
                 for (auto it = sim_announcements.begin(); it != sim_announcements.end(); ++it) {
                     if (it->announcer != worst_peer || it->reconsider != reconsider) continue;
-                    sim_announcements.erase(it);
+                    erase_announce_fn(it);
                     done = true;
                     break;
                 }

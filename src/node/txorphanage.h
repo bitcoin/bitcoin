@@ -82,7 +82,8 @@ public:
     virtual bool EraseTx(const Wtxid& wtxid) = 0;
 
     /** Maybe erase all orphans announced by a peer (eg, after that peer disconnects). If an orphan
-     * has been announced by another peer, don't erase, just remove this peer from the list of announcers. */
+     * has been announced by another peer, don't erase, just remove this peer from the list of announcers. If the
+     * orphan was in this peer's work set, it is moved to another announcer's work set. */
     virtual void EraseForPeer(NodeId peer) = 0;
 
     /** Erase all orphans included in or invalidated by a new block */
