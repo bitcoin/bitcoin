@@ -5,12 +5,17 @@
 #ifndef BITCOIN_KERNEL_NOTIFICATIONS_INTERFACE_H
 #define BITCOIN_KERNEL_NOTIFICATIONS_INTERFACE_H
 
+#include <attributes.h>
+#include <util/expected.h>
+#include <util/translation.h>
+
 #include <cstdint>
+#include <string>
+#include <utility>
 #include <variant>
 
 class CBlockIndex;
 enum class SynchronizationState;
-struct bilingual_str;
 
 namespace kernel {
 
@@ -60,6 +65,45 @@ public:
     //! causing more errors.
     virtual void fatalError(const bilingual_str& message) {}
 };
+
+//! A fatal error notification that has already been raised.
+//!
+//! A FatalError can only be created through Raise(), which fires the
+//! fatalError notification. Holding a FatalError therefore denotes that
+//! the notification has already fired and must not be fired again while the
+//! error is propagated.
+class FatalError
+{
+public:
+    //! Fire the fatalError notification and return the error for propagation
+    //! through util::Expected.
+    [[nodiscard]] static util::Unexpected<FatalError> Raise(Notifications& notifications, bilingual_str message)
+    {
+        notifications.fatalError(message);
+        return util::Unexpected{FatalError{std::move(message.original)}};
+    }
+
+    FatalError(FatalError&&) = default;
+    FatalError& operator=(FatalError&&) = default;
+    FatalError(const FatalError&) = delete;
+    FatalError& operator=(const FatalError&) = delete;
+
+    //! The untranslated error message for logging.
+    const std::string& message() const LIFETIMEBOUND { return m_message; }
+
+    //! Replace the caller-facing diagnostic without raising another notification.
+    FatalError ReplaceMessage(std::string message) &&
+    {
+        m_message = std::move(message);
+        return std::move(*this);
+    }
+
+private:
+    explicit FatalError(std::string message) : m_message{std::move(message)} {}
+
+    std::string m_message;
+};
+
 } // namespace kernel
 
 #endif // BITCOIN_KERNEL_NOTIFICATIONS_INTERFACE_H
