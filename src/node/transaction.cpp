@@ -43,6 +43,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     Txid txid = tx->GetHash();
     Wtxid wtxid = tx->GetWitnessHash();
     bool callback_set = false;
+    bool added_to_mempool = false;
 
     {
         LOCK(cs_main);
@@ -85,6 +86,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
 
             switch (broadcast_method) {
             case TxBroadcast::MEMPOOL_NO_BROADCAST:
+            case TxBroadcast::MEMPOOL_AND_BROADCAST_ADDED:
             case TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL:
                 // Try to submit the transaction to the mempool.
                 {
@@ -95,8 +97,9 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
                     }
                 }
                 // Transaction was accepted to the mempool.
+                added_to_mempool = true;
 
-                if (broadcast_method == TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL) {
+                if (broadcast_method != TxBroadcast::MEMPOOL_NO_BROADCAST) {
                     // the mempool tracks locally submitted transactions to make a
                     // best-effort of initial broadcast
                     node.mempool->AddUnbroadcastTx(txid);
@@ -131,6 +134,11 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         break;
     case TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL:
         node.peerman->InitiateTxBroadcastToAll(wtxid);
+        break;
+    case TxBroadcast::MEMPOOL_AND_BROADCAST_ADDED:
+        if (added_to_mempool) {
+            node.peerman->InitiateTxBroadcastToAll(wtxid);
+        }
         break;
     case TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST:
         return node.peerman->InitiateTxBroadcastPrivate(tx);

@@ -1846,6 +1846,9 @@ bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
 
     const char* what{""};
     switch (broadcast_method) {
+    case node::TxBroadcast::MEMPOOL_AND_BROADCAST_ADDED:
+        what = "to mempool and for broadcast of added txs to peers";
+        break;
     case node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL:
         what = "to mempool and for broadcast to peers";
         break;
