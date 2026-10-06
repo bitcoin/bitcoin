@@ -37,6 +37,8 @@ inline const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqq
 
 std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cchain, const CKey& key);
 
+void AddKey(CWallet& wallet, const CKey& key);
+
 std::shared_ptr<CWallet> TestCreateWallet(WalletContext& context);
 std::shared_ptr<CWallet> TestCreateWallet(std::unique_ptr<WalletDatabase> database, WalletContext& context, uint64_t create_flags);
 std::shared_ptr<CWallet> TestLoadWallet(WalletContext& context);

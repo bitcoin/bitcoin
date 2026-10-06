@@ -30,15 +30,8 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
         LOCK(wallet->cs_wallet);
         wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
         wallet->SetupDescriptorScriptPubKeyMans();
-
-        FlatSigningProvider provider;
-        std::string error;
-        auto descs = Parse("combo(" + EncodeSecret(key) + ")", provider, error, /* require_checksum=*/ false);
-        assert(descs.size() == 1);
-        auto& desc = descs.at(0);
-        WalletDescriptor w_desc(std::move(desc), 0, 0, 1, 1);
-        Assert(wallet->AddWalletDescriptor(w_desc, provider, "", false));
     }
+    AddKey(*wallet, key);
     WalletRescanReserver reserver(*wallet);
     reserver.reserve();
     ScanResult result = wallet->Scanner().Scan(cchain.Genesis()->GetBlockHash(), /*start_height=*/0, /*max_height=*/{}, reserver, /*save_progress=*/false);
@@ -47,6 +40,18 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
     assert(*result.last_scanned_height == cchain.Height());
     assert(result.last_failed_block.IsNull());
     return wallet;
+}
+
+void AddKey(CWallet& wallet, const CKey& key)
+{
+    LOCK(wallet.cs_wallet);
+    FlatSigningProvider provider;
+    std::string error;
+    auto descs = Parse("combo(" + EncodeSecret(key) + ")", provider, error, /* require_checksum=*/ false);
+    assert(descs.size() == 1);
+    auto& desc = descs.at(0);
+    WalletDescriptor w_desc(std::move(desc), /*creation_time=*/0, /*range_start=*/0, /*range_end=*/1, /*next_index=*/1);
+    Assert(wallet.AddWalletDescriptor(w_desc, provider, /*label=*/"", /*internal=*/false));
 }
 
 std::shared_ptr<CWallet> TestCreateWallet(std::unique_ptr<WalletDatabase> database, WalletContext& context, uint64_t create_flags)
