@@ -23,9 +23,12 @@ static void CheckMaxWeightComputation(const std::string& script_str, const std::
     CScript script(script_data.begin(), script_data.end());
     CTxIn input(Txid{}, 0, script);
 
+    std::vector<std::vector<unsigned char>> stack;
+    stack.reserve(witness_str_stack.size());
     for (const auto& s : witness_str_stack) {
-        input.scriptWitness.stack.push_back(ParseHex(s));
+        stack.push_back(ParseHex(s));
     }
+    input.scriptWitness = CScriptWitness{stack};
 
     std::vector prevout_script_data(ParseHex(prevout_script_str));
     CScript prevout_script(prevout_script_data.begin(), prevout_script_data.end());

@@ -1018,12 +1018,12 @@ CScript ScriptPubKey(MsCtx ctx, const CScript& script, TaprootBuilder& builder)
 }
 
 //! Fill the witness with the data additional to the script satisfaction.
-void SatisfactionToWitness(MsCtx ctx, CScriptWitness& witness, const CScript& script, TaprootBuilder& builder) {
+void SatisfactionToWitness(MsCtx ctx, std::vector<std::vector<unsigned char>>& stack, const CScript& script, TaprootBuilder& builder) {
     // For P2WSH, it's only the witness script.
-    witness.stack.emplace_back(script.begin(), script.end());
+    stack.emplace_back(script.begin(), script.end());
     if (!miniscript::IsTapscript(ctx)) return;
     // For Tapscript we also need the control block.
-    witness.stack.push_back(*builder.GetSpendData().scripts.begin()->second.begin());
+    stack.push_back(*builder.GetSpendData().scripts.begin()->second.begin());
 }
 
 /** Perform various applicable tests on a miniscript Node. */
@@ -1064,7 +1064,7 @@ void TestNode(const MsCtx script_ctx, const std::optional<Node>& node, FuzzedDat
 
     // Optionally pad the script or the witness in order to increase the sensitivity of the tests of
     // the resources limits logic.
-    CScriptWitness witness_mal, witness_nonmal;
+    std::vector<std::vector<unsigned char>> witness_mal, witness_nonmal;
     if (provider.ConsumeBool()) {
         // Under P2WSH, optionally pad the script with OP_NOPs to max op the ops limit of the constructed script.
         // This makes the script obviously not actually miniscript-compatible anymore, but the
@@ -1089,8 +1089,8 @@ void TestNode(const MsCtx script_ctx, const std::optional<Node>& node, FuzzedDat
         const auto node_exec_ss{node->GetExecStackSize()};
         if (miniscript::IsTapscript(script_ctx) && node_exec_ss && *node_exec_ss < MAX_STACK_SIZE) {
             unsigned add{(unsigned)MAX_STACK_SIZE - *node_exec_ss};
-            witness_mal.stack.resize(add);
-            witness_nonmal.stack.resize(add);
+            witness_mal.resize(add);
+            witness_nonmal.resize(add);
             script.reserve(add);
             for (unsigned i = 0; i < add; ++i) script.push_back(OP_NIP);
         }
@@ -1124,10 +1124,11 @@ void TestNode(const MsCtx script_ctx, const std::optional<Node>& node, FuzzedDat
         assert(wit_size <= *node->GetWitnessSize());
 
         // Test non-malleable satisfaction.
-        witness_nonmal.stack.insert(witness_nonmal.stack.end(), std::make_move_iterator(stack_nonmal.begin()), std::make_move_iterator(stack_nonmal.end()));
+        witness_nonmal.insert(witness_nonmal.end(), std::make_move_iterator(stack_nonmal.begin()), std::make_move_iterator(stack_nonmal.end()));
         SatisfactionToWitness(script_ctx, witness_nonmal, script, builder);
         ScriptError serror;
-        bool res = VerifyScript(DUMMY_SCRIPTSIG, script_pubkey, &witness_nonmal, STANDARD_SCRIPT_VERIFY_FLAGS, CHECKER_CTX, &serror);
+        const CScriptWitness witness{witness_nonmal};
+        bool res = VerifyScript(DUMMY_SCRIPTSIG, script_pubkey, &witness, STANDARD_SCRIPT_VERIFY_FLAGS, CHECKER_CTX, &serror);
         // Non-malleable satisfactions are guaranteed to be valid if ValidSatisfactions().
         if (node->ValidSatisfactions()) assert(res);
         // More detailed: non-malleable satisfactions must be valid, or could fail with ops count error (if CheckOpsLimit failed),
@@ -1139,10 +1140,11 @@ void TestNode(const MsCtx script_ctx, const std::optional<Node>& node, FuzzedDat
 
     if (mal_success && (!nonmal_success || witness_mal != witness_nonmal)) {
         // Test malleable satisfaction only if it's different from the non-malleable one.
-        witness_mal.stack.insert(witness_mal.stack.end(), std::make_move_iterator(stack_mal.begin()), std::make_move_iterator(stack_mal.end()));
+        witness_mal.insert(witness_mal.end(), std::make_move_iterator(stack_mal.begin()), std::make_move_iterator(stack_mal.end()));
         SatisfactionToWitness(script_ctx, witness_mal, script, builder);
         ScriptError serror;
-        bool res = VerifyScript(DUMMY_SCRIPTSIG, script_pubkey, &witness_mal, STANDARD_SCRIPT_VERIFY_FLAGS, CHECKER_CTX, &serror);
+        const CScriptWitness witness{witness_mal};
+        bool res = VerifyScript(DUMMY_SCRIPTSIG, script_pubkey, &witness, STANDARD_SCRIPT_VERIFY_FLAGS, CHECKER_CTX, &serror);
         // Malleable satisfactions are not guaranteed to be valid under any conditions, but they can only
         // fail due to stack or ops limits.
         assert(res || serror == ScriptError::SCRIPT_ERR_OP_COUNT || serror == ScriptError::SCRIPT_ERR_STACK_SIZE);
