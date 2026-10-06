@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
+import ipaddress
 from pathlib import Path
 import os
 import shlex
@@ -32,8 +33,21 @@ def main():
     # they will not be passed on.
     settings.update([
         "BASE_BUILD_DIR",
+        "BIND_TEST_ROUTABLE_IPV4",
+        "BIND_TEST_ROUTABLE_IPV6",
         "CI_FAILFAST_TEST_LEAVE_DANGLING",
     ])
+
+    ci_idx = sorted(path.name for path in Path(__file__).parent.glob("00_setup_env_*.sh")).index(Path(os.environ["FILE_ENV"]).name)
+    subnet_id = ci_idx % 256
+    ip4_subnet = ipaddress.IPv4Network(f"11.11.{subnet_id}.0/24")
+    ip4_addr = ip4_subnet[5]
+    ip6_subnet = ipaddress.IPv6Network(f"1111:1111:{subnet_id:x}::/112")
+    ip6_addr = ip6_subnet[5]
+
+    if not os.getenv("DANGER_RUN_CI_ON_HOST"):
+        os.environ["BIND_TEST_ROUTABLE_IPV4"] = str(ip4_addr)
+        os.environ["BIND_TEST_ROUTABLE_IPV6"] = str(ip6_addr)
 
     # Append $USER to /tmp/env to support multi-user systems and $CONTAINER_NAME
     # to allow support starting multiple runs simultaneously by the same user.
@@ -114,8 +128,8 @@ def main():
                 sys.exit(1)
             CI_CCACHE_MOUNT = f"type=bind,src={os.environ['CCACHE_DIR']},dst={os.environ['CCACHE_DIR']}"
 
-        run(["docker", "network", "create", "--ipv6", "--subnet", "1111:1111::/112", "ci-ip6net"], check=False)
-        run(["docker", "network", "create", "--subnet", "1.1.1.0/24", "ci-ip4net"], check=False)
+        network_name = f"{os.environ['CONTAINER_NAME']}-net"
+        run(["docker", "network", "create", "--ipv6", f"--subnet={ip6_subnet}", f"--subnet={ip4_subnet}", network_name])
 
         if os.getenv("RESTART_CI_DOCKER_BEFORE_RUN"):
             print("Restart docker before run to stop and clear all containers started with --rm")
@@ -144,8 +158,9 @@ def main():
             *CI_BUILD_MOUNT,
             f"--env-file={env_file}",
             f"--name={os.environ['CONTAINER_NAME']}",
-            "--network=ci-ip6net",
-            "--ip6=1111:1111::5", # Used by some of the tests, don't change it just here (keep them in sync).
+            f"--network={network_name}",
+            f"--ip={ip4_addr}",
+            f"--ip6={ip6_addr}",
             f"--platform={os.environ['CI_IMAGE_PLATFORM']}",
             os.environ["CONTAINER_NAME"],
         ]
@@ -155,8 +170,6 @@ def main():
             stdout=subprocess.PIPE,
             text=True,
         ).stdout.strip()
-
-        run(["docker", "network", "connect", "--ip=1.1.1.5", "ci-ip4net", container_id]) # The IP address is used by some of the tests, don't change it just here (keep them in sync).
 
     def ci_exec(cmd_inner, **kwargs):
         if os.getenv("DANGER_RUN_CI_ON_HOST"):
@@ -199,6 +212,7 @@ def main():
     if not os.getenv("DANGER_RUN_CI_ON_HOST"):
         print("Stop and remove CI container by ID")
         run(["docker", "container", "kill", container_id])
+        run(["docker", "network", "rm", network_name])
 
 
 if __name__ == "__main__":

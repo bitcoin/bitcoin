@@ -6,6 +6,8 @@
 Test that -discover does not add all interfaces' addresses if we listen on only some of them
 """
 
+import os
+
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
 from test_framework.test_node import (
     FailedToStartError,
@@ -29,8 +31,8 @@ from test_framework.util import (
 # FreeBSD and MacOS:
 # ifconfig INTERFACE_NAME 1.1.1.5/32 alias && ifconfig INTERFACE_NAME inet6 1111:1111::5/128 alias  # to set up
 # ifconfig INTERFACE_NAME 1.1.1.5 -alias && ifconfig INTERFACE_NAME inet6 1111:1111::5 -alias       # to remove it, after the test
-ADDR1 = '1.1.1.5' # This and the address below are set in the CI environment, don't change it just here (keep them in sync).
-ADDR2 = '1111:1111::5'
+ADDR1 = os.getenv("BIND_TEST_ROUTABLE_IPV4", "1.1.1.5")
+ADDR2 = os.getenv("BIND_TEST_ROUTABLE_IPV6", "1111:1111::5")
 
 class BindPortDiscoverTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -75,9 +77,9 @@ class BindPortDiscoverTest(BitcoinTestFramework):
             self.cleanup_partially_started_nodes()
             if 'Unable to bind to ' in str(e):
                 raise SkipTest(
-                    f'To run this test make sure that {ADDR1} and {ADDR2} '
-                    '(routable addresses) are assigned to non-loopback '
-                    'interfaces on this machine')
+                    "To run this test, set BIND_TEST_ROUTABLE_IPV4 and "
+                    "BIND_TEST_ROUTABLE_IPV6 to addresses assigned to non-loopback "
+                    f"interfaces on this machine (currently {ADDR1} and {ADDR2}).")
             raise
 
     def run_test(self):
