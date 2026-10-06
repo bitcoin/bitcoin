@@ -12,10 +12,10 @@
 #include <serialize.h>
 #include <span.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/hash_type.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <ios>
@@ -583,7 +583,7 @@ public:
  *
  *  The stack is stored as its serialization (the CompactSize-encoded number of elements, followed
  *  by each element as a CompactSize-prefixed byte string), in a single allocation. Access by index
- *  is O(n) in the position from the bottom of the stack.
+ *  is O(n) in the position from the bottom of the stack, except for the last element.
  */
 class CScriptWitness
 {
@@ -591,20 +591,21 @@ class CScriptWitness
      *  serialization. For example, the stack {{0xaa}, {}, {0xbb, 0xcc}} is stored as (bytes in
      *  hex):
      *
-     *    |<- header -->|<--------- serialization ---------->|
-     *                    0      1         3      4   (offsets within the serialization)
-     *    +-------------+------+---------+------+------------+
-     *    | 07 00 00 00 | 03   | 01 aa   | 00   | 02 bb cc   |
-     *    +-------------+------+---------+------+------------+
-     *      |             |      |         |      |
-     *      |             |      |         |      element 2
-     *      |             |      |         element 1 (empty)
-     *      |             |      element 0: its size (CompactSize), then its bytes
-     *      |             number of elements (CompactSize)
+     *    |<-------- header --------->|<--------- serialization ---------->|
+     *                                  0      1         3      4   (offsets within the serialization)
+     *    +-------------+-------------+------+---------+------+------------+
+     *    | 07 00 00 00 | 04 00 00 00 | 03   | 01 aa   | 00   | 02 bb cc   |
+     *    +-------------+-------------+------+---------+------+------------+
+     *      |             |             |      |         |      |
+     *      |             |             |      |         |      element 2 (the last element)
+     *      |             |             |      |         element 1 (empty)
+     *      |             |             |      element 0: its size (CompactSize), then its bytes
+     *      |             |             number of elements (CompactSize)
+     *      |             offset of the last element's size prefix (4 bytes, little endian)
      *      size of the serialization (4 bytes, little endian)
      */
     std::unique_ptr<std::byte[]> m_data;
-    static constexpr size_t HEADER_SIZE{4};
+    static constexpr size_t HEADER_SIZE{8};
 
     /** The serialization of the stack. For an empty stack that is a single zero byte, stored outside
      *  m_data. */
@@ -614,9 +615,10 @@ class CScriptWitness
         if (!m_data) return EMPTY_SERIALIZATION;
         return {m_data.get() + HEADER_SIZE, ReadLE32(m_data.get())};
     }
-    /** Allocate m_data for a non-empty stack whose serialization has the given size, and write the
-     *  header. Returns where the serialization goes, which the caller must fill. */
-    std::span<std::byte> Allocate(uint64_t size) LIFETIMEBOUND;
+    /** Allocate m_data for a non-empty stack whose serialization has the given size, and whose last
+     *  element's size prefix is at last_offset within it, and write the header. Returns where the
+     *  serialization goes, which the caller must fill. */
+    std::span<std::byte> Allocate(uint64_t size, uint64_t last_offset) LIFETIMEBOUND;
 
 public:
     /** Forward iterator over the elements of the stack, exposing them as spans. */
@@ -689,10 +691,16 @@ public:
     }
     /** The first (bottom) element. The stack must not be empty. */
     std::span<const unsigned char> front() const noexcept LIFETIMEBOUND { return *begin(); }
-    /** The last (top) element. This is O(n). The stack must not be empty. */
-    std::span<const unsigned char> back() const noexcept LIFETIMEBOUND { return (*this)[size() - 1]; }
-    /** The element at a given index (from the bottom), which must exist. This is O(index), so avoid it in loops over
-     *  the elements; iterate instead. */
+    /** The last (top) element. The stack must not be empty. */
+    std::span<const unsigned char> back() const noexcept LIFETIMEBOUND
+    {
+        Assume(m_data);
+        auto data = Data().subspan(ReadLE32(m_data.get() + 4));
+        const auto len = DecodeCompactSizeUnchecked(data);
+        return UCharSpanCast(data.first(len));
+    }
+    /** The element at a given index (from the bottom), which must exist. This is O(index), except for the last
+     *  element, so avoid it in loops over the elements; iterate instead. */
     std::span<const unsigned char> operator[](size_t index) const noexcept LIFETIMEBOUND;
 
     /** The elements, bottom to top, as vectors. For code that needs to modify or take ownership of them (e.g. to
@@ -725,7 +733,10 @@ public:
         // Typical witness stacks fit in this, so that reading them does not reallocate.
         data.reserve(256);
         AppendCompactSize(data, count);
+        size_t last_offset{0};
         for (uint64_t i = 0; i < count; ++i) {
+            // The element about to be read (its size prefix) starts here.
+            last_offset = data.size();
             auto len = ReadCompactSize(s);
             AppendCompactSize(data, len);
             while (len > 0) {
@@ -739,7 +750,7 @@ public:
         // Throw a deserialization error (rather than Allocate's std::length_error) if the serialization
         // is too large for the header.
         if (data.size() > std::numeric_limits<uint32_t>::max() - HEADER_SIZE) throw std::ios_base::failure("Witness stack too large");
-        std::ranges::copy(data, Allocate(data.size()).begin());
+        std::ranges::copy(data, Allocate(data.size(), last_offset).begin());
     }
 
     std::string ToString() const;
