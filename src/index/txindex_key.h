@@ -37,7 +37,6 @@ constexpr uint8_t DB_TXINDEX{'t'};
 
 using block_seq::BLOCK_HEADER_SIZE;
 using block_seq::BlockTxPosition;
-using block_seq::DB_NEXT_BLOCK_SEQ;
 using block_seq::EMPTY_VALUE;
 using BlockSeqKey = block_seq::BlockSeqKey<DB_BLOCK_SEQ>;
 using BlockHashKey = block_seq::BlockHashKey<DB_BLOCK_HASH>;

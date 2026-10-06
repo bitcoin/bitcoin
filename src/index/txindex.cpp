@@ -10,13 +10,13 @@
 #include <dbwrapper.h>
 #include <flatfile.h>
 #include <index/base.h>
+#include <index/block_seq.h>
 #include <index/disktxpos.h>
 #include <index/txindex_key.h>
 #include <interfaces/chain.h>
 #include <node/blockstorage.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <random.h>
 #include <serialize.h>
 #include <streams.h>
 #include <sync.h>
@@ -39,19 +39,6 @@
 #include <vector>
 
 std::unique_ptr<TxIndex> g_txindex;
-
-namespace {
-SipHasher13UJ ReadOrCreateTxidHasher(CDBWrapper& db)
-{
-    std::pair<uint64_t, uint64_t> salt;
-    if (!db.Read(txindex::DB_TXID_HASH_SALT, salt)) {
-        FastRandomContext rng{};
-        salt = {rng.rand64(), rng.rand64()};
-        db.Write(txindex::DB_TXID_HASH_SALT, salt, /*fSync=*/true);
-    }
-    return SipHasher13UJ{salt.first, salt.second};
-}
-} // namespace
 
 /** Access to the txindex database (indexes/txindex/) */
 class TxIndex::DB : public BaseIndex::DB
@@ -87,28 +74,23 @@ TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe) :
 TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe, bool has_legacy) :
     BaseIndex::DB(TxIndexDBPath(), n_cache_size, f_memory, f_wipe, /*f_obfuscate=*/false, /*f_bloom=*/has_legacy,
                   /*versioned_locator=*/true),
-    m_hasher{ReadOrCreateTxidHasher(*this)},
+    m_hasher{block_seq::ReadOrCreateHasher(*this, txindex::DB_TXID_HASH_SALT)},
     m_has_legacy{has_legacy}
 {}
 
 void TxIndex::DB::WriteTxs(const interfaces::BlockInfo& block)
 {
+    CDBBatch batch(*this);
     // A block may be submitted again after it was already indexed, e.g. when it
     // reconnects after a reorg or is re-processed after an unclean shutdown. It
     // keeps its original sequence number, so skip it to avoid duplicate entries.
-    if (Exists(txindex::BlockHashKey{block.hash})) return;
+    const auto seq{block_seq::AssignBlockSeq<txindex::DB_BLOCK_SEQ, txindex::DB_BLOCK_HASH>(*this, batch, block.hash)};
+    if (!seq) return;
 
-    uint32_t block_seq{0};
-    Read(txindex::DB_NEXT_BLOCK_SEQ, block_seq);
-
-    CDBBatch batch(*this);
-    batch.Write(txindex::BlockHashKey{block.hash}, block_seq);
-    batch.Write(txindex::BlockSeqKey{block_seq}, block.hash);
-    batch.Write(txindex::DB_NEXT_BLOCK_SEQ, block_seq + 1);
     uint32_t tx_offset_in_block{txindex::BLOCK_HEADER_SIZE + GetSizeOfCompactSize(block.data->vtx.size())};
     for (const auto& tx : block.data->vtx) {
         const txindex::DBKey key{txindex::CreateKeyPrefix(m_hasher, tx->GetHash()),
-                                 txindex::BlockTxPosition{block_seq, tx_offset_in_block}};
+                                 txindex::BlockTxPosition{*seq, tx_offset_in_block}};
         batch.Write(key, txindex::EMPTY_VALUE);
         tx_offset_in_block += tx->ComputeTotalSize();
     }

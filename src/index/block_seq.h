@@ -6,6 +6,8 @@
 #define BITCOIN_INDEX_BLOCK_SEQ_H
 
 #include <consensus/consensus.h>
+#include <crypto/siphash.h>
+#include <dbwrapper.h>
 #include <serialize.h>
 #include <uint256.h>
 
@@ -13,6 +15,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <ios>
+#include <optional>
 #include <string>
 
 namespace block_seq {
@@ -96,6 +99,22 @@ struct HashedPositionKey {
         READWRITE(Using<BigEndianFormatter<HASH_PREFIX_SIZE>>(obj.hash_prefix), obj.pos);
     }
 };
+
+SipHasher13UJ ReadOrCreateHasher(CDBWrapper& db, const std::string& salt_key);
+
+template <uint8_t SEQ_PREFIX, uint8_t HASH_PREFIX>
+std::optional<uint32_t> AssignBlockSeq(const CDBWrapper& db, CDBBatch& batch, const uint256& block_hash)
+{
+    if (db.Exists(BlockHashKey<HASH_PREFIX>{block_hash})) return std::nullopt;
+
+    uint32_t seq{0};
+    db.Read(DB_NEXT_BLOCK_SEQ, seq);
+
+    batch.Write(BlockHashKey<HASH_PREFIX>{block_hash}, seq);
+    batch.Write(BlockSeqKey<SEQ_PREFIX>{seq}, block_hash);
+    batch.Write(DB_NEXT_BLOCK_SEQ, seq + 1);
+    return seq;
+}
 
 } // namespace block_seq
 
