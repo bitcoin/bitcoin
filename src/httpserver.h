@@ -499,6 +499,7 @@ public:
     HTTPRemoteClient(const HTTPRemoteClient&) = delete;
     HTTPRemoteClient& operator=(const HTTPRemoteClient&) = delete;
 
+    HTTPServer::Id GetId() const { return m_id; }
     const std::string& GetOrigin() const LIFETIMEBOUND { return m_origin; }
     const CService& GetPeer() const LIFETIMEBOUND { return m_addr; }
     std::shared_ptr<Sock> GetSock() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex) { return WITH_LOCK(m_sock_mutex, return m_sock;); }
@@ -508,7 +509,7 @@ public:
     void Send(const HTTPResponse& res, std::span<const std::byte> reply_body, bool keep_alive) EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex, !m_sock_mutex);
     void Receive() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex);
 
-    bool MaybeDisconnect(std::chrono::time_point<SteadyClock> now, std::chrono::seconds rpcservertimeout, bool disconnect_all);
+    bool ShouldDisconnect(std::chrono::time_point<SteadyClock> now, std::chrono::seconds rpcservertimeout, bool disconnect_all) const;
 
     /**
      * Try to read an HTTPRequest from a client's receive buffer.

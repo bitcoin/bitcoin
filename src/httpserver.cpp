@@ -1150,19 +1150,25 @@ std::unique_ptr<HTTPRequest> HTTPRemoteClient::TryReadRequest(const std::shared_
 void HTTPServer::DisconnectClients()
 {
     const auto now{Now<SteadySeconds>()};
-    size_t erased = std::erase_if(m_connected,
-                                  [&](auto& client) {
-                                      return client->MaybeDisconnect(now,
-                                                                     m_rpcservertimeout,
-                                                                     /*disconnect_all=*/m_disconnect_all_clients);
-                                  });
+    size_t erased = std::erase_if(m_connected, [&](auto& client) {
+        bool disconnect{client->ShouldDisconnect(now,
+                                                 m_rpcservertimeout,
+                                                 /*disconnect_all=*/m_disconnect_all_clients)};
+        if (disconnect) {
+            LogDebug(BCLog::HTTP,
+                "Disconnecting HTTP client %s (id=%llu)",
+                client->GetOrigin(),
+                client->GetId());
+        }
+        return disconnect;
+    });
     if (erased > 0) {
         // Report back to the main thread
         m_connected_size.fetch_sub(erased, std::memory_order_relaxed);
     }
 }
 
-bool HTTPRemoteClient::MaybeDisconnect(std::chrono::time_point<SteadyClock> now, std::chrono::seconds rpcservertimeout, bool disconnect_all)
+bool HTTPRemoteClient::ShouldDisconnect(std::chrono::time_point<SteadyClock> now, std::chrono::seconds rpcservertimeout, bool disconnect_all) const
 {
     // First check for idle timeout. We reset the timer when we send and receive data,
     // but if the server is busy handling a request we should ignore the timeout until
@@ -1202,11 +1208,7 @@ bool HTTPRemoteClient::MaybeDisconnect(std::chrono::time_point<SteadyClock> now,
             return false;
         }
     }
-    // No reason NOT to disconnect, log and remove.
-    LogDebug(BCLog::HTTP,
-             "Disconnecting HTTP client %s (id=%llu)",
-             m_origin,
-             m_id);
+    // No reason NOT to disconnect.
     return true;
 }
 
