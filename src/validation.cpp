@@ -3996,8 +3996,8 @@ void ChainstateManager::UpdateUncommittedBlockStructures(CBlock& block, const CB
     static const std::vector<unsigned char> nonce(32, 0x00);
     if (commitpos != NO_WITNESS_COMMITMENT && DeploymentActiveAfter(pindexPrev, *this, Consensus::DEPLOYMENT_SEGWIT) && !block.vtx[0]->HasWitness()) {
         CMutableTransaction tx(*block.vtx[0]);
-        tx.vin[0].scriptWitness.stack.resize(1);
-        tx.vin[0].scriptWitness.stack[0] = nonce;
+        // The coinbase witness consists of just the witness reserved value.
+        tx.vin[0].scriptWitness = CScriptWitness{{nonce}};
         block.vtx[0] = MakeTransactionRef(std::move(tx));
     }
 }
