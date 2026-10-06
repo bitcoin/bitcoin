@@ -6,8 +6,10 @@
 
 #include <coins.h>
 #include <consensus/consensus.h>
+#include <index/base.h>
 #include <node/block_template_manager.h>
 #include <node/blockstorage.h>
+#include <node/context.h>
 #include <node/mining_types.h>
 #include <test/util/mining.h>
 #include <test/util/script.h>
@@ -134,4 +136,10 @@ std::vector<std::pair<COutPoint, CAmount>> ResetChainmanAndMempool(TestingSetup&
         }
     }
     return mature_coinbase;
+}
+
+void StopIndex(BaseIndex& index, node::NodeContext& node)
+{
+    Assert(node.validation_signals)->SyncWithValidationInterfaceQueue();
+    index.Stop();
 }

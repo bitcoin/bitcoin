@@ -16,6 +16,7 @@
 #include <sync.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
+#include <test/util/validation.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/strencodings.h>
@@ -56,8 +57,7 @@ static void BlockFilterIndexSync(benchmark::Bench& bench)
         assert(summary.synced);
         assert(summary.best_block_hash == WITH_LOCK(::cs_main, return test_setup->m_node.chainman->ActiveTip()->GetBlockHash()));
 
-        // Shutdown sequence (c.f. Shutdown() in init.cpp)
-        filter_index.Stop();
+        StopIndex(filter_index, test_setup->m_node);
     });
 }
 

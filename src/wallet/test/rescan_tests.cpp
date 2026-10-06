@@ -10,6 +10,7 @@
 #include <test/util/common.h>
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
+#include <test/util/validation.h>
 #include <util/byte_units.h>
 #include <util/check.h>
 #include <validation.h>
@@ -256,7 +257,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_reorged_block, TestChain100
         BOOST_CHECK(WITH_LOCK(wallet.cs_wallet, return wallet.mapWallet.empty()));
     }
 
-    filter_index.Stop();
+    StopIndex(filter_index, m_node);
     BOOST_REQUIRE(DestroyBlockFilterIndex(BlockFilterType::BASIC));
 }
 
@@ -543,7 +544,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_missing_filter, TestChain10
         BOOST_CHECK_EQUAL(WITH_LOCK(wallet.cs_wallet, return wallet.mapWallet.size()), static_cast<size_t>(tip_height));
     }
 
-    filter_index.Stop();
+    StopIndex(filter_index, m_node);
     BOOST_REQUIRE(DestroyBlockFilterIndex(BlockFilterType::BASIC));
 }
 
