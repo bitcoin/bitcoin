@@ -1517,7 +1517,6 @@ BOOST_AUTO_TEST_CASE(descriptor_create_multisig_valid)
 
 BOOST_AUTO_TEST_CASE(descriptor_create_multisig_invalid_policy)
 {
-    CheckMultisigError(CreateMultisigDescriptor(2, {MULTISIG_KEY_A, MULTISIG_KEY_B, MULTISIG_KEY_C}, OutputType::BECH32M), "Taproot");
     CheckMultisigError(CreateMultisigDescriptor(2, {MULTISIG_KEY_A, MULTISIG_KEY_B, MULTISIG_KEY_C}, OutputType::LEGACY), "Unsupported address type");
     CheckMultisigError(CreateMultisigDescriptor(2, {MULTISIG_KEY_A, MULTISIG_KEY_B, MULTISIG_KEY_C}, OutputType::P2SH_SEGWIT), "Unsupported address type");
     CheckMultisigError(CreateMultisigDescriptor(2, {MULTISIG_KEY_A, MULTISIG_KEY_B, MULTISIG_KEY_C}, OutputType::UNKNOWN), "Unsupported address type");
@@ -1531,8 +1530,14 @@ BOOST_AUTO_TEST_CASE(descriptor_create_multisig_invalid_policy)
 BOOST_AUTO_TEST_CASE(descriptor_create_multisig_invalid_keys)
 {
     CheckMultisigError(CreateMultisigDescriptor(1, {MULTISIG_KEY_A, MULTISIG_KEY_A}, OutputType::BECH32), "Duplicate");
-    CheckMultisigError(CreateMultisigDescriptor(1, {MULTISIG_KEY_A + "/0", MULTISIG_KEY_B}, OutputType::BECH32), "derivation path");
-    CheckMultisigError(CreateMultisigDescriptor(1, {MULTISIG_KEY_A + "/<0;1>/*", MULTISIG_KEY_B}, OutputType::BECH32), "multipath");
+
+    // Keys carry no derivation or multipath of their own, for either output type
+    for (const OutputType type : {OutputType::BECH32, OutputType::BECH32M}) {
+        CheckMultisigError(CreateMultisigDescriptor(1, {MULTISIG_KEY_A + "/0", MULTISIG_KEY_B}, type), "derivation path");
+        CheckMultisigError(CreateMultisigDescriptor(1, {MULTISIG_KEY_A + "/0/*", MULTISIG_KEY_B}, type), "derivation path");
+        CheckMultisigError(CreateMultisigDescriptor(1, {MULTISIG_KEY_A + "/<0;1>/*", MULTISIG_KEY_B}, type), "multipath");
+    }
+
     CheckMultisigError(CreateMultisigDescriptor(1, {"L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1", MULTISIG_KEY_B}, OutputType::BECH32), "private key");
     CheckMultisigError(CreateMultisigDescriptor(1, {"[6738736c/48h/0h/0h/2h]xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi", MULTISIG_KEY_B}, OutputType::BECH32), "private key");
 }

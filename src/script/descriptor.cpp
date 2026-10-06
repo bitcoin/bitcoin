@@ -3050,11 +3050,13 @@ uint256 CompatDescriptorHash(const Descriptor& desc)
 
 util::Result<std::string> CreateMultisigDescriptor(int threshold, const std::vector<std::string>& keys, OutputType output_type)
 {
+    ParseScriptContext ctx{ParseScriptContext::P2WSH};
     switch (output_type) {
     case OutputType::BECH32:
         break;
     case OutputType::BECH32M:
-        return util::Error{_("Taproot multisig is not yet supported")};
+        ctx = ParseScriptContext::P2TR;
+        break;
     case OutputType::LEGACY:
     case OutputType::P2SH_SEGWIT:
     case OutputType::UNKNOWN:
@@ -3064,11 +3066,7 @@ util::Result<std::string> CreateMultisigDescriptor(int threshold, const std::vec
     if (n < 2) {
         return util::Error{_("A multisig requires at least 2 keys")};
     }
-    if (n > MAX_PUBKEYS_PER_MULTISIG) {
-        return util::Error{strprintf(
-            _("A multisig cannot have more than %d keys, %d were provided"),
-            MAX_PUBKEYS_PER_MULTISIG, n)};
-    }
+
     if (threshold < 1 || threshold > n) {
         return util::Error{strprintf(
             _("The threshold must be between 1 and %d, %d was provided"),
@@ -3085,7 +3083,7 @@ util::Result<std::string> CreateMultisigDescriptor(int threshold, const std::vec
         std::string error;
         std::span<const char> sp{key};
         auto parsed{ParsePubkey(key_exp_index, sp,
-            ParseScriptContext::P2WSH, provider, error)};
+            ctx, provider, error)};
 
         if (parsed.empty()) {
             return util::Error{strprintf(
@@ -3108,6 +3106,9 @@ util::Result<std::string> CreateMultisigDescriptor(int threshold, const std::vec
         // Keys must be bare account xpubs: no multipath and no derivation of their own.
         // Since core has no way of verifying the BIP 388 policy correctness of the descriptor such a key will produce,
         // and we risk rejection from complaint hardware wallets.
+        // For taproot there is a second reason: the keys are also aggregated by musig(),
+        // and derivation before aggregation is not expressible in a wallet policy. Core can
+        // parse such descriptors, but compliant hardware wallets would reject the policy.
         const std::string canonical{parsed[0]->ToString(PubkeyProvider::StringType::CANONICAL)};
 
         if (!canonical.starts_with('[')) {
@@ -3124,11 +3125,16 @@ util::Result<std::string> CreateMultisigDescriptor(int threshold, const std::vec
         canonical_keys.emplace_back(canonical);
     }
 
-    std::string descriptor{"wsh(sortedmulti(" + util::ToString(threshold)};
-    for (const auto& key : canonical_keys) {
-        descriptor += "," + key + "/<0;1>/*";
-    }
-    descriptor += "))";
+    const std::string suffix{"/<0;1>/*"};
+    const bool taproot{output_type == OutputType::BECH32M};
+    std::string script{std::string{taproot ? "sortedmulti_a(" : "sortedmulti("} + util::ToString(threshold)};
+    for (const auto& key : canonical_keys) script += "," + key + suffix;
+    script += ")";
+
+    // Taproot key path: a MuSig2 aggregate of every key in the leaf.
+    const std::string descriptor{taproot
+        ? "tr(musig(" + util::Join(canonical_keys, ",") + ")" + suffix + "," + script + ")"
+        : "wsh(" + script + ")"};
 
     FlatSigningProvider provider;
     std::string error;
