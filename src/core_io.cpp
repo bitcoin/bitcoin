@@ -466,7 +466,7 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
         if (!tx.vin[i].scriptWitness.empty()) {
             UniValue txinwitness(UniValue::VARR);
             txinwitness.reserve(tx.vin[i].scriptWitness.size());
-            for (const auto& item : tx.vin[i].scriptWitness.stack) {
+            for (const auto item : tx.vin[i].scriptWitness) {
                 txinwitness.push_back(HexStr(item));
             }
             in.pushKV("txinwitness", std::move(txinwitness));
