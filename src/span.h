@@ -109,6 +109,5 @@ template <typename T, size_t N> constexpr auto UCharSpanCast(std::span<T, N> s) 
 
 /** Like the std::span constructor, but for (const) unsigned char member types only. Only works for (un)signed char containers. */
 template <typename V> constexpr auto MakeUCharSpan(const V& v) -> decltype(UCharSpanCast(std::span{v})) { return UCharSpanCast(std::span{v}); }
-template <typename V> constexpr auto MakeWritableUCharSpan(V&& v) -> decltype(UCharSpanCast(std::span{std::forward<V>(v)})) { return UCharSpanCast(std::span{std::forward<V>(v)}); }
 
 #endif // BITCOIN_SPAN_H
