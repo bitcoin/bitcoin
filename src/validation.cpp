@@ -2850,30 +2850,9 @@ bool Chainstate::FlushStateToDisk(
             if (!CheckDiskSpace(m_blockman.m_opts.blocks_dir)) {
                 return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
             }
-            {
-                LOG_TIME_MILLIS_WITH_CATEGORY("write block and undo data to disk", BCLog::BENCH);
-
-                // First make sure all block and undo data is flushed to disk.
-                if (!m_blockman.FlushChainstateBlockFile(m_chain.Height())) {
-                    // FlushChainstateBlockFile() already reported the specific error through flushError()
-                    return state.Error("Failed to flush block or undo file");
-                }
-            }
-
-            // Take the pruned files with the dirty entries, which WriteBlockIndexDB() drops
-            // even if it fails, so files are only deleted after the write that marks them pruned.
-            const auto files_to_unlink{std::exchange(m_blockman.m_files_to_unlink, {})};
-            // Then update all block file information (which may refer to block and undo files).
-            {
-                LOG_TIME_MILLIS_WITH_CATEGORY("write block index to disk", BCLog::BENCH);
-
-                m_blockman.WriteBlockIndexDB();
-            }
-            // Finally remove any pruned files
-            if (!files_to_unlink.empty()) {
-                LOG_TIME_MILLIS_WITH_CATEGORY("unlink pruned files", BCLog::BENCH);
-
-                m_blockman.UnlinkPrunedFiles(files_to_unlink);
+            if (!m_blockman.WriteBlockStorage(m_chain.Height())) {
+                // WriteBlockStorage() already reported the specific error through flushError()
+                return state.Error("Failed to flush block or undo file");
             }
 
             if (!CoinsTip().GetBestBlock().IsNull()) {

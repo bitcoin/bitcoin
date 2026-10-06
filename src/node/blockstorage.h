@@ -359,6 +359,12 @@ public:
     std::unique_ptr<BlockTreeDB> m_block_tree_db GUARDED_BY(::cs_main);
 
     void WriteBlockIndexDB() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    /**
+     * Flush the block and undo file for `tip_height`, write the block index,
+     * then delete the pruned files. Returns false, without writing the index or
+     * deleting files, if the flush fails.
+     */
+    [[nodiscard]] bool WriteBlockStorage(int tip_height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool LoadBlockIndexDB(const std::optional<uint256>& snapshot_blockhash)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
