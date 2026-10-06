@@ -1283,7 +1283,7 @@ static RPCMethod decodepsbt()
         }
         if (!input.final_script_witness.empty()) {
             UniValue txinwitness(UniValue::VARR);
-            for (const auto& item : input.final_script_witness.stack) {
+            for (const auto item : input.final_script_witness) {
                 txinwitness.push_back(HexStr(item));
             }
             in.pushKV("final_scriptwitness", std::move(txinwitness));
