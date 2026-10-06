@@ -71,7 +71,9 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
             error.original == "Bad page size" ||
             error.original == "Meta page number mismatch" ||
             error.original == "Data record position not in page" ||
+            error.original == "Data records exceed page size" ||
             error.original == "Internal record position not in page" ||
+            error.original == "Internal records exceed page size" ||
             error.original == "LSNs are not reset, this database is not completely flushed. Please reopen then close the database with a version that has BDB support" ||
             error.original == "Records page has odd number of records" ||
             error.original == "Bad overflow record page type" ||

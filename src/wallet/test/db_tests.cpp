@@ -341,11 +341,13 @@ public:
     void Index(uint32_t page, uint32_t i, uint32_t off) { WLE(page, HEADER_BYTES + 2 * i, off, 2); }
 
     //! Internal page record with a key of key_len bytes, pointing at child
-    void InternalRecord(uint32_t page, uint32_t off, uint32_t key_len, uint32_t child)
+    void InternalRecord(uint32_t page, uint32_t off, uint32_t key_len, uint32_t child, bool deleted = false)
     {
-        WLE(page, off, key_len, 2);     // len
-        W8(page, off + 2, REC_KEYDATA); // type
-        WLE(page, off + 4, child, 4);   // page_num
+        uint8_t type{REC_KEYDATA};
+        if (deleted) type |= REC_DELETE_FLAG;
+        WLE(page, off, key_len, 2);   // len
+        W8(page, off + 2, type);      // type
+        WLE(page, off + 4, child, 4); // page_num
     }
 
     //! Data record of len bytes, all set to fill
@@ -383,6 +385,7 @@ public:
 private:
     static constexpr uint8_t REC_KEYDATA{1};
     static constexpr uint8_t REC_OVERFLOW{3};
+    static constexpr uint8_t REC_DELETE_FLAG{0x80};
 
     std::vector<std::byte> m_bytes;
 
@@ -495,6 +498,66 @@ BOOST_AUTO_TEST_CASE(bdbro_overflow_chain_shared_by_records)
     builder.OverflowPage(4, /*data_len=*/1, /*next_page=*/0);
 
     CheckRejected(builder, m_path_root / "overflow_chain_shared.dat", "Overflow page referenced more than once");
+}
+
+BOOST_AUTO_TEST_CASE(bdbro_page_records_do_not_fit)
+{
+    // Leaf page whose entries all point at the same record
+    const uint32_t entries{40};
+    const uint32_t record_off{BDBFileBuilder::HEADER_BYTES + 2 * entries};
+
+    BDBFileBuilder builder(/*num_pages=*/4);
+    builder.Header(3, BDBFileBuilder::PAGE_LEAF, /*level=*/1, entries);
+    for (uint32_t i{0}; i < entries; ++i) {
+        builder.Index(3, i, record_off);
+    }
+    builder.DataRecord(3, record_off, /*len=*/20, /*fill=*/0);
+
+    CheckRejected(builder, m_path_root / "leaf_records.dat", "Data records exceed page size");
+}
+
+BOOST_AUTO_TEST_CASE(bdbro_internal_page_records_do_not_fit)
+{
+    // Internal page whose entries all point at the same deleted record, so no child is visited
+    const uint32_t entries{40};
+    const uint32_t record_off{BDBFileBuilder::HEADER_BYTES + 2 * entries};
+
+    BDBFileBuilder builder(/*num_pages=*/5);
+    builder.Header(3, BDBFileBuilder::PAGE_INTERNAL, /*level=*/2, entries);
+    for (uint32_t i{0}; i < entries; ++i) {
+        builder.Index(3, i, record_off);
+    }
+    builder.InternalRecord(3, record_off, /*key_len=*/1, /*child=*/4, /*deleted=*/true);
+    builder.Header(4, BDBFileBuilder::PAGE_LEAF, /*level=*/1, /*entries=*/0);
+
+    CheckRejected(builder, m_path_root / "internal_records.dat", "Internal records exceed page size");
+}
+
+BOOST_AUTO_TEST_CASE(bdbro_full_page_parses)
+{
+    // Leaf page filled up to its last byte with distinct records still parses
+    const uint32_t entries{20};
+
+    BDBFileBuilder builder(/*num_pages=*/4);
+    builder.Header(3, BDBFileBuilder::PAGE_LEAF, /*level=*/1, entries);
+    uint32_t off{BDBFileBuilder::HEADER_BYTES + 2 * entries};
+    for (uint32_t i{0}; i < entries; ++i) {
+        // The last record takes the remaining space
+        const uint32_t len{i + 1 == entries ? BDBFileBuilder::PAGE_BYTES - off - 3 : 19};
+        builder.Index(3, i, off);
+        builder.DataRecord(3, off, len, /*fill=*/i);
+        off += 3 + len;
+    }
+    BOOST_REQUIRE_EQUAL(off, BDBFileBuilder::PAGE_BYTES);
+
+    const fs::path path{m_path_root / "full_page.dat"};
+    builder.WriteTo(path);
+    DatabaseOptions options;
+    DatabaseStatus status;
+    bilingual_str error;
+    const auto db{MakeBerkeleyRODatabase(path, options, status, error)};
+    BOOST_REQUIRE_MESSAGE(db, error.original);
+    BOOST_CHECK_EQUAL(db->m_records.size(), entries / 2U);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
