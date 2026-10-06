@@ -37,7 +37,6 @@ constexpr uint8_t DB_BLOCK_SEQ{'s'};
 constexpr uint8_t DB_BLOCK_HASH{'h'};
 inline const std::string DB_NEXT_BLOCK_SEQ{"next_block_seq"};
 inline const std::string DB_TXID_HASH_SALT{"txid_hash_salt"};
-inline const std::string DB_BEST_BLOCK_V2{"best_block_v2"};
 //! Prefix of a legacy (pre-hashing) txindex row.
 constexpr uint8_t DB_TXINDEX{'t'};
 

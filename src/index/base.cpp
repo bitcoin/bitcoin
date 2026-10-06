@@ -45,6 +45,7 @@
 using kernel::ChainstateRole;
 
 constexpr uint8_t DB_BEST_BLOCK{'B'};
+const std::string DB_BEST_BLOCK_V2{"best_block_v2"};
 
 constexpr auto SYNC_LOG_INTERVAL{30s};
 constexpr auto SYNC_LOCATOR_WRITE_INTERVAL{30s};
@@ -65,7 +66,8 @@ CBlockLocator GetLocator(interfaces::Chain& chain, const uint256& block_hash)
     return locator;
 }
 
-BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool f_wipe, bool f_obfuscate, bool f_bloom) :
+BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool f_wipe, bool f_obfuscate, bool f_bloom,
+                  bool versioned_locator) :
     CDBWrapper{DBParams{
         .path = path,
         .cache_bytes = n_cache_size,
@@ -73,13 +75,18 @@ BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool
         .wipe_data = f_wipe,
         .obfuscate = f_obfuscate,
         .bloom_filter = f_bloom,
-        .options = [] { DBOptions options; node::ReadDatabaseArgs(gArgs, options); return options; }()}}
+        .options = [] { DBOptions options; node::ReadDatabaseArgs(gArgs, options); return options; }()}},
+    m_versioned_locator{versioned_locator}
 {}
 
 CBlockLocator BaseIndex::DB::ReadBestBlock() const
 {
     CBlockLocator locator;
+    if (m_versioned_locator && Read(DB_BEST_BLOCK_V2, locator)) {
+        return locator;
+    }
 
+    // If there is no versioned locator yet, resume from the legacy one.
     bool success = Read(DB_BEST_BLOCK, locator);
     if (!success) {
         locator.SetNull();
@@ -90,7 +97,11 @@ CBlockLocator BaseIndex::DB::ReadBestBlock() const
 
 void BaseIndex::DB::WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator)
 {
-    batch.Write(DB_BEST_BLOCK, locator);
+    if (m_versioned_locator) {
+        batch.Write(DB_BEST_BLOCK_V2, locator);
+    } else {
+        batch.Write(DB_BEST_BLOCK, locator);
+    }
 }
 
 BaseIndex::BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name, std::string thread_name)

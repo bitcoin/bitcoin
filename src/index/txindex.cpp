@@ -68,9 +68,6 @@ public:
     /// Whether the database contains any legacy ('t' + txid) entries.
     const bool m_has_legacy;
 
-    CBlockLocator ReadBestBlock() const override;
-    void WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator) override;
-
 private:
     DB(size_t n_cache_size, bool f_memory, bool f_wipe, bool has_legacy);
 };
@@ -88,25 +85,11 @@ TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe) :
 {}
 
 TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe, bool has_legacy) :
-    BaseIndex::DB(TxIndexDBPath(), n_cache_size, f_memory, f_wipe, /*f_obfuscate=*/false, /*f_bloom=*/has_legacy),
+    BaseIndex::DB(TxIndexDBPath(), n_cache_size, f_memory, f_wipe, /*f_obfuscate=*/false, /*f_bloom=*/has_legacy,
+                  /*versioned_locator=*/true),
     m_hasher{ReadOrCreateTxidHasher(*this)},
     m_has_legacy{has_legacy}
 {}
-
-CBlockLocator TxIndex::DB::ReadBestBlock() const
-{
-    CBlockLocator locator;
-    if (Read(txindex::DB_BEST_BLOCK_V2, locator)) {
-        return locator;
-    }
-    // If we don't have a locator yet, start from the legacy best block.
-    return BaseIndex::DB::ReadBestBlock();
-}
-
-void TxIndex::DB::WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator)
-{
-    batch.Write(txindex::DB_BEST_BLOCK_V2, locator);
-}
 
 void TxIndex::DB::WriteTxs(const interfaces::BlockInfo& block)
 {
