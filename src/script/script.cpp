@@ -8,6 +8,7 @@
 #include <crypto/common.h>
 #include <crypto/hex_base.h>
 #include <hash.h>
+#include <memusage.h>
 #include <uint256.h>
 #include <util/hash_type.h>
 
@@ -295,6 +296,13 @@ std::string CScriptWitness::ToString() const
         ret += HexStr(stack[i]);
     }
     return ret + ")";
+}
+
+size_t CScriptWitness::DynamicMemoryUsage() const noexcept
+{
+    size_t ret{memusage::DynamicUsage(stack)};
+    for (const auto& element : stack) ret += memusage::DynamicUsage(element);
+    return ret;
 }
 
 bool CScript::HasValidOps() const
