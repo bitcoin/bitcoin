@@ -145,12 +145,12 @@ struct TestChain100Setup : public TestingSetup {
         ChainType chain_type = ChainType::REGTEST,
         TestOpts = {});
 
-    /**
-     * Create a new block with just given transactions, coinbase paying to
-     * scriptPubKey, and try to add it to the current chain.
-     */
+    /// Create a new block with just the given transactions, coinbase paying to
+    /// scriptPubKey, and try to add it to the current chain.
+    /// By default, wait for validation-interface notifications to be processed.
     CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns,
-                                 const CScript& scriptPubKey);
+                                 const CScript& scriptPubKey,
+                                 bool sync = true);
 
     /**
      * Create a new block with just given transactions, coinbase paying to
@@ -160,7 +160,8 @@ struct TestChain100Setup : public TestingSetup {
         const std::vector<CMutableTransaction>& txns,
         const CScript& scriptPubKey);
 
-    //! Mine a series of new blocks on the active chain.
+    /// Mine a series of new blocks on the active chain.
+    /// Wait for validation-interface notifications to be processed.
     void mineBlocks(int num_blocks);
 
     /**
