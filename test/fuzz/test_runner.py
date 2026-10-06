@@ -20,14 +20,19 @@ def get_fuzz_env(*, target, source_dir):
     symbolizer = os.environ.get('LLVM_SYMBOLIZER_PATH', "/usr/bin/llvm-symbolizer")
     fuzz_env = os.environ | {
         'FUZZ': target,
-        'UBSAN_OPTIONS':
-        f'suppressions={source_dir}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1',
         'UBSAN_SYMBOLIZER_PATH': symbolizer,
-        "ASAN_OPTIONS": "detect_leaks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1",
         'ASAN_SYMBOLIZER_PATH': symbolizer,
         'MSAN_SYMBOLIZER_PATH': symbolizer,
     }
     return fuzz_env
+
+
+def with_sanitizer_env(command):
+    return [
+        sys.executable,
+        str(Path(os.path.abspath(__file__)).parent.parent / "with_sanitizer_env.py"),
+        *command,
+    ]
 
 
 def main():
@@ -153,10 +158,7 @@ def main():
 
     print("Check if using libFuzzer ... ", end='')
     help_output = subprocess.run(
-        args=[
-            fuzz_bin,
-            '-help=1',
-        ],
+        with_sanitizer_env([fuzz_bin, '-help=1']),
         env=get_fuzz_env(target=test_list_selection[0], source_dir=config['environment']['SRCDIR']),
         check=False,
         stderr=subprocess.PIPE,
@@ -255,7 +257,7 @@ def generate_corpus(*, fuzz_pool, src_dir, fuzz_bin, corpus_dir, targets):
         logging.debug("Command '{}' output:\n'{}'\n".format(
             command,
             subprocess.run(
-                command,
+                with_sanitizer_env(command),
                 env={
                     **t_env,
                     **get_fuzz_env(target=t, source_dir=src_dir),
@@ -313,7 +315,7 @@ def merge_inputs(*, fuzz_pool, corpus, test_list, src_dir, fuzz_bin, merge_dirs)
         def job(t, args):
             output = 'Run {} with args {}\n'.format(t, " ".join(args))
             output += subprocess.run(
-                args,
+                with_sanitizer_env(args),
                 env=get_fuzz_env(target=t, source_dir=src_dir),
                 check=True,
                 stderr=subprocess.PIPE,
@@ -352,7 +354,7 @@ def run_once(*, fuzz_pool, corpus, test_list, src_dir, fuzz_bin, using_libfuzzer
         def job(t, args):
             output = 'Run {} with args {}'.format(t, args)
             result = subprocess.run(
-                args,
+                with_sanitizer_env(args),
                 env=get_fuzz_env(target=t, source_dir=src_dir),
                 stderr=subprocess.PIPE,
                 text=True,
@@ -390,7 +392,7 @@ def run_once(*, fuzz_pool, corpus, test_list, src_dir, fuzz_bin, using_libfuzzer
 
 def parse_test_list(*, fuzz_bin, source_dir):
     test_list_all = subprocess.run(
-        fuzz_bin,
+        with_sanitizer_env([fuzz_bin]),
         env={
             'PRINT_ALL_FUZZ_TARGETS_AND_ABORT': '',
             **get_fuzz_env(target="", source_dir=source_dir)
