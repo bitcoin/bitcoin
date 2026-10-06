@@ -82,12 +82,12 @@ std::vector<CTxOut> TxOutsFromJSON(const UniValue& univalue)
 CScriptWitness ScriptWitnessFromJSON(const UniValue& univalue)
 {
     if (!univalue.isArray()) throw std::runtime_error("Script witness is not array");
-    CScriptWitness scriptwitness;
+    std::vector<std::vector<unsigned char>> stack;
     for (size_t i = 0; i < univalue.size(); ++i) {
         auto bytes = CheckedParseHex(univalue[i].get_str());
-        scriptwitness.stack.push_back(std::move(bytes));
+        stack.push_back(std::move(bytes));
     }
-    return scriptwitness;
+    return CScriptWitness{stack};
 }
 
 const std::map<std::string, script_verify_flag_name> FLAG_NAMES = {

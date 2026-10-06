@@ -175,8 +175,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         CMutableTransaction coinbase;
         coinbase.vin.resize(1);
         if (include_witness) {
-            coinbase.vin[0].scriptWitness.stack.resize(1);
-            coinbase.vin[0].scriptWitness.stack[0] = std::vector<unsigned char>(32, 0x00);
+            coinbase.vin[0].scriptWitness = CScriptWitness{{std::vector<unsigned char>(32, 0x00)}};
         }
 
         coinbase.vout.resize(1);
@@ -312,8 +311,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         {
             CMutableTransaction mtx;
             mtx.vin.resize(1);
-            mtx.vin[0].scriptWitness.stack.resize(1);
-            mtx.vin[0].scriptWitness.stack[0] = {0};
+            mtx.vin[0].scriptWitness = CScriptWitness{{{0}}};
             block.vtx.push_back(MakeTransactionRef(mtx));
         }
         block.hashMerkleRoot = BlockMerkleRoot(block);
@@ -335,7 +333,9 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         {
             CMutableTransaction mtx{*block.vtx[1]};
             assert(!mtx.vin[0].scriptWitness[0].empty());
-            ++mtx.vin[0].scriptWitness.stack[0][0];
+            auto stack = mtx.vin[0].scriptWitness.ToVectors();
+            ++stack[0][0];
+            mtx.vin[0].scriptWitness = CScriptWitness{stack};
             block.vtx[1] = MakeTransactionRef(mtx);
         }
         // Without also updating the witness commitment, the merkle root should
