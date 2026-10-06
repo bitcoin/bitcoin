@@ -424,7 +424,7 @@ NON_SCRIPTS = [
 
 def main():
     # Parse arguments and pass through unrecognised args
-    parser = argparse.ArgumentParser(add_help=False,
+    parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False,
                                      usage='%(prog)s [test_runner.py options] [script options] [scripts]',
                                      description=__doc__,
                                      epilog='''
