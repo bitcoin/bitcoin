@@ -100,6 +100,18 @@ class SendTxRcnclTest(BitcoinTestFramework):
         assert not peer.sendtxrcncl_msg_received
         self.nodes[0].disconnect_p2ps()
 
+        self.log.info('SENDTXRCNCL on lowest WTXID version should be sent')
+        peer = self.nodes[0].add_p2p_connection(SendTxrcnclReceiver(), send_version=False, wait_for_verack=False)
+        wtxid_version_msg = msg_version()
+        wtxid_version_msg.nVersion = 70016
+        wtxid_version_msg.strSubVer = P2P_SUBVERSION
+        wtxid_version_msg.nServices = P2P_SERVICES
+        wtxid_version_msg.relay = 1
+        peer.send_without_ping(wtxid_version_msg)
+        peer.wait_for_verack()
+        assert peer.sendtxrcncl_msg_received
+        self.nodes[0].disconnect_p2ps()
+
         self.log.info('SENDTXRCNCL for fRelay=false should not be sent')
         peer = self.nodes[0].add_p2p_connection(SendTxrcnclReceiver(), send_version=False, wait_for_verack=False)
         no_txrelay_version_msg = msg_version()
