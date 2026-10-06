@@ -645,6 +645,8 @@ void BerkeleyRODatabase::Open()
     // We also track visited pages, since a page with multiple parents would be parsed once per path
     std::vector<std::pair<uint32_t, uint32_t>> pages{{inner_meta.root, root_header.level}};
     std::unordered_set<uint32_t> visited_pages;
+    // Each overflow page belongs to a single record, so track them to reject loops and shared chains
+    std::unordered_set<uint32_t> visited_overflow;
     while (pages.size() > 0) {
         auto [curr_page, expected_level] = pages.back();
         // It turns out BDB completely ignores this last_page field and doesn't actually update it to the correct
@@ -697,6 +699,9 @@ void BerkeleyRODatabase::Open()
                         throw std::runtime_error("Overflow record has an impossible length");
                     }
                     while (next_page != 0) {
+                        if (!visited_overflow.insert(next_page).second) {
+                            throw std::runtime_error("Overflow page referenced more than once");
+                        }
                         SeekToPage(db_file, next_page, page_size);
                         PageHeader opage_header(next_page, inner_meta.other_endian);
                         db_file >> opage_header;
