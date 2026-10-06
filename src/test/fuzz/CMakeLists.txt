@@ -115,6 +115,7 @@ add_executable(fuzz
   script_parsing.cpp
   script_sigcache.cpp
   script_sign.cpp
+  script_witness.cpp
   scriptnum_ops.cpp
   secp256k1_ec_seckey_import_export_der.cpp
   secp256k1_ecdsa_signature_parse_der_lax.cpp
