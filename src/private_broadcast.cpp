@@ -10,10 +10,19 @@
 #include <ranges>
 
 
-PrivateBroadcast::AddResult PrivateBroadcast::Add(const CTransactionRef& tx)
+PrivateBroadcast::AddResult PrivateBroadcast::Add(const CTransactionRef& tx,
+                                                  std::optional<NodeClock::time_point> release_time)
     EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
 {
     LOCK(m_mutex);
+    const auto now{NodeClock::now()};
+    const bool released{!release_time.has_value() || release_time.value() <= now};
+    const auto set_times{[&](TxSendStatus& status) {
+        status.time_added = now;
+        status.release_time = released ? now : release_time.value();
+        status.released = released;
+    }};
+
     // Cleanup finished transactions
     std::erase_if(m_transactions, [this](const auto& entry) {
         const auto& state{entry.second};
@@ -25,7 +34,7 @@ PrivateBroadcast::AddResult PrivateBroadcast::Add(const CTransactionRef& tx)
         if (it->second.send_statuses.size() < m_max_send_attempts) return AddResult::AlreadyPresent;
 
         // A transaction that has reached m_max_send_attempts can be explicitly retried by adding it again.
-        it->second.time_added = NodeClock::now();
+        set_times(it->second);
         it->second.send_statuses.clear();
         it->second.planned_sends = INITIAL_CONNECTION_COUNT;
         it->second.resolved = false;
@@ -34,7 +43,7 @@ PrivateBroadcast::AddResult PrivateBroadcast::Add(const CTransactionRef& tx)
 
     if (m_transactions.size() >= m_max_transactions) return AddResult::QueueFull;
 
-    m_transactions.try_emplace(tx);
+    set_times(m_transactions.try_emplace(tx).first->second);
     return AddResult::Added;
 }
 
@@ -45,6 +54,8 @@ std::optional<size_t> PrivateBroadcast::Remove(const CTransactionRef& tx)
     const auto handle{m_transactions.extract(tx)};
     if (handle) {
         const auto& state{handle.mapped()};
+        // Removed, but no connections are requested for a transaction before being released.
+        if (!state.released) return 0;
         const size_t planned{std::min(state.planned_sends, m_max_send_attempts)};
         const size_t actual{state.send_statuses.size()};
         return planned > actual ? planned - actual : 0;
@@ -57,6 +68,11 @@ bool PrivateBroadcast::MarkResolved(const CTransactionRef& tx)
     LOCK(m_mutex);
     const auto it{m_transactions.find(tx)};
     if (it == m_transactions.end()) return false;
+    if (!it->second.released) {
+        // Not sent yet and no connections are requested for it, so it can be forgotten.
+        m_transactions.erase(it);
+        return true;
+    }
     it->second.resolved = true;
     return true;
 }
@@ -67,6 +83,20 @@ void PrivateBroadcast::NodeDisconnected(NodeId nodeid)
     if (const auto entry{GetSendStatusByNode(nodeid)}) {
         entry->send_status.disconnected = true;
     }
+}
+
+std::vector<CTransactionRef> PrivateBroadcast::ReleaseDue()
+    EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+{
+    LOCK(m_mutex);
+    const auto now{NodeClock::now()};
+    std::vector<CTransactionRef> due;
+    for (auto& [tx, state] : m_transactions) {
+        if (state.released || state.release_time > now) continue;
+        state.released = true;
+        due.push_back(tx);
+    }
+    return due;
 }
 
 bool PrivateBroadcast::TryGrantRetry(const CTransactionRef& tx)
@@ -91,7 +121,7 @@ std::optional<CTransactionRef> PrivateBroadcast::PickTxForSend(const NodeId& wil
         return std::nullopt;
     }
 
-    auto pending_transactions{m_transactions | std::views::filter([this](const auto& entry) { return IsPending(entry.second); })};
+    auto pending_transactions{m_transactions | std::views::filter([this](const auto& entry) { return IsSendable(entry.second); })};
     const auto it{std::ranges::max_element(
             pending_transactions,
             [](const auto& a, const auto& b) { return a < b; },
@@ -131,7 +161,7 @@ bool PrivateBroadcast::HavePendingTransactions()
     EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
 {
     LOCK(m_mutex);
-    return std::ranges::any_of(m_transactions, [this](const auto& entry) { return IsPending(entry.second); });
+    return std::ranges::any_of(m_transactions, [this](const auto& entry) { return IsSendable(entry.second); });
 }
 
 std::vector<CTransactionRef> PrivateBroadcast::GetStale() const
@@ -141,10 +171,10 @@ std::vector<CTransactionRef> PrivateBroadcast::GetStale() const
     const auto now{NodeClock::now()};
     std::vector<CTransactionRef> stale;
     for (const auto& [tx, state] : m_transactions) {
-        if (state.resolved || state.planned_sends >= m_max_send_attempts) continue;
+        if (!state.released || state.resolved || state.planned_sends >= m_max_send_attempts) continue;
         const Priority p{DerivePriority(state.send_statuses)};
         if (p.num_confirmed == 0) {
-            if (state.time_added < now - INITIAL_STALE_DURATION) stale.push_back(tx);
+            if (state.release_time < now - INITIAL_STALE_DURATION) stale.push_back(tx);
         } else {
             if (p.last_confirmed < now - STALE_DURATION) stale.push_back(tx);
         }
@@ -167,7 +197,7 @@ std::vector<PrivateBroadcast::TxBroadcastInfo> PrivateBroadcast::GetBroadcastInf
             peers.emplace_back(PeerSendInfo{.address = status.address, .sent = status.picked, .received = status.confirmed});
         }
         const size_t attempts_remaining{m_max_send_attempts - std::min(state.send_statuses.size(), m_max_send_attempts)};
-        entries.emplace_back(TxBroadcastInfo{.tx = tx, .time_added = state.time_added, .attempts_remaining = attempts_remaining, .peers = std::move(peers)});
+        entries.emplace_back(TxBroadcastInfo{.tx = tx, .time_added = state.time_added, .release_time = state.release_time, .attempts_remaining = attempts_remaining, .peers = std::move(peers)});
     }
 
     return entries;
@@ -178,6 +208,11 @@ bool PrivateBroadcast::IsPending(const TxSendStatus& status) const
     // Deliberately ignore resolved so all initially scheduled connections can complete.
     const size_t limit{std::min(status.planned_sends, m_max_send_attempts)};
     return status.send_statuses.size() < limit;
+}
+
+bool PrivateBroadcast::IsSendable(const TxSendStatus& status) const
+{
+    return status.released && IsPending(status);
 }
 
 PrivateBroadcast::Priority PrivateBroadcast::DerivePriority(const std::vector<SendStatus>& sent_to)

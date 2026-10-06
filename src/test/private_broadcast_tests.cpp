@@ -331,4 +331,114 @@ BOOST_AUTO_TEST_CASE(rejection_at_cap)
     BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), num_cap);
 }
 
+BOOST_AUTO_TEST_CASE(delayed_release)
+{
+    FakeNodeClock clock{};
+
+    PrivateBroadcast pb;
+    in_addr ipv4_addr;
+    ipv4_addr.s_addr = 0xa0b0c001;
+    const CService address{ipv4_addr, 1111};
+    NodeId node_id{0};
+
+    // A release time in the past or now releases the transaction immediately.
+    const auto tx_now{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
+    BOOST_REQUIRE_EQUAL(pb.Add(tx_now, NodeClock::now()), PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK(pb.ReleaseDue().empty());
+    BOOST_CHECK(pb.HavePendingTransactions());
+    BOOST_CHECK_EQUAL(pb.Remove(tx_now).value(), PrivateBroadcast::INITIAL_CONNECTION_COUNT);
+
+    const auto tx{MakeDummyTx(/*id=*/2, /*num_witness=*/0)};
+    const auto release_time{NodeClock::now() + 1h};
+    BOOST_REQUIRE_EQUAL(pb.Add(tx, release_time), PrivateBroadcast::AddResult::Added);
+
+    // Adding again keeps the original release time.
+    BOOST_CHECK_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::AlreadyPresent);
+    const auto info{pb.GetBroadcastInfo()};
+    BOOST_REQUIRE_EQUAL(info.size(), 1);
+    BOOST_CHECK(info[0].release_time == release_time);
+    BOOST_CHECK(info[0].time_added < info[0].release_time);
+
+    // Not sendable, nor stale, before its release.
+    BOOST_CHECK(!pb.HavePendingTransactions());
+    BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/node_id++, address).has_value());
+    BOOST_CHECK(pb.ReleaseDue().empty());
+    clock += 1h - 1s;
+    BOOST_CHECK(pb.ReleaseDue().empty());
+    BOOST_CHECK(pb.GetStale().empty());
+
+    // Reaching the release time does not by itself make it sendable; ReleaseDue() does.
+    clock += 1s;
+    BOOST_CHECK(!pb.HavePendingTransactions());
+    const auto released{pb.ReleaseDue()};
+    BOOST_REQUIRE_EQUAL(released.size(), 1);
+    BOOST_CHECK_EQUAL(released[0], tx);
+    BOOST_CHECK(pb.ReleaseDue().empty());
+    BOOST_CHECK(pb.HavePendingTransactions());
+
+    // Staleness is measured from the release time, not from when it was added.
+    BOOST_CHECK(pb.GetStale().empty());
+    clock += PrivateBroadcast::INITIAL_STALE_DURATION + 1s;
+    BOOST_CHECK_EQUAL(pb.GetStale().size(), 1);
+
+    BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/node_id++, address).value(), tx);
+    BOOST_CHECK_EQUAL(pb.Remove(tx).value(), PrivateBroadcast::INITIAL_CONNECTION_COUNT - 1);
+}
+
+BOOST_AUTO_TEST_CASE(delayed_remove_before_release)
+{
+    FakeNodeClock clock{};
+
+    PrivateBroadcast pb;
+    const auto tx{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
+    BOOST_REQUIRE_EQUAL(pb.Add(tx, NodeClock::now() + 10min), PrivateBroadcast::AddResult::Added);
+
+    // No sends are planned (no connections requested) before the release.
+    BOOST_CHECK_EQUAL(pb.Remove(tx).value(), 0);
+
+    // A removed delayed transaction is not released later.
+    clock += 1h;
+    BOOST_CHECK(pb.ReleaseDue().empty());
+}
+
+BOOST_AUTO_TEST_CASE(delayed_readd_exhausted)
+{
+    FakeNodeClock clock{};
+
+    PrivateBroadcast pb{PrivateBroadcast::MAX_TRANSACTIONS, /*max_send_attempts=*/1};
+    in_addr ipv4_addr;
+    ipv4_addr.s_addr = 0xa0b0c001;
+    const CService address{ipv4_addr, 1111};
+
+    const auto tx{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
+    BOOST_REQUIRE_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::Added);
+    BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/0, address).value(), tx);
+    BOOST_CHECK(!pb.HavePendingTransactions());
+
+    // Re-adding an exhausted transaction with a delay holds it back again.
+    BOOST_REQUIRE_EQUAL(pb.Add(tx, NodeClock::now() + 10min), PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK(!pb.HavePendingTransactions());
+    BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/1, address).has_value());
+    clock += 10min;
+    BOOST_CHECK_EQUAL(pb.ReleaseDue().size(), 1);
+    BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/2, address).value(), tx);
+}
+
+BOOST_AUTO_TEST_CASE(delayed_resolve_before_release)
+{
+    FakeNodeClock clock{};
+
+    PrivateBroadcast pb;
+    const auto tx{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
+    BOOST_REQUIRE_EQUAL(pb.Add(tx, NodeClock::now() + 10min), PrivateBroadcast::AddResult::Added);
+
+    // Received from the network before its release: it is forgotten, not released later.
+    BOOST_CHECK(pb.MarkResolved(tx));
+    BOOST_CHECK(pb.GetBroadcastInfo().empty());
+    BOOST_CHECK(!pb.Remove(tx).has_value());
+    clock += 1h;
+    BOOST_CHECK(pb.ReleaseDue().empty());
+    BOOST_CHECK(!pb.HavePendingTransactions());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
