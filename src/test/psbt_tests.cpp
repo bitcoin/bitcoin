@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(psbt2_addinput)
 
     // Same thing, but with other things that have signatures
     psbtin7.final_script_sig.clear();
-    psbtin7.final_script_witness.stack.emplace_back();
+    psbtin7.final_script_witness = CScriptWitness{std::vector<std::vector<unsigned char>>(1)};
     BOOST_CHECK(!psbt.AddInput(psbtin7));
     BOOST_CHECK_EQUAL(psbt.inputs.size(), 5);
     psbtin7.final_script_witness = {};

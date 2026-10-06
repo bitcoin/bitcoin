@@ -333,13 +333,15 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         };
         std::map<int, bilingual_str> input_errors;
         BOOST_REQUIRE(SignTransaction(tr_tx, &tr_keystore, coins, {.sighash_type = SIGHASH_DEFAULT}, input_errors));
-        auto& witness_stack = tr_tx.vin[0].scriptWitness.stack;
+        auto witness_stack = tr_tx.vin[0].scriptWitness.ToVectors();
         BOOST_REQUIRE(witness_stack.size() == 1 && witness_stack[0].size() == 64);
 
         // Invalidate signature; an invalid Taproot key-path spend is only invalid if SCRIPT_VERIFY_TAPROOT is set
         witness_stack[0][63] ^= 0x01; // damage signature
+        tr_tx.vin[0].scriptWitness = CScriptWitness{witness_stack};
         ValidateCheckInputsForAllFlags(CTransaction(tr_tx), SCRIPT_VERIFY_TAPROOT, true, m_node.chainman->ActiveChainstate().CoinsTip(), m_node.chainman->m_validation_cache);
         witness_stack[0][63] ^= 0x01; // repair signature
+        tr_tx.vin[0].scriptWitness = CScriptWitness{witness_stack};
 
         // A valid Taproot key-path spend is valid under all flags
         ValidateCheckInputsForAllFlags(CTransaction(tr_tx), 0, true, m_node.chainman->ActiveChainstate().CoinsTip(), m_node.chainman->m_validation_cache);

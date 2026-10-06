@@ -63,12 +63,12 @@ static std::vector<CTxOut> TxOutsFromJSON(const UniValue& univalue)
 static CScriptWitness ScriptWitnessFromJSON(const UniValue& univalue)
 {
     assert(univalue.isArray());
-    CScriptWitness scriptwitness;
+    std::vector<std::vector<unsigned char>> stack;
     for (size_t i = 0; i < univalue.size(); ++i) {
         auto bytes = ParseHex(univalue[i].get_str());
-        scriptwitness.stack.push_back(std::move(bytes));
+        stack.push_back(std::move(bytes));
     }
-    return scriptwitness;
+    return CScriptWitness{stack};
 }
 
 static std::vector<script_verify_flags> AllConsensusFlags()
