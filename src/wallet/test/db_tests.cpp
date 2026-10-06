@@ -318,6 +318,7 @@ public:
     static constexpr uint32_t HEADER_BYTES{26};
     static constexpr uint8_t PAGE_INTERNAL{3};
     static constexpr uint8_t PAGE_LEAF{5};
+    static constexpr uint8_t PAGE_OVERFLOW{7};
 
     explicit BDBFileBuilder(uint32_t num_pages) : m_bytes(size_t{num_pages} * PAGE_BYTES, std::byte{0})
     {
@@ -347,6 +348,30 @@ public:
         WLE(page, off + 4, child, 4);   // page_num
     }
 
+    //! Data record of len bytes, all set to fill
+    void DataRecord(uint32_t page, uint32_t off, uint32_t len, uint32_t fill)
+    {
+        WLE(page, off, len, 2);         // len
+        W8(page, off + 2, REC_KEYDATA); // type
+        for (uint32_t i{0}; i < len; ++i) W8(page, off + 3 + i, static_cast<uint8_t>(fill));
+    }
+
+    //! Overflow record whose chain starts at first_page
+    void OverflowRecord(uint32_t page, uint32_t off, uint32_t first_page, uint32_t item_len)
+    {
+        W8(page, off + 2, REC_OVERFLOW);   // type
+        WLE(page, off + 4, first_page, 4); // page_number
+        WLE(page, off + 8, item_len, 4);   // item_len
+    }
+
+    //! Overflow page holding data_len bytes, followed by next_page (0 ends the chain)
+    void OverflowPage(uint32_t page, uint32_t data_len, uint32_t next_page)
+    {
+        Header(page, PAGE_OVERFLOW, /*level=*/0, /*entries=*/0);
+        WLE(page, 16, next_page, 4); // next_page
+        WLE(page, 22, data_len, 2);  // hf_offset holds the data length on overflow pages
+    }
+
     void WriteTo(const fs::path& path) const
     {
         std::ofstream file{path.std_path(), std::ios::binary};
@@ -355,6 +380,7 @@ public:
 
 private:
     static constexpr uint8_t REC_KEYDATA{1};
+    static constexpr uint8_t REC_OVERFLOW{3};
 
     std::vector<std::byte> m_bytes;
 
@@ -414,6 +440,37 @@ BOOST_AUTO_TEST_CASE(bdbro_btree_page_referenced_twice)
     builder.Header(4, BDBFileBuilder::PAGE_LEAF, /*level=*/1, /*entries=*/0);
 
     CheckRejected(builder, m_path_root / "btree_page_twice.dat", "BTree page referenced more than once");
+}
+
+BOOST_AUTO_TEST_CASE(bdbro_overflow_page_referenced_twice)
+{
+    // Overflow page without data that points back at itself
+    BDBFileBuilder builder(/*num_pages=*/5);
+    builder.Header(3, BDBFileBuilder::PAGE_LEAF, /*level=*/1, /*entries=*/2);
+    builder.Index(3, 0, 30);
+    builder.Index(3, 1, 34);
+    builder.DataRecord(3, 30, /*len=*/1, /*fill=*/'k');
+    builder.OverflowRecord(3, 34, /*first_page=*/4, /*item_len=*/1);
+    builder.OverflowPage(4, /*data_len=*/0, /*next_page=*/4);
+
+    CheckRejected(builder, m_path_root / "overflow_page_twice.dat", "Overflow page referenced more than once");
+}
+
+BOOST_AUTO_TEST_CASE(bdbro_overflow_chain_shared_by_records)
+{
+    // Two records pointing at the same overflow chain
+    BDBFileBuilder builder(/*num_pages=*/5);
+    builder.Header(3, BDBFileBuilder::PAGE_LEAF, /*level=*/1, /*entries=*/4);
+    for (uint32_t i{0}; i < 2; ++i) {
+        const uint32_t off{34 + 16 * i}; // after the index array, 16 bytes per key/overflow pair
+        builder.Index(3, 2 * i, off);
+        builder.Index(3, 2 * i + 1, off + 4);
+        builder.DataRecord(3, off, /*len=*/1, /*fill=*/'a' + i);
+        builder.OverflowRecord(3, off + 4, /*first_page=*/4, /*item_len=*/1);
+    }
+    builder.OverflowPage(4, /*data_len=*/1, /*next_page=*/0);
+
+    CheckRejected(builder, m_path_root / "overflow_chain_shared.dat", "Overflow page referenced more than once");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
