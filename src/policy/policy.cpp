@@ -312,8 +312,10 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             size_t sizeWitnessStack = tx.vin[i].scriptWitness.size() - 1;
             if (sizeWitnessStack > MAX_STANDARD_P2WSH_STACK_ITEMS)
                 return false;
+            // The elements as a vector of spans, for indexed access in the loop below.
+            const auto witness_stack = tx.vin[i].scriptWitness.ToSpans();
             for (unsigned int j = 0; j < sizeWitnessStack; j++) {
-                if (tx.vin[i].scriptWitness.stack[j].size() > MAX_STANDARD_P2WSH_STACK_ITEM_SIZE)
+                if (witness_stack[j].size() > MAX_STANDARD_P2WSH_STACK_ITEM_SIZE)
                     return false;
             }
         }
@@ -323,15 +325,17 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         // - No annexes
         if (witnessversion == 1 && witnessprogram.size() == WITNESS_V1_TAPROOT_SIZE && !p2sh) {
             // Taproot spend (non-P2SH-wrapped, version 1, witness program size 32; see BIP 341)
-            std::span stack{tx.vin[i].scriptWitness.stack};
+            // The elements as a vector of spans.
+            auto stack = tx.vin[i].scriptWitness.ToSpans();
             if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
                 // Annexes are nonstandard as long as no semantics are defined for them.
                 return false;
             }
             if (stack.size() >= 2) {
                 // Script path spend (2 or more stack elements after removing optional annex)
-                const auto& control_block = SpanPopBack(stack);
-                SpanPopBack(stack); // Ignore script
+                const auto control_block = stack.back();
+                stack.pop_back();
+                stack.pop_back(); // Ignore script
                 if (control_block.empty()) return false; // Empty control block is invalid
                 if ((control_block[0] & TAPROOT_LEAF_MASK) == TAPROOT_LEAF_TAPSCRIPT) {
                     // Leaf version 0xc0 (aka Tapscript, see BIP 342)
