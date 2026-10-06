@@ -1733,4 +1733,57 @@ BOOST_AUTO_TEST_CASE(formatscriptflags)
     BOOST_CHECK_EQUAL(FormatScriptFlags(script_verify_flags::from_int(1u<<26)), "0x04000000");
 }
 
+BOOST_AUTO_TEST_CASE(script_witness_representation)
+{
+    // Element counts and sizes around CompactSize encoding boundaries.
+    static constexpr size_t COUNTS[]{0, 1, 2, 3, 252, 253, 254};
+    static constexpr size_t SIZES[]{0, 1, 32, 252, 253, 65535, 65536};
+    for (const size_t count : COUNTS) {
+        for (int iter = 0; iter < 3; ++iter) {
+            std::vector<std::vector<unsigned char>> stack(count);
+            for (auto& element : stack) {
+                // Mostly small elements, as large ones make big stacks slow.
+                const auto size = m_rng.randrange(8) == 0 ? SIZES[m_rng.randrange(std::size(SIZES))] : m_rng.randrange(40);
+                element = m_rng.randbytes(size);
+            }
+            const CScriptWitness witness{stack};
+
+            BOOST_CHECK(witness.ToVectors() == stack);
+            BOOST_CHECK(CScriptWitness{witness.ToVectors()} == witness);
+            BOOST_CHECK_EQUAL(witness.size(), stack.size());
+            BOOST_CHECK_EQUAL(witness.empty(), stack.empty());
+            BOOST_CHECK_EQUAL(std::distance(witness.begin(), witness.end()), (std::ptrdiff_t)stack.size());
+            if (!stack.empty()) {
+                BOOST_CHECK(std::ranges::equal(witness.front(), stack.front()));
+                BOOST_CHECK(std::ranges::equal(witness.back(), stack.back()));
+                for (size_t i = 0; i < stack.size(); ++i) BOOST_CHECK(std::ranges::equal(witness[i], stack[i]));
+            }
+            const auto spans = witness.ToSpans();
+            BOOST_REQUIRE_EQUAL(spans.size(), stack.size());
+            for (size_t i = 0; i < stack.size(); ++i) BOOST_CHECK(std::ranges::equal(spans[i], stack[i]));
+
+            // Serialization matches that of the vector of vectors, in both directions.
+            std::vector<unsigned char> ser_vec, ser_wit;
+            VectorWriter{ser_vec, 0, stack};
+            VectorWriter{ser_wit, 0, witness};
+            BOOST_CHECK(ser_vec == ser_wit);
+            BOOST_CHECK_EQUAL(::GetSerializeSize(witness), ser_vec.size());
+            CScriptWitness deser;
+            SpanReader{ser_vec} >> deser;
+            BOOST_CHECK(deser == witness);
+            if (!stack.empty()) BOOST_CHECK(std::ranges::equal(deser.back(), stack.back()));
+
+            // Moving leaves the source empty.
+            CScriptWitness moved{std::move(deser)};
+            BOOST_CHECK(moved == witness);
+            BOOST_CHECK(deser.empty() && deser.size() == 0 && deser.begin() == deser.end()); // NOLINT(bugprone-use-after-move)
+
+            CScriptWitness copy{witness};
+            copy = {};
+            BOOST_CHECK(copy.empty());
+            BOOST_CHECK(copy.begin() == copy.end());
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
