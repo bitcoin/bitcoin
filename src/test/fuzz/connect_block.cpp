@@ -325,10 +325,11 @@ CTransactionRef ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider,
                 txin.scriptSig = ConsumeScript(fuzzed_data_provider);
             }
             if (fuzzed_data_provider.ConsumeBool()) {
-                txin.scriptWitness.stack.clear();
+                std::vector<std::vector<unsigned char>> stack;
                 LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10) {
-                    txin.scriptWitness.stack.push_back(ConsumeRandomLengthByteVector<unsigned char>(fuzzed_data_provider, 100));
+                    stack.push_back(ConsumeRandomLengthByteVector<unsigned char>(fuzzed_data_provider, 100));
                 }
+                txin.scriptWitness = CScriptWitness{stack};
             }
         }
     }

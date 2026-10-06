@@ -383,7 +383,9 @@ public:
     TestBuilder& AsWit()
     {
         assert(havePush);
-        scriptWitness.stack.push_back(push);
+        auto stack = scriptWitness.ToVectors();
+        stack.push_back(push);
+        scriptWitness = CScriptWitness{stack};
         havePush = false;
         return *this;
     }
@@ -921,7 +923,7 @@ BOOST_AUTO_TEST_CASE(script_json_test)
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         const UniValue& test = tests[idx];
         std::string strTest = test.write();
-        CScriptWitness witness;
+        std::vector<std::vector<unsigned char>> witness_stack;
         TaprootBuilder taprootBuilder;
         CAmount nValue = 0;
         unsigned int pos = 0;
@@ -934,20 +936,20 @@ BOOST_AUTO_TEST_CASE(script_json_test)
                 static const std::string SCRIPT_FLAG{"#SCRIPT#"};
                 if (element.starts_with(SCRIPT_FLAG)) {
                     CScript script = ParseScript(element.substr(SCRIPT_FLAG.size()));
-                    witness.stack.push_back(ToByteVector(script));
+                    witness_stack.push_back(ToByteVector(script));
                 } else if (element == "#CONTROLBLOCK#") {
                     // Taproot script control block - second from the last element in witness stack
                     // If #CONTROLBLOCK# we auto-generate the control block
-                    taprootBuilder.Add(/*depth=*/0, witness.stack.back(), TAPROOT_LEAF_TAPSCRIPT, /*track=*/true);
+                    taprootBuilder.Add(/*depth=*/0, witness_stack.back(), TAPROOT_LEAF_TAPSCRIPT, /*track=*/true);
                     taprootBuilder.Finalize(XOnlyPubKey(keys.key0.GetPubKey()));
-                    auto controlblocks = taprootBuilder.GetSpendData().scripts[{witness.stack.back(), TAPROOT_LEAF_TAPSCRIPT}];
-                    witness.stack.push_back(*(controlblocks.begin()));
+                    auto controlblocks = taprootBuilder.GetSpendData().scripts[{witness_stack.back(), TAPROOT_LEAF_TAPSCRIPT}];
+                    witness_stack.push_back(*(controlblocks.begin()));
                 } else {
                     const auto witness_value{TryParseHex<unsigned char>(element)};
                     if (!witness_value.has_value()) {
                         BOOST_ERROR("Bad witness in test: " << strTest << " witness is not hex: " << element);
                     }
-                    witness.stack.push_back(witness_value.value());
+                    witness_stack.push_back(witness_value.value());
                 }
             }
             nValue = AmountFromValue(test[pos][i]);
@@ -974,7 +976,7 @@ BOOST_AUTO_TEST_CASE(script_json_test)
         script_verify_flags scriptflags = ParseScriptFlags(test[pos++].get_str());
         int scriptError = ParseScriptError(test[pos++].get_str());
 
-        DoTest(scriptPubKey, scriptSig, witness, scriptflags, strTest, scriptError, nValue);
+        DoTest(scriptPubKey, scriptSig, CScriptWitness{witness_stack}, scriptflags, strTest, scriptError, nValue);
     }
 }
 

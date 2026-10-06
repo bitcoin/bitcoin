@@ -334,12 +334,12 @@ CScript ScriptPubKey(miniscript::MiniscriptContext ctx, const CScript& script, T
 }
 
 //! Fill the witness with the data additional to the script satisfaction.
-void SatisfactionToWitness(miniscript::MiniscriptContext ctx, CScriptWitness& witness, const CScript& script, TaprootBuilder& builder) {
+void SatisfactionToWitness(miniscript::MiniscriptContext ctx, std::vector<std::vector<unsigned char>>& stack, const CScript& script, TaprootBuilder& builder) {
     // For P2WSH, it's only the witness script.
-    witness.stack.emplace_back(script.begin(), script.end());
+    stack.emplace_back(script.begin(), script.end());
     if (!miniscript::IsTapscript(ctx)) return;
     // For Tapscript we also need the control block.
-    witness.stack.push_back(*builder.GetSpendData().scripts.begin()->second.begin());
+    stack.push_back(*builder.GetSpendData().scripts.begin()->second.begin());
 }
 
 struct MiniScriptTest : BasicTestingSetup {
@@ -363,16 +363,18 @@ void TestSatisfy(const KeyConverter& converter, const Node& node)
             const CScript script_pubkey{ScriptPubKey(converter.MsContext(), script, builder)};
 
             // Run malleable satisfaction algorithm.
-            CScriptWitness witness_mal;
-            const bool mal_success = node.Satisfy(satisfier, witness_mal.stack, false) == miniscript::Availability::YES;
-            SatisfactionToWitness(converter.MsContext(), witness_mal, script, builder);
+            std::vector<std::vector<unsigned char>> stack_mal;
+            const bool mal_success = node.Satisfy(satisfier, stack_mal, false) == miniscript::Availability::YES;
+            SatisfactionToWitness(converter.MsContext(), stack_mal, script, builder);
+            const CScriptWitness witness_mal{stack_mal};
 
             // Run non-malleable satisfaction algorithm.
-            CScriptWitness witness_nonmal;
-            const bool nonmal_success = node.Satisfy(satisfier, witness_nonmal.stack, true) == miniscript::Availability::YES;
+            std::vector<std::vector<unsigned char>> stack_nonmal;
+            const bool nonmal_success = node.Satisfy(satisfier, stack_nonmal, true) == miniscript::Availability::YES;
             // Compute witness size (excluding script push, control block, and witness count encoding).
-            const uint64_t wit_size{GetSerializeSize(witness_nonmal.stack) - GetSizeOfCompactSize(witness_nonmal.stack.size())};
-            SatisfactionToWitness(converter.MsContext(), witness_nonmal, script, builder);
+            const uint64_t wit_size{GetSerializeSize(stack_nonmal) - GetSizeOfCompactSize(stack_nonmal.size())};
+            SatisfactionToWitness(converter.MsContext(), stack_nonmal, script, builder);
+            const CScriptWitness witness_nonmal{stack_nonmal};
 
             if (nonmal_success) {
                 // Non-malleable satisfactions are bounded by the satisfaction size plus:
