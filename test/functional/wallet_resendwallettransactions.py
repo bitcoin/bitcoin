@@ -42,6 +42,19 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         block.solve()
         node.submitblock(block.serialize().hex())
 
+    def evict_mempool_transaction(self, conflict_utxo, node, wallet, indep_wallet):
+        # Evict a transaction spending conflict_utxo by creating a conflict with it that pays a higher feerate
+        indep_utxo = indep_wallet.listunspent()[0]
+        psbt = indep_wallet.send(outputs=[{indep_wallet.getnewaddress(): 0.00001}], psbt=True, fee_rate=30, inputs=[conflict_utxo, indep_utxo], solving_data={"descriptors":[conflict_utxo["desc"]]})["psbt"]
+        psbt = wallet.walletprocesspsbt(psbt)["psbt"]
+        txid1 = node.sendrawtransaction(node.finalizepsbt(psbt)["hex"])
+        # Create a conflict with just indep_utxo to evict the previous transaction so that the original can be rebroadcast
+        r = indep_wallet.send(outputs=[{indep_wallet.getnewaddress(): 0.00001}], fee_rate=60, inputs=[indep_utxo], add_to_wallet=False)
+        txid2 = node.sendrawtransaction(r["hex"])
+        mempool = node.getrawmempool()
+        assert txid1 not in mempool
+        assert txid2 in mempool
+
     def test_resubmit_timer(self):
         self.log.info("Test periodic rebroadcast of sent transaction")
 
@@ -62,13 +75,14 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         # Can take a few seconds due to transaction trickling
         peer_first.wait_for_broadcast([wtxid])
 
-        # Add a second peer since txs aren't rebroadcast to the same peer (see m_tx_inventory_known_filter)
-        peer_second = node.add_p2p_connection(P2PTxInvStore())
-
         self.mine_empty_block(node)
+        self.evict_mempool_transaction(parent_utxo, node, wallet, self.default_wallet)
 
         # Set correct m_best_block_time, which is used in ResubmitWalletTransactions
         node.syncwithvalidationinterfacequeue()
+
+        # Add a second peer since txs aren't rebroadcast to the same peer (see m_tx_inventory_known_filter)
+        peer_second = node.add_p2p_connection(P2PTxInvStore())
 
         # Transaction should not be rebroadcast within first 12 hours
         # Leave 2 mins for buffer
@@ -142,7 +156,8 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         self.sync_all()
 
         self.log.debug("node0 sends a tx to node1 and disconnects")
-        recv_txid = self.default_wallet.sendtoaddress(wallet.getnewaddress(), 1)
+        utxo = self.default_wallet.listunspent()[0]
+        recv_txid = self.default_wallet.send(outputs=[{wallet.getnewaddress(): 1}], inputs=[utxo])["txid"]
         self.sync_mempools()
         node1.syncwithvalidationinterfacequeue()
 
@@ -152,6 +167,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         self.disconnect_nodes(0, 1)
 
         self.mine_empty_block(node1)
+        self.evict_mempool_transaction(utxo, node1, self.default_wallet, node1.get_wallet_rpc(self.default_wallet_name))
         node1.syncwithvalidationinterfacequeue()
 
         self.log.info("Connect p2p who hasn't seen the tx")

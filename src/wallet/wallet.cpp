@@ -1969,7 +1969,7 @@ void MaybeResendWalletTxs(WalletContext& context)
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
         if (!pwallet->ShouldResend()) continue;
-        pwallet->ResubmitWalletTransactions(node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL, /*force=*/false);
+        pwallet->ResubmitWalletTransactions(node::TxBroadcast::MEMPOOL_AND_BROADCAST_ADDED, /*force=*/false);
         pwallet->SetNextResend();
     }
 }
