@@ -594,15 +594,16 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
         // Maybe this doesn't matter because floating keys here shouldn't have origins
         KeyOriginInfo info;
         bool has_info = GetKeyOrigin(keyid, info);
-        std::string origin_str = has_info ? "[" + HexStr(info.fingerprint) + FormatHDKeypath(info.path) + "]" : "";
+        std::string origin_str = has_info ? "[" + HexStr(info.fingerprint) + FormatHDKeypath(info.path, 'h') + "]" : "";
 
         // Construct the combo descriptor
         std::string desc_str = "combo(" + origin_str + HexStr(key.GetPubKey()) + ")";
         FlatSigningProvider provider;
         std::string error;
-        std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, provider, error, false);
-        CHECK_NONFATAL(descs.size() == 1); // It shouldn't be possible to have an invalid or multipath descriptor
-        WalletDescriptor w_desc(std::move(descs.at(0)), creation_time, 0, 0, 0);
+        std::unique_ptr<Descriptor> desc = Parse(desc_str, provider, error, false);
+        CHECK_NONFATAL(desc); // It shouldn't be possible to have an invalid
+        CHECK_NONFATAL(!desc->IsMultipath()); // or multipath descriptor
+        WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
 
         // Make the DescriptorScriptPubKeyMan and get the scriptPubKeys
         provider.keys.emplace(key.GetPubKey().GetID(), key);
@@ -656,10 +657,11 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
             std::string desc_str = "combo(" + xpub + "/0h/" + ToString(i) + "h/*h)";
             FlatSigningProvider provider;
             std::string error;
-            std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, provider, error, false);
-            CHECK_NONFATAL(descs.size() == 1); // It shouldn't be possible to have an invalid or multipath descriptor
+            std::unique_ptr<Descriptor> desc = Parse(desc_str, provider, error, false);
+            CHECK_NONFATAL(desc); // It shouldn't be possible to have an invalid
+            CHECK_NONFATAL(!desc->IsMultipath()); // or multipath descriptor
             uint32_t chain_counter = std::max((i == 1 ? chain.nInternalChainCounter : chain.nExternalChainCounter), (uint32_t)0);
-            WalletDescriptor w_desc(std::move(descs.at(0)), 0, 0, chain_counter, 0);
+            WalletDescriptor w_desc(std::move(desc), 0, 0, chain_counter, 0);
 
             // Make the DescriptorScriptPubKeyMan and get the scriptPubKeys
             provider.keys.emplace(master_key.key.GetPubKey().GetID(), master_key.key);
@@ -705,8 +707,8 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
             std::string desc_str = desc->ToString();
             FlatSigningProvider parsed_keys;
             std::string parse_error;
-            std::vector<std::unique_ptr<Descriptor>> parsed_descs = Parse(desc_str, parsed_keys, parse_error);
-            if (parsed_descs.empty()) {
+            std::unique_ptr<Descriptor> parsed = Parse(desc_str, parsed_keys, parse_error);
+            if (!parsed) {
                 // Remove this scriptPubKey from the set
                 it = spks.erase(it);
                 continue;
@@ -805,8 +807,8 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
             std::string desc_str = desc->ToString();
             FlatSigningProvider parsed_keys;
             std::string parse_error;
-            std::vector<std::unique_ptr<Descriptor>> parsed_descs = Parse(desc_str, parsed_keys, parse_error, false);
-            if (parsed_descs.empty()) {
+            std::unique_ptr<Descriptor> parsed = Parse(desc_str, parsed_keys, parse_error, false);
+            if (!parsed) {
                 continue;
             }
         }
@@ -1556,6 +1558,14 @@ void DescriptorScriptPubKeyMan::WriteDescriptor()
     }
 }
 
+void DescriptorScriptPubKeyMan::WriteDescriptor(WalletBatch& batch)
+{
+    LOCK(cs_desc_man);
+    if (!batch.WriteDescriptor(GetID(), m_wallet_descriptor)) {
+        throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
+    }
+}
+
 WalletDescriptor DescriptorScriptPubKeyMan::GetWalletDescriptor() const
 {
     return m_wallet_descriptor;
@@ -1598,6 +1608,43 @@ bool DescriptorScriptPubKeyMan::GetDescriptorString(std::string& out, const bool
     }
 
     return m_wallet_descriptor.descriptor->ToNormalizedString(provider, out, &m_wallet_descriptor.cache);
+}
+
+std::optional<std::string> DescriptorScriptPubKeyMan::GetMultipathString(const bool priv) const
+{
+    LOCK(cs_desc_man);
+
+    std::string out;
+    FlatSigningProvider provider;
+    provider.keys = GetKeys();
+
+    const auto mp_rel_ids = m_wallet_descriptor.GetMultipathRelativesIDs();
+    if (mp_rel_ids.size() > 1) {
+        const auto mp_base_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(m_storage.GetScriptPubKeyMan(mp_rel_ids.at(0)));
+        if (!Assume(mp_base_spkm)) {
+            return std::nullopt;
+        }
+        const std::shared_ptr<const Descriptor>& mp_base = mp_base_spkm->GetWalletDescriptor().descriptor;
+        std::vector<const Descriptor*> rels;
+        rels.reserve(mp_rel_ids.size() - 1);
+        for (size_t i = 1; i < mp_rel_ids.size(); ++i) {
+            const auto rel_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(m_storage.GetScriptPubKeyMan(mp_rel_ids.at(i)));
+            if (!Assume(rel_spkm)) {
+                return std::nullopt;
+            }
+            rels.emplace_back(rel_spkm->GetWalletDescriptor().descriptor.get());
+        }
+        std::unique_ptr<Descriptor> mp = mp_base->ReconstructMultipath(rels);
+        if (!Assume(mp)) {
+            return std::nullopt;
+        }
+        if (priv && mp->ToPrivateString(provider, out)) {
+            return out;
+        } else if (mp->ToNormalizedString(provider, out, &m_wallet_descriptor.cache)) {
+            return out;
+        }
+    }
+    return std::nullopt;
 }
 
 void DescriptorScriptPubKeyMan::UpgradeDescriptorCache()
@@ -1688,5 +1735,10 @@ bool DescriptorScriptPubKeyMan::CanUpdateToWalletDescriptor(const WalletDescript
     }
 
     return true;
+}
+
+void DescriptorScriptPubKeyMan::SetMultipathRelatives(const std::vector<uint256>& ids)
+{
+    m_wallet_descriptor.SetMultipathRelatives(ids);
 }
 } // namespace wallet

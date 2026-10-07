@@ -3443,7 +3443,7 @@ void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc, 
     AddScriptPubKeyMan(id, std::move(spk_manager));
 }
 
-DescriptorScriptPubKeyMan& CWallet::SetupDescriptorScriptPubKeyMan(WalletBatch& batch, const CExtKey& master_key, const OutputType& output_type, bool internal)
+DescriptorScriptPubKeyMan& CWallet::SetupDescriptorScriptPubKeyMan(WalletBatch& batch, const CExtKey& master_key, const OutputType& output_type, bool internal, std::optional<uint256> mp_external_rel)
 {
     AssertLockHeld(cs_wallet);
     if (IsLocked()) {
@@ -3452,6 +3452,20 @@ DescriptorScriptPubKeyMan& CWallet::SetupDescriptorScriptPubKeyMan(WalletBatch& 
     auto spk_manager = DescriptorScriptPubKeyMan::GenerateNewSingleSig(*this, batch, m_keypool_size, master_key, output_type, internal);
     DescriptorScriptPubKeyMan* out = spk_manager.get();
     uint256 id = spk_manager->GetID();
+
+    std::vector<uint256> mp_rels;
+    if (mp_external_rel.has_value()) mp_rels.emplace_back(mp_external_rel.value());
+    mp_rels.emplace_back(id);
+    out->SetMultipathRelatives(mp_rels);
+    out->WriteDescriptor(batch);
+    if (mp_external_rel.has_value()) {
+        ScriptPubKeyMan* ext_spkm = GetScriptPubKeyMan(mp_external_rel.value());
+        DescriptorScriptPubKeyMan* ext_d_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(ext_spkm);
+        Assert(ext_d_spkm);
+        ext_d_spkm->SetMultipathRelatives(mp_rels);
+        ext_d_spkm->WriteDescriptor(batch);
+    }
+
     AddScriptPubKeyMan(id, std::move(spk_manager));
     AddActiveScriptPubKeyManWithDb(batch, id, output_type, internal);
     return *out;
@@ -3460,9 +3474,13 @@ DescriptorScriptPubKeyMan& CWallet::SetupDescriptorScriptPubKeyMan(WalletBatch& 
 void CWallet::SetupDescriptorScriptPubKeyMans(WalletBatch& batch, const CExtKey& master_key)
 {
     AssertLockHeld(cs_wallet);
-    for (bool internal : {false, true}) {
-        for (OutputType t : OUTPUT_TYPES) {
-            SetupDescriptorScriptPubKeyMan(batch, master_key, t, internal);
+    for (OutputType t : OUTPUT_TYPES) {
+        std::optional<uint256> mp_rel;
+        for (bool internal : {false, true}) {
+            auto& spkm = SetupDescriptorScriptPubKeyMan(batch, master_key, t, internal, mp_rel);
+            if (!internal) {
+                mp_rel = spkm.GetID();
+            }
         }
     }
 }
@@ -3512,11 +3530,13 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
                 const std::string& desc_str = desc_val.getValStr();
                 FlatSigningProvider keys;
                 std::string desc_error;
-                auto descs = Parse(desc_str, keys, desc_error, false);
-                if (descs.empty()) {
+                auto desc = Parse(desc_str, keys, desc_error, false);
+                if (!desc) {
                     throw std::runtime_error(std::string(__func__) + ": Invalid descriptor \"" + desc_str + "\" (" + desc_error + ")");
                 }
-                auto& desc = descs.at(0);
+                if (desc->IsMultipath()) {
+                    throw std::runtime_error(std::string(__func__) + ": Unable to import multipath descriptors from external signers");
+                }
                 if (!desc->GetOutputType()) {
                     continue;
                 }
@@ -3719,14 +3739,14 @@ util::Expected<CExtPubKey, WalletError> CWallet::AddHDKey(const std::optional<CE
     std::string desc_str = "unused(" + EncodeExtKey(hdkey) + ")";
     FlatSigningProvider keys;
     std::string parse_error;
-    std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, parse_error, /*require_checksum=*/false);
-    if (descs.empty()) {
+    std::unique_ptr<Descriptor> desc = Parse(desc_str, keys, parse_error, /*require_checksum=*/false);
+    if (!desc) {
         return util::Unexpected{WalletError{
             WalletErrorCode::GenericError,
             _("Invalid HD key")
         }};
     }
-    WalletDescriptor w_desc(std::move(descs.at(0)), GetTime(), /*range_start=*/0, /*range_end=*/0, /*next_index=*/0);
+    WalletDescriptor w_desc(std::move(desc), GetTime(), /*range_start=*/0, /*range_end=*/0, /*next_index=*/0);
 
     if (GetDescriptorScriptPubKeyMan(w_desc) != nullptr) {
         return util::Unexpected{WalletError{
@@ -4134,13 +4154,14 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
                 // Parse the descriptor
                 FlatSigningProvider keys;
                 std::string parse_err;
-                std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, parse_err, /*require_checksum=*/ true);
+                std::unique_ptr<Descriptor> desc = Parse(desc_str, keys, parse_err, /*require_checksum=*/ true);
                 // LegacyDataSPKM should not produce invalid, multipath, or ranged watch-only descriptors.
-                assert(descs.size() == 1);
-                assert(!descs.at(0)->IsRange());
+                assert(desc);
+                assert(!desc->IsMultipath());
+                assert(!desc->IsRange());
 
                 // Add to the wallet
-                WalletDescriptor w_desc(std::move(descs.at(0)), creation_time, 0, 0, 0);
+                WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
                 if (auto spkm_res = data->watchonly_wallet->AddWalletDescriptor(w_desc, keys, "", false); !spkm_res) {
                     throw std::runtime_error(util::ErrorString(spkm_res).original);
                 }
@@ -4174,13 +4195,14 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
                 // Parse the descriptor
                 FlatSigningProvider keys;
                 std::string parse_err;
-                std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, parse_err, /*require_checksum=*/ true);
+                std::unique_ptr<Descriptor> desc = Parse(desc_str, keys, parse_err, /*require_checksum=*/ true);
                 // LegacyDataSPKM should not produce invalid, multipath, or ranged watch-only descriptors.
-                assert(descs.size() == 1);
-                assert(!descs.at(0)->IsRange());
+                assert(desc);
+                assert(!desc->IsMultipath());
+                assert(!desc->IsRange());
 
                 // Add to the wallet
-                WalletDescriptor w_desc(std::move(descs.at(0)), creation_time, 0, 0, 0);
+                WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
                 if (auto spkm_res = data->solvable_wallet->AddWalletDescriptor(w_desc, keys, "", false); !spkm_res) {
                     throw std::runtime_error(util::ErrorString(spkm_res).original);
                 }
