@@ -391,7 +391,11 @@ typedef void (*btck_ValidationInterfaceBlockDisconnected)(void* user_data, btck_
 /**
  * Function signature for serializing data.
  *
- * Returns 0 to indicate success.
+ * @param[in] bytes    The data to write. Can be null if size is 0.
+ * @param[in] size     The number of bytes in the data.
+ * @param[in] userdata Holds the user-defined opaque structure that was given
+ *                     with the writer.
+ * @return             0 on success.
  */
 typedef int (*btck_WriteBytes)(const void* bytes, size_t size, void* userdata);
 
