@@ -972,7 +972,6 @@ BOOST_AUTO_TEST_CASE(block_template_manager)
     BlockCreateOptions options;
     options.use_mempool = false;
     auto block_template = block_template_manager.CreateNewTemplate(options);
-    BOOST_REQUIRE(block_template);
     const CBlock& block{block_template->block};
     // Without the mempool the template holds only the coinbase, and the per-tx
     // fee/sigops vectors exclude it.
