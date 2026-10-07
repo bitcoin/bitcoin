@@ -444,10 +444,11 @@ void TestChain100Setup::mineBlocks(int num_blocks)
     CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
     for (int i = 0; i < num_blocks; i++) {
         std::vector<CMutableTransaction> noTxns;
-        CBlock b = CreateAndProcessBlock(noTxns, scriptPubKey);
+        CBlock b = CreateAndProcessBlock(noTxns, scriptPubKey, /*sync=*/false);
         m_clock += 1s;
         m_coinbase_txns.push_back(b.vtx[0]);
     }
+    if (m_node.validation_signals) m_node.validation_signals->SyncWithValidationInterfaceQueue();
 }
 
 CBlock TestChain100Setup::CreateBlock(
@@ -475,11 +476,13 @@ CBlock TestChain100Setup::CreateBlock(
 
 CBlock TestChain100Setup::CreateAndProcessBlock(
     const std::vector<CMutableTransaction>& txns,
-    const CScript& scriptPubKey)
+    const CScript& scriptPubKey,
+    bool sync)
 {
     CBlock block = this->CreateBlock(txns, scriptPubKey);
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
     Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, true, true, nullptr);
+    if (sync && m_node.validation_signals) m_node.validation_signals->SyncWithValidationInterfaceQueue();
 
     return block;
 }

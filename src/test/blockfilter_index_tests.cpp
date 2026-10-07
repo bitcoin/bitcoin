@@ -16,6 +16,7 @@
 #include <test/util/common.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
+#include <test/util/validation.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <validation.h>
@@ -223,7 +224,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
     filter_hashes.clear();
 
     filter_index.Interrupt();
-    filter_index.Stop();
+    StopIndex(filter_index, m_node);
 }
 
 BOOST_FIXTURE_TEST_CASE(blockfilter_index_init_destroy, BasicTestingSetup)

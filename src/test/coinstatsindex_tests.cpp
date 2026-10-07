@@ -12,6 +12,7 @@
 #include <script/script.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
+#include <test/util/validation.h>
 #include <util/check.h>
 #include <validation.h>
 
@@ -71,8 +72,7 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_initial_sync, TestChain100Setup)
 
     BOOST_CHECK(block_index != new_block_index);
 
-    // Shutdown sequence (c.f. Shutdown() in init.cpp)
-    coin_stats_index.Stop();
+    StopIndex(coin_stats_index, m_node);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
