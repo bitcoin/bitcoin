@@ -449,7 +449,7 @@ void RandAddStaticEnv(CSHA512& hasher)
      AddSysctl<CTL_KERN, KERN_OSTYPE>(hasher);
 #    endif
 #    ifdef KERN_POSIX1
-     AddSysctl<CTL_KERN, KERN_OSREV>(hasher);
+     AddSysctl<CTL_KERN, KERN_POSIX1>(hasher);
 #    endif
 #    ifdef KERN_VERSION
      AddSysctl<CTL_KERN, KERN_VERSION>(hasher);
