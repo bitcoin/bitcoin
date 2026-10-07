@@ -735,7 +735,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         self.log.info("Verify snapshot tip with default checks before background validation reaches it")
         n2.submitblock(snapshot_block)
-        with n2.assert_debug_log(expected_msgs=["Verifying last 6 blocks at level 3", f"Verification error: irrecoverable inconsistency in block data at {SNAPSHOT_BASE_HEIGHT},"]):  # TODO: Missing snapshot undo should stop verification without reporting corruption
+        with n2.assert_debug_log(expected_msgs=["Verifying last 6 blocks at level 3", f"Block verification stopping at height {SNAPSHOT_BASE_HEIGHT} (no undo data)."]):
             assert_equal(n2.verifychain(), False)
 
         for reindex_arg in ['-reindex=1', '-reindex-chainstate=1']:

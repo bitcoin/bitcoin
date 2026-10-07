@@ -4698,6 +4698,12 @@ VerifyDBResult CVerifyDB::VerifyDB(
         size_t curr_coins_usage = coins.DynamicMemoryUsage() + chainstate.CoinsTip().DynamicMemoryUsage();
 
         if (nCheckLevel >= 3) {
+            // A block refetched after pruning has its body but not its undo data
+            if (allow_missing_data && !(pindex->nStatus & BLOCK_HAVE_UNDO)) {
+                LogInfo("Block verification stopping at height %d (no undo data). This could be due to pruning or use of an assumeutxo snapshot.", pindex->nHeight);
+                skipped_missing_data = true;
+                break;
+            }
             if (curr_coins_usage <= chainstate.m_coinstip_cache_size_bytes) {
                 assert(coins.GetBestBlock() == pindex->GetBlockHash());
                 DisconnectResult res = chainstate.DisconnectBlock(block, pindex, coins);
