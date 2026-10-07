@@ -1394,4 +1394,37 @@ BOOST_AUTO_TEST_CASE(spends_witness_prog)
     }
 }
 
+BOOST_AUTO_TEST_CASE(tx_malformed_serialization)
+{
+    // A transaction with one input, one output and a one-element witness, split into its fields.
+    const std::string version{"01000000"};
+    const std::string marker_flag{"0001"};
+    const std::string inputs{"01" + std::string(64, '0') + "00000000" "00" "ffffffff"};
+    const std::string outputs{"01" "0100000000000000" "0151"};
+    const std::string witness{"01" "01aa"};
+    const std::string locktime{"00000000"};
+
+    CMutableTransaction mtx;
+    BOOST_REQUIRE(DecodeHexTx(mtx, version + marker_flag + inputs + outputs + witness + locktime));
+    BOOST_CHECK_EQUAL(mtx.vin.at(0).scriptWitness.stack.size(), 1U);
+
+    // Each malformed serialization must fail to deserialize, and DecodeHexTx must
+    // not fall back to reading the same bytes as some other transaction without
+    // witness data.
+    const auto check_malformed{[](const std::string& hex, const std::string& reason) {
+        CMutableTransaction tx;
+        BOOST_CHECK_EXCEPTION(DataStream{ParseHex(hex)} >> TX_WITH_WITNESS(tx), std::ios_base::failure, HasReason{reason});
+        BOOST_CHECK(!DecodeHexTx(tx, hex, /*try_no_witness=*/true, /*try_witness=*/true));
+    }};
+
+    // A flag other than 1 is unknown, including one without the witness bit.
+    check_malformed(version + "0002" + inputs + outputs + witness + locktime, "Unknown transaction optional data");
+    // A witness element that is longer than the remaining data.
+    check_malformed(version + marker_flag + inputs + outputs + "01" "06aa" + locktime, "end of data");
+    // A truncated locktime.
+    check_malformed(version + marker_flag + inputs + outputs + witness + "000000", "end of data");
+    // An output script that is truncated after its length.
+    check_malformed(version + marker_flag + inputs + "01" "0100000000000000" "01", "end of data");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
