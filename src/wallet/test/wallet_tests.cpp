@@ -33,6 +33,7 @@
 #include <script/descriptor.h>
 #include <script/solver.h>
 #include <test/util/common.h>
+#include <test/util/index.h>
 #include <test/util/logging.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
@@ -468,7 +469,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_reorged_block, TestChain100
     BOOST_REQUIRE(InitBlockFilterIndex([&]{ return interfaces::MakeChain(m_node); }, BlockFilterType::BASIC, 1_MiB, /*f_memory=*/true));
     BlockFilterIndex& filter_index{*Assert(GetBlockFilterIndex(BlockFilterType::BASIC))};
     BOOST_REQUIRE(filter_index.Init());
-    filter_index.Sync();
+    IndexTester{filter_index}.Sync();
 
     // Reorg the tip out of the active chain: invalidate it, then mine a
     // longer replacement branch paying a script unrelated to the wallets
@@ -490,7 +491,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_reorged_block, TestChain100
 
     {
         BlockFilter filter;
-        BOOST_REQUIRE(filter_index.LookupFilter(stale_block, filter));
+        BOOST_REQUIRE(filter_index.LookupFilter({stale_block->GetBlockHash(), stale_block->nHeight}, filter));
     }
 
     // Test wallet whose scripts do not match the stale block's filter.
@@ -826,7 +827,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_missing_filter, TestChain10
             tip_hash = tip->GetBlockHash();
             wallet.SetLastBlockProcessed(tip_height, tip_hash);
             BlockFilter filter;
-            BOOST_REQUIRE(!filter_index.LookupFilter(tip, filter));
+            BOOST_REQUIRE(!filter_index.LookupFilter({tip->GetBlockHash(), tip->nHeight}, filter));
         }
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(wallet);

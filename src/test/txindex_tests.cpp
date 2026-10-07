@@ -17,15 +17,18 @@
 #include <interfaces/chain.h>
 #include <key.h>
 #include <node/blockstorage.h>
+#include <node/context.h>
 #include <primitives/block.h>
 #include <script/script.h>
 #include <streams.h>
 #include <sync.h>
+#include <test/util/index.h>
 #include <test/util/setup_common.h>
 #include <util/byte_units.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 #include <validation.h>
+#include <validationinterface.h>
 
 #include <cstdint>
 #include <memory>
@@ -135,7 +138,7 @@ BOOST_AUTO_TEST_CASE(txindex_hash_prefix)
 
 BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
 {
-    TxIndex txindex(interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB, /*f_memory=*/true);
+    TxIndex txindex(interfaces::MakeChain(m_node), m_node.chainman->m_blockman, /*n_cache_size=*/1_MiB, /*f_memory=*/true);
     BOOST_REQUIRE(txindex.Init());
 
     // Transaction should not be found in the index before it is started.
@@ -145,8 +148,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
 
     // BlockUntilSyncedToCurrentChain should return false before txindex is started.
     BOOST_CHECK(!txindex.BlockUntilSyncedToCurrentChain());
-
-    txindex.Sync();
+    IndexTester{txindex}.Sync();
 
     // Check that txindex excludes genesis block transactions.
     const CBlock& genesis_block = Params().GenesisBlock();
@@ -178,9 +180,9 @@ BOOST_FIXTURE_TEST_CASE(txindex_collision_scan_path, TestChain100Setup)
 {
     // On-disk, so the legacy-entry probe at construction runs against a fresh
     // database, as it would on a node whose index was created by this version.
-    TxIndex txindex(interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB, /*f_memory=*/false);
+    TxIndex txindex(interfaces::MakeChain(m_node), m_node.chainman->m_blockman, /*n_cache_size=*/1_MiB, /*f_memory=*/false);
     BOOST_REQUIRE(txindex.Init());
-    txindex.Sync();
+    IndexTester{txindex}.Sync();
 
     CDBWrapper& db{TxIndexTest::GetDB(txindex)};
     const SipHasher13UJ hasher{ReadHasher(db)};
@@ -239,9 +241,9 @@ BOOST_FIXTURE_TEST_CASE(txindex_legacy_fallback, TestChain100Setup)
         db.Write(txindex::LegacyTxKey(legacy_txid), legacy_pos);
     }
 
-    TxIndex txindex(interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB, /*f_memory=*/false);
+    TxIndex txindex(interfaces::MakeChain(m_node), m_node.chainman->m_blockman, /*n_cache_size=*/1_MiB, /*f_memory=*/false);
     BOOST_REQUIRE(txindex.Init());
-    txindex.Sync();
+    IndexTester{txindex}.Sync();
 
     // Drop the hashed entries so only the legacy row remains, then confirm the
     // lookup succeeds through the fallback.
@@ -267,7 +269,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_locator_upgrade, TestChain100Setup)
     CBlockLocator legacy_locator{{legacy_hash}}, new_locator{{new_hash}};
     { CDBWrapper{DBParams{.path = gArgs.GetDataDirNet() / "indexes" / "txindex", .cache_bytes = 1_MiB}}.Write(uint8_t{'B'}, legacy_locator); }
 
-    TxIndex txindex(interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB, /*f_memory=*/false);
+    TxIndex txindex(interfaces::MakeChain(m_node), m_node.chainman->m_blockman, /*n_cache_size=*/1_MiB, /*f_memory=*/false);
     BOOST_CHECK(TxIndexTest::ReadBestBlock(txindex).vHave == legacy_locator.vHave);
 
     TxIndexTest::WriteBestBlock(txindex, new_locator);
@@ -280,9 +282,9 @@ BOOST_FIXTURE_TEST_CASE(txindex_locator_upgrade, TestChain100Setup)
 
 BOOST_FIXTURE_TEST_CASE(txindex_reorg_keeps_stale_entries, TestChain100Setup)
 {
-    TxIndex txindex(interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB, /*f_memory=*/true);
+    TxIndex txindex(interfaces::MakeChain(m_node), m_node.chainman->m_blockman, /*n_cache_size=*/1_MiB, /*f_memory=*/true);
     BOOST_REQUIRE(txindex.Init());
-    txindex.Sync();
+    IndexTester{txindex}.Sync();
 
     const CScript coinbase_script{CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG};
 
