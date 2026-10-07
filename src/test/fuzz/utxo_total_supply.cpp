@@ -35,7 +35,8 @@ FUZZ_TARGET(utxo_total_supply)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    FakeNodeClock clock{ConsumeTime(fuzzed_data_provider, /*min=*/1296688602)}; // regtest genesis block timestamp
+    const auto fuzzed_time{ConsumeTime(fuzzed_data_provider, /*min=*/1296688602)}; // regtest genesis block timestamp
+    FakeNodeClock clock{fuzzed_time}; // global mock satisfies _now_nondet() calls in FlushStateToDisk
     /** The testing setup that creates a chainman only (no chainstate) */
     ChainTestingSetup test_setup{
         ChainType::REGTEST,
@@ -45,10 +46,12 @@ FUZZ_TARGET(utxo_total_supply)
             },
         },
     };
-    // Create chainstate
-    test_setup.LoadVerifyActivateChainstate();
     auto& node{test_setup.m_node};
     auto& chainman{*Assert(test_setup.m_node.chainman)};
+    // Set per-chainman clock before loading chainstate so IBD checks use it
+    chainman.m_clock_now_seconds.store(fuzzed_time.time_since_epoch(), std::memory_order_relaxed);
+    // Create chainstate
+    test_setup.LoadVerifyActivateChainstate();
 
     const auto ActiveHeight = [&]() {
         LOCK(chainman.GetMutex());
