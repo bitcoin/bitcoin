@@ -4648,11 +4648,11 @@ VerifyDBResult CVerifyDB::VerifyDB(
     int nGoodTransactions = 0;
     BlockValidationState state;
     int reportDone = 0;
-    bool skipped_no_block_data{false};
+    bool skipped_missing_data{false};
     bool skipped_l3_checks{false};
     LogInfo("Verification progress: 0%%");
 
-    const bool is_snapshot_cs{chainstate.m_from_snapshot_blockhash};
+    const bool allow_missing_data{chainstate.m_blockman.IsPruneMode() || chainstate.m_from_snapshot_blockhash};
 
     for (pindex = chainstate.m_chain.Tip(); pindex && pindex->pprev; pindex = pindex->pprev) {
         const int percentageDone = std::max(1, std::min(99, (int)(((double)(chainstate.m_chain.Height() - pindex->nHeight)) / (double)nCheckDepth * (nCheckLevel >= 4 ? 50 : 100))));
@@ -4665,11 +4665,11 @@ VerifyDBResult CVerifyDB::VerifyDB(
         if (pindex->nHeight <= chainstate.m_chain.Height() - nCheckDepth) {
             break;
         }
-        if ((chainstate.m_blockman.IsPruneMode() || is_snapshot_cs) && !(pindex->nStatus & BLOCK_HAVE_DATA)) {
+        if (allow_missing_data && !(pindex->nStatus & BLOCK_HAVE_DATA)) {
             // If pruning or running under an assumeutxo snapshot, only go
             // back as far as we have data.
             LogInfo("Block verification stopping at height %d (no data). This could be due to pruning or use of an assumeutxo snapshot.", pindex->nHeight);
-            skipped_no_block_data = true;
+            skipped_missing_data = true;
             break;
         }
         CBlock block;
@@ -4760,7 +4760,7 @@ VerifyDBResult CVerifyDB::VerifyDB(
     if (skipped_l3_checks) {
         return VerifyDBResult::SKIPPED_L3_CHECKS;
     }
-    if (skipped_no_block_data) {
+    if (skipped_missing_data) {
         return VerifyDBResult::SKIPPED_MISSING_BLOCKS;
     }
     return VerifyDBResult::SUCCESS;
