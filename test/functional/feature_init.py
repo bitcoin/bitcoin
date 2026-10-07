@@ -26,6 +26,24 @@ ALL_INDEX_ARGS = [
     '-txospenderindex=1',
 ]
 
+
+def get_process_group_kwargs():
+    # CTRL_BREAK_EVENT must target a separate process group to avoid
+    # terminating the Python test runner.
+    return {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP} if platform.system() == 'Windows' else {}
+
+
+def sigterm_node(node):
+    if platform.system() == 'Windows':
+        # Don't call Python's terminate() since it calls
+        # TerminateProcess(), which unlike SIGTERM doesn't allow
+        # bitcoind to perform any shutdown logic.
+        os.kill(node.process.pid, signal.CTRL_BREAK_EVENT)
+    else:
+        node.process.terminate()
+    node.wait_until_stopped()
+
+
 class InitTest(BitcoinTestFramework):
     """
     Ensure that initialization can be interrupted at a number of points and not impair
@@ -53,16 +71,6 @@ class InitTest(BitcoinTestFramework):
         node = self.nodes[0]
         self.generate(node, 200, sync_fun=self.no_op)
         self.stop_node(0)
-
-        def sigterm_node():
-            if platform.system() == 'Windows':
-                # Don't call Python's terminate() since it calls
-                # TerminateProcess(), which unlike SIGTERM doesn't allow
-                # bitcoind to perform any shutdown logic.
-                os.kill(node.process.pid, signal.CTRL_BREAK_EVENT)
-            else:
-                node.process.terminate()
-            assert_equal(0, node.process.wait())
 
         reindex_log_line = b'Reindexing block file blk00000.dat'
         lines_to_terminate_after = [
@@ -97,14 +105,9 @@ class InitTest(BitcoinTestFramework):
                 extra_args = [*ALL_INDEX_ARGS]
                 if terminate_line == reindex_log_line:
                     extra_args += ['-reindex']
-                if platform.system() == 'Windows':
-                    # CREATE_NEW_PROCESS_GROUP is required in order to be able
-                    # to terminate the child without terminating the test.
-                    node.start(extra_args=extra_args, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
-                else:
-                    node.start(extra_args=extra_args)
+                node.start(extra_args=extra_args, **get_process_group_kwargs())
             self.log.debug("Terminating node after terminate line was found")
-            sigterm_node()
+            sigterm_node(node)
 
         # Prior to deleting/perturbing index files, start node with all indexes enabled.
         # 'check_clean_start' will ensure indexes are synchronized (i.e., data exists to modify)
@@ -285,12 +288,7 @@ class InitTest(BitcoinTestFramework):
         self.log.info("Testing waitforblockheight RPC call followed by break signal")
         node = self.nodes[0]
 
-        if platform.system() == 'Windows':
-            # CREATE_NEW_PROCESS_GROUP prevents python test from exiting
-            # with STATUS_CONTROL_C_EXIT (-1073741510) when break is sent.
-            self.start_node(node.index, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
-        else:
-            self.start_node(node.index)
+        self.start_node(node.index, **get_process_group_kwargs())
 
         current_height = node.getblock(node.getbestblockhash())['height']
 
@@ -384,9 +382,9 @@ class InitTest(BitcoinTestFramework):
             unexpected_msgs = ["Initialized HTTP server"],
             timeout = 10
         ):
-            node.start(extra_args=[f"-rpcmaxconnections={2**64}", "-server=0"])
+            node.start(extra_args=[f"-rpcmaxconnections={2**64}", "-server=0"], **get_process_group_kwargs())
         # No HTTP server, no RPC `stop`
-        node.kill_process()
+        sigterm_node(node)
 
         if self.RLIM_INFINITY is not None:
             # Get the platform's file descriptor limit, if possible
