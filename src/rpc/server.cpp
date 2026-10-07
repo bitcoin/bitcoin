@@ -359,7 +359,7 @@ UniValue OpenRPCArgSchema(const RPCArg& arg, bool include_hidden, bool in_skip_t
         schema = MakeObject({{"type", "string"}});
         break;
     case RPCArg::Type::STR_HEX:
-        schema = MakeObject({{"type", "string"}, {"pattern", "^[0-9a-fA-F]+$"}});
+        schema = MakeObject({{"type", "string"}, {"pattern", "^([0-9a-fA-F]{2})*$"}});
         break;
     case RPCArg::Type::NUM:
         schema = MakeObject({{"type", "number"}});
@@ -460,7 +460,7 @@ UniValue OpenRPCResultSchema(const RPCResult& result)
     case RPCResult::Type::STR_AMOUNT:
         return MakeObject({{"type", "number"}, {"x-bitcoin-unit", "amount"}});
     case RPCResult::Type::STR_HEX:
-        return MakeObject({{"type", "string"}, {"pattern", "^[0-9a-fA-F]+$"}});
+        return MakeObject({{"type", "string"}, {"pattern", "^([0-9a-fA-F]{2})*$"}});
     case RPCResult::Type::NUM:
         return MakeObject({{"type", "number"}});
     case RPCResult::Type::NUM_TIME: {
