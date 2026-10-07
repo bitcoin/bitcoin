@@ -7,29 +7,94 @@
 
 #include <consensus/amount.h>
 #include <primitives/transaction.h>
+#include <scheduler.h>
 #include <util/task_runner.h>
 #include <validation.h>
+#include <validation_queue.h>
 
 #include <cstddef>
 #include <functional>
-#include <thread>
+#include <future>
 #include <utility>
 #include <vector>
 
 namespace node {
 class BlockManager;
 }
+class BaseIndex;
 class CValidationInterface;
 class FakeNodeClock;
+class ValidationSignals;
 struct TestingSetup;
 
-/// Runs callbacks synchronously and deterministically, while avoiding DEBUG_LOCKORDER false positives.
-class ImmediateBackgroundTaskRunner : public util::TaskRunnerInterface
+/** Unregister and drain callbacks before a test-owned index is destroyed, also on assertion failure. */
+class IndexTestGuard
 {
+    BaseIndex& m_index;
+    ValidationSignals& m_signals;
+
 public:
-    void insert(std::function<void()> func) override { std::thread(std::move(func)).join(); }
-    void flush() override {}
-    size_t size() override { return 0; }
+    IndexTestGuard(BaseIndex& index, ValidationSignals& signals) : m_index{index}, m_signals{signals} {}
+    ~IndexTestGuard();
+    IndexTestGuard(const IndexTestGuard&) = delete;
+    IndexTestGuard& operator=(const IndexTestGuard&) = delete;
+};
+
+/** Park the worker without validation locks; destruction releases and waits only for the gate job. */
+class BlockWorkerGate
+{
+    std::promise<void> m_entered;
+    std::future<void> m_entered_future{m_entered.get_future()};
+    std::promise<void> m_release;
+    std::shared_future<void> m_released{m_release.get_future().share()};
+    std::future<BlockProcessingResult> m_completion;
+    bool m_open{false};
+
+public:
+    explicit BlockWorkerGate(ChainstateManager& chainman);
+    ~BlockWorkerGate();
+    void Wait();
+    void Open();
+};
+
+/** Hold queued validation callbacks without taking validation locks. */
+class ValidationCallbackGate
+{
+    ValidationSignals& m_signals;
+    std::promise<void> m_entered;
+    std::future<void> m_entered_future{m_entered.get_future()};
+    std::promise<void> m_release;
+    std::shared_future<void> m_released{m_release.get_future().share()};
+    bool m_open{false};
+
+public:
+    explicit ValidationCallbackGate(ValidationSignals& signals);
+    ~ValidationCallbackGate();
+    void Wait();
+    void Open();
+};
+
+/** Queue callbacks on a separate thread, with no worker left running between fuzz inputs. */
+class FuzzTaskRunner : public util::TaskRunnerInterface
+{
+    SerialTaskRunner* m_runner{nullptr};
+
+public:
+    /** Keep active during initialization and each input; drain before leaving either scope. */
+    class Scope
+    {
+        CScheduler m_scheduler;
+        SerialTaskRunner m_runner{m_scheduler};
+        FuzzTaskRunner& m_owner;
+
+    public:
+        explicit Scope(FuzzTaskRunner& owner);
+        ~Scope();
+    };
+
+    void insert(std::function<void()> func) override;
+    void flush() override;
+    size_t size() override;
 };
 
 struct TestBlockManager : public node::BlockManager {

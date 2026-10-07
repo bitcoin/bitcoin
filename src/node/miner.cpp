@@ -38,6 +38,7 @@
 #include <versionbits.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cstddef>
 #include <functional>
 #include <span>
@@ -359,9 +360,9 @@ void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t 
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
     // Reset cached checks
-    block.m_checked_witness_commitment = false;
-    block.m_checked_merkle_root = false;
-    block.fChecked = false;
+    block.m_validation_cache.m_checked_witness_commitment.store(false);
+    block.m_validation_cache.m_checked_merkle_root.store(false);
+    block.m_validation_cache.m_checked.store(false);
 }
 
 } // namespace node

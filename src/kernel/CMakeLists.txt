@@ -76,6 +76,7 @@ add_library(bitcoinkernel
   ../util/time.cpp
   ../util/tokenpipe.cpp
   ../validation.cpp
+  ../validation_queue.cpp
   ../validationinterface.cpp
   ../versionbits.cpp
   $<TARGET_OBJECTS:bitcoin_clientversion>

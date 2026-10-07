@@ -76,6 +76,13 @@ struct ConnmanTestMsg : public CConnman {
         m_nodes.clear();
     }
 
+    void RemoveTestNode(CNode& node)
+    {
+        LOCK(m_nodes_mutex);
+        std::erase(m_nodes, &node);
+        if (node.IsManualOrFullOutboundConn()) --m_network_conn_counts[node.addr.GetNetwork()];
+    }
+
     void CreateNodeFromAcceptedSocketPublic(std::unique_ptr<Sock> sock,
                                             NetPermissionFlags permissions,
                                             const CAddress& addr_bind,

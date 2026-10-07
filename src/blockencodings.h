@@ -7,14 +7,20 @@
 
 #include <crypto/siphash.h>
 #include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <serialize.h>
+#include <uint256.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <functional>
+#include <ios>
+#include <limits>
+#include <optional>
+#include <utility>
+#include <vector>
 
 class CTxMemPool;
-class BlockValidationState;
-namespace Consensus {
-struct Params;
-};
 
 // Transaction compression schemes for compact block relay can be introduced by writing
 // an actual formatter here.

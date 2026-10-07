@@ -11,6 +11,7 @@
 #include <uint256.h>
 #include <util/time.h>
 
+#include <atomic>
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -76,10 +77,39 @@ public:
     // network and disk
     std::vector<CTransactionRef> vtx;
 
-    // Memory-only flags for caching expensive checks
-    mutable bool fChecked;                            // CheckBlock()
-    mutable bool m_checked_witness_commitment{false}; // CheckWitnessCommitment()
-    mutable bool m_checked_merkle_root{false};        // CheckMerkleRoot()
+    /** Memory-only success caches for an immutable block.
+     *
+     * Concurrent checks and copies may observe these bits independently. A false
+     * bit permits redundant checking; a true bit records a completed check. The
+     * bits do not publish the block contents or synchronize changes to them.
+     *
+     * Payload changes, resets, deserialization, assignment destinations and move
+     * sources require exclusive access. Invalidate the caches before reusing a
+     * changed block; deserialization does not clear them automatically.
+     */
+    struct ValidationCache {
+        std::atomic<bool> m_checked{false};                    //!< CheckBlock()
+        std::atomic<bool> m_checked_witness_commitment{false}; //!< CheckWitnessMalleation()
+        std::atomic<bool> m_checked_merkle_root{false};        //!< CheckMerkleRoot()
+
+        ValidationCache() = default;
+        ValidationCache(const ValidationCache& other) noexcept
+            : m_checked{other.m_checked.load()},
+              m_checked_witness_commitment{other.m_checked_witness_commitment.load()},
+              m_checked_merkle_root{other.m_checked_merkle_root.load()}
+        {
+        }
+
+        ValidationCache& operator=(const ValidationCache& other) noexcept
+        {
+            if (this == &other) return *this;
+            m_checked.store(other.m_checked.load());
+            m_checked_witness_commitment.store(other.m_checked_witness_commitment.load());
+            m_checked_merkle_root.store(other.m_checked_merkle_root.load());
+            return *this;
+        }
+    };
+    mutable ValidationCache m_validation_cache;
 
     CBlock()
     {
@@ -101,9 +131,9 @@ public:
     {
         CBlockHeader::SetNull();
         vtx.clear();
-        fChecked = false;
-        m_checked_witness_commitment = false;
-        m_checked_merkle_root = false;
+        m_validation_cache.m_checked.store(false);
+        m_validation_cache.m_checked_witness_commitment.store(false);
+        m_validation_cache.m_checked_merkle_root.store(false);
     }
 
     std::string ToString() const;

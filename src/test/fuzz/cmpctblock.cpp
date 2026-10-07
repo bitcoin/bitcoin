@@ -53,6 +53,7 @@
 namespace {
 
 TestingSetup* g_setup;
+FuzzTaskRunner* g_task_runner;
 
 //! Fee each created tx will pay.
 const CAmount AMOUNT_FEE{1000};
@@ -113,7 +114,10 @@ void initialize_cmpctblock()
     g_setup = testing_setup.get();
     g_nBits = Params().GenesisBlock().nBits;
     // Replace validation_signals before creating chainman and mempool so they use it.
-    testing_setup->m_node.validation_signals = std::make_unique<ValidationSignals>(std::make_unique<ImmediateBackgroundTaskRunner>());
+    auto task_runner{std::make_unique<FuzzTaskRunner>()};
+    g_task_runner = task_runner.get();
+    testing_setup->m_node.validation_signals = std::make_unique<ValidationSignals>(std::move(task_runner));
+    FuzzTaskRunner::Scope callbacks{*g_task_runner};
     g_mature_coinbase = ResetChainmanAndMempool(*g_setup, init_clock);
 }
 
@@ -124,6 +128,7 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
 
     FakeNodeClock node_clock{1610000000s}; // 2021-01-07, arbitrary
     FakeSteadyClock steady_clock;
+    FuzzTaskRunner::Scope callbacks{*g_task_runner};
 
     auto setup = g_setup;
     auto& connman = *static_cast<ConnmanTestMsg*>(setup->m_node.connman.get());
@@ -435,6 +440,11 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
             random_node.fPauseSend = false;
 
             more_work = connman.ProcessMessagesOnce(random_node);
+            // Block processing is inline in fuzz tests. Deliver its callbacks and
+            // completion marker before continuing with this peer.
+            peerman->ProcessPendingEvents();
+            setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
+            peerman->ProcessPendingEvents();
             peerman->SendMessages(random_node);
         }
 

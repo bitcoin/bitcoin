@@ -36,11 +36,13 @@
 #include <util/result.h>
 #include <util/time.h>
 #include <util/translation.h>
+#include <validation_queue.h> // IWYU pragma: export
 #include <versionbits.h>
 
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
+#include <future>
 #include <map>
 #include <memory>
 #include <optional>
@@ -387,7 +389,14 @@ public:
 
 /** Functions for validating blocks and updating the block tree */
 
-/** Context-independent validity checks */
+/** Context-independent validity checks.
+ *
+ * Concurrent checks or copies of the same block are supported while its contents
+ * and effective consensus parameters remain unchanged. Each call needs its own
+ * validation state, and callers must keep the block and parameters alive. Cached
+ * success is not keyed by consensus parameters; use a fresh block when changing
+ * them. See CBlock::ValidationCache for payload ownership requirements.
+ */
 bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
 
 /**
@@ -949,6 +958,14 @@ enum class SnapshotCompletionResult {
 class ChainstateManager
 {
 private:
+    /** Serialize only initial CheckBlock calls; release before waiting for cs_main. */
+    Mutex m_check_block_mutex;
+
+    /** Process admitted blocks sequentially, with independently owned completion futures. */
+    BlockProcessingQueue m_block_processing_queue;
+    friend class BlockWorkerGate; // Test-only access to submit a blocking job.
+
+    BlockProcessingResult FinishBlockProcessing(const std::shared_ptr<const CBlock>& block, bool force_processing) LOCKS_EXCLUDED(cs_main);
 
     /** The last header for which a headerTip notification was issued. */
     CBlockIndex* m_last_notified_header GUARDED_BY(GetMutex()){nullptr};
@@ -979,6 +996,40 @@ private:
         BlockValidationState& state,
         CBlockIndex** ppindex,
         bool min_pow_checked) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
+     * Determine whether already-indexed block data should proceed to checks and
+     * persistence under the current requested/unrequested anti-DoS policy.
+     */
+    bool ShouldMaybeWrite(const CBlockIndex* pindex, bool fRequested) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
+     * Accept the header and apply storage policy and block/contextual checks.
+     * May update the block index, but does not store block data or activate a chain.
+     *
+     * @param[out] pindex Index of the accepted header, if header acceptance succeeds.
+     * @param[out] should_write True only when initial checks pass and storage is needed.
+     * @return False on failed checks; true for both storage candidates and successful no-ops.
+     */
+    bool PreWriteCheckBlock(
+        const CBlock& block,
+        BlockValidationState& state,
+        CBlockIndex*& pindex,
+        bool fRequested,
+        bool& should_write,
+        bool min_pow_checked) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
+     * Store block data that passed admission and still needs persistence.
+     * If dbp is non-null, the block data already resides on disk.
+     * If provided, fNewBlock is set before storage and remains true on write failure.
+     */
+    bool StoreBlock(
+        const std::shared_ptr<const CBlock>& pblock,
+        BlockValidationState& state,
+        CBlockIndex* pindex,
+        const FlatFilePos* dbp,
+        bool* fNewBlock) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     friend Chainstate;
 
     /** Most recent headers presync progress update, for rate-limiting. */
@@ -1009,6 +1060,13 @@ public:
     using Options = kernel::ChainstateManagerOpts;
 
     explicit ChainstateManager(const util::SignalInterrupt& interrupt, Options options, node::BlockManager::Options blockman_options);
+
+    /** Start only after worker dependencies are initialized. */
+    void StartBlockProcessing() LOCKS_EXCLUDED(cs_main);
+    /** Close admission without waiting for accepted jobs. */
+    void InterruptBlockProcessing() { m_block_processing_queue.Interrupt(); }
+    /** Finish accepted jobs before destroying callbacks, networking, or mempool dependencies. */
+    void StopBlockProcessing() LOCKS_EXCLUDED(cs_main) { m_block_processing_queue.Stop(); }
 
     //! Function to restart active indexes; set dynamically to avoid a circular
     //! dependency on `base/index.cpp`.
@@ -1248,30 +1306,42 @@ public:
         std::multimap<uint256, FlatFilePos>* blocks_with_unknown_parent = nullptr);
 
     /**
-     * Process an incoming block. This only returns after the best known valid
-     * block is made active. Note that it does not, however, guarantee that the
-     * specific block passed to it has been checked for validity!
+     * Process an incoming block and return a future for its processing result.
+     * Initial checks run on the caller. Admitted blocks needing storage are processed
+     * by the worker after StartBlockProcessing(), or synchronously before startup
+     * to support deterministic fuzzing and standalone callers.
+     * The result does not guarantee that the specific block passed to it has been
+     * checked for validity!
      *
      * If you want to *possibly* get feedback on whether block is valid, you must
      * install a CValidationInterface (see validationinterface.h) - this will have
      * its BlockChecked method called whenever *any* block completes validation.
      *
-     * Note that we guarantee that either the proof-of-work is valid on block, or
-     * (and possibly also) BlockChecked will have been called.
+     * Initial failures are returned through state without a BlockChecked callback.
+     * Deferred BlockChecked callbacks are queued before the processing future is ready,
+     * but callers needing their results must also wait for the validation callback queue.
+     * Cached-invalid rejections found by the worker are also included in the result,
+     * allowing callers to attribute them to each individual submission.
      *
      * May not be called in a validationinterface callback.
      *
      * @param[in]   block The block we want to process.
+     * @param[out]  state Receives initial validation or interrupted-submission errors. Must be freshly initialized.
+     *                    A valid state does not imply full block validity or successful processing;
+     *                    deferred errors are reported through callbacks and the future's result.
      * @param[in]   force_processing Process this block even if unrequested; used for non-network block sources.
      * @param[in]   min_pow_checked  True if proof-of-work anti-DoS checks have
      *                               been done by caller for headers chain
      *                               (note: only affects headers acceptance; if
      *                               block header is already present in block
      *                               index then this parameter has no effect)
-     * @param[out]  new_block A boolean which is set to indicate if the block was first received via this call
-     * @returns     If the block was processed, independently of block validity
+     * @returns     A valid future containing processing success and whether the block was
+     *              first received via this call, independently of block validity.
+     *              new_block can be true even if processing fails. cached_invalid
+     *              indicates rejection by the worker's pre-storage invalidity recheck.
      */
-    bool ProcessNewBlock(const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked, bool* new_block) LOCKS_EXCLUDED(cs_main);
+    std::future<BlockProcessingResult> ProcessNewBlock(const std::shared_ptr<const CBlock>& block, BlockValidationState& state, bool force_processing, bool min_pow_checked)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_check_block_mutex) LOCKS_EXCLUDED(cs_main);
 
     /**
      * Process incoming block headers.
