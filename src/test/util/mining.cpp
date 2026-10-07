@@ -90,7 +90,7 @@ bool BuildChain(const NodeContext& node, const CBlockIndex* pindex,
             .use_mempool = false,
             .coinbase_output_script = coinbase_script_pub_key,
         })};
-        CBlock block{Assert(block_template)->block};
+        CBlock block{block_template->block};
 
         // The template is built on the active tip, so repoint it at pindex and
         // redo the fields that depend on the predecessor.
@@ -175,7 +175,7 @@ std::shared_ptr<CBlock> PrepareBlock(const NodeContext& node,
 {
     auto& block_template_manager = *Assert(node.block_template_manager);
     auto block_template = block_template_manager.CreateNewTemplate(assembler_options);
-    auto block = std::make_shared<CBlock>(Assert(block_template)->block);
+    auto block = std::make_shared<CBlock>(block_template->block);
 
     LOCK(cs_main);
     block->nTime = Assert(node.chainman)->ActiveChain().Tip()->GetMedianTimePast() + 1;

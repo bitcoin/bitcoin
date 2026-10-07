@@ -459,7 +459,6 @@ CBlock TestChain100Setup::CreateBlock(
         .use_mempool = false,
         .coinbase_output_script = scriptPubKey,
     })};
-    Assert(block_template);
     CBlock block{block_template->block};
 
     Assert(block.vtx.size() == 1);
