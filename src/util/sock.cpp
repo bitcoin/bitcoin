@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <compare>
 #include <exception>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -162,6 +163,10 @@ bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occur
 
 bool Sock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const
 {
+    // poll() takes the timeout as an int and select() rejects very large values on
+    // some systems (e.g. macOS), so cap it at INT_MAX milliseconds (~24.8 days).
+    timeout = std::min(timeout, std::chrono::milliseconds{std::numeric_limits<int>::max()});
+
 #ifdef USE_POLL
     std::vector<pollfd> pfds;
     for (const auto& [sock, events] : events_per_sock) {
