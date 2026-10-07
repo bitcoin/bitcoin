@@ -152,6 +152,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         self.check_server_busy_idle_timeout()
         self.check_auth_required()
         self.check_wrong_credentials()
+        self.check_cross_origin_rpc()
         self.check_malformed_auth_headers()
         self.check_disallowed_http_methods()
         self.check_path_traversal()
@@ -490,6 +491,22 @@ class HTTPBasicsTest (BitcoinTestFramework):
         response = conn.post('/', '{"method": "getbestblockhash"}')
         assert_equal(response.status, http.client.UNAUTHORIZED)
         assert response.getheader('WWW-Authenticate') is not None
+
+
+    def check_cross_origin_rpc(self):
+        self.log.info("Check cross-origin JSON-RPC requests with and without credentials")
+        for origin in ("http://127.0.0.1:8080", "null", ""):
+            conn = BitcoinHTTPConnection(self.node)
+            conn.add_header("Origin", origin)
+            conn.add_header("Content-Type", "text/plain")
+            response = conn.post('/', '{"method": "getblockcount", "id": 1}')
+            response.read()
+            assert_equal(response.status, http.client.OK)  # TODO: Reject requests carrying any Origin header
+
+            del conn.headers["Authorization"]
+            response = conn.post('/', '{"method": "getblockcount", "id": 1}')
+            assert_equal(response.status, http.client.UNAUTHORIZED)  # TODO: Reject requests carrying Origin before authentication
+            assert response.getheader('WWW-Authenticate') is not None  # TODO: Do not challenge requests carrying Origin
 
 
     def check_malformed_auth_headers(self):
