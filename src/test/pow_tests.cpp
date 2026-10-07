@@ -135,6 +135,19 @@ BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_zero_target)
     BOOST_CHECK(!CheckProofOfWork(hash, nBits, consensus));
 }
 
+BOOST_AUTO_TEST_CASE(GetBitsProof_test)
+{
+    // Targets that are zero, negative or overflow encode no work.
+    BOOST_CHECK(GetBitsProof(0x00000000) == 0);
+    BOOST_CHECK(GetBitsProof(0x01003456) == 0);
+    BOOST_CHECK(GetBitsProof(0x04923456) == 0);
+    BOOST_CHECK(GetBitsProof(0xff123456) == 0);
+    // The exponent byte is unsigned, so this is a large exponent that overflows.
+    BOOST_CHECK(GetBitsProof(0x80010203) == 0);
+    // The genesis block target.
+    BOOST_CHECK(GetBitsProof(0x1d00ffff) == 0x100010001);
+}
+
 BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
