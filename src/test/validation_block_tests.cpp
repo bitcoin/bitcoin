@@ -85,7 +85,6 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
     auto block_template{block_template_manager.CreateNewTemplate({
         .coinbase_output_script = CScript{} << i++ << OP_TRUE,
     })};
-    BOOST_REQUIRE(block_template);
     auto pblock = std::make_shared<CBlock>(block_template->block);
     pblock->hashPrevBlock = prev_hash;
     pblock->nTime = ++time;
@@ -355,7 +354,6 @@ BOOST_AUTO_TEST_CASE(witness_commitment_index)
     auto block_template{block_template_manager.CreateNewTemplate({
         .coinbase_output_script = pubKey,
     })};
-    BOOST_REQUIRE(block_template);
     CBlock pblock{block_template->block};
 
     CTxOut witness;
