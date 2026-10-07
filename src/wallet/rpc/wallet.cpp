@@ -938,80 +938,6 @@ static RPCMethod exportwatchonlywallet()
     };
 }
 
-static util::Expected<std::pair<CExtKey, KeyOriginInfo>, WalletError> DeriveHDKey(const CWallet& wallet, const std::vector<uint32_t>& path, std::optional<CExtPubKey> hdkey) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
-{
-    AssertLockHeld(wallet.cs_wallet);
-
-    if (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        // Watch-only wallets can't contain unused(KEY) descriptors
-        return util::Unexpected{WalletError{WalletErrorCode::GenericError, _("derivehdkey is not available for watch-only wallets")}};
-    }
-
-    if (!HasHardenedDerivation(path)) {
-        return util::Unexpected{WalletError{WalletErrorCode::InvalidParameter, _("Derivation path requires at least one hardened step")}};
-    }
-
-    if (wallet.IsLocked()) {
-        return util::Unexpected{WalletError{WalletErrorCode::UnlockNeeded, _("Wallet needs to be unlocked to perform this operation.")}};
-    }
-
-    CExtPubKey xpub;
-    if (hdkey) {
-        xpub = *hdkey;
-        if (!xpub.pubkey.IsValid()) {
-            return util::Unexpected{WalletError{WalletErrorCode::InvalidParameter, _("Unable to parse HD key. Please provide a valid xpub")}};
-        }
-
-        // Accept an xpub from an active or unused(KEY) descriptor, but
-        // not from a (used) inactive one.
-        std::set<CExtPubKey> xpub_candidates;
-        for (const auto& candidate : wallet.GetHDPubKeys(HDKeyFilter::UnusedKey)) {
-            xpub_candidates.insert(candidate.first);
-        }
-        for (const auto& candidate : wallet.GetHDPubKeys(HDKeyFilter::Active)) {
-            xpub_candidates.insert(candidate.first);
-        }
-        if (!xpub_candidates.contains(xpub)) {
-            return util::Unexpected{WalletError{WalletErrorCode::InvalidParameter, _("HD key is not used by an active or unused(KEY) descriptor")}};
-        }
-    }
-
-    // If hdkey was not specified, try to look it up. First consider
-    // unused(KEY) descriptors. Otherwise look for active descriptors.
-    if (!hdkey) {
-        HDPubKeyMap wallet_xpubs{wallet.GetHDPubKeys(HDKeyFilter::UnusedKey)};
-
-        if (wallet_xpubs.size() > 1) {
-            return util::Unexpected{WalletError{WalletErrorCode::InvalidParameter, _("Unable to determine which HD key to use. Please specify with 'hdkey'")}};
-        } else if (wallet_xpubs.size() == 1) {
-            xpub = wallet_xpubs.begin()->first;
-        } else {
-            HDPubKeyMap active_xpubs = wallet.GetHDPubKeys(HDKeyFilter::Active);
-            if (active_xpubs.empty()) {
-                return util::Unexpected{WalletError{WalletErrorCode::InvalidParameter, _("No active or unused(KEY) descriptor found")}};
-            }
-
-            if (active_xpubs.size() > 1) {
-                return util::Unexpected{WalletError{WalletErrorCode::InvalidParameter, _("Unable to determine which HD key to use from active descriptors. Please specify with 'hdkey'")}};
-            }
-
-            xpub = active_xpubs.begin()->first;
-        }
-    }
-
-    std::optional<CExtKey> xprv{wallet.GetExtKey(xpub)};
-    if (!xprv) {
-        return util::Unexpected{WalletError{WalletErrorCode::InvalidParameter, strprintf(_("Private key for %s is not known"), EncodeExtPubKey(xpub))}};
-    }
-
-    std::optional<std::pair<CExtKey, KeyOriginInfo>> child{DeriveExtKey(*xprv, path)};
-    if (!child) {
-        return util::Unexpected{WalletError{WalletErrorCode::InvalidParameter, _("Unable to derive HD key at the requested path")}};
-    }
-
-    return *child;
-}
-
 RPCMethod derivehdkey()
 {
     return RPCMethod{
@@ -1055,7 +981,7 @@ RPCMethod derivehdkey()
                 xpub = DecodeExtPubKey(hdkey.get_str());
             }
 
-            const auto child{DeriveHDKey(*wallet, path, xpub)};
+            const auto child{wallet->DeriveHDKey(path, xpub)};
             if (!child) {
                 throw JSONRPCError(HandleWalletErrorCode(child.error().code), child.error().message.original);
             }
