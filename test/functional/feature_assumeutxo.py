@@ -733,6 +733,11 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.log.info("Check node2 updated the local services during snapshot load")
         self.assert_only_network_limited_service(n2)
 
+        self.log.info("Verify snapshot tip with default checks before background validation reaches it")
+        n2.submitblock(snapshot_block)
+        with n2.assert_debug_log(expected_msgs=["Verifying last 6 blocks at level 3", f"Verification error: irrecoverable inconsistency in block data at {SNAPSHOT_BASE_HEIGHT},"]):  # TODO: Missing snapshot undo should stop verification without reporting corruption
+            assert_equal(n2.verifychain(), False)
+
         for reindex_arg in ['-reindex=1', '-reindex-chainstate=1']:
             self.log.info(f"Check that restarting with {reindex_arg} will delete the snapshot chainstate")
             self.restart_node(2, extra_args=[reindex_arg, *self.extra_args[2]])
