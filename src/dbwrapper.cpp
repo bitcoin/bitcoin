@@ -395,15 +395,16 @@ struct CDBIterator::IteratorImpl {
     explicit IteratorImpl(leveldb::Iterator* _iter) : iter{_iter} {}
 };
 
-CDBIterator::CDBIterator(const CDBWrapper& _parent, std::unique_ptr<IteratorImpl> _piter) : parent(_parent),
-                                                                                            m_impl_iter(std::move(_piter))
+CDBIterator::CDBIterator(const CDBWrapper& _parent, util::NotNullUniquePtr<IteratorImpl> _piter)
+    : parent(_parent),
+      m_impl_iter(std::move(_piter))
 {
     m_scratch.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
 }
 
 CDBIterator* CDBWrapper::NewIterator()
 {
-    return new CDBIterator{*this, std::make_unique<CDBIterator::IteratorImpl>(DBContext().pdb->NewIterator(DBContext().iteroptions))};
+    return new CDBIterator{*this, util::NotNull{std::make_unique<CDBIterator::IteratorImpl>(DBContext().pdb->NewIterator(DBContext().iteroptions))}};
 }
 
 void CDBIterator::SeekImpl(std::span<const std::byte> key)

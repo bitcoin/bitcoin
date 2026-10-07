@@ -7,6 +7,7 @@
 
 #include <net.h>
 #include <sync.h>
+#include <util/not_null.h>
 
 #include <memory>
 #include <tuple>
@@ -52,7 +53,7 @@ class TxReconciliationTracker
 {
 private:
     class Impl;
-    const std::unique_ptr<Impl> m_impl;
+    const util::NotNullUniquePtr<Impl> m_impl;
 
 public:
     explicit TxReconciliationTracker(uint32_t recon_version);
