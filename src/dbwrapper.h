@@ -11,18 +11,19 @@
 #include <streams.h>
 #include <util/byte_units.h>
 #include <util/check.h>
-#include <util/expected.h>
 #include <util/fs.h>
 #include <util/obfuscation.h>
 
 #include <cstddef>
 #include <cstdint>
 #include <exception>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 
 namespace leveldb {
 class Env;
@@ -53,6 +54,10 @@ struct DBParams {
     bool obfuscate = false;
     //! If true, build a LevelDB bloom filter to accelerate point lookups.
     bool bloom_filter = true;
+    //! Invoked right before the process aborts on a read failure.
+    //! Runs synchronously from database reads, potentially on any thread while locks are held.
+    //! The callback must be safe in that context.
+    std::function<void()> read_error_cb{};
     //! Passed-through options.
     DBOptions options{};
     //! If non-null, use this as the leveldb::Env instead of the default.
@@ -202,13 +207,26 @@ private:
     //! optional XOR-obfuscation of the database
     Obfuscation m_obfuscation;
 
+    //! runs before aborting on a read failure
+    std::function<void()> m_read_error_cb;
+
     //! obfuscation key storage key, null-prefixed to avoid collisions
     inline static const std::string OBFUSCATION_KEY{"\000obfuscate_key", 14}; // explicit size to avoid truncation at leading \0
 
     std::optional<std::string> ReadImpl(std::span<const std::byte> key) const;
-    bool ExistsImpl(std::span<const std::byte> key) const;
+    //! Aborts rather than returning "not found", which would misreport an unreadable database as a missing entry
+    [[noreturn]] void FatalReadError(std::string_view what, std::string_view detail) const;
     size_t EstimateSizeImpl(std::span<const std::byte> key1, std::span<const std::byte> key2) const;
     auto& DBContext() const LIFETIMEBOUND { return *Assert(m_db_context); }
+
+    template <typename K>
+    std::optional<std::string> ReadRaw(const K& key) const
+    {
+        DataStream ssKey{};
+        ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
+        ssKey << key;
+        return ReadImpl(ssKey);
+    }
 
 public:
     CDBWrapper(const DBParams& params);
@@ -217,82 +235,20 @@ public:
     CDBWrapper(const CDBWrapper&) = delete;
     CDBWrapper& operator=(const CDBWrapper&) = delete;
 
-    struct ReadFailure {
-        enum class Code {
-            DeserializationError,   //!< Key exists but value could not be deserialized.
-            DatabaseError,          //!< Unexpected internal DB error.
-        };
-
-        Code status;
-        std::string err_msg;
-    };
-
-    using ReadStatus = util::Expected<bool, ReadFailure>;
-
-    /**
-     * Read and deserialize a value from the database, with explicit error discrimination.
-     *
-     * Unlike Read(), this method distinguishes between a missing key, a deserialization
-     * failure (DeserializationError), and an internal DB error (DatabaseError),
-     * enabling callers to treat data corruption differently from an absent entry.
-     *
-     * @note Callers are expected to provide well-formed keys; key serialization
-     *       is the only operation that may throw.
-     *
-     * @param[in]  key    The key to look up.
-     * @param[out] value  Populated with the deserialized value when the returned
-     *                    Expected holds true; indeterminate otherwise.
-     * @return On success, true if the key was found (value populated) or false if
-     *         the key was absent. On failure, a ReadFailure describing the error.
-     */
+    //! Returns false only for a missing key. LevelDB and value-deserialization errors are fatal.
     template <typename K, typename V>
-    [[nodiscard]] ReadStatus TryRead(const K& key, V& value) const
+    [[nodiscard]] bool Read(const K& key, V& value) const
     {
-        DataStream ssKey{};
-        ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
-        // Key serialization is the only operation that may throw.
-        // Callers are expected to provide well-formed keys.
-        ssKey << key;
-
-        std::optional<std::string> strValue;
-        try {
-            strValue = ReadImpl(ssKey);
-            if (!strValue) {
-                return false; // not found
-            }
-        } catch (const std::exception& e) {
-            return util::Unexpected(ReadFailure{ReadFailure::Code::DatabaseError, e.what()});
-        }
-
+        auto strValue{ReadRaw(key)};
+        if (!strValue) return false;
         try {
             std::span ssValue{MakeWritableByteSpan(*strValue)};
             m_obfuscation(ssValue);
             SpanReader{ssValue} >> value;
         } catch (const std::exception& e) {
-            return util::Unexpected(ReadFailure{ReadFailure::Code::DeserializationError, e.what()});
+            FatalReadError("Corrupted database entry", e.what());
         }
-
         return true;
-    }
-
-    /**
-     * Wrapper around TryRead() that preserves the original Read() semantics:
-     * returns true on success, false if the key is absent or deserialization
-     * fails, and throws dbwrapper_error on an internal DB error.
-     *
-     * Prefer TryRead() when the caller needs to distinguish between a missing
-     * key and a corrupt value.
-     */
-    template <typename K, typename V>
-    bool Read(const K& key, V& value) const
-    {
-        const ReadStatus res = TryRead(key,value);
-        if (res.has_value()) return res.value();
-        switch (const auto& [err_code, err_msg] = res.error(); err_code) {
-            case ReadFailure::Code::DeserializationError: return false;
-            case ReadFailure::Code::DatabaseError: throw dbwrapper_error(err_msg);
-        } // no default case, so the compiler can warn about missing cases
-        std::abort(); // unreachable
     }
 
     template <typename K, typename V>
@@ -306,10 +262,7 @@ public:
     template <typename K>
     bool Exists(const K& key) const
     {
-        DataStream ssKey{};
-        ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
-        ssKey << key;
-        return ExistsImpl(ssKey);
+        return !!ReadRaw(key);
     }
 
     template <typename K>
