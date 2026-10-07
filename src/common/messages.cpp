@@ -24,7 +24,7 @@ using node::TransactionError;
 using util::Join;
 
 namespace common {
-std::string StringForFeeReason(FeeReason reason)
+const std::map<FeeReason, std::string>& FeeReasonMap()
 {
     static const std::map<FeeReason, std::string> fee_reason_strings = {
         {FeeReason::FEE_RATE_ESTIMATOR, "Fee Rate Estimator"},
@@ -33,11 +33,22 @@ std::string StringForFeeReason(FeeReason reason)
         {FeeReason::FALLBACK, "Fallback fee"},
         {FeeReason::REQUIRED, "Minimum Required Fee"},
     };
+    return fee_reason_strings;
+}
+
+std::string StringForFeeReason(FeeReason reason)
+{
+    const auto& fee_reason_strings = FeeReasonMap();
     auto reason_string = fee_reason_strings.find(reason);
 
     if (reason_string == fee_reason_strings.end()) return "Unknown";
 
     return reason_string->second;
+}
+
+std::string FeeReasons(const std::string& delimiter)
+{
+    return Join(FeeReasonMap(), delimiter, [](const auto& reason) { return reason.second; });
 }
 
 const std::vector<std::pair<std::string, FeeEstimateMode>>& FeeModeMap()
