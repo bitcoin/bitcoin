@@ -28,6 +28,7 @@ import shlex
 import subprocess
 import sys
 import tempfile
+import uuid
 import re
 import logging
 from test_framework.util import (
@@ -650,7 +651,7 @@ def run_ctest_test(*, config, test, args, combined_logs_len, tmpdirprefix):
         args.append(f"--timeout-factor={timeout_factor}")
 
     # Leave failed test logs intact across reruns, just like the normal runner.
-    testdir = os.path.join(tmpdirprefix, f"ctest_{pathlib.Path(test[0]).stem}_{time.time_ns()}")
+    testdir = os.path.join(tmpdirprefix, f"ctest_{pathlib.Path(test[0]).stem}_{uuid.uuid4().hex}")
     args.append(f"--tmpdir={testdir}")
     # The runner is invoked from the build tree, but execute the test script
     # from the configured source tree, matching the native test_runner.py's behavior.
