@@ -36,7 +36,7 @@ constexpr bool ShouldWarnOversizedDbCache(uint64_t dbcache, uint64_t total_ram) 
     return dbcache > cap;
 }
 
-void LogOversizedDbCache(const ArgsManager& args) noexcept;
+void LogOversizedDbCache(const ArgsManager& args);
 } // namespace node
 
 #endif // BITCOIN_NODE_CACHES_H
