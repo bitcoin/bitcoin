@@ -501,12 +501,12 @@ class HTTPBasicsTest (BitcoinTestFramework):
             conn.add_header("Content-Type", "text/plain")
             response = conn.post('/', '{"method": "getblockcount", "id": 1}')
             response.read()
-            assert_equal(response.status, http.client.OK)  # TODO: Reject requests carrying any Origin header
+            assert_equal(response.status, http.client.FORBIDDEN)
 
             del conn.headers["Authorization"]
             response = conn.post('/', '{"method": "getblockcount", "id": 1}')
-            assert_equal(response.status, http.client.UNAUTHORIZED)  # TODO: Reject requests carrying Origin before authentication
-            assert response.getheader('WWW-Authenticate') is not None  # TODO: Do not challenge requests carrying Origin
+            assert_equal(response.status, http.client.FORBIDDEN)
+            assert response.getheader('WWW-Authenticate') is None
 
 
     def check_malformed_auth_headers(self):
