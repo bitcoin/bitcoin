@@ -52,8 +52,8 @@ are combined with named values.
 Examples:
 
 ```sh
-# "params": ["mywallet", false, false, "", false, false, true]
-bitcoin-cli createwallet mywallet false false "" false false true
+# "params": ["mywallet", false, false, "", false, true, true]
+bitcoin-cli createwallet mywallet false false "" false true true
 
 # "params": {"wallet_name": "mywallet", "load_on_startup": true}
 bitcoin-cli -named createwallet wallet_name=mywallet load_on_startup=true
