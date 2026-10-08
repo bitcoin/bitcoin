@@ -315,15 +315,10 @@ FUZZ_TARGET(p2p_1p1c_liveness, .init = ::initialize)
         //! one (rejected for feerate before its scripts fail), but an honest non-witness parent sent by a
         //! peer that did not announce the child takes the same path.
         bool parent_stripped{false};
-        //! While a version of the parent is in the mempool, another version that is witnessless or the
-        //! honest one is rejected as TX_CONFLICT, and its wtxid (the parent's txid, or the honest wtxid)
-        //! enters the reject filter. Once the parent then leaves the mempool, the child is dropped as an
-        //! orphan with a rejected parent, or the honest parent is ignored.
-        bool known_parent_replayed{false};
-        //! A witnessless copy of the confirmed transaction funding the child is rejected before any
-        //! script check (as TX_CONFLICT for CONFIRMED_PARENT, as TX_CONSENSUS for a coinbase), and its
-        //! wtxid, also its txid, enters the reject filter. Orphan handling checks every input's parent
-        //! against it, confirmed or not, so the child is dropped as having a rejected parent.
+        //! A witnessless copy of a coinbase funding the child is rejected as TX_CONSENSUS before any
+        //! input lookup, and its wtxid, also its txid, enters the reject filter. Orphan handling checks
+        //! every input's parent against it, confirmed or not, so the child is dropped as having a
+        //! rejected parent. (A copy of CONFIRMED_PARENT is rejected as TX_CONFLICT, which is not added.)
         bool confirmed_parent_stripped{false};
         //! A peer announced or delivered the child, and delivered another version of the parent that
         //! was not accepted. Their 1p1c package (the child is found in the orphanage as announced by
@@ -338,14 +333,12 @@ FUZZ_TARGET(p2p_1p1c_liveness, .init = ::initialize)
         bool parent_left_with_orphan{false};
         bool Any() const
         {
-            return parent_stripped || known_parent_replayed || confirmed_parent_stripped || package_with_other_parent || parent_left_with_orphan;
+            return parent_stripped || confirmed_parent_stripped || package_with_other_parent || parent_left_with_orphan;
         }
     } holes;
     // Adversaries that announced or delivered the child, and that delivered another version of the
     // parent that was not accepted.
     std::set<NodeId> child_announcers, other_parent_senders;
-    // Whether a witnessless or the honest version of the parent was rejected as TX_CONFLICT.
-    bool parent_replay_rejected{false};
     int reconnects{0};
 
     auto receive = [&](CNode& peer, CSerializedNetMsg&& msg) { Assert(connman.ReceiveMsgFrom(peer, std::move(msg))); };
@@ -465,16 +458,12 @@ FUZZ_TARGET(p2p_1p1c_liveness, .init = ::initialize)
                 }
                 case 3: delivered = MutateWitness(fuzzed_data_provider, tx); break;
                 }
-                if (tx == cast.parent && (!delivered->HasWitness() || delivered->GetWitnessHash() == cast.parent->GetWitnessHash())) {
-                    const auto in_mempool{mempool.get(cast.parent->GetHash())};
-                    if (in_mempool && in_mempool->GetWitnessHash() != delivered->GetWitnessHash()) parent_replay_rejected = true;
-                }
                 if (!delivered->HasWitness()) {
                     if (tx == cast.parent && !mempool.exists(cast.parent->GetHash()) &&
                         mempool.m_opts.min_relay_feerate.GetFee(GetVirtualTransactionSize(*delivered)) > cast.parent_fee) {
                         holes.parent_stripped = true;
                     }
-                    if (tx == cast.confirmed) holes.confirmed_parent_stripped = true;
+                    if (tx == cast.confirmed && tx->IsCoinBase()) holes.confirmed_parent_stripped = true;
                 } else if (tx == cast.parent && delivered->GetWitnessHash() != cast.parent->GetWitnessHash()) {
                     other_parent.emplace(adversary->GetId(), delivered->GetWitnessHash());
                 } else if (delivered->GetWitnessHash() == cast.child->GetWitnessHash()) {
@@ -510,7 +499,6 @@ FUZZ_TARGET(p2p_1p1c_liveness, .init = ::initialize)
                 LOCK(mempool.cs);
                 if (const auto parent{mempool.get(cast.parent->GetHash())}) {
                     if (orphaned) holes.parent_left_with_orphan = true;
-                    if (parent_replay_rejected) holes.known_parent_replayed = true;
                     mempool.removeRecursive(*parent, MemPoolRemovalReason::SIZELIMIT);
                 }
             });

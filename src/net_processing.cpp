@@ -3454,8 +3454,13 @@ void PeerManagerImpl::ProcessPackageResult(const node::PackageToValidate& packag
                     ProcessValidTx(nodeid, tx, tx_result.m_replaced_transactions);
                     break;
                 }
-                case MempoolAcceptResult::ResultType::INVALID:
                 case MempoolAcceptResult::ResultType::DIFFERENT_WITNESS:
+                {
+                    // Another version of this tx is in the mempool: like TX_CONFLICT, the tx is known,
+                    // not invalid, so its wtxid must not enter the reject filter.
+                    break;
+                }
+                case MempoolAcceptResult::ResultType::INVALID:
                 {
                     // Don't add to vExtraTxnForCompact, as these transactions should have already been
                     // added there when added to the orphanage or rejected for TX_RECONSIDERABLE.
