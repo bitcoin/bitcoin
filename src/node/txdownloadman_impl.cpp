@@ -475,7 +475,10 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
             // spending it as having a rejected parent.
             RecentRejectsFilter().insert(ptx->GetWitnessHash().ToUint256());
         }
-        m_txrequest.ForgetTxHash(ptx->GetWitnessHash().ToUint256());
+        // Forget only wtxid announcements: what was rejected is this wtxid, while a txid announcement (e.g. for
+        // an orphan's missing parent) asks for the transaction with any witness. This matters when this copy
+        // has no witness, so that its wtxid equals the txid.
+        m_txrequest.ForgetTxHash(GenTxid{ptx->GetWitnessHash()});
         // If the transaction failed for TX_INPUTS_NOT_STANDARD,
         // then we know that the witness was irrelevant to the policy
         // failure, since this check depends only on the txid

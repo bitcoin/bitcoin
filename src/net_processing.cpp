@@ -861,8 +861,10 @@ private:
     /** Synchronizes tx download including TxRequestTracker, rejection filters, and TxOrphanage.
      * Lock invariants:
      * - A txhash (txid or wtxid) in m_txrequest is not also in m_orphanage.
-     * - A txhash (txid or wtxid) in m_txrequest is not also in m_lazy_recent_rejects.
-     * - A txhash (txid or wtxid) in m_txrequest is not also in m_lazy_recent_rejects_reconsiderable.
+     * - A wtxid announcement in m_txrequest does not have its wtxid in m_lazy_recent_rejects or
+     *   m_lazy_recent_rejects_reconsiderable. Txid announcements are not constrained by wtxids in those filters,
+     *   even an equal one (the wtxid of a copy without witness): a txid announcement asks for the transaction
+     *   with any witness.
      * - A txhash (txid or wtxid) in m_txrequest is not also in m_lazy_recent_confirmed_transactions.
      * - Each data structure's limits hold (m_orphanage max size, m_txrequest per-peer limits, etc).
      */
