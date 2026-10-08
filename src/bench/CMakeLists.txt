@@ -13,6 +13,7 @@ add_executable(bench_bitcoin
   bip324_ecdh.cpp
   bip352.cpp
   block_assemble.cpp
+  block_deserialize.cpp
   blockencodings.cpp
   ccoins_caching.cpp
   chacha20.cpp
