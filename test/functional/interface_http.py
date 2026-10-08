@@ -16,6 +16,7 @@ from test_framework.wallet import MiniWallet
 
 import concurrent.futures
 import http.client
+import re
 import socket
 import threading
 import time
@@ -731,6 +732,11 @@ class HTTPBasicsTest (BitcoinTestFramework):
         tip_height = self.node.getblockcount()
         conn.post_raw('/', f'{{"method": "waitforblockheight", "params": [{tip_height + 1}]}}')
 
+        # The server logs each successful socket read with the peer's address
+        # (our ephemeral port) and the connection id. The port uniquely
+        # identifies the flood connection's log lines.
+        local_port = conn.conn.sock.getsockname()[1]
+
         # Flood the same connection with big pipelined requests:
         # Large garbage submitblock (just under MAX_BODY_SIZE each, including HTTP/jsonrpc overhead)
         garbage_block = "0" * (MAX_BODY_SIZE - 100)
@@ -741,55 +747,92 @@ class HTTPBasicsTest (BitcoinTestFramework):
             body
         ).encode("ascii")
 
-        # Non-blocking send: When the server stops reading from the buffer
-        # due to TCP backpressure, Python will raise an error. If the socket
-        # was set to blocking, we would have to wait for an ambiguous timeout.
+        # Save a debug log checkpoint
+        dl_start_size = self.node.debug_log_size(encoding="utf-8")
+
+        # Non-blocking send: When the server stops reading from the buffer,
+        # Python will raise an error. That stop could be due to actual
+        # backpressure from the server or any other throttle in the TCP chain.
+        # If the socket was set to blocking, we would have to wait for a timeout.
         conn.conn.sock.setblocking(False)
 
-        # Kernel socket buffer sizes vary widely across platforms,
-        # so we can't rely on counting sent() bytes to determine if the
-        # server is actually draining its end of the socket.
-        # When the server is busy, a continuous flood from the client SHOULD,
-        # at some point, stall indefinitely. An unpatched server will continue
-        # to accept data from the socket, at some rate, indefinitely.
+        # Use a background thread to push flood data until either an absurd
+        # limit has been reached (server is not throttling) or the foreground
+        # thread has determined that the server is throttling correctly.
+        # We can't rely on TCP backpressure at the client socket to assert
+        # server behavior because different platforms (macos in particular)
+        # like to open and close the TCP window size based on heuristics
+        # out of our control, and delay transmission when windows get too small.
+        flood_stop = threading.Event()
 
-        # If send() is blocked for this many seconds, we assume the server
-        # is behaving correctly.
-        STALL_TIMEOUT = 5
-        # If send() continues to progress for this many seconds, we assume
-        # the server is vulnerable to memory exhaustion.
-        PROGRESS_TIMEOUT = 10
+        def send_flood(self, conn):
+            sent_total = 0
+            blocked = False
+            while not flood_stop.is_set():
+                try:
+                    sent = conn.conn.sock.send(flood)
+                    sent_total += sent
+                    blocked = False
+                    self.log.debug(f"Client sent {sent} bytes (total {sent_total})")
+                except BlockingIOError:
+                    if not blocked:
+                        blocked = True
+                        self.log.debug(f"Client socket blocked after sending {sent_total} bytes")
+                if sent_total > len(flood) * 10:
+                    raise Exception(f"Client sent too much data: {sent_total} bytes")
+                flood_stop.wait(0.05)
 
-        sent = 0
-        stuck_since = None
-        start = time.monotonic()
-        while True:
-            try:
-                sent += conn.conn.sock.send(flood[sent % len(flood):])
-                # Progress: the server is still reading
-                stuck_since = None
-                self.log.debug(f"sent: {sent}")
-                assert sent <= len(flood) * 10, (
-                    f"Server accepted {sent} bytes of pipelined data while a "
-                    "request was still in flight: the receive buffer is not throttled")
-            except BlockingIOError:
-                # The kernel send buffer is full (EAGAIN).
-                # That's good, but we still need to determine if we are
-                # feeling backpressure from the server or the client-side buffer.
-                if stuck_since is None:
-                    stuck_since = time.monotonic()
-                elif time.monotonic() - stuck_since > STALL_TIMEOUT:
-                    # No progress: the server has stopped reading.
-                    break
-            if stuck_since is None and time.monotonic() - start > PROGRESS_TIMEOUT:
-                # Continuous progress: the server is still draining the
-                # receive buffer while a request is in flight.
-                raise AssertionError(
-                    f"Server kept reading pipelined data ({sent} bytes) while a "
-                    f"request was still in flight for {PROGRESS_TIMEOUT}s.")
-            time.sleep(0.05)
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        flood_thread = executor.submit(
+            send_flood,
+            self,
+            conn)
 
-        self.log.info(f"Pipelined flood stalled after {sent} bytes; no progress for {STALL_TIMEOUT}s.")
+        # Now watch the server-side read counter for this connection. While a
+        # request is in flight the throttled server should stop reading.
+        # Expect a 5-second stall sometime within the timeout factor. That gives
+        # the flood thread plenty of time to trigger the throttle.
+        prev_total = -1
+        total = 0
+        buffered = 0
+
+        def progress_stalled():
+            nonlocal buffered, total, prev_total
+
+            # Check the background thread for assertion errors
+            if flood_thread.done():
+                flood_thread.result()
+
+            with open(self.node.debug_log_path, encoding="utf-8", errors="replace") as dl:
+                # Skip everything written before the flood started.
+                dl.seek(dl_start_size)
+                log = dl.read()
+                matches = re.findall(
+                    rf"Received \d+ bytes from [^\s]*:{local_port} \(id=\d+\): total=(\d+) buffered=(\d+)",
+                    log)
+                total = max((int(m[0]) for m in matches), default=total)
+                buffered = max((int(m[1]) for m in matches), default=buffered)
+                if total == prev_total and total > 0:
+                    return True
+                prev_total = total
+                self.log.debug(f"Server read {total} bytes, {buffered} buffered")
+                return False
+
+        try:
+            self.wait_until(progress_stalled, check_interval=5)
+        finally:
+            # Stop the flooding thread.
+            # Wait for it without a timeout so it can't turn an
+            # already-passed verdict into a spurious TimeoutError. If the flood
+            # thread hit its own assertion (server never throttled), result()
+            # re-raises it here.
+            flood_stop.set()
+            flood_thread.result()
+            executor.shutdown(wait=True)
+
+        self.log.info(
+            f"Pipelined flood: server received {total} bytes, buffered {buffered} bytes "
+            "before the read throttle engaged.")
 
         # Unblock the client request queue.
         conn.conn.sock.settimeout(10)
