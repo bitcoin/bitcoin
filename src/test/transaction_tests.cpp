@@ -1251,7 +1251,7 @@ BOOST_AUTO_TEST_CASE(annex_standardness)
     funding.vout.emplace_back(COIN, P2WSH_OP_TRUE);
     funding.vout.emplace_back(COIN, GetScriptForDestination(PayToAnchor{}));
     funding.vout.emplace_back(COIN, GetScriptForDestination(ScriptHash{taproot}));
-    AddCoins(coins, CTransaction{funding}, 1, false);
+    AddCoins(coins, CTransaction{funding}, /*nHeight=*/1, /*check=*/false);
 
     CMutableTransaction tx;
     tx.vin.emplace_back(funding.GetHash(), 0);
