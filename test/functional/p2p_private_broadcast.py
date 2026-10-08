@@ -227,7 +227,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         assert_equal(pending[0]["hex"].lower(), tx["hex"].lower())
         peers = pending[0]["peers"]
         assert_greater_than_or_equal(len(peers), NUM_PRIVATE_BROADCAST_PER_TX)
-        assert_equal(pending[0]["attempts_remaining"], MAX_PRIVATE_BROADCAST_ATTEMPTS - len(peers))
+        assert_equal(pending[0]["attempts_remaining"], 0)
         assert all("address" in p and "sent" in p for p in peers)
         assert_greater_than_or_equal(sum(1 for p in peers if "received" in p), broadcasts_to_expect)
 
@@ -316,10 +316,14 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         self.log.info("Waiting for normal broadcast to another peer")
         other_peer.wait_for_inv([inv])
 
-        self.log.info("Checking getprivatebroadcastinfo no longer reports the transaction after it is received back")
+        self.log.info("Checking getprivatebroadcastinfo reports receive metadata after it is received back")
         pbinfo = tx_originator.getprivatebroadcastinfo()
-        pending = [t for t in pbinfo["transactions"] if t["txid"] == txs[0]["txid"] and t["wtxid"] == txs[0]["wtxid"]]
-        assert_equal(len(pending), 0)
+        info = [t for t in pbinfo["transactions"] if t["wtxid"] == txs[0]["wtxid"]]
+        assert_equal(len(info), 1)
+        assert "received_by_us" in info[0]
+        assert "address" in info[0]["received_by_us"]
+        assert "time" in info[0]["received_by_us"]
+        assert_equal(info[0]["attempts_remaining"], 0)
 
         self.log.info("Sending a transaction that is already in the mempool")
         skip_destinations = len(self.destinations)
