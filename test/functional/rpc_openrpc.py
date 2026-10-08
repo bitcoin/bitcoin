@@ -78,7 +78,7 @@ class OpenRPCDocTest(BitcoinTestFramework):
         address_description = "A key-value pair. The key (string) is the bitcoin address, the value (float or string) is the amount in BTC"
         address_obj = {"type": "object", "additionalProperties": {"oneOf": [{"type": "number"},{"type": "string"}]}, "description": address_description}
         data_description = "A key-value pair. The key must be \"data\", the value is hex-encoded data that becomes a part of an OP_RETURN output"
-        data_obj = {"type": "object", "properties": { "data": {"type": "string", "pattern": "^[0-9a-fA-F]+$", "description": data_description}}, "additionalProperties": False, "required": ["data"]}
+        data_obj = {"type": "object", "properties": { "data": {"type": "string", "pattern": "^([0-9a-fA-F]{2})*$", "description": data_description}}, "additionalProperties": False, "required": ["data"]}
         assert_equal(outputs["schema"], {"oneOf": [{"type": "array", "items": {"anyOf": [address_obj, data_obj]}}, {"type": "object"}]})
 
         getdescriptoractivity = find_method(openrpc, "getdescriptoractivity")
