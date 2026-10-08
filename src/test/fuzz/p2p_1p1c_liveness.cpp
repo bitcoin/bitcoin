@@ -56,7 +56,6 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <set>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -320,25 +319,15 @@ FUZZ_TARGET(p2p_1p1c_liveness, .init = ::initialize)
         //! every input's parent against it, confirmed or not, so the child is dropped as having a
         //! rejected parent. (A copy of CONFIRMED_PARENT is rejected as TX_CONFLICT, which is not added.)
         bool confirmed_parent_stripped{false};
-        //! A peer announced or delivered the child, and delivered another version of the parent that
-        //! was not accepted. Their 1p1c package (the child is found in the orphanage as announced by
-        //! that peer) fails the package feerate, and ProcessInvalidTx erases the child from the
-        //! orphanage for all announcers and caches its wtxid as rejected. Only set once the child was
-        //! dropped this way: it was in the orphanage (or delivered in that step) and afterwards is
-        //! neither there nor accepted.
-        bool package_with_other_parent{false};
         //! The parent left the mempool while the child was in the orphanage. Accepting the parent
         //! completed every request for it, and retrying the orphan with the input missing again
         //! requests nothing, so the parent is not fetched again.
         bool parent_left_with_orphan{false};
         bool Any() const
         {
-            return parent_stripped || confirmed_parent_stripped || package_with_other_parent || parent_left_with_orphan;
+            return parent_stripped || confirmed_parent_stripped || parent_left_with_orphan;
         }
     } holes;
-    // Adversaries that announced or delivered the child, and that delivered another version of the
-    // parent that was not accepted.
-    std::set<NodeId> child_announcers, other_parent_senders;
     int reconnects{0};
 
     auto receive = [&](CNode& peer, CSerializedNetMsg&& msg) { Assert(connman.ReceiveMsgFrom(peer, std::move(msg))); };
@@ -412,15 +401,10 @@ FUZZ_TARGET(p2p_1p1c_liveness, .init = ::initialize)
         return std::ranges::any_of(peerman->GetOrphanTransactions(), [&](const auto& o) { return o.tx->GetWitnessHash() == cast.child->GetWitnessHash(); });
     };
     auto adversary_step = [&]() EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex) {
-        const bool child_was_orphaned{child_orphaned()};
-        // Whether this step may have run the 1p1c package of another parent version and the child.
-        bool other_parent_package{false};
-        bool child_delivered{false};
         const size_t idx{fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, peers.size() - 1)};
         CNode* adversary{peers[idx]};
         const auto& tx{PickValue(fuzzed_data_provider, cast_txs)};
         std::optional<size_t> reconnect_idx;
-        std::optional<std::pair<NodeId, Wtxid>> other_parent;
         CallOneOf(
             fuzzed_data_provider,
             [&] {
@@ -432,7 +416,6 @@ FUZZ_TARGET(p2p_1p1c_liveness, .init = ::initialize)
                 uint256 hash{fuzzed_data_provider.ConsumeBool() ? tx->GetWitnessHash().ToUint256() : MutateWitness(fuzzed_data_provider, tx)->GetWitnessHash().ToUint256()};
                 if (fuzzed_data_provider.ConsumeBool()) hash = ConsumeUInt256(fuzzed_data_provider);
                 const CInv inv{fuzzed_data_provider.ConsumeBool() ? MSG_WTX : MSG_TX, hash};
-                if (inv.IsMsgWtx() && inv.hash == cast.child->GetWitnessHash().ToUint256()) child_announcers.insert(adversary->GetId());
                 receive(*adversary, NetMsg::Make(NetMsgType::INV, std::vector<CInv>{inv}));
             },
             [&] {
@@ -464,12 +447,6 @@ FUZZ_TARGET(p2p_1p1c_liveness, .init = ::initialize)
                         holes.parent_stripped = true;
                     }
                     if (tx == cast.confirmed && tx->IsCoinBase()) holes.confirmed_parent_stripped = true;
-                } else if (tx == cast.parent && delivered->GetWitnessHash() != cast.parent->GetWitnessHash()) {
-                    other_parent.emplace(adversary->GetId(), delivered->GetWitnessHash());
-                } else if (delivered->GetWitnessHash() == cast.child->GetWitnessHash()) {
-                    child_announcers.insert(adversary->GetId());
-                    child_delivered = true;
-                    if (other_parent_senders.contains(adversary->GetId())) other_parent_package = true;
                 }
                 receive(*adversary, NetMsg::Make(NetMsgType::TX, TX_WITH_WITNESS(*delivered)));
             },
@@ -504,13 +481,6 @@ FUZZ_TARGET(p2p_1p1c_liveness, .init = ::initialize)
             });
         if (reconnect_idx) peers[*reconnect_idx] = connect(ConnectionType::INBOUND);
         process();
-        if (other_parent && !mempool.exists(other_parent->second)) {
-            other_parent_senders.insert(other_parent->first);
-            if (child_announcers.contains(other_parent->first)) other_parent_package = true;
-        }
-        if (other_parent_package && (child_was_orphaned || child_delivered) && !child_orphaned() && !child_accepted()) {
-            holes.package_with_other_parent = true;
-        }
     };
 
     // Adversarial prefix.
