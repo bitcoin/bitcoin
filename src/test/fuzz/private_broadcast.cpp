@@ -62,6 +62,20 @@ FUZZ_TARGET(private_broadcast)
         return entry.second < std::min(planned_sends.at(entry.first), max_send_attempts);
     }};
 
+    const auto IsFinished{[&](const auto& e) {
+        const auto& [tx, num_picked]{e};
+
+        bool all_disconnected{true};
+        for (const auto& [node_id, node_tx] : nodes_sent_to) {
+            if (node_tx == tx && !disconnected_nodes.contains(node_id)) {
+                all_disconnected = false;
+                break;
+            }
+        }
+
+        return !is_pending(e) && resolved_transactions.contains(tx) && all_disconnected;
+    }};
+
     const auto ExistentOrNewNodeId = [&next_nodeid, &fdp](){
         if (next_nodeid == 0 || fdp.ConsumeBool()) {
             return next_nodeid++;
@@ -80,24 +94,12 @@ FUZZ_TARGET(private_broadcast)
                     tx = PickIterator(fdp, transactions)->first;
                 }
 
-                auto cleanup_candidates{resolved_transactions};
-                for (const auto& [nodeid, sent_tx] : nodes_sent_to) {
-                    if (!disconnected_nodes.contains(nodeid)) cleanup_candidates.erase(sent_tx);
-                }
-                std::erase_if(transactions, [&](const auto& entry) {
-                    if (!cleanup_candidates.contains(entry.first) || is_pending(entry)) return false;
-                    planned_sends.erase(entry.first);
-                    resolved_transactions.erase(entry.first);
-                    return true;
-                });
-                std::erase_if(nodes_sent_to, [&](const auto& entry) { return !transactions.contains(entry.second); });
-
                 const bool present_before{transactions.contains(tx)};
                 const auto res{pb.Add(tx)};
                 if (present_before) {
                     auto tx_it{transactions.find(tx)};
                     Assert(tx_it != transactions.end());
-                    if (tx_it->second < max_send_attempts) {
+                    if (!IsFinished(*tx_it)) {
                         Assert(res == PrivateBroadcast::AddResult::AlreadyPresent);
                     } else {
                         Assert(res == PrivateBroadcast::AddResult::Added);
@@ -105,7 +107,9 @@ FUZZ_TARGET(private_broadcast)
                         planned_sends[tx] = PrivateBroadcast::INITIAL_CONNECTION_COUNT;
                         resolved_transactions.erase(tx);
                         for (auto it = nodes_sent_to.begin(); it != nodes_sent_to.end();) {
-                            if (CTransactionRefComp{}(it->second, tx)) {
+                            const auto& [node_id, node_tx]{*it};
+                            if (CTransactionRefComp{}(node_tx, tx)) {
+                                disconnected_nodes.erase(node_id);
                                 it = nodes_sent_to.erase(it);
                             } else {
                                 ++it;
@@ -113,7 +117,43 @@ FUZZ_TARGET(private_broadcast)
                         }
                     }
                 } else if (transactions.size() >= cap) {
-                    Assert(res == PrivateBroadcast::AddResult::QueueFull);
+                    auto finished{transactions | std::views::filter(IsFinished)};
+
+                    if (finished.empty()) {
+                        Assert(res == PrivateBroadcast::AddResult::QueueFull);
+                    } else {
+                        Assert(res == PrivateBroadcast::AddResult::Added);
+                        // Oldest resolved transaction was evicted in `pb`. Update our structs here accordingly.
+                        // Find the evicted transaction: the only one no longer in the queue.
+                        const auto info{pb.GetBroadcastInfo()};
+                        std::unordered_set<CTransactionRef, CTransactionRefHash, CTransactionRefComp> in_queue;
+                        in_queue.reserve(info.size());
+                        for (const auto& e : info) {
+                            in_queue.insert(e.tx);
+                        }
+                        const auto evicted_it{std::ranges::find_if(transactions, [&in_queue](const auto& entry) {
+                            return !in_queue.contains(entry.first);
+                        })};
+                        Assert(evicted_it != transactions.end());
+                        Assert(!is_pending(*evicted_it)); // pending transactions are never evicted
+                        const auto& evicted_tx{evicted_it->first};
+                        planned_sends.erase(evicted_tx);
+                        resolved_transactions.erase(evicted_tx);
+                        for (auto it = nodes_sent_to.begin(); it != nodes_sent_to.end();) {
+                            const auto& [node_id, node_tx]{*it};
+                            if (CTransactionRefComp{}(node_tx, evicted_tx)) {
+                                Assert(disconnected_nodes.erase(node_id) == 1);
+                                it = nodes_sent_to.erase(it);
+                            } else {
+                                ++it;
+                            }
+                        }
+                        transactions.erase(evicted_it);
+
+                        // Add the new transaction to our structs.
+                        transactions.emplace(tx, 0);
+                        planned_sends.emplace(tx, PrivateBroadcast::INITIAL_CONNECTION_COUNT);
+                    }
                 } else {
                     Assert(res == PrivateBroadcast::AddResult::Added);
                     transactions.emplace(tx, 0);
@@ -129,7 +169,9 @@ FUZZ_TARGET(private_broadcast)
 
                 // Remove relevant entries from nodes_sent_to[] if any.
                 for (auto it = nodes_sent_to.begin(); it != nodes_sent_to.end();) {
-                    if (CTransactionRefComp{}(it->second, tx)) {
+                    const auto& [node_id, node_tx]{*it};
+                    if (CTransactionRefComp{}(node_tx, tx)) {
+                        disconnected_nodes.erase(node_id);
                         it = nodes_sent_to.erase(it);
                     } else {
                         ++it;
@@ -233,14 +275,17 @@ FUZZ_TARGET(private_broadcast)
             [&] { // GetBroadcastInfo()
                 const auto all_broadcast_info{pb.GetBroadcastInfo()};
 
-                Assert(all_broadcast_info.size() == transactions.size() - resolved_transactions.size());
+                Assert(all_broadcast_info.size() == transactions.size());
 
                 for (const auto& info : all_broadcast_info) {
                     const auto it{transactions.find(info.tx)};
                     Assert(it != transactions.end());
-                    Assert(!resolved_transactions.contains(info.tx));
                     Assert(info.peers.size() == it->second); // exactly the sends we recorded
-                    Assert(info.attempts_remaining == max_send_attempts - it->second);
+                    if (is_pending(*it)) {
+                        Assert(info.attempts_remaining == max_send_attempts - it->second);
+                    } else {
+                        Assert(info.attempts_remaining == 0);
+                    }
                 }
             },
             [&] {
