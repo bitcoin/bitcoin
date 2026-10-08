@@ -76,13 +76,30 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         peer_first.wait_for_broadcast([wtxid])
 
         self.mine_empty_block(node)
-        self.evict_mempool_transaction(parent_utxo, node, wallet, self.default_wallet)
 
         # Set correct m_best_block_time, which is used in ResubmitWalletTransactions
         node.syncwithvalidationinterfacequeue()
 
         # Add a second peer since txs aren't rebroadcast to the same peer (see m_tx_inventory_known_filter)
         peer_second = node.add_p2p_connection(P2PTxInvStore())
+
+        # Transaction should be scheduled for rebroadcast approximately 24 hours in the future,
+        # but can range from 12-36. So bump 36 hours to be sure.
+        # Since it is still in the mempool, it will not actually be rebroadcast
+        with node.assert_debug_log(['resubmit 1 unconfirmed transactions']):
+            node.setmocktime(int(time.time()) + RESEND_TIMER_LIMIT)
+            # Tell scheduler to call MaybeResendWalletTxs now.
+            node.mockscheduler(60)
+            unrelated_txid = self.default_wallet.sendtoaddress(self.default_wallet.getnewaddress(), 1)
+            unrelated_wtxid = self.default_wallet.gettransaction(unrelated_txid)["wtxid"]
+            assert unrelated_txid in node.getrawmempool()
+            peer_second.wait_for_broadcast([unrelated_wtxid])
+        assert int(wtxid, 16) not in peer_second.get_invs()
+        assert txid in node.getrawmempool()
+
+        # Evict the transaction so that it is actually rebroadcast
+        self.evict_mempool_transaction(parent_utxo, node, wallet, self.default_wallet)
+        assert txid not in node.getrawmempool()
 
         # Transaction should not be rebroadcast within first 12 hours
         # Leave 2 mins for buffer
@@ -93,13 +110,12 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
             node.mockscheduler(60)  # Tell scheduler to call MaybeResendWalletTxs now
             assert_equal(int(wtxid, 16) in peer_second.get_invs(), False)
 
-        # Transaction should be rebroadcast approximately 24 hours in the future,
-        # but can range from 12-36. So bump 36 hours to be sure.
         with node.assert_debug_log(['resubmit 1 unconfirmed transactions']):
             node.bumpmocktime(RESEND_TIMER_LIMIT)
             # Tell scheduler to call MaybeResendWalletTxs now.
             node.mockscheduler(60)
-            peer_second.wait_for_broadcast([wtxid])
+            assert txid in node.getrawmempool()
+            peer_second.wait_for_single_broadcast(wtxid)
 
         self.generate(node, 1, sync_fun=self.no_op)
 

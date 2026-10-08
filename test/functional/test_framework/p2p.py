@@ -999,6 +999,13 @@ class P2PTxInvStore(P2PInterface):
         # Flush messages and wait for the getdatas to be processed
         self.sync_with_ping()
 
+    def wait_for_single_broadcast(self, tx, *, timeout=60):
+        # Wait until invs have been received (and getdatas sent) for each txid.
+        self.wait_until(lambda: int(tx, 16) in self.tx_invs_received.keys(), timeout=timeout)
+        # Flush messages and wait for the getdatas to be processed
+        self.sync_with_ping()
+
+
 def start_p2p_listener(network_thread, listener):
     listen_addr = ""
     listen_port = 0
