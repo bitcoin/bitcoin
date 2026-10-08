@@ -1828,12 +1828,33 @@ void CWallet::MaybeUpdateBirthTime(int64_t time)
     }
 }
 
-bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
-                                         std::string& err_string,
-                                         node::TxBroadcast broadcast_method) const
+util::Expected<void, WalletError> CWallet::RebroadcastSingleTransaction(const Txid& txid)
+{
+    LOCK(cs_wallet);
+    auto it = mapWallet.find(txid);
+    if (it == mapWallet.end()) {
+        return util::Unexpected{WalletError{WalletErrorCode::InvalidParameter, strprintf(_("%s not in wallet"), txid.ToString())}};
+    }
+    if (!TransactionCanBeBroadcast(it->second)) {
+        return util::Unexpected{WalletError{WalletErrorCode::InvalidParameter, strprintf(_("%s is not eligible to be rebroadcast"), txid.ToString())}};
+    }
+    std::string err;
+    if (!SubmitTxMemoryPoolAndRelay(it->second, err, node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL)) {
+        return util::Unexpected{WalletError{WalletErrorCode::MiscError, Untranslated(err)}};
+    }
+    return {};
+}
+
+bool CWallet::TransactionCanBeBroadcast(const Txid& txid) const
+{
+    LOCK(cs_wallet);
+    const CWalletTx* wtx = GetWalletTx(txid);
+    return wtx && TransactionCanBeBroadcast(*wtx);
+}
+
+bool CWallet::TransactionCanBeBroadcast(const CWalletTx& wtx) const
 {
     AssertLockHeld(cs_wallet);
-
     // Can't relay if wallet is not broadcasting
     if (!GetBroadcastTransactions()) return false;
     // Don't relay abandoned transactions
@@ -1843,6 +1864,16 @@ bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
     if (wtx.IsCoinBase()) return false;
     // Don't try to submit conflicted or confirmed transactions.
     if (GetTxDepthInMainChain(wtx) != 0) return false;
+    return true;
+}
+
+bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
+                                         std::string& err_string,
+                                         node::TxBroadcast broadcast_method) const
+{
+    AssertLockHeld(cs_wallet);
+
+    if (!TransactionCanBeBroadcast(wtx)) return false;
 
     const char* what{""};
     switch (broadcast_method) {

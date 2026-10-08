@@ -1095,4 +1095,32 @@ RPCMethod abortrescan()
 },
     };
 }
+
+RPCMethod rebroadcastwallettx()
+{
+    return RPCMethod{"rebroadcastwallettx",
+        "Rebroadcast the specified wallet transaction.\n"
+        "Note that rebroadcasting a transaction may reveal that your node is involved as either a sender or receiver in the transaction.",
+        {
+            {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
+        },
+        RPCResult{RPCResult::Type::NONE, "", "If rebroadcast is successfully initiated"},
+        RPCExamples{
+            HelpExampleCli("rebroadcastwallettx", "\"txid\"") +
+            HelpExampleRpc("rebroadcastwallettx", "\"txid\"")
+        },
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        {
+            std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+            if (!wallet) return UniValue::VNULL;
+
+            Txid txid{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
+            util::Expected<void, WalletError> r = wallet->RebroadcastSingleTransaction(txid);
+            if (!r) {
+                throw JSONRPCError(HandleWalletErrorCode(r.error().code), r.error().message.original);
+            }
+            return UniValue::VNULL;
+        },
+    };
+}
 } // namespace wallet
