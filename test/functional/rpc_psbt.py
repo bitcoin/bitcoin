@@ -28,6 +28,7 @@ from test_framework.psbt import (
     PSBT,
     PSBTMap,
     PSBT_GLOBAL_PROPRIETARY,
+    PSBT_GLOBAL_TX_MODIFIABLE,
     PSBT_GLOBAL_UNSIGNED_TX,
     PSBT_GLOBAL_VERSION,
     PSBT_GLOBAL_XPUB,
@@ -838,6 +839,193 @@ class PSBTTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "The PSBT version can only be 2 or 0", self.nodes[0].walletcreatefundedpsbt, inputs=[utxo], outputs=outputs, psbt_version=1)
         assert_raises_rpc_error(-8, "The PSBT version can only be 2 or 0", self.nodes[0].converttopsbt, hexstring=rawtx, psbt_version=1)
         assert_raises_rpc_error(-8, "The PSBT version can only be 2 or 0", self.nodes[0].psbtbumpfee, txid=tobump, psbt_version=1)
+
+    def test_signer_updates_tx_modifiable(self):
+        self.log.info("Test that signing PSBTv2 updates transaction modifiable flags")
+        self.nodes[0].createwallet("tx_modifiable")
+        wallet = self.nodes[0].get_wallet_rpc("tx_modifiable")
+        def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        cases = [
+            ("ALL", False, False, False),
+            ("ALL|ANYONECANPAY", True, False, False),
+            ("NONE", False, True, False),
+            ("NONE|ANYONECANPAY", True, True, False),
+            ("SINGLE", False, False, True),
+            ("SINGLE|ANYONECANPAY", True, False, True),
+        ]
+        addresses = {t: [wallet.getnewaddress(address_type=t) for _ in cases] for t in ["bech32", "bech32m"]}
+        def_wallet.send([{address: 1} for type_addresses in addresses.values() for address in type_addresses])
+        self.generate(self.nodes[0], 1)
+
+        matrix_mismatches = []
+        for address_type, type_addresses in addresses.items():
+            signature_field = "partial_signatures" if address_type == "bech32" else "taproot_key_path_sig"
+            for (sighash, inputs_mod, outputs_mod, has_single), address in zip(cases, type_addresses, strict=True):
+                utxo = next(u for u in wallet.listunspent() if u["address"] == address)
+                psbt = wallet.walletcreatefundedpsbt(
+                    inputs=[utxo], outputs=[{wallet.getnewaddress(): Decimal("0.5")}],
+                    options={"add_inputs": False}, psbt_version=2)["psbt"]
+                psbt = PSBT.from_base64(psbt)
+                psbt.g.map[PSBT_GLOBAL_TX_MODIFIABLE] = bytes([0b011])
+                psbt = psbt.to_base64()
+
+                unsigned = wallet.walletprocesspsbt(psbt=psbt, sign=False)["psbt"]
+                decoded = wallet.decodepsbt(unsigned)
+                assert_equal((decoded["inputs_modifiable"], decoded["outputs_modifiable"], decoded["has_sighash_single"]), (True, True, False))
+                assert signature_field not in decoded["inputs"][0]
+
+                no_keys = self.nodes[0].descriptorprocesspsbt(psbt=psbt, descriptors=[], sighashtype=sighash, finalize=False)["psbt"]
+                decoded = wallet.decodepsbt(no_keys)
+                assert_equal((decoded["inputs_modifiable"], decoded["outputs_modifiable"], decoded["has_sighash_single"]), (True, True, False))
+                assert signature_field not in decoded["inputs"][0]
+
+                signed = wallet.walletprocesspsbt(psbt=psbt, sighashtype=sighash, finalize=False)["psbt"]
+                decoded = wallet.decodepsbt(signed)
+                assert decoded["inputs"][0][signature_field]
+                assert wallet.finalizepsbt(signed)["complete"]
+                actual = (decoded["inputs_modifiable"], decoded["outputs_modifiable"], decoded["has_sighash_single"])
+                expected = (inputs_mod, outputs_mod, has_single)
+                if actual != expected:
+                    matrix_mismatches.append(f"{address_type}/{sighash}: expected {expected}, got {actual}")
+
+        default_mismatches = []
+        for address_type, type_addresses in addresses.items():
+            utxo = next(u for u in wallet.listunspent() if u["address"] == type_addresses[0])
+            psbt = wallet.walletcreatefundedpsbt(
+                inputs=[utxo], outputs=[{wallet.getnewaddress(): Decimal("0.5")}],
+                options={"add_inputs": False}, psbt_version=2)["psbt"]
+            psbt_obj = PSBT.from_base64(psbt)
+            psbt_obj.g.map[PSBT_GLOBAL_TX_MODIFIABLE] = bytes([0b011])
+            psbt = psbt_obj.to_base64()
+
+            default_signed = wallet.walletprocesspsbt(psbt=psbt, finalize=False)["psbt"]
+            decoded = wallet.decodepsbt(default_signed)
+            signature_field = "partial_signatures" if address_type == "bech32" else "taproot_key_path_sig"
+            assert decoded["inputs"][0][signature_field]
+            assert wallet.finalizepsbt(default_signed)["complete"]
+            actual = (decoded["inputs_modifiable"], decoded["outputs_modifiable"], decoded["has_sighash_single"])
+            if actual != (False, False, False):
+                default_mismatches.append(f"{address_type}/default: expected (False, False, False), got {actual}")
+
+            finalized_result = wallet.walletprocesspsbt(psbt=psbt, sighashtype="ALL", finalize=True)
+            assert finalized_result["complete"]
+            finalized = wallet.decodepsbt(finalized_result["psbt"])
+            assert_equal((finalized["inputs_modifiable"], finalized["outputs_modifiable"], finalized["has_sighash_single"]), (False, False, False))
+            assert "final_scriptwitness" in finalized["inputs"][0]
+
+            absent = PSBT.from_base64(psbt)
+            absent.g.map.pop(PSBT_GLOBAL_TX_MODIFIABLE)
+            absent_signed = wallet.walletprocesspsbt(psbt=absent.to_base64(), sighashtype="ALL", finalize=False)["psbt"]
+            assert PSBT_GLOBAL_TX_MODIFIABLE not in PSBT.from_base64(absent_signed).g.map
+            assert wallet.finalizepsbt(absent_signed)["complete"]
+
+            v0 = wallet.walletcreatefundedpsbt(
+                inputs=[utxo], outputs=[{wallet.getnewaddress(): Decimal("0.5")}],
+                options={"add_inputs": False}, psbt_version=0)["psbt"]
+            v0_signed = wallet.walletprocesspsbt(psbt=v0, sighashtype="ALL", finalize=False)["psbt"]
+            assert PSBT_GLOBAL_TX_MODIFIABLE not in PSBT.from_base64(v0_signed).g.map
+            assert wallet.finalizepsbt(v0_signed)["complete"]
+
+        mismatch = PSBT.from_base64(psbt)
+        mismatch.i[0].map[PSBT_IN_SIGHASH_TYPE] = SIGHASH_ALL.to_bytes(4, "little")
+        assert_raises_rpc_error(-22, "Specified sighash value does not match value stored in PSBT", wallet.walletprocesspsbt,
+                                psbt=mismatch.to_base64(), sighashtype="NONE", finalize=False)
+        assert_equal((matrix_mismatches, default_mismatches), ([], []))
+        wallet.unloadwallet()
+
+    def test_partial_signatures_update_tx_modifiable(self):
+        self.log.info("Test transaction modifiable flags for incomplete multisig, Tapscript, and MuSig2 signing")
+        node = self.nodes[0]
+        def_wallet = node.get_wallet_rpc(self.default_wallet_name)
+        keys = [generate_keypair(wif=True) for _ in range(2)]
+
+        def with_modifiable_flags(psbt):
+            psbt = PSBT.from_base64(psbt)
+            psbt.g.map[PSBT_GLOBAL_TX_MODIFIABLE] = bytes([0b011])
+            return psbt.to_base64()
+
+        def assert_flags(psbt, flags):
+            assert_equal(PSBT.from_base64(psbt).g.map[PSBT_GLOBAL_TX_MODIFIABLE], bytes([flags]))
+
+        for name, pattern, signature_field, witness_items in [
+            ("multisig", "wsh(multi(2,{0},{1}))", "partial_signatures", 4),
+            ("tapscript", f"tr({H_POINT},multi_a(2,{{0}},{{1}}))", "taproot_script_path_sigs", 4),
+            ("musig2", "rawtr(musig({0},{1}))", "musig2_partial_sigs", 1),
+            ("musig2_tapscript", f"tr({H_POINT},pk(musig({{0}},{{1}})))", "musig2_partial_sigs", 3),
+        ]:
+            self.log.info(f"Test partial signature flags for {name}")
+            wallets = []
+            for i in range(2):
+                wallet_name = f"tx_modifiable_{name}_{i}"
+                node.createwallet(wallet_name, blank=True)
+                wallet = node.get_wallet_rpc(wallet_name)
+                desc = pattern.format(*(priv if i == j else pub.hex() for j, (priv, pub) in enumerate(keys)))
+                assert wallet.importdescriptors([{"desc": descsum_create(desc), "timestamp": "now"}])[0]["success"]
+                wallets.append(wallet)
+
+            public_desc = descsum_create(pattern.format(*(pub.hex() for _, pub in keys)))
+            address = node.deriveaddresses(public_desc)[0]
+            def_wallet.sendtoaddress(address, 1)
+            self.generate(node, 1)
+            utxo = wallets[0].listunspent()[0]
+            psbt = node.createpsbt(
+                inputs=[{"txid": utxo["txid"], "vout": utxo["vout"]}],
+                outputs=[{def_wallet.getnewaddress(): Decimal("0.9999")}], psbt_version=2)
+            psbt = with_modifiable_flags(wallets[0].walletprocesspsbt(psbt=psbt, sign=False, finalize=False)["psbt"])
+            assert signature_field not in node.decodepsbt(psbt)["inputs"][0]
+
+            is_musig = signature_field == "musig2_partial_sigs"
+            if is_musig:
+                # Wallets retain their secret nonces between these signing rounds.
+                nonce_psbts = []
+                for wallet in wallets:
+                    result = wallet.walletprocesspsbt(psbt=psbt, sighashtype="SINGLE", finalize=False)
+                    assert_equal(result["complete"], False)
+                    nonce_input = node.decodepsbt(result["psbt"])["inputs"][0]
+                    assert_equal(len(nonce_input["musig2_pubnonces"]), 1)
+                    assert "musig2_partial_sigs" not in nonce_input
+                    assert "taproot_key_path_sig" not in nonce_input
+                    assert "taproot_script_path_sigs" not in nonce_input
+                    assert_flags(result["psbt"], 0b011)
+                    nonce_psbts.append(result["psbt"])
+                psbt = node.combinepsbt(nonce_psbts)
+                assert_equal(len(node.decodepsbt(psbt)["inputs"][0]["musig2_pubnonces"]), 2)
+                assert_flags(psbt, 0b011)
+
+            first = wallets[0].walletprocesspsbt(psbt=psbt, sighashtype="SINGLE", finalize=False)
+            first_input = node.decodepsbt(first["psbt"])["inputs"][0]
+            assert_equal(first["complete"], False)
+            assert_equal(len(first_input[signature_field]), 1)
+            assert "taproot_key_path_sig" not in first_input
+            if is_musig:
+                assert "taproot_script_path_sigs" not in first_input
+            assert "final_scriptwitness" not in first_input
+            assert_flags(first["psbt"], 0b100)
+            assert_equal(node.finalizepsbt(first["psbt"])["complete"], False)
+
+            # Restore the flags to detect an erroneous update when no signature is added.
+            existing = with_modifiable_flags(first["psbt"])
+            repeated = wallets[0].walletprocesspsbt(psbt=existing, sighashtype="SINGLE", finalize=False)
+            assert_equal(repeated["complete"], False)
+            assert_equal(node.decodepsbt(repeated["psbt"])["inputs"][0][signature_field], first_input[signature_field])
+            assert_flags(repeated["psbt"], 0b011)
+
+            second = wallets[1].walletprocesspsbt(psbt=existing, sighashtype="SINGLE", finalize=False)["psbt"]
+            second_input = node.decodepsbt(second)["inputs"][0]
+            assert_equal(len(second_input[signature_field]), 2)
+            assert_flags(second, 0b100)
+            if is_musig:
+                assert "taproot_key_path_sig" not in second_input
+                assert "taproot_script_path_sigs" not in second_input
+                # Aggregation adds a signature even though the finalizer has no keys.
+                second = with_modifiable_flags(second)
+            finalized = node.finalizepsbt(second, extract=False)
+            assert finalized["complete"]
+            assert_flags(finalized["psbt"], 0b100)
+            assert_equal(len(node.decodepsbt(finalized["psbt"])["inputs"][0]["final_scriptwitness"]), witness_items)
+            for wallet in wallets:
+                wallet.unloadwallet()
 
     def test_psbt_with_invalid_signature(self):
         self.log.info("Test descriptorprocesspsbt with invalid signature in signed PSBT")
@@ -1816,6 +2004,8 @@ class PSBTTest(BitcoinTestFramework):
         if not self.options.usecli:
             self.test_sighash_mismatch()
         self.test_sighash_adding()
+        self.test_signer_updates_tx_modifiable()
+        self.test_partial_signatures_update_tx_modifiable()
         self.test_sighash_single()
         self.test_decodepsbt_long_sighash_type()
         self.test_combinepsbt_sighash_type()

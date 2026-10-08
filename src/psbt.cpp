@@ -640,6 +640,14 @@ std::optional<PrecomputedTransactionData> PrecomputePSBTData(const PartiallySign
     return txdata;
 }
 
+static size_t CountSignatures(const SignatureData& sigdata)
+{
+    size_t count{sigdata.signatures.size() + sigdata.taproot_script_sigs.size()};
+    if (!sigdata.taproot_key_path_sig.empty()) ++count;
+    for (const auto& [_, sigs] : sigdata.musig2_partial_sigs) count += sigs.size();
+    return count;
+}
+
 util::Expected<void, PSBTError> SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, const PrecomputedTransactionData* txdata, const common::PSBTFillOptions& options,  SignatureData* out_sigdata)
 {
     PSBTInput& input = psbt.inputs.at(index);
@@ -722,6 +730,7 @@ util::Expected<void, PSBTError> SignPSBTInput(const SigningProvider& provider, P
     }
 
     sigdata.witness = false;
+    const size_t signatures_before{CountSignatures(sigdata)};
     bool sig_complete;
     if (txdata == nullptr) {
         sig_complete = ProduceSignature(provider, DUMMY_SIGNATURE_CREATOR, utxo.scriptPubKey, sigdata);
@@ -736,6 +745,12 @@ util::Expected<void, PSBTError> SignPSBTInput(const SigningProvider& provider, P
     if (!options.finalize && sigdata.complete) sigdata.complete = false;
 
     input.FromSignatureData(sigdata);
+
+    if (txdata && psbt.m_tx_modifiable && CountSignatures(sigdata) > signatures_before) {
+        if (!(sighash & SIGHASH_ANYONECANPAY)) psbt.m_tx_modifiable->reset(0);
+        if ((sighash & SIGHASH_OUTPUT_MASK) != SIGHASH_NONE) psbt.m_tx_modifiable->reset(1);
+        if ((sighash & SIGHASH_OUTPUT_MASK) == SIGHASH_SINGLE) psbt.m_tx_modifiable->set(2);
+    }
 
     // If we have a witness signature, put a witness UTXO.
     if (sigdata.witness) {
