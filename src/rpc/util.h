@@ -182,6 +182,29 @@ struct RPCArgOptions {
                                          //!< methods set the also_positional flag and read values from both positions.
 };
 
+/// A compile-time checked RPC argument name.
+struct ConstevalRpcArgName {
+    const std::string_view checked;
+
+    consteval ConstevalRpcArgName(const char* str) : checked{Check(str)} {}
+
+private:
+    static constexpr std::string_view Check(std::string_view str)
+    {
+        for (const unsigned char c : str) {
+            if (!(('a' <= c && c <= 'z') ||
+                  ('A' <= c && c <= 'Z') ||
+                  ('0' <= c && c <= '9') ||
+                  c == '_' ||
+                  c == '|') // Alias separator
+            ) {
+                throw "Invalid RPC argument name";
+            }
+        }
+        return str;
+    }
+};
+
 // NOLINTNEXTLINE(misc-no-recursion)
 struct RPCArg {
     enum class Type {
@@ -230,12 +253,12 @@ struct RPCArg {
     const RPCArgOptions m_opts;
 
     RPCArg(
-        std::string name,
+        ConstevalRpcArgName name,
         Type type,
         Fallback fallback,
         std::string description,
         RPCArgOptions opts = {})
-        : m_names{std::move(name)},
+        : m_names{name.checked},
           m_type{type},
           m_fallback{std::move(fallback)},
           m_description{std::move(description)},
@@ -245,13 +268,13 @@ struct RPCArg {
     }
 
     RPCArg(
-        std::string name,
+        ConstevalRpcArgName name,
         Type type,
         Fallback fallback,
         std::string description,
         std::vector<RPCArg> inner,
         RPCArgOptions opts = {})
-        : m_names{std::move(name)},
+        : m_names{name.checked},
           m_type{type},
           m_inner{std::move(inner)},
           m_fallback{std::move(fallback)},
