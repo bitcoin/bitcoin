@@ -205,6 +205,28 @@ private:
     }
 };
 
+/// A compile-time checked RPC result key name.
+struct ConstevalRpcResultName {
+    const std::string_view checked;
+
+    consteval ConstevalRpcResultName(const char* str) : checked{Check(str)} {}
+
+private:
+    static consteval std::string_view Check(std::string_view str)
+    {
+        for (const unsigned char c : str) {
+            if (!(('a' <= c && c <= 'z') ||
+                  ('A' <= c && c <= 'Z') ||
+                  ('0' <= c && c <= '9') ||
+                  c == '-' ||
+                  c == '_')) {
+                throw "Invalid RPC result key name";
+            }
+        }
+        return str;
+    }
+};
+
 // NOLINTNEXTLINE(misc-no-recursion)
 struct RPCArg {
     enum class Type {
@@ -354,13 +376,13 @@ struct RPCResult {
     RPCResult(
         std::string cond,
         Type type,
-        std::string m_key_name,
+        ConstevalRpcResultName key_name,
         bool optional,
         std::string description,
         std::vector<RPCResult> inner = {},
         RPCResultOptions opts = {})
         : m_type{type},
-          m_key_name{std::move(m_key_name)},
+          m_key_name{key_name.checked},
           m_inner{std::move(inner)},
           m_optional{optional},
           m_opts{std::move(opts)},
@@ -374,21 +396,21 @@ struct RPCResult {
     RPCResult(
         std::string cond,
         Type type,
-        std::string m_key_name,
+        ConstevalRpcResultName key_name,
         std::string description,
         std::vector<RPCResult> inner = {},
         RPCResultOptions opts = {})
-        : RPCResult{std::move(cond), type, std::move(m_key_name), /*optional=*/false, std::move(description), std::move(inner), std::move(opts)} {}
+        : RPCResult{std::move(cond), type, key_name, /*optional=*/false, std::move(description), std::move(inner), std::move(opts)} {}
 
     RPCResult(
         Type type,
-        std::string m_key_name,
+        ConstevalRpcResultName key_name,
         bool optional,
         std::string description,
         std::vector<RPCResult> inner = {},
         RPCResultOptions opts = {})
         : m_type{type},
-          m_key_name{std::move(m_key_name)},
+          m_key_name{key_name.checked},
           m_inner{std::move(inner)},
           m_optional{optional},
           m_opts{std::move(opts)},
@@ -400,11 +422,11 @@ struct RPCResult {
 
     RPCResult(
         Type type,
-        std::string m_key_name,
+        ConstevalRpcResultName key_name,
         std::string description,
         std::vector<RPCResult> inner = {},
         RPCResultOptions opts = {})
-        : RPCResult{type, std::move(m_key_name), /*optional=*/false, std::move(description), std::move(inner), std::move(opts)} {}
+        : RPCResult{type, key_name, /*optional=*/false, std::move(description), std::move(inner), std::move(opts)} {}
 
     /// Copy with replacement options, for stamping new opts onto an existing result.
     RPCResult(const RPCResult& other, RPCResultOptions opts)
