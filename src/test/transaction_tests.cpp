@@ -1240,6 +1240,112 @@ BOOST_AUTO_TEST_CASE(getvalueout_out_of_range_throws)
     BOOST_CHECK_EXCEPTION(tx.GetValueOut(), std::runtime_error, HasReason("GetValueOut: value out of range"));
 }
 
+BOOST_AUTO_TEST_CASE(annex_standardness)
+{
+    CCoinsViewCache coins{&CoinsViewEmpty::Get()};
+    const CScript taproot{CScript{} << OP_1 << std::vector<unsigned char>(32, 1)};
+    CMutableTransaction funding;
+    funding.vout.emplace_back(COIN, taproot);
+    funding.vout.emplace_back(COIN, taproot);
+    funding.vout.emplace_back(COIN, GetScriptForDestination(PKHash{GenerateRandomKey().GetPubKey()}));
+    funding.vout.emplace_back(COIN, P2WSH_OP_TRUE);
+    funding.vout.emplace_back(COIN, GetScriptForDestination(PayToAnchor{}));
+    funding.vout.emplace_back(COIN, GetScriptForDestination(ScriptHash{taproot}));
+    AddCoins(coins, CTransaction{funding}, 1, false);
+
+    CMutableTransaction tx;
+    tx.vin.emplace_back(funding.GetHash(), 0);
+    tx.vout.emplace_back(COIN / 2, taproot);
+    const std::vector<unsigned char> signature(64, 0);
+    std::vector<unsigned char> control_block(33, 0);
+    control_block[0] = TAPROOT_LEAF_TAPSCRIPT;
+    const std::vector<unsigned char> script{OP_DROP, OP_TRUE};
+    const auto is_witness_standard = [&] { return IsWitnessStandard(CTransaction{tx}, coins); };
+
+    // Exercise both spend paths. The annex is not subject to script stack item limits.
+    for (const bool script_path : {false, true}) {
+        auto& stack = tx.vin[0].scriptWitness.stack;
+        stack = script_path ? std::vector<std::vector<unsigned char>>{{}, script, control_block}
+                            : std::vector<std::vector<unsigned char>>{signature};
+        BOOST_CHECK(is_witness_standard());
+        stack.emplace_back(1, ANNEX_TAG);
+        for (const size_t size : {1U, 2U, 258U, 259U, 521U, 10'001U}) {
+            stack.back().resize(size, 0);
+            BOOST_CHECK(is_witness_standard());
+        }
+        for (unsigned int prefix{1}; prefix <= 255; ++prefix) {
+            stack.back()[1] = prefix;
+            BOOST_CHECK(!is_witness_standard());
+        }
+        stack.back()[1] = 0;
+        if (script_path) {
+            stack.front().resize(MAX_STANDARD_TAPSCRIPT_STACK_ITEM_SIZE, 0);
+            BOOST_CHECK(is_witness_standard());
+            stack.front().push_back(0);
+            BOOST_CHECK(!is_witness_standard());
+        }
+    }
+
+    tx.vin[0].scriptWitness.stack = {signature};
+    tx.vin.emplace_back(funding.GetHash(), 1);
+    tx.vin[1].scriptWitness.stack = {signature};
+    BOOST_CHECK(is_witness_standard());
+    for (const unsigned int index : {0U, 1U}) {
+        tx.vin[index].scriptWitness.stack.push_back({ANNEX_TAG});
+        BOOST_CHECK(!is_witness_standard());
+        tx.vin[1 - index].scriptWitness.stack.push_back({ANNEX_TAG, 0x00});
+        BOOST_CHECK(is_witness_standard());
+        tx.vin[0].scriptWitness.stack = {signature};
+        tx.vin[1].scriptWitness.stack = {signature};
+    }
+
+    // A single marker element is a key-path witness, not an annex.
+    tx.vin[0].scriptWitness.stack.push_back({ANNEX_TAG});
+    tx.vin[1].scriptWitness.stack = {{ANNEX_TAG}};
+    BOOST_CHECK(!is_witness_standard());
+
+    // Legacy, witness v0, anchors and P2SH-wrapped v1 cannot opt in to a Taproot annex.
+    for (const unsigned int index : {2U, 3U, 4U, 5U}) {
+        tx.vin[1] = CTxIn{funding.GetHash(), index};
+        if (index == 3) tx.vin[1].scriptWitness.stack = {{OP_TRUE}};
+        if (index == 5) {
+            tx.vin[1].scriptSig << std::vector<unsigned char>(taproot.begin(), taproot.end());
+            tx.vin[1].scriptWitness.stack = {signature, {ANNEX_TAG, 0x00}};
+        }
+        BOOST_CHECK(!is_witness_standard());
+        std::swap(tx.vin[0], tx.vin[1]);
+        BOOST_CHECK(!is_witness_standard());
+        std::swap(tx.vin[0], tx.vin[1]);
+        tx.vin[0].scriptWitness.stack.pop_back();
+        BOOST_CHECK(is_witness_standard());
+        tx.vin[0].scriptWitness.stack.push_back({ANNEX_TAG});
+    }
+
+    // Anchors must have no witness, even if the last item looks like an annex.
+    tx.vin[0].scriptWitness.stack = {signature};
+    tx.vin[1] = CTxIn{funding.GetHash(), 4};
+    tx.vin[1].scriptWitness.stack = {{ANNEX_TAG}};
+    BOOST_CHECK(!is_witness_standard());
+    tx.vin[1].scriptWitness.stack = {signature, {ANNEX_TAG, 0x00}};
+    BOOST_CHECK(!is_witness_standard());
+    tx.vin[0].scriptWitness.stack.push_back({ANNEX_TAG});
+
+    // Annex size is bounded by the existing total transaction weight policy.
+    tx.vin.resize(1);
+    auto& annex = tx.vin[0].scriptWitness.stack.back();
+    annex.resize(MAX_STANDARD_TX_WEIGHT, 0);
+    annex.resize(annex.size() - (GetTransactionWeight(CTransaction{tx}) - MAX_STANDARD_TX_WEIGHT));
+    BOOST_CHECK_EQUAL(GetTransactionWeight(CTransaction{tx}), MAX_STANDARD_TX_WEIGHT);
+    std::string reason;
+    BOOST_CHECK(is_witness_standard());
+    BOOST_CHECK(IsStandardTx(CTransaction{tx}, MAX_OP_RETURN_RELAY, g_bare_multi, g_dust, reason));
+    annex.push_back(0);
+    BOOST_CHECK_EQUAL(GetTransactionWeight(CTransaction{tx}), MAX_STANDARD_TX_WEIGHT + 1);
+    BOOST_CHECK(is_witness_standard());
+    BOOST_CHECK(!IsStandardTx(CTransaction{tx}, MAX_OP_RETURN_RELAY, g_bare_multi, g_dust, reason));
+    BOOST_CHECK_EQUAL(reason, "tx-size");
+}
+
 /** Sanity check the return value of SpendsNonAnchorWitnessProg for various output types. */
 BOOST_AUTO_TEST_CASE(spends_witness_prog)
 {

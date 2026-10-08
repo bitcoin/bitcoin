@@ -267,6 +267,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
     if (tx.IsCoinBase())
         return true; // Coinbases are skipped
 
+    size_t annex_inputs{0};
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
         // We don't care if witness for this input is empty, since it must not be bloated.
@@ -320,13 +321,17 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 
         // Check policy limits for Taproot spends:
         // - MAX_STANDARD_TAPSCRIPT_STACK_ITEM_SIZE limit for stack item size
-        // - No annexes
+        // - Annexes must be marker-only or start with the unstructured data prefix
         if (witnessversion == 1 && witnessprogram.size() == WITNESS_V1_TAPROOT_SIZE && !p2sh) {
             // Taproot spend (non-P2SH-wrapped, version 1, witness program size 32; see BIP 341)
             std::span stack{tx.vin[i].scriptWitness.stack};
             if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
-                // Annexes are nonstandard as long as no semantics are defined for them.
-                return false;
+                const auto& annex = SpanPopBack(stack);
+                // A marker-only annex opts in without carrying data. Otherwise, 0x00
+                // identifies unstructured data; other prefixes remain reserved.
+                // The existing MAX_STANDARD_TX_WEIGHT limit includes annex weight.
+                if (annex.size() > 1 && annex[1] != 0x00) return false;
+                ++annex_inputs;
             }
             if (stack.size() >= 2) {
                 // Script path spend (2 or more stack elements after removing optional annex)
@@ -348,7 +353,10 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             }
         }
     }
-    return true;
+    // Signatures commit only to the annex of their own input. Requiring all inputs
+    // to opt in prevents a participant from introducing an annex into a transaction
+    // whose other participants did not opt in. Inputs without witness also count.
+    return annex_inputs == 0 || annex_inputs == tx.vin.size();
 }
 
 bool SpendsNonAnchorWitnessProg(const CTransaction& tx, const CCoinsViewCache& prevouts)
