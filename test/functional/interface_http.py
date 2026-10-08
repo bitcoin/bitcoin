@@ -10,7 +10,7 @@ from test_framework.util import (
     assert_equal,
     assert_raises,
     mine_large_block,
-    str_to_b64str
+    str_to_b64str,
 )
 from test_framework.wallet import MiniWallet
 
@@ -895,7 +895,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
 
         # Drain the responses that were handled up to the stall point,
         # plus a few more to confirm that pulling out the cork restores the flow.
-        conn.conn.sock.settimeout(10)
+        conn.conn.sock.settimeout(10 * self.options.timeout_factor)
         num_res = 0
         while num_res < count + 2:
             response = conn.conn.sock.recv(10 * 1024 * 1024)
