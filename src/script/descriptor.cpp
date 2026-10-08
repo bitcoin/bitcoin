@@ -57,11 +57,11 @@ util::Expected<void, std::string> CheckDescriptorRangeBounds(int64_t low, int64_
     if ((high >> 31) != 0) {
         return util::Unexpected<std::string>("End of range is too high");
     }
-    if (high >= low + 1000000) {
-        return util::Unexpected<std::string>("Range is too large");
-    }
     if (low > high) {
         return util::Unexpected<std::string>("Range specified as [begin,end] must not have begin after end");
+    }
+    if (high - low >= 1000000) {
+        return util::Unexpected<std::string>("Range is too large");
     }
     return {};
 }
