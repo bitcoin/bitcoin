@@ -2,8 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
-
 #include <qt/clientmodel.h>
 
 #include <qt/bantablemodel.h>
@@ -201,11 +199,6 @@ QString ClientModel::formatFullVersion() const
 QString ClientModel::formatSubVersion() const
 {
     return QString::fromStdString(strSubVersion);
-}
-
-bool ClientModel::isReleaseVersion() const
-{
-    return CLIENT_VERSION_IS_RELEASE;
 }
 
 QString ClientModel::formatClientStartupTime() const
