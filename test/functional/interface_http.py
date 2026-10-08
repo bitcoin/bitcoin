@@ -273,8 +273,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         # Split off the send into a background thread. When the server detects
         # the excessive size it will stop reading from the socket, but the client
         # will continue trying to write until the backpressure eventually
-        # drops the TCP window size to 0. While the send operation is blocking until
-        # it times out, we can still receive the server's response in the foreground.
+        # drops the TCP window size to 0.
 
         def send_excessive_body(self, conn):
             try:
@@ -283,23 +282,18 @@ class HTTPBasicsTest (BitcoinTestFramework):
                 # On some platforms (e.g. Windows) the whole request may be
                 # accepted into the OS send buffer before the server disconnects.
                 # It's ok to allow that, the server-side behavior is asserted in
-                # the foreground thread via the 413 response.
+                # the socket-close check below.
                 self.log.info("Client finished sending request before connection was terminated")
             except NETWORK_ERRORS:
                 self.log.info("Client did not finish sending request before connection was terminated")
 
-        send_thread = threading.Thread(target=send_excessive_body, args=(self, conn))
-        send_thread.start()
-
-        response5 = conn.recv_raw().decode()
-        assert "413 Content too large" in response5
-
-        try:
-            conn.conn.sock.shutdown(socket.SHUT_RDWR)
-            self.log.info("Send thread force-closed by test framework")
-        except OSError:
-            self.log.info("Send thread was already closed by RST from server")
-        send_thread.join()
+        with (
+            self.node.assert_debug_log([f"HTTPResponse (status code: {http.client.REQUEST_ENTITY_TOO_LARGE}"]),
+            concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor,
+        ):
+            send_request = executor.submit(send_excessive_body, self, conn)
+            send_request.result(timeout=5)
+            self.wait_until(conn.sock_closed, timeout=5)
 
 
     def check_pipelining(self, with_invalid_second_request):
@@ -392,8 +386,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         # Split off the send into a background thread. When the server detects
         # the excessive size it will stop reading from the socket, but the client
         # will continue trying to write until the backpressure eventually
-        # drops the TCP window size to 0. While the send operation is blocking until
-        # it times out, we can still receive the server's response in the foreground.
+        # drops the TCP window size to 0.
 
         def send_excessive_chunked(self, conn):
             try:
@@ -406,23 +399,22 @@ class HTTPBasicsTest (BitcoinTestFramework):
                 # On some platforms (e.g. Windows) the whole request may be
                 # accepted into the OS send buffer before the server disconnects.
                 # It's ok to allow that, the server-side behavior is asserted in
-                # the foreground thread via the 413 response.
+                # the socket-close check below.
                 self.log.info("Client finished sending request before connection was terminated")
             except NETWORK_ERRORS:
                 self.log.info("Client did not finish sending request before connection was terminated")
 
-        send_thread = threading.Thread(target=send_excessive_chunked, args=(self, conn))
-        send_thread.start()
-
-        response2 = conn.recv_raw().decode()
-        assert "413 Content too large" in response2
-
-        try:
-            conn.conn.sock.shutdown(socket.SHUT_RDWR)
-            self.log.info("Send thread force-closed by test framework")
-        except OSError:
-            self.log.info("Send thread was already closed by RST from server")
-        send_thread.join()
+        with (
+            self.node.assert_debug_log([f"HTTPResponse (status code: {http.client.REQUEST_ENTITY_TOO_LARGE}"]),
+            concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor,
+        ):
+            send_request = executor.submit(send_excessive_chunked, self, conn)
+            send_request.result(timeout=5)
+            try:
+                conn.conn.getresponse().read()  # Clear pending-request state before next probe.
+            except NETWORK_ERRORS:
+                pass
+            self.wait_until(conn.sock_closed, timeout=5)
 
 
     def check_idle_timeout(self):
