@@ -83,6 +83,7 @@ private:
     QAction *bumpFeeAction{nullptr};
     QAction *copyAddressAction{nullptr};
     QAction *copyLabelAction{nullptr};
+    QAction *m_rebroadcast_action{nullptr};
 
     QWidget *createDateRangeWidget();
 
@@ -105,6 +106,7 @@ private Q_SLOTS:
     void copyTxPlainText();
     void openThirdPartyTxUrl(QString url);
     void abandonTx();
+    void rebroadcastTx();
     void bumpFee(bool checked);
 
 Q_SIGNALS:
