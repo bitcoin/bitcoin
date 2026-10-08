@@ -31,6 +31,29 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
     def setup_network(self):
         self.setup_nodes()  # Don't connect nodes
 
+    def test_manual_rebroadcast(self):
+        self.log.info("Testing manual rebroadcast")
+        self.nodes[0].createwallet("manual")
+        wallet = self.nodes[0].get_wallet_rpc("manual")
+        def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        def_wallet.sendtoaddress(wallet.getnewaddress(), 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+
+        txid1 = def_wallet.sendtoaddress(wallet.getnewaddress(), 1)
+        wtxid1 = def_wallet.gettransaction(txid1)["wtxid"]
+        txid2 = wallet.sendtoaddress(def_wallet.getnewaddress(), 0.5)
+        wtxid2 = wallet.gettransaction(txid2)["wtxid"]
+
+        self.nodes[0].syncwithvalidationinterfacequeue()
+
+        peer = self.nodes[0].add_p2p_connection(P2PTxInvStore())
+
+        with self.nodes[0].assert_debug_log(expected_msgs=[f"Submitting wtx {txid1} to mempool and for broadcast to peers", f"Submitting wtx {txid2} to mempool and for broadcast to peers"]):
+            wallet.rebroadcastwallettx(txid1)
+            wallet.rebroadcastwallettx(txid2)
+            peer.wait_for_broadcast([wtxid1, wtxid2])
+
     def run_test(self):
         node = self.nodes[0]  # alias
 
@@ -157,6 +180,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
             node1.mockscheduler(60)
             peer.wait_for_broadcast([recv_wtxid])
 
+        self.test_manual_rebroadcast()
 
 if __name__ == '__main__':
     ResendWalletTransactionsTest(__file__).main()
