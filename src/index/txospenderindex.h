@@ -51,7 +51,7 @@ private:
     util::Expected<CTransactionRef, std::string> ReadTransaction(const FlatFilePos& pos) const;
     util::Expected<TxoSpender, std::string> ReadLegacyTransaction(const CDiskTxPos& pos) const;
     /// Look up a spender among the legacy entries.
-    util::Expected<std::optional<TxoSpender>, std::string> FindLegacySpender(const COutPoint& txo) const;
+    std::optional<TxoSpender> FindLegacySpender(const COutPoint& txo) const;
 
 protected:
     bool CustomAppend(const interfaces::BlockInfo& block) override;
@@ -67,11 +67,12 @@ public:
      * @param[in] txo  The outpoint to search for.
      *
      * @return  std::nullopt               if the outpoint has not been spent in the active chain.
-     *          std::optional{TxoSpender}  if the output has been spent in the active chain. Contains the spending
+     *          TxoSpender                 if the output has been spent in the active chain. Contains the spending
      *                                     transaction and the block it was confirmed in.
-     *          util::Unexpected{error}    if something unexpected happened (i.e. disk or deserialization error).
+     *
+     * Candidates whose transaction cannot be read are skipped, as in TxIndex::FindTx.
      */
-    util::Expected<std::optional<TxoSpender>, std::string> FindSpender(const COutPoint& txo) const;
+    std::optional<TxoSpender> FindSpender(const COutPoint& txo) const;
 };
 
 /// The global txo spender index. May be null.

@@ -52,14 +52,6 @@ std::vector<block_seq::BlockTxPosition> BucketPositions(CDBWrapper& db, block_se
     return positions;
 }
 
-//! Return the spender of an outpoint and the block it is in, or nullopt if unspent.
-std::optional<TxoSpender> LookupSpender(const TxoSpenderIndex& index, const COutPoint& outpoint)
-{
-    const auto result{index.FindSpender(outpoint)};
-    BOOST_REQUIRE(result.has_value());
-    return *result;
-}
-
 void InvalidateBlock(ChainstateManager& chainman, const uint256& block_hash)
 {
     CBlockIndex* block_index{WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(block_hash))};
@@ -115,7 +107,7 @@ BOOST_FIXTURE_TEST_CASE(txospenderindex_initial_sync, TestChain100Setup)
 
     // Transaction should not be found in the index before it is synced.
     for (const auto& outpoint : spent) {
-        BOOST_CHECK(!txospenderindex.FindSpender(outpoint).value());
+        BOOST_CHECK(!txospenderindex.FindSpender(outpoint));
     }
 
     txospenderindex.Sync();
@@ -123,10 +115,9 @@ BOOST_FIXTURE_TEST_CASE(txospenderindex_initial_sync, TestChain100Setup)
 
     for (size_t i = 0; i < spent.size(); i++) {
         const auto tx_spender{txospenderindex.FindSpender(spent[i])};
-        BOOST_REQUIRE(tx_spender.has_value());
-        BOOST_REQUIRE(tx_spender->has_value());
-        BOOST_CHECK_EQUAL((*tx_spender)->tx->GetHash(), spender[i].GetHash());
-        BOOST_CHECK_EQUAL((*tx_spender)->block_hash, tip_hash);
+        BOOST_REQUIRE(tx_spender);
+        BOOST_CHECK_EQUAL(tx_spender->tx->GetHash(), spender[i].GetHash());
+        BOOST_CHECK_EQUAL(tx_spender->block_hash, tip_hash);
     }
 
     StopIndex(txospenderindex, m_node);
@@ -189,13 +180,49 @@ BOOST_FIXTURE_TEST_CASE(txospenderindex_collision_scan_path, SpendSetup)
     db.Write(txospenderindex::DBKey{unspent_prefix, spent_bucket.front()}, block_seq::EMPTY_VALUE);
 
     // The false positive is read and rejected.
-    BOOST_CHECK(!LookupSpender(index, unspent));
+    BOOST_CHECK(!index.FindSpender(unspent));
 
     // A false positive in the bucket of a spent outpoint does not hide its spender.
     // Point it at the coinbase of the same block, which sorts before the spender.
     db.Write(txospenderindex::DBKey{spent_prefix, {spent_bucket.front().block_seq, block_seq::BLOCK_HEADER_SIZE + 1}}, block_seq::EMPTY_VALUE);
     BOOST_REQUIRE_EQUAL(BucketPositions(db, spent_prefix).size(), 2U);
-    const auto spender{LookupSpender(index, spent)};
+    const auto spender{index.FindSpender(spent)};
+    BOOST_REQUIRE(spender);
+    BOOST_CHECK(spender->tx->GetHash() == spend_txid);
+    BOOST_CHECK(spender->block_hash == block_hash);
+
+    StopIndex(index, m_node);
+}
+
+BOOST_FIXTURE_TEST_CASE(txospenderindex_unreadable_candidate, SpendSetup)
+{
+    const uint256 block_hash{CreateAndProcessBlock({spend_mtx}, coinbase_script).GetHash()};
+
+    TxoSpenderIndex index(interfaces::MakeChain(m_node), /*n_cache_size=*/1_MiB, /*f_memory=*/true);
+    BOOST_REQUIRE(index.Init());
+    index.Sync();
+
+    CDBWrapper& db{TxoSpenderIndexTest::GetDB(index)};
+    const auto prefix{txospenderindex::CreateKeyPrefix(ReadHasher(db), spent)};
+    BOOST_REQUIRE_EQUAL(BucketPositions(db, prefix).size(), 1U);
+
+    // Forge a false positive pointing at the block at height 1, which sorts
+    // before the real spender, and make that block's data unavailable.
+    CBlockIndex* unreadable{WITH_LOCK(cs_main, return m_node.chainman->ActiveChain()[1])};
+    BOOST_REQUIRE(unreadable);
+    uint32_t unreadable_seq;
+    BOOST_REQUIRE(db.Read(txospenderindex::BlockHashKey{unreadable->GetBlockHash()}, unreadable_seq));
+    const block_seq::BlockTxPosition unreadable_pos{unreadable_seq, block_seq::BLOCK_HEADER_SIZE + 1};
+    db.Write(txospenderindex::DBKey{prefix, unreadable_pos}, block_seq::EMPTY_VALUE);
+    // The lookup visits the unreadable candidate first.
+    const auto bucket{BucketPositions(db, prefix)};
+    BOOST_REQUIRE_EQUAL(bucket.size(), 2U);
+    BOOST_CHECK(bucket.front() == unreadable_pos);
+    WITH_LOCK(cs_main, unreadable->nStatus &= ~BLOCK_HAVE_DATA);
+
+    // The unreadable candidate is skipped and the real spender is still found.
+    const auto spender{index.FindSpender(spent)};
+    WITH_LOCK(cs_main, unreadable->nStatus |= BLOCK_HAVE_DATA);
     BOOST_REQUIRE(spender);
     BOOST_CHECK(spender->tx->GetHash() == spend_txid);
     BOOST_CHECK(spender->block_hash == block_hash);
@@ -212,7 +239,7 @@ BOOST_FIXTURE_TEST_CASE(txospenderindex_reorg_keeps_stale_entries, SpendSetup)
     const uint256 stale_block_hash{CreateAndProcessBlock({spend_mtx}, coinbase_script).GetHash()};
     BOOST_REQUIRE(index.BlockUntilSyncedToCurrentChain());
     {
-        const auto spender{LookupSpender(index, spent)};
+        const auto spender{index.FindSpender(spent)};
         BOOST_REQUIRE(spender);
         BOOST_CHECK(spender->tx->GetHash() == spend_txid);
         BOOST_CHECK(spender->block_hash == stale_block_hash);
@@ -228,17 +255,17 @@ BOOST_FIXTURE_TEST_CASE(txospenderindex_reorg_keeps_stale_entries, SpendSetup)
     // Once its block leaves the active chain the spend is no longer returned,
     // even before the index processes the reorg, but its entry is kept.
     InvalidateBlock(chainman, stale_block_hash);
-    BOOST_CHECK(!LookupSpender(index, spent));
+    BOOST_CHECK(!index.FindSpender(spent));
     const uint256 empty_block_hash{CreateAndProcessBlock({}, CScript() << OP_TRUE).GetHash()};
     BOOST_REQUIRE(index.BlockUntilSyncedToCurrentChain());
-    BOOST_CHECK(!LookupSpender(index, spent));
+    BOOST_CHECK(!index.FindSpender(spent));
     BOOST_CHECK_EQUAL(BucketPositions(db, prefix).size(), 1U);
 
     // Mine the same spend into the replacement branch.
     const uint256 branch_block_hash{CreateAndProcessBlock({spend_mtx}, CScript() << OP_TRUE).GetHash()};
     BOOST_REQUIRE(index.BlockUntilSyncedToCurrentChain());
     {
-        const auto spender{LookupSpender(index, spent)};
+        const auto spender{index.FindSpender(spent)};
         BOOST_REQUIRE(spender);
         BOOST_CHECK(spender->block_hash == branch_block_hash);
     }
@@ -258,7 +285,7 @@ BOOST_FIXTURE_TEST_CASE(txospenderindex_reorg_keeps_stale_entries, SpendSetup)
     CreateAndProcessBlock({}, coinbase_script);
     BOOST_REQUIRE(index.BlockUntilSyncedToCurrentChain());
     {
-        const auto spender{LookupSpender(index, spent)};
+        const auto spender{index.FindSpender(spent)};
         BOOST_REQUIRE(spender);
         BOOST_CHECK(spender->block_hash == stale_block_hash);
     }
@@ -307,7 +334,7 @@ BOOST_FIXTURE_TEST_CASE(txospenderindex_legacy_fallback, SpendSetup)
     CDBWrapper& db{TxoSpenderIndexTest::GetDB(index)};
     BOOST_CHECK(BucketPositions(db, txospenderindex::CreateKeyPrefix(ReadHasher(db), spent)).empty());
     {
-        const auto spender{LookupSpender(index, spent)};
+        const auto spender{index.FindSpender(spent)};
         BOOST_REQUIRE(spender);
         BOOST_CHECK(spender->tx->GetHash() == spend_txid);
         BOOST_CHECK(spender->block_hash == block_hash);
@@ -316,11 +343,11 @@ BOOST_FIXTURE_TEST_CASE(txospenderindex_legacy_fallback, SpendSetup)
     // Once its block leaves the active chain, the legacy entry is kept but no
     // longer returned, before and after the index processes the reorg.
     InvalidateBlock(*m_node.chainman, block_hash);
-    BOOST_CHECK(!LookupSpender(index, spent));
+    BOOST_CHECK(!index.FindSpender(spent));
     CreateAndProcessBlock({}, CScript() << OP_TRUE);
     BOOST_REQUIRE(index.BlockUntilSyncedToCurrentChain());
     BOOST_CHECK(db.Exists(legacy_db_key));
-    BOOST_CHECK(!LookupSpender(index, spent));
+    BOOST_CHECK(!index.FindSpender(spent));
 
     StopIndex(index, m_node);
 }
