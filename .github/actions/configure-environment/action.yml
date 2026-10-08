@@ -25,5 +25,5 @@ runs:
     - name: Get container name
       shell: bash
       run: |
-        source $FILE_ENV
+        source ci/test/00_setup_env.sh
         echo "CONTAINER_NAME=$CONTAINER_NAME" >> "$GITHUB_ENV"

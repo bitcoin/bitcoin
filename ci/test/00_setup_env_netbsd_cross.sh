@@ -6,7 +6,6 @@
 
 export LC_ALL=C.UTF-8
 
-export CONTAINER_NAME=ci_netbsd_cross
 export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:26.04"
 export APT_LLVM_V="23"
 export HOST=x86_64-unknown-netbsd
@@ -27,7 +26,6 @@ export DEP_OPTS="build_CC=clang build_CXX=clang++ \
  OBJDUMP=llvm-objdump-${APT_LLVM_V} \
  RANLIB=llvm-ranlib-${APT_LLVM_V} \
  STRIP=llvm-strip-${APT_LLVM_V}"
-export GOAL="install"
 printf -v BITCOIN_CONFIG "%q " \
  --preset=dev-mode \
  -DBUILD_GUI=OFF \
