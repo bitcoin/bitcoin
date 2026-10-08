@@ -28,15 +28,17 @@ RPCSERVERTIMEOUT = 2
 MAX_HEADERS_SIZE = 8192
 MAX_BODY_SIZE = 32 * 1024 * 1024
 
+
 class BitcoinHTTPConnection:
     def __init__(self, node):
         self.url = urllib.parse.urlparse(node.url)
+        self.timeout = node.rpc_timeout
         self.authpair = f'{self.url.username}:{self.url.password}'
         self.headers = {"Authorization": f"Basic {str_to_b64str(self.authpair)}"}
         self.reset_conn()
 
     def reset_conn(self):
-        self.conn = http.client.HTTPConnection(self.url.hostname, self.url.port)
+        self.conn = http.client.HTTPConnection(self.url.hostname, self.url.port, timeout=self.timeout)
         self.conn.connect()
 
     def sock_closed(self):
@@ -698,12 +700,8 @@ class HTTPBasicsTest (BitcoinTestFramework):
                 return conn.get('/rest/blockhashbyheight/0.json').read()
 
             conn = BitcoinHTTPConnection(self.node)
-            conn.set_timeout(None)
             executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-            waiting_request = executor.submit(
-                wait_for_send,
-                conn
-            )
+            waiting_request = executor.submit(wait_for_send, conn)
 
             # We are waiting
             assert not waiting_request.done()
