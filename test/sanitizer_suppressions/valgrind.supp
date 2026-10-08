@@ -45,6 +45,13 @@
    fun:_Z11LogInstancev
 }
 {
+   Suppress GetKernelLogger still reachable memory warning
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znwm
+   fun:_ZN12_GLOBAL__N_115GetKernelLoggerEv
+}
+{
    Suppress BCLog::Logger::StartLogging() still reachable memory warning
    Memcheck:Leak
    match-leak-kinds: reachable
