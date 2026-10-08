@@ -276,15 +276,17 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         // get the scriptPubKey corresponding to this input:
         CScript prevScript = prev.scriptPubKey;
 
-        // P2A inputs cannot carry an annex and are exempt from annex opt-in.
         if (prevScript.IsPayToAnchor()) {
+            // witness stuffing detected
             if (!tx.vin[i].scriptWitness.IsNull()) return false;
+            // P2A inputs cannot carry an annex and are exempt from annex opt-in.
             ++anchor_inputs;
             continue;
         }
 
-        // We don't care if witness for this input is empty, since it must not be bloated.
-        // If the script is invalid without witness, it would be caught sooner or later during validation.
+        // Empty witnesses need no further witness checks; validation checks whether they are allowed.
+        // P2A inputs must be counted above before skipping these checks. Other inputs with
+        // empty witnesses still count toward the transaction-wide annex opt-in requirement.
         if (tx.vin[i].scriptWitness.IsNull())
             continue;
 
@@ -324,14 +326,14 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 
         // Check policy limits for Taproot spends:
         // - MAX_STANDARD_TAPSCRIPT_STACK_ITEM_SIZE limit for stack item size
-        // - Annexes must be marker-only or start with the unstructured data prefix
+        // - Annex payloads (after ANNEX_TAG) must be zero-length or start with the unstructured data prefix, 0x00
         if (witnessversion == 1 && witnessprogram.size() == WITNESS_V1_TAPROOT_SIZE && !p2sh) {
             // Taproot spend (non-P2SH-wrapped, version 1, witness program size 32; see BIP 341)
             std::span stack{tx.vin[i].scriptWitness.stack};
             if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
                 const auto& annex = SpanPopBack(stack);
-                // A marker-only annex opts in without carrying data. Otherwise, 0x00
-                // identifies unstructured data; other prefixes remain reserved.
+                // Reserve 0x00 for unstructured data so future consensus-related annex uses
+                // can use other prefixes or encoding schemes. An empty payload opts in without data.
                 // The existing MAX_STANDARD_TX_WEIGHT limit includes annex weight.
                 if (annex.size() > 1 && annex[1] != 0x00) return false;
                 ++annex_inputs;
@@ -356,9 +358,10 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             }
         }
     }
-    // Signatures commit only to the annex of their own input. Requiring all non-P2A inputs
-    // to opt in prevents a participant from introducing an annex into a transaction
-    // whose other participants did not opt in. Non-P2A inputs without witness also count.
+    // Signatures commit only to the annex of their own input. Requiring all non-P2A
+    // inputs to opt in prevents a transaction pinning attack where one participant
+    // adds an annex to inflate the witness after others signed without opting in.
+    // This does not prevent annex inflation when all participants have opted in.
     return annex_inputs == 0 || annex_inputs == tx.vin.size() - anchor_inputs;
 }
 
