@@ -163,6 +163,12 @@ public:
     //! Abandon transaction.
     virtual bool abandonTransaction(const Txid& txid) = 0;
 
+    //! Return whether transaction can be broadcast.
+    virtual bool transactionCanBeBroadcast(const Txid& txid) = 0;
+
+    //! Rebroadcast a transaction.
+    virtual util::Expected<void, wallet::WalletError> rebroadcastTransaction(const Txid& txid) = 0;
+
     //! Return whether transaction can be bumped.
     virtual bool transactionCanBeBumped(const Txid& txid) = 0;
 
