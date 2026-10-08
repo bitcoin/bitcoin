@@ -748,6 +748,10 @@ class AssumeutxoTest(BitcoinTestFramework):
             assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
             assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
 
+        self.log.info("Check that dumptxoutset rollback also fails early on a non-pruned node without the snapshot base block")
+        assert_raises_rpc_error(-1, "Could not roll back to requested height since block data for the current tip is not available.",
+                                n2.dumptxoutset, "utxos_rollback_snapshot_n2.dat", rollback=START_HEIGHT)
+
         normal, snapshot = n2.getchainstates()['chainstates']
         assert_equal(normal['blocks'], START_HEIGHT)
         assert_equal(normal.get('snapshot_blockhash'), None)

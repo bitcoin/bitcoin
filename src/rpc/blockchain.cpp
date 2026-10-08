@@ -3185,17 +3185,22 @@ static RPCMethod dumptxoutset()
         // Dump the txoutset of the current tip
         result = CreateUTXOSnapshot(node, chainstate, std::move(afile), path, temppath);
     } else {
+        // After loadtxoutset the tip is the snapshot base block, which has
+        // no block or undo data until it is downloaded. Rolling back needs
+        // that data, so fail early instead of after copying the UTXO set.
+        {
+            LOCK(node.chainman->GetMutex());
+            if ((node.chainman->ActiveChain().Tip()->nStatus & BLOCK_HAVE_MASK) != BLOCK_HAVE_MASK) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Could not roll back to requested height since block data for the current tip is not available.");
+            }
+        }
+
         // Check pruning constraints before attempting rollback and prevent
         // pruning of the necessary blocks with a temporary prune lock
         std::optional<TemporaryPruneLock> temp_prune_lock;
         if (node.chainman->m_blockman.IsPruneMode()) {
             LOCK(node.chainman->GetMutex());
             const CBlockIndex* current_tip{node.chainman->ActiveChain().Tip()};
-            // After loadtxoutset the tip is the snapshot base block, which has
-            // no block or undo data until it is downloaded.
-            if ((current_tip->nStatus & BLOCK_HAVE_MASK) != BLOCK_HAVE_MASK) {
-                throw JSONRPCError(RPC_MISC_ERROR, "Could not roll back to requested height since block data for the current tip is not available.");
-            }
             const CBlockIndex& first_block{node.chainman->m_blockman.GetFirstBlock(*current_tip, /*status_mask=*/BLOCK_HAVE_MASK)};
             if (first_block.nHeight > target_index->nHeight) {
                 throw JSONRPCError(RPC_MISC_ERROR, "Could not roll back to requested height since necessary block data is already pruned.");
