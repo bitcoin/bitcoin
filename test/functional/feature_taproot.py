@@ -86,6 +86,7 @@ from test_framework.script import (
     taproot_construct,
 )
 from test_framework.script_util import (
+    PAY_TO_ANCHOR,
     key_to_p2pk_script,
     key_to_p2pkh_script,
     key_to_p2wpkh_script,
@@ -1494,7 +1495,7 @@ class TaprootTest(BitcoinTestFramework):
         legacy_key = ECKey()
         legacy_key.set(generate_privkey(), compressed=True)
         legacy_pubkey = legacy_key.get_pubkey().get_bytes()
-        # A single input without an annex prevents the transaction from opting in,
+        # A non-P2A input without an annex prevents the transaction from opting in,
         # including when that input spends a legacy or witness-v0 output.
         for other in [
             taproot_spender(None),
@@ -1502,6 +1503,30 @@ class TaprootTest(BitcoinTestFramework):
             make_spender("annex/mixed/witness_v0", pkh=legacy_pubkey, key=legacy_key, witv0=True, sigops_weight=1),
         ]:
             self.test_spenders(self.nodes[0], [taproot_spender(bytes([ANNEX_TAG, 0])), other], input_counts=[2], tx_version=2)
+
+        def anchor_spender(witness=()):
+            return make_spender("annex/mixed/anchor", script=PAY_TO_ANCHOR, inputs=[],
+                                witness=list(witness), standard=not witness)
+
+        # P2A inputs cannot have an annex and are excluded from the opt-in rule.
+        self.test_spenders(self.nodes[0], [anchor_spender()], input_counts=[1], tx_version=2)
+        for annex, leaf in [(None, None), (bytes([ANNEX_TAG]), None), (bytes([ANNEX_TAG, 0]), "pk")]:
+            self.test_spenders(self.nodes[0], [taproot_spender(annex, leaf=leaf), anchor_spender()], input_counts=[2], tx_version=2)
+        self.test_spenders(self.nodes[0], [
+            taproot_spender(bytes([ANNEX_TAG])),
+            taproot_spender(bytes([ANNEX_TAG, 0]), leaf="pk"),
+            anchor_spender(),
+        ], input_counts=[3], tx_version=2)
+        # Adding a P2A input does not opt a non-annex Taproot input into annexes.
+        self.test_spenders(self.nodes[0], [
+            taproot_spender(bytes([ANNEX_TAG, 0])),
+            taproot_spender(None, leaf="pk"),
+            anchor_spender(),
+        ], input_counts=[3], tx_version=2)
+        # The P2A exception does not permit witness stuffing, even an empty item.
+        for witness in ([b''], [bytes([ANNEX_TAG, 0])]):
+            for annex in (None, bytes([ANNEX_TAG])):
+                self.test_spenders(self.nodes[0], [taproot_spender(annex), anchor_spender(witness)], input_counts=[2], tx_version=2)
 
     def test_spenders(self, node, spenders, input_counts, *, tx_version=None):
         """Run randomized tests with a number of "spenders".
@@ -1669,6 +1694,7 @@ class TaprootTest(BitcoinTestFramework):
                     dump_json_test(tx, input_utxos, i, success, fail)
 
             annex_count = sum(success[2] is not None for _, success in input_data)
+            non_anchor_count = sum(utxo.output.scriptPubKey != PAY_TO_ANCHOR for utxo in input_utxos)
 
             # Sign each input incorrectly once on each complete signing pass, except the very last.
             for fail_input in list(range(len(input_utxos))) + [None]:
@@ -1685,7 +1711,7 @@ class TaprootTest(BitcoinTestFramework):
                 is_standard_tx = (
                     fail_input is None  # Must be valid to be standard
                     and (all(utxo.spender.is_standard for utxo in input_utxos))  # All inputs must be standard
-                    and annex_count in (0, len(input_utxos))  # All inputs must opt in to annexes, or none
+                    and annex_count in (0, non_anchor_count)  # All non-P2A inputs must opt in to annexes, or none
                     and tx.version in TX_STANDARD_VERSIONS # The tx version must be standard
                     and not (tx.version == 3 and tx.get_vsize() > TRUC_MAX_VSIZE)  # Topological standardness rules must be followed
                 )

@@ -268,22 +268,25 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         return true; // Coinbases are skipped
 
     size_t annex_inputs{0};
+    size_t anchor_inputs{0};
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
-        // We don't care if witness for this input is empty, since it must not be bloated.
-        // If the script is invalid without witness, it would be caught sooner or later during validation.
-        if (tx.vin[i].scriptWitness.IsNull())
-            continue;
-
         const CTxOut &prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
 
         // get the scriptPubKey corresponding to this input:
         CScript prevScript = prev.scriptPubKey;
 
-        // witness stuffing detected
+        // P2A inputs cannot carry an annex and are exempt from annex opt-in.
         if (prevScript.IsPayToAnchor()) {
-            return false;
+            if (!tx.vin[i].scriptWitness.IsNull()) return false;
+            ++anchor_inputs;
+            continue;
         }
+
+        // We don't care if witness for this input is empty, since it must not be bloated.
+        // If the script is invalid without witness, it would be caught sooner or later during validation.
+        if (tx.vin[i].scriptWitness.IsNull())
+            continue;
 
         bool p2sh = false;
         if (prevScript.IsPayToScriptHash()) {
@@ -353,10 +356,10 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             }
         }
     }
-    // Signatures commit only to the annex of their own input. Requiring all inputs
+    // Signatures commit only to the annex of their own input. Requiring all non-P2A inputs
     // to opt in prevents a participant from introducing an annex into a transaction
-    // whose other participants did not opt in. Inputs without witness also count.
-    return annex_inputs == 0 || annex_inputs == tx.vin.size();
+    // whose other participants did not opt in. Non-P2A inputs without witness also count.
+    return annex_inputs == 0 || annex_inputs == tx.vin.size() - anchor_inputs;
 }
 
 bool SpendsNonAnchorWitnessProg(const CTransaction& tx, const CCoinsViewCache& prevouts)
