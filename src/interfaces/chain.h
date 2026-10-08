@@ -21,6 +21,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -34,6 +35,7 @@ enum class MemPoolRemovalReason;
 enum class RBFTransactionState;
 struct bilingual_str;
 struct CBlockLocator;
+class CScript;
 namespace kernel {
 struct ChainstateRole;
 } // namespace kernel
@@ -174,6 +176,11 @@ public:
     //! the current chain UTXO set. Iterates through all the keys in the map and
     //! populates the values.
     virtual void findCoins(std::map<COutPoint, Coin>& coins) = 0;
+
+    //! Scan the UTXO set for coins belonging to output_scripts. Returns false
+    //! if the scan could not be completed, otherwise sets best_block to the
+    //! chainstate snapshot used by the scan and returns true.
+    virtual bool findCoinsByScript(const std::set<CScript>& output_scripts, std::map<COutPoint, Coin>& coins, uint256& best_block) = 0;
 
     //! Estimate fraction of total transactions verified if blocks up to
     //! the specified block hash are verified.
