@@ -94,6 +94,8 @@ BOOST_FIXTURE_TEST_CASE(findAncestorByHash, TestChain100Setup)
     BOOST_CHECK(chain->findAncestorByHash(active[20]->GetBlockHash(), active[10]->GetBlockHash(), FoundBlock().height(height)));
     BOOST_CHECK_EQUAL(height, 10);
     BOOST_CHECK(!chain->findAncestorByHash(active[10]->GetBlockHash(), active[20]->GetBlockHash()));
+    BOOST_CHECK(!chain->findAncestorByHash(uint256{}, active[0]->GetBlockHash()));
+    BOOST_CHECK(!chain->findAncestorByHash(active[0]->GetBlockHash(), uint256{}));
 }
 
 BOOST_FIXTURE_TEST_CASE(findCommonAncestor, TestChain100Setup)
