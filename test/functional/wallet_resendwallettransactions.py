@@ -163,12 +163,46 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
             node1.mockscheduler(60)
             peer.wait_for_broadcast([recv_wtxid])
 
+    def test_resubmit_on_load(self):
+        self.log.info("Test loading a wallet only resubmits to the mempool and does not broadcast")
+        self.nodes[0].createwallet("loading_resubmit")
+        wallet = self.nodes[0].get_wallet_rpc("loading_resubmit")
+
+        self.default_wallet.sendtoaddress(wallet.getnewaddress(), 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+
+        txid1 = wallet.sendtoaddress(self.default_wallet.getnewaddress(), 0.5)
+        txid2 = self.default_wallet.sendtoaddress(wallet.getnewaddress(), 1)
+
+        self.restart_node(0, extra_args=self.nodes[0].extra_args + ["-persistmempool=0", "-nowallet", f"-mocktime={self.nodes[0].mocktime}"])
+        assert_equal(self.nodes[0].getrawmempool(), [])
+        peer = self.nodes[0].add_p2p_connection(P2PTxInvStore())
+
+        self.nodes[0].loadwallet("loading_resubmit")
+        mempool = self.nodes[0].getrawmempool()
+        assert txid1 in mempool
+        assert txid2 in mempool
+
+        self.nodes[0].loadwallet(self.default_wallet_name)
+        self.default_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        # Send an unrelated transaction to make sure the unconfirmed txs in the wallet are not broadcast
+        broadcast_txid = self.default_wallet.sendtoaddress(self.default_wallet.getnewaddress(), 1)
+        broadcast_wtxid = self.default_wallet.gettransaction(broadcast_txid)["wtxid"]
+        peer.wait_for_broadcast([broadcast_wtxid])
+        invs = peer.get_invs()
+        assert int(txid1, 16) not in invs
+        assert int(txid2, 16) not in invs
+
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+
     def run_test(self):
         self.default_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
 
         self.test_resubmit_timer()
         self.test_chained_tx_resubmission()
         self.test_received_rebroadcast()
+        self.test_resubmit_on_load()
 
 if __name__ == '__main__':
     ResendWalletTransactionsTest(__file__).main()
