@@ -263,7 +263,8 @@ static OutputType GetOutputType(TxoutType type, bool is_from_p2sh)
 // Fetch and validate the coin control selected inputs.
 // Coins could be internal (from the wallet) or external.
 util::Result<CoinsResult> FetchSelectedInputs(const CWallet& wallet, const CCoinControl& coin_control,
-                                            const CoinSelectionParams& coin_selection_params)
+                                            const CoinSelectionParams& coin_selection_params,
+                                            bool* has_unconfirmed_parent)
 {
     CoinsResult result;
     const bool can_grind_r = wallet.CanGrindR();
@@ -286,6 +287,7 @@ util::Result<CoinsResult> FetchSelectedInputs(const CWallet& wallet, const CCoin
                 } else if (coin_control.m_version == TRUC_VERSION && parent_tx.GetTx()->version != TRUC_VERSION) {
                     return util::Error{strprintf(_("Can't spend unconfirmed version %d pre-selected input with a version 3 tx"), parent_tx.GetTx()->version)};
                 }
+                if (has_unconfirmed_parent) *has_unconfirmed_parent = true;
             }
         } else {
             // The input is external. We did not find the tx in mapWallet.
@@ -1204,8 +1206,9 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
 
     // Fetch manually selected coins
     CoinsResult preset_inputs;
+    bool preset_has_unconfirmed_parent{false};
     if (coin_control.HasSelected()) {
-        auto res_fetch_inputs = FetchSelectedInputs(wallet, coin_control, coin_selection_params);
+        auto res_fetch_inputs = FetchSelectedInputs(wallet, coin_control, coin_selection_params, &preset_has_unconfirmed_parent);
         if (!res_fetch_inputs) return util::Error{util::ErrorString(res_fetch_inputs)};
         preset_inputs = *res_fetch_inputs;
     }
@@ -1415,6 +1418,13 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     if ((sign && GetTransactionWeight(*tx) > MAX_STANDARD_TX_WEIGHT) ||
         (!sign && tx_sizes.weight > MAX_STANDARD_TX_WEIGHT))
     {
+        return util::Error{_("Transaction too large")};
+    }
+
+    // Coin selection limits a TRUC child to TRUC_CHILD_MAX_WEIGHT, but preset inputs
+    // spending an unconfirmed parent can skip it, so check the final transaction.
+    if (coin_control.m_version == TRUC_VERSION && preset_has_unconfirmed_parent &&
+        (sign ? GetTransactionWeight(*tx) : tx_sizes.weight) > TRUC_CHILD_MAX_WEIGHT) {
         return util::Error{_("Transaction too large")};
     }
 

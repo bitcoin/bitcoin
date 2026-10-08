@@ -167,9 +167,11 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
 /**
  * Fetch and validate coin control selected inputs.
  * Coins could be internal (from the wallet) or external.
+ * If has_unconfirmed_parent is not null, it is set to true when an internal input spends an unconfirmed transaction.
 */
 util::Result<CoinsResult> FetchSelectedInputs(const CWallet& wallet, const CCoinControl& coin_control,
-                                                    const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+                                                    const CoinSelectionParams& coin_selection_params,
+                                                    bool* has_unconfirmed_parent = nullptr) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /**
  * Select a set of coins such that nTargetValue is met; never select unconfirmed coins if they are not ours

@@ -8,7 +8,9 @@ from decimal import Decimal, getcontext
 
 from test_framework.messages import (
     COIN,
+    COutPoint,
     CTransaction,
+    CTxIn,
     CTxOut,
 )
 from test_framework.script import (
@@ -26,6 +28,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
+    assert_greater_than_or_equal,
     assert_raises_rpc_error,
     JSONRPCException,
 )
@@ -117,6 +120,10 @@ class WalletV3Test(BitcoinTestFramework):
         self.mempool_conflicts_removed_when_v3_conflict_removed()
         self.max_tx_weight()
         self.max_tx_child_weight()
+        self.max_tx_child_weight_preset_inputs()
+        self.max_tx_child_weight_preset_inputs_below_limit()
+        self.max_tx_weight_confirmed_preset_inputs()
+        self.max_tx_child_weight_preset_and_selected_inputs()
         self.user_input_weight_not_overwritten()
         self.user_input_weight_not_overwritten_v3_child()
         self.createpsbt_v3()
@@ -400,6 +407,78 @@ class WalletV3Test(BitcoinTestFramework):
 
         self.generate(self.nodes[0], 1)
         self.alice.fundrawtransaction(tx.serialize_with_witness().hex())
+
+    def truc_child_of_wallet_parent(self, amount, confirm_parent):
+        """Send a version 3 parent paying alice and return a version 3 tx spending that output"""
+        address = self.alice.getnewaddress()
+        txid = self.send_tx(self.charlie, [], {address: amount}, 3)
+        vout = next(out["n"] for out in self.nodes[0].getrawtransaction(txid, True)["vout"] if out["scriptPubKey"].get("address") == address)
+        if confirm_parent:
+            self.generate(self.nodes[0], 1)
+
+        tx = CTransaction()
+        tx.version = 3
+        tx.vin.append(CTxIn(COutPoint(int(txid, 16), vout)))
+        return tx
+
+    @cleanup
+    def max_tx_child_weight_preset_inputs(self):
+        self.log.info("Test max v3 transaction child weight with preset inputs")
+
+        tx = self.truc_child_of_wallet_parent(10, confirm_parent=False)
+        self.bulk_tx(tx, 5, TRUC_CHILD_MAX_VSIZE + 100)
+
+        assert_raises_rpc_error(
+            -4,
+            "Transaction too large",
+            self.alice.fundrawtransaction,
+            tx.serialize_with_witness().hex(),
+            {'add_inputs': False}
+        )
+
+    @cleanup
+    def max_tx_child_weight_preset_inputs_below_limit(self):
+        self.log.info("Test v3 child with preset inputs below the child weight limit")
+
+        tx = self.truc_child_of_wallet_parent(10, confirm_parent=False)
+        self.bulk_tx(tx, 5, TRUC_CHILD_MAX_VSIZE - 100)
+
+        funded = self.alice.fundrawtransaction(tx.serialize_with_witness().hex(), {'add_inputs': False})
+        signed = self.alice.signrawtransactionwithwallet(funded["hex"])["hex"]
+        assert_greater_than_or_equal(TRUC_CHILD_MAX_VSIZE * 4, self.alice.decoderawtransaction(signed)["weight"])
+
+    @cleanup
+    def max_tx_weight_confirmed_preset_inputs(self):
+        self.log.info("Test v3 tx with confirmed preset inputs is not limited to the child weight")
+
+        tx = self.truc_child_of_wallet_parent(10, confirm_parent=True)
+        self.bulk_tx(tx, 5, TRUC_CHILD_MAX_VSIZE + 100)
+
+        funded = self.alice.fundrawtransaction(tx.serialize_with_witness().hex(), {'add_inputs': False})
+        signed = self.alice.signrawtransactionwithwallet(funded["hex"])["hex"]
+        weight = self.alice.decoderawtransaction(signed)["weight"]
+        assert_greater_than(weight, TRUC_CHILD_MAX_VSIZE * 4)
+        assert_greater_than_or_equal(TRUC_MAX_VSIZE * 4, weight)
+
+    @cleanup
+    def max_tx_child_weight_preset_and_selected_inputs(self):
+        self.log.info("Test max v3 transaction child weight with a preset input and wallet-selected inputs")
+
+        # confirmed coin for coin selection to add
+        self.send_tx(self.charlie, [], {self.alice.getnewaddress(): 10}, 3)
+        self.generate(self.nodes[0], 1)
+
+        tx = self.truc_child_of_wallet_parent(1, confirm_parent=False)
+        # the 5 BTC output needs more than the 1 BTC preset input
+        self.bulk_tx(tx, 5, TRUC_CHILD_MAX_VSIZE + 100)
+
+        assert_raises_rpc_error(
+            -4,
+            "Transaction too large",
+            self.alice.fundrawtransaction,
+            tx.serialize_with_witness().hex(),
+            {'add_inputs': True}
+        )
 
     @cleanup
     def user_input_weight_not_overwritten(self):
