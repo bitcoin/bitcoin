@@ -11,6 +11,7 @@
 //! HTTP status codes
 enum HTTPStatusCode : int
 {
+    HTTP_CONTINUE              = 100,
     HTTP_OK                    = 200,
     HTTP_NO_CONTENT            = 204,
     HTTP_BAD_REQUEST           = 400,
@@ -28,6 +29,7 @@ enum HTTPStatusCode : int
 inline std::string_view HTTPStatusReasonString(HTTPStatusCode code)
 {
     switch (code) {
+    case HTTP_CONTINUE: return "Continue";
     case HTTP_OK: return "OK";
     case HTTP_NO_CONTENT: return "No Content";
     case HTTP_BAD_REQUEST: return "Bad Request";

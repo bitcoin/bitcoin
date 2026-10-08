@@ -178,6 +178,16 @@ public:
         WriteReply(status, std::as_bytes(std::span{reply_body_view}));
     }
 
+    /**
+     * If the client sent "Expect: 100-continue" on an HTTP/1.1 request,
+     * queue an interim "100 Continue" response so the client sends the
+     * request body right away instead of waiting out its own timeout for a
+     * response that otherwise never comes before the body is read.
+     * Only meaningful once headers are loaded, and a no-op otherwise.
+     * https://httpwg.org/specs/rfc9110.html#rfc.section.10.1.1
+     */
+    void MaybeSendContinue() const;
+
     const HTTPVersion& GetVersion() const LIFETIMEBOUND { return m_version; }
     std::shared_ptr<HTTPRemoteClient> GetClient() const { return m_client.lock(); }
 
@@ -506,6 +516,18 @@ public:
     bool ReceiveBufferEmpty() const { return m_recv_buffer.empty(); }
 
     void Send(const HTTPResponse& res, std::span<const std::byte> reply_body, bool keep_alive) EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex, !m_sock_mutex);
+
+    /**
+     * Queue a "100 Continue" interim response for a request that is still
+     * being read (headers are loaded, body is not). Unlike Send(), this
+     * leaves m_req_busy untouched (the request isn't complete yet) and
+     * forces m_keep_alive=true so that an optimistic send draining this
+     * tiny response doesn't disconnect the client before its request body
+     * arrives; Send() overwrites m_keep_alive with the real value once the
+     * final response for this request is ready.
+     */
+    void SendContinue(const HTTPVersion& version) EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex, !m_sock_mutex);
+
     void Receive() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex);
 
     bool MaybeDisconnect(std::chrono::time_point<SteadyClock> now, std::chrono::seconds rpcservertimeout, bool disconnect_all);

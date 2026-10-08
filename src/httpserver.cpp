@@ -603,6 +603,20 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
     }
 }
 
+void HTTPRequest::MaybeSendContinue() const
+{
+    // The "Expect: 100-continue" mechanism is only defined for HTTP/1.1.
+    // https://httpwg.org/specs/rfc9110.html#rfc.section.10.1.1
+    if (m_version.major != 1 || m_version.minor < 1) return;
+
+    const auto expect{m_headers.FindFirst("Expect")};
+    if (!expect || ToLower(*expect) != "100-continue") return;
+
+    if (std::shared_ptr client{m_client.lock()}) {
+        client->SendContinue(m_version);
+    }
+}
+
 void HTTPRemoteClient::Send(const HTTPResponse& res, std::span<const std::byte> reply_body, bool keep_alive)
 {
     m_keep_alive = keep_alive;
@@ -652,6 +666,44 @@ void HTTPRemoteClient::Send(const HTTPResponse& res, std::span<const std::byte> 
 
     // Signal to the I/O loop that we are ready to handle the next request.
     m_req_busy = false;
+}
+
+void HTTPRemoteClient::SendContinue(const HTTPVersion& version)
+{
+    HTTPResponse res;
+    res.version = version;
+    res.status = HTTP_CONTINUE;
+    // A 100 (Continue) response has no header fields and no body.
+    // https://httpwg.org/specs/rfc9110.html#rfc.section.15.2.1
+    const std::string headers{res.StringifyHeaders()};
+    const auto headers_bytes{std::as_bytes(std::span{headers})};
+
+    bool send_buffer_was_empty{false};
+    {
+        LOCK(m_send_mutex);
+        send_buffer_was_empty = m_send_buffer.empty();
+        m_send_buffer.insert(m_send_buffer.end(), headers_bytes.begin(), headers_bytes.end());
+        // See the matching comment in Send() for why this must happen under the lock.
+        if (!send_buffer_was_empty) m_send_ready = true;
+    }
+
+    // This is an interim response for a request that is still being read;
+    // the connection must stay open regardless of what the eventual final
+    // response decides, or an optimistic send below that drains this tiny
+    // reply would immediately disconnect the client before its request body
+    // ever arrives. Send() overwrites this with the correct value later.
+    m_keep_alive = true;
+
+    LogDebug(
+        BCLog::HTTP,
+        "HTTPResponse (status code: %d) added to send buffer for client %s (id=%llu)",
+        res.status,
+        m_origin,
+        m_id);
+
+    if (send_buffer_was_empty) {
+        MaybeSendBytesFromBuffer();
+    }
 }
 
 CService HTTPRequest::GetPeer() const
@@ -1235,6 +1287,9 @@ void HTTPRemoteClient::ReadRequest(HTTPRequest& req)
         case HTTPRequest::State::NeedsHeaders:
             if (!req.LoadHeaders(reader)) break;
             req.SetState(HTTPRequest::State::NeedsBody);
+            // All headers are known now, so this is the one point where we can
+            // tell the client to go ahead and send a body we were asked to wait for.
+            req.MaybeSendContinue();
             [[fallthrough]];
 
         case HTTPRequest::State::NeedsBody:

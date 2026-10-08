@@ -907,6 +907,128 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
     server.StopListening();
 }
 
+BOOST_AUTO_TEST_CASE(http_continue_tests)
+{
+    // Prepare a request handler that just stores received requests so we can examine them.
+    Mutex requests_mutex;
+    std::deque<std::unique_ptr<HTTPRequest>> requests;
+    auto StoreRequest = [&](std::unique_ptr<HTTPRequest>&& req) {
+        LOCK(requests_mutex);
+        requests.push_back(std::move(req));
+    };
+
+    HTTPServer server{StoreRequest};
+    server.InitHTTPAllowList();
+    CService addr_bind{Lookup("0.0.0.0", /*portDefault=*/0, /*fAllowLookup=*/false).value()};
+    BOOST_REQUIRE(server.BindAndStartListening(addr_bind));
+    server.StartSocketsThreads();
+
+    constexpr std::string_view expected_continue{"HTTP/1.1 100 Continue\r\n\r\n"};
+
+    {
+        // A curl-style request with "Expect: 100-continue" and a large body
+        // that hasn't been sent yet: the server must reply "100 Continue"
+        // as soon as it has read the headers, without waiting for the body.
+        constexpr std::string_view headers{"POST / HTTP/1.1\r\n"
+                                            "Host: 127.0.0.1\r\n"
+                                            "Connection: close\r\n"
+                                            "Expect: 100-continue\r\n"
+                                            "Content-Length: 5\r\n"
+                                            "\r\n"};
+        std::shared_ptr<DynSock::Pipes> mock_client_socket_pipes{
+            ConnectClient(std::as_bytes(std::span(headers)))};
+
+        int attempts{6000};
+        while (server.GetConnectionsCount() < 1) {
+            std::this_thread::sleep_for(10ms);
+            BOOST_REQUIRE(--attempts > 0);
+        }
+
+        // Wait for "100 Continue" to arrive, well before any body is sent.
+        std::string actual;
+        char buf[0x100] = {};
+        attempts = 6000;
+        while (actual.size() < expected_continue.size()) {
+            ssize_t bytes_read = mock_client_socket_pipes->send.GetBytes(buf, sizeof(buf), 0);
+            if (bytes_read > 0) actual.append(buf, bytes_read);
+            std::this_thread::sleep_for(10ms);
+            BOOST_REQUIRE(--attempts > 0);
+        }
+        BOOST_CHECK_EQUAL(actual, expected_continue);
+
+        // The request handler must not have been invoked yet: we don't have a body.
+        BOOST_CHECK_EQUAL(WITH_LOCK(requests_mutex, return requests.size();), 0);
+
+        // Now the client sends the body it was waiting to send.
+        mock_client_socket_pipes->recv.PushBytes("abcde", 5);
+
+        attempts = 6000;
+        while (true) {
+            {
+                LOCK(requests_mutex);
+                if (requests.size() == 1) {
+                    BOOST_CHECK_EQUAL(requests.front()->ReadBody(), "abcde");
+                    requests.front()->WriteReply(HTTP_OK, "");
+                    requests.pop_front();
+                    break;
+                }
+            }
+            std::this_thread::sleep_for(10ms);
+            BOOST_REQUIRE(--attempts > 0);
+        }
+
+        // Final response follows the continue response, connection then closes
+        // (Connection: close, no keep-alive) instead of being stuck.
+        attempts = 6000;
+        while (server.GetConnectionsCount() != 0) {
+            std::this_thread::sleep_for(10ms);
+            BOOST_REQUIRE(--attempts > 0);
+        }
+    }
+    {
+        // HTTP/1.0 has no "100 Continue" mechanism; an Expect header must be ignored.
+        constexpr std::string_view request{"POST / HTTP/1.0\r\n"
+                                            "Expect: 100-continue\r\n"
+                                            "Content-Length: 2\r\n"
+                                            "\r\n"
+                                            "ok"};
+        std::shared_ptr<DynSock::Pipes> mock_client_socket_pipes{
+            ConnectClient(std::as_bytes(std::span(request)))};
+
+        int attempts{6000};
+        while (true) {
+            {
+                LOCK(requests_mutex);
+                if (requests.size() == 1) {
+                    BOOST_CHECK_EQUAL(requests.front()->ReadBody(), "ok");
+                    requests.front()->WriteReply(HTTP_OK, "");
+                    requests.pop_front();
+                    break;
+                }
+            }
+            std::this_thread::sleep_for(10ms);
+            BOOST_REQUIRE(--attempts > 0);
+        }
+
+        // Nothing was ever sent before the final reply; no "100 Continue" leaked in.
+        std::string actual;
+        char buf[0x100] = {};
+        attempts = 100;
+        while (attempts > 0) {
+            ssize_t bytes_read = mock_client_socket_pipes->send.GetBytes(buf, sizeof(buf), 0);
+            if (bytes_read > 0) actual.append(buf, bytes_read);
+            std::this_thread::sleep_for(1ms);
+            --attempts;
+        }
+        BOOST_CHECK(!actual.starts_with(expected_continue));
+        BOOST_CHECK(actual.starts_with("HTTP/1.0 200 OK"));
+    }
+
+    server.InterruptNet();
+    server.JoinSocketsThreads();
+    server.StopListening();
+}
+
 BOOST_AUTO_TEST_CASE(http_socket_error_tests)
 {
     // Create a tiny threadpool for the HTTPRequest handler
