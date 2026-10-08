@@ -9,6 +9,7 @@ from decimal import Decimal
 from itertools import product
 from math import ceil
 from test_framework.address import address_to_scriptpubkey
+from test_framework.authproxy import JSONRPCException
 
 from test_framework.descriptors import descsum_create
 from test_framework.extendedkey import ExtendedPrivateKey
@@ -1062,7 +1063,17 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-5, 'Pubkey "not a pubkey" must be a hex string', wallet.fundrawtransaction, raw_tx, solving_data={"pubkeys":["not a pubkey"]})
         assert_raises_rpc_error(-5, 'Pubkey "01234567890a0b0c0d0e0f" must have a length of either 33 or 65 bytes', wallet.fundrawtransaction, raw_tx, solving_data={"pubkeys":["01234567890a0b0c0d0e0f"]})
         assert_raises_rpc_error(-5, "'not a script' is not hex", wallet.fundrawtransaction, raw_tx, solving_data={"scripts":["not a script"]})
-        assert_raises_rpc_error(-8, "Unable to parse descriptor 'not a descriptor'", wallet.fundrawtransaction, raw_tx, solving_data={"descriptors":["not a descriptor"]})
+        assert_raises_rpc_error(-8, "Unable to parse descriptor: ", wallet.fundrawtransaction, raw_tx, solving_data={"descriptors":["not a descriptor"]})
+        # The error does not quote the descriptor, which can hold a private key
+        priv_key = generate_keypair(wif=True)[0]
+        try:
+            wallet.fundrawtransaction(raw_tx, solving_data={"descriptors": [f"pk({priv_key})"]})
+        except JSONRPCException as e:
+            assert_equal(e.error["code"], -8)
+            assert_equal(e.error["message"], "Unable to parse descriptor: Missing checksum")
+            assert priv_key not in e.error["message"]
+        else:
+            raise AssertionError("No exception raised")
         assert_raises_rpc_error(-8, "Invalid parameter, missing vout key", wallet.fundrawtransaction, raw_tx, input_weights=[{"txid": ext_utxo["txid"]}])
         assert_raises_rpc_error(-8, "Invalid parameter, vout cannot be negative", wallet.fundrawtransaction, raw_tx, input_weights=[{"txid": ext_utxo["txid"], "vout": -1}])
         assert_raises_rpc_error(-8, "Invalid parameter, missing weight key", wallet.fundrawtransaction, raw_tx, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"]}])

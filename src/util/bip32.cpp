@@ -30,6 +30,8 @@ util::Expected<KeyPathElement, std::string> ParseKeyPathElement(std::span<const 
 
     const auto number{ToIntegral<uint32_t>(std::string_view{elem.begin(), elem.end()})};
     if (!number) {
+        // A value longer than any uint32 may be a key written in the path: do not quote it
+        if (raw.size() > 11) return util::Unexpected{std::string{"Key path value is not a valid uint32"}};
         return util::Unexpected{strprintf("Key path value '%s' is not a valid uint32", raw)};
     }
     if (*number >= BIP32_HARDENED_FLAG) {

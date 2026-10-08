@@ -614,7 +614,7 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     Check("wpkh(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1)", "wpkh(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)", "wpkh(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)", SIGNABLE, {{"00149a1c78a507689f6f54b847ad1cef1e614ee23f1e"}}, OutputType::BECH32, /*op_compat_desc_hash=*/uint256{"4a47b7f497721bf3fc48c69a5d22bc1f3617238649a8ba7cb96fbd92fec84a7e"});
     Check("sh(wpkh(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1))", "sh(wpkh(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd))", "sh(wpkh(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd))", SIGNABLE, {{"a91484ab21b1b2fd065d4504ff693d832434b6108d7b87"}}, OutputType::P2SH_SEGWIT, /*op_compat_desc_hash=*/uint256{"a13112753066b5c59473a87c5771b1694a10531944a60e0ab2d7ad66ecb65bcd"});
     Check("tr(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1)", "tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)", "tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)", SIGNABLE | XONLY_KEYS, {{"512077aab6e066f8a7419c5ab714c12c67d25007ed55a43cadcacb4d7a970a093f11"}}, OutputType::BECH32M, /*op_compat_desc_hash=*/uint256{"4290f3d017b270be53b91abc56d9d2f23a3ff361d5b1d39550ba011e6cae0da5"});
-    CheckUnparsable("sh(wpkh(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY2))", "sh(wpkh(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5))", "wpkh(): Pubkey '03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5' is invalid"); // Invalid pubkey
+    CheckUnparsable("sh(wpkh(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY2))", "sh(wpkh(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5))", "wpkh(): Pubkey is invalid"); // Invalid pubkey
     CheckUnparsable("pkh(deadbeef/1/2'/3/4']L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1)", "pkh(deadbeef/1/2h/3/4h]03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)", "pkh(): Key origin start '[ character expected but not found, got 'd' instead"); // Missing start bracket in key origin
     CheckUnparsable("pkh([deadbeef]/1/2'/3/4']L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1)", "pkh([deadbeef]/1/2'/3/4']03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)", "pkh(): Multiple ']' characters found for a single pubkey"); // Multiple end brackets in key origin
 
@@ -1035,9 +1035,9 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     CheckUnparsable("wsh(wsh(pk(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1)))", "wsh(wsh(pk(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)))", "Can only have wsh() at top level or inside sh()"); // Cannot embed P2WSH inside P2WSH
 
     // Check for whitespace into keys
-    CheckUnparsable("", "multi(1, L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1,5KYZdUEo39z3FPrtuX2QbbwGnNP5zTd7yyr2SC1j299sBCnWjss)", "Multi: Key ' L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1' is invalid due to whitespace");
-    CheckUnparsable("", "pk(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1 )", "pk(): Key 'L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1 ' is invalid due to whitespace");
-    CheckUnparsable("", "pk( L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1 )", "pk(): Key ' L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1 ' is invalid due to whitespace");
+    CheckUnparsable("", "multi(1, L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1,5KYZdUEo39z3FPrtuX2QbbwGnNP5zTd7yyr2SC1j299sBCnWjss)", "Multi: Key is invalid due to whitespace");
+    CheckUnparsable("", "pk(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1 )", "pk(): Key is invalid due to whitespace");
+    CheckUnparsable("", "pk( L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1 )", "pk(): Key is invalid due to whitespace");
 
     // Checksums
     Check("sh(multi(2,[00000000/111'/222]xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc,xprv9uPDJpEQgRQfDcW7BkF7eTya6RPxXeJCqCJGHuCJ4GiRVLzkTXBAJMu2qaMWPrS7AANYqdq6vcBcBUdJCVVFceUvJFjaPdGZ2y9WACViL4L/0))#ggrsrxfy", "sh(multi(2,[00000000/111'/222]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/0))#tjg09x5t", "sh(multi(2,[00000000/111h/222]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/0))#hgmsckna", DEFAULT, {{"a91445a9a622a8b0a1269944be477640eedc447bbd8487"}}, OutputType::LEGACY, /*op_compat_desc_hash=*/uint256{"9339b7bfbe8cfd9d0d55819778ef77f52e5786e85b4c83be8a0d5b976e033f4c"}, {{0x8000006FUL,222},{0}});
@@ -1105,9 +1105,9 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     CheckUnparsable("wsh(and_v(vc:andor(pk(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd),pk_k(Kx9HCDjGiwFcgVNhTrS5z5NeZdD6veeam61eDxLDCkGWujvL4Gnn),and_v(v:older(1),pk_k(L4o2kDvXXDRH2VS9uBnouScLduWt4dZnM25se7kvEjJeQ285en2A))),after(10)))#abcdef12", "wsh(and_v(vc:andor(pk(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204),pk_k(032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0),and_v(v:older(1),pk_k(02aa27e5eb2c185e87cd1dbc3e0efc9cb1175235e0259df1713424941c3cb40402))),after(10)))#abcdef12", "Provided checksum 'abcdef12' does not match computed checksum 'tyzp6a7p'");
     // Only p2wsh or tr contexts are valid
     CheckUnparsable("sh(and_v(vc:andor(pk(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd),pk_k(Kx9HCDjGiwFcgVNhTrS5z5NeZdD6veeam61eDxLDCkGWujvL4Gnn),and_v(v:older(1),pk_k(L4o2kDvXXDRH2VS9uBnouScLduWt4dZnM25se7kvEjJeQ285en2A))),after(10)))", "sh(and_v(vc:andor(pk(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204),pk_k(032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0),and_v(v:older(1),pk_k(02aa27e5eb2c185e87cd1dbc3e0efc9cb1175235e0259df1713424941c3cb40402))),after(10)))", "Miniscript expressions can only be used in wsh or tr.");
-    CheckUnparsable("tr(and_v(vc:andor(pk(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd),pk_k(Kx9HCDjGiwFcgVNhTrS5z5NeZdD6veeam61eDxLDCkGWujvL4Gnn),and_v(v:older(1),pk_k(L4o2kDvXXDRH2VS9uBnouScLduWt4dZnM25se7kvEjJeQ285en2A))),after(10)))", "tr(and_v(vc:andor(pk(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204),pk_k(032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0),and_v(v:older(1),pk_k(02aa27e5eb2c185e87cd1dbc3e0efc9cb1175235e0259df1713424941c3cb40402))),after(10)))", "tr(): key 'and_v(vc:andor(pk(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204),pk_k(032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0),and_v(v:older(1),pk_k(02aa27e5eb2c185e87cd1dbc3e0efc9cb1175235e0259df1713424941c3cb40402))),after(10))' is not valid");
+    CheckUnparsable("tr(and_v(vc:andor(pk(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd),pk_k(Kx9HCDjGiwFcgVNhTrS5z5NeZdD6veeam61eDxLDCkGWujvL4Gnn),and_v(v:older(1),pk_k(L4o2kDvXXDRH2VS9uBnouScLduWt4dZnM25se7kvEjJeQ285en2A))),after(10)))", "tr(and_v(vc:andor(pk(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204),pk_k(032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0),and_v(v:older(1),pk_k(02aa27e5eb2c185e87cd1dbc3e0efc9cb1175235e0259df1713424941c3cb40402))),after(10)))", "tr(): key is not valid");
     CheckUnparsable("raw(and_v(vc:andor(pk(L4gM1FBdyHNpkzsFh9ipnofLhpZRp2mwobpeULy1a6dBTvw8Ywtd),pk_k(Kx9HCDjGiwFcgVNhTrS5z5NeZdD6veeam61eDxLDCkGWujvL4Gnn),and_v(v:older(1),pk_k(L4o2kDvXXDRH2VS9uBnouScLduWt4dZnM25se7kvEjJeQ285en2A))),after(10)))", "sh(and_v(vc:andor(pk(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204),pk_k(032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0),and_v(v:older(1),pk_k(02aa27e5eb2c185e87cd1dbc3e0efc9cb1175235e0259df1713424941c3cb40402))),after(10)))", "Miniscript expressions can only be used in wsh or tr.");
-    CheckUnparsable("", "tr(034D2224bbbbbbbbbbcbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb40,{{{{{{{{{{{{{{{{{{{{{{multi(1,xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/967808'/9,xprvA1RpRA33e1JQ7ifknakTFNpgXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/968/2/5/8/5/2/5/58/58/2/5/5/5/58/588/2/6/8/5/2/8/2/5/8/2/58/2/5/8/5/2/8/5/8/3/4/5/58/55/2/5/58/58/2/5/5/5/8/5/2/8/5/85/2/8/2/5/8/5/2/5/58/58/2/5/58/58/588/2/58/2/8/5/8/5/4/5/585/2/5/58/58/2/5/5/58/588/2/58/2/5/8/5/2/8/2/5/8/5/5/58/588/2/6/8/5/2/8/2/5/8/5/2/5/58/58/2/5/58/58/2/0/8/5/2/8/5/8/5/4/5/58/588/2/6/8/5/2/8/2/5/8/5/2/5/58/58/2/5/58/58/588/2/58/2/5/8/5/8/24/5/58/52/5/8/5/2/8/24/5/58/588/246/8/5/2/8/2/5/8/5/2/5/58/58/2/5/5/5/58/588/2/6/8/5/2/8/2/5/8/2/58/2/5/8/5/2/8/5/8/5/4/5/58/55/58/2/5/8/55/2/5/8/58/555/58/2/5/8/4//2/5/58/5w/2/5/8/5/2/4/5/58/5558'/2/5/58/58/2/5/5/58/588/2/58/2/5/8/5/2/8/2/5/8/5/5/8/58/2/5/58/58/2/5/8/9/588/2/58/2/5/8/5/2/8/5/8/5/4/5/58/588/2/6/8/5/2/8/2/5/8/5/2/5/58/58/2/5/5/58/588/2/58/2/5/8/5/2/82/5/8/5/5/58/52/6/8/5/2/8/{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}{{{{{{{{{DDD2/5/8/5/2/5/58/58/2/5/58/58/588/2/58/2/8/5/8/5/4/5/58/588/2/6/8/5/2/8/2/5/8588/246/8/5/2DLDDDDDDDbbD3DDDD/8/2/5/8/5/2/5/58/58/2/5/5/5/58/588/2/6/8/5/2/8/2/5/8/2/58/2/5/8/5/2/8/5/8/3/4/5/58/55/2/5/58/58/2/5/5/5/8/5/2/8/5/85/2/8/2/5/8D)/5/2/5/58/58/2/5/58/58/58/588/2/58/2/5/8/5/25/58/58/2/5/58/58/2/5/8/9/588/2/58/2/6780,xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFW/8/5/2/5/58678008')", "'multi(1,xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/967808'/9,xprvA1RpRA33e1JQ7ifknakTFNpgXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/968/2/5/8/5/2/5/58/58/2/5/5/5/58/588/2/6/8/5/2/8/2/5/8/2/58/2/5/8/5/2/8/5/8/3/4/5/58/55/2/5/58/58/2/5/5/5/8/5/2/8/5/85/2/8/2/5/8/5/2/5/58/58/2/5/58/58/588/2/58/2/8/5/8/5/4/5/585/2/5/58/58/2/5/5/58/588/2/58/2/5/8/5/2/8/2/5/8/5/5/58/588/2/6/8/5/2/8/2/5/8/5/2/5/58/58/2/5/58/58/2/0/8/5/2/8/5/8/5/4/5/58/588/2/6/8/5/2/8/2/5/8/5/2/5/58/58/2/5/58/58/588/2/58/2/5/8/5/8/24/5/58/52/5/8/5/2/8/24/5/58/588/246/8/5/2/8/2/5/8/5/2/5/58/58/2/5/5/5/58/588/2/6/8/5/2/8/2/5/8/2/58/2/5/8/5/2/8/5/8/5/4/5/58/55/58/2/5/8/55/2/5/8/58/555/58/2/5/8/4//2/5/58/5w/2/5/8/5/2/4/5/58/5558'/2/5/58/58/2/5/5/58/588/2/58/2/5/8/5/2/8/2/5/8/5/5/8/58/2/5/58/58/2/5/8/9/588/2/58/2/5/8/5/2/8/5/8/5/4/5/58/588/2/6/8/5/2/8/2/5/8/5/2/5/58/58/2/5/5/58/588/2/58/2/5/8/5/2/82/5/8/5/5/58/52/6/8/5/2/8/{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}{{{{{{{{{DDD2/5/8/5/2/5/58/58/2/5/58/58/588/2/58/2/8/5/8/5/4/5/58/588/2/6/8/5/2/8/2/5/8588/246/8/5/2DLDDDDDDDbbD3DDDD/8/2/5/8/5/2/5/58/58/2/5/5/5/58/588/2/6/8/5/2/8/2/5/8/2/58/2/5/8/5/2/8/5/8/3/4/5/58/55/2/5/58/58/2/5/5/5/8/5/2/8/5/85/2/8/2/5/8D)/5/2/5/58/58/2/5/58/58/58/588/2/58/2/5/8/5/25/58/58/2/5/58/58/2/5/8/9/588/2/58/2/6780,xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFW/8/5/2/5/58678008'' is not a valid descriptor function");
+    CheckUnparsable("", "tr(034D2224bbbbbbbbbbcbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb40,{{{{{{{{{{{{{{{{{{{{{{multi(1,xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/967808'/9,xprvA1RpRA33e1JQ7ifknakTFNpgXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/968/2/5/8/5/2/5/58/58/2/5/5/5/58/588/2/6/8/5/2/8/2/5/8/2/58/2/5/8/5/2/8/5/8/3/4/5/58/55/2/5/58/58/2/5/5/5/8/5/2/8/5/85/2/8/2/5/8/5/2/5/58/58/2/5/58/58/588/2/58/2/8/5/8/5/4/5/585/2/5/58/58/2/5/5/58/588/2/58/2/5/8/5/2/8/2/5/8/5/5/58/588/2/6/8/5/2/8/2/5/8/5/2/5/58/58/2/5/58/58/2/0/8/5/2/8/5/8/5/4/5/58/588/2/6/8/5/2/8/2/5/8/5/2/5/58/58/2/5/58/58/588/2/58/2/5/8/5/8/24/5/58/52/5/8/5/2/8/24/5/58/588/246/8/5/2/8/2/5/8/5/2/5/58/58/2/5/5/5/58/588/2/6/8/5/2/8/2/5/8/2/58/2/5/8/5/2/8/5/8/5/4/5/58/55/58/2/5/8/55/2/5/8/58/555/58/2/5/8/4//2/5/58/5w/2/5/8/5/2/4/5/58/5558'/2/5/58/58/2/5/5/58/588/2/58/2/5/8/5/2/8/2/5/8/5/5/8/58/2/5/58/58/2/5/8/9/588/2/58/2/5/8/5/2/8/5/8/5/4/5/58/588/2/6/8/5/2/8/2/5/8/5/2/5/58/58/2/5/5/58/588/2/58/2/5/8/5/2/82/5/8/5/5/58/52/6/8/5/2/8/{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}{{{{{{{{{DDD2/5/8/5/2/5/58/58/2/5/58/58/588/2/58/2/8/5/8/5/4/5/58/588/2/6/8/5/2/8/2/5/8588/246/8/5/2DLDDDDDDDbbD3DDDD/8/2/5/8/5/2/5/58/58/2/5/5/5/58/588/2/6/8/5/2/8/2/5/8/2/58/2/5/8/5/2/8/5/8/3/4/5/58/55/2/5/58/58/2/5/5/5/8/5/2/8/5/85/2/8/2/5/8D)/5/2/5/58/58/2/5/58/58/58/588/2/58/2/5/8/5/25/58/58/2/5/58/58/2/5/8/9/588/2/58/2/6780,xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFW/8/5/2/5/58678008')", "'multi(...' is not a valid descriptor function");
     // No uncompressed keys allowed
     CheckUnparsable("", "wsh(and_v(vc:andor(pk(03cdabb7f2dce7bfbd8a0b9570c6fd1e712e5d64045e9d6b517b3d5072251dc204),pk_k(032707170c71d8f75e4ca4e3fce870b9409dcaf12b051d3bcadff74747fa7619c0),and_v(v:older(1),pk_k(049228de6902abb4f541791f6d7f925b10e2078ccb1298856e5ea5cc5fd667f930eac37a00cc07f9a91ef3c2d17bf7a17db04552ff90ac312a5b8b4caca6c97aa4))),after(10)))", "Uncompressed keys are not allowed");
     // No hybrid keys allowed
@@ -1305,13 +1305,13 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     CheckUnparsable("tr(musig(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/*,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/*)/0)","tr(musig(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/*,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/*)/0)", "tr(): musig(): Cannot have ranged participant keys if musig() also has derivation");
 
     // Fuzzer crash test cases
-    CheckUnparsable("pk(musig(dd}uue/00/)k(", "pk(musig(dd}uue/00/)k(", "'pk(musig(dd}uue/00/)k(' is not a valid descriptor function");
+    CheckUnparsable("pk(musig(dd}uue/00/)k(", "pk(musig(dd}uue/00/)k(", "'pk(...' is not a valid descriptor function");
     CheckUnparsable("tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)", "tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)","tr(): Too many ')' in musig() expression");
 
     // Unterminated musig() expression
     CheckUnparsable("tr(musig(00)", "tr(musig(00)", "tr(): Invalid musig() expression");
     // Invalid musig() participant key
-    CheckUnparsable("tr(musig(00))", "tr(musig(00))", "tr(): musig(): Pubkey '00' is invalid");
+    CheckUnparsable("tr(musig(00))", "tr(musig(00))", "tr(): musig(): Pubkey is invalid");
     // Garbage after a musig() participant key. The '}' closes the level opened by the '(' of
     // musig( and the '{' re-opens it, so the final ')' stays inside the expression span.
     CheckUnparsable("tr(musig(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1}{))", "tr(musig(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd}{))", "tr(): musig(): expected ',', got '}'");
@@ -1352,11 +1352,60 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     // tr() is not allowed inside sh()
     CheckUnparsable("sh(tr(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1))", "sh(tr(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd))", "Can only have tr at top level");
     // Invalid rawtr() key
-    CheckUnparsable("rawtr(00)", "rawtr(00)", "rawtr(): Pubkey '00' is invalid");
+    CheckUnparsable("rawtr(00)", "rawtr(00)", "rawtr(): Pubkey is invalid");
     // rawtr() is not allowed inside sh()
     CheckUnparsable("sh(rawtr(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1))", "sh(rawtr(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd))", "Can only have rawtr at top level");
     // raw() is not allowed inside sh()
     CheckUnparsable("sh(raw(00))", "sh(raw(00))", "Can only have raw() at top level");
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_errors_do_not_echo_keys)
+{
+    const std::string wif{"L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1"};
+    const std::string xprv{"xprv9s21ZrQH143K31xYSDQpPDxsXRTUcvj2iNHm5NUtrGiGG5e2DtALGdso3pGz6ssrdK4PFmM8NSpSBHNqPqm55Qn3LqFtT2emdEXVYsCzC2U"};
+    const std::string hex_secret{"a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd"};
+    // A typo in the last character leaves the start of the key intact, so the start must be absent too.
+    const std::string bad_wif{wif.substr(0, wif.size() - 1) + "2"};
+    const std::string bad_xprv{xprv.substr(0, xprv.size() - 1) + "V"};
+
+    // Check that parsing fails with exactly `expected`, and that the first 4 characters of each text in `secrets` are not in the error.
+    const auto check = [](const std::string& desc, const std::string& expected, const std::vector<std::string>& secrets) {
+        FlatSigningProvider keys;
+        std::string error;
+        BOOST_CHECK_MESSAGE(Parse(desc, keys, error).empty(), desc);
+        BOOST_CHECK_EQUAL(error, expected);
+        for (const auto& secret : secrets) {
+            BOOST_CHECK_MESSAGE(error.find(secret.substr(0, 4)) == std::string::npos, error);
+        }
+    };
+
+    // Whitespace around a key
+    check("pk( " + wif + ")", "pk(): Key is invalid due to whitespace", {wif});
+    check("pk(" + xprv + " )", "pk(): Key is invalid due to whitespace", {xprv});
+    check("multi(1," + wif + ", " + xprv + ")", "Multi: Key is invalid due to whitespace", {wif, xprv});
+    // Invalid key
+    check("pk(" + bad_wif + ")", "pk(): key is not valid", {bad_wif});
+    check("pk(" + bad_xprv + ")", "pk(): key is not valid", {bad_xprv});
+    check("pk(" + wif + "/0)", "pk(): key is not valid", {wif});
+    check("multi(1,03" + hex_secret + "," + bad_wif + ")", "Multi: key is not valid", {bad_wif});
+    check("pk(" + hex_secret + ")", "pk(): Pubkey is invalid", {hex_secret});
+    // A key in a derivation path
+    check("pk(" + xprv + "/" + wif + ")", "pk(): Key path value is not a valid uint32", {wif});
+    check("pk(" + xprv + "/<0;" + wif + ">)", "pk(): Key path value is not a valid uint32", {wif});
+    check("pk([d34db33f/<0;" + wif + ">]" + xprv + ")", "pk(): Key path value specifies multipath in a section where multipath is not allowed", {wif});
+    // Short text is quoted
+    check("pk([d34db33f/<0;1>]" + xprv + ")", "pk(): Key path value '<0;1>' specifies multipath in a section where multipath is not allowed", {});
+    // A key where a threshold or a function is expected
+    check("multi(" + wif + "," + xprv + ")", "Multi threshold is not valid", {wif});
+    check("multi(a," + xprv + ")", "Multi threshold 'a' is not valid", {});
+    check(wif, "Not a valid descriptor function", {wif});
+    check(xprv, "Not a valid descriptor function", {xprv});
+    check("foo(" + wif + ")", "'foo(...' is not a valid descriptor function", {wif});
+    check("pk(" + wif, "'pk(...' is not a valid descriptor function", {wif});
+    check("wpkh(" + wif + ")x", "'wpkh(...' is not a valid descriptor function", {wif});
+    check(wif + "(x", "Not a valid descriptor function", {wif});
+    check(xprv + "(x", "Not a valid descriptor function", {xprv});
+    check("tr(" + xprv + ",{pk(" + wif + ")," + wif + "})", "Not a valid descriptor function", {wif});
 }
 
 BOOST_AUTO_TEST_CASE(descriptor_literal_null_byte)
@@ -1468,7 +1517,7 @@ BOOST_AUTO_TEST_CASE(unused_descriptor_test)
     CheckUnparsable("unused()", "unused()", "No key provided");
 
     // x-only keys cannot be used in unused()
-    CheckSingleUnparsable("unused(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)", "Pubkey 'a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd' is invalid");
+    CheckSingleUnparsable("unused(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)", "Pubkey is invalid");
 
     CheckUnused("unused(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc)", "unused(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL)");
     CheckUnused("unused(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1)", "unused(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)");

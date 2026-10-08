@@ -395,7 +395,7 @@ class WalletMiniscriptTest(BitcoinTestFramework):
             ]
         )[0]
         assert_equal(res["success"], False)
-        assert "is not a valid descriptor function" in res["error"]["message"]
+        assert "Not a valid descriptor function" in res["error"]["message"]
 
 
 if __name__ == "__main__":

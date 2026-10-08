@@ -1870,6 +1870,19 @@ enum class ParseScriptContext {
 };
 
 /**
+ * Quote text from a descriptor string for an error message, with a leading
+ * space, or return an empty string. The text may be a private key, so it is
+ * quoted only if it is no longer than any uint32 token (11 characters, as in
+ * "4294967295h"): no key is that short.
+ */
+std::string QuoteShort(std::string_view text)
+{
+    constexpr size_t MAX_QUOTED_CHARS{11};
+    if (text.size() > MAX_QUOTED_CHARS) return {};
+    return strprintf(" '%s'", text);
+}
+
+/**
  * Parse a key path, being passed a split list of elements (the first element is ignored because it is always the key).
  *
  * @param[in] split BIP32 path string, using either ' or h for hardened derivation
@@ -1909,7 +1922,7 @@ enum class ParseScriptContext {
         // Check if element contains multipath specifier
         if (!elem.empty() && elem.front() == '<' && elem.back() == '>') {
             if (!allow_multipath) {
-                error = strprintf("Key path value '%s' specifies multipath in a section where multipath is not allowed", std::string(elem.begin(), elem.end()));
+                error = strprintf("Key path value%s specifies multipath in a section where multipath is not allowed", QuoteShort(std::string_view{elem.begin(), elem.end()}));
                 return false;
             }
             if (substitutes) {
@@ -1991,7 +2004,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t& key_exp_
         return {};
     }
     if (IsSpace(str.front()) || IsSpace(str.back())) {
-        error = strprintf("Key '%s' is invalid due to whitespace", str);
+        error = "Key is invalid due to whitespace";
         return {};
     }
     if (split.size() == 1) {
@@ -2021,7 +2034,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t& key_exp_
                     return ret;
                 }
             }
-            error = strprintf("Pubkey '%s' is invalid", str);
+            error = "Pubkey is invalid";
             return {};
         }
         CKey key = DecodeSecret(str);
@@ -2041,7 +2054,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t& key_exp_
     CExtKey extkey = DecodeExtKey(str);
     CExtPubKey extpubkey = DecodeExtPubKey(str);
     if (!extkey.key.IsValid() && !extpubkey.pubkey.IsValid()) {
-        error = strprintf("key '%s' is not valid", str);
+        error = "key is not valid";
         return {};
     }
     std::vector<KeyPath> paths;
@@ -2443,7 +2456,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         if (const auto maybe_thres{ToIntegral<uint32_t>(std::string_view{threshold.begin(), threshold.end()})}) {
             thres = *maybe_thres;
         } else {
-            error = strprintf("Multi threshold '%s' is not valid", std::string(threshold.begin(), threshold.end()));
+            error = strprintf("Multi threshold%s is not valid", QuoteShort(std::string_view{threshold.begin(), threshold.end()}));
             return {};
         }
         size_t script_size = 0;
@@ -2808,7 +2821,15 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         error = "A function is needed within P2WSH";
         return {};
     }
-    error = strprintf("'%s' is not a valid descriptor function", std::string(expr.begin(), expr.end()));
+    // Quote the function name only if it is 16 characters or fewer: every key is longer, and a bare key has no '('
+    constexpr size_t MAX_FUNCTION_NAME_CHARS{16};
+    const std::string_view expr_text{expr.begin(), expr.end()};
+    const size_t paren{expr_text.find('(')};
+    if (paren == std::string_view::npos || paren == 0 || paren > MAX_FUNCTION_NAME_CHARS) {
+        error = "Not a valid descriptor function";
+    } else {
+        error = strprintf("'%s(...' is not a valid descriptor function", expr_text.substr(0, paren));
+    }
     return {};
 }
 
