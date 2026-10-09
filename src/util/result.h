@@ -53,7 +53,11 @@ private:
     friend bilingual_str ErrorString(const Result<FT>& result);
 
 public:
-    Result() : m_variant{std::in_place_index_t<1>{}, std::monostate{}} {}  // constructor for void
+    // Default constructor producing a success value, needed because the
+    // libmultiprocess IPC client currently requires return types to be
+    // default-constructible. Can be dropped after
+    // https://github.com/bitcoin-core/libmultiprocess/pull/337.
+    Result() : m_variant{std::in_place_index_t<1>{}, T{}} {}
     Result(T obj) : m_variant{std::in_place_index_t<1>{}, std::move(obj)} {}
     Result(Error error) : m_variant{std::in_place_index_t<0>{}, std::move(error.message)} {}
     Result(Result&&) = default;

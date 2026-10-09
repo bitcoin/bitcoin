@@ -7,8 +7,14 @@ Library versions are tracked with simple
 Versioning policy is described in the [version.h](../include/mp/version.h)
 include.
 
-## v13
+## v14
+- Adds support for nonunix platforms, making API changes that are not backwards compatible ([#274](https://github.com/bitcoin-core/libmultiprocess/pull/274)).
 - Current unstable version.
+
+## [v13.0](https://github.com/bitcoin-core/libmultiprocess/commits/v13.0)
+- Fixes a `memcpy` ubsan warning by using `std::ranges::copy` ([#305](https://github.com/bitcoin-core/libmultiprocess/pull/305)).
+- Misc: map serialization round-trip test coverage ([#297](https://github.com/bitcoin-core/libmultiprocess/pull/297)) and version bump ([#306](https://github.com/bitcoin-core/libmultiprocess/pull/306)).
+- Used in Bitcoin Core 32.x and newer releases with [#35720](https://github.com/bitcoin/bitcoin/pull/35720).
 
 ## [v12.0](https://github.com/bitcoin-core/libmultiprocess/commits/v12.0)
 - Adds an optional `max_connections` parameter to `ListenConnections` ([#269](https://github.com/bitcoin-core/libmultiprocess/pull/269)).
@@ -24,7 +30,7 @@ include.
 - Fixes a rare mptest hang on musl builds caused by a lost wakeup bug in `Waiter` ([#295](https://github.com/bitcoin-core/libmultiprocess/pull/295)).
 - Fixes a race condition in a log print detected by TSan ([#286](https://github.com/bitcoin-core/libmultiprocess/pull/286)).
 - Build improvements: makes `target_capnp_sources` work correctly when libmultiprocess is used as a CMake subproject ([#289](https://github.com/bitcoin-core/libmultiprocess/pull/289)), adds `mp_headers` target for better lint tool support ([#291](https://github.com/bitcoin-core/libmultiprocess/pull/291)), and fixes compatibility with recent Nix and CMake 4.0 ([#238](https://github.com/bitcoin-core/libmultiprocess/pull/238)).
-- Test, CI, documentation, and minor code improvements: design document corrections ([#278](https://github.com/bitcoin-core/libmultiprocess/pull/278)), field constant comments ([#279](https://github.com/bitcoin-core/libmultiprocess/pull/279)), clang-tidy fix ([#292](https://github.com/bitcoin-core/libmultiprocess/pull/292)), new smoke test for double-precision float values ([#294](https://github.com/bitcoin-core/libmultiprocess/pull/294)), new test for recursive async IPC calls ([#301](https://github.com/bitcoin-core/libmultiprocess/pull/301)), removal of libevent from Core CI builds ([#299](https://github.com/bitcoin-core/libmultiprocess/pull/299)), and rename of `EventLoop::m_num_clients` to `m_num_refs` ([#302](https://github.com/bitcoin-core/libmultiprocess/pull/302)).
+- Test, CI, documentation, and minor code improvements: design document corrections ([#278](https://github.com/bitcoin-core/libmultiprocess/pull/278)), field constant comments ([#279](https://github.com/bitcoin-core/libmultiprocess/pull/279)), clang-tidy fix ([#292](https://github.com/bitcoin-core/libmultiprocess/pull/292)), new smoke test for double-precision float values ([#294](https://github.com/bitcoin-core/libmultiprocess/pull/294)), new test for recursive async IPC calls ([#301](https://github.com/bitcoin-core/libmultiprocess/pull/301)), removal of libevent from Core CI builds ([#299](https://github.com/bitcoin-core/libmultiprocess/pull/299)), rename of `EventLoop::m_num_clients` to `m_num_refs` ([#302](https://github.com/bitcoin-core/libmultiprocess/pull/302)), and version bump ([#270](https://github.com/bitcoin-core/libmultiprocess/pull/270)).
 - Used in Bitcoin Core 32.x and newer releases with [#35661](https://github.com/bitcoin/bitcoin/pull/35661).
 
 ## [v10.0](https://github.com/bitcoin-core/libmultiprocess/commits/v10.0)
