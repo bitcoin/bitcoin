@@ -36,6 +36,8 @@ enum class TransactionError {
 enum class TxBroadcast : uint8_t {
     /// Add the transaction to the mempool and broadcast to all peers for which tx relay is enabled.
     MEMPOOL_AND_BROADCAST_TO_ALL,
+    /// Add the transaction to the mempool, and if it was not already there, broadcast to all peers for which tx relay is enabled.
+    MEMPOOL_AND_BROADCAST_ADDED,
     /// Add the transaction to the mempool, but don't broadcast to anybody.
     MEMPOOL_NO_BROADCAST,
     /// Omit the mempool and directly send the transaction via a few dedicated connections to
