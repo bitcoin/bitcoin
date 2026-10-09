@@ -60,7 +60,7 @@ void initialize_process_message()
             {}),
     };
     g_setup = testing_setup.get();
-    ResetChainmanAndMempool(*g_setup, init_clock);
+    ResetChainmanAndMempool(*g_setup, init_clock, {.init_block_filter_basic = true});
 }
 
 FUZZ_TARGET(process_message, .init = initialize_process_message)
@@ -137,6 +137,6 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
     if (block_index_size != WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size()) || initial_sequence != end_sequence) {
         // Reuse the global chainman and mempool, but reset them when dirty.
         MakeRandDeterministicDANGEROUS(uint256::ZERO);
-        ResetChainmanAndMempool(*g_setup, node_clock);
+        ResetChainmanAndMempool(*g_setup, node_clock, {.init_block_filter_basic = true});
     }
 }

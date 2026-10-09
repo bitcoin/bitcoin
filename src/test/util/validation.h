@@ -63,7 +63,11 @@ public:
         const CBlockIndex* pindex);
 };
 
-std::vector<std::pair<COutPoint, CAmount>> ResetChainmanAndMempool(TestingSetup& setup, FakeNodeClock& node_clock);
+struct ResetOptions {
+    bool init_block_filter_basic{false};
+};
+
+std::vector<std::pair<COutPoint, CAmount>> ResetChainmanAndMempool(TestingSetup& setup, FakeNodeClock& node_clock, const ResetOptions& opts = {});
 
 /// Drain validation callbacks before stopping an index, matching Shutdown() in init.cpp.
 void StopIndex(BaseIndex& index, node::NodeContext& node);
