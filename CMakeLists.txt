@@ -19,6 +19,19 @@ if(POLICY CMP0171)
   cmake_policy(SET CMP0171 NEW)
 endif()
 
+if(POLICY CMP0179)
+  # Set both closely related policies together to avoid the
+  # intermediate behaviour of CMake 3.29/3.30, where only CMP0156
+  # is available.
+
+  # De-duplicate libraries on link lines based on linker capabilities.
+  # See: https://cmake.org/cmake/help/latest/policy/CMP0156.html
+  cmake_policy(SET CMP0156 NEW)
+  # De-duplication of static libraries on link lines keeps first occurrence.
+  # See: https://cmake.org/cmake/help/latest/policy/CMP0179.html
+  cmake_policy(SET CMP0179 NEW)
+endif()
+
 # When adjusting CMake flag variables, we must not override those explicitly
 # set by the user. These are a subset of the CACHE_VARIABLES property.
 get_directory_property(precious_variables CACHE_VARIABLES)
