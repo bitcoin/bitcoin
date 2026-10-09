@@ -24,6 +24,14 @@ class Coin;
 class COutPoint;
 class SigningProvider;
 
+enum class PSBTKeyOriginMode {
+    Add,
+    Preserve,
+    Strip,
+};
+
+PSBTKeyOriginMode ParseBip32DerivsMode(const UniValue& value);
+
 /**
  * Sign a transaction with the given keystore and previous transactions
  *
