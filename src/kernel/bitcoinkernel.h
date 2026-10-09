@@ -1351,10 +1351,9 @@ BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_i
  * interface.
  *
  * Note that a btck_Block caches the result of its context-free checks, and
- * copies made with btck_block_copy share that cache. The cache is only set if
- * both the proof of work and the merkle root were checked. Such a block is not
- * checked again, so it should only be used with a single set of consensus
- * parameters.
+ * copies made with btck_block_copy share that cache. A block that was checked
+ * or processed once is not checked again, so a block should only be used with
+ * a single set of consensus parameters.
  *
  * @param[in] chainstate_manager Non-null.
  * @param[in] block              Non-null, block to be validated.
@@ -1465,7 +1464,7 @@ typedef uint32_t btck_BlockCheckFlags;
  * checked again, so it should only be used with a single set of consensus
  * parameters.
  *
- * @param[in]     block            Non-null, btck_Block to validate.
+ * @param[in]     block             Non-null, btck_Block to validate.
  * @param[in]     consensus_params  Non-null, btck_ConsensusParams for validation.
  * @param[in]     flags             Bitmask of btck_BlockCheckFlags controlling the
  *                                  optional POW and merkle-root checks. Use
