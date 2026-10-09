@@ -80,14 +80,14 @@ static CTxIn GetSpendingScript(const CTransaction& tx, uint32_t vout_index)
     CTxIn res{COutPoint(tx.GetHash(), vout_index)};
     if (output.scriptPubKey == P2WSH_OP_TRUE) {
         res.scriptSig = CScript();
-        res.scriptWitness.stack.push_back(WITNESS_STACK_ELEM_OP_TRUE);
+        res.scriptWitness = CScriptWitness{{WITNESS_STACK_ELEM_OP_TRUE}};
     } else if (output.scriptPubKey == P2SH_OP_TRUE) {
         res.scriptSig = P2SH_OP_TRUE_UNLOCK;
     } else if (output.scriptPubKey == CScript()) {
         res.scriptSig = CScript() << OP_TRUE;
     } else if (output.scriptPubKey == TAPROOT_OP_TRUE) {
         res.scriptSig = CScript();
-        res.scriptWitness.stack = TAPROOT_OP_TRUE_WITNESS;
+        res.scriptWitness = CScriptWitness{TAPROOT_OP_TRUE_WITNESS};
     }
 
     return res;

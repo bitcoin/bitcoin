@@ -1137,7 +1137,7 @@ void TestNode(const MsCtx script_ctx, const std::optional<Node>& node, FuzzedDat
                (!node->CheckStackSize() && serror == ScriptError::SCRIPT_ERR_STACK_SIZE));
     }
 
-    if (mal_success && (!nonmal_success || witness_mal.stack != witness_nonmal.stack)) {
+    if (mal_success && (!nonmal_success || witness_mal != witness_nonmal)) {
         // Test malleable satisfaction only if it's different from the non-malleable one.
         witness_mal.stack.insert(witness_mal.stack.end(), std::make_move_iterator(stack_mal.begin()), std::make_move_iterator(stack_mal.end()));
         SatisfactionToWitness(script_ctx, witness_mal, script, builder);

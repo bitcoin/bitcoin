@@ -452,7 +452,7 @@ static void CreateCreditAndSpend(const FillableSigningProvider& keystore, const 
     assert(input.vin[0] == inputm.vin[0]);
     assert(input.vout.size() == 1);
     assert(input.vout[0] == inputm.vout[0]);
-    assert(input.vin[0].scriptWitness.stack == inputm.vin[0].scriptWitness.stack);
+    assert(input.vin[0].scriptWitness == inputm.vin[0].scriptWitness);
 }
 
 static void CheckWithFlag(const CTransactionRef& output, const CMutableTransaction& input, script_verify_flags flags, bool success)
@@ -1399,7 +1399,7 @@ BOOST_AUTO_TEST_CASE(tx_malformed_serialization)
     // A transaction with one input, one output and a one-element witness.
     CMutableTransaction mtx;
     mtx.vin.resize(1);
-    mtx.vin[0].scriptWitness.stack = {{0xaa}};
+    mtx.vin[0].scriptWitness = CScriptWitness{{{0xaa}}};
     mtx.vout.emplace_back(1, CScript{} << OP_TRUE);
     DataStream ser;
     ser << TX_WITH_WITNESS(mtx);
@@ -1416,7 +1416,7 @@ BOOST_AUTO_TEST_CASE(tx_malformed_serialization)
 
     // A flag other than 1 is unknown, including one without the witness bit.
     DataStream bad_flag;
-    bad_flag << mtx.version << uint8_t{0x00} << uint8_t{0x02} << mtx.vin << mtx.vout << mtx.vin[0].scriptWitness.stack << mtx.nLockTime;
+    bad_flag << mtx.version << uint8_t{0x00} << uint8_t{0x02} << mtx.vin << mtx.vout << mtx.vin[0].scriptWitness << mtx.nLockTime;
     BOOST_CHECK_EXCEPTION(bad_flag >> TX_WITH_WITNESS(tx), std::ios_base::failure, HasReason{"Unknown transaction optional data"});
 }
 

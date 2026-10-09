@@ -288,7 +288,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_tx_pool)
                     // Create input
                     CTxIn in;
                     in.prevout = outpoint;
-                    in.scriptWitness.stack = P2WSH_EMPTY_TRUE_STACK;
+                    in.scriptWitness = CScriptWitness{P2WSH_EMPTY_TRUE_STACK};
 
                     tx_mut.vin.push_back(in);
                 }
@@ -436,7 +436,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
                     in.prevout = outpoint;
                     in.nSequence = sequence;
                     in.scriptSig = script_sig;
-                    in.scriptWitness.stack = script_wit_stack;
+                    in.scriptWitness = CScriptWitness{script_wit_stack};
 
                     tx_mut.vin.push_back(in);
                 }

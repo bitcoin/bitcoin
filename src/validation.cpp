@@ -3883,7 +3883,7 @@ static bool CheckWitnessMalleation(const CBlock& block, bool expect_witness_comm
         int commitpos = GetWitnessCommitmentIndex(block);
         if (commitpos != NO_WITNESS_COMMITMENT) {
             assert(!block.vtx.empty() && !block.vtx[0]->vin.empty());
-            const auto& witness_stack{block.vtx[0]->vin[0].scriptWitness.stack};
+            const auto& witness_stack{block.vtx[0]->vin[0].scriptWitness};
 
             if (witness_stack.size() != 1 || witness_stack[0].size() != 32) {
                 return state.Invalid(
