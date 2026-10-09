@@ -151,6 +151,9 @@ The 8-byte LE uints correspond to _mempool sequence number_ and the types of bod
    - `R` : transaction with this hash removed from mempool for non-block inclusion reason
    - `A` : transaction with this hash added to mempool
 
+An `R` is also sent for a mempool transaction whose txid, but not witness, matches a
+transaction in the connected block. It precedes that block's `C`.
+
 ### Implementing ZMQ client
 
 ZeroMQ endpoint specifiers for TCP (and others) are documented in the
