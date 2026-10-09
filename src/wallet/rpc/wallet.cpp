@@ -7,6 +7,7 @@
 #include <chainparams.h>
 #include <core_io.h>
 #include <httpserver.h>
+#include <interfaces/handler.h>
 #include <policy/policy.h>
 #include <rpc/blockchain.h>
 #include <rpc/rawtransaction_util.h>
@@ -368,10 +369,13 @@ static RPCHelpMan upgradetohd()
         pwallet->WalletLogPrintf("Upgrading wallet to HD\n");
         pwallet->SetMinVersion(FEATURE_HD);
 
+        std::unique_ptr<interfaces::Handler> relock;
         if (pwallet->IsCrypted()) {
             if (wallet_passphrase.empty()) {
                 throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: Wallet encrypted but supplied empty wallet passphrase");
             }
+
+            relock = interfaces::MakeHandler([&pwallet] { pwallet->Lock(); });
 
             // We are intentionally re-locking the wallet so we can validate passphrase
             // by verifying if it can unlock the wallet
@@ -411,10 +415,7 @@ static RPCHelpMan upgradetohd()
             }
         }
 
-        if (pwallet->IsCrypted()) {
-            // Relock encrypted wallet
-            pwallet->Lock();
-        } else if (!wallet_passphrase.empty()) {
+        if (!pwallet->IsCrypted() && !wallet_passphrase.empty()) {
             // Encrypt non-encrypted wallet
             if (!pwallet->EncryptWallet(wallet_passphrase)) {
                 throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Failed to encrypt HD wallet");
