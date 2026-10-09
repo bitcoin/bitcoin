@@ -181,6 +181,8 @@ std::string GetNetworkName(enum Network net);
 /** Return a vector of publicly routable Network names; optionally append NET_UNROUTABLE. */
 std::vector<std::string> GetNetworkNames(bool append_unroutable = false);
 bool SetProxy(enum Network net, const Proxy &addrProxy);
+/** Clear the proxy for `net`, so connections to it are direct again (only for testing). */
+void ResetProxy(enum Network net);
 std::optional<Proxy> GetProxy(enum Network net);
 bool IsProxy(const CNetAddr &addr);
 /**
