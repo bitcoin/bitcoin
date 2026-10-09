@@ -63,7 +63,7 @@ public:
 
     /** Lexicographic ordering
      * @note Does NOT match the ordering on the corresponding \ref
-     *       base_uint::CompareTo, which starts comparing from the end.
+     *       base_uint::operator<=>, which starts comparing from the end.
      */
     constexpr std::strong_ordering operator<=>(const base_blob& other) const = default;
 
