@@ -205,6 +205,21 @@ BOOST_AUTO_TEST_CASE(compactsize)
     }
 }
 
+/** Values around the CompactSize encoding boundaries. */
+static constexpr uint64_t COMPACT_SIZE_BOUNDARIES[]{0, 252, 253, 0xffff, 0x10000, 0xffffffff, 0x100000000, std::numeric_limits<uint64_t>::max()};
+
+BOOST_AUTO_TEST_CASE(append_compactsize)
+{
+    // AppendCompactSize produces the same encoding as WriteCompactSize.
+    std::vector<std::byte> appended;
+    DataStream written{};
+    for (const uint64_t n : COMPACT_SIZE_BOUNDARIES) {
+        AppendCompactSize(appended, n);
+        WriteCompactSize(written, n);
+    }
+    BOOST_CHECK(std::ranges::equal(appended, written));
+}
+
 static bool isCanonicalException(const std::ios_base::failure& ex)
 {
     std::ios_base::failure expectedException("non-canonical ReadCompactSize()");
