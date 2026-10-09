@@ -22,6 +22,7 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <validation.h>
@@ -29,11 +30,14 @@
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <ios>
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
+#include <utility>
 
 using namespace std::literals;
 using namespace util::hex_literals;
@@ -1374,7 +1378,44 @@ public:
     }
 };
 
+constexpr std::string_view MAX_MESSAGE_TYPE{"xxxxxxxxxxxx"};
+static_assert(MAX_MESSAGE_TYPE.size() == CMessageHeader::MESSAGE_TYPE_SIZE);
+
+CSerializedNetMsg MakeNetMessage(std::string_view type, size_t payload_size)
+{
+    auto msg{NetMsg::Make(std::string{type})};
+    msg.data.resize(payload_size, uint8_t{0x01});
+    return msg;
+}
+
 } // namespace
+
+BOOST_AUTO_TEST_CASE(outbound_message_limits)
+{
+    auto& connman{static_cast<ConnmanTestMsg&>(*m_node.connman)};
+    CNode node{/*id=*/0, /*sock=*/nullptr, /*addrIn=*/CAddress{}, /*nKeyedNetGroupIn=*/0, /*nLocalHostNonceIn=*/0, /*addrBindIn=*/CAddress{}, /*addrNameIn=*/"", ConnectionType::INBOUND, /*inbound_onion=*/false, /*network_key=*/0};
+    auto max_type_msg{MakeNetMessage(/*type=*/MAX_MESSAGE_TYPE, /*payload_size=*/1)};
+    // The pending type-limit message keeps messages passed through PushMessage() in the queue
+    BOOST_REQUIRE(node.m_transport->SetMessageToSend(max_type_msg));
+
+    auto queued{0U};
+    for (auto& [msg, reject] : std::array{
+             std::pair{MakeNetMessage(std::string{MAX_MESSAGE_TYPE} + 'x', /*payload_size=*/1), true},
+             std::pair{MakeNetMessage(MAX_MESSAGE_TYPE, MAX_PROTOCOL_MESSAGE_LENGTH + 1), true},
+             std::pair{MakeNetMessage(MAX_MESSAGE_TYPE, MAX_PROTOCOL_MESSAGE_LENGTH), false}}) {
+        test_only_CheckFailuresAreExceptionsNotAborts mock_checks;
+        try {
+            connman.PushMessage(&node, std::move(msg));
+        } catch (const NonFatalCheckError&) {
+            BOOST_CHECK(reject);
+        }
+        queued += !reject;
+        LOCK(node.cs_vSend);
+        BOOST_CHECK_EQUAL(node.vSendMsg.size(), queued);
+    }
+    connman.FlushSendBuffer(node);
+    BOOST_CHECK(connman.ReceiveMsgFrom(node, MakeNetMessage(MAX_MESSAGE_TYPE, MAX_PROTOCOL_MESSAGE_LENGTH)));
+}
 
 BOOST_AUTO_TEST_CASE(v2transport_test)
 {
@@ -1543,6 +1584,12 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
         BOOST_CHECK((*ret)[3]->m_type == "foobar");
         BOOST_CHECK((*ret)[3]->m_recv.empty());
         tester.ReceiveMessage("barfoo", {});
+        if (i == 0) {
+            const auto payload{m_rng.randbytes<uint8_t>(MAX_PROTOCOL_MESSAGE_LENGTH)};
+            tester.AddMessage(std::string{MAX_MESSAGE_TYPE}, payload);
+            BOOST_REQUIRE(tester.Interact());
+            tester.ReceiveMessage(std::string{MAX_MESSAGE_TYPE}, payload);
+        }
     }
 
     // Too long garbage (initiator).

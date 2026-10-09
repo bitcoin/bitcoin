@@ -205,7 +205,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
             [&] {
                 CSerializedNetMsg serialized_net_msg;
                 serialized_net_msg.m_type = fuzzed_data_provider.ConsumeRandomLengthString(CMessageHeader::MESSAGE_TYPE_SIZE);
-                serialized_net_msg.data = ConsumeRandomLengthByteVector(fuzzed_data_provider);
+                serialized_net_msg.data = ConsumeRandomLengthByteVector(fuzzed_data_provider, /*max_length=*/MAX_PROTOCOL_MESSAGE_LENGTH);
                 connman.PushMessage(&random_node, std::move(serialized_net_msg));
             },
             [&] {
