@@ -19,7 +19,6 @@ from test_framework.messages import (
     malleate_tx_to_invalid_witness,
     msg_getdata,
     msg_inv,
-    msg_notfound,
     msg_tx,
     tx_from_hex,
 )
@@ -260,7 +259,6 @@ class OrphanHandlingTest(BitcoinTestFramework):
         self.log.info("Test orphan parent requests with a mixture of confirmed, in-mempool and missing parents")
         # This UTXO confirmed a long time ago.
         utxo_conf_old = self.wallet.send_self_transfer(from_node=node)["new_utxo"]
-        txid_conf_old = utxo_conf_old["txid"]
         self.generate(self.wallet, 10)
 
         # Create a fake reorg to trigger BlockDisconnected, which resets the rolling bloom filter.
@@ -291,13 +289,12 @@ class OrphanHandlingTest(BitcoinTestFramework):
         self.nodes[0].bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
         peer.sync_with_ping()
         assert tx_in_orphanage(node, orphan["tx"])
-        assert_equal(len(peer.last_message["getdata"].inv), 2)
-        peer.wait_for_parent_requests([int(txid_conf_old, 16), int(missing_tx["txid"], 16)])
+        # Only the parent that is actually missing is requested. The confirmed parents, whether or not
+        # they are still in the recently-confirmed filter, and the in-mempool parent are present.
+        assert_equal(len(peer.last_message["getdata"].inv), 1)
+        peer.wait_for_parent_requests([int(missing_tx["txid"], 16)])
 
-        # Even though the peer would send a notfound for the "old" confirmed transaction, the node
-        # doesn't give up on the orphan. Once all of the missing parents are received, it should be
-        # submitted to mempool.
-        peer.send_without_ping(msg_notfound(vec=[CInv(MSG_WITNESS_TX, int(txid_conf_old, 16))]))
+        # Once the missing parent is received, the orphan is submitted to mempool.
         # Sync with ping to ensure orphans are reconsidered
         peer.send_and_ping(msg_tx(missing_tx["tx"]))
         assert_equal(node.getmempoolentry(orphan["txid"])["ancestorcount"], 3)

@@ -695,7 +695,7 @@ private:
      * @returns a PackageToValidate if this transaction has a reconsiderable failure and an eligible package was found,
      * or std::nullopt otherwise.
      */
-    std::optional<node::PackageToValidate> ProcessInvalidTx(NodeId nodeid, const CTransactionRef& tx, const TxValidationState& result,
+    std::optional<node::PackageToValidate> ProcessInvalidTx(NodeId nodeid, const CTransactionRef& tx, const MempoolAcceptResult& result,
                                                       bool first_time_failure)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, m_tx_download_mutex);
 
@@ -859,7 +859,9 @@ private:
      * Lock invariants:
      * - A txhash (txid or wtxid) in m_txrequest is not also in m_orphanage.
      * - A txhash (txid or wtxid) in m_txrequest is not also in m_lazy_recent_rejects.
-     * - A txhash (txid or wtxid) in m_txrequest is not also in m_lazy_recent_rejects_reconsiderable.
+     * - A txhash (txid or wtxid) in m_txrequest is not also in m_lazy_recent_rejects_reconsiderable,
+     *   except announcements of a witnessless (txid == wtxid) transaction that is the missing parent
+     *   of an orphan.
      * - A txhash (txid or wtxid) in m_txrequest is not also in m_lazy_recent_confirmed_transactions.
      * - Each data structure's limits hold (m_orphanage max size, m_txrequest per-peer limits, etc).
      */
@@ -3376,7 +3378,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     return;
 }
 
-std::optional<node::PackageToValidate> PeerManagerImpl::ProcessInvalidTx(NodeId nodeid, const CTransactionRef& ptx, const TxValidationState& state,
+std::optional<node::PackageToValidate> PeerManagerImpl::ProcessInvalidTx(NodeId nodeid, const CTransactionRef& ptx, const MempoolAcceptResult& result,
                                        bool first_time_failure)
 {
     AssertLockNotHeld(m_peer_mutex);
@@ -3384,6 +3386,7 @@ std::optional<node::PackageToValidate> PeerManagerImpl::ProcessInvalidTx(NodeId 
     AssertLockHeld(m_tx_download_mutex);
 
     PeerRef peer{GetPeerRef(nodeid)};
+    const TxValidationState& state{result.m_state};
 
     LogDebug(BCLog::MEMPOOLREJ, "%s (wtxid=%s) from peer=%d was not accepted: %s\n",
         ptx->GetHash().ToString(),
@@ -3391,7 +3394,9 @@ std::optional<node::PackageToValidate> PeerManagerImpl::ProcessInvalidTx(NodeId 
         nodeid,
         state.ToString());
 
-    const auto& [add_extra_compact_tx, unique_parents, package_to_validate] = m_txdownloadman.MempoolRejectedTx(ptx, state, nodeid, first_time_failure);
+    Assume(state.GetResult() != TxValidationResult::TX_MISSING_INPUTS || result.m_missing_parents.has_value());
+    const auto& [add_extra_compact_tx, unique_parents, package_to_validate] = m_txdownloadman.MempoolRejectedTx(ptx, state, nodeid, first_time_failure,
+                                                                                                                 result.m_missing_parents.value_or(std::vector<Txid>{}));
 
     if (add_extra_compact_tx && RecursiveDynamicUsage(*ptx) < 100000) {
         AddToCompactExtraTransactions(ptx);
@@ -3460,11 +3465,22 @@ void PeerManagerImpl::ProcessPackageResult(const node::PackageToValidate& packag
                 case MempoolAcceptResult::ResultType::INVALID:
                 case MempoolAcceptResult::ResultType::DIFFERENT_WITNESS:
                 {
+                    // TX_RECONSIDERABLE here is a package feerate failure, a duplicate of this tx's
+                    // standalone rejection, or the child's own low feerate after the parent was
+                    // accepted by itself (it is then reconsidered via the parent's work set). The
+                    // first is a property of this wtxid pair (already cached by
+                    // MempoolRejectedPackage), not of the tx: don't erase or reject the child, as
+                    // another peer may have a version of the parent with a different witness that
+                    // makes the package acceptable.
+                    if (tx_result.m_state.GetResult() == TxValidationResult::TX_RECONSIDERABLE) {
+                        Assume(package_result.m_state.IsInvalid());
+                        break;
+                    }
                     // Don't add to vExtraTxnForCompact, as these transactions should have already been
                     // added there when added to the orphanage or rejected for TX_RECONSIDERABLE.
                     // This should be updated if package submission is ever used for transactions
                     // that haven't already been validated before.
-                    ProcessInvalidTx(nodeid, tx, tx_result.m_state, /*first_time_failure=*/false);
+                    ProcessInvalidTx(nodeid, tx, tx_result, /*first_time_failure=*/false);
                     break;
                 }
                 case MempoolAcceptResult::ResultType::MEMPOOL_ENTRY:
@@ -3508,7 +3524,7 @@ bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
                        state.GetResult() != TxValidationResult::TX_UNKNOWN &&
                        state.GetResult() != TxValidationResult::TX_NO_MEMPOOL &&
                        state.GetResult() != TxValidationResult::TX_RESULT_UNSET)) {
-                ProcessInvalidTx(peer.m_id, porphanTx, state, /*first_time_failure=*/false);
+                ProcessInvalidTx(peer.m_id, porphanTx, result, /*first_time_failure=*/false);
             }
             return true;
         }
@@ -4771,7 +4787,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             pfrom.m_last_tx_time = GetTime<std::chrono::seconds>();
         }
         if (state.IsInvalid()) {
-            if (auto package_to_validate{ProcessInvalidTx(pfrom.GetId(), ptx, state, /*first_time_failure=*/true)}) {
+            if (auto package_to_validate{ProcessInvalidTx(pfrom.GetId(), ptx, result, /*first_time_failure=*/true)}) {
                 const auto package_result{ProcessNewPackage(m_chainman.ActiveChainstate(), m_mempool, package_to_validate->m_txns, /*test_accept=*/false, /*client_maxfeerate=*/std::nullopt)};
                 LogDebug(BCLog::TXPACKAGES, "package evaluation for %s: %s\n", package_to_validate->ToString(),
                          package_result.m_state.IsValid() ? "package accepted" : "package rejected");

@@ -630,6 +630,8 @@ private:
         /** Txids of mempool transactions that this transaction directly conflicts with or may
          * replace via sibling eviction. */
         std::set<Txid> m_conflicts;
+        /** Txids of the parents at least one of whose spent outputs does not exist, when PreChecks fails with TX_MISSING_INPUTS. */
+        std::vector<Txid> m_missing_parents;
         /** Iterators to mempool entries that this transaction directly conflicts with or may
          * replace via sibling eviction. */
         CTxMemPool::setEntries m_iters_conflicting;
@@ -842,7 +844,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     m_view.SetBackend(m_viewmempool);
 
     const CCoinsViewCache& coins_cache = m_active_chainstate.CoinsTip();
-    // do all inputs exist?
+    // do all inputs exist? Collect every parent with a missing output rather than stopping at the
+    // first: orphan handling uses the set of parents that are actually missing, so that parents
+    // that are present (e.g. confirmed) are neither requested nor held against the transaction.
     for (const CTxIn& txin : tx.vin) {
         if (!coins_cache.HaveCoinInCache(txin.prevout)) {
             coins_to_uncache.push_back(txin.prevout);
@@ -852,16 +856,24 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // (coins_cache.cacheCoins) by way of FetchCoin(). It should be removed
         // later (via coins_to_uncache) if this tx turns out to be invalid.
         if (!m_view.HaveCoin(txin.prevout)) {
-            // Are inputs missing because we already have the tx?
-            for (size_t out = 0; out < tx.vout.size(); out++) {
-                // Optimistically just do efficient check of cache for outputs
-                if (coins_cache.HaveCoinInCache(COutPoint(hash, out))) {
-                    return state.Invalid(TxValidationResult::TX_CONFLICT, "txn-already-known");
+            if (ws.m_missing_parents.empty()) {
+                // Are inputs missing because we already have the tx? Checked once, on the first
+                // missing input: the answer does not depend on which inputs are missing.
+                for (size_t out = 0; out < tx.vout.size(); out++) {
+                    // Optimistically just do efficient check of cache for outputs
+                    if (coins_cache.HaveCoinInCache(COutPoint(hash, out))) {
+                        return state.Invalid(TxValidationResult::TX_CONFLICT, "txn-already-known");
+                    }
                 }
             }
-            // Otherwise assume this might be an orphan tx for which we just haven't seen parents yet
-            return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-txns-inputs-missingorspent");
+            ws.m_missing_parents.push_back(txin.prevout.hash);
         }
+    }
+    if (!ws.m_missing_parents.empty()) {
+        std::sort(ws.m_missing_parents.begin(), ws.m_missing_parents.end());
+        ws.m_missing_parents.erase(std::unique(ws.m_missing_parents.begin(), ws.m_missing_parents.end()), ws.m_missing_parents.end());
+        // Assume this might be an orphan tx for which we just haven't seen parents yet
+        return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-txns-inputs-missingorspent");
     }
 
     // This is const, but calls into `CCoinsViewCache::GetBestBlock()` to refresh
@@ -1319,6 +1331,9 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransactionInternal(const CTransa
     const std::vector<Wtxid> single_wtxid{ws.m_ptx->GetWitnessHash()};
 
     if (!PreChecks(args, ws)) {
+        if (ws.m_state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
+            return MempoolAcceptResult::MissingInputs(ws.m_state, std::move(ws.m_missing_parents));
+        }
         if (ws.m_state.GetResult() == TxValidationResult::TX_RECONSIDERABLE) {
             // Failed for fee reasons. Provide the effective feerate and which tx was included.
             return MempoolAcceptResult::FeeFailure(ws.m_state, CFeeRate(ws.m_modified_fees, ws.m_vsize), single_wtxid);
@@ -1445,7 +1460,9 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactionsInternal(con
         if (!PreChecks(args, ws)) {
             package_state.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
             // Exit early to avoid doing pointless work. Update the failed tx result; the rest are unfinished.
-            results.emplace(ws.m_ptx->GetWitnessHash(), MempoolAcceptResult::Failure(ws.m_state));
+            results.emplace(ws.m_ptx->GetWitnessHash(), ws.m_state.GetResult() == TxValidationResult::TX_MISSING_INPUTS ?
+                MempoolAcceptResult::MissingInputs(ws.m_state, std::move(ws.m_missing_parents)) :
+                MempoolAcceptResult::Failure(ws.m_state));
             return PackageMempoolAcceptResult(package_state, std::move(results));
         }
 
