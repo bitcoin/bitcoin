@@ -134,6 +134,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   netbase.cpp
   outputtype.cpp
   policy/feerate.cpp
+  policy/packages.cpp
   policy/policy.cpp
   pow.cpp
   protocol.cpp
@@ -254,7 +255,6 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   policy/fees/estimator_args.cpp
   policy/fees/estimator_man.cpp
   policy/fees/mempool_estimator.cpp
-  policy/packages.cpp
   policy/rbf.cpp
   policy/settings.cpp
   policy/truc_policy.cpp
