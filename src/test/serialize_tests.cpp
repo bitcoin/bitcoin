@@ -188,6 +188,21 @@ BOOST_AUTO_TEST_CASE(append_compactsize)
     BOOST_CHECK(std::ranges::equal(appended, written));
 }
 
+BOOST_AUTO_TEST_CASE(decode_compactsize)
+{
+    // DecodeCompactSize decodes what WriteCompactSize encodes, advancing past each value.
+    static constexpr uint64_t VALUES[]{0, 252, 253, 0xffff, 0x10000, 0xffffffff, 0x100000000, std::numeric_limits<uint64_t>::max()};
+    DataStream data{};
+    for (const uint64_t n : VALUES) WriteCompactSize(data, n);
+    std::span<const std::byte> rest{data};
+    for (const uint64_t n : VALUES) {
+        const auto size_before = rest.size();
+        BOOST_CHECK_EQUAL(DecodeCompactSize(rest), n);
+        BOOST_CHECK_EQUAL(size_before - rest.size(), GetSizeOfCompactSize(n));
+    }
+    BOOST_CHECK(rest.empty());
+}
+
 static bool isCanonicalException(const std::ios_base::failure& ex)
 {
     std::ios_base::failure expectedException("non-canonical ReadCompactSize()");
