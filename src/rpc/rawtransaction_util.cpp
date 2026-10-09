@@ -386,7 +386,7 @@ std::vector<RPCResult> TxDoc(const TxDocOptions& opts)
         }},
     };
     if (opts.prevout) {
-        vin_inner.emplace_back(
+        vin_inner.push_back({
             RPCResult::Type::OBJ, "prevout", opts.prevout_optional, prevout_doc,
             std::vector<RPCResult>{
                 {RPCResult::Type::BOOL, "generated", "Coinbase or not"},
@@ -394,9 +394,9 @@ std::vector<RPCResult> TxDoc(const TxDocOptions& opts)
                 {RPCResult::Type::STR_AMOUNT, "value", "The value in " + CURRENCY_UNIT},
                 {RPCResult::Type::OBJ, "scriptPubKey", "", ScriptPubKeyDoc()},
             }
-        );
+        });
     }
-    vin_inner.emplace_back(RPCResult::Type::NUM, "sequence", "The script sequence number");
+    vin_inner.push_back({RPCResult::Type::NUM, "sequence", "The script sequence number"});
 
     if (opts.vin_inner_elision) {
         vin_inner = ElideGroup(std::move(vin_inner), *opts.vin_inner_elision);
@@ -444,8 +444,8 @@ std::vector<RPCResult> TxDoc(const TxDocOptions& opts)
         }},
     };
 
-    if (opts.fee) fields.emplace_back(RPCResult::Type::NUM, "fee", /*optional=*/true, fee_doc);
-    if (opts.hex) fields.emplace_back(RPCResult::Type::STR_HEX, "hex", "The hex-encoded transaction data");
+    if (opts.fee) fields.push_back({RPCResult::Type::NUM, "fee", /*optional=*/true, fee_doc});
+    if (opts.hex) fields.push_back({RPCResult::Type::STR_HEX, "hex", "The hex-encoded transaction data"});
 
     if (opts.elision_mode != ElisionMode::None) {
         const bool silent = opts.elision_mode == ElisionMode::Silent;

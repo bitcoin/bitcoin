@@ -342,7 +342,7 @@ static RPCMethod generateblock()
                 "Txids must reference transactions currently in the mempool.\n"
                 "All transactions must be valid and in valid order, otherwise the block will be rejected.",
                 {
-                    {"rawtx/txid", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
+                    {"rawtx_or_txid", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
                 },
             },
             {"submit", RPCArg::Type::BOOL, RPCArg::Default{true}, "Whether to submit the block before the RPC call returns or to return it as hex."},
@@ -583,7 +583,7 @@ static RPCMethod getprioritisedtransactions()
         RPCResult{
             RPCResult::Type::OBJ_DYN, "", "prioritisation keyed by txid",
             {
-                {RPCResult::Type::OBJ, "<transactionid>", "", {
+                {RPCResult::Type::OBJ, "transactionid", "", {
                     {RPCResult::Type::NUM, "fee_delta", "transaction fee delta in satoshis"},
                     {RPCResult::Type::BOOL, "in_mempool", "whether this transaction is currently in mempool"},
                     {RPCResult::Type::NUM, "modified_fee", /*optional=*/true, "modified fee in satoshis. Only returned if in_mempool=true"},
