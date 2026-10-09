@@ -363,6 +363,26 @@ uint64_t ReadCompactSize(Stream& is, bool range_check = true)
 }
 
 /**
+ * Append the CompactSize encoding of n to data.
+ *
+ * This produces the same bytes as WriteCompactSize, but is cheaper than writing through a stream
+ * like VectorWriter, and small enough to be inlined.
+ */
+inline void AppendCompactSize(std::vector<std::byte>& data, uint64_t n)
+{
+    // A minimal stream that appends what is written to data.
+    struct Appender {
+        std::vector<std::byte>& data;
+        void write(std::span<const std::byte> src)
+        {
+            for (const auto b : src) data.push_back(b);
+        }
+    };
+    Appender appender{data};
+    WriteCompactSize(appender, n);
+}
+
+/**
  * Variable-length integers: bytes are a MSB base-128 encoding of the number.
  * The high bit in each byte signifies whether another digit follows. To make
  * sure the encoding is one-to-one, one is subtracted from all but the last digit.
