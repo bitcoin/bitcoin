@@ -11,11 +11,11 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/util.h>
 #include <test/util/net.h>
+#include <util/check.h>
 #include <util/sock.h>
 #include <util/time.h>
 
 #include <array>
-#include <cassert>
 #include <cerrno>
 #include <cstdint>
 #include <cstdlib>

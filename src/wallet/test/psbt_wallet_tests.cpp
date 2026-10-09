@@ -5,6 +5,7 @@
 #include <key_io.h>
 #include <node/types.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <wallet/test/wallet_test_fixture.h>
 #include <wallet/wallet.h>

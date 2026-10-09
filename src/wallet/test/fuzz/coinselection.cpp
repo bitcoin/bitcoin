@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <wallet/coinselection.h>
+
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
@@ -9,7 +11,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
-#include <wallet/coinselection.h>
+#include <util/check.h>
 
 #include <numeric>
 #include <span>

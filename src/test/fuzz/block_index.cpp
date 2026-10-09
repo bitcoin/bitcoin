@@ -11,6 +11,7 @@
 #include <test/util/setup_common.h>
 #include <txdb.h>
 #include <util/byte_units.h>
+#include <util/check.h>
 #include <validation.h>
 
 using kernel::CBlockFileInfo;

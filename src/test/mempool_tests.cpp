@@ -4,14 +4,15 @@
 
 #include <common/system.h>
 #include <policy/policy.h>
+#include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
+#include <util/check.h>
 #include <util/time.h>
 
-#include <test/util/setup_common.h>
-
 #include <boost/test/unit_test.hpp>
+
 #include <vector>
 
 BOOST_FIXTURE_TEST_SUITE(mempool_tests, TestingSetup)

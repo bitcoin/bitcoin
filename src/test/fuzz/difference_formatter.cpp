@@ -3,9 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blockencodings.h>
-#include <streams.h>
 #include <random.h>
+#include <streams.h>
 #include <test/fuzz/fuzz.h>
+#include <util/check.h>
 
 #include <vector>
 
