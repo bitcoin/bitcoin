@@ -41,6 +41,15 @@ class BlocksXORTest(BitcoinTestFramework):
         self.log.info("Shut down node and un-XOR block/undo files manually")
         self.stop_node(0)
         xor_key = node.read_xor_key()
+
+        self.log.info("Check that a lost XOR key is detected while block data is still obfuscated")
+        node.blocks_key_path.unlink()
+        node.assert_start_raises_init_error(
+            expected_msg='The XOR-key file .* is missing, but the block files in .* are obfuscated with a key',
+            match=ErrorMatch.PARTIAL_REGEX)
+        assert not node.blocks_key_path.exists()  # no null key was stored over the lost one
+        node.blocks_key_path.write_bytes(xor_key)
+
         for data_file in sorted(block_files + undo_files):
             self.log.debug(f"Rewriting file {data_file}...")
             with open(data_file, 'rb+') as f:
@@ -60,6 +69,19 @@ class BlocksXORTest(BitcoinTestFramework):
         # nblocks=0    -> verify all blocks
         node.verifychain(checklevel=2, nblocks=0)
         self.log.info("Check that blocks XOR key is recreated")
+        assert_equal(node.read_xor_key(), NULL_BLK_XOR_KEY)
+
+        self.log.info("Check that an unobfuscated blocksdir without a key starts with XOR enabled")
+        self.stop_node(0)
+        node.blocks_key_path.unlink()
+        self.start_node(0)
+        assert_equal(node.read_xor_key(), NULL_BLK_XOR_KEY)
+
+        self.log.info("Check that a single unreadable block file is not mistaken for a lost XOR key")
+        self.stop_node(0)
+        (node.blocks_path / 'blk99999.dat').write_bytes(b'\xde\xad\xbe\xef')
+        node.blocks_key_path.unlink()
+        self.start_node(0)
         assert_equal(node.read_xor_key(), NULL_BLK_XOR_KEY)
 
 
