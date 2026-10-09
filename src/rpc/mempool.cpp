@@ -38,7 +38,6 @@
 #include <uint256.h>
 #include <univalue.h>
 #include <util/check.h>
-#include <util/expected.h>
 #include <util/feefrac.h>
 #include <util/fs.h>
 #include <util/moneystr.h>
@@ -1081,14 +1080,9 @@ static RPCMethod gettxspendingprevout()
             }
 
             for (const auto& prevout : unresolved) {
-                const auto spender{g_txospenderindex->FindSpender(prevout.outpoint)};
-                if (!spender) {
-                    throw JSONRPCError(RPC_MISC_ERROR, spender.error());
-                }
-
-                if (const auto& spender_opt{spender.value()}) {
-                    UniValue o{make_output(prevout, spender_opt->tx.get())};
-                    o.pushKV("blockhash", spender_opt->block_hash.GetHex());
+                if (const auto spender{g_txospenderindex->FindSpender(prevout.outpoint)}) {
+                    UniValue o{make_output(prevout, spender->tx.get())};
+                    o.pushKV("blockhash", spender->block_hash.GetHex());
                     results[prevout.request_index] = std::move(o);
                 } else {
                     // Only return the input outpoint itself, which indicates it is unspent.
