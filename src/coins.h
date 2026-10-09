@@ -742,8 +742,11 @@ private:
         return base->PeekCoin(outpoint);
     }
 
-    /// May have zero workers when input fetching is disabled.
+    //! May have zero workers when input fetching is disabled.
     util::NotNullSharedPtr<ThreadPool> m_thread_pool;
+    //! Reuse task storage between blocks. Submit moves the tasks without taking the vector's storage.
+    std::vector<std::function<void()>> m_tasks;
+    //! Track completion of submitted fetch tasks.
     std::vector<std::future<void>> m_futures{};
 
 protected:
