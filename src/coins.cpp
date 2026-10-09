@@ -12,7 +12,7 @@
 #include <util/threadpool.h>
 #include <util/trace.h>
 
-#include <ranges>
+#include <cstdint>
 #include <unordered_set>
 
 TRACEPOINT_SEMAPHORE(utxocache, add);
@@ -384,13 +384,12 @@ CCoinsViewCache::ResetGuard CoinsViewOverlay::StartFetching(const CBlock& block 
         // Filter inputs that spend outputs created earlier in the same block. These outputs will be created
         // directly in the cache from the tx that creates them, so they will not be requested from a base view.
         std::unordered_set<Txid, SaltedCoinsCacheHasher> earlier_txids;
-        earlier_txids.reserve(block.vtx.size());
-        earlier_txids.emplace(block.vtx[0]->GetHash());
-        for (const auto& tx : block.vtx | std::views::drop(1)) {
-            for (const auto& input : tx->vin) {
+        earlier_txids.reserve(block.vtx.size() - 1);
+        for (uint64_t i{1}; i < block.vtx.size(); ++i) {
+            earlier_txids.emplace(block.vtx[i - 1]->GetHash());
+            for (const auto& input : block.vtx[i]->vin) {
                 if (!earlier_txids.contains(input.prevout.hash)) m_inputs.emplace_back(input.prevout);
             }
-            earlier_txids.emplace(tx->GetHash());
         }
         // Only submit tasks if we have something to fetch.
         if (m_inputs.size()) {
