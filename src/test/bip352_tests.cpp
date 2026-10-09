@@ -57,10 +57,10 @@ BOOST_AUTO_TEST_CASE(bip352_send_and_receive_test_vectors)
                 const auto& script_sig_bytes = ParseHex(input["scriptSig"].get_str());
                 CScript script_sig = CScript(script_sig_bytes.begin(), script_sig_bytes.end());
                 CTxIn txin{outpoint, script_sig};
-                // read the field txWitness as a stream and write txWitness >> witness.stack;
+                // read the field txWitness as a stream and write txWitness >> witness;
                 const auto witness_str = ParseHex(input["txinwitness"].get_str());
                 if (!witness_str.empty()) {
-                    SpanReader(witness_str) >> txin.scriptWitness.stack;
+                    SpanReader(witness_str) >> txin.scriptWitness;
                 }
 
                 // check if this is a silent payments input by trying to extract the public key
@@ -134,10 +134,10 @@ BOOST_AUTO_TEST_CASE(bip352_send_and_receive_test_vectors)
                 const auto& script_sig_bytes = ParseHex(input["scriptSig"].get_str());
                 CScript script_sig = CScript(script_sig_bytes.begin(), script_sig_bytes.end());
                 CTxIn txin{outpoint, script_sig};
-                // read the field txWitness as a stream and write txWitness >> witness.stack;
+                // read the field txWitness as a stream and write txWitness >> witness;
                 const auto witness_str = ParseHex(input["txinwitness"].get_str());
                 if (!witness_str.empty()) {
-                    SpanReader(witness_str) >> txin.scriptWitness.stack;
+                    SpanReader(witness_str) >> txin.scriptWitness;
                 }
                 vin.push_back(txin);
                 coins[outpoint] = Coin{CTxOut{{}, spk}, 0, false};

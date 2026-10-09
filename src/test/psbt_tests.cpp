@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(psbt2_addinput)
     psbtin7.final_script_witness.stack.emplace_back();
     BOOST_CHECK(!psbt.AddInput(psbtin7));
     BOOST_CHECK_EQUAL(psbt.inputs.size(), 5);
-    psbtin7.final_script_witness.SetNull();
+    psbtin7.final_script_witness = {};
     psbtin7.partial_sigs.emplace();
     BOOST_CHECK(!psbt.AddInput(psbtin7));
     BOOST_CHECK_EQUAL(psbt.inputs.size(), 5);

@@ -315,7 +315,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         ValidateCheckInputsForAllFlags(CTransaction(valid_with_witness_tx), 0, true, m_node.chainman->ActiveChainstate().CoinsTip(), m_node.chainman->m_validation_cache);
 
         // Remove the witness, and check that it is now invalid.
-        valid_with_witness_tx.vin[0].scriptWitness.SetNull();
+        valid_with_witness_tx.vin[0].scriptWitness = {};
         ValidateCheckInputsForAllFlags(CTransaction(valid_with_witness_tx), SCRIPT_VERIFY_WITNESS, true, m_node.chainman->ActiveChainstate().CoinsTip(), m_node.chainman->m_validation_cache);
     }
 
@@ -369,7 +369,7 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         // Check that if the second input is invalid, but the first input is
         // valid, the transaction is not cached.
         // Invalidate vin[1]
-        tx.vin[1].scriptWitness.SetNull();
+        tx.vin[1].scriptWitness = {};
 
         TxValidationState state;
         PrecomputedTransactionData txdata;

@@ -58,7 +58,7 @@ CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider,
         const auto script_sig = p2wsh_op_true ? CScript{} : ConsumeScript(fuzzed_data_provider);
         CScriptWitness script_wit;
         if (p2wsh_op_true) {
-            script_wit.stack = std::vector<std::vector<uint8_t>>{WITNESS_STACK_ELEM_OP_TRUE};
+            script_wit = CScriptWitness{std::vector<std::vector<uint8_t>>{WITNESS_STACK_ELEM_OP_TRUE}};
         } else {
             script_wit = ConsumeScriptWitness(fuzzed_data_provider);
         }

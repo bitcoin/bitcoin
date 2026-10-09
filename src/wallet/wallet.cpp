@@ -737,7 +737,7 @@ std::set<CWalletTx*, WalletTxOrderComparator> CWallet::GetMalleatedVariants(cons
     if (wtx.IsCoinBase()) return txs;
 
     // Only transactions that have non-witness inputs can be malleated
-    if (std::ranges::none_of(wtx.GetTx()->vin, [](const CTxIn& in) { return in.scriptWitness.IsNull(); })) {
+    if (std::ranges::none_of(wtx.GetTx()->vin, [](const CTxIn& in) { return in.scriptWitness.empty(); })) {
         return txs;
     }
 
