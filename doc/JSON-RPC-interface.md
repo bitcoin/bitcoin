@@ -140,6 +140,18 @@ RPC interface will be abused.
   isolation (containers, virtualization, separate user accounts with restricted
   permissions) rather than relying solely on RPC access controls.
 
+- **Local access over a unix domain socket:** On platforms that support
+  them, `rpcbind=unix` makes Bitcoin Core serve RPC over a unix domain
+  socket at `<datadir>/http.sock` instead of, or in addition to, TCP. Use
+  `rpcbind=unix:<path>` for a custom path; relative paths are interpreted
+  relative to the network data directory, as for `ipcbind`. The `rpcallowip`
+  setting does not apply to unix socket connections; whoever can connect
+  to the socket file may attempt to authenticate. The socket file itself
+  is restricted to the owner after binding, but parent directories are
+  created with default permissions, so place the socket in a suitably
+  restricted directory. `bitcoin-cli` connects to such a node with
+  `-rpcconnect=unix`, or `-rpcconnect=unix:<path>` for a custom path.
+
 - **Securing remote network access:** You may optionally allow other
   computers to remotely control Bitcoin Core by setting the `rpcallowip`
   and `rpcbind` configuration parameters.  These settings are only meant

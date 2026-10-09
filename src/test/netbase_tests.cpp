@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <bitcoin-build-config.h> // IWYU pragma: keep
+
 #include <compat/compat.h>
 #include <net_permissions.h>
 #include <netaddress.h>
@@ -11,12 +13,22 @@
 #include <serialize.h>
 #include <streams.h>
 #include <test/util/common.h>
+#include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 
+#include <algorithm>
+#include <cerrno>
+#include <concepts>
+#include <cstring>
+#include <memory>
 #include <string>
 #include <numeric>
+
+#ifdef HAVE_SOCKADDR_UN
+#include <sys/un.h>
+#endif
 
 #include <boost/test/unit_test.hpp>
 
@@ -618,6 +630,496 @@ BOOST_AUTO_TEST_CASE(isbadport)
     BOOST_CHECK_EQUAL(std::ranges::count_if(ports, IsBadPort), 85);
 }
 
+/** The socket address API shared by CService, UnixSocketAddr and SocketAddr */
+template <typename T>
+concept SockAddrLike = requires(T addr, const T caddr, sockaddr* paddr, const sockaddr* cpaddr, socklen_t* paddrlen, socklen_t addrlen) {
+    { caddr.IsValid() } -> std::same_as<bool>;
+    { caddr.IsIPv4() } -> std::same_as<bool>;
+    { caddr.IsIPv6() } -> std::same_as<bool>;
+    { caddr.GetSAFamily() } -> std::same_as<sa_family_t>;
+    { caddr.ToStringAddrPort() } -> std::same_as<std::string>;
+    { caddr.GetSockAddr(paddr, paddrlen) } -> std::same_as<bool>;
+    { addr.SetSockAddr(cpaddr, addrlen) } -> std::same_as<bool>;
+};
+static_assert(SockAddrLike<CService>);
+static_assert(SockAddrLike<UnixSocketAddr>);
+static_assert(SockAddrLike<SocketAddr>);
+
+template <SockAddrLike T>
+static void CheckSockAddrRoundTrip(const T& addr, sa_family_t family, socklen_t expected_len)
+{
+    BOOST_REQUIRE(addr.IsValid());
+    BOOST_CHECK_EQUAL(addr.GetSAFamily(), family);
+
+    sockaddr_storage storage;
+    auto* paddr{reinterpret_cast<sockaddr*>(&storage)};
+
+    // Buffer too small
+    socklen_t len{expected_len - 1};
+    BOOST_CHECK(!addr.GetSockAddr(paddr, &len));
+
+    len = sizeof(storage);
+    BOOST_REQUIRE(addr.GetSockAddr(paddr, &len));
+    BOOST_CHECK_EQUAL(len, expected_len);
+    BOOST_CHECK_EQUAL(paddr->sa_family, family);
+
+    T addr2;
+    BOOST_CHECK(!addr2.IsValid());
+    BOOST_REQUIRE(addr2.SetSockAddr(paddr, len));
+    BOOST_CHECK(addr2.IsValid());
+    BOOST_CHECK_EQUAL(addr2.GetSAFamily(), family);
+    BOOST_CHECK_EQUAL(addr2.ToStringAddrPort(), addr.ToStringAddrPort());
+}
+
+BOOST_AUTO_TEST_CASE(sockaddr_api)
+{
+    const CService ipv4{LookupNumeric("142.250.217.142", 8333)};
+    CheckSockAddrRoundTrip(ipv4, AF_INET, sizeof(sockaddr_in));
+    BOOST_CHECK(ipv4.IsIPv4());
+    BOOST_CHECK(!ipv4.IsIPv6());
+    CheckSockAddrRoundTrip(SocketAddr{ipv4}, AF_INET, sizeof(sockaddr_in));
+    BOOST_CHECK(SocketAddr{ipv4}.IsIPv4());
+    BOOST_CHECK(!SocketAddr{ipv4}.IsIPv6());
+
+    const CService ipv6{LookupNumeric("2607:f8b0:4006:80f::200e", 8333)};
+    CheckSockAddrRoundTrip(ipv6, AF_INET6, sizeof(sockaddr_in6));
+    BOOST_CHECK(!ipv6.IsIPv4());
+    BOOST_CHECK(ipv6.IsIPv6());
+    CheckSockAddrRoundTrip(SocketAddr{ipv6}, AF_INET6, sizeof(sockaddr_in6));
+    BOOST_CHECK(!SocketAddr{ipv6}.IsIPv4());
+    BOOST_CHECK(SocketAddr{ipv6}.IsIPv6());
+
+#ifdef HAVE_SOCKADDR_UN
+    const UnixSocketAddr unix_addr{"unix:/tmp/bitcoin.sock"};
+    CheckSockAddrRoundTrip(unix_addr, AF_UNIX, sizeof(sockaddr_un));
+    BOOST_CHECK(!unix_addr.IsIPv4());
+    BOOST_CHECK(!unix_addr.IsIPv6());
+    // Round trip starts from a default SocketAddr, which holds a CService,
+    // so this also checks that SetSockAddr() switches the variant alternative.
+    CheckSockAddrRoundTrip(SocketAddr{unix_addr}, AF_UNIX, sizeof(sockaddr_un));
+    BOOST_CHECK(!SocketAddr{unix_addr}.IsIPv4());
+    BOOST_CHECK(!SocketAddr{unix_addr}.IsIPv6());
+
+    // Each type rejects the other's sockaddr
+    sockaddr_storage storage;
+    auto* paddr{reinterpret_cast<sockaddr*>(&storage)};
+    socklen_t len{sizeof(storage)};
+    BOOST_REQUIRE(unix_addr.GetSockAddr(paddr, &len));
+    CService service;
+    BOOST_CHECK(!service.SetSockAddr(paddr, len));
+
+    for (const CService& ip : {ipv4, ipv6}) {
+        len = sizeof(storage);
+        BOOST_REQUIRE(ip.GetSockAddr(paddr, &len));
+        UnixSocketAddr unix_addr2;
+        BOOST_CHECK(!unix_addr2.SetSockAddr(paddr, len));
+    }
+#endif
+}
+
+#ifdef HAVE_SOCKADDR_UN
+BOOST_AUTO_TEST_CASE(unix_socket_addr)
+{
+    constexpr socklen_t offset{offsetof(sockaddr_un, sun_path)};
+    constexpr size_t max_path_len{sizeof(sockaddr_un::sun_path) - 1};
+    const std::string path{"/tmp/bitcoin.sock"};
+
+    // IsUnixSocketPath boundaries
+    BOOST_CHECK(IsUnixSocketPath(ADDR_PREFIX_UNIX + path));
+    BOOST_CHECK(!IsUnixSocketPath(path));
+    BOOST_CHECK(IsUnixSocketPath(ADDR_PREFIX_UNIX + std::string(max_path_len, 'a')));
+    BOOST_CHECK(!IsUnixSocketPath(ADDR_PREFIX_UNIX + std::string(max_path_len + 1, 'a')));
+
+    // Accessors
+    const UnixSocketAddr addr{ADDR_PREFIX_UNIX + path};
+    BOOST_CHECK(addr.IsValid());
+    BOOST_CHECK_EQUAL(addr.GetDestString(), path);
+    BOOST_CHECK_EQUAL(addr.ToStringAddrPort(), ADDR_PREFIX_UNIX + path);
+
+    sockaddr_un sa_un;
+    auto* paddr{reinterpret_cast<sockaddr*>(&sa_un)};
+    socklen_t len{sizeof(sa_un)};
+
+    // Default-constructed is invalid and can't be converted
+    const UnixSocketAddr empty;
+    BOOST_CHECK(!empty.IsValid());
+    BOOST_CHECK(!empty.GetSockAddr(paddr, &len));
+    BOOST_CHECK_EQUAL(empty.GetDestString(), "");
+    BOOST_CHECK_EQUAL(empty.ToStringAddrPort(), "");
+
+    // Constructed from a string without the prefix, or too long, is invalid
+    for (const std::string& bad : {path, ADDR_PREFIX_UNIX + std::string(max_path_len + 1, 'a'), std::string{}}) {
+        const UnixSocketAddr invalid{bad};
+        BOOST_CHECK(!invalid.IsValid());
+        BOOST_CHECK(!invalid.GetSockAddr(paddr, &len));
+        BOOST_CHECK_EQUAL(invalid.GetDestString(), "");
+        // ToStringAddrPort() still echoes the input to aid error messages
+        BOOST_CHECK_EQUAL(invalid.ToStringAddrPort(), bad);
+    }
+
+    // GetSockAddr zero-pads sun_path after the path
+    std::memset(&sa_un, 0xff, sizeof(sa_un));
+    BOOST_REQUIRE(addr.GetSockAddr(paddr, &len));
+    BOOST_CHECK_EQUAL(len, sizeof(sa_un));
+    BOOST_CHECK_EQUAL(sa_un.sun_family, AF_UNIX);
+    BOOST_CHECK_EQUAL(std::string(sa_un.sun_path), path);
+    BOOST_CHECK(std::all_of(sa_un.sun_path + path.size(), std::end(sa_un.sun_path), [](char c) { return c == '\0'; }));
+
+    // Longest valid path round trips and is still NUL-terminated
+    const UnixSocketAddr longest{ADDR_PREFIX_UNIX + std::string(max_path_len, 'a')};
+    CheckSockAddrRoundTrip(longest, AF_UNIX, sizeof(sockaddr_un));
+    len = sizeof(sa_un);
+    BOOST_REQUIRE(longest.GetSockAddr(paddr, &len));
+    BOOST_CHECK_EQUAL(sa_un.sun_path[max_path_len], '\0');
+
+    // SetSockAddr from hand-built structs, mimicking what the OS may return
+    // from accept(), getpeername() or getsockname()
+    const auto make_sa_un{[](std::string_view p) {
+        sockaddr_un s{};
+        s.sun_family = AF_UNIX;
+        std::memcpy(s.sun_path, p.data(), std::min(p.size(), sizeof(s.sun_path)));
+        return s;
+    }};
+    // Returns the resulting ToStringAddrPort(), or "" on failure
+    const auto set{[](const sockaddr_un& s, socklen_t addrlen) -> std::string {
+        UnixSocketAddr a;
+        if (!a.SetSockAddr(reinterpret_cast<const sockaddr*>(&s), addrlen)) return "";
+        BOOST_CHECK(a.IsValid());
+        return a.ToStringAddrPort();
+    }};
+
+    sa_un = make_sa_un(path);
+    // Invalid lengths
+    BOOST_CHECK_EQUAL(set(sa_un, offset - 1), "");
+    BOOST_CHECK_EQUAL(set(sa_un, sizeof(sa_un) + 1), "");
+    // Length includes the terminator (Linux)
+    BOOST_CHECK_EQUAL(set(sa_un, offset + path.size() + 1), ADDR_PREFIX_UNIX + path);
+    // Length excludes the terminator
+    BOOST_CHECK_EQUAL(set(sa_un, offset + path.size()), ADDR_PREFIX_UNIX + path);
+    // Full struct with NUL padding, as produced by GetSockAddr()
+    BOOST_CHECK_EQUAL(set(sa_un, sizeof(sa_un)), ADDR_PREFIX_UNIX + path);
+    // Length shorter than the path truncates it
+    BOOST_CHECK_EQUAL(set(sa_un, offset + 4), ADDR_PREFIX_UNIX + "/tmp");
+
+    // Unnamed socket: no path bytes at all, or only NUL bytes
+    BOOST_CHECK_EQUAL(set(sa_un, offset), ADDR_PREFIX_UNIX + "unix");
+    sa_un = make_sa_un("");
+    BOOST_CHECK_EQUAL(set(sa_un, offset + 1), ADDR_PREFIX_UNIX + "unix");
+    BOOST_CHECK_EQUAL(set(sa_un, sizeof(sa_un)), ADDR_PREFIX_UNIX + "unix");
+
+    // sun_path filled entirely with no terminator can't be represented, fail gracefully
+    sa_un = make_sa_un(std::string(max_path_len + 1, 'a'));
+    BOOST_CHECK_EQUAL(set(sa_un, sizeof(sa_un)), "");
+    sa_un = make_sa_un(std::string(max_path_len, 'a'));
+    BOOST_CHECK_EQUAL(set(sa_un, sizeof(sa_un)), ADDR_PREFIX_UNIX + std::string(max_path_len, 'a'));
+
+    // Wrong address family
+    sa_un = make_sa_un(path);
+    sa_un.sun_family = AF_INET;
+    BOOST_CHECK_EQUAL(set(sa_un, sizeof(sa_un)), "");
+}
+#endif // HAVE_SOCKADDR_UN
+
+BOOST_AUTO_TEST_CASE(unix_socket_value)
+{
+    // Classification is purely syntactic
+    BOOST_CHECK(IsUnixSocketValue("unix:/tmp/a.sock", /*allow_default=*/false));
+    BOOST_CHECK(IsUnixSocketValue("unix:8080", /*allow_default=*/false));
+    BOOST_CHECK(IsUnixSocketValue("unix:/tmp/a:b.sock", /*allow_default=*/false));
+    BOOST_CHECK(IsUnixSocketValue("unix:", /*allow_default=*/false));
+    BOOST_CHECK(!IsUnixSocketValue("unix", /*allow_default=*/false));
+    BOOST_CHECK(IsUnixSocketValue("unix", /*allow_default=*/true));
+    BOOST_CHECK(!IsUnixSocketValue("unixfoo", /*allow_default=*/true));
+    BOOST_CHECK(!IsUnixSocketValue("127.0.0.1:8332", /*allow_default=*/true));
+    BOOST_CHECK(!IsUnixSocketValue("", /*allow_default=*/true));
+
+    const fs::path datadir{fs::PathFromString("/data/regtest")};
+    {
+        const auto not_unix{ResolveUnixSocketAddr("127.0.0.1", datadir, "http.sock")};
+        BOOST_REQUIRE(!not_unix);
+        BOOST_CHECK_EQUAL(not_unix.error(), "'127.0.0.1' is not a unix socket address");
+    }
+#ifdef HAVE_SOCKADDR_UN
+    // Returns the resolved ToStringAddrPort(), or "" on failure
+    const auto resolve{[&](std::string_view value) {
+        const auto addr{ResolveUnixSocketAddr(value, datadir, "http.sock")};
+        return addr ? addr->ToStringAddrPort() : std::string{};
+    }};
+    // The keyword selects the default name in datadir, as for -ipcbind
+    BOOST_CHECK_EQUAL(resolve("unix"), "unix:/data/regtest/http.sock");
+    BOOST_CHECK_EQUAL(resolve("unix:"), "unix:/data/regtest/http.sock");
+    // Relative paths are interpreted relative to datadir
+    BOOST_CHECK_EQUAL(resolve("unix:rpc.sock"), "unix:/data/regtest/rpc.sock");
+    BOOST_CHECK_EQUAL(resolve("unix:sub/rpc.sock"), "unix:/data/regtest/sub/rpc.sock");
+    BOOST_CHECK_EQUAL(resolve("unix:8080"), "unix:/data/regtest/8080");
+    // Absolute paths are used as is
+    BOOST_CHECK_EQUAL(resolve("unix:/tmp/rpc.sock"), "unix:/tmp/rpc.sock");
+
+    // The datadir prefix counts toward the path length limit...
+    const size_t max_path_len{sizeof(sockaddr_un::sun_path) - 1};
+    const std::string longest_name(max_path_len - fs::PathToString(datadir).size() - 1, 'a');
+    BOOST_CHECK_EQUAL(resolve("unix:" + longest_name), "unix:/data/regtest/" + longest_name);
+    BOOST_CHECK_EQUAL(resolve("unix:" + longest_name + "a"), "");
+    {
+        const auto too_long{ResolveUnixSocketAddr("unix:" + longest_name + "a", datadir, "http.sock")};
+        BOOST_REQUIRE(!too_long);
+        BOOST_CHECK(too_long.error().find("exceeds the maximum unix socket path length") != std::string::npos);
+        // The error names the resolved path, including the datadir prefix
+        BOOST_CHECK(too_long.error().find("/data/regtest/" + longest_name + "a") != std::string::npos);
+    }
+    // ...but not for an absolute path
+    const std::string longest_abs{"/" + std::string(max_path_len - 1, 'a')};
+    BOOST_CHECK_EQUAL(resolve("unix:" + longest_abs), "unix:" + longest_abs);
+    BOOST_CHECK_EQUAL(resolve("unix:" + longest_abs + "a"), "");
+#else
+    const auto unsupported{ResolveUnixSocketAddr("unix", datadir, "http.sock")};
+    BOOST_REQUIRE(!unsupported);
+    BOOST_CHECK_EQUAL(unsupported.error(), "unix sockets are not supported on this platform");
+#endif
+}
+
+BOOST_AUTO_TEST_CASE(socket_addr)
+{
+    const CService ipv4{LookupNumeric("142.250.217.142", 8333)};
+    const CService ipv6{LookupNumeric("2607:f8b0:4006:80f::200e", 8333)};
+
+    sockaddr_storage storage;
+    auto* paddr{reinterpret_cast<sockaddr*>(&storage)};
+    socklen_t len{sizeof(storage)};
+
+    // Default-constructed holds an invalid CService
+    const SocketAddr empty;
+    BOOST_CHECK(!empty.IsValid());
+    BOOST_CHECK(!empty.IsUnix());
+    // CService default values
+    BOOST_CHECK_EQUAL(empty.GetSAFamily(), AF_INET6);
+    BOOST_CHECK(empty.GetSockAddr(paddr, &len));
+
+    // IP addresses delegate to CService
+    for (const CService& ip : {ipv4, ipv6}) {
+        const SocketAddr addr{ip};
+        BOOST_CHECK(addr.IsValid());
+        BOOST_CHECK(!addr.IsUnix());
+        BOOST_CHECK_EQUAL(addr.GetSAFamily(), ip.GetSAFamily());
+        BOOST_CHECK_EQUAL(addr.ToStringAddrPort(), ip.ToStringAddrPort());
+        BOOST_CHECK_EQUAL(addr.GetHost(), ip.ToStringAddr());
+        BOOST_CHECK(addr.GetCNetAddr() == static_cast<CNetAddr>(ip));
+    }
+    BOOST_CHECK_EQUAL(SocketAddr{ipv4}.GetHost(), "142.250.217.142");
+    BOOST_CHECK_EQUAL(SocketAddr{ipv6}.GetHost(), "2607:f8b0:4006:80f::200e");
+    BOOST_CHECK_EQUAL(SocketAddr{ipv6}.ToStringAddrPort(), "[2607:f8b0:4006:80f::200e]:8333");
+
+#ifdef HAVE_SOCKADDR_UN
+    // Unix socket addresses delegate to UnixSocketAddr
+    const UnixSocketAddr unix_addr{"unix:/tmp/bitcoin.sock"};
+    {
+        const SocketAddr addr{unix_addr};
+        BOOST_CHECK(addr.IsValid());
+        BOOST_CHECK(addr.IsUnix());
+        BOOST_CHECK_EQUAL(addr.GetSAFamily(), AF_UNIX);
+        BOOST_CHECK_EQUAL(addr.ToStringAddrPort(), "unix:/tmp/bitcoin.sock");
+        BOOST_CHECK_EQUAL(addr.GetHost(), "localhost");
+        BOOST_CHECK(!addr.GetCNetAddr().IsValid());
+        BOOST_CHECK(addr.GetCNetAddr() == CNetAddr{});
+    }
+
+    // SetSockAddr() switches between alternatives in both directions
+    SocketAddr addr{ipv4};
+    len = sizeof(storage);
+    BOOST_REQUIRE(unix_addr.GetSockAddr(paddr, &len));
+    BOOST_REQUIRE(addr.SetSockAddr(paddr, len));
+    BOOST_CHECK(addr.IsUnix());
+    BOOST_CHECK_EQUAL(addr.ToStringAddrPort(), unix_addr.ToStringAddrPort());
+
+    len = sizeof(storage);
+    BOOST_REQUIRE(ipv6.GetSockAddr(paddr, &len));
+    BOOST_REQUIRE(addr.SetSockAddr(paddr, len));
+    BOOST_CHECK(!addr.IsUnix());
+    BOOST_CHECK(addr.IsIPv6());
+    BOOST_CHECK_EQUAL(addr.ToStringAddrPort(), ipv6.ToStringAddrPort());
+
+    // A failed SetSockAddr() leaves the unix address unchanged
+    addr = SocketAddr{unix_addr};
+    len = sizeof(storage);
+    BOOST_REQUIRE(unix_addr.GetSockAddr(paddr, &len));
+    BOOST_CHECK(!addr.SetSockAddr(paddr, len + 1));
+    BOOST_CHECK_EQUAL(addr.ToStringAddrPort(), unix_addr.ToStringAddrPort());
+#endif
+
+    // A failed SetSockAddr() leaves the IP address unchanged
+    SocketAddr ip_addr{ipv4};
+    len = sizeof(storage);
+    BOOST_REQUIRE(ipv4.GetSockAddr(paddr, &len));
+    BOOST_CHECK(!ip_addr.SetSockAddr(paddr, len - 1));
+    std::memset(&storage, 0, sizeof(storage));
+    paddr->sa_family = AF_UNSPEC;
+    BOOST_CHECK(!ip_addr.SetSockAddr(paddr, sizeof(storage)));
+    BOOST_CHECK_EQUAL(ip_addr.ToStringAddrPort(), ipv4.ToStringAddrPort());
+}
+
+/** A Sock whose Connect() always fails with ECONNREFUSED */
+class ConnectFailingSock : public ZeroSock
+{
+public:
+    int Connect(const sockaddr*, socklen_t) const override
+    {
+        errno = ECONNREFUSED;
+        return SOCKET_ERROR;
+    }
+private:
+    using Sock::operator=;
+};
+
+/** A ZeroSock that records how it was created and the address passed to Connect() */
+class ConnectRecordingSock : public ZeroSock
+{
+public:
+    ConnectRecordingSock(int domain, int type, int protocol)
+        : m_domain{domain}, m_type{type}, m_protocol{protocol} {}
+
+    int Connect(const sockaddr* addr, socklen_t len) const override
+    {
+        m_connected_len = std::min<socklen_t>(len, sizeof(m_connected_addr));
+        std::memcpy(&m_connected_addr, addr, m_connected_len);
+        return 0;
+    }
+
+    const int m_domain;
+    const int m_type;
+    const int m_protocol;
+    // Written by Connect(), which is const
+    mutable sockaddr_storage m_connected_addr{};
+    mutable socklen_t m_connected_len{0};
+private:
+    using Sock::operator=;
+};
+
+struct ConnectRecordingSockTestingSetup : public SocketTestingSetup {
+    ConnectRecordingSockTestingSetup()
+    {
+        CreateSock = [](int d, int t, int p) -> std::unique_ptr<Sock> {
+            return std::make_unique<ConnectRecordingSock>(d, t, p);
+        };
+    }
+};
+
+/**
+ * Checks that Connect() creates the expected kind of socket and connects it
+ * to the sockaddr described by expected_addr. Requires CreateSock to return
+ * a ConnectRecordingSock.
+ */
+template <typename T>
+static void CheckConnect(const T& connectable, int expected_domain, int expected_protocol, const std::string& expected_addr)
+{
+    const auto sock{connectable.Connect()};
+    BOOST_REQUIRE(sock != nullptr);
+    const auto* recording_sock{dynamic_cast<const ConnectRecordingSock*>(sock.get())};
+    BOOST_REQUIRE(recording_sock != nullptr);
+    BOOST_CHECK_EQUAL(recording_sock->m_domain, expected_domain);
+    BOOST_CHECK_EQUAL(recording_sock->m_type, SOCK_STREAM);
+    BOOST_CHECK_EQUAL(recording_sock->m_protocol, expected_protocol);
+    SocketAddr connected;
+    BOOST_REQUIRE(connected.SetSockAddr(reinterpret_cast<const sockaddr*>(&recording_sock->m_connected_addr), recording_sock->m_connected_len));
+    BOOST_CHECK_EQUAL(connected.ToStringAddrPort(), expected_addr);
+}
+
+BOOST_FIXTURE_TEST_CASE(socket_addr_connect, ConnectRecordingSockTestingSetup)
+{
+    const SocketAddr ipv4{LookupNumeric("142.250.217.142", 8333)};
+    CheckConnect(ipv4, AF_INET, IPPROTO_TCP, ipv4.ToStringAddrPort());
+    const SocketAddr ipv6{LookupNumeric("2607:f8b0:4006:80f::200e", 8333)};
+    CheckConnect(ipv6, AF_INET6, IPPROTO_TCP, ipv6.ToStringAddrPort());
+#ifdef HAVE_SOCKADDR_UN
+    const SocketAddr unix_addr{UnixSocketAddr{"unix:/tmp/bitcoin.sock"}};
+    CheckConnect(unix_addr, AF_UNIX, 0, unix_addr.ToStringAddrPort());
+#endif
+
+    // Invalid address doesn't even create a socket
+    BOOST_CHECK(SocketAddr{}.Connect() == nullptr);
+
+    // Failure to create a socket is handled
+    CreateSock = [](int, int, int) -> std::unique_ptr<Sock> { return nullptr; };
+    BOOST_CHECK(SocketAddr{LookupNumeric("142.250.217.142", 8333)}.Connect() == nullptr);
+#ifdef HAVE_SOCKADDR_UN
+    BOOST_CHECK(SocketAddr{UnixSocketAddr{"unix:/tmp/bitcoin.sock"}}.Connect() == nullptr);
+#endif
+}
+
+BOOST_FIXTURE_TEST_CASE(proxy_api, ConnectRecordingSockTestingSetup)
+{
+    // Default-constructed proxy is invalid and can't connect
+    const Proxy empty;
+    BOOST_CHECK(!empty.IsValid());
+    BOOST_CHECK(!empty.m_tor_stream_isolation);
+    BOOST_CHECK(empty.Connect() == nullptr);
+    // An invalid CService makes an invalid proxy
+    BOOST_CHECK(!Proxy{CService{}}.IsValid());
+    BOOST_CHECK(Proxy{CService{}}.Connect() == nullptr);
+
+    // IP proxies
+    const CService ipv4{LookupNumeric("127.0.0.1", 9050)};
+    const CService ipv6{LookupNumeric("::1", 9050)};
+    const Proxy proxy4{ipv4};
+    BOOST_CHECK(proxy4.IsValid());
+    BOOST_CHECK_EQUAL(proxy4.GetSAFamily(), AF_INET);
+    BOOST_CHECK_EQUAL(proxy4.ToString(), "127.0.0.1:9050");
+    CheckConnect(proxy4, AF_INET, IPPROTO_TCP, "127.0.0.1:9050");
+
+    const Proxy proxy6{ipv6};
+    BOOST_CHECK(proxy6.IsValid());
+    BOOST_CHECK_EQUAL(proxy6.GetSAFamily(), AF_INET6);
+    BOOST_CHECK_EQUAL(proxy6.ToString(), "[::1]:9050");
+    CheckConnect(proxy6, AF_INET6, IPPROTO_TCP, "[::1]:9050");
+
+    const std::string path{"unix:/tmp/tor/socks.sock"};
+#ifdef HAVE_SOCKADDR_UN
+    // Unix socket proxies
+    const Proxy proxy_unix{UnixSocketAddr(path)};
+    BOOST_CHECK(proxy_unix.IsValid());
+    BOOST_CHECK_EQUAL(proxy_unix.GetSAFamily(), AF_UNIX);
+    BOOST_CHECK_EQUAL(proxy_unix.ToString(), path);
+    CheckConnect(proxy_unix, AF_UNIX, 0, path);
+
+    // A path without the "unix:" prefix, or too long for sun_path, is invalid
+    for (const std::string& bad_path : {std::string{"/tmp/tor/socks.sock"},
+                                        ADDR_PREFIX_UNIX + std::string(sizeof(sockaddr_un::sun_path), 'a')}) {
+        const Proxy bad{UnixSocketAddr(bad_path)};
+        BOOST_CHECK(!bad.IsValid());
+        BOOST_CHECK_EQUAL(bad.GetSAFamily(), AF_UNIX);
+        BOOST_CHECK_EQUAL(bad.ToString(), bad_path);
+        BOOST_CHECK(bad.Connect() == nullptr);
+    }
+#else
+    // Without unix socket support every unix path is invalid
+    const Proxy proxy_unix{UnixSocketAddr(path)};
+    BOOST_CHECK(!proxy_unix.IsValid());
+    BOOST_CHECK(proxy_unix.Connect() == nullptr);
+#endif
+
+    // The isolation flag is stored and doesn't affect the address
+    for (const bool isolation : {false, true}) {
+        BOOST_CHECK_EQUAL(Proxy(ipv4, isolation).m_tor_stream_isolation, isolation);
+        BOOST_CHECK_EQUAL(Proxy(ipv6, isolation).m_tor_stream_isolation, isolation);
+        BOOST_CHECK_EQUAL(Proxy(UnixSocketAddr(path), isolation).m_tor_stream_isolation, isolation);
+        BOOST_CHECK_EQUAL(Proxy(ipv4, isolation).ToString(), proxy4.ToString());
+        BOOST_CHECK_EQUAL(Proxy(UnixSocketAddr(path), isolation).ToString(), proxy_unix.ToString());
+    }
+
+    // Failure to connect is handled: no half-initialized socket is returned
+    CreateSock = [](int, int, int) -> std::unique_ptr<Sock> { return std::make_unique<ConnectFailingSock>(); };
+    BOOST_CHECK(proxy4.Connect() == nullptr);
+    BOOST_CHECK(proxy6.Connect() == nullptr);
+#ifdef HAVE_SOCKADDR_UN
+    BOOST_CHECK(proxy_unix.Connect() == nullptr);
+#endif
+
+    // Failure to create a socket is handled
+    CreateSock = [](int, int, int) -> std::unique_ptr<Sock> { return nullptr; };
+    BOOST_CHECK(proxy4.Connect() == nullptr);
+#ifdef HAVE_SOCKADDR_UN
+    BOOST_CHECK(proxy_unix.Connect() == nullptr);
+#endif
+}
 
 BOOST_AUTO_TEST_CASE(asmap_test_vectors)
 {

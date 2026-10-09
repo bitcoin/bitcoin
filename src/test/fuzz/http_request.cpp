@@ -76,7 +76,7 @@ void SingleShotParse(const std::string& http_buffer, FuzzedDataProvider& provide
 class FuzzClient : public HTTPRemoteClient
 {
 public:
-    FuzzClient() : HTTPRemoteClient{/*id=*/0, /*addr=*/CService(), /*socket=*/std::make_unique<ZeroSock>()} {}
+    FuzzClient() : HTTPRemoteClient{/*id=*/0, /*addr=*/SocketAddr{}, /*socket=*/std::make_unique<ZeroSock>()} {}
     void Receive(std::string_view s) { MutateRecvBuffer().append(s); }
 };
 

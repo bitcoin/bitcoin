@@ -290,7 +290,7 @@ bool ClientModel::getProxyInfo(std::string& ip_port) const
     const auto ipv4 = m_node.getProxy(NET_IPV4);
     const auto ipv6 = m_node.getProxy(NET_IPV6);
     if (ipv4 && ipv6) {
-        ip_port = ipv4->proxy.ToStringAddrPort();
+        ip_port = ipv4->ToString();
         return true;
     }
     return false;

@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(http_request_state_tests)
     class DummyClient : public HTTPRemoteClient
     {
     public:
-        DummyClient() : HTTPRemoteClient{/*id=*/0, /*addr=*/CService(), /*socket=*/CreateSock(0, 0, 0)} {}
+        DummyClient() : HTTPRemoteClient{/*id=*/0, /*addr=*/SocketAddr{}, /*socket=*/CreateSock(0, 0, 0)} {}
 
         void Receive(std::string_view s)
         {
@@ -797,15 +797,15 @@ BOOST_AUTO_TEST_CASE(http_server_socket_tests)
     server.InitHTTPAllowList();
 
     {
-        // We can only bind to NET_IPV4 and NET_IPV6
-        CService onion_address{Lookup("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaam2dqd.onion", /*portDefault=*/0, /*fAllowLookup=*/false).value()};
+        // We can not bind to an onion address
+        SocketAddr onion_address{Lookup("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaam2dqd.onion", /*portDefault=*/0, /*fAllowLookup=*/false).value()};
         auto result{server.BindAndStartListening(onion_address)};
         BOOST_REQUIRE(!result);
         BOOST_CHECK_EQUAL(result.error(), "Bind address family for aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaam2dqd.onion:0 not supported");
     }
 
     // This VALID address won't actually get used because we stubbed CreateSock()
-    CService addr_bind{Lookup("0.0.0.0", /*portDefault=*/0, /*fAllowLookup=*/false).value()};
+    SocketAddr addr_bind{Lookup("0.0.0.0", /*portDefault=*/0, /*fAllowLookup=*/false).value()};
 
     // Init state
     BOOST_REQUIRE_EQUAL(server.GetListeningSocketCount(), 0);
@@ -970,7 +970,7 @@ BOOST_AUTO_TEST_CASE(http_socket_error_tests)
     };
 
     // Simpler server startup than the last test
-    CService addr_bind{Lookup("0.0.0.0", /*portDefault=*/0, /*fAllowLookup=*/false).value()};
+    SocketAddr addr_bind{Lookup("0.0.0.0", /*portDefault=*/0, /*fAllowLookup=*/false).value()};
     BOOST_REQUIRE(server.BindAndStartListening(addr_bind));
     server.StartSocketsThreads();
 
@@ -1075,7 +1075,7 @@ BOOST_AUTO_TEST_CASE(http_server_rejects_disallowed_client_before_read)
     }};
     BOOST_REQUIRE(server.InitHTTPAllowList());
 
-    CService addr_bind{Lookup("0.0.0.0", /*portDefault=*/0, /*fAllowLookup=*/false).value()};
+    SocketAddr addr_bind{Lookup("0.0.0.0", /*portDefault=*/0, /*fAllowLookup=*/false).value()};
     BOOST_REQUIRE(server.BindAndStartListening(addr_bind));
     server.StartSocketsThreads();
 

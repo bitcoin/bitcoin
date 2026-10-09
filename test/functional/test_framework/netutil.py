@@ -45,6 +45,21 @@ NETWORK_ERRORS = (
     http.client.ResponseNotReady,    # server response not ready or connection out of sync
 )
 
+class UnixHTTPConnection(http.client.HTTPConnection):
+    def __init__(self, hostname, socket_path, timeout=60):
+        # unix socket connections can have any dummy host name
+        super().__init__(hostname)
+        self.socket_path = socket_path
+        self.timeout = timeout
+
+    def connect(self):
+        self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.sock.settimeout(self.timeout)
+        # Increase the socket buffer to ~256 kB, more like a TCP socket.
+        # On macos the default unix socket buffer size is only ~8 kB.
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 1 << 18)
+        self.sock.connect(self.socket_path)
+
 def get_socket_inodes(pid):
     '''
     Get list of socket inodes for process pid.

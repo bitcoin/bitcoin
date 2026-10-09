@@ -8,6 +8,8 @@
 #include <compat/compat.h>
 #include <netaddress.h>
 #include <serialize.h>
+#include <util/expected.h>
+#include <util/fs.h>
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
 
@@ -17,8 +19,11 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <unordered_set>
+#include <utility>
+#include <variant>
 #include <vector>
 
 extern int nConnectTimeout;
@@ -31,6 +36,9 @@ inline constexpr int DEFAULT_NAME_LOOKUP = true;
 
 /** Prefix for unix domain socket addresses (which are local filesystem paths) */
 inline const std::string ADDR_PREFIX_UNIX = "unix:";
+/** File name of the HTTP (JSON-RPC and REST) unix socket in the network data directory,
+ *  selected by -rpcbind=unix and bitcoin-cli -rpcconnect=unix */
+inline const std::string DEFAULT_HTTP_UNIX_SOCKET_NAME = "http.sock";
 
 enum class ConnectionDirection {
     None = 0,
@@ -53,42 +61,203 @@ static inline bool operator&(ConnectionDirection a, ConnectionDirection b) {
  *
  * @param      name     The string provided by the user representing a local path
  *
- * @returns Whether the string has proper format, length, and points to an existing file path
+ * @returns Whether the string has the "unix:" prefix and a path short enough
+ *          to fit in sockaddr_un::sun_path. The filesystem is not consulted.
  */
 bool IsUnixSocketPath(const std::string& name);
 
+/**
+ * Whether an option value names a unix domain socket rather than a host[:port].
+ * Purely syntactic: platform support and path length are not checked. Callers
+ * should classify a value with this before attempting to parse it as host:port,
+ * because some unix socket values (e.g. "unix:8080") are also valid host:port.
+ *
+ * @param[in] value          The option value
+ * @param[in] allow_default  Also accept the bare keyword "unix", meaning a default path
+ */
+bool IsUnixSocketValue(std::string_view value, bool allow_default);
+
+/**
+ * A UNIX domain socket address (a local filesystem path), exposing the subset
+ * of the CService API needed to create, bind and connect sockets.
+ *
+ * Like CService, an instance may be invalid: constructing from a string that
+ * is not a valid "unix:" path (see IsUnixSocketPath()) yields an object for
+ * which IsValid() returns false. Callers must check IsValid() before use.
+ */
+class UnixSocketAddr
+{
+public:
+    UnixSocketAddr() = default;
+    /** @param[in] path Full address string including the "unix:" prefix */
+    explicit UnixSocketAddr(std::string path) : m_path(std::move(path)) {}
+
+    [[nodiscard]] bool IsValid() const { return IsUnixSocketPath(m_path); }
+    [[nodiscard]] sa_family_t GetSAFamily() const { return AF_UNIX; }
+    /** The full address string including the "unix:" prefix.
+     *  Unix sockets don't have a port but we like to match the CService API. */
+    [[nodiscard]] std::string ToStringAddrPort() const { return m_path; }
+    /**
+     * Fill a sockaddr_un with this address.
+     * @param[out]    paddr   Buffer to fill, must be at least sizeof(sockaddr_un)
+     * @param[in,out] addrlen Capacity of paddr on input, bytes written on output
+     * @returns false if the address is invalid or the buffer is too small
+     */
+    bool GetSockAddr(struct sockaddr* paddr, socklen_t* addrlen) const;
+    /**
+     * Set this address from a sockaddr_un as returned by accept().
+     * @returns false if the family or length is wrong, or if the path fills
+     *          sun_path entirely leaving no room for a terminator
+     */
+    bool SetSockAddr(const struct sockaddr* paddr, socklen_t addrlen);
+    /** The filesystem path without the "unix:" prefix, or "" if invalid */
+    [[nodiscard]] std::string GetDestString() const
+    {
+        if (!IsValid()) return {};
+        return m_path.substr(ADDR_PREFIX_UNIX.length());
+    }
+    [[nodiscard]] bool IsIPv4() const { return false; }
+    [[nodiscard]] bool IsIPv6() const { return false; }
+
+    /**
+     * Prepare the filesystem for bind(): create missing parent directories and
+     * remove a stale socket file left by a previous run. Fails if the path
+     * exists and is anything other than a socket, so that a misconfigured path
+     * never deletes a user's file.
+     * @returns an error message on failure
+     */
+    util::Expected<void, std::string> PreparePath() const;
+
+private:
+    std::string m_path;
+};
+
+/**
+ * Resolve a unix socket option value the same way as -ipcbind:
+ * "unix" or "unix:" select <datadir>/<default_name>, a relative "unix:<path>"
+ * is interpreted relative to datadir, and an absolute "unix:<path>" is used as is.
+ *
+ * @param[in] value         The option value, see IsUnixSocketValue()
+ * @param[in] datadir       Directory that relative paths and the default name are resolved against
+ * @param[in] default_name  File name used for the bare "unix" keyword
+ * @returns the resolved address, or an error message if value is not a unix
+ *          socket value, unix sockets are not supported on this platform, or
+ *          the resolved path is too long for sockaddr_un::sun_path
+ */
+util::Expected<UnixSocketAddr, std::string> ResolveUnixSocketAddr(std::string_view value, const fs::path& datadir, std::string_view default_name);
+
+/**
+ * A socket endpoint that is either an IP address and port (CService) or a
+ * UNIX domain socket path (UnixSocketAddr), with a uniform API for creating,
+ * binding and connecting sockets. Unlike CService it carries no bitcoin p2p
+ * properties (network type, reachability, etc).
+ *
+ * A default-constructed SocketAddr holds an invalid CService.
+ */
+class SocketAddr
+{
+public:
+    SocketAddr() = default;
+    explicit SocketAddr(const CService& addr) : m_addr(addr) {}
+    explicit SocketAddr(const UnixSocketAddr& addr) : m_addr(addr) {}
+
+    [[nodiscard]] bool IsValid() const
+    {
+        return std::visit([](const auto& addr) { return addr.IsValid(); }, m_addr);
+    }
+
+    [[nodiscard]] bool IsIPv4() const
+    {
+        return std::visit([](const auto& addr) { return addr.IsIPv4(); }, m_addr);
+    }
+
+    [[nodiscard]] bool IsIPv6() const
+    {
+        return std::visit([](const auto& addr) { return addr.IsIPv6(); }, m_addr);
+    }
+
+    /** Whether this holds a UnixSocketAddr (valid or not) */
+    [[nodiscard]] bool IsUnix() const
+    {
+        return std::holds_alternative<UnixSocketAddr>(m_addr);
+    }
+
+    [[nodiscard]] sa_family_t GetSAFamily() const
+    {
+        return std::visit([](const auto& addr) { return addr.GetSAFamily(); }, m_addr);
+    }
+
+    [[nodiscard]] std::string ToStringAddrPort() const
+    {
+        return std::visit([](const auto& addr) { return addr.ToStringAddrPort(); }, m_addr);
+    }
+
+    /** The filesystem path for a UNIX socket address, without the "unix:" prefix. Empty for IP addresses. */
+    [[nodiscard]] std::string GetUnixPath() const
+    {
+        if (const auto* addr = std::get_if<UnixSocketAddr>(&m_addr)) {
+            return addr->GetDestString();
+        }
+        return {};
+    }
+
+    bool GetSockAddr(struct sockaddr* paddr, socklen_t* addrlen) const
+    {
+        return std::visit([paddr, addrlen](const auto& addr) { return addr.GetSockAddr(paddr, addrlen); }, m_addr);
+    }
+
+    /**
+     * Set this address from a sockaddr, selecting the alternative by
+     * sa_family. On failure the current value is left unchanged.
+     */
+    bool SetSockAddr(const struct sockaddr* paddr, socklen_t addrlen);
+
+    /** Connect directly (no proxy) with the default -timeout */
+    std::unique_ptr<Sock> Connect() const;
+    /** Connect directly (no proxy). Returns nullptr if invalid or on failure. */
+    std::unique_ptr<Sock> Connect(std::chrono::milliseconds timeout) const;
+    /**
+     * The IP address without the port, for subnet matching. Returns a
+     * default (invalid) CNetAddr for a UNIX socket address.
+     */
+    [[nodiscard]] CNetAddr GetCNetAddr() const;
+    /**
+     * A hostname suitable for an HTTP Host header: the IP address without
+     * port (IPv6 is not bracketed), or "localhost" for a UNIX socket address.
+     */
+    [[nodiscard]] std::string GetHost() const;
+
+    /** See UnixSocketAddr::PreparePath(). No-op (success) for an IP address. */
+    util::Expected<void, std::string> PreparePath() const;
+
+private:
+    std::variant<CService, UnixSocketAddr> m_addr;
+};
+
+/**
+ * A SOCKS5 proxy endpoint: an IP address and port or a UNIX socket path, plus
+ * whether to request Tor stream isolation (random credentials per connection).
+ */
 class Proxy
 {
 public:
-    Proxy() : m_is_unix_socket(false), m_tor_stream_isolation(false) {}
-    explicit Proxy(const CService& _proxy, bool tor_stream_isolation = false) : proxy(_proxy), m_is_unix_socket(false), m_tor_stream_isolation(tor_stream_isolation) {}
-    explicit Proxy(std::string path, bool tor_stream_isolation = false)
-        : m_unix_socket_path(std::move(path)), m_is_unix_socket(true), m_tor_stream_isolation(tor_stream_isolation) {}
+    Proxy() = default;
+    explicit Proxy(const SocketAddr& proxy, bool tor_stream_isolation = false) : m_tor_stream_isolation(tor_stream_isolation), m_proxy(proxy) {}
+    explicit Proxy(const CService& addr, bool tor_stream_isolation = false) : m_tor_stream_isolation(tor_stream_isolation), m_proxy(addr) {}
+    explicit Proxy(const UnixSocketAddr& addr, bool tor_stream_isolation = false) : m_tor_stream_isolation(tor_stream_isolation), m_proxy(addr) {}
 
-    CService proxy;
-    std::string m_unix_socket_path;
-    bool m_is_unix_socket;
-    bool m_tor_stream_isolation;
+    bool m_tor_stream_isolation{false};
 
-    bool IsValid() const
-    {
-        if (m_is_unix_socket) return IsUnixSocketPath(m_unix_socket_path);
-        return proxy.IsValid();
-    }
+    [[nodiscard]] bool IsValid() const { return m_proxy.IsValid(); }
+    [[nodiscard]] sa_family_t GetSAFamily() const { return m_proxy.GetSAFamily(); }
+    [[nodiscard]] std::string ToString() const { return m_proxy.ToStringAddrPort(); }
+    std::unique_ptr<Sock> Connect() const { return m_proxy.Connect(); }
+    /** The proxy IP address without port, or an invalid CNetAddr for a UNIX socket proxy */
+    [[nodiscard]] CNetAddr GetCNetAddr() const { return m_proxy.GetCNetAddr(); }
 
-    sa_family_t GetFamily() const
-    {
-        if (m_is_unix_socket) return AF_UNIX;
-        return proxy.GetSAFamily();
-    }
-
-    std::string ToString() const
-    {
-        if (m_is_unix_socket) return m_unix_socket_path;
-        return proxy.ToStringAddrPort();
-    }
-
-    std::unique_ptr<Sock> Connect() const;
+private:
+    //! Default-constructed SocketAddr holds an invalid CService
+    SocketAddr m_proxy;
 };
 
 /** Credentials for proxy authentication */

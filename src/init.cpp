@@ -494,6 +494,14 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     const auto signetChainParams = CreateChainParams(argsman, ChainType::SIGNET);
     const auto regtestChainParams = CreateChainParams(argsman, ChainType::REGTEST);
 
+#ifdef HAVE_SOCKADDR_UN
+    const std::string socketaddr_values = "<ip>[:<port>]|unix:<path>";
+    const std::string doc_for_unix_socket = "May be a local file path prefixed with 'unix:'. ";
+#else
+    const std::string socketaddr_values = "<ip>[:<port>]";
+    const std::string doc_for_unix_socket = "";
+#endif
+
     // Hidden Options
     std::vector<std::string> hidden_args = {
         "-dbcrashratio", "-forcecompactdb",
@@ -586,11 +594,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-maxreceivebuffer=<n>", strprintf("Maximum per-connection receive buffer, <n>*1000 bytes (default: %u)", DEFAULT_MAXRECEIVEBUFFER), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-maxsendbuffer=<n>", strprintf("Maximum per-connection memory usage for the send buffer, <n>*1000 bytes (default: %u)", DEFAULT_MAXSENDBUFFER), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-maxuploadtarget=<n>", strprintf("Tries to keep outbound traffic under the given target per 24h. Limit does not apply to peers with 'download' permission or blocks created within past week. 0 = no limit (default: %s). Optional suffix units [k|K|m|M|g|G|t|T] (default: M). Lowercase is 1000 base while uppercase is 1024 base", DEFAULT_MAX_UPLOAD_TARGET), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
-#ifdef HAVE_SOCKADDR_UN
-    argsman.AddArg("-onion=<ip:port|path>", "Use separate SOCKS5 proxy to reach peers via Tor onion services, set -noonion to disable (default: -proxy). May be a local file path prefixed with 'unix:'.", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
-#else
-    argsman.AddArg("-onion=<ip:port>", "Use separate SOCKS5 proxy to reach peers via Tor onion services, set -noonion to disable (default: -proxy)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
-#endif
+    argsman.AddArg("-onion=" + socketaddr_values, "Use separate SOCKS5 proxy to reach peers via Tor onion services, set -noonion to disable (default: -proxy). " + doc_for_unix_socket, ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-i2psam=<ip:port>", "I2P SAM proxy to reach I2P peers and accept I2P connections", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-i2pacceptincoming", strprintf("Whether to accept inbound I2P connections (default: %i). Ignored if -i2psam is not set. Listening for inbound I2P connections is done through the SAM proxy, not by binding to a local address and port.", DEFAULT_I2P_ACCEPT_INCOMING), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-onlynet=<net>", "Make automatic outbound connections only to network <net> (" + Join(GetNetworkNames(), ", ") + "). Inbound and manual connections are not affected by this option. It can be specified multiple times to allow multiple networks.", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -599,21 +603,9 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-peerblockfilters", strprintf("Serve compact block filters to peers per BIP 157 (default: %u)", DEFAULT_PEERBLOCKFILTERS), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-txreconciliation", strprintf("Enable transaction reconciliations per BIP 330 (default: %d)", DEFAULT_TXRECONCILIATION_ENABLE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-port=<port>", strprintf("Listen for connections on <port> (default: %u, testnet3: %u, testnet4: %u, signet: %u, regtest: %u). Not relevant for I2P (see doc/i2p.md). If set to a value x, the default onion listening port will be set to x+1.", defaultChainParams->GetDefaultPort(), testnetChainParams->GetDefaultPort(), testnet4ChainParams->GetDefaultPort(), signetChainParams->GetDefaultPort(), regtestChainParams->GetDefaultPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
-    const std::string proxy_doc_for_value =
-#ifdef HAVE_SOCKADDR_UN
-        "<ip>[:<port>]|unix:<path>";
-#else
-        "<ip>[:<port>]";
-#endif
-    const std::string proxy_doc_for_unix_socket =
-#ifdef HAVE_SOCKADDR_UN
-        "May be a local file path prefixed with 'unix:' if the proxy supports it. ";
-#else
-        "";
-#endif
-    argsman.AddArg("-proxy=" + proxy_doc_for_value + "[=<network>]",
+    argsman.AddArg("-proxy=" + socketaddr_values + "[=<network>]",
                    "Connect through SOCKS5 proxy, set -noproxy to disable. " +
-                   proxy_doc_for_unix_socket +
+                   doc_for_unix_socket +
                    "Could end in =network to set the proxy only for that network. " +
                    "The network can be any of ipv4, ipv6, tor or cjdns. " +
                    "(default: disabled)",
@@ -736,7 +728,28 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-rest", strprintf("Accept public REST requests (default: %u)", DEFAULT_REST_ENABLE), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-rpcallowip=<ip>", "Allow JSON-RPC connections from specified source. Valid values for <ip> are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0), a network/CIDR (e.g. 1.2.3.4/24), all ipv4 (0.0.0.0/0), or all ipv6 (::/0). RFC4193 is allowed only if -cjdnsreachable=0. This option can be specified multiple times", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-rpcauth=<userpw>", "Username and HMAC-SHA-256 hashed password for JSON-RPC connections. The field <userpw> comes in the format: <USERNAME>:<SALT>$<HASH>. A canonical python script is included in share/rpcauth. The client then connects normally using the rpcuser=<USERNAME>/rpcpassword=<PASSWORD> pair of arguments. This option can be specified multiple times", ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE, OptionsCategory::RPC);
-    argsman.AddArg("-rpcbind=<addr>[:port]", "Bind to given address to listen for JSON-RPC connections. Do not expose the RPC server to untrusted networks such as the public internet! This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost)", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::RPC);
+#ifdef HAVE_SOCKADDR_UN
+    argsman.AddArg("-rpcbind=<ip>[:<port>]|unix[:<path>]",
+                   "Bind to given address to listen for JSON-RPC connections. "
+                   "Do not expose the RPC server to untrusted networks such as the public internet! "
+                   "This option is ignored unless all values are unix sockets, or -rpcallowip is also passed. "
+                   "Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. " +
+                   strprintf("A unix socket is specified as \"unix\" to listen on the default path, <datadir>/%s, "
+                             "or \"unix:/custom/path\" to specify a custom path. "
+                             "If relative paths are specified, they are interpreted relative to the network data directory. "
+                             "If paths include any parent directory components and the parent directories do not exist, they will be created. ",
+                             DEFAULT_HTTP_UNIX_SOCKET_NAME) +
+                   "This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost)",
+                   ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::RPC);
+#else
+    argsman.AddArg("-rpcbind=<ip>[:<port>]",
+                   "Bind to given address to listen for JSON-RPC connections. "
+                   "Do not expose the RPC server to untrusted networks such as the public internet! "
+                   "This option is ignored unless -rpcallowip is also passed. "
+                   "Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. "
+                   "This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost)",
+                   ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::RPC);
+#endif
     argsman.AddArg("-rpcdoccheck", strprintf("Throw a non-fatal error at runtime if the documentation for an RPC is incorrect (default: %u)", DEFAULT_RPC_DOC_CHECK), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
     argsman.AddArg("-rpccookiefile=<loc>", "Location of the auth cookie. Relative paths will be prefixed by a net-specific datadir location. (default: data dir)", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-rpccookieperms=<readable-by>", strprintf("Set permissions on the RPC auth cookie file so that it is readable by [owner|group|all] (default: owner [via umask 0077])"), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
@@ -1324,35 +1337,46 @@ bool CheckHostPortOptions(const ArgsManager& args) {
         }
     }
 
-    for ([[maybe_unused]] const auto& [param_name, unix, suffix_allowed] : std::vector<std::tuple<std::string, bool, bool>>{
-        // arg name          UNIX socket support  =suffix allowed
-        {"-i2psam",          false,               false},
-        {"-onion",           true,                false},
-        {"-proxy",           true,                true},
-        {"-bind",            false,               true},
-        {"-rpcbind",         false,               false},
-        {"-torcontrol",      false,               false},
-        {"-whitebind",       false,               false},
-        {"-zmqpubhashblock", true,                false},
-        {"-zmqpubhashtx",    true,                false},
-        {"-zmqpubrawblock",  true,                false},
-        {"-zmqpubrawtx",     true,                false},
-        {"-zmqpubsequence",  true,                false},
+    // How an option accepts unix domain sockets
+    enum class UnixSupport {
+        NO,      //!< host[:port] only
+        PATH,    //!< also unix:<path>
+        KEYWORD, //!< also the bare keyword "unix" for a default path (see ResolveUnixSocketAddr())
+    };
+    for ([[maybe_unused]] const auto& [param_name, unix_support, suffix_allowed] : std::vector<std::tuple<std::string, UnixSupport, bool>>{
+        // arg name          UNIX socket support    =suffix allowed
+        {"-i2psam",          UnixSupport::NO,       false},
+        {"-onion",           UnixSupport::PATH,     false},
+        {"-proxy",           UnixSupport::PATH,     true},
+        {"-bind",            UnixSupport::NO,       true},
+        {"-rpcbind",         UnixSupport::KEYWORD,  false},
+        {"-torcontrol",      UnixSupport::NO,       false},
+        {"-whitebind",       UnixSupport::NO,       false},
+        {"-zmqpubhashblock", UnixSupport::PATH,     false},
+        {"-zmqpubhashtx",    UnixSupport::PATH,     false},
+        {"-zmqpubrawblock",  UnixSupport::PATH,     false},
+        {"-zmqpubrawtx",     UnixSupport::PATH,     false},
+        {"-zmqpubsequence",  UnixSupport::PATH,     false},
     }) {
         for (const std::string& param_value : args.GetArgs(param_name)) {
             const std::string param_value_hostport{
                 suffix_allowed ? param_value.substr(0, param_value.rfind('=')) : param_value};
+            // Classify before parsing as host:port: some unix socket values,
+            // e.g. "unix:8080" or a path containing ':', also parse as host:port.
+            if (unix_support != UnixSupport::NO &&
+                IsUnixSocketValue(param_value_hostport, /*allow_default=*/unix_support == UnixSupport::KEYWORD)) {
+#ifdef HAVE_SOCKADDR_UN
+                // Paths are resolved and validated where the option is consumed
+                continue;
+#else
+                // Without unix socket support the value can only be a malformed host:port
+                return InitError(InvalidPortErrMsg(param_name, param_value));
+#endif
+            }
             std::string host_out;
             uint16_t port_out{0};
             if (!SplitHostPort(param_value_hostport, port_out, host_out)) {
-#ifdef HAVE_SOCKADDR_UN
-                // Allow unix domain sockets for some options e.g. unix:/some/file/path
-                if (!unix || !param_value.starts_with(ADDR_PREFIX_UNIX)) {
-                    return InitError(InvalidPortErrMsg(param_name, param_value));
-                }
-#else
                 return InitError(InvalidPortErrMsg(param_name, param_value));
-#endif
             }
         }
     }
@@ -1803,7 +1827,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         Proxy proxy;
         if (!proxy_str.empty() && proxy_str != "0") {
             if (IsUnixSocketPath(proxy_str)) {
-                proxy = Proxy{proxy_str, /*tor_stream_isolation=*/proxyRandomize};
+                proxy = Proxy{UnixSocketAddr(proxy_str), /*tor_stream_isolation=*/proxyRandomize};
             } else {
                 const std::optional<CService> addr{Lookup(proxy_str, DEFAULT_TOR_SOCKS_PORT, fNameLookup)};
                 if (!addr.has_value()) {
@@ -1859,7 +1883,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             }
         } else {
             if (IsUnixSocketPath(onionArg)) {
-                onion_proxy = Proxy(onionArg, /*tor_stream_isolation=*/proxyRandomize);
+                onion_proxy = Proxy(UnixSocketAddr(onionArg), /*tor_stream_isolation=*/proxyRandomize);
             } else {
                 const std::optional<CService> addr{Lookup(onionArg, DEFAULT_TOR_SOCKS_PORT, fNameLookup)};
                 if (!addr.has_value() || !addr->IsValid()) {
