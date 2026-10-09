@@ -40,6 +40,10 @@ class DeprecatedRpcTest(BitcoinTestFramework):
                 "fakeargument"
             )
 
+            self.log.info("Test confTarget option deprecation")
+            for rpc in (wallet.bumpfee, wallet.psbtbumpfee):
+                assert_raises_rpc_error(-32, "start the RPC server with the `-deprecatedrpc=confTarget`", rpc, "0" * 64, {"confTarget": 1})
+
 
 if __name__ == '__main__':
     DeprecatedRpcTest(__file__).main()
