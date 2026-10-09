@@ -394,10 +394,10 @@ CCoinsViewCache::ResetGuard CoinsViewOverlay::StartFetching(const CBlock& block 
         m_earlier_txids.clear();
         // Only submit tasks if we have something to fetch.
         if (m_inputs.size()) {
-            std::vector<std::function<void()>> tasks(workers_count, [this] {
+            m_tasks.assign(workers_count, [this] {
                 while (ProcessInput()) {}
             });
-            if (auto futures{m_thread_pool->Submit(std::move(tasks))}) {
+            if (auto futures{m_thread_pool->Submit(std::move(m_tasks))}) {
                 m_futures = std::move(*futures);
             } else {
                 // Submit can fail if a shared owner of the thread pool outside of this class calls Stop() or
