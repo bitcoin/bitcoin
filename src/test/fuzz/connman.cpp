@@ -285,7 +285,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 connman.SocketHandlerPublic();
             });
     }
-    connman.ForEachNode([](CNode* pnode) {
+    connman.ForEachFullyConnectedNode([](CNode* pnode) {
         (void)pnode->GetId();
         (void)pnode->IsInboundConn();
         (void)pnode->IsFullOutboundConn();

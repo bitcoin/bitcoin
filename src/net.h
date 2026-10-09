@@ -1283,7 +1283,7 @@ public:
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
 
     using NodeFn = std::function<void(CNode*)>;
-    void ForEachNode(const NodeFn& func) EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex)
+    void ForEachFullyConnectedNode(const NodeFn& func) EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex)
     {
         LOCK(m_nodes_mutex);
         for (auto&& node : m_nodes) {
@@ -1292,7 +1292,7 @@ public:
         }
     };
 
-    void ForEachNode(const NodeFn& func) const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex)
+    void ForEachFullyConnectedNode(const NodeFn& func) const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex)
     {
         LOCK(m_nodes_mutex);
         for (auto&& node : m_nodes) {
@@ -1334,6 +1334,10 @@ public:
     // a peer that is better than all our current peers.
     void SetTryNewOutboundPeer(bool flag);
     bool GetTryNewOutboundPeer() const;
+
+    // Allow one extra full-relay connection to replace a peer not relaying txs.
+    void SetReplaceNoTxRelayPeer(bool flag);
+    bool GetReplaceNoTxRelayPeer() const;
 
     void StartExtraBlockRelayPeers();
 
@@ -1787,6 +1791,10 @@ private:
      *  in excess of m_max_outbound_full_relay
      *  This takes the place of a feeler connection */
     std::atomic_bool m_try_another_outbound_peer;
+
+    /** flag for connecting to an extra outbound peer to replace one that
+     *  is not relaying txs */
+    std::atomic_bool m_replace_no_tx_relay_peer{false};
 
     /** flag for initiating extra block-relay-only peer connections.
      *  this should only be enabled after initial chain sync has occurred,
