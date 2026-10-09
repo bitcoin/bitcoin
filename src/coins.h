@@ -29,6 +29,7 @@
 #include <memory>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -682,6 +683,8 @@ private:
     };
     //! Must only be mutated when m_futures is empty. Elements may be mutated when m_futures is not empty.
     std::vector<InputToFetch> m_inputs{};
+    //! Reuse buckets when identifying spends of outputs created earlier in each block
+    std::unordered_set<Txid, SaltedCoinsCacheHasher> m_earlier_txids;
 
     /**
      * Claim and fetch the next input in the queue.
@@ -756,7 +759,9 @@ protected:
 public:
     explicit CoinsViewOverlay(CCoinsView* in_base, util::NotNullSharedPtr<ThreadPool> thread_pool,
                               bool deterministic = false) noexcept
-        : CCoinsViewCache{in_base, deterministic}, m_thread_pool{std::move(thread_pool)}
+        : CCoinsViewCache{in_base, deterministic},
+          m_earlier_txids{0, SaltedCoinsCacheHasher{deterministic}},
+          m_thread_pool{std::move(thread_pool)}
     {
     }
 
