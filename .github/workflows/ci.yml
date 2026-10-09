@@ -36,7 +36,7 @@ jobs:
     timeout-minutes: 360  # Use maximum time, see https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_idtimeout-minutes.
     steps:
       - name: Determine fetch depth
-        run: echo "FETCH_DEPTH=$((${{ github.event.pull_request.commits }} + 2))" >> "$GITHUB_ENV"
+        run: echo "FETCH_DEPTH=$((${{ github.event.pull_request.commits }} + 1000))" >> "$GITHUB_ENV"
       - &ANNOTATION_PR_NUMBER
         name: Annotate with pull request number
         # This annotation is machine-readable and can be used to assign a check
