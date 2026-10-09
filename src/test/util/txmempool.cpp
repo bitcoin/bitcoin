@@ -173,7 +173,7 @@ void CheckMempoolEphemeralInvariants(const CTxMemPool& tx_pool)
         // Only-child should be spending the dust
         const auto& only_child = children.begin()->get().GetTx();
         COutPoint dust_outpoint{tx_info.tx->GetHash(), dust_indexes[0]};
-        Assert(std::any_of(only_child.vin.begin(), only_child.vin.end(), [&dust_outpoint](const CTxIn& txin) {
+        Assert(std::any_of(only_child.GetInputs().begin(), only_child.GetInputs().end(), [&dust_outpoint](const CTxIn& txin) {
             return txin.prevout == dust_outpoint;
             }));
     }
@@ -187,7 +187,7 @@ void CheckMempoolTRUCInvariants(const CTxMemPool& tx_pool)
         auto [desc_count, desc_size, desc_fees] = tx_pool.CalculateDescendantData(entry);
         auto [anc_count, anc_size, anc_fees] = tx_pool.CalculateAncestorData(entry);
 
-        if (tx_info.tx->version == TRUC_VERSION) {
+        if (tx_info.tx->GetVersion() == TRUC_VERSION) {
             // Check that special maximum virtual size is respected
             Assert(entry.GetTxSize() <= TRUC_MAX_VSIZE);
 
@@ -201,12 +201,12 @@ void CheckMempoolTRUCInvariants(const CTxMemPool& tx_pool)
                 Assert(entry.GetTxSize() <= TRUC_CHILD_MAX_VSIZE);
                 // All TRUC transactions must only have TRUC unconfirmed parents.
                 const auto& parents = tx_pool.GetParents(entry);
-                Assert(parents.begin()->get().GetSharedTx()->version == TRUC_VERSION);
+                Assert(parents.begin()->get().GetSharedTx()->GetVersion() == TRUC_VERSION);
             }
         } else if (anc_count > 1) {
             // All non-TRUC transactions must only have non-TRUC unconfirmed parents.
             for (const auto& parent : tx_pool.GetParents(entry)) {
-                Assert(parent.get().GetSharedTx()->version != TRUC_VERSION);
+                Assert(parent.get().GetSharedTx()->GetVersion() != TRUC_VERSION);
             }
         }
     }
