@@ -242,6 +242,15 @@ BOOST_AUTO_TEST_CASE(noncanonical)
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 }
 
+BOOST_AUTO_TEST_CASE(truncated_compact_size)
+{
+    // A CompactSize prefix followed by fewer bytes than it announces fails to read.
+    for (const char* hex : {"fd", "fd01", "fe010000", "ff01000000000000"}) {
+        DataStream ss{ParseHex(hex)};
+        BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, HasReason{"end of data"});
+    }
+}
+
 BOOST_AUTO_TEST_CASE(string_view)
 {
     const std::string_view sv{"hello, world"};
