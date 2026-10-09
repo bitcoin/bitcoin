@@ -163,6 +163,39 @@ class PackageRelayTest(BitcoinTestFramework):
         assert high_fee_child["txid"] in node_mempool
 
     @cleanup
+    def test_parent_from_other_peer(self, wallet):
+        node = self.nodes[0]
+        node.setmocktime(int(time.time()))
+
+        low_fee_parent = self.create_tx_below_mempoolminfee(wallet)
+        high_fee_child = wallet.create_self_transfer(utxo_to_spend=low_fee_parent["new_utxo"], fee_rate=20*FEERATE_1SAT_VB)
+
+        peer_child = node.add_p2p_connection(P2PInterface())
+        peer_parent = node.add_p2p_connection(P2PInterface())
+
+        # 1. peer_child sends the child, which is missing its parent and goes to the orphanage.
+        high_child_wtxid_int = high_fee_child["tx"].wtxid_int
+        peer_child.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=high_child_wtxid_int)]))
+        node.bumpmocktime(NONPREF_PEER_TX_DELAY)
+        peer_child.wait_for_getdata([high_child_wtxid_int])
+        peer_child.send_and_ping(msg_tx(high_fee_child["tx"]))
+
+        # 2. A different peer sends the parent, which is rejected for its low feerate.
+        peer_parent.send_and_ping(msg_tx(low_fee_parent["tx"]))
+        assert low_fee_parent["txid"] not in node.getrawmempool()
+
+        # 3. The node still asks peer_child, who announced the child, for the parent by txid.
+        parent_txid_int = int(low_fee_parent["txid"], 16)
+        node.bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
+        peer_child.wait_for_getdata([parent_txid_int])
+
+        # 4. peer_child sends the parent, and the package is accepted.
+        peer_child.send_and_ping(msg_tx(low_fee_parent["tx"]))
+        node_mempool = node.getrawmempool()
+        assert low_fee_parent["txid"] in node_mempool
+        assert high_fee_child["txid"] in node_mempool
+
+    @cleanup
     def test_low_and_high_child(self, wallet):
         node = self.nodes[0]
         node.setmocktime(int(time.time()))
@@ -626,6 +659,12 @@ class PackageRelayTest(BitcoinTestFramework):
 
         self.log.info("Check opportunistic 1p1c logic when child is received before parent")
         self.test_basic_child_then_parent()
+
+        self.log.info("Check opportunistic 1p1c logic when the parent comes from a different peer than the child (parent txid != wtxid)")
+        self.test_parent_from_other_peer(self.wallet)
+
+        self.log.info("Check opportunistic 1p1c logic when the parent comes from a different peer than the child (parent txid == wtxid)")
+        self.test_parent_from_other_peer(self.wallet_nonsegwit)
 
         self.log.info("Check opportunistic 1p1c logic when 2 candidate children exist (parent txid != wtxid)")
         self.test_low_and_high_child(self.wallet)
