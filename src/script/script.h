@@ -11,7 +11,6 @@
 #include <prevector.h>
 #include <serialize.h>
 #include <span.h>
-#include <streams.h>
 #include <uint256.h>
 #include <util/hash_type.h>
 
@@ -608,10 +607,7 @@ class CScriptWitness
     static constexpr size_t HEADER_SIZE{4};
 
     /** The serialization of the stack. For an empty stack that is a single zero byte, stored outside
-     *  m_data. As it was produced by this class, ReadCompactSize cannot fail on it, so the accessors
-     *  below are noexcept. They read it without range check, as a stack constructed from vectors may
-     *  have more than MAX_SIZE elements, or elements larger than that.
-     */
+     *  m_data. */
     std::span<const std::byte> Data() const noexcept LIFETIMEBOUND
     {
         static constexpr std::byte EMPTY_SERIALIZATION[1]{};
@@ -641,18 +637,15 @@ public:
         Iterator() noexcept = default;
         value_type operator*() const noexcept
         {
-            SpanReader reader{m_rest};
-            const auto len = ReadCompactSize(reader, /*range_check=*/false);
-            // What the reader has left starts with the element. The serialization is std::byte, but elements are
-            // returned as unsigned char, like other script data.
-            return UCharSpanCast(m_rest.last(reader.size()).first(len));
+            auto data = m_rest;
+            const auto len = DecodeCompactSizeUnchecked(data);
+            // The serialization is std::byte, but elements are returned as unsigned char, like other script data.
+            return UCharSpanCast(data.first(len));
         }
         Iterator& operator++() noexcept LIFETIMEBOUND
         {
-            SpanReader reader{m_rest};
-            const auto len = ReadCompactSize(reader, /*range_check=*/false);
-            // Skip the element, which is at the start of what the reader has left.
-            m_rest = m_rest.last(reader.size() - len);
+            const auto len = DecodeCompactSizeUnchecked(m_rest);
+            m_rest = m_rest.subspan(len);
             return *this;
         }
         Iterator operator++(int) noexcept { auto ret{*this}; ++*this; return ret; }
@@ -680,17 +673,15 @@ public:
     size_t size() const noexcept
     {
         if (!m_data) return 0;
-        SpanReader reader{Data()};
-        return ReadCompactSize(reader, /*range_check=*/false);
+        auto data = Data();
+        return DecodeCompactSizeUnchecked(data);
     }
     Iterator begin() const noexcept LIFETIMEBOUND
     {
         if (!m_data) return end();
-        const auto data = Data();
-        SpanReader reader{data};
-        ReadCompactSize(reader, /*range_check=*/false);
-        // The elements are what follows the number of elements.
-        return Iterator{data.last(reader.size())};
+        auto data = Data();
+        DecodeCompactSizeUnchecked(data);
+        return Iterator{data};
     }
     Iterator end() const noexcept LIFETIMEBOUND
     {
