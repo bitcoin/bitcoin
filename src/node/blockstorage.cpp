@@ -1047,6 +1047,16 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
     return true;
 }
 
+static bool CheckReadBlockHash(const uint256& block_hash, const FlatFilePos& pos, const std::optional<uint256>& expected_hash)
+{
+    if (expected_hash && block_hash != *expected_hash) {
+        LogError("GetHash() doesn't match index at %s while reading block (%s != %s)", pos.ToString(), block_hash.ToString(), expected_hash->ToString());
+        return false;
+    }
+
+    return true;
+}
+
 bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos, const std::optional<uint256>& expected_hash) const
 {
     block.SetNull();
@@ -1079,13 +1089,7 @@ bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos, const std::o
         return false;
     }
 
-    if (expected_hash && block_hash != *expected_hash) {
-        LogError("GetHash() doesn't match index at %s while reading block (%s != %s)",
-                 pos.ToString(), block_hash.ToString(), expected_hash->ToString());
-        return false;
-    }
-
-    return true;
+    return CheckReadBlockHash(block_hash, pos, expected_hash);
 }
 
 bool BlockManager::ReadBlock(CBlock& block, const CBlockIndex& index) const
