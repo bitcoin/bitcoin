@@ -184,18 +184,31 @@ if [[ "$RUN_MACOS_CODESIGN" == "true" ]]; then
   codesign --verify --deep --strict "${BASE_BUILD_DIR}/deploy/Bitcoin-Qt.app"
 fi
 
-if [ "$RUN_UNIT_TESTS" = "true" ]; then
+RUN_CTEST=$RUN_UNIT_TESTS
+CTEST_ARGS=(-LE '^functional$')
+if [ "${RUN_FUNCTIONAL_TESTS_WITH_CTEST:-false}" = "true" ] && [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
+  RUN_CTEST=true
+  if [ "$RUN_UNIT_TESTS" = "true" ]; then
+    CTEST_ARGS=()
+  else
+    CTEST_ARGS=(-L '^functional$')
+  fi
+  CTEST_TMPDIRPREFIX=${BASE_SCRATCH_DIR//\'/\'\"\'\"\'}
+  export TEST_RUNNER_EXTRA="--tmpdirprefix='${CTEST_TMPDIRPREFIX}'/test_runner/ --combinedlogslen=99999999 ${TEST_RUNNER_EXTRA:-}"
+fi
+if [ "$RUN_CTEST" = "true" ]; then
   DIR_UNIT_TEST_DATA="${DIR_UNIT_TEST_DATA}" \
   LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \
   CTEST_OUTPUT_ON_FAILURE=ON \
   "${WITH_SANITIZER_ENV[@]}" \
     ctest --test-dir "${BASE_BUILD_DIR}" \
+    "${CTEST_ARGS[@]}" \
     --stop-on-failure \
     "${MAKEJOBS}" \
     --timeout $(( TEST_RUNNER_TIMEOUT_FACTOR * 60 ))
 fi
 
-if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
+if [ "$RUN_FUNCTIONAL_TESTS" = "true" ] && [ "${RUN_FUNCTIONAL_TESTS_WITH_CTEST:-false}" != "true" ]; then
   # parses TEST_RUNNER_EXTRA as an array which allows for multiple arguments such as TEST_RUNNER_EXTRA='--exclude "rpc_bind.py --ipv6"'
   eval "TEST_RUNNER_EXTRA=($TEST_RUNNER_EXTRA)"
   LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \

@@ -11,10 +11,12 @@ export GOAL="install deploy"
 export RUN_MACOS_CODESIGN=true
 export CMAKE_GENERATOR="Ninja"
 export CI_OS_NAME="macos"
+export RUN_FUNCTIONAL_TESTS_WITH_CTEST=true
 export NO_DEPENDS=1
 export OSX_SDK=""
 printf -v BITCOIN_CONFIG "%q " \
   --preset=dev-mode \
+  -DBUILD_FUNCTIONAL_TESTS=ON \
   -DWITH_USDT=OFF \
   -DREDUCE_EXPORTS=ON \
   -DCMAKE_EXE_LINKER_FLAGS="-Wl,-stack_size -Wl,0x80000"

@@ -128,6 +128,53 @@ how many jobs to run, append `--jobs=n`
 The individual tests and the test_runner harness have many command-line
 options. Run `build/test/functional/test_runner.py -h` to see them all.
 
+#### CTest functional tests
+
+CTest registration is disabled by default, so the legacy runner remains the default local workflow. The macOS native CI job uses CTest; other CI jobs continue to use the legacy runner.
+Functional test registration uses CMake's native `discover_tests`, so it requires CMake 4.4 or newer. To enable it:
+
+```sh
+cmake -B build -DBUILD_FUNCTIONAL_TESTS=ON
+cmake --build build --parallel
+```
+
+An unfiltered `ctest` run includes unit tests and base functional tests. Pass `--extended` through `TEST_RUNNER_EXTRA` to register the extended tests for that invocation:
+
+```sh
+ctest --test-dir build --parallel --output-on-failure
+TEST_RUNNER_EXTRA='--extended' ctest --test-dir build --parallel --output-on-failure
+```
+
+Functional tests have the `functional` label and names like `functional.<script>` or `functional.<script>.<option>`. Extended tests also have the `extended` label. Use CTest filters to select tests:
+
+```sh
+ctest --test-dir build -L '^functional' --parallel --output-on-failure
+ctest --test-dir build -R '^functional\.wallet_' --output-on-failure
+ctest --test-dir build -R '^functional\.rpc_bind\.ipv6$' --output-on-failure
+ctest --test-dir build -L '^functional$' -LE '^extended$' --parallel --output-on-failure
+```
+
+CTest forwards test selection options such as `--exclude` and `--filter`, and child test options such as `--timeout-factor`, through `TEST_RUNNER_EXTRA`. Use it for combined logs too:
+
+```sh
+TEST_RUNNER_EXTRA='--combinedlogslen=99999999' ctest --test-dir build -L '^functional$' --output-on-failure
+```
+
+For previous-release compatibility tests, set `PREVIOUS_RELEASES_DIR` to an
+absolute path before downloading releases and running CTest, for example from
+the source root:
+
+```sh
+export PREVIOUS_RELEASES_DIR="$PWD/releases"
+test/get_previous_releases.py
+ctest --test-dir build -L '^functional$' --parallel --output-on-failure
+```
+
+The downloader and both test runners use this setting; otherwise, release lookup
+depends on the working directory.
+
+The suite-level `--coverage` and `--resultsfile` options are not supported through CTest yet and fail explicitly; use the legacy test runner for those workflows. Each CTest invocation clears the fixed shared functional cache and gives each test a fresh temporary directory. Failed test directories are preserved. Do not run concurrent CTest suites in the same build tree because deterministic port seeds do not support that yet.
+
 #### Speed up test runs with a RAM disk
 
 If you have available RAM on your system you can create a RAM disk to use as the `cache` and `tmp` directories for the functional tests in order to speed them up.
