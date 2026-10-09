@@ -65,6 +65,7 @@ install anything.
 
 If you do not need IPC functionality (see [multiprocess.md](multiprocess.md))
 you can omit `capnp` and use `-DENABLE_IPC=OFF` in the `cmake -B` step below.
+When IPC is enabled, the Cap'n Proto libraries must be built with C++ exception support.
 
 ### 4. Clone Bitcoin repository
 

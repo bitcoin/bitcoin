@@ -29,6 +29,9 @@ Cap'n Proto is needed for IPC functionality (see [multiprocess.md](multiprocess.
 pkgin install capnproto pkgconf
 ```
 
+The Cap'n Proto libraries must be built with C++ exception support. KJ can
+mis-detect this when `__has_feature` is stubbed; rebuild with
+`-DKJ_NO_EXCEPTIONS=0` or use depends.
 Compile with `-DENABLE_IPC=OFF` if you do not need IPC functionality.
 
 See [dependencies.md](dependencies.md) for a complete overview.
