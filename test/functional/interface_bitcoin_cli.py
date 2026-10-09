@@ -21,6 +21,8 @@ from test_framework.util import (
     get_auth_cookie,
     rpc_port,
 )
+from test_framework.wallet_util import WalletUnlock
+
 import time
 
 # The block reward of coinbaseoutput.nValue (50) BTC/block matures after
@@ -251,8 +253,7 @@ class TestBitcoinCli(BitcoinTestFramework):
 
         self.log.info("Test -getinfo returns expected network and blockchain info")
         if self.is_wallet_compiled():
-            self.import_deterministic_coinbase_privkeys()
-            self.nodes[0].encryptwallet(password)
+            self.import_deterministic_coinbase_privkeys(encrypted=True)
         cli_get_info_string = self.nodes[0].cli('-getinfo').send_cli()
         cli_get_info = cli_get_info_string_to_dict(cli_get_info_string)
 
@@ -292,17 +293,16 @@ class TestBitcoinCli(BitcoinTestFramework):
             # Setup to test -getinfo, -generate, and -rpcwallet= with multiple wallets.
             wallets = [self.default_wallet_name, 'Encrypted', 'secret']
             amounts = [BALANCE + Decimal('9.999928'), Decimal(9), Decimal(31)]
-            self.nodes[0].createwallet(wallet_name=wallets[1])
+            self.nodes[0].createwallet(wallet_name=wallets[1], passphrase=self.default_wallet_pass)
             self.nodes[0].createwallet(wallet_name=wallets[2])
             w1 = self.nodes[0].get_wallet_rpc(wallets[0])
             w2 = self.nodes[0].get_wallet_rpc(wallets[1])
             w3 = self.nodes[0].get_wallet_rpc(wallets[2])
             rpcwallet2 = f'-rpcwallet={wallets[1]}'
             rpcwallet3 = f'-rpcwallet={wallets[2]}'
-            w1.walletpassphrase(password, self.rpc_timeout)
-            w2.encryptwallet(password)
-            w1.sendtoaddress(w2.getnewaddress(), amounts[1])
-            w1.sendtoaddress(w3.getnewaddress(), amounts[2])
+            with WalletUnlock(w1, self.default_wallet_pass):
+                w1.sendtoaddress(w2.getnewaddress(), amounts[1])
+                w1.sendtoaddress(w3.getnewaddress(), amounts[2])
 
             # Mine a block to confirm; adds a block reward (50 BTC) to the default wallet.
             self.generate(self.nodes[0], 1)
@@ -368,7 +368,6 @@ class TestBitcoinCli(BitcoinTestFramework):
             # Test bitcoin-cli -generate.
             n1 = 3
             n2 = 4
-            w2.walletpassphrase(password, self.rpc_timeout)
             blocks = self.nodes[0].getblockcount()
 
             self.log.info('Test -generate with no args')

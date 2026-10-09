@@ -204,6 +204,7 @@ RPCMethod encryptwallet()
 {
     return RPCMethod{
         "encryptwallet",
+        "(DEPRECATED) This feature will be removed in a future major release. New wallets can be created with encryption enabled, but encrypting existing wallets is discouraged. Start bitcoind with the `-deprecatedrpc=encryptwallet` option in order to use this.\n"
         "Encrypts the wallet with 'passphrase'. This is for first time encryption.\n"
         "After this, any calls that interact with private keys such as sending or signing \n"
         "will require the passphrase to be set prior to making these calls.\n"
@@ -233,6 +234,10 @@ RPCMethod encryptwallet()
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
+
+    if (!pwallet->chain().rpcEnableDeprecated("encryptwallet")) {
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "DEPRECATION WARNING: This feature will be removed in a future major release. New wallets can be created with encryption enabled, but encrypting existing wallets is discouraged. Start bitcoind with the `-deprecatedrpc=encryptwallet` option in order to use this.\n");
+    }
 
     if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: wallet does not contain private keys, nothing to encrypt.");

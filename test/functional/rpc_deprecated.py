@@ -40,6 +40,12 @@ class DeprecatedRpcTest(BitcoinTestFramework):
                 "fakeargument"
             )
 
+            assert_raises_rpc_error(
+                -32, "Start bitcoind with the `-deprecatedrpc=encryptwallet`",
+                wallet.encryptwallet,
+                "passphrase"
+            )
+
 
 if __name__ == '__main__':
     DeprecatedRpcTest(__file__).main()
