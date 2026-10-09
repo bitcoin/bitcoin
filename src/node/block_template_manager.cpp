@@ -39,7 +39,7 @@ BlockTemplateManager::BlockTemplateManager(CTxMemPool& mempool, ChainstateManage
 {
 }
 
-std::unique_ptr<CBlockTemplate> BlockTemplateManager::CreateNewTemplate(const BlockCreateOptions& options)
+util::NotNullUniquePtr<CBlockTemplate> BlockTemplateManager::CreateNewTemplate(const BlockCreateOptions& options)
 {
     return BlockAssembler{
         m_chainman.ActiveChainstate(),
@@ -127,7 +127,7 @@ void BlockTemplateManager::InterruptWait(bool& interrupt_wait)
 }
 
 std::unique_ptr<CBlockTemplate> BlockTemplateManager::WaitAndCreateNewBlock(
-    const std::unique_ptr<CBlockTemplate>& block_template,
+    const CBlockTemplate& block_template,
     const BlockWaitOptions& wait_options,
     const BlockCreateOptions& create_options,
     bool& interrupt_wait)
@@ -154,7 +154,7 @@ std::unique_ptr<CBlockTemplate> BlockTemplateManager::WaitAndCreateNewBlock(
                 // We assume tip_block is set, because this is an instance
                 // method on BlockTemplate and no template could have been
                 // generated before a tip exists.
-                tip_changed = Assume(tip_block) && tip_block != block_template->block.hashPrevBlock;
+                tip_changed = Assume(tip_block) && tip_block != block_template.block.hashPrevBlock;
                 return tip_changed || m_chainman.m_interrupt || interrupt_wait;
             });
             if (interrupt_wait) {
@@ -194,7 +194,7 @@ std::unique_ptr<CBlockTemplate> BlockTemplateManager::WaitAndCreateNewBlock(
 
             // Calculate the original template total fees if we haven't already
             if (current_fees == -1) {
-                current_fees = std::accumulate(block_template->vTxFees.begin(), block_template->vTxFees.end(), CAmount{0});
+                current_fees = std::accumulate(block_template.vTxFees.begin(), block_template.vTxFees.end(), CAmount{0});
             }
 
             // Check if fees increased enough to return the new template

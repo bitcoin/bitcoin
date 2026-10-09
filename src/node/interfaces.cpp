@@ -63,6 +63,7 @@
 #include <util/check.h>
 #include <util/expected.h>
 #include <util/fees.h>
+#include <util/not_null.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/string.h>
@@ -876,12 +877,11 @@ class BlockTemplateImpl : public BlockTemplate
 {
 public:
     explicit BlockTemplateImpl(BlockCreateOptions create_options,
-                               std::unique_ptr<CBlockTemplate> block_template,
+                               util::NotNullUniquePtr<CBlockTemplate> block_template,
                                const NodeContext& node) : m_create_options(std::move(create_options)),
                                                           m_block_template(std::move(block_template)),
                                                           m_node(node)
     {
-        assert(m_block_template);
     }
 
     CBlockHeader getBlockHeader() override
@@ -924,8 +924,8 @@ public:
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
     {
         auto new_template = block_template_manager().WaitAndCreateNewBlock(
-            m_block_template, options, m_create_options, m_interrupt_wait);
-        if (new_template) return std::make_unique<BlockTemplateImpl>(m_create_options, std::move(new_template), m_node);
+            *m_block_template, options, m_create_options, m_interrupt_wait);
+        if (new_template) return std::make_unique<BlockTemplateImpl>(m_create_options, util::NotNull{std::move(new_template)}, m_node);
         return nullptr;
     }
 
@@ -936,7 +936,7 @@ public:
 
     const BlockCreateOptions m_create_options;
 
-    const std::unique_ptr<CBlockTemplate> m_block_template;
+    const util::NotNullUniquePtr<CBlockTemplate> m_block_template;
 
     bool m_interrupt_wait{false};
     node::BlockTemplateManager& block_template_manager() { return *Assert(m_node.block_template_manager); }

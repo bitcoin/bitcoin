@@ -13,6 +13,7 @@
 #include <threadsafety.h>
 #include <txmempool.h>
 #include <util/feefrac.h>
+#include <util/not_null.h>
 
 #include <cstdint>
 #include <memory>
@@ -73,7 +74,7 @@ public:
                             BlockCreateOptions create_options);
 
     /** Construct a new block template */
-    std::unique_ptr<CBlockTemplate> CreateNewBlock();
+    util::NotNullUniquePtr<CBlockTemplate> CreateNewBlock();
 
     /** The number of transactions in the last assembled block (excluding coinbase transaction) */
     inline static std::optional<int64_t> m_last_block_num_txs{};
