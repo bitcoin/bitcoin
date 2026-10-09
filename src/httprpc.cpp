@@ -200,6 +200,10 @@ static void HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
         req->WriteReply(HTTP_BAD_METHOD, "JSONRPC server handles only POST requests");
         return;
     }
+    if (req->GetHeader("origin")) {
+        req->WriteReply(HTTP_FORBIDDEN, "Cross-origin requests are not allowed");
+        return;
+    }
     // Check authorization
     std::optional<std::string> auth_header = req->GetHeader("authorization");
     if (!auth_header) {
