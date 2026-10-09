@@ -186,7 +186,7 @@ class WalletTest(BitcoinTestFramework):
         unspent_0 = self.nodes[1].listunspent()[0]
         self.nodes[1].lockunspent(False, [unspent_0])
         tx = self.nodes[1].createrawtransaction([unspent_0], { self.nodes[1].getnewaddress() : 1 })
-        self.nodes[1].fundrawtransaction(tx,{"lockUnspents": True})
+        self.nodes[1].fundrawtransaction(tx, lock_unspents=True)
 
         # fundrawtransaction can lock an input
         self.nodes[1].lockunspent(True, [unspent_0])

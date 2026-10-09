@@ -107,7 +107,7 @@ class WalletMuSigTest(BitcoinTestFramework):
             outputs=[{self.def_wallet.getnewaddress(): 5}],
             inputs=[utxo],
             change_type="bech32m",
-            changePosition=1
+            change_position=1,
         )["psbt"]
 
         return wallets, psbt
