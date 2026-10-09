@@ -383,6 +383,32 @@ inline void AppendCompactSize(std::vector<std::byte>& data, uint64_t n)
 }
 
 /**
+ * Decode the CompactSize at the start of data, and advance data past it.
+ *
+ * Unlike ReadCompactSize, this performs no checks at all (for canonical encoding, MAX_SIZE, or
+ * bounds), so it must only be used for data whose CompactSizes are known to be valid, such as data
+ * produced by WriteCompactSize or AppendCompactSize. This makes it small enough to be inlined.
+ */
+inline uint64_t DecodeCompactSize(std::span<const std::byte>& data) noexcept
+{
+    // A minimal stream that reads from (and advances) data, without bounds checks.
+    struct Reader {
+        std::span<const std::byte>& data;
+        void read(std::span<std::byte> dst) noexcept
+        {
+            std::memcpy(dst.data(), data.data(), dst.size());
+            data = data.subspan(dst.size());
+        }
+    };
+    Reader reader{data};
+    const auto first = ser_readdata8(reader);
+    if (first < 253) return first;
+    if (first == 253) return ser_readdata16(reader);
+    if (first == 254) return ser_readdata32(reader);
+    return ser_readdata64(reader);
+}
+
+/**
  * Variable-length integers: bytes are a MSB base-128 encoding of the number.
  * The high bit in each byte signifies whether another digit follows. To make
  * sure the encoding is one-to-one, one is subtracted from all but the last digit.
