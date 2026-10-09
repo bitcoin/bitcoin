@@ -67,6 +67,16 @@ class TxIndexTest(BitcoinTestFramework):
         assert_equal(node.getrawtransaction(txId1), tx1['hex'])
         assert_equal(node.getrawtransaction(txId2), tx2['hex'])
 
+        self.log.info("Check rebuild advice after pruning with the legacy txindex disabled")
+        self.restart_node(0, extra_args=["-fastprune", "-prune=1", "-txindex=0"])
+        self.generate(node, 600, sync_fun=self.no_op)
+        node.pruneblockchain(node.getblockcount())
+        self.stop_node(0)
+        node.assert_start_raises_init_error(
+            extra_args=["-prune=1", "-txindex"],
+            expected_msg="Error: Prune mode is incompatible with a txindex that still contains legacy entries. Restart with -reindex to rebuild the index and redownload the blockchain.",
+        )
+
 
 if __name__ == '__main__':
     TxIndexTest(__file__).main()
