@@ -270,7 +270,7 @@ target_link_libraries(bitcoin-qt
 )
 
 import_plugins(bitcoin-qt)
-install_binary_component(bitcoin-qt HAS_MANPAGE)
+install_binary_component(bitcoin-qt HAS_MANPAGE HAS_FISH_COMPLETION)
 
 if(ENABLE_IPC)
   add_executable(bitcoin-gui WIN32
