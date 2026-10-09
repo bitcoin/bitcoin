@@ -21,8 +21,6 @@ inline constexpr unsigned int DEFAULT_MAX_MEMPOOL_SIZE_MB{300};
 inline constexpr unsigned int DEFAULT_BLOCKSONLY_MAX_MEMPOOL_SIZE_MB{5};
 /** Default for -mempoolexpiry, expiration time for mempool transactions in hours */
 inline constexpr unsigned int DEFAULT_MEMPOOL_EXPIRY_HOURS{336};
-/** Whether to fall back to legacy V1 serialization when writing mempool.dat */
-inline constexpr bool DEFAULT_PERSIST_V1_DAT{false};
 /** Default for -acceptnonstdtxn */
 inline constexpr bool DEFAULT_ACCEPT_NON_STD_TXN{false};
 
@@ -53,7 +51,6 @@ struct MemPoolOptions {
     std::optional<unsigned> max_datacarrier_bytes{DEFAULT_ACCEPT_DATACARRIER ? std::optional{MAX_OP_RETURN_RELAY} : std::nullopt};
     bool permit_bare_multisig{DEFAULT_PERMIT_BAREMULTISIG};
     bool require_standard{true};
-    bool persist_v1_dat{DEFAULT_PERSIST_V1_DAT};
     MemPoolLimits limits{};
 
     ValidationSignals* signals{nullptr};
