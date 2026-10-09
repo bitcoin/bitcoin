@@ -13,6 +13,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    JSONRPCException,
 )
 from test_framework.wallet import (
     MiniWallet,
@@ -136,6 +137,64 @@ class ScanblocksTest(BitcoinTestFramework):
 
         # test that null scanobjects is rejected for start
         assert_raises_rpc_error(-1, "scanobjects argument is required for the start action", node.scanblocks, "start", None)
+
+        self.test_scanblocks_unindexed_range()
+
+    def test_scanblocks_unindexed_range(self):
+        """scanblocks must not silently skip ranges the filter index has not written yet.
+
+        Like getblockfilter, a scan succeeds when the requested range is already
+        available even if the index is still behind the tip, and it errors (instead
+        of silently skipping the range and still reporting completed=true) when the
+        requested range is not yet available.
+        """
+        node = self.nodes[0]
+        wallet = MiniWallet(node)
+
+        def bfi():
+            return node.getindexinfo()["basic block filter index"]
+
+        _, spk, addr = getnewdestination()
+        wallet.send_to(from_node=node, scriptPubKey=spk, amount=1 * COIN)
+        match_hash = self.generate(node, 1, sync_fun=self.no_op)[0]
+        # A large enough chain that rebuilding the wiped index after a restart
+        # leaves the node briefly behind the tip. Missing that window is harmless.
+        self.generate(node, 3000, sync_fun=self.no_op)
+        self.wait_until(lambda: bfi()["synced"])
+
+        self.stop_node(0)
+        self.cleanup_folder(node.chain_path / "indexes" / "blockfilter")
+        self.start_node(0, extra_args=["-blockfilterindex=1"])
+        tip = node.getblockcount()
+
+        if not bfi()["synced"]:
+            self.log.info("scanning to the not-yet-indexed tip errors instead of skipping silently")
+            try:
+                out = node.scanblocks("start", [f"addr({addr})"], 0, tip)
+            except JSONRPCException as e:
+                assert "still in the process of being indexed" in e.error["message"]
+            else:
+                # A returning scan must be complete: the match must be present.
+                assert_equal(out["completed"], True)
+                assert match_hash in out["relevant_blocks"]
+
+            self.log.info("scanning an already-indexed prefix succeeds while still behind the tip")
+            # Genesis is indexed first, so it is available while the tip is not.
+            while not bfi()["synced"]:
+                try:
+                    out = node.scanblocks("start", [f"addr({addr})"], 0, 0)
+                except JSONRPCException as e:
+                    assert "still in the process of being indexed" in e.error["message"]
+                    continue
+                assert_equal(out["completed"], True)
+                assert_equal(out["to_height"], 0)
+                break
+
+        self.log.info("once the index is synced the same scan completes and finds the match")
+        self.wait_until(lambda: bfi()["synced"])
+        out = node.scanblocks("start", [f"addr({addr})"])
+        assert_equal(out["completed"], True)
+        assert match_hash in out["relevant_blocks"]
 
 
 if __name__ == '__main__':
