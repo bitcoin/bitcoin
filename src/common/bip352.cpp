@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <expected>
 #include <optional>
 #include <span>
 #include <type_traits>

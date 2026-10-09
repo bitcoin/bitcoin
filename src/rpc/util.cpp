@@ -23,7 +23,6 @@
 #include <univalue.h>
 #include <util/bip32.h>
 #include <util/check.h>
-#include <util/expected.h>
 #include <util/result.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -516,7 +515,7 @@ struct Sections {
         for (const auto& s : m_sections) {
             // The left part of a section is assumed to be a single line, usually it is the name of the JSON struct or a
             // brace like {, }, [, or ]
-            CHECK_NONFATAL(s.m_left.find('\n') == std::string::npos);
+            CHECK_NONFATAL(!s.m_left.contains('\n'));
             if (s.m_right.empty()) {
                 ret += s.m_left;
                 ret += "\n";
@@ -926,7 +925,7 @@ std::string RPCArg::GetFirstName() const
 
 std::string RPCArg::GetName() const
 {
-    CHECK_NONFATAL(std::string::npos == m_names.find('|'));
+    CHECK_NONFATAL(!m_names.contains('|'));
     return m_names;
 }
 
