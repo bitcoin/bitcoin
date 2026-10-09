@@ -14,6 +14,7 @@
 #include <util/log.h>
 #include <util/time.h>
 
+#include <array>
 #include <cstdint>
 #include <optional>
 #include <set>
@@ -211,8 +212,10 @@ private:
     //! list of "new" buckets
     nid_type vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs);
 
-    //! last time Good was called (memory only). Initially set to 1 so that "never" is strictly worse.
-    NodeSeconds m_last_good GUARDED_BY(cs){1s};
+    //! last time Good was called, per network (memory only). While unset, no connection failures
+    //! are counted, because we have no evidence that it is due to them instead of
+    //! our connectivity for that network.
+    std::array<NodeSeconds, NET_MAX> m_last_good GUARDED_BY(cs){};
 
     //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discipline used to resolve these collisions.
     std::set<nid_type> m_tried_collisions;
