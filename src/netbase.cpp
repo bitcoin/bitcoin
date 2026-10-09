@@ -349,7 +349,7 @@ static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, std::chrono::m
 }
 
 /** Convert SOCKS5 reply to an error message */
-static std::string Socks5ErrorString(uint8_t err)
+std::string Socks5ErrorString(uint8_t err)
 {
     switch(err) {
         case SOCKS5Reply::GENFAILURE:

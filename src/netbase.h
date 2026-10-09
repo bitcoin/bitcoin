@@ -346,6 +346,9 @@ extern CThreadInterrupt g_socks5_interrupt;
  */
 bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* auth, const Sock& socket);
 
+/** The meaning of a SOCKS5 reply code (RFC 1928), Tor's extended codes for onion services included. */
+std::string Socks5ErrorString(uint8_t err);
+
 /**
  * Determine if a port is "bad" from the perspective of attempting to connect
  * to a node on that port.
