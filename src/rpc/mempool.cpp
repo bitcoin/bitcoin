@@ -25,6 +25,7 @@
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <primitives/transaction.h>
+#include <private_broadcast.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <rpc/server.h>
@@ -48,6 +49,7 @@
 #include <validation.h>
 
 #include <algorithm>
+#include <compare>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -98,6 +100,16 @@ static RPCMethod sendrawtransaction()
         "the transaction is not scheduled until an existing one completes or is\n"
         "aborted. Use getprivatebroadcastinfo to inspect the queue and abortprivatebroadcast to abort.\n"
 
+        "\nIf delay_for is set (requires -privatebroadcast), the private broadcast is held back\n"
+        "to make it harder to correlate the broadcast time with the submission time. The actual\n"
+        "delay is randomized: " + strprintf("up to %d%% (but at least %d minutes) is added to the requested delay.\n",
+                                         PrivateBroadcast::DELAY_RANDOMIZATION_PERCENT,
+                                         Ticks<std::chrono::minutes>(PrivateBroadcast::MIN_DELAY_RANDOMIZATION)) +
+        "The transaction is validated at submission and again when it is due, and is dropped\n"
+        "if it is no longer valid then. Pending delayed transactions are not persisted and are\n"
+        "lost on restart.\n"
+        "With a delay, a successful result means that the transaction is scheduled, not sent.\n"
+
         "\nA specific exception, RPC_TRANSACTION_ALREADY_IN_UTXO_SET, may throw if the transaction cannot be added to the mempool.\n"
 
         "\nRelated RPCs: createrawtransaction, signrawtransactionwithkey\n",
@@ -110,6 +122,10 @@ static RPCMethod sendrawtransaction()
              "Reject transactions with provably unspendable outputs (e.g. 'datacarrier' outputs that use the OP_RETURN opcode) greater than the specified value, expressed in " + CURRENCY_UNIT + ".\n"
              "If burning funds through unspendable outputs is desired, increase this value.\n"
              "This check is based on heuristics and does not guarantee spendability of outputs.\n"},
+            {"delay_for", RPCArg::Type::NUM, RPCArg::Default{0},
+             strprintf("Delay the broadcast by at least this many seconds (0 to %d), see above. "
+                       "0 means no delay. Requires -privatebroadcast.",
+                       Ticks<std::chrono::seconds>(PrivateBroadcast::MAX_DELAY))},
         },
         RPCResult{
             RPCResult::Type::STR_HEX, "", "The transaction hash in hex"
@@ -121,6 +137,8 @@ static RPCMethod sendrawtransaction()
             + HelpExampleCli("signrawtransactionwithwallet", "\"myhex\"") +
             "\nSend the transaction (signed hex)\n"
             + HelpExampleCli("sendrawtransaction", "\"signedhex\"") +
+            "\nSend the transaction privately, with a delay of at least one hour\n"
+            + HelpExampleCli("-named sendrawtransaction", "hexstring=\"signedhex\" delay_for=3600") +
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("sendrawtransaction", "\"signedhex\"")
                 },
@@ -143,11 +161,20 @@ static RPCMethod sendrawtransaction()
 
             const CFeeRate max_raw_tx_fee_rate{ParseFeeRate(self.Arg<UniValue>("maxfeerate"))};
 
+            const std::chrono::seconds delay{self.Arg<int>("delay_for")};
+            if (delay < 0s || delay > PrivateBroadcast::MAX_DELAY) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                                   strprintf("delay_for must be between 0 and %d seconds",
+                                             Ticks<std::chrono::seconds>(PrivateBroadcast::MAX_DELAY)));
+            }
 
             std::string err_string;
             AssertLockNotHeld(cs_main);
             NodeContext& node = EnsureAnyNodeContext(request.context);
             const bool private_broadcast_enabled{gArgs.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)};
+            if (delay > 0s && !private_broadcast_enabled) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "delay_for is only supported with -privatebroadcast enabled");
+            }
             if (private_broadcast_enabled &&
                 !g_reachable_nets.Contains(NET_ONION) &&
                 !g_reachable_nets.Contains(NET_I2P)) {
@@ -165,7 +192,8 @@ static RPCMethod sendrawtransaction()
                                                               /*max_tx_fee=*/0,
                                                               max_raw_tx_fee_rate,
                                                               method,
-                                                              /*wait_callback=*/true);
+                                                              /*wait_callback=*/true,
+                                                              delay);
             if (TransactionError::OK != err) {
                 throw JSONRPCTransactionError(err, err_string);
             }

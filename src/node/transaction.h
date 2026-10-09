@@ -10,6 +10,8 @@
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
 
+#include <chrono>
+
 class CBlockIndex;
 class CTxMemPool;
 namespace Consensus {
@@ -49,6 +51,8 @@ inline constexpr CAmount DEFAULT_MAX_BURN_AMOUNT{0};
  * @param[in]  max_tx_fee_rate reject txs with fee rate higher than this (if CFeeRate(0), the fee rate is not checked)
  * @param[in]  broadcast_method whether to add the transaction to the mempool and how to broadcast it
  * @param[in]  wait_callback wait until callbacks have been processed to avoid stale result due to a sequentially RPC.
+ * @param[in]  delay if positive, hold back the broadcast for a randomized delay derived from this value.
+ *                   Only supported with TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST.
  * return error
  */
 [[nodiscard]] TransactionError BroadcastTransaction(NodeContext& node,
@@ -57,7 +61,8 @@ inline constexpr CAmount DEFAULT_MAX_BURN_AMOUNT{0};
                                                     const CAmount& max_tx_fee,
                                                     const CFeeRate& max_tx_fee_rate,
                                                     TxBroadcast broadcast_method,
-                                                    bool wait_callback);
+                                                    bool wait_callback,
+                                                    std::chrono::seconds delay = std::chrono::seconds{0});
 
 /**
  * Return transaction with a given hash.
