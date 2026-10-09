@@ -20,9 +20,14 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
 using namespace std::literals;
 using node::NodeContext;
@@ -323,6 +328,61 @@ BOOST_AUTO_TEST_CASE(addrman_select_by_network)
 
     BOOST_CHECK(new_selected);
     BOOST_CHECK(tried_selected);
+}
+
+BOOST_AUTO_TEST_CASE(addrman_select_uniform_in_bucket)
+{
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+    CNetAddr source = ResolveIP("252.2.2.2");
+
+    // With the deterministic key, these addresses all end up in new bucket 224, at the listed
+    // positions. Picking the first entry found when scanning from a random position would
+    // strongly favor entries following a gap: in each of the cases tested below, one entry
+    // would be selected 61/64 or 63/64 of the time.
+    const std::vector<std::pair<CService, int>> entries{
+        {ResolveService("250.33.1.1", 8333), 0},
+        {ResolveService("250.53.1.1", 8333), 1},
+        {ResolveService("2a01:e::1", 8333), 62},
+        {ResolveService("2a01:a0::1", 8333), 63},
+    };
+    for (const auto& [addr, position] : entries) {
+        BOOST_REQUIRE(addrman->Add({CAddress(addr, NODE_NONE)}, source));
+        const auto addr_pos{addrman->FindAddressEntry(CAddress(addr, NODE_NONE))};
+        BOOST_REQUIRE(addr_pos.has_value());
+        BOOST_REQUIRE(!addr_pos->tried);
+        BOOST_REQUIRE_EQUAL(addr_pos->bucket, 224);
+        BOOST_REQUIRE_EQUAL(addr_pos->position, position);
+    }
+
+    // Verify that Select() only returns entries matching networks, and picks each of them
+    // equally often.
+    const auto check_uniform = [&](const std::unordered_set<Network>& networks) {
+        std::vector<CService> matching;
+        for (const auto& [addr, position] : entries) {
+            if (networks.empty() || networks.contains(addr.GetNetwork())) matching.push_back(addr);
+        }
+        constexpr int SAMPLES{600};
+        std::vector<int> counts(matching.size());
+        for (int i = 0; i < SAMPLES; ++i) {
+            const CService selected{addrman->Select(/*new_only=*/false, networks).first};
+            const auto it{std::find(matching.begin(), matching.end(), selected)};
+            BOOST_REQUIRE(it != matching.end());
+            ++counts[it - matching.begin()];
+        }
+        // Compare the counts with a uniform distribution using a chi-square test. The critical
+        // values correspond to a false positive probability of 1e-9, for 1, 2, and 3 degrees of
+        // freedom respectively.
+        constexpr std::array<double, 3> CHI_SQUARE_CRITICAL{37.32, 41.45, 44.84};
+        const double expected_count{double(SAMPLES) / matching.size()};
+        double chi_square{0.0};
+        for (int count : counts) {
+            chi_square += (count - expected_count) * (count - expected_count) / expected_count;
+        }
+        BOOST_CHECK_LT(chi_square, CHI_SQUARE_CRITICAL.at(matching.size() - 2));
+    };
+    check_uniform({});
+    check_uniform({NET_IPV4});
+    check_uniform({NET_IPV6});
 }
 
 BOOST_AUTO_TEST_CASE(addrman_select_special)

@@ -186,7 +186,9 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
             nets.insert(net);
         }
     }
-    (void)const_addr_man.Select(fuzzed_data_provider.ConsumeBool(), nets);
+    const CAddress selected{const_addr_man.Select(fuzzed_data_provider.ConsumeBool(), nets).first};
+    // If a network filter was provided, the selected address (if any) must match it.
+    if (!nets.empty() && selected.IsValid()) assert(nets.contains(selected.GetNetwork()));
 
     std::optional<bool> in_new;
     if (fuzzed_data_provider.ConsumeBool()) {
