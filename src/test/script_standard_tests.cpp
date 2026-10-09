@@ -221,6 +221,21 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_failure)
     s << OP_1 << std::vector<unsigned char>{0xff, 0xff};
     BOOST_CHECK(!s.IsPayToAnchor());
     BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::WITNESS_UNKNOWN);
+
+    // Single-byte mismatches for ANCHOR payload {0x4e, 0x73}
+    s.clear();
+    s << OP_1 << std::vector<unsigned char>{0x4e, 0x00};
+    BOOST_CHECK(!s.IsPayToAnchor());
+    BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::WITNESS_UNKNOWN);
+
+    s.clear();
+    s << OP_1 << std::vector<unsigned char>{0x00, 0x73};
+    BOOST_CHECK(!s.IsPayToAnchor());
+    BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::WITNESS_UNKNOWN);
+
+    // Check the static overload with the same single-byte mismatches.
+    BOOST_CHECK(!CScript::IsPayToAnchor(1, {0x4e, 0x00}));
+    BOOST_CHECK(!CScript::IsPayToAnchor(1, {0x00, 0x73}));
 }
 
 BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
