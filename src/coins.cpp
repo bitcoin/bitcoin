@@ -12,8 +12,8 @@
 #include <util/threadpool.h>
 #include <util/trace.h>
 
+#include <algorithm>
 #include <cstdint>
-#include <unordered_set>
 
 TRACEPOINT_SEMAPHORE(utxocache, add);
 TRACEPOINT_SEMAPHORE(utxocache, spent);
@@ -379,18 +379,19 @@ CCoinsViewCache::ResetGuard CoinsViewOverlay::StartFetching(const CBlock& block 
     Assert(m_inputs.empty());
     Assert(m_input_head.load(std::memory_order_relaxed) == 0);
     Assert(m_input_tail == 0);
+    Assert(m_earlier_txids.empty());
     if (const auto workers_count{m_thread_pool->WorkersCount()}; workers_count > 0 && block.vtx.size() > 1) {
         // Loop through the block inputs and set their prevouts in the queue.
         // Filter inputs that spend outputs created earlier in the same block. These outputs will be created
         // directly in the cache from the tx that creates them, so they will not be requested from a base view.
-        std::unordered_set<Txid, SaltedCoinsCacheHasher> earlier_txids;
-        earlier_txids.reserve(block.vtx.size() - 1);
+        m_earlier_txids.reserve(std::max(m_earlier_txids.bucket_count(), block.vtx.size() - 1));
         for (uint64_t i{1}; i < block.vtx.size(); ++i) {
-            earlier_txids.emplace(block.vtx[i - 1]->GetHash());
+            m_earlier_txids.emplace(block.vtx[i - 1]->GetHash());
             for (const auto& input : block.vtx[i]->vin) {
-                if (!earlier_txids.contains(input.prevout.hash)) m_inputs.emplace_back(input.prevout);
+                if (!m_earlier_txids.contains(input.prevout.hash)) m_inputs.emplace_back(input.prevout);
             }
         }
+        m_earlier_txids.clear();
         // Only submit tasks if we have something to fetch.
         if (m_inputs.size()) {
             std::vector<std::function<void()>> tasks(workers_count, [this] {
