@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         // Malleating witnesses should be caught by `IsBlockMutated`.
         {
             CMutableTransaction mtx{*block.vtx[1]};
-            assert(!mtx.vin[0].scriptWitness.stack[0].empty());
+            assert(!mtx.vin[0].scriptWitness[0].empty());
             ++mtx.vin[0].scriptWitness.stack[0][0];
             block.vtx[1] = MakeTransactionRef(mtx);
         }
@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         // Test malleating the coinbase witness reserved value
         {
             CMutableTransaction mtx{*block.vtx[0]};
-            mtx.vin[0].scriptWitness.stack.resize(0);
+            mtx.vin[0].scriptWitness = {};
             block.vtx[0] = MakeTransactionRef(mtx);
             block.hashMerkleRoot = BlockMerkleRoot(block);
         }

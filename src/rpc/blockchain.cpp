@@ -230,7 +230,7 @@ UniValue coinbaseTxToJSON(const CTransaction& coinbase_tx)
     coinbase_tx_obj.pushKV("locktime", coinbase_tx.nLockTime);
     coinbase_tx_obj.pushKV("sequence", vin_0.nSequence);
     coinbase_tx_obj.pushKV("coinbase", HexStr(vin_0.scriptSig));
-    const auto& witness_stack{vin_0.scriptWitness.stack};
+    const auto& witness_stack{vin_0.scriptWitness};
     if (!witness_stack.empty()) {
         CHECK_NONFATAL(witness_stack.size() == 1);
         coinbase_tx_obj.pushKV("witness", HexStr(witness_stack[0]));

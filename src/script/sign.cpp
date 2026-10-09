@@ -774,7 +774,7 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
         witnessscript << OP_DUP << OP_HASH160 << ToByteVector(result[0]) << OP_EQUALVERIFY << OP_CHECKSIG;
         TxoutType subType;
         solved = solved && SignStep(provider, creator, witnessscript, result, subType, SigVersion::WITNESS_V0, sigdata);
-        sigdata.scriptWitness.stack = result;
+        sigdata.scriptWitness = CScriptWitness{result};
         sigdata.witness = true;
         result.clear();
     }
@@ -797,20 +797,20 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
         }
         result.emplace_back(witnessscript.begin(), witnessscript.end());
 
-        sigdata.scriptWitness.stack = result;
+        sigdata.scriptWitness = CScriptWitness{result};
         sigdata.witness = true;
         result.clear();
     } else if (whichType == TxoutType::WITNESS_V1_TAPROOT && !P2SH) {
         sigdata.witness = true;
         if (solved) {
-            sigdata.scriptWitness.stack = std::move(result);
+            sigdata.scriptWitness = CScriptWitness{result};
         }
         result.clear();
     } else if (solved && whichType == TxoutType::WITNESS_UNKNOWN) {
         sigdata.witness = true;
     }
 
-    if (!sigdata.witness) sigdata.scriptWitness.stack.clear();
+    if (!sigdata.witness) sigdata.scriptWitness = {};
     if (P2SH) {
         result.emplace_back(subscript.begin(), subscript.end());
     }
@@ -1066,7 +1066,7 @@ bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
         UpdateInput(txin, sigdata);
 
         // amount must be specified for valid segwit signature
-        if (amount == MAX_MONEY && !txin.scriptWitness.IsNull()) {
+        if (amount == MAX_MONEY && !txin.scriptWitness.empty()) {
             input_errors[i] = _("Missing amount");
             continue;
         }

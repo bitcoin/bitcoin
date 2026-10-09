@@ -392,10 +392,10 @@ public:
     {
         DoPush();
         UniValue array(UniValue::VARR);
-        if (!scriptWitness.stack.empty()) {
+        if (!scriptWitness.empty()) {
             UniValue wit(UniValue::VARR);
-            for (unsigned i = 0; i < scriptWitness.stack.size(); i++) {
-                wit.push_back(HexStr(scriptWitness.stack[i]));
+            for (unsigned i = 0; i < scriptWitness.size(); i++) {
+                wit.push_back(HexStr(scriptWitness[i]));
             }
             wit.push_back(ValueFromAmount(nValue));
             array.push_back(std::move(wit));
