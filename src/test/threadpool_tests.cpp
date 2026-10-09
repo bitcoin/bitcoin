@@ -209,7 +209,9 @@ BOOST_AUTO_TEST_CASE(task_exception_propagates_to_future)
     std::vector<std::future<void>> futures;
     futures.reserve(num_tasks);
     for (int i = 0; i < num_tasks; i++) {
-        futures.emplace_back(Submit(threadPool, [&make_err, i] { throw std::runtime_error(make_err(i)); }));
+        futures.emplace_back(Submit(threadPool, [&make_err, i] [[noreturn]] () {
+          throw std::runtime_error(make_err(i));
+        }));
     }
 
     for (int i = 0; i < num_tasks; i++) {

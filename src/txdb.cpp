@@ -183,7 +183,7 @@ void CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block
                 static FastRandomContext rng;
                 if (rng.randrange(m_options.simulate_crash_ratio) == 0) {
                     LogError("Simulating a crash. Goodbye.");
-                    _Exit(0);
+                    std::_Exit(0);
                 }
             }
         }

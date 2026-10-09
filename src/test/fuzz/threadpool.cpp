@@ -17,7 +17,7 @@ struct ExpectedException : std::runtime_error {
 };
 
 struct ThrowTask {
-    void operator()() const { throw ExpectedException("fail"); }
+    [[noreturn]] void operator()() const { throw ExpectedException("fail"); }
 };
 
 struct CounterTask {
