@@ -6,6 +6,7 @@
 import os
 import struct
 import tempfile
+from decimal import Decimal
 from io import BytesIO
 
 from test_framework.address import (
@@ -125,6 +126,7 @@ class ZMQTest (BitcoinTestFramework):
             else:
                 self.log.info("Skipping ipc test, because UNIX sockets are not supported.")
             self.test_sequence()
+            self.test_reorg_eviction_ordering()
             self.test_mempool_sync()
             self.test_reorg()
             self.test_multiple_interfaces()
@@ -453,6 +455,63 @@ class ZMQTest (BitcoinTestFramework):
         mempool_seq += 1
         self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE)
         self.sync_all()  # want to make sure we didn't break "consensus" for other tests
+
+    def test_reorg_eviction_ordering(self):
+        """
+        Check the order in which a reorg that evicts a mempool transaction is
+        published on the 'sequence' topic: the disconnected block ('D'), then
+        the eviction ('R'), then the connected blocks ('C').
+
+        BlockDisconnected is emitted inline by DisconnectTip, the reorg
+        eviction by MaybeUpdateMempoolForReorg at the end of
+        ActivateBestChainStep, and the BlockConnected signals are batched and
+        only emitted by ActivateBestChain once the step has returned. All three
+        go through the same serial task runner, so subscribers observe them in
+        that order.
+        """
+        self.log.info("Testing 'sequence' ordering for a reorg that evicts a transaction")
+        [seq] = self.setup_zmq_test([("sequence", f"tcp://127.0.0.1:{self.zmq_port_base}")])
+        self.disconnect_nodes(0, 1)
+
+        # Two conflicting spends of the same utxo. `parent` gets confirmed on
+        # nodes[0]'s chain, `conflict` on the chain nodes[0] will reorg to.
+        utxo = self.wallet.get_utxo()
+        parent = self.wallet.create_self_transfer(utxo_to_spend=utxo)
+        conflict = self.wallet.create_self_transfer(utxo_to_spend=utxo, fee_rate=Decimal("0.006"))
+
+        # nodes[0]: confirm `parent`, then leave a child of it in the mempool.
+        self.nodes[0].sendrawtransaction(parent["hex"])
+        dc_block = self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE, sync_fun=self.no_op)[0]
+        child_txid = self.wallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=parent["new_utxo"])["txid"]
+
+        # nodes[1]: build a longer chain confirming `conflict` instead. After the
+        # reorg `parent` can no longer re-enter nodes[0]'s mempool, so its
+        # in-mempool child is evicted with MemPoolRemovalReason::REORG.
+        self.nodes[1].sendrawtransaction(conflict["hex"])
+        connect_blocks = self.generatetoaddress(self.nodes[1], 2, ADDRESS_BCRT1_P2WSH_OP_TRUE, sync_fun=self.no_op)
+
+        self.connect_nodes(0, 1)
+        self.sync_blocks()
+        assert child_txid not in self.nodes[0].getrawmempool()
+
+        # Skip the notifications published before the reorg, then record it.
+        (hash_str, label, _) = seq.receive_sequence()
+        while (hash_str, label) != (dc_block, "D"):
+            (hash_str, label, _) = seq.receive_sequence()
+        observed = [(dc_block, "D")]
+        while len(observed) < 4:
+            (hash_str, label, _) = seq.receive_sequence()
+            observed.append((hash_str, label))
+
+        assert_equal(observed, [
+            (dc_block, "D"),
+            (child_txid, "R"),
+            (connect_blocks[0], "C"),
+            (connect_blocks[1], "C"),
+        ])
+
+        # `parent` and its child are gone for good; resync the wallet's utxo set.
+        self.wallet.rescan_utxos()
 
     def test_mempool_sync(self):
         """
