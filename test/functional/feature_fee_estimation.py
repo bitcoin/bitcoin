@@ -103,7 +103,7 @@ def check_smart_estimates(node, fees_seen):
     """Call estimatesmartfee and verify that the estimates meet certain invariants."""
 
     delta = 1.0e-6  # account for rounding error
-    all_smart_estimates = [node.estimatesmartfee(i, "economical", {"fee_rate_estimator": "block_policy"}) for i in range(1, 26)]
+    all_smart_estimates = [node.estimatesmartfee(i, "economical", False, {"fee_rate_estimator": "block_policy"}) for i in range(1, 26)]
     mempoolMinFee = node.getmempoolinfo()["mempoolminfee"]
     minRelaytxFee = node.getmempoolinfo()["minrelaytxfee"]
     feerate_ceiling = max(max(fees_seen), float(mempoolMinFee), float(minRelaytxFee))
@@ -144,8 +144,8 @@ def make_tx(wallet, utxo, feerate, target_vsize=0):
     )
 
 def check_fee_estimates_btw_modes(node, expected_conservative, expected_economical):
-    fee_est_conservative = node.estimatesmartfee(1, "conservative", {"fee_rate_estimator": "block_policy"})['feerate']
-    fee_est_economical = node.estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})['feerate']
+    fee_est_conservative = node.estimatesmartfee(1, "conservative", False, {"fee_rate_estimator": "block_policy"})['feerate']
+    fee_est_economical = node.estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "block_policy"})['feerate']
     # Omit estimate_mode to check that the default mode is economical.
     fee_est_default = node.estimatesmartfee(1, options={"fee_rate_estimator": "block_policy"})['feerate']
     assert_equal(fee_est_conservative, expected_conservative)
@@ -265,7 +265,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         check_estimates(self.nodes[1], self.fees_per_kb)
 
     def test_estimates_with_highminrelaytxfee(self):
-        high_val = 3 * self.nodes[1].estimatesmartfee(2, "economical", {"fee_rate_estimator": "block_policy"})["feerate"]
+        high_val = 3 * self.nodes[1].estimatesmartfee(2, "economical", False, {"fee_rate_estimator": "block_policy"})["feerate"]
         self.restart_node(1, extra_args=[f"-minrelaytxfee={high_val}"])
         check_smart_estimates(self.nodes[1], self.fees_per_kb)
         self.restart_node(1)
@@ -330,11 +330,11 @@ class EstimateFeeTest(BitcoinTestFramework):
         # Only 10% of the transactions were really confirmed with a low feerate,
         # the rest needed to be RBF'd. We must return the 90% conf rate feerate.
         high_feerate_kvb = Decimal(high_feerate) / COIN * 10 ** 3
-        est_feerate = node.estimatesmartfee(2, "economical", {"fee_rate_estimator": "block_policy"})["feerate"]
+        est_feerate = node.estimatesmartfee(2, "economical", False, {"fee_rate_estimator": "block_policy"})["feerate"]
         assert_equal(est_feerate, high_feerate_kvb)
 
     def test_fallback_when_mempool_estimator_has_insufficient_data(self):
-        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto"})["estimator"], "mempool_policy")
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "auto"})["estimator"], "mempool_policy")
         self.stop_node(0)
         # Move the mempool estimator data aside so the mempool policy estimator has insufficient data.
         original_path = self.nodes[0].chain_path / "fees" / "mempool_policy_estimator.dat"
@@ -342,9 +342,9 @@ class EstimateFeeTest(BitcoinTestFramework):
         original_path.replace(temp_path)
         self.start_node(0)
         self.wait_until(lambda: self.nodes[0].getmempoolinfo()["loaded"])
-        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "mempool_policy"})["errors"],
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "mempool_policy"})["errors"],
                      ["mempool_policy: Not enough recent block data for fee rate estimation"])
-        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto"})["estimator"], "block_policy")
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "auto"})["estimator"], "block_policy")
 
         # Restore the mempool estimator data.
         self.stop_node(0)
@@ -353,11 +353,11 @@ class EstimateFeeTest(BitcoinTestFramework):
 
     def test_old_fee_estimate_file(self):
         # Get the initial fee rate while node is running
-        fee_rate = self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})["feerate"]
+        fee_rate = self.nodes[0].estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "block_policy"})["feerate"]
 
         # Restart node to ensure block policy estimator file is read
         self.restart_node(0)
-        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})["feerate"], fee_rate)
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "block_policy"})["feerate"], fee_rate)
 
         block_policy_fee_dat = self.nodes[0].chain_path / BLOCK_POLICY_ESTIMATOR_FILE_PATH
         legacy_fee_dat = self.nodes[0].chain_path / "fee_estimates.dat"
@@ -367,7 +367,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.stop_node(0)
         os.rename(block_policy_fee_dat, legacy_fee_dat)
         self.start_node(0)
-        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})["feerate"], fee_rate)
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "block_policy"})["feerate"], fee_rate)
         self.stop_node(0)
         assert_equal(os.path.isfile(block_policy_fee_dat), True)
         assert_equal(os.path.isfile(legacy_fee_dat), False)
@@ -377,7 +377,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         with open(legacy_fee_dat, "wb") as f:
             f.write(b"ignored legacy fee estimates")
         self.start_node(0)
-        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})["feerate"], fee_rate)
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "block_policy"})["feerate"], fee_rate)
         self.stop_node(0)
         assert_equal(os.path.isfile(legacy_fee_dat), False)
 
@@ -387,7 +387,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Start node and ensure the block policy estimator file was not read
         self.start_node(0)
-        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})["errors"], [BLOCK_POLICY_ESTIMATOR_ERROR])
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "block_policy"})["errors"], [BLOCK_POLICY_ESTIMATOR_ERROR])
 
 
     def test_estimate_dat_is_flushed_periodically(self):
@@ -459,7 +459,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
     def test_acceptstalefeeestimates_option(self):
         # Get the initial fee rate while node is running
-        fee_rate = self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})["feerate"]
+        fee_rate = self.nodes[0].estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "block_policy"})["feerate"]
 
         self.stop_node(0)
 
@@ -471,7 +471,7 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Restart node with -acceptstalefeeestimates option to ensure block policy estimator file is read
         self.start_node(0,extra_args=["-acceptstalefeeestimates"])
-        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})["feerate"], fee_rate)
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "block_policy"})["feerate"], fee_rate)
 
     def clear_estimates(self):
         self.log.info("Restarting node with fresh estimation")
@@ -482,7 +482,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.connect_nodes(0, 1)
         self.connect_nodes(0, 2)
         self.sync_blocks()
-        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})["errors"], ["Insufficient data or no feerate found"])
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "block_policy"})["errors"], ["Insufficient data or no feerate found"])
 
     def broadcast_and_maybe_mine(self, broadcaster, feerate, txs, blocks=1, miner=None):
         """Broadcast and maybe mine some number of transactions with a specified fee rate."""
@@ -530,7 +530,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         for i in range(6):
             self.broadcast_and_maybe_mine(self.nodes[1], feerate_0_5_s_per_vb, TXS_COUNT)
             self.broadcast_and_maybe_mine(self.nodes[1], feerate_1_s_per_vb, TXS_COUNT, 1, self.nodes[2])
-        assert_equal(feerate_0_5_s_per_vb, self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})["feerate"])
+        assert_equal(feerate_0_5_s_per_vb, self.nodes[0].estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "block_policy"})["feerate"])
 
 
     def test_estimatesmartfee_return_mempool_estimates(self):
@@ -539,7 +539,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Ensure node0's mempool is empty at the start")
         assert_equal(node0.getmempoolinfo()['size'], 0)
         self.log.info("Test estimatesmartfee with empty mempool and no block policy estimator data")
-        estimate_after_restart = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto"})
+        estimate_after_restart = node0.estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "auto"})
         verify_estimate_response(estimate_after_restart, None, [BLOCK_POLICY_ESTIMATOR_ERROR])
         self.log.info("Populate block policy estimator with high-feerate history")
         # Generate high-feerate transactions and mine them over 6 blocks to give block policy data.
@@ -552,7 +552,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         utxos = [self.wallet.get_utxo(confirmed_only=True) for _ in range(num_txs)]
         insane_feerate = Decimal("0.01")
         self.send_transactions(utxos, insane_feerate, target_vsize)
-        estimate_after_spike = node0.estimatesmartfee(1, "economical", {"verbosity": 2, "fee_rate_estimator": "auto"})
+        estimate_after_spike = node0.estimatesmartfee(1, "economical", False, {"verbosity": 2, "fee_rate_estimator": "auto"})
         assert_equal(len(estimate_after_spike["mempool_health_statistics"]), 6)
         current_height = node0.getchaintips()[0]['height']
         for block_stat in estimate_after_spike["mempool_health_statistics"]:
@@ -562,7 +562,7 @@ class EstimateFeeTest(BitcoinTestFramework):
             assert block_stat['mempool_txs_weight']
         verify_estimate_response(estimate_after_spike, high_feerate, [])
         assert_equal(estimate_after_spike["estimator"], "block_policy")
-        mempool_policy_estimate = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "mempool_policy"})
+        mempool_policy_estimate = node0.estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "mempool_policy"})
         verify_estimate_response(mempool_policy_estimate, insane_feerate, [])
         # Confirm the spike transactions so they leave the mempool; the mined block
         # keeps the mempool representation healthy. Then broadcast fresh low-feerate
@@ -572,35 +572,35 @@ class EstimateFeeTest(BitcoinTestFramework):
         low_feerate = Decimal("0.00004")
         low_utxos = [self.wallet.get_utxo(confirmed_only=True) for _ in range(num_txs)]
         self.send_transactions(low_utxos, low_feerate, target_vsize)
-        lower_estimate = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto"})
+        lower_estimate = node0.estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "auto"})
         verify_estimate_response(lower_estimate, low_feerate, [])
         # The mempool block stats are persisted across restarts, so the mempool
         # stays healthy and the lower mempool estimate is still returned after a
         # restart. Without persistence, the combined estimate would fall back to
         # the block policy estimate until enough new blocks are observed.
         self.restart_node(0)
-        estimate_post_restart = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto"})
+        estimate_post_restart = node0.estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "auto"})
         verify_estimate_response(estimate_post_restart, low_feerate, [])
 
         self.log.info("Test estimatesmartfee returns the fee rate floor when the mempool is empty but healthy")
         self.generate(node0, 1, sync_fun=lambda: None)
         assert_equal(node0.getmempoolinfo()['size'], 0)
-        block_policy_estimate = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})
+        block_policy_estimate = node0.estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "block_policy"})
         assert "feerate" in block_policy_estimate
         # With an empty but healthy mempool the mempool estimator has no percentile data,
         # so it falls back to the fee rate floor: the max of minrelaytxfee and mempoolminfee.
         # That floor is lower than the block policy estimate, so the combined estimator returns it.
         mempool_info = node0.getmempoolinfo()
         floor = max(mempool_info["minrelaytxfee"], mempool_info["mempoolminfee"])
-        combined_estimate = node0.estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto"})
+        combined_estimate = node0.estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "auto"})
         verify_estimate_response(combined_estimate, floor, [])
         assert_equal(combined_estimate["estimator"], "mempool_policy")
 
     def test_fallback_to_block_policy_on_low_coverage(self):
         self.clear_estimates()
         self.broadcast_and_maybe_mine(self.nodes[0], Decimal("0.004"), TXS_COUNT, MEMPOOL_HEALTH_WINDOW, self.nodes[1])
-        assert "feerate" in self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})
-        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto"})["estimator"], "mempool_policy")
+        assert "feerate" in self.nodes[0].estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "block_policy"})
+        assert_equal(self.nodes[0].estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "auto"})["estimator"], "mempool_policy")
         anyone_can_spend_script = CScript([OP_TRUE]).hex()
         quarter_block_vsize = int(MAX_BLOCK_WEIGHT / WITNESS_SCALE_FACTOR / 4)
         expected_stats = []
@@ -616,16 +616,16 @@ class EstimateFeeTest(BitcoinTestFramework):
                 "block_weight": sum(tx["tx"].get_weight() for tx in unseen_txs + mempool_txs),
                 "mempool_txs_weight": sum(tx["tx"].get_weight() for tx in mempool_txs),
             })
-        combined = self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto", "verbosity": 2})
+        combined = self.nodes[0].estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "auto", "verbosity": 2})
         assert_equal(combined["estimator"], "block_policy")
-        assert_equal(combined["feerate"], self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "block_policy"})["feerate"])
+        assert_equal(combined["feerate"], self.nodes[0].estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "block_policy"})["feerate"])
         assert_equal(combined["mempool_health_statistics"], list(reversed(expected_stats)))
-        mempool_policy = self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "mempool_policy"})
+        mempool_policy = self.nodes[0].estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "mempool_policy"})
         assert_equal(mempool_policy["errors"], ["mempool_policy: Mempool is unreliable for fee rate estimation"])
         self.restart_node(0)
 
     def test_mined_block_stats_cleared_on_failed_mempool_load(self):
-        assert_equal(len(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto", "verbosity": 2})["mempool_health_statistics"]), MEMPOOL_HEALTH_WINDOW)
+        assert_equal(len(self.nodes[0].estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "auto", "verbosity": 2})["mempool_health_statistics"]), MEMPOOL_HEALTH_WINDOW)
         estimator_dat = self.nodes[0].chain_path / "fees" / "mempool_policy_estimator.dat"
         mempool_dat = self.nodes[0].chain_path / "mempool.dat"
         estimator_bak = estimator_dat.with_name(estimator_dat.name + ".bak")
@@ -640,10 +640,10 @@ class EstimateFeeTest(BitcoinTestFramework):
             break_mempool_load()
             self.start_node(0, **start_kwargs)
             self.wait_until(lambda: self.nodes[0].getmempoolinfo()["loaded"])
-            after = self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "auto", "verbosity": 2})
+            after = self.nodes[0].estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "auto", "verbosity": 2})
             assert_equal(after["mempool_health_statistics"], [])
             assert_equal(after["estimator"], "block_policy")
-            assert_equal(self.nodes[0].estimatesmartfee(1, "economical", {"fee_rate_estimator": "mempool_policy"})["errors"],
+            assert_equal(self.nodes[0].estimatesmartfee(1, "economical", False, {"fee_rate_estimator": "mempool_policy"})["errors"],
                          ["mempool_policy: Not enough recent block data for fee rate estimation"])
             self.stop_node(0)
 
@@ -673,6 +673,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         stale_stats = node0.estimatesmartfee(
             1,
             "economical",
+            False,
             {"verbosity": 2, "fee_rate_estimator": "auto"},
         )["mempool_health_statistics"]
         assert_equal(len(stale_stats), 6)
@@ -696,6 +697,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         stats_after_restart = node0.estimatesmartfee(
             1,
             "economical",
+            False,
             {"verbosity": 2, "fee_rate_estimator": "auto"},
         )["mempool_health_statistics"]
         assert_equal(stats_after_restart, [])
