@@ -11,7 +11,6 @@
 #include <prevector.h>
 #include <serialize.h>
 #include <span.h>
-#include <streams.h>
 #include <uint256.h>
 #include <util/hash_type.h>
 
@@ -607,12 +606,7 @@ class CScriptWitness
     std::unique_ptr<std::byte[]> m_data;
     static constexpr size_t HEADER_SIZE{4};
 
-    /** The serialization of the stack (empty for an empty stack). As it was produced by this class,
-     *  ReadCompactSize cannot fail on it, so the accessors below are noexcept. This relies on the
-     *  number of elements and their sizes not exceeding MAX_SIZE, which holds for deserialized
-     *  stacks, and in practice for stacks constructed from vectors. A later commit removes this
-     *  restriction.
-     */
+    /** The serialization of the stack (empty for an empty stack). */
     std::span<const std::byte> Data() const noexcept
     {
         if (!m_data) return {};
@@ -630,11 +624,10 @@ public:
     /** Forward iterator over the elements of the stack, exposing them as spans. */
     class Iterator
     {
-        /** Reader for the serialization of the remaining elements. */
-        SpanReader m_reader{std::span<const unsigned char>{}};
+        std::span<const std::byte> m_rest; //!< The serialization of the remaining elements.
 
         friend CScriptWitness;
-        explicit Iterator(SpanReader reader) noexcept : m_reader{reader} {}
+        explicit Iterator(std::span<const std::byte> rest) noexcept : m_rest{rest} {}
 
     public:
         using iterator_category = std::forward_iterator_tag;
@@ -646,20 +639,20 @@ public:
         Iterator() noexcept = default;
         value_type operator*() const noexcept
         {
-            auto reader = m_reader;
-            const auto len = ReadCompactSize(reader);
+            auto data = m_rest;
+            const auto len = DecodeCompactSize(data);
             // The serialization is std::byte, but elements are returned as unsigned char, like other script data.
-            return {UCharCast(reader.Remaining().data()), len};
+            return UCharSpanCast(data.first(len));
         }
         Iterator& operator++() noexcept
         {
-            m_reader.ignore(ReadCompactSize(m_reader));
+            const auto len = DecodeCompactSize(m_rest);
+            m_rest = m_rest.subspan(len);
             return *this;
         }
         Iterator operator++(int) noexcept { auto ret{*this}; ++*this; return ret; }
-        /** Iterators over the same stack are equal if the same number of bytes of its serialization
-         *  remain. */
-        friend bool operator==(const Iterator& a, const Iterator& b) noexcept { return a.m_reader.size() == b.m_reader.size(); }
+        /** Iterators over the same stack are equal if they point to the same remaining elements. */
+        friend bool operator==(const Iterator& a, const Iterator& b) noexcept { return a.m_rest.data() == b.m_rest.data(); }
     };
     using iterator = Iterator;
     using const_iterator = Iterator;
@@ -682,21 +675,21 @@ public:
     size_t size() const noexcept
     {
         if (!m_data) return 0;
-        SpanReader reader{Data()};
-        return ReadCompactSize(reader);
+        auto data = Data();
+        return DecodeCompactSize(data);
     }
     Iterator begin() const noexcept LIFETIMEBOUND
     {
         if (!m_data) return Iterator{};
-        SpanReader reader{Data()};
-        ReadCompactSize(reader);
-        return Iterator{reader};
+        auto data = Data();
+        DecodeCompactSize(data);
+        return Iterator{data};
     }
     Iterator end() const noexcept LIFETIMEBOUND
     {
         if (!m_data) return Iterator{};
         const auto data = Data();
-        return Iterator{SpanReader{data.subspan(data.size())}};
+        return Iterator{data.subspan(data.size())};
     }
     /** The first (bottom) element. The stack must not be empty. */
     std::span<const unsigned char> front() const noexcept LIFETIMEBOUND { return *begin(); }
