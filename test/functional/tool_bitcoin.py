@@ -14,6 +14,7 @@ from test_framework.util import (
 
 import platform
 import re
+import subprocess
 
 
 class ToolBitcoinTest(BitcoinTestFramework):
@@ -60,8 +61,58 @@ class ToolBitcoinTest(BitcoinTestFramework):
             except Exception as e:
                 raise RuntimeError(f"Unexpected output from {node.args + extra_args}: {out=!r} {err=!r} {ret=!r}") from e
 
+    def run_wrapper(self, *args):
+        """Run the bitcoin wrapper directly and return (returncode, stdout, stderr)."""
+        binaries = self.nodes[0].binaries
+        result = subprocess.run([*binaries.valgrind_cmd, binaries.paths.bitcoin_bin, *args],
+                                capture_output=True, text=True)
+        return result.returncode, result.stdout, result.stderr
+
+    def test_version(self):
+        self.log.info("Ensure bitcoin -v and --version report the version")
+        for arg in ["-v", "--version"]:
+            returncode, stdout, stderr = self.run_wrapper(arg)
+            assert_equal(returncode, 0)
+            assert_equal(stderr, "")
+            assert "version" in stdout, f"Unexpected output from bitcoin {arg}: {stdout!r}"
+
+    def test_help(self):
+        self.log.info("Ensure bitcoin -h, --help and help print the full help")
+        for arg in ["-h", "--help", "help"]:
+            returncode, stdout, stderr = self.run_wrapper(arg)
+            assert_equal(returncode, 0)
+            assert_equal(stderr, "")
+            assert stdout.startswith("Usage:"), f"Unexpected output from bitcoin {arg}: {stdout!r}"
+            assert "Commands:" in stdout
+
+    def test_no_command(self):
+        self.log.info("Ensure bitcoin without a command prints usage and fails")
+        returncode, stdout, stderr = self.run_wrapper()
+        assert_equal(returncode, 1)
+        assert_equal(stderr, "")
+        assert stdout.startswith("Usage:"), f"Unexpected output from bitcoin: {stdout!r}"
+
+    def test_unrecognized(self):
+        self.log.info("Ensure bitcoin rejects an unknown command and an unknown option")
+        command = "nonexistentcommand"
+        returncode, stdout, stderr = self.run_wrapper(command)
+        assert_equal(returncode, 1)
+        assert_equal(stdout, "")
+        assert f"Unrecognized command: '{command}'" in stderr, f"Unexpected stderr: {stderr!r}"
+
+        option = "-nonexistentoption"
+        returncode, stdout, stderr = self.run_wrapper(option)
+        assert_equal(returncode, 1)
+        assert_equal(stdout, "")
+        assert f"Unknown option: {option}" in stderr, f"Unexpected stderr: {stderr!r}"
+
     def run_test(self):
         node = self.nodes[0]
+
+        self.test_version()
+        self.test_help()
+        self.test_no_command()
+        self.test_unrecognized()
 
         self.log.info("Ensure bitcoin node command invokes bitcoind by default")
         self.test_args([], [], expect_exe="bitcoind")
