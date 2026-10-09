@@ -848,6 +848,9 @@ private:
     FeeFilterRounder m_fee_filter_rounder GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
 
     const CChainParams& m_chainparams;
+    /** Headers sync DoS-protection parameters, computed once at startup from the chain's age and
+     *  minchainwork. Shared by all per-peer HeadersSyncState objects. */
+    const HeadersSyncParams m_headers_sync_params;
     CConnman& m_connman;
     AddrMan& m_addrman;
     /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
@@ -2132,12 +2135,24 @@ std::unique_ptr<PeerManager> PeerManager::make(CConnman& connman, AddrMan& addrm
     return std::make_unique<PeerManagerImpl>(connman, addrman, banman, chainman, pool, warnings, opts);
 }
 
+//! Compute the headers sync DoS-protection parameters for the given chain, using its age (genesis
+//! to now) and the height at which its minimum chain work was taken, and log the result.
+static HeadersSyncParams MakeHeadersSyncParams(const CChainParams& chainparams)
+{
+    const auto params{ComputeHeadersSyncParams(Now<NodeSeconds>() - chainparams.GenesisBlock().Time(),
+                                               chainparams.GetConsensus().minchainwork_height)};
+    LogInfo("Headers sync parameters: commitment period=%u, redownload buffer size=%u",
+            params.commitment_period, params.redownload_buffer_size);
+    return params;
+}
+
 PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
                                  BanMan* banman, ChainstateManager& chainman,
                                  CTxMemPool& pool, node::Warnings& warnings, Options opts)
     : m_rng{opts.deterministic_rng},
       m_fee_filter_rounder{CFeeRate{DEFAULT_MIN_RELAY_TX_FEE}, m_rng},
       m_chainparams(chainman.GetParams()),
+      m_headers_sync_params{MakeHeadersSyncParams(m_chainparams)},
       m_connman(connman),
       m_addrman(addrman),
       m_banman(banman),
@@ -3038,7 +3053,7 @@ bool PeerManagerImpl::TryLowWorkHeadersSync(Peer& peer, CNode& pfrom, const CBlo
             LOCK(peer.m_headers_sync_mutex);
             try {
                 peer.m_headers_sync.reset(new HeadersSyncState(peer.m_id, m_chainparams.GetConsensus(),
-                    m_chainparams.HeadersSync(), chain_start_header, minimum_chain_work));
+                    m_headers_sync_params, chain_start_header, minimum_chain_work));
             } catch (const HeadersSyncState::SystemClockError& e) {
                 // The chain state loading logic performs an earlier check to
                 // verify that the tip of the locally stored chain is <=
