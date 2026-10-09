@@ -8,13 +8,17 @@
 #include <consensus/amount.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
+#include <core_memusage.h>
 #include <interfaces/types.h>
 #include <kernel/chainparams.h>
+#include <logging/categories.h>
+#include <logging/timer.h>
 #include <node/kernel_notifications.h>
 #include <node/miner.h>
 #include <node/mining_args.h>
 #include <primitives/block.h>
 #include <sync.h>
+#include <txmempool.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/signalinterrupt.h>
@@ -25,6 +29,7 @@
 #include <compare>
 #include <condition_variable>
 #include <numeric>
+#include <ranges>
 #include <utility>
 #include <vector>
 
@@ -46,6 +51,68 @@ std::unique_ptr<CBlockTemplate> BlockTemplateManager::CreateNewTemplate(const Bl
         &m_mempool,
         MergeMiningOptions(options, m_block_create_args),
     }.CreateNewBlock();
+}
+
+void BlockTemplateManager::TrackTemplateTransactions(const std::vector<CTransactionRef>& txs)
+{
+    LOCK(m_mutex);
+    // Don't track the dummy coinbase, because it can be modified in-place
+    // by submitSolution()
+    for (const CTransactionRef& tx : txs | std::views::drop(1)) {
+        ++m_template_tx_refs[tx];
+    }
+}
+
+void BlockTemplateManager::StopTrackingTemplateTransactions(const std::vector<CTransactionRef>& txs)
+{
+    LOCK(m_mutex);
+    for (const CTransactionRef& tx : txs | std::views::drop(1)) {
+        auto ref_count{m_template_tx_refs.find(tx)};
+        if (!Assume(ref_count != m_template_tx_refs.end())) continue;
+        if (--ref_count->second == 0) {
+            m_template_tx_refs.erase(ref_count);
+        }
+    }
+}
+
+size_t BlockTemplateManager::GetTemplateMemoryUsage() const
+{
+    LOG_TIME_MILLIS_WITH_CATEGORY("Calculate template transaction reference memory footprint", BCLog::BENCH);
+
+    // Copy the transaction references so that m_mutex is not held while
+    // mempool.exists() below repeatedly locks mempool.cs. Holding it would
+    // block template creation and destruction for the duration of this
+    // calculation.
+    std::vector<CTransactionRef> tx_refs;
+    {
+        LOCK(m_mutex);
+        tx_refs.reserve(m_template_tx_refs.size());
+        std::ranges::copy(m_template_tx_refs | std::views::keys, std::back_inserter(tx_refs));
+    }
+
+    size_t usage_bytes{0};
+    for (const auto& tx_ref : tx_refs) {
+        if (!Assume(tx_ref)) continue;
+        // mempool.exists() locks mempool.cs each time, which slows down
+        // our calculation. This is preferable to potentially blocking
+        // the node from processing new transactions while this
+        // (non-urgent) calculation is in progress.
+        //
+        // As a side-effect the result is not an accurate snapshot, because
+        // the mempool may change during the loop.
+        if (m_mempool.exists(tx_ref->GetWitnessHash())) continue;
+        usage_bytes += RecursiveDynamicUsage(*tx_ref);
+    }
+    return usage_bytes;
+}
+
+void BlockTemplateManager::SanityCheck() const
+{
+    LOCK(m_mutex);
+    for (const auto& [tx_ref, count] : m_template_tx_refs) {
+        Assume(tx_ref);
+        Assume(count > 0);
+    }
 }
 
 namespace {
