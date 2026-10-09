@@ -1664,6 +1664,44 @@ BOOST_AUTO_TEST_CASE(private_broadcast_version_does_not_update_addrman_services)
     m_node.peerman->FinalizeNode(node);
 }
 
+BOOST_AUTO_TEST_CASE(duplicate_wtxidrelay_counted_once)
+{
+    LOCK(NetEventsInterface::g_msgproc_mutex);
+
+    CNode node{/*id=*/0,
+               /*sock=*/nullptr,
+               /*addrIn=*/CAddress{},
+               /*nKeyedNetGroupIn=*/0,
+               /*nLocalHostNonceIn=*/0,
+               /*addrBindIn=*/CService{},
+               /*addrNameIn=*/"",
+               /*conn_type_in=*/ConnectionType::INBOUND,
+               /*inbound_onion=*/false,
+               /*network_key=*/0};
+
+    auto& connman = static_cast<ConnmanTestMsg&>(*m_node.connman);
+    connman.Handshake(node,
+                      /*successfully_connected=*/false,
+                      /*remote_services=*/NODE_NETWORK,
+                      /*local_services=*/NODE_NONE,
+                      /*version=*/PROTOCOL_VERSION,
+                      /*relay_txs=*/true);
+    BOOST_REQUIRE(node.GetCommonVersion() >= WTXID_RELAY_VERSION);
+
+    // Send wtxidrelay twice between VERSION and VERACK. The duplicate must be
+    // ignored and the peer counted only once as a wtxid relay peer.
+    for (size_t i{0}; i < 2; ++i) {
+        (void)connman.ReceiveMsgFrom(node, NetMsg::Make(NetMsgType::WTXIDRELAY));
+        node.fPauseSend = false;
+        connman.ProcessMessagesOnce(node);
+        BOOST_CHECK(!node.fDisconnect);
+    }
+
+    // Removing the last peer runs a consistency check asserting that the
+    // wtxid relay peer counter returned to zero.
+    m_node.peerman->FinalizeNode(node);
+}
+
 BOOST_AUTO_TEST_CASE(addlocal_onlynet_externalip)
 {
     // Test that `-externalip` addresses bypass `-onlynet`, but score alone does
