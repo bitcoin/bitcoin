@@ -163,4 +163,71 @@ BOOST_FIXTURE_TEST_CASE(test_addnode_getaddednodeinfo_and_connection_detection, 
     connman->ClearTestNodes();
 }
 
+/** Under -v2onlyclearnet, an inbound v1 peer is disconnected only if it reached us over clearnet. */
+BOOST_AUTO_TEST_CASE(v2onlyclearnet_inbound_v1)
+{
+    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params());
+    auto peerman = PeerManager::make(*connman, *m_node.addrman, nullptr, *m_node.chainman, *m_node.mempool, *m_node.warnings, {});
+
+    CConnman::Options options;
+    options.m_msgproc = peerman.get();
+    options.m_v2only_clearnet = true;
+    connman->Init(options);
+
+    LOCK(NetEventsInterface::g_msgproc_mutex);
+
+    // Hacky way to test an onion inbound: inbound_onion alone makes
+    // CNode::ConnectedThroughNetwork() report NET_ONION, so the peer can keep this
+    // clearnet address and still be treated as onion.
+    const CAddress addr{ip(0xa0b0c001), NODE_NONE};
+    NodeId id{0};
+
+    // A v1 peer reaching us over clearnet is disconnected while its version message is processed.
+    {
+        CNode node{++id,
+                   /*sock=*/std::make_shared<StaticContentsSock>(""),
+                   addr,
+                   /*nKeyedNetGroupIn=*/0,
+                   /*nLocalHostNonceIn=*/0,
+                   CAddress{},
+                   /*addrNameIn=*/"",
+                   ConnectionType::INBOUND,
+                   /*inbound_onion=*/false,
+                   /*network_key=*/0};
+        BOOST_REQUIRE_EQUAL(node.ConnectedThroughNetwork(), Network::NET_IPV4);
+        connman->Handshake(node,
+                           /*successfully_connected=*/false,
+                           /*remote_services=*/ServiceFlags(NODE_NETWORK | NODE_WITNESS),
+                           /*local_services=*/ServiceFlags(NODE_NETWORK | NODE_WITNESS),
+                           /*version=*/PROTOCOL_VERSION,
+                           /*relay_txs=*/true);
+        BOOST_CHECK(node.fDisconnect);
+        peerman->FinalizeNode(node);
+    }
+
+    // A v1 peer reaching us over Tor is kept: onion inbound connections are already encrypted,
+    // and arrive on a dedicated bind socket rather than from an onion address.
+    {
+        CNode node{++id,
+                   /*sock=*/std::make_shared<StaticContentsSock>(""),
+                   addr,
+                   /*nKeyedNetGroupIn=*/0,
+                   /*nLocalHostNonceIn=*/0,
+                   CAddress{},
+                   /*addrNameIn=*/"",
+                   ConnectionType::INBOUND,
+                   /*inbound_onion=*/true,
+                   /*network_key=*/0};
+        BOOST_REQUIRE_EQUAL(node.ConnectedThroughNetwork(), Network::NET_ONION);
+        connman->Handshake(node,
+                           /*successfully_connected=*/true,
+                           /*remote_services=*/ServiceFlags(NODE_NETWORK | NODE_WITNESS),
+                           /*local_services=*/ServiceFlags(NODE_NETWORK | NODE_WITNESS),
+                           /*version=*/PROTOCOL_VERSION,
+                           /*relay_txs=*/true);
+        BOOST_CHECK(!node.fDisconnect);
+        peerman->FinalizeNode(node);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
