@@ -207,7 +207,7 @@ static void Checksum(std::span<const uint8_t> addr_pubkey, uint8_t (&checksum)[C
     memcpy(checksum, checksum_full, sizeof(checksum));
 }
 
-}; // namespace torv3
+} // namespace torv3
 
 bool CNetAddr::SetSpecial(std::string_view addr)
 {

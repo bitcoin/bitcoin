@@ -45,7 +45,7 @@ public:
         for (unsigned i = bytes.size() / 4; i * 4 < 768; ++i) {
             assert(pn[i] == 0);
         }
-    };
+    }
 };
 
 /** The MuHash3072 modulus (2**3072 - 1103717) as 768 LE8 bytes. */

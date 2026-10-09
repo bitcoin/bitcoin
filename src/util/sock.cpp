@@ -426,7 +426,7 @@ void Sock::Close()
 bool Sock::operator==(SOCKET s) const
 {
     return m_socket == s;
-};
+}
 
 std::string NetworkErrorString(int err)
 {
