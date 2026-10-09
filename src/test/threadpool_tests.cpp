@@ -469,6 +469,7 @@ BOOST_AUTO_TEST_CASE(submit_range_of_tasks_complete_successfully)
     std::array<std::function<int32_t()>, static_cast<size_t>(num_tasks)> array_tasks;
     std::vector<std::function<int32_t()>> vector_tasks;
     vector_tasks.reserve(static_cast<size_t>(num_tasks));
+    BOOST_CHECK(Assert(threadPool.Submit(vector_tasks))->empty());
     for (const auto i : std::views::iota(int32_t{1}, num_tasks + 1)) {
         array_tasks.at(static_cast<size_t>(i - 1)) = [i, square] { return square(i); };
         vector_tasks.emplace_back([i, square] { return square(i); });
@@ -476,7 +477,7 @@ BOOST_AUTO_TEST_CASE(submit_range_of_tasks_complete_successfully)
 
     auto futures{std::move(*Assert(threadPool.Submit(std::move(array_tasks))))};
     BOOST_CHECK_EQUAL(futures.size(), static_cast<size_t>(num_tasks));
-    std::ranges::move(*Assert(threadPool.Submit(std::move(vector_tasks))), std::back_inserter(futures));
+    std::ranges::move(*Assert(threadPool.Submit(vector_tasks)), std::back_inserter(futures));
     BOOST_CHECK_EQUAL(futures.size(), static_cast<size_t>(num_tasks * 2));
 
     auto squares_sum{0};

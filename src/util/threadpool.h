@@ -216,7 +216,7 @@ public:
      *          uncaught exceptions, as they would otherwise be silently discarded.
      */
     template <std::ranges::sized_range R>
-        requires(!std::is_lvalue_reference_v<R>)
+        requires(!std::is_const_v<std::remove_reference_t<R>>)
     [[nodiscard]] util::Expected<std::vector<RangeFuture<R>>, SubmitError> Submit(R&& fns) noexcept EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         std::vector<RangeFuture<R>> futures;
