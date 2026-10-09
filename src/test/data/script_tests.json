@@ -82,6 +82,8 @@
 ["0 IFDUP", "DEPTH 1 EQUALVERIFY 0 EQUAL", "P2SH,STRICTENC", "OK"],
 ["1 IFDUP", "DEPTH 2 EQUALVERIFY 1 EQUALVERIFY 1 EQUAL", "P2SH,STRICTENC", "OK"],
 ["0x05 0x0100000000 IFDUP", "DEPTH 2 EQUALVERIFY 0x05 0x0100000000 EQUAL", "P2SH,STRICTENC", "OK", "IFDUP dups non ints"],
+["0x01 0x80 IFDUP", "DEPTH 1 EQUALVERIFY 0x01 0x80 EQUAL", "P2SH,STRICTENC", "OK", "IFDUP does not dup negative zero"],
+["0x02 0x0000 IFDUP", "DEPTH 1 EQUALVERIFY 0x02 0x0000 EQUAL", "P2SH,STRICTENC", "OK", "IFDUP does not dup non-minimal zero"],
 ["0 DROP", "DEPTH 0 EQUAL", "P2SH,STRICTENC", "OK"],
 ["0", "DUP 1 ADD 1 EQUALVERIFY 0 EQUAL", "P2SH,STRICTENC", "OK"],
 ["0 1", "NIP", "P2SH,STRICTENC", "OK"],
@@ -92,6 +94,7 @@
 ["22 21 20", "0 ROLL 20 EQUALVERIFY DEPTH 2 EQUAL", "P2SH,STRICTENC", "OK"],
 ["22 21 20", "1 ROLL 21 EQUALVERIFY DEPTH 2 EQUAL", "P2SH,STRICTENC", "OK"],
 ["22 21 20", "2 ROLL 22 EQUALVERIFY DEPTH 2 EQUAL", "P2SH,STRICTENC", "OK"],
+["0x01 0xaa 0x01 0xbb 0x01 0xaa 0x01 0xcc 0x01 0xaa", "2 ROLL 0x01 0xaa EQUALVERIFY 0x01 0xaa EQUALVERIFY 0x01 0xcc EQUALVERIFY 0x01 0xbb EQUALVERIFY 0x01 0xaa EQUAL", "P2SH,STRICTENC", "OK", "ROLL moves the element at depth n, not another element with the same value"],
 ["22 21 20", "ROT 22 EQUAL", "P2SH,STRICTENC", "OK"],
 ["22 21 20", "ROT DROP 20 EQUAL", "P2SH,STRICTENC", "OK"],
 ["22 21 20", "ROT DROP DROP 21 EQUAL", "P2SH,STRICTENC", "OK"],
@@ -685,11 +688,13 @@
 ["0 0x02 0x0000 0", "CHECKMULTISIGVERIFY 1", "", "OK"],
 
 ["While not really correctly DER encoded, the empty signature is allowed by"],
-["STRICTENC/DERSIG to provide a compact way to provide a deliberately invalid signature."],
+["STRICTENC/DERSIG/LOW_S to provide a compact way to provide a deliberately invalid signature."],
 ["0", "0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 CHECKSIG NOT", "STRICTENC", "OK"],
 ["0", "0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 CHECKSIG NOT", "DERSIG", "OK"],
 ["0 0", "1 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 1 CHECKMULTISIG NOT", "STRICTENC", "OK"],
 ["0 0", "1 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 1 CHECKMULTISIG NOT", "DERSIG", "OK"],
+["0", "0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 CHECKSIG NOT", "LOW_S", "OK"],
+["0 0", "1 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 1 CHECKMULTISIG NOT", "LOW_S", "OK"],
 
 ["CHECKMULTISIG evaluation order tests. CHECKMULTISIG evaluates signatures and"],
 ["pubkeys in a specific order, and will exit early if the number of signatures"],
@@ -1036,6 +1041,8 @@
 ["-2147483648", "1ADD 1", "P2SH,STRICTENC", "SCRIPTNUM", "Because we use a sign bit, -2147483648 is also 5 bytes"],
 ["2147483647", "1ADD 1SUB 1", "P2SH,STRICTENC", "SCRIPTNUM", "We cannot do math on 5-byte integers, even if the result is 4-bytes"],
 ["2147483648", "1SUB 1", "P2SH,STRICTENC", "SCRIPTNUM", "We cannot do math on 5-byte integers, even if the result is 4-bytes"],
+["0x05 0xff00000000", "1ADD DROP 1", "P2SH,STRICTENC", "SCRIPTNUM", "We cannot do math on 5-byte integers, even if the value fits in 1 byte when minimally encoded"],
+["0x09 0x000000000000000000", "1ADD DROP 1", "P2SH,STRICTENC", "SCRIPTNUM", "We cannot do math on 9-byte integers"],
 
 ["2147483648 1", "BOOLOR 1", "P2SH,STRICTENC", "SCRIPTNUM", "We cannot do BOOLOR on 5-byte integers (but we can still do IF etc)"],
 ["2147483648 1", "BOOLAND 1", "P2SH,STRICTENC", "SCRIPTNUM", "We cannot do BOOLAND on 5-byte integers"],
@@ -1144,6 +1151,8 @@
 
 ["NOP 0x01 1", "HASH160 0x14 0xda1745e9b549bd0bfa1a569971c77eba30cd5a4b EQUAL", "P2SH,STRICTENC", "SIG_PUSHONLY", "Tests for Script.IsPushOnly()"],
 ["NOP1 0x01 1", "HASH160 0x14 0xda1745e9b549bd0bfa1a569971c77eba30cd5a4b EQUAL", "P2SH,STRICTENC", "SIG_PUSHONLY"],
+["0x01 0xff 16", "16 EQUALVERIFY 0x01 0xff EQUAL", "SIGPUSHONLY", "OK", "OP_16 is a push for Script.IsPushOnly()"],
+["16 0x02 0x6087", "HASH160 0x14 0x0365830433de321aea9c57d446d3b305a2bcf5be EQUAL", "P2SH,STRICTENC", "OK", "P2SH scriptSig with OP_16 is push only"],
 
 ["0 0x01 0x50", "HASH160 0x14 0xece424a6bb6ddf4db592c0faed60685047a361b1 EQUAL", "P2SH,STRICTENC", "BAD_OPCODE", "OP_RESERVED in P2SH should fail"],
 ["0 0x01 VER", "HASH160 0x14 0x0f4d7845db968f2a81b530b6f3c1d6246d4c7e01 EQUAL", "P2SH,STRICTENC", "BAD_OPCODE", "OP_VER in P2SH should fail"],
@@ -1317,6 +1326,7 @@
 [["51", 0.00000000 ], "00", "1 0x021234", "P2SH,WITNESS", "WITNESS_MALLEATED", "OP_1 does introduce a witness program"],
 [["51", 0.00000000 ], "00", "16 0x021234", "P2SH,WITNESS", "WITNESS_MALLEATED", "OP_16 does introduce a witness program"],
 [["51", 0.00000000 ], "", "NOP 0x021234", "P2SH,WITNESS", "WITNESS_UNEXPECTED", "NOP does not introduce a witness program"],
+[["51", 0.00000000 ], "", "-1 0x021234", "P2SH", "OK", "Unexpected witness is ignored without WITNESS"],
 [["6161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616151", 0.00000000 ],
 "",
 "0 0x20 0x73a0a078cb5f8f39cffbaeac999da2572e65229ef9cf4510cfa765bfe1aa1854",
@@ -2616,6 +2626,8 @@
 ["CHECKSEQUENCEVERIFY tests"],
 ["", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "INVALID_STACK_OPERATION", "CSV automatically fails on an empty stack"],
 ["-1", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "NEGATIVE_LOCKTIME", "CSV automatically fails if stack top is negative"],
+["-2", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "NEGATIVE_LOCKTIME", "CSV fails for any negative operand, even though -2 has the disable flag bit set"],
+["0x09 0x000000000000000000", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "SCRIPTNUM", "CSV fails for a 9-byte operand"],
 ["0x0180", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "UNSATISFIED_LOCKTIME", "Negative zero is treated as 0, so CSV fails with UNSATISFIED_LOCKTIME rather than NEGATIVE_LOCKTIME"],
 ["0x0100", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY,MINIMALDATA", "SCRIPTNUM", "CSV fails if stack top is not minimally encoded"],
 ["0", "CHECKSEQUENCEVERIFY", "CHECKSEQUENCEVERIFY", "UNSATISFIED_LOCKTIME", "CSV fails if stack top bit 1 << 31 is set and the tx version < 2"],
@@ -2799,6 +2811,15 @@
     "TAPSCRIPT_EMPTY_PUBKEY",
     "TAPSCRIPT: OP_CHECKSIG with empty pubkey must fail"
 ],
+
+["A taproot output key that is not a valid x coordinate is not anyone-can-spend"],
+[["51", "c079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798", 0.00000001], "", "1 0x20 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "P2SH,WITNESS,TAPROOT", "WITNESS_PROGRAM_MISMATCH", "Taproot output key is not a valid x coordinate"],
+
+["Signature encoding checks that apply under a single policy flag"],
+["0x09 0x300602010102010100", "0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 CHECKSIG NOT", "", "OK", "P2PK NOT with invalid sig and hashtype 0 but no STRICTENC"],
+["0x09 0x300602010102010100", "0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 CHECKSIG NOT", "STRICTENC", "SIG_HASHTYPE", "P2PK NOT with invalid sig and hashtype 0"],
+["0x09 0x300602010102010180", "0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 CHECKSIG NOT", "STRICTENC", "SIG_HASHTYPE", "P2PK NOT with invalid sig and hashtype ANYONECANPAY|0"],
+["0x47 0x304402200060558477337b9022e70534f1fea71a318caf836812465a2509931c5e7c4987022078ec32bd50ac9e03a349ba953dfd9fe1c8d2dd8bdb1d38ddca844d3d5c78c11801", "0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 CHECKSIG", "LOW_S", "SIG_DER", "P2PK with too much R padding and only LOW_S"],
 
 ["NULLFAIL should cover all signatures and signatures only"],
 ["0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", "0x01 0x14 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0x01 0x14 CHECKMULTISIG NOT", "DERSIG", "OK", "BIP66 and NULLFAIL-compliant"],
