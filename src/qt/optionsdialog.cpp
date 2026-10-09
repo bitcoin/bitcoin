@@ -380,7 +380,11 @@ void OptionsDialog::on_okButton_clicked()
 {
     model->setData(model->index(OptionsModel::FontForMoney, 0), ui->moneyFont->itemData(ui->moneyFont->currentIndex()));
 
+    model->clearWriteFailed();
     mapper->submit();
+    if (model->writeFailed()) {
+        QMessageBox::warning(this, tr("Options warning"), tr("Some settings could not be saved and will be lost on restart."));
+    }
     accept();
     updateDefaultProxyNets();
 }
