@@ -62,6 +62,7 @@ class BumpFeeTest(BitcoinTestFramework):
         self.extra_args = [[
             "-mintxfee=0.00002",
             "-addresstype=bech32",
+            "-deprecatedrpc=confTarget",
         ] for i in range(self.num_nodes)]
 
     def skip_test_if_missing_module(self):
