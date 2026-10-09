@@ -128,6 +128,7 @@ add_executable(test_bitcoin
   txvalidation_tests.cpp
   txvalidationcache_tests.cpp
   uint256_tests.cpp
+  util/block_validity.cpp
   util_check_tests.cpp
   util_not_null_tests.cpp
   util_expected_tests.cpp
@@ -135,6 +136,10 @@ add_executable(test_bitcoin
   util_tests.cpp
   util_threadnames_tests.cpp
   util_trace_tests.cpp
+  validation_block_contextual_tests.cpp
+  validation_block_header_tests.cpp
+  validation_block_stateful_tests.cpp
+  validation_block_stateless_tests.cpp
   validation_block_tests.cpp
   validation_chainstate_tests.cpp
   validation_chainstatemanager_tests.cpp
