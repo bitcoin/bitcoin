@@ -7,13 +7,10 @@ Test how locally submitted transactions are sent to the network when private bro
 """
 
 import time
-import threading
 
 from test_framework.p2p import (
     P2PDataStore,
     P2PInterface,
-    P2P_SERVICES,
-    start_p2p_listener,
 )
 from test_framework.messages import (
     CAddress,
@@ -23,13 +20,7 @@ from test_framework.messages import (
     msg_inv,
     msg_tx,
 )
-from test_framework.netutil import (
-    format_addr_port
-)
 from test_framework.script_util import build_malleated_tx_package
-from test_framework.socks5 import (
-    start_socks5_server,
-)
 from test_framework.test_framework import (
     BitcoinTestFramework,
 )
@@ -57,94 +48,42 @@ class NoRelayP2PInterface(P2PInterface):
 
 class P2PPrivateBroadcast(BitcoinTestFramework):
     def set_test_params(self):
-        self.disable_autoconnect = False
+        self.auto_outbound_mode = True
         self.num_nodes = 2
-
-    def setup_nodes(self):
-        self.destinations = []
-
-        self.destinations_lock = threading.Lock()
 
         self.trigger_no_relay_peer = False
         self.no_relay_peer = None
 
-        def destinations_factory(requested_to_addr, requested_to_port, proxy_client):
+        def auto_outbound_factory(conn_type):
             """
             Instruct the SOCKS5 proxy to redirect connections:
             * The first automatic outbound connection -> P2PDataStore
             * The first private broadcast connection -> nodes[1]
             * Anything else -> P2PInterface
-
-            proxy_client is the client's socket address as seen by the proxy (host:port),
-            equal to the node's addrbind for this connection.
             """
-            conn_type = None
-            # SOCKS handlers run in separate threads, so each needs its own RPC connection.
-            rpc = self.nodes[0].create_new_rpc_connection()
-
-            def connection_type_found():
-                nonlocal conn_type
-                # The proxy has already replied SUCCESS to the SOCKS5 request, so the node
-                # has finished ConnectNode and registered the peer (or is about to).
-                # The proxy client address equals the node's addrbind for this connection.
-                for peer in rpc.getpeerinfo():
-                    if peer.get("addrbind") == proxy_client:
-                        conn_type = peer["connection_type"]
-                        return True
-                return False
-
-            self.wait_until(connection_type_found)
-
-            with self.destinations_lock:
-                i = len(self.destinations)
-                actual_to_addr = ""
-                actual_to_port = 0
-                listener = None
-                target_name = ""
-                if conn_type == "private-broadcast" and not any(dest["conn_type"] == "private-broadcast" for dest in self.destinations):
-                    # Instruct the SOCKS5 server to redirect the first private
-                    # broadcast connection from nodes[0] to nodes[1]
-                    actual_to_addr = "127.0.0.1" # nodes[1] listen address
-                    actual_to_port = tor_port(1) # nodes[1] listen port for Tor
-                    target_name = "nodes[1]"
+            if conn_type == "private-broadcast" and not any(dest["conn_type"] == "private-broadcast" for dest in self.auto_outbound_destinations):
+                # Instruct the SOCKS5 server to redirect the first private
+                # broadcast connection from nodes[0] to nodes[1]
+                actual_to_addr = "127.0.0.1" # nodes[1] listen address
+                actual_to_port = tor_port(1) # nodes[1] listen port for Tor
+                return (actual_to_addr, actual_to_port, None)
+            else:
+                # Create a Python P2P listening node and instruct the SOCKS5 proxy to
+                # redirect the connection to it. The first outbound connection is used
+                # later to serve GETDATA, thus make it P2PDataStore().
+                if conn_type == "outbound-full-relay" and not any(dest["conn_type"] == "outbound-full-relay" for dest in self.auto_outbound_destinations):
+                    listener = P2PDataStore()
+                elif conn_type == "private-broadcast" and self.trigger_no_relay_peer:
+                    listener = NoRelayP2PInterface()
+                    self.trigger_no_relay_peer = False
+                    self.no_relay_peer = listener
                 else:
-                    # Create a Python P2P listening node and instruct the SOCKS5 proxy to
-                    # redirect the connection to it. The first outbound connection is used
-                    # later to serve GETDATA, thus make it P2PDataStore().
-                    if conn_type == "outbound-full-relay" and not any(dest["conn_type"] == "outbound-full-relay" for dest in self.destinations):
-                        listener = P2PDataStore()
-                        target_name = "Python P2PDataStore"
-                    elif conn_type == "private-broadcast" and self.trigger_no_relay_peer:
-                        listener = NoRelayP2PInterface()
-                        target_name = "Python NoRelayP2PInterface"
-                        self.trigger_no_relay_peer = False
-                        self.no_relay_peer = listener
-                    else:
-                        listener = P2PInterface()
-                        target_name = "Python P2PInterface"
-                    listener.peer_connect_helper(dstaddr="0.0.0.0", dstport=0, net=self.chain, timeout_factor=self.options.timeout_factor)
-                    listener.peer_connect_send_version(services=P2P_SERVICES)
+                    listener = P2PInterface()
+                return self.start_auto_outbound_listener(listener)
 
-                    actual_to_addr, actual_to_port = start_p2p_listener(self.network_thread, listener)
+        self.auto_outbound_factory = auto_outbound_factory
 
-                self.log.debug(f"Instructing the SOCKS5 proxy to redirect connection i={i} ({conn_type}) for "
-                               f"{format_addr_port(requested_to_addr, requested_to_port)} to "
-                               f"{format_addr_port(actual_to_addr, actual_to_port)} ({target_name})")
-
-                self.destinations.append({
-                    "requested_to": format_addr_port(requested_to_addr, requested_to_port),
-                    "conn_type": conn_type,
-                    "node": listener,
-                })
-                assert_equal(len(self.destinations), i + 1)
-
-                return {
-                    "actual_to_addr": actual_to_addr,
-                    "actual_to_port": actual_to_port,
-                }
-
-        self.socks5_server = start_socks5_server(destinations_factory)
-
+    def setup_nodes(self):
         self.extra_args = [
             [
                 # Needed to be able to add CJDNS addresses to addrman (otherwise they are unroutable).
@@ -154,7 +93,6 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
                 "-v2transport=0",
                 "-test=addrman",
                 "-privatebroadcast",
-                f"-proxy={self.socks5_server.conf.addr[0]}:{self.socks5_server.conf.addr[1]}",
                 # To increase coverage, make it think that the I2P network is reachable so that it
                 # selects such addresses as well. Pick a proxy address where nobody is listening
                 # and connection attempts fail quickly.
@@ -171,15 +109,6 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         self.setup_nodes()
 
     def check_broadcasts(self, label, tx, broadcasts_to_expect, skip_destinations):
-        def wait_and_get_destination(n):
-            """Wait for self.destinations[] to have at least n elements and return the 'n'th."""
-            def get_destinations_len():
-                with self.destinations_lock:
-                    return len(self.destinations)
-            self.wait_until(lambda: get_destinations_len() > n)
-            with self.destinations_lock:
-                return self.destinations[n]
-
         broadcasts_done = 0
         i = skip_destinations - 1
         while broadcasts_done < broadcasts_to_expect:
@@ -187,7 +116,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
             self.log.debug(f"{label}: waiting for outbound connection i={i}")
             # At this point the connection may not yet have been established (A),
             # may be active (B), or may have already been closed (C).
-            dest = wait_and_get_destination(i)
+            dest = self.wait_for_auto_outbound_destination(i)
             peer = dest["node"]
             if peer is None:
                 continue # That is the first private broadcast connection, redirected to nodes[1]
@@ -287,8 +216,8 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
             nonlocal other_peer
             tx_returner = None
             other_peer = None
-            with self.destinations_lock:
-                for dest in self.destinations:
+            with self.auto_outbound_destinations_lock:
+                for dest in self.auto_outbound_destinations:
                     if dest["conn_type"] == "outbound-full-relay" and dest["node"] is not None:
                         if tx_returner is None:
                             assert(type(dest["node"]) is P2PDataStore)
@@ -322,12 +251,12 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         assert_equal(len(pending), 0)
 
         self.log.info("Sending a transaction that is already in the mempool")
-        skip_destinations = len(self.destinations)
+        skip_destinations = len(self.auto_outbound_destinations)
         tx_originator.sendrawtransaction(hexstring=txs[0]["hex"], maxfeerate=0)
         self.check_broadcasts("Broadcast of mempool transaction", txs[0], NUM_PRIVATE_BROADCAST_PER_TX, skip_destinations)
 
         self.log.info("Sending a transaction with a dependency in the mempool")
-        skip_destinations = len(self.destinations)
+        skip_destinations = len(self.auto_outbound_destinations)
         tx_originator.sendrawtransaction(hexstring=txs[1]["hex"], maxfeerate=0.1)
         self.check_broadcasts("Dependency in mempool", txs[1], NUM_PRIVATE_BROADCAST_PER_TX, skip_destinations)
 
@@ -344,7 +273,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         # NextTxBroadcast() in net_processing.cpp.
         self.log.info("Checking that rebroadcast works")
         delta = 20 * 60 # 20min
-        skip_destinations = len(self.destinations)
+        skip_destinations = len(self.auto_outbound_destinations)
         rebroadcast_msg = f"Reattempting broadcast of stale txid={txs[1]['txid']}"
         with tx_originator.busy_wait_for_debug_log(expected_msgs=[rebroadcast_msg.encode()]):
             tx_originator.setmocktime(int(time.time()) + delta)
@@ -396,7 +325,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         tx_no_relay = wallet.create_self_transfer()
         disconnect_msg = "Disconnecting: does not support transaction relay (connected in vain)"
         with tx_originator.assert_debug_log(expected_msgs=[disconnect_msg]):
-            with self.destinations_lock:
+            with self.auto_outbound_destinations_lock:
                 self.no_relay_peer = None
                 self.trigger_no_relay_peer = True
             tx_originator.sendrawtransaction(hexstring=tx_no_relay["hex"], maxfeerate=0.1)
