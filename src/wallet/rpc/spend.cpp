@@ -327,12 +327,12 @@ RPCMethod sendtoaddress()
     address_amounts.pushKV(address, request.params[1]);
 
     std::set<int> sffo_set;
-    if (!request.params[4].isNull() && request.params[4].get_bool()) {
+    if (self.Arg<bool>("subtractfeefromamount")) {
         sffo_set.insert(0);
     }
 
     std::vector<CRecipient> recipients{CreateRecipients(ParseOutputs(address_amounts), sffo_set)};
-    const bool verbose{request.params[10].isNull() ? false : request.params[10].get_bool()};
+    const bool verbose{self.Arg<bool>("verbose")};
 
     return SendMoney(*pwallet, coin_control, recipients, comment, comment_to, verbose);
 },
@@ -428,7 +428,7 @@ RPCMethod sendmany()
             ParseOutputs(sendTo),
             InterpretSubtractFeeFromOutputInstructions(request.params[4], sendTo.getKeys())
     );
-    const bool verbose{request.params[9].isNull() ? false : request.params[9].get_bool()};
+    const bool verbose{self.Arg<bool>("verbose")};
 
     return SendMoney(*pwallet, coin_control, recipients, comment, /*comment_to=*/std::nullopt, verbose);
 },
@@ -799,7 +799,7 @@ RPCMethod fundrawtransaction()
                             "\nSend the transaction\n"
                             + HelpExampleCli("sendrawtransaction", "\"signedtransactionhex\"")
                                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -900,7 +900,7 @@ RPCMethod signrawtransactionwithwallet()
                     HelpExampleCli("signrawtransactionwithwallet", "\"myhex\"")
             + HelpExampleRpc("signrawtransactionwithwallet", "\"myhex\"")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -1033,7 +1033,7 @@ static RPCMethod bumpfee_helper(std::string method_name)
     "\nBump the fee, get the new transaction\'s " + std::string(want_psbt ? "psbt" : "txid") + "\n" +
             HelpExampleCli(method_name, "<txid>")
         },
-        [want_psbt](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [want_psbt](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -1375,7 +1375,7 @@ RPCMethod sendall()
         "Spend all UTXOs with a fee rate of 1.3 " + CURRENCY_ATOM + "/vB using named arguments and sending a 0.25 " + CURRENCY_UNIT + " to another recipient\n"
         + HelpExampleCli("-named sendall", "recipients='[{\"" + EXAMPLE_ADDRESS[1] + "\": 0.25}, \""+ EXAMPLE_ADDRESS[0] + "\"]' fee_rate=1.3\n")
         },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
         {
             std::shared_ptr<CWallet> const pwallet{GetWalletForJSONRPCRequest(request)};
             if (!pwallet) return UniValue::VNULL;
@@ -1646,9 +1646,9 @@ RPCMethod walletprocesspsbt()
     std::optional<int> nHashType = ParseSighashString(request.params[2]);
 
     // Fill transaction with our data and also sign
-    bool sign = request.params[1].isNull() ? true : request.params[1].get_bool();
-    bool bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
-    bool finalize = request.params[4].isNull() ? true : request.params[4].get_bool();
+    const bool sign{self.Arg<bool>("sign")};
+    const bool bip32derivs{self.Arg<bool>("bip32derivs")};
+    const bool finalize{self.Arg<bool>("finalize")};
     bool complete = true;
 
     if (sign) EnsureWalletIsUnlocked(*pwallet);
@@ -1791,10 +1791,7 @@ RPCMethod walletcreatefundedpsbt()
     auto txr = FundTransaction(wallet, rawTx, recipients, options, coin_control, /*override_min_fee=*/true);
 
     // Make a blank psbt
-    uint32_t psbt_version = 2;
-    if (!request.params[6].isNull()) {
-        psbt_version = request.params[6].getInt<int>();
-    }
+    const uint32_t psbt_version{self.Arg<uint32_t>("psbt_version")};
     if (psbt_version != 2 && psbt_version != 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "The PSBT version can only be 2 or 0");
     }
@@ -1802,7 +1799,7 @@ RPCMethod walletcreatefundedpsbt()
     PartiallySignedTransaction psbtx(CMutableTransaction(*txr.tx), psbt_version);
 
     // Fill transaction with out data but don't sign
-    bool bip32derivs = request.params[4].isNull() ? true : request.params[4].get_bool();
+    const bool bip32derivs{self.Arg<bool>("bip32derivs")};
     bool complete = true;
     const auto err{wallet.FillPSBT(psbtx, {.sign = false, .bip32_derivs = bip32derivs}, complete)};
     if (err) {

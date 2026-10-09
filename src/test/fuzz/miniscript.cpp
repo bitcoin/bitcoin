@@ -287,7 +287,7 @@ struct SatisfierContext : ParserContext {
 const struct CheckerContext: BaseSignatureChecker {
     // Signature checker methods. Checks the right dummy signature is used.
     bool CheckECDSASignature(const std::vector<unsigned char>& sig, const std::vector<unsigned char>& vchPubKey,
-                             const CScript& scriptCode, SigVersion sigversion) const override
+                             const CScript&, SigVersion) const override
     {
         const CPubKey key{vchPubKey};
         const auto it = TEST_DATA.dummy_sigs.find(key);

@@ -167,7 +167,7 @@ void CZMQNotificationInterface::TransactionAddedToMempool(const NewMempoolTransa
     });
 }
 
-void CZMQNotificationInterface::TransactionRemovedFromMempool(const CTransactionRef& ptx, MemPoolRemovalReason reason, uint64_t mempool_sequence)
+void CZMQNotificationInterface::TransactionRemovedFromMempool(const CTransactionRef& ptx, MemPoolRemovalReason /*reason*/, uint64_t mempool_sequence)
 {
     // Called for all non-block inclusion reasons
     const CTransaction& tx = *ptx;

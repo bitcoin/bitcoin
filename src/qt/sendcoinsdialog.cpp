@@ -706,7 +706,7 @@ void SendCoinsDialog::refreshBalance()
     updateSmartFeeLabel();
 }
 
-void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg)
+void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &/*msgArg*/)
 {
     QPair<QString, CClientUIInterface::MessageBoxFlags> msgParams;
     // Default to a warning message, override if error message is needed
@@ -822,7 +822,7 @@ void SendCoinsDialog::updateCoinControlState()
     m_coin_control->m_confirm_target = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
 }
 
-void SendCoinsDialog::updateNumberOfBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, SyncType synctype, SynchronizationState sync_state) {
+void SendCoinsDialog::updateNumberOfBlocks(int /*count*/, const QDateTime& /*blockDate*/, double /*nVerificationProgress*/, SyncType /*synctype*/, SynchronizationState sync_state) {
     // During shutdown, clientModel will be nullptr. Attempting to update views at this point may cause a crash
     // due to accessing backend models that might no longer exist.
     if (!clientModel) return;

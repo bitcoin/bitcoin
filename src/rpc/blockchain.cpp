@@ -296,7 +296,7 @@ static RPCMethod getblockcount()
                     HelpExampleCli("getblockcount", "")
             + HelpExampleRpc("getblockcount", "")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
@@ -317,7 +317,7 @@ static RPCMethod getbestblockhash()
                     HelpExampleCli("getbestblockhash", "")
             + HelpExampleRpc("getbestblockhash", "")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
@@ -349,9 +349,7 @@ static RPCMethod waitfornewblock()
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
-    int timeout = 0;
-    if (!request.params[0].isNull())
-        timeout = request.params[0].getInt<int>();
+    const int timeout{self.Arg<int>("timeout")};
     if (timeout < 0) throw JSONRPCError(RPC_MISC_ERROR, "Negative timeout");
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -408,12 +406,10 @@ static RPCMethod waitforblock()
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
-    int timeout = 0;
+    const int timeout{self.Arg<int>("timeout")};
 
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
 
-    if (!request.params[1].isNull())
-        timeout = request.params[1].getInt<int>();
     if (timeout < 0) throw JSONRPCError(RPC_MISC_ERROR, "Negative timeout");
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -470,12 +466,10 @@ static RPCMethod waitforblockheight()
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
-    int timeout = 0;
+    const int timeout{self.Arg<int>("timeout")};
 
     int height = request.params[0].getInt<int>();
 
-    if (!request.params[1].isNull())
-        timeout = request.params[1].getInt<int>();
     if (timeout < 0) throw JSONRPCError(RPC_MISC_ERROR, "Negative timeout");
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -520,7 +514,7 @@ static RPCMethod syncwithvalidationinterfacequeue()
                     HelpExampleCli("syncwithvalidationinterfacequeue","")
             + HelpExampleRpc("syncwithvalidationinterfacequeue","")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     CHECK_NONFATAL(node.validation_signals)->SyncWithValidationInterfaceQueue();
@@ -541,7 +535,7 @@ static RPCMethod getdifficulty()
                     HelpExampleCli("getdifficulty", "")
             + HelpExampleRpc("getdifficulty", "")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
@@ -571,7 +565,7 @@ static RPCMethod getblockfrompeer()
             HelpExampleCli("getblockfrompeer", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" 0")
             + HelpExampleRpc("getblockfrompeer", R"("00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09", 0)")
         },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
@@ -619,7 +613,7 @@ static RPCMethod getblockhash()
                     HelpExampleCli("getblockhash", "1000")
             + HelpExampleRpc("getblockhash", "1000")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
@@ -677,9 +671,7 @@ static RPCMethod getblockheader()
 {
     uint256 hash(ParseHashV(request.params[0], "hash"));
 
-    bool fVerbose = true;
-    if (!request.params[1].isNull())
-        fVerbose = request.params[1].get_bool();
+    const bool fVerbose{self.Arg<bool>("verbose")};
 
     const CBlockIndex* pblockindex;
     const CBlockIndex* tip;
@@ -876,7 +868,7 @@ static RPCMethod getblock()
                     HelpExampleCli("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
             + HelpExampleRpc("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
 
@@ -959,7 +951,7 @@ static RPCMethod pruneblockchain()
                     HelpExampleCli("pruneblockchain", "1000")
             + HelpExampleRpc("pruneblockchain", "1000")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     if (!chainman.m_blockman.IsPruneMode()) {
@@ -1105,7 +1097,7 @@ static RPCMethod gettxoutsetinfo()
     UniValue ret(UniValue::VOBJ);
 
     const CoinStatsHashType hash_type{ParseHashType(self.Arg<std::string_view>("hash_type"))};
-    bool index_requested = request.params[2].isNull() || request.params[2].get_bool();
+    const bool index_requested{self.Arg<bool>("use_index")};
 
     NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
@@ -1257,9 +1249,7 @@ static RPCMethod gettxout()
 
     auto hash{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
     COutPoint out{hash, request.params[1].getInt<uint32_t>()};
-    bool fMempool = true;
-    if (!request.params[2].isNull())
-        fMempool = request.params[2].get_bool();
+    const bool fMempool{self.Arg<bool>("include_mempool")};
 
     Chainstate& active_chainstate = chainman.ActiveChainstate();
     CCoinsViewCache* coins_view = &active_chainstate.CoinsTip();
@@ -1298,12 +1288,12 @@ static RPCMethod verifychain()
     return RPCMethod{
         "verifychain",
         "Verifies blockchain database.\n",
-                {
-                    {"checklevel", RPCArg::Type::NUM, RPCArg::DefaultHint{strprintf("%d, range=0-4", DEFAULT_CHECKLEVEL)},
-                        strprintf("How thorough the block verification is:\n%s", MakeUnorderedList(CHECKLEVEL_DOC))},
-                    {"nblocks", RPCArg::Type::NUM, RPCArg::DefaultHint{strprintf("%d, 0=all", DEFAULT_CHECKBLOCKS)}, "The number of blocks to check."},
-                },
-                RPCResult{
+        {
+            {"checklevel", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_CHECKLEVEL},
+                strprintf("How thorough the block verification is (range 0-4):\n%s", MakeUnorderedList(CHECKLEVEL_DOC))},
+            {"nblocks", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_CHECKBLOCKS}, "The number of blocks to check (0=all)."},
+        },
+        RPCResult{
                     RPCResult::Type::BOOL, "", "Verification finished successfully. If false, check debug log for reason."},
                 RPCExamples{
                     HelpExampleCli("verifychain", "")
@@ -1311,8 +1301,8 @@ static RPCMethod verifychain()
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
-    const int check_level{request.params[0].isNull() ? DEFAULT_CHECKLEVEL : request.params[0].getInt<int>()};
-    const int check_depth{request.params[1].isNull() ? DEFAULT_CHECKBLOCKS : request.params[1].getInt<int>()};
+    const int check_level{self.Arg<int>("checklevel")};
+    const int check_depth{self.Arg<int>("nblocks")};
 
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
@@ -1443,7 +1433,7 @@ RPCMethod getblockchaininfo()
             HelpExampleCli("getblockchaininfo", "")
             + HelpExampleRpc("getblockchaininfo", "")
         },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
@@ -1562,7 +1552,7 @@ RPCMethod getdeploymentinfo()
             }
         },
         RPCExamples{ HelpExampleCli("getdeploymentinfo", "") + HelpExampleRpc("getdeploymentinfo", "") },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
         {
             const ChainstateManager& chainman = EnsureAnyChainman(request.context);
             LOCK(cs_main);
@@ -1634,7 +1624,7 @@ static RPCMethod getchaintips()
                     HelpExampleCli("getchaintips", "")
             + HelpExampleRpc("getchaintips", "")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
@@ -1726,7 +1716,7 @@ static RPCMethod preciousblock()
                     HelpExampleCli("preciousblock", "\"blockhash\"")
             + HelpExampleRpc("preciousblock", "\"blockhash\"")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
     CBlockIndex* pblockindex;
@@ -1786,7 +1776,7 @@ static RPCMethod invalidateblock()
                     HelpExampleCli("invalidateblock", "\"blockhash\"")
             + HelpExampleRpc("invalidateblock", "\"blockhash\"")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
@@ -1832,7 +1822,7 @@ static RPCMethod reconsiderblock()
                     HelpExampleCli("reconsiderblock", "\"blockhash\"")
             + HelpExampleRpc("reconsiderblock", "\"blockhash\"")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
@@ -1875,7 +1865,7 @@ static RPCMethod getchaintxstats()
                     HelpExampleCli("getchaintxstats", "")
             + HelpExampleRpc("getchaintxstats", "2016")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     const CBlockIndex* pindex;
@@ -1981,7 +1971,7 @@ void CalculatePercentilesByWeight(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES],
 }
 
 template<typename T>
-static inline bool SetHasKeys(const std::set<T>& set) {return false;}
+static inline bool SetHasKeys(const std::set<T>&) {return false;}
 template<typename T, typename Tk, typename... Args>
 static inline bool SetHasKeys(const std::set<T>& set, const Tk& key, const Args&... args)
 {
@@ -2058,7 +2048,7 @@ static RPCMethod getblockstats()
                     HelpExampleRpc("getblockstats", R"("00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09", ["minfeerate","avgfeerate"])") +
                     HelpExampleRpc("getblockstats", R"(1000, ["minfeerate","avgfeerate"])")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     const CBlockIndex& pindex{*CHECK_NONFATAL(ParseHashOrHeight(request.params[0], chainman))};
@@ -2665,13 +2655,10 @@ static RPCMethod scanblocks()
         {
             LOCK(cs_main);
             CChain& active_chain = chainman.ActiveChain();
-            start_index = active_chain.Genesis();
+            start_index = active_chain[self.Arg<int>("start_height")];
             stop_block = active_chain.Tip(); // If no stop block is provided, stop at the chain tip.
-            if (!request.params[2].isNull()) {
-                start_index = active_chain[request.params[2].getInt<int>()];
-                if (!start_index) {
-                    throw JSONRPCError(RPC_MISC_ERROR, "Invalid start_height");
-                }
+            if (!start_index) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Invalid start_height");
             }
             if (!request.params[3].isNull()) {
                 stop_block = active_chain[request.params[3].getInt<int>()];
@@ -2935,10 +2922,7 @@ static RPCMethod getdescriptoractivity()
         }
     }
 
-    bool search_mempool = true;
-    if (!request.params[2].isNull()) {
-        search_mempool = request.params[2].get_bool();
-    }
+    const bool search_mempool{self.Arg<bool>("include_mempool")};
 
     if (search_mempool) {
         const CTxMemPool& mempool = EnsureMemPool(node);
@@ -3622,7 +3606,7 @@ return RPCMethod{
             HelpExampleCli("getchainstates", "")
     + HelpExampleRpc("getchainstates", "")
         },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     LOCK(cs_main);
     UniValue obj(UniValue::VOBJ);

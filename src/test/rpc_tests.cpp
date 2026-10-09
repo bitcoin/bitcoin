@@ -647,10 +647,10 @@ BOOST_AUTO_TEST_CASE(rpc_arg_helper)
         // Default arg
         {"def_uint64_t", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_UINT64_T}, ""},
         {"def_string", RPCArg::Type::STR, RPCArg::Default{DEFAULT_STRING}, ""},
-        {"def_bool", RPCArg::Type::BOOL, RPCArg::Default{DEFAULT_BOOL}, ""},
+        {"def_bool|legacy_def_bool", RPCArg::Type::BOOL, RPCArg::Default{DEFAULT_BOOL}, ""},
         // Optional arg without default
         {"opt_double", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, ""},
-        {"opt_string", RPCArg::Type::STR, RPCArg::Optional::OMITTED, ""}
+        {"opt_string", RPCArg::Type::STR, RPCArg::Optional::OMITTED, ""},
     };
 
     //! Check that `self.Arg` returns the same value as the `request.params` accessors
