@@ -15,6 +15,8 @@
 #include <wallet/walletutil.h>
 
 #include <cstddef>
+#include <cstdint>
+#include <fstream>
 #include <memory>
 #include <span>
 #include <string>
@@ -304,6 +306,228 @@ BOOST_AUTO_TEST_CASE(in_memory_database_cannot_reopen)
     InMemoryWalletDatabase database;
     database.Close();
     BOOST_CHECK_THROW(database.Open(), std::runtime_error);
+}
+
+namespace {
+//! Lays out a legacy BDB file byte by byte, since BDB is no longer available to write one.
+//! Pages 0-2 hold the outer database and the "main" subdatabase meta page, whose root is page 3.
+class BDBFileBuilder
+{
+public:
+    static constexpr uint32_t PAGE_BYTES{512};
+    static constexpr uint32_t HEADER_BYTES{26};
+    static constexpr uint8_t PAGE_INTERNAL{3};
+    static constexpr uint8_t PAGE_LEAF{5};
+    static constexpr uint8_t PAGE_OVERFLOW{7};
+
+    explicit BDBFileBuilder(uint32_t num_pages) : m_bytes(size_t{num_pages} * PAGE_BYTES, std::byte{0})
+    {
+        MetaPage(/*page=*/0, /*last_page=*/num_pages - 1, /*root=*/1);
+        OuterLeaf(/*page=*/1, /*inner_meta_page=*/2);
+        MetaPage(/*page=*/2, /*last_page=*/num_pages - 1, /*root=*/3);
+    }
+
+    //! Header of a btree or overflow page
+    void Header(uint32_t page, uint8_t type, uint8_t level, uint32_t entries)
+    {
+        WLE(page, 4, 1, 4);    // lsn_offset = 1 (LSNs must read as reset)
+        WLE(page, 8, page, 4); // page_num
+        WLE(page, 20, entries, 2);
+        W8(page, 24, level);
+        W8(page, 25, type);
+    }
+
+    //! Index entry i of a btree page, pointing at the record at offset off
+    void Index(uint32_t page, uint32_t i, uint32_t off) { WLE(page, HEADER_BYTES + 2 * i, off, 2); }
+
+    //! Internal page record with a key of key_len bytes, pointing at child
+    void InternalRecord(uint32_t page, uint32_t off, uint32_t key_len, uint32_t child)
+    {
+        WLE(page, off, key_len, 2);     // len
+        W8(page, off + 2, REC_KEYDATA); // type
+        WLE(page, off + 4, child, 4);   // page_num
+    }
+
+    //! Data record of len bytes, all set to fill
+    void DataRecord(uint32_t page, uint32_t off, uint32_t len, uint32_t fill)
+    {
+        WLE(page, off, len, 2);         // len
+        W8(page, off + 2, REC_KEYDATA); // type
+        for (uint32_t i{0}; i < len; ++i) W8(page, off + 3 + i, static_cast<uint8_t>(fill));
+    }
+
+    //! Overflow record whose chain starts at first_page
+    void OverflowRecord(uint32_t page, uint32_t off, uint32_t first_page, uint32_t item_len)
+    {
+        W8(page, off + 2, REC_OVERFLOW);   // type
+        WLE(page, off + 4, first_page, 4); // page_number
+        WLE(page, off + 8, item_len, 4);   // item_len
+    }
+
+    //! Overflow page holding data_len bytes, followed by next_page (0 ends the chain)
+    void OverflowPage(uint32_t page, uint32_t data_len, uint32_t next_page)
+    {
+        Header(page, PAGE_OVERFLOW, /*level=*/0, /*entries=*/0);
+        WLE(page, 16, next_page, 4); // next_page
+        WLE(page, 22, data_len, 2);  // hf_offset holds the data length on overflow pages
+    }
+
+    void WriteTo(const fs::path& path) const
+    {
+        std::ofstream file{path.std_path(), std::ios::binary};
+        file.write(reinterpret_cast<const char*>(m_bytes.data()), static_cast<std::streamsize>(m_bytes.size()));
+    }
+
+private:
+    static constexpr uint8_t REC_KEYDATA{1};
+    static constexpr uint8_t REC_OVERFLOW{3};
+
+    std::vector<std::byte> m_bytes;
+
+    size_t Offset(uint32_t page, size_t off) const { return size_t{page} * PAGE_BYTES + off; }
+
+    void W8(uint32_t page, size_t off, uint8_t v) { m_bytes.at(Offset(page, off)) = std::byte{v}; }
+    void WLE(uint32_t page, size_t off, uint32_t v, size_t n) { for (size_t i = 0; i < n; ++i) W8(page, off + i, static_cast<uint8_t>(v >> (8 * i))); }
+    void WBE(uint32_t page, size_t off, uint32_t v, size_t n) { for (size_t i = 0; i < n; ++i) W8(page, off + i, static_cast<uint8_t>(v >> (8 * (n - 1 - i)))); }
+    void WStr(uint32_t page, size_t off, std::string_view s) { for (char c : s) W8(page, off++, static_cast<uint8_t>(c)); }
+
+    //! BTREE_META page pointing at a subdatabase root
+    void MetaPage(uint32_t page, uint32_t last_page, uint32_t root)
+    {
+        WLE(page, 4, 1, 4);           // lsn_offset = 1
+        WLE(page, 8, page, 4);        // page_num
+        WLE(page, 12, 0x00053162, 4); // btree magic
+        WLE(page, 16, 9, 4);          // version
+        WLE(page, 20, PAGE_BYTES, 4); // pagesize
+        W8(page, 25, 9);              // type = BTREE_META
+        WLE(page, 32, last_page, 4);  // last_page
+        WLE(page, 48, 0x20, 4);       // flags = SUBDB
+        WLE(page, 88, root, 4);       // root
+    }
+
+    //! Outer root leaf that names the "main" subdatabase and its meta page
+    void OuterLeaf(uint32_t page, uint32_t inner_meta_page)
+    {
+        Header(page, PAGE_LEAF, /*level=*/1, /*entries=*/2);
+        Index(page, 0, 30);
+        Index(page, 1, 37);
+        WLE(page, 30, 4, 2); W8(page, 32, REC_KEYDATA); WStr(page, 33, "main");
+        WLE(page, 37, 4, 2); W8(page, 39, REC_KEYDATA); WBE(page, 40, inner_meta_page, 4);
+    }
+};
+
+//! Write the file and check that the parser rejects it with expected_error
+void CheckRejected(const BDBFileBuilder& builder, const fs::path& path, const std::string& expected_error)
+{
+    builder.WriteTo(path);
+    DatabaseOptions options;
+    DatabaseStatus status;
+    bilingual_str error;
+    BOOST_CHECK(!MakeBerkeleyRODatabase(path, options, status, error));
+    BOOST_CHECK_EQUAL(status, DatabaseStatus::FAILED_LOAD);
+    BOOST_CHECK_EQUAL(error.original, expected_error);
+}
+} // namespace
+
+BOOST_AUTO_TEST_CASE(bdbro_btree_page_referenced_twice)
+{
+    // Internal page with two entries pointing at the same child, which passes the level check
+    BDBFileBuilder builder(/*num_pages=*/5);
+    builder.Header(3, BDBFileBuilder::PAGE_INTERNAL, /*level=*/2, /*entries=*/2);
+    builder.Index(3, 0, 30);
+    builder.Index(3, 1, 30);
+    builder.InternalRecord(3, 30, /*key_len=*/1, /*child=*/4);
+    builder.Header(4, BDBFileBuilder::PAGE_LEAF, /*level=*/1, /*entries=*/0);
+
+    CheckRejected(builder, m_path_root / "btree_page_twice.dat", "BTree page referenced more than once");
+}
+
+BOOST_AUTO_TEST_CASE(bdbro_overflow_page_referenced_twice)
+{
+    // Overflow page without data that points back at itself
+    BDBFileBuilder builder(/*num_pages=*/5);
+    builder.Header(3, BDBFileBuilder::PAGE_LEAF, /*level=*/1, /*entries=*/2);
+    builder.Index(3, 0, 30);
+    builder.Index(3, 1, 34);
+    builder.DataRecord(3, 30, /*len=*/1, /*fill=*/'k');
+    builder.OverflowRecord(3, 34, /*first_page=*/4, /*item_len=*/1);
+    builder.OverflowPage(4, /*data_len=*/0, /*next_page=*/4);
+
+    CheckRejected(builder, m_path_root / "overflow_page_twice.dat", "Overflow page referenced more than once");
+}
+
+BOOST_AUTO_TEST_CASE(bdbro_overflow_chain_shared_by_records)
+{
+    // Two records pointing at the same overflow chain
+    BDBFileBuilder builder(/*num_pages=*/5);
+    builder.Header(3, BDBFileBuilder::PAGE_LEAF, /*level=*/1, /*entries=*/4);
+    for (uint32_t i{0}; i < 2; ++i) {
+        const uint32_t off{34 + 16 * i}; // after the index array, 16 bytes per key/overflow pair
+        builder.Index(3, 2 * i, off);
+        builder.Index(3, 2 * i + 1, off + 4);
+        builder.DataRecord(3, off, /*len=*/1, /*fill=*/'a' + i);
+        builder.OverflowRecord(3, off + 4, /*first_page=*/4, /*item_len=*/1);
+    }
+    builder.OverflowPage(4, /*data_len=*/1, /*next_page=*/0);
+
+    CheckRejected(builder, m_path_root / "overflow_chain_shared.dat", "Overflow page referenced more than once");
+}
+
+BOOST_AUTO_TEST_CASE(bdbro_page_records_do_not_fit)
+{
+    // Leaf page whose entries all point at the same record
+    const uint32_t entries{40};
+    const uint32_t record_off{BDBFileBuilder::HEADER_BYTES + 2 * entries};
+
+    BDBFileBuilder builder(/*num_pages=*/4);
+    builder.Header(3, BDBFileBuilder::PAGE_LEAF, /*level=*/1, entries);
+    for (uint32_t i{0}; i < entries; ++i) builder.Index(3, i, record_off);
+    builder.DataRecord(3, record_off, /*len=*/20, /*fill=*/0);
+
+    CheckRejected(builder, m_path_root / "leaf_records.dat", "Data records exceed page size");
+}
+
+BOOST_AUTO_TEST_CASE(bdbro_internal_page_records_do_not_fit)
+{
+    // Internal page whose entries all point at the same record
+    // The page is rejected while it is read, before any child page is visited
+    const uint32_t entries{40};
+    const uint32_t record_off{BDBFileBuilder::HEADER_BYTES + 2 * entries};
+
+    BDBFileBuilder builder(/*num_pages=*/5);
+    builder.Header(3, BDBFileBuilder::PAGE_INTERNAL, /*level=*/2, entries);
+    for (uint32_t i{0}; i < entries; ++i) builder.Index(3, i, record_off);
+    builder.InternalRecord(3, record_off, /*key_len=*/1, /*child=*/4);
+    builder.Header(4, BDBFileBuilder::PAGE_LEAF, /*level=*/1, /*entries=*/0);
+
+    CheckRejected(builder, m_path_root / "internal_records.dat", "Internal records exceed page size");
+}
+
+BOOST_AUTO_TEST_CASE(bdbro_full_page_parses)
+{
+    // Leaf page filled up to its last byte with distinct records still parses
+    const uint32_t entries{20};
+
+    BDBFileBuilder builder(/*num_pages=*/4);
+    builder.Header(3, BDBFileBuilder::PAGE_LEAF, /*level=*/1, entries);
+    uint32_t off{BDBFileBuilder::HEADER_BYTES + 2 * entries};
+    for (uint32_t i{0}; i < entries; ++i) {
+        // The last record takes the remaining space
+        const uint32_t len{i + 1 == entries ? BDBFileBuilder::PAGE_BYTES - off - 3 : 19};
+        builder.Index(3, i, off);
+        builder.DataRecord(3, off, len, /*fill=*/i);
+        off += 3 + len;
+    }
+    BOOST_REQUIRE_EQUAL(off, BDBFileBuilder::PAGE_BYTES);
+
+    const fs::path path{m_path_root / "full_page.dat"};
+    builder.WriteTo(path);
+    DatabaseOptions options;
+    DatabaseStatus status;
+    bilingual_str error;
+    const auto db{MakeBerkeleyRODatabase(path, options, status, error)};
+    BOOST_REQUIRE_MESSAGE(db, error.original);
+    BOOST_CHECK_EQUAL(db->m_records.size(), entries / 2U);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
