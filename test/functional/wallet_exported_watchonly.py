@@ -10,8 +10,10 @@ from test_framework.key import H_POINT
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_not_equal,
     assert_raises_rpc_error,
+    assert_true,
 )
 from test_framework.wallet_util import generate_keypair
 
@@ -67,7 +69,7 @@ class WalletExportedWatchOnly(BitcoinTestFramework):
         assert_equal(offline_wallet.getbalances()["mine"]["trusted"], 0)
         funds_addr = self.funder.getnewaddress()
         send_res = online_wallet.send([{funds_addr: 5}])
-        assert_equal(send_res["complete"], False)
+        assert_false(send_res["complete"])
         assert "psbt" in send_res
         signed_psbt = offline_wallet.walletprocesspsbt(send_res["psbt"])["psbt"]
         finalized = self.online.finalizepsbt(signed_psbt)["hex"]
@@ -78,8 +80,8 @@ class WalletExportedWatchOnly(BitcoinTestFramework):
         for txout in dec_tx["vout"]:
             if txout["scriptPubKey"]["address"] == funds_addr:
                 continue
-            assert_equal(online_wallet.getaddressinfo(txout["scriptPubKey"]["address"])["ismine"], True)
-            assert_equal(offline_wallet.getaddressinfo(txout["scriptPubKey"]["address"])["ismine"], True)
+            assert_true(online_wallet.getaddressinfo(txout["scriptPubKey"]["address"])["ismine"])
+            assert_true(offline_wallet.getaddressinfo(txout["scriptPubKey"]["address"])["ismine"])
 
         # Both wallets should agree on addresses generated past the end of the keypool
         offline_wallet.getnewaddress()
@@ -177,7 +179,7 @@ class WalletExportedWatchOnly(BitcoinTestFramework):
                 {"desc": descsum_create(f"tr({H_POINT},or_b(pk(tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/2/*),s:pk(tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg/1h/2/*)))"), "timestamp": "now", "active": True, "internal": True},
             ]
         )
-        assert_equal(all([r["success"] for r in import_res]), True)
+        assert_true(all([r["success"] for r in import_res]))
 
         # Export the watchonly wallet file and load onto online node
         online_wallet = self.export_and_restore(offline_wallet, "imports_watchonly")
@@ -204,7 +206,7 @@ class WalletExportedWatchOnly(BitcoinTestFramework):
 
         # Verify that the offline wallet can sign and send
         send_res = online_wallet.sendall([self.funder.getnewaddress()])
-        assert_equal(send_res["complete"], False)
+        assert_false(send_res["complete"])
         assert "psbt" in send_res
         signed_psbt = offline_wallet.walletprocesspsbt(send_res["psbt"])["psbt"]
         finalized = self.online.finalizepsbt(signed_psbt)["hex"]
@@ -218,7 +220,7 @@ class WalletExportedWatchOnly(BitcoinTestFramework):
         self.log.info("Test that the avoid reuse flag appears in the exported wallet")
         self.offline.createwallet(wallet_name="avoidreuse", avoid_reuse=True)
         offline_wallet = self.offline.get_wallet_rpc("avoidreuse")
-        assert_equal(offline_wallet.getwalletinfo()["avoid_reuse"], True)
+        assert_true(offline_wallet.getwalletinfo()["avoid_reuse"])
 
         # The avoid_reuse flag also sets some specific address book entries to track reused addresses
         # In order for these to be set, a few transactions need to be made, so briefly connect offline to online
@@ -230,15 +232,15 @@ class WalletExportedWatchOnly(BitcoinTestFramework):
         offline_wallet.sendall([self.funder.getnewaddress()])
         self.funder.sendtoaddress(addr, 1)
         self.generate(self.online, 1)
-        assert_equal(offline_wallet.listunspent(addresses=[addr])[0]["reused"], True)
+        assert_true(offline_wallet.listunspent(addresses=[addr])[0]["reused"])
         self.disconnect_nodes(self.offline.index, self.online.index)
 
         # Export the watchonly wallet file and load onto online node
         online_wallet = self.export_and_restore(offline_wallet, "avoidreuse_watchonly")
 
         # check avoid_reuse is still set
-        assert_equal(online_wallet.getwalletinfo()["avoid_reuse"], True)
-        assert_equal(online_wallet.listunspent(addresses=[addr])[0]["reused"], True)
+        assert_true(online_wallet.getwalletinfo()["avoid_reuse"])
+        assert_true(online_wallet.listunspent(addresses=[addr])[0]["reused"])
 
         offline_wallet.unloadwallet()
         online_wallet.unloadwallet()

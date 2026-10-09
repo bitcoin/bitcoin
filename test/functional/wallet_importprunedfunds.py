@@ -14,8 +14,10 @@ from test_framework.messages import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_not_equal,
     assert_raises_rpc_error,
+    assert_true,
     find_vout_for_address,
     wallet_importprivkey,
 )
@@ -46,7 +48,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
         # Check only one address
         address_info = self.nodes[0].getaddressinfo(address1)
-        assert_equal(address_info['ismine'], True)
+        assert_true(address_info['ismine'])
 
         self.sync_all()
 
@@ -55,13 +57,13 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
         # Address Test - before import
         address_info = self.nodes[1].getaddressinfo(address1)
-        assert_equal(address_info['ismine'], False)
+        assert_false(address_info['ismine'])
 
         address_info = self.nodes[1].getaddressinfo(address2)
-        assert_equal(address_info['ismine'], False)
+        assert_false(address_info['ismine'])
 
         address_info = self.nodes[1].getaddressinfo(address3)
-        assert_equal(address_info['ismine'], False)
+        assert_false(address_info['ismine'])
 
         # Send funds to self
         txnid1 = self.nodes[0].sendtoaddress(address1, 0.1)
@@ -104,11 +106,11 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
         # Addresses Test - after import
         address_info = w1.getaddressinfo(address1)
-        assert_equal(address_info['ismine'], False)
+        assert_false(address_info['ismine'])
         address_info = wwatch.getaddressinfo(address2)
-        assert_equal(address_info['ismine'], True)
+        assert_true(address_info['ismine'])
         address_info = w1.getaddressinfo(address3)
-        assert_equal(address_info['ismine'], True)
+        assert_true(address_info['ismine'])
 
         # Remove transactions
         assert_raises_rpc_error(-4, f'Transaction {txnid1} does not belong to this wallet', w1.removeprunedfunds, txnid1)

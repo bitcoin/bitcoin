@@ -9,7 +9,7 @@ import time
 from test_framework.messages import msg_getdata, msg_tx, msg_inv, CInv, MSG_WTX
 from test_framework.p2p import P2PInterface, P2PTxInvStore
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_false, assert_true
 from test_framework.wallet import MiniWallet
 
 
@@ -26,7 +26,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
 
     def blocksonly_mode_tests(self):
         self.log.info("Tests with node running in -blocksonly mode")
-        assert_equal(self.nodes[0].getnetworkinfo()['localrelay'], False)
+        assert_false(self.nodes[0].getnetworkinfo()['localrelay'])
 
         self.nodes[0].add_p2p_connection(P2PInterface())
         tx, txid, wtxid, tx_hex = self.check_p2p_tx_violation()
@@ -40,9 +40,9 @@ class P2PBlocksOnly(BitcoinTestFramework):
 
         self.log.info('Check that txs from rpc are not rejected and relayed to other peers')
         tx_relay_peer = self.nodes[0].add_p2p_connection(P2PInterface())
-        assert_equal(self.nodes[0].getpeerinfo()[0]['relaytxes'], True)
+        assert_true(self.nodes[0].getpeerinfo()[0]['relaytxes'])
 
-        assert_equal(self.nodes[0].testmempoolaccept([tx_hex])[0]['allowed'], True)
+        assert_true(self.nodes[0].testmempoolaccept([tx_hex])[0]['allowed'])
         with self.nodes[0].assert_debug_log(['received getdata for: wtx {} peer'.format(wtxid)]):
             self.nodes[0].sendrawtransaction(tx_hex)
             tx_relay_peer.wait_for_tx(txid)
@@ -58,7 +58,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
         assert_equal(first_peer.relay, 1)
         peer_2_info = self.nodes[0].getpeerinfo()[1]
         assert_equal(peer_2_info['permissions'], ['relay'])
-        assert_equal(self.nodes[0].testmempoolaccept([tx_hex])[0]['allowed'], True)
+        assert_true(self.nodes[0].testmempoolaccept([tx_hex])[0]['allowed'])
 
         self.log.info('Check that the tx from first_peer with relay-permission is relayed to others (ie.second_peer)')
         with self.nodes[0].assert_debug_log(["received getdata"]):
@@ -70,7 +70,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
             # See https://github.com/bitcoin/bitcoin/issues/19943 for details.
             first_peer.send_without_ping(msg_tx(tx))
             self.log.info('Check that the peer with relay-permission is still connected after sending the transaction')
-            assert_equal(first_peer.is_connected, True)
+            assert_true(first_peer.is_connected)
             second_peer.wait_for_tx(txid)
             assert_equal(self.nodes[0].getmempoolinfo()['size'], 1)
         self.log.info("Relay-permission peer's transaction is accepted and relayed")
@@ -81,16 +81,16 @@ class P2PBlocksOnly(BitcoinTestFramework):
     def blocks_relay_conn_tests(self):
         self.log.info('Tests with node in normal mode with block-relay-only connections')
         self.restart_node(0, ["-noblocksonly"])  # disables blocks only mode
-        assert_equal(self.nodes[0].getnetworkinfo()['localrelay'], True)
+        assert_true(self.nodes[0].getnetworkinfo()['localrelay'])
 
         # Ensure we disconnect if a block-relay-only connection sends us a transaction
         self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=0, connection_type="block-relay-only")
-        assert_equal(self.nodes[0].getpeerinfo()[0]['relaytxes'], False)
+        assert_false(self.nodes[0].getpeerinfo()[0]['relaytxes'])
         _, txid, _, tx_hex = self.check_p2p_tx_violation()
 
         self.log.info("Tests with node in normal mode with block-relay-only connection, sending an inv")
         conn = self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=0, connection_type="block-relay-only")
-        assert_equal(self.nodes[0].getpeerinfo()[0]['relaytxes'], False)
+        assert_false(self.nodes[0].getpeerinfo()[0]['relaytxes'])
         self.check_p2p_inv_violation(conn)
 
         self.log.info(
@@ -100,7 +100,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
             P2PInterface(), p2p_idx=0, connection_type="block-relay-only"
         )
         conn.send_and_ping(msg_getdata([CInv(t=MSG_WTX, h=0x12345)]))
-        assert_equal(self.nodes[0].getpeerinfo()[0]["relaytxes"], False)
+        assert_false(self.nodes[0].getpeerinfo()[0]["relaytxes"])
         assert "notfound" not in conn.last_message
 
         self.log.info("Check that txs from RPC are not sent to blockrelay connection")

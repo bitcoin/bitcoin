@@ -16,6 +16,7 @@ from test_framework.test_node import TestNode
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    assert_true,
 )
 from test_framework.wallet import MiniWallet
 
@@ -52,7 +53,7 @@ class DataCarrierTest(BitcoinTestFramework):
         self.wallet = MiniWallet(self.nodes[0])
 
         # Test that bare multisig is allowed by default. Do it here rather than create a new test for it.
-        assert_equal(self.nodes[0].getmempoolinfo()["permitbaremultisig"], True)
+        assert_true(self.nodes[0].getmempoolinfo()["permitbaremultisig"])
 
         assert_equal(self.nodes[0].getmempoolinfo()["maxdatacarriersize"], MAX_OP_RETURN_RELAY)
         assert_equal(self.nodes[1].getmempoolinfo()["maxdatacarriersize"], 0)

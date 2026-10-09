@@ -7,6 +7,7 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_raises_rpc_error,
 )
 from test_framework.wallet import MiniWallet
@@ -201,7 +202,7 @@ class GetTxSpendingPrevoutTest(BitcoinTestFramework):
 
         txinfo = node0.getrawtransaction(tx2["txid"], verbose = True, blockhash = blockhash)
         assert_equal(txinfo["confirmations"], 0)
-        assert_equal(txinfo["in_active_chain"], False)
+        assert_false(txinfo["in_active_chain"])
 
         blockhash = self.generate(self.wallet, 1)[0]
         # we check that the spending tx for tx1 is now tx3

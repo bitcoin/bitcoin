@@ -21,6 +21,7 @@ from test_framework.messages import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_greater_than,
     assert_greater_than_or_equal,
     assert_not_equal,
@@ -408,7 +409,7 @@ class RESTTest (BitcoinTestFramework):
             for vin in tx_obj["vin"]:
                 if "coinbase" not in vin:
                     assert "prevout" in vin
-                    assert_equal(vin["prevout"]["generated"], False)
+                    assert_false(vin["prevout"]["generated"])
                 else:
                     assert "prevout" not in vin
 
