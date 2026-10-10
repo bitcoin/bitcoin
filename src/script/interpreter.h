@@ -374,6 +374,32 @@ uint256 ComputeTapbranchHash(std::span<const unsigned char> a, std::span<const u
  *  Requires control block to have valid length (33 + k*32, with k in {0,1,..,128}). */
 uint256 ComputeTaprootMerkleRoot(std::span<const unsigned char> control, const uint256& tapleaf_hash);
 
+/** The ways a (script, leaf version, control block) triple can fail to be a genuine leaf of a
+ *  taproot output's script-path spending tree; see BIP341. */
+enum class TapLeafCandidateError {
+    //! Passes every check that was performed.
+    NONE,
+    //! The leaf version is not a valid tapscript version (BIP341 requires it to be even).
+    BAD_LEAF_VERSION,
+    //! The control block's length is not 33 + 32*n bytes, for some n in {0, 1, ..., 128}.
+    BAD_CONTROL_BLOCK_SIZE,
+    //! The control block's own leaf-version byte does not match leaf_ver.
+    LEAF_VERSION_MISMATCH,
+    //! The Merkle root computed from the control block and the leaf hash of (leaf_ver, script)
+    //! does not match the taproot output's actual Merkle root.
+    MERKLE_ROOT_MISMATCH,
+};
+
+/** Check whether (script, leaf_ver, control_block) could be a genuine leaf of a taproot output's
+ *  script-path spending tree, returning the first of BIP341's structural checks it fails, or
+ *  NONE if it passes all of them that were checked.
+ *
+ *  merkle_root is the tree's actual Merkle root, needed for the one check (a genuine leaf's
+ *  control block must combine with its leaf hash to reproduce that root) that cannot be
+ *  performed from the candidate alone. Passing std::nullopt skips that check; NONE then means
+ *  only that the other three passed, not that this is a genuine leaf. */
+TapLeafCandidateError CheckTapLeafCandidate(int leaf_ver, std::span<const unsigned char> control_block, std::span<const unsigned char> script, std::optional<uint256> merkle_root);
+
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, script_verify_flags flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* error = nullptr);
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, script_verify_flags flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = nullptr);
 bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, script_verify_flags flags, const BaseSignatureChecker& checker, ScriptError* serror = nullptr);
