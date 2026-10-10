@@ -9,11 +9,19 @@
 #include <crypto/hex_base.h>
 #include <hash.h>
 #include <memusage.h>
+#include <streams.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/hash_type.h>
 
+#include <cassert>
 #include <compare>
+#include <limits>
+#include <memory>
+#include <span>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 CScriptID::CScriptID(const CScript& in) : BaseHash(Hash160(in)) {}
 
@@ -289,20 +297,78 @@ bool CScript::IsPushOnly() const
 std::string CScriptWitness::ToString() const
 {
     std::string ret = "CScriptWitness(";
-    for (unsigned int i = 0; i < stack.size(); i++) {
-        if (i) {
-            ret += ", ";
-        }
-        ret += HexStr(stack[i]);
+    bool first{true};
+    for (const auto element : *this) {
+        if (!first) ret += ", ";
+        first = false;
+        ret += HexStr(element);
     }
     return ret + ")";
 }
 
+CScriptWitness::CScriptWitness(const std::vector<std::vector<unsigned char>>& stack)
+{
+    if (stack.empty()) return;
+    SpanWriter{Allocate(::GetSerializeSize(stack)), stack};
+}
+
+void CScriptWitness::Assign(std::span<const std::byte> data)
+{
+    if (data.empty()) {
+        m_data.reset();
+        return;
+    }
+    std::ranges::copy(data, Allocate(data.size()).begin());
+}
+
+std::span<std::byte> CScriptWitness::Allocate(size_t size)
+{
+    // The header stores the size of the serialization in 32 bits.
+    if (size > std::numeric_limits<uint32_t>::max()) throw std::length_error("CScriptWitness too large");
+    m_data = std::make_unique_for_overwrite<std::byte[]>(HEADER_SIZE + size);
+    WriteLE32(m_data.get(), size);
+    return {m_data.get() + HEADER_SIZE, size};
+}
+
+void CScriptWitness::CopyFrom(const CScriptWitness& other)
+{
+    if (!other.m_data) {
+        m_data.reset();
+        return;
+    }
+    const auto total = HEADER_SIZE + other.Data().size();
+    auto new_data = std::make_unique_for_overwrite<std::byte[]>(total);
+    std::copy(other.m_data.get(), other.m_data.get() + total, new_data.get());
+    m_data = std::move(new_data);
+}
+
+std::span<const unsigned char> CScriptWitness::operator[](size_t index) const noexcept
+{
+    Assume(index < size());
+    auto it = begin();
+    for (size_t i = 0; i < index; ++i) ++it;
+    return *it;
+}
+
+std::vector<std::vector<unsigned char>> CScriptWitness::ToVectors() const
+{
+    std::vector<std::vector<unsigned char>> ret;
+    ret.reserve(size());
+    for (const auto element : *this) ret.emplace_back(element.begin(), element.end());
+    return ret;
+}
+
+std::vector<std::span<const unsigned char>> CScriptWitness::ToSpans() const
+{
+    std::vector<std::span<const unsigned char>> ret;
+    ret.reserve(size());
+    for (const auto element : *this) ret.push_back(element);
+    return ret;
+}
+
 size_t CScriptWitness::DynamicMemoryUsage() const noexcept
 {
-    size_t ret{memusage::DynamicUsage(stack)};
-    for (const auto& element : stack) ret += memusage::DynamicUsage(element);
-    return ret;
+    return m_data ? memusage::MallocUsage(HEADER_SIZE + Data().size()) : 0;
 }
 
 bool CScript::HasValidOps() const
