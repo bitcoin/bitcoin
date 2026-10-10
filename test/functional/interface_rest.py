@@ -9,6 +9,7 @@ from enum import Enum
 from io import BytesIO
 import http.client
 import json
+import socket
 import typing
 import urllib.parse
 
@@ -427,6 +428,36 @@ class RESTTest (BitcoinTestFramework):
         # Compare with normal RPC getblockchaininfo response
         blockchain_info = self.nodes[0].getblockchaininfo()
         assert_equal(blockchain_info, json_obj)
+
+        self.log.info("Test that a HEAD request returns the GET headers without a body")
+        get_body = self.test_rest_request("/chaininfo", ret_type=RetType.BYTES)
+        assert_greater_than(len(get_body), 0)
+        # Send the HEAD request by hand and read whatever the server sends
+        # back until it goes quiet: everything must be header section, with
+        # the Content-Length of the GET response and nothing after the blank
+        # line (RFC 9110 section 9.3.2). http.client would silently drop a
+        # wrongly attached body, so a raw socket is used instead.
+        sock = socket.create_connection((self.url.hostname, self.url.port))
+        sock.settimeout(2)
+        sock.sendall(
+            b"HEAD /rest/chaininfo.json HTTP/1.1\r\n"
+            b"Host: localhost\r\n"
+            b"\r\n")
+        raw = b''
+        while True:
+            try:
+                chunk = sock.recv(4096)
+            except TimeoutError:
+                break
+            if not chunk:
+                break
+            raw += chunk
+        sock.close()
+        assert raw.startswith(b"HTTP/1.1 200 "), raw
+        header_end = raw.find(b"\r\n\r\n")
+        assert header_end != -1, raw
+        assert_equal(raw[header_end + 4:], b'')
+        assert f"Content-Length: {len(get_body)}\r\n".encode() in raw, raw
 
         # Test compatibility of deprecated and newer endpoints
         self.log.info("Test compatibility of deprecated and newer endpoints")

@@ -8,6 +8,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.netutil import NETWORK_ERRORS
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_raises,
     mine_large_block,
     str_to_b64str,
@@ -156,6 +157,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         self.check_wrong_credentials()
         self.check_malformed_auth_headers()
         self.check_disallowed_http_methods()
+        self.check_head_request()
         self.check_path_traversal()
         self.check_request_smuggling_cl_te()
         self.check_duplicate_content_length()
@@ -516,6 +518,42 @@ class HTTPBasicsTest (BitcoinTestFramework):
             conn = BitcoinHTTPConnection(self.node)
             response = conn._request(method, '/', data=None, connection_header=None)
             assert_equal(response.status, err)
+
+
+    def check_head_request(self):
+        self.log.info("Check that a HEAD response has the headers of the GET response but no body")
+        # The RPC endpoint answers GET and HEAD alike with 405 and a short
+        # error body. The HEAD response must carry the same Content-Length
+        # but must not send the body itself (RFC 9110 section 9.3.2).
+        conn = BitcoinHTTPConnection(self.node)
+        response = conn.get('/')
+        assert_equal(response.status, http.client.METHOD_NOT_ALLOWED)
+        body = response.read()
+        assert_greater_than(len(body), 0)
+
+        # Send a HEAD request by hand and read whatever the server sends back
+        # until it goes quiet: everything must be header section, nothing after
+        # the blank line.
+        conn.send_raw(
+            b"HEAD / HTTP/1.1\r\n"
+            b"Host: localhost\r\n"
+            b"\r\n")
+        conn.set_timeout(2)
+        raw = b''
+        while True:
+            try:
+                chunk = conn.conn.sock.recv(4096)
+            except TimeoutError:
+                break
+            if not chunk:
+                break
+            raw += chunk
+        assert raw.startswith(b"HTTP/1.1 405 "), raw
+        header_end = raw.find(b"\r\n\r\n")
+        assert header_end != -1, raw
+        assert_equal(raw[header_end + 4:], b'')
+        assert f"Content-Length: {len(body)}\r\n".encode() in raw, raw
+        conn.close_sock()
 
 
     def check_path_traversal(self):
