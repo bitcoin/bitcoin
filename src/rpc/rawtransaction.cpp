@@ -1238,7 +1238,7 @@ static RPCMethod decodepsbt()
         if (!input.partial_sigs.empty()) {
             UniValue partial_sigs(UniValue::VOBJ);
             for (const auto& sig : input.partial_sigs) {
-                partial_sigs.pushKV(HexStr(sig.second.first), HexStr(sig.second.second));
+                partial_sigs.pushKVEnd(HexStr(sig.second.first), HexStr(sig.second.second));
             }
             in.pushKV("partial_signatures", std::move(partial_sigs));
         }
