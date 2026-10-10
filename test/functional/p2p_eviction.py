@@ -58,19 +58,6 @@ class P2PEvict(BitcoinTestFramework):
         node = self.nodes[0]
         self.wallet = MiniWallet(node)
 
-        self.log.info("Create 4 peers and protect them from eviction by sending us a block")
-        for _ in range(4):
-            block_peer = node.add_p2p_connection(SlowP2PDataStore())
-            current_peer += 1
-            block_peer.sync_with_ping()
-            best_block = node.getbestblockhash()
-            tip = int(best_block, 16)
-            best_block_time = node.getblock(best_block)['time']
-            block = create_block(tip, height=node.getblockcount() + 1, ntime=best_block_time + 1)
-            block.solve()
-            block_peer.send_blocks_and_test([block], node, success=True)
-            protected_peers.add(current_peer)
-
         self.log.info("Create 5 slow-pinging peers, making them eviction candidates")
         for _ in range(5):
             node.add_p2p_connection(SlowP2PInterface())
@@ -91,6 +78,22 @@ class P2PEvict(BitcoinTestFramework):
             fastpeer = node.add_p2p_connection(P2PInterface())
             current_peer += 1
             self.wait_until(lambda: "ping" in fastpeer.last_message, timeout=10)
+
+        # Connect these peers last: without block-time protection, the eviction
+        # logic would fall back to protecting older connections and evict the
+        # youngest one, so only a working block-time protection keeps them connected.
+        self.log.info("Create 4 peers and protect them from eviction by sending us a block")
+        for _ in range(4):
+            block_peer = node.add_p2p_connection(SlowP2PDataStore())
+            current_peer += 1
+            block_peer.sync_with_ping()
+            best_block = node.getbestblockhash()
+            tip = int(best_block, 16)
+            best_block_time = node.getblock(best_block)['time']
+            block = create_block(tip, height=node.getblockcount() + 1, ntime=best_block_time + 1)
+            block.solve()
+            block_peer.send_blocks_and_test([block], node, success=True)
+            protected_peers.add(current_peer)
 
         # Make sure by asking the node what the actual min pings are
         peerinfo = node.getpeerinfo()
