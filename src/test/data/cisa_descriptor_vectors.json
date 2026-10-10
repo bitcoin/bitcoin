@@ -1,0 +1,496 @@
+{
+  "valid": [
+    {
+      "description": "x-only public key",
+      "given": {
+        "descriptor": "cisa(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)"
+      },
+      "results": [
+        {
+          "intermediary": {
+            "internalKey": "a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd",
+            "merkleRoot": null,
+            "outputKey": "77aab6e066f8a7419c5ab714c12c67d25007ed55a43cadcacb4d7a970a093f11"
+          },
+          "expected": {
+            "scriptPubKey": "522077aab6e066f8a7419c5ab714c12c67d25007ed55a43cadcacb4d7a970a093f11",
+            "address": "bc1zw74tdcrxlzn5r8z6ku2vztr86fgq0m245s72mjktf4afwzsf8ugs84fgvh"
+          }
+        }
+      ]
+    },
+    {
+      "description": "compressed public key, converted to x-only",
+      "given": {
+        "descriptor": "cisa(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)"
+      },
+      "results": [
+        {
+          "intermediary": {
+            "internalKey": "a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd",
+            "merkleRoot": null,
+            "outputKey": "77aab6e066f8a7419c5ab714c12c67d25007ed55a43cadcacb4d7a970a093f11"
+          },
+          "expected": {
+            "scriptPubKey": "522077aab6e066f8a7419c5ab714c12c67d25007ed55a43cadcacb4d7a970a093f11",
+            "address": "bc1zw74tdcrxlzn5r8z6ku2vztr86fgq0m245s72mjktf4afwzsf8ugs84fgvh"
+          }
+        }
+      ]
+    },
+    {
+      "description": "compressed public key with the other parity byte, same x-only key",
+      "given": {
+        "descriptor": "cisa(02a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)"
+      },
+      "results": [
+        {
+          "intermediary": {
+            "internalKey": "a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd",
+            "merkleRoot": null,
+            "outputKey": "77aab6e066f8a7419c5ab714c12c67d25007ed55a43cadcacb4d7a970a093f11"
+          },
+          "expected": {
+            "scriptPubKey": "522077aab6e066f8a7419c5ab714c12c67d25007ed55a43cadcacb4d7a970a093f11",
+            "address": "bc1zw74tdcrxlzn5r8z6ku2vztr86fgq0m245s72mjktf4afwzsf8ugs84fgvh"
+          }
+        }
+      ]
+    },
+    {
+      "description": "WIF private key",
+      "given": {
+        "descriptor": "cisa(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1)"
+      },
+      "results": [
+        {
+          "intermediary": {
+            "internalKey": "a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd",
+            "merkleRoot": null,
+            "outputKey": "77aab6e066f8a7419c5ab714c12c67d25007ed55a43cadcacb4d7a970a093f11"
+          },
+          "expected": {
+            "scriptPubKey": "522077aab6e066f8a7419c5ab714c12c67d25007ed55a43cadcacb4d7a970a093f11",
+            "address": "bc1zw74tdcrxlzn5r8z6ku2vztr86fgq0m245s72mjktf4afwzsf8ugs84fgvh"
+          }
+        }
+      ]
+    },
+    {
+      "description": "key origin information and ranged extended public key",
+      "given": {
+        "descriptor": "cisa([deadbeef/1/2h/3/4h]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0/*)"
+      },
+      "results": [
+        {
+          "childIndex": 0,
+          "intermediary": {
+            "internalKey": "8145454b87fc9ec3557478d6eadc2aea290b50f3c469b828abeb542ae8f8849d",
+            "merkleRoot": null,
+            "outputKey": "7750507f33a72afbca08b42c1220aac1aaddeff759ff035d2b81c13e93037570"
+          },
+          "expected": {
+            "scriptPubKey": "52207750507f33a72afbca08b42c1220aac1aaddeff759ff035d2b81c13e93037570",
+            "address": "bc1zwag9qlen5u40hjsgkskpyg92cx4dmmlht8lsxhfts8qnaycrw4cqcwx6vj"
+          }
+        },
+        {
+          "childIndex": 1,
+          "intermediary": {
+            "internalKey": "377ad06450813b5f7e10bc94b8b662513398c2d83086f8e67349a00909a5a5a4",
+            "merkleRoot": null,
+            "outputKey": "517660b60759fb83084316efb0d0f7cf0944c076b929a8d504fd437ce480d1af"
+          },
+          "expected": {
+            "scriptPubKey": "5220517660b60759fb83084316efb0d0f7cf0944c076b929a8d504fd437ce480d1af",
+            "address": "bc1z29mxpds8t8acxzzrzmhmp58heuy5fsrkhy5634gyl4pheeyq6xhs2dm4gt"
+          }
+        },
+        {
+          "childIndex": 2,
+          "intermediary": {
+            "internalKey": "0a862a965e930b917327d4d08e6309aeb6a4fb0970e133c8ea0d034de04cc3b0",
+            "merkleRoot": null,
+            "outputKey": "ca34cd293af4269a7b2bd872f2b4680bb56360cf47973050bddd1f9efb8975cc"
+          },
+          "expected": {
+            "scriptPubKey": "5220ca34cd293af4269a7b2bd872f2b4680bb56360cf47973050bddd1f9efb8975cc",
+            "address": "bc1zeg6v62f67snf57etmpe09drgpw6kxcx0g7tnq59am50ea7ufwhxqudkxk5"
+          }
+        }
+      ]
+    },
+    {
+      "description": "ranged internal key and ranged leaf key derived in lockstep",
+      "given": {
+        "descriptor": "cisa(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/0/*,pk(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/1/*))"
+      },
+      "results": [
+        {
+          "childIndex": 0,
+          "intermediary": {
+            "internalKey": "8145454b87fc9ec3557478d6eadc2aea290b50f3c469b828abeb542ae8f8849d",
+            "merkleRoot": "940c66d47aeac60601ed9153c2d0970e835e2d75a19339eca61fb9b976ec17a0",
+            "outputKey": "78bc707124daa551b65af74de2ec128b7525e10f374dc67b64e00ce0ab8b3e12"
+          },
+          "expected": {
+            "scriptPubKey": "522078bc707124daa551b65af74de2ec128b7525e10f374dc67b64e00ce0ab8b3e12",
+            "address": "bc1z0z78qufym2j4rdj67ax79mqj3d6jtcg0xaxuv7myuqxwp2ut8cfq0a8jrt"
+          }
+        },
+        {
+          "childIndex": 1,
+          "intermediary": {
+            "internalKey": "377ad06450813b5f7e10bc94b8b662513398c2d83086f8e67349a00909a5a5a4",
+            "merkleRoot": "d825b20ab1429a0454c56ff1aec7252d03e22687cb36f9259a75d9bfa0fe9fea",
+            "outputKey": "01f0a02a17808c20134b78faab80ef93ffba82261ccef0a2314f5d62b6438f11"
+          },
+          "expected": {
+            "scriptPubKey": "522001f0a02a17808c20134b78faab80ef93ffba82261ccef0a2314f5d62b6438f11",
+            "address": "bc1zq8c2q2shszxzqy6t0ra2hq80j0lm4q3xrn80pg33fawk9djr3ugskaasws"
+          }
+        },
+        {
+          "childIndex": 2,
+          "intermediary": {
+            "internalKey": "0a862a965e930b917327d4d08e6309aeb6a4fb0970e133c8ea0d034de04cc3b0",
+            "merkleRoot": "2507666dcb8791ea1cd62068d11f2452816d7e0a680ccb41a39088708f4834ff",
+            "outputKey": "21024954fcec88237a9386fce80ef2ced5f1e91b422b26c59ccfc174c8d1ad25"
+          },
+          "expected": {
+            "scriptPubKey": "522021024954fcec88237a9386fce80ef2ced5f1e91b422b26c59ccfc174c8d1ad25",
+            "address": "bc1zyypyj48uajyzx75nsm7wsrhjem2lr6gmgg4jd3vuelqhfjx345jsnll28p"
+          }
+        }
+      ]
+    },
+    {
+      "description": "single leaf script tree",
+      "given": {
+        "descriptor": "cisa(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,pk(669b8afcec803a0d323e9a17f3ea8e68e8abe5a278020a929adbec52421adbd0))"
+      },
+      "results": [
+        {
+          "intermediary": {
+            "internalKey": "a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd",
+            "merkleRoot": "32074d694884ddf74449665f31ffa31cf09cd8b51c485eeee1705045003ef51b",
+            "outputKey": "17cf18db381d836d8923b1bdb246cfcd818da1a9f0e6e7907f187f0b2f937754"
+          },
+          "expected": {
+            "scriptPubKey": "522017cf18db381d836d8923b1bdb246cfcd818da1a9f0e6e7907f187f0b2f937754",
+            "address": "bc1zzl833kecrkpkmzfrkx7my3k0ekqcmgdf7rnw0yrlrplsktunwa2qk3llxl"
+          }
+        }
+      ]
+    },
+    {
+      "description": "nested script tree",
+      "given": {
+        "descriptor": "cisa(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,{pk(xprvA2JDeKCSNNZky6uBCviVfJSKyQ1mDYahRjijr5idH2WwLsEd4Hsb2Tyh8RfQMuPh7f7RtyzTtdrbdqqsunu5Mm3wDvUAKRHSC34sJ7in334/0),{{pk(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL),pk(02df12b7035bdac8e3bab862a3a83d06ea6b17b6753d52edecba9be46f5d09e076)},pk(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1)}})"
+      },
+      "results": [
+        {
+          "intermediary": {
+            "internalKey": "a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd",
+            "merkleRoot": "da0a179d3c23796e8fcb70c87d5378bc92b00e8f081a93cc50556de63724b8d3",
+            "outputKey": "71fff39599a7b78bc02623cbe814efebf1a404f5d8ad34ea80f213bd8943f574"
+          },
+          "expected": {
+            "scriptPubKey": "522071fff39599a7b78bc02623cbe814efebf1a404f5d8ad34ea80f213bd8943f574",
+            "address": "bc1zw8ll89ve57mchspxy097s980a0c6gp84mzknf65q7gfmmz2r746qtfww2p"
+          }
+        }
+      ]
+    },
+    {
+      "description": "BIP 387 multi_a() leaf",
+      "given": {
+        "descriptor": "cisa(50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0,multi_a(2,[00000000/111'/222]xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc,xprv9uPDJpEQgRQfDcW7BkF7eTya6RPxXeJCqCJGHuCJ4GiRVLzkTXBAJMu2qaMWPrS7AANYqdq6vcBcBUdJCVVFceUvJFjaPdGZ2y9WACViL4L/0))"
+      },
+      "results": [
+        {
+          "intermediary": {
+            "internalKey": "50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0",
+            "merkleRoot": "1540b5de4dc9c3fb05747199c6a88350fe79191237860c528c0c84c6565593ea",
+            "outputKey": "2eea93581594a43c0c8423b70dc112e5651df63984d108d4fc8ccd3b63b4eafa"
+          },
+          "expected": {
+            "scriptPubKey": "52202eea93581594a43c0c8423b70dc112e5651df63984d108d4fc8ccd3b63b4eafa",
+            "address": "bc1z9m4fxkq4jjjrcryyywmsmsgju4j3ma3esngs348u3nxnkca5ataqwzfp34"
+          }
+        }
+      ]
+    },
+    {
+      "description": "BIP 387 sortedmulti_a() leaf",
+      "given": {
+        "descriptor": "cisa(50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0,sortedmulti_a(2,[00000000/111'/222]xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc,xprv9uPDJpEQgRQfDcW7BkF7eTya6RPxXeJCqCJGHuCJ4GiRVLzkTXBAJMu2qaMWPrS7AANYqdq6vcBcBUdJCVVFceUvJFjaPdGZ2y9WACViL4L/0))"
+      },
+      "results": [
+        {
+          "intermediary": {
+            "internalKey": "50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0",
+            "merkleRoot": "1da14590a048a79a44330842f6afca6189996523d74a3b21b67575f69c8bd3c2",
+            "outputKey": "16fa6a6ba7e98c54b5bf43b3144912b78a61b60b02f6a74172b8dcb35b12bc30"
+          },
+          "expected": {
+            "scriptPubKey": "522016fa6a6ba7e98c54b5bf43b3144912b78a61b60b02f6a74172b8dcb35b12bc30",
+            "address": "bc1zzmax56a8axx9fddlgwe3gjgjk79xrdstqtm2wstjhrwtxkcjhscqf0s2pf"
+          }
+        }
+      ]
+    },
+    {
+      "description": "BIP 379 Miniscript pkh() leaf",
+      "given": {
+        "descriptor": "cisa(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,pkh(L1NKM8dVA1h52mwDrmk1YreTWkAZZTu2vmKLpmLEbFRqGQYjHeEV))"
+      },
+      "results": [
+        {
+          "intermediary": {
+            "internalKey": "a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd",
+            "merkleRoot": "78df47e34ff10fbce3d4a14085865b2eeeaf47c1c2ee962fcdbbed8df0a5f2d5",
+            "outputKey": "1e9875f690f5847404e4c5951e2f029887df0525691ee11a682afd37b608aad4"
+          },
+          "expected": {
+            "scriptPubKey": "52201e9875f690f5847404e4c5951e2f029887df0525691ee11a682afd37b608aad4",
+            "address": "bc1zr6v8ta5s7kz8gp8yck23utcznzra7pf9dy0wzxng9t7n0dsg4t2q9m267m"
+          }
+        }
+      ]
+    },
+    {
+      "description": "BIP 390 musig() internal key, participants are aggregated as compressed keys",
+      "given": {
+        "descriptor": "cisa(musig(02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9,03dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba659,023590a94e768f8e1815c2f24b4d80a8e3149316c3518ce7b7ad338368d038ca66))"
+      },
+      "results": [
+        {
+          "intermediary": {
+            "internalKey": "789d937bade6673538f3e28d8368dda4d0512f94da44cf477a505716d26a1575",
+            "merkleRoot": null,
+            "outputKey": "79e6c3e628c9bfbce91de6b7fb28e2aec7713d377cf260ab599dcbc40e542312"
+          },
+          "expected": {
+            "scriptPubKey": "522079e6c3e628c9bfbce91de6b7fb28e2aec7713d377cf260ab599dcbc40e542312",
+            "address": "bc1z08nv8e3gexlme6gau6mlk28z4mrhz0fh0nexp26enh9ugrj5yvfqukj8ew"
+          }
+        }
+      ]
+    },
+    {
+      "description": "BIP 390 musig() internal key with BIP 328 derivation of the aggregate key",
+      "given": {
+        "descriptor": "cisa(musig(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y)/0/*,pk(f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9))"
+      },
+      "results": [
+        {
+          "childIndex": 0,
+          "intermediary": {
+            "internalKey": "9508c08832f3bb9d5e8baf8cb5cfa3669902e2f2da19acea63ff47b93faa9bfc",
+            "merkleRoot": "a5f4dd9bd9e8664ec5d1b97819e523b297ea9c7f8daa0b2e96e6460060333e5f",
+            "outputKey": "1d377b637b5c73f670f5c8a96a2c0bb0d1a682a1fca6aba91fe673501a189782"
+          },
+          "expected": {
+            "scriptPubKey": "52201d377b637b5c73f670f5c8a96a2c0bb0d1a682a1fca6aba91fe673501a189782",
+            "address": "bc1zr5mhkcmmt3elvu84ez5k5tqtkrg6dq4pljn2h2gluee4qxscj7pqk6tafz"
+          }
+        },
+        {
+          "childIndex": 1,
+          "intermediary": {
+            "internalKey": "5ca1102663025a83dd9b5dbc214762c5a6309af00d48167d2d6483808525a298",
+            "merkleRoot": "a5f4dd9bd9e8664ec5d1b97819e523b297ea9c7f8daa0b2e96e6460060333e5f",
+            "outputKey": "8950c83b117a6c208d5205ffefcf75b187b32512eb7f0d8577db8d9102833036"
+          },
+          "expected": {
+            "scriptPubKey": "52208950c83b117a6c208d5205ffefcf75b187b32512eb7f0d8577db8d9102833036",
+            "address": "bc1z39gvswc30fkzpr2jqhl7lnm4kxrmxfgjadlsmpthmwxezq5rxqmqhmmets"
+          }
+        },
+        {
+          "childIndex": 2,
+          "intermediary": {
+            "internalKey": "7dbed1b89c338df6a1ae137f133a19cae6e03d481196ee6f1a5c7d1aeb56b166",
+            "merkleRoot": "a5f4dd9bd9e8664ec5d1b97819e523b297ea9c7f8daa0b2e96e6460060333e5f",
+            "outputKey": "a49a477c61df73691b77fcd563a80a15ea67bb9c75470310ce5c0f25918db60d"
+          },
+          "expected": {
+            "scriptPubKey": "5220a49a477c61df73691b77fcd563a80a15ea67bb9c75470310ce5c0f25918db60d",
+            "address": "bc1z5jdywlrpmaekjxmhln2k82q2zh4x0wuuw4rsxyxwts8jtyvdkcxst9jx8j"
+          }
+        }
+      ]
+    },
+    {
+      "description": "BIP 390 musig() leaf key with BIP 328 derivation of the aggregate key",
+      "given": {
+        "descriptor": "cisa(f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9,pk(musig(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y)/0/*))"
+      },
+      "results": [
+        {
+          "childIndex": 0,
+          "intermediary": {
+            "internalKey": "f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9",
+            "merkleRoot": "e14c40aa4dc29e2167f1e775333a9fc2de6526bd5941a236e486eb12f21c3c32",
+            "outputKey": "68983d461174afc90c26f3b2821d8a9ced9534586a756763b68371a404635cc8"
+          },
+          "expected": {
+            "scriptPubKey": "522068983d461174afc90c26f3b2821d8a9ced9534586a756763b68371a404635cc8",
+            "address": "bc1zdzvr63s3wjhujrpx7wegy8v2nnke2dzcdf6kwcaksdc6gprrtnyqvxkqdw"
+          }
+        },
+        {
+          "childIndex": 1,
+          "intermediary": {
+            "internalKey": "f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9",
+            "merkleRoot": "453a1d290ed7da9d2a6b9db41c857041a7187bcc27d3568481534bc8e0a46a60",
+            "outputKey": "368e2d864115181bdc8bb5dc8684be8d0760d5c33315570d71a21afce4afd43e"
+          },
+          "expected": {
+            "scriptPubKey": "5220368e2d864115181bdc8bb5dc8684be8d0760d5c33315570d71a21afce4afd43e",
+            "address": "bc1zx68zmpjpz5vphhytkhwgdp9735rkp4wrxv24wrt35gd0ee906slqqerrap"
+          }
+        },
+        {
+          "childIndex": 2,
+          "intermediary": {
+            "internalKey": "f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9",
+            "merkleRoot": "864e78707b369d6ec65886f1cd845e9fecfc6d4b6204a19c75bf887ef3cd56b8",
+            "outputKey": "97a1e6270b33ad85744677418bae5f59ea9136027223bc6e282c47c167b471d5"
+          },
+          "expected": {
+            "scriptPubKey": "522097a1e6270b33ad85744677418bae5f59ea9136027223bc6e282c47c167b471d5",
+            "address": "bc1zj7s7vfctxwkc2azxwaqchtjlt84fzdszwg3mcm3g93ruzea5w82ss3nz89"
+          }
+        }
+      ]
+    },
+    {
+      "description": "x-only public key used directly as the output key",
+      "given": {
+        "descriptor": "rawcisa(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)"
+      },
+      "results": [
+        {
+          "intermediary": {
+            "internalKey": null,
+            "merkleRoot": null,
+            "outputKey": "a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd"
+          },
+          "expected": {
+            "scriptPubKey": "5220a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd",
+            "address": "bc1z5d9enu3v0yxyud4jk0pvxk3kmvrzymjpc6f0eq4ck44vr32qck7ss7ryul"
+          }
+        }
+      ]
+    },
+    {
+      "description": "ranged extended public key used directly as the output key",
+      "given": {
+        "descriptor": "rawcisa(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0/*)"
+      },
+      "results": [
+        {
+          "childIndex": 0,
+          "intermediary": {
+            "internalKey": null,
+            "merkleRoot": null,
+            "outputKey": "8145454b87fc9ec3557478d6eadc2aea290b50f3c469b828abeb542ae8f8849d"
+          },
+          "expected": {
+            "scriptPubKey": "52208145454b87fc9ec3557478d6eadc2aea290b50f3c469b828abeb542ae8f8849d",
+            "address": "bc1zs9z52ju8lj0vx4t50rtw4hp2ag5sk58nc35ms29tad2z468csjwsgfy4s5"
+          }
+        },
+        {
+          "childIndex": 1,
+          "intermediary": {
+            "internalKey": null,
+            "merkleRoot": null,
+            "outputKey": "377ad06450813b5f7e10bc94b8b662513398c2d83086f8e67349a00909a5a5a4"
+          },
+          "expected": {
+            "scriptPubKey": "5220377ad06450813b5f7e10bc94b8b662513398c2d83086f8e67349a00909a5a5a4",
+            "address": "bc1zxaadqezssya47lsshj2t3dnz2yee3skcxzr03ennfxsqjzd95kjqw24253"
+          }
+        },
+        {
+          "childIndex": 2,
+          "intermediary": {
+            "internalKey": null,
+            "merkleRoot": null,
+            "outputKey": "0a862a965e930b917327d4d08e6309aeb6a4fb0970e133c8ea0d034de04cc3b0"
+          },
+          "expected": {
+            "scriptPubKey": "52200a862a965e930b917327d4d08e6309aeb6a4fb0970e133c8ea0d034de04cc3b0",
+            "address": "bc1zp2rz49j7jv9ezue86ngguccf46m2f7cfwrsn8j82p5p5mczvcwcqhnsv0h"
+          }
+        }
+      ]
+    },
+    {
+      "description": "BIP 390 musig() aggregate key used directly as the output key",
+      "given": {
+        "descriptor": "rawcisa(musig(02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9,03dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba659,023590a94e768f8e1815c2f24b4d80a8e3149316c3518ce7b7ad338368d038ca66))"
+      },
+      "results": [
+        {
+          "intermediary": {
+            "internalKey": null,
+            "merkleRoot": null,
+            "outputKey": "789d937bade6673538f3e28d8368dda4d0512f94da44cf477a505716d26a1575"
+          },
+          "expected": {
+            "scriptPubKey": "5220789d937bade6673538f3e28d8368dda4d0512f94da44cf477a505716d26a1575",
+            "address": "bc1z0zwex7aduenn2w8nu2xcx6xa5ng9ztu5mfzv73m62pt3d5n2z46s70eujj"
+          }
+        }
+      ]
+    }
+  ],
+  "invalid": [
+    {
+      "description": "Uncompressed private key",
+      "given": {
+        "descriptor": "cisa(5KYZdUEo39z3FPrtuX2QbbwGnNP5zTd7yyr2SC1j299sBCnWjss)"
+      }
+    },
+    {
+      "description": "Uncompressed public key",
+      "given": {
+        "descriptor": "cisa(04a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd5b8dec5235a0fa8722476c7709c02559e3aa73aa03918ba2d492eea75abea235)"
+      }
+    },
+    {
+      "description": "<tt>cisa()</tt> nested in <tt>wsh</tt>",
+      "given": {
+        "descriptor": "wsh(cisa(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd))"
+      }
+    },
+    {
+      "description": "<tt>cisa()</tt> nested in <tt>sh</tt>",
+      "given": {
+        "descriptor": "sh(cisa(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd))"
+      }
+    },
+    {
+      "description": "<tt>cisa()</tt> nested in a <tt>tr()</tt> tree",
+      "given": {
+        "descriptor": "tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,cisa(669b8afcec803a0d323e9a17f3ea8e68e8abe5a278020a929adbec52421adbd0))"
+      }
+    },
+    {
+      "description": "<tt>cisa()</tt> nested in a <tt>cisa()</tt> tree",
+      "given": {
+        "descriptor": "cisa(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,cisa(669b8afcec803a0d323e9a17f3ea8e68e8abe5a278020a929adbec52421adbd0))"
+      }
+    },
+    {
+      "description": "<tt>rawcisa()</tt> with a script tree",
+      "given": {
+        "descriptor": "rawcisa(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,pk(669b8afcec803a0d323e9a17f3ea8e68e8abe5a278020a929adbec52421adbd0))"
+      }
+    }
+  ]
+}

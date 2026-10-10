@@ -363,7 +363,7 @@ int secp256k1_silentpayments_recipient_label_parse(const secp256k1_context* ctx,
     memset(label, 0, sizeof(*label));
     ARG_CHECK(in33 != NULL);
 
-    if (!secp256k1_ge_parse(&ge, in33, 33)) {
+    if (!secp256k1_ge_parse33(&ge, in33)) {
         return 0;
     }
 
