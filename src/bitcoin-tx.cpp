@@ -57,7 +57,7 @@ static void SetupBitcoinTxArgs(ArgsManager &argsman)
 
     argsman.AddArg("delin=N", "Delete input N from TX", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
     argsman.AddArg("delout=N", "Delete output N from TX", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
-    argsman.AddArg("in=TXID:VOUT(:SEQUENCE_NUMBER)", "Add input to TX", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
+    argsman.AddArg("in=TXID:VOUT[:SEQUENCE_NUMBER]", "Add input to TX", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
     argsman.AddArg("locktime=N", "Set TX lock time to N", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
     argsman.AddArg("nversion=N", "Set TX version to N", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
     argsman.AddArg("outaddr=VALUE:ADDRESS", "Add address-based output to TX", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
@@ -262,9 +262,9 @@ static void MutateTxAddInput(CMutableTransaction& tx, const std::string& strInpu
 {
     std::vector<std::string> vStrInputParts = SplitString(strInput, ':');
 
-    // separate TXID:VOUT in string
-    if (vStrInputParts.size()<2)
-        throw std::runtime_error("TX input missing separator");
+    if (vStrInputParts.size() < 2 || vStrInputParts.size() > 3) {
+        throw std::runtime_error("Invalid format, expected in=TXID:VOUT[:SEQUENCE_NUMBER]");
+    }
 
     // extract and validate TXID
     auto txid{Txid::FromHex(vStrInputParts[0])};
@@ -465,10 +465,10 @@ static void MutateTxAddOutData(CMutableTransaction& tx, const std::string& strIn
 
 static void MutateTxAddOutScript(CMutableTransaction& tx, const std::string& strInput)
 {
-    // separate VALUE:SCRIPT[:FLAGS]
     std::vector<std::string> vStrInputParts = SplitString(strInput, ':');
-    if (vStrInputParts.size() < 2)
-        throw std::runtime_error("TX output missing separator");
+    if (vStrInputParts.size() < 2 || vStrInputParts.size() > 3) {
+        throw std::runtime_error("Invalid format, expected outscript=VALUE:SCRIPT[:FLAGS]");
+    }
 
     // Extract and validate VALUE
     CAmount value = ExtractAndValidateValue(vStrInputParts[0]);
