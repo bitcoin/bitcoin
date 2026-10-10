@@ -152,27 +152,15 @@ FUZZ_TARGET(block_index_tree, .init = initialize_block_index_tree)
             [&] {
                 // Prune chain - dealing with block files is beyond the scope of this test, so just prune random blocks, making no assumptions
                 // about what blocks are pruned together because they are in the same block file.
-                // Also don't prune blocks outside of the chain for now - this would make the fuzzer crash because of the problem described in
-                // https://github.com/bitcoin/bitcoin/issues/31512
                 LOCK(cs_main);
-                auto& chain = chainman.ActiveChain();
-                int prune_height = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, chain.Height());
-                CBlockIndex* prune_block{chain[prune_height]};
-                if (prune_block != chain.Tip() && (prune_block->nStatus & BLOCK_HAVE_DATA)) {
+                CBlockIndex* prune_block{PickValue(fuzzed_data_provider, blocks)};
+                if (prune_block != chainman.ActiveChain().Tip() && (prune_block->nStatus & BLOCK_HAVE_DATA)) {
                     blockman.m_have_pruned = true;
                     prune_block->nStatus &= ~BLOCK_HAVE_DATA;
                     prune_block->nStatus &= ~BLOCK_HAVE_UNDO;
                     prune_block->nFile = 0;
                     prune_block->nDataPos = 0;
                     prune_block->nUndoPos = 0;
-                    auto range = blockman.m_blocks_unlinked.equal_range(prune_block->pprev);
-                    while (range.first != range.second) {
-                        std::multimap<CBlockIndex*, CBlockIndex*>::iterator _it = range.first;
-                        range.first++;
-                        if (_it->second == prune_block) {
-                            blockman.m_blocks_unlinked.erase(_it);
-                        }
-                    }
                     pruned_blocks.push_back(prune_block);
                 }
             },
