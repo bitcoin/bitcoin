@@ -40,11 +40,11 @@ HeadersSyncState::HeadersSyncState(NodeId id,
     // could try again, if necessary, to sync a longer chain).
     const auto now{NodeClock::now()};
     const int64_t max_seconds_since_start{Ticks<std::chrono::seconds>(now - NodeSeconds{std::chrono::seconds{chain_start.GetMedianTimePast()}})
-                                          + MAX_FUTURE_BLOCK_TIME};
+                                          + (MAX_FUTURE_BLOCK_TIME / 1s)};
     if (max_seconds_since_start < 0) {
         throw SystemClockError{strprintf(
             "System clock is more than %d minutes behind chain start MTP (%s vs %s).",
-            MAX_FUTURE_BLOCK_TIME / 60,
+            MAX_FUTURE_BLOCK_TIME / 1min,
             FormatISO8601DateTime(TicksSinceEpoch<std::chrono::seconds>(now)),
             FormatISO8601DateTime(chain_start.GetMedianTimePast()))};
     }
