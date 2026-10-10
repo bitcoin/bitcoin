@@ -1241,6 +1241,10 @@ def spenders_taproot_active():
                     add_spender(spenders, "legacy/pk-wrongkey", hashtype=hashtype, p2sh=p2sh, witv0=witv0, standard=standard, script=key_to_p2pk_script(pubkey1), **SINGLE_SIG, key=eckey1, failure={"key": eckey2}, sigops_weight=4-3*witv0, **ERR_EVAL_FALSE)
                     add_spender(spenders, "legacy/pkh-sighashflip", hashtype=hashtype, p2sh=p2sh, witv0=witv0, standard=standard, pkh=pubkey1, key=eckey1, **SIGHASH_BITFLIP, sigops_weight=4-3*witv0, **ERR_EVAL_FALSE)
 
+    # The P2SH scriptPubKey runs on the stack the scriptSig leaves, and its 20-byte push counts towards the stack size
+    # limit. A scriptSig that leaves 999 items is valid, but one that leaves 1000 is not.
+    add_spender(spenders, "legacy/p2sh-stack-size", p2sh=True, standard=False, script=CScript([OP_1]), inputs=[CScript([OP_0] * 998)], failure={"inputs": [CScript([OP_0] * 999)]}, **ERR_STACK_SIZE)
+
     # Verify that OP_CHECKSIGADD wasn't accidentally added to pre-taproot validation logic.
     for p2sh in [False, True]:
         for witv0 in [False, True]:
