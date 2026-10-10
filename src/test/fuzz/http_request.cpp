@@ -27,9 +27,6 @@ using namespace bitcoin_http;
 namespace {
 
 //! A fully parsed request must have a body consistent with its framing headers.
-//! Before libevent was replaced with HTTPRequest (#35182), ReadBody() always
-//! returned an empty string; LoadBody() now populates the body per RFC 9112
-//! framing, so mirror its branch logic here.
 void CheckBodyMatchesFraming(const HTTPRequest& req)
 {
     const std::string body{req.ReadBody()};
@@ -126,7 +123,8 @@ void Drain(const std::shared_ptr<FuzzClient>& client, RunResult& out)
 
         if (!req) {
             if (const HTTPRequest* cur{client->GetRequest()}) {
-                // Complete is always handed back, never left behind.
+                // A completed request is handed back to a worker unless the send buffer
+                // is full. Replies here are empty, so that cannot happen.
                 assert(cur->GetState() != HTTPRequest::State::Complete);
                 assert(StateRank(cur->GetState()) >= StateRank(out.last_state));
                 out.last_state = cur->GetState();
