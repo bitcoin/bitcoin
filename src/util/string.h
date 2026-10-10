@@ -92,10 +92,16 @@ constexpr void CheckNumFormatSpecifiers(const char* str)
  * run-time. Validation is partial to try and prevent the most common errors
  * while avoiding re-implementing the entire parsing logic.
  */
-template <unsigned num_params>
+template <unsigned num_params, bool permit_trailing_newline = true>
 struct ConstevalFormatString {
     const char* const fmt;
-    consteval ConstevalFormatString(const char* str) : fmt{str} { detail::CheckNumFormatSpecifiers<num_params>(fmt); }
+    consteval ConstevalFormatString(const char* str) : fmt{str}
+    {
+        detail::CheckNumFormatSpecifiers<num_params>(fmt);
+        if constexpr (!permit_trailing_newline) {
+            if (std::string_view{fmt}.ends_with('\n')) throw "Format string must not end with a newline";
+        }
+    }
 };
 
 /// Replace every non-overlapping occurrence of `search` with `substitute`, treating both literally; the replacement text is not searched again.

@@ -2,17 +2,31 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <test/util/common.h>
+#include <tinyformat.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
 #include <boost/test/unit_test.hpp>
-#include <test/util/common.h>
-#include <tinyformat.h>
+
+#include <type_traits>
 
 using namespace util;
 using util::detail::CheckNumFormatSpecifiers;
 
 BOOST_AUTO_TEST_SUITE(util_string_tests)
+
+namespace {
+constexpr char NO_TRAILING_NEWLINE[] = "format string without a trailing newline";
+constexpr char TRAILING_NEWLINE[] = "format string ending in a newline\n";
+
+template <const char* str>
+concept IsStrictFormatString =
+    requires { typename std::bool_constant<(ConstevalFormatString</*num_params=*/0, /*permit_trailing_newline=*/false>{str}, true)>; };
+
+static_assert(IsStrictFormatString<NO_TRAILING_NEWLINE>);
+static_assert(!IsStrictFormatString<TRAILING_NEWLINE>);
+} // namespace
 
 template <unsigned NumArgs>
 void TfmFormatZeroes(const std::string& fmt)

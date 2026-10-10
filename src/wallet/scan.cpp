@@ -23,7 +23,7 @@ int64_t ChainScanner::ScanFromTime(int64_t startTime, const WalletRescanReserver
     int start_height = 0;
     uint256 start_block;
     bool start = m_wallet.chain().findFirstBlockWithTimeAndHeight(startTime - TIMESTAMP_WINDOW, 0, FoundBlock().hash(start_block).height(start_height));
-    m_wallet.WalletLogPrintf("%s: Rescanning last %i blocks\n", __func__, start ? WITH_LOCK(m_wallet.cs_wallet, return m_wallet.GetLastBlockHeight()) - start_height + 1 : 0);
+    m_wallet.WalletLogPrintf("%s: Rescanning last %i blocks", __func__, start ? WITH_LOCK(m_wallet.cs_wallet, return m_wallet.GetLastBlockHeight()) - start_height + 1 : 0);
 
     if (start) {
         // TODO: this should take into account failure by ScanResult::USER_ABORT
@@ -207,7 +207,7 @@ bool ChainScanner::ScanBlock(const uint256& block_hash, int block_height, bool s
         }
 
         if (!loc.IsNull()) {
-            m_wallet.WalletLogPrintf("Saving scan progress %d.\n", block_height);
+            m_wallet.WalletLogPrintf("Saving scan progress %d.", block_height);
             WalletBatch batch(m_wallet.GetDatabase());
             batch.WriteBestBlock(loc);
         }
@@ -227,7 +227,7 @@ ScanResult ChainScanner::Scan(const uint256& start_block, int start_height, std:
     std::unique_ptr<FastWalletRescanFilter> fast_rescan_filter;
     if (chain.hasBlockFilterIndex(BlockFilterType::BASIC)) fast_rescan_filter = std::make_unique<FastWalletRescanFilter>(m_wallet);
 
-    m_wallet.WalletLogPrintf("Rescan started from block %s... (%s)\n", start_block.ToString(),
+    m_wallet.WalletLogPrintf("Rescan started from block %s... (%s)", start_block.ToString(),
                 fast_rescan_filter ? "fast variant using block filters" : "slow variant inspecting all blocks");
 
     // show rescan progress in GUI as dialog or on splashscreen, if rescan required on startup (e.g. due to corruption)
@@ -260,7 +260,7 @@ ScanResult ChainScanner::Scan(const uint256& start_block, int start_height, std:
         bool next_interval = reserver.now() >= current_time + INTERVAL_TIME;
         if (next_interval) {
             current_time = reserver.now();
-            m_wallet.WalletLogPrintf("Still rescanning. At block %d. Progress=%f\n", block_height, progress_current);
+            m_wallet.WalletLogPrintf("Still rescanning. At block %d. Progress=%f", block_height, progress_current);
         }
 
         bool fetch_block{true};
@@ -305,18 +305,18 @@ ScanResult ChainScanner::Scan(const uint256& start_block, int start_height, std:
         if (!max_height) UpdateTipIfChanged(state);
     }
     if (!max_height) {
-        m_wallet.WalletLogPrintf("Scanning current mempool transactions.\n");
+        m_wallet.WalletLogPrintf("Scanning current mempool transactions.");
         WITH_LOCK(m_wallet.cs_wallet, chain.requestMempoolTransactions(m_wallet));
     }
     m_wallet.ShowProgress(strprintf("[%s] %s", m_wallet.DisplayName(), _("Rescanning…")), 100); // hide progress dialog in GUI
     if (m_abort) {
-        m_wallet.WalletLogPrintf("Rescan aborted at block %d. Progress=%f\n", block_height, progress_current);
+        m_wallet.WalletLogPrintf("Rescan aborted at block %d. Progress=%f", block_height, progress_current);
         result.status = ScanResult::USER_ABORT;
     } else if (chain.shutdownRequested()) {
-        m_wallet.WalletLogPrintf("Rescan interrupted by shutdown request at block %d. Progress=%f\n", block_height, progress_current);
+        m_wallet.WalletLogPrintf("Rescan interrupted by shutdown request at block %d. Progress=%f", block_height, progress_current);
         result.status = ScanResult::USER_ABORT;
     } else {
-        m_wallet.WalletLogPrintf("Rescan completed in %15dms\n", Ticks<std::chrono::milliseconds>(reserver.now() - start_time));
+        m_wallet.WalletLogPrintf("Rescan completed in %15dms", Ticks<std::chrono::milliseconds>(reserver.now() - start_time));
     }
     return result;
 }
