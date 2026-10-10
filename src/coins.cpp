@@ -392,21 +392,18 @@ CCoinsViewCache::ResetGuard CoinsViewOverlay::StartFetching(const CBlock& block 
             }
         }
         m_earlier_txids.clear();
-        // Only submit tasks if we have something to fetch.
-        if (m_inputs.size()) {
-            m_tasks.assign(workers_count, [this] {
-                while (ProcessInput()) {}
-            });
-            if (auto futures{m_thread_pool->Submit(m_tasks)}) {
-                m_futures = std::move(*futures);
-            } else {
-                // Submit can fail if a shared owner of the thread pool outside of this class calls Stop() or
-                // Interrupt() on a different thread after we call WorkersCount() above. In that case parallel
-                // fetching will not make progress, so we clear the inputs to fall back to single threaded fetching.
-                LogWarning("Failed to submit prevout fetch tasks (%s); falling back to single-threaded fetching for this block.", SubmitErrorString(futures.error()));
-                m_inputs.clear();
-                StopFetching(); // Assert nothing changed if we failed to start tasks.
-            }
+        m_tasks.assign(std::min(workers_count, m_inputs.size()), [this] {
+            while (ProcessInput()) {}
+        });
+        if (auto futures{m_thread_pool->Submit(m_tasks)}) {
+            m_futures = std::move(*futures);
+        } else {
+            // Submit can fail if a shared owner of the thread pool outside of this class calls Stop() or
+            // Interrupt() on a different thread after we call WorkersCount() above. In that case parallel
+            // fetching will not make progress, so we clear the inputs to fall back to single threaded fetching.
+            LogWarning("Failed to submit prevout fetch tasks (%s); falling back to single-threaded fetching for this block.", SubmitErrorString(futures.error()));
+            m_inputs.clear();
+            StopFetching(); // Assert nothing changed if we failed to start tasks.
         }
     }
     return CreateResetGuard();
