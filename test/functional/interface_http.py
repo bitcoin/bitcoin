@@ -76,10 +76,12 @@ class BitcoinHTTPConnection:
     def send_raw(self, data):
         self.conn.sock.sendall(data)
 
-    def post_raw(self, path, data):
+    def post_raw(self, path, data, connection_header=None):
         data_bytes = data.encode("utf-8")
         req = f"POST {path} HTTP/1.1\r\n"
         req += f'Authorization: Basic {str_to_b64str(self.authpair)}\r\n'
+        if connection_header is not None:
+            req += f'Connection: {connection_header}\r\n'
         req += f'Content-Length: {len(data_bytes)}\r\n\r\n'
         self.send_raw(req.encode("ascii") + data_bytes)
 
@@ -149,6 +151,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         self.check_excessive_request_size()
         self.check_pipelining(with_invalid_second_request=False)
         self.check_pipelining(with_invalid_second_request=True)
+        self.check_no_requests_after_close()
         self.check_chunked_transfer()
         self.check_idle_timeout()
         self.check_server_busy_idle_timeout()
@@ -346,6 +349,54 @@ class HTTPBasicsTest (BitcoinTestFramework):
             assert res.index(b"HTTP/1.1 200") < res.index(b"HTTP/1.1 400")
         else:
             assert chunks[2].startswith(bytes(f'{tip_height + 1}', 'utf8'))
+
+
+    def check_no_requests_after_close(self):
+        """
+        Requests pipelined behind a "Connection: close" request are not processed
+        See https://www.rfc-editor.org/rfc/rfc9112#section-9.6
+        """
+        self.log.info("Check that requests pipelined behind a Connection: close request are not processed")
+        tip_height = self.node.getblockcount()
+        conn = BitcoinHTTPConnection(self.node)
+        conn.set_timeout(5)
+        # The server logs every request it hands to a worker together with the
+        # client's address and port, which lets us count the requests it
+        # processed from this connection.
+        addr, port = conn.conn.sock.getsockname()[:2]
+        dispatched = f"Received a POST request for / from {addr}:{port} "
+
+        # The first request blocks until a block is generated and asks the
+        # server to close the connection after responding. The second request
+        # is pipelined right behind it, so it is already in the server's
+        # receive buffer when the first response is sent.
+        conn.post_raw('/', f'{{"method": "waitforblockheight", "params": [{tip_height + 1}]}}', connection_header='close')
+        conn.post_raw('/', '{"method": "setnetworkactive", "params": [false]}')
+        assert_raises(TimeoutError, lambda: conn.recv_raw())
+
+        # Use a separate http connection to generate a block
+        self.generate(self.node, 1, sync_fun=self.no_op)
+
+        # Read the response to the first request, then EOF: the server closes
+        # the connection without responding to the second request.
+        res = b""
+        while True:
+            chunk = conn.recv_raw()
+            if not chunk:
+                break
+            res += chunk
+        assert_equal(res.count(b"HTTP/1.1 200"), 1)
+        assert b"Connection: close\r\n" in res
+        assert b'"result":{"hash":' in res
+
+        # The second request was not processed either: only the first one was
+        # handed to a worker, and the side effect of the second did not
+        # happen. The I/O thread logs every request it hands over before it
+        # closes the connection, so the log is complete once EOF has been
+        # received.
+        with open(self.node.debug_log_path, encoding="utf-8", errors="replace") as dl:
+            assert_equal(dl.read().count(dispatched), 1)
+        assert_equal(self.node.getnetworkinfo()["networkactive"], True)
 
 
     def check_chunked_transfer(self):

@@ -606,6 +606,7 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
 void HTTPRemoteClient::Send(const HTTPResponse& res, std::span<const std::byte> reply_body, bool keep_alive)
 {
     m_keep_alive = keep_alive;
+    if (!keep_alive) m_closing = true;
 
     // Serialize the response headers
     const std::string headers{res.StringifyHeaders()};
@@ -1088,6 +1089,12 @@ std::unique_ptr<HTTPRequest> HTTPRemoteClient::TryReadRequest(const std::shared_
     // this client, do nothing. We'll check again on the next I/O
     // loop iteration.
     if (client->m_req_busy) return nullptr;
+
+    // Once a reply that closes the connection has been queued, or the client
+    // has been flagged for disconnection, no further requests are processed
+    // (RFC 9112 section 9.6), even if they are already sitting in the receive
+    // buffer.
+    if (client->m_closing || client->m_disconnect) return nullptr;
 
     if (!client->m_req) {
         client->m_req = std::make_unique<HTTPRequest>(client);
