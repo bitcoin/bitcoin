@@ -85,6 +85,18 @@ class SettingsTest(BitcoinTestFramework):
             fp.write('{"key": 1, "key": 2}')
         node.assert_start_raises_init_error(expected_msg='Found duplicate key key in settings file', match=ErrorMatch.PARTIAL_REGEX)
 
+        # Test an integer dbcache value in the settings file is applied
+        with settings.open("w") as fp:
+            json.dump({"dbcache": 4096}, fp)
+        with node.assert_debug_log(expected_msgs=['Setting file arg: dbcache = 4096']):
+            self.start_node(0)
+            self.stop_node(0)
+
+        # Test a non-integer dbcache value is reported by AppInit instead of aborting
+        with settings.open("w") as fp:
+            json.dump({"dbcache": 4096.5}, fp)
+        node.assert_start_raises_init_error(expected_msg=r'JSON integer out of range[\s\S]*in AppInit\(\)', match=ErrorMatch.PARTIAL_REGEX)
+
         # Test invalid settings file is ignored with command line -nosettings
         with node.assert_debug_log(expected_msgs=['Command-line arg: settings=false']):
             self.start_node(0, extra_args=["-nosettings"])
