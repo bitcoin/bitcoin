@@ -305,24 +305,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(res[3]["success"], True)
         assert_equal(res[3]["warnings"], [MISSING_KEYS_WARNING])
 
-    def run_test(self):
-        self.log.info('Setting up wallets')
-        self.nodes[0].createwallet(wallet_name='w0', disable_private_keys=False)
-        w0 = self.nodes[0].get_wallet_rpc('w0')
-
-        self.nodes[1].createwallet(wallet_name='w1', disable_private_keys=True, blank=True)
-        w1 = self.nodes[1].get_wallet_rpc('w1')
-        assert_equal(w1.getwalletinfo()['keypoolsize'], 0)
-
-        self.nodes[1].createwallet(wallet_name="wpriv", disable_private_keys=False, blank=True)
-        wpriv = self.nodes[1].get_wallet_rpc("wpriv")
-        assert_equal(wpriv.getwalletinfo()['keypoolsize'], 0)
-
-        self.log.info('Mining coins')
-        self.generatetoaddress(self.nodes[0], COINBASE_MATURITY + 1, w0.getnewaddress())
-
-        # RPC importdescriptors -----------------------------------------------
-
+    def test_import_fails(self):
         # # Test import fails if no descriptor present
         self.log.info("Import should fail if a descriptor is not provided")
         self.test_importdesc({"timestamp": "now"},
@@ -358,6 +341,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             error_code=-8,
             error_message="Timestamp must not be negative")
 
+    def test_import_p2pkh(self, w1):
         # # Test importing of a P2PKH descriptor
         key = get_generate_key()
         self.log.info("Should import a p2pkh descriptor")
@@ -415,6 +399,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                                     error_message=f"pkh(): Key '{key.pubkey} ' is invalid due to whitespace",
                                     success=False)
 
+    def test_import_p2sh_p2wpkh(self, w1):
         # # Test importing of a P2SH-P2WPKH descriptor
         key = get_generate_key()
         self.log.info("Should not import a p2sh-p2wpkh descriptor without checksum")
@@ -464,266 +449,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                      ismine=True,
                      solvable=True)
 
-        # # Test importing of a multisig descriptor
-        key1 = get_generate_key()
-        key2 = get_generate_key()
-        self.log.info("Should import a 1-of-2 bare multisig from descriptor")
-        self.test_importdesc({"desc": descsum_create("multi(1," + key1.pubkey + "," + key2.pubkey + ")"),
-                              "timestamp": "now"},
-                             success=True)
-        self.log.info("Should not treat individual keys from the imported bare multisig as watchonly")
-        test_address(w1,
-                     key1.p2pkh_addr,
-                     ismine=False)
-
-        # # Test ranged descriptors
-        extended_key = ExtendedPrivateKey.generate()
-        xpriv = extended_key.to_string()
-        xpub = extended_key.pubkey().to_string()
-        pubkeys = [extended_key.derive_path(f"m/0'/0'/{i}'").pubkey().pubkey.get_bytes() for i in range(2)]
-        addresses = [key_to_p2sh_p2wpkh(pubkey) for pubkey in pubkeys] # hdkeypath=m/0'/0'/0' and 1'
-        addresses += [key_to_p2wpkh(pubkey) for pubkey in pubkeys] # wpkh subscripts corresponding to the above addresses
-        desc = "sh(wpkh(" + xpub + "/0/0/*" + "))"
-
-        self.log.info("Ranged descriptors cannot have labels")
-        self.test_importdesc({"desc":descsum_create(desc),
-                              "timestamp": "now",
-                              "range": [0, 100],
-                              "label": "test"},
-                              success=False,
-                              error_code=-8,
-                              error_message='Ranged descriptors should not have a label')
-
-        self.log.info("Ranged descriptors can have an explicitly empty label")
-        self.test_importdesc({"desc":descsum_create("sh(wpkh(" + xpub + "/0/1/*))"),
-                              "timestamp": "now",
-                              "range": [0, 100],
-                              "label": ""},
-                              success=True)
-
-        self.log.info("Ranged descriptors cannot have labels - even if range not provided by user and only implied by asterisk (*)")
-        self.test_importdesc({"desc":descsum_create("wpkh(" + xpub + "/100/0/*)"),
-                              "timestamp": "now",
-                              "label": "test",
-                              "active": True},
-                              success=False,
-                              warnings=['Range not given, using default keypool range'],
-                              error_code=-8,
-                              error_message='Ranged descriptors should not have a label')
-
-        self.log.info("Private keys required for private keys enabled wallet")
-        self.test_importdesc({"desc":descsum_create(desc),
-                              "timestamp": "now",
-                              "range": [0, 100]},
-                              success=False,
-                              error_code=-4,
-                              error_message='Cannot import descriptor without private keys to a wallet with private keys enabled',
-                              wallet=wpriv)
-
-        self.log.info("Ranged descriptor import should warn without a specified range")
-        self.test_importdesc({"desc": descsum_create(desc),
-                               "timestamp": "now"},
-                              success=True,
-                              warnings=['Range not given, using default keypool range'])
-        assert_equal(w1.getwalletinfo()['keypoolsize'], 0)
-
-        # # Test importing of a ranged descriptor with xpriv
-        self.log.info("Should not import a ranged descriptor that includes xpriv into a watch-only wallet")
-        desc = "sh(wpkh(" + xpriv + "/0'/0'/*'" + "))"
-        self.test_importdesc({"desc": descsum_create(desc),
-                              "timestamp": "now",
-                              "range": 1},
-                             success=False,
-                             error_code=-4,
-                             error_message='Cannot import private keys to a wallet with private keys disabled')
-
-        self.log.info("Should not import a descriptor with hardened derivations when private keys are disabled")
-        self.test_importdesc({"desc": descsum_create("wpkh(" + xpub + "/1h/*)"),
-                              "timestamp": "now",
-                              "range": 1},
-                             success=False,
-                             error_code=-4,
-                             error_message='Cannot expand descriptor. Probably because of hardened derivations without private keys provided')
-
-        for address in addresses:
-            test_address(w1,
-                         address,
-                         ismine=False,
-                         solvable=False)
-
-        self.test_importdesc({"desc": descsum_create(desc), "timestamp": "now", "range": -1},
-                              success=False, error_code=-8, error_message='End of range is too high')
-
-        self.test_importdesc({"desc": descsum_create(desc), "timestamp": "now", "range": [-1, 10]},
-                              success=False, error_code=-8, error_message='Range should be greater or equal than 0')
-
-        self.test_importdesc({"desc": descsum_create(desc), "timestamp": "now", "range": [(2 << 31 + 1) - 1000000, (2 << 31 + 1)]},
-                              success=False, error_code=-8, error_message='End of range is too high')
-
-        self.test_importdesc({"desc": descsum_create(desc), "timestamp": "now", "range": [2, 1]},
-                              success=False, error_code=-8, error_message='Range specified as [begin,end] must not have begin after end')
-
-        self.test_importdesc({"desc": descsum_create(desc), "timestamp": "now", "range": [0, 1000001]},
-                              success=False, error_code=-8, error_message='Range is too large')
-
-        # The wallet stores the descriptor range as int32_t and range_end is exclusive,
-        # so an inclusive endpoint of 2^31-1 has no representable end. It used to be
-        # truncated to a negative range_end, which aborted the node during keypool top up.
-        # Use an xpub: w1 rejects the xpriv above before the descriptor is added.
-        self.test_importdesc({"desc": descsum_create("wpkh(" + xpub + "/0/*)"), "timestamp": "now",
-                              "range": [2**31 - 1, 2**31 - 1]},
-                              success=False, error_code=-8, error_message='End of range is too high')
-
-        self.log.info("Verify we can only extend descriptor's range")
-        range_request = {"desc": descsum_create(desc), "timestamp": "now", "range": [5, 10], 'active': True}
-        self.test_importdesc(range_request, wallet=wpriv, success=True)
-        assert_equal(wpriv.getwalletinfo()['keypoolsize'], 6)
-        self.test_importdesc({**range_request, "range": [0, 10]}, wallet=wpriv, success=True)
-        assert_equal(wpriv.getwalletinfo()['keypoolsize'], 11)
-        self.test_importdesc({**range_request, "range": [0, 20]}, wallet=wpriv, success=True)
-        assert_equal(wpriv.getwalletinfo()['keypoolsize'], 21)
-        # Can keep range the same
-        self.test_importdesc({**range_request, "range": [0, 20]}, wallet=wpriv, success=True)
-        assert_equal(wpriv.getwalletinfo()['keypoolsize'], 21)
-
-        self.test_importdesc({**range_request, "range": [5, 10]}, wallet=wpriv, success=False,
-                             error_code=-4, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
-        self.test_importdesc({**range_request, "range": [0, 10]}, wallet=wpriv, success=False,
-                             error_code=-4, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
-        self.test_importdesc({**range_request, "range": [5, 20]}, wallet=wpriv, success=False,
-                             error_code=-4, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
-        assert_equal(wpriv.getwalletinfo()['keypoolsize'], 21)
-
-        self.log.info("Check we can change descriptor internal flag")
-        self.test_importdesc({**range_request, "range": [0, 20], "internal": True}, wallet=wpriv, success=True)
-        assert_equal(wpriv.getwalletinfo()['keypoolsize'], 0)
-        assert_raises_rpc_error(-4, 'This wallet has no available keys', wpriv.getnewaddress, '', 'p2sh-segwit')
-        assert_equal(wpriv.getwalletinfo()['keypoolsize_hd_internal'], 21)
-        wpriv.getrawchangeaddress('p2sh-segwit')
-
-        self.test_importdesc({**range_request, "range": [0, 20], "internal": False}, wallet=wpriv, success=True)
-        assert_equal(wpriv.getwalletinfo()['keypoolsize'], 21)
-        wpriv.getnewaddress('', 'p2sh-segwit')
-        assert_equal(wpriv.getwalletinfo()['keypoolsize_hd_internal'], 0)
-        assert_raises_rpc_error(-4, 'This wallet has no available keys', wpriv.getrawchangeaddress, 'p2sh-segwit')
-
-        # Make sure ranged imports import keys in order
-        w1 = self.nodes[1].get_wallet_rpc('w1')
-        self.log.info('Key ranges should be imported in order')
-        root_xprv = ExtendedPrivateKey.generate()
-        root_fingerprint = root_xprv._fingerprint().hex()
-        xprv = root_xprv.derive_path("m/0'/0'")
-        xpub = xprv.pubkey().to_string()
-        addresses = [key_to_p2wpkh(xprv.derive_path(f"m/{i}").pubkey().pubkey.get_bytes()) for i in range(0, 5)]
-        self.test_importdesc({'desc': descsum_create(f'wpkh([{root_fingerprint}/0h/0h]{xpub}/*)'),
-                              'active': True,
-                              'range' : [0, 2],
-                              'timestamp': 'now'
-                             },
-                             success=True)
-        self.test_importdesc({'desc': descsum_create(f'sh(wpkh([{root_fingerprint}/0h/0h]{xpub}/*))'),
-                              'active': True,
-                              'range' : [0, 2],
-                              'timestamp': 'now'
-                             },
-                             success=True)
-        self.test_importdesc({'desc': descsum_create(f'pkh([{root_fingerprint}/0h/0h]{xpub}/*)'),
-                              'active': True,
-                              'range' : [0, 2],
-                              'timestamp': 'now'
-                             },
-                             success=True)
-
-        assert_equal(w1.getwalletinfo()['keypoolsize'], 5 * 3)
-        for i, expected_addr in enumerate(addresses):
-            received_addr = w1.getnewaddress('', 'bech32')
-            assert_raises_rpc_error(-4, 'This wallet has no available keys', w1.getrawchangeaddress, 'bech32')
-            assert_equal(received_addr, expected_addr)
-
-            key_origin = f'[{root_fingerprint}/0h/0h/{i}]'
-            bech32_addr_info = w1.getaddressinfo(received_addr)
-            assert_equal(bech32_addr_info['desc'].startswith(f'wpkh({key_origin}'), True)
-
-            shwpkh_addr = w1.getnewaddress('', 'p2sh-segwit')
-            shwpkh_addr_info = w1.getaddressinfo(shwpkh_addr)
-            assert_equal(shwpkh_addr_info['desc'].startswith(f'sh(wpkh({key_origin}'), True)
-
-            pkh_addr = w1.getnewaddress('', 'legacy')
-            pkh_addr_info = w1.getaddressinfo(pkh_addr)
-            assert_equal(pkh_addr_info['desc'].startswith(f'pkh({key_origin}'), True)
-
-            assert_equal(w1.getwalletinfo()['keypoolsize'], 4 * 3) # After retrieving a key, we don't refill the keypool again, so it's one less for each address type
-        w1.keypoolrefill()
-        assert_equal(w1.getwalletinfo()['keypoolsize'], 5 * 3)
-
-        self.log.info("Check we can change next_index")
-        # go back and forth with next_index
-        for i in [4, 0, 2, 1, 3]:
-            # Sometimes use h, sometimes use ' for hardened indicator
-            hard = "'" if i & 2 == 0 else "h"
-            self.test_importdesc({'desc': descsum_create(f'wpkh([80002067/0{hard}/0{hard}]' + xpub + '/*)'),
-                                  'active': True,
-                                  'range': [0, 9],
-                                  'next_index': i,
-                                  'timestamp': 'now'
-                                  },
-                                 success=True)
-            assert_equal(w1.getnewaddress('', 'bech32'), addresses[i])
-
-        self.log.info("Equivalent Miniscript descriptors should not be duplicated")
-        self.nodes[1].createwallet(wallet_name="wminiscript", disable_private_keys=True, blank=True)
-        wminiscript = self.nodes[1].get_wallet_rpc("wminiscript")
-        miniscript_request = {
-            'active': True,
-            'range': [0, 9],
-            'timestamp': 'now',
-        }
-        self.test_importdesc({
-            **miniscript_request,
-            'desc': descsum_create(f"wsh(and_v(v:pk([80002067/0h/0h]{xpub}/*),older(1)))"),
-        }, success=True, wallet=wminiscript)
-        self.test_importdesc({
-            **miniscript_request,
-            'desc': descsum_create(f"wsh(and_v(v:pk([80002067/0'/0']{xpub}/*),older(1)))"),
-        }, success=True, wallet=wminiscript)
-        assert_equal(len(wminiscript.listdescriptors()["descriptors"]), 1)
-
-        # Check active=False default
-        self.log.info('Check imported descriptors are not active by default')
-        self.test_importdesc({'desc': descsum_create('pkh([12345678/1h]' + xpub + '/*)'),
-                              'range' : [0, 2],
-                              'timestamp': 'now',
-                              'internal': True
-                             },
-                             success=True)
-        assert_raises_rpc_error(-4, 'This wallet has no available keys', w1.getrawchangeaddress, 'legacy')
-
-        self.log.info('Check can activate inactive descriptor')
-        self.test_importdesc({'desc': descsum_create('pkh([12345678]' + xpub + '/*)'),
-                              'range': [0, 5],
-                              'active': True,
-                              'timestamp': 'now',
-                              'internal': True
-                              },
-                             success=True)
-        address = w1.getrawchangeaddress('legacy')
-        assert_equal(address, key_to_p2pkh(xprv.derive_path("m/0").pubkey().pubkey.get_bytes()))
-
-        self.log.info('Check can deactivate active descriptor')
-        self.test_importdesc({'desc': descsum_create('pkh([12345678]' + xpub + '/*)'),
-                              'range': [0, 5],
-                              'active': False,
-                              'timestamp': 'now',
-                              'internal': True
-                              },
-                             success=True)
-        assert_raises_rpc_error(-4, 'This wallet has no available keys', w1.getrawchangeaddress, 'legacy')
-
-        self.log.info('Verify activation state is persistent')
-        w1.unloadwallet()
-        self.nodes[1].loadwallet('w1')
-        assert_raises_rpc_error(-4, 'This wallet has no available keys', w1.getrawchangeaddress, 'legacy')
-
+    def test_import_private_key(self, w0, w1, wpriv):
         # # Test importing a descriptor containing a WIF private key
         wif_priv = "cTe1f5rdT8A8DFgVWTjyPwACsDPJM9ff4QngFxUixCSvvbg1x6sh"
         address = "2MuhcG52uHPknxDgmGPsV18jSHFBnnRgjPg"
@@ -747,6 +473,20 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         signed_tx = wpriv.signrawtransactionwithwallet(tx)
         w1.sendrawtransaction(signed_tx['hex'])
 
+    def test_import_multisig(self, w1):
+        # # Test importing of a multisig descriptor
+        key1 = get_generate_key()
+        key2 = get_generate_key()
+        self.log.info("Should import a 1-of-2 bare multisig from descriptor")
+        self.test_importdesc({"desc": descsum_create("multi(1," + key1.pubkey + "," + key2.pubkey + ")"),
+                              "timestamp": "now"},
+                             success=True)
+        self.log.info("Should not treat individual keys from the imported bare multisig as watchonly")
+        test_address(w1,
+                     key1.p2pkh_addr,
+                     ismine=False)
+
+    def test_multisig_descriptors(self, w0):
         # Make sure that we can use import and use multisig as addresses
         self.log.info('Test that multisigs can be imported, signed for, and getnewaddress\'d')
         self.nodes[1].createwallet(wallet_name="wmulti_priv", disable_private_keys=False, blank=True)
@@ -950,7 +690,6 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         # 20 sigs + dummy + witness script
         assert_equal(len(decoded['vin'][0]['txinwitness']), 22)
 
-
         self.log.info("Under P2SH, multisig are standard with up to 15 "
                       "compressed keys")
         self.nodes[1].createwallet(wallet_name='multi_priv_big_legacy',
@@ -1009,23 +748,274 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(tx['complete'], True)
         self.nodes[1].sendrawtransaction(tx['hex'])
 
-        self.log.info("Combo descriptors cannot be active")
-        self.test_importdesc({"desc": descsum_create(f"combo({ExtendedPrivateKey.generate().pubkey().to_string()}/*)"),
-                              "active": True,
-                              "range": 1,
-                              "timestamp": "now"},
+    def test_ranged_descriptors(self, w1, wpriv):
+        # # Test ranged descriptors
+        extended_key = ExtendedPrivateKey.generate()
+        xpriv = extended_key.to_string()
+        xpub = extended_key.pubkey().to_string()
+        pubkeys = [extended_key.derive_path(f"m/0'/0'/{i}'").pubkey().pubkey.get_bytes() for i in range(2)]
+        addresses = [key_to_p2sh_p2wpkh(pubkey) for pubkey in pubkeys] # hdkeypath=m/0'/0'/0' and 1'
+        addresses += [key_to_p2wpkh(pubkey) for pubkey in pubkeys] # wpkh subscripts corresponding to the above addresses
+        desc = "sh(wpkh(" + xpub + "/0/0/*" + "))"
+
+        self.log.info("Ranged descriptors cannot have labels")
+        self.test_importdesc({"desc":descsum_create(desc),
+                              "timestamp": "now",
+                              "range": [0, 100],
+                              "label": "test"},
+                              success=False,
+                              error_code=-8,
+                              error_message='Ranged descriptors should not have a label')
+
+        self.log.info("Ranged descriptors can have an explicitly empty label")
+        self.test_importdesc({"desc":descsum_create("sh(wpkh(" + xpub + "/0/1/*))"),
+                              "timestamp": "now",
+                              "range": [0, 100],
+                              "label": ""},
+                              success=True)
+
+        self.log.info("Ranged descriptors cannot have labels - even if range not provided by user and only implied by asterisk (*)")
+        self.test_importdesc({"desc":descsum_create("wpkh(" + xpub + "/100/0/*)"),
+                              "timestamp": "now",
+                              "label": "test",
+                              "active": True},
+                              success=False,
+                              warnings=['Range not given, using default keypool range'],
+                              error_code=-8,
+                              error_message='Ranged descriptors should not have a label')
+
+        self.log.info("Private keys required for private keys enabled wallet")
+        self.test_importdesc({"desc":descsum_create(desc),
+                              "timestamp": "now",
+                              "range": [0, 100]},
                               success=False,
                               error_code=-4,
-                              error_message="Combo descriptors cannot be set to active")
+                              error_message='Cannot import descriptor without private keys to a wallet with private keys enabled',
+                              wallet=wpriv)
 
-        self.log.info("Descriptors with no type cannot be active")
-        self.test_importdesc({"desc": descsum_create(f"pk({ExtendedPrivateKey.generate().pubkey().to_string()}/*)"),
-                              "active": True,
-                              "range": 1,
-                              "timestamp": "now"},
+        self.log.info("Ranged descriptor import should warn without a specified range")
+        self.test_importdesc({"desc": descsum_create(desc),
+                               "timestamp": "now"},
                               success=True,
-                              warnings=["Unknown output type, cannot set descriptor to active."])
+                              warnings=['Range not given, using default keypool range'])
+        assert_equal(w1.getwalletinfo()['keypoolsize'], 0)
 
+        # # Test importing of a ranged descriptor with xpriv
+        self.log.info("Should not import a ranged descriptor that includes xpriv into a watch-only wallet")
+        desc = "sh(wpkh(" + xpriv + "/0'/0'/*'" + "))"
+        self.test_importdesc({"desc": descsum_create(desc),
+                              "timestamp": "now",
+                              "range": 1},
+                             success=False,
+                             error_code=-4,
+                             error_message='Cannot import private keys to a wallet with private keys disabled')
+
+        self.log.info("Should not import a descriptor with hardened derivations when private keys are disabled")
+        self.test_importdesc({"desc": descsum_create("wpkh(" + xpub + "/1h/*)"),
+                              "timestamp": "now",
+                              "range": 1},
+                             success=False,
+                             error_code=-4,
+                             error_message='Cannot expand descriptor. Probably because of hardened derivations without private keys provided')
+
+        for address in addresses:
+            test_address(w1,
+                         address,
+                         ismine=False,
+                         solvable=False)
+
+        self.test_importdesc({"desc": descsum_create(desc), "timestamp": "now", "range": -1},
+                              success=False, error_code=-8, error_message='End of range is too high')
+
+        self.test_importdesc({"desc": descsum_create(desc), "timestamp": "now", "range": [-1, 10]},
+                              success=False, error_code=-8, error_message='Range should be greater or equal than 0')
+
+        self.test_importdesc({"desc": descsum_create(desc), "timestamp": "now", "range": [(2 << 31 + 1) - 1000000, (2 << 31 + 1)]},
+                              success=False, error_code=-8, error_message='End of range is too high')
+
+        self.test_importdesc({"desc": descsum_create(desc), "timestamp": "now", "range": [2, 1]},
+                              success=False, error_code=-8, error_message='Range specified as [begin,end] must not have begin after end')
+
+        self.test_importdesc({"desc": descsum_create(desc), "timestamp": "now", "range": [0, 1000001]},
+                              success=False, error_code=-8, error_message='Range is too large')
+
+        # The wallet stores the descriptor range as int32_t and range_end is exclusive,
+        # so an inclusive endpoint of 2^31-1 has no representable end. It used to be
+        # truncated to a negative range_end, which aborted the node during keypool top up.
+        # Use an xpub: w1 rejects the xpriv above before the descriptor is added.
+        self.test_importdesc({"desc": descsum_create("wpkh(" + xpub + "/0/*)"), "timestamp": "now",
+                              "range": [2**31 - 1, 2**31 - 1]},
+                              success=False, error_code=-8, error_message='End of range is too high')
+
+    def test_descriptor_range_updates(self, wpriv):
+        extended_key = ExtendedPrivateKey.generate()
+        xpriv = extended_key.to_string()
+        desc = "sh(wpkh(" + xpriv + "/0'/0'/*'" + "))"
+        self.log.info("Verify we can only extend descriptor's range")
+        range_request = {"desc": descsum_create(desc), "timestamp": "now", "range": [5, 10], 'active': True}
+        self.test_importdesc(range_request, wallet=wpriv, success=True)
+        assert_equal(wpriv.getwalletinfo()['keypoolsize'], 6)
+        self.test_importdesc({**range_request, "range": [0, 10]}, wallet=wpriv, success=True)
+        assert_equal(wpriv.getwalletinfo()['keypoolsize'], 11)
+        self.test_importdesc({**range_request, "range": [0, 20]}, wallet=wpriv, success=True)
+        assert_equal(wpriv.getwalletinfo()['keypoolsize'], 21)
+        # Can keep range the same
+        self.test_importdesc({**range_request, "range": [0, 20]}, wallet=wpriv, success=True)
+        assert_equal(wpriv.getwalletinfo()['keypoolsize'], 21)
+
+        self.test_importdesc({**range_request, "range": [5, 10]}, wallet=wpriv, success=False,
+                             error_code=-4, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
+        self.test_importdesc({**range_request, "range": [0, 10]}, wallet=wpriv, success=False,
+                             error_code=-4, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
+        self.test_importdesc({**range_request, "range": [5, 20]}, wallet=wpriv, success=False,
+                             error_code=-4, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
+        assert_equal(wpriv.getwalletinfo()['keypoolsize'], 21)
+
+        self.log.info("Check we can change descriptor internal flag")
+        self.test_importdesc({**range_request, "range": [0, 20], "internal": True}, wallet=wpriv, success=True)
+        assert_equal(wpriv.getwalletinfo()['keypoolsize'], 0)
+        assert_raises_rpc_error(-4, 'This wallet has no available keys', wpriv.getnewaddress, '', 'p2sh-segwit')
+        assert_equal(wpriv.getwalletinfo()['keypoolsize_hd_internal'], 21)
+        wpriv.getrawchangeaddress('p2sh-segwit')
+
+        self.test_importdesc({**range_request, "range": [0, 20], "internal": False}, wallet=wpriv, success=True)
+        assert_equal(wpriv.getwalletinfo()['keypoolsize'], 21)
+        wpriv.getnewaddress('', 'p2sh-segwit')
+        assert_equal(wpriv.getwalletinfo()['keypoolsize_hd_internal'], 0)
+        assert_raises_rpc_error(-4, 'This wallet has no available keys', wpriv.getrawchangeaddress, 'p2sh-segwit')
+
+    def test_ranged_key_order(self, w1):
+        # Make sure ranged imports import keys in order
+        self.log.info('Key ranges should be imported in order')
+        root_xprv = ExtendedPrivateKey.generate()
+        root_fingerprint = root_xprv._fingerprint().hex()
+        xprv = root_xprv.derive_path("m/0'/0'")
+        xpub = xprv.pubkey().to_string()
+        addresses = [key_to_p2wpkh(xprv.derive_path(f"m/{i}").pubkey().pubkey.get_bytes()) for i in range(0, 5)]
+        self.test_importdesc({'desc': descsum_create(f'wpkh([{root_fingerprint}/0h/0h]{xpub}/*)'),
+                              'active': True,
+                              'range' : [0, 2],
+                              'timestamp': 'now'
+                             },
+                             success=True)
+        self.test_importdesc({'desc': descsum_create(f'sh(wpkh([{root_fingerprint}/0h/0h]{xpub}/*))'),
+                              'active': True,
+                              'range' : [0, 2],
+                              'timestamp': 'now'
+                             },
+                             success=True)
+        self.test_importdesc({'desc': descsum_create(f'pkh([{root_fingerprint}/0h/0h]{xpub}/*)'),
+                              'active': True,
+                              'range' : [0, 2],
+                              'timestamp': 'now'
+                             },
+                             success=True)
+
+        assert_equal(w1.getwalletinfo()['keypoolsize'], 5 * 3)
+        for i, expected_addr in enumerate(addresses):
+            received_addr = w1.getnewaddress('', 'bech32')
+            assert_raises_rpc_error(-4, 'This wallet has no available keys', w1.getrawchangeaddress, 'bech32')
+            assert_equal(received_addr, expected_addr)
+
+            key_origin = f'[{root_fingerprint}/0h/0h/{i}]'
+            bech32_addr_info = w1.getaddressinfo(received_addr)
+            assert_equal(bech32_addr_info['desc'].startswith(f'wpkh({key_origin}'), True)
+
+            shwpkh_addr = w1.getnewaddress('', 'p2sh-segwit')
+            shwpkh_addr_info = w1.getaddressinfo(shwpkh_addr)
+            assert_equal(shwpkh_addr_info['desc'].startswith(f'sh(wpkh({key_origin}'), True)
+
+            pkh_addr = w1.getnewaddress('', 'legacy')
+            pkh_addr_info = w1.getaddressinfo(pkh_addr)
+            assert_equal(pkh_addr_info['desc'].startswith(f'pkh({key_origin}'), True)
+
+            assert_equal(w1.getwalletinfo()['keypoolsize'], 4 * 3) # After retrieving a key, we don't refill the keypool again, so it's one less for each address type
+        w1.keypoolrefill()
+        assert_equal(w1.getwalletinfo()['keypoolsize'], 5 * 3)
+
+    def test_next_index(self, w1):
+        self.log.info("Check we can change next_index")
+        root_xprv = ExtendedPrivateKey.generate()
+        xprv = root_xprv.derive_path("m/0'/0'")
+        xpub = xprv.pubkey().to_string()
+        addresses = [key_to_p2wpkh(xprv.derive_path(f"m/{i}").pubkey().pubkey.get_bytes()) for i in range(0, 5)]
+        # go back and forth with next_index
+        for i in [4, 0, 2, 1, 3]:
+            # Sometimes use h, sometimes use ' for hardened indicator
+            hard = "'" if i & 2 == 0 else "h"
+            self.test_importdesc({'desc': descsum_create(f'wpkh([80002067/0{hard}/0{hard}]' + xpub + '/*)'),
+                                  'active': True,
+                                  'range': [0, 9],
+                                  'next_index': i,
+                                  'timestamp': 'now'
+                                  },
+                                 success=True)
+            assert_equal(w1.getnewaddress('', 'bech32'), addresses[i])
+
+    def test_equivalent_miniscript_desc(self):
+        self.log.info("Equivalent Miniscript descriptors should not be duplicated")
+        extended_key = ExtendedPrivateKey.generate()
+        xpub = extended_key.pubkey().to_string()
+        self.nodes[1].createwallet(wallet_name="wminiscript", disable_private_keys=True, blank=True)
+        wminiscript = self.nodes[1].get_wallet_rpc("wminiscript")
+        miniscript_request = {
+            'active': True,
+            'range': [0, 9],
+            'timestamp': 'now',
+        }
+        self.test_importdesc({
+            **miniscript_request,
+            'desc': descsum_create(f"wsh(and_v(v:pk([80002067/0h/0h]{xpub}/*),older(1)))"),
+        }, success=True, wallet=wminiscript)
+        self.test_importdesc({
+            **miniscript_request,
+            'desc': descsum_create(f"wsh(and_v(v:pk([80002067/0'/0']{xpub}/*),older(1)))"),
+        }, success=True, wallet=wminiscript)
+        assert_equal(len(wminiscript.listdescriptors()["descriptors"]), 1)
+
+    def test_activation_deactivation(self, w1):
+        # Check active=False default
+        self.log.info('Check imported descriptors are not active by default')
+        root_xprv = ExtendedPrivateKey.generate()
+        xprv = root_xprv.derive_path("m/0'/0'")
+        xpub = xprv.pubkey().to_string()
+        self.test_importdesc({'desc': descsum_create('pkh([12345678/1h]' + xpub + '/*)'),
+                              'range' : [0, 2],
+                              'timestamp': 'now',
+                              'internal': True
+                             },
+                             success=True)
+        assert_raises_rpc_error(-4, 'This wallet has no available keys', w1.getrawchangeaddress, 'legacy')
+
+        self.log.info('Check can activate inactive descriptor')
+        self.test_importdesc({'desc': descsum_create('pkh([12345678]' + xpub + '/*)'),
+                              'range': [0, 5],
+                              'active': True,
+                              'timestamp': 'now',
+                              'internal': True
+                              },
+                             success=True)
+        address = w1.getrawchangeaddress('legacy')
+        assert_equal(address, key_to_p2pkh(xprv.derive_path("m/0").pubkey().pubkey.get_bytes()))
+
+        self.log.info('Check can deactivate active descriptor')
+        self.test_importdesc({'desc': descsum_create('pkh([12345678]' + xpub + '/*)'),
+                              'range': [0, 5],
+                              'active': False,
+                              'timestamp': 'now',
+                              'internal': True
+                              },
+                             success=True)
+        assert_raises_rpc_error(-4, 'This wallet has no available keys', w1.getrawchangeaddress, 'legacy')
+
+        self.log.info('Verify activation state is persistent')
+        w1.unloadwallet()
+        self.nodes[1].loadwallet('w1')
+        assert_raises_rpc_error(-4, 'This wallet has no available keys', w1.getrawchangeaddress, 'legacy')
+
+    def test_encrypted_wallet(self):
+        extended_key = ExtendedPrivateKey.generate()
+        xpriv = extended_key.to_string()
         self.log.info("Test importing a descriptor to an encrypted wallet")
 
         descriptor = {"desc": descsum_create("pkh(" + xpriv + "/1h/*h)"),
@@ -1083,7 +1073,10 @@ class ImportDescriptorsTest(BitcoinTestFramework):
 
         assert_equal(temp_wallet.getbalance(), encrypted_wallet.getbalance())
 
+    def test_import_multipath_descriptors(self):
         self.log.info("Multipath descriptors")
+        extended_key = ExtendedPrivateKey.generate()
+        xpriv = extended_key.to_string()
         self.nodes[1].createwallet(wallet_name="multipath", blank=True)
         w_multipath = self.nodes[1].get_wallet_rpc("multipath")
         self.nodes[1].createwallet(wallet_name="multipath_split", blank=True)
@@ -1134,7 +1127,12 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             assert_equal(w_multipath.getrawchangeaddress(address_type="bech32"), w_multisplit.getrawchangeaddress(address_type="bech32"))
         assert_equal(sorted(w_multipath.listdescriptors()["descriptors"], key=lambda x: x["desc"]), sorted(w_multisplit.listdescriptors()["descriptors"], key=lambda x: x["desc"]))
 
+    def test_older_safety(self):
         self.log.info("Test older() safety")
+
+        root_xprv = ExtendedPrivateKey.generate()
+        xprv = root_xprv.derive_path("m/0'/0'")
+        xpub = xprv.pubkey().to_string()
 
         for flag in [0, SEQUENCE_LOCKTIME_TYPE_FLAG]:
             self.log.debug("Importing a safe value always works")
@@ -1168,7 +1166,58 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                 warnings=[expected_warning],
             )
 
+    def test_combo_descriptors_activation(self):
+        self.log.info("Combo descriptors cannot be active")
+        self.test_importdesc({"desc": descsum_create(f"combo({ExtendedPrivateKey.generate().pubkey().to_string()}/*)"),
+                              "active": True,
+                              "range": 1,
+                              "timestamp": "now"},
+                              success=False,
+                              error_code=-4,
+                              error_message="Combo descriptors cannot be set to active")
 
+        self.log.info("Descriptors with no type cannot be active")
+        self.test_importdesc({"desc": descsum_create(f"pk({ExtendedPrivateKey.generate().pubkey().to_string()}/*)"),
+                              "active": True,
+                              "range": 1,
+                              "timestamp": "now"},
+                              success=True,
+                              warnings=["Unknown output type, cannot set descriptor to active."])
+
+    def run_test(self):
+        self.log.info('Setting up wallets')
+        self.nodes[0].createwallet(wallet_name='w0', disable_private_keys=False)
+        w0 = self.nodes[0].get_wallet_rpc('w0')
+
+        self.nodes[1].createwallet(wallet_name='w1', disable_private_keys=True, blank=True)
+        w1 = self.nodes[1].get_wallet_rpc('w1')
+        assert_equal(w1.getwalletinfo()['keypoolsize'], 0)
+
+        self.nodes[1].createwallet(wallet_name="wpriv", disable_private_keys=False, blank=True)
+        wpriv = self.nodes[1].get_wallet_rpc("wpriv")
+        assert_equal(wpriv.getwalletinfo()['keypoolsize'], 0)
+
+        self.log.info('Mining coins')
+        self.generatetoaddress(self.nodes[0], COINBASE_MATURITY + 1, w0.getnewaddress())
+
+        # RPC importdescriptors -----------------------------------------------
+
+        self.test_import_fails()
+        self.test_import_p2pkh(w1)
+        self.test_import_p2sh_p2wpkh(w1)
+        self.test_import_multisig(w1)
+        self.test_multisig_descriptors(w0)
+        self.test_ranged_descriptors(w1, wpriv)
+        self.test_descriptor_range_updates(wpriv)
+        self.test_ranged_key_order(w1)
+        self.test_next_index(w1)
+        self.test_equivalent_miniscript_desc()
+        self.test_activation_deactivation(w1)
+        self.test_import_private_key(w0, w1, wpriv)
+        self.test_combo_descriptors_activation()
+        self.test_encrypted_wallet()
+        self.test_import_multipath_descriptors()
+        self.test_older_safety()
         self.test_import_unused_key()
         self.test_import_unused_key_existing()
         self.test_import_unused_noprivs()
