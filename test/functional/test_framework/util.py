@@ -573,8 +573,9 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
         #  num_p2p_max_connections = available_fds - min_required_fds = 256 - 180 = 76;
         f.write("maxconnections=76\n")
         f.write("par=" + str(min(2, os.cpu_count())) + "\n")
-        # Use a single prevoutfetch worker thread to keep per-node resource usage low.
+        # Use one prevoutfetch and one block read-ahead worker to keep per-node resource usage low
         f.write("prevoutfetchthreads=1\n")
+        f.write("blockfetchthreads=1\n")
         f.write(extra_config)
 
 

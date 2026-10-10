@@ -23,6 +23,9 @@ class ValidationSignals;
 
 inline constexpr auto DEFAULT_MAX_TIP_AGE{24h};
 inline constexpr int32_t DEFAULT_PREVOUTFETCH_THREADS{8};
+inline constexpr int32_t DEFAULT_BLOCK_READ_AHEAD_THREADS{2};
+inline constexpr int32_t MAX_BLOCK_READ_AHEAD_THREADS{16};
+inline constexpr uint32_t BLOCKS_PER_READ_AHEAD_THREAD{2};
 
 namespace kernel {
 
@@ -49,6 +52,8 @@ struct ChainstateManagerOpts {
     int worker_threads_num{0};
     //! Number of worker threads used for prefetching block input prevouts. Zero means no parallel fetching.
     int32_t prevoutfetch_threads_num{DEFAULT_PREVOUTFETCH_THREADS};
+    //! Number of block read-ahead threads. Zero disables read-ahead.
+    int32_t block_read_ahead_threads_num{DEFAULT_BLOCK_READ_AHEAD_THREADS};
     size_t script_execution_cache_bytes{DEFAULT_SCRIPT_EXECUTION_CACHE_BYTES};
     size_t signature_cache_bytes{DEFAULT_SIGNATURE_CACHE_BYTES};
 };
