@@ -394,7 +394,7 @@ CCoinsViewCache::ResetGuard CoinsViewOverlay::StartFetching(const CBlock& block 
         m_earlier_txids.clear();
         // Only submit tasks if we have something to fetch.
         if (m_inputs.size()) {
-            m_tasks.assign(workers_count, [this] {
+            m_tasks.assign(std::min(workers_count, m_inputs.size()), [this] {
                 while (ProcessInput()) {}
             });
             if (auto futures{m_thread_pool->Submit(std::move(m_tasks))}) {
