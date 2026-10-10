@@ -396,6 +396,7 @@ public:
         UniValue array(UniValue::VARR);
         if (!scriptWitness.empty()) {
             UniValue wit(UniValue::VARR);
+            // Indexing a CScriptWitness is O(n), so this loop is quadratic, which is fine for the small witnesses here.
             for (unsigned i = 0; i < scriptWitness.size(); i++) {
                 wit.push_back(HexStr(scriptWitness[i]));
             }
