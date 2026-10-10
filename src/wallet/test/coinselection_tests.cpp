@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/amount.h>
+#include <consensus/consensus.h>
 #include <policy/policy.h>
 #include <wallet/coinselection.h>
 #include <wallet/test/wallet_test_fixture.h>
@@ -60,7 +61,7 @@ static CoinSelectionParams init_cs_params(int eff_feerate = 5000)
 static const CoinSelectionParams default_cs_params = init_cs_params();
 
 /** Make one OutputGroup with a single UTXO that either has a given effective value (default) or a given amount (`is_eff_value = false`). */
-static OutputGroup MakeCoin(const CAmount& amount, bool is_eff_value = true, CoinSelectionParams cs_params = default_cs_params, int custom_spending_vsize = P2WPKH_INPUT_VSIZE)
+static OutputGroup MakeCoin(const CAmount& amount, CoinSelectionParams cs_params = default_cs_params, int custom_spending_vsize = P2WPKH_INPUT_VSIZE, bool is_eff_value = true)
 {
     // Always assume that we only have one input
     CMutableTransaction tx;
@@ -73,38 +74,43 @@ static OutputGroup MakeCoin(const CAmount& amount, bool is_eff_value = true, Coi
     return group;
 }
 
+/** Make a coin with the default selection parameters and a custom input size. */
+static OutputGroup MakeCoin(const CAmount& amount, int custom_spending_vsize)
+{
+    return MakeCoin(amount, default_cs_params, custom_spending_vsize);
+}
+
 /** Make multiple OutputGroups with the given values as their effective value */
 static void AddCoins(std::vector<OutputGroup>& utxo_pool, std::vector<CAmount> coins, CoinSelectionParams cs_params = default_cs_params)
 {
     for (CAmount c : coins) {
-        utxo_pool.push_back(MakeCoin(c, true, cs_params));
+        utxo_pool.push_back(MakeCoin(c, cs_params));
     }
 }
 
 /** Make multiple coins that share the same effective value */
 static void AddDuplicateCoins(std::vector<OutputGroup>& utxo_pool, int count, int amount, CoinSelectionParams cs_params = default_cs_params) {
     for (int i = 0 ; i < count; ++i) {
-        utxo_pool.push_back(MakeCoin(amount, true, cs_params));
+        utxo_pool.push_back(MakeCoin(amount, cs_params));
     }
 }
 
 /** Check if SelectionResult a is equivalent to SelectionResult b.
- * Two results are equivalent if they are composed of the same input values, even if they have different inputs (i.e., same value, different prevout) */
-static bool HaveEquivalentValues(const SelectionResult& a, const SelectionResult& b)
+ * Two results are equivalent if they are composed of inputs with the same amounts and sizes, even if they have different inputs (i.e., different prevouts). */
+static bool HaveEquivalentInputs(const SelectionResult& a, const SelectionResult& b)
 {
-    std::vector<CAmount> a_amts;
-    std::vector<CAmount> b_amts;
+    std::vector<std::pair<CAmount, int>> a_inputs;
+    std::vector<std::pair<CAmount, int>> b_inputs;
     for (const auto& coin : a.GetInputSet()) {
-        a_amts.push_back(coin->txout.nValue);
+        a_inputs.emplace_back(coin->txout.nValue, coin->input_bytes);
     }
     for (const auto& coin : b.GetInputSet()) {
-        b_amts.push_back(coin->txout.nValue);
+        b_inputs.emplace_back(coin->txout.nValue, coin->input_bytes);
     }
-    std::sort(a_amts.begin(), a_amts.end());
-    std::sort(b_amts.begin(), b_amts.end());
+    std::sort(a_inputs.begin(), a_inputs.end());
+    std::sort(b_inputs.begin(), b_inputs.end());
 
-    auto ret = std::mismatch(a_amts.begin(), a_amts.end(), b_amts.begin());
-    return ret.first == a_amts.end() && ret.second == b_amts.end();
+    return a_inputs == b_inputs;
 }
 
 static std::string InputAmountsToString(const SelectionResult& selection)
@@ -117,14 +123,14 @@ static void TestBnBSuccess(std::string test_title, std::vector<OutputGroup>& utx
     SelectionResult expected_result(CAmount(0), SelectionAlgorithm::BNB);
     CAmount expected_amount = 0;
     for (CAmount input_amount : expected_input_amounts) {
-        OutputGroup group = MakeCoin(input_amount, true, cs_params, custom_spending_vsize);
+        OutputGroup group = MakeCoin(input_amount, cs_params, custom_spending_vsize);
         expected_amount += group.m_value;
         expected_result.AddInput(group);
     }
 
     const auto result = SelectCoinsBnB(utxo_pool, selection_target, /*cost_of_change=*/cs_params.m_cost_of_change, max_selection_weight);
     BOOST_CHECK_MESSAGE(result, "Falsy result in BnB-Success: " + test_title);
-    BOOST_CHECK_MESSAGE(HaveEquivalentValues(expected_result, *result), strprintf("Result mismatch in BnB-Success: %s. Expected %s, but got %s", test_title, InputAmountsToString(expected_result), InputAmountsToString(*result)));
+    BOOST_CHECK_MESSAGE(HaveEquivalentInputs(expected_result, *result), strprintf("Result mismatch in BnB-Success: %s. Expected %s, but got %s", test_title, InputAmountsToString(expected_result), InputAmountsToString(*result)));
     BOOST_CHECK_MESSAGE(result->GetSelectedValue() == expected_amount, strprintf("Selected amount mismatch in BnB-Success: %s. Expected %d, but got %d", test_title, expected_amount, result->GetSelectedValue()));
     BOOST_CHECK_MESSAGE(result->GetWeight() <= max_selection_weight, strprintf("Selected weight is higher than permitted in BnB-Success: %s. Expected %d, but got %d", test_title, max_selection_weight, result->GetWeight()));
     BOOST_CHECK_MESSAGE(result->GetSelectionsEvaluated() == expected_attempts, strprintf("Unexpected number of attempts in BnB-Success: %s. Expected %i attempts, but got %i", test_title, expected_attempts, result->GetSelectionsEvaluated()));
@@ -229,7 +235,7 @@ BOOST_AUTO_TEST_CASE(bnb_exhaustion_with_solution_test)
     // A hard case with no exact-match solution: BnB must still report that the algorithm did not complete once the
     // search is pushed into the attempt limit, even though it finds a solution within cost_of_change of the target.
     for (size_t i = 0; i < 19; ++i) {
-        utxo_pool.push_back(MakeCoin(100'000 + i, /*is_eff_value=*/true, default_cs_params));
+        utxo_pool.push_back(MakeCoin(100'000 + i, default_cs_params));
     }
 
     const auto result{SelectCoinsBnB(utxo_pool, selection_target, /*cost_of_change=*/default_cs_params.m_cost_of_change, MAX_STANDARD_TX_WEIGHT)};
@@ -253,13 +259,180 @@ BOOST_AUTO_TEST_CASE(bnb_feerate_sensitivity_test)
     TestBnBSuccess("Select one input at high feerates", high_feerate_pool, /*selection_target=*/10 * CENT, /*expected_input_amounts=*/{10 * CENT}, /*expected_attempts=*/5, high_feerate_params);
 
     // Add heavy inputs {6, 7} to existing {2, 3, 5, 10}
-    low_feerate_pool.push_back(MakeCoin(6 * CENT, true, default_cs_params, /*custom_spending_vsize=*/500));
-    low_feerate_pool.push_back(MakeCoin(7 * CENT, true, default_cs_params, /*custom_spending_vsize=*/500));
+    low_feerate_pool.push_back(MakeCoin(6 * CENT, /*custom_spending_vsize=*/500));
+    low_feerate_pool.push_back(MakeCoin(7 * CENT, /*custom_spending_vsize=*/500));
     TestBnBSuccess("Prefer two heavy inputs over two light inputs at low feerates", low_feerate_pool, /*selection_target=*/13 * CENT, /*expected_input_amounts=*/{6 * CENT, 7 * CENT}, /*expected_attempts=*/18, default_cs_params, /*custom_spending_vsize=*/500);
 
-    high_feerate_pool.push_back(MakeCoin(6 * CENT, true, high_feerate_params, /*custom_spending_vsize=*/500));
-    high_feerate_pool.push_back(MakeCoin(7 * CENT, true, high_feerate_params, /*custom_spending_vsize=*/500));
+    high_feerate_pool.push_back(MakeCoin(6 * CENT, high_feerate_params, /*custom_spending_vsize=*/500));
+    high_feerate_pool.push_back(MakeCoin(7 * CENT, high_feerate_params, /*custom_spending_vsize=*/500));
     TestBnBSuccess("Prefer two light inputs over two heavy inputs at high feerates", high_feerate_pool, /*selection_target=*/13 * CENT, /*expected_input_amounts=*/{3 * CENT, 10 * CENT}, /*expected_attempts=*/9, high_feerate_params);
+}
+
+static void TestCGFail(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, int max_selection_weight = MAX_STANDARD_TX_WEIGHT, const bool expect_max_weight_exceeded = false)
+{
+    const auto result{CoinGrinder(utxo_pool, selection_target, CENT, max_selection_weight)};
+    BOOST_CHECK_MESSAGE(!result, "CoinGrinder-Fail: " + test_title);
+    bool max_weight_exceeded = util::ErrorString(result).original.find("The inputs size exceeds the maximum weight") != std::string::npos;
+    BOOST_CHECK(expect_max_weight_exceeded == max_weight_exceeded);
+}
+
+static void TestCGSuccess(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const std::vector<OutputGroup>& expected_inputs, size_t expected_attempts, int max_selection_weight = MAX_STANDARD_TX_WEIGHT)
+{
+    SelectionResult expected_result{CAmount{0}, SelectionAlgorithm::CG};
+    CAmount expected_amount{0};
+    for (const auto& input : expected_inputs) {
+        expected_result.AddInput(input);
+        expected_amount += input.m_value;
+    }
+
+    const auto result{CoinGrinder(utxo_pool, selection_target, CENT, max_selection_weight)};
+
+    BOOST_CHECK_MESSAGE(result, "Falsy result in CoinGrinder-Success: " + test_title);
+    BOOST_CHECK_MESSAGE(HaveEquivalentInputs(expected_result, *result), strprintf("Result mismatch in CoinGrinder-Success: %s. Expected %s, but got %s", test_title, InputAmountsToString(expected_result), InputAmountsToString(*result)));
+    BOOST_CHECK_MESSAGE(result->GetSelectedValue() == expected_amount, strprintf( "Selected amount mismatch in CoinGrinder-Success: %s. Expected %d, but got %d", test_title, expected_amount, result->GetSelectedValue()));
+    BOOST_CHECK_MESSAGE(result->GetWeight() <= max_selection_weight, strprintf( "Selected weight is higher than permitted in CoinGrinder-Success: %s. Expected at most %d, but got %d", test_title, max_selection_weight, result->GetWeight()));
+    BOOST_CHECK_MESSAGE(result->GetSelectionsEvaluated() == expected_attempts, strprintf( "Unexpected number of attempts in CoinGrinder-Success: %s. Expected %i attempts, but got %i", test_title, expected_attempts, result->GetSelectionsEvaluated()));
+}
+
+BOOST_AUTO_TEST_CASE(coin_grinder_insufficient_funds_test)
+{
+    {
+        std::vector<OutputGroup> utxo_pool;
+
+        TestCGFail("Empty UTXO pool", utxo_pool, /*selection_target=*/1 * CENT);
+
+        AddDuplicateCoins(utxo_pool, /*count=*/10, /*amount=*/1 * COIN);
+        AddDuplicateCoins(utxo_pool, /*count=*/10, /*amount=*/2 * COIN);
+        TestCGFail("Insufficient funds", utxo_pool, /*selection_target=*/49.5L * COIN);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(coin_grinder_max_weight_test)
+{
+    {
+        std::vector<OutputGroup> utxo_pool;
+        AddDuplicateCoins(utxo_pool, /*count=*/10, /*amount=*/1 * COIN);
+        AddDuplicateCoins(utxo_pool, /*count=*/10, /*amount=*/2 * COIN);
+        TestCGFail("Exceed max weight", utxo_pool, /*selection_target=*/29.5L * COIN, /*max_selection_weight=*/1000, /*expect_max_weight_exceeded=*/true);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(coin_grinder_lowest_weight_below_limit_test)
+{
+    {
+        std::vector<OutputGroup> utxo_pool;
+        AddDuplicateCoins(utxo_pool, /*count=*/60, /*amount=*/0.33 * COIN);
+        AddDuplicateCoins(utxo_pool, /*count=*/10, /*amount=*/2 * COIN);
+        std::vector<OutputGroup> expected_inputs;
+        AddDuplicateCoins(expected_inputs, /*count=*/10, /*amount=*/2 * COIN);
+        AddDuplicateCoins(expected_inputs, /*count=*/17, /*amount=*/0.33 * COIN);
+        TestCGSuccess("Select lowest-weight solution below max weight", utxo_pool, /*selection_target=*/25.33L * COIN, expected_inputs, /*expected_attempts=*/37, /*max_selection_weight=*/10'000);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(coin_grinder_prefer_lighter_inputs_test)
+{
+    {
+        std::vector<OutputGroup> utxo_pool;
+        utxo_pool.push_back(MakeCoin(2 * COIN, /*custom_spending_vsize=*/148));
+        utxo_pool.push_back(MakeCoin(1 * COIN));
+        utxo_pool.push_back(MakeCoin(1 * COIN));
+        std::vector<OutputGroup> expected_inputs{MakeCoin(1 * COIN), MakeCoin(1 * COIN)};
+        TestCGSuccess("Prefer two lighter UTXOs over one heavier UTXO", utxo_pool, /*selection_target=*/1.9L * COIN, expected_inputs, /*expected_attempts=*/3);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(coin_grinder_mixed_weights_test)
+{
+    {
+        std::vector<OutputGroup> utxo_pool;
+        for (int j = 0; j < 5; ++j) {
+            // Add heavy coins {3, 6, 9, 12, 15}
+            utxo_pool.push_back(MakeCoin((3 + 3 * j) * COIN, /*custom_spending_vsize=*/350));
+            // Add medium coins {2, 5, 8, 11, 14}
+            utxo_pool.push_back(MakeCoin((2 + 3 * j) * COIN, /*custom_spending_vsize=*/250));
+            // Add light coins {1, 4, 7, 10, 13}
+            utxo_pool.push_back(MakeCoin((1 + 3 * j) * COIN, /*custom_spending_vsize=*/150));
+        }
+        std::vector<OutputGroup> expected_inputs{MakeCoin(14 * COIN, /*custom_spending_vsize=*/250), MakeCoin(13 * COIN, /*custom_spending_vsize=*/150), MakeCoin(4 * COIN, /*custom_spending_vsize=*/150)};
+        TestCGSuccess("Find solution in pool with mixed weights", utxo_pool, /*selection_target=*/30 * COIN, expected_inputs, /*expected_attempts=*/92);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(coin_grinder_lightest_among_clones_test)
+{
+    {
+        std::vector<OutputGroup> utxo_pool;
+        for (CAmount amount : {4 * COIN, 3 * COIN, 2 * COIN, 1 * COIN}) {
+            utxo_pool.push_back(MakeCoin(amount, /*custom_spending_vsize=*/100));
+        }
+        for (int j = 0; j < 100; ++j) {
+            utxo_pool.push_back(MakeCoin(8 * COIN, /*custom_spending_vsize=*/1000));
+        }
+        for (int j = 0; j < 100; ++j) {
+            utxo_pool.push_back(MakeCoin(7 * COIN, /*custom_spending_vsize=*/800));
+        }
+        for (int j = 0; j < 100; ++j) {
+            utxo_pool.push_back(MakeCoin(6 * COIN, /*custom_spending_vsize=*/600));
+        }
+        for (int j = 0; j < 100; ++j) {
+            utxo_pool.push_back(MakeCoin(5 * COIN, /*custom_spending_vsize=*/400));
+        }
+        std::vector<OutputGroup> expected_inputs;
+        for (CAmount amount : {4 * COIN, 3 * COIN, 2 * COIN, 1 * COIN}) {
+            expected_inputs.push_back(MakeCoin(amount, /*custom_spending_vsize=*/100));
+        }
+        TestCGSuccess("Find lightest solution among clones", utxo_pool, /*selection_target=*/9.9L * COIN, expected_inputs, /*expected_attempts=*/38);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(coin_grinder_skip_tiny_inputs_test)
+{
+    {
+        std::vector<OutputGroup> utxo_pool;
+        utxo_pool.push_back(MakeCoin(1.8L * COIN, /*custom_spending_vsize=*/2500));
+        utxo_pool.push_back(MakeCoin(1 * COIN, /*custom_spending_vsize=*/1000));
+        utxo_pool.push_back(MakeCoin(1 * COIN, /*custom_spending_vsize=*/1000));
+        for (int j = 0; j < 100; ++j) {
+            utxo_pool.push_back(MakeCoin(0.01 * COIN + j, /*custom_spending_vsize=*/110));
+        }
+        std::vector<OutputGroup> expected_inputs{MakeCoin(1 * COIN, /*custom_spending_vsize=*/1000), MakeCoin(1 * COIN, /*custom_spending_vsize=*/1000)};
+        TestCGSuccess("Skip tiny UTXOs that are too heavy", utxo_pool, /*selection_target=*/1.9L * COIN, expected_inputs, /*expected_attempts=*/7, /*max_selection_weight=*/40'000);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(coin_grinder_attempt_limit_test)
+{
+    constexpr int expected_input_count{8};
+    constexpr int decoys_before_exhaustion{10};
+    constexpr int max_selection_weight{expected_input_count * P2WPKH_INPUT_VSIZE * WITNESS_SCALE_FACTOR};
+    // CoinGrinder adds the CENT change target, bringing the total target to expected_input_count * COIN.
+    const CAmount selection_target{expected_input_count * COIN - CENT};
+
+    std::vector<OutputGroup> utxo_pool;
+    SelectionResult expected_result{selection_target, SelectionAlgorithm::CG};
+    for (int i = 0; i < expected_input_count; ++i) {
+        utxo_pool.push_back(MakeCoin(COIN + i));
+        expected_result.AddInput(utxo_pool.back());
+    }
+    BOOST_CHECK_EQUAL(expected_result.GetWeight(), max_selection_weight);
+
+    // Distinct amounts prevent clone skipping. The larger, slightly heavier coins are tried first.
+    for (int i = expected_input_count; i < expected_input_count + decoys_before_exhaustion; ++i) {
+        utxo_pool.push_back(MakeCoin(COIN + i, /*custom_spending_vsize=*/P2WPKH_INPUT_VSIZE + 1));
+    }
+
+    const auto result{CoinGrinder(utxo_pool, selection_target, CENT, max_selection_weight)};
+    BOOST_REQUIRE(result);
+    BOOST_CHECK(HaveEquivalentInputs(expected_result, *result));
+    BOOST_CHECK_EQUAL(result->GetWeight(), max_selection_weight);
+    BOOST_CHECK(result->GetAlgoCompleted());
+    // Pin the search effort as well as the success/failure boundary.
+    BOOST_CHECK_EQUAL(result->GetSelectionsEvaluated(), 63'692U);
+
+    // One more decoy exhausts the search before it reaches the valid light-input selection.
+    utxo_pool.push_back(MakeCoin(COIN + expected_input_count + decoys_before_exhaustion, /*custom_spending_vsize=*/P2WPKH_INPUT_VSIZE + 1));
+    TestCGFail("Exhaust before finding solution", utxo_pool, selection_target, max_selection_weight, /*expect_max_weight_exceeded=*/true);
 }
 
 static void TestSRDSuccess(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CoinSelectionParams& cs_params = default_cs_params, const int max_selection_weight = MAX_STANDARD_TX_WEIGHT)
@@ -312,7 +485,7 @@ BOOST_AUTO_TEST_CASE(srd_test)
         // Create UTXO pool with UTXOs of same effective value but different weights
         std::vector<OutputGroup> mixed_weight_pool;
         AddDuplicateCoins(mixed_weight_pool, /*count=*/100, /*amount=*/5 * CENT, cs_params);
-        mixed_weight_pool.push_back(MakeCoin(5 * CENT, true, cs_params, /*custom_spending_vsize=*/P2WPKH_INPUT_VSIZE - 1));
+        mixed_weight_pool.push_back(MakeCoin(5 * CENT, cs_params, /*custom_spending_vsize=*/P2WPKH_INPUT_VSIZE - 1));
         TestSRDSuccess("Tie-break same effective value with lower weight", utxo_pool, /*selection_target=*/9 * CENT, cs_params,
         /*max_selection_weight=*/4 * 3 * (P2WPKH_INPUT_VSIZE - 1));
     }
