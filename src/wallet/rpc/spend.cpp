@@ -1349,7 +1349,7 @@ RPCMethod sendall()
                         {"maxconf", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Require inputs with at most this many confirmations."},
                         {"version", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_WALLET_TX_VERSION}, "Transaction version"},
                     },
-                    FundTxDoc()
+                    FundTxDoc(/*solving_data=*/false)
                 ),
                 RPCArgOptions{.oneline_description="options"}
             },
@@ -1384,8 +1384,26 @@ RPCMethod sendall()
             pwallet->BlockUntilSyncedToCurrentChain();
 
             UniValue options{request.params[4].isNull() ? UniValue::VOBJ : request.params[4]};
-            InterpretFeeEstimationInstructions(/*conf_target=*/request.params[1], /*estimate_mode=*/request.params[2], /*fee_rate=*/request.params[3], options);
             PreventOutdatedOptions(options);
+            RPCTypeCheckObj(options,
+                {
+                    {"add_to_wallet", UniValueType(UniValue::VBOOL)},
+                    {"fee_rate", UniValueType()},
+                    {"include_watching", UniValueType(UniValue::VBOOL)},
+                    {"inputs", UniValueType(UniValue::VARR)},
+                    {"locktime", UniValueType(UniValue::VNUM)},
+                    {"lock_unspents", UniValueType(UniValue::VBOOL)},
+                    {"psbt", UniValueType(UniValue::VBOOL)},
+                    {"send_max", UniValueType(UniValue::VBOOL)},
+                    {"minconf", UniValueType(UniValue::VNUM)},
+                    {"maxconf", UniValueType(UniValue::VNUM)},
+                    {"version", UniValueType(UniValue::VNUM)},
+                    {"conf_target", UniValueType(UniValue::VNUM)},
+                    {"estimate_mode", UniValueType(UniValue::VSTR)},
+                    {"replaceable", UniValueType(UniValue::VBOOL)},
+                },
+                /*fAllowNull=*/true, /*fStrict=*/true);
+            InterpretFeeEstimationInstructions(/*conf_target=*/request.params[1], /*estimate_mode=*/request.params[2], /*fee_rate=*/request.params[3], options);
 
 
             std::set<CTxDestination> addresses_without_amount;

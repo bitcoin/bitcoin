@@ -283,6 +283,29 @@ class SendallTest(BitcoinTestFramework):
             inputs=[utxo], send_max=True)
 
     @cleanup
+    def sendall_fails_on_invalid_options(self):
+        self.log.info("Test sendall fails on unknown options or options of the wrong type")
+        self.add_utxos([15, 6])
+        utxo = self.wallet.listunspent()[0]
+
+        assert_raises_rpc_error(-3, "Unexpected key input",
+                self.wallet.sendall, recipients=[self.remainder_target], options={"input": [utxo]})
+        assert_raises_rpc_error(-3, "Unexpected key estimate_mde",
+                self.wallet.sendall, recipients=[self.remainder_target], options={"conf_target": 6, "estimate_mde": "economical"})
+        assert_raises_rpc_error(-3, "JSON value of type string for field add_to_wallet is not of expected type bool",
+                self.wallet.sendall, recipients=[self.remainder_target], options={"add_to_wallet": "false"})
+        assert_raises_rpc_error(-3, "Unexpected key solving_data",
+                self.wallet.sendall, recipients=[self.remainder_target], options={"solving_data": {}})
+
+    @cleanup
+    def sendall_accepts_documented_options(self):
+        self.log.info("Test sendall accepts documented options")
+        self.add_utxos([15, 6])
+        self.test_sendall_success(sendall_args=[self.remainder_target], options={"include_watching": False, "fee_rate": 10})
+        self.add_utxos([15, 6])
+        self.test_sendall_success(sendall_args=[self.remainder_target], options={"conf_target": 6, "estimate_mode": "economical"})
+
+    @cleanup
     def sendall_fails_on_high_fee(self):
         self.log.info("Test sendall fails if the transaction fee exceeds the maxtxfee")
         self.add_utxos([21])
@@ -571,6 +594,12 @@ class SendallTest(BitcoinTestFramework):
 
         # Sendall fails when using send_max while specifying inputs
         self.sendall_fails_on_specific_inputs_with_send_max()
+
+        # Sendall fails on unknown options or options of the wrong type
+        self.sendall_fails_on_invalid_options()
+
+        # Sendall accepts documented options
+        self.sendall_accepts_documented_options()
 
         # Sendall fails when providing a fee that is too high
         self.sendall_fails_on_high_fee()
