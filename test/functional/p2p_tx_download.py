@@ -378,7 +378,7 @@ class TxDownloadTest(BitcoinTestFramework):
             assert_equal(log.count(f"got inv: {first_name} {hash_a:064x}"), 1)
             assert_equal(log.count(f"got inv: {second_name} {hash_a:064x}"), 0)
 
-        self.log.info('Check that txids and wtxids are deduplicated separately')
+        self.log.info('Check that MSG_WITNESS_TX inv is ignored with wtxid relay')
         peer = node.add_p2p_connection(TestP2PConn(wtxidrelay=True))
         for first_type, second_type, hash_a in [
             (MSG_WITNESS_TX, MSG_WTX, 0x8899aa),
@@ -388,7 +388,7 @@ class TxDownloadTest(BitcoinTestFramework):
                 CInv(t=first_type, h=hash_a),
                 CInv(t=second_type, h=hash_a),
             ])
-            assert_equal(log.count(f"got inv: witness-tx {hash_a:064x}"), 1)
+            assert_equal(log.count(f"got inv: witness-tx {hash_a:064x}"), 0)
             assert_equal(log.count(f"got inv: wtx {hash_a:064x}"), 1)
 
     def test_spurious_notfound(self):

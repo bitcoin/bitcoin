@@ -6,7 +6,7 @@
 
 import time
 
-from test_framework.messages import msg_getdata, msg_tx, msg_inv, CInv, MSG_WTX
+from test_framework.messages import msg_getdata, msg_tx, msg_inv, CInv, MSG_TX, MSG_WITNESS_TX, MSG_WTX
 from test_framework.p2p import P2PInterface, P2PTxInvStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
@@ -89,9 +89,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
         _, txid, _, tx_hex = self.check_p2p_tx_violation()
 
         self.log.info("Tests with node in normal mode with block-relay-only connection, sending an inv")
-        conn = self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=0, connection_type="block-relay-only")
-        assert_equal(self.nodes[0].getpeerinfo()[0]['relaytxes'], False)
-        self.check_p2p_inv_violation(conn)
+        self.check_p2p_inv_violation()
 
         self.log.info(
             "Check that getdata(tx) from a block-relay-only connection is ignored"
@@ -114,12 +112,17 @@ class P2PBlocksOnly(BitcoinTestFramework):
         conn.sync_with_ping()
         assert int(txid, 16) not in conn.get_invs()
 
-    def check_p2p_inv_violation(self, peer):
+    def check_p2p_inv_violation(self):
         self.log.info("Check that tx-invs from P2P are rejected and result in disconnect")
-        with self.nodes[0].assert_debug_log(["inv sent in violation of protocol, disconnecting peer"]):
-            peer.send_without_ping(msg_inv([CInv(t=MSG_WTX, h=0x12345)]))
-            peer.wait_for_disconnect()
-        self.nodes[0].disconnect_p2ps()
+        h = 0x12345
+        for msg_type in [MSG_WTX, MSG_TX, MSG_WITNESS_TX]:
+            h += 1
+            peer = self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=0, connection_type="block-relay-only")
+            assert_equal(self.nodes[0].getpeerinfo()[0]['relaytxes'], False)
+            with self.nodes[0].assert_debug_log(["inv sent in violation of protocol, disconnecting peer"]):
+                peer.send_without_ping(msg_inv([CInv(t=msg_type, h=h)]))
+                peer.wait_for_disconnect()
+            self.nodes[0].disconnect_p2ps()
 
     def check_p2p_tx_violation(self):
         self.log.info('Check that txs from P2P are rejected and result in disconnect')
