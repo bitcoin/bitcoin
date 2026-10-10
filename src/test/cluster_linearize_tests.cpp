@@ -10,7 +10,7 @@
 
 #include <vector>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 BOOST_FIXTURE_TEST_SUITE(cluster_linearize_tests, BasicTestingSetup)
 
@@ -51,7 +51,7 @@ void TestDepGraphSerialization(const std::vector<std::pair<FeeFrac, SetType>>& c
     SpanReader reader(encoding);
     DepGraph<SetType> depgraph_read;
     reader >> Using<DepGraphFormatter>(depgraph_read);
-    BOOST_CHECK(depgraph == depgraph_read);
+    CHECK_NO_DISPLAY(depgraph == depgraph_read);
 }
 
 void TestOptimalLinearization(std::span<const uint8_t> enc, std::initializer_list<DepGraphIndex> optimal_linearization)
