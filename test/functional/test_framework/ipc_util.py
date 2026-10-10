@@ -69,6 +69,12 @@ async def wait_and_do(wait_fn, do_fn):
     return result
 
 
+async def drop_promise(promise):
+    """Abandon a capnp response promise."""
+    promise.cancel()
+    await asyncio.sleep(0)
+
+
 def load_capnp_modules(config):
     if capnp_bin := shutil.which("capnp"):
         # Add the system cap'nproto path so include/capnp/c++.capnp can be found.
