@@ -12,6 +12,7 @@
 #include <sync.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <util/result.h>
 #include <wallet/coinselection.h>
 #include <wallet/spend.h>

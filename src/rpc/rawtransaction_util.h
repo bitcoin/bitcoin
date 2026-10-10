@@ -6,6 +6,7 @@
 #define BITCOIN_RPC_RAWTRANSACTION_UTIL_H
 
 #include <addresstype.h>
+#include <common/paymentdestination.h>
 #include <consensus/amount.h>
 #include <rpc/util.h>
 
@@ -51,14 +52,17 @@ void AddInputs(CMutableTransaction& rawTx, const UniValue& inputs_in, bool rbf);
 /** Normalize univalue-represented outputs */
 UniValue NormalizeOutputs(const UniValue& outputs_in);
 
-/** Parse normalized outputs into destination, amount tuples */
+/** Parse normalized outputs into destination, amount tuples. Silent payments addresses are rejected. */
 std::vector<std::pair<CTxDestination, CAmount>> ParseOutputs(const UniValue& outputs);
+
+/** Parse normalized outputs into destination, amount tuples, accepting silent payments addresses */
+std::vector<std::pair<PaymentDestination, CAmount>> ParsePaymentOutputs(const UniValue& outputs);
 
 /** Normalize, parse, and add outputs to the transaction */
 void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in);
 
-/** Create a transaction from univalue parameters */
-CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, std::optional<bool> rbf, uint32_t version);
+/** Create a transaction from univalue parameters. If outputs_in is std::nullopt, the transaction has no outputs. */
+CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const std::optional<UniValue>& outputs_in, const UniValue& locktime, std::optional<bool> rbf, uint32_t version);
 
 enum class ElisionMode {
     None,        ///< no elision, all top-level fields rendered normally

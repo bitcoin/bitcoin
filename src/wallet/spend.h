@@ -5,8 +5,12 @@
 #ifndef BITCOIN_WALLET_SPEND_H
 #define BITCOIN_WALLET_SPEND_H
 
+#include <common/bip352.h>
+#include <common/paymentdestination.h>
 #include <consensus/amount.h>
+#include <util/expected.h>
 #include <util/result.h>
+#include <util/translation.h>
 #include <wallet/coinselection.h>
 #include <wallet/transaction.h>
 #include <wallet/types.h>
@@ -44,6 +48,8 @@ TxSize CalculateMaximumSignedTxSize(const CTransaction& tx, const CWallet* walle
  */
 struct CoinsResult {
     std::map<OutputType, std::vector<COutput>> coins;
+    /** Whether coins were skipped because they cannot be spent in a silent payments transaction */
+    bool skipped_silent_payments_ineligible{false};
 
     /** Concatenate and return all COutputs as one vector */
     std::vector<COutput> All() const;
@@ -120,6 +126,25 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
                           const CoinSelectionParams& coin_sel_params,
                           const std::vector<SelectionFilter>& filters);
 
+/** The reason coin selection failed */
+enum class SelectionErrorType {
+    //! No input set reaches the target
+    INSUFFICIENT_FUNDS,
+    //! An input set reaches the target, but only by exceeding the maximum transaction weight
+    MAX_WEIGHT_EXCEEDED,
+    //! The maximum transaction weight cannot accommodate the transaction without inputs, or its change output
+    MAX_WEIGHT_TOO_LOW,
+    //! The bump fees of the unconfirmed inputs could not be calculated
+    BUMP_FEE_FAILED,
+};
+
+/** A coin selection error */
+struct SelectionError {
+    SelectionErrorType type;
+    //! The message to show the user, empty for INSUFFICIENT_FUNDS
+    bilingual_str message;
+};
+
 /**
  * Group coins by the provided filters, groups that pass no filter are appended to `ret_discarded_groups`.
  */
@@ -141,11 +166,11 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
  * @param[in]  coin_selection_params     Parameters for the coin selection
  * @param[in]  allow_mixed_output_types  Relax restriction that SelectionResults must be of the same OutputType
  * returns                               If successful, a SelectionResult containing the input set
- *                                       If failed, returns (1) an empty error message if the target was not reached (general "Insufficient funds")
- *                                                  or (2) a specific error message if there was something particularly wrong (e.g. a selection
+ *                                       If failed, returns (1) an INSUFFICIENT_FUNDS error if the target was not reached
+ *                                                  or (2) another error if there was something particularly wrong (e.g. a selection
  *                                                  result that surpassed the tx max weight size).
  */
-util::Result<SelectionResult> AttemptSelection(interfaces::Chain& chain, const CAmount& nTargetValue, OutputGroupTypeMap& groups,
+util::Expected<SelectionResult, SelectionError> AttemptSelection(interfaces::Chain& chain, const CAmount& nTargetValue, OutputGroupTypeMap& groups,
                         const CoinSelectionParams& coin_selection_params, bool allow_mixed_output_types);
 
 /**
@@ -158,11 +183,11 @@ util::Result<SelectionResult> AttemptSelection(interfaces::Chain& chain, const C
  * @param[in]  groups                    The struct containing the outputs grouped by script and divided by (1) positive only outputs and (2) all outputs (positive + negative).
  * @param[in]  coin_selection_params     Parameters for the coin selection
  * returns                               If successful, a SelectionResult containing the input set
- *                                       If failed, returns (1) an empty error message if the target was not reached (general "Insufficient funds")
- *                                                  or (2) a specific error message if there was something particularly wrong (e.g. a selection
+ *                                       If failed, returns (1) an INSUFFICIENT_FUNDS error if the target was not reached
+ *                                                  or (2) another error if there was something particularly wrong (e.g. a selection
  *                                                  result that surpassed the tx max weight size).
  */
-util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, const CAmount& nTargetValue, Groups& groups, const CoinSelectionParams& coin_selection_params);
+util::Expected<SelectionResult, SelectionError> ChooseSelectionResult(interfaces::Chain& chain, const CAmount& nTargetValue, Groups& groups, const CoinSelectionParams& coin_selection_params);
 
 /**
  * Fetch and validate coin control selected inputs.
@@ -195,10 +220,33 @@ util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& av
                                           const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /**
+ * Return an output of the same size as the one paying amount to dest, to estimate the
+ * transaction size or check for dust before the inputs are known. A silent payments output
+ * script is derived from the inputs, so a P2TR output is returned for a silent payments
+ * destination, since BIP352 v0 outputs are P2TR outputs.
+ */
+CTxOut GetDummyTxOut(const PaymentDestination& dest, CAmount amount);
+
+/**
  * Set a height-based locktime for new transactions (uses the height of the
  * current chain tip unless we are not synced with the current chain
  */
 void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, interfaces::Chain& chain, const uint256& block_hash, int block_height);
+
+/** Whether the input is used for the silent payments shared secret derivation (BIP352 eligible) */
+bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet& wallet);
+
+/** Get the silent payments destinations the recipients pay to */
+std::vector<bip352::SilentPaymentsDestination> GetSilentPaymentsDestinations(const std::vector<CRecipient>& recipients);
+
+/**
+ * Generate the actual taproot output scripts for silent payment recipients by deriving
+ * the shared secret from the selected inputs and SP destinations.
+ */
+util::Result<std::map<size_t, WitnessV1Taproot>> CreateSilentPaymentsOutputs(
+    const CWallet& wallet,
+    const std::map<size_t, bip352::SilentPaymentsDestination>& silent_payments_destinations,
+    const OutputSet& selected_coins);
 
 /**
  * Create a new transaction paying the recipients with a set of coins

@@ -24,6 +24,7 @@
 #include <streams.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <util/overflow.h>
 #include <util/strencodings.h>
 
 #include <algorithm>
@@ -49,20 +50,25 @@ const secp256k1_silentpayments_prevouts_summary* PrevoutsSummary::Get() const
     return m_prevouts_summary.get();
 }
 
+bool SilentPaymentsDestination::IsValid() const
+{
+    if (m_version >= 31) return false;
+    // V0 address has no extension data
+    if (m_version == 0 && !m_extension_data.empty()) return false;
+    if (!m_scan_pubkey.IsFullyValid() || !m_scan_pubkey.IsCompressed()) return false;
+    if (!m_spend_pubkey.IsFullyValid() || !m_spend_pubkey.IsCompressed()) return false;
+    return true;
+}
+
 std::optional<SilentPaymentsDestination> SilentPaymentsDestination::From(
     const CPubKey& scan_pubkey,
     const CPubKey& spend_pubkey,
     uint8_t version,
     std::span<const unsigned char> extension_data
 ) {
-    if (version >= 31) return std::nullopt;
-    if (version == 0 && !extension_data.empty()) {
-        // V0 address has no extension data
-        return std::nullopt;
-    }
-    if (!scan_pubkey.IsFullyValid() || !scan_pubkey.IsCompressed()) return std::nullopt;
-    if (!spend_pubkey.IsFullyValid() || !spend_pubkey.IsCompressed()) return std::nullopt;
-    return SilentPaymentsDestination(version, scan_pubkey, spend_pubkey, extension_data);
+    SilentPaymentsDestination dest(version, scan_pubkey, spend_pubkey, extension_data);
+    if (!dest.IsValid()) return std::nullopt;
+    return dest;
 }
 
 util::Expected<SilentPaymentsDestination, std::string> DecodeSilentPaymentsAddress(
@@ -103,6 +109,24 @@ util::Expected<SilentPaymentsDestination, std::string> DecodeSilentPaymentsAddre
         return util::Unexpected{"Invalid Silent payments address"};
     }
     return *sp_dest;
+}
+
+std::string EncodeSilentPaymentsAddress(const SilentPaymentsDestination& dest, const CChainParams& params)
+{
+    std::vector<unsigned char> data_in;
+    const auto& scan_pubkey{dest.GetScanPubKey()};
+    const auto& spend_pubkey{dest.GetSpendPubKey()};
+    const auto extension_data{dest.GetExtensionData()};
+
+    data_in.reserve(scan_pubkey.size() + spend_pubkey.size() + extension_data.size());
+    data_in.insert(data_in.end(), scan_pubkey.begin(), scan_pubkey.end());
+    data_in.insert(data_in.end(), spend_pubkey.begin(), spend_pubkey.end());
+    data_in.insert(data_in.end(), extension_data.begin(), extension_data.end());
+
+    std::vector<unsigned char> data_out = {dest.GetVersion()};
+    data_out.reserve(1 + CeilDiv(data_in.size() * 8, 5u));
+    ConvertBits<8, 5, true>([&](unsigned char c) { data_out.push_back(c); }, data_in.begin(), data_in.end());
+    return bech32::Encode(bech32::Encoding::BECH32M, params.SilentPaymentsHRP(), data_out);
 }
 
 SilentPaymentsLabel::SilentPaymentsLabel(const secp256k1_silentpayments_label& label) {
