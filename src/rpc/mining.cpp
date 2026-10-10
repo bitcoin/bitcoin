@@ -561,6 +561,10 @@ static RPCMethod prioritisetransaction()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Priority is no longer supported, dummy argument to prioritisetransaction must be 0.");
     }
 
+    if (nAmount < -MAX_MONEY || nAmount > MAX_MONEY) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "fee_delta out of range");
+    }
+
     CTxMemPool& mempool = EnsureAnyMemPool(request.context);
 
     // Non-0 fee dust transactions are not allowed for entry, and modification not allowed afterwards
