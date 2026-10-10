@@ -133,7 +133,6 @@ inline constexpr bool DEFAULT_WALLET_REJECT_LONG_CHAINS{true};
 inline constexpr unsigned int DEFAULT_TX_CONFIRM_TARGET = 6;
 //! -walletrbf default
 inline constexpr bool DEFAULT_WALLET_RBF = true;
-inline constexpr bool DEFAULT_WALLETBROADCAST = true;
 inline constexpr bool DEFAULT_DISABLE_WALLET = false;
 inline constexpr bool DEFAULT_WALLETCROSSCHAIN = false;
 //! -maxtxfee default
@@ -325,9 +324,6 @@ private:
 
     /** The next scheduled rebroadcast of wallet transactions. */
     NodeClock::time_point m_next_resend{GetDefaultNextResend()};
-    /** Whether this wallet will submit newly created transactions to the node's mempool and
-     * prompt rebroadcasts (see ResendWalletTransactions()). */
-    bool fBroadcastTransactions = false;
     // Local time that the tip block was received. Used to schedule wallet rebroadcasts.
     std::atomic<int64_t> m_best_block_time {0};
 
@@ -447,6 +443,9 @@ private:
     void UpdateTrucSiblingConflicts(const CWalletTx& parent_wtx, const Txid& child_txid, bool add_conflict) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
 public:
+    /// When to broadcast transactions that are associated with the wallet.
+    enum class BroadcastWhen : uint8_t { NEVER = 0, INITIAL_AND_PERIODIC = 1, INITIAL_ONLY = 2 };
+
     /**
      * Main wallet lock.
      * This lock protects all the fields added by CWallet.
@@ -841,10 +840,8 @@ public:
      */
     btcsignals::signal<void (CWallet* wallet)> NotifyStatusChanged;
 
-    /** Inquire whether this wallet broadcasts transactions. */
-    bool GetBroadcastTransactions() const { return fBroadcastTransactions; }
-    /** Set whether this wallet broadcasts transactions. */
-    void SetBroadcastTransactions(bool broadcast) { fBroadcastTransactions = broadcast; }
+    /** Set whether this wallet broadcasts transactions and when. */
+    void SetBroadcastWhen(BroadcastWhen when) { m_broadcast_when = when; }
 
     /** Return whether transaction can be abandoned */
     bool TransactionCanBeAbandoned(const Txid& hashTx) const;
@@ -1089,7 +1086,15 @@ public:
 
     //! Set the features of the last client to decrypt this wallet
     void SetLastDecryptedFeatures(uint64_t features) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+private:
+    /** Whether this wallet will submit newly created transactions to the node's mempool and
+     * prompt rebroadcasts (@see MaybeResendWalletTxs()). */
+    BroadcastWhen m_broadcast_when{BroadcastWhen::NEVER};
 };
+
+/// Default value for -walletbroadcast.
+inline constexpr CWallet::BroadcastWhen DEFAULT_WALLETBROADCAST{CWallet::BroadcastWhen::INITIAL_AND_PERIODIC};
 
 /**
  * Called periodically by the schedule thread. Prompts individual wallets to resend
