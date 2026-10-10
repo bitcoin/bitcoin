@@ -48,7 +48,7 @@ RPCMethod getnewaddress()
     }
 
     // Parse the label first so we don't generate a key if there's an error
-    const std::string label{LabelFromValue(request.params[0])};
+    const std::string label{LabelFromValue(self.Arg<UniValue>("label"))};
 
     OutputType output_type = pwallet->m_default_address_type;
     if (!request.params[1].isNull()) {

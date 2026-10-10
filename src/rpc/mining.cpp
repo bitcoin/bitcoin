@@ -312,8 +312,8 @@ static RPCMethod generatetoaddress()
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
-    const int num_blocks{request.params[0].getInt<int>()};
-    const uint64_t max_tries{request.params[2].isNull() ? DEFAULT_MAX_TRIES : request.params[2].getInt<int>()};
+    const int num_blocks{self.Arg<int>("nblocks")};
+    const uint64_t max_tries{self.Arg<uint64_t>("maxtries")};
 
     CTxDestination destination = DecodeDestination(request.params[1].get_str());
     if (!IsValidDestination(destination)) {
@@ -399,7 +399,7 @@ static RPCMethod generateblock()
         }
     }
 
-    const bool process_new_block{request.params[2].isNull() ? true : request.params[2].get_bool()};
+    const bool process_new_block{self.Arg<bool>("submit")};
     CBlock block;
 
     ChainstateManager& chainman = EnsureChainman(node);
