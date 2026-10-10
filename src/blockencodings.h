@@ -8,6 +8,7 @@
 #include <crypto/siphash.h>
 #include <primitives/block.h>
 
+#include <cstdint>
 #include <functional>
 
 class CTxMemPool;
@@ -87,6 +88,15 @@ typedef enum ReadStatus_t
     READ_STATUS_FAILED, // Failed to process object
 } ReadStatus;
 
+struct CompactBlockReconstructionStats
+{
+    uint32_t prefilled_txn_count{0};
+    uint32_t mempool_txn_count{0};
+    uint32_t extra_pool_txn_count{0};
+    uint32_t requested_txn_count{0};
+    uint32_t requested_txn_bytes{0};
+};
+
 class CBlockHeaderAndShortTxIDs {
     mutable std::optional<PresaltedSipHasher> m_hasher;
     uint64_t nonce;
@@ -147,6 +157,8 @@ public:
     // extra_txn is a list of extra transactions to look at, in <witness hash, reference> form
     ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<Wtxid, CTransactionRef>>& extra_txn);
     bool IsTxAvailable(size_t index) const;
+    // The mempool count excludes transactions found in the extra transaction pool.
+    CompactBlockReconstructionStats GetReconstructionStats(const std::vector<CTransactionRef>& vtx_missing) const;
     // segwit_active enforces witness mutation checks just before reporting a healthy status
     ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, bool segwit_active);
 };
