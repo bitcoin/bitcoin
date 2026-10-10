@@ -232,7 +232,7 @@ public:
                 m_work_queue.emplace(std::move(task));
             }
         }
-        m_cv.notify_all();
+        if (futures.size()) m_cv.notify_all();
         return {std::move(futures)};
     }
 
