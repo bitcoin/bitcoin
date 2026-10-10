@@ -289,7 +289,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendall", 4, "maxconf"},
     { "sendall", 4, "conf_target"},
     { "sendall", 4, "replaceable"},
-    { "sendall", 4, "solving_data"},
     { "sendall", 4, "version"},
     { "simulaterawtransaction", 0, "rawtxs" },
     { "simulaterawtransaction", 1, "options" },

@@ -1349,7 +1349,7 @@ RPCMethod sendall()
                         {"maxconf", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Require inputs with at most this many confirmations."},
                         {"version", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_WALLET_TX_VERSION}, "Transaction version"},
                     },
-                    FundTxDoc()
+                    FundTxDoc(/*solving_data=*/false)
                 ),
                 RPCArgOptions{.oneline_description="options"}
             },
@@ -1401,7 +1401,6 @@ RPCMethod sendall()
                     {"conf_target", UniValueType(UniValue::VNUM)},
                     {"estimate_mode", UniValueType(UniValue::VSTR)},
                     {"replaceable", UniValueType(UniValue::VBOOL)},
-                    {"solving_data", UniValueType(UniValue::VOBJ)},
                 },
                 /*fAllowNull=*/true, /*fStrict=*/true);
             InterpretFeeEstimationInstructions(/*conf_target=*/request.params[1], /*estimate_mode=*/request.params[2], /*fee_rate=*/request.params[3], options);
