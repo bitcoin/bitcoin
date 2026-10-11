@@ -5767,6 +5767,27 @@ static void SnapshotUTXOHashBreakpoint(const util::SignalInterrupt& interrupt)
     if (interrupt) throw StopHashingException();
 }
 
+SnapshotCompletionResult ChainstateManager::VerifyAssumeutxoData(const CCoinsViewDB& coins_db, const AssumeutxoHash& expected_hash)
+{
+    LogInfo("[snapshot] computing UTXO stats to verify snapshot commitment - this could take a few minutes");
+    try {
+        const auto stats{ComputeUTXOStats(CoinStatsHashType::HASH_SERIALIZED, coins_db, m_blockman, [&interrupt = m_interrupt] { SnapshotUTXOHashBreakpoint(interrupt); })};
+        if (!stats) {
+            LogWarning("[snapshot] failed to generate UTXO stats");
+            return SnapshotCompletionResult::STATS_FAILED;
+        }
+        if (AssumeutxoHash{stats->hashSerialized} != expected_hash) {
+            LogWarning("[snapshot] UTXO commitment mismatch at height %d: expected %s, got %s", stats->nHeight, expected_hash.ToString(), stats->hashSerialized.ToString());
+            return SnapshotCompletionResult::HASH_MISMATCH;
+        }
+        LogInfo("[snapshot] verified UTXO commitment at height %d: %s", stats->nHeight, stats->hashSerialized.ToString());
+        return SnapshotCompletionResult::SUCCESS;
+    } catch (StopHashingException const&) {
+        LogInfo("[snapshot] UTXO commitment check interrupted");
+        return SnapshotCompletionResult::INTERRUPTED;
+    }
+}
+
 util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
     Chainstate& snapshot_chainstate,
     AutoFile& coins_file,
@@ -6042,22 +6063,13 @@ SnapshotCompletionResult ChainstateManager::MaybeValidateSnapshot(Chainstate& va
         return SnapshotCompletionResult::MISSING_CHAINPARAMS;
     }
 
-    std::optional<CCoinsStats> validated_cs_stats;
-    LogInfo("[snapshot] computing UTXO stats for background chainstate to validate "
-        "snapshot - this could take a few minutes");
-    try {
-        validated_cs_stats = ComputeUTXOStats(
-            CoinStatsHashType::HASH_SERIALIZED,
-            validated_coins_db,
-            m_blockman,
-            [&interrupt = m_interrupt] { SnapshotUTXOHashBreakpoint(interrupt); });
-    } catch (StopHashingException const&) {
+    const auto result{VerifyAssumeutxoData(validated_coins_db, au_data.hash_serialized)};
+    if (result == SnapshotCompletionResult::INTERRUPTED) {
         return SnapshotCompletionResult::STATS_FAILED;
     }
 
     // XXX note that this function is slow and will hold cs_main for potentially minutes.
-    if (!validated_cs_stats) {
-        LogWarning("[snapshot] failed to generate stats for validation coins db");
+    if (result == SnapshotCompletionResult::STATS_FAILED) {
         // While this isn't a problem with the snapshot per se, this condition
         // prevents us from validating the snapshot, so we should shut down and let the
         // user handle the issue manually.
@@ -6071,10 +6083,7 @@ SnapshotCompletionResult ChainstateManager::MaybeValidateSnapshot(Chainstate& va
     // TODO: For belt-and-suspenders, we could cache the UTXO set
     // hash for the snapshot when it's loaded in its chainstate's leveldb. We could then
     // reference that here for an additional check.
-    if (AssumeutxoHash{validated_cs_stats->hashSerialized} != au_data.hash_serialized) {
-        LogWarning("[snapshot] hash mismatch: actual=%s, expected=%s",
-            validated_cs_stats->hashSerialized.ToString(),
-            au_data.hash_serialized.ToString());
+    if (result == SnapshotCompletionResult::HASH_MISMATCH) {
         handle_invalid_snapshot();
         return SnapshotCompletionResult::HASH_MISMATCH;
     }
@@ -6083,7 +6092,7 @@ SnapshotCompletionResult ChainstateManager::MaybeValidateSnapshot(Chainstate& va
         unvalidated_cs.m_from_snapshot_blockhash->ToString());
 
     unvalidated_cs.m_assumeutxo = Assumeutxo::VALIDATED;
-    validated_cs.m_target_utxohash = AssumeutxoHash{validated_cs_stats->hashSerialized};
+    validated_cs.m_target_utxohash = au_data.hash_serialized;
     this->MaybeRebalanceCaches();
 
     return SnapshotCompletionResult::SUCCESS;
