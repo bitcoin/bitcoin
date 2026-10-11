@@ -12,7 +12,6 @@
 #include <uint256.h>
 #include <util/chaintype.h>
 #include <util/hash_type.h>
-#include <util/vector.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -89,7 +88,6 @@ public:
     const Consensus::Params& GetConsensus() const { return consensus; }
     const MessageStartChars& MessageStart() const { return pchMessageStart; }
     uint16_t GetDefaultPort() const { return nDefaultPort; }
-    std::vector<int> GetAvailableSnapshotHeights() const;
 
     const CBlock& GenesisBlock() const { return genesis; }
     /** Default value for -checkmempool and -checkblockindex argument */
@@ -117,14 +115,7 @@ public:
     const std::vector<uint8_t>& FixedSeeds() const { return vFixedSeeds; }
     const HeadersSyncParams& HeadersSync() const { return m_headers_sync_params; }
 
-    std::optional<AssumeutxoData> AssumeutxoForHeight(int height) const
-    {
-        return FindFirst(m_assumeutxo_data, [&](const auto& d) { return d.height == height; });
-    }
-    std::optional<AssumeutxoData> AssumeutxoForBlockhash(const uint256& blockhash) const
-    {
-        return FindFirst(m_assumeutxo_data, [&](const auto& d) { return d.blockhash == blockhash; });
-    }
+    const AssumeutxoData& Assumeutxo() const { return m_assumeutxo_data.back(); }
 
     const ChainTxData& TxData() const { return chainTxData; }
 

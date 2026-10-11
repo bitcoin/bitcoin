@@ -274,7 +274,6 @@ struct SnapshotTestSetup : TestChain100Setup {
 
         // Mine 10 more blocks, putting at us height 110 where a valid assumeutxo value can
         // be found.
-        constexpr int snapshot_height = 110;
         mineBlocks(10);
         initial_size += 10;
         initial_total_coins += 10;
@@ -337,10 +336,10 @@ struct SnapshotTestSetup : TestChain100Setup {
                 *Assert(chainman.CurrentChainstate().m_from_snapshot_blockhash));
         }
 
-        const auto& au_data = chainman.GetParams().AssumeutxoForHeight(snapshot_height);
+        const auto& au_data = chainman.GetParams().Assumeutxo();
         const CBlockIndex* tip = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip());
 
-        BOOST_CHECK_EQUAL(tip->m_chain_tx_count, au_data->m_chain_tx_count);
+        BOOST_CHECK_EQUAL(tip->m_chain_tx_count, au_data.m_chain_tx_count);
 
         // To be checked against later when we try loading a subsequent snapshot.
         uint256 loaded_snapshot_blockhash{*Assert(WITH_LOCK(chainman.GetMutex(), return chainman.CurrentChainstate().m_from_snapshot_blockhash))};
