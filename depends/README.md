@@ -167,8 +167,7 @@ Some Ubuntu or Debian versions may not offer a working package. In this case,
 you may install `nix-bin` and use the Nix shell from the repository root:
 
     apt install nix-bin
-    NIX_BUILD_SHELL=bash HOST=x86_64-w64-mingw32 nix-shell contrib/devtools/shell-win64-cross.nix  # MSVCRT
-    NIX_BUILD_SHELL=bash HOST=x86_64-w64-mingw32ucrt nix-shell contrib/devtools/shell-win64-cross.nix  # UCRT
+    NIX_BUILD_SHELL=bash nix-shell contrib/devtools/shell-win64-cross.nix
 
 #### For Linux cross compilation
 
