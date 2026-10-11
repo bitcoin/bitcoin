@@ -5932,6 +5932,11 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
             au_data.hash_serialized.ToString(), maybe_stats->hashSerialized.ToString()))};
     }
 
+    if (maybe_stats->coins_count != coins_count) {
+        return util::Error{Untranslated(strprintf("Bad snapshot coins count: expected %d, got %d",
+            coins_count, maybe_stats->coins_count))};
+    }
+
     snapshot_chainstate.m_chain.SetTip(*snapshot_start_block);
 
     // The remainder of this function requires modifying data protected by cs_main.

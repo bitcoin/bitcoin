@@ -173,8 +173,7 @@ class AssumeutxoTest(BitcoinTestFramework):
             f.write(valid_snapshot_contents[:43])
             f.write((valid_num_coins * 2).to_bytes(8, "little"))
             f.write(valid_snapshot_contents[43 + 8:] * 2)
-        loaded = snapshot_node.loadtxoutset(bad_snapshot_path)
-        assert_equal(loaded["coins_loaded"], valid_num_coins * 2)  # TODO: The announced count must match the unique UTXO count
+        expected_error(msg=f"Bad snapshot coins count: expected {valid_num_coins * 2}, got {valid_num_coins}", node=snapshot_node)
 
         self.log.info("  - snapshot file with duplicate coin records and a wrong content hash")
         with open(bad_snapshot_path, "r+b") as f:
