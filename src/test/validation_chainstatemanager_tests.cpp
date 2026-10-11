@@ -27,6 +27,7 @@
 
 #include <tinyformat.h>
 
+#include <cstdlib>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
@@ -336,7 +337,7 @@ struct SnapshotTestSetup : TestChain100Setup {
                 *Assert(chainman.CurrentChainstate().m_from_snapshot_blockhash));
         }
 
-        const auto& au_data = ::Params().AssumeutxoForHeight(snapshot_height);
+        const auto& au_data = chainman.GetParams().AssumeutxoForHeight(snapshot_height);
         const CBlockIndex* tip = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip());
 
         BOOST_CHECK_EQUAL(tip->m_chain_tx_count, au_data->m_chain_tx_count);
@@ -438,7 +439,7 @@ struct SnapshotTestSetup : TestChain100Setup {
             BOOST_CHECK_EQUAL(chainman.m_chainstates.size(), 0);
             m_node.notifications = std::make_unique<KernelNotifications>(Assert(m_node.shutdown_request), m_node.exit_status, *Assert(m_node.warnings));
             const ChainstateManager::Options chainman_opts{
-                .chainparams = ::Params(),
+                .chainparams = chainman.m_options.chainparams,
                 .datadir = chainman.m_options.datadir,
                 .notifications = *m_node.notifications,
                 .signals = m_node.validation_signals.get(),
@@ -491,7 +492,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_loadblockindex, TestChain100Setup)
     const int last_assumed_valid_idx{111};
     const int assumed_valid_start_idx = last_assumed_valid_idx - expected_assumed_valid;
 
-    // Mine to height 120, past the hardcoded regtest assumeutxo snapshot at
+    // Mine to height 120, past the TestChain100Setup assumeutxo snapshot at
     // height 110
     mineBlocks(20);
 
@@ -502,6 +503,11 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_loadblockindex, TestChain100Setup)
 
     auto reload_all_block_indexes = [&]() {
         LOCK(chainman.GetMutex());
+        chainman.m_blockman.WriteBlockIndexDB();
+        int last_blockfile{0};
+        BOOST_REQUIRE(chainman.m_blockman.m_block_tree_db->ReadLastBlockFile(last_blockfile));
+        const auto indexes{chainman.m_blockman.GetAllBlockIndices()};
+        chainman.m_blockman.m_block_tree_db->WriteBatchSync({}, last_blockfile, {indexes.begin(), indexes.end()});
         // For completeness, we also reset the block sequence counters to
         // ensure that no state which affects the ranking of tip-candidates is
         // retained (even though this isn't strictly necessary).
@@ -816,6 +822,13 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion, SnapshotTestSetup
     const uint256 snapshot_tip_hash = WITH_LOCK(chainman.GetMutex(),
         return chainman.ActiveTip()->GetBlockHash());
 
+    BOOST_REQUIRE(m_interrupt());
+    res = WITH_LOCK(::cs_main, return chainman.MaybeValidateSnapshot(validated_cs, active_cs));
+    BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::STATS_FAILED); // TODO: distinguish interruption from a validation failure.
+    BOOST_CHECK(WITH_LOCK(::cs_main, return active_cs.m_assumeutxo == Assumeutxo::UNVALIDATED));
+    BOOST_CHECK_EQUAL(m_node.exit_status.load(), EXIT_SUCCESS);
+    BOOST_REQUIRE(m_interrupt.reset());
+
     res = WITH_LOCK(::cs_main, return chainman.MaybeValidateSnapshot(validated_cs, active_cs));
     BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::SUCCESS);
 
@@ -944,6 +957,14 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
         LOCK(::cs_main);
         BOOST_CHECK_EQUAL(chainman_restarted.ActiveHeight(), 220);
     }
+}
+
+BOOST_FIXTURE_TEST_CASE(chainstatemanager_assumeutxo_other_chain, TestChain100Setup)
+{
+    DebugLogHelper no_check{ "computing UTXO stats", [](const std::string* line) { BOOST_CHECK(!line); return false; }};
+    // Build a different chain by changing the coinbase output.
+    CreateAndProcessBlock({}, CScript{});
+    mineBlocks(10);
 }
 
 /** Helper function to parse args into args_man and return the result of applying them to opts */

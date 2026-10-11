@@ -46,13 +46,20 @@ const std::vector<std::shared_ptr<CBlock>>* g_chain;
 TestingSetup* g_setup{nullptr};
 constexpr ReachabilityGoal UTXO_SNAPSHOT_ACTIVATION_SUCCEEDS{"UTXO snapshot activation succeeds"};
 
-/** Sanity check the assumeutxo values hardcoded in chainparams for the fuzz target. */
+const AssumeutxoData FUZZ_SNAPSHOT{
+    .height = 200,
+    .hash_serialized = AssumeutxoHash{uint256{"17dcc016d188d16068907cdeb38b75691a118d43053b8cd6a25969419381d13a"}},
+    .m_chain_tx_count = 201,
+    .blockhash = uint256{"385901ccbd69dff6bbd00065d01fb8a9e464dede7cfe0372443884f9b1dcf6b9"},
+};
+
+/** Sanity check the assumeutxo values hardcoded for the fuzz target. */
 void sanity_check_snapshot()
 {
     Assert(g_chain && g_setup == nullptr);
 
     // Create a temporary chainstate manager to connect the chain to.
-    const auto tmp_setup{MakeNoLogFileContext<TestingSetup>(ChainType::REGTEST, TestOpts{.setup_net = false})};
+    const auto tmp_setup{MakeNoLogFileContext<TestingSetup>(ChainType::REGTEST, TestOpts{.snapshot_commitment = FUZZ_SNAPSHOT, .setup_net = false})};
     const auto& node{tmp_setup->m_node};
     for (auto& block: *g_chain) {
         ProcessBlock(node, block);
@@ -87,6 +94,7 @@ void initialize_chain()
     static const auto setup{
         MakeNoLogFileContext<TestingSetup>(ChainType::REGTEST,
                                            TestOpts{
+                                               .snapshot_commitment = FUZZ_SNAPSHOT,
                                                .setup_net = false,
                                                .setup_validation_interface = false,
                                                .min_validation_cache = true,
