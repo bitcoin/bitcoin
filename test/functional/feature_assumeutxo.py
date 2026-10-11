@@ -10,8 +10,6 @@ The assumeutxo value generated and used here is committed to in
 `CRegTestParams::m_assumeutxo_data` in `src/kernel/chainparams.cpp`.
 """
 import contextlib
-import http.client
-import re
 
 from dataclasses import dataclass
 from test_framework.blocktools import (
@@ -37,7 +35,6 @@ from test_framework.util import (
     assert_approx,
     assert_equal,
     assert_not_equal,
-    assert_raises,
     assert_raises_rpc_error,
     dumb_sync_blocks,
     ensure_for,
@@ -532,9 +529,8 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
 
         self.log.info("Check snapshot rollback with unavailable block or undo data")
-        assert_raises(http.client.RemoteDisconnected, n1.dumptxoutset, 'rollback.dat', rollback=SNAPSHOT_BASE_HEIGHT - 1)  # TODO: Unavailable rollback data should return an RPC error without aborting the node
-        n1.wait_until_stopped(expected_ret_code=[-6, 3, 0xC0000409], expected_stderr=re.compile("GetFirstBlock"))
-        self.start_node(1, extra_args=self.extra_args[1])
+        assert_raises_rpc_error(-1, "Could not roll back to requested height since necessary block data is already pruned.",
+                                n1.dumptxoutset, 'rollback.dat', rollback=SNAPSHOT_BASE_HEIGHT - 1)
 
         self.log.info("Confirm that local services remain unchanged")
         # Since n1 is a pruned node, the 'NETWORK' service flag must always be unset.
@@ -695,9 +691,8 @@ class AssumeutxoTest(BitcoinTestFramework):
         n1.invalidateblock(first_snapshot_child)
         assert_equal(n1.getbestblockhash(), snapshot_hash)
         assert_equal(n1.getblock(snapshot_hash, 0), snapshot_block)
-        assert_raises(http.client.RemoteDisconnected, n1.dumptxoutset, 'rollback_tip.dat', rollback=SNAPSHOT_BASE_HEIGHT - 1)  # TODO: Unavailable rollback data should return an RPC error without aborting the node
-        n1.wait_until_stopped(expected_ret_code=[-6, 3, 0xC0000409], expected_stderr=re.compile("GetFirstBlock"))
-        self.start_node(1, extra_args=self.extra_args[1])
+        assert_raises_rpc_error(-1, "Could not roll back to requested height since necessary block data is already pruned.",
+                                n1.dumptxoutset, 'rollback_tip.dat', rollback=SNAPSHOT_BASE_HEIGHT - 1)
         n1.reconsiderblock(first_snapshot_child)
 
         self.connect_nodes(0, 1)
