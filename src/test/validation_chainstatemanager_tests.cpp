@@ -958,6 +958,27 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
     }
 }
 
+struct AssumeutxoMismatchSetup : TestChain100Setup {
+    AssumeutxoMismatchSetup() : TestChain100Setup{ChainType::REGTEST, [] {
+        auto data{SNAPSHOT_DATA};
+        data.hash_serialized = AssumeutxoHash{uint256{}};
+        return TestOpts{.snapshot_commitment = data};
+    }()} {}
+};
+
+BOOST_FIXTURE_TEST_CASE(chainstatemanager_assumeutxo_mismatch, AssumeutxoMismatchSetup)
+{
+    mineBlocks(9);
+    const auto block{CreateBlock({}, CScript{} << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG)};
+    {
+        ASSERT_DEBUG_LOG("UTXO commitment mismatch at height 110");
+        BOOST_CHECK(!m_node.chainman->ProcessNewBlock(std::make_shared<const CBlock>(block), true, true, nullptr));
+    }
+    BOOST_CHECK(m_interrupt);
+    BOOST_CHECK_EQUAL(m_node.exit_status.load(), EXIT_FAILURE);
+    BOOST_CHECK_EQUAL(WITH_LOCK(m_node.chainman->GetMutex(), return m_node.chainman->ActiveHeight()), 109);
+}
+
 BOOST_FIXTURE_TEST_CASE(chainstatemanager_assumeutxo_other_chain, TestChain100Setup)
 {
     DebugLogHelper no_check{ "computing UTXO stats", [](const std::string* line) { BOOST_CHECK(!line); return false; }};
