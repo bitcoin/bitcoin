@@ -5819,6 +5819,11 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
             size_t coins_per_txid{0};
             coins_per_txid = ReadCompactSize(coins_file);
 
+            if (coins_per_txid == 0) {
+                return util::Error{Untranslated(strprintf("Bad snapshot data after deserializing %d coins - txid has no coins",
+                          coins_count - coins_left))};
+            }
+
             if (coins_per_txid > coins_left) {
                 return util::Error{Untranslated("Mismatch in coins count in snapshot metadata and actual snapshot data")};
             }

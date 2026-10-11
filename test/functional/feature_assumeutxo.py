@@ -62,13 +62,12 @@ class AssumeutxoTest(BitcoinTestFramework):
 
     def set_test_params(self):
         """Use the pregenerated, deterministic chain up to height 199."""
-        self.num_nodes = 5
+        self.num_nodes = 4
         self.rpc_timeout = 120
         self.extra_args = [
             [],
             ["-fastprune", "-prune=1", "-blockfilterindex=1", "-coinstatsindex=1"],
             ["-persistmempool=0","-txindex=1", "-blockfilterindex=1", "-coinstatsindex=1"],
-            [],
             []
         ]
 
@@ -84,9 +83,8 @@ class AssumeutxoTest(BitcoinTestFramework):
             valid_snapshot_contents = f.read()
         bad_snapshot_path = valid_snapshot_path + '.mod'
         node = self.nodes[1]
-        snapshot_node = self.nodes[4]
 
-        def expected_error(msg, node=node):
+        def expected_error(msg):
             assert_raises_rpc_error(-32603, f"Unable to load UTXO snapshot: Population failed: {msg}", node.loadtxoutset, bad_snapshot_path)
 
         self.log.info("  - snapshot file with invalid file magic")
@@ -173,7 +171,7 @@ class AssumeutxoTest(BitcoinTestFramework):
             f.write(valid_snapshot_contents[:43])
             f.write((valid_num_coins * 2).to_bytes(8, "little"))
             f.write(valid_snapshot_contents[43 + 8:] * 2)
-        expected_error(msg=f"Bad snapshot coins count: expected {valid_num_coins * 2}, got {valid_num_coins}", node=snapshot_node)
+        expected_error(msg=f"Bad snapshot coins count: expected {valid_num_coins * 2}, got {valid_num_coins}")
 
         self.log.info("  - snapshot file with duplicate coin records and a wrong content hash")
         with open(bad_snapshot_path, "r+b") as f:
@@ -186,8 +184,7 @@ class AssumeutxoTest(BitcoinTestFramework):
             f.write(valid_snapshot_contents[:43 + 8])
             f.write(bytes(33))  # Transaction ID followed by a zero coin count
             f.write(valid_snapshot_contents[43 + 8:])
-        loaded = snapshot_node.loadtxoutset(bad_snapshot_path)
-        assert_equal(loaded["coins_loaded"], valid_num_coins)  # TODO: Transaction groups without coins should be rejected
+        expected_error(msg="Bad snapshot data after deserializing 0 coins - txid has no coins")
 
     def test_headers_not_synced(self, valid_snapshot_path):
         for node in self.nodes[1:]:
