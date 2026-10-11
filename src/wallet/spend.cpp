@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <common/args.h>
 #include <common/messages.h>
-#include <common/bip352.h>
 #include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
@@ -262,7 +261,7 @@ static OutputType GetOutputType(TxoutType type, bool is_from_p2sh)
     }
 }
 
-static bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet& wallet)
+bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet& wallet)
 {
     std::vector<std::vector<unsigned char>> solutions;
     TxoutType type = Solver(input, solutions);
@@ -578,7 +577,10 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             type = Solver(script, script_solutions);
             is_from_p2sh = true;
         }
-        if (silent_payments && !CheckSilentPaymentsInput(wallet, outpoint, output, &sp_has_key_cache)) continue;
+        if (silent_payments && !CheckSilentPaymentsInput(wallet, outpoint, output, &sp_has_key_cache)) {
+            result.skipped_silent_payments_ineligible = true;
+            continue;
+        }
 
         auto available_output_type = GetOutputType(type, is_from_p2sh);
         auto available_output = COutput(outpoint, output, nDepth, input_bytes, solvable, tx_safe, wtx.GetTxTime(), tx_from_me, feerate);

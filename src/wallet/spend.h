@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_SPEND_H
 #define BITCOIN_WALLET_SPEND_H
 
+#include <common/bip352.h>
 #include <common/paymentdestination.h>
 #include <consensus/amount.h>
 #include <util/result.h>
@@ -45,6 +46,8 @@ TxSize CalculateMaximumSignedTxSize(const CTransaction& tx, const CWallet* walle
  */
 struct CoinsResult {
     std::map<OutputType, std::vector<COutput>> coins;
+    /** Whether coins were skipped because they cannot be spent in a silent payments transaction */
+    bool skipped_silent_payments_ineligible{false};
 
     /** Concatenate and return all COutputs as one vector */
     std::vector<COutput> All() const;
@@ -218,6 +221,9 @@ CTxOut GetDummyTxOut(const PaymentDestination& dest, CAmount amount);
  */
 void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, interfaces::Chain& chain, const uint256& block_hash, int block_height);
 
+/** Whether the input is used for the silent payments shared secret derivation (BIP352 eligible) */
+bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet& wallet);
+
 /**
  * Whether a coin can be spent in a silent payments transaction, or why not. An eligible coin
  * requires its private key, since the outputs are derived from it.
@@ -229,6 +235,15 @@ void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, 
  */
 util::Result<void> CheckSilentPaymentsInput(const CWallet& wallet, const COutPoint& outpoint, const CTxOut& txout,
                                             std::map<std::set<ScriptPubKeyMan*>, bool>* has_key_cache = nullptr);
+
+/**
+ * Generate the actual taproot output scripts for silent payment recipients by deriving
+ * the shared secret from the selected inputs and SP destinations.
+ */
+util::Result<std::map<size_t, WitnessV1Taproot>> CreateSilentPaymentsOutputs(
+    const CWallet& wallet,
+    const std::map<size_t, bip352::SilentPaymentsDestination>& silent_payments_destinations,
+    const OutputSet& selected_coins);
 
 /**
  * Create a new transaction paying the recipients with a set of coins
