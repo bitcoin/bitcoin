@@ -11,6 +11,7 @@
 #include <primitives/block.h>
 #include <uint256.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 #include <util/hash_type.h>
 
 #include <cstddef>
@@ -115,7 +116,7 @@ public:
     const std::vector<uint8_t>& FixedSeeds() const { return vFixedSeeds; }
     const HeadersSyncParams& HeadersSync() const { return m_headers_sync_params; }
 
-    const AssumeutxoData& Assumeutxo() const { return m_assumeutxo_data.back(); }
+    const AssumeutxoData& Assumeutxo() const { return *Assert(m_assumeutxo_data); }
 
     const ChainTxData& TxData() const { return chainTxData; }
 
@@ -188,7 +189,7 @@ protected:
     std::vector<uint8_t> vFixedSeeds;
     bool fDefaultConsistencyChecks;
     bool m_is_mockable_chain;
-    std::vector<AssumeutxoData> m_assumeutxo_data;
+    std::optional<AssumeutxoData> m_assumeutxo_data;
     ChainTxData chainTxData;
     HeadersSyncParams m_headers_sync_params;
 
