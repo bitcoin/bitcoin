@@ -95,7 +95,8 @@ enum class SynchronizationState : btck_SynchronizationState {
 
 enum class Warning : btck_Warning {
     UNKNOWN_NEW_RULES_ACTIVATED = btck_Warning_UNKNOWN_NEW_RULES_ACTIVATED,
-    LARGE_WORK_INVALID_CHAIN = btck_Warning_LARGE_WORK_INVALID_CHAIN
+    LARGE_WORK_INVALID_CHAIN = btck_Warning_LARGE_WORK_INVALID_CHAIN,
+    ASSUMEUTXO_CHECK_FAILED = btck_Warning_ASSUMEUTXO_CHECK_FAILED
 };
 
 enum class ValidationMode : btck_ValidationMode {

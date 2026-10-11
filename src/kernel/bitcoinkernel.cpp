@@ -202,6 +202,8 @@ btck_Warning cast_btck_warning(kernel::Warning warning)
         return btck_Warning_UNKNOWN_NEW_RULES_ACTIVATED;
     case kernel::Warning::LARGE_WORK_INVALID_CHAIN:
         return btck_Warning_LARGE_WORK_INVALID_CHAIN;
+    case kernel::Warning::ASSUMEUTXO_CHECK_FAILED:
+        return btck_Warning_ASSUMEUTXO_CHECK_FAILED;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }

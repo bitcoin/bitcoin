@@ -9,6 +9,7 @@
 #include <node/chainstatemanager_args.h>
 #include <node/kernel_notifications.h>
 #include <node/utxo_snapshot.h>
+#include <node/warnings.h>
 #include <random.h>
 #include <rpc/blockchain.h>
 #include <sync.h>
@@ -21,12 +22,14 @@
 #include <uint256.h>
 #include <util/byte_units.h>
 #include <util/result.h>
+#include <util/translation.h>
 #include <util/vector.h>
 #include <validation.h>
 #include <validationinterface.h>
 
 #include <tinyformat.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <vector>
 
@@ -956,6 +959,26 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
         LOCK(::cs_main);
         BOOST_CHECK_EQUAL(chainman_restarted.ActiveHeight(), 220);
     }
+}
+
+struct AssumeutxoMismatchSetup : TestChain100Setup {
+    AssumeutxoMismatchSetup() : TestChain100Setup{ChainType::REGTEST, [] {
+        auto data{SNAPSHOT_DATA};
+        data.hash_serialized = AssumeutxoHash{uint256{}};
+        return TestOpts{.snapshot_commitment = data};
+    }()} {}
+};
+
+BOOST_FIXTURE_TEST_CASE(chainstatemanager_assumeutxo_mismatch, AssumeutxoMismatchSetup)
+{
+    {
+        ASSERT_DEBUG_LOG("UTXO commitment mismatch at height 110");
+        mineBlocks(11);
+    }
+    BOOST_CHECK(!m_interrupt);
+    BOOST_CHECK_EQUAL(m_node.exit_status.load(), EXIT_SUCCESS);
+    BOOST_CHECK_EQUAL(WITH_LOCK(m_node.chainman->GetMutex(), return m_node.chainman->ActiveHeight()), 111);
+    BOOST_CHECK_EQUAL(std::ranges::count(m_node.warnings->GetMessages(), "Failed to verify the AssumeUTXO commitment at height 110. Please report this problem.", &bilingual_str::original), 1);
 }
 
 BOOST_FIXTURE_TEST_CASE(chainstatemanager_assumeutxo_other_chain, TestChain100Setup)

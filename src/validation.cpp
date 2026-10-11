@@ -3089,6 +3089,8 @@ bool Chainstate::ConnectTip(
     std::vector<ConnectedBlock>& connected_blocks,
     DisconnectedBlockTransactions& disconnectpool)
 {
+    using enum SnapshotCompletionResult;
+
     AssertLockHeld(cs_main);
     if (m_mempool) AssertLockHeld(m_mempool->cs);
 
@@ -3142,6 +3144,15 @@ bool Chainstate::ConnectTip(
     // Write the chain state to disk, if necessary.
     if (!FlushStateToDisk(state, FlushStateMode::IF_NEEDED)) {
         return false;
+    }
+    // Snapshot import and background validation verify their own commitments.
+    if (!m_from_snapshot_blockhash && TargetBlock() != pindexNew) {
+        if (auto& data{m_chainman.GetParams().Assumeutxo()}; data.height == pindexNew->nHeight && data.blockhash == pindexNew->GetBlockHash()) {
+            if (!FlushStateToDisk(state, FlushStateMode::FORCE_SYNC)) return false;
+            if (const auto result{m_chainman.VerifyAssumeutxoData(CoinsDB(), data.hash_serialized)}; result != SUCCESS && result != INTERRUPTED) {
+                m_chainman.GetNotifications().warningSet(kernel::Warning::ASSUMEUTXO_CHECK_FAILED, strprintf(_("Failed to verify the AssumeUTXO commitment at height %d. Please report this problem."), data.height));
+            }
+        }
     }
     const auto time_5{SteadyClock::now()};
     m_chainman.time_chainstate += time_5 - time_4;
