@@ -62,19 +62,20 @@ class AssumeutxoTest(BitcoinTestFramework):
 
     def set_test_params(self):
         """Use the pregenerated, deterministic chain up to height 199."""
-        self.num_nodes = 4
+        self.num_nodes = 5
         self.rpc_timeout = 120
         self.extra_args = [
             [],
             ["-fastprune", "-prune=1", "-blockfilterindex=1", "-coinstatsindex=1"],
             ["-persistmempool=0","-txindex=1", "-blockfilterindex=1", "-coinstatsindex=1"],
+            [],
             []
         ]
 
     def setup_network(self):
         """Start with the nodes disconnected so that one can generate a snapshot
         including blocks the other hasn't yet seen."""
-        self.add_nodes(4)
+        self.add_nodes(self.num_nodes)
         self.start_nodes(extra_args=self.extra_args)
 
     def test_invalid_snapshot_scenarios(self, valid_snapshot_path):
@@ -83,8 +84,9 @@ class AssumeutxoTest(BitcoinTestFramework):
             valid_snapshot_contents = f.read()
         bad_snapshot_path = valid_snapshot_path + '.mod'
         node = self.nodes[1]
+        snapshot_node = self.nodes[4]
 
-        def expected_error(msg):
+        def expected_error(msg, node=node):
             assert_raises_rpc_error(-32603, f"Unable to load UTXO snapshot: Population failed: {msg}", node.loadtxoutset, bad_snapshot_path)
 
         self.log.info("  - snapshot file with invalid file magic")
@@ -165,6 +167,20 @@ class AssumeutxoTest(BitcoinTestFramework):
 
             msg = custom_message if custom_message is not None else f"Bad snapshot content hash: expected 106b2c56233e378a824cf0d5ff2be42ed32c72f1605c9be288d00942908a40ac, got {wrong_hash}."
             expected_error(msg)
+
+        self.log.info("  - snapshot file with duplicate coin records")
+        with open(bad_snapshot_path, "wb") as f:
+            f.write(valid_snapshot_contents[:43])
+            f.write((valid_num_coins * 2).to_bytes(8, "little"))
+            f.write(valid_snapshot_contents[43 + 8:] * 2)
+        loaded = snapshot_node.loadtxoutset(bad_snapshot_path)
+        assert_equal(loaded["coins_loaded"], valid_num_coins * 2)  # TODO: The announced count must match the unique UTXO count
+
+        self.log.info("  - snapshot file with duplicate coin records and a wrong content hash")
+        with open(bad_snapshot_path, "r+b") as f:
+            f.seek(43 + 8)
+            f.write(b"\xff" * 32)
+        expected_error(msg="Bad snapshot content hash")
 
     def test_headers_not_synced(self, valid_snapshot_path):
         for node in self.nodes[1:]:
@@ -402,7 +418,6 @@ class AssumeutxoTest(BitcoinTestFramework):
         n0 = self.nodes[0]
         n1 = self.nodes[1]
         n2 = self.nodes[2]
-        n3 = self.nodes[3]
 
         self.mini_wallet = MiniWallet(n0)
 
@@ -411,7 +426,7 @@ class AssumeutxoTest(BitcoinTestFramework):
             n.setmocktime(n.getblockheader(n.getbestblockhash())['time'])
 
         # Generate a series of blocks that `n0` will have in the snapshot,
-        # but that n1 and n2 don't yet see.
+        # but that the other nodes don't yet see.
         assert_equal(n0.getblockcount(), START_HEIGHT)
         blocks = {START_HEIGHT: Block(n0.getbestblockhash(), 1, START_HEIGHT + 1)}
         for i in range(100):
@@ -450,15 +465,12 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.test_headers_not_synced(dump_output['path'])
 
         # In order for the snapshot to activate, we have to ferry over the new
-        # headers to n1 and n2 so that they see the header of the snapshot's
+        # headers to the other nodes so that they see the header of the snapshot's
         # base block while disconnected from n0.
         for i in range(1, 300):
             block = n0.getblock(n0.getblockhash(i), 0)
-            # make n1 and n2 aware of the new header, but don't give them the
-            # block.
-            n1.submitheader(block)
-            n2.submitheader(block)
-            n3.submitheader(block)
+            for n in self.nodes[1:]:
+                n.submitheader(block)
 
         # Ensure everyone is seeing the same headers.
         for n in self.nodes:
