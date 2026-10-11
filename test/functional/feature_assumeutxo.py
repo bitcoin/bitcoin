@@ -181,6 +181,14 @@ class AssumeutxoTest(BitcoinTestFramework):
             f.write(b"\xff" * 32)
         expected_error(msg="Bad snapshot content hash")
 
+        self.log.info("  - snapshot file with an empty transaction group")
+        with open(bad_snapshot_path, "wb") as f:
+            f.write(valid_snapshot_contents[:43 + 8])
+            f.write(bytes(33))  # Transaction ID followed by a zero coin count
+            f.write(valid_snapshot_contents[43 + 8:])
+        loaded = snapshot_node.loadtxoutset(bad_snapshot_path)
+        assert_equal(loaded["coins_loaded"], valid_num_coins)  # TODO: Transaction groups without coins should be rejected
+
     def test_headers_not_synced(self, valid_snapshot_path):
         for node in self.nodes[1:]:
             msg = "Unable to load UTXO snapshot: The base block header (0c552ced4721c249a389eb9b08cb8da261cd46f0e7b5f9d064d48f3113406853) must appear in the headers chain. Make sure all headers are syncing, and call loadtxoutset again."
