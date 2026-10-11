@@ -445,12 +445,11 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
     }
 
     if (snapshot_blockhash) {
-        const std::optional<AssumeutxoData> maybe_au_data = GetParams().AssumeutxoForBlockhash(*snapshot_blockhash);
-        if (!maybe_au_data) {
+        const auto& au_data{GetParams().Assumeutxo()};
+        if (au_data.blockhash != *snapshot_blockhash) {
             m_opts.notifications.fatalError(strprintf(_("Assumeutxo data not found for the given blockhash '%s'."), snapshot_blockhash->ToString()));
             return false;
         }
-        const AssumeutxoData& au_data = *Assert(maybe_au_data);
         m_snapshot_height = au_data.height;
         CBlockIndex* base{LookupBlockIndex(*snapshot_blockhash)};
 

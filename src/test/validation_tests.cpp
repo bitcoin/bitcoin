@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(test_assumeutxo)
 {
     const auto params = CreateChainParams(*m_node.args, ChainType::REGTEST);
 
-    const auto snapshot{params->AssumeutxoForHeight(299).value()};
+    const auto& snapshot{params->Assumeutxo()};
     BOOST_CHECK_EQUAL(snapshot.height, 299);
     BOOST_CHECK_EQUAL(snapshot.hash_serialized.ToString(), "106b2c56233e378a824cf0d5ff2be42ed32c72f1605c9be288d00942908a40ac");
     BOOST_CHECK_EQUAL(snapshot.m_chain_tx_count, 334U);

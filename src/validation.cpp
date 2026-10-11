@@ -5618,12 +5618,10 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
         if (this->CurrentChainstate().m_from_snapshot_blockhash) {
             return util::Error{Untranslated("Can't activate a snapshot-based chainstate more than once")};
         }
-        if (!GetParams().AssumeutxoForBlockhash(base_blockhash).has_value()) {
-            auto available_heights = GetParams().GetAvailableSnapshotHeights();
-            std::string heights_formatted = util::Join(available_heights, ", ", [&](const auto& i) { return util::ToString(i); });
-            return util::Error{Untranslated(strprintf("assumeutxo block hash in snapshot metadata not recognized (hash: %s). The following snapshot heights are available: %s",
+        if (auto& snapshot{GetParams().Assumeutxo()}; snapshot.blockhash != base_blockhash) {
+            return util::Error{Untranslated(strprintf("assumeutxo block hash in snapshot metadata not recognized (hash: %s). The supported snapshot height is %d",
                 base_blockhash.ToString(),
-                heights_formatted))};
+                snapshot.height))};
         }
 
         snapshot_start_block = m_blockman.LookupBlockIndex(base_blockhash);
@@ -5790,14 +5788,12 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
     }
 
     int base_height = snapshot_start_block->nHeight;
-    const auto& maybe_au_data = GetParams().AssumeutxoForHeight(base_height);
+    const auto& au_data = GetParams().Assumeutxo();
 
-    if (!maybe_au_data) {
+    if (au_data.height != base_height) {
         return util::Error{Untranslated(strprintf("Assumeutxo height in snapshot metadata not recognized "
                   "(%d) - refusing to load snapshot", base_height))};
     }
-
-    const AssumeutxoData& au_data = *maybe_au_data;
 
     // This work comparison is a duplicate check with the one performed later in
     // ActivateSnapshot(), but is done so that we avoid doing the long work of staging
@@ -6038,15 +6034,14 @@ SnapshotCompletionResult ChainstateManager::MaybeValidateSnapshot(Chainstate& va
     CCoinsViewDB& validated_coins_db = validated_cs.CoinsDB();
     validated_cs.ForceFlushStateToDisk();
 
-    const auto& maybe_au_data = m_options.chainparams.AssumeutxoForHeight(validated_cs.m_chain.Height());
-    if (!maybe_au_data) {
+    const auto& au_data = m_options.chainparams.Assumeutxo();
+    if (au_data.height != validated_cs.m_chain.Height()) {
         LogWarning("[snapshot] assumeutxo data not found for height "
             "(%d) - refusing to validate snapshot", validated_cs.m_chain.Height());
         handle_invalid_snapshot();
         return SnapshotCompletionResult::MISSING_CHAINPARAMS;
     }
 
-    const AssumeutxoData& au_data = *maybe_au_data;
     std::optional<CCoinsStats> validated_cs_stats;
     LogInfo("[snapshot] computing UTXO stats for background chainstate to validate "
         "snapshot - this could take a few minutes");
