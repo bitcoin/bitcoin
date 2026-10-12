@@ -193,7 +193,7 @@ std::unique_ptr<CBlockTemplate> BlockTemplateManager::WaitAndCreateNewBlock(
             if (tip_changed) return new_tmpl;
 
             // Calculate the original template total fees if we haven't already
-            if (current_fees == -1) {
+            if (current_fees == CAmount{-1}) {
                 current_fees = std::accumulate(block_template->vTxFees.begin(), block_template->vTxFees.end(), CAmount{0});
             }
 

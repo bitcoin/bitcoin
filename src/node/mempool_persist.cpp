@@ -127,7 +127,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
 
         if (opts.apply_fee_delta_priority) {
             for (const auto& i : mapDeltas) {
-                pool.PrioritiseTransaction(i.first, i.second);
+                pool.PrioritiseTransaction(i.first, CAmount{i.second});
             }
         }
 

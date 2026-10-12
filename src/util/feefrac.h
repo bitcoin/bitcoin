@@ -157,7 +157,7 @@ struct FeeFrac
     {
         Assume(size > 0);
         Assume(at_size >= 0);
-        if (fee >= 0 && fee < 0x200000000) [[likely]] {
+        if (fee >= CAmount{0} && fee < CAmount{0x200000000}) [[likely]] {
             // Common case where (this->fee * at_size) is guaranteed to fit in a uint64_t.
             if constexpr (RoundDown) {
                 return CAmount{(uint64_t(fee.Int()) * at_size) / uint32_t(size)};
@@ -166,7 +166,7 @@ struct FeeFrac
             }
         } else {
             // Otherwise, use Mul and Div.
-            return Div(Mul(fee, at_size), size, RoundDown);
+            return CAmount{Div(Mul(fee, at_size), size, RoundDown)};
         }
     }
 
