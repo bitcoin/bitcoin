@@ -143,7 +143,7 @@ BOOST_FIXTURE_TEST_CASE(ephemeral_tests, RegTestingSetup)
     BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
 
     // Dust checks pass
-    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, dust_spend}, CFeeRate(0), pool, child_state, child_wtxid));
+    BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, dust_spend}, CFeeRate(CAmount{0}), pool, child_state, child_wtxid));
     BOOST_CHECK(child_state.IsValid());
     BOOST_CHECK_EQUAL(child_wtxid, Wtxid());
     BOOST_CHECK(CheckEphemeralSpends({grandparent_tx_1, dust_spend}, dustrelay, pool, child_state, child_wtxid));

@@ -39,7 +39,7 @@ CAmount OutputGetCredit(const CWallet& wallet, const CTxOut& txout)
 
 CAmount TxGetCredit(const CWallet& wallet, const CTransaction& tx)
 {
-    CAmount nCredit = 0;
+    CAmount nCredit{0};
     for (const CTxOut& txout : tx.vout)
     {
         nCredit += OutputGetCredit(wallet, txout);
@@ -87,7 +87,7 @@ CAmount OutputGetChange(const CWallet& wallet, const CTxOut& txout)
 CAmount TxGetChange(const CWallet& wallet, const CTransaction& tx)
 {
     LOCK(wallet.cs_wallet);
-    CAmount nChange = 0;
+    CAmount nChange{0};
     for (const CTxOut& txout : tx.vout)
     {
         nChange += OutputGetChange(wallet, txout);

@@ -30,7 +30,7 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
     }
 
     // Check for negative or overflow output values (see CVE-2010-5139)
-    CAmount nValueOut = 0;
+    CAmount nValueOut{0};
     for (const auto& txout : tx.vout)
     {
         if (txout.nValue < 0)
