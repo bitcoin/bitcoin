@@ -6,6 +6,7 @@
 #ifndef BITCOIN_COMPRESSOR_H
 #define BITCOIN_COMPRESSOR_H
 
+#include <consensus/amount.h>
 #include <prevector.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -97,15 +98,17 @@ struct ScriptCompression
 
 struct AmountCompression
 {
-    template<typename Stream, typename I> void Ser(Stream& s, I val)
+    template <typename Stream>
+    void Ser(Stream& s, const CAmount val)
     {
-        s << VARINT(CompressAmount(val));
+        s << VARINT(CompressAmount(val.Int()));
     }
-    template<typename Stream, typename I> void Unser(Stream& s, I& val)
+    template <typename Stream>
+    void Unser(Stream& s, CAmount& val)
     {
         uint64_t v;
         s >> VARINT(v);
-        val = DecompressAmount(v);
+        val = CAmount{int64_t(DecompressAmount(v))};
     }
 };
 
