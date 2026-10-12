@@ -87,18 +87,17 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
 
             CTransactionRef tx;
             int64_t nTime;
-            int64_t nFeeDelta;
+            CAmount fee_delta{0};
             file >> TX_WITH_WITNESS(tx);
             file >> nTime;
-            file >> nFeeDelta;
+            file >> fee_delta;
 
             if (opts.use_current_time) {
                 nTime = TicksSinceEpoch<std::chrono::seconds>(now);
             }
 
-            CAmount amountdelta = nFeeDelta;
-            if (amountdelta != CAmount{0} && opts.apply_fee_delta_priority) {
-                pool.PrioritiseTransaction(tx->GetHash(), amountdelta);
+            if (fee_delta != CAmount{0} && opts.apply_fee_delta_priority) {
+                pool.PrioritiseTransaction(tx->GetHash(), fee_delta);
             }
             if (nTime > TicksSinceEpoch<std::chrono::seconds>(now - pool.m_opts.expiry)) {
                 LOCK(cs_main);
