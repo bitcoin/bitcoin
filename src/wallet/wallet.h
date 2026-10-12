@@ -306,7 +306,7 @@ inline std::optional<AddressPurpose> PurposeFromString(std::string_view s)
 struct CRecipient
 {
     CTxDestination dest;
-    CAmount nAmount;
+    CAmount nAmount{0};
     bool fSubtractFeeFromAmount;
 };
 
