@@ -909,7 +909,7 @@ class TestNode():
         self.mocktime += seconds
         self.setmocktime(self.mocktime)
 
-    def wait_until(self, test_function, timeout=60, check_interval=0.05):
+    def wait_until(self, test_function, *, timeout=60, check_interval=0.05):
         return wait_until_helper_internal(test_function, timeout=timeout, timeout_factor=self.timeout_factor, check_interval=check_interval)
 
 class TestNodeCLIAttr:
