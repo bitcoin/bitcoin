@@ -27,7 +27,7 @@ class MiniMinerMempoolEntry
     const int64_t vsize_individual;
     int64_t vsize_with_ancestors;
     const CAmount fee_individual;
-    CAmount fee_with_ancestors;
+    CAmount fee_with_ancestors{0};
 
 // This class must be constructed while holding mempool.cs. After construction, the object's
 // methods can be called without holding that lock.

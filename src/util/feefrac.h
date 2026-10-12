@@ -87,7 +87,7 @@ struct FeeFrac
     static constexpr auto Div = DivFallback;
 #endif
 
-    CAmount fee;
+    CAmount fee{0};
     int32_t size;
 
     /** Construct an IsEmpty() FeeFrac. */

@@ -55,7 +55,7 @@ class MutableTransactionSignatureCreator : public BaseSignatureCreator
     const CMutableTransaction& m_txto;
     unsigned int nIn;
     SignOptions m_options;
-    CAmount amount;
+    CAmount amount{0};
     const MutableTransactionSignatureChecker checker;
     const PrecomputedTransactionData* m_txdata;
 
