@@ -17,6 +17,7 @@
 #include <util/moneystr.h>
 
 #include <algorithm>
+#include <compare>
 #include <cstddef>
 #include <string>
 

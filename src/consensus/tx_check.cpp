@@ -11,6 +11,7 @@
 #include <script/script.h>
 #include <serialize.h>
 
+#include <compare>
 #include <set>
 #include <string>
 #include <utility>
