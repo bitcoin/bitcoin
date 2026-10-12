@@ -219,7 +219,7 @@ FUZZ_TARGET(feefrac_mul_div)
         auto res_fee = round_down ?
             FeeFrac{CAmount{mul64}, div}.EvaluateFeeDown(mul32) :
             FeeFrac{CAmount{mul64}, div}.EvaluateFeeUp(mul32);
-        assert(res == res_fee);
+        assert(res == res_fee.Int());
 
         // Compare exactly with CFeeRate::GetFee, which rounds up.
         if (!round_down) {
