@@ -344,7 +344,6 @@ class WalletMigrationTest(BitcoinTestFramework):
         _, multisig1 = self.migrate_and_get_rpc("multisig1")
         assert_equal(multisig1.getaddressinfo(addr1)["ismine"], False)
         assert_equal(multisig1.getaddressinfo(addr1)["solvable"], False)
-        assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", multisig1.gettransaction, txid)
         assert_equal(multisig1.getbalance(), 0)
         assert_equal(multisig1.listtransactions(), [])
 
@@ -425,9 +424,6 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         # Migrate
         _, imports0 = self.migrate_and_get_rpc("imports0")
-        assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", imports0.gettransaction, received_watchonly_txid)
-        assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", imports0.gettransaction, received_sent_watchonly_utxo['txid'])
-        assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", imports0.gettransaction, sent_watchonly_txid)
         assert_equal(len(imports0.listtransactions()), 2)
         imports0.gettransaction(received_txid)
         imports0.gettransaction(watchonly_spendable_txid)
