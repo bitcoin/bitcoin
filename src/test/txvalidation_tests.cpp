@@ -86,7 +86,7 @@ static inline CTransactionRef make_tx(const std::vector<COutPoint>& inputs, int3
     }
     for (auto i{0}; i < 25; ++i) {
         mtx.vout[i].scriptPubKey = CScript() << OP_TRUE;
-        mtx.vout[i].nValue = 10000;
+        mtx.vout[i].nValue = CAmount{10000};
     }
     return MakeTransactionRef(mtx);
 }
@@ -106,7 +106,7 @@ static inline CTransactionRef make_ephemeral_tx(const std::vector<COutPoint>& in
     mtx.vout.resize(NUM_EPHEMERAL_TX_OUTPUTS);
     for (auto i{0}; i < NUM_EPHEMERAL_TX_OUTPUTS; ++i) {
         mtx.vout[i].scriptPubKey = CScript() << OP_TRUE;
-        mtx.vout[i].nValue = (i == EPHEMERAL_DUST_INDEX) ? 0 : 10000;
+        mtx.vout[i].nValue = CAmount{i == EPHEMERAL_DUST_INDEX ? 0 : 10000};
     }
     return MakeTransactionRef(mtx);
 }
@@ -472,7 +472,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         }
         mtx_many_sigops.vout.resize(1);
         mtx_many_sigops.vout.back().scriptPubKey = CScript() << OP_TRUE;
-        mtx_many_sigops.vout.back().nValue = 10000;
+        mtx_many_sigops.vout.back().nValue = CAmount{10000};
         auto tx_many_sigops{MakeTransactionRef(mtx_many_sigops)};
 
         auto parents{pool.GetParents(entry.FromTx(tx_many_sigops))};
