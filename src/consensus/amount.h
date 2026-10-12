@@ -34,7 +34,7 @@ public:
     CAmount() = delete;
 
     template <non_bool_integral T>
-    constexpr CAmount(T sats) noexcept
+    constexpr explicit CAmount(T sats) noexcept
         : m_sats(sats)
     {
     }
@@ -126,7 +126,7 @@ inline constexpr CAmount COIN{100'000'000};
  * for the creation of coins out of thin air modification could lead to a fork.
  * */
 inline constexpr CAmount MAX_MONEY{21'000'000 * COIN};
-inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
+constexpr bool MoneyRange(const CAmount& nValue) { return (nValue.Int() >= 0 && nValue <= MAX_MONEY); }
 
 inline std::ostream& operator<<(std::ostream& o, const CAmount a)
 {
