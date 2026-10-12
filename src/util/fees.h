@@ -6,6 +6,7 @@
 #define BITCOIN_UTIL_FEES_H
 
 #include <attributes.h>
+#include <consensus/amount.h>
 #include <util/expected.h>
 #include <util/feefrac.h>
 
@@ -78,7 +79,7 @@ struct FeeRateEstimationError {
  */
 inline util::Unexpected<FeeRateEstimationError> EstimationError(FeeRateEstimatorType estimator, int returned_target, std::string error)
 {
-    return util::Unexpected{FeeRateEstimationError{{estimator, FeePerVSize{0, 0}, returned_target}, std::move(error)}};
+    return util::Unexpected{FeeRateEstimationError{{estimator, FeePerVSize{CAmount{0}, 0}, returned_target}, std::move(error)}};
 }
 
 /**
