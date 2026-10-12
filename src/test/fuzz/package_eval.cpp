@@ -174,7 +174,7 @@ std::unique_ptr<CTxMemPool> MakeEphemeralMempool(const NodeContext& node)
     mempool_opts.require_standard = true;
 
     // And set minrelay to 0 to allow ephemeral parent tx even with non-TRUC
-    mempool_opts.min_relay_feerate = CFeeRate(0);
+    mempool_opts.min_relay_feerate = CFeeRate(CAmount{0});
 
     bilingual_str error;
     // ...and construct a CTxMemPool from it

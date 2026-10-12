@@ -120,7 +120,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
     std::vector<CAmount> lookahead(utxo_pool.size(), 0);
 
     // Calculate lookahead values, and check that there are sufficient funds
-    CAmount total_available = 0;
+    CAmount total_available{0};
     for (int index = static_cast<int>(utxo_pool.size()) - 1; index >= 0; --index) {
         lookahead[index] = total_available;
         // UTXOs with non-positive effective value must have been filtered
@@ -139,10 +139,10 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
     std::vector<size_t> best_selection;
 
     // The currently selected effective amount
-    CAmount curr_amount = 0;
+    CAmount curr_amount{0};
 
     // The waste score of the current selection, and the best waste score so far
-    CAmount curr_selection_waste = 0;
+    CAmount curr_selection_waste{0};
     CAmount best_waste = MAX_MONEY;
 
     // The weight of the currently selected input set
@@ -405,7 +405,7 @@ util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, c
     std::vector<int> min_tail_weight(utxo_pool.size());
 
     // Calculate lookahead values, min_tail_weights, and check that there are sufficient funds
-    CAmount total_available = 0;
+    CAmount total_available{0};
     int min_group_weight = std::numeric_limits<int>::max();
     for (size_t i = 0; i < utxo_pool.size(); ++i) {
         size_t index = utxo_pool.size() - 1 - i; // Loop over every element in reverse order
@@ -428,7 +428,7 @@ util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, c
     std::vector<size_t> best_selection;
 
     // The currently selected effective amount, and the effective amount of the best selection so far
-    CAmount curr_amount = 0;
+    CAmount curr_amount{0};
     CAmount best_selection_amount = MAX_MONEY;
 
     // The weight of the currently selected input set, and the weight of the best selection
@@ -624,7 +624,7 @@ util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utx
     std::iota(indexes.begin(), indexes.end(), 0);
     std::shuffle(indexes.begin(), indexes.end(), rng);
 
-    CAmount selected_eff_value = 0;
+    CAmount selected_eff_value{0};
     int weight = 0;
     bool max_tx_weight_exceeded = false;
     for (const size_t i : indexes) {
@@ -686,7 +686,7 @@ static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::v
     for (int nRep = 0; nRep < iterations && nBest != nTargetValue; nRep++)
     {
         vfIncluded.assign(groups.size(), false);
-        CAmount nTotal = 0;
+        CAmount nTotal{0};
         int selected_coins_weight{0};
         bool fReachedTarget = false;
         for (int nPass = 0; nPass < 2 && !fReachedTarget; nPass++)
@@ -734,7 +734,7 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
     // Groups with selection amount smaller than the target and any change we might produce.
     // Don't include groups larger than this, because they will only cause us to overshoot.
     std::vector<OutputGroup> applicable_groups;
-    CAmount nTotalLower = 0;
+    CAmount nTotalLower{0};
 
     std::shuffle(groups.begin(), groups.end(), rng);
 
@@ -904,7 +904,7 @@ void SelectionResult::RecalculateWaste(const CAmount min_viable_change, const CA
     assert(!m_selected_inputs.empty());
 
     // Always consider the cost of spending an input now vs in the future.
-    CAmount waste = 0;
+    CAmount waste{0};
     for (const auto& coin_ptr : m_selected_inputs) {
         const COutput& coin = *coin_ptr;
         waste += coin.GetFee() - coin.long_term_fee;
