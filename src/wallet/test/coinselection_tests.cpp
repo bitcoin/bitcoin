@@ -82,7 +82,8 @@ static void AddCoins(std::vector<OutputGroup>& utxo_pool, std::vector<CAmount> c
 }
 
 /** Make multiple coins that share the same effective value */
-static void AddDuplicateCoins(std::vector<OutputGroup>& utxo_pool, int count, int amount, CoinSelectionParams cs_params = default_cs_params) {
+static void AddDuplicateCoins(std::vector<OutputGroup>& utxo_pool, int count, CAmount amount, CoinSelectionParams cs_params = default_cs_params)
+{
     for (int i = 0 ; i < count; ++i) {
         utxo_pool.push_back(MakeCoin(amount, true, cs_params));
     }
@@ -167,7 +168,7 @@ BOOST_AUTO_TEST_CASE(bnb_test)
         TestBnBFail("Exceed max weight", utxo_pool, /*selection_target=*/4 * CENT, cs_params, /*max_selection_weight=*/4 * 2 * P2WPKH_INPUT_VSIZE - 1, /*expect_max_weight_exceeded=*/true);
 
         // Simple cases without BnB solution
-        TestBnBFail("Smallest combination too big", utxo_pool, /*selection_target=*/0.5 * CENT, cs_params);
+        TestBnBFail("Smallest combination too big", utxo_pool, /*selection_target=*/CENT / 2, cs_params);
         TestBnBFail("No UTXO combination in target window", utxo_pool, /*selection_target=*/7 * CENT, cs_params);
         TestBnBFail("Select more than available", utxo_pool, /*selection_target=*/10 * CENT, cs_params);
 

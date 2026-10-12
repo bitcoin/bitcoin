@@ -97,7 +97,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             }
 
             CAmount amountdelta = nFeeDelta;
-            if (amountdelta && opts.apply_fee_delta_priority) {
+            if (amountdelta != CAmount{0} && opts.apply_fee_delta_priority) {
                 pool.PrioritiseTransaction(tx->GetHash(), amountdelta);
             }
             if (nTime > TicksSinceEpoch<std::chrono::seconds>(now - pool.m_opts.expiry)) {
@@ -196,7 +196,7 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
         for (const auto& i : vinfo) {
             file << TX_WITH_WITNESS(*(i.tx));
             file << int64_t{count_seconds(i.m_time)};
-            file << int64_t{i.nFeeDelta};
+            file << i.nFeeDelta.Int();
             mapDeltas.erase(i.tx->GetHash());
         }
 

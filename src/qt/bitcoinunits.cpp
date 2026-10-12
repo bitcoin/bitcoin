@@ -87,7 +87,7 @@ QString BitcoinUnits::format(Unit unit, const CAmount& nIn, bool fPlus, Separato
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
-    qint64 n = (qint64)nIn;
+    qint64 n{nIn.Int()};
     qint64 coin = factor(unit);
     int num_decimals = decimals(unit);
     qint64 n_abs = (n > 0 ? n : -n);
