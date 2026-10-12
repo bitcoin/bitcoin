@@ -529,7 +529,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
         assert(std::equal(setChildrenCheck.begin(), setChildrenCheck.end(), setChildrenStored.begin(), comp));
 
         TxValidationState dummy_state; // Not used. CheckTxInputs() should always pass
-        CAmount txfee = 0;
+        CAmount txfee{0};
         assert(!tx.IsCoinBase());
         assert(Consensus::CheckTxInputs(tx, dummy_state, mempoolDuplicate, spendheight, txfee));
         for (const auto& input: tx.vin) mempoolDuplicate.SpendCoin(input.prevout);
@@ -898,7 +898,7 @@ CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
 
         if (rollingMinimumFeeRate < (double)m_opts.incremental_relay_feerate.GetFeePerK().Int() / 2) {
             rollingMinimumFeeRate = 0;
-            return CFeeRate(0);
+            return CFeeRate(CAmount{0});
         }
     }
     return std::max(CFeeRate(llround(rollingMinimumFeeRate)), m_opts.incremental_relay_feerate);
@@ -959,7 +959,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
         }
     }
 
-    if (maxFeeRateRemoved > CFeeRate(0)) {
+    if (maxFeeRateRemoved > CFeeRate(CAmount{0})) {
         LogDebug(BCLog::MEMPOOL, "Removed %u txn, rolling minimum fee bumped to %s\n", nTxnRemoved, maxFeeRateRemoved.ToString());
     }
 }
@@ -970,7 +970,7 @@ std::tuple<size_t, size_t, CAmount> CTxMemPool::CalculateAncestorData(const CTxM
 
     size_t ancestor_count = ancestors.size();
     size_t ancestor_size = 0;
-    CAmount ancestor_fees = 0;
+    CAmount ancestor_fees{0};
     for (auto tx: ancestors) {
         const CTxMemPoolEntry& anc = static_cast<const CTxMemPoolEntry&>(*tx);
         ancestor_size += anc.GetTxSize();
@@ -984,7 +984,7 @@ std::tuple<size_t, size_t, CAmount> CTxMemPool::CalculateDescendantData(const CT
     auto descendants = m_txgraph->GetDescendants(entry, TxGraph::Level::MAIN);
     size_t descendant_count = descendants.size();
     size_t descendant_size = 0;
-    CAmount descendant_fees = 0;
+    CAmount descendant_fees{0};
 
     for (auto tx: descendants) {
         const CTxMemPoolEntry &desc = static_cast<const CTxMemPoolEntry&>(*tx);

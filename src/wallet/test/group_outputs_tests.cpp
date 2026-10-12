@@ -30,7 +30,7 @@ static void addCoin(CoinsResult& coins,
                      const CTxDestination& dest,
                      const CAmount& nValue,
                      bool is_from_me,
-                     CFeeRate fee_rate = CFeeRate(0),
+                     CFeeRate fee_rate = CFeeRate(CAmount{0}),
                      int depth = 6)
 {
     CMutableTransaction tx;
@@ -64,9 +64,9 @@ static void addCoin(CoinsResult& coins,
             /*change_output_size=*/ 0,
             /*change_spend_size=*/ 0,
             /*min_change_target=*/ CENT,
-            /*effective_feerate=*/ CFeeRate(0),
-            /*long_term_feerate=*/ CFeeRate(0),
-            /*discard_feerate=*/ CFeeRate(0),
+            /*effective_feerate=*/ CFeeRate(CAmount{0}),
+            /*long_term_feerate=*/ CFeeRate(CAmount{0}),
+            /*discard_feerate=*/ CFeeRate(CAmount{0}),
             /*tx_noinputs_size=*/ 0,
             /*avoid_partial=*/ avoid_partial_spends,
     };
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(outputs_grouping_tests)
     // ################################################################################
 
     const CTxDestination dest3 = *Assert(wallet->GetNewDestination(OutputType::BECH32, ""));
-    addCoin(group_verifier.coins_pool, *wallet, dest3, 1, true, CFeeRate(100));
+    addCoin(group_verifier.coins_pool, *wallet, dest3, 1, true, CFeeRate(CAmount{100}));
     BOOST_CHECK(group_verifier.coins_pool.coins[OutputType::BECH32].back().GetEffectiveValue() <= 0);
 
     // First expect no changes with "positive_only" enabled
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(outputs_grouping_tests)
 
     const CTxDestination dest4 = *Assert(wallet->GetNewDestination(OutputType::BECH32, ""));
     addCoin(group_verifier.coins_pool, *wallet, dest4, 6 * COIN,
-            /*is_from_me=*/false, CFeeRate(0), /*depth=*/5);
+            /*is_from_me=*/false, CFeeRate(CAmount{0}), /*depth=*/5);
 
     // Expect no changes from this round and the previous one (point 4)
     group_verifier.GroupAndVerify(OutputType::BECH32,
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(outputs_grouping_tests)
 
     const CTxDestination dest5 = *Assert(wallet->GetNewDestination(OutputType::BECH32, ""));
     addCoin(group_verifier.coins_pool, *wallet, dest5, 6 * COIN,
-            /*is_from_me=*/true, CFeeRate(0), /*depth=*/0);
+            /*is_from_me=*/true, CFeeRate(CAmount{0}), /*depth=*/0);
 
     // Expect no changes from this round and the previous one (point 5)
     group_verifier.GroupAndVerify(OutputType::BECH32,

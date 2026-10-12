@@ -69,7 +69,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         } else {
             // Transaction is not already in the mempool.
             const bool check_max_fee{max_tx_fee > 0};
-            const bool check_max_feerate{max_tx_fee_rate > CFeeRate(0)};
+            const bool check_max_feerate{max_tx_fee_rate > CFeeRate(CAmount{0})};
             if (check_max_fee || check_max_feerate || broadcast_method == TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST) {
                 // First, call ATMP with test_accept and check the fee. If ATMP
                 // fails here, return error immediately.

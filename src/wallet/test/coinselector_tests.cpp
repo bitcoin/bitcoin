@@ -86,7 +86,7 @@ static void add_coin(const CAmount& nValue, int nInput, SelectionResult& result,
     result.AddInput(group);
 }
 
-static void add_coin(CoinsResult& available_coins, CWallet& wallet, const CAmount& nValue, CFeeRate feerate = CFeeRate(0), int nAge = 6*24, bool fIsFromMe = false, int nInput =0, bool spendable = false, int custom_size = 0)
+static void add_coin(CoinsResult& available_coins, CWallet& wallet, const CAmount& nValue, CFeeRate feerate = CFeeRate(CAmount{0}), int nAge = 6*24, bool fIsFromMe = false, int nInput =0, bool spendable = false, int custom_size = 0)
 {
     CMutableTransaction tx;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
@@ -169,9 +169,9 @@ inline std::vector<OutputGroup>& KnapsackGroupOutputs(const CoinsResult& availab
         /*change_output_size=*/ 0,
         /*change_spend_size=*/ 0,
         /*min_change_target=*/ CENT,
-        /*effective_feerate=*/ CFeeRate(0),
-        /*long_term_feerate=*/ CFeeRate(0),
-        /*discard_feerate=*/ CFeeRate(0),
+        /*effective_feerate=*/ CFeeRate(CAmount{0}),
+        /*long_term_feerate=*/ CFeeRate(CAmount{0}),
+        /*discard_feerate=*/ CFeeRate(CAmount{0}),
         /*tx_noinputs_size=*/ 0,
         /*avoid_partial=*/ false,
     };
@@ -207,9 +207,9 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         /*change_output_size=*/ 31,
         /*change_spend_size=*/ 68,
         /*min_change_target=*/ 0,
-        /*effective_feerate=*/ CFeeRate(3000),
-        /*long_term_feerate=*/ CFeeRate(1000),
-        /*discard_feerate=*/ CFeeRate(1000),
+        /*effective_feerate=*/ CFeeRate(CAmount{3000}),
+        /*long_term_feerate=*/ CFeeRate(CAmount{1000}),
+        /*discard_feerate=*/ CFeeRate(CAmount{1000}),
         /*tx_noinputs_size=*/ 0,
         /*avoid_partial=*/ false,
     };
@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
 
         CoinsResult available_coins;
 
-        coin_selection_params_bnb.m_effective_feerate = CFeeRate(0);
+        coin_selection_params_bnb.m_effective_feerate = CFeeRate(CAmount{0});
         add_coin(available_coins, *wallet, 5 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
         add_coin(available_coins, *wallet, 3 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
         add_coin(available_coins, *wallet, 2 * CENT, coin_selection_params_bnb.m_effective_feerate, 6 * 24, false, 0, true);
@@ -267,8 +267,8 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         CoinsResult available_coins;
 
         // pre selected coin should be selected even if disadvantageous
-        coin_selection_params_bnb.m_effective_feerate = CFeeRate(5000);
-        coin_selection_params_bnb.m_long_term_feerate = CFeeRate(3000);
+        coin_selection_params_bnb.m_effective_feerate = CFeeRate(CAmount{5000});
+        coin_selection_params_bnb.m_long_term_feerate = CFeeRate(CAmount{3000});
 
         // Add selectable outputs, increasing their raw amounts by their input fee to make the effective value equal to the raw amount
         CAmount input_fee = coin_selection_params_bnb.m_effective_feerate.GetFee(/*virtual_bytes=*/68); // bech32 input size (default test output type)
@@ -339,9 +339,9 @@ BOOST_AUTO_TEST_CASE(bnb_sffo_restriction)
             /*change_output_size=*/ 31,  // unused value, p2wpkh output size (wallet default change type)
             /*change_spend_size=*/ 68,   // unused value, p2wpkh input size (high-r signature)
             /*min_change_target=*/ 0,    // dummy, set later
-            /*effective_feerate=*/ CFeeRate(3000),
-            /*long_term_feerate=*/ CFeeRate(1000),
-            /*discard_feerate=*/ CFeeRate(1000),
+            /*effective_feerate=*/ CFeeRate(CAmount{3000}),
+            /*long_term_feerate=*/ CFeeRate(CAmount{1000}),
+            /*discard_feerate=*/ CFeeRate(CAmount{1000}),
             /*tx_noinputs_size=*/ 0,
             /*avoid_partial=*/ false,
     };
@@ -381,7 +381,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
         // with an empty wallet we can't even pay one cent
         BOOST_CHECK(!KnapsackSolver(KnapsackGroupOutputs(available_coins, *wallet, filter_standard), 1 * CENT, CENT));
 
-        add_coin(available_coins, *wallet, 1*CENT, CFeeRate(0), 4);        // add a new 1 cent coin
+        add_coin(available_coins, *wallet, 1*CENT, CFeeRate(CAmount{0}), 4);        // add a new 1 cent coin
 
         // with a new 1 cent coin, we still can't find a mature 1 cent
         BOOST_CHECK(!KnapsackSolver(KnapsackGroupOutputs(available_coins, *wallet, filter_standard), 1 * CENT, CENT));
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
         BOOST_CHECK_EQUAL(result2->GetSelectedValue(), 3 * CENT);
 
         add_coin(available_coins, *wallet, 5*CENT);           // add a mature 5 cent coin,
-        add_coin(available_coins, *wallet, 10*CENT, CFeeRate(0), 3, true); // a new 10 cent coin sent from one of our own addresses
+        add_coin(available_coins, *wallet, 10*CENT, CFeeRate(CAmount{0}), 3, true); // a new 10 cent coin sent from one of our own addresses
         add_coin(available_coins, *wallet, 20*CENT);          // and a mature 20 cent coin
 
         // now we have new: 1+10=11 (of which 10 was self-sent), and mature: 2+5+20=27.  total = 38
@@ -727,9 +727,9 @@ BOOST_AUTO_TEST_CASE(SelectCoins_test)
             /*change_output_size=*/ 34,
             /*change_spend_size=*/ 148,
             /*min_change_target=*/ CENT,
-            /*effective_feerate=*/ CFeeRate(0),
-            /*long_term_feerate=*/ CFeeRate(0),
-            /*discard_feerate=*/ CFeeRate(0),
+            /*effective_feerate=*/ CFeeRate(CAmount{0}),
+            /*long_term_feerate=*/ CFeeRate(CAmount{0}),
+            /*discard_feerate=*/ CFeeRate(CAmount{0}),
             /*tx_noinputs_size=*/ 0,
             /*avoid_partial=*/ false,
         };
@@ -934,7 +934,7 @@ BOOST_AUTO_TEST_CASE(effective_value_test)
 {
     const int input_bytes = 148;
     const CFeeRate feerate(1000);
-    const CAmount nValue = 10000;
+    const CAmount nValue{10000};
     const int nInput = 0;
 
     CMutableTransaction tx;
@@ -943,7 +943,7 @@ BOOST_AUTO_TEST_CASE(effective_value_test)
 
     // standard case, pass feerate in constructor
     COutput output1(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/1, input_bytes, /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/false, feerate);
-    const CAmount expected_ev1 = 9852; // 10000 - 148
+    const CAmount expected_ev1{9852}; // 10000 - 148
     BOOST_CHECK_EQUAL(output1.GetEffectiveValue(), expected_ev1);
 
     // input bytes unknown (input_bytes = -1), pass feerate in constructor
@@ -951,12 +951,12 @@ BOOST_AUTO_TEST_CASE(effective_value_test)
     BOOST_CHECK_EQUAL(output2.GetEffectiveValue(), nValue); // The effective value should be equal to the absolute value if input_bytes is -1
 
     // negative effective value, pass feerate in constructor
-    COutput output3(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/1, input_bytes, /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/false, CFeeRate(100000));
-    const CAmount expected_ev3 = -4800; // 10000 - 14800
+    COutput output3(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/1, input_bytes, /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/false, CFeeRate(CAmount{100000}));
+    const CAmount expected_ev3{-4800}; // 10000 - 14800
     BOOST_CHECK_EQUAL(output3.GetEffectiveValue(), expected_ev3);
 
     // standard case, pass fees in constructor
-    const CAmount fees = 148;
+    const CAmount fees{148};
     COutput output4(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/1, input_bytes, /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/false, fees);
     BOOST_CHECK_EQUAL(output4.GetEffectiveValue(), expected_ev1);
 
@@ -994,9 +994,9 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
             /*change_output_size=*/34,
             /*change_spend_size=*/68,
             /*min_change_target=*/CENT,
-            /*effective_feerate=*/CFeeRate(5000),
-            /*long_term_feerate=*/CFeeRate(2000),
-            /*discard_feerate=*/CFeeRate(1000),
+            /*effective_feerate=*/CFeeRate(CAmount{5000}),
+            /*long_term_feerate=*/CFeeRate(CAmount{2000}),
+            /*discard_feerate=*/CFeeRate(CAmount{1000}),
             /*tx_noinputs_size=*/10 + 34, // static header size + output size
             /*avoid_partial=*/false,
     };
@@ -1028,8 +1028,8 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
         const auto& res = CoinGrinder(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
             CoinsResult available_coins;
             for (int j = 0; j < 10; ++j) {
-                add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(5000), 144, false, 0, true);
-                add_coin(available_coins, wallet, CAmount(2 * COIN), CFeeRate(5000), 144, false, 0, true);
+                add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(CAmount{5000}), 144, false, 0, true);
+                add_coin(available_coins, wallet, CAmount(2 * COIN), CFeeRate(CAmount{5000}), 144, false, 0, true);
             }
             return available_coins;
         });
@@ -1046,10 +1046,10 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
         const auto& res = CoinGrinder(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
             CoinsResult available_coins;
             for (int j = 0; j < 60; ++j) { // 60 UTXO --> 19,8 BTC total --> 60 × 272 WU = 16320 WU
-                add_coin(available_coins, wallet, 0.33 * BTC, CFeeRate(5000), 144, false, 0, true);
+                add_coin(available_coins, wallet, 0.33 * BTC, CFeeRate(CAmount{5000}), 144, false, 0, true);
             }
             for (int i = 0; i < 10; i++) { // 10 UTXO --> 20 BTC total --> 10 × 272 WU = 2720 WU
-                add_coin(available_coins, wallet, CAmount(2 * COIN), CFeeRate(5000), 144, false, 0, true);
+                add_coin(available_coins, wallet, CAmount(2 * COIN), CFeeRate(CAmount{5000}), 144, false, 0, true);
             }
             return available_coins;
         });
@@ -1074,9 +1074,9 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
         int max_selection_weight = 400'000; // WU
         const auto& res = CoinGrinder(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
             CoinsResult available_coins;
-            add_coin(available_coins, wallet, CAmount(2 * COIN), CFeeRate(5000), 144, false, 0, true, 148);
-            add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(5000), 144, false, 0, true, 68);
-            add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(5000), 144, false, 0, true, 68);
+            add_coin(available_coins, wallet, CAmount(2 * COIN), CFeeRate(CAmount{5000}), 144, false, 0, true, 148);
+            add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(CAmount{5000}), 144, false, 0, true, 68);
+            add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(CAmount{5000}), 144, false, 0, true, 68);
             return available_coins;
         });
         SelectionResult expected_result(CAmount(0), SelectionAlgorithm::CG);
@@ -1098,11 +1098,11 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
             CoinsResult available_coins;
             for (int j = 0; j < 5; ++j) {
                 // Add heavy coins {3, 6, 9, 12, 15}
-                add_coin(available_coins, wallet, CAmount((3 + 3 * j) * COIN), CFeeRate(5000), 144, false, 0, true, 350);
+                add_coin(available_coins, wallet, CAmount((3 + 3 * j) * COIN), CFeeRate(CAmount{5000}), 144, false, 0, true, 350);
                 // Add medium coins {2, 5, 8, 11, 14}
-                add_coin(available_coins, wallet, CAmount((2 + 3 * j) * COIN), CFeeRate(5000), 144, false, 0, true, 250);
+                add_coin(available_coins, wallet, CAmount((2 + 3 * j) * COIN), CFeeRate(CAmount{5000}), 144, false, 0, true, 250);
                 // Add light coins {1, 4, 7, 10, 13}
-                add_coin(available_coins, wallet, CAmount((1 + 3 * j) * COIN), CFeeRate(5000), 144, false, 0, true, 150);
+                add_coin(available_coins, wallet, CAmount((1 + 3 * j) * COIN), CFeeRate(CAmount{5000}), 144, false, 0, true, 150);
             }
             return available_coins;
         });
@@ -1126,22 +1126,22 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
         const auto& res = CoinGrinder(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
             CoinsResult available_coins;
             // Expected Result: 4 + 3 + 2 + 1 = 10 BTC at 400 vB
-            add_coin(available_coins, wallet, CAmount(4 * COIN), CFeeRate(5000), 144, false, 0, true, 100);
-            add_coin(available_coins, wallet, CAmount(3 * COIN), CFeeRate(5000), 144, false, 0, true, 100);
-            add_coin(available_coins, wallet, CAmount(2 * COIN), CFeeRate(5000), 144, false, 0, true, 100);
-            add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(5000), 144, false, 0, true, 100);
+            add_coin(available_coins, wallet, CAmount(4 * COIN), CFeeRate(CAmount{5000}), 144, false, 0, true, 100);
+            add_coin(available_coins, wallet, CAmount(3 * COIN), CFeeRate(CAmount{5000}), 144, false, 0, true, 100);
+            add_coin(available_coins, wallet, CAmount(2 * COIN), CFeeRate(CAmount{5000}), 144, false, 0, true, 100);
+            add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(CAmount{5000}), 144, false, 0, true, 100);
             // Distracting clones:
             for (int j = 0; j < 100; ++j) {
-                add_coin(available_coins, wallet, CAmount(8 * COIN), CFeeRate(5000), 144, false, 0, true, 1000);
+                add_coin(available_coins, wallet, CAmount(8 * COIN), CFeeRate(CAmount{5000}), 144, false, 0, true, 1000);
             }
             for (int j = 0; j < 100; ++j) {
-                add_coin(available_coins, wallet, CAmount(7 * COIN), CFeeRate(5000), 144, false, 0, true, 800);
+                add_coin(available_coins, wallet, CAmount(7 * COIN), CFeeRate(CAmount{5000}), 144, false, 0, true, 800);
             }
             for (int j = 0; j < 100; ++j) {
-                add_coin(available_coins, wallet, CAmount(6 * COIN), CFeeRate(5000), 144, false, 0, true, 600);
+                add_coin(available_coins, wallet, CAmount(6 * COIN), CFeeRate(CAmount{5000}), 144, false, 0, true, 600);
             }
             for (int j = 0; j < 100; ++j) {
-                add_coin(available_coins, wallet, CAmount(5 * COIN), CFeeRate(5000), 144, false, 0, true, 400);
+                add_coin(available_coins, wallet, CAmount(5 * COIN), CFeeRate(CAmount{5000}), 144, false, 0, true, 400);
             }
             return available_coins;
         });
@@ -1164,12 +1164,12 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
         int max_selection_weight = 40000; // WU
         const auto& res = CoinGrinder(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
             CoinsResult available_coins;
-            add_coin(available_coins, wallet, 1.8 * BTC, CFeeRate(5000), 144, false, 0, true, 2500);
-            add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(5000), 144, false, 0, true, 1000);
-            add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(5000), 144, false, 0, true, 1000);
+            add_coin(available_coins, wallet, 1.8 * BTC, CFeeRate(CAmount{5000}), 144, false, 0, true, 2500);
+            add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(CAmount{5000}), 144, false, 0, true, 1000);
+            add_coin(available_coins, wallet, CAmount(1 * COIN), CFeeRate(CAmount{5000}), 144, false, 0, true, 1000);
             for (int j = 0; j < 100; ++j) {
                 // make a 100 unique coins only differing by one sat
-                add_coin(available_coins, wallet, 0.01 * BTC + CAmount{j}, CFeeRate(5000), 144, false, 0, true, 110);
+                add_coin(available_coins, wallet, 0.01 * BTC + CAmount{j}, CFeeRate(CAmount{5000}), 144, false, 0, true, 110);
             }
             return available_coins;
         });
@@ -1192,7 +1192,7 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
         const auto& result_a = CoinGrinder(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
             CoinsResult doppelgangers;
             for (int i = 0; i < 18; ++i) {
-                add_coin(doppelgangers, wallet, CAmount(1 * COIN + i), CFeeRate(0), 144, false, 0, true, 96 + i);
+                add_coin(doppelgangers, wallet, CAmount(1 * COIN + i), CFeeRate(CAmount{0}), 144, false, 0, true, 96 + i);
             }
             return doppelgangers;
         });
@@ -1210,7 +1210,7 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
         const auto& result_b = CoinGrinder(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
             CoinsResult doppelgangers;
             for (int i = 0; i < 19; ++i) {
-                add_coin(doppelgangers, wallet, CAmount(1 * COIN + i), CFeeRate(0), 144, false, 0, true, 96 + i);
+                add_coin(doppelgangers, wallet, CAmount(1 * COIN + i), CFeeRate(CAmount{0}), 144, false, 0, true, 96 + i);
             }
             return doppelgangers;
         });
@@ -1250,9 +1250,9 @@ BOOST_AUTO_TEST_CASE(check_max_selection_weight)
         /*change_output_size=*/34,
         /*change_spend_size=*/68,
         /*min_change_target=*/CENT,
-        /*effective_feerate=*/CFeeRate(0),
-        /*long_term_feerate=*/CFeeRate(0),
-        /*discard_feerate=*/CFeeRate(0),
+        /*effective_feerate=*/CFeeRate(CAmount{0}),
+        /*long_term_feerate=*/CFeeRate(CAmount{0}),
+        /*discard_feerate=*/CFeeRate(CAmount{0}),
         /*tx_noinputs_size=*/10 + 34, // static header size + output size
         /*avoid_partial=*/false,
     };
@@ -1270,10 +1270,10 @@ BOOST_AUTO_TEST_CASE(check_max_selection_weight)
             target, cs_params, cc, [&](CWallet& wallet) {
                 CoinsResult available_coins;
                 for (int j = 0; j < 1515; ++j) {
-                    add_coin(available_coins, wallet, 0.033 * BTC, CFeeRate(0), 144, false, 0, true);
+                    add_coin(available_coins, wallet, 0.033 * BTC, CFeeRate(CAmount{0}), 144, false, 0, true);
                 }
 
-                add_coin(available_coins, wallet, CAmount(50 * COIN), CFeeRate(0), 144, false, 0, true);
+                add_coin(available_coins, wallet, CAmount(50 * COIN), CFeeRate(CAmount{0}), 144, false, 0, true);
                 return available_coins;
             },
             m_node);
@@ -1296,10 +1296,10 @@ BOOST_AUTO_TEST_CASE(check_max_selection_weight)
             target, cs_params, cc, [&](CWallet& wallet) {
                 CoinsResult available_coins;
                 for (int j = 0; j < 400; ++j) {
-                    add_coin(available_coins, wallet, 0.0625 * BTC, CFeeRate(0), 144, false, 0, true);
+                    add_coin(available_coins, wallet, 0.0625 * BTC, CFeeRate(CAmount{0}), 144, false, 0, true);
                 }
                 for (int j = 0; j < 2000; ++j) {
-                    add_coin(available_coins, wallet, 0.025 * BTC, CFeeRate(0), 144, false, 0, true);
+                    add_coin(available_coins, wallet, 0.025 * BTC, CFeeRate(CAmount{0}), 144, false, 0, true);
                 }
                 return available_coins;
             },
@@ -1321,7 +1321,7 @@ BOOST_AUTO_TEST_CASE(check_max_selection_weight)
             target, cs_params, cc, [&](CWallet& wallet) {
                 CoinsResult available_coins;
                 for (int j = 0; j < 1515; ++j) {
-                    add_coin(available_coins, wallet, 0.033 * BTC, CFeeRate(0), 144, false, 0, true);
+                    add_coin(available_coins, wallet, 0.033 * BTC, CFeeRate(CAmount{0}), 144, false, 0, true);
                 }
                 return available_coins;
             },
@@ -1356,9 +1356,9 @@ BOOST_AUTO_TEST_CASE(SelectCoins_effective_value_test)
         /*change_output_size=*/34,
         /*change_spend_size=*/148,
         /*min_change_target=*/1000,
-        /*effective_feerate=*/CFeeRate(3000),
-        /*long_term_feerate=*/CFeeRate(1000),
-        /*discard_feerate=*/CFeeRate(1000),
+        /*effective_feerate=*/CFeeRate(CAmount{3000}),
+        /*long_term_feerate=*/CFeeRate(CAmount{1000}),
+        /*discard_feerate=*/CFeeRate(CAmount{1000}),
         /*tx_noinputs_size=*/0,
         /*avoid_partial=*/false,
     };
