@@ -196,6 +196,15 @@ class MempoolPersistTest(BitcoinTestFramework):
 
         self.test_importmempool_union()
         self.test_persist_unbroadcast()
+        self.test_importmempool_malformed()
+
+    def test_importmempool_malformed(self):
+        self.log.debug("Check that importmempool fails on a malformed mempool.dat.")
+        node0 = self.nodes[0]
+        mempooldat_malformed = os.path.join(self.options.tmpdir, "mempool_malformed.dat")
+        with open(node0.savemempool()["filename"], "rb") as src, open(mempooldat_malformed, "wb") as dst:
+            dst.write(src.read()[:-1])
+        assert_raises_rpc_error(-1, "Unable to import mempool file", node0.importmempool, mempooldat_malformed)
 
     def test_persist_unbroadcast(self):
         node0 = self.nodes[0]

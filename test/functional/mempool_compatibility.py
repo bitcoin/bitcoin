@@ -22,13 +22,14 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
+        self.extra_args = [["-persistmempoolv1=1"], []]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_previous_releases()
 
     def setup_network(self):
-        self.add_nodes(self.num_nodes, versions=[
-            200100,  # Last release without unbroadcast serialization and without XOR
+        self.add_nodes(self.num_nodes, extra_args=self.extra_args, versions=[
+            310000,  # Last release with -persistmempoolv1
             None,
         ])
         self.start_nodes()
@@ -37,7 +38,6 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
         self.log.info("Test that mempool.dat is compatible between versions")
 
         old_node, new_node = self.nodes
-        assert "unbroadcastcount" not in old_node.getmempoolinfo()
         new_wallet = MiniWallet(new_node, mode=MiniWalletMode.RAW_P2PK)
         self.generate(new_wallet, 1, sync_fun=self.no_op)
         self.generate(new_node, COINBASE_MATURITY, sync_fun=self.no_op)
@@ -60,7 +60,8 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
         old_node_mempool.rename(new_node_mempool)
 
         self.log.info("Start new node and verify mempool contains the tx")
-        self.start_node(1, extra_args=["-persistmempoolv1=1"])
+        # The old node wrote the legacy v1 format (-persistmempoolv1), so this covers reading it
+        self.start_node(1)
         assert old_tx_hash in new_node.getrawmempool()
 
         self.log.info("Add unbroadcasted tx to mempool on new node and shutdown")
@@ -73,7 +74,7 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
         new_node_mempool.rename(old_node_mempool)
 
         self.log.info("Start old node again and verify mempool contains both txs")
-        self.start_node(0, ['-nowallet'])
+        self.start_node(0)
         assert old_tx_hash in old_node.getrawmempool()
         assert unbroadcasted_tx_hash in old_node.getrawmempool()
 
