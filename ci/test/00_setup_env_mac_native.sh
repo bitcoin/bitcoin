@@ -7,7 +7,7 @@
 export LC_ALL=C.UTF-8
 
 export PIP_PACKAGES="--break-system-packages pycapnp pyzmq"
-export GOAL="install deploy"
+export BUILD_TARGETS="all install deploy"
 export RUN_MACOS_CODESIGN=true
 export CMAKE_GENERATOR="Ninja"
 export CI_OS_NAME="macos"

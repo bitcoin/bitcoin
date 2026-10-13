@@ -7,7 +7,7 @@
 export LC_ALL=C.UTF-8
 
 
-export GOAL="bitcoin_consensus bitcoin_crypto secp256k1"
+export BUILD_TARGETS="all bitcoin_consensus bitcoin_crypto secp256k1"
 export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:26.04"
 export HOST="riscv32-unknown-elf-gcc"
 export PACKAGES="autoconf automake autotools-dev curl python3 python3-pip libmpc-dev libmpfr-dev libgmp-dev gawk build-essential bison flex texinfo gperf libtool patchutils bc zlib1g-dev libexpat-dev ninja-build git cmake libglib2.0-dev libslirp-dev"

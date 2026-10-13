@@ -13,7 +13,7 @@ export NO_DEPENDS=1
 export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
 export RUN_FUZZ_TESTS=true
-export GOAL="all"
+export BUILD_TARGETS="all"
 export CI_CONTAINER_CAP="--cap-add SYS_PTRACE"  # If run with (ASan + LSan), the container needs access to ptrace (https://github.com/google/sanitizers/issues/764)
 printf -v BITCOIN_CONFIG "%q " \
  -DBUILD_FOR_FUZZING=ON \
