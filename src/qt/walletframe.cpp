@@ -123,14 +123,6 @@ void WalletFrame::removeWallet(WalletModel* wallet_model)
     delete walletView;
 }
 
-void WalletFrame::removeAllWallets()
-{
-    QMap<WalletModel*, WalletView*>::const_iterator i;
-    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
-        walletStack->removeWidget(i.value());
-    mapWalletViews.clear();
-}
-
 bool WalletFrame::handlePaymentRequest(const SendCoinsRecipient &recipient)
 {
     WalletView *walletView = currentWalletView();
