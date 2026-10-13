@@ -306,11 +306,6 @@ void BitcoinAmountField::SetMinValue(const CAmount& value)
     amount->SetMinValue(value);
 }
 
-void BitcoinAmountField::setReadOnly(bool fReadOnly)
-{
-    amount->setReadOnly(fReadOnly);
-}
-
 void BitcoinAmountField::unitChanged(int idx)
 {
     // Use description tooltip for current unit for the combobox

@@ -41,9 +41,6 @@ public:
     /** Set single step in satoshis **/
     void setSingleStep(const CAmount& step);
 
-    /** Make read-only **/
-    void setReadOnly(bool fReadOnly);
-
     /** Mark current value as invalid in UI. */
     void setValid(bool valid);
     /** Perform input validation, mark field as invalid if entered value is not valid. */
