@@ -38,9 +38,6 @@ public:
     /** Set the minimum value in satoshis **/
     void SetMinValue(const CAmount& value);
 
-    /** Set the maximum value in satoshis **/
-    void SetMaxValue(const CAmount& value);
-
     /** Set single step in satoshis **/
     void setSingleStep(const CAmount& step);
 
