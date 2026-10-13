@@ -18,7 +18,6 @@
 typedef std::vector<unsigned char> valtype;
 
 ScriptHash::ScriptHash(const CScript& in) : BaseHash(Hash160(in)) {}
-ScriptHash::ScriptHash(const CScriptID& in) : BaseHash{in} {}
 
 PKHash::PKHash(const CPubKey& pubkey) : BaseHash(pubkey.GetID()) {}
 PKHash::PKHash(const CKeyID& pubkey_id) : BaseHash(pubkey_id) {}
