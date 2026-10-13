@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_raises_rpc_error
 
 '''
 rpc_masternode.py
@@ -106,6 +106,25 @@ class RPCMasternodeTest(DashTestFramework):
         self.generate(self.nodes[0], 1, sync_fun=self.no_op)
         # we have 3 masternodes that are running already and 2 new outputs we just created
         assert_equal(len(self.nodes[0].masternode("outputs")), 5)
+
+        self.log.info("test that masternode list RPCs refuse a block that is not connected")
+        # Mine a block on an isolated node so node0 can learn its header without being able to download it
+        self.sync_all()
+        self.isolate_node(1)
+        block_hash = self.generate(self.nodes[1], 1, sync_fun=self.no_op)[0]
+        header_hex = self.nodes[1].getblockheader(block_hash, False)
+        block_hex = self.nodes[1].getblock(block_hash, 0)
+        node = self.nodes[0]
+        node.submitheader(header_hex)
+        assert_raises_rpc_error(-8, "Block is not in main chain", node.protx, "info", self.mninfo[0].proTxHash, block_hash)
+        assert_raises_rpc_error(-8, "Block is not in main chain", node.protx, "listdiff", 1, block_hash)
+        assert_raises_rpc_error(-8, "Block is not in main chain", node.masternode, "payments", block_hash)
+        # a list cached for the header alone would make the next block fail with bad-cbtx-mnmerkleroot
+        assert_equal(node.submitblock(block_hex), None)
+        tip = self.generate(node, 1, sync_fun=self.no_op)[0]
+        assert_equal(node.getbestblockhash(), tip)
+        self.reconnect_isolated_node(1, 0)
+        self.sync_blocks()
 
 if __name__ == '__main__':
     RPCMasternodeTest().main()
