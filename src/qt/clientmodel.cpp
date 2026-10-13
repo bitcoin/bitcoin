@@ -127,15 +127,6 @@ std::map<CNetAddr, LocalServiceInfo> ClientModel::getNetLocalAddresses() const
     return m_node.getNetLocalAddresses();
 }
 
-
-int ClientModel::getNumBlocks() const
-{
-    if (m_cached_num_blocks == -1) {
-        m_cached_num_blocks = m_node.getNumBlocks();
-    }
-    return m_cached_num_blocks;
-}
-
 uint256 ClientModel::getBestBlockHash()
 {
     uint256 tip{WITH_LOCK(m_cached_tip_mutex, return m_cached_tip_blocks)};
@@ -223,7 +214,6 @@ void ClientModel::TipChanged(SynchronizationState sync_state, interfaces::BlockT
         cachedBestHeaderHeight = tip.block_height;
         cachedBestHeaderTime = tip.block_time;
     } else if (synctype == SyncType::BLOCK_SYNC) {
-        m_cached_num_blocks = tip.block_height;
         WITH_LOCK(m_cached_tip_mutex, m_cached_tip_blocks = tip.block_hash;);
     }
 
