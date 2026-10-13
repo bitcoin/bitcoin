@@ -245,6 +245,8 @@ class P2PConnection(asyncio.Protocol):
         if self.p2p_connected_to_node and not self.supports_v2_p2p:
             self.send_version()
         self.on_open()
+        with p2p_lock:
+            p2p_lock.notify_all()
 
     def connection_lost(self, exc):
         """asyncio callback when a connection is closed."""
@@ -256,6 +258,8 @@ class P2PConnection(asyncio.Protocol):
         self._transport = None
         self.recvbuf = b""
         self.on_close()
+        with p2p_lock:
+            p2p_lock.notify_all()
 
     # v2 handshake method
     def _on_data_v2_handshake(self):
@@ -528,6 +532,7 @@ class P2PInterface(P2PConnection):
             except Exception:
                 print("ERROR delivering %s (%s)" % (repr(message), sys.exc_info()[0]))
                 raise
+            p2p_lock.notify_all()
 
     # Callback methods. Can be overridden by subclasses in individual test
     # cases to provide custom message handling behaviour.
@@ -735,7 +740,9 @@ class P2PInterface(P2PConnection):
 # P2PConnection acquires this lock whenever delivering a message to a P2PInterface.
 # This lock should be acquired in the thread running the test logic to synchronize
 # access to any data shared with the P2PInterface or P2PConnection.
-p2p_lock = threading.Lock()
+# It is a Condition so that waiters can be woken up as soon as a message is
+# delivered or the connection state changes, instead of polling.
+p2p_lock = threading.Condition(threading.Lock())
 
 
 class NetworkThread(threading.Thread):

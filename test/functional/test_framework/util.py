@@ -18,6 +18,7 @@ import platform
 import random
 import re
 import shlex
+import threading
 import time
 import types
 
@@ -440,6 +441,10 @@ def wait_until_helper_internal(predicate, *, timeout=60, lock=None, timeout_fact
             with lock:
                 if predicate():
                     return
+                if isinstance(lock, threading.Condition):
+                    # Wake up early when the lock owner signals a state change
+                    lock.wait(check_interval)
+                    continue
         else:
             if predicate():
                 return
