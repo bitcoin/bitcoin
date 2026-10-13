@@ -65,6 +65,10 @@ class RPCMasternodeTest(DashTestFramework):
         # using chaintip as a start block should return 2 blocks now, with the tip being the last one
         assert_equal(len(payments2_2), 2)
         assert_equal(payments[0], payments2_2[-1])
+        # the genesis block has no previous block to pay masternodes from
+        assert_equal(self.nodes[0].masternode("payments", self.nodes[0].getblockhash(0)), [])
+        payments_to_genesis = self.nodes[0].masternode("payments", self.nodes[0].getblockhash(1), -2)
+        assert_equal([p["height"] for p in payments_to_genesis], [1])
 
         self.log.info("test that `masternode payments` results at chaintip match `getblocktemplate` results for that block")
         gbt_masternode = self.nodes[0].getblocktemplate()["masternode"]
