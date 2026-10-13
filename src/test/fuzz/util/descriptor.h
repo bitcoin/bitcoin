@@ -35,7 +35,6 @@ public:
     bool IdIsUnCompPubKey(uint8_t idx) const { return idx % KEY_TYPES_COUNT == 1; }
     bool IdIsXOnlyPubKey(uint8_t idx) const { return idx % KEY_TYPES_COUNT == 2; }
     bool IdIsConstPrivKey(uint8_t idx) const { return idx % KEY_TYPES_COUNT == 3; }
-    bool IdIsXpub(uint8_t idx) const { return idx % KEY_TYPES_COUNT == 4; }
     bool IdIsXprv(uint8_t idx) const { return idx % KEY_TYPES_COUNT == 5; }
 
     //! When initializing the target, populate the list of keys.
