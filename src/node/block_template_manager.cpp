@@ -13,8 +13,10 @@
 #include <node/kernel_notifications.h>
 #include <node/miner.h>
 #include <node/mining_args.h>
+#include <node/mining_types.h>
 #include <primitives/block.h>
 #include <sync.h>
+#include <txmempool.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/signalinterrupt.h>
@@ -46,6 +48,36 @@ std::unique_ptr<CBlockTemplate> BlockTemplateManager::CreateNewTemplate(const Bl
         &m_mempool,
         MergeMiningOptions(options, m_block_create_args),
     }.CreateNewBlock();
+}
+
+unsigned int BlockTemplateManager::GetCachedTransactionsUpdated() const
+{
+    AssertLockHeld(::cs_main);
+    return m_cached_template.transactions_updated;
+}
+
+CachedBlockTemplate BlockTemplateManager::RefreshCachedTemplate()
+{
+    AssertLockHeld(::cs_main);
+    CachedBlockTemplate& cache{m_cached_template};
+    const uint256 tip{CHECK_NONFATAL(m_chainman.ActiveChain().Tip())->GetBlockHash()};
+    if (!cache.block_template || cache.block_template->block.hashPrevBlock != tip ||
+        (m_mempool.GetTransactionsUpdated() != cache.transactions_updated && Now<NodeSeconds>() - cache.time_start > 5s)) {
+        // Clear the template so future calls make a new block, despite any failures from here on
+        cache.block_template.reset();
+
+        // Sample the mempool counter before building, so that a change made
+        // while CreateNewTemplate runs is seen as a change on the next call
+        cache.transactions_updated = m_mempool.GetTransactionsUpdated();
+        cache.time_start = Now<NodeSeconds>();
+
+        // Create new block. Opt-out of cooldown mechanism, because it would add
+        // a delay to each getblocktemplate call. This differs from typical
+        // long-lived IPC usage, where the overhead is paid only when creating
+        // the initial template.
+        cache.block_template = CreateNewTemplate({});
+    }
+    return cache;
 }
 
 namespace {
