@@ -50,8 +50,10 @@ public:
     std::unique_ptr<CBlockTemplate> CreateNewTemplate(const BlockCreateOptions& options);
 
     /** Submit a block via ProcessNewBlock and capture validation state.
-     *  @return whether the block was accepted as a new valid block. */
-    bool SubmitBlock(const std::shared_ptr<const CBlock>& block, std::string& reason, std::string& debug);
+     *  @param precious prefer this block over same-work tips.
+     *  @return whether the block was accepted as a new valid block. Duplicate blocks
+     *  return false with reason="duplicate", even if precious changes the active tip. */
+    bool SubmitBlock(const std::shared_ptr<const CBlock>& block, bool precious, std::string& reason, std::string& debug);
 
     /** Locks cs_main.
      *  @return the active chain tip, or nullopt if none exists. */
