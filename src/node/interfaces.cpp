@@ -929,7 +929,7 @@ public:
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
     {
         auto new_template = block_template_manager().WaitAndCreateNewBlock(
-            m_block_template, options, m_create_options, m_interrupt_wait);
+            getBlockHeader().hashPrevBlock, getTotalFees(), options, m_create_options, m_interrupt_wait);
         if (new_template) return std::make_unique<BlockTemplateImpl>(m_create_options, std::move(new_template), m_node);
         return nullptr;
     }
