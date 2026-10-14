@@ -56,6 +56,7 @@
 #include <rpc/request.h>
 #include <rpc/server.h>
 #include <sync.h>
+#include <tinyformat.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <univalue.h>
@@ -80,6 +81,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -439,6 +441,19 @@ public:
     NodeContext* m_context{nullptr};
 };
 
+//! Return whether broadcast_method holds a valid TxBroadcast value. Values
+//! received over IPC are not checked by the compiler and could be out of range.
+bool IsValidBroadcastMethod(TxBroadcast broadcast_method)
+{
+    switch (broadcast_method) {
+    case TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL:
+    case TxBroadcast::MEMPOOL_NO_BROADCAST:
+    case TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST:
+        return true;
+    }
+    return false;
+}
+
 // NOLINTNEXTLINE(misc-no-recursion)
 bool FillBlock(const CBlockIndex* index, const FoundBlock& block, UniqueLock<RecursiveMutex>& lock, const CChain& active, const BlockManager& blockman) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
@@ -563,7 +578,9 @@ public:
     uint256 getBlockHash(int height) override
     {
         LOCK(::cs_main);
-        return Assert(chainman().ActiveChain()[height])->GetBlockHash();
+        const CBlockIndex* block{chainman().ActiveChain()[height]};
+        if (!block) throw std::out_of_range(strprintf("Block height %d is not in the active chain", height));
+        return block->GetBlockHash();
     }
     bool haveBlockOnDisk(int height) override
     {
@@ -684,6 +701,14 @@ public:
                               TxBroadcast broadcast_method,
                               std::string& err_string) override
     {
+        if (!tx) {
+            err_string = "Transaction is null";
+            return false;
+        }
+        if (!IsValidBroadcastMethod(broadcast_method)) {
+            err_string = strprintf("Invalid broadcast method %d", static_cast<int>(broadcast_method));
+            return false;
+        }
         const TransactionError err = BroadcastTransaction(m_node, tx, err_string, max_tx_fee, max_tx_fee_rate, broadcast_method, /*wait_callback=*/false);
         // Chain clients only care about failures to accept the tx to the mempool. Disregard non-mempool related failures.
         // Note: this will need to be updated if BroadcastTransactions() is updated to return other non-mempool failures
@@ -727,6 +752,7 @@ public:
     }
     util::Result<void> checkChainLimits(const CTransactionRef& tx) override
     {
+        if (!tx) return util::Error{Untranslated("Transaction is null")};
         if (!m_node.mempool) return {};
         if (!m_node.mempool->CheckPolicyLimits(tx)) {
             return util::Error{Untranslated("too many unconfirmed transactions in cluster")};

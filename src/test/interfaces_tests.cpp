@@ -5,10 +5,16 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
+#include <node/types.h>
+#include <policy/feerate.h>
+#include <primitives/transaction.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <script/solver.h>
 #include <validation.h>
+
+#include <stdexcept>
+#include <string>
 
 #include <boost/test/unit_test.hpp>
 
@@ -164,6 +170,27 @@ BOOST_FIXTURE_TEST_CASE(hasBlocks, TestChain100Setup)
     BOOST_CHECK(chain->hasBlocks(active.Tip()->GetBlockHash(), 6, 49));
     BOOST_CHECK(!chain->hasBlocks(active.Tip()->GetBlockHash(), 5, 49));
     BOOST_CHECK(!chain->hasBlocks(active.Tip()->GetBlockHash(), 6, 50));
+}
+
+BOOST_FIXTURE_TEST_CASE(invalidArguments, TestChain100Setup)
+{
+    // Chain methods can be called over IPC by clients that don't enforce C++
+    // preconditions, so they should return errors instead of crashing when
+    // passed invalid arguments.
+    auto& chain = m_node.chain;
+    const CBlockIndex* tip{WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return m_node.chainman->ActiveChain().Tip())};
+    BOOST_CHECK_EQUAL(chain->getBlockHash(tip->nHeight), tip->GetBlockHash());
+    BOOST_CHECK_THROW(chain->getBlockHash(tip->nHeight + 1), std::out_of_range);
+    BOOST_CHECK_THROW(chain->getBlockHash(-1), std::out_of_range);
+
+    BOOST_CHECK(!chain->checkChainLimits(nullptr));
+
+    std::string err;
+    BOOST_CHECK(!chain->broadcastTransaction(nullptr, /*max_tx_fee=*/0, CFeeRate{0}, node::TxBroadcast::MEMPOOL_NO_BROADCAST, err));
+    BOOST_CHECK_EQUAL(err, "Transaction is null");
+    const auto tx{MakeTransactionRef(CMutableTransaction{})};
+    BOOST_CHECK(!chain->broadcastTransaction(tx, /*max_tx_fee=*/0, CFeeRate{0}, static_cast<node::TxBroadcast>(255), err));
+    BOOST_CHECK_EQUAL(err, "Invalid broadcast method 255");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
