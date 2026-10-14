@@ -5,6 +5,7 @@
 #ifndef BITCOIN_NODE_BLOCK_TEMPLATE_MANAGER_H
 #define BITCOIN_NODE_BLOCK_TEMPLATE_MANAGER_H
 
+#include <consensus/amount.h>
 #include <node/mining_types.h>
 #include <util/time.h>
 
@@ -93,10 +94,22 @@ public:
     /** Interrupt a blocking wait. */
     void InterruptWait(bool& interrupt_wait);
 
-    /** Return a new block template when fees rise to a certain threshold or
-     *  after a new tip; return nullptr if timeout is reached. */
+    /**
+     * Return a new block template when the tip changes or fees rise sufficiently.
+     * Also refreshes the template when minimum-difficulty rules apply
+     * (on testnet3, testnet4, and regtest).
+     *
+     * @param[in] hash_prev_block Parent block hash of the previous template.
+     * @param[in] current_fees Total transaction fees in the previous template, in satoshis.
+     * @param[in] wait_options Timeout and minimum fee increase relative to current_fees.
+     * @param[in] create_options Options used to create the next block template.
+     * @param[in,out] interrupt_wait Flag set by InterruptWait(); reset to false when observed.
+     *
+     * @return A new block template, or nullptr on timeout, interruption, or shutdown.
+     */
     std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(
-        const std::unique_ptr<CBlockTemplate>& block_template,
+        const uint256& hash_prev_block,
+        CAmount current_fees,
         const BlockWaitOptions& wait_options,
         const BlockCreateOptions& create_options,
         bool& interrupt_wait);
