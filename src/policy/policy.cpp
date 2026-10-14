@@ -401,8 +401,3 @@ int64_t GetVirtualTransactionSize(const CTransaction& tx, int64_t nSigOpCost, un
 {
     return GetVirtualTransactionSize(GetTransactionWeight(tx), nSigOpCost, bytes_per_sigop);
 }
-
-int64_t GetVirtualTransactionInputSize(const CTxIn& txin, int64_t nSigOpCost, unsigned int bytes_per_sigop)
-{
-    return GetVirtualTransactionSize(GetTransactionInputWeight(txin), nSigOpCost, bytes_per_sigop);
-}
