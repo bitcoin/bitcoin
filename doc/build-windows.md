@@ -7,7 +7,7 @@ The options known to work for building Bitcoin Core on Windows are:
 
 * On Linux, using the [Mingw-w64](https://www.mingw-w64.org/) cross compiler tool chain.
 * On Windows, using [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/en-us/windows/wsl/about) and Mingw-w64.
-* On Windows, using [Microsoft Visual Studio](https://visualstudio.microsoft.com). See [`build-windows-msvc.md`](./build-windows-msvc.md).
+* On Windows, using [Microsoft Visual Studio](https://visualstudio.microsoft.com). See [`build-windows-native.md`](./build-windows-native.md).
 
 Other options may work, but are not officially tested:
 
