@@ -470,7 +470,11 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
         } else {
             RecentRejectsFilter().insert(ptx->GetWitnessHash().ToUint256());
         }
-        m_txrequest.ForgetTxHash(ptx->GetWitnessHash().ToUint256());
+        // For a non-witness reconsiderable tx, wtxid == txid: forgetting it would also drop
+        // orphan-resolution (txid) requests to the child's announcers.
+        if (state.GetResult() != TxValidationResult::TX_RECONSIDERABLE || ptx->HasWitness()) {
+            m_txrequest.ForgetTxHash(ptx->GetWitnessHash().ToUint256());
+        }
         // If the transaction failed for TX_INPUTS_NOT_STANDARD,
         // then we know that the witness was irrelevant to the policy
         // failure, since this check depends only on the txid
