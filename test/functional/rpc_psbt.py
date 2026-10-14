@@ -44,6 +44,7 @@ from test_framework.psbt import (
     PSBT_IN_TAP_BIP32_DERIVATION,
     PSBT_IN_TAP_INTERNAL_KEY,
     PSBT_IN_TAP_LEAF_SCRIPT,
+    PSBT_IN_TAP_SCRIPT_SIG,
     PSBT_IN_WITNESS_UTXO,
     PSBT_IN_FINAL_SCRIPTWITNESS,
     PSBT_OUT_MUSIG2_PARTICIPANT_PUBKEYS,
@@ -1474,6 +1475,31 @@ class PSBTTest(BitcoinTestFramework):
         conflict_second_obj.g.map[xpub_key1] = b"\x11\x11\x11\x11"
         joined_conflict = self.nodes[0].joinpsbts([conflict_first_obj.to_base64(), conflict_second_obj.to_base64()])
         assert_equal(self.nodes[0].decodepsbt(joined_conflict)["global_xpubs"], [{"xpub": xpub1, "master_fingerprint": "00000000", "path": "m"}])
+
+        # Joining changes the transaction, so Taproot signatures must be dropped like ECDSA ones
+        tr_addr1 = self.nodes[1].getnewaddress("", "bech32m")
+        tr_addr2 = self.nodes[1].getnewaddress("", "bech32m")
+        tr_utxo1, tr_utxo2 = self.create_outpoints(self.nodes[0], outputs=[{tr_addr1: 1}, {tr_addr2: 1}])
+        self.generate(self.nodes[0], 1)
+        tr_psbt1 = self.nodes[1].createpsbt([tr_utxo1], {self.nodes[0].getnewaddress(): Decimal('0.999')}, psbt_version=0)
+        tr_psbt1 = self.nodes[1].walletprocesspsbt(psbt=tr_psbt1, finalize=False)['psbt']
+        tr_psbt1_obj = PSBT.from_base64(tr_psbt1)
+        _, part_pubkey = generate_keypair()
+        _, agg_pubkey = generate_keypair()
+        leaf_hash = randbytes(32)
+        tr_psbt1_obj.i[0].map[bytes([PSBT_IN_TAP_SCRIPT_SIG]) + part_pubkey[1:] + leaf_hash] = randbytes(64)
+        tr_psbt1_obj.i[0].map[bytes([PSBT_IN_MUSIG2_PUB_NONCE]) + part_pubkey + agg_pubkey + leaf_hash] = randbytes(66)
+        tr_psbt1_obj.i[0].map[bytes([PSBT_IN_MUSIG2_PARTIAL_SIG]) + part_pubkey + agg_pubkey + leaf_hash] = randbytes(32)
+        tr_psbt1 = tr_psbt1_obj.to_base64()
+        tr_sig_fields = ["taproot_key_path_sig", "taproot_script_path_sigs", "musig2_pubnonces", "musig2_partial_sigs"]
+        for field in tr_sig_fields:
+            assert field in self.nodes[0].decodepsbt(tr_psbt1)['inputs'][0]
+        tr_psbt2 = self.nodes[1].createpsbt([tr_utxo2], {self.nodes[0].getnewaddress(): Decimal('0.999')}, psbt_version=0)
+        tr_joined = self.nodes[0].joinpsbts([tr_psbt1, tr_psbt2])
+        for tr_input in self.nodes[0].decodepsbt(tr_joined)['inputs']:
+            for field in tr_sig_fields:
+                assert field not in tr_input
+        assert self.nodes[1].walletprocesspsbt(tr_joined)['complete']
 
         # Newly created PSBT needs UTXOs and updating
         addr = self.nodes[1].getnewaddress("", "p2sh-segwit")
