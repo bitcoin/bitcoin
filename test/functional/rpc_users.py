@@ -25,7 +25,7 @@ def call_with_auth(node, user, password, method="getbestblockhash"):
     url = urllib.parse.urlparse(node.url)
     headers = {"Authorization": "Basic " + str_to_b64str('{}:{}'.format(user, password))}
 
-    conn = http.client.HTTPConnection(url.hostname, url.port)
+    conn = http.client.HTTPConnection(url.hostname, url.port, timeout=node.rpc_timeout)
     conn.connect()
     conn.request('POST', '/', f'{{"method": "{method}"}}', headers)
     resp = conn.getresponse()

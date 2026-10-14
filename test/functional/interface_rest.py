@@ -51,7 +51,8 @@ def filter_output_indices_by_value(vouts, value):
         if vout['value'] == value:
             yield vout['n']
 
-class RESTTest (BitcoinTestFramework):
+
+class RESTTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [["-rest", "-blockfilterindex=1", "-txindex"], []]
@@ -77,7 +78,7 @@ class RESTTest (BitcoinTestFramework):
             else:
                 rest_uri += f'?{urllib.parse.urlencode(query_params)}'
 
-        conn = http.client.HTTPConnection(self.url.hostname, self.url.port)
+        conn = http.client.HTTPConnection(self.url.hostname, self.url.port, timeout=self.rpc_timeout)
         self.log.debug(f'{http_method} {rest_uri} {body}')
         if http_method == 'GET':
             conn.request('GET', rest_uri)
