@@ -884,49 +884,63 @@ public:
         assert(m_block_template);
     }
 
-    CBlockHeader getBlockHeader() override
+    CBlockHeader getBlockHeader() override EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         return m_block_template->block;
     }
 
-    CBlock getBlock() override
+    CBlock getBlock() override EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         return m_block_template->block;
     }
 
-    std::vector<CAmount> getTxFees() override
+    std::vector<CAmount> getTxFees() override EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         return m_block_template->vTxFees;
     }
 
-    CAmount getTotalFees() override
+    CAmount getTotalFees() override EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         return m_block_template->m_total_fees;
     }
 
-    std::vector<int64_t> getTxSigops() override
+    std::vector<int64_t> getTxSigops() override EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         return m_block_template->vTxSigOpsCost;
     }
 
-    CoinbaseTx getCoinbaseTx() override
+    CoinbaseTx getCoinbaseTx() override EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         return m_block_template->m_coinbase_tx;
     }
 
-    std::vector<uint256> getCoinbaseMerklePath() override
+    std::vector<uint256> getCoinbaseMerklePath() override EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
+        LOCK(m_mutex);
         return TransactionMerklePath(m_block_template->block, 0);
     }
 
-    bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase, std::string& reason, std::string& debug) override
+    bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase, std::string& reason, std::string& debug) override EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         if (!coinbase) return false;
-        AddMerkleRootAndCoinbase(m_block_template->block, std::move(coinbase), version, timestamp, nonce);
-        return block_template_manager().SubmitBlock(std::make_shared<const CBlock>(m_block_template->block), reason, debug);
+        std::shared_ptr<const CBlock> block;
+        {
+            LOCK(m_mutex);
+            AddMerkleRootAndCoinbase(m_block_template->block, std::move(coinbase), version, timestamp, nonce);
+            // Copy so later submissions cannot modify the block being validated.
+            block = std::make_shared<const CBlock>(m_block_template->block);
+        }
+        // Release the template mutex before validation acquires other locks or invokes callbacks.
+        return block_template_manager().SubmitBlock(block, reason, debug);
     }
 
-    std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
+    std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         auto new_template = block_template_manager().WaitAndCreateNewBlock(
             getBlockHeader().hashPrevBlock, getTotalFees(), options, m_create_options, m_interrupt_wait);
@@ -939,9 +953,10 @@ public:
         block_template_manager().InterruptWait(m_interrupt_wait);
     }
 
+private:
+    Mutex m_mutex;
     const BlockCreateOptions m_create_options;
-
-    const std::unique_ptr<CBlockTemplate> m_block_template;
+    const std::unique_ptr<CBlockTemplate> m_block_template GUARDED_BY(m_mutex);
 
     bool m_interrupt_wait{false};
     node::BlockTemplateManager& block_template_manager() { return *Assert(m_node.block_template_manager); }
