@@ -10,6 +10,7 @@
 #include <consensus/validation.h>
 #include <interfaces/types.h>
 #include <kernel/chainparams.h>
+#include <node/block_validation_state_catcher.h>
 #include <node/kernel_notifications.h>
 #include <node/miner.h>
 #include <node/mining_args.h>
@@ -48,29 +49,6 @@ std::unique_ptr<CBlockTemplate> BlockTemplateManager::CreateNewTemplate(const Bl
     }.CreateNewBlock();
 }
 
-namespace {
-class SubmitBlockStateCatcher final : public CValidationInterface
-{
-public:
-    uint256 m_hash;
-    bool m_found{false};
-    BlockValidationState m_state;
-
-    explicit SubmitBlockStateCatcher(const uint256& hash) : m_hash{hash} {}
-
-protected:
-    void BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& state) override
-    {
-        if (block->GetHash() != m_hash) return;
-        // ProcessNewBlock emits BlockChecked synchronously while holding cs_main,
-        // so SubmitBlock can read these fields after ProcessNewBlock returns
-        // without extra synchronization.
-        m_found = true;
-        m_state = state;
-    }
-};
-} // namespace
-
 bool BlockTemplateManager::SubmitBlock(const std::shared_ptr<const CBlock>& block, std::string& reason, std::string& debug)
 {
     reason.clear();
@@ -82,7 +60,7 @@ bool BlockTemplateManager::SubmitBlock(const std::shared_ptr<const CBlock>& bloc
     // UpdateUncommittedBlockStructures() for legacy witness handling. IPC
     // callers submit already-formed blocks and need bool + reason/debug
     // results.
-    auto sc = std::make_shared<SubmitBlockStateCatcher>(block->GetHash());
+    auto sc = std::make_shared<BlockValidationStateCatcher>(block->GetHash());
     CHECK_NONFATAL(m_chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
     bool new_block;
     bool accepted = m_chainman.ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
@@ -92,19 +70,19 @@ bool BlockTemplateManager::SubmitBlock(const std::shared_ptr<const CBlock>& bloc
 
     if (!new_block && accepted) {
         reason = "duplicate";
-    } else if (!accepted && (!sc->m_found || sc->m_state.IsValid())) {
+    } else if (!accepted && (!sc->m_state || sc->m_state->IsValid())) {
         // ProcessNewBlock can fail without a validation result, for example
         // from an activation or system error. It can also fail after a valid
         // BlockChecked result. In these cases the validation result is
         // inconclusive.
         reason = "inconclusive";
-    } else if (!sc->m_found) {
+    } else if (!sc->m_state) {
         // The block was accepted but not connected, for example if it does not
         // have more work than the current tip.
         reason = "inconclusive";
-    } else if (!sc->m_state.IsValid()) {
-        reason = sc->m_state.GetRejectReason();
-        debug = sc->m_state.GetDebugMessage();
+    } else if (!sc->m_state->IsValid()) {
+        reason = sc->m_state->GetRejectReason();
+        debug = sc->m_state->GetDebugMessage();
     }
     const bool result{accepted && new_block && reason.empty()};
     CHECK_NONFATAL(result == reason.empty());
