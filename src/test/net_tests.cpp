@@ -1634,6 +1634,34 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
     }
 }
 
+BOOST_AUTO_TEST_CASE(version_message_min_peer_proto_version)
+{
+    LOCK(NetEventsInterface::g_msgproc_mutex);
+    auto& connman{static_cast<ConnmanTestMsg&>(*m_node.connman)};
+
+    // Peers below MIN_PEER_PROTO_VERSION are disconnected, peers at it are not.
+    for (const bool too_old : {true, false}) {
+        CNode node{/*id=*/0,
+                   /*sock=*/nullptr,
+                   /*addrIn=*/CAddress{},
+                   /*nKeyedNetGroupIn=*/0,
+                   /*nLocalHostNonceIn=*/0,
+                   /*addrBindIn=*/CService{},
+                   /*addrNameIn=*/"",
+                   /*conn_type_in=*/ConnectionType::INBOUND,
+                   /*inbound_onion=*/false,
+                   /*network_key=*/0};
+        connman.Handshake(node,
+                          /*successfully_connected=*/false,
+                          /*remote_services=*/NODE_NETWORK,
+                          /*local_services=*/NODE_NONE,
+                          /*version=*/MIN_PEER_PROTO_VERSION - (too_old ? 1 : 0),
+                          /*relay_txs=*/true);
+        BOOST_CHECK_EQUAL(node.fDisconnect.load(), too_old);
+        m_node.peerman->FinalizeNode(node);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(private_broadcast_version_does_not_update_addrman_services)
 {
     LOCK(NetEventsInterface::g_msgproc_mutex);
