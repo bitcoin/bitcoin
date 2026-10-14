@@ -5,6 +5,8 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
+#include <interfaces/handler.h>
+#include <ipc/exception.h>
 #include <node/types.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
@@ -12,7 +14,9 @@
 #include <test/util/setup_common.h>
 #include <script/solver.h>
 #include <validation.h>
+#include <validationinterface.h>
 
+#include <memory>
 #include <stdexcept>
 #include <string>
 
@@ -191,6 +195,39 @@ BOOST_FIXTURE_TEST_CASE(invalidArguments, TestChain100Setup)
     const auto tx{MakeTransactionRef(CMutableTransaction{})};
     BOOST_CHECK(!chain->broadcastTransaction(tx, /*max_tx_fee=*/0, CFeeRate{0}, static_cast<node::TxBroadcast>(255), err));
     BOOST_CHECK_EQUAL(err, "Invalid broadcast method 255");
+}
+
+BOOST_FIXTURE_TEST_CASE(throwingNotifications, TestChain100Setup)
+{
+    // A notification handler that throws ipc::Exception, like an IPC client
+    // returning an error or disconnecting, should not crash the node or stop
+    // later notifications. Not covered: other exceptions thrown by in-process
+    // handlers are intentionally not caught, but checking that would require
+    // calling the notification proxy without the scheduler thread, since an
+    // exception escaping that thread terminates the test.
+    struct ThrowingNotifications : interfaces::Chain::Notifications {
+        int m_blocks{0};
+        int m_tips{0};
+        void blockConnected(const kernel::ChainstateRole&, const interfaces::BlockInfo&) override
+        {
+            ++m_blocks;
+            throw ipc::Exception("blockConnected error");
+        }
+        void updatedBlockTip() override
+        {
+            ++m_tips;
+            throw ipc::Exception("updatedBlockTip error");
+        }
+    };
+    auto notifications{std::make_shared<ThrowingNotifications>()};
+    auto handler{m_node.chain->handleNotifications(notifications)};
+    for (int i = 0; i < 2; ++i) {
+        CreateAndProcessBlock({}, CScript() << OP_TRUE);
+        m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    }
+    BOOST_CHECK_EQUAL(notifications->m_blocks, 2);
+    BOOST_CHECK_EQUAL(notifications->m_tips, 2);
+    handler->disconnect();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
