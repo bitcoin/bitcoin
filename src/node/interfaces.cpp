@@ -24,6 +24,7 @@
 #include <interfaces/node.h>
 #include <interfaces/rpc.h>
 #include <interfaces/types.h>
+#include <ipc/exception.h>
 #include <kernel/context.h>
 #include <key.h>
 #include <logging.h>
@@ -482,27 +483,45 @@ public:
     virtual ~NotificationsProxy() = default;
     void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t mempool_sequence) override
     {
-        m_notifications->transactionAddedToMempool(tx.info.m_tx);
+        Notify("transactionAddedToMempool", [&] { m_notifications->transactionAddedToMempool(tx.info.m_tx); });
     }
     void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) override
     {
-        m_notifications->transactionRemovedFromMempool(tx, reason);
+        Notify("transactionRemovedFromMempool", [&] { m_notifications->transactionRemovedFromMempool(tx, reason); });
     }
     void BlockConnected(const ChainstateRole& role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {
-        m_notifications->blockConnected(role, kernel::MakeBlockInfo(index, block.get()));
+        Notify("blockConnected", [&] { m_notifications->blockConnected(role, kernel::MakeBlockInfo(index, block.get())); });
     }
     void BlockDisconnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {
-        m_notifications->blockDisconnected(kernel::MakeBlockInfo(index, block.get()));
+        Notify("blockDisconnected", [&] { m_notifications->blockDisconnected(kernel::MakeBlockInfo(index, block.get())); });
     }
     void UpdatedBlockTip(const CBlockIndex* index, const CBlockIndex* fork_index, bool is_ibd) override
     {
-        m_notifications->updatedBlockTip();
+        Notify("updatedBlockTip", [&] { m_notifications->updatedBlockTip(); });
     }
     void ChainStateFlushed(const ChainstateRole& role, const CBlockLocator& locator) override
     {
-        m_notifications->chainStateFlushed(role, locator);
+        Notify("chainStateFlushed", [&] { m_notifications->chainStateFlushed(role, locator); });
+    }
+    //! Call a chain notification method on the subscriber.
+    //!
+    //! For IPC subscribers: if the call fails because the subscriber returned
+    //! an error or disconnected, log a warning. In-process subscribers are not
+    //! expected to fail.
+    template <typename Fn>
+    void Notify(const char* name, Fn&& fn)
+    {
+        try {
+            fn();
+        } catch (const ipc::Exception& e) {
+            // An exception escaping the validation interface scheduler thread
+            // would crash the node. Other exceptions are not caught: an
+            // in-process handler like the wallet throwing indicates a bug, and
+            // continuing could leave it with missing or inconsistent state.
+            LogWarning("IPC client failed to handle %s notification: %s", name, e.what());
+        }
     }
     std::shared_ptr<Chain::Notifications> m_notifications;
 };

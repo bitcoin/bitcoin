@@ -5,6 +5,8 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
+#include <interfaces/handler.h>
+#include <ipc/exception.h>
 #include <node/types.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
@@ -12,7 +14,10 @@
 #include <test/util/setup_common.h>
 #include <script/solver.h>
 #include <validation.h>
+#include <validationinterface.h>
 
+#include <map>
+#include <memory>
 #include <stdexcept>
 #include <string>
 
@@ -193,6 +198,62 @@ BOOST_FIXTURE_TEST_CASE(invalidArguments, TestChain100Setup)
     const auto tx{MakeTransactionRef(CMutableTransaction{})};
     BOOST_CHECK(!chain->broadcastTransaction(tx, /*max_tx_fee=*/0, CFeeRate{0}, static_cast<node::TxBroadcast>(255), err));
     BOOST_CHECK_EQUAL(err, "Invalid broadcast method 255");
+}
+
+BOOST_FIXTURE_TEST_CASE(throwingNotifications, TestChain100Setup)
+{
+    // A notification handler that throws ipc::Exception, like an IPC client
+    // returning an error or disconnecting, should not crash the node or stop
+    // later notifications. Not covered: other exceptions thrown by in-process
+    // handlers are intentionally not caught, but checking that would require
+    // calling the notification proxy without the scheduler thread, since an
+    // exception escaping that thread terminates the test.
+    struct ThrowingNotifications : interfaces::Chain::Notifications {
+        std::map<std::string, int> m_calls;
+        void Throw(const std::string& name)
+        {
+            ++m_calls[name];
+            throw ipc::Exception(name + " error");
+        }
+        void transactionAddedToMempool(const CTransactionRef&) override { Throw("transactionAddedToMempool"); }
+        void transactionRemovedFromMempool(const CTransactionRef&, MemPoolRemovalReason) override { Throw("transactionRemovedFromMempool"); }
+        void blockConnected(const kernel::ChainstateRole&, const interfaces::BlockInfo&) override { Throw("blockConnected"); }
+        void blockDisconnected(const interfaces::BlockInfo&) override { Throw("blockDisconnected"); }
+        void updatedBlockTip() override { Throw("updatedBlockTip"); }
+        void chainStateFlushed(const kernel::ChainstateRole&, const CBlockLocator&) override { Throw("chainStateFlushed"); }
+    };
+    auto notifications{std::make_shared<ThrowingNotifications>()};
+    auto handler{m_node.chain->handleNotifications(notifications)};
+    auto& signals{*Assert(m_node.validation_signals)};
+    auto& chainman{*Assert(m_node.chainman)};
+    const CScript script{CScript() << OP_TRUE};
+    const CScript& dest{m_coinbase_txns[0]->vout[0].scriptPubKey};
+
+    // Add a transaction to the mempool, then connect a block with a
+    // conflicting transaction, which removes it from the mempool.
+    CreateValidMempoolTransaction(m_coinbase_txns[0], /*input_vout=*/0, /*input_height=*/1, coinbaseKey, dest, /*output_amount=*/1 * COIN, /*submit=*/true);
+    signals.SyncWithValidationInterfaceQueue();
+    const auto conflict{CreateValidMempoolTransaction(m_coinbase_txns[0], /*input_vout=*/0, /*input_height=*/1, coinbaseKey, dest, /*output_amount=*/2 * COIN, /*submit=*/false)};
+    CreateAndProcessBlock({conflict}, script);
+
+    // Disconnect that block, then flush the chainstate.
+    BlockValidationState state;
+    CBlockIndex* tip{WITH_LOCK(chainman.GetMutex(), return chainman.ActiveChain().Tip())};
+    BOOST_CHECK(chainman.ActiveChainstate().InvalidateBlock(state, tip));
+    chainman.ActiveChainstate().ForceFlushStateToDisk();
+    signals.SyncWithValidationInterfaceQueue();
+
+    for (const char* name : {"transactionAddedToMempool", "transactionRemovedFromMempool", "blockConnected",
+                             "blockDisconnected", "updatedBlockTip", "chainStateFlushed"}) {
+        BOOST_CHECK_MESSAGE(notifications->m_calls[name] > 0, name << " was not called");
+    }
+
+    // Notifications are still sent after the earlier ones failed.
+    const auto calls{notifications->m_calls};
+    CreateAndProcessBlock({}, script);
+    BOOST_CHECK_EQUAL(notifications->m_calls["blockConnected"], calls.at("blockConnected") + 1);
+    BOOST_CHECK_EQUAL(notifications->m_calls["updatedBlockTip"], calls.at("updatedBlockTip") + 1);
+    handler->disconnect();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
