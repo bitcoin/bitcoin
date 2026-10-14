@@ -264,6 +264,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 assert_greater_than_or_equal(len(block.vtx), 1)
                 txfees = await template.getTxFees(ctx)
                 assert_equal(len(txfees.result), 0)
+                assert_equal((await template.getTotalFees(ctx)).result, 0)
                 txsigops = await template.getTxSigops(ctx)
                 assert_equal(len(txsigops.result), 0)
 
@@ -289,6 +290,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 assert template4 is not None
                 block3 = await mining_get_block(template4, ctx)
                 assert_equal(len(block3.vtx), 2)
+                assert_equal((await template4.getTotalFees(ctx)).result, sum((await template4.getTxFees(ctx)).result))
 
                 self.log.debug("Wait again, this should return the same template, since the fee threshold is zero")
                 waitoptions.feeThreshold = 0
@@ -305,6 +307,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 assert template6 is not None
                 block4 = await mining_get_block(template6, ctx)
                 assert_equal(len(block4.vtx), 3)
+                assert_equal((await template6.getTotalFees(ctx)).result, sum((await template6.getTxFees(ctx)).result))
 
                 self.log.debug("Wait for another, but time out, since the fee threshold is set now")
                 template7 = await mining_wait_next_template(template6, stack, ctx, waitoptions)

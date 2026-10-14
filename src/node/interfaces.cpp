@@ -899,6 +899,11 @@ public:
         return m_block_template->vTxFees;
     }
 
+    CAmount getTotalFees() override
+    {
+        return m_block_template->m_total_fees;
+    }
+
     std::vector<int64_t> getTxSigops() override
     {
         return m_block_template->vTxSigOpsCost;
