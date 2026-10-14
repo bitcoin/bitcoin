@@ -478,7 +478,8 @@ class TestBitcoinCli(BitcoinTestFramework):
         self.stop_node(0)  # stop the node so we time out
         start_time = time.time()
         assert_raises_process_error(1, "Could not connect to the server", self.nodes[0].cli('-rpcwait', '-rpcwaittimeout=5').echo)
-        assert_greater_than_or_equal(time.time(), start_time + 5)
+        # Allow small scheduling slack. rpcwaittimeout is best effort wall clock.
+        assert_greater_than_or_equal(time.time() + 0.5, start_time + 5)
 
         self.log.info("Test that only one of -addrinfo, -generate, -getinfo, -netinfo may be specified at a time")
         assert_raises_process_error(1, "Only one of -getinfo, -netinfo may be specified", self.nodes[0].cli('-getinfo', '-netinfo').send_cli)
