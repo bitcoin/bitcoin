@@ -39,6 +39,9 @@ public:
 
     // Fees per transaction, not including coinbase transaction.
     virtual std::vector<CAmount> getTxFees() = 0;
+
+    //! Total transaction fees in satoshis.
+    virtual CAmount getTotalFees() = 0;
     // Sigop cost per transaction, not including coinbase transaction.
     virtual std::vector<int64_t> getTxSigops() = 0;
 
