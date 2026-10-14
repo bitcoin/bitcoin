@@ -492,6 +492,8 @@ struct CNodeState {
         std::chrono::seconds m_timeout{0s};
         //! A header with the work we require on our peer's chain
         const CBlockIndex* m_work_header{nullptr};
+        //! The headers presync work the peer had shown when the timeout was last set
+        arith_uint256 m_presync_work{0};
         //! After timeout is reached, set to true after sending getheaders
         bool m_sent_getheaders{false};
         //! Whether this peer is protected from disconnection due to a bad/slow chain
@@ -5514,16 +5516,17 @@ void PeerManagerImpl::ConsiderEviction(CNode& pto, Peer& peer, std::chrono::seco
         // their chain has more work than ours, we should sync to it,
         // unless it's invalid, in which case we should find that out and
         // disconnect from them elsewhere).
-        const arith_uint256& tip_work{m_chainman.ActiveChain().Tip()->nChainWork};
         // While in headers presync the peer's headers are not stored, so
-        // pindexBestKnownBlock doesn't move. Use the work they have shown so far.
-        const bool presync_has_tip_work{WITH_LOCK(peer.m_headers_sync_mutex,
-            return peer.m_headers_sync && peer.m_headers_sync->GetPresyncWork() >= tip_work)};
-        if ((state.pindexBestKnownBlock != nullptr && state.pindexBestKnownBlock->nChainWork >= tip_work) || presync_has_tip_work) {
+        // pindexBestKnownBlock doesn't move. The work shown during presync is
+        // tracked separately to tell a slow peer from a stalled one.
+        const arith_uint256 presync_work{WITH_LOCK(peer.m_headers_sync_mutex,
+            return peer.m_headers_sync ? peer.m_headers_sync->GetPresyncWork() : arith_uint256{})};
+        if (state.pindexBestKnownBlock != nullptr && state.pindexBestKnownBlock->nChainWork >= m_chainman.ActiveChain().Tip()->nChainWork) {
             // The outbound peer has sent us a block with at least as much work as our current tip, so reset the timeout if it was set
             if (state.m_chain_sync.m_timeout != 0s) {
                 state.m_chain_sync.m_timeout = 0s;
                 state.m_chain_sync.m_work_header = nullptr;
+                state.m_chain_sync.m_presync_work = 0;
                 state.m_chain_sync.m_sent_getheaders = false;
             }
         } else if (state.m_chain_sync.m_timeout == 0s || (state.m_chain_sync.m_work_header != nullptr && state.pindexBestKnownBlock != nullptr && state.pindexBestKnownBlock->nChainWork >= state.m_chain_sync.m_work_header->nChainWork)) {
@@ -5535,6 +5538,13 @@ void PeerManagerImpl::ConsiderEviction(CNode& pto, Peer& peer, std::chrono::seco
             // Either way, set a new timeout based on our current tip.
             state.m_chain_sync.m_timeout = time_in_seconds + CHAIN_SYNC_TIMEOUT;
             state.m_chain_sync.m_work_header = m_chainman.ActiveChain().Tip();
+            state.m_chain_sync.m_presync_work = presync_work;
+            state.m_chain_sync.m_sent_getheaders = false;
+        } else if (state.m_chain_sync.m_timeout > 0s && time_in_seconds > state.m_chain_sync.m_timeout && presync_work > state.m_chain_sync.m_presync_work) {
+            // The peer is not stalled: its headers presync has made progress since the
+            // timeout was set. Give it another full period instead of disconnecting.
+            state.m_chain_sync.m_timeout = time_in_seconds + CHAIN_SYNC_TIMEOUT;
+            state.m_chain_sync.m_presync_work = presync_work;
             state.m_chain_sync.m_sent_getheaders = false;
         } else if (state.m_chain_sync.m_timeout > 0s && time_in_seconds > state.m_chain_sync.m_timeout) {
             // No evidence yet that our peer has synced to a chain with work equal to that

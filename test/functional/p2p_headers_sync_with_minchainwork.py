@@ -71,19 +71,11 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         for n in self.nodes:
             n.setmocktime(time)
 
-    def test_presync_peer_not_evicted(self):
-        self.log.info("Test that an outbound peer serving presync headers isn't evicted by the chain sync timeout")
-        self.disconnect_all()
-        # Each regtest header adds 2 work, so this needs 65536 headers. Serving
-        # one full headers message per minute for 25 minutes is longer than
-        # CHAIN_SYNC_TIMEOUT + HEADERS_RESPONSE_TIME, but doesn't finish presync.
-        num_msgs = 25
-        self.restart_node(1, extra_args=["-minimumchainwork=0x20000", "-checkblockindex=0"])
-        node = self.nodes[1]
+    def make_headers(self, node, count):
         genesis = node.getblockheader(node.getblockhash(0))
         headers = []
         prev_hash = int(genesis["hash"], 16)
-        for i in range(MAX_HEADERS_RESULTS * num_msgs):
+        for i in range(count):
             header = CBlockHeader()
             header.nVersion = 4
             header.hashPrevBlock = prev_hash
@@ -93,6 +85,18 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
                 header.nNonce += 1
             prev_hash = header.hash_int
             headers.append(header)
+        return headers
+
+    def test_presync_peer_not_evicted(self):
+        self.log.info("Test that an outbound peer serving presync headers isn't evicted by the chain sync timeout")
+        self.disconnect_all()
+        # Each regtest header adds 2 work, so this needs 65536 headers. Serving
+        # one full headers message per minute for 25 minutes is longer than
+        # CHAIN_SYNC_TIMEOUT + HEADERS_RESPONSE_TIME, but doesn't finish presync.
+        num_msgs = 25
+        self.restart_node(1, extra_args=["-minimumchainwork=0x20000", "-checkblockindex=0"])
+        node = self.nodes[1]
+        headers = self.make_headers(node, MAX_HEADERS_RESULTS * num_msgs)
         position = {header.hash_int: i for i, header in enumerate(headers)}
 
         now = int(time.time())
@@ -116,6 +120,35 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         assert_equal(info["synced_headers"], -1)
         peer.sync_with_ping()
         assert peer.is_connected
+
+        self.restart_node(1, extra_args=self.extra_args[1])
+        self.reconnect_all()
+
+    def test_presync_peer_stalled_is_evicted(self):
+        self.log.info("Test that an outbound peer which stops serving presync headers is still evicted")
+        self.disconnect_all()
+        self.restart_node(1, extra_args=["-minimumchainwork=0x20000", "-checkblockindex=0"])
+        node = self.nodes[1]
+        headers = self.make_headers(node, MAX_HEADERS_RESULTS)
+
+        now = int(time.time())
+        node.setmocktime(now)
+        peer = node.add_outbound_p2p_connection(HeadersServer(), p2p_idx=0, connection_type="outbound-full-relay")
+        peer.wait_until(lambda: peer.getheaders_count >= 1)
+        peer.send_without_ping(msg_headers(headers))
+        peer.wait_until(lambda: node.getpeerinfo()[0]["presynced_headers"] == MAX_HEADERS_RESULTS)
+
+        # The peer keeps answering pings but never answers another getheaders.
+        # CHAIN_SYNC_TIMEOUT is 20 minutes and HEADERS_RESPONSE_TIME 2 minutes.
+        # The first period is renewed because of the headers above, the
+        # second one ends in the disconnect.
+        for _ in range(45):
+            now += 60
+            node.setmocktime(now)
+            if not peer.is_connected:
+                break
+            time.sleep(0.2)
+        peer.wait_for_disconnect()
 
         self.restart_node(1, extra_args=self.extra_args[1])
         self.reconnect_all()
@@ -245,6 +278,8 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
 
     def run_test(self):
         self.test_presync_peer_not_evicted()
+
+        self.test_presync_peer_stalled_is_evicted()
 
         self.test_chains_sync_when_long_enough()
 
