@@ -22,9 +22,13 @@ from test_framework.blocktools import (
     create_block,
 )
 
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than,
+)
 
 import re
+import shutil
 import time
 
 NODE1_BLOCKS_REQUIRED = 15
@@ -71,13 +75,13 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         for n in self.nodes:
             n.setmocktime(time)
 
-    def make_headers(self, node, count):
+    def make_headers(self, node, count, version=4):
         genesis = node.getblockheader(node.getblockhash(0))
         headers = []
         prev_hash = int(genesis["hash"], 16)
         for i in range(count):
             header = CBlockHeader()
-            header.nVersion = 4
+            header.nVersion = version
             header.hashPrevBlock = prev_hash
             header.nTime = genesis["time"] + i + 1
             header.nBits = 0x207fffff
@@ -87,71 +91,121 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
             headers.append(header)
         return headers
 
+    def connect_headers_server(self, minchainwork, num_headers, version=4):
+        self.disconnect_all()
+        self.restart_node(1, extra_args=[f"-minimumchainwork={minchainwork}", "-checkblockindex=0"])
+        node = self.nodes[1]
+        headers = self.make_headers(node, num_headers, version)
+        position = {header.hash_int: i for i, header in enumerate(headers)}
+        self.mock_now = int(time.time())
+        node.setmocktime(self.mock_now)
+        peer = node.add_outbound_p2p_connection(HeadersServer(), p2p_idx=0, connection_type="outbound-full-relay")
+        peer.wait_until(lambda: peer.getheaders_count >= 1)
+        return node, peer, headers, position
+
+    def serve_next_headers(self, peer, headers, position):
+        """Answer the last getheaders with the next full message and wait for the next request."""
+        with p2p_lock:
+            getheaders_count = peer.getheaders_count
+            locator = peer.last_locator
+        start = next((position[h] + 1 for h in locator if h in position), 0)
+        peer.send_without_ping(msg_headers(headers[start:start + MAX_HEADERS_RESULTS]))
+        peer.wait_until(lambda: peer.getheaders_count > getheaders_count or not peer.is_connected)
+
+    def advance_minutes(self, node, peer, minutes):
+        for _ in range(minutes):
+            if not peer.is_connected:
+                return
+            self.mock_now += 60
+            node.setmocktime(self.mock_now)
+            # Make sure the timeout logic has run at this time before moving on.
+            # A disconnect is a valid outcome and is checked by the caller.
+            try:
+                peer.sync_with_ping()
+            except AssertionError:
+                if peer.is_connected:
+                    raise
+                return
+
+    def restore_node1(self):
+        # Drop any headers stored by the test so later tests see a clean node.
+        self.stop_node(1)
+        node1_chain_dir = self.nodes[1].chain_path
+        for subdir in ("blocks", "chainstate"):
+            shutil.rmtree(node1_chain_dir / subdir)
+        self.start_node(1, extra_args=self.extra_args[1])
+        self.reconnect_all()
+
     def test_presync_peer_not_evicted(self):
         self.log.info("Test that an outbound peer serving presync headers isn't evicted by the chain sync timeout")
-        self.disconnect_all()
         # Each regtest header adds 2 work, so this needs 65536 headers. Serving
         # one full headers message per minute for 25 minutes is longer than
         # CHAIN_SYNC_TIMEOUT + HEADERS_RESPONSE_TIME, but doesn't finish presync.
         num_msgs = 25
-        self.restart_node(1, extra_args=["-minimumchainwork=0x20000", "-checkblockindex=0"])
-        node = self.nodes[1]
-        headers = self.make_headers(node, MAX_HEADERS_RESULTS * num_msgs)
-        position = {header.hash_int: i for i, header in enumerate(headers)}
-
-        now = int(time.time())
-        node.setmocktime(now)
-        peer = node.add_outbound_p2p_connection(HeadersServer(), p2p_idx=0, connection_type="outbound-full-relay")
-        peer.wait_until(lambda: peer.getheaders_count >= 1)
+        node, peer, headers, position = self.connect_headers_server("0x20000", MAX_HEADERS_RESULTS * num_msgs)
         for _ in range(num_msgs):
-            with p2p_lock:
-                getheaders_count = peer.getheaders_count
-                locator = peer.last_locator
-            start = next((position[h] + 1 for h in locator if h in position), 0)
-            peer.send_without_ping(msg_headers(headers[start:start + MAX_HEADERS_RESULTS]))
-            peer.wait_until(lambda: peer.getheaders_count > getheaders_count or not peer.is_connected)
+            self.serve_next_headers(peer, headers, position)
             assert peer.is_connected
-            now += 60
-            node.setmocktime(now)
-            peer.sync_with_ping()
+            self.advance_minutes(node, peer, 1)
 
         info = node.getpeerinfo()[0]
         assert_equal(info["presynced_headers"], MAX_HEADERS_RESULTS * num_msgs)
         assert_equal(info["synced_headers"], -1)
         peer.sync_with_ping()
         assert peer.is_connected
-
-        self.restart_node(1, extra_args=self.extra_args[1])
-        self.reconnect_all()
+        self.restore_node1()
 
     def test_presync_peer_stalled_is_evicted(self):
         self.log.info("Test that an outbound peer which stops serving presync headers is still evicted")
-        self.disconnect_all()
-        self.restart_node(1, extra_args=["-minimumchainwork=0x20000", "-checkblockindex=0"])
-        node = self.nodes[1]
-        headers = self.make_headers(node, MAX_HEADERS_RESULTS)
-
-        now = int(time.time())
-        node.setmocktime(now)
-        peer = node.add_outbound_p2p_connection(HeadersServer(), p2p_idx=0, connection_type="outbound-full-relay")
-        peer.wait_until(lambda: peer.getheaders_count >= 1)
+        node, peer, headers, position = self.connect_headers_server("0x20000", MAX_HEADERS_RESULTS)
         peer.send_without_ping(msg_headers(headers))
         peer.wait_until(lambda: node.getpeerinfo()[0]["presynced_headers"] == MAX_HEADERS_RESULTS)
 
         # The peer keeps answering pings but never answers another getheaders.
         # CHAIN_SYNC_TIMEOUT is 20 minutes and HEADERS_RESPONSE_TIME 2 minutes.
-        # The first period is renewed because of the headers above, the
-        # second one ends in the disconnect.
-        for _ in range(45):
-            now += 60
-            node.setmocktime(now)
-            if not peer.is_connected:
-                break
-            time.sleep(0.2)
+        # The first period is renewed because of the headers above (minute 21),
+        # getheaders is sent at minute 42 and the peer is disconnected after that.
+        self.advance_minutes(node, peer, 50)
         peer.wait_for_disconnect()
+        self.restore_node1()
 
-        self.restart_node(1, extra_args=self.extra_args[1])
-        self.reconnect_all()
+    def test_redownload_peer_not_evicted(self):
+        self.log.info("Test that progress in the headers redownload phase also renews the chain sync timeout")
+        # 65536 headers reach the minimum chain work. Serve presync without
+        # moving the clock, then one message every 15 minutes during redownload.
+        # The redownload buffer holds the first 7017 headers back, so on its own
+        # pindexBestKnownBlock wouldn't move for 60 minutes, past the renewed
+        # timeout plus HEADERS_RESPONSE_TIME.
+        num_msgs = 33
+        node, peer, headers, position = self.connect_headers_server("0x20000", MAX_HEADERS_RESULTS * num_msgs)
+        for _ in range(num_msgs):
+            self.serve_next_headers(peer, headers, position)
+
+        for _ in range(4):
+            self.advance_minutes(node, peer, 15)
+            assert peer.is_connected
+            self.serve_next_headers(peer, headers, position)
+        while node.getpeerinfo()[0]["synced_headers"] < len(headers):
+            self.serve_next_headers(peer, headers, position)
+        peer.sync_with_ping()
+        assert peer.is_connected
+        self.restore_node1()
+
+    def test_headers_sync_renewals_bounded(self):
+        self.log.info("Test that a peer making very slow headers sync progress is eventually evicted")
+        # One full message every 19 minutes renews every period, but only
+        # MAX_HEADERS_SYNC_TIMEOUT_RENEWALS (6) times: the peer must be gone after
+        # 7 periods plus HEADERS_RESPONSE_TIME, well before it could finish.
+        # Use a different chain, the redownload test stored the default one.
+        node, peer, headers, position = self.connect_headers_server("0x40000", MAX_HEADERS_RESULTS * 30, version=5)
+        minutes = 0
+        while peer.is_connected and minutes < 7 * 20 + 2 + 19:
+            self.serve_next_headers(peer, headers, position)
+            self.advance_minutes(node, peer, 19)
+            minutes += 19
+        peer.wait_for_disconnect()
+        assert_greater_than(minutes, 6 * 20)
+        self.restore_node1()
 
     def test_chains_sync_when_long_enough(self):
         self.log.info("Generate blocks on the node with no required chainwork, and verify nodes 1 and 2 have no new headers in their headers tree")
@@ -280,6 +334,10 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         self.test_presync_peer_not_evicted()
 
         self.test_presync_peer_stalled_is_evicted()
+
+        self.test_redownload_peer_not_evicted()
+
+        self.test_headers_sync_renewals_bounded()
 
         self.test_chains_sync_when_long_enough()
 
