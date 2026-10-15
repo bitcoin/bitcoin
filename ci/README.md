@@ -72,6 +72,18 @@ packages on each run. For faster incremental builds, there are also container
 volumes to hold the results of the dependency-generator from `./depends` and
 to hold `ccache` results.
 
+## Pinning dependencies
+
+For direct downloads, checksums are generally used to protect against transport
+errors.
+
+Other CI dependencies are not generally pinned by hash. This is intentional,
+because pins can delay normal and security updates until the next bump, and
+require recurring manual review and maintenance. Moreover, a hash pin only
+verifies the directly fetched artifact. It does not constrain recursive
+downloads at runtime, and it could create a false sense of reproducibility and
+security.
+
 ## Configuring a repository for hosted CI
 
 ### Primary repository
