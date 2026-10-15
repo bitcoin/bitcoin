@@ -3124,7 +3124,9 @@ bool Chainstate::ConnectTip(
     // will be true and this->setBlockIndexCandidates will not have additional
     // blocks.
     Chainstate& current_cs{m_chainman.CurrentChainstate()};
-    m_chainman.MaybeValidateSnapshot(*this, current_cs);
+    if (const auto result{m_chainman.MaybeValidateSnapshot(*this, current_cs)}; result != SUCCESS && result != SKIPPED && result != INTERRUPTED) {
+        return state.Error("AssumeUTXO background validation failed");
+    }
 
     connected_blocks.emplace_back(pindexNew, std::move(block_to_connect));
     return true;
@@ -6076,7 +6078,7 @@ SnapshotCompletionResult ChainstateManager::MaybeValidateSnapshot(Chainstate& va
 
     const auto result{VerifyAssumeutxoData(validated_coins_db, au_data.hash_serialized)};
     if (result == SnapshotCompletionResult::INTERRUPTED) {
-        return SnapshotCompletionResult::STATS_FAILED;
+        return result;
     }
 
     // XXX note that this function is slow and will hold cs_main for potentially minutes.

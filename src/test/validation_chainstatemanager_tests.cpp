@@ -823,7 +823,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion, SnapshotTestSetup
 
     BOOST_REQUIRE(m_interrupt());
     res = WITH_LOCK(::cs_main, return chainman.MaybeValidateSnapshot(validated_cs, active_cs));
-    BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::STATS_FAILED); // TODO: distinguish interruption from a validation failure.
+    BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::INTERRUPTED);
     BOOST_CHECK(WITH_LOCK(::cs_main, return active_cs.m_assumeutxo == Assumeutxo::UNVALIDATED));
     BOOST_CHECK_EQUAL(m_node.exit_status.load(), EXIT_SUCCESS);
     BOOST_REQUIRE(m_interrupt.reset());
@@ -891,10 +891,14 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
 {
     auto chainstates = this->SetupSnapshot();
     Chainstate& validation_chainstate = *std::get<0>(chainstates);
-    Chainstate& unvalidated_cs = *std::get<1>(chainstates);
     ChainstateManager& chainman = *Assert(m_node.chainman);
-    SnapshotCompletionResult res;
+    BlockValidationState state;
     m_node.notifications->m_shutdown_on_fatal_error = false;
+
+    {
+        LOCK2(::cs_main, validation_chainstate.MempoolMutex());
+        BOOST_REQUIRE(validation_chainstate.DisconnectTip(state, nullptr));
+    }
 
     // Test tampering with the IBD UTXO set with an extra coin to ensure it causes
     // snapshot completion to fail.
@@ -912,8 +916,9 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
 
     {
         ASSERT_DEBUG_LOG("failed to validate the -assumeutxo snapshot state");
-        res = WITH_LOCK(::cs_main, return chainman.MaybeValidateSnapshot(validation_chainstate, unvalidated_cs));
-        BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::HASH_MISMATCH);
+        BOOST_CHECK(!validation_chainstate.ActivateBestChain(state, nullptr));
+        BOOST_CHECK(state.IsError());
+        BOOST_CHECK_EQUAL(state.GetRejectReason(), "AssumeUTXO background validation failed");
     }
 
     {
