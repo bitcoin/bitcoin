@@ -31,6 +31,7 @@
 #include <memory>
 #include <vector>
 
+#include <QCheckBox>
 #include <QDebug>
 #include <QMessageBox>
 #include <QSet>
@@ -490,8 +491,18 @@ bool WalletModel::bumpFee(Txid hash, Txid& new_hash)
     const bool always_show_unsigned{getOptionsModel()->getEnablePSBTControls()};
     auto confirmationDialog = new SendConfirmationDialog(tr("Confirm fee bump"), questionString, "", "", SEND_CONFIRM_DELAY, enable_send, always_show_unsigned, nullptr);
     confirmationDialog->setAttribute(Qt::WA_DeleteOnClose);
+    bool psbt_v2_checked{false};
+    if (QCheckBox* psbt_v2_checkbox{confirmationDialog->checkBox()}) {
+        psbt_v2_checked = psbt_v2_checkbox->isChecked();
+        QObject::connect(psbt_v2_checkbox, &QCheckBox::toggled, confirmationDialog, [&psbt_v2_checked](bool checked) {
+            psbt_v2_checked = checked;
+        });
+    }
+
     // TODO: Replace QDialog::exec() with safer QDialog::show().
     const auto retval = static_cast<QMessageBox::StandardButton>(confirmationDialog->exec());
+
+    const bool create_psbt_v2{psbt_v2_checked};
 
     // cancel sign&broadcast if user doesn't want to bump the fee
     if (retval != QMessageBox::Yes && retval != QMessageBox::Save) {
@@ -501,7 +512,7 @@ bool WalletModel::bumpFee(Txid hash, Txid& new_hash)
     // Short-circuit if we are returning a bumped transaction PSBT to clipboard
     if (retval == QMessageBox::Save) {
         // "Create Unsigned" clicked
-        PartiallySignedTransaction psbtx(mtx);
+        PartiallySignedTransaction psbtx(mtx, /*version=*/(create_psbt_v2 ? 2 : 0));
         bool complete = false;
         const auto err{wallet().fillPSBT({.sign = false, .bip32_derivs = true}, nullptr, psbtx, complete)};
         if (err || complete) {
