@@ -3825,10 +3825,14 @@ MessageProcessingResult PeerManagerImpl::ProcessPlatformBanMessage(NodeId node, 
 
     const uint256 hash = ban_msg.GetHash();
 
-    LogPrintf("PLATFORMBAN -- hash: %s protx_hash: %s height: %d peer=%d\n", hash.ToString(), ban_msg.m_protx_hash.ToString(), ban_msg.m_requested_height, node);
-
     MessageProcessingResult ret{};
     ret.m_to_erase = CInv{MSG_PLATFORM_BAN, hash};
+    if (m_mn_metaman.AlreadyHavePlatformBan(hash)) {
+        return ret;
+    }
+
+    LogPrintf("PLATFORMBAN -- hash: %s protx_hash: %s height: %d peer=%d\n", hash.ToString(),
+              ban_msg.m_protx_hash.ToString(), ban_msg.m_requested_height, node);
 
     const auto list = Assert(m_dmnman)->GetListAtChainTip();
     auto dmn = list.GetMN(ban_msg.m_protx_hash);
