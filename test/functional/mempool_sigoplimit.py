@@ -209,6 +209,26 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         for tx_res in res["tx-results"].values():
             assert tx_res["error"].startswith("min relay fee not met")
 
+    def test_too_many_sigops_max_bytespersigop(self):
+        self.log.info("Test that a tx over the sigops limit is rejected before its sigop-adjusted weight overflows int32")
+        # two standard P2WSH inputs whose sigops, times the largest -bytespersigop, exceed int32
+        sigops_per_input = 50020
+        assert_greater_than(2 * sigops_per_input * MAX_BYTES_PER_SIGOP, 2**31 - 1)
+        self.restart_node(0, extra_args=[f"-bytespersigop={MAX_BYTES_PER_SIGOP}"])
+
+        witness_script = CScript([OP_FALSE, OP_IF] + [OP_CHECKMULTISIG] * (sigops_per_input // MAX_PUBKEYS_PER_MULTISIG) + [OP_ENDIF, OP_TRUE])
+        funds = [self.wallet.send_to(from_node=self.nodes[0], scriptPubKey=script_to_p2wsh_script(witness_script), amount=1_000_000)
+                 for _ in range(2)]
+        tx = CTransaction()
+        tx.vin = [CTxIn(COutPoint(int(fund["txid"], 16), fund["sent_vout"])) for fund in funds]
+        tx.wit.vtxinwit = [CTxInWitness() for _ in funds]
+        for inwit in tx.wit.vtxinwit:
+            inwit.scriptWitness.stack = [bytes(witness_script)]
+        tx.vout = [CTxOut(1_500_000, CScript([OP_RETURN, b'test123']))]
+        res = self.nodes[0].testmempoolaccept([tx.serialize().hex()])[0]
+        assert_equal(res['allowed'], False)
+        assert_equal(res['reject-reason'], "bad-txns-too-many-sigops")
+
     def test_sigops_package(self):
         self.log.info("Test a overly-large sigops-vbyte hits package limits")
         # Make a 2-transaction package which fails vbyte checks even though
@@ -304,6 +324,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
             self.generate(self.wallet, 1)
 
         self.test_bytespersigop_range()
+        self.test_too_many_sigops_max_bytespersigop()
         self.test_sigops_package()
         self.test_legacy_sigops_stdness()
 
