@@ -5,6 +5,7 @@
 #include <crypto/sha512.h>
 
 #include <crypto/common.h>
+#include <support/cleanse.h>
 
 #include <cstring>
 
@@ -154,6 +155,12 @@ void Transform(uint64_t* s, const unsigned char* chunk)
 CSHA512::CSHA512()
 {
     sha512::Initialize(s);
+}
+
+CSHA512::~CSHA512()
+{
+    memory_cleanse(s, sizeof(s));
+    memory_cleanse(buf, sizeof(buf));
 }
 
 CSHA512& CSHA512::Write(const unsigned char* data, size_t len)
