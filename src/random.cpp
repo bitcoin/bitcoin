@@ -255,7 +255,7 @@ void Strengthen(const unsigned char (&seed)[32], SteadyClock::duration dur, CSHA
     inner_hasher.Finalize(buffer);
     hasher.Write(buffer, sizeof(buffer));
     // Try to clean up.
-    inner_hasher.Reset();
+    memory_cleanse(&inner_hasher, sizeof(inner_hasher));
     memory_cleanse(buffer, sizeof(buffer));
 }
 
@@ -441,7 +441,7 @@ public:
             memcpy(out, buf, num);
         }
         // Best effort cleanup of internal state
-        hasher.Reset();
+        memory_cleanse(&hasher, sizeof(hasher));
         memory_cleanse(buf, 64);
         return ret;
     }
