@@ -23,7 +23,6 @@ EXCLUDED_DIRS = ["contrib/devtools/bitcoin-tidy/",
 EXPECTED_BOOST_INCLUDES = [
                            "boost/multi_index/detail/hash_index_iterator.hpp",
                            "boost/multi_index/hashed_index.hpp",
-                           "boost/multi_index/identity.hpp",
                            "boost/multi_index/indexed_by.hpp",
                            "boost/multi_index/ordered_index.hpp",
                            "boost/multi_index/sequenced_index.hpp",
