@@ -6233,7 +6233,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                 if (vHeaders.size() == 1 && state.m_requested_hb_cmpctblocks) {
                     // We only send up to 1 block as header-and-ids, as otherwise
                     // probably means we're doing an initial-ish-sync or they're slow
-                    LogDebug(BCLog::NET, "%s sending header-and-ids %s to peer=%d\n", __func__,
+                    LogDebug(BCLog::NET, "sending header-and-ids %s to peer=%d\n",
                             vHeaders.front().GetHash().ToString(), node.GetId());
 
                     std::optional<CSerializedNetMsg> cached_cmpctblock_msg;
@@ -6255,12 +6255,12 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                     state.pindexBestHeaderSent = pBestIndex;
                 } else if (peer.m_prefers_headers) {
                     if (vHeaders.size() > 1) {
-                        LogDebug(BCLog::NET, "%s: %u headers, range (%s, %s), to peer=%d\n", __func__,
+                        LogDebug(BCLog::NET, "sending %u headers, range (%s, %s), to peer=%d\n",
                                 vHeaders.size(),
                                 vHeaders.front().GetHash().ToString(),
                                 vHeaders.back().GetHash().ToString(), node.GetId());
                     } else {
-                        LogDebug(BCLog::NET, "%s: sending header %s to peer=%d\n", __func__,
+                        LogDebug(BCLog::NET, "sending header %s to peer=%d\n",
                                 vHeaders.front().GetHash().ToString(), node.GetId());
                     }
                     MakeAndPushMessage(node, NetMsgType::HEADERS, TX_WITH_WITNESS(vHeaders));
@@ -6288,7 +6288,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                     // If the peer's chain has this block, don't inv it back.
                     if (!PeerHasHeader(&state, pindex)) {
                         peer.m_blocks_for_inv_relay.push_back(hashToAnnounce);
-                        LogDebug(BCLog::NET, "%s: sending inv peer=%d hash=%s\n", __func__,
+                        LogDebug(BCLog::NET, "sending inv peer=%d hash=%s\n",
                             node.GetId(), hashToAnnounce.ToString());
                     }
                 }
