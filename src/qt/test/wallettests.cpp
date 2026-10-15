@@ -60,7 +60,7 @@ using wallet::WalletRescanReserver;
 namespace
 {
 //! Press "Yes" or "Cancel" buttons in modal send confirmation dialog.
-void ConfirmSend(QString* text = nullptr, QMessageBox::StandardButton confirm_type = QMessageBox::Yes)
+void ConfirmSend(QString* text, QMessageBox::StandardButton confirm_type)
 {
     QTimer::singleShot(0, [text, confirm_type]() {
         for (QWidget* widget : QApplication::topLevelWidgets()) {
@@ -77,7 +77,7 @@ void ConfirmSend(QString* text = nullptr, QMessageBox::StandardButton confirm_ty
 
 //! Send coins to address and return txid.
 Txid SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CTxDestination& address, CAmount amount,
-                  QMessageBox::StandardButton confirm_type = QMessageBox::Yes)
+                  QMessageBox::StandardButton confirm_type)
 {
     QVBoxLayout* entries = sendCoinsDialog.findChild<QVBoxLayout*>("entries");
     SendCoinsEntry* entry = qobject_cast<SendCoinsEntry*>(entries->itemAt(0)->widget());
@@ -280,8 +280,8 @@ void TestGUI(interfaces::Node& node, const std::shared_ptr<CWallet>& wallet)
     // Send two transactions, and verify they are added to transaction list.
     TransactionTableModel* transactionTableModel = walletModel.getTransactionTableModel();
     QCOMPARE(transactionTableModel->rowCount({}), 105);
-    Txid txid1 = SendCoins(*wallet.get(), sendCoinsDialog, PKHash(), 5 * COIN);
-    Txid txid2 = SendCoins(*wallet.get(), sendCoinsDialog, PKHash(), 10 * COIN);
+    Txid txid1 = SendCoins(*wallet.get(), sendCoinsDialog, PKHash(), 5 * COIN, /*confirm_type=*/QMessageBox::Yes);
+    Txid txid2 = SendCoins(*wallet.get(), sendCoinsDialog, PKHash(), 10 * COIN, /*confirm_type=*/QMessageBox::Yes);
     // Transaction table model updates on a QueuedConnection, so process events to ensure it's updated.
     qApp->processEvents();
     QCOMPARE(transactionTableModel->rowCount({}), 107);
