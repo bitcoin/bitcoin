@@ -28,6 +28,22 @@ using node::fReindex;
 using node::GetTransaction;
 
 namespace instantsend {
+namespace {
+bool IsProviderTx(const CTransaction& tx)
+{
+    if (!tx.IsSpecialTxVersion()) return false;
+    switch (tx.nType) {
+    case TRANSACTION_PROVIDER_REGISTER:
+    case TRANSACTION_PROVIDER_UPDATE_SERVICE:
+    case TRANSACTION_PROVIDER_UPDATE_REGISTRAR:
+    case TRANSACTION_PROVIDER_UPDATE_REVOKE:
+        return true;
+    default:
+        return false;
+    }
+}
+} // anonymous namespace
+
 InstantSendSigner::InstantSendSigner(CChainState& chainstate, const chainlock::Chainlocks& chainlocks,
                                      InstantSendSignerParent& isman, llmq::CSigningManager& sigman,
                                      llmq::CSigSharesManager& shareman, llmq::CQuorumManager& qman,
@@ -165,6 +181,13 @@ void InstantSendSigner::ProcessPendingRetryLockTxs(const std::vector<CTransactio
 
 bool InstantSendSigner::CheckCanLock(const CTransaction& tx, bool printDebug, const Consensus::Params& params) const
 {
+    if (IsProviderTx(tx)) {
+        if (printDebug) {
+            LogPrint(BCLog::INSTANTSEND, "%s -- txid=%s: provider txs are not locked\n", __func__,
+                     tx.GetHash().ToString());
+        }
+        return false;
+    }
     if (tx.vin.empty()) {
         // can't lock TXs without inputs (e.g. quorum commitments)
         return false;
@@ -354,6 +377,8 @@ bool InstantSendSigner::TrySignInputLocks(const CTransaction& tx, bool fRetroact
 
 void InstantSendSigner::TrySignInstantSendLock(const CTransaction& tx)
 {
+    if (IsProviderTx(tx)) return;
+
     const auto llmqType = Params().GetConsensus().llmqTypeDIP0024InstantSend;
 
     for (const auto& in : tx.vin) {

@@ -139,7 +139,7 @@ private:
     void AddNonLockedTx(const CTransactionRef& tx, const CBlockIndex* pindexMined)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_timingsTxSeen);
     void RemoveNonLockedTx(const uint256& txid, bool retryChildren)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingRetry);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingRetry, !cs_timingsTxSeen);
     void RemoveConflictedTx(const CTransaction& tx)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingRetry);
     void TruncateRecoveredSigsForInputs(const instantsend::InstantSendLock& islock);
@@ -150,7 +150,7 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingLocks, !cs_pendingRetry, !cs_height_cache);
 
     void HandleFullyConfirmedBlock(const CBlockIndex* pindex)
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingRetry);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_nonLocked, !cs_pendingRetry, !cs_timingsTxSeen);
 
 public:
     bool IsLocked(const uint256& txHash) const override;
