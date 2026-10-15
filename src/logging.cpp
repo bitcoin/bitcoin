@@ -339,10 +339,13 @@ namespace BCLog {
      */
     std::string LogEscapeMessage(std::string_view str) {
         std::string ret;
-        for (char ch_in : str) {
-            uint8_t ch = (uint8_t)ch_in;
-            if (ch >= 32 && ch != '\x7f') {
-                ret += ch_in;
+        for (size_t i{0}; i < str.size(); ++i) {
+            uint8_t ch = (uint8_t)str[i];
+            // UTF-8 encodes the C1 controls as 0xC2 followed by 0x80 to 0x9F.
+            if (ch == 0xc2 && i + 1 < str.size() && (uint8_t)str[i + 1] >= 0x80 && (uint8_t)str[i + 1] <= 0x9f) {
+                ret += strprintf("\\x%02x\\x%02x", ch, (uint8_t)str[++i]);
+            } else if (ch >= 32 && ch != '\x7f') {
+                ret += str[i];
             } else {
                 ret += strprintf("\\x%02x", ch);
             }
