@@ -24,11 +24,10 @@
 #include <util/hasher.h>
 #include <util/not_null.h>
 #include <util/result.h>
+#include <util/time.h>
 
 #include <boost/multi_index/hashed_index.hpp>
-#include <boost/multi_index/identity.hpp>
 #include <boost/multi_index/indexed_by.hpp>
-#include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/sequenced_index.hpp>
 #include <boost/multi_index/tag.hpp>
 #include <boost/multi_index_container.hpp>
@@ -93,17 +92,7 @@ struct mempoolentry_wtxid
     }
 };
 
-class CompareTxMemPoolEntryByEntryTime
-{
-public:
-    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
-    {
-        return a.GetTime() < b.GetTime();
-    }
-};
-
 // Multi_index tag names
-struct entry_time {};
 struct index_by_wtxid {};
 
 /**
@@ -222,12 +211,6 @@ public:
                 boost::multi_index::tag<index_by_wtxid>,
                 mempoolentry_wtxid,
                 SaltedWtxidHasher
-            >,
-            // sorted by entry time
-            boost::multi_index::ordered_non_unique<
-                boost::multi_index::tag<entry_time>,
-                boost::multi_index::identity<CTxMemPoolEntry>,
-                CompareTxMemPoolEntryByEntryTime
             >
         >
     >;

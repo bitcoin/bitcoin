@@ -19,9 +19,6 @@
 #include <util/moneystr.h>
 #include <util/translation.h>
 
-#include <chrono>
-#include <memory>
-
 using common::AmountErrMsg;
 using kernel::MemPoolLimits;
 using kernel::MemPoolOptions;
