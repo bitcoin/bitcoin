@@ -150,7 +150,7 @@ class IPCMiningTest(BitcoinTestFramework):
             assert_equal(len(newblockref.hash), block_hash_size)
             assert_equal(newblockref.height, current_block_height + 1)
             self.log.debug("Wait for timeout")
-            oldblockref = (await mining.waitTipChanged(ctx, newblockref.hash, self.default_ipc_timeout)).result
+            oldblockref = (await mining.waitTipChanged(ctx, newblockref.hash, self.no_event_timeout_ms)).result
             assert_equal(len(newblockref.hash), block_hash_size)
             assert_equal(oldblockref.hash, newblockref.hash)
             assert_equal(oldblockref.height, newblockref.height)
@@ -279,8 +279,10 @@ class IPCMiningTest(BitcoinTestFramework):
                 assert_equal(len(block2.vtx), 1)
 
                 self.log.debug("Wait for another, but time out")
+                waitoptions.timeout = self.no_event_timeout_ms
                 template3 = await mining_wait_next_template(template2, stack, ctx, waitoptions)
                 assert template3 is None
+                waitoptions.timeout = self.default_ipc_timeout
 
                 self.log.debug("Wait for another, get one after increase in fees in the mempool")
                 template4 = await wait_and_do(
@@ -307,8 +309,10 @@ class IPCMiningTest(BitcoinTestFramework):
                 assert_equal(len(block4.vtx), 3)
 
                 self.log.debug("Wait for another, but time out, since the fee threshold is set now")
+                waitoptions.timeout = self.no_event_timeout_ms
                 template7 = await mining_wait_next_template(template6, stack, ctx, waitoptions)
                 assert template7 is None
+                waitoptions.timeout = self.default_ipc_timeout
 
                 self.log.debug("interruptWait should abort the current wait")
                 async def wait_for_block():
@@ -800,6 +804,8 @@ class IPCMiningTest(BitcoinTestFramework):
         self.miniwallet = MiniWallet(self.nodes[0])
         # Amount of time in milliseconds the test is allowed to wait or be idle before it should fail.
         self.default_ipc_timeout = 1000.0 * self.options.timeout_factor
+        # Expected timeout checks allow up to 5 seconds on slow CI runners.
+        self.no_event_timeout_ms = min(self.default_ipc_timeout, 5000.0)
         self.default_block_create_options = self.capnp_modules['mining'].BlockCreateOptions()
         self.default_block_wait_options = self.capnp_modules['mining'].BlockWaitOptions()
         self.default_block_wait_options.timeout = self.default_ipc_timeout

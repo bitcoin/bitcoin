@@ -21,6 +21,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    ensure_for,
     try_rpc
 )
 
@@ -138,12 +139,36 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
         # connect unsynced node 2 with pruned NODE_NETWORK_LIMITED peer
         # because node 2 is in IBD and node 0 is a NODE_NETWORK_LIMITED peer, sync must not be possible
         self.connect_nodes(0, 2)
-        try:
-            self.sync_blocks([self.nodes[0], self.nodes[2]], timeout=5)
-        except Exception:
-            pass
-        # node2 must remain at height 0
-        assert_equal(self.nodes[2].getblockheader(self.nodes[2].getbestblockhash())['height'], 0)
+        pruned_node = self.nodes[0]
+        full_node = self.nodes[2]
+        # Wait for headers and a ping roundtrip so the block request decision
+        # has had time to run before checking the negative case.
+        limited_tip = pruned_node.getbestblockhash()
+        self.wait_until(lambda: any(
+            tip["hash"] == limited_tip and tip["status"] == "headers-only"
+            for tip in full_node.getchaintips()
+        ))
+        peers = full_node.getpeerinfo()
+        assert_equal(len(peers), 1)
+        received_pongs = peers[0]["bytesrecv_per_msg"].get("pong", 0)
+        full_node.ping()
+        self.wait_until(lambda: full_node.getpeerinfo()[0]["bytesrecv_per_msg"].get("pong", 0) > received_pongs)
+
+        def no_block_request_from_limited_peer():
+            peers = full_node.getpeerinfo()
+            if len(peers) != 1:
+                return False
+            peer = peers[0]
+            return (
+                full_node.getblockcount() == 0
+                and peer["inflight"] == []
+                and peer["bytessent_per_msg"].get("getdata", 0) == 0
+            )
+
+        ensure_for(
+            duration=max(1.0, min(5.0, self.options.timeout_factor)),
+            f=no_block_request_from_limited_peer,
+        )
 
         # now connect also to node 1 (non pruned)
         self.connect_nodes(1, 2)
