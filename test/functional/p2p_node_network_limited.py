@@ -127,11 +127,11 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
         self.connect_nodes(0, 1)
         blocks = self.generate(self.nodes[1], 292, sync_fun=lambda: self.sync_blocks([self.nodes[0], self.nodes[1]]))
 
-        self.log.info("Make sure we can max retrieve block at tip-288.")
+        self.log.info("Retrieve a block at height 2 (tip-290).")
         node.send_getdata_for_block(blocks[1])  # last block in valid range
         node.wait_for_block(int(blocks[1], 16), timeout=3)
 
-        self.log.info("Requesting block at height 2 (tip-289) must fail (ignored).")
+        self.log.info("Requesting a block at height 1 (tip-291) must fail.")
         node.send_getdata_for_block(blocks[0])  # first block outside of the 288+2 limit
         node.wait_for_disconnect(timeout=5)
         self.nodes[0].disconnect_p2ps()
