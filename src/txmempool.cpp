@@ -856,24 +856,6 @@ bool CTxMemPool::CheckPolicyLimits(const CTransactionRef& tx)
     return changeset->CheckMemPoolPolicyLimits();
 }
 
-int CTxMemPool::Expire(std::chrono::seconds time)
-{
-    AssertLockHeld(cs);
-    Assume(!m_have_changeset);
-    indexed_transaction_set::index<entry_time>::type::iterator it = mapTx.get<entry_time>().begin();
-    setEntries toremove;
-    while (it != mapTx.get<entry_time>().end() && it->GetTime() < time) {
-        toremove.insert(mapTx.project<0>(it));
-        it++;
-    }
-    setEntries stage;
-    for (txiter removeit : toremove) {
-        CalculateDescendants(removeit, stage);
-    }
-    RemoveStaged(stage, MemPoolRemovalReason::EXPIRY);
-    return stage.size();
-}
-
 CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
     LOCK(cs);
     if (!blockSinceLastRollingFeeBump || rollingMinimumFeeRate == 0)
