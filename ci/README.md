@@ -14,11 +14,8 @@ testing compared to other parts of the codebase. If you want to keep the work tr
 system in a virtual machine with a Linux operating system of your choice.
 
 To allow for a wide range of tested environments, but also ensure reproducibility to some extent, the test stage
-requires `bash`, `docker`, and `python3` to be installed. To run on different architectures than the host `qemu` is also required. To install all requirements on Ubuntu, run
-
-```
-sudo apt install bash docker.io python3 qemu-user-static
-```
+requires `bash`, `docker`, and `python3` to be installed. On Ubuntu, you may
+use the `docker.io` or the `podman-docker` package.
 
 For some sanitizer builds, the kernel's address-space layout randomization
 (ASLR) entropy can cause sanitizer shadow memory mappings to fail. When running
@@ -29,12 +26,15 @@ sudo sysctl -w vm.mmap_rnd_bits=28
 ```
 
 To run a test that requires emulating a CPU architecture different from the
-host, we may rely on the container environment recognizing foreign executables
-and automatically running them using `qemu`. The following sets us up to do so
-(also works for `podman`):
+host, the CI relies on the container environment recognizing foreign executables
+and automatically running them using QEMU. Refer to the container engine docs
+to find out whether this is supported by default and whether a separate install
+of `qemu-user-static` is needed
+([Docker](https://docs.docker.com/build/building/multi-platform/#qemu)).
+If not, the following may work, also for `podman`:
 
 ```
-docker run --rm --privileged docker.io/multiarch/qemu-user-static --reset -p yes
+docker run --privileged --rm tonistiigi/binfmt --install all
 ```
 
 It is recommended to run the CI system in a clean environment. The `env -i`
