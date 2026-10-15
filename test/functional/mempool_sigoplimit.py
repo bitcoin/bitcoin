@@ -49,6 +49,11 @@ from test_framework.wallet_util import generate_keypair
 
 DEFAULT_BYTES_PER_SIGOP = 20  # default setting
 MAX_PUBKEYS_PER_MULTISIG = 20
+MAX_STANDARD_TX_SIGOPS_COST = 16000
+MAX_PACKAGE_COUNT = 25
+# largest -bytespersigop for which the sigop-adjusted vsize of a package of
+# MAX_PACKAGE_COUNT txs, each at MAX_STANDARD_TX_SIGOPS_COST, fits in int32
+MAX_BYTES_PER_SIGOP = (2**31 - 1) * WITNESS_SCALE_FACTOR // (MAX_PACKAGE_COUNT * MAX_STANDARD_TX_SIGOPS_COST)
 
 class BytesPerSigOpTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -161,6 +166,49 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         assert_equal(raw['vsize_adjusted'], sigop_equivalent_vsize)
         assert_greater_than(raw['vsize_adjusted'], raw['vsize'])
 
+    def test_bytespersigop_range(self):
+        self.log.info("Test that -bytespersigop is refused outside its range")
+        self.stop_node(0)
+        for value in (-1, MAX_BYTES_PER_SIGOP + 1, 2**32 + DEFAULT_BYTES_PER_SIGOP):
+            self.nodes[0].assert_start_raises_init_error(
+                extra_args=[f"-bytespersigop={value}"],
+                expected_msg=f"Error: -bytespersigop must be between 0 and {MAX_BYTES_PER_SIGOP}",
+            )
+
+        self.log.info(f"Test sigops limit setting -bytespersigop={MAX_BYTES_PER_SIGOP}...")
+        self.start_node(0, extra_args=[f"-bytespersigop={MAX_BYTES_PER_SIGOP}"])
+        self.test_sigops_limit(MAX_BYTES_PER_SIGOP, 1)
+
+        self.log.info(f"Test a package of {MAX_PACKAGE_COUNT} txs at the sigops limit with -bytespersigop={MAX_BYTES_PER_SIGOP}")
+        node = self.nodes[0]
+        sigops_script = CScript([OP_FALSE, OP_IF] + [OP_CHECKMULTISIG] * (MAX_STANDARD_TX_SIGOPS_COST // MAX_PUBKEYS_PER_MULTISIG) + [OP_ENDIF, OP_TRUE])
+        true_script = CScript([OP_TRUE])
+        funds = [self.wallet.send_to(from_node=node, scriptPubKey=script_to_p2wsh_script(sigops_script), amount=1_000_000)
+                 for _ in range(MAX_PACKAGE_COUNT - 1)]
+        self.generate(node, 1)
+        # every parent spends a P2WSH with MAX_STANDARD_TX_SIGOPS_COST sigops;
+        # the child spends one such output and the other parents' OP_TRUE outputs
+        parents = []
+        for i, fund in enumerate(funds):
+            tx = CTransaction()
+            tx.vin = [CTxIn(COutPoint(int(fund["txid"], 16), fund["sent_vout"]))]
+            tx.wit.vtxinwit = [CTxInWitness()]
+            tx.wit.vtxinwit[0].scriptWitness.stack = [bytes(sigops_script)]
+            tx.vout = [CTxOut(990_000, script_to_p2wsh_script(sigops_script if i == 0 else true_script))]
+            parents.append(tx)
+        child = CTransaction()
+        child.vin = [CTxIn(COutPoint(parent.txid_int, 0)) for parent in parents]
+        child.wit.vtxinwit = [CTxInWitness() for _ in parents]
+        for i, inwit in enumerate(child.wit.vtxinwit):
+            inwit.scriptWitness.stack = [bytes(sigops_script if i == 0 else true_script)]
+        child.vout = [CTxOut(990_000 * len(parents) - 10_000, script_to_p2wsh_script(true_script))]
+        package = parents + [child]
+        assert_equal(len(package), MAX_PACKAGE_COUNT)
+        res = node.submitpackage([tx.serialize().hex() for tx in package])
+        assert_equal(res["package_msg"], "transaction failed")
+        for tx_res in res["tx-results"].values():
+            assert tx_res["error"].startswith("min relay fee not met")
+
     def test_sigops_package(self):
         self.log.info("Test a overly-large sigops-vbyte hits package limits")
         # Make a 2-transaction package which fails vbyte checks even though
@@ -255,6 +303,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
 
             self.generate(self.wallet, 1)
 
+        self.test_bytespersigop_range()
         self.test_sigops_package()
         self.test_legacy_sigops_stdness()
 
