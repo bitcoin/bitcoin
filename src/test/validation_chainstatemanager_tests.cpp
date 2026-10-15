@@ -888,8 +888,8 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_cleanup_interrupted, Snapshot
     BOOST_REQUIRE(fs::exists(cleanup_dir));
 
     this->SimulateNodeRestart();
-    BOOST_CHECK_THROW(this->LoadVerifyActivateChainstate(), fs::filesystem_error); // TODO: Resume cleanup after an interrupted earlier attempt.
-    BOOST_CHECK( fs::exists(cleanup_dir)); // TODO: Remove the obsolete database when cleanup resumes.
+    this->LoadVerifyActivateChainstate();
+    BOOST_CHECK(!fs::exists(cleanup_dir));
 }
 
 BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, SnapshotTestSetup)
