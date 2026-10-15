@@ -51,7 +51,6 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
     }
 
     int64_t count = 0;
-    int64_t expired = 0;
     int64_t failed = 0;
     int64_t already_there = 0;
     int64_t unbroadcast = 0;
@@ -100,7 +99,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             if (amountdelta && opts.apply_fee_delta_priority) {
                 pool.PrioritiseTransaction(tx->GetHash(), amountdelta);
             }
-            if (nTime > TicksSinceEpoch<std::chrono::seconds>(now - pool.m_opts.expiry)) {
+            {
                 LOCK(cs_main);
                 const auto& accepted = AcceptToMemoryPool(active_chainstate, tx, nTime, /*bypass_limits=*/false, /*test_accept=*/false);
                 if (accepted.m_result_type == MempoolAcceptResult::ResultType::VALID) {
@@ -116,8 +115,6 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
                         ++failed;
                     }
                 }
-            } else {
-                ++expired;
             }
             if (active_chainstate.m_chainman.m_interrupt)
                 return false;
@@ -146,7 +143,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
         return false;
     }
 
-    LogInfo("Imported mempool transactions from file: %i succeeded, %i failed, %i expired, %i already there, %i waiting for initial broadcast\n", count, failed, expired, already_there, unbroadcast);
+    LogInfo("Imported mempool transactions from file: %i succeeded, %i failed, %i already there, %i waiting for initial broadcast\n", count, failed, already_there, unbroadcast);
     return true;
 }
 

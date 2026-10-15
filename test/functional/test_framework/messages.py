@@ -83,8 +83,6 @@ DEFAULT_CLUSTER_LIMIT = 64     # default max number of transactions in a cluster
 MAX_OP_RETURN_RELAY = 100_000
 
 
-DEFAULT_MEMPOOL_EXPIRY_HOURS = 336  # hours
-
 TX_MIN_STANDARD_VERSION = 1
 TX_MAX_STANDARD_VERSION = 3
 

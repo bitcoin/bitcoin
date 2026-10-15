@@ -81,7 +81,6 @@ protected:
      * This notification fires for transactions that are removed from the
      * mempool for the following reasons:
      *
-     * - EXPIRY (expired from mempool after -mempoolexpiry hours)
      * - SIZELIMIT (removed in size limiting if the mempool exceeds -maxmempool megabytes)
      * - REORG (removed during a reorg)
      * - CONFLICT (removed because it conflicts with in-block transaction)
