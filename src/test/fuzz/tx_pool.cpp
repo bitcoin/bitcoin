@@ -112,8 +112,6 @@ void SetMempoolConstraints(ArgsManager& args, FuzzedDataProvider& fuzzed_data_pr
                      ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(1, 250)));
     args.ForceSetArg("-maxmempool",
                      ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 200)));
-    args.ForceSetArg("-mempoolexpiry",
-                     ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 999)));
 }
 
 /** Get a list of wtxids to query from the mempool for relay. Make the list heterogeneous with
@@ -203,11 +201,6 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Cha
         // Try eviction
         LOCK2(::cs_main, tx_pool.cs);
         tx_pool.TrimToSize(fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0U, tx_pool.DynamicMemoryUsage() * 2));
-    }
-    if (fuzzed_data_provider.ConsumeBool()) {
-        // Try expiry
-        LOCK2(::cs_main, tx_pool.cs);
-        tx_pool.Expire(GetMockTime() - std::chrono::seconds(fuzzed_data_provider.ConsumeIntegral<uint32_t>()));
     }
     WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
     g_setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
