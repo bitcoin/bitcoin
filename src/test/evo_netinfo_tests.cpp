@@ -38,8 +38,9 @@ static const std::vector<TestEntry> addr_vals_main{
     // - Non-mainnet port on mainnet causes failure in MnNetInfo
     // - ExtNetInfo is indifferent to choice of port unless it's a bad port which 9998 isn't
     {{NetInfoPurpose::CORE_P2P, "1.1.1.1:9998"}, NetInfoStatus::BadPort, NetInfoStatus::Success},
-    // Internal addresses not allowed on mainnet
+    // Internal and private addresses not allowed on mainnet
     {{NetInfoPurpose::CORE_P2P, "127.0.0.1:9999"}, NetInfoStatus::NotRoutable, NetInfoStatus::NotRoutable},
+    {{NetInfoPurpose::CORE_P2P, "10.0.0.1:9999"}, NetInfoStatus::NotRoutable, NetInfoStatus::NotRoutable},
     // Valid IPv4 formatting but invalid IPv4 address
     {{NetInfoPurpose::CORE_P2P, "0.0.0.0:9999"}, NetInfoStatus::BadAddress, NetInfoStatus::BadAddress},
     // Port greater than uint16_t max
@@ -139,6 +140,16 @@ BOOST_AUTO_TEST_CASE(mnnetinfo_rules_main)
 }
 
 BOOST_AUTO_TEST_CASE(extnetinfo_rules_main) { TestExtNetInfo(addr_vals_main); }
+
+BOOST_AUTO_TEST_CASE(netinfo_rules_main_allowprivatenet)
+{
+    // -allowprivatenet widens CNetAddr::IsRoutable() to RFC1918 addresses; a node-local option
+    // must not change which masternode addresses pass consensus validation
+    fAllowPrivateNet = true;
+    TestMnNetInfo(addr_vals_main);
+    TestExtNetInfo(addr_vals_main);
+    fAllowPrivateNet = DEFAULT_ALLOWPRIVATENET;
+}
 
 static const std::vector<TestEntry> addr_vals_reg{
     // - MnNetInfo doesn't mind using port 0
