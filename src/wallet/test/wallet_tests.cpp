@@ -71,7 +71,7 @@ static CMutableTransaction TestSimpleSpend(const CTransaction& from, uint32_t in
     return mtx;
 }
 
-static bool BroadcastTestSimpleSpend(interfaces::Chain& chain, ChainstateManager& chainman, const CMutableTransaction& tx, std::string& error)
+static util::Expected<void, node::TransactionBroadcastError> BroadcastTestSimpleSpend(interfaces::Chain& chain, ChainstateManager& chainman, const CMutableTransaction& tx)
 {
     const auto tx_ref{MakeTransactionRef(tx)};
     const auto tx_sigops = WITH_LOCK(::cs_main, return GetTransactionSigOpCost(
@@ -80,7 +80,7 @@ static bool BroadcastTestSimpleSpend(interfaces::Chain& chain, ChainstateManager
     const auto tx_feerate{CFeeRate{DEFAULT_TRANSACTION_MAXFEE, static_cast<int32_t>(tx_vsize)}};
     // TestSimpleSpend pays a high fee; use a limit just above its feerate.
     const auto tx_feerate_limit{CFeeRate{tx_feerate.GetFeePerK() + 1}};
-    return chain.broadcastTransaction(tx_ref, DEFAULT_TRANSACTION_MAXFEE, tx_feerate_limit, node::TxBroadcast::MEMPOOL_NO_BROADCAST, error);
+    return chain.broadcastTransaction(tx_ref, DEFAULT_TRANSACTION_MAXFEE, tx_feerate_limit, node::TxBroadcast::MEMPOOL_NO_BROADCAST);
 }
 
 BOOST_AUTO_TEST_CASE(reject_invalid_descriptor_ranges)
@@ -723,12 +723,11 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
     m_node.validation_signals->CallFunctionInValidationInterfaceQueue([&promise] {
         promise.get_future().wait();
     });
-    std::string error;
     m_coinbase_txns.push_back(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()), /*sync=*/false).vtx[0]);
     auto block_tx = TestSimpleSpend(*m_coinbase_txns[0], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
     m_coinbase_txns.push_back(CreateAndProcessBlock({block_tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()), /*sync=*/false).vtx[0]);
     auto mempool_tx = TestSimpleSpend(*m_coinbase_txns[1], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
-    BOOST_CHECK(BroadcastTestSimpleSpend(*m_node.chain, *Assert(m_node.chainman), mempool_tx, error));
+    BOOST_CHECK(BroadcastTestSimpleSpend(*m_node.chain, *Assert(m_node.chainman), mempool_tx));
 
     // Reload wallet and make sure new transactions are detected despite events
     // being blocked
@@ -769,7 +768,7 @@ BOOST_FIXTURE_TEST_CASE(CreateWallet, TestChain100Setup)
             block_tx = TestSimpleSpend(*m_coinbase_txns[2], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
             m_coinbase_txns.push_back(CreateAndProcessBlock({block_tx}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
             mempool_tx = TestSimpleSpend(*m_coinbase_txns[3], 0, coinbaseKey, GetScriptForRawPubKey(key.GetPubKey()));
-            BOOST_CHECK(BroadcastTestSimpleSpend(*m_node.chain, *Assert(m_node.chainman), mempool_tx, error));
+            BOOST_CHECK(BroadcastTestSimpleSpend(*m_node.chain, *Assert(m_node.chainman), mempool_tx));
             m_node.validation_signals->SyncWithValidationInterfaceQueue();
         });
     wallet = TestLoadWallet(context);

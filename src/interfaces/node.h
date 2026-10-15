@@ -11,8 +11,10 @@
 #include <net_types.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <node/types.h>
 #include <primitives/transaction.h>
 #include <uint256.h>
+#include <util/expected.h>
 #include <util/log.h>
 #include <util/translation.h>
 
@@ -32,7 +34,6 @@ class UniValue;
 enum class SynchronizationState;
 struct CNodeStateStats;
 namespace node {
-enum class TransactionError;
 struct NodeContext;
 } // namespace node
 
@@ -203,8 +204,9 @@ public:
     //! Get unspent output associated with a transaction.
     virtual std::optional<Coin> getUnspentOutput(const COutPoint& output) = 0;
 
-    //! Broadcast transaction.
-    virtual node::TransactionError broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, CFeeRate max_tx_fee_rate, std::string& err_string) = 0;
+    //! Broadcast transaction. Returns {} on success, otherwise the error code
+    //! and an untranslated error message.
+    [[nodiscard]] virtual util::Expected<void, node::TransactionBroadcastError> broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, CFeeRate max_tx_fee_rate) = 0;
 
     //! Get wallet loader.
     virtual WalletLoader& walletLoader() = 0;

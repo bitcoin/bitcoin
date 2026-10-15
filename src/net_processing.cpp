@@ -13,6 +13,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <common/bloom.h>
+#include <common/messages.h>
 #include <consensus/amount.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
@@ -62,6 +63,7 @@
 #include <util/time.h>
 #include <util/tokenbucket.h>
 #include <util/trace.h>
+#include <util/translation.h>
 #include <validation.h>
 
 #include <algorithm>
@@ -608,7 +610,7 @@ public:
     std::vector<CTransactionRef> AbortPrivateBroadcast(const uint256& id) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void InitiateTxBroadcastToAll(const Wtxid& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_inv_to_send_mutex);
-    node::TransactionError InitiateTxBroadcastPrivate(const CTransactionRef& tx) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    util::Expected<void, node::TransactionBroadcastError> InitiateTxBroadcastPrivate(const CTransactionRef& tx) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SetBestBlock(int height, std::chrono::seconds time) override
     {
         m_best_height = height;
@@ -2496,20 +2498,22 @@ void PeerManagerImpl::InitiateTxBroadcastToAll(const Wtxid& wtxid)
     ProcessInvBacklog(NodeClock::now(), /*backlog_bumped=*/true);
 }
 
-node::TransactionError PeerManagerImpl::InitiateTxBroadcastPrivate(const CTransactionRef& tx)
+util::Expected<void, node::TransactionBroadcastError> PeerManagerImpl::InitiateTxBroadcastPrivate(const CTransactionRef& tx)
 {
     const auto txstr{strprintf("txid=%s, wtxid=%s", tx->GetHash().ToString(), tx->GetWitnessHash().ToString())};
     switch (m_tx_for_private_broadcast.Add(tx)) {
     case PrivateBroadcast::AddResult::Added:
         LogDebug(BCLog::PRIVBROADCAST, "Requesting %d new connections due to %s", PrivateBroadcast::INITIAL_CONNECTION_COUNT, txstr);
         m_connman.m_private_broadcast.NumToOpenAdd(PrivateBroadcast::INITIAL_CONNECTION_COUNT);
-        return node::TransactionError::OK;
+        return {};
     case PrivateBroadcast::AddResult::AlreadyPresent:
         LogDebug(BCLog::PRIVBROADCAST, "Ignoring unnecessary request to schedule an already scheduled transaction: %s", txstr);
-        return node::TransactionError::OK;
+        return {};
     case PrivateBroadcast::AddResult::QueueFull:
         LogDebug(BCLog::PRIVBROADCAST, "Rejecting private broadcast, queue full (cap=%u): %s", PrivateBroadcast::MAX_TRANSACTIONS, txstr);
-        return node::TransactionError::PRIVATE_BROADCAST_FULL;
+        return util::Unexpected{node::TransactionBroadcastError{
+            node::TransactionError::PRIVATE_BROADCAST_FULL,
+            common::TransactionErrorString(node::TransactionError::PRIVATE_BROADCAST_FULL).original}};
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }

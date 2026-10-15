@@ -143,8 +143,6 @@ static RPCMethod sendrawtransaction()
 
             const CFeeRate max_raw_tx_fee_rate{ParseFeeRate(self.Arg<UniValue>("maxfeerate"))};
 
-
-            std::string err_string;
             AssertLockNotHeld(cs_main);
             NodeContext& node = EnsureAnyNodeContext(request.context);
             const bool private_broadcast_enabled{gArgs.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)};
@@ -159,15 +157,14 @@ static RPCMethod sendrawtransaction()
             }
             const auto method = private_broadcast_enabled ? node::TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST
                                                           : node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL;
-            const TransactionError err = BroadcastTransaction(node,
-                                                              tx,
-                                                              err_string,
-                                                              /*max_tx_fee=*/0,
-                                                              max_raw_tx_fee_rate,
-                                                              method,
-                                                              /*wait_callback=*/true);
-            if (TransactionError::OK != err) {
-                throw JSONRPCTransactionError(err, err_string);
+            const auto result = BroadcastTransaction(node,
+                                                     tx,
+                                                     /*max_tx_fee=*/0,
+                                                     max_raw_tx_fee_rate,
+                                                     method,
+                                                     /*wait_callback=*/true);
+            if (!result) {
+                throw JSONRPCTransactionError(result.error().code, result.error().message);
             }
 
             return tx->GetHash().GetHex();
@@ -1516,12 +1513,11 @@ static RPCMethod submitpackage()
                 }
 
                 // We do not expect an error here; we are only broadcasting things already/still in mempool
-                std::string err_string;
-                const auto err = BroadcastTransaction(node, tx, err_string, /*max_tx_fee=*/0, /*max_tx_fee_rate=*/CFeeRate(0), /*broadcast_method=*/node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL, /*wait_callback=*/true);
-                if (err != TransactionError::OK) {
-                    throw JSONRPCTransactionError(err,
+                const auto result = BroadcastTransaction(node, tx, /*max_tx_fee=*/0, /*max_tx_fee_rate=*/CFeeRate(0), /*broadcast_method=*/node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL, /*wait_callback=*/true);
+                if (!result) {
+                    throw JSONRPCTransactionError(result.error().code,
                         strprintf("transaction broadcast failed: %s (%d transactions were broadcast successfully)",
-                            err_string, num_broadcast));
+                            result.error().message, num_broadcast));
                 }
                 num_broadcast++;
             }
