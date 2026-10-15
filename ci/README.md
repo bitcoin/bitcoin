@@ -65,16 +65,14 @@ file. For example,
 env -i HOME="$HOME" PATH="$PATH" USER="$USER" MAKEJOBS="-j1" FILE_ENV="./ci/test/00_setup_env_arm.sh" ./ci/test_run_all.sh
 ```
 
-The files starting with `0n` (`n` greater than 0) are the scripts that are run
-in order.
-
 ## Cache
 
-In order to avoid rebuilding all dependencies for each build, the binaries are
-cached and reused when possible. Changes in the dependency-generator will
-trigger cache-invalidation and rebuilds as necessary.
+The CI system will cache container images to avoid having to reinstall all
+packages on each run. For faster incremental builds, there are also container
+volumes to hold the results of the dependency-generator from `./depends` and
+to hold `ccache` results.
 
-## Configuring a repository for CI
+## Configuring a repository for hosted CI
 
 ### Primary repository
 
