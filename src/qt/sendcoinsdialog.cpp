@@ -514,7 +514,9 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
         bool broadcast = true;
         if (model->wallet().hasExternalSigner()) {
             CMutableTransaction mtx = CMutableTransaction{*(m_current_transaction->getWtx())};
-            PartiallySignedTransaction psbtx(mtx);
+            // Users will need to have an external signer software that
+            // that supports BIP-0370.
+            PartiallySignedTransaction psbtx(mtx, /*version=*/2);
             bool complete = false;
             // Always fill without signing first. This prevents an external signer
             // from being called prematurely and is not expensive.
