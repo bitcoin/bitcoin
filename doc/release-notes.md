@@ -43,12 +43,19 @@ unsupported systems.
 Notable changes
 ===============
 
+`-maxconnections` now clamps values above 2,000 with a warning to reduce
+  crash risk at very high peer counts.
+
+### P2P
+
+- #35919 p2p: cap maxconnections at 2,000 to reduce crash risk
+
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
--
+- l0rinc
 
 As well as to everyone that helped with translations on
 [Transifex](https://explore.transifex.com/bitcoin/bitcoin/).
