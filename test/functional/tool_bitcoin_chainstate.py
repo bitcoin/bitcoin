@@ -75,7 +75,7 @@ class BitcoinChainstateTest(BitcoinTestFramework):
         n1.stop_node()
         block = n0.getblock(n0.getblockhash(START_HEIGHT+1), 0)
         self.log.info(f"Test bitcoin-chainstate {self.get_binaries().chainstate_argv()} with datadir: {datadir}")
-        self.add_block(datadir, block, expected_stderr="Block has not yet been rejected")
+        self.add_block(datadir, block, expected_stderr="Block has not yet been rejected", expected_stdout="Valid block")
         self.add_block(datadir, block, expected_stderr="duplicate")
         self.add_block(datadir, "00", expected_stderr="Block decode failed")
         self.add_block(datadir, "", expected_stderr="Empty line found")
