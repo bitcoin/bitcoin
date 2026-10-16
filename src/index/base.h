@@ -111,9 +111,9 @@ protected:
     const std::string m_name;
     const std::string m_thread_name;
 
-    void BlockConnected(const kernel::ChainstateRole& role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override;
+    void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override;
 
-    void ChainStateFlushed(const kernel::ChainstateRole& role, const CBlockLocator& locator) override;
+    void ChainStateFlushed(const CBlockLocator& locator) override;
 
     /// Initialize internal state from the database and block index.
     [[nodiscard]] virtual bool CustomInit(const std::optional<interfaces::BlockRef>& block) { return true; }

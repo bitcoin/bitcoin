@@ -6,7 +6,6 @@
 
 #include <common/args.h>
 #include <kernel/mempool_entry.h>
-#include <kernel/types.h>
 #include <netbase.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -22,8 +21,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-using kernel::ChainstateRole;
 
 CZMQNotificationInterface::CZMQNotificationInterface() = default;
 
@@ -177,11 +174,8 @@ void CZMQNotificationInterface::TransactionRemovedFromMempool(const CTransaction
     });
 }
 
-void CZMQNotificationInterface::BlockConnected(const ChainstateRole& role, const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected)
+void CZMQNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected)
 {
-    if (role.historical) {
-        return;
-    }
     for (const CTransactionRef& ptx : pblock->vtx) {
         const CTransaction& tx = *ptx;
         TryForEachAndRemoveFailed(notifiers, [&tx](CZMQAbstractNotifier* notifier) {
