@@ -124,6 +124,25 @@ $ bitcoin-cli -rpcwallet="restored-wallet" getwalletinfo
 
 The restored wallet can also be loaded in the GUI via `File` ->`Open wallet`.
 
+### 1.7 Recovering from a Corrupted Wallet
+
+A wallet database can become corrupted due to hardware failure, a power loss or OS crash during a write, or disk-level errors. When corruption is detected at load time, Bitcoin Core will report an error and log details to `debug.log`.
+
+**The only supported recovery mechanism is to restore from a backup** (see [section 1.4](#14-backing-up-the-wallet) and [section 1.6](#16-restoring-the-wallet-from-a-backup)).
+
+There is no safe way to repair a corrupted wallet database in place. Attempting to manually remove, modify, or reconstruct records risks inconsistent state, incorrect balances, or permanent fund loss.
+
+To recover from a corrupted wallet:
+
+1. Ensure the wallet is not loaded by using the `unloadwallet` RPC, or `File` -> `Close Wallet` in the GUI, or stopping Bitcoin Core.
+2. Move the corrupted wallet directory aside — do not delete it until recovery is confirmed.
+3. Restore the most recent backup as described in [section 1.6](#16-restoring-the-wallet-from-a-backup).
+4. Verify the restored wallet loads correctly and shows the expected balance before resuming normal use.
+
+If no backup is available, there is no supported recovery path for the corrupted wallet.
+
+Regular backups as described in [section 1.5](#15-backup-frequency) are the only reliable protection against unrecoverable corruption.
+
 ## Wallet Passphrase
 
 Understanding wallet security is crucial for safely storing your Bitcoin. A key aspect is the wallet passphrase, used for encryption. Let's explore its nuances, role, encryption process, and limitations.
