@@ -188,7 +188,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, 'Label argument must be a valid label name or "*".', self.nodes[0].listtransactions, label="")
         self.nodes[0].listtransactions(label="*")
         assert_raises_rpc_error(-8, "Negative count", self.nodes[0].listtransactions, count=-1)
-        assert_raises_rpc_error(-8, "Negative from", self.nodes[0].listtransactions, skip=-1)
+        assert_raises_rpc_error(-8, "Negative skip", self.nodes[0].listtransactions, skip=-1)
 
     def test_op_return(self):
         """Test if OP_RETURN outputs will be displayed correctly."""
