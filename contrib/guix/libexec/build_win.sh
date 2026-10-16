@@ -23,7 +23,7 @@ make -C depends --jobs="$JOBS" HOST="$HOST" \
                                    NO_QT=1
 
 # CFLAGS
-HOST_CFLAGS="-O2 -g"
+HOST_CFLAGS="-O2 -g -D_GLIBCXX_USE_DEPRECATED=0"
 HOST_CFLAGS+=$(find /gnu/store -maxdepth 1 -mindepth 1 -type d -exec echo -n " -ffile-prefix-map={}=/usr" \;)
 HOST_CFLAGS+=" -fdebug-prefix-map=${DISTSRC}/src=."
 HOST_CFLAGS+=" -fno-ident"
