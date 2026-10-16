@@ -30,6 +30,11 @@
 using util::SplitString;
 using util::TrimString;
 
+/* defined in logging.cpp */
+namespace BCLog {
+    std::string LogEscapeMessage(std::string_view str);
+}
+
 BOOST_FIXTURE_TEST_SUITE(logging_tests, BasicTestingSetup)
 
 static void ResetLogger()
@@ -108,6 +113,19 @@ BOOST_AUTO_TEST_CASE(logging_timer)
     auto micro_timer = BCLog::Timer<std::chrono::microseconds>("tests", "end_msg");
     const std::string_view result_prefix{"tests: msg ("};
     BOOST_CHECK_EQUAL(micro_timer.LogMsg("msg").substr(0, result_prefix.size()), result_prefix);
+}
+
+BOOST_AUTO_TEST_CASE(test_LogEscapeMessage)
+{
+    // ASCII and UTF-8 must pass through unaltered.
+    BOOST_CHECK_EQUAL(BCLog::LogEscapeMessage("Valid log message貓"), "Valid log message貓");
+    // Newlines are escaped too, so a message can't forge log lines.
+    BOOST_CHECK_EQUAL(BCLog::LogEscapeMessage("Message\n with newlines\n"), R"(Message\x0a with newlines\x0a)");
+    // Other control characters are escaped in C syntax.
+    BOOST_CHECK_EQUAL(BCLog::LogEscapeMessage("\x01\x7f Corrupted log message\x0d"), R"(\x01\x7f Corrupted log message\x0d)");
+    // Embedded NULL characters are escaped too.
+    const std::string NUL("O\x00O", 3);
+    BOOST_CHECK_EQUAL(BCLog::LogEscapeMessage(NUL), R"(O\x00O)");
 }
 
 BOOST_FIXTURE_TEST_CASE(logging_LogPrint, LogSetup)

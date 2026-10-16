@@ -923,7 +923,7 @@ public:
 
     /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
     template <typename... Params>
-    void WalletLogPrintf(util::ConstevalFormatString<sizeof...(Params)> wallet_fmt, const Params&... params) const
+    void WalletLogPrintf(util::ConstevalFormatString<sizeof...(Params), /*permit_trailing_newline=*/false> wallet_fmt, const Params&... params) const
     {
         LogInfo("[%s] %s", LogName(), tfm::format(wallet_fmt, params...));
     };
@@ -931,9 +931,9 @@ public:
     void LogStats() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
         AssertLockHeld(cs_wallet);
-        WalletLogPrintf("setKeyPool.size() = %u\n",      GetKeyPoolSize());
-        WalletLogPrintf("mapWallet.size() = %u\n",       mapWallet.size());
-        WalletLogPrintf("m_address_book.size() = %u\n",  m_address_book.size());
+        WalletLogPrintf("setKeyPool.size() = %u",      GetKeyPoolSize());
+        WalletLogPrintf("mapWallet.size() = %u",       mapWallet.size());
+        WalletLogPrintf("m_address_book.size() = %u",  m_address_book.size());
     };
 
     //! Returns all unique ScriptPubKeyMans in m_internal_spk_managers and m_external_spk_managers

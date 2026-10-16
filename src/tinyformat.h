@@ -193,7 +193,8 @@ template <unsigned num_params>
 struct FormatStringCheck {
     consteval FormatStringCheck(const char* str) : fmt{util::ConstevalFormatString<num_params>{str}.fmt} {}
     FormatStringCheck(LIFETIMEBOUND const RuntimeFormat& run) : fmt{run.fmt.c_str()} {}
-    FormatStringCheck(util::ConstevalFormatString<num_params> str) : fmt{str.fmt} {}
+    template <bool permit_trailing_newline>
+    FormatStringCheck(util::ConstevalFormatString<num_params, permit_trailing_newline> str) : fmt{str.fmt} {}
     operator const char*() { return fmt; }
     const char* fmt;
 };
