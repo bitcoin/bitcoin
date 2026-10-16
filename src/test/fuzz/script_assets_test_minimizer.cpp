@@ -4,6 +4,7 @@
 
 #include <test/fuzz/fuzz.h>
 
+#include <common/ecc_init.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
@@ -186,7 +187,10 @@ void Test(const std::string& str)
     }
 }
 
-void test_init() {}
+void test_init()
+{
+    static const auto ecc_context{MakeContextECC()};
+}
 
 FUZZ_TARGET(script_assets_test_minimizer, .init = test_init, .hidden = true)
 {

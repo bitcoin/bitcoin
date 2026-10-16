@@ -8,6 +8,7 @@
 #include <bech32.h>
 #include <chainparams.h>
 #include <coins.h>
+#include <ecc_context.h>
 #include <hash.h>
 #include <key.h>
 #include <primitives/transaction.h>

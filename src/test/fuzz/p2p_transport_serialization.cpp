@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <common/ecc_init.h>
 #include <hash.h>
 #include <net.h>
 #include <netmessagemaker.h>
@@ -25,7 +26,7 @@ auto g_all_messages = ALL_NET_MESSAGE_TYPES;
 
 void initialize_p2p_transport_serialization()
 {
-    static ECC_Context ecc_context{};
+    static const auto ecc_context{MakeContextECC()};
     SelectParams(ChainType::REGTEST);
     std::sort(g_all_messages.begin(), g_all_messages.end());
 }
