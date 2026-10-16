@@ -80,6 +80,8 @@ inline constexpr size_t MAX_PRIVATE_BROADCAST_CONNECTIONS{64};
 inline constexpr bool DEFAULT_LISTEN = true;
 /** The maximum number of peer connections to maintain. */
 inline constexpr unsigned int DEFAULT_MAX_PEER_CONNECTIONS{200};
+/** Maximum value of -maxconnections */
+inline constexpr int MAX_PEER_CONNECTIONS{2'000};
 /** Default percentage of inbound connection slots that tx-relaying peers can use */
 inline constexpr int DEFAULT_FULL_RELAY_INBOUND_PCT{50};
 /** The default for -maxuploadtarget. 0 = Unlimited */
