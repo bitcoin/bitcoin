@@ -314,6 +314,13 @@ std::optional<PackageToValidate> TxDownloadManagerImpl::Find1P1CPackage(const CT
     // of children that replace each other, this helps us accept the highest feerate (probably the
     // most recent) one efficiently.
     for (const auto& child : cpfp_candidates_same_peer) {
+        // The orphan is left in the orphanage when it enters the mempool other than through peer
+        // relay (e.g. by RPC), or when a version with a different witness enters. Either way it
+        // cannot enter the mempool.
+        if (m_mempool.exists(child->GetHash())) {
+            m_orphanage->EraseTx(child->GetWitnessHash());
+            continue;
+        }
         Package maybe_cpfp_package{ptx, child};
         if (!RecentRejectsReconsiderableFilter().contains(GetPackageHash(maybe_cpfp_package)) &&
             !RecentRejectsFilter().contains(child->GetHash().ToUint256())) {
