@@ -763,10 +763,7 @@ bool BlockManager::FlushBlockFile(int blockfile_num, bool fFinalize, bool finali
     bool success = true;
 
     if (m_blockfile_info.size() < 1) {
-        // Return if we haven't loaded any blockfiles yet. This happens during
-        // chainstate init, when we call ChainstateManager::MaybeRebalanceCaches() (which
-        // then calls FlushStateToDisk()), resulting in a call to this function before we
-        // have populated `m_blockfile_info` via LoadBlockIndexDB().
+        // Return if we haven't loaded any blockfiles yet.
         return true;
     }
     assert(static_cast<int>(m_blockfile_info.size()) > blockfile_num);
