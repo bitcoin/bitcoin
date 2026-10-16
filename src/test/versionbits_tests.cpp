@@ -457,6 +457,10 @@ BOOST_FIXTURE_TEST_CASE(versionbits_computeblockversion, BlockVersionTest)
             // the same bit might overlap, even when non-overlapping start-end
             // times are picked.
             const auto& dep_info = chainParams->GetConsensus().vDeployments[dep];
+            // CISA activation parameters are only defined for regtest so far.
+            if (chain_type != ChainType::REGTEST && dep == Consensus::DEPLOYMENT_CISA) {
+                continue;
+            }
             const uint32_t dep_mask{uint32_t{1} << dep_info.bit};
             BOOST_CHECK(!(chain_all_vbits & dep_mask));
             chain_all_vbits |= dep_mask;

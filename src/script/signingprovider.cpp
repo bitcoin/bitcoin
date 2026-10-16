@@ -5,6 +5,7 @@
 
 #include <script/signingprovider.h>
 
+#include <cisa.h>
 #include <musig.h>
 #include <script/interpreter.h>
 #include <script/keyorigin.h>
@@ -84,6 +85,21 @@ void HidingSigningProvider::DeleteMuSig2Session(const uint256& session_id) const
     m_provider->DeleteMuSig2Session(session_id);
 }
 
+void HidingSigningProvider::SetCISASecNonce(const uint256& id, FullAggSecNonce&& nonce) const
+{
+    m_provider->SetCISASecNonce(id, std::move(nonce));
+}
+
+std::optional<std::reference_wrapper<FullAggSecNonce>> HidingSigningProvider::GetCISASecNonce(const uint256& session_id) const
+{
+    return m_provider->GetCISASecNonce(session_id);
+}
+
+void HidingSigningProvider::DeleteCISASession(const uint256& session_id) const
+{
+    m_provider->DeleteCISASession(session_id);
+}
+
 bool FlatSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const { return LookupHelper(scripts, scriptid, script); }
 bool FlatSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const { return LookupHelper(pubkeys, keyid, pubkey); }
 bool FlatSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const
@@ -147,6 +163,27 @@ void FlatSigningProvider::DeleteMuSig2Session(const uint256& session_id) const
     musig2_secnonces->erase(session_id);
 }
 
+void FlatSigningProvider::SetCISASecNonce(const uint256& session_id, FullAggSecNonce&& nonce) const
+{
+    if (!Assume(cisa_secnonces)) return;
+    auto [it, inserted] = cisa_secnonces->try_emplace(session_id, std::move(nonce));
+    Assert(inserted);
+}
+
+std::optional<std::reference_wrapper<FullAggSecNonce>> FlatSigningProvider::GetCISASecNonce(const uint256& session_id) const
+{
+    if (!Assume(cisa_secnonces)) return std::nullopt;
+    const auto& it = cisa_secnonces->find(session_id);
+    if (it == cisa_secnonces->end()) return std::nullopt;
+    return it->second;
+}
+
+void FlatSigningProvider::DeleteCISASession(const uint256& session_id) const
+{
+    if (!Assume(cisa_secnonces)) return;
+    cisa_secnonces->erase(session_id);
+}
+
 FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
 {
     scripts.merge(b.scripts);
@@ -157,6 +194,7 @@ FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
     aggregate_pubkeys.merge(b.aggregate_pubkeys);
     // We shouldn't be merging 2 different sessions, just overwrite with b's sessions.
     if (!musig2_secnonces) musig2_secnonces = b.musig2_secnonces;
+    if (!cisa_secnonces) cisa_secnonces = b.cisa_secnonces;
     return *this;
 }
 

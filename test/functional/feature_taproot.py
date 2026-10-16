@@ -853,6 +853,10 @@ def spenders_taproot_active():
     for p2sh in [False, True]:
         for witver in range(1, 17):
             for witlen in [20, 31, 32, 33]:
+                if not p2sh and witver == 2 and witlen == 32:
+                    # Witness v2 with a 32-byte program has its own spending
+                    # rules under BIP460, covered in feature_cisa.py.
+                    continue
                 def mutate(spk):
                     prog = spk[2:]
                     assert_equal(len(prog), 32)

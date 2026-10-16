@@ -113,6 +113,14 @@ std::string ScriptErrorString(const ScriptError serror)
             return "OP_IF/NOTIF argument must be minimal in tapscript";
         case SCRIPT_ERR_TAPSCRIPT_EMPTY_PUBKEY:
             return "Empty public key in tapscript";
+        case SCRIPT_ERR_WITNESS_V2_INVALID_MARKER:
+            return "Invalid witness v2 aggregation marker or element size";
+        case SCRIPT_ERR_WITNESS_V2_INVALID_SIGHASH:
+            return "Invalid witness v2 sighash type";
+        case SCRIPT_ERR_CISA_GROUP_INVALID:
+            return "Invalid CISA aggregation group structure";
+        case SCRIPT_ERR_CISA_VERIFY_FAILED:
+            return "CISA aggregate signature verification failed";
         case SCRIPT_ERR_OP_CODESEPARATOR:
             return "Using OP_CODESEPARATOR in non-witness script";
         case SCRIPT_ERR_SIG_FINDANDDELETE:

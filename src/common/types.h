@@ -13,6 +13,7 @@
 #ifndef BITCOIN_COMMON_TYPES_H
 #define BITCOIN_COMMON_TYPES_H
 
+#include <cstdint>
 #include <optional>
 
 namespace common {
@@ -48,6 +49,11 @@ struct PSBTFillOptions {
      * Whether to fill in bip32 derivation information if available.
      */
     bool bip32_derivs{true};
+
+    /**
+     * The BIP460 aggregation mode to set on witness version 2 inputs that have none.
+     */
+    std::optional<uint8_t> cisa_mode{std::nullopt};
 };
 
 } // namespace common
