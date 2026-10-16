@@ -4,6 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test torcontrol functionality with a mock Tor control server."""
 from contextlib import contextmanager
+import hashlib
+import hmac
 import socket
 import threading
 from test_framework.test_framework import BitcoinTestFramework
@@ -104,6 +106,81 @@ class MockTorControlServer:
             return "510 Unrecognized command\r\n"
 
 
+# Constants from torcontrol.cpp
+TOR_SAFE_SERVERKEY = b"Tor safe cookie authentication server-to-controller hash"
+TOR_SAFE_CLIENTKEY = b"Tor safe cookie authentication controller-to-server hash"
+
+
+class SafeCookieServer(MockTorControlServer):
+    def __init__(self, port, cookie_data, cookie_fpath, fail_authchallenge=False, server_nonce=b'\x44' * 32, corrupt_server_hash=False):
+        super().__init__(port, manual_mode=True)
+
+        self.cookie = cookie_data
+        self.cookie_path = cookie_fpath
+        self.client_nonce = None
+        self.server_nonce = server_nonce
+        self.fail_authchallenge = fail_authchallenge
+        self.corrupt_server_hash = corrupt_server_hash
+
+    def _compute_hmac(self, key, client_nonce):
+        """Compute HMAC-SHA256 for SAFECOOKIE authentication"""
+        return hmac.new(key, self.cookie + client_nonce + self.server_nonce, hashlib.sha256).digest()
+
+    def _handle_authchallenge(self, command):
+        """Parse AUTHCHALLENGE command and extract client nonce"""
+        if self.fail_authchallenge:
+            return "515 Authentication failed\r\n"
+
+        # Format: AUTHCHALLENGE SAFECOOKIE <client_nonce_hex>
+        parts = command.split()
+        if len(parts) != 3:
+            return "513 Syntax error in AUTHCHALLENGE command\r\n"
+
+        self.client_nonce = bytes.fromhex(parts[2])
+        server_hash = self._compute_hmac(TOR_SAFE_SERVERKEY, self.client_nonce)
+        if self.corrupt_server_hash:
+            # a real HMAC-SHA256 hash will never be 32 zero bytes
+            server_hash = b'\x00' * 32
+        return (f"250-AUTHCHALLENGE SERVERHASH={server_hash.hex()} "
+                f"SERVERNONCE={self.server_nonce.hex()}\r\n"
+                f"250 OK\r\n")
+
+    def _handle_authenticate(self, command):
+        """Verify AUTHENTICATE command has correct client hash"""
+
+        # Format: AUTHENTICATE <client_hash_hex>
+        parts = command.split()
+        if len(parts) == 2 and self.client_nonce is not None:
+            received_hash = bytes.fromhex(parts[1])
+            # Compute expected client hash
+            expected_hash = self._compute_hmac(TOR_SAFE_CLIENTKEY, self.client_nonce)
+            if received_hash == expected_hash:
+                return "250 OK\r\n"
+        return "515 Bad authentication\r\n"
+
+    def _get_response(self, command):
+        if command == "PROTOCOLINFO 1":
+            # COOKIEFILE is a QuotedString, so backslashes (Windows paths) must be escaped
+            cookie_path = str(self.cookie_path).replace("\\", "\\\\")
+            return ("250-PROTOCOLINFO 1\r\n"
+                    f'250-AUTH METHODS=SAFECOOKIE COOKIEFILE="{cookie_path}"\r\n'
+                    '250-VERSION Tor="0.1.2.3"\r\n'
+                    "250 OK\r\n")
+        if command.startswith("AUTHCHALLENGE"):
+            return self._handle_authchallenge(command)
+        if command.startswith("AUTHENTICATE"):
+            return self._handle_authenticate(command)
+        if command.startswith("GETINFO"):
+            return '250-net/listeners/socks="127.0.0.1:9050"\r\n250 OK\r\n'
+        if command.startswith("ADD_ONION"):
+            return ("250-ServiceID=testserviceid1234567890123456789012345678901234567890123456\r\n"
+                    "250 OK\r\n")
+        return super()._get_response(command)
+
+    def get_response(self, command):
+        return self._get_response(command)
+
+
 class TorControlTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
@@ -140,6 +217,13 @@ class TorControlTest(BitcoinTestFramework):
         else:
             # No disconnect, so no reconnect message
             ensure_for(duration=2, f=lambda: len(mock_tor.received_commands) == initial_len)
+
+    def expect_command(self, mock_tor, index, prefix):
+        """Wait until the mock received command number `index`, check its prefix and return it."""
+        self.wait_until(lambda: len(mock_tor.received_commands) > index, timeout=10)
+        command = mock_tor.received_commands[index]
+        assert command.startswith(prefix), f"Expected command {index} to start with {prefix!r}, got {command!r}."
+        return command
 
     def test_basic(self):
         self.log.info("Test Tor control basic functionality")
@@ -271,6 +355,117 @@ class TorControlTest(BitcoinTestFramework):
 
         mock_tor.stop()
 
+    def test_safecookie_auth_success(self):
+        self.log.info("Test that SAFECOOKIE authentication succeeds")
+
+        # Store cookie file in node's datadir
+        cookie = b'\x12' * 32
+        cookie_path = self.nodes[0].datadir_path / "tor_cookie"
+        cookie_path.write_bytes(cookie)
+
+        mock_tor = SafeCookieServer(self.next_port(), cookie, str(cookie_path))
+        self.restart_with_mock(mock_tor)
+        mock_tor.send_raw(mock_tor.get_response("PROTOCOLINFO 1"))
+
+        command = self.expect_command(mock_tor, 1, "AUTHCHALLENGE SAFECOOKIE ")
+        mock_tor.send_raw(mock_tor.get_response(command))
+
+        command = self.expect_command(mock_tor, 2, "AUTHENTICATE ")
+        auth_response = mock_tor.get_response(command)
+        mock_tor.send_raw(auth_response)
+        # Verify successful authentication
+        assert_equal(auth_response, "250 OK\r\n")
+
+        # After successful auth, we should proceed to GETINFO
+        command = self.expect_command(mock_tor, 3, "GETINFO net/listeners/socks")
+        mock_tor.send_raw(mock_tor.get_response(command))
+        self.expect_command(mock_tor, 4, "ADD_ONION ")
+
+        mock_tor.stop()
+
+    def test_safecookie_authchallenge_error(self):
+        self.log.info("Test that AUTHCHALLENGE returns an error code")
+
+        cookie = b'\x12' * 32
+        cookie_path = self.nodes[0].datadir_path / "tor_cookie"
+        cookie_path.write_bytes(cookie)
+
+        mock_tor = SafeCookieServer(self.next_port(), cookie, str(cookie_path), fail_authchallenge=True)
+        self.restart_with_mock(mock_tor)
+        mock_tor.send_raw(mock_tor.get_response("PROTOCOLINFO 1"))
+
+        command = self.expect_command(mock_tor, 1, "AUTHCHALLENGE SAFECOOKIE ")
+        with self.nodes[0].assert_debug_log(["SAFECOOKIE authentication challenge failed"], timeout=10):
+            mock_tor.send_raw(mock_tor.get_response(command))
+
+        mock_tor.stop()
+
+    def test_safecookie_short_cookie(self):
+        self.log.info("Test that SAFECOOKIE authentication fails when the cookie file is shorter than 32 bytes")
+
+        # Store short cookie file in node's datadir
+        short_cookie = b'\x12' * 31
+        short_cookie_path = self.nodes[0].datadir_path / "tor_cookie_short"
+        short_cookie_path.write_bytes(short_cookie)
+
+        mock_tor = SafeCookieServer(self.next_port(), short_cookie, str(short_cookie_path))
+        self.restart_with_mock(mock_tor)
+        with self.nodes[0].assert_debug_log([f"Authentication cookie {short_cookie_path} is not exactly 32 bytes"], timeout=10):
+            mock_tor.send_raw(mock_tor.get_response("PROTOCOLINFO 1"))
+
+        mock_tor.stop()
+
+    def test_safecookie_unreadable_cookie(self):
+        self.log.info("Test that SAFECOOKIE authentication is available but the cookie file cannot be read")
+
+        # Point COOKIEFILE at a path that doesn't exist, so the node can't read it
+        missing_cookie_path = self.nodes[0].datadir_path / "tor_cookie_missing"
+
+        cookie = b'\x12' * 32
+        mock_tor = SafeCookieServer(self.next_port(), cookie, str(missing_cookie_path))
+        self.restart_with_mock(mock_tor)
+        with self.nodes[0].assert_debug_log([f"Authentication cookie {missing_cookie_path} could not be opened"], timeout=10):
+            mock_tor.send_raw(mock_tor.get_response("PROTOCOLINFO 1"))
+
+        mock_tor.stop()
+
+    def test_safecookie_invalid_server_nonce(self):
+        self.log.info("Test that SAFECOOKIE authentication fails when the server nonce is not 32 bytes")
+
+        cookie = b'\x12' * 32
+        cookie_path = self.nodes[0].datadir_path / "tor_cookie"
+        cookie_path.write_bytes(cookie)
+
+        # The server hash for the 31-byte nonce is valid, but the nonce length is wrong
+        mock_tor = SafeCookieServer(self.next_port(), cookie, str(cookie_path), server_nonce=b'\x44' * 31)
+        self.restart_with_mock(mock_tor)
+        mock_tor.send_raw(mock_tor.get_response("PROTOCOLINFO 1"))
+
+        command = self.expect_command(mock_tor, 1, "AUTHCHALLENGE SAFECOOKIE ")
+        with self.nodes[0].assert_debug_log(["ServerNonce is not 32 bytes"], timeout=10):
+            mock_tor.send_raw(mock_tor.get_response(command))
+
+        mock_tor.stop()
+
+    def test_safecookie_server_hash_mismatch(self):
+        self.log.info("Test that SAFECOOKIE authentication fails when the server hash does not match the computed one")
+
+        cookie = b'\x12' * 32
+        cookie_path = self.nodes[0].datadir_path / "tor_cookie"
+        cookie_path.write_bytes(cookie)
+
+        mock_tor = SafeCookieServer(self.next_port(), cookie, str(cookie_path), corrupt_server_hash=True)
+        self.restart_with_mock(mock_tor)
+        mock_tor.send_raw(mock_tor.get_response("PROTOCOLINFO 1"))
+
+        command = self.expect_command(mock_tor, 1, "AUTHCHALLENGE SAFECOOKIE ")
+        with self.nodes[0].assert_debug_log(["does not match expected ServerHash"], timeout=10):
+            mock_tor.send_raw(mock_tor.get_response(command))
+
+        # Node must not send AUTHENTICATE to a server that failed to prove it knows the cookie
+        ensure_for(duration=2, f=lambda: len(mock_tor.received_commands) == 2)
+        mock_tor.stop()
+
     def run_test(self):
         self.test_basic()
         self.test_partial_data()
@@ -278,6 +473,17 @@ class TorControlTest(BitcoinTestFramework):
         self.test_oversized_line()
         self.test_overmany_lines()
         self.test_reconnect_backoff()
+
+        # Reset the port counter, otherwise 'next_port()' can run
+        # past 'MAX_NODES'
+        self._port_counter = 0
+
+        self.test_safecookie_auth_success()
+        self.test_safecookie_authchallenge_error()
+        self.test_safecookie_short_cookie()
+        self.test_safecookie_unreadable_cookie()
+        self.test_safecookie_invalid_server_nonce()
+        self.test_safecookie_server_hash_mismatch()
 
 
 if __name__ == '__main__':
