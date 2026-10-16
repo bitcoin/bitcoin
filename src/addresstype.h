@@ -124,7 +124,7 @@ struct PayToAnchor : public WitnessUnknown
 {
     PayToAnchor() : WitnessUnknown(1, ANCHOR_BYTES) {
         Assume(CScript::IsPayToAnchor(1, ANCHOR_BYTES));
-    };
+    }
 };
 
 /**
