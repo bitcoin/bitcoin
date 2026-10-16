@@ -74,6 +74,7 @@
 #include <optional>
 #include <ranges>
 #include <span>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -3339,9 +3340,6 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
         {
             LOCK(cs_main);
             {
-            // Snapshot activation can replace the active chainstate while this
-            // call releases cs_main. Do not continue its historical validation.
-            if (TargetBlock()) return true;
             // Lock transaction pool for at least as long as it takes for connected_blocks to be consumed
             LOCK(MempoolMutex());
             CBlockIndex* starting_tip = m_chain.Tip();
@@ -4819,12 +4817,6 @@ bool Chainstate::NeedsRedownload() const
     return false;
 }
 
-void Chainstate::ClearBlockIndexCandidates()
-{
-    AssertLockHeld(::cs_main);
-    setBlockIndexCandidates.clear();
-}
-
 void Chainstate::PopulateBlockIndexCandidates()
 {
     AssertLockHeld(::cs_main);
@@ -5917,12 +5909,20 @@ void ChainstateManager::ResetChainstates()
 }
 
 /**
+ * Reject unfinished snapshots before BlockManager can open or wipe storage.
  * Apply default chain params to nullopt members.
  * This helps to avoid coding errors around the accidental use of the compare
  * operators that accept nullopt, thus ignoring the intended default value.
  */
 static ChainstateManager::Options&& Flatten(ChainstateManager::Options&& opts)
 {
+    const auto snapshot_path{opts.datadir / "chainstate_snapshot"};
+    if (fs::exists(snapshot_path / "base_blockhash")) {
+        throw std::runtime_error{strprintf("An unfinished AssumeUTXO snapshot was found in %s. Finish background validation and restart with a version that supports AssumeUTXO before upgrading, or delete this directory and restart with -reindex to discard the snapshot and rebuild the block index.", fs::PathToString(snapshot_path))};
+    }
+    if (fs::is_directory(snapshot_path)) {
+        LogWarning("Ignoring malformed AssumeUTXO snapshot directory %s. It can be deleted.", fs::PathToString(snapshot_path));
+    }
     if (!opts.check_block_index.has_value()) opts.check_block_index = opts.chainparams.DefaultConsistencyChecks();
     if (!opts.minimum_chain_work.has_value()) opts.minimum_chain_work = UintToArith256(opts.chainparams.GetConsensus().nMinimumChainWork);
     if (!opts.assumed_valid_block.has_value()) opts.assumed_valid_block = opts.chainparams.GetConsensus().defaultAssumeValid;

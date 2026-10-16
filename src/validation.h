@@ -803,8 +803,6 @@ public:
 
     void PruneBlockIndexCandidates();
 
-    void ClearBlockIndexCandidates() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
     /** Populate the candidate set by calling TryAddBlockIndexCandidate on all valid block indices. */
     void PopulateBlockIndexCandidates() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
@@ -991,6 +989,7 @@ public:
     RecursiveMutex& GetMutex() const LOCK_RETURNED(::cs_main) { return ::cs_main; }
 
     const util::SignalInterrupt& m_interrupt;
+    //! Validate options before constructing m_blockman, which may modify storage.
     const Options m_options;
     //! A single BlockManager instance is shared across each constructed
     //! chainstate to avoid duplicating block metadata.
@@ -1019,16 +1018,6 @@ public:
     int32_t nBlockReverseSequenceId = -1;
     /** chainwork for the last block that preciousblock has been applied to. */
     arith_uint256 nLastPreciousChainwork = 0;
-
-    // Reset the memory-only sequence counters we use to track block arrival
-    // (used by tests to reset state)
-    void ResetBlockSequenceCounters() EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
-    {
-        AssertLockHeld(::cs_main);
-        nBlockSequenceId = SEQ_ID_INIT_FROM_DISK + 1;
-        nBlockReverseSequenceId = -1;
-    }
-
 
     /** Best header we've seen so far for which the block is not known to be invalid
         (used, among others, for getheaders queries' starting points).

@@ -367,6 +367,7 @@ BASE_SCRIPTS = [
     'p2p_connection_limits.py',
     'rpc_scantxoutset.py',
     'feature_unsupported_utxo_db.py',
+    'feature_assumeutxo_compat.py',
     'mempool_cluster.py',
     'feature_logging.py',
     'interface_ipc.py',

@@ -3,22 +3,15 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 #include <chain.h>
-#include <chainparams.h>
 #include <coins.h>
 #include <consensus/amount.h>
-#include <consensus/validation.h>
-#include <node/blockstorage.h>
-#include <node/kernel_notifications.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <random.h>
 #include <script/script.h>
 #include <sync.h>
-#include <test/util/chainstate.h>
 #include <test/util/coins.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
-#include <tinyformat.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <validation.h>
@@ -26,10 +19,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <memory>
-#include <optional>
 #include <vector>
-
-class CTxMemPool;
 
 BOOST_FIXTURE_TEST_SUITE(validation_chainstate_tests, ChainTestingSetup)
 
@@ -96,75 +86,6 @@ BOOST_FIXTURE_TEST_CASE(connect_tip_does_not_cache_inputs_on_failed_connect, Tes
     LOCK(cs_main);
     BOOST_CHECK_EQUAL(tip, chainstate.m_chain.Tip()->GetBlockHash()); // block rejected
     BOOST_CHECK(!chainstate.CoinsTip().HaveCoinInCache(outpoint));    // input not cached
-}
-
-//! Snapshot notifications advance while historical validation stays stopped.
-BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
-{
-    ChainstateManager& chainman = *Assert(m_node.chainman);
-    const auto get_notify_tip{[&]() {
-        LOCK(m_node.notifications->m_tip_block_mutex);
-        BOOST_REQUIRE(m_node.notifications->TipBlock());
-        return *m_node.notifications->TipBlock();
-    }};
-    uint256 curr_tip = get_notify_tip();
-
-    // Mine 10 more blocks, putting at us height 110 where a valid assumeutxo value can
-    // be found.
-    mineBlocks(10);
-
-    // After adding some blocks to the tip, best block should have changed.
-    BOOST_CHECK(get_notify_tip() != curr_tip);
-
-    // Grab block 1 from disk to attempt historical validation later.
-    std::shared_ptr<CBlock> pblockone = std::make_shared<CBlock>();
-    {
-        LOCK(::cs_main);
-        chainman.m_blockman.ReadBlock(*pblockone, *chainman.ActiveChain()[1]);
-    }
-
-    BOOST_REQUIRE(CreateAndActivateUTXOSnapshot(
-        this, NoMalleation, /*reset_chainstate=*/ true));
-
-    // Ensure our active chain is the snapshot chainstate.
-    BOOST_CHECK(WITH_LOCK(::cs_main, return chainman.CurrentChainstate().m_from_snapshot_blockhash));
-
-    curr_tip = get_notify_tip();
-
-    // Mine a new block on top of the activated snapshot chainstate.
-    mineBlocks(1);  // Defined in TestChain100Setup.
-
-    // After adding some blocks to the snapshot tip, best block should have changed.
-    BOOST_CHECK(get_notify_tip() != curr_tip);
-
-    curr_tip = get_notify_tip();
-
-    Chainstate& background_cs{*Assert(WITH_LOCK(::cs_main, return chainman.HistoricalChainstate()))};
-
-    // Receiving an earlier block must not resume historical validation.
-    BlockValidationState state;
-    CBlockIndex* pindex = nullptr;
-    const CChainParams& chainparams = Params();
-    bool newblock = false;
-
-    {
-        LOCK(::cs_main);
-        bool checked = CheckBlock(*pblockone, state, chainparams.GetConsensus());
-        BOOST_CHECK(checked);
-        bool accepted = chainman.AcceptBlock(
-            pblockone, state, &pindex, true, nullptr, &newblock, true);
-        BOOST_CHECK(accepted);
-    }
-
-    // Direct callers cannot advance the stopped chainstate either.
-    bool block_added = background_cs.ActivateBestChain(state, pblockone);
-
-    // Ensure tip is as expected
-    BOOST_CHECK_EQUAL(background_cs.m_chain.Height(), 0);
-
-    // Attempting historical validation does not send a tip notification.
-    BOOST_CHECK(block_added);
-    BOOST_CHECK_EQUAL(curr_tip, get_notify_tip());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

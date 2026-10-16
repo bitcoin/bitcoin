@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <utility>
 #include <vector>
 
 using kernel::CacheSizes;
@@ -50,6 +51,14 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         // If the loaded chain has a wrong genesis, bail out immediately
         // (we're likely using a testnet datadir, or the other way around).
         return {ChainstateLoadStatus::FAILURE_INCOMPATIBLE_DB, _("Incorrect or no genesis block found. Wrong datadir for network?")};
+    }
+
+    // Genesis is never connected, so its validity need not reach BLOCK_VALID_CHAIN.
+    for (const auto& [hash, block] : chainman.BlockIndex()) {
+        if (block.nHeight > 1 && (block.nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_CHAIN &&
+            (block.pprev->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_CHAIN) {
+            return {ChainstateLoadStatus::FAILURE_INCOMPATIBLE_DB, _("Block index contains unfinished AssumeUTXO validation. Please restart with -reindex to rebuild the block index.")};
+        }
     }
 
     // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
