@@ -1250,6 +1250,32 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
            result.GetWaste(),
            result.GetSelectedValue());
 
+    // Check for partial spend: spending some but not all available UTXOs from any scriptPubKey
+    bool has_partial_spend{false};
+    if (coin_control.m_allow_other_inputs) {
+        std::map<CScript, std::pair<size_t, size_t>> spk_counts; // {available, selected}
+        for (const auto& [_, outputs] : available_coins.coins) {
+            for (const auto& coin : outputs) {
+                spk_counts[coin.txout.scriptPubKey].first++;
+            }
+        }
+        // AvailableCoins skips manually selected coins, so count them here too.
+        for (const auto& [_, outputs] : preset_inputs.coins) {
+            for (const auto& coin : outputs) {
+                spk_counts[coin.txout.scriptPubKey].first++;
+            }
+        }
+        for (const auto& coin : result.GetInputSet()) {
+            spk_counts[coin->txout.scriptPubKey].second++;
+        }
+        for (const auto& [spk, counts] : spk_counts) {
+            if (counts.second > 0 && counts.second < counts.first) {
+                has_partial_spend = true;
+                break;
+            }
+        }
+    }
+
     // vouts to the payees
     txNew.vout.reserve(vecSend.size() + 1); // + 1 because of possible later insert
     for (const auto& recipient : vecSend)
@@ -1442,7 +1468,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     wallet.WalletLogPrintf("Coin Selection: Algorithm:%s, Waste Metric Score:%d\n", GetAlgorithmName(result.GetAlgo()), result.GetWaste());
     wallet.WalletLogPrintf("Fee Calculation: Fee:%d Bytes:%u, Source: %s\n",
                            current_fee, nBytes, StringForFeeReason(min_fee_rate.fee_reason));
-    return CreatedTransactionResult(tx, current_fee, change_pos, min_fee_rate.fee_reason);
+    return CreatedTransactionResult(tx, current_fee, change_pos, min_fee_rate.fee_reason, has_partial_spend);
 }
 
 util::Result<CreatedTransactionResult> CreateTransaction(
@@ -1470,8 +1496,8 @@ util::Result<CreatedTransactionResult> CreateTransaction(
            res && res->change_pos.has_value() ? int32_t(*res->change_pos) : -1);
     if (!res) return res;
     const auto& txr_ungrouped = *res;
-    // try with avoidpartialspends unless it's enabled already
-    if (txr_ungrouped.fee > 0 /* 0 means non-functional fee rate estimation */ && wallet.m_max_aps_fee > -1 && !coin_control.m_avoid_partial_spends) {
+    // try with avoidpartialspends unless it's enabled already, or if there's no partial spend to avoid
+    if (txr_ungrouped.fee > 0 /* 0 means non-functional fee rate estimation */ && wallet.m_max_aps_fee > -1 && !coin_control.m_avoid_partial_spends && txr_ungrouped.has_partial_spend) {
         TRACEPOINT(coin_selection, attempting_aps_create_tx, wallet.GetName().c_str());
         CCoinControl tmp_cc = coin_control;
         tmp_cc.m_avoid_partial_spends = true;
