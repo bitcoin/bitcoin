@@ -324,12 +324,13 @@ for host in $HOSTS; do
         # for the particular $HOST we're building for
         export HOST="$host"
 
-        # Make local modules available
+        # Make local modules available. These are passed to `guix shell` via
+        # --load-path, rather than exported via GUIX_PACKAGE_PATH, so they are
+        # only seen by the pinned Guix.
         package_path="${VERSION_BASE}/guix-package-path"
         mkdir -p "$package_path"
         ln -sfn "${PWD}/contrib/guix/toolchains.scm" "${package_path}/toolchains.scm"
         ln -sfn "${PWD}/contrib/guix/patches" "${package_path}/patches"
-        export GUIX_PACKAGE_PATH="$package_path"
 
 cat << EOF
 INFO: Building ${VERSION:?not set} for platform triple ${HOST:?not set}:
@@ -398,6 +399,11 @@ EOF
         #     make the downloaded depends sources available to it. The sources
         #     should have been downloaded prior to this invocation.
         #
+        #   --load-path="$package_path"
+        #
+        #                     make our local modules (contrib/guix/toolchains.scm)
+        #                     available to the manifests
+        #
         #   --keep-failed     keep build tree of failed builds
         #
         #     When builds of the Guix environment itself (not Bitcoin Core)
@@ -429,6 +435,7 @@ EOF
             ${SOURCES_PATH:+--share="$SOURCES_PATH"}
             ${BASE_CACHE:+--share="$BASE_CACHE"}
             ${SDK_PATH:+--share="$SDK_PATH"}
+            --load-path="$package_path"
             --cores="$JOBS"
             --keep-failed
             --fallback
