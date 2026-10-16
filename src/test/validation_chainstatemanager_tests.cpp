@@ -27,6 +27,7 @@
 
 #include <tinyformat.h>
 
+#include <cstdlib>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
@@ -273,7 +274,6 @@ struct SnapshotTestSetup : TestChain100Setup {
 
         // Mine 10 more blocks, putting at us height 110 where a valid assumeutxo value can
         // be found.
-        constexpr int snapshot_height = 110;
         mineBlocks(10);
         initial_size += 10;
         initial_total_coins += 10;
@@ -336,10 +336,10 @@ struct SnapshotTestSetup : TestChain100Setup {
                 *Assert(chainman.CurrentChainstate().m_from_snapshot_blockhash));
         }
 
-        const auto& au_data = ::Params().AssumeutxoForHeight(snapshot_height);
+        const auto& au_data = chainman.GetParams().Assumeutxo();
         const CBlockIndex* tip = WITH_LOCK(chainman.GetMutex(), return chainman.ActiveTip());
 
-        BOOST_CHECK_EQUAL(tip->m_chain_tx_count, au_data->m_chain_tx_count);
+        BOOST_CHECK_EQUAL(tip->m_chain_tx_count, au_data.m_chain_tx_count);
 
         // To be checked against later when we try loading a subsequent snapshot.
         uint256 loaded_snapshot_blockhash{*Assert(WITH_LOCK(chainman.GetMutex(), return chainman.CurrentChainstate().m_from_snapshot_blockhash))};
@@ -438,7 +438,7 @@ struct SnapshotTestSetup : TestChain100Setup {
             BOOST_CHECK_EQUAL(chainman.m_chainstates.size(), 0);
             m_node.notifications = std::make_unique<KernelNotifications>(Assert(m_node.shutdown_request), m_node.exit_status, *Assert(m_node.warnings));
             const ChainstateManager::Options chainman_opts{
-                .chainparams = ::Params(),
+                .chainparams = chainman.m_options.chainparams,
                 .datadir = chainman.m_options.datadir,
                 .notifications = *m_node.notifications,
                 .signals = m_node.validation_signals.get(),
@@ -491,7 +491,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_loadblockindex, TestChain100Setup)
     const int last_assumed_valid_idx{111};
     const int assumed_valid_start_idx = last_assumed_valid_idx - expected_assumed_valid;
 
-    // Mine to height 120, past the hardcoded regtest assumeutxo snapshot at
+    // Mine to height 120, past the TestChain100Setup assumeutxo snapshot at
     // height 110
     mineBlocks(20);
 
@@ -502,6 +502,11 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_loadblockindex, TestChain100Setup)
 
     auto reload_all_block_indexes = [&]() {
         LOCK(chainman.GetMutex());
+        chainman.m_blockman.WriteBlockIndexDB();
+        int last_blockfile{0};
+        BOOST_REQUIRE(chainman.m_blockman.m_block_tree_db->ReadLastBlockFile(last_blockfile));
+        const auto indexes{chainman.m_blockman.GetAllBlockIndices()};
+        chainman.m_blockman.m_block_tree_db->WriteBatchSync({}, last_blockfile, {indexes.begin(), indexes.end()});
         // For completeness, we also reset the block sequence counters to
         // ensure that no state which affects the ranking of tip-candidates is
         // retained (even though this isn't strictly necessary).
@@ -816,6 +821,13 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion, SnapshotTestSetup
     const uint256 snapshot_tip_hash = WITH_LOCK(chainman.GetMutex(),
         return chainman.ActiveTip()->GetBlockHash());
 
+    BOOST_REQUIRE(m_interrupt());
+    res = WITH_LOCK(::cs_main, return chainman.MaybeValidateSnapshot(validated_cs, active_cs));
+    BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::INTERRUPTED);
+    BOOST_CHECK(WITH_LOCK(::cs_main, return active_cs.m_assumeutxo == Assumeutxo::UNVALIDATED));
+    BOOST_CHECK_EQUAL(m_node.exit_status.load(), EXIT_SUCCESS);
+    BOOST_REQUIRE(m_interrupt.reset());
+
     res = WITH_LOCK(::cs_main, return chainman.MaybeValidateSnapshot(validated_cs, active_cs));
     BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::SUCCESS);
 
@@ -879,10 +891,14 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
 {
     auto chainstates = this->SetupSnapshot();
     Chainstate& validation_chainstate = *std::get<0>(chainstates);
-    Chainstate& unvalidated_cs = *std::get<1>(chainstates);
     ChainstateManager& chainman = *Assert(m_node.chainman);
-    SnapshotCompletionResult res;
+    BlockValidationState state;
     m_node.notifications->m_shutdown_on_fatal_error = false;
+
+    {
+        LOCK2(::cs_main, validation_chainstate.MempoolMutex());
+        BOOST_REQUIRE(validation_chainstate.DisconnectTip(state, nullptr));
+    }
 
     // Test tampering with the IBD UTXO set with an extra coin to ensure it causes
     // snapshot completion to fail.
@@ -900,8 +916,9 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
 
     {
         ASSERT_DEBUG_LOG("failed to validate the -assumeutxo snapshot state");
-        res = WITH_LOCK(::cs_main, return chainman.MaybeValidateSnapshot(validation_chainstate, unvalidated_cs));
-        BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::HASH_MISMATCH);
+        BOOST_CHECK(!validation_chainstate.ActivateBestChain(state, nullptr));
+        BOOST_CHECK(state.IsError());
+        BOOST_CHECK_EQUAL(state.GetRejectReason(), "AssumeUTXO background validation failed");
     }
 
     {
@@ -944,6 +961,35 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, Sna
         LOCK(::cs_main);
         BOOST_CHECK_EQUAL(chainman_restarted.ActiveHeight(), 220);
     }
+}
+
+struct AssumeutxoMismatchSetup : TestChain100Setup {
+    AssumeutxoMismatchSetup() : TestChain100Setup{ChainType::REGTEST, [] {
+        auto data{SNAPSHOT_DATA};
+        data.hash_serialized = AssumeutxoHash{uint256{}};
+        return TestOpts{.snapshot_commitment = data};
+    }()} {}
+};
+
+BOOST_FIXTURE_TEST_CASE(chainstatemanager_assumeutxo_mismatch, AssumeutxoMismatchSetup)
+{
+    mineBlocks(9);
+    const auto block{CreateBlock({}, CScript{} << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG)};
+    {
+        ASSERT_DEBUG_LOG("UTXO commitment mismatch at height 110");
+        BOOST_CHECK(!m_node.chainman->ProcessNewBlock(std::make_shared<const CBlock>(block), true, true, nullptr));
+    }
+    BOOST_CHECK(m_interrupt);
+    BOOST_CHECK_EQUAL(m_node.exit_status.load(), EXIT_FAILURE);
+    BOOST_CHECK_EQUAL(WITH_LOCK(m_node.chainman->GetMutex(), return m_node.chainman->ActiveHeight()), 109);
+}
+
+BOOST_FIXTURE_TEST_CASE(chainstatemanager_assumeutxo_other_chain, TestChain100Setup)
+{
+    DebugLogHelper no_check{ "computing UTXO stats", [](const std::string* line) { BOOST_CHECK(!line); return false; }};
+    // Build a different chain by changing the coinbase output.
+    CreateAndProcessBlock({}, CScript{});
+    mineBlocks(10);
 }
 
 /** Helper function to parse args into args_man and return the result of applying them to opts */

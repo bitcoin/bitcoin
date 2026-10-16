@@ -44,13 +44,20 @@ namespace {
 const std::vector<std::shared_ptr<CBlock>>* g_chain;
 TestingSetup* g_setup{nullptr};
 
-/** Sanity check the assumeutxo values hardcoded in chainparams for the fuzz target. */
+const AssumeutxoData FUZZ_SNAPSHOT{
+    .height = 200,
+    .hash_serialized = AssumeutxoHash{uint256{"17dcc016d188d16068907cdeb38b75691a118d43053b8cd6a25969419381d13a"}},
+    .m_chain_tx_count = 201,
+    .blockhash = uint256{"385901ccbd69dff6bbd00065d01fb8a9e464dede7cfe0372443884f9b1dcf6b9"},
+};
+
+/** Sanity check the assumeutxo values hardcoded for the fuzz target. */
 void sanity_check_snapshot()
 {
     Assert(g_chain && g_setup == nullptr);
 
     // Create a temporary chainstate manager to connect the chain to.
-    const auto tmp_setup{MakeNoLogFileContext<TestingSetup>(ChainType::REGTEST, TestOpts{.setup_net = false})};
+    const auto tmp_setup{MakeNoLogFileContext<TestingSetup>(ChainType::REGTEST, TestOpts{.snapshot_commitment = FUZZ_SNAPSHOT, .setup_net = false})};
     const auto& node{tmp_setup->m_node};
     for (auto& block: *g_chain) {
         ProcessBlock(node, block);
@@ -61,7 +68,7 @@ void sanity_check_snapshot()
     auto& cs{node.chainman->ActiveChainstate()};
     cs.ForceFlushStateToDisk(/*wipe_cache=*/false);
     const auto stats{*Assert(kernel::ComputeUTXOStats(kernel::CoinStatsHashType::HASH_SERIALIZED, cs.CoinsDB(), node.chainman->m_blockman))};
-    const auto cp_au_data{*Assert(node.chainman->GetParams().AssumeutxoForHeight(2 * COINBASE_MATURITY))};
+    const auto& cp_au_data{node.chainman->GetParams().Assumeutxo()};
     Assert(stats.nHeight == cp_au_data.height);
     Assert(stats.nTransactions + 1 == cp_au_data.m_chain_tx_count); // +1 for the genesis tx.
     Assert(stats.hashBlock == cp_au_data.blockhash);
@@ -82,6 +89,7 @@ void initialize_chain()
     static const auto setup{
         MakeNoLogFileContext<TestingSetup>(ChainType::REGTEST,
                                            TestOpts{
+                                               .snapshot_commitment = FUZZ_SNAPSHOT,
                                                .setup_net = false,
                                                .setup_validation_interface = false,
                                                .min_validation_cache = true,
@@ -192,9 +200,9 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
             Assert(index);
             Assert(index->nTx == 0);
             if (index->nHeight == chainman.ActiveChainstate().SnapshotBase()->nHeight) {
-                auto params{chainman.GetParams().AssumeutxoForHeight(index->nHeight)};
-                Assert(params.has_value());
-                Assert(params.value().m_chain_tx_count == index->m_chain_tx_count);
+                const auto& params{chainman.GetParams().Assumeutxo()};
+                Assert(params.height == index->nHeight);
+                Assert(params.m_chain_tx_count == index->m_chain_tx_count);
             } else {
                 Assert(index->m_chain_tx_count == 0);
             }

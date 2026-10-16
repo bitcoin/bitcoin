@@ -8,6 +8,7 @@
 #include <common/args.h> // IWYU pragma: export
 #include <consensus/amount.h>
 #include <kernel/caches.h>
+#include <kernel/chainparams.h>
 #include <key.h>
 #include <node/caches.h>
 #include <node/context.h> // IWYU pragma: export
@@ -45,6 +46,7 @@ void SetupCommonTestArgs(ArgsManager& argsman);
 
 struct TestOpts {
     std::vector<const char*> extra_args{};
+    std::optional<AssumeutxoData> snapshot_commitment{};
     bool coins_db_in_memory{true};
     bool block_tree_db_in_memory{true};
     bool setup_net{true};
@@ -112,6 +114,9 @@ struct ChainTestingSetup : public BasicTestingSetup {
 
     // Supplies a chainstate, if one is needed
     void LoadVerifyActivateChainstate();
+
+private:
+    std::unique_ptr<const CChainParams> m_chainparams;
 };
 
 /** Testing setup that configures a complete environment.
@@ -141,6 +146,8 @@ class CScript;
  * Testing fixture that pre-creates a 100-block REGTEST-mode block chain
  */
 struct TestChain100Setup : public TestingSetup {
+    static const AssumeutxoData SNAPSHOT_DATA;
+
     TestChain100Setup(
         ChainType chain_type = ChainType::REGTEST,
         TestOpts = {});
