@@ -24,11 +24,10 @@
 #include <util/hasher.h>
 #include <util/not_null.h>
 #include <util/result.h>
+#include <util/time.h>
 
 #include <boost/multi_index/hashed_index.hpp>
-#include <boost/multi_index/identity.hpp>
 #include <boost/multi_index/indexed_by.hpp>
-#include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/sequenced_index.hpp>
 #include <boost/multi_index/tag.hpp>
 #include <boost/multi_index_container.hpp>
@@ -93,17 +92,7 @@ struct mempoolentry_wtxid
     }
 };
 
-class CompareTxMemPoolEntryByEntryTime
-{
-public:
-    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b) const
-    {
-        return a.GetTime() < b.GetTime();
-    }
-};
-
 // Multi_index tag names
-struct entry_time {};
 struct index_by_wtxid {};
 
 /**
@@ -161,8 +150,8 @@ struct TxMempoolInfo
  * interfaces to the rest of the codebase, such as:
  *  - to validation for replace-by-fee calculations and cluster size limits
  *    when evaluating unconfirmed transactions
- *  - to validation for evicting transactions due to expiry or the mempool size
- *    limit being hit
+ *  - to validation for evicting transactions due to the mempool size limit
+ *    being hit
  *  - to validation for updating the mempool to be consistent with the best
  *    chain after a new block is connected or after a reorg.
  *  - to net_processing for ordering transactions that are to-be-announced to
@@ -222,12 +211,6 @@ public:
                 boost::multi_index::tag<index_by_wtxid>,
                 mempoolentry_wtxid,
                 SaltedWtxidHasher
-            >,
-            // sorted by entry time
-            boost::multi_index::ordered_non_unique<
-                boost::multi_index::tag<entry_time>,
-                boost::multi_index::identity<CTxMemPoolEntry>,
-                CompareTxMemPoolEntryByEntryTime
             >
         >
     >;
@@ -470,9 +453,6 @@ public:
       */
     void TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpendsRemaining = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    /** Expire all transaction (and their dependencies) in the mempool older than time. Return the number of removed transactions. */
-    int Expire(std::chrono::seconds time) EXCLUSIVE_LOCKS_REQUIRED(cs);
-
     /**
      * Calculate the ancestor and cluster count for the given transaction.
      * The counts include the transaction itself.
@@ -626,7 +606,7 @@ public:
      * This class is used for all mempool additions and associated removals (eg
      * due to rbf). Removals that don't need to be evaluated for acceptance,
      * such as removing transactions that appear in a block, or due to reorg,
-     * or removals related to mempool limiting or expiry do not need to use
+     * or removals related to mempool limiting do not need to use
      * this.
      *
      * Callers can interleave calls to StageAddition()/StageRemoval(), and
