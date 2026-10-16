@@ -622,34 +622,6 @@ public:
     const std::optional<uint256> m_from_snapshot_blockhash;
 
     /**
-     * The base of the snapshot this chainstate was created from.
-     *
-     * nullptr if this chainstate was not created from a snapshot.
-     */
-    const CBlockIndex* SnapshotBase() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
-    //! Return target block which chainstate tip is expected to reach, if this
-    //! is a historic chainstate being used to validate a snapshot, or null if
-    //! chainstate targets the most-work block. Requires the block index to be
-    //! loaded, so prefer TargetBlockHash() when the block itself is not needed.
-    const CBlockIndex* TargetBlock() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    //! Return hash of the target block, or nullopt if chainstate targets the
-    //! most-work block. Unlike TargetBlock(), does not require the block index
-    //! to be loaded.
-    std::optional<uint256> TargetBlockHash() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
-    {
-        AssertLockHeld(::cs_main);
-        return m_target_blockhash;
-    }
-    //! Set target block for this chainstate. If null, chainstate will target
-    //! the most-work valid block. If non-null chainstate will be a historic
-    //! chainstate and target the specified block.
-    void SetTargetBlock(CBlockIndex* block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    //! Set target block for this chainstate using just a block hash. Useful
-    //! when the block database has not been loaded yet.
-    void SetTargetBlockHash(uint256 block_hash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
-    /**
      * The set of all CBlockIndex entries that have as much work as our current
      * tip or more, and transaction data needed to be validated (with
      * BLOCK_VALID_TRANSACTIONS for each block and its parents back to the
@@ -1004,36 +976,6 @@ public:
     //! @param[in] mempool              The mempool to pass to the chainstate
     //                                  constructor
     Chainstate& InitializeChainstate(CTxMemPool* mempool) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
-    //! Return current chainstate targeting the most-work, network tip.
-    Chainstate& CurrentChainstate() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex())
-    {
-        for (auto& cs : m_chainstates) {
-            if (cs && !cs->TargetBlockHash()) return *cs;
-        }
-        abort();
-    }
-
-    //! Return historical chainstate targeting a specific block, if any.
-    Chainstate* HistoricalChainstate() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex())
-    {
-        for (auto& cs : m_chainstates) {
-            if (cs && cs->TargetBlockHash()) return cs.get();
-        }
-        return nullptr;
-    }
-
-    //! Remove a chainstate.
-    std::unique_ptr<Chainstate> RemoveChainstate(Chainstate& chainstate) EXCLUSIVE_LOCKS_REQUIRED(GetMutex())
-    {
-        auto it{std::find_if(m_chainstates.begin(), m_chainstates.end(), [&](auto& cs) { return cs.get() == &chainstate; })};
-        if (it != m_chainstates.end()) {
-            auto ret{std::move(*it)};
-            m_chainstates.erase(it);
-            return ret;
-        }
-        return nullptr;
-    }
 
     //! Alternatives to CurrentChainstate() used by older code to query latest
     //! chainstate information without locking cs_main. Newer code should avoid

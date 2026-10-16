@@ -26,16 +26,12 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager, TestChain100Setup)
 {
     ChainstateManager& manager = *m_node.chainman;
 
-    BOOST_CHECK(WITH_LOCK(::cs_main, return !manager.CurrentChainstate().m_from_snapshot_blockhash));
-
     // Create a legacy (IBD) chainstate.
     //
     Chainstate& c1 = manager.ActiveChainstate();
 
-    BOOST_CHECK(WITH_LOCK(::cs_main, return !manager.CurrentChainstate().m_from_snapshot_blockhash));
     {
         LOCK(manager.GetMutex());
-        BOOST_CHECK_EQUAL(manager.m_chainstates.size(), 1);
         BOOST_CHECK_EQUAL(manager.m_chainstates[0].get(), &c1);
     }
 

@@ -1862,36 +1862,6 @@ Chainstate::Chainstate(
       m_assumeutxo(from_snapshot_blockhash ? Assumeutxo::UNVALIDATED : Assumeutxo::VALIDATED),
       m_from_snapshot_blockhash(from_snapshot_blockhash) {}
 
-const CBlockIndex* Chainstate::SnapshotBase() const
-{
-    if (!m_from_snapshot_blockhash) return nullptr;
-    if (!m_cached_snapshot_base) m_cached_snapshot_base = Assert(m_chainman.m_blockman.LookupBlockIndex(*m_from_snapshot_blockhash));
-    return m_cached_snapshot_base;
-}
-
-const CBlockIndex* Chainstate::TargetBlock() const
-{
-    if (!m_target_blockhash) return nullptr;
-    if (!m_cached_target_block) m_cached_target_block = Assert(m_chainman.m_blockman.LookupBlockIndex(*m_target_blockhash));
-    return m_cached_target_block;
-}
-
-void Chainstate::SetTargetBlock(CBlockIndex* block)
-{
-    if (block) {
-        m_target_blockhash = block->GetBlockHash();
-    } else {
-        m_target_blockhash.reset();
-    }
-    m_cached_target_block = block;
-}
-
-void Chainstate::SetTargetBlockHash(uint256 block_hash)
-{
-    m_target_blockhash = block_hash;
-    m_cached_target_block = nullptr;
-}
-
 void Chainstate::InitCoinsDB(
     size_t cache_size_bytes,
     bool in_memory,
@@ -3250,7 +3220,7 @@ void ChainstateManager::UpdateIBDStatus()
     AssertLockHeld(cs_main);
     if (!m_cached_is_ibd.load(std::memory_order_relaxed)) return;
     if (m_blockman.LoadingBlocks()) return;
-    if (!CurrentChainstate().m_chain.IsTipRecent(MinimumChainWork(), m_options.max_tip_age)) return;
+    if (!ActiveChain().IsTipRecent(MinimumChainWork(), m_options.max_tip_age)) return;
     LogInfo("Leaving InitialBlockDownload (latching to false)");
     m_cached_is_ibd.store(false, std::memory_order_relaxed);
 }
@@ -5336,7 +5306,7 @@ Chainstate& ChainstateManager::InitializeChainstate(CTxMemPool* mempool)
 Chainstate& ChainstateManager::ActiveChainstate() const
 {
     LOCK(::cs_main);
-    return CurrentChainstate();
+    return *Assert(m_chainstates.front());
 }
 
 void ChainstateManager::ResetChainstates()
