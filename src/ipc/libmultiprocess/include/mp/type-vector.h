@@ -9,8 +9,8 @@
 #include <mp/util.h>
 
 namespace mp {
-template <typename LocalType, typename Value, typename Output>
-void CustomBuildField(TypeList<std::vector<LocalType>>,
+template <typename LocalType, typename Allocator, typename Value, typename Output>
+void CustomBuildField(TypeList<std::vector<LocalType, Allocator>>,
     Priority<1>,
     InvokeContext& invoke_context,
     Value&& value,
@@ -24,8 +24,8 @@ inline static bool BuildPrimitive(InvokeContext& invoke_context, std::vector<boo
     return value;
 }
 
-template <typename LocalType, typename Input, typename ReadDest>
-decltype(auto) CustomReadField(TypeList<std::vector<LocalType>>,
+template <typename LocalType, typename Allocator, typename Input, typename ReadDest>
+decltype(auto) CustomReadField(TypeList<std::vector<LocalType, Allocator>>,
     Priority<1>,
     InvokeContext& invoke_context,
     Input&& input,
