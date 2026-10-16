@@ -33,6 +33,7 @@
 #include <util/not_null.h>
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
+#include <util/time.h>
 
 #include <atomic>
 #include <condition_variable>
@@ -229,6 +230,8 @@ public:
     TransportProtocolType m_transport_type;
     /** BIP324 session id string in hex, if any. */
     std::string m_session_id;
+    /** CPU time spent processing messages to/from the peer. */
+    std::chrono::nanoseconds m_cpu_time;
 };
 
 
@@ -1002,6 +1005,9 @@ public:
         m_last_ping_time = ping_time;
         m_min_ping_time = std::min(m_min_ping_time.load(), ping_time);
     }
+
+    /** CPU time spent processing messages to/from the peer. */
+    std::atomic<std::chrono::nanoseconds> m_cpu_time;
 
 private:
     const NodeId id;
