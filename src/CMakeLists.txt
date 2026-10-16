@@ -245,7 +245,6 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   node/txdownloadman_impl.cpp
   node/txorphanage.cpp
   node/txreconciliation.cpp
-  node/utxo_snapshot.cpp
   node/warnings.cpp
   noui.cpp
   policy/ephemeral_policy.cpp
