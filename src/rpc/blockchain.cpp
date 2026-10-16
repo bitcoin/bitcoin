@@ -1762,7 +1762,14 @@ void InvalidateBlock(ChainstateManager& chainman, const uint256 block_hash) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
     }
-    chainman.ActiveChainstate().InvalidateBlock(state, pblockindex);
+    if (pblockindex->nHeight == 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot invalidate genesis block");
+    }
+
+    if (!chainman.ActiveChainstate().InvalidateBlock(state, pblockindex) && state.IsValid()) {
+        // Never report success if the block was not invalidated, even if no reason was given.
+        state.Error("Failed to invalidate block");
+    }
 
     if (state.IsValid()) {
         chainman.ActiveChainstate().ActivateBestChain(state);
