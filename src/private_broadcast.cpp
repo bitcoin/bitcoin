@@ -14,25 +14,42 @@ PrivateBroadcast::AddResult PrivateBroadcast::Add(const CTransactionRef& tx)
     EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
 {
     LOCK(m_mutex);
-    // Cleanup finished transactions
-    std::erase_if(m_transactions, [this](const auto& entry) {
-        const auto& state{entry.second};
-        return state.resolved && !IsPending(state) &&
-               std::ranges::all_of(state.send_statuses, [](const auto& status) { return status.disconnected; });
-    });
+
+    const auto IsFinished{[this](const TxSendStatus& state) {
+        return !IsPending(state) && // All planned sends are completed.
+               state.resolved && // No more planned sends will be added.
+               std::ranges::all_of(state.send_statuses, [](const auto& s) { return s.disconnected; }); // All peers are disconnected.
+    }};
 
     if (const auto it{m_transactions.find(tx)}; it != m_transactions.end()) {
-        if (it->second.send_statuses.size() < m_max_send_attempts) return AddResult::AlreadyPresent;
+        auto& state{it->second};
 
-        // A transaction that has reached m_max_send_attempts can be explicitly retried by adding it again.
-        it->second.time_added = NodeClock::now();
-        it->second.send_statuses.clear();
-        it->second.planned_sends = INITIAL_CONNECTION_COUNT;
-        it->second.resolved = false;
+        if (!IsFinished(state)) { // We are still trying
+            return AddResult::AlreadyPresent;
+        }
+
+        // Allow Add() to restart the broadcast process if we have given up.
+
+        state.time_added = NodeClock::now();
+        state.send_statuses.clear();
+        state.planned_sends = INITIAL_CONNECTION_COUNT;
+        state.resolved = false;
+        state.received_by_us.reset();
         return AddResult::Added;
     }
 
-    if (m_transactions.size() >= m_max_transactions) return AddResult::QueueFull;
+    if (m_transactions.size() >= m_max_transactions) {
+        // Make room by dropping the oldest transaction that is no longer being broadcast.
+        auto finished{m_transactions | std::views::filter([&](const auto& e) { return IsFinished(e.second); })};
+
+        if (finished.empty()) {
+            return AddResult::QueueFull;
+        }
+
+        const auto oldest{std::ranges::min_element(finished, {}, [](const auto& e) { return e.second.time_added; })};
+
+        m_transactions.erase(oldest.base());
+    }
 
     m_transactions.try_emplace(tx);
     return AddResult::Added;
@@ -52,12 +69,16 @@ std::optional<size_t> PrivateBroadcast::Remove(const CTransactionRef& tx)
     return std::nullopt;
 }
 
-bool PrivateBroadcast::MarkResolved(const CTransactionRef& tx)
+bool PrivateBroadcast::MarkResolved(const CTransactionRef& tx, std::optional<CService> received_from)
 {
     LOCK(m_mutex);
     const auto it{m_transactions.find(tx)};
     if (it == m_transactions.end()) return false;
-    it->second.resolved = true;
+    auto& state{it->second};
+    state.resolved = true;
+    if (received_from.has_value()) {
+        state.received_by_us.emplace(received_from.value(), NodeClock::now());
+    }
     return true;
 }
 
@@ -160,14 +181,19 @@ std::vector<PrivateBroadcast::TxBroadcastInfo> PrivateBroadcast::GetBroadcastInf
     entries.reserve(m_transactions.size());
 
     for (const auto& [tx, state] : m_transactions) {
-        if (state.resolved) continue;
         std::vector<PeerSendInfo> peers;
         peers.reserve(state.send_statuses.size());
         for (const auto& status : state.send_statuses) {
             peers.emplace_back(PeerSendInfo{.address = status.address, .sent = status.picked, .received = status.confirmed});
         }
-        const size_t attempts_remaining{m_max_send_attempts - std::min(state.send_statuses.size(), m_max_send_attempts)};
-        entries.emplace_back(TxBroadcastInfo{.tx = tx, .time_added = state.time_added, .attempts_remaining = attempts_remaining, .peers = std::move(peers)});
+
+        const size_t attempts_remaining{IsPending(state) ? m_max_send_attempts - state.send_statuses.size() : 0};
+
+        entries.emplace_back(TxBroadcastInfo{.tx = tx,
+                                             .time_added = state.time_added,
+                                             .attempts_remaining = attempts_remaining,
+                                             .peers = std::move(peers),
+                                             .received_by_us = state.received_by_us});
     }
 
     return entries;
