@@ -12,4 +12,5 @@ Kernel chainstate-manager creation returns null for an unfinished snapshot.
 Nodes that completed background validation and restarted before upgrading are unaffected.
 
 The `dumptxoutset` RPC remains available.
+Rollback exports now require an explicit `rollback` height or block hash.
 The `-assumevalid` option is unchanged.
