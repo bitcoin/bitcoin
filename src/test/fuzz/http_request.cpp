@@ -51,9 +51,7 @@ void SingleShotParse(const std::string& http_buffer, FuzzedDataProvider& provide
     HTTPRequest http_request;
     LineReader reader(http_buffer, MAX_HEADERS_SIZE);
     try {
-        if (!http_request.LoadControlData(reader)) return;
-        if (!http_request.LoadHeaders(reader)) return;
-        if (!http_request.LoadBody(reader)) return;
+        if (http_request.Load(reader) != HTTPRequest::State::Complete) return;
     } catch (const std::runtime_error&) {
         return;
     }
