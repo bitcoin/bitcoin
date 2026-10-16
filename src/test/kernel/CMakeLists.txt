@@ -9,6 +9,10 @@ target_link_libraries(test_kernel
     Boost::headers
 )
 
+if(ENABLE_SCRIPT_TRACE)
+  target_compile_definitions(test_kernel PRIVATE ENABLE_SCRIPT_TRACE)
+endif()
+
 add_windows_application_manifest(test_kernel)
 
 add_test(NAME test_kernel COMMAND test_kernel)
