@@ -35,7 +35,7 @@ class RpcEchoPayloadTest(BitcoinTestFramework):
                 except JSONRPCException as e:
                     msg = e.error["message"]
                     if msg not in [
-                        "TX decode failed. Make sure the tx has at least one input.",
+                        "TX decode failed. Make sure the transaction is complete, correctly serialized, hex-encoded, and has at least one input.",
                         "non-JSON HTTP response with '503 Service Unavailable' from server: Work queue depth exceeded",
                     ]:
                         raise AssertionError(f"Unexpected msg: {msg}")
