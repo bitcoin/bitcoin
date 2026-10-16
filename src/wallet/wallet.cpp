@@ -24,7 +24,6 @@
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
 #include <kernel/mempool_removal_reason.h>
-#include <kernel/types.h>
 #include <key.h>
 #include <key_io.h>
 #include <node/types.h>
@@ -92,7 +91,6 @@ using common::AmountErrMsg;
 using common::AmountHighWarn;
 using common::PSBTError;
 using interfaces::FoundBlock;
-using kernel::ChainstateRole;
 using util::ReplaceAll;
 using util::ToString;
 
@@ -1549,11 +1547,8 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
     }
 }
 
-void CWallet::blockConnected(const ChainstateRole& role, const interfaces::BlockInfo& block)
+void CWallet::blockConnected(const interfaces::BlockInfo& block)
 {
-    if (role.historical) {
-        return;
-    }
     assert(block.data);
     LOCK(cs_wallet);
 

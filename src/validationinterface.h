@@ -17,9 +17,6 @@
 #include <memory>
 #include <vector>
 
-namespace kernel {
-struct ChainstateRole;
-} // namespace kernel
 namespace util {
 class TaskRunnerInterface;
 } // namespace util
@@ -61,7 +58,7 @@ protected:
      * but may not be called on every intermediate tip. If the latter behavior is desired,
      * subscribe to BlockConnected() instead.
      *
-     * Called on a background thread. Only called for the active chainstate.
+     * Called on a background thread.
      */
     virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
     /**
@@ -123,13 +120,12 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void BlockConnected(const kernel::ChainstateRole& role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) {}
+    virtual void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) {}
     /**
      * Notifies listeners of a block being disconnected
      * Provides the block that was disconnected.
      *
-     * Called on a background thread. Only called for the active chainstate, since
-     * background chainstates should never disconnect blocks.
+     * Called on a background thread.
      */
     virtual void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex) {}
     /**
@@ -148,7 +144,7 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void ChainStateFlushed(const kernel::ChainstateRole& role, const CBlockLocator& locator) {}
+    virtual void ChainStateFlushed(const CBlockLocator& locator) {}
     /**
      * Notifies listeners of a block validation result.
      * If the provided BlockValidationState IsValid, the provided block
@@ -226,9 +222,9 @@ public:
     void TransactionAddedToMempool(const NewMempoolTransactionInfo&, uint64_t mempool_sequence);
     void TransactionRemovedFromMempool(const CTransactionRef&, MemPoolRemovalReason, uint64_t mempool_sequence);
     void MempoolTransactionsRemovedForBlock(std::shared_ptr<const CBlock>, std::vector<RemovedMempoolTransactionInfo>, unsigned int block_height);
-    void BlockConnected(const kernel::ChainstateRole&, std::shared_ptr<const CBlock>, const CBlockIndex* pindex);
+    void BlockConnected(std::shared_ptr<const CBlock>, const CBlockIndex* pindex);
     void BlockDisconnected(std::shared_ptr<const CBlock>, const CBlockIndex* pindex);
-    void ChainStateFlushed(const kernel::ChainstateRole&, const CBlockLocator&);
+    void ChainStateFlushed(const CBlockLocator&);
     void BlockChecked(const std::shared_ptr<const CBlock>&, const BlockValidationState&);
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
 };
