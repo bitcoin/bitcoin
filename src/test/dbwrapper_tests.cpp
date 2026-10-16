@@ -195,13 +195,12 @@ BOOST_AUTO_TEST_CASE(dbwrapper_batch)
     }
 }
 
-// Verify that Read() returns false (without throwing) when the stored value
-// fails to be deserialized
-BOOST_AUTO_TEST_CASE(dbwrapper_read_returns_false_on_deserialization_error)
+BOOST_AUTO_TEST_CASE(dbwrapper_read_deserialization_error)
 {
     for (const bool obfuscate : {false, true}) {
         const fs::path path{m_args.GetDataDirBase() / (obfuscate ? "dbwrapper_deser_obf" : "dbwrapper_deser_noobf")};
-        CDBWrapper dbw({.path = path, .cache_bytes = 1 << 20, .wipe_data = true, .obfuscate = obfuscate});
+        CDBWrapper dbw({.path = path, .cache_bytes = 1_MiB, .wipe_data = true, .obfuscate = obfuscate,
+                        .read_error_cb = [] { throw dbwrapper_error{"dbwrapper test read error"}; }});
 
         constexpr uint8_t key{'X'};
 
@@ -210,23 +209,22 @@ BOOST_AUTO_TEST_CASE(dbwrapper_read_returns_false_on_deserialization_error)
         dbw.Write(key, uint8_t{0xFF});
         BOOST_CHECK(dbw.Exists(key));
 
-        // Read() must catch the deserialization exception and return false,
-        // the same as if the key were absent
         uint256 result;
-        BOOST_CHECK(!dbw.Read(key, result));
+        BOOST_CHECK_EXCEPTION((void)dbw.Read(key, result), dbwrapper_error, HasReason{"dbwrapper test read error"});
     }
 }
 
-// Verify Read() throws dbwrapper_error due to an internal db error
-BOOST_AUTO_TEST_CASE(dbwrapper_read_throws_on_db_error)
+BOOST_AUTO_TEST_CASE(dbwrapper_read_db_error)
 {
     const fs::path path{m_args.GetDataDirBase() / "dbwrapper_db_error"};
     constexpr uint8_t key{'Y'};
 
-    const auto make_db = [] (const fs::path& path, const bool force_compact) {
-        return CDBWrapper({.path = path, .cache_bytes = 1 << 20, .obfuscate = false,
-                        .options = {.force_compact = force_compact}});
-    };
+    const auto make_db{[](const fs::path& path, bool force_compact) {
+        return CDBWrapper({.path = path, .cache_bytes = 1_MiB,
+                           .obfuscate = false, // A stored obfuscation key would be read from the corrupted table at open
+                           .read_error_cb = [] { throw dbwrapper_error{"dbwrapper test read error"}; },
+                           .options = {.force_compact = force_compact}});
+    }};
 
     // Write a value and close the database
     make_db(path, /*force_compact=*/false).Write(key, m_rng.rand256());
@@ -243,60 +241,10 @@ BOOST_AUTO_TEST_CASE(dbwrapper_read_throws_on_db_error)
         }
     }
 
-    // Read() should detect the issue now and throw
+    // Read() should detect the issue
     const auto db{make_db(path, /*force_compact=*/false)};
     uint256 result;
-    BOOST_CHECK_EXCEPTION(db.Read(key, result), dbwrapper_error, HasReason("Fatal LevelDB error"));
-
-    // TryRead() must return DatabaseError (without throwing).
-    CDBWrapper::ReadStatus status = db.TryRead(key, result);
-    BOOST_REQUIRE(!status);
-    BOOST_CHECK(status.error().status == CDBWrapper::ReadFailure::Code::DatabaseError);
-    BOOST_CHECK(status.error().err_msg.find("Fatal LevelDB error") != std::string::npos);
-}
-
-// Exercise TryRead() return values directly: found, absent and DeserializationError.
-// DatabaseError is tested inside 'dbwrapper_read_throws_on_db_error' test
-BOOST_AUTO_TEST_CASE(dbwrapper_tryread)
-{
-    for (const bool obfuscate : {false, true}) {
-        const fs::path path{m_args.GetDataDirBase() / (obfuscate ? "dbwrapper_tryread_obf" : "dbwrapper_tryread_noobf")};
-        CDBWrapper dbw({.path = path, .cache_bytes = 1 << 20, .wipe_data = true, .obfuscate = obfuscate});
-
-        constexpr uint8_t key_ok{'A'};
-        constexpr uint8_t key_missing{'B'};
-        constexpr uint8_t key_bad{'C'};
-
-        uint256 written_value{m_rng.rand256()};
-        dbw.Write(key_ok, written_value);
-        dbw.Write(key_bad, uint8_t{0xFF});
-
-        // Found: key exists, value deserializes correctly
-        {
-            uint256 read_value;
-            CDBWrapper::ReadStatus status = dbw.TryRead(key_ok, read_value);
-            BOOST_REQUIRE(status);
-            BOOST_CHECK(status.value());
-            BOOST_CHECK_EQUAL(read_value, written_value);
-        }
-
-        // Absent: key does not exist
-        {
-            uint256 read_value;
-            CDBWrapper::ReadStatus status = dbw.TryRead(key_missing, read_value);
-            BOOST_REQUIRE(status);
-            BOOST_CHECK(!status.value());
-        }
-
-        // DeserializationError: key exists but stored value is too short
-        {
-            uint256 read_value;
-            CDBWrapper::ReadStatus status = dbw.TryRead(key_bad, read_value);
-            BOOST_REQUIRE(!status);
-            BOOST_CHECK(status.error().status == CDBWrapper::ReadFailure::Code::DeserializationError);
-            BOOST_CHECK(!status.error().err_msg.empty());
-        }
-    }
+    BOOST_CHECK_EXCEPTION((void)db.Read(key, result), dbwrapper_error, HasReason{"dbwrapper test read error"});
 }
 
 BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
