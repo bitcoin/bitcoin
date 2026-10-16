@@ -227,9 +227,6 @@ public:
  * erases their temporary entries when the backend lookup fails, so non-hash keys cannot
  * accumulate.
  *
- * The assumeutxo loader assumes snapshot txids are valid while loading and verifies the
- * complete snapshot's content hash before activation.
- *
  * Hash values are process-local and must not be persisted, serialized, or compared across
  * processes.
  *
