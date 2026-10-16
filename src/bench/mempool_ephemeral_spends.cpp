@@ -29,7 +29,7 @@ static void AddTx(const CTransactionRef& tx, CTxMemPool& pool) EXCLUSIVE_LOCKS_R
     uint64_t sequence{0};
     bool spendsCoinbase{false};
     unsigned int sigOpCost{4};
-    uint64_t fee{0};
+    CAmount fee{0};
     LockPoints lp;
     TryAddToMempool(pool, CTxMemPoolEntry(
         tx, fee, nTime, nHeight, sequence,
@@ -51,7 +51,7 @@ static void MempoolCheckEphemeralSpends(benchmark::Bench& bench)
     tx1.vout.resize(number_outputs);
     for (size_t i = 0; i < tx1.vout.size(); i++) {
         // Each output progressively larger
-        tx1.vout[i] = CTxOut{CAmount(i) * CENT, CScript()};
+        tx1.vout[i] = CTxOut{i * CENT, CScript()};
     }
 
     const auto& parent_txid = tx1.GetHash();

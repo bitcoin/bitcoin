@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <common/bip352.h>
+#include <consensus/amount.h>
 #include <chainparams.h>
 #include <coins.h>
 #include <span.h>
@@ -140,7 +141,7 @@ BOOST_AUTO_TEST_CASE(bip352_send_and_receive_test_vectors)
                     SpanReader(witness_str) >> txin.scriptWitness.stack;
                 }
                 vin.push_back(txin);
-                coins[outpoint] = Coin{CTxOut{{}, spk}, 0, false};
+                coins[outpoint] = Coin{CTxOut{0*sats, spk}, 0, false};
             }
             auto pub_tweak_data = GetSilentPaymentsPrevoutsSummary(vin, coins);
             // If we don't get any tweak data from the transaction inputs, it is not a silent payment
@@ -236,8 +237,8 @@ BOOST_AUTO_TEST_CASE(bip352_skips_transactions_spending_unknown_segwit_versions)
     eligible_input.scriptWitness.stack.emplace_back(pubkey.begin(), pubkey.end());
 
     std::map<COutPoint, Coin> coins;
-    coins[eligible_outpoint] = Coin{CTxOut{{}, GetScriptForDestination(WitnessV0KeyHash{pubkey})}, 0, false};
-    coins[unknown_segwit_outpoint] = Coin{CTxOut{{}, GetScriptForDestination(WitnessUnknown{2, std::vector<unsigned char>(32, 1)})}, 0, false};
+    coins[eligible_outpoint] = Coin{CTxOut{0*sats, GetScriptForDestination(WitnessV0KeyHash{pubkey})}, 0, false};
+    coins[unknown_segwit_outpoint] = Coin{CTxOut{0*sats, GetScriptForDestination(WitnessUnknown{2, std::vector<unsigned char>(32, 1)})}, 0, false};
 
     BOOST_REQUIRE(GetSilentPaymentsPrevoutsSummary({eligible_input}, coins).has_value());
     BOOST_CHECK(!GetSilentPaymentsPrevoutsSummary({eligible_input, CTxIn{unknown_segwit_outpoint}}, coins).has_value());
@@ -262,7 +263,7 @@ BOOST_AUTO_TEST_CASE(bip352_scan_skips_invalid_taproot_outputs)
     txin.scriptWitness.stack.emplace_back(sender_pubkey.begin(), sender_pubkey.end());
 
     std::map<COutPoint, Coin> coins;
-    coins[outpoint] = Coin{CTxOut{{}, GetScriptForDestination(WitnessV0KeyHash{sender_pubkey})}, 0, false};
+    coins[outpoint] = Coin{CTxOut{0*sats, GetScriptForDestination(WitnessV0KeyHash{sender_pubkey})}, 0, false};
     const auto prevouts_summary = GetSilentPaymentsPrevoutsSummary({txin}, coins);
     BOOST_REQUIRE(prevouts_summary.has_value());
 
@@ -294,7 +295,7 @@ BOOST_AUTO_TEST_CASE(bip352_p2pkh_pubkey_extraction_with_checksig_in_scriptsig)
     CMutableTransaction tx;
     tx.vin.emplace_back(COutPoint{Txid::FromHex("0000000000000000000000000000000000000000000000000000000000000001").value(), 0});
     std::vector<unsigned char> sig;
-    BOOST_REQUIRE(key.Sign(SignatureHash(spk, tx, 0, SIGHASH_ALL, /*amount=*/0, SigVersion::BASE), sig));
+    BOOST_REQUIRE(key.Sign(SignatureHash(spk, tx, 0, SIGHASH_ALL, /*amount=*/0*sats, SigVersion::BASE), sig));
     sig.push_back(SIGHASH_ALL);
     const std::vector<unsigned char> bogus_sig{ParseHex("300602010102010101")}; // r=1, s=1, SIGHASH_ALL
     tx.vin[0].scriptSig = CScript() << sig << ToByteVector(pubkey) << bogus_sig << OP_OVER << OP_CHECKSIG
@@ -304,7 +305,7 @@ BOOST_AUTO_TEST_CASE(bip352_p2pkh_pubkey_extraction_with_checksig_in_scriptsig)
     // Verify that the malleated spend is consensus-valid
     ScriptError serror = SCRIPT_ERR_OK;
     BOOST_CHECK_MESSAGE(VerifyScript(txin.scriptSig, spk, nullptr, MANDATORY_SCRIPT_VERIFY_FLAGS,
-                                     MutableTransactionSignatureChecker(&tx, 0, /*amountIn=*/0, MissingDataBehavior::ASSERT_FAIL), &serror),
+                                     MutableTransactionSignatureChecker(&tx, 0, /*amountIn=*/0*sats, MissingDataBehavior::ASSERT_FAIL), &serror),
                         ScriptErrorString(serror));
 
     const auto extracted_pubkey = GetPubKeyFromInput(txin, spk);

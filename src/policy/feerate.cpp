@@ -23,7 +23,7 @@ CAmount CFeeRate::GetFee(int32_t virtual_bytes) const
     Assume(virtual_bytes >= 0);
     if (m_feerate.IsEmpty()) { return CAmount(0);}
     CAmount nFee = CAmount(m_feerate.EvaluateFeeUp(virtual_bytes));
-    if (nFee == 0 && virtual_bytes != 0 && m_feerate.fee < 0) return CAmount(-1);
+    if (nFee == 0*sats && virtual_bytes != 0 && m_feerate.fee < 0*sats) return -1*sats;
     return nFee;
 }
 
@@ -31,15 +31,15 @@ std::string CFeeRate::ToString(FeeRateFormat fee_rate_format) const
 {
     const CAmount feerate_per_kvb{GetFeePerK()};
     const auto format_feerate = [](const CAmount fee_rate, const CAmount divisor, const int decimals, const std::string& currency_unit, const std::string& size_unit) {
-        Assert(divisor > 0);
-        const char* sign{fee_rate < 0 ? "-" : ""};
+        Assert(divisor > 0*sats);
+        const char* sign{fee_rate < 0*sats ? "-" : ""};
         const CAmount quotient{std::abs(fee_rate / divisor)};
         const CAmount remainder{std::abs(fee_rate % divisor)};
         return strprintf("%s%d.%0*d %s/%s", sign, quotient, decimals, remainder, currency_unit, size_unit);
     };
     switch (fee_rate_format) {
     case FeeRateFormat::BTC_KVB: return format_feerate(feerate_per_kvb, COIN, /*decimals=*/8, CURRENCY_UNIT, "kvB");
-    case FeeRateFormat::SAT_VB: return format_feerate(feerate_per_kvb, 1000, /*decimals=*/3, CURRENCY_ATOM, "vB");
+    case FeeRateFormat::SAT_VB: return format_feerate(feerate_per_kvb, 1000*sats, /*decimals=*/3, CURRENCY_ATOM, "vB");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }

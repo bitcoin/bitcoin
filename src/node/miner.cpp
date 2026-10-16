@@ -120,7 +120,7 @@ void BlockAssembler::resetBlock()
 
     // These counters do not include coinbase tx
     nBlockTx = 0;
-    nFees = 0;
+    nFees = 0*sats;
 }
 
 std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
