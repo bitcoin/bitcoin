@@ -2310,7 +2310,12 @@ struct KeyParser {
         FlatSigningProvider out_a, out_b;
         const std::optional<CPubKey> pub_a{key_a.GetPubKey(0, provider, out_a)};
         const std::optional<CPubKey> pub_b{key_b.GetPubKey(0, provider, out_b)};
-        if (pub_a && pub_b) return *pub_a < *pub_b;
+        if (pub_a && pub_b) {
+            if (miniscript::IsTapscript(m_script_ctx)) {
+                return XOnlyPubKey{*pub_a} < XOnlyPubKey{*pub_b};
+            }
+            return *pub_a < *pub_b;
+        }
         // Keys that cannot be derived sort before the ones that can, and are compared by their
         // expression so that two different keys are not taken for duplicates.
         if (pub_a.has_value() != pub_b.has_value()) return !pub_a.has_value();
