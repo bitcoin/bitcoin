@@ -335,6 +335,60 @@ class CompactBlocksTest(BitcoinTestFramework):
         lb_peer.send_await_disconnect(msg_cmpctblock(cmpct_block))
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.hashPrevBlock)
 
+        # Also test the optimistic reconstruction path: a peer sending an invalid cmpctblock
+        # message for a block already in-flight from MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK peers
+        # must also be disconnected.
+        stall1 = self.nodes[0].add_p2p_connection(TestP2PConn())
+        self.request_cb_announcements(stall1)
+        stall2 = self.nodes[0].add_p2p_connection(TestP2PConn())
+        self.request_cb_announcements(stall2)
+        bad_peer = self.nodes[0].add_p2p_connection(TestP2PConn())
+        self.request_cb_announcements(bad_peer)
+        # Newly created peers are the last three connections.
+        stall1_idx, stall2_idx, bad_peer_idx = -3, -2, -1
+
+        # The final in-flight slot is reserved for outbound peers, so outbound_node
+        # takes it. The outbound HB peer is never evicted, so the HB set ends up as
+        # outbound_node, stall2 and bad_peer.
+        for peer in [self.outbound_node, stall2, bad_peer]:
+            self.make_peer_hb_to_candidate(self.nodes[0], peer)
+        self.assert_highbandwidth_states(self.nodes[0], idx=stall1_idx, hb_to=False, hb_from=True)
+        self.assert_highbandwidth_states(self.nodes[0], idx=stall2_idx, hb_to=True, hb_from=True)
+        self.assert_highbandwidth_states(self.nodes[0], idx=bad_peer_idx, hb_to=True, hb_from=True)
+
+        block2 = self.build_block_on_tip(self.nodes[0])
+
+        # Encode coinbase as shortid (never in mempool) to force getblocktxn.
+        inflight_cmpct = HeaderAndShortIDs()
+        inflight_cmpct.header = CBlockHeader(block2)
+        inflight_cmpct.nonce = 0
+        [k0, k1] = inflight_cmpct.get_siphash_keys()
+        inflight_cmpct.shortids = [calculate_shortid(k0, k1, block2.vtx[0].wtxid_int)]
+
+        # stall1 is non-HB, so it does a solicited announcement and takes the first slot.
+        stall1.send_header_for_blocks([block2])
+        stall1.wait_for_getdata([block2.hash_int], timeout=30)
+        for peer in [stall1, stall2, self.outbound_node]:
+            peer.clear_getblocktxn()
+            peer.send_and_ping(msg_cmpctblock(inflight_cmpct.to_p2p()))
+            self.getblocktxn_expected(peer, block2.hash_int, indices=[0])
+
+        # Now all MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK slots are taken. An HB peer
+        # sending an invalid cmpctblock message for the same block falls into the optimistic
+        # reconstruction path and must be disconnected.
+        invalid_cmpct = P2PHeaderAndShortIDs()
+        invalid_cmpct.header = CBlockHeader(block2)
+        invalid_cmpct.prefilled_txn_length = 1
+        invalid_cmpct.prefilled_txn = [PrefilledTransaction(too_high_prefill_idx, block2.vtx[0])]
+        bad_peer.send_await_disconnect(msg_cmpctblock(invalid_cmpct))
+        assert_equal(int(self.nodes[0].getbestblockhash(), 16), block2.hashPrevBlock)
+
+        # Deliver the block so the stalled in-flight requests don't leak into later tests.
+        msg = msg_blocktxn()
+        msg.block_transactions = BlockTransactions(block2.hash_int, [block2.vtx[0]])
+        stall1.send_and_ping(msg)
+        assert_equal(self.nodes[0].getbestblockhash(), block2.hash_hex)
+
     # Compare the generated shortids to what we expect based on BIP 152, given
     # bitcoind's choice of nonce.
     def test_compactblock_construction(self, test_node):
