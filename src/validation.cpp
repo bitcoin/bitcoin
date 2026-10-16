@@ -5941,25 +5941,6 @@ ChainstateManager::~ChainstateManager()
     m_versionbitscache.Clear();
 }
 
-Chainstate* ChainstateManager::LoadAssumeutxoChainstate()
-{
-    assert(!CurrentChainstate().m_from_snapshot_blockhash);
-    std::optional<fs::path> path = node::FindAssumeutxoChainstateDir(m_options.datadir);
-    if (!path) {
-        return nullptr;
-    }
-    std::optional<uint256> base_blockhash = node::ReadSnapshotBaseBlockhash(*path);
-    if (!base_blockhash) {
-        return nullptr;
-    }
-    LogInfo("[snapshot] detected active snapshot chainstate (%s) - loading",
-        fs::PathToString(*path));
-
-    auto snapshot_chainstate{std::make_unique<Chainstate>(nullptr, m_blockman, *this, base_blockhash)};
-    LogInfo("[snapshot] switching active chainstate to %s", snapshot_chainstate->ToString());
-    return &this->AddChainstate(std::move(snapshot_chainstate));
-}
-
 Chainstate& ChainstateManager::AddChainstate(std::unique_ptr<Chainstate> chainstate)
 {
     Chainstate& prev_chainstate{CurrentChainstate()};
@@ -5989,24 +5970,6 @@ bool IsBIP30Unspendable(const uint256& block_hash, int block_height)
 {
     return (block_height==91722 && block_hash == uint256{"00000000000271a2dc26e7667f8419f2e15416dc6955e5a6c6cdf3f2574dd08e"}) ||
            (block_height==91812 && block_hash == uint256{"00000000000af0aed4792b1acee3d966af36cf5def14935db8de83d6f9306f2f"});
-}
-
-bool ChainstateManager::DeleteChainstate(Chainstate& chainstate)
-{
-    AssertLockHeld(::cs_main);
-    assert(!chainstate.m_coins_views);
-    const fs::path db_path{chainstate.StoragePath()};
-    if (!DeleteCoinsDBFromDisk(db_path, /*is_snapshot=*/bool{chainstate.m_from_snapshot_blockhash})) {
-        LogError("Deletion of %s failed. Please remove it manually to continue reindexing.",
-                  fs::PathToString(db_path));
-        return false;
-    }
-    std::unique_ptr<Chainstate> prev_chainstate{Assert(RemoveChainstate(chainstate))};
-    Chainstate& curr_chainstate{CurrentChainstate()};
-    assert(!prev_chainstate->m_mempool || prev_chainstate->m_mempool->size() == 0);
-    assert(!curr_chainstate.m_mempool);
-    std::swap(curr_chainstate.m_mempool, prev_chainstate->m_mempool);
-    return true;
 }
 
 ChainstateRole Chainstate::GetRole() const

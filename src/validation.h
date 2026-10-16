@@ -1256,19 +1256,10 @@ public:
      *  information. */
     void ReportHeadersPresync(int64_t height, int64_t timestamp);
 
-    //! When starting up, search the datadir for a chainstate based on a UTXO
-    //! snapshot that is in the process of being validated and load it if found.
-    //! Return pointer to the Chainstate if it is loaded.
-    Chainstate* LoadAssumeutxoChainstate() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
     //! Add new chainstate.
     Chainstate& AddChainstate(std::unique_ptr<Chainstate> chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     void ResetChainstates() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
-    //! Remove the chainstate and all on-disk artifacts.
-    //! Used when reindex{-chainstate} is called during snapshot use.
-    [[nodiscard]] bool DeleteChainstate(Chainstate& chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Call ActivateBestChain() on the active chainstate.
     util::Result<void> ActivateBestChains() LOCKS_EXCLUDED(::cs_main);
