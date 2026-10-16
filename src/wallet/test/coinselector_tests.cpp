@@ -10,6 +10,7 @@
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <util/translation.h>
+#include <script/solver.h>
 #include <wallet/coincontrol.h>
 #include <wallet/coinselection.h>
 #include <wallet/spend.h>
@@ -1384,6 +1385,304 @@ BOOST_FIXTURE_TEST_CASE(wallet_coinsresult_test, BasicTestingSetup)
         }
         // And verify that no extra element were removed
         BOOST_CHECK_EQUAL(available_coins.Size(), 8);
+    }
+}
+
+static CoinSelectionParams MakeSPTestParams(FastRandomContext& rand, std::optional<int> max_tx_weight = std::nullopt,
+                                            CFeeRate effective_feerate = CFeeRate(0))
+{
+    CoinSelectionParams params{
+        rand,
+        /*change_output_size=*/34,
+        /*change_spend_size=*/148,
+        /*min_change_target=*/CENT,
+        /*effective_feerate=*/effective_feerate,
+        /*long_term_feerate=*/CFeeRate(0),
+        /*discard_feerate=*/CFeeRate(0),
+        /*tx_noinputs_size=*/10,
+        /*avoid_partial=*/false,
+    };
+    params.m_silent_payments = true;
+    if (max_tx_weight) params.m_max_tx_weight = *max_tx_weight;
+    return params;
+}
+
+static COutPoint AddP2WPKHCoin(CoinsResult& coins, CWallet& wallet, CAmount value, int input_bytes = 68, CFeeRate feerate = CFeeRate(0))
+{
+    CMutableTransaction tx;
+    tx.nLockTime = nextLockTime++;
+    tx.vout.resize(1);
+    tx.vout[0].nValue = value;
+    tx.vout[0].scriptPubKey = GetScriptForDestination(*Assert(wallet.GetNewDestination(OutputType::BECH32, "")));
+    Txid txid = tx.GetHash();
+    LOCK(wallet.cs_wallet);
+    auto ret = wallet.mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(txid),
+                                        std::forward_as_tuple(MakeTransactionRef(std::move(tx)), TxStateInactive{}));
+    coins.Add(OutputType::BECH32, {COutPoint(txid, 0), ret.first->second.GetTx()->vout[0],
+                                   /*depth=*/6, input_bytes, /*solvable=*/true, /*safe=*/true,
+                                   /*time=*/0, /*from_me=*/false, feerate});
+    return COutPoint(txid, 0);
+}
+
+static COutPoint AddP2WSHCoin(CoinsResult& coins, CAmount value, int input_bytes = 272, CFeeRate feerate = CFeeRate(0))
+{
+    CMutableTransaction tx;
+    tx.nLockTime = nextLockTime++;
+    tx.vout.resize(1);
+    tx.vout[0].nValue = value;
+    tx.vout[0].scriptPubKey = CScript() << OP_0 << std::vector<unsigned char>(32, 0x01);
+    Txid txid = tx.GetHash();
+    coins.Add(OutputType::BECH32, {COutPoint(txid, 0), tx.vout[0],
+                                   /*depth=*/6, input_bytes, /*solvable=*/true, /*safe=*/true,
+                                   /*time=*/0, /*from_me=*/false, feerate});
+    return COutPoint(txid, 0);
+}
+
+static bool InputSetContains(const SelectionResult& result, const COutPoint& pt)
+{
+    return std::any_of(result.GetInputSet().begin(), result.GetInputSet().end(),
+                       [&](const auto& c) { return c->outpoint == pt; });
+}
+
+BOOST_AUTO_TEST_CASE(silent_payments_test)
+{
+    std::unique_ptr<CWallet> wallet = NewWallet(m_node);
+    FastRandomContext rand;
+
+    // All-eligible coins
+    {
+        LOCK(wallet->cs_wallet);
+        CoinsResult coins;
+        AddP2WPKHCoin(coins, *wallet, 3 * COIN);
+        AddP2WPKHCoin(coins, *wallet, 2 * COIN);
+
+        auto params = MakeSPTestParams(rand);
+        auto result = AutomaticCoinSelection(*wallet, coins, 4 * COIN, params);
+        BOOST_CHECK(result);
+        for (const auto& coin : result->GetInputSet()) {
+            std::vector<std::vector<unsigned char>> solutions;
+            BOOST_CHECK(Solver(coin->txout.scriptPubKey, solutions) == TxoutType::WITNESS_V0_KEYHASH);
+        }
+    }
+
+    // Eligible covers target: ineligible P2WSH is never selected
+    {
+        LOCK(wallet->cs_wallet);
+        CoinsResult coins;
+        auto elig = AddP2WPKHCoin(coins, *wallet, 5 * COIN);
+        auto inelig = AddP2WSHCoin(coins, 10 * COIN);
+
+        auto params = MakeSPTestParams(rand);
+        auto result = AutomaticCoinSelection(*wallet, coins, 3 * COIN, params);
+        BOOST_CHECK(result);
+        BOOST_CHECK(InputSetContains(*result, elig));
+        BOOST_CHECK(!InputSetContains(*result, inelig));
+    }
+
+    // Eligible insufficient: fills remainder from ineligible coins
+    {
+        LOCK(wallet->cs_wallet);
+        CoinsResult coins;
+        auto elig = AddP2WPKHCoin(coins, *wallet, 1 * COIN);
+        AddP2WSHCoin(coins, 5 * COIN);
+
+        auto params = MakeSPTestParams(rand);
+        auto result = AutomaticCoinSelection(*wallet, coins, 4 * COIN, params);
+        BOOST_CHECK(result);
+        BOOST_CHECK(InputSetContains(*result, elig));
+    }
+
+    // The only eligible coin has a negative effective value: it is still used as the anchor
+    {
+        LOCK(wallet->cs_wallet);
+        const CFeeRate feerate{500000}; // 500 sat/vB, so a 68 vB input costs 34,000 sat
+        CoinsResult coins;
+        auto elig = AddP2WPKHCoin(coins, *wallet, 10000, /*input_bytes=*/68, feerate);
+        AddP2WSHCoin(coins, 5 * COIN, /*input_bytes=*/272, feerate);
+
+        auto params = MakeSPTestParams(rand, std::nullopt, feerate);
+        auto result = AutomaticCoinSelection(*wallet, coins, 4 * COIN, params);
+        BOOST_REQUIRE(result);
+        BOOST_CHECK(InputSetContains(*result, elig));
+    }
+
+    // A negative effective value eligible coin is anchored if no positive one fits the weight budget
+    {
+        LOCK(wallet->cs_wallet);
+        const CFeeRate feerate{500000}; // 500 sat/vB, so a 68 vB input costs 34,000 sat
+        CoinsResult coins;
+
+        // max_selection_weight is 1000, so heavy (500 * WITNESS_SCALE_FACTOR = 2000) is not an anchor candidate
+        auto heavy = AddP2WPKHCoin(coins, *wallet, 5 * COIN, /*input_bytes=*/500, feerate);
+        auto elig = AddP2WPKHCoin(coins, *wallet, 10000, /*input_bytes=*/68, feerate);
+        // Fits in what the anchor leaves: 1000 - 68 * WITNESS_SCALE_FACTOR = 728
+        AddP2WSHCoin(coins, 5 * COIN, /*input_bytes=*/100, feerate);
+
+        // max_tx_weight = max_selection_weight + (tx_noinputs_size + change_output_size) * WITNESS_SCALE_FACTOR
+        auto params = MakeSPTestParams(rand, 1000 + (10 + 34) * WITNESS_SCALE_FACTOR, feerate);
+        auto result = AutomaticCoinSelection(*wallet, coins, 4 * COIN, params);
+        BOOST_REQUIRE(result);
+        BOOST_CHECK(InputSetContains(*result, elig));
+        BOOST_CHECK(!InputSetContains(*result, heavy));
+    }
+
+    // A negative effective value eligible coin is anchored if the positive anchors leave too little
+    // weight for the remainder
+    {
+        LOCK(wallet->cs_wallet);
+        const CFeeRate feerate{500000}; // 500 sat/vB, so a 68 vB input costs 34,000 sat
+        CoinsResult coins;
+
+        // max_selection_weight is 1000, so positive (225 * WITNESS_SCALE_FACTOR = 900) is an anchor
+        // candidate, but only leaves 100 for the remainder
+        auto positive = AddP2WPKHCoin(coins, *wallet, 1 * COIN, /*input_bytes=*/225, feerate);
+        auto negative = AddP2WPKHCoin(coins, *wallet, 10000, /*input_bytes=*/68, feerate);
+        // Fits in what negative leaves (728), but not in what positive leaves (100)
+        AddP2WSHCoin(coins, 5 * COIN, /*input_bytes=*/100, feerate);
+
+        auto params = MakeSPTestParams(rand, 1000 + (10 + 34) * WITNESS_SCALE_FACTOR, feerate);
+        auto result = AutomaticCoinSelection(*wallet, coins, 4 * COIN, params);
+        BOOST_REQUIRE(result);
+        BOOST_CHECK(InputSetContains(*result, negative));
+        BOOST_CHECK(!InputSetContains(*result, positive));
+    }
+
+    // The anchor with the highest selection amount is picked: by effective value by default, and
+    // by nominal value when subtracting fees from outputs
+    {
+        LOCK(wallet->cs_wallet);
+        const CFeeRate feerate{500000}; // 500 sat/vB
+        CoinsResult coins;
+        // Higher nominal value, but its 500,000 sat fee leaves the lower effective value
+        auto high_nominal = AddP2WPKHCoin(coins, *wallet, 100'000'000, /*input_bytes=*/1000, feerate);
+        // Lower nominal value, but its 34,000 sat fee leaves the higher effective value
+        auto high_effective = AddP2WPKHCoin(coins, *wallet, 99'900'000, /*input_bytes=*/68, feerate);
+        // The eligible coins cannot cover the target, so an anchor is needed
+        AddP2WSHCoin(coins, 5 * COIN, /*input_bytes=*/100, feerate);
+
+        auto params = MakeSPTestParams(rand, std::nullopt, feerate);
+        auto result = AutomaticCoinSelection(*wallet, coins, 3 * COIN, params);
+        BOOST_REQUIRE(result);
+        BOOST_CHECK(InputSetContains(*result, high_effective));
+        BOOST_CHECK(!InputSetContains(*result, high_nominal));
+
+        params.m_subtract_fee_outputs = true;
+        auto sffo_result = AutomaticCoinSelection(*wallet, coins, 3 * COIN, params);
+        BOOST_REQUIRE(sffo_result);
+        BOOST_CHECK(InputSetContains(*sffo_result, high_nominal));
+        BOOST_CHECK(!InputSetContains(*sffo_result, high_effective));
+    }
+
+    // No eligible coins: returns a non-empty error
+    {
+        LOCK(wallet->cs_wallet);
+        CoinsResult coins;
+        AddP2WSHCoin(coins, 5 * COIN);
+        AddP2WSHCoin(coins, 3 * COIN);
+
+        auto params = MakeSPTestParams(rand);
+        auto result = AutomaticCoinSelection(*wallet, coins, 4 * COIN, params);
+        BOOST_CHECK(!result);
+        BOOST_CHECK(!util::ErrorString(result).empty());
+    }
+
+    // Heavy eligible coin exceeds max_selection_weight and is skipped;
+    // lighter eligible coin becomes anchor instead.
+    {
+        LOCK(wallet->cs_wallet);
+        CoinsResult coins;
+        // max_selection_weight is 1000 units
+        // heavy: input_bytes=500 → weight=(500 * WITNESS_SCALE_FACTOR) > 1000 → excluded as anchor candidate
+        auto heavy = AddP2WPKHCoin(coins, *wallet, 5 * COIN, /*input_bytes=*/500);
+        // light: input_bytes=50  → weight=(200 * WITNESS_SCALE_FACTOR)  < 1000 → chosen as anchor
+        auto light = AddP2WPKHCoin(coins, *wallet, 2 * COIN, /*input_bytes=*/50);
+        AddP2WSHCoin(coins, 3 * COIN, /*input_bytes=*/100);
+
+        // max_tx_weight = max_selection_weight + (tx_noinputs_size + change_output_size) * WITNESS_SCALE_FACTOR
+        auto params = MakeSPTestParams(rand, /*max_tx_weight=*/1176);
+        auto result = AutomaticCoinSelection(*wallet, coins, 3 * COIN, params);
+        BOOST_CHECK(result);
+        BOOST_CHECK(!InputSetContains(*result, heavy));
+        BOOST_CHECK(InputSetContains(*result, light));
+    }
+
+    // Search all eligible coins and other coins combinations for result
+    {
+        LOCK(wallet->cs_wallet);
+        CoinsResult coins;
+        // max_selection_weight is 1000 units
+        // Has highest value but is too heavy to combine with p2wsh coin
+        auto highest_value = AddP2WPKHCoin(coins, *wallet, 5 * COIN, /*input_bytes=*/250);
+        // Less value but will fit into transaction with p2wsh coin
+        auto expected = AddP2WPKHCoin(coins, *wallet, 4 * COIN, /*input_bytes=*/200);
+        AddP2WSHCoin(coins, 3 * COIN, /*input_bytes=*/50);
+
+        // max_tx_weight = max_selection_weight + (tx_noinputs_size + change_output_size) * WITNESS_SCALE_FACTOR
+        auto params = MakeSPTestParams(rand, /*max_tx_weight=*/1176);
+        auto result = AutomaticCoinSelection(*wallet, coins, 6 * COIN, params);
+        BOOST_CHECK(result);
+        BOOST_CHECK(!InputSetContains(*result, highest_value));
+        BOOST_CHECK(InputSetContains(*result, expected));
+    }
+
+    // Eligible coins exceed the maximum weight: the detailed error is returned, as without silent payments
+    {
+        LOCK(wallet->cs_wallet);
+        CoinsResult coins;
+        for (int i = 0; i < 10; ++i) AddP2WPKHCoin(coins, *wallet, 1 * COIN, /*input_bytes=*/50);
+
+        // Paying 8 COIN needs 8 coins of weight 200, which exceeds max_selection_weight of 1000 units
+        auto params = MakeSPTestParams(rand, /*max_tx_weight=*/1176);
+        CoinsResult sp_coins{coins};
+        auto result = AutomaticCoinSelection(*wallet, sp_coins, 8 * COIN, params);
+        BOOST_CHECK(!result);
+        params.m_silent_payments = false;
+        auto non_sp_result = AutomaticCoinSelection(*wallet, coins, 8 * COIN, params);
+        BOOST_CHECK(!non_sp_result);
+        BOOST_CHECK(!util::ErrorString(result).empty());
+        BOOST_CHECK_EQUAL(util::ErrorString(result).original, util::ErrorString(non_sp_result).original);
+    }
+
+    // An eligible preset input is enough: the remainder can be selected from ineligible coins
+    {
+        LOCK(wallet->cs_wallet);
+        CoinsResult preset;
+        auto elig = AddP2WPKHCoin(preset, *wallet, 1 * COIN);
+        CoinsResult coins;
+        auto inelig = AddP2WSHCoin(coins, 5 * COIN);
+
+        auto params = MakeSPTestParams(rand);
+        auto result = SelectCoins(*wallet, coins, preset, 4 * COIN, /*coin_control=*/{}, params);
+        BOOST_REQUIRE(result);
+        BOOST_CHECK(InputSetContains(*result, elig));
+        BOOST_CHECK(InputSetContains(*result, inelig));
+    }
+
+    // An ineligible preset input is not: the remainder must contain an eligible coin
+    {
+        LOCK(wallet->cs_wallet);
+        CoinsResult preset;
+        AddP2WSHCoin(preset, 1 * COIN);
+        CoinsResult coins;
+        AddP2WSHCoin(coins, 5 * COIN);
+
+        auto params = MakeSPTestParams(rand);
+        auto result = SelectCoins(*wallet, coins, preset, 4 * COIN, /*coin_control=*/{}, params);
+        BOOST_CHECK(!result);
+        BOOST_CHECK_EQUAL(util::ErrorString(result).original, "No silent payment eligible inputs were found.");
+    }
+
+    // m_silent_payments=false: ineligible-only pool succeeds normally
+    {
+        LOCK(wallet->cs_wallet);
+        CoinsResult coins;
+        AddP2WSHCoin(coins, 5 * COIN);
+        AddP2WSHCoin(coins, 3 * COIN);
+
+        auto params = MakeSPTestParams(rand);
+        params.m_silent_payments = false;
+        auto result = AutomaticCoinSelection(*wallet, coins, 4 * COIN, params);
+        BOOST_CHECK(result);
     }
 }
 

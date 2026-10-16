@@ -6,21 +6,33 @@
 #include <rpc/register.h> // IWYU pragma: associated
 
 #include <addresstype.h>
+#include <chainparams.h>
+#include <coins.h>
+#include <common/bip352.h>
+#include <common/paymentdestination.h>
+#include <core_io.h>
 #include <crypto/hex_base.h>
+#include <index/txindex.h>
 #include <key.h>
 #include <key_io.h>
+#include <node/coin.h>
 #include <outputtype.h>
+#include <primitives/transaction.h>
 #include <pubkey.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <rpc/server.h>
+#include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
+#include <span.h>
 #include <tinyformat.h>
 #include <univalue.h>
 #include <util/check.h>
+#include <util/expected.h>
+#include <util/strencodings.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -34,6 +46,10 @@
 #include <utility>
 #include <variant>
 #include <vector>
+
+namespace node {
+struct NodeContext;
+} // namespace node
 
 static RPCMethod validateaddress()
 {
@@ -66,28 +82,35 @@ static RPCMethod validateaddress()
         },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
-            std::string error_msg;
             std::vector<int> error_locations;
-            CTxDestination dest = DecodeDestination(request.params[0].get_str(), error_msg, &error_locations);
-            const bool isValid = IsValidDestination(dest);
-            CHECK_NONFATAL(isValid == error_msg.empty());
+            const auto dest{PaymentDestination::FromString(request.params[0].get_str(), &error_locations)};
+            const bool isValid = dest.has_value();
+            CHECK_NONFATAL(isValid || !dest.error().empty());
 
             UniValue ret(UniValue::VOBJ);
             ret.pushKV("isvalid", isValid);
             if (isValid) {
-                std::string currentAddress = EncodeDestination(dest);
-                ret.pushKV("address", currentAddress);
+                if (const auto* sp_dest{dest->GetSilentPaymentsDestination()}) {
+                    ret.pushKV("address", bip352::EncodeSilentPaymentsAddress(*sp_dest, Params()));
+                    // A silent payments address has no fixed scriptPubKey
+                    ret.pushKV("isscript", false);
+                    ret.pushKV("iswitness", false);
+                } else {
+                    const CTxDestination& tx_dest{*CHECK_NONFATAL(dest->GetTxDestination())};
+                    std::string currentAddress = EncodeDestination(tx_dest);
+                    ret.pushKV("address", currentAddress);
 
-                CScript scriptPubKey = GetScriptForDestination(dest);
-                ret.pushKV("scriptPubKey", HexStr(scriptPubKey));
+                    CScript scriptPubKey = GetScriptForDestination(tx_dest);
+                    ret.pushKV("scriptPubKey", HexStr(scriptPubKey));
 
-                UniValue detail = DescribeAddress(dest);
-                ret.pushKVs(std::move(detail));
+                    UniValue detail = DescribeAddress(tx_dest);
+                    ret.pushKVs(std::move(detail));
+                }
             } else {
                 UniValue error_indices(UniValue::VARR);
                 for (int i : error_locations) error_indices.push_back(i);
                 ret.pushKV("error_locations", std::move(error_indices));
-                ret.pushKV("error", error_msg);
+                ret.pushKV("error", dest.error());
             }
 
             return ret;
@@ -351,6 +374,128 @@ static RPCMethod deriveaddresses()
     };
 }
 
+static RPCMethod scantxforsilentpayments()
+{
+    return RPCMethod{
+        "scantxforsilentpayments",
+        "Scan a raw transaction for Silent Payments outputs belonging to the given recipient.\n"
+        "Returns a list of found outputs with their spend key tweaks.\n"
+        "Prevouts are resolved from the UTXO set, mempool, and the txindex.\n",
+        {
+            {"tx", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The raw transaction hex to scan"},
+            {"scan_key", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The recipient's 32-byte scan private key (hex)"},
+            {"spend_pubkey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The recipient's 33-byte spend public key (hex)"},
+        },
+        RPCResult{
+            RPCResult::Type::ARR, "", "Array of found outputs (empty if none belong to this recipient)",
+            {
+                {RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR_HEX, "output", "The x-only public key of the found taproot output"},
+                    {RPCResult::Type::STR_HEX, "tweak", "The 32-byte spend key tweak for this output"},
+                }},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("scantxforsilentpayments", "\"<tx_hex>\" \"<scan_key_hex>\" \"<spend_pubkey_hex>\"") +
+            HelpExampleRpc("scantxforsilentpayments", "\"<tx_hex>\", \"<scan_key_hex>\", \"<spend_pubkey_hex>\"")
+        },
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        {
+            CMutableTransaction mtx;
+            if (!DecodeHexTx(mtx, request.params[0].get_str())) {
+                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+            }
+            const CTransaction tx(std::move(mtx));
+
+            const auto scan_key_bytes = ParseHex(request.params[1].get_str());
+            if (scan_key_bytes.size() != 32) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "scan_key must be 32 bytes (64 hex chars)");
+            }
+            CKey scan_key;
+            scan_key.Set(scan_key_bytes.begin(), scan_key_bytes.end(), /*fCompressedIn=*/true);
+            if (!scan_key.IsValid()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid scan_key");
+            }
+
+            const auto spend_pubkey_bytes = ParseHex(request.params[2].get_str());
+            if (spend_pubkey_bytes.size() != 33) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "spend_pubkey must be 33 bytes (66 hex chars)");
+            }
+            CPubKey spend_pubkey(spend_pubkey_bytes.begin(), spend_pubkey_bytes.end());
+            if (!spend_pubkey.IsFullyValid()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid spend_pubkey");
+            }
+
+            // Resolve prevout scriptPubKeys needed by GetSilentPaymentsPrevoutsSummary.
+            // Initialize with empty coins for every input.
+            std::map<COutPoint, Coin> coins;
+            for (const CTxIn& txin : tx.vin) {
+                coins[txin.prevout];
+            }
+
+            // UTXO set + mempool
+            node::NodeContext& node = EnsureAnyNodeContext(request.context);
+            node::FindCoins(node, coins);
+
+            // txindex for any prevouts not found above
+            if (g_txindex) {
+                g_txindex->BlockUntilSyncedToCurrentChain();
+                for (auto& [outpoint, coin] : coins) {
+                    if (!coin.IsSpent()) continue;
+                    auto res = g_txindex->FindTx(outpoint.hash);
+                    if (res && outpoint.n < res->tx->vout.size()) {
+                        coin.out = res->tx->vout[outpoint.n];
+                    }
+                }
+            }
+
+            // error for any still-missing prevouts
+            for (const auto& [outpoint, coin] : coins) {
+                if (coin.IsSpent()) {
+                    throw JSONRPCError(RPC_MISC_ERROR,
+                        strprintf("Could not find prevout %s:%u, enable -txindex for confirmed transactions",
+                                  outpoint.hash.ToString(), outpoint.n));
+                }
+            }
+
+            // Compute the BIP352 prevouts summary; returns nullopt if no eligible inputs.
+            auto prevouts_summary = bip352::GetSilentPaymentsPrevoutsSummary(tx.vin, coins);
+            if (!prevouts_summary) {
+                return UniValue(UniValue::VARR);
+            }
+
+            // Collect x-only pubkeys from all taproot outputs.
+            std::vector<XOnlyPubKey> output_pubkeys;
+            for (const CTxOut& txout : tx.vout) {
+                if (txout.scriptPubKey.IsPayToTaproot()) {
+                    output_pubkeys.emplace_back(
+                        std::span<const unsigned char>(txout.scriptPubKey.data() + 2, 32));
+                }
+            }
+            if (output_pubkeys.empty()) {
+                return UniValue(UniValue::VARR);
+            }
+
+            auto found = bip352::SilentPaymentsReceiver(scan_key, spend_pubkey)
+                .Scan(*prevouts_summary, output_pubkeys);
+
+            if (!found) {
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "TX scan failed");
+            }
+
+            UniValue result(UniValue::VARR);
+            for (const bip352::SilentPaymentsOutput& sp_out : *found) {
+                UniValue entry(UniValue::VOBJ);
+                entry.pushKV("output", HexStr(sp_out.output));
+                entry.pushKV("tweak", HexStr(sp_out.tweak));
+                result.push_back(entry);
+            }
+            return result;
+        },
+    };
+}
+
 void RegisterOutputScriptRPCCommands(CRPCTable& t)
 {
     static const CRPCCommand commands[]{
@@ -358,6 +503,7 @@ void RegisterOutputScriptRPCCommands(CRPCTable& t)
         {"util", &createmultisig},
         {"util", &deriveaddresses},
         {"util", &getdescriptorinfo},
+        {"util", &scantxforsilentpayments},
     };
     for (const auto& c : commands) {
         t.appendCommand(c.name, &c);

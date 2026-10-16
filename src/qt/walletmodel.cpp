@@ -15,6 +15,7 @@
 #include <qt/transactiontablemodel.h>
 
 #include <common/args.h>
+#include <common/bip352.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <key_io.h>
@@ -182,7 +183,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             setAddress.insert(rcp.address);
             ++nAddresses;
 
-            vecSend.emplace_back(CRecipient{DecodeDestination(rcp.address.toStdString()), rcp.amount, rcp.fSubtractFeeFromAmount});
+            vecSend.emplace_back(CRecipient{PaymentDestination{DecodeDestination(rcp.address.toStdString())}, rcp.amount, rcp.fSubtractFeeFromAmount});
 
             total += rcp.amount;
         }
@@ -450,12 +451,24 @@ WalletModel::UnlockContext::~UnlockContext()
 
 bool WalletModel::bumpFee(Txid hash, Txid& new_hash)
 {
+    // Silent payments outputs are derived from the private keys of the inputs, so the wallet
+    // must be unlocked to create the bump transaction of a silent payments transaction
+    const bool is_silent_payments{m_wallet->getWalletTx(hash).is_silent_payments};
+    WalletModel::UnlockContext sp_ctx{[&]() -> UnlockContext {
+        if (is_silent_payments) return requestUnlock();
+        return UnlockContext(this, /*valid=*/false, /*relock=*/false);
+    }()};
+    if (is_silent_payments && !sp_ctx.isValid()) {
+        return false;
+    }
+
     CCoinControl coin_control;
     std::vector<bilingual_str> errors;
     CAmount old_fee;
     CAmount new_fee;
     CMutableTransaction mtx;
-    if (!m_wallet->createBumpTransaction(hash, coin_control, errors, old_fee, new_fee, mtx)) {
+    std::vector<bip352::SilentPaymentsDestination> sp_recipients;
+    if (!m_wallet->createBumpTransaction(hash, coin_control, errors, old_fee, new_fee, mtx, sp_recipients)) {
         QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Increasing transaction fee failed") + "<br />(" +
             (errors.size() ? QString::fromStdString(errors[0].translated) : "") +")");
         return false;
@@ -487,7 +500,10 @@ bool WalletModel::bumpFee(Txid hash, Txid& new_hash)
     }
 
     const bool enable_send{!wallet().privateKeysDisabled() || wallet().hasExternalSigner()};
-    const bool always_show_unsigned{getOptionsModel()->getEnablePSBTControls()};
+    // A silent payments transaction must be added to the wallet when it is created, so it is not
+    // offered as a PSBT. A PSBT broadcast elsewhere would be bumped later as if it paid to regular
+    // taproot outputs, since the wallet would not know its silent payments recipients.
+    const bool always_show_unsigned{getOptionsModel()->getEnablePSBTControls() && sp_recipients.empty()};
     auto confirmationDialog = new SendConfirmationDialog(tr("Confirm fee bump"), questionString, "", "", SEND_CONFIRM_DELAY, enable_send, always_show_unsigned, nullptr);
     confirmationDialog->setAttribute(Qt::WA_DeleteOnClose);
     // TODO: Replace QDialog::exec() with safer QDialog::show().
@@ -501,6 +517,10 @@ bool WalletModel::bumpFee(Txid hash, Txid& new_hash)
     // Short-circuit if we are returning a bumped transaction PSBT to clipboard
     if (retval == QMessageBox::Save) {
         // "Create Unsigned" clicked
+        if (!sp_recipients.empty()) {
+            QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Silent payments transactions cannot be bumped as a PSBT."));
+            return false;
+        }
         PartiallySignedTransaction psbtx(mtx);
         bool complete = false;
         const auto err{wallet().fillPSBT({.sign = false, .bip32_derivs = true}, nullptr, psbtx, complete)};
@@ -529,7 +549,7 @@ bool WalletModel::bumpFee(Txid hash, Txid& new_hash)
         return false;
     }
     // commit the bumped transaction
-    if(!m_wallet->commitBumpTransaction(hash, std::move(mtx), errors, new_hash)) {
+    if(!m_wallet->commitBumpTransaction(hash, std::move(mtx), errors, new_hash, sp_recipients)) {
         QMessageBox::critical(nullptr, tr("Fee bump error"), tr("Could not commit transaction") + "<br />(" +
             QString::fromStdString(errors[0].translated)+")");
         return false;

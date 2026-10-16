@@ -4,6 +4,7 @@
 
 #include <consensus/amount.h>
 #include <key.h>
+#include <script/signingprovider.h>
 #include <script/solver.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
@@ -43,7 +44,7 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
     // leftover input amount which would have been change to the recipient
     // instead of the miner.
     auto check_tx = [&wallet](CAmount leftover_input_amount) {
-        CRecipient recipient{PubKeyDestination({}), 50 * COIN - leftover_input_amount, /*subtract_fee=*/true};
+        CRecipient recipient{PaymentDestination{PubKeyDestination({})}, 50 * COIN - leftover_input_amount, /*subtract_fee=*/true};
         CCoinControl coin_control;
         coin_control.m_feerate.emplace(10000);
         coin_control.fOverrideFeeRate = true;
@@ -93,7 +94,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_duplicated_preset_inputs_test, TestChain100Setup)
 
     // Try to create a tx that spends more than what preset inputs + wallet selected inputs are covering for.
     // The wallet can cover up to 200 BTC, and the tx target is 299 BTC.
-    std::vector<CRecipient> recipients{{*Assert(wallet->GetNewDestination(OutputType::BECH32, "dummy")),
+    std::vector<CRecipient> recipients{{PaymentDestination{*Assert(wallet->GetNewDestination(OutputType::BECH32, "dummy"))},
                                            /*nAmount=*/299 * COIN, /*fSubtractFeeFromAmount=*/true}};
     CCoinControl coin_control;
     coin_control.m_allow_other_inputs = true;
@@ -118,6 +119,54 @@ BOOST_FIXTURE_TEST_CASE(wallet_duplicated_preset_inputs_test, TestChain100Setup)
     // Second case, don't use 'subtract_fee_from_outputs'.
     recipients[0].fSubtractFeeFromAmount = false;
     BOOST_CHECK(!CreateTransaction(*wallet, recipients, /*change_pos=*/std::nullopt, coin_control));
+}
+
+BOOST_AUTO_TEST_CASE(check_silent_payments_input)
+{
+    const COutPoint outpoint{Txid::FromUint256(uint256::ONE), 0};
+    const auto check{[&](const CScript& spk, const SigningProvider* provider) {
+        return bool{CheckSilentPaymentsInput(outpoint, CTxOut{COIN, spk}, provider)};
+    }};
+    const CKey key{GenerateRandomKey()};
+    const FlatSigningProvider empty_provider;
+
+    // Wallet coins of the eligible types are allowed, external ones are not
+    const CScript p2wpkh{GetScriptForDestination(WitnessV0KeyHash{key.GetPubKey()})};
+    BOOST_CHECK(check(p2wpkh, &empty_provider));
+    BOOST_CHECK(!check(p2wpkh, nullptr));
+
+    // External coins that are not eligible are allowed
+    const CScript p2wsh{GetScriptForDestination(WitnessV0ScriptHash{CScript{} << OP_TRUE})};
+    BOOST_CHECK(check(p2wsh, nullptr));
+
+    // Unknown witness versions are not allowed, also when wrapped in P2SH
+    const CScript witness_v2{CScript{} << OP_2 << std::vector<unsigned char>(32, 0x01)};
+    BOOST_CHECK(!check(witness_v2, &empty_provider));
+    BOOST_CHECK(!check(witness_v2, nullptr));
+    const CScript p2sh_witness_v2{GetScriptForDestination(ScriptHash{witness_v2})};
+    FlatSigningProvider p2sh_provider;
+    p2sh_provider.scripts.emplace(CScriptID{witness_v2}, witness_v2);
+    BOOST_CHECK(!check(p2sh_witness_v2, &p2sh_provider));
+    // Without the redeemScript, the wrapped witness version is unknown
+    BOOST_CHECK(check(p2sh_witness_v2, &empty_provider));
+
+    // Taproot coins are allowed, also with script path spend data
+    const XOnlyPubKey internal_key{key.GetPubKey()};
+    TaprootBuilder key_path_builder;
+    key_path_builder.Finalize(internal_key);
+    FlatSigningProvider key_path_provider;
+    const WitnessV1Taproot key_path_output{key_path_builder.GetOutput()};
+    key_path_provider.tr_trees.emplace(key_path_output, key_path_builder);
+    BOOST_CHECK(check(GetScriptForDestination(key_path_output), &key_path_provider));
+
+    TaprootBuilder script_path_builder;
+    const CScript leaf{CScript{} << ToByteVector(XOnlyPubKey{GenerateRandomKey().GetPubKey()}) << OP_CHECKSIG};
+    script_path_builder.Add(/*depth=*/0, leaf, TAPROOT_LEAF_TAPSCRIPT);
+    script_path_builder.Finalize(internal_key);
+    FlatSigningProvider script_path_provider;
+    const WitnessV1Taproot script_path_output{script_path_builder.GetOutput()};
+    script_path_provider.tr_trees.emplace(script_path_output, script_path_builder);
+    BOOST_CHECK(check(GetScriptForDestination(script_path_output), &script_path_provider));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

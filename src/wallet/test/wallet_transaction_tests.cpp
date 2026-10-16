@@ -50,5 +50,43 @@ BOOST_AUTO_TEST_CASE(deserialize_rejects_mismatched_variant_txid)
     BOOST_CHECK_EXCEPTION(CWalletTx(deserialize, ss, bad_variants), std::runtime_error, HasReason{"variant txid does not match wallet txid"});
 }
 
+BOOST_AUTO_TEST_CASE(silent_payments_flag_roundtrip)
+{
+    CMutableTransaction mtx;
+    mtx.vin.emplace_back(COutPoint{Txid::FromUint256(uint256::ONE), 0});
+    mtx.vout.emplace_back(COIN, CScript() << OP_TRUE);
+    const CTransactionRef tx{MakeTransactionRef(std::move(mtx))};
+    const Txid replacement{Txid::FromUint256(uint256{2})};
+    const std::map<Wtxid, CTransactionRef> no_variants;
+
+    // Unserialize throws on unknown string values, so a successful roundtrip also checks that the
+    // flag is not written as a new value, which releases that throw on them could not load
+    const auto roundtrip{[&](const CWalletTx& wtx) {
+        DataStream ss;
+        ss << wtx;
+        return CWalletTx(deserialize, ss, no_variants);
+    }};
+
+    // A silent payments tx is written as replaced by itself, which is read back as the flag
+    CWalletTx sp_wtx{tx, TxStateInactive{}};
+    sp_wtx.m_is_sp_tx = true;
+    const CWalletTx sp_loaded{roundtrip(sp_wtx)};
+    BOOST_CHECK(sp_loaded.IsSilentPaymentsTx());
+    BOOST_CHECK(!sp_loaded.m_replaced_by_txid);
+
+    // Once replaced, the replacement is kept
+    sp_wtx.m_replaced_by_txid = replacement;
+    const CWalletTx replaced_loaded{roundtrip(sp_wtx)};
+    BOOST_CHECK(replaced_loaded.m_replaced_by_txid == replacement);
+
+    // Other txs are not flagged
+    CWalletTx wtx{tx, TxStateInactive{}};
+    const CWalletTx loaded{roundtrip(wtx)};
+    BOOST_CHECK(!loaded.IsSilentPaymentsTx());
+    BOOST_CHECK(!loaded.m_replaced_by_txid);
+    wtx.m_replaced_by_txid = replacement;
+    BOOST_CHECK(roundtrip(wtx).m_replaced_by_txid == replacement);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
