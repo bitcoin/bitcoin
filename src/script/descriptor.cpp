@@ -2277,7 +2277,7 @@ std::unique_ptr<PubkeyProvider> InferPubkey(const CPubKey& pubkey, ParseScriptCo
     return key_provider;
 }
 
-std::unique_ptr<PubkeyProvider> InferXOnlyPubkey(const XOnlyPubKey& xkey, ParseScriptContext ctx, const SigningProvider& provider)
+std::unique_ptr<PubkeyProvider> InferXOnlyPubkey(const XOnlyPubKey& xkey, const SigningProvider& provider)
 {
     CPubKey pubkey{xkey.GetEvenCorrespondingCPubKey()};
     std::unique_ptr<PubkeyProvider> key_provider = std::make_unique<ConstPubkeyProvider>(0, pubkey, true);
@@ -2357,7 +2357,7 @@ struct KeyParser {
         if (miniscript::IsTapscript(m_script_ctx) && end - begin == 32) {
             XOnlyPubKey pubkey;
             std::copy(begin, end, pubkey.begin());
-            if (auto pubkey_provider = InferXOnlyPubkey(pubkey, ParseContext(), *m_in)) {
+            if (auto pubkey_provider = InferXOnlyPubkey(pubkey, *m_in)) {
                 m_keys.emplace_back();
                 m_keys.back().push_back(std::move(pubkey_provider));
                 return key;
@@ -2830,7 +2830,7 @@ std::unique_ptr<DescriptorImpl> InferMultiA(const CScript& script, ParseScriptCo
     keys.reserve(match->second.size());
     for (const auto keyspan : match->second) {
         if (keyspan.size() != 32) return {};
-        auto key = InferXOnlyPubkey(XOnlyPubKey{keyspan}, ctx, provider);
+        auto key = InferXOnlyPubkey(XOnlyPubKey{keyspan}, provider);
         if (!key) return {};
         keys.push_back(std::move(key));
     }
@@ -2842,7 +2842,7 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
 {
     if (ctx == ParseScriptContext::P2TR && script.size() == 34 && script[0] == 32 && script[33] == OP_CHECKSIG) {
         XOnlyPubKey key{std::span{script}.subspan(1, 32)};
-        return std::make_unique<PKDescriptor>(InferXOnlyPubkey(key, ctx, provider), true);
+        return std::make_unique<PKDescriptor>(InferXOnlyPubkey(key, provider), true);
     }
 
     if (ctx == ParseScriptContext::P2TR) {
@@ -2938,14 +2938,14 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
                     }
                 }
                 if (ok) {
-                    auto key = InferXOnlyPubkey(tap.internal_key, ParseScriptContext::P2TR, provider);
+                    auto key = InferXOnlyPubkey(tap.internal_key, provider);
                     return std::make_unique<TRDescriptor>(std::move(key), std::move(subscripts), std::move(depths));
                 }
             }
         }
         // If the above doesn't work, construct a rawtr() descriptor with just the encoded x-only pubkey.
         if (pubkey.IsFullyValid()) {
-            auto key = InferXOnlyPubkey(pubkey, ParseScriptContext::P2TR, provider);
+            auto key = InferXOnlyPubkey(pubkey, provider);
             if (key) {
                 return std::make_unique<RawTRDescriptor>(std::move(key));
             }
