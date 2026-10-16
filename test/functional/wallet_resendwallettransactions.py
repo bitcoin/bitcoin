@@ -121,7 +121,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
             parent_utxo, indep_utxo = node.listunspent()[:2]
             txid = node.send(outputs=[{addr: 1}], inputs=[parent_utxo])["txid"]
 
-        self.log.info("Test rebroadcast of transactions received by others")
+        self.log.info("Test that transactions received from others are not rebroadcast")
         # clear mempool
         self.generate(node, 1, sync_fun=self.no_op)
         # Sync node1's mocktime to node0's before connecting so it accepts node0's blocks
@@ -151,11 +151,17 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         self.log.info("Connect p2p who hasn't seen the tx")
         peer = node1.add_p2p_connection(P2PTxInvStore())
 
-        self.log.info("Check that rebroadcast happens after 36 hours")
-        with node1.assert_debug_log(['resubmit 1 unconfirmed transactions']):
+        self.log.info("Check that no rebroadcast happens after 36 hours")
+        with node1.assert_debug_log(expected_msgs=[], unexpected_msgs=['resubmit']):
             node1.bumpmocktime(RESEND_TIMER_LIMIT)
             node1.mockscheduler(60)
-            peer.wait_for_broadcast([recv_wtxid])
+            # MaybeResendWalletTxs runs on the scheduler thread, wait for it
+            node1.syncwithvalidationinterfacequeue()
+        assert int(recv_wtxid, 16) not in peer.get_invs()
+
+        self.log.info("Check that the tx is not loaded into the mempool on startup")
+        self.restart_node(1, extra_args=["-persistmempool=0", f"-mocktime={node1.mocktime}"])
+        assert_raises_rpc_error(-5, "Transaction not in mempool", node1.getmempoolentry, recv_txid)
 
 
 if __name__ == '__main__':
