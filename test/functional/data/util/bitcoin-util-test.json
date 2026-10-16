@@ -820,5 +820,83 @@
     "return_code": 1,
     "error_txt": "error: Uncompressed pubkeys are not useable for SegWit outputs",
     "description": "Ensure adding witness outputs with uncompressed pubkeys fails"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["evalscript", "1"],
+    "return_code": 0,
+    "output_cmp": "evalscript-op1.json",
+    "description": "evalscript: OP_1 succeeds (default witness_v0, mandatory flags)"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["evalscript"],
+    "return_code": 0,
+    "output_cmp": "evalscript-empty.json",
+    "description": "evalscript: empty script fails with EVAL_FALSE"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["evalscript", "93", "03", "05"],
+    "return_code": 0,
+    "output_cmp": "evalscript-add.json",
+    "description": "evalscript: OP_ADD with initial stack 3+5=8"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["-sigversion=tapscript", "evalscript", "51"],
+    "return_code": 0,
+    "output_cmp": "evalscript-tapscript.json",
+    "description": "evalscript: tapscript sigversion, OP_1"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["-sigversion=tapscript", "evalscript", "bb"],
+    "return_code": 0,
+    "output_cmp": "evalscript-opsuccess.json",
+    "description": "evalscript: tapscript OP_SUCCESS opcode (0xbb) succeeds"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["-sigversion=tapscript", "-scriptflags=DISCOURAGE_OP_SUCCESS", "evalscript", "bb"],
+    "return_code": 0,
+    "output_cmp": "evalscript-opsuccess-discouraged.json",
+    "description": "evalscript: tapscript OP_SUCCESS with DISCOURAGE_OP_SUCCESS fails"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["-sigversion=base", "-scriptflags=NONE", "evalscript", "1", "01"],
+    "return_code": 0,
+    "output_cmp": "evalscript-base-noflags.json",
+    "description": "evalscript: base sigversion, no flags, extra stack item allowed"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["-scriptflags=P2SH,WITNESS", "evalscript", "1"],
+    "return_code": 0,
+    "output_cmp": "evalscript-customflags.json",
+    "description": "evalscript: custom script flags"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["-sigversion=foo", "evalscript", "1"],
+    "return_code": 1,
+    "error_txt": "Unknown -sigversion=foo",
+    "description": "evalscript: unknown sigversion is an error"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["-scriptflags=BOGUS", "evalscript", "1"],
+    "return_code": 1,
+    "error_txt": "Unknown script flag: BOGUS",
+    "description": "evalscript: unknown script flag is an error"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["evalscript", "1", "notahex"],
+    "return_code": 1,
+    "error_txt": "Initial stack element not valid hex: notahex",
+    "description": "evalscript: non-hex stack element is an error"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["-sigversion=base", "-tx=0100000001c997a5e56e104102fa209c6a852dd90660a20b2d9c352423edce25857fcd3704000000004847304402204e45e16932b8af514961a1d3a1a25fdf3f4f7732e9d624c6c61548ab5fb8cd410220181522ec8eca07de4860a4acdd12909d831cc56cbbac4622082221a8768d1d0901ffffffff0200ca9a3b00000000434104ae1a62fe09c5f51b13905f07f06b99a2f7159b2225f374cd378d71302fa28414e7aab37397f554a7df5f142c21c1b7303b8a0626f1baded5c72a704f7e6cd84cac00286bee0000000043410411db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5cb2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3ac00000000", "-spentoutput=00f2052a0100000043410411db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5cb2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3ac", "evalscript", "0x410411db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5cb2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3 CHECKSIG", "304402204e45e16932b8af514961a1d3a1a25fdf3f4f7732e9d624c6c61548ab5fb8cd410220181522ec8eca07de4860a4acdd12909d831cc56cbbac4622082221a8768d1d0901"],
+    "return_code": 0,
+    "output_cmp": "evalscript-tx-checksig.json",
+    "description": "evalscript: -tx gives a real signature checker so CHECKSIG validates a signature"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["-sigversion=base", "-tx=0100000001c997a5e56e104102fa209c6a852dd90660a20b2d9c352423edce25857fcd3704000000004847304402204e45e16932b8af514961a1d3a1a25fdf3f4f7732e9d624c6c61548ab5fb8cd410220181522ec8eca07de4860a4acdd12909d831cc56cbbac4622082221a8768d1d0901ffffffff0200ca9a3b00000000434104ae1a62fe09c5f51b13905f07f06b99a2f7159b2225f374cd378d71302fa28414e7aab37397f554a7df5f142c21c1b7303b8a0626f1baded5c72a704f7e6cd84cac00286bee0000000043410411db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5cb2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3ac00000000", "-spentoutput=00f2052a0100000043410411db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5cb2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3ac", "evalscript", "0x410411db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5cb2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3 CHECKSIG", "304402204e45e16932b8af514961a1d3a1a25fdf3f4f7732e9d624c6c61548ab5fb8cd410220181522ec8eca07de4860a4acdd12909d831cc56cbbac4622082221a8768d1d0902"],
+    "return_code": 0,
+    "output_cmp": "evalscript-tx-checksig-badsig.json",
+    "description": "evalscript: -tx real checker rejects a signature that does not verify"
   }
 ]
