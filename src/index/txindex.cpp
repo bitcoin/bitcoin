@@ -88,7 +88,7 @@ TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe) :
 {}
 
 TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe, bool has_legacy) :
-    BaseIndex::DB(TxIndexDBPath(), n_cache_size, f_memory, f_wipe, /*f_obfuscate=*/false, /*f_bloom=*/has_legacy),
+    BaseIndex::DB(TxIndexDBPath(), n_cache_size, f_memory, f_wipe, /*f_bloom=*/has_legacy),
     m_hasher{ReadOrCreateTxidHasher(*this)},
     m_has_legacy{has_legacy}
 {}
