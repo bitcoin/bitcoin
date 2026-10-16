@@ -1057,7 +1057,7 @@ static RPCMethod bumpfee_helper(std::string method_name)
         UniValue options = request.params[1];
         RPCTypeCheckObj(options,
             {
-                {"confTarget", UniValueType(UniValue::VNUM)},
+                {"confTarget", UniValueType(UniValue::VNUM)}, // Deprecated, undocumented alias.
                 {"conf_target", UniValueType(UniValue::VNUM)},
                 {"fee_rate", UniValueType()}, // will be checked by AmountFromValue() in SetFeeEstimateMode()
                 {"replaceable", UniValueType(UniValue::VBOOL)},
@@ -1067,6 +1067,10 @@ static RPCMethod bumpfee_helper(std::string method_name)
                 {"psbt_version", UniValueType(UniValue::VNUM)},
             },
             true, true);
+
+        if (options.exists("confTarget") && !pwallet->chain().rpcEnableDeprecated("confTarget")) {
+            throw JSONRPCError(RPC_METHOD_DEPRECATED, "DEPRECATION WARNING: Use conf_target (confTarget is deprecated and will be removed in the next release). To use it, start the RPC server with the `-deprecatedrpc=confTarget`.");
+        }
 
         if (options.exists("confTarget") && options.exists("conf_target")) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "confTarget and conf_target options should not both be set. Use conf_target (confTarget is deprecated).");
