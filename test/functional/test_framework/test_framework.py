@@ -1180,9 +1180,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Checks whether the GUI was compiled."""
         return self.config.getboolean("components", "BUILD_GUI")
 
-    def has_blockfile(self, node, filenum: str):
-        return (node.blocks_path/ f"blk{filenum}.dat").is_file()
-
     def inspect_sqlite_db(self, path, fn, *args, **kwargs):
         try:
             import sqlite3 # type: ignore[import]

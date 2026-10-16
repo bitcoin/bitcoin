@@ -39,7 +39,6 @@
 #include <prevector.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <protocol.h>
 #include <rpc/protocol.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/request.h>
@@ -65,11 +64,9 @@
 #include <util/expected.h>
 #include <util/fs.h>
 #include <util/log.h>
-#include <util/result.h>
 #include <util/string.h>
 #include <util/syserror.h>
 #include <util/time.h>
-#include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
 #include <versionbits.h>
@@ -3083,7 +3080,7 @@ static RPCMethod dumptxoutset()
 {
     return RPCMethod{
         "dumptxoutset",
-        "Write the serialized UTXO set to a file. This can be used in loadtxoutset afterwards if this snapshot height is supported in the chainparams as well.\n"
+        "Write the serialized UTXO set to a file.\n"
         "This creates a temporary UTXO database when rolling back, keeping the main chain intact. Should the node experience an unclean shutdown the temporary database may need to be removed from the datadir manually.\n"
         "For deep rollbacks, make sure to use no RPC timeout (bitcoin-cli -rpcclienttimeout=0) as it may take several minutes.",
         {
@@ -3492,86 +3489,11 @@ UniValue CreateUTXOSnapshot(
 
 static RPCMethod loadtxoutset()
 {
-    return RPCMethod{
-        "loadtxoutset",
-        "Load the serialized UTXO set from a file.\n"
-        "Once this snapshot is loaded, its contents will be "
-        "deserialized into a second chainstate data structure, which is then used to sync to "
-        "the network's tip. "
-        "Earlier blocks are not downloaded or validated in the background. To reconstruct the "
-        "UTXO set from genesis, disable pruning and restart with -reindex. This discards the "
-        "snapshot and downloads any missing blocks. Disable indexes before loading a snapshot.\n\n"
-
-        "The result is a usable bitcoind instance that is current with the network tip in a "
-        "matter of minutes rather than hours. UTXO snapshot are typically obtained from "
-        "third-party sources (HTTP, torrent, etc.) which is reasonable since their "
-        "contents are always checked by hash.\n\n"
-
-        "You can find more information on this process in the `assumeutxo` design "
-        "document (<https://github.com/bitcoin/bitcoin/blob/master/doc/design/assumeutxo.md>).",
-        {
-            {"path",
-                RPCArg::Type::STR,
-                RPCArg::Optional::NO,
-                "path to the snapshot file. If relative, will be prefixed by datadir."},
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-                {
-                    {RPCResult::Type::NUM, "coins_loaded", "the number of coins loaded from the snapshot"},
-                    {RPCResult::Type::STR_HEX, "tip_hash", "the hash of the base of the snapshot"},
-                    {RPCResult::Type::NUM, "base_height", "the height of the base of the snapshot"},
-                    {RPCResult::Type::STR, "path", "the absolute path that the snapshot was loaded from"},
-                }
-        },
-        RPCExamples{
-            HelpExampleCli("-rpcclienttimeout=0 loadtxoutset", "utxo.dat")
-        },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
-{
-    NodeContext& node = EnsureAnyNodeContext(request.context);
-    ChainstateManager& chainman = EnsureChainman(node);
-    const fs::path path{AbsPathForConfigVal(EnsureArgsman(node), fs::u8path(self.Arg<std::string_view>("path")))};
-
-    FILE* file{fsbridge::fopen(path, "rb")};
-    AutoFile afile{file};
-    if (afile.IsNull()) {
-        throw JSONRPCError(
-            RPC_INVALID_PARAMETER,
-            "Couldn't open file " + path.utf8string() + " for reading.");
-    }
-
-    SnapshotMetadata metadata{chainman.GetParams().MessageStart()};
-    try {
-        afile >> metadata;
-    } catch (const std::ios_base::failure& e) {
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Unable to parse metadata: %s", e.what()));
-    }
-
-    if (!node.indexes.empty()) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Disable indexes before loading a UTXO snapshot. To rebuild indexes from genesis, restart with -reindex without loading a snapshot.");
-    }
-    auto activation_result{chainman.ActivateSnapshot(afile, metadata, false)};
-    if (!activation_result) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Unable to load UTXO snapshot: %s. (%s)", util::ErrorString(activation_result).original, path.utf8string()));
-    }
-
-    // Snapshot nodes do not download the missing historical blocks.
-    node.connman->RemoveLocalServices(NODE_NETWORK);
-    // Setting the limited state is usually redundant because the node can always
-    // provide the last 288 blocks, but it doesn't hurt to set it.
-    node.connman->AddLocalServices(NODE_NETWORK_LIMITED);
-
-    CBlockIndex& snapshot_index{*CHECK_NONFATAL(*activation_result)};
-
-    UniValue result(UniValue::VOBJ);
-    result.pushKV("coins_loaded", metadata.m_coins_count);
-    result.pushKV("tip_hash", snapshot_index.GetBlockHash().ToString());
-    result.pushKV("base_height", snapshot_index.nHeight);
-    result.pushKV("path", fs::PathToString(path));
-    return result;
-},
-    };
+    return RPCMethod{"loadtxoutset", "AssumeUTXO snapshot loading has been removed. Synchronize this node from genesis instead.",
+        {{"path", RPCArg::Type::STR, RPCArg::Optional::NO, "Unused snapshot path."}}, {}, RPCExamples{""},
+        [](const RPCMethod& self, const JSONRPCRequest&) -> UniValue {
+            throw JSONRPCError(RPC_METHOD_NOT_FOUND, self.ToString());
+        }};
 }
 
 const std::vector<RPCResult> RPCHelpForChainstate{
@@ -3672,7 +3594,7 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"blockchain", &getdescriptoractivity},
         {"blockchain", &getblockfilter},
         {"blockchain", &dumptxoutset},
-        {"blockchain", &loadtxoutset},
+        {"hidden", &loadtxoutset},
         {"blockchain", &getchainstates},
         {"hidden", &invalidateblock},
         {"hidden", &reconsiderblock},

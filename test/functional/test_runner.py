@@ -110,7 +110,6 @@ BASE_SCRIPTS = [
     # vv Tests less than 2m vv
     'mining_getblocktemplate_longpoll.py',
     'p2p_segwit.py',
-    'feature_assumeutxo.py',
     'mempool_updatefromblock.py',
     'mempool_persist.py',
     # vv Tests less than 60s vv
@@ -341,7 +340,6 @@ BASE_SCRIPTS = [
     'wallet_coinbase_category.py',
     'feature_filelock.py',
     'feature_loadblock.py',
-    'wallet_assumeutxo.py',
     'p2p_add_connections.py',
     'feature_bind_port_discover.py',
     'p2p_unrequested_blocks.py',
