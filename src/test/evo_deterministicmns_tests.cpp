@@ -945,6 +945,25 @@ void FuncTestMempoolProTxKeyChangedConflictChain(TestChainSetup& setup)
     BOOST_CHECK_EQUAL(testPool.size(), 0U);
 }
 
+// Re-types a registration as an EvoNode with internal collateral claiming the given Platform node ID.
+// Only the mempool conflict maps are consulted by the callers, so the payload does not have to be valid.
+static CTransaction AsEvoWithPlatformNodeID(CMutableTransaction tx, const uint160& platform_node_id)
+{
+    auto pro_reg{*Assert(GetTxPayload<CProRegTx>(tx))};
+    pro_reg.nVersion = ProTxVersion::BasicBLS;
+    pro_reg.nType = MnType::Evo;
+    pro_reg.collateralOutpoint = COutPoint{};
+    pro_reg.platformNodeID = platform_node_id;
+    SetTxPayload(tx, pro_reg);
+    return CTransaction(tx);
+}
+
+static uint160 RandomUint160()
+{
+    const uint256 rand{GetRandHash()};
+    return uint160{Span<const unsigned char>{rand.begin(), uint160::size()}};
+}
+
 void FuncTestMempoolDualProregtx(TestChainSetup& setup)
 {
     auto& chainman = *Assert(setup.m_node.chainman.get());
@@ -1004,6 +1023,43 @@ void FuncTestMempoolDualProregtx(TestChainSetup& setup)
     testPool.addUnchecked(entry.FromTx(tx_reg1));
     BOOST_CHECK_EQUAL(testPool.size(), 1U);
     BOOST_CHECK(testPool.existsProviderTxConflict(CTransaction(tx_reg2)));
+
+    // The masternode list keeps owner key IDs and Platform node IDs in one uniqueness namespace, so a
+    // pending owner key and a pending Platform node ID with the same 160 bits cannot be mined in one block.
+    const uint160 owner1_id{ownerKey1.GetPubKey().GetID()};
+    // tx_reg2 has its own owner key, operator key and address; only its collateral reuse would clash with tx_reg1
+    const auto tx_platform_reg = AsEvoWithPlatformNodeID(tx_reg2, owner1_id);
+    const auto tx_unrelated_reg = AsEvoWithPlatformNodeID(tx_reg2, RandomUint160());
+    const auto tx_platform_up_serv = [&] {
+        auto tx = CreateProUpServTx(chainman.ActiveChain(), *(setup.m_node.mempool), utxos, tx_reg1.GetHash(),
+                                    operatorKey1, 5, CScript(), setup.coinbaseKey);
+        auto payload{*Assert(GetTxPayload<CProUpServTx>(tx))};
+        // nType and the Platform fields are only serialized from BasicBLS on
+        payload.nVersion = ProTxVersion::BasicBLS;
+        payload.nType = MnType::Evo;
+        payload.platformNodeID = owner1_id;
+        SetTxPayload(tx, payload);
+        return CTransaction(tx);
+    }();
+
+    // A pending owner key blocks a pending Platform node ID of the same value, at registration and at update
+    BOOST_CHECK(testPool.existsProviderTxConflict(tx_platform_reg));
+    BOOST_CHECK(testPool.existsProviderTxConflict(tx_platform_up_serv));
+    BOOST_CHECK(!testPool.existsProviderTxConflict(tx_unrelated_reg));
+
+    // ... and a pending Platform node ID blocks a pending owner key of the same value
+    testPool.removeRecursive(CTransaction(tx_reg1), MemPoolRemovalReason::MANUAL);
+    testPool.addUnchecked(entry.FromTx(MakeTransactionRef(tx_platform_reg)));
+    BOOST_CHECK(testPool.existsProviderTxConflict(CTransaction(tx_reg1)));
+
+    // A confirmed claim evicts the pending claim of the same value in the other field
+    testPool.removeForBlock({MakeTransactionRef(tx_reg1)}, chainman.ActiveChain().Height() + 1);
+    BOOST_CHECK(!testPool.exists(tx_platform_reg.GetHash()));
+
+    testPool.addUnchecked(entry.FromTx(tx_reg1));
+    testPool.removeForBlock({MakeTransactionRef(tx_platform_reg)}, chainman.ActiveChain().Height() + 1);
+    BOOST_CHECK(!testPool.exists(tx_reg1.GetHash()));
+    BOOST_CHECK_EQUAL(testPool.size(), 0U);
 }
 
 // A ProRegTx that reuses a confirmed external collateral replaces the live MN at block
