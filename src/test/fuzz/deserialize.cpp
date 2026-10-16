@@ -19,7 +19,6 @@
 #include <netbase.h>
 #include <netgroup.h>
 #include <node/blockstorage.h>
-#include <node/utxo_snapshot.h>
 #include <primitives/block.h>
 #include <protocol.h>
 #include <psbt.h>
@@ -38,7 +37,6 @@
 #include <stdexcept>
 
 using kernel::CBlockFileInfo;
-using node::SnapshotMetadata;
 
 void initialize_deserialize()
 {
@@ -304,11 +302,6 @@ FUZZ_TARGET_DESERIALIZE(blocktransactions_deserialize, {
 FUZZ_TARGET_DESERIALIZE(blocktransactionsrequest_deserialize, {
     BlockTransactionsRequest btr;
     DeserializeFromFuzzingInput(buffer, btr);
-})
-FUZZ_TARGET_DESERIALIZE(snapshotmetadata_deserialize, {
-    auto msg_start = Params().MessageStart();
-    SnapshotMetadata snapshot_metadata{msg_start};
-    DeserializeFromFuzzingInput(buffer, snapshot_metadata);
 })
 FUZZ_TARGET_DESERIALIZE(uint160_deserialize, {
     uint160 u160;
