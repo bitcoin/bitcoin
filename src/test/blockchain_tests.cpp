@@ -126,7 +126,8 @@ BOOST_FIXTURE_TEST_CASE(invalidate_block, TestChain100Setup)
     auto* orig_tip = active.Tip();
     int height_to_invalidate = orig_tip->nHeight - 10;
     auto* tip_to_invalidate = active[height_to_invalidate];
-    m_node.chainman->ActiveChainstate().InvalidateBlock(state, tip_to_invalidate);
+    BOOST_CHECK(m_node.chainman->ActiveChainstate().InvalidateBlock(state, tip_to_invalidate));
+    BOOST_CHECK(state.IsValid());
 
     // tip_to_invalidate just got invalidated, so it's BLOCK_FAILED_VALID
     WITH_LOCK(::cs_main, assert(tip_to_invalidate->nStatus & BLOCK_FAILED_VALID));
@@ -145,6 +146,13 @@ BOOST_FIXTURE_TEST_CASE(invalidate_block, TestChain100Setup)
         WITH_LOCK(::cs_main, assert(pindex->nStatus & BLOCK_FAILED_VALID));
         pindex = pindex->pprev;
     }
+
+    // The genesis block can't be invalidated, and the failure is reported through state
+    BlockValidationState genesis_state;
+    BOOST_CHECK(!m_node.chainman->ActiveChainstate().InvalidateBlock(genesis_state, active.Genesis()));
+    BOOST_CHECK(genesis_state.IsError());
+    BOOST_CHECK_EQUAL(genesis_state.GetRejectReason(), "Cannot invalidate genesis block");
+    WITH_LOCK(::cs_main, assert((active.Genesis()->nStatus & BLOCK_FAILED_VALID) == 0));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

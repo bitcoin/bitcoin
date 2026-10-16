@@ -3533,7 +3533,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* const
 
     // Genesis block can't be invalidated
     assert(pindex);
-    if (pindex->nHeight == 0) return false;
+    if (pindex->nHeight == 0) return state.Error("Cannot invalidate genesis block");
 
     // We do not allow ActivateBestChain() to run while InvalidateBlock() is
     // running, as that could cause the tip to change while we disconnect
@@ -3595,7 +3595,16 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* const
         // and we're not doing a very deep invalidation (in which case
         // keeping the mempool up to date is probably futile anyway).
         MaybeUpdateMempoolForReorg(disconnectpool, /* fAddToMempool = */ (++disconnected <= 10) && ret);
-        if (!ret) return false;
+        if (!ret) {
+            // Blocks disconnected so far remain disconnected and marked invalid, but pindex itself is not.
+            // Report this to the caller instead of silently leaving the chain partially rolled back.
+            if (state.IsValid()) {
+                state.Error(strprintf("Failed to disconnect block %s at height %d; block %s was not invalidated and the chain was only partially rolled back (tip is now at height %d). See debug.log for details",
+                                      disconnected_tip->GetBlockHash().ToString(), disconnected_tip->nHeight,
+                                      pindex->GetBlockHash().ToString(), m_chain.Height()));
+            }
+            return false;
+        }
         CBlockIndex* new_tip{m_chain.Tip()};
         assert(disconnected_tip->pprev == new_tip);
 
@@ -3655,7 +3664,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* const
         LOCK(cs_main);
         if (m_chain.Contains(*to_mark_failed)) {
             // If the to-be-marked invalid block is in the active chain, something is interfering and we can't proceed.
-            return false;
+            return state.Error(strprintf("Block %s was not invalidated because it is still in the active chain (interrupted?)", pindex->GetBlockHash().ToString()));
         }
 
         // Mark pindex as invalid if it never was in the main chain
