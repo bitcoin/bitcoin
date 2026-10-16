@@ -25,9 +25,7 @@
 #include <algorithm>
 #include <compare>
 #include <condition_variable>
-#include <numeric>
 #include <utility>
-#include <vector>
 
 namespace node {
 
@@ -105,15 +103,12 @@ void BlockTemplateManager::InterruptWait(bool& interrupt_wait)
 }
 
 std::unique_ptr<CBlockTemplate> BlockTemplateManager::WaitAndCreateNewBlock(
-    const std::unique_ptr<CBlockTemplate>& block_template,
+    const uint256& hash_prev_block,
+    CAmount current_fees,
     const BlockWaitOptions& wait_options,
     const BlockCreateOptions& create_options,
     bool& interrupt_wait)
 {
-    // Delay calculating the current template fees, just in case a new block
-    // comes in before the next tick.
-    CAmount current_fees = -1;
-
     // Alternate waiting for a new tip and checking if fees have risen.
     // The latter check is expensive so we only run it once per second.
     auto now{NodeClock::now()};
@@ -132,7 +127,7 @@ std::unique_ptr<CBlockTemplate> BlockTemplateManager::WaitAndCreateNewBlock(
                 // We assume tip_block is set, because this is an instance
                 // method on BlockTemplate and no template could have been
                 // generated before a tip exists.
-                tip_changed = Assume(tip_block) && tip_block != block_template->block.hashPrevBlock;
+                tip_changed = Assume(tip_block) && tip_block != hash_prev_block;
                 return tip_changed || m_chainman.m_interrupt || interrupt_wait;
             });
             if (interrupt_wait) {
@@ -170,15 +165,9 @@ std::unique_ptr<CBlockTemplate> BlockTemplateManager::WaitAndCreateNewBlock(
             // If the tip changed, return the new template regardless of its fees.
             if (tip_changed) return new_tmpl;
 
-            // Calculate the original template total fees if we haven't already
-            if (current_fees == -1) {
-                current_fees = std::accumulate(block_template->vTxFees.begin(), block_template->vTxFees.end(), CAmount{0});
-            }
-
             // Check if fees increased enough to return the new template
-            const CAmount new_fees = std::accumulate(new_tmpl->vTxFees.begin(), new_tmpl->vTxFees.end(), CAmount{0});
             Assume(wait_options.fee_threshold != MAX_MONEY);
-            if (new_fees >= current_fees + wait_options.fee_threshold) return new_tmpl;
+            if (new_tmpl->m_total_fees >= current_fees + wait_options.fee_threshold) return new_tmpl;
         }
 
         now = NodeClock::now();
