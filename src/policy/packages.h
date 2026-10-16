@@ -12,11 +12,15 @@
 #include <util/hasher.h>
 
 #include <cstdint>
+#include <limits>
 #include <unordered_set>
 #include <vector>
 
 /** Default maximum number of transactions in a package. */
 inline constexpr uint32_t MAX_PACKAGE_COUNT{25};
+/** Maximum for -bytespersigop, so that the sigop-adjusted size of a package of MAX_PACKAGE_COUNT transactions,
+ * each at MAX_STANDARD_TX_SIGOPS_COST, fits in int32_t */
+inline constexpr unsigned int MAX_BYTES_PER_SIGOP{uint64_t{std::numeric_limits<int32_t>::max()} * WITNESS_SCALE_FACTOR / (MAX_PACKAGE_COUNT * MAX_STANDARD_TX_SIGOPS_COST)};
 /** Default maximum total weight of transactions in a package in weight
     to allow for context-less checks. This must allow a superset of sigops
     weighted vsize limited transactions to not disallow transactions we would
