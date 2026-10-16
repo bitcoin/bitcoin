@@ -43,6 +43,7 @@
 #include <node/mini_miner.h>
 #include <node/mining_types.h>
 #include <node/transaction.h>
+#include <node/tx_collection.h>
 #include <node/types.h>
 #include <node/warnings.h>
 #include <policy/feerate.h>
@@ -80,6 +81,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -877,9 +879,11 @@ class BlockTemplateImpl : public BlockTemplate
 public:
     explicit BlockTemplateImpl(BlockCreateOptions create_options,
                                std::unique_ptr<CBlockTemplate> block_template,
-                               const NodeContext& node) : m_create_options(std::move(create_options)),
-                                                          m_block_template(std::move(block_template)),
-                                                          m_node(node)
+                               const NodeContext& node,
+                               bool external = false) : m_create_options(std::move(create_options)),
+                                                        m_block_template(std::move(block_template)),
+                                                        m_external(external),
+                                                        m_node(node)
     {
         assert(m_block_template);
     }
@@ -896,16 +900,19 @@ public:
 
     std::vector<CAmount> getTxFees() override
     {
+        if (m_external) throw std::runtime_error("getTxFees is unavailable for externally generated templates");
         return m_block_template->vTxFees;
     }
 
     std::vector<int64_t> getTxSigops() override
     {
+        if (m_external) throw std::runtime_error("getTxSigops is unavailable for externally generated templates");
         return m_block_template->vTxSigOpsCost;
     }
 
     CoinbaseTx getCoinbaseTx() override
     {
+        if (m_external) throw std::runtime_error("getCoinbaseTx is unavailable for externally generated templates");
         return m_block_template->m_coinbase_tx;
     }
 
@@ -923,6 +930,7 @@ public:
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
     {
+        if (m_external) throw std::runtime_error("waitNext is unavailable for externally generated templates");
         auto new_template = block_template_manager().WaitAndCreateNewBlock(
             m_block_template, options, m_create_options, m_interrupt_wait);
         if (new_template) return std::make_unique<BlockTemplateImpl>(m_create_options, std::move(new_template), m_node);
@@ -931,6 +939,7 @@ public:
 
     void interruptWait() override
     {
+        if (m_external) throw std::runtime_error("interruptWait is unavailable for externally generated templates");
         block_template_manager().InterruptWait(m_interrupt_wait);
     }
 
@@ -938,8 +947,43 @@ public:
 
     const std::unique_ptr<CBlockTemplate> m_block_template;
 
+    const bool m_external;
     bool m_interrupt_wait{false};
     node::BlockTemplateManager& block_template_manager() { return *Assert(m_node.block_template_manager); }
+    const NodeContext& m_node;
+};
+
+class TxCollectionImpl : public interfaces::TxCollection
+{
+public:
+    TxCollectionImpl(std::unique_ptr<node::TxCollection> tx_collection, const NodeContext& node)
+        : m_tx_collection(std::move(tx_collection)),
+          m_node(node)
+    {
+    }
+
+    std::vector<uint32_t> unknownTxPos() override
+    {
+        return m_tx_collection->UnknownTxPos();
+    }
+
+    void addMissingTxs(const std::vector<CTransactionRef>& txs) override
+    {
+        m_tx_collection->AddMissingTxs(txs);
+    }
+
+    std::unique_ptr<BlockTemplate> makeTemplate(uint256 prevhash,
+                                                CTransactionRef coinbase,
+                                                std::string& reason,
+                                                std::string& debug) override
+    {
+        auto block_template{m_tx_collection->MakeTemplate(prevhash, coinbase, reason, debug)};
+        if (!block_template) return nullptr;
+        return std::make_unique<BlockTemplateImpl>(BlockCreateOptions{}, std::move(block_template), m_node, /*external=*/true);
+    }
+
+private:
+    std::unique_ptr<node::TxCollection> m_tx_collection;
     const NodeContext& m_node;
 };
 
@@ -1036,6 +1080,11 @@ public:
             results.emplace_back(m_node.mempool->get(wtxid));
         }
         return results;
+    }
+
+    std::unique_ptr<interfaces::TxCollection> collectTxs(const std::vector<Wtxid>& wtxids) override
+    {
+        return std::make_unique<TxCollectionImpl>(block_template_manager().CreateTxCollection(wtxids), m_node);
     }
 
     const NodeContext* context() override { return &m_node; }
