@@ -52,6 +52,7 @@
 #include <atomic>
 #include <compare>
 #include <cstdint>
+#include <limits>
 #include <map>
 #include <memory>
 #include <optional>
@@ -858,6 +859,10 @@ static RPCMethod setban()
 
         if (absolute && banTime < GetTime()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Absolute timestamp is in the past");
+        }
+
+        if (!absolute && banTime > std::numeric_limits<uint32_t>::max()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: bantime is too large");
         }
 
         if (isSubnet) {
