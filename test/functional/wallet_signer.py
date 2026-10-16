@@ -249,6 +249,27 @@ class WalletSignerTest(BitcoinTestFramework):
         self.log.info('Test invalid external signer')
         assert_raises_rpc_error(-4, "Invalid descriptor", self.nodes[1].createwallet, wallet_name='hww_invalid', disable_private_keys=True, external_signer=True)
 
+        self.log.info('Test that failed wallet creation removes the files it created')
+        # The cached chain has no wallets directory, so wallets are created in the chain directory
+        wallet_dir = self.nodes[1].chain_path / 'hww_invalid'
+        assert not wallet_dir.exists()
+        assert 'hww_invalid' not in [w['name'] for w in self.nodes[1].listwalletdir()['wallets']]
+
+        self.log.info('Test that retrying with the same name fails for the same reason')
+        assert_raises_rpc_error(-4, "Invalid descriptor", self.nodes[1].createwallet, wallet_name='hww_invalid', disable_private_keys=True, external_signer=True)
+        assert not wallet_dir.exists()
+
+        self.log.info('Test that failed wallet creation keeps a directory that already existed')
+        wallet_dir.mkdir()
+        assert_raises_rpc_error(-4, "Invalid descriptor", self.nodes[1].createwallet, wallet_name='hww_invalid', disable_private_keys=True, external_signer=True)
+        assert_equal(list(wallet_dir.iterdir()), [])
+
+        self.log.info('Test that failed wallet creation keeps files that already existed')
+        (wallet_dir / 'not_a_wallet.txt').touch()
+        (wallet_dir / 'wallet.dat').touch()
+        assert_raises_rpc_error(-4, "Invalid descriptor", self.nodes[1].createwallet, wallet_name='hww_invalid', disable_private_keys=True, external_signer=True)
+        assert_equal(sorted(p.name for p in wallet_dir.iterdir()), ['not_a_wallet.txt', 'wallet.dat'])
+
     def test_multiple_signers(self):
         self.log.debug(f"-signer={self.mock_multi_signers_path()}")
         self.log.info('Test multiple external signers')
