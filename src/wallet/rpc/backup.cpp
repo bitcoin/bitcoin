@@ -140,20 +140,26 @@ RPCMethod removeprunedfunds()
  */
 static std::optional<int64_t> GetImportTimestamp(const UniValue& data)
 {
-    if (data.exists("timestamp")) {
-        const UniValue& timestamp = data["timestamp"];
-        if (timestamp.isNum()) {
-            const int64_t value{timestamp.getInt<int64_t>()};
-            if (value < 0) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Timestamp must not be negative");
-            }
-            return value;
-        } else if (timestamp.isStr() && timestamp.get_str() == "now") {
-            return std::nullopt; // std::nullopt means use the current best block's MTP time
-        }
-        throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Expected number or \"now\" timestamp value for key. got type %s", uvTypeName(timestamp.type())));
+    if (!data.exists("timestamp")) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "Missing required timestamp field for key");
     }
-    throw JSONRPCError(RPC_TYPE_ERROR, "Missing required timestamp field for key");
+
+    const UniValue& timestamp = data["timestamp"];
+
+    if (timestamp.isNum()) {
+        const int64_t required_timestamp = timestamp.getInt<int64_t>();
+        if (required_timestamp < 0) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Timestamp must not be negative");
+        }
+        return required_timestamp;
+    }
+
+    if (timestamp.isStr()) {
+        const std::string& ts_str = timestamp.get_str();
+        if (ts_str == "now")   return std::nullopt;
+        if (ts_str == "never") return -1;
+    }
+    throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Expected number or \"now\" or \"never\" timestamp value for key. got type %s", uvTypeName(timestamp.type())));
 }
 
 static ImportDescriptorRequest ProcessUniValueDescriptor(const UniValue& data, std::optional<int64_t> timestamp)
@@ -192,10 +198,11 @@ RPCMethod importdescriptors()
                                     {"next_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "If a ranged descriptor is set to active, this specifies the next index to generate addresses from"},
                                     {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, "Time from which to start rescanning the blockchain for this descriptor, in " + UNIX_EPOCH_TIME + "\n"
                                         "Use the string \"now\" to substitute the current synced blockchain time.\n"
-                                        "\"now\" can be specified to bypass scanning, for outputs which are known to never have been used, and\n"
+                                        "\"now\" can be specified to scan from last mediantime, for outputs which are known to never have been used, and\n"
+                                        "\"never\" can be specified to skip scanning, and\n"
                                         "0 can be specified to scan the entire blockchain. Blocks up to 2 hours before the earliest timestamp\n"
                                         "of all descriptors being imported will be scanned as well as the mempool.",
-                                        RPCArgOptions{.type_str={"timestamp | \"now\"", "integer / string"}}
+                                        RPCArgOptions{.type_str={"timestamp | \"now\" | \"never\"", "integer / string"}}
                                     },
                                     {"internal", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether matching outputs should be treated as not incoming payments (e.g. change)"},
                                     {"label", RPCArg::Type::STR, RPCArg::Default{""}, "Label to assign to the address, only allowed with internal=false. Disabled for ranged descriptors"},
