@@ -82,12 +82,6 @@ inline constexpr bool DEFAULT_ACCEPT_DATACARRIER = true;
  * Default setting for -datacarriersize in vbytes.
  */
 inline constexpr unsigned int MAX_OP_RETURN_RELAY = MAX_STANDARD_TX_WEIGHT / WITNESS_SCALE_FACTOR;
-/**
- * An extra transaction can be added to a package, as long as it only has one
- * ancestor and is no larger than this. Not really any reason to make this
- * configurable as it doesn't materially change DoS parameters.
- */
-inline constexpr unsigned int EXTRA_DESCENDANT_TX_SIZE_LIMIT{10'000};
 
 /**
  * Maximum number of ephemeral dust outputs allowed.

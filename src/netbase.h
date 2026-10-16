@@ -76,12 +76,6 @@ public:
         return proxy.IsValid();
     }
 
-    sa_family_t GetFamily() const
-    {
-        if (m_is_unix_socket) return AF_UNIX;
-        return proxy.GetSAFamily();
-    }
-
     std::string ToString() const
     {
         if (m_is_unix_socket) return m_unix_socket_path;

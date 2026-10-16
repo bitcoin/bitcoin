@@ -88,6 +88,4 @@ public:
     }
 };
 
-using BinarySemaphoreGrant = CountingSemaphoreGrant<1>;
-
 #endif // BITCOIN_SEMAPHORE_GRANT_H

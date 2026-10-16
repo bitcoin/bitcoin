@@ -38,7 +38,6 @@ public:
     bool addView(WalletView* walletView);
     void setCurrentWallet(WalletModel* wallet_model);
     void removeWallet(WalletModel* wallet_model);
-    void removeAllWallets();
 
     bool handlePaymentRequest(const SendCoinsRecipient& recipient);
 

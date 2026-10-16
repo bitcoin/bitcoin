@@ -65,7 +65,6 @@ struct ScriptHash : public BaseHash<uint160>
 
     explicit ScriptHash(const uint160& hash) : BaseHash(hash) {}
     explicit ScriptHash(const CScript& script);
-    explicit ScriptHash(const CScriptID& script);
 };
 CScriptID ToScriptID(const ScriptHash& script_hash);
 

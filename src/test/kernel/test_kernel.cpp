@@ -86,7 +86,7 @@ constexpr auto VERIFY_ALL_PRE_SEGWIT{ScriptVerificationFlags::P2SH | ScriptVerif
                                      ScriptVerificationFlags::CHECKSEQUENCEVERIFY};
 constexpr auto VERIFY_ALL_PRE_TAPROOT{VERIFY_ALL_PRE_SEGWIT | ScriptVerificationFlags::WITNESS};
 
-void check_equal(std::span<const std::byte> _actual, std::span<const std::byte> _expected, bool equal = true)
+void check_equal(std::span<const std::byte> _actual, std::span<const std::byte> _expected)
 {
     std::span<const uint8_t> actual{reinterpret_cast<const unsigned char*>(_actual.data()), _actual.size()};
     std::span<const uint8_t> expected{reinterpret_cast<const unsigned char*>(_expected.data()), _expected.size()};

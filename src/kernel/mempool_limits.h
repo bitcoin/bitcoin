@@ -24,15 +24,6 @@ struct MemPoolLimits {
     int64_t ancestor_count{DEFAULT_ANCESTOR_LIMIT};
     //! The maximum allowed number of transactions in a package including the entry and its descendants.
     int64_t descendant_count{DEFAULT_DESCENDANT_LIMIT};
-
-    /**
-     * @return MemPoolLimits with all the limits set to the maximum
-     */
-    static constexpr MemPoolLimits NoLimits()
-    {
-        int64_t no_limit{std::numeric_limits<int64_t>::max()};
-        return {std::numeric_limits<unsigned>::max(), no_limit, no_limit, no_limit};
-    }
 };
 } // namespace kernel
 
