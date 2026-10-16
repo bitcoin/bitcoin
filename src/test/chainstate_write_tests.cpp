@@ -15,8 +15,6 @@
 
 #include <cstdlib>
 
-using kernel::ChainstateRole;
-
 // Taken from validation.cpp
 static constexpr auto DATABASE_WRITE_INTERVAL_MIN{50min};
 static constexpr auto DATABASE_WRITE_INTERVAL_MAX{70min};
@@ -27,7 +25,7 @@ BOOST_FIXTURE_TEST_CASE(chainstate_write_interval, TestingSetup)
 {
     struct TestSubscriber final : CValidationInterface {
         bool m_did_flush{false};
-        void ChainStateFlushed(const ChainstateRole&, const CBlockLocator&) override
+        void ChainStateFlushed(const CBlockLocator&) override
         {
             m_did_flush = true;
         }
@@ -65,7 +63,7 @@ BOOST_FIXTURE_TEST_CASE(write_during_multiblock_activation, TestChain100Setup)
     {
         const CBlockIndex* m_tip{nullptr};
         const CBlockIndex* m_flushed_at_block{nullptr};
-        void ChainStateFlushed(const ChainstateRole&, const CBlockLocator&) override
+        void ChainStateFlushed(const CBlockLocator&) override
         {
             m_flushed_at_block = m_tip;
         }
