@@ -99,7 +99,9 @@ class DumptxoutsetTest(BitcoinTestFramework):
 
         self.log.info("Test that dumptxoutset with unknown dump type fails")
         assert_raises_rpc_error(
-            -8, 'Invalid snapshot type "bogus" specified. Please specify "rollback" or "latest"', node.dumptxoutset, 'utxos.dat', "bogus")
+            -8, 'Invalid snapshot type "bogus" specified. Please specify "latest" or provide a rollback height or hash', node.dumptxoutset, 'utxos.dat', "bogus")
+        assert_raises_rpc_error(
+            -8, 'The "rollback" snapshot type requires the rollback option', node.dumptxoutset, 'utxos.dat', "rollback")
 
         self.log.info("Testing dumptxoutset with chain fork at target height")
         self.test_dumptxoutset_with_fork()
