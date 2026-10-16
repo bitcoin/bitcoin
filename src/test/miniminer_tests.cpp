@@ -618,7 +618,7 @@ BOOST_FIXTURE_TEST_CASE(calculate_cluster, TestChain100Setup)
     CTxMemPool::setEntries cluster_500tx_set{cluster_500tx.begin(), cluster_500tx.end()};
     BOOST_CHECK_EQUAL(cluster_500tx.size(), cluster_500tx_set.size());
     const auto vec_iters_500 = pool.GetIterVec(chain_txids);
-    for (const auto& iter : vec_iters_500) BOOST_CHECK(cluster_500tx_set.count(iter));
+    for (const auto& iter : vec_iters_500) BOOST_CHECK(cluster_500tx_set.contains(iter));
 
     // GatherClusters stops at 500 transactions.
     const auto tx_501 = make_tx({COutPoint{lasttx->GetHash(), 0}}, /*num_outputs=*/1);
@@ -651,7 +651,7 @@ BOOST_FIXTURE_TEST_CASE(calculate_cluster, TestChain100Setup)
         BOOST_CHECK_EQUAL(cluster.size(), zigzag_txids.size());
         CTxMemPool::setEntries clusterset{cluster.begin(), cluster.end()};
         BOOST_CHECK_EQUAL(cluster.size(), clusterset.size());
-        for (const auto& iter : vec_iters_zigzag) BOOST_CHECK(clusterset.count(iter));
+        for (const auto& iter : vec_iters_zigzag) BOOST_CHECK(clusterset.contains(iter));
     }
 }
 
