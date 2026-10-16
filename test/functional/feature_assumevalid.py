@@ -24,9 +24,9 @@ Start a few nodes:
       reject block 102 and only sync as far as block 101
     - node1 has -assumevalid set to the hash of block 102. Try to sync to
       block 2202. node1 will sync all the way to block 2202.
-    - node2 has -assumevalid set to the hash of block 102. Try to sync to
-      block 200. node2 will reject block 102 since it's assumed valid, but it
-      isn't buried by at least two weeks' work.
+    - node2 has -assumevalid set to the hash of block 102. Send BURIED_HEADER_COUNT
+      headers, leaving block 1 exactly two weeks of work behind the best header.
+      node2 will reject block 102 because scripts remain checked at the threshold.
     - node3 has -assumevalid set to the hash of block 102. Feed a longer
       competing headers-only branch so block #1 is not on the best header chain.
     - node4 has -assumevalid set to the hash of block 102. Submit an alternative
@@ -46,6 +46,7 @@ from test_framework.messages import (
     CTransaction,
     CTxIn,
     CTxOut,
+    MAX_HEADERS_RESULTS,
     msg_block,
     msg_headers,
 )
@@ -59,11 +60,22 @@ from test_framework.util import assert_equal
 from test_framework.wallet_util import generate_keypair
 
 
+# Scripts remain checked when block 1 is exactly two weeks of work behind the best header.
+TWO_WEEKS = 14 * 24 * 60 * 60
+TARGET_SPACING = 10 * 60
+BURIED_HEADER_COUNT = 1 + TWO_WEEKS // TARGET_SPACING
+
+
 class BaseNode(P2PInterface):
     def send_header_for_blocks(self, new_blocks):
         headers_message = msg_headers()
         headers_message.headers = [CBlockHeader(b) for b in new_blocks]
         self.send_without_ping(headers_message)
+
+    def send_headers_in_batches(self, new_blocks):
+        """Headers must be split: a peer sending more than MAX_HEADERS_RESULTS at once is disconnected."""
+        for i in range(0, len(new_blocks), MAX_HEADERS_RESULTS):
+            self.send_header_for_blocks(new_blocks[i:i + MAX_HEADERS_RESULTS])
 
 
 class AssumeValidTest(BitcoinTestFramework):
@@ -141,8 +153,7 @@ class AssumeValidTest(BitcoinTestFramework):
         # nodes[0]
         self.log.info("Send blocks to node0. Block 102 will be rejected.")
         p2p0 = self.nodes[0].add_p2p_connection(BaseNode())
-        p2p0.send_header_for_blocks(self.blocks[0:2000])
-        p2p0.send_header_for_blocks(self.blocks[2000:])
+        p2p0.send_headers_in_batches(self.blocks)
         with self.nodes[0].assert_debug_log(expected_msgs=[
             f"Enabling script verification at block #1 ({block_1_hash}): assumevalid=0 (always verify).",
         ]):
@@ -159,8 +170,7 @@ class AssumeValidTest(BitcoinTestFramework):
         # nodes[1]
         self.log.info("Send all blocks to node1. All blocks will be accepted.")
         p2p1 = self.nodes[1].add_p2p_connection(BaseNode())
-        p2p1.send_header_for_blocks(self.blocks[0:2000])
-        p2p1.send_header_for_blocks(self.blocks[2000:])
+        p2p1.send_headers_in_batches(self.blocks)
         with self.nodes[1].assert_debug_log(expected_msgs=[
             f"Disabling script verification at block #1 ({self.blocks[0].hash_hex}).",
         ]):
@@ -177,7 +187,7 @@ class AssumeValidTest(BitcoinTestFramework):
         # nodes[2]
         self.log.info("Send blocks to node2. Block 102 will be rejected.")
         p2p2 = self.nodes[2].add_p2p_connection(BaseNode())
-        p2p2.send_header_for_blocks(self.blocks[0:200])
+        p2p2.send_headers_in_batches(self.blocks[:BURIED_HEADER_COUNT])
         with self.nodes[2].assert_debug_log(expected_msgs=[
             f"Enabling script verification at block #1 ({block_1_hash}): block too recent relative to best header.",
         ]):
@@ -189,7 +199,7 @@ class AssumeValidTest(BitcoinTestFramework):
                 p2p2.send_without_ping(msg_block(self.blocks[i]))
             p2p2.wait_for_disconnect()
             assert_equal(self.nodes[2].getblockcount(), COINBASE_MATURITY + 1)
-            assert_equal(next(filter(lambda x: x["hash"] == self.blocks[199].hash_hex, self.nodes[2].getchaintips()))["status"], "invalid")
+            assert_equal(next(filter(lambda x: x["hash"] == self.blocks[BURIED_HEADER_COUNT - 1].hash_hex, self.nodes[2].getchaintips()))["status"], "invalid")
 
         # nodes[3]
         self.log.info("Send two header chains, and a block not in the best header chain to node3.")
