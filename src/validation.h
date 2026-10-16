@@ -58,13 +58,9 @@ struct ChainTxData;
 class DisconnectedBlockTransactions;
 struct PrecomputedTransactionData;
 struct LockPoints;
-struct AssumeutxoData;
 namespace kernel {
 struct ChainstateRole;
 } // namespace kernel
-namespace node {
-class SnapshotMetadata;
-} // namespace node
 namespace Consensus {
 struct Params;
 } // namespace Consensus
@@ -906,18 +902,6 @@ private:
 
     bool NotifyHeaderTip() LOCKS_EXCLUDED(GetMutex());
 
-    //! Internal helper for ActivateSnapshot().
-    //!
-    //! De-serialization of a snapshot that is created with
-    //! the dumptxoutset RPC.
-    //! To reduce space the serialization format of the snapshot avoids
-    //! duplication of tx hashes. The code takes advantage of the guarantee by
-    //! leveldb that keys are lexicographically sorted.
-    [[nodiscard]] util::Result<void> PopulateAndValidateSnapshot(
-        Chainstate& snapshot_chainstate,
-        AutoFile& coins_file,
-        const node::SnapshotMetadata& metadata);
-
     /**
      * If a block header hasn't already been seen, call CheckBlockHeader on it, ensure
      * that it doesn't descend from an invalid block, and then add it to m_block_index.
@@ -1041,20 +1025,6 @@ public:
     //! @param[in] mempool              The mempool to pass to the chainstate
     //                                  constructor
     Chainstate& InitializeChainstate(CTxMemPool* mempool) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
-    //! Construct and activate a Chainstate on the basis of UTXO snapshot data.
-    //!
-    //! Steps:
-    //!
-    //! - Initialize an unused Chainstate.
-    //! - Load its `CoinsViews` contents from `coins_file`.
-    //! - Verify that the hash of the resulting coinsdb matches the expected hash
-    //!   per assumeutxo chain parameters.
-    //! - Wait for our headers chain to include the base block of the snapshot.
-    //! - "Fast forward" the tip of the new chainstate to the base of the snapshot.
-    //! - Construct the new Chainstate and add it to m_chainstates.
-    [[nodiscard]] util::Result<CBlockIndex*> ActivateSnapshot(
-        AutoFile& coins_file, const node::SnapshotMetadata& metadata, bool in_memory);
 
     //! Return current chainstate targeting the most-work, network tip.
     Chainstate& CurrentChainstate() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex())
