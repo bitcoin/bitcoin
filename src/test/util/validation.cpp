@@ -29,8 +29,6 @@
 #include <utility>
 #include <vector>
 
-using kernel::ChainstateRole;
-
 void TestBlockManager::CleanupForFuzzing()
 {
     m_dirty_blockindex.clear();
@@ -63,12 +61,11 @@ void TestChainstateManager::JumpOutOfIbd()
 }
 
 void ValidationInterfaceTest::BlockConnected(
-    const ChainstateRole& role,
     CValidationInterface& obj,
     const std::shared_ptr<const CBlock>& block,
     const CBlockIndex* pindex)
 {
-    obj.BlockConnected(role, block, pindex);
+    obj.BlockConnected(block, pindex);
 }
 void TestChainstateManager::InvalidBlockFound(CBlockIndex* pindex, const BlockValidationState& state)
 {

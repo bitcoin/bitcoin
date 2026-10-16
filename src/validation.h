@@ -14,7 +14,6 @@
 #include <consensus/amount.h>
 #include <cuckoocache.h>
 #include <deploymentstatus.h>
-#include <kernel/chain.h>
 #include <kernel/chainparams.h>
 #include <kernel/chainstatemanager_opts.h>
 #include <kernel/cs_main.h> // IWYU pragma: export
@@ -57,9 +56,6 @@ struct ChainTxData;
 class DisconnectedBlockTransactions;
 struct PrecomputedTransactionData;
 struct LockPoints;
-namespace kernel {
-struct ChainstateRole;
-} // namespace kernel
 namespace Consensus {
 struct Params;
 } // namespace Consensus
@@ -585,12 +581,6 @@ public:
         node::BlockManager& blockman,
         ChainstateManager& chainman,
         std::optional<uint256> from_snapshot_blockhash = std::nullopt);
-
-    //! Return the current role of the chainstate. See `ChainstateManager`
-    //! documentation for a description of the different types of chainstates.
-    //!
-    //! @sa ChainstateRole
-    kernel::ChainstateRole GetRole() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /**
      * Initialize the CoinsViews UTXO set database management data structures. The in-memory
