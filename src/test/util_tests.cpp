@@ -32,6 +32,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <limits>
@@ -1049,7 +1050,7 @@ enum : char {
             break;
         case ExitCommand:
             close(fd);
-            exit(0);
+            std::exit(0);
         default:
             assert(0);
         }
