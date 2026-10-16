@@ -66,10 +66,14 @@ def github_import_vs_env(_ci_type):
 def generate(ci_type):
     command = [
         "cmake",
+        "-E",
+        "env",
+        "CXXFLAGS=-Wno-error=return-type -Wno-error=conditional-uninitialized",
+        "cmake",
         "-B",
         "build",
         "-Werror=dev",
-        "--preset=vs2026",
+        "--preset=windows",
         # Using x64-windows-release for both host and target triplets
         # to ensure vcpkg builds only release packages, thereby optimizing
         # build time.
