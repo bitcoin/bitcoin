@@ -63,49 +63,6 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager, TestChain100Setup)
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
 }
 
-BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
-{
-    ChainstateManager& manager = *m_node.chainman;
-
-    size_t max_cache = 10000;
-    manager.m_total_coinsdb_cache = max_cache;
-    manager.m_total_coinstip_cache = max_cache;
-
-    std::vector<Chainstate*> chainstates;
-
-    // Create a legacy (IBD) chainstate.
-    //
-    Chainstate& c1 = manager.ActiveChainstate();
-    chainstates.push_back(&c1);
-    {
-        LOCK(::cs_main);
-        c1.InitCoinsCache(8_MiB);
-        manager.MaybeRebalanceCaches();
-    }
-
-    BOOST_CHECK_EQUAL(c1.m_coinstip_cache_size_bytes, max_cache);
-    BOOST_CHECK_EQUAL(c1.m_coinsdb_cache_size_bytes, max_cache);
-
-    // Create a snapshot-based chainstate.
-    //
-    CBlockIndex* snapshot_base{WITH_LOCK(manager.GetMutex(), return manager.ActiveChain()[manager.ActiveChain().Height() / 2])};
-    Chainstate& c2{WITH_LOCK(::cs_main, return manager.AddChainstate(std::make_unique<Chainstate>(nullptr, manager.m_blockman, manager, *snapshot_base->phashBlock)))};
-    chainstates.push_back(&c2);
-    c2.InitCoinsDB(
-        /*cache_size_bytes=*/8_MiB, /*in_memory=*/true, /*should_wipe=*/false);
-
-    {
-        LOCK(::cs_main);
-        c2.InitCoinsCache(8_MiB);
-        manager.MaybeRebalanceCaches();
-    }
-
-    BOOST_CHECK_EQUAL(c1.m_coinstip_cache_size_bytes, size_t(max_cache * 0.05));
-    BOOST_CHECK_EQUAL(c1.m_coinsdb_cache_size_bytes, size_t(max_cache * 0.05));
-    BOOST_CHECK_EQUAL(c2.m_coinstip_cache_size_bytes, size_t(max_cache * 0.95));
-    BOOST_CHECK_EQUAL(c2.m_coinsdb_cache_size_bytes, size_t(max_cache * 0.95));
-}
-
 BOOST_FIXTURE_TEST_CASE(chainstatemanager_ibd_exit_after_loading_blocks, ChainTestingSetup)
 {
     CBlockIndex tip;

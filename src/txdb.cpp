@@ -70,21 +70,6 @@ CCoinsViewDB::~CCoinsViewDB()
     }
 }
 
-void CCoinsViewDB::ResizeCache(size_t new_cache_size)
-{
-    // We can't do this operation with an in-memory DB since we'll lose all the coins upon
-    // reset.
-    if (!m_db_params.memory_only) {
-        LOCK(m_db_mutex);
-        // Have to do a reset first to get the original `m_db` state to release its
-        // filesystem lock.
-        m_db.reset();
-        m_db_params.cache_bytes = new_cache_size;
-        m_db_params.wipe_data = false;
-        m_db = std::make_unique<CDBWrapper>(m_db_params);
-    }
-}
-
 std::optional<Coin> CCoinsViewDB::GetCoin(const COutPoint& outpoint) const
 {
     Coin coin;
@@ -215,8 +200,6 @@ std::shared_future<void> CCoinsViewDB::CompactFullAsync()
     m_compaction = std::async(std::launch::async, [this] {
         try {
             util::ThreadRename("utxocompact");
-            LOCK(m_db_mutex);
-
             LogDebug(BCLog::COINDB, "Starting chainstate compaction of %s", fs::PathToString(m_db_params.path));
             m_db->CompactFull();
             LogDebug(BCLog::COINDB, "Finished chainstate compaction of %s", fs::PathToString(m_db_params.path));
