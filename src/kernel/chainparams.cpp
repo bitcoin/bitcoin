@@ -592,17 +592,6 @@ std::unique_ptr<const CChainParams> CChainParams::TestNet4(const TestNetOptions&
     return std::make_unique<const CTestNet4Params>(options);
 }
 
-std::vector<int> CChainParams::GetAvailableSnapshotHeights() const
-{
-    std::vector<int> heights;
-    heights.reserve(m_assumeutxo_data.size());
-
-    for (const auto& data : m_assumeutxo_data) {
-        heights.emplace_back(data.height);
-    }
-    return heights;
-}
-
 std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
 {
     const auto mainnet_msg = CChainParams::Main()->MessageStart();
