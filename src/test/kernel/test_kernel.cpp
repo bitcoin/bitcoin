@@ -719,30 +719,49 @@ BOOST_AUTO_TEST_CASE(logging_connection_tests)
 {
     std::map<std::string, int> messages;
     int destroyed{0};
-    logging_set_min_level(LogLevel::INFO_LEVEL);
+    // Creating signet chain parameters with a challenge logs this INFO entry.
+    const std::string info_message{"Signet with challenge 51"};
+    const auto log_info{[] { ChainParams params{hex_string_to_byte_vec("51")}; }};
 
     {
-        // At the default minimum level (INFO), the DEBUG entries are not delivered.
+        // At the default minimum level (INFO), INFO entries are delivered, and the DEBUG
+        // "Logger disconnecting." entry is not.
         Logger logger{std::make_unique<CountingLog>(messages, destroyed)};
+        log_info();
     }
-    BOOST_CHECK(messages.empty());
+    BOOST_CHECK_EQUAL(messages.size(), 1);
+    BOOST_CHECK_EQUAL(messages[info_message], 1);
     BOOST_CHECK_EQUAL(destroyed, 1);
-    destroyed = 0;
+    messages.clear();
 
-    logging_set_min_level(LogLevel::DEBUG_LEVEL);
+    std::map<std::string, int> rejected_messages;
+    int rejected_destroyed{0};
     {
-        // Each connection logs "Logger connected." after registering, and the entry reaches every
-        // connection that exists at that moment: 1 + 2.
         Logger logger{std::make_unique<CountingLog>(messages, destroyed)};
-        Logger logger_2{std::make_unique<CountingLog>(messages, destroyed)};
-        BOOST_CHECK_EQUAL(messages["Logger connected."], 3);
-        BOOST_CHECK_EQUAL(destroyed, 0);
+        logger.SetMinLevel(LogLevel::DEBUG_LEVEL);
+
+        // Only one connection can exist at a time. The rejected create destroys its own user_data,
+        // logs nothing, and leaves the existing connection in place.
+        BOOST_CHECK_THROW(Logger{std::make_unique<CountingLog>(rejected_messages, rejected_destroyed)}, std::runtime_error);
+        BOOST_CHECK_EQUAL(rejected_destroyed, 1);
+        BOOST_CHECK_EQUAL(destroyed, 1);
+        BOOST_CHECK(messages.empty());
     }
-    // "Logger disconnecting." is logged before unregistering, so it still reaches the connection
-    // being destroyed: 2 + 1. Each connection's user_data is destroyed exactly once.
-    BOOST_CHECK_EQUAL(messages["Logger disconnecting."], 3);
+    // "Logger disconnecting." is logged before unregistering, so it still reaches the existing
+    // connection being destroyed.
+    BOOST_CHECK_EQUAL(messages["Logger disconnecting."], 1);
+    BOOST_CHECK(rejected_messages.empty());
     BOOST_CHECK_EQUAL(destroyed, 2);
-    logging_set_min_level(LogLevel::INFO_LEVEL);
+    messages.clear();
+
+    {
+        // A new connection starts at INFO, not at the level of the previous connection.
+        Logger logger{std::make_unique<CountingLog>(messages, destroyed)};
+        log_info();
+    }
+    BOOST_CHECK_EQUAL(messages.size(), 1);
+    BOOST_CHECK_EQUAL(messages[info_message], 1);
+    BOOST_CHECK_EQUAL(destroyed, 3);
 }
 
 BOOST_AUTO_TEST_CASE(btck_chainparams_tests)
