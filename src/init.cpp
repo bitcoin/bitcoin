@@ -2023,20 +2023,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // after any wallet rescanning has taken place.
     if (chainman.m_blockman.IsPruneMode()) {
         if (chainman.m_blockman.m_blockfiles_indexed) {
-            LOCK(cs_main);
-            for (const auto& chainstate : chainman.m_chainstates) {
-                uiInterface.InitMessage(_("Pruning blockstore…"));
-                chainstate->PruneAndFlush();
-            }
+            uiInterface.InitMessage(_("Pruning blockstore…"));
+            chainman.ActiveChainstate().PruneAndFlush();
         }
     } else {
-        // Prior to setting NODE_NETWORK, check if we can provide historical blocks.
-        if (!WITH_LOCK(chainman.GetMutex(), return chainman.HistoricalChainstate())) {
-            LogInfo("Setting NODE_NETWORK in non-prune mode");
-            g_local_services = ServiceFlags(g_local_services | NODE_NETWORK);
-        } else {
-            LogInfo("Running snapshot node in NODE_NETWORK_LIMITED mode without historical block downloads");
-        }
+        LogInfo("Setting NODE_NETWORK in non-prune mode");
+        g_local_services = ServiceFlags(g_local_services | NODE_NETWORK);
     }
 
     // ********************************************************* Step 11: import blocks
