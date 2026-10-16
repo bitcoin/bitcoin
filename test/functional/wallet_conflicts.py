@@ -163,12 +163,14 @@ class TxConflicts(BitcoinTestFramework):
 
         # broadcast tx1
         tx1_txid = alice.sendrawtransaction(tx1)
+        self.sync_mempools()
 
         assert_equal(alice.listunspent(), [unspents[2]])
         assert_equal(alice.getbalance(), 25)
 
         # broadcast tx2, replaces tx1 in mempool
         tx2_txid = alice.sendrawtransaction(tx2)
+        self.sync_mempools()
 
         # Check that unspent[0] is now available because the transaction spending it has been replaced in the mempool
         assert_equal(alice.listunspent(), [unspents[0]])
@@ -184,9 +186,10 @@ class TxConflicts(BitcoinTestFramework):
         # rebroadcasted. Now unspent[0] is not available, because
         # tx1 is no longer conflicted.
         alice.sendrawtransaction(tx3)
+        self.sync_mempools()
 
         assert_equal(alice.gettransaction(tx1_txid)["mempoolconflicts"], [])
-        assert tx1_txid not in self.nodes[0].getrawmempool()
+        assert tx1_txid not in alice.getrawmempool()
 
         # now all of alice's outputs should be considered spent
         # unspent[0]: spent by inactive tx1
@@ -197,7 +200,7 @@ class TxConflicts(BitcoinTestFramework):
 
         # Clean up for next test
         bob.sendall([self.nodes[2].getnewaddress()])
-        self.generate(self.nodes[2], 1)
+        self.generate(bob, 1)
 
         alice.unloadwallet()
 
