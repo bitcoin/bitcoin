@@ -15,6 +15,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
+    assert_true,
     sha256sum_file,
 )
 
@@ -399,7 +400,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1)
         send_res = wallet.sendall([def_wallet.getnewaddress()])
         self.generate(self.nodes[0], 1)
-        assert_equal(send_res["complete"], True)
+        assert_true(send_res["complete"])
         tx = wallet.gettransaction(txid=send_res["txid"], verbose=True)
         assert_greater_than(tx["decoded"]["size"], 70000)
 

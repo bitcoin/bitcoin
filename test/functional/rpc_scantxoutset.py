@@ -6,7 +6,7 @@
 from test_framework.address import address_to_scriptpubkey
 from test_framework.messages import COIN
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.util import assert_equal, assert_false, assert_raises_rpc_error, assert_true
 from test_framework.wallet import (
     MiniWallet,
     getnewdestination,
@@ -61,7 +61,7 @@ class ScantxoutsetTest(BitcoinTestFramework):
 
         scan = self.nodes[0].scantxoutset("start", [])
         info = self.nodes[0].gettxoutsetinfo()
-        assert_equal(scan['success'], True)
+        assert_true(scan['success'])
         assert_equal(scan['height'], info['height'])
         assert_equal(scan['txouts'], info['txouts'])
         assert_equal(scan['bestblock'], info['bestblock'])
@@ -81,7 +81,7 @@ class ScantxoutsetTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Range specified as [begin,end] must not have begin after end", self.nodes[0].scantxoutset, "start", [{"desc": "desc", "range": [2, 1]}])
         assert_raises_rpc_error(-8, "Range is too large", self.nodes[0].scantxoutset, "start", [{"desc": "desc", "range": [0, 1000001]}])
         range_end = 2**31 - 1
-        assert_equal(self.nodes[0].scantxoutset("start", [{"desc": "combo(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0h/0'/*)", "range": [range_end, range_end]}])['success'], True)
+        assert_true(self.nodes[0].scantxoutset("start", [{"desc": "combo(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0h/0'/*)", "range": [range_end, range_end]}])['success'])
 
         self.log.info("Test extended key derivation.")
         # Run various scans, and verify that the sum of the amounts of the matches corresponds to the expected subset.
@@ -121,7 +121,7 @@ class ScantxoutsetTest(BitcoinTestFramework):
 
         # Check that status and abort don't need second arg
         assert_equal(self.nodes[0].scantxoutset("status"), None)
-        assert_equal(self.nodes[0].scantxoutset("abort"), False)
+        assert_false(self.nodes[0].scantxoutset("abort"))
 
         # Check that the blockhash and confirmations fields are correct
         self.generate(self.nodes[0], 2)

@@ -13,6 +13,7 @@ from test_framework.util import (
     assert_greater_than,
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
+    assert_true,
 )
 
 # Decorator to reset activewallet to zero utxos
@@ -64,7 +65,7 @@ class SendallTest(BitcoinTestFramework):
         # wallet has remaining balance (usually empty)
         assert_equal(remaining_balance, self.wallet.getbalances()["mine"]["trusted"])
 
-        assert_equal(sendall_tx_receipt["complete"], True)
+        assert_true(sendall_tx_receipt["complete"])
         return self.wallet.gettransaction(txid = sendall_tx_receipt["txid"], verbose = True)
 
     @cleanup

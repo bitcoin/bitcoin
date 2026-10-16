@@ -98,6 +98,7 @@ from test_framework.p2p import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
 )
 
 DIRECT_FETCH_RESPONSE_TIME = 0.05
@@ -255,7 +256,7 @@ class SendHeadersTest(BitcoinTestFramework):
         test_node.clear_block_announcements()
         test_node.send_get_headers(locator=[], hashstop=block.hash_int)
         test_node.sync_with_ping()
-        assert_equal(test_node.block_announced, False)
+        assert_false(test_node.block_announced)
         inv_node.clear_block_announcements()
         test_node.send_without_ping(msg_block(block))
         inv_node.check_last_inv_announcement(inv=[block.hash_int])

@@ -49,14 +49,15 @@ from test_framework.p2p import P2PInterface
 from test_framework.script import hash256, OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_not_equal,
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
+    assert_is_hash_string,
+    assert_is_hex_string,
+    assert_not_equal,
     assert_raises,
     assert_raises_rpc_error,
-    assert_is_hex_string,
-    assert_is_hash_string,
+    assert_true,
 )
 from test_framework.wallet import MiniWallet
 
@@ -436,7 +437,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(txout['scriptPubKey']['asm'], decoded_script['asm'])
         assert_equal(txout['scriptPubKey']['desc'], decoded_script['desc'])
         assert_equal(txout['scriptPubKey']['type'], decoded_script['type'])
-        assert_equal(txout['coinbase'], True)
+        assert_true(txout['coinbase'])
 
     def _test_getblockheader(self):
         self.log.info("Test getblockheader")
@@ -680,7 +681,7 @@ class BlockchainTest(BitcoinTestFramework):
             for vin in tx["vin"]:
                 assert "prevout" in vin
                 assert_equal(set(vin["prevout"].keys()), set(("value", "height", "generated", "scriptPubKey")))
-                assert_equal(vin["prevout"]["generated"], True)
+                assert_true(vin["prevout"]["generated"])
                 total_vin += vin["prevout"]["value"]
             for vout in tx["vout"]:
                 total_vout += vout["value"]
