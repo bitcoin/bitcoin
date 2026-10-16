@@ -467,10 +467,18 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
                          ptx->GetHash().ToString(), ptx->GetWitnessHash().ToString());
                 package_to_validate = Find1P1CPackage(ptx, nodeid);
             }
-        } else {
+        } else if (state.GetResult() != TxValidationResult::TX_CONFLICT) {
+            // TX_CONFLICT means the transaction is already known (in the mempool, in the mempool with a
+            // different witness, or confirmed), not that it is invalid: don't add it to the reject
+            // filter. For a transaction without witness data the wtxid is also the txid, and if the
+            // known transaction later leaves the mempool, a txid in the filter marks every orphan
+            // spending it as having a rejected parent.
             RecentRejectsFilter().insert(ptx->GetWitnessHash().ToUint256());
         }
-        m_txrequest.ForgetTxHash(ptx->GetWitnessHash().ToUint256());
+        // Forget only wtxid announcements: what was rejected is this wtxid, while a txid announcement (e.g. for
+        // an orphan's missing parent) asks for the transaction with any witness. This matters when this copy
+        // has no witness, so that its wtxid equals the txid.
+        m_txrequest.ForgetTxHash(GenTxid{ptx->GetWitnessHash()});
         // If the transaction failed for TX_INPUTS_NOT_STANDARD,
         // then we know that the witness was irrelevant to the policy
         // failure, since this check depends only on the txid

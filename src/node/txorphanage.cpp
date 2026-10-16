@@ -265,9 +265,23 @@ void TxOrphanageImpl::Erase(Iter<Tag> it)
         }
     }
 
-    // If this was the (unique) reconsiderable announcement for its wtxid, then the wtxid won't
-    // have any reconsiderable announcements left after erasing.
-    if (it->m_reconsider) m_reconsiderable_wtxids.erase(it->m_tx->GetWitnessHash());
+    // If this was the (unique) reconsiderable announcement for its wtxid, hand reconsideration over to
+    // a remaining announcer, so that the announcer going away (through disconnection or eviction) does
+    // not leave the orphan unprocessed. Which one does not matter; the lowest NodeId needs no
+    // randomness here. If there is none, the wtxid won't have any reconsiderable announcements left
+    // after erasing.
+    if (it->m_reconsider) {
+        const auto& wtxid{it->m_tx->GetWitnessHash()};
+        auto& index_by_wtxid = m_orphans.get<ByWtxid>();
+        auto it_other = index_by_wtxid.lower_bound(ByWtxidView{wtxid, MIN_PEER});
+        if (it_other->m_announcer == it->m_announcer) ++it_other;
+        if (it_other != index_by_wtxid.end() && it_other->m_tx->GetWitnessHash() == wtxid) {
+            static constexpr auto mark_reconsidered_modifier = [](auto& ann) { ann.m_reconsider = true; };
+            index_by_wtxid.modify(it_other, mark_reconsidered_modifier);
+        } else {
+            m_reconsiderable_wtxids.erase(wtxid);
+        }
+    }
 
     m_orphans.get<Tag>().erase(it);
 }
@@ -547,8 +561,8 @@ std::vector<std::pair<Wtxid, NodeId>> TxOrphanageImpl::AddChildrenToWorkSet(cons
                 if (!Assume(it != index_by_wtxid.end() && it->m_tx->GetWitnessHash() == wtxid)) continue;
 
                 // Select a random peer to assign orphan processing, reducing wasted work if the orphan is still missing
-                // inputs. However, we don't want to create an issue in which the assigned peer can purposefully stop us
-                // from processing the orphan by disconnecting.
+                // inputs. The assigned peer cannot stop the orphan from being processed by disconnecting: if its
+                // announcement is erased (on disconnection or eviction), Erase() hands the work over to another announcer.
                 auto it_end = index_by_wtxid.upper_bound(ByWtxidView{wtxid, MAX_PEER});
                 const auto num_announcers{std::distance(it, it_end)};
                 if (!Assume(num_announcers > 0)) continue;

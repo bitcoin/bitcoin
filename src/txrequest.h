@@ -47,6 +47,9 @@
  *   - If a peer goes offline, all its announcements are forgotten.
  *   - If a transaction has been successfully received, or is otherwise no longer needed, the caller can call
  *     ForgetTxHash, which removes all announcements across all peers with the specified txhash.
+ *   - If a transaction is no longer needed by one type of identifier (txid or wtxid), the caller can call
+ *     ForgetTxHash with a GenTxid, which removes the announcements across all peers with the specified txhash
+ *     and type, and keeps those of the other type.
  *   - If for a given txhash only already-failed announcements remain, they are all forgotten.
  *
  *   Rationale: giving a peer multiple chances to announce a transaction would allow them to bias requests in their
@@ -148,6 +151,14 @@ public:
      */
     void ForgetTxHash(const uint256& txhash);
 
+    /** Deletes the announcements for a given txhash whose type (txid or wtxid) matches that of gtxid.
+     *
+     * Announcements of the other type for the same txhash are kept. This matters when txid == wtxid: a txid
+     * announcement is a request for the transaction with any witness, so a verdict about one witness (recorded
+     * under a wtxid that equals the txid because that copy had no witness) should not cancel it.
+     */
+    void ForgetTxHash(const GenTxid& gtxid);
+
     /** Find the txids to request now from peer.
      *
      * It does the following:
@@ -201,6 +212,10 @@ public:
     /** For some txhash (txid or wtxid), finds all peers with non-COMPLETED announcements and appends them to
      * result_peers. Does not try to ensure that result_peers contains no duplicates. */
     void GetCandidatePeers(const uint256& txhash, std::vector<NodeId>& result_peers) const;
+
+    /** Like GetCandidatePeers(txhash, result_peers), but only for announcements whose type (txid or wtxid)
+     * matches that of gtxid. */
+    void GetCandidatePeers(const GenTxid& gtxid, std::vector<NodeId>& result_peers) const;
 
     /** Access to the internal priority computation (testing only) */
     uint64_t ComputePriority(const uint256& txhash, NodeId peer, bool preferred) const;
