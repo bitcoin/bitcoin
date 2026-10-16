@@ -24,6 +24,7 @@
 #include <interfaces/node.h>
 #include <interfaces/rpc.h>
 #include <interfaces/types.h>
+#include <ipc/exception.h>
 #include <kernel/context.h>
 #include <key.h>
 #include <logging.h>
@@ -56,6 +57,7 @@
 #include <rpc/request.h>
 #include <rpc/server.h>
 #include <sync.h>
+#include <tinyformat.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <univalue.h>
@@ -80,6 +82,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -439,6 +442,19 @@ public:
     NodeContext* m_context{nullptr};
 };
 
+//! Return whether broadcast_method holds a valid TxBroadcast value. Values
+//! received over IPC are not checked by the compiler and could be out of range.
+bool IsValidBroadcastMethod(TxBroadcast broadcast_method)
+{
+    switch (broadcast_method) {
+    case TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL:
+    case TxBroadcast::MEMPOOL_NO_BROADCAST:
+    case TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST:
+        return true;
+    }
+    return false;
+}
+
 // NOLINTNEXTLINE(misc-no-recursion)
 bool FillBlock(const CBlockIndex* index, const FoundBlock& block, UniqueLock<RecursiveMutex>& lock, const CChain& active, const BlockManager& blockman) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
@@ -467,27 +483,43 @@ public:
     virtual ~NotificationsProxy() = default;
     void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t mempool_sequence) override
     {
-        m_notifications->transactionAddedToMempool(tx.info.m_tx);
+        Notify("transactionAddedToMempool", [&] { m_notifications->transactionAddedToMempool(tx.info.m_tx); });
     }
     void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) override
     {
-        m_notifications->transactionRemovedFromMempool(tx, reason);
+        Notify("transactionRemovedFromMempool", [&] { m_notifications->transactionRemovedFromMempool(tx, reason); });
     }
     void BlockConnected(const ChainstateRole& role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {
-        m_notifications->blockConnected(role, kernel::MakeBlockInfo(index, block.get()));
+        Notify("blockConnected", [&] { m_notifications->blockConnected(role, kernel::MakeBlockInfo(index, block.get())); });
     }
     void BlockDisconnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
     {
-        m_notifications->blockDisconnected(kernel::MakeBlockInfo(index, block.get()));
+        Notify("blockDisconnected", [&] { m_notifications->blockDisconnected(kernel::MakeBlockInfo(index, block.get())); });
     }
     void UpdatedBlockTip(const CBlockIndex* index, const CBlockIndex* fork_index, bool is_ibd) override
     {
-        m_notifications->updatedBlockTip();
+        Notify("updatedBlockTip", [&] { m_notifications->updatedBlockTip(); });
     }
     void ChainStateFlushed(const ChainstateRole& role, const CBlockLocator& locator) override
     {
-        m_notifications->chainStateFlushed(role, locator);
+        Notify("chainStateFlushed", [&] { m_notifications->chainStateFlushed(role, locator); });
+    }
+    //! Call a notification method, logging and discarding IPC errors. A
+    //! notification handler in an IPC client throws ipc::Exception if it
+    //! returns an error or disconnects, and should not be able to crash the
+    //! node, which happens if an exception escapes the validation interface
+    //! scheduler thread. Other exceptions are not caught: an in-process handler
+    //! like the wallet throwing indicates a bug, and continuing could leave it
+    //! with missing or inconsistent state.
+    template <typename Fn>
+    void Notify(const char* name, Fn&& fn)
+    {
+        try {
+            fn();
+        } catch (const ipc::Exception& e) {
+            LogWarning("Chain notification %s failed: %s", name, e.what());
+        }
     }
     std::shared_ptr<Chain::Notifications> m_notifications;
 };
@@ -563,7 +595,9 @@ public:
     uint256 getBlockHash(int height) override
     {
         LOCK(::cs_main);
-        return Assert(chainman().ActiveChain()[height])->GetBlockHash();
+        const CBlockIndex* block{chainman().ActiveChain()[height]};
+        if (!block) throw std::out_of_range(strprintf("Block height %d is not in the active chain", height));
+        return block->GetBlockHash();
     }
     bool haveBlockOnDisk(int height) override
     {
@@ -620,7 +654,7 @@ public:
         WAIT_LOCK(cs_main, lock);
         const CBlockIndex* block = chainman().m_blockman.LookupBlockIndex(block_hash);
         const CBlockIndex* ancestor = chainman().m_blockman.LookupBlockIndex(ancestor_hash);
-        if (block && ancestor && block->GetAncestor(ancestor->nHeight) != ancestor) ancestor = nullptr;
+        if (!block || (ancestor && block->GetAncestor(ancestor->nHeight) != ancestor)) ancestor = nullptr;
         return FillBlock(ancestor, ancestor_out, lock, chainman().ActiveChain(), chainman().m_blockman);
     }
     bool findCommonAncestor(const uint256& block_hash1, const uint256& block_hash2, const FoundBlock& ancestor_out, const FoundBlock& block1_out, const FoundBlock& block2_out) override
@@ -684,6 +718,14 @@ public:
                               TxBroadcast broadcast_method,
                               std::string& err_string) override
     {
+        if (!tx) {
+            err_string = "Transaction is null";
+            return false;
+        }
+        if (!IsValidBroadcastMethod(broadcast_method)) {
+            err_string = strprintf("Invalid broadcast method %d", static_cast<int>(broadcast_method));
+            return false;
+        }
         const TransactionError err = BroadcastTransaction(m_node, tx, err_string, max_tx_fee, max_tx_fee_rate, broadcast_method, /*wait_callback=*/false);
         // Chain clients only care about failures to accept the tx to the mempool. Disregard non-mempool related failures.
         // Note: this will need to be updated if BroadcastTransactions() is updated to return other non-mempool failures
@@ -727,6 +769,7 @@ public:
     }
     util::Result<void> checkChainLimits(const CTransactionRef& tx) override
     {
+        if (!tx) return util::Error{Untranslated("Transaction is null")};
         if (!m_node.mempool) return {};
         if (!m_node.mempool->CheckPolicyLimits(tx)) {
             return util::Error{Untranslated("too many unconfirmed transactions in cluster")};

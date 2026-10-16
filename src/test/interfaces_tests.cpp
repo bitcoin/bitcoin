@@ -5,10 +5,20 @@
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
+#include <interfaces/handler.h>
+#include <ipc/exception.h>
+#include <node/types.h>
+#include <policy/feerate.h>
+#include <primitives/transaction.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <script/solver.h>
 #include <validation.h>
+#include <validationinterface.h>
+
+#include <memory>
+#include <stdexcept>
+#include <string>
 
 #include <boost/test/unit_test.hpp>
 
@@ -94,6 +104,9 @@ BOOST_FIXTURE_TEST_CASE(findAncestorByHash, TestChain100Setup)
     BOOST_CHECK(chain->findAncestorByHash(active[20]->GetBlockHash(), active[10]->GetBlockHash(), FoundBlock().height(height)));
     BOOST_CHECK_EQUAL(height, 10);
     BOOST_CHECK(!chain->findAncestorByHash(active[10]->GetBlockHash(), active[20]->GetBlockHash()));
+    // Unknown block or ancestor hashes should return false.
+    BOOST_CHECK(!chain->findAncestorByHash(uint256{}, active[0]->GetBlockHash()));
+    BOOST_CHECK(!chain->findAncestorByHash(active[10]->GetBlockHash(), uint256{}));
 }
 
 BOOST_FIXTURE_TEST_CASE(findCommonAncestor, TestChain100Setup)
@@ -161,6 +174,60 @@ BOOST_FIXTURE_TEST_CASE(hasBlocks, TestChain100Setup)
     BOOST_CHECK(chain->hasBlocks(active.Tip()->GetBlockHash(), 6, 49));
     BOOST_CHECK(!chain->hasBlocks(active.Tip()->GetBlockHash(), 5, 49));
     BOOST_CHECK(!chain->hasBlocks(active.Tip()->GetBlockHash(), 6, 50));
+}
+
+BOOST_FIXTURE_TEST_CASE(invalidArguments, TestChain100Setup)
+{
+    // Chain methods can be called over IPC by clients that don't enforce C++
+    // preconditions, so they should return errors instead of crashing when
+    // passed invalid arguments.
+    auto& chain = m_node.chain;
+    const CBlockIndex* tip{WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return m_node.chainman->ActiveChain().Tip())};
+    BOOST_CHECK_EQUAL(chain->getBlockHash(tip->nHeight), tip->GetBlockHash());
+    BOOST_CHECK_THROW(chain->getBlockHash(tip->nHeight + 1), std::out_of_range);
+    BOOST_CHECK_THROW(chain->getBlockHash(-1), std::out_of_range);
+
+    BOOST_CHECK(!chain->checkChainLimits(nullptr));
+
+    std::string err;
+    BOOST_CHECK(!chain->broadcastTransaction(nullptr, /*max_tx_fee=*/0, CFeeRate{0}, node::TxBroadcast::MEMPOOL_NO_BROADCAST, err));
+    BOOST_CHECK_EQUAL(err, "Transaction is null");
+    const auto tx{MakeTransactionRef(CMutableTransaction{})};
+    BOOST_CHECK(!chain->broadcastTransaction(tx, /*max_tx_fee=*/0, CFeeRate{0}, static_cast<node::TxBroadcast>(255), err));
+    BOOST_CHECK_EQUAL(err, "Invalid broadcast method 255");
+}
+
+BOOST_FIXTURE_TEST_CASE(throwingNotifications, TestChain100Setup)
+{
+    // A notification handler that throws ipc::Exception, like an IPC client
+    // returning an error or disconnecting, should not crash the node or stop
+    // later notifications. Not covered: other exceptions thrown by in-process
+    // handlers are intentionally not caught, but checking that would require
+    // calling the notification proxy without the scheduler thread, since an
+    // exception escaping that thread terminates the test.
+    struct ThrowingNotifications : interfaces::Chain::Notifications {
+        int m_blocks{0};
+        int m_tips{0};
+        void blockConnected(const kernel::ChainstateRole&, const interfaces::BlockInfo&) override
+        {
+            ++m_blocks;
+            throw ipc::Exception("blockConnected error");
+        }
+        void updatedBlockTip() override
+        {
+            ++m_tips;
+            throw ipc::Exception("updatedBlockTip error");
+        }
+    };
+    auto notifications{std::make_shared<ThrowingNotifications>()};
+    auto handler{m_node.chain->handleNotifications(notifications)};
+    for (int i = 0; i < 2; ++i) {
+        CreateAndProcessBlock({}, CScript() << OP_TRUE);
+        m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    }
+    BOOST_CHECK_EQUAL(notifications->m_blocks, 2);
+    BOOST_CHECK_EQUAL(notifications->m_tips, 2);
+    handler->disconnect();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
