@@ -693,7 +693,7 @@ static RPCMethod getnetworkinfo()
                         {RPCResult::Type::NUM, "timeoffset", "the time offset"},
                         {RPCResult::Type::NUM, "tx_send_rate", "configured target for maximum number of transactions per second to send to inbound peers"},
                         {RPCResult::Type::OBJ_DYN, "inv_buckets", "", {
-                          {RPCResult::Type::OBJ, "inbound/outbound", "connection direction",
+                          {RPCResult::Type::OBJ, "direction", "connection direction (inbound or outbound)",
                             {
                                 {RPCResult::Type::NUM, "backlog", "number of queued txs to announce"},
                                 {RPCResult::Type::NUM, "count_tok", "tokens available to be consumed per-transaction"},
@@ -1278,7 +1278,7 @@ static RPCMethod getrawaddrman()
         RPCResult{
             RPCResult::Type::OBJ_DYN, "", "", {
                 {RPCResult::Type::OBJ_DYN, "table", "buckets with addresses in the address manager table ( new, tried )", {
-                    {RPCResult::Type::OBJ, "bucket/position", "the location in the address manager table (<bucket>/<position>)", {
+                    {RPCResult::Type::OBJ, "bucket_and_position", "address manager table location, formatted as <bucket>/<position>", {
                         {RPCResult::Type::STR, "address", "The address of the node"},
                         {RPCResult::Type::NUM, "mapped_as", /*optional=*/true, "Mapped AS (Autonomous System) number at the end of the BGP route to the peer, used for diversifying peer selection (only displayed if the -asmap config option is set)"},
                         {RPCResult::Type::NUM, "port", "The port number of the node"},
