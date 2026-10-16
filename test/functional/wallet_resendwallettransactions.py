@@ -157,6 +157,27 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
             node1.mockscheduler(60)
             peer.wait_for_broadcast([recv_wtxid])
 
+        self.log.info("With -privatebroadcast, the wallet never re-adds a transaction to the mempool")
+        node1.replace_in_config([("connect=0\n", "#connect=0\n")])  # -privatebroadcast refuses -connect
+        privbcast_args = ["-privatebroadcast", "-onion=127.0.0.1:9", "-persistmempool=0"]  # the proxy is never used here
+        self.restart_node(1, extra_args=privbcast_args + [f"-mocktime={node1.mocktime}"])
+        assert recv_txid not in node1.getrawmempool()  # loading the wallet did not re-add it
+
+        self.log.info("The periodic resend does not re-add it")
+        # Resending needs a recent tip (the restart put node1 back in IBD) and a block seen since startup.
+        # Keep the block empty so any resubmitted transaction stays unconfirmed no matter what.
+        self.generateblock(node1, output="raw(42)", transactions=[], sync_fun=self.no_op)
+        node1.syncwithvalidationinterfacequeue()
+        node1.bumpmocktime(RESEND_TIMER_LIMIT)
+        node1.mockscheduler(60)
+        node1.syncwithvalidationinterfacequeue()  # runs on the scheduler thread, after the resend
+        assert recv_txid not in node1.getrawmempool()
+
+        self.log.info("Without -privatebroadcast, loading the wallet re-adds it")
+        node1.replace_in_config([("#connect=0\n", "connect=0\n")])
+        self.restart_node(1, extra_args=["-persistmempool=0", f"-mocktime={node1.mocktime}"])
+        assert recv_txid in node1.getrawmempool()
+
 
 if __name__ == '__main__':
     ResendWalletTransactionsTest(__file__).main()
