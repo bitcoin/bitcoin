@@ -3073,7 +3073,7 @@ static RPCMethod dumptxoutset()
         "For deep rollbacks, make sure to use no RPC timeout (bitcoin-cli -rpcclienttimeout=0) as it may take several minutes.",
         {
             {"path", RPCArg::Type::STR, RPCArg::Optional::NO, "Path to the output file. If relative, will be prefixed by datadir."},
-            {"type", RPCArg::Type::STR, RPCArg::Default(""), "The type of snapshot to create. Can be \"latest\" to create a snapshot of the current UTXO set or \"rollback\" to temporarily roll back the state of the node to a historical block before creating the snapshot of a historical UTXO set. This parameter can be omitted if a separate \"rollback\" named parameter is specified indicating the height or hash of a specific historical block. If \"rollback\" is specified and separate \"rollback\" named parameter is not specified, this will roll back to the latest valid snapshot block that can currently be loaded with loadtxoutset."},
+            {"type", RPCArg::Type::STR, RPCArg::Default(""), "The type of snapshot to create. Can be \"latest\" to create a snapshot of the current UTXO set or \"rollback\" to temporarily roll back the state of the node to a historical block before creating the snapshot of a historical UTXO set, with the target height or hash supplied in the \"rollback\" option. This parameter can be omitted if a separate \"rollback\" named parameter is specified indicating the height or hash of a specific historical block."},
             {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
                 {
                     {"rollback", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
@@ -3096,7 +3096,6 @@ static RPCMethod dumptxoutset()
         },
         RPCExamples{
             HelpExampleCli("-rpcclienttimeout=0 dumptxoutset", "utxo.dat latest") +
-            HelpExampleCli("-rpcclienttimeout=0 dumptxoutset", "utxo.dat rollback") +
             HelpExampleCli("-rpcclienttimeout=0 -named dumptxoutset", R"(utxo.dat rollback=853456)") +
             HelpExampleCli("-rpcclienttimeout=0 -named dumptxoutset", R"(utxo.dat rollback=853456 in_memory=true)")
         },
@@ -3106,21 +3105,18 @@ static RPCMethod dumptxoutset()
     const CBlockIndex* tip{WITH_LOCK(::cs_main, return node.chainman->ActiveChain().Tip())};
     const CBlockIndex* target_index{nullptr};
     const auto snapshot_type{self.Arg<std::string_view>("type")};
-    const UniValue options{request.params[2].isNull() ? UniValue::VOBJ : request.params[2]};
+    const UniValue& options{request.params[2]};
     if (options.exists("rollback")) {
         if (!snapshot_type.empty() && snapshot_type != "rollback") {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid snapshot type \"%s\" specified with rollback option", snapshot_type));
         }
         target_index = ParseHashOrHeight(options["rollback"], *node.chainman);
     } else if (snapshot_type == "rollback") {
-        auto snapshot_heights = node.chainman->GetParams().GetAvailableSnapshotHeights();
-        CHECK_NONFATAL(snapshot_heights.size() > 0);
-        auto max_height = std::max_element(snapshot_heights.begin(), snapshot_heights.end());
-        target_index = ParseHashOrHeight(*max_height, *node.chainman);
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "The \"rollback\" snapshot type requires the rollback option");
     } else if (snapshot_type == "latest") {
         target_index = tip;
     } else {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid snapshot type \"%s\" specified. Please specify \"rollback\" or \"latest\"", snapshot_type));
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid snapshot type \"%s\" specified. Please specify \"latest\" or provide a rollback height or hash", snapshot_type));
     }
 
     const ArgsManager& args{EnsureAnyArgsman(request.context)};
