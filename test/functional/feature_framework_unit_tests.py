@@ -19,7 +19,6 @@ TEST_FRAMEWORK_MODULES = [
     "bip352",
     "crypto.bip324_cipher",
     "blocktools",
-    "compressor",
     "crypto.chacha20",
     "crypto.ellswift",
     "extendedkey",
