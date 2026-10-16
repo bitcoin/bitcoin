@@ -104,6 +104,27 @@ class MockTorControlServer:
             return "510 Unrecognized command\r\n"
 
 
+TEST_PASSWORD = "test_hashed_password"
+
+
+class HashedPasswordServer(MockTorControlServer):
+    def __init__(self, port, expected_auth=f'AUTHENTICATE "{TEST_PASSWORD}"'):
+        super().__init__(port)
+        self.expected_auth = expected_auth
+
+    def _get_response(self, command):
+        if command == 'PROTOCOLINFO 1':
+            return ("250-PROTOCOLINFO 1\r\n"
+                    "250-AUTH METHODS=HASHEDPASSWORD\r\n"
+                    "250-VERSION Tor=\"0.1.2.3\"\r\n"
+                    "250 OK\r\n")
+        elif command.startswith('AUTHENTICATE '):
+            if command != self.expected_auth:
+                return "515 Bad authentication\r\n"
+            return "250 OK\r\n"
+        return super()._get_response(command)
+
+
 class TorControlTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
@@ -271,6 +292,81 @@ class TorControlTest(BitcoinTestFramework):
 
         mock_tor.stop()
 
+    def test_hashedpassword_auth_success(self):
+        self.log.info("Test that the correct password is sent as AUTHENTICATE's argument with HASHEDPASSWORD authentication")
+
+        mock_tor = HashedPasswordServer(self.next_port())
+        mock_tor.start()
+        with self.nodes[0].assert_debug_log(["Authentication successful"], timeout=10):
+            self.restart_node(0, extra_args=[
+                f"-torcontrol=127.0.0.1:{mock_tor.port}",
+                f"-torpassword={TEST_PASSWORD}",
+                "-listenonion=1",
+                "-debug=tor",
+            ])
+            mock_tor.conn_ready.wait(timeout=10)
+            self.wait_until(lambda: len(mock_tor.received_commands) >= 2, timeout=10)
+
+        assert_equal(mock_tor.received_commands[0], "PROTOCOLINFO 1")
+        assert_equal(mock_tor.received_commands[1], f'AUTHENTICATE "{TEST_PASSWORD}"')
+
+        mock_tor.stop()
+
+    def test_hashedpassword_auth_wrong_password(self):
+        self.log.info("Test that an incorrect password produces authentication failure with HASHEDPASSWORD authentication")
+
+        mock_tor = HashedPasswordServer(self.next_port())
+        mock_tor.start()
+        with self.nodes[0].assert_debug_log(["Authentication failed"], timeout=10):
+            self.restart_node(0, extra_args=[
+                f"-torcontrol=127.0.0.1:{mock_tor.port}",
+                "-torpassword=wrong_password",
+                "-listenonion=1",
+                "-debug=tor",
+            ])
+            mock_tor.conn_ready.wait(timeout=10)
+            self.wait_until(lambda: len(mock_tor.received_commands) >= 2, timeout=10)
+
+        # After auth failure, no further commands should be sent
+        ensure_for(duration=1, f=lambda: len(mock_tor.received_commands) == 2)
+        assert_equal(mock_tor.received_commands[0], "PROTOCOLINFO 1")
+        assert_equal(mock_tor.received_commands[1], 'AUTHENTICATE "wrong_password"')
+
+        mock_tor.stop()
+
+    def test_hashedpassword_auth_no_password(self):
+        self.log.info("Test that if -torpassword is absent, no AUTHENTICATE is sent with HASHEDPASSWORD authentication")
+
+        mock_tor = HashedPasswordServer(self.next_port())
+        with self.nodes[0].assert_debug_log(["no password provided with -torpassword"], timeout=10):
+            self.restart_with_mock(mock_tor)
+
+        # No AUTHENTICATE should ever be sent because node has no password to offer.
+        ensure_for(duration=1, f=lambda: len(mock_tor.received_commands) == 1)
+
+        mock_tor.stop()
+
+    def test_hashedpassword_auth_unsupported(self):
+        self.log.info("Test -torpassword ignored when Tor does not support HASHEDPASSWORD authentication")
+
+        mock_tor = MockTorControlServer(self.next_port())
+        mock_tor.start()
+        with self.nodes[0].assert_debug_log(["Password provided with -torpassword, but HASHEDPASSWORD authentication is not available"], timeout=10):
+            self.restart_node(0, extra_args=[
+                f"-torcontrol=127.0.0.1:{mock_tor.port}",
+                f"-torpassword={TEST_PASSWORD}",
+                "-listenonion=1",
+                "-debug=tor",
+            ])
+            mock_tor.conn_ready.wait(timeout=10)
+            self.wait_until(lambda: len(mock_tor.received_commands) >= 1, timeout=10)
+
+        # Password should be ignored since HASHEDPASSWORD is not supported, so no AUTHENTICATE sent
+        ensure_for(duration=1, f=lambda: len(mock_tor.received_commands) == 1)
+        assert_equal(mock_tor.received_commands[0], "PROTOCOLINFO 1")
+
+        mock_tor.stop()
+
     def run_test(self):
         self.test_basic()
         self.test_partial_data()
@@ -278,6 +374,10 @@ class TorControlTest(BitcoinTestFramework):
         self.test_oversized_line()
         self.test_overmany_lines()
         self.test_reconnect_backoff()
+        self.test_hashedpassword_auth_success()
+        self.test_hashedpassword_auth_wrong_password()
+        self.test_hashedpassword_auth_no_password()
+        self.test_hashedpassword_auth_unsupported()
 
 
 if __name__ == '__main__':
