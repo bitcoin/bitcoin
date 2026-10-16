@@ -149,6 +149,8 @@ class TestNode():
             "-debugexclude=rand",
             "-uacomment=testnode%d" % i,  # required for subversion uniqueness across peers
         ]
+        if use_gui:
+            self.args.append("-lang=nl_NL")  # Set language to try to trigger translation bugs
         if uses_wallet is not None and not uses_wallet:
             self.args.append("-disablewallet")
 
@@ -299,7 +301,7 @@ class TestNode():
                 # on stderr, which the test framework treats as a failure.
                 # Fall back to Qt's poll-based event dispatcher instead.
                 subp_env.setdefault("QT_NO_GLIB", "1")
-            subp_env.setdefault("LC_ALL", "nl_NL.UTF-8") # Set language to try to trigger translation bugs
+            subp_env.setdefault("LC_ALL", "C.UTF-8")  # Qt prints a warning to stderr if the locale is not UTF-8
             if sys.platform.startswith("linux") and "XDG_RUNTIME_DIR" not in subp_env:
                 # Qt prints warnings to stderr when XDG_RUNTIME_DIR is unset or has wrong
                 # permissions (e.g. in CI environments without a desktop session), which
