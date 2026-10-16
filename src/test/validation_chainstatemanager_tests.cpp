@@ -4,6 +4,7 @@
 //
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <dbwrapper.h>
 #include <kernel/disconnected_transactions.h>
 #include <node/block_template_manager.h>
 #include <node/chainstatemanager_args.h>
@@ -873,6 +874,22 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion, SnapshotTestSetup
         LOCK(chainman_restarted.GetMutex());
         BOOST_CHECK_EQUAL(chainman_restarted.ActiveHeight(), 220);
     }
+}
+
+BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_cleanup_interrupted, SnapshotTestSetup)
+{
+    mineBlocks(10); // Reach height 110, where regtest has assumeutxo data.
+    BOOST_REQUIRE(CreateAndActivateUTXOSnapshot(this));
+
+    const fs::path cleanup_dir{m_args.GetDataDirNet() / "chainstate_todelete"};
+    {
+        CDBWrapper cleanup_db{DBParams{.path = cleanup_dir, .cache_bytes = 1_MiB}};
+    }
+    BOOST_REQUIRE(fs::exists(cleanup_dir));
+
+    this->SimulateNodeRestart();
+    this->LoadVerifyActivateChainstate();
+    BOOST_CHECK(!fs::exists(cleanup_dir));
 }
 
 BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion_hash_mismatch, SnapshotTestSetup)

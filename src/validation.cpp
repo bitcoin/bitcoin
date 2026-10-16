@@ -6307,6 +6307,13 @@ bool ChainstateManager::ValidatedSnapshotCleanup(Chainstate& validated_cs, Chain
     const fs::path assumed_valid_path{unvalidated_cs.StoragePath()};
     const fs::path delete_path{validated_path + "_todelete"};
 
+    // A previous cleanup may have stopped after moving the background chainstate.
+    // Remove that obsolete database before reusing its path.
+    if (fs::exists(delete_path) && !DeleteCoinsDBFromDisk(delete_path, /*is_snapshot=*/false)) {
+        GetNotifications().fatalError(strprintf(_("Failed to remove leftover background chainstate directory '%s'. Manually remove it before restarting."), fs::PathToString(delete_path)));
+        return false;
+    }
+
     // Since we're going to be moving around the underlying leveldb filesystem content
     // for each chainstate, make sure that the chainstates (and their constituent
     // CoinsViews members) have been destructed first.
