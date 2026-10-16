@@ -81,7 +81,7 @@ class WalletSignerTest(BitcoinTestFramework):
 
 
         self.set_mock_result(self.nodes[1], '0 {"invalid json"}')
-        assert_raises_rpc_error(-1, 'Unable to parse JSON',
+        assert_raises_rpc_error(-4, 'Unable to parse JSON',
             self.nodes[1].createwallet, wallet_name='hww2', disable_private_keys=True, external_signer=True
         )
         self.clear_mock_result(self.nodes[1])
@@ -247,13 +247,13 @@ class WalletSignerTest(BitcoinTestFramework):
     def test_invalid_signer(self):
         self.log.debug(f"-signer={self.mock_invalid_signer_path()}")
         self.log.info('Test invalid external signer')
-        assert_raises_rpc_error(-1, "Invalid descriptor", self.nodes[1].createwallet, wallet_name='hww_invalid', disable_private_keys=True, external_signer=True)
+        assert_raises_rpc_error(-4, "Invalid descriptor", self.nodes[1].createwallet, wallet_name='hww_invalid', disable_private_keys=True, external_signer=True)
 
     def test_multiple_signers(self):
         self.log.debug(f"-signer={self.mock_multi_signers_path()}")
         self.log.info('Test multiple external signers')
 
-        assert_raises_rpc_error(-1, "More than one external signer found", self.nodes[1].createwallet, wallet_name='multi_hww', disable_private_keys=True, external_signer=True)
+        assert_raises_rpc_error(-4, "More than one external signer found", self.nodes[1].createwallet, wallet_name='multi_hww', disable_private_keys=True, external_signer=True)
 
 if __name__ == '__main__':
     WalletSignerTest(__file__).main()

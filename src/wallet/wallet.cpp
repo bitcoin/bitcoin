@@ -373,7 +373,14 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
 
     // Make the wallet
     context.chain->initMessage(_("Creating wallet…"));
-    std::shared_ptr<CWallet> wallet = CWallet::CreateNew(context, name, std::move(database), wallet_creation_flags, born_encrypted, error, warnings);
+    std::shared_ptr<CWallet> wallet;
+    try {
+        wallet = CWallet::CreateNew(context, name, std::move(database), wallet_creation_flags, born_encrypted, error, warnings);
+    } catch (const std::runtime_error& e) {
+        // Setting up the wallet can throw, for example when an external signer
+        // fails or returns an invalid descriptor.
+        error = Untranslated(e.what());
+    }
     if (!wallet) {
         error = Untranslated("Wallet creation failed.") + Untranslated(" ") + error;
         status = DatabaseStatus::FAILED_CREATE;
