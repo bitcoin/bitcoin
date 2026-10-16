@@ -859,12 +859,6 @@ public:
             notifications.transactionAddedToMempool(entry.GetSharedTx());
         }
     }
-    bool hasAssumedValidChain() override
-    {
-        LOCK(::cs_main);
-        return bool{chainman().CurrentChainstate().m_from_snapshot_blockhash};
-    }
-
     NodeContext* context() override { return &m_node; }
     ArgsManager& args() { return *Assert(m_node.args); }
     ChainstateManager& chainman() { return *Assert(m_node.chainman); }

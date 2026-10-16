@@ -8,7 +8,6 @@
 #include <primitives/transaction_identifier.h>
 #include <rpc/util.h>
 #include <rpc/rawtransaction_util.h>
-#include <rpc/blockchain.h>
 #include <util/vector.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/util.h>
