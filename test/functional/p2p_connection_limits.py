@@ -6,7 +6,8 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import (
     msg_version,
-    msg_filterload
+    msg_filterclear,
+    msg_filterload,
 )
 from test_framework.p2p import (
     P2PInterface,
@@ -76,9 +77,18 @@ class P2PConnectionLimits(BitcoinTestFramework):
 
         node.add_p2p_connection(P2PInterface())
         self.wait_until(lambda: len(node.getpeerinfo()) == 2)
-        with node.assert_debug_log(['connection dropped after filterload message'], timeout=2):
+        with node.assert_debug_log(['connection dropped after filterload message']):
             peer1.send_without_ping(msg_filterload(data=b'\xbb'*(100)))
-        self.wait_until(lambda: len(node.getpeerinfo()) == 1)
+            self.wait_until(lambda: len(node.getpeerinfo()) == 1)
+
+        self.log.info('Check that a switch to tx relay via filterclear can trigger eviction')
+        peer2 = self.nodes[0].add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False)
+        peer2.send_without_ping(self.create_blocks_only_version())
+        peer2.wait_for_verack()
+        self.wait_until(lambda: len(node.getpeerinfo()) == 2)
+        with node.assert_debug_log(['connection dropped after filterclear message']):
+            peer2.send_without_ping(msg_filterclear())
+            self.wait_until(lambda: len(node.getpeerinfo()) == 1)
 
         self.log.info('Test different values of inboundrelaypercent')
         self.restart_node(0, ['-maxconnections=13', '-inboundrelaypercent=0'])
