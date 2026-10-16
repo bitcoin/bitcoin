@@ -1350,6 +1350,17 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "The combination of the pre-selected inputs and the wallet automatic inputs selection exceeds the transaction maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs",
                                 wallet.fundrawtransaction, hexstring=rawtx, input_weights=inputs)
 
+        # 4) Preset inputs alone must also respect a custom maximum transaction weight.
+        inputs = [{"txid": txid, "vout": i} for i in range(1, 11)]
+        rawtx = wallet.createrawtransaction(inputs, [{wallet.getnewaddress(): 0.5}])
+        for add_inputs in (False, True):
+            assert_raises_rpc_error(-4, "Transaction too large", wallet.fundrawtransaction,
+                                    hexstring=rawtx, max_tx_weight=4000, add_inputs=add_inputs)
+            funded = wallet.fundrawtransaction(rawtx, max_tx_weight=8000, add_inputs=add_inputs)
+            signed = wallet.signrawtransactionwithwallet(funded["hex"])
+            assert signed["complete"]
+            assert 4000 < wallet.decoderawtransaction(signed["hex"])["weight"] <= 8000
+
         self.nodes[2].unloadwallet("test_weight_limits")
 
     def test_include_unsafe(self):
