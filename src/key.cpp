@@ -9,6 +9,7 @@
 #include <crypto/hmac_sha512.h>
 #include <hash.h>
 #include <random.h>
+#include <util/bip32.h>
 
 #include <secp256k1.h>
 #include <secp256k1_ellswift.h>
@@ -366,14 +367,14 @@ bool CExtKey::Derive(CExtKey &out, unsigned int _nChild) const {
     return key.Derive(out.key, out.chaincode, _nChild, chaincode);
 }
 
-std::optional<std::pair<CExtKey, KeyOriginInfo>> DeriveExtKey(const CExtKey& ext_key, const std::vector<uint32_t>& path)
+std::optional<std::pair<CExtKey, KeyOriginInfo>> DeriveExtKey(const CExtKey& ext_key, const KeyPath& path)
 {
     CExtKey descendant = ext_key;
     KeyOriginInfo origin;
     origin.fingerprint = ext_key.id_key_fingerprint();
     origin.path = path;
-    for (uint32_t i : path) {
-        if (!descendant.Derive(descendant, i)) return std::nullopt;
+    for (KeyPathElement i : path) {
+        if (!descendant.Derive(descendant, i.ChildNumber())) return std::nullopt;
     }
     return std::make_pair(descendant, origin);
 }
