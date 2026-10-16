@@ -220,7 +220,7 @@ void ThrowField(TypeList<LocalType>, InvokeContext& invoke_context, Input&& inpu
 {
     ReadField(
         TypeList<LocalType>(), invoke_context, input, ReadDestEmplace(TypeList<LocalType>(),
-            [](auto&& ...args) -> const LocalType& { throw LocalType{std::forward<decltype(args)>(args)...}; }));
+            [] [[noreturn]] (auto&& ...args) -> const LocalType& { throw LocalType{std::forward<decltype(args)>(args)...}; }));
 }
 
 //! Special case for generic std::exception. It's an abstract type so it can't
@@ -285,9 +285,28 @@ void BuildList(TypeList<LocalType>, InvokeContext& invoke_context, Output&& outp
 {
     auto list = output.init(value.size());
     size_t i = 0;
-    for (const auto& elem : value) {
-        BuildField(TypeList<LocalType>(), invoke_context, ListOutput<typename decltype(list)::Builds>(list, i), elem);
-        ++i;
+    // Iterate with an explicit iterator rather than a range-for loop so the
+    // value category of `*it` is passed through to BuildField unchanged. This
+    // matters for two reasons:
+    //
+    // - Elements must be passed as non-const so that BuildField can move out of
+    //   them, e.g. calling unique_ptr::release() to transfer ownership of an
+    //   interface pointer to the capnp server.
+    //
+    // - For proxy containers like std::vector<bool>, `*it` is a prvalue proxy
+    //   object rather than a reference. A range-for loop would bind it to a
+    //   named variable and demote it to an lvalue; passing `*it` directly
+    //   preserves the prvalue-ness.
+    //
+    // Only move out of elements when `value` itself is an rvalue container that
+    // is about to be destroyed. When it is an lvalue reference owned by the
+    // caller, pass elements as lvalues so BuildField does not move from them.
+    for (auto it = value.begin(); it != value.end(); ++it, ++i) {
+        if constexpr (std::is_lvalue_reference_v<Value&&>) {
+            BuildField(TypeList<LocalType>(), invoke_context, ListOutput<typename decltype(list)::Builds>(list, i), *it);
+        } else {
+            BuildField(TypeList<LocalType>(), invoke_context, ListOutput<typename decltype(list)::Builds>(list, i), std::move(*it));
+        }
     }
 }
 
@@ -627,7 +646,7 @@ template <typename Accessor, typename... Args>
 auto PassField(Priority<2>, Args&&... args) -> decltype(CustomPassField<Accessor>(std::forward<Args>(args)...))
 {
     return CustomPassField<Accessor>(std::forward<Args>(args)...);
-};
+}
 
 template <int argc, typename Accessor, typename Parent>
 struct ServerField : Parent
@@ -691,9 +710,9 @@ void serverDestroy(Server& server)
 template <typename ProxyClient, typename GetRequest, typename... FieldObjs>
 void clientInvoke(ProxyClient& proxy_client, const GetRequest& get_request, FieldObjs&&... fields)
 {
-    if (!g_thread_context.waiter) {
-        assert(g_thread_context.thread_name.empty());
-        g_thread_context.thread_name = ThreadName(proxy_client.m_context.loop->m_exe_name);
+    if (!CurrentThread().waiter) {
+        assert(CurrentThread().thread_name.empty());
+        CurrentThread().thread_name = ThreadName(proxy_client.m_context.loop->m_exe_name);
         // If next assert triggers, it means clientInvoke is being called from
         // the capnp event loop thread. This can happen when a ProxyServer
         // method implementation that runs synchronously on the event loop
@@ -702,13 +721,13 @@ void clientInvoke(ProxyClient& proxy_client, const GetRequest& get_request, Fiel
         // run asynchronously off the event loop thread. This is easy to fix by
         // just adding a 'context :Proxy.Context' argument to the capnp method
         // declaration so the server method runs in a dedicated thread.
-        assert(!g_thread_context.loop_thread);
-        g_thread_context.waiter = std::make_unique<Waiter>();
+        assert(!CurrentThread().loop_thread);
+        CurrentThread().waiter = std::make_unique<Waiter>();
         MP_LOGPLAIN(*proxy_client.m_context.loop, Log::Info)
-            << "{" << g_thread_context.thread_name
+            << "{" << CurrentThread().thread_name
             << "} IPC client first request from current thread, constructing waiter";
     }
-    ThreadContext& thread_context{g_thread_context};
+    ThreadContext& thread_context{CurrentThread()};
     std::optional<ClientInvokeContext> invoke_context; // Must outlive waiter->wait() call below
     std::exception_ptr exception;
     std::string kj_exception;
