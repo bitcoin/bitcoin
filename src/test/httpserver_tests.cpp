@@ -1064,6 +1064,150 @@ BOOST_AUTO_TEST_CASE(http_socket_error_tests)
     server.StopListening();
 }
 
+BOOST_AUTO_TEST_CASE(http_pipelined_keepalive_close_tests)
+{
+    // Regression test: HTTPRemoteClient::Send() must update m_keep_alive in the
+    // same critical section that appends the reply to the send buffer.
+    //
+    // A client pipelines a keep-alive request followed by a "Connection: close"
+    // request. While the first reply is still sitting in the send buffer (the
+    // socket is not accepting data yet), the second request is dispatched to a
+    // worker. If the worker cleared m_keep_alive before taking m_send_mutex,
+    // the I/O thread could drain the first reply in between, observe an empty
+    // buffer with keep_alive=false and flag the client for disconnection,
+    // dropping the second reply.
+    //
+    // The mock socket below reproduces that interleaving deterministically:
+    //  - Phase 1: Send() fails with EAGAIN until the second request has been
+    //    dispatched, so the first reply stays in the send buffer.
+    //  - Phase 2: the next Send() is made by the I/O thread while it holds
+    //    m_send_mutex. It signals the worker to write its reply, waits long
+    //    enough for the worker to reach HTTPRemoteClient::Send() (and, before
+    //    the fix, clear m_keep_alive), and only then flushes the first reply.
+    //  - Phase 3: Send() fails with EAGAIN again until the test releases it, so
+    //    the second reply cannot be flushed by the worker's optimistic send and
+    //    is only delivered if the I/O loop keeps the connection open.
+    //
+    // The state is shared between the test, the request handler and the mock
+    // socket. It is static because the local class below cannot capture
+    // automatic variables.
+    static std::atomic_bool second_request_dispatched{false};
+    static std::atomic_bool io_thread_in_send{false};
+    static std::atomic_bool allow_second_reply{false};
+    second_request_dispatched = false;
+    io_thread_in_send = false;
+    allow_second_reply = false;
+
+    class RaceSock : public DynSock
+    {
+    public:
+        explicit RaceSock(std::shared_ptr<Pipes> pipes) : DynSock{std::move(pipes)} {}
+        DynSock& operator=(Sock&&) override { assert(false); return *this; }
+
+        ssize_t Send(const void* buf, size_t len, int flags) const override
+        {
+            if (!second_request_dispatched || (m_flushed_first_reply && !allow_second_reply)) {
+                // Phase 1 and 3: refuse to send, the caller will retry later.
+                #ifdef WIN32
+                WSASetLastError(WSAEWOULDBLOCK);
+                #else
+                errno = WSAEAGAIN;
+                #endif
+                return -1;
+            }
+            if (!m_flushed_first_reply) {
+                // Phase 2: only the I/O thread can get here because the worker
+                // handling the second request waits for io_thread_in_send before
+                // writing its reply. Let it proceed and give it time to reach
+                // HTTPRemoteClient::Send() while we are still holding m_send_mutex.
+                io_thread_in_send = true;
+                std::this_thread::sleep_for(200ms);
+                m_flushed_first_reply = true;
+            }
+            return DynSock::Send(buf, len, flags);
+        }
+
+        mutable bool m_flushed_first_reply{false};
+    };
+
+    // Single worker so the two requests are handled in order.
+    ThreadPool workers("http");
+    workers.Start(1);
+
+    std::atomic<int> request_count{0};
+    HTTPServer server{[&](std::shared_ptr<HTTPRequest> req) {
+        const int index{request_count.fetch_add(1)};
+        auto item = [req, index]() {
+            if (index == 1) {
+                second_request_dispatched = true;
+                // Wait until the I/O thread is inside Send() holding m_send_mutex.
+                while (!io_thread_in_send) std::this_thread::sleep_for(1ms);
+            }
+            req->WriteReply(HTTP_OK, strprintf("reply %d\n", index));
+        };
+        // Can't call BOOST_REQUIRE from worker thread
+        Assert(workers.Submit(std::move(item)));
+    }};
+    server.InitHTTPAllowList();
+
+    CService addr_bind{Lookup("0.0.0.0", /*portDefault=*/0, /*fAllowLookup=*/false).value()};
+    BOOST_REQUIRE(server.BindAndStartListening(addr_bind));
+    server.StartSocketsThreads();
+
+    // First request keeps the connection alive, second request (full_request) asks to close it.
+    std::string keepalive_request{full_request};
+    keepalive_request.replace(keepalive_request.find("Connection: close"), 17, "Connection: keep-alive");
+    const std::string all_requests{keepalive_request + std::string{full_request}};
+
+    std::shared_ptr<RaceSock::Pipes> mock_client_socket_pipes{
+        ConnectClient<RaceSock>(std::as_bytes(std::span(all_requests)))
+    };
+
+    // Collect everything the server sends to the mock client and wait for a given reply.
+    std::string actual;
+    char buf[0x10000] = {};
+    auto WaitForReply = [&](const std::string& reply) {
+        int attempts{6000};
+        while (attempts-- > 0) {
+            const ssize_t bytes_read{mock_client_socket_pipes->send.GetBytes(buf, sizeof(buf), 0)};
+            if (bytes_read > 0) actual.append(buf, bytes_read);
+            if (actual.find(reply) != std::string::npos) return true;
+            std::this_thread::sleep_for(10ms);
+        }
+        return false;
+    };
+
+    // The first reply is flushed by the I/O thread in phase 2.
+    BOOST_REQUIRE(WaitForReply("reply 0\n"));
+    // The second reply is held back by the mock socket in phase 3.
+    BOOST_CHECK(actual.find("reply 1\n") == std::string::npos);
+
+    // Give the I/O loop plenty of time to act on a wrongly set disconnect flag.
+    // With the bug, the client has been disconnected at this point and the
+    // second reply, still sitting in the send buffer, is lost.
+    std::this_thread::sleep_for(500ms);
+    BOOST_REQUIRE_EQUAL(server.GetConnectionsCount(), 1);
+
+    // Let the socket accept data again: the I/O loop must still be retrying
+    // the send and deliver the second reply.
+    allow_second_reply = true;
+    BOOST_REQUIRE(WaitForReply("reply 1\n"));
+
+    // The second request asked for "Connection: close", so once its reply has
+    // been sent the server disconnects the client.
+    int attempts{6000};
+    while (server.GetConnectionsCount() != 0) {
+        std::this_thread::sleep_for(10ms);
+        BOOST_REQUIRE(--attempts > 0);
+    }
+
+    workers.Stop();
+
+    server.InterruptNet();
+    server.JoinSocketsThreads();
+    server.StopListening();
+}
+
 BOOST_AUTO_TEST_CASE(http_server_rejects_disallowed_client_before_read)
 {
     // DynSock reports accepted connections as coming from 5.5.5.5.
