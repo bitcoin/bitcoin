@@ -63,6 +63,25 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
     CScript scriptSig2;
     scriptSig2 << OP_1 << ToByteVector(dummy) << ToByteVector(dummy) << Serialize(s2);
     BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig2), 3U);
+
+    // For non-P2SH outputs, the scriptSig overload counts this script accurately.
+    BOOST_CHECK_EQUAL(s1.GetSigOpCount(scriptSig), 3U);
+
+    // 1-of-1 multisig to verify accurate counting when lastOpcode is OP_1 (boundary of OP_1..OP_16)
+    CScript s_1of1;
+    s_1of1 << OP_1 << ToByteVector(dummy) << OP_1 << OP_CHECKMULTISIG;
+    BOOST_CHECK_EQUAL(s_1of1.GetSigOpCount(true), 1U);
+    BOOST_CHECK_EQUAL(s_1of1.GetSigOpCount(false), 20U);
+
+    // OP_16 is allowed in scriptSig before the serialized redeem script.
+    CScript script_sig_op16;
+    script_sig_op16 << OP_16 << Serialize(s2);
+    BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(script_sig_op16), 3U);
+
+    // OP_NOP is the first opcode above OP_16 and must be rejected.
+    CScript script_sig_nop;
+    script_sig_nop << OP_NOP << Serialize(s2);
+    BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(script_sig_nop), 0U);
 }
 
 /**
