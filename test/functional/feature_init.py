@@ -386,10 +386,21 @@ class InitTest(BitcoinTestFramework):
         # No HTTP server, no RPC `stop`
         sigterm_node(node)
 
+        # From net.h
+        MAX_PEER_CONNECTIONS = 2000
+
+        self.log.info("Checking -maxconnections is capped before reserving file descriptors")
+        for requested, parsed in [(MAX_PEER_CONNECTIONS + 1, MAX_PEER_CONNECTIONS + 1), (2**64, 2**31 - 1)]:
+            warning = f"Reducing -maxconnections from {parsed} to {MAX_PEER_CONNECTIONS}."
+            self.restart_node(1, extra_args=[f"-maxconnections={requested}"])
+            self.stop_node(1, expected_stderr=re.compile(re.escape(warning)))
+
         if self.RLIM_INFINITY is not None:
             # Get the platform's file descriptor limit, if possible
             import resource
             soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+            # Stay within the -maxconnections cap so the descriptor limit is what reduces it
+            soft = min(soft, MAX_PEER_CONNECTIONS)
 
             # Lower the hard limit so RaiseFileDescriptorLimit() has a ceiling.
             # The hard limit can not be raised again without root privilges,
