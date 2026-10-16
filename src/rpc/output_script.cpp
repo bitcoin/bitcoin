@@ -205,25 +205,25 @@ static RPCMethod getdescriptorinfo()
         {
             FlatSigningProvider provider;
             std::string error;
-            auto descs = Parse(self.Arg<std::string_view>("descriptor"), provider, error);
-            if (descs.empty()) {
+            auto desc = Parse(self.Arg<std::string_view>("descriptor"), provider, error);
+            if (!desc) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
             }
 
             UniValue result(UniValue::VOBJ);
-            result.pushKV("descriptor", descs.at(0)->ToString());
+            result.pushKV("descriptor", desc->ToString());
 
-            if (descs.size() > 1) {
+            if (desc->IsMultipath()) {
                 UniValue multipath_descs(UniValue::VARR);
-                for (const auto& d : descs) {
+                for (const auto& d : desc->GetMultipathExpansion()) {
                     multipath_descs.push_back(d->ToString());
                 }
                 result.pushKV("multipath_expansion", multipath_descs);
             }
 
             result.pushKV("checksum", GetDescriptorChecksum(request.params[0].get_str()));
-            result.pushKV("isrange", descs.at(0)->IsRange());
-            result.pushKV("issolvable", descs.at(0)->IsSolvable());
+            result.pushKV("isrange", desc->IsRange());
+            result.pushKV("issolvable", desc->IsSolvable());
             result.pushKV("hasprivatekeys", provider.keys.size() > 0);
             return result;
         },
@@ -322,11 +322,10 @@ static RPCMethod deriveaddresses()
 
             FlatSigningProvider key_provider;
             std::string error;
-            auto descs = Parse(desc_str, key_provider, error, /* require_checksum = */ true);
-            if (descs.empty()) {
+            auto desc = Parse(desc_str, key_provider, error, /* require_checksum = */ true);
+            if (!desc) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
             }
-            auto& desc = descs.at(0);
             if (!desc->IsRange() && range) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Range should not be specified for an un-ranged descriptor");
             }
@@ -335,16 +334,12 @@ static RPCMethod deriveaddresses()
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Range must be specified for a ranged descriptor");
             }
 
-            UniValue addresses = DeriveAddresses(desc.get(), range_begin, range_end, key_provider);
-
-            if (descs.size() == 1) {
-                return addresses;
-            }
-
             UniValue ret(UniValue::VARR);
-            ret.push_back(addresses);
-            for (size_t i = 1; i < descs.size(); ++i) {
-                ret.push_back(DeriveAddresses(descs.at(i).get(), range_begin, range_end, key_provider));
+            for (const auto& d : desc->GetMultipathExpansion()) {
+                ret.push_back(DeriveAddresses(d.get(), range_begin, range_end, key_provider));
+            }
+            if (ret.size() == 1) {
+                return ret[0];
             }
             return ret;
         },
