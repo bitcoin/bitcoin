@@ -386,11 +386,6 @@ public:
     //! removed transactions and already added new transactions.
     virtual void requestMempoolTransactions(Notifications& notifications) = 0;
 
-    //! Return true if an assumed-valid snapshot is in use. Note that this
-    //! returns true even after the snapshot is validated, until the next node
-    //! restart.
-    virtual bool hasAssumedValidChain() = 0;
-
     //! Get internal node context. Useful for testing, but not
     //! accessible across processes.
     virtual node::NodeContext* context() { return nullptr; }
