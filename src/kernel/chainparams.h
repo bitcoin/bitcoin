@@ -9,10 +9,7 @@
 #include <consensus/params.h>
 #include <kernel/messagestartchars.h>
 #include <primitives/block.h>
-#include <uint256.h>
 #include <util/chaintype.h>
-#include <util/hash_type.h>
-#include <util/vector.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -21,32 +18,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-struct AssumeutxoHash : public BaseHash<uint256> {
-    explicit AssumeutxoHash(const uint256& hash) : BaseHash(hash) {}
-};
-
-/**
- * Holds configuration for use during UTXO snapshot load and validation. The contents
- * here are security critical, since they dictate which UTXO snapshots are recognized
- * as valid.
- */
-struct AssumeutxoData {
-    int height;
-
-    //! The expected hash of the deserialized UTXO set.
-    AssumeutxoHash hash_serialized;
-
-    //! Used to populate the m_chain_tx_count value, which is used during BlockManager::LoadBlockIndex().
-    //!
-    //! We need to hardcode the value here because this is computed cumulatively using block data,
-    //! which we do not necessarily have at the time of snapshot load.
-    uint64_t m_chain_tx_count;
-
-    //! The hash of the base block for this snapshot. Used to refer to assumeutxo data
-    //! prior to having a loaded blockindex.
-    uint256 blockhash;
-};
 
 /**
  * Holds various statistics on transactions within a chain. Used to estimate
@@ -89,7 +60,6 @@ public:
     const Consensus::Params& GetConsensus() const { return consensus; }
     const MessageStartChars& MessageStart() const { return pchMessageStart; }
     uint16_t GetDefaultPort() const { return nDefaultPort; }
-    std::vector<int> GetAvailableSnapshotHeights() const;
 
     const CBlock& GenesisBlock() const { return genesis; }
     /** Default value for -checkmempool and -checkblockindex argument */
@@ -116,15 +86,6 @@ public:
     const std::string& SilentPaymentsHRP() const { return silent_payments_hrp; }
     const std::vector<uint8_t>& FixedSeeds() const { return vFixedSeeds; }
     const HeadersSyncParams& HeadersSync() const { return m_headers_sync_params; }
-
-    std::optional<AssumeutxoData> AssumeutxoForHeight(int height) const
-    {
-        return FindFirst(m_assumeutxo_data, [&](const auto& d) { return d.height == height; });
-    }
-    std::optional<AssumeutxoData> AssumeutxoForBlockhash(const uint256& blockhash) const
-    {
-        return FindFirst(m_assumeutxo_data, [&](const auto& d) { return d.blockhash == blockhash; });
-    }
 
     const ChainTxData& TxData() const { return chainTxData; }
 
@@ -197,7 +158,6 @@ protected:
     std::vector<uint8_t> vFixedSeeds;
     bool fDefaultConsistencyChecks;
     bool m_is_mockable_chain;
-    std::vector<AssumeutxoData> m_assumeutxo_data;
     ChainTxData chainTxData;
     HeadersSyncParams m_headers_sync_params;
 

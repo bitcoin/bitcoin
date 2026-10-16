@@ -437,36 +437,12 @@ CBlockIndex* BlockManager::InsertBlockIndex(const uint256& hash)
     return pindex;
 }
 
-bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockhash)
+bool BlockManager::LoadBlockIndex()
 {
     if (!m_block_tree_db->LoadBlockIndexGuts(
             GetConsensus(), [this](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return this->InsertBlockIndex(hash); }, m_interrupt)) {
         return false;
     }
-
-    if (snapshot_blockhash) {
-        const std::optional<AssumeutxoData> maybe_au_data = GetParams().AssumeutxoForBlockhash(*snapshot_blockhash);
-        if (!maybe_au_data) {
-            m_opts.notifications.fatalError(strprintf(_("Assumeutxo data not found for the given blockhash '%s'."), snapshot_blockhash->ToString()));
-            return false;
-        }
-        const AssumeutxoData& au_data = *Assert(maybe_au_data);
-        m_snapshot_height = au_data.height;
-        CBlockIndex* base{LookupBlockIndex(*snapshot_blockhash)};
-
-        // Since m_chain_tx_count (responsible for estimated progress) isn't persisted
-        // to disk, we must bootstrap the value for assumedvalid chainstates
-        // from the hardcoded assumeutxo chainparams.
-        base->m_chain_tx_count = au_data.m_chain_tx_count;
-        LogInfo("[snapshot] set m_chain_tx_count=%d for %s", au_data.m_chain_tx_count, snapshot_blockhash->ToString());
-    } else {
-        // If this isn't called with a snapshot blockhash, make sure the cached snapshot height
-        // is null. This is relevant during snapshot completion, when the blockman may be loaded
-        // with a height that then needs to be cleared after the snapshot is fully validated.
-        m_snapshot_height.reset();
-    }
-
-    Assert(m_snapshot_height.has_value() == snapshot_blockhash.has_value());
 
     // Calculate nChainWork
     std::vector<CBlockIndex*> vSortedByHeight{GetAllBlockIndices()};
@@ -484,17 +460,11 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
         pindex->nChainWork = (pindex->pprev ? pindex->pprev->nChainWork : 0) + GetBlockProof(*pindex);
         pindex->nTimeMax = (pindex->pprev ? std::max(pindex->pprev->nTimeMax, pindex->nTime) : pindex->nTime);
 
-        // We can link the chain of blocks for which we've received transactions at some point, or
-        // blocks that are assumed-valid on the basis of snapshot load (see
-        // PopulateAndValidateSnapshot()).
+        // We can link the chain of blocks for which we've received transactions at some point.
         // Pruned nodes may have deleted the block.
         if (pindex->nTx > 0) {
             if (pindex->pprev) {
-                if (m_snapshot_height && pindex->nHeight == *m_snapshot_height &&
-                        pindex->GetBlockHash() == *snapshot_blockhash) {
-                    // Should have been set above; don't disturb it with code below.
-                    Assert(pindex->m_chain_tx_count > 0);
-                } else if (pindex->pprev->m_chain_tx_count > 0) {
+                if (pindex->pprev->m_chain_tx_count > 0) {
                     pindex->m_chain_tx_count = pindex->pprev->m_chain_tx_count + pindex->nTx;
                 } else {
                     pindex->m_chain_tx_count = 0;
@@ -545,10 +515,10 @@ void BlockManager::WriteBlockIndexDB()
     m_block_tree_db->WriteBatchSync(vFiles, max_blockfile, vBlocks);
 }
 
-bool BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_blockhash)
+bool BlockManager::LoadBlockIndexDB()
 {
     AssertLockHeld(::cs_main);
-    if (!LoadBlockIndex(snapshot_blockhash)) {
+    if (!LoadBlockIndex()) {
         return false;
     }
     int max_blockfile_num{0};
