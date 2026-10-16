@@ -133,7 +133,20 @@ public:
 class PartiallyDownloadedBlock {
 protected:
     std::vector<CTransactionRef> txn_available;
+
+    // These count and size values should ONLY be used for logging output, they
+    // are NOT correctly set if compact block logging is off.
     size_t prefilled_count = 0, mempool_count = 0, extra_count = 0;
+    size_t prefilled_size = 0, mempool_size = 0, extra_size = 0;
+
+    // For tracking redundant prefills, DO NOT use for anything other than
+    // logging, these are not correctly set if compact block logging is off.
+    //
+    // Either it was already present in our mempool...
+    size_t redundant_prefilled_mempool_count = 0, redundant_prefilled_mempool_size = 0;
+    // or maybe it was present in our extrapool...
+    size_t redundant_prefilled_extrapool_count = 0, redundant_prefilled_extrapool_size = 0;
+
     const CTxMemPool* pool;
 public:
     CBlockHeader header;
