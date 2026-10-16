@@ -22,6 +22,7 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <validation.h>

@@ -16,6 +16,7 @@
 #include <test/fuzz/util/threadinterrupt.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
+#include <util/check.h>
 #include <util/translation.h>
 
 #include <cstdint>

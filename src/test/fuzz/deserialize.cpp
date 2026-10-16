@@ -29,6 +29,7 @@
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
 #include <undo.h>
+#include <util/check.h>
 
 #include <cstdint>
 #include <exception>

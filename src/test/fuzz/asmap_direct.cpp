@@ -3,14 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <netaddress.h>
-#include <util/asmap.h>
 #include <test/fuzz/fuzz.h>
+#include <util/asmap.h>
+#include <util/check.h>
 
 #include <cstdint>
 #include <optional>
 #include <vector>
 
-#include <cassert>
 
 std::vector<std::byte> BitsToBytes(std::span<const uint8_t> bits) noexcept
 {

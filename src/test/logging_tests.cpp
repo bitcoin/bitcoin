@@ -10,9 +10,12 @@
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
 #include <tinyformat.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/string.h>
+
+#include <boost/test/unit_test.hpp>
 
 #include <chrono>
 #include <fstream>
@@ -24,8 +27,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include <boost/test/unit_test.hpp>
 
 using util::SplitString;
 using util::TrimString;

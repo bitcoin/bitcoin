@@ -8,15 +8,16 @@
 #include <node/blockstorage.h>
 #include <node/context.h>
 #include <node/kernel_notifications.h>
-#include <script/solver.h>
 #include <primitives/block.h>
-#include <util/chaintype.h>
-#include <validation.h>
-
-#include <boost/test/unit_test.hpp>
+#include <script/solver.h>
 #include <test/util/common.h>
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
+#include <util/chaintype.h>
+#include <util/check.h>
+#include <validation.h>
+
+#include <boost/test/unit_test.hpp>
 
 using kernel::CBlockFileInfo;
 using node::STORAGE_HEADER_BYTES;
