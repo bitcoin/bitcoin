@@ -33,6 +33,8 @@ struct SignatureData;
 
 struct SignOptions {
     int sighash_type{SIGHASH_DEFAULT};
+    //! BIP340 auxiliary randomness. Fresh randomness is used if unset.
+    std::optional<uint256> aux_rand{std::nullopt};
 };
 
 /** Interface for signature creators. */
