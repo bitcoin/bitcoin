@@ -31,7 +31,6 @@
 #include <uint256.h>
 #include <util/byte_units.h>
 #include <util/check.h>
-#include <util/fs.h>
 #include <util/hasher.h>
 #include <util/result.h>
 #include <util/time.h>
@@ -587,14 +586,14 @@ public:
         ChainstateManager& chainman,
         std::optional<uint256> from_snapshot_blockhash = std::nullopt);
 
-    //! Return path to chainstate leveldb directory.
-    fs::path StoragePath() const;
-
     //! Return the current role of the chainstate. See `ChainstateManager`
     //! documentation for a description of the different types of chainstates.
     //!
     //! @sa ChainstateRole
     kernel::ChainstateRole GetRole() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! Return path to chainstate leveldb directory.
+    fs::path StoragePath() const;
 
     /**
      * Initialize the CoinsViews UTXO set database management data structures. The in-memory

@@ -29,7 +29,6 @@
 #include <kernel/warning.h>
 #include <logging/timer.h>
 #include <node/blockstorage.h>
-#include <node/utxo_snapshot.h>
 #include <policy/ephemeral_policy.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
@@ -1860,15 +1859,6 @@ Chainstate::Chainstate(
       m_assumeutxo(from_snapshot_blockhash ? Assumeutxo::UNVALIDATED : Assumeutxo::VALIDATED),
       m_from_snapshot_blockhash(from_snapshot_blockhash) {}
 
-fs::path Chainstate::StoragePath() const
-{
-    fs::path path{m_chainman.m_options.datadir / "chainstate"};
-    if (m_from_snapshot_blockhash) {
-        path += node::SNAPSHOT_CHAINSTATE_SUFFIX;
-    }
-    return path;
-}
-
 const CBlockIndex* Chainstate::SnapshotBase() const
 {
     if (!m_from_snapshot_blockhash) return nullptr;
@@ -1897,6 +1887,11 @@ void Chainstate::SetTargetBlockHash(uint256 block_hash)
 {
     m_target_blockhash = block_hash;
     m_cached_target_block = nullptr;
+}
+
+fs::path Chainstate::StoragePath() const
+{
+    return m_chainman.m_options.datadir / "chainstate";
 }
 
 void Chainstate::InitCoinsDB(
