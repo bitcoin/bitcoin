@@ -1,24 +1,10 @@
 # Assumeutxo Usage
 
-Assumeutxo is a feature that allows fast bootstrapping of a validating bitcoind
-instance.
+Existing snapshots can still be resumed. New snapshot imports are no longer supported.
 
 For notes on the design of Assumeutxo, please refer to [the design doc](/doc/design/assumeutxo.md).
 
-## Loading a snapshot
-
-There is currently no canonical source for snapshots, but any downloaded snapshot
-will be checked against a hash that's been hardcoded in source code. If there is
-no source for the snapshot you need, you can generate it yourself using
-`dumptxoutset` on another node that is already synced (see
-[Generating a snapshot](#generating-a-snapshot)).
-
-Once you've obtained the snapshot, you can use the RPC command `loadtxoutset` to
-load it.
-
-```
-$ bitcoin-cli -rpcclienttimeout=0 loadtxoutset /path/to/input
-```
+## Existing snapshots
 
 After loading, monitor snapshot sync with `getchainstates`. Earlier blocks are
 not downloaded or validated in the background. To discard the snapshot and
@@ -27,26 +13,18 @@ storage. Wallet operations requiring missing blocks need this history too.
 
 ### Pruning
 
-A pruned node can load a snapshot. To save space, it's possible to delete the
-snapshot file as soon as `loadtxoutset` finishes.
-
 The minimum `-prune` setting is 550 MiB, but this functionality ignores that
 minimum and uses at least 1100 MiB.
 
 ### Indexes
 
-Disable indexes before importing. Index startup requires the historical blocks
+Index startup requires the historical blocks
 and undo data needed to catch up. Use `-reindex` to restore missing history.
 
 ## Generating a snapshot
 
 The RPC command `dumptxoutset` can be used to generate a snapshot for the current
-tip (using type "latest") or a recent height (using type "rollback"). A generated
-snapshot from one node can then be loaded
-on any other node. However, keep in mind that the snapshot hash needs to be
-listed in the chainparams to make it usable. If there is no snapshot hash for
-the height you have chosen already, you will need to change the code there and
-re-compile.
+tip (using type "latest") or a recent height (using type "rollback").
 
 Using the type parameter "rollback", `dumptxoutset` can also be used to verify the
 hardcoded snapshot hash in the source code by regenerating the snapshot and

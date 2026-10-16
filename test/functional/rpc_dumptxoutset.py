@@ -61,6 +61,7 @@ class DumptxoutsetTest(BitcoinTestFramework):
         expected_path = node.chain_path / FILENAME
 
         assert expected_path.is_file()
+        assert_raises_rpc_error(-32601, None, node.loadtxoutset, out['path'])
 
         assert_equal(out['coins_written'], 100)
         assert_equal(out['base_height'], 100)
