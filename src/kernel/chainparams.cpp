@@ -10,7 +10,6 @@
 #include <consensus/merkle.h>
 #include <consensus/params.h>
 #include <crypto/hex_base.h>
-#include <kernel/messagestartchars.h>
 #include <kernel/signet.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -22,7 +21,6 @@
 #include <util/log.h>
 #include <util/strencodings.h>
 
-#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cstdint>
@@ -590,26 +588,4 @@ std::unique_ptr<const CChainParams> CChainParams::TestNet(const TestNetOptions& 
 std::unique_ptr<const CChainParams> CChainParams::TestNet4(const TestNetOptions& options)
 {
     return std::make_unique<const CTestNet4Params>(options);
-}
-
-std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
-{
-    const auto mainnet_msg = CChainParams::Main()->MessageStart();
-    const auto testnet_msg = CChainParams::TestNet()->MessageStart();
-    const auto testnet4_msg = CChainParams::TestNet4()->MessageStart();
-    const auto regtest_msg = CChainParams::RegTest()->MessageStart();
-    const auto signet_msg = CChainParams::SigNet()->MessageStart();
-
-    if (std::ranges::equal(message, mainnet_msg)) {
-        return ChainType::MAIN;
-    } else if (std::ranges::equal(message, testnet_msg)) {
-        return ChainType::TESTNET;
-    } else if (std::ranges::equal(message, testnet4_msg)) {
-        return ChainType::TESTNET4;
-    } else if (std::ranges::equal(message, regtest_msg)) {
-        return ChainType::REGTEST;
-    } else if (std::ranges::equal(message, signet_msg)) {
-        return ChainType::SIGNET;
-    }
-    return std::nullopt;
 }
