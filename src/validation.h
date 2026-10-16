@@ -704,16 +704,8 @@ public:
     //! Destructs all objects related to accessing the UTXO set.
     void ResetCoinsViews() { m_coins_views.reset(); }
 
-    //! The cache size of the on-disk coins view.
-    size_t m_coinsdb_cache_size_bytes{0};
-
     //! The cache size of the in-memory coins view.
     size_t m_coinstip_cache_size_bytes{0};
-
-    //! Resize the CoinsViews caches dynamically and flush state to disk.
-    //! @returns true unless an error occurred during the flush.
-    bool ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
-        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /**
      * Update the on-disk chain state.
@@ -1010,11 +1002,11 @@ public:
     CBlockIndex* m_best_header GUARDED_BY(::cs_main){nullptr};
 
     //! The total number of bytes available for us to use across all in-memory
-    //! coins caches. This will be split somehow across chainstates.
+    //! coins caches.
     size_t m_total_coinstip_cache{0};
     //
     //! The total number of bytes available for us to use across all leveldb
-    //! coins databases. This will be split somehow across chainstates.
+    //! coins databases.
     size_t m_total_coinsdb_cache{0};
 
     /// Ensures a genesis block is in the block tree, possibly writing one to disk.
@@ -1206,10 +1198,6 @@ public:
     //! Load the block tree and coins database from disk, initializing state if we're running with -reindex
     bool LoadBlockIndex() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    //! Check to see if caches are out of balance and if so, call
-    //! ResizeCoinsCaches() as needed.
-    void MaybeRebalanceCaches() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
     /**
      * Update uncommitted block structures (currently: only the witness reserved
      * value). This is safe for submitted blocks as long as they honor
@@ -1225,9 +1213,6 @@ public:
      *  responsible for logging and signalling through NotifyHeaderTip, so it needs this
      *  information. */
     void ReportHeadersPresync(int64_t height, int64_t timestamp);
-
-    //! Add new chainstate.
-    Chainstate& AddChainstate(std::unique_ptr<Chainstate> chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     void ResetChainstates() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 

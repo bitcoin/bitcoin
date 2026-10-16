@@ -1919,8 +1919,6 @@ void Chainstate::InitCoinsDB(
             .obfuscate = true,
             .options = m_chainman.m_options.coins_db},
         m_chainman.m_options.coins_view);
-
-    m_coinsdb_cache_size_bytes = cache_size_bytes;
 }
 
 void Chainstate::InitCoinsCache(size_t cache_size_bytes)
@@ -5382,37 +5380,6 @@ std::string Chainstate::ToString()
                      tip ? tip->nHeight : -1, tip ? tip->GetBlockHash().ToString() : "null");
 }
 
-bool Chainstate::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
-{
-    AssertLockHeld(::cs_main);
-    if (coinstip_size == m_coinstip_cache_size_bytes &&
-            coinsdb_size == m_coinsdb_cache_size_bytes) {
-        // Cache sizes are unchanged, no need to continue.
-        return true;
-    }
-    size_t old_coinstip_size = m_coinstip_cache_size_bytes;
-    m_coinstip_cache_size_bytes = coinstip_size;
-    m_coinsdb_cache_size_bytes = coinsdb_size;
-    CoinsDB().ResizeCache(coinsdb_size);
-
-    LogInfo("[%s] resized coinsdb cache to %.1f MiB",
-        this->ToString(), coinsdb_size / double(1_MiB));
-    LogInfo("[%s] resized coinstip cache to %.1f MiB",
-        this->ToString(), coinstip_size / double(1_MiB));
-
-    BlockValidationState state;
-    bool ret;
-
-    if (coinstip_size > old_coinstip_size) {
-        // Likely no need to flush if cache sizes have grown.
-        ret = FlushStateToDisk(state, FlushStateMode::IF_NEEDED);
-    } else {
-        // Otherwise, flush state to disk and deallocate the in-memory coins map.
-        ret = FlushStateToDisk(state, FlushStateMode::FORCE_FLUSH);
-    }
-    return ret;
-}
-
 double ChainstateManager::GuessVerificationProgress(const CBlockIndex* pindex) const
 {
     AssertLockHeld(GetMutex());
@@ -5464,28 +5431,6 @@ Chainstate& ChainstateManager::ActiveChainstate() const
     return CurrentChainstate();
 }
 
-void ChainstateManager::MaybeRebalanceCaches()
-{
-    AssertLockHeld(::cs_main);
-    Chainstate& current_cs{CurrentChainstate()};
-    Chainstate* historical_cs{HistoricalChainstate()};
-    if (!historical_cs && !current_cs.m_from_snapshot_blockhash) {
-        // Allocate everything to the IBD chainstate. This will always happen
-        // when we are not using a snapshot.
-        current_cs.ResizeCoinsCaches(m_total_coinstip_cache, m_total_coinsdb_cache);
-    } else if (!historical_cs) {
-        // If background validation has completed and snapshot is our active chain...
-        LogInfo("[snapshot] allocating all cache to the snapshot chainstate");
-        // Allocate everything to the snapshot chainstate.
-        current_cs.ResizeCoinsCaches(m_total_coinstip_cache, m_total_coinsdb_cache);
-    } else {
-        historical_cs->ResizeCoinsCaches(
-            m_total_coinstip_cache * 0.05, m_total_coinsdb_cache * 0.05);
-        current_cs.ResizeCoinsCaches(
-            m_total_coinstip_cache * 0.95, m_total_coinsdb_cache * 0.95);
-    }
-}
-
 void ChainstateManager::ResetChainstates()
 {
     m_chainstates.clear();
@@ -5526,25 +5471,6 @@ ChainstateManager::~ChainstateManager()
     LOCK(::cs_main);
 
     m_versionbitscache.Clear();
-}
-
-Chainstate& ChainstateManager::AddChainstate(std::unique_ptr<Chainstate> chainstate)
-{
-    Chainstate& prev_chainstate{CurrentChainstate()};
-    assert(prev_chainstate.m_assumeutxo == Assumeutxo::VALIDATED);
-    // Set target block for historical chainstate to snapshot block.
-    assert(!prev_chainstate.TargetBlockHash());
-    prev_chainstate.SetTargetBlockHash(*Assert(chainstate->m_from_snapshot_blockhash));
-    m_chainstates.push_back(std::move(chainstate));
-    Chainstate& curr_chainstate{CurrentChainstate()};
-    assert(&curr_chainstate == m_chainstates.back().get());
-
-    // Transfer possession of the mempool to the chainstate.
-    // Mempool is empty at this point because we're still in IBD.
-    assert(!prev_chainstate.m_mempool || prev_chainstate.m_mempool->size() == 0);
-    assert(!curr_chainstate.m_mempool);
-    std::swap(curr_chainstate.m_mempool, prev_chainstate.m_mempool);
-    return curr_chainstate;
 }
 
 bool IsBIP30Repeat(const CBlockIndex& block_index)
