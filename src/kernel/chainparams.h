@@ -14,7 +14,6 @@
 #include <util/hash_type.h>
 #include <util/vector.h>
 
-#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -58,15 +57,6 @@ struct ChainTxData {
     int64_t nTime;    //!< UNIX timestamp of last known number of transactions
     uint64_t tx_count; //!< total number of transactions between genesis and that timestamp
     double dTxRate;   //!< estimated number of transactions per second after that timestamp
-};
-
-//! Configuration for headers sync memory usage.
-struct HeadersSyncParams {
-    //! Distance in blocks between header commitments.
-    size_t commitment_period{0};
-    //! Minimum number of validated headers to accumulate in the redownload
-    //! buffer before feeding them into the permanent block index.
-    size_t redownload_buffer_size{0};
 };
 
 /**
@@ -115,7 +105,6 @@ public:
     const std::string& Bech32HRP() const { return bech32_hrp; }
     const std::string& SilentPaymentsHRP() const { return silent_payments_hrp; }
     const std::vector<uint8_t>& FixedSeeds() const { return vFixedSeeds; }
-    const HeadersSyncParams& HeadersSync() const { return m_headers_sync_params; }
 
     std::optional<AssumeutxoData> AssumeutxoForHeight(int height) const
     {
@@ -199,7 +188,6 @@ protected:
     bool m_is_mockable_chain;
     std::vector<AssumeutxoData> m_assumeutxo_data;
     ChainTxData chainTxData;
-    HeadersSyncParams m_headers_sync_params;
 
     void ApplyDeploymentOptions(const DeploymentOptions& opts);
 };

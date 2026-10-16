@@ -10,9 +10,12 @@
 #include <util/time.h>
 #include <util/vector.h>
 
-// Our memory analysis in headerssync-params.py assumes this many bytes for a
-// CompressedHeader (we should re-calculate parameters if we compress further).
-static_assert(sizeof(CompressedHeader) == 48);
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <numeric>
+#include <tuple>
+#include <utility>
 
 HeadersSyncState::HeadersSyncState(NodeId id,
                                    const Consensus::Params& consensus_params,
@@ -187,7 +190,7 @@ bool HeadersSyncState::ValidateAndProcessSingleHeader(const CBlockHeader& curren
     Assume(m_download_state == State::PRESYNC);
     if (m_download_state != State::PRESYNC) return false;
 
-    int next_height = m_current_height + 1;
+    int64_t next_height = m_current_height + 1;
 
     // Verify that the difficulty isn't growing too fast; an adversary with
     // limited hashing capability has a greater chance of producing a high
@@ -322,4 +325,291 @@ CBlockLocator HeadersSyncState::NextHeadersRequestLocator() const
     locator.insert(locator.end(), chain_start_locator.begin(), chain_start_locator.end());
 
     return CBlockLocator{std::move(locator)};
+}
+
+//  PARAMETER OPTIMIZATION
+//
+//  The headerssync module implements a DoS protection against low-difficulty header spam which does
+//  not rely on checkpoints. In short it works as follows:
+//
+//  - (initial) header synchronization is split into two phases:
+//    - A commitment phase, in which headers are downloaded from the peer, and a very compact
+//      commitment to them is remembered in per-peer memory. The commitment phase ends when the
+//      received chain's combined work reaches a predetermined threshold.
+//    - A redownload phase, during which the headers are downloaded a second time from the same
+//      peer, and compared against the commitment constructed in the first phase. If there is a
+//      match, the redownloaded headers are fed to validation and accepted into permanent storage.
+//
+//    This separation guarantees that no headers are accepted into permanent storage without
+//    requiring the peer to first prove the chain actually has sufficient work.
+//
+//  - To actually implement this commitment mechanism, the following approach is used:
+//    - Keep a *1 bit* commitment (constructed using a salted hash function), for every block whose
+//      height is a multiple of {period} plus an offset value. The offset, like the salt, is chosen
+//      randomly when the synchronization starts and kept fixed afterwards.
+//    - When redownloading, headers are fed through a per-peer queue that holds {bufsize} headers,
+//      before passing them to validation. All the headers in this queue are verified against the
+//      commitment bits created in the first phase before any header is released from it. This means
+//      {bufsize/period} bits are checked "on top of" each header before actually processing it,
+//      which results in a commitment structure with roughly {bufsize/period} bits of security, as
+//      once a header is modified, due to the prevhash inclusion, all future headers necessarily
+//      change as well.
+//
+//  The question is what these {period} and {bufsize} parameters need to be set to. The code
+//  below computes a near-optimal choice, taking into account:
+//
+//  - Minimizing the (maximum of) two scenarios that trigger per-peer memory usage:
+//
+//    - When downloading a (likely honest) chain that reaches the chainwork threshold after {n}
+//      blocks, and then redownloads them, we will consume per-peer memory that is sufficient to
+//      store {n/period} commitment bits and {bufsize} headers. We only consider attackers without
+//      sufficient hashpower (as otherwise they are from a PoW perspective not attackers), which
+//      means {n} is restricted to the honest chain's length before reaching minchainwork.
+//
+//    - When downloading a (likely false) chain of {n} headers that never reaches the chainwork
+//      threshold, we will consume per-peer memory that is sufficient to store {n/period}
+//      commitment bits. Such a chain may be very long, by exploiting the timewarp bug to avoid
+//      ramping up difficulty. There is however an absolute limit on how long such a chain can be: 6
+//      blocks per second since genesis, due to the increasing MTP consensus rule.
+//
+//  - Not gratuitously preventing synchronizing any valid chain, however difficult such a chain may
+//    be to construct. In particular, the above scenario with an enormous timewarp-exploiting chain
+//    cannot simply be ignored, as it is legal that the honest main chain is like that. We however
+//    do not bother minimizing the memory usage in that case (because a billion-header long honest
+//    chain will inevitably use far larger amounts of memory than designed for).
+//
+//  - Keep the rate at which attackers can get low-difficulty headers accepted to the block index
+//    negligible. Specifically, the possibility exists for an attacker to send the honest main
+//    chain's headers during the commitment phase, but then start deviating at an attacker-chosen
+//    point by sending novel low-difficulty headers instead. Depending on how high we set the
+//    {bufsize/period} ratio, we can make the probability that such a header makes it in
+//    arbitrarily small, but at the cost of higher memory during the redownload phase. It turns out,
+//    some rate of memory usage growth is expected anyway due to chain growth, so permitting the
+//    attacker to increase that rate by a small factor isn't concerning. The attacker may start
+//    somewhat later than genesis, as long as the difficulty doesn't get too high. This reduces
+//    the attacker bandwidth required at the cost of higher PoW needed for constructing the
+//    alternate chain. This trade-off is ignored here, as it results in at most a small constant
+//    factor in attack rate.
+
+HeadersSyncParams ComputeHeadersSyncParamsInner(int64_t max_headers, int64_t minchainwork_headers, double attack_headers)
+{
+    /** Headers in the redownload buffer are stored without prevhash, as a CompressedHeader. [bits] */
+    constexpr int64_t COMPACT_HEADER_SIZE = sizeof(CompressedHeader) * 8;
+    // The unit tests would need to be regenerated if this constant were to change, so
+    // static_assert to give a more targeted error message.
+    static_assert(COMPACT_HEADER_SIZE == 384);
+
+    // The range of legal periods, [1, minchainwork_headers], must be nonempty: Step 1 below
+    // bisects it, and Step 2 divides by the periods it returns.
+    Assert(minchainwork_headers > 0);
+    // Some small attacker success rate is inevitable. A non-positive one cannot be reached, and
+    // would make the bufsize computation below yield infinity or NaN, which cannot be converted
+    // to an integer.
+    Assert(attack_headers > 0);
+    // Step 1 below relies on this to guarantee the two memory-usage curves intersect. Unlike the
+    // conditions above, violating this one merely yields a suboptimal (but still valid) result.
+    Assume(max_headers > 2 * minchainwork_headers);
+
+    /** The (real-valued) bufsize whose attack rate against the given period is exactly
+     *  attack_headers.
+     *
+     *  The expected number of forged headers that get accepted, per attack, in a (period, bufsize)
+     *  configuration, is derived as follows.
+     *
+     *  We ignore the effects of headers arriving in batches of size 2000, and instead treat them
+     *  as arriving one by one. This overestimates the attacker's ability slightly, because the
+     *  batches are only accepted in their entirety, if all checks inside succeed. Thus, our result
+     *  here will be a conservative overestimate.
+     *
+     *  The attack we model then consists of:
+     *  - During the commitment phase, the attacker sends just the honest chain.
+     *  - During the redownload phase, the attacker starts forging headers at some point. Let F be
+     *    the number of forged headers before the first commitment check, P the period, and B the
+     *    bufsize. So F is in [0, P-1]. Now the following happens:
+     *    - The first B forged headers fill up the victim's buffer, and are not accepted. There are
+     *      C = ceil((B-F)/P) commitment checks within those first B forgeries, which gives a
+     *      probability of 2^-C that the attack does not fail outright before any forgeries are
+     *      accepted.
+     *    - After that, there are (F + P*C - B) headers before the next check. Each of these causes
+     *      one forged header to be pushed out of the buffer and be accepted.
+     *    - After that, every group of P headers contains 1 more check, and if it passes, P more
+     *      headers are pushed out of the buffer and get accepted.
+     *    - Assume the attacker keeps doing this forever as long as they succeed; stopping early
+     *      never helps them. This is thanks to ignoring the batching; with batching, we need to
+     *      model the attacker's ability to strategically stop the attack. They are in principle
+     *      bounded by the length of the honest chain, but for simplicity we overestimate this as
+     *      infinitely long.
+     *
+     *  Together, this means the number of accepted headers is
+     *
+     *  n(F) = 2^-C * (F + P*C - B + 1/2*P + 1/4*P + 1/8*P + ...)
+     *       = 2^-C * (F + P*C - B + P)
+     *
+     *  Since the position of the first commitment is randomized, we need to average this expression
+     *  over all F in [0, P-1]. Let K=floor(B/P), and M=(B mod P). Then we have:
+     *  - for F in [0, M-1]: C = K+1, so avg n(0..M-1) = 2^-(K+1) * ((M-1)/2   + P*K - B + 2*P)
+     *  - for F in [M, P-1]: C = K,   so avg n(M..P-1) = 2^-K     * ((M+P-1)/2 + P*K - B + P)
+     *  Taking the weighted average over both (weight M for first, weight P-M for second) gives:
+     *
+     *      2^-K * (6*P^2 - 4*P*M + M^2 - 2*P + M) / (4*P)
+     *
+     *  That expression is used here with real-valued period and bufsize (and thus M in [0, P)). As
+     *  a function of bufsize it is continuous and strictly decreasing, and for the bufsize values
+     *  sharing a given K it takes values in (2^-K * (3*P - 1) / 4, 2^-K * (3*P - 1) / 2]. It can
+     *  therefore be solved for bufsize directly: K is the unique integer for which attack_headers
+     *  falls in that range, after which M follows from the quadratic equation
+     *
+     *      2^-K * (6*P^2 - 4*P*M + M^2 - 2*P + M) / (4*P) = attack_headers
+     *  <=>         6*P^2 - 4*P*M + M^2 - 2*P + M          = 4*2^K*P * attack_headers
+     *  <=> M^2 + (1 - 4*P)*M + 2*P*(3*P-1) - 2^(K+2)*P * attack_headers = 0
+     *
+     *  with solution
+     *
+     *      [4*P - 1   +- sqrt(1   - 8*P^2 + 2^(K+4)*P * attack_headers)] / 2
+     *    =  2*P - 1/2 +- sqrt(1/4 - 2*P^2 + 2^(K+2)*P * attack_headers)
+     *
+     *  where we need the negative square root term, as the positive term would yield M >= P.
+     */
+    const auto log2_attack_headers = std::log2(attack_headers);
+    const auto real_bufsize = [attack_headers, log2_attack_headers](double period) noexcept -> double {
+        const auto k = std::floor(std::log2(1.5 * period - 0.5) - log2_attack_headers);
+        const auto m = 2.0 * period - 0.5 - std::sqrt(
+                           0.25 - 2.0 * period * period + std::ldexp(attack_headers * period, int(k + 2)));
+        return k * period + m;
+    };
+
+    /** Smallest integer bufsize whose attack rate against (period, bufsize) is below
+     *  attack_headers. As that rate is strictly decreasing in bufsize, and is exactly
+     *  attack_headers at real_bufsize(period), this is the next integer above it, but at
+     *  least 1, because the buffer cannot be empty however permissive attack_headers is. */
+    const auto int_bufsize = [&](int64_t period) noexcept {
+        return std::max<int64_t>(1, int64_t(std::floor(real_bufsize(period))) + 1);
+    };
+
+    /** The peak per-peer memory a (period,bufsize) configuration needs. */
+    const auto memory_usage = [max_headers, minchainwork_headers](int64_t period, int64_t bufsize) noexcept {
+        /** Per-peer memory usage for a timewarp chain that never meets minchainwork (one bit per
+         *  period). */
+        const int64_t mem_timewarp = max_headers / period;
+        /** Per-peer memory usage for being fed the main chain (one bit per period +
+         *  redownload buffer size). */
+        const int64_t mem_mainchain = (minchainwork_headers / period) + bufsize * COMPACT_HEADER_SIZE;
+        /** The peak per-peer memory usage is the larger of the two. */
+        return std::max(mem_timewarp, mem_mainchain);
+    };
+
+    // The overall strategy to solve our problem (minimizing peak memory usage while staying under
+    // the acceptable attack rate), is as follows:
+    //
+    // Step 1: assume that period and bufsize can be arbitrary real numbers, and find the two
+    //         adjacent legal integer periods which straddle the optimum of that continuous
+    //         relaxation.
+    // Step 2: try both of them, and return the one whose memory usage is lowest (breaking ties
+    //         toward the smallest period).
+    //
+    // As a function of the period, the memory usage is the maximum of a decreasing (timewarp) and
+    // an increasing (mainchain) branch, which cross at the continuous optimum. The best integer
+    // period is therefore one of the two surrounding it, unless rounding bufsize up to an integer
+    // outweighs a whole step further along the timewarp branch. Experimentally, this only happens
+    // for absurdly high attack rates, and even then, it only results in memory usage slightly
+    // above the optimal.
+
+    // Step 1: find the two adjacent legal periods which straddle the optimum of the continuous
+    //         relaxation of the problem (the two legal periods nearest to it, if it lies outside
+    //         the legal range).
+    const auto [period_below, period_above] = [&]() {
+        // Abstractly, our goal is to find (period, bufsize):
+        // (1) such that the attack rate against (period, bufsize) is at most attack_headers
+        // (2) such that memory_usage(period, bufsize) is minimal
+        //
+        // Both of these turn into exact equalities in the continuous relaxation:
+        // (1) becomes an equality, because there is no need to overshoot, which means bufsize is
+        //     the real_bufsize() computed above.
+        // (2) becomes mem_timewarp(period, bufsize) = mem_mainchain(period, bufsize), because
+        //     timewarp memory goes down with increasing period, and mainchain memory goes up with
+        //     increasing period (with bufsize set to keep the attack rate constant). The maximum
+        //     of the two is therefore minimized exactly where they intersect. This can be shown to
+        //     be the case whenever max_headers is larger than 2 * minchainwork_headers, which is
+        //     practically always true.
+        //
+        // Substituting (1) into (2), written out and multiplied by period, gives:
+        //
+        //   COMPACT_HEADER_SIZE * period * real_bufsize(period) = max_headers - minchainwork_headers
+        //
+        // whose left-hand side increases with period. The periods below the continuous optimum are
+        // therefore exactly those whose left-hand side is still below the right-hand side, so the
+        // pair straddling it can be found by bisection. As only integer periods are ever tried,
+        // that bisection can be performed over the integers, bracketed by the legal range itself,
+        // which keeps both results legal: if the optimum lies outside that range, the two periods
+        // nearest the corresponding end are returned instead. Note that the interval shrinks by
+        // construction on every iteration, independent of how accurately the condition is
+        // evaluated.
+        const auto target = double(max_headers - minchainwork_headers) / COMPACT_HEADER_SIZE;
+        int64_t lo = 1;
+        int64_t hi = minchainwork_headers;
+        while (hi - lo > 1) {
+            const auto mid = std::midpoint(lo, hi);
+            if (mid * real_bufsize(mid) < target) {
+                lo = mid;
+            } else {
+                hi = mid;
+            }
+        }
+        return std::pair{lo, hi};
+    }();
+
+    // Step 2: try period_below and period_above, and pick the one which, together with its
+    //         corresponding bufsize, results in the lowest memory usage.
+    const auto make_config = [&](int64_t period) noexcept {
+        const auto bufsize = int_bufsize(period);
+        return std::tuple{memory_usage(period, bufsize), period, bufsize};
+    };
+    // Tuples compare lexicographically, so this picks the lowest memory usage, and among equally
+    // low ones the smallest period.
+    const auto [_memory, best_period, best_bufsize] = std::min(
+        make_config(period_below),
+        make_config(period_above));
+
+    return {.commitment_period = size_t(best_period), .redownload_buffer_size = size_t(best_bufsize)};
+}
+
+// Derive max_headers (the longest a valid chain could be by now) and the attack_headers budget from
+// the chain's age and minimum-chain-work header count, then optimize.
+HeadersSyncParams ComputeHeadersSyncParams(std::chrono::seconds timespan, int64_t minchainwork_headers)
+{
+    /** Expected block interval. [seconds] */
+    constexpr double BLOCK_INTERVAL{600.0};
+    /** Combined processing bandwidth from all attackers to one victim. [bit/s]
+     *
+     * 6 Gbit/s is approximately the speed at which a single thread of a Ryzen 5950X CPU thread can
+     * hash headers. In practice, the victim's network bandwidth and network processing overheads
+     * probably impose a far lower number, but it's a useful upper bound. */
+    constexpr double ATTACK_BANDWIDTH{6000000000.0};
+    /** How much additional permanent memory usage are attackers (jointly) allowed to cause in the
+     *  victim, expressed as fraction of the normal memory usage due to mainchain growth, for the
+     *  duration the attack is sustained. [unitless]. 0.2 means that attackers, while they keep up the
+     *  attack, can cause permanent memory usage due to headers storage to grow at 1.2 header per
+     *  BLOCK_INTERVAL. */
+    constexpr double ATTACK_FRACTION{0.2};
+    /** How many bits a header uses in P2P protocol. [bits] */
+    constexpr int64_t NET_HEADER_SIZE{81 * 8};
+    /** What rate of headers worth of RAM attackers are allowed to cause in the victim. [headers/s] */
+    constexpr double LIMIT_HEADERRATE{ATTACK_FRACTION / BLOCK_INTERVAL};
+    /** How many headers can attackers (jointly) send a victim per second. [headers/s] */
+    constexpr double NET_HEADERRATE{ATTACK_BANDWIDTH / NET_HEADER_SIZE};
+    /** What fraction of headers sent by attackers can at most be accepted by a victim. [unitless] */
+    constexpr double LIMIT_FRACTION{LIMIT_HEADERRATE / NET_HEADERRATE};
+
+    // The chain has at least one header.
+    Assert(minchainwork_headers > 0);
+
+    /** Maximum number of headers a valid Bitcoin chain can have over the given timespan (from genesis
+     *  to now). When exploiting the timewarp attack, this can be up to 6 per second since genesis.
+     *  Clamp below such that max_headers > 2 * minchainwork_headers, which the optimizer relies on.
+     *  Any consistent clock satisfies this by a wide margin (the chain demonstrably reached
+     *  minchainwork_headers), but mocked or badly wrong clocks may not. */
+    const int64_t max_headers = std::max<int64_t>(6 * timespan.count(), 2 * minchainwork_headers + 1);
+
+    return ComputeHeadersSyncParamsInner(max_headers, minchainwork_headers,
+                                         LIMIT_FRACTION * minchainwork_headers);
 }

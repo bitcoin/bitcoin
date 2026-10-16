@@ -46,16 +46,9 @@ Release Process
     - On mainnet, the selected value must not be orphaned, so it may be useful to set the height two blocks back from the tip.
     - Testnet should be set with a height some tens of thousands back from the tip, due to reorgs there.
   - `nMinimumChainWork` with the "chainwork" value of RPC `getblockheader` using the same height as that selected for the previous step.
+  - `minchainwork_height` with that same height. It is the number of headers corresponding to `nMinimumChainWork`, and is used to size the headers synchronization DoS-protection parameters (which are computed at node startup).
   - `m_assumeutxo_data` array should be appended to with the values returned by calling `bitcoin-cli -rpcclienttimeout=0 -named dumptxoutset utxo.dat rollback=<height or hash>`
     The same height considerations for `defaultAssumeValid` apply.
-* Consider updating the headers synchronization tuning parameters to account for the chainparams updates.
-  The optimal values change very slowly, so this isn't strictly necessary every release, but doing so doesn't hurt.
-  - Update configuration variables in [`contrib/devtools/headerssync-params.py`](/contrib/devtools/headerssync-params.py):
-    - Set `TIME` to the software's expected supported lifetime -- after this time, its ability to defend against a high bandwidth timewarp attacker will begin to degrade.
-    - Set `MINCHAINWORK_HEADERS` to the height used for the `nMinimumChainWork` calculation above.
-    - Check that the other variables still look reasonable.
-  - Run the script. It works fine in CPython, but PyPy is much faster (seconds instead of minutes): `pypy3 contrib/devtools/headerssync-params.py`.
-  - Paste the output defining the header `commitment_period` and `redownload_buffer_size` into the mainnet section of [`src/kernel/chainparams.cpp`](/src/kernel/chainparams.cpp).
 - Clear the release notes and move them to the wiki (see "Write the release notes" below).
 - Translations on Transifex:
     - Pull translations from Transifex into the master branch.
