@@ -3496,79 +3496,6 @@ static RPCMethod loadtxoutset()
         }};
 }
 
-const std::vector<RPCResult> RPCHelpForChainstate{
-    {RPCResult::Type::NUM, "blocks", "number of blocks in this chainstate"},
-    {RPCResult::Type::STR_HEX, "bestblockhash", "blockhash of the tip"},
-    {RPCResult::Type::STR_HEX, "bits", "nBits: compact representation of the block difficulty target"},
-    {RPCResult::Type::STR_HEX, "target", "The difficulty target"},
-    {RPCResult::Type::NUM, "difficulty", "difficulty of the tip"},
-    {RPCResult::Type::NUM, "verificationprogress", "progress towards the network tip"},
-    {RPCResult::Type::STR_HEX, "snapshot_blockhash", /*optional=*/true, "the base block of the snapshot this chainstate is based on, if any"},
-    {RPCResult::Type::NUM, "coins_db_cache_bytes", "size of the coinsdb cache"},
-    {RPCResult::Type::NUM, "coins_tip_cache_bytes", "size of the coinstip cache"},
-    {RPCResult::Type::BOOL, "validated", "whether the chainstate is fully validated. True if all blocks in the chainstate were validated, false if the chain is based on a snapshot."},
-};
-
-static RPCMethod getchainstates()
-{
-return RPCMethod{
-        "getchainstates",
-        "Return information about chainstates.\n",
-        {},
-        RPCResult{
-            RPCResult::Type::OBJ, "", "", {
-                {RPCResult::Type::NUM, "headers", "the number of headers seen so far"},
-                {RPCResult::Type::ARR, "chainstates", "list of the chainstates ordered by work, with the most-work (active) chainstate last", {{RPCResult::Type::OBJ, "", "", RPCHelpForChainstate},}},
-            }
-        },
-        RPCExamples{
-            HelpExampleCli("getchainstates", "")
-    + HelpExampleRpc("getchainstates", "")
-        },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
-{
-    LOCK(cs_main);
-    UniValue obj(UniValue::VOBJ);
-
-    ChainstateManager& chainman = EnsureAnyChainman(request.context);
-
-    auto make_chain_data = [&](const Chainstate& cs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
-        AssertLockHeld(::cs_main);
-        UniValue data(UniValue::VOBJ);
-        if (!cs.m_chain.Tip()) {
-            return data;
-        }
-        const CChain& chain = cs.m_chain;
-        const CBlockIndex* tip = chain.Tip();
-
-        data.pushKV("blocks", chain.Height());
-        data.pushKV("bestblockhash",         tip->GetBlockHash().GetHex());
-        data.pushKV("bits", strprintf("%08x", tip->nBits));
-        data.pushKV("target", GetTarget(*tip, chainman.GetConsensus().powLimit).GetHex());
-        data.pushKV("difficulty", GetDifficulty(*tip));
-        data.pushKV("verificationprogress", chainman.GuessVerificationProgress(tip));
-        data.pushKV("coins_db_cache_bytes",  cs.m_coinsdb_cache_size_bytes);
-        data.pushKV("coins_tip_cache_bytes", cs.m_coinstip_cache_size_bytes);
-        if (cs.m_from_snapshot_blockhash) {
-            data.pushKV("snapshot_blockhash", cs.m_from_snapshot_blockhash->ToString());
-        }
-        data.pushKV("validated", cs.m_assumeutxo == Assumeutxo::VALIDATED);
-        return data;
-    };
-
-    obj.pushKV("headers", chainman.m_best_header ? chainman.m_best_header->nHeight : -1);
-    UniValue obj_chainstates{UniValue::VARR};
-    if (const Chainstate * cs{chainman.HistoricalChainstate()}) {
-        obj_chainstates.push_back(make_chain_data(*cs));
-    }
-    obj_chainstates.push_back(make_chain_data(chainman.CurrentChainstate()));
-    obj.pushKV("chainstates", std::move(obj_chainstates));
-    return obj;
-}
-    };
-}
-
-
 void RegisterBlockchainRPCCommands(CRPCTable& t)
 {
     static const CRPCCommand commands[]{
@@ -3595,7 +3522,6 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"blockchain", &getblockfilter},
         {"blockchain", &dumptxoutset},
         {"hidden", &loadtxoutset},
-        {"blockchain", &getchainstates},
         {"hidden", &invalidateblock},
         {"hidden", &reconsiderblock},
         {"blockchain", &waitfornewblock},

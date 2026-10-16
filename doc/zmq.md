@@ -132,15 +132,13 @@ mempool and then again in each block that includes it. The body part of the mess
 
 #### rawblock
 
-Notifies when the chain tip is updated. When assumeutxo is in use, this notification will
-not be issued for historical blocks connected to the background validation chainstate. The
-body part of the message is the serialized block.
+Notifies when the chain tip is updated. The body part of the message is the serialized
+block.
 
 #### hashblock
 
-Notifies when the chain tip is updated. When assumeutxo is in use, this notification will
-not be issued for historical blocks connected to the background validation chainstate. The
-body part of the message is the 32-byte block hash in reversed byte order.
+Notifies when the chain tip is updated. The body part of the message is the 32-byte block
+hash in reversed byte order.
 
 #### sequence
 
