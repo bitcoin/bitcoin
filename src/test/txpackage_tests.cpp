@@ -424,8 +424,7 @@ BOOST_AUTO_TEST_CASE(package_submission_tests)
     // Parent and child package where transactions are invalid for reasons other than fee and
     // missing inputs, so the package validation isn't expected to happen.
     {
-        CScriptWitness bad_witness;
-        bad_witness.stack.emplace_back(1);
+        CScriptWitness bad_witness{{std::vector<unsigned char>(1)}};
         CMutableTransaction mtx_parent_invalid{mtx_parent};
         mtx_parent_invalid.vin[0].scriptWitness = bad_witness;
         CTransactionRef tx_parent_invalid = MakeTransactionRef(mtx_parent_invalid);
@@ -649,13 +648,9 @@ BOOST_AUTO_TEST_CASE(package_witness_swap_tests)
     CTransactionRef ptx_parent = MakeTransactionRef(mtx_parent);
 
     // Make two children with the same txid but different witnesses.
-    CScriptWitness witness1;
-    witness1.stack.emplace_back(1);
-    witness1.stack.emplace_back(witnessScript.begin(), witnessScript.end());
+    CScriptWitness witness1{{std::vector<unsigned char>(1), ToByteVector(witnessScript)}};
 
-    CScriptWitness witness2(witness1);
-    witness2.stack.emplace_back(2);
-    witness2.stack.emplace_back(witnessScript.begin(), witnessScript.end());
+    CScriptWitness witness2{{std::vector<unsigned char>(1), ToByteVector(witnessScript), std::vector<unsigned char>(2), ToByteVector(witnessScript)}};
 
     CKey child_key = GenerateRandomKey();
     CScript child_locking_script = GetScriptForDestination(WitnessV0KeyHash(child_key.GetPubKey()));
@@ -759,8 +754,7 @@ BOOST_AUTO_TEST_CASE(package_witness_swap_tests)
     // Give all the parents anyone-can-spend scripts so we don't have to deal with signing the child.
     CScript acs_script = CScript() << OP_TRUE;
     CScript acs_spk = GetScriptForDestination(WitnessV0ScriptHash(acs_script));
-    CScriptWitness acs_witness;
-    acs_witness.stack.emplace_back(acs_script.begin(), acs_script.end());
+    CScriptWitness acs_witness{{ToByteVector(acs_script)}};
 
     // parent1 will already be in the mempool
     auto mtx_parent1 = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[1], /*input_vout=*/0,
@@ -773,12 +767,8 @@ BOOST_AUTO_TEST_CASE(package_witness_swap_tests)
     // parent2 will have a same-txid-different-witness tx already in the mempool
     CScript grandparent2_script = CScript() << OP_DROP << OP_TRUE;
     CScript grandparent2_spk = GetScriptForDestination(WitnessV0ScriptHash(grandparent2_script));
-    CScriptWitness parent2_witness1;
-    parent2_witness1.stack.emplace_back(1);
-    parent2_witness1.stack.emplace_back(grandparent2_script.begin(), grandparent2_script.end());
-    CScriptWitness parent2_witness2;
-    parent2_witness2.stack.emplace_back(2);
-    parent2_witness2.stack.emplace_back(grandparent2_script.begin(), grandparent2_script.end());
+    CScriptWitness parent2_witness1{{std::vector<unsigned char>(1), ToByteVector(grandparent2_script)}};
+    CScriptWitness parent2_witness2{{std::vector<unsigned char>(2), ToByteVector(grandparent2_script)}};
 
     // Create grandparent2 creating an output with multiple spending paths. Submit to mempool.
     auto mtx_grandparent2 = CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[2], /*input_vout=*/0,

@@ -179,7 +179,7 @@ bool PartiallySignedTransaction::AddInput(const PSBTInput& psbtin)
         inputs.push_back(psbtin);
         inputs.back().partial_sigs.clear();
         inputs.back().final_script_sig.clear();
-        inputs.back().final_script_witness.SetNull();
+        inputs.back().final_script_witness = {};
         return true;
     }
 
@@ -293,7 +293,7 @@ void PSBTInput::FillSignatureData(SignatureData& sigdata) const
         sigdata.scriptSig = final_script_sig;
         sigdata.complete = true;
     }
-    if (!final_script_witness.IsNull()) {
+    if (!final_script_witness.empty()) {
         sigdata.scriptWitness = final_script_witness;
         sigdata.complete = true;
     }
@@ -362,7 +362,7 @@ void PSBTInput::FromSignatureData(const SignatureData& sigdata)
         if (!sigdata.scriptSig.empty()) {
             final_script_sig = sigdata.scriptSig;
         }
-        if (!sigdata.scriptWitness.IsNull()) {
+        if (!sigdata.scriptWitness.empty()) {
             final_script_witness = sigdata.scriptWitness;
         }
         return;
@@ -449,7 +449,7 @@ void PSBTInput::Merge(const PSBTInput& input)
     if (redeem_script.empty() && !input.redeem_script.empty()) redeem_script = input.redeem_script;
     if (witness_script.empty() && !input.witness_script.empty()) witness_script = input.witness_script;
     if (final_script_sig.empty() && !input.final_script_sig.empty()) final_script_sig = input.final_script_sig;
-    if (final_script_witness.IsNull() && !input.final_script_witness.IsNull()) final_script_witness = input.final_script_witness;
+    if (final_script_witness.empty() && !input.final_script_witness.empty()) final_script_witness = input.final_script_witness;
     if (m_tap_key_sig.empty() && !input.m_tap_key_sig.empty()) m_tap_key_sig = input.m_tap_key_sig;
     if (m_tap_internal_key.IsNull() && !input.m_tap_internal_key.IsNull()) m_tap_internal_key = input.m_tap_internal_key;
     if (m_tap_merkle_root.IsNull() && !input.m_tap_merkle_root.IsNull()) m_tap_merkle_root = input.m_tap_merkle_root;
@@ -469,7 +469,7 @@ void PSBTInput::Merge(const PSBTInput& input)
 bool PSBTInput::HasSignatures() const
 {
     return !final_script_sig.empty()
-           || !final_script_witness.IsNull()
+           || !final_script_witness.empty()
            || !partial_sigs.empty()
            || !m_tap_key_sig.empty()
            || !m_tap_script_sigs.empty()
@@ -546,7 +546,7 @@ void PSBTOutput::Merge(const PSBTOutput& output)
 
 bool PSBTInputSigned(const PSBTInput& input)
 {
-    return !input.final_script_sig.empty() || !input.final_script_witness.IsNull();
+    return !input.final_script_sig.empty() || !input.final_script_witness.empty();
 }
 
 bool PSBTInputSignedAndVerified(const PartiallySignedTransaction& psbt, unsigned int input_index, const PrecomputedTransactionData* txdata)

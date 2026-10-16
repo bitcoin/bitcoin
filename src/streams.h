@@ -100,6 +100,8 @@ public:
 
     size_t size() const { return m_data.size(); }
     bool empty() const { return m_data.empty(); }
+    //! The data that remains to be read (referring to the underlying data, not a copy of it).
+    std::span<const std::byte> remaining() const { return m_data; }
 
     void read(std::span<std::byte> dst)
     {

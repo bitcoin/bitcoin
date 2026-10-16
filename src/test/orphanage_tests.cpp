@@ -46,7 +46,7 @@ static CTransactionRef MakeTransactionSpending(const std::vector<COutPoint>& out
         }
     }
     // Ensure txid != wtxid
-    tx.vin[0].scriptWitness.stack.push_back({1});
+    tx.vin[0].scriptWitness = CScriptWitness{{{1}}};
     tx.vout.resize(2);
     tx.vout[0].nValue = CENT;
     tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
@@ -59,7 +59,9 @@ static CTransactionRef MakeTransactionSpending(const std::vector<COutPoint>& out
 static CTransactionRef MakeMutation(const CTransactionRef& ptx)
 {
     CMutableTransaction tx(*ptx);
-    tx.vin[0].scriptWitness.stack.push_back({5});
+    auto stack = tx.vin[0].scriptWitness.ToVectors();
+    stack.push_back({5});
+    tx.vin[0].scriptWitness = CScriptWitness{stack};
     auto mutated_tx = MakeTransactionRef(tx);
     assert(ptx->GetHash() == mutated_tx->GetHash());
     return mutated_tx;

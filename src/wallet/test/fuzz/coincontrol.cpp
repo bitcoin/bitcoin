@@ -129,8 +129,8 @@ FUZZ_TARGET(coincontrol, .init = initialize_coincontrol)
                 const CScriptWitness script_wit{ConsumeScriptWitness(fuzzed_data_provider)};
                 input.SetScriptWitness(script_wit);
                 assert(input.HasScripts());
-                assert(input.GetScripts().second->stack == script_wit.stack);
-                assert(coin_control.GetScripts(out_point).second->stack == script_wit.stack);
+                assert(*input.GetScripts().second == script_wit);
+                assert(*coin_control.GetScripts(out_point).second == script_wit);
             },
             [&] {
                 auto& input = coin_control.Select(out_point);

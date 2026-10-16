@@ -298,6 +298,35 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader_rvalue)
     BOOST_CHECK(reader.empty());
 }
 
+BOOST_AUTO_TEST_CASE(streams_span_reader_remaining)
+{
+    const std::vector<unsigned char> data{1, 2, 3, 4, 5, 6};
+    const auto bytes{std::as_bytes(std::span{data})};
+    SpanReader reader{data};
+
+    // Before reading, all of the data remains.
+    BOOST_CHECK(reader.remaining().data() == bytes.data());
+    BOOST_CHECK_EQUAL(reader.remaining().size(), 6U);
+
+    // Reading and ignoring data advance past it.
+    uint16_t a;
+    reader >> a;
+    BOOST_CHECK(reader.remaining().data() == bytes.data() + 2);
+    BOOST_CHECK_EQUAL(reader.remaining().size(), 4U);
+    reader.ignore(3);
+    BOOST_CHECK(reader.remaining().data() == bytes.data() + 5);
+    BOOST_CHECK_EQUAL(reader.remaining().size(), 1U);
+
+    // A failed read leaves it unchanged.
+    BOOST_CHECK_EXCEPTION(reader >> a, std::ios_base::failure, HasReason{"SpanReader::read(): end of data"});
+    BOOST_CHECK(reader.remaining().data() == bytes.data() + 5);
+    BOOST_CHECK_EQUAL(reader.remaining().size(), 1U);
+
+    // Once everything is read, nothing remains.
+    reader.ignore(1);
+    BOOST_CHECK(reader.remaining().empty());
+}
+
 BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
 {
     DataStream data{};
