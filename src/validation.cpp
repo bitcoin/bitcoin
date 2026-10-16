@@ -1854,13 +1854,10 @@ void CoinsViews::InitCache(int32_t prevoutfetch_threads)
 Chainstate::Chainstate(
     CTxMemPool* mempool,
     BlockManager& blockman,
-    ChainstateManager& chainman,
-    std::optional<uint256> from_snapshot_blockhash)
+    ChainstateManager& chainman)
     : m_mempool(mempool),
       m_blockman(blockman),
-      m_chainman(chainman),
-      m_assumeutxo(from_snapshot_blockhash ? Assumeutxo::UNVALIDATED : Assumeutxo::VALIDATED),
-      m_from_snapshot_blockhash(from_snapshot_blockhash) {}
+      m_chainman(chainman) {}
 
 void Chainstate::InitCoinsDB(
     size_t cache_size_bytes,
@@ -2835,12 +2832,6 @@ void Chainstate::UpdateTip(const CBlockIndex* pindexNew)
     AssertLockHeld(::cs_main);
     const auto& coins_tip = this->CoinsTip();
 
-    // The remainder of the function isn't relevant if we are not acting on
-    // the active chainstate, so return if need be.
-    if (this != &m_chainman.ActiveChainstate()) {
-        return;
-    }
-
     // New best block
     if (m_mempool) {
         m_mempool->AddTransactionsUpdated(1);
@@ -3331,7 +3322,7 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
 
             // Notify external listeners about the new tip.
             // Enqueue while holding cs_main to ensure that UpdatedBlockTip is called in the order in which blocks are connected
-            if (this == &m_chainman.ActiveChainstate() && pindexFork != pindexNewTip) {
+            if (pindexFork != pindexNewTip) {
                 // Notify ValidationInterface subscribers
                 if (m_chainman.m_options.signals) {
                     m_chainman.m_options.signals->UpdatedBlockTip(pindexNewTip, pindexFork, still_in_ibd);
@@ -3351,7 +3342,7 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
             }
             } // release MempoolMutex
             // Notify external listeners about the new tip, even if pindexFork == pindexNewTip.
-            if (m_chainman.m_options.signals && this == &m_chainman.ActiveChainstate()) {
+            if (m_chainman.m_options.signals) {
                 m_chainman.m_options.signals->ActiveTipChange(*Assert(pindexNewTip), m_chainman.IsInitialBlockDownload());
             }
         } // release cs_main
@@ -3671,9 +3662,7 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
             }
             pindex->m_chain_tx_count = prev_tx_sum(*pindex);
             pindex->nSequenceId = nBlockSequenceId++;
-            for (const auto& c : m_chainstates) {
-                c->TryAddBlockIndexCandidate(pindex);
-            }
+            ActiveChainstate().TryAddBlockIndexCandidate(pindex);
             std::pair<std::multimap<CBlockIndex*, CBlockIndex*>::iterator, std::multimap<CBlockIndex*, CBlockIndex*>::iterator> range = m_blockman.m_blocks_unlinked.equal_range(pindex);
             while (range.first != range.second) {
                 std::multimap<CBlockIndex*, CBlockIndex*>::iterator it = range.first;
@@ -4245,13 +4234,8 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
         return FatalError(GetNotifications(), state, strprintf(_("System error while saving block to disk: %s"), e.what()));
     }
 
-    // TODO: FlushStateToDisk() handles flushing of both block and chainstate
-    // data, so we should move this to ChainstateManager so that we can be more
-    // intelligent about how we flush.
-    // For now, since FlushStateMode::NONE is used, all that can happen is that
-    // the block files may be pruned, so we can just call this on one
-    // chainstate (particularly if we haven't implemented pruning with
-    // background validation yet).
+    // Since FlushStateMode::NONE is used, all that can happen here is that
+    // the block files may be pruned.
     //
     // Flush errors (e.g. low disk space during pruning) are ignored, so that
     // callers can't mistreat a flush failure as a block validation failure.
@@ -4428,11 +4412,9 @@ bool Chainstate::LoadChainTip()
     m_last_flushed_block = pindex;
     tip = m_chain.Tip();
 
-    // nSequenceId is one of the keys used to sort setBlockIndexCandidates. Ensure all
-    // candidate sets are empty to avoid UB, as nSequenceId is about to be modified.
-    for (const auto& cs : m_chainman.m_chainstates) {
-        assert(cs->setBlockIndexCandidates.empty());
-    }
+    // nSequenceId is one of the keys used to sort setBlockIndexCandidates. Ensure
+    // it is empty to avoid UB, as nSequenceId is about to be modified.
+    assert(setBlockIndexCandidates.empty());
 
     // Make sure our chain tip before shutting down scores better than any other candidate
     // to maintain a consistent best tip over reboots in case of a tie.
@@ -5253,8 +5235,7 @@ std::string Chainstate::ToString()
 {
     AssertLockHeld(::cs_main);
     CBlockIndex* tip = m_chain.Tip();
-    return strprintf("Chainstate [%s] @ height %d (%s)",
-                     m_from_snapshot_blockhash ? "snapshot" : "ibd",
+    return strprintf("Chainstate [ibd] @ height %d (%s)",
                      tip ? tip->nHeight : -1, tip ? tip->GetBlockHash().ToString() : "null");
 }
 
@@ -5298,20 +5279,15 @@ double ChainstateManager::GuessVerificationProgress(const CBlockIndex* pindex) c
 Chainstate& ChainstateManager::InitializeChainstate(CTxMemPool* mempool)
 {
     AssertLockHeld(::cs_main);
-    assert(m_chainstates.empty());
-    m_chainstates.emplace_back(std::make_unique<Chainstate>(mempool, m_blockman, *this));
-    return *m_chainstates.back();
+    assert(!m_chainstate);
+    m_chainstate = std::make_unique<Chainstate>(mempool, m_blockman, *this);
+    return *m_chainstate;
 }
 
 Chainstate& ChainstateManager::ActiveChainstate() const
 {
     LOCK(::cs_main);
-    return *Assert(m_chainstates.front());
-}
-
-void ChainstateManager::ResetChainstates()
-{
-    m_chainstates.clear();
+    return *Assert(m_chainstate);
 }
 
 /**

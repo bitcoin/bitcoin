@@ -513,14 +513,6 @@ constexpr int64_t LargeCoinsCacheThreshold(int64_t total_space) noexcept
                     total_space - MAX_BLOCK_COINSDB_USAGE_BYTES);
 }
 
-//! Chainstate assumeutxo validity.
-enum class Assumeutxo {
-    //! Every block in the chain has been validated.
-    VALIDATED,
-    //! Blocks after an assumeutxo snapshot have been validated but the snapshot itself has not been validated.
-    UNVALIDATED,
-};
-
 /**
  * Chainstate stores and provides an API to update our local knowledge of the
  * current best chain.
@@ -546,41 +538,24 @@ protected:
     Mutex m_chainstate_mutex;
 
     //! Optional mempool that is kept in sync with the chain.
-    //! Only the active chainstate has a mempool.
     CTxMemPool* m_mempool;
 
     //! Manages the UTXO set, which is a reflection of the contents of `m_chain`.
     std::unique_ptr<CoinsViews> m_coins_views;
 
-    //! Cached result of LookupBlockIndex(*m_from_snapshot_blockhash)
-    mutable const CBlockIndex* m_cached_snapshot_base GUARDED_BY(::cs_main){nullptr};
-
-    //! Target block for this chainstate. If this is not set, chainstate will
-    //! target the most-work, valid block. If this is set, ChainstateManager
-    //! considers this a "historical" chainstate since it will only contain old
-    //! blocks up to the target block, not newer blocks.
-    std::optional<uint256> m_target_blockhash GUARDED_BY(::cs_main);
-
-    //! Cached result of LookupBlockIndex(*m_target_blockhash)
-    mutable const CBlockIndex* m_cached_target_block GUARDED_BY(::cs_main){nullptr};
-
     std::optional<const char*> m_last_script_check_reason_logged GUARDED_BY(::cs_main){};
 
 public:
-    //! Reference to a BlockManager instance which itself is shared across all
-    //! Chainstate instances.
+    //! Block storage and metadata independent of the chainstate.
     node::BlockManager& m_blockman;
 
-    //! The chainstate manager that owns this chainstate. The reference is
-    //! necessary so that this instance can check whether it is the active
-    //! chainstate within deeply nested method calls.
+    //! The chainstate manager that owns this chainstate.
     ChainstateManager& m_chainman;
 
     explicit Chainstate(
         CTxMemPool* mempool,
         node::BlockManager& blockman,
-        ChainstateManager& chainman,
-        std::optional<uint256> from_snapshot_blockhash = std::nullopt);
+        ChainstateManager& chainman);
 
     /**
      * Initialize the CoinsViews UTXO set database management data structures. The in-memory
@@ -609,24 +584,12 @@ public:
     //! @see CChain, CBlockIndex.
     CChain m_chain;
 
-    //! Assumeutxo state indicating whether all blocks in the chain were
-    //! validated, or if the chainstate is based on an assumeutxo snapshot and
-    //! the snapshot has not been validated.
-    Assumeutxo m_assumeutxo GUARDED_BY(::cs_main);
-
-    /**
-     * The blockhash which is the base of the snapshot this chainstate was created from.
-     *
-     * std::nullopt if this chainstate was not created from a snapshot.
-     */
-    const std::optional<uint256> m_from_snapshot_blockhash;
-
     /**
      * The set of all CBlockIndex entries that have as much work as our current
      * tip or more, and transaction data needed to be validated (with
      * BLOCK_VALID_TRANSACTIONS for each block and its parents back to the
-     * genesis block or an assumeutxo snapshot block). Entries may be failed,
-     * though, and pruning nodes may be missing the data for the block.
+     * genesis block). Entries may be failed, though, and pruning nodes may be
+     * missing the data for the block.
      */
     std::set<CBlockIndex*, node::CBlockIndexWorkComparator> setBlockIndexCandidates;
 
@@ -829,20 +792,9 @@ protected:
 };
 
 /**
- * Interface for managing multiple \ref Chainstate objects, where each
- * chainstate is associated with chainstate* subdirectory in the data directory
- * and contains a database of UTXOs existing at a different point in history.
- * (See \ref Chainstate class for more information.)
- *
- * Normally there is exactly one Chainstate, which contains the UTXO set of
- * chain tip if syncing is completed, or the UTXO set the most recent validated
- * block if the initial sync is still in progress.
- *
- * However, if an assumeutxo snapshot is loaded before syncing is completed,
- * there will be two chainstates. The original fully validated chainstate will
- * remain stopped. The snapshot chainstate is used as the chain tip for the
- * wallet and RPCs based on the compiled snapshot commitment. Reindexing discards
- * the snapshot and reconstructs the ordinary chainstate from genesis.
+ * Interface for managing the \ref Chainstate object, which is associated with
+ * the chainstate subdirectory in the data directory and contains the UTXO set
+ * for the current best chain.
  */
 class ChainstateManager
 {
@@ -873,8 +825,7 @@ private:
     //! A queue for script verifications that have to be performed by worker threads.
     CCheckQueue<CScriptCheck> m_script_check_queue;
 
-    //! Timers and counters used for benchmarking validation in both background
-    //! and active chainstates.
+    //! Timers and counters used for benchmarking validation.
     SteadyClock::duration GUARDED_BY(::cs_main) time_check{};
     SteadyClock::duration GUARDED_BY(::cs_main) time_forks{};
     SteadyClock::duration GUARDED_BY(::cs_main) time_connect{};
@@ -926,8 +877,7 @@ public:
     const util::SignalInterrupt& m_interrupt;
     //! Validate options before constructing m_blockman, which may modify storage.
     const Options m_options;
-    //! A single BlockManager instance is shared across each constructed
-    //! chainstate to avoid duplicating block metadata.
+    //! Block metadata and storage for the chainstate.
     node::BlockManager m_blockman;
 
     ValidationCache m_validation_cache;
@@ -971,16 +921,15 @@ public:
     /// Ensures a genesis block is in the block tree, possibly writing one to disk.
     [[nodiscard]] bool LoadGenesisBlock();
 
-    //! Instantiate a new chainstate.
+    //! Instantiate the active chainstate.
     //!
     //! @param[in] mempool              The mempool to pass to the chainstate
     //                                  constructor
     Chainstate& InitializeChainstate(CTxMemPool* mempool) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    //! Alternatives to CurrentChainstate() used by older code to query latest
-    //! chainstate information without locking cs_main. Newer code should avoid
-    //! querying ChainstateManager and use Chainstate objects directly, or
-    //! should use CurrentChainstate() instead.
+    //! Accessors used by older code to query the chainstate. ActiveChainstate()
+    //! locks cs_main itself. The others require it to be held. Newer code
+    //! should avoid querying ChainstateManager and use Chainstate objects directly.
     //! @{
     Chainstate& ActiveChainstate() const;
     CChain& ActiveChain() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChainstate().m_chain; }
@@ -1015,10 +964,7 @@ public:
     /** Check whether we are doing an initial block download (synchronizing from disk or network) */
     bool IsInitialBlockDownload() const noexcept;
 
-    /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip).
-    * This is also the case in the assumeutxo context, meaning that the progress reported for
-    * the snapshot chainstate may suggest that all historical blocks have already been verified
-    * even though that may not actually be the case. */
+    /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip). */
     double GuessVerificationProgress(const CBlockIndex* pindex) const EXCLUSIVE_LOCKS_REQUIRED(GetMutex());
 
     /**
@@ -1143,8 +1089,6 @@ public:
      *  information. */
     void ReportHeadersPresync(int64_t height, int64_t timestamp);
 
-    void ResetChainstates() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
     //! Call ActivateBestChain() on the active chainstate.
     util::Result<void> ActivateBestChains() LOCKS_EXCLUDED(::cs_main);
 
@@ -1161,14 +1105,8 @@ public:
 
     ~ChainstateManager();
 
-    //! List of chainstates. Note: in general, it is not safe to delete
-    //! Chainstate objects once they are added to this list because there is no
-    //! mutex that can be locked to prevent Chainstate pointers from being used
-    //! while they are deleted. (cs_main doesn't work because it is too narrow
-    //! and is released in the middle of Chainstate::ActivateBestChain to let
-    //! notifications be processed. m_chainstate_mutex doesn't work because it
-    //! is not locked at other times when the chainstate is in use.)
-    std::vector<std::unique_ptr<Chainstate>> m_chainstates GUARDED_BY(::cs_main);
+    //! Active chainstate.
+    std::unique_ptr<Chainstate> m_chainstate GUARDED_BY(::cs_main);
 };
 
 /** Deployment* info via ChainstateManager */

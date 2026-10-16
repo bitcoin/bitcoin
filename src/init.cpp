@@ -367,10 +367,8 @@ void Shutdown(NodeContext& node)
     // FlushStateToDisk generates a ChainStateFlushed callback, which we should avoid missing
     if (node.chainman) {
         LOCK(cs_main);
-        for (const auto& chainstate : node.chainman->m_chainstates) {
-            if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
-            }
+        if (node.chainman->m_chainstate && node.chainman->m_chainstate->CanFlushToDisk()) {
+            node.chainman->m_chainstate->ForceFlushStateToDisk();
         }
     }
 
@@ -397,11 +395,9 @@ void Shutdown(NodeContext& node)
     // Callbacks queued by this final chainstate flush will not run during shutdown
     if (node.chainman) {
         LOCK(cs_main);
-        for (const auto& chainstate : node.chainman->m_chainstates) {
-            if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
-                chainstate->ResetCoinsViews();
-            }
+        if (node.chainman->m_chainstate && node.chainman->m_chainstate->CanFlushToDisk()) {
+            node.chainman->m_chainstate->ForceFlushStateToDisk();
+            node.chainman->m_chainstate->ResetCoinsViews();
         }
     }
 

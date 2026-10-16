@@ -40,7 +40,7 @@ struct TestBlockManager : public node::BlockManager {
 };
 
 struct TestChainstateManager : public ChainstateManager {
-    /** Disable the next write of all chainstates */
+    /** Disable the next chainstate write */
     void DisableNextWrite();
     /** Reset the ibd cache to its initial state */
     void ResetIbd();
