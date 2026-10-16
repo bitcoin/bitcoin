@@ -20,6 +20,7 @@
 #include <concepts>
 #include <cstdint>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -27,6 +28,7 @@
 #include <random>
 #include <ranges>
 #include <span>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -894,6 +896,11 @@ BOOST_AUTO_TEST_CASE(btck_chainman_tests)
     BOOST_CHECK(chainman_opts.SetWipeDbs(/*wipe_block_tree=*/true, /*wipe_chainstate=*/true));
     BOOST_CHECK(chainman_opts.SetWipeDbs(/*wipe_block_tree=*/false, /*wipe_chainstate=*/true));
     BOOST_CHECK(chainman_opts.SetWipeDbs(/*wipe_block_tree=*/false, /*wipe_chainstate=*/false));
+    const auto snapshot_dir{test_directory.m_directory / "chainstate_snapshot"};
+    fs::create_directory(snapshot_dir);
+    BOOST_REQUIRE(std::ofstream{(snapshot_dir / "base_blockhash").std_path()});
+    BOOST_CHECK_THROW((ChainMan{context, chainman_opts}), std::runtime_error);
+    fs::remove_all(snapshot_dir);
     ChainMan chainman{context, chainman_opts};
 }
 

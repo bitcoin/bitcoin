@@ -12,16 +12,12 @@
 
 class CBlock;
 class CBlockIndex;
-class CChainParams;
 class COutPoint;
 class CScript;
 namespace node {
 struct BlockCreateOptions;
 struct NodeContext;
 } // namespace node
-
-/** Create a blockchain, starting from genesis */
-std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const CChainParams& params);
 
 /**
  * Build a chain of `length` coinbase-only blocks on top of `pindex` (which need
