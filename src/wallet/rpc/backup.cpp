@@ -153,7 +153,7 @@ static std::optional<int64_t> GetImportTimestamp(const UniValue& data)
         }
         throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Expected number or \"now\" timestamp value for key. got type %s", uvTypeName(timestamp.type())));
     }
-    throw JSONRPCError(RPC_TYPE_ERROR, "Missing required timestamp field for key");
+    throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Missing required timestamp field for import request: %s", data.write()));
 }
 
 static ImportDescriptorRequest ProcessUniValueDescriptor(const UniValue& data, std::optional<int64_t> timestamp)
