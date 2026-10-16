@@ -308,6 +308,7 @@ if(WIN32)
   target_compile_definitions(core_interface INTERFACE
     _WIN32_WINNT=0x0A00
     _WIN32_IE=0x0A00
+    NTDDI_VERSION=0x0A000003 # Windows 10 1703
     WIN32_LEAN_AND_MEAN
     NOMINMAX
   )
