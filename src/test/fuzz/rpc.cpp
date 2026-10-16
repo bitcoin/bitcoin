@@ -78,7 +78,6 @@ const std::vector<std::string> RPC_COMMANDS_NOT_SAFE_FOR_FUZZING{
     "generatetodescriptor", // avoid prohibitively slow execution (when `nblocks` is large)
     "gettxoutproof",        // avoid prohibitively slow execution
     "importmempool",        // avoid reading from disk
-    "loadtxoutset",         // avoid reading from disk
     "loadwallet",           // avoid reading from disk
     "savemempool",          // disabled as a precautionary measure: may take a file path argument in the future
     "setban",               // avoid DNS lookups
@@ -160,6 +159,7 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "invalidateblock",
     "joinpsbts",
     "listbanned",
+    "loadtxoutset",
     "logging",
     "mockscheduler",
     "ping",
