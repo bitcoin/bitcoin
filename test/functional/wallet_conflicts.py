@@ -44,7 +44,6 @@ class TxConflicts(BitcoinTestFramework):
         txid_conflict_from_1 = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("10"))
         txid_conflict_from_2 = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("10"))
         self.generate(self.nodes[0], 1)
-        self.sync_blocks()
 
         self.log.info("Disconnect nodes to broadcast conflicts on their respective chains")
         self.disconnect_nodes(0, 1)
@@ -130,7 +129,6 @@ class TxConflicts(BitcoinTestFramework):
         # Rebroadcast former conflicted tx and check it confirms smoothly
         self.nodes[2].sendrawtransaction(conflicted["hex"])
         self.generate(self.nodes[2], 1)
-        self.sync_blocks()
         former_conflicted = self.nodes[0].gettransaction(txid_AB_parent)
         assert_equal(former_conflicted["confirmations"], 1)
         assert_equal(former_conflicted["blockheight"], 217)
