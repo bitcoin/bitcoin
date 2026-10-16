@@ -40,6 +40,7 @@ export MAKEJOBS=${MAKEJOBS:--j$(if command -v nproc > /dev/null 2>&1; then nproc
 
 export RUN_UNIT_TESTS=${RUN_UNIT_TESTS:-true}
 export RUN_FUNCTIONAL_TESTS=${RUN_FUNCTIONAL_TESTS:-true}
+export RUN_FUNCTIONAL_TESTS_WITH_CTEST=${RUN_FUNCTIONAL_TESTS_WITH_CTEST:-false}
 export RUN_TIDY=${RUN_TIDY:-false}
 # By how much to scale the test_runner timeouts (option --timeout-factor).
 # This is needed because some ci machines have slow CPU or disk, so sanitizers
