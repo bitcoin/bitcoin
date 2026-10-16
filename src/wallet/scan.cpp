@@ -199,11 +199,29 @@ bool ChainScanner::ScanBlock(const uint256& block_hash, int block_height, bool s
         // cs_wallet is a RecursiveMutex; ScanBlock may be called
         // with cs_wallet already held as in AttachChain or without it.
         LOCK(m_wallet.cs_wallet);
-        for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
-            m_wallet.SyncTransaction(
-                block.vtx[posInBlock], TxStateConfirmed{block_hash, block_height,
-                static_cast<int>(posInBlock)},
-                /*rescanning_old_block=*/true);
+        // Process transactions in vtx order, retrying any that don't match
+        // yet. A tx can become wallet-relevant only after an earlier one in
+        // the same block is processed — either because it expands the
+        // look-ahead pool (TopUp from MarkUnusedAddresses) covering a key
+        // this tx pays, or because it makes a previously-unknown parent tx
+        // known so this tx's spend of it is recognized. Keep retrying the
+        // still-unmatched positions until a full pass matches nothing new;
+        // the unmatched set never grows, so this terminates.
+        std::vector<size_t> pending(block.vtx.size());
+        for (size_t i = 0; i < pending.size(); ++i) pending[i] = i;
+        while (!pending.empty()) {
+            if (m_abort || m_wallet.chain().shutdownRequested()) return false;
+            std::vector<size_t> unmatched;
+            for (size_t posInBlock : pending) {
+                if (!m_wallet.SyncTransaction(
+                        block.vtx[posInBlock], TxStateConfirmed{block_hash, block_height,
+                        static_cast<int>(posInBlock)},
+                        /*rescanning_old_block=*/true)) {
+                    unmatched.push_back(posInBlock);
+                }
+            }
+            if (unmatched.size() == pending.size()) break; // nothing new matched
+            pending = std::move(unmatched);
         }
 
         if (!loc.IsNull()) {
@@ -285,6 +303,9 @@ ScanResult ChainScanner::Scan(const uint256& start_block, int start_height, std:
             // the most recent successfully scanned block
             result.last_scanned_block = block_hash;
             result.last_scanned_height = block_height;
+        } else if (m_abort || chain.shutdownRequested()) {
+            // Cancellation left this block only partially scanned, without a read failure.
+            break;
         } else {
             // could not scan block, keep scanning but record this block as the most recent failure
             result.last_failed_block = block_hash;
