@@ -38,8 +38,6 @@ class CCoinsViewDB final : public CCoinsView
 protected:
     DBParams m_db_params;
     CoinsViewOptions m_options;
-    //! Prevents CompactFull() from using m_db while ResizeCache() replaces it.
-    Mutex m_db_mutex;
     std::unique_ptr<CDBWrapper> m_db;
     std::shared_future<void> m_compaction;
 public:
@@ -59,11 +57,8 @@ public:
     bool NeedsUpgrade();
     size_t EstimateSize() const override;
 
-    //! Dynamically alter the underlying leveldb cache size.
-    void ResizeCache(size_t new_cache_size) EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_db_mutex);
-
     //! Perform a full compaction of the underlying LevelDB on a one-shot background thread.
-    std::shared_future<void> CompactFullAsync() EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_db_mutex);
+    std::shared_future<void> CompactFullAsync() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     //! Return an underlying LevelDB property value, if available.
     std::optional<std::string> GetDBProperty(const std::string& property);

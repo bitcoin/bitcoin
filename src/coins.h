@@ -434,9 +434,8 @@ class CCoinsViewCache : public CCoinsViewBacked
 private:
     const bool m_deterministic;
 
-    //! Force a reallocation of the cache map. This is required when downsizing
-    //! the cache because the map's allocator may be hanging onto a lot of
-    //! memory despite having called .clear().
+    //! Force a reallocation of the cache map, because the map's allocator may be
+    //! hanging onto a lot of memory despite having called .clear().
     //!
     //! See: https://stackoverflow.com/questions/42114044/how-to-release-unordered-map-memory
     void ReallocateCache();
