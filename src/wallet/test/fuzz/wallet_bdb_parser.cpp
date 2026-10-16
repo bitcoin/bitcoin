@@ -71,12 +71,18 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
             error.original == "Bad page size" ||
             error.original == "Meta page number mismatch" ||
             error.original == "Data record position not in page" ||
+            error.original == "Data records exceed page size" ||
             error.original == "Internal record position not in page" ||
+            error.original == "Internal records exceed page size" ||
             error.original == "LSNs are not reset, this database is not completely flushed. Please reopen then close the database with a version that has BDB support" ||
             error.original == "Records page has odd number of records" ||
             error.original == "Bad overflow record page type" ||
+            error.original == "Overflow record has an impossible length" ||
+            error.original == "Overflow record data is larger than stated size" ||
             error.original == "BTree page has an unexpected level" ||
+            error.original == "BTree page referenced more than once" ||
             error.original == "BTree Leaf page is not at level 1" ||
+            error.original == "Overflow page referenced more than once" ||
             error.original == "Subdatabase last page is greater than database last page" ||
             error.original == "Page number is greater than database last page" ||
             error.original == "Last page number could not fit in file" ||
