@@ -3664,18 +3664,7 @@ void Chainstate::TryAddBlockIndexCandidate(CBlockIndex* pindex)
         return;
     }
 
-    const CBlockIndex* target_block{TargetBlock()};
-    if (!target_block) {
-        // If no specific target block, add all entries that have more
-        // work than the tip.
-        setBlockIndexCandidates.insert(pindex);
-    } else {
-        // If there is a target block, only consider connecting blocks
-        // towards the target block.
-        if (target_block->GetAncestor(pindex->nHeight) == pindex) {
-            setBlockIndexCandidates.insert(pindex);
-        }
-    }
+    setBlockIndexCandidates.insert(pindex);
 }
 
 /** Mark a block as having its data received and checked (up to BLOCK_VALID_TRANSACTIONS). */
@@ -3684,13 +3673,10 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
     AssertLockHeld(cs_main);
     pindexNew->nTx = block.vtx.size();
     // Typically m_chain_tx_count will be 0 at this point, but it can be nonzero if this
-    // is a pruned block which is being downloaded again, or if this is an
-    // assumeutxo snapshot block which has a hardcoded m_chain_tx_count value from the
-    // snapshot metadata. If the pindex is not the snapshot block and the
-    // m_chain_tx_count value is not zero, assert that value is actually correct.
+    // is a pruned block which is being downloaded again. Assert that nonzero
+    // values are actually correct.
     auto prev_tx_sum = [](CBlockIndex& block) { return block.nTx + (block.pprev ? block.pprev->m_chain_tx_count : 0); };
-    if (!Assume(pindexNew->m_chain_tx_count == 0 || pindexNew->m_chain_tx_count == prev_tx_sum(*pindexNew) ||
-                std::ranges::any_of(m_chainstates, [&](const auto& cs) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return cs->SnapshotBase() == pindexNew; }))) {
+    if (!Assume(pindexNew->m_chain_tx_count == 0 || pindexNew->m_chain_tx_count == prev_tx_sum(*pindexNew))) {
         LogWarning("Internal bug detected: block %d has unexpected m_chain_tx_count %i that should be %i (%s %s). Please report this issue here: %s\n",
             pindexNew->nHeight, pindexNew->m_chain_tx_count, prev_tx_sum(*pindexNew), CLIENT_NAME, FormatFullVersion(), CLIENT_BUGREPORT);
         pindexNew->m_chain_tx_count = 0;
@@ -3716,8 +3702,7 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
             queue.pop_front();
             // Before setting m_chain_tx_count, assert that it is 0 or already set to
             // the correct value. This assert will fail after receiving the
-            // assumeutxo snapshot block if assumeutxo snapshot metadata has an
-            // incorrect hardcoded AssumeutxoData::m_chain_tx_count value.
+            // block if the existing value is incorrect.
             if (!Assume(pindex->m_chain_tx_count == 0 || pindex->m_chain_tx_count == prev_tx_sum(*pindex))) {
                 LogWarning("Internal bug detected: block %d has unexpected m_chain_tx_count %i that should be %i (%s %s). Please report this issue here: %s\n",
                    pindex->nHeight, pindex->m_chain_tx_count, prev_tx_sum(*pindex), CLIENT_NAME, FormatFullVersion(), CLIENT_BUGREPORT);
@@ -4554,8 +4539,6 @@ VerifyDBResult CVerifyDB::VerifyDB(
     bool skipped_l3_checks{false};
     LogInfo("Verification progress: 0%%");
 
-    const bool is_snapshot_cs{chainstate.m_from_snapshot_blockhash};
-
     for (pindex = chainstate.m_chain.Tip(); pindex && pindex->pprev; pindex = pindex->pprev) {
         const int percentageDone = std::max(1, std::min(99, (int)(((double)(chainstate.m_chain.Height() - pindex->nHeight)) / (double)nCheckDepth * (nCheckLevel >= 4 ? 50 : 100))));
         if (reportDone < percentageDone / 10) {
@@ -4567,10 +4550,9 @@ VerifyDBResult CVerifyDB::VerifyDB(
         if (pindex->nHeight <= chainstate.m_chain.Height() - nCheckDepth) {
             break;
         }
-        if ((chainstate.m_blockman.IsPruneMode() || is_snapshot_cs) && !(pindex->nStatus & BLOCK_HAVE_DATA)) {
-            // If pruning or running under an assumeutxo snapshot, only go
-            // back as far as we have data.
-            LogInfo("Block verification stopping at height %d (no data). This could be due to pruning or use of an assumeutxo snapshot.", pindex->nHeight);
+        if (chainstate.m_blockman.IsPruneMode() && !(pindex->nStatus & BLOCK_HAVE_DATA)) {
+            // If pruning, only go back as far as we have data.
+            LogInfo("Block verification stopping at height %d (no data). This could be due to pruning.", pindex->nHeight);
             skipped_no_block_data = true;
             break;
         }
@@ -4801,12 +4783,8 @@ void Chainstate::PopulateBlockIndexCandidates()
     AssertLockHeld(::cs_main);
 
     for (CBlockIndex* pindex : m_blockman.GetAllBlockIndices()) {
-        // With assumeutxo, the snapshot block is a candidate for the tip, but it
-        // may not have BLOCK_VALID_TRANSACTIONS (e.g. if we haven't yet downloaded
-        // the block), so we special-case it here.
-        if (pindex == SnapshotBase() ||
-                (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) &&
-                 (pindex->HaveNumChainTxs() || pindex->pprev == nullptr))) {
+        if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) &&
+                (pindex->HaveNumChainTxs() || pindex->pprev == nullptr)) {
             TryAddBlockIndexCandidate(pindex);
         }
     }
@@ -5060,6 +5038,8 @@ void ChainstateManager::CheckBlockIndex() const
         assert(m_blockman.m_block_index.size() <= 1);
         return;
     }
+    const Chainstate& chainstate{ActiveChainstate()};
+    const CBlockIndex* chain_tip{chainstate.m_chain.Tip()};
 
     // Build forward-pointing data structure for the entire block tree.
     // For performance reasons, indexes of the best header chain are stored in a vector (within CChain).
@@ -5090,28 +5070,12 @@ void ChainstateManager::CheckBlockIndex() const
     size_t nNodes = 0;
     int nHeight = 0;
     const CBlockIndex* pindexFirstInvalid = nullptr;              // Oldest ancestor of pindex which is invalid.
-    const CBlockIndex* pindexFirstMissing = nullptr;              // Oldest ancestor of pindex which does not have BLOCK_HAVE_DATA, since assumeutxo snapshot if used.
-    const CBlockIndex* pindexFirstNeverProcessed = nullptr;       // Oldest ancestor of pindex for which nTx == 0, since assumeutxo snapshot if used.
+    const CBlockIndex* pindexFirstMissing = nullptr;              // Oldest ancestor of pindex which does not have BLOCK_HAVE_DATA.
+    const CBlockIndex* pindexFirstNeverProcessed = nullptr;       // Oldest ancestor of pindex for which nTx == 0.
     const CBlockIndex* pindexFirstNotTreeValid = nullptr;         // Oldest ancestor of pindex which does not have BLOCK_VALID_TREE (regardless of being valid or not).
-    const CBlockIndex* pindexFirstNotTransactionsValid = nullptr; // Oldest ancestor of pindex which does not have BLOCK_VALID_TRANSACTIONS (regardless of being valid or not), since assumeutxo snapshot if used.
-    const CBlockIndex* pindexFirstNotChainValid = nullptr;        // Oldest ancestor of pindex which does not have BLOCK_VALID_CHAIN (regardless of being valid or not), since assumeutxo snapshot if used.
-    const CBlockIndex* pindexFirstNotScriptsValid = nullptr;      // Oldest ancestor of pindex which does not have BLOCK_VALID_SCRIPTS (regardless of being valid or not), since assumeutxo snapshot if used.
-
-    // After checking an assumeutxo snapshot block, reset pindexFirst pointers
-    // to earlier blocks that have not been downloaded or validated yet, so
-    // checks for later blocks can assume the earlier blocks were validated and
-    // be stricter, testing for more requirements.
-    const CBlockIndex* snap_base{CurrentChainstate().SnapshotBase()};
-    const CBlockIndex *snap_first_missing{}, *snap_first_notx{}, *snap_first_notv{}, *snap_first_nocv{}, *snap_first_nosv{};
-    auto snap_update_firsts = [&] {
-        if (pindex == snap_base) {
-            std::swap(snap_first_missing, pindexFirstMissing);
-            std::swap(snap_first_notx, pindexFirstNeverProcessed);
-            std::swap(snap_first_notv, pindexFirstNotTransactionsValid);
-            std::swap(snap_first_nocv, pindexFirstNotChainValid);
-            std::swap(snap_first_nosv, pindexFirstNotScriptsValid);
-        }
-    };
+    const CBlockIndex* pindexFirstNotTransactionsValid = nullptr; // Oldest ancestor of pindex which does not have BLOCK_VALID_TRANSACTIONS (regardless of being valid or not).
+    const CBlockIndex* pindexFirstNotChainValid = nullptr;        // Oldest ancestor of pindex which does not have BLOCK_VALID_CHAIN (regardless of being valid or not).
+    const CBlockIndex* pindexFirstNotScriptsValid = nullptr;      // Oldest ancestor of pindex which does not have BLOCK_VALID_SCRIPTS (regardless of being valid or not).
 
     while (pindex != nullptr) {
         nNodes++;
@@ -5143,11 +5107,7 @@ void ChainstateManager::CheckBlockIndex() const
         if (pindex->pprev == nullptr) {
             // Genesis block checks.
             assert(pindex->GetBlockHash() == GetConsensus().hashGenesisBlock); // Genesis block's hash must match.
-            for (const auto& c : m_chainstates) {
-                if (c->m_chain.Genesis() != nullptr) {
-                    assert(pindex == c->m_chain.Genesis()); // The chain's genesis block must be this block.
-                }
-            }
+            assert(pindex == chainstate.m_chain.Genesis()); // The chain's genesis block must be this block.
         }
         // nSequenceId can't be set higher than SEQ_ID_INIT_FROM_DISK{1} for blocks that aren't linked
         // (negative is used for preciousblock, SEQ_ID_BEST_CHAIN_FROM_DISK{0} for active chain when loaded from disk)
@@ -5163,17 +5123,12 @@ void ChainstateManager::CheckBlockIndex() const
             if (pindex->nStatus & BLOCK_HAVE_DATA) assert(pindex->nTx > 0);
         }
         if (pindex->nStatus & BLOCK_HAVE_UNDO) assert(pindex->nStatus & BLOCK_HAVE_DATA);
-        if (snap_base && snap_base->GetAncestor(pindex->nHeight) == pindex) {
-            // Assumed-valid blocks should connect to the main chain.
-            assert((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TREE);
-        }
         // There should only be an nTx value if we have
         // actually seen a block's transactions.
         assert(((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TRANSACTIONS) == (pindex->nTx > 0)); // This is pruning-independent.
         // All parents having had data (at some point) is equivalent to all parents being VALID_TRANSACTIONS, which is equivalent to HaveNumChainTxs().
-        // HaveNumChainTxs will also be set in the assumeutxo snapshot block from snapshot metadata.
-        assert((pindexFirstNeverProcessed == nullptr || pindex == snap_base) == pindex->HaveNumChainTxs());
-        assert((pindexFirstNotTransactionsValid == nullptr || pindex == snap_base) == pindex->HaveNumChainTxs());
+        assert((pindexFirstNeverProcessed == nullptr) == pindex->HaveNumChainTxs());
+        assert((pindexFirstNotTransactionsValid == nullptr) == pindex->HaveNumChainTxs());
         assert(pindex->nHeight == nHeight); // nHeight must be consistent.
         assert(pindex->pprev == nullptr || pindex->nChainWork >= pindex->pprev->nChainWork); // For every block except the genesis block, the chainwork must be larger than the parent's.
         assert(nHeight < 2 || (pindex->pskip && (pindex->pskip->nHeight < nHeight))); // The pskip pointer must point back for all but the first 2 blocks.
@@ -5195,69 +5150,49 @@ void ChainstateManager::CheckBlockIndex() const
             // If previous m_chain_tx_count is set and number of transactions in block is known, sum must be set.
             assert(pindex->m_chain_tx_count == pindex->nTx + pindex->pprev->m_chain_tx_count);
         } else {
-            // Otherwise m_chain_tx_count should only be set if this is a snapshot
-            // block, and must be set if it is.
-            assert((pindex->m_chain_tx_count != 0) == (pindex == snap_base));
+            assert(pindex->m_chain_tx_count == 0);
         }
         // There should be no block with more work than m_best_header, unless it's known to be invalid
         assert((pindex->nStatus & BLOCK_FAILED_VALID) || pindex->nChainWork <= m_best_header->nChainWork);
 
-        // Chainstate-specific checks on setBlockIndexCandidates
-        for (const auto& c : m_chainstates) {
-            if (c->m_chain.Tip() == nullptr) continue;
-            // Two main factors determine whether pindex is a candidate in
-            // setBlockIndexCandidates:
-            //
-            // - If pindex has less work than the chain tip, it should not be a
-            //   candidate, and this will be asserted below. Otherwise it is a
-            //   potential candidate.
-            //
-            // - If pindex or one of its parent blocks back to the genesis block
-            //   or an assumeutxo snapshot never downloaded transactions
-            //   (pindexFirstNeverProcessed is non-null), it should not be a
-            //   candidate, and this will be asserted below. The only exception
-            //   is if pindex itself is an assumeutxo snapshot block. Then it is
-            //   also a potential candidate.
-            if (!CBlockIndexWorkComparator()(pindex, c->m_chain.Tip()) && (pindexFirstNeverProcessed == nullptr || pindex == snap_base)) {
-                // If pindex was detected as invalid (pindexFirstInvalid is
-                // non-null), it is not required to be in
-                // setBlockIndexCandidates.
-                if (pindexFirstInvalid == nullptr) {
-                    // If pindex and all its parents back to the genesis block
-                    // or an assumeutxo snapshot block downloaded transactions,
-                    // and the transactions were not pruned (pindexFirstMissing
-                    // is null), it is a potential candidate. The check
-                    // excludes pruned blocks, because if any blocks were
-                    // pruned between pindex and the current chain tip, pindex will
-                    // only temporarily be added to setBlockIndexCandidates,
-                    // before being moved to m_blocks_unlinked. This check
-                    // could be improved to verify that if all blocks between
-                    // the chain tip and pindex have data, pindex must be a
-                    // candidate.
-                    //
-                    // If pindex is the chain tip, it also is a potential
-                    // candidate.
-                    //
-                    // If the chainstate was loaded from a snapshot and pindex
-                    // is the base of the snapshot, pindex is also a potential
-                    // candidate.
-                    if (pindexFirstMissing == nullptr || pindex == c->m_chain.Tip() || pindex == c->SnapshotBase()) {
-                        // If this chainstate is not a historical chainstate
-                        // targeting a specific block, pindex must be in
-                        // setBlockIndexCandidates. Otherwise, pindex only
-                        // needs to be added if it is an ancestor of the target
-                        // block.
-                        if (!c->TargetBlock() || c->TargetBlock()->GetAncestor(pindex->nHeight) == pindex) {
-                            assert(c->setBlockIndexCandidates.contains(pindex));
-                        }
-                    }
-                    // If some parent is missing, then it could be that this block was in
-                    // setBlockIndexCandidates but had to be removed because of the missing data.
-                    // In this case it must be in m_blocks_unlinked -- see test below.
+        // Two main factors determine whether pindex is a candidate in
+        // setBlockIndexCandidates:
+        //
+        // - If pindex has less work than the chain tip, it should not be a
+        //   candidate, and this will be asserted below. Otherwise it is a
+        //   potential candidate.
+        //
+        // - If pindex or one of its parent blocks back to the genesis block
+        //   never downloaded transactions (pindexFirstNeverProcessed is
+        //   non-null), it should not be a candidate, and this will be
+        //   asserted below.
+        if (!CBlockIndexWorkComparator()(pindex, chain_tip) && pindexFirstNeverProcessed == nullptr) {
+            // If pindex was detected as invalid (pindexFirstInvalid is
+            // non-null), it is not required to be in
+            // setBlockIndexCandidates.
+            if (pindexFirstInvalid == nullptr) {
+                // If pindex and all its parents back to the genesis block
+                // downloaded transactions, and the transactions were not
+                // pruned (pindexFirstMissing is null), it is a potential
+                // candidate. The check excludes pruned blocks, because if any blocks were
+                // pruned between pindex and the current chain tip, pindex will
+                // only temporarily be added to setBlockIndexCandidates,
+                // before being moved to m_blocks_unlinked. This check
+                // could be improved to verify that if all blocks between
+                // the chain tip and pindex have data, pindex must be a
+                // candidate.
+                //
+                // If pindex is the chain tip, it also is a potential
+                // candidate.
+                if (pindexFirstMissing == nullptr || pindex == chain_tip) {
+                    assert(chainstate.setBlockIndexCandidates.contains(pindex));
                 }
-            } else { // If this block sorts worse than the current tip or some ancestor's block has never been seen, it cannot be in setBlockIndexCandidates.
-                assert(!c->setBlockIndexCandidates.contains(pindex));
+                // If some parent is missing, then it could be that this block was in
+                // setBlockIndexCandidates but had to be removed because of the missing data.
+                // In this case it must be in m_blocks_unlinked -- see test below.
             }
+        } else { // If this block sorts worse than the current tip or some ancestor's block has never been seen, it cannot be in setBlockIndexCandidates.
+            assert(!chainstate.setBlockIndexCandidates.contains(pindex));
         }
         // Check whether this block is in m_blocks_unlinked.
         auto rangeUnlinked{m_blockman.m_blocks_unlinked.equal_range(pindex->pprev)};
@@ -5284,15 +5219,11 @@ void ChainstateManager::CheckBlockIndex() const
             //  - we tried switching to that descendant but were missing
             //    data for some intermediate block between m_chain and the
             //    tip.
-            // So if this block is itself better than any m_chain.Tip() and it wasn't in
+            // So if this block is itself better than the chain tip and it wasn't in
             // setBlockIndexCandidates, then it must be in m_blocks_unlinked.
-            for (const auto& c : m_chainstates) {
-                if (!CBlockIndexWorkComparator()(pindex, c->m_chain.Tip()) && !c->setBlockIndexCandidates.contains(pindex)) {
-                    if (pindexFirstInvalid == nullptr) {
-                        if (!c->TargetBlock() || c->TargetBlock()->GetAncestor(pindex->nHeight) == pindex) {
-                            assert(foundInUnlinked);
-                        }
-                    }
+            if (!CBlockIndexWorkComparator()(pindex, chain_tip) && !chainstate.setBlockIndexCandidates.contains(pindex)) {
+                if (pindexFirstInvalid == nullptr) {
+                    assert(foundInUnlinked);
                 }
             }
         }
@@ -5301,7 +5232,6 @@ void ChainstateManager::CheckBlockIndex() const
 
 
         // Try descending into the first subnode. Always process forks first and the best header chain after.
-        snap_update_firsts();
         auto range{forward.equal_range(pindex)};
         if (range.first != range.second) {
             // A subnode not part of the best header chain was found.
@@ -5319,7 +5249,6 @@ void ChainstateManager::CheckBlockIndex() const
         // Move upwards until we reach a node of which we have not yet visited the last child.
         while (pindex) {
             // We are going to either move to a parent or a sibling of pindex.
-            snap_update_firsts();
             // If pindex was the first with a certain property, unset the corresponding variable.
             if (pindex == pindexFirstInvalid) pindexFirstInvalid = nullptr;
             if (pindex == pindexFirstMissing) pindexFirstMissing = nullptr;
