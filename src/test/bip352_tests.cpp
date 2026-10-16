@@ -312,6 +312,104 @@ BOOST_AUTO_TEST_CASE(bip352_p2pkh_pubkey_extraction_with_checksig_in_scriptsig)
     BOOST_CHECK(std::get<CPubKey>(*extracted_pubkey) == pubkey);
 }
 
+BOOST_AUTO_TEST_CASE(bip352_p2sh_pubkey_extraction_invariants)
+{
+    const CKey key = ParseHexToCKey("0000000000000000000000000000000000000000000000000000000000000001");
+    const CPubKey pubkey = key.GetPubKey();
+    const CPubKey other_pubkey = ParseHexToCKey("0000000000000000000000000000000000000000000000000000000000000002").GetPubKey();
+
+    // 1. Construct a P2SH scriptPubKey for a multisig script
+    const CScript multisig_script = CScript() << OP_2 << ToByteVector(pubkey) << ToByteVector(pubkey) << OP_2 << OP_CHECKMULTISIG;
+    const CScript p2sh_spk = GetScriptForDestination(ScriptHash(multisig_script));
+
+    // 2. Construct a scriptSig that pushes a valid P2WPKH redeem script (hash does NOT match p2sh_spk)
+    const CScript p2wpkh_redeem = GetScriptForDestination(WitnessV0KeyHash(pubkey));
+    CMutableTransaction tx;
+    tx.vin.emplace_back(COutPoint{Txid::FromHex("0000000000000000000000000000000000000000000000000000000000000001").value(), 0});
+    tx.vin[0].scriptSig = CScript() << ToByteVector(p2wpkh_redeem);
+    tx.vin[0].scriptWitness.stack.emplace_back(std::vector<unsigned char>{0x30, 0x06, 0x02, 0x01, 0x01, 0x02, 0x01, 0x01, 0x01});
+    tx.vin[0].scriptWitness.stack.emplace_back(pubkey.begin(), pubkey.end());
+
+    // 3. Extraction MUST return std::nullopt for mismatched redeem script
+    BOOST_CHECK(!GetPubKeyFromInput(tx.vin[0], p2sh_spk).has_value());
+
+    // 4. Extraction with matching P2SH-P2WPKH scriptPubKey MUST succeed
+    const CScript valid_p2sh_spk = GetScriptForDestination(ScriptHash(p2wpkh_redeem));
+    const auto extracted_pubkey = GetPubKeyFromInput(tx.vin[0], valid_p2sh_spk);
+    BOOST_REQUIRE(extracted_pubkey.has_value());
+    BOOST_CHECK(std::get<CPubKey>(*extracted_pubkey) == pubkey);
+
+    // 5. Multiple pushes in scriptSig (BIP-16 single-push constraint) MUST return std::nullopt
+    tx.vin[0].scriptSig = CScript() << std::vector<unsigned char>{0x01} << ToByteVector(p2wpkh_redeem);
+    BOOST_CHECK(!GetPubKeyFromInput(tx.vin[0], valid_p2sh_spk).has_value());
+    tx.vin[0].scriptSig = CScript() << ToByteVector(p2wpkh_redeem);
+
+    // Non-push opcodes in scriptSig (BIP-16 push-only constraint) MUST return std::nullopt
+    tx.vin[0].scriptSig = CScript() << OP_1 << OP_DROP << ToByteVector(p2wpkh_redeem);
+    BOOST_CHECK(!GetPubKeyFromInput(tx.vin[0], valid_p2sh_spk).has_value());
+    tx.vin[0].scriptSig = CScript() << ToByteVector(p2wpkh_redeem);
+
+    // 6. Witness stack with mismatched pubkey MUST return std::nullopt
+    tx.vin[0].scriptWitness.stack[1] = ToByteVector(other_pubkey);
+    BOOST_CHECK(!GetPubKeyFromInput(tx.vin[0], valid_p2sh_spk).has_value());
+
+    // Uncompressed public key in witness stack MUST return std::nullopt
+    CKey uncompressed_key;
+    uncompressed_key.MakeNewKey(false);
+    const CPubKey uncompressed_pubkey = uncompressed_key.GetPubKey();
+    BOOST_CHECK(!uncompressed_pubkey.IsCompressed());
+    tx.vin[0].scriptWitness.stack[1] = ToByteVector(uncompressed_pubkey);
+    BOOST_CHECK(!GetPubKeyFromInput(tx.vin[0], valid_p2sh_spk).has_value());
+    tx.vin[0].scriptWitness.stack[1] = ToByteVector(pubkey);
+
+    // 7. Witness stack size != 2 MUST return std::nullopt
+    tx.vin[0].scriptWitness.stack = {std::vector<unsigned char>{0x01}, std::vector<unsigned char>{0x02}, ToByteVector(pubkey)};
+    BOOST_CHECK(!GetPubKeyFromInput(tx.vin[0], valid_p2sh_spk).has_value());
+    tx.vin[0].scriptWitness.stack = {ToByteVector(pubkey)};
+    BOOST_CHECK(!GetPubKeyFromInput(tx.vin[0], valid_p2sh_spk).has_value());
+    tx.vin[0].scriptWitness.stack.clear();
+    BOOST_CHECK(!GetPubKeyFromInput(tx.vin[0], valid_p2sh_spk).has_value());
+}
+
+BOOST_AUTO_TEST_CASE(bip352_witness_v0_keyhash_pubkey_extraction_invariants)
+{
+    const CKey key = ParseHexToCKey("0000000000000000000000000000000000000000000000000000000000000001");
+    const CPubKey pubkey = key.GetPubKey();
+    const CPubKey other_pubkey = ParseHexToCKey("0000000000000000000000000000000000000000000000000000000000000002").GetPubKey();
+    const CScript p2wpkh_spk = GetScriptForDestination(WitnessV0KeyHash(pubkey));
+
+    CMutableTransaction tx;
+    tx.vin.emplace_back(COutPoint{Txid::FromHex("0000000000000000000000000000000000000000000000000000000000000001").value(), 0});
+    tx.vin[0].scriptWitness.stack.emplace_back(std::vector<unsigned char>{0x30, 0x06, 0x02, 0x01, 0x01, 0x02, 0x01, 0x01, 0x01});
+    tx.vin[0].scriptWitness.stack.emplace_back(pubkey.begin(), pubkey.end());
+
+    // 1. Valid P2WPKH spend MUST extract pubkey
+    const auto extracted_pubkey = GetPubKeyFromInput(tx.vin[0], p2wpkh_spk);
+    BOOST_REQUIRE(extracted_pubkey.has_value());
+    BOOST_CHECK(std::get<CPubKey>(*extracted_pubkey) == pubkey);
+
+    // 2. Mismatched pubkey in witness stack MUST return std::nullopt
+    tx.vin[0].scriptWitness.stack[1] = ToByteVector(other_pubkey);
+    BOOST_CHECK(!GetPubKeyFromInput(tx.vin[0], p2wpkh_spk).has_value());
+
+    // Uncompressed public key in witness stack MUST return std::nullopt
+    CKey uncompressed_key;
+    uncompressed_key.MakeNewKey(false);
+    const CPubKey uncompressed_pubkey = uncompressed_key.GetPubKey();
+    BOOST_CHECK(!uncompressed_pubkey.IsCompressed());
+    tx.vin[0].scriptWitness.stack[1] = ToByteVector(uncompressed_pubkey);
+    BOOST_CHECK(!GetPubKeyFromInput(tx.vin[0], p2wpkh_spk).has_value());
+    tx.vin[0].scriptWitness.stack[1] = ToByteVector(pubkey);
+
+    // 3. Witness stack size != 2 MUST return std::nullopt
+    tx.vin[0].scriptWitness.stack = {std::vector<unsigned char>{0x01}, std::vector<unsigned char>{0x02}, ToByteVector(pubkey)};
+    BOOST_CHECK(!GetPubKeyFromInput(tx.vin[0], p2wpkh_spk).has_value());
+    tx.vin[0].scriptWitness.stack = {ToByteVector(pubkey)};
+    BOOST_CHECK(!GetPubKeyFromInput(tx.vin[0], p2wpkh_spk).has_value());
+    tx.vin[0].scriptWitness.stack.clear();
+    BOOST_CHECK(!GetPubKeyFromInput(tx.vin[0], p2wpkh_spk).has_value());
+}
+
 BOOST_AUTO_TEST_CASE(bip352_label_serialize_roundtrip)
 {
     CKey scan_key = ParseHexToCKey("0000000000000000000000000000000000000000000000000000000000000002");
