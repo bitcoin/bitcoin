@@ -30,6 +30,7 @@
 #include <util/expected.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <util/translation.h>
 #include <util/vector.h>
 
 #include <algorithm>
@@ -3045,6 +3046,108 @@ uint256 CompatDescriptorHash(const Descriptor& desc)
     uint256 id;
     CSHA256().Write((unsigned char*)desc_str.data(), desc_str.size()).Finalize(id.begin());
     return id;
+}
+
+util::Result<std::string> CreateMultisigDescriptor(int threshold, const std::vector<std::string>& keys, OutputType output_type)
+{
+    ParseScriptContext ctx{ParseScriptContext::P2WSH};
+    switch (output_type) {
+    case OutputType::BECH32:
+        break;
+    case OutputType::BECH32M:
+        ctx = ParseScriptContext::P2TR;
+        break;
+    case OutputType::LEGACY:
+    case OutputType::P2SH_SEGWIT:
+    case OutputType::UNKNOWN:
+        return util::Error{_("Unsupported address type")};
+    }
+    const int n{int(keys.size())};
+    if (n < 2) {
+        return util::Error{_("A multisig requires at least 2 keys")};
+    }
+
+    if (threshold < 1 || threshold > n) {
+        return util::Error{strprintf(
+            _("The threshold must be between 1 and %d, %d was provided"),
+            n, threshold)};
+    }
+
+    std::vector<std::string> canonical_keys;
+    canonical_keys.reserve(keys.size());
+    std::set<std::string> seen;
+    uint32_t key_exp_index{0};
+
+    for (const auto& key : keys) {
+        FlatSigningProvider provider;
+        std::string error;
+        std::span<const char> sp{key};
+        auto parsed{ParsePubkey(key_exp_index, sp,
+            ctx, provider, error)};
+
+        if (parsed.empty()) {
+            return util::Error{strprintf(
+                _("Invalid key '%s': %s"), key, error)};
+        }
+        if (!provider.keys.empty()) {
+            return util::Error{strprintf(
+                _("Key '%s' contains private key; only public keys may be shared with cosigners"), key)};
+        }
+        // This function produces a single-spending-path multisig.
+        if (parsed.size() != 1) {
+            return util::Error{strprintf(_("Key '%s' must not specify a multipath derivation"), key)};
+        }
+
+        const auto xpub{parsed[0]->GetRootExtPubKey()};
+        if (!xpub) {
+            return util::Error{strprintf(_("Key '%s' must be an extended public key"), key)};
+        }
+
+        // Keys must be bare account xpubs: no multipath and no derivation of their own.
+        // Since core has no way of verifying the BIP 388 policy correctness of the descriptor such a key will produce,
+        // and we risk rejection from complaint hardware wallets.
+        // For taproot there is a second reason: the keys are also aggregated by musig(),
+        // and derivation before aggregation is not expressible in a wallet policy. Core can
+        // parse such descriptors, but compliant hardware wallets would reject the policy.
+        const std::string canonical{parsed[0]->ToString(PubkeyProvider::StringType::CANONICAL)};
+
+        if (!canonical.starts_with('[')) {
+            return util::Error{strprintf(_("Key '%s' must include key origin information, formatted [fingerprint/path]xpub"), key)};
+        }
+        if (!canonical.ends_with(EncodeExtPubKey(*xpub))) {
+            return util::Error{strprintf(_("Key '%s' must not specify a derivation path"), key)};
+        }
+
+        if (!seen.insert(EncodeExtPubKey(*xpub)).second) {
+            return util::Error{strprintf(_("Duplicate key: %s"), key)};
+        }
+
+        canonical_keys.emplace_back(canonical);
+    }
+
+    const std::string suffix{"/<0;1>/*"};
+    const bool taproot{output_type == OutputType::BECH32M};
+    std::string script{std::string{taproot ? "sortedmulti_a(" : "sortedmulti("} + util::ToString(threshold)};
+    for (const auto& key : canonical_keys) script += "," + key + suffix;
+    script += ")";
+
+    // Taproot key path: a MuSig2 aggregate of every key in the leaf.
+    const std::string descriptor{taproot
+        ? "tr(musig(" + util::Join(canonical_keys, ",") + ")" + suffix + "," + script + ")"
+        : "wsh(" + script + ")"};
+
+    FlatSigningProvider provider;
+    std::string error;
+    const auto descs{Parse(descriptor, provider, error)};
+    if (descs.empty()) {
+        return util::Error{strprintf(_("Invalid descriptor: %s"), error)};
+    }
+    if (!Assume(descs.size() == 2)) {
+        return util::Error{_(
+            "Internal error: descriptor did not expand to a receive and a change path")};
+    }
+
+    return AddChecksum(descriptor);
 }
 
 void DescriptorCache::CacheParentExtPubKey(uint32_t key_exp_pos, const CExtPubKey& xpub)
