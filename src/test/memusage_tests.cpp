@@ -36,7 +36,7 @@ static constexpr bool SANITIZER_ALLOCATOR{false};
 
 // Set to true to measure the usage of every allocation size up to MAX_TEST_SIZE instead of a random sample, and to
 // print the results in a form meant for writing MallocUsage() code. This can take minutes.
-static constexpr bool ALL_SIZES{false};
+static constexpr bool ALL_SIZES{true};
 
 namespace {
 
