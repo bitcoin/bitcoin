@@ -528,8 +528,6 @@ enum class Assumeutxo {
     VALIDATED,
     //! Blocks after an assumeutxo snapshot have been validated but the snapshot itself has not been validated.
     UNVALIDATED,
-    //! The assumeutxo snapshot failed validation.
-    INVALID,
 };
 
 /**
@@ -641,10 +639,6 @@ public:
      */
     const std::optional<uint256> m_from_snapshot_blockhash;
 
-    //! Hash of the UTXO set at the target block, computed when the chainstate
-    //! reaches the target block, and null before then.
-    std::optional<AssumeutxoHash> m_target_utxohash GUARDED_BY(::cs_main);
-
     /**
      * The base of the snapshot this chainstate was created from.
      *
@@ -672,14 +666,6 @@ public:
     //! Set target block for this chainstate using just a block hash. Useful
     //! when the block database has not been loaded yet.
     void SetTargetBlockHash(uint256 block_hash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
-    //! Return true if chainstate reached target block.
-    bool ReachedTarget() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
-    {
-        const CBlockIndex* target_block{TargetBlock()};
-        assert(!target_block || target_block->GetAncestor(m_chain.Height()) == m_chain.Tip());
-        return target_block && target_block == m_chain.Tip();
-    }
 
     /**
      * The set of all CBlockIndex entries that have as much work as our current
@@ -894,30 +880,7 @@ protected:
     NodeClock::time_point m_next_write{NodeClock::time_point::max()};
     const CBlockIndex* m_last_flushed_block GUARDED_BY(::cs_main){nullptr};
 
-    /**
-     * In case of an invalid snapshot, rename the coins leveldb directory so
-     * that it can be examined for issue diagnosis.
-     */
-    [[nodiscard]] util::Result<void> InvalidateCoinsDBOnDisk() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
     friend ChainstateManager;
-};
-
-enum class SnapshotCompletionResult {
-    SUCCESS,
-    SKIPPED,
-
-    // Expected assumeutxo configuration data is not found for the height of the
-    // base block.
-    MISSING_CHAINPARAMS,
-
-    // Failed to generate UTXO statistics (to check UTXO set hash) for the
-    // validated chainstate.
-    STATS_FAILED,
-
-    // The UTXO set hash of the validated chainstate does not match the one
-    // expected by assumeutxo chainparams.
-    HASH_MISMATCH,
 };
 
 /**
@@ -1104,21 +1067,11 @@ public:
     [[nodiscard]] util::Result<CBlockIndex*> ActivateSnapshot(
         AutoFile& coins_file, const node::SnapshotMetadata& metadata, bool in_memory);
 
-    //! Try to validate an assumeutxo snapshot by using a validated historical
-    //! chainstate targeted at the snapshot block. When the target block is
-    //! reached, the UTXO hash is computed and saved to
-    //! `validated_cs.m_target_utxohash`, and `unvalidated_cs.m_assumeutxo` will
-    //! be updated from UNVALIDATED to either VALIDATED or INVALID depending on
-    //! whether the hash matches. The INVALID case should not happen in practice
-    //! because the software should refuse to load unrecognized snapshots, but
-    //! if it does happen, it is a fatal error.
-    SnapshotCompletionResult MaybeValidateSnapshot(Chainstate& validated_cs, Chainstate& unvalidated_cs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
     //! Return current chainstate targeting the most-work, network tip.
     Chainstate& CurrentChainstate() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex())
     {
         for (auto& cs : m_chainstates) {
-            if (cs && cs->m_assumeutxo != Assumeutxo::INVALID && !cs->TargetBlockHash()) return *cs;
+            if (cs && !cs->TargetBlockHash()) return *cs;
         }
         abort();
     }
@@ -1127,7 +1080,7 @@ public:
     Chainstate* HistoricalChainstate() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex())
     {
         for (auto& cs : m_chainstates) {
-            if (cs && cs->m_assumeutxo != Assumeutxo::INVALID && cs->TargetBlockHash() && !cs->m_target_utxohash) return cs.get();
+            if (cs && cs->TargetBlockHash()) return cs.get();
         }
         return nullptr;
     }
@@ -1187,9 +1140,6 @@ public:
     * the snapshot chainstate may suggest that all historical blocks have already been verified
     * even though that may not actually be the case. */
     double GuessVerificationProgress(const CBlockIndex* pindex) const EXCLUSIVE_LOCKS_REQUIRED(GetMutex());
-
-    /** Guess background verification progress in case assume-utxo was used (as a fraction between 0.0=genesis and 1.0=snapshot blocks). */
-    double GetBackgroundVerificationProgress(const CBlockIndex& pindex) const EXCLUSIVE_LOCKS_REQUIRED(GetMutex());
 
     /**
      * Import blocks from an external file
@@ -1330,17 +1280,6 @@ public:
     //! Remove the chainstate and all on-disk artifacts.
     //! Used when reindex{-chainstate} is called during snapshot use.
     [[nodiscard]] bool DeleteChainstate(Chainstate& chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
-    //! If we have validated a snapshot chain during this runtime, copy its
-    //! chainstate directory over to the main `chainstate` location, completing
-    //! validation of the snapshot.
-    //!
-    //! If the cleanup succeeds, the caller will need to ensure chainstates are
-    //! reinitialized, since ResetChainstates() will be called before leveldb
-    //! directories are moved or deleted.
-    //!
-    //! @sa node/chainstate:LoadChainstate()
-    bool ValidatedSnapshotCleanup(Chainstate& validated_cs, Chainstate& unvalidated_cs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Call ActivateBestChain() on the active chainstate.
     util::Result<void> ActivateBestChains() LOCKS_EXCLUDED(::cs_main);
