@@ -34,6 +34,7 @@
 #include <memory>
 #include <optional>
 
+#include <QCheckBox>
 #include <QFontMetrics>
 #include <QScrollBar>
 #include <QSettings>
@@ -474,8 +475,19 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
     const bool always_show_unsigned{model->getOptionsModel()->getEnablePSBTControls()};
     auto confirmationDialog = new SendConfirmationDialog(confirmation, question_string, informative_text, detailed_text, SEND_CONFIRM_DELAY, enable_send, always_show_unsigned, this);
     confirmationDialog->setAttribute(Qt::WA_DeleteOnClose);
+
+    bool psbt_v2_checked{false};
+    if (QCheckBox* psbt_v2_checkbox{confirmationDialog->checkBox()}) {
+        psbt_v2_checked = psbt_v2_checkbox->isChecked();
+        QObject::connect(psbt_v2_checkbox, &QCheckBox::toggled, confirmationDialog, [&psbt_v2_checked](bool checked) {
+            psbt_v2_checked = checked;
+        });
+    }
+
     // TODO: Replace QDialog::exec() with safer QDialog::show().
     const auto retval = static_cast<QMessageBox::StandardButton>(confirmationDialog->exec());
+
+    const bool create_psbt_v2{psbt_v2_checked};
 
     if(retval != QMessageBox::Yes && retval != QMessageBox::Save)
     {
@@ -487,7 +499,7 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
     if (retval == QMessageBox::Save) {
         // "Create Unsigned" clicked
         CMutableTransaction mtx = CMutableTransaction{*(m_current_transaction->getWtx())};
-        PartiallySignedTransaction psbtx(mtx);
+        PartiallySignedTransaction psbtx(mtx, /*version=*/(create_psbt_v2 ? 2 : 0));
         bool complete = false;
         // Fill without signing
         const auto err{model->wallet().fillPSBT({.sign = false, .bip32_derivs = true}, /*n_signed=*/nullptr, psbtx, complete)};
@@ -502,7 +514,9 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
         bool broadcast = true;
         if (model->wallet().hasExternalSigner()) {
             CMutableTransaction mtx = CMutableTransaction{*(m_current_transaction->getWtx())};
-            PartiallySignedTransaction psbtx(mtx);
+            // Users will need to have an external signer software that
+            // that supports BIP-0370.
+            PartiallySignedTransaction psbtx(mtx, /*version=*/2);
             bool complete = false;
             // Always fill without signing first. This prevents an external signer
             // from being called prematurely and is not expensive.
@@ -1046,7 +1060,13 @@ SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QStri
     setInformativeText(informative_text);
     setDetailedText(detailed_text);
     setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
-    if (always_show_unsigned || !enable_send) addButton(QMessageBox::Save);
+    if (always_show_unsigned || !enable_send) {
+        addButton(QMessageBox::Save);
+        auto* psbt_v2_checkbox = new QCheckBox(tr("Use PSBT v2. (Only check this if your signing device supports PSBT v2)."), this);
+        psbt_v2_checkbox->setToolTip(tr("Only use if your signing device understands BIP-370."));
+        psbt_v2_checkbox->setChecked(false);
+        setCheckBox(psbt_v2_checkbox);
+    }
     setDefaultButton(QMessageBox::Cancel);
     yesButton = button(QMessageBox::Yes);
     if (confirmButtonText.isEmpty()) {

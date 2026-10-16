@@ -60,12 +60,19 @@ using wallet::WalletRescanReserver;
 namespace
 {
 //! Press "Yes" or "Cancel" buttons in modal send confirmation dialog.
-void ConfirmSend(QString* text = nullptr, QMessageBox::StandardButton confirm_type = QMessageBox::Yes)
+void ConfirmSend(QString* text, QMessageBox::StandardButton confirm_type, bool psbt_v2_checked)
 {
-    QTimer::singleShot(0, [text, confirm_type]() {
+    QTimer::singleShot(0, [text, confirm_type, psbt_v2_checked]() {
         for (QWidget* widget : QApplication::topLevelWidgets()) {
             if (widget->inherits("SendConfirmationDialog")) {
                 SendConfirmationDialog* dialog = qobject_cast<SendConfirmationDialog*>(widget);
+                if (QCheckBox* checkbox = dialog->checkBox()) {
+                    // Check that the checkbox exists and is unchecked by default.
+                    QVERIFY(checkbox);
+                    QVERIFY(checkbox->text().contains(QStringLiteral("PSBT v2")));
+                    QVERIFY(!checkbox->isChecked());
+                    checkbox->setChecked(psbt_v2_checked);
+                }
                 if (text) *text = dialog->text();
                 QAbstractButton* button = dialog->button(confirm_type);
                 button->setEnabled(true);
@@ -77,7 +84,8 @@ void ConfirmSend(QString* text = nullptr, QMessageBox::StandardButton confirm_ty
 
 //! Send coins to address and return txid.
 Txid SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CTxDestination& address, CAmount amount,
-                  QMessageBox::StandardButton confirm_type = QMessageBox::Yes)
+                  QMessageBox::StandardButton confirm_type,
+                  bool psbt_v2_checked)
 {
     QVBoxLayout* entries = sendCoinsDialog.findChild<QVBoxLayout*>("entries");
     SendCoinsEntry* entry = qobject_cast<SendCoinsEntry*>(entries->itemAt(0)->widget());
@@ -87,7 +95,7 @@ Txid SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CTxDesti
     btcsignals::scoped_connection c(wallet.NotifyTransactionChanged.connect([&txid](const Txid& hash, ChangeType status) {
         if (status == CT_NEW) txid = hash;
     }));
-    ConfirmSend(/*text=*/nullptr, confirm_type);
+    ConfirmSend(/*text=*/nullptr, /*confirm_type=*/confirm_type, /*psbt_v2_checked=*/psbt_v2_checked);
     bool invoked = QMetaObject::invokeMethod(&sendCoinsDialog, "sendButtonClicked", Q_ARG(bool, false));
     assert(invoked);
     return txid;
@@ -125,7 +133,7 @@ void BumpFee(TransactionView& view, const Txid& txid, bool expectDisabled, std::
     action->setEnabled(true);
     QString text;
     if (expectError.empty()) {
-        ConfirmSend(&text, cancel ? QMessageBox::Cancel : QMessageBox::Yes);
+        ConfirmSend(&text, cancel ? QMessageBox::Cancel : QMessageBox::Yes, /*psbt_v2_checked=*/false);
     } else {
         ConfirmMessage(&text, 0ms);
     }
@@ -280,8 +288,8 @@ void TestGUI(interfaces::Node& node, const std::shared_ptr<CWallet>& wallet)
     // Send two transactions, and verify they are added to transaction list.
     TransactionTableModel* transactionTableModel = walletModel.getTransactionTableModel();
     QCOMPARE(transactionTableModel->rowCount({}), 105);
-    Txid txid1 = SendCoins(*wallet.get(), sendCoinsDialog, PKHash(), 5 * COIN);
-    Txid txid2 = SendCoins(*wallet.get(), sendCoinsDialog, PKHash(), 10 * COIN);
+    Txid txid1 = SendCoins(*wallet.get(), sendCoinsDialog, PKHash(), 5 * COIN, /*confirm_type=*/QMessageBox::Yes, /*psbt_v2_checked=*/false);
+    Txid txid2 = SendCoins(*wallet.get(), sendCoinsDialog, PKHash(), 10 * COIN, /*confirm_type=*/QMessageBox::Yes, /*psbt_v2_checked=*/false);
     // Transaction table model updates on a QueuedConnection, so process events to ensure it's updated.
     qApp->processEvents();
     QCOMPARE(transactionTableModel->rowCount({}), 107);
@@ -418,18 +426,22 @@ void TestGUIWatchOnly(interfaces::Node& node, TestChain100Setup& test)
             }
         }
     });
-    timer.start(500);
 
-    // Send tx and verify PSBT copied to the clipboard.
-    SendCoins(*wallet.get(), sendCoinsDialog, PKHash(), 5 * COIN, QMessageBox::Save);
-    const std::string& psbt_string = QApplication::clipboard()->text().toStdString();
-    QVERIFY(!psbt_string.empty());
+    for (const bool psbtv2 : {false, true} ) {
+        timer.start(500);
+        // Send tx and verify PSBT copied to the clipboard.
+        SendCoins(*wallet.get(), sendCoinsDialog, PKHash(), 5 * COIN, /*confirm_type=*/QMessageBox::Save, /*psbt_v2_checked=*/psbtv2);
+        const std::string& psbt_string = QApplication::clipboard()->text().toStdString();
+        QVERIFY(!psbt_string.empty());
 
-    // Decode psbt
-    std::optional<std::vector<unsigned char>> decoded_psbt = DecodeBase64(psbt_string);
-    QVERIFY(decoded_psbt);
-    util::Result<PartiallySignedTransaction> psbt = DecodeRawPSBT(MakeByteSpan(*decoded_psbt));
-    QVERIFY(psbt);
+        // Decode psbt
+        std::optional<std::vector<unsigned char>> decoded_psbt = DecodeBase64(psbt_string);
+        QVERIFY(decoded_psbt);
+        util::Result<PartiallySignedTransaction> psbt = DecodeRawPSBT(MakeByteSpan(*decoded_psbt));
+        QVERIFY(psbt);
+
+        QCOMPARE(psbt->GetVersion(), psbtv2 ? uint32_t{2} : uint32_t{0});
+    }
 }
 
 void TestGUI(interfaces::Node& node)
