@@ -67,6 +67,17 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager, TestChain100Setup)
     auto exp_tip = c1.m_chain.Tip();
     BOOST_CHECK_EQUAL(active_tip, exp_tip);
 
+    BOOST_CHECK_EQUAL(WITH_LOCK(m_node.notifications->m_tip_block_mutex, return m_node.notifications->TipBlock()), active_tip->GetBlockHash());
+
+    {
+        LOCK(manager.GetMutex());
+        c1.setBlockIndexCandidates.clear();
+        BOOST_REQUIRE(manager.LoadBlockIndex());
+        c1.PopulateBlockIndexCandidates();
+        BOOST_CHECK_EQUAL(c1.setBlockIndexCandidates.size(), 1);
+        BOOST_CHECK(c1.setBlockIndexCandidates.contains(active_tip));
+    }
+
     BOOST_CHECK(WITH_LOCK(::cs_main, return !manager.CurrentChainstate().m_from_snapshot_blockhash));
 
     // Create a snapshot-based chainstate.

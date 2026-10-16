@@ -44,7 +44,7 @@ class DumptxoutsetTest(BitcoinTestFramework):
         assert_equal(out['base_hash'], target_hash)
 
         # Cover the same case as above with an in-memory database
-        out_mem = node.dumptxoutset("txoutset_fork_mem.dat", "rollback", {"rollback": target_height, "in_memory": True})
+        out_mem = node.dumptxoutset("txoutset_fork_mem.dat", rollback=target_height, in_memory=True)
         assert_equal(out_mem['base_height'], target_height)
         assert_equal(out_mem['base_hash'], target_hash)
 
@@ -78,6 +78,16 @@ class DumptxoutsetTest(BitcoinTestFramework):
         assert_equal(
             out['txoutset_hash'], '771d773b5c27b6f35f598ce764652a2cf28fbc268341eb1827844e416c629c7d')
         assert_equal(out['nchaintx'], 101)
+
+        self.log.info("Check rollback exports match the original UTXO set")
+        self.generate(node, 10)
+        tip = node.getbestblockhash()
+        for target in (out['base_height'], out['base_hash']):
+            rollback = node.dumptxoutset(f'rollback-{target}.dat', "rollback", {"rollback": target})
+            assert_equal(rollback['txoutset_hash'], out['txoutset_hash'])
+            assert_equal(rollback['nchaintx'], out['nchaintx'])
+            assert_equal(sha256sum_file(rollback['path']), sha256sum_file(expected_path))
+            assert_equal(node.getbestblockhash(), tip)
 
         # Specifying a path to an existing or invalid file will fail.
         assert_raises_rpc_error(
