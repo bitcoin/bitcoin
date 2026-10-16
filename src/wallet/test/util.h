@@ -67,7 +67,7 @@ class MockableSQLiteDatabase : public InMemoryWalletDatabase
 public:
     MockableSQLiteDatabase();
 
-    bool Backup(const std::string& strDest) const override { return true; }
+    bool Backup(const std::string&) const override { return true; }
 
     std::string Filename() override { return "mockable"; }
     std::string Format() override { return "sqlite-mock"; }
@@ -151,7 +151,6 @@ private:
 };
 
 std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase();
-MockableSQLiteDatabase& GetMockableDatabase(CWallet& wallet);
 
 DescriptorScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std::string& desc_str, bool success);
 } // namespace wallet

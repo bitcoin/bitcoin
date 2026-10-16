@@ -792,7 +792,7 @@ std::unique_ptr<DatabaseCursor> BerkeleyROBatch::GetNewPrefixCursor(std::span<co
     return std::make_unique<BerkeleyROCursor>(m_database, prefix);
 }
 
-std::unique_ptr<BerkeleyRODatabase> MakeBerkeleyRODatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error)
+std::unique_ptr<BerkeleyRODatabase> MakeBerkeleyRODatabase(const fs::path& path, const DatabaseOptions& /*options*/, DatabaseStatus& status, bilingual_str& error)
 {
     fs::path data_file = BDBDataFile(path);
     try {

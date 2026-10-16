@@ -16,7 +16,7 @@ struct TableAndFile {
   Table* table;
 };
 
-static void DeleteEntry(const Slice& key, void* value) {
+static void DeleteEntry(const Slice&, void* value) {
   TableAndFile* tf = reinterpret_cast<TableAndFile*>(value);
   delete tf->table;
   delete tf->file;

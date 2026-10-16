@@ -400,7 +400,7 @@ void OptionsDialog::on_showTrayIcon_stateChanged(int state)
     }
 }
 
-void OptionsDialog::togglePruneWarning(bool enabled)
+void OptionsDialog::togglePruneWarning(bool /*enabled*/)
 {
     ui->pruneWarning->setVisible(!ui->pruneWarning->isVisible());
 }

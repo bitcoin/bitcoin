@@ -37,8 +37,6 @@ void TrafficGraphWidget::setClientModel(ClientModel *model)
     }
 }
 
-std::chrono::minutes TrafficGraphWidget::getGraphRange() const { return m_range; }
-
 void TrafficGraphWidget::paintPath(QPainterPath &path, QQueue<float> &samples)
 {
     int sampleCount = samples.size();
