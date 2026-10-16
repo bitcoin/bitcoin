@@ -4795,8 +4795,7 @@ bool ChainstateManager::LoadBlockIndex()
     AssertLockHeld(cs_main);
     // Load block index from databases
     if (m_blockman.m_blockfiles_indexed) {
-        bool ret{m_blockman.LoadBlockIndexDB(CurrentChainstate().m_from_snapshot_blockhash)};
-        if (!ret) return false;
+        if (!m_blockman.LoadBlockIndexDB()) return false;
 
         m_blockman.ScanAndUnlinkAlreadyPrunedFiles();
 

@@ -1832,19 +1832,17 @@ static RPCMethod getchaintxstats()
                     RPCResult::Type::OBJ, "", "",
                     {
                         {RPCResult::Type::NUM_TIME, "time", "The timestamp for the final block in the window, expressed in " + UNIX_EPOCH_TIME},
-                        {RPCResult::Type::NUM, "txcount", /*optional=*/true,
-                         "The total number of transactions in the chain up to that point, if known. "
-                         "It may be unknown when using assumeutxo."},
+                        {RPCResult::Type::NUM, "txcount", "The total number of transactions in the chain up to that point"},
                         {RPCResult::Type::STR_HEX, "window_final_block_hash", "The hash of the final block in the window"},
                         {RPCResult::Type::NUM, "window_final_block_height", "The height of the final block in the window."},
                         {RPCResult::Type::NUM, "window_block_count", "Size of the window in number of blocks"},
                         {RPCResult::Type::NUM, "window_interval", /*optional=*/true, "The elapsed time in the window in seconds. Only returned if \"window_block_count\" is > 0"},
                         {RPCResult::Type::NUM, "window_tx_count", /*optional=*/true,
                          "The number of transactions in the window. "
-                         "Only returned if \"window_block_count\" is > 0 and if txcount exists for the start and end of the window."},
+                         "Only returned if \"window_block_count\" is > 0."},
                         {RPCResult::Type::NUM, "txrate", /*optional=*/true,
                          "The average rate of transactions per second in the window. "
-                         "Only returned if \"window_interval\" is > 0 and if window_tx_count exists."},
+                         "Only returned if \"window_interval\" is > 0."},
                     }},
                 RPCExamples{
                     HelpExampleCli("getchaintxstats", "")
@@ -1888,20 +1886,16 @@ static RPCMethod getchaintxstats()
 
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("time", pindex->nTime);
-    if (pindex->m_chain_tx_count) {
-        ret.pushKV("txcount", pindex->m_chain_tx_count);
-    }
+    ret.pushKV("txcount", pindex->m_chain_tx_count);
     ret.pushKV("window_final_block_hash", pindex->GetBlockHash().GetHex());
     ret.pushKV("window_final_block_height", pindex->nHeight);
     ret.pushKV("window_block_count", blockcount);
     if (blockcount > 0) {
         ret.pushKV("window_interval", nTimeDiff);
-        if (pindex->m_chain_tx_count != 0 && past_block.m_chain_tx_count != 0) {
-            const auto window_tx_count = pindex->m_chain_tx_count - past_block.m_chain_tx_count;
-            ret.pushKV("window_tx_count", window_tx_count);
-            if (nTimeDiff > 0) {
-                ret.pushKV("txrate", double(window_tx_count) / nTimeDiff);
-            }
+        const auto window_tx_count = pindex->m_chain_tx_count - past_block.m_chain_tx_count;
+        ret.pushKV("window_tx_count", window_tx_count);
+        if (nTimeDiff > 0) {
+            ret.pushKV("txrate", double(window_tx_count) / nTimeDiff);
         }
     }
 
