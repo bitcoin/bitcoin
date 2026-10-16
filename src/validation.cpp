@@ -4490,7 +4490,7 @@ BlockValidationState TestBlockValidity(
     CBlockIndex* tip{Assert(chainstate.m_chain.Tip())};
 
     if (block.hashPrevBlock != *Assert(tip->phashBlock)) {
-        state.Invalid({}, "inconclusive-not-best-prevblk");
+        state.Invalid(BlockValidationResult::BLOCK_INCONCLUSIVE, "inconclusive-not-best-prevblk");
         return state;
     }
 
