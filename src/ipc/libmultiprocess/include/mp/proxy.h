@@ -44,7 +44,9 @@ inline void CleanupRun(CleanupList& fns) {
     }
 }
 
-//! Event loop smart pointer automatically managing m_num_refs.
+//! Event loop smart pointer automatically managing m_num_refs. Hold one
+//! reference to keep the loop running, once the last reference is released
+//! EventLoop::loop() will exit.
 //! If a lock pointer argument is passed, the specified lock will be used,
 //! otherwise EventLoop::m_mutex will be locked when needed.
 class EventLoopRef
@@ -315,21 +317,21 @@ template <typename Field, int flags>
 struct Accessor : public Field
 {
     //! Field is present from the Cap'n Proto Params struct (client -> server).
-    static const bool in = flags & FIELD_IN;
+    static constexpr bool in = (flags & FIELD_IN) != 0;
     //! Field is present from the Cap'n Proto Results struct (server -> client).
-    static const bool out = flags & FIELD_OUT;
+    static constexpr bool out = (flags & FIELD_OUT) != 0;
     //! Field has a companion has{Name} boolean field in the Cap'n Proto struct.
     //! This is used to represent optional primitive values (e.g. C++
     //! std::optional<int>) because Cap'n Proto doesn't allow primitive fields to
     //! be unset.
-    static const bool optional = flags & FIELD_OPTIONAL;
+    static constexpr bool optional = (flags & FIELD_OPTIONAL) != 0;
     //! Results field has a companion want{Name} boolean field in the Params
     //! struct. Used for optional output parameters (e.g. C++ int*) and set to
     //! true if the caller passed a non-null pointer and wants the result.
-    static const bool requested = flags & FIELD_REQUESTED;
+    static constexpr bool requested = (flags & FIELD_REQUESTED) != 0;
     //! Field is a Cap'n Proto pointer type (struct, list, text, data,
     //! interface) as opposed to a primitive type (bool, int, float, enum).
-    static const bool boxed = flags & FIELD_BOXED;
+    static constexpr bool boxed = (flags & FIELD_BOXED) != 0;
 };
 
 //! Wrapper around std::function for passing std::function objects between client and servers.

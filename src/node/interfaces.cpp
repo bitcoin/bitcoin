@@ -20,6 +20,8 @@
 #include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
+#include <interfaces/init.h>
+#include <interfaces/ipc.h>
 #include <interfaces/mining.h>
 #include <interfaces/node.h>
 #include <interfaces/rpc.h>
@@ -120,7 +122,11 @@ class NodeImpl : public Node
 {
 public:
     explicit NodeImpl(NodeContext& context) { setContext(&context); }
-    void initLogging() override { InitLogging(args()); }
+    void initLogging() override
+    {
+        interfaces::Ipc* ipc = m_context->init->ipc();
+        InitLogging(args(), ipc ? ipc->logSuffix() : nullptr);
+    }
     void initParameterInteraction() override { InitParameterInteraction(args()); }
     bilingual_str getWarnings() override { return Join(Assert(m_context->warnings)->GetMessages(), Untranslated("<hr />")); }
     int getExitStatus() override { return Assert(m_context)->exit_status.load(); }
@@ -733,12 +739,12 @@ public:
         }
         return {};
     }
-    util::Expected<FeeRateEstimation, FeeRateEstimationError> getFeeRateEstimate(int num_blocks, bool conservative) const override
+    util::Expected<FeeRateEstimation, FeeRateEstimationError> getFeeRateEstimate(int num_blocks, bool conservative) override
     {
         if (!m_node.fee_estimator_man) return EstimationError(FeeRateEstimatorType::AUTO, /*returned_target=*/0, /*error=*/{});
         return m_node.fee_estimator_man->GetFeeRateEstimate(num_blocks, conservative);
     }
-    unsigned int maximumFeeEstimationTargetBlocks() const override
+    unsigned int maximumFeeEstimationTargetBlocks() override
     {
         if (!m_node.fee_estimator_man) return 0;
         return m_node.fee_estimator_man->MaximumTarget();
@@ -823,7 +829,7 @@ public:
         return result;
     }
     bool updateRwSetting(const std::string& name,
-                         const interfaces::SettingsUpdate& update_settings_func) override
+                         interfaces::SettingsUpdate update_settings_func) override
     {
         std::optional<interfaces::SettingsAction> action;
         args().LockSettings([&](common::Settings& settings) {

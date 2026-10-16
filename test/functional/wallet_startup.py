@@ -103,7 +103,7 @@ class WalletStartupTest(BitcoinTestFramework):
             assert_raises_rpc_error(None, None, node.createwallet, wallet_name, load_on_startup=True)
             return
 
-        with node.assert_debug_log([f"[{wallet_name}]".replace("\n", "\\x0a")]):
+        with node.assert_debug_log([f"[{wallet_name}]".replace("\n", "\\x0a")], wallet=True):
             assert_equal(node.createwallet(wallet_name=wallet_name, load_on_startup=True)["name"], wallet_name)
         self.stop_node(0)
 
