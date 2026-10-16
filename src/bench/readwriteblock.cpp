@@ -5,18 +5,29 @@
 #include <bench/bench.h>
 #include <bench/data/block413567.raw.h>
 #include <flatfile.h>
+#include <net.h>
+#include <netmessagemaker.h>
 #include <node/blockstorage.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <protocol.h>
+#include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
+#include <uint256.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <validation.h>
 
+#include <algorithm>
+#include <cstdint>
 #include <memory>
 #include <span>
+#include <string>
+#include <utility>
+#include <vector>
 
 static CBlock CreateTestBlock()
 {
@@ -65,3 +76,44 @@ static void ReadRawBlockBench(benchmark::Bench& bench)
 BENCHMARK(WriteBlockBench);
 BENCHMARK(ReadBlockBench);
 BENCHMARK(ReadRawBlockBench);
+
+static CSerializedNetMsg ReadBlockMessageWithoutWitness(const node::BlockManager& blockman, const FlatFilePos& pos, const uint256& hash)
+{
+    const auto data{Assert(blockman.ReadBlockWithoutWitness(pos, hash))};
+    return NetMsg::Make(NetMsgType::BLOCK, std::span{*data});
+}
+
+static void BlockWithoutWitnessRead(benchmark::Bench& bench, bool witness)
+{
+    const auto testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN)};
+    auto& blockman{testing_setup->m_node.chainman->m_blockman};
+    CBlock fixture{CreateTestBlock()};
+    if (witness) {
+        for (auto& transaction : fixture.vtx) {
+            CMutableTransaction tx{*transaction};
+            for (auto& input : tx.vin) input.scriptWitness.stack = {std::vector<uint8_t>(512, 0x42), {}};
+            transaction = MakeTransactionRef(std::move(tx));
+        }
+    }
+    assert(std::ranges::all_of(fixture.vtx, [witness](const auto& tx) { return tx->HasWitness() == witness; }));
+    const auto hash{fixture.GetHash()};
+    const auto pos{WITH_LOCK(::cs_main, return blockman.WriteBlock(fixture, /*nHeight=*/0))};
+    const auto expected_size{GetSerializeSize(TX_NO_WITNESS(fixture))};
+    bench.unit("block").run([&] {
+        const auto message{ReadBlockMessageWithoutWitness(blockman, pos, hash)};
+        assert(message.data.size() == expected_size);
+    });
+}
+
+static void BlockWithoutWitnessRead_Legacy(benchmark::Bench& bench)
+{
+    BlockWithoutWitnessRead(bench, /*witness=*/false);
+}
+
+static void BlockWithoutWitnessRead_Witness(benchmark::Bench& bench)
+{
+    BlockWithoutWitnessRead(bench, /*witness=*/true);
+}
+
+BENCHMARK(BlockWithoutWitnessRead_Legacy);
+BENCHMARK(BlockWithoutWitnessRead_Witness);
