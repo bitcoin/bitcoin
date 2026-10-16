@@ -124,10 +124,9 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
         options.require_format = DatabaseFormat::SQLITE;
 
         const std::shared_ptr<CWallet> wallet_instance = MakeWallet(name, path, options);
-        if (wallet_instance) {
-            WalletShowInfo(wallet_instance.get());
-            wallet_instance->Close();
-        }
+        if (!wallet_instance) return false;
+        WalletShowInfo(wallet_instance.get());
+        wallet_instance->Close();
     } else if (command == "info") {
         DatabaseOptions options;
         ReadDatabaseArgs(args, options);
