@@ -188,53 +188,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
         assumeutxo_cs = nullptr;
     }
 
-    auto [init_status, init_error] = CompleteChainstateInitialization(chainman, options);
-    if (init_status != ChainstateLoadStatus::SUCCESS) {
-        return {init_status, init_error};
-    }
-
-    // If a snapshot chainstate was fully validated by a background chainstate during
-    // the last run, detect it here and clean up the now-unneeded background
-    // chainstate.
-    //
-    // Why is this cleanup done here (on subsequent restart) and not just when the
-    // snapshot is actually validated? Because this entails unusual
-    // filesystem operations to move leveldb data directories around, and that seems
-    // too risky to do in the middle of normal runtime.
-    auto snapshot_completion{assumeutxo_cs && validated_cs.m_chain.Tip() == validated_cs.TargetBlock()
-                             ? chainman.MaybeValidateSnapshot(validated_cs, *assumeutxo_cs)
-                             : SnapshotCompletionResult::SKIPPED};
-
-    if (snapshot_completion == SnapshotCompletionResult::SKIPPED) {
-        // do nothing; expected case
-    } else if (snapshot_completion == SnapshotCompletionResult::SUCCESS) {
-        LogInfo("[snapshot] cleaning up unneeded background chainstate, then reinitializing");
-        if (!chainman.ValidatedSnapshotCleanup(validated_cs, *assumeutxo_cs)) {
-            return {ChainstateLoadStatus::FAILURE_FATAL, Untranslated("Background chainstate cleanup failed unexpectedly.")};
-        }
-
-        // Because ValidatedSnapshotCleanup() has torn down chainstates with
-        // ChainstateManager::ResetChainstates(), reinitialize them here without
-        // duplicating the blockindex work above.
-        assert(chainman.m_chainstates.empty());
-
-        chainman.InitializeChainstate(options.mempool);
-
-        // A reload of the block index is required to recompute setBlockIndexCandidates
-        // for the fully validated chainstate.
-        chainman.ActiveChainstate().ClearBlockIndexCandidates();
-
-        auto [init_status, init_error] = CompleteChainstateInitialization(chainman, options);
-        if (init_status != ChainstateLoadStatus::SUCCESS) {
-            return {init_status, init_error};
-        }
-    } else {
-        return {ChainstateLoadStatus::FAILURE_FATAL, _(
-           "UTXO snapshot failed to validate. "
-           "Restart to resume normal initial block download, or try loading a different snapshot.")};
-    }
-
-    return {ChainstateLoadStatus::SUCCESS, {}};
+    return CompleteChainstateInitialization(chainman, options);
 }
 
 ChainstateLoadResult VerifyLoadedChainstate(ChainstateManager& chainman, const ChainstateLoadOptions& options)
