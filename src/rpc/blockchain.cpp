@@ -3193,9 +3193,7 @@ static RPCMethod dumptxoutset()
         std::optional<TemporaryPruneLock> temp_prune_lock;
         if (node.chainman->m_blockman.IsPruneMode()) {
             LOCK(node.chainman->GetMutex());
-            const CBlockIndex* current_tip{node.chainman->ActiveChain().Tip()};
-            const CBlockIndex& first_block{node.chainman->m_blockman.GetFirstBlock(*current_tip, /*status_mask=*/BLOCK_HAVE_MASK)};
-            if (first_block.nHeight > target_index->nHeight) {
+            if (GetPruneHeight(node.chainman->m_blockman, chainstate.m_chain).value_or(0) >= target_index->nHeight) {
                 throw JSONRPCError(RPC_MISC_ERROR, "Could not roll back to requested height since necessary block data is already pruned.");
             }
             temp_prune_lock.emplace(node.chainman->m_blockman, target_index->nHeight);
