@@ -43,6 +43,8 @@ from test_framework.psbt import (
     PSBT_IN_PROPRIETARY,
     PSBT_IN_TAP_BIP32_DERIVATION,
     PSBT_IN_TAP_INTERNAL_KEY,
+    PSBT_IN_TAP_KEY_SIG,
+    PSBT_IN_TAP_SCRIPT_SIG,
     PSBT_IN_TAP_LEAF_SCRIPT,
     PSBT_IN_WITNESS_UTXO,
     PSBT_IN_FINAL_SCRIPTWITNESS,
@@ -674,6 +676,26 @@ class PSBTTest(BitcoinTestFramework):
             fin_hex = fin_res["hex"]
             assert_equal(self.nodes[0].testmempoolaccept([fin_hex])[0]["allowed"], True)
 
+            # A valid 65-byte taproot signature carries its own sighash type.
+            # Removing the optional input-level constraint must not prevent finalization.
+            unconstrained_psbt = PSBT.from_base64(psbt)
+            taproot_inputs = [entry for entry in unconstrained_psbt.i if PSBT_IN_TAP_KEY_SIG in entry.map]
+            assert_equal(len(taproot_inputs), 1)
+            taproot_input = taproot_inputs[0]
+            taproot_signature = taproot_input.map[PSBT_IN_TAP_KEY_SIG]
+            assert_equal(len(taproot_signature), 65)
+            assert_equal(taproot_signature[-1], SIGHASH_ALL | SIGHASH_ANYONECANPAY)
+            assert_equal(taproot_input.map[PSBT_IN_SIGHASH_TYPE], (SIGHASH_ALL | SIGHASH_ANYONECANPAY).to_bytes(4, "little"))
+
+            del taproot_input.map[PSBT_IN_SIGHASH_TYPE]
+            without_constraint = self.nodes[0].finalizepsbt(unconstrained_psbt.to_base64())
+            assert_equal(without_constraint["complete"], True)
+            assert_equal(self.nodes[0].testmempoolaccept([without_constraint["hex"]])[0]["allowed"], True)
+
+            # An explicit, conflicting constraint must still reject that signature.
+            taproot_input.map[PSBT_IN_SIGHASH_TYPE] = (0).to_bytes(4, "little")
+            assert_equal(self.nodes[0].finalizepsbt(unconstrained_psbt.to_base64())["complete"], False)
+
             # Change the sighash field to a different value and make sure we can no longer finalize
             mod_psbt = PSBT.from_base64(psbt)
             mod_psbt.i[0].map[PSBT_IN_SIGHASH_TYPE] = (SIGHASH_ALL).to_bytes(4, byteorder="little")
@@ -686,6 +708,58 @@ class PSBTTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1)
 
         wallet.unloadwallet()
+
+    def test_taproot_mixed_script_sighashes(self):
+        self.log.info("Test Taproot script-path signatures with different sighash types")
+
+        first_key = get_generate_key()
+        second_key = get_generate_key()
+        public_script = f"multi_a(2,{first_key.pubkey},{second_key.pubkey})"
+        public_desc = descsum_create(f"tr({H_POINT},{public_script})")
+        first_desc = descsum_create(
+            f"tr({H_POINT},multi_a(2,{first_key.privkey},{second_key.pubkey}))")
+        second_desc = descsum_create(
+            f"tr({H_POINT},multi_a(2,{first_key.pubkey},{second_key.privkey}))")
+
+        address = self.nodes[0].deriveaddresses(public_desc)[0]
+        utxo = self.create_outpoints(self.nodes[0], outputs=[{address: 1}])[0]
+        original_psbt = self.nodes[0].createpsbt(
+            [utxo], [{self.nodes[0].getnewaddress(): 0.999}])
+
+        default_signed = self.nodes[0].descriptorprocesspsbt(
+            psbt=original_psbt, descriptors=[first_desc],
+            sighashtype="DEFAULT", finalize=False)["psbt"]
+        all_signed = self.nodes[0].descriptorprocesspsbt(
+            psbt=original_psbt, descriptors=[second_desc],
+            sighashtype="ALL", finalize=False)["psbt"]
+
+        def script_signatures(psbt):
+            return [
+                value for key, value in psbt.i[0].map.items()
+                if isinstance(key, bytes) and key[0] == PSBT_IN_TAP_SCRIPT_SIG
+            ]
+
+        default_psbt = PSBT.from_base64(default_signed)
+        all_psbt = PSBT.from_base64(all_signed)
+        assert_equal([len(sig) for sig in script_signatures(default_psbt)], [64])
+        assert_equal([len(sig) for sig in script_signatures(all_psbt)], [65])
+        assert_equal(script_signatures(all_psbt)[0][-1], SIGHASH_ALL)
+
+        # The signatures contain their own sighash types; no field is needed.
+        assert PSBT_IN_SIGHASH_TYPE not in default_psbt.i[0].map
+        del all_psbt.i[0].map[PSBT_IN_SIGHASH_TYPE]
+        combined = PSBT.from_base64(
+            self.nodes[0].combinepsbt([default_psbt.to_base64(), all_psbt.to_base64()]))
+        assert PSBT_IN_SIGHASH_TYPE not in combined.i[0].map
+        assert_equal(sorted(len(sig) for sig in script_signatures(combined)), [64, 65])
+
+        finalized = self.nodes[0].finalizepsbt(combined.to_base64())
+        assert_equal(finalized["complete"], True)
+        assert_equal(self.nodes[0].testmempoolaccept([finalized["hex"]])[0]["allowed"], True)
+
+        # An explicit constraint cannot match both signatures.
+        combined.i[0].map[PSBT_IN_SIGHASH_TYPE] = SIGHASH_ALL.to_bytes(4, "little")
+        assert_equal(self.nodes[0].finalizepsbt(combined.to_base64())["complete"], False)
 
     def test_decodepsbt_long_sighash_type(self):
         self.log.info("Test that decodepsbt rejects invalid trailing bytes in the sighash type field")
@@ -1816,6 +1890,7 @@ class PSBTTest(BitcoinTestFramework):
         if not self.options.usecli:
             self.test_sighash_mismatch()
         self.test_sighash_adding()
+        self.test_taproot_mixed_script_sighashes()
         self.test_sighash_single()
         self.test_decodepsbt_long_sighash_type()
         self.test_combinepsbt_sighash_type()
