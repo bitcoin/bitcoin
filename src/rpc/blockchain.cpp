@@ -3500,6 +3500,7 @@ static RPCMethod loadtxoutset()
         "the network's tip. "
         "Meanwhile, the original chainstate will complete the initial block download process in "
         "the background, eventually validating up to the block that the snapshot is based upon.\n\n"
+        "Disable indexes before loading a snapshot.\n\n"
 
         "The result is a usable bitcoind instance that is current with the network tip in a "
         "matter of minutes rather than hours. UTXO snapshot are typically obtained from "
@@ -3547,6 +3548,9 @@ static RPCMethod loadtxoutset()
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Unable to parse metadata: %s", e.what()));
     }
 
+    if (!node.indexes.empty()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Disable indexes before loading a UTXO snapshot. To rebuild indexes from genesis, restart with -reindex without loading a snapshot.");
+    }
     auto activation_result{chainman.ActivateSnapshot(afile, metadata, false)};
     if (!activation_result) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Unable to load UTXO snapshot: %s. (%s)", util::ErrorString(activation_result).original, path.utf8string()));
