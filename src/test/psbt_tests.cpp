@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(taproot_signatures_with_implicit_sighash)
         }
         const auto result{SignPSBTInput(provider, psbt, /*index=*/0, /*txdata=*/nullptr,
                                         {.sighash_type = requested, .finalize = false})};
-        return result.has_value() || result.error() != common::PSBTError::SIGHASH_MISMATCH;
+        return result.has_value() || result.error() == common::PSBTError::INCOMPLETE;
     };
 
     for (bool key_path : {false, true}) {
@@ -364,9 +364,28 @@ BOOST_AUTO_TEST_CASE(taproot_signatures_with_implicit_sighash)
         BOOST_CHECK(!accepts_encoding(key_path, 63, SIGHASH_DEFAULT));
         BOOST_CHECK(!accepts_encoding(key_path, 66, SIGHASH_ALL));
 
+        BOOST_CHECK(accepts_encoding(key_path, 65, SIGHASH_ALL, SIGHASH_ALL));
+        BOOST_CHECK(!accepts_encoding(key_path, 64, SIGHASH_DEFAULT, SIGHASH_ALL));
+        BOOST_CHECK(!accepts_encoding(key_path, 65, SIGHASH_SINGLE, SIGHASH_ALL));
         BOOST_CHECK(!accepts_encoding(key_path, 65, SIGHASH_ALL, SIGHASH_DEFAULT));
         BOOST_CHECK(!accepts_encoding(key_path, 65, SIGHASH_ALL, std::nullopt, SIGHASH_DEFAULT));
     }
+
+    // Multiple valid script-path sighashes can coexist without an input-level constraint.
+    PartiallySignedTransaction mixed_psbt{unsigned_psbt};
+    PSBTInput& mixed_input{mixed_psbt.inputs[0]};
+    std::vector<unsigned char> default_sig(64, 1);
+    std::vector<unsigned char> all_sig(65, 1);
+    all_sig.back() = SIGHASH_ALL;
+    mixed_input.m_tap_script_sigs.emplace(
+        std::pair{XOnlyPubKey{GenerateRandomKey().GetPubKey()}, uint256{}}, default_sig);
+    mixed_input.m_tap_script_sigs.emplace(
+        std::pair{XOnlyPubKey{GenerateRandomKey().GetPubKey()}, uint256{}}, all_sig);
+    BOOST_REQUIRE_EQUAL(mixed_input.m_tap_script_sigs.size(), 2U);
+    const auto result{SignPSBTInput(provider, mixed_psbt, /*index=*/0, /*txdata=*/nullptr,
+                                    {.finalize = false})};
+    BOOST_CHECK(result.has_value() || result.error() == common::PSBTError::INCOMPLETE);
+    BOOST_CHECK_EQUAL(mixed_input.m_tap_script_sigs.size(), 2U);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
