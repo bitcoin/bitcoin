@@ -3319,7 +3319,7 @@ void CConnman::ThreadPrivateBroadcast()
     AssertLockNotHeld(m_nodes_mutex);
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
 
-    size_t addrman_num_bad_addresses{0};
+    size_t num_unusable_in_a_row{0};
     while (!m_interrupt_net->interrupted()) {
 
         if (!fNetworkActive) {
@@ -3345,15 +3345,19 @@ void CConnman::ThreadPrivateBroadcast()
 
         const auto [addr, _] = addrman.get().Select(/*new_only=*/false, {net.value()});
 
-        if (!addr.IsValid() || IsLocal(addr)) {
-            ++addrman_num_bad_addresses;
-            if (addrman_num_bad_addresses > 100) {
-                LogDebug(BCLog::PRIVBROADCAST, "Connections needed but addrman keeps returning bad addresses, will retry");
+        // Skip picks that OpenNetworkConnection() would reject anyway, e.g. peers we are already
+        // connected to. Otherwise this loop spins on fast-failing attempts when addrman has few usable addresses.
+        const bool banned_or_discouraged{m_banman && (m_banman->IsDiscouraged(addr) || m_banman->IsBanned(addr))};
+        if (!addr.IsValid() || IsLocal(addr) || banned_or_discouraged || AlreadyConnectedToAddress(addr)) {
+            if (++num_unusable_in_a_row > 100) {
+                if (num_unusable_in_a_row % 100 == 1) {
+                    LogDebug(BCLog::PRIVBROADCAST, "Connections needed but addrman keeps returning unusable addresses, will keep retrying");
+                }
                 m_interrupt_net->sleep_for(500ms);
             }
             continue;
         }
-        addrman_num_bad_addresses = 0;
+        num_unusable_in_a_row = 0;
 
         auto target_str{addr.ToStringAddrPort()};
         if (proxy.has_value()) {
