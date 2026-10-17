@@ -3,6 +3,8 @@
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 #include <addresstype.h>
+#include <common/types.h>
+#include <script/interpreter.h>
 #include <key.h>
 #include <psbt.h>
 #include <script/descriptor.h>
@@ -15,6 +17,9 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <array>
+#include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -310,6 +315,57 @@ BOOST_AUTO_TEST_CASE(update_psbt_output_taproot)
         auto out{test.UpdateOutput(has_input)};
         BOOST_CHECK(out.m_tap_bip32_paths.contains(XOnlyPubKey{test.pubkey}));
         BOOST_CHECK(out.hd_keypaths.empty());
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(taproot_signatures_with_implicit_sighash)
+{
+    CMutableTransaction tx;
+    tx.vin.emplace_back(COutPoint{});
+    tx.vout.emplace_back(1, CScript{} << OP_RETURN);
+    PartiallySignedTransaction unsigned_psbt{tx};
+    unsigned_psbt.inputs[0].witness_utxo = CTxOut{1, CScript{} << OP_1 << std::vector<unsigned char>(32, 1)};
+    FlatSigningProvider provider;
+
+    const auto accepts_encoding = [&](bool key_path, size_t size, unsigned char hash_type,
+                                      std::optional<int> requested = std::nullopt,
+                                      std::optional<int> input_sighash = std::nullopt) {
+        PartiallySignedTransaction psbt{unsigned_psbt};
+        PSBTInput& input{psbt.inputs[0]};
+        input.sighash_type = input_sighash;
+        std::vector<unsigned char> sig(size, 1);
+        if (size == 65) sig.back() = hash_type;
+        if (key_path) {
+            input.m_tap_key_sig = sig;
+        } else {
+            input.m_tap_script_sigs.emplace(std::pair{XOnlyPubKey{}, uint256{}}, sig);
+        }
+        const auto result{SignPSBTInput(provider, psbt, /*index=*/0, /*txdata=*/nullptr,
+                                        {.sighash_type = requested, .finalize = false})};
+        return result.has_value() || result.error() != common::PSBTError::SIGHASH_MISMATCH;
+    };
+
+    for (bool key_path : {false, true}) {
+        BOOST_CHECK(accepts_encoding(key_path, 64, SIGHASH_DEFAULT));
+
+        for (unsigned char hash_type : std::array<unsigned char, 6>{
+                 SIGHASH_ALL, SIGHASH_NONE, SIGHASH_SINGLE,
+                 SIGHASH_ALL | SIGHASH_ANYONECANPAY,
+                 SIGHASH_NONE | SIGHASH_ANYONECANPAY,
+                 SIGHASH_SINGLE | SIGHASH_ANYONECANPAY}) {
+            BOOST_CHECK(accepts_encoding(key_path, 65, hash_type));
+        }
+
+        for (unsigned char hash_type : std::array<unsigned char, 5>{
+                 0x00, 0x04, 0x80, 0x84, 0xff}) {
+            BOOST_CHECK(!accepts_encoding(key_path, 65, hash_type));
+        }
+        BOOST_CHECK(!accepts_encoding(key_path, 63, SIGHASH_DEFAULT));
+        BOOST_CHECK(!accepts_encoding(key_path, 66, SIGHASH_ALL));
+
+        BOOST_CHECK(!accepts_encoding(key_path, 65, SIGHASH_ALL, SIGHASH_DEFAULT));
+        BOOST_CHECK(!accepts_encoding(key_path, 65, SIGHASH_ALL, std::nullopt, SIGHASH_DEFAULT));
     }
 }
 
