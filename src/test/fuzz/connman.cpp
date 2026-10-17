@@ -88,6 +88,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
     const auto use_addrman_outgoing{fuzzed_data_provider.ConsumeBool()};
     options.m_use_addrman_outgoing = use_addrman_outgoing;
     options.m_max_automatic_connections = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 1000);
+    options.m_reconnect_check_local = fuzzed_data_provider.ConsumeBool();
 
     auto consume_whitelist = [&]() {
         std::vector<NetWhitelistPermissions> result(fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 3));

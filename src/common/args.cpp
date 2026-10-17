@@ -846,6 +846,7 @@ const std::vector<std::string> TEST_OPTIONS_DOC{
     "addrman (use deterministic addrman)",
     "reindex_after_failure_noninteractive_yes (When asked for a reindex after failure interactively, simulate as-if answered with 'yes')",
     "bip94 (enforce BIP94 consensus rules)",
+    "inbound_reconnect_check_local (apply the inbound reconnect check to local addresses, which are exempt otherwise)",
 };
 
 bool HasTestOption(const ArgsManager& args, const std::string& test_option)
