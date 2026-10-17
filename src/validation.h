@@ -1010,8 +1010,7 @@ public:
 
     explicit ChainstateManager(const util::SignalInterrupt& interrupt, Options options, node::BlockManager::Options blockman_options);
 
-    //! Function to restart active indexes; set dynamically to avoid a circular
-    //! dependency on `base/index.cpp`.
+    //! Restore network services when snapshot validation completes
     std::function<void()> snapshot_download_completed = std::function<void()>();
 
     const CChainParams& GetParams() const { return m_options.chainparams; }
@@ -1144,17 +1143,6 @@ public:
             if (cs && cs->m_assumeutxo != Assumeutxo::INVALID && cs->TargetBlockHash() && !cs->m_target_utxohash) return cs.get();
         }
         return nullptr;
-    }
-
-    //! Return fully validated chainstate that should be used for indexing, to
-    //! support indexes that need to index blocks in order and can't start from
-    //! the snapshot block.
-    Chainstate& ValidatedChainstate() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex())
-    {
-        for (auto* cs : {&CurrentChainstate(), HistoricalChainstate()}) {
-            if (cs && cs->m_assumeutxo == Assumeutxo::VALIDATED) return *cs;
-        }
-        abort();
     }
 
     //! Remove a chainstate.

@@ -1459,24 +1459,10 @@ static ChainstateLoadResult InitAndLoadChainstate(
     ChainstateManager& chainman = *node.chainman;
     if (chainman.m_interrupt) return {ChainstateLoadStatus::INTERRUPTED, {}};
 
-    // This is defined and set here instead of inline in validation.h to avoid a hard
-    // dependency between validation and index/base, since the latter is not in
-    // libbitcoinkernel.
     chainman.snapshot_download_completed = [&node]() {
         if (!node.chainman->m_blockman.IsPruneMode()) {
             LogInfo("[snapshot] re-enabling NODE_NETWORK services");
             node.connman->AddLocalServices(NODE_NETWORK);
-        }
-        LogInfo("[snapshot] restarting indexes");
-        // Drain the validation interface queue to ensure that the old indexes
-        // don't have any pending work.
-        Assert(node.validation_signals)->SyncWithValidationInterfaceQueue();
-        for (auto* index : node.indexes) {
-            index->Interrupt();
-            index->Stop();
-            if (!(index->Init() && index->StartBackgroundSync())) {
-                LogWarning("[snapshot] Failed to restart index %s on snapshot chain", index->GetName());
-            }
         }
     };
     node::ChainstateLoadOptions options;
@@ -2461,8 +2447,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 bool StartIndexBackgroundSync(NodeContext& node)
 {
     ChainstateManager& chainman = *Assert(node.chainman);
-    const Chainstate& chainstate = WITH_LOCK(::cs_main, return chainman.ValidatedChainstate());
-    const CChain& index_chain = chainstate.m_chain;
+    const CChain& index_chain = chainman.ActiveChainstate().m_chain;
     const int current_height = WITH_LOCK(::cs_main, return index_chain.Height());
 
     // Skip checking data availability if we have not synced any blocks yet

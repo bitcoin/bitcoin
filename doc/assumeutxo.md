@@ -37,20 +37,8 @@ downloaded snapshot).
 
 ### Indexes
 
-Indexes work but don't take advantage of this feature. They always start building
-from the genesis block and can only apply blocks in order. Once the background
-validation reaches the snapshot block, indexes will continue to build all the
-way to the tip.
-
-
-For indexes that support pruning, note that these indexes only allow blocks that
-were already indexed to be pruned. Blocks that are not indexed yet will also
-not be pruned.
-
-This means that, if the snapshot is old, then a lot of blocks after the snapshot
-block will need to be downloaded, and these blocks can't be pruned until they
-are indexed, so they could consume a lot of disk space until indexing catches up
-to the snapshot block.
+Disable indexes before importing. Index startup requires the historical blocks
+and undo data needed to catch up. Use `-reindex` to restore missing history.
 
 ## Generating a snapshot
 
