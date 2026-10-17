@@ -85,11 +85,6 @@ chainstates will be detected during the next init and the process will resume.
 
 ### Snapshot chainstate hits network tip
 
-Once the snapshot chainstate leaves IBD, caches are rebalanced
-(via `MaybeRebalanceCaches()` in `ActivateBestChain()`) and more cache is given
-to the background chainstate, which is responsible for doing full validation of the
-assumed-valid parts of the chain.
-
 **Note:** at this point, ValidationInterface callbacks will be coming in from both
 chainstates. Considerations here must be made for indexing, which may no longer be happening
 sequentially.
