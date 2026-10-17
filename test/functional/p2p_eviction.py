@@ -11,6 +11,11 @@ We cannot currently test the parts of the eviction logic that are based on
 address/netgroup since in the current framework, all peers are connecting from
 the same local address. See Issue #14210 for more info.
 Therefore, this test is limited to the remaining protection criteria.
+
+The same setup is then repeated with -test=inbound_reconnect_check_local, which
+makes the reconnect check apply to 127.0.0.1: since every test peer connects
+from the same address, the peer that would trigger the eviction counts as a
+recent reconnect and is dropped instead, leaving all other peers connected.
 """
 import time
 
@@ -53,6 +58,14 @@ class P2PEvict(BitcoinTestFramework):
         self.extra_args = [['-maxconnections=53']]
 
     def run_test(self):
+        self.log.info("Test eviction with default settings (local addresses are exempt from the reconnect check)")
+        self.test_eviction(reconnect_check=False)
+
+        self.log.info("Test that a recent reconnect is dropped instead of evicting a peer")
+        self.restart_node(0, ['-maxconnections=53', '-test=inbound_reconnect_check_local'])
+        self.test_eviction(reconnect_check=True)
+
+    def test_eviction(self, reconnect_check):
         protected_peers = set()  # peers that we expect to be protected from eviction
         current_peer = -1
         node = self.nodes[0]
@@ -103,6 +116,17 @@ class P2PEvict(BitcoinTestFramework):
         # one of the slower peers might have a faster min ping though.
         for i in range(8):
             protected_peers.add(sorted_pings[i][0])
+
+        if reconnect_check:
+            self.log.info("Create peer that would trigger the eviction mechanism, but is a recent reconnect")
+            with node.assert_debug_log(['tx-relay inbound slots full and peer reconnected too soon - connection dropped after version message'],
+                                       unexpected_msgs=['selected inbound connection for eviction'], timeout=10):
+                node.add_p2p_connection(SlowP2PInterface(), wait_for_verack=False, expect_success=False)
+            self.wait_until(lambda: len(node.getpeerinfo()) == current_peer + 1)
+
+            self.log.info("Test that no other peer was disconnected")
+            assert all(peer.is_connected for peer in node.p2ps[:-1])
+            return
 
         self.log.info("Create peer that triggers the eviction mechanism")
         node.add_p2p_connection(SlowP2PInterface())

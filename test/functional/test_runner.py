@@ -283,6 +283,7 @@ BASE_SCRIPTS = [
     'p2p_leak_tx.py --v2transport',
     'p2p_tx_relay_rate_limit.py',
     'p2p_eviction.py',
+    'p2p_inbound_reconnect.py',
     'p2p_outbound_eviction.py',
     'p2p_ibd_stalling.py --v1transport',
     'p2p_ibd_stalling.py --v2transport',
