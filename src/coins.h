@@ -174,7 +174,6 @@ public:
     };
 
     CCoinsCacheEntry() noexcept = default;
-    explicit CCoinsCacheEntry(Coin&& coin_) noexcept : coin(std::move(coin_)) {}
     ~CCoinsCacheEntry()
     {
         SetClean();
@@ -513,15 +512,6 @@ public:
      * already exist in the cache.
      */
     void AddCoin(const COutPoint& outpoint, Coin&& coin, bool possible_overwrite);
-
-    /**
-     * Emplace a coin into cacheCoins without performing any checks, marking
-     * the emplaced coin as dirty.
-     *
-     * NOT FOR GENERAL USE. Used only when loading coins from a UTXO snapshot.
-     * @sa ChainstateManager::PopulateAndValidateSnapshot()
-     */
-    void EmplaceCoinInternalDANGER(const COutPoint& outpoint, Coin&& coin);
 
     /**
      * Spend a coin. Pass moveto in order to get the deleted data.
