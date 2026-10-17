@@ -43,6 +43,7 @@ from test_framework.psbt import (
     PSBT_IN_PROPRIETARY,
     PSBT_IN_TAP_BIP32_DERIVATION,
     PSBT_IN_TAP_INTERNAL_KEY,
+    PSBT_IN_TAP_KEY_SIG,
     PSBT_IN_TAP_LEAF_SCRIPT,
     PSBT_IN_WITNESS_UTXO,
     PSBT_IN_FINAL_SCRIPTWITNESS,
@@ -673,6 +674,26 @@ class PSBTTest(BitcoinTestFramework):
             assert_equal(fin_res["complete"], True)
             fin_hex = fin_res["hex"]
             assert_equal(self.nodes[0].testmempoolaccept([fin_hex])[0]["allowed"], True)
+
+            # A valid 65-byte taproot signature carries its own sighash type.
+            # Removing the optional input-level constraint must not prevent finalization.
+            unconstrained_psbt = PSBT.from_base64(psbt)
+            taproot_inputs = [entry for entry in unconstrained_psbt.i if PSBT_IN_TAP_KEY_SIG in entry.map]
+            assert_equal(len(taproot_inputs), 1)
+            taproot_input = taproot_inputs[0]
+            taproot_signature = taproot_input.map[PSBT_IN_TAP_KEY_SIG]
+            assert_equal(len(taproot_signature), 65)
+            assert_equal(taproot_signature[-1], SIGHASH_ALL | SIGHASH_ANYONECANPAY)
+            assert_equal(taproot_input.map[PSBT_IN_SIGHASH_TYPE], (SIGHASH_ALL | SIGHASH_ANYONECANPAY).to_bytes(4, "little"))
+
+            del taproot_input.map[PSBT_IN_SIGHASH_TYPE]
+            without_constraint = self.nodes[0].finalizepsbt(unconstrained_psbt.to_base64())
+            assert_equal(without_constraint["complete"], True)
+            assert_equal(self.nodes[0].testmempoolaccept([without_constraint["hex"]])[0]["allowed"], True)
+
+            # An explicit, conflicting constraint must still reject that signature.
+            taproot_input.map[PSBT_IN_SIGHASH_TYPE] = (0).to_bytes(4, "little")
+            assert_equal(self.nodes[0].finalizepsbt(unconstrained_psbt.to_base64())["complete"], False)
 
             # Change the sighash field to a different value and make sure we can no longer finalize
             mod_psbt = PSBT.from_base64(psbt)
