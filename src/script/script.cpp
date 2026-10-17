@@ -350,14 +350,6 @@ std::vector<std::vector<unsigned char>> CScriptWitness::ToVectors() const
     return ret;
 }
 
-std::vector<std::span<const unsigned char>> CScriptWitness::ToSpans() const
-{
-    std::vector<std::span<const unsigned char>> ret;
-    ret.reserve(size());
-    for (const auto element : *this) ret.push_back(element);
-    return ret;
-}
-
 size_t CScriptWitness::DynamicMemoryUsage() const noexcept
 {
     return m_data ? memusage::MallocUsage(HEADER_SIZE + Data().size()) : 0;

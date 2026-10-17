@@ -707,9 +707,6 @@ public:
     /** The elements, bottom to top, as vectors. For code that needs to modify or take ownership of them (e.g. to
      *  execute a script with them as its initial stack). */
     std::vector<std::vector<unsigned char>> ToVectors() const;
-    /** Spans of the elements, bottom to top, which are valid as long as this witness is. For code that accesses many
-     *  elements by index, as indexing a witness need not be constant-time. */
-    std::vector<std::span<const unsigned char>> ToSpans() const LIFETIMEBOUND;
 
     /** The dynamic memory usage of the stack, including that of its elements. */
     size_t DynamicMemoryUsage() const noexcept;

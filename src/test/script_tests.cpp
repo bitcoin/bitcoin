@@ -1760,9 +1760,6 @@ BOOST_AUTO_TEST_CASE(script_witness_representation)
                 BOOST_CHECK(std::ranges::equal(witness.back(), stack.back()));
                 for (size_t i = 0; i < stack.size(); ++i) BOOST_CHECK(std::ranges::equal(witness[i], stack[i]));
             }
-            const auto spans = witness.ToSpans();
-            BOOST_REQUIRE_EQUAL(spans.size(), stack.size());
-            for (size_t i = 0; i < stack.size(); ++i) BOOST_CHECK(std::ranges::equal(spans[i], stack[i]));
 
             // Serialization matches that of the vector of vectors, in both directions.
             std::vector<unsigned char> ser_vec, ser_wit;
