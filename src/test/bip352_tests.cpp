@@ -14,6 +14,7 @@
 #include <script/solver.h>
 #include <test/data/bip352_send_and_receive_vectors.json.h>
 
+#include <test/util/common.h>
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
@@ -274,7 +275,7 @@ BOOST_AUTO_TEST_CASE(bip352_scan_skips_invalid_taproot_outputs)
     const auto found_outputs = receiver.Scan(*prevouts_summary, output_pub_keys);
     BOOST_REQUIRE(found_outputs.has_value());
     BOOST_REQUIRE_EQUAL(found_outputs->size(), 1);
-    BOOST_CHECK(found_outputs->front().output == expected_output);
+    BOOST_CHECK_EQUAL(found_outputs->front().output, expected_output);
 }
 
 BOOST_AUTO_TEST_CASE(bip352_p2pkh_pubkey_extraction_with_checksig_in_scriptsig)
