@@ -3365,6 +3365,9 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
         {
             LOCK(cs_main);
             {
+            // Snapshot activation can replace the active chainstate while this
+            // call releases cs_main. Do not continue its historical validation.
+            if (TargetBlock()) return true;
             // Lock transaction pool for at least as long as it takes for connected_blocks to be consumed
             LOCK(MempoolMutex());
             CBlockIndex* starting_tip = m_chain.Tip();
@@ -6365,13 +6368,6 @@ std::pair<int, int> Chainstate::GetPruneRange(int last_height_can_prune) const
     int prune_end = std::min(last_height_can_prune, max_prune);
 
     return {prune_start, prune_end};
-}
-
-std::optional<std::pair<const CBlockIndex*, const CBlockIndex*>> ChainstateManager::GetHistoricalBlockRange() const
-{
-    const Chainstate* chainstate{HistoricalChainstate()};
-    if (!chainstate) return {};
-    return std::make_pair(chainstate->m_chain.Tip(), chainstate->TargetBlock());
 }
 
 util::Result<void> ChainstateManager::ActivateBestChains()

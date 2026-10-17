@@ -938,13 +938,9 @@ enum class SnapshotCompletionResult {
  *
  * However, if an assumeutxo snapshot is loaded before syncing is completed,
  * there will be two chainstates. The original fully validated chainstate will
- * continue to exist and download new blocks in the background. But the new
- * snapshot which is loaded will become a second chainstate. The second
- * chainstate will be used as the chain tip for the wallet and RPCs even though
- * it is only assumed to be valid. When the initial chainstate catches up to the
- * snapshot height and confirms that the assumeutxo snapshot is actually valid,
- * the second chainstate will be marked validated and become the only chainstate
- * again.
+ * remain stopped. The snapshot chainstate is used as the chain tip for the
+ * wallet and RPCs based on the compiled snapshot commitment. Reindexing discards
+ * the snapshot and reconstructs the ordinary chainstate from genesis.
  */
 class ChainstateManager
 {
@@ -1354,9 +1350,6 @@ public:
     //!
     //! @sa node/chainstate:LoadChainstate()
     bool ValidatedSnapshotCleanup(Chainstate& validated_cs, Chainstate& unvalidated_cs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
-    //! Get range of historical blocks to download.
-    std::optional<std::pair<const CBlockIndex*, const CBlockIndex*>> GetHistoricalBlockRange() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Call ActivateBestChain() on every chainstate.
     util::Result<void> ActivateBestChains() LOCKS_EXCLUDED(::cs_main);

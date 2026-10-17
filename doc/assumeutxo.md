@@ -20,8 +20,10 @@ load it.
 $ bitcoin-cli -rpcclienttimeout=0 loadtxoutset /path/to/input
 ```
 
-After the snapshot has loaded, the syncing process of both the snapshot chain
-and the background IBD chain can be monitored with the `getchainstates` RPC.
+After loading, monitor snapshot sync with `getchainstates`. Earlier blocks are
+not downloaded or validated in the background. To discard the snapshot and
+validate from genesis, restart with `-reindex`. Disable pruning for archival
+storage. Wallet operations requiring missing blocks need this history too.
 
 ### Pruning
 
@@ -30,10 +32,6 @@ snapshot file as soon as `loadtxoutset` finishes.
 
 The minimum `-prune` setting is 550 MiB, but this functionality ignores that
 minimum and uses at least 1100 MiB.
-
-As the background sync continues there will be temporarily two chainstate
-directories, each multiple gigabytes in size (likely growing larger than the
-downloaded snapshot).
 
 ### Indexes
 

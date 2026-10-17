@@ -3498,9 +3498,9 @@ static RPCMethod loadtxoutset()
         "Once this snapshot is loaded, its contents will be "
         "deserialized into a second chainstate data structure, which is then used to sync to "
         "the network's tip. "
-        "Meanwhile, the original chainstate will complete the initial block download process in "
-        "the background, eventually validating up to the block that the snapshot is based upon.\n\n"
-        "Disable indexes before loading a snapshot.\n\n"
+        "Earlier blocks are not downloaded or validated in the background. To reconstruct the "
+        "UTXO set from genesis, disable pruning and restart with -reindex. This discards the "
+        "snapshot and downloads any missing blocks. Disable indexes before loading a snapshot.\n\n"
 
         "The result is a usable bitcoind instance that is current with the network tip in a "
         "matter of minutes rather than hours. UTXO snapshot are typically obtained from "
@@ -3556,8 +3556,7 @@ static RPCMethod loadtxoutset()
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Unable to load UTXO snapshot: %s. (%s)", util::ErrorString(activation_result).original, path.utf8string()));
     }
 
-    // Because we can't provide historical blocks during tip or background sync.
-    // Update local services to reflect we are a limited peer until we are fully sync.
+    // Snapshot nodes do not download the missing historical blocks.
     node.connman->RemoveLocalServices(NODE_NETWORK);
     // Setting the limited state is usually redundant because the node can always
     // provide the last 288 blocks, but it doesn't hurt to set it.

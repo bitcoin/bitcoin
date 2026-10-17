@@ -201,7 +201,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     // snapshot is actually validated? Because this entails unusual
     // filesystem operations to move leveldb data directories around, and that seems
     // too risky to do in the middle of normal runtime.
-    auto snapshot_completion{assumeutxo_cs
+    auto snapshot_completion{assumeutxo_cs && validated_cs.m_chain.Tip() == validated_cs.TargetBlock()
                              ? chainman.MaybeValidateSnapshot(validated_cs, *assumeutxo_cs)
                              : SnapshotCompletionResult::SKIPPED};
 

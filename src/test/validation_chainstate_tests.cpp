@@ -98,10 +98,7 @@ BOOST_FIXTURE_TEST_CASE(connect_tip_does_not_cache_inputs_on_failed_connect, Tes
     BOOST_CHECK(!chainstate.CoinsTip().HaveCoinInCache(outpoint));    // input not cached
 }
 
-//! Test UpdateTip behavior for both active and background chainstates.
-//!
-//! When run on the background chainstate, UpdateTip should do a subset
-//! of what it does for the active chainstate.
+//! Snapshot notifications advance while historical validation stays stopped.
 BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
 {
     ChainstateManager& chainman = *Assert(m_node.chainman);
@@ -119,7 +116,7 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
     // After adding some blocks to the tip, best block should have changed.
     BOOST_CHECK(get_notify_tip() != curr_tip);
 
-    // Grab block 1 from disk; we'll add it to the background chain later.
+    // Grab block 1 from disk to attempt historical validation later.
     std::shared_ptr<CBlock> pblockone = std::make_shared<CBlock>();
     {
         LOCK(::cs_main);
@@ -144,14 +141,12 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
 
     Chainstate& background_cs{*Assert(WITH_LOCK(::cs_main, return chainman.HistoricalChainstate()))};
 
-    // Append the first block to the background chain.
+    // Receiving an earlier block must not resume historical validation.
     BlockValidationState state;
     CBlockIndex* pindex = nullptr;
     const CChainParams& chainparams = Params();
     bool newblock = false;
 
-    // TODO: much of this is inlined from ProcessNewBlock(); just reuse PNB()
-    // once it is changed to support multiple chainstates.
     {
         LOCK(::cs_main);
         bool checked = CheckBlock(*pblockone, state, chainparams.GetConsensus());
@@ -161,14 +156,13 @@ BOOST_FIXTURE_TEST_CASE(chainstate_update_tip, TestChain100Setup)
         BOOST_CHECK(accepted);
     }
 
-    // UpdateTip is called here
+    // Direct callers cannot advance the stopped chainstate either.
     bool block_added = background_cs.ActivateBestChain(state, pblockone);
 
     // Ensure tip is as expected
-    BOOST_CHECK_EQUAL(background_cs.m_chain.Tip()->GetBlockHash(), pblockone->GetHash());
+    BOOST_CHECK_EQUAL(background_cs.m_chain.Height(), 0);
 
-    // get_notify_tip() should be unchanged after adding a block to the background
-    // validation chain.
+    // Attempting historical validation does not send a tip notification.
     BOOST_CHECK(block_added);
     BOOST_CHECK_EQUAL(curr_tip, get_notify_tip());
 }
