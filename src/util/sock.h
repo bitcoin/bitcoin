@@ -162,8 +162,17 @@ public:
     static constexpr Event ErrorEvent = 0b100;
 
     /**
+     * Maximum timeout supported by `Wait()` and `WaitMany()` (about 24.8 days).
+     * Longer timeouts are capped because `poll()` takes an `int` timeout in
+     * milliseconds, and `select()` rejects large timeouts on some platforms
+     * (e.g. macOS). Expressed in seconds so that callers can use the same value.
+     */
+    static constexpr std::chrono::seconds MAX_WAIT_TIMEOUT{std::numeric_limits<int>::max() / 1000};
+
+    /**
      * Wait for readiness for input (recv) or output (send).
      * @param[in] timeout Wait this much for at least one of the requested events to occur.
+     * Capped at `MAX_WAIT_TIMEOUT`.
      * @param[in] requested Wait for those events, bitwise-or of `RecvEvent` and `SendEvent`.
      * @param[out] occurred If not nullptr and the function returns `true`, then this
      * indicates which of the requested events occurred (`ErrorEvent` will be added, even if
@@ -218,6 +227,7 @@ public:
     /**
      * Same as `Wait()`, but wait on many sockets within the same timeout.
      * @param[in] timeout Wait this long for at least one of the requested events to occur.
+     * Capped at `MAX_WAIT_TIMEOUT`.
      * @param[in,out] events_per_sock Wait for the requested events on these sockets and set
      * `occurred` for the events that actually occurred.
      * @return true on success (or timeout, if all `what[].occurred` are returned as 0),
