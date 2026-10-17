@@ -1414,15 +1414,6 @@ RPCMethod getblockchaininfo()
                 {RPCResult::Type::NUM_TIME, "mediantime", "the median block time expressed in " + UNIX_EPOCH_TIME},
                 {RPCResult::Type::NUM, "verificationprogress", "estimate of verification progress [0..1]"},
                 {RPCResult::Type::BOOL, "initialblockdownload", "(debug information) estimate of whether this node is in Initial Block Download mode"},
-                {RPCResult::Type::OBJ, "backgroundvalidation", /*optional=*/true, "state info regarding background validation process",
-                {
-                    {RPCResult::Type::NUM, "snapshotheight", "the height of the snapshot block. Background validation verifies the chain from genesis up to this height"},
-                    {RPCResult::Type::NUM, "blocks", "the height of the most-work background fully-validated chain. The genesis block has height 0"},
-                    {RPCResult::Type::STR, "bestblockhash", "the hash of the currently best block validated in the background"},
-                    {RPCResult::Type::NUM_TIME, "mediantime", "the median block time expressed in " + UNIX_EPOCH_TIME},
-                    {RPCResult::Type::NUM, "verificationprogress", "estimate of background verification progress [0..1]"},
-                    {RPCResult::Type::STR_HEX, "chainwork", "total amount of work in background validated chain, in hexadecimal"},
-                }},
                 {RPCResult::Type::STR_HEX, "chainwork", "total amount of work in active chain, in hexadecimal"},
                 {RPCResult::Type::NUM, "size_on_disk", "the estimated size of the block and undo files on disk"},
                 {RPCResult::Type::BOOL, "pruned", "if the blocks are subject to pruning"},
@@ -1463,19 +1454,6 @@ RPCMethod getblockchaininfo()
     obj.pushKV("mediantime", tip.GetMedianTimePast());
     obj.pushKV("verificationprogress", chainman.GuessVerificationProgress(&tip));
     obj.pushKV("initialblockdownload", chainman.IsInitialBlockDownload());
-    auto historical_blocks{chainman.GetHistoricalBlockRange()};
-    if (historical_blocks) {
-        UniValue background_validation(UniValue::VOBJ);
-        const CBlockIndex& btip{*CHECK_NONFATAL(historical_blocks->first)};
-        const CBlockIndex& btarget{*CHECK_NONFATAL(historical_blocks->second)};
-        background_validation.pushKV("snapshotheight", btarget.nHeight);
-        background_validation.pushKV("blocks", btip.nHeight);
-        background_validation.pushKV("bestblockhash", btip.GetBlockHash().GetHex());
-        background_validation.pushKV("mediantime", btip.GetMedianTimePast());
-        background_validation.pushKV("chainwork", btip.nChainWork.GetHex());
-        background_validation.pushKV("verificationprogress", chainman.GetBackgroundVerificationProgress(btip));
-        obj.pushKV("backgroundvalidation", std::move(background_validation));
-    }
     obj.pushKV("chainwork", tip.nChainWork.GetHex());
     obj.pushKV("size_on_disk", chainman.m_blockman.CalculateCurrentUsage());
     obj.pushKV("pruned", chainman.m_blockman.IsPruneMode());
