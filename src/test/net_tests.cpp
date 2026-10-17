@@ -1707,4 +1707,54 @@ BOOST_AUTO_TEST_CASE(addlocal_onlynet_externalip)
     fDiscover = discover_orig;
 }
 
+BOOST_AUTO_TEST_CASE(inbound_reconnect_tracking)
+{
+    auto& connman{static_cast<ConnmanTestMsg&>(*m_node.connman)};
+    const auto addr{[](const std::string& s) { return LookupHost(s, /*fAllowLookup=*/false).value(); }};
+    const auto note{[&](const std::string& s, NodeClock::time_point t) { return connman.NoteInboundAttemptPublic(addr(s), t); }};
+    constexpr auto W{INBOUND_RECONNECT_WINDOW};
+    const auto t0{NodeClock::now()};
+
+    // The first two attempts from an address are not recent, the third is.
+    BOOST_CHECK(!note("1.2.3.4", t0));
+    BOOST_CHECK(!note("1.2.3.4", t0 + 1s));
+    BOOST_CHECK(note("1.2.3.4", t0 + 2s));
+    // Other IPv4 hosts are distinct keys.
+    BOOST_CHECK(!note("1.2.3.5", t0 + 2s));
+
+    // IPv6 is keyed by /48.
+    BOOST_CHECK(!note("2001:db8:1:2::1", t0 + 3s));
+    BOOST_CHECK(!note("2001:db8:1:3::1", t0 + 3s));
+    BOOST_CHECK(note("2001:db8:1:ffff:ffff:ffff:ffff:ffff", t0 + 3s));
+    BOOST_CHECK(!note("2001:db8:2::1", t0 + 3s));
+    // An IPv4 address and an IPv6 /48 starting with the same bytes don't collide.
+    BOOST_CHECK(!note("102:304:506::1", t0 + 4s));
+
+    // Still remembered one and a half windows after the last attempt.
+    BOOST_CHECK(note("1.2.3.4", t0 + W + W / 2));
+
+    // Forgotten two windows after the last attempt, with other traffic
+    // driving the rotations in between. The attempts of that other address
+    // are counted across the rotations.
+    BOOST_CHECK(!note("5.6.7.8", t0 + 2 * W + W / 2));
+    BOOST_CHECK(!note("5.6.7.8", t0 + 3 * W + W / 2));
+    BOOST_CHECK(!note("1.2.3.4", t0 + 3 * W + W / 2));
+    BOOST_CHECK(note("5.6.7.8", t0 + 3 * W + W / 2 + 1s));
+
+    // Forgotten after a quiet period of two windows, in which no attempt
+    // triggered a rotation.
+    BOOST_CHECK(!note("5.6.7.8", t0 + 5 * W + W / 2));
+    BOOST_CHECK(!note("1.2.3.4", t0 + 5 * W + W / 2));
+
+    // An address that keeps reconnecting stays recent indefinitely, even when
+    // every attempt in a window lands right after a rotation.
+    const auto t1{t0 + 5 * W + W / 2};
+    BOOST_CHECK(!note("9.9.9.9", t1));
+    BOOST_CHECK(!note("9.9.9.9", t1 + 1s));
+    BOOST_CHECK(note("9.9.9.9", t1 + 2s));
+    BOOST_CHECK(note("9.9.9.9", t1 + W));
+    BOOST_CHECK(note("9.9.9.9", t1 + 2 * W));
+    BOOST_CHECK(note("9.9.9.9", t1 + 3 * W));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

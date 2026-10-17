@@ -89,6 +89,11 @@ struct ConnmanTestMsg : public CConnman {
         return InitBinds(options);
     }
 
+    bool NoteInboundAttemptPublic(const CNetAddr& addr, NodeClock::time_point now) EXCLUSIVE_LOCKS_REQUIRED(!m_recent_inbound_mutex)
+    {
+        return NoteInboundAttempt(addr, now);
+    }
+
     void SocketHandlerPublic()
     {
         SocketHandler();

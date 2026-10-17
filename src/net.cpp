@@ -1779,6 +1779,51 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     CreateNodeFromAcceptedSocket(std::move(sock), permission_flags, addr_bind, addr);
 }
 
+bool CConnman::NoteInboundAttempt(const CNetAddr& addr, NodeClock::time_point now)
+{
+    AssertLockNotHeld(m_recent_inbound_mutex);
+
+    std::vector<unsigned char> key{addr.GetAddrBytes()};
+    // Key IPv6 by /48: the entity this targets controls a whole /48 and could
+    // otherwise use a fresh /64 (or address) per attempt. Honest nodes that
+    // share a /48 are lumped together, which costs them little: it takes
+    // three attempts from the /48 within a window for one of them to be
+    // refused, and only while we are full. IPv4, Tor, I2P and CJDNS keep the
+    // full address.
+    if (addr.IsIPv6()) key.resize(6);
+
+    LOCK(m_recent_inbound_mutex);
+    const auto elapsed{now - m_recent_inbound_rotated};
+    if (elapsed >= 2 * INBOUND_RECONNECT_WINDOW) {
+        // No rotation for more than two windows: both filters are stale.
+        m_recent_inbound_cur.reset();
+        m_recent_inbound_prev.reset();
+        m_recent_inbound_rotated = now;
+    } else if (elapsed >= INBOUND_RECONNECT_WINDOW) {
+        std::swap(m_recent_inbound_cur, m_recent_inbound_prev);
+        m_recent_inbound_cur.reset();
+        m_recent_inbound_rotated = now;
+    }
+    const auto seen{[&](const std::vector<unsigned char>& k) EXCLUSIVE_LOCKS_REQUIRED(m_recent_inbound_mutex) {
+        return m_recent_inbound_cur.contains(k) || m_recent_inbound_prev.contains(k);
+    }};
+    // The filters can't count, so use two entries per key: key+1 after the
+    // first attempt and key+2 after the second. Only insert entries that are
+    // not yet present: every insert counts towards the filter's own generation
+    // rollover, and an address that retries every second must not push the
+    // others out.
+    key.push_back(2);
+    if (seen(key)) {
+        // Third or later attempt. Keep the entry alive across rotations.
+        if (!m_recent_inbound_cur.contains(key)) m_recent_inbound_cur.insert(key);
+        return true;
+    }
+    key.back() = 1;
+    if (seen(key)) key.back() = 2; // second attempt
+    m_recent_inbound_cur.insert(key);
+    return false;
+}
+
 void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
                                             NetPermissionFlags permission_flags,
                                             const CService& addr_bind,
