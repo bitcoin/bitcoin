@@ -769,12 +769,6 @@ public:
      * May not be called with cs_main held. May not be called in a
      * validationinterface callback.
      *
-     * Note that if this is called while a snapshot chainstate is active, and if
-     * it is called on a validated chainstate whose tip has reached the base
-     * block of the snapshot, its execution will take *MINUTES* while it hashes
-     * the UTXO set to verify the assumeutxo value the snapshot was activated
-     * with. `cs_main` will be held during this time.
-     *
      * @returns true unless a system error occurred
      */
     bool ActivateBestChain(
@@ -1005,9 +999,6 @@ public:
     using Options = kernel::ChainstateManagerOpts;
 
     explicit ChainstateManager(const util::SignalInterrupt& interrupt, Options options, node::BlockManager::Options blockman_options);
-
-    //! Restore network services when snapshot validation completes
-    std::function<void()> snapshot_download_completed = std::function<void()>();
 
     const CChainParams& GetParams() const { return m_options.chainparams; }
     const Consensus::Params& GetConsensus() const { return m_options.chainparams.GetConsensus(); }
@@ -1351,7 +1342,7 @@ public:
     //! @sa node/chainstate:LoadChainstate()
     bool ValidatedSnapshotCleanup(Chainstate& validated_cs, Chainstate& unvalidated_cs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    //! Call ActivateBestChain() on every chainstate.
+    //! Call ActivateBestChain() on the active chainstate.
     util::Result<void> ActivateBestChains() LOCKS_EXCLUDED(::cs_main);
 
     //! If, due to invalidation / reconsideration of blocks, the previous

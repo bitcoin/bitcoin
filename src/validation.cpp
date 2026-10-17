@@ -3103,18 +3103,6 @@ bool Chainstate::ConnectTip(
              Ticks<SecondsDouble>(m_chainman.time_total),
              Ticks<MillisecondsDouble>(m_chainman.time_total) / m_chainman.num_blocks_total);
 
-    // See if this chainstate has reached a target block and can be used to
-    // validate an assumeutxo snapshot. If it can, hashing the UTXO database
-    // will be slow, and cs_main could remain locked here for several minutes.
-    // If the snapshot is validated, the UTXO hash will be saved to
-    // this->m_target_utxohash, causing HistoricalChainstate() to return null
-    // and this chainstate to no longer be used. ActivateBestChain() will also
-    // stop connecting blocks to this chainstate because this->ReachedTarget()
-    // will be true and this->setBlockIndexCandidates will not have additional
-    // blocks.
-    Chainstate& current_cs{m_chainman.CurrentChainstate()};
-    m_chainman.MaybeValidateSnapshot(*this, current_cs);
-
     connected_blocks.emplace_back(pindexNew, std::move(block_to_connect));
     return true;
 }
@@ -3344,13 +3332,6 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
     // we use m_chainstate_mutex to enforce mutual exclusion so that only one caller may execute this function at a time
     LOCK(m_chainstate_mutex);
 
-    // Belt-and-suspenders check that we aren't attempting to advance the
-    // chainstate past the target block.
-    if (WITH_LOCK(::cs_main, return m_target_utxohash)) {
-        LogError("%s", STR_INTERNAL_BUG("m_target_utxohash is set - this chainstate should not be in operation."));
-        return Assume(false);
-    }
-
     CBlockIndex *pindexMostWork = nullptr;
     CBlockIndex *pindexNewTip = nullptr;
     do {
@@ -3410,10 +3391,6 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
                     }
                 }
 
-                // Break this do-while to ensure we don't advance past the target block.
-                if (ReachedTarget()) {
-                    break;
-                }
             } while (!m_chain.Tip() || (starting_tip && CBlockIndexWorkComparator()(m_chain.Tip(), starting_tip)));
             if (!blocks_connected) return true;
 
@@ -3448,29 +3425,9 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
         } // release cs_main
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
 
-        bool reached_target;
-        {
-            LOCK(m_chainman.GetMutex());
-            // Write changes periodically to disk, after relay.
-            if (!FlushStateToDisk(state, FlushStateMode::PERIODIC)) {
-                return false;
-            }
-
-            reached_target = ReachedTarget();
-        }
-
-        if (reached_target) {
-            // Chainstate has reached the target block, so exit.
-            //
-            // Restart indexes so indexes can resync and index new blocks after
-            // the target block.
-            //
-            // This cannot be done while holding cs_main (within
-            // MaybeValidateSnapshot) or a cs_main deadlock will occur.
-            if (m_chainman.snapshot_download_completed) {
-                m_chainman.snapshot_download_completed();
-            }
-            break;
+        // Write changes periodically to disk, after relay.
+        if (!FlushStateToDisk(state, FlushStateMode::PERIODIC)) {
+            return false;
         }
 
         // We check interrupt only after giving ActivateBestChainStep a chance to run once so that we
@@ -4439,13 +4396,6 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
         LogError("%s: ActivateBestChain failed (%s)\n", __func__, state.ToString());
         return false;
     }
-
-    Chainstate* bg_chain{WITH_LOCK(cs_main, return HistoricalChainstate())};
-    BlockValidationState bg_state;
-    if (bg_chain && !bg_chain->ActivateBestChain(bg_state, block)) {
-        LogError("%s: [background] ActivateBestChain failed (%s)\n", __func__, bg_state.ToString());
-        return false;
-     }
 
     return true;
 }
@@ -5961,17 +5911,6 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
     return {};
 }
 
-// Currently, this function holds cs_main for its duration, which could be for
-// multiple minutes due to the ComputeUTXOStats call. Holding cs_main used to be
-// necessary (before d43a1f1a2fa3) to avoid advancing validated_cs farther than
-// its target block. Now it should be possible to avoid this, but simply
-// releasing cs_main here would not be possible because this function is invoked
-// by ConnectTip within ActivateBestChain.
-//
-// Eventually (TODO) it would be better to call this function outside of
-// ActivateBestChain, on a separate thread that should not require cs_main to
-// hash, because the UTXO set is only hashed after the historical chainstate
-// reaches its target block and is no longer changing.
 SnapshotCompletionResult ChainstateManager::MaybeValidateSnapshot(Chainstate& validated_cs, Chainstate& unvalidated_cs)
 {
     AssertLockHeld(cs_main);
@@ -6372,26 +6311,12 @@ std::pair<int, int> Chainstate::GetPruneRange(int last_height_can_prune) const
 
 util::Result<void> ChainstateManager::ActivateBestChains()
 {
-    // We can't hold cs_main during ActivateBestChain even though we're accessing
-    // the chainman unique_ptrs since ABC requires us not to be holding cs_main, so retrieve
-    // the relevant pointers before the ABC call.
     AssertLockNotHeld(cs_main);
-    std::vector<Chainstate*> chainstates;
-    {
+    Chainstate& chainstate{ActiveChainstate()};
+    BlockValidationState state;
+    if (!chainstate.ActivateBestChain(state, nullptr)) {
         LOCK(GetMutex());
-        chainstates.reserve(m_chainstates.size());
-        for (const auto& chainstate : m_chainstates) {
-            if (chainstate && chainstate->m_assumeutxo != Assumeutxo::INVALID && !chainstate->m_target_utxohash) {
-                chainstates.push_back(chainstate.get());
-            }
-        }
-    }
-    for (Chainstate* chainstate : chainstates) {
-        BlockValidationState state;
-        if (!chainstate->ActivateBestChain(state, nullptr)) {
-            LOCK(GetMutex());
-            return util::Error{Untranslated(strprintf("%s Failed to connect best block (%s)", chainstate->ToString(), state.ToString()))};
-        }
+        return util::Error{Untranslated(strprintf("%s Failed to connect best block (%s)", chainstate.ToString(), state.ToString()))};
     }
     return {};
 }
