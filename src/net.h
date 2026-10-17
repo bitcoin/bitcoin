@@ -1369,6 +1369,8 @@ public:
      *                                so that the caller can deal with this.
      */
     bool EvictTxPeerIfFull(std::optional<NodeId> protect_peer = std::nullopt) EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
+    /** Whether we have more inbound tx-relaying peers than allowed. */
+    bool InboundTxRelayFull() const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
 
     bool AddNode(const AddedNodeParams& add) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
     bool RemoveAddedNode(std::string_view node) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);

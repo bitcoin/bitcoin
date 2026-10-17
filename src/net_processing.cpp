@@ -5410,6 +5410,16 @@ bool PeerManagerImpl::MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer)
 bool PeerManagerImpl::MaybeDisconnectForTxRelayCapacity(CNode& node, const std::string& msg_type, std::optional<NodeId> protect_peer)
 {
     if (!node.IsInboundConn() || !node.m_relays_txs) return false;
+
+    if (node.m_recent_reconnect) {
+        // Don't evict an existing tx-relaying peer for an address that was
+        // here a moment ago. Drop this peer instead, unless there is room.
+        if (!m_connman.InboundTxRelayFull()) return false;
+        LogDebug(BCLog::NET, "tx-relay inbound slots full and peer reconnected too soon - connection dropped after %s message, peer=%d\n", msg_type, node.GetId());
+        node.fDisconnect = true;
+        return true;
+    }
+
     if (m_connman.EvictTxPeerIfFull(protect_peer)) return false;
 
     LogDebug(BCLog::NET, "failed to find a tx-relaying eviction candidate - connection dropped after %s message, peer=%d\n", msg_type, node.GetId());

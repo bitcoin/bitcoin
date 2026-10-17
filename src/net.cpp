@@ -2598,7 +2598,7 @@ int CConnman::GetExtraBlockRelayCount() const
     return std::max(block_relay_peers - m_max_outbound_block_relay, 0);
 }
 
-bool CConnman::EvictTxPeerIfFull(std::optional<NodeId> protect_peer)
+bool CConnman::InboundTxRelayFull() const
 {
     int tx_inbound_peers{0};
     {
@@ -2609,10 +2609,13 @@ bool CConnman::EvictTxPeerIfFull(std::optional<NodeId> protect_peer)
             }
         }
     }
-    if (tx_inbound_peers > m_max_inbound_full_relay) {
-        return AttemptToEvictConnection(/*evict_tx_relay_peer_only=*/true, protect_peer);
-    }
-    return true;
+    return tx_inbound_peers > m_max_inbound_full_relay;
+}
+
+bool CConnman::EvictTxPeerIfFull(std::optional<NodeId> protect_peer)
+{
+    if (!InboundTxRelayFull()) return true;
+    return AttemptToEvictConnection(/*evict_tx_relay_peer_only=*/true, protect_peer);
 }
 
 std::unordered_set<Network> CConnman::GetReachableEmptyNetworks() const
