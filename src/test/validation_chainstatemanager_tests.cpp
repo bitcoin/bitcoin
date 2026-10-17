@@ -170,15 +170,6 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
     c2.InitCoinsDB(
         /*cache_size_bytes=*/8_MiB, /*in_memory=*/true, /*should_wipe=*/false);
 
-    // Reset IBD state so IsInitialBlockDownload() returns true and causes
-    // MaybeRebalanceCaches() to prioritize the snapshot chainstate, giving it
-    // more cache space than the snapshot chainstate. Calling ResetIbd() is
-    // necessary because m_cached_is_ibd is already latched to false before
-    // the test starts due to the test setup. After ResetIbd() is called,
-    // IsInitialBlockDownload() will return true because at this point the active
-    // chainstate has a null chain tip.
-    static_cast<TestChainstateManager&>(manager).ResetIbd();
-
     {
         LOCK(::cs_main);
         c2.InitCoinsCache(8_MiB);

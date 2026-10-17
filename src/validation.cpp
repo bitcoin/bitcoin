@@ -3353,7 +3353,6 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
 
     CBlockIndex *pindexMostWork = nullptr;
     CBlockIndex *pindexNewTip = nullptr;
-    bool exited_ibd{false};
     do {
         // Block until the validation queue drains. This should largely
         // never happen in normal operation, however may happen during
@@ -3368,7 +3367,6 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
             {
             // Lock transaction pool for at least as long as it takes for connected_blocks to be consumed
             LOCK(MempoolMutex());
-            const bool was_in_ibd = m_chainman.IsInitialBlockDownload();
             CBlockIndex* starting_tip = m_chain.Tip();
             bool blocks_connected = false;
             do {
@@ -3419,11 +3417,6 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
             const CBlockIndex* pindexFork = starting_tip ? m_chain.FindFork(*starting_tip) : nullptr;
             bool still_in_ibd = m_chainman.IsInitialBlockDownload();
 
-            if (was_in_ibd && !still_in_ibd) {
-                // Active chainstate has exited IBD.
-                exited_ibd = true;
-            }
-
             // Notify external listeners about the new tip.
             // Enqueue while holding cs_main to ensure that UpdatedBlockTip is called in the order in which blocks are connected
             if (this == &m_chainman.ActiveChainstate() && pindexFork != pindexNewTip) {
@@ -3455,12 +3448,6 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
         bool reached_target;
         {
             LOCK(m_chainman.GetMutex());
-            if (exited_ibd) {
-                // If a background chainstate is in use, we may need to rebalance our
-                // allocation of caches once a chainstate exits initial block download.
-                m_chainman.MaybeRebalanceCaches();
-            }
-
             // Write changes periodically to disk, after relay.
             if (!FlushStateToDisk(state, FlushStateMode::PERIODIC)) {
                 return false;
@@ -6115,20 +6102,10 @@ void ChainstateManager::MaybeRebalanceCaches()
         // Allocate everything to the snapshot chainstate.
         current_cs.ResizeCoinsCaches(m_total_coinstip_cache, m_total_coinsdb_cache);
     } else {
-        // If both chainstates exist, determine who needs more cache based on IBD status.
-        //
-        // Note: shrink caches first so that we don't inadvertently overwhelm available memory.
-        if (IsInitialBlockDownload()) {
-            historical_cs->ResizeCoinsCaches(
-                m_total_coinstip_cache * 0.05, m_total_coinsdb_cache * 0.05);
-            current_cs.ResizeCoinsCaches(
-                m_total_coinstip_cache * 0.95, m_total_coinsdb_cache * 0.95);
-        } else {
-            current_cs.ResizeCoinsCaches(
-                m_total_coinstip_cache * 0.05, m_total_coinsdb_cache * 0.05);
-            historical_cs->ResizeCoinsCaches(
-                m_total_coinstip_cache * 0.95, m_total_coinsdb_cache * 0.95);
-        }
+        historical_cs->ResizeCoinsCaches(
+            m_total_coinstip_cache * 0.05, m_total_coinsdb_cache * 0.05);
+        current_cs.ResizeCoinsCaches(
+            m_total_coinstip_cache * 0.95, m_total_coinsdb_cache * 0.95);
     }
 }
 
