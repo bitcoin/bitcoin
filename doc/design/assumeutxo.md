@@ -23,18 +23,6 @@ For notes on the usage of Assumeutxo, please refer to [the usage doc](/doc/assum
 
 ## Chainstate phases
 
-Chainstate within the system goes through a number of phases when UTXO snapshots are
-used, as managed by `ChainstateManager`. At various points there can be multiple
-`Chainstate` objects in existence to facilitate both maintaining the network tip and
-performing historical validation of the assumed-valid chain.
-
-It is worth noting that though there are multiple separate chainstates, those
-chainstates share use of a common block index (i.e. they hold the same `BlockManager`
-reference).
-
-The subheadings below outline the phases and the corresponding changes to chainstate
-data.
-
 ### "Normal" operation via initial block download
 
 `ChainstateManager` manages a single Chainstate object, for which
@@ -75,48 +63,5 @@ leveldb database.
 | number of chainstates | 2 |
 | active chainstate | snapshot |
 
-The snapshot begins to sync to tip from its base block, technically in parallel with
-the original chainstate, but it is given priority during block download and is
-allocated most of the cache (see `MaybeRebalanceCaches()` and usages) as our chief
-goal is getting to network tip.
-
-**Failure consideration:** if shutdown happens at any point during this phase, both
-chainstates will be detected during the next init and the process will resume.
-
-### Snapshot chainstate hits network tip
-
-**Note:** at this point, ValidationInterface callbacks will be coming in from both
-chainstates. Considerations here must be made for indexing, which may no longer be happening
-sequentially.
-
-### Background chainstate hits snapshot base block
-
-Once the tip of the background chainstate hits the base block of the snapshot
-chainstate, we hash the
-background chainstate's UTXO set contents and ensure it matches the compiled value in
-`CMainParams::m_assumeutxo_data`.
-
-|    |    |
-| ---------- | ----------- |
-| number of chainstates | 2 |
-| active chainstate | snapshot |
-
-The background chainstate data lingers on disk until the program is restarted.
-
-### Bitcoind restarts sometime after snapshot validation has completed
-
-After a shutdown and subsequent restart, `LoadChainstate()` cleans up the background
-chainstate with `ValidatedSnapshotCleanup()`, which renames the `chainstate_snapshot`
-datadir as `chainstate` and removes the now unnecessary background chainstate data.
-
-|    |    |
-| ---------- | ----------- |
-| number of chainstates | 1 |
-| active chainstate | ibd (was snapshot, but is now fully validated) |
-
-What began as the snapshot chainstate is now indistinguishable from a chainstate that
-has been built from the traditional IBD process, and will be initialized as such.
-
-A file will be left in `chainstate/base_blockhash`, which indicates that the
-chainstate, even though now fully validated, was originally started from a snapshot
-with the corresponding base blockhash.
+The snapshot syncs to tip while the original chainstate remains stopped.
+Use `-reindex` to discard the snapshot and reconstruct the UTXO set from genesis.
