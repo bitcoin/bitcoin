@@ -152,13 +152,9 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
                 }
                 COutPoint outpoint{random_out_point};
                 Coin coin{random_coin};
-                if (fuzzed_data_provider.ConsumeBool()) {
-                    // We can only skip the check if no unspent coin exists for this outpoint.
-                    const bool possible_overwrite{coins_view_cache.PeekCoin(outpoint) || fuzzed_data_provider.ConsumeBool()};
-                    coins_view_cache.AddCoin(outpoint, std::move(coin), possible_overwrite);
-                } else {
-                    coins_view_cache.EmplaceCoinInternalDANGER(outpoint, std::move(coin));
-                }
+                // We can only skip the check if no unspent coin exists for this outpoint.
+                const bool possible_overwrite{coins_view_cache.PeekCoin(outpoint) || fuzzed_data_provider.ConsumeBool()};
+                coins_view_cache.AddCoin(outpoint, std::move(coin), possible_overwrite);
             },
             [&] {
                 if (overlay && !overlay->AllInputsConsumed()) return; // CoinsViewOverlay::Flush() must have all inputs consumed before being called
