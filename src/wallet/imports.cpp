@@ -315,10 +315,6 @@ std::vector<ImportResult> ProcessDescriptorsImport(CWallet& wallet,
                         error_msg += strprintf(" This error could be caused by pruning or data corruption "
                             "(see bitcoind log for details) and could be dealt with by downloading and "
                             "rescanning the relevant blocks (see -reindex option and rescanblockchain RPC).");
-                    } else if (wallet.chain().hasAssumedValidChain()) {
-                        error_msg += strprintf(" This error is likely caused by an in-progress assumeutxo "
-                            "background sync. Check logs or getchainstates RPC for assumeutxo background "
-                            "sync progress and try again later.");
                     } else {
                         error_msg += strprintf(" This error could potentially caused by data corruption. If "
                             "the issue persists you may want to reindex (see -reindex option).");
