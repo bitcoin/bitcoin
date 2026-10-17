@@ -66,8 +66,8 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.rpc_timeout = 120
         self.extra_args = [
             [],
-            ["-fastprune", "-prune=1", "-blockfilterindex=1", "-coinstatsindex=1"],
-            ["-persistmempool=0","-txindex=1", "-blockfilterindex=1", "-coinstatsindex=1"],
+            ["-fastprune", "-prune=1"],
+            ["-persistmempool=0"],
             []
         ]
 
@@ -299,6 +299,8 @@ class AssumeutxoTest(BitcoinTestFramework):
         miner = self.nodes[0]
         snapshot_node = self.nodes[2]
         ibd_node = self.nodes[3]
+
+        self.extra_args[snapshot_node.index] = ["-persistmempool=0"]
 
         # Start test fresh by cleaning up node directories
         for node in (snapshot_node, ibd_node):
@@ -668,12 +670,14 @@ class AssumeutxoTest(BitcoinTestFramework):
         # completing the background sync.
         self.assert_only_network_limited_service(n1)
 
-        # Ensure indexes have synced.
+        completed_indexes = ["-blockfilterindex=1", "-coinstatsindex=1"]
+        self.extra_args[1] = completed_indexes
+
+        # Ensure indexes have synced after restart.
         completed_idx_state = {
             'basic block filter index': COMPLETE_IDX,
             'coinstatsindex': COMPLETE_IDX,
         }
-        self.wait_until(lambda: n1.getindexinfo() == completed_idx_state)
 
         self.log.info("Re-check nTx and nChainTx values")
         check_tx_counts(final=True)
@@ -701,6 +705,10 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(n2.getblockcount(), START_HEIGHT)
         assert 'NETWORK' in n2.getnetworkinfo()['localservicesnames']  # sanity check
 
+        self.log.info("Snapshot import requires indexes to be disabled")
+        self.restart_node(2, extra_args=["-txindex=1"])
+        assert_raises_rpc_error(-1, "Disable indexes before loading a UTXO snapshot", n2.loadtxoutset, dump_output['path'])
+        self.restart_node(2, extra_args=self.extra_args[2])
         self.log.info(f"Loading snapshot into third node from {dump_output['path']}")
         loaded = n2.loadtxoutset(dump_output['path'])
         assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
@@ -749,12 +757,12 @@ class AssumeutxoTest(BitcoinTestFramework):
         # Once background chain sync completes, the full node must start offering historical blocks again.
         self.wait_until(lambda: {'NETWORK', 'NETWORK_LIMITED'}.issubset(n2.getnetworkinfo()['localservicesnames']))
 
+        self.extra_args[2] += ["-txindex=1", "-blockfilterindex=1", "-coinstatsindex=1"]
         completed_idx_state = {
             'basic block filter index': COMPLETE_IDX,
             'coinstatsindex': COMPLETE_IDX,
             'txindex': COMPLETE_IDX,
         }
-        self.wait_until(lambda: n2.getindexinfo() == completed_idx_state)
 
         for i in (0, 2):
             n = self.nodes[i]
