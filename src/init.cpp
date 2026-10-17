@@ -2041,7 +2041,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             LogInfo("Setting NODE_NETWORK in non-prune mode");
             g_local_services = ServiceFlags(g_local_services | NODE_NETWORK);
         } else {
-            LogInfo("Running node in NODE_NETWORK_LIMITED mode until snapshot background sync completes");
+            LogInfo("Running snapshot node in NODE_NETWORK_LIMITED mode without historical block downloads");
         }
     }
 

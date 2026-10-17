@@ -766,10 +766,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_init, SnapshotTestSetup)
     {
         LOCK(chainman_restarted.GetMutex());
         BOOST_CHECK_EQUAL(chainman_restarted.m_chainstates.size(), 2);
-        // Background chainstate has height of 109 not 110 here due to a quirk
-        // of the LoadVerifyActivate only calling ActivateBestChain on one
-        // chainstate. The height would be 110 after a real restart, but it's
-        // fine for this test which is focused on the snapshot chainstate.
+        // Restarting leaves historical validation stopped.
         BOOST_CHECK_EQUAL(chainman_restarted.m_chainstates[0]->m_chain.Height(), 109);
         BOOST_CHECK_EQUAL(chainman_restarted.m_chainstates[1]->m_chain.Height(), 210);
 
@@ -788,12 +785,11 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_init, SnapshotTestSetup)
         LOCK(chainman_restarted.GetMutex());
         BOOST_CHECK_EQUAL(chainman_restarted.ActiveHeight(), 220);
 
-        // Background chainstate should be unaware of new blocks on the snapshot
-        // chainstate, but the block disconnected above is now reattached.
+        // Receiving new blocks does not advance the historical chainstate.
         BOOST_CHECK_EQUAL(chainman_restarted.m_chainstates.size(), 2);
-        BOOST_CHECK_EQUAL(chainman_restarted.m_chainstates[0]->m_chain.Height(), 110);
+        BOOST_CHECK_EQUAL(chainman_restarted.m_chainstates[0]->m_chain.Height(), 109);
         BOOST_CHECK_EQUAL(chainman_restarted.m_chainstates[1]->m_chain.Height(), 220);
-        BOOST_CHECK_EQUAL(chainman_restarted.HistoricalChainstate(), nullptr);
+        BOOST_CHECK_EQUAL(chainman_restarted.HistoricalChainstate(), chainman_restarted.m_chainstates[0].get());
     }
 }
 
