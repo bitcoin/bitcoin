@@ -487,7 +487,7 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
     if (retval == QMessageBox::Save) {
         // "Create Unsigned" clicked
         CMutableTransaction mtx = CMutableTransaction{*(m_current_transaction->getWtx())};
-        PartiallySignedTransaction psbtx(mtx);
+        PartiallySignedTransaction psbtx(mtx, /*version=*/0);
         bool complete = false;
         // Fill without signing
         const auto err{model->wallet().fillPSBT({.sign = false, .bip32_derivs = true}, /*n_signed=*/nullptr, psbtx, complete)};
@@ -502,7 +502,7 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
         bool broadcast = true;
         if (model->wallet().hasExternalSigner()) {
             CMutableTransaction mtx = CMutableTransaction{*(m_current_transaction->getWtx())};
-            PartiallySignedTransaction psbtx(mtx);
+            PartiallySignedTransaction psbtx(mtx, /*version=*/0);
             bool complete = false;
             // Always fill without signing first. This prevents an external signer
             // from being called prematurely and is not expensive.
