@@ -67,7 +67,7 @@ inline constexpr std::chrono::milliseconds DEFAULT_PRIVATE_BROADCAST_TIMEOUT{10m
                                                     const CFeeRate& max_tx_fee_rate,
                                                     TxBroadcast broadcast_method,
                                                     bool wait_callback,
-                                                    std::chrono::milliseconds private_broadcast_timeout = 0ms);
+                                                    std::chrono::milliseconds private_broadcast_timeout = DEFAULT_PRIVATE_BROADCAST_TIMEOUT);
 
 /**
  * Return transaction with a given hash.
