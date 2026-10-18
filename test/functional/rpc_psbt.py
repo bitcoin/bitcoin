@@ -1475,6 +1475,20 @@ class PSBTTest(BitcoinTestFramework):
         joined_conflict = self.nodes[0].joinpsbts([conflict_first_obj.to_base64(), conflict_second_obj.to_base64()])
         assert_equal(self.nodes[0].decodepsbt(joined_conflict)["global_xpubs"], [{"xpub": xpub1, "master_fingerprint": "00000000", "path": "m"}])
 
+        # Joining changes the transaction, so Taproot signatures must be dropped like ECDSA ones
+        tr_addr1 = self.nodes[1].getnewaddress("", "bech32m")
+        tr_addr2 = self.nodes[1].getnewaddress("", "bech32m")
+        tr_utxo1, tr_utxo2 = self.create_outpoints(self.nodes[0], outputs=[{tr_addr1: 1}, {tr_addr2: 1}])
+        self.generate(self.nodes[0], 1)
+        tr_psbt1 = self.nodes[1].createpsbt([tr_utxo1], {self.nodes[0].getnewaddress(): Decimal('0.999')}, psbt_version=0)
+        tr_psbt1 = self.nodes[1].walletprocesspsbt(psbt=tr_psbt1, finalize=False)['psbt']
+        assert "taproot_key_path_sig" in self.nodes[0].decodepsbt(tr_psbt1)['inputs'][0]
+        tr_psbt2 = self.nodes[1].createpsbt([tr_utxo2], {self.nodes[0].getnewaddress(): Decimal('0.999')}, psbt_version=0)
+        tr_joined = self.nodes[0].joinpsbts([tr_psbt1, tr_psbt2])
+        for tr_input in self.nodes[0].decodepsbt(tr_joined)['inputs']:
+            assert "taproot_key_path_sig" not in tr_input
+        assert self.nodes[1].walletprocesspsbt(tr_joined)['complete']
+
         # Newly created PSBT needs UTXOs and updating
         addr = self.nodes[1].getnewaddress("", "p2sh-segwit")
         utxo = self.create_outpoints(self.nodes[0], outputs=[{addr: 7}])[0]
