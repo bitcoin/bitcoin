@@ -2939,5 +2939,33 @@
     "OP_SUCCESS accepts before a truncated PUSHDATA is parsed and before the stack check"
 ],
 
+["Tapscript validation weight"],
+["A non-empty signature check spends validation weight before the pubkey is parsed, so an unknown pubkey length still spends it."],
+["One check fits in a small witness. A second does not. Empty signatures do not spend weight."],
+[
+    ["#SCRIPT# 0x01115101aaba", "#CONTROLBLOCK#", 0.00000001],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT",
+    "OK",
+    "One non-empty CHECKSIGADD against a 1-byte pubkey stays within the weight budget"
+],
+[
+    ["#SCRIPT# 0x01115101aaba7501115101aaba", "#CONTROLBLOCK#", 0.00000001],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT",
+    "TAPSCRIPT_VALIDATION_WEIGHT",
+    "A second non-empty CHECKSIGADD exceeds the tapscript weight budget"
+],
+[
+    ["#SCRIPT# 0x005101aaba75005101aaba", "#CONTROLBLOCK#", 0.00000001],
+    "",
+    "0x51 0x20 #TAPROOTOUTPUT#",
+    "P2SH,WITNESS,TAPROOT",
+    "OK",
+    "Empty CHECKSIGADD signatures do not spend tapscript validation weight"
+],
+
 ["The End"]
 ]
