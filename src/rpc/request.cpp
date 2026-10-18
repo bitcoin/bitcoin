@@ -72,11 +72,14 @@ UniValue JSONRPCReplyObj(UniValue result, UniValue error, std::optional<UniValue
     return reply;
 }
 
-UniValue JSONRPCError(int code, const std::string& message)
+UniValue JSONRPCError(int code, const std::string& message, const UniValue& data)
 {
     UniValue error(UniValue::VOBJ);
     error.pushKV("code", code);
     error.pushKV("message", message);
+    if (!data.isNull()) {
+        error.pushKV("data", data);
+    }
     return error;
 }
 
