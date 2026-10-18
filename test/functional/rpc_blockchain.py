@@ -760,6 +760,10 @@ class BlockchainTest(BitcoinTestFramework):
         assert_vin_does_not_contain_prevout(block_noundo.hash_hex, 2)
         assert_vin_does_not_contain_prevout(block_noundo.hash_hex, 3)
 
+        tx_without_undo = node.getrawtransaction(tx.txid_hex, 2, block_noundo.hash_hex)
+        assert "fee" not in tx_without_undo
+        assert "prevout" not in tx_without_undo["vin"][0]
+
         self.log.info("Test getblock when block is missing")
         move_block_file('blk00000.dat', 'blk00000.dat.bak')
         assert_raises_rpc_error(-1, "Block not found on disk", node.getblock, blockhash)
