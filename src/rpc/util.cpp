@@ -403,6 +403,8 @@ RPCErrorCode RPCErrorFromTransactionError(TransactionError terr)
             return RPC_VERIFY_ALREADY_IN_UTXO_SET;
         case TransactionError::PRIVATE_BROADCAST_FULL:
             return RPC_LIMIT_EXCEEDED;
+        case TransactionError::SHUTTING_DOWN:
+            return RPC_CLIENT_NOT_CONNECTED;
         default: break;
     }
     return RPC_TRANSACTION_ERROR;
