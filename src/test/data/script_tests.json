@@ -2818,6 +2818,7 @@
 ["0", "IF CODESEPARATOR ENDIF 1", "CONST_SCRIPTCODE", "OP_CODESEPARATOR", "OP_CODESEPARATOR is rejected even in an unexecuted branch"],
 ["0", "IF CODESEPARATOR ENDIF 1", "", "OK", "Without CONST_SCRIPTCODE, OP_CODESEPARATOR in an unexecuted branch is allowed"],
 ["0x02 0x0001", "0x02 0x0001 DROP 0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 CHECKSIG", "CONST_SCRIPTCODE", "SIG_FINDANDDELETE", "CHECKSIG fails when the signature push is found in the scriptCode"],
+[["0001", "0200017521038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508ac", 0.00000000], "", "0 0x20 0xccfcd988d8969735df1ba659c7e40c11ac4e96f81f9a275bfe1ec224261cdee1", "P2SH,WITNESS,CONST_SCRIPTCODE", "EVAL_FALSE", "Witness v0 does not FindAndDelete, so the same signature push fails the check instead"],
 ["0 0x02 0x0001", "0x02 0x0001 DROP 1 0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 1 CHECKMULTISIG", "CONST_SCRIPTCODE", "SIG_FINDANDDELETE", "CHECKMULTISIG fails when a signature push is found in the scriptCode"],
 ["0x02 0x0001", "0x02 0x0001 DROP 0x21 0x038282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f51508 CHECKSIG NOT", "", "OK", "Without CONST_SCRIPTCODE, FindAndDelete silently drops the signature push from the scriptCode"],
 
