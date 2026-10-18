@@ -1011,4 +1011,19 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_args, BasicTestingSetup)
     BOOST_CHECK(!get_opts({"-prevoutfetchthreads=-1"}));
 }
 
+BOOST_AUTO_TEST_CASE(snapshot_metadata_network_mismatch_custom_signet)
+{
+    // A snapshot made for mainnet, read by a node whose network magic is not
+    // one of the built-in networks (a custom signet).
+    const MessageStartChars main_magic{0xf9, 0xbe, 0xb4, 0xd9};
+    const MessageStartChars custom_magic{0x01, 0x02, 0x03, 0x04};
+
+    DataStream ss;
+    ss << SnapshotMetadata{main_magic, uint256::ZERO, 0};
+
+    SnapshotMetadata metadata{custom_magic};
+    BOOST_CHECK_EXCEPTION(ss >> metadata, std::ios_base::failure,
+                          HasReason("The network of the snapshot (main) does not match the network of this node (custom signet)."));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

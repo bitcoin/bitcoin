@@ -93,7 +93,8 @@ public:
             if (metadata_network) {
                 std::string network_string{ChainTypeToString(metadata_network.value())};
                 auto node_network{GetNetworkForMagic(m_network_magic)};
-                std::string node_network_string{ChainTypeToString(node_network.value())};
+                // a custom signet has a magic that matches no built-in network
+                std::string node_network_string{node_network ? ChainTypeToString(*node_network) : "custom signet"};
                 throw std::ios_base::failure(strprintf("The network of the snapshot (%s) does not match the network of this node (%s).", network_string, node_network_string));
             } else {
                 throw std::ios_base::failure("This snapshot has been created for an unrecognized network. This could be a custom signet, a new testnet or possibly caused by data corruption.");
