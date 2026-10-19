@@ -14,6 +14,10 @@ class BitcoinApplication;
 class BitcoinGUI;
 class RPCConsole;
 
+namespace interfaces {
+class Init;
+} // namespace interfaces
+
 class AppTests : public QObject
 {
     Q_OBJECT
@@ -21,7 +25,7 @@ public:
     explicit AppTests(BitcoinApplication& app) : m_app(app) {}
 
 private Q_SLOTS:
-    void appTests();
+    void appTests(interfaces::Init& init);
     void guiTests(BitcoinGUI* window);
     void consoleTests(RPCConsole* console);
 
