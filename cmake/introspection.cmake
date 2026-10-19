@@ -182,7 +182,7 @@ if(NOT MSVC)
   )
 
   # Check for x86 SHA-NI intrinsics.
-  set(X86_SHANI_CXXFLAGS -msse4 -msha)
+  set(X86_SHANI_CXXFLAGS -msse4.1 -msha)
   check_cxx_source_compiles_with_flags("
     #include <immintrin.h>
 
