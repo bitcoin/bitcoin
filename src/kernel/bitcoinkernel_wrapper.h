@@ -1025,11 +1025,6 @@ public:
     }
 };
 
-inline void logging_set_min_level(LogLevel level)
-{
-    btck_logging_set_min_level(static_cast<btck_LogLevel>(level));
-}
-
 //! Non-owning view over a btck_LogEntry. The referenced entry is only valid for the duration of the
 //! logging callback, so a LogEntry (and any string_view obtained from it) must not be stored or
 //! used after the callback returns.
@@ -1074,6 +1069,11 @@ public:
               log.release(),
               +[](void* user_data) { delete static_cast<T*>(user_data); })}
     {
+    }
+
+    void SetMinLevel(LogLevel level)
+    {
+        btck_logging_connection_set_min_level(get(), static_cast<btck_LogLevel>(level));
     }
 };
 
