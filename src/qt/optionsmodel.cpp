@@ -88,14 +88,14 @@ static common::SettingsValue PruneSetting(bool prune_enabled, int prune_size_gb)
 static bool PruneEnabled(const common::SettingsValue& prune_setting)
 {
     // -prune=1 setting is manual pruning mode, so disabled for purposes of the gui
-    return SettingTo<int64_t>(prune_setting, 0) > 1;
+    return SettingTo<int64_t>(prune_setting).value_or(0) > 1;
 }
 
 //! Get pruning size value to show in GUI from bitcoin -prune setting. If
 //! pruning is not enabled, just show default recommended pruning size (2GB).
 static int PruneSizeGB(const common::SettingsValue& prune_setting)
 {
-    int value = SettingTo<int64_t>(prune_setting, 0);
+    int value = SettingTo<int64_t>(prune_setting).value_or(0);
     return value > 1 ? PruneMiBtoGB(value) : DEFAULT_PRUNE_TARGET_GB;
 }
 
@@ -160,7 +160,7 @@ void OptionsModel::addOverriddenOption(const std::string &option)
 bool OptionsModel::Init(bilingual_str& error)
 {
     // Initialize display settings from stored settings.
-    language = QString::fromStdString(SettingToString(node().getPersistentSetting("lang"), ""));
+    language = QString::fromStdString(SettingToString(node().getPersistentSetting("lang")).value_or(""));
 
     checkAndMigrate();
 
@@ -411,17 +411,17 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
     case MinimizeToTray:
         return fMinimizeToTray;
     case MapPortNatpmp:
-        return SettingToBool(setting(), DEFAULT_NATPMP);
+        return SettingToBool(setting()).value_or(DEFAULT_NATPMP);
     case MinimizeOnClose:
         return fMinimizeOnClose;
 
     // default proxy
     case ProxyUse:
     case ProxyUseTor:
-        return ParseProxyString(SettingToString(setting(), "")).is_set;
+        return ParseProxyString(SettingToString(setting()).value_or("")).is_set;
     case ProxyIP:
     case ProxyIPTor: {
-        ProxySetting proxy = ParseProxyString(SettingToString(setting(), ""));
+        ProxySetting proxy = ParseProxyString(SettingToString(setting()).value_or(""));
         if (proxy.is_set) {
             return proxy.ip;
         } else if (suffix.empty()) {
@@ -432,7 +432,7 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
     }
     case ProxyPort:
     case ProxyPortTor: {
-        ProxySetting proxy = ParseProxyString(SettingToString(setting(), ""));
+        ProxySetting proxy = ParseProxyString(SettingToString(setting()).value_or(""));
         if (proxy.is_set) {
             return proxy.port;
         } else if (suffix.empty()) {
@@ -444,9 +444,9 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
 
 #ifdef ENABLE_WALLET
     case SpendZeroConfChange:
-        return SettingToBool(setting(), wallet::DEFAULT_SPEND_ZEROCONF_CHANGE);
+        return SettingToBool(setting()).value_or(wallet::DEFAULT_SPEND_ZEROCONF_CHANGE);
     case ExternalSignerPath:
-        return QString::fromStdString(SettingToString(setting(), ""));
+        return QString::fromStdString(SettingToString(setting()).value_or(""));
     case SubFeeFromAmount:
         return m_sub_fee_from_amount;
 #endif
@@ -455,7 +455,7 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
     case ThirdPartyTxUrls:
         return strThirdPartyTxUrls;
     case Language:
-        return QString::fromStdString(SettingToString(setting(), ""));
+        return QString::fromStdString(SettingToString(setting()).value_or(""));
     case FontForMoney:
         return QVariant::fromValue(m_font_money);
     case CoinControlFeatures:
@@ -469,13 +469,13 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
                suffix.empty()          ? getOption(option, "-prev") :
                                          DEFAULT_PRUNE_TARGET_GB;
     case DatabaseCache:
-        return qlonglong(SettingTo<int64_t>(setting(), node::GetDefaultDBCache() / 1_MiB));
+        return qlonglong(SettingTo<int64_t>(setting()).value_or(node::GetDefaultDBCache() / 1_MiB));
     case ThreadsScriptVerif:
-        return qlonglong(SettingTo<int64_t>(setting(), DEFAULT_SCRIPTCHECK_THREADS));
+        return qlonglong(SettingTo<int64_t>(setting()).value_or(DEFAULT_SCRIPTCHECK_THREADS));
     case Listen:
-        return SettingToBool(setting(), DEFAULT_LISTEN);
+        return SettingToBool(setting()).value_or(DEFAULT_LISTEN);
     case Server:
-        return SettingToBool(setting(), false);
+        return SettingToBool(setting()).value_or(false);
     case MaskValues:
         return m_mask_values;
     default:
