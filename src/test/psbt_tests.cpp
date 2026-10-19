@@ -3,18 +3,23 @@
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 #include <addresstype.h>
+#include <common/types.h>
 #include <key.h>
+#include <primitives/transaction_identifier.h>
 #include <psbt.h>
 #include <script/descriptor.h>
+#include <script/interpreter.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
 #include <test/util/setup_common.h>
+#include <uint256.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
 #include <boost/test/unit_test.hpp>
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -311,6 +316,80 @@ BOOST_AUTO_TEST_CASE(update_psbt_output_taproot)
         BOOST_CHECK(out.m_tap_bip32_paths.contains(XOnlyPubKey{test.pubkey}));
         BOOST_CHECK(out.hd_keypaths.empty());
     }
+}
+
+BOOST_AUTO_TEST_CASE(taproot_sighash_field_absent)
+{
+    PSBTOutputTest test{"tr(<KEY>)"};
+    const CTxOut utxo{1000, test.script_pubkey};
+    CMutableTransaction tx;
+    tx.vin.emplace_back(COutPoint{Txid::FromUint256(uint256::ONE), 0});
+    tx.vout.emplace_back(900, CScript{} << OP_RETURN);
+    PrecomputedTransactionData txdata;
+    txdata.Init(tx, {utxo}, /*force=*/true);
+
+    // Sign with an explicit sighash, then drop the field to leave only the signature.
+    const auto sign_without_field = [&](int sighash) {
+        PartiallySignedTransaction psbt{tx};
+        psbt.inputs[0].witness_utxo = utxo;
+        BOOST_REQUIRE(SignPSBTInput(test.provider, psbt, /*index=*/0, &txdata, {.sighash_type = sighash, .finalize = false}));
+        BOOST_REQUIRE_EQUAL(psbt.inputs[0].m_tap_key_sig.size(), 65U);
+        psbt.inputs[0].sighash_type = std::nullopt;
+        return psbt;
+    };
+
+    // ALL is accepted without the field, so the input can be finalized.
+    {
+        PartiallySignedTransaction psbt{sign_without_field(SIGHASH_ALL)};
+        BOOST_CHECK(FinalizePSBT(psbt));
+    }
+
+    // Any other sighash is rejected without the field.
+    for (int sighash : {int{SIGHASH_NONE}, int{SIGHASH_SINGLE}, SIGHASH_ALL | SIGHASH_ANYONECANPAY,
+                        SIGHASH_NONE | SIGHASH_ANYONECANPAY, SIGHASH_SINGLE | SIGHASH_ANYONECANPAY}) {
+        PartiallySignedTransaction psbt{sign_without_field(sighash)};
+        BOOST_CHECK(!FinalizePSBT(psbt));
+        const auto res{SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbt, 0, &txdata, {.finalize = true})};
+        BOOST_REQUIRE(!res);
+        BOOST_CHECK(res.error() == common::PSBTError::SIGHASH_MISMATCH);
+    }
+
+    // When the field or the parameter is set, the signature must match it.
+    {
+        PartiallySignedTransaction psbt{sign_without_field(SIGHASH_ALL)};
+        const auto res{SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbt, 0, &txdata, {.sighash_type = SIGHASH_DEFAULT, .finalize = true})};
+        BOOST_REQUIRE(!res);
+        BOOST_CHECK(res.error() == common::PSBTError::SIGHASH_MISMATCH);
+        psbt.inputs[0].sighash_type = SIGHASH_DEFAULT;
+        BOOST_CHECK(!FinalizePSBT(psbt));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(taproot_script_sighash_field_absent)
+{
+    // Two signers on one leaf: the first signs with SIGHASH_ALL, the second without any sighash.
+    const CKey key2{GenerateRandomKey()};
+    PSBTOutputTest test{"tr(50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0,multi_a(2,<KEY>," + HexStr(key2.GetPubKey()) + "))"};
+    FlatSigningProvider provider2;
+    provider2.keys.emplace(key2.GetPubKey().GetID(), key2);
+    const CTxOut utxo{1000, test.script_pubkey};
+    CMutableTransaction tx;
+    tx.vin.emplace_back(COutPoint{Txid::FromUint256(uint256::ONE), 0});
+    tx.vout.emplace_back(900, CScript{} << OP_RETURN);
+    PrecomputedTransactionData txdata;
+    txdata.Init(tx, {utxo}, /*force=*/true);
+
+    PartiallySignedTransaction psbt{tx};
+    psbt.inputs[0].witness_utxo = utxo;
+    BOOST_CHECK(!SignPSBTInput(test.provider, psbt, /*index=*/0, &txdata, {.sighash_type = SIGHASH_ALL, .finalize = false}));
+    BOOST_REQUIRE_EQUAL(psbt.inputs[0].m_tap_script_sigs.size(), 1U);
+    BOOST_REQUIRE_EQUAL(psbt.inputs[0].m_tap_script_sigs.begin()->second.size(), 65U);
+    psbt.inputs[0].sighash_type = std::nullopt;
+
+    // The second signer adds a 64-byte signature next to the 65-byte one, and the input finalizes.
+    BOOST_CHECK(SignPSBTInput(provider2, psbt, /*index=*/0, &txdata, {.finalize = false}));
+    BOOST_REQUIRE_EQUAL(psbt.inputs[0].m_tap_script_sigs.size(), 2U);
+    BOOST_CHECK(FinalizePSBT(psbt));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
