@@ -910,7 +910,7 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
         std::vector<const char*> argv = {"ignored"};
         for (auto& arg : args) {
             arg.insert(0, "-");
-            desc += " ";
+            desc += ' ';
             desc += arg;
             argv.push_back(arg.c_str());
         }
@@ -920,10 +920,10 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
 
         std::string conf;
         for (auto& conf_val : GetValues(conf_actions, section, name, "c")) {
-            desc += " ";
+            desc += ' ';
             desc += conf_val;
             conf += conf_val;
-            conf += "\n";
+            conf += '\n';
         }
         std::istringstream conf_stream(conf);
         BOOST_CHECK(parser.ReadConfigStream(conf_stream, "filepath", error));
@@ -956,7 +956,7 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
             desc += parser.GetArg(key, "default");
             desc += " |";
             for (const auto& arg : parser.GetArgs(key)) {
-                desc += " ";
+                desc += ' ';
                 desc += arg;
             }
         }
@@ -965,12 +965,12 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
         if (!ignored.empty()) {
             desc += " | ignored";
             for (const auto& arg : ignored) {
-                desc += " ";
+                desc += ' ';
                 desc += arg;
             }
         }
 
-        desc += "\n";
+        desc += '\n';
 
         out_sha.Write(MakeUCharSpan(desc));
         if (out_file) {
@@ -1045,7 +1045,7 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
             const char* argstr = arg(action);
             if (!argstr) break;
             argv.push_back(argstr);
-            desc += " ";
+            desc += ' ';
             desc += argv.back();
         }
         std::string error;
@@ -1056,10 +1056,10 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
         for (Action action : conf_actions) {
             const char* argstr = arg(action);
             if (!argstr) break;
-            desc += " ";
+            desc += ' ';
             desc += argstr + 1;
             conf += argstr + 1;
-            conf += "\n";
+            conf += '\n';
         }
         std::istringstream conf_stream(conf);
         BOOST_CHECK(parser.ReadConfigStream(conf_stream, "filepath", error));
@@ -1072,7 +1072,7 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
             desc += "error: ";
             desc += e.what();
         }
-        desc += "\n";
+        desc += '\n';
 
         out_sha.Write(MakeUCharSpan(desc));
         if (out_file) {

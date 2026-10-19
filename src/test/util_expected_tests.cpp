@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(expected_error)
     BOOST_CHECK_EQUAL(e.error(), "fail");
 
     // modify error
-    e.error() += "1";
+    e.error() += '1';
 
     const auto& read{e};
     BOOST_CHECK_EQUAL(read.error(), "fail1");

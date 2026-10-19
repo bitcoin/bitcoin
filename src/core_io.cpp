@@ -364,7 +364,7 @@ std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDeco
     CScript::const_iterator pc = script.begin();
     while (pc < script.end()) {
         if (!str.empty()) {
-            str += " ";
+            str += ' ';
         }
         if (!script.GetOp(pc, opcode, vch)) {
             str += "[error]";

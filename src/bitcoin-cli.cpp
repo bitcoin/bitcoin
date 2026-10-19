@@ -1444,7 +1444,7 @@ static void ParseGetInfoResult(UniValue& result)
     if (ibd_progress < 0.99) {
       GetProgressBar(ibd_progress, ibd_progress_bar);
       // Add padding between progress bar and IBD progress
-      ibd_progress_bar += " ";
+      ibd_progress_bar += ' ';
     }
 
     result_string += strprintf("Verification progress: %s%.4f%%\n", ibd_progress_bar, ibd_progress * 100);
@@ -1510,7 +1510,7 @@ static void ParseGetInfoResult(UniValue& result)
                                        result["balances"][wallet].getValStr(),
                                        wallet.empty() ? "\"\"" : wallet);
         }
-        result_string += "\n";
+        result_string += '\n';
     }
 
     const std::string warnings{result["warnings"].getValStr()};
