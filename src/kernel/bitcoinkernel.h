@@ -424,8 +424,8 @@ typedef struct {
 
 /**
  * Function signature for a logging callback. Receives kernel log entries at or
- * above the minimum level (see @ref btck_logging_set_min_level) while its
- * btck_LoggingConnection exists.
+ * above the minimum level (see @ref btck_logging_connection_set_min_level)
+ * while its btck_LoggingConnection exists.
  *
  * The callback may be invoked from any thread. Invocations are serialized: no
  * two invocations run at the same time, and destroying a btck_LoggingConnection
@@ -948,15 +948,16 @@ BITCOINKERNEL_API void btck_transaction_output_destroy(btck_TransactionOutput* t
 ///@{
 
 /**
- * @brief Set the minimum log level. Messages below this level are not delivered
- * to logging callbacks. Defaults to Info.
+ * @brief Set the minimum log level of the logging connection. Entries below
+ * this level are not delivered to its callback. A new logging connection
+ * starts at Info.
  *
- * This changes a global setting and will affect all existing @ref
- * btck_LoggingConnection instances.
- *
- * @param[in] level Minimum log level.
+ * @param[in] logging_connection Non-null.
+ * @param[in] level              Minimum log level.
  */
-BITCOINKERNEL_API void btck_logging_set_min_level(btck_LogLevel level);
+BITCOINKERNEL_API void btck_logging_connection_set_min_level(
+    btck_LoggingConnection* logging_connection,
+    btck_LogLevel level) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
  * @brief Start logging messages through the provided callback. Fails if a

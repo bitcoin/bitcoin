@@ -506,18 +506,27 @@ class KernelLogger
         void operator()(const btck_LogEntry* entry) const { fn(user_data.get(), entry); }
     };
 
+    //! Minimum level of a newly registered callback.
+    static constexpr util::log::Level DEFAULT_MIN_LEVEL{util::log::Level::Info};
+
     mutable StdMutex m_mutex;
     //! The registered callback that is executed through Log, if any. Owned by its CallbackHandle,
     //! which keeps it alive until UnregisterCallback() returns.
     const Callback* m_callback GUARDED_BY(m_mutex){nullptr};
     //! Whether m_callback is set. Can be stale when read without m_mutex.
     std::atomic<bool> m_has_callback{false};
-    //! Entries below this level are not delivered.
-    std::atomic<util::log::Level> m_min_level{util::log::Level::Info};
+    //! Entries below this level are not delivered. Set to DEFAULT_MIN_LEVEL under m_mutex when the
+    //! callback is registered.
+    std::atomic<util::log::Level> m_min_level{DEFAULT_MIN_LEVEL};
 
     //! Unregisters the callback. Waits for running invocations to return, so that the caller can
     //! destroy the callback afterwards.
     void UnregisterCallback() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    //! Set the minimum level of the registered callback.
+    void SetMinLevel(btck_LogLevel level)
+    {
+        m_min_level.store(to_util(level), std::memory_order_relaxed);
+    }
 
 public:
     //! Owns the registered logging callback. Unregisters it on destruction. A moved-from handle
@@ -544,26 +553,23 @@ public:
         {
             if (m_logger) m_logger->UnregisterCallback();
         }
+
+        void SetMinLevel(btck_LogLevel level) { m_logger->SetMinLevel(level); }
     };
 
     //! Registers a logging callback. Takes ownership of user_data, also when registration fails.
     //! Throws if a callback is already registered.
     [[nodiscard]] CallbackHandle RegisterCallback(btck_LogCallback fn, UserData user_data) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
-    //! Set the minimum log level.
-    void SetMinLevel(btck_LogLevel level)
-    {
-        m_min_level.store(to_util(level), std::memory_order_relaxed);
-    }
 
-    //! True if a callback is registered and level is not below the minimum level. Can be stale
-    //! while the callback is registered or unregistered, or while the minimum level changes.
+    //! True if a callback is registered and level is not below its minimum level. Can be stale
+    //! while the callback is registered, unregistered, or changes its level.
     bool ShouldLog(util::log::Level level) const
     {
         return level >= m_min_level.load(std::memory_order_relaxed) &&
                m_has_callback.load(std::memory_order_relaxed);
     }
     //! Deliver the entry to the registered callback while holding m_mutex, if there is one and the
-    //! entry's level is not below the minimum level. Exceptions from the callback are swallowed.
+    //! entry's level is not below its minimum level. Exceptions from the callback are swallowed.
     void Log(const util::log::Entry& entry) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 };
 
@@ -574,6 +580,7 @@ KernelLogger::CallbackHandle KernelLogger::RegisterCallback(btck_LogCallback fn,
     STDLOCK(m_mutex);
     if (m_callback) throw std::runtime_error("A logging connection already exists");
     m_callback = callback.get();
+    m_min_level.store(DEFAULT_MIN_LEVEL, std::memory_order_relaxed);
     m_has_callback.store(true, std::memory_order_relaxed);
     return CallbackHandle{*this, std::move(callback)};
 }
@@ -614,8 +621,8 @@ void KernelLogger::Log(const util::log::Entry& entry) const
     };
 
     STDLOCK(m_mutex);
-    // Check again: the callback may have been unregistered since ShouldLog().
-    if (!m_callback) return;
+    // Check again: the callback, or its minimum level, may have changed since ShouldLog().
+    if (!m_callback || entry.level < m_min_level.load(std::memory_order_relaxed)) return;
     try {
         (*m_callback)(&btck_entry);
     } catch (...) {
@@ -995,9 +1002,9 @@ void Log(Entry entry)
 } // namespace util::log
 
 
-void btck_logging_set_min_level(btck_LogLevel level)
+void btck_logging_connection_set_min_level(btck_LoggingConnection* logging_connection, btck_LogLevel level)
 {
-    GetKernelLogger().SetMinLevel(level);
+    btck_LoggingConnection::get(logging_connection).SetMinLevel(level);
 }
 
 btck_LoggingConnection* btck_global_logging_connection_create(btck_LogCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback)
@@ -1007,7 +1014,6 @@ btck_LoggingConnection* btck_global_logging_connection_create(btck_LogCallback c
         // Take ownership before anything can throw, so that user_data is always freed on error.
         UserData data{user_data, {user_data_destroy_callback}};
         auto handle{GetKernelLogger().RegisterCallback(callback, std::move(data))};
-        LogDebug(BCLog::KERNEL, "Logger connected.");
         return btck_LoggingConnection::create(std::move(handle));
     } catch (...) {
         return nullptr;
