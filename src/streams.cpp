@@ -107,7 +107,7 @@ bool AutoFile::Commit()
     return ::FileCommit(m_file);
 }
 
-bool AutoFile::Truncate(unsigned size)
+bool AutoFile::Truncate(uint64_t size)
 {
     return ::TruncateFile(m_file, size);
 }
