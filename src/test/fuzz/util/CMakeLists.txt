@@ -23,3 +23,6 @@ target_link_libraries(test_fuzz
 if(NOT FUZZ_BINARY_LINKS_WITHOUT_MAIN_FUNCTION)
   target_compile_definitions(test_fuzz PRIVATE PROVIDE_FUZZ_MAIN_FUNCTION)
 endif()
+if(FUZZ_BINARY_PROVIDES_LLVM_FUZZER_MUTATE)
+  target_compile_definitions(test_fuzz PRIVATE PROVIDE_FUZZ_CUSTOM_MUTATOR)
+endif()
