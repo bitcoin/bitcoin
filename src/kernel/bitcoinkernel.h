@@ -427,11 +427,11 @@ typedef struct {
  * above the minimum level (see @ref btck_logging_connection_set_min_level)
  * while its btck_LoggingConnection exists.
  *
- * The callback may be invoked from any thread. Invocations are serialized: no
- * two invocations run at the same time, and destroying a btck_LoggingConnection
- * waits for an in-flight invocation of its callback to return. The callback
- * must not call any kernel API function (this may deadlock), and should return
- * quickly since it blocks every kernel thread that logs.
+ * The callback may be invoked from any thread, and from multiple threads at the
+ * same time, so it must be thread-safe. Destroying a btck_LoggingConnection
+ * waits for running invocations of its callback to return. The callback must
+ * not call any kernel API function (this may deadlock), and should return
+ * quickly since it blocks the kernel thread that logs.
  *
  * @param[in] user_data User-defined opaque structure.
  * @param[in] entry     Log entry. Valid only for the duration of the callback.
@@ -981,7 +981,8 @@ BITCOINKERNEL_API btck_LoggingConnection* BITCOINKERNEL_WARN_UNUSED_RESULT btck_
     btck_DestroyCallback user_data_destroy_callback) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
- * Stop logging and destroy the logging connection.
+ * Stop logging and destroy the logging connection. Blocks until running
+ * invocations of its callback return, then destroys the user data.
  */
 BITCOINKERNEL_API void btck_logging_connection_destroy(btck_LoggingConnection* logging_connection);
 

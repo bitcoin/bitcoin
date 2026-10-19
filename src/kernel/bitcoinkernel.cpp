@@ -513,7 +513,10 @@ class KernelLogger
     //! The registered callback that is executed through Log, if any. Owned by its CallbackHandle,
     //! which keeps it alive until UnregisterCallback() returns.
     const Callback* m_callback GUARDED_BY(m_mutex){nullptr};
-    //! Whether m_callback is set. Can be stale when read without m_mutex.
+    //! Number of running invocations of m_callback.
+    mutable std::atomic<int> m_in_flight{0};
+    //! Whether m_callback is set and accepts entries. Cleared before m_callback is unregistered, so
+    //! that no new invocations start. Written under m_mutex. Can be stale when read without m_mutex.
     std::atomic<bool> m_has_callback{false};
     //! Entries below this level are not delivered. Set to DEFAULT_MIN_LEVEL under m_mutex when the
     //! callback is registered.
@@ -568,8 +571,9 @@ public:
         return level >= m_min_level.load(std::memory_order_relaxed) &&
                m_has_callback.load(std::memory_order_relaxed);
     }
-    //! Deliver the entry to the registered callback while holding m_mutex, if there is one and the
-    //! entry's level is not below its minimum level. Exceptions from the callback are swallowed.
+    //! Deliver the entry to the registered callback, if there is one and the entry's level is not
+    //! below its minimum level. Invocations from different threads can run at the same time.
+    //! Exceptions from the callback are swallowed.
     void Log(const util::log::Entry& entry) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 };
 
@@ -587,10 +591,17 @@ KernelLogger::CallbackHandle KernelLogger::RegisterCallback(btck_LogCallback fn,
 
 void KernelLogger::UnregisterCallback()
 {
-    // Log invokes the callback while holding m_mutex, so locking it waits for a running invocation.
+    {
+        STDLOCK(m_mutex);
+        m_has_callback.store(false, std::memory_order_relaxed);
+    }
+    // Invocations that started before m_has_callback was cleared still use m_callback. m_callback
+    // stays set until they return, so no new callback can be registered and counted in m_in_flight.
+    while (int n{m_in_flight.load(std::memory_order_acquire)}) {
+        m_in_flight.wait(n, std::memory_order_acquire);
+    }
     STDLOCK(m_mutex);
     m_callback = nullptr;
-    m_has_callback.store(false, std::memory_order_relaxed);
 }
 
 void KernelLogger::Log(const util::log::Entry& entry) const
@@ -620,15 +631,21 @@ void KernelLogger::Log(const util::log::Entry& entry) const
         .category = to_btck(static_cast<BCLog::LogFlags>(entry.category)),
     };
 
-    STDLOCK(m_mutex);
-    // Check again: the callback, or its minimum level, may have changed since ShouldLog().
-    if (!m_callback || entry.level < m_min_level.load(std::memory_order_relaxed)) return;
-    try {
-        (*m_callback)(&btck_entry);
-    } catch (...) {
-        // Can't log the error here because we're already inside the logging path (would deadlock
-        // on m_mutex).
+    const Callback* callback;
+    {
+        STDLOCK(m_mutex);
+        // Check again: the callback, or its minimum level, may have changed since ShouldLog().
+        if (!m_has_callback.load(std::memory_order_relaxed) ||
+            entry.level < m_min_level.load(std::memory_order_relaxed)) return;
+        callback = m_callback;
+        m_in_flight.fetch_add(1, std::memory_order_relaxed);
     }
+    try {
+        (*callback)(&btck_entry);
+    } catch (...) {
+        // Can't log the error here because we're already inside the logging path.
+    }
+    if (m_in_flight.fetch_sub(1, std::memory_order_release) == 1) m_in_flight.notify_all();
 }
 
 } // namespace

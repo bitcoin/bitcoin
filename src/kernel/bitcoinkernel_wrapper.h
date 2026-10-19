@@ -1049,6 +1049,7 @@ public:
     LogCategory Category() const { return static_cast<LogCategory>(m_entry->category); }
 };
 
+//! LogMessage() may be called from multiple threads at the same time, so it must be thread-safe.
 template <typename T>
 concept Log = requires(T a, const LogEntry& entry) {
     { a.LogMessage(entry) } -> std::same_as<void>;
