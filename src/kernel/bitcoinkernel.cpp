@@ -47,9 +47,7 @@
 #include <cstddef>
 #include <cstring>
 #include <exception>
-#include <iterator>
 #include <limits>
-#include <list>
 #include <memory>
 #include <optional>
 #include <span>
@@ -495,10 +493,11 @@ struct UserDataDeleter {
 //! Owns a caller-provided user_data pointer and frees it with its destroy callback.
 using UserData = std::unique_ptr<void, UserDataDeleter>;
 
-//! Holds state for kernel logging subscribers: the registered callbacks and the minimum level.
-//! Shared by all btck_LoggingConnection instances.
+//! Holds state for kernel logging: the registered callback and the minimum level.
 class KernelLogger
 {
+    // IWYU incorrectly suggests an invalid forward declaration of this nested struct.
+    // IWYU pragma: no_forward_declare KernelLogger::Callback
     //! A registered btck_LogCallback. Owns user_data.
     struct Callback {
         btck_LogCallback fn;
@@ -508,38 +507,47 @@ class KernelLogger
     };
 
     mutable StdMutex m_mutex;
-    //! All registered callbacks that are executed through Log.
-    std::list<Callback> m_callbacks GUARDED_BY(m_mutex);
-    //! Size of m_callbacks. Can be stale when read without m_mutex.
-    std::atomic<size_t> m_callback_count{0};
+    //! The registered callback that is executed through Log, if any. Owned by its CallbackHandle,
+    //! which keeps it alive until UnregisterCallback() returns.
+    const Callback* m_callback GUARDED_BY(m_mutex){nullptr};
+    //! Whether m_callback is set. Can be stale when read without m_mutex.
+    std::atomic<bool> m_has_callback{false};
     //! Entries below this level are not delivered.
     std::atomic<util::log::Level> m_min_level{util::log::Level::Info};
 
-    //! Unregisters and destroys the callback. Waits for an in-flight Log to finish, then destroys
-    //! the callback (and its user_data) outside m_mutex.
-    void UnregisterCallback(std::list<Callback>::iterator it) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    //! Unregisters the callback. Waits for running invocations to return, so that the caller can
+    //! destroy the callback afterwards.
+    void UnregisterCallback() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
 public:
-    //! Owns a registered logging callback. Unregisters it on destruction. A moved-from handle
-    //! owns nothing and does not unregister.
+    //! Owns the registered logging callback. Unregisters it on destruction. A moved-from handle
+    //! owns nothing and does not unregister. Only KernelLogger creates handles.
     class CallbackHandle
     {
+        friend class KernelLogger;
+
         KernelLogger* m_logger;
-        std::list<Callback>::iterator m_it;
+        //! Heap-allocated, so that KernelLogger::m_callback still points to it after the handle is
+        //! moved.
+        std::unique_ptr<const Callback> m_callback;
+
+        CallbackHandle(KernelLogger& logger LIFETIMEBOUND, std::unique_ptr<const Callback> callback)
+            : m_logger{&logger}, m_callback{std::move(callback)} {}
 
     public:
-        CallbackHandle(KernelLogger& logger LIFETIMEBOUND, std::list<Callback>::iterator it)
-            : m_logger{&logger}, m_it{it} {}
         CallbackHandle(CallbackHandle&& other) noexcept
-            : m_logger{std::exchange(other.m_logger, nullptr)}, m_it{other.m_it} {}
+            : m_logger{std::exchange(other.m_logger, nullptr)}, m_callback{std::move(other.m_callback)} {}
         CallbackHandle& operator=(CallbackHandle&&) = delete;
+        //! Unregisters the callback. m_callback (and its user_data) is destroyed afterwards, outside
+        //! m_mutex.
         ~CallbackHandle()
         {
-            if (m_logger) m_logger->UnregisterCallback(m_it);
+            if (m_logger) m_logger->UnregisterCallback();
         }
     };
 
     //! Registers a logging callback. Takes ownership of user_data, also when registration fails.
+    //! Throws if a callback is already registered.
     [[nodiscard]] CallbackHandle RegisterCallback(btck_LogCallback fn, UserData user_data) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
     //! Set the minimum log level.
     void SetMinLevel(btck_LogLevel level)
@@ -547,36 +555,35 @@ public:
         m_min_level.store(to_util(level), std::memory_order_relaxed);
     }
 
-    //! True if level is not below minimum level and at least one callback is registered.
+    //! True if a callback is registered and level is not below the minimum level. Can be stale
+    //! while the callback is registered or unregistered, or while the minimum level changes.
     bool ShouldLog(util::log::Level level) const
     {
         return level >= m_min_level.load(std::memory_order_relaxed) &&
-               m_callback_count.load(std::memory_order_relaxed) > 0;
+               m_has_callback.load(std::memory_order_relaxed);
     }
-    //! Deliver the entry to every registered callback while holding m_mutex, if ShouldLog() passes
-    //! for its level. Exceptions from callbacks are swallowed.
+    //! Deliver the entry to the registered callback while holding m_mutex, if there is one and the
+    //! entry's level is not below the minimum level. Exceptions from the callback are swallowed.
     void Log(const util::log::Entry& entry) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 };
 
 KernelLogger::CallbackHandle KernelLogger::RegisterCallback(btck_LogCallback fn, UserData user_data)
 {
-    // Construct before locking so that a failed push_back destroys user_data outside m_mutex.
-    Callback cb{fn, std::move(user_data)};
+    // Construct before locking so that a failed registration destroys user_data outside m_mutex.
+    auto callback{std::make_unique<const Callback>(fn, std::move(user_data))};
     STDLOCK(m_mutex);
-    m_callbacks.push_back(std::move(cb));
-    m_callback_count.fetch_add(1, std::memory_order_relaxed);
-    return {*this, std::prev(m_callbacks.end())};
+    if (m_callback) throw std::runtime_error("A logging connection already exists");
+    m_callback = callback.get();
+    m_has_callback.store(true, std::memory_order_relaxed);
+    return CallbackHandle{*this, std::move(callback)};
 }
 
-void KernelLogger::UnregisterCallback(std::list<Callback>::iterator it)
+void KernelLogger::UnregisterCallback()
 {
-    // Avoid running the callback destructor while holding m_mutex.
-    std::list<Callback> dying;
-    {
-        STDLOCK(m_mutex);
-        dying.splice(dying.begin(), m_callbacks, it);
-        m_callback_count.fetch_sub(1, std::memory_order_relaxed);
-    }
+    // Log invokes the callback while holding m_mutex, so locking it waits for a running invocation.
+    STDLOCK(m_mutex);
+    m_callback = nullptr;
+    m_has_callback.store(false, std::memory_order_relaxed);
 }
 
 void KernelLogger::Log(const util::log::Entry& entry) const
@@ -607,13 +614,13 @@ void KernelLogger::Log(const util::log::Entry& entry) const
     };
 
     STDLOCK(m_mutex);
-    for (const auto& callback : m_callbacks) {
-        try {
-            callback(&btck_entry);
-        } catch (...) {
-            // Can't log the error here because we're already inside the logging path (would
-            // deadlock on m_mutex).
-        }
+    // Check again: the callback may have been unregistered since ShouldLog().
+    if (!m_callback) return;
+    try {
+        (*m_callback)(&btck_entry);
+    } catch (...) {
+        // Can't log the error here because we're already inside the logging path (would deadlock
+        // on m_mutex).
     }
 }
 
@@ -993,7 +1000,7 @@ void btck_logging_set_min_level(btck_LogLevel level)
     GetKernelLogger().SetMinLevel(level);
 }
 
-btck_LoggingConnection* btck_logging_connection_create(btck_LogCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback)
+btck_LoggingConnection* btck_global_logging_connection_create(btck_LogCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback)
 {
     assert(callback);
     try {

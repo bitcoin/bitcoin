@@ -1059,12 +1059,14 @@ concept Log = requires(T a, const LogEntry& entry) {
     { a.LogMessage(entry) } -> std::same_as<void>;
 };
 
+//! Owns the process-wide logging connection. Throws if creating it fails, e.g. because one already
+//! exists.
 template <Log T>
 class Logger : UniqueHandle<btck_LoggingConnection, btck_logging_connection_destroy>
 {
 public:
     Logger(std::unique_ptr<T> log)
-        : UniqueHandle{btck_logging_connection_create(
+        : UniqueHandle{btck_global_logging_connection_create(
               +[](void* user_data, const btck_LogEntry* entry) { static_cast<T*>(user_data)->LogMessage(LogEntry{*entry}); },
               log.release(),
               +[](void* user_data) { delete static_cast<T*>(user_data); })}

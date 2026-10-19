@@ -146,10 +146,11 @@ typedef struct btck_TransactionOutput btck_TransactionOutput;
 /**
  * Opaque data structure for holding a logging connection.
  *
- * Log entries are delivered to the connection's callback for as long as the
- * connection exists. Entries logged before a connection is created are not
- * delivered. Functions changing the logging settings are global and change
- * the settings for all existing btck_LoggingConnection instances.
+ * At most one logging connection can exist in the process at a time. It is
+ * created with @ref btck_global_logging_connection_create, and receives all
+ * log entries produced by the kernel for as long as it exists. Entries logged
+ * before it is created are not delivered. After it is destroyed, a new one can
+ * be created.
  */
 typedef struct btck_LoggingConnection btck_LoggingConnection;
 
@@ -958,7 +959,8 @@ BITCOINKERNEL_API void btck_transaction_output_destroy(btck_TransactionOutput* t
 BITCOINKERNEL_API void btck_logging_set_min_level(btck_LogLevel level);
 
 /**
- * @brief Start logging messages through the provided callback.
+ * @brief Start logging messages through the provided callback. Fails if a
+ * logging connection already exists in the process.
  *
  * @param[in] log_callback               Non-null, function through which log entries will be delivered.
  * @param[in] user_data                  Nullable, holds a user-defined opaque structure. Is passed back
@@ -967,11 +969,12 @@ BITCOINKERNEL_API void btck_logging_set_min_level(btck_LogLevel level);
  *                                       to the created logging connection.
  * @param[in] user_data_destroy_callback Nullable, function for freeing the user data. Not called
  *                                       if user_data is null.
- * @return                               A new kernel logging connection, or null on error. On error,
+ * @return                               A new kernel logging connection, or null on error, e.g. if a
+ *                                       logging connection already exists. On error,
  *                                       user_data_destroy_callback is invoked if both it and user_data
  *                                       are non-null.
  */
-BITCOINKERNEL_API btck_LoggingConnection* BITCOINKERNEL_WARN_UNUSED_RESULT btck_logging_connection_create(
+BITCOINKERNEL_API btck_LoggingConnection* BITCOINKERNEL_WARN_UNUSED_RESULT btck_global_logging_connection_create(
     btck_LogCallback log_callback,
     void* user_data,
     btck_DestroyCallback user_data_destroy_callback) BITCOINKERNEL_ARG_NONNULL(1);
