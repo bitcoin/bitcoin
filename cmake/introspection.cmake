@@ -204,7 +204,9 @@ if(NOT MSVC)
 
     int main()
     {
-      uint32x4_t a, b, c;
+      uint32x4_t a = vdupq_n_u32(0);
+      uint32x4_t b = vdupq_n_u32(1);
+      uint32x4_t c = vdupq_n_u32(2);
       vsha256h2q_u32(a, b, c);
       vsha256hq_u32(a, b, c);
       vsha256su0q_u32(a, b);
