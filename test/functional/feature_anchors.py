@@ -64,11 +64,12 @@ class AnchorsTest(BitcoinTestFramework):
         block_relay_nodes_port = []
         inbound_nodes_port = []
         for p in self.nodes[0].getpeerinfo():
-            addr_split = p["addr"].split(":")
+            # The port is serialized as two bytes, so zero-pad it to four hex digits
+            port_hex = f"{int(p['addr'].split(':')[1]):04x}"
             if p["connection_type"] == "block-relay-only":
-                block_relay_nodes_port.append(hex(int(addr_split[1]))[2:])
+                block_relay_nodes_port.append(port_hex)
             else:
-                inbound_nodes_port.append(hex(int(addr_split[1]))[2:])
+                inbound_nodes_port.append(port_hex)
 
         self.log.info("Disabling network activity should not affect the anchors")
         self.nodes[0].setnetworkactive(False)
