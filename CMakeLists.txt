@@ -419,7 +419,8 @@ if(SANITIZERS)
     SOURCE "
       #include <cstdint>
       #include <cstddef>
-      extern \"C\" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) { return 0; }
+      extern \"C\" int LLVMFuzzerTestOneInput(const uint8_t*, size_t);
+      extern \"C\" int LLVMFuzzerTestOneInput(const uint8_t*, size_t) { return 0; }
       int main() { return 0; }
     "
     RESULT_VAR linker_supports_sanitizers
@@ -439,7 +440,8 @@ if(BUILD_FUZZ_BINARY)
   check_cxx_source_compiles_with_flags("
       #include <cstdint>
       #include <cstddef>
-      extern \"C\" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) { return 0; }
+      extern \"C\" int LLVMFuzzerTestOneInput(const uint8_t*, size_t);
+      extern \"C\" int LLVMFuzzerTestOneInput(const uint8_t*, size_t) { return 0; }
       // No main() function.
     " FUZZ_BINARY_LINKS_WITHOUT_MAIN_FUNCTION
     LDFLAGS ${SANITIZER_LDFLAGS} ${fuzz_flag}
