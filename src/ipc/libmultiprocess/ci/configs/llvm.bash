@@ -2,7 +2,7 @@ CI_DESC="CI job using LLVM-based libraries and tools (clang, libc++, clang-tidy,
 CI_DIR=build-llvm
 NIX_ARGS=(--arg enableLibcxx true)
 export CXX=clang++
-export CXXFLAGS="-Werror -Wall -Wextra -Wpedantic -Wthread-safety -Wno-unused-parameter"
+export CXXFLAGS="-Werror -Wall -Wextra -Wextra-semi -Wpedantic -Wthread-safety -Wno-unused-parameter -Wno-c++23-lambda-attributes"
 CMAKE_ARGS=(
   -G Ninja
   -DMP_ENABLE_CLANG_TIDY=ON
