@@ -187,8 +187,19 @@ class ListTransactionsTest(BitcoinTestFramework):
         self.log.info("Test listtransactions RPC parameter validity")
         assert_raises_rpc_error(-8, 'Label argument must be a valid label name or "*".', self.nodes[0].listtransactions, label="")
         self.nodes[0].listtransactions(label="*")
-        assert_raises_rpc_error(-8, "Negative count", self.nodes[0].listtransactions, count=-1)
-        assert_raises_rpc_error(-8, "Negative from", self.nodes[0].listtransactions, skip=-1)
+        assert_raises_rpc_error(-1, "JSON integer out of range", self.nodes[0].listtransactions, count=-1)
+        assert_raises_rpc_error(-1, "JSON integer out of range", self.nodes[0].listtransactions, skip=-1)
+
+        self.log.info("Test listtransactions with large count and skip")
+        INT_MAX = 2**31 - 1
+        UINT32_MAX = 2**32 - 1
+        all_but_newest = self.nodes[0].listtransactions(count=1000000, skip=1)
+        assert_equal(self.nodes[0].listtransactions(count=INT_MAX, skip=1), all_but_newest)
+        assert_equal(self.nodes[0].listtransactions(count=UINT32_MAX, skip=1), all_but_newest)
+        assert_equal(self.nodes[0].listtransactions(count=INT_MAX, skip=INT_MAX), [])
+        assert_equal(self.nodes[0].listtransactions(count=1, skip=INT_MAX), [])
+        assert_equal(self.nodes[0].listtransactions(count=UINT32_MAX, skip=UINT32_MAX), [])
+        assert_raises_rpc_error(-1, "JSON integer out of range", self.nodes[0].listtransactions, count=UINT32_MAX + 1)
 
     def test_op_return(self):
         """Test if OP_RETURN outputs will be displayed correctly."""

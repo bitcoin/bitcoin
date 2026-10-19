@@ -558,17 +558,10 @@ RPCMethod listtransactions()
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Label argument must be a valid label name or \"*\".");
         }
     }
-    int nCount = 10;
-    if (!request.params[1].isNull())
-        nCount = request.params[1].getInt<int>();
-    int nFrom = 0;
-    if (!request.params[2].isNull())
-        nFrom = request.params[2].getInt<int>();
-
-    if (nCount < 0)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
-    if (nFrom < 0)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative from");
+    const auto count{self.Arg<uint32_t>("count")};
+    const auto skip{self.Arg<uint32_t>("skip")};
+    // Both are at most UINT32_MAX, so the sum can't overflow in 64 bits
+    const uint64_t limit{uint64_t{count} + skip};
 
     std::vector<UniValue> ret;
     {
@@ -576,25 +569,23 @@ RPCMethod listtransactions()
 
         const CWallet::TxItems & txOrdered = pwallet->wtxOrdered;
 
-        // iterate backwards until we have nCount items to return:
+        // iterate backwards until we have count items to return:
         for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
         {
             CWalletTx *const pwtx = (*it).second;
             ListTransactions(*pwallet, *pwtx, 0, true, ret, filter_label);
-            if ((int)ret.size() >= (nCount+nFrom)) break;
+            if (ret.size() >= limit) break;
         }
     }
 
     // ret is newest to oldest
 
-    if (nFrom > (int)ret.size())
-        nFrom = ret.size();
-    if ((nFrom + nCount) > (int)ret.size())
-        nCount = ret.size() - nFrom;
+    const size_t from{std::min<size_t>(skip, ret.size())};
+    const size_t num{std::min<size_t>(count, ret.size() - from)};
 
     auto txs_rev_it{std::make_move_iterator(ret.rend())};
     UniValue result{UniValue::VARR};
-    result.push_backV(txs_rev_it - nFrom - nCount, txs_rev_it - nFrom); // Return oldest to newest
+    result.push_backV(txs_rev_it - from - num, txs_rev_it - from); // Return oldest to newest
     return result;
 },
     };
