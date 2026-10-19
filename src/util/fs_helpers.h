@@ -44,7 +44,7 @@ bool FileCommit(FILE* file);
  */
 void DirectoryCommit(const fs::path& dirname);
 
-bool TruncateFile(FILE* file, unsigned int length);
+bool TruncateFile(FILE* file, uint64_t length);
 
 /**
  * Try to raise the file descriptor limit to the requested number.
@@ -57,7 +57,7 @@ bool TruncateFile(FILE* file, unsigned int length);
  */
 int RaiseFileDescriptorLimit(int min_fd);
 
-void AllocateFileRange(FILE* file, unsigned int offset, unsigned int length);
+void AllocateFileRange(FILE* file, uint64_t offset, unsigned int length);
 
 /**
  * Rename src to dest.
