@@ -56,15 +56,12 @@ class HeadersSyncTest(BitcoinTestFramework):
             p.send_and_ping(new_block_announcement)
 
     def assert_single_getheaders_recipient(self, peers):
-        count = 0
-        receiving_peer = None
-        for p in peers:
+        def getheaders_recipients():
             with p2p_lock:
-                if "getheaders" in p.last_message:
-                    count += 1
-                    receiving_peer = p
-        assert_equal(count, 1)
-        return receiving_peer
+                return [p for p in peers if "getheaders" in p.last_message]
+
+        self.wait_until(lambda: len(getheaders_recipients()) == 1)
+        return getheaders_recipients()[0]
 
     def test_initial_headers_sync(self):
         self.log.info("Test initial headers sync")
