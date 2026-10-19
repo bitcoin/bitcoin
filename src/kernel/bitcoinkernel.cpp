@@ -553,16 +553,9 @@ public:
         return level >= m_min_level.load(std::memory_order_relaxed) &&
                m_callback_count.load(std::memory_order_relaxed) > 0;
     }
-    //! Deliver the entry to every registered callback while holding m_mutex, regardless of its
-    //! level. Exceptions from callbacks are swallowed.
+    //! Deliver the entry to every registered callback while holding m_mutex, if ShouldLog() passes
+    //! for its level. Exceptions from callbacks are swallowed.
     void Log(const util::log::Entry& entry) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
-    //! Log() the entry if ShouldLog() passes for its level.
-    void MaybeLog(const util::log::Entry& entry) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
-    {
-        if (ShouldLog(entry.level)) {
-            Log(entry);
-        }
-    }
 };
 
 KernelLogger::CallbackHandle KernelLogger::RegisterCallback(btck_LogCallback fn, UserData user_data)
@@ -588,6 +581,8 @@ void KernelLogger::UnregisterCallback(std::list<Callback>::iterator it)
 
 void KernelLogger::Log(const util::log::Entry& entry) const
 {
+    if (!ShouldLog(entry.level)) return;
+
     // Some log statements are manually suffixed with a newline.
     std::string_view message{util::RemoveSuffixView(entry.message, "\n")};
     std::string_view thread_name{entry.thread_name};
@@ -986,9 +981,9 @@ bool ShouldTraceLog(Category /*category*/)
 
 void Log(Entry entry)
 {
-    // Conditional logging, because the util::log framework doesn't allow us to check if the
-    // minimum level exceeds Info.
-    GetKernelLogger().MaybeLog(entry);
+    // KernelLogger::Log() filters on level, because the util::log framework doesn't allow us to
+    // check if the minimum level exceeds Info.
+    GetKernelLogger().Log(entry);
 }
 } // namespace util::log
 
