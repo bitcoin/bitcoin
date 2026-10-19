@@ -52,11 +52,11 @@ check_cxx_source_compiles_with_flags("
   #endif
 
   int main() {
-    uint64_t l = 0;
-    l = _mm_crc32_u8(l, 0);
-    l = _mm_crc32_u32(l, 0);
-    l = _mm_crc32_u64(l, 0);
-    return l;
+    unsigned int crc32 = 0;
+    crc32 = _mm_crc32_u8(crc32, 0);
+    crc32 = _mm_crc32_u32(crc32, 0);
+    uint64_t crc64 = _mm_crc32_u64(crc32, 0);
+    return static_cast<int>(crc64);
   }
   " HAVE_SSE42
   CXXFLAGS ${SSE42_CXXFLAGS}
