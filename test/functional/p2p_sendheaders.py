@@ -78,7 +78,14 @@ a. Repeat 100 times:
       Expect: getdata for the missing blocks, tip update.
 b. Then send 99 more headers that don't connect.
    Expect: getheaders message each time.
+c. Send a header that doesn't connect again, without an empty headers in between.
+   Expect: no getheaders message, as unconnecting headers are not a response
+   to the outstanding getheaders.
+   Advance mocktime past HEADERS_RESPONSE_TIME and send it again.
+   Expect: getheaders message.
 """
+import time
+
 from test_framework.blocktools import create_block
 from test_framework.messages import CInv
 from test_framework.p2p import (
@@ -101,6 +108,7 @@ from test_framework.util import (
 )
 
 DIRECT_FETCH_RESPONSE_TIME = 0.05
+HEADERS_RESPONSE_TIME = 2 * 60  # seconds, matches net_processing.cpp
 
 class BaseNode(P2PInterface):
     def __init__(self):
@@ -567,6 +575,19 @@ class SendHeadersTest(BitcoinTestFramework):
             # Send the actual unconnecting header, which should trigger a new getheaders.
             test_node.send_header_for_blocks([blocks[i]])
             test_node.wait_for_getheaders(block_hash=expected_hash)
+
+        self.log.info("Part 5c: Check that unconnecting headers don't count as a getheaders response")
+        with p2p_lock:
+            test_node.last_message.pop("getheaders", None)
+        test_node.send_header_for_blocks([blocks[NUM_HEADERS]])
+        test_node.sync_with_ping()
+        with p2p_lock:
+            assert "getheaders" not in test_node.last_message
+        # Once HEADERS_RESPONSE_TIME has passed, a new getheaders can go out.
+        self.nodes[0].setmocktime(int(time.time()) + HEADERS_RESPONSE_TIME + 1)
+        test_node.send_header_for_blocks([blocks[NUM_HEADERS]])
+        test_node.wait_for_getheaders(block_hash=expected_hash)
+        self.nodes[0].setmocktime(0)
 
         # Finally, check that the inv node never received a getdata request,
         # throughout the test
