@@ -36,9 +36,9 @@ struct IndexSummary {
 namespace interfaces {
 struct BlockRef;
 }
-namespace util {
+namespace util::log {
 template <unsigned int num_params>
-struct ConstevalFormatString;
+struct FormatString;
 }
 
 /**
@@ -108,7 +108,7 @@ private:
     virtual bool AllowPrune() const = 0;
 
     template <typename... Args>
-    void FatalErrorf(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args);
+    void FatalErrorf(util::log::FormatString<sizeof...(Args)> fmt, const Args&... args);
 
 protected:
     std::unique_ptr<interfaces::Chain> m_chain;
