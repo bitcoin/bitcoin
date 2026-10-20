@@ -156,8 +156,11 @@ public:
      * Queue the witness transaction id to the inbound and outbound inv backlogs.
      * Later, depending on `-txsendrate`, `Peer::TxRelay::m_next_inv_send_time` and if
      * the transaction is in the mempool, an `INV` about it may be sent to the peer.
+     * If `reason` is not `RELAY` and the transaction has been privately broadcast,
+     * then nothing is announced and the transaction is removed from the mempool's
+     * unbroadcast set, because a public announcement would reveal us as its origin.
      */
-    virtual void InitiateTxBroadcastToAll(const Wtxid& wtxid) = 0;
+    virtual void InitiateTxBroadcastToAll(const Wtxid& wtxid, node::TxAnnounceReason reason) = 0;
 
     /**
      * Initiate a private transaction broadcast. This is done

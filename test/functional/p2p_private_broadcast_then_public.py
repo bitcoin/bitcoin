@@ -4,15 +4,17 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
 Test sending a transaction via private broadcast and then, from the same running
-node, sending the same transaction again non-privately.
+node, trying to send the same transaction again non-privately.
 
 With -privatebroadcast, sendrawtransaction does not add the transaction to the
 mempool and only sends it via short-lived private broadcast connections. However,
-other code paths add a transaction to the mempool and announce it to all peers
-regardless of -privatebroadcast (net_processing's InitiateTxBroadcastToAll()),
-for example the submitpackage RPC or the wallet (on commit or on periodic
-rebroadcast, via MEMPOOL_AND_BROADCAST_TO_ALL). Here submitpackage and (if
-compiled) the periodic rebroadcast of the wallet are used.
+other code paths add a transaction to the mempool and request it to be announced
+to all peers regardless of -privatebroadcast (net_processing's
+InitiateTxBroadcastToAll()), for example the submitpackage RPC or the wallet (on
+commit or on periodic rebroadcast, via MEMPOOL_AND_BROADCAST_TO_ALL). Here
+submitpackage and (if compiled) the periodic rebroadcast of the wallet are used.
+Such an announcement of a privately broadcast transaction must be suppressed,
+while other transactions are still announced.
 
 Topology:
 * nodes[0]: the transaction originator, runs with -privatebroadcast. All its
@@ -162,14 +164,27 @@ class P2PPrivateBroadcastThenPublic(BitcoinTestFramework):
         # Note: we want to make the node to send the TX again non-privately,
         # Currently the `submitpackage` is a good option for that, but if it also gets changes
         # to be privateproadcast-aware, it should be changed to another method -- TODO
-        self.log.info("Sending the same transaction again, non-privately, via submitpackage")
-        res = tx_originator.submitpackage([tx["hex"]])
+        self.log.info("Trying to send the same transaction again, non-privately, via submitpackage")
+        not_announcing_msg = f"Not announcing privately broadcast transaction to all peers: txid={tx['txid']}, wtxid={tx['wtxid']}"
+        with tx_originator.assert_debug_log(expected_msgs=[not_announcing_msg]):
+            res = tx_originator.submitpackage([tx["hex"]])
         assert_equal(res["package_msg"], "success")
         assert tx["txid"] in tx_originator.getrawmempool()
+        assert_equal(tx_originator.getmempoolentry(tx["txid"])["unbroadcast"], False)
 
-        self.log.info("Observing the non-private broadcast on nodes[2]")
-        self.wait_until(lambda: tx["txid"] in public_observer.getrawmempool())
-        assert_equal(public_observer.getmempoolentry(tx["txid"])["wtxid"], tx["wtxid"])
+        self.log.info("Sending another, not privately broadcast, transaction via submitpackage")
+        tx_other = wallet.create_self_transfer()
+        with tx_originator.assert_debug_log(expected_msgs=[], unexpected_msgs=["Not announcing privately broadcast transaction"]):
+            res = tx_originator.submitpackage([tx_other["hex"]])
+        assert_equal(res["package_msg"], "success")
+        assert tx_other["txid"] in tx_originator.getrawmempool()
+
+        self.log.info("Observing the non-private broadcast of the other transaction on nodes[2]")
+        self.wait_until(lambda: tx_other["txid"] in public_observer.getrawmempool())
+        assert_equal(public_observer.getmempoolentry(tx_other["txid"])["wtxid"], tx_other["wtxid"])
+
+        self.log.info("Checking that the privately broadcast transaction did not reach nodes[2]")
+        assert tx["txid"] not in public_observer.getrawmempool()
 
         if self.is_wallet_compiled():
             self.test_wallet_resend()
@@ -209,6 +224,12 @@ class P2PPrivateBroadcastThenPublic(BitcoinTestFramework):
         self.disconnect_nodes(0, 1)
         assert txid not in public_observer.getrawmempool()
 
+        self.log.info("Wallet: creating another, not privately broadcast, wallet transaction")
+        # nodes[0] has no peers now, so this is only announced by the resend below.
+        # Do not spend the output of the privately broadcast transaction.
+        txid_other = tx_originator.send(outputs=[{tx_originator.getnewaddress(): 1}], minconf=1)["txid"]
+        wtxid_other = tx_originator.getmempoolentry(txid_other)["wtxid"]
+
         # Transactions are only resent if there has been a block at least five minutes
         # after they were received by the wallet. Create a block without the transaction.
         block_time = int(time.time()) + 6 * 60
@@ -223,14 +244,18 @@ class P2PPrivateBroadcastThenPublic(BitcoinTestFramework):
         self.connect_nodes(0, 2)
 
         self.log.info("Wallet: triggering the periodic resend of the wallet")
-        with tx_originator.assert_debug_log(expected_msgs=["resubmit 1 unconfirmed transactions"]):
+        not_announcing_msg = f"Not announcing privately broadcast transaction to all peers: txid={txid}, wtxid={wtxid}"
+        with tx_originator.assert_debug_log(expected_msgs=["resubmit 2 unconfirmed transactions", not_announcing_msg]):
             tx_originator.setmocktime(block_time + WALLET_RESEND_TIMER_LIMIT)
             # Run MaybeResendWalletTxs() now
             tx_originator.mockscheduler(60)
 
-            self.log.info("Wallet: observing the non-private broadcast on nodes[2]")
-            self.wait_until(lambda: txid in public_observer.getrawmempool())
-        assert_equal(public_observer.getmempoolentry(txid)["wtxid"], wtxid)
+            self.log.info("Wallet: observing the non-private broadcast of the other transaction on nodes[2]")
+            self.wait_until(lambda: txid_other in public_observer.getrawmempool())
+        assert_equal(public_observer.getmempoolentry(txid_other)["wtxid"], wtxid_other)
+
+        self.log.info("Wallet: checking that the privately broadcast transaction did not reach nodes[2]")
+        assert txid not in public_observer.getrawmempool()
 
 if __name__ == "__main__":
     P2PPrivateBroadcastThenPublic(__file__).main()
