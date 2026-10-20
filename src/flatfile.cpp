@@ -46,7 +46,7 @@ FILE* FlatFileSeq::Open(const FlatFilePos& pos, bool read_only) const
         LogError("Unable to open file %s", fs::PathToString(path));
         return nullptr;
     }
-    if (pos.nPos && fseek(file, pos.nPos, SEEK_SET)) {
+    if (pos.nPos && FileSeek64(file, pos.nPos, SEEK_SET)) {
         LogError("Unable to seek to position %u of %s", pos.nPos, fs::PathToString(path));
         if (fclose(file) != 0) {
             LogError("Unable to close file %s", fs::PathToString(path));
