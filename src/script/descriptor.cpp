@@ -849,14 +849,14 @@ private:
 class DescriptorImpl : public Descriptor
 {
 protected:
-    //! Public key arguments for this descriptor (size 1 for PK, PKH, WPKH; any size for WSH and Multisig).
+    //! Public key arguments in provider-storage order, including Miniscript keys.
     const std::vector<std::unique_ptr<PubkeyProvider>> m_pubkey_args;
     //! The string name of the descriptor function.
     const std::string m_name;
     //! Warnings (not including subdescriptors).
     std::vector<std::string> m_warnings;
 
-    //! The sub-descriptor arguments (empty for everything but SH and WSH).
+    //! Sub-descriptor arguments for script wrappers and Taproot leaves.
     //! In doc/descriptors.md this is referred to as SCRIPT expressions sh(SCRIPT)
     //! and wsh(SCRIPT), and distinct from KEY expressions and ADDR expressions.
     //! Subdescriptors can only ever generate a single script.
@@ -876,6 +876,27 @@ protected:
      *  @return A vector with scriptPubKeys for this descriptor.
      */
     virtual std::vector<CScript> MakeScripts(const std::vector<CPubKey>& pubkeys, std::span<const CScript> scripts, FlatSigningProvider& out) const = 0;
+
+    //! Signing role of this descriptor's own key arguments.
+    virtual DescriptorKeyInventory::Role KeyRole() const = 0;
+
+    //! Append occurrences for this descriptor's own key arguments, in storage order.
+    void AppendKeyOccurrences(DescriptorKeyInventory& inventory) const
+    {
+        for (const auto& provider : m_pubkey_args) {
+            auto info{provider->GetKeyInfo()};
+            const size_t offset{inventory.occurrences.size()};
+            for (size_t i = 0; i < info.nodes.size(); ++i) {
+                auto& node{info.nodes[i]};
+                if (auto* musig = std::get_if<DescriptorKeyInfo::MuSigKey>(&node.key)) {
+                    // Provider-local links become descriptor-inventory IDs.
+                    for (auto& participant : musig->participants)
+                        participant += offset;
+                }
+                inventory.occurrences.push_back({std::move(node), i == 0 ? KeyRole() : DescriptorKeyInventory::Role::MUSIG_PARTICIPANT});
+            }
+        }
+    }
 
 public:
     DescriptorImpl(std::vector<std::unique_ptr<PubkeyProvider>> pubkeys, const std::string& name) : m_pubkey_args(std::move(pubkeys)), m_name(name), m_subdescriptor_args() {}
@@ -1095,6 +1116,32 @@ public:
 
     virtual std::unique_ptr<DescriptorImpl> Clone() const = 0;
 
+    DescriptorKeyInventory GetKeyInventory() const final
+    {
+        DescriptorKeyInventory inventory;
+        inventory.occurrences.reserve(GetKeyCount());
+        AppendKeyOccurrences(inventory);
+        // Keep only the current ancestry, rather than queueing every Taproot leaf.
+        struct Frame {
+            const DescriptorImpl* descriptor;
+            size_t next_child{0};
+        };
+        std::vector<Frame> stack{{this}};
+        while (!stack.empty()) {
+            // Invalidated by the push_back below; do not use it after that.
+            auto& frame{stack.back()};
+            const auto& children{frame.descriptor->m_subdescriptor_args};
+            if (frame.next_child == children.size()) {
+                stack.pop_back();
+                continue;
+            }
+            const DescriptorImpl* child{children[frame.next_child++].get()};
+            child->AppendKeyOccurrences(inventory);
+            stack.push_back({child});
+        }
+        return inventory;
+    }
+
     bool HasScripts() const override { return true; }
 
     // NOLINTNEXTLINE(misc-no-recursion)
@@ -1159,6 +1206,8 @@ class AddressDescriptor final : public DescriptorImpl
 {
     const CTxDestination m_destination;
 protected:
+    //! No key arguments, so no role is ever requested.
+    DescriptorKeyInventory::Role KeyRole() const override { NONFATAL_UNREACHABLE(); }
     std::string ToStringExtra() const override { return EncodeDestination(m_destination); }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, std::span<const CScript>, FlatSigningProvider&) const override { return Vector(GetScriptForDestination(m_destination)); }
 public:
@@ -1184,6 +1233,8 @@ class RawDescriptor final : public DescriptorImpl
 {
     const CScript m_script;
 protected:
+    //! No key arguments, so no role is ever requested.
+    DescriptorKeyInventory::Role KeyRole() const override { NONFATAL_UNREACHABLE(); }
     std::string ToStringExtra() const override { return HexStr(m_script); }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, std::span<const CScript>, FlatSigningProvider&) const override { return Vector(m_script); }
 public:
@@ -1213,6 +1264,7 @@ class PKDescriptor final : public DescriptorImpl
 private:
     const bool m_xonly;
 protected:
+    DescriptorKeyInventory::Role KeyRole() const override { return m_xonly ? DescriptorKeyInventory::Role::TAPSCRIPT : DescriptorKeyInventory::Role::ECDSA; }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript>, FlatSigningProvider&) const override
     {
         if (m_xonly) {
@@ -1251,6 +1303,7 @@ public:
 class PKHDescriptor final : public DescriptorImpl
 {
 protected:
+    DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::ECDSA; }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript>, FlatSigningProvider&) const override
     {
         CKeyID id = keys[0].GetID();
@@ -1284,6 +1337,7 @@ public:
 class WPKHDescriptor final : public DescriptorImpl
 {
 protected:
+    DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::ECDSA; }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript>, FlatSigningProvider&) const override
     {
         CKeyID id = keys[0].GetID();
@@ -1317,6 +1371,7 @@ public:
 class ComboDescriptor final : public DescriptorImpl
 {
 protected:
+    DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::ECDSA; }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript>, FlatSigningProvider& out) const override
     {
         std::vector<CScript> ret;
@@ -1346,6 +1401,7 @@ class MultisigDescriptor final : public DescriptorImpl
     const int m_threshold;
     const bool m_sorted;
 protected:
+    DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::ECDSA; }
     std::string ToStringExtra() const override { return strprintf("%i", m_threshold); }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript>, FlatSigningProvider&) const override {
         if (m_sorted) {
@@ -1392,6 +1448,7 @@ class MultiADescriptor final : public DescriptorImpl
     const int m_threshold;
     const bool m_sorted;
 protected:
+    DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::TAPSCRIPT; }
     std::string ToStringExtra() const override { return strprintf("%i", m_threshold); }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript>, FlatSigningProvider&) const override {
         CScript ret;
@@ -1436,6 +1493,8 @@ public:
 class SHDescriptor final : public DescriptorImpl
 {
 protected:
+    //! No key arguments, so no role is ever requested.
+    DescriptorKeyInventory::Role KeyRole() const override { NONFATAL_UNREACHABLE(); }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, std::span<const CScript> scripts, FlatSigningProvider& out) const override
     {
         auto ret = Vector(GetScriptForDestination(ScriptHash(scripts[0])));
@@ -1486,6 +1545,8 @@ public:
 class WSHDescriptor final : public DescriptorImpl
 {
 protected:
+    //! No key arguments, so no role is ever requested.
+    DescriptorKeyInventory::Role KeyRole() const override { NONFATAL_UNREACHABLE(); }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, std::span<const CScript> scripts, FlatSigningProvider& out) const override
     {
         auto ret = Vector(GetScriptForDestination(WitnessV0ScriptHash(scripts[0])));
@@ -1528,6 +1589,7 @@ class TRDescriptor final : public DescriptorImpl
 {
     std::vector<int> m_depths;
 protected:
+    DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::TAPROOT_INTERNAL; }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> scripts, FlatSigningProvider& out) const override
     {
         TaprootBuilder builder;
@@ -1705,6 +1767,7 @@ private:
     miniscript::Node<uint32_t> m_node;
 
 protected:
+    DescriptorKeyInventory::Role KeyRole() const override { return miniscript::IsTapscript(m_node.GetMsCtx()) ? DescriptorKeyInventory::Role::TAPSCRIPT : DescriptorKeyInventory::Role::ECDSA; }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> scripts,
                                      FlatSigningProvider& provider) const override
     {
@@ -1785,6 +1848,7 @@ public:
 class RawTRDescriptor final : public DescriptorImpl
 {
 protected:
+    DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::TAPROOT_OUTPUT; }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> scripts, FlatSigningProvider& out) const override
     {
         assert(keys.size() == 1);
@@ -1820,6 +1884,7 @@ public:
 class UnusedDescriptor final : public DescriptorImpl
 {
 protected:
+    DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::UNUSED; }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> scripts, FlatSigningProvider& out) const override { return {}; }
 public:
     UnusedDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), "unused") {}

@@ -16,6 +16,7 @@
 
 #include <optional>
 #include <regex>
+#include <set>
 #include <string>
 #include <variant>
 #include <vector>
@@ -125,6 +126,57 @@ static size_t CountUniqueXpubs(const std::string& desc)
 
 const std::set<std::vector<uint32_t>> ONLY_EMPTY{{}};
 
+void CheckKeyInventory(const Descriptor& descriptor)
+{
+    const size_t count{descriptor.GetKeyCount()};
+    auto inventory{descriptor.GetKeyInventory()};
+    BOOST_REQUIRE_EQUAL(inventory.occurrences.size(), count);
+    std::vector<size_t> parents(count, 0);
+    for (size_t i = 0; i < count; ++i) {
+        const auto& occurrence{inventory.occurrences[i]};
+        if (const auto* musig = std::get_if<DescriptorKeyInfo::MuSigKey>(&occurrence.expression.key)) {
+            for (const auto participant : musig->participants) {
+                BOOST_REQUIRE(participant > i && participant < count);
+                ++parents[participant];
+            }
+        }
+    }
+    for (size_t i = 0; i < count; ++i) {
+        BOOST_CHECK_EQUAL(parents[i], inventory.occurrences[i].role == DescriptorKeyInventory::Role::MUSIG_PARTICIPANT ? 1U : 0U);
+    }
+}
+
+/** Check that two forms of the same public descriptor have the same key inventory. */
+void CheckSameKeyInventory(const Descriptor& a, const Descriptor& b)
+{
+    const auto left{a.GetKeyInventory()};
+    const auto right{b.GetKeyInventory()};
+    BOOST_REQUIRE_EQUAL(left.occurrences.size(), right.occurrences.size());
+    for (size_t i = 0; i < left.occurrences.size(); ++i) {
+        const auto& x{left.occurrences[i]};
+        const auto& y{right.occurrences[i]};
+        BOOST_CHECK(x.role == y.role);
+        BOOST_CHECK(x.expression.origin == y.expression.origin);
+        BOOST_REQUIRE_EQUAL(x.expression.key.index(), y.expression.key.index());
+        if (const auto* constant = std::get_if<DescriptorKeyInfo::ConstKey>(&x.expression.key)) {
+            const auto& other{std::get<DescriptorKeyInfo::ConstKey>(y.expression.key)};
+            BOOST_CHECK(constant->pubkey == other.pubkey);
+            BOOST_CHECK_EQUAL(constant->xonly, other.xonly);
+        } else if (const auto* bip32 = std::get_if<DescriptorKeyInfo::BIP32Key>(&x.expression.key)) {
+            const auto& other{std::get<DescriptorKeyInfo::BIP32Key>(y.expression.key)};
+            BOOST_CHECK(bip32->root == other.root);
+            BOOST_CHECK(bip32->derivation.path == other.derivation.path);
+            BOOST_CHECK(bip32->derivation.type == other.derivation.type);
+        } else {
+            const auto& musig{std::get<DescriptorKeyInfo::MuSigKey>(x.expression.key)};
+            const auto& other{std::get<DescriptorKeyInfo::MuSigKey>(y.expression.key)};
+            BOOST_CHECK(musig.participants == other.participants);
+            BOOST_CHECK(musig.derivation.path == other.derivation.path);
+            BOOST_CHECK(musig.derivation.type == other.derivation.type);
+        }
+    }
+}
+
 std::set<CPubKey> GetKeyData(const FlatSigningProvider& provider, int flags) {
     std::set<CPubKey> ret;
     for (const auto& [_, pubkey] : provider.pubkeys) {
@@ -202,6 +254,14 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
 
     auto& parse_priv = parse_privs.at(desc_index);
     auto& parse_pub = parse_pubs.at(desc_index);
+    CheckKeyInventory(*parse_priv);
+    CheckKeyInventory(*parse_pub);
+    // Private keys, and the public form's own serialization, must not change the inventory.
+    CheckSameKeyInventory(*parse_priv, *parse_pub);
+    FlatSigningProvider round_trip_keys;
+    const auto round_trip{Parse(parse_pub->ToString(), round_trip_keys, error)};
+    BOOST_REQUIRE_MESSAGE(round_trip.size() == 1, error);
+    CheckSameKeyInventory(*parse_pub, *round_trip[0]);
 
     // We must be able to estimate the max satisfaction size for any solvable descriptor top descriptor (but combo).
     const bool is_nontop_or_nonsolvable{!parse_priv->IsSolvable() || !parse_priv->GetOutputType()};
@@ -478,6 +538,7 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
 
                 /* Infer a descriptor from the generated script, and verify its solvability and that it roundtrips. */
                 auto inferred = InferDescriptor(spks[n], script_provider);
+                CheckKeyInventory(*inferred);
                 BOOST_CHECK_EQUAL(inferred->IsSolvable(), !(flags & UNSOLVABLE));
                 std::vector<CScript> spks_inferred;
                 FlatSigningProvider provider_inferred;
@@ -1766,6 +1827,245 @@ BOOST_AUTO_TEST_CASE(inspect_pubkey_preserves_derivation)
         BOOST_CHECK(providers[0]->GetPubKey(5, keys, cached_out, &cache) == expected);
         BOOST_CHECK(EqualSigningProviders(cached_out, expected_out));
         BOOST_CHECK(cached_out.aggregate_pubkeys == expected_out.aggregate_pubkeys);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_key_inventory_roles)
+{
+    using Role = DescriptorKeyInventory::Role;
+    const std::string pubkey{"0379be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    const std::string xonly{pubkey.substr(2)};
+    struct Test {
+        std::string descriptor;
+        std::vector<Role> roles;
+        bool xonly{false};
+    };
+    const std::vector<Test> tests{
+        {"pk(" + pubkey + ")", {Role::ECDSA}},
+        {"pkh(" + pubkey + ")", {Role::ECDSA}},
+        {"wpkh(" + pubkey + ")", {Role::ECDSA}},
+        {"combo(" + pubkey + ")", {Role::ECDSA}},
+        {"sh(pk(" + pubkey + "))", {Role::ECDSA}},
+        {"sh(wpkh(" + pubkey + "))", {Role::ECDSA}},
+        {"wsh(pk(" + pubkey + "))", {Role::ECDSA}},
+        {"wsh(and_v(v:pk(" + pubkey + "),after(1)))", {Role::ECDSA}},
+        {"wsh(multi(2," + pubkey + "," + pubkey + "))", {Role::ECDSA, Role::ECDSA}},
+        {"sh(wsh(sortedmulti(2," + pubkey + "," + pubkey + ")))", {Role::ECDSA, Role::ECDSA}},
+        {"tr(" + pubkey + ")", {Role::TAPROOT_INTERNAL}},
+        {"rawtr(" + pubkey + ")", {Role::TAPROOT_OUTPUT}},
+        {"tr(" + pubkey + ",pk(" + pubkey + "))", {Role::TAPROOT_INTERNAL, Role::TAPSCRIPT}},
+        {"tr(" + pubkey + ",and_v(v:pk(" + pubkey + "),after(1)))", {Role::TAPROOT_INTERNAL, Role::TAPSCRIPT}},
+        {"tr(" + pubkey + ",multi_a(2," + pubkey + "," + pubkey + "))", {Role::TAPROOT_INTERNAL, Role::TAPSCRIPT, Role::TAPSCRIPT}},
+        {"tr(" + pubkey + ",sortedmulti_a(2," + pubkey + "," + pubkey + "))", {Role::TAPROOT_INTERNAL, Role::TAPSCRIPT, Role::TAPSCRIPT}},
+        {"tr(" + xonly + ",pk(" + xonly + "))", {Role::TAPROOT_INTERNAL, Role::TAPSCRIPT}, true},
+        {"rawtr(" + xonly + ")", {Role::TAPROOT_OUTPUT}, true},
+        {"unused(" + pubkey + ")", {Role::UNUSED}},
+    };
+    for (const auto& test : tests) {
+        BOOST_TEST_CONTEXT(test.descriptor)
+        {
+            FlatSigningProvider keys;
+            std::string error;
+            auto descriptors{Parse(test.descriptor, keys, error)};
+            BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+            auto inventory{descriptors[0]->GetKeyInventory()};
+            BOOST_REQUIRE_EQUAL(inventory.occurrences.size(), test.roles.size());
+            for (size_t i = 0; i < test.roles.size(); ++i) {
+                const auto& occurrence{inventory.occurrences[i]};
+                BOOST_CHECK(occurrence.role == test.roles[i]);
+                BOOST_CHECK(!occurrence.expression.origin);
+                const auto& key{std::get<DescriptorKeyInfo::ConstKey>(occurrence.expression.key)};
+                BOOST_CHECK(key.pubkey == CPubKey(ParseHex(test.xonly ? "02" + xonly : pubkey)));
+                BOOST_CHECK_EQUAL(key.xonly, test.xonly);
+            }
+        }
+    }
+
+    // Legacy contexts accept uncompressed keys without changing the standalone parser.
+    const std::string uncompressed{"04a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd5b8dec5235a0fa8722476c7709c02559e3aa73aa03918ba2d492eea75abea235"};
+    for (const auto& expression : {"pk(" + uncompressed + ")", "sh(pk(" + uncompressed + "))"}) {
+        FlatSigningProvider keys;
+        std::string error;
+        auto descriptors{Parse(expression, keys, error)};
+        BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+        auto inventory{descriptors[0]->GetKeyInventory()};
+        BOOST_REQUIRE_EQUAL(inventory.occurrences.size(), 1U);
+        BOOST_CHECK(inventory.occurrences[0].role == Role::ECDSA);
+        BOOST_CHECK(std::get<DescriptorKeyInfo::ConstKey>(inventory.occurrences[0].expression.key).pubkey == CPubKey(ParseHex(uncompressed)));
+        BOOST_CHECK(ParsePubkey(uncompressed, keys, error).empty());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_key_inventory_musig)
+{
+    using Role = DescriptorKeyInventory::Role;
+    const std::string first{"0379be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    const std::string second{"02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9"};
+    const std::string aggregate{"musig(" + first + "," + second + ")"};
+    FlatSigningProvider keys;
+    std::string error;
+    auto descriptors{Parse("tr(" + aggregate + ",multi_a(2,musig(" + second + "," + first + ")," + aggregate + "))", keys, error)};
+    BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+    auto inventory{descriptors[0]->GetKeyInventory()};
+    BOOST_REQUIRE_EQUAL(inventory.occurrences.size(), 9U);
+    for (const size_t root : {0U, 3U, 6U}) {
+        const auto& occurrence{inventory.occurrences[root]};
+        BOOST_CHECK(occurrence.role == (root == 0 ? Role::TAPROOT_INTERNAL : Role::TAPSCRIPT));
+        const auto& aggregate_key{std::get<DescriptorKeyInfo::MuSigKey>(occurrence.expression.key)};
+        BOOST_CHECK(aggregate_key.participants == std::vector<size_t>({root + 1, root + 2}));
+        for (size_t i = 1; i <= 2; ++i) {
+            const auto& participant{inventory.occurrences[root + i]};
+            BOOST_CHECK(participant.role == Role::MUSIG_PARTICIPANT);
+            const auto& key{std::get<DescriptorKeyInfo::ConstKey>(participant.expression.key)};
+            BOOST_CHECK(key.pubkey == CPubKey(ParseHex((root == 3) == (i == 1) ? second : first)));
+            BOOST_CHECK(!key.xonly);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_key_inventory_inferred)
+{
+    using Role = DescriptorKeyInventory::Role;
+    const std::string first{"0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    const std::string second{"02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9"};
+    for (const auto& expression : {
+             "wsh(multi(2," + first + "," + second + "))",
+             "wsh(multi(2," + first + "," + first + "))",
+             "wsh(and_v(v:pk(" + first + "),pk(" + second + ")))",
+             "tr(" + first + ",multi_a(2," + second + "," + second + "))"}) {
+        BOOST_TEST_CONTEXT(expression)
+        {
+            FlatSigningProvider keys;
+            std::string error;
+            auto descriptors{Parse(expression, keys, error)};
+            BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+            std::vector<CScript> scripts;
+            FlatSigningProvider expanded;
+            BOOST_REQUIRE(descriptors[0]->Expand(0, keys, scripts, expanded));
+            BOOST_REQUIRE_EQUAL(scripts.size(), 1U);
+            const auto inferred{InferDescriptor(scripts[0], expanded)};
+            // Inference's cache indices are deliberately unchanged and all zero.
+            BOOST_CHECK_EQUAL(inferred->GetMaxKeyExpr(), 0U);
+            const bool taproot{expression.starts_with("tr(")};
+            auto inventory{inferred->GetKeyInventory()};
+            BOOST_REQUIRE_EQUAL(inventory.occurrences.size(), taproot ? 3U : 2U);
+            std::multiset<CPubKey> actual;
+            for (size_t i = 0; i < inventory.occurrences.size(); ++i) {
+                const auto& occurrence{inventory.occurrences[i]};
+                BOOST_CHECK(occurrence.role == (taproot ? (i == 0 ? Role::TAPROOT_INTERNAL : Role::TAPSCRIPT) : Role::ECDSA));
+                actual.insert(std::get<DescriptorKeyInfo::ConstKey>(occurrence.expression.key).pubkey);
+            }
+            const std::multiset<CPubKey> expected{taproot ? std::multiset<CPubKey>{CPubKey(ParseHex(first)), CPubKey(ParseHex(second)), CPubKey(ParseHex(second))} :
+                                                            std::multiset<CPubKey>{CPubKey(ParseHex(first)), CPubKey(ParseHex(expression.find(second) == std::string::npos ? first : second))}};
+            BOOST_CHECK(actual == expected);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_key_inventory_clones)
+{
+    using Role = DescriptorKeyInventory::Role;
+    const std::string xpub{"xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL"};
+    const std::vector<std::string> leaves{
+        "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+        "03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd",
+        "02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9",
+    };
+    FlatSigningProvider keys;
+    std::string error;
+    // The second multipath branch clones both a pk leaf and a Miniscript leaf.
+    auto descriptors{Parse("tr([deadbeef/5]" + xpub + "/<0;1>/*,{pk(" + leaves[0] + "),and_v(v:pk(" + leaves[1] + "),pk(" + leaves[2] + "))})", keys, error)};
+    BOOST_REQUIRE_MESSAGE(descriptors.size() == 2, error);
+    for (size_t branch = 0; branch < descriptors.size(); ++branch) {
+        auto inventory{descriptors[branch]->GetKeyInventory()};
+        BOOST_REQUIRE_EQUAL(inventory.occurrences.size(), 4U);
+        const auto& internal{inventory.occurrences[0]};
+        BOOST_CHECK(internal.role == Role::TAPROOT_INTERNAL);
+        BOOST_REQUIRE(internal.expression.origin);
+        BOOST_CHECK_EQUAL(HexStr(internal.expression.origin->fingerprint), "deadbeef");
+        BOOST_CHECK(internal.expression.origin->path == std::vector<uint32_t>{5});
+        const auto& key{std::get<DescriptorKeyInfo::BIP32Key>(internal.expression.key)};
+        BOOST_CHECK(key.root == DecodeExtPubKey(xpub));
+        BOOST_CHECK(key.derivation.path == std::vector<uint32_t>{static_cast<uint32_t>(branch)});
+        BOOST_CHECK(key.derivation.type == DescriptorKeyInfo::DeriveType::UNHARDENED_RANGED);
+        for (size_t i = 0; i < leaves.size(); ++i) {
+            const auto& leaf{inventory.occurrences[i + 1]};
+            BOOST_CHECK(leaf.role == Role::TAPSCRIPT);
+            BOOST_CHECK(std::get<DescriptorKeyInfo::ConstKey>(leaf.expression.key).pubkey == CPubKey(ParseHex(leaves[i])));
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_key_inventory_opaque)
+{
+    const std::string xpub{"xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL"};
+    FlatSigningProvider keys;
+    std::string error;
+    // Opaque scripts have no inspectable expressions; unused() still has one.
+    for (const auto& expression : {"raw(51)", "addr(1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa)"}) {
+        auto descriptors{Parse(expression, keys, error)};
+        BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+        BOOST_CHECK(descriptors[0]->GetKeyInventory().occurrences.empty());
+    }
+    auto descriptors{Parse("unused(" + xpub + ")", keys, error)};
+    BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+    const auto inventory{descriptors[0]->GetKeyInventory()};
+    BOOST_REQUIRE_EQUAL(inventory.occurrences.size(), 1U);
+    BOOST_CHECK(inventory.occurrences[0].role == DescriptorKeyInventory::Role::UNUSED);
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_key_inventory_private)
+{
+    const std::string xpub{"xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL"};
+    const std::string xprv{"xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc"};
+    FlatSigningProvider keys;
+    std::string error;
+    auto descriptors{Parse("tr([deadbeef/7h]" + xprv + "/1h,pk(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1))", keys, error)};
+    BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+    keys.keys.clear();
+    auto inventory{descriptors[0]->GetKeyInventory()};
+    descriptors.clear(); // Results retain public values, without providers or secrets.
+    BOOST_REQUIRE_EQUAL(inventory.occurrences.size(), 2U);
+    const auto& internal{inventory.occurrences[0]};
+    BOOST_CHECK(internal.role == DescriptorKeyInventory::Role::TAPROOT_INTERNAL);
+    BOOST_REQUIRE(internal.expression.origin);
+    BOOST_CHECK(internal.expression.origin->path == std::vector<uint32_t>{0x80000007U});
+    const auto& key{std::get<DescriptorKeyInfo::BIP32Key>(internal.expression.key)};
+    BOOST_CHECK(key.root == DecodeExtPubKey(xpub));
+    BOOST_CHECK(key.derivation.path == std::vector<uint32_t>{0x80000001U});
+    const auto& leaf{inventory.occurrences[1]};
+    BOOST_CHECK(leaf.role == DescriptorKeyInventory::Role::TAPSCRIPT);
+    // The leaf key is x-only, so the odd-parity WIF reports its even form.
+    BOOST_CHECK(std::get<DescriptorKeyInfo::ConstKey>(leaf.expression.key).pubkey == CPubKey(ParseHex("02a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd")));
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_key_inventory_large)
+{
+    const std::string pubkey{"0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    const std::string leaf{"pk(" + pubkey + ")"};
+    FlatSigningProvider keys;
+    std::string error;
+    std::string deep;
+    for (size_t i = 0; i < 3200; ++i)
+        deep += "and_v(v:after(1),";
+    deep += leaf;
+    deep.append(3200, ')');
+    auto descriptors{Parse("tr(" + pubkey + "," + deep + ")", keys, error)};
+    BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+    // Timelock subtrees do not enlarge a key inventory or require serialization.
+    auto inventory{descriptors[0]->GetKeyInventory()};
+    BOOST_CHECK_EQUAL(inventory.occurrences.size(), 2U);
+
+    std::string wide{leaf};
+    for (size_t i = 0; i < 10; ++i)
+        wide = "{" + wide + "," + wide + "}";
+    descriptors = Parse("tr(" + pubkey + "," + wide + ")", keys, error);
+    BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+    inventory = descriptors[0]->GetKeyInventory();
+    BOOST_REQUIRE_EQUAL(inventory.occurrences.size(), 1025U);
+    BOOST_CHECK(inventory.occurrences[0].role == DescriptorKeyInventory::Role::TAPROOT_INTERNAL);
+    for (size_t i = 1; i < inventory.occurrences.size(); ++i) {
+        BOOST_CHECK(inventory.occurrences[i].role == DescriptorKeyInventory::Role::TAPSCRIPT);
     }
 }
 

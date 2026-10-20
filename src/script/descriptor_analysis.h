@@ -58,4 +58,30 @@ struct DescriptorKeyInfo {
     std::vector<Node> nodes;
 };
 
+/** Public key occurrences in an already parsed descriptor.
+ *
+ * Each vector index is an ID local to this inventory, independent of descriptor
+ * cache indices. Equal keys remain separate occurrences. MuSig participant
+ * links refer to this vector. IDs follow descriptor traversal and stored key
+ * argument order, and need not survive inference or serialization round trips.
+ * No policy nodes or wallet ownership information are included.
+ */
+struct DescriptorKeyInventory {
+    enum class Role {
+        ECDSA,
+        TAPROOT_INTERNAL,
+        TAPROOT_OUTPUT,
+        TAPSCRIPT,
+        MUSIG_PARTICIPANT, //!< Full public keys are used by aggregation, even in Taproot.
+        UNUSED,            //!< Key material recorded without a signing requirement.
+    };
+
+    struct Occurrence {
+        DescriptorKeyInfo::Node expression;
+        Role role;
+    };
+
+    std::vector<Occurrence> occurrences;
+};
+
 #endif // BITCOIN_SCRIPT_DESCRIPTOR_ANALYSIS_H
