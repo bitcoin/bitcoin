@@ -31,6 +31,7 @@
 #include <test/util/setup_common.h>
 #include <undo.h>
 #include <util/check.h>
+#include <utxo_snapshot.h>
 
 #include <cstdint>
 #include <exception>
@@ -38,7 +39,6 @@
 #include <stdexcept>
 
 using kernel::CBlockFileInfo;
-using node::SnapshotMetadata;
 
 void initialize_deserialize()
 {

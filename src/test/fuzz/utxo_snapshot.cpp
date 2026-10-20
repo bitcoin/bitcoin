@@ -29,6 +29,7 @@
 #include <util/fs.h>
 #include <util/result.h>
 #include <util/time.h>
+#include <utxo_snapshot.h>
 #include <validation.h>
 
 #include <cstdint>
@@ -37,8 +38,6 @@
 #include <memory>
 #include <optional>
 #include <vector>
-
-using node::SnapshotMetadata;
 
 namespace {
 

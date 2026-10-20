@@ -64,6 +64,7 @@
 #include <util/time.h>
 #include <util/trace.h>
 #include <util/translation.h>
+#include <utxo_snapshot.h>
 #include <validationinterface.h>
 
 #include <algorithm>
@@ -89,7 +90,6 @@ using node::BlockManager;
 using node::BlockMap;
 using node::CBlockIndexHeightOnlyComparator;
 using node::CBlockIndexWorkComparator;
-using node::SnapshotMetadata;
 
 /** Time window to wait between writing blocks/block index and chainstate to disk.
  *  Randomize writing time inside the window to prevent a situation where the
