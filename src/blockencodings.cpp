@@ -59,7 +59,7 @@ uint64_t CBlockHeaderAndShortTxIDs::GetShortID(const Wtxid& wtxid) const
  */
 ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<Wtxid, CTransactionRef>>& extra_txn)
 {
-    LogDebug(BCLog::CMPCTBLOCK, "Initializing PartiallyDownloadedBlock for block %s using a cmpctblock of %u bytes\n", cmpctblock.header.GetHash().ToString(), GetSerializeSize(cmpctblock));
+    LogDebug(BCLog::CMPCTBLOCK, "Initializing PartiallyDownloadedBlock for block %s using a cmpctblock of %u bytes\n", cmpctblock.header.GetHash().ToString(), GetSerializeSize(TX_WITH_WITNESS(cmpctblock)));
     if (cmpctblock.header.IsNull() || (cmpctblock.shorttxids.empty() && cmpctblock.prefilledtxn.empty()))
         return READ_STATUS_INVALID;
     if (cmpctblock.shorttxids.size() + cmpctblock.prefilledtxn.size() > MAX_BLOCK_WEIGHT / MIN_SERIALIZABLE_TRANSACTION_WEIGHT)
@@ -227,7 +227,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
         }
     }
 
-    LogDebug(BCLog::CMPCTBLOCK, "Initialized PartiallyDownloadedBlock for block %s using a cmpctblock of %u bytes\n", cmpctblock.header.GetHash().ToString(), GetSerializeSize(cmpctblock));
+    LogDebug(BCLog::CMPCTBLOCK, "Initialized PartiallyDownloadedBlock for block %s using a cmpctblock of %u bytes\n", cmpctblock.header.GetHash().ToString(), GetSerializeSize(TX_WITH_WITNESS(cmpctblock)));
 
     return READ_STATUS_OK;
 }

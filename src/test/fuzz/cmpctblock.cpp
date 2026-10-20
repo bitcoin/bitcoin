@@ -311,7 +311,7 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
 
                 if (fuzzed_data_provider.ConsumeBool()) {
                     CBlockHeaderAndShortTxIDs base_cmpctblock = cmpctblock;
-                    net_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, base_cmpctblock);
+                    net_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, TX_WITH_WITNESS(base_cmpctblock));
                     return;
                 }
 
@@ -348,7 +348,7 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
                 assert(cmpctblock.PrefilledTxCount() + cmpctblock.ShortTxIDCount() == num_txs);
 
                 CBlockHeaderAndShortTxIDs base_cmpctblock = cmpctblock;
-                net_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, base_cmpctblock);
+                net_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, TX_WITH_WITNESS(base_cmpctblock));
             },
             [&]() {
                 // Send a blocktxn message for an existing block (if one exists).
@@ -371,7 +371,7 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
                     block_txn.txn.push_back(cblock->vtx[i]);
                 }
 
-                net_msg = NetMsg::Make(NetMsgType::BLOCKTXN, block_txn);
+                net_msg = NetMsg::Make(NetMsgType::BLOCKTXN, TX_WITH_WITNESS(block_txn));
             },
             [&]() {
                 // Send a headers message for an existing block (if one exists).

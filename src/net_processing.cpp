@@ -2248,7 +2248,7 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
 
     uint256 hashBlock(pblock->GetHash());
     const std::shared_future<CSerializedNetMsg> lazy_ser{
-        std::async(std::launch::deferred, [&] { return NetMsg::Make(NetMsgType::CMPCTBLOCK, *pcmpctblock); })};
+        std::async(std::launch::deferred, [&] { return NetMsg::Make(NetMsgType::CMPCTBLOCK, TX_WITH_WITNESS(*pcmpctblock)); })};
 
     {
         auto most_recent_block_txs = std::make_unique<std::map<GenTxid, CTransactionRef>>();
@@ -2713,10 +2713,10 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
             // instead we respond with the full, non-compact block.
             if (can_direct_fetch && pindex->nHeight >= tip->nHeight - MAX_CMPCTBLOCK_DEPTH) {
                 if (a_recent_compact_block && a_recent_compact_block->header.GetHash() == inv.hash) {
-                    MakeAndPushMessage(pfrom, NetMsgType::CMPCTBLOCK, *a_recent_compact_block);
+                    MakeAndPushMessage(pfrom, NetMsgType::CMPCTBLOCK, TX_WITH_WITNESS(*a_recent_compact_block));
                 } else {
                     CBlockHeaderAndShortTxIDs cmpctblock{*pblock, m_rng.rand64()};
-                    MakeAndPushMessage(pfrom, NetMsgType::CMPCTBLOCK, cmpctblock);
+                    MakeAndPushMessage(pfrom, NetMsgType::CMPCTBLOCK, TX_WITH_WITNESS(cmpctblock));
                 }
             } else {
                 MakeAndPushMessage(pfrom, NetMsgType::BLOCK, TX_WITH_WITNESS(*pblock));
@@ -2863,7 +2863,7 @@ void PeerManagerImpl::SendBlockTransactions(CNode& pfrom, Peer& peer, const CBlo
             LogTrace(BCLog::CMPCTBLOCK, "%s sent a GETBLOCKTXN for block %s requesting the following transactions: %s", pfrom.LogPeer(), block.GetHash().ToString(), missing_txids);
         }
     }
-    MakeAndPushMessage(pfrom, NetMsgType::BLOCKTXN, resp);
+    MakeAndPushMessage(pfrom, NetMsgType::BLOCKTXN, TX_WITH_WITNESS(resp));
 }
 
 bool PeerManagerImpl::CheckHeadersPoW(const std::vector<CBlockHeader>& headers, Peer& peer)
@@ -4807,7 +4807,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         }
 
         CBlockHeaderAndShortTxIDs cmpctblock;
-        vRecv >> cmpctblock;
+        vRecv >> TX_WITH_WITNESS_P2P(cmpctblock);
 
         bool received_new_header = false;
         const auto blockhash = cmpctblock.header.GetHash();
@@ -5061,7 +5061,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         }
 
         BlockTransactions resp;
-        vRecv >> resp;
+        vRecv >> TX_WITH_WITNESS_P2P(resp);
 
         return ProcessCompactBlockTxns(pfrom, peer, resp);
     }
@@ -6245,7 +6245,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                     {
                         LOCK(m_most_recent_block_mutex);
                         if (m_most_recent_block_hash == pBestIndex->GetBlockHash()) {
-                            cached_cmpctblock_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, *m_most_recent_compact_block);
+                            cached_cmpctblock_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, TX_WITH_WITNESS(*m_most_recent_compact_block));
                         }
                     }
                     if (cached_cmpctblock_msg.has_value()) {
@@ -6255,7 +6255,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                         const bool ret{m_chainman.m_blockman.ReadBlock(block, *pBestIndex)};
                         assert(ret);
                         CBlockHeaderAndShortTxIDs cmpctblock{block, m_rng.rand64()};
-                        MakeAndPushMessage(node, NetMsgType::CMPCTBLOCK, cmpctblock);
+                        MakeAndPushMessage(node, NetMsgType::CMPCTBLOCK, TX_WITH_WITNESS(cmpctblock));
                     }
                     state.pindexBestHeaderSent = pBestIndex;
                 } else if (peer.m_prefers_headers) {
