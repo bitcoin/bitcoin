@@ -12,6 +12,7 @@
 #include <wallet/sqlite.h>
 #include <wallet/migrate.h>
 #include <wallet/test/util.h>
+#include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
 
 #include <cstddef>
@@ -304,6 +305,40 @@ BOOST_AUTO_TEST_CASE(in_memory_database_cannot_reopen)
     InMemoryWalletDatabase database;
     database.Close();
     BOOST_CHECK_THROW(database.Open(), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(txn_listener_unset_callback_is_skipped)
+{
+    // A DbTxnListener may leave either callback unset. The unset one must be
+    // skipped rather than invoked, which would throw std::bad_function_call.
+    DatabaseOptions options;
+    DatabaseStatus status;
+    bilingual_str error;
+    std::unique_ptr<SQLiteDatabase> database = MakeSQLiteDatabase(m_path_root / "sqlite", options, status, error);
+
+    // Only on_commit set: aborting must not throw, and must not run on_commit.
+    {
+        WalletBatch batch{*Assert(database)};
+        BOOST_CHECK(batch.TxnBegin());
+        bool committed{false};
+        batch.RegisterTxnListener({.on_commit = [&] { committed = true; }, .on_abort = {}});
+        bool aborted{false};
+        BOOST_CHECK_NO_THROW(aborted = batch.TxnAbort());
+        BOOST_CHECK(aborted);
+        BOOST_CHECK(!committed);
+    }
+
+    // Only on_abort set: committing must not throw, and must not run on_abort.
+    {
+        WalletBatch batch{*Assert(database)};
+        BOOST_CHECK(batch.TxnBegin());
+        bool rolled_back{false};
+        batch.RegisterTxnListener({.on_commit = {}, .on_abort = [&] { rolled_back = true; }});
+        bool committed{false};
+        BOOST_CHECK_NO_THROW(committed = batch.TxnCommit());
+        BOOST_CHECK(committed);
+        BOOST_CHECK(!rolled_back);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

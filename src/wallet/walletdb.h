@@ -185,6 +185,8 @@ public:
 
 struct DbTxnListener
 {
+    //! Callbacks are optional. An empty std::function means the listener has
+    //! nothing to do for that outcome, and is skipped.
     std::function<void()> on_commit, on_abort;
 };
 

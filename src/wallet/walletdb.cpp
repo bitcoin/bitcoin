@@ -1365,7 +1365,7 @@ bool WalletBatch::TxnCommit()
     bool res = m_batch->TxnCommit();
     if (res) {
         for (const auto& listener : m_txn_listeners) {
-            listener.on_commit();
+            if (listener.on_commit) listener.on_commit();
         }
         // txn finished, clear listeners
         m_txn_listeners.clear();
@@ -1378,7 +1378,7 @@ bool WalletBatch::TxnAbort()
     bool res = m_batch->TxnAbort();
     if (res) {
         for (const auto& listener : m_txn_listeners) {
-            listener.on_abort();
+            if (listener.on_abort) listener.on_abort();
         }
         // txn finished, clear listeners
         m_txn_listeners.clear();
