@@ -76,10 +76,10 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
         CBlockHeaderAndShortTxIDs shortIDs{block, rand_ctx.rand64()};
 
         DataStream stream{};
-        stream << shortIDs;
+        stream << TX_WITH_WITNESS(shortIDs);
 
         CBlockHeaderAndShortTxIDs shortIDs2;
-        stream >> shortIDs2;
+        stream >> TX_WITH_WITNESS_P2P(shortIDs2);
 
         PartiallyDownloadedBlock partialBlock(&pool);
         BOOST_CHECK(partialBlock.InitData(shortIDs2, empty_extra_txn) == READ_STATUS_OK);
@@ -127,17 +127,17 @@ public:
 
     explicit TestHeaderAndShortIDs(const CBlockHeaderAndShortTxIDs& orig) {
         DataStream stream{};
-        stream << orig;
-        stream >> *this;
+        stream << TX_WITH_WITNESS(orig);
+        stream >> TX_WITH_WITNESS_P2P(*this);
     }
     explicit TestHeaderAndShortIDs(const CBlock& block, FastRandomContext& ctx) :
         TestHeaderAndShortIDs(CBlockHeaderAndShortTxIDs{block, ctx.rand64()}) {}
 
     uint64_t GetShortID(const Wtxid& txhash) const {
         DataStream stream{};
-        stream << *this;
+        stream << TX_WITH_WITNESS(*this);
         CBlockHeaderAndShortTxIDs base;
-        stream >> base;
+        stream >> TX_WITH_WITNESS_P2P(base);
         return base.GetShortID(txhash);
     }
 
@@ -174,10 +174,10 @@ BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)
         shortIDs.shorttxids[1] = shortIDs.GetShortID(block.vtx[2]->GetWitnessHash());
 
         DataStream stream{};
-        stream << shortIDs;
+        stream << TX_WITH_WITNESS(shortIDs);
 
         CBlockHeaderAndShortTxIDs shortIDs2;
-        stream >> shortIDs2;
+        stream >> TX_WITH_WITNESS_P2P(shortIDs2);
 
         PartiallyDownloadedBlock partialBlock(&pool);
         BOOST_CHECK(partialBlock.InitData(shortIDs2, empty_extra_txn) == READ_STATUS_OK);
@@ -245,10 +245,10 @@ BOOST_AUTO_TEST_CASE(SufficientPreforwardRTTest)
         shortIDs.shorttxids[0] = shortIDs.GetShortID(block.vtx[1]->GetWitnessHash());
 
         DataStream stream{};
-        stream << shortIDs;
+        stream << TX_WITH_WITNESS(shortIDs);
 
         CBlockHeaderAndShortTxIDs shortIDs2;
-        stream >> shortIDs2;
+        stream >> TX_WITH_WITNESS_P2P(shortIDs2);
 
         PartiallyDownloadedBlock partialBlock(&pool);
         BOOST_CHECK(partialBlock.InitData(shortIDs2, empty_extra_txn) == READ_STATUS_OK);
@@ -297,10 +297,10 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
         CBlockHeaderAndShortTxIDs shortIDs{block, rand_ctx.rand64()};
 
         DataStream stream{};
-        stream << shortIDs;
+        stream << TX_WITH_WITNESS(shortIDs);
 
         CBlockHeaderAndShortTxIDs shortIDs2;
-        stream >> shortIDs2;
+        stream >> TX_WITH_WITNESS_P2P(shortIDs2);
 
         PartiallyDownloadedBlock partialBlock(&pool);
         BOOST_CHECK(partialBlock.InitData(shortIDs2, empty_extra_txn) == READ_STATUS_OK);
