@@ -44,6 +44,37 @@ bool FileCommit(FILE* file);
 void DirectoryCommit(const fs::path& dirname);
 
 bool TruncateFile(FILE* file, uint64_t length);
+
+/**
+ * 64-bit-clean file positioning.
+ *
+ * The wrapper is necessary for Windows, because `long` is only 32 bits there,
+ * even in 64-bit builds (LLP64).
+ */
+inline int FileSeek64(FILE* file, int64_t offset, int origin)
+{
+#if defined(WIN32)
+    return _fseeki64(file, offset, origin);
+#else
+    return std::fseek(file, offset, origin);
+#endif
+}
+
+/**
+ * 64-bit-clean file positioning.
+ *
+ * The wrapper is necessary for Windows, because `long` is only 32 bits there,
+ * even in 64-bit builds (LLP64).
+ */
+inline int64_t FileTell64(FILE* file)
+{
+#if defined(WIN32)
+    return _ftelli64(file);
+#else
+    return std::ftell(file);
+#endif
+}
+
 int RaiseFileDescriptorLimit(int nMinFD);
 void AllocateFileRange(FILE* file, uint64_t offset, unsigned int length);
 
