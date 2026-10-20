@@ -298,6 +298,14 @@ struct Descriptor {
      */
     virtual void GetPubKeys(std::set<CPubKey>& pubkeys, std::set<CExtPubKey>& ext_pubs) const = 0;
 
+    /** Inspect every key occurrence and its role, without expansion or key access.
+     * Returns an owned inventory whose size is linear in this descriptor.
+     * Opaque descriptors such as raw() and addr() have no inspectable key
+     * expressions; an empty inventory does not assert that their scripts
+     * contain no keys.
+     */
+    virtual DescriptorKeyInventory GetKeyInventory() const = 0;
+
     /** Whether this descriptor produces any scripts with the Expand functions */
     virtual bool HasScripts() const = 0;
 
