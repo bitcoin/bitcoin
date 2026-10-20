@@ -306,6 +306,13 @@ struct Descriptor {
      */
     virtual DescriptorKeyInventory GetKeyInventory() const = 0;
 
+    /** Inspect policy structure and public key occurrences without key derivation.
+     * Returns a complete owned result, including explicit opaque forms, whose
+     * size is linear in this descriptor. Does not consult signing providers or
+     * access caches. Policy node data is local; no node holds a serialized subtree.
+     */
+    virtual DescriptorPolicy GetPolicy() const = 0;
+
     /** Whether this descriptor produces any scripts with the Expand functions */
     virtual bool HasScripts() const = 0;
 

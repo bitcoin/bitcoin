@@ -845,6 +845,26 @@ private:
     }
 };
 
+/** Construction state for a complete policy inspection. */
+class DescriptorPolicyBuilder
+{
+    DescriptorPolicy m_policy;
+
+public:
+    size_t AddNode(std::variant<DescriptorPolicy::Kind, miniscript::Fragment> kind,
+                   std::span<const size_t> keys = {}, uint32_t value = 0,
+                   std::span<const unsigned char> data = {})
+    {
+        const size_t index{m_policy.nodes.size()};
+        m_policy.nodes.push_back({kind, value, {data.begin(), data.end()}, {keys.begin(), keys.end()}, {}});
+        return index;
+    }
+
+    DescriptorKeyInventory& Keys() { return m_policy.keys; }
+    DescriptorPolicy::Node& Node(size_t index) { return m_policy.nodes[index]; }
+    DescriptorPolicy Take() { return std::move(m_policy); }
+};
+
 /** Base class for all Descriptor implementations. */
 class DescriptorImpl : public Descriptor
 {
@@ -881,11 +901,15 @@ protected:
     virtual DescriptorKeyInventory::Role KeyRole() const = 0;
 
     //! Append occurrences for this descriptor's own key arguments, in storage order.
-    void AppendKeyOccurrences(DescriptorKeyInventory& inventory) const
+    //! Returns the occurrence ID of each argument's root expression.
+    std::vector<size_t> AppendKeyOccurrences(DescriptorKeyInventory& inventory) const
     {
+        std::vector<size_t> roots;
+        roots.reserve(m_pubkey_args.size());
         for (const auto& provider : m_pubkey_args) {
             auto info{provider->GetKeyInfo()};
             const size_t offset{inventory.occurrences.size()};
+            roots.push_back(offset);
             for (size_t i = 0; i < info.nodes.size(); ++i) {
                 auto& node{info.nodes[i]};
                 if (auto* musig = std::get_if<DescriptorKeyInfo::MuSigKey>(&node.key)) {
@@ -896,6 +920,15 @@ protected:
                 inventory.occurrences.push_back({std::move(node), i == 0 ? KeyRole() : DescriptorKeyInventory::Role::MUSIG_PARTICIPANT});
             }
         }
+        return roots;
+    }
+
+    //! Append this descriptor's local policy, with keys mapped to inventory IDs.
+    virtual size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const = 0;
+
+    virtual std::variant<DescriptorPolicy::ChildRole, DescriptorPolicy::TapLeaf> PolicyChildRole(size_t) const
+    {
+        return DescriptorPolicy::ChildRole::SCRIPT;
     }
 
 public:
@@ -1116,17 +1149,26 @@ public:
 
     virtual std::unique_ptr<DescriptorImpl> Clone() const = 0;
 
-    DescriptorKeyInventory GetKeyInventory() const final
+    DescriptorKeyInventory GetKeyInventory() const final { return GetPolicy().keys; }
+
+    DescriptorPolicy GetPolicy() const final
     {
-        DescriptorKeyInventory inventory;
-        inventory.occurrences.reserve(GetKeyCount());
-        AppendKeyOccurrences(inventory);
+        DescriptorPolicyBuilder builder;
+        builder.Keys().occurrences.reserve(GetKeyCount());
+        const auto append = [&](const DescriptorImpl& descriptor) {
+            // Roots follow provider storage order, which can differ from
+            // Miniscript traversal order after script inference.
+            const auto roots{descriptor.AppendKeyOccurrences(builder.Keys())};
+            return descriptor.AppendPolicy(builder, roots);
+        };
+
         // Keep only the current ancestry, rather than queueing every Taproot leaf.
         struct Frame {
             const DescriptorImpl* descriptor;
+            size_t node;
             size_t next_child{0};
         };
-        std::vector<Frame> stack{{this}};
+        std::vector<Frame> stack{{this, append(*this)}};
         while (!stack.empty()) {
             // Invalidated by the push_back below; do not use it after that.
             auto& frame{stack.back()};
@@ -1135,11 +1177,13 @@ public:
                 stack.pop_back();
                 continue;
             }
-            const DescriptorImpl* child{children[frame.next_child++].get()};
-            child->AppendKeyOccurrences(inventory);
-            stack.push_back({child});
+            const size_t pos{frame.next_child++};
+            const DescriptorImpl* child{children[pos].get()};
+            const size_t child_node{append(*child)};
+            builder.Node(frame.node).children.push_back({child_node, frame.descriptor->PolicyChildRole(pos)});
+            stack.push_back({child, child_node});
         }
-        return inventory;
+        return builder.Take();
     }
 
     bool HasScripts() const override { return true; }
@@ -1208,6 +1252,13 @@ class AddressDescriptor final : public DescriptorImpl
 protected:
     //! No key arguments, so no role is ever requested.
     DescriptorKeyInventory::Role KeyRole() const override { NONFATAL_UNREACHABLE(); }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t>) const override
+    {
+        // A destination script is bounded independently of the descriptor input.
+        const auto script{GetScriptForDestination(m_destination)};
+        return builder.AddNode(DescriptorPolicy::Kind::ADDR, {}, /*value=*/0, script);
+    }
+
     std::string ToStringExtra() const override { return EncodeDestination(m_destination); }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, std::span<const CScript>, FlatSigningProvider&) const override { return Vector(GetScriptForDestination(m_destination)); }
 public:
@@ -1235,6 +1286,11 @@ class RawDescriptor final : public DescriptorImpl
 protected:
     //! No key arguments, so no role is ever requested.
     DescriptorKeyInventory::Role KeyRole() const override { NONFATAL_UNREACHABLE(); }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t>) const override
+    {
+        return builder.AddNode(DescriptorPolicy::Kind::RAW, {}, /*value=*/0, m_script);
+    }
+
     std::string ToStringExtra() const override { return HexStr(m_script); }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, std::span<const CScript>, FlatSigningProvider&) const override { return Vector(m_script); }
 public:
@@ -1265,6 +1321,11 @@ private:
     const bool m_xonly;
 protected:
     DescriptorKeyInventory::Role KeyRole() const override { return m_xonly ? DescriptorKeyInventory::Role::TAPSCRIPT : DescriptorKeyInventory::Role::ECDSA; }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const override
+    {
+        return builder.AddNode(DescriptorPolicy::Kind::PK, keys);
+    }
+
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript>, FlatSigningProvider&) const override
     {
         if (m_xonly) {
@@ -1304,6 +1365,11 @@ class PKHDescriptor final : public DescriptorImpl
 {
 protected:
     DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::ECDSA; }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const override
+    {
+        return builder.AddNode(DescriptorPolicy::Kind::PKH, keys);
+    }
+
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript>, FlatSigningProvider&) const override
     {
         CKeyID id = keys[0].GetID();
@@ -1338,6 +1404,11 @@ class WPKHDescriptor final : public DescriptorImpl
 {
 protected:
     DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::ECDSA; }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const override
+    {
+        return builder.AddNode(DescriptorPolicy::Kind::WPKH, keys);
+    }
+
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript>, FlatSigningProvider&) const override
     {
         CKeyID id = keys[0].GetID();
@@ -1372,6 +1443,11 @@ class ComboDescriptor final : public DescriptorImpl
 {
 protected:
     DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::ECDSA; }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const override
+    {
+        return builder.AddNode(DescriptorPolicy::Kind::COMBO, keys);
+    }
+
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript>, FlatSigningProvider& out) const override
     {
         std::vector<CScript> ret;
@@ -1402,6 +1478,11 @@ class MultisigDescriptor final : public DescriptorImpl
     const bool m_sorted;
 protected:
     DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::ECDSA; }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const override
+    {
+        return builder.AddNode(m_sorted ? DescriptorPolicy::Kind::SORTEDMULTI : DescriptorPolicy::Kind::MULTI, keys, static_cast<uint32_t>(m_threshold));
+    }
+
     std::string ToStringExtra() const override { return strprintf("%i", m_threshold); }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript>, FlatSigningProvider&) const override {
         if (m_sorted) {
@@ -1449,6 +1530,11 @@ class MultiADescriptor final : public DescriptorImpl
     const bool m_sorted;
 protected:
     DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::TAPSCRIPT; }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const override
+    {
+        return builder.AddNode(m_sorted ? DescriptorPolicy::Kind::SORTEDMULTI_A : DescriptorPolicy::Kind::MULTI_A, keys, static_cast<uint32_t>(m_threshold));
+    }
+
     std::string ToStringExtra() const override { return strprintf("%i", m_threshold); }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript>, FlatSigningProvider&) const override {
         CScript ret;
@@ -1495,6 +1581,11 @@ class SHDescriptor final : public DescriptorImpl
 protected:
     //! No key arguments, so no role is ever requested.
     DescriptorKeyInventory::Role KeyRole() const override { NONFATAL_UNREACHABLE(); }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t>) const override
+    {
+        return builder.AddNode(DescriptorPolicy::Kind::SH);
+    }
+
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, std::span<const CScript> scripts, FlatSigningProvider& out) const override
     {
         auto ret = Vector(GetScriptForDestination(ScriptHash(scripts[0])));
@@ -1547,6 +1638,11 @@ class WSHDescriptor final : public DescriptorImpl
 protected:
     //! No key arguments, so no role is ever requested.
     DescriptorKeyInventory::Role KeyRole() const override { NONFATAL_UNREACHABLE(); }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t>) const override
+    {
+        return builder.AddNode(DescriptorPolicy::Kind::WSH);
+    }
+
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, std::span<const CScript> scripts, FlatSigningProvider& out) const override
     {
         auto ret = Vector(GetScriptForDestination(WitnessV0ScriptHash(scripts[0])));
@@ -1590,6 +1686,16 @@ class TRDescriptor final : public DescriptorImpl
     std::vector<int> m_depths;
 protected:
     DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::TAPROOT_INTERNAL; }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const override
+    {
+        return builder.AddNode(DescriptorPolicy::Kind::TR, keys);
+    }
+
+    std::variant<DescriptorPolicy::ChildRole, DescriptorPolicy::TapLeaf> PolicyChildRole(size_t pos) const override
+    {
+        return DescriptorPolicy::TapLeaf{static_cast<uint32_t>(m_depths[pos])};
+    }
+
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> scripts, FlatSigningProvider& out) const override
     {
         TaprootBuilder builder;
@@ -1766,8 +1872,81 @@ class MiniscriptDescriptor final : public DescriptorImpl
 private:
     miniscript::Node<uint32_t> m_node;
 
+    static DescriptorPolicy::ChildRole MiniscriptChildRole(miniscript::Fragment fragment, size_t pos)
+    {
+        using Role = DescriptorPolicy::ChildRole;
+        using Fragment = miniscript::Fragment;
+        switch (fragment) {
+        case Fragment::WRAP_A:
+        case Fragment::WRAP_S:
+        case Fragment::WRAP_C:
+        case Fragment::WRAP_D:
+        case Fragment::WRAP_V:
+        case Fragment::WRAP_J:
+        case Fragment::WRAP_N: return Role::WRAPPED;
+        case Fragment::AND_V:
+        case Fragment::AND_B:
+        case Fragment::OR_B:
+        case Fragment::OR_C:
+        case Fragment::OR_D: return pos == 0 ? Role::LEFT : Role::RIGHT;
+        case Fragment::OR_I: return pos == 0 ? Role::IF_TRUE : Role::IF_FALSE;
+        case Fragment::ANDOR: return pos == 0 ? Role::CONDITION : pos == 1 ? Role::IF_TRUE :
+                                                                             Role::IF_FALSE;
+        case Fragment::THRESH: return Role::THRESHOLD_INPUT;
+        case Fragment::JUST_0:
+        case Fragment::JUST_1:
+        case Fragment::PK_K:
+        case Fragment::PK_H:
+        case Fragment::OLDER:
+        case Fragment::AFTER:
+        case Fragment::SHA256:
+        case Fragment::HASH256:
+        case Fragment::RIPEMD160:
+        case Fragment::HASH160:
+        case Fragment::MULTI:
+        case Fragment::MULTI_A: NONFATAL_UNREACHABLE();
+        }
+        NONFATAL_UNREACHABLE();
+    }
+
 protected:
     DescriptorKeyInventory::Role KeyRole() const override { return miniscript::IsTapscript(m_node.GetMsCtx()) ? DescriptorKeyInventory::Role::TAPSCRIPT : DescriptorKeyInventory::Role::ECDSA; }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const override
+    {
+        const auto append = [&](const miniscript::Node<uint32_t>& node) {
+            const size_t index{builder.AddNode(node.Fragment(), {}, node.K(), node.Data())};
+            auto& result{builder.Node(index)};
+            result.keys.reserve(node.Keys().size());
+            for (const auto key : node.Keys()) {
+                CHECK_NONFATAL(key < keys.size());
+                result.keys.push_back(keys[key]);
+            }
+            return index;
+        };
+        const size_t root{append(m_node)};
+        struct Frame {
+            const miniscript::Node<uint32_t>* source;
+            size_t node;
+            size_t next_child{0};
+        };
+        std::vector<Frame> stack{{&m_node, root}};
+        while (!stack.empty()) {
+            // Invalidated by the push_back below; do not use it after that.
+            auto& frame{stack.back()};
+            const auto& children{frame.source->Subs()};
+            if (frame.next_child == children.size()) {
+                stack.pop_back();
+                continue;
+            }
+            const size_t pos{frame.next_child++};
+            const auto* child{&children[pos]};
+            const size_t child_node{append(*child)};
+            builder.Node(frame.node).children.push_back({child_node, MiniscriptChildRole(frame.source->Fragment(), pos)});
+            stack.push_back({child, child_node});
+        }
+        return root;
+    }
+
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> scripts,
                                      FlatSigningProvider& provider) const override
     {
@@ -1849,6 +2028,11 @@ class RawTRDescriptor final : public DescriptorImpl
 {
 protected:
     DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::TAPROOT_OUTPUT; }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const override
+    {
+        return builder.AddNode(DescriptorPolicy::Kind::RAWTR, keys);
+    }
+
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> scripts, FlatSigningProvider& out) const override
     {
         assert(keys.size() == 1);
@@ -1885,6 +2069,11 @@ class UnusedDescriptor final : public DescriptorImpl
 {
 protected:
     DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::UNUSED; }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const override
+    {
+        return builder.AddNode(DescriptorPolicy::Kind::UNUSED, keys);
+    }
+
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> scripts, FlatSigningProvider& out) const override { return {}; }
 public:
     UnusedDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), "unused") {}
