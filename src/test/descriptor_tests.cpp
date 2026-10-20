@@ -5,6 +5,7 @@
 #include <key_io.h>
 #include <pubkey.h>
 #include <script/descriptor.h>
+#include <script/miniscript.h>
 #include <script/sign.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
@@ -177,6 +178,52 @@ void CheckSameKeyInventory(const Descriptor& a, const Descriptor& b)
     }
 }
 
+void CheckPolicy(const DescriptorPolicy& policy)
+{
+    BOOST_REQUIRE(!policy.nodes.empty());
+    std::vector<size_t> parents(policy.nodes.size(), 0);
+    std::vector<size_t> key_uses(policy.keys.occurrences.size(), 0);
+    for (size_t i = 0; i < policy.nodes.size(); ++i) {
+        for (const auto& child : policy.nodes[i].children) {
+            BOOST_REQUIRE(child.node > i && child.node < policy.nodes.size());
+            ++parents[child.node];
+            if (std::holds_alternative<DescriptorPolicy::TapLeaf>(child.role)) {
+                const auto* kind{std::get_if<DescriptorPolicy::Kind>(&policy.nodes[i].kind)};
+                BOOST_REQUIRE(kind);
+                BOOST_CHECK(*kind == DescriptorPolicy::Kind::TR);
+            }
+        }
+        for (const auto key : policy.nodes[i].keys) {
+            BOOST_REQUIRE(key < key_uses.size());
+            ++key_uses[key];
+        }
+        BOOST_CHECK_EQUAL(parents[i], i == 0 ? 0U : 1U);
+    }
+    for (size_t i = 0; i < key_uses.size(); ++i) {
+        BOOST_CHECK_EQUAL(key_uses[i], policy.keys.occurrences[i].role == DescriptorKeyInventory::Role::MUSIG_PARTICIPANT ? 0U : 1U);
+    }
+}
+
+void CheckDescriptorPolicy(const Descriptor& descriptor)
+{
+    auto policy{descriptor.GetPolicy()};
+    BOOST_CHECK_EQUAL(policy.keys.occurrences.size(), descriptor.GetKeyCount());
+    CheckPolicy(policy);
+}
+
+DescriptorPolicy InspectPolicy(const std::string& expression, size_t expected_nodes)
+{
+    FlatSigningProvider keys;
+    std::string error;
+    auto descriptors{Parse(expression, keys, error)};
+    BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+    auto policy{descriptors[0]->GetPolicy()};
+    BOOST_REQUIRE_EQUAL(policy.nodes.size(), expected_nodes);
+    BOOST_CHECK_EQUAL(policy.keys.occurrences.size(), descriptors[0]->GetKeyCount());
+    CheckPolicy(policy);
+    return policy;
+}
+
 std::set<CPubKey> GetKeyData(const FlatSigningProvider& provider, int flags) {
     std::set<CPubKey> ret;
     for (const auto& [_, pubkey] : provider.pubkeys) {
@@ -262,6 +309,8 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
     const auto round_trip{Parse(parse_pub->ToString(), round_trip_keys, error)};
     BOOST_REQUIRE_MESSAGE(round_trip.size() == 1, error);
     CheckSameKeyInventory(*parse_pub, *round_trip[0]);
+    CheckDescriptorPolicy(*parse_priv);
+    CheckDescriptorPolicy(*parse_pub);
 
     // We must be able to estimate the max satisfaction size for any solvable descriptor top descriptor (but combo).
     const bool is_nontop_or_nonsolvable{!parse_priv->IsSolvable() || !parse_priv->GetOutputType()};
@@ -539,6 +588,7 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
                 /* Infer a descriptor from the generated script, and verify its solvability and that it roundtrips. */
                 auto inferred = InferDescriptor(spks[n], script_provider);
                 CheckKeyInventory(*inferred);
+                CheckDescriptorPolicy(*inferred);
                 BOOST_CHECK_EQUAL(inferred->IsSolvable(), !(flags & UNSOLVABLE));
                 std::vector<CScript> spks_inferred;
                 FlatSigningProvider provider_inferred;
@@ -2024,6 +2074,7 @@ BOOST_AUTO_TEST_CASE(descriptor_key_inventory_private)
     BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
     keys.keys.clear();
     auto inventory{descriptors[0]->GetKeyInventory()};
+    auto policy{descriptors[0]->GetPolicy()};
     descriptors.clear(); // Results retain public values, without providers or secrets.
     BOOST_REQUIRE_EQUAL(inventory.occurrences.size(), 2U);
     const auto& internal{inventory.occurrences[0]};
@@ -2037,6 +2088,10 @@ BOOST_AUTO_TEST_CASE(descriptor_key_inventory_private)
     BOOST_CHECK(leaf.role == DescriptorKeyInventory::Role::TAPSCRIPT);
     // The leaf key is x-only, so the odd-parity WIF reports its even form.
     BOOST_CHECK(std::get<DescriptorKeyInfo::ConstKey>(leaf.expression.key).pubkey == CPubKey(ParseHex("02a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd")));
+    BOOST_CHECK(std::get<DescriptorKeyInfo::BIP32Key>(policy.keys.occurrences[0].expression.key).root == DecodeExtPubKey(xpub));
+    BOOST_CHECK(std::get<DescriptorKeyInfo::ConstKey>(policy.keys.occurrences[1].expression.key).pubkey == std::get<DescriptorKeyInfo::ConstKey>(leaf.expression.key).pubkey);
+    BOOST_CHECK(policy.nodes[0].keys == std::vector<size_t>{0});
+    BOOST_CHECK(policy.nodes[1].keys == std::vector<size_t>{1});
 }
 
 BOOST_AUTO_TEST_CASE(descriptor_key_inventory_large)
@@ -2066,6 +2121,259 @@ BOOST_AUTO_TEST_CASE(descriptor_key_inventory_large)
     BOOST_CHECK(inventory.occurrences[0].role == DescriptorKeyInventory::Role::TAPROOT_INTERNAL);
     for (size_t i = 1; i < inventory.occurrences.size(); ++i) {
         BOOST_CHECK(inventory.occurrences[i].role == DescriptorKeyInventory::Role::TAPSCRIPT);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_policy_forms)
+{
+    using Kind = DescriptorPolicy::Kind;
+    const std::string first{"0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    const std::string second{"02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9"};
+    for (const auto& [name, kind] : std::vector<std::pair<std::string, Kind>>{
+             {"pk", Kind::PK}, {"pkh", Kind::PKH}, {"wpkh", Kind::WPKH}, {"combo", Kind::COMBO}, {"tr", Kind::TR}, {"rawtr", Kind::RAWTR}, {"unused", Kind::UNUSED}}) {
+        auto policy{InspectPolicy(name + "(" + first + ")", 1)};
+        BOOST_REQUIRE_EQUAL(policy.nodes.size(), 1U);
+        BOOST_CHECK(std::get<Kind>(policy.nodes[0].kind) == kind);
+        BOOST_CHECK(policy.nodes[0].keys == std::vector<size_t>{0});
+        BOOST_CHECK_EQUAL(policy.nodes[0].value, 0U);
+        BOOST_CHECK(policy.nodes[0].data.empty());
+        BOOST_CHECK(policy.nodes[0].children.empty());
+    }
+    for (const bool sorted : {false, true}) {
+        auto policy{InspectPolicy("sh(wsh(" + std::string{sorted ? "sortedmulti" : "multi"} + "(2," + second + "," + first + ")))", 3)};
+        BOOST_REQUIRE_EQUAL(policy.nodes.size(), 3U);
+        BOOST_CHECK(std::get<Kind>(policy.nodes[0].kind) == Kind::SH);
+        BOOST_CHECK(std::get<Kind>(policy.nodes[1].kind) == Kind::WSH);
+        BOOST_CHECK(std::get<Kind>(policy.nodes[2].kind) == (sorted ? Kind::SORTEDMULTI : Kind::MULTI));
+        for (size_t i = 0; i < 2; ++i) {
+            BOOST_REQUIRE_EQUAL(policy.nodes[i].children.size(), 1U);
+            BOOST_CHECK_EQUAL(policy.nodes[i].children[0].node, i + 1);
+            BOOST_CHECK(std::get<DescriptorPolicy::ChildRole>(policy.nodes[i].children[0].role) == DescriptorPolicy::ChildRole::SCRIPT);
+        }
+        BOOST_CHECK_EQUAL(policy.nodes[2].value, 2U);
+        BOOST_CHECK(policy.nodes[2].keys == std::vector<size_t>({0, 1}));
+        // Inspection preserves expression order even when expansion sorts keys.
+        BOOST_CHECK(std::get<DescriptorKeyInfo::ConstKey>(policy.keys.occurrences[0].expression.key).pubkey == CPubKey(ParseHex(second)));
+        BOOST_CHECK(std::get<DescriptorKeyInfo::ConstKey>(policy.keys.occurrences[1].expression.key).pubkey == CPubKey(ParseHex(first)));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_policy_taproot)
+{
+    using Kind = DescriptorPolicy::Kind;
+    using Fragment = miniscript::Fragment;
+    const std::string first{"0379be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    const std::string second{"02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9"};
+    const std::string third{"03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd"};
+    for (const bool sorted : {false, true}) {
+        auto policy{InspectPolicy("tr(musig(" + first + "," + second + "),{pk(" + first + "),{" + std::string{sorted ? "sortedmulti_a" : "multi_a"} + "(2," + second + "," + first + "),and_v(v:pk(" + third + "),after(10))}})", 8)};
+        BOOST_REQUIRE_EQUAL(policy.nodes.size(), 8U);
+        BOOST_CHECK(std::get<Kind>(policy.nodes[0].kind) == Kind::TR);
+        BOOST_CHECK(policy.nodes[0].keys == std::vector<size_t>{0});
+        BOOST_REQUIRE_EQUAL(policy.nodes[0].children.size(), 3U);
+        for (size_t i = 0; i < 3; ++i) {
+            const auto& child{policy.nodes[0].children[i]};
+            BOOST_CHECK_EQUAL(child.node, i + 1);
+            const auto& leaf{std::get<DescriptorPolicy::TapLeaf>(child.role)};
+            BOOST_CHECK_EQUAL(leaf.depth, i == 0 ? 1U : 2U);
+        }
+        BOOST_CHECK(policy.nodes[1].keys == std::vector<size_t>{3});
+        BOOST_CHECK(std::get<Kind>(policy.nodes[2].kind) == (sorted ? Kind::SORTEDMULTI_A : Kind::MULTI_A));
+        BOOST_CHECK_EQUAL(policy.nodes[2].value, 2U);
+        BOOST_CHECK(policy.nodes[2].keys == std::vector<size_t>({4, 5}));
+        BOOST_CHECK(std::get<Fragment>(policy.nodes[3].kind) == Fragment::AND_V);
+        BOOST_CHECK(std::get<Fragment>(policy.nodes[6].kind) == Fragment::PK_K);
+        BOOST_CHECK(policy.nodes[6].keys == std::vector<size_t>{6});
+        BOOST_CHECK(std::get<Fragment>(policy.nodes[7].kind) == Fragment::AFTER);
+        BOOST_CHECK_EQUAL(policy.nodes[7].value, 10U);
+        BOOST_CHECK(std::get<DescriptorKeyInfo::MuSigKey>(policy.keys.occurrences[0].expression.key).participants == std::vector<size_t>({1, 2}));
+    }
+    const auto single{InspectPolicy("tr(" + first + ",pk(" + second + "))", 2)};
+    BOOST_CHECK_EQUAL(std::get<DescriptorPolicy::TapLeaf>(single.nodes[0].children[0].role).depth, 0U);
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_policy_miniscript)
+{
+    using Fragment = miniscript::Fragment;
+    using Role = DescriptorPolicy::ChildRole;
+    const std::string first{"0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    const std::string second{"02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9"};
+    const std::string third{"03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd"};
+    const auto conditional{InspectPolicy("wsh(andor(pk(" + first + "),pk(" + second + "),pk(" + third + ")))", 8)};
+    BOOST_CHECK(std::get<Fragment>(conditional.nodes[1].kind) == Fragment::ANDOR);
+    BOOST_REQUIRE_EQUAL(conditional.nodes[1].children.size(), 3U);
+    const std::vector<Role> roles{Role::CONDITION, Role::IF_TRUE, Role::IF_FALSE};
+    for (size_t i = 0; i < 3; ++i) {
+        const auto& child{conditional.nodes[1].children[i]};
+        BOOST_CHECK_EQUAL(child.node, 2 + 2 * i);
+        BOOST_CHECK(std::get<Role>(child.role) == roles[i]);
+        BOOST_CHECK(std::get<Fragment>(conditional.nodes[child.node].kind) == Fragment::WRAP_C);
+        BOOST_CHECK(std::get<Role>(conditional.nodes[child.node].children[0].role) == Role::WRAPPED);
+        BOOST_CHECK(conditional.nodes[child.node + 1].keys == std::vector<size_t>{i});
+    }
+    const auto threshold{InspectPolicy("wsh(thresh(2,pk(" + first + "),s:pk(" + second + "),s:pk(" + third + ")))", 10)};
+    BOOST_CHECK(std::get<Fragment>(threshold.nodes[1].kind) == Fragment::THRESH);
+    BOOST_CHECK_EQUAL(threshold.nodes[1].value, 2U);
+    BOOST_REQUIRE_EQUAL(threshold.nodes[1].children.size(), 3U);
+    const std::vector<size_t> operands{2, 4, 7};
+    for (size_t i = 0; i < 3; ++i) {
+        BOOST_CHECK_EQUAL(threshold.nodes[1].children[i].node, operands[i]);
+        BOOST_CHECK(std::get<Role>(threshold.nodes[1].children[i].role) == Role::THRESHOLD_INPUT);
+    }
+
+    // Aliases expose the existing parsed operators, including constant operands.
+    const auto aliases{InspectPolicy("wsh(tv:or_i(pk(" + first + "),and_n(pk(" + second + "),pk(" + third + "))))", 13)};
+    const std::vector<Fragment> expected{
+        Fragment::AND_V,
+        Fragment::WRAP_V,
+        Fragment::OR_I,
+        Fragment::WRAP_C,
+        Fragment::PK_K,
+        Fragment::ANDOR,
+        Fragment::WRAP_C,
+        Fragment::PK_K,
+        Fragment::WRAP_C,
+        Fragment::PK_K,
+        Fragment::JUST_0,
+        Fragment::JUST_1,
+    };
+    BOOST_REQUIRE_EQUAL(aliases.nodes.size(), expected.size() + 1);
+    for (size_t i = 0; i < expected.size(); ++i)
+        BOOST_CHECK(std::get<Fragment>(aliases.nodes[i + 1].kind) == expected[i]);
+    BOOST_CHECK(std::get<Role>(aliases.nodes[1].children[0].role) == Role::LEFT);
+    BOOST_CHECK(std::get<Role>(aliases.nodes[1].children[1].role) == Role::RIGHT);
+    BOOST_CHECK(std::get<Role>(aliases.nodes[3].children[0].role) == Role::IF_TRUE);
+    BOOST_CHECK(std::get<Role>(aliases.nodes[3].children[1].role) == Role::IF_FALSE);
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_policy_data)
+{
+    using Fragment = miniscript::Fragment;
+    const std::string pubkey{"0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    for (const auto& [name, fragment] : std::vector<std::pair<std::string, Fragment>>{
+             {"sha256", Fragment::SHA256}, {"hash256", Fragment::HASH256}, {"ripemd160", Fragment::RIPEMD160}, {"hash160", Fragment::HASH160}}) {
+        const std::string hash{fragment == Fragment::SHA256 || fragment == Fragment::HASH256 ?
+                                   "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f" :
+                                   "000102030405060708090a0b0c0d0e0f10111213"};
+        const auto policy{InspectPolicy("wsh(and_v(v:pk(" + pubkey + "),and_v(v:" + name + "(" + hash + "),older(123))))", 9)};
+        bool found_hash{false}, found_time{false};
+        for (const auto& node : policy.nodes) {
+            if (const auto* kind = std::get_if<Fragment>(&node.kind)) {
+                if (*kind == fragment) {
+                    BOOST_CHECK(node.data == ParseHex(hash));
+                    found_hash = true;
+                } else if (*kind == Fragment::OLDER) {
+                    BOOST_CHECK_EQUAL(node.value, 123U);
+                    found_time = true;
+                }
+            }
+        }
+        BOOST_CHECK(found_hash && found_time);
+    }
+    for (const auto& [expression, bytes] : std::vector<std::pair<std::string, std::string>>{
+             {"raw(21" + pubkey + "ac)", "21" + pubkey + "ac"},
+             {"addr(1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa)", "76a914"
+                                                          "62e907b15cbf27d5425399ebf6f0fb50ebb88f18"
+                                                          "88ac"}}) {
+        auto policy{InspectPolicy(expression, 1)};
+        BOOST_REQUIRE_EQUAL(policy.nodes.size(), 1U);
+        BOOST_CHECK(std::get<DescriptorPolicy::Kind>(policy.nodes[0].kind) == (expression.starts_with("raw(") ? DescriptorPolicy::Kind::RAW : DescriptorPolicy::Kind::ADDR));
+        BOOST_CHECK(policy.nodes[0].data == ParseHex(bytes));
+        BOOST_CHECK(policy.nodes[0].keys.empty());
+        BOOST_CHECK(policy.nodes[0].children.empty());
+        BOOST_CHECK(policy.keys.occurrences.empty());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_policy_inferred_and_cloned)
+{
+    const std::string first{"0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    const std::string second{"02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9"};
+    FlatSigningProvider keys;
+    std::string error;
+    auto descriptors{Parse("wsh(and_v(v:pk([deadbeef/7]" + first + "),pk([abcdef01/8]" + second + ")))", keys, error)};
+    BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+    std::vector<CScript> scripts;
+    FlatSigningProvider expanded;
+    BOOST_REQUIRE(descriptors[0]->Expand(0, keys, scripts, expanded));
+    BOOST_REQUIRE_EQUAL(scripts.size(), 1U);
+    const auto inferred{InferDescriptor(scripts[0], expanded)};
+    BOOST_CHECK_EQUAL(inferred->GetMaxKeyExpr(), 0U);
+    for (const auto* descriptor : {descriptors[0].get(), inferred.get()}) {
+        auto policy{descriptor->GetPolicy()};
+        BOOST_REQUIRE_EQUAL(policy.nodes.size(), 7U);
+        CheckPolicy(policy);
+        std::vector<CPubKey> policy_order;
+        for (const auto& node : policy.nodes) {
+            if (const auto* fragment = std::get_if<miniscript::Fragment>(&node.kind); fragment && *fragment == miniscript::Fragment::PK_K) {
+                BOOST_REQUIRE_EQUAL(node.keys.size(), 1U);
+                const auto& key{policy.keys.occurrences[node.keys[0]].expression};
+                policy_order.push_back(std::get<DescriptorKeyInfo::ConstKey>(key.key).pubkey);
+                BOOST_REQUIRE(key.origin);
+                BOOST_CHECK(key.origin->path == std::vector<uint32_t>{policy_order.size() == 1 ? 7U : 8U});
+            }
+        }
+        // Inference stores providers in reverse script order. Policy operands must
+        // still refer to the correct key, without reindexing descriptor caches.
+        BOOST_CHECK(policy_order == std::vector<CPubKey>({CPubKey(ParseHex(first)), CPubKey(ParseHex(second))}));
+    }
+
+    const std::string xpub{"xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL"};
+    descriptors = Parse("tr([deadbeef/5]" + xpub + "/<0;1>/*,{pk(" + first + "),and_v(v:pk(" + second + "),after(10))})", keys, error);
+    BOOST_REQUIRE_MESSAGE(descriptors.size() == 2, error);
+    for (size_t branch = 0; branch < descriptors.size(); ++branch) {
+        auto policy{descriptors[branch]->GetPolicy()};
+        BOOST_REQUIRE_EQUAL(policy.nodes.size(), 7U);
+        CheckPolicy(policy);
+        BOOST_CHECK(std::get<DescriptorKeyInfo::BIP32Key>(policy.keys.occurrences[0].expression.key).derivation.path == std::vector<uint32_t>{static_cast<uint32_t>(branch)});
+        BOOST_CHECK_EQUAL(policy.nodes[0].children[0].node, 1U);
+        BOOST_CHECK_EQUAL(policy.nodes[0].children[1].node, 2U);
+        BOOST_CHECK(policy.nodes[1].keys == std::vector<size_t>{1});
+        BOOST_CHECK(policy.nodes[5].keys == std::vector<size_t>{2});
+        BOOST_CHECK_EQUAL(policy.nodes[6].value, 10U);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_policy_large)
+{
+    const std::string pubkey{"0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    FlatSigningProvider keys;
+    std::string error;
+    for (const size_t depth : {1U, 3200U}) {
+        std::string expression;
+        for (size_t i = 0; i < depth; ++i)
+            expression += "and_v(v:after(1),";
+        expression += "pk(" + pubkey + ")";
+        expression.append(depth, ')');
+        auto descriptors{Parse("tr(" + pubkey + "," + expression + ")", keys, error)};
+        BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+        const size_t nodes{3 * depth + 3};
+        auto policy{descriptors[0]->GetPolicy()};
+        BOOST_REQUIRE_EQUAL(policy.nodes.size(), nodes);
+        CheckPolicy(policy);
+        size_t edges{0}, key_refs{0};
+        for (const auto& node : policy.nodes) {
+            BOOST_CHECK(node.data.empty());
+            edges += node.children.size();
+            key_refs += node.keys.size();
+        }
+        // Local fields and links grow linearly; no repeated subtree expressions.
+        BOOST_CHECK_EQUAL(edges, nodes - 1);
+        BOOST_CHECK_EQUAL(key_refs, 2U);
+        BOOST_CHECK_EQUAL(policy.keys.occurrences.size(), 2U);
+    }
+
+    std::string tree{"pk(" + pubkey + ")"};
+    for (size_t i = 0; i < 10; ++i)
+        tree = "{" + tree + "," + tree + "}";
+    const auto policy{InspectPolicy("tr(" + pubkey + "," + tree + ")", 1025)};
+    BOOST_REQUIRE_EQUAL(policy.nodes.size(), 1025U);
+    BOOST_REQUIRE_EQUAL(policy.nodes[0].children.size(), 1024U);
+    for (size_t i = 0; i < 1024; ++i) {
+        const auto& child{policy.nodes[0].children[i]};
+        BOOST_CHECK_EQUAL(child.node, i + 1);
+        BOOST_CHECK_EQUAL(std::get<DescriptorPolicy::TapLeaf>(child.role).depth, 10U);
+        BOOST_CHECK(policy.nodes[child.node].keys == std::vector<size_t>{i + 1});
     }
 }
 
