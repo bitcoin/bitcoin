@@ -181,6 +181,10 @@ struct TransactionSerParams {
      *  valid) as soon as that is known, rather than first allocating memory for whatever else they
      *  contain. */
     const bool reject_empty{false};
+    /** When deserializing, if not null, the weight that the deserialized transactions may still
+     *  have in total (over all transactions deserialized with these parameters). It is decreased
+     *  while reading, and deserialization fails as soon as the data read is known to exceed it. */
+    uint64_t* const weight_left{nullptr};
     SER_PARAMS_OPFUNC
 };
 inline constexpr TransactionSerParams TX_WITH_WITNESS{.allow_witness = true};
@@ -188,6 +192,12 @@ inline constexpr TransactionSerParams TX_NO_WITNESS{.allow_witness = false};
 /** TX_WITH_WITNESS, but rejecting transactions without inputs or outputs. For data received from
  *  P2P peers. */
 inline constexpr TransactionSerParams TX_WITH_WITNESS_P2P{.allow_witness = true, .reject_empty = true};
+/** TX_WITH_WITNESS_P2P, additionally limiting the total weight of the deserialized transactions to
+ *  weight_left. */
+inline TransactionSerParams TxWithWitnessP2P(uint64_t& weight_left)
+{
+    return {.allow_witness = true, .reject_empty = true, .weight_left = &weight_left};
+}
 
 /** The minimum weight of a transaction input: its prevout (36 bytes), an empty scriptSig (1), and its nSequence (4). */
 inline constexpr uint64_t MIN_WEIGHT_PER_TXIN{WITNESS_SCALE_FACTOR * (36 + 1 + 4)};
@@ -214,6 +224,15 @@ inline constexpr uint64_t MIN_WEIGHT_PER_TXOUT{WITNESS_SCALE_FACTOR * (8 + 1)};
 template<typename Stream, typename TxType>
 void UnserializeTransaction(TxType& tx, Stream& s, const TransactionSerParams& params)
 {
+    // Charge weight against the budget, if any, failing as soon as it is exceeded.
+    const auto charge{[&](uint64_t weight) {
+        if (!params.weight_left) return;
+        if (weight > *params.weight_left) throw std::ios_base::failure("Weight limit exceeded");
+        *params.weight_left -= weight;
+    }};
+    // Charge the weight of the version and the lock time up front.
+    charge(WITNESS_SCALE_FACTOR * (sizeof(tx.version) + sizeof(tx.nLockTime)));
+
     const bool fAllowWitness = params.allow_witness;
 
     s >> tx.version;
@@ -226,30 +245,44 @@ void UnserializeTransaction(TxType& tx, Stream& s, const TransactionSerParams& p
     if (num_inputs == 0 && fAllowWitness) {
         /* We read a dummy or an empty vin. */
         s >> flags;
-        if (flags != 0) num_inputs = ReadCompactSize(s);
+        if (flags != 0) {
+            // The dummy and the flags are witness data.
+            charge(2);
+            num_inputs = ReadCompactSize(s);
+        }
     }
     // Fail without reading them if more inputs or outputs are claimed than can fit in a block. This also bounds the
     // memory allocated for them.
     if (num_inputs > MAX_BLOCK_WEIGHT / MIN_WEIGHT_PER_TXIN) throw std::ios_base::failure("Too many transaction inputs");
     if (num_inputs == 0 && params.reject_empty) throw std::ios_base::failure("Transaction without inputs");
-    // Read the transaction inputs.
+    // Read the transaction inputs. Charge the weight of their count and their minimum weight before allocating memory
+    // for them, and the rest of the weight of each after reading it.
+    charge(WITNESS_SCALE_FACTOR * GetSizeOfCompactSize(num_inputs) + num_inputs * MIN_WEIGHT_PER_TXIN);
     tx.vin.resize(num_inputs);
-    for (auto& txin : tx.vin) s >> txin;
+    for (auto& txin : tx.vin) {
+        s >> txin;
+        if (params.weight_left) charge(WITNESS_SCALE_FACTOR * ::GetSerializeSize(txin) - MIN_WEIGHT_PER_TXIN);
+    }
 
     // Read the number of outputs. In case of an empty vin, the byte read as the flags is the number of outputs (if the
     // flags are not zero, there is witness data without inputs, which fails below).
     auto num_outputs = (num_inputs == 0 && fAllowWitness) ? uint64_t{0} : ReadCompactSize(s);
     if (num_outputs > MAX_BLOCK_WEIGHT / MIN_WEIGHT_PER_TXOUT) throw std::ios_base::failure("Too many transaction outputs");
     if (num_outputs == 0 && params.reject_empty) throw std::ios_base::failure("Transaction without outputs");
-    // Read the transaction outputs.
+    // Read the transaction outputs, charging their weight like that of the inputs.
+    charge(WITNESS_SCALE_FACTOR * GetSizeOfCompactSize(num_outputs) + num_outputs * MIN_WEIGHT_PER_TXOUT);
     tx.vout.resize(num_outputs);
-    for (auto& txout : tx.vout) s >> txout;
+    for (auto& txout : tx.vout) {
+        s >> txout;
+        if (params.weight_left) charge(WITNESS_SCALE_FACTOR * ::GetSerializeSize(txout) - MIN_WEIGHT_PER_TXOUT);
+    }
 
     if ((flags & 1) && fAllowWitness) {
         /* The witness flag is present, and we support witnesses. */
         flags ^= 1;
         for (size_t i = 0; i < tx.vin.size(); i++) {
             s >> tx.vin[i].scriptWitness;
+            if (params.weight_left) charge(::GetSerializeSize(tx.vin[i].scriptWitness));
         }
         if (!tx.HasWitness()) {
             /* It's illegal to encode witnesses when all witness stacks are empty. */
