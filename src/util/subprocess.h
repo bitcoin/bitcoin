@@ -1088,7 +1088,7 @@ inline void Popen::execute_process() noexcept(false)
 
   for (auto arg : this->vargs_) {
     if (!first_arg) {
-      command_line += " ";
+      command_line += ' ';
     } else {
       first_arg = false;
     }
