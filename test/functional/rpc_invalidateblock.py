@@ -140,7 +140,7 @@ class InvalidateTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
 
         self.log.info("Verify that invalidating the genesis block throws an error")
-        assert_raises_rpc_error(-20, "Cannot invalidate genesis block", self.nodes[1].invalidateblock, self.nodes[1].getblockhash(0))
+        assert_raises_rpc_error(-8, "Cannot invalidate genesis block", self.nodes[1].invalidateblock, self.nodes[1].getblockhash(0))
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
 
 

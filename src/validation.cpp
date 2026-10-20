@@ -3533,7 +3533,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* const
 
     // Genesis block can't be invalidated
     assert(pindex);
-    if (pindex->nHeight == 0) return state.Error("Cannot invalidate genesis block");
+    if (pindex->nHeight == 0) return false;
 
     // We do not allow ActivateBestChain() to run while InvalidateBlock() is
     // running, as that could cause the tip to change while we disconnect
@@ -3658,7 +3658,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* const
         LOCK(cs_main);
         if (m_chain.Contains(*to_mark_failed)) {
             // If the to-be-marked invalid block is in the active chain, something is interfering and we can't proceed.
-            return state.Error(strprintf("Block %s was not invalidated because it is still in the active chain (interrupted?)", pindex->GetBlockHash().ToString()));
+            return state.Error(strprintf("Block %s was not invalidated because it is still in the active chain (interrupted?)", to_mark_failed->GetBlockHash().ToString()));
         }
 
         // Mark pindex as invalid if it never was in the main chain
