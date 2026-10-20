@@ -46,9 +46,35 @@
 #include <tuple>
 #include <unordered_set>
 #include <utility>
+#include <variant>
 #include <vector>
 
 using util::Split;
+
+/** Internal construction state shared by all nodes of a key inspection. */
+class DescriptorKeyInfoBuilder
+{
+    DescriptorKeyInfo m_info;
+
+public:
+    template <typename Key>
+    size_t AddNode(Key key)
+    {
+        const size_t index{m_info.nodes.size()};
+        m_info.nodes.push_back({std::move(key), std::nullopt});
+        return index;
+    }
+
+    DescriptorKeyInfo::Node& GetNode(size_t index) { return m_info.nodes[index]; }
+
+    size_t Append(const PubkeyProvider& provider) { return provider.AppendKeyInfo(*this); }
+
+    DescriptorKeyInfo Build(const PubkeyProvider& provider)
+    {
+        Append(provider);
+        return std::move(m_info);
+    }
+};
 
 util::Expected<void, std::string> CheckDescriptorRangeBounds(int64_t low, int64_t high)
 {
@@ -284,6 +310,14 @@ public:
         return std::make_unique<OriginPubkeyProvider>(m_expr_index, m_origin, m_provider->Clone(), m_apostrophe);
     }
     bool CanSelfExpand() const override { return m_provider->CanSelfExpand(); }
+
+private:
+    size_t AppendKeyInfo(DescriptorKeyInfoBuilder& builder) const override
+    {
+        const size_t index{builder.Append(*m_provider)};
+        builder.GetNode(index).origin = GetOriginInfo();
+        return index;
+    }
 };
 
 /** An object representing a parsed constant public key in a descriptor. */
@@ -349,13 +383,17 @@ public:
         return std::make_unique<ConstPubkeyProvider>(m_expr_index, m_pubkey, m_xonly);
     }
     bool CanSelfExpand() const final { return true; }
+
+private:
+    size_t AppendKeyInfo(DescriptorKeyInfoBuilder& builder) const override
+    {
+        // An x-only key has no parity; report the even form, as its serialization does.
+        const CPubKey pubkey{m_xonly ? XOnlyPubKey{m_pubkey}.GetEvenCorrespondingCPubKey() : m_pubkey};
+        return builder.AddNode(DescriptorKeyInfo::ConstKey{pubkey, m_xonly});
+    }
 };
 
-enum class DeriveType {
-    NON_RANGED,
-    UNHARDENED_RANGED,
-    HARDENED_RANGED,
-};
+using DeriveType = DescriptorKeyInfo::DeriveType;
 
 /** An object representing a parsed extended public key in a descriptor. */
 class BIP32PubkeyProvider final : public PubkeyProvider
@@ -569,6 +607,12 @@ public:
         return std::make_unique<BIP32PubkeyProvider>(m_expr_index, m_root_extkey, m_path, m_derive, m_apostrophe);
     }
     bool CanSelfExpand() const override { return !IsHardened(); }
+
+private:
+    size_t AppendKeyInfo(DescriptorKeyInfoBuilder& builder) const override
+    {
+        return builder.AddNode(DescriptorKeyInfo::BIP32Key{m_root_extkey, {m_path, m_derive}});
+    }
 };
 
 /** PubkeyProvider for a musig() expression */
@@ -785,6 +829,19 @@ public:
             if (!key->CanSelfExpand()) return false;
         }
         return true;
+    }
+
+private:
+    size_t AppendKeyInfo(DescriptorKeyInfoBuilder& builder) const override
+    {
+        const size_t index{builder.AddNode(DescriptorKeyInfo::MuSigKey{{}, {m_path, m_derive}})};
+        std::get<DescriptorKeyInfo::MuSigKey>(builder.GetNode(index).key).participants.reserve(m_participants.size());
+        for (const auto& participant : m_participants) {
+            const size_t child{builder.Append(*participant)};
+            // Appending a participant can invalidate references into the node vector.
+            std::get<DescriptorKeyInfo::MuSigKey>(builder.GetNode(index).key).participants.push_back(child);
+        }
+        return index;
     }
 };
 
@@ -2896,6 +2953,11 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
 
 
 } // namespace
+
+DescriptorKeyInfo PubkeyProvider::GetKeyInfo() const
+{
+    return DescriptorKeyInfoBuilder{}.Build(*this);
+}
 
 bool PubkeyProvider::HavePrivateKeys(const SigningProvider& arg) const
 {
