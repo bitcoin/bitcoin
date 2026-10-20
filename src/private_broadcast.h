@@ -127,6 +127,13 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
+     * Check whether a transaction is in the storage, regardless of whether it is resolved.
+     * @param[in] wtxid Witness id of the transaction to look for.
+     */
+    bool Contains(const Wtxid& wtxid) const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /**
      * Mark a connection finished.
      * @param[in] nodeid Node whose connection has ended.
      */
