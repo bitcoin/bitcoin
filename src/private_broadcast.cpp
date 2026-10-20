@@ -82,6 +82,13 @@ bool PrivateBroadcast::MarkResolved(const CTransactionRef& tx, std::optional<CSe
     return true;
 }
 
+bool PrivateBroadcast::Contains(const Wtxid& wtxid) const
+    EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+{
+    LOCK(m_mutex);
+    return std::ranges::any_of(m_transactions, [&wtxid](const auto& entry) { return entry.first->GetWitnessHash() == wtxid; });
+}
+
 void PrivateBroadcast::NodeDisconnected(NodeId nodeid)
 {
     LOCK(m_mutex);
