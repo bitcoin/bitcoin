@@ -14,6 +14,7 @@
 #include <chainparams.h>
 #include <common/bloom.h>
 #include <consensus/amount.h>
+#include <consensus/consensus.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
 #include <core_memusage.h>
@@ -109,6 +110,9 @@ static constexpr int32_t MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT = 4;
 static constexpr auto CHAIN_SYNC_TIMEOUT{20min};
 /** How frequently to check for stale tips */
 static constexpr auto STALE_CHECK_INTERVAL{10min};
+/** The total weight that the transactions of a valid block can have: MAX_BLOCK_WEIGHT minus that of
+ *  the block's header (80 bytes) and (at least a 1-byte) transaction count. */
+static constexpr uint64_t MAX_BLOCK_TXS_WEIGHT{MAX_BLOCK_WEIGHT - WITNESS_SCALE_FACTOR * (80 + 1)};
 /** How frequently to check for extra outbound peers and disconnect */
 static constexpr auto EXTRA_PEER_CHECK_INTERVAL{45s};
 /** Minimum time an outbound-peer-eviction candidate must be connected for, in order to evict */
@@ -4723,7 +4727,9 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         if (m_chainman.IsInitialBlockDownload()) return;
 
         CTransactionRef ptx;
-        vRecv >> TX_WITH_WITNESS_P2P(ptx);
+        // A transaction that does not fit in a valid block cannot be valid.
+        uint64_t weight_left{MAX_BLOCK_TXS_WEIGHT};
+        vRecv >> TxWithWitnessP2P(weight_left)(ptx);
 
         const Txid& txid = ptx->GetHash();
         const Wtxid& wtxid = ptx->GetWitnessHash();
@@ -4807,7 +4813,10 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         }
 
         CBlockHeaderAndShortTxIDs cmpctblock;
-        vRecv >> TX_WITH_WITNESS_P2P(cmpctblock);
+        // The prefilled transactions are part of the block, so stop deserializing as soon as they exceed the weight
+        // that the transactions of a valid block can have.
+        uint64_t weight_left{MAX_BLOCK_TXS_WEIGHT};
+        vRecv >> TxWithWitnessP2P(weight_left)(cmpctblock);
 
         bool received_new_header = false;
         const auto blockhash = cmpctblock.header.GetHash();
@@ -5061,7 +5070,10 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         }
 
         BlockTransactions resp;
-        vRecv >> TX_WITH_WITNESS_P2P(resp);
+        // The transactions are part of the block, so stop deserializing as soon as they exceed the weight that the
+        // transactions of a valid block can have (not accounting for those of the block that are already known).
+        uint64_t weight_left{MAX_BLOCK_TXS_WEIGHT};
+        vRecv >> TxWithWitnessP2P(weight_left)(resp);
 
         return ProcessCompactBlockTxns(pfrom, peer, resp);
     }
@@ -5116,7 +5128,10 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         }
 
         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
-        vRecv >> TX_WITH_WITNESS_P2P(*pblock);
+        // Stop deserializing as soon as the transactions read exceed the weight that the transactions of a valid
+        // block can have.
+        uint64_t weight_left{MAX_BLOCK_TXS_WEIGHT};
+        vRecv >> TxWithWitnessP2P(weight_left)(*pblock);
 
         LogDebug(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom.GetId());
 

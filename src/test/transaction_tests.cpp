@@ -1500,4 +1500,87 @@ BOOST_AUTO_TEST_CASE(reject_empty)
     BOOST_CHECK_EXCEPTION(SpanReader{block_ser} >> TX_WITH_WITNESS_P2P(block_deser), std::ios_base::failure, HasReason("Transaction without inputs"));
 }
 
+BOOST_AUTO_TEST_CASE(weight_limited_deserialization)
+{
+    const auto ser{[](const auto& obj) {
+        std::vector<unsigned char> ret;
+        VectorWriter{ret, 0, TX_WITH_WITNESS(obj)};
+        return ret;
+    }};
+    const auto random_bytes{[&](size_t max_size) {
+        // Sometimes cross a CompactSize encoding boundary.
+        return m_rng.randbytes(m_rng.randbool() ? m_rng.randrange(max_size) : 250 + m_rng.randrange(10));
+    }};
+    const auto random_script{[&] {
+        const auto bytes = random_bytes(40);
+        return CScript(bytes.begin(), bytes.end());
+    }};
+    const auto random_count{[&] {
+        // Sometimes cross a CompactSize encoding boundary.
+        return m_rng.randrange(8) ? m_rng.randrange(3) : 250 + m_rng.randrange(10);
+    }};
+
+    // Transactions with and without witnesses, and the transaction without inputs or outputs (which is not in the
+    // extended format, but starts like it).
+    std::vector<CMutableTransaction> txs(1);
+    for (int i = 0; i < 100; ++i) {
+        CMutableTransaction tx;
+        tx.vin.resize(1 + random_count());
+        tx.vout.resize(random_count());
+        const bool witness{m_rng.randbool()};
+        for (auto& in : tx.vin) {
+            in.scriptSig = random_script();
+            if (witness) {
+                std::vector<std::vector<unsigned char>> stack(m_rng.randrange(4));
+                for (auto& element : stack) element = random_bytes(40);
+                in.scriptWitness = CScriptWitness{stack};
+            }
+        }
+        for (auto& out : tx.vout) out.scriptPubKey = random_script();
+        txs.push_back(tx);
+    }
+
+    // Deserializing a transaction with a weight limit succeeds if and only if the limit is at least its weight, and
+    // then consumes exactly its weight.
+    for (const auto& tx : txs) {
+        const auto data = ser(tx);
+        const auto weight = GetTransactionWeight(CTransaction{tx});
+        for (const uint64_t limit : {uint64_t(weight), uint64_t(weight) + 1, uint64_t(weight) - 1}) {
+            uint64_t weight_left{limit};
+            CMutableTransaction deser;
+            const TransactionSerParams params{.allow_witness = true, .weight_left = &weight_left};
+            if (limit >= uint64_t(weight)) {
+                SpanReader{data} >> params(deser);
+                BOOST_CHECK_EQUAL(weight_left, limit - weight);
+                BOOST_CHECK(CTransaction{deser}.GetWitnessHash() == CTransaction{tx}.GetWitnessHash());
+            } else {
+                BOOST_CHECK_EXCEPTION(SpanReader{data} >> params(deser), std::ios_base::failure, HasReason("Weight limit exceeded"));
+            }
+        }
+    }
+
+    // The limit applies to the transactions of a block together.
+    CBlock block;
+    int64_t txs_weight{0};
+    for (const auto& tx : txs) {
+        if (tx.vin.empty()) continue;
+        block.vtx.push_back(MakeTransactionRef(tx));
+        txs_weight += GetTransactionWeight(*block.vtx.back());
+    }
+    const auto data = ser(block);
+    BOOST_CHECK_EQUAL(GetBlockWeight(block), txs_weight + WITNESS_SCALE_FACTOR * int64_t(80 + 1));
+    for (const auto limit : {txs_weight, txs_weight - 1}) {
+        uint64_t weight_left(limit);
+        CBlock deser;
+        const TransactionSerParams params{.allow_witness = true, .weight_left = &weight_left};
+        if (limit == txs_weight) {
+            SpanReader{data} >> params(deser);
+            BOOST_CHECK_EQUAL(weight_left, 0U);
+            BOOST_CHECK_EQUAL(deser.vtx.size(), block.vtx.size());
+        } else {
+            BOOST_CHECK_EXCEPTION(SpanReader{data} >> params(deser), std::ios_base::failure, HasReason("Weight limit exceeded"));
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
