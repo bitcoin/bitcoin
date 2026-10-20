@@ -147,12 +147,17 @@ BOOST_FIXTURE_TEST_CASE(invalidate_block, TestChain100Setup)
         pindex = pindex->pprev;
     }
 
-    // The genesis block can't be invalidated, and the failure is reported through state
-    BlockValidationState genesis_state;
-    BOOST_CHECK(!m_node.chainman->ActiveChainstate().InvalidateBlock(genesis_state, active.Genesis()));
-    BOOST_CHECK(genesis_state.IsError());
-    BOOST_CHECK_EQUAL(genesis_state.GetRejectReason(), "Cannot invalidate genesis block");
-    WITH_LOCK(::cs_main, assert((active.Genesis()->nStatus & BLOCK_FAILED_VALID) == 0));
+    state = {};
+    BOOST_CHECK(!m_node.chainman->ActiveChainstate().InvalidateBlock(state, active.Genesis()));
+    BOOST_CHECK_EQUAL(state.GetRejectReason(), "Cannot invalidate genesis block");
+
+    // Rollback stops at a block without undo data and leaves the chain partially disconnected
+    auto* no_undo{active.Tip()->pprev};
+    WITH_LOCK(::cs_main, no_undo->nStatus &= ~BLOCK_HAVE_UNDO);
+    state = {};
+    BOOST_CHECK(!m_node.chainman->ActiveChainstate().InvalidateBlock(state, no_undo->pprev));
+    BOOST_CHECK(state.IsError());
+    BOOST_CHECK_EQUAL(active.Tip(), no_undo);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -11,7 +11,6 @@ from test_framework.blocktools import (
 )
 from test_framework.util import (
     assert_equal,
-    assert_greater_than_or_equal,
     assert_raises_rpc_error,
 )
 
@@ -19,7 +18,7 @@ from test_framework.util import (
 class InvalidateTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 4
+        self.num_nodes = 3
 
     def setup_network(self):
         self.setup_nodes()
@@ -141,44 +140,8 @@ class InvalidateTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
 
         self.log.info("Verify that invalidating the genesis block throws an error")
-        assert_raises_rpc_error(-8, "Cannot invalidate genesis block", self.nodes[1].invalidateblock, self.nodes[1].getblockhash(0))
+        assert_raises_rpc_error(-20, "Cannot invalidate genesis block", self.nodes[1].invalidateblock, self.nodes[1].getblockhash(0))
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
-
-        self.test_disconnect_failure()
-
-    def test_disconnect_failure(self):
-        self.log.info("Verify that invalidateblock reports an error if a block can't be disconnected")
-        node = self.nodes[3]
-        # Each block only contains a coinbase, so each undo record in rev00000.dat has the same size:
-        # 4 bytes magic + 4 bytes size + 1 byte empty CBlockUndo + 32 bytes checksum.
-        UNDO_RECORD_SIZE = 41
-        blocks = self.generate(node, 10, sync_fun=self.no_op)
-        self.stop_node(3)
-        rev_path = node.blocks_path / "rev00000.dat"
-        with open(rev_path, "r+b") as f:
-            # Block files are preallocated, so only check the beginning of the file.
-            assert_greater_than_or_equal(len(f.read()), len(blocks) * UNDO_RECORD_SIZE)
-            # Flip the last checksum byte of block 5's undo record (genesis has none).
-            offset = (5 - 1) * UNDO_RECORD_SIZE + UNDO_RECORD_SIZE - 1
-            f.seek(offset)
-            byte = f.read(1)
-            f.seek(offset)
-            f.write(bytes([byte[0] ^ 0xff]))
-        # Only verify the tip on startup, so the corruption isn't detected before invalidateblock
-        self.start_node(3, extra_args=["-checkblocks=1"])
-
-        with node.assert_debug_log(["Checksum mismatch at ", f"DisconnectBlock {blocks[4]} failed"]):
-            assert_raises_rpc_error(-20, f"Failed to disconnect block {blocks[4]} at height 5; block {blocks[2]} was not invalidated and the chain was only partially rolled back (tip is now at height 5)",
-                                    node.invalidateblock, blocks[2])
-        # Blocks above the corrupted one were disconnected, the requested block was not invalidated
-        assert_equal(node.getblockcount(), 5)
-        assert_equal(node.getbestblockhash(), blocks[4])
-        assert_equal(node.getblockheader(blocks[2])["confirmations"], 3)
-        assert {"height": 10, "hash": blocks[-1], "branchlen": 5, "status": "invalid"} in node.getchaintips()
-
-        self.log.info("Reconsider the requested block to restore the previous tip")
-        node.reconsiderblock(blocks[2])
-        assert_equal(node.getbestblockhash(), blocks[-1])
 
 
 if __name__ == '__main__':

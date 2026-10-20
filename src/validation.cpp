@@ -3596,14 +3596,8 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* const
         // keeping the mempool up to date is probably futile anyway).
         MaybeUpdateMempoolForReorg(disconnectpool, /* fAddToMempool = */ (++disconnected <= 10) && ret);
         if (!ret) {
-            // Blocks disconnected so far remain disconnected and marked invalid, but pindex itself is not.
-            // Report this to the caller instead of silently leaving the chain partially rolled back.
-            if (state.IsValid()) {
-                state.Error(strprintf("Failed to disconnect block %s at height %d; block %s was not invalidated and the chain was only partially rolled back (tip is now at height %d). See debug.log for details",
-                                      disconnected_tip->GetBlockHash().ToString(), disconnected_tip->nHeight,
-                                      pindex->GetBlockHash().ToString(), m_chain.Height()));
-            }
-            return false;
+            return state.Error(strprintf("Failed to disconnect block %s, chain was partially rolled back to height %d",
+                                         disconnected_tip->GetBlockHash().ToString(), m_chain.Height()));
         }
         CBlockIndex* new_tip{m_chain.Tip()};
         assert(disconnected_tip->pprev == new_tip);
