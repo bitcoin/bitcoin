@@ -91,6 +91,8 @@ class GetTxSpendingPrevoutTest(BitcoinTestFramework):
                               spent_out(txidA, vout=1, spending_tx_id=txidC)])
         self.wait_until(lambda: node1.gettxspendingprevout([prevout(txid_root_utxo, vout=0), prevout(txidA, vout=1)]) == result)
         self.wait_until(lambda: node2.gettxspendingprevout([prevout(txid_root_utxo, vout=0), prevout(txidA, vout=1)], mempool_only=True) == result)
+        # without txospenderindex, mempool_only=false still succeeds when the mempool has every spend
+        assert_equal(node2.gettxspendingprevout([prevout(txid_root_utxo, vout=0), prevout(txidA, vout=1)], mempool_only=False), result)
 
         self.log.info("Find transaction spending multiple outputs")
         result = node0.gettxspendingprevout([prevout(txidE, vout=0), prevout(txidF, vout=0)])
@@ -134,6 +136,10 @@ class GetTxSpendingPrevoutTest(BitcoinTestFramework):
         # Spending transactions not in node 2 (no spending index)
         result = node2.gettxspendingprevout([prevout(txid_root_utxo, vout=0), prevout(txidA, vout=1)], return_spending_tx=True)
         assert_equal(result, [unspent_out(txid_root_utxo, vout=0), unspent_out(txidA, vout=1)])
+
+        self.log.info("Explicit mempool_only=false without txospenderindex")
+        assert_raises_rpc_error(-1, "Mempool lacks a relevant spend, and txospenderindex is unavailable.",
+                                node2.gettxspendingprevout, [prevout(txid_root_utxo, vout=0)], mempool_only=False)
 
         # spending transaction is not found if we only search the mempool
         result = node0.gettxspendingprevout([prevout(txid_root_utxo, vout=0), prevout(txidA, vout=1)], return_spending_tx=True, mempool_only=True)
