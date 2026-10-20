@@ -4,8 +4,10 @@
 
 #include <consensus/amount.h>
 #include <key.h>
+#include <key_io.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
+#include <util/strencodings.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/spend.h>
@@ -124,49 +126,49 @@ BOOST_FIXTURE_TEST_CASE(wallet_duplicated_preset_inputs_test, TestChain100Setup)
 BOOST_AUTO_TEST_CASE(check_silent_payments_input)
 {
     const COutPoint outpoint{Txid::FromUint256(uint256::ONE), 0};
-    const auto check{[&](const CScript& spk, const SigningProvider* provider) {
-        return bool{CheckSilentPaymentsInput(outpoint, CTxOut{COIN, spk}, provider)};
+    // Checks the coin of a wallet holding the descriptor
+    const auto check{[&](const std::string& desc) {
+        CWallet wallet{m_node.chain.get(), "", CreateMockableWalletDatabase()};
+        const auto spks{CreateDescriptor(wallet, desc, /*success=*/true)->GetScriptPubKeys()};
+        BOOST_REQUIRE_EQUAL(spks.size(), 1U);
+        return bool{CheckSilentPaymentsInput(wallet, outpoint, CTxOut{COIN, *spks.begin()})};
+    }};
+    const auto check_external{[&](const CScript& spk) {
+        return bool{CheckSilentPaymentsInput(m_wallet, outpoint, CTxOut{COIN, spk})};
     }};
     const CKey key{GenerateRandomKey()};
-    const FlatSigningProvider empty_provider;
+    const std::string priv{EncodeSecret(key)};
+    const std::string pub{HexStr(GenerateRandomKey().GetPubKey())};
+    const std::string xonly_pub{HexStr(XOnlyPubKey{GenerateRandomKey().GetPubKey()})};
 
-    // Wallet coins of the eligible types are allowed, external ones are not
-    const CScript p2wpkh{GetScriptForDestination(WitnessV0KeyHash{key.GetPubKey()})};
-    BOOST_CHECK(check(p2wpkh, &empty_provider));
-    BOOST_CHECK(!check(p2wpkh, nullptr));
+    // Eligible coins require their private key, which the wallet does not have for external ones
+    BOOST_CHECK(check("wpkh(" + priv + ")"));
+    BOOST_CHECK(!check("wpkh(" + pub + ")"));
+    BOOST_CHECK(check("pkh(" + priv + ")"));
+    BOOST_CHECK(!check("pkh(" + pub + ")"));
+    BOOST_CHECK(check("sh(wpkh(" + priv + "))"));
+    BOOST_CHECK(!check("sh(wpkh(" + pub + "))"));
+    BOOST_CHECK(!check_external(GetScriptForDestination(WitnessV0KeyHash{key.GetPubKey()})));
 
-    // External coins that are not eligible are allowed
+    // Coins that are not eligible are allowed without a private key, also external ones
     const CScript p2wsh{GetScriptForDestination(WitnessV0ScriptHash{CScript{} << OP_TRUE})};
-    BOOST_CHECK(check(p2wsh, nullptr));
+    BOOST_CHECK(check("wsh(pk(" + pub + "))"));
+    BOOST_CHECK(check_external(p2wsh));
 
-    // Unknown witness versions are not allowed, also when wrapped in P2SH
+    // Unknown witness versions are not allowed
     const CScript witness_v2{CScript{} << OP_2 << std::vector<unsigned char>(32, 0x01)};
-    BOOST_CHECK(!check(witness_v2, &empty_provider));
-    BOOST_CHECK(!check(witness_v2, nullptr));
-    const CScript p2sh_witness_v2{GetScriptForDestination(ScriptHash{witness_v2})};
-    FlatSigningProvider p2sh_provider;
-    p2sh_provider.scripts.emplace(CScriptID{witness_v2}, witness_v2);
-    BOOST_CHECK(!check(p2sh_witness_v2, &p2sh_provider));
+    BOOST_CHECK(!check("raw(" + HexStr(witness_v2) + ")"));
+    BOOST_CHECK(!check_external(witness_v2));
     // Without the redeemScript, the wrapped witness version is unknown
-    BOOST_CHECK(check(p2sh_witness_v2, &empty_provider));
+    BOOST_CHECK(check("raw(" + HexStr(GetScriptForDestination(ScriptHash{witness_v2})) + ")"));
 
-    // Taproot coins are allowed, also with script path spend data
-    const XOnlyPubKey internal_key{key.GetPubKey()};
-    TaprootBuilder key_path_builder;
-    key_path_builder.Finalize(internal_key);
-    FlatSigningProvider key_path_provider;
-    const WitnessV1Taproot key_path_output{key_path_builder.GetOutput()};
-    key_path_provider.tr_trees.emplace(key_path_output, key_path_builder);
-    BOOST_CHECK(check(GetScriptForDestination(key_path_output), &key_path_provider));
-
-    TaprootBuilder script_path_builder;
-    const CScript leaf{CScript{} << ToByteVector(XOnlyPubKey{GenerateRandomKey().GetPubKey()}) << OP_CHECKSIG};
-    script_path_builder.Add(/*depth=*/0, leaf, TAPROOT_LEAF_TAPSCRIPT);
-    script_path_builder.Finalize(internal_key);
-    FlatSigningProvider script_path_provider;
-    const WitnessV1Taproot script_path_output{script_path_builder.GetOutput()};
-    script_path_provider.tr_trees.emplace(script_path_output, script_path_builder);
-    BOOST_CHECK(check(GetScriptForDestination(script_path_output), &script_path_provider));
+    // Taproot coins require the private key of the output key, which is derived from the internal key
+    BOOST_CHECK(check("tr(" + priv + ")"));
+    BOOST_CHECK(!check("tr(" + xonly_pub + ")"));
+    BOOST_CHECK(check("tr(" + priv + ",pk(" + xonly_pub + "))"));
+    BOOST_CHECK(!check("tr(" + xonly_pub + ",pk(" + priv + "))"));
+    // Script path only coins, with the NUMS point as internal key, are not eligible
+    BOOST_CHECK(check("tr(" + HexStr(XOnlyPubKey::NUMS_H) + ",pk(" + xonly_pub + "))"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

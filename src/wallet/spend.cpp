@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <common/args.h>
 #include <common/messages.h>
+#include <common/bip352.h>
 #include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
@@ -32,6 +33,7 @@
 
 #include <cmath>
 
+using bip352::SilentPaymentsDestination;
 using common::StringForFeeReason;
 using common::TransactionErrorString;
 using interfaces::FoundBlock;
@@ -313,10 +315,21 @@ static bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet
     assert(false);
 }
 
-util::Result<void> CheckSilentPaymentsInput(const COutPoint& outpoint, const CTxOut& txout, const SigningProvider* provider)
+//! Get the private key of a silent payments eligible script from the first ScriptPubKeyMan that has it
+static std::optional<SilentPaymentsKey> GetSilentPaymentsKey(const CWallet& wallet, const CScript& script)
+{
+    for (const ScriptPubKeyMan* spk_manager : wallet.GetScriptPubKeyMans(script)) {
+        if (auto key{spk_manager->GetPrivKeyForSilentPayments(script)}) return key;
+    }
+    return std::nullopt;
+}
+
+util::Result<void> CheckSilentPaymentsInput(const CWallet& wallet, const COutPoint& outpoint, const CTxOut& txout,
+                                            std::map<std::set<ScriptPubKeyMan*>, bool>* has_key_cache)
 {
     std::vector<std::vector<unsigned char>> solutions;
     TxoutType type = Solver(txout.scriptPubKey, solutions);
+    const std::unique_ptr<SigningProvider> provider{wallet.GetSolvingProvider(txout.scriptPubKey)};
     if (!provider) {
         // The outputs are derived from the private keys of the eligible inputs, which the wallet
         // does not have for external inputs. An external P2SH input may be eligible as well,
@@ -333,6 +346,21 @@ util::Result<void> CheckSilentPaymentsInput(const COutPoint& outpoint, const CTx
     // BIP352 receivers skip transactions spending outputs of an unknown witness version
     if (type == TxoutType::WITNESS_UNKNOWN) {
         return util::Error{strprintf(_("%s has an unknown witness version and cannot be used in a silent payments transaction"), outpoint.ToString())};
+    }
+    // The outputs are derived from the private keys of the eligible inputs
+    if (provider && IsInputForSharedSecretDerivation(txout.scriptPubKey, wallet)) {
+        if (wallet.IsLocked()) {
+            return util::Error{strprintf(_("Cannot check the private key of silent payments eligible input %s while the wallet is locked."), outpoint.ToString())};
+        }
+        const auto has_key{[&] {
+            if (!has_key_cache) return GetSilentPaymentsKey(wallet, txout.scriptPubKey).has_value();
+            auto [it, inserted]{has_key_cache->try_emplace(wallet.GetScriptPubKeyMans(txout.scriptPubKey))};
+            if (inserted) it->second = GetSilentPaymentsKey(wallet, txout.scriptPubKey).has_value();
+            return it->second;
+        }};
+        if (!has_key()) {
+            return util::Error{strprintf(_("Missing the private key of silent payments eligible input %s."), outpoint.ToString())};
+        }
     }
     return {};
 }
@@ -382,8 +410,7 @@ util::Result<CoinsResult> FetchSelectedInputs(const CWallet& wallet, const CCoin
             return util::Error{strprintf(_("Not solvable pre-selected input %s"), outpoint.ToString())}; // Not solvable, can't estimate size for fee
         }
         if (coin_control.m_silent_payments) {
-            std::unique_ptr<SigningProvider> provider{wallet.GetSolvingProvider(txout.scriptPubKey)};
-            if (auto res{CheckSilentPaymentsInput(outpoint, txout, provider.get())}; !res) {
+            if (auto res{CheckSilentPaymentsInput(wallet, outpoint, txout)}; !res) {
                 return util::Error{util::ErrorString(res)};
             }
         }
@@ -414,6 +441,8 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     const int max_depth = {coinControl ? coinControl->m_max_depth : DEFAULT_MAX_DEPTH};
     const bool only_safe = {coinControl ? !coinControl->m_include_unsafe_inputs : true};
     const bool silent_payments = {coinControl ? coinControl->m_silent_payments : false};
+    // Avoids deriving the private key of every coin, see CheckSilentPaymentsInput
+    std::map<std::set<ScriptPubKeyMan*>, bool> sp_has_key_cache;
     const bool can_grind_r = wallet.CanGrindR();
     std::vector<COutPoint> outpoints;
 
@@ -549,7 +578,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             type = Solver(script, script_solutions);
             is_from_p2sh = true;
         }
-        if (silent_payments && !CheckSilentPaymentsInput(outpoint, output, provider.get())) continue;
+        if (silent_payments && !CheckSilentPaymentsInput(wallet, outpoint, output, &sp_has_key_cache)) continue;
 
         auto available_output_type = GetOutputType(type, is_from_p2sh);
         auto available_output = COutput(outpoint, output, nDepth, input_bytes, solvable, tx_safe, wtx.GetTxTime(), tx_from_me, feerate);
@@ -1180,14 +1209,58 @@ void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
     }
 }
 
+CTxOut GetDummyTxOut(const PaymentDestination& dest, CAmount amount)
+{
+    if (const auto script{dest.GetStaticScript()}) return CTxOut{amount, *script};
+    // BIP352 v0 outputs are P2TR outputs, which all have the same size
+    return CTxOut{amount, GetScriptForDestination(WitnessV1Taproot{})};
+}
+
 uint64_t GetSerializeSizeForRecipient(const CRecipient& recipient)
 {
-    return ::GetSerializeSize(CTxOut(recipient.nAmount, *Assert(recipient.dest.GetStaticScript())));
+    return ::GetSerializeSize(GetDummyTxOut(recipient.dest, recipient.nAmount));
 }
 
 bool IsDust(const CRecipient& recipient, const CFeeRate& dustRelayFee)
 {
-    return ::IsDust(CTxOut(recipient.nAmount, *Assert(recipient.dest.GetStaticScript())), dustRelayFee);
+    return ::IsDust(GetDummyTxOut(recipient.dest, recipient.nAmount), dustRelayFee);
+}
+
+util::Result<std::map<size_t, WitnessV1Taproot>> CreateSilentPaymentsOutputs(
+    const CWallet& wallet,
+    const std::map<size_t, SilentPaymentsDestination>& silent_payments_destinations,
+    const OutputSet& selected_coins)
+{
+    std::vector<CKey> plain_keys;
+    std::vector<KeyPair> taproot_keys;
+    // in most cases, we will use all of the inputs for shared secret derivation,
+    // in rare cases, we will overallocate the vector, but this should be fine
+    plain_keys.reserve(selected_coins.size());
+    taproot_keys.reserve(selected_coins.size());
+    for (const auto& input : selected_coins) {
+        if (!IsInputForSharedSecretDerivation(input->txout.scriptPubKey, wallet)) continue;
+        auto key{GetSilentPaymentsKey(wallet, input->txout.scriptPubKey)};
+        // All coins without private keys should have been filtered out by
+        // CheckSilentPaymentsInput. The coins should be filtered out so that
+        // coin selection selects only from a set of elligible coins.
+        Assume(key);
+        if (!key) {
+            // The input is used for the shared secret, so the outputs cannot be derived without its key
+            return util::Error{strprintf(_("Missing the private key of silent payments eligible input %s."), input->outpoint.ToString())};
+        }
+        if (auto* taproot_key = std::get_if<KeyPair>(&*key)) {
+            taproot_keys.push_back(std::move(*taproot_key));
+        } else if (auto* plain_key = std::get_if<CKey>(&*key)) {
+            plain_keys.push_back(std::move(*plain_key));
+        }
+    }
+    if (plain_keys.empty() && taproot_keys.empty()) {
+        return util::Error{_("No silent payment eligible inputs were found.")};
+    }
+    const auto& smallest_outpoint{(*std::ranges::min_element(selected_coins, bip352::BIP352Comparator{}, [](const auto& input) -> const COutPoint& { return input->outpoint; }))->outpoint};
+    auto outputs{bip352::GenerateSilentPaymentsTaprootDestinations(silent_payments_destinations, plain_keys, taproot_keys, smallest_outpoint)};
+    if (!outputs) return util::Error{_("Failed to create silent payments outputs.")};
+    return std::move(*outputs);
 }
 
 static util::Result<CreatedTransactionResult> CreateTransactionInternal(
@@ -1237,13 +1310,16 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         }
     }
 
-    // Create change script that will be used if we need change
-    CScript scriptChange;
+    CTxOut change_prototype_txout{0, CScript()};
     bilingual_str error; // possible error str
 
     // coin control: send change to custom address
     if (coin_control.destChange) {
-        scriptChange = *Assert(coin_control.destChange->GetStaticScript());
+        if (coin_control.destChange->IsSilentPayment() && !coin_control.m_silent_payments) {
+            return util::Error{_("Silent payments change requires a silent payments transaction")};
+        }
+        // A silent payments change output script is derived once the inputs are selected, see below
+        change_prototype_txout = GetDummyTxOut(*coin_control.destChange, /*amount=*/0);
     } else { // no coin control: send change to newly generated address
         // Note: We use a new key here to keep it from being obvious which side is the change.
         //  The drawback is that by not reusing a previous key, the change may be lost if a
@@ -1260,14 +1336,13 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
             error = _("Transaction needs a change address, but we can't generate it.") + Untranslated(" ") + util::ErrorString(op_dest);
         } else {
             dest = *op_dest;
-            scriptChange = GetScriptForDestination(dest);
+            change_prototype_txout = CTxOut(0, GetScriptForDestination(dest));
         }
         // A valid destination implies a change script (and
         // vice-versa). An empty change script will abort later, if the
         // change keypool ran out, but change is required.
-        CHECK_NONFATAL(IsValidDestination(dest) != scriptChange.empty());
+        CHECK_NONFATAL(IsValidDestination(dest) != change_prototype_txout.scriptPubKey.empty());
     }
-    CTxOut change_prototype_txout(0, scriptChange);
     coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout);
 
     // Get size of spending the change output
@@ -1384,13 +1459,41 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
            result.GetWaste(),
            result.GetSelectedValue());
 
+    const CAmount change_amount = result.GetChange(coin_selection_params.min_viable_change, coin_selection_params.m_change_fee);
+
+    CScript scriptChange{change_prototype_txout.scriptPubKey};
+    // Silent payments output scripts are derived from the selected inputs, keyed by index in vecSend
+    std::map<size_t, WitnessV1Taproot> sp_outputs;
+    if (coin_control.m_silent_payments) {
+        std::map<size_t, SilentPaymentsDestination> sp_dests;
+        for (size_t i = 0; i < vecSend.size(); ++i) {
+            if (const auto* sp = vecSend[i].dest.GetSilentPaymentsDestination()) {
+                sp_dests.emplace(i, *sp);
+            }
+        }
+        // A silent payments change destination is keyed after all recipients, so its output is
+        // numbered after those of recipients with the same scan key. It is only derived if there
+        // is a change output.
+        if (coin_control.destChange && change_amount > 0) {
+            if (const auto* sp = coin_control.destChange->GetSilentPaymentsDestination()) {
+                sp_dests.emplace(vecSend.size(), *sp);
+            }
+        }
+        auto res{CreateSilentPaymentsOutputs(wallet, sp_dests, result.GetInputSet())};
+        if (!res) return util::Error{util::ErrorString(res)};
+        sp_outputs = std::move(*res);
+        if (const auto it{sp_outputs.find(vecSend.size())}; it != sp_outputs.end()) {
+            scriptChange = GetScriptForDestination(it->second);
+        }
+    }
+    // A silent payments change output must never fall back to the dummy prototype script
+    Assume(!coin_control.destChange || !coin_control.destChange->IsSilentPayment() || change_amount <= 0 || sp_outputs.contains(vecSend.size()));
     // vouts to the payees
     txNew.vout.reserve(vecSend.size() + 1); // + 1 because of possible later insert
-    for (const auto& recipient : vecSend)
-    {
-        txNew.vout.emplace_back(recipient.nAmount, *Assert(recipient.dest.GetStaticScript()));
+    for (size_t i = 0; i < vecSend.size(); ++i) {
+        const auto sp_it{sp_outputs.find(i)};
+        txNew.vout.emplace_back(vecSend[i].nAmount, sp_it != sp_outputs.end() ? GetScriptForDestination(sp_it->second) : *Assert(vecSend[i].dest.GetStaticScript()));
     }
-    const CAmount change_amount = result.GetChange(coin_selection_params.min_viable_change, coin_selection_params.m_change_fee);
     if (change_amount > 0) {
         CTxOut newTxOut(change_amount, scriptChange);
         if (!change_pos) {
@@ -1610,8 +1713,9 @@ util::Result<CreatedTransactionResult> CreateTransaction(
         CCoinControl tmp_cc = coin_control;
         tmp_cc.m_avoid_partial_spends = true;
 
-        // Reuse the change destination from the first creation attempt to avoid skipping BIP44 indexes
-        if (txr_ungrouped.change_pos) {
+        // Reuse the change destination from the first creation attempt to avoid skipping BIP44 indexes.
+        // A silent payments change output script depends on the selected inputs, so it is not reused.
+        if (txr_ungrouped.change_pos && !(coin_control.destChange && coin_control.destChange->IsSilentPayment())) {
             CTxDestination change_dest;
             ExtractDestination(txr_ungrouped.tx->vout[*txr_ungrouped.change_pos].scriptPubKey, change_dest);
             tmp_cc.destChange = PaymentDestination{change_dest};

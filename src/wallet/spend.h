@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_SPEND_H
 #define BITCOIN_WALLET_SPEND_H
 
+#include <common/paymentdestination.h>
 #include <consensus/amount.h>
 #include <util/result.h>
 #include <wallet/coinselection.h>
@@ -204,17 +205,30 @@ util::Result<SelectionResult> SelectCoinsForSilentPayments(const CWallet& wallet
                                                            const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /**
+ * Return an output of the same size as the one paying amount to dest, to estimate the
+ * transaction size or check for dust before the inputs are known. A silent payments output
+ * script is derived from the inputs, so a P2TR output is returned for a silent payments
+ * destination, since BIP352 v0 outputs are P2TR outputs.
+ */
+CTxOut GetDummyTxOut(const PaymentDestination& dest, CAmount amount);
+
+/**
  * Set a height-based locktime for new transactions (uses the height of the
  * current chain tip unless we are not synced with the current chain
  */
 void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, interfaces::Chain& chain, const uint256& block_hash, int block_height);
 
 /**
- * Whether a coin can be spent in a silent payments transaction, or why not.
+ * Whether a coin can be spent in a silent payments transaction, or why not. An eligible coin
+ * requires its private key, since the outputs are derived from it.
  *
- * @param[in] provider  The wallet's signing provider for the coin, or nullptr for an external coin
+ * @param[in,out] has_key_cache  Whether any of a set of ScriptPubKeyMans has the private keys of the
+ *                               eligible scripts they all manage. Every script of a descriptor is
+ *                               derived from the same keys, so checking one script per set is enough.
+ *                               Pass it when checking many coins.
  */
-util::Result<void> CheckSilentPaymentsInput(const COutPoint& outpoint, const CTxOut& txout, const SigningProvider* provider);
+util::Result<void> CheckSilentPaymentsInput(const CWallet& wallet, const COutPoint& outpoint, const CTxOut& txout,
+                                            std::map<std::set<ScriptPubKeyMan*>, bool>* has_key_cache = nullptr);
 
 /**
  * Create a new transaction paying the recipients with a set of coins

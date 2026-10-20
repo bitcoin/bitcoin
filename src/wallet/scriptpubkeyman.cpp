@@ -1548,6 +1548,47 @@ void DescriptorScriptPubKeyMan::Load()
     m_storage.TopUpCallback(new_spks, this);
 }
 
+std::optional<SilentPaymentsKey> DescriptorScriptPubKeyMan::GetPrivKeyForSilentPayments(const CScript& scriptPubKey) const
+{
+    std::vector<std::vector<unsigned char>> solutions;
+    const TxoutType type{Solver(scriptPubKey, solutions)};
+    std::unique_ptr<FlatSigningProvider> coin_keys = GetSigningProvider(scriptPubKey, true);
+    if (!coin_keys) return std::nullopt;
+
+    if (type == TxoutType::WITNESS_V1_TAPROOT) {
+        // The sender uses the private key of the output key
+        const XOnlyPubKey output_key{solutions[0]};
+        for (const auto& [_, key] : coin_keys->keys) {
+            // this means it is a "rawtr" output
+            if (XOnlyPubKey{key.GetPubKey()} == output_key) return key.ComputeKeyPair(nullptr);
+        }
+        // Otherwise, tweak the private key of the internal key with the merkle root
+        TaprootSpendData spenddata;
+        if (!coin_keys->GetTaprootSpendData(output_key, spenddata)) return std::nullopt;
+        for (const auto& [_, key] : coin_keys->keys) {
+            if (XOnlyPubKey{key.GetPubKey()} == spenddata.internal_key) return key.ComputeKeyPair(&spenddata.merkle_root);
+        }
+        return std::nullopt;
+    }
+
+    CKeyID keyid;
+    if (type == TxoutType::PUBKEYHASH || type == TxoutType::WITNESS_V0_KEYHASH) {
+        keyid = CKeyID{uint160{solutions[0]}};
+    } else if (type == TxoutType::SCRIPTHASH) {
+        // Only P2SH-P2WPKH is eligible
+        CScript redeem_script;
+        if (!coin_keys->GetCScript(CScriptID{uint160{solutions[0]}}, redeem_script)) return std::nullopt;
+        if (Solver(redeem_script, solutions) != TxoutType::WITNESS_V0_KEYHASH) return std::nullopt;
+        keyid = CKeyID{uint160{solutions[0]}};
+    } else {
+        return std::nullopt;
+    }
+    CKey key;
+    // BIP352 only uses compressed public keys
+    if (!coin_keys->GetKey(keyid, key) || !key.IsCompressed()) return std::nullopt;
+    return key;
+}
+
 bool DescriptorScriptPubKeyMan::HasWalletDescriptor(const WalletDescriptor& desc) const
 {
     LOCK(cs_desc_man);
