@@ -62,8 +62,11 @@ void PopulateView(const CBlock& block, CCoinsView& view, bool spent = false)
         for (const auto& in : tx->vin) {
             if (txids.contains(in.prevout.hash)) continue;
             Coin coin{};
-            if (!spent) coin.out.nValue = 1;
-            cache.EmplaceCoinInternalDANGER(in.prevout, std::move(coin));
+            coin.out.nValue = 1;
+            // possible_overwrite keeps the entry out of the FRESH state, without
+            // which SpendCoin() would erase it rather than mark it spent.
+            cache.AddCoin(in.prevout, std::move(coin), /*possible_overwrite=*/true);
+            if (spent) cache.SpendCoin(in.prevout);
         }
         txids.emplace(tx->GetHash());
     }
@@ -199,7 +202,7 @@ BOOST_AUTO_TEST_CASE(access_non_input_coins)
     Coin coin{};
     coin.out.nValue = 1;
     const COutPoint outpoint{Txid::FromUint256(uint256::ZERO), 0};
-    main_cache.EmplaceCoinInternalDANGER(COutPoint{outpoint}, std::move(coin));
+    main_cache.AddCoin(COutPoint{outpoint}, std::move(coin), /*possible_overwrite=*/false);
 
     CoinsViewOverlay view{&main_cache, MakeStartedThreadPool()};
     // The block has no non-coinbase transactions, so this fetches nothing and only creates the
