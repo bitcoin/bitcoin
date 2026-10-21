@@ -36,12 +36,12 @@ struct CoinsViewOptions {
 class CCoinsViewDB final : public CCoinsView
 {
 protected:
-    DBParams m_db_params;
+    const fs::path m_path;
     CoinsViewOptions m_options;
-    std::unique_ptr<CDBWrapper> m_db;
+    CDBWrapper m_db;
     std::shared_future<void> m_compaction;
 public:
-    explicit CCoinsViewDB(DBParams db_params, CoinsViewOptions options);
+    explicit CCoinsViewDB(const DBParams& db_params, CoinsViewOptions options);
     ~CCoinsViewDB() override;
 
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;

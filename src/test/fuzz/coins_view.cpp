@@ -407,7 +407,7 @@ FUZZ_TARGET(coins_view_db, .init = initialize_coins_view)
         .cache_bytes = 1_MiB,
         .memory_only = true,
     };
-    CCoinsViewDB backend_coins_view{std::move(db_params), CoinsViewOptions{}};
+    CCoinsViewDB backend_coins_view{db_params, CoinsViewOptions{}};
     CCoinsViewCache coins_view_cache{&backend_coins_view, /*deterministic=*/true};
     TestCoinsView(fuzzed_data_provider, coins_view_cache, &backend_coins_view);
 }
@@ -438,7 +438,7 @@ FUZZ_TARGET(coins_view_stacked, .init = initialize_coins_view)
         .cache_bytes = 1_MiB,
         .memory_only = true,
     };
-    CCoinsViewDB backend_base_coins_view{std::move(db_params), CoinsViewOptions{}};
+    CCoinsViewDB backend_base_coins_view{db_params, CoinsViewOptions{}};
     CCoinsViewCache backend_cache{&backend_base_coins_view, /*deterministic=*/true};
     TestCoinsView(fuzzed_data_provider, backend_cache, &backend_base_coins_view);
     CoinsViewOverlay coins_view_cache{&backend_cache, g_thread_pool, /*deterministic=*/true};
