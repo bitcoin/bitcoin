@@ -2,6 +2,7 @@ Checks: '
 -*,
 bitcoin-*,
 bugprone-argument-comment,
+bugprone-inaccurate-erase,
 bugprone-move-forwarding-reference,
 bugprone-string-constructor,
 bugprone-string-literal-with-embedded-nul,
