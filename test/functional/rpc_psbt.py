@@ -599,6 +599,32 @@ class PSBTTest(BitcoinTestFramework):
             assert_equal(decoded["outputs"][0]["unknown"], unknown_fields(
                 (unknown_key_a, output_value_b)
             ))
+    
+    def test_unknown_fields_passthrough(self):
+        self.log.info("Test that unknown values are just passed through")
+        unknown_type = b'\xf0'
+        unknown_key = unknown_type + bytes(range(1, 10))
+        unknown_value = bytes(range(1, 16))
+
+        unknown_psbt = self.create_psbt(inputs={unknown_key: unknown_value}).to_base64()
+        unknown_out = self.nodes[0].walletprocesspsbt(unknown_psbt)['psbt']
+        assert_equal(unknown_psbt, unknown_out)
+
+        unknown_key2 = unknown_type + bytes(range(1, 9)) + bytes(11)
+        unknown_psbt2 = self.create_psbt(inputs={unknown_key2: unknown_value}).to_base64()
+        merged_unknown = self.nodes[0].combinepsbt([unknown_psbt, unknown_psbt2])
+        merged_unknown_psbt = PSBT.from_base64(merged_unknown)
+        assert_equal(merged_unknown_psbt.i[0].map[unknown_key], unknown_value)
+        assert_equal(merged_unknown_psbt.i[0].map[unknown_key2], unknown_value)
+
+        # The explicit PSBT_GLOBAL_VERSION=0 encoding is equivalent to omitting the
+        # version field, and both accepted v0 encodings can be merged.
+        explicit_v0_psbt = self.create_psbt(inputs={unknown_key2: unknown_value})
+        explicit_v0_psbt.g.map[PSBT_GLOBAL_VERSION] = (0).to_bytes(4, "little")
+        merged_v0_versions = self.nodes[0].combinepsbt([unknown_psbt, explicit_v0_psbt.to_base64()])
+        merged_v0_versions_psbt = PSBT.from_base64(merged_v0_versions)
+        assert_equal(merged_v0_versions_psbt.i[0].map[unknown_key], unknown_value)
+        assert_equal(merged_v0_versions_psbt.i[0].map[unknown_key2], unknown_value)
 
     def test_sighash_mismatch(self):
         self.log.info("Test sighash type mismatches")
@@ -1264,30 +1290,7 @@ class PSBTTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Insufficient funds", wunsafe.walletcreatefundedpsbt, [], [{self.nodes[0].getnewaddress(): 1}])
         wunsafe.walletcreatefundedpsbt([], [{self.nodes[0].getnewaddress(): 1}], 0, {"include_unsafe": True})
 
-        self.log.info("Test that unknown values are just passed through")
-        unknown_type = b'\xf0'
-        unknown_key = unknown_type + bytes(range(1, 10))
-        unknown_value = bytes(range(1, 16))
-
-        unknown_psbt = self.create_psbt(inputs={unknown_key: unknown_value}).to_base64()
-        unknown_out = self.nodes[0].walletprocesspsbt(unknown_psbt)['psbt']
-        assert_equal(unknown_psbt, unknown_out)
-
-        unknown_key2 = unknown_type + bytes(range(1, 9)) + bytes(11)
-        unknown_psbt2 = self.create_psbt(inputs={unknown_key2: unknown_value}).to_base64()
-        merged_unknown = self.nodes[0].combinepsbt([unknown_psbt, unknown_psbt2])
-        merged_unknown_psbt = PSBT.from_base64(merged_unknown)
-        assert_equal(merged_unknown_psbt.i[0].map[unknown_key], unknown_value)
-        assert_equal(merged_unknown_psbt.i[0].map[unknown_key2], unknown_value)
-
-        # The explicit PSBT_GLOBAL_VERSION=0 encoding is equivalent to omitting the
-        # version field, and both accepted v0 encodings can be merged.
-        explicit_v0_psbt = self.create_psbt(inputs={unknown_key2: unknown_value})
-        explicit_v0_psbt.g.map[PSBT_GLOBAL_VERSION] = (0).to_bytes(4, "little")
-        merged_v0_versions = self.nodes[0].combinepsbt([unknown_psbt, explicit_v0_psbt.to_base64()])
-        merged_v0_versions_psbt = PSBT.from_base64(merged_v0_versions)
-        assert_equal(merged_v0_versions_psbt.i[0].map[unknown_key], unknown_value)
-        assert_equal(merged_v0_versions_psbt.i[0].map[unknown_key2], unknown_value)
+        self.test_unknown_fields_passthrough()
 
         # BIP 174 Test Vectors
 
