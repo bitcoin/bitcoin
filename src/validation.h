@@ -913,11 +913,11 @@ public:
     //                                  constructor
     Chainstate& InitializeChainstate(CTxMemPool* mempool) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    //! Accessors used by older code to query the chainstate. ActiveChainstate()
-    //! locks cs_main itself. The others require it to be held. Newer code
+    //! Accessors used by older code to query the chainstate. All except
+    //! ActiveChainstate() require cs_main to be held. Newer code
     //! should avoid querying ChainstateManager and use Chainstate objects directly.
     //! @{
-    Chainstate& ActiveChainstate() const;
+    Chainstate& ActiveChainstate() const { return *Assert(m_chainstate); }
     CChain& ActiveChain() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChainstate().m_chain; }
     int ActiveHeight() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChain().Height(); }
     CBlockIndex* ActiveTip() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChain().Tip(); }
@@ -1091,8 +1091,8 @@ public:
 
     ~ChainstateManager();
 
-    //! Active chainstate.
-    std::unique_ptr<Chainstate> m_chainstate GUARDED_BY(::cs_main);
+    //! Initialized before use and never replaced during normal operation.
+    std::unique_ptr<Chainstate> m_chainstate;
 };
 
 /** Deployment* info via ChainstateManager */

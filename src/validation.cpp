@@ -5284,12 +5284,6 @@ Chainstate& ChainstateManager::InitializeChainstate(CTxMemPool* mempool)
     return *m_chainstate;
 }
 
-Chainstate& ChainstateManager::ActiveChainstate() const
-{
-    LOCK(::cs_main);
-    return *Assert(m_chainstate);
-}
-
 /**
  * Reject unfinished snapshots before BlockManager can open or wipe storage.
  * Apply default chain params to nullopt members.

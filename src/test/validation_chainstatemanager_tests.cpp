@@ -28,11 +28,6 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager, TestChain100Setup)
 
     Chainstate& c1 = manager.ActiveChainstate();
 
-    {
-        LOCK(manager.GetMutex());
-        BOOST_CHECK_EQUAL(manager.m_chainstate.get(), &c1);
-    }
-
     auto& active_chain = WITH_LOCK(manager.GetMutex(), return manager.ActiveChain());
     BOOST_CHECK_EQUAL(&active_chain, &c1.m_chain);
 
