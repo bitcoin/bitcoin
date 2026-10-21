@@ -33,6 +33,7 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
+#include <txmempool.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
@@ -45,6 +46,7 @@
 #include <wallet/spend.h>
 #include <wallet/test/util.h>
 #include <wallet/test/wallet_test_fixture.h>
+#include <wallet/walletdb.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -500,6 +502,36 @@ public:
     std::unique_ptr<CWallet> wallet;
 };
 
+BOOST_FIXTURE_TEST_CASE(CommitTransaction, ListCoinsTestingSetup)
+{
+    wallet->SetBroadcastTransactions(true);
+    CCoinControl control;
+    control.m_feerate = CFeeRate{1000};
+    const auto created = WITH_LOCK(wallet->cs_wallet, return CreateTransaction(*wallet, {{PKHash{}, COIN, false}}, std::nullopt, control));
+    BOOST_REQUIRE_MESSAGE(created, util::ErrorString(created).original);
+    const auto tx = created->tx;
+    const auto txid = tx->GetHash();
+
+    wallet->m_max_tx_fee = 1;
+    const auto fee = wallet->CommitTransaction(tx);
+    BOOST_REQUIRE(!fee);
+    BOOST_CHECK(fee.error().code == node::TransactionError::MAX_FEE_EXCEEDED);
+    BOOST_CHECK_EQUAL(fee.error().message, "Fee exceeds maximum configured by user (maxtxfee)");
+    BOOST_CHECK(!m_node.mempool->exists(txid));
+    wallet->m_max_tx_fee = DEFAULT_TRANSACTION_MAXFEE;
+
+    BOOST_CHECK(wallet->CommitTransaction(tx));
+    BOOST_CHECK(m_node.mempool->exists(txid));
+    BOOST_CHECK(wallet->CommitTransaction(tx));
+    BOOST_CHECK(m_node.mempool->exists(txid));
+
+    CreateAndProcessBlock({CMutableTransaction{*tx}}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+    const auto confirmed = wallet->CommitTransaction(tx);
+    BOOST_REQUIRE(!confirmed);
+    BOOST_CHECK(confirmed.error().code == node::TransactionError::ALREADY_IN_UTXO_SET);
+    BOOST_CHECK(!m_node.mempool->exists(txid));
+}
+
 BOOST_FIXTURE_TEST_CASE(CommitTransactionErrors, ListCoinsTestingSetup)
 {
     wallet->SetBroadcastTransactions(true);
@@ -509,6 +541,22 @@ BOOST_FIXTURE_TEST_CASE(CommitTransactionErrors, ListCoinsTestingSetup)
     BOOST_REQUIRE_MESSAGE(created, util::ErrorString(created).original);
     const auto tx = created->tx;
     const auto txid = tx->GetHash();
+
+    const auto high_fee_tx = TestSimpleSpend(*m_coinbase_txns[0], 0, coinbaseKey, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+    BOOST_REQUIRE(BroadcastTestSimpleSpend(*m_node.chain, *m_node.chainman, high_fee_tx));
+    WITH_LOCK(m_node.mempool->cs, m_node.mempool->TrimToSize(0));
+    BOOST_REQUIRE(m_node.chain->mempoolMinFee() > *control.m_feerate);
+    BOOST_CHECK(WITH_LOCK(wallet->cs_wallet, return !wallet->mapWallet.contains(txid)));
+    const auto rejected = wallet->CommitTransaction(tx, std::nullopt, "saved rejection");
+    BOOST_REQUIRE(!rejected);
+    BOOST_CHECK(rejected.error().code == node::TransactionError::MEMPOOL_REJECTED);
+    BOOST_CHECK(rejected.error().message.find("mempool min fee not met") != std::string::npos);
+    BOOST_CHECK(!m_node.mempool->exists(txid));
+    BOOST_CHECK(WITH_LOCK(wallet->cs_wallet, return wallet->mapWallet.contains(txid)));
+    CWalletTx saved{MakeTransactionRef(CMutableTransaction{}), TxStateInactive{}};
+    BOOST_REQUIRE(wallet->GetDatabase().MakeBatch()->Read(std::make_pair(DBKeys::TX, txid), saved));
+    BOOST_CHECK(saved.GetTx()->GetWitnessHash() == tx->GetWitnessHash());
+    BOOST_CHECK_EQUAL(*saved.m_comment, "saved rejection");
 
     wallet->SetBroadcastTransactions(false);
     const auto disabled = wallet->CommitTransaction(tx);
