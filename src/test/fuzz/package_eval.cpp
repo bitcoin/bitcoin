@@ -132,15 +132,20 @@ struct TransactionsDelta final : public CValidationInterface {
 /** Check that testing a package as submission (test) gave what its submission (real) then gave. */
 void CheckTestAsSubmission(const Package& txs, const PackageMempoolAcceptResult& test, const PackageMempoolAcceptResult& real)
 {
-    // A transaction other than the last that passes alone is not staged in a test, so the rest differs.
-    for (size_t i{0}; i + 1 < txs.size(); ++i) {
-        const auto it{test.m_tx_results.find(txs[i]->GetWitnessHash())};
-        if (it != test.m_tx_results.end() && it->second.m_result_type == MempoolAcceptResult::ResultType::VALID &&
-            it->second.m_wtxids_fee_calculations == std::vector<Wtxid>{txs[i]->GetWitnessHash()}) return;
-    }
     // Submission may trim what it added.
     for (const auto& [_, r] : real.m_tx_results) {
         if (r.m_state.GetRejectReason() == "mempool full") return;
+    }
+    // A transaction other than the last that passes alone is not staged in a test, which tests the
+    // rest with it, each paying for itself. For a parent and child that accepts at least what
+    // submission accepts.
+    for (size_t i{0}; i + 1 < txs.size(); ++i) {
+        const auto it{test.m_tx_results.find(txs[i]->GetWitnessHash())};
+        if (it != test.m_tx_results.end() && it->second.m_result_type == MempoolAcceptResult::ResultType::VALID &&
+            it->second.m_wtxids_fee_calculations == std::vector<Wtxid>{txs[i]->GetWitnessHash()}) {
+            if (txs.size() == 2) Assert(!real.m_state.IsValid() || test.m_state.IsValid());
+            return;
+        }
     }
     Assert(test.m_state.GetResult() == real.m_state.GetResult());
     Assert(test.m_state.GetRejectReason() == real.m_state.GetRejectReason());

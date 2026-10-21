@@ -282,8 +282,8 @@ MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTra
 *                                   Only for sanity checks against local submission of transactions.
 * @param[in]    test_as_submission  With test_accept, evaluate the package as submission would: each transaction
 *                                   alone first, then the rest at their package feerate, replacements allowed.
-*                                   Results do not list replaced transactions, and a transaction other than the
-*                                   last must not pass alone: it is not staged for the rest to spend.
+*                                   Results do not list replaced transactions. A parent that passes alone is
+*                                   tested with the rest, each paying for itself, replacements checked together.
 * @returns a PackageMempoolAcceptResult which includes a MempoolAcceptResult for each transaction.
 * If a transaction fails, validation will exit early and some results may be missing. It is also
 * possible for the package to be partially submitted.

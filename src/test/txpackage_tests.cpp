@@ -1141,6 +1141,50 @@ BOOST_AUTO_TEST_CASE(package_test_as_submission)
     }
 }
 
+BOOST_AUTO_TEST_CASE(package_test_parent_alone)
+{
+    mineBlocks(5);
+    LOCK(::cs_main);
+    CKey parent_key = GenerateRandomKey();
+    CScript parent_spk = GetScriptForDestination(WitnessV0KeyHash(parent_key.GetPubKey()));
+    CScript child_spk = GetScriptForDestination(WitnessV0KeyHash(GenerateRandomKey().GetPubKey()));
+    const CAmount coinbase_value{50 * COIN};
+    // Test a package as submission, then submit it: both must accept it, or both refuse it.
+    const auto check{[&](const Package& package, bool valid) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        const size_t pool_size{m_node.mempool->size()};
+        const auto tested{ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package,
+                                            /*test_accept=*/true, /*client_maxfeerate=*/{}, /*test_as_submission=*/true)};
+        BOOST_CHECK_MESSAGE(tested.m_state.IsValid() == valid, tested.m_state.ToString());
+        BOOST_CHECK_EQUAL(m_node.mempool->size(), pool_size);
+        const auto submitted{ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package,
+                                               /*test_accept=*/false, /*client_maxfeerate=*/{})};
+        BOOST_CHECK_MESSAGE(submitted.m_state.IsValid() == valid, submitted.m_state.ToString());
+    }};
+    const auto spend{[&](const CTransactionRef& tx, CAmount value) {
+        return MakeTransactionRef(CreateValidMempoolTransaction(tx, 0, 101, parent_key, child_spk, value, /*submit=*/false));
+    }};
+
+    // The parent pays for itself and replaces a mempool transaction, and its child pays less per
+    // vbyte. Package RBF would refuse the two, but submission takes the parent and then the child.
+    CreateValidMempoolTransaction(m_coinbase_txns[0], 0, 0, coinbaseKey, parent_spk, coinbase_value - 10'000);
+    auto parent{MakeTransactionRef(CreateValidMempoolTransaction(m_coinbase_txns[0], 0, 0, coinbaseKey, parent_spk, coinbase_value - 100'000, /*submit=*/false))};
+    check({parent, spend(parent, coinbase_value - 110'000)}, /*valid=*/true);
+
+    // The parent pays for itself, and its child replaces a mempool transaction.
+    CreateValidMempoolTransaction(m_coinbase_txns[1], 0, 0, coinbaseKey, parent_spk, coinbase_value - 10'000);
+    parent = MakeTransactionRef(CreateValidMempoolTransaction(m_coinbase_txns[2], 0, 0, coinbaseKey, parent_spk, coinbase_value - 10'000, /*submit=*/false));
+    auto child{MakeTransactionRef(CreateValidMempoolTransaction({parent, m_coinbase_txns[1]}, {{parent->GetHash(), 0}, {m_coinbase_txns[1]->GetHash(), 0}},
+                                                                 101, {parent_key, coinbaseKey}, {CTxOut{2 * coinbase_value - 200'000, child_spk}}, /*submit=*/false))};
+    check({parent, child}, /*valid=*/true);
+
+    // The parent replaces the mempool transaction whose output its child spends: neither takes them.
+    auto spent{MakeTransactionRef(CreateValidMempoolTransaction(m_coinbase_txns[3], 0, 0, coinbaseKey, parent_spk, coinbase_value - 10'000))};
+    parent = MakeTransactionRef(CreateValidMempoolTransaction(m_coinbase_txns[3], 0, 0, coinbaseKey, parent_spk, coinbase_value - 100'000, /*submit=*/false));
+    child = MakeTransactionRef(CreateValidMempoolTransaction({parent, spent}, {{parent->GetHash(), 0}, {spent->GetHash(), 0}},
+                                                              101, {parent_key, parent_key}, {CTxOut{2 * coinbase_value - 200'000, child_spk}}, /*submit=*/false));
+    check({parent, child}, /*valid=*/false);
+}
+
 BOOST_AUTO_TEST_CASE(package_rbf_tests)
 {
     mineBlocks(5);

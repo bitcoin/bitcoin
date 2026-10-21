@@ -534,6 +534,21 @@ public:
             };
         }
 
+        /** Parameters for testing a child-with-parents package whose parents pass alone: each
+         *  transaction pays for itself, and replacements are checked for the package as a whole. */
+        static ATMPArgs PackageTestEach(const ATMPArgs& package_args) {
+            return ATMPArgs{/*accept_time=*/ package_args.m_accept_time,
+                            /*bypass_limits=*/ false,
+                            /*coins_to_uncache=*/ package_args.m_coins_to_uncache,
+                            /*test_accept=*/ true,
+                            /*allow_replacement=*/ true,
+                            /*allow_sibling_eviction=*/ false,
+                            /*package_submission=*/ true,
+                            /*package_feerates=*/ false,
+                            /*client_maxfeerate=*/ package_args.m_client_maxfeerate,
+            };
+        }
+
         /** Parameters for a single transaction within a package. */
         static ATMPArgs SingleInPackageAccept(const ATMPArgs& package_args) {
             return ATMPArgs{/*accept_time=*/ package_args.m_accept_time,
@@ -676,7 +691,8 @@ private:
 
     bool PackageRBFChecks(const std::vector<CTransactionRef>& txns,
                           std::vector<Workspace>& workspaces,
-                          PackageValidationState& package_state) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
+                          PackageValidationState& package_state,
+                          bool package_feerates) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     // Run the script checks using our policy flags. As this can be slow, we should
     // only invoke this on transactions that have otherwise passed policy checks.
@@ -1033,7 +1049,8 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
 
 bool MemPoolAccept::PackageRBFChecks(const std::vector<CTransactionRef>& txns,
                                      std::vector<Workspace>& workspaces,
-                                     PackageValidationState& package_state)
+                                     PackageValidationState& package_state,
+                                     bool package_feerates)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(m_pool.cs);
@@ -1055,9 +1072,9 @@ bool MemPoolAccept::PackageRBFChecks(const std::vector<CTransactionRef>& txns,
     // Specifically we would need to check that the ancestors of the new
     // transactions don't intersect with the set of transactions to be removed
     // due to RBF, which is not checked at all in the package acceptance
-    // context.
+    // context. Testing transactions that each pay for themselves does that check instead, below.
     for (const auto& ws : workspaces) {
-        if (!ws.m_parents.empty()) {
+        if (package_feerates && !ws.m_parents.empty()) {
             return package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package RBF failed: new transaction cannot have mempool ancestors");
         }
     }
@@ -1081,6 +1098,16 @@ bool MemPoolAccept::PackageRBFChecks(const std::vector<CTransactionRef>& txns,
                                      "package RBF failed: too many potential replacements", *err_string);
     }
 
+    if (!package_feerates) {
+        for (const auto& ws : workspaces) {
+            for (const auto& ancestor : m_subpackage.m_changeset->CalculateMemPoolAncestors(ws.m_tx_handle)) {
+                if (all_conflicts.contains(ancestor)) {
+                    return package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package RBF failed: replaces an ancestor of the package");
+                }
+            }
+        }
+    }
+
     for (CTxMemPool::txiter it : all_conflicts) {
         m_subpackage.m_changeset->StageRemoval(it);
         m_subpackage.m_conflicting_fees += it->GetModifiedFee();
@@ -1101,7 +1128,7 @@ bool MemPoolAccept::PackageRBFChecks(const std::vector<CTransactionRef>& txns,
     // to be only paying anti-DoS fees
     const CFeeRate parent_feerate(parent_ws.m_modified_fees, parent_ws.m_vsize);
     const CFeeRate package_feerate(m_subpackage.m_total_modified_fees, m_subpackage.m_total_vsize);
-    if (package_feerate <= parent_feerate) {
+    if (package_feerates && package_feerate <= parent_feerate) {
         return package_state.Invalid(PackageValidationResult::PCKG_POLICY,
                                      "package RBF failed: package feerate is less than or equal to parent feerate",
                                      strprintf("package feerate %s <= parent feerate is %s", package_feerate.ToString(), parent_feerate.ToString()));
@@ -1510,7 +1537,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactionsInternal(con
     }
 
     // Apply package mempool RBF checks.
-    if (m_subpackage.m_rbf && !PackageRBFChecks(txns, workspaces, package_state)) {
+    if (m_subpackage.m_rbf && !PackageRBFChecks(txns, workspaces, package_state, args.m_package_feerates)) {
         return PackageMempoolAcceptResult(package_state, std::move(results));
     }
 
@@ -1714,8 +1741,31 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
         }
     }
 
-    auto multi_submission_result = quit_early || txns_package_eval.empty() ? PackageMempoolAcceptResult(package_state_quit_early, {}) :
-        AcceptSubPackage(txns_package_eval, args);
+    // A test does not stage a transaction that passes alone, so the rest could not spend it. Test the
+    // new transactions together instead, each paying for itself: this accepts what submitting them
+    // in turn would, and a little more. Those that passed alone keep their own results.
+    std::vector<CTransactionRef> txns_alone;
+    if (args.m_test_accept && !quit_early) {
+        for (size_t i{0}; i + 1 < package.size(); ++i) {
+            const auto it{results_final.find(package[i]->GetWitnessHash())};
+            if (it != results_final.end() && it->second.m_result_type == MempoolAcceptResult::ResultType::VALID) txns_alone.push_back(package[i]);
+        }
+    }
+    auto multi_submission_result = [&]() EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_pool.cs) {
+        if (!txns_alone.empty()) {
+            std::vector<CTransactionRef> txns_new;
+            for (const auto& tx : package) {
+                const auto it{results_final.find(tx->GetWitnessHash())};
+                if (it == results_final.end() || it->second.m_result_type == MempoolAcceptResult::ResultType::VALID) txns_new.push_back(tx);
+            }
+            auto args_each{ATMPArgs::PackageTestEach(args)};
+            auto result{AcceptSubPackage(txns_new, args_each)};
+            for (const auto& tx : txns_alone) result.m_tx_results.erase(tx->GetWitnessHash());
+            return result;
+        }
+        return quit_early || txns_package_eval.empty() ? PackageMempoolAcceptResult(package_state_quit_early, {}) :
+            AcceptSubPackage(txns_package_eval, args);
+    }();
     PackageValidationState& package_state_final = multi_submission_result.m_state;
     // A failed test may have passed some transactions before the one that failed. Submission accepts
     // none of them, so report their individual results instead.
