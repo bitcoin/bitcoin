@@ -917,6 +917,18 @@ BOOST_AUTO_TEST_CASE(package_cpfp_tests)
         }
     }
 
+    // Deltas near INT64_MIN on both: the package's modified fees add up saturating, so the package
+    // is refused rather than its fee wrapping around to a large positive one.
+    m_node.mempool->PrioritiseTransaction(tx_child->GetHash(), -5'000'000'000'000'000'000);
+    m_node.mempool->PrioritiseTransaction(tx_parent->GetHash(), -5'000'000'000'000'000'000 - (child_value - coinbase_value));
+    {
+        const auto submit_overflow = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
+                                                       package_cpfp, /*test_accept=*/ false, /*client_maxfeerate=*/{});
+        BOOST_CHECK(submit_overflow.m_state.IsInvalid());
+        BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
+    }
+    WITH_LOCK(m_node.mempool->cs, m_node.mempool->ClearPrioritisation(tx_child->GetHash()));
+
     // Clear the prioritisation of the parent transaction.
     WITH_LOCK(m_node.mempool->cs, m_node.mempool->ClearPrioritisation(tx_parent->GetHash()));
 

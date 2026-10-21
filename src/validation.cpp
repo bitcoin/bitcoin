@@ -55,6 +55,7 @@
 #include <util/hasher.h>
 #include <util/log.h>
 #include <util/moneystr.h>
+#include <util/overflow.h>
 #include <util/rbf.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
@@ -1493,7 +1494,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactionsInternal(con
     m_subpackage.m_total_vsize = std::accumulate(workspaces.cbegin(), workspaces.cend(), int64_t{0},
         [](int64_t sum, auto& ws) { return sum + ws.m_vsize; });
     m_subpackage.m_total_modified_fees = std::accumulate(workspaces.cbegin(), workspaces.cend(), CAmount{0},
-        [](CAmount sum, auto& ws) { return sum + ws.m_modified_fees; });
+        [](CAmount sum, auto& ws) { return SaturatingAdd(sum, ws.m_modified_fees); });
     const CFeeRate package_feerate(m_subpackage.m_total_modified_fees, m_subpackage.m_total_vsize);
     std::vector<Wtxid> all_package_wtxids;
     all_package_wtxids.reserve(workspaces.size());
