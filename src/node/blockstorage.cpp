@@ -1235,7 +1235,7 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
     }
 
     // scan for better chains in the block chain database, that are not yet connected in the active best chain
-    if (auto result = chainman.ActivateBestChains(); !result) {
+    if (auto result = chainman.ActivateBestChain(); !result) {
         chainman.GetNotifications().fatalError(util::ErrorString(result));
     }
     // End scope of ImportingNow
