@@ -147,6 +147,22 @@ void DirectoryCommit(const fs::path& dirname)
 #endif
 }
 
+bool DirectoryFilesCommit(const fs::path& dirname)
+{
+    bool success = true;
+    for (const auto& entry : fs::directory_iterator{dirname}) {
+        if (!entry.is_regular_file()) continue;
+        FILE* file{fsbridge::fopen(entry.path(), "rb+")};
+        if (file) {
+            if (!FileCommit(file)) success = false;
+            fclose(file);
+        } else {
+            success = false;
+        }
+    }
+    return success;
+}
+
 bool TruncateFile(FILE* file, unsigned int length)
 {
 #if defined(WIN32)
