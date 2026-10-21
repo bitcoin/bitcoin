@@ -527,7 +527,7 @@ public:
                             /*coins_to_uncache=*/ coins_to_uncache,
                             /*test_accept=*/ test_accept,
                             /*allow_replacement=*/ true,
-                            /*allow_sibling_eviction=*/ test_accept,
+                            /*allow_sibling_eviction=*/ false,
                             /*package_submission=*/ true,
                             /*package_feerates=*/ true,
                             /*client_maxfeerate=*/ client_maxfeerate,
@@ -574,7 +574,7 @@ public:
             // Sibling eviction may still trigger in specific testing path
             if (m_package_feerates) {
                 Assume(m_package_submission);
-                Assume(!m_allow_sibling_eviction || m_test_accept);
+                Assume(!m_allow_sibling_eviction);
             }
             if (m_allow_sibling_eviction) Assume(m_allow_replacement);
         }
@@ -1547,6 +1547,16 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactionsInternal(con
         }
     }
 
+    const auto add_test_success{[&](Workspace& ws) {
+        const auto effective_feerate = args.m_package_feerates ? ws.m_package_feerate :
+            CFeeRate{ws.m_modified_fees, static_cast<int32_t>(ws.m_vsize)};
+        const auto effective_feerate_wtxids = args.m_package_feerates ? all_package_wtxids :
+            std::vector<Wtxid>{ws.m_ptx->GetWitnessHash()};
+        results.emplace(ws.m_ptx->GetWitnessHash(),
+                        MempoolAcceptResult::Success(std::move(m_subpackage.m_replaced_transactions),
+                                                     ws.m_vsize, ws.m_base_fees, effective_feerate,
+                                                     effective_feerate_wtxids));
+    }};
     for (Workspace& ws : workspaces) {
         ws.m_package_feerate = package_feerate;
         if (!PolicyScriptChecks(ws)) {
@@ -1555,16 +1565,11 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactionsInternal(con
             results.emplace(ws.m_ptx->GetWitnessHash(), MempoolAcceptResult::Failure(ws.m_state));
             return PackageMempoolAcceptResult(package_state, std::move(results));
         }
-        if (args.m_test_accept) {
-            const auto effective_feerate = args.m_package_feerates ? ws.m_package_feerate :
-                CFeeRate{ws.m_modified_fees, static_cast<int32_t>(ws.m_vsize)};
-            const auto effective_feerate_wtxids = args.m_package_feerates ? all_package_wtxids :
-                std::vector<Wtxid>{ws.m_ptx->GetWitnessHash()};
-            results.emplace(ws.m_ptx->GetWitnessHash(),
-                            MempoolAcceptResult::Success(std::move(m_subpackage.m_replaced_transactions),
-                                                         ws.m_vsize, ws.m_base_fees, effective_feerate,
-                                                         effective_feerate_wtxids));
-        }
+        if (args.m_test_accept && !args.m_package_feerates) add_test_success(ws);
+    }
+    // With package feerates the package is accepted whole or not at all, as submission accepts it.
+    if (args.m_test_accept && args.m_package_feerates) {
+        for (Workspace& ws : workspaces) add_test_success(ws);
     }
 
     if (args.m_test_accept) return PackageMempoolAcceptResult(package_state, std::move(results));

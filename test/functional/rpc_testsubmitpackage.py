@@ -80,6 +80,8 @@ class TestSubmitPackageTest(BitcoinTestFramework):
         self.test_truc_version_mismatch()
         self.test_insufficient_package_feerate()
         self.test_truc_sibling_eviction()
+        self.test_truc_parent_with_mempool_sibling()
+        self.test_child_script_failure()
         self.test_single_tx_basic()
         self.test_single_tx_rbf()
         self.test_single_tx_truc_sibling_eviction()
@@ -544,6 +546,32 @@ class TestSubmitPackageTest(BitcoinTestFramework):
         assert new_child["txid"] not in node.getrawmempool()
 
         self.generate(self.wallet, 1)
+
+    def test_truc_parent_with_mempool_sibling(self):
+        self.log.info("TRUC parent whose in-mempool parent already has a child: rejected as submitpackage rejects it")
+        node = self.nodes[0]
+        grandparent = self.wallet.send_self_transfer_multi(from_node=node, num_outputs=2, version=3)
+        self.wallet.send_self_transfer(from_node=node, utxo_to_spend=grandparent["new_utxos"][0], version=3)
+        parent, child = self._make_1p1c_cpfp(parent_kwargs={"utxo_to_spend": grandparent["new_utxos"][1], "version": 3},
+                                             child_kwargs={"version": 3})
+        package = [parent["hex"], child["hex"]]
+        result = node.testsubmitpackage(package)
+        assert_equal(result, node.submitpackage(package))
+        assert_equal(result["package_msg"], "transaction failed")
+        assert result["tx-results"][parent["wtxid"]]["error"].startswith("TRUC-violation")
+        self.generate(self.wallet, 1)
+
+    def test_child_script_failure(self):
+        self.log.info("Child failing its script checks: the parent is reported as submitpackage reports it")
+        node = self.nodes[0]
+        parent, child = self._make_1p1c_cpfp()
+        child["tx"].wit.vtxinwit[0].scriptWitness.stack = [bytes(CScript([OP_0]))]
+        package = [parent["hex"], child["tx"].serialize().hex()]
+        result = node.testsubmitpackage(package)
+        assert_equal(result, node.submitpackage(package))
+        assert_equal(result["package_msg"], "transaction failed")
+        assert result["tx-results"][parent["wtxid"]]["error"].startswith("min relay fee not met")
+        assert "script-verify-flag-failed" in result["tx-results"][child["tx"].wtxid_hex]["error"]
 
     def test_single_tx_basic(self):
         self.log.info("Single tx: clean accept routes through SingleInPackageAccept")
