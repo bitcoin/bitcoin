@@ -6,9 +6,87 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
+#include <optional>
+#include <tuple>
 
 BOOST_AUTO_TEST_SUITE(headerssync_tests)
+
+namespace {
+
+/** Compute the expected number of forged headers an attacker can get accepted per attack.
+ *
+ * This is a naive implementation that computes the expected value by averaging over all possible
+ * values of the offset. See the comment on real_bufsize inside ComputeHeadersSyncParamsInner in
+ * headerssync.cpp.
+ */
+double AttackRateNaive(int64_t period, int64_t bufsize)
+{
+    double accepted{0};
+    for (int64_t offset = 0; offset < period; ++offset) {
+        const int64_t c = (bufsize - offset + period - 1) / period;
+        accepted += std::ldexp(offset + period * c - bufsize + period, -int(c));
+    }
+    return accepted / period;
+}
+
+/** Compute the expected number of forged headers an attacker can get accepted per attack.
+ *
+ * This uses the efficient closed-form expression derived in the comment on real_bufsize inside
+ * ComputeHeadersSyncParamsInner in headerssync.cpp.
+ */
+double AttackRate(int64_t period, int64_t bufsize) noexcept
+{
+    const int64_t k = bufsize / period;
+    const int64_t m = bufsize % period;
+    /** Expected accepted headers, given the first k checks pass. */
+    const double expected_headers = (period * (6.0 * period - 4.0 * m - 2.0) + m * (m + 1.0)) / (4.0 * period);
+    return std::ldexp(expected_headers, -int(k));
+}
+
+/** Verify by brute force and mild heuristics that a (period, bufsize) configuration really is the
+ *  memory optimum. */
+void CheckOptimal(int64_t max_headers, int64_t minchainwork_headers, double attack_headers,
+                  int64_t expected_period, int64_t expected_bufsize)
+{
+    constexpr int64_t COMPACT_HEADER_SIZE = sizeof(CompressedHeader) * 8;
+    /** The best (period, bufsize, memory) solution so far. */
+    std::optional<std::tuple<int64_t, int64_t, int64_t>> best;
+    int64_t bufsize = 1;
+    for (int64_t period = 1; period <= minchainwork_headers; ++period) {
+        // Stop when the minimum amount of memory just due to the redownload buffer at this period
+        // is already more than the best so far. Larger periods can only increase it further, as the
+        // bound below grows with the period wherever it is positive.
+        //
+        // The formula is a lower bound on the bufsize every acceptable solution at this period
+        // needs. The attack rate always exceeds 2^-floor(bufsize/period) * (3*period - 1) / 4 (see
+        // the bounds on the attack rate in headerssync.cpp), and the floor is at most
+        // bufsize/period.
+        const double min_bufsize = period * std::log2((3.0 * period - 1.0) / (4.0 * attack_headers));
+        if (best.has_value() && min_bufsize * COMPACT_HEADER_SIZE > std::get<2>(*best)) break;
+        // Find the lowest bufsize at this period with acceptable attack rate. The efficient formula
+        // is used here, as the naive one would be far too slow.
+        while (AttackRate(period, bufsize) >= attack_headers) ++bufsize;
+        // In the loop above, we reuse the previous period's bufsize as starting point because the
+        // attack rate at a fixed bufsize never decreases as the period grows. Verify that by
+        // checking that {bufsize - 1, bufsize} is indeed the boundary for acceptable attack rate
+        // (for bufsize 1 that means an empty buffer, which is never acceptable).
+        BOOST_CHECK_GE(AttackRate(period, bufsize - 1), attack_headers);
+        // Compute the exact memory usage, and remember the best one.
+        const int64_t mem = std::max(max_headers / period, minchainwork_headers / period + bufsize * COMPACT_HEADER_SIZE);
+        if (!best.has_value() || mem < std::get<2>(*best)) best = {period, bufsize, mem};
+    }
+    BOOST_CHECK_EQUAL(expected_period, std::get<0>(*best));
+    BOOST_CHECK_EQUAL(expected_bufsize, std::get<1>(*best));
+    // Verify that the found optimal bufsize is indeed at the boundary for its period, using the
+    // naive attack rate implementation (unlike the loop above, which uses the closed-form formula).
+    BOOST_CHECK_LT(AttackRateNaive(expected_period, expected_bufsize), attack_headers);
+    BOOST_CHECK_GE(AttackRateNaive(expected_period, expected_bufsize - 1), attack_headers);
+}
+
+} // namespace
 
 // Test vectors checking that ComputeHeadersSyncParamsInner() finds the optimal (period, bufsize)
 // configuration, each a tuple containing:
@@ -96,7 +174,7 @@ BOOST_AUTO_TEST_SUITE(headerssync_tests)
 
 BOOST_AUTO_TEST_CASE(compute_headers_sync_params)
 {
-    const struct {
+    constexpr struct {
         int64_t max_headers;
         int64_t minchainwork_headers;
         double attack_headers;
@@ -155,9 +233,13 @@ BOOST_AUTO_TEST_CASE(compute_headers_sync_params)
         {2762151481, 103252, 1.7805562892829343e-06, 501, 14355},
     };
     for (const auto& cas : cases) {
-        const auto [period, bufsize] = ComputeHeadersSyncParamsInner(cas.max_headers, cas.minchainwork_headers, cas.attack_headers);
+        const auto [period, bufsize] = ComputeHeadersSyncParamsInner(
+            cas.max_headers, cas.minchainwork_headers, cas.attack_headers);
         BOOST_CHECK_EQUAL(period, cas.expected_period);
         BOOST_CHECK_EQUAL(bufsize, cas.expected_bufsize);
+        // Verify that the expected values are indeed optimal.
+        CheckOptimal(cas.max_headers, cas.minchainwork_headers, cas.attack_headers,
+                     cas.expected_period, cas.expected_bufsize);
     }
 }
 
