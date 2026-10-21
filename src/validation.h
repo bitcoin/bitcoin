@@ -741,12 +741,6 @@ public:
         return m_mempool ? &m_mempool->cs : nullptr;
     }
 
-    //! Return the [start, end] (inclusive) of block heights we can prune.
-    //!
-    //! start > end is possible, meaning no blocks can be pruned.
-    // TODO: Return only the upper bound now that pruning always starts at genesis
-    std::pair<int, int> GetPruneRange(int last_height_can_prune) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
 protected:
     bool ActivateBestChainStep(BlockValidationState& state, CBlockIndex& index_most_work, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, std::vector<ConnectedBlock>& connected_blocks) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);
     bool ConnectTip(

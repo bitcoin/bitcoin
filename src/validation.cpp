@@ -2684,11 +2684,11 @@ bool Chainstate::FlushStateToDisk(
                 m_blockman.FindFilesToPruneManual(
                     setFilesToPrune,
                     std::min(last_prune, nManualPruneHeight),
-                    *this);
+                    m_chain.Height());
             } else {
                 LOG_TIME_MILLIS_WITH_CATEGORY("find files to prune", BCLog::BENCH);
 
-                m_blockman.FindFilesToPrune(setFilesToPrune, last_prune, *this, m_chainman);
+                m_blockman.FindFilesToPrune(setFilesToPrune, last_prune, m_chain.Height(), m_chainman);
                 m_blockman.m_check_for_pruning = false;
             }
             if (!setFilesToPrune.empty()) {
@@ -5361,20 +5361,6 @@ std::optional<int> ChainstateManager::BlocksAheadOfTip() const
         return best_header->nHeight - tip->nHeight;
     }
     return std::nullopt;
-}
-
-std::pair<int, int> Chainstate::GetPruneRange(int last_height_can_prune) const
-{
-    if (m_chain.Height() <= 0) {
-        return {0, 0};
-    }
-    int max_prune = std::max<int>(
-        0, m_chain.Height() - static_cast<int>(MIN_BLOCKS_TO_KEEP));
-
-    // last block to prune is the lesser of (caller-specified height, MIN_BLOCKS_TO_KEEP from the tip)
-    int prune_end = std::min(last_height_can_prune, max_prune);
-
-    return {0, prune_end};
 }
 
 util::Result<void> ChainstateManager::ActivateBestChains()
