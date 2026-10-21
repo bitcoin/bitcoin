@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(check_null_smart_pointer)
     static_assert(!std::is_nothrow_constructible_v<util::NotNullSharedPtr<int>, std::unique_ptr<int>>);
     test_only_CheckFailuresAreExceptionsNotAborts mock_checks{};
     BOOST_CHECK_EXCEPTION(util::NotNullSharedPtr<int>{std::unique_ptr<int>{nullptr}}, NonFatalCheckError,
-                          HasReason{"Internal bug detected: m_ptr != nullptr"});
+                          HasReason{"Internal bug detected: `m_ptr != nullptr` check failed"});
 }
 
 template <class P>
