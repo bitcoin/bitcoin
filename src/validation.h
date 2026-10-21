@@ -730,8 +730,6 @@ public:
         size_t max_coins_cache_size_bytes,
         size_t max_mempool_size_bytes) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    std::string ToString() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
     //! Get the last block that was flushed to disk.
     const CBlockIndex* GetLastFlushedBlock() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main) { return m_last_flushed_block; }
 
@@ -1076,7 +1074,7 @@ public:
     void ReportHeadersPresync(int64_t height, int64_t timestamp);
 
     //! Call ActivateBestChain() on the active chainstate.
-    util::Result<void> ActivateBestChains() LOCKS_EXCLUDED(::cs_main);
+    util::Result<void> ActivateBestChain() LOCKS_EXCLUDED(::cs_main);
 
     //! If, due to invalidation / reconsideration of blocks, the previous
     //! best header is no longer valid / guaranteed to be the most-work

@@ -97,7 +97,6 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     // block tree into BlockIndex()!
 
     Chainstate& chainstate{chainman.ActiveChainstate()};
-    LogInfo("Initializing chainstate %s", chainstate.ToString());
 
     try {
         chainstate.InitCoinsDB(

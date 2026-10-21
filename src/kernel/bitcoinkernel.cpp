@@ -1291,7 +1291,7 @@ btck_ChainstateManager* btck_chainstate_manager_create(
             LogError("Failed to verify loaded chain state from your datadir: %s", chainstate_err.original);
             return nullptr;
         }
-        if (auto result = chainman->ActivateBestChains(); !result) {
+        if (auto result = chainman->ActivateBestChain(); !result) {
             LogError("%s", util::ErrorString(result).original);
             return nullptr;
         }

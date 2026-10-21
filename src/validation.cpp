@@ -4900,7 +4900,7 @@ void ChainstateManager::LoadExternalBlockFile(
                     // until after all of the block files are loaded. ActivateBestChain can be
                     // called by concurrent network message processing. but, that is not
                     // reliable for the purpose of pruning while importing.
-                    if (auto result{ActivateBestChains()}; !result) {
+                    if (auto result{ActivateBestChain()}; !result) {
                         LogDebug(BCLog::REINDEX, "%s\n", util::ErrorString(result).original);
                         break;
                     }
@@ -5231,14 +5231,6 @@ void ChainstateManager::CheckBlockIndex() const
     assert(nNodes == forward.size() + best_hdr_chain.Height() + 1);
 }
 
-std::string Chainstate::ToString()
-{
-    AssertLockHeld(::cs_main);
-    CBlockIndex* tip = m_chain.Tip();
-    return strprintf("Chainstate [ibd] @ height %d (%s)",
-                     tip ? tip->nHeight : -1, tip ? tip->GetBlockHash().ToString() : "null");
-}
-
 double ChainstateManager::GuessVerificationProgress(const CBlockIndex* pindex) const
 {
     AssertLockHeld(GetMutex());
@@ -5357,14 +5349,12 @@ std::optional<int> ChainstateManager::BlocksAheadOfTip() const
     return std::nullopt;
 }
 
-util::Result<void> ChainstateManager::ActivateBestChains()
+util::Result<void> ChainstateManager::ActivateBestChain()
 {
     AssertLockNotHeld(cs_main);
-    Chainstate& chainstate{ActiveChainstate()};
     BlockValidationState state;
-    if (!chainstate.ActivateBestChain(state, nullptr)) {
-        LOCK(GetMutex());
-        return util::Error{Untranslated(strprintf("%s Failed to connect best block (%s)", chainstate.ToString(), state.ToString()))};
+    if (!ActiveChainstate().ActivateBestChain(state, nullptr)) {
+        return util::Error{Untranslated(strprintf("Failed to connect best block (%s)", state.ToString()))};
     }
     return {};
 }
