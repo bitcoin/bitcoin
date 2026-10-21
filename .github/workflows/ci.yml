@@ -146,11 +146,9 @@ jobs:
 
       - name: Clang version
         run: |
-          # Use the latest Xcode supported by the version of macOS denoted in
-          # doc/release-notes-empty-template.md and providing at least the
-          # minimum clang version denoted in doc/dependencies.md.
-          # See: https://developer.apple.com/documentation/xcode-release-notes/xcode-16_2-release-notes
-          sudo xcode-select --switch /Applications/Xcode_16.2.app
+          # Use the minimum Xcode version denoted in doc/dependencies.md.
+          # See: https://developer.apple.com/documentation/xcode-release-notes/xcode-26_3-release-notes
+          sudo xcode-select --switch /Applications/Xcode_26.3.app
           clang --version
 
       - name: Install Homebrew packages
