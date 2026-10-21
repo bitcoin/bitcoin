@@ -522,6 +522,22 @@ def initialize_datadir(dirname, n, chain, disable_autoconnect=True):
     return datadir
 
 
+# Limit max connections to mitigate test failures on some systems caused by the warning:
+# "Warning: Reducing -maxconnections from <...> to <...> due to system limitations".
+# For details, consult the `AppInitParameterInteraction` function in src/init.cpp.
+#  available_fds = 256                // Same as FD_SETSIZE on NetBSD.
+#  MIN_CORE_FDS = 151                 // Number of file descriptors required for core functionality.
+#  MAX_ADDNODE_CONNECTIONS = 8        // Maximum number of -addnode outgoing nodes.
+#  num_p2p_bind = 3                   // Maximum number of bound P2P interfaces (-bind and -whitebind) used in a test.
+#  num_rpc_bind = 2                   // Maximum number of HTTP sockets used in a test.
+#  DEFAULT_MAX_HTTP_CONNECTIONS = 16  // Reserved for connected HTTP clients.
+#
+#  min_required_fds = MIN_CORE_FDS + MAX_ADDNODE_CONNECTIONS + num_p2p_bind + num_rpc_bind + DEFAULT_MAX_HTTP_CONNECTIONS =
+#    = 151 + 8 + 3 + 2 + 16 = 180;
+#  num_p2p_max_connections = available_fds - min_required_fds = 256 - 180 = 76;
+TEST_MAX_P2P_CONNECTIONS = 76
+
+
 def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=True):
     # Translate chain name to config name
     if chain == 'main':
@@ -563,20 +579,7 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
         f.write("unsafesqlitesync=1\n")
         if disable_autoconnect:
             f.write("connect=0\n")
-        # Limit max connections to mitigate test failures on some systems caused by the warning:
-        # "Warning: Reducing -maxconnections from <...> to <...> due to system limitations".
-        # For details, consult the `AppInitParameterInteraction` function in src/init.cpp.
-        #  available_fds = 256                // Same as FD_SETSIZE on NetBSD.
-        #  MIN_CORE_FDS = 151                 // Number of file descriptors required for core functionality.
-        #  MAX_ADDNODE_CONNECTIONS = 8        // Maximum number of -addnode outgoing nodes.
-        #  num_p2p_bind = 3                   // Maximum number of bound P2P interfaces (-bind and -whitebind) used in a test.
-        #  num_rpc_bind = 2                   // Maximum number of HTTP sockets used in a test.
-        #  DEFAULT_MAX_HTTP_CONNECTIONS = 16  // Reserved for connected HTTP clients.
-        #
-        #  min_required_fds = MIN_CORE_FDS + MAX_ADDNODE_CONNECTIONS + num_p2p_bind + num_rpc_bind + DEFAULT_MAX_HTTP_CONNECTIONS =
-        #    = 151 + 8 + 3 + 2 + 16 = 180;
-        #  num_p2p_max_connections = available_fds - min_required_fds = 256 - 180 = 76;
-        f.write("maxconnections=76\n")
+        f.write(f"maxconnections={TEST_MAX_P2P_CONNECTIONS}\n")
         f.write("par=" + str(min(2, os.cpu_count())) + "\n")
         # Use a single prevoutfetch worker thread to keep per-node resource usage low.
         f.write("prevoutfetchthreads=1\n")
