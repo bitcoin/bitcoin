@@ -21,9 +21,6 @@ public:
     QVariant value() const;
     void setValue(const QVariant &value);
 
-    /** Specify model role to use as ordinal value (defaults to Qt::UserRole) */
-    void setRole(int role);
-
 Q_SIGNALS:
     void valueChanged();
 

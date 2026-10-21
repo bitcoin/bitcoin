@@ -232,11 +232,6 @@ namespace BCLog {
             STDLOCK(m_cs);
             m_category_log_levels = levels;
         }
-        void AddCategoryLogLevel(LogFlags category, Level level) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
-        {
-            STDLOCK(m_cs);
-            m_category_log_levels[category] = level;
-        }
         bool SetCategoryLogLevel(std::string_view category_str, std::string_view level_str) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         Level LogLevel() const { return m_log_level.load(); }

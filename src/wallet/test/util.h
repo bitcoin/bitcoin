@@ -151,7 +151,6 @@ private:
 };
 
 std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase();
-MockableSQLiteDatabase& GetMockableDatabase(CWallet& wallet);
 
 DescriptorScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std::string& desc_str, bool success);
 } // namespace wallet

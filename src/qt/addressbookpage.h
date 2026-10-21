@@ -78,9 +78,6 @@ private Q_SLOTS:
     void contextualMenu(const QPoint &point);
     /** New entry/entries were added to address table */
     void selectNewAddress(const QModelIndex &parent, int begin, int /*end*/);
-
-Q_SIGNALS:
-    void sendCoins(QString addr);
 };
 
 #endif // BITCOIN_QT_ADDRESSBOOKPAGE_H

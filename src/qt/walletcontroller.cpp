@@ -44,7 +44,6 @@ WalletController::WalletController(ClientModel& client_model, const PlatformStyl
     , m_client_model(client_model)
     , m_node(client_model.node())
     , m_platform_style(platform_style)
-    , m_options_model(client_model.getOptionsModel())
 {
     m_handler_load_wallet = m_node.walletLoader().handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) {
         getOrCreateWallet(std::move(wallet));
