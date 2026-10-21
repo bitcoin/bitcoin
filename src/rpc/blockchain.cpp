@@ -4,7 +4,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <rpc/blockchain.h>
-#include <rpc/register.h> // IWYU pragma: associated
 
 #include <arith_uint256.h>
 #include <blockfilter.h>
@@ -28,13 +27,11 @@
 #include <interfaces/types.h>
 #include <kernel/coinstats.h>
 #include <logging/timer.h>
-#include <net.h>
 #include <net_processing.h>
 #include <net_types.h>
 #include <node/block_template_manager.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
-#include <node/utxo_snapshot.h>
 #include <node/warnings.h>
 #include <policy/feerate.h>
 #include <prevector.h>
@@ -42,6 +39,7 @@
 #include <primitives/transaction.h>
 #include <rpc/protocol.h>
 #include <rpc/rawtransaction_util.h>
+#include <rpc/register.h> // IWYU pragma: associated
 #include <rpc/request.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
@@ -100,16 +98,26 @@ using kernel::CoinStatsHashType;
 using interfaces::BlockRef;
 using node::BlockManager;
 using node::NodeContext;
-using node::SnapshotMetadata;
 using util::MakeUnorderedList;
 
-std::tuple<std::unique_ptr<CCoinsViewCursor>, CCoinsStats, const CBlockIndex*>
+/**
+ * Helper to create UTXO snapshots given a chainstate and a file handle.
+ * @return a UniValue map containing metadata about the snapshot.
+ */
+static UniValue CreateUTXOSnapshot(
+    node::NodeContext& node,
+    Chainstate& chainstate,
+    AutoFile&& afile,
+    const fs::path& path,
+    const fs::path& tmppath);
+
+static std::tuple<std::unique_ptr<CCoinsViewCursor>, CCoinsStats, const CBlockIndex*>
 PrepareUTXOSnapshot(
     Chainstate& chainstate,
-    const std::function<void()>& interruption_point = {})
+    const std::function<void()>& interruption_point)
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-UniValue WriteUTXOSnapshot(
+static UniValue WriteUTXOSnapshot(
     Chainstate& chainstate,
     CCoinsViewCursor* pcursor,
     CCoinsStats* maybe_stats,
@@ -117,9 +125,9 @@ UniValue WriteUTXOSnapshot(
     AutoFile&& afile,
     const fs::path& path,
     const fs::path& temppath,
-    const std::function<void()>& interruption_point = {});
+    const std::function<void()>& interruption_point);
 
-UniValue CreateRolledBackUTXOSnapshot(
+static UniValue CreateRolledBackUTXOSnapshot(
     NodeContext& node,
     Chainstate& chainstate,
     const CBlockIndex* target,
@@ -3052,8 +3060,6 @@ public:
 
 /**
  * Serialize the UTXO set to a file for loading elsewhere.
- *
- * @see SnapshotMetadata
  */
 static RPCMethod dumptxoutset()
 {
@@ -3189,7 +3195,7 @@ public:
     }
 };
 
-UniValue CreateRolledBackUTXOSnapshot(
+static UniValue CreateRolledBackUTXOSnapshot(
     NodeContext& node,
     Chainstate& chainstate,
     const CBlockIndex* target,
@@ -3327,7 +3333,7 @@ UniValue CreateRolledBackUTXOSnapshot(
                              node.rpc_interruption_point);
 }
 
-std::tuple<std::unique_ptr<CCoinsViewCursor>, CCoinsStats, const CBlockIndex*>
+static std::tuple<std::unique_ptr<CCoinsViewCursor>, CCoinsStats, const CBlockIndex*>
 PrepareUTXOSnapshot(
     Chainstate& chainstate,
     const std::function<void()>& interruption_point)
@@ -3365,7 +3371,7 @@ PrepareUTXOSnapshot(
     return {std::move(pcursor), *CHECK_NONFATAL(maybe_stats), tip};
 }
 
-UniValue WriteUTXOSnapshot(
+static UniValue WriteUTXOSnapshot(
     Chainstate& chainstate,
     CCoinsViewCursor* pcursor,
     CCoinsStats* maybe_stats,
@@ -3379,9 +3385,10 @@ UniValue WriteUTXOSnapshot(
         tip->nHeight, tip->GetBlockHash().ToString(),
         fs::PathToString(path), fs::PathToString(temppath)));
 
-    SnapshotMetadata metadata{chainstate.m_chainman.GetParams().MessageStart(), tip->GetBlockHash(), maybe_stats->coins_count};
-
-    afile << metadata;
+    // Preserve the version 2 export header for existing snapshot readers.
+    afile << std::array<uint8_t, 5>{'u', 't', 'x', 'o', 0xff} << uint16_t{2};
+    afile << chainstate.m_chainman.GetParams().MessageStart();
+    afile << tip->GetBlockHash() << maybe_stats->coins_count;
 
     COutPoint key;
     Txid last_hash;
@@ -3444,7 +3451,7 @@ UniValue WriteUTXOSnapshot(
     return result;
 }
 
-UniValue CreateUTXOSnapshot(
+static UniValue CreateUTXOSnapshot(
     node::NodeContext& node,
     Chainstate& chainstate,
     AutoFile&& afile,
