@@ -2,10 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <merkleblock.h>
 #include <serialize.h>
 #include <streams.h>
+#include <test/util/common.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
@@ -123,6 +125,44 @@ BOOST_AUTO_TEST_CASE(pmt_malleability)
     CPartialMerkleTree tree(vTxid, vMatch);
     std::vector<unsigned int> vIndex;
     BOOST_CHECK(tree.ExtractMatches(vTxid, vIndex).IsNull());
+}
+
+BOOST_AUTO_TEST_CASE(pmt_malformed)
+{
+    // Deserialize a partial merkle tree with the given fields and extract its matches.
+    const auto extract{[](uint32_t tx_count, uint32_t hash_count, std::vector<unsigned char> bits) {
+        std::vector<uint256> hashes;
+        for (uint32_t i{1}; i <= hash_count; ++i) hashes.emplace_back(i);
+        DataStream ss;
+        ss << tx_count << hashes << bits;
+        CPartialMerkleTree tree;
+        ss >> tree;
+        std::vector<Txid> matches;
+        std::vector<unsigned int> indexes;
+        return tree.ExtractMatches(matches, indexes);
+    }};
+
+    // The transaction count is limited to MAX_BLOCK_WEIGHT / MIN_TRANSACTION_WEIGHT.
+    constexpr uint32_t max_tx_count{MAX_BLOCK_WEIGHT / MIN_TRANSACTION_WEIGHT};
+    static_assert(max_tx_count == 16666);
+    BOOST_CHECK_EQUAL(extract(max_tx_count, 1, {0x00}), uint256{1});
+    BOOST_CHECK(extract(max_tx_count + 1, 1, {0x00}).IsNull());
+    // An empty tree, more hashes than transactions, and fewer bits than hashes are
+    // rejected before traversal. Traversal would reject each of them anyway, so these
+    // check the result, not the early returns.
+    BOOST_CHECK(extract(0, 0, {0x00}).IsNull());
+    BOOST_CHECK(extract(1, 2, {0x00}).IsNull());
+    BOOST_CHECK(extract(9, 9, {0xff}).IsNull());
+    // Traversal runs out of hashes: the root is a parent of a match, so both of its
+    // leaves need a hash, but only one is provided.
+    BOOST_CHECK(extract(2, 1, {0x01}).IsNull());
+    // Traversal runs out of bits: eight bits reach the third leaf but not the fourth.
+    BOOST_CHECK(extract(16, 8, {0xff}).IsNull());
+    // Not all bits are consumed: a second byte of bits is more than padding.
+    BOOST_CHECK(extract(1, 1, {0x00, 0x00}).IsNull());
+    // Not all hashes are consumed: the root is not a parent of a match, so only its
+    // own hash is used.
+    BOOST_CHECK(extract(2, 2, {0x00}).IsNull());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

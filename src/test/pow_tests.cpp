@@ -202,6 +202,23 @@ BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_zero_target)
     BOOST_CHECK(!CheckProofOfWork(hash, nBits, consensus));
 }
 
+BOOST_AUTO_TEST_CASE(GetBitsProof_test)
+{
+    // Targets that are zero, negative or overflow encode no work.
+    BOOST_CHECK_EQUAL(GetBitsProof(0x00000000), arith_uint256{0});
+    BOOST_CHECK_EQUAL(GetBitsProof(0x01003456), arith_uint256{0});
+    BOOST_CHECK_EQUAL(GetBitsProof(0x04923456), arith_uint256{0});
+    BOOST_CHECK_EQUAL(GetBitsProof(0xff123456), arith_uint256{0});
+    // The exponent byte is unsigned, so this is a large exponent that overflows.
+    BOOST_CHECK_EQUAL(GetBitsProof(0x80010203), arith_uint256{0});
+    // The two overflows above shift every mantissa bit out of 256 bits, so they would
+    // also give zero work without the overflow check. This one keeps the low bits of
+    // its mantissa when truncated.
+    BOOST_CHECK_EQUAL(GetBitsProof(0x21012345), arith_uint256{0});
+    // The genesis block target.
+    BOOST_CHECK_EQUAL(GetBitsProof(0x1d00ffff), arith_uint256{0x100010001});
+}
+
 BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
