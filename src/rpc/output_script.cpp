@@ -16,11 +16,15 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
+#include <script/descriptor_analysis.h>
+#include <script/miniscript.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
 #include <tinyformat.h>
 #include <univalue.h>
+#include <util/bip32.h>
 #include <util/check.h>
+#include <util/overloaded.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -172,6 +176,186 @@ static RPCMethod createmultisig()
     };
 }
 
+static std::string KeyRoleName(DescriptorKeyInventory::Role role)
+{
+    using Role = DescriptorKeyInventory::Role;
+    switch (role) {
+    case Role::ECDSA: return "ecdsa";
+    case Role::TAPROOT_INTERNAL: return "taproot_internal";
+    case Role::TAPROOT_OUTPUT: return "taproot_output";
+    case Role::TAPSCRIPT: return "tapscript";
+    case Role::MUSIG_PARTICIPANT: return "musig_participant";
+    case Role::UNUSED: return "unused";
+    } // no default case, so the compiler can warn about missing cases
+    NONFATAL_UNREACHABLE();
+}
+
+static std::string FunctionName(DescriptorPolicy::Kind kind)
+{
+    using Kind = DescriptorPolicy::Kind;
+    switch (kind) {
+    case Kind::PK: return "pk";
+    case Kind::PKH: return "pkh";
+    case Kind::WPKH: return "wpkh";
+    case Kind::COMBO: return "combo";
+    case Kind::MULTI: return "multi";
+    case Kind::SORTEDMULTI: return "sortedmulti";
+    case Kind::MULTI_A: return "multi_a";
+    case Kind::SORTEDMULTI_A: return "sortedmulti_a";
+    case Kind::SH: return "sh";
+    case Kind::WSH: return "wsh";
+    case Kind::TR: return "tr";
+    case Kind::RAWTR: return "rawtr";
+    case Kind::UNUSED: return "unused";
+    case Kind::RAW: return "raw";
+    case Kind::ADDR: return "addr";
+    } // no default case, so the compiler can warn about missing cases
+    NONFATAL_UNREACHABLE();
+}
+
+static std::string FragmentName(miniscript::Fragment fragment)
+{
+    using miniscript::Fragment;
+    switch (fragment) {
+    case Fragment::JUST_0: return "0";
+    case Fragment::JUST_1: return "1";
+    case Fragment::PK_K: return "pk_k";
+    case Fragment::PK_H: return "pk_h";
+    case Fragment::OLDER: return "older";
+    case Fragment::AFTER: return "after";
+    case Fragment::SHA256: return "sha256";
+    case Fragment::HASH256: return "hash256";
+    case Fragment::RIPEMD160: return "ripemd160";
+    case Fragment::HASH160: return "hash160";
+    case Fragment::WRAP_A: return "a:";
+    case Fragment::WRAP_S: return "s:";
+    case Fragment::WRAP_C: return "c:";
+    case Fragment::WRAP_D: return "d:";
+    case Fragment::WRAP_V: return "v:";
+    case Fragment::WRAP_J: return "j:";
+    case Fragment::WRAP_N: return "n:";
+    case Fragment::AND_V: return "and_v";
+    case Fragment::AND_B: return "and_b";
+    case Fragment::OR_B: return "or_b";
+    case Fragment::OR_C: return "or_c";
+    case Fragment::OR_D: return "or_d";
+    case Fragment::OR_I: return "or_i";
+    case Fragment::ANDOR: return "andor";
+    case Fragment::THRESH: return "thresh";
+    case Fragment::MULTI: return "multi";
+    case Fragment::MULTI_A: return "multi_a";
+    } // no default case, so the compiler can warn about missing cases
+    NONFATAL_UNREACHABLE();
+}
+
+static std::string ChildRoleName(DescriptorPolicy::ChildRole role)
+{
+    using Role = DescriptorPolicy::ChildRole;
+    switch (role) {
+    case Role::SCRIPT: return "script";
+    case Role::WRAPPED: return "wrapped";
+    case Role::LEFT: return "left";
+    case Role::RIGHT: return "right";
+    case Role::CONDITION: return "condition";
+    case Role::IF_TRUE: return "if_true";
+    case Role::IF_FALSE: return "if_false";
+    case Role::THRESHOLD_INPUT: return "threshold_input";
+    } // no default case, so the compiler can warn about missing cases
+    NONFATAL_UNREACHABLE();
+}
+
+//! Format a derivation in descriptor syntax, e.g. "/1/*". Empty if there is none.
+static std::string FormatDerivation(const DescriptorKeyInfo::Derivation& derivation)
+{
+    std::string result{FormatHDKeypath(derivation.path)};
+    switch (derivation.type) {
+    case DescriptorKeyInfo::DeriveType::NON_RANGED: return result;
+    case DescriptorKeyInfo::DeriveType::UNHARDENED_RANGED: return result + "/*";
+    case DescriptorKeyInfo::DeriveType::HARDENED_RANGED: return result + "/*h";
+    } // no default case, so the compiler can warn about missing cases
+    NONFATAL_UNREACHABLE();
+}
+
+static UniValue IdsToUniv(const std::vector<size_t>& ids)
+{
+    UniValue result(UniValue::VARR);
+    for (const size_t id : ids) {
+        result.push_back(id);
+    }
+    return result;
+}
+
+static UniValue DescriptorKeysToUniv(const DescriptorKeyInventory& inventory)
+{
+    UniValue keys(UniValue::VARR);
+    for (const auto& occurrence : inventory.occurrences) {
+        UniValue key(UniValue::VOBJ);
+        key.pushKV("role", KeyRoleName(occurrence.role));
+        std::string derivation;
+        std::visit(util::Overloaded{
+            [&](const DescriptorKeyInfo::ConstKey& constant) {
+                key.pushKV("type", "pubkey");
+                key.pushKV("pubkey", constant.xonly ? HexStr(XOnlyPubKey{constant.pubkey}) : HexStr(constant.pubkey));
+            },
+            [&](const DescriptorKeyInfo::BIP32Key& bip32) {
+                key.pushKV("type", "bip32");
+                key.pushKV("xpub", EncodeExtPubKey(bip32.root));
+                derivation = FormatDerivation(bip32.derivation);
+            },
+            [&](const DescriptorKeyInfo::MuSigKey& musig) {
+                key.pushKV("type", "musig");
+                key.pushKV("participants", IdsToUniv(musig.participants));
+                derivation = FormatDerivation(musig.derivation);
+            },
+        }, occurrence.expression.key);
+        if (!derivation.empty()) {
+            key.pushKV("derivation", derivation);
+        }
+        if (const auto& origin{occurrence.expression.origin}) {
+            UniValue origin_obj(UniValue::VOBJ);
+            origin_obj.pushKV("master_fingerprint", HexStr(origin->fingerprint));
+            origin_obj.pushKV("path", WriteHDKeypath(origin->path));
+            key.pushKV("origin", std::move(origin_obj));
+        }
+        keys.push_back(std::move(key));
+    }
+    return keys;
+}
+
+static UniValue DescriptorPolicyToUniv(const DescriptorPolicy& policy)
+{
+    UniValue nodes(UniValue::VARR);
+    for (const auto& node : policy.nodes) {
+        UniValue node_obj(UniValue::VOBJ);
+        std::visit(util::Overloaded{
+            [&](DescriptorPolicy::Kind kind) { node_obj.pushKV("function", FunctionName(kind)); },
+            [&](miniscript::Fragment fragment) { node_obj.pushKV("fragment", FragmentName(fragment)); },
+        }, node.kind);
+        // No valid threshold or timelock is zero, so zero means the node has no value.
+        if (node.value != 0) node_obj.pushKV("value", node.value);
+        if (!node.data.empty()) node_obj.pushKV("data", HexStr(node.data));
+        if (!node.keys.empty()) node_obj.pushKV("keys", IdsToUniv(node.keys));
+        if (!node.children.empty()) {
+            UniValue children(UniValue::VARR);
+            for (const auto& child : node.children) {
+                UniValue child_obj(UniValue::VOBJ);
+                child_obj.pushKV("node", child.node);
+                std::visit(util::Overloaded{
+                    [&](DescriptorPolicy::ChildRole role) { child_obj.pushKV("role", ChildRoleName(role)); },
+                    [&](DescriptorPolicy::TapLeaf leaf) {
+                        child_obj.pushKV("role", "tapleaf");
+                        child_obj.pushKV("depth", leaf.depth);
+                    },
+                }, child.role);
+                children.push_back(std::move(child_obj));
+            }
+            node_obj.pushKV("children", std::move(children));
+        }
+        nodes.push_back(std::move(node_obj));
+    }
+    return nodes;
+}
+
 static RPCMethod getdescriptorinfo()
 {
     const std::string EXAMPLE_DESCRIPTOR = "wpkh([d34db33f/84h/0h/0h]0279be667ef9dcbbac55a06295Ce870b07029Bfcdb2dce28d959f2815b16f81798)";
@@ -181,6 +365,9 @@ static RPCMethod getdescriptorinfo()
         "Analyses a descriptor.\n",
         {
             {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor."},
+            {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, also return the descriptor's key occurrences and policy structure. "
+                "For a multipath descriptor, only the first path is described.\n"
+                "EXPERIMENTAL warning: the format of these fields may be changed in future releases."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -194,12 +381,61 @@ static RPCMethod getdescriptorinfo()
                 {RPCResult::Type::BOOL, "isrange", "Whether the descriptor is ranged"},
                 {RPCResult::Type::BOOL, "issolvable", "Whether the descriptor is solvable"},
                 {RPCResult::Type::BOOL, "hasprivatekeys", "Whether the input descriptor contained at least one private key"},
+                {RPCResult::Type::ARR, "keys", /*optional=*/true, "Only if verbose is true. The public key occurrences, in descriptor order. "
+                    "Array indices are the key IDs used in this result; equal keys remain separate occurrences.",
+                {
+                    {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "role", "How the key is used: \"ecdsa\", \"taproot_internal\", \"taproot_output\", \"tapscript\", \"musig_participant\" or \"unused\""},
+                        {RPCResult::Type::STR, "type", "The kind of key expression: \"pubkey\", \"bip32\" or \"musig\""},
+                        {RPCResult::Type::STR_HEX, "pubkey", /*optional=*/true, "For a \"pubkey\": the public key, as 32 bytes if x-only"},
+                        {RPCResult::Type::STR, "xpub", /*optional=*/true, "For a \"bip32\": the extended public key"},
+                        {RPCResult::Type::ARR, "participants", /*optional=*/true, "For a \"musig\": the key IDs of its participants, in expression order",
+                        {
+                            {RPCResult::Type::NUM, "", "Key ID"},
+                        }},
+                        {RPCResult::Type::STR, "derivation", /*optional=*/true, "For a \"bip32\" or \"musig\": the derivation applied to it, if any, e.g. \"/1/*\""},
+                        {RPCResult::Type::OBJ, "origin", /*optional=*/true, "The key origin, if given",
+                        {
+                            {RPCResult::Type::STR_HEX, "master_fingerprint", "The fingerprint of the master key"},
+                            {RPCResult::Type::STR, "path", "The derivation path from the master key"},
+                        }},
+                    }},
+                }},
+                {RPCResult::Type::ARR, "policy", /*optional=*/true, "Only if verbose is true. The policy nodes in preorder, with the root first. "
+                    "Array indices are the node IDs used in this result. This is the structure of the descriptor, not an analysis of how it can be satisfied. "
+                    "The same construct can appear in two forms: as a whole descriptor argument it is a \"function\" (e.g. \"pk\" or \"multi\"), "
+                    "inside a Miniscript expression it is a \"fragment\" (e.g. \"c:\" over \"pk_k\", or \"multi\").",
+                {
+                    {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "function", /*optional=*/true, "For a descriptor node: its function, e.g. \"wsh\""},
+                        {RPCResult::Type::STR, "fragment", /*optional=*/true, "For a Miniscript node: its fragment after desugaring, e.g. \"and_v\", \"pk_k\", or \"v:\" for a wrapper"},
+                        {RPCResult::Type::NUM, "value", /*optional=*/true, "The threshold of a multisig or thresh, or the value of a timelock"},
+                        {RPCResult::Type::STR_HEX, "data", /*optional=*/true, "The hash of a hash fragment, or the script of a raw() or addr(), which are not analysed further"},
+                        {RPCResult::Type::ARR, "keys", /*optional=*/true, "The key IDs used by this node, in expression order",
+                        {
+                            {RPCResult::Type::NUM, "", "Key ID"},
+                        }},
+                        {RPCResult::Type::ARR, "children", /*optional=*/true, "The child nodes, in order",
+                        {
+                            {RPCResult::Type::OBJ, "", "",
+                            {
+                                {RPCResult::Type::NUM, "node", "The node ID of the child"},
+                                {RPCResult::Type::STR, "role", "The role of the child in this node: \"script\", \"tapleaf\", \"wrapped\", \"left\", \"right\", \"condition\", \"if_true\", \"if_false\" or \"threshold_input\""},
+                                {RPCResult::Type::NUM, "depth", /*optional=*/true, "For a \"tapleaf\": its depth in the Taproot tree"},
+                            }},
+                        }},
+                    }},
+                }},
             }
         },
         RPCExamples{
             "Analyse a descriptor\n" +
             HelpExampleCli("getdescriptorinfo", "\"" + EXAMPLE_DESCRIPTOR + "\"") +
-            HelpExampleRpc("getdescriptorinfo", "\"" + EXAMPLE_DESCRIPTOR + "\"")
+            HelpExampleRpc("getdescriptorinfo", "\"" + EXAMPLE_DESCRIPTOR + "\"") +
+            "Analyse a descriptor, including its keys and policy\n" +
+            HelpExampleCli("getdescriptorinfo", "\"" + EXAMPLE_DESCRIPTOR + "\" true")
         },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
@@ -225,6 +461,12 @@ static RPCMethod getdescriptorinfo()
             result.pushKV("isrange", descs.at(0)->IsRange());
             result.pushKV("issolvable", descs.at(0)->IsSolvable());
             result.pushKV("hasprivatekeys", provider.keys.size() > 0);
+
+            if (self.Arg<bool>("verbose")) {
+                const DescriptorPolicy policy{descs.at(0)->GetPolicy()};
+                result.pushKV("keys", DescriptorKeysToUniv(policy.keys));
+                result.pushKV("policy", DescriptorPolicyToUniv(policy));
+            }
             return result;
         },
     };
