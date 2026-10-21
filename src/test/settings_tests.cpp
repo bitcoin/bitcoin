@@ -232,12 +232,12 @@ BOOST_FIXTURE_TEST_CASE(Merge, MergeTestingSetup)
         desc += GetSetting(settings, network, name, ignore_default_section_config, /*ignore_nonpersistent=*/false, /*get_chain_type=*/false).write();
         desc += " |";
         for (const auto& s : GetSettingsList(settings, network, name, ignore_default_section_config)) {
-            desc += " ";
+            desc += ' ';
             desc += s.write();
         }
         desc += " |";
         if (OnlyHasDefaultSectionSetting(settings, network, name)) desc += " ignored";
-        desc += "\n";
+        desc += '\n';
 
         out_sha.Write(MakeUCharSpan(desc));
         if (out_file) {

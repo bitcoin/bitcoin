@@ -227,10 +227,10 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
         "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd\0wtf.onion", 66}));
 
     // TOR, bogus length
-    BOOST_CHECK(!addr.SetSpecial(std::string{"mfrggzak.onion"}));
+    BOOST_CHECK(!addr.SetSpecial("mfrggzak.onion"));
 
     // TOR, invalid base32
-    BOOST_CHECK(!addr.SetSpecial(std::string{"mf*g zak.onion"}));
+    BOOST_CHECK(!addr.SetSpecial("mf*g zak.onion"));
 
     // I2P
     const char* i2p_addr = "UDHDrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.I2P";
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
         !addr.SetSpecial("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscsad.b32.i2p"));
 
     // I2P, invalid base32
-    BOOST_CHECK(!addr.SetSpecial(std::string{"tp*szydbh4dp.b32.i2p"}));
+    BOOST_CHECK(!addr.SetSpecial("tp*szydbh4dp.b32.i2p"));
 
     // Internal
     addr.SetInternal("esffpp");

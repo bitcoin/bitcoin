@@ -110,7 +110,7 @@ std::string CRPCTable::help(std::string_view strCommand, const JSONRPCRequest& h
                 if (category != pcmd->category)
                 {
                     if (!category.empty())
-                        strRet += "\n";
+                        strRet += '\n';
                     category = pcmd->category;
                     strRet += "== " + Capitalize(category) + " ==\n";
                 }

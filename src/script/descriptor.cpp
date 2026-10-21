@@ -760,10 +760,10 @@ public:
         std::string out = "musig(";
         for (size_t i = 0; i < m_participants.size(); ++i) {
             const auto& pubkey = m_participants.at(i);
-            if (i) out += ",";
+            if (i) out += ',';
             out += pubkey->ToString(type);
         }
-        out += ")";
+        out += ')';
         out += FormatHDKeypath(m_path);
         if (IsRangedDerivation()) {
             out += "/*";
@@ -776,14 +776,14 @@ public:
         out = "musig(";
         for (size_t i = 0; i < m_participants.size(); ++i) {
             const auto& pubkey = m_participants.at(i);
-            if (i) out += ",";
+            if (i) out += ',';
             std::string tmp;
             if (pubkey->ToPrivateString(arg, tmp)) {
                 any_privkeys = true;
             }
             out += tmp;
         }
-        out += ")";
+        out += ')';
         out += FormatHDKeypath(m_path);
         if (IsRangedDerivation()) {
             out += "/*";
@@ -795,14 +795,14 @@ public:
         out = "musig(";
         for (size_t i = 0; i < m_participants.size(); ++i) {
             const auto& pubkey = m_participants.at(i);
-            if (i) out += ",";
+            if (i) out += ',';
             std::string tmp;
             if (!pubkey->ToNormalizedString(arg, tmp, cache)) {
                 return false;
             }
             out += tmp;
         }
-        out += ")";
+        out += ')';
         out += FormatHDKeypath(m_path);
         if (IsRangedDerivation()) {
             out += "/*";
@@ -960,7 +960,7 @@ public:
         // Initialize to true for non-private types.
         bool any_success{!is_private};
         for (const auto& scriptarg : m_subdescriptor_args) {
-            if (pos++) ret += ",";
+            if (pos++) ret += ',';
             std::string tmp;
             bool subscript_res{scriptarg->ToStringHelper(arg, tmp, type, cache)};
             if (!is_private && !subscript_res) return false;
@@ -982,7 +982,7 @@ public:
         bool any_success{!is_private};
 
         for (const auto& pubkey : m_pubkey_args) {
-            if (pos++) ret += ",";
+            if (pos++) ret += ',';
             std::string tmp;
             switch (type) {
                 case StringType::NORMALIZED:

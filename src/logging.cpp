@@ -369,7 +369,7 @@ std::string BCLog::Logger::GetLogPrefix(BCLog::LogFlags category, BCLog::Level l
         // If there is a category, Debug is implied, so don't add the level
 
         // Only add separator if we have a category
-        if (has_category) s += ":";
+        if (has_category) s += ':';
         s += Logger::LogLevelToStr(level);
     }
 
