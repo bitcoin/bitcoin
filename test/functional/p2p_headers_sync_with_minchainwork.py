@@ -24,7 +24,6 @@ from test_framework.blocktools import (
 
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
 )
 
 import re
@@ -198,13 +197,15 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         # 7 periods plus HEADERS_RESPONSE_TIME, well before it could finish.
         # Use a different chain, the redownload test stored the default one.
         node, peer, headers, position = self.connect_headers_server("0x40000", MAX_HEADERS_RESULTS * 30, version=5)
-        minutes = 0
-        while peer.is_connected and minutes < 7 * 20 + 2 + 19:
+        # The timeout is renewed 6 times: still connected at minute 133 (7 periods).
+        for _ in range(7):
             self.serve_next_headers(peer, headers, position)
             self.advance_minutes(node, peer, 19)
-            minutes += 19
+        assert peer.is_connected
+        # Gone at minute 152 (8 periods): a 7th renewal or a 6th that is missing would show here.
+        self.serve_next_headers(peer, headers, position)
+        self.advance_minutes(node, peer, 19)
         peer.wait_for_disconnect()
-        assert_greater_than(minutes, 6 * 20)
         self.restore_node1()
 
     def test_chains_sync_when_long_enough(self):
