@@ -7,7 +7,6 @@
 
 #include <consensus/amount.h>
 #include <sync.h>
-#include <util/fs.h>
 #include <validation.h>
 
 #include <cstdint>
@@ -19,13 +18,11 @@ class CBlock;
 class CBlockIndex;
 class CChain;
 class UniValue;
-class AutoFile;
 class uint256;
 enum class TxVerbosity;
 
 namespace node {
 class BlockManager;
-struct NodeContext;
 } // namespace node
 
 inline constexpr int NUM_GETBLOCKSTATS_PERCENTILES = 5;
@@ -46,17 +43,6 @@ UniValue blockheaderToJSON(const CBlockIndex& tip, const CBlockIndex& blockindex
 
 /** Used by getblockstats to get feerates at different percentiles by weight  */
 void CalculatePercentilesByWeight(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES], std::vector<std::pair<CAmount, int64_t>>& scores, int64_t total_weight);
-
-/**
- * Helper to create UTXO snapshots given a chainstate and a file handle.
- * @return a UniValue map containing metadata about the snapshot.
- */
-UniValue CreateUTXOSnapshot(
-    node::NodeContext& node,
-    Chainstate& chainstate,
-    AutoFile&& afile,
-    const fs::path& path,
-    const fs::path& tmppath);
 
 //! Return height of highest block that has been pruned, or std::nullopt if no blocks have been pruned
 std::optional<int> GetPruneHeight(const node::BlockManager& blockman, const CChain& chain) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
