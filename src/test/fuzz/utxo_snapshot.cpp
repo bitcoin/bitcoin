@@ -144,7 +144,7 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
         }
         if constexpr (INVALID) {
             // Append an invalid coin to ensure invalidity. This error will be
-            // detected late in PopulateAndValidateSnapshot, and allows the
+            // detected late in the snapshot load, and allows the
             // INVALID fuzz target to reach more potential code coverage.
             const auto& coinbase{g_chain->back()->vtx.back()};
             outfile << coinbase->GetHash();
@@ -198,7 +198,6 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
                 Assert(index->m_chain_tx_count == 0);
             }
         }
-        Assert(g_chain->size() == coinscache.GetCacheSize());
         dirty_chainman = true;
     } else {
         Assert(!chainman.ActiveChainstate().m_from_snapshot_blockhash);
