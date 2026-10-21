@@ -41,7 +41,6 @@ void TestChainstateManager::DisableNextWrite()
     struct TestChainstate : public Chainstate {
         void ResetNextWrite() { m_next_write = NodeClock::time_point::max() - 1s; }
     };
-    LOCK(::cs_main);
     static_cast<TestChainstate&>(ActiveChainstate()).ResetNextWrite();
 }
 
