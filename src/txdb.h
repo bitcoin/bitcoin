@@ -10,6 +10,7 @@
 #include <dbwrapper.h>
 #include <kernel/caches.h>
 #include <kernel/cs_main.h>
+#include <streams.h>
 #include <sync.h>
 #include <util/fs.h>
 
@@ -18,9 +19,11 @@
 #include <future>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <vector>
 
+class Coin;
 class COutPoint;
 class uint256;
 
@@ -30,6 +33,52 @@ struct CoinsViewOptions {
     uint64_t batch_write_bytes{DEFAULT_DB_CACHE_BATCH};
     //! If non-zero, randomly exit when the database is flushed with (1/ratio) probability.
     int simulate_crash_ratio{0};
+};
+
+/** Writes already-serialized coin records into a coin database, without staging
+ * in a CoinsView cache. */
+class RawCoinDataDBWriter
+{
+public:
+    explicit RawCoinDataDBWriter(CDBWrapper& db, uint64_t flush_size);
+
+    /** Store one batch, flushing to leveldb as the flush size is reached. */
+    void Write(std::span<const std::byte> batch);
+
+    /** Write any pending records to leveldb */
+    void Flush();
+
+    /** Store the best block. Call this only after every coin is written; a database
+     * without the marker is known to be incomplete. */
+    void WriteBestBlock(const uint256& block_hash);
+
+    /** Builds serialized Coin batches up to a fixed limit, compatible with Write */
+    class Batch
+    {
+    public:
+        explicit Batch(size_t limit) : m_limit{limit} { m_bytes.reserve(limit); }
+
+        /** Append one coin to the batch. If it doesn't fit, return a
+         * batch for writing, otherwise an empty vector. An empty batch will
+         * always take the coin, even if it overflows the limit. */
+        [[nodiscard]] std::vector<std::byte> Add(const COutPoint& outpoint, const Coin& coin);
+
+        /** Hand off the bytes written so far and start a new batch. */
+        [[nodiscard]] std::vector<std::byte> Take();
+
+        bool empty() const { return m_bytes.empty(); }
+
+    private:
+        size_t m_limit;
+        std::vector<std::byte> m_bytes;
+        DataStream m_key;
+        DataStream m_value;
+    };
+
+private:
+    CDBWrapper& m_db;
+    CDBBatch m_batch;
+    uint64_t m_flush_size;
 };
 
 /** CCoinsView backed by the coin database (chainstate/) */
