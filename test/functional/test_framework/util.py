@@ -526,6 +526,7 @@ def initialize_datadir(dirname, n, chain, disable_autoconnect=True):
 # "Warning: Reducing -maxconnections from <...> to <...> due to system limitations".
 # For details, consult the `AppInitParameterInteraction` function in src/init.cpp.
 #  available_fds = 256                // Same as FD_SETSIZE on NetBSD.
+#                                     // Enforced in CI via CI_LIMIT_FD_COUNT (macOS native job).
 #  MIN_CORE_FDS = 151                 // Number of file descriptors required for core functionality.
 #  MAX_ADDNODE_CONNECTIONS = 8        // Maximum number of -addnode outgoing nodes.
 #  num_p2p_bind = 3                   // Maximum number of bound P2P interfaces (-bind and -whitebind) used in a test.
