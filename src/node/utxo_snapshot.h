@@ -18,7 +18,6 @@
 
 class AutoFile;
 class CDBWrapper;
-class Chainstate;
 struct AssumeutxoData;
 
 namespace util {
@@ -32,12 +31,6 @@ namespace node {
 //! Because we only allow loading a single snapshot at a time, there will only be one
 //! chainstate directory with this filename present within it.
 inline const fs::path SNAPSHOT_BLOCKHASH_FILENAME{"base_blockhash"};
-
-//! Write out the blockhash of the snapshot base block that was used to construct
-//! this chainstate. This value is read in during subsequent initializations and
-//! used to reconstruct snapshot-based chainstates.
-bool WriteSnapshotBaseBlockhash(Chainstate& snapshot_chainstate)
-    EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 //! Write out the blockhash of the base block that was used to construct
 //! this utxo set snapshot, and sync it. This value is read in during subsequent
