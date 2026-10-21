@@ -219,8 +219,9 @@ class AssumeutxoTest(BitcoinTestFramework):
         snapshot_dir = node.chain_path / "chainstate_snapshot"
         snapshot_dir.mkdir()
         (snapshot_dir / "CURRENT").write_text("invalid", encoding="utf8")
-        assert_raises_rpc_error(-1, "CURRENT file does not end with newline", node.loadtxoutset, dump_output_path)  # TODO: an interrupted load must not block later loads
-        self.cleanup_folder(snapshot_dir)
+        msg = "Unable to load UTXO snapshot: Population failed: Work does not exceed active chainstate."
+        assert_raises_rpc_error(-32603, msg, node.loadtxoutset, dump_output_path)
+        assert not snapshot_dir.exists()
 
     def test_snapshot_block_invalidated(self, dump_output_path):
         self.log.info("Test snapshot is not loaded when base block is invalid.")
