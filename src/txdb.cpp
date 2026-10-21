@@ -55,6 +55,26 @@ struct CoinEntry {
 
 } // namespace
 
+RawCoinDataDBBatch::RawCoinDataDBBatch(CDBWrapper& db) :
+    m_db{db},
+    m_batch{db} { }
+
+void RawCoinDataDBBatch::Add(const COutPoint& outpoint, const Coin& coin)
+{
+    m_batch.Write(CoinEntry(&outpoint), coin);
+}
+
+void RawCoinDataDBBatch::AddBestBlock(const uint256& block_hash)
+{
+    m_batch.Write(DB_BEST_BLOCK, block_hash);
+}
+
+void RawCoinDataDBBatch::Flush()
+{
+    m_db.WriteBatch(m_batch);
+    m_batch.Clear();
+}
+
 CCoinsViewDB::CCoinsViewDB(DBParams db_params, CoinsViewOptions options) :
     m_db_params{std::move(db_params)},
     m_options{std::move(options)},
