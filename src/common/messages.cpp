@@ -147,6 +147,8 @@ bilingual_str TransactionErrorString(const TransactionError err)
             return Untranslated("Transaction rejected due to invalid package");
         case TransactionError::PRIVATE_BROADCAST_FULL:
             return Untranslated("Private broadcast queue is full");
+        case TransactionError::SUBMISSION_SKIPPED:
+            return Untranslated("Transaction submission skipped");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }

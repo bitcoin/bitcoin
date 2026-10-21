@@ -682,8 +682,10 @@ public:
         const std::vector<std::string>& payment_requests = {}
     );
 
-    /** Pass this transaction to node for optional mempool insertion and relay to peers. */
-    bool SubmitTxMemoryPoolAndRelay(CWalletTx& wtx, std::string& err_string, node::TxBroadcast broadcast_method) const
+    /** Submit for mempool or private broadcast queue acceptance, depending on broadcast_method.
+     * Return {} on acceptance, otherwise the error.
+     */
+    [[nodiscard]] util::Expected<void, node::TransactionBroadcastError> SubmitTxMemoryPoolAndRelay(CWalletTx& wtx, node::TxBroadcast broadcast_method) const
         EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** Updates wallet birth time if 'time' is below it */

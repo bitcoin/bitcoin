@@ -500,6 +500,34 @@ public:
     std::unique_ptr<CWallet> wallet;
 };
 
+BOOST_FIXTURE_TEST_CASE(CommitTransactionErrors, ListCoinsTestingSetup)
+{
+    wallet->SetBroadcastTransactions(true);
+    CCoinControl control;
+    control.m_feerate = CFeeRate{1000};
+    const auto created = WITH_LOCK(wallet->cs_wallet, return CreateTransaction(*wallet, {{PKHash{}, COIN, false}}, std::nullopt, control));
+    BOOST_REQUIRE_MESSAGE(created, util::ErrorString(created).original);
+    const auto tx = created->tx;
+    const auto txid = tx->GetHash();
+
+    wallet->SetBroadcastTransactions(false);
+    wallet->CommitTransaction(tx);
+    {
+        LOCK(wallet->cs_wallet);
+        const auto disabled = wallet->SubmitTxMemoryPoolAndRelay(wallet->mapWallet.at(txid), node::TxBroadcast::MEMPOOL_NO_BROADCAST);
+        BOOST_REQUIRE(!disabled);
+        BOOST_CHECK(disabled.error().code == node::TransactionError::SUBMISSION_SKIPPED);
+        BOOST_CHECK(!m_node.mempool->exists(txid));
+    }
+    wallet->SetBroadcastTransactions(true);
+    BOOST_REQUIRE(wallet->AbandonTransaction(txid));
+    LOCK(wallet->cs_wallet);
+    const auto abandoned = wallet->SubmitTxMemoryPoolAndRelay(wallet->mapWallet.at(txid), node::TxBroadcast::MEMPOOL_NO_BROADCAST);
+    BOOST_REQUIRE(!abandoned);
+    BOOST_CHECK(abandoned.error().code == node::TransactionError::SUBMISSION_SKIPPED);
+    BOOST_CHECK(!m_node.mempool->exists(txid));
+}
+
 BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
 {
     std::string coinbaseAddress = coinbaseKey.GetPubKey().GetID().ToString();

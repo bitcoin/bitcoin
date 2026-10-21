@@ -28,6 +28,7 @@ enum class TransactionError {
     MAX_BURN_EXCEEDED,
     INVALID_PACKAGE,
     PRIVATE_BROADCAST_FULL,
+    SUBMISSION_SKIPPED, //!< The wallet did not submit the transaction (e.g. broadcasting disabled or abandoned)
 };
 
 //! Error returned when a transaction cannot be broadcast: a machine-readable
