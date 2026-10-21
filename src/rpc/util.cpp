@@ -1354,17 +1354,17 @@ std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, Fl
     }
 
     std::string error;
-    auto descs = Parse(desc_str, provider, error);
-    if (descs.empty()) {
+    auto desc = Parse(desc_str, provider, error);
+    if (!desc) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
     }
-    if (!descs.at(0)->IsRange()) {
+    if (!desc->IsRange()) {
         range.first = 0;
         range.second = 0;
     }
     std::vector<CScript> ret;
     for (int64_t i = range.first; i <= range.second; ++i) {
-        for (const auto& desc : descs) {
+        for (const auto& desc : desc->GetMultipathExpansion()) {
             std::vector<CScript> scripts;
             if (!desc->Expand(i, provider, scripts, provider)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Cannot derive script without private keys: '%s'", desc_str));
@@ -1378,13 +1378,13 @@ std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, Fl
     return ret;
 }
 
-std::vector<uint32_t> ParsePathBIP32(const std::string& path)
+KeyPath ParsePathBIP32(const std::string& path)
 {
-    std::vector<uint32_t> out;
-    if (!ParseHDKeypath(path, out)) {
+    std::optional<KeyPath> parsed = ParseHDKeypath(path);
+    if (!parsed) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid BIP32 keypath");
     }
-    return out;
+    return *parsed;
 }
 
 /** Convert a vector of bilingual strings to a UniValue::VARR containing their original untranslated values. */
