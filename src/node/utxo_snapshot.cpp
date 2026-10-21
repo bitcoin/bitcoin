@@ -11,7 +11,6 @@
 #include <kernel/caches.h>
 #include <primitives/transaction.h>
 #include <streams.h>
-#include <sync.h>
 #include <tinyformat.h>
 #include <txdb.h>
 #include <uint256.h>
@@ -24,9 +23,7 @@
 #include <util/thread.h>
 #include <util/translation.h>
 #include <utxo_snapshot.h>
-#include <validation.h>
 
-#include <cassert>
 #include <cstddef>
 #include <cstdio>
 #include <exception>
@@ -54,32 +51,6 @@ static constexpr size_t SNAPSHOT_DATA_BATCH_BYTES{4_MiB};
 static constexpr size_t SNAPSHOT_DB_BATCHES{8};
 
 namespace node {
-
-bool WriteSnapshotBaseBlockhash(Chainstate& snapshot_chainstate)
-{
-    AssertLockHeld(::cs_main);
-    assert(snapshot_chainstate.m_from_snapshot_blockhash);
-
-    const std::optional<fs::path> chaindir = snapshot_chainstate.StoragePath();
-    assert(chaindir); // Sanity check that chainstate isn't in-memory.
-    const fs::path write_to = *chaindir / node::SNAPSHOT_BLOCKHASH_FILENAME;
-
-    FILE* file{fsbridge::fopen(write_to, "wb")};
-    AutoFile afile{file};
-    if (afile.IsNull()) {
-        LogError("[snapshot] failed to open base blockhash file for writing: %s",
-                  fs::PathToString(write_to));
-        return false;
-    }
-    afile << *snapshot_chainstate.m_from_snapshot_blockhash;
-
-    if (afile.fclose() != 0) {
-        LogError("[snapshot] failed to close base blockhash file %s after writing",
-                  fs::PathToString(write_to));
-        return false;
-    }
-    return true;
-}
 
 bool WriteSnapshotBaseBlockhash(const fs::path& datadir, const uint256& base_blockhash)
 {
