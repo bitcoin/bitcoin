@@ -206,10 +206,9 @@ std::shared_ptr<CWallet> SetupDescriptorsWallet(interfaces::Node& node, TestChai
     } else {
         key_str = EncodeSecret(test.coinbaseKey);
     }
-    auto descs = Parse("combo(" + key_str + ")", provider, error, /* require_checksum=*/ false);
-    assert(!descs.empty());
-    assert(descs.size() == 1);
-    auto& desc = descs.at(0);
+    auto desc = Parse("combo(" + key_str + ")", provider, error, /* require_checksum=*/ false);
+    assert(desc);
+    assert(!desc->IsMultipath());
     WalletDescriptor w_desc(std::move(desc), 0, 0, 1, 1);
     Assert(wallet->AddWalletDescriptor(w_desc, provider, "", false));
     const PKHash dest{test.coinbaseKey.GetPubKey()};
