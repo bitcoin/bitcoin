@@ -129,6 +129,35 @@ struct TransactionsDelta final : public CValidationInterface {
     }
 };
 
+/** Check that testing a package as submission (test) gave what its submission (real) then gave. */
+void CheckTestAsSubmission(const Package& txs, const PackageMempoolAcceptResult& test, const PackageMempoolAcceptResult& real)
+{
+    // A transaction other than the last that passes alone is not staged in a test, so the rest differs.
+    for (size_t i{0}; i + 1 < txs.size(); ++i) {
+        const auto it{test.m_tx_results.find(txs[i]->GetWitnessHash())};
+        if (it != test.m_tx_results.end() && it->second.m_result_type == MempoolAcceptResult::ResultType::VALID &&
+            it->second.m_wtxids_fee_calculations == std::vector<Wtxid>{txs[i]->GetWitnessHash()}) return;
+    }
+    // Submission may trim what it added.
+    for (const auto& [_, r] : real.m_tx_results) {
+        if (r.m_state.GetRejectReason() == "mempool full") return;
+    }
+    Assert(test.m_state.GetResult() == real.m_state.GetResult());
+    Assert(test.m_state.GetRejectReason() == real.m_state.GetRejectReason());
+    Assert(test.m_tx_results.size() == real.m_tx_results.size());
+    for (const auto& [wtxid, r] : real.m_tx_results) {
+        const auto& t{test.m_tx_results.at(wtxid)};
+        Assert(t.m_result_type == r.m_result_type);
+        Assert(t.m_state.GetResult() == r.m_state.GetResult());
+        Assert(t.m_state.GetRejectReason() == r.m_state.GetRejectReason());
+        Assert(t.m_vsize == r.m_vsize);
+        Assert(t.m_base_fees == r.m_base_fees);
+        Assert(t.m_effective_feerate == r.m_effective_feerate);
+        Assert(t.m_wtxids_fee_calculations == r.m_wtxids_fee_calculations);
+        Assert(t.m_other_wtxid == r.m_other_wtxid);
+    }
+}
+
 void MockTime(FuzzedDataProvider& fuzzed_data_provider, const Chainstate& chainstate)
 {
     const auto time = ConsumeTime(fuzzed_data_provider,
@@ -515,8 +544,18 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
             client_maxfeerate = CFeeRate(fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-1, 50 * COIN), 100);
         }
 
+        // Test the package as submission, which leaves the mempool alone, then compare with its submission.
+        std::optional<PackageMempoolAcceptResult> result_test;
+        if (!single_submit) {
+            const auto pool_before{WITH_LOCK(tx_pool.cs, return std::make_pair(tx_pool.size(), tx_pool.GetTotalTxSize()))};
+            result_test = WITH_LOCK(::cs_main, return ProcessNewPackage(chainstate, tx_pool, txs, /*test_accept=*/true, client_maxfeerate, /*test_as_submission=*/true));
+            node.validation_signals->SyncWithValidationInterfaceQueue();
+            Assert(added.empty());
+            Assert(WITH_LOCK(tx_pool.cs, return std::make_pair(tx_pool.size(), tx_pool.GetTotalTxSize())) == pool_before);
+        }
         const auto result_package = WITH_LOCK(::cs_main,
                                     return ProcessNewPackage(chainstate, tx_pool, txs, /*test_accept=*/single_submit, client_maxfeerate));
+        if (result_test) CheckTestAsSubmission(txs, *result_test, result_package);
 
         // Always set bypass_limits to false because it is not supported in ProcessNewPackage and
         // can be a source of divergence.

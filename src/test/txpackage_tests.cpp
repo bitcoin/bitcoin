@@ -1088,6 +1088,59 @@ BOOST_AUTO_TEST_CASE(package_cpfp_tests)
     }
 }
 
+BOOST_AUTO_TEST_CASE(package_test_as_submission)
+{
+    mineBlocks(5);
+    MockMempoolMinFee(CFeeRate(5000), *m_node.mempool);
+    LOCK(::cs_main);
+    const size_t pool_size{m_node.mempool->size()};
+    CKey parent_key = GenerateRandomKey();
+    CScript parent_spk = GetScriptForDestination(WitnessV0KeyHash(parent_key.GetPubKey()));
+    CScript child_spk = GetScriptForDestination(WitnessV0KeyHash(GenerateRandomKey().GetPubKey()));
+    const CAmount parent_value{50 * COIN - low_fee_amt};
+    auto tx_parent = MakeTransactionRef(CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[0], /*input_vout=*/0,
+                                                                      /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
+                                                                      /*output_destination=*/parent_spk,
+                                                                      /*output_amount=*/parent_value, /*submit=*/false));
+    auto mtx_child = CreateValidMempoolTransaction(/*input_transaction=*/tx_parent, /*input_vout=*/0,
+                                                   /*input_height=*/101, /*input_signing_key=*/parent_key,
+                                                   /*output_destination=*/child_spk,
+                                                   /*output_amount=*/parent_value - COIN, /*submit=*/false);
+    const auto test{[&](const Package& package) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        return ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package,
+                                 /*test_accept=*/true, /*client_maxfeerate=*/{}, /*test_as_submission=*/true);
+    }};
+
+    // The child fails its scripts: the parent's result is its own fee failure, as submission reports
+    // it, though the parent passed before the child failed.
+    CMutableTransaction mtx_bad_child{mtx_child};
+    mtx_bad_child.vin[0].scriptWitness.stack[0][10] ^= 1;
+    auto tx_bad_child = MakeTransactionRef(mtx_bad_child);
+    const auto bad{test({tx_parent, tx_bad_child})};
+    BOOST_CHECK(bad.m_state.IsInvalid());
+    BOOST_CHECK_EQUAL(bad.m_tx_results.at(tx_parent->GetWitnessHash()).m_state.GetRejectReason(), "mempool min fee not met");
+    BOOST_CHECK(bad.m_tx_results.at(tx_bad_child->GetWitnessHash()).m_result_type == MempoolAcceptResult::ResultType::INVALID);
+    BOOST_CHECK_EQUAL(m_node.mempool->size(), pool_size);
+
+    // The child pays for its low-fee parent: valid at the package feerate, with the mempool
+    // unchanged, and the results submission then gives.
+    const Package package{tx_parent, MakeTransactionRef(mtx_child)};
+    const auto tested{test(package)};
+    BOOST_CHECK(tested.m_state.IsValid());
+    BOOST_CHECK_EQUAL(m_node.mempool->size(), pool_size);
+    const auto submitted{ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package,
+                                           /*test_accept=*/false, /*client_maxfeerate=*/{})};
+    BOOST_CHECK(submitted.m_state.IsValid());
+    BOOST_CHECK_EQUAL(m_node.mempool->size(), pool_size + 2);
+    for (const auto& tx : package) {
+        const auto& t{tested.m_tx_results.at(tx->GetWitnessHash())};
+        const auto& s{submitted.m_tx_results.at(tx->GetWitnessHash())};
+        BOOST_CHECK(t.m_result_type == s.m_result_type);
+        BOOST_CHECK(t.m_effective_feerate == s.m_effective_feerate);
+        BOOST_CHECK(t.m_wtxids_fee_calculations == s.m_wtxids_fee_calculations);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(package_rbf_tests)
 {
     mineBlocks(5);
