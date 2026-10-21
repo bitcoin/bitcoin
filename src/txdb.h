@@ -36,12 +36,13 @@ struct CoinsViewOptions {
 class CCoinsViewDB final : public CCoinsView
 {
 protected:
-    DBParams m_db_params;
+    const fs::path m_path;
+    const bool m_memory_only;
     CoinsViewOptions m_options;
-    std::unique_ptr<CDBWrapper> m_db;
+    CDBWrapper m_db;
     std::shared_future<void> m_compaction;
 public:
-    explicit CCoinsViewDB(DBParams db_params, CoinsViewOptions options);
+    explicit CCoinsViewDB(const DBParams& db_params, CoinsViewOptions options);
     ~CCoinsViewDB() override;
 
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
@@ -57,7 +58,7 @@ public:
     bool NeedsUpgrade();
     size_t EstimateSize() const override;
 
-    bool IsMemoryOnly() const { return m_db_params.memory_only; }
+    bool IsMemoryOnly() const { return m_memory_only; }
 
     //! Perform a full compaction of the underlying LevelDB on a one-shot background thread.
     std::shared_future<void> CompactFullAsync() EXCLUSIVE_LOCKS_REQUIRED(cs_main);

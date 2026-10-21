@@ -3224,7 +3224,7 @@ UniValue CreateRolledBackUTXOSnapshot(
     };
 
     std::unique_ptr<CCoinsViewDB> temp_db = std::make_unique<CCoinsViewDB>(
-        std::move(db_params),
+        db_params,
         CoinsViewOptions{}
     );
 
