@@ -536,6 +536,12 @@ def initialize_datadir(dirname, n, chain, disable_autoconnect=True):
 #    = 151 + 8 + 3 + 2 + 16 = 180;
 #  num_p2p_max_connections = available_fds - min_required_fds = 256 - 180 = 76;
 TEST_MAX_P2P_CONNECTIONS = 76
+# File descriptors reserved by a single default -ipcbind listener: one listening
+# socket plus ipc::DEFAULT_MAX_CONNECTIONS (16) client connection slots.
+# Nodes started with -ipcbind subtract this from TEST_MAX_P2P_CONNECTIONS to
+# stay within the same budget. A test that configures more IPC listeners or slots
+# than that must lower -maxconnections itself.
+IPC_RESERVED_FDS = 1 + 16
 
 
 def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=True):
