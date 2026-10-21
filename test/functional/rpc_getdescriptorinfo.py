@@ -33,6 +33,104 @@ class DescriptorTest(BitcoinTestFramework):
         assert_equal(info['issolvable'], issolvable)
         assert_equal(info['hasprivatekeys'], hasprivatekeys)
 
+    def test_verbose(self):
+        self.log.info("Test verbose output")
+        node = self.nodes[0]
+        xpub = "tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B"
+        xprv = "tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK"  # Private form of xpub.
+        pk_a = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
+        pk_b = "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5"
+        pk_c = "02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9"
+        pk_d = "03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556"
+
+        desc = f"wsh(or_d(pk([deadbeef/48h/1h/0h/2h]{xpub}/0/*),and_v(v:pk({pk_b}),older(144))))"
+        info = node.getdescriptorinfo(desc)
+        assert "keys" not in info and "policy" not in info
+        assert_equal(node.getdescriptorinfo(desc, False), info)
+        verbose = node.getdescriptorinfo(desc, True)
+        assert_equal({k: v for k, v in verbose.items() if k not in ("keys", "policy")}, info)
+        assert_equal(verbose["keys"], [
+            {"role": "ecdsa", "type": "bip32", "xpub": xpub, "derivation": "/0/*", "origin": {"master_fingerprint": "deadbeef", "path": "m/48h/1h/0h/2h"}},
+            {"role": "ecdsa", "type": "pubkey", "pubkey": pk_b},
+        ])
+        assert_equal(verbose["policy"], [
+            {"function": "wsh", "children": [{"node": 1, "role": "script"}]},
+            {"fragment": "or_d", "children": [{"node": 2, "role": "left"}, {"node": 4, "role": "right"}]},
+            {"fragment": "c:", "children": [{"node": 3, "role": "wrapped"}]},
+            {"fragment": "pk_k", "keys": [0]},
+            {"fragment": "and_v", "children": [{"node": 5, "role": "left"}, {"node": 8, "role": "right"}]},
+            {"fragment": "v:", "children": [{"node": 6, "role": "wrapped"}]},
+            {"fragment": "c:", "children": [{"node": 7, "role": "wrapped"}]},
+            {"fragment": "pk_k", "keys": [1]},
+            {"fragment": "older", "value": 144},
+        ])
+
+        self.log.info("Test verbose output for Taproot and MuSig")
+        verbose = node.getdescriptorinfo(f"tr(musig({pk_a},{pk_b}),{{pk({pk_c[2:]}),and_v(v:pk({pk_d}),after(10))}})", True)
+        assert_equal(verbose["keys"], [
+            {"role": "taproot_internal", "type": "musig", "participants": [1, 2]},
+            {"role": "musig_participant", "type": "pubkey", "pubkey": pk_a},
+            {"role": "musig_participant", "type": "pubkey", "pubkey": pk_b},
+            {"role": "tapscript", "type": "pubkey", "pubkey": pk_c[2:]},
+            {"role": "tapscript", "type": "pubkey", "pubkey": pk_d},
+        ])
+        assert_equal(verbose["policy"], [
+            {"function": "tr", "keys": [0], "children": [{"node": 1, "role": "tapleaf", "depth": 1}, {"node": 2, "role": "tapleaf", "depth": 1}]},
+            {"function": "pk", "keys": [3]},
+            {"fragment": "and_v", "children": [{"node": 3, "role": "left"}, {"node": 6, "role": "right"}]},
+            {"fragment": "v:", "children": [{"node": 4, "role": "wrapped"}]},
+            {"fragment": "c:", "children": [{"node": 5, "role": "wrapped"}]},
+            {"fragment": "pk_k", "keys": [4]},
+            {"fragment": "after", "value": 10},
+        ])
+        verbose = node.getdescriptorinfo(f"tr(musig({xpub}/0,{xpub}/1)/0/*,{{pk({xpub}/2),{{pk({xpub}/3),pk({xpub}/4)}}}})", True)
+        assert_equal(verbose["keys"][0], {"role": "taproot_internal", "type": "musig", "participants": [1, 2], "derivation": "/0/*"})
+        assert_equal(verbose["keys"][1], {"role": "musig_participant", "type": "bip32", "xpub": xpub, "derivation": "/0"})
+        assert_equal([child["depth"] for child in verbose["policy"][0]["children"]], [1, 2, 2])
+
+        self.log.info("Test verbose output for child roles")
+        policy = node.getdescriptorinfo(f"wsh(andor(pk({xpub}/0),or_i(pk({xpub}/1),pk({xpub}/2)),thresh(1,pk({xpub}/3),s:pk({xpub}/4))))", True)["policy"]
+        assert_equal([child["role"] for child in policy[1]["children"]], ["condition", "if_true", "if_false"])
+        assert_equal(policy[4]["fragment"], "or_i")
+        assert_equal([child["role"] for child in policy[4]["children"]], ["if_true", "if_false"])
+        assert_equal(policy[9]["fragment"], "thresh")
+        assert_equal(policy[9]["value"], 1)
+        assert_equal([child["role"] for child in policy[9]["children"]], ["threshold_input", "threshold_input"])
+
+        self.log.info("Test verbose output for hashes, sorted multisig, and opaque scripts")
+        sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        policy = node.getdescriptorinfo(f"wsh(and_v(v:sha256({sha256}),multi(1,{pk_a},{pk_b})))", True)["policy"]
+        assert_equal(policy[3], {"fragment": "sha256", "data": sha256})
+        assert_equal(policy[4], {"fragment": "multi", "value": 1, "keys": [0, 1]})
+        verbose = node.getdescriptorinfo(f"sh(wsh(sortedmulti(1,{pk_b},{pk_a})))", True)
+        assert_equal([key["pubkey"] for key in verbose["keys"]], [pk_b, pk_a])
+        assert_equal(verbose["policy"][2], {"function": "sortedmulti", "value": 1, "keys": [0, 1]})
+        verbose = node.getdescriptorinfo("raw(51)", True)
+        assert_equal(verbose["keys"], [])
+        assert_equal(verbose["policy"], [{"function": "raw", "data": "51"}])
+        verbose = node.getdescriptorinfo("addr(bcrt1qw508d6qejxtdg4y5r3zarvary0c5xw7kygt080)", True)
+        assert_equal(verbose["policy"], [{"function": "addr", "data": "0014751e76e8199196d454941c45d1b3a323f1433bd6"}])
+        assert_equal(node.getdescriptorinfo(f"rawtr({pk_a[2:]})", True)["keys"], [{"role": "taproot_output", "type": "pubkey", "pubkey": pk_a[2:]}])
+
+        self.log.info("Test that verbose output contains no private keys")
+        public = node.getdescriptorinfo(f"wpkh([deadbeef/84h]{xpub}/0/*h)", True)
+        private = node.getdescriptorinfo(f"wpkh([deadbeef/84h]{xprv}/0/*h)", True)
+        assert_equal(private["hasprivatekeys"], True)
+        assert_equal(private["keys"], public["keys"])
+        assert_equal(private["policy"], public["policy"])
+        assert_equal(public["keys"][0]["derivation"], "/0/*h")
+
+        self.log.info("Test verbose output for an origin without a path and for MuSig participant origins")
+        keys = node.getdescriptorinfo(f"wpkh([deadbeef]{xpub}/0/*)", True)["keys"]
+        assert_equal(keys[0]["origin"], {"master_fingerprint": "deadbeef", "path": "m"})
+        keys = node.getdescriptorinfo(f"tr(musig([deadbeef/1h]{pk_a},{pk_b}))", True)["keys"]
+        assert_equal(keys[1]["origin"], {"master_fingerprint": "deadbeef", "path": "m/1h"})
+        assert "origin" not in keys[0] and "origin" not in keys[2]
+
+        self.log.info("Test that verbose output describes the first multipath descriptor")
+        verbose = node.getdescriptorinfo(f"wpkh({xpub}/<0;1>/*)", True)
+        assert_equal(verbose["keys"], node.getdescriptorinfo(f"wpkh({xpub}/0/*)", True)["keys"])
+
     def run_test(self):
         assert_raises_rpc_error(-1, 'getdescriptorinfo', self.nodes[0].getdescriptorinfo)
         # cli handles wrong types differently
@@ -79,6 +177,8 @@ class DescriptorTest(BitcoinTestFramework):
             expanded_descs=["wpkh(tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/0/*)", "wpkh(tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/*)"])
         self.test_desc("wsh(multi(1,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/<1;2>/0/*,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/<2;3>/0/*))", isrange=True, issolvable=True, hasprivatekeys=False,
             expanded_descs=["wsh(multi(1,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/0/*,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/2/0/*))", "wsh(multi(1,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/2/0/*,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/3/0/*))"])
+
+        self.test_verbose()
 
 
 if __name__ == '__main__':

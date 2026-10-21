@@ -131,6 +131,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendmany", 8, "fee_rate"},
     { "sendmany", 9, "verbose" },
     { "deriveaddresses", 1, "range" },
+    { "getdescriptorinfo", 1, "verbose" },
     { "scanblocks", 1, "scanobjects" },
     { "scanblocks", 2, "start_height" },
     { "scanblocks", 3, "stop_height" },
