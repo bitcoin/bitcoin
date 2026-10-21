@@ -667,13 +667,18 @@ public:
      * Should be called after CreateTransaction unless you want to abort
      * broadcasting the transaction.
      *
+     * The transaction is saved to the wallet before submission and stays saved
+     * if submission fails or is skipped. Throws if it cannot be written to the
+     * wallet database.
+     *
      * @param[in] tx The transaction to be broadcast.
      * @param[in] replaces_txid The txid of the transaction that this transaction replaces
      * @param[in] comment The user's comment for this transaction
      * @param[in] comment_to The comment for this transaction indicating where coins are sent to
      * @param[in] messages The BIP 21 URI messages to attach to this transaction
+     * @return {} if the node accepted the transaction, otherwise the error.
      */
-    void CommitTransaction(
+    [[nodiscard]] util::Expected<void, node::TransactionBroadcastError> CommitTransaction(
         CTransactionRef tx,
         std::optional<Txid> replaces_txid = std::nullopt,
         std::optional<std::string> comment = std::nullopt,

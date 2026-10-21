@@ -480,7 +480,7 @@ public:
             BOOST_CHECK(res);
             tx = res->tx;
         }
-        wallet->CommitTransaction(tx);
+        (void)wallet->CommitTransaction(tx);
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
@@ -511,14 +511,10 @@ BOOST_FIXTURE_TEST_CASE(CommitTransactionErrors, ListCoinsTestingSetup)
     const auto txid = tx->GetHash();
 
     wallet->SetBroadcastTransactions(false);
-    wallet->CommitTransaction(tx);
-    {
-        LOCK(wallet->cs_wallet);
-        const auto disabled = wallet->SubmitTxMemoryPoolAndRelay(wallet->mapWallet.at(txid), node::TxBroadcast::MEMPOOL_NO_BROADCAST);
-        BOOST_REQUIRE(!disabled);
-        BOOST_CHECK(disabled.error().code == node::TransactionError::SUBMISSION_SKIPPED);
-        BOOST_CHECK(!m_node.mempool->exists(txid));
-    }
+    const auto disabled = wallet->CommitTransaction(tx);
+    BOOST_REQUIRE(!disabled);
+    BOOST_CHECK(disabled.error().code == node::TransactionError::SUBMISSION_SKIPPED);
+    BOOST_CHECK(!m_node.mempool->exists(txid));
     wallet->SetBroadcastTransactions(true);
     BOOST_REQUIRE(wallet->AbandonTransaction(txid));
     LOCK(wallet->cs_wallet);

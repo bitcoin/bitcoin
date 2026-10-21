@@ -247,7 +247,7 @@ void WalletModel::sendCoins(WalletModelTransaction& transaction)
         }
 
         auto& newTx = transaction.getWtx();
-        wallet().commitTransaction(newTx, messages);
+        (void)wallet().commitTransaction(newTx, messages);
 
         DataStream ssTx;
         ssTx << TX_WITH_WITNESS(*newTx);

@@ -2150,7 +2150,7 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
     return m_default_address_type;
 }
 
-void CWallet::CommitTransaction(
+util::Expected<void, node::TransactionBroadcastError> CWallet::CommitTransaction(
     CTransactionRef tx,
     std::optional<Txid> replaces_txid,
     std::optional<std::string> comment,
@@ -2190,6 +2190,7 @@ void CWallet::CommitTransaction(
         WalletLogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s", result.error().message);
         // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
     }
+    return result;
 }
 
 DBErrors CWallet::PopulateWalletFromDB(bilingual_str& error, std::vector<bilingual_str>& warnings)
