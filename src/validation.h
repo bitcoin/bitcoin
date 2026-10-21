@@ -910,14 +910,6 @@ public:
         because CBlockIndexWorkComparator tiebreaker rules are not applied. */
     CBlockIndex* m_best_header GUARDED_BY(::cs_main){nullptr};
 
-    //! The total number of bytes available for us to use across all in-memory
-    //! coins caches.
-    size_t m_total_coinstip_cache{0};
-    //
-    //! The total number of bytes available for us to use across all leveldb
-    //! coins databases.
-    size_t m_total_coinsdb_cache{0};
-
     /// Ensures a genesis block is in the block tree, possibly writing one to disk.
     [[nodiscard]] bool LoadGenesisBlock();
 
