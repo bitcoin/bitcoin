@@ -28,12 +28,29 @@
 using kernel::CacheSizes;
 
 namespace node {
-// Complete initialization of the chainstate after the initial call has been made
-// to ChainstateManager::InitializeChainstate().
-static ChainstateLoadResult CompleteChainstateInitialization(
-    ChainstateManager& chainman,
-    const ChainstateLoadOptions& options) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSizes& cache_sizes,
+                                    const ChainstateLoadOptions& options)
 {
+    if (!chainman.AssumedValidBlock().IsNull()) {
+        LogInfo("Assuming ancestors of block %s have valid signatures.", chainman.AssumedValidBlock().GetHex());
+    } else {
+        LogInfo("Validating signatures for all blocks.");
+    }
+    LogInfo("Setting nMinimumChainWork=%s", chainman.MinimumChainWork().GetHex());
+    if (chainman.MinimumChainWork() < UintToArith256(chainman.GetConsensus().nMinimumChainWork)) {
+        LogWarning("nMinimumChainWork set below default value of %s", chainman.GetConsensus().nMinimumChainWork.GetHex());
+    }
+    if (chainman.m_blockman.GetPruneTarget() == BlockManager::PRUNE_TARGET_MANUAL) {
+        LogInfo("Block pruning enabled. Use RPC call pruneblockchain(height) to manually prune block and undo files.");
+    } else if (chainman.m_blockman.GetPruneTarget()) {
+        LogInfo("Prune configured to target %u MiB on disk for block and undo files.",
+                chainman.m_blockman.GetPruneTarget() / 1_MiB);
+    }
+
+    LOCK(cs_main);
+
+    chainman.InitializeChainstate(options.mempool);
+
     if (chainman.m_interrupt) return {ChainstateLoadStatus::INTERRUPTED, {}};
 
     // LoadBlockIndex will load m_have_pruned if we've ever removed a
@@ -73,8 +90,8 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         return {ChainstateLoadStatus::FAILURE, _("Error initializing block database")};
     }
 
-    assert(chainman.m_total_coinstip_cache > 0);
-    assert(chainman.m_total_coinsdb_cache > 0);
+    assert(cache_sizes.coins > 0);
+    assert(cache_sizes.coins_db > 0);
 
     // At this point we're either in reindex or we've loaded a useful
     // block tree into BlockIndex()!
@@ -84,7 +101,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
 
     try {
         chainstate.InitCoinsDB(
-            /*cache_size_bytes=*/chainman.m_total_coinsdb_cache,
+            /*cache_size_bytes=*/cache_sizes.coins_db,
             /*in_memory=*/options.coins_db_in_memory,
             /*should_wipe=*/options.wipe_chainstate_db);
     } catch (dbwrapper_error& err) {
@@ -110,7 +127,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     }
 
     // The on-disk coinsdb is now in a good state, create the cache
-    chainstate.InitCoinsCache(chainman.m_total_coinstip_cache);
+    chainstate.InitCoinsCache(cache_sizes.coins);
     assert(chainstate.CanFlushToDisk());
 
     if (!options.wipe_chainstate_db && !chainstate.CoinsTip().GetBestBlock().IsNull()) {
@@ -132,35 +149,6 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     };
 
     return {ChainstateLoadStatus::SUCCESS, {}};
-}
-
-ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSizes& cache_sizes,
-                                    const ChainstateLoadOptions& options)
-{
-    if (!chainman.AssumedValidBlock().IsNull()) {
-        LogInfo("Assuming ancestors of block %s have valid signatures.", chainman.AssumedValidBlock().GetHex());
-    } else {
-        LogInfo("Validating signatures for all blocks.");
-    }
-    LogInfo("Setting nMinimumChainWork=%s", chainman.MinimumChainWork().GetHex());
-    if (chainman.MinimumChainWork() < UintToArith256(chainman.GetConsensus().nMinimumChainWork)) {
-        LogWarning("nMinimumChainWork set below default value of %s", chainman.GetConsensus().nMinimumChainWork.GetHex());
-    }
-    if (chainman.m_blockman.GetPruneTarget() == BlockManager::PRUNE_TARGET_MANUAL) {
-        LogInfo("Block pruning enabled. Use RPC call pruneblockchain(height) to manually prune block and undo files.");
-    } else if (chainman.m_blockman.GetPruneTarget()) {
-        LogInfo("Prune configured to target %u MiB on disk for block and undo files.",
-                chainman.m_blockman.GetPruneTarget() / 1_MiB);
-    }
-
-    LOCK(cs_main);
-
-    chainman.m_total_coinstip_cache = cache_sizes.coins;
-    chainman.m_total_coinsdb_cache = cache_sizes.coins_db;
-
-    chainman.InitializeChainstate(options.mempool);
-
-    return CompleteChainstateInitialization(chainman, options);
 }
 
 ChainstateLoadResult VerifyLoadedChainstate(ChainstateManager& chainman, const ChainstateLoadOptions& options)
