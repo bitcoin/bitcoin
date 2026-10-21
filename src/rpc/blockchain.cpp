@@ -3561,9 +3561,10 @@ static RPCMethod loadtxoutset()
             "Couldn't open file " + path.utf8string() + " for reading.");
     }
 
-    SnapshotMetadata metadata{chainman.GetParams().MessageStart()};
+    SnapshotMetadata metadata;
     try {
         afile >> metadata;
+        metadata.CheckNetwork(chainman.GetParams().MessageStart());
     } catch (const std::ios_base::failure& e) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Unable to parse metadata: %s", e.what()));
     }
