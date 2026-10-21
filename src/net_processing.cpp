@@ -1002,35 +1002,6 @@ private:
      */
     void FindNextBlocksToDownload(const Peer& peer, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, NodeId& nodeStaller) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    /**
-    * \brief Find next blocks to download from a peer after a starting block.
-    *
-    * \param vBlocks      Vector of blocks to download which will be appended to.
-    * \param peer         Peer which blocks will be downloaded from.
-    * \param state        Pointer to the state of the peer.
-    * \param pindexWalk   Pointer to the starting block to add to vBlocks.
-    * \param count        Maximum number of blocks to allow in vBlocks. No more
-    *                     blocks will be added if it reaches this size.
-    * \param nWindowEnd   Maximum height of blocks to allow in vBlocks. No
-    *                     blocks will be added above this height.
-    * \param activeChain  Optional pointer to a chain to compare against. If
-    *                     provided, any next blocks which are already contained
-    *                     in this chain will not be appended to vBlocks, but
-    *                     instead will be used to update the
-    *                     state->pindexLastCommonBlock pointer.
-    * \param nodeStaller  Optional pointer to a NodeId variable that will receive
-    *                     the ID of another peer that might be causing this peer
-    *                     to stall. This is set to the ID of the peer which
-    *                     first requested the first in-flight block in the
-    *                     download window. It is only set if vBlocks is empty at
-    *                     the end of this function call and if increasing
-    *                     nWindowEnd by 1 would cause it to be non-empty (which
-    *                     indicates the download might be stalled because every
-    *                     block in the window is in flight and no other peer is
-    *                     trying to download the next block).
-    */
-    void FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, const Peer& peer, CNodeState *state, const CBlockIndex *pindexWalk, unsigned int count, int nWindowEnd, const CChain* activeChain=nullptr, NodeId* nodeStaller=nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
     /* Multimap used to preserve insertion order */
     typedef std::multimap<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator>> BlockDownloadMap;
     BlockDownloadMap mapBlocksInFlight GUARDED_BY(cs_main);
@@ -1522,11 +1493,6 @@ void PeerManagerImpl::FindNextBlocksToDownload(const Peer& peer, unsigned int co
     // download that next block if the window were 1 larger.
     int nWindowEnd = state->pindexLastCommonBlock->nHeight + BLOCK_DOWNLOAD_WINDOW;
 
-    FindNextBlocks(vBlocks, peer, state, pindexWalk, count, nWindowEnd, &m_chainman.ActiveChain(), &nodeStaller);
-}
-
-void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, const Peer& peer, CNodeState *state, const CBlockIndex *pindexWalk, unsigned int count, int nWindowEnd, const CChain* activeChain, NodeId* nodeStaller)
-{
     std::vector<const CBlockIndex*> vToFetch;
     int nMaxHeight = std::min<int>(state->pindexBestKnownBlock->nHeight, nWindowEnd + 1);
     bool is_limited_peer = IsLimitedPeer(peer);
@@ -1558,8 +1524,8 @@ void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, c
                 return;
             }
 
-            if (pindex->nStatus & BLOCK_HAVE_DATA || (activeChain && activeChain->Contains(*pindex))) {
-                if (activeChain && pindex->HaveNumChainTxs()) {
+            if (pindex->nStatus & BLOCK_HAVE_DATA || m_chainman.ActiveChain().Contains(*pindex)) {
+                if (pindex->HaveNumChainTxs()) {
                     state->pindexLastCommonBlock = pindex;
                 }
                 continue;
@@ -1579,7 +1545,7 @@ void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, c
                 // We reached the end of the window.
                 if (vBlocks.size() == 0 && waitingfor != peer.m_id) {
                     // We aren't able to fetch anything, but we would be if the download window was one larger.
-                    if (nodeStaller) *nodeStaller = waitingfor;
+                    nodeStaller = waitingfor;
                 }
                 return;
             }
@@ -6480,11 +6446,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
         if (CanServeBlocks(peer) && can_request_blocks_from_peer && ((sync_blocks_and_headers_from_peer && !IsLimitedPeer(peer)) || !m_chainman.IsInitialBlockDownload()) && state.vBlocksInFlight.size() < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             std::vector<const CBlockIndex*> vToDownload;
             NodeId staller = -1;
-            auto get_inflight_budget = [&state]() {
-                return std::max(0, MAX_BLOCKS_IN_TRANSIT_PER_PEER - static_cast<int>(state.vBlocksInFlight.size()));
-            };
-
-            FindNextBlocksToDownload(peer, get_inflight_budget(), vToDownload, staller);
+            FindNextBlocksToDownload(peer, MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.vBlocksInFlight.size(), vToDownload, staller);
             for (const CBlockIndex *pindex : vToDownload) {
                 uint32_t nFetchFlags = GetFetchFlags(peer);
                 vGetData.emplace_back(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash());
