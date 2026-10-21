@@ -12,23 +12,14 @@ $(package)_freebsd_dependencies := $($(package)_linux_dependencies)
 $(package)_openbsd_dependencies := $($(package)_linux_dependencies)
 $(package)_patches_path := $(qt_details_patches_path)
 $(package)_patches := cocoa_compat.patch
-$(package)_patches += dont_hardcode_pwd.patch
 $(package)_patches += qtbase_avoid_qmain.patch
-$(package)_patches += qtbase_plugins_cocoa.patch
 $(package)_patches += qtbase_skip_tools.patch
-$(package)_patches += rcc_hardcode_timestamp.patch
+$(package)_patches += qtbase_xkbcommon_compat.patch
 $(package)_patches += qttools_skip_dependencies.patch
+$(package)_patches += rcc_hardcode_timestamp.patch
 $(package)_patches += static_fixes.patch
-$(package)_patches += fix-gcc16-qcompare.patch
-$(package)_patches += fix-gcc16-sfinae-qregularexpression.patch
-$(package)_patches += fix-gcc16-sfinae-qchar.patch
-$(package)_patches += fix-gcc16-sfinae-qbitarray.patch
-$(package)_patches += fix-gcc16-sfinae-qanystringview.patch
-$(package)_patches += fix-macos26-qyield.patch
-$(package)_patches += fix-qbytearray-include.patch
 $(package)_patches += fix_openbsd_network_kernel.patch
 $(package)_patches += fix_openbsd_plugin_qelfparser.patch
-$(package)_patches += fix_missed_headers.patch
 
 $(package)_qttranslations_file_name=$(qt_details_qttranslations_file_name)
 $(package)_qttranslations_sha256_hash=$(qt_details_qttranslations_sha256_hash)
@@ -81,8 +72,6 @@ $(package)_config_opts += -no-securetransport
 $(package)_config_opts += -no-system-proxies
 $(package)_config_opts += -no-use-gold-linker
 $(package)_config_opts += -no-zstd
-$(package)_config_opts += -nomake examples
-$(package)_config_opts += -nomake tests
 $(package)_config_opts += -prefix $(host_prefix)
 $(package)_config_opts += -qt-doubleconversion
 $(package)_config_opts += -qt-harfbuzz
@@ -109,6 +98,7 @@ $(package)_config_opts += -no-feature-libstdcpp_assertions
 $(package)_config_opts += -no-feature-networkdiskcache
 $(package)_config_opts += -no-feature-networkproxy
 $(package)_config_opts += -no-feature-printsupport
+$(package)_config_opts += -no-feature-qtwaylandscanner
 $(package)_config_opts += -no-feature-sessionmanager
 $(package)_config_opts += -no-feature-socks5
 $(package)_config_opts += -no-feature-sql
@@ -123,11 +113,13 @@ $(package)_config_opts += -no-feature-undostack
 $(package)_config_opts += -no-feature-undoview
 $(package)_config_opts += -no-feature-vnc
 $(package)_config_opts += -no-feature-vulkan
+$(package)_config_opts += -no-feature-wayland
 
 # Core tools.
 $(package)_config_opts += -no-feature-androiddeployqt
 $(package)_config_opts += -no-feature-macdeployqt
 $(package)_config_opts += -no-feature-qmake
+$(package)_config_opts += -no-feature-wasmdeployqt
 $(package)_config_opts += -no-feature-windeployqt
 
 ifeq ($(host),$(build))
@@ -135,7 +127,6 @@ ifeq ($(host),$(build))
 $(package)_config_opts += -feature-linguist
 $(package)_config_opts += -no-feature-assistant
 $(package)_config_opts += -no-feature-clang
-$(package)_config_opts += -no-feature-clangcpp
 $(package)_config_opts += -no-feature-designer
 $(package)_config_opts += -no-feature-pixeltool
 $(package)_config_opts += -no-feature-qdoc
@@ -226,8 +217,12 @@ ifeq ($(host_os),darwin)
 $(package)_cmake_opts += -DCMAKE_INSTALL_NAME_TOOL=true
 $(package)_cmake_opts += -DCMAKE_FRAMEWORK_PATH=$(OSX_SDK)/System/Library/Frameworks
 $(package)_cmake_opts += -DQT_INTERNAL_APPLE_SDK_VERSION=$(OSX_SDK_VERSION)
-$(package)_cmake_opts += -DQT_INTERNAL_XCODE_VERSION=$(XCODE_VERSION)
 $(package)_cmake_opts += -DQT_NO_APPLE_SDK_MAX_VERSION_CHECK=ON
+ifeq ($(build_os),darwin)
+$(package)_cmake_opts += -DQT_NO_XCODE_MIN_VERSION_CHECK=ON
+else
+$(package)_cmake_opts += -DQT_INTERNAL_XCODE_VERSION=$(XCODE_VERSION)
+endif
 endif
 endef
 
@@ -280,22 +275,13 @@ endif
 
 define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/cocoa_compat.patch && \
-  patch -p1 -i $($(package)_patch_dir)/dont_hardcode_pwd.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase_avoid_qmain.patch && \
-  patch -p1 -i $($(package)_patch_dir)/qtbase_plugins_cocoa.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase_skip_tools.patch && \
+  patch -p1 -i $($(package)_patch_dir)/qtbase_xkbcommon_compat.patch && \
   patch -p1 -i $($(package)_patch_dir)/rcc_hardcode_timestamp.patch && \
   patch -p1 -i $($(package)_patch_dir)/static_fixes.patch && \
-  patch -p1 -i $($(package)_patch_dir)/fix-gcc16-qcompare.patch && \
-  patch -p1 -i $($(package)_patch_dir)/fix-gcc16-sfinae-qregularexpression.patch && \
-  patch -p1 -i $($(package)_patch_dir)/fix-gcc16-sfinae-qchar.patch && \
-  patch -p1 -i $($(package)_patch_dir)/fix-gcc16-sfinae-qbitarray.patch && \
-  patch -p1 -i $($(package)_patch_dir)/fix-gcc16-sfinae-qanystringview.patch && \
-  patch -p1 -i $($(package)_patch_dir)/fix-macos26-qyield.patch && \
-  patch -p1 -i $($(package)_patch_dir)/fix-qbytearray-include.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_openbsd_network_kernel.patch && \
-  patch -p1 -i $($(package)_patch_dir)/fix_openbsd_plugin_qelfparser.patch && \
-  patch -p1 -i $($(package)_patch_dir)/fix_missed_headers.patch
+  patch -p1 -i $($(package)_patch_dir)/fix_openbsd_plugin_qelfparser.patch
 endef
 ifeq ($(host),$(build))
   $(package)_preprocess_cmds += && patch -p1 -i $($(package)_patch_dir)/qttools_skip_dependencies.patch
