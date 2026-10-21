@@ -953,18 +953,6 @@ private:
 
     bool NotifyHeaderTip() LOCKS_EXCLUDED(GetMutex());
 
-    //! Internal helper for ActivateSnapshot().
-    //!
-    //! De-serialization of a snapshot that is created with
-    //! the dumptxoutset RPC.
-    //! To reduce space the serialization format of the snapshot avoids
-    //! duplication of tx hashes. The code takes advantage of the guarantee by
-    //! leveldb that keys are lexicographically sorted.
-    [[nodiscard]] util::Result<void> PopulateAndValidateSnapshot(
-        Chainstate& snapshot_chainstate,
-        AutoFile& coins_file,
-        const SnapshotMetadata& metadata);
-
     /**
      * If a block header hasn't already been seen, call CheckBlockHeader on it, ensure
      * that it doesn't descend from an invalid block, and then add it to m_block_index.
