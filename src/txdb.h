@@ -12,6 +12,7 @@
 #include <kernel/cs_main.h>
 #include <streams.h>
 #include <sync.h>
+#include <util/check.h>
 #include <util/fs.h>
 
 #include <cstddef>
@@ -116,6 +117,9 @@ public:
 
     //! Return an underlying LevelDB property value, if available.
     std::optional<std::string> GetDBProperty(const std::string& property);
+
+    //! Access the underlying database; for testing/in-memory databases only.
+    CDBWrapper& GetDB() { Assert(m_db_params.memory_only); return *m_db; }
 };
 
 #endif // BITCOIN_TXDB_H
