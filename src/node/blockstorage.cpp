@@ -300,24 +300,29 @@ void BlockManager::PruneOneBlockFile(const int fileNumber)
     m_dirty_fileinfo.insert(fileNumber);
 }
 
+static int LastPrunableHeight(int chain_height, int requested_height)
+{
+    return std::min(requested_height, std::max(0, chain_height - static_cast<int>(MIN_BLOCKS_TO_KEEP)));
+}
+
 void BlockManager::FindFilesToPruneManual(
     std::set<int>& setFilesToPrune,
     int nManualPruneHeight,
-    const Chainstate& chain)
+    int chain_tip_height)
 {
     assert(IsPruneMode() && nManualPruneHeight > 0);
 
     LOCK(::cs_main);
-    if (chain.m_chain.Height() < 0) {
+    if (chain_tip_height < 0) {
         return;
     }
 
-    const auto [min_block_to_prune, last_block_can_prune] = chain.GetPruneRange(nManualPruneHeight);
+    const int last_block_can_prune{LastPrunableHeight(chain_tip_height, nManualPruneHeight)};
 
     int count = 0;
     for (int fileNumber = 0; fileNumber < m_blockfile_cursor.file_num; fileNumber++) {
         const auto& fileinfo = m_blockfile_info[fileNumber];
-        if (fileinfo.nSize == 0 || fileinfo.nHeightLast > (unsigned)last_block_can_prune || fileinfo.nHeightFirst < (unsigned)min_block_to_prune) {
+        if (fileinfo.nSize == 0 || fileinfo.nHeightLast > (unsigned)last_block_can_prune) {
             continue;
         }
 
@@ -332,21 +337,21 @@ void BlockManager::FindFilesToPruneManual(
 void BlockManager::FindFilesToPrune(
     std::set<int>& setFilesToPrune,
     int last_prune,
-    const Chainstate& chain,
+    int chain_tip_height,
     ChainstateManager& chainman)
 {
     LOCK(::cs_main);
     const uint64_t target{GetPruneTarget()};
     const uint64_t target_sync_height = chainman.m_best_header->nHeight;
 
-    if (chain.m_chain.Height() < 0 || target == 0) {
+    if (chain_tip_height < 0 || target == 0) {
         return;
     }
-    if (static_cast<uint64_t>(chain.m_chain.Height()) <= chainman.GetParams().PruneAfterHeight()) {
+    if (static_cast<uint64_t>(chain_tip_height) <= chainman.GetParams().PruneAfterHeight()) {
         return;
     }
 
-    const auto [min_block_to_prune, last_block_can_prune] = chain.GetPruneRange(last_prune);
+    const int last_block_can_prune{LastPrunableHeight(chain_tip_height, last_prune)};
 
     uint64_t nCurrentUsage = CalculateCurrentUsage();
     // We don't check to prune until after we've allocated new space for files
@@ -361,7 +366,6 @@ void BlockManager::FindFilesToPrune(
         // To avoid excessive prune events negating the benefit of high dbcache
         // values, we should not prune too rapidly.
         // So when pruning in IBD, increase the buffer to avoid a re-prune too soon.
-        const auto chain_tip_height = chain.m_chain.Height();
         if (chainman.IsInitialBlockDownload() && target_sync_height > (uint64_t)chain_tip_height) {
             // Since this is only relevant during IBD, we assume blocks are at least 1 MB on average
             static constexpr uint64_t average_block_size = 1000000;  /* 1 MB */
@@ -381,9 +385,8 @@ void BlockManager::FindFilesToPrune(
                 break;
             }
 
-            // don't prune files that could have a block that's not within the allowable
-            // prune range for the chain being pruned.
-            if (fileinfo.nHeightLast > (unsigned)last_block_can_prune || fileinfo.nHeightFirst < (unsigned)min_block_to_prune) {
+            // don't prune files that could have a block within MIN_BLOCKS_TO_KEEP of the main chain's tip but keep scanning
+            if (fileinfo.nHeightLast > (unsigned)last_block_can_prune) {
                 continue;
             }
 
@@ -395,10 +398,10 @@ void BlockManager::FindFilesToPrune(
         }
     }
 
-    LogDebug(BCLog::PRUNE, "target=%dMiB actual=%dMiB diff=%dMiB min_height=%d max_prune_height=%d removed %d blk/rev pairs\n",
+    LogDebug(BCLog::PRUNE, "target=%dMiB actual=%dMiB diff=%dMiB max_prune_height=%d removed %d blk/rev pairs\n",
              target / 1_MiB, nCurrentUsage / 1_MiB,
              (int64_t(target) - int64_t(nCurrentUsage)) / int64_t(1_MiB),
-             min_block_to_prune, last_block_can_prune, count);
+             last_block_can_prune, count);
 }
 
 void BlockManager::UpdatePruneLock(const std::string& name, const PruneLockInfo& lock_info) {
