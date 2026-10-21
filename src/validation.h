@@ -490,7 +490,7 @@ public:
     //! state to disk, which should not be done until the health of the database is verified.
     //!
     //! All arguments forwarded onto CCoinsViewDB.
-    CoinsViews(DBParams db_params, CoinsViewOptions options);
+    CoinsViews(const DBParams& db_params, CoinsViewOptions options);
 
     //! Initialize the CCoinsViewCache member.
     void InitCache(int32_t prevoutfetch_threads) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
