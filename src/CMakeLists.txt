@@ -258,7 +258,6 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   policy/rbf.cpp
   policy/settings.cpp
   policy/truc_policy.cpp
-  private_broadcast.cpp
   privbcast/assign.cpp
   privbcast/attempt.cpp
   privbcast/discovery.cpp

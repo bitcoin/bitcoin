@@ -83,7 +83,6 @@ add_executable(test_bitcoin
   pool_tests.cpp
   pow_tests.cpp
   prevector_tests.cpp
-  private_broadcast_tests.cpp
   privbcast_plan_tests.cpp
   privbcast_queue_tests.cpp
   psbt_tests.cpp
