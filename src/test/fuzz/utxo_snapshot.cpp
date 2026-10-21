@@ -157,10 +157,10 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
 
     const auto ActivateFuzzedSnapshot{[&] {
         AutoFile infile{fsbridge::fopen(snapshot_path, "rb")};
-        auto msg_start = chainman.GetParams().MessageStart();
-        SnapshotMetadata metadata{msg_start};
+        SnapshotMetadata metadata;
         try {
             infile >> metadata;
+            metadata.CheckNetwork(chainman.GetParams().MessageStart());
         } catch (const std::ios_base::failure&) {
             return false;
         }
