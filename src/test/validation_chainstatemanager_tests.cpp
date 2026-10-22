@@ -4,6 +4,7 @@
 //
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <kernel/coinstats.h>
 #include <kernel/disconnected_transactions.h>
 #include <node/block_template_manager.h>
 #include <node/chainstatemanager_args.h>
@@ -18,6 +19,7 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
+#include <txdb.h>
 #include <uint256.h>
 #include <util/byte_units.h>
 #include <util/result.h>
@@ -28,6 +30,8 @@
 
 #include <tinyformat.h>
 
+#include <algorithm>
+#include <memory>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
@@ -467,6 +471,62 @@ struct SnapshotTestSetup : TestChain100Setup {
 BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, SnapshotTestSetup)
 {
     this->SetupSnapshot();
+}
+
+//! Snapshot hashing must agree with database hashing even when output indices
+//! are not in numeric order, or a transaction spans decoded batches.
+BOOST_AUTO_TEST_CASE(snapshot_hash_order)
+{
+    const auto txid{Txid::FromUint256(uint256::ONE)};
+    const auto next_txid{Txid::FromUint256(uint256{"0000000000000000000000000000000000000000000000000000000000000002"})};
+    const Coin coin{CTxOut{1, CScript{} << OP_TRUE}, 1, false};
+    // In particular, VARINT(16512) sorts before VARINT(16511).
+    const std::vector<SnapshotItem> coins{
+        {{txid, 0}, coin}, {{txid, 16512}, coin}, {{txid, 16511}, coin},
+        {{next_txid, 0}, coin}, {{next_txid, 1}, coin},
+    };
+    CCoinsViewDB db{{.path = m_path_root / "snapshot-hash", .cache_bytes = 0, .memory_only = true}, {}};
+    CCoinsViewCache cache{&db};
+    for (const auto& item : coins) cache.AddCoin(item.outpoint, Coin{item.coin}, false);
+    const auto base{WITH_LOCK(cs_main, return m_node.chainman->ActiveTip()->GetBlockHash())};
+    cache.SetBestBlock(base);
+    cache.Flush();
+    const auto stats{kernel::ComputeUTXOStats(kernel::CoinStatsHashType::HASH_SERIALIZED, db, m_node.chainman->m_blockman)};
+    BOOST_REQUIRE(stats);
+    for (const size_t batch_size : {1, 2, 5}) {
+        SnapshotQueue queue{coins.size()};
+        for (size_t offset{0}; offset < coins.size(); offset += batch_size) {
+            const auto end{std::min(offset + batch_size, coins.size())};
+            queue.Push(std::make_shared<const std::vector<SnapshotItem>>(coins.begin() + offset, coins.begin() + end));
+        }
+        queue.Finish();
+        uint256 hash;
+        HashSnapshotBatches(queue, hash);
+        BOOST_CHECK_EQUAL(hash, stats->hashSerialized);
+    }
+
+    // Sorting an untrusted transaction group must not retain unlimited data.
+    // 99 of these outputs fit in a block; 100 exceed its weight limit.
+    CScript large_script;
+    large_script.resize(10'000);
+    const Coin large_coin{CTxOut{1, large_script}, 1, false};
+    const auto path{m_path_root / "snapshot-oversized-group"};
+    for (const size_t count : {99, 100}) {
+        {
+            AutoFile file{fsbridge::fopen(path, "wb")};
+            file << txid;
+            WriteCompactSize(file, count);
+            for (size_t n{0}; n < count; ++n) {
+                WriteCompactSize(file, n);
+                file << large_coin;
+            }
+            BOOST_REQUIRE_EQUAL(file.fclose(), 0);
+        }
+        AutoFile file{fsbridge::fopen(path, "rb")};
+        const auto result{ReadSnapshotCoins(file, count,
+            [](const COutPoint&, Coin&) -> util::Result<void> { return {}; })};
+        BOOST_CHECK_EQUAL(bool{result}, count == 99);
+    }
 }
 
 //! Test LoadBlockIndex behavior when multiple chainstates are in use.
