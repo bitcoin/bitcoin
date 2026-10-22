@@ -1420,4 +1420,25 @@ BOOST_AUTO_TEST_CASE(tx_malformed_serialization)
     BOOST_CHECK_EXCEPTION(bad_flag >> TX_WITH_WITNESS(tx), std::ios_base::failure, HasReason{"Unknown transaction optional data"});
 }
 
+BOOST_AUTO_TEST_CASE(too_many_inputs_or_outputs)
+{
+    // Deserialization fails as soon as a count of inputs or outputs is read that is more than fit in a block, before
+    // reading them (so here, rather than for running out of data), in either format.
+    const auto check{[](bool extended, bool outputs, uint64_t count, const std::string& reason) {
+        DataStream s;
+        s << uint32_t{2};
+        if (extended) s << uint8_t{0} << uint8_t{1};
+        if (outputs) s << std::vector<CTxIn>(1);
+        WriteCompactSize(s, count);
+        CMutableTransaction tx;
+        BOOST_CHECK_EXCEPTION(s >> TX_WITH_WITNESS(tx), std::ios_base::failure, HasReason(reason));
+    }};
+    for (const bool extended : {false, true}) {
+        check(extended, /*outputs=*/false, MAX_BLOCK_WEIGHT / MIN_WEIGHT_PER_TXIN, "end of data");
+        check(extended, /*outputs=*/false, MAX_BLOCK_WEIGHT / MIN_WEIGHT_PER_TXIN + 1, "Too many transaction inputs");
+        check(extended, /*outputs=*/true, MAX_BLOCK_WEIGHT / MIN_WEIGHT_PER_TXOUT, "end of data");
+        check(extended, /*outputs=*/true, MAX_BLOCK_WEIGHT / MIN_WEIGHT_PER_TXOUT + 1, "Too many transaction outputs");
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

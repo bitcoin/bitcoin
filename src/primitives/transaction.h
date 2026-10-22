@@ -8,6 +8,7 @@
 
 #include <attributes.h>
 #include <consensus/amount.h>
+#include <consensus/consensus.h>
 #include <primitives/transaction_identifier.h> // IWYU pragma: export
 #include <script/script.h>
 #include <serialize.h>
@@ -181,6 +182,11 @@ struct TransactionSerParams {
 inline constexpr TransactionSerParams TX_WITH_WITNESS{.allow_witness = true};
 inline constexpr TransactionSerParams TX_NO_WITNESS{.allow_witness = false};
 
+/** The minimum weight of a transaction input: its prevout (36 bytes), an empty scriptSig (1), and its nSequence (4). */
+inline constexpr uint64_t MIN_WEIGHT_PER_TXIN{WITNESS_SCALE_FACTOR * (36 + 1 + 4)};
+/** The minimum weight of a transaction output: its nValue (8 bytes) and an empty scriptPubKey (1). */
+inline constexpr uint64_t MIN_WEIGHT_PER_TXOUT{WITNESS_SCALE_FACTOR * (8 + 1)};
+
 /**
  * Basic transaction serialization format:
  * - uint32_t version
@@ -207,19 +213,29 @@ void UnserializeTransaction(TxType& tx, Stream& s, const TransactionSerParams& p
     unsigned char flags = 0;
     tx.vin.clear();
     tx.vout.clear();
-    /* Try to read the vin. In case the dummy is there, this will be read as an empty vector. */
-    s >> tx.vin;
-    if (tx.vin.size() == 0 && fAllowWitness) {
+
+    // Read the number of inputs. In case the dummy is there, this reads it as zero inputs.
+    auto num_inputs = ReadCompactSize(s);
+    if (num_inputs == 0 && fAllowWitness) {
         /* We read a dummy or an empty vin. */
         s >> flags;
-        if (flags != 0) {
-            s >> tx.vin;
-            s >> tx.vout;
-        }
-    } else {
-        /* We read a non-empty vin. Assume a normal vout follows. */
-        s >> tx.vout;
+        if (flags != 0) num_inputs = ReadCompactSize(s);
     }
+    // Fail without reading them if more inputs or outputs are claimed than can fit in a block. This also bounds the
+    // memory allocated for them.
+    if (num_inputs > MAX_BLOCK_WEIGHT / MIN_WEIGHT_PER_TXIN) throw std::ios_base::failure("Too many transaction inputs");
+    // Read the transaction inputs.
+    tx.vin.resize(num_inputs);
+    for (auto& txin : tx.vin) s >> txin;
+
+    // Read the number of outputs. In case of an empty vin, the byte read as the flags is the number of outputs (if the
+    // flags are not zero, there is witness data without inputs, which fails below).
+    auto num_outputs = (num_inputs == 0 && fAllowWitness) ? uint64_t{0} : ReadCompactSize(s);
+    if (num_outputs > MAX_BLOCK_WEIGHT / MIN_WEIGHT_PER_TXOUT) throw std::ios_base::failure("Too many transaction outputs");
+    // Read the transaction outputs.
+    tx.vout.resize(num_outputs);
+    for (auto& txout : tx.vout) s >> txout;
+
     if ((flags & 1) && fAllowWitness) {
         /* The witness flag is present, and we support witnesses. */
         flags ^= 1;
