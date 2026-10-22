@@ -22,11 +22,10 @@ from test_framework.blocktools import (
     create_empty_fork,
 )
 from test_framework.mempool_util import (
+    MAX_REPLACEMENT_CANDIDATES,
     TRUC_MAX_VSIZE,
     TRUC_CHILD_MAX_VSIZE,
 )
-
-MAX_REPLACEMENT_CANDIDATES = 100
 
 def cleanup(extra_args=None):
     def decorator(func):

@@ -10,7 +10,10 @@ from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
 )
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.mempool_util import fill_mempool
+from test_framework.mempool_util import (
+    fill_mempool,
+    MAX_REPLACEMENT_CANDIDATES,
+)
 from test_framework.util import (
     assert_greater_than_or_equal,
     assert_equal,
@@ -20,8 +23,6 @@ from test_framework.wallet import (
     MiniWallet,
 )
 from test_framework import mempool_util
-
-MAX_REPLACEMENT_CANDIDATES = 100
 
 # Value high enough to cause evictions in each subtest
 # for typical cases
@@ -191,12 +192,12 @@ class PackageRBFTest(BitcoinTestFramework):
 
     def test_package_rbf_max_conflicts(self):
         node = self.nodes[0]
-        self.log.info("Check Package RBF cannot conflict with  more than MAX_REPLACEMENT_CANDIDATES clusters")
-        num_coins = 101
+        self.log.info("Check Package RBF cannot conflict with more than MAX_REPLACEMENT_CANDIDATES clusters")
+        num_coins = MAX_REPLACEMENT_CANDIDATES + 1
         parent_coins = self.coins[:num_coins]
         del self.coins[:num_coins]
 
-        # Original transactions: 101 transactions with 2 descendants each -> 303 total transactions, 101 clusters
+        # Original transactions: num_coins transactions with 2 descendants each -> num_coins * 3 total transactions, num_coins clusters
         size_three_clusters = []
         for coin in parent_coins:
             size_three_clusters.append(self.wallet.send_self_transfer_chain(from_node=node, chain_length=3, utxo_to_spend=coin))
@@ -211,13 +212,13 @@ class PackageRBFTest(BitcoinTestFramework):
         parent_fee_per_conflict = 10000
         child_feerate = 10000 * DEFAULT_FEE
 
-        # Conflict against all transactions by double-spending each parent, causing 101 cluster conflicts
+        # Conflict against all transactions by double-spending each parent, causing num_coins cluster conflicts
         package_parent = self.wallet.create_self_transfer_multi(utxos_to_spend=parent_coins, fee_per_output=parent_fee_per_conflict)
         package_child = self.wallet.create_self_transfer(fee_rate=child_feerate, utxo_to_spend=package_parent["new_utxos"][0])
 
         pkg_results = node.submitpackage([package_parent["hex"], package_child["hex"]], maxfeerate=0)
         assert_equal("transaction failed", pkg_results["package_msg"])
-        assert_equal(f"too many potential replacements, rejecting replacement {package_parent['txid']}; too many conflicting clusters (101 > 100)", pkg_results["tx-results"][package_parent["wtxid"]]["error"])
+        assert_equal(f"too many potential replacements, rejecting replacement {package_parent['txid']}; too many conflicting clusters ({num_coins} > {MAX_REPLACEMENT_CANDIDATES})", pkg_results["tx-results"][package_parent["wtxid"]]["error"])
         self.assert_mempool_contents(expected=expected_txns)
 
         # Make singleton tx to conflict with in next batch
@@ -233,7 +234,7 @@ class PackageRBFTest(BitcoinTestFramework):
         package_child = self.wallet.create_self_transfer(fee_rate=child_feerate, utxo_to_spend=package_parent["new_utxos"][0])
         pkg_results = node.submitpackage([package_parent["hex"], package_child["hex"]], maxfeerate=0)
         assert_equal("transaction failed", pkg_results["package_msg"])
-        assert_equal(f"too many potential replacements, rejecting replacement {package_parent['txid']}; too many conflicting clusters (101 > 100)", pkg_results["tx-results"][package_parent["wtxid"]]["error"])
+        assert_equal(f"too many potential replacements, rejecting replacement {package_parent['txid']}; too many conflicting clusters ({num_coins} > {MAX_REPLACEMENT_CANDIDATES})", pkg_results["tx-results"][package_parent["wtxid"]]["error"])
         self.assert_mempool_contents(expected=expected_txns)
 
         # Finally, conflict with MAX_REPLACEMENT_CANDIDATES clusters
