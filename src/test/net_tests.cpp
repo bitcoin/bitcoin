@@ -654,6 +654,8 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
     //    he sees us as.
     // 2.1. For inbound connections we must override both the address and the port.
     // 2.2. For outbound connections we must override only the address.
+    // 3. A peer on a privacy network cannot see our address, so its view of us must not
+    //    be used, neither for inbound nor for outbound connections.
 
     // Pretend that we bound to this port.
     const uint16_t bind_port = 20001;
@@ -706,6 +708,40 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
     chosen_local_addr = GetLocalAddrForPeer(peer_in);
     BOOST_REQUIRE(chosen_local_addr);
     BOOST_CHECK_EQUAL(*chosen_local_addr, peer_us);
+
+    // An inbound privacy network peer claims to see us at a routable IPv4 address. Nothing is advertised.
+    CNetAddr i2p_addr;
+    BOOST_REQUIRE(i2p_addr.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p"));
+    CNode peer_in_i2p{/*id=*/0,
+                      /*sock=*/nullptr,
+                      /*addrIn=*/CAddress{CService{i2p_addr, I2P_SAM31_PORT}, NODE_NETWORK},
+                      /*nKeyedNetGroupIn=*/0,
+                      /*nLocalHostNonceIn=*/0,
+                      /*addrBindIn=*/CService{},
+                      /*addrNameIn=*/std::string{},
+                      /*conn_type_in=*/ConnectionType::INBOUND,
+                      /*inbound_onion=*/false,
+                      /*network_key=*/2};
+    peer_in_i2p.fSuccessfullyConnected = true;
+    peer_in_i2p.SetAddrLocal(peer_us);
+    BOOST_CHECK(!GetLocalAddrForPeer(peer_in_i2p));
+
+    // Same for an outbound privacy network peer
+    CNetAddr onion_addr;
+    BOOST_REQUIRE(onion_addr.SetSpecial("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"));
+    CNode peer_out_onion{/*id=*/0,
+                         /*sock=*/nullptr,
+                         /*addrIn=*/CAddress{CService{onion_addr, 8333}, NODE_NETWORK},
+                         /*nKeyedNetGroupIn=*/0,
+                         /*nLocalHostNonceIn=*/0,
+                         /*addrBindIn=*/CService{},
+                         /*addrNameIn=*/std::string{},
+                         /*conn_type_in=*/ConnectionType::OUTBOUND_FULL_RELAY,
+                         /*inbound_onion=*/false,
+                         /*network_key=*/3};
+    peer_out_onion.fSuccessfullyConnected = true;
+    peer_out_onion.SetAddrLocal(peer_us);
+    BOOST_CHECK(!GetLocalAddrForPeer(peer_out_onion));
 
     m_node.args->ForceSetArg("-bind", "");
 }
