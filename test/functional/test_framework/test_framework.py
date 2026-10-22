@@ -452,10 +452,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             extra_confs = [[]] * num_nodes
         if extra_args is None:
             extra_args = [[]] * num_nodes
-        # Whitelist peers to speed up tx relay / mempool sync. Don't use it if testing tx relay or timing.
+        # Use noban permission to speed up tx relay / mempool sync. Don't use it if testing tx relay or timing.
         if self.noban_tx_relay:
-            for i in range(len(extra_args)):
-                extra_args[i] = extra_args[i] + ["-whitelist=noban,in,out@127.0.0.1"]
+            extra_confs = [conf + ["whitelist=noban,in,out@127.0.0.1"] for conf in extra_confs]
         if versions is None:
             versions = [None] * num_nodes
         bin_dirs = []
