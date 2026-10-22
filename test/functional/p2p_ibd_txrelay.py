@@ -13,19 +13,19 @@ import time
 
 from test_framework.blocktools import create_block
 from test_framework.messages import (
-        CInv,
-        COIN,
-        CTransaction,
-        from_hex,
-        msg_inv,
-        msg_tx,
-        MSG_WTX,
+    CInv,
+    COIN,
+    CTransaction,
+    from_hex,
+    msg_inv,
+    msg_tx,
+    MSG_WTX,
 )
 from test_framework.p2p import (
-        NONPREF_PEER_TX_DELAY,
-        P2PDataStore,
-        P2PInterface,
-        p2p_lock
+    NONPREF_PEER_TX_DELAY,
+    P2PDataStore,
+    P2PInterface,
+    p2p_lock,
 )
 from test_framework.test_framework import BitcoinTestFramework
 
@@ -54,6 +54,9 @@ class P2PIBDTxRelayTest(BitcoinTestFramework):
         block.solve()
         self.nodes[0].submitblock(block.serialize().hex())
         assert self.nodes[0].getblockchaininfo()['initialblockdownload']
+        # BlockConnected is async. Sync while in IBD so a delayed event cannot
+        # add ibd_wtxid to the recently-confirmed filter.
+        self.nodes[0].syncwithvalidationinterfacequeue()
         ibd_wtxid = int(self.nodes[0].getblock(f"{block.hash_int:064x}", 2)["tx"][0]["hash"], 16)
 
         self.log.info("Check that nodes don't send getdatas for transactions while still in IBD")
