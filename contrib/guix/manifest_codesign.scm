@@ -2,7 +2,7 @@
              ((gnu packages compression) #:select (gzip zip))
              ((gnu packages crypto) #:select (osslsigncode))
              ((gnu packages nss) #:select (nss-certs))
-             ((gnu packages python-build) #:select (python-poetry-core))
+             ((gnu packages python-build) #:select (python-poetry-core python-setuptools))
              ((gnu packages python-crypto) #:select (python-asn1crypto python-oscrypto))
              ((gnu packages tls) #:select (openssl))
              ((gnu packages version-control) #:select (git-minimal))
@@ -28,6 +28,7 @@
           (base32
            "07x6p8clh11z8s1n2kdxrqwqm2almgc5qpkcr9ckb6y5ivjdr5r6"))))
       (build-system python-build-system)
+      (native-inputs (list python-setuptools))
       ;; There are no tests, but attempting to run python setup.py test leads to
       ;; PYTHONPATH problems, just disable the test
       (arguments '(#:tests? #f))
@@ -51,7 +52,7 @@
              #t)))))))
 
 (define-public python-certvalidator
-  (let ((commit "a145bf25eb75a9f014b3e7678826132efbba6213"))
+  (let ((commit "8ccb2d334a2ce572395d8e01d0cd2b966f20e626"))
     (package
       (name "python-certvalidator")
       (version (git-version "0.1" "1" commit))
@@ -64,8 +65,9 @@
          (file-name (git-file-name name commit))
          (sha256
           (base32
-           "1qw2k7xis53179lpqdqyylbcmp76lj7sagp883wmxg5i7chhc96k"))))
+           "0i7zxjcrj83rklw064979qb0vj053q749md4sx4nyvvra1950is2"))))
       (build-system python-build-system)
+      (native-inputs (list python-setuptools))
       (propagated-inputs
         (list openssl
               python-asn1crypto
@@ -108,7 +110,11 @@
                                  line)))
                #t))
            (replace 'check
-             (lambda _
+             (lambda* (#:key inputs #:allow-other-keys)
+               (let ((openssl (assoc-ref inputs "openssl")))
+                 (setenv "OSCRYPTO_USE_OPENSSL"
+                         (string-append openssl "/lib/libcrypto.so,"
+                                        openssl "/lib/libssl.so")))
                (invoke "python" "run.py" "tests")
                #t)))))
       (home-page "https://github.com/wbond/certvalidator")
