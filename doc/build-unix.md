@@ -16,28 +16,6 @@ cmake --build build    # Append "-j N" for N parallel jobs
 cmake --install build  # Optional
 ```
 
-See below for instructions on how to [install the dependencies on popular Linux
-distributions](#dependencies).
-
-## Memory Requirements
-
-C++ compilers are memory-hungry. It is recommended to have at least 1.5 GB of
-memory available when compiling Bitcoin Core. On systems with less, gcc can be
-tuned to conserve memory with additional `CMAKE_CXX_FLAGS`:
-
-
-    cmake -B build -DCMAKE_CXX_FLAGS="--param ggc-min-expand=1 --param ggc-min-heapsize=32768"
-
-Alternatively, or in addition, debugging information can be skipped for compilation.
-For the default build type `RelWithDebInfo`, the default compile flags are
-`-O2 -g`, and can be changed with:
-
-    cmake -B build -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-O2 -g0"
-
-Finally, clang (often less resource hungry) can be used instead of gcc, which is used by default:
-
-    cmake -B build -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
-
 ## Dependencies
 
 You can either build from self-compiled [depends](/depends/README.md) or
@@ -57,18 +35,21 @@ For Debian "oldstable", or earlier Ubuntu LTS releases, you may need to pick a
 later compiler version, according to the [dependencies](/doc/dependencies.md)
 documentation.
 
-To build Bitcoin Core without the wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
-and use `-DENABLE_WALLET=OFF` to build without the wallet and skip the SQLite dependency.
+### IPC
 
 Cap'n Proto is needed for IPC functionality (see [multiprocess.md](multiprocess.md)).
 Compile with `-DENABLE_IPC=OFF` if you do not need IPC functionality.
 
+### ZMQ notifications
+
 ZMQ-enabled binaries are compiled with `-DWITH_ZMQ=ON` and require libzmq.
+
+### Tracing
 
 User-Space, Statically Defined Tracing (USDT) requires the systemtap-sdt
 development package and must be enabled via `-DWITH_USDT=ON`.
 
-GUI dependencies:
+### GUI
 
 Bitcoin Core includes a GUI built with the cross-platform Qt Framework. To compile the GUI, we need to install
 the necessary parts of Qt, the libqrencode and pass `-DBUILD_GUI=ON`. Skip if you don't intend to use the GUI.
@@ -92,3 +73,27 @@ Mining is also possible in disable-wallet mode using the `getblocktemplate` RPC 
 ### Test Suite Dependencies
 
 See [`test/README.md`](/test/README.md#dependencies-and-prerequisites).
+
+## Memory Requirements
+
+C++ compilers are memory-hungry. It is recommended to have at least 1.5 GB of
+memory available when compiling Bitcoin Core. On systems with less, gcc can be
+tuned to conserve memory with additional `CMAKE_CXX_FLAGS`:
+
+
+    cmake -B build -DCMAKE_CXX_FLAGS="--param ggc-min-expand=1 --param ggc-min-heapsize=32768"
+
+Alternatively, or in addition, debugging information can be skipped for compilation.
+For the default build type `RelWithDebInfo`, the default compile flags are
+`-O2 -g`, and can be changed with:
+
+    cmake -B build -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-O2 -g0"
+
+Finally, clang (often less resource hungry) can be used instead of gcc, which is used by default:
+
+    cmake -B build -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
+
+### ulimit data size
+
+On some systems (like OpenBSD), the standard ulimit restrictions may be too
+strict. Use `ulimit -d` to read and set the data limit to a larger value.
