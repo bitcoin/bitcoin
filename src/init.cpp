@@ -575,10 +575,10 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-forcednsseed", strprintf("Always query for peer addresses via DNS lookup (default: %u)", DEFAULT_FORCEDNSSEED), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-listen", strprintf("Accept connections from outside (default: %u if no -proxy, -connect or -maxconnections=0)", DEFAULT_LISTEN), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-listenonion", strprintf("Automatically create Tor onion service (default: %d)", DEFAULT_LISTEN_ONION), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
-    argsman.AddArg("-maxconnections=<n>", strprintf("Maintain at most <n> automatic connections to peers (default: %u). %u slots of these are reserved for outgoing connections. See -inboundrelaypercent for more information about limits applied to transaction relay inbound peers. "
+    argsman.AddArg("-maxconnections=<n>", strprintf("Maintain at most <n> automatic connections to peers (default: %u, maximum: %u). %u slots of these are reserved for outgoing connections. See -inboundrelaypercent for more information about limits applied to transaction relay inbound peers. "
                                                     "This limit does not apply to connections manually added via -addnode or the addnode RPC, which have a separate limit of %u. "
                                                     "It does not apply to short-lived private broadcast connections either, which have a separate limit of %u.",
-                                                    DEFAULT_MAX_PEER_CONNECTIONS, MAX_OUTBOUND_FULL_RELAY_CONNECTIONS + MAX_BLOCK_RELAY_ONLY_CONNECTIONS + MAX_FEELER_CONNECTIONS, MAX_ADDNODE_CONNECTIONS, MAX_PRIVATE_BROADCAST_CONNECTIONS),
+                                                    DEFAULT_MAX_PEER_CONNECTIONS, MAX_PEER_CONNECTIONS, MAX_OUTBOUND_FULL_RELAY_CONNECTIONS + MAX_BLOCK_RELAY_ONLY_CONNECTIONS + MAX_FEELER_CONNECTIONS, MAX_ADDNODE_CONNECTIONS, MAX_PRIVATE_BROADCAST_CONNECTIONS),
                    ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-inboundrelaypercent=<n>", strprintf("Permit a maximum percent of inbound connections to relay transactions, to limit memory utilization (0 to 100, default: %u).", DEFAULT_FULL_RELAY_INBOUND_PCT), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-maxreceivebuffer=<n>", strprintf("Maximum per-connection receive buffer, <n>*1000 bytes (default: %u)", DEFAULT_MAXRECEIVEBUFFER), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -613,7 +613,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
                    "Connect through SOCKS5 proxy, set -noproxy to disable. " +
                    proxy_doc_for_unix_socket +
                    "Could end in =network to set the proxy only for that network. " +
-                   "The network can be any of ipv4, ipv6, tor or cjdns. " +
+                   "The network can be any of " + Join(std::vector{NET_IPV4, NET_IPV6, NET_ONION, NET_CJDNS}, ", ", GetNetworkName) + ". " +
                    "(default: disabled)",
                    ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_ELISION,
                    OptionsCategory::CONNECTION);
@@ -1060,10 +1060,16 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // Number of bound interfaces (we have at least one)
     int num_p2p_bind = std::max(num_user_p2p_bind, size_t(1));
     // Maximum number of connections with other nodes, this accounts for all types of outbounds and inbounds except for manual
-    int user_p2p_max_connections = args.GetIntArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
+    int user_p2p_max_connections = args.GetArg<int>("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
     if (user_p2p_max_connections < 0) {
         return InitError(Untranslated("-maxconnections must be greater or equal than zero"));
     }
+
+    if (user_p2p_max_connections > MAX_PEER_CONNECTIONS) {
+        InitWarning(strprintf(_("Reducing -maxconnections from %d to %d."), user_p2p_max_connections, MAX_PEER_CONNECTIONS));
+        user_p2p_max_connections = MAX_PEER_CONNECTIONS;
+    }
+
     const size_t max_private{args.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)
                              ? MAX_PRIVATE_BROADCAST_CONNECTIONS
                              : 0};
@@ -1761,7 +1767,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             if (eq_pos + 1 == param_value.length()) {
                 return InitError(strprintf(_("Invalid -proxy address or hostname, ends with '=': '%s'"), param_value));
             }
-            net_str = ToLower(param_value.substr(eq_pos + 1)); // e.g. 127.0.0.1:9050=ipv4 -> ipv4
+            net_str = param_value.substr(eq_pos + 1); // e.g. 127.0.0.1:9050=ipv4 -> ipv4
         }
 
         Proxy proxy;
@@ -1782,16 +1788,18 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
         if (net_str.empty()) { // For all networks.
             ipv4_proxy = ipv6_proxy = name_proxy = cjdns_proxy = onion_proxy = proxy;
-        } else if (net_str == "ipv4") {
-            ipv4_proxy = name_proxy = proxy;
-        } else if (net_str == "ipv6") {
-            ipv6_proxy = name_proxy = proxy;
-        } else if (net_str == "onion") {
-            onion_proxy = proxy;
-        } else if (net_str == "cjdns") {
-            cjdns_proxy = proxy;
         } else {
-            return InitError(strprintf(_("Unrecognized network in -proxy='%s': '%s'"), param_value, net_str));
+            switch (ParseNetwork(net_str)) {
+            case NET_IPV4: ipv4_proxy = name_proxy = proxy; break;
+            case NET_IPV6: ipv6_proxy = name_proxy = proxy; break;
+            case NET_ONION: onion_proxy = proxy; break;
+            case NET_CJDNS: cjdns_proxy = proxy; break;
+            case NET_UNROUTABLE:
+            case NET_I2P:
+            case NET_INTERNAL:
+            case NET_MAX:
+                return InitError(strprintf(_("Unrecognized network in -proxy='%s': '%s'"), param_value, net_str));
+            } // no default case, so the compiler can warn about missing cases
         }
     }
     if (ipv4_proxy.IsValid()) {
