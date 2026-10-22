@@ -95,22 +95,3 @@ cmake --build build     # Append "-j N" for N parallel jobs.
 ctest --test-dir build  # Append "-j N" for N parallel tests.
 ```
 
-## Resource limits
-
-If the build runs into out-of-memory errors, the instructions in this section
-might help.
-
-The standard ulimit restrictions in OpenBSD are very strict:
-```bash
-data(kbytes)         1572864
-```
-
-This is, unfortunately, in some cases not enough to compile some `.cpp` files in the project,
-(see issue [#6658](https://github.com/bitcoin/bitcoin/issues/6658)).
-If your user is in the `staff` group the limit can be raised with:
-```bash
-ulimit -d 3000000
-```
-The change will only affect the current shell and processes spawned by it. To
-make the change system-wide, change `datasize-cur` and `datasize-max` in
-`/etc/login.conf`, and reboot.
