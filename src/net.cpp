@@ -236,7 +236,9 @@ static int GetnScore(const CService& addr)
 [[nodiscard]] static bool IsPeerAddrLocalGood(CNode *pnode)
 {
     CService addrLocal = pnode->GetAddrLocal();
-    return fDiscover && pnode->addr.IsRoutable() && addrLocal.IsRoutable() &&
+    // A peer on a privacy network cannot see our address, so its view of us is never useful.
+    return fDiscover && !pnode->IsConnectedThroughPrivacyNet() &&
+           pnode->addr.IsRoutable() && addrLocal.IsRoutable() &&
            g_reachable_nets.Contains(addrLocal);
 }
 
