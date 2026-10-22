@@ -1056,7 +1056,7 @@ BOOST_FIXTURE_TEST_CASE(coins_db_leveldb_layout, FlushTest)
     CCoinsViewDB base{{.path = m_args.GetDataDirBase() / "coins_db_leveldb_layout", .cache_bytes = 1_MiB, .wipe_data = true}, {}};
     CCoinsViewCache cache{&base};
 
-    cache.EmplaceCoinInternalDANGER(COutPoint{outpoint}, Coin{coin});
+    cache.AddCoin(outpoint, Coin{coin}, /*possible_overwrite=*/true);
     cache.SetBestBlock(block_hash);
     cache.Sync();
 
@@ -1140,7 +1140,7 @@ BOOST_AUTO_TEST_CASE(ccoins_reset_guard)
     const COutPoint outpoint{Txid::FromUint256(m_rng.rand256()), m_rng.rand32()};
 
     const Coin coin{CTxOut{m_rng.randrange(10), CScript{} << m_rng.randbytes(CScriptBase::STATIC_SIZE + 1)}, 1, false};
-    cache.EmplaceCoinInternalDANGER(outpoint, Coin{coin});
+    cache.AddCoin(outpoint, Coin{coin}, /*possible_overwrite=*/true);
     BOOST_CHECK_EQUAL(cache.GetDirtyCount(), 1U);
 
     uint256 cache_best_block{m_rng.rand256()};
