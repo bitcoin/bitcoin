@@ -8,6 +8,7 @@
 
 #include <coins.h>
 #include <consensus/consensus.h>
+#include <crypto/muhash.h>
 #include <hash.h>
 #include <kernel/chainparams.h>
 #include <kernel/messagestartchars.h>
@@ -283,6 +284,22 @@ inline void HashSnapshotBatches(SnapshotQueue& queue, uint256& out)
     }
     flush();
     out = hasher.GetHash();
+}
+
+/** The muhash of the coins in `queue`, added to `accumulator`. MuHash
+ * is a commutative hash function, so consumers can keep one accumulator
+ * each and combine them at the end. */
+inline void MuhashSnapshotBatches(SnapshotQueue& queue, MuHash3072& accumulator)
+{
+    DataStream element{};
+    SnapshotBatch items;
+    while (queue.Pop(items)) {
+        for (const SnapshotItem& item : *items) {
+            element.clear();
+            WriteCoinStatsElement(element, item.outpoint, item.coin);
+            accumulator.Insert(MakeUCharSpan(element));
+        }
+    }
 }
 
 #endif // BITCOIN_UTXO_SNAPSHOT_H
