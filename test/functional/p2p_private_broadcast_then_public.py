@@ -11,19 +11,23 @@ mempool and only sends it via short-lived private broadcast connections. However
 other code paths add a transaction to the mempool and announce it to all peers
 regardless of -privatebroadcast (net_processing's InitiateTxBroadcastToAll()),
 for example the submitpackage RPC or the wallet (on commit or on periodic
-rebroadcast, via MEMPOOL_AND_BROADCAST_TO_ALL). Here submitpackage is used.
+rebroadcast, via MEMPOOL_AND_BROADCAST_TO_ALL). Here submitpackage and (if
+compiled) the periodic rebroadcast of the wallet are used.
 
 Topology:
 * nodes[0]: the transaction originator, runs with -privatebroadcast. All its
   outbound connections go through a SOCKS5 proxy controlled by this test.
-* nodes[1]: receives the first private broadcast connection from nodes[0]
-  (redirected to it by the proxy). Not connected to anybody else.
+* nodes[1]: receives the first private broadcast connection of each transaction
+  from nodes[0] (redirected to it by the proxy). In the wallet case it also gets a
+  temporary normal (manual) connection from nodes[0], to send the transaction back.
 * nodes[2]: has a normal (manual) connection from nodes[0]. Not connected to
   anybody else.
 """
 
 import threading
+import time
 
+from test_framework.blocktools import create_block
 from test_framework.messages import CAddress
 from test_framework.p2p import (
     P2PInterface,
@@ -39,12 +43,16 @@ from test_framework.util import (
 from test_framework.wallet import MiniWallet
 
 NUM_PRIVATE_BROADCAST_PER_TX = 3
+# Upper limit of the wallet resend timer, see CWallet::GetDefaultNextResend()
+WALLET_RESEND_TIMER_LIMIT = 36 * 60 * 60
 
 
 class P2PPrivateBroadcastThenPublic(BitcoinTestFramework):
     def set_test_params(self):
         self.disable_autoconnect = False
         self.num_nodes = 3
+        self.uses_wallet = None
+        self.noban_tx_relay = True  # Needed due to mocktime, the trickle delay is not tested here
 
     def setup_nodes(self):
         self.private_broadcast_to_node1_done = False
@@ -112,9 +120,28 @@ class P2PPrivateBroadcastThenPublic(BitcoinTestFramework):
         # Keep the nodes disconnected from each other.
         self.setup_nodes()
 
-    def run_test(self):
+    def send_privately(self, tx_hex, txid, wtxid):
+        """Send a transaction via private broadcast from nodes[0], wait until nodes[1]
+        has received it and all private broadcast connections are done."""
         tx_originator = self.nodes[0]
         private_observer = self.nodes[1]
+
+        with self.lock:
+            self.private_broadcast_to_node1_done = False
+        tx_originator.sendrawtransaction(hexstring=tx_hex, maxfeerate=0.1)
+
+        self.log.info("Observing the private broadcast on nodes[1]")
+        self.wait_until(lambda: txid in private_observer.getrawmempool())
+        assert_equal(private_observer.getmempoolentry(txid)["wtxid"], wtxid)
+
+        def all_private_broadcasts_done():
+            pending = [t for t in tx_originator.getprivatebroadcastinfo()["transactions"] if t["wtxid"] == wtxid]
+            assert_equal(len(pending), 1)
+            return sum(1 for p in pending[0]["peers"] if "received" in p) >= NUM_PRIVATE_BROADCAST_PER_TX
+        self.wait_until(all_private_broadcasts_done)
+
+    def run_test(self):
+        tx_originator = self.nodes[0]
         public_observer = self.nodes[2]
 
         self.log.info("Connecting nodes[0] to nodes[2] with a normal connection")
@@ -127,17 +154,7 @@ class P2PPrivateBroadcastThenPublic(BitcoinTestFramework):
         self.log.info(f"Created txid={tx['txid']} wtxid={tx['wtxid']}")
 
         self.log.info("Sending the transaction via private broadcast")
-        tx_originator.sendrawtransaction(hexstring=tx["hex"], maxfeerate=0.1)
-
-        self.log.info("Observing the private broadcast on nodes[1]")
-        self.wait_until(lambda: tx["txid"] in private_observer.getrawmempool())
-        assert_equal(private_observer.getmempoolentry(tx["txid"])["wtxid"], tx["wtxid"])
-
-        def all_private_broadcasts_done():
-            pending = [t for t in tx_originator.getprivatebroadcastinfo()["transactions"] if t["wtxid"] == tx["wtxid"]]
-            assert_equal(len(pending), 1)
-            return sum(1 for p in pending[0]["peers"] if "received" in p) >= NUM_PRIVATE_BROADCAST_PER_TX
-        self.wait_until(all_private_broadcasts_done)
+        self.send_privately(tx["hex"], tx["txid"], tx["wtxid"])
 
         self.log.info("Checking that the transaction did not propagate otherwise")
         assert tx["txid"] not in tx_originator.getrawmempool()
@@ -155,10 +172,66 @@ class P2PPrivateBroadcastThenPublic(BitcoinTestFramework):
         self.wait_until(lambda: tx["txid"] in public_observer.getrawmempool())
         assert_equal(public_observer.getmempoolentry(tx["txid"])["wtxid"], tx["wtxid"])
 
+        if self.is_wallet_compiled():
+            self.test_wallet_resend()
+
         self.stop_node(0)
         self.socks5_server.stop()
 
-        # TODO: Continue the test with another send, in the same way, but with another TX
+    def test_wallet_resend(self):
+        tx_originator = self.nodes[0]
+        private_observer = self.nodes[1]
+        public_observer = self.nodes[2]
+
+        self.init_wallet(node=0)
+
+        self.log.info("Wallet: creating a transaction without adding it to the wallet")
+        res = tx_originator.send(outputs=[{tx_originator.getnewaddress(): 1}], add_to_wallet=False)
+        assert_equal(res["complete"], True)
+        tx_hex = res["hex"]
+        tx = tx_originator.decoderawtransaction(tx_hex)
+        txid, wtxid = tx["txid"], tx["hash"]
+        self.log.info(f"Created txid={txid} wtxid={wtxid}")
+
+        self.log.info("Wallet: sending the transaction via private broadcast")
+        self.send_privately(tx_hex, txid, wtxid)
+        assert txid not in tx_originator.getrawmempool()
+
+        # Let the transaction come back from the network, so that it gets into the
+        # mempool and the wallet of nodes[0]. Keep nodes[2] disconnected meanwhile,
+        # so that the relay from nodes[0] does not reach it.
+        self.log.info("Wallet: receiving the transaction back from nodes[1]")
+        self.disconnect_nodes(0, 2)
+        self.connect_nodes(0, 1)
+        # nodes[1] already has the transaction, ask it to announce it again.
+        private_observer.sendrawtransaction(tx_hex)
+        self.wait_until(lambda: txid in tx_originator.getrawmempool())
+        assert_equal(tx_originator.gettransaction(txid)["confirmations"], 0)
+        self.disconnect_nodes(0, 1)
+        assert txid not in public_observer.getrawmempool()
+
+        # Transactions are only resent if there has been a block at least five minutes
+        # after they were received by the wallet. Create a block without the transaction.
+        block_time = int(time.time()) + 6 * 60
+        tx_originator.setmocktime(block_time)
+        block = create_block(int(tx_originator.getbestblockhash(), 16), height=tx_originator.getblockcount() + 1, ntime=block_time)
+        block.solve()
+        assert_equal(tx_originator.submitblock(block.serialize().hex()), None)
+        # Update the best block time of the wallet, used in ResubmitWalletTransactions()
+        tx_originator.syncwithvalidationinterfacequeue()
+
+        self.log.info("Wallet: connecting nodes[0] to nodes[2] again")
+        self.connect_nodes(0, 2)
+
+        self.log.info("Wallet: triggering the periodic resend of the wallet")
+        with tx_originator.assert_debug_log(expected_msgs=["resubmit 1 unconfirmed transactions"]):
+            tx_originator.setmocktime(block_time + WALLET_RESEND_TIMER_LIMIT)
+            # Run MaybeResendWalletTxs() now
+            tx_originator.mockscheduler(60)
+
+            self.log.info("Wallet: observing the non-private broadcast on nodes[2]")
+            self.wait_until(lambda: txid in public_observer.getrawmempool())
+        assert_equal(public_observer.getmempoolentry(txid)["wtxid"], wtxid)
 
 if __name__ == "__main__":
     P2PPrivateBroadcastThenPublic(__file__).main()
