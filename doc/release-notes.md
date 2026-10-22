@@ -46,6 +46,11 @@ Notable changes
 
 - #36218 build: avoid pipe2 on Darwin (for now)
 
+### Doc
+
+- #34252 doc: add 433 (Pay to Anchor) to bips.md
+- #36377 doc: add 461 (Deterministic ECDSA signatures with low-R grinding) to bips.md
+
 Credits
 =======
 
@@ -53,6 +58,7 @@ Thanks to everyone who directly contributed to this release:
 
 - fanquake
 - Martin Zumsande
+- Sebastian Falbesoner
 - sipa
 
 As well as to everyone that helped with translations on
