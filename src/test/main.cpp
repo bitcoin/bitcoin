@@ -2,11 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <boost/config.hpp>
+// Boost.Test's SIGSTKSZ alternate stack can be smaller than Linux requires on musl.
+#ifdef BOOST_HAS_SIGACTION
+#define BOOST_TEST_DISABLE_ALT_STACK
+#endif
+
 /**
  * See https://www.boost.org/doc/libs/1_78_0/libs/test/doc/html/boost_test/adv_scenarios/single_header_customizations/multiple_translation_units.html
  */
-// Boost.Test's SIGSTKSZ alternate stack can be smaller than Linux requires on musl.
-#define BOOST_TEST_DISABLE_ALT_STACK
 #define BOOST_TEST_MODULE Bitcoin Core Test Suite
 
 #include <boost/test/included/unit_test.hpp>
