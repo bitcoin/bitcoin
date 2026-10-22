@@ -1394,4 +1394,30 @@ BOOST_AUTO_TEST_CASE(spends_witness_prog)
     }
 }
 
+BOOST_AUTO_TEST_CASE(tx_malformed_serialization)
+{
+    // A transaction with one input, one output and a one-element witness.
+    CMutableTransaction mtx;
+    mtx.vin.resize(1);
+    mtx.vin[0].scriptWitness.stack = {{0xaa}};
+    mtx.vout.emplace_back(1, CScript{} << OP_TRUE);
+    DataStream ser;
+    ser << TX_WITH_WITNESS(mtx);
+
+    CMutableTransaction tx;
+    DataStream{std::span{ser}} >> TX_WITH_WITNESS(tx);
+    BOOST_CHECK(CTransaction{tx}.HasWitness());
+
+    // Every strict prefix ends inside some field, such as a CompactSize, an output
+    // script, a witness element or the locktime, and fails to deserialize.
+    for (size_t len{0}; len < ser.size(); ++len) {
+        BOOST_CHECK_EXCEPTION(DataStream{std::span{ser}.first(len)} >> TX_WITH_WITNESS(tx), std::ios_base::failure, HasReason{"end of data"});
+    }
+
+    // A flag other than 1 is unknown, including one without the witness bit.
+    DataStream bad_flag;
+    bad_flag << mtx.version << uint8_t{0x00} << uint8_t{0x02} << mtx.vin << mtx.vout << mtx.vin[0].scriptWitness.stack << mtx.nLockTime;
+    BOOST_CHECK_EXCEPTION(bad_flag >> TX_WITH_WITNESS(tx), std::ios_base::failure, HasReason{"Unknown transaction optional data"});
+}
+
 BOOST_AUTO_TEST_SUITE_END()
