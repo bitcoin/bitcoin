@@ -34,19 +34,15 @@ static void CCoinsCaching(benchmark::Bench& bench)
         SetupDummyInputs(keystore, coins, {11 * COIN, 50 * COIN, 21 * COIN, 22 * COIN});
 
     CMutableTransaction t1;
-    t1.vin.resize(3);
-    t1.vin[0].prevout.hash = dummyTransactions[0].GetHash();
-    t1.vin[0].prevout.n = 1;
-    t1.vin[0].scriptSig << std::vector<unsigned char>(65, 0);
-    t1.vin[1].prevout.hash = dummyTransactions[1].GetHash();
-    t1.vin[1].prevout.n = 0;
-    t1.vin[1].scriptSig << std::vector<unsigned char>(65, 0) << std::vector<unsigned char>(33, 4);
-    t1.vin[2].prevout.hash = dummyTransactions[1].GetHash();
-    t1.vin[2].prevout.n = 1;
-    t1.vin[2].scriptSig << std::vector<unsigned char>(65, 0) << std::vector<unsigned char>(33, 4);
-    t1.vout.resize(2);
-    t1.vout[0].nValue = 90 * COIN;
-    t1.vout[0].scriptPubKey << OP_1;
+    t1.vin = {
+        CTxIn{COutPoint{dummyTransactions[0].GetHash(), 1}, CScript{} << std::vector<unsigned char>(65, 0)},
+        CTxIn{COutPoint{dummyTransactions[1].GetHash(), 0}, CScript{} << std::vector<unsigned char>(65, 0) << std::vector<unsigned char>(33, 4)},
+        CTxIn{COutPoint{dummyTransactions[1].GetHash(), 1}, CScript{} << std::vector<unsigned char>(65, 0) << std::vector<unsigned char>(33, 4)},
+    };
+    t1.vout = {
+        CTxOut{90 * COIN, CScript{} << OP_1},
+        CTxOut{},
+    };
 
     // Benchmark.
     const CTransaction tx_1(t1);
