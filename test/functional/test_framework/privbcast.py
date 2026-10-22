@@ -10,18 +10,40 @@ behaviours, or to a bitcoind. Every wire-visible parameter is a constant of the 
 """
 
 
+import json
+import threading
+
 from test_framework.messages import (
     CInv,
     MSG_WTX,
     NODE_WITNESS,
     msg_getdata,
 )
-from test_framework.p2p import P2PInterface
-from test_framework.socks5 import Command
+from test_framework.netutil import format_addr_port
+from test_framework.p2p import (
+    P2PInterface,
+    P2P_SERVICES,
+    start_p2p_listener,
+)
+from test_framework.socks5 import (
+    Command,
+    start_socks5_server,
+)
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
 )
+from test_framework.v2_p2p import EncryptedP2PState
+from test_framework.wallet import MiniWallet
+
+
+# The job tests run in real time: setmocktime moves a job's schedule but not the steady clock that
+# times its proxy exchanges and connections, so the regtest -privatebroadcasttimedivisor shortens
+# every duration of the plan instead. The margins in the tests are sized for the slowest CI host,
+# not for precision, because the tests check the node end to end. p2p_private_broadcast.py runs
+# jobs on a mocked clock instead.
+TIME_DIVISOR = 10  # scaled budgets (4.5 s handshake, 7.5 s request window, 1 s PONG) comfortably cover a real bitcoind recipient
 
 
 # The Parameters of doc/design/private-broadcast.md. A release has no knobs, so the checks
@@ -151,3 +173,110 @@ class Recipient(P2PInterface):
 
     def on_notfound(self, message):
         self.notfound.extend(i.hash for i in message.vec)
+
+
+class PrivbcastJobTest(BitcoinTestFramework):
+    """Runs private broadcast jobs in nodes[0] through the framework's SOCKS5 server, against scripted
+    recipients and against nodes[1], a bitcoind."""
+    def set_test_params(self):
+        self.num_nodes = 2
+        self.setup_clean_chain = True
+        # A job speaks v2 (BIP324) and never falls back to v1, so the bitcoind recipient must accept v2.
+        self.extra_args = [["-v2transport=1"], ["-v2transport=1"]]
+
+    def run_test(self):
+        raise NotImplementedError
+
+    def setup_wallet(self):
+        self.wallet = MiniWallet(self.nodes[0])
+        self.generate(self.wallet, 120)  # >100 for COINBASE_MATURITY, plus a margin of spendable UTXOs for every scenario
+        # nodes[1] has the chain, and from here on hears of a transaction only from a job.
+        self.disconnect_nodes(0, 1)
+
+    def start_proxy(self, resolve_script, behaviours, proxy_authenticates=True, tor=True, time_divisor=TIME_DIVISOR):
+        """Start a SOCKS5 server, and restart nodes[0] to run its jobs through it, on the seeds of resolve_script.
+        resolve_script: seed name -> list of answers, cycled per query.
+        behaviours: endpoint address string -> (listener class, supports_v2).
+        proxy_authenticates: if False the proxy lacks username and password authentication, the only method
+        a job offers, and answers "no acceptable method" (0xFF).
+        tor: if False the proxy is an ordinary SOCKS5 proxy: no RESOLVE, no .onion.
+        time_divisor: nodes[0]'s -privatebroadcasttimedivisor."""
+        self.listeners = {}
+        self.listeners_lock = threading.Lock()
+        self.connects = {}
+        self.resolve_counts = {}
+
+        def resolve_factory(name):
+            with self.listeners_lock:
+                n = self.resolve_counts.get(name, 0)
+                self.resolve_counts[name] = n + 1
+            answers = resolve_script.get(name)
+            if not answers:
+                return None
+            return answers[n % len(answers)]
+
+        def destinations_factory(requested_to_addr, requested_to_port, proxy_client):
+            with self.listeners_lock:
+                self.connects[requested_to_addr] = self.connects.get(requested_to_addr, 0) + 1
+                if requested_to_addr not in behaviours:
+                    self.log.debug(f"unexpected connect to {format_addr_port(requested_to_addr, requested_to_port)}")
+                    return None
+                if requested_to_addr not in self.listeners:
+                    cls, v2 = behaviours[requested_to_addr]
+                    listener = cls()
+                    listener.peer_connect_helper(dstaddr="0.0.0.0", dstport=0, net=self.chain, timeout_factor=self.options.timeout_factor)
+                    listener.peer_connect_send_version(services=P2P_SERVICES)
+                    if v2:
+                        listener.v2_state = EncryptedP2PState(initiating=False, net=self.chain)
+                    else:
+                        # A v1-only peer closes on the v2 handshake bytes; mark it so the framework does
+                        # not log that expected close as an error. A job never comes back over v1.
+                        listener.reconnect = True
+                    addr, port = start_p2p_listener(self.network_thread, listener)
+                    self.listeners[requested_to_addr] = (listener, addr, port)
+                _, addr, port = self.listeners[requested_to_addr]
+                return {"actual_to_addr": addr, "actual_to_port": port}
+
+        self.socks5_server = start_socks5_server(destinations_factory, resolve_factory, auth=proxy_authenticates, tor=tor)
+        self.restart_node(0, extra_args=[
+            "-privatebroadcast",
+            f"-onion=127.0.0.1:{self.socks5_server.conf.addr[1]}",
+            *[f"-privatebroadcastseed={name}" for name in resolve_script],
+            f"-privatebroadcasttimedivisor={time_divisor}",
+            "-v2transport=1",
+            "-debug=privatebroadcast",
+        ])
+
+    def stop_proxy(self):
+        self.socks5_server.stop()
+
+    def jobs(self):
+        """nodes[0]'s jobs, by wtxid."""
+        return {j["wtxid"]: j for j in self.nodes[0].getprivatebroadcastinfo()["jobs"]}
+
+    def start_job(self, tx):
+        """Submit a MiniWallet transaction to nodes[0], whose queue is empty: the job starts at once.
+        Returns its wtxid."""
+        assert_equal(self.nodes[0].sendrawtransaction(tx["hex"]), tx["txid"])
+        return tx["wtxid"]
+
+    def finish_job(self, wtxid):
+        """Wait for a job to end; returns the job and its report."""
+        self.wait_until(lambda: self.jobs()[wtxid]["state"] in ("done", "aborted"), timeout=240)
+        job = self.jobs()[wtxid]
+        self.log.debug(json.dumps(job, indent=1))
+        check_summary(job["report"])
+        return job, job["report"]
+
+    def run_job(self, tx):
+        """Run a job to its end; returns the job and its report."""
+        return self.finish_job(self.start_job(tx))
+
+    @staticmethod
+    def attempts(report):
+        for s in report["slots"]:
+            for a in s["attempts"]:
+                yield s, a
+
+    def attempts_to(self, report, endpoint):
+        return [a for _, a in self.attempts(report) if a["endpoint"].startswith(endpoint)]
