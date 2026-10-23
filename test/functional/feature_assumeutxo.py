@@ -10,6 +10,7 @@ The assumeutxo value generated and used here is committed to in
 `CRegTestParams::m_assumeutxo_data` in `src/kernel/chainparams.cpp`.
 """
 import contextlib
+import re
 
 from dataclasses import dataclass
 from test_framework.blocktools import (
@@ -24,6 +25,7 @@ from test_framework.messages import (
     MAGIC_BYTES,
     MAX_MONEY,
     msg_headers,
+    ser_compact_size,
     ser_varint,
     tx_from_hex,
 )
@@ -165,6 +167,43 @@ class AssumeutxoTest(BitcoinTestFramework):
 
             msg = custom_message if custom_message is not None else f"Bad snapshot content hash: expected 106b2c56233e378a824cf0d5ff2be42ed32c72f1605c9be288d00942908a40ac, got {wrong_hash}."
             expected_error(msg)
+
+    def test_snapshot_cache_growth(self, valid_snapshot_path):
+        self.log.info("Test that loading a snapshot with large scripts keeps the coins cache close to -dbcache")
+        node = self.nodes[2]
+        self.restart_node(2, extra_args=["-dbcache=4", *self.extra_args[2]])
+        with open(valid_snapshot_path, 'rb') as f:
+            # Snapshot magic, version, network magic and base block hash
+            metadata = f.read(5 + 2 + 4 + 32)
+
+        # Each coin has a script of the maximum size the compressor keeps, so
+        # the coins cache grows by about 10 kB per coin. This is far fewer
+        # coins than the interval of coins between the cache size checks.
+        num_coins = 2000
+        script = b"\x51" * 10000
+        coin = ser_varint(1 << 1) + ser_varint(compress_amount(1)) + ser_varint(len(script) + 6) + script
+        large_snapshot_path = valid_snapshot_path + '.large'
+        with open(large_snapshot_path, 'wb') as f:
+            f.write(metadata + num_coins.to_bytes(8, "little"))
+            f.write(b"\x11" * 32 + ser_compact_size(num_coins))
+            for vout in range(num_coins):
+                f.write(ser_compact_size(vout) + coin)
+
+        log_start = node.debug_log_size(encoding="utf-8")
+        assert_raises_rpc_error(-32603, "Bad snapshot content hash", node.loadtxoutset, large_snapshot_path)
+        with open(node.debug_log_path, encoding="utf-8", errors="replace") as f:
+            f.seek(log_start)
+            new_log = f.read()
+
+        # The cache must be checked, and so flushed, before it exceeds its
+        # limit by much more than the 4 MiB the node allows between checks.
+        sizes = re.findall(r"Cache size \((\d+)\) exceeds total space \((\d+)\)", new_log)
+        assert sizes, "the coins cache never exceeded its limit at a check during the snapshot load"
+        for cache_size, total_space in sizes:
+            self.log.debug(f"Cache size {cache_size}, limit {total_space}")
+            assert int(cache_size) - int(total_space) < 5 * 1024 * 1024
+
+        self.restart_node(2, extra_args=self.extra_args[2])
 
     def test_headers_not_synced(self, valid_snapshot_path):
         for node in self.nodes[1:]:
@@ -513,6 +552,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.test_snapshot_with_less_work(dump_output['path'])
         self.test_invalid_mempool_state(dump_output['path'])
         self.test_invalid_snapshot_scenarios(dump_output['path'])
+        self.test_snapshot_cache_growth(dump_output['path'])
         self.test_invalid_chainstate_scenarios()
         self.test_invalid_file_path()
         self.test_snapshot_block_invalidated(dump_output['path'])
