@@ -173,7 +173,8 @@ class ECKey:
         z = int.from_bytes(msg, 'big')
         # Note: no RFC6979 by default, but a simple random nonce (some tests rely on distinct transactions for the same operation)
         if rfc6979:
-            k = int.from_bytes(rfc6979_nonce(self.secret.to_bytes(32, 'big') + msg), 'big')
+            # RFC6979 section 2.3.4 (bits2octets): the hash is reduced mod n.
+            k = int.from_bytes(rfc6979_nonce(self.secret.to_bytes(32, 'big') + (z % ORDER).to_bytes(32, 'big')), 'big')
         else:
             k = random.randrange(1, ORDER)
         R = k * secp256k1.G
@@ -320,6 +321,18 @@ class TestFrameworkKey(unittest.TestCase):
         msg = bytes(32)
         for sig in [b'', b'\x30', b'\x30\x00', b'\x30\x01\x02']:
             self.assertFalse(pubkey.verify_ecdsa(sig, msg))
+
+    def test_ecdsa_rfc6979(self):
+        """RFC6979 signatures match libsecp256k1, including for a hash >= n."""
+        privkey = ECKey()
+        privkey.set((1).to_bytes(32, 'big'), compressed=True)
+        vectors = [
+            (hashlib.sha256(b"Satoshi Nakamoto").digest(), "3045022100934b1ea10a4b3c1757e2b0c017d0b6143ce3c9a7e6a4a49860d7a6ab210ee3d802202442ce9d2b916064108014783e923ec36b49743e2ffa1c4496f01a512aafd9e5"),
+            # bits2octets reduces the hash mod n before deriving the nonce
+            ((ORDER + 1).to_bytes(32, 'big'), "304402206673ffad2147741f04772b6f921f0ba6af0c1e77fc439e65c36dedf4092e889802204c1a971652e0ada880120ef8025e709fff2080c4a39aae068d12eed009b68c89"),
+        ]
+        for msg, sig_hex in vectors:
+            self.assertEqual(privkey.sign_ecdsa(msg, rfc6979=True).hex(), sig_hex)
 
     def test_schnorr_testvectors(self):
         """Implement the BIP340 test vectors (read from bip340_test_vectors.csv)."""
