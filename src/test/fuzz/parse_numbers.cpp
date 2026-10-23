@@ -3,11 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <test/fuzz/fuzz.h>
+#include <util/check.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
-#include <cassert>
 #include <cstdint>
 #include <optional>
 #include <string>

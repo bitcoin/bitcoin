@@ -6,10 +6,11 @@
 #include <script/script.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
-
-#include <cstdint>
+#include <util/check.h>
 
 #include <boost/test/unit_test.hpp>
+
+#include <cstdint>
 
 // amounts 0.00000001 .. 0.00100000
 #define NUM_MULTIPLES_UNIT 100000

@@ -19,7 +19,6 @@
 #include <leveldb/helpers/memenv/memenv.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cstdint>
 #include <deque>
 #include <functional>
