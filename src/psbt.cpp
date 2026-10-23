@@ -687,6 +687,7 @@ util::Expected<void, PSBTError> SignPSBTInput(const SigningProvider& provider, P
     // If only the parameter is provided, use it and add it to the PSBT if it is other than SIGHASH_DEFAULT
     // for all input types, and not SIGHASH_ALL for non-taproot input types.
     // If neither are provided, use SIGHASH_DEFAULT if it is taproot, and SIGHASH_ALL for everything else.
+    const bool sighash_specified{options.sighash_type || input.sighash_type};
     int sighash{options.sighash_type.value_or(utxo.scriptPubKey.IsPayToTaproot() ? SIGHASH_DEFAULT : SIGHASH_ALL)};
 
     // For user safety, the desired sighash must be provided if the PSBT wants something other than the default set in the previous line.
@@ -703,11 +704,16 @@ util::Expected<void, PSBTError> SignPSBTInput(const SigningProvider& provider, P
 
     // Check all existing signatures use the sighash type
     if (sighash == SIGHASH_DEFAULT) {
-        if (!input.m_tap_key_sig.empty() && input.m_tap_key_sig.size() != 64) {
+        // If neither the field nor the parameter is provided, DEFAULT was only assumed,
+        // so a taproot signature with an explicit SIGHASH_ALL is also accepted.
+        const auto sig_matches = [&](const std::vector<unsigned char>& sig) {
+            return sig.size() == 64 || (!sighash_specified && sig.size() == 65 && sig.back() == SIGHASH_ALL);
+        };
+        if (!input.m_tap_key_sig.empty() && !sig_matches(input.m_tap_key_sig)) {
             return util::Unexpected{PSBTError::SIGHASH_MISMATCH};
         }
         for (const auto& [_, sig] : input.m_tap_script_sigs) {
-            if (sig.size() != 64) return util::Unexpected{PSBTError::SIGHASH_MISMATCH};
+            if (!sig_matches(sig)) return util::Unexpected{PSBTError::SIGHASH_MISMATCH};
         }
     } else {
         if (!input.m_tap_key_sig.empty() && (input.m_tap_key_sig.size() != 65 || input.m_tap_key_sig.back() != sighash)) {
