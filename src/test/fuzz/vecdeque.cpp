@@ -456,12 +456,7 @@ public:
 
     friend std::strong_ordering operator<=>(const TrackedObj& a, const TrackedObj& b)
     {
-        // Libc++ 15 & 16 do not support std::optional<T>::operator<=> yet. See
-        // https://reviews.llvm.org/D146392.
-        if (!a.Deref().has_value() || !b.Deref().has_value()) {
-            return a.Deref().has_value() <=> b.Deref().has_value();
-        }
-        return *a.Deref() <=> *b.Deref();
+        return a.Deref() <=> b.Deref();
     }
 
     static void CheckNoneExist()
