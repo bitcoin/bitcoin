@@ -5794,7 +5794,7 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
     // Do a final check to ensure that the snapshot chainstate is actually a more
     // work chain than the active chainstate; a user could have loaded a snapshot
     // very late in the IBD process, and we wouldn't want to load a useless chainstate.
-    if (!CBlockIndexWorkComparator()(ActiveTip(), snapshot_chainstate->m_chain.Tip())) {
+    if (ActiveTip() && !CBlockIndexWorkComparator()(ActiveTip(), snapshot_chainstate->m_chain.Tip())) {
         return cleanup_bad_snapshot(Untranslated("work does not exceed active chainstate"));
     }
     // If not in-memory, persist the base blockhash for use during subsequent
@@ -5815,6 +5815,13 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
               chainstate.CoinsTip().DynamicMemoryUsage() / (1000 * 1000));
 
     this->MaybeRebalanceCaches();
+
+    // Publish the new active tip, as LoadChainTip() does for a chainstate loaded from disk
+    const CBlockIndex& tip{*Assert(chainstate.m_chain.Tip())};
+    (void)GetNotifications().blockTip(
+        /*state=*/GetSynchronizationState(/*init=*/true, m_blockman.m_blockfiles_indexed),
+        /*index=*/tip,
+        /*verification_progress=*/GuessVerificationProgress(&tip));
     return snapshot_start_block;
 }
 
@@ -5875,7 +5882,7 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
     // This work comparison is a duplicate check with the one performed later in
     // ActivateSnapshot(), but is done so that we avoid doing the long work of staging
     // a snapshot that isn't actually usable.
-    if (WITH_LOCK(::cs_main, return !CBlockIndexWorkComparator()(ActiveTip(), snapshot_start_block))) {
+    if (WITH_LOCK(::cs_main, return ActiveTip() && !CBlockIndexWorkComparator()(ActiveTip(), snapshot_start_block))) {
         return util::Error{Untranslated("Work does not exceed active chainstate")};
     }
 

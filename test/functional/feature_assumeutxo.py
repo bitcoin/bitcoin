@@ -10,6 +10,7 @@ The assumeutxo value generated and used here is committed to in
 `CRegTestParams::m_assumeutxo_data` in `src/kernel/chainparams.cpp`.
 """
 import contextlib
+import re
 
 from dataclasses import dataclass
 from test_framework.blocktools import (
@@ -31,6 +32,7 @@ from test_framework.p2p import (
     P2PInterface,
 )
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_node import ErrorMatch
 from test_framework.util import (
     assert_approx,
     assert_equal,
@@ -79,6 +81,15 @@ class AssumeutxoTest(BitcoinTestFramework):
             self.cleanup_folder(node.blocks_path)
             self.cleanup_folder(node.chain_path / "chainstate")
         self.start_nodes(extra_args=self.extra_args)
+
+    def load_snapshot(self, node, path):
+        self.stop_node(node.index)
+        self.cleanup_folder(node.chain_path / "chainstate")
+        self.start_node(node.index, extra_args=[*self.extra_args[node.index], f"-loadtxoutset={path}"], wait_for_full_init=False)
+        self.wait_until(lambda: node.getmempoolinfo()['loaded'])
+
+    def assert_snapshot_init_error(self, node, path, message):
+        node.assert_start_raises_init_error(extra_args=[*self.extra_args[node.index], f"-loadtxoutset={path}"], expected_msg=re.escape(message), match=ErrorMatch.PARTIAL_REGEX)
 
     def test_invalid_snapshot_scenarios(self, valid_snapshot_path):
         self.log.info("Test different scenarios of loading invalid snapshot files")
@@ -209,6 +220,13 @@ class AssumeutxoTest(BitcoinTestFramework):
         node = self.nodes[1]
         path = node.datadir_path / node.chain / "invalid" / "path"
         assert_raises_rpc_error(-8, "Couldn't open file {} for reading.".format(path), node.loadtxoutset, path)
+        self.stop_node(node.index)
+        for conflict in ["-reindex", "-reindex-chainstate", "-loadblock=unused", "-stopafterblockimport"]:
+            # Reach the snapshot conflict check instead of the prune/reindex-chainstate check
+            node.assert_start_raises_init_error(extra_args=[*self.extra_args[node.index], "-prune=0", f"-loadtxoutset={path}", conflict], expected_msg="-loadtxoutset cannot be combined", match=ErrorMatch.PARTIAL_REGEX)
+        self.assert_snapshot_init_error(node, path, f"Unable to open UTXO snapshot {path} for reading.")
+        self.log.info("Test -noloadtxoutset overrides an earlier -loadtxoutset")
+        self.start_node(node.index, extra_args=[*self.extra_args[node.index], f"-loadtxoutset={path}", "-noloadtxoutset"])
 
     def test_snapshot_block_invalidated(self, dump_output_path):
         self.log.info("Test snapshot is not loaded when base block is invalid.")
@@ -470,15 +488,9 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.test_snapshot_block_invalidated(dump_output['path'])
         self.test_snapshot_not_on_most_work_chain(dump_output['path'])
 
-        # Prune-node sanity check
-        assert 'NETWORK' not in n1.getnetworkinfo()['localservicesnames']
-
         self.log.info(f"Loading snapshot into second node from {dump_output['path']}")
-        loaded = n1.loadtxoutset(dump_output['path'])
-        assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
-        assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
+        self.load_snapshot(n1, dump_output['path'])
 
-        self.log.info("Confirm that local services remain unchanged")
         # Since n1 is a pruned node, the 'NETWORK' service flag must always be unset.
         self.assert_only_network_limited_service(n1)
 
