@@ -133,6 +133,7 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
                 }
             },
             [&] {
+                LOCK(wallet.cs_wallet);
                 auto spks{spk_manager->GetScriptPubKeys()};
                 for (const CScript& spk : spks) {
                     assert(spk_manager->IsMine(spk));
@@ -182,6 +183,7 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
                 std::map<COutPoint, Coin> coins{ConsumeCoins(fuzzed_data_provider)};
                 const int sighash{fuzzed_data_provider.ConsumeIntegral<int>()};
                 std::map<int, bilingual_str> input_errors;
+                LOCK(wallet.cs_wallet);
                 (void)spk_manager->SignTransaction(tx_to, coins, sighash, input_errors);
             },
             [&] {
@@ -203,6 +205,7 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
                     .bip32_derivs = fuzzed_data_provider.ConsumeBool()
                 };
                 if (options.sighash_type == 151) options.sighash_type = std::nullopt;
+                LOCK(wallet.cs_wallet);
                 (void)spk_manager->FillPSBT(psbt, txdata, options);
             }
         );

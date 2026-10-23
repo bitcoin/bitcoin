@@ -4456,6 +4456,12 @@ void CWallet::TopUpCallback(const std::set<CScript>& spks, ScriptPubKeyMan* spkm
     CacheNewScriptPubKeys(spks, spkm);
 }
 
+MuSig2SecNonces& CWallet::GetMuSig2SecNonces() const
+{
+    AssertLockHeld(cs_wallet);
+    return m_musig2_secnonces;
+}
+
 CWallet::HDPubKeyMap CWallet::GetHDPubKeys(HDKeyFilter filter) const
 {
     AssertLockHeld(cs_wallet);

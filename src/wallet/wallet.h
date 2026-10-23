@@ -12,6 +12,7 @@
 #include <interfaces/handler.h>
 #include <kernel/cs_main.h>
 #include <key.h>
+#include <musig.h>
 #include <node/types.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
@@ -430,6 +431,22 @@ private:
 
     //! Features of the last client to decrypt this wallet
     std::optional<uint64_t> m_last_decrypted_features GUARDED_BY(cs_wallet);
+
+    /** Map of a session id to MuSig2 secnonce
+     *
+     * Stores MuSig2 secnonces while the MuSig2 signing session is still ongoing.
+     * Note that these secnonces must not be reused. In order to avoid being tricked into
+     * reusing a nonce, this map is held only in memory and must not be written to disk.
+     * The side effect is that signing sessions cannot persist across restarts, but this
+     * must be done in order to prevent nonce reuse.
+     *
+     * The session id is an arbitrary value set by the signer in order for the signing logic
+     * to find ongoing signing sessions, see MuSig2SessionID.
+     * All descriptors of the wallet share it, so at most MuSig2SecNonces::MAX_SESSIONS
+     * sessions are kept per wallet, the oldest is dropped first.
+     * Signing providers get it, and use it, only while cs_wallet is held.
+     */
+    mutable MuSig2SecNonces m_musig2_secnonces GUARDED_BY(cs_wallet);
 
     /**
      * Catch wallet up to current chain, scanning new blocks, updating the best
@@ -1065,6 +1082,8 @@ public:
     void CacheNewScriptPubKeys(const std::set<CScript>& spks, ScriptPubKeyMan* spkm);
 
     void TopUpCallback(const std::set<CScript>& spks, ScriptPubKeyMan* spkm) override;
+
+    MuSig2SecNonces& GetMuSig2SecNonces() const override EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Which descriptors GetHDPubKeys() should consider.
     enum class HDKeyFilter {

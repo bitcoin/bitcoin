@@ -6,7 +6,12 @@
 #define BITCOIN_MUSIG_H
 
 #include <pubkey.h>
+#include <uint256.h>
 
+#include <cstddef>
+#include <deque>
+#include <map>
+#include <memory>
 #include <optional>
 #include <vector>
 
@@ -55,6 +60,38 @@ public:
     secp256k1_musig_secnonce* Get() const;
     void Invalidate();
     bool IsValid();
+};
+
+/**
+ * The secret nonces of the MuSig2 signing sessions that have not finished yet, by session ID.
+ * A session that is never finished would stay forever, so at most MAX_SESSIONS are kept:
+ * adding one more drops the oldest. Dropping a nonce never allows it to be reused.
+ * While our pubnonce is in the PSBT, no partial signature and no new nonce is made for a
+ * dropped session. It restarts once our pubnonce is removed if no participant has a partial
+ * signature for that MuSig2 key yet, and from new nonces of all participants otherwise.
+ * Each input starts one session for each MuSig2 key with our key in its key path and script
+ * leaves. Such an input weighs at least 230 WU, as a key-path spend does, because every
+ * script path of a descriptor also needs a signature. A standard transaction has at most
+ * 1738 such inputs, so MAX_SESSIONS lets each of them start 18 sessions. A wallet has one
+ * MuSig2SecNonces, so all its descriptors and concurrent PSBTs share the limit. At
+ * MAX_SESSIONS a wallet's secret nonces use 4.5 MiB of locked memory.
+ */
+class MuSig2SecNonces
+{
+private:
+    std::map<uint256, MuSig2SecNonce> m_nonces;
+    //! Session IDs in the map, oldest first
+    std::deque<uint256> m_order;
+
+public:
+    static constexpr size_t MAX_SESSIONS{32768};
+
+    //! Add the nonce of a new session. Returns false and keeps the nonce already stored if the session ID exists.
+    bool Add(const uint256& session_id, MuSig2SecNonce&& nonce);
+    //! The nonce of a session, or nullptr if there is none.
+    MuSig2SecNonce* Get(const uint256& session_id);
+    //! Remove the nonce of a session, if there is one.
+    void Remove(const uint256& session_id);
 };
 
 /**

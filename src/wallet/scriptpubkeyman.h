@@ -55,6 +55,8 @@ public:
     virtual bool IsLocked() const = 0;
     //! Callback function for after TopUp completes containing any scripts that were added by a SPKMan
     virtual void TopUpCallback(const std::set<CScript>&, ScriptPubKeyMan*) = 0;
+    //! The secret nonces of the ongoing MuSig2 signing sessions, shared by all ScriptPubKeyMans.
+    virtual MuSig2SecNonces& GetMuSig2SecNonces() const = 0;
 };
 
 //! Constant representing an unknown spkm creation time
@@ -288,19 +290,6 @@ private:
 
     //! Number of pre-generated keys/scripts (part of the look-ahead process, used to detect payments)
     int64_t m_keypool_size GUARDED_BY(cs_desc_man){DEFAULT_KEYPOOL_SIZE};
-
-    /** Map of a session id to MuSig2 secnonce
-     *
-     * Stores MuSig2 secnonces while the MuSig2 signing session is still ongoing.
-     * Note that these secnonces must not be reused. In order to avoid being tricked into
-     * reusing a nonce, this map is held only in memory and must not be written to disk.
-     * The side effect is that signing sessions cannot persist across restarts, but this
-     * must be done in order to prevent nonce reuse.
-     *
-     * The session id is an arbitrary value set by the signer in order for the signing logic
-     * to find ongoing signing sessions, see MuSig2SessionID.
-     */
-    mutable std::map<uint256, MuSig2SecNonce> m_musig2_secnonces;
 
     const uint256 m_id;
 
