@@ -91,8 +91,7 @@ class BitcoinChainstateTest(BitcoinTestFramework):
             block = n0.getblock(n0.getblockhash(height), 0)
             n1.submitheader(block)
         assert_equal(n1.getblockcount(), 0)
-        loaded = n1.loadtxoutset(dump_output_path)
-        assert_equal(loaded['base_height'], SNAPSHOT_BASE_BLOCK_HEIGHT)
+        self.restart_node(1, extra_args=[f"-loadtxoutset={dump_output_path}"])
         assert_equal(n1.getblockcount(), SNAPSHOT_BASE_BLOCK_HEIGHT)
         datadir = n1.chain_path
         n1.stop_node()
