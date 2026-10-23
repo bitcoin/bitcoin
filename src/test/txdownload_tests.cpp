@@ -104,7 +104,7 @@ static CTransactionRef CreatePlaceholderTx(bool segwit)
     CMutableTransaction mtx;
     mtx.vin.emplace_back(prevout_hash, 0);
     // This makes txid != wtxid
-    if (segwit) mtx.vin[0].scriptWitness.stack.push_back({1});
+    if (segwit) mtx.vin[0].scriptWitness = CScriptWitness{{{1}}};
     mtx.vout.emplace_back(CENT, CScript());
     auto ptx = MakeTransactionRef(mtx);
     prevout_hash = ptx->GetHash();

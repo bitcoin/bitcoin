@@ -292,7 +292,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinC
         CMutableTransaction temp_mtx{*tx};
         for (auto& txin : temp_mtx.vin) {
             txin.scriptSig.clear();
-            txin.scriptWitness.SetNull();
+            txin.scriptWitness = {};
         }
         temp_mtx.vout = txouts;
         const int64_t maxTxSize{CalculateMaximumSignedTxSize(CTransaction(temp_mtx), &wallet, &new_coin_control).vsize};
