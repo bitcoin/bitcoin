@@ -1357,6 +1357,10 @@ BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_i
  *                               might also not be 1 if processing was attempted before, but the block was found invalid
  *                               before its data was persisted.
  * @return                       0 if processing the block was successful. Will also return 0 for valid, but duplicate blocks.
+ * @note                         Blocks are processed as if they were requested. A block is therefore stored
+ *                               even if it has less work than the tip, is more than 288 blocks ahead of it,
+ *                               is below the minimum chain work, or was pruned before. A caller that takes
+ *                               blocks from untrusted sources must apply these checks itself.
  */
 BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_process_block(
     btck_ChainstateManager* chainstate_manager,
