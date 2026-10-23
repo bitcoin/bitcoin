@@ -47,8 +47,7 @@ class WalletBackupTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = True
-        # whitelist peers to speed up tx relay / mempool sync
-        self.noban_tx_relay = True
+        self.noban_tx_relay = True  # faster tx relay
         # nodes 1, 2, 3 are spenders, let's give them a keypool=100
         self.extra_args = [
             ["-keypool=100"],

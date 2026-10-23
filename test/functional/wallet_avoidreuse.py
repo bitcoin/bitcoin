@@ -66,8 +66,7 @@ def assert_balances(node, mine, margin=0.001):
 class AvoidReuseTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        # whitelist peers to speed up tx relay / mempool sync
-        self.noban_tx_relay = True
+        self.noban_tx_relay = True  # faster tx relay
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()

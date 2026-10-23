@@ -17,8 +17,7 @@ class WalletChangeAddressTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
-        # whitelist peers to speed up tx relay / mempool sync
-        self.noban_tx_relay = True
+        self.noban_tx_relay = True  # faster tx relay
         # discardfee is used to make change outputs less likely in the change_pos test
         self.extra_args = [
             [],

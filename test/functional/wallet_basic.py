@@ -29,8 +29,7 @@ OUT_OF_RANGE = "Amount out of range"
 class WalletTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
-        # whitelist peers to speed up tx relay / mempool sync
-        self.noban_tx_relay = True
+        self.noban_tx_relay = True  # faster tx relay
         self.extra_args = [[
             "-dustrelayfee=0", "-walletrejectlongchains=0"
         ]] * self.num_nodes
