@@ -30,7 +30,7 @@ std::string SanitizeString(std::string_view str, int rule)
 {
     std::string result;
     for (char c : str) {
-        if (SAFE_CHARS[rule].find(c) != std::string::npos) {
+        if (SAFE_CHARS[rule].contains(c)) {
             result.push_back(c);
         }
     }
