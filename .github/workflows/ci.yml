@@ -543,12 +543,6 @@ jobs:
         if: ${{ github.repository != 'bitcoin/bitcoin' || matrix.provider == 'gha' }} # Only needed on GHA runners
         uses: ./.github/actions/clear-files
 
-      - name: Enable bpfcc script
-        if: ${{ env.CONTAINER_NAME == 'ci_native_asan' }}
-        # In the image build step, no external environment variables are available,
-        # so any settings will need to be written to the settings env file:
-        run: sed -i "s|\${INSTALL_BCC_TRACING_TOOLS}|true|g" ./ci/test/00_setup_env_native_asan.sh
-
       - name: Set mmap_rnd_bits
         if: ${{ env.CONTAINER_NAME == 'ci_native_tsan' || env.CONTAINER_NAME == 'ci_native_msan' || env.CONTAINER_NAME == 'ci_native_fuzz_with_msan' }}
         # Prevents crashes due to high ASLR entropy

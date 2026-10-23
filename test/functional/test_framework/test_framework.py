@@ -1009,23 +1009,22 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         except ImportError:
             raise SkipTest("capnp module not available.")
 
-    def skip_if_no_python_bcc(self):
-        """Attempt to import the bcc package and skip the tests if the import fails."""
-        try:
-            import bcc  # type: ignore[import] # noqa: F401
-        except ImportError:
-            raise SkipTest("bcc python module not available")
+    def skip_if_no_usdt_tools(self):
+        """USDT tests need GDB with Python and SystemTap probe support."""
+        for tool in ("gdb", "readelf"):
+            if shutil.which(tool) is None:
+                raise SkipTest(f"{tool} not available")
+        result = subprocess.run(
+            ["gdb", "-q", "-nx", "--batch", "-ex", "python import gdb", "-ex", "help break -probe-stap"],
+            capture_output=True, text=True,
+        )
+        if result.returncode:
+            raise SkipTest(f"GDB lacks Python or SystemTap probe support: {result.stderr.strip()}")
 
     def skip_if_no_bitcoind_tracepoints(self):
         """Skip the running test if bitcoind has not been compiled with USDT tracepoint support."""
         if not self.is_usdt_compiled():
             raise SkipTest("bitcoind has not been built with USDT tracepoints enabled.")
-
-    def skip_if_no_bpf_permissions(self):
-        """Skip the running test if we don't have permissions to do BPF syscalls and load BPF maps."""
-        # check for 'root' permissions
-        if os.geteuid() != 0:
-            raise SkipTest("no permissions to use BPF (please review the tests carefully before running them with higher privileges)")
 
     def skip_if_platform_not_linux(self):
         """Skip the running test if we are not on a Linux platform"""
