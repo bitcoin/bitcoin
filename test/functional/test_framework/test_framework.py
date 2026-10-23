@@ -495,18 +495,18 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 # adjust conf for pre 17
                 test_node_i.replace_in_config([('[regtest]', '')])
 
-    def start_node(self, i, *args, **kwargs):
+    def start_node(self, i, *args, wait_for_full_init=True, **kwargs):
         """Start a bitcoind"""
 
         node = self.nodes[i]
 
         node.start(*args, **kwargs)
-        node.wait_for_rpc_connection()
+        node.wait_for_rpc_connection(wait_for_full_init=wait_for_full_init)
 
         if self.options.coveragedir is not None:
             coverage.write_all_rpc_commands(self.options.coveragedir, node._rpc)
 
-    def start_nodes(self, extra_args=None, *args, **kwargs):
+    def start_nodes(self, extra_args=None, *args, wait_for_full_init=True, **kwargs):
         """Start multiple bitcoinds"""
 
         if extra_args is None:
@@ -515,7 +515,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         for i, node in enumerate(self.nodes):
             node.start(extra_args[i], *args, **kwargs)
         for node in self.nodes:
-            node.wait_for_rpc_connection()
+            node.wait_for_rpc_connection(wait_for_full_init=wait_for_full_init)
 
         if self.options.coveragedir is not None:
             for node in self.nodes:
@@ -556,16 +556,16 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 node.stderr.close()
                 node.running = False
 
-    def restart_node(self, i, extra_args=None, clear_addrman=False, *, expected_stderr=''):
+    def restart_node(self, i, extra_args=None, clear_addrman=False, *, expected_stderr='', wait_for_full_init=True):
         """Stop and start a test node"""
         self.stop_node(i, expected_stderr=expected_stderr)
         if clear_addrman:
             peers_dat = self.nodes[i].chain_path / "peers.dat"
             os.remove(peers_dat)
             with self.nodes[i].assert_debug_log(expected_msgs=[f'Creating peers.dat because the file was not found ("{peers_dat}")']):
-                self.start_node(i, extra_args)
+                self.start_node(i, extra_args, wait_for_full_init=wait_for_full_init)
         else:
-            self.start_node(i, extra_args)
+            self.start_node(i, extra_args, wait_for_full_init=wait_for_full_init)
 
     def wait_for_node_exit(self, i, timeout):
         self.nodes[i].process.wait(timeout)
@@ -744,9 +744,17 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             "".join("\n  {!r}".format(m) for m in pool),
         ))
 
+    def wait_for_index_sync(self, nodes=None, **kwargs):
+        """Wait for every enabled index to reach each node's chain tip."""
+        nodes = nodes or self.nodes
+
+        for node in nodes:
+            node.wait_for_index_sync(**kwargs)
+
     def sync_all(self, nodes=None):
         self.sync_blocks(nodes)
         self.sync_mempools(nodes)
+        self.wait_for_index_sync(nodes)
 
     def wait_until(self, test_function, *, timeout=60, check_interval=0.05):
         return wait_until_helper_internal(test_function, timeout=timeout, timeout_factor=self.options.timeout_factor, check_interval=check_interval)

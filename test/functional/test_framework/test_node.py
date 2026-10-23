@@ -353,7 +353,7 @@ class TestNode():
                 *extra_args
             )
 
-    def wait_for_rpc_connection(self, *, wait_for_import=True):
+    def wait_for_rpc_connection(self, *, wait_for_full_init=True):
         """Sets up an RPC connection to the bitcoind process. Returns False if unable to connect."""
         # Poll at a rate of twenty times per second
         poll_per_s = 20
@@ -378,12 +378,13 @@ class TestNode():
                 rpc = self.create_new_rpc_connection(mode="AUTHPROXY")
                 rpc.getblockcount()
                 # If the call to getblockcount() succeeds then the RPC connection is up
-                if self.version_is_at_least(190000) and wait_for_import:
+                if self.version_is_at_least(190000) and wait_for_full_init:
                     # getmempoolinfo.loaded is available since commit
                     # bb8ae2c (version 0.19.0)
                     self.wait_until(lambda: rpc.getmempoolinfo()['loaded'])
+                    self.wait_for_index_sync(rpc=rpc)
                     # Wait for the node to finish reindex, block import, and
-                    # loading the mempool. Usually importing happens fast or
+                    # loading the mempool and indexes. Usually importing happens fast or
                     # even "immediate" when the node is started. However, there
                     # is no guarantee and sometimes ImportBlocks might finish
                     # later. This is going to cause intermittent test failures,
@@ -914,6 +915,20 @@ class TestNode():
 
     def wait_until(self, test_function, *, timeout=60, check_interval=0.05):
         return wait_until_helper_internal(test_function, timeout=timeout, timeout_factor=self.timeout_factor, check_interval=check_interval)
+
+    def wait_for_index_sync(self, *, rpc=None, **kwargs):
+        """Wait for every enabled index to reach this node's chain tip."""
+        if not self.version_is_at_least(210000):
+            return  # getindexinfo is not available in earlier versions
+
+        rpc = rpc or self
+
+        def indexes_are_synced():
+            indexes = rpc.getindexinfo().values()
+            height = rpc.getblockcount()
+            return all(index["synced"] and index["best_block_height"] == height for index in indexes)
+
+        self.wait_until(indexes_are_synced, **kwargs)
 
 class TestNodeCLIAttr:
     def __init__(self, cli, command):
