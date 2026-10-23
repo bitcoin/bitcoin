@@ -3473,7 +3473,8 @@ void PeerManagerImpl::ProcessPackageResult(const node::PackageToValidate& packag
                 }
                 case MempoolAcceptResult::ResultType::MEMPOOL_ENTRY:
                 {
-                    // AlreadyHaveTx() should be catching transactions that are already in mempool.
+                    // AlreadyHaveTx() catches a parent that is already in the mempool, and
+                    // Find1P1CPackage() skips children that are.
                     Assume(false);
                     break;
                 }
