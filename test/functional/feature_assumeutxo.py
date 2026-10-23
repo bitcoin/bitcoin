@@ -124,7 +124,7 @@ class AssumeutxoTest(BitcoinTestFramework):
             with open(bad_snapshot_path, 'wb') as f:
                 f.write(valid_snapshot_contents[:11] + bytes.fromhex(bad_block_hash)[::-1] + valid_snapshot_contents[43:])
 
-            msg = f"Unable to load UTXO snapshot: assumeutxo block hash in snapshot metadata not recognized (hash: {bad_block_hash}). The following snapshot heights are available: 110, 200, 299."
+            msg = f"Unable to load UTXO snapshot: assumeutxo block hash in snapshot metadata not recognized (hash: {bad_block_hash}). The supported snapshot height is {SNAPSHOT_BASE_HEIGHT}."
             assert_raises_rpc_error(-32603, msg, node.loadtxoutset, bad_snapshot_path)
 
         self.log.info("  - snapshot file with wrong number of coins")
@@ -794,10 +794,12 @@ class AssumeutxoTest(BitcoinTestFramework):
                 self.wait_until(lambda: n.getindexinfo() == completed_idx_state)
 
         self.log.info("Test -reindex-chainstate of an assumeutxo-synced node")
-        self.restart_node(2, extra_args=[
-            '-reindex-chainstate=1', *self.extra_args[2]])
-        assert_equal(n2.getblockchaininfo()["blocks"], FINAL_HEIGHT)
-        self.wait_until(lambda: n2.getblockcount() == FINAL_HEIGHT)
+        expected = [f"verified UTXO commitment at height {SNAPSHOT_BASE_HEIGHT}: 106b2c56233e378a824cf0d5ff2be42ed32c72f1605c9be288d00942908a40ac"]
+        with n2.assert_debug_log(expected):
+            self.restart_node(2, extra_args=[
+                '-reindex-chainstate=1', *self.extra_args[2]])
+            assert_equal(n2.getblockchaininfo()["blocks"], FINAL_HEIGHT)
+            self.wait_until(lambda: n2.getblockcount() == FINAL_HEIGHT)
 
         self.log.info("Test -reindex of an assumeutxo-synced node")
         self.restart_node(2, extra_args=['-reindex=1', *self.extra_args[2]])

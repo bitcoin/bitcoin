@@ -3110,7 +3110,7 @@ static RPCMethod dumptxoutset()
         "For deep rollbacks, make sure to use no RPC timeout (bitcoin-cli -rpcclienttimeout=0) as it may take several minutes.",
         {
             {"path", RPCArg::Type::STR, RPCArg::Optional::NO, "Path to the output file. If relative, will be prefixed by datadir."},
-            {"type", RPCArg::Type::STR, RPCArg::Default(""), "The type of snapshot to create. Can be \"latest\" to create a snapshot of the current UTXO set or \"rollback\" to temporarily roll back the state of the node to a historical block before creating the snapshot of a historical UTXO set. This parameter can be omitted if a separate \"rollback\" named parameter is specified indicating the height or hash of a specific historical block. If \"rollback\" is specified and separate \"rollback\" named parameter is not specified, this will roll back to the latest valid snapshot block that can currently be loaded with loadtxoutset."},
+            {"type", RPCArg::Type::STR, RPCArg::Default(""), "The type of snapshot to create. Can be \"latest\" to create a snapshot of the current UTXO set or \"rollback\" to temporarily roll back the state of the node to a historical block before creating the snapshot of a historical UTXO set. This parameter can be omitted if a separate \"rollback\" named parameter is specified indicating the height or hash of a specific historical block. If \"rollback\" is specified and separate \"rollback\" named parameter is not specified, this will roll back to the snapshot block supported by loadtxoutset."},
             {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
                 {
                     {"rollback", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
@@ -3150,10 +3150,7 @@ static RPCMethod dumptxoutset()
         }
         target_index = ParseHashOrHeight(options["rollback"], *node.chainman);
     } else if (snapshot_type == "rollback") {
-        auto snapshot_heights = node.chainman->GetParams().GetAvailableSnapshotHeights();
-        CHECK_NONFATAL(snapshot_heights.size() > 0);
-        auto max_height = std::max_element(snapshot_heights.begin(), snapshot_heights.end());
-        target_index = ParseHashOrHeight(*max_height, *node.chainman);
+        target_index = ParseHashOrHeight(node.chainman->GetParams().Assumeutxo().height, *node.chainman);
     } else if (snapshot_type == "latest") {
         target_index = tip;
     } else {
