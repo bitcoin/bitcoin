@@ -44,7 +44,8 @@ public:
     static constexpr auto STALE_DURATION{1min};
 
     /// Maximum number of transactions tracked simultaneously.
-    /// Additions that would exceed this are rejected (see Add()).
+    /// Additions that would exceed this evict the oldest finished transaction,
+    /// or are rejected if there is none (see Add()).
     static constexpr size_t MAX_TRANSACTIONS{10'000};
 
     /// Maximum number of send attempts for a transaction. Once this limit is
@@ -66,31 +67,39 @@ public:
         std::optional<NodeClock::time_point> received;
     };
 
+    /// Auxiliary struct that holds metadata about the peer who echoed the transaction to us.
+    struct ReceivedByUs {
+        CService from;
+        NodeClock::time_point when;
+    };
+
     struct TxBroadcastInfo {
         CTransactionRef tx;
         NodeClock::time_point time_added;
         /// Number of additional send attempts allowed for this transaction (0 if exhausted).
         size_t attempts_remaining;
         std::vector<PeerSendInfo> peers;
+        std::optional<ReceivedByUs> received_by_us;
     };
 
     /// Outcome of Add().
     enum class AddResult {
-        //! The transaction was newly added or reset after exhausting its send attempts.
+        /// The transaction was newly added or reset if it was finished.
         Added,
-        //! The transaction was already present with send attempts remaining; no change.
+        /// The transaction was already present and not finished; no change.
         AlreadyPresent,
-        //! Rejected: the queue is already at MAX_TRANSACTIONS.
+        /// Rejected: the queue is at MAX_TRANSACTIONS and no finished transactions,
+        /// so there is nothing that can be evicted.
         QueueFull,
     };
 
     /**
-     * Add a transaction to the storage, or reset an exhausted transaction so it
-     * can be broadcast again.
+     * Add a transaction to the storage or reset a finished one, so it can be broadcast again.
+     * If the queue is at MAX_TRANSACTIONS, the oldest finished transaction is evicted to
+     * make room. Not finished transactions are never evicted.
      * @param[in] tx The transaction to add.
-     * @return Whether the transaction was newly added or reset, was already
-     * present with send attempts remaining, or was rejected because the queue is
-     * full (see AddResult).
+     * @return Whether the transaction was newly added (or reset) or was already
+     * present or was rejected because the queue is full (@see AddResult).
      */
     [[nodiscard]] AddResult Add(const CTransactionRef& tx)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
@@ -106,12 +115,15 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
-     * Mark a transaction as resolved because it was received back from the network
-     * or is no longer acceptable to the mempool.
+     * Mark a transaction as resolved because either
+     * - it was echoed from the network (`received_from` is set), or
+     * - it is no longer acceptable to the mempool (`received_from` is not set).
      * @param[in] tx Transaction to resolve.
+     * @param[in] received_from If the transaction was echoed from the network,
+     * the address of the peer from which it was received back.
      * @return Whether the transaction was found in the storage.
      */
-    bool MarkResolved(const CTransactionRef& tx)
+    bool MarkResolved(const CTransactionRef& tx, std::optional<CService> received_from = std::nullopt)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
@@ -140,8 +152,7 @@ public:
      * transaction to one node would be a privacy leak.
      * @param[in] will_send_to_address Address of the peer to which this transaction
      * will be sent.
-     * @return Most urgent transaction or nullopt if there are no transactions
-     * with send attempts remaining.
+     * @return Most urgent transaction or nullopt if no transactions need sending.
      */
     std::optional<CTransactionRef> PickTxForSend(const NodeId& will_send_to_nodeid, const CService& will_send_to_address)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
@@ -163,14 +174,14 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
-     * Check if there are transactions with send attempts remaining.
+     * Check if there are transactions that still need to be broadcast.
      */
     bool HavePendingTransactions()
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
-     * Get the transactions that have not been broadcast recently and have send
-     * attempts remaining.
+     * Get the transactions that have not been broadcast recently and are still
+     * pending (not yet received back, with send attempts remaining).
      */
     std::vector<CTransactionRef> GetStale() const
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
@@ -257,6 +268,9 @@ private:
         size_t planned_sends{INITIAL_CONNECTION_COUNT};
         /// Whether the transaction no longer needs to be retried.
         bool resolved{false};
+        /// If the transaction has been echoed from the network, then
+        /// this contains information about which peer sent it to us.
+        std::optional<ReceivedByUs> received_by_us;
     };
     bool IsPending(const TxSendStatus& status) const;
     /// Cap on the number of simultaneously tracked transactions (see Add()).
