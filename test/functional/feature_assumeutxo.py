@@ -232,7 +232,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.log.info("Test bitcoind should fail when file path is invalid.")
         node = self.nodes[1]
         path = node.datadir_path / node.chain / "invalid" / "path"
-        assert_raises_rpc_error(-8, "Couldn't open file {} for reading.".format(path), node.loadtxoutset, path)
+        assert_raises_rpc_error(-32601, "loadtxoutset", node.loadtxoutset, path)
         self.stop_node(node.index)
         for conflict in ["-reindex", "-reindex-chainstate", "-loadblock=unused", "-stopafterblockimport"]:
             # Reach the snapshot conflict check instead of the prune/reindex-chainstate check
