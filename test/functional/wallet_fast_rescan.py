@@ -99,6 +99,7 @@ class WalletFastRescanTest(BitcoinTestFramework):
         self.generateblock(node, output="raw(42)", transactions=[send_result['txid']])
 
         self.log.info("Import wallet backup with block filter index")
+        self.wait_until(lambda: node.getindexinfo()["basic block filter index"]["best_block_height"] == node.getblockcount())
         with node.assert_debug_log(['fast variant using block filters', *fast_rescan_messages]):
             node.restorewallet('rescan_fast', WALLET_BACKUP_FILENAME)
         txids_fast = self.get_wallet_txids(node, 'rescan_fast')
