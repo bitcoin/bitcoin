@@ -59,10 +59,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         wrpc = node.get_wallet_rpc(wallet_name)
         return wrpc.importdescriptors(import_request)
 
-    def validate_snapshot_import(self, node, loaded, base_hash):
-        assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
-        assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
-
+    def validate_snapshot_import(self, node, base_hash):
         normal, snapshot = node.getchainstates()["chainstates"]
         assert_equal(normal['blocks'], 0)
         assert 'snapshot_blockhash' not in normal
@@ -85,8 +82,8 @@ class AssumeutxoTest(BitcoinTestFramework):
 
     def test_backup_during_background_sync_pruned_node(self, n3, dump_output, expected_error_message):
         self.log.info("Backup from the snapshot height can be loaded during background sync (pruned node)")
-        loaded = n3.loadtxoutset(dump_output['path'])
-        self.validate_snapshot_import(n3, loaded, dump_output['base_hash'])
+        self.restart_node(3, extra_args=[*self.extra_args[3], f"-loadtxoutset={dump_output['path']}"])
+        self.validate_snapshot_import(n3, dump_output['base_hash'])
         for height in range(1, START_HEIGHT + 1):
             block = self.nodes[0].getblock(self.nodes[0].getblockhash(height), 0)
             n3.submitblock(block)
@@ -204,8 +201,8 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         self.log.info(
             f"Loading snapshot into second node from {dump_output['path']}")
-        loaded = n1.loadtxoutset(dump_output['path'])
-        self.validate_snapshot_import(n1, loaded, dump_output['base_hash'])
+        self.restart_node(1, extra_args=[*self.extra_args[1], f"-loadtxoutset={dump_output['path']}"])
+        self.validate_snapshot_import(n1, dump_output['base_hash'])
 
         self.log.info("Backup from the snapshot height can be loaded during background sync")
         n1.restorewallet("w", "backup_w.dat")
@@ -281,8 +278,8 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(w.getbalance(), 34)
 
         self.log.info("Check balance of a wallet that is active during snapshot completion")
+        self.restart_node(2, extra_args=[*self.extra_args[2], f"-loadtxoutset={dump_output['path']}"])
         n2.restorewallet("w", "backup_w.dat")
-        loaded = n2.loadtxoutset(dump_output['path'])
         self.connect_nodes(0, 2)
         self.wait_until(lambda: len(n2.getchainstates()['chainstates']) == 1)
         ensure_for(duration=1, f=lambda: (n2.getbalance() == 34))
