@@ -5811,6 +5811,10 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
 
     LogInfo("[snapshot] loading %d coins from snapshot %s", coins_left, base_blockhash.ToString());
     int64_t coins_processed{0};
+    // Coins vary in size (scripts can be up to MAX_SCRIPT_SIZE bytes), so the
+    // cache is also checked once it has grown by this much since the last check.
+    static constexpr size_t MAX_UNCHECKED_CACHE_GROWTH{4 << 20};
+    size_t cache_usage_at_last_check{coins_cache.DynamicMemoryUsage()};
 
     while (coins_left > 0) {
         try {
@@ -5851,11 +5855,11 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
                         coins_cache.DynamicMemoryUsage() / (1000 * 1000));
                 }
 
-                // Batch write and flush (if we need to) every so often.
-                //
-                // If our average Coin size is roughly 41 bytes, checking every 120,000 coins
-                // means <5MB of memory imprecision.
-                if (coins_processed % 120000 == 0) {
+                // Batch write and flush (if we need to) every so often: every
+                // 120,000 coins, or sooner once the cache has grown by
+                // MAX_UNCHECKED_CACHE_GROWTH bytes since the last check.
+                if (coins_processed % 120000 == 0 ||
+                    coins_cache.DynamicMemoryUsage() >= cache_usage_at_last_check + MAX_UNCHECKED_CACHE_GROWTH) {
                     if (m_interrupt) {
                         return util::Error{Untranslated("Aborting after an interrupt was requested")};
                     }
@@ -5872,6 +5876,7 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
                         // No need to acquire cs_main since this chainstate isn't being used yet.
                         FlushSnapshotToDisk(coins_cache, /*snapshot_loaded=*/false);
                     }
+                    cache_usage_at_last_check = coins_cache.DynamicMemoryUsage();
                 }
             }
         } catch (const std::ios_base::failure&) {
