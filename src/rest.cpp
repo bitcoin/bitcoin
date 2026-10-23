@@ -8,6 +8,7 @@
 #include <blockfilter.h>
 #include <chain.h>
 #include <coins.h>
+#include <consensus/amount.h>
 #include <consensus/params.h>
 #include <core_io.h>
 #include <crypto/hex_base.h>

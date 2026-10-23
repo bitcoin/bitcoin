@@ -21,6 +21,7 @@ public:
     std::vector<CTransactionRef> passTransactions(std::vector<CTransactionRef> t) { return t; }
     std::vector<char> passVectorChar(std::vector<char> v) { return v; }
     CScript passScript(CScript s) { return s; }
+    std::vector<CAmount> passAmounts(std::vector<CAmount> v) { return v; }
 };
 
 #endif // BITCOIN_IPC_TEST_IPC_TEST_H

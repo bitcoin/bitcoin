@@ -10,6 +10,7 @@
 #include <banman.h>
 #include <chainparams.h>
 #include <clientversion.h>
+#include <consensus/amount.h>
 #include <core_io.h>
 #include <crypto/hex_base.h>
 #include <net.h>
