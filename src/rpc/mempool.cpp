@@ -517,7 +517,7 @@ static std::vector<RPCResult> MempoolEntryDescription()
         RPCResult{RPCResult::Type::BOOL, "unbroadcast", "Whether this transaction is currently unbroadcast (initial broadcast not yet acknowledged by any peers)"},
     };
     if (IsDeprecatedRPCEnabled("bip125")) {
-        list.emplace_back(RPCResult::Type::BOOL, "bip125-replaceable", "Whether this transaction signals BIP125 replaceability or has an unconfirmed ancestor signaling BIP125 replaceability. (DEPRECATED)\n");
+        list.push_back({RPCResult::Type::BOOL, "bip125-replaceable", "Whether this transaction signals BIP125 replaceability or has an unconfirmed ancestor signaling BIP125 replaceability. (DEPRECATED)\n"});
     }
     return list;
 }
@@ -1156,7 +1156,7 @@ static RPCMethod getmempoolinfo()
                     {RPCResult::Type::BOOL, "optimal", "If the mempool is in a known-optimal transaction ordering"},
                 };
                 if (IsDeprecatedRPCEnabled("fullrbf")) {
-                    list.emplace_back(RPCResult::Type::BOOL, "fullrbf", "True if the mempool accepts RBF without replaceability signaling inspection (DEPRECATED)");
+                    list.push_back({RPCResult::Type::BOOL, "fullrbf", "True if the mempool accepts RBF without replaceability signaling inspection (DEPRECATED)"});
                 }
                 return list;
             }()
