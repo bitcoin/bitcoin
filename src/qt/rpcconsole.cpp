@@ -793,9 +793,9 @@ static QString categoryClass(int category)
 {
     switch(category)
     {
-    case RPCConsole::CMD_REQUEST:  return "cmd-request"; break;
-    case RPCConsole::CMD_REPLY:    return "cmd-reply"; break;
-    case RPCConsole::CMD_ERROR:    return "cmd-error"; break;
+    case RPCConsole::CMD_REQUEST:  return "cmd-request";
+    case RPCConsole::CMD_REPLY:    return "cmd-reply";
+    case RPCConsole::CMD_ERROR:    return "cmd-error";
     default:                       return "misc";
     }
 }
