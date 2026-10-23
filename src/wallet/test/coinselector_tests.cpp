@@ -905,6 +905,29 @@ BOOST_AUTO_TEST_CASE(bump_fee_test)
     }
 }
 
+BOOST_AUTO_TEST_CASE(merge_algo_test)
+{
+    // Preset inputs are merged into the automatic selection result, which keeps its algorithm
+    {
+        SelectionResult automatic{2 * CENT, SelectionAlgorithm::BNB};
+        add_coin(2 * CENT, 1, automatic);
+        SelectionResult preselected{1 * CENT, SelectionAlgorithm::MANUAL};
+        add_coin(1 * CENT, 2, preselected);
+        automatic.Merge(preselected);
+        BOOST_CHECK_EQUAL(GetAlgorithmName(automatic.GetAlgo()), GetAlgorithmName(SelectionAlgorithm::BNB));
+    }
+
+    // A manual result takes the algorithm of the result merged into it
+    {
+        SelectionResult preselected{1 * CENT, SelectionAlgorithm::MANUAL};
+        add_coin(1 * CENT, 1, preselected);
+        SelectionResult automatic{2 * CENT, SelectionAlgorithm::BNB};
+        add_coin(2 * CENT, 2, automatic);
+        preselected.Merge(automatic);
+        BOOST_CHECK_EQUAL(GetAlgorithmName(preselected.GetAlgo()), GetAlgorithmName(SelectionAlgorithm::BNB));
+    }
+}
+
 BOOST_AUTO_TEST_CASE(effective_value_test)
 {
     const int input_bytes = 148;
