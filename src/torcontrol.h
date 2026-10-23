@@ -17,6 +17,7 @@
 #include <deque>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <thread>
 #include <vector>
@@ -70,6 +71,11 @@ public:
     bool Connect(const std::string& tor_control_center);
 
     /**
+     * Address the control port was reached at, if connected.
+     */
+    std::optional<CService> GetPeer() const;
+
+    /**
      * Disconnect from Tor control port.
      */
     void Disconnect();
@@ -104,6 +110,8 @@ private:
     CThreadInterrupt& m_interrupt;
     /** Socket for the connection */
     std::unique_ptr<Sock> m_sock;
+    /** Address the socket was connected to */
+    std::optional<CService> m_peer;
     /** Message being received */
     TorControlReply m_message;
     /** Response handlers */

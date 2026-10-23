@@ -106,6 +106,15 @@ it requires a Tor connection to work. It can be explicitly disabled with
 `-listenonion=0`. If it is not disabled, it can be configured using the
 `-torcontrol` and `-torpassword` settings.
 
+Unless `-onion` is set, Bitcoin Core asks Tor for its SOCKS listeners and uses
+one as the proxy for onion addresses. It only uses a listener on the same host
+as the control port: a loopback address if the control port is on loopback,
+otherwise the address of the `-torcontrol` host. Other listeners, including
+unix sockets, are ignored and logged. If none is usable, the onion proxy given
+by `-proxy` is kept, and without `-proxy` the default `127.0.0.1:9050` is
+used. With a remote Tor that listens on a different address than its control
+port, set `-onion` or `-proxy` to point to it.
+
 To see verbose Tor information in the bitcoind debug log, pass `-debug=tor`.
 
 ### Control Port

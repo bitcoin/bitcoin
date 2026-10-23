@@ -100,6 +100,7 @@ bool TorControlConnection::Connect(const std::string& tor_control_center)
         LogWarning("tor: Error connecting to address %s", tor_control_center);
         return false;
     }
+    m_peer = control_service;
 
     m_recv_buffer.clear();
     m_message.Clear();
@@ -107,6 +108,11 @@ bool TorControlConnection::Connect(const std::string& tor_control_center)
 
     LogDebug(BCLog::TOR, "Successfully connected to Tor control port");
     return true;
+}
+
+std::optional<CService> TorControlConnection::GetPeer() const
+{
+    return m_sock ? m_peer : std::nullopt;
 }
 
 void TorControlConnection::Disconnect()
@@ -410,9 +416,22 @@ void TorController::ThreadControl()
     LogDebug(BCLog::TOR, "Exited Tor control thread");
 }
 
+/** Whether a SOCKS listener reported by Tor may be used as onion proxy: it is on the same
+ * host as the control port, which is a loopback address when the control port is. */
+bool IsSocksListenerAllowed(const CNetAddr& listener, const CNetAddr& control)
+{
+    static const CSubNet loopback_v4{LookupSubNet("127.0.0.0/8")};
+    static const std::optional<CNetAddr> loopback_v6{LookupHost("::1", /*fAllowLookup=*/false)};
+    const auto is_loopback{[&](const CNetAddr& addr) {
+        return loopback_v4.Match(addr) || (loopback_v6 && addr == *loopback_v6);
+    }};
+    return is_loopback(control) ? is_loopback(listener) : listener == control;
+}
+
 void TorController::get_socks_cb(TorControlConnection& _conn, const TorControlReply& reply)
 {
     // NOTE: We can only get here if -onion is unset
+    const std::optional<CService> control{_conn.GetPeer()};
     std::string socks_location;
     if (reply.code == TOR_REPLY_OK) {
         for (const auto& line : reply.lines) {
@@ -425,6 +444,14 @@ void TorController::get_socks_cb(TorControlConnection& _conn, const TorControlRe
                     if ((portstr[0] == '"' || portstr[0] == '\'') && portstr.size() >= 2 && (*portstr.rbegin() == portstr[0])) {
                         portstr = portstr.substr(1, portstr.size() - 2);
                         if (portstr.empty()) continue;
+                    }
+                    // Whoever answers on the control port chooses the listeners, so only
+                    // use one on the host that runs the control port. Any other, including
+                    // a unix socket or an address that is not a host, is ignored and logged.
+                    const CService listener{LookupNumeric(portstr, DEFAULT_TOR_SOCKS_PORT)};
+                    if (!listener.IsValid() || !control || !IsSocksListenerAllowed(listener, *control)) {
+                        LogWarning("tor: Ignoring SOCKS listener %s, it is not an address on the Tor control host", portstr);
+                        continue;
                     }
                     socks_location = portstr;
                     if (portstr.starts_with("127.0.0.1:")) {
@@ -450,19 +477,23 @@ void TorController::get_socks_cb(TorControlConnection& _conn, const TorControlRe
     if (!socks_location.empty()) {
         resolved = LookupNumeric(socks_location, DEFAULT_TOR_SOCKS_PORT);
     }
-    if (!resolved.IsValid()) {
+    if (resolved.IsValid()) {
+        LogDebug(BCLog::TOR, "Configuring onion proxy for %s", resolved.ToStringAddrPort());
+
+        // Add Tor as proxy for .onion addresses.
+        // Enable stream isolation to prevent connection correlation and enhance privacy, by forcing a different Tor circuit for every connection.
+        // For this to work, the IsolateSOCKSAuth flag must be enabled on SOCKSPort (which is the default, see the IsolateSOCKSAuth section of Tor's manual page).
+        SetProxy(NET_ONION, Proxy(resolved, /*tor_stream_isolation=*/ true));
+    } else if (const auto current{GetProxy(NET_ONION)}) {
+        // Keep the onion proxy set by -proxy, or by an earlier reply.
+        LogDebug(BCLog::TOR, "Keeping onion proxy %s", current->ToString());
+    } else {
         // Fallback to old behaviour
         resolved = LookupNumeric("127.0.0.1", DEFAULT_TOR_SOCKS_PORT);
+        Assume(resolved.IsValid());
+        LogDebug(BCLog::TOR, "Configuring onion proxy for %s", resolved.ToStringAddrPort());
+        SetProxy(NET_ONION, Proxy(resolved, /*tor_stream_isolation=*/ true));
     }
-
-    Assume(resolved.IsValid());
-    LogDebug(BCLog::TOR, "Configuring onion proxy for %s", resolved.ToStringAddrPort());
-
-    // Add Tor as proxy for .onion addresses.
-    // Enable stream isolation to prevent connection correlation and enhance privacy, by forcing a different Tor circuit for every connection.
-    // For this to work, the IsolateSOCKSAuth flag must be enabled on SOCKSPort (which is the default, see the IsolateSOCKSAuth section of Tor's manual page).
-    Proxy addrOnion = Proxy(resolved, /*tor_stream_isolation=*/ true);
-    SetProxy(NET_ONION, addrOnion);
 
     const auto onlynets = gArgs.GetArgs("-onlynet");
 

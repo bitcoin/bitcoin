@@ -3,6 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 
+#include <netaddress.h>
+#include <netbase.h>
+
 #include <boost/test/unit_test.hpp>
 
 #include <map>
@@ -12,6 +15,7 @@
 
 std::pair<std::string, std::string> SplitTorReplyLine(const std::string& s);
 std::map<std::string, std::string> ParseTorReplyMapping(const std::string& s);
+bool IsSocksListenerAllowed(const CNetAddr& listener, const CNetAddr& control);
 
 
 BOOST_AUTO_TEST_SUITE(torcontrol_tests)
@@ -197,6 +201,32 @@ BOOST_AUTO_TEST_CASE(util_ParseTorReplyMapping)
     CheckParseTorReplyMapping("MORE  ARGS", {});
     CheckParseTorReplyMapping("EVEN more=ARGS", {});
     CheckParseTorReplyMapping("EVEN+more ARGS", {});
+}
+
+static bool Allowed(const std::string& listener, const std::string& control)
+{
+    return IsSocksListenerAllowed(LookupNumeric(listener), LookupNumeric(control));
+}
+
+BOOST_AUTO_TEST_CASE(socks_listener_allowed)
+{
+    // Control port on loopback: any loopback listener, nothing else.
+    BOOST_CHECK(Allowed("127.0.0.1", "127.0.0.1"));
+    BOOST_CHECK(Allowed("127.1.2.3", "127.0.0.1"));
+    BOOST_CHECK(Allowed("::1", "127.0.0.1"));
+    BOOST_CHECK(Allowed("127.0.0.1", "::1"));
+    BOOST_CHECK(!Allowed("0.1.2.3", "127.0.0.1"));
+    BOOST_CHECK(!Allowed("203.0.113.7", "127.0.0.1"));
+    BOOST_CHECK(!Allowed("172.18.0.5", "127.0.0.1"));
+    BOOST_CHECK(!Allowed("2001:db8::1", "::1"));
+
+    // Control port on another host: only that host.
+    BOOST_CHECK(Allowed("172.18.0.5", "172.18.0.5"));
+    BOOST_CHECK(Allowed("2001:db8::1", "2001:db8::1"));
+    BOOST_CHECK(!Allowed("172.18.0.6", "172.18.0.5"));
+    BOOST_CHECK(!Allowed("127.0.0.1", "172.18.0.5"));
+    BOOST_CHECK(!Allowed("::1", "172.18.0.5"));
+    BOOST_CHECK(!Allowed("2001:db8::2", "2001:db8::1"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

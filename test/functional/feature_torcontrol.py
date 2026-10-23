@@ -16,8 +16,9 @@ from test_framework.util import (
 
 
 class MockTorControlServer:
-    def __init__(self, port, manual_mode=False):
+    def __init__(self, port, manual_mode=False, host='127.0.0.1'):
         self.port = port
+        self.host = host
         self.sock = None
         self.conn = None
         self.running = False
@@ -30,7 +31,7 @@ class MockTorControlServer:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.settimeout(1.0)
-        self.sock.bind(('127.0.0.1', self.port))
+        self.sock.bind((self.host, self.port))
         self.sock.listen(1)
         self.running = True
         self.thread = threading.Thread(target=self._serve)
@@ -113,13 +114,13 @@ class TorControlTest(BitcoinTestFramework):
         self._port_counter = getattr(self, '_port_counter', 0) + 1
         return p2p_port(self.num_nodes + self._port_counter)
 
-    def restart_with_mock(self, mock_tor):
+    def restart_with_mock(self, mock_tor, extra_args=None):
         mock_tor.start()
         self.restart_node(0, extra_args=[
-            f"-torcontrol=127.0.0.1:{mock_tor.port}",
+            f"-torcontrol={mock_tor.host}:{mock_tor.port}",
             "-listenonion=1",
             "-debug=tor",
-        ])
+        ] + (extra_args or []))
 
         # Wait for connection and PROTOCOLINFO command
         mock_tor.conn_ready.wait(timeout=10)
@@ -357,6 +358,80 @@ class TorControlTest(BitcoinTestFramework):
 
         mock_tor.stop()
 
+    def check_socks_listeners(self, listeners, expected_proxy, expected_log, host="127.0.0.1", extra_args=None):
+        class SocksServer(MockTorControlServer):
+            def _get_response(self, command):
+                if command.startswith("GETINFO"):
+                    return f"250-net/listeners/socks={listeners}\r\n250 OK\r\n"
+                return super()._get_response(command)
+
+        mock_tor = SocksServer(self.next_port(), host=host)
+        with self.nodes[0].assert_debug_log([expected_log], timeout=10):
+            self.restart_with_mock(mock_tor, extra_args)
+            self.wait_until(lambda: len(mock_tor.received_commands) >= 4, timeout=10)
+
+        onion_proxy = next(n["proxy"] for n in self.nodes[0].getnetworkinfo()["networks"] if n["name"] == "onion")
+        assert_equal(onion_proxy, expected_proxy)
+
+        mock_tor.stop()
+        # The port is free again, and p2p_port() allows only MAX_NODES ports.
+        self._port_counter -= 1
+
+    def nonloopback_address(self):
+        """An address of this host that is not loopback and that accepts connections, or None."""
+        # Connecting a UDP socket sends nothing, it only selects the local address.
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            try:
+                s.connect(("192.0.2.1", 9))
+                address = s.getsockname()[0]
+            except OSError:
+                return None
+        if address.startswith("127.") or address == "0.0.0.0":
+            return None
+        # Some environments do not deliver connections to such an address.
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
+                server.bind((address, 0))
+                server.listen(1)
+                server.settimeout(2)
+                with socket.create_connection(server.getsockname(), timeout=2):
+                    server.accept()[0].close()
+        except OSError:
+            return None
+        return address
+
+    def test_socks_listeners(self):
+        self.log.info("Test which SOCKS listeners from Tor are used as onion proxy")
+        ignored = "Ignoring SOCKS listener"
+
+        self.log.debug("Control port on loopback: a loopback listener is used, wherever it is in the list")
+        self.check_socks_listeners('"[::1]:9150" "203.0.113.7:9050"', "[::1]:9150", "Configuring onion proxy for [::1]:9150")
+        self.check_socks_listeners('"203.0.113.7:9050" "[::1]:9150"', "[::1]:9150", "Configuring onion proxy for [::1]:9150")
+
+        self.log.debug("Control port on loopback: another host is ignored, the default proxy is used")
+        self.check_socks_listeners('"203.0.113.7:9050"', "127.0.0.1:9050", ignored)
+
+        self.log.debug("Control port on loopback: a listener that is not a host address is ignored and logged")
+        self.check_socks_listeners('"0.0.0.0:9050"', "127.0.0.1:9050", f"{ignored} 0.0.0.0:9050")
+        self.check_socks_listeners('"unix:/run/tor/socks"', "127.0.0.1:9050", f"{ignored} unix:/run/tor/socks")
+
+        self.log.debug("Control port on loopback: another host is ignored, the proxy from -proxy is kept")
+        self.check_socks_listeners('"203.0.113.7:9050"', "203.0.113.9:9050", "Keeping onion proxy", extra_args=["-proxy=203.0.113.9:9050"])
+
+        address = self.nonloopback_address()
+        if address is None:
+            self.log.info("Skipping the tests with a control port that is not on loopback, no such address")
+            return
+
+        self.log.debug("Control port not on loopback: a listener on the same host is used")
+        self.check_socks_listeners(f'"{address}:9150"', f"{address}:9150", f"Configuring onion proxy for {address}:9150", host=address)
+
+        self.log.debug("Control port not on loopback: another host is ignored, the proxy from -proxy is kept")
+        self.check_socks_listeners('"203.0.113.7:9050"', f"{address}:9050", ignored, host=address, extra_args=[f"-proxy={address}:9050"])
+
+        self.log.debug("Control port not on loopback: a loopback listener is ignored too")
+        self.check_socks_listeners('"127.0.0.1:9050"', "203.0.113.9:9050", ignored, host=address, extra_args=["-proxy=203.0.113.9:9050"])
+
     def run_test(self):
         self.test_basic()
         self.test_partial_data()
@@ -367,6 +442,7 @@ class TorControlTest(BitcoinTestFramework):
         self.test_cookiefile_not_regular()
         self.test_cookiefile_missing()
         self.test_cookiefile_regular()
+        self.test_socks_listeners()
 
 
 if __name__ == '__main__':
