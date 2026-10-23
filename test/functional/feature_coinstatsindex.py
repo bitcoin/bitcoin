@@ -62,7 +62,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         )
 
     def sync_index_node(self):
-        self.wait_until(lambda: self.nodes[1].getindexinfo()['coinstatsindex']['synced'] is True)
+        self.wait_for_index_sync([self.nodes[1]])
 
     def _test_coin_stats_index(self):
         node = self.nodes[0]
@@ -230,14 +230,12 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self.log.info("Test that the index works with -reindex")
 
         self.restart_node(1, extra_args=["-coinstatsindex", "-reindex"])
-        self.sync_index_node()
         res11 = index_node.gettxoutsetinfo('muhash')
         assert_equal(res11, res10)
 
         self.log.info("Test that the index works with -reindex-chainstate")
 
         self.restart_node(1, extra_args=["-coinstatsindex", "-reindex-chainstate"])
-        self.sync_index_node()
         res12 = index_node.gettxoutsetinfo('muhash')
         assert_equal(res12, res10)
 
@@ -261,7 +259,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         index_node = self.nodes[1]
         reorg_blocks = self.generatetoaddress(index_node, 2, getnewdestination()[2])
         reorg_block = reorg_blocks[1]
-        self.sync_index_node()
         res_invalid = index_node.gettxoutsetinfo('muhash')
         index_node.invalidateblock(reorg_blocks[0])
         assert_equal(index_node.gettxoutsetinfo('muhash')['height'], 110)
@@ -317,7 +314,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
 
         # Restart with index that still has its best block on the old chain
         self.restart_node(1, extra_args=self.extra_args[1])
-        self.sync_index_node()
         res1 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=None, use_index=True)
         assert_equal(res["muhash"], res1["muhash"])
 
@@ -332,7 +328,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self.sync_index_node()
         index_node.kill_process()
         self.start_node(1, extra_args=self.extra_args[1])
-        self.sync_index_node()
         # Because of the unclean shutdown above, indexes reset to the point we last committed them to disk.
         assert_equal(index_node.getindexinfo()['coinstatsindex']['best_block_height'], committed_height)
 
