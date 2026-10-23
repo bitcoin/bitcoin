@@ -198,6 +198,20 @@ class MempoolPersistTest(BitcoinTestFramework):
         self.test_importmempool_union()
         self.test_persist_unbroadcast()
         self.test_importmempool_malformed()
+        self.test_future_entry_time()
+
+    def test_future_entry_time(self):
+        self.log.debug("Check that an entry time later than the current time is clamped when mempool.dat is loaded.")
+        node0 = self.nodes[0]
+        now = int(time.time())
+        node0.setmocktime(now + 3600)
+        txid = self.mini_wallet.send_self_transfer(from_node=node0)["txid"]
+        assert_equal(node0.getmempoolentry(txid)["time"], now + 3600)
+
+        # The mempool is dumped on shutdown with the entry time in the future.
+        self.restart_node(0, extra_args=[f"-mocktime={now}"])
+        assert_equal(node0.getmempoolentry(txid)["time"], now)
+        node0.setmocktime(0)
 
     def test_importmempool_malformed(self):
         self.log.debug("Check that importmempool fails on a malformed mempool.dat.")
