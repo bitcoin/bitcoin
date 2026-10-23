@@ -4,7 +4,7 @@
 
 #include <chainparams.h>
 #include <hash.h>
-#include <net.h>
+#include <net_transport.h>
 #include <netmessagemaker.h>
 #include <protocol.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <deque>
 #include <limits>
 #include <optional>
 #include <vector>

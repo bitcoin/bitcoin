@@ -41,6 +41,7 @@ static constexpr auto HELP_FULL = R"(
 Additional less commonly used commands:
   bench [ARGS]      Run bench command, equivalent to running 'bench_bitcoin [ARGS]'.
   chainstate [ARGS] Run bitcoin kernel chainstate util, equivalent to running 'bitcoin-chainstate [ARGS]'.
+  privbcast [ARGS]  Broadcast a transaction privately through Tor, equivalent to running 'bitcoin-privbcast [ARGS]'.
   test [ARGS]       Run unit tests, equivalent to running 'test_bitcoin [ARGS]'.
   test-gui [ARGS]   Run GUI unit tests, equivalent to running 'test_bitcoin-qt [ARGS]'.
 )";
@@ -109,6 +110,8 @@ int main(int argc, char* argv[])
             args.emplace_back("test_bitcoin-qt");
         } else if (cmd.command == "util") {
             args.emplace_back("bitcoin-util");
+        } else if (cmd.command == "privbcast") {
+            args.emplace_back("bitcoin-privbcast");
         } else {
             throw std::runtime_error(strprintf("Unrecognized command: '%s'", cmd.command));
         }

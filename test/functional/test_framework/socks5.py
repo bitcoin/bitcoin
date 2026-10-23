@@ -21,6 +21,7 @@ logger = logging.getLogger("TestFramework.socks5")
 # Protocol constants
 class Command:
     CONNECT = 0x01
+    RESOLVE = 0xf0  # Tor extension: https://spec.torproject.org/socks-extensions.html
 
 class AddressType:
     IPV4 = 0x01
@@ -87,7 +88,7 @@ def forward_sockets(a, b, wakeup_socket, serv):
                     sendall(b, data)
                 elif s == b:
                     sendall(a, data)
-            except (BrokenPipeError, ConnectionResetError) as e:
+            except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError) as e:
                 logger.debug(f"{log_prefix}cannot send or receive data on socket {'a' if s == a else 'b'}: {str(e)}")
                 return
 
@@ -100,6 +101,15 @@ class Socks5Configuration():
         self.unauth = False  # Support unauthenticated
         self.auth = False  # Support authentication
         self.keep_alive = False  # Do not automatically close connections
+        # Seconds to wait before answering a CONNECT request: a proxy that is slow to reach the
+        # destination (Tor building a circuit), for clients that must bound that wait.
+        self.connect_reply_delay = 0
+        # Seconds to wait before answering a RESOLVE request (a slow or stalled resolver).
+        self.resolve_reply_delay = 0
+        # Behave as Tor: answer RESOLVE and reach .onion names. If False, act as an ordinary SOCKS5
+        # proxy: RESOLVE is an unsupported command (REP 0x07) and a CONNECT to a .onion name fails
+        # (REP 0x04), as the proxy's own DNS lookup of the name would.
+        self.tor = True
         # This function is called whenever a new connection arrives to the proxy
         # and it decides where the connection is redirected to. It is passed:
         # - the address the client requested to connect to
@@ -114,6 +124,9 @@ class Socks5Configuration():
         # If it returns an object then the connection is redirected to actual_to_addr:actual_to_port.
         # If it returns None, or destinations_factory itself is None then the connection is closed.
         self.destinations_factory = None
+        # Called for each Tor RESOLVE command with the requested hostname. It is supposed to
+        # return an IPv4 or IPv6 address string, or None to answer with an error.
+        self.resolve_factory = None
 
 class Socks5Command():
     """Information about an incoming socks5 command."""
@@ -146,8 +159,13 @@ class Socks5Connection():
                                     f"client={proxy_client}, "
                                     f"proxy={format_sock(self.conn, local=True)}): ")
 
-            # Verify socks version
-            ver = recvall(self.conn, 1)[0]
+            # Verify socks version. A client that hangs up before its greeting was stopped while
+            # it connected (a cancelled job's streams are), which is not an error.
+            try:
+                ver = recvall(self.conn, 1)[0]
+            except IOError:
+                logger.debug(f"{log_exception_prefix}client closed before its greeting")
+                return
             if ver != 0x05:
                 raise IOError('Invalid socks version %i' % ver)
             # Choose authentication method
@@ -159,14 +177,22 @@ class Socks5Connection():
             elif 0x00 in methods and self.serv.conf.unauth:
                 method = 0x00 # unauthenticated
             if method is None:
-                raise IOError('No supported authentication method was offered')
+                # RFC 1928: no acceptable method. The client closes; that is its answer, not an error.
+                self.conn.sendall(bytearray([0x05, 0xFF]))
+                return
             # Send response
             self.conn.sendall(bytearray([0x05, method]))
             # Read authentication (optional)
             username = None
             password = None
             if method == 0x02:
-                ver = recvall(self.conn, 1)[0]
+                # A client that hangs up here gave up on us (its own per-stage timeout expired
+                # while a loaded host had us wait), which is its business, not an error.
+                try:
+                    ver = recvall(self.conn, 1)[0]
+                except IOError:
+                    logger.debug(f"{log_exception_prefix}client closed before authenticating")
+                    return
                 if ver != 0x01:
                     raise IOError('Invalid auth packet version %i' % ver)
                 ulen = recvall(self.conn, 1)[0]
@@ -176,11 +202,16 @@ class Socks5Connection():
                 # Send authentication response
                 self.conn.sendall(bytearray([0x01, 0x00]))
 
-            # Read connect request
-            ver, cmd, _, atyp = recvall(self.conn, 4)
+            # Read connect request. A client that hangs up here refused the authentication method
+            # we chose (RFC 1928 lets it), which is normal, not an error.
+            try:
+                ver, cmd, _, atyp = recvall(self.conn, 4)
+            except IOError:
+                logger.debug(f"{log_exception_prefix}client closed after method selection")
+                return
             if ver != 0x05:
                 raise IOError('Invalid socks version %i in connect request' % ver)
-            if cmd != Command.CONNECT:
+            if cmd not in (Command.CONNECT, Command.RESOLVE):
                 raise IOError('Unhandled command %i in connect request' % cmd)
 
             if atyp == AddressType.IPV4:
@@ -195,6 +226,46 @@ class Socks5Connection():
             port_hi,port_lo = recvall(self.conn, 2)
             port = (port_hi << 8) | port_lo
 
+            if not self.serv.conf.tor and (cmd == Command.RESOLVE or (atyp == AddressType.DOMAINNAME and addr.endswith(b".onion"))):
+                cmdin = Socks5Command(cmd, atyp, addr, port, username, password)
+                self.serv.queue.put(cmdin)
+                logger.debug('Proxy (not Tor): %s', cmdin)
+                reply_code = 0x07 if cmd == Command.RESOLVE else 0x04
+                self.conn.sendall(bytearray([0x05, reply_code, 0x00, 0x01, 0, 0, 0, 0, 0, 0]))
+                return  # Disconnect happens in the "finally" block below.
+
+            if cmd == Command.RESOLVE:
+                cmdin = Socks5Command(cmd, atyp, addr, port, username, password)
+                self.serv.queue.put(cmdin)
+                logger.debug('Proxy: %s', cmdin)
+                answer = None
+                if self.serv.conf.resolve_factory is not None:
+                    answer = self.serv.conf.resolve_factory(addr.decode("utf-8"))
+                # Stall before replying (not before the factory), so a client waiting on the count
+                # sees the query recorded while the reply is still withheld. Stopping the server ends
+                # the stall.
+                if self.serv.conf.resolve_reply_delay and self.serv.stopping.wait(self.serv.conf.resolve_reply_delay):
+                    return
+                if answer is None:
+                    # REP 0x04: host unreachable
+                    self.conn.sendall(bytearray([0x05, 0x04, 0x00, 0x01, 0, 0, 0, 0, 0, 0]))
+                else:
+                    packed_v4 = None
+                    try:
+                        packed_v4 = socket.inet_pton(socket.AF_INET, answer)
+                    except OSError:
+                        pass
+                    if packed_v4 is not None:
+                        self.conn.sendall(bytearray([0x05, 0x00, 0x00, AddressType.IPV4]) + packed_v4 + bytearray([0, 0]))
+                    else:
+                        self.conn.sendall(bytearray([0x05, 0x00, 0x00, AddressType.IPV6]) + socket.inet_pton(socket.AF_INET6, answer) + bytearray([0, 0]))
+                return  # Disconnect happens in the "finally" block below.
+
+            with self.serv.connects_lock:
+                self.serv.connects_received += 1
+            # Stopping the server ends the stall.
+            if self.serv.conf.connect_reply_delay and self.serv.stopping.wait(self.serv.conf.connect_reply_delay):
+                return
             # Reply SUCCESS before calling destinations_factory, so the client can finish
             # establishing the connection and register the peer; factories that consult
             # getpeerinfo depend on that order.
@@ -204,7 +275,12 @@ class Socks5Connection():
             self.serv.queue.put(cmdin)
             logger.debug('Proxy: %s', cmdin)
 
-            requested_to_addr = addr.decode("utf-8")
+            if atyp == AddressType.IPV4:
+                requested_to_addr = socket.inet_ntop(socket.AF_INET, addr)
+            elif atyp == AddressType.IPV6:
+                requested_to_addr = socket.inet_ntop(socket.AF_INET6, addr)
+            else:
+                requested_to_addr = addr.decode("utf-8")
             requested_to = format_addr_port(requested_to_addr, port)
 
             if self.serv.is_running():
@@ -223,7 +299,7 @@ class Socks5Connection():
 
             # Disconnect happens in the "finally" block below.
 
-        except (BrokenPipeError, ConnectionResetError) as e:
+        except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError) as e:
             logger.debug(f"{log_exception_prefix}abnormal connection close: {str(e)}")
         except Exception as e:
             logger.exception(f"{log_exception_prefix}exception: {str(e)} (running {self.serv.is_running()})")
@@ -281,12 +357,19 @@ class Socks5Server():
         # When port=0, the OS assigns an available port. Update conf.addr
         # to reflect the actual bound address so callers can use it.
         self.conf.addr = self.s.getsockname()
-        self.s.listen(5)
+        # Clients such as bitcoin-privbcast open a few dozen isolated streams at once; a short
+        # backlog would make their connects time out before the accept loop gets to them.
+        self.s.listen(128)
         # Set to False when stop is initiated
         self._running = False
         self._running_lock = threading.Lock()
+        # Set when stop is initiated; ends the reply delays handlers are sleeping in
+        self.stopping = threading.Event()
         self.thread = None
         self.queue = queue.Queue() # report connections and exceptions to client
+        # CONNECT requests read so far, counted before any reply delay, so a client can see one held.
+        self.connects_received = 0
+        self.connects_lock = threading.Lock()
         self.keep_alive = conf.keep_alive
         # Store the background handlers, needed for clean shutdown
         # Append-only array, completed handlers are set to None
@@ -329,6 +412,7 @@ class Socks5Server():
 
     def stop(self):
         self.set_running(False)
+        self.stopping.set()
         # connect to self to end run loop
         s = socket.socket(self.conf.af)
         s.connect(self.conf.addr)
@@ -349,12 +433,16 @@ class Socks5Server():
                 else:
                     logger.warning(f"Stop(): Handler thread {i} didn't finish after force close")
 
-def start_socks5_server(destinations_factory):
+def start_socks5_server(destinations_factory, resolve_factory=None, connect_reply_delay=0, resolve_reply_delay=0, auth=True, tor=True):
     config = Socks5Configuration()
     config.addr = ("127.0.0.1", 0) # Use port=0 to let the OS pick one. The actual port is later in server.conf.addr[1].
     config.unauth = True
-    config.auth = True
+    config.auth = auth
     config.destinations_factory = destinations_factory
+    config.resolve_factory = resolve_factory
+    config.connect_reply_delay = connect_reply_delay
+    config.resolve_reply_delay = resolve_reply_delay
+    config.tor = tor
 
     server = Socks5Server(config)
     server.start()

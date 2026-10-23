@@ -280,12 +280,17 @@ MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTra
 * @param[in]    test_accept         When true, run validation checks but don't submit to mempool.
 * @param[in]    client_maxfeerate    If exceeded by an individual transaction, rest of (sub)package evaluation is aborted.
 *                                   Only for sanity checks against local submission of transactions.
+* @param[in]    test_as_submission  With test_accept, evaluate the package as submission would: each transaction
+*                                   alone first, then the rest at their package feerate, replacements allowed.
+*                                   Results do not list replaced transactions. A parent that passes alone is
+*                                   tested with the rest, each paying for itself, replacements checked together.
 * @returns a PackageMempoolAcceptResult which includes a MempoolAcceptResult for each transaction.
 * If a transaction fails, validation will exit early and some results may be missing. It is also
 * possible for the package to be partially submitted.
 */
 PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxMemPool& pool,
-                                                   const Package& txns, bool test_accept, const std::optional<CFeeRate>& client_maxfeerate)
+                                                   const Package& txns, bool test_accept, const std::optional<CFeeRate>& client_maxfeerate,
+                                                   bool test_as_submission = false)
                                                    EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /* Mempool validation helper functions */

@@ -5,7 +5,7 @@
 #include <bench/bench.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
-#include <net.h>
+#include <net_transport.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>

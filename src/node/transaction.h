@@ -18,6 +18,7 @@ struct Params;
 
 namespace node {
 class BlockManager;
+class PrivbcastQueue;
 struct NodeContext;
 
 /** Maximum fee rate for sendrawtransaction and testmempoolaccept RPC calls.
@@ -58,6 +59,18 @@ inline constexpr CAmount DEFAULT_MAX_BURN_AMOUNT{0};
                                                     const CFeeRate& max_tx_fee_rate,
                                                     TxBroadcast broadcast_method,
                                                     bool wait_callback);
+
+/**
+ * Queue a private broadcast job for a transaction that has passed the checks of its submission, as
+ * submitted, which in package mode carries its parent. A submission that a job covers succeeds
+ * without queueing anything.
+ *
+ * @param[in]  queue   the node's private broadcast jobs
+ * @param[in]  tx      the transaction to broadcast, the child in package mode
+ * @param[in]  parent  in package mode, the parent; else null
+ * @returns OK, or why the job cannot be queued
+ */
+[[nodiscard]] TransactionError SubmitPrivateBroadcast(PrivbcastQueue& queue, const CTransactionRef& tx, const CTransactionRef& parent = nullptr);
 
 /**
  * Return transaction with a given hash.

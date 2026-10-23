@@ -431,25 +431,26 @@ class ConfArgsTest(BitcoinTestFramework):
     def test_privatebroadcast(self):
         self.log.info("Test that an invalid usage of -privatebroadcast throws an init error")
         self.stop_node(0)
-        # -privatebroadcast init error: Tor/I2P not reachable at startup
+        # -privatebroadcast init error: Tor not reachable at startup
         self.nodes[0].assert_start_raises_init_error(
             extra_args=["-privatebroadcast"],
-            expected_msg=(
-                "Error: Private broadcast of own transactions requested (-privatebroadcast), "
-                "but none of Tor or I2P networks is reachable"))
-        # -privatebroadcast init error: incompatible with -connect
+            expected_msg=None)  # any error: messages are not part of the interface
+        # Onion cannot become reachable when -onlynet leaves it out (U2).
         self.nodes[0].assert_start_raises_init_error(
-            extra_args=["-privatebroadcast", "-connect=127.0.0.1:8333", "-onion=127.0.0.1:9050"],
-            expected_msg=(
-                "Error: Private broadcast of own transactions requested (-privatebroadcast), but -connect is also configured. "
-                "They are incompatible because the private broadcast needs to open new connections to randomly "
-                "chosen Tor or I2P peers. Consider using -maxconnections=0 -addnode=... instead"))
-        # Warning case: private broadcast allowed, but -proxyrandomize=0 triggers a privacy warning
-        self.start_node(0, extra_args=["-privatebroadcast", "-onion=127.0.0.1:9050", "-proxyrandomize=0"])
-        self.stop_node(0, expected_stderr=(
-            "Warning: Private broadcast of own transactions requested (-privatebroadcast) and "
-            "-proxyrandomize is disabled. Tor circuits for private broadcast connections may "
-            "be correlated to other connections over Tor. To reduce this risk, set -proxyrandomize=1."))
+            extra_args=["-privatebroadcast", "-onion=127.0.0.1:9050", "-onlynet=ipv4"],
+            expected_msg=None)
+        # Nor with -onion=0, whatever -listenonion says: the Tor controller then installs no proxy.
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=["-privatebroadcast", "-listenonion=1", "-onion=0"],
+            expected_msg=None)
+        # A private broadcast fixed seed that is not an address is refused (off regtest, any is: see
+        # feature_signet.py).
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=["-privatebroadcast", "-onion=127.0.0.1:9050", "-privatebroadcastfixedseed=notanaddress"],
+            expected_msg=None)
+        # -connect is no conflict: jobs choose their own recipients (U2).
+        self.start_node(0, extra_args=["-privatebroadcast", "-onion=127.0.0.1:9050", "-connect=127.0.0.1:8333", "-proxyrandomize=0"])
+        self.stop_node(0)
 
     def test_ignored_conf(self):
         self.log.info('Test error is triggered when the datadir in use contains a bitcoin.conf file that would be ignored '

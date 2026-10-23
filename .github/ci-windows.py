@@ -171,6 +171,7 @@ def run_tests(ci_type):
             "BITCOIN_BENCH": "bench_bitcoin.exe",
             "BITCOINTX": "bitcoin-tx.exe",
             "BITCOINUTIL": "bitcoin-util.exe",
+            "BITCOINPRIVBCAST": "bitcoin-privbcast.exe",
             "BITCOINWALLET": "bitcoin-wallet.exe",
             "BITCOINCHAINSTATE": "bitcoin-chainstate.exe",
         }

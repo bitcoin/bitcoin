@@ -16,6 +16,7 @@ BINARIES = [
 'bin/bitcoin-tx',
 'bin/bitcoin-wallet',
 'bin/bitcoin-util',
+'bin/bitcoin-privbcast',
 'bin/bitcoin-qt',
 ]
 
