@@ -333,12 +333,13 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         # Test import fails if one timestamp is invalid or missing
         self.log.info("Import should fail if timestamp is missing or an invalid timestamp is present in the request")
         key = get_generate_key()
-        import_request = {"desc": descsum_create("pkh(" + key.pubkey + ")"), "label": "Descriptor import test"}
+        desc = descsum_create("pkh(" + key.pubkey + ")")
+        import_request = {"desc": desc, "label": "Descriptor import test"}
         self.test_importdesc(import_request,
             success=False,
             global_error=True,
             error_code=-3,
-            error_message="Missing required timestamp field for key")
+            error_message=f'Missing required timestamp field for import request: {{"desc":"{desc}","label":"Descriptor import test"}}')
 
         import_request = {"desc": descsum_create("pkh(" + key.pubkey + ")"),
             "timestamp": "this_is_not_a_valid_timestamp",
