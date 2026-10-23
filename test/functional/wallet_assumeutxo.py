@@ -43,7 +43,14 @@ class AssumeutxoTest(BitcoinTestFramework):
         """Start with the nodes disconnected so that one can generate a snapshot
         including blocks the other hasn't yet seen."""
         self.add_nodes(self.num_nodes, self.extra_args)
+        for node in self.nodes[1:]:
+            self.cleanup_folder(node.blocks_path)
+            self.cleanup_folder(node.chain_path / "chainstate")
         self.start_nodes()
+        for height in range(1, START_HEIGHT + 1):
+            header = self.nodes[0].getblockheader(self.nodes[0].getblockhash(height), False)
+            for node in self.nodes[1:]:
+                node.submitheader(header)
 
     def import_descriptor(self, node, wallet_name, key, timestamp):
         import_request = [{"desc": descsum_create("pkh(" + key.pubkey + ")"),
@@ -57,7 +64,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
 
         normal, snapshot = node.getchainstates()["chainstates"]
-        assert_equal(normal['blocks'], START_HEIGHT)
+        assert_equal(normal['blocks'], 0)
         assert 'snapshot_blockhash' not in normal
         assert_equal(normal['validated'], True)
         assert_equal(snapshot['blocks'], SNAPSHOT_BASE_HEIGHT)
@@ -79,8 +86,11 @@ class AssumeutxoTest(BitcoinTestFramework):
     def test_backup_during_background_sync_pruned_node(self, n3, dump_output, expected_error_message):
         self.log.info("Backup from the snapshot height can be loaded during background sync (pruned node)")
         loaded = n3.loadtxoutset(dump_output['path'])
-        assert_greater_than(n3.pruneblockchain(START_HEIGHT), 0)
         self.validate_snapshot_import(n3, loaded, dump_output['base_hash'])
+        for height in range(1, START_HEIGHT + 1):
+            block = self.nodes[0].getblock(self.nodes[0].getblockhash(height), 0)
+            n3.submitblock(block)
+        assert_greater_than(n3.pruneblockchain(START_HEIGHT), 0)
         n3.restorewallet("w", "backup_w.dat")
         # Balance of w wallet is still 0 because n3 has not synced yet
         assert_equal(n3.getbalance(), 0)
@@ -124,7 +134,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         # Mock time for a deterministic chain
         for n in self.nodes:
-            n.setmocktime(n.getblockheader(n.getbestblockhash())['time'])
+            n.setmocktime(n0.getblockheader(n0.getbestblockhash())['time'])
 
         # Create a wallet that we will create a backup for later (at snapshot height)
         n0.createwallet('w')
@@ -164,7 +174,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.log.info("-- Testing assumeutxo")
 
         assert_equal(n0.getblockcount(), SNAPSHOT_BASE_HEIGHT)
-        assert_equal(n1.getblockcount(), START_HEIGHT)
+        assert_equal(n1.getblockcount(), 0)
 
         self.log.info(
             f"Creating a UTXO snapshot at height {SNAPSHOT_BASE_HEIGHT}")
@@ -187,8 +197,8 @@ class AssumeutxoTest(BitcoinTestFramework):
             self.generate(n0, nblocks=1, sync_fun=self.no_op)
 
         assert_equal(n0.getblockcount(), FINAL_HEIGHT)
-        assert_equal(n1.getblockcount(), START_HEIGHT)
-        assert_equal(n2.getblockcount(), START_HEIGHT)
+        assert_equal(n1.getblockcount(), 0)
+        assert_equal(n2.getblockcount(), 0)
 
         assert_equal(n0.getblockchaininfo()["blocks"], FINAL_HEIGHT)
 
@@ -243,8 +253,8 @@ class AssumeutxoTest(BitcoinTestFramework):
         # Verify there are still two chainstates (background validation not complete)
         chainstates = n1.getchainstates()['chainstates']
         assert_equal(len(chainstates), 2)
-        # The background chainstate should still be at START_HEIGHT
-        assert_equal(chainstates[0]['blocks'], START_HEIGHT)
+        # The background chainstate should still be at genesis
+        assert_equal(chainstates[0]['blocks'], 0)
         assert_equal(chainstates[1]["blocks"], PAUSE_HEIGHT)
 
         # After restart, wallets that existed before cannot be loaded because
