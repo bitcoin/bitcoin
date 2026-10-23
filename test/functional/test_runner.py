@@ -104,6 +104,7 @@ BASE_SCRIPTS = [
     # vv Tests less than 5m vv
     'feature_fee_estimation.py',
     'feature_taproot.py',
+    'feature_cisa.py',
     'feature_block.py',
     'mempool_ephemeral_dust.py',
     'p2p_opportunistic_1p1c.py',
@@ -132,6 +133,7 @@ BASE_SCRIPTS = [
     'p2p_blockfilters.py',
     'feature_assumevalid.py',
     'wallet_taproot.py',
+    'wallet_cisa.py',
     'feature_bip68_sequence.py',
     'rpc_packages.py',
     'rpc_bind.py --ipv4',

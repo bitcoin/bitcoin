@@ -36,6 +36,10 @@
 #include "../include/secp256k1_musig.h"
 #endif
 
+#ifdef ENABLE_MODULE_FULLAGG
+#include "../include/secp256k1_fullagg.h"
+#endif
+
 #ifdef ENABLE_MODULE_ELLSWIFT
 #include "../include/secp256k1_ellswift.h"
 #endif
@@ -47,6 +51,12 @@
 #if defined(__GNUC__)
 # pragma GCC diagnostic push
 # pragma GCC diagnostic warning "-Wunused-function"
+#endif
+
+#ifdef ENABLE_MODULE_SCHNORRSIG
+static int nonce_function_custom(unsigned char *nonce32, const unsigned char *msg, size_t msglen, const unsigned char *key32, const unsigned char *xonly_pk32, const unsigned char *algo, size_t algolen, void *data) {
+    return secp256k1_nonce_function_bip340(nonce32, msg, msglen, key32, xonly_pk32, algo, algolen, data);
+}
 #endif
 
 static void run_tests(secp256k1_context *ctx, unsigned char *key);
@@ -98,6 +108,10 @@ static void run_tests(secp256k1_context *ctx, unsigned char *key) {
 #endif
 #ifdef ENABLE_MODULE_EXTRAKEYS
     secp256k1_keypair keypair;
+#endif
+#ifdef ENABLE_MODULE_SCHNORRSIG
+    secp256k1_schnorrsig_extraparams extraparams = SECP256K1_SCHNORRSIG_EXTRAPARAMS_INIT;
+    unsigned char aux_rand[32] = { 0 };
 #endif
 #ifdef ENABLE_MODULE_ELLSWIFT
     unsigned char ellswift[64];
@@ -214,6 +228,37 @@ static void run_tests(secp256k1_context *ctx, unsigned char *key) {
     ret = secp256k1_schnorrsig_sign32(ctx, sig, msg, &keypair, NULL);
     SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
     CHECK(ret == 1);
+
+    SECP256K1_CHECKMEM_UNDEFINE(key, 32);
+    ret = secp256k1_keypair_create(ctx, &keypair, key);
+    SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
+    CHECK(ret == 1);
+    SECP256K1_CHECKMEM_UNDEFINE(&keypair, sizeof(keypair));
+    ret = secp256k1_schnorrsig_sign_custom(ctx, sig, msg, 32, &keypair, NULL);
+    SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
+    CHECK(ret == 1);
+
+    extraparams.noncefp = NULL;
+    extraparams.ndata = aux_rand;
+    SECP256K1_CHECKMEM_UNDEFINE(key, 32);
+    ret = secp256k1_keypair_create(ctx, &keypair, key);
+    SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
+    CHECK(ret == 1);
+    SECP256K1_CHECKMEM_UNDEFINE(&keypair, sizeof(keypair));
+    ret = secp256k1_schnorrsig_sign_custom(ctx, sig, msg, 32, &keypair, &extraparams);
+    SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
+    CHECK(ret == 1);
+
+    extraparams.noncefp = nonce_function_custom;
+    extraparams.ndata = aux_rand;
+    SECP256K1_CHECKMEM_UNDEFINE(key, 32);
+    ret = secp256k1_keypair_create(ctx, &keypair, key);
+    SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
+    CHECK(ret == 1);
+    SECP256K1_CHECKMEM_UNDEFINE(&keypair, sizeof(keypair));
+    ret = secp256k1_schnorrsig_sign_custom(ctx, sig, msg, sizeof(msg), &keypair, &extraparams);
+    SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
+    CHECK(ret == 1);
 #endif
 
 #ifdef ENABLE_MODULE_MUSIG
@@ -263,6 +308,57 @@ static void run_tests(secp256k1_context *ctx, unsigned char *key) {
         SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
         CHECK(ret == 1);
         ret = secp256k1_musig_partial_sign(ctx, &partial_sig, &secnonce, &keypair, &cache, &session);
+        SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
+        CHECK(ret == 1);
+    }
+#endif
+
+#ifdef ENABLE_MODULE_FULLAGG
+    {
+        secp256k1_xonly_pubkey pk;
+        const secp256k1_xonly_pubkey *pk_ptr[1];
+        const unsigned char *msg_ptr[1];
+        unsigned char session_secrand[32];
+        uint64_t nonrepeating_cnt = 0;
+        secp256k1_fullagg_secnonce secnonce;
+        secp256k1_fullagg_pubnonce pubnonce;
+        const secp256k1_fullagg_pubnonce *pubnonce_ptr[1];
+        secp256k1_fullagg_aggnonce aggnonce;
+        secp256k1_fullagg_session session;
+        secp256k1_fullagg_partial_sig partial_sig;
+        unsigned char extra_input[32];
+
+        pk_ptr[0] = &pk;
+        msg_ptr[0] = msg;
+        pubnonce_ptr[0] = &pubnonce;
+        SECP256K1_CHECKMEM_DEFINE(key, 32);
+        memcpy(session_secrand, key, sizeof(session_secrand));
+        session_secrand[0] = session_secrand[0] + 1;
+        memcpy(extra_input, key, sizeof(extra_input));
+        extra_input[0] = extra_input[0] + 2;
+
+        CHECK(secp256k1_keypair_create(ctx, &keypair, key));
+        CHECK(secp256k1_keypair_xonly_pub(ctx, &pk, NULL, &keypair));
+
+        SECP256K1_CHECKMEM_UNDEFINE(key, 32);
+        SECP256K1_CHECKMEM_UNDEFINE(session_secrand, sizeof(session_secrand));
+        SECP256K1_CHECKMEM_UNDEFINE(extra_input, sizeof(extra_input));
+        ret = secp256k1_fullagg_nonce_gen(ctx, &secnonce, &pubnonce, session_secrand, key, &pk, extra_input);
+        SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
+        CHECK(ret == 1);
+        ret = secp256k1_fullagg_nonce_gen_counter(ctx, &secnonce, &pubnonce, nonrepeating_cnt, &keypair, extra_input);
+        SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
+        CHECK(ret == 1);
+
+        CHECK(secp256k1_fullagg_nonce_agg(ctx, &aggnonce, pubnonce_ptr, 1));
+        /* Make sure that previous tests don't undefine msg. It's not used as a secret here. */
+        SECP256K1_CHECKMEM_DEFINE(msg, sizeof(msg));
+        CHECK(secp256k1_fullagg_session_init(ctx, &session, &aggnonce, pk_ptr, msg_ptr, pubnonce_ptr, 1) == 1);
+
+        ret = secp256k1_keypair_create(ctx, &keypair, key);
+        SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
+        CHECK(ret == 1);
+        ret = secp256k1_fullagg_partial_sign(ctx, &partial_sig, &secnonce, &keypair, msg, &session, pk_ptr, msg_ptr, pubnonce_ptr, 1, 0);
         SECP256K1_CHECKMEM_DEFINE(&ret, sizeof(ret));
         CHECK(ret == 1);
     }
