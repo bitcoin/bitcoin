@@ -1,0 +1,104 @@
+From b91a6ba7c7dbe1e5f70fff7660a01d7155404618 Mon Sep 17 00:00:00 2001
+From: xyzconstant <263061129+xyzconstant@users.noreply.github.com>
+Date: Sun, 11 Oct 2026 22:10:44 -0300
+Subject: [PATCH] kj: fix atomicAddRef non-atomic read
+
+Backport of capnproto/capnproto#2781 from v2 to 1.x.
+
+Uses __atomic_load_n (and the MSVC interlocked equivalent) because
+kj/atomic.h (#2780) is not available on 1.x. The "Arc concurrent final
+release is synchronized" test is not included because kj::Arc does not
+exist on 1.x.
+---
+ c++/src/kj/refcount-test.c++ | 31 +++++++++++++++++++++++++++++++
+ c++/src/kj/refcount.h        | 12 ++++++++++--
+ 2 files changed, 41 insertions(+), 2 deletions(-)
+
+diff --git a/c++/src/kj/refcount-test.c++ b/c++/src/kj/refcount-test.c++
+index c3b39d45..8ea3a2ac 100644
+--- a/c++/src/kj/refcount-test.c++
++++ b/c++/src/kj/refcount-test.c++
+@@ -20,8 +20,12 @@
+ // THE SOFTWARE.
+ 
+ #include "refcount.h"
++#include "thread.h"
+ #include <kj/compat/gtest.h>
+ 
++#include <atomic>
++#include <thread>
++
+ namespace kj {
+ 
+ struct SetTrueInDestructor: public Refcounted {
+@@ -134,4 +138,31 @@ KJ_TEST("RefcountedWrapper") {
+   }
+ }
+ 
++struct AtomicSetTrueInDestructor: public AtomicRefcounted {
++  AtomicSetTrueInDestructor(bool* ptr): ptr(ptr) {}
++  ~AtomicSetTrueInDestructor() { *ptr = true; }
++
++  bool* ptr;
++};
++
++KJ_TEST("atomicAddRef is safe under concurrent reference-count changes") {
++  bool destroyed = false;
++  auto owner = kj::atomicRefcounted<AtomicSetTrueInDestructor>(&destroyed);
++  auto* object = owner.get();
++  std::atomic<bool> start(false);
++
++  auto addRefs = [&]() noexcept {
++    while (!start.load(std::memory_order_acquire)) {
++      std::this_thread::yield();
++    }
++    for (uint i = 0; i < 1000; ++i) {
++      auto ref = kj::atomicAddRef(*object);
++    }
++  };
++
++  kj::Thread thread1(addRefs);
++  kj::Thread thread2(addRefs);
++  start.store(true, std::memory_order_release);
++}
++
+ }  // namespace kj
+diff --git a/c++/src/kj/refcount.h b/c++/src/kj/refcount.h
+index 03b5234d..722fca3f 100644
+--- a/c++/src/kj/refcount.h
++++ b/c++/src/kj/refcount.h
+@@ -204,6 +204,14 @@ private:
+ 
+   bool addRefWeakInternal() const;
+ 
++  inline bool hasRefs() const {
++#if _MSC_VER && !defined(__clang__)
++    return KJ_MSVC_INTERLOCKED(Or, acq)(&refcount, 0) > 0;
++#else
++    return __atomic_load_n(&refcount, __ATOMIC_RELAXED) > 0;
++#endif
++  }
++
+   void disposeImpl(void* pointer) const override;
+   template <typename T>
+   static kj::Own<T> addRefInternal(T* object);
+@@ -227,14 +235,14 @@ inline kj::Own<T> atomicRefcounted(Params&&... params) {
+ 
+ template <typename T>
+ kj::Own<T> atomicAddRef(T& object) {
+-  KJ_IREQUIRE(object.AtomicRefcounted::refcount > 0,
++  KJ_IREQUIRE(object.AtomicRefcounted::hasRefs(),
+       "Object not allocated with kj::atomicRefcounted().");
+   return AtomicRefcounted::addRefInternal(&object);
+ }
+ 
+ template <typename T>
+ kj::Own<const T> atomicAddRef(const T& object) {
+-  KJ_IREQUIRE(object.AtomicRefcounted::refcount > 0,
++  KJ_IREQUIRE(object.AtomicRefcounted::hasRefs(),
+       "Object not allocated with kj::atomicRefcounted().");
+   return AtomicRefcounted::addRefInternal(&object);
+ }
+-- 
+2.54.0 (Apple Git-157)
+
