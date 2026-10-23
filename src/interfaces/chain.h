@@ -9,6 +9,7 @@
 #include <common/settings.h>
 #include <consensus/amount.h>
 #include <kernel/chain.h> // IWYU pragma: export
+#include <node/types.h>
 #include <primitives/transaction.h>
 #include <util/expected.h>
 #include <util/fees.h>
@@ -39,7 +40,6 @@ struct ChainstateRole;
 } // namespace kernel
 namespace node {
 struct NodeContext;
-enum class TxBroadcast : uint8_t;
 } // namespace node
 
 namespace interfaces {
@@ -201,13 +201,14 @@ public:
     //! @param[in] max_tx_fee_rate reject txs with fee rate higher than this (if CFeeRate(0), the fee rate is not checked)
     //! @param[in] broadcast_method Whether to add the transaction to the
     //! mempool and how/whether to broadcast it.
-    //! @param[out] err_string Set if an error occurs.
-    //! @return False if the transaction could not be added due to the fee or for another reason.
-    virtual bool broadcastTransaction(const CTransactionRef& tx,
-                                      const CAmount& max_tx_fee,
-                                      const CFeeRate& max_tx_fee_rate,
-                                      node::TxBroadcast broadcast_method,
-                                      std::string& err_string) = 0;
+    //! @return {} if the transaction was accepted, otherwise the error code and
+    //!         an untranslated error message. A transaction already in the
+    //!         mempool counts as accepted. With NO_MEMPOOL_PRIVATE_BROADCAST,
+    //!         accepted means queued for private broadcast.
+    [[nodiscard]] virtual util::Expected<void, node::TransactionBroadcastError> broadcastTransaction(const CTransactionRef& tx,
+                                                                                                     const CAmount& max_tx_fee,
+                                                                                                     const CFeeRate& max_tx_fee_rate,
+                                                                                                     node::TxBroadcast broadcast_method) = 0;
 
     //! Calculate mempool ancestor and cluster counts for the given transaction.
     virtual void getTransactionAncestry(const Txid& txid, size_t& ancestors, size_t& cluster_count, size_t* ancestorsize = nullptr, CAmount* ancestorfees = nullptr) = 0;

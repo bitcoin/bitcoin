@@ -30,6 +30,7 @@ constexpr TransactionError ALL_TRANSACTION_ERROR[] = {
     TransactionError::MEMPOOL_ERROR,
     TransactionError::MAX_FEE_EXCEEDED,
     TransactionError::MAX_FEE_RATE_EXCEEDED,
+    TransactionError::SUBMISSION_SKIPPED,
 };
 }; // namespace
 
