@@ -16,7 +16,9 @@
 #include <test/util/common.h>
 
 #include <algorithm>
+#include <atomic>
 #include <charconv>
+#include <chrono>
 #include <concepts>
 #include <cstdint>
 #include <cstdlib>
@@ -27,8 +29,10 @@
 #include <random>
 #include <ranges>
 #include <span>
+#include <sstream>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <vector>
 
 using namespace btck;
@@ -100,10 +104,14 @@ class TestLog
 public:
     void LogMessage(const LogEntry& entry)
     {
-        std::cout << "kernel: " << entry.Timestamp().time_since_epoch().count()
-                  << " [" << Name(entry.Category()) << ":"
-                  << Name(entry.Level()) << "] "
-                  << entry.Message() << "\n";
+        // LogMessage() can run on multiple threads at the same time. Format the full line first and
+        // write it at once, so that lines from different threads do not mix.
+        std::ostringstream line;
+        line << "kernel: " << entry.Timestamp().time_since_epoch().count()
+             << " [" << Name(entry.Category()) << ":"
+             << Name(entry.Level()) << "] "
+             << entry.Message() << "\n";
+        std::cout << line.str();
     }
 };
 
@@ -719,30 +727,100 @@ BOOST_AUTO_TEST_CASE(logging_connection_tests)
 {
     std::map<std::string, int> messages;
     int destroyed{0};
-    logging_set_min_level(LogLevel::INFO_LEVEL);
+    // Creating signet chain parameters with a challenge logs this INFO entry.
+    const std::string info_message{"Signet with challenge 51"};
+    const auto log_info{[] { ChainParams params{hex_string_to_byte_vec("51")}; }};
 
     {
-        // At the default minimum level (INFO), the DEBUG entries are not delivered.
+        // At the default minimum level (INFO), INFO entries are delivered, and the DEBUG
+        // "Logger disconnecting." entry is not.
         Logger logger{std::make_unique<CountingLog>(messages, destroyed)};
+        log_info();
     }
-    BOOST_CHECK(messages.empty());
+    BOOST_CHECK_EQUAL(messages.size(), 1);
+    BOOST_CHECK_EQUAL(messages[info_message], 1);
     BOOST_CHECK_EQUAL(destroyed, 1);
-    destroyed = 0;
+    messages.clear();
 
-    logging_set_min_level(LogLevel::DEBUG_LEVEL);
+    std::map<std::string, int> rejected_messages;
+    int rejected_destroyed{0};
     {
-        // Each connection logs "Logger connected." after registering, and the entry reaches every
-        // connection that exists at that moment: 1 + 2.
         Logger logger{std::make_unique<CountingLog>(messages, destroyed)};
-        Logger logger_2{std::make_unique<CountingLog>(messages, destroyed)};
-        BOOST_CHECK_EQUAL(messages["Logger connected."], 3);
-        BOOST_CHECK_EQUAL(destroyed, 0);
+        logger.SetMinLevel(LogLevel::DEBUG_LEVEL);
+
+        // Only one connection can exist at a time. The rejected create destroys its own user_data,
+        // logs nothing, and leaves the existing connection in place.
+        BOOST_CHECK_THROW(Logger{std::make_unique<CountingLog>(rejected_messages, rejected_destroyed)}, std::runtime_error);
+        BOOST_CHECK_EQUAL(rejected_destroyed, 1);
+        BOOST_CHECK_EQUAL(destroyed, 1);
+        BOOST_CHECK(messages.empty());
     }
-    // "Logger disconnecting." is logged before unregistering, so it still reaches the connection
-    // being destroyed: 2 + 1. Each connection's user_data is destroyed exactly once.
-    BOOST_CHECK_EQUAL(messages["Logger disconnecting."], 3);
+    // "Logger disconnecting." is logged before unregistering, so it still reaches the existing
+    // connection being destroyed.
+    BOOST_CHECK_EQUAL(messages["Logger disconnecting."], 1);
+    BOOST_CHECK(rejected_messages.empty());
     BOOST_CHECK_EQUAL(destroyed, 2);
-    logging_set_min_level(LogLevel::INFO_LEVEL);
+    messages.clear();
+
+    {
+        // A new connection starts at INFO, not at the level of the previous connection.
+        Logger logger{std::make_unique<CountingLog>(messages, destroyed)};
+        log_info();
+    }
+    BOOST_CHECK_EQUAL(messages.size(), 1);
+    BOOST_CHECK_EQUAL(messages[info_message], 1);
+    BOOST_CHECK_EQUAL(destroyed, 3);
+}
+
+//! Counts invocations of LogMessage(), and blocks each one until released, so that a test controls
+//! when invocations return.
+class BlockingLog
+{
+    std::atomic<int>& m_entered;
+    std::atomic<bool>& m_released;
+    std::atomic<bool>& m_destroyed;
+
+public:
+    BlockingLog(std::atomic<int>& entered, std::atomic<bool>& released, std::atomic<bool>& destroyed)
+        : m_entered{entered}, m_released{released}, m_destroyed{destroyed} {}
+    ~BlockingLog() { m_destroyed = true; }
+
+    void LogMessage(const LogEntry&)
+    {
+        ++m_entered;
+        m_entered.notify_all();
+        m_released.wait(false);
+    }
+};
+
+//! Invocations from different threads run at the same time, and destroying the connection waits for
+//! them to return before it destroys user_data.
+BOOST_AUTO_TEST_CASE(logging_callback_concurrency_tests)
+{
+    std::atomic<int> entered{0};
+    std::atomic<bool> released{false};
+    std::atomic<bool> destroyed{false};
+    std::optional<Logger<BlockingLog>> logger;
+    logger.emplace(std::make_unique<BlockingLog>(entered, released, destroyed));
+
+    // Creating signet chain parameters with a challenge logs an INFO entry.
+    const auto log_info{[] { ChainParams params{hex_string_to_byte_vec("51")}; }};
+    std::thread log_1{log_info};
+    std::thread log_2{log_info};
+    for (int n; (n = entered) < 2;) {
+        entered.wait(n);
+    }
+
+    std::thread destroyer{[&] { logger.reset(); }};
+    std::this_thread::sleep_for(std::chrono::milliseconds{100});
+    BOOST_CHECK(!destroyed);
+
+    released = true;
+    released.notify_all();
+    log_1.join();
+    log_2.join();
+    destroyer.join();
+    BOOST_CHECK(destroyed);
 }
 
 BOOST_AUTO_TEST_CASE(btck_chainparams_tests)
