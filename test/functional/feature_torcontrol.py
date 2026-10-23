@@ -104,6 +104,18 @@ class MockTorControlServer:
             return "510 Unrecognized command\r\n"
 
 
+class HashedPasswordTorControlServer(MockTorControlServer):
+    def _get_response(self, command):
+        if command == "PROTOCOLINFO 1":
+            return (
+                "250-PROTOCOLINFO 1\r\n"
+                "250-AUTH METHODS=HASHEDPASSWORD\r\n"
+                "250-VERSION Tor=\"0.1.2.3\"\r\n"
+                "250 OK\r\n"
+            )
+        return super()._get_response(command)
+
+
 class TorControlTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
@@ -271,8 +283,25 @@ class TorControlTest(BitcoinTestFramework):
 
         mock_tor.stop()
 
+    def test_password_escaping(self):
+        self.log.info("Test that -torpassword is sent as a correctly escaped quoted string")
+
+        mock_tor = HashedPasswordTorControlServer(self.next_port())
+        mock_tor.start()
+        self.restart_node(0, extra_args=[
+            f"-torcontrol=127.0.0.1:{mock_tor.port}",
+            "-listenonion=1",
+            '-torpassword=pa\\ss"word\\',
+        ])
+        self.wait_until(lambda: len(mock_tor.received_commands) >= 2, timeout=10)
+        # Backslashes and quotes must both be escaped, otherwise Tor decodes a different password
+        assert_equal(mock_tor.received_commands[1], 'AUTHENTICATE "pa\\\\ss\\"word\\\\"')
+
+        mock_tor.stop()
+
     def run_test(self):
         self.test_basic()
+        self.test_password_escaping()
         self.test_partial_data()
         self.test_pow_fallback()
         self.test_oversized_line()
