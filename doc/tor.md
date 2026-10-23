@@ -138,6 +138,9 @@ the `CookieAuthFile` specified in the Tor configuration. In some cases this is
 preconfigured and the creation of an onion service is automatic. Don't forget to
 use the `-debug=tor` bitcoind configuration option to enable Tor debug logging.
 
+Tor tells Bitcoin Core where the cookie file is. Bitcoin Core only reads it if
+it is a regular file.
+
 If a permissions problem is seen in the debug log, e.g. `tor: Authentication
 cookie /run/tor/control.authcookie could not be opened (check permissions)`, it
 can be resolved by adding both the user running Tor and the user running

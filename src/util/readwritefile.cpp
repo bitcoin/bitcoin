@@ -12,9 +12,23 @@
 #include <string>
 #include <utility>
 
+#ifndef WIN32
+#include <fcntl.h>
+#include <unistd.h>
+#endif
+
 std::pair<bool,std::string> ReadBinaryFile(const fs::path &filename, size_t maxsize)
 {
+#ifndef WIN32
+    // Do not block when opening a FIFO that has no writer.
+    FILE* f{nullptr};
+    if (const int fd{open(filename.c_str(), O_RDONLY | O_NONBLOCK | O_CLOEXEC)}; fd >= 0) {
+        f = fdopen(fd, "rb");
+        if (f == nullptr) close(fd);
+    }
+#else
     FILE *f = fsbridge::fopen(filename, "rb");
+#endif
     if (f == nullptr)
         return std::make_pair(false,"");
     std::string retval;

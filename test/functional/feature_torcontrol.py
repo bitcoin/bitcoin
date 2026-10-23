@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test torcontrol functionality with a mock Tor control server."""
 from contextlib import contextmanager
+import os
 import socket
 import threading
 from test_framework.test_framework import BitcoinTestFramework
@@ -271,6 +272,91 @@ class TorControlTest(BitcoinTestFramework):
 
         mock_tor.stop()
 
+    def test_cookiefile_not_regular(self):
+        self.log.info("Test that a COOKIEFILE that is not a regular file is not read")
+
+        if not hasattr(os, "mkfifo"):
+            self.log.info("Skipping, no FIFOs on this platform")
+            return
+
+        # Opening a FIFO for reading blocks until something opens it for writing.
+        fifo = os.path.join(self.options.tmpdir, "cookie.fifo")
+        os.mkfifo(fifo)
+        escaped_fifo = fifo.replace("\\", "\\\\")
+
+        class FifoCookieServer(MockTorControlServer):
+            def _get_response(self, command):
+                if command == "PROTOCOLINFO 1":
+                    return (
+                        "250-PROTOCOLINFO 1\r\n"
+                        f"250-AUTH METHODS=COOKIE,SAFECOOKIE COOKIEFILE=\"{escaped_fifo}\"\r\n"
+                        "250-VERSION Tor=\"0.1.2.3\"\r\n"
+                        "250 OK\r\n"
+                    )
+                return super()._get_response(command)
+
+        mock_tor = FifoCookieServer(self.next_port())
+        with self.nodes[0].assert_debug_log(["is not a regular file"], timeout=10):
+            self.restart_with_mock(mock_tor)
+        # Authentication is not attempted.
+        ensure_for(duration=1, f=lambda: len(mock_tor.received_commands) == 1)
+
+        # The torcontrol thread must not be stuck, or shutdown would not finish.
+        self.stop_node(0)
+        mock_tor.stop()
+
+    def test_cookiefile_missing(self):
+        self.log.info("Test that a COOKIEFILE that cannot be examined is not read")
+
+        missing = os.path.join(self.options.tmpdir, "no", "such", "cookie")
+        escaped_missing = missing.replace("\\", "\\\\")
+
+        class MissingCookieServer(MockTorControlServer):
+            def _get_response(self, command):
+                if command == "PROTOCOLINFO 1":
+                    return (
+                        "250-PROTOCOLINFO 1\r\n"
+                        f"250-AUTH METHODS=COOKIE,SAFECOOKIE COOKIEFILE=\"{escaped_missing}\"\r\n"
+                        "250-VERSION Tor=\"0.1.2.3\"\r\n"
+                        "250 OK\r\n"
+                    )
+                return super()._get_response(command)
+
+        mock_tor = MissingCookieServer(self.next_port())
+        with self.nodes[0].assert_debug_log(["is not a regular file"], timeout=10):
+            self.restart_with_mock(mock_tor)
+        ensure_for(duration=1, f=lambda: len(mock_tor.received_commands) == 1)
+
+        mock_tor.stop()
+
+    def test_cookiefile_regular(self):
+        self.log.info("Test that a COOKIEFILE that is a regular file is read")
+
+        cookie = os.path.join(self.options.tmpdir, "cookie")
+        with open(cookie, "wb") as f:
+            f.write(bytes(32))
+
+        # The backslashes of a Windows path are unescaped by the node.
+        escaped_cookie = cookie.replace("\\", "\\\\")
+
+        class CookieServer(MockTorControlServer):
+            def _get_response(self, command):
+                if command == "PROTOCOLINFO 1":
+                    return (
+                        "250-PROTOCOLINFO 1\r\n"
+                        f"250-AUTH METHODS=COOKIE,SAFECOOKIE COOKIEFILE=\"{escaped_cookie}\"\r\n"
+                        "250-VERSION Tor=\"0.1.2.3\"\r\n"
+                        "250 OK\r\n"
+                    )
+                return super()._get_response(command)
+
+        mock_tor = CookieServer(self.next_port())
+        self.restart_with_mock(mock_tor)
+        self.wait_until(lambda: len(mock_tor.received_commands) >= 2, timeout=10)
+        assert mock_tor.received_commands[1].startswith("AUTHCHALLENGE SAFECOOKIE ")
+
+        mock_tor.stop()
+
     def run_test(self):
         self.test_basic()
         self.test_partial_data()
@@ -278,6 +364,9 @@ class TorControlTest(BitcoinTestFramework):
         self.test_oversized_line()
         self.test_overmany_lines()
         self.test_reconnect_backoff()
+        self.test_cookiefile_not_regular()
+        self.test_cookiefile_missing()
+        self.test_cookiefile_regular()
 
 
 if __name__ == '__main__':

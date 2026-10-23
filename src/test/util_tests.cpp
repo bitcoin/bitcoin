@@ -46,6 +46,7 @@
 #include <sys/types.h>
 
 #ifndef WIN32
+#include <sys/stat.h>
 #include <sys/wait.h>
 #endif
 
@@ -1687,6 +1688,16 @@ BOOST_AUTO_TEST_CASE(util_ReadBinaryFile)
         BOOST_CHECK(!valid);
         BOOST_CHECK(text.empty());
     }
+#ifndef WIN32
+    {
+        // A FIFO with no writer must not block, and has nothing to read.
+        fs::path fifo = tmpfolder / "read_binary.fifo";
+        BOOST_REQUIRE_EQUAL(mkfifo(fifo.c_str(), 0600), 0);
+        auto [valid, text] = ReadBinaryFile(fifo);
+        BOOST_CHECK(text.empty());
+        fs::remove(fifo);
+    }
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(util_WriteBinaryFile)
