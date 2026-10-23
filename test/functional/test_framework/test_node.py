@@ -31,7 +31,9 @@ from . import coverage
 from .messages import NODE_P2P_V2
 from .p2p import P2P_SERVICES, P2P_SUBVERSION
 from .util import (
+    IPC_RESERVED_FDS,
     MAX_NODES,
+    TEST_MAX_P2P_CONNECTIONS,
     assert_equal,
     assert_not_equal,
     append_config,
@@ -156,6 +158,11 @@ class TestNode():
 
         self.ipc_tmp_dir = None
         if ipcbind:
+            # -ipcbind reserves IPC_RESERVED_FDS file descriptors, which would
+            # exceed the budget documented at TEST_MAX_P2P_CONNECTIONS on
+            # select()-based platforms such as NetBSD and make bitcoind emit
+            # "Reducing -maxconnections" on stderr.
+            self.args.append(f"-maxconnections={TEST_MAX_P2P_CONNECTIONS - IPC_RESERVED_FDS}")
             self.ipc_socket_path = self.chain_path / "node.sock"
             if len(os.fsencode(self.ipc_socket_path)) < UNIX_PATH_MAX:
                 self.args.append("-ipcbind=unix")
