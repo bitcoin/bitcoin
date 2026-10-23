@@ -88,7 +88,7 @@ template <class Target, class Source>
 concept NotNullCopyConvertible = requires {
     typename std::bool_constant<([] {
         util::NotNull<Source> copy_source{Source{}};
-        util::NotNull<Target>{copy_source};
+        [[maybe_unused]] util::NotNull<Target> copy_target{copy_source};
         return true;
     }())>;
 };

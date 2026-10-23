@@ -6,6 +6,8 @@
 
 #include <qt/notificator.h>
 
+#include <attributes.h>
+
 #include <QApplication>
 #include <QByteArray>
 #include <QImageWriter>
@@ -82,8 +84,8 @@ private:
     int bitsPerSample;
     QByteArray image;
 
-    friend QDBusArgument &operator<<(QDBusArgument &a, const FreedesktopImage &i);
-    friend const QDBusArgument &operator>>(const QDBusArgument &a, FreedesktopImage &i);
+    friend QDBusArgument& operator<<(QDBusArgument& a, const FreedesktopImage& i);
+    friend const QDBusArgument& operator>>(const QDBusArgument& a LIFETIMEBOUND, FreedesktopImage& i);
 };
 
 Q_DECLARE_METATYPE(FreedesktopImage);
