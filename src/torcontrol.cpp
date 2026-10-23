@@ -705,7 +705,6 @@ void TorController::protocolinfo_cb(TorControlConnection& _conn, const TorContro
             LogDebug(BCLog::TOR, "Using SAFECOOKIE authentication, reading cookie authentication from %s", cookiefile);
             std::pair<bool,std::string> status_cookie = ReadBinaryFile(fs::PathFromString(cookiefile), TOR_COOKIE_SIZE);
             if (status_cookie.first && status_cookie.second.size() == TOR_COOKIE_SIZE) {
-                // _conn.Command("AUTHENTICATE " + HexStr(status_cookie.second), std::bind_front(&TorController::auth_cb, this));
                 m_cookie = std::vector<uint8_t>(status_cookie.second.begin(), status_cookie.second.end());
                 m_client_nonce = std::vector<uint8_t>(TOR_NONCE_SIZE, 0);
                 GetRandBytes(m_client_nonce);
