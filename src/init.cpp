@@ -129,6 +129,7 @@
 #include <system_error>
 #include <thread>
 #include <tuple>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -1406,6 +1407,18 @@ static std::optional<CService> CheckBindingConflicts(const CConnman::Options& co
     return std::nullopt;
 }
 
+//! Whether startup could connect blocks before a -loadtxoutset import: the chainstate
+//! is past genesis, a reindex is unfinished, or block data beyond genesis is stored.
+static bool ChainstateMayAdvance(ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+{
+    if (chainman.ActiveHeight() > 0 || !chainman.m_blockman.m_blockfiles_indexed) {
+        return true;
+    }
+    return std::ranges::any_of(chainman.BlockIndex(), [](const auto& entry) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        return entry.second.nHeight > 0 && (entry.second.nStatus & BLOCK_HAVE_DATA);
+    });
+}
+
 //! Import the UTXO snapshot specified by -loadtxoutset
 static ChainstateLoadResult ImportSnapshot(ChainstateManager& chainman, const ArgsManager& args)
 {
@@ -1536,6 +1549,9 @@ static ChainstateLoadResult InitAndLoadChainstate(
     };
     auto [status, error] = catch_exceptions([&] { return LoadChainstate(chainman, cache_sizes, options); });
     if (status == node::ChainstateLoadStatus::SUCCESS) {
+        if (SnapshotImportRequested(args) && WITH_LOCK(cs_main, return ChainstateMayAdvance(chainman))) {
+            return {ChainstateLoadStatus::FAILURE_FATAL, Untranslated("Snapshot loading requires a chainstate at genesis. Use a separate datadir to load a snapshot.")};
+        }
         uiInterface.InitMessage(_("Verifying blocks…"));
         if (chainman.m_blockman.m_have_pruned && options.check_blocks > MIN_BLOCKS_TO_KEEP) {
             LogWarning("pruned datadir may not have more than %d blocks; only checking available blocks\n",

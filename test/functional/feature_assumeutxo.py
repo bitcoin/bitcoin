@@ -192,7 +192,7 @@ class AssumeutxoTest(BitcoinTestFramework):
             msg = "Unable to load UTXO snapshot: The base block header (0c552ced4721c249a389eb9b08cb8da261cd46f0e7b5f9d064d48f3113406853) must appear in the headers chain. Make sure all headers are syncing, and call loadtxoutset again."
             assert_raises_rpc_error(-32603, msg, node.loadtxoutset, valid_snapshot_path)
 
-    def test_invalid_chainstate_scenarios(self):
+    def test_invalid_chainstate_scenarios(self, dump_output_path):
         self.log.info("Test different scenarios of invalid snapshot chainstate in datadir")
 
         self.log.info("  - snapshot chainstate referring to a block that is not in the assumeutxo parameters")
@@ -213,6 +213,14 @@ class AssumeutxoTest(BitcoinTestFramework):
         # resurrect node again
         (chainstate_snapshot_path / "base_blockhash").unlink()
         chainstate_snapshot_path.rmdir()
+        node = self.nodes[0]
+        msg = "Snapshot loading requires a chainstate at genesis. Use a separate datadir to load a snapshot."
+        self.log.info("Test snapshot loading fails when the chainstate has advanced beyond genesis.")
+        self.assert_snapshot_init_error(node, dump_output_path, msg)
+        self.log.info("Test snapshot loading fails before connecting stored blocks into an empty chainstate.")
+        self.cleanup_folder(node.chain_path / "chainstate")
+        with node.assert_debug_log([], unexpected_msgs=["UpdateTip"]):
+            self.assert_snapshot_init_error(node, dump_output_path, msg)
         self.start_node(0)
 
     def test_invalid_file_path(self):
@@ -483,7 +491,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(n0.getblockchaininfo()["blocks"], FINAL_HEIGHT)
 
         self.test_invalid_snapshot_scenarios(dump_output['path'])
-        self.test_invalid_chainstate_scenarios()
+        self.test_invalid_chainstate_scenarios(dump_output['path'])
         self.test_invalid_file_path()
         self.test_snapshot_block_invalidated(dump_output['path'])
         self.test_snapshot_not_on_most_work_chain(dump_output['path'])
