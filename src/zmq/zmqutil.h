@@ -7,7 +7,8 @@
 
 #include <string>
 
-void zmqError(const std::string& str);
+/** Log ZMQ error at Debug level */
+void zmqDebug(const std::string& str);
 
 /** Prefix for unix domain socket addresses (which are local filesystem paths) */
 inline const std::string ADDR_PREFIX_IPC = "ipc://"; // used by libzmq, example "ipc:///root/path/to/file"
