@@ -732,12 +732,6 @@ template<typename Stream, typename K, typename Pred, typename A> void Unserializ
 template<typename Stream, typename T> void Serialize(Stream& os, const std::shared_ptr<const T>& p);
 template<typename Stream, typename T> void Unserialize(Stream& os, std::shared_ptr<const T>& p);
 
-/**
- * unique_ptr
- */
-template<typename Stream, typename T> void Serialize(Stream& os, const std::unique_ptr<const T>& p);
-template<typename Stream, typename T> void Unserialize(Stream& os, std::unique_ptr<const T>& p);
-
 
 /**
  * If none of the specialized versions above matched, default to calling member function.
@@ -986,23 +980,6 @@ void Unserialize(Stream& is, std::set<K, Pred, A>& m)
         Unserialize(is, key);
         it = m.insert(it, key);
     }
-}
-
-
-
-/**
- * unique_ptr
- */
-template<typename Stream, typename T> void
-Serialize(Stream& os, const std::unique_ptr<const T>& p)
-{
-    Serialize(os, *p);
-}
-
-template<typename Stream, typename T>
-void Unserialize(Stream& is, std::unique_ptr<const T>& p)
-{
-    p.reset(new T(deserialize, is));
 }
 
 
