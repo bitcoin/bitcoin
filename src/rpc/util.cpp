@@ -30,8 +30,8 @@
 #include <util/translation.h>
 
 #include <algorithm>
-#include <iterator>
 #include <memory>
+#include <ranges>
 #include <set>
 #include <span>
 #include <string_view>
@@ -276,17 +276,17 @@ class DescribeAddressVisitor
 public:
     explicit DescribeAddressVisitor() = default;
 
-    UniValue operator()(const CNoDestination& dest) const
+    UniValue operator()(const CNoDestination&) const
     {
         return UniValue(UniValue::VOBJ);
     }
 
-    UniValue operator()(const PubKeyDestination& dest) const
+    UniValue operator()(const PubKeyDestination&) const
     {
         return UniValue(UniValue::VOBJ);
     }
 
-    UniValue operator()(const PKHash& keyID) const
+    UniValue operator()(const PKHash&) const
     {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("isscript", false);
@@ -294,7 +294,7 @@ public:
         return obj;
     }
 
-    UniValue operator()(const ScriptHash& scriptID) const
+    UniValue operator()(const ScriptHash&) const
     {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("isscript", true);
@@ -332,7 +332,7 @@ public:
         return obj;
     }
 
-    UniValue operator()(const PayToAnchor& anchor) const
+    UniValue operator()(const PayToAnchor&) const
     {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("isscript", true);
@@ -735,7 +735,9 @@ TMPL_INST(nullptr, std::optional<std::string_view>, maybe_arg ? std::optional<st
 // Required arg or optional arg with default value.
 TMPL_INST(CheckRequiredOrDefault, const UniValue&, *CHECK_NONFATAL(maybe_arg););
 TMPL_INST(CheckRequiredOrDefault, bool, CHECK_NONFATAL(maybe_arg)->get_bool(););
+TMPL_INST(CheckRequiredOrDefault, double, CHECK_NONFATAL(maybe_arg)->get_real(););
 TMPL_INST(CheckRequiredOrDefault, int, CHECK_NONFATAL(maybe_arg)->getInt<int>(););
+TMPL_INST(CheckRequiredOrDefault, int64_t, CHECK_NONFATAL(maybe_arg)->getInt<int64_t>(););
 TMPL_INST(CheckRequiredOrDefault, uint64_t, CHECK_NONFATAL(maybe_arg)->getInt<uint64_t>(););
 TMPL_INST(CheckRequiredOrDefault, uint32_t, CHECK_NONFATAL(maybe_arg)->getInt<uint32_t>(););
 TMPL_INST(CheckRequiredOrDefault, std::string_view, CHECK_NONFATAL(maybe_arg)->get_str(););
@@ -769,9 +771,7 @@ std::vector<std::pair<std::string, bool>> RPCMethod::GetArgNames() const
 
 size_t RPCMethod::GetParamIndex(std::string_view key) const
 {
-    auto it{std::find_if(
-        m_args.begin(), m_args.end(), [&key](const auto& arg) { return arg.GetName() == key;}
-    )};
+    auto it{std::ranges::find_if(m_args, [&key](const auto& arg) { return arg.GetFirstName() == key; })};
 
     CHECK_NONFATAL(it != m_args.end());  // TODO: ideally this is checked at compile time
     return std::distance(m_args.begin(), it);

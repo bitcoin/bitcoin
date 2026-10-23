@@ -26,7 +26,7 @@ void CustomBuildField(TypeList<std::unique_ptr<Impl>>,
     InvokeContext& invoke_context,
     Value&& value,
     Output&& output,
-    typename Decay<decltype(output.get())>::Calls* enable = nullptr)
+    typename Decay<decltype(output.get())>::Calls* = nullptr)
 {
     if (value) {
         using Interface = typename decltype(output.get())::Calls;
@@ -40,7 +40,7 @@ void CustomBuildField(TypeList<std::shared_ptr<Impl>>,
     InvokeContext& invoke_context,
     Value&& value,
     Output&& output,
-    typename Decay<decltype(output.get())>::Calls* enable = nullptr)
+    typename Decay<decltype(output.get())>::Calls* = nullptr)
 {
     if (value) {
         using Interface = typename decltype(output.get())::Calls;
@@ -54,7 +54,7 @@ void CustomBuildField(TypeList<Impl&>,
     InvokeContext& invoke_context,
     Impl& value,
     Output&& output,
-    typename decltype(output.get())::Calls* enable = nullptr)
+    typename decltype(output.get())::Calls* = nullptr)
 {
     // Disable deleter so proxy server object doesn't attempt to delete the
     // wrapped implementation when the proxy client is destroyed or
@@ -82,7 +82,7 @@ decltype(auto) CustomReadField(TypeList<std::unique_ptr<LocalType>>,
     InvokeContext& invoke_context,
     Input&& input,
     ReadDest&& read_dest,
-    typename Decay<decltype(input.get())>::Calls* enable = nullptr)
+    typename Decay<decltype(input.get())>::Calls* = nullptr)
 {
     using Interface = typename Decay<decltype(input.get())>::Calls;
     if (CustomHasField(TypeList<LocalType>(), invoke_context, input)) {
@@ -98,7 +98,7 @@ decltype(auto) CustomReadField(TypeList<std::shared_ptr<LocalType>>,
     InvokeContext& invoke_context,
     Input&& input,
     ReadDest&& read_dest,
-    typename Decay<decltype(input.get())>::Calls* enable = nullptr)
+    typename Decay<decltype(input.get())>::Calls* = nullptr)
 {
     using Interface = typename Decay<decltype(input.get())>::Calls;
     if (CustomHasField(TypeList<LocalType>(), invoke_context, input)) {
