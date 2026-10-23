@@ -407,23 +407,6 @@ struct CheckVarIntMode {
     }
 };
 
-template<VarIntMode Mode, typename I>
-inline unsigned int GetSizeOfVarInt(I n)
-{
-    CheckVarIntMode<Mode, I>();
-    int nRet = 0;
-    while(true) {
-        nRet++;
-        if (n <= 0x7F)
-            break;
-        n = (n >> 7) - 1;
-    }
-    return nRet;
-}
-
-template<typename I>
-inline void WriteVarInt(SizeComputer& os, I n);
-
 template<typename Stream, VarIntMode Mode, typename I>
 void WriteVarInt(Stream& os, I n)
 {
@@ -1141,12 +1124,6 @@ public:
         return m_size;
     }
 };
-
-template<typename I>
-inline void WriteVarInt(SizeComputer &s, I n)
-{
-    s.seek(GetSizeOfVarInt<I>(n));
-}
 
 inline void WriteCompactSize(SizeComputer &s, uint64_t nSize)
 {
