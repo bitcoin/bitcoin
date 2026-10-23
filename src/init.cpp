@@ -65,6 +65,7 @@
 #include <node/mempool_persist_args.h>
 #include <node/mining_args.h>
 #include <node/peerman_args.h>
+#include <node/utxo_snapshot.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
 #include <policy/fees/estimator_args.h>
@@ -78,6 +79,7 @@
 #include <rpc/util.h>
 #include <scheduler.h>
 #include <script/sigcache.h>
+#include <streams.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <torcontrol.h>
@@ -539,6 +541,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
             "Warning: Reverting this setting requires re-downloading the entire blockchain. Wallets and indexes should be loaded at startup and kept active while pruning is enabled so they stay synchronized before old block data is deleted; wallets or indexes that fall behind pruned data may require a reindex. "
             "(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >=%u = automatically prune block files to stay under the specified target size in MiB)", MIN_DISK_SPACE_FOR_BLOCK_FILES / 1_MiB), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-reindex", "If enabled, wipe chain state and block index, and rebuild them from blk*.dat files on disk. Also wipe and rebuild other optional indexes that are active. If an assumeutxo snapshot was loaded, its chainstate will be wiped as well. The snapshot can then be reloaded via RPC.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-loadtxoutset=<file>", "Load a UTXO snapshot before block synchronization.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-reindex-chainstate", "If enabled, wipe chain state, and rebuild it from blk*.dat files on disk. If an assumeutxo snapshot was loaded, its chainstate will be wiped as well. The snapshot can then be reloaded via RPC.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-settings=<file>", strprintf("Specify path to dynamic settings data file. Can be disabled with -nosettings. File is written at runtime and not meant to be edited by users (use %s instead for custom settings). Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME, BITCOIN_SETTINGS_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #if HAVE_SYSTEM
@@ -943,6 +946,12 @@ bool AppInitBasicSetup(const ArgsManager& args, std::atomic<int>& exit_status)
     return true;
 }
 
+//! A negated or empty -loadtxoutset value requests no import
+static bool SnapshotImportRequested(const ArgsManager& args)
+{
+    return !args.GetPathArg("-loadtxoutset").empty();
+}
+
 bool AppInitParameterInteraction(const ArgsManager& args)
 {
     const CChainParams& chainparams = Params();
@@ -1033,6 +1042,10 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         if (args.GetBoolArg("-reindex-chainstate", false)) {
             return InitError(_("Prune mode is incompatible with -reindex-chainstate. Use full -reindex instead."));
         }
+    }
+
+    if (SnapshotImportRequested(args) && (args.GetBoolArg("-reindex", false) || args.GetBoolArg("-reindex-chainstate", false) || !args.GetArgs("-loadblock").empty() || args.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT))) {
+        return InitError(Untranslated("-loadtxoutset cannot be combined with -reindex, -reindex-chainstate, -loadblock or -stopafterblockimport"));
     }
 
     // If -forcednsseed is set to true, ensure -dnsseed has not been set to false
@@ -1509,6 +1522,23 @@ static ChainstateLoadResult InitAndLoadChainstate(
         }
         std::tie(status, error) = catch_exceptions([&] { return VerifyLoadedChainstate(chainman, options); });
         if (status == node::ChainstateLoadStatus::SUCCESS) {
+            if (SnapshotImportRequested(args)) {
+                const fs::path path{AbsPathForConfigVal(args, args.GetPathArg("-loadtxoutset"))};
+                try {
+                    AutoFile snapshot_file{fsbridge::fopen(path, "rb")};
+                    node::SnapshotMetadata metadata{chainparams.MessageStart()};
+                    snapshot_file >> metadata;
+                    uiInterface.InitMessage(_("Loading UTXO snapshot…"));
+                    if (auto result{chainman.ActivateSnapshot(snapshot_file, metadata, /*in_memory=*/false)}; !result) {
+                        return {chainman.m_interrupt ? ChainstateLoadStatus::INTERRUPTED : ChainstateLoadStatus::FAILURE_FATAL, util::ErrorString(result)};
+                    }
+                    LOCK(cs_main);
+                    const auto* tip{Assert(chainman.ActiveTip())};
+                    (void)chainman.GetNotifications().blockTip(SynchronizationState::INIT_DOWNLOAD, *tip, chainman.GuessVerificationProgress(tip));
+                } catch (const std::exception& e) {
+                    return {ChainstateLoadStatus::FAILURE_FATAL, Untranslated(strprintf("Unable to load UTXO snapshot %s: %s", fs::PathToString(path), e.what()))};
+                }
+            }
             LogInfo("Block index and chainstate loaded");
             auto mining_args{node::ReadMiningArgs(args)};
             Assert(mining_args); // no error can happen, already checked in AppInitParameterInteraction
@@ -1938,14 +1968,15 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     bool do_reindex{args.GetBoolArg("-reindex", false)};
     const bool do_reindex_chainstate{args.GetBoolArg("-reindex-chainstate", false)};
 
-    // Chainstate initialization and loading may be retried once with reindexing by GUI users
+    // Chainstate initialization and loading may be retried once with reindexing by GUI users,
+    // unless a snapshot import was requested
     auto [status, error] = InitAndLoadChainstate(
         node,
         do_reindex,
         do_reindex_chainstate,
         kernel_cache_sizes,
         args);
-    if (status == ChainstateLoadStatus::FAILURE && !do_reindex && !ShutdownRequested(node)) {
+    if (status == ChainstateLoadStatus::FAILURE && !do_reindex && !SnapshotImportRequested(args) && !ShutdownRequested(node)) {
         // suggest a reindex
         bool do_retry{HasTestOption(args, "reindex_after_failure_noninteractive_yes") ||
             uiInterface.ThreadSafeQuestion(

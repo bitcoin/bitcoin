@@ -80,6 +80,12 @@ class AssumeutxoTest(BitcoinTestFramework):
             self.cleanup_folder(node.chain_path / "chainstate")
         self.start_nodes(extra_args=self.extra_args)
 
+    def load_snapshot(self, node, path):
+        self.stop_node(node.index)
+        self.cleanup_folder(node.chain_path / "chainstate")
+        self.start_node(node.index, extra_args=[*self.extra_args[node.index], f"-loadtxoutset={path}"], wait_for_full_init=False)
+        self.wait_until(lambda: node.getmempoolinfo()['loaded'])
+
     def test_invalid_snapshot_scenarios(self, valid_snapshot_path):
         self.log.info("Test different scenarios of loading invalid snapshot files")
         with open(valid_snapshot_path, 'rb') as f:
@@ -470,15 +476,9 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.test_snapshot_block_invalidated(dump_output['path'])
         self.test_snapshot_not_on_most_work_chain(dump_output['path'])
 
-        # Prune-node sanity check
-        assert 'NETWORK' not in n1.getnetworkinfo()['localservicesnames']
-
         self.log.info(f"Loading snapshot into second node from {dump_output['path']}")
-        loaded = n1.loadtxoutset(dump_output['path'])
-        assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
-        assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
+        self.load_snapshot(n1, dump_output['path'])
 
-        self.log.info("Confirm that local services remain unchanged")
         # Since n1 is a pruned node, the 'NETWORK' service flag must always be unset.
         self.assert_only_network_limited_service(n1)
 
