@@ -341,9 +341,6 @@ struct SnapshotTestSetup : TestChain100Setup {
 
         BOOST_CHECK_EQUAL(tip->m_chain_tx_count, au_data->m_chain_tx_count);
 
-        // To be checked against later when we try loading a subsequent snapshot.
-        uint256 loaded_snapshot_blockhash{*Assert(WITH_LOCK(chainman.GetMutex(), return chainman.CurrentChainstate().m_from_snapshot_blockhash))};
-
         // Make some assertions about the both chainstates. These checks ensure the
         // legacy chainstate hasn't changed and that the newly created chainstate
         // reflects the expected content.
@@ -404,13 +401,6 @@ struct SnapshotTestSetup : TestChain100Setup {
             BOOST_CHECK_EQUAL(coins_missing_from_background, new_coins);
         }
 
-        // Snapshot should refuse to load after one has already loaded.
-        BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(this));
-
-        // Snapshot blockhash should be unchanged.
-        BOOST_CHECK_EQUAL(
-            *chainman.ActiveChainstate().m_from_snapshot_blockhash,
-            loaded_snapshot_blockhash);
         return std::make_tuple(&validation_chainstate, &snapshot_chainstate);
     }
 
