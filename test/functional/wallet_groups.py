@@ -176,6 +176,37 @@ class WalletGroupTest(BitcoinTestFramework):
         self.log.info("Test creating txn that only requires ~100 of our UTXOs without pulling in all outputs")
         assert self.nodes[2].sendtoaddress(address=addr2[0], amount=5, fee_rate=self.fee_rate)
 
+        self.log.info("Test that avoidpartialspends is not attempted without a partial spend")
+        # Every scriptPubKey holds one UTXO, so no selection is a partial spend.
+        self.nodes[3].createwallet("no_partial_spend")
+        no_partial = self.nodes[3].get_wallet_rpc("no_partial_spend")
+        for _ in range(2):
+            self.nodes[0].sendtoaddress(no_partial.getnewaddress(), 1.0, fee_rate=self.fee_rate)
+        self.generate(self.nodes[0], 1)
+        assert_equal(2, len({utxo["scriptPubKey"] for utxo in no_partial.listunspent()}))
+        with self.nodes[3].assert_debug_log(expected_msgs=[], unexpected_msgs=['Fee non-grouped']):
+            txid = no_partial.sendtoaddress(self.nodes[0].getnewaddress(), 0.5, fee_rate=self.fee_rate)
+        assert_equal(1, len(self.nodes[3].getrawtransaction(txid, True)["vin"]))
+
+        self.log.info("Test that a manually selected input counts towards its scriptPubKey")
+        # Three UTXOs on one scriptPubKey: preselecting one pulls in one more
+        # and leaves the third, so this is a partial spend only if the
+        # preselected input counts towards its scriptPubKey.
+        self.nodes[3].createwallet("preset_partial_spend")
+        preset_partial = self.nodes[3].get_wallet_rpc("preset_partial_spend")
+        preset_addr = preset_partial.getnewaddress()
+        for _ in range(3):
+            self.nodes[0].sendtoaddress(preset_addr, 1.0, fee_rate=self.fee_rate)
+        self.generate(self.nodes[0], 1)
+        preset_utxo = preset_partial.listunspent()[0]
+        raw_tx = preset_partial.createrawtransaction(
+            [{"txid": preset_utxo["txid"], "vout": preset_utxo["vout"]}],
+            [{self.nodes[0].getnewaddress(): 1.5}])
+        with self.nodes[3].assert_debug_log(['Fee non-grouped']):
+            funded_tx = preset_partial.fundrawtransaction(raw_tx, options={"add_inputs": True, "fee_rate": self.fee_rate})
+        # The grouped selection is used, so all three are spent
+        assert_equal(3, len(preset_partial.decoderawtransaction(funded_tx['hex'])["vin"]))
+
 
 if __name__ == '__main__':
     WalletGroupTest(__file__).main()
