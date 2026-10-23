@@ -194,9 +194,48 @@ class WalletTest(BitcoinTestFramework):
         tx = self.nodes[1].fundrawtransaction(tx,{"lockUnspents": True})['hex']
         assert_equal(len(self.nodes[1].listlockunspent()), 1)
 
+        # Upgrading a temporary lock to a persistent lock should update the
+        # lock state.
+        self.nodes[1].lockunspent(False, [unspent_0], True)
+        assert_equal(len(self.nodes[1].listlockunspent()), 1)
+
         # Send transaction
         tx = self.nodes[1].signrawtransactionwithwallet(tx)["hex"]
         self.nodes[1].sendrawtransaction(tx)
+        assert_equal(len(self.nodes[1].listlockunspent()), 0)
+
+        # A spent persistent lock should not be restored after wallet reload.
+        self.nodes[1].unloadwallet(self.default_wallet_name)
+        self.nodes[1].loadwallet(self.default_wallet_name)
+        assert_equal(len(self.nodes[1].listlockunspent()), 0)
+
+       # A persistent lock should not be downgraded to a non-persistent lock.
+        unspent_1 = self.nodes[1].listunspent()[0]
+        unspent_1 = {"txid": unspent_1["txid"], "vout": unspent_1["vout"]}
+
+        self.nodes[1].lockunspent(False, [unspent_1], True)
+        assert_equal(len(self.nodes[1].listlockunspent()), 1)
+
+        # fundrawtransaction tries to lock the input non-persistently.
+        tx = self.nodes[1].createrawtransaction(
+            [unspent_1], {self.nodes[1].getnewaddress(): 1}
+        )
+        tx = self.nodes[1].fundrawtransaction(
+            tx, {"lockUnspents": True}
+        )["hex"]
+
+        # The persistent lock must not be downgraded.
+        assert_equal(len(self.nodes[1].listlockunspent()), 1)
+
+        # Spend the locked output.
+        tx = self.nodes[1].signrawtransactionwithwallet(tx)["hex"]
+        self.nodes[1].sendrawtransaction(tx)
+
+        assert_equal(len(self.nodes[1].listlockunspent()), 0)
+
+        # A spent persistent lock should not be restored after wallet reload.
+        self.nodes[1].unloadwallet(self.default_wallet_name)
+        self.nodes[1].loadwallet(self.default_wallet_name)
         assert_equal(len(self.nodes[1].listlockunspent()), 0)
 
         # Have node1 generate 100 blocks (so node0 can recover the fee)
