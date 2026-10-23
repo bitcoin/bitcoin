@@ -247,7 +247,7 @@ void PSBTOperationsDialog::showStatus(const QString &msg, StatusLevel level) {
     m_ui->statusBar->show();
 }
 
-size_t PSBTOperationsDialog::couldSignInputs(const PartiallySignedTransaction &psbtx) {
+size_t PSBTOperationsDialog::couldSignInputs() {
     if (!m_wallet_model) {
         return 0;
     }
@@ -264,7 +264,7 @@ size_t PSBTOperationsDialog::couldSignInputs(const PartiallySignedTransaction &p
 
 void PSBTOperationsDialog::showTransactionStatus(const PartiallySignedTransaction &psbtx) {
     PSBTAnalysis analysis = AnalyzePSBT(psbtx);
-    size_t n_could_sign = couldSignInputs(psbtx);
+    size_t n_could_sign = couldSignInputs();
 
     switch (analysis.next) {
         case PSBTRole::UPDATER: {
