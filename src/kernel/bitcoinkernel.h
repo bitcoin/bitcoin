@@ -117,7 +117,7 @@ extern "C" {
  * Ownership of these resources may be taken by copying. They are typically
  * used for iteration with minimal overhead and require some care by the
  * programmer that their lifetime is not extended beyond that of the original
- * object.
+ * object. The same applies to btck_StringView.
  *
  * Array lengths follow the pointer argument they describe.
  *
@@ -127,6 +127,15 @@ extern "C" {
  * such as heights. Plain int and unsigned int are used for boolean-like values
  * and flags.
  */
+
+/**
+ * A non-owning view of a string. The string is not required to be
+ * null-terminated, so always use len to determine its length.
+ */
+typedef struct {
+    const char* data;
+    size_t len;
+} btck_StringView;
 
 /**
  * Opaque data structure for holding a transaction.
@@ -382,42 +391,14 @@ typedef uint8_t btck_LogLevel;
 #define btck_LogLevel_ERROR ((btck_LogLevel)(4))
 
 /**
- * A log entry passed to the logging callback.
+ * Opaque data structure for holding a log entry.
  *
- * String fields are not guaranteed to be null-terminated. Always use the
- * accompanying *_len field to determine their length.
+ * A log entry is passed to the logging callback and is only valid for the
+ * duration of the callback. Its fields are read with the btck_log_entry_get_*
+ * functions. Strings returned by these functions are only valid for the
+ * lifetime of the btck_LogEntry.
  */
-typedef struct {
-    //! Log message text. Not escaped, so it may contain newlines and other
-    //! control characters.
-    const char* message;
-    //! Length of message.
-    size_t message_len;
-    //! Name of the thread that produced the log message.
-    const char* thread_name;
-    //! Length of thread_name.
-    size_t thread_name_len;
-    //! Wall-clock time when the entry was logged, in nanoseconds since the
-    //! Unix epoch.
-    int64_t timestamp_ns;
-    //! Mock time in effect when the entry was logged, in seconds since the Unix
-    //! epoch, or 0 if no mock time is set (see btck_set_mock_time).
-    int64_t mocktime_s;
-    //! Name of the source file that produced the log statement.
-    const char* file_name;
-    //! Length of file_name.
-    size_t file_name_len;
-    //! Name of the function that produced the log message.
-    const char* function_name;
-    //! Length of function_name.
-    size_t function_name_len;
-    //! Line number of the source code that produced the log statement.
-    uint32_t line;
-    //! Log severity level.
-    btck_LogLevel level;
-    //! Log category.
-    btck_LogCategory category;
-} btck_LogEntry;
+typedef struct btck_LogEntry btck_LogEntry;
 
 /** Callback function types */
 
@@ -428,9 +409,10 @@ typedef struct {
  *
  * The callback may be invoked from any thread. Invocations are serialized: no
  * two invocations run at the same time, and destroying a btck_LoggingConnection
- * waits for an in-flight invocation of its callback to return. The callback
- * must not call any kernel API function (this may deadlock), and should return
- * quickly since it blocks every kernel thread that logs.
+ * waits for an in-flight invocation of its callback to return. The callback may
+ * call the btck_log_entry_get_* functions on @p entry. It must not call any
+ * other kernel API function (this may deadlock), and should return quickly
+ * since it blocks every kernel thread that logs.
  *
  * @param[in] user_data User-defined opaque structure.
  * @param[in] entry     Log entry. Valid only for the duration of the callback.
@@ -980,6 +962,89 @@ BITCOINKERNEL_API btck_LoggingConnection* BITCOINKERNEL_WARN_UNUSED_RESULT btck_
  * Stop logging and destroy the logging connection.
  */
 BITCOINKERNEL_API void btck_logging_connection_destroy(btck_LoggingConnection* logging_connection);
+
+/**
+ * @brief Get the message text from a btck_LogEntry. The message is not escaped,
+ * so it may contain newlines and other control characters.
+ *
+ * @param[in] entry Non-null btck_LogEntry
+ * @return          Message text
+ */
+BITCOINKERNEL_API btck_StringView btck_log_entry_get_message(
+    const btck_LogEntry* entry) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the name of the thread that produced the log message.
+ *
+ * @param[in] entry Non-null btck_LogEntry
+ * @return          Thread name
+ */
+BITCOINKERNEL_API btck_StringView btck_log_entry_get_thread_name(
+    const btck_LogEntry* entry) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the wall-clock time when the entry was logged.
+ *
+ * @param[in] entry Non-null btck_LogEntry
+ * @return          Nanoseconds since the Unix epoch
+ */
+BITCOINKERNEL_API int64_t btck_log_entry_get_timestamp_ns(
+    const btck_LogEntry* entry) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the mock time in effect when the entry was logged.
+ *
+ * @param[in] entry Non-null btck_LogEntry
+ * @return          Seconds since the Unix epoch, or 0 if no mock time is set
+ *                  (see btck_set_mock_time)
+ */
+BITCOINKERNEL_API int64_t btck_log_entry_get_mocktime_s(
+    const btck_LogEntry* entry) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the name of the source file that produced the log statement.
+ *
+ * @param[in] entry Non-null btck_LogEntry
+ * @return          File name
+ */
+BITCOINKERNEL_API btck_StringView btck_log_entry_get_file_name(
+    const btck_LogEntry* entry) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the name of the function that produced the log statement.
+ *
+ * @param[in] entry Non-null btck_LogEntry
+ * @return          Function name
+ */
+BITCOINKERNEL_API btck_StringView btck_log_entry_get_function_name(
+    const btck_LogEntry* entry) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the line number of the source code that produced the log statement.
+ *
+ * @param[in] entry Non-null btck_LogEntry
+ * @return          Line number
+ */
+BITCOINKERNEL_API uint32_t btck_log_entry_get_line(
+    const btck_LogEntry* entry) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the severity level of the log entry.
+ *
+ * @param[in] entry Non-null btck_LogEntry
+ * @return          Log level
+ */
+BITCOINKERNEL_API btck_LogLevel btck_log_entry_get_level(
+    const btck_LogEntry* entry) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Get the category of the log entry.
+ *
+ * @param[in] entry Non-null btck_LogEntry
+ * @return          Log category
+ */
+BITCOINKERNEL_API btck_LogCategory btck_log_entry_get_category(
+    const btck_LogEntry* entry) BITCOINKERNEL_ARG_NONNULL(1);
 
 ///@}
 
