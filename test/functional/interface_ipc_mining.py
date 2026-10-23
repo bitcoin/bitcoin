@@ -41,6 +41,7 @@ from test_framework.ipc_util import (
     assert_create_new_block_fails,
     destroying,
     load_capnp_modules,
+    make_capnp_init_ctx,
     make_mining_ctx,
     mining_create_block_template,
     mining_get_block,
@@ -264,6 +265,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 assert_greater_than_or_equal(len(block.vtx), 1)
                 txfees = await template.getTxFees(ctx)
                 assert_equal(len(txfees.result), 0)
+                assert_equal((await template.getTotalFees(ctx)).result, 0)
                 txsigops = await template.getTxSigops(ctx)
                 assert_equal(len(txsigops.result), 0)
 
@@ -291,6 +293,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 assert template4 is not None
                 block3 = await mining_get_block(template4, ctx)
                 assert_equal(len(block3.vtx), 2)
+                assert_equal((await template4.getTotalFees(ctx)).result, sum((await template4.getTxFees(ctx)).result))
 
                 self.log.debug("Wait again, this should return the same template, since the fee threshold is zero")
                 waitoptions.feeThreshold = 0
@@ -307,6 +310,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 assert template6 is not None
                 block4 = await mining_get_block(template6, ctx)
                 assert_equal(len(block4.vtx), 3)
+                assert_equal((await template6.getTotalFees(ctx)).result, sum((await template6.getTxFees(ctx)).result))
 
                 self.log.debug("Wait for another, but time out, since the fee threshold is set now")
                 waitoptions.timeout = self.no_event_timeout_ms
@@ -800,6 +804,58 @@ class IPCMiningTest(BitcoinTestFramework):
 
         asyncio.run(capnp.run(async_routine()))
 
+    def run_concurrent_template_access_test(self):
+        """Reading and submitting a template at the same time must not race."""
+        self.log.info("Running concurrent template access test")
+        timeout = 5 * self.options.timeout_factor
+
+        async def async_routine():
+            # One context runs on one server thread. Two contexts run on two
+            # threads, so the read and the submit can run at the same time and race.
+            reader_ctx, init = await make_capnp_init_ctx(self)
+            writer_ctx = self.capnp_modules['proxy'].Context()
+            writer_ctx.thread = init.construct().threadMap.makeThread("pythread").result
+            mining = init.makeMining(reader_ctx).result
+
+            stack = AsyncExitStack()
+            try:
+                template = await mining_create_block_template(
+                    mining, stack, reader_ctx, self.default_block_create_options, cooldown=False)
+                assert template is not None
+                block = await mining_get_block(template, reader_ctx)
+                # No witness means every submit is rejected, so the tip never moves.
+                coinbase = block.vtx[0].serialize_without_witness()
+                height = self.nodes[0].getblockcount()
+
+                done = asyncio.Event()
+
+                async def read_loop():
+                    while not done.is_set():
+                        await template.getBlockHeader(reader_ctx)
+                        await template.getBlock(reader_ctx)
+
+                async def submit_loop():
+                    # Repeat to exercise different worker-thread interleavings.
+                    for _ in range(100):
+                        await template.submitSolution(
+                            writer_ctx, block.nVersion, block.nTime, block.nNonce, coinbase)
+                    done.set()
+
+                tasks = [asyncio.create_task(read_loop()), asyncio.create_task(submit_loop())]
+                try:
+                    await asyncio.gather(*tasks)
+                finally:
+                    # Stop both loops before destroying the template, including on failure.
+                    for task in tasks:
+                        task.cancel()
+                    await asyncio.gather(*tasks, return_exceptions=True)
+                assert_equal(self.nodes[0].getblockcount(), height)
+            finally:
+                # Limit how long we wait for the template destruction IPC call.
+                await asyncio.wait_for(stack.aclose(), timeout=timeout)
+
+        asyncio.run(asyncio.wait_for(capnp.run(async_routine()), timeout=timeout))
+
     def run_test(self):
         self.miniwallet = MiniWallet(self.nodes[0])
         # Amount of time in milliseconds the test is allowed to wait or be idle before it should fail.
@@ -818,6 +874,7 @@ class IPCMiningTest(BitcoinTestFramework):
         self.run_block_max_weight_test()
         self.run_ipc_option_override_test()
         self.run_transaction_lookup_test()
+        self.run_concurrent_template_access_test()
 
         # Needs to run last because it resets the chain.
         self.run_low_height_test()

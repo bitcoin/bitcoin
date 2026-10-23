@@ -33,12 +33,22 @@ public:
     virtual ~BlockTemplate() = default;
 
     virtual CBlockHeader getBlockHeader() = 0;
-    // Block contains a dummy coinbase transaction that should not be used and
-    // it may not match a transaction constructed from getCoinbaseTx().
+    /**
+     * Return the current block. Initially, it contains a dummy coinbase transaction
+     * that should not be used and may not match a transaction constructed from
+     * getCoinbaseTx().
+     *
+     * To retrieve the block updated by submitSolution(), wait for that call to
+     * return before calling getBlock(). Concurrent calls to submitSolution() may
+     * replace the block again.
+     */
     virtual CBlock getBlock() = 0;
 
     // Fees per transaction, not including coinbase transaction.
     virtual std::vector<CAmount> getTxFees() = 0;
+
+    //! Total transaction fees in satoshis.
+    virtual CAmount getTotalFees() = 0;
     // Sigop cost per transaction, not including coinbase transaction.
     virtual std::vector<int64_t> getTxSigops() = 0;
 
