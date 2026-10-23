@@ -182,7 +182,7 @@ if(NOT MSVC)
   )
 
   # Check for x86 SHA-NI intrinsics.
-  set(X86_SHANI_CXXFLAGS -msse4 -msha)
+  set(X86_SHANI_CXXFLAGS -msse4.1 -msha)
   check_cxx_source_compiles_with_flags("
     #include <immintrin.h>
 
@@ -204,7 +204,9 @@ if(NOT MSVC)
 
     int main()
     {
-      uint32x4_t a, b, c;
+      uint32x4_t a = vdupq_n_u32(0);
+      uint32x4_t b = vdupq_n_u32(1);
+      uint32x4_t c = vdupq_n_u32(2);
       vsha256h2q_u32(a, b, c);
       vsha256hq_u32(a, b, c);
       vsha256su0q_u32(a, b);
