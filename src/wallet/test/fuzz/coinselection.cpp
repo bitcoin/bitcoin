@@ -92,7 +92,6 @@ FUZZ_TARGET(coin_grinder)
     coin_params.m_effective_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
     coin_params.change_output_size = fuzzed_data_provider.ConsumeIntegralInRange<int>(10, 1000);
     coin_params.change_spend_size = fuzzed_data_provider.ConsumeIntegralInRange<int>(10, 1000);
-    coin_params.m_cost_of_change= coin_params.m_effective_feerate.GetFee(coin_params.change_output_size) + coin_params.m_long_term_feerate.GetFee(coin_params.change_spend_size);
     coin_params.m_change_fee = coin_params.m_effective_feerate.GetFee(coin_params.change_output_size);
     // For other results to be comparable to SRD, we must align the change_target with SRD’s hardcoded behavior
     coin_params.m_min_change_target = CHANGE_LOWER + coin_params.m_change_fee;
