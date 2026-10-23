@@ -1411,9 +1411,11 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // Return the constructed transaction data.
     CTransactionRef tx = MakeTransactionRef(std::move(txNew));
 
-    // Limit size
-    if ((sign && GetTransactionWeight(*tx) > MAX_STANDARD_TX_WEIGHT) ||
-        (!sign && tx_sizes.weight > MAX_STANDARD_TX_WEIGHT))
+    // Ensure the transaction weight (when not signing, its estimated maximum signed weight)
+    // does not exceed m_max_tx_weight, which is MAX_STANDARD_TX_WEIGHT unless the caller set a
+    // limit. Coin selection skips its weight checks when the preset inputs alone cover the target.
+    if ((sign && GetTransactionWeight(*tx) > coin_selection_params.m_max_tx_weight.value()) ||
+        (!sign && tx_sizes.weight > coin_selection_params.m_max_tx_weight.value()))
     {
         return util::Error{_("Transaction too large")};
     }
