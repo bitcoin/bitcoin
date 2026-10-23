@@ -1296,15 +1296,6 @@ public:
         }
     };
 
-    void ForEachNode(const NodeFn& func) const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex)
-    {
-        LOCK(m_nodes_mutex);
-        for (auto&& node : m_nodes) {
-            if (NodeFullyConnected(node))
-                func(node);
-        }
-    };
-
     // Addrman functions
     /**
      * Return randomly selected addresses. This function does not use the address response cache and
