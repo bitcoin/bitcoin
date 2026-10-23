@@ -6,6 +6,9 @@
 
 from decimal import Decimal
 
+from test_framework.blocktools import (
+    create_empty_fork,
+)
 from test_framework.mempool_util import (
     DEFAULT_CLUSTER_LIMIT,
     DEFAULT_CLUSTER_SIZE_LIMIT_KVB,
@@ -21,8 +24,14 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
+    assert_not_equal,
     assert_raises_rpc_error,
 )
+
+# Feerates in BTC/kvB, used by the reorg tests
+HIGH_FEE_RATE = Decimal("0.001")   # 100 sat/vB
+LOW_FEE_RATE = Decimal("0.0001")   # 10 sat/vB
+MIN_FEE_RATE = Decimal("0.00001")  # 1 sat/vB
 
 def weight_to_vsize(weight):
     # Divide by 4, round up
@@ -73,6 +82,53 @@ class MempoolClusterTest(BitcoinTestFramework):
 
         assert_equal(node.getmempoolcluster(parent_tx['txid'])['txcount'], cluster_count)
         return all_results
+
+    def create_chain(self, count, *, utxo_to_spend=None, target_vsize=None, fee_rate=None):
+        """Create (but do not submit) a linear chain of transactions, the i'th one spending the
+        (i-1)'th. The first one spends a confirmed utxo unless one is provided.
+        """
+        kwargs = {}
+        if target_vsize is not None:
+            kwargs["target_vsize"] = target_vsize
+        if fee_rate is not None:
+            kwargs["fee_rate"] = fee_rate
+        if utxo_to_spend is None:
+            utxo_to_spend = self.wallet.get_utxo(confirmed_only=True)
+
+        chain = []
+        for _ in range(count):
+            tx = self.wallet.create_self_transfer(utxo_to_spend=utxo_to_spend, **kwargs)
+            chain.append(tx)
+            utxo_to_spend = tx["new_utxo"]
+        return chain
+
+    def check_mempool(self, txids):
+        """Assert the exact contents of the mempool, by txid."""
+        assert_equal(sorted(self.nodes[0].getrawmempool()), sorted(txids))
+
+    def check_cluster_limits(self, *, count_limit=None, size_limit_vbytes=None):
+        """Assert that every cluster in the mempool respects the configured limits."""
+        node = self.nodes[0]
+        for txid in node.getrawmempool():
+            cluster = node.getmempoolcluster(txid)
+            if count_limit is not None:
+                assert_greater_than_or_equal(count_limit, cluster["txcount"])
+            if size_limit_vbytes is not None:
+                assert_greater_than_or_equal(size_limit_vbytes, weight_to_vsize(cluster["clusterweight"]))
+
+    def check_chain_prefix(self, chain, remaining):
+        """Assert that whatever is left of a chain is a prefix of it, and return how many survived.
+        """
+        present = [tx["txid"] in remaining for tx in chain]
+        assert_equal(present, sorted(present, reverse=True))
+        return present.count(True)
+
+    def trigger_reorg(self, fork_blocks):
+        """Submit the fork blocks, reorging out everything mined since the fork was created."""
+        node = self.nodes[0]
+        for block in fork_blocks:
+            node.submitblock(block.serialize().hex())
+        assert_equal(node.getbestblockhash(), fork_blocks[-1].hash_hex)
 
     def check_feerate_diagram(self, node):
         """Sanity check the feerate diagram."""
@@ -308,6 +364,168 @@ class MempoolClusterTest(BitcoinTestFramework):
         assert_equal(node.getmempoolcluster(tx_replacer["txid"])['txcount'], 2)
 
     @cleanup
+    def test_reorg_within_cluster_limit(self, max_cluster_count):
+        """Transactions resurrected by a reorg are all re-accepted when the cluster they end up
+        merging into still fits within the limit."""
+        node = self.nodes[0]
+        self.log.info("Test that a reorg re-adds all transactions when the resulting cluster is within limits")
+
+        num_mined = max(1, max_cluster_count // 3)
+        num_unconfirmed = max_cluster_count - num_mined
+
+        # Create empty fork
+        fork_blocks = create_empty_fork(node)
+
+        # Mine a chain of transactions, then build the rest of the cluster on top of them.
+        mined_chain = self.create_chain(num_mined)
+        self.generateblock(node, output="raw(42)", transactions=[tx["hex"] for tx in mined_chain])
+        self.check_mempool([])
+
+        unconfirmed_chain = self.create_chain(num_unconfirmed, utxo_to_spend=mined_chain[-1]["new_utxo"])
+        for tx in unconfirmed_chain:
+            node.sendrawtransaction(tx["hex"])
+        # While their ancestors are confirmed, only the unconfirmed transactions form a cluster.
+        assert_equal(node.getmempoolcluster(unconfirmed_chain[0]["txid"])["txcount"], num_unconfirmed)
+
+        # The reorg brings the mined transactions back, forming a single cluster which is exactly
+        # at the limit.
+        self.trigger_reorg(fork_blocks)
+        all_txns = mined_chain + unconfirmed_chain
+        self.check_mempool([tx["txid"] for tx in all_txns])
+        assert_equal(node.getmempoolcluster(all_txns[0]["txid"])["txcount"], max_cluster_count)
+        self.check_feerate_diagram(node)
+
+    @cleanup
+    def test_reorg_trims_cluster_over_count_limit(self, max_cluster_count):
+        """A reorg can create a cluster over the count limit, because a resurrected transaction's
+        in-mempool children are only linked up (in UpdateTransactionsFromBlock) after it has been
+        accepted. The limit is then restored by trimming the cluster rather than by refusing to
+        re-add the transactions."""
+        node = self.nodes[0]
+        self.log.info("Test that a reorg trims a cluster that grows past the count limit")
+        assert_greater_than_or_equal(max_cluster_count, 4)
+
+        num_mined = max_cluster_count // 2
+        # Two more than the room left over, so that the merged cluster is over the limit.
+        num_unconfirmed = max_cluster_count - num_mined + 2
+        # The unconfirmed chain must still be acceptable on its own.
+        assert_greater_than_or_equal(max_cluster_count, num_unconfirmed)
+
+        fork_blocks = create_empty_fork(node)
+
+        # Give the mined transactions a much higher feerate than the unconfirmed ones, so that
+        # trimming has an unambiguous worst chunk to evict.
+        mined_chain = self.create_chain(num_mined, fee_rate=HIGH_FEE_RATE)
+        self.generateblock(node, output="raw(42)", transactions=[tx["hex"] for tx in mined_chain])
+        self.check_mempool([])
+
+        unconfirmed_chain = self.create_chain(num_unconfirmed, utxo_to_spend=mined_chain[-1]["new_utxo"],
+                                              fee_rate=LOW_FEE_RATE)
+        for tx in unconfirmed_chain:
+            node.sendrawtransaction(tx["hex"])
+        self.check_mempool([tx["txid"] for tx in unconfirmed_chain])
+
+        self.trigger_reorg(fork_blocks)
+        combined_chain = mined_chain + unconfirmed_chain
+        remaining = node.getrawmempool()
+
+        # The cluster limit is respected.
+        self.check_cluster_limits(count_limit=max_cluster_count)
+        # check if requires evicting some transactions
+        assert_greater_than(len(combined_chain), len(remaining))
+        # and check what is left is a prefix of the chain, i.e. nothing was orphaned.
+        num_survivors = self.check_chain_prefix(combined_chain, remaining)
+        assert_equal(num_survivors, len(remaining))
+        # The high-feerate transactions from the disconnected block were all re-added; only the
+        # cheaper unconfirmed ones at the end of the chain were dropped.
+        assert_greater_than_or_equal(num_survivors, num_mined)
+
+    @cleanup
+    def test_reorg_trims_cluster_over_size_limit(self, max_cluster_size_vbytes):
+        """Same as above, but for the cluster size (rather than count) limit."""
+        node = self.nodes[0]
+        self.log.info("Test that a reorg trims a cluster that grows past the size limit")
+
+        # Five transactions of this size fit in a cluster.
+        target_vsize_per_tx = max_cluster_size_vbytes // 5
+        num_mined = 3
+        num_unconfirmed = 3
+
+        fork_blocks = create_empty_fork(node)
+
+        # These transactions are large, so use feerates low enough to keep them affordable while
+        # still leaving a wide gap between the mined and unconfirmed ones.
+        mined_chain = self.create_chain(num_mined, target_vsize=target_vsize_per_tx,
+                                        fee_rate=LOW_FEE_RATE)
+        self.generateblock(node, output="raw(42)", transactions=[tx["hex"] for tx in mined_chain])
+        self.check_mempool([])
+
+        unconfirmed_chain = self.create_chain(num_unconfirmed, utxo_to_spend=mined_chain[-1]["new_utxo"],
+                                              target_vsize=target_vsize_per_tx, fee_rate=MIN_FEE_RATE)
+        for tx in unconfirmed_chain:
+            node.sendrawtransaction(tx["hex"])
+        self.check_cluster_limits(size_limit_vbytes=max_cluster_size_vbytes)
+
+        self.trigger_reorg(fork_blocks)
+        combined_chain = mined_chain + unconfirmed_chain
+        remaining = node.getrawmempool()
+
+        self.check_cluster_limits(size_limit_vbytes=max_cluster_size_vbytes)
+        assert_greater_than(len(combined_chain), len(remaining))
+        num_survivors = self.check_chain_prefix(combined_chain, remaining)
+        assert_equal(num_survivors, len(remaining))
+        assert_greater_than_or_equal(num_survivors, num_mined)
+
+    @cleanup
+    def test_reorg_trims_merged_clusters(self, max_cluster_count):
+        """A transaction resurrected by a reorg can merge two clusters into an oversized one. It is
+        still re-added, and the merged cluster is trimmed back within the limit."""
+        node = self.nodes[0]
+        self.log.info("Test that a reorg trims clusters it merges past the count limit")
+
+        # Each chain fits in a cluster on its own, but the two of them plus the splitter do not.
+        num_per_chain = max_cluster_count // 2 + 1
+        assert_greater_than_or_equal(max_cluster_count, num_per_chain)
+        assert_greater_than(2 * num_per_chain + 1, max_cluster_count)
+
+        fork_blocks = create_empty_fork(node)
+
+        # A confirmed transaction with two outputs, each funding an independent cluster.
+        splitter = self.wallet.create_self_transfer_multi(num_outputs=2, confirmed_only=True)
+        self.generateblock(node, output="raw(42)", transactions=[splitter["hex"]])
+        self.check_mempool([])
+
+        # Only the cheaper chain should be trimmed once the two are merged.
+        chain_a = self.create_chain(num_per_chain, utxo_to_spend=splitter["new_utxos"][0],
+                                    fee_rate=HIGH_FEE_RATE)
+        chain_b = self.create_chain(num_per_chain, utxo_to_spend=splitter["new_utxos"][1],
+                                    fee_rate=LOW_FEE_RATE)
+        for tx in chain_a + chain_b:
+            node.sendrawtransaction(tx["hex"])
+
+        # While the splitter is confirmed, these are two separate clusters.
+        cluster_a = node.getmempoolcluster(chain_a[0]["txid"])
+        cluster_b = node.getmempoolcluster(chain_b[0]["txid"])
+        assert_equal(cluster_a["txcount"], num_per_chain)
+        assert_equal(cluster_b["txcount"], num_per_chain)
+        assert_not_equal(cluster_a["chunks"], cluster_b["chunks"])
+
+        self.trigger_reorg(fork_blocks)
+        remaining = node.getrawmempool()
+
+        # The splitter was re-added, joining both chains into one cluster which was then trimmed
+        # back to the limit.
+        assert splitter["txid"] in remaining
+        self.check_cluster_limits(count_limit=max_cluster_count)
+        assert_greater_than(2 * num_per_chain + 1, len(remaining))
+        num_a = self.check_chain_prefix(chain_a, remaining)
+        num_b = self.check_chain_prefix(chain_b, remaining)
+        assert_equal(1 + num_a + num_b, len(remaining))
+        # The expensive chain survived intact; the cheap one absorbed the trimming.
+        assert_equal(num_a, num_per_chain)
+        assert_greater_than(num_per_chain, num_b)
+
+    @cleanup
     def test_getmempoolcluster(self):
         node = self.nodes[0]
 
@@ -411,6 +629,21 @@ class MempoolClusterTest(BitcoinTestFramework):
             self.test_cluster_count_limit(cluster_count_limit)
             if cluster_count_limit > 10:
                 self.test_cluster_merging(cluster_count_limit)
+
+        self.log.info("-> Testing cluster limits during reorgs")
+        for cluster_count_limit in [4, 10, DEFAULT_CLUSTER_LIMIT]:
+            self.log.info(f"-> Resetting node with -limitclustercount={cluster_count_limit}")
+            self.restart_node(0, extra_args=[f"-limitclustercount={cluster_count_limit}"])
+
+            self.test_reorg_within_cluster_limit(cluster_count_limit)
+            self.test_reorg_trims_cluster_over_count_limit(cluster_count_limit)
+            self.test_reorg_trims_merged_clusters(cluster_count_limit)
+
+        for cluster_size_limit_kvb in [10, DEFAULT_CLUSTER_SIZE_LIMIT_KVB]:
+            self.log.info(f"-> Resetting node with -limitclustersize={cluster_size_limit_kvb}")
+            self.restart_node(0, extra_args=[f"-limitclustersize={cluster_size_limit_kvb}"])
+
+            self.test_reorg_trims_cluster_over_size_limit(cluster_size_limit_kvb * 1000)
 
 
 if __name__ == '__main__':
