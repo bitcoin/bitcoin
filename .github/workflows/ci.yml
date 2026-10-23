@@ -13,6 +13,9 @@ on:
     tags-ignore:
       - '**'
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.event_name != 'pull_request' && github.run_id || github.ref }}
   cancel-in-progress: true
