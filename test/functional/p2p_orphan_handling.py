@@ -8,11 +8,11 @@ import time
 from test_framework.blocktools import MAX_STANDARD_TX_WEIGHT
 from test_framework.mempool_util import (
     create_large_orphan,
+    DEFAULT_ANCESTOR_LIMIT,
     tx_in_orphanage,
 )
 from test_framework.messages import (
     CInv,
-    DEFAULT_ANCESTOR_LIMIT,
     MSG_TX,
     MSG_WITNESS_TX,
     MSG_WTX,

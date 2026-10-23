@@ -21,10 +21,11 @@ from test_framework.wallet import (
 from test_framework.blocktools import (
     create_empty_fork,
 )
-
-MAX_REPLACEMENT_CANDIDATES = 100
-TRUC_MAX_VSIZE = 10000
-TRUC_CHILD_MAX_VSIZE = 1000
+from test_framework.mempool_util import (
+    MAX_REPLACEMENT_CANDIDATES,
+    TRUC_MAX_VSIZE,
+    TRUC_CHILD_MAX_VSIZE,
+)
 
 def cleanup(extra_args=None):
     def decorator(func):
