@@ -126,7 +126,7 @@ void ModalOverlay::tipUpdate(int count, const QDateTime& blockDate, double nVeri
 
         // show expected remaining time
         if(remainingMSecs >= 0) {
-            ui->expectedTimeLeft->setText(GUIUtil::formatNiceTimeOffset(remainingMSecs / 1000.0));
+            ui->expectedTimeLeft->setText(GUIUtil::formatNiceTimeOffset(std::chrono::seconds{remainingMSecs / 1000}));
         } else {
             ui->expectedTimeLeft->setText(QObject::tr("unknown"));
         }
