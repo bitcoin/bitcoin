@@ -80,6 +80,7 @@ add_executable(fuzz
   node_eviction.cpp
   overflow.cpp
   p2p_handshake.cpp
+  p2p_1p1c_liveness.cpp
   p2p_headers_presync.cpp
   p2p_private_broadcast.cpp
   p2p_transport_serialization.cpp

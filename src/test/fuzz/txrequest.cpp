@@ -186,6 +186,22 @@ public:
         m_tracker.ForgetTxHash(TXHASHES[txhash]);
     }
 
+    void ForgetTxHash(int txhash, bool is_wtxid)
+    {
+        // Apply to naive structure: the announcements for that txhash of the given type are wiped.
+        for (int peer = 0; peer < MAX_PEERS; ++peer) {
+            Announcement& ann = m_announcements[txhash][peer];
+            if (ann.m_state != State::NOTHING && ann.m_is_wtxid == is_wtxid) {
+                ann.m_state = State::NOTHING;
+            }
+        }
+        Cleanup(txhash);
+
+        // Call TxRequestTracker's implementation.
+        auto gtxid = is_wtxid ? GenTxid{Wtxid::FromUint256(TXHASHES[txhash])} : GenTxid{Txid::FromUint256(TXHASHES[txhash])};
+        m_tracker.ForgetTxHash(gtxid);
+    }
+
     void ReceivedInv(int peer, int txhash, bool is_wtxid, bool preferred, std::chrono::microseconds reqtime)
     {
         // Apply to naive structure: if no announcement for txidnum/peer combination
@@ -310,6 +326,23 @@ public:
                 for (const auto& peer : candidate_peers) {
                     assert(expected_announcers[peer]);
                 }
+
+                // Same, restricted to announcements of each type.
+                for (const bool is_wtxid : {false, true}) {
+                    std::bitset<MAX_PEERS> expected_typed_announcers;
+                    for (int peer = 0; peer < MAX_PEERS; ++peer) {
+                        if (expected_announcers[peer] && m_announcements[txhash][peer].m_is_wtxid == is_wtxid) {
+                            expected_typed_announcers[peer] = true;
+                        }
+                    }
+                    auto gtxid = is_wtxid ? GenTxid{Wtxid::FromUint256(TXHASHES[txhash])} : GenTxid{Txid::FromUint256(TXHASHES[txhash])};
+                    std::vector<NodeId> typed_candidate_peers;
+                    m_tracker.GetCandidatePeers(gtxid, typed_candidate_peers);
+                    assert(expected_typed_announcers.count() == typed_candidate_peers.size());
+                    for (const auto& peer : typed_candidate_peers) {
+                        assert(expected_typed_announcers[peer]);
+                    }
+                }
             }
             assert(m_tracker.Count(peer) == tracked);
             assert(m_tracker.CountInFlight(peer) == inflight);
@@ -333,7 +366,7 @@ FUZZ_TARGET(txrequest)
     // Decode the input as a sequence of instructions with parameters
     auto it = buffer.begin();
     while (it != buffer.end()) {
-        int cmd = *(it++) % 11;
+        int cmd = *(it++) % 12;
         int peer, txidnum, delaynum;
         switch (cmd) {
         case 0: // Make time jump to the next event (m_time of CANDIDATE or REQUESTED)
@@ -380,6 +413,10 @@ FUZZ_TARGET(txrequest)
             peer = it == buffer.end() ? 0 : *(it++) % MAX_PEERS;
             txidnum = it == buffer.end() ? 0 : *(it++);
             tester.ReceivedResponse(peer, txidnum % MAX_TXHASHES);
+            break;
+        case 11: // No longer need tx by one type of identifier
+            txidnum = it == buffer.end() ? 0 : *(it++);
+            tester.ForgetTxHash(txidnum % MAX_TXHASHES, (txidnum / MAX_TXHASHES) & 1);
             break;
         default:
             assert(false);
