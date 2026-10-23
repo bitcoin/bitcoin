@@ -17,6 +17,7 @@
 #include <script/script.h>
 #include <sync.h>
 #include <test/util/common.h>
+#include <test/util/mining.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
@@ -83,12 +84,13 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
 
     auto& block_template_manager{*Assert(m_node.block_template_manager)};
     auto block_template{block_template_manager.CreateNewTemplate({
+        .use_mempool = false,
         .coinbase_output_script = CScript{} << i++ << OP_TRUE,
     })};
     BOOST_REQUIRE(block_template);
     auto pblock = std::make_shared<CBlock>(block_template->block);
-    pblock->hashPrevBlock = prev_hash;
-    pblock->nTime = ++time;
+    const auto& parent{*Assert(WITH_LOCK(::cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(prev_hash)))};
+    RebuildBlockForParent(*pblock, parent, /*time=*/++time, Params().GetConsensus());
 
     // Make the coinbase transaction with two outputs:
     // One zero-value one that has a unique pubkey to make sure that blocks at the same height can have a different hash
@@ -99,10 +101,6 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
     txCoinbase.vout[1].nValue = txCoinbase.vout[0].nValue;
     txCoinbase.vout[0].nValue = 0;
     txCoinbase.vin[0].scriptWitness.SetNull();
-    // Always pad with OP_0 as dummy extraNonce (also avoids bad-cb-length error for block <=16)
-    const int prev_height{WITH_LOCK(::cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(prev_hash)->nHeight)};
-    txCoinbase.vin[0].scriptSig = CScript{} << prev_height + 1 << OP_0;
-    txCoinbase.nLockTime = static_cast<uint32_t>(prev_height);
     pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
 
     return pblock;
@@ -383,5 +381,40 @@ BOOST_AUTO_TEST_CASE(witness_commitment_index)
     pblock.vtx[0] = MakeTransactionRef(std::move(txCoinbase));
 
     BOOST_CHECK_EQUAL(GetWitnessCommitmentIndex(pblock), 2);
+}
+
+BOOST_FIXTURE_TEST_CASE(rebuild_block_for_parent_target, RegTestingSetup)
+{
+    const auto& consensus{Params().GetConsensus()};
+    const auto& genesis{Params().GenesisBlock()};
+    const auto parent_hash{genesis.GetHash()};
+    CBlockIndex parent{genesis};
+    parent.phashBlock = &parent_hash;
+    --parent.nBits;
+
+    // Regtest uses the parent's target until the min-difficulty delay is exceeded.
+    const auto threshold{uint32_t(2 * consensus.nPowTargetSpacing)};
+    for (auto delay : {threshold, threshold + 1}) {
+        CBlock block{genesis};
+        RebuildBlockForParent(block, parent, parent.nTime + delay, consensus);
+        BOOST_CHECK_EQUAL(block.nBits, delay > threshold ? genesis.nBits : parent.nBits);
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(rebuild_block_for_parent_coinbase, RegTestingSetup)
+{
+    const auto& consensus{Params().GetConsensus()};
+    const CBlockIndex* genesis{WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Genesis())};
+    const int length{consensus.nSubsidyHalvingInterval};
+    std::vector<std::shared_ptr<CBlock>> chain;
+    BOOST_REQUIRE(BuildChain(m_node, genesis, CScript{} << OP_TRUE, length, chain));
+    BOOST_CHECK_EQUAL(chain[0]->vtx[0]->vin[0].scriptSig.size(), 2);
+    for (int i{0}; i < length; ++i) {
+        const auto& block{chain[i]};
+        BOOST_CHECK_EQUAL(block->vtx[0]->nLockTime, i);
+        BOOST_CHECK_EQUAL(block->vtx[0]->vout[0].nValue, GetBlockSubsidy(i + 1, consensus));
+        BOOST_REQUIRE(m_node.chainman->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
+    }
+    BOOST_CHECK_EQUAL(WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Height()), length);
 }
 BOOST_AUTO_TEST_SUITE_END()
