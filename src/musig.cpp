@@ -164,8 +164,8 @@ std::vector<uint8_t> CreateMuSig2Nonce(MuSig2SecNonce& secnonce, const uint256& 
 
 std::optional<uint256> CreateMuSig2PartialSig(const uint256& sighash, const CKey& our_seckey, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys, const std::map<CPubKey, std::vector<uint8_t>>& pubnonces, MuSig2SecNonce& secnonce, const std::vector<std::pair<uint256, bool>>& tweaks)
 {
-    secp256k1_keypair keypair;
-    if (!secp256k1_keypair_create(GetSecp256k1SignContext(), &keypair, UCharCast(our_seckey.begin()))) return std::nullopt;
+    const KeyPair keypair{our_seckey.ComputeKeyPair(/*merkle_root=*/nullptr)};
+    if (!keypair.IsValid()) return std::nullopt;
 
     // Get the keyagg cache and aggregate pubkey
     secp256k1_musig_keyagg_cache keyagg_cache;
@@ -231,7 +231,7 @@ std::optional<uint256> CreateMuSig2PartialSig(const uint256& sighash, const CKey
 
     // Create partial signature
     secp256k1_musig_partial_sig psig;
-    if (!secp256k1_musig_partial_sign(secp256k1_context_static, &psig, secnonce.Get(), &keypair, &keyagg_cache, &session)) {
+    if (!secp256k1_musig_partial_sign(secp256k1_context_static, &psig, secnonce.Get(), keypair.GetSecpKeypair(), &keyagg_cache, &session)) {
         return std::nullopt;
     }
     // The secnonce must be deleted after signing to prevent nonce reuse.
