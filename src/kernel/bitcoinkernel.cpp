@@ -1265,6 +1265,26 @@ void btck_chainstate_manager_options_update_chainstate_db_in_memory(
     opts.m_chainstate_load_options.coins_db_in_memory = chainstate_db_in_memory == 1;
 }
 
+int btck_chainstate_manager_options_set_prune_target(
+    btck_ChainstateManagerOptions* chainman_opts,
+    uint64_t prune_target_bytes)
+{
+    static_assert(btck_MIN_PRUNE_TARGET_BYTES == MIN_DISK_SPACE_FOR_BLOCK_FILES);
+    static_assert(btck_PRUNE_TARGET_MANUAL == node::BlockManager::PRUNE_TARGET_MANUAL);
+
+    if (prune_target_bytes != 0 &&
+        prune_target_bytes != btck_PRUNE_TARGET_MANUAL &&
+        prune_target_bytes < btck_MIN_PRUNE_TARGET_BYTES) {
+        LogError("Failed to set prune target: target must be 0, btck_PRUNE_TARGET_MANUAL, or at least %u bytes.", MIN_DISK_SPACE_FOR_BLOCK_FILES);
+        return -1;
+    }
+    auto& opts{btck_ChainstateManagerOptions::get(chainman_opts)};
+    LOCK(opts.m_mutex);
+    opts.m_blockman_options.prune_target = prune_target_bytes;
+    opts.m_chainstate_load_options.prune = (prune_target_bytes > 0);
+    return 0;
+}
+
 btck_ChainstateManager* btck_chainstate_manager_create(
     const btck_ChainstateManagerOptions* chainman_opts)
 {

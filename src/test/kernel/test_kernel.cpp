@@ -894,7 +894,17 @@ BOOST_AUTO_TEST_CASE(btck_chainman_tests)
     BOOST_CHECK(chainman_opts.SetWipeDbs(/*wipe_block_tree=*/true, /*wipe_chainstate=*/true));
     BOOST_CHECK(chainman_opts.SetWipeDbs(/*wipe_block_tree=*/false, /*wipe_chainstate=*/true));
     BOOST_CHECK(chainman_opts.SetWipeDbs(/*wipe_block_tree=*/false, /*wipe_chainstate=*/false));
+    BOOST_CHECK(!chainman_opts.SetPruneTarget(btck_MIN_PRUNE_TARGET_BYTES - 1));
+    BOOST_CHECK(chainman_opts.SetPruneTarget(btck_PRUNE_TARGET_MANUAL));
+    BOOST_CHECK(chainman_opts.SetPruneTarget(btck_MIN_PRUNE_TARGET_BYTES));
+    // Verify constructing chainman with prune target enabled
     ChainMan chainman{context, chainman_opts};
+
+    // Verify constructing chainman with unpruned target
+    TestDirectory unpruned_dir;
+    ChainstateManagerOptions unpruned_opts{context, PathToString(unpruned_dir.m_directory), PathToString(unpruned_dir.m_directory / "blocks")};
+    BOOST_CHECK(unpruned_opts.SetPruneTarget(0));
+    ChainMan unpruned_chainman{context, unpruned_opts};
 }
 
 std::unique_ptr<ChainMan> create_chainman(TestDirectory& test_directory,

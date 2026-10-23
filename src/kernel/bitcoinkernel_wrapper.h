@@ -1330,6 +1330,11 @@ public:
     {
         btck_chainstate_manager_options_update_chainstate_db_in_memory(get(), chainstate_db_in_memory);
     }
+
+    bool SetPruneTarget(uint64_t prune_target_bytes)
+    {
+        return btck_chainstate_manager_options_set_prune_target(get(), prune_target_bytes) == 0;
+    }
 };
 
 class ChainView : public View<btck_Chain>
