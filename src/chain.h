@@ -55,17 +55,15 @@ enum BlockStatus : uint32_t {
      * sigops, size, merkle root. Implies all parents are at least TREE but not necessarily TRANSACTIONS.
      *
      * If a block's validity is at least VALID_TRANSACTIONS, CBlockIndex::nTx will be set. If a block and all previous
-     * blocks back to the genesis block or an assumeutxo snapshot block are at least VALID_TRANSACTIONS,
-     * CBlockIndex::m_chain_tx_count will be set.
+     * blocks back to the genesis block are at least VALID_TRANSACTIONS, CBlockIndex::m_chain_tx_count will be set.
      */
     BLOCK_VALID_TRANSACTIONS =    3,
 
     //! Outputs do not overspend inputs, no double spends, coinbase output ok, no immature coinbase spends, BIP30.
-    //! Implies all previous blocks back to the genesis block or an assumeutxo snapshot block are at least VALID_CHAIN.
+    //! Implies all previous blocks back to the genesis block are at least VALID_CHAIN.
     BLOCK_VALID_CHAIN        =    4,
 
-    //! Scripts & signatures ok. Implies all previous blocks back to the genesis block or an assumeutxo snapshot block
-    //! are at least VALID_SCRIPTS.
+    //! Scripts & signatures ok. Implies all previous blocks back to the genesis block are at least VALID_SCRIPTS.
     BLOCK_VALID_SCRIPTS      =    5,
 
     //! All validity bits.
@@ -124,16 +122,10 @@ public:
 
     //! (memory only) Number of transactions in the chain up to and including this block.
     //! This value will be non-zero if this block and all previous blocks back
-    //! to the genesis block or an assumeutxo snapshot block have reached the
-    //! VALID_TRANSACTIONS level.
+    //! to the genesis block have reached the VALID_TRANSACTIONS level.
     uint64_t m_chain_tx_count{0};
 
     //! Verification status of this block. See enum BlockStatus
-    //!
-    //! Note: this value is modified to show BLOCK_OPT_WITNESS during UTXO snapshot
-    //! load to avoid a spurious startup failure requiring -reindex.
-    //! @sa NeedsRedownload
-    //! @sa ActivateSnapshot
     uint32_t nStatus GUARDED_BY(::cs_main){0};
 
     //! block header
@@ -202,14 +194,11 @@ public:
     }
 
     /**
-     * Check whether this block and all previous blocks back to the genesis block or an assumeutxo snapshot block have
-     * reached VALID_TRANSACTIONS and had transactions downloaded (and stored to disk) at some point.
+     * Check whether this block and all previous blocks back to the genesis block have reached VALID_TRANSACTIONS and had
+     * transactions downloaded (and stored to disk) at some point.
      *
      * Does not imply the transactions are consensus-valid (ConnectTip might fail)
      * Does not imply the transactions are still stored on disk. (IsBlockPruned might return true)
-     *
-     * Note that this will be true for the snapshot base block, if one is loaded, since its m_chain_tx_count value will have
-     * been set manually based on the related AssumeutxoData entry.
      */
     bool HaveNumChainTxs() const { return m_chain_tx_count != 0; }
 

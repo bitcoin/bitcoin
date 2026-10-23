@@ -186,11 +186,7 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
                     (coin.IsSpent() ? added_an_entry : updated_an_entry) = true;
                     coin = newcoin;
                 }
-                if (COutPoint op(txid, 0); !stack.back()->map().contains(op) && !newcoin.out.scriptPubKey.IsUnspendable() && m_rng.randbool()) {
-                    stack.back()->EmplaceCoinInternalDANGER(op, std::move(newcoin));
-                } else {
-                    stack.back()->AddCoin(op, std::move(newcoin), /*possible_overwrite=*/!coin.IsSpent() || m_rng.randbool());
-                }
+                stack.back()->AddCoin(COutPoint(txid, 0), std::move(newcoin), /*possible_overwrite=*/!coin.IsSpent() || m_rng.randbool());
             } else {
                 // Spend the coin.
                 removed_an_entry = true;
@@ -1056,7 +1052,7 @@ BOOST_FIXTURE_TEST_CASE(coins_db_leveldb_layout, FlushTest)
     CCoinsViewDB base{{.path = m_args.GetDataDirBase() / "coins_db_leveldb_layout", .cache_bytes = 1_MiB, .wipe_data = true}, {}};
     CCoinsViewCache cache{&base};
 
-    cache.EmplaceCoinInternalDANGER(COutPoint{outpoint}, Coin{coin});
+    cache.AddCoin(outpoint, Coin{coin}, /*possible_overwrite=*/true);
     cache.SetBestBlock(block_hash);
     cache.Sync();
 
@@ -1110,23 +1106,6 @@ BOOST_AUTO_TEST_CASE(ccoins_addcoin_exception_keeps_usage_balanced)
     BOOST_CHECK_EQUAL(cache.AccessCoin(outpoint), coin1);
 }
 
-BOOST_AUTO_TEST_CASE(ccoins_emplace_duplicate_keeps_usage_balanced)
-{
-    CCoinsViewCacheTest cache{&CoinsViewEmpty::Get()};
-
-    const COutPoint outpoint{Txid::FromUint256(m_rng.rand256()), m_rng.rand32()};
-
-    const Coin coin1{CTxOut{m_rng.randrange(10), CScript{} << m_rng.randbytes(CScriptBase::STATIC_SIZE + 1)}, 1, false};
-    cache.EmplaceCoinInternalDANGER(outpoint, Coin{coin1});
-    cache.SelfTest();
-
-    const Coin coin2{CTxOut{m_rng.randrange(20), CScript{} << m_rng.randbytes(CScriptBase::STATIC_SIZE + 2)}, 2, false};
-    cache.EmplaceCoinInternalDANGER(outpoint, Coin{coin2});
-    cache.SelfTest();
-
-    BOOST_CHECK_EQUAL(cache.AccessCoin(outpoint), coin1);
-}
-
 BOOST_AUTO_TEST_CASE(ccoins_reset_guard)
 {
     CCoinsViewTest root{m_rng};
@@ -1140,7 +1119,7 @@ BOOST_AUTO_TEST_CASE(ccoins_reset_guard)
     const COutPoint outpoint{Txid::FromUint256(m_rng.rand256()), m_rng.rand32()};
 
     const Coin coin{CTxOut{m_rng.randrange(10), CScript{} << m_rng.randbytes(CScriptBase::STATIC_SIZE + 1)}, 1, false};
-    cache.EmplaceCoinInternalDANGER(outpoint, Coin{coin});
+    cache.AddCoin(outpoint, Coin{coin}, /*possible_overwrite=*/true);
     BOOST_CHECK_EQUAL(cache.GetDirtyCount(), 1U);
 
     uint256 cache_best_block{m_rng.rand256()};
