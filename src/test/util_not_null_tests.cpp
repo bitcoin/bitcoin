@@ -41,6 +41,8 @@ concept NotNullType = requires { typename util::NotNull<T>; };
 
 BOOST_AUTO_TEST_CASE(check_ctor_ref)
 {
+    static_assert(NotNullType<std::shared_ptr<int>>);
+
     static_assert(!NotNullType<std::shared_ptr<int>&>);
     static_assert(!NotNullType<int*&>);
 }
@@ -77,6 +79,9 @@ BOOST_AUTO_TEST_CASE(check_ctor_conv)
     // NNPtr from NNUniqPtr may throw:
     static_assert(!std::is_nothrow_constructible_v<NNPtr, NNUniqPtr&&>);
     static_assert(std::is_constructible_v<NNPtr, NNUniqPtr&&>);
+    // NNUniqPtr -> NNPtr is implicit, just like the underlying conversion:
+    static_assert(std::convertible_to<NNUniqPtr&&, NNPtr>);
+    static_assert(std::convertible_to<UniqPtr&&, Ptr>);
 
     // Extraction is implicit:
     static_assert(std::convertible_to<NNUniqPtr&&, UniqPtr>);
@@ -167,6 +172,9 @@ BOOST_AUTO_TEST_CASE(check_derived)
 
     util::NotNull p{std::make_shared<MyDerived>()};
     util::NotNull q{std::make_shared<MyBase>()};
+    // Conversion is implicit:
+    static_assert(std::convertible_to<const decltype(p)&, decltype(q)>);
+    static_assert(std::is_assignable_v<decltype(q)&, const decltype(p)&>);
     q = p;
     const bool same_ptr{q == p};
     BOOST_CHECK(same_ptr);
