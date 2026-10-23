@@ -29,8 +29,7 @@ from test_framework.wallet_util import (
 class WalletSendTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        # whitelist peers to speed up tx relay / mempool sync
-        self.noban_tx_relay = True
+        self.noban_tx_relay = True  # faster tx relay
         self.supports_cli = False
         self.extra_args = [["-datacarriersize=16"]] * self.num_nodes
         getcontext().prec = 8 # Satoshi precision for Decimal

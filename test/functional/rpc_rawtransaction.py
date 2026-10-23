@@ -73,8 +73,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             [],
             ["-fastprune", "-prune=1"],
         ]
-        # whitelist peers to speed up tx relay / mempool sync
-        self.noban_tx_relay = True
+        self.noban_tx_relay = True  # faster tx relay
         self.supports_cli = False
 
     def setup_network(self):

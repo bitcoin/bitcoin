@@ -34,8 +34,7 @@ class PackageRelayTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 4
-        # hugely speeds up the test, as it involves multiple hops of tx relay.
-        self.noban_tx_relay = True
+        self.noban_tx_relay = True  # faster tx relay
 
     def create_basic_1p1c(self, wallet):
         low_fee_parent = wallet.create_self_transfer(fee_rate=0, confirmed_only=True)

@@ -94,8 +94,7 @@ class P2PBloomFilter(P2PInterface):
 class FilterTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        # whitelist peers to speed up tx relay / mempool sync
-        self.noban_tx_relay = True
+        self.noban_tx_relay = True  # faster tx relay
         self.extra_args = [[
             '-peerbloomfilters',
         ]]

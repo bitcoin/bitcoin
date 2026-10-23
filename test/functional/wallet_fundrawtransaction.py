@@ -48,8 +48,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         ] for i in range(self.num_nodes)]
 
         self.setup_clean_chain = True
-        # whitelist peers to speed up tx relay / mempool sync
-        self.noban_tx_relay = True
+        self.noban_tx_relay = True  # faster tx relay
         self.rpc_timeout = 90  # to prevent timeouts in `test_transaction_too_large`
         self.supports_cli = False
 

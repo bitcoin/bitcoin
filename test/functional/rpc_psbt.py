@@ -85,9 +85,7 @@ class PSBTTest(BitcoinTestFramework):
             ["-changetype=legacy", "-maxfeerate=1"],
             ["-maxfeerate=1"]
         ]
-        # whitelist peers to speed up tx relay / mempool sync
-        for args in self.extra_args:
-            args.append("-whitelist=noban@127.0.0.1")
+        self.noban_tx_relay = True  # faster tx relay
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()

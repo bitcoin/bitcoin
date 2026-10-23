@@ -81,8 +81,7 @@ CLTV_HEIGHT = 111
 class BIP65Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        # whitelist peers to speed up tx relay / mempool sync
-        self.noban_tx_relay = True
+        self.noban_tx_relay = True  # faster tx relay
         self.extra_args = [[
             f'-testactivationheight=cltv@{CLTV_HEIGHT}',
             '-acceptnonstdtxn=1',  # cltv_invalidate is nonstandard
