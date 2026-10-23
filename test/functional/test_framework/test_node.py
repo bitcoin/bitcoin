@@ -21,6 +21,7 @@ import collections
 import sys
 from collections.abc import Iterable
 from pathlib import Path
+from typing import TypeVar
 
 from .authproxy import (
     AuthServiceProxy,
@@ -29,7 +30,7 @@ from .authproxy import (
 )
 from . import coverage
 from .messages import NODE_P2P_V2
-from .p2p import P2P_SERVICES, P2P_SUBVERSION
+from .p2p import P2P_SERVICES, P2P_SUBVERSION, P2PInterface
 from .util import (
     MAX_NODES,
     assert_equal,
@@ -48,6 +49,9 @@ BITCOIND_PROC_WAIT_TIMEOUT = 60
 # The size of the blocks xor key
 # from InitBlocksdirXorKey::xor_key.size()
 NUM_XOR_BYTES = 8
+
+P2PInterfaceT = TypeVar("P2PInterfaceT", bound=P2PInterface)
+
 # Many systems have a 128kB limit for a command size. Depending on the
 # platform, this limit may be larger or smaller. Moreover, when using the
 # 'bitcoin' command, it may internally insert more args, which must be
@@ -764,7 +768,17 @@ class TestNode():
             if assert_msg:
                 self._raise_assertion_error(assert_msg)
 
-    def add_p2p_connection(self, p2p_conn, *, wait_for_verack=True, send_version=True, supports_v2_p2p=None, wait_for_v2_handshake=True, expect_success=True, **kwargs):
+    def add_p2p_connection(
+        self,
+        p2p_conn: P2PInterfaceT,
+        *,
+        wait_for_verack=True,
+        send_version=True,
+        supports_v2_p2p=None,
+        wait_for_v2_handshake=True,
+        expect_success=True,
+        **kwargs,
+    ) -> P2PInterfaceT:
         """Add an inbound p2p connection to the node.
 
         This method adds the p2p connection to the self.p2ps list and also
@@ -823,7 +837,18 @@ class TestNode():
 
         return p2p_conn
 
-    def add_outbound_p2p_connection(self, p2p_conn, *, wait_for_verack=True, wait_for_disconnect=False, p2p_idx, connection_type="outbound-full-relay", supports_v2_p2p=None, advertise_v2_p2p=None, **kwargs):
+    def add_outbound_p2p_connection(
+        self,
+        p2p_conn: P2PInterfaceT,
+        *,
+        wait_for_verack=True,
+        wait_for_disconnect=False,
+        p2p_idx,
+        connection_type="outbound-full-relay",
+        supports_v2_p2p=None,
+        advertise_v2_p2p=None,
+        **kwargs,
+    ) -> P2PInterfaceT:
         """Add an outbound p2p connection from node. Must be an
         "outbound-full-relay", "block-relay-only", "addr-fetch", "feeler" or "manual" connection.
 
