@@ -281,7 +281,6 @@ static void MuHashDiv(benchmark::Bench& bench)
 
 static void MuHashPrecompute(benchmark::Bench& bench)
 {
-    MuHash3072 acc;
     FastRandomContext rng(true);
     std::vector<unsigned char> key{rng.randbytes(32)};
 
