@@ -10,29 +10,29 @@
 #include <fstream>
 #include <future>
 #include <iostream>
-#include <kj/async.h>
 #include <kj/common.h>
 #include <memory>
+#include <mp/proxy.h>
 #include <mp/proxy-io.h>
 #include <mp/util.h>
 #include <stdexcept>
 #include <string>
 #include <thread>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace fs = std::filesystem;
 
 static auto Spawn(mp::EventLoop& loop, const std::string& process_argv0, const std::string& new_exe_name)
 {
-    int pid;
-    const int fd = mp::SpawnProcess(pid, [&](int fd) -> std::vector<std::string> {
+    const auto [pid, socket] = mp::SpawnProcess([&](mp::SpawnConnectInfo info) -> std::vector<std::string> {
         fs::path path = process_argv0;
         path.remove_filename();
         path.append(new_exe_name);
-        return {path.string(), std::to_string(fd)};
+        return {path.string(), std::move(info)};
     });
-    return std::make_tuple(mp::ConnectStream<InitInterface>(loop, fd), pid);
+    return std::make_tuple(mp::ConnectStream<InitInterface>(loop, mp::MakeStream(loop, socket)), pid);
 }
 
 static void LogPrint(mp::LogMessage log_data)
@@ -55,6 +55,7 @@ int main(int argc, char** argv)
         loop.loop();
     });
     mp::EventLoop* loop = promise.get_future().get();
+    mp::EventLoopRef loop_ref{*loop};
 
     auto [printer_init, printer_pid] = Spawn(*loop, argv[0], "mpprinter");
     auto [calc_init, calc_pid] = Spawn(*loop, argv[0], "mpcalculator");
@@ -71,6 +72,7 @@ int main(int argc, char** argv)
     mp::WaitProcess(calc_pid);
     printer_init.reset();
     mp::WaitProcess(printer_pid);
+    loop_ref.reset();
     loop_thread.join();
     std::cout << "Bye!" << std::endl;
     return 0;

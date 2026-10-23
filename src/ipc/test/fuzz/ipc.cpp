@@ -35,25 +35,8 @@ public:
                 if (message.level == mp::Log::Raise) throw std::runtime_error(message.message);
             });
             auto pipe = loop.m_io_context.provider->newTwoWayPipe();
-
-            auto server_connection = std::make_unique<mp::Connection>(
-                loop,
-                kj::mv(pipe.ends[0]),
-                [&](mp::Connection& connection) {
-                    auto server_proxy = kj::heap<mp::ProxyServer<test::fuzz::messages::IpcFuzzInterface>>(
-                        std::make_shared<IpcFuzzImplementation>(), connection);
-                    return capnp::Capability::Client(kj::mv(server_proxy));
-                });
-            server_connection->onDisconnect([&] { server_connection.reset(); });
-
-            auto client_connection = std::make_unique<mp::Connection>(loop, kj::mv(pipe.ends[1]));
-            auto client_proxy = std::make_unique<mp::ProxyClient<test::fuzz::messages::IpcFuzzInterface>>(
-                client_connection->m_rpc_system->bootstrap(mp::ServerVatId().vat_id)
-                    .castAs<test::fuzz::messages::IpcFuzzInterface>(),
-                client_connection.get(),
-                /* destroy_connection= */ true);
-            (void)client_connection.release();
-
+            mp::ServeStream<test::fuzz::messages::IpcFuzzInterface>(loop, kj::mv(pipe.ends[0]), std::make_shared<IpcFuzzImplementation>());
+            auto client_proxy = mp::ConnectStream<test::fuzz::messages::IpcFuzzInterface>(loop, kj::mv(pipe.ends[1]));
             client_promise.set_value(std::move(client_proxy));
             loop.loop();
         });
