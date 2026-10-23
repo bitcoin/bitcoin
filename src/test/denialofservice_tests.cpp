@@ -537,6 +537,33 @@ BOOST_FIXTURE_TEST_CASE(orphan_reconsideration_interruptible, TestChain100Setup)
     BOOST_CHECK_EQUAL(mempool.size(), 1U + num_children / 2);
     BOOST_CHECK(!connman.ProcessMessagesOnce(peer));
 
+    // Create a new parent for the purpose of testing a single orphan is reconsidered per call.
+    mineBlocks(1);
+    const int child_count{2};
+    const auto new_parent{MakeTransactionRef(CreateValidMempoolTransaction(
+        {m_coinbase_txns[1]}, {COutPoint{m_coinbase_txns[1]->GetHash(), 0}}, /*input_height=*/2, {coinbaseKey},
+        std::vector<CTxOut>(child_count, CTxOut{5 * COIN, script}), /*submit=*/false))};
+
+    // Now create 2 children. Each spends the parent and a non-existing input.
+    for (int i{0}; i < child_count; ++i) {
+        CMutableTransaction mtx;
+        mtx.vin.emplace_back(COutPoint{new_parent->GetHash(), uint32_t(i)});
+        mtx.vin.emplace_back(COutPoint{Txid::FromUint256(m_rng.rand256()), 0});
+        mtx.vout.emplace_back(COIN, script);
+        send_tx(MakeTransactionRef(mtx));
+    }
+    BOOST_CHECK_EQUAL(peerman.GetOrphanTransactions().size(), child_count);
+
+    // Processing the parent will lead to processing a single orphan per run, even though each fails
+    // on a missing-input error (orphanage size does not decrease).
+    BOOST_CHECK(send_tx(new_parent));
+    BOOST_CHECK(mempool.exists(new_parent->GetHash()));
+    for (int i{0}; i < child_count; ++i) {
+        BOOST_CHECK(connman.ProcessMessagesOnce(peer));
+        BOOST_CHECK_EQUAL(peerman.GetOrphanTransactions().size(), child_count);
+    }
+    BOOST_CHECK(!connman.ProcessMessagesOnce(peer));
+
     peerman.FinalizeNode(peer);
 }
 
