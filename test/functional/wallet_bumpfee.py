@@ -36,10 +36,7 @@ from test_framework.util import (
     find_vout_for_address,
 )
 from test_framework.wallet import MiniWallet
-
-
-WALLET_PASSPHRASE = "test"
-WALLET_PASSPHRASE_TIMEOUT = 3600
+from test_framework.wallet_util import WalletUnlock
 
 # Fee rates (sat/vB)
 INSUFFICIENT =      1
@@ -72,10 +69,6 @@ class BumpFeeTest(BitcoinTestFramework):
         self.generate(self.nodes[1], 1)
 
     def run_test(self):
-        # Encrypt wallet for test_locked_wallet_fails test
-        self.nodes[1].encryptwallet(WALLET_PASSPHRASE)
-        self.nodes[1].walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
-
         peer_node, rbf_node = self.nodes
         rbf_node_address = rbf_node.getnewaddress()
 
@@ -479,7 +472,6 @@ def test_bumpfee_with_abandoned_descendant_succeeds(self, rbf_node, rbf_node_add
 
     # Restart the node with higher min relay fee so the descendant tx is no longer in mempool so that we can abandon it
     self.restart_node(1, ['-minrelaytxfee=0.00005'] + self.extra_args[1])
-    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     self.connect_nodes(1, 0)
     assert parent_id in rbf_node.getrawmempool()
     assert child_id not in rbf_node.getrawmempool()
@@ -492,7 +484,6 @@ def test_bumpfee_with_abandoned_descendant_succeeds(self, rbf_node, rbf_node_add
     assert parent_id not in rbf_node.getrawmempool()
     # Cleanup
     self.restart_node(1, self.extra_args[1])
-    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     self.connect_nodes(1, 0)
     self.clear_mempool()
 
@@ -568,7 +559,6 @@ def test_maxtxfee_fails(self, rbf_node, dest_address):
     # expected bump fee of 141 vbytes * 0.00200000 BTC / 1000 vbytes = 0.00002820 BTC
     # which exceeds maxtxfee and is expected to raise
     self.restart_node(1, ['-maxtxfee=0.000025'] + self.extra_args[1])
-    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     rbfid = spend_one_input(rbf_node, dest_address)
     # When user passed fee rate causes base fee to be above maxtxfee we fail early
     assert_raises_rpc_error(-4, "Specified or calculated fee 0.0000282 is too high (cannot be higher than -maxtxfee 0.000025)", rbf_node.bumpfee, rbfid, fee_rate=20)
@@ -602,7 +592,6 @@ def test_maxtxfee_fails(self, rbf_node, dest_address):
     ))
     self.start_node(1, extra_args=[f'-minrelaytxfee={high_min_relay_fee}', f'-maxtxfee={high_max_tx_fee}'])
     self.restart_node(1, self.extra_args[1])
-    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     self.connect_nodes(1, 0)
     self.clear_mempool()
 
@@ -791,12 +780,28 @@ def test_bumpfee_metadata(self, rbf_node, dest_address):
 
 
 def test_locked_wallet_fails(self, rbf_node, dest_address):
-    self.log.info('Test that locked wallet cannot bump txn')
-    rbfid = spend_one_input(rbf_node, dest_address)
-    rbf_node.walletlock()
+    # Create and fund an encrypted wallet
+    self.nodes[1].createwallet("encrypted", passphrase=self.default_wallet_pass)
+    encrypted_wallet = self.nodes[1].get_wallet_rpc("encrypted")
+    rbf_node.get_wallet_rpc(self.default_wallet_name).sendtoaddress(encrypted_wallet.getnewaddress(), 0.001)
+    self.generate(rbf_node, 1)
+
+    # Create an rbf transaction for the encrypted wallet
+    with WalletUnlock(encrypted_wallet, self.default_wallet_pass):
+        rbfid = spend_one_input(encrypted_wallet, dest_address)
+
+    self.log.info('Test that a locked wallet cannot bump txn')
+    encrypted_wallet.walletlock()
     assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first.",
-                            rbf_node.bumpfee, rbfid)
-    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
+                            encrypted_wallet.bumpfee, rbfid)
+
+    self.log.info('Test that an unlocked wallet can bump txn')
+    with WalletUnlock(encrypted_wallet, self.default_wallet_pass):
+        bumpfee_res = encrypted_wallet.bumpfee(rbfid)
+    assert bumpfee_res["errors"] == []
+
+    # Cleanup
+    encrypted_wallet.unloadwallet()
     self.clear_mempool()
 
 
@@ -938,7 +943,6 @@ def test_bumpfee_uncomputable_cluster(self, rbf_node, dest_address):
     # Note the bump below uses NORMAL (100 sat/vB); if that ever ends up under the
     # -minrelaytxfee here, CheckFeeRate() bails on its mempool minimum check instead.
     self.restart_node(1, ["-minrelaytxfee=0.0001"] + self.extra_args[1])
-    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     assert_equal(set(rbf_node.getrawmempool()), {seed["txid"] for seed in seeds})
     assert_equal(rbf_node.gettransaction(original_txid)["confirmations"], 0)
 
@@ -959,7 +963,6 @@ def test_bumpfee_uncomputable_cluster(self, rbf_node, dest_address):
     rbf_node.abandontransaction(original_txid)
     self.generate(rbf_node, 1, sync_fun=self.no_op)
     self.restart_node(1, self.extra_args[1])
-    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     self.connect_nodes(1, 0)
     self.sync_all()
 

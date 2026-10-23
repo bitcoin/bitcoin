@@ -46,9 +46,12 @@ class SignRawTransactionWithWalletTest(BitcoinTestFramework):
 
     def test_with_lock_outputs(self):
         self.log.info("Test correct error reporting when trying to sign a locked output")
-        self.nodes[0].encryptwallet("password")
-        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].signrawtransactionwithwallet, RAW_TX)
-        self.nodes[0].walletpassphrase("password", 9999)
+        self.nodes[0].createwallet("encrypted", passphrase=self.default_wallet_pass)
+        encrypted_wallet = self.nodes[0].get_wallet_rpc("encrypted")
+        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", encrypted_wallet.signrawtransactionwithwallet, RAW_TX)
+
+        # Clean up
+        encrypted_wallet.unloadwallet()
 
     def test_with_invalid_sighashtype(self):
         self.log.info("Test signrawtransactionwithwallet raises if an invalid sighashtype is passed")
@@ -147,7 +150,6 @@ class SignRawTransactionWithWalletTest(BitcoinTestFramework):
 
     def test_fully_signed_tx(self):
         self.log.info("Test signing a fully signed transaction does nothing")
-        self.nodes[0].walletpassphrase("password", 9999)
         self.generate(self.nodes[0], COINBASE_MATURITY + 1)
         rawtx = self.nodes[0].createrawtransaction([], [{self.nodes[0].getnewaddress(): 10}])
         fundedtx = self.nodes[0].fundrawtransaction(rawtx)
@@ -156,7 +158,6 @@ class SignRawTransactionWithWalletTest(BitcoinTestFramework):
         signedtx2 = self.nodes[0].signrawtransactionwithwallet(signedtx["hex"])
         assert_equal(signedtx2["complete"], True)
         assert_equal(signedtx["hex"], signedtx2["hex"])
-        self.nodes[0].walletlock()
 
     def OP_1NEGATE_test(self):
         self.log.info("Test OP_1NEGATE (0x4f) satisfies BIP62 minimal push standardness rule")
@@ -179,7 +180,6 @@ class SignRawTransactionWithWalletTest(BitcoinTestFramework):
 
     def test_signing_with_csv(self):
         self.log.info("Test signing a transaction containing a fully signed CSV input")
-        self.nodes[0].walletpassphrase("password", 9999)
         getcontext().prec = 8
 
         # Make sure CSV is active
@@ -213,7 +213,6 @@ class SignRawTransactionWithWalletTest(BitcoinTestFramework):
 
     def test_signing_with_cltv(self):
         self.log.info("Test signing a transaction containing a fully signed CLTV input")
-        self.nodes[0].walletpassphrase("password", 9999)
         getcontext().prec = 8
 
         # Make sure CLTV is active

@@ -607,17 +607,14 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.log.info("Test fundrawtxn with locked wallet and hardened derivation")
 
         df_wallet = self.nodes[1].get_wallet_rpc(self.default_wallet_name)
-        self.nodes[1].createwallet(wallet_name="locked_wallet")
+        self.nodes[1].createwallet(wallet_name="locked_wallet", passphrase=self.default_wallet_pass)
         wallet = self.nodes[1].get_wallet_rpc("locked_wallet")
 
         # Add some balance to the wallet (this will be reverted at the end of the test)
         df_wallet.sendall(recipients=[wallet.getnewaddress()])
         self.generate(self.nodes[1], 1)
 
-        # Encrypt wallet and import descriptors
-        wallet.encryptwallet("test")
-
-        with WalletUnlock(wallet, "test"):
+        with WalletUnlock(wallet, self.default_wallet_pass):
             wallet.importdescriptors([{
                 'desc': descsum_create(f'wpkh({ExtendedPrivateKey.generate().to_string()}/0h/*h)'),
                 'timestamp': 'now',
@@ -654,7 +651,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Transaction needs a change address, but we can't generate it.", wallet.fundrawtransaction, rawtx)
 
         # Refill the keypool.
-        with WalletUnlock(wallet, "test"):
+        with WalletUnlock(wallet, self.default_wallet_pass):
             wallet.keypoolrefill(8) #need to refill the keypool to get an internal change address
 
         assert_raises_rpc_error(-13, "walletpassphrase", wallet.sendtoaddress, self.nodes[0].getnewaddress(), 1.2)
@@ -669,7 +666,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_not_equal(fundedTx["changepos"], -1)
 
         # Now we need to unlock.
-        with WalletUnlock(wallet, "test"):
+        with WalletUnlock(wallet, self.default_wallet_pass):
             signedTx = wallet.signrawtransactionwithwallet(fundedTx['hex'])
             wallet.sendrawtransaction(signedTx['hex'])
             self.generate(self.nodes[1], 1)
