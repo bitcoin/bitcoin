@@ -894,6 +894,10 @@ BOOST_AUTO_TEST_CASE(btck_chainman_tests)
     BOOST_CHECK(chainman_opts.SetWipeDbs(/*wipe_block_tree=*/true, /*wipe_chainstate=*/true));
     BOOST_CHECK(chainman_opts.SetWipeDbs(/*wipe_block_tree=*/false, /*wipe_chainstate=*/true));
     BOOST_CHECK(chainman_opts.SetWipeDbs(/*wipe_block_tree=*/false, /*wipe_chainstate=*/false));
+    BOOST_CHECK(!chainman_opts.SetPruneTarget(btck_MIN_PRUNE_TARGET_BYTES - 1));
+    BOOST_CHECK(chainman_opts.SetPruneTarget(btck_MIN_PRUNE_TARGET_BYTES));
+    BOOST_CHECK(chainman_opts.SetPruneTarget(btck_PRUNE_TARGET_MANUAL));
+    BOOST_CHECK(chainman_opts.SetPruneTarget(0));
     ChainMan chainman{context, chainman_opts};
 }
 

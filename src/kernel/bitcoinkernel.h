@@ -1282,6 +1282,36 @@ BITCOINKERNEL_API void btck_chainstate_manager_options_update_chainstate_db_in_m
     int chainstate_db_in_memory) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
+ * @brief Special value for prune_target_bytes indicating manual pruning mode
+ * (equivalent to the -prune=1 command line option).
+ */
+static const uint64_t btck_PRUNE_TARGET_MANUAL = 0xFFFFFFFFFFFFFFFFULL;
+
+/**
+ * @brief Minimum allowed prune target in bytes (550 MiB). Prune targets below
+ * this (other than 0 for unpruned, or @ref btck_PRUNE_TARGET_MANUAL) are rejected.
+ */
+static const uint64_t btck_MIN_PRUNE_TARGET_BYTES = 550ULL * 1024ULL * 1024ULL;
+
+/**
+ * @brief Set block pruning target in bytes for the chainstate manager.
+ *
+ * Setting this option allows libbitcoinkernel to operate on pruned block storage
+ * or configure automatic block pruning.
+ *
+ * When set to 0, pruning is disabled. If enabled, the target must either be
+ * @ref btck_PRUNE_TARGET_MANUAL for manual pruning, or at least
+ * @ref btck_MIN_PRUNE_TARGET_BYTES (550 MiB).
+ *
+ * @param[in] chainstate_manager_options Non-null, created by @ref btck_chainstate_manager_options_create.
+ * @param[in] prune_target_bytes         Pruning target in bytes (0 to disable pruning).
+ * @return                               0 if the set was successful, non-zero if the target is invalid.
+ */
+BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_options_set_prune_target(
+    btck_ChainstateManagerOptions* chainstate_manager_options,
+    uint64_t prune_target_bytes) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
  * Destroy the chainstate manager options.
  */
 BITCOINKERNEL_API void btck_chainstate_manager_options_destroy(btck_ChainstateManagerOptions* chainstate_manager_options);
