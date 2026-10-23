@@ -340,8 +340,9 @@ bool SignTransaction(CWallet& wallet, CMutableTransaction& mtx) {
     LOCK(wallet.cs_wallet);
 
     if (wallet.IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
-        // Make a blank psbt
-        PartiallySignedTransaction psbtx(mtx);
+        // Make a blank PSBT, this means that users will need to have an
+        // external signer software that supports BIP-0370.
+        PartiallySignedTransaction psbtx(mtx, /*version=*/2);
 
         // First fill transaction with our data without signing,
         // so external signers are not asked to sign more than once.

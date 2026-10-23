@@ -430,6 +430,7 @@ void TestGUIWatchOnly(interfaces::Node& node, TestChain100Setup& test)
     QVERIFY(decoded_psbt);
     util::Result<PartiallySignedTransaction> psbt = DecodeRawPSBT(MakeByteSpan(*decoded_psbt));
     QVERIFY(psbt);
+    QCOMPARE(psbt->GetVersion(), 0);
 }
 
 void TestGUI(interfaces::Node& node)
