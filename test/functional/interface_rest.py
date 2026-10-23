@@ -640,5 +640,13 @@ class RESTTest(BitcoinTestFramework):
         assert_cache_control("/mempool/not-a-valid-path", no_store, status=400)
         assert_cache_control(f"/deploymentinfo/{non_existing_blockhash}", no_store, status=400)
 
+        self.log.info("Test /spenttxouts for a block without undo data")
+        node = self.nodes[0]
+        stale = self.generateblock(node, self.wallet.get_address(), [], submit=False, sync_fun=self.no_op)
+        self.generate(node, 1)
+        assert_equal(node.submitblock(stale["hex"]), "inconclusive")
+        with node.assert_debug_log(expected_msgs=[], unexpected_msgs=["OpenUndoFile failed"]):
+            self.test_rest_request(f"/spenttxouts/{stale['hash']}", status=404, ret_type=RetType.OBJ)
+
 if __name__ == '__main__':
     RESTTest(__file__).main()
