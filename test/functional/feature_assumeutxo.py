@@ -10,6 +10,8 @@ The assumeutxo value generated and used here is committed to in
 `CRegTestParams::m_assumeutxo_data` in `src/kernel/chainparams.cpp`.
 """
 import contextlib
+import os
+import threading
 
 from dataclasses import dataclass
 from test_framework.blocktools import (
@@ -205,6 +207,57 @@ class AssumeutxoTest(BitcoinTestFramework):
         msg = "Unable to load UTXO snapshot: Can't activate a snapshot when mempool not empty"
         assert_raises_rpc_error(-32603, msg, node.loadtxoutset, dump_output_path)
 
+        self.restart_node(2, extra_args=self.extra_args[2])
+
+    def test_mempool_blocked_during_load(self, dump_output_path):
+        if not hasattr(os, "mkfifo"):
+            self.log.info("Skipping mempool-blocked-during-load test, os.mkfifo is not available")
+            return
+        self.log.info("Test transactions are not accepted to the mempool while the snapshot is loading")
+        node = self.nodes[2]
+        assert_equal(node.getmempoolinfo()["size"], 0)
+        with open(dump_output_path, "rb") as f:
+            snapshot = f.read()
+        # Metadata: 5 magic bytes, 2 version, 4 network magic, 32 base blockhash, 8 coins count
+        metadata_size = 51
+
+        # Feed the snapshot through a FIFO so the load can be paused after the
+        # initial mempool check has passed.
+        fifo_path = os.path.join(self.options.tmpdir, "snapshot.fifo")
+        os.mkfifo(fifo_path)
+        result = {}
+
+        def load():
+            rpc = node.create_new_rpc_connection(client_timeout=self.rpc_timeout)
+            try:
+                result["loaded"] = rpc.loadtxoutset(fifo_path)
+            except Exception as e:
+                result["error"] = e
+
+        thread = threading.Thread(target=load)
+        thread.start()
+        with open(fifo_path, "wb") as fifo:
+            with node.busy_wait_for_debug_log([b"[snapshot] loading"]):
+                fifo.write(snapshot[:metadata_size])
+                fifo.flush()
+            wallet = MiniWallet(node)
+            tx = wallet.create_self_transfer()
+            assert_equal(node.testmempoolaccept([tx["hex"]])[0]["allowed"], True)
+            assert_raises_rpc_error(-26, "snapshot-loading", node.sendrawtransaction, tx["hex"])
+            package = [t["hex"] for t in wallet.create_self_transfer_chain(chain_length=2)]
+            assert_equal(node.submitpackage(package)["package_msg"], "snapshot-loading")
+            assert_equal(node.getmempoolinfo()["size"], 0)
+            fifo.write(snapshot[metadata_size:])
+        thread.join()
+        os.remove(fifo_path)
+
+        assert "error" not in result
+        assert_equal(result["loaded"]["coins_loaded"], SNAPSHOT_BASE_HEIGHT)
+        assert_equal(len(node.getchainstates()["chainstates"]), 2)
+
+        # Drop the snapshot chainstate again for the tests below.
+        self.restart_node(2, extra_args=["-reindex-chainstate=1", *self.extra_args[2]])
+        assert_equal(len(node.getchainstates()["chainstates"]), 1)
         self.restart_node(2, extra_args=self.extra_args[2])
 
     def test_invalid_file_path(self):
@@ -512,6 +565,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         self.test_snapshot_with_less_work(dump_output['path'])
         self.test_invalid_mempool_state(dump_output['path'])
+        self.test_mempool_blocked_during_load(dump_output['path'])
         self.test_invalid_snapshot_scenarios(dump_output['path'])
         self.test_invalid_chainstate_scenarios()
         self.test_invalid_file_path()

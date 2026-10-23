@@ -1775,6 +1775,12 @@ MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTra
     assert(active_chainstate.GetMempool() != nullptr);
     CTxMemPool& pool{*active_chainstate.GetMempool()};
 
+    if (!test_accept && active_chainstate.m_chainman.m_snapshot_loading) {
+        TxValidationState state;
+        state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "snapshot-loading");
+        return MempoolAcceptResult::Failure(state);
+    }
+
     std::vector<COutPoint> coins_to_uncache;
 
     auto args = MemPoolAccept::ATMPArgs::SingleAccept(accept_time, bypass_limits, coins_to_uncache, test_accept);
@@ -1805,6 +1811,12 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
     AssertLockHeld(cs_main);
     assert(!package.empty());
     assert(std::all_of(package.cbegin(), package.cend(), [](const auto& tx){return tx != nullptr;}));
+
+    if (!test_accept && active_chainstate.m_chainman.m_snapshot_loading) {
+        PackageValidationState state;
+        state.Invalid(PackageValidationResult::PCKG_POLICY, "snapshot-loading");
+        return PackageMempoolAcceptResult(state, {});
+    }
 
     std::vector<COutPoint> coins_to_uncache;
     auto result = [&]() EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
@@ -5645,7 +5657,18 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
         if (mempool && mempool->size() > 0) {
             return util::Error{Untranslated("Can't activate a snapshot when mempool not empty")};
         }
+
+        if (m_snapshot_loading) {
+            return util::Error{Untranslated("Can't activate a snapshot while another one is being loaded")};
+        }
+        // cs_main is released while the snapshot is populated, keep the mempool
+        // empty until then.
+        m_snapshot_loading = true;
     }
+    struct ResetSnapshotLoading {
+        ChainstateManager& chainman;
+        ~ResetSnapshotLoading() { WITH_LOCK(::cs_main, chainman.m_snapshot_loading = false); }
+    } reset_snapshot_loading{*this};
 
     int64_t current_coinsdb_cache_size{0};
     int64_t current_coinstip_cache_size{0};

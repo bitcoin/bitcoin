@@ -1087,6 +1087,11 @@ public:
         because CBlockIndexWorkComparator tiebreaker rules are not applied. */
     CBlockIndex* m_best_header GUARDED_BY(::cs_main){nullptr};
 
+    //! Set while ActivateSnapshot() is loading a snapshot. The mempool has to
+    //! stay empty until the snapshot chainstate is added, so no transactions
+    //! are accepted to it in the meantime.
+    bool m_snapshot_loading GUARDED_BY(::cs_main){false};
+
     //! The total number of bytes available for us to use across all in-memory
     //! coins caches. This will be split somehow across chainstates.
     size_t m_total_coinstip_cache{0};
