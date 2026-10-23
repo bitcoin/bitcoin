@@ -62,19 +62,20 @@ class AssumeutxoTest(BitcoinTestFramework):
 
     def set_test_params(self):
         """Use the pregenerated, deterministic chain up to height 199."""
-        self.num_nodes = 4
+        self.num_nodes = 5
         self.rpc_timeout = 120
         self.extra_args = [
             [],
             ["-fastprune", "-prune=1", "-blockfilterindex=1", "-coinstatsindex=1"],
             ["-persistmempool=0","-txindex=1", "-blockfilterindex=1", "-coinstatsindex=1"],
+            [],
             []
         ]
 
     def setup_network(self):
         """Start with the nodes disconnected so that one can generate a snapshot
         including blocks the other hasn't yet seen."""
-        self.add_nodes(4)
+        self.add_nodes(self.num_nodes)
         self.start_nodes(extra_args=self.extra_args)
 
     def test_invalid_snapshot_scenarios(self, valid_snapshot_path):
@@ -218,6 +219,38 @@ class AssumeutxoTest(BitcoinTestFramework):
         node = self.nodes[0]
         msg = "Unable to load UTXO snapshot: Population failed: Work does not exceed active chainstate."
         assert_raises_rpc_error(-32603, msg, node.loadtxoutset, dump_output_path)
+
+    def test_snapshot_base_block_already_on_disk(self, dump_output_path):
+        self.log.info("Test background validation when snapshot base block is already on disk")
+        node0 = self.nodes[0]
+        node4 = self.nodes[4]
+
+        snapshot_hash = node0.getblockhash(SNAPSHOT_BASE_HEIGHT)
+        snapshot_block = node0.getblock(snapshot_hash, 0)
+
+        # Store the base block before loadtxoutset() sets BlockManager::m_snapshot_height.
+        # The block cannot be connected until its historical parents arrive.
+        submit_result = node4.submitblock(snapshot_block)
+        assert submit_result in (None, "inconclusive"), submit_result
+        assert_equal(node4.getblock(snapshot_hash)["height"], SNAPSHOT_BASE_HEIGHT)
+
+        loaded = node4.loadtxoutset(dump_output_path)
+        assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
+
+        # Restart after loading the snapshot to check that the persisted block
+        # index state can still resume background validation.
+        self.restart_node(4, extra_args=self.extra_args[4])
+
+        # Feed only the historical blocks missing from the background chainstate.
+        # The base block itself is already on disk in the normal blockfile range.
+        # Background validation should still be able to connect it.
+        for height in range(START_HEIGHT + 1, SNAPSHOT_BASE_HEIGHT):
+            block_hash = node0.getblockhash(height)
+            submit_result = node4.submitblock(node0.getblock(block_hash, 0))
+            assert submit_result in (None, "inconclusive"), submit_result
+
+        self.wait_until(lambda: len(node4.getchainstates()['chainstates']) == 1)
+        assert_equal(node4.getblockcount(), SNAPSHOT_BASE_HEIGHT)
 
     def test_snapshot_block_invalidated(self, dump_output_path):
         self.log.info("Test snapshot is not loaded when base block is invalid.")
@@ -402,7 +435,6 @@ class AssumeutxoTest(BitcoinTestFramework):
         n0 = self.nodes[0]
         n1 = self.nodes[1]
         n2 = self.nodes[2]
-        n3 = self.nodes[3]
 
         self.mini_wallet = MiniWallet(n0)
 
@@ -411,7 +443,7 @@ class AssumeutxoTest(BitcoinTestFramework):
             n.setmocktime(n.getblockheader(n.getbestblockhash())['time'])
 
         # Generate a series of blocks that `n0` will have in the snapshot,
-        # but that n1 and n2 don't yet see.
+        # but the other nodes don't yet see.
         assert_equal(n0.getblockcount(), START_HEIGHT)
         blocks = {START_HEIGHT: Block(n0.getbestblockhash(), 1, START_HEIGHT + 1)}
         for i in range(100):
@@ -450,15 +482,14 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.test_headers_not_synced(dump_output['path'])
 
         # In order for the snapshot to activate, we have to ferry over the new
-        # headers to n1 and n2 so that they see the header of the snapshot's
-        # base block while disconnected from n0.
+        # headers to the other nodes so that they see the header of the
+        # snapshot's base block while disconnected from n0.
         for i in range(1, 300):
             block = n0.getblock(n0.getblockhash(i), 0)
-            # make n1 and n2 aware of the new header, but don't give them the
-            # block.
-            n1.submitheader(block)
-            n2.submitheader(block)
-            n3.submitheader(block)
+            # Make the other nodes aware of the new header, but don't give them
+            # the block.
+            for n in self.nodes[1:]:
+                n.submitheader(block)
 
         # Ensure everyone is seeing the same headers.
         for n in self.nodes:
@@ -473,6 +504,8 @@ class AssumeutxoTest(BitcoinTestFramework):
             assert_equal(output["nchaintx"], blocks[SNAPSHOT_BASE_HEIGHT].chain_tx)
 
         check_dump_output(dump_output)
+
+        self.test_snapshot_base_block_already_on_disk(dump_output['path'])
 
         # Mine more blocks on top of the snapshot that n1 hasn't yet seen. This
         # will allow us to test n1's sync-to-tip on top of a snapshot.
