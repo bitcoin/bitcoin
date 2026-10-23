@@ -39,7 +39,6 @@
 #include <prevector.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <protocol.h>
 #include <rpc/protocol.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/request.h>
@@ -65,11 +64,9 @@
 #include <util/expected.h>
 #include <util/fs.h>
 #include <util/log.h>
-#include <util/result.h>
 #include <util/string.h>
 #include <util/syserror.h>
 #include <util/time.h>
-#include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
 #include <versionbits.h>
@@ -3517,7 +3514,7 @@ static RPCMethod loadtxoutset()
         {
             {"path",
                 RPCArg::Type::STR,
-                RPCArg::Optional::NO,
+                RPCArg::Optional::OMITTED,
                 "path to the snapshot file. If relative, will be prefixed by datadir."},
         },
         RPCResult{
@@ -3532,48 +3529,9 @@ static RPCMethod loadtxoutset()
         RPCExamples{
             HelpExampleCli("-rpcclienttimeout=0 loadtxoutset", "utxo.dat")
         },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
-{
-    NodeContext& node = EnsureAnyNodeContext(request.context);
-    ChainstateManager& chainman = EnsureChainman(node);
-    const fs::path path{AbsPathForConfigVal(EnsureArgsman(node), fs::u8path(self.Arg<std::string_view>("path")))};
-
-    FILE* file{fsbridge::fopen(path, "rb")};
-    AutoFile afile{file};
-    if (afile.IsNull()) {
-        throw JSONRPCError(
-            RPC_INVALID_PARAMETER,
-            "Couldn't open file " + path.utf8string() + " for reading.");
-    }
-
-    SnapshotMetadata metadata{chainman.GetParams().MessageStart()};
-    try {
-        afile >> metadata;
-    } catch (const std::ios_base::failure& e) {
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Unable to parse metadata: %s", e.what()));
-    }
-
-    auto activation_result{chainman.ActivateSnapshot(afile, metadata, false)};
-    if (!activation_result) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Unable to load UTXO snapshot: %s. (%s)", util::ErrorString(activation_result).original, path.utf8string()));
-    }
-
-    // Because we can't provide historical blocks during tip or background sync.
-    // Update local services to reflect we are a limited peer until we are fully sync.
-    node.connman->RemoveLocalServices(NODE_NETWORK);
-    // Setting the limited state is usually redundant because the node can always
-    // provide the last 288 blocks, but it doesn't hurt to set it.
-    node.connman->AddLocalServices(NODE_NETWORK_LIMITED);
-
-    CBlockIndex& snapshot_index{*CHECK_NONFATAL(*activation_result)};
-
-    UniValue result(UniValue::VOBJ);
-    result.pushKV("coins_loaded", metadata.m_coins_count);
-    result.pushKV("tip_hash", snapshot_index.GetBlockHash().ToString());
-    result.pushKV("base_height", snapshot_index.nHeight);
-    result.pushKV("path", fs::PathToString(path));
-    return result;
-},
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
+            throw JSONRPCError(RPC_METHOD_NOT_FOUND, self.ToString());
+        },
     };
 }
 
@@ -3675,7 +3633,7 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"blockchain", &getdescriptoractivity},
         {"blockchain", &getblockfilter},
         {"blockchain", &dumptxoutset},
-        {"blockchain", &loadtxoutset},
+        {"hidden", &loadtxoutset},
         {"blockchain", &getchainstates},
         {"hidden", &invalidateblock},
         {"hidden", &reconsiderblock},
