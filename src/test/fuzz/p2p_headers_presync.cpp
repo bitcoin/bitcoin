@@ -208,7 +208,7 @@ FUZZ_TARGET(p2p_headers_presync, .init = initialize)
             [&]() NO_THREAD_SAFETY_ANALYSIS {
                 // Send a compact block
                 auto block = finalized_block();
-                CBlockHeaderAndShortTxIDs cmpct_block{block, fuzzed_data_provider.ConsumeIntegral<uint64_t>()};
+                CBlockHeaderAndShortTxIDs cmpct_block{block, fuzzed_data_provider.ConsumeIntegral<uint64_t>(), {}};
 
                 all_headers.push_back(block);
 
