@@ -44,6 +44,7 @@ from test_framework.psbt import (
     PSBT_IN_TAP_BIP32_DERIVATION,
     PSBT_IN_TAP_INTERNAL_KEY,
     PSBT_IN_TAP_LEAF_SCRIPT,
+    PSBT_IN_TAP_MERKLE_ROOT,
     PSBT_IN_WITNESS_UTXO,
     PSBT_IN_FINAL_SCRIPTWITNESS,
     PSBT_OUT_MUSIG2_PARTICIPANT_PUBKEYS,
@@ -51,7 +52,7 @@ from test_framework.psbt import (
     PSBT_OUT_TAP_TREE,
     PSBT_OUT_SCRIPT,
 )
-from test_framework.script import CScript, LEAF_VERSION_TAPSCRIPT, OP_TRUE, SIGHASH_ALL, SIGHASH_ANYONECANPAY, hash160
+from test_framework.script import CScript, LEAF_VERSION_TAPSCRIPT, OP_TRUE, SIGHASH_ALL, SIGHASH_ANYONECANPAY, hash160, taproot_construct
 from test_framework.script_util import MIN_STANDARD_TX_NONWITNESS_SIZE, output_key_to_p2tr_script
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -471,6 +472,88 @@ class PSBTTest(BitcoinTestFramework):
             tap_script(leaf_script_a, [control_block, control_block_with_path]),
             tap_script(leaf_script_b, [control_block_with_longer_path]),
         ])
+
+    def test_decodepsbt_tap_leaf_script_control_block_warnings(self):
+        self.log.info("Test that decodepsbt reports why a PSBT_IN_TAP_LEAF_SCRIPT control block could not be a genuine taproot leaf")
+
+        # A genuine two-leaf taproot tree, so control_block_a below carries a real Merkle branch
+        # node (as opposed to a single-leaf tree, whose only control block has none).
+        internal_pubkey = bytes.fromhex(H_POINT)
+        leaf_script_a = CScript([OP_TRUE])
+        leaf_script_b = CScript([OP_TRUE, OP_TRUE])
+        tap = taproot_construct(internal_pubkey, [("a", leaf_script_a), ("b", leaf_script_b)])
+        leaf_a = tap.leaves["a"]
+        leaf_ver = leaf_a.version
+        control_block_a = bytes([leaf_ver + tap.negflag]) + tap.internal_pubkey + leaf_a.merklebranch
+
+        tx = CTransaction()
+        tx.vin = [CTxIn(outpoint=COutPoint(hash=int('aa' * 32, 16), n=0), scriptSig=b"")]
+        tx.vout = [CTxOut(nValue=0, scriptPubKey=b"")]
+
+        def decoded_tap_script(leaf_script, record_leaf_ver, control_block, merkle_root=None):
+            input_map = {
+                bytes([PSBT_IN_TAP_LEAF_SCRIPT]) + control_block: bytes(leaf_script) + bytes([record_leaf_ver]),
+            }
+            if merkle_root is not None:
+                input_map[PSBT_IN_TAP_MERKLE_ROOT] = merkle_root
+            psbt = PSBT(
+                g=PSBTMap({PSBT_GLOBAL_UNSIGNED_TX: tx.serialize()}),
+                i=[PSBTMap(input_map)],
+                o=[PSBTMap({})],
+            ).to_base64()
+            return self.nodes[0].decodepsbt(psbt)["inputs"][0]["taproot_scripts"][0]
+
+        # A genuine leaf with the correct Merkle root on the input: no warning.
+        result = decoded_tap_script(leaf_script_a, leaf_ver, control_block_a, merkle_root=tap.merkle_root)
+        assert "control_block_warnings" not in result
+
+        # Skip script records with nonsensical leaf version (odd).
+        result = decoded_tap_script(leaf_script_a, leaf_ver + 1, control_block_a, merkle_root=tap.merkle_root)
+        assert_equal(result["control_block_warnings"], [{
+            "control_block": control_block_a.hex(),
+            "warning": "leaf version is not a valid tapscript version (BIP341 requires it to be even)",
+        }])
+
+        # Skip script records with invalid control block sizes. A PSBT_IN_TAP_LEAF_SCRIPT key
+        # that isn't 33 + 32*n bytes (n >= 0) is rejected by PSBT deserialization itself (see
+        # psbt.h), so decodepsbt can only ever see this check fail for a control block that
+        # *is* 33 + 32*n bytes but exceeds BIP341's 128-node maximum path length -- deserialization
+        # does not enforce that upper bound.
+        oversized_control_block = control_block_a + bytes(32) * 128
+        result = decoded_tap_script(leaf_script_a, leaf_ver, oversized_control_block, merkle_root=tap.merkle_root)
+        assert_equal(result["control_block_warnings"], [{
+            "control_block": oversized_control_block.hex(),
+            "warning": "control block length is not 33 + 32*n bytes for some n in [0, 128]",
+        }])
+
+        # Skip script records that don't match the control block (flip an even bit of the
+        # control block's leaf-version byte, so it no longer matches record_leaf_ver).
+        mismatched_control_block = bytes([control_block_a[0] ^ 0x04]) + control_block_a[1:]
+        result = decoded_tap_script(leaf_script_a, leaf_ver, mismatched_control_block, merkle_root=tap.merkle_root)
+        assert_equal(result["control_block_warnings"], [{
+            "control_block": mismatched_control_block.hex(),
+            "warning": "control block's leaf-version byte does not match this record's leaf_ver",
+        }])
+
+        # Skip script records that don't match the provided Merkle root (flip a bit in the
+        # control block's Merkle branch node).
+        wrong_branch_control_block = control_block_a[:-1] + bytes([control_block_a[-1] ^ 0x01])
+        result = decoded_tap_script(leaf_script_a, leaf_ver, wrong_branch_control_block, merkle_root=tap.merkle_root)
+        assert_equal(result["control_block_warnings"], [{
+            "control_block": wrong_branch_control_block.hex(),
+            "warning": "computed Merkle root does not match this input's taproot_merkle_root",
+        }])
+
+        # Without a taproot_merkle_root on the input, the Merkle-root check cannot run: a control
+        # block that would only be rejected by that check is not claimed to have been verified...
+        result = decoded_tap_script(leaf_script_a, leaf_ver, wrong_branch_control_block)
+        assert "control_block_warnings" not in result
+        # ...while the other three checks, which don't need the Merkle root, still report.
+        result = decoded_tap_script(leaf_script_a, leaf_ver + 1, control_block_a)
+        assert_equal(result["control_block_warnings"], [{
+            "control_block": control_block_a.hex(),
+            "warning": "leaf version is not a valid tapscript version (BIP341 requires it to be even)",
+        }])
 
     def test_combinepsbt_preserves_unknown_fields(self):
         self.log.info("Test that combining PSBTs preserves unknown fields with the same and with distinct values per map.")
@@ -1727,6 +1810,7 @@ class PSBTTest(BitcoinTestFramework):
         self.test_combinepsbt_preserves_proprietary_fields()
         self.test_combinepsbt_global_xpub_origin_conflict()
         self.test_combinepsbt_tap_leaf_script_conflict()
+        self.test_decodepsbt_tap_leaf_script_control_block_warnings()
 
         self.test_combinepsbt_preserves_unknown_fields()
 
