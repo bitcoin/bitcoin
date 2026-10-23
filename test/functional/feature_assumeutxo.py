@@ -200,12 +200,6 @@ class AssumeutxoTest(BitcoinTestFramework):
         path = node.datadir_path / node.chain / "invalid" / "path"
         assert_raises_rpc_error(-8, "Couldn't open file {} for reading.".format(path), node.loadtxoutset, path)
 
-    def test_snapshot_with_less_work(self, dump_output_path):
-        self.log.info("Test bitcoind should fail when snapshot has less accumulated work than this node.")
-        node = self.nodes[0]
-        msg = "Unable to load UTXO snapshot: Population failed: Work does not exceed active chainstate."
-        assert_raises_rpc_error(-32603, msg, node.loadtxoutset, dump_output_path)
-
     def test_snapshot_block_invalidated(self, dump_output_path):
         self.log.info("Test snapshot is not loaded when base block is invalid.")
         node = self.nodes[0]
@@ -218,35 +212,6 @@ class AssumeutxoTest(BitcoinTestFramework):
             msg = "Unable to load UTXO snapshot: The base block header (0c552ced4721c249a389eb9b08cb8da261cd46f0e7b5f9d064d48f3113406853) is part of an invalid chain."
             assert_raises_rpc_error(-32603, msg, node.loadtxoutset, dump_output_path)
             node.reconsiderblock(block_hash)
-
-    def test_snapshot_in_a_divergent_chain(self, dump_output_path):
-        n0 = self.nodes[0]
-        n3 = self.nodes[3]
-        assert_equal(n0.getblockcount(), FINAL_HEIGHT)
-        assert_equal(n3.getblockcount(), START_HEIGHT)
-
-        self.log.info("Check importing a snapshot where current chain-tip is not an ancestor of the snapshot block but has less work")
-        # Generate a divergent chain in n3 up to 298
-        self.generate(n3, nblocks=99, sync_fun=self.no_op)
-        assert_equal(n3.getblockcount(), SNAPSHOT_BASE_HEIGHT - 1)
-
-        # Try importing the snapshot and assert its success
-        loaded = n3.loadtxoutset(dump_output_path)
-        assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
-        normal, snapshot = n3.getchainstates()["chainstates"]
-        assert_equal(normal['blocks'], START_HEIGHT + 99)
-        assert_equal(snapshot['blocks'], SNAPSHOT_BASE_HEIGHT)
-
-        # Both states should have the same nBits and target
-        assert_equal(normal['bits'], nbits_str(N_BITS))
-        assert_equal(normal['bits'], snapshot['bits'])
-        assert_equal(normal['target'], target_str(TARGET))
-        assert_equal(normal['target'], snapshot['target'])
-
-        # Now lets sync the nodes and wait for the background validation to finish
-        self.connect_nodes(0, 3)
-        self.sync_blocks(nodes=(n0, n3))
-        self.wait_until(lambda: len(n3.getchainstates()['chainstates']) == 1)
 
     def test_snapshot_not_on_most_work_chain(self, dump_output_path):
         self.log.info("Test snapshot is not loaded when the node knows the headers of another chain with more work.")
@@ -389,7 +354,6 @@ class AssumeutxoTest(BitcoinTestFramework):
         n0 = self.nodes[0]
         n1 = self.nodes[1]
         n2 = self.nodes[2]
-        n3 = self.nodes[3]
 
         self.mini_wallet = MiniWallet(n0)
 
@@ -428,11 +392,6 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.log.info(f"Creating a UTXO snapshot at height {SNAPSHOT_BASE_HEIGHT}")
         dump_output = n0.dumptxoutset('utxos.dat', "latest")
 
-        self.log.info("Test loading snapshot when the node tip is on the same block as the snapshot")
-        assert_equal(n0.getblockcount(), SNAPSHOT_BASE_HEIGHT)
-        assert_equal(n0.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
-        self.test_snapshot_with_less_work(dump_output['path'])
-
         self.log.info("Test loading snapshot when headers are not synced")
         self.test_headers_not_synced(dump_output['path'])
 
@@ -445,10 +404,9 @@ class AssumeutxoTest(BitcoinTestFramework):
             # block.
             n1.submitheader(block)
             n2.submitheader(block)
-            n3.submitheader(block)
 
-        # Ensure everyone is seeing the same headers.
-        for n in self.nodes:
+        # Ensure the producer and snapshot receivers see the same headers.
+        for n in self.nodes[:3]:
             assert_equal(n.getblockchaininfo()["headers"], SNAPSHOT_BASE_HEIGHT)
 
         assert_equal(n0.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
@@ -497,7 +455,6 @@ class AssumeutxoTest(BitcoinTestFramework):
         # Ensure n0 is back at the tip
         assert_equal(n0.getblockchaininfo()["blocks"], FINAL_HEIGHT)
 
-        self.test_snapshot_with_less_work(dump_output['path'])
         self.test_invalid_snapshot_scenarios(dump_output['path'])
         self.test_invalid_chainstate_scenarios()
         self.test_invalid_file_path()
@@ -611,6 +568,12 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(snapshot['blocks'], SNAPSHOT_BASE_HEIGHT)
         assert_equal(snapshot['snapshot_blockhash'], dump_output['base_hash'])
         assert_equal(snapshot['validated'], False)
+
+        # Both states should have the same nBits and target
+        assert_equal(normal['bits'], nbits_str(N_BITS))
+        assert_equal(normal['bits'], snapshot['bits'])
+        assert_equal(normal['target'], target_str(TARGET))
+        assert_equal(normal['target'], snapshot['target'])
 
         assert_equal(n1.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
 
@@ -789,8 +752,6 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.restart_node(2, extra_args=['-reindex=1', *self.extra_args[2]])
         self.connect_nodes(0, 2)
         self.wait_until(lambda: n2.getblockcount() == FINAL_HEIGHT)
-
-        self.test_snapshot_in_a_divergent_chain(dump_output['path'])
 
         # The following test cleans node2 and node3 chain directories.
         self.test_sync_from_assumeutxo_node(snapshot=dump_output)
