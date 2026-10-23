@@ -68,10 +68,10 @@ def fill_mempool(test_framework, node, *, tx_sync_fun=None):
     minrelayfee = node.getnetworkinfo()['relayfee']
 
     tx_batch_size = 1
-    num_of_batches = 75
+    num_of_batches = 80
     # Generate UTXOs to flood the mempool
     # 1 to create a tx initially that will be evicted from the mempool later
-    # 75 transactions each with a fee rate higher than the previous one
+    # up to 80 transactions each with a fee rate higher than the previous one
     ephemeral_miniwallet = MiniWallet(node, tag_name="fill_mempool_ephemeral_wallet")
     test_framework.generate(ephemeral_miniwallet, 1 + num_of_batches * tx_batch_size)
 
@@ -99,17 +99,29 @@ def fill_mempool(test_framework, node, *, tx_sync_fun=None):
     batch_fees = [(i + 1) * base_fee for i in range(num_of_batches)]
 
     test_framework.log.debug("Fill up the mempool with txs with higher fee rate")
-    for fee in batch_fees[:-3]:
-        send_batch(fee)
+    # How many batches fit depends on how much memory the platform's malloc uses for each, so keep
+    # sending them while two more would still fit (judging by the last one), and then send three more.
+    max_usage = node.getmempoolinfo()["maxmempool"]
+    usage = node.getmempoolinfo()["usage"]
+    num_sent = 0
+    while True:
+        send_batch(batch_fees[num_sent])
+        num_sent += 1
+        batch_usage = node.getmempoolinfo()["usage"] - usage
+        usage += batch_usage
+        if usage + 2 * batch_usage > max_usage:
+            break
+    test_framework.log.debug(f"Sent {num_sent} batches using {usage} bytes of mempool memory")
     tx_sync_fun() if tx_sync_fun else test_framework.sync_mempools()  # sync before any eviction
     assert_equal(node.getmempoolinfo()["mempoolminfee"], minrelayfee)
-    for fee in batch_fees[-3:]:
+    for fee in batch_fees[num_sent:num_sent + 3]:
         send_batch(fee)
+    num_sent += 3
     tx_sync_fun() if tx_sync_fun else test_framework.sync_mempools()  # sync after all evictions
 
     test_framework.log.debug("The tx should be evicted by now")
     # The number of transactions created should be greater than the ones present in the mempool
-    assert_greater_than(tx_batch_size * num_of_batches, len(node.getrawmempool()))
+    assert_greater_than(tx_batch_size * num_sent, len(node.getrawmempool()))
     # Initial tx created should not be present in the mempool anymore as it had a lower fee rate
     assert tx_to_be_evicted_id not in node.getrawmempool()
 
