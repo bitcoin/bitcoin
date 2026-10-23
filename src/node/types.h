@@ -43,6 +43,14 @@ enum class TxBroadcast : uint8_t {
     NO_MEMPOOL_PRIVATE_BROADCAST,
 };
 
+/// Why a transaction is being announced to all peers.
+enum class TxAnnounceReason : uint8_t {
+    /// The transaction was received from a peer and accepted to the mempool.
+    RELAY,
+    /// Any other reason, e.g. a local submission or a periodic reattempt.
+    REQUESTED,
+};
+
 } // namespace node
 
 #endif // BITCOIN_NODE_TYPES_H

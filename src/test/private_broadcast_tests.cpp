@@ -164,15 +164,20 @@ BOOST_AUTO_TEST_CASE(complete_all_initial_sends)
     BOOST_REQUIRE(pb.MarkResolved(tx));
     BOOST_CHECK_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::AlreadyPresent);
     BOOST_REQUIRE_EQUAL(pb.GetTxForNode(1).value(), tx);
-    BOOST_CHECK(pb.GetBroadcastInfo().empty());
+    BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), 1);
 
     // Receipt must not prevent either of the two remaining initial sends.
     BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/2, address).value(), tx);
     BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/3, address).value(), tx);
 
-    BOOST_CHECK_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::AlreadyPresent);
-    pb.NodeDisconnected(/*nodeid=*/1);
     BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/4, address).has_value());
+    pb.NodeDisconnected(/*nodeid=*/1);
+    BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/5, address).has_value());
+    BOOST_CHECK_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::AlreadyPresent);
+    pb.NodeDisconnected(/*nodeid=*/2);
+    BOOST_CHECK_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::AlreadyPresent);
+    pb.NodeDisconnected(/*nodeid=*/3);
+    BOOST_CHECK_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::Added);
 }
 
 BOOST_AUTO_TEST_CASE(stale_unpicked_tx)
@@ -212,8 +217,11 @@ BOOST_AUTO_TEST_CASE(send_attempt_limit)
             BOOST_REQUIRE(pb.TryGrantRetry(tx));
         }
         BOOST_CHECK(pb.HavePendingTransactions());
-        BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/node_id++, address).value(), tx);
+        const NodeId this_node_id{node_id++};
+        BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/this_node_id, address).value(), tx);
+        pb.NodeDisconnected(this_node_id);
     }
+    pb.MarkResolved(tx);
 
     // The transaction and its complete send history remain available, but no
     // further connections should be opened for it.
@@ -228,13 +236,13 @@ BOOST_AUTO_TEST_CASE(send_attempt_limit)
     clock += PrivateBroadcast::INITIAL_STALE_DURATION + 1min;
     BOOST_CHECK(pb.GetStale().empty());
 
-    // An exhausted transaction does not prevent another transaction from being sent.
+    // A finished transaction does not prevent another transaction from being sent.
     const auto next_tx{MakeDummyTx(/*id=*/2, /*num_witness=*/0)};
     BOOST_REQUIRE_EQUAL(pb.Add(next_tx), PrivateBroadcast::AddResult::Added);
     BOOST_CHECK(pb.HavePendingTransactions());
     BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/node_id++, address).value(), next_tx);
 
-    // Re-adding an exhausted transaction resets its state and starts a fresh
+    // Re-adding a finished transaction resets its state and starts a fresh
     // initial stale period.
     BOOST_REQUIRE_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::Added);
     BOOST_CHECK(pb.HavePendingTransactions());
@@ -261,13 +269,15 @@ BOOST_AUTO_TEST_CASE(reset_with_equivalent_transaction_reference)
     BOOST_REQUIRE_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::Added);
     BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/0, address).value(), tx);
     pb.NodeConfirmedReception(/*nodeid=*/0);
+    pb.NodeDisconnected(/*nodeid=*/0);
     const auto confirmed_info{pb.GetBroadcastInfo()};
     BOOST_REQUIRE_EQUAL(confirmed_info.size(), 1);
     BOOST_REQUIRE_EQUAL(confirmed_info[0].peers.size(), 1);
     BOOST_CHECK(confirmed_info[0].peers[0].received.has_value());
     BOOST_CHECK(!pb.HavePendingTransactions());
+    pb.MarkResolved(tx);
 
-    // A distinct CTransactionRef with the same WTXID must reset the exhausted
+    // A distinct CTransactionRef with the same WTXID must reset the finished
     // transaction, including its send and confirmation history.
     BOOST_REQUIRE_EQUAL(pb.Add(equivalent_tx), PrivateBroadcast::AddResult::Added);
     BOOST_CHECK(pb.HavePendingTransactions());
