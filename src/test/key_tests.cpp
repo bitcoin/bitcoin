@@ -6,6 +6,7 @@
 
 #include <common/system.h>
 #include <key_io.h>
+#include <pubkey.h>
 #include <span.h>
 #include <streams.h>
 #include <secp256k1_extrakeys.h>
@@ -16,6 +17,7 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -222,7 +224,7 @@ static CPubKey UnserializePubkey(const std::vector<uint8_t>& data)
     return pubkey;
 }
 
-static unsigned int GetLen(unsigned char chHeader)
+static uint32_t GetLen(uint8_t chHeader)
 {
     if (chHeader == 2 || chHeader == 3)
         return CPubKey::COMPRESSED_SIZE;
@@ -237,21 +239,23 @@ static void CmpSerializationPubkey(const CPubKey& pubkey)
     stream << pubkey;
     CPubKey pubkey2;
     stream >> pubkey2;
+    BOOST_CHECK(stream.empty());
     BOOST_CHECK(pubkey == pubkey2);
 }
 
 BOOST_AUTO_TEST_CASE(pubkey_unserialize)
 {
-    for (uint8_t i = 2; i <= 7; ++i) {
-        CPubKey key = UnserializePubkey({0x02});
-        BOOST_CHECK(!key.IsValid());
-        CmpSerializationPubkey(key);
-        key = UnserializePubkey(std::vector<uint8_t>(GetLen(i), i));
-        CmpSerializationPubkey(key);
-        if (i == 5) {
-            BOOST_CHECK(!key.IsValid());
-        } else {
-            BOOST_CHECK(key.IsValid());
+    // The first byte must uniquely determine the length of every accepted encoding, checked through one byte past the largest one
+    for (uint32_t header{0}; header < 256; ++header) {
+        for (uint32_t size{0}; size <= CPubKey::SIZE + 1; ++size) {
+            BOOST_TEST_CONTEXT("header=" << header << " size=" << size) {
+                const std::vector<uint8_t> bytes(size, header);
+                const CPubKey key{bytes};
+                const auto expected_size{size == GetLen(header) ? size : 0}; // A length mismatch invalidates the key (size 0)
+                BOOST_CHECK_EQUAL(key.size(), expected_size);
+                BOOST_CHECK(key == UnserializePubkey(bytes));
+                CmpSerializationPubkey(key);
+            }
         }
     }
 }

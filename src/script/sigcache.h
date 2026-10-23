@@ -39,7 +39,9 @@ static_assert(DEFAULT_VALIDATION_CACHE_BYTES == DEFAULT_SIGNATURE_CACHE_BYTES + 
 class SignatureCache
 {
 private:
-    //! Entries are SHA256(nonce || 'E' or 'S' || 31 zero bytes || signature hash || public key || signature):
+    /** Entries are SHA256(nonce [32 bytes] || 'E' or 'S' || 31 zero bytes || signature hash [32 bytes] || public key || signature), where the signature excludes the sighash type byte.
+     * The preimage is unambiguous because the public key is self-delimiting: a valid CPubKey's length follows from its first byte, and an XOnlyPubKey is always 32 bytes.
+     */
     CSHA256 m_salted_hasher_ecdsa;
     CSHA256 m_salted_hasher_schnorr;
     typedef CuckooCache::cache<uint256, SignatureCacheHasher> map_type;
@@ -52,9 +54,11 @@ public:
     SignatureCache(const SignatureCache&) = delete;
     SignatureCache& operator=(const SignatureCache&) = delete;
 
-    void ComputeEntryECDSA(uint256& entry, const uint256 &hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubkey) const;
+    //! Requires a valid ECDSA public-key encoding and a signature without the sighash byte
+    uint256 ComputeEntryECDSA(const uint256& hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubkey) const;
 
-    void ComputeEntrySchnorr(uint256& entry, const uint256 &hash, std::span<const unsigned char> sig, const XOnlyPubKey& pubkey) const;
+    //! Requires a Schnorr signature without the optional sighash byte
+    uint256 ComputeEntrySchnorr(const uint256& hash, std::span<const unsigned char> sig, const XOnlyPubKey& pubkey) const;
 
     bool Get(const uint256& entry, bool erase);
 
@@ -70,6 +74,7 @@ private:
 public:
     CachingTransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, bool storeIn, SignatureCache& signature_cache, PrecomputedTransactionData& txdataIn) : TransactionSignatureChecker(txToIn, nInIn, amountIn, txdataIn, MissingDataBehavior::ASSERT_FAIL), store(storeIn), m_signature_cache(signature_cache)  {}
 
+    // Direct calls require the input guarantees documented on the base hooks
     bool VerifyECDSASignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const override;
     bool VerifySchnorrSignature(std::span<const unsigned char> sig, const XOnlyPubKey& pubkey, const uint256& sighash) const override;
 };
