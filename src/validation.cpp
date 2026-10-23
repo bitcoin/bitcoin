@@ -5696,7 +5696,7 @@ util::Result<void> ChainstateManager::ActivateSnapshot(
 
         const CBlockIndex* snapshot_start_block{m_blockman.LookupBlockIndex(base_blockhash)};
         if (!snapshot_start_block) {
-            return util::Error{Untranslated(strprintf("The base block header (%s) must appear in the headers chain. Make sure all headers are syncing, and call loadtxoutset again",
+            return util::Error{Untranslated(strprintf("The base block header (%s) must appear in the headers chain",
                           base_blockhash.ToString()))};
         }
 
@@ -6220,7 +6220,8 @@ Chainstate& ChainstateManager::AddChainstate(std::unique_ptr<Chainstate> chainst
     assert(&curr_chainstate == m_chainstates.back().get());
 
     // Transfer possession of the mempool to the chainstate.
-    // Mempool is empty at this point because we're still in IBD.
+    // Mempool is empty at this point because snapshot chainstates are only
+    // added during startup, before the mempool is loaded.
     assert(!prev_chainstate.m_mempool || prev_chainstate.m_mempool->size() == 0);
     assert(!curr_chainstate.m_mempool);
     std::swap(curr_chainstate.m_mempool, prev_chainstate.m_mempool);
