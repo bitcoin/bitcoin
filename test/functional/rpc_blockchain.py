@@ -747,6 +747,7 @@ class BlockchainTest(BitcoinTestFramework):
         block.solve()
         node.submitheader(block.serialize().hex())
         assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", lambda: node.getblock(block.hash_hex))
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", node.getrawtransaction, block.vtx[0].txid_hex, 0, block.hash_hex)
 
         self.log.info("Test getblock when block data is available but undo data isn't")
         # Submits a block building on the header-only block, so it can't be connected and has no undo data
