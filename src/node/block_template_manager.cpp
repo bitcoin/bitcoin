@@ -14,6 +14,7 @@
 #include <node/kernel_notifications.h>
 #include <node/miner.h>
 #include <node/mining_args.h>
+#include <node/tx_collection.h>
 #include <primitives/block.h>
 #include <sync.h>
 #include <uint256.h>
@@ -47,6 +48,11 @@ std::unique_ptr<CBlockTemplate> BlockTemplateManager::CreateNewTemplate(const Bl
         &m_mempool,
         MergeMiningOptions(options, m_block_create_args),
     }.CreateNewBlock();
+}
+
+std::unique_ptr<TxCollection> BlockTemplateManager::CreateTxCollection(std::vector<Wtxid> wtxids)
+{
+    return std::make_unique<TxCollection>(std::move(wtxids), m_chainman, m_mempool);
 }
 
 bool BlockTemplateManager::SubmitBlock(const std::shared_ptr<const CBlock>& block, std::string& reason, std::string& debug)
