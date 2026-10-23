@@ -128,7 +128,7 @@ std::map<CPubKey, std::vector<CPubKey>> FlatSigningProvider::GetAllMuSig2Partici
 void FlatSigningProvider::SetMuSig2SecNonce(const uint256& session_id, MuSig2SecNonce&& nonce) const
 {
     if (!Assume(musig2_secnonces)) return;
-    auto [it, inserted] = musig2_secnonces->try_emplace(session_id, std::move(nonce));
+    const bool inserted{musig2_secnonces->Add(session_id, std::move(nonce))};
     // No secnonce should exist for this session yet.
     Assert(inserted);
 }
@@ -136,15 +136,15 @@ void FlatSigningProvider::SetMuSig2SecNonce(const uint256& session_id, MuSig2Sec
 std::optional<std::reference_wrapper<MuSig2SecNonce>> FlatSigningProvider::GetMuSig2SecNonce(const uint256& session_id) const
 {
     if (!Assume(musig2_secnonces)) return std::nullopt;
-    const auto& it = musig2_secnonces->find(session_id);
-    if (it == musig2_secnonces->end()) return std::nullopt;
-    return it->second;
+    MuSig2SecNonce* secnonce = musig2_secnonces->Get(session_id);
+    if (!secnonce) return std::nullopt;
+    return *secnonce;
 }
 
 void FlatSigningProvider::DeleteMuSig2Session(const uint256& session_id) const
 {
     if (!Assume(musig2_secnonces)) return;
-    musig2_secnonces->erase(session_id);
+    musig2_secnonces->Remove(session_id);
 }
 
 FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
