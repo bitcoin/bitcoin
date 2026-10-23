@@ -23,6 +23,9 @@ printf -v BITCOIN_CONFIG "%q " \
  -DCMAKE_CXX_FLAGS_DEBUG= \
  -DBUILD_FOR_FUZZING=ON \
  -DSANITIZERS=memory \
+`# Unlike the other jobs that define BOOST_MULTI_INDEX_ENABLE_SAFE_MODE,` \
+`# BOOST_MULTI_INDEX_ENABLE_INVARIANT_CHECKING is not defined here, as it` \
+`# would push the job past the 240-minute limit on the Warp runner.` \
  -DAPPEND_CPPFLAGS="-DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE -U_FORTIFY_SOURCE"  `# _FORTIFY_SOURCE is not compatible with MSAN`
 export BITCOIN_CONFIG
 export USE_INSTRUMENTED_LIBCPP="MemoryWithOrigins"
