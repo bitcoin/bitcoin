@@ -581,6 +581,10 @@ class AssumeutxoTest(BitcoinTestFramework):
         txout_result = n1.gettxout(coinbase_tx['txid'], 0)
         assert_equal(txout_result['scriptPubKey']['desc'], coinbase_output_descriptor)
 
+        self.log.info("Script history is unavailable even when the index is synced to the background chain")
+        self.wait_until(lambda: n1.getindexinfo()['txoscriptindex'] == {'synced': True, 'best_block_height': START_HEIGHT})
+        assert_raises_rpc_error(-1, "Script history is unavailable until assumeutxo background validation completes.", n1.getscripthistory, coinbase_output_descriptor)
+
         def check_tx_counts(final: bool) -> None:
             """Check nTx and nChainTx intermediate values right after loading
             the snapshot, and final values after the snapshot is validated."""
@@ -697,6 +701,10 @@ class AssumeutxoTest(BitcoinTestFramework):
             'txoscriptindex': COMPLETE_IDX,
         }
         self.wait_until(lambda: n1.getindexinfo() == completed_idx_state)
+
+        self.log.info("Script history becomes available after background validation and index synchronization")
+        history = n1.getscripthistory(coinbase_output_descriptor, 0, {"start_height": SNAPSHOT_BASE_HEIGHT, "end_height": SNAPSHOT_BASE_HEIGHT, "include_mempool": False, "include_spending_transactions": False})
+        assert_equal([tx['txid'] for tx in history['transactions']], [coinbase_tx['txid']])
 
         self.log.info("Re-check nTx and nChainTx values")
         check_tx_counts(final=True)
