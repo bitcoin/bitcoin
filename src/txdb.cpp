@@ -55,6 +55,75 @@ struct CoinEntry {
 
 } // namespace
 
+std::vector<std::byte> RawCoinDataDBWriter::Batch::Take()
+{
+    std::vector<std::byte> out{std::move(m_bytes)};
+    m_bytes.clear();
+    m_bytes.reserve(m_limit);
+    return out;
+}
+
+std::vector<std::byte> RawCoinDataDBWriter::Batch::Add(const COutPoint& outpoint, const Coin& coin)
+{
+    std::vector<std::byte> to_send;
+
+    m_key.clear();
+    m_value.clear();
+    m_key << CoinEntry(&outpoint);
+    m_value << coin;
+
+    const size_t add{sizeof(uint32_t) * 2 + m_key.size() + m_value.size()};
+    if (!m_bytes.empty() && m_bytes.size() + add > m_limit) to_send = Take();
+
+    const auto append = [this](std::span<const std::byte> bytes) {
+        m_bytes.insert(m_bytes.end(), bytes.begin(), bytes.end());
+    };
+    const uint32_t key_size{static_cast<uint32_t>(m_key.size())};
+    const uint32_t value_size{static_cast<uint32_t>(m_value.size())};
+    append(std::as_bytes(std::span{&key_size, 1}));
+    append(std::span<const std::byte>{m_key.data(), m_key.size()});
+    append(std::as_bytes(std::span{&value_size, 1}));
+    append(std::span<const std::byte>{m_value.data(), m_value.size()});
+    return to_send;
+}
+
+RawCoinDataDBWriter::RawCoinDataDBWriter(CDBWrapper& db, uint64_t flush_size) :
+    m_db{db},
+    m_batch{db},
+    m_flush_size{flush_size} { }
+
+void RawCoinDataDBWriter::Write(std::span<const std::byte> batch)
+{
+    std::span<const std::byte> in{batch};
+    while (!in.empty()) {
+        uint32_t key_size{0};
+        uint32_t value_size{0};
+        if (in.size() < sizeof(key_size)) throw std::runtime_error{"truncated coin data batch"};
+        std::memcpy(&key_size, in.data(), sizeof(key_size));
+        in = in.subspan(sizeof(key_size));
+        if (in.size() < key_size + sizeof(value_size)) throw std::runtime_error{"truncated coin data batch"};
+        const auto key{in.first(key_size)};
+        in = in.subspan(key_size);
+        std::memcpy(&value_size, in.data(), sizeof(value_size));
+        in = in.subspan(sizeof(value_size));
+        if (in.size() < value_size) throw std::runtime_error{"truncated coin data batch"};
+        m_batch.Write(key, in.first(value_size));
+        in = in.subspan(value_size);
+        if (m_batch.ApproximateSize() >= m_flush_size) Flush();
+    }
+}
+
+void RawCoinDataDBWriter::Flush()
+{
+    m_db.WriteBatch(m_batch);
+    m_batch.Clear();
+}
+
+void RawCoinDataDBWriter::WriteBestBlock(const uint256& block_hash)
+{
+    m_db.Write(DB_BEST_BLOCK, block_hash);
+}
+
 CCoinsViewDB::CCoinsViewDB(DBParams db_params, CoinsViewOptions options) :
     m_db_params{std::move(db_params)},
     m_options{std::move(options)},

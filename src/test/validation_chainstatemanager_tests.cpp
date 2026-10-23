@@ -22,6 +22,7 @@
 #include <util/byte_units.h>
 #include <util/result.h>
 #include <util/vector.h>
+#include <utxo_snapshot.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -33,7 +34,6 @@
 
 using node::BlockManager;
 using node::KernelNotifications;
-using node::SnapshotMetadata;
 
 BOOST_FIXTURE_TEST_SUITE(validation_chainstatemanager_tests, TestingSetup)
 

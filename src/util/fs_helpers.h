@@ -44,6 +44,12 @@ bool FileCommit(FILE* file);
  */
 void DirectoryCommit(const fs::path& dirname);
 
+/**
+ * Sync the contents of every regular file in a directory. DirectoryCommit makes
+ * the names durable; this makes the data durable.
+ */
+bool DirectoryFilesCommit(const fs::path& dirname);
+
 bool TruncateFile(FILE* file, unsigned int length);
 
 /**

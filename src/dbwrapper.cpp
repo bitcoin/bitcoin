@@ -218,6 +218,52 @@ size_t CDBBatch::ApproximateSize() const
     return m_impl_batch->batch.ApproximateSize();
 }
 
+namespace {
+
+/** A file that accepts Sync() and does not act on it. */
+class NoSyncFile final : public leveldb::WritableFile
+{
+public:
+    explicit NoSyncFile(std::unique_ptr<leveldb::WritableFile> file) : m_file{std::move(file)} {}
+
+    leveldb::Status Append(const leveldb::Slice& data) override { return m_file->Append(data); }
+    leveldb::Status Close() override { return m_file->Close(); }
+    leveldb::Status Flush() override { return m_file->Flush(); }
+    leveldb::Status Sync() override { return leveldb::Status::OK(); }
+    std::string GetName() const override { return m_file->GetName(); }
+
+private:
+    std::unique_ptr<leveldb::WritableFile> m_file;
+};
+
+class NoSyncEnv final : public leveldb::EnvWrapper
+{
+public:
+    explicit NoSyncEnv() : leveldb::EnvWrapper{leveldb::Env::Default()} {}
+
+    leveldb::Status NewWritableFile(const std::string& f, leveldb::WritableFile** r) override
+    {
+        leveldb::WritableFile* file{nullptr};
+        const leveldb::Status status{target()->NewWritableFile(f, &file)};
+        if (status.ok()) {
+            *r = new NoSyncFile{std::unique_ptr<leveldb::WritableFile>{file}};
+        }
+        return status;
+    }
+
+    leveldb::Status NewAppendableFile(const std::string& f, leveldb::WritableFile** r) override
+    {
+        leveldb::WritableFile* file{nullptr};
+        const leveldb::Status status{target()->NewAppendableFile(f, &file)};
+        if (status.ok()) {
+            *r = new NoSyncFile{std::unique_ptr<leveldb::WritableFile>{file}};
+        }
+        return status;
+    }
+};
+
+} // namespace
+
 struct LevelDBContext {
     //! custom environment this database is using (may be nullptr in case of default environment)
     leveldb::Env* penv;
@@ -254,9 +300,14 @@ CDBWrapper::CDBWrapper(const DBParams& params)
     DBContext().options.max_file_size = params.max_file_size;
     assert(!(params.testing_env && params.memory_only));
     if (params.testing_env) {
+        assert(!params.memory_only && !params.nosync);
         DBContext().options.env = params.testing_env;
     } else if (params.memory_only) {
+        assert(!params.nosync);
         DBContext().penv = leveldb::NewMemEnv(leveldb::Env::Default());
+        DBContext().options.env = DBContext().penv;
+    } else if (params.nosync) {
+        DBContext().penv = new NoSyncEnv;
         DBContext().options.env = DBContext().penv;
     }
     if (!params.memory_only) {

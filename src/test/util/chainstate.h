@@ -13,11 +13,12 @@
 #include <util/byte_units.h>
 #include <util/fs.h>
 #include <util/log.h>
+#include <utxo_snapshot.h>
 #include <validation.h>
 
 #include <univalue.h>
 
-inline constexpr auto NoMalleation = [](AutoFile& file, node::SnapshotMetadata& meta){};
+inline constexpr auto NoMalleation = [](AutoFile& file, SnapshotMetadata& meta){};
 
 /**
  * Create and activate a UTXO snapshot, optionally providing a function to
@@ -60,8 +61,9 @@ CreateAndActivateUTXOSnapshot(
     //
     FILE* infile{fsbridge::fopen(snapshot_path, "rb")};
     AutoFile auto_infile{infile};
-    node::SnapshotMetadata metadata{node.chainman->GetParams().MessageStart()};
+    SnapshotMetadata metadata;
     auto_infile >> metadata;
+    metadata.CheckNetwork(node.chainman->GetParams().MessageStart());
 
     malleation(auto_infile, metadata);
 
