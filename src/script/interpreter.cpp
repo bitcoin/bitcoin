@@ -678,7 +678,14 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                 {
                     return set_error(serror, SCRIPT_ERR_OP_RETURN);
                 }
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunreachable-code-break"
+#endif
                 break;
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 
                 //
