@@ -7,6 +7,7 @@
 
 #include <consensus/validation.h>
 #include <index/txindex.h>
+#include <interfaces/handler.h>
 #include <net.h>
 #include <net_processing.h>
 #include <node/blockstorage.h>
@@ -14,10 +15,31 @@
 #include <node/types.h>
 #include <policy/feerate.h>
 #include <txmempool.h>
+#include <util/signalinterrupt.h>
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <algorithm>
+#include <chrono>
+#include <future>
+#include <memory>
+
 namespace node {
+namespace {
+struct MempoolAcceptance final : CValidationInterface {
+    explicit MempoolAcceptance(const Txid& txid) : m_txid{txid} {}
+
+    const Txid m_txid;
+    std::promise<void> m_promise;
+    const std::shared_future<void> m_future{m_promise.get_future().share()};
+
+    void TransactionAddedToMempoolSync(const Txid& txid) override
+    {
+        if (txid == m_txid && m_future.wait_for(0ms) != std::future_status::ready) m_promise.set_value();
+    }
+};
+} // namespace
+
 static TransactionError HandleATMPError(const TxValidationState& state, std::string& err_string_out)
 {
     err_string_out = state.ToString();
@@ -31,7 +53,7 @@ static TransactionError HandleATMPError(const TxValidationState& state, std::str
     }
 }
 
-TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, const CFeeRate& max_tx_fee_rate, TxBroadcast broadcast_method, bool wait_callback)
+TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, const CFeeRate& max_tx_fee_rate, TxBroadcast broadcast_method, bool wait_callback, std::chrono::milliseconds private_broadcast_timeout)
 {
     // BroadcastTransaction can be called by RPC or by the wallet.
     // chainman, mempool and peerman are initialized before the RPC server and wallet are started
@@ -42,7 +64,23 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
 
     Txid txid = tx->GetHash();
     Wtxid wtxid = tx->GetWitnessHash();
-    bool callback_set = false;
+    std::shared_ptr<MempoolAcceptance> acceptance;
+    std::unique_ptr<interfaces::Handler> subscription;
+    if (broadcast_method == TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST && private_broadcast_timeout > 0ms) {
+        AssertLockNotHeld(cs_main);
+        AssertLockNotHeld(node.mempool->cs);
+        LOCK(node.mempool->cs);
+        acceptance = std::make_shared<MempoolAcceptance>(txid);
+        if (node.mempool->exists(txid)) {
+            acceptance->m_promise.set_value();
+        } else {
+            auto& signals{*Assert(node.validation_signals)};
+            subscription = interfaces::MakeCleanupHandler([&signals, acceptance] {
+                signals.UnregisterSharedValidationInterface(acceptance);
+            });
+            signals.RegisterSharedValidationInterface(acceptance);
+        }
+    }
 
     {
         LOCK(cs_main);
@@ -105,35 +143,36 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
             case TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST:
                 break;
             }
-
-            if (wait_callback && node.validation_signals) {
-                // For transactions broadcast from outside the wallet, make sure
-                // that the wallet has been notified of the transaction before
-                // continuing.
-                //
-                // This prevents a race where a user might call sendrawtransaction
-                // with a transaction to/from their wallet, immediately call some
-                // wallet RPC, and get a stale result because callbacks have not
-                // yet been processed.
-                callback_set = true;
-            }
         }
     } // cs_main
 
-    if (callback_set) {
-        // Wait until Validation Interface clients have been notified of the
-        // transaction entering the mempool.
+    if (broadcast_method == TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST) {
+        const auto err{node.peerman->InitiateTxBroadcastPrivate(tx)};
+        if (err != TransactionError::OK || !acceptance) return err;
+        const auto deadline{std::chrono::steady_clock::now() + private_broadcast_timeout};
+        // Check shutdown periodically without polling the mempool or holding node locks.
+        while (true) {
+            const auto status{acceptance->m_future.wait_until(std::min(deadline, std::chrono::steady_clock::now() + 100ms))};
+            if (*Assert(node.shutdown_signal)) return TransactionError::SHUTTING_DOWN;
+            if (status == std::future_status::ready) break;
+            if (std::chrono::steady_clock::now() >= deadline) return TransactionError::MEMPOOL_TIMEOUT;
+        }
+    }
+
+    if (wait_callback && node.validation_signals) {
+        // For transactions broadcast from outside the wallet, make sure
+        // that the wallet has been notified of the transaction before
+        // continuing.
+        //
+        // This prevents a race where a user might call sendrawtransaction
+        // with a transaction to/from their wallet, immediately call some
+        // wallet RPC, and get a stale result because callbacks have not
+        // yet been processed.
         node.validation_signals->SyncWithValidationInterfaceQueue();
     }
 
-    switch (broadcast_method) {
-    case TxBroadcast::MEMPOOL_NO_BROADCAST:
-        break;
-    case TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL:
+    if (broadcast_method == TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL) {
         node.peerman->InitiateTxBroadcastToAll(wtxid);
-        break;
-    case TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST:
-        return node.peerman->InitiateTxBroadcastPrivate(tx);
     }
 
     return TransactionError::OK;

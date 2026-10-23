@@ -53,7 +53,7 @@ class PrivateBroadcastCompletionTest(BitcoinTestFramework):
         self.fill_node_addrman(node_index=0, address_types_to_add=[CAddress.NET_TORV3])
         wallet = MiniWallet(node)
         tx = wallet.create_self_transfer()
-        node.sendrawtransaction(tx["hex"])
+        node.sendrawtransaction(tx["hex"], timeout=0)
 
         def three_private_peers():
             with p2p_lock:
@@ -77,7 +77,7 @@ class PrivateBroadcastCompletionTest(BitcoinTestFramework):
         self.proxy.s.close()
         next_tx = wallet.create_self_transfer()
         with node.assert_debug_log(["will retry to a different address"], timeout=10):
-            node.sendrawtransaction(next_tx["hex"])
+            node.sendrawtransaction(next_tx["hex"], timeout=0)
         returner.send_and_ping(msg_tx(next_tx["tx"]))
 
         self.log.info("Restoring the proxy opens all three connections for the received transaction")

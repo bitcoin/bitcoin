@@ -206,6 +206,7 @@ void ValidationSignals::TransactionAddedToMempool(const NewMempoolTransactionInf
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.TransactionAddedToMempool(tx, mempool_sequence); });
     };
     ENQUEUE_AND_LOG_EVENT(std::move(event), std::move(log_msg));
+    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.TransactionAddedToMempoolSync(tx.info.m_tx->GetHash()); });
 }
 
 void ValidationSignals::TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) {

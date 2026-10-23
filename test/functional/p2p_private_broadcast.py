@@ -250,7 +250,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         self.log.info(f"Created txid={txs[0]['txid']}: for basic test")
         self.log.info(f"Created txid={txs[1]['txid']}: for broadcast with dependency in mempool + rebroadcast")
         self.log.info(f"Created txid={txs[2]['txid']}: for broadcast with dependency not in mempool")
-        tx_originator.sendrawtransaction(hexstring=txs[0]["hex"], maxfeerate=0.1)
+        tx_originator.sendrawtransaction(hexstring=txs[0]["hex"], maxfeerate=0.1, timeout=0)
 
         self.log.info("First private broadcast: waiting for the transaction to reach the recipient")
         self.wait_until(lambda: len(tx_receiver.getrawmempool()) > 0)
@@ -264,7 +264,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         self.log.info("Resending the same transaction via RPC again (it is not in the mempool yet)")
         ignoring_msg = f"Ignoring unnecessary request to schedule an already scheduled transaction: txid={txs[0]['txid']}, wtxid={txs[0]['wtxid']}"
         with tx_originator.busy_wait_for_debug_log(expected_msgs=[ignoring_msg.encode()]):
-            tx_originator.sendrawtransaction(hexstring=txs[0]["hex"], maxfeerate=0)
+            tx_originator.sendrawtransaction(hexstring=txs[0]["hex"], maxfeerate=0, timeout=0)
 
         self.log.info("Sending a malleated transaction with an invalid witness via RPC")
         malleated_invalid = malleate_tx_to_invalid_witness(txs[0])
@@ -328,7 +328,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
 
         self.log.info("Sending a transaction with a dependency in the mempool")
         skip_destinations = len(self.destinations)
-        tx_originator.sendrawtransaction(hexstring=txs[1]["hex"], maxfeerate=0.1)
+        tx_originator.sendrawtransaction(hexstring=txs[1]["hex"], maxfeerate=0.1, timeout=0)
         self.check_broadcasts("Dependency in mempool", txs[1], NUM_PRIVATE_BROADCAST_PER_TX, skip_destinations)
 
         self.log.info("Sending a transaction with a dependency not in the mempool (should be rejected)")
@@ -368,14 +368,14 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         tx_returner.send_without_ping(msg_tx(siblings_parent))
         self.wait_until(lambda: len(tx_originator.getrawmempool()) > 1)
         self.log.info("  - siblings' parent added to the mempool")
-        tx_originator.sendrawtransaction(hexstring=sibling1.serialize_with_witness().hex(), maxfeerate=0.1)
+        tx_originator.sendrawtransaction(hexstring=sibling1.serialize_with_witness().hex(), maxfeerate=0.1, timeout=0)
         self.log.info("  - sent sibling1: ok")
-        tx_originator.sendrawtransaction(hexstring=sibling2.serialize_with_witness().hex(), maxfeerate=0.1)
+        tx_originator.sendrawtransaction(hexstring=sibling2.serialize_with_witness().hex(), maxfeerate=0.1, timeout=0)
         self.log.info("  - sent sibling2: ok")
 
         self.log.info("Checking abortprivatebroadcast removes a pending private-broadcast transaction")
         tx_abort = wallet.create_self_transfer()
-        tx_originator.sendrawtransaction(hexstring=tx_abort["hex"], maxfeerate=0.1)
+        tx_originator.sendrawtransaction(hexstring=tx_abort["hex"], maxfeerate=0.1, timeout=0)
         assert tx_abort["wtxid"] in [t["wtxid"] for t in tx_originator.getprivatebroadcastinfo()["transactions"]]
         abort_res = tx_originator.abortprivatebroadcast(tx_abort["txid"])
         assert_equal(len(abort_res["removed_transactions"]), 1)
@@ -399,7 +399,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
             with self.destinations_lock:
                 self.no_relay_peer = None
                 self.trigger_no_relay_peer = True
-            tx_originator.sendrawtransaction(hexstring=tx_no_relay["hex"], maxfeerate=0.1)
+            tx_originator.sendrawtransaction(hexstring=tx_no_relay["hex"], maxfeerate=0.1, timeout=0)
             self.wait_until(lambda: self.no_relay_peer is not None)
             self.no_relay_peer.wait_until(lambda: self.no_relay_peer.message_count["version"] == 1, check_connected=False)
             self.no_relay_peer.wait_for_disconnect()
