@@ -12,7 +12,7 @@
 #include <util/string.h>
 #include <util/threadpool.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 #include <memory>
 
 using util::LineReader;
