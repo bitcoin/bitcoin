@@ -82,6 +82,11 @@ class WalletStartupTest(BitcoinTestFramework):
         assert_equal(node.loadwallet(filename="no_settings"), {"name": "no_settings"})
         assert_equal(node.get_wallet_rpc("no_settings").getwalletinfo()["walletname"], "no_settings")
 
+        # Re-adding a wallet already in the startup list skips the write, so it does not warn either.
+        assert_equal(node.unloadwallet(wallet_name="no_settings"), {})
+        assert_equal(node.loadwallet(filename="no_settings", load_on_startup=True), {"name": "no_settings"})
+        assert_equal(node.get_wallet_rpc("no_settings").getwalletinfo()["walletname"], "no_settings")
+
         assert_equal(node.loadwallet(filename="w2", load_on_startup=True), {"name": "w2", "warnings": [load_message]})
         assert_equal(set(node.listwallets()), {'', 'no_settings', 'w2'})
 
