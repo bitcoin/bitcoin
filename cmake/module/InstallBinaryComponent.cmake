@@ -8,7 +8,7 @@ include(GNUInstallDirs)
 function(install_binary_component component)
   cmake_parse_arguments(PARSE_ARGV 1
     IC                          # prefix
-    "HAS_MANPAGE;INTERNAL"      # options
+    "HAS_MANPAGE;HAS_BASH_COMPLETION;HAS_FISH_COMPLETION;INTERNAL" # options
     ""                          # one_value_keywords
     ""                          # multi_value_keywords
   )
@@ -25,6 +25,19 @@ function(install_binary_component component)
   if(INSTALL_MAN AND IC_HAS_MANPAGE)
     install(FILES ${PROJECT_SOURCE_DIR}/doc/man/${target_name}.1
       DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
+      COMPONENT ${component}
+    )
+  endif()
+  if(INSTALL_BASH_COMPLETIONS AND IC_HAS_BASH_COMPLETION)
+    install(FILES ${PROJECT_SOURCE_DIR}/contrib/completions/bash/${target_name}.bash
+      DESTINATION ${CMAKE_INSTALL_DATADIR}/bash-completion/completions
+      RENAME ${target_name}
+      COMPONENT ${component}
+    )
+  endif()
+  if(INSTALL_FISH_COMPLETIONS AND IC_HAS_FISH_COMPLETION)
+    install(FILES ${PROJECT_SOURCE_DIR}/contrib/completions/fish/${target_name}.fish
+      DESTINATION ${CMAKE_INSTALL_DATADIR}/fish/vendor_completions.d
       COMPONENT ${component}
     )
   endif()
