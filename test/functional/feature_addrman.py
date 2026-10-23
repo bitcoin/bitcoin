@@ -11,7 +11,7 @@ from test_framework.messages import ser_uint256, hash256, MAGIC_BYTES
 from test_framework.netutil import ADDRMAN_NEW_BUCKET_COUNT, ADDRMAN_TRIED_BUCKET_COUNT, ADDRMAN_BUCKET_SIZE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import ErrorMatch
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_false, assert_true
 
 def serialize_addrman(
     *,
@@ -81,13 +81,13 @@ class AddrmanTest(BitcoinTestFramework):
         self.log.info("Check that addrman from future is overwritten with new addrman")
         self.stop_node(0)
         write_addrman(peers_dat, lowest_compatible=111)
-        assert_equal(os.path.exists(peers_dat + ".bak"), False)
+        assert_false(os.path.exists(peers_dat + ".bak"))
         with self.nodes[0].assert_debug_log([
                 f'Creating new peers.dat because the file version was not compatible ("{peers_dat}"). Original backed up to peers.dat.bak',
         ]):
             self.start_node(0)
         assert_equal(self.nodes[0].getnodeaddresses(), [])
-        assert_equal(os.path.exists(peers_dat + ".bak"), True)
+        assert_true(os.path.exists(peers_dat + ".bak"))
 
         self.log.info("Check that corrupt addrman cannot be read (EOF)")
         self.stop_node(0)
