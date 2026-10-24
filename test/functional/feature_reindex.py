@@ -8,10 +8,12 @@
 - Stop the node and restart it with -reindex. Verify that the node has reindexed up to block 3.
 - Stop the node and restart it with -reindex-chainstate. Verify that the node has reindexed up to block 3.
 - Verify that out-of-order blocks are correctly processed, see LoadExternalBlockFile()
+- Verify that -reindex stops with an error if the genesis block in blk00000.dat is invalid.
 """
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import MAGIC_BYTES
+from test_framework.test_node import ErrorMatch
 from test_framework.util import (
     assert_equal,
     util_xor,
@@ -79,6 +81,28 @@ class ReindexTest(BitcoinTestFramework):
         # All blocks should be accepted and processed.
         assert_equal(self.nodes[0].getblockcount(), 12)
 
+    def invalid_genesis(self):
+        node = self.nodes[0]
+        node.stop_node()
+
+        # Flip a bit in the last byte of the genesis block, the lock time of its coinbase
+        # transaction. The header stays intact, so the merkle root no longer matches.
+        # A bit flipped in the XOR-obfuscated file flips the same bit in the block.
+        blk0 = node.blocks_path / "blk00000.dat"
+        genesis_end = 8 + 285  # 8 bytes of magic and size, then the serialized block
+        with open(blk0, 'r+b') as bf:
+            bf.seek(genesis_end - 1)
+            last_byte = bf.read(1)[0]
+            bf.seek(genesis_end - 1)
+            bf.write(bytes([last_byte ^ 0x01]))
+
+        self.log.info("A reindex with an invalid genesis block stops with an error")
+        node.assert_start_raises_init_error(
+            extra_args=["-reindex"],
+            expected_msg="The genesis block in the block files is invalid.",
+            match=ErrorMatch.PARTIAL_REGEX,
+        )
+
     def continue_reindex_after_shutdown(self):
         node = self.nodes[0]
         self.generate(node, 1500)
@@ -106,6 +130,7 @@ class ReindexTest(BitcoinTestFramework):
 
         self.out_of_order()
         self.continue_reindex_after_shutdown()
+        self.invalid_genesis()
 
 
 if __name__ == '__main__':
