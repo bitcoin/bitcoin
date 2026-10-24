@@ -200,6 +200,11 @@ std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue& in)
 
 void JSONRPCRequest::parse(const UniValue& valRequest)
 {
+    // Start from the defaults, so that an error reply to a request that is
+    // not an object does not carry the id or version of a previous request
+    id = UniValue::VNULL;
+    m_json_version = JSONRPCVersion::V1_LEGACY;
+
     // Parse request
     if (!valRequest.isObject())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Invalid Request object");
