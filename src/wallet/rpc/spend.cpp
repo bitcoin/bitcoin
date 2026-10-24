@@ -629,7 +629,7 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                 std::vector<CScript> scripts_temp;
                 auto descs = Parse(desc_str, desc_out, error, true);
                 if (descs.empty()) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unable to parse descriptor '%s': %s", desc_str, error));
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unable to parse descriptor: %s", error));
                 }
                 for (auto& desc : descs) {
                     desc->Expand(0, desc_out, scripts_temp, desc_out);
