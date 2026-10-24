@@ -38,11 +38,7 @@ check_cxx_source_compiles("
 )
 
 # Check for SSE4.2 support in the compiler.
-if(MSVC)
-  set(SSE42_CXXFLAGS /arch:AVX)
-else()
-  set(SSE42_CXXFLAGS -msse4.2)
-endif()
+set(SSE42_CXXFLAGS -msse4.2)
 check_cxx_source_compiles_with_flags("
   #include <cstdint>
   #if defined(_MSC_VER)
