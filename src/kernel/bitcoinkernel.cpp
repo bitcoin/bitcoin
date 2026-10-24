@@ -652,7 +652,9 @@ btck_Transaction* btck_transaction_create(const void* raw_transaction, size_t ra
     assert(raw_transaction != nullptr || raw_transaction_len == 0);
     try {
         SpanReader stream{std::span{reinterpret_cast<const std::byte*>(raw_transaction), raw_transaction_len}};
-        return btck_Transaction::create(std::make_shared<const CTransaction>(deserialize, TX_WITH_WITNESS, stream));
+        auto tx{std::make_shared<const CTransaction>(deserialize, TX_WITH_WITNESS, stream)};
+        if (!stream.empty()) return nullptr;
+        return btck_Transaction::create(std::move(tx));
     } catch (...) {
         return nullptr;
     }
@@ -1367,6 +1369,10 @@ btck_Block* btck_block_create(const void* raw_block, size_t raw_block_length)
         stream >> TX_WITH_WITNESS(*block);
     } catch (...) {
         LogDebug(BCLog::KERNEL, "Block decode failed.");
+        return nullptr;
+    }
+    if (!stream.empty()) {
+        LogDebug(BCLog::KERNEL, "Block decode failed: trailing bytes.");
         return nullptr;
     }
 

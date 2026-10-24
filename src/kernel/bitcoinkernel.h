@@ -638,7 +638,8 @@ BITCOINKERNEL_API void btck_tx_validation_state_destroy(btck_TxValidationState* 
  *
  * @param[in] raw_transaction     Serialized transaction.
  * @param[in] raw_transaction_len Length of the serialized transaction.
- * @return                        The transaction, or null on error.
+ * @return                        The transaction, or null on error, including
+ *                                when bytes follow the serialized transaction.
  */
 BITCOINKERNEL_API btck_Transaction* BITCOINKERNEL_WARN_UNUSED_RESULT btck_transaction_create(
     const void* raw_transaction, size_t raw_transaction_len);
@@ -1421,7 +1422,8 @@ BITCOINKERNEL_API btck_Block* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_read(
  *
  * @param[in] raw_block     Serialized block.
  * @param[in] raw_block_len Length of the serialized block.
- * @return                  The allocated block, or null on error.
+ * @return                  The allocated block, or null on error, including
+ *                          when bytes follow the serialized block.
  */
 BITCOINKERNEL_API btck_Block* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_create(
     const void* raw_block, size_t raw_block_len);

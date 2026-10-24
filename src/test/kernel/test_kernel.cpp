@@ -424,6 +424,9 @@ BOOST_AUTO_TEST_CASE(btck_transaction_tests)
 
     auto broken_tx_data{std::span<std::byte>{tx_data.begin(), tx_data.begin() + 10}};
     BOOST_CHECK_THROW(Transaction{broken_tx_data}, std::runtime_error);
+    auto trailing_tx_data{tx_data};
+    trailing_tx_data.push_back(std::byte{0});
+    BOOST_CHECK_THROW(Transaction{trailing_tx_data}, std::runtime_error);
     auto input{tx.GetInput(0)};
     BOOST_CHECK_EQUAL(input.GetSequence(), 0xfffffffe);
     auto output{tx.GetOutput(tx.CountOutputs() - 1)};
@@ -835,6 +838,9 @@ BOOST_AUTO_TEST_CASE(btck_block)
     BOOST_CHECK_THROW(Block{invalid_data}, std::runtime_error);
     auto empty_data = hex_string_to_byte_vec("");
     BOOST_CHECK_THROW(Block{empty_data}, std::runtime_error);
+    auto trailing_block_data{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[205])};
+    trailing_block_data.push_back(std::byte{0});
+    BOOST_CHECK_THROW(Block{trailing_block_data}, std::runtime_error);
 }
 
 Context create_context(std::shared_ptr<TestKernelNotifications> notifications, ChainType chain_type, std::shared_ptr<TestValidationInterface> validation_interface = nullptr)
