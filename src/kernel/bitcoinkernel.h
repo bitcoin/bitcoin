@@ -795,7 +795,9 @@ BITCOINKERNEL_API void btck_transaction_destroy(btck_Transaction* transaction);
  * @param[in] tx_to             Non-null.
  * @param[in] spent_outputs     Nullable for non-taproot verification. Points to an array of
  *                              outputs spent by the transaction.
- * @param[in] spent_outputs_len Length of the spent_outputs array.
+ * @param[in] spent_outputs_len Length of the spent_outputs array. If spent_outputs is not null
+ *                              and this is not zero, it must equal the number of inputs of tx_to,
+ *                              or the process aborts.
  * @return                      The precomputed data, or null on error.
  */
 BITCOINKERNEL_API btck_PrecomputedTransactionData* BITCOINKERNEL_WARN_UNUSED_RESULT btck_precomputed_transaction_data_create(
@@ -1329,6 +1331,10 @@ BITCOINKERNEL_API btck_BlockValidationState* BITCOINKERNEL_WARN_UNUSED_RESULT bt
  * @brief Triggers the start of a reindex if the wipe options were previously
  * set for the chainstate manager. Can also import an array of existing block
  * files selected by the user.
+ *
+ * Do not call this while another call on the same chainstate manager is in
+ * progress, including from a notification callback. The process aborts when
+ * this is detected.
  *
  * @param[in] chainstate_manager        Non-null.
  * @param[in] block_file_paths_data     Nullable, array of block files described by their full filesystem paths.
