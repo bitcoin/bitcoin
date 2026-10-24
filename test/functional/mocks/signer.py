@@ -15,10 +15,12 @@ from test_framework.psbt import (
     PSBT,
     PSBT_IN_PARTIAL_SIG,
     PSBT_IN_SEQUENCE,
+    PSBT_IN_SIGHASH_TYPE,
     PSBT_IN_TAP_KEY_SIG,
     PSBT_OUT_AMOUNT,
     PSBT_OUT_SCRIPT,
 )
+from test_framework.script import SIGHASH_NONE
 
 # Master private key for the tpub in getdescriptors below. Used by signtx,
 # which imports the keys into a wallet on the offline node provided by the
@@ -134,8 +136,16 @@ def signtx(args):
     if mode in ("change_amount", "change_script", "remove_output", "change_sequence"):
         psbt = tamper(psbt, mode)
 
+    sign_options = {}
+    if mode in ("sighash_none", "sighash_none_hidden"):
+        sign_options["sighashtype"] = "NONE"
+    elif mode in ("sighash_single", "sighash_single_hidden"):
+        sign_options["sighashtype"] = "SINGLE"
+    elif mode == "sighash_all_anyonecanpay":
+        sign_options["sighashtype"] = "ALL|ANYONECANPAY"
+
     wallet = get_mock_wallet()
-    result = wallet.walletprocesspsbt(psbt=psbt, sign=True, bip32derivs=False, finalize=False)
+    result = wallet.walletprocesspsbt(psbt=psbt, sign=True, bip32derivs=False, finalize=False, **sign_options)
     reply = result["psbt"]
 
     if mode == "psbt_v0":
@@ -175,6 +185,20 @@ def signtx(args):
                     signature = bytearray(value)
                     signature[-2] ^= 1
                     psbt_in.map[key] = bytes(signature)
+        reply = signed.to_base64()
+    elif mode == "sighash_none_declared":
+        # Keep the safe signatures, but declare an unsafe sighash type to
+        # exercise the declaration check independently.
+        signed = PSBT.from_base64(reply)
+        for psbt_in in signed.i:
+            psbt_in.map[PSBT_IN_SIGHASH_TYPE] = SIGHASH_NONE.to_bytes(4, "little")
+        reply = signed.to_base64()
+    elif mode in ("sighash_none_hidden", "sighash_single_hidden"):
+        # Drop the declared sighash type, leaving only the signatures
+        # themselves to reveal it
+        signed = PSBT.from_base64(reply)
+        for psbt_in in signed.i:
+            psbt_in.map.pop(PSBT_IN_SIGHASH_TYPE, None)
         reply = signed.to_base64()
 
     sys.stdout.write(json.dumps({"psbt": reply}))

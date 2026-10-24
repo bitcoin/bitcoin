@@ -150,7 +150,7 @@ This command reads request `<base64-encoded psbt>` and MUST return a JSON object
 
 The returned PSBT MUST use the same PSBT version as the request.
 
-The returned PSBT MUST NOT contain finalized inputs (`PSBT_IN_FINAL_SCRIPTSIG` or `PSBT_IN_FINAL_SCRIPTWITNESS`). Signatures MUST remain in the partial signature or Taproot signature fields.
+The returned PSBT MUST NOT contain finalized inputs (`PSBT_IN_FINAL_SCRIPTSIG` or `PSBT_IN_FINAL_SCRIPTWITNESS`). Signatures MUST remain in the partial signature or Taproot signature fields so Bitcoin Core can check their sighash types.
 
 PSBT SHOULD include BIP32 derivations. The command SHOULD fail if none of the BIP32 derivations match a key owned by the device.
 
