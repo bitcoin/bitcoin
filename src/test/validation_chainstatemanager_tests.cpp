@@ -9,6 +9,7 @@
 #include <node/chainstatemanager_args.h>
 #include <node/kernel_notifications.h>
 #include <node/utxo_snapshot.h>
+#include <pow.h>
 #include <random.h>
 #include <rpc/blockchain.h>
 #include <sync.h>
@@ -27,6 +28,7 @@
 
 #include <tinyformat.h>
 
+#include <limits>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
@@ -629,6 +631,73 @@ BOOST_FIXTURE_TEST_CASE(loadblockindex_invalid_descendants, TestChain100Setup)
     BOOST_CHECK(grand_parent->nStatus & BLOCK_FAILED_VALID);
     BOOST_CHECK(parent->nStatus & BLOCK_FAILED_VALID);
     BOOST_CHECK(child->nStatus & BLOCK_FAILED_VALID);
+}
+
+//! Check that LoadBlockIndex fails on an invalid last block file number.
+BOOST_FIXTURE_TEST_CASE(loadblockindex_invalid_last_block_file, TestChain100Setup)
+{
+    ChainstateManager& chainman{*Assert(m_node.chainman)};
+    LOCK(chainman.GetMutex());
+    auto& block_tree_db{*Assert(chainman.m_blockman.m_block_tree_db)};
+    const kernel::CBlockFileInfo file_info;
+    const std::vector<std::pair<int, const kernel::CBlockFileInfo*>> files{{0, &file_info}};
+
+    // The number must not be negative.
+    block_tree_db.WriteBatchSync(files, /*nLastFile=*/-1, {});
+    {
+        ASSERT_DEBUG_LOG("invalid last block file number -1");
+        BOOST_CHECK(!chainman.LoadBlockIndex());
+    }
+
+    // Neither the last block file nor the one before it has file info.
+    for (const int last_file : {2, 1 << 16, 1 << 30, std::numeric_limits<int>::max()}) {
+        block_tree_db.WriteBatchSync(files, last_file, {});
+        ASSERT_DEBUG_LOG(strprintf("no file info for the last block file %i", last_file));
+        BOOST_CHECK(!chainman.LoadBlockIndex());
+    }
+
+    // A new last file may lack file info, since the node can run out of disk space
+    // before it writes to it.
+    block_tree_db.WriteBatchSync(files, /*nLastFile=*/1, {});
+    BOOST_CHECK(chainman.LoadBlockIndex());
+}
+
+//! Write an entry for the block at height 50 with the given parent in place of its own, and
+//! check that LoadBlockIndex fails on it.
+static void CheckLoadBlockIndexInvalidParent(ChainstateManager& chainman, bool null_parent)
+{
+    LOCK(chainman.GetMutex());
+    const CBlockIndex* const index{chainman.ActiveChain()[50]};
+    CBlockIndex bad_index{index->GetBlockHeader()};
+    bad_index.nHeight = index->nHeight;
+    bad_index.nStatus = BLOCK_VALID_TREE;
+    bad_index.pprev = null_parent ? nullptr : index->pprev->pprev;
+    uint256 hash;
+    bad_index.phashBlock = &hash;
+    do {
+        ++bad_index.nNonce;
+        hash = bad_index.GetBlockHeader().GetHash();
+    } while (!CheckProofOfWork(hash, bad_index.nBits, chainman.GetConsensus()));
+
+    const std::vector<CBlockIndex*> indices{chainman.m_blockman.GetAllBlockIndices()};
+    std::vector<const CBlockIndex*> entries{indices.begin(), indices.end()};
+    entries.push_back(&bad_index);
+    chainman.m_blockman.m_block_tree_db->WriteBatchSync({}, /*nLastFile=*/0, entries);
+
+    ASSERT_DEBUG_LOG("block index entry at height 50 has an invalid parent link");
+    BOOST_CHECK(!chainman.LoadBlockIndex());
+}
+
+//! Check that LoadBlockIndex fails on a block without a parent.
+BOOST_FIXTURE_TEST_CASE(loadblockindex_missing_parent, TestChain100Setup)
+{
+    CheckLoadBlockIndexInvalidParent(*Assert(m_node.chainman), /*null_parent=*/true);
+}
+
+//! Check that LoadBlockIndex fails on a block whose parent is not at the previous height.
+BOOST_FIXTURE_TEST_CASE(loadblockindex_parent_height_mismatch, TestChain100Setup)
+{
+    CheckLoadBlockIndexInvalidParent(*Assert(m_node.chainman), /*null_parent=*/false);
 }
 
 //! Verify that ReconsiderBlock clears failure flags for the target block, its ancestors, and descendants,

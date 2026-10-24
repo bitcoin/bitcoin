@@ -480,6 +480,11 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
             LogError("%s: block index is non-contiguous, index of height %d missing\n", __func__, previous_index->nHeight + 1);
             return false;
         }
+        // Only the genesis block has no parent, and every other block follows its parent.
+        if (pindex->pprev ? pindex->pprev->nHeight + 1 != pindex->nHeight : pindex->nHeight != 0) {
+            LogError("%s: block index entry at height %d has an invalid parent link", __func__, pindex->nHeight);
+            return false;
+        }
         previous_index = pindex;
         pindex->nChainWork = (pindex->pprev ? pindex->pprev->nChainWork : 0) + GetBlockProof(*pindex);
         pindex->nTimeMax = (pindex->pprev ? std::max(pindex->pprev->nTimeMax, pindex->nTime) : pindex->nTime);
@@ -555,6 +560,19 @@ bool BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_block
 
     // Load block file info
     m_block_tree_db->ReadLastBlockFile(max_blockfile_num);
+    if (max_blockfile_num < 0) {
+        LogError("%s: invalid last block file number %i", __func__, max_blockfile_num);
+        return false;
+    }
+    // A new last file can lack stored info if the disk ran out of space before its first
+    // block was written, but the file before it always has info.
+    CBlockFileInfo last_file_info;
+    if (max_blockfile_num > 0 &&
+        !m_block_tree_db->ReadBlockFileInfo(max_blockfile_num, last_file_info) &&
+        !m_block_tree_db->ReadBlockFileInfo(max_blockfile_num - 1, last_file_info)) {
+        LogError("%s: no file info for the last block file %i", __func__, max_blockfile_num);
+        return false;
+    }
     m_blockfile_info.resize(max_blockfile_num + 1);
     LogInfo("Loading block index db: last block file = %i", max_blockfile_num);
     for (int nFile = 0; nFile <= max_blockfile_num; nFile++) {
