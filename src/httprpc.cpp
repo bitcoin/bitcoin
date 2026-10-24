@@ -157,15 +157,19 @@ UniValue ExecuteHTTPRPC(const UniValue& valRequest, JSONRPCRequest& jreq, HTTPSt
                 // Batches never throw HTTP errors, they are always just included
                 // in "HTTP OK" responses. Notifications never get any response.
                 UniValue response;
+                // Each element gets its own copy of the unparsed request, so
+                // that nothing parsed from one element ends up in the reply to
+                // the next
+                JSONRPCRequest elem_jreq{jreq};
                 try {
-                    jreq.parse(valRequest[i]);
-                    response = JSONRPCExec(jreq, /*catch_errors=*/true);
+                    elem_jreq.parse(valRequest[i]);
+                    response = JSONRPCExec(elem_jreq, /*catch_errors=*/true);
                 } catch (UniValue& e) {
-                    response = JSONRPCReplyObj(NullUniValue, std::move(e), jreq.id, jreq.m_json_version);
+                    response = JSONRPCReplyObj(NullUniValue, std::move(e), elem_jreq.id, elem_jreq.m_json_version);
                 } catch (const std::exception& e) {
-                    response = JSONRPCReplyObj(NullUniValue, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq.id, jreq.m_json_version);
+                    response = JSONRPCReplyObj(NullUniValue, JSONRPCError(RPC_PARSE_ERROR, e.what()), elem_jreq.id, elem_jreq.m_json_version);
                 }
-                if (!jreq.IsNotification()) {
+                if (!elem_jreq.IsNotification()) {
                     reply.push_back(std::move(response));
                 }
             }
