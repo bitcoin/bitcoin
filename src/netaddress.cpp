@@ -228,8 +228,9 @@ bool CNetAddr::SetSpecial(std::string_view addr)
 
 bool CNetAddr::SetTor(std::string_view addr)
 {
-    if (!addr.ends_with(".onion")) return false;
-    addr.remove_suffix(6);
+    static constexpr std::string_view suffix{".onion"};
+    if (addr.size() < suffix.size() || ToLower(addr.substr(addr.size() - suffix.size())) != suffix) return false;
+    addr.remove_suffix(suffix.size());
     auto input = DecodeBase32(addr);
 
     if (!input) {

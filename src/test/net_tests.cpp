@@ -216,6 +216,13 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_CHECK(!addr.IsAddrV1Compatible());
     BOOST_CHECK_EQUAL(addr.ToStringAddr(), torv3_addr);
 
+    // TORv3, mixed case
+    const char* torv3_addr_mixed_case = "PG6Mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.ONION";
+    BOOST_REQUIRE(addr.SetSpecial(torv3_addr_mixed_case));
+    BOOST_REQUIRE(addr.IsValid());
+    BOOST_REQUIRE(addr.IsTor());
+    BOOST_CHECK_EQUAL(addr.ToStringAddr(), ToLower(torv3_addr_mixed_case));
+
     // TORv3, broken, with wrong checksum
     BOOST_CHECK(!addr.SetSpecial("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscsad.onion"));
 
