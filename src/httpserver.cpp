@@ -428,11 +428,30 @@ bool HTTPRequest::LoadHeaders(LineReader& reader)
     return m_headers.Read(reader);
 }
 
+//! The only transfer coding we support is "chunked". It must be the final
+//! coding and cannot be applied twice, so it must be the only one listed.
+//! https://httpwg.org/specs/rfc9112.html#field.transfer-encoding
+static void RequireChunkedOnly(const std::vector<std::string_view>& transfer_encoding_values)
+{
+    size_t num_codings{0};
+    for (const auto value : transfer_encoding_values) {
+        for (const auto coding : Split<std::string_view>(value, ",")) {
+            const auto trimmed{util::TrimStringView(coding)};
+            if (trimmed.empty()) continue;
+            if (ToLower(trimmed) != "chunked") throw std::runtime_error("Unsupported Transfer-Encoding");
+            ++num_codings;
+        }
+    }
+    if (num_codings != 1) throw std::runtime_error("Unsupported Transfer-Encoding");
+}
+
 bool HTTPRequest::LoadBody(LineReader& reader)
 {
     // https://httpwg.org/specs/rfc9112.html#message.body
-    auto transfer_encoding_header = m_headers.FindFirst("Transfer-Encoding");
-    if (transfer_encoding_header && ToLower(transfer_encoding_header.value()) == "chunked") {
+    // Transfer-Encoding takes precedence over Content-Length.
+    const auto transfer_encoding_values{m_headers.FindAll("Transfer-Encoding")};
+    if (!transfer_encoding_values.empty()) {
+        RequireChunkedOnly(transfer_encoding_values);
         // Transfer-Encoding: https://datatracker.ietf.org/doc/html/rfc7230.html#section-3.3.1
         // Chunked Transfer Coding: https://datatracker.ietf.org/doc/html/rfc7230.html#section-4.1
         // see evhttp_handle_chunked_read() in libevent http.c

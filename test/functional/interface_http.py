@@ -158,6 +158,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         self.check_disallowed_http_methods()
         self.check_path_traversal()
         self.check_request_smuggling_cl_te()
+        self.check_transfer_encoding_not_chunked()
         self.check_duplicate_content_length()
         self.check_null_byte_in_uri()
         self.check_invalid_http_version()
@@ -568,6 +569,33 @@ class HTTPBasicsTest (BitcoinTestFramework):
         assert "HTTP/1.1 200 OK" in response
         count = self.node.getblockcount()
         assert f'"result":{count}' in response
+
+
+    def check_transfer_encoding_not_chunked(self):
+        self.log.info("Check that a Transfer-Encoding other than a single chunked is rejected")
+        # https://www.rfc-editor.org/rfc/rfc9112#section-6.3
+        # Only a single "chunked" coding is supported. Anything else gets a
+        # 400 rather than a body framed by Content-Length.
+        body = '{"method":"getblockcount"}'
+        for te_headers in (
+            ["Transfer-Encoding: gzip"],
+            ["Transfer-Encoding: chunked, gzip"],
+            ["Transfer-Encoding: chunked", "Transfer-Encoding: gzip"],
+            ["Transfer-Encoding: identity", "Transfer-Encoding: chunked"],
+        ):
+            conn = BitcoinHTTPConnection(self.node)
+            raw = (
+                f"POST / HTTP/1.1\r\n"
+                f"Host: {conn.url.hostname}\r\n"
+                f"Authorization: Basic {str_to_b64str(conn.authpair)}\r\n"
+                + "".join(f"{h}\r\n" for h in te_headers) +
+                f"Content-Length: {len(body)}\r\n"
+                f"\r\n"
+                f"{body}"
+            ).encode("ascii")
+            conn.send_raw(raw)
+            response = conn.recv_raw().decode()
+            assert response.startswith("HTTP/1.1 400"), (te_headers, response)
 
 
     def check_duplicate_content_length(self):
