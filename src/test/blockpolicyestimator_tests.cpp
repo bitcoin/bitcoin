@@ -9,10 +9,17 @@
 #include <test/util/txmempool.h>
 #include <txmempool.h>
 #include <uint256.h>
+#include <util/fs.h>
+#include <util/readwritefile.h>
+#include <util/serfloat.h>
 #include <util/time.h>
 #include <validationinterface.h>
 
 #include <boost/test/unit_test.hpp>
+
+#include <cstdint>
+#include <limits>
+#include <string>
 
 BOOST_FIXTURE_TEST_SUITE(blockpolicyestimator_tests, ChainTestingSetup)
 
@@ -209,6 +216,52 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     for (int i = 2; i < 9; i++) { // At 9, the original estimate was already at the bottom (b/c scale = 2)
         BOOST_CHECK(feeEst.estimateFee(i).GetFeePerK() < origFeeEst[i-1] - deltaFee);
     }
+}
+
+BOOST_AUTO_TEST_CASE(ReadRejectsInvalidBuckets)
+{
+    const fs::path path{m_args.GetDataDirBase() / "fee_estimates_buckets.dat"};
+    CBlockPolicyEstimator feeEst{BlockPolicyFeeEstPath(m_args), DEFAULT_ACCEPT_STALE_FEE_ESTIMATES};
+    {
+        AutoFile file{fsbridge::fopen(path, "wb")};
+        BOOST_REQUIRE(feeEst.Write(file));
+        BOOST_REQUIRE_EQUAL(file.fclose(), 0);
+    }
+    const auto [ok, data]{ReadBinaryFile(path)};
+    BOOST_REQUIRE(ok);
+
+    // Layout: version, best height, historical first and best (4 bytes each),
+    // then the bucket count as a compact size and the buckets as 8-byte doubles.
+    constexpr size_t buckets_pos{16};
+    SpanReader reader{std::span{reinterpret_cast<const unsigned char*>(data.data()) + buckets_pos, data.size() - buckets_pos}};
+    const uint64_t num_buckets{ReadCompactSize(reader)};
+    const size_t first_pos{data.size() - reader.size()};
+    BOOST_REQUIRE_GT(num_buckets, 2U);
+
+    const auto read_with_bucket = [&](size_t index, double value) {
+        std::string mutated{data};
+        const uint64_t encoded{EncodeDouble(value)};
+        for (int i = 0; i < 8; ++i) mutated[first_pos + 8 * index + i] = static_cast<char>(encoded >> (8 * i));
+        BOOST_REQUIRE(WriteBinaryFile(path, mutated));
+        AutoFile file{fsbridge::fopen(path, "rb")};
+        return feeEst.Read(file);
+    };
+
+    // The unchanged file is accepted.
+    {
+        BOOST_REQUIRE(WriteBinaryFile(path, data));
+        AutoFile file{fsbridge::fopen(path, "rb")};
+        BOOST_CHECK(feeEst.Read(file));
+    }
+    // No infinite last bucket.
+    BOOST_CHECK(!read_with_bucket(num_buckets - 1, 1e98));
+    // A bucket that is not positive.
+    BOOST_CHECK(!read_with_bucket(0, 0.0));
+    BOOST_CHECK(!read_with_bucket(0, -1.0));
+    // Buckets that do not increase.
+    BOOST_CHECK(!read_with_bucket(1, 0.5));
+    // A NaN bucket.
+    BOOST_CHECK(!read_with_bucket(1, std::numeric_limits<double>::quiet_NaN()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

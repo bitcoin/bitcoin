@@ -1058,6 +1058,13 @@ bool CBlockPolicyEstimator::Read(AutoFile& filein)
         if (numBuckets <= 1 || numBuckets > 1000) {
             throw std::runtime_error("Corrupt estimates file. Must have between 2 and 1000 feerate buckets");
         }
+        // The last bucket must be the infinite sentinel so that every feerate
+        // finds a bucket, and the boundaries must be positive and increasing.
+        // The negated comparisons also reject NaN.
+        if (!(fileBuckets.front() > 0) || fileBuckets.back() != INF_FEERATE ||
+            std::adjacent_find(fileBuckets.begin(), fileBuckets.end(), [](double a, double b) { return !(a < b); }) != fileBuckets.end()) {
+            throw std::runtime_error("Corrupt estimates file. Feerate buckets must be positive, increasing and end with the infinite bucket");
+        }
 
         std::unique_ptr<TxConfirmStats> fileFeeStats(new TxConfirmStats(buckets, bucketMap, MED_BLOCK_PERIODS, MED_DECAY, MED_SCALE));
         std::unique_ptr<TxConfirmStats> fileShortStats(new TxConfirmStats(buckets, bucketMap, SHORT_BLOCK_PERIODS, SHORT_DECAY, SHORT_SCALE));
