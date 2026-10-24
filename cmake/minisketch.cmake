@@ -5,38 +5,23 @@
 include(CheckSourceCompilesWithFlags)
 
 # Check for clmul instructions support.
-if(MSVC)
-  set(CLMUL_CXXFLAGS "")
-else()
-  set(CLMUL_CXXFLAGS -mpclmul)
-endif()
+set(CLMUL_CXXFLAGS -mpclmul)
 check_cxx_source_compiles_with_flags("
   #include <immintrin.h>
   #include <cstdint>
 
   int main()
   {
-    __m128i a = _mm_cvtsi64_si128((uint64_t)7);
+    __m128i a = _mm_cvtsi64_si128(7);
     __m128i b = _mm_clmulepi64_si128(a, a, 37);
     __m128i c = _mm_srli_epi64(b, 41);
     __m128i d = _mm_xor_si128(b, c);
-    uint64_t e = _mm_cvtsi128_si64(d);
+    int64_t e = _mm_cvtsi128_si64(d);
     return e == 0;
   }
   " HAVE_CLMUL
   CXXFLAGS ${CLMUL_CXXFLAGS}
 )
-
-add_library(minisketch_common INTERFACE)
-if(MSVC)
-  target_compile_options(minisketch_common INTERFACE
-    /wd4060
-    /wd4065
-    /wd4146
-    /wd4244
-    /wd4267
-  )
-endif()
 
 add_library(minisketch STATIC EXCLUDE_FROM_ALL
   ${PROJECT_SOURCE_DIR}/src/minisketch/src/minisketch.cpp
@@ -64,7 +49,6 @@ target_include_directories(minisketch
 target_link_libraries(minisketch
   PRIVATE
     core_interface
-    minisketch_common
 )
 
 set_target_properties(minisketch PROPERTIES
