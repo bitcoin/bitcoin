@@ -5058,6 +5058,12 @@ void ChainstateManager::LoadExternalBlockFile(
                         if (state.IsError()) {
                             break;
                         }
+                        if (state.IsInvalid() && hash == params.GetConsensus().hashGenesisBlock) {
+                            // Its header is now in the block index but the block is not, so the
+                            // blocks that follow could not be connected to the chain.
+                            GetNotifications().fatalError(_("The genesis block in the block files is invalid."));
+                            break;
+                        }
                     } else if (hash != params.GetConsensus().hashGenesisBlock && pindex->nHeight % 1000 == 0) {
                         LogDebug(BCLog::REINDEX, "Block Import: already had block %s at height %d\n", hash.ToString(), pindex->nHeight);
                     }
