@@ -22,6 +22,7 @@
 #include <util/time.h>
 #include <validation.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <exception>
@@ -94,6 +95,9 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
 
             if (opts.use_current_time) {
                 nTime = TicksSinceEpoch<std::chrono::seconds>(now);
+            } else {
+                // An entry time in the future would keep the transaction from ever expiring.
+                nTime = std::min<int64_t>(nTime, TicksSinceEpoch<std::chrono::seconds>(now));
             }
 
             CAmount amountdelta = nFeeDelta;
