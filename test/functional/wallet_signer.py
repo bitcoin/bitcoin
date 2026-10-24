@@ -269,6 +269,37 @@ class WalletSignerTest(BitcoinTestFramework):
         res = hww.send(outputs={dest: 1.5}, inputs=inputs, add_inputs=False, add_to_wallet=False)
         assert res["complete"]
 
+        # Each transaction has a single input, so an ECDSA signature cannot
+        # mask missing checks of schnorr signatures, or vice versa.
+        for address_type in ["bech32", "bech32m"]:
+            self.log.info(f'Test signer sighash types for {address_type}')
+            inputs = self.create_outpoints(self.nodes[0], outputs=[{hww.getnewaddress(address_type=address_type): 1}])
+            self.generate(self.nodes[0], 1, sync_fun=self.sync_except_mock)
+            dest = self.nodes[0].getnewaddress()
+
+            # Check declarations and signatures independently, including an
+            # unsafe declaration with otherwise safe signatures.
+            for mode, sighash in [
+                ("sighash_none", "NONE"),
+                ("sighash_none_hidden", "NONE"),
+                ("sighash_none_declared", "NONE"),
+                ("sighash_single", "SINGLE"),
+                ("sighash_single_hidden", "SINGLE"),
+            ]:
+                self.set_mock_sign_mode(self.nodes[1], mode)
+                with self.nodes[1].assert_debug_log([f"Signer used an unsafe sighash type: {sighash}"]):
+                    assert_raises_rpc_error(-25, "External signer failed to sign", hww.send, outputs={dest: 0.5}, inputs=inputs, add_inputs=False)
+
+            # DEFAULT uses a 64-byte signature for taproot.
+            for mode in ["default", "sighash_all_anyonecanpay"]:
+                self.set_mock_sign_mode(self.nodes[1], mode)
+                res = hww.send(outputs={dest: 0.5}, inputs=inputs, add_inputs=False, add_to_wallet=False)
+                assert res["complete"]
+                assert_equal(len(hww.decoderawtransaction(res["hex"])["vin"]), 1)
+                assert hww.testmempoolaccept([res["hex"]])[0]["allowed"]
+
+        self.clear_mock_sign_mode(self.nodes[1])
+
     def test_finalized_signer(self):
         hww = self.nodes[1].get_wallet_rpc('hww')
         # Exercise final_script_sig and final_script_witness independently.
