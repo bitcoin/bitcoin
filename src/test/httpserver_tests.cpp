@@ -477,6 +477,42 @@ BOOST_AUTO_TEST_CASE(http_request_tests)
         BOOST_CHECK(req.LoadHeaders(reader));
         BOOST_CHECK_EXCEPTION(req.LoadBody(reader), std::runtime_error, HasReason{"Improperly terminated chunk"});
     }
+    {
+        // Transfer coding names are case-insensitive
+        HTTPRequest req;
+        std::string_view ok_chunked = "POST / HTTP/1.1\n"
+                                      "Transfer-Encoding: Chunked\n"
+                                      "\n"
+                                      "1a\n"
+                                      R"({"method":"getblockcount"})""\n"
+                                      "0\n"
+                                      "\n";
+        LineReader reader(ok_chunked, MAX_HEADERS_SIZE);
+        BOOST_CHECK(req.LoadControlData(reader));
+        BOOST_CHECK(req.LoadHeaders(reader));
+        BOOST_CHECK(req.LoadBody(reader));
+        BOOST_CHECK_EQUAL(req.ReadBody(), R"({"method":"getblockcount"})");
+    }
+    // Reject any Transfer-Encoding other than a single "chunked", whatever
+    // Content-Length says and whichever header line carries it
+    for (const std::string_view te : {
+             "Transfer-Encoding: gzip\n",
+             "Transfer-Encoding: identity\n",
+             "Transfer-Encoding: chunked, gzip\n",
+             "Transfer-Encoding: gzip, chunked\n",
+             "Transfer-Encoding: chunked, chunked\n",
+             "Transfer-Encoding: \n",
+             "Transfer-Encoding: chunked\nTransfer-Encoding: gzip\n",
+             "Transfer-Encoding: identity\nTransfer-Encoding: chunked\n",
+             "Transfer-Encoding: chunked\nTransfer-Encoding: chunked\n",
+         }) {
+        HTTPRequest req;
+        const std::string request{strprintf("POST / HTTP/1.1\n%sContent-Length: 26\n\n" R"({"method":"getblockcount"})", te)};
+        LineReader reader(request, MAX_HEADERS_SIZE);
+        BOOST_CHECK(req.LoadControlData(reader));
+        BOOST_CHECK(req.LoadHeaders(reader));
+        BOOST_CHECK_EXCEPTION(req.LoadBody(reader), std::runtime_error, HasReason{"Unsupported Transfer-Encoding"});
+    }
 }
 
 BOOST_AUTO_TEST_CASE(http_request_state_tests)

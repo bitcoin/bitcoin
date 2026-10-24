@@ -32,7 +32,7 @@ void CheckBodyMatchesFraming(const HTTPRequest& req)
     const std::string body{req.ReadBody()};
     const auto transfer_encoding{req.GetHeader("Transfer-Encoding")};
     const auto content_length{req.GetHeader("Content-Length")};
-    if (transfer_encoding && ToLower(*transfer_encoding) == "chunked") {
+    if (transfer_encoding) {
         assert(body.size() <= MAX_BODY_SIZE);
     } else if (content_length) {
         const auto parsed_length{ToIntegral<uint64_t>(*content_length)};
