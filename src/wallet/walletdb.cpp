@@ -820,6 +820,12 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
             }
             CExtPubKey xpub;
             value >> xpub;
+            // Unserialize empties the key if its public key is not a valid point,
+            // or if it has depth 0 and a non-zero child number or fingerprint
+            if (!xpub.pubkey.IsValid()) {
+                err = "Error reading wallet database: descriptor cache xpub is invalid";
+                return DBErrors::CORRUPT;
+            }
             if (parent) {
                 cache.CacheParentExtPubKey(key_exp_index, xpub);
             } else {
@@ -846,6 +852,10 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
             }
             CExtPubKey xpub;
             value >> xpub;
+            if (!xpub.pubkey.IsValid()) {
+                err = "Error reading wallet database: descriptor last hardened cache xpub is invalid";
+                return DBErrors::CORRUPT;
+            }
             cache.CacheLastHardenedExtPubKey(key_exp_index, xpub);
             return DBErrors::LOAD_OK;
         });
