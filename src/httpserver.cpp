@@ -589,8 +589,11 @@ void HTTPRequest::WriteReply(HTTPStatusCode status, std::span<const std::byte> r
         res.headers.Write("Content-Type", "text/html; charset=ISO-8859-1");
     }
 
+    // RFC 9112 section 6.1: the connection must be closed after responding to
+    // a request that has both Content-Length and Transfer-Encoding.
+    const bool conflicting_framing{m_headers.FindFirst("Content-Length") && m_headers.FindFirst("Transfer-Encoding")};
     auto connection_header{m_headers.FindFirst("Connection")};
-    if (connection_header && ToLower(connection_header.value()) == "close") {
+    if (conflicting_framing || (connection_header && ToLower(connection_header.value()) == "close")) {
         // Might not exist already but we need to replace it, not append to it
         res.headers.RemoveAll("Connection");
 

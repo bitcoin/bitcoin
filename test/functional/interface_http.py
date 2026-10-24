@@ -563,11 +563,35 @@ class HTTPBasicsTest (BitcoinTestFramework):
             f"Transfer-Encoding: chunked\r\n"
             f"\r\n"
         ).encode("ascii") + chunk_body
-        conn.send_raw(raw)
-        response = conn.recv_raw().decode()
+        # A second request with a visible side effect is sent in the same write,
+        # so it is already in the receive buffer when the first reply is queued.
+        # https://www.rfc-editor.org/rfc/rfc9112#section-9.6
+        # The server must not process it after sending a reply that closes the connection.
+        body2 = b'{"method":"setnetworkactive","params":[false]}'
+        raw2 = (
+            f"POST / HTTP/1.1\r\n"
+            f"Host: {conn.url.hostname}\r\n"
+            f"Authorization: Basic {str_to_b64str(conn.authpair)}\r\n"
+            f"Content-Length: {len(body2)}\r\n"
+            f"\r\n"
+        ).encode("ascii") + body2
+        conn.send_raw(raw + raw2)
+        # Read until EOF: the server closes the connection after its reply.
+        response = b""
+        while True:
+            chunk = conn.recv_raw()
+            if not chunk:
+                break
+            response += chunk
+        response = response.decode()
+        assert_equal(response.count("HTTP/1.1"), 1)
         assert "HTTP/1.1 200 OK" in response
         count = self.node.getblockcount()
         assert f'"result":{count}' in response
+        # https://www.rfc-editor.org/rfc/rfc9112#section-6.1
+        # The server must close the connection after responding.
+        assert "Connection: close" in response
+        assert_equal(self.node.getnetworkinfo()["networkactive"], True)
 
 
     def check_duplicate_content_length(self):
