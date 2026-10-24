@@ -14,7 +14,7 @@ mingw32_NM = $(host_toolchain)gcc-nm
 mingw32_RANLIB = $(host_toolchain)gcc-ranlib
 endif
 
-mingw32_release_CFLAGS=-O2
+mingw32_release_CFLAGS=-O2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3
 mingw32_release_CXXFLAGS=$(mingw32_release_CFLAGS)
 
 mingw32_debug_CFLAGS=-O1 -g

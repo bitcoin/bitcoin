@@ -7,7 +7,7 @@ linux_NM = $(host_toolchain)gcc-nm
 linux_RANLIB = $(host_toolchain)gcc-ranlib
 endif
 
-linux_release_CFLAGS=-O2
+linux_release_CFLAGS=-O2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-clash-protection
 linux_release_CXXFLAGS=$(linux_release_CFLAGS)
 
 linux_debug_CFLAGS=-O1 -g
