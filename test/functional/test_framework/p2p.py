@@ -799,7 +799,9 @@ class NetworkThread(threading.Thread):
             addr = '127.0.0.1'
 
         def exception_handler(loop, context):
-            if not p2p.reconnect:
+            # Several listeners share this loop: judge the protocol that failed, not the last one
+            # registered. A protocol awaiting a v1 reconnect is expected to drop v2 handshake bytes.
+            if not getattr(context.get("protocol"), "reconnect", p2p.reconnect):
                 loop.default_exception_handler(context)
 
         cls.network_event_loop.set_exception_handler(exception_handler)

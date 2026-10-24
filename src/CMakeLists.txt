@@ -239,6 +239,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   node/mini_miner.cpp
   node/minisketchwrapper.cpp
   node/peerman_args.cpp
+  node/privbcast.cpp
   node/psbt.cpp
   node/timeoffsets.cpp
   node/transaction.cpp
@@ -257,7 +258,14 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   policy/rbf.cpp
   policy/settings.cpp
   policy/truc_policy.cpp
-  private_broadcast.cpp
+  privbcast/assign.cpp
+  privbcast/attempt.cpp
+  privbcast/discovery.cpp
+  privbcast/job.cpp
+  privbcast/plan.cpp
+  privbcast/report.cpp
+  privbcast/socks5.cpp
+  privbcast/stream.cpp
   rest.cpp
   rpc/blockchain.cpp
   rpc/external_signer.cpp
