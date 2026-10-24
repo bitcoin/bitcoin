@@ -4,6 +4,7 @@
 
 #include <key.h>
 #include <key_io.h>
+#include <musig.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <script/solver.h>
@@ -48,6 +49,38 @@ BOOST_AUTO_TEST_CASE(desc_spkm_topup_fail)
     BOOST_CHECK_EXCEPTION(
         CreateDescriptor(keystore, "wpkh(" + EncodeExtPubKey(extkey.Neuter()) + "/*h)", /*success=*/true),
         std::runtime_error, HasReason("Could not top up scriptPubKeys"));
+}
+
+BOOST_AUTO_TEST_CASE(desc_spkm_musig2_secnonces_are_bounded)
+{
+    CWallet keystore(m_node.chain.get(), "", CreateMockableWalletDatabase());
+    auto key = GenerateRandomKey();
+    auto spk_man = CreateDescriptor(keystore, "tr(" + EncodeSecret(key) + ")", /*success=*/true);
+    BOOST_REQUIRE(spk_man != nullptr);
+    auto provider = spk_man->GetSigningProvider(key.GetPubKey());
+    BOOST_REQUIRE(provider != nullptr);
+
+    // Start sessions that are never finished. The limit is below this number.
+    constexpr int num_sessions{4096};
+    std::vector<uint256> session_ids;
+    for (int i = 0; i < num_sessions; ++i) {
+        session_ids.emplace_back(m_rng.rand256());
+        provider->SetMuSig2SecNonce(session_ids.back(), MuSig2SecNonce{});
+    }
+
+    // The oldest session is dropped and the newest is kept, also when the sessions
+    // are looked up through another provider of the same descriptor.
+    auto other_provider = spk_man->GetSigningProvider(key.GetPubKey());
+    BOOST_REQUIRE(other_provider != nullptr);
+    BOOST_CHECK(!other_provider->GetMuSig2SecNonce(session_ids.front()).has_value());
+    BOOST_CHECK(other_provider->GetMuSig2SecNonce(session_ids.back()).has_value());
+    size_t kept{0};
+    for (const uint256& id : session_ids) kept += other_provider->GetMuSig2SecNonce(id).has_value();
+    BOOST_CHECK_LT(kept, size_t{num_sessions});
+
+    // A session that is kept can be deleted.
+    other_provider->DeleteMuSig2Session(session_ids.back());
+    BOOST_CHECK(!provider->GetMuSig2SecNonce(session_ids.back()).has_value());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
