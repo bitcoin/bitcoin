@@ -358,6 +358,29 @@ void SignTransactionResultToJSON(CMutableTransaction& mtx, bool complete, const 
     }
 }
 
+std::vector<RPCResult> RawTransactionDoc(int32_t verbosity, TxDocOptions opts, const std::vector<RPCResult>& extra_context)
+{
+    const bool v2{verbosity == 2};
+    const std::vector<RPCResult> context{Cat(extra_context, std::vector<RPCResult>{
+        {RPCResult::Type::STR_HEX, "blockhash", /*optional=*/true, "the block hash (omitted for mempool transactions)"},
+        {RPCResult::Type::NUM, "confirmations", /*optional=*/true, "The confirmations"},
+        {RPCResult::Type::NUM_TIME, "blocktime", /*optional=*/true, "The block time expressed in " + UNIX_EPOCH_TIME},
+        {RPCResult::Type::NUM, "time", /*optional=*/true, "Same as \"blocktime\""},
+        {RPCResult::Type::STR_HEX, "hex", "The serialized, hex-encoded data for the transaction"},
+    })};
+    opts.elision_mode = v2 ? ElisionMode::Silent : ElisionMode::None;
+    opts.prevout = v2;
+    opts.prevout_optional = v2;
+    opts.vin_inner_elision = v2 ? std::optional<std::string>{"Same vin fields as verbosity = 1"} : std::nullopt;
+    std::vector<RPCResult> doc{Cat(v2 ? ElideGroup(context, "Same fields as verbosity = 1") : context, TxDoc(opts))};
+    // Keep fee outside Silent elision so it remains visible in v2 help.
+    if (v2) {
+        doc.emplace_back(RPCResult::Type::NUM, "fee", /*optional=*/true,
+                         "transaction fee in " + CURRENCY_UNIT + ", omitted if block undo data is not available");
+    }
+    return doc;
+}
+
 std::vector<RPCResult> TxDoc(const TxDocOptions& opts)
 {
     CHECK_NONFATAL(!opts.fee_doc || opts.fee);
@@ -437,9 +460,12 @@ std::vector<RPCResult> TxDoc(const TxDocOptions& opts)
                     {RPCResult::Type::NUM, "n", "index"},
                     {RPCResult::Type::OBJ, "scriptPubKey", "", ScriptPubKeyDoc()},
                 },
-                opts.wallet ?
-                    std::vector<RPCResult>{{RPCResult::Type::BOOL, "ischange", /*optional=*/true, "Output script is change (only present if true)"}} :
-                    std::vector<RPCResult>{}
+                Cat(
+                    opts.wallet ?
+                        std::vector<RPCResult>{{RPCResult::Type::BOOL, "ischange", /*optional=*/true, "Output script is change (only present if true)"}} :
+                        std::vector<RPCResult>{},
+                    opts.extra_vout
+                )
             )},
         }},
     };
