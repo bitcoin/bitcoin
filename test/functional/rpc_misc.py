@@ -100,7 +100,7 @@ class RpcMiscTest(BitcoinTestFramework):
         assert_equal(node.getindexinfo(), {})
 
         # Restart the node with indices.
-        self.restart_node(0, ["-txindex", "-blockfilterindex", "-coinstatsindex", "-txospenderindex"])
+        self.restart_node(0, ["-txindex", "-blockfilterindex", "-coinstatsindex", "-txospenderindex", "-txoscriptindex"])
 
         # Returns a list of all running indices by default
         values = {"synced": True, "best_block_height": 200}
@@ -111,10 +111,11 @@ class RpcMiscTest(BitcoinTestFramework):
                 "basic block filter index": values,
                 "coinstatsindex": values,
                 "txospenderindex": values,
+                "txoscriptindex": values,
             }
         )
         # Specifying an index by name returns only the status of that index
-        for i in {"txindex", "basic block filter index", "coinstatsindex", "txospenderindex"}:
+        for i in {"txindex", "basic block filter index", "coinstatsindex", "txospenderindex", "txoscriptindex"}:
             assert_equal(node.getindexinfo(i), {i: values})
 
         # Specifying an unknown index name returns an empty result
