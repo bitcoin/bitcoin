@@ -7,6 +7,7 @@
 #include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
 #include <index/txindex.h>
+#include <index/txoscriptindex.h>
 #include <index/txospenderindex.h>
 #include <node/context.h>
 
@@ -15,6 +16,7 @@ namespace node {
 void IndexDeleter::operator()(BlockFilterIndex* index) const noexcept { delete index; }
 void IndexDeleter::operator()(CoinStatsIndex* index) const noexcept { delete index; }
 void IndexDeleter::operator()(TxIndex* index) const noexcept { delete index; }
+void IndexDeleter::operator()(TxoScriptIndex* index) const noexcept { delete index; }
 void IndexDeleter::operator()(TxoSpenderIndex* index) const noexcept { delete index; }
 
 BlockFilterIndex* GetBlockFilterIndex(const NodeContext& node, BlockFilterType filter_type)

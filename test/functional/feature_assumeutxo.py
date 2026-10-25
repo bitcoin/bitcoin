@@ -66,7 +66,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.rpc_timeout = 120
         self.extra_args = [
             [],
-            ["-fastprune", "-prune=1", "-blockfilterindex=1", "-coinstatsindex=1"],
+            ["-fastprune", "-prune=1", "-blockfilterindex=1", "-coinstatsindex=1", "-txoscriptindex=1"],
             ["-persistmempool=0","-txindex=1", "-blockfilterindex=1", "-coinstatsindex=1"],
             []
         ]
@@ -694,6 +694,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         completed_idx_state = {
             'basic block filter index': COMPLETE_IDX,
             'coinstatsindex': COMPLETE_IDX,
+            'txoscriptindex': COMPLETE_IDX,
         }
         self.wait_until(lambda: n1.getindexinfo() == completed_idx_state)
 
