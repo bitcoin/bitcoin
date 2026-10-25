@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/license/mit.
 
+#include <common/args.h>
 #include <kernel/caches.h>
 #include <node/caches.h>
 #include <util/byte_units.h>
@@ -21,6 +22,19 @@ void CheckDbCacheWarnThreshold(uint64_t threshold, uint64_t total_ram)
 } // namespace
 
 BOOST_AUTO_TEST_SUITE(caches_tests)
+
+BOOST_AUTO_TEST_CASE(txoscriptindex_cache_allocation)
+{
+    ArgsManager args;
+    args.ForceSetArg("-dbcache", "100");
+    for (const bool enabled : {false, true}) {
+        args.ForceSetArg("-txoscriptindex", enabled ? "1" : "0");
+        const auto sizes{CalculateCacheSizes(args)};
+        BOOST_CHECK_EQUAL(sizes.index.txoscript_index, enabled ? 5_MiB : 0);
+        BOOST_CHECK_EQUAL(sizes.kernel.block_tree_db + sizes.kernel.coins_db + sizes.kernel.coins,
+                          enabled ? 95_MiB : 100_MiB);
+    }
+}
 
 BOOST_AUTO_TEST_CASE(oversized_dbcache_warning)
 {

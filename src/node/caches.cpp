@@ -7,6 +7,7 @@
 #include <common/args.h>
 #include <common/system.h>
 #include <index/txindex.h>
+#include <index/txoscriptindex.h>
 #include <index/txospenderindex.h>
 #include <kernel/caches.h>
 #include <node/interface_ui.h>
@@ -28,6 +29,8 @@ static constexpr uint64_t MAX_TX_INDEX_CACHE{1_GiB};
 static constexpr uint64_t MAX_FILTER_INDEX_CACHE{1_GiB};
 //! Max memory allocated to tx spenderindex DB specific cache in bytes.
 static constexpr uint64_t MAX_TXOSPENDER_INDEX_CACHE{1_GiB};
+//! Max memory allocated to transaction output script index DB specific cache in bytes.
+static constexpr uint64_t MAX_TXOSCRIPT_INDEX_CACHE{1_GiB};
 //! Larger default dbcache on 64-bit systems with enough RAM.
 static constexpr uint64_t HIGH_DEFAULT_DBCACHE{1_GiB};
 //! Minimum detected RAM required for HIGH_DEFAULT_DBCACHE.
@@ -67,11 +70,13 @@ CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes)
     //   of the total cache.
     // - txospenderindex (5%): serves gettxspendingprevout RPCs with very
     //   specific, rarely repeated outpoint queries.
+    // - txoscriptindex (5%): serves getscripthistory prefix scans.
     // - coinstatsindex: intentionally not included here, since usage pattern
     //   does not seem to suggest it would be necessary to cache.
     IndexCacheSizes index_sizes;
     index_sizes.tx_index = std::min(total_cache * 10 / 100, args.GetBoolArg("-txindex", DEFAULT_TXINDEX) ? MAX_TX_INDEX_CACHE : 0);
     index_sizes.txospender_index = std::min(total_cache * 5 / 100, args.GetBoolArg("-txospenderindex", DEFAULT_TXOSPENDERINDEX) ? MAX_TXOSPENDER_INDEX_CACHE : 0);
+    index_sizes.txoscript_index = std::min(total_cache * 5 / 100, args.GetBoolArg("-txoscriptindex", DEFAULT_TXOSCRIPTINDEX) ? MAX_TXOSCRIPT_INDEX_CACHE : 0);
     if (n_indexes > 0) {
         uint64_t max_cache = std::min(total_cache * 5 / 100, MAX_FILTER_INDEX_CACHE);
         index_sizes.filter_index = max_cache / n_indexes;
@@ -79,6 +84,7 @@ CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes)
     }
     total_cache -= index_sizes.tx_index;
     total_cache -= index_sizes.txospender_index;
+    total_cache -= index_sizes.txoscript_index;
     return {index_sizes, kernel::CacheSizes{total_cache}};
 }
 
