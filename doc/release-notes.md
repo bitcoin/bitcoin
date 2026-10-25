@@ -5,7 +5,7 @@ Bitcoin Core version 32.x is now available from:
 
   <https://bitcoincore.org/bin/bitcoin-core-32.x/>
 
-This release includes various bug fixes and performance
+This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
@@ -15,6 +15,9 @@ Please report bugs using the issue tracker at GitHub:
 To receive security and update notifications, please subscribe to:
 
   <https://bitcoincore.org/en/list/announcements/join/>
+
+With the release of this new major version, versions 29.x and
+older are at "End of Life" and will no longer receive updates.
 
 How to Upgrade
 ==============
@@ -47,22 +50,12 @@ Notable changes
 
 - #35919 p2p: cap maxconnections at 2,000 to reduce crash risk
 
-### Net
-
-- #36177 net: fix startup failures from stale Tor examples
-
-### Test
-
-- #36599 test: Fix intermittent timeout waiting for ibd_wtxid getdata
-
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- jeanpablojp
 - l0rinc
-- MarcoFalke
 
 As well as to everyone that helped with translations on
 [Transifex](https://explore.transifex.com/bitcoin/bitcoin/).
