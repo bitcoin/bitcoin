@@ -6,6 +6,7 @@
 #define BITCOIN_RPC_BLOCKCHAIN_H
 
 #include <consensus/amount.h>
+#include <core_io.h>
 #include <sync.h>
 #include <util/fs.h>
 #include <validation.h>
@@ -18,10 +19,11 @@
 class CBlock;
 class CBlockIndex;
 class CChain;
+class CTransaction;
+class CTxUndo;
 class UniValue;
 class AutoFile;
 class uint256;
-enum class TxVerbosity;
 
 namespace node {
 class BlockManager;
@@ -37,6 +39,11 @@ inline constexpr int NUM_GETBLOCKSTATS_PERCENTILES = 5;
  * difficulty (4295032833 hashes).
  */
 double GetDifficulty(const CBlockIndex& blockindex);
+
+/** Render a decoded transaction with block context from the active chainstate. */
+void TxToJSON(const CTransaction& tx, uint256 hashBlock, UniValue& entry,
+              Chainstate& active_chainstate, const CTxUndo* txundo = nullptr,
+              TxVerbosity verbosity = TxVerbosity::SHOW_DETAILS, bool include_hex = true);
 
 /** Block description to JSON */
 UniValue blockToJSON(node::BlockManager& blockman, const CBlock& block, const CBlockIndex& tip, const CBlockIndex& blockindex, TxVerbosity verbosity, uint256 pow_limit) LOCKS_EXCLUDED(cs_main);
