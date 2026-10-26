@@ -367,12 +367,14 @@ bool Sock::WaitManySelect(std::chrono::milliseconds timeout,
         const auto& s = sock;
         if (events.requested & RECV) {
             FD_SET(s, &recv);
+            FD_SET(s, &err);
         }
         if (events.requested & SEND) {
             FD_SET(s, &send);
         }
-        FD_SET(s, &err);
-        socket_max = std::max(socket_max, s);
+        if (events.requested & (RECV | SEND)) {
+            socket_max = std::max(socket_max, s);
+        }
     }
 
     timeval tv = MillisToTimeval(timeout);
