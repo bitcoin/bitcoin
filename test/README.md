@@ -36,15 +36,15 @@ They can be installed with any suitable tool, like the system package manager, `
 
 If an optional dependency is not installed, the corresponding tests will be skipped rather than failed.
 
-| Package manager | Python | sqlite3<br>(wallet tests) | zmq<br>(ZMQ tests) | capnp<br>(IPC tests) | lsof <sup><a href="#note1">[1]</a></sup><br>(network tests) |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **pip** | n/a | n/a | `pyzmq` | `pycapnp` | n/a |
-| **Debian/Ubuntu**<br>(`apt`) | `python3` | included | `python3-zmq` | n/a | n/a |
-| **macOS**<br>(`brew`) | `python3` | included | n/a | n/a | n/a |
-| **Windows**<br>(`winget`) | `python3` | included | n/a | n/a | n/a |
-| **FreeBSD**<br>(`pkg`) | `python3` | `databases/py-sqlite3` | `net/py-pyzmq` | n/a | `sysutils/lsof` |
-| **NetBSD**<br>(`pkgin`) | `python313` | included | `py313-zmq` | n/a | `lsof` |
-| **OpenBSD**<br>(`pkg_add`) | `python` | included | `py3-zmq` | n/a | n/a |
+| Package manager | Python | sqlite3<br>(wallet tests) | zmq<br>(ZMQ tests) | capnp<br>(IPC tests) | lsof <sup><a href="#note1">[1]</a></sup><br>(network tests) | plyvel<br>(DB corruption tests) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **pip** | n/a | n/a | `pyzmq` | `pycapnp` | n/a | `plyvel` |
+| **Debian/Ubuntu**<br>(`apt`) | `python3` | included | `python3-zmq` | n/a | n/a | `python3-plyvel` |
+| **macOS**<br>(`brew`) | `python3` | included | n/a | n/a | n/a | n/a |
+| **Windows**<br>(`winget`) | `python3` | included | n/a | n/a | n/a | n/a |
+| **FreeBSD**<br>(`pkg`) | `python3` | `databases/py-sqlite3` | `net/py-pyzmq` | n/a | `sysutils/lsof` | n/a |
+| **NetBSD**<br>(`pkgin`) | `python313` | included | `py313-zmq` | n/a | `lsof` | n/a |
+| **OpenBSD**<br>(`pkg_add`) | `python` | included | `py3-zmq` | n/a | n/a | n/a |
 
 <a id="note1"></a>1. Only used on non-Linux systems. macOS ships `lsof` in the base system. OpenBSD and Windows do not provide it, and the tests requiring it are always skipped there.
 
