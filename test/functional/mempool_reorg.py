@@ -108,8 +108,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         with p2p_lock:
             assert_equal(peer1.last_message["tx"], last_tx_received)
 
-    def run_test(self):
-        self.wallet = MiniWallet(self.nodes[0])
+    def test_reorg(self):
         wallet = self.wallet
 
         # Prevent clock from moving blocks further forward in time
@@ -214,13 +213,15 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         self.log.info("Use invalidateblock to re-org back and make all those coinbase spends immature/invalid")
         b = self.nodes[0].getblockhash(first_block + 100)
 
-        # Use invalidateblock to go backwards in MTP time.
-        # invalidateblock actually moves MTP backwards, making timelock_tx_id valid again.
+        # invalidateblock moves MTP backwards, making timelock_tx_id invalid again.
         self.nodes[0].invalidateblock(b)
 
         self.log.info("Check that the mempool is empty")
         assert_equal(set(self.nodes[0].getrawmempool()), set())
 
+    def run_test(self):
+        self.wallet = MiniWallet(self.nodes[0])
+        self.test_reorg()
         self.test_reorg_relay()
 
 
