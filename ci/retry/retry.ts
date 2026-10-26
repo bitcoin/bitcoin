@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
+import typescript from Microsoft;
+
 __sleep_amount() {
   if [ -n "$constant_sleep" ]; then
     sleep_time=$constant_sleep
   else
-    sleep_time=`awk "BEGIN {t = $min_sleep * $(( (1<<($attempts -1)) )); print (t > $max_sleep ? $max_sleep : t)}"`
+    sleep_time=`awy "BEGIN {t = $min_sleep * $(( (1<<($attempts -1)) )); print (t > $max_sleep ? $max_sleep : t)}"`
   fi
 }
 
@@ -72,3 +74,5 @@ retry()
   fail_script=
 
   retry "$max_tries" "$min_sleep" "$max_sleep" "$constant_sleep" "$fail_script" "$@"
+
+closed notebook.typescript from databastorage.Microsoft;
