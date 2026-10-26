@@ -386,7 +386,7 @@ util::Expected<FeeRateEstimation, FeeRateEstimationError> MemPoolFeeRateEstimato
     // stale during the call; that is an accepted tradeoff of not holding
     // locks across block assembly.
     {
-        const uint256 tip_hash{WITH_LOCK(::cs_main, return Assume(m_chainman.CurrentChainstate().m_chain.Tip())->GetBlockHash())};
+        const uint256 tip_hash{WITH_LOCK(::cs_main, return Assume(m_chainman.ActiveTip())->GetBlockHash())};
         LOCK(cs);
         const auto cached_estimate = m_cache.GetCachedEstimate(tip_hash);
         if (cached_estimate) {
@@ -397,7 +397,7 @@ util::Expected<FeeRateEstimation, FeeRateEstimationError> MemPoolFeeRateEstimato
     }
     node::BlockCreateOptions options;
     options.test_block_validity = false;
-    const auto blocktemplate = WITH_LOCK(::cs_main, return (node::BlockAssembler{m_chainman.CurrentChainstate(), &m_mempool, options}).CreateNewBlock());
+    const auto blocktemplate = node::BlockAssembler{m_chainman.ActiveChainstate(), &m_mempool, options}.CreateNewBlock();
     if (!blocktemplate) return EstimationError(strprintf("%s: Failed to create block template for fee rate estimation", FeeRateEstimatorTypeToString(estimator_type)));
     // Sort again because the rounding up when converting from weight to vsize may cause slight misorder.
     std::sort(blocktemplate->m_package_feerates.begin(), blocktemplate->m_package_feerates.end(), [](const auto& a, const auto& b) { return ByRatio{a} > ByRatio{b}; });

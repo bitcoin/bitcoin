@@ -36,7 +36,7 @@ static constexpr size_t WARN_FLUSH_COINS_COUNT{10'000'000};
 
 bool CCoinsViewDB::NeedsUpgrade()
 {
-    std::unique_ptr<CDBIterator> cursor{m_db->NewIterator()};
+    std::unique_ptr<CDBIterator> cursor{m_db.NewIterator()};
     // DB_COINS was deprecated in v0.15.0, commit
     // 1088b02f0ccd7358d2b7076bb9e122d59d502d02
     cursor->Seek(std::make_pair(DB_COINS, uint256{}));
@@ -55,40 +55,25 @@ struct CoinEntry {
 
 } // namespace
 
-CCoinsViewDB::CCoinsViewDB(DBParams db_params, CoinsViewOptions options) :
-    m_db_params{std::move(db_params)},
+CCoinsViewDB::CCoinsViewDB(const DBParams& db_params, CoinsViewOptions options) :
+    m_path{db_params.path},
     m_options{std::move(options)},
-    m_db{std::make_unique<CDBWrapper>(m_db_params)} { }
+    m_db{db_params} { }
 
 CCoinsViewDB::~CCoinsViewDB()
 {
     if (m_compaction.valid()) {
         if (m_compaction.wait_for(std::chrono::seconds{0}) != std::future_status::ready) {
-            LogInfo("Waiting for background chainstate compaction of %s", fs::PathToString(m_db_params.path));
+            LogInfo("Waiting for background chainstate compaction of %s", fs::PathToString(m_path));
         }
         m_compaction.wait();
-    }
-}
-
-void CCoinsViewDB::ResizeCache(size_t new_cache_size)
-{
-    // We can't do this operation with an in-memory DB since we'll lose all the coins upon
-    // reset.
-    if (!m_db_params.memory_only) {
-        LOCK(m_db_mutex);
-        // Have to do a reset first to get the original `m_db` state to release its
-        // filesystem lock.
-        m_db.reset();
-        m_db_params.cache_bytes = new_cache_size;
-        m_db_params.wipe_data = false;
-        m_db = std::make_unique<CDBWrapper>(m_db_params);
     }
 }
 
 std::optional<Coin> CCoinsViewDB::GetCoin(const COutPoint& outpoint) const
 {
     Coin coin;
-    const CDBWrapper::ReadStatus res = m_db->TryRead(CoinEntry(&outpoint), coin);
+    const CDBWrapper::ReadStatus res = m_db.TryRead(CoinEntry(&outpoint), coin);
     if (!res) {
         // Propagate errors so CCoinsViewErrorCatcher triggers a clean shutdown.
         switch (const auto& [err_code, err_msg] = res.error(); err_code) {
@@ -114,19 +99,19 @@ std::optional<Coin> CCoinsViewDB::PeekCoin(const COutPoint& outpoint) const
 
 bool CCoinsViewDB::HaveCoin(const COutPoint& outpoint) const
 {
-    return m_db->Exists(CoinEntry(&outpoint));
+    return m_db.Exists(CoinEntry(&outpoint));
 }
 
 uint256 CCoinsViewDB::GetBestBlock() const {
     uint256 hashBestChain;
-    if (!m_db->Read(DB_BEST_BLOCK, hashBestChain))
+    if (!m_db.Read(DB_BEST_BLOCK, hashBestChain))
         return uint256();
     return hashBestChain;
 }
 
 std::vector<uint256> CCoinsViewDB::GetHeadBlocks() const {
     std::vector<uint256> vhashHeadBlocks;
-    if (!m_db->Read(DB_HEAD_BLOCKS, vhashHeadBlocks)) {
+    if (!m_db.Read(DB_HEAD_BLOCKS, vhashHeadBlocks)) {
         return std::vector<uint256>();
     }
     return vhashHeadBlocks;
@@ -134,7 +119,7 @@ std::vector<uint256> CCoinsViewDB::GetHeadBlocks() const {
 
 void CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block_hash)
 {
-    CDBBatch batch(*m_db);
+    CDBBatch batch(m_db);
     size_t count = 0;
     const size_t dirty_count{cursor.GetDirtyCount()};
     assert(!block_hash.IsNull());
@@ -177,7 +162,7 @@ void CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block
         if (batch.ApproximateSize() > m_options.batch_write_bytes) {
             LogDebug(BCLog::COINDB, "Writing partial batch of %.2f MiB\n", batch.ApproximateSize() / double(1_MiB));
 
-            m_db->WriteBatch(batch);
+            m_db.WriteBatch(batch);
             batch.Clear();
             if (m_options.simulate_crash_ratio) {
                 static FastRandomContext rng;
@@ -194,18 +179,18 @@ void CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block
     batch.Write(DB_BEST_BLOCK, block_hash);
 
     LogDebug(BCLog::COINDB, "Writing final batch of %.2f MiB\n", batch.ApproximateSize() / double(1_MiB));
-    m_db->WriteBatch(batch);
+    m_db.WriteBatch(batch);
     LogDebug(BCLog::COINDB, "Committed %u changed transaction outputs (out of %u) to coin database...", (unsigned int)dirty_count, (unsigned int)count);
 }
 
 size_t CCoinsViewDB::EstimateSize() const
 {
-    return m_db->EstimateSize(DB_COIN, uint8_t(DB_COIN + 1));
+    return m_db.EstimateSize(DB_COIN, uint8_t(DB_COIN + 1));
 }
 
 std::optional<std::string> CCoinsViewDB::GetDBProperty(const std::string& property)
 {
-    return m_db->GetProperty(property);
+    return m_db.GetProperty(property);
 }
 
 std::shared_future<void> CCoinsViewDB::CompactFullAsync()
@@ -215,11 +200,9 @@ std::shared_future<void> CCoinsViewDB::CompactFullAsync()
     m_compaction = std::async(std::launch::async, [this] {
         try {
             util::ThreadRename("utxocompact");
-            LOCK(m_db_mutex);
-
-            LogDebug(BCLog::COINDB, "Starting chainstate compaction of %s", fs::PathToString(m_db_params.path));
-            m_db->CompactFull();
-            LogDebug(BCLog::COINDB, "Finished chainstate compaction of %s", fs::PathToString(m_db_params.path));
+            LogDebug(BCLog::COINDB, "Starting chainstate compaction of %s", fs::PathToString(m_path));
+            m_db.CompactFull();
+            LogDebug(BCLog::COINDB, "Finished chainstate compaction of %s", fs::PathToString(m_path));
         } catch (const std::exception& e) {
             LogWarning("Failed chainstate compaction (%s)", e.what());
         }
@@ -253,7 +236,7 @@ private:
 std::unique_ptr<CCoinsViewCursor> CCoinsViewDB::Cursor() const
 {
     auto i = std::make_unique<CCoinsViewDBCursor>(
-        const_cast<CDBWrapper&>(*m_db).NewIterator(), GetBestBlock());
+        const_cast<CDBWrapper&>(m_db).NewIterator(), GetBestBlock());
     /* It seems that there are no "const iterators" for LevelDB.  Since we
        only need read operations on it, use a const-cast to get around
        that restriction.  */

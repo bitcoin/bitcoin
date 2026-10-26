@@ -627,7 +627,7 @@ public:
     bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, const SyncTxState& state, bool rescanning_old_block) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool LoadToWallet(CWalletTx&& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void transactionAddedToMempool(const CTransactionRef& tx) override;
-    void blockConnected(const kernel::ChainstateRole& role, const interfaces::BlockInfo& block) override;
+    void blockConnected(const interfaces::BlockInfo& block) override;
     void blockDisconnected(const interfaces::BlockInfo& block) override;
     void updatedBlockTip() override;
     void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) override;

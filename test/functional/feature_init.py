@@ -17,7 +17,7 @@ from test_framework.test_node import (
     BITCOIN_PID_FILENAME_DEFAULT,
     ErrorMatch,
 )
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, sha256sum_file
 
 ALL_INDEX_ARGS = [
     '-txindex=1',
@@ -274,6 +274,39 @@ class InitTest(BitcoinTestFramework):
         self.stop_node(0)
         assert not custom_pidfile_absolute.exists()
 
+    def init_snapshot_test(self):
+        node = self.nodes[0]
+        snapshot_dir = node.chain_path / "chainstate_snapshot"
+        self.log.info("Ignore a regular file and warn about a malformed snapshot directory")
+        snapshot_dir.touch()
+        self.start_node(0, extra_args=["-reindex"])
+        self.stop_node(0)
+        assert snapshot_dir.exists()
+        snapshot_dir.unlink()
+        snapshot_dir.mkdir()
+        with node.assert_debug_log(["Ignoring malformed AssumeUTXO snapshot directory"]):
+            self.start_node(0, extra_args=["-reindex-chainstate"])
+            self.stop_node(0)
+        assert snapshot_dir.exists()
+        snapshot_dir.rmdir()
+
+        self.log.info("Reject unfinished AssumeUTXO snapshots without changing storage")
+        snapshot_dir.mkdir()
+        marker = snapshot_dir / "base_blockhash"
+        marker.write_bytes(bytes(32))
+        index_dir = node.blocks_path / "index"
+        index_files = {path.name: sha256sum_file(path) for path in index_dir.iterdir()}
+        for args in [[], ["-reindex"], ["-reindex-chainstate"]]:
+            node.assert_start_raises_init_error(
+                extra_args=args,
+                expected_msg="An unfinished AssumeUTXO snapshot was found in .*chainstate_snapshot.*or delete this directory and restart with -reindex",
+                match=ErrorMatch.PARTIAL_REGEX,
+            )
+            assert_equal(marker.read_bytes(), bytes(32))
+            assert_equal(index_files, {path.name: sha256sum_file(path) for path in index_dir.iterdir()})
+        marker.unlink()
+        snapshot_dir.rmdir()
+
     def break_wait_test(self):
         """Test what happens when a break signal is sent during a
         waitforblockheight RPC call with a long timeout. Ctrl-Break is sent on
@@ -429,6 +462,7 @@ class InitTest(BitcoinTestFramework):
 
     def run_test(self):
         self.init_pid_test()
+        self.init_snapshot_test()
         self.init_stress_test_interrupt()
         self.init_stress_test_removals()
         self.break_wait_test()

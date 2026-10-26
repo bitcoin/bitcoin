@@ -10,6 +10,7 @@
 #include <psbt.h>
 #include <util/strencodings.h>
 #include <util/subprocess.h>
+#include <util/vector.h>
 
 #include <algorithm>
 #include <stdexcept>

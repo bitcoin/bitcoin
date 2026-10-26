@@ -1400,11 +1400,6 @@ public:
     //! that peer during `net_processing.cpp:PushNodeVersion()`.
     ServiceFlags GetLocalServices() const;
 
-    //! Updates the local services that this node advertises to other peers
-    //! during connection handshake.
-    void AddLocalServices(ServiceFlags services) { m_local_services = ServiceFlags(m_local_services | services); };
-    void RemoveLocalServices(ServiceFlags services) { m_local_services = ServiceFlags(m_local_services & ~services); }
-
     uint64_t GetMaxOutboundTarget() const EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);
     std::chrono::seconds GetMaxOutboundTimeframe() const;
 
@@ -1704,13 +1699,11 @@ private:
      *
      * This data is replicated in each Peer instance we create.
      *
-     * This data is not marked const, but after being set it should not
-     * change. Unless AssumeUTXO is started, in which case, the peer
-     * will be limited until the background chain sync finishes.
+     * This data is not marked const, but after being set it should not change.
      *
      * \sa Peer::our_services
      */
-    std::atomic<ServiceFlags> m_local_services;
+    ServiceFlags m_local_services;
 
     std::unique_ptr<std::counting_semaphore<>> semOutbound;
     std::unique_ptr<std::counting_semaphore<>> semAddnode;

@@ -19,12 +19,10 @@
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <sync.h>
-#include <test/util/script.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <validation.h>
 #include <validationinterface.h>
-#include <versionbits.h>
 
 #include <cstdint>
 #include <memory>
@@ -40,41 +38,6 @@ COutPoint generatetoaddress(const NodeContext& node, const std::string& address)
     return MineBlock(node, {
         .coinbase_output_script = GetScriptForDestination(dest),
     });
-}
-
-std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const CChainParams& params)
-{
-    std::vector<std::shared_ptr<CBlock>> ret{total_height};
-    auto time{params.GenesisBlock().nTime};
-    // NOTE: here `height` does not correspond to the block height but the block height - 1.
-    for (size_t height{0}; height < total_height; ++height) {
-        CBlock& block{*(ret.at(height) = std::make_shared<CBlock>())};
-
-        CMutableTransaction coinbase_tx;
-        coinbase_tx.nLockTime = static_cast<uint32_t>(height);
-        coinbase_tx.vin.resize(1);
-        coinbase_tx.vin[0].prevout.SetNull();
-        coinbase_tx.vin[0].nSequence = CTxIn::MAX_SEQUENCE_NONFINAL; // Make sure timelock is enforced.
-        coinbase_tx.vout.resize(1);
-        coinbase_tx.vout[0].scriptPubKey = P2WSH_OP_TRUE;
-        coinbase_tx.vout[0].nValue = GetBlockSubsidy(height + 1, params.GetConsensus());
-        // Always include OP_0 as a dummy extraNonce.
-        coinbase_tx.vin[0].scriptSig = CScript() << (height + 1) << OP_0;
-        block.vtx = {MakeTransactionRef(std::move(coinbase_tx))};
-
-        block.nVersion = VERSIONBITS_LAST_OLD_BLOCK_VERSION;
-        block.hashPrevBlock = (height >= 1 ? *ret.at(height - 1) : params.GenesisBlock()).GetHash();
-        block.hashMerkleRoot = BlockMerkleRoot(block);
-        block.nTime = ++time;
-        block.nBits = params.GenesisBlock().nBits;
-        block.nNonce = 0;
-
-        while (!CheckProofOfWork(block.GetHash(), block.nBits, params.GetConsensus())) {
-            ++block.nNonce;
-            assert(block.nNonce);
-        }
-    }
-    return ret;
 }
 
 bool BuildChain(const NodeContext& node, const CBlockIndex* pindex,

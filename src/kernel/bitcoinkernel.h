@@ -1298,6 +1298,9 @@ BITCOINKERNEL_API void btck_chainstate_manager_options_destroy(btck_ChainstateMa
  * validation tasks as well as for retrieving data from the chain and
  * interacting with its chainstate and indexes.
  *
+ * Unfinished AssumeUTXO datadirs are rejected. Finish validation with a supporting
+ * version and restart it, or delete chainstate_snapshot and rebuild both the block index and chainstate.
+ *
  * @param[in] chainstate_manager_options Non-null, created by @ref btck_chainstate_manager_options_create.
  * @return                               The allocated chainstate manager, or null on error.
  */

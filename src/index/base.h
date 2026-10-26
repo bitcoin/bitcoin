@@ -45,11 +45,6 @@ struct ConstevalFormatString;
  * Base class for indices of blockchain data. This implements
  * CValidationInterface and ensures blocks are indexed sequentially according
  * to their position in the active chain.
- *
- * In the presence of multiple chainstates (i.e. if a UTXO snapshot is loaded),
- * only the background "IBD" chainstate will be indexed to avoid building the
- * index out of order. When the background chainstate completes validation, the
- * index will be reinitialized and indexing will continue.
  */
 class BaseIndex : public CValidationInterface
 {
@@ -116,9 +111,9 @@ protected:
     const std::string m_name;
     const std::string m_thread_name;
 
-    void BlockConnected(const kernel::ChainstateRole& role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override;
+    void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override;
 
-    void ChainStateFlushed(const kernel::ChainstateRole& role, const CBlockLocator& locator) override;
+    void ChainStateFlushed(const CBlockLocator& locator) override;
 
     /// Initialize internal state from the database and block index.
     [[nodiscard]] virtual bool CustomInit(const std::optional<interfaces::BlockRef>& block) { return true; }
@@ -135,6 +130,9 @@ protected:
 
     virtual DB& GetDB() const = 0;
 
+    /// Get the name of the index for display in logs.
+    const std::string& GetName() const LIFETIMEBOUND { return m_name; }
+
     /// Update the internal best block index as well as the prune lock.
     void SetBestBlockIndex(const CBlockIndex* block);
 
@@ -142,9 +140,6 @@ public:
     BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name, std::string thread_name);
     /// Destructor interrupts sync thread if running and blocks until it exits.
     virtual ~BaseIndex();
-
-    /// Get the name of the index for display in logs.
-    const std::string& GetName() const LIFETIMEBOUND { return m_name; }
 
     /// Return custom notification options for index.
     [[nodiscard]] virtual interfaces::Chain::NotifyOptions CustomOptions() { return {}; }
