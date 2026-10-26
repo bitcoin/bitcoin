@@ -13,7 +13,7 @@
 AutoFile::AutoFile(std::FILE* file, const Obfuscation& obfuscation) : m_file{file}, m_obfuscation{obfuscation}
 {
     if (!IsNull()) {
-        auto pos{std::ftell(m_file)};
+        auto pos{FileTell64(m_file)};
         if (pos >= 0) m_position = pos;
     }
 }
@@ -35,7 +35,7 @@ void AutoFile::seek(int64_t offset, int origin)
     if (IsNull()) {
         throw std::ios_base::failure("AutoFile::seek: file handle is nullptr");
     }
-    if (std::fseek(m_file, offset, origin) != 0) {
+    if (FileSeek64(m_file, offset, origin) != 0) {
         throw std::ios_base::failure(feof() ? "AutoFile::seek: end of file" : "AutoFile::seek: fseek failed");
     }
     if (origin == SEEK_SET) {
@@ -43,7 +43,7 @@ void AutoFile::seek(int64_t offset, int origin)
     } else if (origin == SEEK_CUR && m_position.has_value()) {
         *m_position += offset;
     } else {
-        int64_t r{std::ftell(m_file)};
+        int64_t r{FileTell64(m_file)};
         if (r < 0) {
             throw std::ios_base::failure("AutoFile::seek: ftell failed");
         }
@@ -131,7 +131,7 @@ bool AutoFile::Commit()
     return ::FileCommit(m_file);
 }
 
-bool AutoFile::Truncate(unsigned size)
+bool AutoFile::Truncate(uint64_t size)
 {
     m_was_written = true;
     return ::TruncateFile(m_file, size);

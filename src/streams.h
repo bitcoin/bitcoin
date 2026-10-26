@@ -466,7 +466,7 @@ public:
     bool Commit();
 
     /** Wrapper around TruncateFile(). */
-    bool Truncate(unsigned size);
+    bool Truncate(uint64_t size);
 
     //! Write a mutable buffer more efficiently than write(), obfuscating the buffer in-place.
     void write_buffer(std::span<std::byte> src);

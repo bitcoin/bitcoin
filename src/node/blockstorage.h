@@ -58,8 +58,8 @@ class CBlockFileInfo
 {
 public:
     uint32_t nBlocks{};      //!< number of blocks stored in file
-    uint32_t nSize{};        //!< number of used bytes of block file
-    uint32_t nUndoSize{};    //!< number of used bytes in the undo file
+    uint64_t nSize{};        //!< number of used bytes of block file
+    uint64_t nUndoSize{};    //!< number of used bytes in the undo file
     uint32_t nHeightFirst{}; //!< lowest height of block in file
     uint32_t nHeightLast{};  //!< highest height of block in file
     uint64_t nTimeFirst{};   //!< earliest time of block in file

@@ -46,7 +46,7 @@ FILE* FlatFileSeq::Open(const FlatFilePos& pos, bool read_only) const
         LogError("Unable to open file %s", fs::PathToString(path));
         return nullptr;
     }
-    if (pos.nPos && fseek(file, pos.nPos, SEEK_SET)) {
+    if (pos.nPos && FileSeek64(file, pos.nPos, SEEK_SET)) {
         LogError("Unable to seek to position %u of %s", pos.nPos, fs::PathToString(path));
         if (fclose(file) != 0) {
             LogError("Unable to close file %s", fs::PathToString(path));
@@ -60,11 +60,11 @@ size_t FlatFileSeq::Allocate(const FlatFilePos& pos, size_t add_size, bool& out_
 {
     out_of_space = false;
 
-    unsigned int n_old_chunks = CeilDiv(pos.nPos, m_chunk_size);
-    unsigned int n_new_chunks = CeilDiv(pos.nPos + add_size, m_chunk_size);
+    uint64_t n_old_chunks = CeilDiv(pos.nPos, uint64_t{m_chunk_size});
+    uint64_t n_new_chunks = CeilDiv(pos.nPos + add_size, uint64_t{m_chunk_size});
     if (n_new_chunks > n_old_chunks) {
-        size_t old_size = pos.nPos;
-        size_t new_size = n_new_chunks * m_chunk_size;
+        uint64_t old_size = pos.nPos;
+        uint64_t new_size = n_new_chunks * m_chunk_size;
         size_t inc_size = new_size - old_size;
 
         if (CheckDiskSpace(m_dir, inc_size)) {
