@@ -1,9 +1,9 @@
-v31.x Release Notes
+v31.2 Release Notes
 ===================
 
-Bitcoin Core version 31.x is now available from:
+Bitcoin Core version 31.2 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-31.x/>
+  <https://bitcoincore.org/bin/bitcoin-core-31.2/>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -81,6 +81,12 @@ Notable changes
 - #36177 net: fix startup failures from stale Tor examples
 - #36199 net: treat RFC 9637 new IPv6 documentation range as invalid
 - #36201 Update embedded asmap to 1788801420
+- #36665 sock: align exception monitoring between poll() and select() backends
+- #36667 net: enforce timeout interval for paused send peers
+
+### Util
+
+- #36669 refactor: store positions as a 64 bits integer in flatfiles
 
 ### Test
 
