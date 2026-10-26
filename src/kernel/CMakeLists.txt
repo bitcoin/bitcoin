@@ -87,9 +87,7 @@ add_library(bitcoinkernel
 # These can be more strict and/or warnings that only apply to shared
 # libs.
 add_library(kernel_warn_interface INTERFACE)
-if(NOT MSVC)
-  try_append_cxx_flags("-Wunique-object-duplication" TARGET kernel_warn_interface SKIP_LINK)
-endif()
+try_append_cxx_flags("-Wunique-object-duplication" TARGET kernel_warn_interface SKIP_LINK)
 
 # Also manually apply the warnings to the kernel's internal dependencies
 target_link_libraries(bitcoin_clientversion PRIVATE kernel_warn_interface)
