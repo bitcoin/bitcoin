@@ -44,7 +44,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         """Trigger reorg of the fork blocks."""
         for block in fork_blocks:
             node.submitblock(block.serialize().hex())
-        assert_equal(self.nodes[0].getbestblockhash(), fork_blocks[-1].hash_hex)
+        assert_equal(node.getbestblockhash(), fork_blocks[-1].hash_hex)
 
     def test_reorg_relay(self):
         self.log.info("Test that transactions from disconnected blocks are available for relay immediately")
@@ -53,8 +53,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         self.connect_nodes(0, 1)
         self.generate(self.wallet, 3)
 
-        # Disconnect node0 and node1 to create different chains.
-        self.disconnect_nodes(0, 1)
+        fork_blocks = create_empty_fork(self.nodes[1], fork_length=3)
         # Connect a peer to node1, which doesn't have immediate tx relay
         peer1 = self.nodes[1].add_p2p_connection(P2PTxInvStore())
 
@@ -70,12 +69,8 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getmempoolentry(tx_child["txid"])["ancestorcount"], 1)
         assert_equal(len(peer1.get_invs()), 0)
 
-        # node0 has a longer chain in which tx_disconnected was not confirmed.
-        self.generate(self.nodes[0], 3, sync_fun=self.no_op)
-
-        # Reconnect the nodes and sync chains. node0's chain should win.
-        self.connect_nodes(0, 1)
-        self.sync_blocks()
+        # Activate the longer chain in which tx_disconnected was not confirmed.
+        self.trigger_reorg(fork_blocks, self.nodes[1])
 
         # Child now has an ancestor from the disconnected block
         assert_equal(self.nodes[1].getmempoolentry(tx_child["txid"])["ancestorcount"], 2)
