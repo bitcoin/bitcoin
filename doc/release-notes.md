@@ -55,6 +55,7 @@ Notable changes
 
 ### Validation
 
+- #35168 validation: Don't add pruned blocks to m_blocks_unlinked on startup
 - #35209 validation: correct lifetime of precomputed tx data
 - #35465 coins: compact chainstate regularly
 
@@ -73,6 +74,7 @@ Notable changes
 - #35678 private broadcast: define and use new RPC_LIMIT_EXCEEDED error code
 - #35691 chainparams: delete my DNS seed
 - #35766 p2p: Assume v2transport for addresses from seeds
+- #36312 net: don't discourage private broadcast peers
 
 ### Net
 
@@ -113,6 +115,7 @@ Credits
 Thanks to everyone who directly contributed to this release:
 
 - ajtowns
+- Andrew Toth
 - cyb3ralbert
 - darosior
 - fanquake
@@ -123,6 +126,7 @@ Thanks to everyone who directly contributed to this release:
 - jpk68
 - Lőrinc
 - MarcoFalke
+- marcofleon
 - Martin Zumsande
 - Mccalabrese
 - Sebastian Falbesoner
