@@ -32,13 +32,7 @@ FORK_LENGTH = 20
 
 class MempoolCoinbaseTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 2
-        self.extra_args = [
-            [
-                '-whitelist=noban@127.0.0.1',  # immediate tx relay
-            ],
-            []
-        ]
+        self.num_nodes = 1
 
     def trigger_reorg(self, fork_blocks, node):
         """Trigger reorg of the fork blocks."""
@@ -49,32 +43,30 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
     def test_reorg_relay(self):
         self.log.info("Test that transactions from disconnected blocks are available for relay immediately")
         # Prevent time from moving forward
-        self.nodes[1].setmocktime(int(time.time()))
-        self.connect_nodes(0, 1)
+        self.nodes[0].setmocktime(int(time.time()))
         self.generate(self.wallet, 3)
 
-        fork_blocks = create_empty_fork(self.nodes[1], fork_length=3)
-        # Connect a peer to node1, which doesn't have immediate tx relay
-        peer1 = self.nodes[1].add_p2p_connection(P2PTxInvStore())
+        fork_blocks = create_empty_fork(self.nodes[0], fork_length=3)
+        peer1 = self.nodes[0].add_p2p_connection(P2PTxInvStore())
 
         # Create a transaction that is included in a block.
-        tx_disconnected = self.wallet.send_self_transfer(from_node=self.nodes[1])
-        self.generate(self.nodes[1], 1, sync_fun=self.no_op)
+        tx_disconnected = self.wallet.send_self_transfer(from_node=self.nodes[0])
+        self.generate(self.nodes[0], 1)
 
-        # Create a transaction and submit it to node1's mempool.
-        tx_before_reorg = self.wallet.send_self_transfer(from_node=self.nodes[1])
+        # Create a transaction and submit it to node0's mempool.
+        tx_before_reorg = self.wallet.send_self_transfer(from_node=self.nodes[0])
 
-        # Create a child of that transaction and submit it to node1's mempool.
-        tx_child = self.wallet.send_self_transfer(utxo_to_spend=tx_disconnected["new_utxo"], from_node=self.nodes[1])
-        assert_equal(self.nodes[1].getmempoolentry(tx_child["txid"])["ancestorcount"], 1)
+        # Create a child of that transaction and submit it to node0's mempool.
+        tx_child = self.wallet.send_self_transfer(utxo_to_spend=tx_disconnected["new_utxo"], from_node=self.nodes[0])
+        assert_equal(self.nodes[0].getmempoolentry(tx_child["txid"])["ancestorcount"], 1)
         assert_equal(len(peer1.get_invs()), 0)
 
         # Activate the longer chain in which tx_disconnected was not confirmed.
-        self.trigger_reorg(fork_blocks, self.nodes[1])
+        self.trigger_reorg(fork_blocks, self.nodes[0])
 
         # Child now has an ancestor from the disconnected block
-        assert_equal(self.nodes[1].getmempoolentry(tx_child["txid"])["ancestorcount"], 2)
-        assert_equal(self.nodes[1].getmempoolentry(tx_before_reorg["txid"])["ancestorcount"], 1)
+        assert_equal(self.nodes[0].getmempoolentry(tx_child["txid"])["ancestorcount"], 2)
+        assert_equal(self.nodes[0].getmempoolentry(tx_before_reorg["txid"])["ancestorcount"], 1)
 
         # peer1 should not have received an inv for any of the transactions during this time, as no
         # mocktime has elapsed for those transactions to be announced. Likewise, it cannot
@@ -100,7 +92,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
             # However, the node will answer requests for the tx from the recently-disconnected block.
             assert_equal(peer1.last_message["tx"].tx.wtxid_hex,tx_disconnected["tx"].wtxid_hex)
 
-        self.nodes[1].setmocktime(int(time.time()) + 300)
+        self.nodes[0].setmocktime(int(time.time()) + 300)
         peer1.sync_with_ping()
         # the transactions are now announced
         assert_equal(len(peer1.get_invs()), 3)
@@ -109,9 +101,9 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
             peer1.sync_with_ping()
         last_tx_received = peer1.last_message["tx"]
 
-        tx_after_reorg = self.wallet.send_self_transfer(from_node=self.nodes[1])
+        tx_after_reorg = self.wallet.send_self_transfer(from_node=self.nodes[0])
         request_after_reorg = msg_getdata([CInv(t=MSG_WTX, h=tx_after_reorg["tx"].wtxid_int)])
-        assert tx_after_reorg["txid"] in self.nodes[1].getrawmempool()
+        assert tx_after_reorg["txid"] in self.nodes[0].getrawmempool()
         peer1.send_and_ping(request_after_reorg)
         with p2p_lock:
             assert_equal(peer1.last_message["tx"], last_tx_received)
@@ -183,8 +175,6 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         block_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time']
         assert(block_time >= now + 300)
 
-        # generate() implicitly syncs blocks, so that peer 1 gets the block before timelock_tx
-        # Otherwise, peer 1 would put the timelock_tx in m_lazy_recent_rejects
         self.log.info("The time-locked transaction can now be spent")
         timelock_tx_id = self.nodes[0].sendrawtransaction(timelock_tx)
 
@@ -193,10 +183,8 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         spend_2_1_id = self.nodes[0].sendrawtransaction(spend_2_1['hex'])
 
         assert_equal(set(self.nodes[0].getrawmempool()), {spend_1_id, spend_2_1_id, timelock_tx_id})
-        self.sync_all()
 
         self.trigger_reorg(fork_blocks, self.nodes[0])
-        self.sync_blocks()
 
         # We went backwards in time to boot timelock_tx_id
         fork_block_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time']
@@ -210,8 +198,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
 
         while (spend_2_id not in self.nodes[0].getrawmempool()):
             b = self.nodes[0].getbestblockhash()
-            for node in self.nodes:
-                node.invalidateblock(b)
+            self.nodes[0].invalidateblock(b)
 
         assert(spend_2_id in self.nodes[0].getrawmempool())
         assert(spend_2_1_id in self.nodes[0].getrawmempool())
@@ -229,12 +216,10 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
 
         # Use invalidateblock to go backwards in MTP time.
         # invalidateblock actually moves MTP backwards, making timelock_tx_id valid again.
-        for node in self.nodes:
-            node.invalidateblock(b)
+        self.nodes[0].invalidateblock(b)
 
         self.log.info("Check that the mempool is empty")
         assert_equal(set(self.nodes[0].getrawmempool()), set())
-        self.sync_all()
 
         self.test_reorg_relay()
 
