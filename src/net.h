@@ -804,6 +804,8 @@ public:
 
     std::atomic_bool fPauseRecv{false};
     std::atomic_bool fPauseSend{false};
+    /** When was fPauseSend last set from false to true */
+    std::atomic<std::chrono::seconds> m_pause_send_since{0s};
 
     std::atomic_bool fHasRecvData{false};
     std::atomic_bool fCanSendData{false};
