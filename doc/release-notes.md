@@ -1,9 +1,9 @@
-v30.x Release Notes
+v30.4 Release Notes
 ===================
 
-Bitcoin Core version v30.x is now available from:
+Bitcoin Core version v30.4 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-30.x/>
+  <https://bitcoincore.org/bin/bitcoin-core-30.4/>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -52,6 +52,15 @@ Notable changes
 
 - #35691 chainparams: delete my DNS seed
 - #35766 p2p: Assume v2transport for addresses from seeds
+
+### Net
+
+- #36665 sock: align exception monitoring between poll() and select() backends
+- #36667 net: enforce timeout interval for paused send peers
+
+### Util
+
+- #36669 refactor: store positions as a 64 bits integer in flatfiles
 
 ### Build
 
