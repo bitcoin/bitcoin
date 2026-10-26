@@ -1,6 +1,6 @@
-Bitcoin Core version 29.x is now available from:
+Bitcoin Core version 29.5 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-29.x/>
+  <https://bitcoincore.org/bin/bitcoin-core-29.5/>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -42,6 +42,15 @@ Notable changes
 - #35691 chainparams: delete my DNS seed
 - #35766 p2p: Assume v2transport for addresses from seeds
 
+### Net
+
+- #36665 sock: align exception monitoring between poll() and select() backends
+- #36667 net: enforce timeout interval for paused send peers
+
+### Util
+
+- #36669 refactor: store positions as a 64 bits integer in flatfiles
+
 ### Build
 
 - #36218 build: avoid pipe2 on Darwin (for now)
@@ -56,6 +65,7 @@ Credits
 
 Thanks to everyone who directly contributed to this release:
 
+- darosior
 - fanquake
 - Martin Zumsande
 - Sebastian Falbesoner
