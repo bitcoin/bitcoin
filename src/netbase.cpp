@@ -389,12 +389,37 @@ static std::string Socks5ErrorString(uint8_t err)
     }
 }
 
+/**
+ * Return the name to send for dest in a SOCKS5 CONNECT request.
+ *
+ * Tor copies the name into its relay BEGIN cell as "<name>:<port>", and an exit parses
+ * "2001:db8::1:8333" as an IPv6 address with no port and closes the stream. An IPv6
+ * address shortened with "::" is therefore sent with all eight groups written out
+ * ("2001:db8:0:0:0:0:0:1"), which an exit splits at the last colon and which other
+ * proxies still parse as an address. A zone index would be lost, so such names are
+ * sent unchanged.
+ */
+static std::string Socks5DestName(const std::string& dest)
+{
+    if (dest.find("::") == std::string::npos || dest.find('%') != std::string::npos) return dest;
+    const std::optional<CNetAddr> addr{LookupHost(dest, /*fAllowLookup=*/false)};
+    if (!addr || !addr->IsIPv6()) return dest;
+    const std::vector<unsigned char> bytes{addr->GetAddrBytes()};
+    std::string name;
+    for (size_t i{0}; i < bytes.size(); i += 2) {
+        if (i > 0) name += ':';
+        name += strprintf("%x", (bytes[i] << 8) | bytes[i + 1]);
+    }
+    return name;
+}
+
 bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* auth, const Sock& sock)
 {
     try {
         IntrRecvError recvr;
         LogDebug(BCLog::NET, "SOCKS5 connecting %s\n", strDest);
-        if (strDest.size() > 255) {
+        const std::string dest_name{Socks5DestName(strDest)};
+        if (dest_name.size() > 255) {
             LogDebug(BCLog::PROXY, "Hostname too long for SOCKS5 proxying: %s", strDest);
             return false;
         }
@@ -453,8 +478,8 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
         vSocks5.push_back(SOCKS5Command::CONNECT); // CMD CONNECT
         vSocks5.push_back(0x00);                   // RSV Reserved must be 0
         vSocks5.push_back(SOCKS5Atyp::DOMAINNAME); // ATYP DOMAINNAME
-        vSocks5.push_back(strDest.size());         // Length<=255 is checked at beginning of function
-        vSocks5.insert(vSocks5.end(), strDest.begin(), strDest.end());
+        vSocks5.push_back(dest_name.size());       // Length<=255 is checked at beginning of function
+        vSocks5.insert(vSocks5.end(), dest_name.begin(), dest_name.end());
         vSocks5.push_back((port >> 8) & 0xFF);
         vSocks5.push_back((port >> 0) & 0xFF);
         sock.SendComplete(vSocks5, g_socks5_recv_timeout, g_socks5_interrupt);
