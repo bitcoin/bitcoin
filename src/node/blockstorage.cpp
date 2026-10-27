@@ -857,6 +857,13 @@ util::Expected<void, WriteBlockStorageError> BlockManager::WriteBlockStorage(int
     return {};
 }
 
+void BlockManager::SetBlockfilesIndexed()
+{
+    AssertLockHeld(::cs_main);
+    m_block_tree_db->WriteReindexing(false);
+    m_blockfiles_indexed = true;
+}
+
 uint64_t BlockManager::CalculateCurrentUsage()
 {
     AssertLockHeld(::cs_main);
@@ -1346,8 +1353,7 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
                 return;
             }
         }
-        WITH_LOCK(::cs_main, chainman.m_blockman.m_block_tree_db->WriteReindexing(false));
-        chainman.m_blockman.m_blockfiles_indexed = true;
+        WITH_LOCK(::cs_main, chainman.m_blockman.SetBlockfilesIndexed());
         LogInfo("Reindexing finished");
         // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
         (void)chainman.LoadGenesisBlock();
