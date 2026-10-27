@@ -19,7 +19,7 @@
 
 #include <iostream>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <univalue.h>
 

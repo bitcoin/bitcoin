@@ -7,7 +7,6 @@ target_link_libraries(test_kernel
     core_interface
     test_framework
     bitcoinkernel
-    Boost::headers
 )
 
 add_windows_application_manifest(test_kernel)

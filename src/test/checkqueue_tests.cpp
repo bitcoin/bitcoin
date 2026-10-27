@@ -10,7 +10,7 @@
 #include <util/chaintype.h>
 #include <util/time.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <atomic>
 #include <condition_variable>

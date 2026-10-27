@@ -6,7 +6,7 @@
 #include <test/util/common.h>
 #include <util/not_null.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <memory>
 #include <set>

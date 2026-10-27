@@ -4,7 +4,7 @@
 
 #include <util/check.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 #include <test/util/common.h>
 
 BOOST_AUTO_TEST_SUITE(util_check_tests)

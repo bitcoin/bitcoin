@@ -13,7 +13,7 @@
 #include <util/chaintype.h>
 #include <validation.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 struct Dersig100Setup : public TestChain100Setup {
     Dersig100Setup()
