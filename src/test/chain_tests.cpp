@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(chain_test)
         for (int q = 0; q < 10000; ++q) {
             const CBlockIndex* block1 = block_index[ctx.randrange(block_index.size())].get();
             const CBlockIndex* block2 = block_index[ctx.randrange(block_index.size())].get();
-            const CBlockIndex* result = LastCommonAncestor(block1, block2);
+            const CBlockIndex* result = &LastCommonAncestor(*block1, *block2);
             BOOST_CHECK(result == NaiveLastCommonAncestor(block1, block2));
         }
     }

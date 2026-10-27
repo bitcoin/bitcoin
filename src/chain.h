@@ -309,8 +309,11 @@ inline arith_uint256 GetBlockProof(const CBlockHeader& header) { return GetBitsP
 
 /** Return the time it would take to redo the work difference between from and to, assuming the current hashrate corresponds to the difficulty at tip, in seconds. */
 int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& from, const CBlockIndex& tip, const Consensus::Params&);
-/** Find the forking point between two chain tips. */
-const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* pb);
+/**
+ * Find the forking point between two chain tips.
+ * The two chains must share a common ancestor (at least the same genesis).
+ */
+const CBlockIndex& LastCommonAncestor(const CBlockIndex& a, const CBlockIndex& b);
 
 
 /** Used to marshal pointers into hashes for db storage. */
@@ -379,7 +382,7 @@ public:
 class CChain
 {
 private:
-    std::vector<CBlockIndex*> vChain;
+    std::vector<CBlockIndex*> vChain;  // Pointers, never nullptr
 
 public:
     CChain() = default;
