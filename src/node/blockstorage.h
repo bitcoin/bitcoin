@@ -43,8 +43,6 @@
 
 class BlockValidationState;
 class CBlockUndo;
-class Chainstate;
-class ChainstateManager;
 namespace Consensus {
 struct Params;
 }
@@ -210,9 +208,6 @@ enum class WriteBlockStorageError {
  */
 class BlockManager
 {
-    friend Chainstate;
-    friend ChainstateManager;
-
 private:
     const CChainParams& GetParams() const { return m_opts.chainparams; }
     const Consensus::Params& GetConsensus() const { return m_opts.chainparams.GetConsensus(); }
@@ -467,6 +462,10 @@ public:
 
     /** True if any block files have ever been pruned. */
     bool m_have_pruned = false;
+
+    void RequestPrune() { m_check_for_pruning = true; }
+
+    void MarkBlockIndexDirty(CBlockIndex& index) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Check whether the block associated with this index entry is pruned or not.
     bool IsBlockPruned(const CBlockIndex& block) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
