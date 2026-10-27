@@ -30,6 +30,7 @@
 #include <util/check.h>
 #include <util/expected.h>
 #include <util/fs.h>
+#include <util/fs_helpers.h>
 #include <util/log.h>
 #include <util/obfuscation.h>
 #include <util/overflow.h>
@@ -370,6 +371,15 @@ void BlockManager::FindFilesToPrune(
     }
 }
 
+void BlockManager::SetHavePruned()
+{
+    AssertLockHeld(::cs_main);
+    if (!m_have_pruned) {
+        m_block_tree_db->WriteFlag("prunedblockfiles", true);
+        m_have_pruned = true;
+    }
+}
+
 void BlockManager::UpdatePruneLock(const std::string& name, const PruneLockInfo& lock_info) {
     AssertLockHeld(::cs_main);
     m_prune_locks[name] = lock_info;
@@ -400,6 +410,21 @@ int BlockManager::GetLastPrunableHeight(int last_prune) const
         LogDebug(BCLog::PRUNE, "%s limited pruning to height %d\n", limiting_lock.value(), last_prune);
     }
     return last_prune;
+}
+
+std::optional<int> BlockManager::BeginManualPrune(int tip_height)
+{
+    AssertLockHeld(::cs_main);
+    if (!IsPruneMode() || !m_blockfiles_indexed) return std::nullopt;
+    return GetLastPrunableHeight(tip_height);
+}
+
+std::optional<int> BlockManager::BeginTargetPrune(int tip_height)
+{
+    AssertLockHeld(::cs_main);
+    if (!IsPruneMode() || !m_check_for_pruning || !m_blockfiles_indexed) return std::nullopt;
+    m_check_for_pruning = false;
+    return GetLastPrunableHeight(tip_height);
 }
 
 void BlockManager::MovePruneLocksBack(int max_height_first)
@@ -800,14 +825,18 @@ bool BlockManager::FlushChainstateBlockFile(int tip_height)
     return true;
 }
 
-bool BlockManager::WriteBlockStorage(int tip_height)
+util::Expected<void, WriteBlockStorageError> BlockManager::WriteBlockStorage(int tip_height, const std::set<int>& files_to_prune)
 {
     AssertLockHeld(::cs_main);
+    Assume(files_to_prune.empty() || m_have_pruned);
+    m_files_to_unlink.insert(files_to_prune.begin(), files_to_prune.end());
+    // Ensure we can write block index
+    if (!CheckDiskSpace(m_opts.blocks_dir)) return util::Unexpected{WriteBlockStorageError::LowDiskSpace};
     {
         LOG_TIME_MILLIS_WITH_CATEGORY("write block and undo data to disk", BCLog::BENCH);
 
         // First make sure all block and undo data is flushed to disk.
-        if (!FlushChainstateBlockFile(tip_height)) return false;
+        if (!FlushChainstateBlockFile(tip_height)) return util::Unexpected{WriteBlockStorageError::FlushFailed};
     }
 
     // Take the pruned files with the dirty entries, which WriteBlockIndexDB() drops
@@ -825,7 +854,7 @@ bool BlockManager::WriteBlockStorage(int tip_height)
 
         UnlinkPrunedFiles(files_to_unlink);
     }
-    return true;
+    return {};
 }
 
 uint64_t BlockManager::CalculateCurrentUsage()

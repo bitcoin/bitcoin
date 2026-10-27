@@ -197,6 +197,11 @@ enum class ReadRawError {
     BadPartRange,
 };
 
+enum class WriteBlockStorageError {
+    LowDiskSpace,
+    FlushFailed,
+};
+
 /**
  * Maintains a tree of blocks (stored in `m_block_index`) which is consulted
  * to determine where the most-work tip is.
@@ -347,10 +352,12 @@ public:
     void WriteBlockIndexDB() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     /**
      * Flush the block and undo file for `tip_height`, write the block index,
-     * then delete the pruned files. Returns false, without writing the index or
-     * deleting files, if the flush fails.
+     * then delete `files_to_prune` and those left by earlier failed calls.
+     * Fails, without writing the index or deleting files, if space is low or
+     * the flush fails. Call SetHavePruned() first if `files_to_prune` is not
+     * empty.
      */
-    [[nodiscard]] bool WriteBlockStorage(int tip_height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] util::Expected<void, WriteBlockStorageError> WriteBlockStorage(int tip_height, const std::set<int>& files_to_prune) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool LoadBlockIndexDB(const std::optional<uint256>& snapshot_blockhash)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
@@ -470,6 +477,16 @@ public:
     bool DeletePruneLock(const std::string& name) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     int GetLastPrunableHeight(int last_prune) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! Return the last height a manual prune may reach, or nullopt if pruning is off
+    //! or the block files are not indexed yet.
+    std::optional<int> BeginManualPrune(int tip_height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! Like BeginManualPrune(), but only once a prune check was requested, which it clears.
+    std::optional<int> BeginTargetPrune(int tip_height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    //! Record on disk that block files have been pruned.
+    void SetHavePruned() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     void MovePruneLocksBack(int max_height_first) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 

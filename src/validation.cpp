@@ -2866,36 +2866,23 @@ bool Chainstate::FlushStateToDisk(
 
     try {
     {
-        bool fFlushForPrune = false;
-
         CoinsCacheSizeState cache_state = GetCoinsCacheSizeState();
-        if (m_blockman.IsPruneMode() && (m_blockman.m_check_for_pruning || nManualPruneHeight > 0) && m_chainman.m_blockman.m_blockfiles_indexed) {
-            // make sure we don't prune above any of the prune locks bestblocks
-            // pruning is height-based
-            const int last_prune{m_blockman.GetLastPrunableHeight(m_chain.Height())};
-
-            if (nManualPruneHeight > 0) {
+        if (nManualPruneHeight > 0) {
+            if (const auto last_prune{m_blockman.BeginManualPrune(m_chain.Height())}) {
                 LOG_TIME_MILLIS_WITH_CATEGORY("find files to prune (manual)", BCLog::BENCH);
 
                 FindFilesToPruneManual(
                     setFilesToPrune,
-                    std::min(last_prune, nManualPruneHeight),
+                    std::min(*last_prune, nManualPruneHeight),
                     *this);
-            } else {
-                LOG_TIME_MILLIS_WITH_CATEGORY("find files to prune", BCLog::BENCH);
+            }
+        } else if (const auto last_prune{m_blockman.BeginTargetPrune(m_chain.Height())}) {
+            LOG_TIME_MILLIS_WITH_CATEGORY("find files to prune", BCLog::BENCH);
 
-                FindFilesToPrune(setFilesToPrune, last_prune, *this, m_chainman);
-                m_blockman.m_check_for_pruning = false;
-            }
-            if (!setFilesToPrune.empty()) {
-                fFlushForPrune = true;
-                if (!m_blockman.m_have_pruned) {
-                    m_blockman.m_block_tree_db->WriteFlag("prunedblockfiles", true);
-                    m_blockman.m_have_pruned = true;
-                }
-                m_blockman.m_files_to_unlink.insert(setFilesToPrune.begin(), setFilesToPrune.end());
-            }
+            FindFilesToPrune(setFilesToPrune, *last_prune, *this, m_chainman);
         }
+        const bool fFlushForPrune{!setFilesToPrune.empty()};
+        if (fFlushForPrune) m_blockman.SetHavePruned();
         const auto nNow{NodeClock::now()};
         // The cache is large and we're within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
         bool fCacheLarge = mode == FlushStateMode::PERIODIC && cache_state >= CoinsCacheSizeState::LARGE;
@@ -2911,13 +2898,15 @@ bool Chainstate::FlushStateToDisk(
             LogDebug(BCLog::COINDB, "Writing chainstate to disk: flush mode=%s, prune=%d, large=%d, critical=%d, periodic=%d",
                      FlushStateModeNames[size_t(mode)], fFlushForPrune, fCacheLarge, fCacheCritical, fPeriodicWrite);
 
-            // Ensure we can write block index
-            if (!CheckDiskSpace(m_blockman.m_opts.blocks_dir)) {
-                return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
-            }
-            if (!m_blockman.WriteBlockStorage(m_chain.Height())) {
-                // WriteBlockStorage() already reported the specific error through flushError()
-                return state.Error("Failed to flush block or undo file");
+            if (const auto written{m_blockman.WriteBlockStorage(m_chain.Height(), setFilesToPrune)}; !written) {
+                switch (written.error()) {
+                case node::WriteBlockStorageError::LowDiskSpace:
+                    return FatalError(m_chainman.GetNotifications(), state, _("Disk space is too low!"));
+                case node::WriteBlockStorageError::FlushFailed:
+                    // WriteBlockStorage() already reported the specific error through flushError()
+                    return state.Error("Failed to flush block or undo file");
+                } // no default case, so the compiler can warn about missing cases
+                assert(false);
             }
 
             if (!CoinsTip().GetBestBlock().IsNull()) {
