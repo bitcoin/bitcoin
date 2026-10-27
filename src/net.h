@@ -33,6 +33,7 @@
 #include <util/not_null.h>
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
+#include <util/time.h>
 
 #include <atomic>
 #include <condition_variable>
@@ -751,9 +752,18 @@ public:
 
     const uint64_t nKeyedNetGroup;
     std::atomic_bool fPauseRecv{false};
-    std::atomic_bool fPauseSend{false};
-    /** When was fPauseSend last set from false to true */
-    std::atomic<NodeClock::time_point> m_pause_send_since{NodeClock::epoch};
+
+    bool IsSendPaused() const { return fPauseSend.load(); }
+
+    NodeClock::time_point GetPauseSendSince() const { return m_pause_send_since.load(); }
+
+    void SetPauseSend(bool pause_send) EXCLUSIVE_LOCKS_REQUIRED(cs_vSend)
+    {
+        if (pause_send && !IsSendPaused()) {
+            m_pause_send_since = NodeClock::now();
+        }
+        fPauseSend = pause_send;
+    }
 
     /** Network key used to prevent fingerprinting our node across networks.
      *  Influenced by the network and the bind address (+ bind port for inbounds) */
@@ -1022,6 +1032,10 @@ private:
     // Our address, as reported by the peer
     CService m_addr_local GUARDED_BY(m_addr_local_mutex);
     mutable Mutex m_addr_local_mutex;
+
+    std::atomic_bool fPauseSend{false};
+    /** When was fPauseSend last set from false to true */
+    std::atomic<NodeClock::time_point> m_pause_send_since{NodeClock::epoch};
 
     mapMsgTypeSize mapSendBytesPerMsgType GUARDED_BY(cs_vSend);
     mapMsgTypeSize mapRecvBytesPerMsgType GUARDED_BY(cs_vRecv);

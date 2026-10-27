@@ -21,9 +21,11 @@
 #include <test/util/net.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <test/util/validation.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <util/time.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -138,6 +140,29 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     BOOST_CHECK(pnode4->IsInboundConn() == true);
     BOOST_CHECK(pnode4->m_inbound_onion == true);
     BOOST_CHECK_EQUAL(pnode4->ConnectedThroughNetwork(), Network::NET_ONION);
+}
+
+BOOST_AUTO_TEST_CASE(cnode_pause_send)
+{
+    FakeNodeClock clock{1s};
+    CNode peer{/*id=*/0, /*sock=*/nullptr, /*addrIn=*/CAddress{}, /*nKeyedNetGroupIn=*/0, /*nLocalHostNonceIn=*/0, /*addrBindIn=*/CService{}, /*addrNameIn=*/"", ConnectionType::INBOUND, /*inbound_onion=*/false, /*network_key=*/0};
+    BOOST_CHECK(!peer.IsSendPaused());
+
+    LOCK(peer.cs_vSend);
+    const auto first_pause{NodeClock::now()};
+    peer.SetPauseSend(true);
+    BOOST_CHECK(peer.IsSendPaused());
+    BOOST_CHECK_EQUAL(peer.GetPauseSendSince(), first_pause);
+
+    clock += 1s;
+    peer.SetPauseSend(true);
+    BOOST_CHECK_EQUAL(peer.GetPauseSendSince(), first_pause);
+
+    peer.SetPauseSend(false);
+    BOOST_CHECK(!peer.IsSendPaused());
+    peer.SetPauseSend(true);
+    BOOST_CHECK(peer.IsSendPaused());
+    BOOST_CHECK_EQUAL(peer.GetPauseSendSince(), NodeClock::now());
 }
 
 BOOST_AUTO_TEST_CASE(cnetaddr_basic)
