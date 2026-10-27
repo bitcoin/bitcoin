@@ -38,8 +38,8 @@ enum class Encoding {
  *  convert the CharLimit::VALUE to an int. In practice, this should never happen since this CharLimit applies to an address encoding
  *  and we would never encode an address with such a massive value */
 enum CharLimit : size_t {
-    BECH32 = 90,            //!< BIP173/350 imposed character limit for Bech32(m) encoded addresses. This guarantees finding up to 4 errors.
-    SILENT_PAYMENTS = 1023, //!< BIP352 imposed 1023 character limit on Bech32m encoded silent payment addresses. This guarantees finding up to 3 errors.
+    BECH32 = 90,            //!< BIP173/350 imposed character limit for Bech32(m) encoded addresses. Checksum detects up to 4 char changes.
+    SILENT_PAYMENTS = 1023, //!< BIP352 imposed 1023 character limit on Bech32m encoded silent payment addresses. Checksum detects up to 3 char changes.
 };
 
 /** Encode a Bech32 or Bech32m string. If hrp contains uppercase characters, this will cause an
