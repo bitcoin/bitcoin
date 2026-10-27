@@ -383,6 +383,7 @@ public:
 class CChain
 {
 private:
+    // Pointers, but never nullptr (except temporarily within SetTip())
     std::vector<CBlockIndex*> vChain;
 
 public:
