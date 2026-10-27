@@ -12,9 +12,11 @@
 #include <streams.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
+#include <util/sock.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 
+#include <chrono>
 #include <string>
 #include <numeric>
 
@@ -618,6 +620,43 @@ BOOST_AUTO_TEST_CASE(isbadport)
     BOOST_CHECK_EQUAL(std::ranges::count_if(ports, IsBadPort), 85);
 }
 
+
+/** Test that TCP urgent data is received inline like any other data on an accepted socket. */
+BOOST_AUTO_TEST_CASE(urgent_data_inline)
+{
+    // Create the server socket.
+    const auto listener{CreateSockOS(AF_INET, SOCK_STREAM, IPPROTO_TCP)};
+    BOOST_REQUIRE(listener);
+    sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    BOOST_REQUIRE_EQUAL(listener->Bind(reinterpret_cast<const sockaddr*>(&addr), sizeof(addr)), 0);
+    BOOST_REQUIRE_EQUAL(listener->Listen(1), 0);
+    socklen_t addr_len{sizeof(addr)};
+    BOOST_REQUIRE_EQUAL(listener->GetSockName(reinterpret_cast<sockaddr*>(&addr), &addr_len), 0);
+
+    // Connect to server from client. Use `CreateSockOS` directly instead of the `ConnectDirectly`
+    // helper to make sure the peer doesn't become a mock (which could happen for instance if
+    // the test suite was updated to use SocketTestingSetup instead of BasicTestingSetup).
+    const auto peer{CreateSockOS(AF_INET, SOCK_STREAM, IPPROTO_TCP)};
+    BOOST_REQUIRE(peer);
+    (void)peer->Connect(reinterpret_cast<const sockaddr*>(&addr), addr_len);
+
+    // Accept the client's connection on the server.
+    BOOST_REQUIRE(listener->Wait(1min, Sock::RecvEvent));
+    const auto sock{listener->Accept(nullptr, nullptr)};
+    BOOST_REQUIRE(sock);
+    BOOST_REQUIRE(sock->SetNonBlocking());
+
+    // Check that out of band data sent by the client is received like regular data on the server.
+    BOOST_REQUIRE_EQUAL(peer->Send("U", 1, MSG_OOB), 1);
+    Sock::Event occurred{0};
+    BOOST_REQUIRE(sock->Wait(1min, Sock::RecvEvent, &occurred));
+    BOOST_CHECK(occurred & Sock::RecvEvent);
+    char c{0};
+    BOOST_CHECK_EQUAL(sock->Recv(&c, 1, 0), 1);
+    BOOST_CHECK_EQUAL(c, 'U');
+}
 
 BOOST_AUTO_TEST_CASE(asmap_test_vectors)
 {
