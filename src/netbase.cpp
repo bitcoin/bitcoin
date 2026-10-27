@@ -569,6 +569,12 @@ std::unique_ptr<Sock> CreateSockOS(int domain, int type, int protocol)
         if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == SOCKET_ERROR) {
             LogDebug(BCLog::NET, "Unable to set TCP_NODELAY on a newly created socket, continuing anyway\n");
         }
+
+        // Receive TCP urgent data inline, like any other data. Out of band, it is not returned by
+        // recv() but select() reports it as pending.
+        if (sock->SetSockOpt(SOL_SOCKET, SO_OOBINLINE, &on, sizeof(on)) == SOCKET_ERROR) {
+            LogWarnThenDebug(BCLog::NET, "Error setting SO_OOBINLINE on socket: %s", NetworkErrorString(WSAGetLastError()));
+        }
     }
 
     return sock;
