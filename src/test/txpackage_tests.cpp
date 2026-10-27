@@ -917,6 +917,18 @@ BOOST_AUTO_TEST_CASE(package_cpfp_tests)
         }
     }
 
+    // Deltas near INT64_MIN on both: the package's modified fees add up saturating, so the package
+    // is refused rather than its fee wrapping around to a large positive one.
+    m_node.mempool->PrioritiseTransaction(tx_child->GetHash(), -5'000'000'000'000'000'000);
+    m_node.mempool->PrioritiseTransaction(tx_parent->GetHash(), -5'000'000'000'000'000'000 - (child_value - coinbase_value));
+    {
+        const auto submit_overflow = ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool,
+                                                       package_cpfp, /*test_accept=*/ false, /*client_maxfeerate=*/{});
+        BOOST_CHECK(submit_overflow.m_state.IsInvalid());
+        BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
+    }
+    WITH_LOCK(m_node.mempool->cs, m_node.mempool->ClearPrioritisation(tx_child->GetHash()));
+
     // Clear the prioritisation of the parent transaction.
     WITH_LOCK(m_node.mempool->cs, m_node.mempool->ClearPrioritisation(tx_parent->GetHash()));
 
@@ -1074,6 +1086,103 @@ BOOST_AUTO_TEST_CASE(package_cpfp_tests)
         expected_pool_size += 1;
         BOOST_CHECK_EQUAL(m_node.mempool->size(), expected_pool_size);
     }
+}
+
+BOOST_AUTO_TEST_CASE(package_test_as_submission)
+{
+    mineBlocks(5);
+    MockMempoolMinFee(CFeeRate(5000), *m_node.mempool);
+    LOCK(::cs_main);
+    const size_t pool_size{m_node.mempool->size()};
+    CKey parent_key = GenerateRandomKey();
+    CScript parent_spk = GetScriptForDestination(WitnessV0KeyHash(parent_key.GetPubKey()));
+    CScript child_spk = GetScriptForDestination(WitnessV0KeyHash(GenerateRandomKey().GetPubKey()));
+    const CAmount parent_value{50 * COIN - low_fee_amt};
+    auto tx_parent = MakeTransactionRef(CreateValidMempoolTransaction(/*input_transaction=*/m_coinbase_txns[0], /*input_vout=*/0,
+                                                                      /*input_height=*/0, /*input_signing_key=*/coinbaseKey,
+                                                                      /*output_destination=*/parent_spk,
+                                                                      /*output_amount=*/parent_value, /*submit=*/false));
+    auto mtx_child = CreateValidMempoolTransaction(/*input_transaction=*/tx_parent, /*input_vout=*/0,
+                                                   /*input_height=*/101, /*input_signing_key=*/parent_key,
+                                                   /*output_destination=*/child_spk,
+                                                   /*output_amount=*/parent_value - COIN, /*submit=*/false);
+    const auto test{[&](const Package& package) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        return ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package,
+                                 /*test_accept=*/true, /*client_maxfeerate=*/{}, /*test_as_submission=*/true);
+    }};
+
+    // The child fails its scripts: the parent's result is its own fee failure, as submission reports
+    // it, though the parent passed before the child failed.
+    CMutableTransaction mtx_bad_child{mtx_child};
+    mtx_bad_child.vin[0].scriptWitness.stack[0][10] ^= 1;
+    auto tx_bad_child = MakeTransactionRef(mtx_bad_child);
+    const auto bad{test({tx_parent, tx_bad_child})};
+    BOOST_CHECK(bad.m_state.IsInvalid());
+    BOOST_CHECK_EQUAL(bad.m_tx_results.at(tx_parent->GetWitnessHash()).m_state.GetRejectReason(), "mempool min fee not met");
+    BOOST_CHECK(bad.m_tx_results.at(tx_bad_child->GetWitnessHash()).m_result_type == MempoolAcceptResult::ResultType::INVALID);
+    BOOST_CHECK_EQUAL(m_node.mempool->size(), pool_size);
+
+    // The child pays for its low-fee parent: valid at the package feerate, with the mempool
+    // unchanged, and the results submission then gives.
+    const Package package{tx_parent, MakeTransactionRef(mtx_child)};
+    const auto tested{test(package)};
+    BOOST_CHECK(tested.m_state.IsValid());
+    BOOST_CHECK_EQUAL(m_node.mempool->size(), pool_size);
+    const auto submitted{ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package,
+                                           /*test_accept=*/false, /*client_maxfeerate=*/{})};
+    BOOST_CHECK(submitted.m_state.IsValid());
+    BOOST_CHECK_EQUAL(m_node.mempool->size(), pool_size + 2);
+    for (const auto& tx : package) {
+        const auto& t{tested.m_tx_results.at(tx->GetWitnessHash())};
+        const auto& s{submitted.m_tx_results.at(tx->GetWitnessHash())};
+        BOOST_CHECK(t.m_result_type == s.m_result_type);
+        BOOST_CHECK(t.m_effective_feerate == s.m_effective_feerate);
+        BOOST_CHECK(t.m_wtxids_fee_calculations == s.m_wtxids_fee_calculations);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(package_test_parent_alone)
+{
+    mineBlocks(5);
+    LOCK(::cs_main);
+    CKey parent_key = GenerateRandomKey();
+    CScript parent_spk = GetScriptForDestination(WitnessV0KeyHash(parent_key.GetPubKey()));
+    CScript child_spk = GetScriptForDestination(WitnessV0KeyHash(GenerateRandomKey().GetPubKey()));
+    const CAmount coinbase_value{50 * COIN};
+    // Test a package as submission, then submit it: both must accept it, or both refuse it.
+    const auto check{[&](const Package& package, bool valid) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        const size_t pool_size{m_node.mempool->size()};
+        const auto tested{ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package,
+                                            /*test_accept=*/true, /*client_maxfeerate=*/{}, /*test_as_submission=*/true)};
+        BOOST_CHECK_MESSAGE(tested.m_state.IsValid() == valid, tested.m_state.ToString());
+        BOOST_CHECK_EQUAL(m_node.mempool->size(), pool_size);
+        const auto submitted{ProcessNewPackage(m_node.chainman->ActiveChainstate(), *m_node.mempool, package,
+                                               /*test_accept=*/false, /*client_maxfeerate=*/{})};
+        BOOST_CHECK_MESSAGE(submitted.m_state.IsValid() == valid, submitted.m_state.ToString());
+    }};
+    const auto spend{[&](const CTransactionRef& tx, CAmount value) {
+        return MakeTransactionRef(CreateValidMempoolTransaction(tx, 0, 101, parent_key, child_spk, value, /*submit=*/false));
+    }};
+
+    // The parent pays for itself and replaces a mempool transaction, and its child pays less per
+    // vbyte. Package RBF would refuse the two, but submission takes the parent and then the child.
+    CreateValidMempoolTransaction(m_coinbase_txns[0], 0, 0, coinbaseKey, parent_spk, coinbase_value - 10'000);
+    auto parent{MakeTransactionRef(CreateValidMempoolTransaction(m_coinbase_txns[0], 0, 0, coinbaseKey, parent_spk, coinbase_value - 100'000, /*submit=*/false))};
+    check({parent, spend(parent, coinbase_value - 110'000)}, /*valid=*/true);
+
+    // The parent pays for itself, and its child replaces a mempool transaction.
+    CreateValidMempoolTransaction(m_coinbase_txns[1], 0, 0, coinbaseKey, parent_spk, coinbase_value - 10'000);
+    parent = MakeTransactionRef(CreateValidMempoolTransaction(m_coinbase_txns[2], 0, 0, coinbaseKey, parent_spk, coinbase_value - 10'000, /*submit=*/false));
+    auto child{MakeTransactionRef(CreateValidMempoolTransaction({parent, m_coinbase_txns[1]}, {{parent->GetHash(), 0}, {m_coinbase_txns[1]->GetHash(), 0}},
+                                                                 101, {parent_key, coinbaseKey}, {CTxOut{2 * coinbase_value - 200'000, child_spk}}, /*submit=*/false))};
+    check({parent, child}, /*valid=*/true);
+
+    // The parent replaces the mempool transaction whose output its child spends: neither takes them.
+    auto spent{MakeTransactionRef(CreateValidMempoolTransaction(m_coinbase_txns[3], 0, 0, coinbaseKey, parent_spk, coinbase_value - 10'000))};
+    parent = MakeTransactionRef(CreateValidMempoolTransaction(m_coinbase_txns[3], 0, 0, coinbaseKey, parent_spk, coinbase_value - 100'000, /*submit=*/false));
+    child = MakeTransactionRef(CreateValidMempoolTransaction({parent, spent}, {{parent->GetHash(), 0}, {spent->GetHash(), 0}},
+                                                              101, {parent_key, parent_key}, {CTxOut{2 * coinbase_value - 200'000, child_spk}}, /*submit=*/false));
+    check({parent, child}, /*valid=*/false);
 }
 
 BOOST_AUTO_TEST_CASE(package_rbf_tests)

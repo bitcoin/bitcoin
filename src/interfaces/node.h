@@ -8,6 +8,7 @@
 #include <common/settings.h>
 #include <consensus/amount.h>
 #include <net.h>
+#include <net_transport.h>
 #include <net_types.h>
 #include <netaddress.h>
 #include <netbase.h>

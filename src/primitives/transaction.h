@@ -419,8 +419,7 @@ template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txI
 
 namespace std {
 /** Disable default std::hash for CTransactionRef to prevent accidentally
- *  comparing by pointer. Use CTransactionRefHash or provide a custom
- *  hasher. */
+ *  comparing by pointer. */
 template <>
 struct hash<CTransactionRef> {
     hash() = delete;

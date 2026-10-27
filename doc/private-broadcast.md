@@ -1,0 +1,137 @@
+# Private broadcast
+
+Bitcoin Core can send a transaction to the network without revealing your IP address, onion address
+or node identity, either with the standalone `bitcoin-privbcast` program or with
+`bitcoind -privatebroadcast`, which runs the same jobs for transactions submitted through
+`sendrawtransaction` and `submitpackage`. Each broadcast is a job: it finds peers through the
+release DNS seeds (resolved through Tor), connects to a small, fixed number of them through Tor on a
+schedule drawn when the job starts, announces the transaction, and stops. A job does not retry.
+
+What a job guarantees, and what it does not, is specified in
+[design/private-broadcast-tool.md](design/private-broadcast-tool.md).
+
+## Tor proxy
+
+Jobs reach everything through a Tor SOCKS5 proxy.
+
+- `bitcoin-privbcast` expects Tor at `127.0.0.1:9050`. Use `-tor=<ip:port|path>` for another
+  loopback address or a unix socket, given as `unix:<path>` as for `-onion`; a remote proxy is
+  refused, because SOCKS5 carries destinations and credentials in plaintext.
+- `bitcoind -privatebroadcast` uses the node's Tor proxy, set with `-proxy`, `-onion`, or
+  `-listenonion` with `-torcontrol` (see [tor.md](tor.md)).
+
+The proxy must accept SOCKS username/password authentication and Tor's RESOLVE extension. Without
+IPv6 it loses the IPv6 peers. A proxy that is not Tor delivers nothing: every stream uses fresh
+credentials, which `ssh -D` and most VPN clients do not accept, and IPv4 and IPv6 peers come only
+from RESOLVE answers.
+
+If the node and the jobs share a SocksPort, keep Tor's default `IsolateSOCKSAuth`. With
+`NoIsolateSOCKSAuth`, Tor may put several of a job's streams on one circuit, so one exit could see
+the transaction reach several peers, or put a job's stream on a circuit that also carries the node's
+own connections. Nothing at the SOCKS interface can detect this.
+
+## bitcoin-privbcast
+
+1. Check the transaction with `bitcoin-cli testmempoolaccept`. The tool only checks that the
+   transaction is well formed, standard in size, and burns nothing to an unspendable output
+   (`-maxburnamount` raises that limit).
+2. Feed the final hex on stdin, choosing the chain as with other tools (`-signet`, `-testnet4`, ...;
+   a custom signet is refused, since it has no seeds):
+   ```
+   bitcoin-privbcast send < tx.hex
+   ```
+   The JSON report goes to stdout and progress lines to stderr.
+3. Watch for the transaction with `bitcoin-cli getmempoolentry <txid>`. Do not also broadcast it the
+   ordinary way. If it does not arrive, run another job.
+
+`send` exits with status 0 if the announcement was fully sent to at least one peer, even if the job
+failed afterwards; 1 on bad input or arguments, or if the job failed before that; and 2 if the job
+ran without failing but sent the announcement in full to no peer. Status 0 does not mean that a peer
+requested, received or accepted the transaction: the report's per-attempt `outcome` and its
+`tx_written` and `pongs` counts say more. The report and the progress lines name the transaction and
+every peer dialled, so keep them where you would keep a wallet log. Progress lines carry timestamps,
+like `debug.log`, while the report gives times as offsets from the job's start. Progress lines are
+best effort: on a pipe or a file, a line that stderr cannot take at once is dropped, while a paused
+terminal holds the job up until the line is written.
+
+`bitcoin-privbcast discover` runs only the peer discovery and prints the candidates it found. It
+makes the same queries as a job.
+
+## A parent and its child
+
+A parent too cheap to enter mempools on its own can be carried by a child that pays for both, if
+the recipient evaluates the two together. Give the tool both transactions, separated by whitespace,
+in either order. The job announces the child and serves the parent to a peer that asks for it.
+
+- Bitcoin Core 31 and later accept a parent below the minimum relay feerate in such a package
+  whatever its version; versions 28 to 30 only if it is TRUC (version 3); older versions drop it.
+  Whether the package reaches miners depends on what they run.
+- `testmempoolaccept` checks each transaction on its own. It rejects a low-fee parent ("min relay
+  fee not met", or "mempool min fee not met") even when the package would be accepted, and then does
+  not evaluate the child. The tool checks no fees, so work out the package feerate yourself. The
+  node checks the pair as `submitpackage` would without `-privatebroadcast` (see below).
+- Peers can tell that you used package mode: a peer that fetches the child sees the job wait before
+  its PING, and a peer that asks for the parent is sent it. That the two transactions belong
+  together is visible on chain anyway.
+
+## bitcoind -privatebroadcast
+
+With `-privatebroadcast`, `sendrawtransaction` and `submitpackage` queue a job instead of adding the
+transaction to the mempool and announcing it to the node's peers. The transaction enters the node's
+mempool only when it comes back from the network, and is then relayed like any other. Wallet sends
+are not affected: the wallet adds to the mempool and rebroadcasts from there.
+
+- `sendrawtransaction` test-accepts the transaction, then queues it. `submitpackage` takes one
+  transaction, or one parent and its child. A transaction whose txid is already in the mempool
+  counts as accepted and is sent as you gave it. A new parent too cheap on its own goes out with its
+  child if the node would accept the two as a package, each within `maxfeerate`.
+- Jobs start in submission order, 35 to 55 seconds (drawn at random) after the previous start. A
+  job submitted after that time, with nothing waiting, starts at once.
+- A transaction whose job is still queued or running is not queued again. The match is by wtxid, so
+  a witness variant gets its own job. A job for a parent and child also covers the child submitted
+  alone, once the parent is in the mempool; before that, `sendrawtransaction` refuses the child for
+  its missing input. Once a job has ended, the same transaction can be queued again.
+- A job runs until its schedule is over, at most ten minutes, and does not retry. If
+  `getprivatebroadcastinfo` shows a finished job with `announced` false, or the transaction does not
+  arrive, submit it again.
+- `getprivatebroadcastinfo` lists the queued and running jobs and the last 100 finished ones, with
+  their reports, which include every peer dialled, to any RPC user allowed to call it. They are
+  kept in memory only.
+  `abortprivatebroadcast` removes a queued job or stops a running one.
+- `setnetworkactive false` and shutdown cancel all jobs; turning networking back on does not restart
+  them. While networking is off, submissions are refused.
+- Settings that choose the node's peers (`-onlynet`, `-dnsseed`, `-fixedseeds`, `-connect`,
+  `-seednode`, `-addnode`) do not apply to jobs, except that `-privatebroadcast` is refused at
+  startup when `-onlynet` leaves out onion or `-onion=0` turns it off. Even with `-onlynet=onion`,
+  jobs connect to IPv4 and IPv6 peers through Tor exits. Jobs use fresh proxy credentials for each
+  connection and each set of DNS queries, whatever `-proxyrandomize` says.
+- `-privatebroadcast` is also refused with `-signetseednode` or `-signetchallenge`, since jobs query
+  only a chain's own seeds and a custom signet has none, and with `-mocktime` except on regtest.
+- `debug.log` records job progress only with `-debug=privatebroadcast`, and SOCKS failures that name
+  a destination only with `-debug=proxy`. By default it names no transaction or peer.
+- Jobs need file descriptors beyond those of the node's ordinary connections. If the node refuses to
+  start for lack of them, lower `-maxconnections`.
+
+## Limits
+
+- Every peer a job dials comes from the release's DNS seeds and is reached through a Tor exit. If
+  the seeds cannot be reached through Tor, the job has no one to send to.
+- A peer can accept the announcement and then withhold the transaction, and the job does not try
+  that slot again. Watch for the transaction and submit it again if it does not arrive.
+- Tor exits and DNS seeds are untrusted: an exit can act as the peer on its own connection, and a
+  seed can lie about which peers exist. Each affects only its share of a job's connections.
+- Peers can recognise the tool by its fixed profile. They learn only that someone used it.
+- The tool and the node usually share a host and a Tor daemon, and the design does not separate
+  them.
+- The wallet is out of scope. If a wallet loaded in your node recognises the transaction, then once
+  the transaction is back in the node's mempool, the wallet's periodic resend (every 12 to 36 hours)
+  announces it to all of the node's peers for as long as it stays unconfirmed, however it was first
+  broadcast. To avoid that, run the node with `-walletbroadcast=0` or keep the wallet on another
+  node.
+- Stopping the node or running `setnetworkactive false` closes a job's open connections at nearly
+  the same moment the node drops its own peers. A peer of your node that is also one of the job's
+  recipients could link the two.
+- Jobs queued together start 35 to 55 seconds apart. Seeds and recipients that together see
+  several jobs start at that rhythm could guess they come from one node.
+- Tor does not protect against an observer who watches both your connection to Tor and the Bitcoin
+  network. The burst of circuits a job opens when it starts makes it easier to spot.

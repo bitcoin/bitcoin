@@ -139,6 +139,15 @@ class SignetBasicTest(BitcoinTestFramework):
         self.nodes[0].assert_start_raises_init_error(extra_args=["-signetchallenge=abc"], expected_msg="Error: -signetchallenge must be hex, not 'abc'.")
         self.nodes[0].assert_start_raises_init_error(extra_args=["-signetchallenge=abc"] * 2, expected_msg="Error: -signetchallenge cannot be multiple values.")
 
+        self.log.info("Private broadcast's regtest-only options, the signet seed settings and -mocktime are refused on signet")
+        args = self.signets[1].shared_args + ["-privatebroadcast", "-onion=127.0.0.1:9050"]  # the default signet
+        for option in ("-privatebroadcastseed=a.seed.", "-signetseednode=127.0.0.1:38333", f"-signetchallenge={self.signets[0].challenge}",
+                       "-mocktime=1700000000"):
+            self.nodes[0].assert_start_raises_init_error(extra_args=args + [option], expected_msg=None)
+        self.nodes[0].extra_args = args  # the framework finds the node's files by its configured chain
+        self.start_node(0)  # without them it starts
+        self.stop_node(0)
+
 
     def test_cli_signetchallenge_hint(self):
         if not self.is_cli_compiled():

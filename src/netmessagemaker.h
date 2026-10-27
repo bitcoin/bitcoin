@@ -6,8 +6,9 @@
 #ifndef BITCOIN_NETMESSAGEMAKER_H
 #define BITCOIN_NETMESSAGEMAKER_H
 
-#include <net.h>
+#include <net_transport.h>
 #include <serialize.h>
+#include <streams.h>
 
 namespace NetMsg {
     template <typename... Args>
