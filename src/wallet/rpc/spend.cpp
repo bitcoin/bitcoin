@@ -1469,7 +1469,11 @@ RPCMethod sendall()
             } else if (options.exists("inputs") && (options.exists("minconf") || options.exists("maxconf"))) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot combine minconf or maxconf with specific inputs.");
             } else if (options.exists("inputs")) {
+                std::set<COutPoint> seen_inputs;
                 for (const CTxIn& input : rawTx.vin) {
+                    if (!seen_inputs.insert(input.prevout).second) {
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, duplicated input: %s:%d", input.prevout.hash.ToString(), input.prevout.n));
+                    }
                     if (pwallet->IsSpent(input.prevout)) {
                         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Input not available. UTXO (%s:%d) was already spent.", input.prevout.hash.ToString(), input.prevout.n));
                     }
