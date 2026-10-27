@@ -754,7 +754,7 @@ public:
 
     //! Prune blockfiles from the disk if necessary and then flush chainstate changes
     //! if we pruned.
-    void PruneAndFlush();
+    void PruneAndFlush() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /**
      * Find the best known block, and make it the tip of the block chain. The

@@ -856,6 +856,18 @@ util::Expected<void, WriteBlockStorageError> BlockManager::WriteBlockStorage(int
     return {};
 }
 
+void BlockManager::RequestPrune()
+{
+    AssertLockHeld(::cs_main);
+    m_check_for_pruning = true;
+}
+
+void BlockManager::MarkBlockIndexDirty(CBlockIndex& index)
+{
+    AssertLockHeld(::cs_main);
+    m_dirty_blockindex.insert(&index);
+}
+
 void BlockManager::SetBlockfilesIndexed()
 {
     AssertLockHeld(::cs_main);
