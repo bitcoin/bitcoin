@@ -6,7 +6,7 @@
 #include <test/util/common.h>
 #include <uint256.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <cmath>
 #include <cstdint>
