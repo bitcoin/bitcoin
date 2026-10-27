@@ -1153,7 +1153,7 @@ BOOST_AUTO_TEST_CASE(test_ToLower)
 
     BOOST_CHECK_EQUAL(ToLower(""), "");
     BOOST_CHECK_EQUAL(ToLower("#HODL"), "#hodl");
-    BOOST_CHECK_EQUAL(ToLower("\x00\xfe\xff"), "\x00\xfe\xff");
+    BOOST_CHECK_EQUAL(ToLower("\x00\xfe\xff"sv), "\x00\xfe\xff"sv);
 }
 
 BOOST_AUTO_TEST_CASE(test_ToUpper)
@@ -1167,14 +1167,14 @@ BOOST_AUTO_TEST_CASE(test_ToUpper)
 
     BOOST_CHECK_EQUAL(ToUpper(""), "");
     BOOST_CHECK_EQUAL(ToUpper("#hodl"), "#HODL");
-    BOOST_CHECK_EQUAL(ToUpper("\x00\xfe\xff"), "\x00\xfe\xff");
+    BOOST_CHECK_EQUAL(ToUpper("\x00\xfe\xff"sv), "\x00\xfe\xff"sv);
 }
 
 BOOST_AUTO_TEST_CASE(test_Capitalize)
 {
     BOOST_CHECK_EQUAL(Capitalize(""), "");
     BOOST_CHECK_EQUAL(Capitalize("bitcoin"), "Bitcoin");
-    BOOST_CHECK_EQUAL(Capitalize("\x00\xfe\xff"), "\x00\xfe\xff");
+    BOOST_CHECK_EQUAL(Capitalize("\x00\xfe\xff"s), "\x00\xfe\xff"sv);
 }
 
 static std::string SpanToStr(const std::span<const char>& span)
