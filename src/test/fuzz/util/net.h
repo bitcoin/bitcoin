@@ -187,6 +187,29 @@ class FuzzedSock : public Sock
      */
     FakeSteadyClock& m_clock;
 
+    struct FailedConnection {
+        size_t recv_budget;
+        bool recv_error_returned{false};
+    };
+
+    /**
+     * Whether the connection failed, as reported by a wait with `ErrorEvent`. From then on, waits
+     * report it, `Recv()` returns at most `m_failed->recv_budget` more bytes (what was buffered
+     * before) and then fails for good, and `Send()` fails.
+     */
+    mutable std::optional<FailedConnection> m_failed;
+
+    /** At most this much is buffered when a connection fails: what a receive buffer can hold. */
+    static constexpr size_t MAX_FAILED_RECV_BYTES{256 * 1024};
+
+    /** Pick what a wait reports for this socket, among what the real OS can report. */
+    Event ConsumeOccurred(Event requested) const;
+
+    /** Pick a subset of the requested events. */
+    Event ConsumeSubset(Event requested) const;
+
+    ssize_t RecvAfterFailure(void* buf, size_t len, int flags) const;
+
 public:
     explicit FuzzedSock(FuzzedDataProvider& fuzzed_data_provider, FakeSteadyClock& clock);
 
