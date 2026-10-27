@@ -890,7 +890,6 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     auto msg_version_receive =
         NetMsg::Make(NetMsgType::VERSION, PROTOCOL_VERSION, services, time, services, CAddress::V1_NETWORK(peer_us));
     Assert(connman.ReceiveMsgFrom(peer, std::move(msg_version_receive)));
-    peer.fPauseSend = false;
     bool more_work{connman.ProcessMessagesOnce(peer)};
     Assert(!more_work);
 
@@ -898,7 +897,6 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
     connman.FlushSendBuffer(peer); // Drop sent verack message
 
     Assert(connman.ReceiveMsgFrom(peer, NetMsg::Make(NetMsgType::VERACK)));
-    peer.fPauseSend = false;
     // Will set peer.fSuccessfullyConnected to true (necessary in SendMessages()).
     more_work = connman.ProcessMessagesOnce(peer);
     Assert(!more_work);
