@@ -13,7 +13,7 @@
 #include <wallet/wallet.h>
 #include <wallet/test/util.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 using namespace util::hex_literals;
 
