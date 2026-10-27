@@ -11,6 +11,7 @@
 #include <serialize.h>
 #include <streams.h>
 #include <test/util/common.h>
+#include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
@@ -659,6 +660,45 @@ BOOST_AUTO_TEST_CASE(asmap_test_vectors)
     BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("dff5:8021:61d:b17d:406d:7888:fdac:4a20", false)), 969411);
     BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("e888:6791:2960:d723:bcfd:47e1:2d8c:599f", false)), 824019);
     BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("ffff:d499:8c4b:4941:bc81:d5b9:b51e:85a8", false)), 824019);
+}
+
+BOOST_AUTO_TEST_CASE(socks5_dest_name)
+{
+    // A CConnman stopped by an earlier test in the same process leaves this set.
+    g_socks5_interrupt.reset();
+
+    // Run Socks5() against a mocked proxy that accepts every request, and return the
+    // name it sent in the CONNECT request.
+    const auto sent_name{[](const std::string& dest) {
+        const auto pipes{std::make_shared<DynSock::Pipes>()};
+        const uint8_t replies[]{
+            0x05, 0x00,                                     // method: no authentication
+            0x05, 0x00, 0x00, 0x01, 0, 0, 0, 0, 0x20, 0x8d, // CONNECT succeeded, bound to 0.0.0.0:8333
+        };
+        pipes->recv.PushBytes(replies, sizeof(replies));
+        const DynSock sock{pipes};
+        BOOST_REQUIRE(Socks5(dest, 8333, /*auth=*/nullptr, sock));
+        // Greeting (3 bytes), then VER CMD RSV ATYP LEN NAME PORT.
+        uint8_t sent[3 + 5 + 255 + 2];
+        const ssize_t len{pipes->send.GetBytes(sent, sizeof(sent))};
+        BOOST_REQUIRE_GE(len, 3 + 5 + 2);
+        BOOST_REQUIRE_EQUAL(sent[3 + 3], 0x03); // ATYP DOMAINNAME
+        BOOST_REQUIRE_EQUAL(len, 3 + 5 + sent[3 + 4] + 2);
+        return std::string(sent + 3 + 5, sent + 3 + 5 + sent[3 + 4]);
+    }};
+
+    // An IPv6 address shortened with "::" is written out with all eight groups.
+    BOOST_CHECK_EQUAL(sent_name("2001:db8::1"), "2001:db8:0:0:0:0:0:1");
+    BOOST_CHECK_EQUAL(sent_name("2001:DB8:0:1::"), "2001:db8:0:1:0:0:0:0");
+    BOOST_CHECK_EQUAL(sent_name("::1"), "0:0:0:0:0:0:0:1");
+
+    // Anything else is sent unchanged.
+    BOOST_CHECK_EQUAL(sent_name("2001:db8:1:2:3:4:5:6"), "2001:db8:1:2:3:4:5:6");
+    BOOST_CHECK_EQUAL(sent_name("fe80::1%eth0"), "fe80::1%eth0");
+    BOOST_CHECK_EQUAL(sent_name("1.2.3.4"), "1.2.3.4");
+    BOOST_CHECK_EQUAL(sent_name("seed.bitcoin.sipa.be"), "seed.bitcoin.sipa.be");
+    BOOST_CHECK_EQUAL(sent_name("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"),
+                      "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
