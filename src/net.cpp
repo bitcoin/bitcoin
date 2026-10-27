@@ -34,6 +34,7 @@
 #include <util/strencodings.h>
 #include <util/thread.h>
 #include <util/threadinterrupt.h>
+#include <util/time.h>
 #include <util/trace.h>
 #include <util/translation.h>
 #include <util/vector.h>
@@ -2083,15 +2084,11 @@ bool CConnman::InactivityCheck(const CNode& node, NodeClock::time_point now) con
         return true;
     }
 
-    if (node.IsSendPaused()) {
-        const auto last_pause{node.GetPauseSendSince()};
-        if (now > last_pause + TIMEOUT_INTERVAL) {
-            LogDebug(BCLog::NET,
-                "send buffer full for %is, %s", Ticks<std::chrono::seconds>(now - last_pause),
-                node.DisconnectMsg()
-            );
-            return true;
-        }
+    if (auto last_pause{node.GetPauseSendSince()}; last_pause && now > *last_pause + TIMEOUT_INTERVAL) {
+        LogDebug(BCLog::NET,
+            "send buffer full for %is, %s", TicksSeconds(now - *last_pause),
+            node.DisconnectMsg());
+        return true;
     }
 
     if (!node.fSuccessfullyConnected) {
