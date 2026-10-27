@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -383,7 +384,7 @@ public:
 class CChain
 {
 private:
-    std::vector<CBlockIndex*> vChain;  // Pointers, never nullptr
+    std::vector<std::reference_wrapper<CBlockIndex>> m_chain;
 
 public:
     CChain() = default;
@@ -393,21 +394,21 @@ public:
     /** Returns the index entry for the genesis block of this chain, or nullptr if none. */
     CBlockIndex* Genesis() const
     {
-        return vChain.size() > 0 ? vChain[0] : nullptr;
+        return m_chain.size() > 0 ? &(m_chain[0].get()) : nullptr;
     }
 
     /** Returns the index entry for the tip of this chain, or nullptr if none. */
     CBlockIndex* Tip() const
     {
-        return vChain.size() > 0 ? vChain[vChain.size() - 1] : nullptr;
+        return m_chain.size() > 0 ? &(m_chain[m_chain.size() - 1].get()) : nullptr;
     }
 
     /** Returns the index entry at a particular height in this chain, or nullptr if no such height exists. */
     CBlockIndex* operator[](int nHeight) const
     {
-        if (nHeight < 0 || nHeight >= (int)vChain.size())
+        if (nHeight < 0 || nHeight >= (int)m_chain.size())
             return nullptr;
-        return vChain[nHeight];
+        return &(m_chain[nHeight].get());
     }
 
     /** Efficiently check whether a block is present in this chain. */
@@ -428,7 +429,7 @@ public:
     /** Return the maximal height in the chain. Is equal to chain.Tip() ? chain.Tip()->nHeight : -1. */
     int Height() const
     {
-        return int(vChain.size()) - 1;
+        return int(m_chain.size()) - 1;
     }
 
     /** Check whether this chain's tip exists, has enough work, and is recent. */
