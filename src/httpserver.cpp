@@ -290,10 +290,9 @@ void HTTPHeaders::Write(std::string&& key, std::string&& value)
 
 void HTTPHeaders::RemoveAll(std::string_view key)
 {
-    auto moved = std::ranges::remove_if(m_headers, [key] (auto& pair) {
+    std::erase_if(m_headers, [key] (auto& pair) {
         return CaseInsensitiveEqual(key, pair.first);
     });
-    m_headers.erase(moved.begin(), moved.end());
 }
 
 bool HTTPHeaders::Read(util::LineReader& reader, bool write)

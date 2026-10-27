@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <optional>
+#include <vector>
 
 namespace {
 
@@ -731,10 +732,9 @@ struct SmartInfo
         }
         for (auto type_it = table.begin(); type_it != table.end();) {
             // Remove all recipes which involve non-constructible types.
-            type_it->second.erase(std::remove_if(type_it->second.begin(), type_it->second.end(),
-                [&](const recipe& rec) {
-                    return !std::all_of(rec.second.begin(), rec.second.end(), known_constructible);
-                }), type_it->second.end());
+            std::erase_if(type_it->second, [&](const recipe& rec) {
+                return !std::all_of(rec.second.begin(), rec.second.end(), known_constructible);
+            });
             // Delete types entirely which have no recipes left.
             if (type_it->second.empty()) {
                 type_it = table.erase(type_it);

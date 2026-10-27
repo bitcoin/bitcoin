@@ -36,6 +36,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <variant>
+#include <vector>
 
 using util::SplitString;
 
@@ -635,9 +636,7 @@ bool CRPCTable::removeCommand(const std::string& name, const CRPCCommand* pcmd)
 {
     auto it = mapCommands.find(name);
     if (it != mapCommands.end()) {
-        auto new_end = std::remove(it->second.begin(), it->second.end(), pcmd);
-        if (it->second.end() != new_end) {
-            it->second.erase(new_end, it->second.end());
+        if (std::erase(it->second, pcmd)) {
             if (it->second.empty()) {
                 mapCommands.erase(it);
             }

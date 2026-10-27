@@ -86,20 +86,12 @@ static void EraseLastKElements(
 
 void ProtectNoBanConnections(std::vector<NodeEvictionCandidate>& eviction_candidates)
 {
-    eviction_candidates.erase(std::remove_if(eviction_candidates.begin(), eviction_candidates.end(),
-                                             [](NodeEvictionCandidate const& n) {
-                                                 return n.m_noban;
-                                             }),
-                              eviction_candidates.end());
+    std::erase_if(eviction_candidates, [](const NodeEvictionCandidate& n) { return n.m_noban; });
 }
 
 void ProtectOutboundConnections(std::vector<NodeEvictionCandidate>& eviction_candidates)
 {
-    eviction_candidates.erase(std::remove_if(eviction_candidates.begin(), eviction_candidates.end(),
-                                             [](NodeEvictionCandidate const& n) {
-                                                 return n.m_conn_type != ConnectionType::INBOUND;
-                                             }),
-                              eviction_candidates.end());
+    std::erase_if(eviction_candidates, [](const NodeEvictionCandidate& n) { return n.m_conn_type != ConnectionType::INBOUND; });
 }
 
 void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& eviction_candidates)
@@ -210,8 +202,7 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& evicti
     // This happens after the other preferences since if a peer is really the best by other criteria (esp relaying blocks)
     //  then we probably don't want to evict it no matter what.
     if (std::any_of(vEvictionCandidates.begin(),vEvictionCandidates.end(),[](NodeEvictionCandidate const &n){return n.prefer_evict;})) {
-        vEvictionCandidates.erase(std::remove_if(vEvictionCandidates.begin(),vEvictionCandidates.end(),
-                                  [](NodeEvictionCandidate const &n){return !n.prefer_evict;}),vEvictionCandidates.end());
+        std::erase_if(vEvictionCandidates, [](const NodeEvictionCandidate& n) { return !n.prefer_evict; });
     }
 
     // Identify the network group with the most connections and youngest member.

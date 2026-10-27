@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
+#include <list>
 #include <map>
 #include <optional>
 #include <stdexcept>
@@ -162,7 +163,7 @@ std::list<SectionInfo> ArgsManager::GetUnrecognizedSections() const
 
     LOCK(cs_args);
     std::list<SectionInfo> unrecognized = m_config_sections;
-    unrecognized.remove_if([](const SectionInfo& appeared){ return available_sections.contains(appeared.m_name); });
+    std::erase_if(unrecognized, [](const SectionInfo& appeared) { return available_sections.contains(appeared.m_name); });
     return unrecognized;
 }
 
