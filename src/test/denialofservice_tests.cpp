@@ -27,7 +27,7 @@
 #include <array>
 #include <cstdint>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 static CService ip(uint32_t i)
 {
