@@ -2750,6 +2750,9 @@ bool Chainstate::FlushStateToDisk(
             }
             if (!setFilesToPrune.empty()) {
                 fFlushForPrune = true;
+                for (const int file_number : setFilesToPrune) {
+                    m_blockman.PruneOneBlockFile(file_number);
+                }
                 if (!m_blockman.m_have_pruned) {
                     m_blockman.m_block_tree_db->WriteFlag("prunedblockfiles", true);
                     m_blockman.m_have_pruned = true;
