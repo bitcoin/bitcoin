@@ -644,56 +644,6 @@ static std::string gbt_rule_value(const std::string& name, bool gbt_optional_rul
     return s;
 }
 
-namespace {
-/** Block template shared by getblocktemplate calls, and the state of its last build attempt. */
-struct CachedBlockTemplate {
-    //! CTxMemPool::GetTransactionsUpdated() sampled before the last build attempt.
-    unsigned int transactions_updated{0};
-    //! Mockable time of the last build attempt.
-    NodeSeconds time_start{};
-    //! nullptr if no template was built yet, or if the last rebuild failed.
-    std::shared_ptr<const node::CBlockTemplate> block_template;
-};
-
-CachedBlockTemplate g_cached_template GUARDED_BY(::cs_main);
-
-//! A cached getblocktemplate template is only rebuilt for a mempool change
-//! once it is older than this.
-constexpr std::chrono::seconds GBT_TEMPLATE_REBUILD_INTERVAL{5};
-
-/** Rebuild the cached getblocktemplate template with init-time options if
- *  none is cached, if it does not build on the active chain tip, or if the
- *  mempool changed and the template is older than the rebuild interval.
- *  @return the cached template, rebuilt if needed. Its block_template is
- *  never null.
- *  @throws std::runtime_error if building the template fails. The cache is
- *  then left without a template, so the next call tries again. */
-CachedBlockTemplate GetNewOrCachedBlockTemplate(node::BlockTemplateManager& block_template_manager, const ChainstateManager& chainman, const CTxMemPool& mempool) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
-{
-    AssertLockHeld(::cs_main);
-    CachedBlockTemplate& cache{g_cached_template};
-    const uint256 tip{CHECK_NONFATAL(chainman.ActiveChain().Tip())->GetBlockHash()};
-    if (!cache.block_template || cache.block_template->block.hashPrevBlock != tip ||
-        (mempool.GetTransactionsUpdated() != cache.transactions_updated &&
-         Now<NodeSeconds>() - cache.time_start > GBT_TEMPLATE_REBUILD_INTERVAL)) {
-        // Clear the template so future calls make a new block, despite any failures from here on
-        cache.block_template.reset();
-
-        // Sample the mempool counter before building, so that a change made
-        // while CreateNewTemplate runs is seen as a change on the next call
-        cache.transactions_updated = mempool.GetTransactionsUpdated();
-        cache.time_start = Now<NodeSeconds>();
-
-        // Create new block. Opt-out of cooldown mechanism, because it would add
-        // a delay to each getblocktemplate call. This differs from typical
-        // long-lived IPC usage, where the overhead is paid only when creating
-        // the initial template.
-        cache.block_template = CHECK_NONFATAL(block_template_manager.CreateNewTemplate({}));
-    }
-    return cache;
-}
-} // namespace
-
 static RPCMethod getblocktemplate()
 {
     return RPCMethod{
@@ -894,7 +844,7 @@ static RPCMethod getblocktemplate()
         {
             // NOTE: Spec does not specify behaviour for non-string longpollid, but this makes testing easier
             hashWatchedChain = tip;
-            nTransactionsUpdatedLastLP = g_cached_template.transactions_updated;
+            nTransactionsUpdatedLastLP = block_template_manager.GetCachedTransactionsUpdated();
         }
 
         // Release lock while waiting
@@ -937,7 +887,7 @@ static RPCMethod getblocktemplate()
     }
 
     // Update block
-    const CachedBlockTemplate cached{GetNewOrCachedBlockTemplate(block_template_manager, chainman, mempool)};
+    const node::CachedBlockTemplate cached{block_template_manager.GetNewOrCachedBlockTemplate()};
     const std::shared_ptr<const node::CBlockTemplate> block_template{cached.block_template};
     const CBlockIndex* const pindexPrev{CHECK_NONFATAL(chainman.m_blockman.LookupBlockIndex(block_template->block.hashPrevBlock))};
     CBlockHeader block_header{block_template->block};
