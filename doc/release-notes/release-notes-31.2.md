@@ -1,0 +1,144 @@
+v31.2 Release Notes
+===================
+
+Bitcoin Core version 31.2 is now available from:
+
+  <https://bitcoincore.org/bin/bitcoin-core-31.2/>
+
+This release includes various bug fixes and performance
+improvements, as well as updated translations.
+
+Please report bugs using the issue tracker at GitHub:
+
+  <https://github.com/bitcoin/bitcoin/issues>
+
+To receive security and update notifications, please subscribe to:
+
+  <https://bitcoincore.org/en/list/announcements/join/>
+
+How to Upgrade
+==============
+
+If you are running an older version, shut it down. Wait until it has completely
+shut down (which might take a few minutes in some cases), then run the installer
+(on Windows) or just copy over `/Applications/Bitcoin-Qt` (on macOS) or
+`bin/` and `libexec/` (on Linux).
+
+Upgrading directly from a version of Bitcoin Core that has reached its EOL is
+possible, but it might take some time if the data directory needs to be
+migrated. Old wallet versions of Bitcoin Core are generally supported.
+
+Compatibility
+==============
+
+Bitcoin Core is supported and tested on the following operating systems or
+newer: Linux Kernel 3.17, macOS 14, and Windows 10 (version 1903). Bitcoin Core
+should also work on most other Unix-like systems but is not as frequently tested
+on them. It is not recommended to use Bitcoin Core on unsupported systems.
+
+Notable changes
+===============
+
+- BIP 9 bits 5 to 28 inclusive are now ignored for soft fork signaling, as per
+  BIP 323. We won't warn about unknown deployments when receiving blocks that
+  set any of those bits in their version. (#34779)
+
+- The private-broadcast queue (transactions submitted via `sendrawtransaction`
+  when `-privatebroadcast` is enabled and not yet echoed back from the network)
+  is now capped at 10,000 entries. When full, new submissions are rejected. It is
+  up to the caller to inspect the queue via `getprivatebroadcastinfo` and free
+  up space when stuck via `abortprivatebroadcast`. (#35406)
+
+### Versionbits
+
+- #34779 BIP 323: reserve version bits 5-28 as extra nonce space
+
+### Validation
+
+- #35168 validation: Don't add pruned blocks to m_blocks_unlinked on startup
+- #35209 validation: correct lifetime of precomputed tx data
+- #35465 coins: compact chainstate regularly
+
+### Leveldb
+
+- #61(bitcoin-core/leveldb): Disable seek compaction
+
+### Private Broadcast
+
+- #36309 private broadcast: clarify claims, mark as experimental
+
+### P2P
+
+- #34873 net: fix premature stale flagging of unpicked private broadcast txs
+- #35406 private broadcast: limit outstanding txs to count of 10,000
+- #35678 private broadcast: define and use new RPC_LIMIT_EXCEEDED error code
+- #35691 chainparams: delete my DNS seed
+- #35766 p2p: Assume v2transport for addresses from seeds
+- #36312 net: don't discourage private broadcast peers
+
+### Net
+
+- #36177 net: fix startup failures from stale Tor examples
+- #36199 net: treat RFC 9637 new IPv6 documentation range as invalid
+- #36201 Update embedded asmap to 1788801420
+- #36665 sock: align exception monitoring between poll() and select() backends
+- #36667 net: enforce timeout interval for paused send peers
+
+### Util
+
+- #36669 refactor: store positions as a 64 bits integer in flatfiles
+
+### Test
+
+- #35914 test, fuzz: Remove unused variables
+- #35937 test: Append print_suppressions=0 to LSAN_OPTIONS, and suppress bitcoin-qt
+- #36045 test: avoid undersized Boost.Test signal stacks
+- #36599 test: Fix intermittent timeout waiting for ibd_wtxid getdata
+
+### Fuzz
+
+- #35679 fuzz: Remove unused DeserializeFromFuzzingInput params overload
+
+### Build
+
+- #35769 depends, zeromq: Apply upstream patch
+- #36218 build: avoid pipe2 on Darwin (for now)
+
+### Doc
+
+- #35908 doc: Update NetBSD Build Guide
+- #35928 doc: mention -DWITH_ZMQ=ON in macOS build guide
+- #36377 doc: add 461 (Deterministic ECDSA signatures with low-R grinding) to bips.md
+- #36441 doc: fix How to Upgrade section for bitcoin wrapper and libexec
+
+### Misc
+
+- #35978 contrib/init: fix unused variables in openrc script
+
+Credits
+=======
+
+Thanks to everyone who directly contributed to this release:
+
+- ajtowns
+- Andrew Toth
+- cyb3ralbert
+- darosior
+- fanquake
+- fjahr
+- Greg Sanders
+- hebasto
+- hodlinator
+- jpk68
+- Lőrinc
+- MarcoFalke
+- marcofleon
+- Martin Zumsande
+- Mccalabrese
+- Sebastian Falbesoner
+- sipa
+- spidey279
+- stickies-v
+
+As well as to everyone that helped with translations on
+[Transifex](https://explore.transifex.com/bitcoin/bitcoin/).
