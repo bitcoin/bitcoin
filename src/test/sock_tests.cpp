@@ -580,4 +580,47 @@ BOOST_AUTO_TEST_CASE(readiness)
     // Not tested, as the timing of signals is racy: a wait interrupted by a signal (EINTR).
 }
 
+/** Check that WaitMany reports each socket's own events, for many sockets in random states. */
+BOOST_AUTO_TEST_CASE(wait_many_attribution)
+{
+    enum class State { IDLE, DATA, END_OF_STREAM };
+    struct Entry {
+        State state;
+        Sock::Event requested;
+        std::unique_ptr<Connection> conn;
+    };
+
+    // Create a hundred connections to a single Sock listener, in various states.
+    Listener listener;
+    std::vector<Entry> entries;
+    bool nothing_requested{true};
+    for (int i{0}; i < 100; ++i) {
+        const auto state{static_cast<State>(m_rng.randrange(3))};
+        const auto requested{static_cast<Sock::Event>(m_rng.randrange(4))};
+        if (nothing_requested && requested != 0) nothing_requested = false;
+        entries.push_back({state, requested, std::make_unique<Connection>(listener)});
+        if (state == State::DATA) entries.back().conn->PeerSend("data");
+        if (state == State::END_OF_STREAM) entries.back().conn->PeerShutdown();
+    }
+    // At least one socket must request something, see NOTHING_REQUESTED_FAILS.
+    if (nothing_requested) entries.back().requested = Sock::SendEvent;
+
+    // Make sure all events setting up the state have arrived.
+    for (const auto& e : entries) {
+        if (e.state != State::IDLE) e.conn->AwaitReadable();
+    }
+
+    Sock::EventsPerSock events_per_sock;
+    for (const auto& e : entries) {
+        events_per_sock.emplace(e.conn->sock, Sock::Events{e.requested});
+    }
+    BOOST_REQUIRE(listener.sock.WaitMany(LONG_WAIT, events_per_sock));
+    for (const auto& e : entries) {
+        Sock::Event possible{Sock::SendEvent};
+        if (e.state != State::IDLE) possible |= Sock::RecvEvent;
+        const auto expected{static_cast<Sock::Event>(e.requested & possible)};
+        BOOST_CHECK_EQUAL(EventsStr(events_per_sock.at(e.conn->sock).occurred), EventsStr(expected));
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
