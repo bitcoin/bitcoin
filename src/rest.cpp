@@ -37,6 +37,7 @@
 #include <univalue.h>
 #include <util/any.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <util/overflow.h>
 #include <util/strencodings.h>
 #include <util/string.h>
