@@ -89,7 +89,7 @@ void static RandomScript(CScript &script) {
 
 void static RandomTransaction(CMutableTransaction &tx, bool fSingle)
 {
-    tx.nVersion = int(InsecureRandRange(2)) + 1;
+    tx.nVersion = static_cast<int16_t>(InsecureRandBits(16));
     tx.vin.clear();
     tx.vout.clear();
     tx.nLockTime = (InsecureRandBool()) ? InsecureRand32() : 0;

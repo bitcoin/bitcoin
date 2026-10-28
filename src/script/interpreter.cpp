@@ -1420,7 +1420,7 @@ public:
     template<typename S>
     void Serialize(S &s) const {
         // Serialize nVersion
-        int32_t n32bitVersion = txTo.nVersion | (txTo.nType << 16);
+        int32_t n32bitVersion = PackVersionAndType(txTo.nVersion, txTo.nType);
         ::Serialize(s, n32bitVersion);
         // Serialize vin
         unsigned int nInputs = fAnyoneCanPay ? 1 : txTo.vin.size();

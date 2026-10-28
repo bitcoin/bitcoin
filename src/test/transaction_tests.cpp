@@ -329,6 +329,26 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
     BOOST_CHECK_MESSAGE(!CheckTransaction(CTransaction(tx), state) || !state.IsValid(), "Transaction with duplicate txins should be invalid.");
 }
 
+BOOST_AUTO_TEST_CASE(tx_version_type_roundtrip)
+{
+    // nVersion and nType share one 32-bit wire field; a negative nVersion must not sign-extend over nType
+    for (const auto& [version, type] : std::vector<std::pair<int16_t, uint16_t>>{{-1, TRANSACTION_NORMAL}, {-1, 0xffff}}) {
+        CMutableTransaction tx;
+        tx.nVersion = version;
+        tx.nType = type;
+        CDataStream mutable_stream(SER_NETWORK, PROTOCOL_VERSION);
+        mutable_stream << tx;
+        CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+        stream << CTransaction(tx);
+        BOOST_CHECK_EQUAL(HexStr(stream), HexStr(mutable_stream));
+
+        CMutableTransaction tx_read;
+        stream >> tx_read;
+        BOOST_CHECK_EQUAL(tx_read.nVersion, version);
+        BOOST_CHECK_EQUAL(tx_read.nType, type);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(test_Get)
 {
     FillableSigningProvider keystore;

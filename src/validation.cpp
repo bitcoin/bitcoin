@@ -339,6 +339,11 @@ static bool ContextualCheckTransaction(const CTransaction& tx, TxValidationState
         } else if (tx.nType != TRANSACTION_NORMAL) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-type");
         }
+        // Releases that sign-extended nVersion over nType re-serialized a negative nVersion with nType 0xffff,
+        // so a block carrying one was accepted only by the peers that received the miner's own bytes
+        if (tx.nVersion < 0) {
+            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-version");
+        }
     }
 
     // Size limits
