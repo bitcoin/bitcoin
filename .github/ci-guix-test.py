@@ -45,6 +45,11 @@ def main():
     with (workspace / "test" / "config.ini").open("w", encoding="utf-8") as file:
         config.write(file)
 
+    sanitizer_template = (workspace / "test" / "with_sanitizer_env.py.in").read_text(encoding="utf-8")
+    (workspace / "test" / "with_sanitizer_env.py").write_text(
+        sanitizer_template.replace("@PROJECT_SOURCE_DIR@", workspace.as_posix()), encoding="utf-8",
+    )
+
     env = os.environ.copy()
     binaries = {
         "BITCOIN_BIN": "bitcoin",
