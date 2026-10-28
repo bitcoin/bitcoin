@@ -3,13 +3,20 @@
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 #include <addresstype.h>
+#include <cisa.h>
+#include <core_io.h>
 #include <key.h>
+#include <policy/policy.h>
 #include <psbt.h>
 #include <script/descriptor.h>
+#include <script/interpreter.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
+#include <test/data/cisa_psbt_vectors.json.h>
 #include <test/util/setup_common.h>
+#include <univalue.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
@@ -311,6 +318,168 @@ BOOST_AUTO_TEST_CASE(update_psbt_output_taproot)
         BOOST_CHECK(out.m_tap_bip32_paths.contains(XOnlyPubKey{test.pubkey}));
         BOOST_CHECK(out.hd_keypaths.empty());
     }
+}
+
+
+static std::string EncodeBase64PSBT(const PartiallySignedTransaction& psbt)
+{
+    DataStream ss;
+    ss << psbt;
+    return EncodeBase64(ss);
+}
+
+//! Validate like consensus does for witness v2: per-input script checks plus the transaction level aggregate verification
+static bool ValidateCISATransaction(const CMutableTransaction& mtx, const std::vector<CTxOut>& spent_outputs)
+{
+    const CTransaction tx{mtx};
+    PrecomputedTransactionData txdata;
+    txdata.Init(tx, std::vector<CTxOut>{spent_outputs}, /*force=*/true);
+    for (unsigned int i = 0; i < tx.vin.size(); i++) {
+        TransactionSignatureChecker checker(&tx, i, spent_outputs[i].nValue, txdata, MissingDataBehavior::FAIL);
+        if (!VerifyScript(tx.vin[i].scriptSig, spent_outputs[i].scriptPubKey, &tx.vin[i].scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, checker)) return false;
+    }
+    return VerifyCISATransaction(tx, spent_outputs, STANDARD_SCRIPT_VERIFY_FLAGS, txdata);
+}
+
+BOOST_AUTO_TEST_CASE(cisa_psbt_vectors)
+{
+    UniValue tests;
+    Assert(tests.read(json_tests::cisa_psbt_vectors));
+
+    for (const auto& vec : tests["invalid"].getValues()) {
+        BOOST_CHECK(!DecodeBase64PSBT(vec["base64"].get_str()));
+    }
+
+    for (const auto& vec : tests["valid"].getValues()) {
+        const auto& stages{vec["stages"].getValues()};
+        const std::string& signed_stage{stages[stages.size() - 2]["base64"].get_str()};
+        const std::string& finalized_stage{stages.back()["base64"].get_str()};
+        const std::string& expected_tx{vec["expected"]["transaction"].get_str()};
+        const auto& intermediary{vec["intermediary"]};
+        for (const auto& stage : stages) {
+            const auto psbt{DecodeBase64PSBT(stage["base64"].get_str())};
+            BOOST_REQUIRE(psbt);
+            BOOST_CHECK_EQUAL(EncodeBase64PSBT(*psbt), stage["base64"].get_str());
+        }
+
+        // The tweaked secret keys sign as the output keys
+        FlatSigningProvider keys;
+        std::map<uint256, FullAggSecNonce> secnonces;
+        keys.cisa_secnonces = &secnonces;
+        std::vector<XOnlyPubKey> pubkeys;
+        std::vector<uint8_t> modes;
+        for (const auto& input : vec["given"]["inputs"].getValues()) {
+            CKey key;
+            const auto seckey{ParseHex(input["tweakedSecretKey"].get_str())};
+            key.Set(seckey.begin(), seckey.end(), true);
+            keys.keys.emplace(key.GetPubKey().GetID(), key);
+            pubkeys.emplace_back(ParseHex(input["outputKey"].get_str()));
+            modes.push_back(ParseHex(input["aggregationMode"].get_str()).at(0));
+        }
+        const bool has_fullagg{std::ranges::find(modes, CISA_MARKER_FULLAGG) != modes.end()};
+
+        // Sign every input from the first stage, half-aggregation signatures are deterministic
+        auto psbt{*DecodeBase64PSBT(stages[0]["base64"].get_str())};
+        const PrecomputedTransactionData txdata{*PrecomputePSBTData(psbt)};
+        std::vector<CTxOut> utxos;
+        for (size_t i = 0; i < psbt.inputs.size(); i++) {
+            PSBTInput& input = psbt.inputs[i];
+            utxos.push_back(input.witness_utxo);
+            const int sighash_type{input.sighash_type.value_or(SIGHASH_DEFAULT)};
+            ScriptExecutionData execdata;
+            execdata.m_annex_init = true;
+            execdata.m_annex_present = false;
+            execdata.m_cisa_agg_mode = modes[i];
+            uint256 msg;
+            BOOST_REQUIRE(SignatureHashSchnorr(msg, execdata, *psbt.GetUnsignedTx(), i, sighash_type, modes[i] ? SigVersion::WITNESS_V2_KEYPATH : SigVersion::TAPROOT, txdata, MissingDataBehavior::FAIL));
+            BOOST_CHECK_EQUAL(HexStr(msg), intermediary["messages"][i].get_str());
+
+            const auto result{SignPSBTInput(keys, psbt, i, &txdata, {.sighash_type = sighash_type, .finalize = false})};
+            if (modes[i] == CISA_MARKER_FULLAGG) {
+                // The first pass only produces the nonce
+                BOOST_CHECK(!result && result.error() == PSBTError::INCOMPLETE);
+                BOOST_CHECK_EQUAL(input.m_cisa_fullagg_pubnonce.size(), FULLAGG_PUBNONCE_SIZE);
+                continue;
+            }
+            BOOST_CHECK(result);
+            auto expected_sig{ParseHex(intermediary["signatures"][i].get_str())};
+            if (sighash_type != SIGHASH_DEFAULT) expected_sig.push_back(sighash_type);
+            BOOST_CHECK(modes[i] == CISA_MARKER_HALFAGG ? input.m_cisa_halfagg_sig == expected_sig : input.m_tap_key_sig == expected_sig);
+        }
+        if (!has_fullagg) BOOST_CHECK_EQUAL(EncodeBase64PSBT(psbt), signed_stage);
+        for (size_t i = 0; i < psbt.inputs.size(); i++) {
+            BOOST_CHECK(SignPSBTInput(keys, psbt, i, &txdata, {.sighash_type = psbt.inputs[i].sighash_type, .finalize = false}));
+        }
+        CMutableTransaction tx;
+        BOOST_REQUIRE(FinalizeAndExtractPSBT(psbt, tx));
+        BOOST_CHECK(ValidateCISATransaction(tx, utxos));
+        if (!has_fullagg) {
+            BOOST_CHECK_EQUAL(EncodeBase64PSBT(psbt), finalized_stage);
+            BOOST_CHECK_EQUAL(EncodeHexTx(CTransaction(tx)), expected_tx);
+        }
+
+        // The signature material of the vector aggregates to its aggregate signatures
+        for (const uint8_t marker : {CISA_MARKER_HALFAGG, CISA_MARKER_FULLAGG}) {
+            std::vector<XOnlyPubKey> group_pubkeys;
+            std::vector<uint256> group_msgs;
+            std::vector<std::vector<uint8_t>> sigs, pubnonces;
+            std::vector<uint256> partial_sigs;
+            for (size_t i = 0; i < modes.size(); i++) {
+                if (modes[i] != marker) continue;
+                group_pubkeys.push_back(pubkeys[i]);
+                group_msgs.emplace_back(ParseHex(intermediary["messages"][i].get_str()));
+                if (marker == CISA_MARKER_HALFAGG) {
+                    sigs.push_back(ParseHex(intermediary["signatures"][i].get_str()));
+                } else {
+                    pubnonces.push_back(ParseHex(intermediary["publicNonces"][i].get_str()));
+                    partial_sigs.emplace_back(ParseHex(intermediary["partialSignatures"][i].get_str()));
+                }
+            }
+            if (group_pubkeys.empty()) continue;
+            if (marker == CISA_MARKER_HALFAGG) {
+                BOOST_CHECK(AggregateHalfAggSigs(group_pubkeys, group_msgs, sigs) == ParseHex(intermediary["halfaggAggregateSignature"].get_str()));
+            } else {
+                for (size_t pos = 0; pos < partial_sigs.size(); pos++) {
+                    BOOST_CHECK(VerifyFullAggPartialSig(partial_sigs[pos], group_pubkeys, group_msgs, pubnonces, pos));
+                    BOOST_CHECK(!VerifyFullAggPartialSig(partial_sigs[pos], group_pubkeys, group_msgs, pubnonces, pos ^ 1));
+                }
+                BOOST_CHECK(AggregateFullAggSigs(group_pubkeys, group_msgs, pubnonces, partial_sigs) == ParseHex(intermediary["fullaggAggregateSignature"].get_str()));
+            }
+        }
+
+        // The Finalizer builds the vector's witnesses from its signature material
+        auto vec_psbt{*DecodeBase64PSBT(signed_stage)};
+        CMutableTransaction vec_tx;
+        BOOST_REQUIRE(FinalizeAndExtractPSBT(vec_psbt, vec_tx));
+        BOOST_CHECK_EQUAL(EncodeBase64PSBT(vec_psbt), finalized_stage);
+        BOOST_CHECK_EQUAL(EncodeHexTx(CTransaction(vec_tx)), expected_tx);
+        for (size_t k = 0; k + 2 < stages.size(); k++) {
+            auto partial{*DecodeBase64PSBT(stages[k]["base64"].get_str())};
+            BOOST_CHECK(!FinalizePSBT(partial));
+        }
+
+        // An aggregated input carrying an opted-out signature must not be finalized
+        auto optout_psbt{*DecodeBase64PSBT(signed_stage)};
+        PSBTInput& aggregated = optout_psbt.inputs[std::ranges::find_if(modes, [](uint8_t m) { return m != 0; }) - modes.begin()];
+        aggregated.m_tap_key_sig.assign(64, 0);
+        BOOST_CHECK(!FinalizePSBT(optout_psbt));
+        BOOST_CHECK(!PSBTInputSigned(aggregated));
+    }
+
+    // A Combiner must fail on differing modes, nonces or partial signatures of an input
+    const auto& fullagg_case{tests["valid"][1]};
+    auto nonces{*DecodeBase64PSBT(fullagg_case["stages"][2]["base64"].get_str())};
+    auto other_nonces{nonces};
+    BOOST_CHECK(nonces.Merge(other_nonces));
+    other_nonces.inputs[1].m_cisa_fullagg_pubnonce[5] ^= 1;
+    BOOST_CHECK(!nonces.Merge(other_nonces));
+    auto other_mode{nonces};
+    other_mode.inputs[0].m_cisa_mode = CISA_MARKER_HALFAGG;
+    BOOST_CHECK(!nonces.Merge(other_mode));
+    auto psigs{*DecodeBase64PSBT(fullagg_case["stages"][3]["base64"].get_str())};
+    auto other_psigs{psigs};
+    other_psigs.inputs[1].m_cisa_fullagg_partial_sig = uint256::ONE;
+    BOOST_CHECK(!psigs.Merge(other_psigs));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

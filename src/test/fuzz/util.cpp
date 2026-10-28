@@ -214,6 +214,9 @@ CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) no
             tx_destination = WitnessV1Taproot{XOnlyPubKey{ConsumeUInt256(fuzzed_data_provider)}};
         },
         [&] {
+            tx_destination = WitnessV2Cisa{XOnlyPubKey{ConsumeUInt256(fuzzed_data_provider)}};
+        },
+        [&] {
             tx_destination = PayToAnchor{};
         },
         [&] {
@@ -221,7 +224,7 @@ CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) no
             if (program.size() < 2) {
                 program = {0, 0};
             }
-            tx_destination = WitnessUnknown{fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(2, 16), program};
+            tx_destination = WitnessUnknown{fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(3, 16), program};
         })};
     Assert(call_size == std::variant_size_v<CTxDestination>);
     return tx_destination;
