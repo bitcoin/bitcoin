@@ -123,6 +123,15 @@ static ChainstateLoadResult CompleteChainstateInitialization(
                 return {ChainstateLoadStatus::FAILURE, _("Error initializing block database")};
             }
             assert(chainstate->m_chain.Tip() != nullptr);
+        } else {
+            // An empty chainstate (e.g. after an unclean shutdown during its
+            // first flush) can only be rebuilt by connecting blocks from
+            // genesis. If the genesis block has been pruned, nothing can be
+            // connected and startup would wait forever for a chain tip.
+            const CBlockIndex* genesis{chainman.m_blockman.LookupBlockIndex(chainman.GetConsensus().hashGenesisBlock)};
+            if (genesis && chainman.m_blockman.IsBlockPruned(*genesis)) {
+                return {ChainstateLoadStatus::FAILURE, _("The chainstate database is empty, but the blocks needed to rebuild it have been pruned")};
+            }
         }
     }
 
