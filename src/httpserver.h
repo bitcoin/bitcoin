@@ -132,6 +132,7 @@ private:
 
 struct HTTPVersion {
     /**
+     * @name Protocol version
      * Default HTTP protocol version 1.1 is used by error responses
      * when a request is unreadable.
      */
@@ -199,6 +200,7 @@ public:
 
 private:
     /**
+     * @name Request parsers
      * Methods that attempt to parse HTTP request fields line-by-line
      * from a receive buffer.
      * @returns     true    If the request field was parsed.
@@ -408,7 +410,8 @@ private:
      */
     std::thread m_thread_socket_handler;
 
-    /*
+    /**
+     * @name Request dispatch
      * What to do with HTTP requests once received, validated and parsed.
      * Set in main thread by server start and interrupt but read in
      * worker threads.
@@ -578,6 +581,7 @@ private:
     std::atomic_bool m_req_busy{false};
 
     /**
+     * @name Response data
      * Response data destined for this client.
      * Written to by http worker threads, read and erased by HTTPServer I/O thread
      */
