@@ -14,6 +14,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <array>
 #include <cassert>
 #include <cerrno>
 #include <chrono>
@@ -197,6 +198,11 @@ constexpr bool WINDOWS{true};
 #else
 constexpr bool WINDOWS{false};
 #endif
+#ifdef __linux__
+constexpr bool LINUX{true};
+#else
+constexpr bool LINUX{false};
+#endif
 // poll() reports a reset connection (POLLERR, POLLHUP) whatever was requested, even nothing.
 // select() reports it only through the read and write sets.
 constexpr bool RESET_REPORTS_ERROR{POLL};
@@ -207,6 +213,16 @@ constexpr bool NOTHING_REQUESTED_FAILS{!POLL && WINDOWS};
 constexpr Sock::Event FAILED_CONNECT_EVENTS{POLL    ? Sock::RecvEvent | Sock::SendEvent | Sock::ErrorEvent :
                                             WINDOWS ? Sock::ErrorEvent :
                                                       Sock::RecvEvent | Sock::SendEvent};
+
+/*
+ * Where platforms differ in the sockets that accept() returns. CreateSockOS() sockets are
+ * non-blocking, with TCP_NODELAY and, where it exists, SO_NOSIGPIPE.
+ */
+// Linux's accept() does not pass O_NONBLOCK on to the new socket, unlike macOS, the BSDs and
+// Windows. net.cpp and httpserver.cpp do not set it again: they pass MSG_DONTWAIT instead.
+constexpr bool ACCEPT_INHERITS_NONBLOCKING{!LINUX};
+// Where MSG_DONTWAIT does not exist (Windows), accepted sockets must be non-blocking by themselves.
+static_assert(MSG_DONTWAIT != 0 || ACCEPT_INHERITS_NONBLOCKING);
 
 // Timeout for an expected event. Would only be reached on test failure. Note we never wait for
 // something *not* to happen, all tests are level-triggered.
@@ -271,6 +287,17 @@ bool WouldBlock(ssize_t ret)
     return !Progressed(ret);
 }
 
+/** Our end of a Connection. */
+class AcceptedSock : public Sock
+{
+public:
+    explicit AcceptedSock(Sock&& sock) : Sock{std::move(sock)} {}
+    // Do not hide Sock's virtual move assignment (-Woverloaded-virtual).
+    using Sock::operator=;
+
+    SOCKET Fd() const { return m_socket; }
+};
+
 /** A socket of ours, with the options we set in production. */
 std::unique_ptr<Sock> CreateOurSock()
 {
@@ -307,9 +334,13 @@ struct Connection {
     static constexpr int SMALL_BUFFER{4096};
 
     SOCKET peer;
-    std::shared_ptr<Sock> sock;
+    std::shared_ptr<AcceptedSock> sock;
 
-    explicit Connection(const Listener& listener) : peer{CreateSocket()}
+    /**
+     * @param[in] set_options Set O_NONBLOCK, which an accepted socket does not inherit everywhere,
+     *                        and TCP_NODELAY, which is set again in prod "just in case".
+     */
+    explicit Connection(const Listener& listener, bool set_options = true) : peer{CreateSocket()}
     {
         // Set before connecting: the receive window is negotiated in the handshake.
         BOOST_REQUIRE_EQUAL(setsockopt(peer, SOL_SOCKET, SO_RCVBUF, reinterpret_cast<const char*>(&SMALL_BUFFER), sizeof(SMALL_BUFFER)), 0);
@@ -322,13 +353,15 @@ struct Connection {
 
         auto accepted{listener.sock.Accept(nullptr, nullptr)};
         BOOST_REQUIRE(accepted);
-        sock = std::move(accepted);
+        sock = std::make_shared<AcceptedSock>(std::move(*accepted));
         // Other options are inherited from the listening socket, but not O_NONBLOCK on Linux, nor
         // TCP_NODELAY everywhere. In production we set TCP_NODELAY again but not O_NONBLOCK (!) and
         // instead rely on passing MSG_DONTWAIT for all recv() and send(). Set it here so a test failure
         // raises instead of hanging.
-        BOOST_REQUIRE(sock->SetNonBlocking());
-        BOOST_REQUIRE_EQUAL(sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &SOCK_OPTION_ON, sizeof(SOCK_OPTION_ON)), 0);
+        if (set_options) {
+            BOOST_REQUIRE(sock->SetNonBlocking());
+            BOOST_REQUIRE_EQUAL(sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &SOCK_OPTION_ON, sizeof(SOCK_OPTION_ON)), 0);
+        }
         BOOST_REQUIRE_EQUAL(sock->SetSockOpt(SOL_SOCKET, SO_SNDBUF, &SMALL_BUFFER, sizeof(SMALL_BUFFER)), 0);
     }
 
@@ -363,12 +396,12 @@ struct Connection {
     }
 
     /** Write to our socket until it would block. */
-    void FillSendBuffer() const
+    void FillSendBuffer(int flags = MSG_NOSIGNAL) const
     {
         const std::vector<char> data(SMALL_BUFFER, 'x');
         size_t sent{0};
         for (;;) {
-            const ssize_t ret{sock->Send(data.data(), data.size(), MSG_NOSIGNAL)};
+            const ssize_t ret{sock->Send(data.data(), data.size(), flags)};
             if (ret < 0) {
                 BOOST_REQUIRE(WouldBlock(ret));
                 return;
@@ -672,6 +705,66 @@ BOOST_AUTO_TEST_CASE(large_timeout)
         BOOST_CHECK(conn.sock->WaitMany(timeout, events_per_sock));
         BOOST_CHECK_EQUAL(events_per_sock.begin()->second.occurred, Sock::RecvEvent);
     }
+}
+
+/** Check the options set by CreateSockOS(), and those inherited by accepted sockets. */
+BOOST_AUTO_TEST_CASE(socket_options)
+{
+    const auto get{[](const Sock& sock, int level, int name) {
+        int value{0};
+        socklen_t len{sizeof(value)};
+        BOOST_REQUIRE_EQUAL(sock.GetSockOpt(level, name, &value, &len), 0);
+        return value != 0;
+    }};
+
+    // Listening socket and outgoing connections get NODELAY and NOSIGPIPE when available.
+    Listener listener;
+    const auto unconnected{CreateOurSock()};
+    for (const Sock* sock : std::array<const Sock*, 2>{&listener.sock, unconnected.get()}) {
+        BOOST_CHECK(get(*sock, IPPROTO_TCP, TCP_NODELAY));
+#ifdef SO_NOSIGPIPE
+        BOOST_CHECK(get(*sock, SOL_SOCKET, SO_NOSIGPIPE));
+#endif
+    }
+    BOOST_CHECK(!listener.sock.Accept(nullptr, nullptr));
+    // Accept() didn't fail because of an error.
+    BOOST_CHECK(!IOErrorIsPermanent(WSAGetLastError()));
+
+    // Accepted sockets get NODELAY and NOSIGPIPE when available too..
+    const Connection conn{listener, /*set_options=*/false};
+    const Sock& accepted{*conn.sock};
+    BOOST_CHECK(get(accepted, IPPROTO_TCP, TCP_NODELAY));
+#ifdef SO_NOSIGPIPE
+    BOOST_CHECK(get(accepted, SOL_SOCKET, SO_NOSIGPIPE));
+#endif
+
+    // ..But do not inherit O_NONBLOCK on Linux!
+#ifndef WIN32
+    const int flags{fcntl(conn.sock->Fd(), F_GETFL)};
+    BOOST_REQUIRE_NE(flags, -1);
+    BOOST_CHECK_EQUAL((flags & O_NONBLOCK) != 0, ACCEPT_INHERITS_NONBLOCKING);
+#endif
+
+    // Check all platforms which claim that accepted sockets inherit non-blocking mode. This will
+    // hang if it's not the case. NOTE: for Windows, MSG_DONTWAIT is 0, so if this didn't held,
+    // it would expose Windows users to a trivial remote forever-stall.
+    if (ACCEPT_INHERITS_NONBLOCKING) {
+        char c;
+        BOOST_CHECK(WouldBlock(accepted.Recv(&c, 1, 0)));
+    }
+}
+
+/** Check that Recv() and Send() with MSG_DONTWAIT return would-block rather than wait on a socket
+ * as Accept() returns it. NOTE: since accepted sockets on Linux do not inherit NONBLOCK, this is
+ * the only thing protecting Linux users from a trivial remote forever-stall. */
+BOOST_AUTO_TEST_CASE(accepted_socket_dontwait)
+{
+    Listener listener;
+    Connection conn{listener, /*set_options=*/false};
+    char c;
+    BOOST_CHECK(WouldBlock(conn.sock->Recv(&c, 1, MSG_DONTWAIT)));
+    conn.FillSendBuffer(MSG_NOSIGNAL | MSG_DONTWAIT);
+    BOOST_CHECK(WouldBlock(conn.sock->Send("x", 1, MSG_NOSIGNAL | MSG_DONTWAIT)));
 }
 
 /** Check that a listening socket reports RecvEvent when accept() will succeed, by accepting one
