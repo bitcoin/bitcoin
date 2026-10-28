@@ -15,6 +15,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <cassert>
+#include <cerrno>
 #include <chrono>
 #include <memory>
 #include <string>
@@ -201,6 +202,11 @@ constexpr bool WINDOWS{false};
 constexpr bool RESET_REPORTS_ERROR{POLL};
 // Windows' select() fails if no socket requests any event, as all three sets are then empty.
 constexpr bool NOTHING_REQUESTED_FAILS{!POLL && WINDOWS};
+// What a failed non-blocking connect() reports. Callers only check that something occurred and
+// then read SO_ERROR. Windows' select() signals it only in exceptfds.
+constexpr Sock::Event FAILED_CONNECT_EVENTS{POLL    ? Sock::RecvEvent | Sock::SendEvent | Sock::ErrorEvent :
+                                            WINDOWS ? Sock::ErrorEvent :
+                                                      Sock::RecvEvent | Sock::SendEvent};
 
 // Timeout for an expected event. Would only be reached on test failure. Note we never wait for
 // something *not* to happen, all tests are level-triggered.
@@ -208,8 +214,10 @@ constexpr auto LONG_WAIT{60s};
 
 #ifdef WIN32
 constexpr int SHUT_WRITE{SD_SEND};
+constexpr int CONNECTION_REFUSED{WSAECONNREFUSED};
 #else
 constexpr int SHUT_WRITE{SHUT_WR};
+constexpr int CONNECTION_REFUSED{ECONNREFUSED};
 #endif
 
 constexpr int SOCK_OPTION_ON{1};
@@ -695,6 +703,71 @@ BOOST_AUTO_TEST_CASE(listening_socket)
     BOOST_CHECK(!IOErrorIsPermanent(WSAGetLastError()));
 
     for (const SOCKET s : clients) CloseSocket(s);
+}
+
+/** A successful non-blocking connect() will wake up a wait for RecvEvent | SendEvent with SendEvent. */
+BOOST_AUTO_TEST_CASE(connect_succeeds)
+{
+    Listener listener;
+    const auto sock_ptr{CreateOurSock()};
+
+    // Connect to the listener, possibly completing the connection immediately.
+    const Sock& sock{*sock_ptr};
+    if (sock.Connect(reinterpret_cast<const sockaddr*>(&listener.addr), sizeof(listener.addr)) != 0) {
+        // If it didn't complete immediately, it must be because it's in progress, not because there
+        // was an error.
+        const int err{WSAGetLastError()};
+        BOOST_REQUIRE(err == WSAEINPROGRESS || err == WSAEWOULDBLOCK);
+    }
+
+    // Now waiting for Send | Recv will return Send once the connection is established.
+    Sock::Event occurred{0xff};
+    BOOST_REQUIRE(sock.Wait(LONG_WAIT, Sock::RecvEvent | Sock::SendEvent, &occurred));
+    BOOST_CHECK_EQUAL(EventsStr(occurred), EventsStr(Sock::SendEvent));
+
+    // Make sure the Send reported by Wait() was because the connection was successful, not
+    // because there was an error.
+    int error{-1};
+    socklen_t len{sizeof(error)};
+    BOOST_REQUIRE_EQUAL(sock.GetSockOpt(SOL_SOCKET, SO_ERROR, &error, &len), 0);
+    BOOST_CHECK_EQUAL(error, 0);
+}
+
+/** A failed non-blocking connect() will wake up a wait for RecvEvent | SendEvent too, but SO_ERROR
+ * will be set. */
+BOOST_AUTO_TEST_CASE(connect_refused)
+{
+    // Get a free port from the OS and immediately free it, because macOS does not answer a
+    // connection to a port that is bound but not listening. Technically something else could bind
+    // to it in the meantime but that's unlikely since it's a free port we requested just before.
+    sockaddr_in addr;
+    {
+        Listener listener;
+        addr = listener.addr;
+    }
+
+    // Connect to the just-freed port. It must not succeed.
+    const auto sock_ptr{CreateOurSock()};
+    const Sock& sock{*sock_ptr};
+    BOOST_REQUIRE_NE(sock.Connect(reinterpret_cast<const sockaddr*>(&addr), sizeof(addr)), 0);
+
+    // It may have failed immediately.
+    const int err{WSAGetLastError()};
+    if (err != WSAEINPROGRESS && err != WSAEWOULDBLOCK) {
+        BOOST_CHECK_EQUAL(err, CONNECTION_REFUSED);
+        return;
+    }
+
+    // Otherwise, it must fail eventually. NOTE: Windows retries for about two seconds before giving up.
+    Sock::Event occurred{0xff};
+    BOOST_REQUIRE(sock.Wait(LONG_WAIT, Sock::RecvEvent | Sock::SendEvent, &occurred));
+    BOOST_CHECK_EQUAL(EventsStr(occurred), EventsStr(FAILED_CONNECT_EVENTS));
+
+    // SO_ERROR must be set.
+    int error{-1};
+    socklen_t len{sizeof(error)};
+    BOOST_REQUIRE_EQUAL(sock.GetSockOpt(SOL_SOCKET, SO_ERROR, &error, &len), 0);
+    BOOST_CHECK_EQUAL(error, CONNECTION_REFUSED);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
