@@ -1,9 +1,12 @@
-v32.0 Release Notes
+v32.1 Release Notes
 ===================
 
-Bitcoin Core version 32.0 is now available from:
+Due to last-minute issues, 32.0, although tagged, was never
+fully announced or released.
 
-  <https://bitcoincore.org/bin/bitcoin-core-32.0/>
+Bitcoin Core version 32.1 is now available from:
+
+  <https://bitcoincore.org/bin/bitcoin-core-32.1/>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
@@ -19,11 +22,14 @@ To receive security and update notifications, please subscribe to:
 With the release of this new major version, versions 29.x and
 older are at "End of Life" and will no longer receive updates.
 
-In accordance with the security policy, we will in two weeks disclose:
+In accordance with our [security policy](https://bitcoincore.org/en/security-advisories/), any **easily discoverable** vulnerabilities fixed in this
+release will be disclosed as soon as fixed releases are available for all maintained major versions.
+
+Under the regular disclosure schedule, we will disclose the following in two weeks:
 
 * Medium and high severity vulnerabilities fixed in 30.0. There are 3 of these.
 
-* Low severity vulnerabilities fixed in 32.0. There are 0 of these.
+* Low severity vulnerabilities fixed in 32.1. There are 0 of these.
 
 How to Upgrade
 ==============
@@ -114,6 +120,8 @@ P2P and network changes
 - Explicitly configured `-maxconnections` values remain unchanged, but the new
   inbound transaction-relay limit still applies. To retain the previous
   connection limits, use `-maxconnections=125 -inboundrelaypercent=100`.
+`-maxconnections` now clamps values above 2,000 with a warning to reduce
+  crash risk at very high peer counts. (#35919)
 
 Mempool
 -------
