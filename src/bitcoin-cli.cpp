@@ -912,8 +912,9 @@ bool HTTPClient::SendRequest(std::string_view request)
             return false;
         }
 
+        // The wait either timed out or the socket reported an error without becoming writable.
         if (!(event & Sock::SendEvent)) {
-            continue;
+            return false;
         }
 
         ssize_t sent = m_socket->Send(request.data(), request.size(), MSG_NOSIGNAL);
