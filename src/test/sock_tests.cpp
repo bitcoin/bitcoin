@@ -666,4 +666,35 @@ BOOST_AUTO_TEST_CASE(large_timeout)
     }
 }
 
+/** Check that a listening socket reports RecvEvent when accept() will succeed, by accepting one
+ * connection per wake up. */
+BOOST_AUTO_TEST_CASE(listening_socket)
+{
+    Listener listener;
+    Sock::Event occurred{0xff};
+    BOOST_REQUIRE(listener.sock.Wait(0ms, Sock::RecvEvent, &occurred));
+    BOOST_CHECK_EQUAL(occurred, 0);
+    BOOST_CHECK(!listener.sock.Accept(nullptr, nullptr));
+
+    std::vector<SOCKET> clients;
+    for (int i{0}; i < 3; ++i) {
+        clients.push_back(CreateSocket());
+        BOOST_REQUIRE_EQUAL(connect(clients.back(), reinterpret_cast<const sockaddr*>(&listener.addr), sizeof(listener.addr)), 0);
+    }
+    for (size_t i{0}; i < clients.size(); ++i) {
+        occurred = 0xff;
+        BOOST_REQUIRE(listener.sock.Wait(LONG_WAIT, Sock::RecvEvent, &occurred));
+        BOOST_CHECK_EQUAL(occurred, Sock::RecvEvent);
+        BOOST_CHECK(listener.sock.Accept(nullptr, nullptr));
+    }
+    occurred = 0xff;
+    BOOST_REQUIRE(listener.sock.Wait(0ms, Sock::RecvEvent, &occurred));
+    BOOST_CHECK_EQUAL(occurred, 0);
+    BOOST_CHECK(!listener.sock.Accept(nullptr, nullptr));
+    // Accept() didn't fail because of an error.
+    BOOST_CHECK(!IOErrorIsPermanent(WSAGetLastError()));
+
+    for (const SOCKET s : clients) CloseSocket(s);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
