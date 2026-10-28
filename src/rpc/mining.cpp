@@ -644,6 +644,56 @@ static std::string gbt_rule_value(const std::string& name, bool gbt_optional_rul
     return s;
 }
 
+namespace {
+/** Block template shared by getblocktemplate calls, and the state of its last build attempt. */
+struct CachedBlockTemplate {
+    //! CTxMemPool::GetTransactionsUpdated() sampled before the last build attempt.
+    unsigned int transactions_updated{0};
+    //! Mockable time of the last build attempt.
+    NodeSeconds time_start{};
+    //! nullptr if no template was built yet, or if the last rebuild failed.
+    std::shared_ptr<const node::CBlockTemplate> block_template;
+};
+
+CachedBlockTemplate g_cached_template GUARDED_BY(::cs_main);
+
+//! A cached getblocktemplate template is only rebuilt for a mempool change
+//! once it is older than this.
+constexpr std::chrono::seconds GBT_TEMPLATE_REBUILD_INTERVAL{5};
+
+/** Rebuild the cached getblocktemplate template with init-time options if
+ *  none is cached, if it does not build on the active chain tip, or if the
+ *  mempool changed and the template is older than the rebuild interval.
+ *  @return the cached template, rebuilt if needed. Its block_template is
+ *  never null.
+ *  @throws std::runtime_error if building the template fails. The cache is
+ *  then left without a template, so the next call tries again. */
+CachedBlockTemplate GetNewOrCachedBlockTemplate(node::BlockTemplateManager& block_template_manager, const ChainstateManager& chainman, const CTxMemPool& mempool) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+{
+    AssertLockHeld(::cs_main);
+    CachedBlockTemplate& cache{g_cached_template};
+    const uint256 tip{CHECK_NONFATAL(chainman.ActiveChain().Tip())->GetBlockHash()};
+    if (!cache.block_template || cache.block_template->block.hashPrevBlock != tip ||
+        (mempool.GetTransactionsUpdated() != cache.transactions_updated &&
+         Now<NodeSeconds>() - cache.time_start > GBT_TEMPLATE_REBUILD_INTERVAL)) {
+        // Clear the template so future calls make a new block, despite any failures from here on
+        cache.block_template.reset();
+
+        // Sample the mempool counter before building, so that a change made
+        // while CreateNewTemplate runs is seen as a change on the next call
+        cache.transactions_updated = mempool.GetTransactionsUpdated();
+        cache.time_start = Now<NodeSeconds>();
+
+        // Create new block. Opt-out of cooldown mechanism, because it would add
+        // a delay to each getblocktemplate call. This differs from typical
+        // long-lived IPC usage, where the overhead is paid only when creating
+        // the initial template.
+        cache.block_template = CHECK_NONFATAL(block_template_manager.CreateNewTemplate({}));
+    }
+    return cache;
+}
+} // namespace
+
 static RPCMethod getblocktemplate()
 {
     return RPCMethod{
@@ -806,7 +856,6 @@ static RPCMethod getblocktemplate()
         }
     }
 
-    static unsigned int nTransactionsUpdatedLast;
     const CTxMemPool& mempool = EnsureMemPool(node);
 
     WAIT_LOCK(cs_main, cs_main_lock);
@@ -833,7 +882,7 @@ static RPCMethod getblocktemplate()
 
         if (lpval.isStr())
         {
-            // Format: <hashBestChain><nTransactionsUpdatedLast>
+            // Format: <hashBestChain><transactions_updated>
             const std::string& lpstr = lpval.get_str();
 
             // Assume the longpollid is a block hash. If it's not then we return
@@ -845,7 +894,7 @@ static RPCMethod getblocktemplate()
         {
             // NOTE: Spec does not specify behaviour for non-string longpollid, but this makes testing easier
             hashWatchedChain = tip;
-            nTransactionsUpdatedLastLP = nTransactionsUpdatedLast;
+            nTransactionsUpdatedLastLP = g_cached_template.transactions_updated;
         }
 
         // Release lock while waiting
@@ -869,7 +918,6 @@ static RPCMethod getblocktemplate()
                 checktxtime = std::chrono::seconds(10);
             }
         }
-        tip = CHECK_NONFATAL(block_template_manager.GetTip()).value().hash;
 
         if (!IsRPCRunning())
             throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Shutting down");
@@ -889,32 +937,9 @@ static RPCMethod getblocktemplate()
     }
 
     // Update block
-    static CBlockIndex* pindexPrev;
-    static int64_t time_start;
-    static std::unique_ptr<node::CBlockTemplate> block_template;
-    if (!pindexPrev || pindexPrev->GetBlockHash() != tip ||
-        (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - time_start > 5))
-    {
-        // Clear pindexPrev so future calls make a new block, despite any failures from here on
-        pindexPrev = nullptr;
-
-        // Store the pindexBest used before createNewBlock, to avoid races
-        nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
-        CBlockIndex* pindexPrevNew = chainman.m_blockman.LookupBlockIndex(tip);
-        time_start = GetTime();
-
-        // Create new block. Opt-out of cooldown mechanism, because it would add
-        // a delay to each getblocktemplate call. This differs from typical
-        // long-lived IPC usage, where the overhead is paid only when creating
-        // the initial template.
-        block_template = block_template_manager.CreateNewTemplate({});
-        CHECK_NONFATAL(block_template);
-
-
-        // Need to update only after we know createNewBlock succeeded
-        pindexPrev = pindexPrevNew;
-    }
-    CHECK_NONFATAL(pindexPrev);
+    const CachedBlockTemplate cached{GetNewOrCachedBlockTemplate(block_template_manager, chainman, mempool)};
+    const std::shared_ptr<const node::CBlockTemplate> block_template{cached.block_template};
+    const CBlockIndex* const pindexPrev{CHECK_NONFATAL(chainman.m_blockman.LookupBlockIndex(block_template->block.hashPrevBlock))};
     CBlockHeader block_header{block_template->block};
 
     // Update nTime
@@ -1031,7 +1056,7 @@ static RPCMethod getblocktemplate()
     result.pushKV("transactions", std::move(transactions));
     result.pushKV("coinbaseaux", std::move(aux));
     result.pushKV("coinbasevalue", block_template->block.vtx[0]->vout[0].nValue);
-    result.pushKV("longpollid", tip.GetHex() + ToString(nTransactionsUpdatedLast));
+    result.pushKV("longpollid", block_template->block.hashPrevBlock.GetHex() + ToString(cached.transactions_updated));
     result.pushKV("target", hashTarget.GetHex());
     result.pushKV("mintime", GetMinimumTime(pindexPrev, consensusParams.DifficultyAdjustmentInterval()));
     result.pushKV("mutable", std::move(aMutable));
