@@ -402,6 +402,8 @@ RPCErrorCode RPCErrorFromTransactionError(TransactionError terr)
         case TransactionError::ALREADY_IN_UTXO_SET:
             return RPC_VERIFY_ALREADY_IN_UTXO_SET;
         case TransactionError::PRIVATE_BROADCAST_FULL:
+        case TransactionError::PRIVATE_BROADCAST_NETWORK_OFF:
+        case TransactionError::PRIVATE_BROADCAST_SHUTTING_DOWN:
             return RPC_LIMIT_EXCEEDED;
         default: break;
     }

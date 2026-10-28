@@ -42,6 +42,7 @@ class SignalInterrupt;
 namespace node {
 class BlockTemplateManager;
 class KernelNotifications;
+class PrivbcastQueue;
 class Warnings;
 
 //! NodeContext struct containing references to chain state and connection
@@ -70,6 +71,8 @@ struct NodeContext {
     std::unique_ptr<const NetGroupManager> netgroupman;
     std::unique_ptr<FeeRateEstimatorManager> fee_estimator_man;
     std::unique_ptr<PeerManager> peerman;
+    //! Private broadcast jobs, with -privatebroadcast only.
+    std::unique_ptr<PrivbcastQueue> privbcast;
     std::unique_ptr<TorController> tor_controller;
     std::unique_ptr<ChainstateManager> chainman;
     std::unique_ptr<BanMan> banman;

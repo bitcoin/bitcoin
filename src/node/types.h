@@ -27,6 +27,8 @@ enum class TransactionError {
     MAX_BURN_EXCEEDED,
     INVALID_PACKAGE,
     PRIVATE_BROADCAST_FULL,
+    PRIVATE_BROADCAST_NETWORK_OFF,
+    PRIVATE_BROADCAST_SHUTTING_DOWN,
 };
 
 /**
@@ -38,8 +40,8 @@ enum class TxBroadcast : uint8_t {
     MEMPOOL_AND_BROADCAST_TO_ALL,
     /// Add the transaction to the mempool, but don't broadcast to anybody.
     MEMPOOL_NO_BROADCAST,
-    /// Omit the mempool and directly send the transaction via a few dedicated connections to
-    /// peers on privacy networks.
+    /// Omit the mempool and queue a private broadcast job, which sends the transaction to a few
+    /// peers through Tor.
     NO_MEMPOOL_PRIVATE_BROADCAST,
 };
 

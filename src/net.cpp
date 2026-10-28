@@ -360,15 +360,7 @@ bool CConnman::CheckIncomingNonce(uint64_t nonce)
 {
     LOCK(m_nodes_mutex);
     for (const CNode* pnode : m_nodes) {
-        // Omit private broadcast connections from this check to prevent this privacy attack:
-        // - We connect to a peer in an attempt to privately broadcast a transaction. From our
-        //   VERSION message the peer deducts that this is a short-lived connection for
-        //   broadcasting a transaction, takes our nonce and delays their VERACK.
-        // - The peer starts connecting to (clearnet) nodes and sends them a VERSION message
-        //   which contains our nonce. If the peer manages to connect to us we would disconnect.
-        // - Upon a disconnect, the peer knows our clearnet address. They go back to the short
-        //   lived privacy broadcast connection and continue with VERACK.
-        if (!pnode->fSuccessfullyConnected && !pnode->IsInboundConn() && !pnode->IsPrivateBroadcastConn() &&
+        if (!pnode->fSuccessfullyConnected && !pnode->IsInboundConn() &&
             pnode->GetLocalNonce() == nonce)
             return false;
     }
@@ -379,8 +371,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                              const char* pszDest,
                              bool fCountFailure,
                              ConnectionType conn_type,
-                             bool use_v2transport,
-                             const std::optional<Proxy>& proxy_override)
+                             bool use_v2transport)
 {
     AssertLockNotHeld(m_nodes_mutex);
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
@@ -447,19 +438,14 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
 
     for (auto& target_addr : connect_to) {
         if (target_addr.IsValid()) {
-            const std::optional<Proxy> use_proxy{
-                proxy_override.has_value() ? proxy_override : GetProxy(target_addr.GetNetwork()),
-            };
+            const std::optional<Proxy> use_proxy{GetProxy(target_addr.GetNetwork())};
             bool proxyConnectionFailed = false;
 
             if (target_addr.IsI2P() && use_proxy) {
                 i2p::Connection conn;
                 bool connected{false};
 
-                // If an I2P SAM session already exists, normally we would re-use it. But in the case of
-                // private broadcast we force a new transient session. A Connect() using m_i2p_sam_session
-                // would use our permanent I2P address as a source address.
-                if (m_i2p_sam_session && conn_type != ConnectionType::PRIVATE_BROADCAST) {
+                if (m_i2p_sam_session) {
                     connected = m_i2p_sam_session->Connect(target_addr, conn, proxyConnectionFailed);
                 } else {
                     {
@@ -489,11 +475,8 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                 LogDebug(BCLog::PROXY, "Using proxy: %s to connect to %s\n", use_proxy->ToString(), target_addr.ToStringAddrPort());
                 sock = ConnectThroughProxy(*use_proxy, target_addr.ToStringAddr(), target_addr.GetPort(), proxyConnectionFailed);
             } else {
-                // No proxy needed (none set for target network). Private broadcast connections
-                // must always use a proxy, otherwise they would leak the originator's IP address.
-                if (Assume(conn_type != ConnectionType::PRIVATE_BROADCAST)) {
-                    sock = ConnectDirectly(target_addr, conn_type == ConnectionType::MANUAL);
-                }
+                // No proxy needed (none set for target network).
+                sock = ConnectDirectly(target_addr, conn_type == ConnectionType::MANUAL);
             }
             if (!proxyConnectionFailed) {
                 // If a connection to the node was attempted, and failure (if any) is not caused by a problem connecting to
@@ -543,7 +526,6 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                                 network_id,
                                 CNodeOptions{
                                     .permission_flags = permission_flags,
-                                    .proxy_override = proxy_override,
                                     .i2p_sam_session = std::move(i2p_transient_session),
                                     .recv_flood_size = nReceiveFloodSize,
                                     .use_v2transport = use_v2transport,
@@ -1902,7 +1884,6 @@ bool CConnman::AddConnection(const std::string& address, ConnectionType conn_typ
     std::optional<int> max_connections;
     switch (conn_type) {
     case ConnectionType::INBOUND:
-    case ConnectionType::PRIVATE_BROADCAST:
         return false;
     // no separate per-type limit for MANUAL because semAddnode limits them
     case ConnectionType::MANUAL:
@@ -1937,8 +1918,7 @@ bool CConnman::AddConnection(const std::string& address, ConnectionType conn_typ
                           /*grant_outbound=*/std::move(grant),
                           /*pszDest=*/address.c_str(),
                           /*conn_type=*/conn_type,
-                          /*use_v2transport=*/use_v2transport,
-                          /*proxy_override=*/std::nullopt);
+                          /*use_v2transport=*/use_v2transport);
     return true;
 }
 
@@ -1979,7 +1959,6 @@ void CConnman::DisconnectNodes()
                 // and we don't want to hold up the socket handler thread for that long.
                 if (network_active && pnode->m_transport->ShouldReconnectV1()) {
                     reconnections_to_add.push_back({
-                        .proxy_override = pnode->m_proxy_override,
                         .addr_connect = pnode->addr,
                         .grant = std::move(pnode->grantOutbound),
                         .destination = pnode->m_dest,
@@ -2478,8 +2457,7 @@ void CConnman::ProcessAddrFetch()
                               /*grant_outbound=*/std::move(grant),
                               /*pszDest=*/strDest.c_str(),
                               /*conn_type=*/ConnectionType::ADDR_FETCH,
-                              /*use_v2transport=*/use_v2transport,
-                              /*proxy_override=*/std::nullopt);
+                              /*use_v2transport=*/use_v2transport);
     }
 }
 
@@ -2629,8 +2607,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
                                       /*grant_outbound=*/{},
                                       /*pszDest=*/strAddr.c_str(),
                                       /*conn_type=*/ConnectionType::MANUAL,
-                                      /*use_v2transport=*/use_v2transport,
-                                      /*proxy_override=*/std::nullopt);
+                                      /*use_v2transport=*/use_v2transport);
                 for (int i = 0; i < 10 && i < nLoop; i++)
                 {
                     if (!m_interrupt_net->sleep_for(500ms)) {
@@ -2758,7 +2735,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
                     // peers from addrman.
                     case ConnectionType::ADDR_FETCH:
                     case ConnectionType::FEELER:
-                    case ConnectionType::PRIVATE_BROADCAST:
                         break;
                     case ConnectionType::MANUAL:
                     case ConnectionType::OUTBOUND_FULL_RELAY:
@@ -2997,8 +2973,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
                                   /*grant_outbound=*/std::move(grant),
                                   /*pszDest=*/nullptr,
                                   /*conn_type=*/conn_type,
-                                  /*use_v2transport=*/use_v2transport,
-                                  /*proxy_override=*/std::nullopt);
+                                  /*use_v2transport=*/use_v2transport);
         }
     }
 }
@@ -3102,8 +3077,7 @@ void CConnman::ThreadOpenAddedConnections()
                                   /*grant_outbound=*/std::move(grant),
                                   /*pszDest=*/info.m_params.m_added_node.c_str(),
                                   /*conn_type=*/ConnectionType::MANUAL,
-                                  /*use_v2transport=*/info.m_params.m_use_v2transport,
-                                  /*proxy_override=*/std::nullopt);
+                                  /*use_v2transport=*/info.m_params.m_use_v2transport);
             if (!m_interrupt_net->sleep_for(500ms)) return;
             grant = CountingSemaphoreGrant<>(*semAddnode, /*fTry=*/true);
         }
@@ -3122,8 +3096,7 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect,
                                      CountingSemaphoreGrant<>&& grant_outbound,
                                      const char* pszDest,
                                      ConnectionType conn_type,
-                                     bool use_v2transport,
-                                     const std::optional<Proxy>& proxy_override)
+                                     bool use_v2transport)
 {
     AssertLockNotHeld(m_nodes_mutex);
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
@@ -3147,7 +3120,7 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect,
         return false;
     }
 
-    CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure, conn_type, use_v2transport, proxy_override);
+    CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure, conn_type, use_v2transport);
 
     if (!pnode)
         return false;
@@ -3170,75 +3143,6 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect,
         GetNodeCount(ConnectionDirection::Out));
 
     return true;
-}
-
-std::optional<Network> CConnman::PrivateBroadcast::PickNetwork(std::optional<Proxy>& proxy) const
-{
-    prevector<4, Network> nets;
-    std::optional<Proxy> clearnet_proxy;
-    proxy.reset();
-    if (g_reachable_nets.Contains(NET_ONION)) {
-        nets.push_back(NET_ONION);
-
-        clearnet_proxy = ProxyForIPv4or6();
-        if (clearnet_proxy.has_value()) {
-            if (g_reachable_nets.Contains(NET_IPV4)) {
-                nets.push_back(NET_IPV4);
-            }
-            if (g_reachable_nets.Contains(NET_IPV6)) {
-                nets.push_back(NET_IPV6);
-            }
-        }
-    }
-    if (g_reachable_nets.Contains(NET_I2P)) {
-        nets.push_back(NET_I2P);
-    }
-
-    if (nets.empty()) {
-        return std::nullopt;
-    }
-
-    const Network net{nets[FastRandomContext{}.randrange(nets.size())]};
-    if (net == NET_IPV4 || net == NET_IPV6) {
-        proxy = clearnet_proxy;
-    }
-    return net;
-}
-
-size_t CConnman::PrivateBroadcast::NumToOpen() const
-{
-    return m_num_to_open;
-}
-
-void CConnman::PrivateBroadcast::NumToOpenAdd(size_t n)
-{
-    m_num_to_open += n;
-    m_num_to_open.notify_all();
-}
-
-size_t CConnman::PrivateBroadcast::NumToOpenSub(size_t n)
-{
-    size_t current_value{m_num_to_open.load()};
-    size_t new_value;
-    do {
-        new_value = current_value > n ? current_value - n : 0;
-    } while (!m_num_to_open.compare_exchange_strong(current_value, new_value));
-    return new_value;
-}
-
-void CConnman::PrivateBroadcast::NumToOpenWait() const
-{
-    m_num_to_open.wait(0);
-}
-
-std::optional<Proxy> CConnman::PrivateBroadcast::ProxyForIPv4or6() const
-{
-    if (m_outbound_tor_ok_at_least_once.load()) {
-        if (const auto tor_proxy = GetProxy(NET_ONION)) {
-            return tor_proxy;
-        }
-    }
-    return std::nullopt;
 }
 
 Mutex NetEventsInterface::g_msgproc_mutex;
@@ -3326,75 +3230,6 @@ void CConnman::ThreadI2PAcceptIncoming()
         CreateNodeFromAcceptedSocket(std::move(conn.sock), NetPermissionFlags::None, conn.me, conn.peer);
 
         err_wait = err_wait_begin;
-    }
-}
-
-void CConnman::ThreadPrivateBroadcast()
-{
-    AssertLockNotHeld(m_nodes_mutex);
-    AssertLockNotHeld(m_unused_i2p_sessions_mutex);
-
-    size_t addrman_num_bad_addresses{0};
-    while (!m_interrupt_net->interrupted()) {
-
-        if (!fNetworkActive) {
-            m_interrupt_net->sleep_for(5s);
-            continue;
-        }
-
-        CountingSemaphoreGrant<> conn_max_grant{m_private_broadcast.m_sem_conn_max}; // Would block if too many are opened.
-
-        m_private_broadcast.NumToOpenWait();
-
-        if (m_interrupt_net->interrupted()) {
-            break;
-        }
-
-        std::optional<Proxy> proxy;
-        const std::optional<Network> net{m_private_broadcast.PickNetwork(proxy)};
-        if (!net.has_value()) {
-            LogWarning("Unable to open -privatebroadcast connections: neither Tor nor I2P is reachable");
-            m_interrupt_net->sleep_for(5s);
-            continue;
-        }
-
-        const auto [addr, _] = addrman.get().Select(/*new_only=*/false, {net.value()});
-
-        if (!addr.IsValid() || IsLocal(addr)) {
-            ++addrman_num_bad_addresses;
-            if (addrman_num_bad_addresses > 100) {
-                LogDebug(BCLog::PRIVBROADCAST, "Connections needed but addrman keeps returning bad addresses, will retry");
-                m_interrupt_net->sleep_for(500ms);
-            }
-            continue;
-        }
-        addrman_num_bad_addresses = 0;
-
-        auto target_str{addr.ToStringAddrPort()};
-        if (proxy.has_value()) {
-            target_str += " through the proxy at " + proxy->ToString();
-        }
-
-        const bool use_v2transport(addr.nServices & GetLocalServices() & NODE_P2P_V2);
-
-        if (OpenNetworkConnection(addr,
-                                  /*fCountFailure=*/true,
-                                  std::move(conn_max_grant),
-                                  /*pszDest=*/nullptr,
-                                  ConnectionType::PRIVATE_BROADCAST,
-                                  use_v2transport,
-                                  proxy)) {
-            const size_t remaining{m_private_broadcast.NumToOpenSub(1)};
-            LogDebug(BCLog::PRIVBROADCAST, "Socket connected to %s; remaining connections to open: %d", target_str, remaining);
-        } else {
-            const size_t remaining{m_private_broadcast.NumToOpen()};
-            if (remaining == 0) {
-                LogDebug(BCLog::PRIVBROADCAST, "Failed to connect to %s, will not retry, no more connections needed", target_str);
-            } else {
-                LogDebug(BCLog::PRIVBROADCAST, "Failed to connect to %s, will retry to a different address; remaining connections to open: %d", target_str, remaining);
-                m_interrupt_net->sleep_for(100ms); // Prevent busy loop if OpenNetworkConnection() fails fast repeatedly.
-            }
-        }
     }
 }
 
@@ -3698,11 +3533,6 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
             std::thread(&util::TraceThread, "i2paccept", [this] { ThreadI2PAcceptIncoming(); });
     }
 
-    if (gArgs.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)) {
-        threadPrivateBroadcast =
-            std::thread(&util::TraceThread, "privbcast", [this] { ThreadPrivateBroadcast(); });
-    }
-
     // Dump network addresses
     scheduler.scheduleEvery([this] { DumpAddresses(); }, DUMP_PEERS_INTERVAL);
 
@@ -3752,16 +3582,10 @@ void CConnman::Interrupt()
             semAddnode->release();
         }
     }
-
-    m_private_broadcast.m_sem_conn_max.release();
-    m_private_broadcast.NumToOpenAdd(1); // Just unblock NumToOpenWait() to be able to continue with shutdown.
 }
 
 void CConnman::StopThreads()
 {
-    if (threadPrivateBroadcast.joinable()) {
-        threadPrivateBroadcast.join();
-    }
     if (threadI2PAcceptIncoming.joinable()) {
         threadI2PAcceptIncoming.join();
     }
@@ -3976,13 +3800,13 @@ bool CConnman::DisconnectNode(std::string_view strNode)
     return false;
 }
 
-bool CConnman::DisconnectNode(const CSubNet& subnet, bool disconnect_private_broadcast)
+bool CConnman::DisconnectNode(const CSubNet& subnet)
 {
     AssertLockNotHeld(m_nodes_mutex);
     bool disconnected = false;
     LOCK(m_nodes_mutex);
     for (CNode* pnode : m_nodes) {
-        if (subnet.Match(pnode->addr) && (disconnect_private_broadcast || !pnode->IsPrivateBroadcastConn())) {
+        if (subnet.Match(pnode->addr)) {
             LogDebug(BCLog::NET, "disconnect by subnet%s match, %s", (fLogIPs ? strprintf("=%s", subnet.ToString()) : ""), pnode->DisconnectMsg());
             pnode->fDisconnect = true;
             disconnected = true;
@@ -4139,7 +3963,6 @@ CNode::CNode(NodeId idIn,
       m_permission_flags{node_opts.permission_flags},
       m_sock{sock},
       m_connected{NodeClock::now()},
-      m_proxy_override{std::move(node_opts.proxy_override)},
       addr{addrIn},
       addrBind{addrBindIn},
       m_addr_name{addrNameIn.empty() ? addr.ToStringAddrPort() : addrNameIn},
@@ -4204,33 +4027,9 @@ bool CConnman::NodeFullyConnected(const CNode* pnode)
     return pnode && pnode->fSuccessfullyConnected && !pnode->fDisconnect;
 }
 
-/// Private broadcast connections only need to send certain message types.
-/// Other messages are not needed and may degrade privacy.
-static bool IsOutboundMessageAllowedInPrivateBroadcast(std::string_view type) noexcept
-{
-    return type == NetMsgType::VERSION ||
-           type == NetMsgType::VERACK ||
-           type == NetMsgType::INV ||
-           type == NetMsgType::TX ||
-           type == NetMsgType::PING;
-}
-
 void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 {
     AssertLockNotHeld(m_total_bytes_sent_mutex);
-
-    if (pnode->IsPrivateBroadcastConn() && !IsOutboundMessageAllowedInPrivateBroadcast(msg.m_type)) {
-        LogDebug(BCLog::PRIVBROADCAST, "Omitting send of message '%s', %s", msg.m_type, pnode->LogPeer());
-        return;
-    }
-
-    if (!m_private_broadcast.m_outbound_tor_ok_at_least_once.load() && !pnode->IsInboundConn() &&
-        pnode->addr.IsTor() && msg.m_type == NetMsgType::VERACK) {
-        // If we are sending the peer VERACK that means we successfully sent
-        // and received another message to/from that peer (VERSION).
-        m_private_broadcast.m_outbound_tor_ok_at_least_once.store(true);
-    }
-
     size_t nMessageSize = msg.data.size();
     LogDebug(BCLog::NET, "sending %s (%d bytes) peer=%d\n", msg.m_type, nMessageSize, pnode->GetId());
     if (m_capture_messages) {
@@ -4329,8 +4128,7 @@ void CConnman::PerformReconnections()
                               std::move(item.grant),
                               item.destination.empty() ? nullptr : item.destination.c_str(),
                               item.conn_type,
-                              item.use_v2transport,
-                              item.proxy_override);
+                              item.use_v2transport);
     }
 }
 
