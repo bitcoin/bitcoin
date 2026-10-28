@@ -23,7 +23,7 @@ To receive security and update notifications, please subscribe to:
 With the release of this new major version, versions *version minus 3* and
 older are at "End of Life" and will no longer receive updates.
 
-In accordance with our security policy, any **easily discoverable** vulnerabilities fixed in this
+In accordance with our [security policy](https://bitcoincore.org/en/security-advisories/), any **easily discoverable** vulnerabilities fixed in this
 release will be disclosed as soon as fixed releases are available for all maintained major versions.
 
 Under the regular disclosure schedule, we will disclose the following in two weeks:
