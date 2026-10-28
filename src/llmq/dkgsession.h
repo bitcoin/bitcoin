@@ -72,6 +72,7 @@ public:
         CONTRIBUTION_LIE,
         JUSTIFY_OMIT,
         JUSTIFY_LIE,
+        CONTRIBUTION_INVALID,
         _COUNT
     };
     static constexpr DKGError::type from_string(std::string_view in) {
@@ -82,6 +83,7 @@ public:
         if (in == "contribution-lie") return CONTRIBUTION_LIE;
         if (in == "justify-lie") return JUSTIFY_LIE;
         if (in == "justify-omit") return JUSTIFY_OMIT;
+        if (in == "contribution-invalid") return CONTRIBUTION_INVALID;
         return _COUNT;
     }
 };

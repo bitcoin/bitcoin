@@ -300,8 +300,14 @@ struct Aggregator : public std::enable_shared_from_this<Aggregator<T>> {
     template <typename TP>
     T SyncAggregate(Span<TP> vec, size_t start, size_t count)
     {
+        // Defence in depth: AggregateInsecure() asserts that every operand is valid, so
+        // peer-influenced data (e.g. a decrypted contribution share) must never reach it
+        // while invalid. Short-circuit to an invalid aggregate instead; callers already
+        // treat an invalid result as an aggregation failure rather than aborting.
         T result = *vec[start];
+        if (!result.IsValid()) return {};
         for (size_t j = 1; j < count; j++) {
+            if (!vec[start + j]->IsValid()) return {};
             result.AggregateInsecure(*vec[start + j]);
         }
         return result;

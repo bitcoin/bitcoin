@@ -161,8 +161,11 @@ MessageProcessingResult QuorumParticipant::ProcessContribQDATA(CNode& pfrom, CDa
         std::vector<CBLSSecretKey> vecSecretKeys;
         vecSecretKeys.resize(vecEncrypted.size());
         for (const auto i : irange::range(vecEncrypted.size())) {
-            if (!m_mn_activeman.Decrypt(vecEncrypted[i], memberIdx, vecSecretKeys[i], PROTOCOL_VERSION)) {
-                return MisbehavingError{10, "failed to decrypt"};
+            if (!m_mn_activeman.Decrypt(vecEncrypted[i], memberIdx, vecSecretKeys[i], PROTOCOL_VERSION) ||
+                !vecSecretKeys[i].IsValid()) {
+                // Reject an undecryptable or structurally-invalid (e.g. all-zero) share before
+                // it reaches AggregateSecretKeys()/AggregateInsecure(), which asserts validity.
+                return MisbehavingError{10, "invalid contribution share"};
             }
         }
 

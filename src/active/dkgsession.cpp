@@ -90,6 +90,14 @@ void ActiveDKGSession::SendContributions(CDKGPendingMessages& pendingMessages, P
             skContrib.MakeNewKey();
         }
 
+        if (i != myIdx && ShouldSimulateError(DKGError::type::CONTRIBUTION_INVALID)) {
+            // Deliver a share that decrypts to an all-zero (structurally invalid)
+            // CBLSSecretKey on the recipient. Used to exercise the DKG intake's
+            // handling of a peer-supplied invalid contribution share.
+            logger.Batch("sending invalid (zero) share to %s", m->dmn->proTxHash.ToString());
+            skContrib = CBLSSecretKey{};
+        }
+
         if (!qc.contributions->Encrypt(i, m->dmn->pdmnState->pubKeyOperator.Get(), skContrib, PROTOCOL_VERSION)) {
             logger.Batch("failed to encrypt contribution for %s", m->dmn->proTxHash.ToString());
             return;
