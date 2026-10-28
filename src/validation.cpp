@@ -2750,13 +2750,6 @@ bool Chainstate::FlushStateToDisk(
             }
             if (!setFilesToPrune.empty()) {
                 fFlushForPrune = true;
-                for (const int file_number : setFilesToPrune) {
-                    m_blockman.PruneOneBlockFile(file_number);
-                }
-                if (!m_blockman.m_have_pruned) {
-                    m_blockman.m_block_tree_db->WriteFlag("prunedblockfiles", true);
-                    m_blockman.m_have_pruned = true;
-                }
             }
         }
         const auto nNow{NodeClock::now()};
@@ -2795,12 +2788,6 @@ bool Chainstate::FlushStateToDisk(
 
                 m_blockman.WriteBlockIndexDB();
             }
-            // Finally remove any pruned files
-            if (fFlushForPrune) {
-                LOG_TIME_MILLIS_WITH_CATEGORY("unlink pruned files", BCLog::BENCH);
-
-                m_blockman.UnlinkPrunedFiles(setFilesToPrune);
-            }
 
             if (!CoinsTip().GetBestBlock().IsNull()) {
                 // Typical Coin structures on disk are around 48 bytes in size.
@@ -2821,6 +2808,25 @@ bool Chainstate::FlushStateToDisk(
                     (uint64_t)coins_count,
                     (uint64_t)coins_mem_usage,
                     (bool)fFlushForPrune);
+            }
+
+            // Finally prune the block files. This has to happen after the
+            // chainstate is flushed, because until then the chainstate on
+            // disk may still need these blocks to catch up after a crash.
+            if (fFlushForPrune) {
+                LOG_TIME_MILLIS_WITH_CATEGORY("prune block files", BCLog::BENCH);
+
+                for (const int file_number : setFilesToPrune) {
+                    m_blockman.PruneOneBlockFile(file_number);
+                }
+                if (!m_blockman.m_have_pruned) {
+                    m_blockman.m_block_tree_db->WriteFlag("prunedblockfiles", true);
+                    m_blockman.m_have_pruned = true;
+                }
+                // Write the pruned state before deleting the files, so that
+                // the block index never refers to deleted data.
+                m_blockman.WriteBlockIndexDB();
+                m_blockman.UnlinkPrunedFiles(setFilesToPrune);
             }
         }
 
