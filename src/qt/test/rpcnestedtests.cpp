@@ -91,6 +91,10 @@ void RPCNestedTests::rpcNestedTests()
     QVERIFY(filtered == "createwallet(…)");
     RPCConsole::RPCParseCommandLine(nullptr, result, "createwalletdescriptor abc", false, &filtered);
     QVERIFY(filtered == "createwalletdescriptor(…)");
+    RPCConsole::RPCParseCommandLine(nullptr, result, "exportaddresskey sentinel", false, &filtered);
+    QVERIFY(filtered == "exportaddresskey(…)");
+    RPCConsole::RPCParseCommandLine(nullptr, result, "help(exportaddresskey(sentinel))", false, &filtered);
+    QVERIFY(filtered == "help(exportaddresskey(…))");
     RPCConsole::RPCParseCommandLine(nullptr, result, "migratewallet abc abc", false, &filtered);
     QVERIFY(filtered == "migratewallet(…)");
     RPCConsole::RPCParseCommandLine(nullptr, result, "signmessagewithprivkey abc", false, &filtered);
