@@ -196,6 +196,9 @@ class PingIBDTest(BitcoinTestFramework):
             peer.serve_next_block()
         self.wait_until(lambda: node.getblockcount() == start_height + NUM_DOWNLOAD_BLOCKS)
         assert_equal(node.getpeerinfo()[0]["inflight"], [])
+        # The node stamps the last block time only after the block is connected, so wait until it
+        # handled a message sent after the block before moving the clock.
+        peer.sync_with_ping()
 
         self.log.info("Check that the peer still gets a grace period to answer the ping")
         node.bumpmocktime(POST_BLOCK_PONG_GRACE // 2)
