@@ -770,4 +770,33 @@ BOOST_AUTO_TEST_CASE(connect_refused)
     BOOST_CHECK_EQUAL(error, CONNECTION_REFUSED);
 }
 
+/** Check that readiness is level-triggered: what is left after a partial read, and then the end of
+ * the stream, are reported again. */
+BOOST_AUTO_TEST_CASE(level_triggered)
+{
+    // Create a listener, a peer on the same thread for simplicity, and send a random string.
+    Listener listener;
+    Connection conn{listener};
+    std::string sent;
+    for (size_t i{0}; i < 3000; ++i) {
+        sent += static_cast<char>('a' + i % 26);
+    }
+    conn.PeerSend(sent);
+    conn.PeerShutdown();
+
+    // Read the string in chunks on the receiving side. We must be able to reconstruct the full string.
+    std::string received;
+    for (;;) {
+        Sock::Event occurred{0xff};
+        BOOST_REQUIRE(conn.sock->Wait(LONG_WAIT, Sock::RecvEvent, &occurred));
+        BOOST_REQUIRE_EQUAL(occurred, Sock::RecvEvent);
+        char buf[1000];
+        const ssize_t ret{conn.sock->Recv(buf, sizeof(buf), 0)};
+        BOOST_REQUIRE_GE(ret, 0);
+        if (ret == 0) break;
+        received.append(buf, ret);
+    }
+    BOOST_CHECK_EQUAL(received, sent);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
