@@ -18,6 +18,7 @@
 #include <numeric>
 #include <ranges>
 #include <utility>
+#include <vector>
 
 namespace node {
 
@@ -221,9 +222,7 @@ void MiniMiner::DeleteAncestorPackage(const std::set<MockEntryMap::iterator, Ite
         // respective descendants exactly once.
         Assume(anc->second.GetModFeesWithAncestors() == 0);
         Assume(anc->second.GetSizeWithAncestors() == 0);
-        auto vec_it = std::find(m_entries.begin(), m_entries.end(), anc);
-        Assume(vec_it != m_entries.end());
-        m_entries.erase(vec_it);
+        Assume(std::erase(m_entries, anc) == 1);
         m_entries_by_txid.erase(anc);
     }
 }

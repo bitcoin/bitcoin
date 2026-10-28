@@ -15,6 +15,7 @@
 #include <util/strencodings.h>
 
 #include <algorithm>
+#include <map>
 #include <optional>
 #include <vector>
 
@@ -696,13 +697,7 @@ struct SmartInfo
             if (useful_types.size() == set_size) break;
         }
         // Remove all rules that construct uninteresting types.
-        for (auto type_it = table.begin(); type_it != table.end();) {
-            if (!useful_types.contains(type_it->first)) {
-                type_it = table.erase(type_it);
-            } else {
-                ++type_it;
-            }
-        }
+        std::erase_if(table, [&](const auto& entry) { return !useful_types.contains(entry.first); });
 
         /* Find which types are constructible. A type is constructible if there is a leaf
          * node recipe for constructing it, or a recipe whose subnodes are all constructible.
