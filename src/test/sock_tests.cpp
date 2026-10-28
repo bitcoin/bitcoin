@@ -153,17 +153,6 @@ BOOST_AUTO_TEST_CASE(send_and_receive)
     socks_moved.send_and_receive();
 }
 
-BOOST_AUTO_TEST_CASE(wait)
-{
-    TcpSocketPair socks = TcpSocketPair{};
-
-    std::thread waiter([&socks]() { (void)socks.receiver.Wait(24h, Sock::RecvEvent); });
-
-    BOOST_REQUIRE_EQUAL(socks.sender.Send("a", 1, 0), 1);
-
-    waiter.join();
-}
-
 BOOST_AUTO_TEST_CASE(recv_until_terminator_limit)
 {
     constexpr auto timeout = 1min; // High enough so that it is never hit.
@@ -620,6 +609,60 @@ BOOST_AUTO_TEST_CASE(wait_many_attribution)
         if (e.state != State::IDLE) possible |= Sock::RecvEvent;
         const auto expected{static_cast<Sock::Event>(e.requested & possible)};
         BOOST_CHECK_EQUAL(EventsStr(events_per_sock.at(e.conn->sock).occurred), EventsStr(expected));
+    }
+}
+
+/** Check that when no event occurred, the wait returns true and reports no event. */
+BOOST_AUTO_TEST_CASE(timeout)
+{
+    constexpr auto TIMEOUT{100ms};
+
+    Listener listener;
+    Connection idle{listener};
+    Connection readable{listener};
+    readable.PeerSend("data");
+    readable.AwaitReadable();
+
+    Sock::Event occurred{0xff};
+    BOOST_REQUIRE(idle.sock->Wait(TIMEOUT, Sock::RecvEvent, &occurred));
+    BOOST_CHECK_EQUAL(occurred, 0);
+    // NOTE: we don't assert the expected time elapsed, that would be brittle, but
+    // the following `large_timeout` test would break if a Wait() returned immediately
+    // without respecting the specified timeout.
+
+    Sock::EventsPerSock events_per_sock;
+    events_per_sock.emplace(idle.sock, Sock::Events{Sock::RecvEvent});
+    events_per_sock.emplace(readable.sock, Sock::Events{0});
+    BOOST_REQUIRE(listener.sock.WaitMany(TIMEOUT, events_per_sock));
+    BOOST_CHECK_EQUAL(events_per_sock.at(idle.sock).occurred, 0);
+    BOOST_CHECK_EQUAL(events_per_sock.at(readable.sock).occurred, 0);
+}
+
+/* Check that timeouts longer than MAX_WAIT_TIMEOUT are capped rather than making the wait fail. */
+BOOST_AUTO_TEST_CASE(large_timeout)
+{
+    Listener listener;
+    for (const std::chrono::milliseconds timeout : {std::chrono::milliseconds{Sock::MAX_WAIT_TIMEOUT},
+                                                    std::chrono::milliseconds{Sock::MAX_WAIT_TIMEOUT + 1s},
+                                                    std::chrono::milliseconds::max()}) {
+        Connection conn{listener};
+        // Make it readable while waiting. If the wait failed to wait, it fails before that.
+        ssize_t sent{0};
+        std::thread peer{[&] {
+            std::this_thread::sleep_for(100ms);
+            sent = send(conn.peer, "x", 1, 0);
+        }};
+        Sock::Event occurred{0xff};
+        const bool ok{conn.sock->Wait(timeout, Sock::RecvEvent, &occurred)};
+        peer.join();
+        BOOST_REQUIRE_EQUAL(sent, 1);
+        BOOST_CHECK(ok);
+        BOOST_CHECK_EQUAL(occurred, Sock::RecvEvent);
+
+        Sock::EventsPerSock events_per_sock;
+        events_per_sock.emplace(conn.sock, Sock::Events{Sock::RecvEvent});
+        BOOST_CHECK(conn.sock->WaitMany(timeout, events_per_sock));
+        BOOST_CHECK_EQUAL(events_per_sock.begin()->second.occurred, Sock::RecvEvent);
     }
 }
 
