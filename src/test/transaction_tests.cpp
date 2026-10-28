@@ -39,6 +39,7 @@
 #include <functional>
 #include <map>
 #include <string>
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
 
@@ -1147,14 +1148,16 @@ BOOST_AUTO_TEST_CASE(getlegacysigopcount_inaccurate_test)
 
 BOOST_AUTO_TEST_CASE(checktxinputs_invalid_transactions_test)
 {
-    auto check_invalid{[](CAmount input_value, CAmount output_value, bool coinbase, int spend_height, TxValidationResult expected_result, std::string_view expected_reason) {
+    auto check_invalid{[](const std::vector<CAmount>& input_values, CAmount output_value, bool coinbase, int spend_height, TxValidationResult expected_result, std::string_view expected_reason) {
         CCoinsViewCache inputs{&CoinsViewEmpty::Get()};
-
-        const COutPoint prevout{Txid::FromUint256(uint256::ONE), 0};
-        inputs.AddCoin(prevout, Coin{{input_value, CScript() << OP_TRUE}, /*nHeightIn=*/1, coinbase}, /*possible_overwrite=*/false);
-
         CMutableTransaction mtx;
-        mtx.vin.emplace_back(prevout);
+        const auto txid{Txid::FromUint256(uint256::ONE)};
+        uint32_t output_index{0};
+        for (const CAmount input_value : input_values) {
+            const COutPoint prevout{txid, output_index++};
+            inputs.AddCoin(prevout, Coin{{input_value, CScript() << OP_TRUE}, /*nHeightIn=*/1, coinbase}, /*possible_overwrite=*/false);
+            mtx.vin.emplace_back(prevout);
+        }
         mtx.vout.emplace_back(output_value, CScript() << OP_TRUE);
 
         TxValidationState state;
@@ -1165,19 +1168,19 @@ BOOST_AUTO_TEST_CASE(checktxinputs_invalid_transactions_test)
         BOOST_CHECK_EQUAL(state.GetRejectReason(), expected_reason);
     }};
 
-    check_invalid(/*input_value=*/MAX_MONEY + 1,
+    check_invalid(/*input_values=*/{MAX_MONEY + 1},
                   /*output_value=*/0,
                   /*coinbase=*/false,
                   /*spend_height=*/2,
                   TxValidationResult::TX_CONSENSUS, /*expected_reason=*/"bad-txns-inputvalues-outofrange");
 
-    check_invalid(/*input_value=*/1 * COIN,
+    check_invalid(/*input_values=*/{1 * COIN},
                   /*output_value=*/2 * COIN,
                   /*coinbase=*/false,
                   /*spend_height=*/2,
                   TxValidationResult::TX_CONSENSUS, /*expected_reason=*/"bad-txns-in-belowout");
 
-    check_invalid(/*input_value=*/1 * COIN,
+    check_invalid(/*input_values=*/{1 * COIN},
                   /*output_value=*/0,
                   /*coinbase=*/true,
                   /*spend_height=*/COINBASE_MATURITY,
