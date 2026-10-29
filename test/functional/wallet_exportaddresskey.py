@@ -26,6 +26,7 @@ from test_framework.address import (
     script_to_p2sh,
 )
 from test_framework.descriptors import descsum_create
+from test_framework.authproxy import JSONRPCException
 from test_framework.crypto.secp256k1 import GE, G
 from test_framework.key import ECKey, H_POINT, ORDER, TaggedHash, sign_schnorr, verify_schnorr
 from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, tx_from_hex
@@ -119,6 +120,79 @@ class ExportAddressKeyTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
+    def check_error(self, code, message, function, *args, **kwargs):
+        """Check exact failure shape without exposing synthetic secrets on failure."""
+        try:
+            function(*args, **kwargs)
+        except JSONRPCException as error:
+            assert_equal(error.error['code'], code)
+            assert message in error.error['message'], 'incorrect export error message'
+            assert_equal(set(error.error), {'code', 'message'})
+            assert all(secret not in error.error['message'] for secret in self.private_material), 'secret in export error'
+        else:
+            raise AssertionError('export unexpectedly succeeded instead of returning an error')
+
+    def check_failure_matrix(self, wallet, fixtures):
+        rpc_wallet = self.nodes[0].create_new_rpc_connection(mode='AUTHPROXY') / 'wallet/owner'
+        self.log.info('Check both-mode error matrix and validation/authorization precedence')
+        node = self.nodes[0]
+        address = fixtures[0][0]
+        secret = (140).to_bytes(32, 'big')
+        self.private_material.update([secret.hex(), bytes_to_wif(secret)])
+        self.import_descriptor(wallet, f'tr({bytes_to_wif(secret)})')
+        taproot = program_to_witness(1, taproot_construct(public_key(secret)[1:]).output_pubkey)
+        for mode in ['wallet', 'taproot_output']:
+            expected = wallet.exportaddresskey(taproot, mode)
+            assert_equal(len(expected['keys']), 1)
+            assert_equal(wallet.exportaddresskey(address=taproot, key_type=mode), expected)
+            for endpoint, code, message in [(node, -19, 'Multiple wallets are loaded'),
+                                            (node.get_wallet_rpc('missing'), -18, 'does not exist or is not loaded')]:
+                self.check_error(code, message, endpoint.exportaddresskey, taproot, mode)
+                self.check_error(code, message, endpoint.exportaddresskey, 'invalid', mode)
+            capabilities = [(node.get_wallet_rpc('watch'), 'This wallet has private keys disabled')]
+            if self.is_external_signer_compiled():
+                capabilities.append((node.get_wallet_rpc('signer'), 'Private keys are held by an external signer'))
+            for endpoint, message in capabilities:
+                self.check_error(-4, message, endpoint.exportaddresskey, taproot, mode)
+                self.check_error(-5, 'Invalid address', endpoint.exportaddresskey, 'invalid', mode)
+                self.check_error(-8, "key_type must be 'wallet' or 'taproot_output'", endpoint.exportaddresskey, taproot, 'unknown')
+            for invalid in ['invalid', taproot[:-1] + ('q' if taproot[-1] != 'q' else 'p'),
+                            key_to_p2pkh(public_key(secret), main=True), key_to_p2wpkh(public_key(secret), main=True)]:
+                self.check_error(-5, 'Invalid address', wallet.exportaddresskey, invalid, mode)
+            for invalid in [None, 1, True, [], {}]:
+                self.check_error(-3, 'Wrong type passed', rpc_wallet.exportaddresskey, invalid, mode)
+            self.check_error(-1, 'exportaddresskey', wallet.exportaddresskey, taproot, mode, 'extra')
+            self.check_error(-8, 'Unknown named parameter', wallet.exportaddresskey, address=taproot, key_type=mode, extra=True)
+            self.check_error(-3, 'Wrong type passed', rpc_wallet.exportaddresskey, key_type=mode, address=None)
+            self.check_error(-3, 'Wrong type passed', rpc_wallet.exportaddresskey, key_type=mode)
+            self.check_error(-5, 'spending construction is not supported', wallet.exportaddresskey, program_to_witness(1, bytes(32)), mode)
+            self.check_error(-5, 'Invalid address', wallet.exportaddresskey, bytes_to_wif(secret), mode)
+        self.check_error(-8, "key_type must be 'wallet' or 'taproot_output'", wallet.exportaddresskey, taproot, ROOT_XPRV)
+        # An empty selected wallet has no secret; a directly known output key has one.
+        node.createwallet('empty_matrix', blank=True)
+        empty = node.get_wallet_rpc('empty_matrix')
+        direct = program_to_witness(1, public_key(secret)[1:])
+        for mode in ['wallet', 'taproot_output']:
+            self.check_error(-5, 'lacks the spending/script information', empty.exportaddresskey, direct, mode)
+        self.import_descriptor(empty, f'rawtr({bytes_to_wif(secret)})')
+        for mode in ['wallet', 'taproot_output']:
+            assert_equal(len(empty.exportaddresskey(direct, mode)['keys']), 1)
+        wallet.encryptwallet('synthetic-test-passphrase')
+        for mode in ['wallet', 'taproot_output']:
+            self.check_error(-13, 'walletpassphrase', wallet.exportaddresskey, taproot, mode)
+            self.check_error(-13, 'walletpassphrase', wallet.exportaddresskey, direct, mode)
+            self.check_error(-5, 'Invalid address', wallet.exportaddresskey, 'invalid', mode)
+            self.check_error(-8, "key_type must be 'wallet' or 'taproot_output'", wallet.exportaddresskey, taproot, 'invalid')
+        self.check_error(-8, 'requires a Taproot address', wallet.exportaddresskey, address, 'taproot_output')
+        wallet.walletpassphrase('synthetic-test-passphrase', 60)
+        for fixture_address, fixture_secret, compressed, witness in fixtures:
+            self.check_export(wallet, fixture_address, fixture_secret, compressed, witness=witness)
+        for mode in ['wallet', 'taproot_output']:
+            assert_equal(len(wallet.exportaddresskey(taproot, mode)['keys']), 1)
+        wallet.walletlock()
+        for mode in ['wallet', 'taproot_output']:
+            self.check_error(-13, 'walletpassphrase', wallet.exportaddresskey, taproot, mode)
+
     def import_descriptor(self, wallet, descriptor, **kwargs):
         result = wallet.importdescriptors([{'desc': descsum_create(descriptor), 'timestamp': 'now', **kwargs}])
         for item in result:
@@ -165,6 +239,9 @@ class ExportAddressKeyTest(BitcoinTestFramework):
         wallet.getaddressinfo(address)
         assert_equal(wallet.exportaddresskey(*arguments), result)
         assert_equal(self.snapshot(wallet, []), before)
+        for record in result['keys']:
+            self.private_material.add(record['private_key_hex'])
+            self.private_material.add(bytes_to_wif(bytes.fromhex(record['private_key_hex']), compressed=record['compressed']))
         return result
 
     def check_script_export(self, wallet, address, secrets):
@@ -716,6 +793,102 @@ class ExportAddressKeyTest(BitcoinTestFramework):
             assert partial.exportaddresskey(target)['keys'], 'wallet-only fixture has no local keys'
             assert_raises_rpc_error(-5, 'No local Taproot output private key', partial.exportaddresskey, target, 'taproot_output')
 
+    def check_security_sentinels(self, root, root_secret, root_chain):
+        self.log.info('Check all export roles and modes against unrelated, ancestor, index and other-wallet sentinels')
+        node = self.nodes[0]
+        node.createwallet('security_sentinels', blank=True)
+        wallet = node.get_wallet_rpc('security_sentinels')
+        node.createwallet('security_foreign', blank=True)
+        foreign_wallet = node.get_wallet_rpc('security_foreign')
+        fixed, foreign, unrelated = [value.to_bytes(32, 'big') for value in [151, 152, 153]]
+        fixed_wif, foreign_wif, unrelated_wif = [bytes_to_wif(secret) for secret in [fixed, foreign, unrelated]]
+        child = derive_leaf(root_secret, root_chain, [5, 2])[0]
+        participant = derive_leaf(root_secret, root_chain, [5])[0]
+        foreign_payload, _ = base58_to_byte(CHILD_XPRV)
+        foreign_root_secret, foreign_chain = foreign_payload[-32:], foreign_payload[-65:-33]
+        foreign_root = byte_to_base58(bytes.fromhex('358394') + foreign_payload[3:], 4)
+        foreign_xpub = byte_to_base58(bytes.fromhex('3587cf') + foreign_payload[3:-33] + public_key(foreign_root_secret), 4)
+        foreign_participant = derive_leaf(foreign_root_secret, foreign_chain, [5])[0]
+        foreign_pub = public_key(foreign)
+        child_pub = public_key(child)
+        fixed_pub = public_key(fixed)
+        forbidden = [root_secret, foreign, unrelated, foreign_root_secret, foreign_participant]
+        forbidden += [derive_leaf(root_secret, root_chain, path)[0]
+                      for path in [[5, 0], [5, 1], [5, 3]] + [[9, index] for index in range(4)]]
+        self.private_material.update(secret.hex() for secret in forbidden + [fixed, child, participant])
+        self.private_material.update(bytes_to_wif(secret) for secret in forbidden + [fixed, child, participant])
+        self.private_material.update([fixed_wif, foreign_wif, unrelated_wif, foreign_root])
+        self.import_descriptor(foreign_wallet, f'wpkh({foreign_wif})')
+        self.import_descriptor(foreign_wallet, f'wpkh({foreign_root}/5)')
+        self.import_descriptor(wallet, f'wpkh({unrelated_wif})')
+        self.import_descriptor(wallet, f'wpkh({root}/9/*)', range=[0, 3])
+        # The local descriptor root derives exactly index 2. Its ancestor and other
+        # cached indices are not candidates merely because the provider holds them.
+        expression = f'{root}/5/*'
+        scripts = keys_to_multisig_script([child_pub, foreign_pub, fixed_pub], k=2)
+        leaf = CScript([fixed_pub[1:], OP_CHECKSIG, foreign_pub[1:], OP_CHECKSIGADD, 2, OP_NUMEQUAL])
+        tree = taproot_construct(child_pub[1:], [('leaf', leaf)])
+        aggregate = musig_public_key([child_pub, foreign_pub])
+        musig_tree = taproot_construct(aggregate[1:], [('leaf', CScript([fixed_pub[1:], OP_CHECKSIG]))])
+        derived_aggregate = musig_public_key([public_key(participant), public_key(foreign_participant)], [7, 2])
+        cases = [
+            ('script', f'wsh(multi(2,{expression},{foreign_pub.hex()},{fixed_wif}))',
+             script_to_p2wsh(scripts), [(child, ['script']), (fixed, ['script'])], None),
+            ('tree', f'tr({expression},multi_a(2,{fixed_wif},{foreign_pub.hex()}))',
+             program_to_witness(1, tree.output_pubkey), [(child, ['taproot_internal']), (fixed, ['taproot_script'])],
+             taproot_output_secret(child, tree.merkle_root)),
+            ('direct', f'rawtr({expression})', program_to_witness(1, child_pub[1:]),
+             [(child, ['taproot_output'])], child),
+            ('participant', f'tr(musig({expression},{foreign_pub.hex()}),pk({fixed_wif}))',
+             program_to_witness(1, musig_tree.output_pubkey), [(child, ['musig2_participant']), (fixed, ['taproot_script'])], None),
+            ('aggregate_child', f'rawtr(musig({root}/5,{foreign_xpub}/5)/7/*)',
+             program_to_witness(1, derived_aggregate[1:]), [(participant, ['musig2_participant'])], None),
+        ]
+        funding = node.get_wallet_rpc('funding')
+        for name, descriptor, address, _, _ in cases:
+            self.import_descriptor(wallet, descriptor, range=[0, 3])
+            wallet.setlabel(address, f'sentinel_{name}')
+            funding.sendtoaddress(address, 1)
+        self.generatetoaddress(node, 1, funding.getnewaddress())
+        coins = wallet.listunspent()
+        assert coins, 'sentinel fixture has no tracked coins'
+        wallet.lockunspent(False, [{'txid': coins[0]['txid'], 'vout': coins[0]['vout']}], True)
+        node.unloadwallet('security_sentinels')
+        node.loadwallet('security_sentinels')
+        wallet = node.get_wallet_rpc('security_sentinels')
+        before = self.snapshot(wallet, [])
+        foreign_before = self.snapshot(foreign_wallet, [])
+        assert_greater_than(before['wallet']['txcount'], 0)
+        assert before['labels'], 'sentinel state preconditions missing'
+        assert before['locked_coins'], 'sentinel state preconditions missing'
+        seen_roles = set()
+        positive = denied = 0
+        for name, _, address, held, output in cases:
+            for mode in ['wallet', 'taproot_output']:
+                if mode == 'taproot_output' and output is None:
+                    code, message = (-8, 'requires a Taproot address') if name == 'script' else (-5, 'No local Taproot output private key')
+                    for _ in range(2):
+                        self.check_error(code, message, wallet.exportaddresskey, address, mode)
+                    denied += 1
+                    continue
+                expected = held if mode == 'wallet' else [(output, ['taproot_output'])]
+                self.private_material.update(secret.hex() for secret, _ in expected)
+                records = sorted([{'pubkey': public_key(secret).hex(), 'private_key_hex': secret.hex(),
+                                   'compressed': True, 'roles': sorted(roles)} for secret, roles in expected],
+                                 key=lambda record: record['pubkey'])
+                result = self.export_unchanged(wallet, address, mode)
+                assert_equal(result, {'keys': records})
+                serialized = json.dumps(result)
+                assert all(secret.hex() not in serialized for secret in forbidden), 'unrelated/ancestor/index/other-wallet secret exported'
+                seen_roles.update(role for record in result['keys'] for role in record['roles'])
+                positive += 1
+        assert_equal(seen_roles, {'script', 'taproot_internal', 'taproot_script', 'taproot_output', 'musig2_participant'})
+        assert_equal(positive, 7)
+        assert_equal(denied, 3)
+        assert_equal(self.snapshot(wallet, []), before)
+        assert_equal(self.snapshot(foreign_wallet, []), foreign_before)
+        self.log.info('Verified seven positive and three denied sentinel role/mode cases with repeated calls and unchanged funded wallet state')
+
     def check_taproot_script_spending(self):
         self.log.info('Spend script-only Taproot outputs using exported default-mode scalars')
         node = self.nodes[0]
@@ -813,6 +986,8 @@ class ExportAddressKeyTest(BitcoinTestFramework):
     def run_test(self):
         node = self.nodes[0]
         self.private_material = set()
+        for mode in ['wallet', 'taproot_output']:
+            self.check_error(-18, 'No wallet is loaded', node.exportaddresskey, 'invalid', mode)
         node.createwallet('owner', blank=True)
         wallet = node.get_wallet_rpc('owner')
         # JSON null and type checks must use JSON-RPC even under --usecli.
@@ -853,6 +1028,11 @@ class ExportAddressKeyTest(BitcoinTestFramework):
             fixtures.append((address, secret, True, True))
 
         addresses = [fixture[0] for fixture in fixtures]
+        assert_equal(node.exportaddresskey(addresses[0]), wallet.exportaddresskey(addresses[0]))
+        direct = program_to_witness(1, public_key(fixtures[0][1])[1:])
+        for mode in ['wallet', 'taproot_output']:
+            assert_equal(node.exportaddresskey(direct, mode), wallet.exportaddresskey(direct, mode))
+        assert_equal(rpc_wallet.exportaddresskey(address=direct, key_type=None), wallet.exportaddresskey(direct))
         node.createwallet('scripts', blank=True)
         self.check_script_constructions(node.get_wallet_rpc('scripts'), root, root_secret, root_chain)
         self.check_cross_manager_resolution(root, root_secret, root_chain)
@@ -861,6 +1041,7 @@ class ExportAddressKeyTest(BitcoinTestFramework):
         self.check_musig_participants(root, root_secret, root_chain)
         self.check_taproot_output_keys()
         self.check_taproot_script_spending()
+        self.check_security_sentinels(root, root_secret, root_chain)
         self.log.info('Check optional mode, named arguments, JSON-RPC versions and CLI strings')
         expected = wallet.exportaddresskey(addresses[0])
         for result in [rpc_wallet.exportaddresskey(addresses[0], None),
@@ -943,16 +1124,7 @@ class ExportAddressKeyTest(BitcoinTestFramework):
         assert_raises_rpc_error(-1, 'exportaddresskey', wallet.exportaddresskey, addresses[0], 'wallet', 'extra')
         assert_raises_rpc_error(-3, 'not of expected type string', rpc_wallet.exportaddresskey, None)
 
-        self.log.info('Check encrypted locked, unlocked and relocked authorization')
-        wallet.encryptwallet('synthetic-test-passphrase')
-        assert_raises_rpc_error(-13, 'walletpassphrase', wallet.exportaddresskey, addresses[0])
-        assert_raises_rpc_error(-13, 'walletpassphrase', wallet.exportaddresskey, unknown)
-        assert_raises_rpc_error(-13, 'walletpassphrase', wallet.exportaddresskey, taproot, 'taproot_output')
-        wallet.walletpassphrase('synthetic-test-passphrase', 60)
-        for address, secret, compressed, witness in fixtures:
-            self.check_export(wallet, address, secret, compressed, witness=witness)
-        wallet.walletlock()
-        assert_raises_rpc_error(-13, 'walletpassphrase', wallet.exportaddresskey, addresses[-1])
+        self.check_failure_matrix(wallet, fixtures)
 
         # Normal daemon RPC logging must never include exported scalars, WIFs,
         # private descriptors or the synthetic HD root. Fixed diagnostics avoid

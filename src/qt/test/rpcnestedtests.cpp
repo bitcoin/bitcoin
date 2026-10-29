@@ -99,6 +99,14 @@ void RPCNestedTests::rpcNestedTests()
     QVERIFY(filtered == "exportaddresskey(…)");
     RPCConsole::RPCParseCommandLine(nullptr, result, "help(exportaddresskey(sentinel,taproot_output))", false, &filtered);
     QVERIFY(filtered == "help(exportaddresskey(…))");
+    RPCConsole::RPCParseCommandLine(nullptr, result, "exportaddresskey sentinel taproot_output", false, &filtered);
+    QVERIFY(filtered == "exportaddresskey(…)");
+    RPCConsole::RPCParseCommandLine(nullptr, result, "help(exportaddresskey(sentinel,wallet))", false, &filtered);
+    QVERIFY(filtered == "help(exportaddresskey(…))");
+    RPCConsole::RPCParseCommandLine(nullptr, result, "exportaddresskey sentinel null", false, &filtered);
+    QVERIFY(filtered == "exportaddresskey(…)");
+    RPCConsole::RPCParseCommandLine(nullptr, result, "help(exportaddresskey(sentinel,null))", false, &filtered);
+    QVERIFY(filtered == "help(exportaddresskey(…))");
     RPCConsole::RPCParseCommandLine(nullptr, result, "migratewallet abc abc", false, &filtered);
     QVERIFY(filtered == "migratewallet(…)");
     RPCConsole::RPCParseCommandLine(nullptr, result, "signmessagewithprivkey abc", false, &filtered);

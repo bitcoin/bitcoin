@@ -1340,18 +1340,18 @@ util::Expected<FlatSigningProvider, AddressKeyError> DescriptorScriptPubKeyMan::
         std::find(scripts.begin(), scripts.end(), script) == scripts.end()) {
         return util::Unexpected{AddressKeyError::INCONSISTENT};
     }
-    if (musig2) {
-        std::vector<DescriptorMuSig2KeyInfo> info;
-        if (!descriptor.GetMuSig2KeyInfo(it->second, m_wallet_descriptor.cache, info)) return util::Unexpected{AddressKeyError::INCONSISTENT};
-        for (const auto& entry : info) {
-            CPubKey expanded;
-            if (!public_keys.GetPubKey(entry.derived.GetID(), expanded) || expanded != entry.derived) return util::Unexpected{AddressKeyError::INCONSISTENT};
-            for (const auto& participant : entry.participants) {
-                if (!public_keys.GetPubKey(participant.GetID(), expanded) || expanded != participant) return util::Unexpected{AddressKeyError::INCONSISTENT};
-            }
+    // The traversal also verifies independently derivable public expressions.
+    // That consistency check is required even when no MuSig2 metadata is requested.
+    std::vector<DescriptorMuSig2KeyInfo> info;
+    if (!descriptor.GetMuSig2KeyInfo(it->second, m_wallet_descriptor.cache, info)) return util::Unexpected{AddressKeyError::INCONSISTENT};
+    for (const auto& entry : info) {
+        CPubKey expanded;
+        if (!public_keys.GetPubKey(entry.derived.GetID(), expanded) || expanded != entry.derived) return util::Unexpected{AddressKeyError::INCONSISTENT};
+        for (const auto& participant : entry.participants) {
+            if (!public_keys.GetPubKey(participant.GetID(), expanded) || expanded != participant) return util::Unexpected{AddressKeyError::INCONSISTENT};
         }
-        musig2->insert(musig2->end(), std::make_move_iterator(info.begin()), std::make_move_iterator(info.end()));
     }
+    if (musig2) musig2->insert(musig2->end(), std::make_move_iterator(info.begin()), std::make_move_iterator(info.end()));
     return public_keys;
 }
 

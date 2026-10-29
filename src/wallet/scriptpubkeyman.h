@@ -391,7 +391,7 @@ public:
     std::unique_ptr<FlatSigningProvider> GetSigningProvider(const CPubKey& pubkey) const;
 
     //! Re-expand the exact known script/index without populating caches or accessing secrets/nonces.
-    //! For Taproot, musig2 enables original public-expression checks as well as MuSig2 collection.
+    //! Public-expression checks always run; musig2 optionally collects original MuSig2 provenance.
     util::Expected<FlatSigningProvider, AddressKeyError> GetExportProvider(const CScript& script, std::vector<DescriptorMuSig2KeyInfo>* musig2 = nullptr) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
     //! Filter existing public key metadata by directly verifiable address forms; never derive or decrypt.

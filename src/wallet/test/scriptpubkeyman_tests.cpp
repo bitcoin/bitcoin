@@ -5,6 +5,8 @@
 #include <key.h>
 #include <key_io.h>
 #include <musig.h>
+#include <rpc/request.h>
+#include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/interpreter.h>
 #include <sync.h>
@@ -15,6 +17,7 @@
 #include <tinyformat.h>
 #include <util/bip32.h>
 #include <wallet/export.h>
+#include <wallet/context.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/wallet.h>
 #include <wallet/test/util.h>
@@ -31,6 +34,8 @@
 #include <boost/test/unit_test.hpp>
 
 namespace wallet {
+RPCMethod exportaddresskey();
+
 BOOST_FIXTURE_TEST_SUITE(scriptpubkeyman_tests, BasicTestingSetup)
 
 class ExportTestScriptPubKeyMan : public DescriptorScriptPubKeyMan
@@ -1077,6 +1082,77 @@ BOOST_AUTO_TEST_CASE(export_musig_inconsistent_public_participant_cache)
     BOOST_CHECK(result.error() == AddressKeyError::INCONSISTENT);
 }
 
+BOOST_AUTO_TEST_CASE(export_script_inconsistent_public_expression_cache)
+{
+    const auto local = GenerateRandomKey();
+    CExtKey remote, unrelated, parent, child;
+    remote.SetSeed(std::array<std::byte, 32>{});
+    unrelated.SetSeed(std::array<std::byte, 32>{std::byte{1}});
+    BOOST_REQUIRE(remote.Derive(parent, 0));
+    BOOST_REQUIRE(parent.Derive(child, 0));
+    for (const std::string wrapper : {"sh", "wsh", "sh-wsh"}) {
+        for (bool derived_cache : {false, true}) {
+            for (bool corrupt : {false, true}) {
+                CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
+                WAIT_LOCK(wallet.cs_wallet, wallet_lock);
+                wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+                std::string expression = "multi(1," + EncodeSecret(local) + ',' + EncodeExtPubKey(remote.Neuter()) + "/0/*)";
+                expression = wrapper == "sh-wsh" ? "sh(wsh(" + expression + "))" : wrapper + '(' + expression + ')';
+                FlatSigningProvider keys;
+                std::string error;
+                auto descriptors = Parse(expression, keys, error, /*require_checksum=*/false);
+                BOOST_REQUIRE_EQUAL(descriptors.size(), 1U);
+                WalletDescriptor descriptor(std::move(descriptors.front()), /*creation_time=*/1, /*range_start=*/0, /*range_end=*/1, /*next_index=*/0);
+                descriptor.cache.CacheParentExtPubKey(1, parent.Neuter());
+                FlatSigningProvider original;
+                std::vector<CScript> original_scripts;
+                BOOST_REQUIRE(descriptor.descriptor->ExpandFromCache(0, descriptor.cache, original_scripts, original));
+                if (derived_cache) descriptor.cache.CacheDerivedExtPubKey(1, 0, corrupt ? unrelated.Neuter() : child.Neuter());
+                else if (corrupt) descriptor.cache.CacheParentExtPubKey(1, unrelated.Neuter());
+                // A pre-Load corrupt cache agrees with the script map. The available
+                // local cosigner must not hide a remote expression/cache mismatch.
+                auto manager = std::make_unique<ExportTestScriptPubKeyMan>(wallet, descriptor, keys.keys);
+                const auto scripts = manager->GetScriptPubKeys();
+                BOOST_REQUIRE_EQUAL(scripts.size(), 1U);
+                BOOST_CHECK((*scripts.begin() != original_scripts.front()) == corrupt);
+                CTxDestination destination;
+                BOOST_REQUIRE(ExtractDestination(*scripts.begin(), destination));
+                const auto result = ExportAddressKeys(wallet, destination, AddressKeyType::WALLET);
+                if (corrupt) {
+                    BOOST_CHECK(!result);
+                    if (!result) BOOST_CHECK(result.error() == AddressKeyError::INCONSISTENT);
+                } else {
+                    BOOST_REQUIRE(result);
+                    BOOST_REQUIRE_EQUAL(result->keys.size(), 1U);
+                    BOOST_CHECK(result->keys.front().key == local);
+                    BOOST_CHECK(result->keys.front().roles == std::set{AddressKeyRole::SCRIPT});
+                }
+                wallet_lock.unlock();
+                WalletContext context;
+                // The stack wallet outlives this local RPC context.
+                {
+                    LOCK(context.wallets_mutex);
+                    context.wallets.emplace_back(&wallet, [](CWallet*) {});
+                }
+                JSONRPCRequest request;
+                request.context = &context;
+                request.params = UniValue{UniValue::VARR};
+                request.params.push_back(EncodeDestination(destination));
+                request.params.push_back("wallet");
+                if (corrupt) {
+                    BOOST_CHECK_EXCEPTION(exportaddresskey().HandleRequest(request), UniValue,
+                        [](const UniValue& error) {
+                            return error["code"].getInt<int>() == -32603 &&
+                                error["message"].get_str() == "Unable to export because wallet key/script data is inconsistent";
+                        });
+                } else {
+                    BOOST_CHECK_EQUAL(exportaddresskey().HandleRequest(request)["keys"].size(), 1U);
+                }
+            }
+        }
+    }
+}
+
 BOOST_AUTO_TEST_CASE(export_taproot_inconsistent_public_expression_cache)
 {
     const auto local = GenerateRandomKey();
@@ -1245,6 +1321,13 @@ BOOST_AUTO_TEST_CASE(export_musig_nonce_snapshot_and_cooperative_signatures)
     wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
     auto manager = CreateDescriptor(wallet, "rawtr(musig(" + EncodeSecret(local) + "," + HexStr(external.GetPubKey()) + "))", /*success=*/true);
     BOOST_REQUIRE(manager);
+    BOOST_REQUIRE(CreateDescriptor(wallet, "wpkh(" + EncodeSecret(local) + ')', /*success=*/true));
+    auto tree_manager = CreateDescriptor(wallet, "tr(" + EncodeSecret(local) + ",pk(" + EncodeSecret(local) + "))", /*success=*/true);
+    BOOST_REQUIRE(tree_manager);
+    const auto tree_scripts = tree_manager->GetScriptPubKeys();
+    BOOST_REQUIRE_EQUAL(tree_scripts.size(), 1U);
+    CTxDestination tree_destination;
+    BOOST_REQUIRE(ExtractDestination(*tree_scripts.begin(), tree_destination));
     const auto provider = manager->GetSigningProvider(local.GetPubKey());
     BOOST_REQUIRE(provider && provider->musig2_secnonces);
     const uint256 message = uint256::ONE;
@@ -1266,6 +1349,30 @@ BOOST_AUTO_TEST_CASE(export_musig_nonce_snapshot_and_cooperative_signatures)
         BOOST_REQUIRE_EQUAL(exported->keys.size(), 1U);
         BOOST_CHECK(exported->keys.front().key.GetPubKey() == local.GetPubKey());
         BOOST_CHECK(exported->keys.front().roles == std::set{AddressKeyRole::MUSIG2_PARTICIPANT});
+        const auto output = ExportAddressKeys(wallet, WitnessV1Taproot{XOnlyPubKey{*aggregate}}, AddressKeyType::TAPROOT_OUTPUT);
+        BOOST_REQUIRE(!output);
+        BOOST_CHECK(output.error() == AddressKeyError::NO_TAPROOT_OUTPUT_KEY);
+        const auto public_provider = manager->GetSolvingProvider(GetScriptForDestination(WitnessV1Taproot{XOnlyPubKey{*aggregate}}));
+        const auto flat = dynamic_cast<const FlatSigningProvider*>(public_provider.get());
+        BOOST_REQUIRE(flat);
+        BOOST_CHECK(flat->keys.empty());
+        BOOST_CHECK(flat->musig2_secnonces == nullptr);
+        for (const CTxDestination& destination : {CTxDestination{WitnessV0KeyHash{local.GetPubKey()}}, tree_destination,
+                                                 CTxDestination{WitnessV1Taproot{XOnlyPubKey{local.GetPubKey()}}}}) {
+            for (const auto mode : {AddressKeyType::WALLET, AddressKeyType::TAPROOT_OUTPUT}) {
+                if (mode == AddressKeyType::TAPROOT_OUTPUT && std::holds_alternative<WitnessV0KeyHash>(destination)) continue;
+                const auto other = ExportAddressKeys(wallet, destination, mode);
+                BOOST_REQUIRE(other);
+                BOOST_REQUIRE_EQUAL(other->keys.size(), 1U);
+                std::set<AddressKeyRole> roles{AddressKeyRole::TAPROOT_OUTPUT};
+                if (mode == AddressKeyType::WALLET && destination == tree_destination) {
+                    roles = {AddressKeyRole::TAPROOT_INTERNAL, AddressKeyRole::TAPROOT_SCRIPT};
+                } else if (std::holds_alternative<WitnessV0KeyHash>(destination)) {
+                    roles = {AddressKeyRole::SCRIPT};
+                }
+                BOOST_CHECK(other->keys.front().roles == roles);
+            }
+        }
         BOOST_REQUIRE_EQUAL(provider->musig2_secnonces->size(), 1U);
         const auto nonce_after = provider->GetMuSig2SecNonce(id);
         BOOST_REQUIRE(nonce_after && nonce_after->get().IsValid());
