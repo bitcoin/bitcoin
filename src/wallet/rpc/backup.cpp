@@ -49,6 +49,8 @@ static UniValue AddressKeyRPCError(AddressKeyError error)
     switch (error) {
     case AddressKeyError::NO_KEY:
         return JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No private key for this address is available in the selected wallet");
+    case AddressKeyError::NO_TAPROOT_OUTPUT_KEY:
+        return JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No local Taproot output private key is available for this address; use key_type='wallet' to export available script or participant keys.");
     case AddressKeyError::MISSING_METADATA:
         return JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Wallet lacks the spending/script information needed to identify/export keys for this address");
     case AddressKeyError::UNSUPPORTED:
@@ -100,17 +102,21 @@ RPCMethod exportaddresskey()
 {
     return RPCMethod{
         "exportaddresskey",
-        "Returns local private keys for a recognized non-Taproot address known to the selected descriptor wallet.\n"
-        "Supports P2PKH, P2WPKH, P2SH and P2WSH, including nested wrappers, multisig and supported Miniscript.\n"
+        "Returns local private keys for a recognized address known to the selected descriptor wallet.\n"
+        "Supports P2PKH, P2WPKH, P2SH, P2WSH and Taproot tr()/rawtr(), including nested wrappers, multisig and supported Miniscript.\n"
         "Returns every available key even when other keys, preimages or timelocks are needed to spend.\n"
-        "Uses existing wallet metadata and known indices; missing redeem/witness scripts produce a missing spending/script information error.\n"
+        "Uses existing wallet metadata and known indices; missing redeem/witness scripts or Taproot commitments produce a missing spending/script information error.\n"
         "It does not recover unknown script hashes, search unknown derivation paths or infer keys from arbitrary script data.\n"
         "The canonical keys array is sorted by full serialized public key, with sorted unique roles.\n"
         "The top-level private_key_hex and compressed fields are compatibility aliases for original P2PKH/native P2WPKH exports.\n"
-        "The taproot_output mode is reserved for effective Taproot output keys; Taproot export is currently unsupported.\n"
-        "Exported keys are not a wallet backup; other spending data or cosigners may be required.\n"
+        "Wallet mode returns original stored/derived scalars and full public-key serializations, including Taproot internal, direct output, leaf and MuSig2 participant keys.\n"
+        "The taproot_output mode returns effective key-path keys, applying the exact known TapTweak (including tree-less tr()) to internal keys. Direct output/rawtr() keys are not tweaked again.\n"
+        "Script-only or MuSig2 participant-only ownership can succeed in wallet mode while taproot_output fails. Participant secrets are not aggregate or output secrets, even when all participants are local.\n"
+        "A MuSig2 participant used before post-aggregation derivation, or any explicitly reused key, may control many outputs. Export does not promise an address-exclusive or leaf-only secret.\n"
+        "Exported keys are not a wallet backup; scripts, control blocks, cosigners, preimages or timelocks may still be required.\n"
         "Requires wallet unlock. The result contains a spending secret, including when displayed in the RPC console.\n"
-        "Disclosure of a non-hardened child key together with the corresponding ancestor xpub can compromise that ancestor's private subtree.\n",
+        "Disclosure of a non-hardened child key together with the corresponding ancestor xpub can compromise that ancestor's private subtree.\n"
+        "RPC responses, JSON/client buffers and console output may retain secrets; this RPC does not guarantee erasure of those copies.\n",
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet address"},
             {"key_type", RPCArg::Type::STR, RPCArg::Default{"wallet"}, "The key type: wallet or taproot_output. Null uses the default. taproot_output requires a Taproot address"},
@@ -122,14 +128,15 @@ RPCMethod exportaddresskey()
                     {RPCResult::Type::STR_HEX, "private_key_hex", "32-byte unsigned big-endian private scalar (64 lowercase hex characters, including leading zeros); not WIF"},
                     {RPCResult::Type::BOOL, "compressed", "Whether the returned key uses compressed public-key serialization"},
                     {RPCResult::Type::ARR, "roles", "Sorted unique key roles", {
-                        {RPCResult::Type::STR, "", "script, taproot_internal, taproot_script, taproot_output, or musig2_participant (currently only script is supported)"},
+                        {RPCResult::Type::STR, "", "script (non-Taproot), taproot_internal (raw internal key), taproot_script (leaf key), taproot_output (direct/effective output key), or musig2_participant (participant, not aggregate key)"},
                     }},
                 }},
             }},
             {RPCResult::Type::STR_HEX, "private_key_hex", /*optional=*/true, "Compatibility alias for original P2PKH/native P2WPKH wallet-mode exports"},
             {RPCResult::Type::BOOL, "compressed", /*optional=*/true, "Compatibility alias for original P2PKH/native P2WPKH wallet-mode exports"},
         }},
-        RPCExamples{HelpExampleCli("exportaddresskey", "\"" + EXAMPLE_ADDRESS[0] + "\"")},
+        RPCExamples{HelpExampleCli("exportaddresskey", "\"" + EXAMPLE_ADDRESS[0] + "\"") +
+            HelpExampleCli("exportaddresskey", "\"bc1p2wsldez5mud2yam29q22wgfh9439spgduvct83k3pm50fcxa5dps59h4z5\" \"taproot_output\"")},
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);

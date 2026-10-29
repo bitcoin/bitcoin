@@ -23,6 +23,7 @@
 #include <wallet/types.h>
 
 #include <algorithm>
+#include <iterator>
 #include <limits>
 #include <optional>
 
@@ -1325,7 +1326,7 @@ std::unique_ptr<FlatSigningProvider> DescriptorScriptPubKeyMan::GetSigningProvid
     return out;
 }
 
-util::Expected<FlatSigningProvider, AddressKeyError> DescriptorScriptPubKeyMan::GetExportProvider(const CScript& script) const
+util::Expected<FlatSigningProvider, AddressKeyError> DescriptorScriptPubKeyMan::GetExportProvider(const CScript& script, std::vector<DescriptorMuSig2KeyInfo>* musig2) const
 {
     AssertLockHeld(cs_desc_man);
     const auto it = m_map_script_pub_keys.find(script);
@@ -1338,6 +1339,18 @@ util::Expected<FlatSigningProvider, AddressKeyError> DescriptorScriptPubKeyMan::
     if (!descriptor.ExpandFromCache(it->second, m_wallet_descriptor.cache, scripts, public_keys) ||
         std::find(scripts.begin(), scripts.end(), script) == scripts.end()) {
         return util::Unexpected{AddressKeyError::INCONSISTENT};
+    }
+    if (musig2) {
+        std::vector<DescriptorMuSig2KeyInfo> info;
+        if (!descriptor.GetMuSig2KeyInfo(it->second, m_wallet_descriptor.cache, info)) return util::Unexpected{AddressKeyError::INCONSISTENT};
+        for (const auto& entry : info) {
+            CPubKey expanded;
+            if (!public_keys.GetPubKey(entry.derived.GetID(), expanded) || expanded != entry.derived) return util::Unexpected{AddressKeyError::INCONSISTENT};
+            for (const auto& participant : entry.participants) {
+                if (!public_keys.GetPubKey(participant.GetID(), expanded) || expanded != participant) return util::Unexpected{AddressKeyError::INCONSISTENT};
+            }
+        }
+        musig2->insert(musig2->end(), std::make_move_iterator(info.begin()), std::make_move_iterator(info.end()));
     }
     return public_keys;
 }
@@ -1360,7 +1373,9 @@ std::set<CPubKey> DescriptorScriptPubKeyMan::GetExportPubKeys(const CTxDestinati
     AssertLockHeld(cs_desc_man);
     std::set<CPubKey> matches;
     const auto add_match = [&](const CPubKey& pubkey) {
+        const auto taproot = std::get_if<WitnessV1Taproot>(&destination);
         if (destination == CTxDestination{PKHash{pubkey}} ||
+            (taproot && pubkey.IsFullyValid() && XOnlyPubKey{pubkey} == *taproot) ||
             (pubkey.IsCompressed() && (destination == CTxDestination{WitnessV0KeyHash{pubkey}} ||
                 destination == CTxDestination{ScriptHash{GetScriptForDestination(WitnessV0KeyHash{pubkey})}}))) {
             matches.insert(pubkey);
@@ -1368,10 +1383,8 @@ std::set<CPubKey> DescriptorScriptPubKeyMan::GetExportPubKeys(const CTxDestinati
     };
     for (const auto& [pubkey, index] : m_map_pubkeys) add_match(pubkey);
     std::set<CPubKey> roots;
-    std::set<CExtPubKey> ext_roots;
-    m_wallet_descriptor.descriptor->GetPubKeys(roots, ext_roots);
+    m_wallet_descriptor.descriptor->GetPrivateKeyRoots(roots);
     for (const auto& root : roots) add_match(root);
-    for (const auto& root : ext_roots) add_match(root.pubkey);
     return matches;
 }
 
@@ -1402,12 +1415,10 @@ util::Expected<std::optional<CKey>, AddressKeyError> DescriptorScriptPubKeyMan::
         return util::Unexpected{AddressKeyError::INCONSISTENT};
     }
 
-    // GetPubKeys supplies only derivation inputs here, never output candidates. Retrieve just
+    // GetPrivateKeyRoots supplies only derivation inputs here, never output candidates. Retrieve just
     // this descriptor's roots; do not decrypt all stored keys or call signing-provider APIs.
     std::set<CPubKey> roots;
-    std::set<CExtPubKey> ext_roots;
-    descriptor.GetPubKeys(roots, ext_roots);
-    for (const auto& root : ext_roots) roots.insert(root.pubkey);
+    descriptor.GetPrivateKeyRoots(roots);
     FlatSigningProvider private_roots;
     for (const auto& root : roots) {
         if (!root.IsFullyValid()) return util::Unexpected{AddressKeyError::INCONSISTENT};

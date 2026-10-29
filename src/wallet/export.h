@@ -6,11 +6,13 @@
 #define BITCOIN_WALLET_EXPORT_H
 
 #include <key.h>
+#include <script/signingprovider.h>
 #include <threadsafety.h>
 #include <util/expected.h>
 #include <wallet/types.h>
 #include <wallet/wallet.h>
 
+#include <map>
 #include <optional>
 #include <set>
 #include <vector>
@@ -32,6 +34,9 @@ struct AddressKeyResult {
     //! Only original P2PKH/P2WPKH wallet-mode successes have compatibility aliases.
     bool legacy_aliases{false};
 };
+
+//! Verify public Taproot spend data and collect only recognized internal/leaf key associations.
+util::Expected<std::map<XOnlyPubKey, std::set<AddressKeyRole>>, AddressKeyError> GetTaprootKeyCandidates(const XOnlyPubKey& output, const TaprootSpendData& spenddata, const SigningProvider& provider);
 
 //! Caller must authorize local private-key export and retain cs_wallet through serialization.
 util::Expected<AddressKeyResult, AddressKeyError> ExportAddressKeys(const CWallet& wallet, const CTxDestination& destination, AddressKeyType type) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);

@@ -26,12 +26,13 @@ from test_framework.address import (
     script_to_p2sh,
 )
 from test_framework.descriptors import descsum_create
-from test_framework.key import ECKey, ORDER
+from test_framework.crypto.secp256k1 import GE, G
+from test_framework.key import ECKey, H_POINT, ORDER, TaggedHash, sign_schnorr, verify_schnorr
 from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, tx_from_hex
 from test_framework.script import (
     CScript, LegacySignatureHash, SegwitV0SignatureHash, SIGHASH_ALL,
-    OP_CHECKSEQUENCEVERIFY, OP_CHECKSIG, OP_ELSE, OP_ENDIF, OP_EQUALVERIFY,
-    OP_IF, OP_SHA256, OP_SIZE, OP_TRUE, OP_VERIFY,
+    OP_CHECKLOCKTIMEVERIFY, OP_CHECKSEQUENCEVERIFY, OP_CHECKSIG, OP_CHECKSIGADD, OP_ELSE, OP_ENDIF, OP_EQUALVERIFY,
+    OP_IF, OP_NUMEQUAL, OP_SHA256, OP_SIZE, OP_TRUE, OP_VERIFY, SIGHASH_DEFAULT, TaprootSignatureHash, taproot_construct,
 )
 from test_framework.script_util import (
     key_to_p2pk_script, key_to_p2pkh_script, key_to_p2wpkh_script,
@@ -72,6 +73,39 @@ def derive_leaf(secret, chain, path):
     return secret, chain
 
 
+def musig_public_key(pubkeys, path=()):
+    """Independent BIP327 public KeyAgg and BIP328 public derivation, for synthetic fixtures."""
+    pubkeys = sorted(pubkeys)
+    second = next((pubkey for pubkey in pubkeys if pubkey != pubkeys[0]), None)
+    key_list = TaggedHash('KeyAgg list', b''.join(pubkeys))
+    terms = [(1 if pubkey == second else int.from_bytes(TaggedHash('KeyAgg coefficient', key_list + pubkey), 'big') % ORDER,
+              GE.from_bytes(pubkey)) for pubkey in pubkeys]
+    point = GE.mul(*terms)
+    chain = bytes.fromhex('868087ca02a6f974c4598924c36b57762d32cb45717167e300622c7167e38965')
+    for index in path:
+        assert index < 0x80000000, 'test aggregate derivation must be public'
+        digest = hmac.new(chain, point.to_bytes_compressed() + index.to_bytes(4, 'big'), hashlib.sha512).digest()
+        tweak = int.from_bytes(digest[:32], 'big')
+        assert tweak < ORDER, 'invalid test public derivation'
+        point = point + tweak * G
+        chain = digest[32:]
+    assert not point.infinity, 'invalid synthetic aggregate'
+    return point.to_bytes_compressed()
+
+
+def taproot_output_secret(secret, merkle_root=b''):
+    """Independent BIP341 test oracle, preserving the actual tweaked scalar's output parity."""
+    pubkey = public_key(secret)
+    value = int.from_bytes(secret, 'big')
+    if pubkey[0] == 3:
+        value = ORDER - value
+    tweak = int.from_bytes(TaggedHash('TapTweak', pubkey[1:] + merkle_root), 'big')
+    assert tweak < ORDER, 'invalid synthetic tweak'
+    value = (value + tweak) % ORDER
+    assert value, 'invalid synthetic output scalar'
+    return value.to_bytes(32, 'big')
+
+
 class ExportAddressKeyTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
@@ -87,7 +121,11 @@ class ExportAddressKeyTest(BitcoinTestFramework):
 
     def import_descriptor(self, wallet, descriptor, **kwargs):
         result = wallet.importdescriptors([{'desc': descsum_create(descriptor), 'timestamp': 'now', **kwargs}])
-        assert result[0]['success'], 'synthetic descriptor import failed'
+        for item in result:
+            message = item.get('error', {}).get('message', '')
+            for material in self.private_material:
+                message = message.replace(material, '<redacted>')
+            assert item['success'], f'synthetic descriptor import failed: {message}'
         if any(material in descriptor for material in self.private_material):
             self.private_material.add(descriptor)
 
@@ -118,13 +156,14 @@ class ExportAddressKeyTest(BitcoinTestFramework):
             'unlocked_until': info.get('unlocked_until'),
         }
 
-    def export_unchanged(self, wallet, address):
+    def export_unchanged(self, wallet, address, key_type=None):
         # These snapshots avoid getaddressinfo before the first export, since that
         # RPC may warm public solving-provider caches. Warm them explicitly afterward.
         before = self.snapshot(wallet, [])
-        result = wallet.exportaddresskey(address)
+        arguments = [address] if key_type is None else [address, key_type]
+        result = wallet.exportaddresskey(*arguments)
         wallet.getaddressinfo(address)
-        assert_equal(wallet.exportaddresskey(address), result)
+        assert_equal(wallet.exportaddresskey(*arguments), result)
         assert_equal(self.snapshot(wallet, []), before)
         return result
 
@@ -363,6 +402,414 @@ class ExportAddressKeyTest(BitcoinTestFramework):
         assert_raises_rpc_error(-13, 'walletpassphrase', wallet.exportaddresskey, address)
         assert_equal(self.snapshot(wallet, []), before)
 
+    def check_taproot_roles(self):
+        self.log.info('Check Taproot internal, direct output and script roles with independent public commitments')
+        node = self.nodes[0]
+        secrets = [(i).to_bytes(32, 'big') for i in [70, 71, 72]]
+        pubkeys = [public_key(secret) for secret in secrets]
+        xonly = [pubkey[1:] for pubkey in pubkeys]
+        wifs = [bytes_to_wif(secret) for secret in secrets]
+        self.private_material.update(wifs)
+
+        def check(wallet, address, expected):
+            result = self.export_unchanged(wallet, address)
+            assert_equal(set(result), {'keys'})
+            records = sorted([
+                {'pubkey': public_key(secret).hex(), 'private_key_hex': secret.hex(),
+                 'compressed': True, 'roles': sorted(roles)}
+                for secret, roles in expected
+            ], key=lambda record: record['pubkey'])
+            assert_equal(result['keys'], records)
+            self.private_material.update(secret.hex() for secret, _ in expected)
+
+        # Each wallet has different internal/script ownership. The unknown internal
+        # NUMS point has no known secret; script-only success cannot rely on it.
+        for local_internal, local_leaves in [(True, 0), (False, 1), (True, 2)]:
+            node.createwallet(f'taproot_{local_internal}_{local_leaves}', blank=True)
+            wallet = node.get_wallet_rpc(f'taproot_{local_internal}_{local_leaves}')
+            internal = wifs[0] if local_internal else H_POINT
+            internal_x = xonly[0] if local_internal else bytes.fromhex(H_POINT)
+            expressions = [wifs[i] if i <= local_leaves else pubkeys[i].hex() for i in [1, 2]]
+            expected = [(secrets[0], ['taproot_internal'])] if local_internal else []
+            expected += [(secrets[i], ['taproot_script']) for i in range(1, local_leaves + 1)]
+            for sorted_keys in [False, True]:
+                kind = 'sortedmulti_a' if sorted_keys else 'multi_a'
+                self.import_descriptor(wallet, f'tr({internal},{kind}(2,{",".join(expressions)}))')
+                keys = sorted(xonly[1:]) if sorted_keys else xonly[1:]
+                script = CScript([keys[0], OP_CHECKSIG, keys[1], OP_CHECKSIGADD, 2, OP_NUMEQUAL])
+                tree = taproot_construct(internal_x, [('multi', script)])
+                address = program_to_witness(1, tree.output_pubkey)
+                check(wallet, address, expected)
+            self.import_descriptor(wallet, f'tr({internal},or_i(pk({expressions[0]}),and_v(v:older(1000),pk({expressions[1]}))))')
+            branch = CScript([OP_IF, xonly[1], OP_CHECKSIG, OP_ELSE, 1000, OP_CHECKSEQUENCEVERIFY,
+                              OP_VERIFY, xonly[2], OP_CHECKSIG, OP_ENDIF])
+            tree = taproot_construct(internal_x, [('miniscript', branch)])
+            check(wallet, program_to_witness(1, tree.output_pubkey), expected)
+            leaf_a = CScript([xonly[1], OP_CHECKSIG])
+            leaf_b = CScript([xonly[2], OP_CHECKSIG])
+            self.import_descriptor(wallet, f'tr({internal},{{pk({expressions[0]}),{{pk({expressions[1]}),pk({expressions[0]})}}}})')
+            tree = taproot_construct(internal_x, [('a', leaf_a), [('b', leaf_b), ('repeat', leaf_a)]])
+            check(wallet, program_to_witness(1, tree.output_pubkey), expected)
+
+        node.createwallet('taproot_parity', blank=True)
+        wallet = node.get_wallet_rpc('taproot_parity')
+        representatives = [(1).to_bytes(32, 'big'), (ORDER - 1).to_bytes(32, 'big')]
+        self.private_material.update(bytes_to_wif(secret) for secret in representatives)
+        # A directly held output key is exportable even before importing rawtr().
+        for secret in representatives:
+            self.import_descriptor(wallet, f'wpkh({bytes_to_wif(secret)})')
+        x = public_key(representatives[0])[1:]
+        direct = program_to_witness(1, x)
+        check(wallet, direct, [(secret, ['taproot_output']) for secret in representatives])
+        self.import_descriptor(wallet, f'rawtr({bytes_to_wif(representatives[0])})')
+        check(wallet, direct, [(secret, ['taproot_output']) for secret in representatives])
+        self.import_descriptor(wallet, f'tr({bytes_to_wif(representatives[0])})')
+        check(wallet, program_to_witness(1, taproot_construct(x).output_pubkey),
+              [(secret, ['taproot_internal']) for secret in representatives])
+        self.import_descriptor(wallet, f'tr({bytes_to_wif(representatives[0])},{{pk({x.hex()}),pk({x.hex()})}})')
+        leaf = CScript([x, OP_CHECKSIG])
+        tree = taproot_construct(x, [('a', leaf), ('b', leaf)])
+        check(wallet, program_to_witness(1, tree.output_pubkey),
+              [(secret, ['taproot_internal', 'taproot_script']) for secret in representatives])
+        uncompressed_wif = bytes_to_wif(representatives[0], compressed=False)
+        self.private_material.add(uncompressed_wif)
+        self.import_descriptor(wallet, f'pkh({uncompressed_wif})')
+        records = self.export_unchanged(wallet, direct)['keys']
+        assert_equal(len(records), 3)
+        assert_equal(records[-1], {'pubkey': public_key(representatives[0], compressed=False).hex(),
+                                   'private_key_hex': representatives[0].hex(), 'compressed': False,
+                                   'roles': ['taproot_output']})
+        # Knowing other keys cannot disclose absent tree information.
+        missing = program_to_witness(1, taproot_construct(xonly[0]).output_pubkey)
+        assert_raises_rpc_error(-5, 'lacks the spending/script information', wallet.exportaddresskey, missing)
+
+    def check_musig_participants(self, root, root_secret, root_chain):
+        self.log.info('Check original MuSig participants, independently aggregated public outputs and reused roles')
+        node = self.nodes[0]
+        secrets = [(i).to_bytes(32, 'big') for i in [90, 91, 92]]
+        pubkeys = [public_key(secret) for secret in secrets]
+        wifs = [bytes_to_wif(secret) for secret in secrets]
+        self.private_material.update(wifs)
+
+        def check(wallet, address, expected):
+            result = self.export_unchanged(wallet, address)
+            assert_equal(set(result), {'keys'})
+            records = sorted([
+                {'pubkey': public_key(secret).hex(), 'private_key_hex': secret.hex(),
+                 'compressed': True, 'roles': sorted(roles)} for secret, roles in expected
+            ], key=lambda record: record['pubkey'])
+            assert_equal(result['keys'], records)
+            self.private_material.update(secret.hex() for secret, _ in expected)
+
+        for local in [1, 2, 3]:
+            for repeated in [False, True]:
+                name = f'musig_export_{local}_{repeated}'
+                node.createwallet(name, blank=True)
+                wallet = node.get_wallet_rpc(name)
+                expressions = [wifs[i] if i < local else pubkeys[i].hex() for i in range(3)]
+                participants = list(pubkeys)
+                if repeated:
+                    expressions.append(pubkeys[0].hex())
+                    participants.append(pubkeys[0])
+                expression = f'musig({",".join(expressions)})'
+                aggregate = musig_public_key(participants)
+                expected = [(secret, ['musig2_participant']) for secret in secrets[:local]]
+                for context in ['tr', 'rawtr', 'leaf']:
+                    descriptor = f'{context}({expression})' if context != 'leaf' else f'tr({H_POINT},pk({expression}))'
+                    self.import_descriptor(wallet, descriptor)
+                    if context == 'tr':
+                        output = taproot_construct(aggregate[1:]).output_pubkey
+                    elif context == 'rawtr':
+                        output = aggregate[1:]
+                    else:
+                        output = taproot_construct(bytes.fromhex(H_POINT), [('mu', CScript([aggregate[1:], OP_CHECKSIG]))]).output_pubkey
+                    check(wallet, program_to_witness(1, output), expected)
+                descriptor = f'tr({H_POINT},or_i(pk({expression}),pk({wifs[0]})))'
+                self.import_descriptor(wallet, descriptor)
+                script = CScript([OP_IF, aggregate[1:], OP_CHECKSIG, OP_ELSE, pubkeys[0][1:], OP_CHECKSIG, OP_ENDIF])
+                output = taproot_construct(bytes.fromhex(H_POINT), [('mu', script)]).output_pubkey
+                reused = [(secret, ['musig2_participant', 'taproot_script'] if i == 0 else ['musig2_participant'])
+                          for i, secret in enumerate(secrets[:local])]
+                check(wallet, program_to_witness(1, output), reused)
+
+        first_payload, _ = base58_to_byte(ROOT_XPRV)
+        second_payload, _ = base58_to_byte(CHILD_XPRV)
+        second_secret, second_chain = second_payload[-32:], second_payload[-65:-33]
+        second_root = byte_to_base58(bytes.fromhex('358394') + second_payload[3:], 4)
+        roots = [root, second_root]
+        materials = [(root_secret, root_chain), (second_secret, second_chain)]
+        self.private_material.update([second_root, second_secret.hex()])
+        pubs = [byte_to_base58(bytes.fromhex('3587cf') + payload[3:-33] + public_key(secret), 4)
+                for payload, (secret, _) in zip([first_payload, second_payload], materials)]
+        node.createwallet('musig_export_ranges', blank=True)
+        wallet = node.get_wallet_rpc('musig_export_ranges')
+        for aggregate_derivation in [False, True]:
+            for multipath in [False, True]:
+                self.log.info(f'Check MuSig derivation: aggregate={aggregate_derivation}, multipath={multipath}')
+                participant_suffix = '/5' if aggregate_derivation else ('/<5;6>/*' if multipath else '/5/*')
+                aggregate_suffix = ('/<7;8>/*' if multipath else '/7/*') if aggregate_derivation else ''
+                expression = f'musig({roots[0]}{participant_suffix},{pubs[1]}{participant_suffix}){aggregate_suffix}'
+                self.import_descriptor(wallet, f'rawtr({expression})', range=[0, 15])
+                for branch in ([0, 1] if multipath else [0]):
+                    for index in [0, 2]:
+                        path = [5] if aggregate_derivation else [5 + branch, index]
+                        participants = [derive_leaf(secret, chain, path)[0] for secret, chain in materials]
+                        aggregate_path = [7 + branch, index] if aggregate_derivation else []
+                        output = musig_public_key([public_key(secret) for secret in participants], aggregate_path)[1:]
+                        check(wallet, program_to_witness(1, output), [(participants[0], ['musig2_participant'])])
+
+        self.import_descriptor(wallet, f'rawtr(musig({root}/5/*h,{pubkeys[1].hex()}))', range=[0, 15])
+        hardened = derive_leaf(root_secret, root_chain, [5, 0x80000002])[0]
+        aggregate = musig_public_key([public_key(hardened), pubkeys[1]])
+        check(wallet, program_to_witness(1, aggregate[1:]), [(hardened, ['musig2_participant'])])
+
+        # The original matching descriptor has no participant secrets. Resolve its
+        # concrete /5/2 participant in a different ranged descriptor, without roots in results.
+        node.createwallet('musig_export_cross', blank=True)
+        wallet = node.get_wallet_rpc('musig_export_cross')
+        self.import_descriptor(wallet, f'wpkh({roots[0]}/5/*)', range=[0, 3])
+        local = derive_leaf(root_secret, root_chain, [5, 2])[0]
+        external = derive_leaf(second_secret, second_chain, [5, 2])[0]
+        expression = f'musig({pubs[0]}/5/*,{pubs[1]}/5/*)'
+        self.import_descriptor(wallet, f'tr({expression},pk({wifs[2]}))', range=[0, 3])
+        aggregate = musig_public_key([public_key(local), public_key(external)])
+        script = CScript([pubkeys[2][1:], OP_CHECKSIG])
+        output = taproot_construct(aggregate[1:], [('normal', script)]).output_pubkey
+        check(wallet, program_to_witness(1, output), [(local, ['musig2_participant']), (secrets[2], ['taproot_script'])])
+
+        self.log.info('Check held MuSig SEC identities and exclude the opposite participant point')
+        node.createwallet('musig_export_sec', blank=True)
+        wallet = node.get_wallet_rpc('musig_export_sec')
+        positive = (1).to_bytes(32, 'big')
+        negative = (ORDER - 1).to_bytes(32, 'big')
+        participant = public_key(positive)
+        opposite = public_key(negative)
+        for compressed in [False, True]:
+            wif = bytes_to_wif(negative, compressed=compressed)
+            self.private_material.add(wif)
+            self.import_descriptor(wallet, f'pkh({wif})')
+
+        def point_address(pubkey):
+            self.import_descriptor(wallet, f'tr(musig({pubkey.hex()},{pubkeys[1].hex()}),pk({wifs[2]}))')
+            aggregate = musig_public_key([pubkey, pubkeys[1]])
+            output = taproot_construct(aggregate[1:], [('normal', CScript([pubkeys[2][1:], OP_CHECKSIG]))]).output_pubkey
+            return program_to_witness(1, output)
+
+        def check_held(address, held):
+            result = self.export_unchanged(wallet, address)
+            assert_equal(set(result), {'keys'})
+            expected = [{'pubkey': pubkeys[2].hex(), 'private_key_hex': secrets[2].hex(),
+                         'compressed': True, 'roles': ['taproot_script']}]
+            expected += [{'pubkey': public_key(secret, compressed).hex(), 'private_key_hex': secret.hex(),
+                          'compressed': compressed, 'roles': ['musig2_participant']} for secret, compressed in held]
+            assert_equal(result['keys'], sorted(expected, key=lambda record: record['pubkey']))
+            self.private_material.update(secret.hex() for secret, _ in held)
+
+        address = point_address(participant)
+        check_held(address, [])
+        uncompressed_wif = bytes_to_wif(positive, compressed=False)
+        self.private_material.add(uncompressed_wif)
+        self.import_descriptor(wallet, f'pkh({uncompressed_wif})')
+        check_held(address, [(positive, False)])
+        compressed_wif = bytes_to_wif(positive)
+        self.private_material.add(compressed_wif)
+        self.import_descriptor(wallet, f'wpkh({compressed_wif})')
+        check_held(address, [(positive, True), (positive, False)])
+        check_held(point_address(opposite), [(negative, True), (negative, False)])
+
+    def check_taproot_output_keys(self):
+        self.log.info('Check BIP341 output scalars and actual key-path spends')
+        vector_path = os.path.join(self.config['environment']['SRCDIR'], 'src', 'test', 'data', 'bip341_wallet_vectors.json')
+        with open(vector_path, encoding='utf8') as vector_file:
+            vectors = json.load(vector_file)
+        for spending in vectors['keyPathSpending']:
+            for vector in spending['inputSpending']:
+                given = vector['given']
+                root = bytes.fromhex(given['merkleRoot']) if given['merkleRoot'] else b''
+                assert_equal(taproot_output_secret(bytes.fromhex(given['internalPrivkey']), root).hex(), vector['intermediary']['tweakedPrivkey'])
+
+        node = self.nodes[0]
+        node.createwallet('output_keys', blank=True)
+        wallet = node.get_wallet_rpc('output_keys')
+        funding = node.get_wallet_rpc('funding')
+        mining = funding.getnewaddress()
+        spend_count = 0
+
+        def check(address, expected):
+            result = self.export_unchanged(wallet, address, 'taproot_output')
+            records = sorted([{'pubkey': public_key(secret, compressed).hex(), 'private_key_hex': secret.hex(),
+                               'compressed': compressed, 'roles': ['taproot_output']}
+                              for secret, compressed in expected], key=lambda record: record['pubkey'])
+            assert_equal(result, {'keys': records})
+            self.private_material.update(secret.hex() for secret, _ in expected)
+            return result['keys']
+
+        def spend(address, output_key):
+            nonlocal spend_count
+            txid = funding.sendtoaddress(address, 1)
+            self.generatetoaddress(node, 1, mining)
+            previous = tx_from_hex(funding.gettransaction(txid)['hex'])
+            script = bytes.fromhex(node.validateaddress(address)['scriptPubKey'])
+            index = next(i for i, output in enumerate(previous.vout) if output.scriptPubKey == script)
+            tx = CTransaction()
+            tx.vin = [CTxIn(COutPoint(int(txid, 16), index), nSequence=0xfffffffd)]
+            destination = funding.getnewaddress('', 'legacy')
+            tx.vout = [CTxOut(COIN - 10000, bytes.fromhex(node.validateaddress(destination)['scriptPubKey']))]
+            digest = TaprootSignatureHash(tx, [previous.vout[index]], SIGHASH_DEFAULT)
+            scalar = bytes.fromhex(output_key['private_key_hex'])
+            signature = sign_schnorr(scalar, digest)
+            assert verify_schnorr(public_key(scalar)[1:], signature, digest), 'exported output signature does not verify'
+            tx.wit.vtxinwit = [CTxInWitness()]
+            tx.wit.vtxinwit[0].scriptWitness.stack = [signature]
+            assert node.testmempoolaccept([tx.serialize().hex()])[0]['allowed'], 'exported scalar cannot spend requested output'
+            node.sendrawtransaction(tx.serialize().hex())
+            self.generatetoaddress(node, 1, mining)
+            spend_count += 1
+
+        parities = set()
+        for value in list(range(1, 13)) + [ORDER - 1]:
+            internal = value.to_bytes(32, 'big')
+            wif = bytes_to_wif(internal)
+            self.private_material.add(wif)
+            for has_tree in [False, True]:
+                leaf_pubkey = public_key((99).to_bytes(32, 'big'))
+                descriptor = f'tr({wif},pk({leaf_pubkey.hex()}))' if has_tree else f'tr({wif})'
+                self.import_descriptor(wallet, descriptor)
+                scripts = [('leaf', CScript([leaf_pubkey[1:], OP_CHECKSIG]))] if has_tree else []
+                tree = taproot_construct(public_key(internal)[1:], scripts)
+                address = program_to_witness(1, tree.output_pubkey)
+                scalar = taproot_output_secret(internal, tree.merkle_root)
+                parities.add((public_key(internal)[0] & 1, public_key(scalar)[0] & 1))
+                ordinary = self.export_unchanged(wallet, address)
+                assert any(record['private_key_hex'] == internal.hex() and 'taproot_internal' in record['roles'] for record in ordinary['keys']), 'wallet mode lost raw internal scalar'
+                records = check(address, [(scalar, True)])
+                assert_not_equal(scalar, internal)
+                assert_equal(public_key(scalar)[1:], tree.output_pubkey)
+                if value in [1, 2, 3, 10, ORDER - 1]:
+                    spend(address, records[0])
+                if value == 10 and not has_tree:
+                    assert records[0]['private_key_hex'].startswith('00'), 'leading-zero output fixture lost padding'
+        assert_equal(len(parities), 4)
+
+        direct = (1).to_bytes(32, 'big')
+        self.import_descriptor(wallet, f'rawtr({bytes_to_wif(direct)})')
+        address = program_to_witness(1, public_key(direct)[1:])
+        negative = (ORDER - 1).to_bytes(32, 'big')
+        records = check(address, [(direct, True), (negative, True)])
+        spend(address, records[0])
+        uncompressed_wif = bytes_to_wif(direct, compressed=False)
+        self.private_material.add(uncompressed_wif)
+        self.import_descriptor(wallet, f'pkh({uncompressed_wif})')
+        check(address, [(direct, True), (negative, True), (direct, False)])
+        assert_equal(spend_count, 11)
+        self.log.info(f'Verified {spend_count} exported-scalar key-path spends and {len(parities)} internal/output parity combinations')
+
+        for name, descriptor in [('script_only_output', f'tr({H_POINT},pk({bytes_to_wif((110).to_bytes(32, "big"))}))'),
+                                 ('musig_only_output', f'tr(musig({bytes_to_wif((111).to_bytes(32, "big"))},{bytes_to_wif((112).to_bytes(32, "big"))}))')]:
+            node.createwallet(name, blank=True)
+            partial = node.get_wallet_rpc(name)
+            for value in [110, 111, 112]:
+                self.private_material.add(bytes_to_wif(value.to_bytes(32, 'big')))
+            self.import_descriptor(partial, descriptor)
+            public_descriptor = partial.listdescriptors()['descriptors'][0]['desc']
+            target = partial.deriveaddresses(public_descriptor)[0]
+            assert partial.exportaddresskey(target)['keys'], 'wallet-only fixture has no local keys'
+            assert_raises_rpc_error(-5, 'No local Taproot output private key', partial.exportaddresskey, target, 'taproot_output')
+
+    def check_taproot_script_spending(self):
+        self.log.info('Spend script-only Taproot outputs using exported default-mode scalars')
+        node = self.nodes[0]
+        funding = node.get_wallet_rpc('funding')
+        mining = funding.getnewaddress()
+        secrets = [value.to_bytes(32, 'big') for value in [120, 121, 122]]
+        pubkeys = [public_key(secret) for secret in secrets]
+        xonly = [pubkey[1:] for pubkey in pubkeys]
+        wifs = [bytes_to_wif(secret) for secret in secrets]
+        self.private_material.update(wifs)
+        preimage = b'\x11' * 32
+        digest = hashlib.sha256(preimage).digest()
+        cases = [('pk', f'pk({wifs[0]})', CScript([xonly[0], OP_CHECKSIG]), [0], [None])]
+        for sorted_keys in [False, True]:
+            indices = [0, 1, 2] if sorted_keys else [0, 1]
+            kind = 'sortedmulti_a' if sorted_keys else 'multi_a'
+            expression = f'{kind}(2,{",".join([wifs[0]] + [pubkeys[i].hex() for i in indices[1:]])})'
+            ordered = sorted(indices, key=lambda i: xonly[i]) if sorted_keys else indices
+            script = CScript([xonly[ordered[0]], OP_CHECKSIG] +
+                             [item for i in ordered[1:] for item in [xonly[i], OP_CHECKSIGADD]] + [2, OP_NUMEQUAL])
+            cases.append((kind, expression, script, [0], [ordered]))
+        after_script = CScript([OP_IF, xonly[0], OP_CHECKSIG, OP_ELSE, 1, OP_CHECKLOCKTIMEVERIFY,
+                               OP_VERIFY, xonly[1], OP_CHECKSIG, OP_ENDIF])
+        cases.append(('miniscript_after', f'or_i(pk({wifs[0]}),and_v(v:after(1),pk({wifs[1]})))', after_script, [0, 1], [True, False]))
+        hash_script = CScript([OP_IF, xonly[0], OP_CHECKSIG, OP_ELSE, OP_SIZE, 32, OP_EQUALVERIFY,
+                              OP_SHA256, digest, OP_EQUALVERIFY, xonly[1], OP_CHECKSIG, OP_ENDIF])
+        cases.append(('miniscript_hash', f'or_i(pk({wifs[0]}),and_v(v:sha256({digest.hex()}),pk({wifs[1]})))', hash_script, [0, 1], [True, False]))
+        spent = 0
+        partial_rejections = 0
+        for name, expression, script, local_indices, branches in cases:
+            wallet_name = f'taproot_script_spend_{name}'
+            node.createwallet(wallet_name, blank=True)
+            wallet = node.get_wallet_rpc(wallet_name)
+            self.import_descriptor(wallet, f'tr({H_POINT},{expression})')
+            tree = taproot_construct(bytes.fromhex(H_POINT), [('leaf', script)])
+            address = program_to_witness(1, tree.output_pubkey)
+            leaf = tree.leaves['leaf']
+            control = bytes([leaf.version | tree.negflag]) + tree.internal_pubkey + leaf.merklebranch
+            for branch in branches:
+                txid = funding.sendtoaddress(address, 1)
+                self.generatetoaddress(node, 1, mining)
+                previous = tx_from_hex(funding.gettransaction(txid)['hex'])
+                index = next(i for i, output in enumerate(previous.vout) if output.scriptPubKey == tree.scriptPubKey)
+                exported = self.export_unchanged(wallet, address)
+                expected = sorted([{'pubkey': pubkeys[i].hex(), 'private_key_hex': secrets[i].hex(),
+                                    'compressed': True, 'roles': ['taproot_script']} for i in local_indices],
+                                  key=lambda record: record['pubkey'])
+                assert_equal(exported, {'keys': expected})
+                self.private_material.update(record['private_key_hex'] for record in exported['keys'])
+                assert_raises_rpc_error(-5, 'No local Taproot output private key', wallet.exportaddresskey, address, 'taproot_output')
+                tx = CTransaction()
+                tx.nLockTime = 1
+                tx.vin = [CTxIn(COutPoint(int(txid, 16), index), nSequence=0xfffffffd)]
+                destination = funding.getnewaddress('', 'legacy')
+                tx.vout = [CTxOut(COIN - 10000, bytes.fromhex(node.validateaddress(destination)['scriptPubKey']))]
+                sighash = TaprootSignatureHash(tx, [previous.vout[index]], SIGHASH_DEFAULT, scriptpath=True,
+                                              leaf_script=script, codeseparator_pos=0xffffffff)
+                signatures = {}
+                for record in exported['keys']:
+                    scalar = bytes.fromhex(record['private_key_hex'])
+                    public = public_key(scalar)[1:]
+                    signature = sign_schnorr(scalar, sighash)
+                    assert verify_schnorr(public, signature, sighash), 'exported leaf signature does not verify'
+                    signatures[public] = signature
+
+                def set_witness():
+                    if isinstance(branch, list):
+                        stack = [signatures.get(xonly[i], b'') for i in reversed(branch)]
+                    elif branch is None:
+                        stack = [signatures[xonly[0]]]
+                    elif branch:
+                        stack = [signatures[xonly[0]], b'\x01']
+                    else:
+                        stack = [signatures[xonly[1]]] + ([preimage] if name == 'miniscript_hash' else []) + [b'']
+                    tx.wit.vtxinwit = [CTxInWitness()]
+                    tx.wit.vtxinwit[0].scriptWitness.stack = stack + [script, control]
+
+                set_witness()
+                if isinstance(branch, list):
+                    partial = node.testmempoolaccept([tx.serialize().hex()])[0]
+                    assert not partial['allowed'] and 'script' in partial['reject-reason'], 'partial local set unexpectedly satisfied threshold'
+                    partial_rejections += 1
+                    signature = sign_schnorr(secrets[1], sighash)
+                    assert verify_schnorr(xonly[1], signature, sighash), 'synthetic cosigner signature does not verify'
+                    signatures[xonly[1]] = signature
+                    set_witness()
+                assert node.testmempoolaccept([tx.serialize().hex()])[0]['allowed'], 'exported leaf keys do not spend the committed script'
+                node.sendrawtransaction(tx.serialize().hex())
+                self.generatetoaddress(node, 1, mining)
+                spent += 1
+        assert_equal(spent, 7)
+        assert_equal(partial_rejections, 2)
+        self.log.info(f'Verified {spent} exported-scalar Taproot script-path spends and {partial_rejections} incomplete local threshold rejections')
+
     def run_test(self):
         node = self.nodes[0]
         self.private_material = set()
@@ -410,6 +857,10 @@ class ExportAddressKeyTest(BitcoinTestFramework):
         self.check_script_constructions(node.get_wallet_rpc('scripts'), root, root_secret, root_chain)
         self.check_cross_manager_resolution(root, root_secret, root_chain)
         self.check_spending_and_state(root_secret, root_chain)
+        self.check_taproot_roles()
+        self.check_musig_participants(root, root_secret, root_chain)
+        self.check_taproot_output_keys()
+        self.check_taproot_script_spending()
         self.log.info('Check optional mode, named arguments, JSON-RPC versions and CLI strings')
         expected = wallet.exportaddresskey(addresses[0])
         for result in [rpc_wallet.exportaddresskey(addresses[0], None),
@@ -476,9 +927,10 @@ class ExportAddressKeyTest(BitcoinTestFramework):
         taproot, _ = create_deterministic_address_bcrt1_p2tr_op_true()
         for address in [key_to_p2sh_p2wpkh(unknown_pubkey), script_to_p2wsh(CScript([OP_TRUE]))]:
             assert_raises_rpc_error(-5, 'lacks the spending/script information', wallet.exportaddresskey, address)
-        for address in [taproot, program_to_witness(2, bytes(32))]:
-            assert_raises_rpc_error(-5, 'spending construction is not supported', wallet.exportaddresskey, address)
-        assert_raises_rpc_error(-5, 'spending construction is not supported', wallet.exportaddresskey, taproot, 'taproot_output')
+        assert_raises_rpc_error(-5, 'lacks the spending/script information', wallet.exportaddresskey, taproot)
+        assert_raises_rpc_error(-5, 'spending construction is not supported', wallet.exportaddresskey, program_to_witness(1, bytes(32)))
+        assert_raises_rpc_error(-5, 'spending construction is not supported', wallet.exportaddresskey, program_to_witness(2, bytes(32)))
+        assert_raises_rpc_error(-5, 'lacks the spending/script information', wallet.exportaddresskey, taproot, 'taproot_output')
         assert_raises_rpc_error(-8, 'requires a Taproot address', wallet.exportaddresskey, addresses[0], 'taproot_output')
         for mode in ['', 'Wallet', 'output', 'null']:
             assert_raises_rpc_error(-8, "key_type must be 'wallet' or 'taproot_output'", wallet.exportaddresskey, addresses[0], mode)
