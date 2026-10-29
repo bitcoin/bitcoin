@@ -205,6 +205,13 @@ public:
 
 struct CMutableTransaction;
 
+/** nVersion and nType share one 32-bit wire field. nVersion fills the low half as raw bits:
+ *  sign-extending a negative nVersion would overwrite nType. */
+constexpr int32_t PackVersionAndType(int16_t nVersion, uint16_t nType)
+{
+    return static_cast<int32_t>(static_cast<uint16_t>(nVersion) | (static_cast<uint32_t>(nType) << 16));
+}
+
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
  */
@@ -241,7 +248,7 @@ public:
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
-        int32_t n32bitVersion = this->nVersion | (this->nType << 16);
+        int32_t n32bitVersion = PackVersionAndType(this->nVersion, this->nType);
         s << n32bitVersion;
         s << vin;
         s << vout;
@@ -320,7 +327,7 @@ struct CMutableTransaction
     SERIALIZE_METHODS(CMutableTransaction, obj)
     {
         int32_t n32bitVersion;
-        SER_WRITE(obj, n32bitVersion = obj.nVersion | (obj.nType << 16));
+        SER_WRITE(obj, n32bitVersion = PackVersionAndType(obj.nVersion, obj.nType));
         READWRITE(n32bitVersion);
         SER_READ(obj, obj.nVersion = (int16_t) (n32bitVersion & 0xffff));
         SER_READ(obj, obj.nType = (uint16_t) ((n32bitVersion >> 16) & 0xffff));
