@@ -92,8 +92,19 @@ Wtxid CTransaction::ComputeWitnessHash() const
     return Wtxid::FromUint256((HashWriter{} << TX_WITH_WITNESS(*this)).GetHash());
 }
 
-CTransaction::CTransaction(const CMutableTransaction& tx) : vin(tx.vin), vout(tx.vout), version{tx.version}, nLockTime{tx.nLockTime}, m_has_witness{ComputeHasWitness()}, hash{ComputeHash()}, m_witness_hash{ComputeWitnessHash()} {}
-CTransaction::CTransaction(CMutableTransaction&& tx) : vin(std::move(tx.vin)), vout(std::move(tx.vout)), version{tx.version}, nLockTime{tx.nLockTime}, m_has_witness{ComputeHasWitness()}, hash{ComputeHash()}, m_witness_hash{ComputeWitnessHash()} {}
+CTransaction::CTransaction(private_ctor, std::vector<CTxIn> in, std::vector<CTxOut> out, uint32_t ver, uint32_t lt)
+    : vin(std::move(in)),
+      vout(std::move(out)),
+      version{ver},
+      nLockTime{lt},
+      m_has_witness{ComputeHasWitness()},
+      hash{ComputeHash()},
+      m_witness_hash{ComputeWitnessHash()}
+{
+}
+
+CTransaction::CTransaction(const CMutableTransaction& tx) : CTransaction{private_ctor{}, tx.vin, tx.vout, tx.version, tx.nLockTime} {}
+CTransaction::CTransaction(CMutableTransaction&& tx)  : CTransaction{private_ctor{}, std::move(tx.vin), std::move(tx.vout), tx.version, tx.nLockTime} {}
 
 CAmount CTransaction::GetValueOut() const
 {
