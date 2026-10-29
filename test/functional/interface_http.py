@@ -8,6 +8,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.netutil import NETWORK_ERRORS
 from test_framework.util import (
     assert_equal,
+    assert_greater_than_or_equal,
     assert_raises,
     mine_large_block,
     str_to_b64str,
@@ -338,6 +339,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         # waitforblockheight was responded to first, and then getblockcount
         # which includes the block added after the request was made
         chunks = res.split(b'"result":')
+        assert_greater_than_or_equal(len(chunks), 2)
         assert chunks[1].startswith(b'{"hash":')
         if with_invalid_second_request:
             # The response to the in-flight first request is sent before the
@@ -345,6 +347,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
             # request could have been rejected much earlier.
             assert res.index(b"HTTP/1.1 200") < res.index(b"HTTP/1.1 400")
         else:
+            assert_greater_than_or_equal(len(chunks), 3)
             assert chunks[2].startswith(bytes(f'{tip_height + 1}', 'utf8'))
 
 
