@@ -275,9 +275,16 @@ BOOST_AUTO_TEST_CASE(sig_share_batch_verifier_judges_each_sender_by_its_own_shar
     sk_forger.MakeNewKey();
     const CBLSSignature forged_sig{sk_forger.Sign(sig_share.GetSignHash(), legacy_scheme)};
 
+    // Two wrong shares whose errors cancel out: (valid + forged) + (valid - forged) == 2 * valid
+    CBLSSignature plus_error_sig{valid_sig};
+    plus_error_sig.AggregateInsecure(forged_sig);
+    CBLSSignature minus_error_sig{valid_sig};
+    minus_error_sig.SubInsecure(forged_sig);
+
     constexpr NodeId honest{1};
     constexpr NodeId attacker{2};
     constexpr NodeId other_honest{3};
+    constexpr NodeId other_attacker{4};
 
     struct Push {
         NodeId from;
@@ -290,6 +297,8 @@ BOOST_AUTO_TEST_CASE(sig_share_batch_verifier_judges_each_sender_by_its_own_shar
         {{{attacker, forged_sig}, {honest, valid_sig}}, {attacker}},
         // The same valid share relayed by two peers is not misbehavior.
         {{{honest, valid_sig}, {other_honest, valid_sig}}, {}},
+        // Complementary errors from two peers must not pass as one valid aggregate.
+        {{{attacker, plus_error_sig}, {other_attacker, minus_error_sig}}, {attacker, other_attacker}},
     };
 
     for (const auto& [pushes, expected_bad_sources] : cases) {

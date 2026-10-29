@@ -292,6 +292,30 @@ static void AddMessage(std::vector<Message>& vec, uint32_t sourceId, uint32_t ms
     vec.emplace_back(m);
 }
 
+// Adds two wrong signatures whose errors cancel out when both are aggregated unweighted
+static void AddCancellingMessages(std::vector<Message>& vec, uint32_t sourceId1, uint32_t msgId1, uint8_t msgHash1,
+                                  uint32_t sourceId2, uint32_t msgId2, uint8_t msgHash2, bool sameKey)
+{
+    const bool legacy_scheme = bls::bls_legacy_scheme.load();
+    AddMessage(vec, sourceId1, msgId1, msgHash1, true);
+    AddMessage(vec, sourceId2, msgId2, msgHash2, true);
+    auto& m1 = vec[vec.size() - 2];
+    auto& m2 = vec[vec.size() - 1];
+    if (sameKey) {
+        m2.sk = m1.sk;
+        m2.pk = m1.pk;
+        m2.sig = m2.sk.Sign(m2.msgHash, legacy_scheme);
+    }
+
+    CBLSSecretKey sk_error;
+    sk_error.MakeNewKey();
+    const CBLSSignature error{sk_error.Sign(uint256::ONE, legacy_scheme)};
+    m1.sig.AggregateInsecure(error);
+    m2.sig.SubInsecure(error);
+    m1.valid = false;
+    m2.valid = false;
+}
+
 static void Verify(std::vector<Message>& vec, bool secureVerification, bool perMessageFallback)
 {
     CBLSBatchVerifier<uint32_t, uint32_t> batchVerifier(secureVerification, perMessageFallback);
@@ -368,6 +392,18 @@ void FuncBatchVerifier(const bool legacy_scheme)
 
     // last message invalid from one source
     AddMessage(msgs, 1, 7, 1, false);
+    Verify(msgs);
+
+    msgs.clear();
+    // errors cancelling out between distinct messages from one source
+    AddMessage(msgs, 1, 1, 1, true);
+    AddCancellingMessages(msgs, 2, 2, 2, 2, 3, 3, /*sameKey=*/false);
+    Verify(msgs);
+
+    // errors cancelling out between distinct sources signing the same message with the same key
+    msgs.clear();
+    AddMessage(msgs, 1, 1, 1, true);
+    AddCancellingMessages(msgs, 2, 2, 2, 3, 3, 2, /*sameKey=*/true);
     Verify(msgs);
 }
 

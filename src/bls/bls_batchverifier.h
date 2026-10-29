@@ -6,9 +6,24 @@
 #define DASH_CRYPTO_BLS_BATCHVERIFIER_H
 
 #include <bls/bls.h>
+#include <random.h>
 
+#include <algorithm>
+#include <array>
 #include <map>
 #include <vector>
+
+//! A secret random nonzero 128-bit scalar, well below the group order. Weighting each signature and its public key by
+//! one makes errors in several signatures unable to cancel out in an aggregate.
+inline CBLSSecretKey MakeBatchVerificationWeight(FastRandomContext& rng)
+{
+    std::array<uint8_t, BLS_CURVE_SECKEY_SIZE> bytes{};
+    do {
+        const uint256 rand{rng.rand256()};
+        std::copy(rand.begin(), rand.begin() + 16, bytes.end() - 16);
+    } while (std::all_of(bytes.begin(), bytes.end(), [](uint8_t b) { return b == 0; }));
+    return CBLSSecretKey{bytes};
+}
 
 template<typename SourceId, typename MessageId>
 class CBLSBatchVerifier
@@ -19,6 +34,9 @@ private:
         uint256 msgHash;
         CBLSSignature sig;
         CBLSPublicKey pubKey;
+        //! sig and pubKey multiplied by the same MakeBatchVerificationWeight()
+        CBLSSignature weightedSig;
+        CBLSPublicKey weightedPubKey;
     };
 
     using MessageMap = std::map<MessageId, Message>;
@@ -31,6 +49,8 @@ private:
 
     MessageMap messages;
     MessagesBySourceMap messagesBySource;
+
+    FastRandomContext rng;
 
 public:
     std::set<SourceId> badSources;
@@ -48,7 +68,12 @@ public:
     {
         assert(sig.IsValid() && pubKey.IsValid());
 
-        auto it = messages.emplace(msgId, Message{msgId, msgHash, sig, pubKey}).first;
+        auto [it, inserted] = messages.emplace(msgId, Message{msgId, msgHash, sig, pubKey, sig, pubKey});
+        if (inserted) {
+            const CBLSSecretKey weight{MakeBatchVerificationWeight(rng)};
+            it->second.weightedSig.MulInsecure(weight);
+            it->second.weightedPubKey.MulInsecure(weight);
+        }
         messagesBySource[sourceId].emplace_back(it);
 
         if (subBatchSize != 0 && messages.size() >= subBatchSize) {
@@ -155,8 +180,8 @@ private:
                     continue;
                 }
 
-                sigsToAggregate.push_back(msg.sig);
-                pubKeysToAggregate.push_back(msg.pubKey);
+                sigsToAggregate.push_back(msg.weightedSig);
+                pubKeysToAggregate.push_back(msg.weightedPubKey);
             }
 
             CBLSPublicKey aggPubKey = CBLSPublicKey::AggregateInsecure(pubKeysToAggregate);
@@ -210,8 +235,8 @@ private:
 
             if (dups.emplace(msg.msgId).second) {
                 msgHashes.emplace_back(msgHash);
-                pubKeys.emplace_back(msg.pubKey);
-                sigsToAggregate.push_back(msg.sig);
+                pubKeys.emplace_back(msg.weightedPubKey);
+                sigsToAggregate.push_back(msg.weightedSig);
             }
 
             messageIts.pop_back();
