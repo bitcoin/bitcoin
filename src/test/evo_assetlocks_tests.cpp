@@ -7,7 +7,11 @@
 #include <consensus/amount.h>
 #include <consensus/tx_check.h>
 #include <consensus/validation.h>
+#include <deploymentstatus.h>
 #include <evo/assetlocktx.h>
+#include <evo/chainhelper.h>
+#include <evo/creditpool.h>
+#include <evo/evodb.h>
 #include <evo/specialtx.h>
 #include <llmq/context.h>
 #include <policy/settings.h>
@@ -404,6 +408,43 @@ BOOST_FIXTURE_TEST_CASE(evo_assetunlock, TestChain100Setup)
         BOOST_CHECK(tx_state.GetRejectReason() == "bad-assetunlocktx-too-many-outs");
     }
 
+}
+
+BOOST_FIXTURE_TEST_CASE(credit_pool_snapshot_persisted_after_transactionless_construction, TestChain100Setup)
+{
+    // getassetunlockstatuses, block assembly and mempool acceptance ask for a credit pool outside any
+    // block-scoped EvoDB transaction. At a snapshot height that constructs and caches the pool, and
+    // must not write its disk snapshot: the write would sit uncommitted in the current EvoDB
+    // transaction and abort the node on the IsClean() assertion at the next root commit. The next
+    // block connection hits the cached pool, so it must persist the snapshot then, or the snapshot
+    // is lost and every restart reconstructs the pool from an older one.
+    constexpr int SNAPSHOT_HEIGHT{576}; // CCreditPoolManager::DISK_SNAPSHOT_PERIOD
+    const CScript coinbase_pk = GetScriptForRawPubKey(coinbaseKey.GetPubKey());
+    const auto tip = [&]() { return WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()); };
+    while (tip()->nHeight < SNAPSHOT_HEIGHT) {
+        CreateAndProcessBlock({}, coinbase_pk);
+    }
+    const CBlockIndex* snapshot_index = tip();
+    BOOST_REQUIRE_EQUAL(snapshot_index->nHeight, SNAPSHOT_HEIGHT);
+    BOOST_REQUIRE(WITH_LOCK(cs_main, return DeploymentActiveAt(*snapshot_index, m_node.chainman->GetConsensus(),
+                                                               Consensus::DEPLOYMENT_V20)));
+    const auto snapshot_key = std::make_pair(std::string{"cpm_S"}, snapshot_index->GetBlockHash());
+    BOOST_REQUIRE(!m_node.evodb->Exists(snapshot_key));
+
+    // A transaction-less lookup, as getassetunlockstatuses does, constructs the pool without
+    // leaving an uncommitted write behind.
+    BOOST_REQUIRE(!m_node.evodb->HasActiveTransaction());
+    const CCreditPool pool = m_node.chain_helper->GetCreditPool(snapshot_index);
+    BOOST_CHECK(!m_node.evodb->Exists(snapshot_key));
+    BOOST_CHECK(WITH_LOCK(m_node.evodb->cs, return m_node.evodb->GetCurTransaction().IsClean()));
+
+    // Connecting the next block persists the snapshot from the cached pool.
+    CreateAndProcessBlock({}, coinbase_pk);
+    CCreditPool snapshot;
+    BOOST_REQUIRE(m_node.evodb->Read(snapshot_key, snapshot));
+    BOOST_CHECK_EQUAL(snapshot.locked, pool.locked);
+    BOOST_CHECK_EQUAL(snapshot.currentLimit, pool.currentLimit);
+    BOOST_CHECK(WITH_LOCK(m_node.evodb->cs, return m_node.evodb->GetCurTransaction().IsClean()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

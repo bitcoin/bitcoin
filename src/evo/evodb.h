@@ -8,6 +8,8 @@
 #include <dbwrapper.h>
 #include <sync.h>
 
+#include <thread>
+
 class uint256;
 namespace util {
 struct DbWrapperParams;
@@ -38,7 +40,7 @@ public:
 class CEvoDB
 {
 public:
-    Mutex cs;
+    mutable Mutex cs;
 private:
     std::unique_ptr<CDBWrapper> db;
 
@@ -48,6 +50,10 @@ private:
     CDBBatch rootBatch;
     RootTransaction rootDBTransaction;
     CurTransaction curDBTransaction;
+
+    //! Open CEvoDBScopedCommitter scopes, and the thread that opened the outermost one
+    int m_transaction_depth GUARDED_BY(cs){0};
+    std::thread::id m_transaction_thread GUARDED_BY(cs);
 
 public:
     CEvoDB() = delete;
@@ -59,7 +65,20 @@ public:
     std::unique_ptr<CEvoDBScopedCommitter> BeginTransaction() EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
+        if (m_transaction_depth++ == 0) {
+            m_transaction_thread = std::this_thread::get_id();
+        }
         return std::make_unique<CEvoDBScopedCommitter>(*this);
+    }
+
+    /** Whether a block-scoped transaction is open on this thread. Writes performed outside one
+     *  are never committed and trip the clean-transaction assertion at the next root commit, so
+     *  callers reachable from transaction-less contexts (mempool acceptance, mining, RPC) must
+     *  skip optional persistence when this is false. */
+    bool HasActiveTransaction() const EXCLUSIVE_LOCKS_REQUIRED(!cs)
+    {
+        LOCK(cs);
+        return m_transaction_depth > 0 && m_transaction_thread == std::this_thread::get_id();
     }
 
     CurTransaction& GetCurTransaction() EXCLUSIVE_LOCKS_REQUIRED(cs)
