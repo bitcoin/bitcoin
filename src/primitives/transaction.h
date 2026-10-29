@@ -311,6 +311,8 @@ private:
     bool ComputeHasWitness() const;
 
 public:
+    CTransaction(std::vector<CTxIn> inputs, std::vector<CTxOut> outputs, uint32_t version = CURRENT_VERSION, uint32_t locktime = 0);
+
     /** Convert a CMutableTransaction into a CTransaction. */
     explicit CTransaction(const CMutableTransaction& tx);
     explicit CTransaction(CMutableTransaction&& tx);
