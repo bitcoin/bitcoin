@@ -1063,11 +1063,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
 
                     bool fSuccess = false;
                     if (vchSig.size()) {
-                        valtype vchHash(32);
-                        CSHA256()
-                            .Write(vchMessage.data(), vchMessage.size())
-                            .Finalize(vchHash.data());
-                        fSuccess = CPubKey(vchPubKey).Verify(uint256(vchHash), vchSig);
+                        fSuccess = checker.CheckDataSig(vchSig, vchMessage, vchPubKey);
                     }
 
                     if (!fSuccess && (flags & SCRIPT_VERIFY_NULLFAIL) && vchSig.size()) {
@@ -1533,10 +1529,35 @@ uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn
 template uint256 SignatureHash<CMutableTransaction>(const CScript& scriptCode, const CMutableTransaction& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache);
 template uint256 SignatureHash<CTransaction>(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache);
 
+static uint256 DataSignatureHash(const std::vector<unsigned char>& vchMessage)
+{
+    uint256 hash;
+    CSHA256().Write(vchMessage.data(), vchMessage.size()).Finalize(hash.begin());
+    return hash;
+}
+
+bool BaseSignatureChecker::CheckDataSig(const std::vector<unsigned char>& vchSig, const std::vector<unsigned char>& vchMessage,
+                                        const std::vector<unsigned char>& vchPubKey) const
+{
+    return CPubKey(vchPubKey).Verify(DataSignatureHash(vchMessage), vchSig);
+}
+
 template <class T>
 bool GenericTransactionSignatureChecker<T>::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const
 {
     return pubkey.Verify(sighash, vchSig);
+}
+
+template <class T>
+bool GenericTransactionSignatureChecker<T>::CheckDataSig(const std::vector<unsigned char>& vchSig,
+                                                         const std::vector<unsigned char>& vchMessage,
+                                                         const std::vector<unsigned char>& vchPubKey) const
+{
+    // An invalid key serializes to no bytes in the signature cache entry, so it must not reach the cache
+    const CPubKey pubkey(vchPubKey);
+    if (!pubkey.IsValid()) return false;
+    // Through the virtual VerifySignature, so CachingTransactionSignatureChecker caches the result
+    return VerifySignature(vchSig, pubkey, DataSignatureHash(vchMessage));
 }
 
 template <class T>

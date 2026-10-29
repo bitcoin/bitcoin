@@ -69,6 +69,11 @@ class PlatformBanMessagesTest(DashTestFramework):
         wait_until_helper(lambda: p2p_node2.message_count["platformban"] > 0, timeout=10, lock=p2p_lock)
         p2p_node2.message_count["platformban"] = 0
 
+        self.log.info("An already verified Platform ban skips handler work")
+        ban_inv_hash = hash256(msg.serialize()[:-96])[::-1].hex()
+        with self.mninfo[2].get_node(self).assert_debug_log([], unexpected_msgs=[f"PLATFORMBAN -- hash: {ban_inv_hash}"]):
+            p2p_node2.send_and_ping(msg)
+
         assert not self.check_banned(self.mninfo[0])
 
         mninfos_valid = self.mninfo.copy()[1:]

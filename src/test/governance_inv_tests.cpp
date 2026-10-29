@@ -2,10 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <bls/bls.h>
 #include <common/bloom.h>
+#include <evo/deterministicmns.h>
+#include <evo/dmnstate.h>
+#include <evo/netinfo.h>
+#include <evo/providertx.h>
 #include <governance/governance.h>
 #include <governance/net_governance.h>
 #include <governance/object.h>
+#include <key.h>
 #include <masternode/meta.h>
 #include <masternode/sync.h>
 #include <net.h>
@@ -166,6 +172,13 @@ void ProcessGovernanceVote(NetGovernance& net_gov, CNode& peer, const CGovernanc
     CDataStream vote_stream{SER_NETWORK, PROTOCOL_VERSION};
     vote_stream << vote;
     net_gov.ProcessMessage(peer, NetMsgType::MNGOVERNANCEOBJECTVOTE, vote_stream);
+}
+
+void AssertMisbehaviorScore(PeerManager& peerman, const CNode& peer, int expected)
+{
+    CNodeStateStats stats;
+    BOOST_REQUIRE(peerman.GetNodeStateStats(peer.GetId(), stats));
+    BOOST_CHECK_EQUAL(stats.m_misbehavior_score, expected);
 }
 } // namespace
 
@@ -415,8 +428,14 @@ BOOST_AUTO_TEST_CASE(governance_votes_require_peer_announcement_or_request)
     m_node.peerman->InitializeNode(*second_announcing_peer, NODE_NETWORK);
     m_node.peerman->InitializeNode(*unsolicited_peer, NODE_NETWORK);
 
-    auto& connman = static_cast<ConnmanTestMsg&>(*m_node.connman);
     CNodeStateStats stats;
+
+    // The vote below carries an unknown masternode outpoint, so CGovernanceManager::ProcessVote
+    // rejects it with a penalty of 20. Only a peer that passes the announce-then-request gate
+    // reaches ProcessVote at all, which makes the score the observable for the gate itself.
+    // Penalties are applied only once fully synced.
+    m_node.mn_sync->SwitchToNextAsset();
+    BOOST_REQUIRE(m_node.mn_sync->IsSynced());
 
     const CGovernanceVote vote{MakeGovernanceVote(uint256S("31"))};
     const CInv vote_inv{MSG_GOVERNANCE_OBJECT_VOTE, vote.GetHash()};
@@ -429,22 +448,17 @@ BOOST_AUTO_TEST_CASE(governance_votes_require_peer_announcement_or_request)
     ProcessInv(*m_node.peerman, *announcing_peer, vote_inv);
     ProcessInv(*m_node.peerman, *second_announcing_peer, vote_inv);
 
-    connman.FlushSendBuffer(*announcing_peer);
     ProcessGovernanceVote(net_gov, *announcing_peer, vote);
-    BOOST_CHECK_EQUAL(CountQueuedMessages(*announcing_peer, NetMsgType::MNGOVERNANCESYNC), 1U);
-    BOOST_REQUIRE(m_node.peerman->GetNodeStateStats(announcing_peer->GetId(), stats));
-    BOOST_CHECK_EQUAL(stats.m_misbehavior_score, 0);
+    BOOST_CHECK(
+        !WITH_LOCK(::cs_main, return m_node.peerman->PeerConsumeObjectRequest(announcing_peer->GetId(), vote_inv)));
+    AssertMisbehaviorScore(*m_node.peerman, *announcing_peer, 20);
 
-    connman.FlushSendBuffer(*second_announcing_peer);
     ProcessGovernanceVote(net_gov, *second_announcing_peer, vote);
-    // Second announcer: the gate accepts (it independently announced the vote) and consumes
-    // its per-peer request entry. A rejected vote would return before the gate consumes and
-    // leave the entry intact, so this proves the accept path independently of the (deduped)
-    // orphan-request side effect.
+    // Consumption is per-peer: the second announcer's own entry is accepted and consumed,
+    // independent of the first peer's already-consumed entry.
     BOOST_CHECK(!WITH_LOCK(::cs_main,
                            return m_node.peerman->PeerConsumeObjectRequest(second_announcing_peer->GetId(), vote_inv)));
-    BOOST_REQUIRE(m_node.peerman->GetNodeStateStats(second_announcing_peer->GetId(), stats));
-    BOOST_CHECK_EQUAL(stats.m_misbehavior_score, 0);
+    AssertMisbehaviorScore(*m_node.peerman, *second_announcing_peer, 20);
 
     m_node.peerman->FinalizeNode(*announcing_peer);
     m_node.peerman->FinalizeNode(*second_announcing_peer);
@@ -467,7 +481,6 @@ BOOST_AUTO_TEST_CASE(governance_vote_authorization_survives_unsynced_drop)
 
     auto peer{MakeGovernanceInvPeer(/*id=*/31)};
     m_node.peerman->InitializeNode(*peer, NODE_NETWORK);
-    auto& connman = static_cast<ConnmanTestMsg&>(*m_node.connman);
 
     const CGovernanceVote vote{MakeGovernanceVote(uint256S("41"))};
     const CInv vote_inv{MSG_GOVERNANCE_OBJECT_VOTE, vote.GetHash()};
@@ -479,21 +492,128 @@ BOOST_AUTO_TEST_CASE(governance_vote_authorization_survives_unsynced_drop)
     // Not synced: delivering the vote is dropped at the sync gate and must NOT consume the request.
     m_node.mn_sync->Reset(/*fForce=*/true, /*fNotifyReset=*/false);
     BOOST_REQUIRE(!m_node.mn_sync->IsBlockchainSynced());
-    connman.FlushSendBuffer(*peer);
     ProcessGovernanceVote(net_gov, *peer, vote);
-    BOOST_CHECK_EQUAL(CountQueuedMessages(*peer, NetMsgType::MNGOVERNANCESYNC), 0U);
+    AssertMisbehaviorScore(*m_node.peerman, *peer, 0);
 
-    // Back in sync, the retransmit is still authorized: ProcessVote runs and (orphan parent)
-    // requests the missing object. Had the unsynced drop consumed the request, the gate would now
-    // reject the vote as unrequested and send no MNGOVERNANCESYNC.
-    m_node.mn_sync->SwitchToNextAsset();
-    BOOST_REQUIRE(m_node.mn_sync->IsBlockchainSynced());
-    connman.FlushSendBuffer(*peer);
+    // Back in sync, the retransmit is still authorized and reaches ProcessVote, which rejects the
+    // unknown masternode outpoint with a penalty of 20. Had the unsynced drop consumed the request,
+    // the gate would now reject the vote as unrequested and return before ProcessVote, leaving the
+    // score at 0.
+    while (!m_node.mn_sync->IsSynced()) {
+        m_node.mn_sync->SwitchToNextAsset();
+    }
     ProcessGovernanceVote(net_gov, *peer, vote);
-    BOOST_CHECK_EQUAL(CountQueuedMessages(*peer, NetMsgType::MNGOVERNANCESYNC), 1U);
+    AssertMisbehaviorScore(*m_node.peerman, *peer, 20);
 
     m_node.peerman->FinalizeNode(*peer);
     chainstate.ResetIbd();
+}
+
+// A vote whose parent object is unknown must prove masternode authorship before it is cached.
+BOOST_AUTO_TEST_CASE(orphan_votes_require_a_valid_masternode_signature)
+{
+    LOCK(NetEventsInterface::g_msgproc_mutex);
+
+    TestChainState& chainstate =
+        *static_cast<TestChainState*>(&m_node.chainman->ActiveChainstate());
+    chainstate.JumpOutOfIbd();
+
+    // Penalties are applied only once fully synced.
+    m_node.mn_sync->SwitchToNextAsset();
+    BOOST_REQUIRE(m_node.mn_sync->IsSynced());
+
+    NetGovernance net_gov(m_node.peerman.get(), *m_node.govman, *m_node.mn_sync,
+                          *m_node.netfulfilledman, *m_node.connman);
+
+    auto peer{MakeGovernanceInvPeer(/*id=*/41)};
+    m_node.peerman->InitializeNode(*peer, NODE_NETWORK);
+    auto& connman = static_cast<ConnmanTestMsg&>(*m_node.connman);
+
+    // The tip masternode list is empty in this setup, so no vote can name a known collateral.
+    const CGovernanceVote vote{MakeGovernanceVote(uint256S("51"))};
+    const CInv vote_inv{MSG_GOVERNANCE_OBJECT_VOTE, vote.GetHash()};
+
+    ProcessInv(*m_node.peerman, *peer, vote_inv);
+    connman.FlushSendBuffer(*peer);
+    ProcessGovernanceVote(net_gov, *peer, vote);
+
+    BOOST_CHECK(m_node.govman->GetOrphanVoteObjectHashes().empty());
+    BOOST_CHECK_EQUAL(CountQueuedMessages(*peer, NetMsgType::MNGOVERNANCESYNC), 0U);
+    AssertMisbehaviorScore(*m_node.peerman, *peer, 20);
+
+    m_node.peerman->FinalizeNode(*peer);
+    chainstate.ResetIbd();
+}
+
+// The same unauthenticated vote must cost the sender the same whether or not its parent object
+// happens to have arrived first.
+BOOST_AUTO_TEST_CASE(invalid_vote_is_scored_alike_with_and_without_a_parent_object)
+{
+    LOCK(NetEventsInterface::g_msgproc_mutex);
+
+    TestChainState& chainstate =
+        *static_cast<TestChainState*>(&m_node.chainman->ActiveChainstate());
+    chainstate.JumpOutOfIbd();
+
+    m_node.mn_sync->SwitchToNextAsset();
+    BOOST_REQUIRE(m_node.mn_sync->IsSynced());
+
+    NetGovernance net_gov(m_node.peerman.get(), *m_node.govman, *m_node.mn_sync,
+                          *m_node.netfulfilledman, *m_node.connman);
+
+    auto orphan_peer{MakeGovernanceInvPeer(/*id=*/51)};
+    auto known_parent_peer{MakeGovernanceInvPeer(/*id=*/52)};
+    m_node.peerman->InitializeNode(*orphan_peer, NODE_NETWORK);
+    m_node.peerman->InitializeNode(*known_parent_peer, NODE_NETWORK);
+
+    const CGovernanceObject govobj{MakeGovernanceObject(GetTime<std::chrono::seconds>().count(), uint256S("61"))};
+    const CGovernanceVote orphan_vote{MakeGovernanceVote(uint256S("62"))};
+    const CGovernanceVote known_parent_vote{MakeGovernanceVote(govobj.GetHash())};
+
+    ProcessInv(*m_node.peerman, *orphan_peer, CInv{MSG_GOVERNANCE_OBJECT_VOTE, orphan_vote.GetHash()});
+    ProcessGovernanceVote(net_gov, *orphan_peer, orphan_vote);
+    AssertMisbehaviorScore(*m_node.peerman, *orphan_peer, 20);
+
+    m_node.govman->AddGovernanceObjectForTesting(govobj);
+    ProcessInv(*m_node.peerman, *known_parent_peer, CInv{MSG_GOVERNANCE_OBJECT_VOTE, known_parent_vote.GetHash()});
+    ProcessGovernanceVote(net_gov, *known_parent_peer, known_parent_vote);
+    AssertMisbehaviorScore(*m_node.peerman, *known_parent_peer, 20);
+
+    m_node.peerman->FinalizeNode(*orphan_peer);
+    m_node.peerman->FinalizeNode(*known_parent_peer);
+    chainstate.ResetIbd();
+}
+
+// A vote that fails validation must not leave a vote record behind: the masternode's own trigger
+// voting treats any record for its collateral as "already voted".
+BOOST_AUTO_TEST_CASE(rejected_vote_leaves_no_vote_record)
+{
+    CGovernanceObject govobj{MakeGovernanceObject(GetTime<std::chrono::seconds>().count(), uint256S("71"))};
+    // MakeGovernanceVote names this collateral and carries an all-zero signature.
+    const COutPoint collateral{uint256S("11"), 1};
+
+    CKey voting_key;
+    voting_key.MakeNewKey(true);
+    CBLSSecretKey operator_key;
+    operator_key.MakeNewKey();
+    auto state = std::make_shared<CDeterministicMNState>();
+    state->keyIDOwner = voting_key.GetPubKey().GetID();
+    state->keyIDVoting = voting_key.GetPubKey().GetID();
+    state->pubKeyOperator.Set(operator_key.GetPublicKey(), /*specificLegacyScheme=*/false);
+    state->netInfo = NetInfoInterface::MakeNetInfo(ProTxVersion::BasicBLS);
+    auto dmn = std::make_shared<CDeterministicMN>(/*_internalId=*/1, MnType::Regular);
+    dmn->proTxHash = uint256S("72");
+    dmn->collateralOutpoint = collateral;
+    dmn->pdmnState = state;
+    CDeterministicMNList mn_list;
+    mn_list.AddMN(dmn);
+
+    CGovernanceException exception;
+    BOOST_CHECK(!govobj.ProcessVote(*m_node.mn_metaman, *m_node.govman, mn_list, MakeGovernanceVote(govobj.GetHash()),
+                                    exception));
+    BOOST_CHECK_EQUAL(exception.GetNodePenalty(), 20);
+    vote_rec_t vote_record;
+    BOOST_CHECK(!govobj.GetCurrentMNVotes(collateral, vote_record));
 }
 
 

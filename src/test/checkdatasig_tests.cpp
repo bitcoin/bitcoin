@@ -3,7 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <policy/policy.h>
+#include <primitives/transaction.h>
 #include <script/interpreter.h>
+#include <script/sigcache.h>
 
 #include <test/lcg.h>
 #include <test/util/setup_common.h>
@@ -11,6 +13,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <array>
+#include <functional>
 
 typedef std::vector<uint8_t> valtype;
 typedef std::vector<valtype> stacktype;
@@ -36,27 +39,46 @@ struct KeyData {
     }
 };
 
+static CMutableTransaction SpendingTx()
+{
+    CMutableTransaction tx;
+    tx.vin.resize(1);
+    return tx;
+}
+
+//! Data signatures must behave the same with the plain, transaction and caching signature checkers
+static void ForEachChecker(const std::function<void(const BaseSignatureChecker&)>& check)
+{
+    const CTransaction tx{SpendingTx()};
+    PrecomputedTransactionData txdata;
+    check(BaseSignatureChecker{});
+    check(TransactionSignatureChecker{&tx, 0, 0, MissingDataBehavior::FAIL});
+    check(CachingTransactionSignatureChecker{&tx, 0, 0, txdata, /*storeIn=*/true});
+}
+
 static void CheckError(uint32_t flags, const stacktype& original_stack,
                        const CScript& script, ScriptError expected)
 {
-    BaseSignatureChecker sigchecker;
-    ScriptError err = ScriptError::SCRIPT_ERR_OK;
-    stacktype stack{original_stack};
-    bool r = EvalScript(stack, script, flags, sigchecker, SigVersion::BASE, &err);
-    BOOST_CHECK(!r);
-    BOOST_CHECK(err == expected);
+    ForEachChecker([&](const BaseSignatureChecker& sigchecker) {
+        ScriptError err = ScriptError::SCRIPT_ERR_OK;
+        stacktype stack{original_stack};
+        bool r = EvalScript(stack, script, flags, sigchecker, SigVersion::BASE, &err);
+        BOOST_CHECK(!r);
+        BOOST_CHECK(err == expected);
+    });
 }
 
 static void CheckPass(uint32_t flags, const stacktype& original_stack,
                       const CScript& script, const stacktype& expected)
 {
-    BaseSignatureChecker sigchecker;
-    ScriptError err = ScriptError::SCRIPT_ERR_OK;
-    stacktype stack{original_stack};
-    bool r = EvalScript(stack, script, flags, sigchecker, SigVersion::BASE, &err);
-    BOOST_CHECK(r);
-    BOOST_CHECK(err == ScriptError::SCRIPT_ERR_OK);
-    BOOST_CHECK(stack == expected);
+    ForEachChecker([&](const BaseSignatureChecker& sigchecker) {
+        ScriptError err = ScriptError::SCRIPT_ERR_OK;
+        stacktype stack{original_stack};
+        bool r = EvalScript(stack, script, flags, sigchecker, SigVersion::BASE, &err);
+        BOOST_CHECK(r);
+        BOOST_CHECK(err == ScriptError::SCRIPT_ERR_OK);
+        BOOST_CHECK(stack == expected);
+    });
 }
 
 /**
@@ -227,6 +249,57 @@ BOOST_AUTO_TEST_CASE(checkdatasig_test)
             CheckError(flags, {nondersig, message, pubkeyC}, scriptverify,
                        ScriptError::SCRIPT_ERR_CHECKDATASIGVERIFY);
         }
+    }
+}
+
+static uint256 MessageHash(const valtype& message)
+{
+    uint256 hash;
+    CSHA256().Write(message.data(), message.size()).Finalize(hash.begin());
+    return hash;
+}
+
+// A cached valid data signature must not validate a different message, key or signature.
+BOOST_AUTO_TEST_CASE(checkdatasig_signature_cache_controls)
+{
+    KeyData kd;
+    const valtype message{0x03, 0x04};
+    valtype sig;
+    BOOST_REQUIRE(kd.privkeyC.Sign(MessageHash(message), sig));
+    const valtype pubkey{ToByteVector(kd.pubkeyC)};
+    CKey other_key;
+    other_key.MakeNewKey(/*fCompressed=*/true);
+    valtype bad_sig{sig};
+    bad_sig[bad_sig.size() - 1] ^= 0x01;
+
+    const CTransaction tx{SpendingTx()};
+    PrecomputedTransactionData txdata;
+    const CachingTransactionSignatureChecker storing{&tx, 0, 0, txdata, /*storeIn=*/true};
+    const CachingTransactionSignatureChecker lookup{&tx, 0, 0, txdata, /*storeIn=*/false};
+    const auto result = [](const BaseSignatureChecker& checker, const stacktype& args) {
+        stacktype stack{args};
+        ScriptError err;
+        BOOST_REQUIRE(EvalScript(stack, CScript() << OP_CHECKDATASIG, SCRIPT_VERIFY_NONE, checker, SigVersion::BASE, &err));
+        return stack == stacktype{{0x01}};
+    };
+
+    BOOST_CHECK(result(storing, {sig, message, pubkey}));
+    BOOST_CHECK(result(lookup, {sig, message, pubkey}));
+    BOOST_CHECK(!result(lookup, {sig, {0x03, 0x05}, pubkey}));
+    BOOST_CHECK(!result(lookup, {sig, message, ToByteVector(other_key.GetPubKey())}));
+    BOOST_CHECK(!result(lookup, {bad_sig, message, pubkey}));
+    BOOST_CHECK(!result(storing, {bad_sig, message, pubkey}));
+    BOOST_CHECK(!result(lookup, {bad_sig, message, pubkey}));
+
+    // An invalid public key adds no bytes to a cache entry, so moving the key into the signature must
+    // not match the cached (message, key, signature) entry
+    valtype alias{pubkey};
+    alias.insert(alias.end(), sig.begin(), sig.end());
+    for (const valtype& invalid_pubkey : {valtype{}, valtype{0x02}, valtype(pubkey.begin(), pubkey.end() - 1)}) {
+        // A lookup-only hit marks its entry discardable, so store the valid one again to keep it
+        BOOST_REQUIRE(result(storing, {sig, message, pubkey}));
+        BOOST_CHECK(!result(storing, {alias, message, invalid_pubkey}));
+        BOOST_CHECK(!result(lookup, {alias, message, invalid_pubkey}));
     }
 }
 

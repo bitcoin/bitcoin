@@ -21,7 +21,6 @@
 #include <gsl/pointers.h>
 #include <immer/map.hpp>
 
-#include <atomic>
 #include <limits>
 #include <numeric>
 #include <unordered_map>
@@ -682,15 +681,15 @@ class CDeterministicMNManager
     // keep cache for enough disk snapshots to have all active quourms covered
     static constexpr int DISK_SNAPSHOTS = llmq_max_blocks() / DISK_SNAPSHOT_PERIOD + 1;
     static constexpr int LIST_DIFFS_CACHE_SIZE = DISK_SNAPSHOT_PERIOD * DISK_SNAPSHOTS;
+    //! Lists the cache may hold before a lookup runs CleanupCache(). Cleanup retains only the
+    //! tip and the bases of live quorums, a few dozen lists; the rest is scratch that historical
+    //! requests (a full list read from disk plus its mini-snapshots) and connected blocks added.
+    //! The budget caps what peers can make the node hold through historical requests, while
+    //! sequential historical work keeps its intermediate lists until it outgrows the budget.
+    static constexpr size_t MAX_CACHED_LISTS{64};
 
 private:
     Mutex cs;
-    Mutex cs_cleanup;
-    // We have performed CleanupCache() on this height.
-    int did_cleanup GUARDED_BY(cs_cleanup) {0};
-
-    // Main thread has indicated we should perform cleanup up to this height
-    std::atomic<int> to_cleanup {0};
 
     CEvoDB& m_evoDb;
     CMasternodeMetaMan& m_mn_metaman;
@@ -722,8 +721,6 @@ public:
 
     // Test if given TX is a ProRegTx which also contains the collateral at index n
     static bool IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n);
-
-    void DoMaintenance() EXCLUSIVE_LOCKS_REQUIRED(!cs, !cs_cleanup);
 
     // Recalculate and optionally repair diffs between snapshots
     struct RecalcDiffsResult {

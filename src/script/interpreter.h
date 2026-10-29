@@ -153,6 +153,10 @@ public:
          return false;
     }
 
+    /** Verify vchSig as an ECDSA signature by vchPubKey over SHA256(vchMessage), as CHECKDATASIG does */
+    virtual bool CheckDataSig(const std::vector<unsigned char>& vchSig, const std::vector<unsigned char>& vchMessage,
+                              const std::vector<unsigned char>& vchPubKey) const;
+
     virtual ~BaseSignatureChecker() {}
 };
 
@@ -184,6 +188,8 @@ public:
     bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override;
     bool CheckLockTime(const CScriptNum& nLockTime) const override;
     bool CheckSequence(const CScriptNum& nSequence) const override;
+    bool CheckDataSig(const std::vector<unsigned char>& vchSig, const std::vector<unsigned char>& vchMessage,
+                      const std::vector<unsigned char>& vchPubKey) const override;
 };
 
 using TransactionSignatureChecker = GenericTransactionSignatureChecker<CTransaction>;
@@ -208,6 +214,11 @@ public:
     bool CheckSequence(const CScriptNum& nSequence) const override
     {
         return m_checker.CheckSequence(nSequence);
+    }
+    bool CheckDataSig(const std::vector<unsigned char>& vchSig, const std::vector<unsigned char>& vchMessage,
+                      const std::vector<unsigned char>& vchPubKey) const override
+    {
+        return m_checker.CheckDataSig(vchSig, vchMessage, vchPubKey);
     }
 };
 

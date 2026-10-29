@@ -67,7 +67,7 @@ bool CHDChain::SetMnemonic(const SecureString& ssMnemonic, const SecureString& s
 
         // printf("mnemonic: %s\n", ssMnemonicTmp.c_str());
         if (!CMnemonic::Check(ssMnemonicTmp)) {
-            throw std::runtime_error(std::string(__func__) + ": invalid mnemonic: `" + std::string(ssMnemonicTmp) + "`");
+            throw std::runtime_error(std::string(__func__) + ": invalid mnemonic");
         }
 
         CMnemonic::ToSeed(ssMnemonicTmp, ssMnemonicPassphrase, vchSeed);

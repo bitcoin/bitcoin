@@ -121,11 +121,13 @@ std::optional<CCreditPool> CCreditPoolManager::GetFromCache(const CBlockIndex& b
 
     const uint256 block_hash = block_index.GetBlockHash();
     CCreditPool pool;
-    {
-        LOCK(cache_mutex);
-        if (creditPoolCache.get(block_hash, pool)) {
-            return pool;
-        }
+    if (WITH_LOCK(cache_mutex, return creditPoolCache.get(block_hash, pool))) {
+        // The pool may have been constructed, and cached, outside a block-scoped transaction
+        // (mempool acceptance, template creation, RPC), where its snapshot cannot be written.
+        // Persist it from the first transaction-scoped lookup instead, or the snapshot would be
+        // lost for good: block connection only sees the cache hit and never constructs it again.
+        MaybeWriteSnapshot(block_hash, block_index.nHeight, pool);
+        return pool;
     }
     if (block_index.nHeight % DISK_SNAPSHOT_PERIOD == 0) {
         if (evoDb.Read(std::make_pair(DB_CREDITPOOL_SNAPSHOT, block_hash), pool)) {
@@ -137,15 +139,22 @@ std::optional<CCreditPool> CCreditPoolManager::GetFromCache(const CBlockIndex& b
     return std::nullopt;
 }
 
-void CCreditPoolManager::AddToCache(const uint256& block_hash, int height, const CCreditPool &pool)
+void CCreditPoolManager::MaybeWriteSnapshot(const uint256& block_hash, int height, const CCreditPool& pool)
 {
-    {
-        LOCK(cache_mutex);
-        creditPoolCache.insert(block_hash, pool);
-    }
-    if (height % DISK_SNAPSHOT_PERIOD == 0) {
-        evoDb.Write(std::make_pair(DB_CREDITPOOL_SNAPSHOT, block_hash), pool);
-    }
+    // The disk snapshot is an optimization; skip it outside a block-scoped EvoDB transaction
+    // (e.g. a pool constructed on a cold cache during mempool acceptance, template creation or
+    // an RPC such as getassetunlockstatuses), where the write would never be committed and would
+    // trip the clean-transaction assertion at the next root commit. GetFromCache() writes it
+    // once a transaction-scoped lookup hits the cached pool.
+    if (height % DISK_SNAPSHOT_PERIOD != 0 || !evoDb.HasActiveTransaction()) return;
+    evoDb.Write(std::make_pair(DB_CREDITPOOL_SNAPSHOT, block_hash), pool);
+}
+
+void CCreditPoolManager::AddToCache(const uint256& block_hash, int height, const CCreditPool& pool)
+{
+    MaybeWriteSnapshot(block_hash, height, pool);
+    LOCK(cache_mutex);
+    creditPoolCache.insert(block_hash, pool);
 }
 
 CCreditPool CCreditPoolManager::ConstructCreditPool(const gsl::not_null<const CBlockIndex*> block_index, CCreditPool prev)

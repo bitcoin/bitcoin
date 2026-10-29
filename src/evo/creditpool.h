@@ -142,6 +142,9 @@ public:
 private:
     std::optional<CCreditPool> GetFromCache(const CBlockIndex& block_index) EXCLUSIVE_LOCKS_REQUIRED(!cache_mutex);
     void AddToCache(const uint256& block_hash, int height, const CCreditPool& pool) EXCLUSIVE_LOCKS_REQUIRED(!cache_mutex);
+    /** Write the disk snapshot of a snapshot-height pool when a block-scoped EvoDB transaction
+     *  is open on this thread; a no-op otherwise. */
+    void MaybeWriteSnapshot(const uint256& block_hash, int height, const CCreditPool& pool);
 
     CCreditPool ConstructCreditPool(const gsl::not_null<const CBlockIndex*> block_index, CCreditPool prev)
         EXCLUSIVE_LOCKS_REQUIRED(!cache_mutex);

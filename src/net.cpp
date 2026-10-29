@@ -1957,9 +1957,9 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
 
     // Evict connections until we are below nMaxInbound. In case eviction protection resulted in nodes to not be evicted
     // before, they might get evicted in batches now (after the protection timeout).
-    // We don't evict verified MN connections and also don't take them into account when checking limits. We can do this
-    // because we know that such connections are naturally limited by the total number of MNs, so this is not usable
-    // for attacks.
+    // We don't evict verified MN connections and also don't take them into account when checking limits. We can do
+    // this because such connections are limited by the total number of MNs times MAX_VERIFIED_INBOUND_PER_PROTX
+    // (enforced in TryMarkVerified), so this is not usable for attacks.
     while (nInbound - nVerifiedInboundMasternodes >= nMaxInbound)
     {
         if (!AttemptToEvictConnection()) {
@@ -4486,6 +4486,34 @@ void CConnman::AddPendingProbeConnections(const std::set<uint256> &proTxHashes)
 {
     LOCK(cs_vPendingMasternodes);
     masternodePendingProbes.insert(proTxHashes.begin(), proTxHashes.end());
+}
+
+bool CConnman::TryMarkVerified(NodeId id, const uint256& proregtx_hash, const uint256& pubkey_hash)
+{
+    // Exclusive, not shared: the count and the grant must be one atomic step or concurrent
+    // callers could each pass the check and jointly exceed the cap.
+    LOCK(m_nodes_mutex);
+    CNode* node = FindNodeMutable(id, /*fExcludeDisconnecting=*/false);
+    if (node == nullptr) {
+        return false;
+    }
+    if (node->IsInboundConn()) {
+        size_t verified_inbound{0};
+        for (const CNode* pnode : m_nodes) {
+            if (pnode != node && !pnode->fDisconnect && pnode->IsInboundConn() &&
+                pnode->GetVerifiedProRegTxHash() == proregtx_hash) {
+                ++verified_inbound;
+            }
+        }
+        if (verified_inbound >= MAX_VERIFIED_INBOUND_PER_PROTX) {
+            LogPrint(BCLog::NET_NETCONN, "CConnman::%s -- refusing to verify masternode %s: already %d verified inbound connections, peer=%d\n",
+                     __func__, proregtx_hash.ToString(), verified_inbound, id);
+            return false;
+        }
+    }
+    node->SetVerifiedProRegTxHash(proregtx_hash);
+    node->SetVerifiedPubKeyHash(pubkey_hash);
+    return true;
 }
 
 size_t CConnman::GetNodeCount(ConnectionDirection flags) const

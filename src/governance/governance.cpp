@@ -656,17 +656,20 @@ std::vector<CInv> CGovernanceManager::GetSyncableVoteInvs(const uint256& nProp, 
 
     const auto& govobj = *Assert(it->second);
     LOCK(govobj.cs);
-    const auto& fileVotes = govobj.GetVoteFile();
-    for (const auto& vote : fileVotes.GetVotes()) {
+    // Visit the stored votes in place: CheckSignature memoises its verdict on
+    // the vote instance, and a GetVotes() copy would discard that memo, so every
+    // walk would pay a fresh ECDSA recovery or BLS pairing per vote.
+    invs.reserve(govobj.GetVoteFile().GetVoteCount());
+    govobj.GetVoteFile().ForEachVote([&](const CGovernanceVote& vote) {
         uint256 nVoteHash = vote.GetHash();
 
         bool onlyVotingKeyAllowed = govobj.GetObjectType() == GovernanceObject::PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
 
         if (filter.contains(nVoteHash) || !vote.IsValid(tip_mn_list, onlyVotingKeyAllowed)) {
-            continue;
+            return;
         }
         invs.emplace_back(MSG_GOVERNANCE_OBJECT_VOTE, nVoteHash);
-    }
+    });
 
     return invs;
 }
@@ -801,6 +804,8 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
     AssertLockNotHeld(cs_store);
     hashToRequest = uint256{};
 
+    const auto tip_mn_list{Assert(m_dmnman)->GetListAtChainTip()};
+
     LOCK(cs_store);
     uint256 nHashVote = vote.GetHash();
     uint256 nHashGovobj = vote.GetParentHash();
@@ -821,8 +826,17 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
 
     auto it = mapObjects.find(nHashGovobj);
     if (it == mapObjects.end()) {
+        if (!vote.IsValidForUnknownParent(tip_mn_list)) {
+            std::string msg{strprintf("CGovernanceManager::%s -- Invalid vote for unknown parent object %s, MN outpoint = %s, vote hash = %s",
+                __func__, nHashGovobj.ToString(), vote.GetMasternodeOutpoint().ToStringShort(), nHashVote.ToString())};
+            LogPrint(BCLog::GOBJECT, "%s\n", msg);
+            exception = CGovernanceException(msg, GOVERNANCE_EXCEPTION_PERMANENT_ERROR, 20);
+            return false;
+        }
         std::string msg{strprintf("CGovernanceManager::%s -- Unknown parent object %s, MN outpoint = %s", __func__,
             nHashGovobj.ToString(), vote.GetMasternodeOutpoint().ToStringShort())};
+        // No penalty: the vote is signed by a masternode, it just arrived before its parent object,
+        // which routinely happens during governance sync. Misbehaviour scores never decay.
         exception = CGovernanceException(msg, GOVERNANCE_EXCEPTION_WARNING);
         if (cmmapOrphanVotes.Insert(nHashGovobj, vote_time_pair_t(vote, count_seconds(GetTime<std::chrono::seconds>() +
                                                                                       GOVERNANCE_ORPHAN_EXPIRATION_TIME)))) {
@@ -840,7 +854,7 @@ bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, 
         return false;
     }
 
-    bool fOk = govobj.ProcessVote(m_mn_metaman, *this, Assert(m_dmnman)->GetListAtChainTip(), vote, exception);
+    bool fOk = govobj.ProcessVote(m_mn_metaman, *this, tip_mn_list, vote, exception);
     if (fOk) {
         fOk = cmapVoteToObject.Insert(nHashVote, it->second);
     } else if (exception.GetType() == GOVERNANCE_EXCEPTION_PERMANENT_ERROR && exception.GetNodePenalty() == 20) {

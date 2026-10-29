@@ -20,8 +20,6 @@ static std::once_flag g_main_params_flag;
 
 /** Maximum length of a label in a domain per RFC 1035 */
 static constexpr uint8_t DOMAIN_LABEL_MAX_LEN{63};
-/** Maximum possible length of a ASCII FQDN */
-static constexpr uint8_t DOMAIN_MAX_LEN{253};
 /** Minimum length of a FQDN */
 static constexpr uint8_t DOMAIN_MIN_LEN{3};
 
@@ -287,7 +285,7 @@ NetInfoStatus MnNetInfo::ValidateService(const CService& service)
     if (!service.IsIPv4()) {
         return NetInfoStatus::BadType;
     }
-    if (Params().RequireRoutableExternalIP() && !service.IsRoutable()) {
+    if (Params().RequireRoutableExternalIP() && (service.IsRFC1918() || !service.IsRoutable())) {
         return NetInfoStatus::NotRoutable;
     }
 
@@ -453,7 +451,7 @@ NetInfoStatus ExtNetInfo::ValidateService(const CService& service)
     if (!service.IsCJDNS() && !service.IsI2P() && !service.IsIPv4() && !service.IsIPv6() && !service.IsTor()) {
         return NetInfoStatus::BadType;
     }
-    if (Params().RequireRoutableExternalIP() && !service.IsRoutable()) {
+    if (Params().RequireRoutableExternalIP() && (service.IsRFC1918() || !service.IsRoutable())) {
         return NetInfoStatus::NotRoutable;
     }
     const uint16_t service_port{service.GetPort()};
@@ -594,6 +592,11 @@ NetInfoStatus ExtNetInfo::Validate() const
         if (entries.empty()) {
             // Purpose if present in map must have at least one entry
             return NetInfoStatus::Malformed;
+        }
+        if (entries.size() > MAX_ENTRIES_EXTNETINFO) {
+            // Per-purpose entry count is bounded at insertion; a deserialized object
+            // may exceed it and must be rejected here
+            return NetInfoStatus::MaxLimit;
         }
         if (HasAddrDuplicates(entries)) {
             return NetInfoStatus::Duplicate;

@@ -5,6 +5,7 @@
 #include <evo/evodb.h>
 
 #include <uint256.h>
+#include <util/check.h>
 
 CEvoDBScopedCommitter::CEvoDBScopedCommitter(CEvoDB &_evoDB) :
     evoDB(_evoDB)
@@ -45,12 +46,16 @@ void CEvoDB::CommitCurTransaction()
 {
     LOCK(cs);
     curDBTransaction.Commit();
+    Assume(m_transaction_depth > 0);
+    --m_transaction_depth;
 }
 
 void CEvoDB::RollbackCurTransaction()
 {
     LOCK(cs);
     curDBTransaction.Clear();
+    Assume(m_transaction_depth > 0);
+    --m_transaction_depth;
 }
 
 bool CEvoDB::CommitRootTransaction()

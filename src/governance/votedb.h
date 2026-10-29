@@ -65,6 +65,16 @@ public:
 
     std::vector<CGovernanceVote> GetVotes() const;
 
+    /** Visit the stored votes in place, so callers warm and reuse the per-vote
+     *  signature memo instead of discarding it with a GetVotes() copy. Takes a
+     *  callback rather than returning the list: the caller's lock on the owning
+     *  object's cs cannot be expressed on a returned reference. */
+    template <typename Fn>
+    void ForEachVote(Fn&& fn) const
+    {
+        for (const auto& vote : listVotes) fn(vote);
+    }
+
     void RemoveVotesFromMasternode(const COutPoint& outpointMasternode);
     std::set<uint256> RemoveInvalidVotes(const CDeterministicMNList& tip_mn_list, const COutPoint& outpointMasternode, bool fProposal);
 

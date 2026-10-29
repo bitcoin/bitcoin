@@ -155,8 +155,12 @@ MessageProcessingResult CMNAuth::ProcessMessage(CNode& peer, ServiceFlags node_s
         return {};
     }
 
-    peer.SetVerifiedProRegTxHash(mnauth.proRegTxHash);
-    peer.SetVerifiedPubKeyHash(dmn->pdmnState->pubKeyOperator.GetHash());
+    if (!connman.TryMarkVerified(peer.GetId(), mnauth.proRegTxHash, dmn->pdmnState->pubKeyOperator.GetHash())) {
+        // At the verified-inbound cap for this identity. Not a misbehavior: a legitimate
+        // reconnect racing not-yet-reaped stale legs must not be banned.
+        peer.fDisconnect = true;
+        return {};
+    }
 
     if (!peer.m_masternode_iqr_connection && connman.IsMasternodeQuorumRelayMember(peer.GetVerifiedProRegTxHash())) {
         // Tell our peer that we're interested in plain LLMQ recovered signatures.

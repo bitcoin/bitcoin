@@ -689,14 +689,14 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<co
         m_evoDb.Write(std::make_pair(DB_LIST_DIFF, newList.GetBlockHash()), diff);
         if ((nHeight % DISK_SNAPSHOT_PERIOD) == 0 || pindex->pprev == m_initial_snapshot_index) {
             m_evoDb.Write(std::make_pair(DB_LIST_SNAPSHOT, newList.GetBlockHash()), newList);
-            mnListsCache.emplace(newList.GetBlockHash(), newList);
+            mnListsCache.insert_or_assign(newList.GetBlockHash(), newList);
             LogPrintf("CDeterministicMNManager::%s -- Wrote snapshot. nHeight=%d, mapCurMNs.allMNsCount=%d\n",
                 __func__, nHeight, newList.GetCounts().total());
         }
 
         diff.nHeight = pindex->nHeight;
         mnListDiffsCache.emplace(pindex->GetBlockHash(), diff);
-        mnListsCache.emplace(newList.GetBlockHash(), newList);
+        mnListsCache.insert_or_assign(newList.GetBlockHash(), newList);
     } catch (const std::exception& e) {
         LogPrintf("CDeterministicMNManager::%s -- internal error: %s\n", __func__, e.what());
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "failed-dmn-block");
@@ -725,10 +725,6 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<co
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-dip3-enf-block");
         }
         LogPrintf("CDeterministicMNManager::%s -- DIP3 is enforced now. nHeight=%d\n", __func__, nHeight);
-    }
-    int current = to_cleanup.load();
-    while (nHeight > current && !to_cleanup.compare_exchange_weak(current, nHeight)) {
-        // Loop continues if compare_exchange_weak failed (another thread changed it) (current is updated to the new value in to_cleanup)
     }
     return true;
 }
@@ -784,6 +780,10 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlockInternal(gsl::not_n
     }
 
     AssertLockHeld(cs);
+
+    if (tipIndex != nullptr && mnListsCache.size() > MAX_CACHED_LISTS) {
+        CleanupCache(tipIndex->nHeight);
+    }
 
     std::list<const CBlockIndex*> listDiffIndexes;
 
@@ -945,15 +945,6 @@ void CDeterministicMNManager::CleanupCache(int nHeight)
 }
 
 //end
-
-void CDeterministicMNManager::DoMaintenance() {
-    LOCK(cs_cleanup);
-    int loc_to_cleanup = to_cleanup.load();
-    if (loc_to_cleanup <= did_cleanup) return;
-    LOCK(cs);
-    CleanupCache(loc_to_cleanup);
-    did_cleanup = loc_to_cleanup;
-}
 
 bool CDeterministicMNManager::IsMigrationRequired() const
 {

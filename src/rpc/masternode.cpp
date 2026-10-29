@@ -376,6 +376,10 @@ static RPCHelpMan masternode_payments()
         if (pindex == nullptr) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
+        // Payees come from the previous block's list, which an unconnected block may not have yet
+        if (!chainman.ActiveChain().Contains(pindex)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Block is not in main chain");
+        }
     }
 
     int64_t nCount = request.params.size() > 1 ? ParseInt64V(request.params[1], "count") : 1;
@@ -385,7 +389,8 @@ static RPCHelpMan masternode_payments()
 
     CHECK_NONFATAL(node.chain_helper);
     CHECK_NONFATAL(node.dmnman);
-    while (vecPayments.size() < uint64_t(std::abs(nCount)) && pindex != nullptr) {
+    // Payees are selected from the previous block's list, so the genesis block has none
+    while (vecPayments.size() < uint64_t(std::abs(nCount)) && pindex != nullptr && pindex->pprev != nullptr) {
         CBlock block;
         if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");

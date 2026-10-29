@@ -7,6 +7,7 @@
 #include <hash.h>
 #include <logging.h>
 #include <span.h>
+#include <util/check.h>
 
 #include <stdexcept>
 
@@ -26,7 +27,7 @@ CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params) :
 
 CDKGSessionHandler::~CDKGSessionHandler() = default;
 
-MessageProcessingResult CDKGPendingMessages::PushPendingMessage(NodeId from, CDataStream& vRecv)
+MessageProcessingResult CDKGPendingMessages::PushPendingMessage(NodeId from, const uint256& sender_protx, CDataStream& vRecv)
 {
     // this will also consume the data, even if we bail out early
     auto pm = std::make_shared<CDataStream>(std::move(vRecv));
@@ -42,18 +43,27 @@ MessageProcessingResult CDKGPendingMessages::PushPendingMessage(NodeId from, CDa
 
     LOCK(cs_messages);
 
-    if (messagesPerNode[from] >= maxMessagesPerNode) {
-        // TODO ban?
-        LogPrint(BCLog::LLMQ_DKG, "CDKGPendingMessages::%s -- too many messages, peer=%d\n", __func__, from);
-        return ret;
-    }
-    messagesPerNode[from]++;
-
-    if (!seenMessages.emplace(hash).second) {
+    // Check duplicates before the quota so resent hashes don't burn budget
+    if (seenMessages.count(hash) != 0) {
         LogPrint(BCLog::LLMQ_DKG, "CDKGPendingMessages::%s -- already seen %s, peer=%d\n", __func__, hash.ToString(), from);
         return ret;
     }
 
+    // Callers always pass an identity (the MNAuth gate for remote, our own
+    // proTxHash for local); drop rather than share a null-keyed quota bucket
+    if (!Assume(!sender_protx.IsNull())) {
+        return ret;
+    }
+    auto& count = messagesPerProTx[sender_protx];
+    if (count >= maxMessagesPerProTx) {
+        // TODO ban?
+        LogPrint(BCLog::LLMQ_DKG, "CDKGPendingMessages::%s -- too many messages from %s, peer=%d\n", __func__,
+                 sender_protx.ToString(), from);
+        return ret;
+    }
+    count++;
+
+    seenMessages.emplace(hash);
     pendingMessages.emplace_back(std::make_pair(from, std::move(pm)));
     return ret;
 }
@@ -87,23 +97,24 @@ void CDKGPendingMessages::Clear()
 {
     LOCK(cs_messages);
     pendingMessages.clear();
-    messagesPerNode.clear();
+    messagesPerProTx.clear();
     seenMessages.clear();
 }
 
 //////
 
-MessageProcessingResult CDKGSessionHandler::ProcessMessage(NodeId from, std::string_view msg_type, CDataStream& vRecv)
+MessageProcessingResult CDKGSessionHandler::ProcessMessage(NodeId from, const uint256& sender_protx,
+                                                           std::string_view msg_type, CDataStream& vRecv)
 {
     // We don't handle messages in the calling thread as deserialization/processing of these would block everything
     if (msg_type == NetMsgType::QCONTRIB) {
-        return pendingContributions.PushPendingMessage(from, vRecv);
+        return pendingContributions.PushPendingMessage(from, sender_protx, vRecv);
     } else if (msg_type == NetMsgType::QCOMPLAINT) {
-        return pendingComplaints.PushPendingMessage(from, vRecv);
+        return pendingComplaints.PushPendingMessage(from, sender_protx, vRecv);
     } else if (msg_type == NetMsgType::QJUSTIFICATION) {
-        return pendingJustifications.PushPendingMessage(from, vRecv);
+        return pendingJustifications.PushPendingMessage(from, sender_protx, vRecv);
     } else if (msg_type == NetMsgType::QPCOMMITMENT) {
-        return pendingPrematureCommitments.PushPendingMessage(from, vRecv);
+        return pendingPrematureCommitments.PushPendingMessage(from, sender_protx, vRecv);
     }
     return {};
 }

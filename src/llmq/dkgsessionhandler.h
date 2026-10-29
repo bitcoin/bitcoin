@@ -63,17 +63,27 @@ public:
 
 private:
     const uint32_t invType;
-    const size_t maxMessagesPerNode;
+    const size_t maxMessagesPerProTx;
     mutable Mutex cs_messages;
     std::list<BinaryMessage> pendingMessages GUARDED_BY(cs_messages);
-    std::map<NodeId, size_t> messagesPerNode GUARDED_BY(cs_messages);
+    // Keyed by proTxHash rather than NodeId so the quota survives reconnects,
+    // and cumulative for the round (not refunded on pop) so draining the queue
+    // does not regain retention slots. MNAuth pins keys to registered MNs.
+    std::map<uint256, size_t> messagesPerProTx GUARDED_BY(cs_messages);
     std::set<uint256> seenMessages GUARDED_BY(cs_messages);
 
 public:
-    explicit CDKGPendingMessages(size_t _maxMessagesPerNode, uint32_t _invType) :
-            invType(_invType), maxMessagesPerNode(_maxMessagesPerNode) {};
+    explicit CDKGPendingMessages(size_t _maxMessagesPerProTx, uint32_t _invType) :
+            invType(_invType), maxMessagesPerProTx(_maxMessagesPerProTx) {};
 
-    [[nodiscard]] MessageProcessingResult PushPendingMessage(NodeId from, CDataStream& vRecv)
+    /**
+     * Enqueue a serialized DKG message received from @p from. @p sender_protx keys the per-proTx
+     * quota: the sender's MNAuth-verified proTxHash for remote messages, or this node's own for
+     * messages it produced itself (@p from == -1). Drops the message silently on quota overflow or
+     * duplicate hash; quota-dropped messages are not marked seen, so another peer with budget can
+     * re-deliver them.
+     */
+    [[nodiscard]] MessageProcessingResult PushPendingMessage(NodeId from, const uint256& sender_protx, CDataStream& vRecv)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_messages);
     std::list<BinaryMessage> PopPendingMessages(size_t maxCount) EXCLUSIVE_LOCKS_REQUIRED(!cs_messages);
     bool HasSeen(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(!cs_messages);
@@ -81,11 +91,12 @@ public:
     void Clear() EXCLUSIVE_LOCKS_REQUIRED(!cs_messages);
 
     template <typename Message>
-    void PushPendingMessage(NodeId from, Message& msg, PeerManager& peerman) EXCLUSIVE_LOCKS_REQUIRED(!cs_messages)
+    void PushPendingMessage(NodeId from, const uint256& sender_protx, Message& msg, PeerManager& peerman)
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_messages)
     {
         CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
         ds << msg;
-        peerman.PostProcessMessage(PushPendingMessage(from, ds), from);
+        peerman.PostProcessMessage(PushPendingMessage(from, sender_protx, ds), from);
     }
 
     // Might return nullptr messages, which indicates that deserialization failed for some reason
@@ -138,7 +149,8 @@ public:
     explicit CDKGSessionHandler(const Consensus::LLMQParams& _params);
     virtual ~CDKGSessionHandler();
 
-    [[nodiscard]] MessageProcessingResult ProcessMessage(NodeId from, std::string_view msg_type, CDataStream& vRecv);
+    [[nodiscard]] MessageProcessingResult ProcessMessage(NodeId from, const uint256& sender_protx,
+                                                         std::string_view msg_type, CDataStream& vRecv);
 
 public:
     virtual bool GetContribution(const uint256& hash, CDKGContribution& ret) const { return false; }

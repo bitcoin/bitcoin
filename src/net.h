@@ -98,6 +98,26 @@ static const int MAX_BLOCK_RELAY_ONLY_CONNECTIONS = 2;
 static const int MAX_DESIRED_ONION_CONNECTIONS = 2;
 /** Maximum number of feeler connections */
 static const int MAX_FEELER_CONNECTIONS = 1;
+/**
+ * Upper bound on simultaneous verified *inbound* connections carrying the same proRegTxHash,
+ * enforced by CConnman::TryMarkVerified.
+ *
+ * A verified inbound masternode peer is exempt from the inbound connection limit
+ * (CreateNodeFromAcceptedSocket) and protected from eviction (GetEvictionCandidates), so without a
+ * bound a single operator key could stack such slots without end.
+ *
+ * The limit is not 1: a reconnect racing a socket we have not yet detected as dead legitimately
+ * produces a second verified inbound leg. Refusing it would strand the peer until InactivityCheck
+ * fires (TIMEOUT_INTERVAL, 20 minutes) — nothing in src/ sets SO_KEEPALIVE or TCP_USER_TIMEOUT, so
+ * that is the only reaper of half-open sockets, and where the peer is the deterministic outbound
+ * side we never dial it, leaving no other recovery path. A small allowance keeps that case working
+ * while making the exemption a bounded multiple of the masternode count. If a lower-level reaper
+ * is ever added, this value can likely be tightened.
+ *
+ * Consequently, up to this many verified legs per proRegTxHash may coexist: code that maps
+ * proRegTxHash -> node (e.g. sig-share routing) must tolerate duplicates.
+ */
+static constexpr size_t MAX_VERIFIED_INBOUND_PER_PROTX{3};
 /** -listen default */
 static const bool DEFAULT_LISTEN = true;
 /** The maximum number of peer connections to maintain.
@@ -1481,6 +1501,16 @@ public:
     bool IsMasternodeQuorumNode(const CNode* pnode, const CDeterministicMNList& tip_mn_list) const;
     bool IsMasternodeQuorumRelayMember(const uint256& protxHash);
     void AddPendingProbeConnections(const std::set<uint256>& proTxHashes);
+
+    /**
+     * Mark a peer as a verified masternode connection, granting it the inbound-limit exemption and
+     * eviction protection tied to that status. Returns false, leaving the peer unmarked, if the
+     * peer no longer exists or — for inbound peers — once MAX_VERIFIED_INBOUND_PER_PROTX verified
+     * inbound connections already carry the same proRegTxHash; see that constant for the rationale.
+     * All paths that verify a masternode connection must go through this gate.
+     */
+    bool TryMarkVerified(NodeId id, const uint256& proregtx_hash, const uint256& pubkey_hash)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
 
     size_t GetNodeCount(ConnectionDirection) const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
     std::map<CNetAddr, LocalServiceInfo> getNetLocalAddresses() const;

@@ -208,6 +208,9 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
         node.stop()
         node.wait_until_stopped()
         self.start_node(0, extra_args=['-rescan'])
+        # A failed upgrade must leave the encrypted wallet locked
+        assert_raises_rpc_error(-1, "invalid mnemonic", node.upgradetohd, "invalid mnemonic", "", walletpass)
+        assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.", node.signmessage, node.get_deterministic_priv_key().address, "after failed upgrade")
         assert_raises_rpc_error(-13, "Error: Wallet encrypted but passphrase not supplied to RPC.", node.upgradetohd, mnemonic[0])
         assert_raises_rpc_error(-14, "Error: The wallet passphrase entered was incorrect", node.upgradetohd, mnemonic[0], "", "111")
         assert node.upgradetohd(mnemonic[0], "", walletpass)

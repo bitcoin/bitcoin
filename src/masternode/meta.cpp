@@ -200,11 +200,10 @@ bool CMasternodeMetaMan::SetPlatformBan(const uint256& inv_hash, PlatformBanMess
 
     const uint256& protx_hash = ban_msg.m_protx_hash;
 
-    bool ret = GetMetaInfo(protx_hash).SetPlatformBan(true, ban_msg.m_requested_height);
-    if (ret) {
-        m_seen_platform_bans.emplace(inv_hash, std::move(ban_msg));
-    }
-    return ret;
+    const bool changed = GetMetaInfo(protx_hash).SetPlatformBan(true, ban_msg.m_requested_height);
+    // Remember authenticated messages even when newer metadata supersedes them.
+    m_seen_platform_bans.emplace(inv_hash, std::move(ban_msg));
+    return changed;
 }
 
 bool CMasternodeMetaMan::AlreadyHavePlatformBan(const uint256& inv_hash) const

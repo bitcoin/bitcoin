@@ -1568,6 +1568,10 @@ static RPCHelpMan protx_info()
         if (pindex == nullptr) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
+        // A block that was never connected has no list to read yet
+        if (!chainman.ActiveChain().Contains(pindex)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Block is not in main chain");
+        }
     }
 
     auto mnList = dmnman.GetListForBlock(pindex);
@@ -1688,6 +1692,9 @@ static RPCHelpMan protx_listdiff()
 
     const CBlockIndex* pBaseBlockIndex = ParseBlockIndex(request.params[0], chainman, "baseBlock");
     const CBlockIndex* pTargetBlockIndex = ParseBlockIndex(request.params[1], chainman, "block");
+    if (!chainman.ActiveChain().Contains(pBaseBlockIndex) || !chainman.ActiveChain().Contains(pTargetBlockIndex)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Block is not in main chain");
+    }
 
     if (pBaseBlockIndex == nullptr) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Base block not found");

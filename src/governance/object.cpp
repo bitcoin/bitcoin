@@ -80,8 +80,6 @@ bool CGovernanceObject::ProcessVote(CMasternodeMetaMan& mn_metaman, CGovernanceM
         return false;
     }
 
-    auto it = mapCurrentMNVotes.emplace(vote_m_t::value_type(vote.GetMasternodeOutpoint(), vote_rec_t())).first;
-    vote_rec_t& voteRecordRef = it->second;
     vote_signal_enum_t eSignal = vote.GetSignal();
     if (eSignal == VOTE_SIGNAL_NONE) {
         std::string msg{strprintf("CGovernanceObject::%s -- Vote signal: none", __func__)};
@@ -92,24 +90,28 @@ bool CGovernanceObject::ProcessVote(CMasternodeMetaMan& mn_metaman, CGovernanceM
     if (eSignal < VOTE_SIGNAL_NONE || eSignal >= VOTE_SIGNAL_UNKNOWN) {
         std::string msg{strprintf("CGovernanceObject::%s -- Unsupported vote signal: %s", __func__,
             CGovernanceVoting::ConvertSignalToString(vote.GetSignal()))};
-        LogPrintf("%s\n", msg);
+        LogPrint(BCLog::GOBJECT, "%s\n", msg);
         exception = CGovernanceException(msg, GOVERNANCE_EXCEPTION_PERMANENT_ERROR, 20);
         return false;
     }
-    auto it2 = voteRecordRef.mapInstances.emplace(vote_instance_m_t::value_type(int(eSignal), vote_instance_t())).first;
-    vote_instance_t& voteInstanceRef = it2->second;
+    vote_instance_t voteInstance;
+    if (const auto it = mapCurrentMNVotes.find(vote.GetMasternodeOutpoint()); it != mapCurrentMNVotes.end()) {
+        if (const auto it2 = it->second.mapInstances.find(int(eSignal)); it2 != it->second.mapInstances.end()) {
+            voteInstance = it2->second;
+        }
+    }
 
     // Reject obsolete votes
-    if (vote.GetTimestamp() < voteInstanceRef.nCreationTime) {
+    if (vote.GetTimestamp() < voteInstance.nCreationTime) {
         std::string msg{strprintf("CGovernanceObject::%s -- Obsolete vote", __func__)};
         LogPrint(BCLog::GOBJECT, "%s\n", msg);
         exception = CGovernanceException(msg, GOVERNANCE_EXCEPTION_NONE);
         return false;
-    } else if (vote.GetTimestamp() == voteInstanceRef.nCreationTime) {
+    } else if (vote.GetTimestamp() == voteInstance.nCreationTime) {
         // Someone is doing something fishy, there can be no two votes from the same masternode
         // with the same timestamp for the same object and signal and yet different hash/outcome.
         std::string msg{strprintf("CGovernanceObject::%s -- Invalid vote, same timestamp for the different outcome", __func__)};
-        if (vote.GetOutcome() < voteInstanceRef.eOutcome) {
+        if (vote.GetOutcome() < voteInstance.eOutcome) {
             // This is an arbitrary comparison, we have to agree on some way
             // to pick the "winning" vote.
             msg += ", rejected";
@@ -122,9 +124,9 @@ bool CGovernanceObject::ProcessVote(CMasternodeMetaMan& mn_metaman, CGovernanceM
     }
 
     int64_t nNow = GetAdjustedTime();
-    int64_t nVoteTimeUpdate = voteInstanceRef.nTime;
+    int64_t nVoteTimeUpdate = voteInstance.nTime;
     if (govman.AreRateChecksEnabled()) {
-        int64_t nTimeDelta = nNow - voteInstanceRef.nTime;
+        int64_t nTimeDelta = nNow - voteInstance.nTime;
         if (nTimeDelta < GOVERNANCE_UPDATE_MIN) {
             std::string msg{strprintf("CGovernanceObject::%s -- Masternode voting too often, MN outpoint = %s, "
                                       "governance object hash = %s, time delta = %d",
@@ -143,14 +145,15 @@ bool CGovernanceObject::ProcessVote(CMasternodeMetaMan& mn_metaman, CGovernanceM
         std::string msg{strprintf("CGovernanceObject::%s -- Invalid vote, MN outpoint = %s, governance object hash = %s, "
                                   "vote hash = %s",
             __func__, vote.GetMasternodeOutpoint().ToStringShort(), GetHash().ToString(), vote.GetHash().ToString())};
-        LogPrintf("%s\n", msg);
+        LogPrint(BCLog::GOBJECT, "%s\n", msg);
         exception = CGovernanceException(msg, GOVERNANCE_EXCEPTION_PERMANENT_ERROR, 20);
         return false;
     }
 
     mn_metaman.AddGovernanceVote(dmn->proTxHash, vote.GetParentHash());
 
-    voteInstanceRef = vote_instance_t(vote.GetOutcome(), nVoteTimeUpdate, vote.GetTimestamp());
+    mapCurrentMNVotes[vote.GetMasternodeOutpoint()].mapInstances[int(eSignal)] =
+        vote_instance_t(vote.GetOutcome(), nVoteTimeUpdate, vote.GetTimestamp());
     fileVotes.AddVote(vote);
     fDirtyCache = true;
     // SEND NOTIFICATION TO SCRIPT/ZMQ

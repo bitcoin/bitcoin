@@ -36,6 +36,7 @@ class InstantSendTest(DashTestFramework):
 
         self.test_mempool_doublespend()
         self.test_block_doublespend()
+        self.test_provider_tx_not_locked()
 
     def test_block_doublespend(self):
         sender = self.nodes[self.sender_idx]
@@ -142,6 +143,32 @@ class InstantSendTest(DashTestFramework):
         assert_equal(receiver.getwalletinfo()["balance"], 0)
         # mine more blocks
         self.generate(self.nodes[0], 2)
+
+    def test_provider_tx_not_locked(self):
+        self.log.info("Provider txs are not locked, but are mined and ChainLocked once safe")
+        node = self.nodes[0]
+        funds_addr = node.getnewaddress()
+        fund_id = node.sendtoaddress(funds_addr, 1)
+        self.bump_mocktime(30)
+        self.sync_mempools()
+        for n in self.nodes:
+            self.wait_for_instantlock(fund_id, n)
+
+        protx_id = self.mninfo[0].update_service(node, submit=True, fundsAddr=funds_addr)
+        later_id = node.sendtoaddress(node.getnewaddress(), 1)
+        self.bump_mocktime(30)
+        self.sync_mempools()
+        for n in self.nodes:
+            self.wait_for_instantlock(later_id, n)
+        for n in self.nodes:
+            assert not n.getrawtransaction(protx_id, True)["instantlock_internal"]
+
+        # An unlocked provider tx is mined like any other unlocked tx: after it has been in
+        # the mempool for 10 minutes, and the block is ChainLocked once its txs are old enough.
+        self.sync_mempools()
+        self.bump_mocktime(10 * 60 + 1)
+        tip = self.generate(node, 1)[0]
+        self.wait_for_chainlocked_block(node, tip)
 
 if __name__ == '__main__':
     InstantSendTest().main()

@@ -919,6 +919,13 @@ void CTxMemPool::removeProTxPubKeyConflicts(const CTransaction &tx, const CKeyID
             removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
         }
     }
+    // Owner key IDs and Platform node IDs share one uniqueness namespace in the masternode list
+    if (mapProTxPlatformNodeIDs.count(keyId)) {
+        uint256 conflictHash = mapProTxPlatformNodeIDs[keyId];
+        if (conflictHash != tx.GetHash() && mapTx.count(conflictHash)) {
+            removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
+        }
+    }
 }
 
 void CTxMemPool::removeProTxPubKeyConflicts(const CTransaction &tx, const CBLSLazyPublicKey &pubKey)
@@ -939,6 +946,13 @@ void CTxMemPool::removeProTxPlatformNodeIDConflicts(const CTransaction &tx, cons
             removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
         }
     }
+    // Owner key IDs and Platform node IDs share one uniqueness namespace in the masternode list
+    if (mapProTxPubKeyIDs.count(CKeyID{platformNodeID})) {
+        uint256 conflictHash = mapProTxPubKeyIDs[CKeyID{platformNodeID}];
+        if (conflictHash != tx.GetHash() && mapTx.count(conflictHash)) {
+            removeRecursive(mapTx.find(conflictHash)->GetTx(), MemPoolRemovalReason::CONFLICT);
+        }
+    }
 }
 
 void CTxMemPool::removeProTxCollateralConflicts(const CTransaction &tx, const COutPoint &collateralOutpoint)
@@ -951,41 +965,43 @@ void CTxMemPool::removeProTxCollateralConflicts(const CTransaction &tx, const CO
     }
 }
 
+void CTxMemPool::removeProTxReferences(const uint256& proTxHash)
+{
+    // Can't use equal_range here as every call to removeRecursive might invalidate iterators
+    AssertLockHeld(cs);
+    while (true) {
+        auto it = mapProTxRefs.find(proTxHash);
+        if (it == mapProTxRefs.end()) {
+            break;
+        }
+        auto conflictIt = mapTx.find(it->second);
+        if (conflictIt != mapTx.end()) {
+            removeRecursive(conflictIt->GetTx(), MemPoolRemovalReason::CONFLICT);
+        } else {
+            // Should not happen as we track referencing TXs in addUnchecked/removeUnchecked.
+            // But lets be on the safe side and not run into an endless loop...
+            LogPrint(BCLog::MEMPOOL, "%s: ERROR: found invalid TX ref in mapProTxRefs, proTxHash=%s, txHash=%s\n", __func__, proTxHash.ToString(), it->second.ToString());
+            mapProTxRefs.erase(it);
+        }
+    }
+}
+
 void CTxMemPool::removeProTxSpentCollateralConflicts(const CTransaction &tx)
 {
     auto dmnman = Assert(m_dmnman.load(std::memory_order_acquire));
 
     // Remove TXs that refer to a MN for which the collateral was spent
-    auto removeSpentCollateralConflict = [&](const uint256& proTxHash) EXCLUSIVE_LOCKS_REQUIRED(cs) {
-        // Can't use equal_range here as every call to removeRecursive might invalidate iterators
-        AssertLockHeld(cs);
-        while (true) {
-            auto it = mapProTxRefs.find(proTxHash);
-            if (it == mapProTxRefs.end()) {
-                break;
-            }
-            auto conflictIt = mapTx.find(it->second);
-            if (conflictIt != mapTx.end()) {
-                removeRecursive(conflictIt->GetTx(), MemPoolRemovalReason::CONFLICT);
-            } else {
-                // Should not happen as we track referencing TXs in addUnchecked/removeUnchecked.
-                // But lets be on the safe side and not run into an endless loop...
-                LogPrint(BCLog::MEMPOOL, "%s: ERROR: found invalid TX ref in mapProTxRefs, proTxHash=%s, txHash=%s\n", __func__, proTxHash.ToString(), it->second.ToString());
-                mapProTxRefs.erase(it);
-            }
-        }
-    };
     auto mnList = dmnman->GetListAtChainTip();
     for (const auto& in : tx.vin) {
         auto collateralIt = mapProTxCollaterals.find(in.prevout);
         if (collateralIt != mapProTxCollaterals.end()) {
             // These are not yet mined ProRegTxs
-            removeSpentCollateralConflict(collateralIt->second);
+            removeProTxReferences(collateralIt->second);
         }
         auto dmn = mnList.GetMNByCollateral(in.prevout);
         if (dmn) {
             // These are updates referring to a mined ProRegTx
-            removeSpentCollateralConflict(dmn->proTxHash);
+            removeProTxReferences(dmn->proTxHash);
         }
     }
 }
@@ -1043,6 +1059,13 @@ void CTxMemPool::removeProTxConflicts(const CTransaction &tx)
         }
         if (!proTx.collateralOutpoint.hash.IsNull()) {
             removeProTxCollateralConflicts(tx, proTx.collateralOutpoint);
+            // A ProRegTx reusing an external collateral replaces the MN that collateral
+            // currently backs, so that MN ceases to exist. Drop any mempool update that
+            // still targets its proTxHash; such an update can never be mined afterwards.
+            // removeProTxSpentCollateralConflicts only covers collateral *spends*, not reuse.
+            if (auto dmn = Assert(m_dmnman.load(std::memory_order_acquire))->GetListAtChainTip().GetMNByCollateral(proTx.collateralOutpoint)) {
+                removeProTxReferences(dmn->proTxHash);
+            }
         } else {
             removeProTxCollateralConflicts(tx, COutPoint(tx_hash, proTx.collateralOutpoint.n));
         }
@@ -1387,6 +1410,12 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
         return false;
     };
 
+    // Owner key IDs and Platform node IDs share one uniqueness namespace in the masternode list
+    auto isOwnerOrPlatformNodeIDClaimed = [&](const uint160& id) EXCLUSIVE_LOCKS_REQUIRED(cs) {
+        AssertLockHeld(cs);
+        return mapProTxPubKeyIDs.count(CKeyID{id}) || mapProTxPlatformNodeIDs.count(id);
+    };
+
     const uint256 tx_hash{tx.GetHash()};
     if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
         const auto opt_proTx = GetTxPayload<CProRegTx>(tx);
@@ -1400,10 +1429,10 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
                 return true;
             }
         }
-        if (mapProTxPubKeyIDs.count(proTx.keyIDOwner) || mapProTxBlsPubKeyHashes.count(proTx.pubKeyOperator.GetHash())) {
+        if (isOwnerOrPlatformNodeIDClaimed(proTx.keyIDOwner) || mapProTxBlsPubKeyHashes.count(proTx.pubKeyOperator.GetHash())) {
             return true;
         }
-        if (proTx.nType == MnType::Evo && !proTx.platformNodeID.IsNull() && mapProTxPlatformNodeIDs.count(proTx.platformNodeID)) {
+        if (proTx.nType == MnType::Evo && !proTx.platformNodeID.IsNull() && isOwnerOrPlatformNodeIDClaimed(proTx.platformNodeID)) {
             return true;
         }
         if (!proTx.collateralOutpoint.hash.IsNull()) {
@@ -1414,6 +1443,14 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
             if (mapNextTx.count(proTx.collateralOutpoint)) {
                 // there is another tx that spends the collateral
                 return true;
+            }
+            // A replacement ProRegTx deletes the live MN backed by this collateral. Any
+            // in-mempool update that still targets that MN's proTxHash would then fail
+            // BuildNewListFromBlock with bad-protx-hash if both were mined in one block.
+            if (auto dmn = dmnman->GetListAtChainTip().GetMNByCollateral(proTx.collateralOutpoint)) {
+                if (mapProTxRefs.find(dmn->proTxHash) != mapProTxRefs.end()) {
+                    return true;
+                }
             }
         }
         return false;
@@ -1434,6 +1471,15 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
             if (it != mapProTxPlatformNodeIDs.end() && it->second != opt_proTx->proTxHash) {
                 return true;
             }
+            if (mapProTxPubKeyIDs.count(CKeyID{opt_proTx->platformNodeID})) {
+                return true;
+            }
+        }
+        // Conflict with a replacement ProRegTx that reuses this MN's external collateral.
+        if (auto dmn = dmnman->GetListAtChainTip().GetMN(opt_proTx->proTxHash)) {
+            if (mapProTxCollaterals.count(dmn->collateralOutpoint)) {
+                return true;
+            }
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
         const auto opt_proTx = GetTxPayload<CProUpRegTx>(tx);
@@ -1448,6 +1494,10 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
         if (!dmn) {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Masternode is not in the list, proTxHash: %s\n", __func__, proTx.proTxHash.ToString());
             return true; // i.e. failed to find validated ProTx == conflict
+        }
+        // Conflict with a replacement ProRegTx that reuses this MN's external collateral.
+        if (mapProTxCollaterals.count(dmn->collateralOutpoint)) {
+            return true;
         }
         // only allow one operator key change in the mempool
         if (dmn->pdmnState->pubKeyOperator != proTx.pubKeyOperator) {
@@ -1470,6 +1520,10 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
         if (!dmn) {
             LogPrint(BCLog::MEMPOOL, "%s: ERROR: Masternode is not in the list, proTxHash: %s\n", __func__, proTx.proTxHash.ToString());
             return true; // i.e. failed to find validated ProTx == conflict
+        }
+        // Conflict with a replacement ProRegTx that reuses this MN's external collateral.
+        if (mapProTxCollaterals.count(dmn->collateralOutpoint)) {
+            return true;
         }
         // only allow one operator key change in the mempool
         if (dmn->pdmnState->pubKeyOperator.Get() != CBLSPublicKey()) {
