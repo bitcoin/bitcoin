@@ -27,7 +27,6 @@
 #include <wallet/imports.h>
 #include <wallet/rpc/util.h>
 #include <wallet/scan.h>
-#include <wallet/scriptpubkeyman.h>
 #include <wallet/wallet.h>
 
 #include <cstdint>

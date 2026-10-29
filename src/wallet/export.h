@@ -6,7 +6,6 @@
 #define BITCOIN_WALLET_EXPORT_H
 
 #include <key.h>
-#include <script/signingprovider.h>
 #include <threadsafety.h>
 #include <util/expected.h>
 #include <wallet/types.h>
@@ -16,6 +15,10 @@
 #include <optional>
 #include <set>
 #include <vector>
+
+class SigningProvider;
+class XOnlyPubKey;
+struct TaprootSpendData;
 
 namespace wallet {
 enum class AddressKeyType { WALLET, TAPROOT_OUTPUT };

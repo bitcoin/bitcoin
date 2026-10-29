@@ -8,6 +8,7 @@
 #include <key_io.h>
 #include <script/descriptor.h>
 #include <script/interpreter.h>
+#include <script/signingprovider.h>
 #include <script/solver.h>
 #include <util/fs.h>
 #include <util/expected.h>
