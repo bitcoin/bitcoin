@@ -1464,6 +1464,7 @@ class SegWitTest(BitcoinTestFramework):
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
+        self.sync_blocks()
 
         # Now try to spend it. Send it to a P2WSH output, which we'll
         # use in the next test.
@@ -1484,6 +1485,7 @@ class SegWitTest(BitcoinTestFramework):
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx2])
         test_witness_block(self.nodes[1], self.std_node, block, accepted=True)
+        self.sync_blocks()
 
         # Test 2: P2WSH
         # Try to spend the P2WSH output created in last test.
@@ -1503,6 +1505,7 @@ class SegWitTest(BitcoinTestFramework):
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx3])
         test_witness_block(self.nodes[1], self.std_node, block, accepted=True)
+        self.sync_blocks()
 
         # Test 3: P2SH(P2WSH)
         # Try to spend the P2SH output created in the last test.
@@ -1519,6 +1522,7 @@ class SegWitTest(BitcoinTestFramework):
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx4])
         test_witness_block(self.nodes[1], self.std_node, block, accepted=True)
+        self.sync_blocks()
 
         # Test 4: Uncompressed pubkeys should still be valid in non-segwit
         # transactions.
