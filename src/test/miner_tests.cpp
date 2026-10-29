@@ -26,6 +26,7 @@
 #include <serialize.h>
 #include <sync.h>
 #include <test/util/common.h>
+#include <test/util/mining.h>
 #include <test/util/setup_common.h>
 #include <test/util/transaction_utils.h>
 #include <test/util/time.h>
@@ -980,6 +981,96 @@ BOOST_AUTO_TEST_CASE(block_template_manager)
     BOOST_CHECK(block.vtx[0]->IsCoinBase());
     BOOST_CHECK(block_template->vTxFees.empty());
     BOOST_CHECK(block_template->vTxSigOpsCost.empty());
+}
+
+// Uses regtest so that MineBlock() can solve a block.
+BOOST_FIXTURE_TEST_CASE(block_template_manager_cached_template, RegTestingSetup)
+{
+    auto& block_template_manager{*Assert(m_node.block_template_manager)};
+    auto& mempool{*Assert(m_node.mempool)};
+    FakeNodeClock clock{};
+    const auto active_tip{[&] { return WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Tip()->GetBlockHash()); }};
+    const auto refresh{[&] { return WITH_LOCK(::cs_main, return block_template_manager.RefreshCachedTemplate()); }};
+
+    // The first refresh builds a template on the tip.
+    const uint256 tip{active_tip()};
+    const auto first{refresh()};
+    BOOST_REQUIRE(first.block_template);
+    BOOST_CHECK_EQUAL(first.block_template->block.hashPrevBlock, tip);
+    BOOST_CHECK_EQUAL(first.transactions_updated, mempool.GetTransactionsUpdated());
+    BOOST_CHECK_EQUAL(first.time_start, Now<NodeSeconds>());
+
+    // Without a mempool change, the template is reused however old it is.
+    clock += 1h;
+    BOOST_CHECK(refresh().block_template == first.block_template);
+
+    // A mempool change rebuilds a template that is more than 5 seconds old.
+    mempool.AddTransactionsUpdated(1);
+    const auto second{refresh()};
+    BOOST_CHECK(second.block_template != first.block_template);
+    BOOST_CHECK_EQUAL(second.transactions_updated, mempool.GetTransactionsUpdated());
+    BOOST_CHECK_EQUAL(second.time_start, Now<NodeSeconds>());
+    BOOST_CHECK_EQUAL(WITH_LOCK(::cs_main, return block_template_manager.GetCachedTransactionsUpdated()), second.transactions_updated);
+
+    // A mempool change does not rebuild a template that is up to 5 seconds old.
+    mempool.AddTransactionsUpdated(1);
+    clock += 5s;
+    BOOST_CHECK(refresh().block_template == second.block_template);
+    clock += 1s;
+    const auto third{refresh()};
+    BOOST_CHECK(third.block_template != second.block_template);
+
+    // A new tip rebuilds the template.
+    MineBlock(m_node, {});
+    const uint256 new_tip{active_tip()};
+    BOOST_REQUIRE(new_tip != tip);
+    const auto fourth{refresh()};
+    BOOST_REQUIRE(fourth.block_template);
+    BOOST_CHECK(fourth.block_template != third.block_template);
+    BOOST_CHECK_EQUAL(fourth.block_template->block.hashPrevBlock, new_tip);
+
+    // A failed rebuild leaves no template, so the next refresh tries again
+    // without waiting for the 5 seconds to pass. An orphan in the mempool
+    // makes TestBlockValidity() reject the block.
+    CMutableTransaction orphan;
+    orphan.vin.emplace_back(COutPoint{Txid::FromUint256(uint256::ONE), 0});
+    orphan.vout.emplace_back(COIN, CScript() << OP_TRUE);
+    TryAddToMempool(mempool, TestMemPoolEntryHelper{}.Fee(CENT).FromTx(orphan));
+    BOOST_REQUIRE(mempool.exists(orphan.GetHash()));
+    clock += 6s;
+    BOOST_CHECK_EXCEPTION(refresh(), std::runtime_error, HasReason("bad-txns-inputs-missingorspent"));
+    WITH_LOCK(mempool.cs, mempool.removeRecursive(CTransaction{orphan}, MemPoolRemovalReason::REPLACED));
+    const auto fifth{refresh()};
+    BOOST_REQUIRE(fifth.block_template);
+    BOOST_CHECK(fifth.block_template != fourth.block_template);
+    BOOST_CHECK_EQUAL(fifth.block_template->block.hashPrevBlock, new_tip);
+}
+
+BOOST_AUTO_TEST_CASE(block_template_manager_last_block_stats)
+{
+    auto& block_template_manager{*Assert(m_node.block_template_manager)};
+    const auto last_block_stats{[&] { return WITH_LOCK(::cs_main, return block_template_manager.GetLastBlockStats()); }};
+
+    // Nothing is recorded before the first template is built.
+    BOOST_CHECK(!last_block_stats());
+
+    // A template built by the manager records its size. With an empty mempool
+    // the weight is the reserved weight alone.
+    const auto first{block_template_manager.CreateNewTemplate({.block_reserved_weight = 10'000})};
+    BOOST_REQUIRE_EQUAL(first->block.vtx.size(), 1U);
+    BOOST_REQUIRE(last_block_stats());
+    BOOST_CHECK_EQUAL(last_block_stats()->num_txs, 0);
+    BOOST_CHECK_EQUAL(last_block_stats()->weight, 10'000);
+
+    // A template built with BlockAssembler directly, as the mempool fee
+    // estimator does, is not recorded.
+    const auto direct{node::BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get(), {.block_reserved_weight = 12'000}}.CreateNewBlock()};
+    BOOST_REQUIRE(direct);
+    BOOST_CHECK_EQUAL(last_block_stats()->weight, 10'000);
+
+    // The next template built by the manager replaces the recorded size.
+    const auto second{block_template_manager.CreateNewTemplate({.block_reserved_weight = 14'000})};
+    BOOST_CHECK_EQUAL(last_block_stats()->weight, 14'000);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
