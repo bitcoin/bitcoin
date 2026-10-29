@@ -54,7 +54,7 @@ private:
     std::optional<const CGovernanceObject> CreateGovernanceTrigger(const std::optional<const CSuperblock>& sb_opt);
     std::optional<const CSuperblock> CreateSuperblockCandidate(int nHeight) const;
     void ResetVotedFundingTrigger();
-    void VoteGovernanceTriggers(const std::optional<const CGovernanceObject>& trigger_opt);
+    void VoteGovernanceTriggers(const std::optional<const CGovernanceObject>& trigger_opt, int nHeight);
 };
 
 #endif // BITCOIN_GOVERNANCE_SIGNING_H

@@ -178,7 +178,7 @@ std::optional<const CGovernanceObject> GovernanceSigner::CreateGovernanceTrigger
     return std::make_optional<CGovernanceObject>(gov_sb);
 }
 
-void GovernanceSigner::VoteGovernanceTriggers(const std::optional<const CGovernanceObject>& trigger_opt)
+void GovernanceSigner::VoteGovernanceTriggers(const std::optional<const CGovernanceObject>& trigger_opt, int nHeight)
 {
     // only active masternodes can vote on triggers
     if (m_mn_activeman.GetProTxHash().IsNull()) return;
@@ -238,6 +238,12 @@ void GovernanceSigner::VoteGovernanceTriggers(const std::optional<const CGoverna
             // ignore triggers from the past
             LogPrint(BCLog::GOBJECT, "%s -- Not voting NO-FUNDING for outdated trigger:%s\n", __func__,
                      trigger_hash.ToString());
+            continue;
+        }
+        if (nHeight < trigger->GetBlockHeight() - Params().GetConsensus().nSuperblockMaturityWindow) {
+            // We can't build a candidate for this trigger's superblock yet, so we have nothing to compare it to
+            LogPrint(BCLog::GOBJECT, "%s -- Not voting NO-FUNDING for trigger:%s, its maturity window has not started\n",
+                     __func__, trigger_hash.ToString());
             continue;
         }
         if (trigger_hash == votedFundingYesTriggerHash) {
@@ -300,7 +306,7 @@ void GovernanceSigner::UpdatedBlockTip(const CBlockIndex* pindex)
 {
     const auto sb_opt = CreateSuperblockCandidate(pindex->nHeight);
     const auto trigger_opt = CreateGovernanceTrigger(sb_opt);
-    VoteGovernanceTriggers(trigger_opt);
+    VoteGovernanceTriggers(trigger_opt, pindex->nHeight);
     CSuperblock_sptr pSuperblock;
     if (m_superblocks.GetBestSuperblock(m_dmnman.GetListAtChainTip(), pSuperblock, pindex->nHeight)) {
         ResetVotedFundingTrigger();
