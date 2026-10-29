@@ -46,7 +46,32 @@ Sock& Sock::operator=(Sock&& other)
 
 ssize_t Sock::Send(const void* data, size_t len, int flags) const
 {
-    return send(m_socket, static_cast<const char*>(data), len, flags);
+    //return send(m_socket, static_cast<const char*>(data), len, flags);
+
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // !!! NOTE: NOT FOR MERGING !!!
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // Instead of a normal send, perform forced small-chunk send calls, to stress test code and test paths.
+    // Send the first and last EDGE bytes one byte per send call, and the middle in larger calls.
+    constexpr size_t EDGE{100};
+    constexpr size_t MIDDLE_CHUNK{123};
+    ssize_t sent_all{0};
+    size_t i{0};
+    while (i < len) {
+        const bool edge{len < 2 * EDGE || i < EDGE || i >= len - EDGE};
+        const size_t n{edge ? 1 : std::min(len - EDGE - i, MIDDLE_CHUNK)};
+        auto sent1 = send(m_socket, static_cast<const char*>(data) + i, n, flags);
+        // Like send(), report the bytes transferred before an error; the error recurs on the next call
+        if (sent1 < 0) return sent_all > 0 ? sent_all : sent1;
+        if (sent1 == 0) break;
+        sent_all += sent1;
+        i += sent1;
+        // A partial send of the middle means the kernel buffer is full; let the caller retry later
+        if (static_cast<size_t>(sent1) < n) break;
+        // Also yield, so the reader has higher chance of reading small chunks
+        std::this_thread::yield();
+    }
+    return sent_all;
 }
 
 ssize_t Sock::Recv(void* buf, size_t len, int flags) const
