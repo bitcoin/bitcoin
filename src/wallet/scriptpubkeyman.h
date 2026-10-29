@@ -316,6 +316,8 @@ private:
     // Fetch the SigningProvider for a given index and optionally include private keys. Called by the above functions.
     std::unique_ptr<FlatSigningProvider> GetSigningProvider(int32_t index, bool include_private = false) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
+    util::Expected<std::optional<CKey>, AddressKeyError> ExportKey(int32_t index, const CPubKey& pubkey) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+
     void Load();
 
     void UpdateWithSigningProvider(WalletBatch& batch, const FlatSigningProvider& signing_provider) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
@@ -387,6 +389,15 @@ public:
 
     // Fetch the SigningProvider for the given pubkey and always include private keys. This should only be called by signing code.
     std::unique_ptr<FlatSigningProvider> GetSigningProvider(const CPubKey& pubkey) const;
+
+    //! Re-expand the exact known script/index without populating caches or accessing secrets/nonces.
+    util::Expected<FlatSigningProvider, AddressKeyError> GetExportProvider(const CScript& script) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+
+    //! Filter existing public key metadata by directly verifiable address forms; never derive or decrypt.
+    std::set<CPubKey> GetExportPubKeys(const CTxDestination& destination) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+
+    //! Resolve only a verified candidate, from stored key material or its existing cached index.
+    util::Expected<std::optional<CKey>, AddressKeyError> ExportKey(const CPubKey& pubkey) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
     //! Expand only the existing index for script, verify the public candidate, and return only its key.
     //! Does not populate provider caches or access signing nonce state. Caller authorizes export.

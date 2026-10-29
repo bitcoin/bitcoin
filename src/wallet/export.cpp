@@ -4,7 +4,9 @@
 
 #include <wallet/export.h>
 
+#include <hash.h>
 #include <key_io.h>
+#include <script/descriptor.h>
 #include <script/solver.h>
 #include <util/fs.h>
 #include <util/expected.h>
@@ -13,44 +15,130 @@
 #include <wallet/sqlite.h>
 #include <wallet/wallet.h>
 
+#include <algorithm>
 #include <fstream>
 #include <map>
 
 namespace wallet {
+//! Merge only public script/key metadata, checking identities before any duplicate is discarded.
+static bool MergeExportProvider(FlatSigningProvider& merged, const FlatSigningProvider& provider)
+{
+    for (const auto& [id, pubkey] : provider.pubkeys) {
+        if (!pubkey.IsFullyValid() || pubkey.GetID() != id) return false;
+        const auto [it, inserted] = merged.pubkeys.emplace(id, pubkey);
+        if (!inserted && it->second != pubkey) return false;
+    }
+    for (const auto& [id, script] : provider.scripts) {
+        if (CScriptID{script} != id) return false;
+        const auto [it, inserted] = merged.scripts.emplace(id, script);
+        if (!inserted && it->second != script) return false;
+    }
+    return true;
+}
+
+//! Follow only Core's permitted non-Taproot wrappers; recognition of the inner script is separate.
+static util::Expected<void, AddressKeyError> CheckExportWrappers(const CScript& script, const SigningProvider& provider)
+{
+    CScript inner{script};
+    std::vector<std::vector<unsigned char>> data;
+    if (Solver(inner, data) == TxoutType::SCRIPTHASH) {
+        CScript redeem;
+        if (!provider.GetCScript(CScriptID{uint160{data[0]}}, redeem)) return util::Unexpected{AddressKeyError::MISSING_METADATA};
+        if (GetScriptForDestination(ScriptHash{redeem}) != inner) return util::Unexpected{AddressKeyError::INCONSISTENT};
+        inner = std::move(redeem);
+    }
+    if (Solver(inner, data) == TxoutType::WITNESS_V0_SCRIPTHASH) {
+        CScript witness;
+        if (!provider.GetCScript(CScriptID{RIPEMD160(data[0])}, witness)) return util::Unexpected{AddressKeyError::MISSING_METADATA};
+        if (GetScriptForDestination(WitnessV0ScriptHash{witness}) != inner) return util::Unexpected{AddressKeyError::INCONSISTENT};
+        inner = std::move(witness);
+    }
+    const auto type = Solver(inner, data);
+    if (inner != script && (type == TxoutType::PUBKEYHASH || type == TxoutType::WITNESS_V0_KEYHASH)) {
+        CPubKey pubkey;
+        if (!provider.GetPubKey(CKeyID{uint160{data[0]}}, pubkey)) return util::Unexpected{AddressKeyError::MISSING_METADATA};
+    }
+    return {};
+}
+
 util::Expected<AddressKeyResult, AddressKeyError> ExportAddressKeys(const CWallet& wallet, const CTxDestination& destination, AddressKeyType type)
 {
     AssertLockHeld(wallet.cs_wallet);
     const auto pkhash = std::get_if<PKHash>(&destination);
     const auto witness = std::get_if<WitnessV0KeyHash>(&destination);
-    if (type != AddressKeyType::WALLET || (!pkhash && !witness)) {
+    if (type != AddressKeyType::WALLET || (!pkhash && !witness &&
+        !std::holds_alternative<ScriptHash>(destination) && !std::holds_alternative<WitnessV0ScriptHash>(destination))) {
         return util::Unexpected{AddressKeyError::UNSUPPORTED};
     }
 
     const CScript script{GetScriptForDestination(destination)};
-    const CKeyID key_id{pkhash ? ToKeyID(*pkhash) : ToKeyID(*witness)};
-    std::map<CPubKey, AddressKey> records;
-    for (const auto spk_man : wallet.GetScriptPubKeyMans(script)) {
+    FlatSigningProvider provider;
+    auto managers = wallet.GetAllScriptPubKeyMans();
+    const auto matching = wallet.GetScriptPubKeyMans(script);
+    managers.insert(matching.begin(), matching.end());
+    for (const auto spk_man : managers) {
         const auto desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man);
         if (!desc_spk_man) continue;
         LOCK(desc_spk_man->cs_desc_man);
-        auto exported = desc_spk_man->ExportKey(script, key_id);
-        if (!exported) return util::Unexpected{exported.error()};
-        if (!*exported) continue;
-        CKey key{std::move(**exported)};
-        const CPubKey pubkey{key.GetPubKey()};
-        const bool matches{pkhash ? PKHash{pubkey} == *pkhash : WitnessV0KeyHash{pubkey} == *witness};
-        if (!matches || (witness && !key.IsCompressed())) {
-            return util::Unexpected{AddressKeyError::INCONSISTENT};
+        const auto exact = desc_spk_man->GetExportProvider(script);
+        if (exact) {
+            if (!MergeExportProvider(provider, *exact)) return util::Unexpected{AddressKeyError::INCONSISTENT};
+        } else if (exact.error() != AddressKeyError::NO_KEY) {
+            return util::Unexpected{exact.error()};
         }
-        records.try_emplace(pubkey, AddressKey{std::move(key), {AddressKeyRole::SCRIPT}});
+        if (pkhash || witness || std::holds_alternative<ScriptHash>(destination)) {
+            for (const auto& pubkey : desc_spk_man->GetExportPubKeys(destination)) {
+                if (!pubkey.IsFullyValid()) return util::Unexpected{AddressKeyError::INCONSISTENT};
+                const auto [it, inserted] = provider.pubkeys.emplace(pubkey.GetID(), pubkey);
+                if (!inserted && it->second != pubkey) return util::Unexpected{AddressKeyError::INCONSISTENT};
+                if (std::holds_alternative<ScriptHash>(destination)) {
+                    const CScript redeem{GetScriptForDestination(WitnessV0KeyHash{pubkey})};
+                    provider.scripts.emplace(CScriptID{redeem}, redeem);
+                }
+            }
+        }
+    }
+    const auto wrappers = CheckExportWrappers(script, provider);
+    if (!wrappers) return util::Unexpected{wrappers.error()};
+    const auto concrete = InferDescriptor(script, provider);
+    if (!concrete->IsSolvable()) {
+        return util::Unexpected{pkhash || witness ? AddressKeyError::NO_KEY : AddressKeyError::UNSUPPORTED};
+    }
+    // Re-expansion binds the recognized semantics and every wrapper commitment to the output.
+    FlatSigningProvider expanded;
+    std::vector<CScript> scripts;
+    if (!concrete->Expand(0, provider, scripts, expanded) ||
+        std::find(scripts.begin(), scripts.end(), script) == scripts.end()) {
+        return util::Unexpected{AddressKeyError::INCONSISTENT};
+    }
+    std::set<CPubKey> candidates;
+    std::set<CExtPubKey> ext_keys;
+    concrete->GetPubKeys(candidates, ext_keys);
+    if (!ext_keys.empty()) return util::Unexpected{AddressKeyError::INCONSISTENT};
+    std::map<CPubKey, AddressKey> records;
+    for (const auto spk_man : managers) {
+        const auto desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man);
+        if (!desc_spk_man) continue;
+        LOCK(desc_spk_man->cs_desc_man);
+        for (const auto& pubkey : candidates) {
+            if (!pubkey.IsFullyValid()) return util::Unexpected{AddressKeyError::INCONSISTENT};
+            auto exported = desc_spk_man->ExportKey(pubkey);
+            if (!exported) return util::Unexpected{exported.error()};
+            if (!*exported) continue;
+            CKey key{std::move(**exported)};
+            if (!key.IsValid() || key.GetPubKey() != pubkey || (witness && !key.IsCompressed())) {
+                return util::Unexpected{AddressKeyError::INCONSISTENT};
+            }
+            records.try_emplace(pubkey, AddressKey{std::move(key), {AddressKeyRole::SCRIPT}});
+        }
     }
     if (records.empty()) return util::Unexpected{AddressKeyError::NO_KEY};
 
     AddressKeyResult result;
     for (auto& [pubkey, record] : records) result.keys.push_back(std::move(record));
     // A single hash-bound key is the original RPC contract, never an arbitrary first record.
-    if (result.keys.size() != 1) return util::Unexpected{AddressKeyError::INCONSISTENT};
-    result.legacy_aliases = true;
+    result.legacy_aliases = pkhash || witness;
+    if (result.legacy_aliases && result.keys.size() != 1) return util::Unexpected{AddressKeyError::INCONSISTENT};
     return result;
 }
 

@@ -2,7 +2,7 @@
 # Copyright (c) 2026 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test address-bound leaf-key export, authorization, encoding and non-mutation.
+"""Test address-bound key export, script membership, authorization and non-mutation.
 
 All secrets are public synthetic fixtures. No private-descriptor export RPC is
 used as an oracle.
@@ -21,12 +21,22 @@ from test_framework.address import (
     key_to_p2pkh,
     key_to_p2sh_p2wpkh,
     key_to_p2wpkh,
+    program_to_witness,
     script_to_p2wsh,
+    script_to_p2sh,
 )
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECKey, ORDER
-from test_framework.script import CScript, OP_TRUE
-from test_framework.script_util import key_to_p2wpkh_script
+from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, tx_from_hex
+from test_framework.script import (
+    CScript, LegacySignatureHash, SegwitV0SignatureHash, SIGHASH_ALL,
+    OP_CHECKSEQUENCEVERIFY, OP_CHECKSIG, OP_ELSE, OP_ENDIF, OP_EQUALVERIFY,
+    OP_IF, OP_SHA256, OP_SIZE, OP_TRUE, OP_VERIFY,
+)
+from test_framework.script_util import (
+    key_to_p2pk_script, key_to_p2pkh_script, key_to_p2wpkh_script,
+    keys_to_multisig_script, script_to_p2sh_script, script_to_p2wsh_script,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -82,7 +92,7 @@ class ExportAddressKeyTest(BitcoinTestFramework):
             self.private_material.add(descriptor)
 
     def check_export(self, wallet, address, secret, compressed, *, witness=False):
-        result = wallet.exportaddresskey(address)
+        result = self.export_unchanged(wallet, address)
         assert_equal(set(result), {'keys', 'private_key_hex', 'compressed'})
         encoded = result['private_key_hex']
         assert isinstance(encoded, str) and re.fullmatch('[0-9a-f]{64}', encoded), 'invalid scalar encoding'
@@ -102,7 +112,256 @@ class ExportAddressKeyTest(BitcoinTestFramework):
             'balances': wallet.getbalances(),
             'wallet': {k: info.get(k) for k in ['txcount', 'keypoolsize', 'keypoolsize_hd_internal']},
             'addresses': [wallet.getaddressinfo(address) for address in addresses],
+            'labels': {label: wallet.getaddressesbylabel(label) for label in wallet.listlabels()},
+            'transactions': wallet.listtransactions(count=1000),
+            'locked_coins': wallet.listlockunspent(),
+            'unlocked_until': info.get('unlocked_until'),
         }
+
+    def export_unchanged(self, wallet, address):
+        # These snapshots avoid getaddressinfo before the first export, since that
+        # RPC may warm public solving-provider caches. Warm them explicitly afterward.
+        before = self.snapshot(wallet, [])
+        result = wallet.exportaddresskey(address)
+        wallet.getaddressinfo(address)
+        assert_equal(wallet.exportaddresskey(address), result)
+        assert_equal(self.snapshot(wallet, []), before)
+        return result
+
+    def check_script_export(self, wallet, address, secrets):
+        result = self.export_unchanged(wallet, address)
+        assert_equal(set(result), {'keys'})
+        expected = sorted([
+            {'pubkey': public_key(secret, compressed).hex(), 'private_key_hex': secret.hex(),
+             'compressed': compressed, 'roles': ['script']}
+            for secret, compressed in set(secrets)
+        ], key=lambda record: record['pubkey'])
+        assert_equal(result['keys'], expected)
+        self.private_material.update(secret.hex() for secret, _ in secrets)
+        return result
+
+    def check_script_constructions(self, wallet, root, root_secret, root_chain):
+        self.log.info('Check nested wrappers and partial multisig ownership independently of threshold')
+        secrets = [(i).to_bytes(32, 'big') for i in range(20, 23)]
+        pubkeys = [public_key(secret) for secret in secrets]
+        wifs = [bytes_to_wif(secret) for secret in secrets]
+        self.private_material.update(wifs)
+        for variant, (local, threshold, sorted_keys) in enumerate([(1, 1, False), (1, 3, False), (2, 2, True), (3, 2, False)]):
+            name = f'partial_{variant}'
+            self.nodes[0].createwallet(name, blank=True)
+            partial = self.nodes[0].get_wallet_rpc(name)
+            expressions = [wifs[i] if i < local else pubkeys[i].hex() for i in range(3)]
+            kind = 'sortedmulti' if sorted_keys else 'multi'
+            inner = f'{kind}({threshold},{",".join(expressions)})'
+            script = keys_to_multisig_script(sorted(pubkeys) if sorted_keys else pubkeys, k=threshold)
+            for descriptor, address in [(f'sh({inner})', script_to_p2sh(script)),
+                                        (f'wsh({inner})', script_to_p2wsh(script)),
+                                        (f'sh(wsh({inner}))', script_to_p2sh(CScript([0, hashlib.sha256(script).digest()])))]:
+                self.import_descriptor(partial, descriptor)
+                self.check_script_export(partial, address, [(secret, True) for secret in secrets[:local]])
+        for compressed in [True, False]:
+            secret = (30 + compressed).to_bytes(32, 'big')
+            wif = bytes_to_wif(secret, compressed)
+            self.private_material.add(wif)
+            pubkey = public_key(secret, compressed)
+            for kind, script in [('pk', key_to_p2pk_script(pubkey)), ('pkh', key_to_p2pkh_script(pubkey))]:
+                self.import_descriptor(wallet, f'sh({kind}({wif}))')
+                self.check_script_export(wallet, script_to_p2sh(script), [(secret, compressed)])
+            if compressed:
+                self.import_descriptor(wallet, f'sh(wpkh({wif}))')
+                self.check_script_export(wallet, key_to_p2sh_p2wpkh(pubkey), [(secret, True)])
+                self.import_descriptor(wallet, f'wsh(pk({wif}))')
+                self.check_script_export(wallet, script_to_p2wsh(key_to_p2pk_script(pubkey)), [(secret, True)])
+
+        self.log.info('Check ranged receive/change multisig and repeated keys')
+        for branch, index in [(0, 7), (1, 11)]:
+            desc = f'wsh(multi(2,{wifs[0]},{root}/48h/1h/0h/{branch}/*,{wifs[0]}))'
+            self.import_descriptor(wallet, desc, active=True, internal=bool(branch), range=[0, 15], next_index=index)
+            leaf, _ = derive_leaf(root_secret, root_chain, [0x80000030, 0x80000001, 0x80000000, branch, index])
+            script = keys_to_multisig_script([pubkeys[0], public_key(leaf), pubkeys[0]], k=2)
+            address = script_to_p2wsh(script)
+            generated = wallet.getrawchangeaddress('bech32') if branch else wallet.getnewaddress('', 'bech32')
+            assert_equal(generated, address)
+            self.check_script_export(wallet, address, [(secrets[0], True), (leaf, True)])
+
+        self.log.info('Check all Miniscript branches despite timelocks and unavailable hash preimages')
+        for policy in [f'or_i(pk({wifs[0]}),and_v(v:older(1000),pk({wifs[1]})))',
+                       f'or_i(pk({wifs[0]}),and_v(v:sha256({hashlib.sha256(b"unknown preimage").hexdigest()}),pk({wifs[1]})))']:
+            descriptor = f'wsh({policy})'
+            self.import_descriptor(wallet, descriptor)
+            public_desc = wallet.getdescriptorinfo(descsum_create(descriptor))['descriptor']
+            address = wallet.deriveaddresses(public_desc)[0]
+            self.check_script_export(wallet, address, [(secrets[0], True), (secrets[1], True)])
+
+    def check_cross_manager_resolution(self, root, root_secret, root_chain):
+        self.log.info('Check cross-descriptor key union and independence from import order')
+        node = self.nodes[0]
+        secrets = [(i).to_bytes(32, 'big') for i in [50, 51]]
+        pubkeys = [public_key(secret) for secret in secrets]
+        wifs = [bytes_to_wif(secret) for secret in secrets]
+        self.private_material.update(wifs)
+        a = f'wsh(multi(2,{wifs[0]},{pubkeys[1].hex()}))'
+        b = f'wsh(multi(2,[01020304]{pubkeys[0].hex()},{wifs[1]}))'
+        address = script_to_p2wsh(keys_to_multisig_script(pubkeys, k=2))
+        for name, descriptors in [('cross', [a, b]), ('cross_reverse', [b, a])]:
+            node.createwallet(name, blank=True)
+            wallet = node.get_wallet_rpc(name)
+            self.import_descriptor(wallet, descriptors[0])
+            first = secrets[0] if name == 'cross' else secrets[1]
+            self.check_script_export(wallet, address, [(first, True)])
+            self.import_descriptor(wallet, descriptors[1])
+            self.check_script_export(wallet, address, [(secret, True) for secret in secrets])
+        wallet = node.get_wallet_rpc('cross')
+
+        self.log.info('Check a concrete candidate whose derived secret belongs to another descriptor')
+        self.import_descriptor(wallet, f'wpkh({root}/5/*)', range=[0, 5])
+        leaf, _ = derive_leaf(root_secret, root_chain, [5, 3])
+        leaf_pubkey = public_key(leaf)
+        target = f'wsh(multi(2,{wifs[0]},{leaf_pubkey.hex()}))'
+        self.import_descriptor(wallet, target)
+        address = script_to_p2wsh(keys_to_multisig_script([pubkeys[0], leaf_pubkey], k=2))
+        self.check_script_export(wallet, address, [(secrets[0], True), (leaf, True)])
+        self.check_export(wallet, key_to_p2pkh(leaf_pubkey), leaf, True)
+        self.check_script_export(wallet, key_to_p2sh_p2wpkh(leaf_pubkey), [(leaf, True)])
+
+        self.log.info('Check exact compression identity and selected-wallet isolation')
+        uncompressed = public_key(secrets[1], compressed=False)
+        assert_raises_rpc_error(-5, 'No private key for this address', wallet.exportaddresskey, key_to_p2pkh(uncompressed))
+        wif = bytes_to_wif(secrets[1], compressed=False)
+        self.private_material.add(wif)
+        self.import_descriptor(wallet, f'unused({wif})')
+        self.check_export(wallet, key_to_p2pkh(uncompressed), secrets[1], False)
+        node.createwallet('isolated', blank=True)
+        isolated = node.get_wallet_rpc('isolated')
+        assert_raises_rpc_error(-5, 'No private key for this address', isolated.exportaddresskey, key_to_p2pkh(leaf_pubkey))
+        assert_raises_rpc_error(-5, 'lacks the spending/script information', isolated.exportaddresskey, address)
+
+    def check_spending_and_state(self, root_secret, root_chain):
+        self.log.info('Fund independently reconstructed scripts and spend using exported scalars')
+        node = self.nodes[0]
+        node.createwallet('funding')
+        funding = node.get_wallet_rpc('funding')
+        mining_address = funding.getnewaddress()
+        self.generatetoaddress(node, 101, mining_address)
+
+        def spend(wallet_name, script_code, wrapper, expected, make_stack, *, external=(), required=1):
+            wallet = node.get_wallet_rpc(wallet_name)
+            if wrapper == 'sh':
+                outer, address = script_to_p2sh_script(script_code), script_to_p2sh(script_code)
+                redeem = script_code
+            elif wrapper == 'sh_wpkh':
+                pubkey = public_key(*expected[0])
+                redeem = key_to_p2wpkh_script(pubkey)
+                outer, address = script_to_p2sh_script(redeem), script_to_p2sh(redeem)
+            else:
+                redeem = script_to_p2wsh_script(script_code)
+                outer = script_to_p2sh_script(redeem) if wrapper == 'sh_wsh' else redeem
+                address = script_to_p2sh(redeem) if wrapper == 'sh_wsh' else script_to_p2wsh(script_code)
+            wallet.setlabel(address, 'script export spend fixture')
+            txid = funding.sendtoaddress(address, 1)
+            self.generatetoaddress(node, 1, mining_address)
+            previous = tx_from_hex(funding.gettransaction(txid)['hex'])
+            matches = [i for i, output in enumerate(previous.vout) if output.scriptPubKey == outer]
+            assert_equal(len(matches), 1)
+            index = matches[0]
+            assert_equal(previous.vout[index].nValue, COIN)
+            coin = {'txid': txid, 'vout': index}
+            assert wallet.lockunspent(False, [coin]), 'funded wallet output cannot be locked'
+            assert coin in wallet.listlockunspent(), 'nonempty lock-state fixture missing'
+            exported = self.check_script_export(wallet, address, expected)
+            assert wallet.lockunspent(True, [coin]), 'funded wallet output cannot be unlocked'
+
+            tx = CTransaction()
+            tx.vin = [CTxIn(COutPoint(int(txid, 16), index), nSequence=0xfffffffd)]
+            destination = funding.getnewaddress('', 'legacy')
+            destination_info = node.validateaddress(destination)
+            tx.vout = [CTxOut(COIN - 10000, bytes.fromhex(destination_info['scriptPubKey']))]
+            witness = wrapper != 'sh'
+            if witness:
+                digest = SegwitV0SignatureHash(script_code, tx, inIdx=0, hashtype=SIGHASH_ALL, amount=COIN)
+            else:
+                digest, error = LegacySignatureHash(script_code, tx, inIdx=0, hashtype=SIGHASH_ALL)
+                assert_equal(error, None)
+            signatures = {}
+
+            def sign(secret, compressed):
+                key = ECKey()
+                key.set(secret, compressed)
+                signature = key.sign_ecdsa(digest)
+                assert key.get_pubkey().verify_ecdsa(signature, digest), 'exported scalar signature does not verify'
+                signatures[key.get_pubkey().get_bytes()] = signature + bytes([SIGHASH_ALL])
+
+            for record in exported['keys']:
+                sign(bytes.fromhex(record['private_key_hex']), record['compressed'])
+            assert_equal(len(signatures), len(expected))
+
+            def set_stack():
+                stack = make_stack(signatures)
+                if witness:
+                    tx.vin[0].scriptSig = CScript([redeem]) if wrapper.startswith('sh_') else CScript()
+                    tx.wit.vtxinwit = [CTxInWitness()]
+                    tx.wit.vtxinwit[0].scriptWitness.stack = stack + ([] if wrapper == 'sh_wpkh' else [script_code])
+                else:
+                    tx.vin[0].scriptSig = CScript(stack + [script_code])
+
+            if len(signatures) < required:
+                set_stack()
+                partial = node.testmempoolaccept([tx.serialize().hex()])[0]
+                assert not partial['allowed'], 'incomplete exported set unexpectedly satisfied threshold'
+                assert 'script' in partial['reject-reason'] or 'stack' in partial['reject-reason'], 'partial spend failed outside script verification'
+            for secret, compressed in external:
+                sign(secret, compressed)
+            set_stack()
+            assert node.testmempoolaccept([tx.serialize().hex()])[0]['allowed'], 'exported-key spend rejected by script validation'
+            node.sendrawtransaction(tx.serialize().hex())
+            self.generatetoaddress(node, 1, mining_address)
+            assert_equal(node.gettxout(txid, index), None)
+
+        secrets = [(i).to_bytes(32, 'big') for i in [20, 21, 22]]
+        pubkeys = [public_key(secret) for secret in secrets]
+        for name, threshold, wrapper, local, sorted_keys in [
+                ('partial_0', 1, 'sh', 1, False),
+                ('partial_1', 3, 'wsh', 1, False),
+                ('partial_2', 2, 'sh_wsh', 2, True)]:
+            ordered = sorted(pubkeys) if sorted_keys else pubkeys
+            script = keys_to_multisig_script(ordered, k=threshold)
+            spend(name, script, wrapper, [(secret, True) for secret in secrets[:local]],
+                  lambda signatures, ordered=ordered, threshold=threshold: [b''] + [signatures[p] for p in ordered if p in signatures][:threshold],
+                  external=[(secret, True) for secret in secrets[local:threshold]], required=threshold)
+
+        uncompressed = (30).to_bytes(32, 'big')
+        pubkey = public_key(uncompressed, False)
+        spend('scripts', key_to_p2pk_script(pubkey), 'sh', [(uncompressed, False)], lambda signatures: [signatures[pubkey]])
+        compressed = (31).to_bytes(32, 'big')
+        pubkey = public_key(compressed)
+        spend('scripts', key_to_p2pkh_script(pubkey), 'sh_wpkh', [(compressed, True)], lambda signatures: [signatures[pubkey], pubkey])
+
+        for guard in [[1000, OP_CHECKSEQUENCEVERIFY, OP_VERIFY],
+                      [OP_SIZE, 32, OP_EQUALVERIFY, OP_SHA256, hashlib.sha256(b'unknown preimage').digest(), OP_EQUALVERIFY]]:
+            # Reconstruct both Miniscript branches directly, without asking Core for a script.
+            script = CScript([OP_IF, pubkeys[0], OP_CHECKSIG, OP_ELSE, *guard, pubkeys[1], OP_CHECKSIG, OP_ENDIF])
+            spend('scripts', script, 'wsh', [(secret, True) for secret in secrets[:2]],
+                  lambda signatures: [signatures[pubkeys[0]], b'\x01'])
+
+        leaf, _ = derive_leaf(root_secret, root_chain, [5, 3])
+        fixed = (50).to_bytes(32, 'big')
+        ordered = [public_key(fixed), public_key(leaf)]
+        spend('cross', keys_to_multisig_script(ordered, k=2), 'wsh', [(fixed, True), (leaf, True)],
+              lambda signatures: [b''] + [signatures[p] for p in ordered], required=2)
+
+        self.log.info('Check encrypted script/cross-manager export preserves authorization and transaction state')
+        wallet = node.get_wallet_rpc('cross')
+        address = script_to_p2wsh(keys_to_multisig_script(ordered, k=2))
+        wallet.encryptwallet('synthetic-script-passphrase')
+        before = self.snapshot(wallet, [])
+        assert_raises_rpc_error(-13, 'walletpassphrase', wallet.exportaddresskey, address)
+        assert_equal(self.snapshot(wallet, []), before)
+        wallet.walletpassphrase('synthetic-script-passphrase', 60)
+        self.check_script_export(wallet, address, [(fixed, True), (leaf, True)])
+        wallet.walletlock()
+        before = self.snapshot(wallet, [])
+        assert_raises_rpc_error(-13, 'walletpassphrase', wallet.exportaddresskey, address)
+        assert_equal(self.snapshot(wallet, []), before)
 
     def run_test(self):
         node = self.nodes[0]
@@ -147,6 +406,10 @@ class ExportAddressKeyTest(BitcoinTestFramework):
             fixtures.append((address, secret, True, True))
 
         addresses = [fixture[0] for fixture in fixtures]
+        node.createwallet('scripts', blank=True)
+        self.check_script_constructions(node.get_wallet_rpc('scripts'), root, root_secret, root_chain)
+        self.check_cross_manager_resolution(root, root_secret, root_chain)
+        self.check_spending_and_state(root_secret, root_chain)
         self.log.info('Check optional mode, named arguments, JSON-RPC versions and CLI strings')
         expected = wallet.exportaddresskey(addresses[0])
         for result in [rpc_wallet.exportaddresskey(addresses[0], None),
@@ -211,7 +474,9 @@ class ExportAddressKeyTest(BitcoinTestFramework):
         for address in [key_to_p2pkh(unknown_pubkey, main=True), key_to_p2wpkh(unknown_pubkey, main=True)]:
             assert_raises_rpc_error(-5, 'Invalid address', wallet.exportaddresskey, address)
         taproot, _ = create_deterministic_address_bcrt1_p2tr_op_true()
-        for address in [key_to_p2sh_p2wpkh(unknown_pubkey), script_to_p2wsh(CScript([OP_TRUE])), taproot]:
+        for address in [key_to_p2sh_p2wpkh(unknown_pubkey), script_to_p2wsh(CScript([OP_TRUE]))]:
+            assert_raises_rpc_error(-5, 'lacks the spending/script information', wallet.exportaddresskey, address)
+        for address in [taproot, program_to_witness(2, bytes(32))]:
             assert_raises_rpc_error(-5, 'spending construction is not supported', wallet.exportaddresskey, address)
         assert_raises_rpc_error(-5, 'spending construction is not supported', wallet.exportaddresskey, taproot, 'taproot_output')
         assert_raises_rpc_error(-8, 'requires a Taproot address', wallet.exportaddresskey, addresses[0], 'taproot_output')

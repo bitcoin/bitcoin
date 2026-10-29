@@ -4,20 +4,25 @@
 
 #include <key.h>
 #include <key_io.h>
+#include <script/descriptor.h>
 #include <sync.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <script/solver.h>
+#include <threadsafety.h>
+#include <tinyformat.h>
 #include <wallet/export.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/wallet.h>
 #include <wallet/test/util.h>
 
+#include <algorithm>
 #include <array>
 #include <memory>
 #include <optional>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
@@ -174,9 +179,246 @@ BOOST_AUTO_TEST_CASE(export_key_duplicate_managers_and_candidates)
     const auto exported = WITH_LOCK(multi->cs_desc_man, return multi->ExportKey(script, key.GetPubKey().GetID()));
     BOOST_REQUIRE(exported && *exported);
     BOOST_CHECK((**exported).GetPubKey() == key.GetPubKey());
-    const auto unsupported = ExportAddressKeys(wallet, WitnessV0ScriptHash{GetScriptForMultisig(1, {key.GetPubKey(), extra.GetPubKey(), key.GetPubKey()})}, AddressKeyType::WALLET);
-    BOOST_REQUIRE(!unsupported);
-    BOOST_CHECK(unsupported.error() == AddressKeyError::UNSUPPORTED);
+    const auto multiple = ExportAddressKeys(wallet, WitnessV0ScriptHash{GetScriptForMultisig(1, {key.GetPubKey(), extra.GetPubKey(), key.GetPubKey()})}, AddressKeyType::WALLET);
+    BOOST_REQUIRE(multiple);
+    BOOST_CHECK_EQUAL(multiple->keys.size(), 2U);
+    BOOST_CHECK(!multiple->legacy_aliases);
+}
+
+BOOST_AUTO_TEST_CASE(export_script_keys_partial_and_wrappers)
+{
+    const std::array<CKey, 3> keys{GenerateRandomKey(), GenerateRandomKey(), GenerateRandomKey()};
+    for (const std::string wrapper : {"sh", "wsh", "sh-wsh"}) {
+        for (bool sorted : {false, true}) {
+            for (int threshold : {1, 2, 3}) {
+                for (int local : {1, 2, 3}) {
+                    CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
+                    LOCK(wallet.cs_wallet);
+                    wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+                    std::string desc = (sorted ? "sortedmulti(" : "multi(") + strprintf("%d", threshold);
+                    std::set<CPubKey> expected;
+                    std::vector<CPubKey> pubkeys;
+                    for (int i = 0; i < 3; ++i) {
+                        desc += "," + (i < local ? EncodeSecret(keys[i]) : HexStr(keys[i].GetPubKey()));
+                        pubkeys.push_back(keys[i].GetPubKey());
+                        if (i < local) expected.insert(keys[i].GetPubKey());
+                    }
+                    desc += ')';
+                    if (sorted) std::sort(pubkeys.begin(), pubkeys.end());
+                    const CScript inner = GetScriptForMultisig(threshold, pubkeys);
+                    CTxDestination dest{wrapper == "sh" ? CTxDestination{ScriptHash{inner}} : CTxDestination{WitnessV0ScriptHash{inner}}};
+                    desc = (wrapper == "sh" ? "sh(" : "wsh(") + desc + ")";
+                    if (wrapper == "sh-wsh") {
+                        dest = ScriptHash{GetScriptForDestination(dest)};
+                        desc = "sh(" + desc + ")";
+                    }
+                    auto manager = LoadExportDescriptor(wallet, desc);
+                    const auto result = ExportAddressKeys(wallet, dest, AddressKeyType::WALLET);
+                    BOOST_REQUIRE(result);
+                    BOOST_CHECK(!result->legacy_aliases);
+                    std::vector<CPubKey> actual;
+                    for (const auto& record : result->keys) {
+                        actual.push_back(record.key.GetPubKey());
+                        BOOST_CHECK(record.roles == std::set{AddressKeyRole::SCRIPT});
+                    }
+                    BOOST_CHECK(actual == std::vector<CPubKey>(expected.begin(), expected.end()));
+                }
+            }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(export_script_keys_recognition)
+{
+    const auto key = GenerateRandomKey();
+    const auto pubkey = key.GetPubKey();
+    for (const std::string& text : {"sh(wpkh(" + EncodeSecret(key) + "))", "sh(pk(" + EncodeSecret(key) + "))", "sh(pkh(" + EncodeSecret(key) + "))", "wsh(pk(" + EncodeSecret(key) + "))"}) {
+        CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
+        LOCK(wallet.cs_wallet);
+        wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+        auto manager = LoadExportDescriptor(wallet, text);
+        const auto scripts = manager->GetScriptPubKeys();
+        BOOST_REQUIRE_EQUAL(scripts.size(), 1U);
+        CTxDestination dest;
+        BOOST_REQUIRE(ExtractDestination(*scripts.begin(), dest));
+        const auto result = ExportAddressKeys(wallet, dest, AddressKeyType::WALLET);
+        BOOST_REQUIRE(result);
+        BOOST_REQUIRE_EQUAL(result->keys.size(), 1U);
+        BOOST_CHECK(result->keys.front().key.GetPubKey() == pubkey);
+    }
+    // Key-shaped pushed bytes are not evidence of a signing-key association.
+    CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
+    LOCK(wallet.cs_wallet);
+    wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+    const CScript unused = CScript{} << ToByteVector(pubkey) << OP_DROP << OP_TRUE;
+    const CTxDestination dest{WitnessV0ScriptHash{unused}};
+    FlatSigningProvider known;
+    known.pubkeys.emplace(pubkey.GetID(), pubkey);
+    known.scripts.emplace(CScriptID{unused}, unused);
+    const CScript signing = GetScriptForRawPubKey(pubkey);
+    known.scripts.emplace(CScriptID{signing}, signing);
+    // Both fixtures supply their full witness script and known public key. The
+    // positive control checks that recognition is not failing from missing data.
+    for (const auto& [inner, supported] : {std::pair{signing, true}, std::pair{unused, false}}) {
+        const CScript outer = GetScriptForDestination(WitnessV0ScriptHash{inner});
+        CScript retrieved;
+        BOOST_REQUIRE(known.GetCScript(CScriptID{inner}, retrieved));
+        BOOST_CHECK(retrieved == inner);
+        const auto concrete = InferDescriptor(outer, known);
+        BOOST_CHECK_EQUAL(concrete->IsSolvable(), supported);
+        FlatSigningProvider expanded;
+        std::vector<CScript> scripts;
+        BOOST_REQUIRE(concrete->Expand(0, known, scripts, expanded));
+        BOOST_CHECK(std::find(scripts.begin(), scripts.end(), outer) != scripts.end());
+        std::set<CPubKey> candidates;
+        std::set<CExtPubKey> ext_keys;
+        concrete->GetPubKeys(candidates, ext_keys);
+        BOOST_CHECK(candidates == (supported ? std::set{pubkey} : std::set<CPubKey>{}));
+        BOOST_CHECK(ext_keys.empty());
+    }
+    auto manager = LoadExportDescriptor(wallet, "raw(" + HexStr(GetScriptForDestination(dest)) + ")", KeyMap{{pubkey.GetID(), key}});
+    const auto result = ExportAddressKeys(wallet, dest, AddressKeyType::WALLET);
+    BOOST_REQUIRE(!result);
+    BOOST_CHECK(result.error() == AddressKeyError::MISSING_METADATA);
+}
+
+BOOST_AUTO_TEST_CASE(export_cross_manager_keys_and_order)
+{
+    const auto first = GenerateRandomKey();
+    const auto second = GenerateRandomKey();
+    const auto script = GetScriptForMultisig(2, {first.GetPubKey(), second.GetPubKey()});
+    for (bool reverse : {false, true}) {
+        CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
+        LOCK(wallet.cs_wallet);
+        wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+        const std::string a = "wsh(multi(2,[01020304]" + EncodeSecret(first) + "," + HexStr(second.GetPubKey()) + "))";
+        const std::string b = "wsh(multi(2," + HexStr(first.GetPubKey()) + ",[05060708]" + EncodeSecret(second) + "))";
+        BOOST_REQUIRE(CreateDescriptor(wallet, reverse ? b : a, /*success=*/true));
+        BOOST_REQUIRE(CreateDescriptor(wallet, reverse ? a : b, /*success=*/true));
+        const auto result = ExportAddressKeys(wallet, WitnessV0ScriptHash{script}, AddressKeyType::WALLET);
+        BOOST_REQUIRE(result);
+        std::set<CPubKey> expected{first.GetPubKey(), second.GetPubKey()};
+        std::vector<CPubKey> actual;
+        for (const auto& record : result->keys) actual.push_back(record.key.GetPubKey());
+        BOOST_CHECK(actual == std::vector<CPubKey>(expected.begin(), expected.end()));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(export_cross_manager_cached_and_stored_keys)
+{
+    CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
+    LOCK(wallet.cs_wallet);
+    wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+    CExtKey root, child;
+    root.SetSeed(std::array<std::byte, 32>{});
+    BOOST_REQUIRE(root.Derive(child, 2));
+    // The target descriptor has no secrets. Its concrete key is cached in another descriptor.
+    BOOST_REQUIRE(CreateDescriptor(wallet, "wsh(pk(" + HexStr(child.key.GetPubKey()) + "))", /*success=*/true));
+    FlatSigningProvider keys;
+    std::string error;
+    auto descs = Parse("wpkh(" + EncodeExtKey(root) + "/*)", keys, error, /*require_checksum=*/false);
+    BOOST_REQUIRE_EQUAL(descs.size(), 1U);
+    WalletDescriptor descriptor(std::move(descs.front()), /*creation_time=*/1, /*range_start=*/0, /*range_end=*/3, /*next_index=*/0);
+    BOOST_REQUIRE(wallet.AddWalletDescriptor(descriptor, keys, "", /*internal=*/false));
+    for (const CTxDestination& dest : {CTxDestination{WitnessV0ScriptHash{GetScriptForRawPubKey(child.key.GetPubKey())}},
+            CTxDestination{PKHash{child.key.GetPubKey()}}, CTxDestination{WitnessV0KeyHash{child.key.GetPubKey()}},
+            CTxDestination{ScriptHash{GetScriptForDestination(WitnessV0KeyHash{child.key.GetPubKey()})}}}) {
+        const auto result = ExportAddressKeys(wallet, dest, AddressKeyType::WALLET);
+        BOOST_REQUIRE(result);
+        BOOST_REQUIRE_EQUAL(result->keys.size(), 1U);
+        BOOST_CHECK(result->keys.front().key.GetPubKey() == child.key.GetPubKey());
+        BOOST_CHECK_EQUAL(result->legacy_aliases, std::holds_alternative<PKHash>(dest) || std::holds_alternative<WitnessV0KeyHash>(dest));
+    }
+    // A stored root is also usable in direct address forms, without deriving a new index.
+    const auto direct = ExportAddressKeys(wallet, PKHash{root.key.GetPubKey()}, AddressKeyType::WALLET);
+    BOOST_REQUIRE(direct);
+    BOOST_CHECK(direct->keys.front().key.GetPubKey() == root.key.GetPubKey());
+}
+
+BOOST_AUTO_TEST_CASE(export_public_metadata_and_wallet_isolation)
+{
+    const auto key = GenerateRandomKey();
+    const auto script = GetScriptForRawPubKey(key.GetPubKey());
+    const CTxDestination dest{WitnessV0ScriptHash{script}};
+    CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
+    CWallet other(m_node.chain.get(), "", CreateMockableWalletDatabase());
+    LOCK2(wallet.cs_wallet, other.cs_wallet);
+    wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+    other.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+    BOOST_REQUIRE(CreateDescriptor(other, "unused(" + EncodeSecret(key) + ")", /*success=*/true));
+    for (const auto& text : {"addr(" + EncodeDestination(dest) + ")", "raw(" + HexStr(GetScriptForDestination(dest)) + ")"}) {
+        BOOST_REQUIRE(CreateDescriptor(wallet, text, /*success=*/true));
+        const auto missing = ExportAddressKeys(wallet, dest, AddressKeyType::WALLET);
+        BOOST_REQUIRE(!missing);
+        BOOST_CHECK(missing.error() == AddressKeyError::MISSING_METADATA);
+    }
+    BOOST_REQUIRE(CreateDescriptor(wallet, "wsh(pk(" + HexStr(key.GetPubKey()) + "))", /*success=*/true));
+    const auto absent = ExportAddressKeys(wallet, dest, AddressKeyType::WALLET);
+    BOOST_REQUIRE(!absent);
+    BOOST_CHECK(absent.error() == AddressKeyError::NO_KEY);
+    BOOST_REQUIRE(CreateDescriptor(wallet, "unused(" + EncodeSecret(key) + ")", /*success=*/true));
+    const auto result = ExportAddressKeys(wallet, dest, AddressKeyType::WALLET);
+    BOOST_REQUIRE(result);
+    BOOST_REQUIRE_EQUAL(result->keys.size(), 1U);
+    BOOST_CHECK(result->keys.front().key.GetPubKey() == key.GetPubKey());
+}
+
+BOOST_AUTO_TEST_CASE(export_checked_partial_derivation_failure)
+{
+    // A depth-255 xpub can have public cached metadata, but cannot derive a child.
+    // This must fail even though another cosigner is normally unavailable.
+    CExtKey root;
+    root.SetSeed(std::array<std::byte, 32>{});
+    root.nDepth = 255;
+    const auto cosigner = GenerateRandomKey();
+    FlatSigningProvider roots;
+    std::string error;
+    auto descs = Parse("wsh(multi(2," + EncodeExtKey(root) + "/*h," + HexStr(cosigner.GetPubKey()) + "))", roots, error, /*require_checksum=*/false);
+    BOOST_REQUIRE_EQUAL(descs.size(), 1U);
+    BOOST_CHECK(!descs.front()->HavePrivateKeys(roots));
+    FlatSigningProvider expanded;
+    BOOST_CHECK(!descs.front()->ExpandPrivateChecked(2, roots, expanded));
+    BOOST_CHECK(expanded.keys.empty());
+    const auto stored = roots.keys;
+    roots.keys.clear();
+    BOOST_CHECK(descs.front()->ExpandPrivateChecked(2, roots, expanded));
+    CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
+    LOCK(wallet.cs_wallet);
+    wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+    WalletDescriptor descriptor(std::move(descs.front()), /*creation_time=*/1, /*range_start=*/0, /*range_end=*/1, /*next_index=*/0);
+    descriptor.cache.CacheDerivedExtPubKey(0, 0, root.Neuter());
+    auto corrupt = std::make_unique<ExportTestScriptPubKeyMan>(wallet, descriptor, stored);
+    BOOST_REQUIRE(CreateDescriptor(wallet, "wsh(multi(2," + EncodeSecret(root.key) + "," + HexStr(cosigner.GetPubKey()) + "))", /*success=*/true));
+    const CTxDestination dest{WitnessV0ScriptHash{GetScriptForMultisig(2, {root.key.GetPubKey(), cosigner.GetPubKey()})}};
+    const auto result = ExportAddressKeys(wallet, dest, AddressKeyType::WALLET);
+    BOOST_REQUIRE(!result);
+    BOOST_CHECK(result.error() == AddressKeyError::INCONSISTENT);
+}
+
+BOOST_AUTO_TEST_CASE(export_script_keys_miniscript_branches)
+{
+    const auto first = GenerateRandomKey();
+    const auto second = GenerateRandomKey();
+    for (bool partial : {false, true}) {
+        for (const std::string guard : {"older(1000)", "sha256(2a8ce30189b2ec3200b47aeb4feaac8fcad7c0ba170389729f4898b0b7933bcb)"}) {
+            CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
+            LOCK(wallet.cs_wallet);
+            wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+            auto manager = LoadExportDescriptor(wallet, "wsh(or_i(pk(" + EncodeSecret(first) + "),and_v(v:" + guard + ",pk(" +
+                (partial ? HexStr(second.GetPubKey()) : EncodeSecret(second)) + "))))");
+            const auto scripts = manager->GetScriptPubKeys();
+            BOOST_REQUIRE_EQUAL(scripts.size(), 1U);
+            CTxDestination dest;
+            BOOST_REQUIRE(ExtractDestination(*scripts.begin(), dest));
+            const auto result = ExportAddressKeys(wallet, dest, AddressKeyType::WALLET);
+            BOOST_REQUIRE(result);
+            std::set<CPubKey> actual;
+            for (const auto& record : result->keys) actual.insert(record.key.GetPubKey());
+            std::set<CPubKey> expected{first.GetPubKey()};
+            if (!partial) expected.insert(second.GetPubKey());
+            BOOST_CHECK(actual == expected);
+        }
+    }
 }
 
 BOOST_AUTO_TEST_CASE(export_key_inconsistent_public_expansion)

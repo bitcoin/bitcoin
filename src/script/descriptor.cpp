@@ -1087,6 +1087,25 @@ public:
         }
     }
 
+    // NOLINTNEXTLINE(misc-no-recursion)
+    bool ExpandPrivateChecked(int pos, const SigningProvider& provider, FlatSigningProvider& out) const final
+    {
+        for (const auto& p : m_pubkey_args) {
+            const auto root = p->GetRootPubKey();
+            const auto ext_root = p->GetRootExtPubKey();
+            const bool available = (root && provider.HaveKey(root->GetID())) ||
+                (ext_root && provider.HaveKey(ext_root->pubkey.GetID()));
+            FlatSigningProvider derived;
+            p->GetPrivKey(pos, provider, derived);
+            if (available && derived.keys.empty()) return false;
+            out.keys.merge(derived.keys);
+        }
+        for (const auto& arg : m_subdescriptor_args) {
+            if (!arg->ExpandPrivateChecked(pos, provider, out)) return false;
+        }
+        return true;
+    }
+
     std::optional<OutputType> GetOutputType() const override { return std::nullopt; }
 
     std::optional<int64_t> ScriptSize() const override { return {}; }

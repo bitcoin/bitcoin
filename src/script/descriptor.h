@@ -176,6 +176,11 @@ struct Descriptor {
      */
     virtual void ExpandPrivate(int pos, const SigningProvider& provider, FlatSigningProvider& out) const = 0;
 
+    /** Expand available private keys, returning false if a held root fails to derive.
+     * Missing cosigner roots are allowed. Output must be discarded on failure.
+     */
+    virtual bool ExpandPrivateChecked(int pos, const SigningProvider& provider, FlatSigningProvider& out) const = 0;
+
     /** @return The OutputType of the scriptPubKey(s) produced by this descriptor. Or nullopt if indeterminate (multiple or none) */
     virtual std::optional<OutputType> GetOutputType() const = 0;
 

@@ -49,6 +49,8 @@ static UniValue AddressKeyRPCError(AddressKeyError error)
     switch (error) {
     case AddressKeyError::NO_KEY:
         return JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No private key for this address is available in the selected wallet");
+    case AddressKeyError::MISSING_METADATA:
+        return JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Wallet lacks the spending/script information needed to identify/export keys for this address");
     case AddressKeyError::UNSUPPORTED:
         return JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "This address's spending construction is not supported for key export");
     case AddressKeyError::INCONSISTENT:
@@ -98,15 +100,19 @@ RPCMethod exportaddresskey()
 {
     return RPCMethod{
         "exportaddresskey",
-        "Returns local private keys for a P2PKH or native P2WPKH address known to the selected descriptor wallet.\n"
+        "Returns local private keys for a recognized non-Taproot address known to the selected descriptor wallet.\n"
+        "Supports P2PKH, P2WPKH, P2SH and P2WSH, including nested wrappers, multisig and supported Miniscript.\n"
+        "Returns every available key even when other keys, preimages or timelocks are needed to spend.\n"
+        "Uses existing wallet metadata and known indices; missing redeem/witness scripts produce a missing spending/script information error.\n"
+        "It does not recover unknown script hashes, search unknown derivation paths or infer keys from arbitrary script data.\n"
         "The canonical keys array is sorted by full serialized public key, with sorted unique roles.\n"
-        "The top-level private_key_hex and compressed fields are compatibility aliases for these wallet-mode exports.\n"
+        "The top-level private_key_hex and compressed fields are compatibility aliases for original P2PKH/native P2WPKH exports.\n"
         "The taproot_output mode is reserved for effective Taproot output keys; Taproot export is currently unsupported.\n"
         "Exported keys are not a wallet backup; other spending data or cosigners may be required.\n"
         "Requires wallet unlock. The result contains a spending secret, including when displayed in the RPC console.\n"
         "Disclosure of a non-hardened child key together with the corresponding ancestor xpub can compromise that ancestor's private subtree.\n",
         {
-            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet P2PKH or native P2WPKH address"},
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet address"},
             {"key_type", RPCArg::Type::STR, RPCArg::Default{"wallet"}, "The key type: wallet or taproot_output. Null uses the default. taproot_output requires a Taproot address"},
         },
         RPCResult{RPCResult::Type::OBJ, "", "", {
