@@ -10,6 +10,7 @@
 #include <test/util/setup_common.h>
 #include <test/util/versionbits.h>
 #include <util/chaintype.h>
+#include <validation.h>
 #include <versionbits.h>
 #include <versionbits_impl.h>
 
@@ -439,6 +440,28 @@ void check_computeblockversion(VersionBitsCache& versionbitscache, const Consens
     BOOST_CHECK(versionbitscache.IsActiveAfter(lastBlock, params, dep));
 }
 }; // struct BlockVersionTest
+
+BOOST_FIXTURE_TEST_CASE(blockscriptflags, RegTestingSetup)
+{
+    // RegTest should have all possible flags enabled by default
+    // If this check fails, then either remove the flag from
+    // CONSENSUS_SCRIPT_VERIFY_FLAGS, so that it's never a consensus
+    // flag for any chain, or ensure the deployment is enabled by
+    // default for RegTest.
+    auto regtest{CreateChainParams(*m_node.args, ChainType::REGTEST)};
+    BOOST_CHECK_EQUAL(ChainstateManager::GetAllConsensusScriptFlags(regtest->GetConsensus()).as_int(), CONSENSUS_SCRIPT_VERIFY_FLAGS.as_int());
+
+    // Check stored value is consistent
+    ChainstateManager& chainman = *m_node.chainman;
+    BOOST_CHECK_EQUAL(chainman.m_all_consensus_script_flags.as_int(), CONSENSUS_SCRIPT_VERIFY_FLAGS.as_int());
+
+    // Every other chain should have a subset (though this should already have been checked at compile-time)
+    for (const auto& chain_type : {ChainType::MAIN, ChainType::TESTNET, ChainType::TESTNET4, ChainType::SIGNET}) {
+        auto params{CreateChainParams(*m_node.args, chain_type)};
+        script_verify_flags possible_flags{ChainstateManager::GetAllConsensusScriptFlags(params->GetConsensus())};
+        BOOST_CHECK_EQUAL((possible_flags & CONSENSUS_SCRIPT_VERIFY_FLAGS).as_int(), possible_flags.as_int());
+    }
+}
 
 BOOST_FIXTURE_TEST_CASE(versionbits_computeblockversion, BlockVersionTest)
 {

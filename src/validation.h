@@ -1047,6 +1047,12 @@ public:
     //! chainstate to avoid duplicating block metadata.
     node::BlockManager m_blockman;
 
+    /** Determine the potential consensus script flags for blocks in a chain */
+    static script_verify_flags GetAllConsensusScriptFlags(const Consensus::Params& params);
+
+    /** Store the potential consensus script flags for this manager's selected params */
+    const script_verify_flags m_all_consensus_script_flags;
+
     ValidationCache m_validation_cache;
 
     /**
@@ -1421,7 +1427,43 @@ bool IsBIP30Repeat(const CBlockIndex& block_index);
 /** Identifies blocks which coinbase output was subsequently overwritten in the UTXO set (see BIP30) */
 bool IsBIP30Unspendable(const uint256& block_hash, int block_height);
 
+/** Set of script verify flags that may be enforced at the consensus level
+ *  (for some combination of chain params and chain state)
+ */
+inline constexpr script_verify_flags CONSENSUS_SCRIPT_VERIFY_FLAGS{
+    SCRIPT_VERIFY_NONE
+    | SCRIPT_VERIFY_P2SH
+    | SCRIPT_VERIFY_WITNESS
+    | SCRIPT_VERIFY_TAPROOT
+    | SCRIPT_VERIFY_DERSIG
+    | SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY
+    | SCRIPT_VERIFY_CHECKSEQUENCEVERIFY
+    | SCRIPT_VERIFY_NULLDUMMY
+};
+
 // Returns the script flags which should be checked for a given block
+// (a subset of CONSENSUS_SCRIPT_VERIFY_FLAGS)
 script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const ChainstateManager& chainman);
+
+/** The context CheckInputScripts is called in, which decides how a
+ *  script failure is reported: as a consensus failure for blocks,
+ *  or as a standardness failure for the mempool. The flags alone can't
+ *  determine this, as the mempool may check with consensus flags only
+ *  (-acceptnonstdtxn).
+ */
+enum class CheckInputScriptsFor {
+    Block,
+    Mempool,
+};
+
+bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
+                       const CCoinsViewCache& inputs,
+                       script_verify_flags flags,
+                       CheckInputScriptsFor check_for,
+                       bool cacheSigStore,
+                       bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
+                       ValidationCache& validation_cache,
+                       std::vector<CScriptCheck>* pvChecks = nullptr)
+                       EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 #endif // BITCOIN_VALIDATION_H
