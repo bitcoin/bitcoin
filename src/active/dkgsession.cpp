@@ -17,6 +17,7 @@
 
 #include <chain.h>
 #include <deploymentstatus.h>
+#include <hash.h>
 #include <validation.h>
 
 #include <cxxtimer.hpp>
@@ -49,7 +50,23 @@ std::optional<CDKGContribution> ActiveDKGSession::Contribute()
 
     cxxtimer::Timer t1(true);
     logger.Batch("generating contributions");
-    if (!blsWorker.GenerateContributions(params.threshold, memberIds, vvecContribution, m_sk_contributions)) {
+    if (ShouldSimulateError(DKGError::type::CONTRIBUTION_CLONE)) {
+        // Derive the contribution from the quorum alone, so every member simulating this deals the same
+        // contribution, as if it had copied another member's
+        logger.Batch("dealing a cloned contribution");
+        std::vector<CBLSSecretKey> svec(params.threshold);
+        vvecContribution = std::make_shared<std::vector<CBLSPublicKey>>();
+        for (const auto i : util::irange(svec.size())) {
+            uint256 seed{::SerializeHash(std::make_pair(m_quorum_base_block_index->GetBlockHash(), uint32_t(i)))};
+            *seed.begin() = 0; // keep it below the group order
+            svec[i] = CBLSSecretKey{Span{seed}};
+            vvecContribution->emplace_back(svec[i].GetPublicKey());
+        }
+        m_sk_contributions.resize(memberIds.size());
+        for (const auto i : util::irange(memberIds.size())) {
+            m_sk_contributions[i].SecretKeyShare(svec, memberIds[i]);
+        }
+    } else if (!blsWorker.GenerateContributions(params.threshold, memberIds, vvecContribution, m_sk_contributions)) {
         // this should never happen actually
         logger.Batch("GenerateContributions failed");
         return std::nullopt;
