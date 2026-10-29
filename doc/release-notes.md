@@ -1,8 +1,10 @@
-# Dash Core version v23.1.8
+# Dash Core version v23.1.9
 
-This is a new patch version release, fixing three remotely reachable crashes and
-bringing further hardening of the peer-to-peer message handlers along with
-networking, RPC and build fixes.
+This is a new patch version release. It fixes a consensus-affecting
+transaction-encoding bug, several remotely reachable crashes and
+denial-of-service issues in the masternode, DKG, signing and governance paths,
+and backports a number of hardening and robustness fixes from later releases.
+
 Upgrading is **strongly recommended** for all nodes, and required for
 masternodes.
 
@@ -28,98 +30,91 @@ require a reindex.
 
 # Release Notes
 
-## Critical fixes
+## Consensus
 
-This release fixes three crashes that a remote party could trigger. None of
-them affect consensus rules or put funds at risk, but each one can take a node
-offline, so all operators should upgrade promptly.
+- Transactions whose version field is negative are now rejected once DIP3 is
+  active. The version and type share one 32-bit field; a negative version was
+  sign-extended when a transaction was re-serialized, so a block containing such
+  a transaction could be accepted by a node that received the original bytes and
+  rejected by every node that received the re-serialized form, leading to a
+  persistent chain split. The new rule rejects these transactions uniformly. No
+  valid or historical transaction is affected and transaction ids are unchanged.
 
-- Fixed a crash while removing provider transactions that a masternode's
-  operator-key change invalidates. Those transactions are collected before any
-  of them are removed, so when one was an in-mempool descendant of another it
-  was already erased along with its ancestor, and the stale entry was then
-  dereferenced. Such entries are now skipped. This is reachable whenever a block
-  carries a provider registrar update or revocation for a masternode that has
-  chained service updates pending in the mempool.
-- Fixed a crash caused by an unvalidated LLMQ type in a `qsigshare` message. A
-  masternode that received a signature share naming an LLMQ type its chain does
-  not register would index a per-type quorum cache that is only populated for
-  known types, aborting the process. Unregistered types are now rejected before
-  the lookup, and the affected cache lookups no longer create missing entries.
-- Fixed a crash caused by a quorum commitment naming a block with no parent,
-  such as the genesis block. The parentless block index reached a non-null
-  precondition and terminated the process instead of failing validation, which
-  no exception handler could contain. Commitments with a parentless quorum base
-  block are now rejected, and the LLMQ activation check treats a null
-  predecessor as "not enabled" rather than a contract violation.
+## Crash fixes
 
-## Security
+These issues do not affect consensus rules or put funds at risk, but each one
+can take a node offline.
 
-This release continues the hardening of peer-to-peer message handlers against
-denial-of-service from remote peers. These issues do not affect consensus and do
-not put funds at risk, but they could be used to crash or degrade nodes -
-masternodes in particular - so upgrading is recommended.
+- Fixed an abort during the DKG when a quorum member sent a contribution whose
+  decrypted secret-key share was invalid: the share reached an aggregation
+  assertion and terminated the process on every honest member of the quorum.
+  Invalid shares are now rejected before aggregation.
+- Fixed block-template failures caused by provider transactions: a
+  `ProUpServTx` with an invalid type, a `ProRegTx` reusing collateral already
+  referenced by an in-mempool update, and a pending owner key colliding with a
+  Platform node id are now rejected at mempool acceptance.
+- Bounded the masternode-list caches by size so a peer cannot drive unbounded
+  memory growth between blocks.
+- Bounded `DomainPort` deserialization so a small provider transaction can no
+  longer make the node allocate and zero very large buffers while holding
+  `cs_main`.
+- Decoding an unknown-version provider transaction through the verbose decode
+  RPCs no longer dereferences a missing network-info object.
+- `masternode payments` no longer aborts at the genesis block, and the
+  masternode-list RPCs no longer cache a list for a block outside the active
+  chain.
+- Evonodes no longer abort at credit-pool snapshot boundaries when the pool is
+  first constructed outside a block connection (for example by
+  `getassetunlockstatuses`).
+- Flat-file (block and undo) positions are now stored and seeked as 64-bit
+  values. Block-undo data can be several times the size of its block, so a busy
+  chain could push a data file past the point a 32-bit offset can address; the
+  write and seek paths no longer narrow the position to 32 bits, which avoided a
+  silent wrap (and, on Windows, a failure past 2 GiB).
 
-- LLMQ / signing: the queues of not-yet-verified recovered signatures and
-  signature shares are now bounded, and the vectors carried by the QSIGSHARE,
-  QSIGSESANN, QSIGSHARESINV, QGETSIGSHARES and QBSIGSHARES messages are bounded
-  before any allocation or decoding takes place. The number of signing share
-  sessions a single peer may announce is also capped, so a peer can no longer
-  grow that per-peer state without limit (dash#7351).
-- LLMQ / DKG: the number of encrypted contribution blobs in a DKG contribution
-  is now checked against the quorum's lower bound as well as its upper bound.
-- LLMQ / quorum data: the verification vector and encrypted contribution
-  vectors in QDATA responses are validated against their expected sizes before
-  any BLS decoding is performed.
-- Transaction relay: an oversized `notfound` message is now penalised rather
-  than silently ignored (dash#7348).
-- ChainLocks: the cache of seen ChainLock signatures is now bounded.
-- Governance: per-object vote sync requests are now throttled per peer, and
-  governance object and vote responses are only accepted from a peer if that
-  peer announced them or they were requested from it, using the net-layer
-  per-peer request tracker. Governance vote signatures are bounded when read
-  from the network and must use one of the two legitimate encodings.
-- CoinJoin: the vectors carried by CoinJoin mixing messages are bounded before
-  allocation, and a non-participant can no longer abort another session's
-  signing phase. An invalid `dstx` message now carries a misbehaviour score
-  instead of being dropped for free (dash#7347).
-- Bloom filters: filterload and filteradd payloads are bounded before
-  allocation.
-- Sporks: spork signatures are bounded during deserialization, and malformed
-  spork messages now attribute misbehaviour to the sending peer.
-- Compact block relay: batched hardening backported from upstream Bitcoin Core
-  (dash#7398), including detection of mutated blocks as a defence-in-depth
-  measure.
+## InstantSend
 
-## RPC
+- Provider (masternode) transactions are no longer given InstantSend locks.
+  Locking them served no purpose and interacted badly with lock eviction on
+  mempool removal. Software that waited for an InstantSend lock on a provider
+  transaction should wait for a ChainLock or for confirmations instead.
 
-- `protx listdiff` no longer reports an always-zero `platformP2PPort` /
-  `platformHTTPPort` for masternodes registered with extended addresses; the
-  live Platform ports are reported instead.
+## Security and denial-of-service hardening
 
-## GUI
+These issues do not affect consensus and do not put funds at risk.
 
-- The PoSe score column is no longer hidden together with banned masternodes in
-  the masternode list.
-- Fixed an abort when scaling widgets whose font was set in pixels rather than
-  points (for example by a stylesheet's `font-size: Npx`); such fonts are now
-  converted to a point size instead of being assumed to have one (dash#7465).
+- DKG contribution verification: a single verification-vector coefficient
+  shared between two members no longer fails the whole verification batch.
+  Previously that marked unrelated honest members' contributions invalid and
+  caused them to be complained about; contributions are now verified
+  individually, so only the offending member is affected.
+- Signature-share batch verification is now scoped per sender, so one peer can
+  no longer get an honest peer penalised or have a forged share stored in place
+  of an honest one. Malformed detached quorum share batches are rejected, and
+  signing intake is gated against the active-quorum set before any quorum is
+  retrieved.
+- Governance: an orphan vote now requires a valid masternode signature before
+  it is cached, the number of orphan parent objects re-requested per tick is
+  bounded, governance vote signature checks are memoised to bound the cost of a
+  sync request, a vote is no longer recorded before it is validated, and a
+  failed BLS vote-signature check is logged under the governance category
+  instead of unconditionally, so a peer cannot fill `debug.log` with it.
+- Socket exception monitoring is now consistent between the `poll()` and
+  `select()` backends, and a peer whose send buffer stalls is now subject to the
+  send timeout, so it can no longer hold a connection slot indefinitely.
+- Verified inbound connections are bounded per operator identity; `CHECKDATASIG`
+  uses the signature cache; repeated authenticated Platform bans are skipped;
+  `DYNBITSET` allocation is bounded against the remaining stream size; a bogus
+  InstantSend lock no longer drops a batch of unrelated locks; and
+  `-allowprivatenet` no longer influences masternode address validation.
 
-## Build and CI
+## Wallet
 
-- Fixed a CMake compatibility error when building the freetype dependency with
-  newer CMake (dash#7372).
-- Stabilized the `-par` / `-parbls` help text (and the generated man pages) so
-  they no longer embed the core count of the build machine.
-- Updated GitHub Actions pins for the Node 24 runtime.
-- Fixed the circular-dependencies lint script under Python 3.15.
+- Invalid-mnemonic errors no longer echo the recovery phrase, an encrypted
+  wallet is relocked if an HD upgrade fails after it was unlocked, and a wallet
+  unlock deadline can no longer be extended without re-authenticating.
 
-## Tests
-
-- Governance inventory cache coverage moved from a functional test to unit
-  tests, and governance vote test fixtures are now wire-valid.
-
-# v23.1.8 Change log
+# v23.1.9 Change log
 
 See detailed [set of changes][set-of-changes].
 
@@ -139,6 +134,7 @@ debug the release candidates.
 
 These releases are considered obsolete. Old release notes can be found here:
 
+- [v23.1.8](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.1.8.md) released Jul/29/2026
 - [v23.1.7](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.1.7.md) released Jun/30/2026
 - [v23.1.5](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.1.5.md) released Jun/19/2026
 - [v23.1.4](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.1.4.md) released Jun/18/2026
@@ -158,4 +154,4 @@ These releases are considered obsolete. Old release notes can be found here:
 - [v21.0.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-21.0.0.md) released Jul/25/2024
 - [v20.1.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-20.1.1.md) released April/3/2024
 
-[set-of-changes]: https://github.com/dashpay/dash/compare/v23.1.7...dashpay:v23.1.8
+[set-of-changes]: https://github.com/dashpay/dash/compare/v23.1.8...dashpay:v23.1.9
