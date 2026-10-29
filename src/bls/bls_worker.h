@@ -11,6 +11,7 @@
 
 #include <future>
 #include <mutex>
+#include <set>
 #include <utility>
 
 // Low level BLS/DKG stuff. All very compute intensive and optimized for parallelization
@@ -121,6 +122,9 @@ public:
     // Simple verification of vectors. Checks x.IsValid() for every entry and checks for duplicate entries
     static bool VerifyVerificationVector(Span<CBLSPublicKey> vvec);
     static bool VerifyVerificationVectors(Span<BLSVerificationVectorPtr> vvecs);
+    //! Indexes of the vvecs sharing a coefficient with another vvec, which VerifyVerificationVectors() rejects.
+    //! Null vvecs are skipped.
+    static std::set<size_t> FindVerificationVectorsWithSharedCoefficients(Span<BLSVerificationVectorPtr> vvecs);
 
     // Internally batched signature signing and verification
     void AsyncSign(const CBLSSecretKey& secKey, const uint256& msgHash, const SignDoneCallback& doneCallback);

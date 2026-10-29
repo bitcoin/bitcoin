@@ -693,6 +693,23 @@ void FuncVerifyContributionSharesDuplicateCoefficient(const bool legacy_scheme)
     BOOST_CHECK(!res[0]);  // the member that planted the duplicate is caught alone
     BOOST_CHECK(res[1]);   // the honest member whose coefficient was copied is unaffected
     BOOST_CHECK(res[2]);   // the other honest member is unaffected
+    BOOST_CHECK(CBLSWorker::FindVerificationVectorsWithSharedCoefficients(vvecs) == (std::set<size_t>{0, 1}));
+
+    // Dealer 0 copies dealer 1's whole contribution, vvec and share alike: every share verifies,
+    // but the quorum verification vector can't be built until both copies are dropped.
+    vvecs[0] = std::make_shared<std::vector<CBLSPublicKey>>(*vvecs[1]);
+    recvShares[0] = skShares[1][R];
+    res = worker.VerifyContributionShares(recvId, vvecs, recvShares);
+    BOOST_REQUIRE_EQUAL(res.size(), 3U);
+    BOOST_CHECK(res[0] && res[1] && res[2]);
+    BOOST_CHECK(worker.BuildQuorumVerificationVector(vvecs) == nullptr);
+    BOOST_CHECK(CBLSWorker::FindVerificationVectorsWithSharedCoefficients(vvecs) == (std::set<size_t>{0, 1}));
+    std::vector<BLSVerificationVectorPtr> remaining{vvecs[2]};
+    BOOST_CHECK(worker.BuildQuorumVerificationVector(remaining) != nullptr);
+
+    // Distinct vvecs share nothing, and a missing vvec is skipped.
+    std::vector<BLSVerificationVectorPtr> distinct{vvecs[1], nullptr, vvecs[2]};
+    BOOST_CHECK(CBLSWorker::FindVerificationVectorsWithSharedCoefficients(distinct).empty());
 
     worker.Stop();
 }

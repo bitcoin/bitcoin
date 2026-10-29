@@ -8,6 +8,7 @@
 #include <logging.h>
 #include <util/system.h>
 
+#include <map>
 #include <memory>
 #include <ranges>
 #include <utility>
@@ -802,6 +803,25 @@ bool CBLSWorker::VerifyVerificationVectors(Span<BLSVerificationVectorPtr> vvecs)
     }
 
     return true;
+}
+
+std::set<size_t> CBLSWorker::FindVerificationVectorsWithSharedCoefficients(Span<BLSVerificationVectorPtr> vvecs)
+{
+    std::map<uint256, size_t> owners;
+    std::set<size_t> ret;
+    for (size_t i = 0; i < vvecs.size(); i++) {
+        if (vvecs[i] == nullptr) {
+            continue;
+        }
+        for (const auto& coefficient : *vvecs[i]) {
+            const auto [it, inserted] = owners.emplace(coefficient.GetHash(), i);
+            if (!inserted && it->second != i) {
+                ret.emplace(it->second);
+                ret.emplace(i);
+            }
+        }
+    }
+    return ret;
 }
 
 void CBLSWorker::AsyncSign(const CBLSSecretKey& secKey, const uint256& msgHash, const CBLSWorker::SignDoneCallback& doneCallback)

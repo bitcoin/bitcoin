@@ -453,7 +453,25 @@ std::optional<CDKGPrematureCommitment> ActiveDKGSession::VerifyAndCommit()
         }
     }
 
-    if (!badMembers.empty() || !openComplaintMembers.empty()) {
+    // A member can copy another member's whole contribution: every share verifies, but the duplicated
+    // coefficients make the quorum verification vector impossible to build, so no commitment could be made.
+    // The copy can't be told from the original, so drop both; members that agree on the remaining members
+    // and hold the same contributions drop the same ones and still agree on the commitment.
+    std::vector<size_t> remainingMembers;
+    std::vector<BLSVerificationVectorPtr> remainingVvecs;
+    for (const auto& m : members) {
+        if (!m->bad) {
+            remainingMembers.emplace_back(m->idx);
+            remainingVvecs.emplace_back(receivedVvecs[m->idx]);
+        }
+    }
+    std::vector<size_t> sharedCoefficientMembers;
+    for (const auto i : CBLSWorker::FindVerificationVectorsWithSharedCoefficients(remainingVvecs)) {
+        MarkBadMember(remainingMembers[i]);
+        sharedCoefficientMembers.emplace_back(remainingMembers[i]);
+    }
+
+    if (!badMembers.empty() || !openComplaintMembers.empty() || !sharedCoefficientMembers.empty()) {
         logger.Batch("verification result:");
     }
     if (!badMembers.empty()) {
@@ -465,6 +483,12 @@ std::optional<CDKGPrematureCommitment> ActiveDKGSession::VerifyAndCommit()
     if (!openComplaintMembers.empty()) {
         logger.Batch("  members with open complaints and now marked as bad:");
         for (const auto& idx : openComplaintMembers) {
+            logger.Batch("    %s", members[idx]->dmn->proTxHash.ToString());
+        }
+    }
+    if (!sharedCoefficientMembers.empty()) {
+        logger.Batch("  members sharing verification vector coefficients and now marked as bad:");
+        for (const auto& idx : sharedCoefficientMembers) {
             logger.Batch("    %s", members[idx]->dmn->proTxHash.ToString());
         }
     }
