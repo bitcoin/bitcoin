@@ -152,6 +152,17 @@ void ActiveDKGSession::VerifyPendingContributions()
         dkgManager.WriteEncryptedContributions(params.type, m_quorum_base_block_index, m->dmn->proTxHash, *vecEncryptedContributions[idx]);
     }
 
+    // Defence in depth: every pending member may have been marked bad (e.g. a
+    // double contribution) after it was enqueued, which the pre-filter check
+    // above cannot catch. AsyncVerifyContributionShares guards empty input too,
+    // but keep the call site correct on its own terms - this path terminated the
+    // node before that guard existed.
+    if (memberIndexes.empty()) {
+        logger.Batch("all %d pending contributions were from bad or complained-about members, nothing to verify", pendingContributionVerifications.size());
+        pendingContributionVerifications.clear();
+        return;
+    }
+
     auto result = blsWorker.VerifyContributionShares(myId, vvecs, skContributions);
     if (result.size() != memberIndexes.size()) {
         logger.Batch("VerifyContributionShares returned result of size %d but size %d was expected, something is wrong", result.size(), memberIndexes.size());

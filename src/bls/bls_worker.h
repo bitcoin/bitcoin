@@ -98,6 +98,9 @@ public:
     // Calculate public key share from public key vector and id. Not parallelized
     static CBLSPublicKey BuildPubKeyShare(const BLSVerificationVectorPtr& vvec, const CBLSId& id);
 
+    // Number of contributions aggregated into one batch by AsyncVerifyContributionShares
+    static constexpr size_t CONTRIBUTION_VERIFY_BATCH_SIZE{8};
+
     // The following functions verify multiple verification vectors and contributions for the same id
     // This is parallelized by performing batched verification. The verification vectors and the contributions of
     // a batch are aggregated (in parallel, see AsyncBuildQuorumVerificationVector and AsyncBuildSecretKeyShare). The

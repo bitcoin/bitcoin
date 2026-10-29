@@ -5,6 +5,7 @@
 #include <bls/bls_worker.h>
 #include <hash.h>
 
+#include <logging.h>
 #include <util/ranges.h>
 #include <util/system.h>
 
@@ -688,14 +689,50 @@ CBLSPublicKey CBLSWorker::BuildPubKeyShare(const BLSVerificationVectorPtr& vvec,
 void CBLSWorker::AsyncVerifyContributionShares(const CBLSId& forId, Span<BLSVerificationVectorPtr> vvecs, Span<CBLSSecretKey> skShares,
                                                bool parallel, bool aggregated, std::function<void(const std::vector<bool>&)> doneCallback)
 {
-    if (!forId.IsValid() || !VerifyVerificationVectors(vvecs)) {
+    if (!forId.IsValid()) {
         std::vector<bool> result;
         result.assign(vvecs.size(), false);
         doneCallback(result);
         return;
     }
 
-    auto verifier = std::make_shared<ContributionVerifier>(forId, vvecs, skShares, 8, parallel, aggregated, workerPool, std::move(doneCallback));
+    // Empty input never schedules any work, so doneCallback would never fire and the
+    // future-based wrappers would throw broken_promise. Mirror the empty-input
+    // short-circuit in AsyncBuildQuorumVerificationVector / AsyncAggregateHelper.
+    if (vvecs.empty()) {
+        doneCallback(std::vector<bool>{});
+        return;
+    }
+
+    if (!VerifyVerificationVectors(vvecs)) {
+        // A batch-level verification-vector problem must not fail the whole batch. The
+        // only thing the batched VerifyVerificationVectors adds over the per-member
+        // VerifyVerificationVector check already run in PreVerifyMessage is detecting a
+        // coefficient point shared between two members' vvecs. Failing the whole batch on
+        // that lets one member, by placing a coefficient that collides with another
+        // member's, force every other honest member in the same verification batch to be
+        // marked invalid and complained about - a denial of service against their
+        // participation in the DKG. Instead, verify each contribution on its own: a member
+        // fails only if its own share is inconsistent with its own vvec, so a member that
+        // placed a colliding coefficient is caught on its own while the honest members it
+        // collided with verify normally.
+        LogPrint(BCLog::LLMQ_DKG, "CBLSWorker::%s -- batch verification-vector check failed; verifying %d contributions individually\n",
+                  __func__, vvecs.size());
+        std::vector<std::future<bool>> futures;
+        futures.reserve(vvecs.size());
+        for (size_t i = 0; i < vvecs.size(); i++) {
+            futures.emplace_back(AsyncVerifyContributionShare(forId, vvecs[i], skShares[i]));
+        }
+        std::vector<bool> result;
+        result.reserve(vvecs.size());
+        for (auto& f : futures) {
+            result.push_back(f.get());
+        }
+        doneCallback(result);
+        return;
+    }
+
+    auto verifier = std::make_shared<ContributionVerifier>(forId, vvecs, skShares, CONTRIBUTION_VERIFY_BATCH_SIZE, parallel, aggregated, workerPool, std::move(doneCallback));
     verifier->Start();
 }
 

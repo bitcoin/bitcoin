@@ -6,6 +6,7 @@
 #include <bls/bls_batchverifier.h>
 #include <bls/bls_worker.h>
 #include <clientversion.h>
+#include <crypto/common.h>
 #include <random.h>
 #include <streams.h>
 #include <util/irange.h>
@@ -507,6 +508,193 @@ BOOST_AUTO_TEST_CASE(bls_verify_contribution_share_null_vvec_tests)
 {
     FuncVerifyContributionShareNullVvec(true);
     FuncVerifyContributionShareNullVvec(false);
+}
+
+// Regression: an empty verification-vector set schedules no work at all, so
+// before the guard nothing ever invoked doneCallback and .get() threw
+// std::future_error(broken_promise). In production that throw escapes
+// VerifyPendingContributions on the DKG phase-handler thread, which only catches
+// AbortPhaseException, and std::terminate aborts dashd.
+// Contract: return an empty result vector, on both the aggregated and the
+// one-by-one path.
+void FuncVerifyContributionSharesEmptyVvecs(const bool legacy_scheme)
+{
+    bls::bls_legacy_scheme.store(legacy_scheme);
+
+    CBLSWorker worker;
+    worker.Start();
+
+    const CBLSId id{uint256::ONE};
+    BOOST_REQUIRE(id.IsValid());
+
+    std::vector<BLSVerificationVectorPtr> vvecs; // empty
+    std::vector<CBLSSecretKey> skShares;         // empty
+
+    // Must return gracefully (empty result) instead of destroying the promise.
+    const auto result = worker.VerifyContributionShares(id, vvecs, skShares);
+    BOOST_CHECK(result.empty());
+
+    const auto result_no_agg = worker.VerifyContributionShares(id, vvecs, skShares,
+                                                               /*parallel=*/true,
+                                                               /*aggregated=*/false);
+    BOOST_CHECK(result_no_agg.empty());
+
+    worker.Stop();
+}
+
+BOOST_AUTO_TEST_CASE(bls_verify_contribution_shares_empty_vvecs_tests)
+{
+    FuncVerifyContributionSharesEmptyVvecs(true);
+    FuncVerifyContributionSharesEmptyVvecs(false);
+}
+
+// Positive control for the empty-input guard: it must not change which
+// contributions are accepted. Accepting an invalid share would corrupt the
+// recovered quorum key; rejecting an honest one would stall DKG. This property
+// was previously only covered by src/bench/bls_dkg.cpp, which does not run under
+// `make check`.
+//
+// QUORUM_SIZE exceeds CONTRIBUTION_VERIFY_BATCH_SIZE so the aggregated path
+// builds more than one batch. Corrupting a share in the first batch must then
+// fail that batch, fall back to per-contribution verification, blame exactly the
+// corrupted index, and leave the second batch accepted wholesale - an invalid
+// share must never be masked by the valid shares it is aggregated with.
+void FuncVerifyContributionSharesHonest(const bool legacy_scheme)
+{
+    bls::bls_legacy_scheme.store(legacy_scheme);
+
+    constexpr size_t QUORUM_SIZE{CBLSWorker::CONTRIBUTION_VERIFY_BATCH_SIZE + 2};
+    constexpr int THRESHOLD{6};
+
+    CBLSWorker worker;
+    worker.Start();
+
+    std::vector<CBLSId> ids;
+    ids.reserve(QUORUM_SIZE);
+    for (const size_t i : irange::range(QUORUM_SIZE)) {
+        uint256 id;
+        WriteLE64(id.begin(), i + 1);
+        ids.emplace_back(id);
+    }
+
+    // Every member runs GenerateContributions and broadcasts its vvec; member i's
+    // share for us (member 0) is skShares[i][0].
+    std::vector<BLSVerificationVectorPtr> vvecs;
+    std::vector<CBLSSecretKey> skContributions;
+    vvecs.reserve(QUORUM_SIZE);
+    skContributions.reserve(QUORUM_SIZE);
+    for ([[maybe_unused]] const size_t i : irange::range(QUORUM_SIZE)) {
+        BLSVerificationVectorPtr vvec;
+        std::vector<CBLSSecretKey> skShares;
+        BOOST_REQUIRE(worker.GenerateContributions(THRESHOLD, ids, vvec, skShares));
+        BOOST_REQUIRE(vvec != nullptr);
+        BOOST_REQUIRE_EQUAL(vvec->size(), size_t(THRESHOLD));
+        BOOST_REQUIRE_EQUAL(skShares.size(), QUORUM_SIZE);
+        vvecs.emplace_back(std::move(vvec));
+        skContributions.emplace_back(skShares[0]); // the share addressed to ids[0]
+    }
+
+    const CBLSId& myId = ids[0];
+
+    // 1. All-honest input must be accepted in full, on both code paths.
+    for (const bool aggregated : {true, false}) {
+        const auto result = worker.VerifyContributionShares(myId, vvecs, skContributions,
+                                                            /*parallel=*/true, aggregated);
+        BOOST_REQUIRE_EQUAL(result.size(), QUORUM_SIZE);
+        for (const size_t i : irange::range(QUORUM_SIZE)) {
+            BOOST_CHECK_MESSAGE(result[i], "honest contribution " << i << " rejected (aggregated="
+                                                                  << aggregated << ")");
+        }
+    }
+
+    // 2. Corrupt one share and expect exactly that index to be blamed, nobody else.
+    //    With aggregated=true the corrupted index sits in the first batch, so that
+    //    batch must fail and fall back to per-contribution verification while the
+    //    second batch stays accepted wholesale. With aggregated=false there is a
+    //    single batch verified one-by-one, so only the blame-exactness holds.
+    constexpr size_t BAD_IDX{3};
+    static_assert(BAD_IDX < CBLSWorker::CONTRIBUTION_VERIFY_BATCH_SIZE,
+                  "corrupted index must land in the first batch");
+    auto corrupted = skContributions;
+    corrupted[BAD_IDX].MakeNewKey(); // valid key, wrong value -> pk mismatch
+
+    for (const bool aggregated : {true, false}) {
+        const auto result = worker.VerifyContributionShares(myId, vvecs, corrupted,
+                                                            /*parallel=*/true, aggregated);
+        BOOST_REQUIRE_EQUAL(result.size(), QUORUM_SIZE);
+        for (const size_t i : irange::range(QUORUM_SIZE)) {
+            const bool expected{i != BAD_IDX};
+            BOOST_CHECK_MESSAGE(result[i] == expected,
+                                "index " << i << " expected " << expected << " got " << result[i]
+                                         << " (aggregated=" << aggregated << ")");
+        }
+    }
+
+    worker.Stop();
+}
+
+BOOST_AUTO_TEST_CASE(bls_verify_contribution_shares_honest_tests)
+{
+    FuncVerifyContributionSharesHonest(true);
+    FuncVerifyContributionSharesHonest(false);
+}
+
+// A duplicate coefficient point between two members' verification vectors must not fail the
+// other members' contributions. CBLSWorker::VerifyContributionShares() batches the members'
+// vvecs, and the batched VerifyVerificationVectors() check rejects a coefficient shared
+// between two vvecs. Failing the whole batch on that let one member, by copying another
+// member's coefficient into its own vvec, mark every honest member in the batch invalid.
+// The fix verifies each contribution against its own vvec, so only the member whose share no
+// longer matches its own vvec fails. Regression: on the old all-or-nothing code every entry
+// came back false, so the honest members verifying true is what distinguishes fixed from broken.
+void FuncVerifyContributionSharesDuplicateCoefficient(const bool legacy_scheme)
+{
+    bls::bls_legacy_scheme.store(legacy_scheme);
+
+    CBLSWorker worker;
+    worker.Start();
+
+    const int threshold = 2;
+    std::vector<CBLSId> ids;
+    for (int i = 0; i < 4; i++) {
+        uint256 id;
+        WriteLE64(id.begin(), i + 1);
+        ids.emplace_back(id);
+    }
+
+    // Three dealers each generate a verification vector and their secret-key shares to each id.
+    std::vector<BLSVerificationVectorPtr> vvecs(3);
+    std::vector<std::vector<CBLSSecretKey>> skShares(3);
+    for (int d = 0; d < 3; d++) {
+        BOOST_REQUIRE(worker.GenerateContributions(threshold, ids, vvecs[d], skShares[d]));
+    }
+
+    // Receiver R collects each dealer's share to it.
+    const size_t R = 0;
+    const CBLSId& recvId = ids[R];
+    std::vector<CBLSSecretKey> recvShares{skShares[0][R], skShares[1][R], skShares[2][R]};
+
+    // All honest: every contribution verifies.
+    std::vector<bool> ok = worker.VerifyContributionShares(recvId, vvecs, recvShares);
+    BOOST_REQUIRE_EQUAL(ok.size(), 3U);
+    BOOST_CHECK(ok[0] && ok[1] && ok[2]);
+
+    // Dealer 0 copies dealer 1's leading coefficient into its own vvec (a cross-member
+    // duplicate) without touching its share, making the batch vvec check fail.
+    vvecs[0]->at(0) = vvecs[1]->at(0);
+    std::vector<bool> res = worker.VerifyContributionShares(recvId, vvecs, recvShares);
+    BOOST_REQUIRE_EQUAL(res.size(), 3U);
+    BOOST_CHECK(!res[0]);  // the member that planted the duplicate is caught alone
+    BOOST_CHECK(res[1]);   // the honest member whose coefficient was copied is unaffected
+    BOOST_CHECK(res[2]);   // the other honest member is unaffected
+
+    worker.Stop();
+}
+
+BOOST_AUTO_TEST_CASE(bls_verify_contribution_shares_duplicate_coefficient_tests)
+{
+    FuncVerifyContributionSharesDuplicateCoefficient(true);
+    FuncVerifyContributionSharesDuplicateCoefficient(false);
 }
 
 // A dummy BLS object that satisfies the minimal interface expected by CBLSLazyWrapper.
