@@ -37,6 +37,7 @@ class BitcoinHTTPConnection:
         self.authpair = f'{self.url.username}:{self.url.password}'
         self.headers = {"Authorization": f"Basic {str_to_b64str(self.authpair)}"}
         self.reset_conn()
+        self.log = node.log
 
     def reset_conn(self):
         self.conn = http.client.HTTPConnection(self.url.hostname, self.url.port, timeout=self.timeout)
@@ -89,6 +90,35 @@ class BitcoinHTTPConnection:
         Blocking socket will wait until data is received and return up to 1024 bytes
         '''
         return self.conn.sock.recv(1024)
+
+    def recv_responses(self, count):
+        '''
+        Receive until `count` complete responses (headers and Content-Length body) have
+        been read, or the server closed the connection. Return all received data.
+        '''
+        res = bytearray()
+        pos = 0
+        received = 0
+        while received < count:
+            headers_end = res.find(b"\r\n\r\n", pos)
+            if headers_end != -1:
+                headers_end += 4
+                match = re.search(rb"\r\ncontent-length:\s*(\d+)\r\n", res[pos:headers_end], re.IGNORECASE)
+                content_len = int(match[1]) if match else 0
+                if not match:
+                    self.log.warning(f"HTTP response with missing content-length received, assuming 0 ({bytes(res[pos:headers_end])})")
+                response_end = headers_end + content_len
+                if len(res) >= response_end:
+                    pos = response_end
+                    received += 1
+                    if received == count and len(res) > pos:
+                        self.log.warning(f"Read {len(res) - pos} bytes past the last response, they are lost to later reads")
+                    continue
+            data = self.conn.sock.recv(64 * 1024)
+            if not data:
+                break
+            res += data
+        return bytes(res)
 
     def expect_timeout(self, seconds):
         # Wait for response, but expect a timeout disconnection
@@ -330,11 +360,9 @@ class HTTPBasicsTest (BitcoinTestFramework):
         else:
             OK = 2
             BAD = 0
-        res = b""
-        while True:
-            res += conn.recv_raw()
-            if res.count(b"HTTP/1.1 200") == OK and res.count(b"HTTP/1.1 400") == BAD:
-                break
+        res = conn.recv_responses(OK + BAD)
+        assert_equal(res.count(b"HTTP/1.1 200"), OK)
+        assert_equal(res.count(b"HTTP/1.1 400"), BAD)
 
         # waitforblockheight was responded to first, and then getblockcount
         # which includes the block added after the request was made
@@ -370,7 +398,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
             body=iter(body_chunked),
             headers=headers_chunked,
             encode_chunked=True)
-        response1 = conn.recv_raw()
+        response1 = conn.recv_responses(1)
         assert b'{"result":"high-hash","error":null}\n' in response1
 
         self.log.info("Check excessive size HTTP request encoded with chunked transfer")
@@ -440,7 +468,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         good_http_request = "GET /test2 HTTP/1.1\r\nHost: somehost\r\n\r\n"
         conn.reset_conn()
         conn.send_raw(good_http_request.encode("ascii"))
-        response = conn.recv_raw()
+        response = conn.recv_responses(1)
         assert response.startswith(b"HTTP/1.1 404 Not Found")
 
         # Still open
@@ -461,7 +489,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         generated_block = self.generate(self.node, 1, sync_fun=self.no_op)[0]
 
         # The first connection gets the response it is patiently waiting for
-        response1 = conn.recv_raw().decode()
+        response1 = conn.recv_responses(1).decode()
         assert generated_block in response1
         # The connection is still open
         assert not conn.sock_closed()
@@ -567,7 +595,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
             f"\r\n"
         ).encode("ascii") + chunk_body
         conn.send_raw(raw)
-        response = conn.recv_raw().decode()
+        response = conn.recv_responses(1).decode()
         assert "HTTP/1.1 200 OK" in response
         count = self.node.getblockcount()
         assert f'"result":{count}' in response
@@ -590,7 +618,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
             f"{body}"
         ).encode("ascii")
         conn.send_raw(raw)
-        response = conn.recv_raw().decode()
+        response = conn.recv_responses(1).decode()
         assert response.startswith("HTTP/1.1 400")
 
 
@@ -606,7 +634,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
             "\r\n"
         ).encode("ascii")
         conn.send_raw(raw)
-        response = conn.recv_raw().decode()
+        response = conn.recv_responses(1).decode()
         assert response.startswith("HTTP/1.1 400")
 
 
@@ -621,7 +649,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         for raw in cases:
             conn = BitcoinHTTPConnection(self.node)
             conn.send_raw(raw)
-            response = conn.recv_raw().decode()
+            response = conn.recv_responses(1).decode()
             assert response.startswith("HTTP/1.1 400")
 
 
@@ -831,7 +859,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         conn.conn.sock.settimeout(10)
         generated_block = self.generate(self.node, 1, sync_fun=self.no_op)[0]
         # First reply is for the blocking request.
-        response = conn.recv_raw().decode()
+        response = conn.recv_responses(1).decode()
         assert generated_block in response
 
 
@@ -889,10 +917,8 @@ class HTTPBasicsTest (BitcoinTestFramework):
         # Drain the responses that were handled up to the stall point,
         # plus a few more to confirm that pulling out the cork restores the flow.
         conn.conn.sock.settimeout(10 * self.options.timeout_factor)
-        num_res = 0
-        while num_res < count + 2:
-            response = conn.conn.sock.recv(10 * 1024 * 1024)
-            num_res += response.count(b"HTTP/1.1 200")
+        num_res = conn.recv_responses(count + 2).count(b"HTTP/1.1 200")
+        assert_greater_than_or_equal(num_res, count + 2)
         self.log.info(f"Drained {num_res} responses")
 
 if __name__ == '__main__':
