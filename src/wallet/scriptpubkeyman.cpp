@@ -20,7 +20,9 @@
 #include <util/string.h>
 #include <util/time.h>
 #include <util/translation.h>
+#include <wallet/types.h>
 
+#include <algorithm>
 #include <limits>
 #include <optional>
 
@@ -1321,6 +1323,53 @@ std::unique_ptr<FlatSigningProvider> DescriptorScriptPubKeyMan::GetSigningProvid
         return nullptr;
     }
     return out;
+}
+
+util::Expected<std::optional<CKey>, AddressKeyError> DescriptorScriptPubKeyMan::ExportKey(const CScript& script, const CKeyID& key_id) const
+{
+    AssertLockHeld(cs_desc_man);
+    const auto it = m_map_script_pub_keys.find(script);
+    if (it == m_map_script_pub_keys.end()) return std::optional<CKey>{};
+
+    // Re-expand at the script's index, not the first index at which a reused pubkey appeared.
+    FlatSigningProvider public_keys;
+    std::vector<CScript> scripts;
+    const auto& descriptor = *m_wallet_descriptor.descriptor;
+    if (!descriptor.ExpandFromCache(it->second, m_wallet_descriptor.cache, scripts, public_keys) ||
+        std::find(scripts.begin(), scripts.end(), script) == scripts.end()) {
+        return util::Unexpected{AddressKeyError::INCONSISTENT};
+    }
+    CPubKey pubkey;
+    if (!public_keys.GetPubKey(key_id, pubkey)) return std::optional<CKey>{};
+    if (!pubkey.IsFullyValid() || pubkey.GetID() != key_id) return util::Unexpected{AddressKeyError::INCONSISTENT};
+
+    // GetPubKeys supplies only derivation inputs here, never output candidates. Retrieve just
+    // this descriptor's roots; do not decrypt all stored keys or call signing-provider APIs.
+    std::set<CPubKey> roots;
+    std::set<CExtPubKey> ext_roots;
+    descriptor.GetPubKeys(roots, ext_roots);
+    for (const auto& root : ext_roots) roots.insert(root.pubkey);
+    FlatSigningProvider private_roots;
+    for (const auto& root : roots) {
+        if (!root.IsFullyValid()) return util::Unexpected{AddressKeyError::INCONSISTENT};
+        if (!HasPrivKey(root.GetID())) continue;
+        auto key = GetKey(root.GetID());
+        if (!key || !key->IsValid() || key->GetPubKey() != root) {
+            return util::Unexpected{AddressKeyError::INCONSISTENT};
+        }
+        private_roots.keys.emplace(root.GetID(), std::move(*key));
+    }
+    FlatSigningProvider private_keys;
+    descriptor.ExpandPrivate(it->second, private_roots, private_keys);
+    auto key = private_keys.keys.find(key_id);
+    if (key == private_keys.keys.end()) {
+        if (descriptor.HavePrivateKeys(private_roots)) return util::Unexpected{AddressKeyError::INCONSISTENT};
+        return std::optional<CKey>{};
+    }
+    if (!key->second.IsValid() || key->second.GetPubKey() != pubkey) {
+        return util::Unexpected{AddressKeyError::INCONSISTENT};
+    }
+    return std::optional<CKey>{std::move(key->second)};
 }
 
 std::unique_ptr<FlatSigningProvider> DescriptorScriptPubKeyMan::GetSigningProvider(int32_t index, bool include_private) const

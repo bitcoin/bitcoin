@@ -9,6 +9,7 @@ used as an oracle.
 """
 import hashlib
 import hmac
+import json
 import os
 import re
 import sys
@@ -82,13 +83,14 @@ class ExportAddressKeyTest(BitcoinTestFramework):
 
     def check_export(self, wallet, address, secret, compressed, *, witness=False):
         result = wallet.exportaddresskey(address)
-        assert_equal(set(result), {'private_key_hex', 'compressed'})
+        assert_equal(set(result), {'keys', 'private_key_hex', 'compressed'})
         encoded = result['private_key_hex']
         assert isinstance(encoded, str) and re.fullmatch('[0-9a-f]{64}', encoded), 'invalid scalar encoding'
         assert_equal(encoded, secret.hex())
         assert_equal(type(result['compressed']), bool)
         assert_equal(result['compressed'], compressed)
         pubkey = public_key(bytes.fromhex(encoded), result['compressed'])
+        assert_equal(result['keys'], [{'pubkey': pubkey.hex(), 'private_key_hex': encoded, 'compressed': compressed, 'roles': ['script']}])
         derived_address = key_to_p2wpkh(pubkey) if witness else key_to_p2pkh(pubkey)
         assert_equal(derived_address, address)
         self.private_material.add(encoded)
@@ -110,7 +112,9 @@ class ExportAddressKeyTest(BitcoinTestFramework):
         # JSON null and type checks must use JSON-RPC even under --usecli.
         rpc_node = node.create_new_rpc_connection(mode='AUTHPROXY')
         rpc_wallet = rpc_node / 'wallet/owner'
-        assert 'private_key_hex' in wallet.help('exportaddresskey'), 'RPC help missing'
+        help_text = wallet.help('exportaddresskey')
+        for field in ['key_type', 'wallet', 'taproot_output', 'keys', 'pubkey', 'private_key_hex', 'compressed', 'roles']:
+            assert field in help_text, 'RPC help missing field'
 
         self.log.info('Check fixed-width scalar encoding and both P2PKH public-key serializations')
         fixtures = []
@@ -143,6 +147,22 @@ class ExportAddressKeyTest(BitcoinTestFramework):
             fixtures.append((address, secret, True, True))
 
         addresses = [fixture[0] for fixture in fixtures]
+        self.log.info('Check optional mode, named arguments, JSON-RPC versions and CLI strings')
+        expected = wallet.exportaddresskey(addresses[0])
+        for result in [rpc_wallet.exportaddresskey(addresses[0], None),
+                       wallet.exportaddresskey(addresses[0], 'wallet'),
+                       wallet.exportaddresskey(address=addresses[0]),
+                       rpc_wallet.exportaddresskey(address=addresses[0], key_type=None),
+                       wallet.exportaddresskey(key_type='wallet', address=addresses[0]),
+                       node.cli('-rpcwallet=owner').exportaddresskey(addresses[0], 'wallet')]:
+            assert_equal(result, expected)
+        for version in ['1.0', '2.0']:
+            for params in [[addresses[0]], [addresses[0], None], {'address': addresses[0], 'key_type': 'wallet'}]:
+                response, status = rpc_node._request('POST', '/wallet/owner', json.dumps({'jsonrpc': version, 'id': 1, 'method': 'exportaddresskey', 'params': params}).encode())
+                assert_equal(status, 200)
+                assert_equal(response['result'], expected)
+            response, _ = rpc_node._request('POST', '/wallet/owner', ('{"jsonrpc":"' + version + '","id":1,"method":"exportaddresskey","params":{"address":"' + addresses[0] + '","key_type":"wallet","key_type":"wallet"}}').encode())
+            assert_equal(response['error']['code'], -8)
         wallet.setlabel(addresses[0], 'synthetic export fixture')
         self.generatetoaddress(node, 1, addresses[0])
         before = self.snapshot(wallet, addresses)
@@ -155,8 +175,8 @@ class ExportAddressKeyTest(BitcoinTestFramework):
         self.log.info('Check wallet selection, capability and missing-key errors')
         node.createwallet('other', blank=True)
         other = node.get_wallet_rpc('other')
-        unavailable = 'Private key for address is not available in this wallet'
-        capability = 'This wallet does not support local private-key export'
+        unavailable = 'No private key for this address is available in the selected wallet'
+        capability = 'This wallet has private keys disabled'
         assert_raises_rpc_error(-19, 'Multiple wallets are loaded', node.exportaddresskey, addresses[0])
         assert_raises_rpc_error(-18, 'does not exist or is not loaded', node.get_wallet_rpc('missing').exportaddresskey, addresses[0])
         assert_raises_rpc_error(-5, unavailable, other.exportaddresskey, addresses[0])
@@ -180,7 +200,7 @@ class ExportAddressKeyTest(BitcoinTestFramework):
             node.createwallet('signer', disable_private_keys=True, external_signer=True)
             signer = node.get_wallet_rpc('signer')
             assert signer.getwalletinfo()['external_signer'], 'external-signer fixture missing capability'
-            assert_raises_rpc_error(-4, capability, signer.exportaddresskey, signer.getnewaddress('', 'bech32'))
+            assert_raises_rpc_error(-4, 'Private keys are held by an external signer', signer.exportaddresskey, signer.getnewaddress('', 'bech32'))
         else:
             self.log.info('External-signer capability coverage unavailable in this build')
 
@@ -192,16 +212,25 @@ class ExportAddressKeyTest(BitcoinTestFramework):
             assert_raises_rpc_error(-5, 'Invalid address', wallet.exportaddresskey, address)
         taproot, _ = create_deterministic_address_bcrt1_p2tr_op_true()
         for address in [key_to_p2sh_p2wpkh(unknown_pubkey), script_to_p2wsh(CScript([OP_TRUE])), taproot]:
-            assert_raises_rpc_error(-5, 'Only P2PKH and native P2WPKH addresses are supported', wallet.exportaddresskey, address)
+            assert_raises_rpc_error(-5, 'spending construction is not supported', wallet.exportaddresskey, address)
+        assert_raises_rpc_error(-5, 'spending construction is not supported', wallet.exportaddresskey, taproot, 'taproot_output')
+        assert_raises_rpc_error(-8, 'requires a Taproot address', wallet.exportaddresskey, addresses[0], 'taproot_output')
+        for mode in ['', 'Wallet', 'output', 'null']:
+            assert_raises_rpc_error(-8, "key_type must be 'wallet' or 'taproot_output'", wallet.exportaddresskey, addresses[0], mode)
+        for mode in [1, True, [], {}]:
+            assert_raises_rpc_error(-3, 'JSON value of type', rpc_wallet.exportaddresskey, addresses[0], mode)
+        assert_raises_rpc_error(-8, 'Unknown named parameter', wallet.exportaddresskey, address=addresses[0], unknown='wallet')
         for argument in [1, True, [], {}]:
             assert_raises_rpc_error(-3, 'JSON value of type', rpc_wallet.exportaddresskey, argument)
         assert_raises_rpc_error(-1, 'exportaddresskey', wallet.exportaddresskey)
-        assert_raises_rpc_error(-1, 'exportaddresskey', wallet.exportaddresskey, addresses[0], 'extra')
+        assert_raises_rpc_error(-1, 'exportaddresskey', wallet.exportaddresskey, addresses[0], 'wallet', 'extra')
         assert_raises_rpc_error(-3, 'not of expected type string', rpc_wallet.exportaddresskey, None)
 
         self.log.info('Check encrypted locked, unlocked and relocked authorization')
         wallet.encryptwallet('synthetic-test-passphrase')
         assert_raises_rpc_error(-13, 'walletpassphrase', wallet.exportaddresskey, addresses[0])
+        assert_raises_rpc_error(-13, 'walletpassphrase', wallet.exportaddresskey, unknown)
+        assert_raises_rpc_error(-13, 'walletpassphrase', wallet.exportaddresskey, taproot, 'taproot_output')
         wallet.walletpassphrase('synthetic-test-passphrase', 60)
         for address, secret, compressed, witness in fixtures:
             self.check_export(wallet, address, secret, compressed, witness=witness)

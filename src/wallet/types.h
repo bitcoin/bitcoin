@@ -24,6 +24,8 @@
 #include <utility>
 
 namespace wallet {
+enum class AddressKeyError { NO_KEY, UNSUPPORTED, INCONSISTENT };
+
 struct MinimumFeeRateResult {
     CFeeRate fee_rate;
     FeeReason fee_reason;

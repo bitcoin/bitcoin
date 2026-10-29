@@ -16,6 +16,7 @@
 #include <script/script.h>
 #include <script/signingprovider.h>
 #include <util/btcsignals.h>
+#include <util/expected.h>
 #include <util/hasher.h>
 #include <util/log.h>
 #include <util/result.h>
@@ -386,6 +387,10 @@ public:
 
     // Fetch the SigningProvider for the given pubkey and always include private keys. This should only be called by signing code.
     std::unique_ptr<FlatSigningProvider> GetSigningProvider(const CPubKey& pubkey) const;
+
+    //! Expand only the existing index for script, verify the public candidate, and return only its key.
+    //! Does not populate provider caches or access signing nonce state. Caller authorizes export.
+    util::Expected<std::optional<CKey>, AddressKeyError> ExportKey(const CScript& script, const CKeyID& key_id) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
     bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const override;
     SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const override;

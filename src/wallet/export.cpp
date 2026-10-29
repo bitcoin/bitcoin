@@ -5,6 +5,7 @@
 #include <wallet/export.h>
 
 #include <key_io.h>
+#include <script/solver.h>
 #include <util/fs.h>
 #include <util/expected.h>
 #include <wallet/scriptpubkeyman.h>
@@ -13,8 +14,46 @@
 #include <wallet/wallet.h>
 
 #include <fstream>
+#include <map>
 
 namespace wallet {
+util::Expected<AddressKeyResult, AddressKeyError> ExportAddressKeys(const CWallet& wallet, const CTxDestination& destination, AddressKeyType type)
+{
+    AssertLockHeld(wallet.cs_wallet);
+    const auto pkhash = std::get_if<PKHash>(&destination);
+    const auto witness = std::get_if<WitnessV0KeyHash>(&destination);
+    if (type != AddressKeyType::WALLET || (!pkhash && !witness)) {
+        return util::Unexpected{AddressKeyError::UNSUPPORTED};
+    }
+
+    const CScript script{GetScriptForDestination(destination)};
+    const CKeyID key_id{pkhash ? ToKeyID(*pkhash) : ToKeyID(*witness)};
+    std::map<CPubKey, AddressKey> records;
+    for (const auto spk_man : wallet.GetScriptPubKeyMans(script)) {
+        const auto desc_spk_man = dynamic_cast<DescriptorScriptPubKeyMan*>(spk_man);
+        if (!desc_spk_man) continue;
+        LOCK(desc_spk_man->cs_desc_man);
+        auto exported = desc_spk_man->ExportKey(script, key_id);
+        if (!exported) return util::Unexpected{exported.error()};
+        if (!*exported) continue;
+        CKey key{std::move(**exported)};
+        const CPubKey pubkey{key.GetPubKey()};
+        const bool matches{pkhash ? PKHash{pubkey} == *pkhash : WitnessV0KeyHash{pubkey} == *witness};
+        if (!matches || (witness && !key.IsCompressed())) {
+            return util::Unexpected{AddressKeyError::INCONSISTENT};
+        }
+        records.try_emplace(pubkey, AddressKey{std::move(key), {AddressKeyRole::SCRIPT}});
+    }
+    if (records.empty()) return util::Unexpected{AddressKeyError::NO_KEY};
+
+    AddressKeyResult result;
+    for (auto& [pubkey, record] : records) result.keys.push_back(std::move(record));
+    // A single hash-bound key is the original RPC contract, never an arbitrary first record.
+    if (result.keys.size() != 1) return util::Unexpected{AddressKeyError::INCONSISTENT};
+    result.legacy_aliases = true;
+    return result;
+}
+
 util::Expected<std::vector<WalletDescInfo>, std::string> ExportDescriptors(const CWallet& wallet, bool export_private)
 {
     AssertLockHeld(wallet.cs_wallet);

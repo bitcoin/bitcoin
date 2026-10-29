@@ -436,6 +436,18 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     BOOST_CHECK_EQUAL(adr.get_str(), "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/128");
 }
 
+BOOST_AUTO_TEST_CASE(rpc_convert_values_exportaddresskey)
+{
+    for (const auto* mode : {"wallet", "taproot_output", "null", "true", "1"}) {
+        const auto positional = RPCConvertValues("exportaddresskey", {"address", mode});
+        BOOST_CHECK_EQUAL(positional[0].get_str(), "address");
+        BOOST_CHECK_EQUAL(positional[1].get_str(), mode);
+        const auto named = RPCConvertNamedValues("exportaddresskey", {"address=address", std::string{"key_type="} + mode});
+        BOOST_CHECK_EQUAL(named["address"].get_str(), "address");
+        BOOST_CHECK_EQUAL(named["key_type"].get_str(), mode);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(rpc_convert_values_generatetoaddress)
 {
     UniValue result;
