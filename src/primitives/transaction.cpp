@@ -23,18 +23,17 @@ std::string COutPoint::ToString() const
     return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10), n);
 }
 
-CTxIn::CTxIn(COutPoint prevoutIn, CScript scriptSigIn, uint32_t nSequenceIn)
+CTxIn::CTxIn(COutPoint prevoutIn, CScript scriptSigIn, uint32_t nSequenceIn, CScriptWitness scriptWitnessIn)
+    : prevout{std::move(prevoutIn)},
+      scriptSig{std::move(scriptSigIn)},
+      nSequence{nSequenceIn},
+      scriptWitness{std::move(scriptWitnessIn)}
 {
-    prevout = prevoutIn;
-    scriptSig = scriptSigIn;
-    nSequence = nSequenceIn;
 }
 
-CTxIn::CTxIn(Txid hashPrevTx, uint32_t nOut, CScript scriptSigIn, uint32_t nSequenceIn)
+CTxIn::CTxIn(Txid hashPrevTx, uint32_t nOut, CScript scriptSigIn, uint32_t nSequenceIn, CScriptWitness scriptWitnessIn)
+    : CTxIn{COutPoint{hashPrevTx, nOut}, std::move(scriptSigIn), nSequenceIn, std::move(scriptWitnessIn)}
 {
-    prevout = COutPoint(hashPrevTx, nOut);
-    scriptSig = scriptSigIn;
-    nSequence = nSequenceIn;
 }
 
 std::string CTxIn::ToString() const
