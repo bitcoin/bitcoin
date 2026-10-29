@@ -434,7 +434,7 @@ std::optional<NodeInfo> ConsumeNodeStable(MsCtx script_ctx, FuzzedDataProvider& 
             const auto k = provider.ConsumeIntegral<uint8_t>();
             const auto n_keys = provider.ConsumeIntegral<uint8_t>();
             if (n_keys > 20 || k == 0 || k > n_keys) return {};
-            std::vector<CPubKey> keys{n_keys};
+            std::vector<CPubKey> keys(n_keys);
             for (auto& key: keys) key = ConsumePubKey(provider);
             return {{Fragment::MULTI, k, std::move(keys)}};
         }
@@ -496,7 +496,7 @@ std::optional<NodeInfo> ConsumeNodeStable(MsCtx script_ctx, FuzzedDataProvider& 
             const auto k = provider.ConsumeIntegral<uint16_t>();
             const auto n_keys = provider.ConsumeIntegral<uint16_t>();
             if (n_keys > 999 || k == 0 || k > n_keys) return {};
-            std::vector<CPubKey> keys{n_keys};
+            std::vector<CPubKey> keys(n_keys);
             for (auto& key: keys) key = ConsumePubKey(provider);
             return {{Fragment::MULTI_A, k, std::move(keys)}};
         }
@@ -779,14 +779,14 @@ std::optional<NodeInfo> ConsumeNodeSmart(MsCtx script_ctx, FuzzedDataProvider& p
         case Fragment::MULTI: {
             const auto n_keys = provider.ConsumeIntegralInRange<uint8_t>(1, 20);
             const auto k = provider.ConsumeIntegralInRange<uint8_t>(1, n_keys);
-            std::vector<CPubKey> keys{n_keys};
+            std::vector<CPubKey> keys(n_keys);
             for (auto& key: keys) key = ConsumePubKey(provider);
             return {{frag, k, std::move(keys)}};
         }
         case Fragment::MULTI_A: {
             const auto n_keys = provider.ConsumeIntegralInRange<uint16_t>(1, 999);
             const auto k = provider.ConsumeIntegralInRange<uint16_t>(1, n_keys);
-            std::vector<CPubKey> keys{n_keys};
+            std::vector<CPubKey> keys(n_keys);
             for (auto& key: keys) key = ConsumePubKey(provider);
             return {{frag, k, std::move(keys)}};
         }

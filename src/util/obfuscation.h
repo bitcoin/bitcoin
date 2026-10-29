@@ -63,7 +63,7 @@ public:
     void Serialize(Stream& s) const
     {
         // Use vector serialization for convenient compact size prefix.
-        std::vector<std::byte> bytes{KEY_SIZE};
+        std::vector<std::byte> bytes(KEY_SIZE);
         std::memcpy(bytes.data(), &m_rotations[0], KEY_SIZE);
         s << bytes;
     }
@@ -71,7 +71,7 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        std::vector<std::byte> bytes{KEY_SIZE};
+        std::vector<std::byte> bytes(KEY_SIZE);
         s >> bytes;
         if (bytes.size() != KEY_SIZE) throw std::ios_base::failure(strprintf("Obfuscation key size should be exactly %s bytes long", KEY_SIZE));
         SetRotations(ToKey(std::span<std::byte, KEY_SIZE>(bytes)));
