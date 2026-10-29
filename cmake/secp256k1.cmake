@@ -3,6 +3,38 @@
 # file COPYING or https://opensource.org/license/mit/.
 
 enable_language(C)
+include(CheckCSourceCompiles)
+
+# The hardening flags are checked with the C++ compiler.
+# Drop those that the C compiler rejects. Each flag is checked together
+# with those accepted before it, as -D_FORTIFY_SOURCE=3 needs the
+# -U_FORTIFY_SOURCE before it.
+function(filter_c_flags var)
+  cmake_parse_arguments(PARSE_ARGV 1 FCF "LINK" "" "")
+  set(flags ${${var}})
+  separate_arguments(flags)
+  set(result)
+  foreach(flag IN LISTS flags)
+    string(MAKE_C_IDENTIFIER "${flag}" id)
+    string(TOUPPER "${id}" id)
+    if(FCF_LINK)
+      set(CMAKE_TRY_COMPILE_TARGET_TYPE EXECUTABLE)
+      set(CMAKE_REQUIRED_LINK_OPTIONS ${result} ${flag} ${working_linker_werror_flag})
+      set(check_result C_LINKER_SUPPORTS_${id})
+    else()
+      set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+      list(JOIN result " " accepted)
+      set(CMAKE_REQUIRED_FLAGS "${accepted} ${flag} ${working_compiler_werror_flag}")
+      set(check_result C_SUPPORTS_${id})
+    endif()
+    check_c_source_compiles("int main(void) { return 0; }" ${check_result})
+    if(${check_result})
+      list(APPEND result ${flag})
+    endif()
+  endforeach()
+  list(JOIN result " " result)
+  set(${var} "${result}" PARENT_SCOPE)
+endfunction()
 
 function(add_secp256k1 subdir)
   message("")
@@ -27,13 +59,19 @@ function(add_secp256k1 subdir)
   endif()
   set(SECP256K1_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
   include(GetTargetInterface)
-  # -fsanitize and related flags apply to both C++ and C,
+  # -fsanitize, hardening and related flags apply to both C++ and C,
   # so we can pass them down to libsecp256k1 as CFLAGS and LDFLAGS.
   get_target_interface(SECP256K1_APPEND_CFLAGS "" sanitize_interface COMPILE_OPTIONS)
+  get_target_interface(secp256k1_hardening_cflags "" hardening_interface COMPILE_OPTIONS)
+  filter_c_flags(secp256k1_hardening_cflags)
+  string(STRIP "${SECP256K1_APPEND_CFLAGS} ${secp256k1_hardening_cflags}" SECP256K1_APPEND_CFLAGS)
   string(STRIP "${SECP256K1_APPEND_CFLAGS} ${APPEND_CPPFLAGS}" SECP256K1_APPEND_CFLAGS)
   string(STRIP "${SECP256K1_APPEND_CFLAGS} ${APPEND_CFLAGS}" SECP256K1_APPEND_CFLAGS)
   set(SECP256K1_APPEND_CFLAGS ${SECP256K1_APPEND_CFLAGS} CACHE STRING "" FORCE)
   get_target_interface(SECP256K1_APPEND_LDFLAGS "" sanitize_interface LINK_OPTIONS)
+  get_target_interface(secp256k1_hardening_ldflags "" hardening_interface LINK_OPTIONS)
+  filter_c_flags(secp256k1_hardening_ldflags LINK)
+  string(STRIP "${SECP256K1_APPEND_LDFLAGS} ${secp256k1_hardening_ldflags}" SECP256K1_APPEND_LDFLAGS)
   string(STRIP "${SECP256K1_APPEND_LDFLAGS} ${APPEND_LDFLAGS}" SECP256K1_APPEND_LDFLAGS)
   set(SECP256K1_APPEND_LDFLAGS ${SECP256K1_APPEND_LDFLAGS} CACHE STRING "" FORCE)
   # We want to build libsecp256k1 with the most tested RelWithDebInfo configuration.
