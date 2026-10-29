@@ -9,9 +9,11 @@
 #include <mp/type-pair.h>
 #include <mp/util.h>
 
+#include <map>
+
 namespace mp {
-template <typename KeyLocalType, typename ValueLocalType, typename Value, typename Output>
-void CustomBuildField(TypeList<std::map<KeyLocalType, ValueLocalType>>,
+template <typename KeyLocalType, typename ValueLocalType, typename Compare, typename Allocator, typename Value, typename Output>
+void CustomBuildField(TypeList<std::map<KeyLocalType, ValueLocalType, Compare, Allocator>>,
     Priority<1>,
     InvokeContext& invoke_context,
     Value&& value,
@@ -49,8 +51,8 @@ auto EmplacePiecewiseSafe(
     }
 }
 
-template <typename KeyLocalType, typename ValueLocalType, typename Input, typename ReadDest>
-decltype(auto) CustomReadField(TypeList<std::map<KeyLocalType, ValueLocalType>>,
+template <typename KeyLocalType, typename ValueLocalType, typename Compare, typename Allocator, typename Input, typename ReadDest>
+decltype(auto) CustomReadField(TypeList<std::map<KeyLocalType, ValueLocalType, Compare, Allocator>>,
     Priority<1>,
     InvokeContext& invoke_context,
     Input&& input,
