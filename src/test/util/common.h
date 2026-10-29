@@ -46,6 +46,10 @@ inline std::ostream& operator<<(std::ostream& os, const std::optional<T>& v)
     return v ? os << *v
              : os << "std::nullopt";
 }
+inline std::ostream& operator<<(std::ostream& os, const std::nullopt_t)
+{
+    return os << "std::nullopt";
+}
 } // namespace std
 
 template <typename T>
