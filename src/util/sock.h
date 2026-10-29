@@ -292,6 +292,12 @@ protected:
      */
     SOCKET m_socket;
 
+    /**
+     * NOT FOR MERGING: stress-test state for chunked Recv(). Store the number of bytes
+     * read in the last recv() call.
+     */
+    mutable size_t m_dbg_recv_prev{0};
+
 private:
     /**
      * Close `m_socket` if it is not `INVALID_SOCKET`.

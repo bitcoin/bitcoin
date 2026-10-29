@@ -26,12 +26,17 @@
 #include <poll.h>
 #endif
 
+#ifndef WIN32
+#include <sys/ioctl.h>
+#endif
+
 Sock::Sock(SOCKET s) : m_socket(s) {}
 
 Sock::Sock(Sock&& other)
 {
     m_socket = other.m_socket;
     other.m_socket = INVALID_SOCKET;
+    m_dbg_recv_prev = 0;
 }
 
 Sock::~Sock() { Close(); }
@@ -41,6 +46,7 @@ Sock& Sock::operator=(Sock&& other)
     Close();
     m_socket = other.m_socket;
     other.m_socket = INVALID_SOCKET;
+    m_dbg_recv_prev = 0;
     return *this;
 }
 
@@ -51,7 +57,33 @@ ssize_t Sock::Send(const void* data, size_t len, int flags) const
 
 ssize_t Sock::Recv(void* buf, size_t len, int flags) const
 {
-    return recv(m_socket, static_cast<char*>(buf), len, flags);
+    //return recv(m_socket, static_cast<char*>(buf), len, flags);
+
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // !!! NOTE: NOT FOR MERGING !!!
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // Instead of performing a recv for up to the available buffer size normally,
+    // break it up into smaller recv()'s, in order to stress test code paths.
+    // The amount to read is limited by either of these:
+    // - 125% of the previous read
+    // - 33% of the available amount
+    // - the available amount
+
+#ifdef WIN32
+    u_long avail{0};
+    if (ioctlsocket(m_socket, FIONREAD, &avail) == SOCKET_ERROR) avail = 0;
+#else
+    int avail{0};
+    if (ioctl(m_socket, FIONREAD, &avail) != 0 || avail < 0) avail = 0;
+#endif
+    const size_t a{static_cast<size_t>(avail)};
+    const size_t slow_grow{m_dbg_recv_prev + m_dbg_recv_prev / 4 + 1};
+    const size_t n{std::max<size_t>(1, std::min({slow_grow, a / 3, a}))};
+    const ssize_t ret{recv(m_socket, static_cast<char*>(buf), std::min(len, n), flags)};
+    if (!(flags & MSG_PEEK)) {
+        m_dbg_recv_prev = ret > 0 ? static_cast<size_t>(ret) : 0;
+    }
+    return ret;
 }
 
 int Sock::Connect(const sockaddr* addr, socklen_t addr_len) const
