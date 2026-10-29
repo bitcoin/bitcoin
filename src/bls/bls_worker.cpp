@@ -8,6 +8,7 @@
 #include <logging.h>
 #include <util/system.h>
 
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <ranges>
@@ -620,13 +621,15 @@ BLSVerificationVectorPtr CBLSWorker::BuildQuorumVerificationVector(Span<BLSVerif
 
 template <typename T>
 void AsyncAggregateHelper(ctpl::thread_pool& workerPool, Span<T> vec, bool parallel,
-                          std::function<void(const T&)> doneCallback)
+                          std::function<void(const T&)> doneCallback, bool rejectDuplicates = true)
 {
     if (vec.empty()) {
         doneCallback(T());
         return;
     }
-    if (!VerifyVectorHelper(vec)) {
+    const bool inputValid{rejectDuplicates ? VerifyVectorHelper(vec)
+                                           : std::all_of(vec.begin(), vec.end(), [](const T& item) { return item.IsValid(); })};
+    if (!inputValid) {
         doneCallback(T());
         return;
     }
@@ -638,7 +641,10 @@ void AsyncAggregateHelper(ctpl::thread_pool& workerPool, Span<T> vec, bool paral
 void CBLSWorker::AsyncAggregateSecretKeys(Span<CBLSSecretKey> secKeys, bool parallel,
                                           std::function<void(const CBLSSecretKey&)> doneCallback)
 {
-    AsyncAggregateHelper(workerPool, secKeys, parallel, std::move(doneCallback));
+    // These are the DKG shares dealt to one member. Two colluding dealers can deal it equal shares while their
+    // contributions stay valid and their vvecs share no coefficient, so rejecting duplicates here would let them keep
+    // chosen members from building their quorum secret key share. The sum is correct either way.
+    AsyncAggregateHelper(workerPool, secKeys, parallel, std::move(doneCallback), /*rejectDuplicates=*/false);
 }
 
 std::future<CBLSSecretKey> CBLSWorker::AsyncAggregateSecretKeys(Span<CBLSSecretKey> secKeys, bool parallel)

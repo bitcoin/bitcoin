@@ -720,6 +720,61 @@ BOOST_AUTO_TEST_CASE(bls_verify_contribution_shares_duplicate_coefficient_tests)
     FuncVerifyContributionSharesDuplicateCoefficient(false);
 }
 
+void FuncAggregateCollidingContributionShares(const bool legacy_scheme)
+{
+    bls::bls_legacy_scheme.store(legacy_scheme);
+
+    CBLSWorker worker;
+    worker.Start(4);
+
+    // The receiver's id is -1 mod the group order, so a degree-1 polynomial b0 + b1 * x takes the value b0 - b1 there
+    uint256 recvIdHash;
+    const auto minusOne{ParseHex("73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000")};
+    std::copy(minusOne.begin(), minusOne.end(), recvIdHash.begin());
+    const CBLSId recvId{recvIdHash};
+
+    // Dealer 0 is honest. Dealers 1 and 2 collude: their polynomials differ, but agree at the receiver's id
+    const auto makeKey = [] { CBLSSecretKey sk; sk.MakeNewKey(); return sk; };
+    std::vector<std::vector<CBLSSecretKey>> polys{{makeKey(), makeKey()}, {makeKey(), makeKey()}, {}};
+    CBLSSecretKey share1;
+    BOOST_REQUIRE(share1.SecretKeyShare(polys[1], recvId));
+    const CBLSSecretKey b1{makeKey()};
+    CBLSSecretKey b0{share1};
+    b0.AggregateInsecure(b1);
+    polys[2] = {b0, b1};
+
+    std::vector<BLSVerificationVectorPtr> vvecs;
+    std::vector<CBLSSecretKey> recvShares;
+    for (auto& poly : polys) {
+        auto vvec = std::make_shared<std::vector<CBLSPublicKey>>();
+        for (const auto& coefficient : poly) {
+            vvec->emplace_back(coefficient.GetPublicKey());
+        }
+        vvecs.emplace_back(vvec);
+        BOOST_REQUIRE(recvShares.emplace_back().SecretKeyShare(poly, recvId));
+    }
+    BOOST_REQUIRE(recvShares[1] == recvShares[2]);
+
+    // Every contribution verifies and nothing in the vvecs collides
+    const std::vector<bool> ok{worker.VerifyContributionShares(recvId, vvecs, recvShares)};
+    BOOST_CHECK(ok == std::vector<bool>(3, true));
+    const BLSVerificationVectorPtr quorumVvec{worker.BuildQuorumVerificationVector(vvecs)};
+    BOOST_REQUIRE(quorumVvec != nullptr);
+
+    // so the receiver must still get the quorum secret key share matching the quorum vvec
+    const CBLSSecretKey skShare{worker.AggregateSecretKeys(recvShares)};
+    BOOST_REQUIRE(skShare.IsValid());
+    BOOST_CHECK(skShare.GetPublicKey() == CBLSWorker::BuildPubKeyShare(quorumVvec, recvId));
+
+    worker.Stop();
+}
+
+BOOST_AUTO_TEST_CASE(bls_aggregate_colliding_contribution_shares_tests)
+{
+    FuncAggregateCollidingContributionShares(true);
+    FuncAggregateCollidingContributionShares(false);
+}
+
 // A dummy BLS object that satisfies the minimal interface expected by CBLSLazyWrapper.
 class DummyBLS
 {
