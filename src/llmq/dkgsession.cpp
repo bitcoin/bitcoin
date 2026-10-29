@@ -263,6 +263,13 @@ std::optional<CInv> CDKGSession::ReceiveMessage(const CDKGContribution& qc)
     if (!MaybeDecrypt(*qc.contributions, *myIdx, skContribution, PROTOCOL_VERSION)) {
         logger.Batch("contribution from %s could not be decrypted", member->dmn->proTxHash.ToString());
         complain = true;
+    } else if (!skContribution.IsValid()) {
+        // A decryptable but structurally-invalid (e.g. all-zero) share must never be
+        // retained: it later reaches CBLSSecretKey::AggregateInsecure() in the batched
+        // contribution verification, whose assert(IsValid()) would abort an honest node.
+        // Treat it as a bad contribution and complain.
+        logger.Batch("contribution from %s decrypted to an invalid share", member->dmn->proTxHash.ToString());
+        complain = true;
     } else if (member->idx != myIdx && ShouldSimulateError(DKGError::type::COMPLAIN_LIE)) {
         logger.Batch("lying/complaining for %s", member->dmn->proTxHash.ToString());
         complain = true;

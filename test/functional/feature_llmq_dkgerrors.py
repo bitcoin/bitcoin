@@ -50,6 +50,19 @@ class LLMQDKGErrors(DashTestFramework):
         qh = self.mine_quorum(expected_contributions=3, expected_complaints=2, expected_justifications=1, mninfos_valid=mninfos_valid)
         self.assert_member_valid(qh, self.mninfo[0].proTxHash, True)
 
+        self.log.info("Lets deliver a structurally-invalid (all-zero) contribution share but provide a correct justification")
+        # Regression test for the DKG abort via an invalid decrypted contribution share:
+        # before the intake gate rejected it, the share reached CBLSSecretKey::AggregateInsecure()
+        # in the batched verification and its assert aborted every honest recipient (SIGABRT).
+        # With the gate the invalid share is treated like a bad contribution: recipients complain,
+        # the sender justifies with its real shares, and the member remains valid - no crash.
+        # contribution-lie stays enabled from the previous case; contribution-invalid overrides it
+        # with an all-zero (structurally invalid) share, which is the EMBARGO-8 trigger.
+        self.mninfo[0].get_node(self).quorum('dkgsimerror', 'contribution-invalid', '100')
+        qh = self.mine_quorum(expected_contributions=3, expected_complaints=2, expected_justifications=1, mninfos_valid=mninfos_valid)
+        self.assert_member_valid(qh, self.mninfo[0].proTxHash, True)
+        self.mninfo[0].get_node(self).quorum('dkgsimerror', 'contribution-invalid', '0')
+
         self.log.info("Lets lie in the contribution and then omit the justification")
         self.mninfo[0].get_node(self).quorum('dkgsimerror', 'justify-omit', '100')
         qh = self.mine_quorum(expected_contributions=3, expected_complaints=2, mninfos_valid=mninfos_valid)
