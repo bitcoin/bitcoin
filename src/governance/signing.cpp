@@ -182,6 +182,8 @@ void GovernanceSigner::VoteGovernanceTriggers(const std::optional<const CGoverna
 {
     // only active masternodes can vote on triggers
     if (m_mn_activeman.GetProTxHash().IsNull()) return;
+    // Until we are synced we can't build a candidate, so we have nothing to compare triggers to
+    if (!m_mn_sync.IsSynced()) return;
 
     LOCK(::cs_main);
 
