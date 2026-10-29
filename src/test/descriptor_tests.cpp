@@ -2,19 +2,26 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <chainparams.h>
+#include <key_io.h>
 #include <pubkey.h>
 #include <script/descriptor.h>
+#include <script/keyorigin.h>
 #include <script/sign.h>
 #include <test/util/setup_common.h>
+#include <util/bip32.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
 #include <boost/test/unit_test.hpp>
 
+#include <map>
 #include <optional>
 #include <regex>
+#include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace util::hex_literals;
@@ -1473,6 +1480,118 @@ BOOST_AUTO_TEST_CASE(unused_descriptor_test)
     CheckUnused("unused(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc)", "unused(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL)");
     CheckUnused("unused(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1)", "unused(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)");
     CheckUnused("unused(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/0h/0h/1)", "unused(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0h/0h/1)");
+}
+
+/** The extended public keys a descriptor contributes, keyed by the origin they carry,
+ *  in the string form a descriptor writes them in. */
+std::set<std::pair<std::string, std::string>> ExtPubKeysWithOrigins(const std::string& desc_str, const DescriptorCache* cache = nullptr)
+{
+    FlatSigningProvider keys;
+    std::string error;
+    const auto descs = Parse(desc_str, keys, error, /*require_checksum=*/false);
+    BOOST_REQUIRE_MESSAGE(descs.size() == 1, error);
+
+    const std::map<KeyOriginInfo, std::set<CExtPubKey>> xpubs{descs.at(0)->GetExtPubKeysWithOrigins(cache)};
+
+    const auto& version{Params().Base58Prefix(CChainParams::EXT_PUBLIC_KEY)};
+    std::set<std::pair<std::string, std::string>> ret;
+    for (const auto& [origin, keyset] : xpubs) {
+        for (const CExtPubKey& xpub : keyset) {
+            // A PSBT serializes these keys with their own version bytes, unlike a
+            // descriptor, so every key handed out has to carry them.
+            BOOST_CHECK(std::equal(version.begin(), version.end(), std::begin(xpub.version)));
+            ret.emplace(HexStr(origin.fingerprint) + FormatHDKeypath(origin.path), EncodeExtPubKey(xpub));
+        }
+    }
+    return ret;
+}
+
+void CheckExtPubKeys(const std::string& desc_str, const std::set<std::pair<std::string, std::string>>& expected, const DescriptorCache* cache = nullptr)
+{
+    BOOST_CHECK_MESSAGE(ExtPubKeysWithOrigins(desc_str, cache) == expected, desc_str);
+}
+
+//! The fingerprint of an extended key, computed without going through a descriptor.
+std::string Fingerprint(const std::string& ext_key)
+{
+    const CExtKey xprv{DecodeExtKey(ext_key)};
+    const CExtPubKey xpub{xprv.key.IsValid() ? xprv.Neuter() : DecodeExtPubKey(ext_key)};
+    return HexStr(xpub.pubkey.GetID().fingerprint());
+}
+
+//! The extended public key at a path, derived without going through a descriptor.
+std::string DeriveExtPubKey(const std::string& xprv_str, const std::vector<uint32_t>& path)
+{
+    CExtKey key{DecodeExtKey(xprv_str)};
+    BOOST_REQUIRE(key.key.IsValid());
+    for (const uint32_t step : path) {
+        CExtKey child;
+        BOOST_REQUIRE(key.Derive(child, step));
+        key = child;
+    }
+    return EncodeExtPubKey(key.Neuter());
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_extpubkeys_with_origins)
+{
+    const std::string XPRV{"xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc"};
+    const std::string XPUB{"xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL"};
+    const std::string XPUB2{"xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y"};
+    const std::string FP{Fingerprint(XPUB)};
+    const std::string FP2{Fingerprint(XPUB2)};
+
+    // With no hardened step, the key written in the descriptor is the one the children
+    // are derived from, and it is published with an empty path.
+    CheckExtPubKeys("wpkh(" + XPUB + "/0/*)", {{FP, XPUB}});
+    // The private form of the same descriptor publishes the same key.
+    CheckExtPubKeys("wpkh(" + XPRV + "/0/*)", {{FP, XPUB}});
+
+    // The key at the last hardened step is only reachable through the cache, since
+    // deriving it needs the private key. Without one, the root is what is left, whether
+    // the descriptor carries the private key or not.
+    CheckExtPubKeys("wpkh(" + XPRV + "/84h/0h/0h/0/*)", {{FP, XPUB}});
+    CheckExtPubKeys("wpkh(" + XPUB + "/84h/0h/0h/0/*)", {{FP, XPUB}});
+
+    // With the key in the cache, that key is published, and the origin is the path down
+    // to it.
+    const std::string lh_xpub{DeriveExtPubKey(XPRV, {84 | BIP32_HARDENED_FLAG, BIP32_HARDENED_FLAG, BIP32_HARDENED_FLAG})};
+    DescriptorCache cache;
+    cache.CacheLastHardenedExtPubKey(0, DecodeExtPubKey(lh_xpub));
+    CheckExtPubKeys("wpkh(" + XPUB + "/84h/0h/0h/0/*)", {{FP + "/84h/0h/0h", lh_xpub}}, &cache);
+
+    // A key origin in the descriptor is what the published origin starts from.
+    CheckExtPubKeys("wpkh([00aabb22/48h]" + XPUB + "/0/*)", {{"00aabb22/48h", XPUB}});
+    // And it is prepended to whatever the key expression contributes, including the path
+    // down to a key from the cache.
+    CheckExtPubKeys("wpkh([00aabb22/48h]" + XPRV + "/0h/0/*)", {{"00aabb22/48h", XPUB}});
+    const std::string lh_after_origin{DeriveExtPubKey(XPRV, {BIP32_HARDENED_FLAG})};
+    DescriptorCache origin_cache;
+    origin_cache.CacheLastHardenedExtPubKey(0, DecodeExtPubKey(lh_after_origin));
+    CheckExtPubKeys("wpkh([00aabb22/48h]" + XPUB + "/0h/0/*)", {{"00aabb22/48h/0h", lh_after_origin}}, &origin_cache);
+
+    // A cached key whose depth does not fit the path cannot be the key at the last
+    // hardened step, so the root is what is left.
+    DescriptorCache shallower_cache;
+    shallower_cache.CacheLastHardenedExtPubKey(0, DecodeExtPubKey(XPUB2));
+    CheckExtPubKeys("wpkh(" + XPUB + "/84h/0h/0h/0/*)", {{FP, XPUB}}, &shallower_cache);
+    DescriptorCache deeper_cache;
+    deeper_cache.CacheLastHardenedExtPubKey(0, DecodeExtPubKey(DeriveExtPubKey(XPRV, {BIP32_HARDENED_FLAG, 0})));
+    CheckExtPubKeys("pkh(" + XPUB + "/0h)", {{FP, XPUB}}, &deeper_cache);
+
+    // Every key expression contributes, including through a subdescriptor.
+    CheckExtPubKeys("wsh(multi(2," + XPUB + "/0/*," + XPUB2 + "/0/*))", {{FP, XPUB}, {FP2, XPUB2}});
+    CheckExtPubKeys("sh(wsh(multi(2," + XPUB + "/0/*," + XPUB2 + "/0/*)))", {{FP, XPUB}, {FP2, XPUB2}});
+
+    // A hardened ranged expression has no key its children derive from either, so the
+    // root is what it offers.
+    CheckExtPubKeys("wpkh(" + XPRV + "/0h/*h)", {{FP, XPUB}});
+    // A plain public key has no extended key behind it.
+    CheckExtPubKeys("wpkh(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)", {});
+    // MuSig hands out its participants' keys, whether the derivation comes before the
+    // aggregation or after it, and a participant with no extended key adds nothing.
+    CheckExtPubKeys("rawtr(musig(" + XPUB + "," + XPUB2 + ")/0/*)", {{FP, XPUB}, {FP2, XPUB2}});
+    CheckExtPubKeys("rawtr(musig(" + XPUB + "/0/*," + XPUB2 + "/0/*))", {{FP, XPUB}, {FP2, XPUB2}});
+    CheckExtPubKeys("rawtr(musig(" + XPUB + "/0/*,03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd))", {{FP, XPUB}});
 }
 
 BOOST_AUTO_TEST_SUITE_END()

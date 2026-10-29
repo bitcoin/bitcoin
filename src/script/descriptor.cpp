@@ -255,6 +255,11 @@ public:
     /** Return the extended public key for this PubkeyProvider, if it has one. */
     virtual std::optional<CExtPubKey> GetRootExtPubKey() const = 0;
 
+    /** The extended public keys this provider is built from, each keyed by the origin
+     *  that leads to it: the key at the deepest hardened step when the cache holds it,
+     *  and the root otherwise. */
+    virtual std::map<KeyOriginInfo, std::set<CExtPubKey>> GetExtPubKeysWithOrigins(const DescriptorCache* cache) const = 0;
+
     /** Make a deep copy of this PubkeyProvider */
     virtual std::unique_ptr<PubkeyProvider> Clone() const = 0;
 
@@ -359,6 +364,17 @@ public:
     {
         return m_provider->GetRootExtPubKey();
     }
+    std::map<KeyOriginInfo, std::set<CExtPubKey>> GetExtPubKeysWithOrigins(const DescriptorCache* cache) const override
+    {
+        std::map<KeyOriginInfo, std::set<CExtPubKey>> ret;
+        for (auto& [suborigin, xpubs] : m_provider->GetExtPubKeysWithOrigins(cache)) {
+            KeyOriginInfo origin{suborigin};
+            origin.fingerprint = m_origin.fingerprint;
+            origin.path.insert(origin.path.begin(), m_origin.path.begin(), m_origin.path.end());
+            ret[origin].merge(xpubs);
+        }
+        return ret;
+    }
     std::unique_ptr<PubkeyProvider> Clone() const override
     {
         return std::make_unique<OriginPubkeyProvider>(m_expr_index, m_origin, m_provider->Clone(), m_apostrophe);
@@ -424,6 +440,7 @@ public:
     {
         return std::nullopt;
     }
+    std::map<KeyOriginInfo, std::set<CExtPubKey>> GetExtPubKeysWithOrigins(const DescriptorCache*) const override { return {}; }
     std::unique_ptr<PubkeyProvider> Clone() const override
     {
         return std::make_unique<ConstPubkeyProvider>(m_expr_index, m_pubkey, m_xonly);
@@ -644,6 +661,29 @@ public:
     {
         return m_root_extkey;
     }
+    std::map<KeyOriginInfo, std::set<CExtPubKey>> GetExtPubKeysWithOrigins(const DescriptorCache* cache) const override
+    {
+        KeyOriginInfo origin;
+        origin.fingerprint = m_root_extkey.id_key_fingerprint();
+        CExtPubKey xpub;
+
+        // Only unhardened steps follow the last hardened one, so the key there derives every
+        // key this expression produces. Deriving that key needs the private key, so only the
+        // cache can provide it; when the cache lacks it, the root is what is left.
+        if (cache != nullptr && cache->GetCachedLastHardenedExtPubKey(m_expr_index, xpub) &&
+            xpub.nDepth > m_root_extkey.nDepth && size_t(xpub.nDepth - m_root_extkey.nDepth) <= m_path.size()) {
+            // The cached key's depth past the root's is the number of path steps that lead to it.
+            origin.path.assign(m_path.begin(), m_path.begin() + (xpub.nDepth - m_root_extkey.nDepth));
+        } else {
+            xpub = m_root_extkey;
+        }
+        if (!xpub.pubkey.IsValid()) return {};
+
+        // A key parsed from a descriptor or taken from the cache carries no version bytes;
+        // give it this network's.
+        SetExtPubKeyVersion(xpub);
+        return {{origin, {xpub}}};
+    }
     std::unique_ptr<PubkeyProvider> Clone() const override
     {
         return std::make_unique<BIP32PubkeyProvider>(m_expr_index, m_root_extkey, m_path, m_derive, m_apostrophe);
@@ -837,6 +877,16 @@ public:
     std::optional<CExtPubKey> GetRootExtPubKey() const override
     {
         return std::nullopt;
+    }
+    std::map<KeyOriginInfo, std::set<CExtPubKey>> GetExtPubKeysWithOrigins(const DescriptorCache* cache) const override
+    {
+        std::map<KeyOriginInfo, std::set<CExtPubKey>> ret;
+        for (const auto& prov : m_participants) {
+            for (auto& [origin, keys] : prov->GetExtPubKeysWithOrigins(cache)) {
+                ret[origin].merge(keys);
+            }
+        }
+        return ret;
     }
 
     std::unique_ptr<PubkeyProvider> Clone() const override
@@ -1114,6 +1164,23 @@ public:
         for (const auto& arg : m_subdescriptor_args) {
             arg->GetPubKeys(pubkeys, ext_pubs);
         }
+    }
+
+    // NOLINTNEXTLINE(misc-no-recursion)
+    std::map<KeyOriginInfo, std::set<CExtPubKey>> GetExtPubKeysWithOrigins(const DescriptorCache* cache) const override
+    {
+        std::map<KeyOriginInfo, std::set<CExtPubKey>> ret;
+        for (const auto& p : m_pubkey_args) {
+            for (auto& [origin, keys] : p->GetExtPubKeysWithOrigins(cache)) {
+                ret[origin].merge(keys);
+            }
+        }
+        for (const auto& sub : m_subdescriptor_args) {
+            for (auto& [origin, keys] : sub->GetExtPubKeysWithOrigins(cache)) {
+                ret[origin].merge(keys);
+            }
+        }
+        return ret;
     }
 
     virtual std::unique_ptr<DescriptorImpl> Clone() const = 0;
