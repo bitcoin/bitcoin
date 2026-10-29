@@ -14,7 +14,7 @@
 struct FlatFilePos
 {
     int nFile{-1};
-    unsigned int nPos{0};
+    uint64_t nPos{0};
 
     SERIALIZE_METHODS(FlatFilePos, obj)
     {
@@ -23,7 +23,7 @@ struct FlatFilePos
 
     FlatFilePos() {}
 
-    FlatFilePos(int nFileIn, unsigned int nPosIn) :
+    FlatFilePos(int nFileIn, uint64_t nPosIn) :
         nFile(nFileIn),
         nPos(nPosIn)
     {}

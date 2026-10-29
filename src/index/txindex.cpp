@@ -87,7 +87,7 @@ bool TxIndex::FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRe
     CBlockHeader header;
     try {
         file >> header;
-        if (fseek(file.Get(), postx.nTxOffset, SEEK_CUR)) {
+        if (FileSeek64(file.Get(), postx.nTxOffset, SEEK_CUR)) {
             return error("%s: fseek(...) failed", __func__);
         }
         file >> tx;
