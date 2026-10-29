@@ -88,6 +88,7 @@
 #include <typeinfo>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 using kernel::ChainstateRole;
 using namespace util::hex_literals;
@@ -5795,8 +5796,7 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
         if (!ret) peer.m_addr_known->insert(addr.GetKey());
         return ret;
     };
-    peer.m_addrs_to_send.erase(std::remove_if(peer.m_addrs_to_send.begin(), peer.m_addrs_to_send.end(), addr_already_known),
-                           peer.m_addrs_to_send.end());
+    std::erase_if(peer.m_addrs_to_send, addr_already_known);
 
     // No addr messages to send
     if (peer.m_addrs_to_send.empty()) return;

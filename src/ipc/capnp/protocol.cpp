@@ -19,6 +19,7 @@
 #include <cassert>
 #include <cerrno>
 #include <future>
+#include <list>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -112,7 +113,7 @@ public:
         // process (if there is one), since a parent process should be able to
         // monitor and control this process, even during shutdown.
         m_loop->sync([&] {
-            m_loop->m_incoming_connections.remove_if([this](mp::Connection& c) { return &c != m_parent_connection; });
+            std::erase_if(m_loop->m_incoming_connections, [this](mp::Connection& c) { return &c != m_parent_connection; });
         });
     }
     mp::Stream makeStream(mp::SocketId socket) override

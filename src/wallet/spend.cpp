@@ -31,6 +31,7 @@
 #include <wallet/wallet.h>
 
 #include <cmath>
+#include <vector>
 
 using common::StringForFeeReason;
 using common::TransactionErrorString;
@@ -213,7 +214,7 @@ std::vector<COutput> CoinsResult::All() const
 void CoinsResult::Erase(const std::unordered_set<COutPoint, SaltedOutpointHasher>& coins_to_remove)
 {
     for (auto& [type, vec] : coins) {
-        auto remove_it = std::remove_if(vec.begin(), vec.end(), [&](const COutput& coin) {
+        std::erase_if(vec, [&](const COutput& coin) {
             // remove it if it's on the set
             if (!coins_to_remove.contains(coin.outpoint)) return false;
 
@@ -222,7 +223,6 @@ void CoinsResult::Erase(const std::unordered_set<COutPoint, SaltedOutpointHasher
             if (coin.HasEffectiveValue() && total_effective_amount.has_value()) total_effective_amount = *total_effective_amount - coin.GetEffectiveValue();
             return true;
         });
-        vec.erase(remove_it, vec.end());
     }
 }
 

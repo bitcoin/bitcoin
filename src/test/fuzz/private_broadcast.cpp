@@ -104,13 +104,7 @@ FUZZ_TARGET(private_broadcast)
                         tx_it->second = 0;
                         planned_sends[tx] = PrivateBroadcast::INITIAL_CONNECTION_COUNT;
                         resolved_transactions.erase(tx);
-                        for (auto it = nodes_sent_to.begin(); it != nodes_sent_to.end();) {
-                            if (CTransactionRefComp{}(it->second, tx)) {
-                                it = nodes_sent_to.erase(it);
-                            } else {
-                                ++it;
-                            }
-                        }
+                        std::erase_if(nodes_sent_to, [&](const auto& entry) { return CTransactionRefComp{}(entry.second, tx); });
                     }
                 } else if (transactions.size() >= cap) {
                     Assert(res == PrivateBroadcast::AddResult::QueueFull);
@@ -128,13 +122,7 @@ FUZZ_TARGET(private_broadcast)
                 const CTransactionRef& tx{transactions_it->first};
 
                 // Remove relevant entries from nodes_sent_to[] if any.
-                for (auto it = nodes_sent_to.begin(); it != nodes_sent_to.end();) {
-                    if (CTransactionRefComp{}(it->second, tx)) {
-                        it = nodes_sent_to.erase(it);
-                    } else {
-                        ++it;
-                    }
-                }
+                std::erase_if(nodes_sent_to, [&](const auto& entry) { return CTransactionRefComp{}(entry.second, tx); });
 
                 const auto remaining_sends{pb.Remove(tx)};
 
