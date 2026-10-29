@@ -138,9 +138,9 @@ std::optional<CDKGContribution> ActiveDKGSession::SendContributions()
 }
 
 // Verifies all pending secret key contributions in one batch
-// This is done by aggregating the verification vectors belonging to the secret key contributions
+// This is done by aggregating randomly weighted verification vectors belonging to the secret key contributions
 // The resulting aggregated vvec is then used to recover a public key share
-// The public key share must match the public key belonging to the aggregated secret key contributions
+// The public key share must match the equally weighted public keys of the secret key contributions
 // See CBLSWorker::VerifyContributionShares for more details.
 void ActiveDKGSession::VerifyPendingContributions()
 {
@@ -157,6 +157,7 @@ void ActiveDKGSession::VerifyPendingContributions()
     std::vector<size_t> memberIndexes;
     std::vector<BLSVerificationVectorPtr> vvecs;
     std::vector<CBLSSecretKey> skContributions;
+    bool anyLegacyVvec{false};
 
     for (const auto& idx : pendingContributionVerifications) {
         const auto& m = members[idx];
@@ -165,6 +166,7 @@ void ActiveDKGSession::VerifyPendingContributions()
         }
         memberIndexes.emplace_back(idx);
         vvecs.emplace_back(receivedVvecs[idx]);
+        anyLegacyVvec |= receivedVvecsLegacyScheme[idx];
         skContributions.emplace_back(receivedSkContributions[idx]);
         // Write here to definitely store one contribution for each member no matter if
         // our share is valid or not, could be that others are still correct
@@ -182,7 +184,9 @@ void ActiveDKGSession::VerifyPendingContributions()
         return;
     }
 
-    auto result = blsWorker.VerifyContributionShares(myId, vvecs, skContributions);
+    // Weighted aggregation needs points that passed subgroup checks, which legacy-scheme deserialization skips
+    auto result = blsWorker.VerifyContributionShares(myId, vvecs, skContributions, /*parallel=*/true,
+                                                     /*aggregated=*/!anyLegacyVvec);
     if (result.size() != memberIndexes.size()) {
         logger.Batch("VerifyContributionShares returned result of size %d but size %d was expected, something is wrong", result.size(), memberIndexes.size());
         return;

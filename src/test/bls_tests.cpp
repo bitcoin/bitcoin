@@ -672,6 +672,30 @@ void FuncVerifyContributionSharesHonest(const bool legacy_scheme)
         }
     }
 
+    // 3. With the defaults the DKG uses, only the dealers of wrong shares are blamed:
+    //    - two colluding dealers in the same batch swap their shares: each one is wrong, but their sum is not, so the
+    //      errors cancel in an unweighted aggregate;
+    //    - a missing (invalid) share fails its batch and is blamed alone.
+    auto swapped = skContributions;
+    std::swap(swapped[1], swapped[2]);
+    auto missing = skContributions;
+    missing[5] = CBLSSecretKey{};
+    std::vector<std::pair<std::vector<CBLSSecretKey>, std::set<size_t>>> cases{
+        {swapped, {1, 2}},
+        {missing, {5}},
+    };
+    for (auto& [shares, bad] : cases) {
+        for (const bool parallel : {true, false}) {
+            const auto result = worker.VerifyContributionShares(myId, vvecs, shares, parallel);
+            BOOST_REQUIRE_EQUAL(result.size(), QUORUM_SIZE);
+            for (const size_t i : util::irange(QUORUM_SIZE)) {
+                const bool expected{bad.count(i) == 0};
+                BOOST_CHECK_MESSAGE(result[i] == expected, "index " << i << " expected " << expected << " got "
+                                                                    << result[i] << " (parallel=" << parallel << ")");
+            }
+        }
+    }
+
     worker.Stop();
 }
 

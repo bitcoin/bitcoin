@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <bls/bls.h>
+#include <llmq/dkgmessages.h>
 #include <llmq/dkgsession.h>
 #include <llmq/dkgsessionhandler.h>
 #include <protocol.h>
@@ -118,6 +120,39 @@ BOOST_AUTO_TEST_CASE(pending_messages_quota_is_per_protx)
     BOOST_CHECK(pending.HasSeen(MakeTestHash(5)));
 
     BOOST_CHECK_EQUAL(pending.PopPendingMessages(6).size(), 5U);
+}
+
+BOOST_AUTO_TEST_CASE(contribution_records_vvec_scheme)
+{
+    // A contribution remembers which BLS scheme its vvec was deserialized under, since only the basic scheme checks
+    // subgroup membership, which weighted contribution verification relies on
+    using namespace llmq;
+
+    const bool legacy_scheme_before{bls::bls_legacy_scheme.load()};
+
+    uint256 seed{uint256S("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")};
+    *seed.begin() = 0; // keep it below the group order
+    const CBLSSecretKey sk{Span{seed}};
+    BOOST_REQUIRE(sk.IsValid());
+    CDKGContribution qc;
+    qc.llmqType = Consensus::LLMQType::LLMQ_TEST;
+    qc.vvec = std::make_shared<std::vector<CBLSPublicKey>>(std::vector<CBLSPublicKey>{sk.GetPublicKey()});
+    qc.contributions = std::make_shared<CBLSIESMultiRecipientObjects<CBLSSecretKey>>();
+
+    for (const bool legacy : {true, false}) {
+        bls::bls_legacy_scheme.store(legacy);
+        CDataStream stream{SER_NETWORK, PROTOCOL_VERSION};
+        stream << qc;
+        CDKGContribution received;
+        stream >> received;
+        BOOST_CHECK_EQUAL(received.vvecLegacyScheme, legacy);
+        BOOST_REQUIRE_EQUAL(received.vvec->size(), 1U);
+        BOOST_CHECK((*received.vvec)[0].IsValid());
+        BOOST_CHECK((*received.vvec)[0] == (*qc.vvec)[0]);
+        BOOST_CHECK(stream.empty());
+    }
+
+    bls::bls_legacy_scheme.store(legacy_scheme_before);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -105,11 +105,13 @@ public:
     static constexpr size_t CONTRIBUTION_VERIFY_BATCH_SIZE{8};
 
     // The following functions verify multiple verification vectors and contributions for the same id
-    // This is parallelized by performing batched verification. The verification vectors and the contributions of
-    // a batch are aggregated (in parallel, see AsyncBuildQuorumVerificationVector and AsyncBuildSecretKeyShare). The
-    // result per batch is a single aggregated verification vector and a single aggregated contribution, which are then
-    // verified with VerifyContributionShare. If verification of the aggregated inputs is successful, the whole batch
-    // is marked as valid. If the batch verification fails, the individual entries are verified in a non-aggregated manner
+    // This is parallelized by performing batched verification. Each verification vector of a batch and the public key of
+    // its contribution are multiplied by the same secret random 64-bit weight, so that errors in the contributions of
+    // several dealers can't cancel out, and aggregated. The public key share recovered from the aggregated verification
+    // vector must match the aggregated public key. If it does, the whole batch is marked as valid. If the batch
+    // verification fails, the individual entries are verified in a non-aggregated manner
+    // The weighting is only sound for points that passed subgroup checks, so callers that may hold objects deserialized
+    // under the legacy scheme must pass aggregated=false
     void AsyncVerifyContributionShares(const CBLSId& forId, Span<BLSVerificationVectorPtr> vvecs, Span<CBLSSecretKey> skShares,
                                        bool parallel, bool aggregated, std::function<void(const std::vector<bool>&)> doneCallback);
     std::future<std::vector<bool> > AsyncVerifyContributionShares(const CBLSId& forId, Span<BLSVerificationVectorPtr> vvecs, Span<CBLSSecretKey> skShares,

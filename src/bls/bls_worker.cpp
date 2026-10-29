@@ -3,7 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bls/bls_worker.h>
+#include <bls/bls_batchverifier.h>
 #include <hash.h>
+#include <random.h>
 
 #include <logging.h>
 #include <util/system.h>
@@ -394,13 +396,6 @@ struct ContributionVerifier : public std::enable_shared_from_this<ContributionVe
         size_t start{0};
         size_t count{0};
 
-        BLSVerificationVectorPtr vvec;
-        CBLSSecretKey skShare;
-
-        // starts with 0 and is incremented if either vvec or skShare aggregation finishes. If it reaches 2, we know
-        // that aggregation for this batch is fully done. We can then start verification.
-        std::unique_ptr<std::atomic<int> > aggDone;
-
         // we can't directly update a vector<bool> in parallel
         // as vector<bool> is not thread safe (uses bitsets internally)
         // so we must use vector<char> temporarily and concatenate/convert
@@ -453,7 +448,6 @@ struct ContributionVerifier : public std::enable_shared_from_this<ContributionVe
         for (size_t i = 0; i < batchCount; i++) {
             auto& batchState = batchStates[i];
 
-            batchState.aggDone = std::make_unique<std::atomic<int>>(0);
             batchState.start = i * batchSize;
             batchState.count = std::min(batchSize, vvecs.size() - batchState.start);
             batchState.verifyResults.assign(batchState.count, 0);
@@ -485,64 +479,10 @@ struct ContributionVerifier : public std::enable_shared_from_this<ContributionVe
 
     void AsyncAggregate(size_t batchIdx)
     {
-        auto& batchState = batchStates[batchIdx];
-
-        // aggregate vvecs and skShares of batch in parallel
-        auto self(this->shared_from_this());
-        auto vvecAgg = std::make_shared<VectorAggregator<CBLSPublicKey>>(vvecs.subspan(batchState.start, batchState.count), parallel, workerPool, [this, self, batchIdx] (const BLSVerificationVectorPtr& vvec) {HandleAggVvecDone(batchIdx, vvec);});
-        auto skShareAgg = std::make_shared<Aggregator<CBLSSecretKey>>(Span{skShares}.subspan(batchState.start, batchState.count), parallel, workerPool, [this, self, batchIdx] (const CBLSSecretKey& skShare) {HandleAggSkShareDone(batchIdx, skShare);});
-
-        vvecAgg->Start();
-        skShareAgg->Start();
-    }
-
-    void HandleAggVvecDone(size_t batchIdx, const BLSVerificationVectorPtr& vvec)
-    {
-        auto& batchState = batchStates[batchIdx];
-        batchState.vvec = vvec;
-        if (++(*batchState.aggDone) == 2) {
-            HandleAggDone(batchIdx);
-        }
-    }
-    void HandleAggSkShareDone(size_t batchIdx, const CBLSSecretKey& skShare)
-    {
-        auto& batchState = batchStates[batchIdx];
-        batchState.skShare = skShare;
-        if (++(*batchState.aggDone) == 2) {
-            HandleAggDone(batchIdx);
-        }
-    }
-
-    void HandleVerifyDone(size_t count)
-    {
-        size_t c = verifyDoneCount += count;
-        if (c == verifyCount) {
-            Finish();
-        }
-    }
-
-    void HandleAggDone(size_t batchIdx)
-    {
-        auto& batchState = batchStates[batchIdx];
-
-        if (batchState.vvec == nullptr || batchState.vvec->empty() || !batchState.skShare.IsValid()) {
-            // something went wrong while aggregating and there is nothing we can do now except mark the whole batch as failed
-            // this can only happen if inputs were invalid in some way
-            batchState.verifyResults.assign(batchState.count, 0);
-            HandleVerifyDone(batchState.count);
-            return;
-        }
-
-        AsyncAggregatedVerifyBatch(batchIdx);
-    }
-
-    void AsyncAggregatedVerifyBatch(size_t batchIdx)
-    {
         auto self(this->shared_from_this());
         auto f = [this, self, batchIdx](int threadId) {
             auto& batchState = batchStates[batchIdx];
-            bool result = Verify(batchState.vvec, batchState.skShare);
-            if (result) {
+            if (VerifyWeightedBatch(batchState)) {
                 // whole batch is valid
                 batchState.verifyResults.assign(batchState.count, 1);
                 HandleVerifyDone(batchState.count);
@@ -552,6 +492,55 @@ struct ContributionVerifier : public std::enable_shared_from_this<ContributionVe
             }
         };
         PushOrDoWork(std::move(f));
+    }
+
+    // Each contribution's vvec and the public key of its share are multiplied by the same secret random weight before
+    // they are aggregated, so that errors in the contributions of several dealers can't cancel out. 64-bit weights
+    // let a batch with an invalid contribution pass with a probability of at most 2^-64.
+    bool VerifyWeightedBatch(const BatchState& batchState) const
+    {
+        FastRandomContext rng;
+        std::vector<CBLSPublicKey> aggVvec;
+        std::vector<CBLSPublicKey> pubKeys;
+        pubKeys.reserve(batchState.count);
+        for (size_t i = batchState.start; i < batchState.start + batchState.count; i++) {
+            const auto& vvec = vvecs[i];
+            if (vvec == nullptr || vvec->empty() || !skShares[i].IsValid() ||
+                (!aggVvec.empty() && vvec->size() != aggVvec.size())) {
+                return false;
+            }
+            const CBLSSecretKey weight{MakeBatchVerificationWeight(rng, /*numBytes=*/8)};
+            CBLSPublicKey pubKey{skShares[i].GetPublicKey()};
+            pubKey.MulInsecure(weight);
+            pubKeys.emplace_back(pubKey);
+            const bool first{aggVvec.empty()};
+            for (size_t j = 0; j < vvec->size(); j++) {
+                CBLSPublicKey coefficient{(*vvec)[j]};
+                if (!coefficient.IsValid()) {
+                    return false;
+                }
+                coefficient.MulInsecure(weight);
+                if (first) {
+                    aggVvec.emplace_back(coefficient);
+                } else {
+                    aggVvec[j].AggregateInsecure(coefficient);
+                }
+            }
+        }
+
+        CBLSPublicKey expected;
+        if (!expected.PublicKeyShare(aggVvec, forId)) {
+            return false;
+        }
+        return expected == CBLSPublicKey::AggregateInsecure(pubKeys);
+    }
+
+    void HandleVerifyDone(size_t count)
+    {
+        size_t c = verifyDoneCount += count;
+        if (c == verifyCount) {
+            Finish();
+        }
     }
 
     void AsyncVerifyBatchOneByOne(size_t batchIdx)

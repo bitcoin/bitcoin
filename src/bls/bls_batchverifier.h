@@ -13,14 +13,15 @@
 #include <map>
 #include <vector>
 
-//! A secret random nonzero 128-bit scalar, well below the group order. Weighting each signature and its public key by
-//! one makes errors in several signatures unable to cancel out in an aggregate.
-inline CBLSSecretKey MakeBatchVerificationWeight(FastRandomContext& rng)
+//! A secret random nonzero scalar of numBytes bytes (at most 16, so well below the group order). Weighting each
+//! signature and its public key by one makes errors in several signatures unable to cancel out in an aggregate.
+inline CBLSSecretKey MakeBatchVerificationWeight(FastRandomContext& rng, size_t numBytes = 16)
 {
+    assert(numBytes > 0 && numBytes <= 16);
     std::array<uint8_t, BLS_CURVE_SECKEY_SIZE> bytes{};
     do {
         const uint256 rand{rng.rand256()};
-        std::copy(rand.begin(), rand.begin() + 16, bytes.end() - 16);
+        std::copy(rand.begin(), rand.begin() + numBytes, bytes.end() - numBytes);
     } while (std::all_of(bytes.begin(), bytes.end(), [](uint8_t b) { return b == 0; }));
     return CBLSSecretKey{bytes};
 }
