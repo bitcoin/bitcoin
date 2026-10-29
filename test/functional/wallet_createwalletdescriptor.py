@@ -8,7 +8,9 @@ from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_raises_rpc_error,
+    assert_true,
 )
 from test_framework.wallet_util import WalletUnlock
 
@@ -44,7 +46,7 @@ class WalletCreateDescriptorTest(BitcoinTestFramework):
 
         self.log.info("Test createwalletdescriptor after importing active descriptor to blank wallet")
         # Import one active descriptor
-        assert_equal(wallet.importdescriptors([{"desc": descsum_create(f"pkh({xprv}/44h/2h/0h/0/0/*)"), "timestamp": "now", "active": True}])[0]["success"], True)
+        assert_true(wallet.importdescriptors([{"desc": descsum_create(f"pkh({xprv}/44h/2h/0h/0/0/*)"), "timestamp": "now", "active": True}])[0]["success"])
         assert_equal(len(wallet.listdescriptors()["descriptors"]), 1)
         assert_equal(len(wallet.gethdkeys()), 1)
 
@@ -61,8 +63,8 @@ class WalletCreateDescriptorTest(BitcoinTestFramework):
         assert_equal(len(new_descs), 1)
         assert_equal(len(wallet.gethdkeys()), 1)
         assert_equal(new_descs[0][0], descsum_create(f"tr({xprv}/86h/1h/0h/0/*)"))
-        assert_equal(new_descs[0][1], True)
-        assert_equal(new_descs[0][2], False)
+        assert_true(new_descs[0][1])
+        assert_false(new_descs[0][2])
 
         old_descs = curr_descs
         wallet.createwalletdescriptor(type="bech32m", internal=True)
@@ -71,8 +73,8 @@ class WalletCreateDescriptorTest(BitcoinTestFramework):
         assert_equal(len(new_descs), 1)
         assert_equal(len(wallet.gethdkeys()), 1)
         assert_equal(new_descs[0][0], descsum_create(f"tr({xprv}/86h/1h/0h/1/*)"))
-        assert_equal(new_descs[0][1], True)
-        assert_equal(new_descs[0][2], True)
+        assert_true(new_descs[0][1])
+        assert_true(new_descs[0][2])
 
     def test_imported_other_keys(self):
         self.log.info("Test createwalletdescriptor with multiple keys in active descriptors")
@@ -86,7 +88,7 @@ class WalletCreateDescriptorTest(BitcoinTestFramework):
         xpub = xpub_info[0]["xpub"]
         xprv = xpub_info[0]["xprv"]
 
-        assert_equal(wallet.importdescriptors([{"desc": descsum_create(f"wpkh({xprv}/0/0/*)"), "timestamp": "now", "active": True}])[0]["success"], True)
+        assert_true(wallet.importdescriptors([{"desc": descsum_create(f"wpkh({xprv}/0/0/*)"), "timestamp": "now", "active": True}])[0]["success"])
         assert_equal(len(wallet.gethdkeys()), 2)
 
         assert_raises_rpc_error(-5, "Unable to determine which HD key to use from active descriptors. Please specify with 'hdkey'", wallet.createwalletdescriptor, "bech32")
@@ -106,7 +108,7 @@ class WalletCreateDescriptorTest(BitcoinTestFramework):
         xprv = xpub_info[0]["xprv"]
 
         with WalletUnlock(wallet, "pass"):
-            assert_equal(wallet.importdescriptors([{"desc": descsum_create(f"wpkh({xprv}/0/0/*)"), "timestamp": "now", "active": True}])[0]["success"], True)
+            assert_true(wallet.importdescriptors([{"desc": descsum_create(f"wpkh({xprv}/0/0/*)"), "timestamp": "now", "active": True}])[0]["success"])
         assert_equal(len(wallet.gethdkeys()), 1)
 
         assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.", wallet.createwalletdescriptor, type="bech32m")

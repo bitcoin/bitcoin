@@ -14,9 +14,11 @@ from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_greater_than,
     assert_is_hash_string,
     assert_raises_rpc_error,
+    assert_true,
     dumb_sync_blocks,
 )
 
@@ -80,7 +82,7 @@ class WalletAncientMigrationTest(BitcoinTestFramework):
         old_wallet_info = old_node.getwalletinfo()
         assert_equal(old_wallet_info['walletversion'], expected_version)
         # v0.14.3 predates HD split keypool (v0.15+).
-        assert_equal('keypoolsize_hd_internal' in old_wallet_info, False)
+        assert_false('keypoolsize_hd_internal' in old_wallet_info)
         assert_equal('hdmasterkeyid' in old_wallet_info, expect_hd)
 
         # Generate blocks and create transaction history
@@ -106,7 +108,7 @@ class WalletAncientMigrationTest(BitcoinTestFramework):
                     change_addresses.add(address)
 
         all_addresses = {tx['address'] for tx in old_txs if 'address' in tx} | change_addresses
-        assert_equal(unfunded_address in all_addresses, False)
+        assert_false(unfunded_address in all_addresses)
         assert_greater_than(len(change_addresses), 0)
         assert_greater_than(len(all_addresses), 0)
 
@@ -131,8 +133,8 @@ class WalletAncientMigrationTest(BitcoinTestFramework):
         with new_node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Rescanning"]):
             migration_result = new_node.migratewallet("migrated_wallet", passphrase=passphrase)
         assert_equal(migration_result['wallet_name'], 'migrated_wallet')
-        assert_equal('watchonly_name' in migration_result, False)
-        assert_equal('solvables_name' in migration_result, False)
+        assert_false('watchonly_name' in migration_result)
+        assert_false('solvables_name' in migration_result)
         assert Path(migration_result['backup_path']).is_file()
         new_wallet = new_node.get_wallet_rpc(migration_result['wallet_name'])
 
@@ -140,7 +142,7 @@ class WalletAncientMigrationTest(BitcoinTestFramework):
         self.log.info("Verifying migration")
         new_wallet_info = new_wallet.getwalletinfo()
         assert_equal(new_wallet_info['format'], 'sqlite')
-        assert_equal(new_wallet_info['descriptors'], True)
+        assert_true(new_wallet_info['descriptors'])
 
         # v0.14.3 HD wallets use a single external chain. Encrypting an HD
         # wallet rotates its seed, leaving the original chain inactive.
@@ -169,8 +171,8 @@ class WalletAncientMigrationTest(BitcoinTestFramework):
 
         # Verify all addresses are still owned
         for addr in all_addresses:
-            assert_equal(new_wallet.getaddressinfo(addr)['ismine'], True)
-        assert_equal(new_wallet.getaddressinfo(unfunded_address)['ismine'], True)
+            assert_true(new_wallet.getaddressinfo(addr)['ismine'])
+        assert_true(new_wallet.getaddressinfo(unfunded_address)['ismine'])
 
         # Test post-migration functionality
         new_addr = new_wallet.getnewaddress()
