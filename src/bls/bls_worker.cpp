@@ -525,6 +525,10 @@ struct ContributionVerifier : public std::enable_shared_from_this<ContributionVe
                 } else {
                     aggVvec[j].AggregateInsecure(coefficient);
                 }
+                if (!aggVvec[j].IsValid()) {
+                    // AggregateInsecure() asserts on an invalid operand, so leave this to the one-by-one fallback
+                    return false;
+                }
             }
         }
 
