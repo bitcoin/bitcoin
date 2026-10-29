@@ -71,6 +71,12 @@ void CSigShare::UpdateKey()
     key.second = quorumMember;
 }
 
+void PushSigShareToBatchVerifier(SigShareBatchVerifier& batchVerifier, NodeId from, const CSigShare& sigShare,
+                                 const CBLSSignature& sig, const CBLSPublicKey& pubKeyShare)
+{
+    batchVerifier.PushMessage(from, {from, sigShare.GetKey()}, sigShare.GetSignHash(), sig, pubKeyShare);
+}
+
 std::string CSigSesAnn::ToString() const
 {
     return strprintf("sessionId=%d, llmqType=%d, quorumHash=%s, id=%s, msgHash=%s",
@@ -809,7 +815,7 @@ bool CSigSharesManager::ProcessPendingSigShares()
 
     // It's ok to perform insecure batched verification here as we verify against the quorum public key shares,
     // which are not craftable by individual entities, making the rogue public key attack impossible
-    CBLSBatchVerifier<NodeId, SigShareKey> batchVerifier(false, true);
+    SigShareBatchVerifier batchVerifier(false, true);
 
     cxxtimer::Timer prepareTimer(true);
     size_t verifyCount = 0;
@@ -825,7 +831,7 @@ bool CSigSharesManager::ProcessPendingSigShares()
             // we didn't check this earlier because we use a lazy BLS signature and tried to avoid doing the expensive
             // deserialization in the message thread
             if (!sig.IsValid()) {
-                BanNode(nodeId);
+                batchVerifier.badSources.emplace(nodeId);
                 // don't process any additional shares from this node
                 break;
             }
@@ -840,7 +846,7 @@ bool CSigSharesManager::ProcessPendingSigShares()
                 assert(false);
             }
 
-            batchVerifier.PushMessage(nodeId, sigShare.GetKey(), sigShare.GetSignHash(), sig, pubKeyShare);
+            PushSigShareToBatchVerifier(batchVerifier, nodeId, sigShare, sig, pubKeyShare);
             verifyCount++;
         }
     }
