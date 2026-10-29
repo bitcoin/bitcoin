@@ -26,9 +26,11 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <memory>
+#include <set>
 #include <thread>
 #include <vector>
 
@@ -492,6 +494,38 @@ BOOST_AUTO_TEST_CASE(governance_vote_authorization_survives_unsynced_drop)
 
     m_node.peerman->FinalizeNode(*peer);
     chainstate.ResetIbd();
+}
+
+
+// Every orphan parent hash is re-requested from every peer on each governance tick, and one
+// masternode key can sign votes for any number of invented parents, so the hashes requested per tick
+// must stay bounded.
+BOOST_AUTO_TEST_CASE(orphan_object_requests_are_capped_per_tick)
+{
+    constexpr size_t cap{CGovernanceManager::MAX_ORPHAN_OBJECT_REQUESTS};
+    std::set<uint256> parents;
+    const auto add_orphans = [&](size_t count) {
+        for (size_t i = 0; i < count; ++i) {
+            const uint256 parent{GetRandHash()};
+            parents.insert(parent);
+            m_node.govman->AddOrphanVoteForTesting(MakeGovernanceVote(parent));
+        }
+    };
+
+    // Up to the cap, every orphan parent is requested.
+    add_orphans(cap);
+    auto hashes{m_node.govman->GetOrphanVoteObjectHashes()};
+    BOOST_CHECK(std::set<uint256>(hashes.begin(), hashes.end()) == parents);
+
+    // Beyond it, each tick requests exactly cap distinct ones among them.
+    add_orphans(cap);
+    for (int tick = 0; tick < 2; ++tick) {
+        hashes = m_node.govman->GetOrphanVoteObjectHashes();
+        BOOST_CHECK_EQUAL(hashes.size(), cap);
+        const std::set<uint256> unique(hashes.begin(), hashes.end());
+        BOOST_CHECK_EQUAL(unique.size(), cap);
+        BOOST_CHECK(std::includes(parents.begin(), parents.end(), unique.begin(), unique.end()));
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
