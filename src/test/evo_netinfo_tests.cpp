@@ -6,13 +6,20 @@
 
 #include <chainparams.h>
 #include <clientversion.h>
+#include <core_io.h>
 #include <evo/netinfo.h>
+#include <evo/providertx.h>
+#include <primitives/transaction.h>
 #include <netbase.h>
 #include <streams.h>
 #include <util/pointer.h>
 #include <util/strencodings.h>
 
 #include <boost/test/unit_test.hpp>
+
+#include <limits>
+
+#include <univalue.h>
 
 BOOST_FIXTURE_TEST_SUITE(evo_netinfo_tests, BasicTestingSetup)
 
@@ -493,6 +500,32 @@ BOOST_AUTO_TEST_CASE(domainport_rules)
         BOOST_CHECK_EQUAL(rhs.Set(ToUpper("example.com"), 9999), DomainPort::Status::Success);
         BOOST_CHECK_EQUAL(lhs.ToStringAddr(), rhs.ToStringAddr());
         BOOST_CHECK(lhs == rhs);
+    }
+}
+
+
+// A provider payload of unknown version stops deserializing before its netInfo. Decoding such a
+// transaction (decoderawtransaction, getrawtransaction verbose) must not dereference the missing netInfo.
+BOOST_AUTO_TEST_CASE(decode_provider_payload_without_netinfo)
+{
+    for (const auto& [tx_type, payload_key] : {std::pair{TRANSACTION_PROVIDER_REGISTER, "proRegTx"},
+                                               std::pair{TRANSACTION_PROVIDER_UPDATE_SERVICE, "proUpServTx"}}) {
+        for (const uint16_t version : {uint16_t{0}, std::numeric_limits<uint16_t>::max()}) {
+            CMutableTransaction mtx;
+            mtx.nVersion = 3;
+            mtx.nType = tx_type;
+            CDataStream payload{SER_NETWORK, PROTOCOL_VERSION};
+            payload << version;
+            mtx.vExtraPayload.assign(UCharCast(payload.data()), UCharCast(payload.data() + payload.size()));
+
+            UniValue entry{UniValue::VOBJ};
+            TxToUniv(CTransaction{mtx}, /*block_hash=*/uint256{}, entry);
+            const UniValue& decoded{entry.find_value(payload_key)};
+            BOOST_REQUIRE(decoded.isObject());
+            BOOST_CHECK_EQUAL(decoded.find_value("version").getInt<int>(), version);
+            BOOST_CHECK(decoded.find_value("service").isNull());
+            BOOST_CHECK(decoded.find_value("addresses").isNull());
+        }
     }
 }
 

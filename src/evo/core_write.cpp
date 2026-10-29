@@ -73,6 +73,16 @@ const std::map<std::string, RPCResult> RPCRESULT_MAP{{
     RESULT_MAP_ENTRY("votingAddress", RPCResult::Type::STR, "Dash address used for voting"),
 }};
 #undef RESULT_MAP_ENTRY
+
+/** A provider payload of unknown version stops deserializing before its netInfo, and such a payload can
+ *  be decoded from user-supplied hex (decoderawtransaction), so report the network fields only if present. */
+template <typename Obj>
+void PushNetInfoFields(UniValue& obj, const Obj& netinfo_holder, MnType type)
+{
+    if (!netinfo_holder.netInfo) return;
+    obj.pushKV("service", netinfo_holder.netInfo->GetPrimary().ToStringAddrPort());
+    obj.pushKV("addresses", GetNetInfoWithLegacyFields(netinfo_holder, type));
+}
 } // anonymous namespace
 
 RPCResult GetRpcResult(const std::string& key, bool optional, const std::string& override_name)
@@ -221,8 +231,7 @@ UniValue CDeterministicMNState::ToJson(MnType nType) const
 {
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("version", nVersion);
-    obj.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
-    obj.pushKV("addresses", GetNetInfoWithLegacyFields(*this, nType));
+    PushNetInfoFields(obj, *this, nType);
     obj.pushKV("registeredHeight", nRegisteredHeight);
     obj.pushKV("lastPaidHeight", nLastPaidHeight);
     obj.pushKV("consecutivePayments", nConsecutivePayments);
@@ -283,8 +292,8 @@ RPCResult CProRegTx::GetJsonHelp(const std::string& key, bool optional)
         GetRpcResult("type"),
         GetRpcResult("collateralHash"),
         GetRpcResult("collateralIndex"),
-        GetRpcResult("service"),
-        GetRpcResult("addresses"),
+        GetRpcResult("service", /*optional=*/true),
+        GetRpcResult("addresses", /*optional=*/true),
         GetRpcResult("ownerAddress"),
         GetRpcResult("votingAddress"),
         GetRpcResult("payoutAddress", /*optional=*/true),
@@ -304,8 +313,7 @@ UniValue CProRegTx::ToJson() const
     ret.pushKV("type", ToUnderlying(nType));
     ret.pushKV("collateralHash", collateralOutpoint.hash.ToString());
     ret.pushKV("collateralIndex", collateralOutpoint.n);
-    ret.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
-    ret.pushKV("addresses", GetNetInfoWithLegacyFields(*this, nType));
+    PushNetInfoFields(ret, *this, nType);
     ret.pushKV("ownerAddress", EncodeDestination(PKHash(keyIDOwner)));
     ret.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
     if (CTxDestination dest; ExtractDestination(scriptPayout, dest)) {
@@ -377,8 +385,8 @@ RPCResult CProUpServTx::GetJsonHelp(const std::string& key, bool optional)
         GetRpcResult("version"),
         GetRpcResult("type"),
         GetRpcResult("proTxHash"),
-        GetRpcResult("service"),
-        GetRpcResult("addresses"),
+        GetRpcResult("service", /*optional=*/true),
+        GetRpcResult("addresses", /*optional=*/true),
         GetRpcResult("operatorPayoutAddress", /*optional=*/true),
         GetRpcResult("platformNodeID", /*optional=*/true),
         GetRpcResult("platformP2PPort", /*optional=*/true),
@@ -393,8 +401,7 @@ UniValue CProUpServTx::ToJson() const
     ret.pushKV("version", nVersion);
     ret.pushKV("type", ToUnderlying(nType));
     ret.pushKV("proTxHash", proTxHash.ToString());
-    ret.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
-    ret.pushKV("addresses", GetNetInfoWithLegacyFields(*this, nType));
+    PushNetInfoFields(ret, *this, nType);
     if (CTxDestination dest; ExtractDestination(scriptOperatorPayout, dest)) {
         ret.pushKV("operatorPayoutAddress", EncodeDestination(dest));
     }
@@ -527,8 +534,7 @@ UniValue CSimplifiedMNListEntry::ToJson(bool extended) const
     obj.pushKV("nType", ToUnderlying(nType));
     obj.pushKV("proRegTxHash", proRegTxHash.ToString());
     obj.pushKV("confirmedHash", confirmedHash.ToString());
-    obj.pushKV("service", netInfo->GetPrimary().ToStringAddrPort());
-    obj.pushKV("addresses", GetNetInfoWithLegacyFields(*this, nType));
+    PushNetInfoFields(obj, *this, nType);
     obj.pushKV("pubKeyOperator", pubKeyOperator.ToString());
     obj.pushKV("votingAddress", EncodeDestination(PKHash(keyIDVoting)));
     obj.pushKV("isValid", isValid);
