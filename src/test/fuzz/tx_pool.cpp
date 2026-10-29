@@ -394,7 +394,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool_standard)
 
             auto tx = MakeTransactionRef(tx_mut);
             // Restore previously removed outpoints
-            for (const auto& in : tx->vin) {
+            for (const auto& in : tx->GetInputs()) {
                 Assert(outpoints_rbf.insert(in.prevout).second);
             }
             return tx;
@@ -456,12 +456,12 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool_standard)
         // Helper to insert spent and created outpoints of a tx into collections
         using Sets = std::vector<std::reference_wrapper<std::set<COutPoint>>>;
         const auto insert_tx = [](Sets created_by_tx, Sets consumed_by_tx, const auto& tx) {
-            for (size_t i{0}; i < tx.vout.size(); ++i) {
+            for (size_t i{0}; i < tx.GetOutputs().size(); ++i) {
                 for (auto& set : created_by_tx) {
                     Assert(set.get().emplace(tx.GetHash(), i).second);
                 }
             }
-            for (const auto& in : tx.vin) {
+            for (const auto& in : tx.GetInputs()) {
                 for (auto& set : consumed_by_tx) {
                     Assert(set.get().insert(in.prevout).second);
                 }
