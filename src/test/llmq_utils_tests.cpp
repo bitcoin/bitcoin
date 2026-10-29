@@ -5,6 +5,7 @@
 #include <test/util/llmq_tests.h>
 #include <test/util/setup_common.h>
 
+#include <bls/bls.h>
 #include <consensus/params.h>
 #include <llmq/net_signing.h>
 #include <llmq/params.h>
@@ -18,6 +19,7 @@
 
 #include <map>
 #include <set>
+#include <vector>
 
 using namespace llmq;
 using namespace llmq::testutils;
@@ -171,6 +173,47 @@ BOOST_AUTO_TEST_CASE(pending_sig_shares_session_removal_updates_count)
     node_state.RemoveSession(sig_share1.GetSignHash());
     node_state.RemoveSession(MakeSigShare(3).GetSignHash());
     BOOST_CHECK_EQUAL(node_state.pendingIncomingSigShares.Size(), 1U);
+}
+
+BOOST_AUTO_TEST_CASE(sig_share_batch_verifier_judges_each_sender_by_its_own_share)
+{
+    const bool legacy_scheme{bls::bls_legacy_scheme.load()};
+    const CSigShare sig_share{MakeSigShare(1)};
+
+    CBLSSecretKey sk_share;
+    sk_share.MakeNewKey();
+    const CBLSPublicKey pk_share{sk_share.GetPublicKey()};
+    const CBLSSignature valid_sig{sk_share.Sign(sig_share.GetSignHash(), legacy_scheme)};
+
+    CBLSSecretKey sk_forger;
+    sk_forger.MakeNewKey();
+    const CBLSSignature forged_sig{sk_forger.Sign(sig_share.GetSignHash(), legacy_scheme)};
+
+    constexpr NodeId honest{1};
+    constexpr NodeId attacker{2};
+    constexpr NodeId other_honest{3};
+
+    struct Push {
+        NodeId from;
+        CBLSSignature sig;
+    };
+    const std::vector<std::pair<std::vector<Push>, std::set<NodeId>>> cases{
+        // Honest share first: the forged copy of the same key must still be checked, not shadowed.
+        {{{honest, valid_sig}, {attacker, forged_sig}}, {attacker}},
+        // Forged share first: the honest sender must be judged by its own share, not the attacker's.
+        {{{attacker, forged_sig}, {honest, valid_sig}}, {attacker}},
+        // The same valid share relayed by two peers is not misbehavior.
+        {{{honest, valid_sig}, {other_honest, valid_sig}}, {}},
+    };
+
+    for (const auto& [pushes, expected_bad_sources] : cases) {
+        SigShareBatchVerifier verifier(/*_secureVerification=*/false, /*_perMessageFallback=*/true);
+        for (const auto& push : pushes) {
+            PushSigShareToBatchVerifier(verifier, push.from, sig_share, push.sig, pk_share);
+        }
+        verifier.Verify();
+        BOOST_CHECK(verifier.badSources == expected_bad_sources);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(batched_sig_shares_rejects_oversized_inner_vector)

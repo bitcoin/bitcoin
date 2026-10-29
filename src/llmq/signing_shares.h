@@ -6,6 +6,7 @@
 #define BITCOIN_LLMQ_SIGNING_SHARES_H
 
 #include <bls/bls.h>
+#include <bls/bls_batchverifier.h>
 #include <ctpl_stl.h>
 #include <evo/types.h>
 #include <llmq/signhash.h>
@@ -90,6 +91,14 @@ public:
         SER_READ(obj, obj.UpdateKey());
     }
 };
+
+// Batch entries are keyed by sender as well as SigShareKey. QSIGSHARE is accepted from any peer, so two peers can
+// push the same key; with a sender-less key the second push would alias the first entry, letting one peer's share be
+// judged in place of the other's (banning an honest sender, or never checking a forged share).
+using SigShareBatchVerifier = CBLSBatchVerifier<NodeId, std::pair<NodeId, SigShareKey>>;
+
+void PushSigShareToBatchVerifier(SigShareBatchVerifier& batchVerifier, NodeId from, const CSigShare& sigShare,
+                                 const CBLSSignature& sig, const CBLSPublicKey& pubKeyShare);
 
 // Nodes will first announce a signing session with a sessionId to be used in all future P2P messages related to that
 // session. We locally keep track of the mapping for each node. We also assign new sessionIds for outgoing sessions
