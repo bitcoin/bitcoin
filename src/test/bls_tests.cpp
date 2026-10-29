@@ -6,6 +6,7 @@
 #include <bls/bls_batchverifier.h>
 #include <bls/bls_worker.h>
 #include <clientversion.h>
+#include <crypto/common.h>
 #include <random.h>
 #include <streams.h>
 #include <util/irange.h>
@@ -636,6 +637,64 @@ BOOST_AUTO_TEST_CASE(bls_verify_contribution_shares_honest_tests)
 {
     FuncVerifyContributionSharesHonest(true);
     FuncVerifyContributionSharesHonest(false);
+}
+
+// A duplicate coefficient point between two members' verification vectors must not fail the
+// other members' contributions. CBLSWorker::VerifyContributionShares() batches the members'
+// vvecs, and the batched VerifyVerificationVectors() check rejects a coefficient shared
+// between two vvecs. Failing the whole batch on that let one member, by copying another
+// member's coefficient into its own vvec, mark every honest member in the batch invalid.
+// The fix verifies each contribution against its own vvec, so only the member whose share no
+// longer matches its own vvec fails. Regression: on the old all-or-nothing code every entry
+// came back false, so the honest members verifying true is what distinguishes fixed from broken.
+void FuncVerifyContributionSharesDuplicateCoefficient(const bool legacy_scheme)
+{
+    bls::bls_legacy_scheme.store(legacy_scheme);
+
+    CBLSWorker worker;
+    worker.Start();
+
+    const int threshold = 2;
+    std::vector<CBLSId> ids;
+    for (int i = 0; i < 4; i++) {
+        uint256 id;
+        WriteLE64(id.begin(), i + 1);
+        ids.emplace_back(id);
+    }
+
+    // Three dealers each generate a verification vector and their secret-key shares to each id.
+    std::vector<BLSVerificationVectorPtr> vvecs(3);
+    std::vector<std::vector<CBLSSecretKey>> skShares(3);
+    for (int d = 0; d < 3; d++) {
+        BOOST_REQUIRE(worker.GenerateContributions(threshold, ids, vvecs[d], skShares[d]));
+    }
+
+    // Receiver R collects each dealer's share to it.
+    const size_t R = 0;
+    const CBLSId& recvId = ids[R];
+    std::vector<CBLSSecretKey> recvShares{skShares[0][R], skShares[1][R], skShares[2][R]};
+
+    // All honest: every contribution verifies.
+    std::vector<bool> ok = worker.VerifyContributionShares(recvId, vvecs, recvShares);
+    BOOST_REQUIRE_EQUAL(ok.size(), 3U);
+    BOOST_CHECK(ok[0] && ok[1] && ok[2]);
+
+    // Dealer 0 copies dealer 1's leading coefficient into its own vvec (a cross-member
+    // duplicate) without touching its share, making the batch vvec check fail.
+    vvecs[0]->at(0) = vvecs[1]->at(0);
+    std::vector<bool> res = worker.VerifyContributionShares(recvId, vvecs, recvShares);
+    BOOST_REQUIRE_EQUAL(res.size(), 3U);
+    BOOST_CHECK(!res[0]);  // the member that planted the duplicate is caught alone
+    BOOST_CHECK(res[1]);   // the honest member whose coefficient was copied is unaffected
+    BOOST_CHECK(res[2]);   // the other honest member is unaffected
+
+    worker.Stop();
+}
+
+BOOST_AUTO_TEST_CASE(bls_verify_contribution_shares_duplicate_coefficient_tests)
+{
+    FuncVerifyContributionSharesDuplicateCoefficient(true);
+    FuncVerifyContributionSharesDuplicateCoefficient(false);
 }
 
 // A dummy BLS object that satisfies the minimal interface expected by CBLSLazyWrapper.
