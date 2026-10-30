@@ -13,6 +13,10 @@
 #include <util/strencodings.h>
 
 #include <cassert>
+#include <cstdint>
+#include <optional>
+#include <stdexcept>
+#include <vector>
 
 void SetupChainParamsBaseOptions(ArgsManager& argsman)
 {
@@ -34,6 +38,22 @@ const CBaseChainParams& BaseParams()
 {
     assert(globalChainBaseParams);
     return *globalChainBaseParams;
+}
+
+std::optional<std::vector<uint8_t>> ReadSignetChallengeArg(const ArgsManager& args)
+{
+    const auto challenge_hex = args.GetArgs("-signetchallenge");
+    if (challenge_hex.empty()) {
+        return std::nullopt;
+    }
+    if (challenge_hex.size() != 1) {
+        throw std::runtime_error("-signetchallenge cannot be multiple values.");
+    }
+    const auto challenge_bytes = TryParseHex<uint8_t>(challenge_hex[0]);
+    if (!challenge_bytes) {
+        throw std::runtime_error(strprintf("-signetchallenge must be hex, not '%s'.", challenge_hex[0]));
+    }
+    return challenge_bytes;
 }
 
 std::string GetSignetDataDir(const ArgsManager& args)
