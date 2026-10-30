@@ -61,8 +61,9 @@ struct DBKey {
     }
 };
 
-TxoSpenderIndex::TxoSpenderIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe)
-    : BaseIndex(std::move(chain), "txospenderindex", "txospenderidx"), m_db{std::make_unique<DB>(gArgs.GetDataDirNet() / "indexes" / "txospenderindex" / "db", n_cache_size, f_memory, f_wipe, /*f_obfuscate=*/false, /*f_bloom=*/false)}
+TxoSpenderIndex::TxoSpenderIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe,
+                                 std::function<void()> read_error_cb)
+    : BaseIndex(std::move(chain), "txospenderindex", "txospenderidx"), m_db{std::make_unique<DB>(gArgs.GetDataDirNet() / "indexes" / "txospenderindex" / "db", n_cache_size, f_memory, f_wipe, /*f_obfuscate=*/false, /*f_bloom=*/false, std::move(read_error_cb))}
 {
     if (!m_db->Read("siphash_key", m_siphash_key)) {
         FastRandomContext rng(false);
