@@ -69,11 +69,12 @@ NORMAL_GBT_REQUEST_PARAMS = {"rules": ["segwit"]}
 VERSIONBITS_LAST_OLD_BLOCK_VERSION = 4
 MIN_BLOCKS_TO_KEEP = 288
 
-REGTEST_RETARGET_PERIOD = 150
+HALVING_INTERVAL = 150  # regtest nSubsidyHalvingInterval
 
-REGTEST_N_BITS = 0x207fffff  # difficulty retargeting is disabled in REGTEST chainparams"
-REGTEST_TARGET = 0x7fffff0000000000000000000000000000000000000000000000000000000000
-assert_equal(uint256_from_compact(REGTEST_N_BITS), REGTEST_TARGET)
+DIFFICULTY_ADJUSTMENT_INTERVAL = 144  # regtest nPowTargetTimespan / nPowTargetSpacing
+N_BITS = 0x207fffff  # difficulty retargeting is disabled in REGTEST chainparams"
+TARGET = 0x7fffff0000000000000000000000000000000000000000000000000000000000
+assert_equal(uint256_from_compact(N_BITS), TARGET)
 
 DIFF_1_N_BITS = 0x1d00ffff
 DIFF_1_TARGET = 0x00000000ffff0000000000000000000000000000000000000000000000000000
@@ -106,7 +107,7 @@ def create_block(hashprev=None, coinbase=None, *, ntime=None, height=None, versi
     if tmpl and tmpl.get('bits') is not None:
         block.nBits = struct.unpack('>I', bytes.fromhex(tmpl['bits']))[0]
     else:
-        block.nBits = REGTEST_N_BITS
+        block.nBits = N_BITS
     if coinbase is None:
         coinbase = create_coinbase(height=height or tmpl["height"])
     block.vtx.append(coinbase)
@@ -171,7 +172,7 @@ def script_BIP34_coinbase_height(height, *, padding=True):
     return CScript([CScriptNum(height)])
 
 
-def create_coinbase(height, pubkey=None, *, script_pubkey=None, extra_output_script=None, fees=0, nValue=50, halving_period=REGTEST_RETARGET_PERIOD):
+def create_coinbase(height, pubkey=None, *, script_pubkey=None, extra_output_script=None, fees=0, nValue=50, halving_period=HALVING_INTERVAL):
     """Create a coinbase transaction.
 
     If pubkey is passed in, the coinbase output will be a P2PK output;
