@@ -10,8 +10,8 @@
 #include <unordered_set>
 
 namespace mp {
-template <typename LocalType, typename Value, typename Output>
-void CustomBuildField(TypeList<std::unordered_set<LocalType>>,
+template <typename LocalType, typename Hash, typename KeyEqual, typename Allocator, typename Value, typename Output>
+void CustomBuildField(TypeList<std::unordered_set<LocalType, Hash, KeyEqual, Allocator>>,
     Priority<1>,
     InvokeContext& invoke_context,
     Value&& value,
@@ -20,8 +20,8 @@ void CustomBuildField(TypeList<std::unordered_set<LocalType>>,
     BuildList(TypeList<LocalType>(), invoke_context, output, value);
 }
 
-template <typename LocalType, typename Input, typename ReadDest>
-decltype(auto) CustomReadField(TypeList<std::unordered_set<LocalType>>,
+template <typename LocalType, typename Hash, typename KeyEqual, typename Allocator, typename Input, typename ReadDest>
+decltype(auto) CustomReadField(TypeList<std::unordered_set<LocalType, Hash, KeyEqual, Allocator>>,
     Priority<1>,
     InvokeContext& invoke_context,
     Input&& input,
