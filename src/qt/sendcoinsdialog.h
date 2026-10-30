@@ -85,7 +85,7 @@ private:
     bool PrepareSendText(QString& question_string, QString& informative_text, QString& detailed_text);
     /* Sign PSBT using external signer.
      *
-     * @param[in,out] psbtx the PSBT to sign
+     * @param[in,out] psbt the PSBT to sign
      * @param[in,out] mtx needed to attempt to finalize
      * @param[in,out] complete whether the PSBT is complete (a successfully signed multisig transaction may not be complete)
      *
