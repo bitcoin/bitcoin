@@ -83,7 +83,7 @@ private:
     void minimizeFeeSection(bool fMinimize);
     // Format confirmation message
     bool PrepareSendText(QString& question_string, QString& informative_text, QString& detailed_text);
-    /* Sign PSBT using external signer.
+    /** Sign PSBT using external signer.
      *
      * @param[in,out] psbtx the PSBT to sign
      * @param[out] mtx needed to attempt to finalize
