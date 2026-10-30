@@ -74,7 +74,7 @@ BOOST_FIXTURE_TEST_CASE(blockmanager_scan_unlink_already_pruned_files, TestChain
     {
         LOCK(chainman.GetMutex());
         file_number = old_tip->GetBlockPos().nFile;
-        blockman.PruneOneBlockFile(file_number);
+        blockman.PruneBlockFiles({file_number});
     }
 
     const FlatFilePos pos(file_number, 0);
@@ -99,6 +99,87 @@ BOOST_FIXTURE_TEST_CASE(blockmanager_scan_unlink_already_pruned_files, TestChain
     const int new_file_number{WITH_LOCK(chainman.GetMutex(), return new_tip->GetBlockPos().nFile)};
     const FlatFilePos new_pos(new_file_number, 0);
     BOOST_CHECK(!blockman.OpenBlockFile(new_pos, true).IsNull());
+}
+
+BOOST_FIXTURE_TEST_CASE(blockmanager_prune_block_files_batch, TestChain100Setup)
+{
+    auto& chainman{*Assert(m_node.chainman)};
+    auto& blockman{chainman.m_blockman};
+
+    // Distribute blocks across multiple block files (file 0, file 1, file 2)
+    const CBlockIndex* tip0{WITH_LOCK(chainman.GetMutex(), return chainman.ActiveChain().Tip())};
+    int file0 = WITH_LOCK(chainman.GetMutex(), return tip0->GetBlockPos().nFile);
+    WITH_LOCK(chainman.GetMutex(), blockman.GetBlockFileInfo(file0)->nSize = MAX_BLOCKFILE_SIZE);
+
+    CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+    const CBlockIndex* tip1{WITH_LOCK(chainman.GetMutex(), return chainman.ActiveChain().Tip())};
+    int file1 = WITH_LOCK(chainman.GetMutex(), return tip1->GetBlockPos().nFile);
+    BOOST_CHECK_NE(file0, file1);
+    WITH_LOCK(chainman.GetMutex(), blockman.GetBlockFileInfo(file1)->nSize = MAX_BLOCKFILE_SIZE);
+
+    CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+    const CBlockIndex* tip2{WITH_LOCK(chainman.GetMutex(), return chainman.ActiveChain().Tip())};
+    int file2 = WITH_LOCK(chainman.GetMutex(), return tip2->GetBlockPos().nFile);
+    BOOST_CHECK_NE(file1, file2);
+
+    LOCK(::cs_main);
+
+    // Add a header-only block index entry (nFile = 0, no block/undo data)
+    CBlockIndex* header_index{blockman.InsertBlockIndex(uint256::ONE)};
+    BOOST_CHECK_EQUAL(int{header_index->nFile}, 0);
+    BOOST_CHECK_EQUAL(header_index->nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO), 0);
+
+    // 1. Empty set is a safe no-op
+    blockman.PruneBlockFiles({});
+    BOOST_CHECK(tip0->nStatus & BLOCK_HAVE_DATA);
+    BOOST_CHECK(tip1->nStatus & BLOCK_HAVE_DATA);
+    BOOST_CHECK(tip2->nStatus & BLOCK_HAVE_DATA);
+
+    // Flush any prior dirty block index entries so we can accurately check what gets marked dirty
+    blockman.WriteBlockIndexDB();
+    BOOST_CHECK(blockman.GetDirtyBlockIndex().empty());
+
+    // 2. Batch prune multiple populated files (file0 and file1) in a single call.
+    // Verify both files are pruned together, and unselected file2 remains untouched.
+    blockman.PruneBlockFiles({file0, file1});
+
+    // Blocks in file0 and file1 should both be pruned
+    BOOST_CHECK(!(tip0->nStatus & BLOCK_HAVE_DATA));
+    BOOST_CHECK_EQUAL(int{tip0->nFile}, 0);
+    BOOST_CHECK(!(tip1->nStatus & BLOCK_HAVE_DATA));
+    BOOST_CHECK_EQUAL(int{tip1->nFile}, 0);
+
+    // Blocks in unselected file2 should remain completely untouched
+    BOOST_CHECK(tip2->nStatus & BLOCK_HAVE_DATA);
+    BOOST_CHECK_EQUAL(tip2->GetBlockPos().nFile, file2);
+
+    // Block file info records for both pruned files should be cleared, unselected kept
+    BOOST_CHECK_EQUAL(blockman.GetBlockFileInfo(file0)->nSize, 0);
+    BOOST_CHECK_EQUAL(blockman.GetBlockFileInfo(file1)->nSize, 0);
+    BOOST_CHECK_GT(blockman.GetBlockFileInfo(file2)->nSize, 0);
+
+    // Verify m_dirty_blockindex after batch pruning file0 and file1:
+    // - tip0 is dirty (it had data in file 0 and was pruned)
+    // - tip1 is dirty (it had data in file 1 and was pruned)
+    // - header_index is NOT dirty (it had nFile = 0, but no block data)
+    // - tip2 is NOT dirty (unselected file2)
+    {
+        const auto& dirty{blockman.GetDirtyBlockIndex()};
+        BOOST_CHECK(dirty.contains(const_cast<CBlockIndex*>(tip0)));
+        BOOST_CHECK(dirty.contains(const_cast<CBlockIndex*>(tip1)));
+        BOOST_CHECK(!dirty.contains(header_index));
+        BOOST_CHECK(!dirty.contains(const_cast<CBlockIndex*>(tip2)));
+    }
+
+    // 3. Flush dirty entries again
+    blockman.WriteBlockIndexDB();
+    BOOST_CHECK(blockman.GetDirtyBlockIndex().empty());
+
+    // 4. Pruning already-pruned file0 again must be a clean no-op for dirty entries:
+    // Neither header_index nor already-pruned tip0 / tip1 (all having nFile == 0)
+    // should be re-marked dirty.
+    blockman.PruneBlockFiles({file0});
+    BOOST_CHECK(blockman.GetDirtyBlockIndex().empty());
 }
 
 BOOST_FIXTURE_TEST_CASE(blockmanager_block_data_availability, TestChain100Setup)
