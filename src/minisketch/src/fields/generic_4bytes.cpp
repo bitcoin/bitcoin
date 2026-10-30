@@ -17,6 +17,7 @@
 #endif
 
 #include "../sketch.h"
+#include "../util.h"
 
 namespace {
 #ifdef ENABLE_FIELD_INT_25
@@ -92,7 +93,7 @@ typedef Field<uint32_t, 32, 141, StatTable32, DynTable32, &SQR_TABLE_32, &QRT_TA
 #endif
 }
 
-Sketch* ConstructGeneric4Bytes(int bits, int implementation)
+Sketch* ConstructGeneric4Bytes(int bits, MAYBE_UNUSED int implementation)
 {
     switch (bits) {
 #ifdef ENABLE_FIELD_INT_25

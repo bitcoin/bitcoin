@@ -102,7 +102,7 @@ RPCMethod getreceivedbyaddress()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("getreceivedbyaddress", "\"" + EXAMPLE_ADDRESS[0] + "\", 6")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -144,7 +144,7 @@ RPCMethod getreceivedbylabel()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("getreceivedbylabel", "\"tabby\", 6, true")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -269,7 +269,7 @@ RPCMethod lockunspent()
 
     bool fUnlock = request.params[0].get_bool();
 
-    const bool persistent{request.params[2].isNull() ? false : request.params[2].get_bool()};
+    const bool persistent{self.Arg<bool>("persistent")};
 
     if (request.params[1].isNull()) {
         if (fUnlock) {
@@ -374,7 +374,7 @@ RPCMethod listlockunspent()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("listlockunspent", "")
                 },
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -422,7 +422,7 @@ RPCMethod getbalances()
         RPCExamples{
             HelpExampleCli("getbalances", "") +
             HelpExampleRpc("getbalances", "")},
-        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod&, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> rpc_wallet = GetWalletForJSONRPCRequest(request);
     if (!rpc_wallet) return UniValue::VNULL;
@@ -523,15 +523,8 @@ RPCMethod listunspent()
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
 
-    int nMinDepth = 1;
-    if (!request.params[0].isNull()) {
-        nMinDepth = request.params[0].getInt<int>();
-    }
-
-    int nMaxDepth = 9999999;
-    if (!request.params[1].isNull()) {
-        nMaxDepth = request.params[1].getInt<int>();
-    }
+    const int nMinDepth{self.Arg<int>("minconf")};
+    const int nMaxDepth{self.Arg<int>("maxconf")};
 
     std::set<CTxDestination> destinations;
     if (!request.params[2].isNull()) {
@@ -548,10 +541,7 @@ RPCMethod listunspent()
         }
     }
 
-    bool include_unsafe = true;
-    if (!request.params[3].isNull()) {
-        include_unsafe = request.params[3].get_bool();
-    }
+    const bool include_unsafe{self.Arg<bool>("include_unsafe")};
 
     CoinFilterParams filter_coins;
     filter_coins.min_amount = 0;

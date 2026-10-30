@@ -44,7 +44,7 @@ void initialize_pdb()
 
 PartiallyDownloadedBlock::IsBlockMutatedFn FuzzedIsBlockMutated(bool result)
 {
-    return [result](const CBlock& block, bool) {
+    return [result](const CBlock&, bool) {
         return result;
     };
 }

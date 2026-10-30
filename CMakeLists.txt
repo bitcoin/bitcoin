@@ -480,6 +480,7 @@ else()
   try_append_cxx_flags("-Wthread-safety-pointer" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("-Wloop-analysis" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("-Wredundant-decls" TARGET warn_interface SKIP_LINK)
+  try_append_cxx_flags("-Wunused" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("-Wunused-const-variable" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("-Wunused-exception-parameter" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("-Wunused-macros" TARGET warn_interface SKIP_LINK)
@@ -500,13 +501,6 @@ else()
   try_append_cxx_flags("-Wundef" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("-Wleading-whitespace=spaces" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("-Wtrailing-whitespace=any" TARGET warn_interface SKIP_LINK)
-
-  # Some compilers (gcc) ignore unknown -Wno-* options, but warn about all
-  # unknown options if any other warning is produced. Test the -Wfoo case, and
-  # set the -Wno-foo case if it works.
-  try_append_cxx_flags("-Wunused-parameter" TARGET warn_interface SKIP_LINK
-    IF_CHECK_PASSED "-Wno-unused-parameter"
-  )
 endif()
 
 configure_file(cmake/script/Coverage.cmake Coverage.cmake USE_SOURCE_PERMISSIONS COPYONLY)
