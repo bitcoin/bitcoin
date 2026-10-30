@@ -6,6 +6,7 @@
 
 from concurrent.futures import ThreadPoolExecutor
 
+from test_framework.extendedkey import ExtendedPrivateKey
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.wallet import MiniWallet
 from test_framework.util import (
@@ -112,11 +113,12 @@ class RPCGenerateTest(BitcoinTestFramework):
         assert_raises_rpc_error(-5, 'Invalid address or descriptor', self.generateblock, node, '1234', [])
 
         self.log.info('Fail to generate block with a ranged descriptor')
-        ranged_descriptor = 'pkh(tpubD6NzVbkrYhZ4XgiXtGrdW5XDAPFCL9h7we1vwNCpn8tGbBcgfVYjXyhWo4E1xkh56hjod1RhGjxbaTLV3X4FyWuejifB9jusQ46QzG87VKp/0/*)'
+        xpub = ExtendedPrivateKey.generate().pubkey().to_string()
+        ranged_descriptor = f'pkh({xpub}/0/*)'
         assert_raises_rpc_error(-8, 'Ranged descriptor not accepted. Maybe pass through deriveaddresses first?', self.generateblock, node, ranged_descriptor, [])
 
         self.log.info('Fail to generate block with a descriptor missing a private key')
-        child_descriptor = 'pkh(tpubD6NzVbkrYhZ4XgiXtGrdW5XDAPFCL9h7we1vwNCpn8tGbBcgfVYjXyhWo4E1xkh56hjod1RhGjxbaTLV3X4FyWuejifB9jusQ46QzG87VKp/0\'/0)'
+        child_descriptor = f"pkh({xpub}/0'/0)"
         assert_raises_rpc_error(-5, 'Cannot derive script without private keys', self.generateblock, node, child_descriptor, [])
 
     def test_generate(self):

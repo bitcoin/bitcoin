@@ -6,6 +6,7 @@
 import os
 
 from test_framework.descriptors import descsum_create
+from test_framework.extendedkey import ExtendedPrivateKey
 from test_framework.key import H_POINT
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -164,18 +165,20 @@ class WalletExportedWatchOnly(BitcoinTestFramework):
         self.offline.createwallet("imports")
         offline_wallet = self.offline.get_wallet_rpc("imports")
 
+        xprv = ExtendedPrivateKey.generate().to_string()
+        xpub = ExtendedPrivateKey.generate().pubkey().to_string()
         import_res = offline_wallet.importdescriptors(
             [
                 # A single key, non-ranged
                 {"desc": descsum_create(f"pkh({generate_keypair(wif=True)[0]})"), "timestamp": "now"},
                 # hardened derivation
-                {"desc": descsum_create("sh(wpkh(tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg/0'/*'))"), "timestamp": "now", "active": True},
+                {"desc": descsum_create(f"sh(wpkh({xprv}/0'/*'))"), "timestamp": "now", "active": True},
                 # multisig
-                {"desc": descsum_create("wsh(multi(1,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/*,tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg/*))"), "timestamp": "now", "active": True, "internal": True},
+                {"desc": descsum_create(f"wsh(multi(1,{xpub}/*,{xprv}/*))"), "timestamp": "now", "active": True, "internal": True},
                 # taproot multi scripts
-                {"desc": descsum_create(f"tr({H_POINT},{{pk(tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/*),pk(tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg/0h/*)}})"), "timestamp": "now", "active": True},
+                {"desc": descsum_create(f"tr({H_POINT},{{pk({xpub}/*),pk({xprv}/0h/*)}})"), "timestamp": "now", "active": True},
                 # miniscript
-                {"desc": descsum_create(f"tr({H_POINT},or_b(pk(tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/2/*),s:pk(tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg/1h/2/*)))"), "timestamp": "now", "active": True, "internal": True},
+                {"desc": descsum_create(f"tr({H_POINT},or_b(pk({xpub}/1/2/*),s:pk({xprv}/1h/2/*)))"), "timestamp": "now", "active": True, "internal": True},
             ]
         )
         assert_equal(all([r["success"] for r in import_res]), True)
