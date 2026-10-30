@@ -10,6 +10,7 @@
 #include <streams.h>
 #include <support/allocators/secure.h>
 #include <util/fs.h>
+#include <util/result.h>
 
 #include <memory>
 #include <optional>
@@ -177,8 +178,7 @@ struct DatabaseOptions {
     bool use_unsafe_sync = false;   //!< Disable file sync for faster performance.
 };
 
-enum class DatabaseStatus {
-    SUCCESS,
+enum class DatabaseError {
     FAILED_BAD_PATH,
     FAILED_BAD_FORMAT,
     FAILED_LEGACY_DISABLED,
@@ -197,7 +197,7 @@ enum class DatabaseStatus {
 std::vector<std::pair<fs::path, std::string>> ListDatabases(const fs::path& path);
 
 void ReadDatabaseArgs(const ArgsManager& args, DatabaseOptions& options);
-std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
+util::ResultPtr<std::unique_ptr<WalletDatabase>, DatabaseError> MakeDatabase(const fs::path& path, const DatabaseOptions& options);
 
 fs::path BDBDataFile(const fs::path& path);
 fs::path SQLiteDataFile(const fs::path& path);
