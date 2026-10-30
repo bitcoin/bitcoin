@@ -1026,7 +1026,7 @@ static RPCMethod getnodeaddresses()
         obj.pushKV("services", static_cast<std::underlying_type_t<decltype(addr.nServices)>>(addr.nServices));
         obj.pushKV("address", addr.ToStringAddr());
         obj.pushKV("port", addr.GetPort());
-        obj.pushKV("network", GetNetworkName(addr.GetNetClass()));
+        obj.pushKV("network", GetNetworkName(addr.GetNetwork()));
         ret.push_back(std::move(obj));
     }
     return ret;
@@ -1243,9 +1243,9 @@ UniValue AddrmanEntryToJSON(const AddrInfo& info, const CConnman& connman)
     ret.pushKV("port", info.GetPort());
     ret.pushKV("services", static_cast<std::underlying_type_t<decltype(info.nServices)>>(info.nServices));
     ret.pushKV("time", TicksSinceEpoch<std::chrono::seconds>(info.nTime));
-    ret.pushKV("network", GetNetworkName(info.GetNetClass()));
+    ret.pushKV("network", GetNetworkName(info.GetNetwork()));
     ret.pushKV("source", info.source.ToStringAddr());
-    ret.pushKV("source_network", GetNetworkName(info.source.GetNetClass()));
+    ret.pushKV("source_network", GetNetworkName(info.source.GetNetwork()));
     const uint32_t source_mapped_as{connman.GetMappedAS(info.source)};
     if (source_mapped_as) {
         ret.pushKV("source_mapped_as", source_mapped_as);
