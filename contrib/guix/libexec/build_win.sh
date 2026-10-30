@@ -25,7 +25,7 @@ make -C depends --jobs="$JOBS" HOST="$HOST" \
 # CFLAGS
 HOST_CFLAGS="-O2 -g"
 HOST_CFLAGS+=$(find /gnu/store -maxdepth 1 -mindepth 1 -type d -exec echo -n " -ffile-prefix-map={}=/usr" \;)
-HOST_CFLAGS+=" -fdebug-prefix-map=${DISTSRC}/src=."
+HOST_CFLAGS+=" -fdebug-prefix-map=${DISTSRC}=."
 HOST_CFLAGS+=" -fno-ident"
 
 # CXXFLAGS
