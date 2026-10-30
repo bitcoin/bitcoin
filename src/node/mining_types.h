@@ -47,9 +47,11 @@ struct BlockCreateOptions {
      */
     std::optional<bool> print_modified_fee{};
     /**
-     * The default reserved weight for the fixed-size block header,
-     * transaction count and coinbase transaction. Minimum: 2000 weight units
-     * (MINIMUM_BLOCK_RESERVED_WEIGHT).
+     * This reservation is for the block header, transaction count and final coinbase, including witness data.
+     * The minimum is 2000 weight units (MINIMUM_BLOCK_RESERVED_WEIGHT).
+     *
+     * Mempool transactions may use all weight that remains after this reservation.
+     * Include any desired safety margin in this reservation.
      *
      * Providing a value overrides the `-blockreservedweight` startup setting.
      * Cap'n Proto IPC clients currently cannot leave this field unset, so they
@@ -64,8 +66,8 @@ struct BlockCreateOptions {
      */
     std::optional<uint64_t> block_max_weight{};
     /**
-     * The maximum additional sigops which the pool will add in coinbase
-     * transaction outputs.
+     * The maximum sigops cost reserved for the pool's coinbase transaction outputs.
+     * Each legacy sigop costs WITNESS_SCALE_FACTOR units.
      */
     size_t coinbase_output_max_additional_sigops{DEFAULT_COINBASE_OUTPUT_MAX_ADDITIONAL_SIGOPS};
     /**
@@ -80,8 +82,7 @@ struct BlockCreateOptions {
      * This software typically also controls the payout outputs, even for solo
      * mining.
      *
-     * The size and sigops are not checked against
-     * coinbase_max_additional_weight and coinbase_output_max_additional_sigops.
+     * The resulting coinbase is not checked against the weight and sigops reservations.
      */
     CScript coinbase_output_script{CScript() << OP_TRUE};
     /**
