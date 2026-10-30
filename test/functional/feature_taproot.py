@@ -86,6 +86,7 @@ from test_framework.script import (
     taproot_construct,
 )
 from test_framework.script_util import (
+    PAY_TO_ANCHOR,
     key_to_p2pk_script,
     key_to_p2pkh_script,
     key_to_p2wpkh_script,
@@ -486,7 +487,7 @@ def spend(tx, idx, utxos, **kwargs):
     scriptsig_list = flatten(get(ctx, "scriptsig"))
     scriptsig = CScript(b"".join(bytes(to_script(elem)) for elem in scriptsig_list))
     witness_stack = flatten(get(ctx, "witness"))
-    return (scriptsig, witness_stack)
+    return (scriptsig, witness_stack, get(ctx, "annex"))
 
 
 # === Spender objects ===
@@ -495,7 +496,7 @@ def spend(tx, idx, utxos, **kwargs):
 # - A scriptPubKey which is to be spent from (CScript)
 # - A comment describing the test (string)
 # - Whether the spending (on itself) is expected to be standard (bool)
-# - A tx-signing lambda returning (scriptsig, witness_stack), taking as inputs:
+# - A tx-signing lambda returning (scriptsig, witness_stack, annex), taking as inputs:
 #   - A transaction to sign (CTransaction)
 #   - An input position (int)
 #   - The spent UTXOs by this transaction (list of CTxOut)
@@ -739,14 +740,17 @@ def spenders_taproot_active():
 
     # == Tests for signature hashing ==
 
-    # Run all tests once with no annex, and once with a valid random annex.
-    for annex in [None, lambda _: bytes([ANNEX_TAG]) + random.randbytes(random.randrange(0, 250))]:
-        # Non-empty annex is non-standard
-        no_annex = annex is None
+    # Test signature hashing with absent, empty, unstructured, and reserved-format annexes.
+    for annex, standard in [
+        (None, True),
+        (bytes([ANNEX_TAG]), True),
+        (lambda _: bytes([ANNEX_TAG, 0]) + random.randbytes(random.randrange(250)), True),
+        (lambda _: bytes([ANNEX_TAG, random.randrange(1, 256)]) + random.randbytes(random.randrange(250)), False),
+    ]:
 
         # Sighash mutation tests (test all sighash combinations)
         for hashtype in VALID_SIGHASHES_TAPROOT:
-            common = {"annex": annex, "hashtype": hashtype, "standard": no_annex}
+            common = {"annex": annex, "hashtype": hashtype, "standard": standard}
 
             # Pure pubkey
             tap = taproot_construct(pubs[0])
@@ -760,14 +764,14 @@ def spenders_taproot_active():
 
             # Test SIGHASH_SINGLE behavior in combination with mismatching outputs
             if hashtype in VALID_SIGHASHES_TAPROOT_SINGLE:
-                add_spender(spenders, "sighash/keypath_hashtype_mis_%x" % hashtype, tap=tap, key=secs[0], annex=annex, standard=no_annex, hashtype_actual=random.choice(VALID_SIGHASHES_TAPROOT_NO_SINGLE), failure={"hashtype_actual": hashtype}, **ERR_SCHNORR_SIG_HASHTYPE, need_vin_vout_mismatch=True)
-                add_spender(spenders, "sighash/scriptpath_hashtype_mis_%x" % hashtype, tap=tap, leaf="s0", key=secs[1], annex=annex, standard=no_annex, hashtype_actual=random.choice(VALID_SIGHASHES_TAPROOT_NO_SINGLE), **SINGLE_SIG, failure={"hashtype_actual": hashtype}, **ERR_SCHNORR_SIG_HASHTYPE, need_vin_vout_mismatch=True)
+                add_spender(spenders, "sighash/keypath_hashtype_mis_%x" % hashtype, tap=tap, key=secs[0], annex=annex, standard=standard, hashtype_actual=random.choice(VALID_SIGHASHES_TAPROOT_NO_SINGLE), failure={"hashtype_actual": hashtype}, **ERR_SCHNORR_SIG_HASHTYPE, need_vin_vout_mismatch=True)
+                add_spender(spenders, "sighash/scriptpath_hashtype_mis_%x" % hashtype, tap=tap, leaf="s0", key=secs[1], annex=annex, standard=standard, hashtype_actual=random.choice(VALID_SIGHASHES_TAPROOT_NO_SINGLE), **SINGLE_SIG, failure={"hashtype_actual": hashtype}, **ERR_SCHNORR_SIG_HASHTYPE, need_vin_vout_mismatch=True)
 
         # Test OP_CODESEPARATOR impact on sighashing.
         def hashtype(_):
             return random.choice(VALID_SIGHASHES_TAPROOT)
 
-        common = {"annex": annex, "hashtype": hashtype, "standard": no_annex}
+        common = {"annex": annex, "hashtype": hashtype, "standard": standard}
         scripts = [
             ("pk_codesep", CScript(random_checksig_style(pubs[1]) + bytes([OP_CODESEPARATOR]))),  # codesep after checksig
             ("codesep_pk", CScript(bytes([OP_CODESEPARATOR]) + random_checksig_style(pubs[1]))),  # codesep before checksig
@@ -787,7 +791,7 @@ def spenders_taproot_active():
         add_spender(spenders, "sighash/codesep_pk_wrongpos2", tap=tap, leaf="codesep_pk", key=secs[1], codeseppos=0, **common, **SINGLE_SIG, failure={"codeseppos": 0xfffffffe}, **ERR_SCHNORR_SIG)
 
     # Reusing the scripts above, test that various features affect the sighash.
-    add_spender(spenders, "sighash/annex", tap=tap, leaf="pk_codesep", key=secs[1], hashtype=hashtype, standard=False, **SINGLE_SIG, annex=bytes([ANNEX_TAG]), failure={"sighash": override(default_sighash, annex=None)}, **ERR_SCHNORR_SIG)
+    add_spender(spenders, "sighash/annex", tap=tap, leaf="pk_codesep", key=secs[1], hashtype=hashtype, **SINGLE_SIG, annex=bytes([ANNEX_TAG]), failure={"sighash": override(default_sighash, annex=None)}, **ERR_SCHNORR_SIG)
     add_spender(spenders, "sighash/script", tap=tap, leaf="pk_codesep", key=secs[1], **common, **SINGLE_SIG, failure={"sighash": override(default_sighash, script_taproot=tap.leaves["codesep_pk"].script)}, **ERR_SCHNORR_SIG)
     add_spender(spenders, "sighash/leafver", tap=tap, leaf="pk_codesep", key=secs[1], **common, **SINGLE_SIG, failure={"sighash": override(default_sighash, leafversion=random.choice([x & 0xFE for x in range(0x100) if x & 0xFE != LEAF_VERSION_TAPSCRIPT]))}, **ERR_SCHNORR_SIG)
     add_spender(spenders, "sighash/scriptpath", tap=tap, leaf="pk_codesep", key=secs[1], **common, **SINGLE_SIG, failure={"sighash": override(default_sighash, leaf=None)}, **ERR_SCHNORR_SIG)
@@ -1106,7 +1110,7 @@ def spenders_taproot_active():
         # n OP_CHECKSIGADDs and 1 OP_CHECKSIG, but also an OP_CHECKSIGADD with an empty signature.
         lambda n, pk: (CScript([OP_DROP, OP_0, OP_10, pk, OP_CHECKSIGADD, OP_10, OP_EQUALVERIFY, pk] + [OP_2DUP, OP_16, OP_SWAP, OP_CHECKSIGADD, b'\x11', OP_EQUALVERIFY] * n + [OP_CHECKSIG]), n + 1),
     ]
-    for annex in [None, bytes([ANNEX_TAG]) + random.randbytes(random.randrange(1000))]:
+    for annex in [None, bytes([ANNEX_TAG, random.randrange(1, 256)]) + random.randbytes(random.randrange(1000))]:
         for hashtype in [SIGHASH_DEFAULT, SIGHASH_ALL]:
             for pubkey in [pubs[1], random.randbytes(random.choice([x for x in range(2, 81) if x != 32]))]:
                 for fn_num, fn in enumerate(SIGOPS_RATIO_SCRIPTS):
@@ -1328,7 +1332,7 @@ def spenders_taproot_nonstandard():
     ]
     tap = taproot_construct(pub, scripts)
 
-    # Test that features like annex, leaf versions, or OP_SUCCESS are valid but non-standard
+    # Test that features like future leaf versions or OP_SUCCESS are valid but non-standard
     add_spender(spenders, "inactive/scriptpath_valid_unkleaf", key=sec, tap=tap, leaf="future_leaf", standard=False, inputs=[getter("sign")])
     add_spender(spenders, "inactive/scriptpath_invalid_unkleaf", key=sec, tap=tap, leaf="future_leaf", standard=False, inputs=[getter("sign")], sighash=bitflipper(default_sighash))
     add_spender(spenders, "inactive/scriptpath_valid_opsuccess", key=sec, tap=tap, leaf="op_success", standard=False, inputs=[getter("sign")])
@@ -1455,7 +1459,76 @@ class TaprootTest(BitcoinTestFramework):
         self.lastblockheight = block['height']
         self.lastblocktime = block['time']
 
-    def test_spenders(self, node, spenders, input_counts):
+    def test_annex(self):
+        self.log.info("Annex policy tests...")
+        key = generate_privkey()
+        pubkey = compute_xonly_pubkey(key)[0]
+        tap = taproot_construct(pubkey, [("pk", CScript([pubkey, OP_CHECKSIG]))])
+
+        def taproot_spender(annex, *, leaf=None, standard=True):
+            return make_spender("annex/%s/%s" % ("keypath" if leaf is None else "scriptpath", "absent" if annex is None else len(annex)),
+                                tap=tap, key=key, leaf=leaf, annex=annex, standard=standard, **SINGLE_SIG)
+
+        # Annex data is not subject to stack-item or script-size limits, including
+        # when spending through a script path.
+        spenders = []
+        for annex, standard in [
+            (None, True),
+            (bytes([ANNEX_TAG]), True),
+            (bytes([ANNEX_TAG, 0]), True),
+            (bytes([ANNEX_TAG, 0]) + b'\xff' * 256, True),
+            (bytes([ANNEX_TAG, 0]) + b'\xff' * 257, True),
+            (bytes([ANNEX_TAG, 0]) + b'\xff' * 10001, True),
+            (bytes([ANNEX_TAG, 1]), False),
+        ]:
+            for leaf in (None, "pk"):
+                spenders.append(taproot_spender(annex, leaf=leaf, standard=standard))
+        # Fix the version so every standard input is tested for mempool acceptance.
+        self.test_spenders(self.nodes[0], spenders, input_counts=[1], tx_version=2)
+
+        # Empty and unstructured annexes may be combined across key and script paths.
+        self.test_spenders(self.nodes[0], [
+            taproot_spender(bytes([ANNEX_TAG])),
+            taproot_spender(bytes([ANNEX_TAG, 0]) + b'\xff' * 10001, leaf="pk"),
+        ], input_counts=[2], tx_version=2)
+
+        legacy_key = ECKey()
+        legacy_key.set(generate_privkey(), compressed=True)
+        legacy_pubkey = legacy_key.get_pubkey().get_bytes()
+        # A non-P2A input without an annex prevents the transaction from opting in,
+        # including when that input spends a legacy or witness-v0 output.
+        for other in [
+            taproot_spender(None),
+            make_spender("annex/mixed/legacy", pkh=legacy_pubkey, key=legacy_key, sigops_weight=4),
+            make_spender("annex/mixed/witness_v0", pkh=legacy_pubkey, key=legacy_key, witv0=True, sigops_weight=1),
+        ]:
+            self.test_spenders(self.nodes[0], [taproot_spender(bytes([ANNEX_TAG, 0])), other], input_counts=[2], tx_version=2)
+
+        def anchor_spender(witness=()):
+            return make_spender("annex/mixed/anchor", script=PAY_TO_ANCHOR, inputs=[],
+                                witness=list(witness), standard=not witness)
+
+        # P2A inputs cannot have an annex and are excluded from the opt-in rule.
+        self.test_spenders(self.nodes[0], [anchor_spender()], input_counts=[1], tx_version=2)
+        for annex, leaf in [(None, None), (bytes([ANNEX_TAG]), None), (bytes([ANNEX_TAG, 0]), "pk")]:
+            self.test_spenders(self.nodes[0], [taproot_spender(annex, leaf=leaf), anchor_spender()], input_counts=[2], tx_version=2)
+        self.test_spenders(self.nodes[0], [
+            taproot_spender(bytes([ANNEX_TAG])),
+            taproot_spender(bytes([ANNEX_TAG, 0]), leaf="pk"),
+            anchor_spender(),
+        ], input_counts=[3], tx_version=2)
+        # Adding a P2A input does not opt a non-annex Taproot input into annexes.
+        self.test_spenders(self.nodes[0], [
+            taproot_spender(bytes([ANNEX_TAG, 0])),
+            taproot_spender(None, leaf="pk"),
+            anchor_spender(),
+        ], input_counts=[3], tx_version=2)
+        # The P2A exception does not permit witness stuffing, even an empty item.
+        for witness in ([b''], [bytes([ANNEX_TAG, 0])]):
+            for annex in (None, bytes([ANNEX_TAG])):
+                self.test_spenders(self.nodes[0], [taproot_spender(annex), anchor_spender(witness)], input_counts=[2], tx_version=2)
+
+    def test_spenders(self, node, spenders, input_counts, *, tx_version=None):
         """Run randomized tests with a number of "spenders".
 
         Steps:
@@ -1543,7 +1616,7 @@ class TaprootTest(BitcoinTestFramework):
         while left:
             # Construct CTransaction with random version, nLocktime
             tx = CTransaction()
-            tx.version = random.choice(TX_STANDARD_VERSIONS + [0, TX_MAX_STANDARD_VERSION + 1, random.getrandbits(32)])
+            tx.version = tx_version if tx_version is not None else random.choice(TX_STANDARD_VERSIONS + [0, TX_MAX_STANDARD_VERSION + 1, random.getrandbits(32)])
             min_sequence = (tx.version != 1 and tx.version != 0) * 0x80000000  # The minimum sequence number to disable relative locktime
             if random.choice([True, False]):
                 tx.nLockTime = random.randrange(LOCKTIME_THRESHOLD, self.lastblocktime - 7200)  # all absolute locktimes in the past
@@ -1620,6 +1693,9 @@ class TaprootTest(BitcoinTestFramework):
                 if self.options.dump_tests:
                     dump_json_test(tx, input_utxos, i, success, fail)
 
+            annex_count = sum(success[2] is not None for _, success in input_data)
+            non_anchor_count = sum(utxo.output.scriptPubKey != PAY_TO_ANCHOR for utxo in input_utxos)
+
             # Sign each input incorrectly once on each complete signing pass, except the very last.
             for fail_input in list(range(len(input_utxos))) + [None]:
                 # Skip trying to fail at spending something that can't be made to fail.
@@ -1635,6 +1711,7 @@ class TaprootTest(BitcoinTestFramework):
                 is_standard_tx = (
                     fail_input is None  # Must be valid to be standard
                     and (all(utxo.spender.is_standard for utxo in input_utxos))  # All inputs must be standard
+                    and annex_count in (0, non_anchor_count)  # All non-P2A inputs must opt in to annexes, or none
                     and tx.version in TX_STANDARD_VERSIONS # The tx version must be standard
                     and not (tx.version == 3 and tx.get_vsize() > TRUC_MAX_VSIZE)  # Topological standardness rules must be followed
                 )
@@ -1886,6 +1963,7 @@ class TaprootTest(BitcoinTestFramework):
     def run_test(self):
         self.nodesigner = NodeSigner(self.nodes[0])
         self.gen_test_vectors()
+        self.test_annex()
 
         self.log.info("Post-activation tests...")
 
