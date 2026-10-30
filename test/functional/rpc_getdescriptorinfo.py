@@ -5,6 +5,7 @@
 """Test getdescriptorinfo RPC.
 """
 
+from test_framework.authproxy import JSONRPCException
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import descsum_create
 from test_framework.util import (
@@ -38,13 +39,38 @@ class DescriptorTest(BitcoinTestFramework):
         # cli handles wrong types differently
         if not self.options.usecli:
             assert_raises_rpc_error(-3, 'JSON value of type number is not of expected type string', self.nodes[0].getdescriptorinfo, 1)
-        assert_raises_rpc_error(-5, "'' is not a valid descriptor function", self.nodes[0].getdescriptorinfo, "")
-        assert_raises_rpc_error(-5, "pk(): Key ' 0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798' is invalid due to whitespace", self.nodes[0].getdescriptorinfo, "pk( 0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)")
-        assert_raises_rpc_error(-5, "pk(): Key '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798 ' is invalid due to whitespace", self.nodes[0].getdescriptorinfo, "pk(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798 )")
-        assert_raises_rpc_error(-5, "Multi: Key ' 03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7' is invalid due to whitespace", self.nodes[0].getdescriptorinfo, "wsh(multi(2, 03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7,03774ae7f858a9411e5ef4246b70c65aac5649980be5c17891bbec17895da008cb,03d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85a))")
-        assert_raises_rpc_error(-5, "Multi: Key ' 03774ae7f858a9411e5ef4246b70c65aac5649980be5c17891bbec17895da008cb' is invalid due to whitespace", self.nodes[0].getdescriptorinfo, "wsh(multi(2,03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7, 03774ae7f858a9411e5ef4246b70c65aac5649980be5c17891bbec17895da008cb,03d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85a))")
+        assert_raises_rpc_error(-5, "Not a valid descriptor function", self.nodes[0].getdescriptorinfo, "")
+        assert_raises_rpc_error(-5, "pk(): Key is invalid due to whitespace", self.nodes[0].getdescriptorinfo, "pk( 0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)")
+        assert_raises_rpc_error(-5, "pk(): Key is invalid due to whitespace", self.nodes[0].getdescriptorinfo, "pk(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798 )")
+        assert_raises_rpc_error(-5, "Multi: Key is invalid due to whitespace", self.nodes[0].getdescriptorinfo, "wsh(multi(2, 03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7,03774ae7f858a9411e5ef4246b70c65aac5649980be5c17891bbec17895da008cb,03d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85a))")
+        assert_raises_rpc_error(-5, "Multi: Key is invalid due to whitespace", self.nodes[0].getdescriptorinfo, "wsh(multi(2,03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7, 03774ae7f858a9411e5ef4246b70c65aac5649980be5c17891bbec17895da008cb,03d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85a))")
         priv_key = generate_keypair(wif=True)[0]
-        assert_raises_rpc_error(-5, f"pk(): Key ' {priv_key}' is invalid due to whitespace", self.nodes[0].getdescriptorinfo, f"pk( {priv_key})")
+        self.log.info("Error messages must not contain private keys")
+        xprv = "tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0h/*"
+        bad_priv_key = priv_key[:-1] + ("2" if priv_key[-1] != "2" else "3")
+        xprv_pub = "tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B"
+        bad_xprv = xprv.replace("tprv8ZgxMBicQKsPd7", "tprv8ZgxMBicQKsPd8")
+        for desc, message in [
+            (f"pk( {priv_key})", "pk(): Key is invalid due to whitespace"),
+            (f"pk({priv_key} )", "pk(): Key is invalid due to whitespace"),
+            (f"pk( {xprv})", "pk(): Key is invalid due to whitespace"),
+            (f"pk({bad_priv_key})", "pk(): key is not valid"),
+            (f"pk({priv_key}/0)", "pk(): key is not valid"),
+            (f"pk({xprv_pub}/{priv_key})", "Key path value is not a valid uint32"),
+            (f"pk({xprv_pub}/<0;{priv_key}>)", "Key path value is not a valid uint32"),
+            (f"pk({bad_xprv})", "pk(): key is not valid"),
+            (priv_key, "Not a valid descriptor function"),
+            (xprv, "Not a valid descriptor function"),
+        ]:
+            try:
+                self.nodes[0].getdescriptorinfo(desc)
+            except JSONRPCException as e:
+                assert_equal(e.error["code"], -5)
+                assert message in e.error["message"], e.error["message"]
+                for secret in [priv_key, bad_priv_key, xprv, bad_xprv]:
+                    assert secret[:4] not in e.error["message"], e.error["message"]
+            else:
+                raise AssertionError(f"No exception raised for {desc}")
 
         # P2PK output with the specified public key.
         self.test_desc('pk(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)', isrange=False, issolvable=True, hasprivatekeys=False)
