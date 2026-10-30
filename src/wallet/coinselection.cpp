@@ -99,14 +99,14 @@ struct {
  * The Branch and Bound algorithm is described in detail in Murch's Master Thesis:
  * https://murch.one/wp-content/uploads/2016/11/erhardt2016coinselection.pdf
  *
- * @param const std::vector<OutputGroup>& utxo_pool The set of UTXO groups that we are choosing from.
+ * @param[in,out] utxo_pool The set of UTXO groups that we are choosing from.
  *        These UTXO groups will be sorted in descending order by effective value and the OutputGroups'
  *        values are their effective values.
- * @param const CAmount& selection_target This is the value that we want to select. It is the lower
+ * @param[in] selection_target This is the value that we want to select. It is the lower
  *        bound of the range.
- * @param const CAmount& cost_of_change This is the cost of creating and spending a change output.
+ * @param[in] cost_of_change This is the cost of creating and spending a change output.
  *        This plus selection_target is the upper bound of the range.
- * @param int max_selection_weight The maximum allowed weight for a selection result to be valid.
+ * @param[in] max_selection_weight The maximum allowed weight for a selection result to be valid.
  * @returns The result of this coin selection algorithm, or std::nullopt
  */
 
@@ -388,12 +388,12 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
  * branch can be skipped, or both the inclusion and omission branch can be skipped after evaluating the candidate input
  * set in the node.
  *
- * @param std::vector<OutputGroup>& utxo_pool The UTXOs that we are choosing from. These UTXOs will be sorted in
+ * @param[in,out] utxo_pool The UTXOs that we are choosing from. These UTXOs will be sorted in
  *        descending order by effective value, with lower weight preferred as a tie-breaker. (We can think of an output
  *        group with multiple as a heavier UTXO with the combined amount here.)
- * @param const CAmount& selection_target This is the minimum amount that we need for the transaction without considering change.
- * @param const CAmount& change_target The minimum budget for creating a change output, by which we increase the selection_target.
- * @param int max_selection_weight The maximum allowed weight for a selection result to be valid.
+ * @param[in] selection_target This is the minimum amount that we need for the transaction without considering change.
+ * @param[in] change_target The minimum budget for creating a change output, by which we increase the selection_target.
+ * @param[in] max_selection_weight The maximum allowed weight for a selection result to be valid.
  * @returns The result of this coin selection algorithm, or std::nullopt
  */
 util::Result<SelectionResult> CoinGrinder(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, CAmount change_target, int max_selection_weight)
