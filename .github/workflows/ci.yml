@@ -470,11 +470,11 @@ jobs:
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_nowallet.sh'
 
-          - name: 'i686, no IPC'
+          - name: 'i686'
             warp-runner: 'warp-ubuntu-latest-x64-8x'
             fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_i686_no_ipc.sh'
+            file-env: './ci/test/00_setup_env_i686.sh'
 
           - name: 'fuzzer,address,undefined,integer'
             warp-runner: 'warp-ubuntu-latest-x64-16x'
