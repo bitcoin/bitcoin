@@ -1182,11 +1182,11 @@ public:
         AssertLockNotHeld(m_reconnections_mutex);
         StopThreads();
         StopNodes();
-    };
+    }
 
     void Interrupt() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
-    bool GetNetworkActive() const { return fNetworkActive; };
-    bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
+    bool GetNetworkActive() const { return fNetworkActive; }
+    bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; }
     void SetNetworkActive(bool active) EXCLUSIVE_LOCKS_REQUIRED(!m_anchors_mutex, !m_nodes_mutex);
 
     /**
@@ -1294,7 +1294,7 @@ public:
             if (NodeFullyConnected(node))
                 func(node);
         }
-    };
+    }
 
     void ForEachNode(const NodeFn& func) const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex)
     {
@@ -1303,7 +1303,7 @@ public:
             if (NodeFullyConnected(node))
                 func(node);
         }
-    };
+    }
 
     // Addrman functions
     /**
@@ -1404,7 +1404,7 @@ public:
 
     //! Updates the local services that this node advertises to other peers
     //! during connection handshake.
-    void AddLocalServices(ServiceFlags services) { m_local_services = ServiceFlags(m_local_services | services); };
+    void AddLocalServices(ServiceFlags services) { m_local_services = ServiceFlags(m_local_services | services); }
     void RemoveLocalServices(ServiceFlags services) { m_local_services = ServiceFlags(m_local_services & ~services); }
 
     uint64_t GetMaxOutboundTarget() const EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex);

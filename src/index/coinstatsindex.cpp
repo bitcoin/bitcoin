@@ -82,7 +82,7 @@ struct DBVal {
         SER_READ(obj, obj.total_coinbase_amount = UintToArith256(coinbase));
     }
 };
-}; // namespace
+} // namespace
 
 std::unique_ptr<CoinStatsIndex> g_coin_stats_index;
 

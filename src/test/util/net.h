@@ -112,7 +112,7 @@ struct ConnmanTestMsg : public CConnman {
     bool ReceiveMsgFrom(CNode& node, CSerializedNetMsg&& ser_msg) const;
     void FlushSendBuffer(CNode& node) const;
 
-    bool AlreadyConnectedToAddressPublic(const CNetAddr& addr) { return AlreadyConnectedToAddress(addr); };
+    bool AlreadyConnectedToAddressPublic(const CNetAddr& addr) { return AlreadyConnectedToAddress(addr); }
 
     CNode* ConnectNodePublic(PeerManager& peerman, const char* pszDest, ConnectionType conn_type)
         EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);

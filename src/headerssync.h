@@ -51,7 +51,7 @@ struct CompressedHeader {
         ret.nBits = nBits;
         ret.nNonce = nNonce;
         return ret;
-    };
+    }
 };
 
 /** HeadersSyncState:

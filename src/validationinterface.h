@@ -67,7 +67,7 @@ protected:
     /**
      * Notifies listeners any time the block chain tip changes, synchronously.
      */
-    virtual void ActiveTipChange(const CBlockIndex& new_tip, bool is_ibd) {};
+    virtual void ActiveTipChange(const CBlockIndex& new_tip, bool is_ibd) {}
     /**
      * Notifies listeners of a transaction having been added to mempool.
      *
@@ -160,7 +160,7 @@ protected:
      * Notifies listeners that a block which builds directly on our current tip
      * has been received and connected to the headers tree, though not validated yet.
      */
-    virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {};
+    virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {}
     friend class ValidationSignals;
     friend class ValidationInterfaceTest;
 };
