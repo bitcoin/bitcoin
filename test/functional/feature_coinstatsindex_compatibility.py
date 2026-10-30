@@ -51,9 +51,10 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self.cleanup_folder(node.chain_path / "indexes" / "coinstatsindex")
         shutil.copytree(legacy_node.chain_path / "indexes" / "coinstats", node.chain_path / "indexes" / "coinstats")
         old_version_path = node.chain_path / "indexes" / "coinstats"
-        msg = f'[warning] Old version of coinstatsindex found at {old_version_path}. This folder can be safely deleted unless you plan to downgrade your node to version 29 or lower.'
+        msg = f'Deleted old version of coinstatsindex at {old_version_path}'
         with node.assert_debug_log(expected_msgs=[msg]):
             self.start_node(0, ['-coinstatsindex'])
+        assert not old_version_path.exists()
         self.wait_until(lambda: node.getindexinfo()['coinstatsindex']['synced'] is True)
         res2 = node.gettxoutsetinfo('muhash')
         assert_equal(res2, res0)
