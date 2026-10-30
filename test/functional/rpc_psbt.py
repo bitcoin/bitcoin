@@ -13,7 +13,7 @@ from test_framework.blocktools import (
     MAX_STANDARD_TX_WEIGHT,
 )
 from test_framework.descriptors import descsum_create
-from test_framework.extendedkey import hardened
+from test_framework.extendedkey import ExtendedPrivateKey, hardened
 from test_framework.key import H_POINT
 from test_framework.messages import (
     COutPoint,
@@ -391,7 +391,7 @@ class PSBTTest(BitcoinTestFramework):
         tx.vin = [CTxIn(outpoint=COutPoint(hash=int('aa' * 32, 16), n=0), scriptSig=b"")]
         tx.vout = [CTxOut(nValue=0, scriptPubKey=b"")]
 
-        xpub = "tpubD6NzVbkrYhZ4XgiXtGrdW5XDAPFCL9h7we1vwNCpn8tGbBcgfVYjXyhWo4E1xkh56hjod1RhGjxbaTLV3X4FyWuejifB9jusQ46QzG87VKp"
+        xpub = ExtendedPrivateKey.generate().pubkey().to_string()
         xpub_data, xpub_version = base58_to_byte(xpub)
         xpub_key = bytes([PSBT_GLOBAL_XPUB]) + bytes([xpub_version]) + xpub_data
 
@@ -1439,9 +1439,10 @@ class PSBTTest(BitcoinTestFramework):
             xpub_data, xpub_version = base58_to_byte(extended_pubkey)
             return bytes([PSBT_GLOBAL_XPUB]) + bytes([xpub_version]) + xpub_data
 
-        xpub1 = "tpubD6NzVbkrYhZ4XgiXtGrdW5XDAPFCL9h7we1vwNCpn8tGbBcgfVYjXyhWo4E1xkh56hjod1RhGjxbaTLV3X4FyWuejifB9jusQ46QzG87VKp"
+        xpub1 = ExtendedPrivateKey.generate().pubkey().to_string()
         xpub_key1 = global_xpub_key(xpub1)
-        xpub_key2 = global_xpub_key("tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B")
+        xpub2 = ExtendedPrivateKey.generate().pubkey().to_string()
+        xpub_key2 = global_xpub_key(xpub2)
         xpub_value = b"\x00\x00\x00\x00"  # master key fingerprint with an empty derivation path
         global_prop_key = bytes([PSBT_GLOBAL_PROPRIETARY]) + b"\x02\x01\x02\x00"  # identifier "0102", subtype 0
         global_prop_value = b"\xde\xad\xbe\xef"

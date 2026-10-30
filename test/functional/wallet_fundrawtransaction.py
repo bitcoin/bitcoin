@@ -757,7 +757,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         wwatch = self.nodes[3].get_wallet_rpc('wwatch')
         # Setup change addresses for the watchonly wallet
         desc_import = [{
-            "desc": descsum_create("wpkh(tpubD6NzVbkrYhZ4YNXVQbNhMK1WqguFsUXceaVJKbmno2aZ3B6QfbMeraaYvnBSGpV3vxLyTTK9DYT1yoEck4XUScMzXoQ2U2oSmE2JyMedq3H/1/*)"),
+            "desc": descsum_create(f"wpkh({ExtendedPrivateKey.generate().pubkey().to_string()}/1/*)"),
             "timestamp": "now",
             "internal": True,
             "active": True,
