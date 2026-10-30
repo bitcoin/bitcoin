@@ -21,6 +21,7 @@
 #include <util/time.h>
 #include <util/translation.h>
 
+#include <algorithm>
 #include <limits>
 #include <optional>
 
@@ -1402,6 +1403,10 @@ std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTran
     if (n_signed) {
         *n_signed = 0;
     }
+    // Whether any input or output of this transaction is ours, which is what decides
+    // if this descriptor's extended keys belong in the PSBT at all. The change output
+    // counts: it is what a signer checks to see the change comes back to us.
+    bool contributes_to_psbt = false;
     for (unsigned int i = 0; i < psbtx.inputs.size(); ++i) {
         PSBTInput& input = psbtx.inputs.at(i);
 
@@ -1426,8 +1431,12 @@ std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTran
         std::unique_ptr<FlatSigningProvider> keys = std::make_unique<FlatSigningProvider>();
         std::unique_ptr<FlatSigningProvider> script_keys = GetSigningProvider(script, /*include_private=*/options.sign);
         if (script_keys) {
+            contributes_to_psbt = true;
             keys->Merge(std::move(*script_keys));
         } else {
+            // Deliberately not counted as contributing: reaching here means the script is
+            // not ours, we just happen to hold one of the keys it lists. Our descriptor's
+            // extended keys describe a different policy and do not belong in this PSBT.
             // Maybe there are pubkeys listed that we can sign for
             std::vector<CPubKey> pubkeys;
             pubkeys.reserve(input.hd_keypaths.size() + 2);
@@ -1486,10 +1495,94 @@ std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTran
         if (!keys) {
             continue;
         }
+        contributes_to_psbt = true;
         UpdatePSBTOutput(HidingSigningProvider(keys.get(), /*hide_secret=*/true, /*hide_origin=*/!options.bip32_derivs), psbtx, i);
     }
 
+    if (contributes_to_psbt && options.bip32_derivs) {
+        AddGlobalXpubs(psbtx);
+    }
+
     return {};
+}
+
+//! Whether this key, at this origin, derives one of the listed keys through unhardened steps
+//! alone. A listed key comes with the origin the descriptor gave it, but keys can share an
+//! origin, so the child is derived and compared with the listed key.
+static bool DerivesKeyInPSBT(const KeyOriginInfo& origin, const CExtPubKey& key, const std::map<CPubKey, KeyOriginInfo>& listed)
+{
+    return std::ranges::any_of(listed, [&](const auto& entry) {
+        const auto& [pubkey, info]{entry};
+        if (info.fingerprint != origin.fingerprint || info.path.size() < origin.path.size()) return false;
+        const auto rest{info.path.begin() + origin.path.size()};
+        // Every step is checked before any is derived, since deriving a hardened step from a
+        // public key asserts.
+        if (!std::equal(info.path.begin(), rest, origin.path.begin()) ||
+            std::any_of(rest, info.path.end(), [](uint32_t step) { return (step & BIP32_HARDENED_FLAG) != 0; })) {
+            return false;
+        }
+        CExtPubKey child{key};
+        for (auto step{rest}; step != info.path.end(); ++step) {
+            if (!child.Derive(child, *step)) return false;
+        }
+        return child.pubkey == pubkey;
+    });
+}
+
+void DescriptorScriptPubKeyMan::AddGlobalXpubs(PartiallySignedTransaction& psbtx) const
+{
+    LOCK(cs_desc_man);
+
+    // The keys the PSBT lists that this descriptor produced, at the origin it gave them. A path
+    // in a PSBT is only what its sender claims, so any other key or path is dropped here, and
+    // nothing is derived along a path the descriptor did not give. The work below is bounded by
+    // the descriptor's own keys whatever the PSBT lists.
+    std::map<CPubKey, KeyOriginInfo> listed;
+    std::map<int32_t, std::unique_ptr<FlatSigningProvider>> providers;
+    const auto take{[&](const CPubKey& pubkey, const KeyOriginInfo& claimed) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man) {
+        const auto found{m_map_pubkeys.find(pubkey)};
+        if (found == m_map_pubkeys.end()) return;
+        const auto [cached, first]{providers.try_emplace(found->second)};
+        if (first) cached->second = GetSigningProvider(found->second, /*include_private=*/false);
+        const FlatSigningProvider* provider{cached->second.get()};
+        KeyOriginInfo info;
+        if (provider && provider->GetKeyOrigin(pubkey.GetID(), info) && info == claimed) listed.emplace(pubkey, std::move(info));
+    }};
+    const auto take_all{[&](const auto& in_or_out) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man) {
+        for (const auto& [pubkey, claimed] : in_or_out.hd_keypaths) {
+            take(pubkey, claimed);
+        }
+        for (const auto& [xonly, leaves_and_origin] : in_or_out.m_tap_bip32_paths) {
+            for (const CPubKey& pubkey : xonly.GetCPubKeys()) {
+                take(pubkey, leaves_and_origin.second);
+            }
+        }
+    }};
+    for (const PSBTInput& input : psbtx.inputs) {
+        take_all(input);
+    }
+    for (const PSBTOutput& output : psbtx.outputs) {
+        take_all(output);
+    }
+
+    std::map<KeyOriginInfo, std::set<CExtPubKey>> xpubs{
+        m_wallet_descriptor.descriptor->GetExtPubKeysWithOrigins(&m_wallet_descriptor.cache)};
+
+    // BIP 174 wants the keys that the transaction's keys derive from, each with as many
+    // steps in its path as its depth. Where the cache lacks the key at the last hardened
+    // step, the descriptor hands out its root instead, and a root with hardened steps still
+    // below it derives none of them; a key written without its origin has a path too short
+    // for its depth. Neither can go in. Keys that share an origin are judged one by one,
+    // since they need not share an answer.
+    for (auto& [origin, keys] : xpubs) {
+        std::erase_if(keys, [&](const CExtPubKey& key) {
+            return origin.path.size() != size_t{key.nDepth} || !DerivesKeyInPSBT(origin, key, listed);
+        });
+    }
+
+    // A key the PSBT already carries, from another descriptor, from this one or from whoever
+    // sent it, keeps the origin it has there, since BIP 174 allows one record per key.
+    psbtx.MergeGlobalXPubs(xpubs);
 }
 
 std::unique_ptr<CKeyMetadata> DescriptorScriptPubKeyMan::GetMetadata(const CTxDestination& dest) const
