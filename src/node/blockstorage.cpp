@@ -494,6 +494,10 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
                         pindex->GetBlockHash() == *snapshot_blockhash) {
                     // Should have been set above; don't disturb it with code below.
                     Assert(pindex->m_chain_tx_count > 0);
+                    // The hardcoded value doesn't mean all its ancestors were received.
+                    if (pindex->pprev->m_chain_tx_count == 0 && (pindex->nStatus & BLOCK_HAVE_DATA)) {
+                        AddUnlinkedBlock(pindex);
+                    }
                 } else if (pindex->pprev->m_chain_tx_count > 0) {
                     pindex->m_chain_tx_count = pindex->pprev->m_chain_tx_count + pindex->nTx;
                 } else {
