@@ -13,6 +13,11 @@ no source for the snapshot you need, you can generate it yourself using
 `dumptxoutset` on another node that is already synced (see
 [Generating a snapshot](#generating-a-snapshot)).
 
+Each release supports only the newest AssumeUTXO commitment for each production
+network. To load an older snapshot for research or other purposes, use a release
+that contains its commitment or restore that commitment as `m_assumeutxo_data`
+in `src/kernel/chainparams.cpp` and recompile.
+
 Once you've obtained the snapshot, you can use the RPC command `loadtxoutset` to
 load it.
 
@@ -52,13 +57,22 @@ block will need to be downloaded, and these blocks can't be pruned until they
 are indexed, so they could consume a lot of disk space until indexing catches up
 to the snapshot block.
 
+## Checking the commitment during block validation
+
+When block connection reaches the corresponding block, ordinary block validation
+verifies the provided AssumeUTXO hash and stops the node on a mismatch.
+The node flushes pending changes to disk, hashes the UTXO set, and compares
+the hash with the commitment. This can take several minutes. The check also runs
+during reindexing or a reorg, and does not run retroactively after startup beyond
+that height.
+
 ## Generating a snapshot
 
 The RPC command `dumptxoutset` can be used to generate a snapshot for the current
 tip (using type "latest") or a recent height (using type "rollback"). A generated
 snapshot from one node can then be loaded
 on any other node. However, keep in mind that the snapshot hash needs to be
-listed in the chainparams to make it usable. If there is no snapshot hash for
+configured in the chainparams to make it usable. If there is no snapshot hash for
 the height you have chosen already, you will need to change the code there and
 re-compile.
 
