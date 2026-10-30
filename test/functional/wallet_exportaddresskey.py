@@ -694,6 +694,65 @@ class ExportAddressKeyTest(BitcoinTestFramework):
         check_held(address, [(positive, True), (positive, False)])
         check_held(point_address(opposite), [(negative, True), (negative, False)])
 
+    def check_taproot_key_reload(self):
+        self.log.info('Check stored Taproot key identities across wallet reload and encryption')
+        node = self.nodes[0]
+        for kind in ['tr', 'rawtr']:
+            for value in [1, ORDER - 1]:
+                name = f'identity_{kind}_{value == 1}'
+                node.createwallet(name, blank=True)
+                wallet = node.get_wallet_rpc(name)
+                secret = value.to_bytes(32, 'big')
+                pubkey = public_key(secret)
+                opposite = public_key((ORDER - value).to_bytes(32, 'big'))
+                self.import_descriptor(wallet, f'{kind}({bytes_to_wif(secret)})')
+                addresses = [key_to_p2pkh(pubkey), key_to_p2wpkh(pubkey), key_to_p2sh_p2wpkh(pubkey)]
+                for phase in ['imported', 'reloaded', 'encrypted']:
+                    self.log.info(f'Check {kind} WIF with public-key prefix {pubkey[0]:02x}, {phase}')
+                    if phase != 'imported':
+                        if phase == 'encrypted':
+                            wallet.encryptwallet('test')
+                        node.unloadwallet(name)
+                        node.loadwallet(name)
+                        wallet = node.get_wallet_rpc(name)
+                        if phase == 'encrypted':
+                            wallet.walletpassphrase('test', 60)
+                    self.check_export(wallet, addresses[0], secret, True)
+                    self.check_export(wallet, addresses[1], secret, True, witness=True)
+                    self.check_script_export(wallet, addresses[2], [(secret, True)])
+                    for address_for_key in [key_to_p2pkh, key_to_p2wpkh]:
+                        self.check_error(-5, 'No private key for this address', wallet.exportaddresskey, address_for_key(opposite))
+
+    def check_xonly_hd_root(self, root, root_secret, root_chain):
+        self.log.info('Check an odd-Y HD root reused as an x-only internal or leaf key')
+        node = self.nodes[0]
+        assert_equal(public_key(root_secret)[0], 3)
+        child, _ = derive_leaf(root_secret, root_chain, [0])
+        for root_internal in [False, True]:
+            name = f'identity_hd_{root_internal}'
+            node.createwallet(name, blank=True)
+            wallet = node.get_wallet_rpc(name)
+            internal, leaf = (root_secret, child) if root_internal else (child, root_secret)
+            root_xonly = public_key(root_secret)[1:].hex()
+            internal_expression, leaf_expression = (root_xonly, f'{root}/0') if root_internal else (f'{root}/0', root_xonly)
+            self.import_descriptor(wallet, f'tr({internal_expression},pk({leaf_expression}))')
+            tree = taproot_construct(public_key(internal)[1:], [('leaf', CScript([public_key(leaf)[1:], OP_CHECKSIG]))])
+            address = program_to_witness(1, tree.output_pubkey)
+            expected = sorted([
+                {'pubkey': public_key(secret).hex(), 'private_key_hex': secret.hex(), 'compressed': True, 'roles': [role]}
+                for secret, role in [(internal, 'taproot_internal'), (leaf, 'taproot_script')]
+            ], key=lambda record: record['pubkey'])
+            for reload in [False, True]:
+                if reload:
+                    node.unloadwallet(name)
+                    node.loadwallet(name)
+                    wallet = node.get_wallet_rpc(name)
+                assert_equal(self.export_unchanged(wallet, address)['keys'], expected)
+                output = self.export_unchanged(wallet, address, 'taproot_output')['keys']
+                assert_equal(len(output), 1)
+                assert_equal(output[0]['private_key_hex'], taproot_output_secret(internal, tree.merkle_root).hex())
+                assert_equal(output[0]['roles'], ['taproot_output'])
+
     def check_taproot_output_keys(self):
         self.log.info('Check BIP341 output scalars and actual key-path spends')
         vector_path = os.path.join(self.config['environment']['SRCDIR'], 'src', 'test', 'data', 'bip341_wallet_vectors.json')
@@ -1039,6 +1098,8 @@ class ExportAddressKeyTest(BitcoinTestFramework):
         self.check_spending_and_state(root_secret, root_chain)
         self.check_taproot_roles()
         self.check_musig_participants(root, root_secret, root_chain)
+        self.check_taproot_key_reload()
+        self.check_xonly_hd_root(root, root_secret, root_chain)
         self.check_taproot_output_keys()
         self.check_taproot_script_spending()
         self.check_security_sentinels(root, root_secret, root_chain)

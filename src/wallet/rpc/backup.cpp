@@ -112,6 +112,7 @@ RPCMethod exportaddresskey()
         "The taproot_output mode returns effective key-path keys, applying the exact known TapTweak (including tree-less tr()) to internal keys. Direct output/rawtr() keys are not tweaked again.\n"
         "Script-only or MuSig2 participant-only ownership can succeed in wallet mode while taproot_output fails. Participant secrets are not aggregate or output secrets, even when all participants are local.\n"
         "A MuSig2 participant used before post-aggregation derivation, or any explicitly reused key, may control many outputs. Export does not promise an address-exclusive or leaf-only secret.\n"
+        "A direct address for a stored descriptor root can export that root's private key, including an HD master private key.\n"
         "Exported keys are not a wallet backup; scripts, control blocks, cosigners, preimages or timelocks may still be required.\n"
         "Requires wallet unlock. The result contains a spending secret, including when displayed in the RPC console.\n"
         "Disclosure of a non-hardened child key together with the corresponding ancestor xpub can compromise that ancestor's private subtree.\n"

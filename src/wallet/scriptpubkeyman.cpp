@@ -1384,7 +1384,15 @@ std::set<CPubKey> DescriptorScriptPubKeyMan::GetExportPubKeys(const CTxDestinati
     for (const auto& [pubkey, index] : m_map_pubkeys) add_match(pubkey);
     std::set<CPubKey> roots;
     m_wallet_descriptor.descriptor->GetPrivateKeyRoots(roots);
-    for (const auto& root : roots) add_match(root);
+    for (const auto& root : roots) {
+        add_match(root);
+        // Reloaded x-only descriptors need not retain the stored key's Y parity.
+        if (root.IsFullyValid()) {
+            for (const auto& pubkey : XOnlyPubKey{root}.GetCPubKeys()) {
+                if (HasPrivKey(pubkey.GetID())) add_match(pubkey);
+            }
+        }
+    }
     return matches;
 }
 
@@ -1434,8 +1442,14 @@ util::Expected<std::optional<CKey>, AddressKeyError> DescriptorScriptPubKeyMan::
         return util::Unexpected{AddressKeyError::INCONSISTENT};
     }
     for (const auto& [id, derived] : private_keys.keys) {
+        if (!derived.IsValid()) return util::Unexpected{AddressKeyError::INCONSISTENT};
+        const auto actual = derived.GetPubKey();
         CPubKey derived_pubkey;
-        if (!derived.IsValid() || !public_keys.GetPubKey(id, derived_pubkey) || derived.GetPubKey() != derived_pubkey) {
+        // X-only expressions can resolve to a root stored with the opposite Y parity.
+        if (public_keys.GetPubKey(id, derived_pubkey)) {
+            if (actual != derived_pubkey) return util::Unexpected{AddressKeyError::INCONSISTENT};
+        } else if (!public_keys.GetPubKeyByXOnly(XOnlyPubKey{actual}, derived_pubkey) ||
+                   XOnlyPubKey{actual} != XOnlyPubKey{derived_pubkey}) {
             return util::Unexpected{AddressKeyError::INCONSISTENT};
         }
     }
