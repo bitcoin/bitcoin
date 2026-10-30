@@ -31,6 +31,8 @@
 #include <optional>
 #include <utility>
 
+using kernel::AbortFailure;
+using kernel::FlushResult;
 using node::NodeContext;
 
 COutPoint generatetoaddress(const NodeContext& node, const std::string& address)
@@ -145,7 +147,9 @@ COutPoint ProcessBlock(const NodeContext& node, const std::shared_ptr<CBlock>& b
     bool new_block;
     node::BlockValidationStateCatcher bvsc{block->GetHash()};
     node.validation_signals->RegisterValidationInterface(&bvsc);
-    const bool processed{chainman.ProcessNewBlock(block, true, true, &new_block)};
+    FlushResult<void, AbortFailure> process_result;
+    const bool processed{chainman.ProcessNewBlock(block, true, true, &new_block, process_result)};
+    assert(process_result);
     const bool duplicate{!new_block && processed};
     assert(!duplicate);
     node.validation_signals->UnregisterValidationInterface(&bvsc);
