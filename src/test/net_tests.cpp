@@ -1327,7 +1327,7 @@ public:
         BOOST_CHECK(ret[0] == 0);
         for (unsigned i = 0; i < 12; ++i) {
             if (i < m_type.size()) {
-                BOOST_CHECK(ret[1 + i] == m_type[i]);
+                BOOST_CHECK(ret[1 + i] == uint8_t(m_type[i]));
             } else {
                 BOOST_CHECK(ret[1 + i] == 0);
             }
