@@ -216,7 +216,11 @@ bool Sock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per
         const auto& s = sock->m_socket;
         if (events.requested & RecvEvent) {
             FD_SET(s, &recv);
+#ifdef WIN32
+            // The exception set is necessary for Windows to report connection
+            // failures with non-blocking sockets.
             FD_SET(s, &err);
+#endif
         }
         if (events.requested & SendEvent) {
             FD_SET(s, &send);
