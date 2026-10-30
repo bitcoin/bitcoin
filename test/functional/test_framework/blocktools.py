@@ -121,7 +121,13 @@ def create_block(hashprev=None, coinbase=None, *, ntime=None, height=None, versi
 def create_empty_fork(node, fork_length=FORK_LENGTH):
     '''
         Creates a fork using node's chaintip as the starting point.
-        Returns a list of blocks to submit in order.
+        Returns a list of blocks to submit in order (see trigger_reorg()).
+
+        Prefer this over calling the invalidateblock RPC to simulate a reorg:
+        invalidateblock takes a different codepath than a reorg caused by a
+        competing chain arriving, so tests using it are not exercising the
+        behaviour they mean to. Create the fork before the blocks to be reorged
+        out are mined, then submit it with trigger_reorg().
     '''
     tip = int(node.getbestblockhash(), 16)
     height = node.getblockcount()
@@ -137,6 +143,15 @@ def create_empty_fork(node, fork_length=FORK_LENGTH):
         height += 1
 
     return blocks
+
+def trigger_reorg(node, fork_blocks):
+    '''
+        Submit the fork blocks created by create_empty_fork() to trigger a reorg,
+        then assert the node reorged onto the fork tip.
+    '''
+    for block in fork_blocks:
+        node.submitblock(block.serialize().hex())
+    assert_equal(node.getbestblockhash(), fork_blocks[-1].hash_hex)
 
 def get_witness_script(witness_root, witness_nonce):
     witness_commitment = hash256(ser_uint256(witness_root) + ser_uint256(witness_nonce))
