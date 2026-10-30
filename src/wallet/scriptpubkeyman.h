@@ -308,6 +308,10 @@ private:
 
     KeyMap GetKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
+    //! Put the extended keys of this descriptor that the PSBT's own keys derive from in
+    //! the PSBT, as BIP 174's PSBT_GLOBAL_XPUB.
+    void AddGlobalXpubs(PartiallySignedTransaction& psbtx) const;
+
     // Cached FlatSigningProviders to avoid regenerating them each time they are needed.
     mutable std::map<int32_t, FlatSigningProvider> m_map_signing_providers;
     // Fetch the SigningProvider for the given script and optionally include private keys

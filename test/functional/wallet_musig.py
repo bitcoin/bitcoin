@@ -281,6 +281,10 @@ class WalletMuSigTest(BitcoinTestFramework):
                     part_pks.remove(deriv_path["pubkey"])
             assert_equal(len(part_pks), 0)
 
+        # Every participant's extended key goes in the PSBT, with the origin that leads to it
+        participant_xpubs = sorted((pub[1:9], "m" + ORIGIN_PATH_RE.search(pub).group(1), pub.split("]")[1]) for _, pub in keys)
+        assert_equal(sorted((x["master_fingerprint"], x["path"], x["xpub"]) for x in dec_psbt["global_xpubs"]), participant_xpubs)
+
         # Run 2 signing sessions simultaneously to verify no nonce reuse
         # Add pubnonces
         nonce_psbts = []
