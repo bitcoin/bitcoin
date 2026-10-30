@@ -23,7 +23,7 @@ FILE-NAME found in ./patches relative to the current file."
       ((%patch-path (list (string-append (dirname (current-filename)) "/patches"))))
     (list (search-patch file-name) ...)))
 
-(define building-on (string-append "--build=" (list-ref (string-split (%current-system) #\-) 0) "-guix-linux-gnu"))
+(define (building-on) (string-append "--build=" (list-ref (string-split (%current-system) #\-) 0) "-guix-linux-gnu"))
 
 (define (base-binutils target)
   (package
@@ -174,7 +174,7 @@ chain for " target " development."))
                   "--disable-libsanitizer"
                   "--disable-lto"
                   "--disable-nls"
-                  #$building-on)))))))
+                  #$(building-on))))))))
 
 (define-public linux-base-gcc
   (package
@@ -198,7 +198,7 @@ chain for " target " development."))
                   "--disable-lto"
                   "--disable-nls"
                   "--disable-tm-clone-registry"
-                  #$building-on)))
+                  #$(building-on))))
         ((#:phases phases)
           #~(modify-phases #$phases
             ;; Given a XGCC package, return a modified package that replace each instance of
@@ -239,7 +239,7 @@ chain for " target " development."))
                   "--disable-profile",
                   "--disable-timezone-tools",
                   "--disable-werror",
-                  building-on)))
+                  (building-on))))
     ((#:phases phases)
         `(modify-phases ,phases
            (add-before 'configure 'set-etc-rpc-installation-directory
