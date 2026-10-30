@@ -26,7 +26,8 @@ using FuzzBufferType = std::span<const uint8_t>;
 
 using TypeTestOneInput = std::function<void(FuzzBufferType)>;
 struct FuzzTargetOptions {
-    std::function<void()> init{[] {}};
+    std::function<void()> init{};
+    std::function<void()> cleanup{};
     bool hidden{false};
 };
 

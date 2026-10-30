@@ -14,6 +14,7 @@
 #include <index/db_key.h>
 #include <interfaces/chain.h>
 #include <interfaces/types.h>
+#include <logging.h>
 #include <serialize.h>
 #include <streams.h>
 #include <sync.h>
@@ -95,7 +96,7 @@ BlockFilterIndex::BlockFilterIndex(std::unique_ptr<interfaces::Chain> chain, Blo
     fs::create_directories(path);
 
     m_db = std::make_unique<BaseIndex::DB>(path / "db", n_cache_size, f_memory, f_wipe);
-    m_filter_fileseq = std::make_unique<FlatFileSeq>(std::move(path), "fltr", FLTR_FILE_CHUNK_SIZE);
+    m_filter_fileseq = std::make_unique<FlatFileSeq>(LogInstance(), std::move(path), "fltr", FLTR_FILE_CHUNK_SIZE);
 }
 
 interfaces::Chain::NotifyOptions BlockFilterIndex::CustomOptions()

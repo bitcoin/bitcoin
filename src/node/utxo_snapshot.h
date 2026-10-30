@@ -28,6 +28,9 @@
 inline constexpr std::array<uint8_t, 5> SNAPSHOT_MAGIC_BYTES = {'u', 't', 'x', 'o', 0xff};
 
 class Chainstate;
+namespace util::log {
+class Logger;
+} // namespace util::log
 
 namespace node {
 //! Metadata describing a serialized version of a UTXO set from which an
@@ -120,7 +123,7 @@ bool WriteSnapshotBaseBlockhash(Chainstate& snapshot_chainstate)
 
 //! Read the blockhash of the snapshot base block that was used to construct the
 //! chainstate.
-std::optional<uint256> ReadSnapshotBaseBlockhash(fs::path chaindir)
+std::optional<uint256> ReadSnapshotBaseBlockhash(util::log::Logger* logger, fs::path chaindir)
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 //! Suffix appended to the chainstate (leveldb) dir when created based upon
