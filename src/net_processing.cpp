@@ -108,6 +108,9 @@ static constexpr auto HEADERS_RESPONSE_TIME{2min};
 static constexpr int32_t MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT = 4;
 /** Timeout for (unprotected) outbound peers to sync to our chainwork */
 static constexpr auto CHAIN_SYNC_TIMEOUT{20min};
+/** How many times CHAIN_SYNC_TIMEOUT can be renewed for an outbound peer
+ *  that makes headers sync progress without reaching our tip's work. */
+static constexpr int MAX_HEADERS_SYNC_TIMEOUT_RENEWALS{6};
 /** How frequently to check for stale tips */
 static constexpr auto STALE_CHECK_INTERVAL{10min};
 /** How frequently to check for extra outbound peers and disconnect */
@@ -493,6 +496,10 @@ struct CNodeState {
         std::chrono::seconds m_timeout{0s};
         //! A header with the work we require on our peer's chain
         const CBlockIndex* m_work_header{nullptr};
+        //! The headers sync progress the peer had shown when the timeout was last set
+        int64_t m_headers_sync_progress{0};
+        //! How many times the timeout was renewed because of headers sync progress
+        int m_headers_sync_renewals{0};
         //! After timeout is reached, set to true after sending getheaders
         bool m_sent_getheaders{false};
         //! Whether this peer is protected from disconnection due to a bad/slow chain
@@ -625,7 +632,7 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex, !m_tx_download_mutex, !m_inv_to_send_mutex);
 
     /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
-    void ConsiderEviction(CNode& pto, Peer& peer, std::chrono::seconds time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
+    void ConsiderEviction(CNode& pto, Peer& peer, std::chrono::seconds time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex, !peer.m_headers_sync_mutex);
 
     /** If we have extra outbound peers, try to disconnect the one with the oldest block announcement */
     void EvictExtraOutboundPeers(NodeClock::time_point now) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -5518,11 +5525,19 @@ void PeerManagerImpl::ConsiderEviction(CNode& pto, Peer& peer, std::chrono::seco
         // their chain has more work than ours, we should sync to it,
         // unless it's invalid, in which case we should find that out and
         // disconnect from them elsewhere).
+        // While in headers presync the peer's headers are not stored, so
+        // pindexBestKnownBlock doesn't move until the redownload buffer releases
+        // headers. Progress in both phases is tracked separately to tell a slow
+        // peer from a stalled one.
+        const int64_t headers_sync_progress{WITH_LOCK(peer.m_headers_sync_mutex,
+            return peer.m_headers_sync ? peer.m_headers_sync->GetSyncProgress() : 0)};
         if (state.pindexBestKnownBlock != nullptr && state.pindexBestKnownBlock->nChainWork >= m_chainman.ActiveChain().Tip()->nChainWork) {
             // The outbound peer has sent us a block with at least as much work as our current tip, so reset the timeout if it was set
             if (state.m_chain_sync.m_timeout != 0s) {
                 state.m_chain_sync.m_timeout = 0s;
                 state.m_chain_sync.m_work_header = nullptr;
+                state.m_chain_sync.m_headers_sync_progress = 0;
+                state.m_chain_sync.m_headers_sync_renewals = 0;
                 state.m_chain_sync.m_sent_getheaders = false;
             }
         } else if (state.m_chain_sync.m_timeout == 0s || (state.m_chain_sync.m_work_header != nullptr && state.pindexBestKnownBlock != nullptr && state.pindexBestKnownBlock->nChainWork >= state.m_chain_sync.m_work_header->nChainWork)) {
@@ -5534,6 +5549,17 @@ void PeerManagerImpl::ConsiderEviction(CNode& pto, Peer& peer, std::chrono::seco
             // Either way, set a new timeout based on our current tip.
             state.m_chain_sync.m_timeout = time_in_seconds + CHAIN_SYNC_TIMEOUT;
             state.m_chain_sync.m_work_header = m_chainman.ActiveChain().Tip();
+            state.m_chain_sync.m_headers_sync_progress = headers_sync_progress;
+            state.m_chain_sync.m_sent_getheaders = false;
+        } else if (state.m_chain_sync.m_timeout > 0s && time_in_seconds > state.m_chain_sync.m_timeout &&
+                   headers_sync_progress > state.m_chain_sync.m_headers_sync_progress &&
+                   state.m_chain_sync.m_headers_sync_renewals < MAX_HEADERS_SYNC_TIMEOUT_RENEWALS) {
+            // The peer is not stalled: its headers sync has made progress since the
+            // timeout was set. Give it another full period instead of disconnecting,
+            // a bounded number of times so a very slow peer can't hold the slot.
+            state.m_chain_sync.m_timeout = time_in_seconds + CHAIN_SYNC_TIMEOUT;
+            state.m_chain_sync.m_headers_sync_progress = headers_sync_progress;
+            ++state.m_chain_sync.m_headers_sync_renewals;
             state.m_chain_sync.m_sent_getheaders = false;
         } else if (state.m_chain_sync.m_timeout > 0s && time_in_seconds > state.m_chain_sync.m_timeout) {
             // No evidence yet that our peer has synced to a chain with work equal to that

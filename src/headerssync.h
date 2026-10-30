@@ -134,6 +134,10 @@ public:
     /** Return the amount of work in the chain received during the PRESYNC phase. */
     arith_uint256 GetPresyncWork() const { return m_current_chain_work; }
 
+    /** Return a value that grows with every header accepted in either the
+     *  PRESYNC or the REDOWNLOAD phase. Only meaningful for comparisons. */
+    int64_t GetSyncProgress() const { return m_current_height + m_redownload_buffer_last_height; }
+
     /** Construct a HeadersSyncState object representing a headers sync via this
      *  download-twice mechanism).
      *
