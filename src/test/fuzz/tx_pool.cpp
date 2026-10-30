@@ -374,7 +374,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool_standard)
                 in.prevout = outpoint;
                 in.nSequence = sequence;
                 in.scriptSig = script_sig;
-                in.scriptWitness.stack = script_wit_stack;
+                in.scriptWitness = CScriptWitness{script_wit_stack};
 
                 tx_mut.vin.push_back(in);
             }

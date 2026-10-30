@@ -448,7 +448,7 @@ static void CreateCreditAndSpend(const FillableSigningProvider& keystore, const 
     assert(input.vin[0] == inputm.vin[0]);
     assert(input.vout.size() == 1);
     assert(input.vout[0] == inputm.vout[0]);
-    assert(input.vin[0].scriptWitness.stack == inputm.vin[0].scriptWitness.stack);
+    assert(input.vin[0].scriptWitness == inputm.vin[0].scriptWitness);
 }
 
 static void CheckWithFlag(const CTransactionRef& output, const CMutableTransaction& input, script_verify_flags flags, bool success)
@@ -1395,7 +1395,7 @@ BOOST_AUTO_TEST_CASE(tx_malformed_serialization)
     // A transaction with one input, one output and a one-element witness.
     CMutableTransaction mtx;
     mtx.vin.resize(1);
-    mtx.vin[0].scriptWitness.stack = {{0xaa}};
+    mtx.vin[0].scriptWitness = CScriptWitness{{{0xaa}}};
     mtx.vout.emplace_back(1, CScript{} << OP_TRUE);
     DataStream ser;
     ser << TX_WITH_WITNESS(mtx);
@@ -1412,8 +1412,171 @@ BOOST_AUTO_TEST_CASE(tx_malformed_serialization)
 
     // A flag other than 1 is unknown, including one without the witness bit.
     DataStream bad_flag;
-    bad_flag << mtx.version << uint8_t{0x00} << uint8_t{0x02} << mtx.vin << mtx.vout << mtx.vin[0].scriptWitness.stack << mtx.nLockTime;
+    bad_flag << mtx.version << uint8_t{0x00} << uint8_t{0x02} << mtx.vin << mtx.vout << mtx.vin[0].scriptWitness << mtx.nLockTime;
     BOOST_CHECK_EXCEPTION(bad_flag >> TX_WITH_WITNESS(tx), std::ios_base::failure, HasReason{"Unknown transaction optional data"});
+}
+
+BOOST_AUTO_TEST_CASE(too_many_inputs_or_outputs)
+{
+    // Deserialization fails as soon as a count of inputs or outputs is read that is more than fit in a block, before
+    // reading them (so here, rather than for running out of data), in either format.
+    const auto check{[](bool extended, bool outputs, uint64_t count, const std::string& reason) {
+        DataStream s;
+        s << uint32_t{2};
+        if (extended) s << uint8_t{0} << uint8_t{1};
+        if (outputs) s << std::vector<CTxIn>(1);
+        WriteCompactSize(s, count);
+        CMutableTransaction tx;
+        BOOST_CHECK_EXCEPTION(s >> TX_WITH_WITNESS(tx), std::ios_base::failure, HasReason(reason));
+    }};
+    for (const bool extended : {false, true}) {
+        check(extended, /*outputs=*/false, MAX_BLOCK_WEIGHT / MIN_WEIGHT_PER_TXIN, "end of data");
+        check(extended, /*outputs=*/false, MAX_BLOCK_WEIGHT / MIN_WEIGHT_PER_TXIN + 1, "Too many transaction inputs");
+        check(extended, /*outputs=*/true, MAX_BLOCK_WEIGHT / MIN_WEIGHT_PER_TXOUT, "end of data");
+        check(extended, /*outputs=*/true, MAX_BLOCK_WEIGHT / MIN_WEIGHT_PER_TXOUT + 1, "Too many transaction outputs");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(reject_empty)
+{
+    const auto deser_tx{[](std::span<const unsigned char> data, const TransactionSerParams& params) {
+        CMutableTransaction tx;
+        SpanReader{data} >> params(tx);
+        return tx;
+    }};
+    const auto ser{[](const CMutableTransaction& tx, const TransactionSerParams& params) {
+        std::vector<unsigned char> ret;
+        VectorWriter{ret, 0, params(tx)};
+        return ret;
+    }};
+
+    CMutableTransaction valid;
+    valid.vin.resize(1);
+    valid.vout.resize(1);
+    CMutableTransaction no_outputs;
+    no_outputs.vin.resize(1);
+    const CMutableTransaction empty;
+
+    // A transaction with inputs and outputs is accepted either way.
+    BOOST_CHECK(CTransaction{deser_tx(ser(valid, TX_WITH_WITNESS), TX_WITH_WITNESS_P2P)}.GetWitnessHash() == CTransaction{valid}.GetWitnessHash());
+
+    // A transaction without inputs or outputs (version, 0x00, 0x00, locktime) deserializes normally, but not with
+    // TX_WITH_WITNESS_P2P.
+    const auto empty_ser{ser(empty, TX_WITH_WITNESS)};
+    BOOST_CHECK_EQUAL(empty_ser.size(), 10U);
+    BOOST_CHECK(deser_tx(empty_ser, TX_WITH_WITNESS).vin.empty());
+    BOOST_CHECK_EXCEPTION(deser_tx(empty_ser, TX_WITH_WITNESS_P2P), std::ios_base::failure, HasReason("Transaction without inputs"));
+
+    // A transaction without outputs.
+    const auto no_outputs_ser{ser(no_outputs, TX_WITH_WITNESS)};
+    BOOST_CHECK(deser_tx(no_outputs_ser, TX_WITH_WITNESS).vout.empty());
+    BOOST_CHECK_EXCEPTION(deser_tx(no_outputs_ser, TX_WITH_WITNESS_P2P), std::ios_base::failure, HasReason("Transaction without outputs"));
+
+    // The extended format with no inputs is rejected before the outputs are read (otherwise it fails later, for
+    // having a superfluous witness record).
+    std::vector<unsigned char> ext_no_inputs{0x02, 0, 0, 0, /*marker=*/0, /*flag=*/1, /*inputs=*/0, /*outputs=*/1};
+    ext_no_inputs.resize(ext_no_inputs.size() + 8, 0); // output value
+    ext_no_inputs.push_back(0);                        // empty scriptPubKey
+    ext_no_inputs.resize(ext_no_inputs.size() + 4, 0); // lock time
+    BOOST_CHECK_EXCEPTION(deser_tx(ext_no_inputs, TX_WITH_WITNESS), std::ios_base::failure, HasReason("Superfluous witness record"));
+    BOOST_CHECK_EXCEPTION(deser_tx(ext_no_inputs, TX_WITH_WITNESS_P2P), std::ios_base::failure, HasReason("Transaction without inputs"));
+    // ... even when the outputs that would follow are missing.
+    ext_no_inputs.resize(7);
+    BOOST_CHECK_EXCEPTION(deser_tx(ext_no_inputs, TX_WITH_WITNESS_P2P), std::ios_base::failure, HasReason("Transaction without inputs"));
+
+    // The flag applies to transactions inside blocks too.
+    CBlock block;
+    block.vtx.push_back(MakeTransactionRef(valid));
+    block.vtx.push_back(MakeTransactionRef(empty));
+    std::vector<unsigned char> block_ser;
+    VectorWriter{block_ser, 0, TX_WITH_WITNESS(block)};
+    CBlock block_deser;
+    SpanReader{block_ser} >> TX_WITH_WITNESS(block_deser);
+    BOOST_CHECK_EQUAL(block_deser.vtx.size(), 2U);
+    BOOST_CHECK_EXCEPTION(SpanReader{block_ser} >> TX_WITH_WITNESS_P2P(block_deser), std::ios_base::failure, HasReason("Transaction without inputs"));
+}
+
+BOOST_AUTO_TEST_CASE(weight_limited_deserialization)
+{
+    const auto ser{[](const auto& obj) {
+        std::vector<unsigned char> ret;
+        VectorWriter{ret, 0, TX_WITH_WITNESS(obj)};
+        return ret;
+    }};
+    const auto random_bytes{[&](size_t max_size) {
+        // Sometimes cross a CompactSize encoding boundary.
+        return m_rng.randbytes(m_rng.randbool() ? m_rng.randrange(max_size) : 250 + m_rng.randrange(10));
+    }};
+    const auto random_script{[&] {
+        const auto bytes = random_bytes(40);
+        return CScript(bytes.begin(), bytes.end());
+    }};
+    const auto random_count{[&] {
+        // Sometimes cross a CompactSize encoding boundary.
+        return m_rng.randrange(8) ? m_rng.randrange(3) : 250 + m_rng.randrange(10);
+    }};
+
+    // Transactions with and without witnesses, and the transaction without inputs or outputs (which is not in the
+    // extended format, but starts like it).
+    std::vector<CMutableTransaction> txs(1);
+    for (int i = 0; i < 100; ++i) {
+        CMutableTransaction tx;
+        tx.vin.resize(1 + random_count());
+        tx.vout.resize(random_count());
+        const bool witness{m_rng.randbool()};
+        for (auto& in : tx.vin) {
+            in.scriptSig = random_script();
+            if (witness) {
+                std::vector<std::vector<unsigned char>> stack(m_rng.randrange(4));
+                for (auto& element : stack) element = random_bytes(40);
+                in.scriptWitness = CScriptWitness{stack};
+            }
+        }
+        for (auto& out : tx.vout) out.scriptPubKey = random_script();
+        txs.push_back(tx);
+    }
+
+    // Deserializing a transaction with a weight limit succeeds if and only if the limit is at least its weight, and
+    // then consumes exactly its weight.
+    for (const auto& tx : txs) {
+        const auto data = ser(tx);
+        const auto weight = GetTransactionWeight(CTransaction{tx});
+        for (const uint64_t limit : {uint64_t(weight), uint64_t(weight) + 1, uint64_t(weight) - 1}) {
+            uint64_t weight_left{limit};
+            CMutableTransaction deser;
+            const TransactionSerParams params{.allow_witness = true, .weight_left = &weight_left};
+            if (limit >= uint64_t(weight)) {
+                SpanReader{data} >> params(deser);
+                BOOST_CHECK_EQUAL(weight_left, limit - weight);
+                BOOST_CHECK(CTransaction{deser}.GetWitnessHash() == CTransaction{tx}.GetWitnessHash());
+            } else {
+                BOOST_CHECK_EXCEPTION(SpanReader{data} >> params(deser), std::ios_base::failure, HasReason("Weight limit exceeded"));
+            }
+        }
+    }
+
+    // The limit applies to the transactions of a block together.
+    CBlock block;
+    int64_t txs_weight{0};
+    for (const auto& tx : txs) {
+        if (tx.vin.empty()) continue;
+        block.vtx.push_back(MakeTransactionRef(tx));
+        txs_weight += GetTransactionWeight(*block.vtx.back());
+    }
+    const auto data = ser(block);
+    BOOST_CHECK_EQUAL(GetBlockWeight(block), txs_weight + WITNESS_SCALE_FACTOR * int64_t(80 + 1));
+    for (const auto limit : {txs_weight, txs_weight - 1}) {
+        uint64_t weight_left(limit);
+        CBlock deser;
+        const TransactionSerParams params{.allow_witness = true, .weight_left = &weight_left};
+        if (limit == txs_weight) {
+            SpanReader{data} >> params(deser);
+            BOOST_CHECK_EQUAL(weight_left, 0U);
+            BOOST_CHECK_EQUAL(deser.vtx.size(), block.vtx.size());
+        } else {
+            BOOST_CHECK_EXCEPTION(SpanReader{data} >> params(deser), std::ios_base::failure, HasReason("Weight limit exceeded"));
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

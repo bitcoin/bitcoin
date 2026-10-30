@@ -114,12 +114,13 @@ FUZZ_TARGET(script, .init = initialize_script)
         const auto flags_rand{fuzzed_data_provider.ConsumeIntegral<script_verify_flags::value_type>()};
         const auto flags = script_verify_flags::from_int(flags_rand) | SCRIPT_VERIFY_P2SH;
         {
-            CScriptWitness wit;
+            std::vector<std::vector<unsigned char>> stack;
+            stack.reserve(random_string_vector.size());
             for (const auto& s : random_string_vector) {
-                wit.stack.emplace_back(s.begin(), s.end());
+                stack.emplace_back(s.begin(), s.end());
             }
+            CScriptWitness wit{stack};
             (void)CountWitnessSigOps(script, *other_script, wit, flags);
-            wit.SetNull();
         }
     }
 

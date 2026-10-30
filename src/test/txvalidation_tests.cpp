@@ -468,7 +468,7 @@ BOOST_FIXTURE_TEST_CASE(version3_tests, RegTestingSetup)
         mtx_many_sigops.version = TRUC_VERSION;
         for (const auto& outpoint : multisig_outpoints) {
             mtx_many_sigops.vin.emplace_back(outpoint);
-            mtx_many_sigops.vin.back().scriptWitness.stack.emplace_back(script_multisig.begin(), script_multisig.end());
+            mtx_many_sigops.vin.back().scriptWitness = CScriptWitness{{ToByteVector(script_multisig)}};
         }
         mtx_many_sigops.vout.resize(1);
         mtx_many_sigops.vout.back().scriptPubKey = CScript() << OP_TRUE;

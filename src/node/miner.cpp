@@ -209,7 +209,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
 
     const CTransactionRef& final_coinbase{pblock->vtx[0]};
     if (final_coinbase->HasWitness()) {
-        const auto& witness_stack{final_coinbase->vin[0].scriptWitness.stack};
+        const auto& witness_stack{final_coinbase->vin[0].scriptWitness};
         // Consensus requires the coinbase witness stack to have exactly one
         // element of 32 bytes.
         Assert(witness_stack.size() == 1 && witness_stack[0].size() == 32);

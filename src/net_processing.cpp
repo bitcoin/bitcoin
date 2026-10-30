@@ -14,6 +14,7 @@
 #include <chainparams.h>
 #include <common/bloom.h>
 #include <consensus/amount.h>
+#include <consensus/consensus.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
 #include <core_memusage.h>
@@ -110,6 +111,9 @@ static constexpr int32_t MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT = 4;
 static constexpr auto CHAIN_SYNC_TIMEOUT{20min};
 /** How frequently to check for stale tips */
 static constexpr auto STALE_CHECK_INTERVAL{10min};
+/** The total weight that the transactions of a valid block can have: MAX_BLOCK_WEIGHT minus that of
+ *  the block's header (80 bytes) and (at least a 1-byte) transaction count. */
+static constexpr uint64_t MAX_BLOCK_TXS_WEIGHT{MAX_BLOCK_WEIGHT - WITNESS_SCALE_FACTOR * (80 + 1)};
 /** How frequently to check for extra outbound peers and disconnect */
 static constexpr auto EXTRA_PEER_CHECK_INTERVAL{45s};
 /** Minimum time an outbound-peer-eviction candidate must be connected for, in order to evict */
@@ -2249,7 +2253,7 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
 
     uint256 hashBlock(pblock->GetHash());
     const std::shared_future<CSerializedNetMsg> lazy_ser{
-        std::async(std::launch::deferred, [&] { return NetMsg::Make(NetMsgType::CMPCTBLOCK, *pcmpctblock); })};
+        std::async(std::launch::deferred, [&] { return NetMsg::Make(NetMsgType::CMPCTBLOCK, TX_WITH_WITNESS(*pcmpctblock)); })};
 
     {
         auto most_recent_block_txs = std::make_unique<std::map<GenTxid, CTransactionRef>>();
@@ -2714,10 +2718,10 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
             // instead we respond with the full, non-compact block.
             if (can_direct_fetch && pindex->nHeight >= tip->nHeight - MAX_CMPCTBLOCK_DEPTH) {
                 if (a_recent_compact_block && a_recent_compact_block->header.GetHash() == inv.hash) {
-                    MakeAndPushMessage(pfrom, NetMsgType::CMPCTBLOCK, *a_recent_compact_block);
+                    MakeAndPushMessage(pfrom, NetMsgType::CMPCTBLOCK, TX_WITH_WITNESS(*a_recent_compact_block));
                 } else {
                     CBlockHeaderAndShortTxIDs cmpctblock{*pblock, m_rng.rand64()};
-                    MakeAndPushMessage(pfrom, NetMsgType::CMPCTBLOCK, cmpctblock);
+                    MakeAndPushMessage(pfrom, NetMsgType::CMPCTBLOCK, TX_WITH_WITNESS(cmpctblock));
                 }
             } else {
                 MakeAndPushMessage(pfrom, NetMsgType::BLOCK, TX_WITH_WITNESS(*pblock));
@@ -2864,7 +2868,7 @@ void PeerManagerImpl::SendBlockTransactions(CNode& pfrom, Peer& peer, const CBlo
             LogTrace(BCLog::CMPCTBLOCK, "%s sent a GETBLOCKTXN for block %s requesting the following transactions: %s", pfrom.LogPeer(), block.GetHash().ToString(), missing_txids);
         }
     }
-    MakeAndPushMessage(pfrom, NetMsgType::BLOCKTXN, resp);
+    MakeAndPushMessage(pfrom, NetMsgType::BLOCKTXN, TX_WITH_WITNESS(resp));
 }
 
 bool PeerManagerImpl::CheckHeadersPoW(const std::vector<CBlockHeader>& headers, Peer& peer)
@@ -4724,7 +4728,9 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         if (m_chainman.IsInitialBlockDownload()) return;
 
         CTransactionRef ptx;
-        vRecv >> TX_WITH_WITNESS(ptx);
+        // A transaction that does not fit in a valid block cannot be valid.
+        uint64_t weight_left{MAX_BLOCK_TXS_WEIGHT};
+        vRecv >> TxWithWitnessP2P(weight_left)(ptx);
 
         const Txid& txid = ptx->GetHash();
         const Wtxid& wtxid = ptx->GetWitnessHash();
@@ -4808,7 +4814,10 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         }
 
         CBlockHeaderAndShortTxIDs cmpctblock;
-        vRecv >> cmpctblock;
+        // The prefilled transactions are part of the block, so stop deserializing as soon as they exceed the weight
+        // that the transactions of a valid block can have.
+        uint64_t weight_left{MAX_BLOCK_TXS_WEIGHT};
+        vRecv >> TxWithWitnessP2P(weight_left)(cmpctblock);
 
         bool received_new_header = false;
         const auto blockhash = cmpctblock.header.GetHash();
@@ -5062,7 +5071,10 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         }
 
         BlockTransactions resp;
-        vRecv >> resp;
+        // The transactions are part of the block, so stop deserializing as soon as they exceed the weight that the
+        // transactions of a valid block can have (not accounting for those of the block that are already known).
+        uint64_t weight_left{MAX_BLOCK_TXS_WEIGHT};
+        vRecv >> TxWithWitnessP2P(weight_left)(resp);
 
         return ProcessCompactBlockTxns(pfrom, peer, resp);
     }
@@ -5117,7 +5129,10 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         }
 
         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
-        vRecv >> TX_WITH_WITNESS(*pblock);
+        // Stop deserializing as soon as the transactions read exceed the weight that the transactions of a valid
+        // block can have.
+        uint64_t weight_left{MAX_BLOCK_TXS_WEIGHT};
+        vRecv >> TxWithWitnessP2P(weight_left)(*pblock);
 
         LogDebug(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom.GetId());
 
@@ -6245,7 +6260,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                     {
                         LOCK(m_most_recent_block_mutex);
                         if (m_most_recent_block_hash == pBestIndex->GetBlockHash()) {
-                            cached_cmpctblock_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, *m_most_recent_compact_block);
+                            cached_cmpctblock_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, TX_WITH_WITNESS(*m_most_recent_compact_block));
                         }
                     }
                     if (cached_cmpctblock_msg.has_value()) {
@@ -6255,7 +6270,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                         const bool ret{m_chainman.m_blockman.ReadBlock(block, *pBestIndex)};
                         assert(ret);
                         CBlockHeaderAndShortTxIDs cmpctblock{block, m_rng.rand64()};
-                        MakeAndPushMessage(node, NetMsgType::CMPCTBLOCK, cmpctblock);
+                        MakeAndPushMessage(node, NetMsgType::CMPCTBLOCK, TX_WITH_WITNESS(cmpctblock));
                     }
                     state.pindexBestHeaderSent = pBestIndex;
                 } else if (peer.m_prefers_headers) {

@@ -64,7 +64,7 @@ static CTransactionRef MakeTransactionSpending(const std::vector<COutPoint>& out
         tx.vin.emplace_back(outpoint);
     }
     if (add_witness) {
-        tx.vin[0].scriptWitness.stack.push_back({1});
+        tx.vin[0].scriptWitness = CScriptWitness{{{1}}};
     }
     for (size_t o = 0; o < num_outputs; ++o) tx.vout.emplace_back(CENT, P2WSH_OP_TRUE);
     return MakeTransactionRef(tx);

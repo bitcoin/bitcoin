@@ -52,6 +52,23 @@ FUZZ_TARGET(transaction, .init = initialize_transaction)
         return;
     }
 
+    // Deserializing the transaction with a weight budget succeeds if and only if the budget is at least its weight, and
+    // then subtracts exactly its weight from the budget.
+    const uint64_t weight = GetTransactionWeight(tx);
+    for (const uint64_t budget : {uint64_t{0}, weight / 2, weight - 1, weight, weight + 1}) {
+        uint64_t weight_left{budget};
+        CMutableTransaction budget_tx;
+        const TransactionSerParams params{.allow_witness = true, .weight_left = &weight_left};
+        try {
+            SpanReader{buffer} >> params(budget_tx);
+            assert(budget >= weight);
+            assert(weight_left == budget - weight);
+            assert(CTransaction{budget_tx}.GetWitnessHash() == tx.GetWitnessHash());
+        } catch (const std::ios_base::failure&) {
+            assert(budget < weight);
+        }
+    }
+
     {
         TxValidationState state_with_dupe_check;
         const bool res{CheckTransaction(tx, state_with_dupe_check)};

@@ -57,10 +57,10 @@ BOOST_AUTO_TEST_CASE(bip352_send_and_receive_test_vectors)
                 const auto& script_sig_bytes = ParseHex(input["scriptSig"].get_str());
                 CScript script_sig = CScript(script_sig_bytes.begin(), script_sig_bytes.end());
                 CTxIn txin{outpoint, script_sig};
-                // read the field txWitness as a stream and write txWitness >> witness.stack;
+                // Deserialize the txinwitness field into txin.scriptWitness.
                 const auto witness_str = ParseHex(input["txinwitness"].get_str());
                 if (!witness_str.empty()) {
-                    SpanReader(witness_str) >> txin.scriptWitness.stack;
+                    SpanReader(witness_str) >> txin.scriptWitness;
                 }
 
                 // check if this is a silent payments input by trying to extract the public key
@@ -134,10 +134,10 @@ BOOST_AUTO_TEST_CASE(bip352_send_and_receive_test_vectors)
                 const auto& script_sig_bytes = ParseHex(input["scriptSig"].get_str());
                 CScript script_sig = CScript(script_sig_bytes.begin(), script_sig_bytes.end());
                 CTxIn txin{outpoint, script_sig};
-                // read the field txWitness as a stream and write txWitness >> witness.stack;
+                // Deserialize the txinwitness field into txin.scriptWitness.
                 const auto witness_str = ParseHex(input["txinwitness"].get_str());
                 if (!witness_str.empty()) {
-                    SpanReader(witness_str) >> txin.scriptWitness.stack;
+                    SpanReader(witness_str) >> txin.scriptWitness;
                 }
                 vin.push_back(txin);
                 coins[outpoint] = Coin{CTxOut{{}, spk}, 0, false};
@@ -232,8 +232,7 @@ BOOST_AUTO_TEST_CASE(bip352_skips_transactions_spending_unknown_segwit_versions)
     COutPoint unknown_segwit_outpoint{Txid::FromHex("0000000000000000000000000000000000000000000000000000000000000002").value(), 0};
 
     CTxIn eligible_input{eligible_outpoint};
-    eligible_input.scriptWitness.stack.emplace_back(64, 0);
-    eligible_input.scriptWitness.stack.emplace_back(pubkey.begin(), pubkey.end());
+    eligible_input.scriptWitness = CScriptWitness{{std::vector<unsigned char>(64, 0), {pubkey.begin(), pubkey.end()}}};
 
     std::map<COutPoint, Coin> coins;
     coins[eligible_outpoint] = Coin{CTxOut{{}, GetScriptForDestination(WitnessV0KeyHash{pubkey})}, 0, false};
@@ -258,8 +257,7 @@ BOOST_AUTO_TEST_CASE(bip352_scan_skips_invalid_taproot_outputs)
 
     CTxIn txin{outpoint};
     const CPubKey sender_pubkey{sender_key.GetPubKey()};
-    txin.scriptWitness.stack.emplace_back();
-    txin.scriptWitness.stack.emplace_back(sender_pubkey.begin(), sender_pubkey.end());
+    txin.scriptWitness = CScriptWitness{{{}, {sender_pubkey.begin(), sender_pubkey.end()}}};
 
     std::map<COutPoint, Coin> coins;
     coins[outpoint] = Coin{CTxOut{{}, GetScriptForDestination(WitnessV0KeyHash{sender_pubkey})}, 0, false};
