@@ -13,7 +13,9 @@ from test_framework.util import (
     assert_equal,
 )
 
+from test_framework.address import base58_to_byte
 from test_framework.descriptors import descsum_create
+from test_framework.psbt import PSBT, PSBT_GLOBAL_XPUB
 
 
 class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
@@ -34,6 +36,22 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
         # Keep all key origin information (master key fingerprint and all derivation steps) for proper support of hardware devices
         # See section 'Key origin identification' in 'doc/descriptors.md' for more details...
         return f"{hdkey_info['origin']}{hdkey_info['xpub']}/<0;1>/*"
+
+    @staticmethod
+    def _split_key_expression(xpub_expr):
+        """Split "[fingerprint/path]xpub/<0;1>/*" into the fingerprint, the path and the xpub."""
+        origin, _, rest = xpub_expr.partition("]")
+        fingerprint, _, path = origin.lstrip("[").partition("/")
+        return fingerprint, f"m/{path}", rest.split("/")[0]
+
+    def _check_global_xpubs(self, psbt, xpub_exprs, multisig):
+        """Every co-signer's extended key belongs in the PSBT, with the origin that leads
+        to it, so that a signer holding only the file can tell which key in the script is
+        its own."""
+        got = multisig.decodepsbt(psbt)["global_xpubs"]
+        expected = [self._split_key_expression(x) for x in xpub_exprs]
+        assert_equal(sorted((g["master_fingerprint"], g["path"], g["xpub"]) for g in got),
+                     sorted(expected))
 
     @staticmethod
     def _check_psbt(psbt, to, value, multisig):
@@ -63,6 +81,202 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
             ])
             assert all(r["success"] for r in result)
             yield multisig
+
+    def test_change_descriptor_publishes(self, signers, coordinator):
+        """The internal descriptor publishes on its own, reaching the PSBT through the
+        change output while every input belongs to the external one. A wallet whose two
+        descriptors share their keys cannot show this, since both then contribute the
+        same entries."""
+        def account(signer, path):
+            info = signer.derivehdkey(path)
+            return f"{info['origin']}{info['xpub']}/0/*"
+
+        receiving = [account(signer, "m/44h/1h/0h") for signer in signers]
+        change = [account(signer, "m/44h/1h/1h") for signer in signers]
+        wallet = self.node.get_wallet_rpc(self.node.createwallet(
+            wallet_name="split_change_multisig", blank=True, disable_private_keys=True)["name"])
+        result = wallet.importdescriptors([
+            {"desc": descsum_create(f"wsh(sortedmulti({self.M},{','.join(receiving)}))"),
+             "active": True, "timestamp": "now"},
+            {"desc": descsum_create(f"wsh(sortedmulti({self.M},{','.join(change)}))"),
+             "active": True, "internal": True, "timestamp": "now"},
+        ])
+        assert all(r["success"] for r in result)
+
+        coordinator.sendtoaddress(wallet.getnewaddress(), 1)
+        self.generate(self.node, 1)
+        funded = wallet.walletcreatefundedpsbt(inputs=[], outputs={coordinator.getnewaddress(): 0.5}, feeRate=0.00010)
+        assert funded["changepos"] != -1, "the case needs a change output"
+        self._check_global_xpubs(funded["psbt"], receiving + change, wallet)
+
+    def _check_publishes_nothing(self, wallet, coordinator):
+        """Fund the wallet and check that its PSBT carries derivation paths but no extended key."""
+        coordinator.sendtoaddress(wallet.getnewaddress(), 1)
+        self.generate(self.node, 1)
+        funded = wallet.walletcreatefundedpsbt(inputs=[], outputs={coordinator.getnewaddress(): 0.5}, feeRate=0.00010)
+        decoded = wallet.decodepsbt(funded["psbt"])
+        assert decoded["inputs"][0]["bip32_derivs"], "the case needs derivation paths to check against"
+        assert_equal(decoded["global_xpubs"], [])
+
+    def test_hardened_derivation_publishes_nothing(self, signers, coordinator):
+        """With hardened derivation down to the keys themselves, there is no key that
+        derives them without the private key. The descriptor then offers its root keys,
+        and those must stay out of the PSBT."""
+        keys = [signer.derivehdkey("m/45h", private=True) for signer in signers[:2]]
+
+        def descriptor(branch):
+            return descsum_create(f"wsh(multi(2,{','.join(k['origin'] + k['xprv'] + f'/{branch}h/*h' for k in keys)}))")
+
+        wallet = self.node.get_wallet_rpc(self.node.createwallet(wallet_name="hardened_multisig", blank=True)["name"])
+        result = wallet.importdescriptors([
+            {"desc": descriptor(0), "active": True, "timestamp": "now"},
+            {"desc": descriptor(1), "active": True, "internal": True, "timestamp": "now"},
+        ])
+        assert all(r["success"] for r in result)
+        self._check_publishes_nothing(wallet, coordinator)
+
+        # A path in a PSBT is only what its sender claims. Here a stranger's key is claimed at
+        # the root's origin, once in each derivation map, and the root still has to stay out.
+        stranger = coordinator.getaddressinfo(coordinator.getnewaddress(address_type="bech32"))["pubkey"]
+        forged = [descsum_create(f"wpkh({keys[0]['origin']}{stranger})"), descsum_create(f"tr({keys[0]['origin']}{stranger[2:]})")]
+        outputs = {wallet.getnewaddress(): 0.1} | {self.node.deriveaddresses(desc)[0]: 0.1 for desc in forged}
+        psbt = coordinator.walletcreatefundedpsbt(inputs=[], outputs=outputs, feeRate=0.00010, bip32derivs=False)["psbt"]
+        psbt = self.node.descriptorprocesspsbt(psbt, forged, bip32derivs=True, finalize=False)["psbt"]
+        decoded = wallet.decodepsbt(wallet.walletprocesspsbt(psbt, sign=False)["psbt"])
+        claims = [d for out in decoded["outputs"] for d in out.get("bip32_derivs", []) + out.get("taproot_bip32_derivs", [])
+                  if d["path"] == "m/45h"]
+        assert_equal(len(claims), len(forged))
+        assert_equal(decoded["global_xpubs"], [])
+
+        # Nor does a key the root derives through a path the descriptor never uses, however long.
+        # The wallet derives nothing for a key it did not produce, so the root stays out.
+        unproduced = descsum_create(f"wpkh({keys[0]['origin']}{keys[0]['xpub']}{'/1' * 200})")
+        outputs = {wallet.getnewaddress(): 0.1, self.node.deriveaddresses(unproduced)[0]: 0.1}
+        psbt = coordinator.walletcreatefundedpsbt(inputs=[], outputs=outputs, feeRate=0.00010, bip32derivs=False)["psbt"]
+        psbt = self.node.descriptorprocesspsbt(psbt, [unproduced], bip32derivs=True, finalize=False)["psbt"]
+        decoded = wallet.decodepsbt(wallet.walletprocesspsbt(psbt, sign=False)["psbt"])
+        assert any(d["path"].count("/") > 200 for out in decoded["outputs"] for d in out.get("bip32_derivs", [])), "the case needs the long path"
+        assert_equal(decoded["global_xpubs"], [])
+
+    def test_keys_without_origin_publish_nothing(self, signers, coordinator):
+        """An account xpub written without its origin has a path too short for its
+        depth, which BIP 174 does not allow, so it stays out of the PSBT."""
+        accounts = [signer.derivehdkey("m/48h/1h/0h/2h")["xpub"] for signer in signers[:2]]
+        wallet = self.node.get_wallet_rpc(self.node.createwallet(
+            wallet_name="no_origin_multisig", blank=True, disable_private_keys=True)["name"])
+        result = wallet.importdescriptors([
+            {"desc": descsum_create(f"wsh(multi(2,{','.join(x + '/<0;1>/*' for x in accounts)}))"),
+             "active": True, "timestamp": "now"},
+        ])
+        assert all(r["success"] for r in result)
+        self._check_publishes_nothing(wallet, coordinator)
+
+    def test_single_key_publishes_its_accounts(self, coordinator):
+        """A single key wallet publishes the account key its input and its change derive
+        from, whatever the address type, taproot included."""
+        wallet = self.node.get_wallet_rpc(self.node.createwallet(wallet_name="single_key")["name"])
+        for address_type in ["legacy", "p2sh-segwit", "bech32", "bech32m"]:
+            address = wallet.getnewaddress(address_type=address_type)
+            coordinator.sendtoaddress(address, 1)
+            self.generate(self.node, 1)
+            utxo = next(u for u in wallet.listunspent() if u["address"] == address)
+            funded = wallet.walletcreatefundedpsbt(inputs=[{"txid": utxo["txid"], "vout": utxo["vout"]}],
+                                                   outputs={coordinator.getnewaddress(): 0.5},
+                                                   add_inputs=False, change_type=address_type, feeRate=0.00010)
+            assert funded["changepos"] != -1, "the case needs a change output"
+            # The receiving and change descriptors of an address type share their account key.
+            parent_desc = wallet.getaddressinfo(address)["parent_desc"]
+            self._check_global_xpubs(funded["psbt"], [parent_desc[parent_desc.index("["):]], wallet)
+
+    def test_one_record_per_xpub(self, coordinator):
+        """BIP 174 allows one record per xpub. When the key reaches the PSBT under a second
+        origin, from another descriptor, from the same descriptor or from whoever sent the
+        PSBT, the record already there stays and no second one is written."""
+        account = coordinator.derivehdkey("m/84h/1h/0h")
+        real, placeholder = account["origin"], "[00000000/84h/1h/0h]"
+        either = {(real[1:9], "m/84h/1h/0h"), ("00000000", "m/84h/1h/0h")}
+
+        def records(wallet, psbt):
+            return [(x["master_fingerprint"], x["path"]) for x in wallet.decodepsbt(psbt)["global_xpubs"]]
+
+        def funded_watch_only(name, descriptors):
+            wallet = self.node.get_wallet_rpc(self.node.createwallet(wallet_name=name, blank=True, disable_private_keys=True)["name"])
+            result = wallet.importdescriptors([{"desc": descsum_create(desc), "active": True, "internal": internal, "timestamp": "now"}
+                                               for desc, internal in descriptors])
+            assert all(r["success"] for r in result)
+            coordinator.sendtoaddress(wallet.getnewaddress(), 1)
+            self.generate(self.node, 1)
+            return wallet
+
+        # The receiving and change descriptors carry the key under different origins.
+        wallet = funded_watch_only("xpub_in_two_descriptors", [(f"wpkh({real}{account['xpub']}/0/*)", False),
+                                                               (f"wpkh({placeholder}{account['xpub']}/1/*)", True)])
+        got = records(wallet, wallet.walletcreatefundedpsbt(inputs=[], outputs={coordinator.getnewaddress(): 0.5}, feeRate=0.00010)["psbt"])
+        assert_equal(len(got), 1)
+        assert got[0] in either, got
+
+        # One descriptor lists the key twice, under different origins.
+        wallet = funded_watch_only("xpub_twice_in_one_descriptor",
+                                   [(f"wsh(multi(1,{real}{account['xpub']}/0/*,{placeholder}{account['xpub']}/1/*))", False)])
+        got = records(wallet, wallet.walletcreatefundedpsbt(inputs=[], outputs={coordinator.getnewaddress(): 0.5}, feeRate=0.00010,
+                                                            changeAddress=coordinator.getnewaddress())["psbt"])
+        assert_equal(len(got), 1)
+        assert got[0] in either, got
+
+        # The PSBT already lists the key under another origin, and that record is the one that stays.
+        # Input and change are both on that account, so the wallet does reach the key.
+        utxo = next(u for u in coordinator.listunspent() if u["desc"].startswith("wpkh(") and u["amount"] > 1)
+        bare = PSBT.from_base64(coordinator.walletcreatefundedpsbt(inputs=[{"txid": utxo["txid"], "vout": utxo["vout"]}],
+                                                                   outputs={coordinator.getnewaddress(): 0.5}, add_inputs=False,
+                                                                   change_type="bech32", feeRate=0.00010, bip32derivs=False)["psbt"])
+        xpub_data, version = base58_to_byte(account["xpub"])
+        bare.g.map[bytes([PSBT_GLOBAL_XPUB, version]) + xpub_data] = bytes.fromhex("00000000" "54000080" "01000080" "00000080")
+        processed = coordinator.walletprocesspsbt(bare.to_base64(), sign=False)["psbt"]
+        assert_equal(records(coordinator, processed), [("00000000", "m/84h/1h/0h")])
+
+    def test_keys_sharing_an_origin(self, signers, coordinator):
+        """Keys written under one origin are judged one by one. One that breaks the depth
+        rule does not take the account key beside it out, and a root that derives none of
+        the transaction's keys does not come in with it."""
+        def funded(name, desc, private):
+            wallet = self.node.get_wallet_rpc(self.node.createwallet(wallet_name=name, blank=True, disable_private_keys=not private)["name"])
+            result = wallet.importdescriptors([{"desc": descsum_create(desc), "active": True, "timestamp": "now"}])
+            assert all(r["success"] for r in result)
+            coordinator.sendtoaddress(wallet.getnewaddress(), 1)
+            self.generate(self.node, 1)
+            psbt = wallet.walletcreatefundedpsbt(inputs=[], outputs={coordinator.getnewaddress(): 0.5}, feeRate=0.00010,
+                                                 changeAddress=coordinator.getnewaddress())["psbt"]
+            return wallet, psbt
+
+        # A master key under an account's origin breaks the depth rule.
+        account = f"[00000000/48h/1h/0h/2h]{signers[0].derivehdkey('m/48h/1h/0h/2h')['xpub']}/0/*"
+        master = f"[00000000/48h/1h/0h/2h]{signers[1].gethdkeys()[0]['xpub']}/0/*"
+        wallet, psbt = funded("master_beside_account", f"wsh(multi(1,{account},{master}))", private=False)
+        self._check_global_xpubs(psbt, [account], wallet)
+
+        # A root with hardened steps below it derives none of the keys.
+        account = f"[00000000/48h]{signers[0].derivehdkey('m/48h')['xpub']}/0/*"
+        root = f"[00000000/48h]{signers[1].derivehdkey('m/48h', private=True)['xprv']}/*h"
+        wallet, psbt = funded("root_beside_account", f"wsh(multi(1,{account},{root}))", private=True)
+        self._check_global_xpubs(psbt, [account], wallet)
+
+    def test_own_key_under_another_origin(self, coordinator):
+        """A key the descriptor produced counts only at the origin the descriptor gave it, so
+        a PSBT that lists the wallet's key under another origin gets no extended key for it."""
+        account = coordinator.derivehdkey("m/84h/1h/0h")
+        wallet = self.node.get_wallet_rpc(self.node.createwallet(
+            wallet_name="own_key_under_another_origin", blank=True, disable_private_keys=True)["name"])
+        result = wallet.importdescriptors([{"desc": descsum_create(f"wpkh({account['origin']}{account['xpub']}/0/*)"),
+                                            "active": True, "timestamp": "now"}])
+        assert all(r["success"] for r in result)
+        address = wallet.getnewaddress()
+        psbt = coordinator.walletcreatefundedpsbt(inputs=[], outputs={address: 0.1}, feeRate=0.00010, bip32derivs=False)["psbt"]
+        psbt = self.node.descriptorprocesspsbt(psbt, [descsum_create(f"wpkh([00000000/84h/1h/0h]{account['xpub']}/0/*)")],
+                                               bip32derivs=True, finalize=False)["psbt"]
+        decoded = wallet.decodepsbt(wallet.walletprocesspsbt(psbt, sign=False)["psbt"])
+        output = next(out for out in decoded["outputs"] if out["script"]["address"] == address)
+        assert_equal([d["master_fingerprint"] for d in output["bip32_derivs"]], ["00000000"])
+        assert_equal(decoded["global_xpubs"], [])
 
     def run_test(self):
         self.M = 2
@@ -113,6 +327,20 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
         self.log.info("First, make a sending transaction, created using `walletcreatefundedpsbt` (anyone can initiate this)...")
         psbt = participants["multisigs"][0].walletcreatefundedpsbt(inputs=[], outputs={to: value}, feeRate=0.00010)
 
+        self.log.info("The psbt carries every co-signer's xpub, and does not when bip32derivs is off...")
+        self._check_global_xpubs(psbt["psbt"], xpubs, participants["multisigs"][0])
+        no_derivs = participants["multisigs"][0].walletcreatefundedpsbt(inputs=[], outputs={to: value}, feeRate=0.00010, bip32derivs=False)
+        assert_equal(participants["multisigs"][0].decodepsbt(no_derivs["psbt"])["global_xpubs"], [])
+
+        self.log.info("A signer holding one of the keys adds no xpub to a psbt that is not its own...")
+        # The paths come from descriptorprocesspsbt, which adds no xpub: in a psbt that already carries
+        # the co-signers' xpubs, the signer's own is one of them, and adding it again would change nothing.
+        multisig_desc = descsum_create(f"wsh(sortedmulti({self.M},{','.join(xpubs)}))")
+        with_paths = self.node.descriptorprocesspsbt(no_derivs["psbt"], [multisig_desc], bip32derivs=True, finalize=False)["psbt"]
+        signed = self.node.decodepsbt(participants["signers"][1].walletprocesspsbt(with_paths, finalize=False)["psbt"])
+        assert signed["inputs"][0].get("partial_signatures"), "the signer has to reach the input through the key it holds"
+        assert_equal(signed["global_xpubs"], [])
+
         psbts = []
         self.log.info("Now at least M users check the psbt with decodepsbt and (if OK) signs it with walletprocesspsbt...")
         for m in range(self.M):
@@ -147,6 +375,27 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
         self.generate(self.node, 1)
         assert_approx(participants["multisigs"][0].getbalance(), deposit_amount - (value * 2), vspan=0.001)
         assert_equal(participants["signers"][self.N - 1].getbalance(), value * 2)
+
+        self.log.info("The change descriptor publishes its own keys, even with no input of its own...")
+        self.test_change_descriptor_publishes(participants["signers"], coordinator_wallet)
+
+        self.log.info("Root keys a hardened path runs below stay out of the PSBT...")
+        self.test_hardened_derivation_publishes_nothing(participants["signers"], coordinator_wallet)
+
+        self.log.info("So do keys written without their origin...")
+        self.test_keys_without_origin_publish_nothing(participants["signers"], coordinator_wallet)
+
+        self.log.info("A single key wallet publishes the account key behind its input and change, for every address type...")
+        self.test_single_key_publishes_its_accounts(coordinator_wallet)
+
+        self.log.info("An xpub gets one record, whichever way a second origin for it reaches the psbt...")
+        self.test_one_record_per_xpub(coordinator_wallet)
+
+        self.log.info("Keys that share an origin are judged one by one...")
+        self.test_keys_sharing_an_origin(participants["signers"], coordinator_wallet)
+
+        self.log.info("A key counts only at the origin its descriptor gave it...")
+        self.test_own_key_under_another_origin(coordinator_wallet)
 
 
 if __name__ == "__main__":

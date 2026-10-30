@@ -1948,7 +1948,7 @@ static RPCMethod joinpsbts()
         for (const PSBTOutput& output : psbt.outputs) {
             merged_psbt.AddOutput(output);
         }
-        merged_psbt.MergeGlobalXPubs(psbt);
+        merged_psbt.MergeGlobalXPubs(psbt.m_xpubs);
         merged_psbt.m_proprietary.insert(psbt.m_proprietary.begin(), psbt.m_proprietary.end());
         merged_psbt.unknown.insert(psbt.unknown.begin(), psbt.unknown.end());
     }

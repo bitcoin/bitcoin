@@ -52,7 +52,7 @@ bool PartiallySignedTransaction::Merge(const PartiallySignedTransaction& psbt)
     for (unsigned int i = 0; i < outputs.size(); ++i) {
         outputs[i].Merge(psbt.outputs[i]);
     }
-    MergeGlobalXPubs(psbt);
+    MergeGlobalXPubs(psbt.m_xpubs);
     if (fallback_locktime == std::nullopt && psbt.fallback_locktime != std::nullopt) fallback_locktime = psbt.fallback_locktime;
 
     // Set m_tx_modifiable only if either PSBT had it set
@@ -73,10 +73,10 @@ bool PartiallySignedTransaction::Merge(const PartiallySignedTransaction& psbt)
     return true;
 }
 
-void PartiallySignedTransaction::MergeGlobalXPubs(const PartiallySignedTransaction& psbt)
+void PartiallySignedTransaction::MergeGlobalXPubs(const std::map<KeyOriginInfo, std::set<CExtPubKey>>& xpubs)
 {
-    for (const auto& [origin, xpubs] : psbt.m_xpubs) {
-        for (const CExtPubKey& xpub : xpubs) {
+    for (const auto& [origin, keys] : xpubs) {
+        for (const CExtPubKey& xpub : keys) {
             const bool known{std::ranges::any_of(m_xpubs, [&](const auto& entry) { return entry.second.contains(xpub); })};
             if (!known) m_xpubs[origin].insert(xpub);
         }
