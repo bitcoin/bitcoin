@@ -47,6 +47,15 @@
 using node::GetTransaction;
 using node::NodeContext;
 
+static Consensus::LLMQType ParseLLMQType(const UniValue& value)
+{
+    const auto llmq_type{static_cast<Consensus::LLMQType>(value.getInt<uint8_t>())};
+    if (!Params().GetLLMQ(llmq_type).has_value()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
+    }
+    return llmq_type;
+}
+
 static RPCHelpMan quorum_list()
 {
     return RPCHelpMan{"quorum list",
@@ -288,10 +297,7 @@ static RPCHelpMan quorum_info()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
-    const Consensus::LLMQType llmqType{static_cast<Consensus::LLMQType>(request.params[0].getInt<int>())};
-    if (!Params().GetLLMQ(llmqType).has_value()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
-    }
+    const Consensus::LLMQType llmqType{ParseLLMQType(request.params[0])};
 
     const uint256 quorumHash(ParseHashV(request.params[1], "quorumHash"));
     bool includeSkShare = false;
@@ -615,7 +621,7 @@ static RPCHelpMan quorum_sign()
         RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const Consensus::LLMQType llmqType{static_cast<Consensus::LLMQType>(request.params[0].getInt<int>())};
+    const Consensus::LLMQType llmqType{ParseLLMQType(request.params[0])};
 
     JSONRPCRequest new_request{request};
     new_request.params.setArray();
@@ -685,12 +691,10 @@ static RPCHelpMan quorum_verify()
     const ChainstateManager& chainman = EnsureChainman(node);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
-    const Consensus::LLMQType llmqType{static_cast<Consensus::LLMQType>(request.params[0].getInt<int>())};
+    const Consensus::LLMQType llmqType{ParseLLMQType(request.params[0])};
 
     const auto llmq_params_opt = Params().GetLLMQ(llmqType);
-    if (!llmq_params_opt.has_value()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
-    }
+    CHECK_NONFATAL(llmq_params_opt.has_value());
 
     const uint256 id(ParseHashV(request.params[1], "id"));
     const uint256 msgHash(ParseHashV(request.params[2], "msgHash"));
@@ -739,10 +743,7 @@ static RPCHelpMan quorum_hasrecsig()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
-    const Consensus::LLMQType llmqType{static_cast<Consensus::LLMQType>(request.params[0].getInt<int>())};
-    if (!Params().GetLLMQ(llmqType).has_value()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
-    }
+    const Consensus::LLMQType llmqType{ParseLLMQType(request.params[0])};
 
     const uint256 id(ParseHashV(request.params[1], "id"));
     const uint256 msgHash(ParseHashV(request.params[2], "msgHash"));
@@ -768,10 +769,7 @@ static RPCHelpMan quorum_getrecsig()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
-    const Consensus::LLMQType llmqType{static_cast<Consensus::LLMQType>(request.params[0].getInt<int>())};
-    if (!Params().GetLLMQ(llmqType).has_value()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
-    }
+    const Consensus::LLMQType llmqType{ParseLLMQType(request.params[0])};
 
     const uint256 id(ParseHashV(request.params[1], "id"));
     const uint256 msgHash(ParseHashV(request.params[2], "msgHash"));
@@ -801,10 +799,7 @@ static RPCHelpMan quorum_isconflicting()
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
-    const Consensus::LLMQType llmqType{static_cast<Consensus::LLMQType>(request.params[0].getInt<int>())};
-    if (!Params().GetLLMQ(llmqType).has_value()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
-    }
+    const Consensus::LLMQType llmqType{ParseLLMQType(request.params[0])};
 
     const uint256 id(ParseHashV(request.params[1], "id"));
     const uint256 msgHash(ParseHashV(request.params[2], "msgHash"));
@@ -838,11 +833,9 @@ static RPCHelpMan quorum_selectquorum()
     const ChainstateManager& chainman = EnsureChainman(node);
     const LLMQContext& llmq_ctx = EnsureLLMQContext(node);
 
-    const Consensus::LLMQType llmqType{static_cast<Consensus::LLMQType>(request.params[0].getInt<int>())};
+    const Consensus::LLMQType llmqType{ParseLLMQType(request.params[0])};
     const auto llmq_params_opt = Params().GetLLMQ(llmqType);
-    if (!llmq_params_opt.has_value()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
-    }
+    CHECK_NONFATAL(llmq_params_opt.has_value());
 
     const uint256 id(ParseHashV(request.params[1], "id"));
 
@@ -922,7 +915,7 @@ static RPCHelpMan quorum_getdata()
     CConnman& connman = EnsureConnman(node);
 
     NodeId nodeId = request.params[0].getInt<int64_t>();
-    Consensus::LLMQType llmqType = static_cast<Consensus::LLMQType>(request.params[1].getInt<int>());
+    const Consensus::LLMQType llmqType{ParseLLMQType(request.params[1])};
     uint256 quorumHash(ParseHashV(request.params[2], "quorumHash"));
     uint16_t nDataMask = static_cast<uint16_t>(request.params[3].getInt<int>());
     uint256 proTxHash;
