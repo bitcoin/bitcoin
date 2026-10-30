@@ -17,6 +17,7 @@
 #include <sync.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/expected.h>
 #include <util/translation.h>
 #include <util/ui_change_type.h>
 #include <wallet/coincontrol.h>
@@ -275,10 +276,10 @@ public:
         LOCK(m_wallet->cs_wallet);
         return CreateTransaction(*m_wallet, recipients, change_pos, coin_control, sign);
     }
-    void commitTransaction(CTransactionRef tx, const std::vector<std::string>& messages) override
+    util::Expected<void, node::TransactionBroadcastError> commitTransaction(CTransactionRef tx, const std::vector<std::string>& messages) override
     {
         LOCK(m_wallet->cs_wallet);
-        m_wallet->CommitTransaction(std::move(tx), /*replaces_txid=*/std::nullopt, /*comment=*/std::nullopt, /*comment_to=*/std::nullopt, messages);
+        return m_wallet->CommitTransaction(std::move(tx), /*replaces_txid=*/std::nullopt, /*comment=*/std::nullopt, /*comment_to=*/std::nullopt, messages);
     }
     bool transactionCanBeAbandoned(const Txid& txid) override { return m_wallet->TransactionCanBeAbandoned(txid); }
     bool abandonTransaction(const Txid& txid) override
