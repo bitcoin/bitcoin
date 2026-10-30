@@ -5,6 +5,10 @@
 """Test the generation of UTXO snapshots using `dumptxoutset`.
 """
 
+import os
+import platform
+from threading import Thread
+
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -30,7 +34,7 @@ class DumptxoutsetTest(BitcoinTestFramework):
         node.invalidateblock(invalid_block)
         # Reset mocktime to not regenerate the same blockhash
         node.setmocktime(0)
-        self.generate(node, 2)
+        stale_hash = self.generate(node, 2)[-1]
 
         # Move back on to actual main chain
         node.reconsiderblock(invalid_block)
@@ -47,6 +51,30 @@ class DumptxoutsetTest(BitcoinTestFramework):
         out_mem = node.dumptxoutset("txoutset_fork_mem.dat", "rollback", {"rollback": target_height, "in_memory": True})
         assert_equal(out_mem['base_height'], target_height)
         assert_equal(out_mem['base_hash'], target_hash)
+
+        # Rolling back to a hash on the stale branch is rejected before any work is done
+        assert_raises_rpc_error(
+            -8, "Block is not in main chain", node.dumptxoutset, "txoutset_stale.dat", "rollback", {"rollback": stale_hash})
+        assert not (node.chain_path / "txoutset_stale.dat.incomplete").exists()
+
+    def test_concurrent_dumps_rejected(self):
+        node = self.nodes[0]
+        fifo_path = node.chain_path / "utxos.fifo"
+        os.mkfifo(fifo_path)
+
+        # Opening the pipe for writing blocks until a reader shows up, keeping the first dump running
+        result = []
+        rpc2 = node.create_new_rpc_connection()
+        thread = Thread(target=lambda: result.append(rpc2.dumptxoutset(str(fifo_path), "latest")))
+        thread.start()
+        self.wait_until(lambda: any(c['method'] == 'dumptxoutset' for c in node.getrpcinfo()['active_commands']))
+
+        assert_raises_rpc_error(-1, "dumptxoutset is already running", node.dumptxoutset, "utxos_concurrent.dat", "latest")
+
+        with open(fifo_path, "rb") as f:
+            f.read()
+        thread.join()
+        assert_equal(result[0]['base_height'], node.getblockcount())
 
 
     def run_test(self):
@@ -92,6 +120,10 @@ class DumptxoutsetTest(BitcoinTestFramework):
 
         self.log.info("Testing dumptxoutset with chain fork at target height")
         self.test_dumptxoutset_with_fork()
+
+        if platform.system() != "Windows":  # FIFOs are not available on Windows
+            self.log.info("Testing that concurrent dumptxoutset calls are rejected")
+            self.test_concurrent_dumps_rejected()
 
 
 if __name__ == '__main__':
