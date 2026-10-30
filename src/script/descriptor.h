@@ -26,6 +26,16 @@ struct FlatSigningProvider;
 
 using ExtPubKeyMap = std::unordered_map<uint32_t, CExtPubKey>;
 
+/** Public provenance from an original musig() expression at a known descriptor index.
+ * Participants retain their full identities and multiplicity; path is only post-aggregation derivation.
+ */
+struct DescriptorMuSig2KeyInfo {
+    std::vector<CPubKey> participants;
+    CPubKey aggregate;
+    CPubKey derived;
+    std::vector<uint32_t> path;
+};
+
 /** Cache for single descriptor's derived extended pubkeys */
 class DescriptorCache {
 private:
@@ -176,6 +186,22 @@ struct Descriptor {
      */
     virtual void ExpandPrivate(int pos, const SigningProvider& provider, FlatSigningProvider& out) const = 0;
 
+    /** Expand available private keys, returning false if a held root fails to derive.
+     * Missing cosigner roots are allowed. Output must be discarded on failure.
+     */
+    virtual bool ExpandPrivateChecked(int pos, const SigningProvider& provider, FlatSigningProvider& out) const = 0;
+
+    /** Collect private derivation input public keys, including structured MuSig2 participants.
+     * These are not concrete output candidates and must never be exported without membership proof.
+     */
+    virtual void GetPrivateKeyRoots(std::set<CPubKey>& roots) const = 0;
+
+    /** Check every publicly expandable key against its original expression at the cached index,
+     * and collect/recompute original MuSig2 provenance. Hardened peers do not suppress other checks.
+     * No private keys or nonce/session state are used. Discard output on failure.
+     */
+    virtual bool GetMuSig2KeyInfo(int pos, const DescriptorCache& cache, std::vector<DescriptorMuSig2KeyInfo>& out) const = 0;
+
     /** @return The OutputType of the scriptPubKey(s) produced by this descriptor. Or nullopt if indeterminate (multiple or none) */
     virtual std::optional<OutputType> GetOutputType() const = 0;
 
@@ -251,6 +277,11 @@ std::string GetDescriptorChecksum(const std::string& descriptor);
  * - Failing that, a "raw()" descriptor is returned.
  */
 std::unique_ptr<Descriptor> InferDescriptor(const CScript& script, const SigningProvider& provider);
+
+/** Infer a recognized tapscript leaf using Core's script/Miniscript semantics.
+ * Returns nullptr for unsupported scripts. This does not verify a Taproot commitment.
+ */
+std::unique_ptr<Descriptor> InferTaprootScript(const CScript& script, const SigningProvider& provider);
 
 /** Hash of the COMPAT string representation of the descriptor that is not supposed to change over time.
  * Due to the hash's usage in previous versions, the COMPAT string is computed with some quirks.

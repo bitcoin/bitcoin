@@ -434,6 +434,17 @@ bool KeyPair::SignSchnorr(const uint256& hash, std::span<unsigned char> sig, con
     return ret;
 }
 
+std::optional<CKey> KeyPair::GetKey() const
+{
+    if (!IsValid()) return std::nullopt;
+    auto secret = make_secure_unique<std::array<unsigned char, 32>>();
+    if (!secp256k1_keypair_sec(secp256k1_context_static, secret->data(), GetSecpKeypair())) return std::nullopt;
+    CKey key;
+    key.Set(secret->begin(), secret->end(), /*fCompressedIn=*/true);
+    if (!key.IsValid()) return std::nullopt;
+    return key;
+}
+
 bool ECC_InitSanityCheck() {
     CKey key = GenerateRandomKey();
     CPubKey pubkey = key.GetPubKey();

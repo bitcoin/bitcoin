@@ -1068,6 +1068,7 @@ RPCMethod walletdisplayaddress();
 #endif // ENABLE_EXTERNAL_SIGNER
 
 // backup
+RPCMethod exportaddresskey();
 RPCMethod importprunedfunds();
 RPCMethod removeprunedfunds();
 RPCMethod importdescriptors();
@@ -1131,6 +1132,7 @@ std::span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &derivehdkey},
         {"wallet", &restorewallet},
         {"wallet", &encryptwallet},
+        {"wallet", &exportaddresskey},
         {"wallet", &exportwatchonlywallet},
         {"wallet", &getaddressesbylabel},
         {"wallet", &getaddressinfo},

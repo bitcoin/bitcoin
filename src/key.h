@@ -321,6 +321,9 @@ public:
     friend KeyPair CKey::ComputeKeyPair(const uint256* merkle_root) const;
     [[nodiscard]] bool SignSchnorr(const uint256& hash, std::span<unsigned char> sig, const uint256& aux) const;
 
+    //! Extract the actual keypair scalar into secure CKey storage, or nullopt for an invalid keypair.
+    [[nodiscard]] std::optional<CKey> GetKey() const;
+
     //! Pointer to this KeyPair's internal `secp256k1_keypair` data or nullptr if invalid.
     const secp256k1_keypair* GetSecpKeypair() const LIFETIMEBOUND
     {

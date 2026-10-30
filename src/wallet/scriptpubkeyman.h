@@ -16,6 +16,7 @@
 #include <script/script.h>
 #include <script/signingprovider.h>
 #include <util/btcsignals.h>
+#include <util/expected.h>
 #include <util/hasher.h>
 #include <util/log.h>
 #include <util/result.h>
@@ -315,6 +316,8 @@ private:
     // Fetch the SigningProvider for a given index and optionally include private keys. Called by the above functions.
     std::unique_ptr<FlatSigningProvider> GetSigningProvider(int32_t index, bool include_private = false) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
+    util::Expected<std::optional<CKey>, AddressKeyError> ExportKey(int32_t index, const CPubKey& pubkey) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+
     void Load();
 
     void UpdateWithSigningProvider(WalletBatch& batch, const FlatSigningProvider& signing_provider) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
@@ -386,6 +389,20 @@ public:
 
     // Fetch the SigningProvider for the given pubkey and always include private keys. This should only be called by signing code.
     std::unique_ptr<FlatSigningProvider> GetSigningProvider(const CPubKey& pubkey) const;
+
+    //! Re-expand the exact known script/index without populating caches or accessing secrets/nonces.
+    //! Public-expression checks always run; musig2 optionally collects original MuSig2 provenance.
+    util::Expected<FlatSigningProvider, AddressKeyError> GetExportProvider(const CScript& script, std::vector<DescriptorMuSig2KeyInfo>* musig2 = nullptr) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+
+    //! Filter existing public key metadata by directly verifiable address forms; never derive or decrypt.
+    std::set<CPubKey> GetExportPubKeys(const CTxDestination& destination) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+
+    //! Resolve only a verified candidate, from stored key material or its existing cached index.
+    util::Expected<std::optional<CKey>, AddressKeyError> ExportKey(const CPubKey& pubkey) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
+
+    //! Expand only the existing index for script, verify the public candidate, and return only its key.
+    //! Does not populate provider caches or access signing nonce state. Caller authorizes export.
+    util::Expected<std::optional<CKey>, AddressKeyError> ExportKey(const CScript& script, const CKeyID& key_id) const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
     bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const override;
     SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const override;
