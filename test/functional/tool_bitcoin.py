@@ -5,30 +5,23 @@
 """Test the bitcoin wrapper tool."""
 from test_framework.test_framework import (
     BitcoinTestFramework,
-    SkipTest,
 )
 from test_framework.util import (
     append_config,
     assert_equal,
 )
 
+import os
 import platform
 import re
+import shutil
+import subprocess
 
 
 class ToolBitcoinTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-
-    def skip_test_if_missing_module(self):
-        # Skip test on windows because currently when `bitcoin node -version` is
-        # run on windows, python doesn't capture output from the child
-        # `bitcoind` and `bitcoin-node` process started with _wexecvp, and
-        # stdout/stderr are always empty. See
-        # https://github.com/bitcoin/bitcoin/pull/33229#issuecomment-3265524908
-        if platform.system() == "Windows":
-            raise SkipTest("Test does not currently work on windows")
 
     def setup_network(self):
         """Set up nodes normally, but save a copy of their arguments before starting them."""
@@ -60,8 +53,46 @@ class ToolBitcoinTest(BitcoinTestFramework):
             except Exception as e:
                 raise RuntimeError(f"Unexpected output from {node.args + extra_args}: {out=!r} {err=!r} {ret=!r}") from e
 
+    def test_windows_exit_status(self):
+        self.log.info("Ensure bitcoin preserves child exit status on Windows")
+        exe_dir = self.nodes[0].datadir_path / "exit_status"
+        exe_dir.mkdir()
+        wrapper = exe_dir / "bitcoin.exe"
+        shutil.copyfile(self.get_binaries().paths.bitcoin_bin, wrapper)
+        # Use cmd.exe as a fake bitcoind with a controllable exit status.
+        shutil.copyfile(os.path.join(os.environ["SystemRoot"], "System32", "cmd.exe"), exe_dir / "bitcoind.exe")
+        for status in (0, 1, -1):
+            result = subprocess.run(
+                [str(wrapper), "-M", "node", "/d", "/c", "exit", str(status)],
+                capture_output=True, timeout=30,
+            )
+            # Windows process exit codes are unsigned 32-bit values.
+            assert_equal(result.returncode, status & 0xFFFFFFFF)
+            assert_equal(result.stdout, b"")
+            assert_equal(result.stderr, b"")
+
+    def test_launch_failure(self):
+        self.log.info("Ensure bitcoin reports an error if bitcoind can't be started")
+        # Copy the wrapper to a directory without bitcoind. The wrapper is run
+        # by path, so it doesn't fall back to searching PATH and should fail.
+        exe_dir = self.nodes[0].datadir_path / "launch_failure"
+        exe_dir.mkdir()
+        bitcoin_bin = self.get_binaries().paths.bitcoin_bin
+        wrapper = exe_dir / os.path.basename(bitcoin_bin)
+        # Use copy instead of copyfile to keep the executable bit.
+        shutil.copy(bitcoin_bin, wrapper)
+        result = subprocess.run([str(wrapper), "-M", "node", "-version"], capture_output=True, timeout=30)
+        assert_equal(result.returncode, 1)
+        assert_equal(result.stdout, b"")
+        assert b"execvp failed to execute" in result.stderr
+
     def run_test(self):
         node = self.nodes[0]
+
+        if platform.system() == "Windows":
+            self.test_windows_exit_status()
+
+        self.test_launch_failure()
 
         self.log.info("Ensure bitcoin node command invokes bitcoind by default")
         self.test_args([], [], expect_exe="bitcoind")
