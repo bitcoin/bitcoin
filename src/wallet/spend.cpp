@@ -1091,6 +1091,9 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     ReserveDestination reservedest(&wallet, change_type);
     unsigned int outputs_to_subtract_fee_from = 0; // The number of outputs which we are subtracting the fee from
     for (const auto& recipient : vecSend) {
+        if (!MoneyRange(recipient.nAmount) || !MoneyRange(recipients_sum + recipient.nAmount)) {
+            return util::Error{_("Transaction output amount must be valid")};
+        }
         if (IsDust(recipient, wallet.chain().relayDustFee())) {
             return util::Error{_("Transaction amount too small")};
         }
@@ -1454,10 +1457,6 @@ util::Result<CreatedTransactionResult> CreateTransaction(
 {
     if (vecSend.empty()) {
         return util::Error{_("Transaction must have at least one recipient")};
-    }
-
-    if (std::any_of(vecSend.cbegin(), vecSend.cend(), [](const auto& recipient){ return recipient.nAmount < 0; })) {
-        return util::Error{_("Transaction amounts must not be negative")};
     }
 
     LOCK(wallet.cs_wallet);
