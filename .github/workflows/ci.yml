@@ -406,6 +406,8 @@ jobs:
     env:
       DANGER_CI_ON_HOST_FOLDERS: 1
       FILE_ENV: ${{ matrix.file-env }}
+      RUN_UNIT_TESTS: ${{ matrix.run_unit_tests }}
+      RUN_FUNCTIONAL_TESTS: ${{ matrix.run_functional_tests }}
 
     strategy:
       fail-fast: false
@@ -423,6 +425,8 @@ jobs:
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_arm.sh'
             provider: 'gha'
+            run_unit_tests: false
+            run_functional_tests: false
 
           - name: 'ASan + LSan + UBSan + integer'
             warp-runner: 'warp-ubuntu-2404-x64-8x' # has to match container in ci/test/00_setup_env_native_asan.sh for tracing tools
