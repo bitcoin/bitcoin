@@ -49,7 +49,9 @@ struct {
     }
 } descending_effval_weight;
 
-/*
+static const size_t TOTAL_TRIES = 100000;
+
+/**
  * This is the Branch and Bound Coin Selection algorithm designed by Murch. It searches for an input
  * set that can pay for the spending target and does not exceed the spending target by more than the
  * cost of creating and spending a change output. The algorithm uses a depth-first search on a binary
@@ -109,9 +111,6 @@ struct {
  * @param[in] max_selection_weight The maximum allowed weight for a selection result to be valid.
  * @returns The result of this coin selection algorithm, or std::nullopt
  */
-
-static const size_t TOTAL_TRIES = 100000;
-
 util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change,
                                              int max_selection_weight)
 {
@@ -274,7 +273,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
 }
 
 
-/*
+/**
  * TL;DR: Coin Grinder is a DFS-based algorithm that deterministically searches for the minimum-weight input set to fund
  * the transaction. The algorithm is similar to the Branch and Bound algorithm, but will produce a transaction _with_ a
  * change output instead of a changeless transaction.
@@ -289,6 +288,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
  * We represent UTXOs as _alias=[effective_value/weight]_ and indicate omitted UTXOs with an underscore. Given a UTXO
  * pool {A=[10/2], B=[7/1], C=[5/1], D=[4/2]} sorted by descending effective value, our search tree looks as follows:
  *
+ * @verbatim
  *                                       _______________________ {} ________________________
  *                                      /                                                   \
  * A=[10/2]               __________ {A} _________                                __________ {_} _________
@@ -298,6 +298,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
  * C=[5/1]     {ABC}         {AB_}         {A_C}         {A__}         {_BC}         {_B_}         {__C}         {___}
  *              / \           / \           / \           / \           / \           / \           / \           / \
  * D=[4/2] {ABCD} {ABC_} {AB_D} {AB__} {A_CD} {A_C_} {A__D} {A___} {_BCD} {_BC_} {_B_D} {_B__} {__CD} {__C_} {___D} {____}
+ * @endverbatim
  *
  *
  * CoinGrinder uses a depth-first search to walk this tree. It first tries inclusion branches, then omission branches. A
@@ -321,6 +322,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
  *
  *     {A} {AB} {ABC} {ABCD} {AB_D} {A_C} {A_CD} {A__D} {_B} {_BC} {_BCD} {_B_D} {__C} {__CD} {___D}
  *
+ * @verbatim
  *                                       _______________________ {} ________________________
  *                                      /                                                   \
  * A=[10/2]               __________ {A} _________                                ___________\____________
@@ -330,6 +332,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
  * C=[5/1]     {ABC}          \            {A_C}          \            {_BC}          \            {__C}          \
  *              /             /             /             /             /             /             /             /
  * D=[4/2] {ABCD}        {AB_D}        {A_CD}        {A__D}        {_BCD}        {_B_D}        {__CD}        {___D}
+ * @endverbatim
  *
  *
  * We refer to the move from the inclusion branch {AB} via the omission branch {A_} to its inclusion-branch child {A_C}
@@ -365,6 +368,7 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
  *     {__CD} [9/3]             Insufficient funds, leaf node: CUT
  *     {___D} [4/2]             Insufficient funds, leaf node, cannot CUT since only one UTXO selected: done.
  *
+ * @verbatim
  *                                       _______________________ {} ________________________
  *                                      /                                                   \
  * A=[10/2]               __________ {A} _________                                ___________\____________
@@ -374,15 +378,16 @@ util::Result<SelectionResult> SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool
  * C=[5/1]                                 {A_C}          \            {_BC}          \            {__C}          \
  *                                                        /                           /             /             /
  * D=[4/2]                                           {A__D}                      {_B_D}        {__CD}        {___D}
+ * @endverbatim
  *
  *
  * We implement this tree walk in the following algorithm:
  * 1. Add `next_utxo`
  * 2. Evaluate candidate input set
  * 3. Determine `next_utxo` by deciding whether to
- *    a) EXPLORE: Add next inclusion branch, e.g. {_B} ⇒ {_B} + `next_uxto`: C
+ *    a) EXPLORE: Add next inclusion branch, e.g. {_B} ⇒ {_B} + `next_utxo`: C
  *    b) SHIFT: Replace last selected UTXO by next higher index, e.g. {A_C} ⇒ {A__} + `next_utxo`: D
- *    c) CUT: deselect last selected UTXO and shift to omission branch of penultimate UTXO, e.g. {AB_D} ⇒ {A_} + `next_utxo: C
+ *    c) CUT: deselect last selected UTXO and shift to omission branch of penultimate UTXO, e.g. {AB_D} ⇒ {A_} + `next_utxo`: C
  *
  * The implementation then adds further optimizations by discovering further situations in which either the inclusion
  * branch can be skipped, or both the inclusion and omission branch can be skipped after evaluating the candidate input
