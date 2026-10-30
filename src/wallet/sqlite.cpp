@@ -704,18 +704,48 @@ bool SQLiteBatch::TxnAbort()
     return res == SQLITE_OK;
 }
 
+std::vector<fs::path> SQLiteFiles(const fs::path& data_file)
+{
+    return {data_file, fs::PathFromString(fs::PathToString(data_file) + "-journal")};
+}
+
+static bool IsMissing(const fs::path& path)
+{
+    std::error_code ec;
+    return fs::symlink_status(path, ec).type() == fs::file_type::not_found;
+}
+
 std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error)
 {
+    const fs::path data_file = SQLiteDataFile(path);
+
+    // Note what does not exist yet, so that a failure only removes what this attempt created
+    std::vector<fs::path> new_files;
+    for (const fs::path& file : SQLiteFiles(data_file)) {
+        if (IsMissing(file)) new_files.push_back(file);
+    }
+    std::vector<fs::path> new_dirs; // Deepest first
+    for (fs::path dir{data_file.parent_path()}; !dir.empty() && IsMissing(dir); dir = dir.parent_path()) {
+        new_dirs.push_back(dir);
+    }
+    const auto remove_created{[&] {
+        std::error_code ec;
+        for (const fs::path& file : new_files) fs::remove(file, ec);
+        for (const fs::path& dir : new_dirs) fs::remove(dir, ec); // Only removes it if it is empty
+    }};
+
     try {
-        fs::path data_file = SQLiteDataFile(path);
         auto db = std::make_unique<SQLiteDatabase>(data_file.parent_path(), data_file, options);
         if (options.verify && !db->Verify(error)) {
+            db.reset();
+            remove_created();
             status = DatabaseStatus::FAILED_VERIFY;
             return nullptr;
         }
         status = DatabaseStatus::SUCCESS;
         return db;
     } catch (const std::runtime_error& e) {
+        remove_created();
         status = DatabaseStatus::FAILED_LOAD;
         error = Untranslated(e.what());
         return nullptr;

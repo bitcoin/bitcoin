@@ -1083,6 +1083,107 @@ class WalletMigrationTest(BitcoinTestFramework):
         # Check the wallet we tried to migrate is still BDB
         self.assert_is_bdb("failed")
 
+    def copy_legacy_wallet_to_master(self, wallet_name, plain_file, external):
+        """Create a legacy wallet and copy it as a wallet directory or as a plain file into the
+        master node's wallet directory, or outside of it to be loaded by absolute path. Return the
+        name to migrate it by, the path of its data file, and the directory its migration uses."""
+        self.create_legacy_wallet(wallet_name).unloadwallet()
+        parent_dir = Path(self.options.tmpdir) / "external" if external else self.master_node.wallets_path
+        parent_dir.mkdir(exist_ok=True)
+        wallet_path = parent_dir / wallet_name
+        name = str(wallet_path) if external else wallet_name
+        if plain_file:
+            shutil.copyfile(self.old_node.wallets_path / wallet_name / "wallet.dat", wallet_path)
+            return name, wallet_path, parent_dir / "migration"
+        shutil.copytree(self.old_node.wallets_path / wallet_name, wallet_path)
+        return name, wallet_path / "wallet.dat", wallet_path / "migration"
+
+    def describe_wallet(self, plain_file, external):
+        return f"{'plain file' if plain_file else 'wallet directory'} {'outside of' if external else 'in'} the wallet directory"
+
+    def test_sqlite_creation_failure(self, plain_file, external):
+        self.log.info(f"Test that failing to create the SQLite database leaves a legacy wallet stored as a {self.describe_wallet(plain_file, external)} unchanged")
+        wallet_name = f"create_fail_{'file' if plain_file else 'dir'}{'_external' if external else ''}"
+        name, wallet_file, migration_dir = self.copy_legacy_wallet_to_master(wallet_name, plain_file, external)
+        original_shasum = sha256sum_file(wallet_file)
+
+        # The new database is built in a temporary directory next to the wallet's data file, named
+        # like the backup file. Make creating it fail by putting a directory where its journal file would go.
+        mocked_time = int(time.time())
+        self.master_node.setmocktime(mocked_time)
+        temp_dir = migration_dir / f"{wallet_name}_{mocked_time}.tmp"
+        journal_dir = temp_dir / "wallet.dat-journal"
+        journal_dir.mkdir(parents=True)
+        # Migrating twice also checks that a failed attempt leaves nothing behind that blocks a retry
+        assert_raises_rpc_error(-4, "Unable to create the SQLite database for the migrated wallet", self.master_node.migratewallet, name)
+        assert_raises_rpc_error(-4, "The wallet has not been changed.", self.master_node.migratewallet, name)
+
+        assert name not in self.master_node.listwallets()
+        assert wallet_file.is_file()
+        assert_equal(sha256sum_file(wallet_file), original_shasum)
+        # The data file SQLite created is removed, what existed before the attempt is kept
+        assert not (temp_dir / "wallet.dat").exists()
+        assert journal_dir.is_dir()
+
+        # Once the obstruction is removed, migration succeeds and removes the migration directory
+        journal_dir.rmdir()
+        self.master_node.migratewallet(name)
+        self.master_node.setmocktime(0)
+        self.assert_is_sqlite(name)
+        assert not migration_dir.exists()
+        assert not (self.master_node.wallets_path / "migration").exists()
+
+    def test_swap_failure(self, plain_file, external):
+        self.log.info(f"Test that failing to swap in the new database leaves a legacy wallet stored as a {self.describe_wallet(plain_file, external)} unchanged")
+        wallet_name = f"swap_fail_{'file' if plain_file else 'dir'}{'_external' if external else ''}"
+        name, wallet_file, migration_dir = self.copy_legacy_wallet_to_master(wallet_name, plain_file, external)
+        original_shasum = sha256sum_file(wallet_file)
+
+        # Before the new database is swapped in, the original file is moved aside into the
+        # migration directory. A directory in its place makes that fail after the new database
+        # was built in a temporary directory.
+        mocked_time = int(time.time())
+        self.master_node.setmocktime(mocked_time)
+        aside_path = migration_dir / f"{wallet_name}_{mocked_time}.legacy"
+        (aside_path / "obstruction").mkdir(parents=True)
+        assert_raises_rpc_error(-4, "Unable to move the wallet file", self.master_node.migratewallet, name)
+        self.master_node.setmocktime(0)
+
+        assert name not in self.master_node.listwallets()
+        assert wallet_file.is_file()
+        assert_equal(sha256sum_file(wallet_file), original_shasum)
+        # The temporary directory created by the attempt is removed. The migration directory
+        # is kept, as it is not empty.
+        assert_equal(os.listdir(migration_dir), [aside_path.name])
+
+        self.cleanup_folder(migration_dir)
+        self.master_node.migratewallet(name)
+        self.assert_is_sqlite(name)
+
+    def test_migration_leftovers(self):
+        self.log.info("Test that a successful migration removes temporary databases left behind by earlier migrations")
+        migration_dir = self.master_node.wallets_path / "leftovers" / "migration"
+        # Interrupted in the middle of writing the records, so the journal file is left too
+        leftover_dir = migration_dir / "interrupted_1.tmp"
+        leftover_dir.mkdir(parents=True)
+        (leftover_dir / "wallet.dat").write_bytes(b"leftover")
+        (leftover_dir / "wallet.dat-journal").write_bytes(b"leftover")
+        # Only SQLite files are removed, anything else is kept, and with it the directory
+        unknown_dir = migration_dir / "interrupted_2.tmp"
+        unknown_dir.mkdir()
+        (unknown_dir / "wallet.dat").write_bytes(b"leftover")
+        (unknown_dir / "unknown").write_bytes(b"unknown")
+        # An original wallet file moved aside by an interrupted migration is kept
+        aside_file = migration_dir / "interrupted_1.legacy"
+        aside_file.write_bytes(b"original")
+
+        self.create_legacy_wallet("leftovers")
+        self.migrate_and_get_rpc("leftovers")
+        assert_equal(sorted(os.listdir(migration_dir)), [aside_file.name, unknown_dir.name])
+        assert_equal(os.listdir(unknown_dir), ["unknown"])
+
+        self.cleanup_folder(migration_dir)
+
     def test_blank(self):
         self.log.info("Test that a blank wallet is migrated")
         wallet = self.create_legacy_wallet("blank", blank=True)
@@ -1785,6 +1886,11 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_conflict_txs()
         self.test_hybrid_pubkey()
         self.test_failed_migration_cleanup()
+        # Wallets that are plain files can only be loaded from the wallet directory
+        for plain_file, external in [(False, False), (False, True), (True, False)]:
+            self.test_sqlite_creation_failure(plain_file, external)
+            self.test_swap_failure(plain_file, external)
+        self.test_migration_leftovers()
         self.test_avoidreuse()
         self.test_preserve_tx_extra_info()
         self.test_blank()

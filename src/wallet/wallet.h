@@ -1047,7 +1047,10 @@ public:
     /** Move all records from the BDB database to a new SQLite database for storage.
      * The original BDB file will be deleted and replaced with a new SQLite file.
      * A backup is not created.
-     * May crash if something unexpected happens in the filesystem.
+     * The new database is built in a "migration" directory next to the original file
+     * and only swapped in once all records have been written to it. On failure,
+     * false is returned and the original file is left in place, unless the error
+     * says otherwise.
      */
     bool MigrateToSQLite(bilingual_str& error) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 

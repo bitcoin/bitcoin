@@ -69,6 +69,7 @@
 #include <wallet/external_signer_scriptpubkeyman.h>
 #include <wallet/scan.h>
 #include <wallet/scriptpubkeyman.h>
+#include <wallet/sqlite.h>
 #include <wallet/transaction.h>
 #include <wallet/types.h>
 #include <wallet/walletdb.h>
@@ -3754,6 +3755,48 @@ util::Expected<CExtPubKey, WalletError> CWallet::AddHDKey(const std::optional<CE
     return *extpubs.begin();
 }
 
+//! Serializes migrations to SQLite, so that one cannot remove the temporary database of another as a leftover
+static GlobalMutex g_migration_mutex;
+
+// Used to name the backup file and the temporary database of a migration. The name is
+// based on the name of the parent directory containing the wallet data in most cases,
+// but in the case where the wallet name is a path to a data file, the name of the data
+// file is used, and in the case where the wallet name is blank, "default_wallet" is used.
+static std::string MigrationBackupPrefix(const CWallet& wallet)
+{
+    const std::string& name{wallet.GetName()};
+    if (name.empty()) return "default_wallet";
+    // fs::weakly_canonical resolves relative specifiers and remove trailing slashes.
+    const auto legacy_wallet_path = fs::weakly_canonical(GetWalletDir() / fs::PathFromString(name));
+    return fs::PathToString(legacy_wallet_path.filename());
+}
+
+// Remove the temporary database directory of a migration: the SQLite files in it, and the
+// directory itself if nothing else is left in it.
+static void RemoveTempDatabase(const fs::path& temp_dir)
+{
+    std::error_code ec;
+    for (const fs::path& file : SQLiteFiles(SQLiteDataFile(temp_dir))) fs::remove(file, ec);
+    fs::remove(temp_dir, ec); // Only removes it if it is empty
+}
+
+// Remove the temporary database directories (*.tmp) left behind by migrations that did not
+// finish, and the migration directory itself if nothing else is left in it. Original wallet
+// files that an interrupted migration moved aside (*.legacy), and anything that is not a SQLite
+// file, are kept.
+static void RemoveMigrationLeftovers(const fs::path& migration_dir) EXCLUSIVE_LOCKS_REQUIRED(g_migration_mutex)
+{
+    std::error_code ec;
+    std::vector<fs::path> leftovers;
+    for (auto it{fs::directory_iterator(migration_dir, ec)}; !ec && it != fs::directory_iterator(); it.increment(ec)) {
+        std::error_code status_ec;
+        const bool is_dir{it->symlink_status(status_ec).type() == fs::file_type::directory}; // Symlinks are not followed
+        if (is_dir && it->path().extension() == ".tmp") leftovers.emplace_back(it->path());
+    }
+    for (const fs::path& leftover : leftovers) RemoveTempDatabase(leftover);
+    fs::remove(migration_dir, ec); // Only removes it if it is empty
+}
+
 bool CWallet::MigrateToSQLite(bilingual_str& error)
 {
     AssertLockHeld(cs_wallet);
@@ -3792,39 +3835,97 @@ bool CWallet::MigrateToSQLite(bilingual_str& error)
         return false;
     }
 
-    // Close this database and delete the file
-    fs::path db_path = fs::PathFromString(m_database->Filename());
-    m_database->Close();
-    fs::remove(db_path);
+    // Build the new database in a temporary directory, and only swap it in for the original
+    // file once all records have been written to it, so that a failure leaves the wallet unchanged.
+    // Wallets that are plain files rather than wallet directories will be migrated to be wallet
+    // directories: when the wallet path is not a directory, the temporary directory becomes it.
+    // The temporary directory is created next to the original file rather than in the wallet
+    // directory, so that the swap stays on one filesystem for wallets loaded from elsewhere.
+    const fs::path wallet_path{fsbridge::AbsPathJoin(GetWalletDir(), fs::PathFromString(m_name))};
+    const bool move_dir{!fs::is_directory(wallet_path)};
+    LOCK(g_migration_mutex);
+    const fs::path migration_dir{(move_dir ? fs::path{wallet_path.parent_path()} : wallet_path) / "migration"};
+    const std::string temp_name{strprintf("%s_%d", MigrationBackupPrefix(*this), GetTime())};
+    const fs::path temp_dir{migration_dir / fs::PathFromString(temp_name + ".tmp")};
+    const fs::path legacy_file{migration_dir / fs::PathFromString(temp_name + ".legacy")};
+    const auto unchanged{[&](const bilingual_str& reason) {
+        RemoveTempDatabase(temp_dir);
+        std::error_code ec;
+        fs::remove(migration_dir, ec); // Only removes it if it is empty
+        error = reason + Untranslated(" ") + _("The wallet has not been changed.");
+        return false;
+    }};
 
-    // Generate the path for the location of the migrated wallet
-    // Wallets that are plain files rather than wallet directories will be migrated to be wallet directories.
-    const fs::path wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), fs::PathFromString(m_name));
-
-    // Make new DB
+    // Make new DB. If this fails, MakeDatabase() has already removed whatever it created.
     DatabaseOptions opts;
     opts.require_create = true;
     opts.require_format = DatabaseFormat::SQLITE;
     DatabaseStatus db_status;
-    std::unique_ptr<WalletDatabase> new_db = MakeDatabase(wallet_path, opts, db_status, error);
-    assert(new_db); // This is to prevent doing anything further with this wallet. The original file was deleted, but a backup exists.
-    m_database.reset();
-    m_database = std::move(new_db);
+    bilingual_str db_error;
+    std::unique_ptr<WalletDatabase> new_db = MakeDatabase(temp_dir, opts, db_status, db_error);
+    if (!new_db) {
+        error = strprintf(_("Error: Unable to create the SQLite database for the migrated wallet: %s"), db_error) + Untranslated(" ") +
+                strprintf(_("Check that the directory %s is writable and on a filesystem that supports file locking (network filesystems such as SMB/CIFS or NFS may not)."), fs::PathToString(migration_dir.parent_path())) + Untranslated(" ") +
+                _("The wallet has not been changed.");
+        return false;
+    }
 
     // Write existing records into the new DB
-    batch = m_database->MakeBatch();
-    bool began = batch->TxnBegin();
-    assert(began); // This is a critical error, the new db could not be written to. The original db exists as a backup, but we should not continue execution.
-    for (const auto& [key, value] : records) {
-        if (!batch->Write(std::span{key}, std::span{value})) {
+    batch = new_db->MakeBatch();
+    bool written{batch->TxnBegin()};
+    if (written) {
+        for (const auto& [key, value] : records) {
+            written = batch->Write(std::span{key}, std::span{value});
+            if (!written) break;
+        }
+        if (written) {
+            written = batch->TxnCommit();
+        } else {
             batch->TxnAbort();
-            m_database->Close();
-            fs::remove(m_database->Filename());
-            assert(false); // This is a critical error, the new db could not be written to. The original db exists as a backup, but we should not continue execution.
         }
     }
-    bool committed = batch->TxnCommit();
-    assert(committed); // This is a critical error, the new db could not be written to. The original db exists as a backup, but we should not continue execution.
+    batch.reset();
+    new_db.reset(); // Close the new database so that it can be moved
+    if (!written) return unchanged(_("Error: Unable to write the wallet records to the new SQLite database."));
+
+    // Swap the new database in. The original file is moved aside first, so that it can be put
+    // back if the new database cannot be opened at its final location.
+    const fs::path db_path{fs::PathFromString(m_database->Filename())};
+    const bool has_db_file{fs::exists(db_path)}; // In-memory databases used in tests have no file
+    const fs::path move_from{move_dir ? temp_dir : SQLiteDataFile(temp_dir)};
+    const fs::path move_to{move_dir ? wallet_path : SQLiteDataFile(wallet_path)};
+    m_database->Close();
+    if (has_db_file && !RenameOver(db_path, legacy_file)) {
+        return unchanged(strprintf(_("Error: Unable to move the wallet file %s to %s."), fs::PathToString(db_path), fs::PathToString(legacy_file)));
+    }
+    if (!RenameOver(move_from, move_to)) {
+        db_error = strprintf(_("Unable to move it to %s."), fs::PathToString(move_to));
+    } else {
+        DatabaseOptions open_opts;
+        open_opts.require_existing = true;
+        open_opts.require_format = DatabaseFormat::SQLITE;
+        new_db = MakeDatabase(wallet_path, open_opts, db_status, db_error);
+        if (!new_db && !RenameOver(move_to, move_from)) {
+            WalletLogPrintf("Warning: Unable to move the new database at %s back to %s", fs::PathToString(move_to), fs::PathToString(move_from));
+        }
+    }
+    if (!new_db) {
+        const bilingual_str reason{strprintf(_("Error: Unable to swap in the new SQLite database for the migrated wallet: %s"), db_error)};
+        if (has_db_file && !RenameOver(legacy_file, db_path)) {
+            error = reason + Untranslated(" ") + strprintf(_("The original wallet file could not be moved back to %s and is at %s."), fs::PathToString(db_path), fs::PathToString(legacy_file));
+            return false;
+        }
+        return unchanged(reason);
+    }
+    m_database = std::move(new_db);
+
+    // The records are now in the new database at its final location, so the original file is no longer needed
+    std::error_code ec;
+    if (has_db_file && !fs::remove(legacy_file, ec)) {
+        WalletLogPrintf("Warning: Unable to remove the original wallet file %s after migration: %s", fs::PathToString(legacy_file), ec.message());
+    }
+    RemoveTempDatabase(temp_dir);
+    RemoveMigrationLeftovers(migration_dir);
     return true;
 }
 
@@ -4265,18 +4366,8 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
     }
 
     // Make a backup of the DB in the wallet's directory with a unique filename
-    // using the wallet name and current timestamp. The backup filename is based
-    // on the name of the parent directory containing the wallet data in most
-    // cases, but in the case where the wallet name is a path to a data file,
-    // the name of the data file is used, and in the case where the wallet name
-    // is blank, "default_wallet" is used.
-    const std::string backup_prefix = wallet_name.empty() ? MigrationPrefixName(*local_wallet) : [&] {
-        // fs::weakly_canonical resolves relative specifiers and remove trailing slashes.
-        const auto legacy_wallet_path = fs::weakly_canonical(GetWalletDir() / fs::PathFromString(wallet_name));
-        return fs::PathToString(legacy_wallet_path.filename());
-    }();
-
-    fs::path backup_filename = fs::PathFromString(strprintf("%s_%d.legacy.bak", backup_prefix, GetTime()));
+    // using the wallet name and current timestamp.
+    fs::path backup_filename = fs::PathFromString(strprintf("%s_%d.legacy.bak", MigrationBackupPrefix(*local_wallet), GetTime()));
     fs::path backup_path = fsbridge::AbsPathJoin(GetWalletDir(), backup_filename);
     if (!local_wallet->BackupWallet(fs::PathToString(backup_path))) {
         return util::Error{_("Error: Unable to make a backup of your wallet")};

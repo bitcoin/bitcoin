@@ -15,6 +15,7 @@
 #include <wallet/walletutil.h>
 
 #include <cstddef>
+#include <fstream>
 #include <memory>
 #include <span>
 #include <string>
@@ -304,6 +305,63 @@ BOOST_AUTO_TEST_CASE(in_memory_database_cannot_reopen)
     InMemoryWalletDatabase database;
     database.Close();
     BOOST_CHECK_THROW(database.Open(), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(sqlite_failed_create_removes_created_file)
+{
+    // A directory where the journal file goes makes creating the database fail
+    // after the data file was created
+    const fs::path wallet_dir{m_path_root / "journal_blocked"};
+    const fs::path journal_dir{wallet_dir / "wallet.dat-journal"};
+    fs::create_directories(journal_dir);
+
+    DatabaseOptions options;
+    DatabaseStatus status;
+    bilingual_str error;
+    BOOST_CHECK(!MakeSQLiteDatabase(wallet_dir, options, status, error));
+    BOOST_CHECK(status == DatabaseStatus::FAILED_LOAD);
+    BOOST_CHECK(!fs::exists(SQLiteDataFile(wallet_dir)));
+    // What existed before the attempt is kept
+    BOOST_CHECK(fs::is_directory(journal_dir));
+}
+
+#ifndef WIN32
+BOOST_AUTO_TEST_CASE(sqlite_failed_create_removes_created_dirs)
+{
+    // SQLite does not accept database paths longer than 512 bytes on Unix, so this
+    // fails after the directories below existing_dir were created
+    const fs::path existing_dir{m_path_root / "existing"};
+    fs::create_directories(existing_dir);
+    const fs::path first_new_dir{existing_dir / fs::PathFromString(std::string(200, 'a'))};
+    const fs::path wallet_dir{first_new_dir / fs::PathFromString(std::string(200, 'b')) / fs::PathFromString(std::string(200, 'c'))};
+
+    DatabaseOptions options;
+    DatabaseStatus status;
+    bilingual_str error;
+    BOOST_CHECK(!MakeSQLiteDatabase(wallet_dir, options, status, error));
+    BOOST_CHECK(status == DatabaseStatus::FAILED_LOAD);
+    BOOST_CHECK(!fs::exists(first_new_dir));
+    BOOST_CHECK(fs::is_directory(existing_dir));
+}
+#endif
+
+BOOST_AUTO_TEST_CASE(sqlite_failed_open_keeps_existing_file)
+{
+    // Failing to open a file that is not a SQLite database must not remove it
+    const fs::path wallet_dir{m_path_root / "not_sqlite"};
+    fs::create_directories(wallet_dir);
+    const fs::path data_file{SQLiteDataFile(wallet_dir)};
+    const std::string content(4096, 'x');
+    {
+        std::ofstream file{data_file.std_path()};
+        file << content;
+    }
+
+    DatabaseOptions options;
+    DatabaseStatus status;
+    bilingual_str error;
+    BOOST_CHECK(!MakeSQLiteDatabase(wallet_dir, options, status, error));
+    BOOST_CHECK_EQUAL(fs::file_size(data_file), content.size());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -18,6 +18,9 @@ struct sqlite3;
 namespace wallet {
 class SQLiteDatabase;
 
+/** Return the paths of the files that make up a SQLite database: its data file and its rollback journal. */
+std::vector<fs::path> SQLiteFiles(const fs::path& data_file);
+
 /** RAII class that provides a database cursor */
 class SQLiteCursor : public DatabaseCursor
 {
@@ -158,10 +161,7 @@ public:
     /** Return paths to all database created files */
     std::vector<fs::path> Files() override
     {
-        std::vector<fs::path> files;
-        files.emplace_back(m_dir_path / fs::PathFromString(m_file_path));
-        files.emplace_back(m_dir_path / fs::PathFromString(m_file_path + "-journal"));
-        return files;
+        return SQLiteFiles(m_dir_path / fs::PathFromString(m_file_path));
     }
     std::string Format() override { return "sqlite"; }
 
@@ -184,6 +184,8 @@ public:
     std::vector<fs::path> Files() override { return {}; }
 };
 
+/** Open or create a SQLite database at path. On failure, any files and directories
+ * that this attempt created are removed, and anything that already existed is kept. */
 std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
 
 std::unique_ptr<WalletDatabase> MakeInMemoryWalletDatabase();
