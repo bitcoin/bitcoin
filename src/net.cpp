@@ -2914,8 +2914,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
 
             if (fFeeler) {
                 // First, try to get a tried table collision address. This returns
-                // an empty (invalid) address if there are no collisions to try.
-                std::tie(addr, addr_last_try) = addrman.get().SelectTriedCollision();
+                // an empty (invalid) address if there are no collisions to try or
+                // if every pending collision's address is on an unreachable network.
+                std::tie(addr, addr_last_try) = addrman.get().SelectTriedCollision(reachable_nets);
 
                 if (!addr.IsValid()) {
                     // No tried table collisions. Select a new table address
