@@ -55,6 +55,17 @@ class PortTest(BitcoinTestFramework):
         node.extra_args = ["-listen", "-port=0"]
         node.assert_start_raises_init_error(expected_msg="Error: Invalid port specified in -port: '0'")
 
+        self.log.info("-port=65535 has no port left for the default onion bind")
+        node.extra_args = ["-listen", "-port=65535"]
+        node.assert_start_raises_init_error(expected_msg="Error: -port=65535 leaves no port for the default onion bind. Specify one explicitly with -bind=<addr>:<port>=onion.")
+        node.extra_args = ["-listen", "-port=65535", "-bind=127.0.0.1=onion"]
+        node.assert_start_raises_init_error(expected_msg="Error: -port=65535 leaves no port for the default onion bind. Specify one explicitly with -bind=<addr>:<port>=onion.")
+        onion_port = p2p_port(self.num_nodes + 6)
+        with node.assert_debug_log(expected_msgs=[f'Bound to 127.0.0.1:{onion_port}']):
+            self.start_node(0, extra_args=["-listen", "-port=65535", f"-bind=127.0.0.1:{onion_port}=onion"])
+        self.stop_node(0)
+        self.start_node(0, extra_args=["-listen=0", "-port=65535"])
+
 
 if __name__ == '__main__':
     PortTest(__file__).main()
