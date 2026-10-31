@@ -5,6 +5,7 @@
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
 #include <script/script.h>
+#include <script/script_error.h>
 #include <script/sigcache.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
@@ -139,8 +140,14 @@ static void AssetTest(const UniValue& test, SignatureCache& signature_cache)
         for (const auto flags : ALL_CONSENSUS_FLAGS) {
             // If a test is supposed to fail with test_flags, it should also fail with any superset thereof.
             if ((flags & test_flags) == test_flags) {
-                bool ret = VerifyScript(tx.vin[idx].scriptSig, prevouts[idx].scriptPubKey, &tx.vin[idx].scriptWitness, flags, txcheck, nullptr);
+                ScriptError serror;
+                bool ret = VerifyScript(tx.vin[idx].scriptSig, prevouts[idx].scriptPubKey, &tx.vin[idx].scriptWitness, flags, txcheck, &serror);
                 BOOST_CHECK(!ret);
+                // With exactly test_flags the failure is also expected for the stated reason. A superset of the
+                // flags may fail earlier for another reason.
+                if (flags == test_flags && test.exists("error")) {
+                    BOOST_CHECK_EQUAL(ScriptErrorString(serror), test["error"].get_str());
+                }
             }
         }
     }

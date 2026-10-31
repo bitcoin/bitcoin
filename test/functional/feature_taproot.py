@@ -1031,6 +1031,10 @@ def spenders_taproot_active():
         ("t35", CScript([bytes([csa_low_val]), pubs[1], OP_CHECKSIGADD, csa_low_result, OP_EQUAL])),
         # 36) Empty script
         ("t36", CScript([])),
+        # 37) 0-of-0 CHECKMULTISIG, which succeeds when executed, so only the tapscript ban can make it fail
+        ("t37", CScript([OP_DROP, OP_0, OP_0, OP_0, OP_CHECKMULTISIG])),
+        # 38) The same with CHECKMULTISIGVERIFY
+        ("t38", CScript([OP_DROP, OP_0, OP_0, OP_0, OP_CHECKMULTISIGVERIFY, OP_1])),
     ]
     # Add many dummies to test huge trees
     for j in range(100000):
@@ -1049,6 +1053,10 @@ def spenders_taproot_active():
     # Test that OP_CHECKMULTISIG and OP_CHECKMULTISIGVERIFY cause failure, but OP_CHECKSIG and OP_CHECKSIGVERIFY work.
     add_spender(spenders, "tapscript/disabled_checkmultisig", leaf="t1", **common, **SINGLE_SIG, failure={"leaf": "t3"}, **ERR_TAPSCRIPT_CHECKMULTISIG)
     add_spender(spenders, "tapscript/disabled_checkmultisigverify", leaf="t2", **common, **SINGLE_SIG, failure={"leaf": "t4"}, **ERR_TAPSCRIPT_CHECKMULTISIG)
+    # The same with a 0-of-0 CHECKMULTISIG(VERIFY), which succeeds if the opcode is executed. An implementation which
+    # does not disable the opcode fails the t3/t4 variants anyway, since the Schnorr signature is not a DER signature.
+    add_spender(spenders, "tapscript/disabled_checkmultisig", leaf="t1", **common, **SINGLE_SIG, failure={"leaf": "t37"}, **ERR_TAPSCRIPT_CHECKMULTISIG)
+    add_spender(spenders, "tapscript/disabled_checkmultisigverify", leaf="t2", **common, **SINGLE_SIG, failure={"leaf": "t38"}, **ERR_TAPSCRIPT_CHECKMULTISIG)
     # Test that OP_IF and OP_NOTIF do not accept non-0x01 as truth value (the MINIMALIF rule is consensus in Tapscript)
     add_spender(spenders, "tapscript/minimalif", leaf="t5", **common, inputs=[getter("sign"), b'\x01'], failure={"inputs": [getter("sign"), b'\x02']}, **ERR_TAPSCRIPT_MINIMALIF)
     add_spender(spenders, "tapscript/minimalnotif", leaf="t6", **common, inputs=[getter("sign"), b'\x01'], failure={"inputs": [getter("sign"), b'\x03']}, **ERR_TAPSCRIPT_MINIMALIF)
@@ -1402,6 +1410,9 @@ def dump_json_test(tx, input_utxos, idx, success, failure):
         fields.append(("success", dump_witness(success)))
     if failure is not None:
         fields.append(("failure", dump_witness(failure)))
+        # The script error the failure case is expected to fail with under the listed flags, when known.
+        if spender.err_msg is not None:
+            fields.append(("error", spender.err_msg))
 
     # Write the dump to $TEST_DUMP_DIR/x/xyz... where x,y,z,... are the SHA1 sum of the dump (which makes the
     # file naming scheme compatible with fuzzing infrastructure).
