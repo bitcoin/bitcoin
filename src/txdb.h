@@ -11,6 +11,7 @@
 #include <kernel/caches.h>
 #include <kernel/cs_main.h>
 #include <sync.h>
+#include <util/check.h>
 #include <util/fs.h>
 
 #include <cstddef>
@@ -21,6 +22,7 @@
 #include <string>
 #include <vector>
 
+class Coin;
 class COutPoint;
 class uint256;
 
@@ -30,6 +32,32 @@ struct CoinsViewOptions {
     uint64_t batch_write_bytes{DEFAULT_DB_CACHE_BATCH};
     //! If non-zero, randomly exit when the database is flushed with (1/ratio) probability.
     int simulate_crash_ratio{0};
+};
+
+/** Builds up a leveldb batch of coin records, without staging in a CoinsView
+ * cache. Batches are written and refilled rather than reallocated. */
+class RawCoinDataDBBatch
+{
+public:
+    /** @param[in] db  database that this batch is to be submitted to */
+    explicit RawCoinDataDBBatch(CDBWrapper& db);
+
+    /** Serialize one coin into the batch */
+    void Add(const COutPoint& outpoint, const Coin& coin);
+
+    /** Store the best block. Call this only after every coin is written; a database
+     * without the marker is known to be incomplete. */
+    void AddBestBlock(const uint256& block_hash);
+
+    /** Get size of batch */
+    size_t ApproximateSize() const { return m_batch.ApproximateSize(); }
+
+    /** Write the batch into the database, leaving it empty for reuse */
+    void Flush();
+
+private:
+    CDBWrapper& m_db;
+    CDBBatch m_batch;
 };
 
 /** CCoinsView backed by the coin database (chainstate/) */
@@ -67,6 +95,9 @@ public:
 
     //! Return an underlying LevelDB property value, if available.
     std::optional<std::string> GetDBProperty(const std::string& property);
+
+    //! Access the underlying database; for testing/in-memory databases only.
+    CDBWrapper& GetDB() { Assert(m_db_params.memory_only); return *m_db; }
 };
 
 #endif // BITCOIN_TXDB_H
