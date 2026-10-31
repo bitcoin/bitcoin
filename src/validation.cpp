@@ -4977,7 +4977,11 @@ void Chainstate::PopulateBlockIndexCandidates()
 {
     AssertLockHeld(::cs_main);
 
+    const CBlockIndex* target_block{TargetBlock()};
     for (CBlockIndex* pindex : m_blockman.GetAllBlockIndices()) {
+        // A historical chainstate's target is the snapshot block, which has a
+        // hardcoded m_chain_tx_count even if some of its ancestors are missing.
+        if (pindex == target_block && !pindex->pprev->HaveNumChainTxs()) continue;
         // With assumeutxo, the snapshot block is a candidate for the tip, but it
         // may not have BLOCK_VALID_TRANSACTIONS (e.g. if we haven't yet downloaded
         // the block), so we special-case it here.
