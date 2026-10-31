@@ -917,6 +917,14 @@ const RPCResult& DecodePSBTInputs()
                         {
                             {RPCResult::Type::STR_HEX, "control_block", "A hex-encoded control block for this script"},
                         }},
+                        {RPCResult::Type::ARR, "control_block_warnings", /*optional=*/ true, "Present only if one or more of the control blocks above could not be a genuine leaf of this input's taproot tree (BIP341): entries here have a nonsensical leaf version, the wrong size, or a leaf-version byte that doesn't match leaf_ver, or -- only checked when this input carries a taproot_merkle_root -- a Merkle root that doesn't match it. A control block that passes every check that could be performed on it is omitted; when taproot_merkle_root is absent from this input, that omission means only that the checks not needing it passed, not that the control block is a genuine leaf",
+                        {
+                            {RPCResult::Type::OBJ, "", "",
+                            {
+                                {RPCResult::Type::STR_HEX, "control_block", "The control block above (from control_blocks) that this diagnostic is about"},
+                                {RPCResult::Type::STR, "warning", "Why this control block could not be verified as a genuine leaf"},
+                            }},
+                        }},
                     }},
                 }},
                 {RPCResult::Type::ARR, "taproot_bip32_derivs", /*optional=*/ true, "",
@@ -1069,6 +1077,25 @@ const RPCResult& DecodePSBTOutputs()
         }
     };
     return decodepsbt_outputs;
+}
+
+//! Human-readable reason a PSBT_IN_TAP_LEAF_SCRIPT record's control block failed one of
+//! CheckTapLeafCandidate()'s checks, for decodepsbt's control_block_warnings diagnostic.
+static std::string TapLeafCandidateErrorString(TapLeafCandidateError error)
+{
+    switch (error) {
+    case TapLeafCandidateError::NONE:
+        break;
+    case TapLeafCandidateError::BAD_LEAF_VERSION:
+        return "leaf version is not a valid tapscript version (BIP341 requires it to be even)";
+    case TapLeafCandidateError::BAD_CONTROL_BLOCK_SIZE:
+        return "control block length is not 33 + 32*n bytes for some n in [0, 128]";
+    case TapLeafCandidateError::LEAF_VERSION_MISMATCH:
+        return "control block's leaf-version byte does not match this record's leaf_ver";
+    case TapLeafCandidateError::MERKLE_ROOT_MISMATCH:
+        return "computed Merkle root does not match this input's taproot_merkle_root";
+    } // no default case, so the compiler can warn about missing cases
+    NONFATAL_UNREACHABLE();
 }
 
 static RPCMethod decodepsbt()
@@ -1366,6 +1393,9 @@ static RPCMethod decodepsbt()
 
         // Taproot leaf scripts
         if (!input.m_tap_scripts.empty()) {
+            // PSBT_IN_TAP_MERKLE_ROOT (BIP371) is optional: only evaluate the Merkle-root check
+            // of CheckTapLeafCandidate() below when this input actually carries one.
+            const std::optional<uint256> merkle_root{input.m_tap_merkle_root.IsNull() ? std::nullopt : std::make_optional(input.m_tap_merkle_root)};
             UniValue tap_scripts(UniValue::VARR);
             for (const auto& [leaf, control_blocks] : input.m_tap_scripts) {
                 const auto& [script, leaf_ver] = leaf;
@@ -1373,10 +1403,21 @@ static RPCMethod decodepsbt()
                 script_info.pushKV("script", HexStr(script));
                 script_info.pushKV("leaf_ver", leaf_ver);
                 UniValue control_blocks_univ(UniValue::VARR);
+                UniValue control_block_warnings(UniValue::VARR);
                 for (const auto& control_block : control_blocks) {
                     control_blocks_univ.push_back(HexStr(control_block));
+                    const TapLeafCandidateError error{CheckTapLeafCandidate(leaf_ver, control_block, script, merkle_root)};
+                    if (error != TapLeafCandidateError::NONE) {
+                        UniValue warning(UniValue::VOBJ);
+                        warning.pushKV("control_block", HexStr(control_block));
+                        warning.pushKV("warning", TapLeafCandidateErrorString(error));
+                        control_block_warnings.push_back(std::move(warning));
+                    }
                 }
                 script_info.pushKV("control_blocks", std::move(control_blocks_univ));
+                if (!control_block_warnings.empty()) {
+                    script_info.pushKV("control_block_warnings", std::move(control_block_warnings));
+                }
                 tap_scripts.push_back(std::move(script_info));
             }
             in.pushKV("taproot_scripts", std::move(tap_scripts));
