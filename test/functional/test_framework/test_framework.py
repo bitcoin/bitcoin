@@ -45,6 +45,9 @@ from .util import (
     JSONRPCException,
 )
 
+from .wallet_util import WalletUnlock
+
+
 
 class TestStatus(Enum):
     PASSED = 1
@@ -115,6 +118,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.bind_to_localhost_only = True
         self.parse_args(test_file)
         self.default_wallet_name = "default_wallet"
+        self.default_wallet_pass = "regtest_coin$"
         self.wallet_data_filename = "wallet.dat"
         # Optional list of wallet names that can be set in set_test_params to
         # create and import keys to. If unset, default is len(nodes) *
@@ -400,18 +404,23 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 assert_equal(chain_info["blocks"], 200)
                 assert_equal(chain_info["initialblockdownload"], False)
 
-    def import_deterministic_coinbase_privkeys(self):
+    def import_deterministic_coinbase_privkeys(self, encrypted=False):
         for i in range(self.num_nodes):
-            self.init_wallet(node=i)
+            self.init_wallet(node=i, encrypted=encrypted)
 
-    def init_wallet(self, *, node):
+    def init_wallet(self, *, node, encrypted=False):
         """Refer to the self.wallet_names docstring on how to use this"""
         wallet_name = self.default_wallet_name if self.wallet_names is None else self.wallet_names[node] if node < len(self.wallet_names) else False
         if wallet_name is not False:
             n = self.nodes[node]
-            if wallet_name is not None:
+            if encrypted:
+                n.createwallet(wallet_name=wallet_name, load_on_startup=True, passphrase=self.default_wallet_pass)
+                w = n.get_wallet_rpc(wallet_name)
+                with WalletUnlock(w, self.default_wallet_pass):
+                    wallet_importprivkey(n.get_wallet_rpc(wallet_name), n.get_deterministic_priv_key().key, 0, label="coinbase")
+            else:
                 n.createwallet(wallet_name=wallet_name, load_on_startup=True)
-            wallet_importprivkey(n.get_wallet_rpc(wallet_name), n.get_deterministic_priv_key().key, 0, label="coinbase")
+                wallet_importprivkey(n.get_wallet_rpc(wallet_name), n.get_deterministic_priv_key().key, 0, label="coinbase")
 
     def run_test(self):
         """Tests must override this method to define test logic"""

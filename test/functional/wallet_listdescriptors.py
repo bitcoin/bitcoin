@@ -17,7 +17,10 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
-from test_framework.wallet_util import generate_keypair
+from test_framework.wallet_util import (
+        WalletUnlock,
+        generate_keypair
+)
 
 
 class ListDescriptorsTest(BitcoinTestFramework):
@@ -27,6 +30,23 @@ class ListDescriptorsTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+
+    def test_encrypted_wallet(self):
+        self.log.info("Test listdescriptors with encrypted wallet")
+        self.nodes[0].createwallet("encrypted", passphrase=self.default_wallet_pass)
+        encrypted_wallet = self.nodes[0].get_wallet_rpc("encrypted")
+        self.log.info("- With private=false, Works when locked.")
+        encrypted_locked_output = encrypted_wallet.listdescriptors()
+        self.log.info("- With private=false, output is equivalent when locked and unlocked.")
+        with WalletUnlock(encrypted_wallet, self.default_wallet_pass):
+            assert_equal(encrypted_locked_output, encrypted_wallet.listdescriptors())
+
+        self.log.info('- With private=true, errors when the wallet is locked.')
+        assert_raises_rpc_error(-13, 'Please enter the wallet passphrase with walletpassphrase first.', encrypted_wallet.listdescriptors, True)
+        encrypted_wallet.walletpassphrase(passphrase=self.default_wallet_pass, timeout=self.rpc_timeout)
+        encrypted_wallet.listdescriptors(True)
+        encrypted_wallet.unloadwallet()
+
 
     def run_test(self):
         node = self.nodes[0]
@@ -92,14 +112,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
         }
         assert_equal(expected_private, wallet.listdescriptors(True))
 
-        self.log.info("Test listdescriptors with encrypted wallet")
-        wallet.encryptwallet("pass")
-        assert_equal(expected, wallet.listdescriptors())
-
-        self.log.info('Test list private descriptors with encrypted wallet')
-        assert_raises_rpc_error(-13, 'Please enter the wallet passphrase with walletpassphrase first.', wallet.listdescriptors, True)
-        wallet.walletpassphrase(passphrase="pass", timeout=1000000)
-        assert_equal(expected_private, wallet.listdescriptors(True))
+        self.test_encrypted_wallet()
 
         self.log.info('Test list private descriptors with watch-only wallet')
         node.createwallet(wallet_name='watch-only', disable_private_keys=True)
