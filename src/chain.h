@@ -117,16 +117,16 @@ public:
     //! (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
     arith_uint256 nChainWork{};
 
-    //! Number of transactions in this block. This will be nonzero if the block
-    //! reached the VALID_TRANSACTIONS level, and zero otherwise.
-    //! Note: in a potential headers-first mode, this number cannot be relied upon
-    unsigned int nTx{0};
-
     //! (memory only) Number of transactions in the chain up to and including this block.
     //! This value will be non-zero if this block and all previous blocks back
     //! to the genesis block or an assumeutxo snapshot block have reached the
     //! VALID_TRANSACTIONS level.
     uint64_t m_chain_tx_count{0};
+
+    //! Number of transactions in this block. This will be nonzero if the block
+    //! reached the VALID_TRANSACTIONS level, and zero otherwise.
+    //! Note: in a potential headers-first mode, this number cannot be relied upon
+    unsigned int nTx{0};
 
     //! Verification status of this block. See enum BlockStatus
     //!
