@@ -52,6 +52,7 @@
 #include <atomic>
 #include <compare>
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <memory>
 #include <optional>
@@ -61,6 +62,7 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -622,6 +624,33 @@ static RPCMethod getnettotals()
                            {RPCResult::Type::NUM, "bytes_left_in_cycle", "Bytes left in current time cycle"},
                            {RPCResult::Type::NUM, "time_left_in_cycle", "Seconds left in current time cycle"},
                         }},
+                        {RPCResult::Type::OBJ_DYN, "detailed", "Number messages and bytes, broken down by direction, network, connection type or message type. If not listed, the statistics for that metric are 0.",
+                        {
+                            {RPCResult::Type::OBJ_DYN, "sent", /*optional=*/true, "The direction in which the traffic occurred.",
+                            {
+                                {RPCResult::Type::OBJ_DYN, "ipv4", /*optional=*/true, "The network over which the traffic occurred.",
+                                {
+                                    {RPCResult::Type::OBJ_DYN, "inbound", /*optional=*/true, "The connection type over which the traffic occurred.",
+                                    {
+                                        {RPCResult::Type::OBJ, "verack", /*optional=*/true, "Type of the messages transferred.",
+                                        {
+                                            {RPCResult::Type::NUM, "bytes", /*optional=*/false, "Total number of bytes.", {}, {.skip_type_check = true}},
+                                            {RPCResult::Type::NUM, "count", /*optional=*/false, "Total number of messages.", {}, {.skip_type_check = true}}
+                                        },
+                                        {.skip_type_check = true}
+                                        }
+                                    },
+                                    {.skip_type_check = true}
+                                    }
+                                },
+                                {.skip_type_check = true}
+                                }
+                            },
+                            {.skip_type_check = true}
+                            }
+                        },
+                        {.skip_type_check = true}
+                        }
                     }
                 },
                 RPCExamples{
@@ -646,6 +675,61 @@ static RPCMethod getnettotals()
     outboundLimit.pushKV("bytes_left_in_cycle", connman.GetOutboundTargetBytesLeft());
     outboundLimit.pushKV("time_left_in_cycle", count_seconds(connman.GetMaxOutboundTimeLeftInCycle()));
     obj.pushKV("uploadtarget", std::move(outboundLimit));
+
+    std::unordered_map<
+        std::string, // "sent" or "recv"
+        std::unordered_map<std::string, // "ipv4", "tor", ...
+                           std::unordered_map<std::string, // "outbound-full-relay", "feeler", ...
+                                              std::unordered_map<std::string, // "verack", "ping", ...
+                                                                 NetStats::BytesAndCount>>>>
+        detailed_map;
+
+    connman.GetNetStats().ForEach([&detailed_map](NetStats::Direction dir,
+                                                  Network net,
+                                                  ConnectionType con,
+                                                  const std::string& msg,
+                                                  const NetStats::BytesAndCount& data) {
+        const std::string dir_str{dir == NetStats::SENT ? "sent" : "recv"};
+        const std::string net_str{GetNetworkName(net)};
+        const std::string con_str{ConnectionTypeAsString(con)};
+
+        detailed_map[dir_str][net_str][con_str][msg] += data;
+    });
+
+    UniValue dir_json{UniValue::VOBJ};
+    for (const auto& [dir_key, dir_val] : detailed_map) {
+        UniValue net_json{UniValue::VOBJ};
+        for (const auto& [net_key, net_val] : dir_val) {
+            UniValue con_json{UniValue::VOBJ};
+            for (const auto& [con_key, con_val] : net_val) {
+                UniValue msg_json{UniValue::VOBJ};
+                for (const auto& [msg_key, stats] : con_val) {
+                    const auto bytes = stats.bytes.load();
+                    const auto count = stats.count.load();
+                    if (bytes == 0 || count == 0) {
+                        continue;
+                    }
+                    UniValue bytes_and_count_json{UniValue::VOBJ};
+                    bytes_and_count_json.pushKV("bytes", bytes);
+                    bytes_and_count_json.pushKV("count", count);
+
+                    msg_json.pushKV(msg_key, bytes_and_count_json);
+                }
+                if (!msg_json.empty()) {
+                    con_json.pushKV(con_key, msg_json);
+                }
+            }
+            if (!con_json.empty()) {
+                net_json.pushKV(net_key, con_json);
+            }
+        }
+        if (!net_json.empty()) {
+            dir_json.pushKV(dir_key, net_json);
+        }
+    }
+
+    obj.pushKV("detailed", std::move(dir_json));
+
     return obj;
 },
     };
