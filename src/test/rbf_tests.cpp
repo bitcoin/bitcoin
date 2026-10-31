@@ -4,13 +4,14 @@
 #include <common/system.h>
 #include <policy/rbf.h>
 #include <random.h>
+#include <test/util/setup_common.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
+#include <util/check.h>
 #include <util/time.h>
 
-#include <test/util/setup_common.h>
-
 #include <boost/test/unit_test.hpp>
+
 #include <optional>
 #include <vector>
 

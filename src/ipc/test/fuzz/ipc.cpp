@@ -2,20 +2,21 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <primitives/transaction.h>
 #include <capnp/capability.h>
 #include <capnp/rpc.h>
+#include <ipc/test/fuzz/ipc_fuzz.capnp.h>
+#include <ipc/test/fuzz/ipc_fuzz.capnp.proxy.h>
+#include <ipc/test/fuzz/ipc_fuzz.h>
 #include <ipc/util.h>
 #include <kj/memory.h>
 #include <mp/proxy-io.h>
 #include <mp/proxy.h>
+#include <primitives/transaction.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
-#include <ipc/test/fuzz/ipc_fuzz.capnp.h>
-#include <ipc/test/fuzz/ipc_fuzz.capnp.proxy.h>
-#include <ipc/test/fuzz/ipc_fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 
 #include <future>
 #include <memory>
