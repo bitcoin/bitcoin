@@ -882,7 +882,9 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         CHECK_NONFATAL(IsValidDestination(dest) != scriptChange.empty());
     }
     CTxOut change_prototype_txout(0, scriptChange);
-    coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout);
+    // Adding the change output may also grow the output count CompactSize
+    coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout) +
+                                               GetSizeOfCompactSize(vecSend.size() + 1) - GetSizeOfCompactSize(vecSend.size());
 
     // Get size of spending the change output
     int change_spend_size = CalculateMaximumSignedInputSize(change_prototype_txout, &wallet);
@@ -927,8 +929,8 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     const auto change_spend_fee = coin_selection_params.m_discard_feerate.GetFee(coin_selection_params.change_spend_size);
     coin_selection_params.min_viable_change = std::max(change_spend_fee + 1, dust);
 
-    // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime, 1 input count
-    coin_selection_params.tx_noinputs_size = 9 + GetSizeOfCompactSize(vecSend.size()) + extra_payload_bytes; // bytes for output count
+    // Static vsize overhead + outputs vsize. 4 nVersion, 4 nLocktime (input count is added once the coins are known)
+    coin_selection_params.tx_noinputs_size = 8 + GetSizeOfCompactSize(vecSend.size()) + extra_payload_bytes; // bytes for output count
 
     // vouts to the payees
     for (const auto& recipient : vecSend)
@@ -944,16 +946,6 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         txNew.vout.push_back(txout);
     }
 
-    // Include the fees for things that aren't inputs, excluding the change output
-    const CAmount not_input_fees = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.m_subtract_fee_outputs ? 0 : coin_selection_params.tx_noinputs_size);
-    CAmount selection_target = recipients_sum + not_input_fees;
-
-    // This can only happen if feerate is 0, and requested destinations are value of 0 (e.g. OP_RETURN)
-    // and no pre-selected inputs. This will result in 0-input transaction, which is consensus-invalid anyways
-    if (selection_target == 0 && !coin_control.HasSelected()) {
-        return util::Error{_("Transaction requires one destination of non-0 value, a non-0 feerate, or a pre-selected input")};
-    }
-
     // Fetch manually selected coins
     PreSelectedInputs preset_inputs;
     if (coin_control.HasSelected()) {
@@ -967,6 +959,20 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     CoinsResult available_coins;
     if (coin_control.m_allow_other_inputs) {
         available_coins = AvailableCoins(wallet, &coin_control, coin_selection_params.m_effective_feerate);
+    }
+
+    // Coin selection can't know in advance how many inputs it will pick, so size the input count for every coin
+    // it could pick. Otherwise transactions with 253+ inputs underpay the fee for the 3 byte CompactSize.
+    coin_selection_params.tx_noinputs_size += GetSizeOfCompactSize(preset_inputs.coins.size() + available_coins.Size());
+
+    // Include the fees for things that aren't inputs, excluding the change output
+    const CAmount not_input_fees = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.m_subtract_fee_outputs ? 0 : coin_selection_params.tx_noinputs_size);
+    CAmount selection_target = recipients_sum + not_input_fees;
+
+    // This can only happen if feerate is 0, and requested destinations are value of 0 (e.g. OP_RETURN)
+    // and no pre-selected inputs. This will result in 0-input transaction, which is consensus-invalid anyways
+    if (selection_target == 0 && !coin_control.HasSelected()) {
+        return util::Error{_("Transaction requires one destination of non-0 value, a non-0 feerate, or a pre-selected input")};
     }
 
     // Choose coins to use
