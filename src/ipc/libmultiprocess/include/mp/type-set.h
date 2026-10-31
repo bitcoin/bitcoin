@@ -9,8 +9,8 @@
 #include <mp/util.h>
 
 namespace mp {
-template <typename LocalType, typename Value, typename Output>
-void CustomBuildField(TypeList<std::set<LocalType>>,
+template <typename LocalType, typename Compare, typename Allocator, typename Value, typename Output>
+void CustomBuildField(TypeList<std::set<LocalType, Compare, Allocator>>,
     Priority<1>,
     InvokeContext& invoke_context,
     Value&& value,
@@ -19,8 +19,8 @@ void CustomBuildField(TypeList<std::set<LocalType>>,
     BuildList(TypeList<LocalType>(), invoke_context, output, value);
 }
 
-template <typename LocalType, typename Input, typename ReadDest>
-decltype(auto) CustomReadField(TypeList<std::set<LocalType>>,
+template <typename LocalType, typename Compare, typename Allocator, typename Input, typename ReadDest>
+decltype(auto) CustomReadField(TypeList<std::set<LocalType, Compare, Allocator>>,
     Priority<1>,
     InvokeContext& invoke_context,
     Input&& input,
