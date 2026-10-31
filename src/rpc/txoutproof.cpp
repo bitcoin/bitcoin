@@ -12,6 +12,7 @@
 #include <merkleblock.h>
 #include <node/blockstorage.h>
 #include <node/transaction.h>
+#include <node/tx_lookup_result.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <rpc/blockchain.h>
@@ -41,9 +42,13 @@ static RPCMethod gettxoutproof()
         "gettxoutproof",
         "Returns a hex-encoded proof that \"txid\" was included in a block.\n"
         "\nNOTE: By default this function only works sometimes. This is when there is an\n"
-        "unspent output in the utxo for this transaction. To make it always work,\n"
-        "you need to maintain a transaction index, using the -txindex command line option or\n"
-        "specify the block in which the transaction is included manually (by blockhash).\n",
+        "unspent output in the utxo for this transaction. Otherwise, you need to maintain\n"
+        "a transaction index, using the -txindex command line option, or specify the block\n"
+        "in which the transaction is included manually (by blockhash). The block data must be available.\n\n"
+        "If pruning is enabled, this call may return error -1 indicating that a requested transaction may be found\n"
+        "in one or more pruned blocks. The block hashes are included in the error message and the\n"
+        "error.data.pruned_block_hashes array. These blocks are not guaranteed to contain all requested transactions.\n"
+        "Use getblockfrompeer to fetch the blocks, then retry the request.\n",
         {
             {"txids", RPCArg::Type::ARR, RPCArg::Optional::NO, "The txids to filter",
                 {
@@ -101,10 +106,15 @@ static RPCMethod gettxoutproof()
             }
 
             if (pblockindex == nullptr) {
-                const CTransactionRef tx = GetTransaction(/*block_index=*/nullptr, /*mempool=*/nullptr, *setTxids.begin(), chainman.m_blockman, hashBlock);
-                if (!tx || hashBlock.IsNull()) {
+                const TxLookupResult result{GetTransaction(/*block_index=*/nullptr, /*mempool=*/nullptr, *setTxids.begin(), chainman.m_blockman)};
+                const auto* found{result.GetFound()};
+                if (!found || found->block_hash.IsNull()) {
+                    if (const auto* miss{result.GetMiss()}; miss && !miss->pruned_block_hashes.empty()) {
+                        throw JSONRPCPrunedBlocksError(miss->pruned_block_hashes);
+                    }
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
                 }
+                hashBlock = found->block_hash;
 
                 LOCK(cs_main);
                 pblockindex = chainman.m_blockman.LookupBlockIndex(hashBlock);
@@ -115,6 +125,9 @@ static RPCMethod gettxoutproof()
 
             {
                 LOCK(cs_main);
+                if (chainman.m_blockman.IsBlockPruned(*pblockindex)) {
+                    throw JSONRPCPrunedBlocksError({pblockindex->GetBlockHash()});
+                }
                 CheckBlockDataAvailability(chainman.m_blockman, *pblockindex, /*check_for_undo=*/false);
             }
             CBlock block;

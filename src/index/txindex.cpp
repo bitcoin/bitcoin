@@ -14,6 +14,7 @@
 #include <index/txindex_key.h>
 #include <interfaces/chain.h>
 #include <node/blockstorage.h>
+#include <node/tx_lookup_result.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <random.h>
@@ -33,7 +34,7 @@
 #include <exception>
 #include <functional>
 #include <memory>
-#include <optional>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -144,6 +145,11 @@ TxIndex::TxIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, 
 
 TxIndex::~TxIndex() = default;
 
+bool TxIndex::AllowPrune() const
+{
+    return !m_db->m_has_legacy;
+}
+
 bool TxIndex::CustomAppend(const interfaces::BlockInfo& block)
 {
     // Exclude genesis block transaction because outputs are not spendable.
@@ -156,7 +162,7 @@ bool TxIndex::CustomAppend(const interfaces::BlockInfo& block)
 
 BaseIndex::DB& TxIndex::GetDB() const { return *m_db; }
 
-std::optional<TxIndexResult> TxIndex::FindTx(const Txid& tx_hash) const
+TxLookupResult TxIndex::FindTx(const Txid& tx_hash) const
 {
     struct Candidate {
         FlatFilePos tx_position;
@@ -164,10 +170,11 @@ std::optional<TxIndexResult> TxIndex::FindTx(const Txid& tx_hash) const
         uint32_t block_seq;
         //! Whether this candidate's block is currently in the active chain.
         //! Active chain candidates are attempted first, so duplicate entries
-        //! in both active and stale blocks will always return the active block hash.
+        //! in both active and stale blocks will return the active block hash if readable.
         bool in_active_chain;
     };
     std::vector<Candidate> candidates;
+    std::set<uint256> pruned_block_hashes;
     {
         std::unique_ptr<CDBIterator> it{m_db->NewIterator()};
         const txindex::TxHashKeyPrefix prefix{txindex::CreateKeyPrefix(m_db->m_hasher, tx_hash)};
@@ -184,9 +191,13 @@ std::optional<TxIndexResult> TxIndex::FindTx(const Txid& tx_hash) const
                 LogWarning("Block index entry %s not found for txid %s", candidate_block_hash.ToString(), tx_hash.ToString());
                 continue;
             }
-            if (!(block_index->nStatus & BLOCK_HAVE_DATA)) continue;
+            const bool in_active_chain{m_chainstate->m_chain.Contains(*block_index)};
+            if (~block_index->nStatus & BLOCK_HAVE_DATA) {
+                if (in_active_chain) pruned_block_hashes.insert(candidate_block_hash);
+                continue;
+            }
             const FlatFilePos tx_position{block_index->nFile, block_index->nDataPos + key.pos.tx_offset_in_block};
-            candidates.emplace_back(tx_position, candidate_block_hash, key.pos.block_seq, m_chainstate->m_chain.Contains(*block_index));
+            candidates.emplace_back(tx_position, candidate_block_hash, key.pos.block_seq, in_active_chain);
         }
     }
 
@@ -198,36 +209,39 @@ std::optional<TxIndexResult> TxIndex::FindTx(const Txid& tx_hash) const
     for (const auto& candidate : candidates) {
         AutoFile file{m_chainstate->m_blockman.OpenBlockFile(candidate.tx_position, /*fReadOnly=*/true)};
         if (file.IsNull()) {
+            LOCK(cs_main);
+            const CBlockIndex* block_index{m_chainstate->m_blockman.LookupBlockIndex(candidate.block_hash)};
+            if (block_index && m_chainstate->m_chain.Contains(*block_index) && m_chainstate->m_blockman.IsBlockPruned(*block_index)) {
+                pruned_block_hashes.insert(candidate.block_hash);
+                continue;
+            }
             LogWarning("OpenBlockFile failed for txid %s", tx_hash.ToString());
             continue;
         }
-        CTransactionRef tx;
         try {
-            file >> TX_WITH_WITNESS(tx);
+            auto tx{std::make_shared<const CTransaction>(deserialize, TX_WITH_WITNESS, file)};
+            if (tx->GetHash() == tx_hash) return TxFound{std::move(tx), candidate.block_hash};
         } catch (const std::exception& e) {
             LogWarning("Deserialize or I/O error - %s", e.what());
-            continue;
-        }
-        if (tx->GetHash() == tx_hash) {
-            return TxIndexResult{candidate.block_hash, std::move(tx)};
         }
     }
     // Fall back to legacy if no hashed entry matched. This makes misses pay an
     // extra lookup, but keeps existing full-txid entries readable after upgrade.
-    return m_db->m_has_legacy ? FindLegacyTx(tx_hash) : std::nullopt;
+    if (m_db->m_has_legacy) return FindLegacyTx(tx_hash);
+    return TxMiss{std::move(pruned_block_hashes)};
 }
 
-std::optional<TxIndexResult> TxIndex::FindLegacyTx(const Txid& tx_hash) const
+TxLookupResult TxIndex::FindLegacyTx(const Txid& tx_hash) const
 {
     CDiskTxPos postx;
     if (!m_db->Read(txindex::LegacyTxKey(tx_hash), postx)) {
-        return std::nullopt;
+        return TxMiss{};
     }
 
     AutoFile file{m_chainstate->m_blockman.OpenBlockFile(postx, /*fReadOnly=*/true)};
     if (file.IsNull()) {
         LogWarning("%s: OpenBlockFile failed", GetName());
-        return std::nullopt;
+        return TxMiss{};
     }
     CBlockHeader header;
     CTransactionRef tx;
@@ -237,11 +251,11 @@ std::optional<TxIndexResult> TxIndex::FindLegacyTx(const Txid& tx_hash) const
         file >> TX_WITH_WITNESS(tx);
     } catch (const std::exception& e) {
         LogWarning("%s: Deserialize or I/O error - %s", GetName(), e.what());
-        return std::nullopt;
+        return TxMiss{};
     }
     if (tx->GetHash() != tx_hash) {
         LogWarning("%s: txid mismatch", GetName());
-        return std::nullopt;
+        return TxMiss{};
     }
-    return TxIndexResult{header.GetHash(), std::move(tx)};
+    return TxFound{std::move(tx), header.GetHash()};
 }
