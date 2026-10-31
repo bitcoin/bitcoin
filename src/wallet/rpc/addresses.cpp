@@ -398,13 +398,13 @@ static std::vector<RPCResult> GetAddressInfoEmbeddedFields(bool include_nested)
 
     if (include_nested) {
         auto nested = GetAddressInfoBaseFields();
-        fields.emplace_back(
+        fields.push_back({
             RPCResult::Type::OBJ,
             "embedded",
             /*optional=*/true,
             "Information about the address embedded in P2SH or P2WSH, if relevant and known.",
             std::move(nested)
-        );
+        });
     }
 
     return fields;
@@ -459,7 +459,7 @@ RPCMethod getaddressinfo()
                         {RPCResult::Type::ARR, "labels", "Array of labels associated with the address. Currently limited to one label but returned\n"
                             "as an array to keep the API stable if multiple labels are enabled in the future.",
                         {
-                            {RPCResult::Type::STR, "label name", "Label name (defaults to \"\")."},
+                            {RPCResult::Type::STR, "", "Label name (defaults to \"\")."},
                         }},
                     }
                 },
