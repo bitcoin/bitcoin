@@ -2904,9 +2904,16 @@ bool Chainstate::FlushStateToDisk(
             m_chainman.m_options.signals->ChainStateFlushed(this->GetRole(), GetLocator(m_last_flushed_block));
         }
 
-        if (!m_chainman.m_interrupt && ShouldCompactChainstate(m_chainman.IsInitialBlockDownload())) {
+        if (!m_chainman.m_interrupt && !CoinsDB().IsMemoryOnly() && ShouldCompactChainstate(m_chainman.IsInitialBlockDownload())) {
             try {
-                CoinsDB().CompactFullAsync();
+                const fs::path path{StoragePath()};
+                const uint64_t min_free_space{m_chainman.GetParams().AssumedChainStateSize() * 1_GiB};
+                if (CheckDiskSpace(path, min_free_space)) {
+                    CoinsDB().CompactFullAsync();
+                } else {
+                    LogWarning("Deferring chainstate compaction of %s: %.2f GiB free, %u GiB needed. Free up some space so compaction can run.",
+                               fs::PathToString(path), fs::space(path).available / double{1_GiB}, CeilDiv(min_free_space, 1_GiB));
+                }
             } catch (const std::exception& e) {
                 LogWarning("Failed to start chainstate compaction (%s)", e.what());
             }
