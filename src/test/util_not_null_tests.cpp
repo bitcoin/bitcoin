@@ -109,12 +109,8 @@ BOOST_AUTO_TEST_CASE(check_cross_type_conversion)
     };
 
     // Assume checks failed conversions during constant evaluation.
-#if !defined(_MSC_VER)
-    // MSVC does not reject this failed constant evaluation in a requires-expression.
-    // See https://github.com/bitcoin/bitcoin/issues/36153.
     static_assert(!NotNullCopyConvertible<NullPtr, SomePtr>);
     static_assert(!NotNullMoveConvertible<NullPtr, SomePtr>);
-#endif
 }
 
 BOOST_AUTO_TEST_CASE(check_null_smart_pointer)
