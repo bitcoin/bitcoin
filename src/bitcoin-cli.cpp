@@ -386,8 +386,8 @@ class NetinfoRequestHandler : public BaseRequestHandler
 {
 private:
     std::array<std::array<uint16_t, NETWORKS.size() + 1>, 3> m_counts{{{}}}; //!< Peer counts by (in/out/total, networks/total)
-    uint8_t m_block_relay_peers_count{0};
-    uint8_t m_manual_peers_count{0};
+    uint16_t m_block_relay_peers_count{0};
+    uint16_t m_manual_peers_count{0};
     uint8_t m_details_level{0}; //!< Optional user-supplied arg to set dashboard details level
     bool DetailsRequested() const { return m_details_level; }
     bool IsAddressSelected() const { return m_details_level == 2 || m_details_level == 4; }
