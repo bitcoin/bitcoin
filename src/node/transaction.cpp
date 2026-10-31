@@ -14,6 +14,7 @@
 #include <node/types.h>
 #include <policy/feerate.h>
 #include <txmempool.h>
+#include <util/check.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -31,7 +32,7 @@ static TransactionError HandleATMPError(const TxValidationState& state, std::str
     }
 }
 
-TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, const CFeeRate& max_tx_fee_rate, TxBroadcast broadcast_method, bool wait_callback)
+TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, const CFeeRate& max_tx_fee_rate, TxBroadcast broadcast_method, bool wait_callback, std::chrono::seconds delay)
 {
     // BroadcastTransaction can be called by RPC or by the wallet.
     // chainman, mempool and peerman are initialized before the RPC server and wallet are started
@@ -39,6 +40,8 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     assert(node.chainman);
     assert(node.mempool);
     assert(node.peerman);
+    // A delayed broadcast is only supported with private broadcast.
+    Assume(delay <= 0s || broadcast_method == TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST);
 
     Txid txid = tx->GetHash();
     Wtxid wtxid = tx->GetWitnessHash();
@@ -133,7 +136,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         node.peerman->InitiateTxBroadcastToAll(wtxid);
         break;
     case TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST:
-        return node.peerman->InitiateTxBroadcastPrivate(tx);
+        return node.peerman->InitiateTxBroadcastPrivate(tx, delay);
     }
 
     return TransactionError::OK;
