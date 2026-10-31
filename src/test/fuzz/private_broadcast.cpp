@@ -50,6 +50,10 @@ FUZZ_TARGET(private_broadcast)
     // The values are the number of times a transaction is planned to be sent.
     std::unordered_map<CTransactionRef, size_t, CTransactionRefHash, CTransactionRefComp> planned_sends;
     std::unordered_set<CTransactionRef, CTransactionRefHash, CTransactionRefComp> resolved_transactions;
+    // When each transaction was added, or reset by adding it again.
+    std::unordered_map<CTransactionRef, NodeClock::time_point, CTransactionRefHash, CTransactionRefComp> time_added;
+    // When each node confirmed reception. Only looked up through nodes_sent_to.
+    std::unordered_map<NodeId, NodeClock::time_point> confirmed_at;
 
     // Transactions passed to PickTxForSend(), indexed by node id. Trimmed when
     // Remove() is called or a transaction is reset or cleaned up by Add().
@@ -103,6 +107,7 @@ FUZZ_TARGET(private_broadcast)
                         Assert(res == PrivateBroadcast::AddResult::Added);
                         tx_it->second = 0;
                         planned_sends[tx] = PrivateBroadcast::INITIAL_CONNECTION_COUNT;
+                        time_added[tx] = NodeClock::now();
                         resolved_transactions.erase(tx);
                         std::erase_if(nodes_sent_to, [&](const auto& entry) { return CTransactionRefComp{}(entry.second, tx); });
                     }
@@ -112,6 +117,7 @@ FUZZ_TARGET(private_broadcast)
                     Assert(res == PrivateBroadcast::AddResult::Added);
                     transactions.emplace(tx, 0);
                     planned_sends.emplace(tx, PrivateBroadcast::INITIAL_CONNECTION_COUNT);
+                    time_added[tx] = NodeClock::now();
                 }
             },
             [&] { // Remove()
@@ -185,6 +191,7 @@ FUZZ_TARGET(private_broadcast)
                 const NodeId nodeid{ExistentOrNewNodeId()};
 
                 pb.NodeConfirmedReception(nodeid);
+                if (nodes_sent_to.contains(nodeid)) confirmed_at[nodeid] = NodeClock::now();
             },
             [&] { // NodeDisconnected()
                 const NodeId nodeid{ExistentOrNewNodeId()};
@@ -217,6 +224,25 @@ FUZZ_TARGET(private_broadcast)
                     Assert(!resolved_transactions.contains(stale_tx));
                     Assert(planned_sends.at(stale_tx) < max_send_attempts);
                 }
+
+                // Every transaction that should be stale must be returned, not only a subset.
+                const auto now{NodeClock::now()};
+                std::unordered_set<CTransactionRef, CTransactionRefHash, CTransactionRefComp> expected;
+                for (const auto& [tx, num_picked] : transactions) {
+                    if (resolved_transactions.contains(tx) || planned_sends.at(tx) >= max_send_attempts) continue;
+                    std::optional<NodeClock::time_point> last_confirmed;
+                    for (const auto& [nodeid, sent_tx] : nodes_sent_to) {
+                        if (!CTransactionRefComp{}(sent_tx, tx)) continue;
+                        if (const auto c{confirmed_at.find(nodeid)}; c != confirmed_at.end()) {
+                            last_confirmed = std::max(last_confirmed.value_or(c->second), c->second);
+                        }
+                    }
+                    const bool is_stale{last_confirmed ? *last_confirmed < now - PrivateBroadcast::STALE_DURATION :
+                                                         time_added.at(tx) < now - PrivateBroadcast::INITIAL_STALE_DURATION};
+                    if (is_stale) expected.insert(tx);
+                }
+                Assert(stale.size() == expected.size());
+                for (const auto& stale_tx : stale) Assert(expected.contains(stale_tx));
             },
             [&] { // GetBroadcastInfo()
                 const auto all_broadcast_info{pb.GetBroadcastInfo()};
