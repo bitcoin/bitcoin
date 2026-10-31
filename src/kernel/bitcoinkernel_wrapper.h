@@ -226,6 +226,11 @@ T check(T ptr)
     return ptr;
 }
 
+inline std::string_view ToStringView(btck_StringView view)
+{
+    return {view.data, view.len};
+}
+
 template <typename Collection, typename ValueType, auto GetFunc>
 class Iterator
 {
@@ -1028,30 +1033,28 @@ inline void logging_set_min_level(LogLevel level)
 //! Non-owning view over a btck_LogEntry. The referenced entry is only valid for the duration of the
 //! logging callback, so a LogEntry (and any string_view obtained from it) must not be stored or
 //! used after the callback returns.
-class LogEntry
+class LogEntry : public View<btck_LogEntry>
 {
-private:
-    const btck_LogEntry* m_entry;
-
 public:
-    explicit LogEntry(const btck_LogEntry& entry) : m_entry{&entry} {}
+    explicit LogEntry(const btck_LogEntry* entry) : View{entry} {}
 
-    std::string_view Message() const { return {m_entry->message, m_entry->message_len}; }
-    std::string_view ThreadName() const { return {m_entry->thread_name, m_entry->thread_name_len}; }
+    std::string_view Message() const { return ToStringView(btck_log_entry_get_message(get())); }
+    std::string_view ThreadName() const { return ToStringView(btck_log_entry_get_thread_name(get())); }
     std::chrono::sys_time<std::chrono::nanoseconds> Timestamp() const
     {
-        return std::chrono::sys_time<std::chrono::nanoseconds>{std::chrono::nanoseconds{m_entry->timestamp_ns}};
+        return std::chrono::sys_time<std::chrono::nanoseconds>{std::chrono::nanoseconds{btck_log_entry_get_timestamp_ns(get())}};
     }
     std::optional<std::chrono::sys_seconds> MockTime() const
     {
-        if (m_entry->mocktime_s == 0) return std::nullopt;
-        return std::chrono::sys_seconds{std::chrono::seconds{m_entry->mocktime_s}};
+        const int64_t mocktime_s{btck_log_entry_get_mocktime_s(get())};
+        if (mocktime_s == 0) return std::nullopt;
+        return std::chrono::sys_seconds{std::chrono::seconds{mocktime_s}};
     }
-    std::string_view FileName() const { return {m_entry->file_name, m_entry->file_name_len}; }
-    std::string_view FunctionName() const { return {m_entry->function_name, m_entry->function_name_len}; }
-    uint32_t Line() const { return m_entry->line; }
-    LogLevel Level() const { return static_cast<LogLevel>(m_entry->level); }
-    LogCategory Category() const { return static_cast<LogCategory>(m_entry->category); }
+    std::string_view FileName() const { return ToStringView(btck_log_entry_get_file_name(get())); }
+    std::string_view FunctionName() const { return ToStringView(btck_log_entry_get_function_name(get())); }
+    uint32_t Line() const { return btck_log_entry_get_line(get()); }
+    LogLevel Level() const { return static_cast<LogLevel>(btck_log_entry_get_level(get())); }
+    LogCategory Category() const { return static_cast<LogCategory>(btck_log_entry_get_category(get())); }
 };
 
 template <typename T>
@@ -1065,7 +1068,7 @@ class Logger : UniqueHandle<btck_LoggingConnection, btck_logging_connection_dest
 public:
     Logger(std::unique_ptr<T> log)
         : UniqueHandle{btck_logging_connection_create(
-              +[](void* user_data, const btck_LogEntry* entry) { static_cast<T*>(user_data)->LogMessage(LogEntry{*entry}); },
+              +[](void* user_data, const btck_LogEntry* entry) { static_cast<T*>(user_data)->LogMessage(LogEntry{entry}); },
               log.release(),
               +[](void* user_data) { delete static_cast<T*>(user_data); })}
     {
