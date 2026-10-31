@@ -6,7 +6,12 @@
 #define BITCOIN_MUSIG_H
 
 #include <pubkey.h>
+#include <uint256.h>
 
+#include <cstddef>
+#include <deque>
+#include <map>
+#include <memory>
 #include <optional>
 #include <vector>
 
@@ -55,6 +60,34 @@ public:
     secp256k1_musig_secnonce* Get() const;
     void Invalidate();
     bool IsValid();
+};
+
+/**
+ * The secret nonces of the MuSig2 signing sessions that have not finished yet, by session ID.
+ * A session that is never finished would stay forever, so at most MAX_SESSIONS are kept:
+ * adding one more drops the oldest. Dropping a nonce never allows it to be reused.
+ * While our pubnonce is in the PSBT, no partial signature and no new nonce is made for a
+ * dropped session, so it has to restart from a PSBT without our pubnonce.
+ * The limit is above the number of key-path inputs of a standard transaction (about 1700),
+ * and the unfinished sessions of concurrent PSBTs share it.
+ */
+class MuSig2SecNonces
+{
+private:
+    std::map<uint256, MuSig2SecNonce> m_nonces;
+    //! Session IDs in the map, oldest first
+    std::deque<uint256> m_order;
+
+public:
+    static constexpr size_t MAX_SESSIONS{2048};
+
+    //! Add the nonce of a new session. Returns false and keeps the nonce already stored if the session ID exists.
+    bool Add(const uint256& session_id, MuSig2SecNonce&& nonce);
+    //! The nonce of a session, or nullptr if there is none.
+    MuSig2SecNonce* Get(const uint256& session_id);
+    //! Remove the nonce of a session, if there is one.
+    void Remove(const uint256& session_id);
+    size_t Size() const { return m_nonces.size(); }
 };
 
 /**

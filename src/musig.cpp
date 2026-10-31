@@ -9,6 +9,9 @@
 
 #include <secp256k1_musig.h>
 
+#include <algorithm>
+#include <utility>
+
 //! MuSig2 chaincode as defined by BIP 328
 using namespace util::hex_literals;
 const ChainCode MUSIG_CHAINCODE{"868087ca02a6f974c4598924c36b57762d32cb45717167e300622c7167e38965"_hex_u8};
@@ -120,6 +123,30 @@ void MuSig2SecNonce::Invalidate()
 bool MuSig2SecNonce::IsValid()
 {
     return m_impl->IsValid();
+}
+
+bool MuSig2SecNonces::Add(const uint256& session_id, MuSig2SecNonce&& nonce)
+{
+    auto [it, inserted] = m_nonces.try_emplace(session_id, std::move(nonce));
+    if (!inserted) return false;
+    m_order.push_back(session_id);
+    while (m_nonces.size() > MAX_SESSIONS) {
+        m_nonces.erase(m_order.front());
+        m_order.pop_front();
+    }
+    return true;
+}
+
+MuSig2SecNonce* MuSig2SecNonces::Get(const uint256& session_id)
+{
+    auto it = m_nonces.find(session_id);
+    return it == m_nonces.end() ? nullptr : &it->second;
+}
+
+void MuSig2SecNonces::Remove(const uint256& session_id)
+{
+    if (m_nonces.erase(session_id) == 0) return;
+    m_order.erase(std::find(m_order.begin(), m_order.end(), session_id));
 }
 
 uint256 MuSig2SessionID(const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256& sighash, const std::vector<uint8_t>& pubnonce)

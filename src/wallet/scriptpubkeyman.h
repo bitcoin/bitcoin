@@ -299,8 +299,9 @@ private:
      *
      * The session id is an arbitrary value set by the signer in order for the signing logic
      * to find ongoing signing sessions, see MuSig2SessionID.
+     * At most MuSig2SecNonces::MAX_SESSIONS sessions are kept, the oldest is dropped first.
      */
-    mutable std::map<uint256, MuSig2SecNonce> m_musig2_secnonces;
+    mutable MuSig2SecNonces m_musig2_secnonces;
 
     const uint256 m_id;
 
