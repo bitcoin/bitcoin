@@ -5,6 +5,8 @@
 #ifndef BITCOIN_KERNEL_NOTIFICATIONS_INTERFACE_H
 #define BITCOIN_KERNEL_NOTIFICATIONS_INTERFACE_H
 
+#include <kernel/error.h>
+
 #include <cstdint>
 #include <variant>
 
@@ -49,7 +51,7 @@ public:
     //! perform. Applications can choose to handle the flush error notification
     //! by logging the error, or notifying the user, or triggering an early
     //! shutdown as a precaution against causing more errors.
-    virtual void flushError(const bilingual_str& message) {}
+    virtual void flushError(FlushError error) {}
 
     //! The fatal error notification is sent to notify the user when an error
     //! occurs in kernel code that can't be recovered from. After this
@@ -58,7 +60,10 @@ public:
     //! handle the fatal error notification by logging the error, or notifying
     //! the user, or triggering an early shutdown as a precaution against
     //! causing more errors.
-    virtual void fatalError(const bilingual_str& message) {}
+    //!
+    //! The kernel does not translate errors; the application builds the
+    //! user-facing message from the error's fields.
+    virtual void fatalError(const FatalError& error) {}
 };
 } // namespace kernel
 
