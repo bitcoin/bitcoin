@@ -36,7 +36,7 @@ curl --fail -L "https://github.com/koalaman/shellcheck/releases/download/${SHELL
     tar --xz -xf - --directory /tmp/
 mv "/tmp/shellcheck-${SHELLCHECK_VERSION}/shellcheck" /usr/bin/
 
-MLC_VERSION=v1.2.0
+MLC_VERSION=v1.3.0
 curl --fail -L "https://github.com/becheran/mlc/releases/download/${MLC_VERSION}/mlc-$(uname --machine)-linux" -o "/usr/bin/mlc"
 chmod +x /usr/bin/mlc
 
