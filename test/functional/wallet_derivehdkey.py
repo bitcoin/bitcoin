@@ -54,7 +54,7 @@ class WalletDeriveHDKeyTest(BitcoinTestFramework):
                 path,
             )
         assert_raises_rpc_error(
-            -5,
+            -8,
             "No active or unused(KEY) descriptor found",
             wallet.derivehdkey,
             "m/87h",
@@ -83,7 +83,7 @@ class WalletDeriveHDKeyTest(BitcoinTestFramework):
         wallet.encryptwallet("pass")
         assert_raises_rpc_error(
             -13,
-            "Error: Please enter the wallet passphrase with walletpassphrase first",
+            "Wallet needs to be unlocked to perform this operation.",
             wallet.derivehdkey,
             "m/87h",
         )
@@ -97,7 +97,7 @@ class WalletDeriveHDKeyTest(BitcoinTestFramework):
         self.log.info("HD privkey can be retrieved from encrypted wallets")
         assert_raises_rpc_error(
             -13,
-            "Error: Please enter the wallet passphrase with walletpassphrase first",
+            "Wallet needs to be unlocked to perform this operation.",
             wallet.derivehdkey,
             "m/87h/0h/0h/0",
             private=True,
@@ -115,7 +115,7 @@ class WalletDeriveHDKeyTest(BitcoinTestFramework):
         master_xpub_1 = wallet.addhdkey()['xpub']
         master_xpub_2 = wallet.addhdkey()['xpub']
         assert_raises_rpc_error(
-            -5,
+            -8,
             "Unable to determine which HD key to use. Please specify with 'hdkey'",
             wallet.derivehdkey,
             "m/87h",
@@ -125,7 +125,7 @@ class WalletDeriveHDKeyTest(BitcoinTestFramework):
         assert xpub_info_1["xpub"] != xpub_info_2["xpub"]
 
         assert_raises_rpc_error(
-            -5,
+            -8,
             "Unable to parse HD key. Please provide a valid xpub",
             wallet.derivehdkey,
             "m/87h",
@@ -179,7 +179,7 @@ class WalletDeriveHDKeyTest(BitcoinTestFramework):
         # its HD key is no longer a candidate.
         assert_equal(wallet.importdescriptors([{**request, "active": False}])[0]["success"], True)
         assert_raises_rpc_error(
-            -5,
+            -8,
             "HD key is not used by an active or unused(KEY) descriptor",
             wallet.derivehdkey,
             "m/87h",
@@ -201,7 +201,7 @@ class WalletDeriveHDKeyTest(BitcoinTestFramework):
         self.nodes[0].createwallet(wallet_name="blank", blank=True)
         wallet = self.nodes[0].get_wallet_rpc("blank")
         assert_raises_rpc_error(
-            -5,
+            -8,
             "No active or unused(KEY) descriptor found",
             wallet.derivehdkey,
             "m/87h",
