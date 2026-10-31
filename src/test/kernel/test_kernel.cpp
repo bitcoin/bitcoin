@@ -7,10 +7,7 @@
 #include <util/byte_units.h>
 #include <util/fs.h>
 
-// Boost.Test's SIGSTKSZ alternate stack can be smaller than Linux requires on musl.
-#define BOOST_TEST_DISABLE_ALT_STACK
-#define BOOST_TEST_MODULE Bitcoin Kernel Test Suite
-#include <boost/test/included/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <test/kernel/block_data.h>
 #include <test/util/common.h>

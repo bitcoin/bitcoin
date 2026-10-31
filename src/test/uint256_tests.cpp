@@ -8,7 +8,7 @@
 #include <uint256.h>
 #include <util/strencodings.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <iomanip>
 #include <sstream>
