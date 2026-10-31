@@ -33,7 +33,7 @@ def get_process_group_kwargs():
     return {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP} if platform.system() == 'Windows' else {}
 
 
-def sigterm_node(node):
+def sigterm_node(node, **kwargs):
     if platform.system() == 'Windows':
         # Don't call Python's terminate() since it calls
         # TerminateProcess(), which unlike SIGTERM doesn't allow
@@ -41,7 +41,7 @@ def sigterm_node(node):
         os.kill(node.process.pid, signal.CTRL_BREAK_EVENT)
     else:
         node.process.terminate()
-    node.wait_until_stopped()
+    node.wait_until_stopped(**kwargs)
 
 
 class InitTest(BitcoinTestFramework):
@@ -99,15 +99,34 @@ class InitTest(BitcoinTestFramework):
             lines_to_terminate_after.append(b'Verifying wallet')
         lines_to_terminate_after.append(reindex_log_line)
 
+        index_threads = [
+            b'txidx thread start',
+            b'blkfltbscidx thread start',
+            b'coinstatsidx thread start',
+            b'txospenderidx thread start',
+        ]
+        log_start_byte = node.debug_log_size(mode="rb")
         for terminate_line in lines_to_terminate_after:
             self.log.info(f"Starting node and will terminate after line {terminate_line}")
-            with node.busy_wait_for_debug_log([terminate_line]):
+            # Index thread start messages are only printed if index is behind
+            # the current chain tip at startup and needs to sync. If the index
+            # is already in sync during startup no messages will be printed.
+            # Set `start_byte` below for this reason to look for the index
+            # thread start messages, starting earlier, from the begining of this
+            # test, in case the node was not killed quickly enough and an index
+            # was already synced by the time this test was looking for its
+            # thread start message.
+            with node.busy_wait_for_debug_log([terminate_line], start_byte=log_start_byte if terminate_line in index_threads else None):
                 extra_args = [*ALL_INDEX_ARGS]
                 if terminate_line == reindex_log_line:
                     extra_args += ['-reindex']
                 node.start(extra_args=extra_args, **get_process_group_kwargs())
             self.log.debug("Terminating node after terminate line was found")
-            sigterm_node(node)
+            # Accept other exit codes besides 0. If the process is killed
+            # early, before the bitcoind signal handler is installed, it will
+            # exit with other values like SIGTERM (-15) on linux or
+            # STATUS_DLL_INIT_FAILED (0xc0000142) on windows.
+            sigterm_node(node, expected_ret_code=(0, -signal.SIGTERM, 0xc0000142))
 
         # Prior to deleting/perturbing index files, start node with all indexes enabled.
         # 'check_clean_start' will ensure indexes are synchronized (i.e., data exists to modify)

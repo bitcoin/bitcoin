@@ -182,6 +182,11 @@ public:
         m_conn.disconnect();
     }
 
+    bool connected() const
+    {
+        return m_conn.connected();
+    }
+
     ~scoped_connection()
     {
         disconnect();
