@@ -200,11 +200,12 @@ chain for " target " development."))
                   "--disable-gcov"
                   "--disable-libgomp"
                   "--disable-libsanitizer"
+                  "--disable-libstdcxx-filesystem-ts"
                   "--disable-lto"
                   "--disable-nls"
                   #$building-on)))))))
 
-(define linux-base-gcc
+(define* (make-linux-base-gcc #:key (minimal? #f))
   (package
     (inherit base-gcc)
     (arguments
@@ -223,9 +224,13 @@ chain for " target " development."))
                   "--disable-libgomp"
                   "--disable-libquadmath"
                   "--disable-libsanitizer"
+                  "--disable-libstdcxx-filesystem-ts"
                   "--disable-lto"
                   "--disable-nls"
                   "--disable-tm-clone-registry"
+                  #$@(if minimal? (list "--enable-clocale=generic"
+                                        "--disable-wchar_t"
+                                        "--with-libstdcxx-zoneinfo=no") '())
                   #$building-on)))
         ((#:phases phases)
           #~(modify-phases #$phases
@@ -238,6 +243,10 @@ chain for " target " development."))
                                               "^gnu-user.*\\.h$"))
                  (("-rpath=") "-rpath-link="))
                #t))))))))
+
+(define-public linux-base-gcc-minimal (make-linux-base-gcc #:minimal? #t))
+;; GUI build
+(define-public linux-base-gcc (make-linux-base-gcc #:minimal? #f))
 
 (define glibc-2.31
   (let ((commit "28eb5caf895ced5d895cb02757e109004a2d33e5"))
