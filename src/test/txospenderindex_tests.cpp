@@ -3,10 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <index/txospenderindex.h>
+#include <primitives/block.h>
+#include <serialize.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
 #include <validation.h>
+
+#include <cstdint>
 
 #include <boost/test/unit_test.hpp>
 
@@ -45,7 +49,8 @@ BOOST_FIXTURE_TEST_CASE(txospenderindex_initial_sync, TestChain100Setup)
     }
 
     // Generate and ensure block has been fully processed
-    const uint256 tip_hash = CreateAndProcessBlock(spender, coinbase_script).GetHash();
+    const auto block{CreateAndProcessBlock(spender, coinbase_script)};
+    const uint256 tip_hash{block.GetHash()};
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
     BOOST_CHECK_EQUAL(WITH_LOCK(::cs_main, return m_node.chainman->ActiveTip()->GetBlockHash()), tip_hash);
 
@@ -63,12 +68,15 @@ BOOST_FIXTURE_TEST_CASE(txospenderindex_initial_sync, TestChain100Setup)
     txospenderindex.Sync();
     BOOST_CHECK_EQUAL(txospenderindex.GetSummary().best_block_hash, tip_hash);
 
+    uint64_t tx_offset{GetSerializeSize(CBlockHeader{}) + GetSizeOfCompactSize(block.vtx.size()) + block.vtx[0]->ComputeTotalSize()};
     for (size_t i = 0; i < spent.size(); i++) {
         const auto tx_spender{txospenderindex.FindSpender(spent[i])};
         BOOST_REQUIRE(tx_spender.has_value());
         BOOST_REQUIRE(tx_spender->has_value());
         BOOST_CHECK_EQUAL((*tx_spender)->tx->GetHash(), spender[i].GetHash());
         BOOST_CHECK_EQUAL((*tx_spender)->block_hash, tip_hash);
+        BOOST_CHECK_EQUAL((*tx_spender)->tx_offset, tx_offset);
+        tx_offset += block.vtx[i + 1]->ComputeTotalSize();
     }
 
     StopIndex(txospenderindex, m_node);

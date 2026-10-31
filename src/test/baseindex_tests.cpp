@@ -13,6 +13,7 @@
 #include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
 #include <index/txindex.h>
+#include <index/txoscriptindex.h>
 #include <index/txospenderindex.h>
 #include <interfaces/chain.h>
 #include <kernel/types.h>
@@ -53,6 +54,8 @@ static const std::vector<std::pair<std::string, IndexFactory>> INDEX_FACTORIES{
         return std::make_unique<TxIndex>(interfaces::MakeChain(node), /*n_cache_size=*/1_MiB); }},
     {"txospenderindex", [](node::NodeContext& node) -> std::unique_ptr<BaseIndex> {
         return std::make_unique<TxoSpenderIndex>(interfaces::MakeChain(node), /*n_cache_size=*/1_MiB); }},
+    {"txoscriptindex", [](node::NodeContext& node) -> std::unique_ptr<BaseIndex> {
+        return std::make_unique<TxoScriptIndex>(interfaces::MakeChain(node), /*cache_size=*/1_MiB); }},
     {"blockfilterindex", [](node::NodeContext& node) -> std::unique_ptr<BaseIndex> {
         return std::make_unique<BlockFilterIndex>(interfaces::MakeChain(node), BlockFilterType::BASIC, /*n_cache_size=*/1_MiB); }},
 };
