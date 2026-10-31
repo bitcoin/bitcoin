@@ -8,12 +8,12 @@
 #include <chainparamsbase.h>
 #include <clientversion.h>
 #include <common/args.h>
+#include <common/ecc_init.h>
 #include <common/license_info.h>
 #include <common/system.h>
 #include <compat/compat.h>
 #include <crypto/sha256.h>
 #include <interfaces/init.h>
-#include <key.h>
 #include <logging.h>
 #include <pubkey.h>
 #include <tinyformat.h>
@@ -126,7 +126,7 @@ MAIN_FUNCTION
         return EXIT_FAILURE;
     }
 
-    ECC_Context ecc_context{};
+    const auto ecc_context{MakeContextECC()};
     if (!wallet::WalletTool::ExecuteWalletToolFunc(args, command->command)) {
         return EXIT_FAILURE;
     }

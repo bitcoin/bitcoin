@@ -5,6 +5,8 @@
 #ifndef BITCOIN_NODE_CONTEXT_H
 #define BITCOIN_NODE_CONTEXT_H
 
+#include <common/ecc_init.h>
+
 #include <atomic>
 #include <cstdlib>
 #include <functional>
@@ -22,7 +24,6 @@ class ValidationSignals;
 class CScheduler;
 class CTxMemPool;
 class ChainstateManager;
-class ECC_Context;
 class NetGroupManager;
 class PeerManager;
 class TorController;
@@ -57,7 +58,7 @@ class Warnings;
 struct NodeContext {
     //! libbitcoin_kernel context
     std::unique_ptr<kernel::Context> kernel;
-    std::unique_ptr<ECC_Context> ecc_context;
+    std::unique_ptr<ECC_Context, ECC_ContextDeleter> ecc_context;
     //! Init interface for initializing current process and connecting to other processes.
     interfaces::Init* init{nullptr};
     //! Function to request a shutdown.

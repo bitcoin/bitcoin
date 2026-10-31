@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <common/ecc_init.h>
 #include <hash.h>
 #include <net.h>
 #include <netmessagemaker.h>
@@ -27,7 +28,7 @@ constexpr ReachabilityGoal V1_TRANSPORT_RECEIVES_COMPLETE_MESSAGE{"v1 transport 
 
 void initialize_p2p_transport()
 {
-    static ECC_Context ecc_context{};
+    static const auto ecc_context{MakeContextECC()};
     SelectParams(ChainType::REGTEST);
     std::sort(g_all_messages.begin(), g_all_messages.end());
 }

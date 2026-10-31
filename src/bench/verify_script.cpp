@@ -5,6 +5,7 @@
 #include <addresstype.h>
 #include <bench/bench.h>
 #include <coins.h>
+#include <common/ecc_init.h>
 #include <key.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
@@ -23,6 +24,7 @@
 
 #include <cstddef>
 #include <map>
+#include <memory>
 #include <span>
 #include <vector>
 
@@ -45,7 +47,7 @@ static size_t ExpectedWitnessStackSize(ScriptType script_type)
 // Microbenchmark for verification of standard scripts.
 static void VerifyScriptBench(benchmark::Bench& bench, ScriptType script_type)
 {
-    ECC_Context ecc_context{};
+    const auto ecc_context{MakeContextECC()};
 
     // Create deterministic key material needed for output script creation / signing
     CKey privkey;
