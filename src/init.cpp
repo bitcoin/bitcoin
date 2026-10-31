@@ -2242,7 +2242,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     const uint16_t default_bind_port =
         static_cast<uint16_t>(args.GetIntArg("-port", Params().GetDefaultPort()));
 
-    const uint16_t default_bind_port_onion = default_bind_port + 1;
+    // The onion bind defaults to the port after -port, which doesn't exist for -port=65535.
+    std::optional<uint16_t> default_bind_port_onion;
+    if (default_bind_port < std::numeric_limits<uint16_t>::max()) default_bind_port_onion = default_bind_port + 1;
+    const auto OnionPortError = [] {
+        return InitError(_("-port=65535 leaves no port for the default onion bind. Specify one explicitly with -bind=<addr>:<port>=onion."));
+    };
 
     const auto BadPortWarning = [](const char* prefix, uint16_t port) {
         return strprintf(_("%s request to listen on port %u. This port is considered \"bad\" and "
@@ -2268,7 +2273,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             const std::string network_type = bind_arg.substr(index + 1);
             if (network_type == "onion") {
                 const std::string truncated_bind_arg = bind_arg.substr(0, index);
-                bind_addr = Lookup(truncated_bind_arg, default_bind_port_onion, false);
+                bind_addr = Lookup(truncated_bind_arg, default_bind_port_onion.value_or(0), false);
+                if (bind_addr.has_value() && bind_addr->GetPort() == 0) return OnionPortError();
                 if (bind_addr.has_value()) {
                     connOptions.onion_binds.push_back(bind_addr.value());
                     continue;
@@ -2304,8 +2310,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     } else if (!connOptions.vBinds.empty()) {
         onion_service_target = connOptions.vBinds.front();
     } else {
-        onion_service_target = DefaultOnionServiceTarget(default_bind_port_onion);
-        connOptions.onion_binds.push_back(onion_service_target);
+        if (!default_bind_port_onion) {
+            if (fListen) return OnionPortError();
+        } else {
+            onion_service_target = DefaultOnionServiceTarget(*default_bind_port_onion);
+            connOptions.onion_binds.push_back(onion_service_target);
+        }
     }
 
     if (listenonion) {
