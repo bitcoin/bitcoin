@@ -21,8 +21,14 @@
  * It is api-compatible with a minimal subset of boost::signals2.
  *
  * Rather than using a custom slot type, and the features/complexity that they
- * imply, std::function is used to store the callbacks. Lifetime management of
- * the callbacks is left up to the user.
+ * imply, std::function is used to store the callbacks. There is no automatic
+ * tracking of objects the callbacks refer to, so callers need to disconnect
+ * callbacks before those objects are destroyed.
+ *
+ * Like boost::signals2, disconnecting a connection destroys its callback
+ * object, or if the callback is running at the time, destroys it when the
+ * call returns. Callbacks that are never disconnected are destroyed with the
+ * signal.
  *
  * All usage is thread-safe except for interacting with a connection while
  * copying/moving it on another thread.
@@ -49,6 +55,31 @@ public:
 template <typename Signature, typename Combiner = null_value>
 class signal;
 
+namespace detail {
+#ifdef __cpp_lib_atomic_shared_ptr
+template <typename T>
+using atomic_shared_ptr = std::atomic<std::shared_ptr<T>>;
+#else
+//! Substitute for the C++20 std::atomic<std::shared_ptr<T>> specialization on
+//! standard libraries that do not provide it yet (feature-test macro
+//! __cpp_lib_atomic_shared_ptr), implemented with the C++11 atomic_load and
+//! atomic_store overloads for shared_ptr. Only the members used here are
+//! provided.
+template <typename T>
+class atomic_shared_ptr
+{
+    std::shared_ptr<T> m_ptr;
+
+public:
+    explicit atomic_shared_ptr(std::shared_ptr<T> ptr) noexcept : m_ptr{std::move(ptr)} {}
+    atomic_shared_ptr(const atomic_shared_ptr&) = delete;
+    atomic_shared_ptr& operator=(const atomic_shared_ptr&) = delete;
+    std::shared_ptr<T> load() const noexcept { return std::atomic_load(&m_ptr); }
+    void store(std::shared_ptr<T> ptr) noexcept { std::atomic_store(&m_ptr, std::move(ptr)); }
+};
+#endif
+} // namespace detail
+
 /*
  * State object representing the liveness of a registered callback.
  * signal::connect() returns an enabled connection which can be held and
@@ -64,11 +95,22 @@ class connection
     class liveness
     {
         friend class connection;
-        std::atomic_bool m_connected{true};
 
-        void disconnect() { m_connected.store(false); }
+        //! Callback object, type-erased so connection does not depend on the
+        //! signal type, and set to null by disconnect(). Signal invocation
+        //! holds a reference to it while calling it, so a callback
+        //! disconnected during a call is destroyed when the call returns.
+        detail::atomic_shared_ptr<const void> m_callback;
+
+        void disconnect() { m_callback.store(nullptr); }
+
+    protected:
+        explicit liveness(std::shared_ptr<const void> callback) : m_callback{std::move(callback)} {}
+
+        std::shared_ptr<const void> load() const { return m_callback.load(); }
+
     public:
-        bool connected() const { return m_connected.load(); }
+        bool connected() const { return load() != nullptr; }
     };
 
     /**
@@ -94,8 +136,10 @@ public:
      * If a connection is disabled as part of a signal's callback function, it
      * will _not_ be executed in the current signal invocation.
      *
-     * Note that disconnected callbacks are not removed from their owning
-     * signals here. They are garbage collected in signal::connect().
+     * The callback object is destroyed here (or when the last concurrently
+     * executing invocation of it completes). The empty holder entry is not
+     * removed from the owning signal; it is garbage collected in
+     * signal::connect().
      */
     void disconnect()
     {
@@ -157,11 +201,17 @@ class signal
      */
     struct connection_holder : connection::liveness {
         template <typename Callable>
-        connection_holder(Callable&& callback) : m_callback{std::forward<Callable>(callback)}
+        explicit connection_holder(Callable&& callback)
+            : liveness{std::make_shared<const function_type>(std::forward<Callable>(callback))}
         {
         }
 
-        const function_type m_callback;
+        //! Return the callback, or null if disconnected. The callback stays
+        //! alive while the returned pointer is held.
+        std::shared_ptr<const function_type> callback() const
+        {
+            return std::static_pointer_cast<const function_type>(load());
+        }
     };
 
     mutable Mutex m_mutex;
@@ -209,8 +259,10 @@ public:
             static_assert(std::is_same_v<result_type, typename function_type::result_type>,
                           "Callback result type must be equal to the combiner result type (void).");
             for (const auto& connection : connections) {
-                if (connection->connected()) {
-                    connection->m_callback(args...);
+                // Holding the callback pointer keeps the callback alive until
+                // the call returns, even if it is disconnected concurrently.
+                if (const auto callback{connection->callback()}) {
+                    (*callback)(args...);
                 }
             }
         } else {
@@ -220,8 +272,8 @@ public:
                           "Callback result type must be equal to the combiner result type (bool).");
             result_type ret{false};
             for (const auto& connection : connections) {
-                if (connection->connected()) {
-                    ret |= connection->m_callback(args...);
+                if (const auto callback{connection->callback()}) {
+                    ret |= (*callback)(args...);
                 }
             }
             return ret;
