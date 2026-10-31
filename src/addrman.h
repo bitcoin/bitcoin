@@ -8,6 +8,7 @@
 
 #include <netaddress.h>
 #include <protocol.h>
+#include <util/not_null.h>
 #include <util/time.h>
 
 #include <cstddef>
@@ -109,7 +110,7 @@ struct AddressPosition {
 class AddrMan
 {
 protected:
-    const std::unique_ptr<AddrManImpl> m_impl;
+    const util::NotNullUniquePtr<AddrManImpl> m_impl;
 
 public:
     explicit AddrMan(const NetGroupManager& netgroupman, bool deterministic, int32_t consistency_check_ratio);

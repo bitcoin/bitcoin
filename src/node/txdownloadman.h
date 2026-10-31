@@ -8,6 +8,7 @@
 #include <net.h>
 #include <node/txorphanage.h>
 #include <policy/packages.h>
+#include <util/not_null.h>
 
 #include <cstdint>
 #include <memory>
@@ -113,7 +114,7 @@ struct RejectedTxTodo
  * external mutex.
  */
 class TxDownloadManager {
-    const std::unique_ptr<TxDownloadManagerImpl> m_impl;
+    const util::NotNullUniquePtr<TxDownloadManagerImpl> m_impl;
 
 public:
     explicit TxDownloadManager(const TxDownloadOptions& options);

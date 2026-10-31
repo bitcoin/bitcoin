@@ -8,6 +8,7 @@
 #include <primitives/transaction.h>
 #include <net.h>
 #include <uint256.h>
+#include <util/not_null.h>
 
 #include <chrono>
 #include <cstdint>
@@ -100,7 +101,7 @@
 class TxRequestTracker {
     // Avoid littering this header file with implementation details.
     class Impl;
-    const std::unique_ptr<Impl> m_impl;
+    const util::NotNullUniquePtr<Impl> m_impl;
 
 public:
     //! Construct a TxRequestTracker.
