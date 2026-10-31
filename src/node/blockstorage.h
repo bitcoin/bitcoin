@@ -5,6 +5,7 @@
 #ifndef BITCOIN_NODE_BLOCKSTORAGE_H
 #define BITCOIN_NODE_BLOCKSTORAGE_H
 
+#include <arith_uint256.h>
 #include <attributes.h>
 #include <chain.h>
 #include <dbwrapper.h>
@@ -27,6 +28,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <compare>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -38,6 +40,7 @@
 #include <set>
 #include <span>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -46,6 +49,7 @@ class BlockValidationState;
 class CBlockUndo;
 class Chainstate;
 class ChainstateManager;
+
 namespace Consensus {
 struct Params;
 }
@@ -136,13 +140,22 @@ inline constexpr uint32_t UNDO_DATA_DISK_OVERHEAD{STORAGE_HEADER_BYTES + uint256
 using BlockMap = std::unordered_map<uint256, CBlockIndex, BlockHasher>;
 
 struct CBlockIndexWorkComparator {
-    bool operator()(const CBlockIndex* pa, const CBlockIndex* pb) const;
+    bool operator()(const CBlockIndex* pa, const CBlockIndex* pb) const noexcept
+    {
+        // Order by increasing work, then decreasing sequence ID and address.
+        return std::tie(pa->nChainWork, pb->nSequenceId, pb)
+             < std::tie(pb->nChainWork, pa->nSequenceId, pa);
+    }
+
     using is_transparent = void;
 };
 
 struct CBlockIndexHeightOnlyComparator {
     /* Only compares the height of two block indices, doesn't try to tie-break */
-    bool operator()(const CBlockIndex* pa, const CBlockIndex* pb) const;
+    bool operator()(const CBlockIndex* pa, const CBlockIndex* pb) const noexcept
+    {
+        return pa->nHeight < pb->nHeight;
+    }
 };
 
 struct PruneLockInfo {
