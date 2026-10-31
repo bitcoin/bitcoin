@@ -24,7 +24,6 @@ from test_framework.util import (
     assert_greater_than,
     assert_greater_than_or_equal,
     assert_not_equal,
-    sync_txindex,
 )
 from test_framework.wallet import (
     MiniWallet,
@@ -303,10 +302,6 @@ class RESTTest(BitcoinTestFramework):
 
         # See if we can get 5 headers in one response
         self.generate(self.nodes[1], 5)
-        expected_filter = {
-            'basic block filter index': {'synced': True, 'best_block_height': 208},
-        }
-        self.wait_until(lambda: self.nodes[0].getindexinfo("basic block filter index") == expected_filter)
         json_obj = self.test_rest_request(f"/headers/{bb_hash}", query_params={"count": 5})
         assert_equal(len(json_obj), 5)  # now we should have 5 header objects
         json_obj = self.test_rest_request(f"/blockfilterheaders/basic/{bb_hash}", query_params={"count": 5})
@@ -594,7 +589,6 @@ class RESTTest(BitcoinTestFramework):
         assert_cache_control(f"/tx/{mempool_txid}", no_store, req_type=ReqType.HEX)
 
         self.generate(self.nodes[0], 1)
-        sync_txindex(self, self.nodes[0])
 
         self.log.info("Test Cache-Control response behavior across a newly mined block")
         assert_equal(immutable_block, assert_cache_control(f"/block/{blockhash}", immutable, req_type=ReqType.BIN))

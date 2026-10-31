@@ -50,23 +50,10 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
             for i in range(height_from, to_height + 1):
                 b = node_from.getblock(blockhash=node_from.getblockhash(i), verbosity=0)
                 list(rpc_threads.map(lambda n: n.submitblock(b), self.nodes))
+        self.wait_for_index_sync(timeout=150)
 
     def generate(self, node, num_blocks, sync_fun=None):
         return super().generate(node, num_blocks, sync_fun=sync_fun or (lambda: self.linear_sync(node)))
-
-    def sync_index(self, height):
-        expected_filter = {
-            'basic block filter index': {'synced': True, 'best_block_height': height},
-        }
-        self.wait_until(lambda: self.nodes[0].getindexinfo() == expected_filter)
-
-        expected_stats = {
-            'coinstatsindex': {'synced': True, 'best_block_height': height}
-        }
-        self.wait_until(lambda: self.nodes[1].getindexinfo() == expected_stats, timeout=150)
-
-        expected = {**expected_filter, **expected_stats}
-        self.wait_until(lambda: self.nodes[2].getindexinfo() == expected)
 
     def restart_without_indices(self):
         for i in range(3):
@@ -84,7 +71,6 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
         stats_nodes = [self.nodes[1], self.nodes[2]]
 
         self.log.info("check if we can access blockfilters and coinstats when pruning is enabled but no blocks are actually pruned")
-        self.sync_index(height=200)
         tip = self.nodes[0].getbestblockhash()
         for node in filter_nodes:
             assert_greater_than(len(node.getblockfilter(tip)['filter']), 0)
@@ -92,7 +78,6 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
             assert node.gettxoutsetinfo(hash_type="muhash", hash_or_height=tip)['muhash']
 
         self.generate(self.nodes[0], 500)
-        self.sync_index(height=700)
 
         self.log.info("prune some blocks")
         for node in self.nodes[:2]:
@@ -118,7 +103,6 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
 
         # mine and sync index up to a height that will later be the pruneheight
         self.generate(self.nodes[0], 54)
-        self.sync_index(height=754)
 
         self.restart_without_indices()
 
@@ -140,7 +124,6 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
             self.restart_node(i, extra_args=self.extra_args[i])
 
         self.log.info("make sure that we can continue with the partially synced indices after having pruned up to the index height")
-        self.sync_index(height=1500)
 
         self.log.info("prune further than the indices best blocks while the indices are disabled")
         self.restart_without_indices()
@@ -190,7 +173,6 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
             self.restart_node(i, extra_args=restart_args)
 
         self.linear_sync(self.nodes[3])
-        self.sync_index(height=2500)
 
         for node in self.nodes[:2]:
             with node.assert_debug_log(['limited pruning to height 2489']):
