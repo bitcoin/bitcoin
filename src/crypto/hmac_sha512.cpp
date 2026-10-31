@@ -31,6 +31,12 @@ CHMAC_SHA512::CHMAC_SHA512(const unsigned char* key, size_t keylen)
     memory_cleanse(rkey, sizeof(rkey));
 }
 
+CHMAC_SHA512::~CHMAC_SHA512()
+{
+    memory_cleanse(&outer, sizeof(outer));
+    memory_cleanse(&inner, sizeof(inner));
+}
+
 void CHMAC_SHA512::Finalize(unsigned char hash[OUTPUT_SIZE])
 {
     unsigned char temp[64];

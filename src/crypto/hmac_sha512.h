@@ -20,6 +20,7 @@ public:
     static constexpr size_t OUTPUT_SIZE{64};
 
     CHMAC_SHA512(const unsigned char* key, size_t keylen);
+    ~CHMAC_SHA512();
     CHMAC_SHA512& Write(const unsigned char* data, size_t len)
     {
         inner.Write(data, len);
