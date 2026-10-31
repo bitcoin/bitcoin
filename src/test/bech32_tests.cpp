@@ -158,4 +158,96 @@ BOOST_AUTO_TEST_CASE(bech32m_testvectors_invalid)
     }
 }
 
+BOOST_AUTO_TEST_CASE(bech32m_error_detection_guarantees)
+{
+    auto gen_valid_string = [](const std::string & hrp, int length) {
+        const std::vector<uint8_t> data(length - 3 - bech32::CHECKSUM_SIZE, 0);
+        const std::string valid = bech32::Encode(bech32::Encoding::BECH32M, hrp, data);
+        return valid;
+    };
+
+    const auto valid_90 = gen_valid_string("bc", bech32::CharLimit::BECH32);
+    const auto valid_91 = gen_valid_string("sp", bech32::CharLimit::BECH32 + 1);
+    const auto valid_1023 = gen_valid_string("sp", bech32::CharLimit::SILENT_PAYMENTS);
+
+    //Check valid strings of max lengths
+    BOOST_CHECK(bech32::Decode(valid_90, bech32::CharLimit::BECH32).encoding == bech32::Encoding::BECH32M);
+    BOOST_CHECK(bech32::Decode(valid_91, bech32::CharLimit::BECH32).encoding == bech32::Encoding::INVALID);
+    BOOST_CHECK(bech32::Decode(valid_91, bech32::CharLimit::SILENT_PAYMENTS).encoding == bech32::Encoding::BECH32M);
+    BOOST_CHECK(bech32::Decode(valid_1023, bech32::CharLimit::SILENT_PAYMENTS).encoding == bech32::Encoding::BECH32M);
+
+    //Check error detection guarantees at base max length (90)
+    //- up to 4 changes to a valid string cannot generate a valid checksum
+    //- up to 2 error locations can be found, at the exact locations
+    auto introduce_errors = [](const std::string& valid, const std::vector<int>& locations) {
+        std::string invalid{valid};
+        for (const int location : locations) {
+            invalid[location] = invalid[location] == 'q' ? 'p' : 'q';
+        }
+        return invalid;
+    };
+
+    // 1 char changes are detected and can be located
+    auto invalid = introduce_errors(valid_90, {3});
+    auto errors = bech32::LocateErrors(invalid);
+    BOOST_CHECK_EQUAL("Invalid Bech32m checksum", errors.first);
+    BOOST_CHECK(errors.second == std::vector<int>{3});
+    // 2 char changes are detected and can be located
+    invalid = introduce_errors(valid_90, {3, 30});
+    errors = bech32::LocateErrors(invalid);
+    BOOST_CHECK_EQUAL("Invalid Bech32m checksum", errors.first);
+    BOOST_CHECK(errors.second == std::vector<int>({3, 30}));
+    //3 char differences fail checksum, errors can't be located anymore
+    invalid = introduce_errors(valid_90, {3, 30, 60});
+    errors = bech32::LocateErrors(invalid);
+    BOOST_CHECK_EQUAL("Invalid checksum", errors.first);
+    BOOST_CHECK(errors.second.empty()); // can only detect up to 2 locations
+    // 4 char differences fail checksum, errors can't be located anymore
+    invalid = introduce_errors(valid_90, {3, 30, 60, 80});
+    errors = bech32::LocateErrors(invalid);
+    BOOST_CHECK_EQUAL("Invalid checksum", errors.first);
+    BOOST_CHECK(errors.second.empty());//can only detect up to 2 locations
+    // 5 char changes might generate another valid checksum
+    std::string collision{valid_90};
+    collision[6] = 'j';
+    collision[13] = '0';
+    collision[23] = 'p';
+    collision[33] = 'w';
+    collision[49] = '5';
+    BOOST_CHECK(bech32::Decode(collision, bech32::CharLimit::BECH32).encoding == bech32::Encoding::BECH32M);
+
+    // Check error detection guarantees at silent payments max length (1023)
+    //- up to 3 changes to a valid string cannot generate a valid checksum
+    //- up to 2 error locations can be found, but not always at the exact locations
+    //1 char change fails checksum and errors can be located
+    invalid = introduce_errors(valid_1023, {3});
+    errors = bech32::LocateErrors(invalid, bech32::CharLimit::SILENT_PAYMENTS);
+    BOOST_CHECK_EQUAL("Invalid Bech32m checksum", errors.first);
+    BOOST_CHECK(errors.second == std::vector<int>{3});
+    //2 char errors fail checksum, and 2 errors can be located (but not guaranteed to be the correct ones)
+    invalid = introduce_errors(valid_1023, {3, 500});
+    errors = bech32::LocateErrors(invalid, bech32::CharLimit::SILENT_PAYMENTS);
+    BOOST_CHECK_EQUAL("Invalid Bech32m checksum", errors.first);
+    BOOST_CHECK(errors.second == std::vector<int>({3, 500}));
+    // 3 char errors fail checksum, and we can't locate all 3 errors.
+    invalid = introduce_errors(valid_1023, {3, 500, 1022});
+    BOOST_CHECK(bech32::Decode(invalid, bech32::CharLimit::SILENT_PAYMENTS).encoding == bech32::Encoding::INVALID);
+    errors = bech32::LocateErrors(invalid, bech32::CharLimit::SILENT_PAYMENTS);
+    BOOST_CHECK_EQUAL("Invalid Bech32 checksum", errors.first);
+    //here, a 3 char change can be fixed by only 2 char changes
+    BOOST_CHECK(errors.second.size() == 2);
+    // 4 char changes might generate another valid checksum
+    collision = valid_1023;
+    collision[3] = 'g';
+    collision[63] = 'p';
+    collision[113] = 'r';
+    collision[413] = '6';
+    std::size_t differences{0};
+    for (std::size_t i{0}; i < valid_1023.size(); ++i) {
+        differences += valid_1023[i] != collision[i];
+    }
+    BOOST_REQUIRE_EQUAL(differences, 4);
+    BOOST_CHECK(bech32::Decode(collision, bech32::CharLimit::SILENT_PAYMENTS).encoding == bech32::Encoding::BECH32M);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
