@@ -180,6 +180,18 @@ class ProxyTest(BitcoinTestFramework):
             rv.append(cmd)
             self.network_test(node, addr, network=NET_IPV6)
 
+            addr = "[1233:3432::6546:4534]:5443"
+            self.log.debug(f"Test: outgoing IPv6 connection through node {node.index} for shortened address {addr}")
+            node.addnode(addr, "onetry", v2transport=False)
+            cmd = proxies[1].queue.get()
+            assert isinstance(cmd, Socks5Command)
+            # A shortened IPv6 address is sent with all eight groups, so that Tor does not read "<addr>:<port>" as one address
+            assert_equal(cmd.atyp, AddressType.DOMAINNAME)
+            assert_equal(cmd.addr, b"1233:3432:0:0:0:0:6546:4534")
+            assert_equal(cmd.port, 5443)
+            rv.append(cmd)
+            self.network_test(node, addr, network=NET_IPV6)
+
         if test_onion:
             addr = "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion:8333"
             self.log.debug(f"Test: outgoing onion connection through node {node.index} for address {addr}")
