@@ -133,6 +133,12 @@ BOOST_AUTO_TEST_CASE(test_LogEscapeMessage)
     // Embedded NULL characters are escaped too.
     const std::string NUL("O\x00O", 3);
     BOOST_CHECK_EQUAL(BCLog::LogEscapeMessage(NUL), R"(O\x00O)");
+    // C1 control characters (U+0080 to U+009F), encoded in UTF-8 as 0xC2 0x80 to 0xC2 0x9F, are escaped too.
+    BOOST_CHECK_EQUAL(BCLog::LogEscapeMessage("\xc2\x80\xc2\x9b"
+                                              "31m\xc2\x9f"),
+                      R"(\xc2\x80\xc2\x9b31m\xc2\x9f)");
+    // Their neighbours U+00A0 and U+0100 pass through, as does a truncated sequence.
+    BOOST_CHECK_EQUAL(BCLog::LogEscapeMessage("\xc2\xa0\xc4\x80\xc2"), "\xc2\xa0\xc4\x80\xc2");
 }
 
 BOOST_FIXTURE_TEST_CASE(logging_LogPrint, LogSetup)
