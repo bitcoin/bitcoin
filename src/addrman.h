@@ -36,6 +36,9 @@ inline constexpr int32_t ADDRMAN_RETRIES{3};
 inline constexpr int32_t ADDRMAN_MAX_FAILURES{10};
 /** ... in at least this duration */
 inline constexpr auto ADDRMAN_MIN_FAIL{7 * 24h};
+/** After how long without a successful connection to a network we assume that it is unreachable for us,
+ *  and count failures against its addresses based on successful connections to other networks */
+inline constexpr auto ADDRMAN_NET_UNREACHABLE{7 * 24h};
 /** How recent a successful connection should be before we allow an address to be evicted from tried */
 inline constexpr auto ADDRMAN_REPLACEMENT{4h};
 /** The maximum number of tried addr collisions to store */
