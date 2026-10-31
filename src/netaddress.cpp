@@ -401,6 +401,11 @@ bool CNetAddr::IsHeNet() const
     return IsIPv6() && HasPrefix(m_addr, std::array<uint8_t, 4>{0x20, 0x01, 0x04, 0x70});
 }
 
+bool CNetAddr::IsMulticast() const
+{
+    return (IsIPv4() && (m_addr[0] & 0xF0) == 0xE0) || (IsIPv6() && m_addr[0] == 0xFF);
+}
+
 bool CNetAddr::IsLocal() const
 {
     // IPv4 loopback (127.0.0.0/8 or 0.0.0.0/8)
@@ -467,7 +472,7 @@ bool CNetAddr::IsValid() const
  */
 bool CNetAddr::IsRoutable() const
 {
-    return IsValid() && !(IsRFC1918() || IsRFC2544() || IsRFC3927() || IsRFC4862() || IsRFC6598() || IsRFC5737() || IsRFC4193() || IsRFC4843() || IsRFC7343() || IsLocal() || IsInternal());
+    return IsValid() && !(IsRFC1918() || IsRFC2544() || IsRFC3927() || IsRFC4862() || IsRFC6598() || IsRFC5737() || IsRFC4193() || IsRFC4843() || IsRFC7343() || IsMulticast() || IsLocal() || IsInternal());
 }
 
 /**

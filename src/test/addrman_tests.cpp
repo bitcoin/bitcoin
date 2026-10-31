@@ -554,9 +554,10 @@ BOOST_AUTO_TEST_CASE(addrman_getaddr)
 
     size_t percent23 = (addrman->Size() * 23) / 100;
     BOOST_CHECK_EQUAL(vAddr.size(), percent23);
-    BOOST_CHECK_EQUAL(vAddr.size(), 461U);
-    // (addrman.Size() < number of addresses added) due to address collisions.
-    BOOST_CHECK_EQUAL(addrman->Size(), 2006U);
+    BOOST_CHECK_EQUAL(vAddr.size(), 432U);
+    // (addrman.Size() < number of addresses added) due to address collisions and
+    // the multicast (224.0.0.0/4) addresses being rejected as not routable.
+    BOOST_CHECK_EQUAL(addrman->Size(), 1881U);
 }
 
 BOOST_AUTO_TEST_CASE(getaddr_unfiltered)
