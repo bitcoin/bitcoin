@@ -1,0 +1,76 @@
+# Copyright (c) 2026-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or https://opensource.org/license/mit.
+
+name: Code signing certificate
+on:
+  workflow_dispatch:
+  schedule:
+    # Mondays at 09:23 UTC.
+    - cron: '23 9 * * 1'
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: code-signing-certificate
+
+jobs:
+  check-certificate:
+    if: github.repository == 'bitcoin/bitcoin'
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: master
+          persist-credentials: false
+
+      - name: Check certificate expiry
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: bitcoin/bitcoin
+        shell: bash
+        run: |
+          CERT=contrib/windeploy/win-codesign.cert
+          WARNING_DAYS=90
+          # Require the first certificate to be a non-CA code signing certificate.
+          EXTENSIONS=$(openssl x509 -in "$CERT" -noout -ext basicConstraints,extendedKeyUsage)
+          if [[ "$EXTENSIONS" != *"CA:FALSE"* || "$EXTENSIONS" != *"Code Signing"* ]]; then
+            echo "::error::The first certificate in $CERT must be a non-CA code signing certificate."
+            exit 1
+          fi
+          DETAILS=$(openssl x509 -in "$CERT" -noout -subject -issuer -dates -sha256 -fingerprint)
+          if openssl x509 -in "$CERT" -noout -checkend "$((WARNING_DAYS * 86400))"; then
+            exit 0
+          fi
+
+          EXPIRY=$(openssl x509 -in "$CERT" -noout -enddate)
+          export TITLE="Windows code signing certificate expires ${EXPIRY#notAfter=}"
+          # Include closed issues so closing an alert acknowledges this expiry.
+          EXISTING=$(gh issue list --state all --search "\"$TITLE\" in:title" \
+            --json title,url --jq '.[] | select(.title == env.TITLE) | .url')
+          if [[ -n "$EXISTING" ]]; then
+            echo "Certificate expiry already reported: $EXISTING"
+            exit 0
+          fi
+
+          STATUS="expires within $WARNING_DAYS days"
+          if ! openssl x509 -in "$CERT" -noout -checkend 0; then
+            STATUS="has expired"
+          fi
+          COMMIT=$(git rev-parse HEAD)
+          cat > "$RUNNER_TEMP/certificate-issue.md" <<EOF
+          The Windows code signing certificate $STATUS. Please renew it and update \`$CERT\`. Backport the certificate update to maintained release branches.
+
+          Certificate checked on [master at $COMMIT]($GITHUB_SERVER_URL/$GH_REPO/blob/$COMMIT/$CERT):
+
+          \`\`\`text
+          $DETAILS
+          \`\`\`
+
+          Warning threshold: $WARNING_DAYS days before expiry.
+          [Weekly check]($GITHUB_SERVER_URL/$GH_REPO/actions/runs/$GITHUB_RUN_ID).
+          EOF
+          gh issue create --title "$TITLE" --body-file "$RUNNER_TEMP/certificate-issue.md"
