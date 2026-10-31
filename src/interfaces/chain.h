@@ -123,7 +123,8 @@ public:
     //! any blocks)
     virtual std::optional<int> getHeight() = 0;
 
-    //! Get block hash. Height must be valid or this function will abort.
+    //! Get block hash. Throws std::out_of_range if height is not in the
+    //! active chain.
     virtual uint256 getBlockHash(int height) = 0;
 
     //! Check that the block is available on disk (i.e. has not been
