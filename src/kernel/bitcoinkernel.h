@@ -2029,7 +2029,7 @@ BITCOINKERNEL_API btck_BlockHash* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_ha
  * @brief Serializes the block hash to bytes.
  *
  * @param[in] block_hash     Non-null.
- * @param[in] output         The serialized block hash.
+ * @param[out] output        The serialized block hash.
  */
 BITCOINKERNEL_API void btck_block_hash_to_bytes(
     const btck_BlockHash* block_hash, unsigned char output[32]) BITCOINKERNEL_ARG_NONNULL(1, 2);

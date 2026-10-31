@@ -714,7 +714,7 @@ private:
     /**
      * Reconsider orphan transactions after a parent has been accepted to the mempool.
      *
-     * @peer[in]  peer     The peer whose orphan transactions we will reconsider. At most
+     * @param[in] peer     The peer whose orphan transactions we will reconsider. At most
      *                     one orphan will be reconsidered on each call of this function. If an
      *                     accepted orphan has orphaned children, those will need to be
      *                     reconsidered, creating more work, possibly for other peers.

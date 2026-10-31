@@ -301,7 +301,7 @@ namespace util
    * [in] str : Input string which needs to be split based upon the
    *            delimiters provided.
    * [in] deleims : Delimiter characters based upon which the string needs
-   *                to be split. Default constructed to ' '(space) and '\t'(tab)
+   *                to be split. Default constructed to ' '(space) and '\\t'(tab)
    * [out] vector<string> : Vector of strings split at deleimiter.
    */
   static inline std::vector<std::string>

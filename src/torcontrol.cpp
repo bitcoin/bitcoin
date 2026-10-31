@@ -289,7 +289,7 @@ std::map<std::string,std::string> ParseTorReplyMapping(const std::string &s)
              *   rules to be compatible with buggy Tor implementations and with
              *   future ones that implement the spec as intended:
              *
-             *     Read \n \t \r and \0 ... \377 as C escapes.
+             *     Read \\n \\t \\r and \\0 ... \\377 as C escapes.
              *     Treat a backslash followed by any other character as that character.
              */
             std::string escaped_value;
