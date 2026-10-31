@@ -3489,6 +3489,8 @@ void PeerManagerImpl::ProcessPackageResult(const node::PackageToValidate& packag
 bool PeerManagerImpl::ProcessOrphanTx(Peer& peer)
 {
     AssertLockHeld(g_msgproc_mutex);
+    // Avoid waiting for validation when this peer has no orphan work.
+    if (!WITH_LOCK(m_tx_download_mutex, return m_txdownloadman.HaveMoreWork(peer.m_id))) return false;
     LOCK2(::cs_main, m_tx_download_mutex);
 
     if (CTransactionRef porphanTx = m_txdownloadman.GetTxToReconsider(peer.m_id)) {
