@@ -8,10 +8,8 @@ from itertools import product
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.descriptors import descsum_create
-from test_framework.messages import (
-    COIN,
-    DEFAULT_ANCESTOR_LIMIT,
-)
+from test_framework.mempool_util import DEFAULT_ANCESTOR_LIMIT
+from test_framework.messages import COIN
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_array_result,

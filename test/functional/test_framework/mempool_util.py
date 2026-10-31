@@ -33,8 +33,12 @@ from .wallet import (
 DEFAULT_MIN_RELAY_TX_FEE = 100
 # Default for -incrementalrelayfee in sat/kvB
 DEFAULT_INCREMENTAL_RELAY_FEE = 100
-DEFAULT_CLUSTER_LIMIT = 64
+DEFAULT_CLUSTER_LIMIT = 64 # default max number of transactions in a cluster
 DEFAULT_CLUSTER_SIZE_LIMIT_KVB = 101
+
+DEFAULT_ANCESTOR_LIMIT = 25 # default max number of in-mempool ancestors
+
+MAX_REPLACEMENT_CANDIDATES = 100
 
 TRUC_MAX_VSIZE = 10000
 TRUC_CHILD_MAX_VSIZE = 1000

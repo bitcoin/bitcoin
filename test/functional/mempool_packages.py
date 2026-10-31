@@ -6,7 +6,7 @@
 
 from decimal import Decimal
 
-from test_framework.messages import (
+from test_framework.mempool_util import (
     DEFAULT_CLUSTER_LIMIT,
 )
 from test_framework.p2p import P2PTxInvStore
