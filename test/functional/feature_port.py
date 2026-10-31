@@ -7,11 +7,14 @@ Test the -port option and its interactions with
 -bind.
 """
 
+import socket
 from test_framework.test_framework import (
     BitcoinTestFramework,
 )
+from test_framework.test_node import ErrorMatch
 from test_framework.util import (
     p2p_port,
+    assert_raises,
 )
 
 
@@ -31,6 +34,22 @@ class PortTest(BitcoinTestFramework):
         self.log.info("When starting with -port, bitcoind binds to it and uses port + 1 for an onion bind")
         with node.assert_debug_log(expected_msgs=[f'Bound to 0.0.0.0:{port1}', f'Bound to 127.0.0.1:{port1 + 1}']):
             self.restart_node(0, extra_args=["-listen", f"-port={port1}"])
+
+        self.log.info("Verifying that another process cannot bind the same P2P listen port as bitcoind")
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as competing_listener:
+            competing_listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            # Misconfigured sockets allow port reuse unless the original
+            # listener requested for exclusive address use.
+            assert_raises(OSError, lambda: competing_listener.bind(("0.0.0.0", port1)))
+
+        self.log.info("Verifying that bitcoind fails during startup if another process is already bound to the same P2P listen port")
+        self.stop_node(0)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as competing_listener:
+            competing_listener.bind(("0.0.0.0", port1))
+            node.assert_start_raises_init_error(
+                extra_args=["-listen", f"-port={port1}"],
+                expected_msg=fr"^Error\: Unable to bind to 0\.0\.0\.0\:{port1} on this computer\..*",
+                match=ErrorMatch.PARTIAL_REGEX)
 
         self.log.info("When specifying -port multiple times, only the last one is taken")
         with node.assert_debug_log(expected_msgs=[f'Bound to 0.0.0.0:{port2}', f'Bound to 127.0.0.1:{port2 + 1}'], unexpected_msgs=[f'Bound to 0.0.0.0:{port1}']):
