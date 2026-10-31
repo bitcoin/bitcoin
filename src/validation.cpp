@@ -5892,6 +5892,11 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
             size_t coins_per_txid{0};
             coins_per_txid = ReadCompactSize(coins_file);
 
+            if (coins_per_txid == 0) {
+                return util::Error{Untranslated(strprintf("Bad snapshot data after deserializing %d coins - txid has no coins",
+                          coins_count - coins_left))};
+            }
+
             if (coins_per_txid > coins_left) {
                 return util::Error{Untranslated("Mismatch in coins count in snapshot metadata and actual snapshot data")};
             }
@@ -6003,6 +6008,11 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
     if (AssumeutxoHash{maybe_stats->hashSerialized} != au_data.hash_serialized) {
         return util::Error{Untranslated(strprintf("Bad snapshot content hash: expected %s, got %s",
             au_data.hash_serialized.ToString(), maybe_stats->hashSerialized.ToString()))};
+    }
+
+    if (maybe_stats->coins_count != coins_count) {
+        return util::Error{Untranslated(strprintf("Bad snapshot coins count: expected %d, got %d",
+            coins_count, maybe_stats->coins_count))};
     }
 
     snapshot_chainstate.m_chain.SetTip(*snapshot_start_block);
