@@ -137,7 +137,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         with listener:
             assert_raises_process_error(
                 1, 'Authorization failed',
-                self.nodes[0].cli(f'-rpcport={listener.getsockname()[1]}', '-rpcclienttimeout=10').echo)
+                self.nodes[0].cli('-rpcconnect=127.0.0.1', f'-rpcport={listener.getsockname()[1]}', '-rpcclienttimeout=10').echo)
 
     def run_test(self):
         """Main test logic"""
@@ -172,9 +172,6 @@ class TestBitcoinCli(BitcoinTestFramework):
         self.log.info("Test -rpcclienttimeout=0 (no timeout)")
         assert_equal(BLOCKS, self.nodes[0].cli('-rpcclienttimeout=0').getblockcount())
 
-        self.log.info("Test connecting to a non-existing server")
-        assert_raises_process_error(1, "Could not connect to the server", self.nodes[0].cli('-rpcport=1').echo)
-
         self.test_empty_response_body()
 
         self.log.info("Test handling of invalid ports in rpcconnect")
@@ -195,34 +192,55 @@ class TestBitcoinCli(BitcoinTestFramework):
             assert_raises_process_error(1, "Invalid port provided in -rpcconnect: [::1]:65536", self.nodes[0].cli("-rpcconnect=[::1]:65536").echo)
 
         self.log.info("Test handling of invalid ports in rpcport")
+        # Checked even when connecting over a unix socket, where the port is otherwise unused
         assert_raises_process_error(1, "Invalid port provided in -rpcport: notaport", self.nodes[0].cli("-rpcport=notaport").echo)
         assert_raises_process_error(1, "Invalid port provided in -rpcport: -1", self.nodes[0].cli("-rpcport=-1").echo)
         assert_raises_process_error(1, "Invalid port provided in -rpcport: 0", self.nodes[0].cli("-rpcport=0").echo)
         assert_raises_process_error(1, "Invalid port provided in -rpcport: 65536", self.nodes[0].cli("-rpcport=65536").echo)
 
-        self.log.info("Test port usage preferences")
-        node_rpc_port = rpc_port(self.nodes[0].index)
-        # Prevent bitcoin-cli from using existing rpcport in conf
-        conf_rpcport = "rpcport=" + str(node_rpc_port)
-        self.nodes[0].replace_in_config([(conf_rpcport, "#" + conf_rpcport)])
-        # prefer rpcport over rpcconnect
-        assert_raises_process_error(1, "Error while attempting to communicate with server 127.0.0.1:1 (Could not connect to the server)", self.nodes[0].cli(f"-rpcconnect=127.0.0.1:{node_rpc_port}", "-rpcport=1").echo)
-        if have_ipv6:
-            assert_raises_process_error(1, "Error while attempting to communicate with server ::1:1 (Could not connect to the server)", self.nodes[0].cli(f"-rpcconnect=[::1]:{node_rpc_port}", "-rpcport=1").echo)
+        if self.options.httpunix:
+            self.log.info("Test connecting to a non-existing unix socket")
+            assert_raises_process_error(1, "Error while attempting to communicate with server unix:/does/not/exist.sock (Could not connect to the server)", self.nodes[0].cli("-rpcconnect=unix:/does/not/exist.sock").echo)
+            assert_raises_process_error(1, "connecting to the correct unix socket path", self.nodes[0].cli("-rpcconnect=unix:/does/not/exist.sock").echo)
+            # A valid -rpcport is ignored for a unix socket
+            assert_equal(BLOCKS, self.nodes[0].cli("-rpcport=1").getblockcount())
 
-        assert_equal(BLOCKS, self.nodes[0].cli("-rpcconnect=127.0.0.1:18999", f'-rpcport={node_rpc_port}').getblockcount())
-        if have_ipv6:
-            assert_equal(BLOCKS, self.nodes[0].cli("-rpcconnect=[::1]:18999", f'-rpcport={node_rpc_port}').getblockcount())
+            self.log.info("Test handling of an over-long unix socket path in rpcconnect")
+            assert_raises_process_error(1, "Invalid unix socket path provided in -rpcconnect", self.nodes[0].cli(f"-rpcconnect=unix:/{'a' * 200}").echo)
 
-        # prefer rpcconnect port over default
-        assert_equal(BLOCKS, self.nodes[0].cli(f"-rpcconnect=127.0.0.1:{node_rpc_port}").getblockcount())
-        if have_ipv6:
-            assert_equal(BLOCKS, self.nodes[0].cli(f"-rpcconnect=[::1]:{node_rpc_port}").getblockcount())
+            if self.nodes[0].http_unix_tmp_dir is None:
+                self.log.info("Test the unix keyword and relative unix paths resolve against the network data directory")
+                assert_equal(BLOCKS, self.nodes[0].cli("-rpcconnect=unix").getblockcount())
+                assert_equal(BLOCKS, self.nodes[0].cli("-rpcconnect=unix:").getblockcount())
+                assert_equal(BLOCKS, self.nodes[0].cli("-rpcconnect=unix:http.sock").getblockcount())
+        else:
+            self.log.info("Test connecting to a non-existing server")
+            assert_raises_process_error(1, "Could not connect to the server", self.nodes[0].cli('-rpcport=1').echo)
+            assert_raises_process_error(1, "connecting to the correct RPC port", self.nodes[0].cli('-rpcport=1').echo)
 
-        # prefer rpcport over default
-        assert_equal(BLOCKS, self.nodes[0].cli(f'-rpcport={node_rpc_port}').getblockcount())
-        # Re-enable rpcport in conf if present
-        self.nodes[0].replace_in_config([("#" + conf_rpcport, conf_rpcport)])
+            self.log.info("Test port usage preferences")
+            node_rpc_port = rpc_port(self.nodes[0].index)
+            # Prevent bitcoin-cli from using existing rpcport in conf
+            conf_rpcport = "rpcport=" + str(node_rpc_port)
+            self.nodes[0].replace_in_config([(conf_rpcport, "#" + conf_rpcport)])
+            # prefer rpcport over rpcconnect
+            assert_raises_process_error(1, "Error while attempting to communicate with server 127.0.0.1:1 (Could not connect to the server)", self.nodes[0].cli(f"-rpcconnect=127.0.0.1:{node_rpc_port}", "-rpcport=1").echo)
+            if have_ipv6:
+                assert_raises_process_error(1, "Error while attempting to communicate with server [::1]:1 (Could not connect to the server)", self.nodes[0].cli(f"-rpcconnect=[::1]:{node_rpc_port}", "-rpcport=1").echo)
+
+            assert_equal(BLOCKS, self.nodes[0].cli("-rpcconnect=127.0.0.1:18999", f'-rpcport={node_rpc_port}').getblockcount())
+            if have_ipv6:
+                assert_equal(BLOCKS, self.nodes[0].cli("-rpcconnect=[::1]:18999", f'-rpcport={node_rpc_port}').getblockcount())
+
+            # prefer rpcconnect port over default
+            assert_equal(BLOCKS, self.nodes[0].cli(f"-rpcconnect=127.0.0.1:{node_rpc_port}").getblockcount())
+            if have_ipv6:
+                assert_equal(BLOCKS, self.nodes[0].cli(f"-rpcconnect=[::1]:{node_rpc_port}").getblockcount())
+
+            # prefer rpcport over default
+            assert_equal(BLOCKS, self.nodes[0].cli(f'-rpcport={node_rpc_port}').getblockcount())
+            # Re-enable rpcport in conf if present
+            self.nodes[0].replace_in_config([("#" + conf_rpcport, conf_rpcport)])
 
         self.log.info("Test connecting with non-existing RPC cookie file")
         assert_raises_process_error(1, "Failed to read cookie file and no rpcpassword was specified.", self.nodes[0].cli('-rpccookiefile=does-not-exist', '-rpcpassword=').echo)
