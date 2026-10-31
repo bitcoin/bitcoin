@@ -924,9 +924,6 @@ private:
      */
     std::map<uint256, std::pair<NodeId, bool>> mapBlockSource GUARDED_BY(cs_main);
 
-    /** Number of peers with wtxid relay. */
-    std::atomic<int> m_wtxid_relay_peers{0};
-
     /** Number of outbound peers with m_chain_sync.m_protect. */
     int m_outbound_peers_with_protect_from_disconnect GUARDED_BY(cs_main) = 0;
 
@@ -1788,8 +1785,6 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         // destructed.
         PeerRef peer = RemovePeer(nodeid);
         assert(peer != nullptr);
-        m_wtxid_relay_peers -= peer->m_wtxid_relay;
-        assert(m_wtxid_relay_peers >= 0);
     }
     CNodeState *state = State(nodeid);
     assert(state != nullptr);
@@ -1827,7 +1822,6 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         assert(m_num_preferred_download_peers == 0);
         assert(m_peers_downloading_from == 0);
         assert(m_outbound_peers_with_protect_from_disconnect == 0);
-        assert(m_wtxid_relay_peers == 0);
         WITH_LOCK(m_tx_download_mutex, m_txdownloadman.CheckIsEmpty());
     }
     } // cs_main
@@ -4203,7 +4197,6 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         if (pfrom.GetCommonVersion() >= WTXID_RELAY_VERSION) {
             if (!peer.m_wtxid_relay) {
                 peer.m_wtxid_relay = true;
-                m_wtxid_relay_peers++;
             } else {
                 LogDebug(BCLog::NET, "ignoring duplicate wtxidrelay from peer=%d\n", pfrom.GetId());
             }
