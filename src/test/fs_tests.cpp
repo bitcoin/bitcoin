@@ -12,6 +12,14 @@
 #include <ios>
 #include <string>
 
+#ifdef WIN32
+    #include <io.h>
+    #include <windows.h>
+#else
+    #include <fcntl.h>
+    #include <unistd.h>
+#endif
+
 BOOST_FIXTURE_TEST_SUITE(fs_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(fsbridge_pathtostring)
@@ -137,6 +145,39 @@ BOOST_AUTO_TEST_CASE(rename)
         BOOST_CHECK_EQUAL(contents, path1_contents);
     }
     fs::remove(path2);
+}
+
+BOOST_AUTO_TEST_CASE(fsbridge_fopen_noninheritable)
+{
+    const fs::path tmpfile{m_args.GetDataDirBase() / "fopen_test.dat"};
+    auto file = fsbridge::fopen(tmpfile, "wb");
+
+    BOOST_REQUIRE(file != nullptr);
+
+#ifdef WIN32
+    const int fd = _fileno(file);
+    BOOST_REQUIRE(fd >= 0);
+
+    const intptr_t os_handle = _get_osfhandle(fd);
+    BOOST_REQUIRE(os_handle != -1);
+
+    DWORD flags = 0;
+    BOOST_REQUIRE(GetHandleInformation(reinterpret_cast<HANDLE>(os_handle), &flags));
+
+    BOOST_CHECK((flags & HANDLE_FLAG_INHERIT) == 0);
+#else
+    const int fd = fileno(file);
+
+    BOOST_REQUIRE(fd >= 0);
+
+    const int flags = fcntl(fd, F_GETFD);
+
+    BOOST_REQUIRE(flags != -1);
+    BOOST_CHECK((flags & FD_CLOEXEC) != 0);
+#endif
+
+    BOOST_CHECK_EQUAL(fclose(file), 0);
+    fs::remove(tmpfile);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

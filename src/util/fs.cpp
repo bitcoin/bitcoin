@@ -10,22 +10,65 @@
 #include <cerrno>
 #include <string>
 
+#if !defined(__linux__) && !defined(WIN32)
+#include <cstring>
+#endif
+
 #ifndef WIN32
 #include <fcntl.h>
 #include <unistd.h>
 #else
-#include <limits>
 #include <windows.h>
+
+#include <limits>
 #endif
 
 namespace fsbridge {
 
 FILE *fopen(const fs::path& p, const char *mode)
 {
-#ifndef WIN32
-    return ::fopen(p.c_str(), mode);
+#if defined(__linux__)
+    const std::string safe_mode{std::string(mode) + "e"};
+    return ::fopen(p.c_str(), safe_mode.c_str());
+#elif defined(WIN32)
+    const std::string safe_mode{std::string(mode) + "N"};
+    return ::fopen(p.utf8string().c_str(), safe_mode.c_str());
 #else
-    return ::fopen(p.utf8string().c_str(), mode);
+    const bool read_write{std::strchr(mode, '+') != nullptr};
+    int flags{O_CLOEXEC};
+
+    switch (mode[0]) {
+        case 'r':
+            flags |= read_write ? O_RDWR : O_RDONLY;
+            break;
+        case 'w':
+            flags |= (read_write ? O_RDWR :  O_WRONLY) | O_CREAT | O_TRUNC;
+            if(std::strchr(mode, 'x')) flags |= O_EXCL;
+            break;
+        case 'a':
+            flags |= (read_write ? O_RDWR : O_WRONLY) | O_CREAT | O_APPEND;
+            break;
+        default:
+            errno = EINVAL;
+            return nullptr;
+    }
+
+    const int fd{::open(p.c_str(), flags, 0666)};
+    if (fd == -1) return nullptr;
+
+    // Match fopen's initial position for append.
+    if (mode[0] == 'a') {
+        (void)::lseek(fd, 0, SEEK_END);
+    }
+
+    FILE* file{::fdopen(fd, mode)};
+    if (!file) {
+        const int saved_errno{errno};
+        ::close(fd);
+        errno = saved_errno;
+    }
+
+    return file;
 #endif
 }
 
