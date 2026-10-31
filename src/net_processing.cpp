@@ -3904,6 +3904,13 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             return;
         }
 
+        const bool is_v1transport = pfrom.m_transport->GetInfo().transport_type == TransportProtocolType::V1;
+        if (pfrom.IsInboundConn() && is_v1transport && m_connman.RequiresV2Peer(pfrom.ConnectedThroughNetwork())) {
+            LogDebug(BCLog::NET, "v1 connection from a clearnet peer not allowed (-v2onlyclearnet), %s", pfrom.DisconnectMsg());
+            pfrom.fDisconnect = true;
+            return;
+        }
+
         if (pfrom.IsInboundConn() && addrMe.IsRoutable())
         {
             SeenLocal(addrMe);
