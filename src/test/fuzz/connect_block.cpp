@@ -442,7 +442,7 @@ FUZZ_TARGET(connect_block, .init = initialize_connect_block)
     FakeNodeClock clock{g_blocks.back()->Time() + 2s};
 
     LOCK(::cs_main);
-    g_setup->m_node.chainman->m_validation_cache.m_script_execution_cache.TestOnlyReset();
+    g_setup->m_node.chainman->m_validation_cache.TestOnlyResetScriptExecutionCache();
     Chainstate& active_chainstate = g_setup->m_node.chainman->ActiveChainstate();
     CBlockIndex* active_tip = active_chainstate.m_chain.Tip();
     Assert(active_tip->GetBlockHash() == g_blocks.back()->GetHash());
