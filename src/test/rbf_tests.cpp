@@ -20,19 +20,13 @@ static inline CTransactionRef make_tx(const std::vector<CTransactionRef>& inputs
                                       const std::vector<CAmount>& output_values)
 {
     CMutableTransaction tx = CMutableTransaction();
-    tx.vin.resize(inputs.size());
-    tx.vout.resize(output_values.size());
     for (size_t i = 0; i < inputs.size(); ++i) {
-        tx.vin[i].prevout.hash = inputs[i]->GetHash();
-        tx.vin[i].prevout.n = 0;
+        tx.vin.emplace_back(COutPoint{inputs[i]->GetHash(), 0});
         // Add a witness so wtxid != txid
-        CScriptWitness witness;
-        witness.stack.emplace_back(i + 10);
-        tx.vin[i].scriptWitness = witness;
+        tx.vin.back().scriptWitness.stack.emplace_back(i + 10);
     }
     for (size_t i = 0; i < output_values.size(); ++i) {
-        tx.vout[i].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
-        tx.vout[i].nValue = output_values[i];
+        tx.vout.emplace_back(output_values[i], CScript{} << OP_11 << OP_EQUAL);
     }
     return MakeTransactionRef(tx);
 }
