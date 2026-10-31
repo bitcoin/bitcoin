@@ -5,12 +5,32 @@
 #ifndef BITCOIN_UTIL_VECTOR_H
 #define BITCOIN_UTIL_VECTOR_H
 
+#include <algorithm>
 #include <functional>
 #include <initializer_list>
+#include <iterator>
 #include <optional>
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+/** A range whose elements are convertible to T. */
+template <typename R, typename T>
+concept RangeOf =
+    std::ranges::input_range<R> &&
+    std::convertible_to<std::ranges::range_reference_t<R>, T>;
+
+/** Construct a vector from an input range (replace with `to<vector>` in C++23). */
+template <typename T, RangeOf<T> R>
+std::vector<T> ToVector(R&& range)
+{
+    std::vector<T> result;
+    if constexpr (std::ranges::sized_range<R>) {
+        result.reserve(std::ranges::size(range));
+    }
+    std::ranges::copy(range, std::back_inserter(result));
+    return result;
+}
 
 /** Construct a vector with the specified elements.
  *

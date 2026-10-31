@@ -11,6 +11,7 @@
 #include <primitives/transaction_identifier.h> // IWYU pragma: export
 #include <script/script.h>
 #include <serialize.h>
+#include <util/vector.h>
 
 #include <algorithm>
 #include <compare>
@@ -119,8 +120,8 @@ public:
         nSequence = SEQUENCE_FINAL;
     }
 
-    explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
-    CTxIn(Txid hashPrevTx, uint32_t nOut, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
+    explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn = CScript(), uint32_t nSequenceIn = SEQUENCE_FINAL, const CScriptWitness& scriptWitnessIn = {});
+    CTxIn(Txid hashPrevTx, uint32_t nOut, CScript scriptSigIn = CScript(), uint32_t nSequenceIn = SEQUENCE_FINAL, const CScriptWitness& scriptWitnessIn = {});
 
     SERIALIZE_METHODS(CTxIn, obj) { READWRITE(obj.prevout, obj.scriptSig, obj.nSequence); }
 
@@ -305,12 +306,21 @@ private:
     const Txid hash;
     const Wtxid m_witness_hash;
 
+    struct private_ctor {};
+    CTransaction(private_ctor, std::vector<CTxIn> in, std::vector<CTxOut> out, uint32_t ver, uint32_t lt);
+
     Txid ComputeHash() const;
     Wtxid ComputeWitnessHash() const;
 
     bool ComputeHasWitness() const;
 
 public:
+    template <RangeOf<CTxIn> In, RangeOf<CTxOut> Out>
+    CTransaction(In&& in, Out&& out, uint32_t ver = CURRENT_VERSION, uint32_t lt = 0)
+        : CTransaction{private_ctor{}, ToVector<CTxIn>(std::forward<In>(in)), ToVector<CTxOut>(std::forward<Out>(out)), ver, lt}
+    {
+    }
+
     /** Convert a CMutableTransaction into a CTransaction. */
     explicit CTransaction(const CMutableTransaction& tx);
     explicit CTransaction(CMutableTransaction&& tx);
