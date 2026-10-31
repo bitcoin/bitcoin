@@ -372,8 +372,12 @@ static bool rest_spent_txouts(const std::any& context, HTTPRequest* req, const s
     }
 
     CBlockUndo block_undo;
-    if (pblockindex->nHeight > 0 && !chainman->m_blockman.ReadBlockUndo(block_undo, *pblockindex)) {
-        return RESTERR(req, HTTP_NOT_FOUND, hashStr + " undo not available");
+    if (pblockindex->nHeight > 0) {
+        // Blocks that were never connected or have been pruned have no undo data.
+        const bool have_undo{WITH_LOCK(cs_main, return (pblockindex->nStatus & BLOCK_HAVE_UNDO) != 0)};
+        if (!have_undo || !chainman->m_blockman.ReadBlockUndo(block_undo, *pblockindex)) {
+            return RESTERR(req, HTTP_NOT_FOUND, hashStr + " undo not available");
+        }
     }
 
     switch (rf) {
