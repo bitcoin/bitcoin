@@ -837,6 +837,20 @@ class PSBTTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "The PSBT version can only be 2 or 0", self.nodes[0].converttopsbt, hexstring=rawtx, psbt_version=1)
         assert_raises_rpc_error(-8, "The PSBT version can only be 2 or 0", self.nodes[0].psbtbumpfee, txid=tobump, psbt_version=1)
 
+    def test_psbt_unsupported_version_field(self):
+        self.log.info("Test that the global PSBT version is supported on decode")
+
+        psbt = PSBT.from_base64(self.nodes[0].createpsbt([{"txid": "00" * 32, "vout": 0}], [{"data": "00"}]))
+        psbt.g.map[PSBT_GLOBAL_VERSION] = (3).to_bytes(4, "little")
+        assert_raises_rpc_error(-22, "TX decode failed Unsupported version number", self.nodes[0].decodepsbt, psbt.to_base64())
+
+    def test_psbt_missing_version_field(self):
+        self.log.info("Test that a PSBT without the global version is interpreted as v0")
+
+        psbt = PSBT.from_base64(self.nodes[0].createpsbt([{"txid": "00" * 32, "vout": 0}], [{"data": "00"}]))
+        del psbt.g.map[PSBT_GLOBAL_VERSION]
+        assert_raises_rpc_error(-22, "TX decode failed No unsigned transaction was provided", self.nodes[0].decodepsbt, psbt.to_base64())
+
     def test_psbt_with_invalid_signature(self):
         self.log.info("Test descriptorprocesspsbt with invalid signature in signed PSBT")
 
@@ -1820,6 +1834,8 @@ class PSBTTest(BitcoinTestFramework):
         self.test_psbt_named_parameter_handling()
         self.test_psbt_roundtrip()
         self.test_psbt_version()
+        self.test_psbt_unsupported_version_field()
+        self.test_psbt_missing_version_field()
         self.test_psbt_with_invalid_signature()
         self.test_musig2_untrusted_derivation()
 
