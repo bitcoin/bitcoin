@@ -92,6 +92,11 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     BOOST_CHECK(CFeeRate(CAmount(27), 789) < CFeeRate(35));
     // Maximum size in bytes, should not crash
     CFeeRate(MAX_MONEY, std::numeric_limits<int32_t>::max()).GetFeePerK();
+    BOOST_CHECK_EQUAL(CFeeRate(0, 0).GetFeePerK(), CAmount{0});
+    BOOST_CHECK_EQUAL(CFeeRate(CAmount{5}, 0).GetFeePerK(), CAmount{0});
+    CFeeRate empty_rate(0, 0);
+    empty_rate += CFeeRate(1, 1);
+    BOOST_CHECK(empty_rate == CFeeRate(1, 1));
 
     // check multiplication operator
     // check multiplying by zero
