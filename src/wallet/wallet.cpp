@@ -4063,7 +4063,11 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
     // migrated records will be presented to the user.
     if (!has_spendable_material) {
         if (!m_address_book.empty()) return util::Error{_("Error: Not all address book records were migrated")};
-        if (!mapWallet.empty()) return util::Error{_("Error: Not all transaction records were migrated")};
+        // Unlike DelAddressBookWithDB(), which updates m_address_book straight away, RemoveTxs()
+        // only erases the transactions from disk here; it defers the mapWallet removal to the db
+        // txn's on_commit listener, which runs after this function returns. The transactions
+        // queued for deletion are therefore still in mapWallet and must be discounted.
+        if (mapWallet.size() != txids_to_delete.size()) return util::Error{_("Error: Not all transaction records were migrated")};
     }
 
     return {}; // all good

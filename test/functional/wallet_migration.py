@@ -1178,6 +1178,25 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         wallet.unloadwallet()
 
+    def test_watchonly_txs_no_privkeys(self):
+        self.log.info("Test migrating a wallet with only watch-only addresses imported and no spendable material with transactions.")
+        default = self.master_node.get_wallet_rpc(self.default_wallet_name)
+
+        wallet = self.create_legacy_wallet("watchonly_no_privkeys", blank=True)
+        key = get_generate_key()
+        addr = key.p2pkh_addr
+        wallet.importaddress(addr)
+
+        # Create a transaction that spends to the address
+        received_txid = default.sendtoaddress(addr, 10)
+        self.generate(self.master_node, 1)
+
+        wallet.gettransaction(received_txid)
+
+        res, wallet = self.migrate_and_get_rpc("watchonly_no_privkeys")
+
+        wallet.unloadwallet()
+
     def test_migrate_simple_watch_only(self):
         self.log.info("Test migrating a watch-only p2pk script")
         wallet = self.create_legacy_wallet("bare_p2pk", blank=True)
@@ -1788,6 +1807,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_avoidreuse()
         self.test_preserve_tx_extra_info()
         self.test_blank()
+        self.test_watchonly_txs_no_privkeys()
         self.test_migrate_simple_watch_only()
         self.test_manual_keys_import()
         self.test_p2wsh()
