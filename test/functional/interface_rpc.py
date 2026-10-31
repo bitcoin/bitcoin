@@ -176,6 +176,19 @@ class RPCInterfaceTest(BitcoinTestFramework):
             request_fields={"jsonrpc": "2.1"},
             response_fields={"result": None, "error": {"code": RPC_INVALID_REQUEST, "message": "JSON-RPC version not supported"}}))
 
+    def test_batch_invalid_element_reply(self):
+        self.log.info("Testing that an invalid batch element does not reuse the id or version of the previous one...")
+        invalid_element = {"result": None, "error": {"code": RPC_INVALID_REQUEST, "message": "Invalid Request object"}, "id": None}
+
+        response, status = send_json_rpc(self.nodes[0], [{"jsonrpc": "2.0", "method": "getblockcount", "id": "X"}, 2])
+        assert_equal(status, 200)
+        assert_equal(response, [{"jsonrpc": "2.0", "result": 0, "id": "X"}, invalid_element])
+
+        # The error is not mistaken for a reply to the notification before it
+        response, status = send_json_rpc(self.nodes[0], [{"jsonrpc": "2.0", "method": "getblockcount"}, 2])
+        assert_equal(status, 200)
+        assert_equal(response, [invalid_element])
+
     def test_http_status_codes(self):
         self.log.info("Testing HTTP status codes for JSON-RPC 1.1 requests...")
         # OK
@@ -240,6 +253,7 @@ class RPCInterfaceTest(BitcoinTestFramework):
     def run_test(self):
         self.test_getrpcinfo()
         self.test_batch_requests()
+        self.test_batch_invalid_element_reply()
         self.test_http_status_codes()
         self.test_work_queue_exceeded()
 
