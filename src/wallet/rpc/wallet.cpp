@@ -1115,6 +1115,7 @@ RPCMethod gettransaction();
 RPCMethod abandontransaction();
 RPCMethod rescanblockchain();
 RPCMethod abortrescan();
+RPCMethod rebroadcastwallettx();
 
 std::span<const CRPCCommand> GetWalletRPCCommands()
 {
@@ -1161,6 +1162,7 @@ std::span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &loadwallet},
         {"wallet", &lockunspent},
         {"wallet", &migratewallet},
+        {"wallet", &rebroadcastwallettx},
         {"wallet", &removeprunedfunds},
         {"wallet", &rescanblockchain},
         {"wallet", &send},

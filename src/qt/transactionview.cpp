@@ -169,6 +169,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     GUIUtil::ExceptionSafeConnect(bumpFeeAction, &QAction::triggered, this, &TransactionView::bumpFee);
     bumpFeeAction->setObjectName("bumpFeeAction");
     abandonAction = contextMenu->addAction(tr("A&bandon transaction"), this, &TransactionView::abandonTx);
+    m_rebroadcast_action = contextMenu->addAction(tr("Re&broadcast transaction"), this, &TransactionView::rebroadcastTx);
     contextMenu->addAction(tr("&Edit address label"), this, &TransactionView::editLabel);
 
     connect(dateWidget, qOverload<int>(&QComboBox::activated), this, &TransactionView::chooseDate);
@@ -372,6 +373,7 @@ void TransactionView::contextualMenu(const QPoint &point)
     bumpFeeAction->setEnabled(model->wallet().transactionCanBeBumped(hash));
     copyAddressAction->setEnabled(GUIUtil::hasEntryData(transactionView, 0, TransactionTableModel::AddressRole));
     copyLabelAction->setEnabled(GUIUtil::hasEntryData(transactionView, 0, TransactionTableModel::LabelRole));
+    m_rebroadcast_action->setEnabled(model->wallet().transactionCanBeBroadcast(hash));
 
     if (index.isValid()) {
         GUIUtil::PopupMenu(contextMenu, transactionView->viewport()->mapToGlobal(point));
@@ -390,6 +392,20 @@ void TransactionView::abandonTx()
 
     // Abandon the wallet transaction over the walletModel
     model->wallet().abandonTransaction(hash);
+}
+
+void TransactionView::rebroadcastTx()
+{
+    if(!transactionView || !transactionView->selectionModel())
+        return;
+    QModelIndexList selection = transactionView->selectionModel()->selectedRows(0);
+
+    // get the hash from the TxHashRole (QVariant / QString)
+    QString hashQStr = selection.at(0).data(TransactionTableModel::TxHashRole).toString();
+    Txid hash = Txid::FromHex(hashQStr.toStdString()).value();
+
+    // Abandon the wallet transaction over the walletModel
+    model->wallet().rebroadcastTransaction(hash);
 }
 
 void TransactionView::bumpFee([[maybe_unused]] bool checked)
