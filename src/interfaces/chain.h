@@ -198,7 +198,7 @@ public:
     //! @param[in] tx Transaction to process.
     //! @param[in] max_tx_fee Don't add the transaction to the mempool or
     //! broadcast it if its fee is higher than this.
-    //! @param[in] max_tx_fee_rate reject txs with fee rate higher than this (if CFeeRate(0), the fee rate is not checked)
+    //! @param[in] max_tx_fee_rate reject txs with fee rate higher than this (if CFeeRate(0*sats), the fee rate is not checked)
     //! @param[in] broadcast_method Whether to add the transaction to the
     //! mempool and how/whether to broadcast it.
     //! @param[out] err_string Set if an error occurs.

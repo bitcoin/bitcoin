@@ -1111,8 +1111,8 @@ static RPCMethod bumpfee_helper(std::string method_name)
 
 
     std::vector<bilingual_str> errors;
-    CAmount old_fee;
-    CAmount new_fee;
+    CAmount old_fee{0};
+    CAmount new_fee{0};
     CMutableTransaction mtx;
     // Targeting feerate bump.
     [&](){
@@ -1491,7 +1491,7 @@ RPCMethod sendall()
                 }
             } else {
                 CoinFilterParams coins_params;
-                coins_params.min_amount = 0;
+                coins_params.min_amount = 0*sats;
                 for (const COutput& output : AvailableCoins(*pwallet, &coin_control, fee_rate, coins_params).All()) {
                     if (send_max && fee_rate.GetFee(output.input_bytes) > output.txout.nValue) {
                         continue;
@@ -1520,7 +1520,7 @@ RPCMethod sendall()
             }
             const CAmount fee_from_size{fee_rate.GetFee(tx_size.vsize)};
             const std::optional<CAmount> total_bump_fees{pwallet->chain().calculateCombinedBumpFee(outpoints_spent, fee_rate)};
-            const CAmount actual_fee{fee_from_size + total_bump_fees.value_or(0)};
+            const CAmount actual_fee{fee_from_size + total_bump_fees.value_or(0*sats)};
             CAmount effective_value = total_input_value - actual_fee;
 
             if (actual_fee > pwallet->m_max_tx_fee) {
@@ -1530,7 +1530,7 @@ RPCMethod sendall()
                 throw JSONRPCError(RPC_WALLET_ERROR, TransactionErrorString(TransactionError::MAX_FEE_RATE_EXCEEDED).original);
             }
 
-            if (effective_value <= 0) {
+            if (effective_value <= 0*sats) {
                 if (send_max) {
                     throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Total value of UTXO pool too low to pay for transaction, try using lower feerate.");
                 } else {
@@ -1553,7 +1553,7 @@ RPCMethod sendall()
             }
 
             const CAmount remainder{effective_value - output_amounts_claimed};
-            if (remainder < 0) {
+            if (remainder < 0*sats) {
                 throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds for fees after creating specified outputs.");
             }
 

@@ -152,7 +152,7 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
             if (!wallet.IsMine(address)) return; // exclude addresses not owned by the wallet (e.g. "send" purpose)
         }
 
-        CAmount nAmount = 0;
+        CAmount nAmount{0};
         int nConf = std::numeric_limits<int>::max();
         if (it != mapTally.end()) {
             nAmount = (*it).second.nAmount;
@@ -324,7 +324,7 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
                              bool include_change = false)
     EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
-    CAmount nFee;
+    CAmount nFee{0};
     std::list<COutputEntry> listReceived;
     std::list<COutputEntry> listSent;
 
@@ -400,7 +400,7 @@ static void PushTxAmountAndFee(const CWallet& wallet, const CWalletTx& wtx, UniV
     CAmount debit = CachedTxGetDebit(wallet, wtx, /*avoid_reuse=*/false);
     CAmount net = credit - debit;
     bool is_from_me = CachedTxIsFromMe(wallet, wtx);
-    CAmount fee = (is_from_me ? wtx.GetTx()->GetValueOut() - debit : 0);
+    CAmount fee = (is_from_me ? wtx.GetTx()->GetValueOut() - debit : 0*sats);
 
     entry.pushKV("amount", ValueFromAmount(net - fee));
     if (is_from_me)
