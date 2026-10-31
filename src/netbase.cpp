@@ -564,6 +564,14 @@ std::unique_ptr<Sock> CreateSockOS(int domain, int type, int protocol)
 #endif
 
     if (protocol == IPPROTO_TCP) {
+        // RFC 6093 §5 ¶1 advises applications not to employ TCP urgent
+        // indications. P2P has no urgent-data semantics. The v2 encrypted
+        // transport treats TCP as a uniform byte stream; interpreting the
+        // cleartext URG flag as an interrupt would violate that design. P2P
+        // should never support such interrupts.
+        //
+        // RFC 6093 §6 ¶1 requires SO_OOBINLINE for applications that employ
+        // urgent indications. P2P does not, so leave SO_OOBINLINE unset.
         // Set the no-delay option (disable Nagle's algorithm) on the TCP socket.
         const int on{1};
         if (sock->SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == SOCKET_ERROR) {
