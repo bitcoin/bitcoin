@@ -12,6 +12,7 @@
 #include <consensus/amount.h>
 #include <core_io.h>
 #include <crypto/hex_base.h>
+#include <init_settings.h>
 #include <node/types.h>
 #include <outputtype.h>
 #include <pow.h>
@@ -669,7 +670,7 @@ UniValue RPCMethod::HandleRequest(const JSONRPCRequest& request) const
     m_req = &request;
     UniValue ret = m_fun(*this, request);
     m_req = nullptr;
-    if (gArgs.GetBoolArg("-rpcdoccheck", DEFAULT_RPC_DOC_CHECK)) {
+    if (RpcDocCheckSetting::Get(gArgs)) {
         UniValue mismatch{UniValue::VARR};
         for (const auto& res : m_results.m_results) {
             UniValue match{res.MatchesType(ret)};
@@ -1270,7 +1271,7 @@ std::string RPCArg::ToStringObj(const bool oneline) const
 std::string RPCArg::ToString(const bool oneline) const
 {
     if (oneline && !m_opts.oneline_description.empty()) {
-        if (m_opts.oneline_description[0] == '\"' && m_type != Type::STR_HEX && m_type != Type::STR && gArgs.GetBoolArg("-rpcdoccheck", DEFAULT_RPC_DOC_CHECK)) {
+        if (m_opts.oneline_description[0] == '\"' && m_type != Type::STR_HEX && m_type != Type::STR && RpcDocCheckSetting::Get(gArgs)) {
             throw std::runtime_error{
                 STR_INTERNAL_BUG(strprintf("non-string RPC arg \"%s\" quotes oneline_description:\n%s",
                     m_names, m_opts.oneline_description)

@@ -13,6 +13,7 @@
 #include <util/string.h>
 #include <util/translation.h>
 #include <wallet/context.h>
+#include <wallet/init_settings.h>
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
@@ -29,8 +30,8 @@ bool VerifyWallets(WalletContext& context)
     interfaces::Chain& chain = *context.chain;
     ArgsManager& args = *Assert(context.args);
 
-    if (args.IsArgSet("-walletdir")) {
-        const fs::path wallet_dir{args.GetPathArg("-walletdir")};
+    if (!WalletDirSetting::Value(args).isNull()) {
+        const fs::path wallet_dir{WalletDirSetting::Get(args)};
         std::error_code error;
         // The canonical path cleans the path, preventing >1 Berkeley environment instances for the same directory
         // It also lets the fs::exists and fs::is_directory checks below pass on windows, since they return false
@@ -58,7 +59,7 @@ bool VerifyWallets(WalletContext& context)
 
     // For backwards compatibility if an unnamed top level wallet exists in the
     // wallets directory, include it in the default list of wallets to load.
-    if (!args.IsArgSet("wallet")) {
+    if (WalletSetting::Value(args).isNull()) {
         DatabaseOptions options;
         DatabaseStatus status;
         ReadDatabaseArgs(args, options);
