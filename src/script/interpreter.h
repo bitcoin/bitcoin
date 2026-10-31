@@ -322,7 +322,9 @@ private:
     mutable SigHashCache m_sighash_cache;
 
 protected:
+    //! Public-key encoding must keep cached verification commitments unambiguous
     virtual bool VerifyECDSASignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
+    //! Overrides must preserve the Schnorr verifier's signature-format contract
     virtual bool VerifySchnorrSignature(std::span<const unsigned char> sig, const XOnlyPubKey& pubkey, const uint256& sighash) const;
 
 public:
