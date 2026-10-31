@@ -445,6 +445,17 @@ if(BUILD_FUZZ_BINARY)
     LDFLAGS ${SANITIZER_LDFLAGS} ${fuzz_flag}
     LINK_LIBRARIES ${FUZZ_LIBS}
   )
+  # Custom mutators call back into the engine's LLVMFuzzerMutate, which only
+  # libFuzzer provides.
+  check_cxx_source_compiles_with_flags("
+      #include <cstdint>
+      #include <cstddef>
+      extern \"C\" size_t LLVMFuzzerMutate(uint8_t* data, size_t size, size_t max_size);
+      extern \"C\" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) { return LLVMFuzzerMutate(nullptr, 0, 0); }
+    " FUZZ_BINARY_PROVIDES_LLVM_FUZZER_MUTATE
+    LDFLAGS ${SANITIZER_LDFLAGS} ${fuzz_flag}
+    LINK_LIBRARIES ${FUZZ_LIBS}
+  )
   add_library(fuzzer_interface INTERFACE)
   target_link_options(fuzzer_interface INTERFACE ${fuzz_flag})
   target_link_libraries(fuzzer_interface INTERFACE ${FUZZ_LIBS})
