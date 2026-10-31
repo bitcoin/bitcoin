@@ -1,0 +1,226 @@
+// Copyright (c) The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include <key.h>
+#include <musig.h>
+#include <pubkey.h>
+#include <secp256k1_musig.h>
+#include <test/fuzz/FuzzedDataProvider.h>
+#include <test/fuzz/fuzz.h>
+#include <test/fuzz/util.h>
+#include <test/util/random.h>
+#include <uint256.h>
+#include <util/check.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <map>
+#include <vector>
+
+namespace {
+
+void initialize_musig()
+{
+    static ECC_Context ecc_context{};
+}
+
+std::vector<CPubKey> ConsumePubKeyVector(FuzzedDataProvider& fdp)
+{
+    std::vector<CPubKey> pubkeys;
+    LIMITED_WHILE (fdp.ConsumeBool(), 16) {
+        CallOneOf(
+            fdp,
+            [&] {
+                const CKey key{ConsumePrivateKey(fdp)};
+                if (key.IsValid()) {
+                    pubkeys.push_back(key.GetPubKey());
+                }
+            },
+            [&] {
+                const std::vector<unsigned char> bytes{
+                    fdp.ConsumeBytes<unsigned char>(
+                        fdp.ConsumeIntegralInRange<size_t>(0, CPubKey::SIZE))};
+                if (CPubKey::ValidSize(bytes)) {
+                    pubkeys.emplace_back(bytes);
+                }
+            },
+            [&] {
+                if (const std::optional<CPubKey> pubkey{ConsumeDeserializable<CPubKey>(fdp)}) {
+                    if (pubkey->size() != 0) {
+                        pubkeys.push_back(*pubkey);
+                    }
+                }
+            });
+    }
+    return pubkeys;
+}
+
+} // namespace
+
+FUZZ_TARGET(musig, .init = initialize_musig)
+{
+    SeedRandomStateForTest(SeedRand::ZEROS);
+    FuzzedDataProvider fdp{buffer.data(), buffer.size()};
+
+    LIMITED_WHILE (fdp.ConsumeBool(), 50) {
+        std::vector<CPubKey> pubkeys{ConsumePubKeyVector(fdp)};
+
+        CallOneOf(
+            fdp,
+            [&] {
+                (void)MuSig2AggregatePubkeys(pubkeys);
+            },
+            [&] {
+                secp256k1_musig_keyagg_cache keyagg_cache;
+                std::optional<CPubKey> expected;
+                const std::optional<CPubKey> plain{MuSig2AggregatePubkeys(pubkeys)};
+                bool planted{false};
+                if (fdp.ConsumeBool()) {
+                    expected = plain;
+                    // Plant expected != agg so the mismatch return stays reachable.
+                    if (expected.has_value() && fdp.ConsumeBool()) {
+                        std::vector<unsigned char> ser{expected->begin(), expected->end()};
+                        ser.back() ^= 1;
+                        expected = CPubKey{ser.begin(), ser.end()};
+                        planted = true;
+                    }
+                }
+                const auto res{MuSig2AggregatePubkeys(pubkeys, keyagg_cache, expected)};
+                if (planted) {
+                    Assert(!res);
+                } else {
+                    Assert(res == plain);
+                }
+                if (res) Assert(res->IsCompressed() && res->IsFullyValid());
+            },
+            [&] {
+                if (pubkeys.empty()) {
+                    return;
+                }
+                const size_t idx{fdp.ConsumeIntegralInRange<size_t>(0, pubkeys.size() - 1)};
+                (void)CreateMuSig2SyntheticXpub(pubkeys[idx]);
+            },
+            [&] {
+                if (pubkeys.empty()) {
+                    return;
+                }
+                const size_t i{fdp.ConsumeIntegralInRange<size_t>(0, pubkeys.size() - 1)};
+                const size_t j{fdp.ConsumeIntegralInRange<size_t>(0, pubkeys.size() - 1)};
+                const std::vector<uint8_t> pubnonce{
+                    fdp.ConsumeBytes<uint8_t>(MUSIG2_PUBNONCE_SIZE)};
+                (void)MuSig2SessionID(pubkeys[i], pubkeys[j], ConsumeUInt256(fdp), pubnonce);
+            },
+            [&] {
+                std::vector<CKey> keys;
+                std::vector<CPubKey> pubkeys;
+                LIMITED_WHILE (fdp.ConsumeBool(), 5) {
+                    CKey key{ConsumePrivateKey(fdp, /*compressed=*/true)};
+                    if (!key.IsValid()) {
+                        continue;
+                    }
+                    const CPubKey pubkey{key.GetPubKey()};
+                    if (std::find(pubkeys.begin(), pubkeys.end(), pubkey) != pubkeys.end()) {
+                        continue;
+                    }
+                    pubkeys.push_back(pubkey);
+                    keys.push_back(std::move(key));
+                }
+                if (keys.empty()) {
+                    return;
+                }
+
+                const std::optional<CPubKey> aggregate{MuSig2AggregatePubkeys(pubkeys)};
+                if (!aggregate) {
+                    return;
+                }
+
+                const uint256 sighash{ConsumeUInt256(fdp)};
+                std::vector<std::pair<uint256, bool>> tweaks;
+                LIMITED_WHILE (fdp.ConsumeBool(), 4) {
+                    tweaks.emplace_back(ConsumeUInt256(fdp), fdp.ConsumeBool());
+                }
+
+                std::vector<MuSig2SecNonce> secnonces;
+                secnonces.reserve(keys.size());
+                std::map<CPubKey, std::vector<uint8_t>> pubnonces;
+                for (const CKey& key : keys) {
+                    MuSig2SecNonce& secnonce{secnonces.emplace_back()};
+                    const std::vector<uint8_t> pubnonce{CreateMuSig2Nonce(
+                        secnonce, sighash, key, *aggregate, pubkeys)};
+                    if (pubnonce.empty()) {
+                        return;
+                    }
+                    pubnonces.emplace(key.GetPubKey(), pubnonce);
+                }
+
+                std::map<CPubKey, uint256> partial_sigs;
+                for (size_t i{0}; i < keys.size(); ++i) {
+                    const std::optional<uint256> partial{CreateMuSig2PartialSig(
+                        sighash, keys[i], *aggregate, pubkeys, pubnonces, secnonces[i], tweaks)};
+                    if (!partial) {
+                        return;
+                    }
+                    // CreateMuSig2PartialSig invalidates the secnonce after signing.
+                    Assert(!secnonces[i].IsValid());
+                    partial_sigs.emplace(keys[i].GetPubKey(), *partial);
+                }
+                const std::optional<std::vector<uint8_t>> agg_sig{CreateMuSig2AggregateSig(
+                    pubkeys, *aggregate, tweaks, sighash, pubnonces, partial_sigs)};
+                Assert(agg_sig.has_value());
+            },
+            [&] {
+                const CKey our_key{ConsumePrivateKey(fdp, /*compressed=*/true)};
+                if (!our_key.IsValid()) {
+                    return;
+                }
+
+                const CPubKey our_pubkey{our_key.GetPubKey()};
+                // Include our key so nonce and partial stay reachable.
+                if (std::find(pubkeys.begin(), pubkeys.end(), our_pubkey) == pubkeys.end()) {
+                    pubkeys.push_back(our_pubkey);
+                }
+
+                const std::optional<CPubKey> aggregate{MuSig2AggregatePubkeys(pubkeys)};
+                if (!aggregate) {
+                    return;
+                }
+
+                const uint256 sighash{ConsumeUInt256(fdp)};
+                std::vector<std::pair<uint256, bool>> tweaks;
+                LIMITED_WHILE (fdp.ConsumeBool(), 4) {
+                    tweaks.emplace_back(ConsumeUInt256(fdp), fdp.ConsumeBool());
+                }
+
+                MuSig2SecNonce secnonce;
+                const std::vector<uint8_t> our_pubnonce{CreateMuSig2Nonce(
+                    secnonce, sighash, our_key, *aggregate, pubkeys)};
+                if (our_pubnonce.empty()) {
+                    return;
+                }
+
+                std::map<CPubKey, std::vector<uint8_t>> pubnonces;
+                for (const CPubKey& pubkey : pubkeys) {
+                    if (pubkey == our_pubkey) {
+                        pubnonces[pubkey] = our_pubnonce;
+                    } else {
+                        // Sized bytes, not generated nonces.
+                        pubnonces[pubkey] = fdp.ConsumeBytes<uint8_t>(MUSIG2_PUBNONCE_SIZE);
+                    }
+                }
+
+                const std::optional<uint256> partial{CreateMuSig2PartialSig(
+                    sighash, our_key, *aggregate, pubkeys, pubnonces, secnonce, tweaks)};
+                if (partial) {
+                    Assert(!secnonce.IsValid());
+                }
+
+                std::map<CPubKey, uint256> partial_sigs;
+                for (const CPubKey& pubkey : pubkeys) {
+                    partial_sigs[pubkey] = ConsumeUInt256(fdp);
+                }
+                (void)CreateMuSig2AggregateSig(
+                    pubkeys, *aggregate, tweaks, sighash, pubnonces, partial_sigs);
+            });
+    }
+}
