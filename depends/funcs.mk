@@ -102,7 +102,9 @@ endef
 define int_get_build_properties
 $(1)_build_subdir?=.
 $(1)_download_file?=$($(1)_file_name)
-$(1)_source_dir:=$(SOURCES_PATH)
+# Local packages are stored in a per-checkout directory, not SOURCES_PATH,
+# because their tarballs are generated from local sources and can't be shared.
+$(1)_source_dir:=$(if $($(1)_local_dir),$(base_local_source_dir),$(SOURCES_PATH))
 # If $(1)_file_name is empty and $(1)_local_dir is nonempty, set file name to a
 # .tar file with a friendly filename named after the directory path.
 $(if $($(1)_file_name),,$(if $($(1)_local_dir),$(eval $(1)_file_name:=$(call int_friendly_file_name,$($(1)_local_dir)).tar)))
@@ -112,7 +114,7 @@ $(1)_prefixbin:=$($($(1)_type)_prefix)/bin/
 $(1)_all_sources=$($(1)_file_name) $($(1)_extra_sources)
 
 #stamps
-$(1)_fetched=$(SOURCES_PATH)/download-stamps/.stamp_fetched-$(1)-$($(1)_file_name).hash
+$(1)_fetched=$$($(1)_source_dir)/download-stamps/.stamp_fetched-$(1)-$($(1)_file_name).hash
 $(1)_extracted=$$($(1)_extract_dir)/.stamp_extracted
 $(1)_preprocessed=$$($(1)_extract_dir)/.stamp_preprocessed
 $(1)_cleaned=$$($(1)_extract_dir)/.stamp_cleaned
