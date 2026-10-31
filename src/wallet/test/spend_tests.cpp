@@ -4,7 +4,10 @@
 
 #include <consensus/amount.h>
 #include <key.h>
+#include <key_io.h>
+#include <script/signingprovider.h>
 #include <script/solver.h>
+#include <util/strencodings.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/spend.h>
@@ -43,7 +46,7 @@ BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
     // leftover input amount which would have been change to the recipient
     // instead of the miner.
     auto check_tx = [&wallet](CAmount leftover_input_amount) {
-        CRecipient recipient{PubKeyDestination({}), 50 * COIN - leftover_input_amount, /*subtract_fee=*/true};
+        CRecipient recipient{PaymentDestination{PubKeyDestination({})}, 50 * COIN - leftover_input_amount, /*subtract_fee=*/true};
         CCoinControl coin_control;
         coin_control.m_feerate.emplace(10000);
         coin_control.fOverrideFeeRate = true;
@@ -93,7 +96,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_duplicated_preset_inputs_test, TestChain100Setup)
 
     // Try to create a tx that spends more than what preset inputs + wallet selected inputs are covering for.
     // The wallet can cover up to 200 BTC, and the tx target is 299 BTC.
-    std::vector<CRecipient> recipients{{*Assert(wallet->GetNewDestination(OutputType::BECH32, "dummy")),
+    std::vector<CRecipient> recipients{{PaymentDestination{*Assert(wallet->GetNewDestination(OutputType::BECH32, "dummy"))},
                                            /*nAmount=*/299 * COIN, /*fSubtractFeeFromAmount=*/true}};
     CCoinControl coin_control;
     coin_control.m_allow_other_inputs = true;
@@ -118,6 +121,54 @@ BOOST_FIXTURE_TEST_CASE(wallet_duplicated_preset_inputs_test, TestChain100Setup)
     // Second case, don't use 'subtract_fee_from_outputs'.
     recipients[0].fSubtractFeeFromAmount = false;
     BOOST_CHECK(!CreateTransaction(*wallet, recipients, /*change_pos=*/std::nullopt, coin_control));
+}
+
+BOOST_AUTO_TEST_CASE(check_silent_payments_input)
+{
+    const COutPoint outpoint{Txid::FromUint256(uint256::ONE), 0};
+    // Checks the coin of a wallet holding the descriptor
+    const auto check{[&](const std::string& desc) {
+        CWallet wallet{m_node.chain.get(), "", CreateMockableWalletDatabase()};
+        const auto spks{CreateDescriptor(wallet, desc, /*success=*/true)->GetScriptPubKeys()};
+        BOOST_REQUIRE_EQUAL(spks.size(), 1U);
+        return bool{CheckSilentPaymentsInput(wallet, outpoint, CTxOut{COIN, *spks.begin()})};
+    }};
+    const auto check_external{[&](const CScript& spk) {
+        return bool{CheckSilentPaymentsInput(m_wallet, outpoint, CTxOut{COIN, spk})};
+    }};
+    const CKey key{GenerateRandomKey()};
+    const std::string priv{EncodeSecret(key)};
+    const std::string pub{HexStr(GenerateRandomKey().GetPubKey())};
+    const std::string xonly_pub{HexStr(XOnlyPubKey{GenerateRandomKey().GetPubKey()})};
+
+    // Eligible coins require their private key, which the wallet does not have for external ones
+    BOOST_CHECK(check("wpkh(" + priv + ")"));
+    BOOST_CHECK(!check("wpkh(" + pub + ")"));
+    BOOST_CHECK(check("pkh(" + priv + ")"));
+    BOOST_CHECK(!check("pkh(" + pub + ")"));
+    BOOST_CHECK(check("sh(wpkh(" + priv + "))"));
+    BOOST_CHECK(!check("sh(wpkh(" + pub + "))"));
+    BOOST_CHECK(!check_external(GetScriptForDestination(WitnessV0KeyHash{key.GetPubKey()})));
+
+    // Coins that are not eligible are allowed without a private key, also external ones
+    const CScript p2wsh{GetScriptForDestination(WitnessV0ScriptHash{CScript{} << OP_TRUE})};
+    BOOST_CHECK(check("wsh(pk(" + pub + "))"));
+    BOOST_CHECK(check_external(p2wsh));
+
+    // Unknown witness versions are not allowed
+    const CScript witness_v2{CScript{} << OP_2 << std::vector<unsigned char>(32, 0x01)};
+    BOOST_CHECK(!check("raw(" + HexStr(witness_v2) + ")"));
+    BOOST_CHECK(!check_external(witness_v2));
+    // Without the redeemScript, the wrapped witness version is unknown
+    BOOST_CHECK(check("raw(" + HexStr(GetScriptForDestination(ScriptHash{witness_v2})) + ")"));
+
+    // Taproot coins require the private key of the output key, which is derived from the internal key
+    BOOST_CHECK(check("tr(" + priv + ")"));
+    BOOST_CHECK(!check("tr(" + xonly_pub + ")"));
+    BOOST_CHECK(check("tr(" + priv + ",pk(" + xonly_pub + "))"));
+    BOOST_CHECK(!check("tr(" + xonly_pub + ",pk(" + priv + "))"));
+    // Script path only coins, with the NUMS point as internal key, are not eligible
+    BOOST_CHECK(check("tr(" + HexStr(XOnlyPubKey::NUMS_H) + ",pk(" + xonly_pub + "))"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

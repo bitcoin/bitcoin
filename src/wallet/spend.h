@@ -5,6 +5,8 @@
 #ifndef BITCOIN_WALLET_SPEND_H
 #define BITCOIN_WALLET_SPEND_H
 
+#include <common/bip352.h>
+#include <common/paymentdestination.h>
 #include <consensus/amount.h>
 #include <util/result.h>
 #include <wallet/coinselection.h>
@@ -44,6 +46,8 @@ TxSize CalculateMaximumSignedTxSize(const CTransaction& tx, const CWallet* walle
  */
 struct CoinsResult {
     std::map<OutputType, std::vector<COutput>> coins;
+    /** Whether coins were skipped because they cannot be spent in a silent payments transaction */
+    bool skipped_silent_payments_ineligible{false};
 
     /** Concatenate and return all COutputs as one vector */
     std::vector<COutput> All() const;
@@ -195,10 +199,57 @@ util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& av
                                           const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /**
+ * Like 'SelectCoins', but for a silent payments transaction, which needs at least one input eligible for
+ * the BIP352 shared secret derivation. If the selection has none, an eligible coin is preset and the
+ * rest is selected again.
+ */
+util::Result<SelectionResult> SelectCoinsForSilentPayments(const CWallet& wallet, CoinsResult& available_coins, const CoinsResult& pre_set_inputs,
+                                                           const CAmount& nTargetValue, const CCoinControl& coin_control,
+                                                           const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+
+/**
+ * Return an output of the same size as the one paying amount to dest, to estimate the
+ * transaction size or check for dust before the inputs are known. A silent payments output
+ * script is derived from the inputs, so a P2TR output is returned for a silent payments
+ * destination, since BIP352 v0 outputs are P2TR outputs.
+ */
+CTxOut GetDummyTxOut(const PaymentDestination& dest, CAmount amount);
+
+/**
  * Set a height-based locktime for new transactions (uses the height of the
  * current chain tip unless we are not synced with the current chain
  */
 void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, interfaces::Chain& chain, const uint256& block_hash, int block_height);
+
+/** Whether the input is used for the silent payments shared secret derivation (BIP352 eligible) */
+bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet& wallet);
+
+/**
+ * Get the silent payments destinations a created transaction pays to, in the order their outputs
+ * are derived: the recipients, then the change destination if the transaction has a change output.
+ */
+std::vector<bip352::SilentPaymentsDestination> GetSilentPaymentsDestinations(const std::vector<CRecipient>& recipients, const CCoinControl& coin_control, const CreatedTransactionResult& txr);
+
+/**
+ * Whether a coin can be spent in a silent payments transaction, or why not. An eligible coin
+ * requires its private key, since the outputs are derived from it.
+ *
+ * @param[in,out] has_key_cache  Whether any of a set of ScriptPubKeyMans has the private keys of the
+ *                               eligible scripts they all manage. Every script of a descriptor is
+ *                               derived from the same keys, so checking one script per set is enough.
+ *                               Pass it when checking many coins.
+ */
+util::Result<void> CheckSilentPaymentsInput(const CWallet& wallet, const COutPoint& outpoint, const CTxOut& txout,
+                                            std::map<std::set<ScriptPubKeyMan*>, bool>* has_key_cache = nullptr);
+
+/**
+ * Generate the actual taproot output scripts for silent payment recipients by deriving
+ * the shared secret from the selected inputs and SP destinations.
+ */
+util::Result<std::map<size_t, WitnessV1Taproot>> CreateSilentPaymentsOutputs(
+    const CWallet& wallet,
+    const std::map<size_t, bip352::SilentPaymentsDestination>& silent_payments_destinations,
+    const OutputSet& selected_coins);
 
 /**
  * Create a new transaction paying the recipients with a set of coins
