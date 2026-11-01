@@ -90,6 +90,8 @@ private:
     //! scan helpers. Defined in scan.cpp.
     struct ScanContext;
 
+    friend class ParallelFilterChecker;
+
     //! Consume ctx.next_block and queue its active-chain successor into
     //! ctx.next_block if it exists and is within the scan range.
     std::optional<QueuedBlock> ReadNextBlock(ScanContext& ctx);
@@ -103,7 +105,11 @@ private:
     //! Read and filter the next block, recording a skipped block as scanned.
     //! @return the block to scan, if any
     std::vector<QueuedBlock> NextBlocksSerial(ScanContext& ctx);
-    //! Whether blocks remain to be read.
+    //! Read and filter the next blocks on ctx.checker, recording skipped
+    //! blocks as scanned.
+    //! @return the blocks to scan
+    std::vector<QueuedBlock> NextBlocksParallel(ScanContext& ctx);
+    //! Whether blocks remain to be read or delivered by the filter checker.
     static bool HasPendingBlocks(const ScanContext& ctx);
     ScanBlockResult ScanBlock(const uint256& block_hash, int block_height, bool save_progress);
     void UpdateProgress(const LoopState& state, double progress_current, int block_height);
