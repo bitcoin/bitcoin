@@ -66,12 +66,14 @@ private:
     std::atomic<SteadyClock::time_point> m_scanning_start{SteadyClock::time_point{}};
     std::atomic<double> m_scanning_progress{0};
 
+public:
     //! A block queued for filtering and scanning.
     struct QueuedBlock {
         uint256 hash;
         int height;
     };
 
+private:
     enum class ScanBlockError {
         //! The block data could not be read (e.g. pruned or corrupt).
         READ_FAILED,
@@ -96,7 +98,11 @@ private:
     //! Read and filter the next block, recording a skipped block as scanned.
     //! @return the block to scan, if any
     std::vector<QueuedBlock> NextBlocksSerial(ScanContext& ctx);
-    //! Whether blocks remain to be read.
+    //! Read and filter the next blocks on ctx.checker, recording skipped
+    //! blocks as scanned.
+    //! @return the blocks to scan
+    std::vector<QueuedBlock> NextBlocksParallel(ScanContext& ctx);
+    //! Whether blocks remain to be read or delivered by the filter checker.
     static bool HasPendingBlocks(const ScanContext& ctx);
     //! Read a block and sync its transactions as confirmed in it.
     //! May be called with or without cs_wallet held.
