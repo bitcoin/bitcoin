@@ -35,7 +35,8 @@ do
     echo Signing "${bin}"
     bin_base="$(realpath --relative-to=${SRCDIR} "${bin}")"
     mkdir -p "$(dirname ${WORKDIR}/"${bin_base}")"
-    "${OSSLSIGNCODE}" sign -certs "${CERTFILE}" -t "${TIMESERVER}" -h sha256 -in "${bin}" -out "${WORKDIR}/${bin_base}" -key "$1" -pass "${cs_key_pass}"
+    # Pass the passphrase on stdin so it does not show up in the process arguments.
+    printf '%s' "${cs_key_pass}" | "${OSSLSIGNCODE}" sign -certs "${CERTFILE}" -t "${TIMESERVER}" -h sha256 -in "${bin}" -out "${WORKDIR}/${bin_base}" -key "$1" -readpass -
     mkdir -p "$(dirname ${OUTSUBDIR}/"${bin_base}")"
     "${OSSLSIGNCODE}" extract-signature -pem -in "${WORKDIR}/${bin_base}" -out "${OUTSUBDIR}/${bin_base}.pem" && rm "${WORKDIR}/${bin_base}"
 done
