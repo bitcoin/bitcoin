@@ -349,11 +349,12 @@ static RPCMethod addnode()
                 "Nodes added using addnode (or -connect) are protected from DoS disconnection and IBD block stalling\n"
                 "disconnection, and are not required to be full nodes or support SegWit as other outbound peers are (though\n"
                 "such peers will not be synced from).\n" +
-                strprintf("Addnode connections are limited to %u at a time", MAX_ADDNODE_CONNECTIONS) +
-                " and are counted separately from the -maxconnections limit.\n",
+                strprintf("Persistent addnode connections (command 'add') are limited to %u at a time", MAX_ADDNODE_CONNECTIONS) +
+                " and are counted separately from the -maxconnections limit.\n"
+                "The 'onetry' command attempts a connection once and does not count against this limit.\n",
                 {
                     {"node", RPCArg::Type::STR, RPCArg::Optional::NO, "The IP address/hostname optionally followed by :port of the peer to connect to"},
-                    {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once"},
+                    {"command", RPCArg::Type::STR, RPCArg::Optional::NO, strprintf("'add' to add a node to the persistent list (limited to %u), 'remove' to remove a node from the list, 'onetry' to try a connection to the node once (does not count against the limit)", MAX_ADDNODE_CONNECTIONS)},
                     {"v2transport", RPCArg::Type::BOOL, RPCArg::DefaultHint{"set by -v2transport"}, "Attempt to connect using BIP324 v2 transport protocol (ignored for 'remove' command)"},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
