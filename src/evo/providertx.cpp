@@ -15,6 +15,7 @@
 #include <script/standard.h>
 #include <tinyformat.h>
 
+#include <algorithm>
 #include <set>
 
 static bool IsValidPayoutScript(const CScript& script)
@@ -60,28 +61,58 @@ bool IsPayoutListTriviallyValid(const MasternodePayoutShares& payouts, const CKe
     return true;
 }
 
+bool IsEarlyPenaltyValid(uint32_t early_period_blocks, CAmount early_penalty, CAmount min_share_amount,
+                         TxValidationState& state)
+{
+    if (early_penalty < 0 || early_penalty >= min_share_amount) {
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-shares-penalty");
+    }
+    // Without an early period the penalty is never required, but it would still act as the
+    // unilateral bonus ceiling, so a stolen share owner key could drain that much of the actor's
+    // share for the life of the masternode
+    if (early_period_blocks == 0 && early_penalty != 0) {
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-shares-penalty");
+    }
+    return true;
+}
+
+bool AreShareAmountsValid(const std::vector<CAmount>& amounts, CAmount required_collateral, TxValidationState& state)
+{
+    if (amounts.size() < CProRegTx::MIN_SHARES || amounts.size() > CProRegTx::MAX_SHARES) {
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-shares-count");
+    }
+    CAmount total_amount{0};
+    for (const CAmount amount : amounts) {
+        // Bounding each amount by the required collateral first makes the sum overflow-safe
+        if (amount < CCollateralShare::MIN_AMOUNT || amount > required_collateral) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-shares-amount");
+        }
+        total_amount += amount;
+    }
+    if (total_amount != required_collateral) {
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-shares-amount-sum");
+    }
+    return true;
+}
+
 bool IsShareListTriviallyValid(const CollateralShares& shares, uint32_t early_period_blocks, CAmount early_penalty,
                                CAmount required_collateral, const CKeyID& keyIDVoting, TxValidationState& state)
 {
-    if (shares.size() < CProRegTx::MIN_SHARES || shares.size() > CProRegTx::MAX_SHARES) {
-        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-shares-count");
+    std::vector<CAmount> amounts;
+    amounts.reserve(shares.size());
+    for (const auto& share : shares) {
+        amounts.push_back(share.amount);
+    }
+    if (!AreShareAmountsValid(amounts, required_collateral, state)) {
+        return false;
     }
     if (early_period_blocks > CProRegTx::MAX_EARLY_PERIOD_BLOCKS) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-shares-early-period");
     }
 
-    CAmount total_amount{0};
-    CAmount min_amount{std::numeric_limits<CAmount>::max()};
     std::set<CKeyID> seen_owner_keys;
     std::set<CScript> seen_refund_scripts;
     for (const auto& share : shares) {
-        // Bounding each amount by the required collateral first makes the sum overflow-safe
-        if (share.amount < CCollateralShare::MIN_AMOUNT || share.amount > required_collateral) {
-            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-shares-amount");
-        }
-        total_amount += share.amount;
-        min_amount = std::min(min_amount, share.amount);
-
         if (share.keyIDOwner.IsNull()) {
             return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-shares-key-null");
         }
@@ -114,19 +145,8 @@ bool IsShareListTriviallyValid(const CollateralShares& shares, uint32_t early_pe
             }
         }
     }
-    if (total_amount != required_collateral) {
-        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-shares-amount-sum");
-    }
-    if (early_penalty < 0 || early_penalty >= min_amount) {
-        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-shares-penalty");
-    }
-    // Without an early period the penalty is never required, but it would still act as the
-    // unilateral bonus ceiling, so a stolen share owner key could drain that much of the actor's
-    // share for the life of the masternode
-    if (early_period_blocks == 0 && early_penalty != 0) {
-        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-shares-penalty");
-    }
-    return true;
+    return IsEarlyPenaltyValid(early_period_blocks, early_penalty, *std::min_element(amounts.begin(), amounts.end()),
+                               state);
 }
 
 bool IsShareListVotingKeySafe(const CollateralShares& shares, const CKeyID& keyIDVoting)

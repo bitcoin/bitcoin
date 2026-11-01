@@ -5,6 +5,7 @@
 #include <qt/mnsharesession.h>
 
 #include <chainparams.h>
+#include <consensus/validation.h>
 #include <core_io.h>
 #include <crypto/sha256.h>
 #include <evo/dmn_types.h>
@@ -25,7 +26,6 @@
 
 #include <algorithm>
 #include <limits>
-#include <map>
 #include <optional>
 #include <utility>
 #include <variant>
@@ -663,133 +663,127 @@ bool MnShareSession::fromJson(const UniValue& json, QString& error)
     }
 }
 
+QString MnShareSession::ShareListErrorText(const std::string& reject_reason, BitcoinUnits::Unit unit,
+                                           CAmount min_share_amount, uint32_t early_period_blocks)
+{
+    const CAmount required_collateral{GetMnType(MnType::Regular).collat_amount};
+    if (reject_reason == "bad-protx-shares-count") {
+        return QCoreApplication::translate("MnShareSession", "A shared masternode needs between %1 and %2 shares.")
+            .arg(CProRegTx::MIN_SHARES)
+            .arg(CProRegTx::MAX_SHARES);
+    }
+    if (reject_reason == "bad-protx-shares-early-period") {
+        return QCoreApplication::translate("MnShareSession",
+                                           "The early period must be at most %1 blocks (about two years).")
+            .arg(CProRegTx::MAX_EARLY_PERIOD_BLOCKS);
+    }
+    if (reject_reason == "bad-protx-shares-amount") {
+        return QCoreApplication::translate("MnShareSession", "Every share amount must be between %1 and %2.")
+            .arg(SharedMnFormatAmount(unit, CCollateralShare::MIN_AMOUNT),
+                 SharedMnFormatAmount(unit, required_collateral));
+    }
+    if (reject_reason == "bad-protx-shares-amount-sum") {
+        return QCoreApplication::translate("MnShareSession", "The share amounts must sum to exactly %1.")
+            .arg(SharedMnFormatAmount(unit, required_collateral));
+    }
+    if (reject_reason == "bad-protx-shares-key-null" || reject_reason == "bad-protx-shares-dup-key") {
+        return QCoreApplication::translate("MnShareSession", "Every share needs its own, non-empty owner address.");
+    }
+    if (reject_reason == "bad-protx-shares-dup-refund") {
+        return QCoreApplication::translate("MnShareSession", "Every refund address must be unique.");
+    }
+    if (reject_reason == "bad-protx-shares-payee" || reject_reason == "bad-protx-shares-payee-dest") {
+        return QCoreApplication::translate("MnShareSession",
+                                           "Every refund and reward address must be a valid P2PKH or P2SH address.");
+    }
+    if (reject_reason == "bad-protx-shares-payee-reuse") {
+        return QCoreApplication::translate("MnShareSession", "A refund or reward address must not be the voting "
+                                                             "address or any share's owner address.");
+    }
+    if (reject_reason == "bad-protx-shares-penalty") {
+        if (early_period_blocks == 0) {
+            return QCoreApplication::translate("MnShareSession",
+                                               "Set the early penalty to 0 when there is no early period.");
+        }
+        return QCoreApplication::translate("MnShareSession",
+                                           "The early penalty must be below the smallest share amount (%1).")
+            .arg(SharedMnFormatAmount(unit, min_share_amount));
+    }
+    return QCoreApplication::translate("MnShareSession", "The share table is not valid (%1).")
+        .arg(QString::fromStdString(reject_reason));
+}
+
+QString MnShareSession::CheckEarlyPenalty(const std::vector<CAmount>& share_amounts, BitcoinUnits::Unit unit,
+                                          uint32_t early_period_blocks, CAmount early_penalty)
+{
+    CAmount smallest{GetMnType(MnType::Regular).collat_amount};
+    for (const CAmount amount : share_amounts) {
+        if (amount > 0) smallest = std::min(smallest, amount);
+    }
+    TxValidationState state;
+    if (IsEarlyPenaltyValid(early_period_blocks, early_penalty, smallest, state)) return {};
+    return ShareListErrorText(state.GetRejectReason(), unit, smallest, early_period_blocks);
+}
+
+QString MnShareSession::CheckShareAmounts(const std::vector<CAmount>& share_amounts, BitcoinUnits::Unit unit)
+{
+    TxValidationState state;
+    if (AreShareAmountsValid(share_amounts, GetMnType(MnType::Regular).collat_amount, state)) return {};
+    return ShareListErrorText(state.GetRejectReason(), unit, CCollateralShare::MIN_AMOUNT, /*early_period_blocks=*/0);
+}
+
 QStringList MnShareSession::validateShares() const
 {
     QStringList errors;
-    const CAmount required_collateral{GetMnType(MnType::Regular).collat_amount};
 
-    if (m_shares.size() < CProRegTx::MIN_SHARES || m_shares.size() > CProRegTx::MAX_SHARES) {
-        errors << QCoreApplication::translate("MnShareSession",
-                                              "A shared masternode needs between %1 and %2 shares (currently %3).")
-                      .arg(CProRegTx::MIN_SHARES)
-                      .arg(CProRegTx::MAX_SHARES)
-                      .arg(m_shares.size());
-    }
-
-    std::optional<CKeyID> voting_key_id;
+    // What consensus cannot see: whether each address string decodes to a destination of the right type
+    CollateralShares shares;
+    CKeyID voting_key_id;
     if (CTxDestination dest{DecodeDestination(m_terms.votingAddress.toStdString())}; const auto* pkhash = std::get_if<PKHash>(&dest)) {
         voting_key_id = ToKeyID(*pkhash);
     } else {
         errors << QCoreApplication::translate("MnShareSession", "The voting address must be a valid P2PKH address.");
     }
 
-    // Resolve owner keys first: refund/reward scripts must not pay to any of them
-    std::vector<std::optional<CKeyID>> owner_key_ids;
-    std::map<CKeyID, size_t> seen_owner_keys;
-    for (size_t i = 0; i < m_shares.size(); ++i) {
-        const QString row{QCoreApplication::translate("MnShareSession", "Share %1:").arg(i + 1)};
-        std::optional<CKeyID> key_id;
-        if (CTxDestination dest{DecodeDestination(m_shares[i].ownerAddress.toStdString())}; const auto* pkhash = std::get_if<PKHash>(&dest)) {
-            if (const CKeyID id{ToKeyID(*pkhash)}; id.IsNull()) {
-                errors << row + QLatin1Char(' ') +
-                              QCoreApplication::translate("MnShareSession",
-                                                          "the owner address must be a valid P2PKH address.");
-            } else {
-                key_id = id;
-            }
-        } else {
-            errors << row + QLatin1Char(' ') +
-                          QCoreApplication::translate("MnShareSession",
-                                                      "the owner address must be a valid P2PKH address.");
-        }
-        if (key_id) {
-            if (const auto [it, inserted] = seen_owner_keys.emplace(*key_id, i); !inserted) {
-                errors << row + QLatin1Char(' ') +
-                              QCoreApplication::translate("MnShareSession", "the owner address is already used by "
-                                                                            "share %1. Every owner key must be unique.")
-                                  .arg(it->second + 1);
-            }
-        }
-        owner_key_ids.push_back(key_id);
-    }
-
-    CAmount total_amount{0};
-    CAmount min_amount{std::numeric_limits<CAmount>::max()};
-    std::map<CScript, size_t> seen_refund_scripts;
     for (size_t i = 0; i < m_shares.size(); ++i) {
         const Share& share{m_shares[i]};
         const QString row{QCoreApplication::translate("MnShareSession", "Share %1:").arg(i + 1)};
+        const auto row_error{[&](const QString& text) { errors << row + QLatin1Char(' ') + text; }};
 
-        if (share.amount < CCollateralShare::MIN_AMOUNT || share.amount > required_collateral) {
-            errors << row + QLatin1Char(' ') +
-                          QCoreApplication::translate("MnShareSession", "the amount must be between %1 and %2.")
-                              .arg(SharedMnFormatAmount(kEngineUnit, CCollateralShare::MIN_AMOUNT),
-                                   SharedMnFormatAmount(kEngineUnit, required_collateral));
+        CKeyID owner_key_id;
+        if (CTxDestination dest{DecodeDestination(share.ownerAddress.toStdString())}; const auto* pkhash = std::get_if<PKHash>(&dest)) {
+            owner_key_id = ToKeyID(*pkhash);
         } else {
-            total_amount += share.amount;
-            min_amount = std::min(min_amount, share.amount);
+            row_error(QCoreApplication::translate("MnShareSession", "the owner address must be a valid P2PKH address."));
         }
 
-        const bool has_reward{!share.rewardAddress.isEmpty()};
+        CScript scripts[2];
         const std::pair<const QString*, QString> payout_addrs[]{
             {&share.refundAddress, QCoreApplication::translate("MnShareSession", "refund")},
             {&share.rewardAddress, QCoreApplication::translate("MnShareSession", "reward")},
         };
-        for (const auto& [addr, kind] : payout_addrs) {
-            if (addr == &share.rewardAddress && !has_reward) continue; // empty reward = fall back to refund
+        for (size_t j = 0; j < std::size(payout_addrs); ++j) {
+            const auto& [addr, kind] = payout_addrs[j];
+            if (addr == &share.rewardAddress && addr->isEmpty()) continue; // empty reward = fall back to refund
             const CTxDestination dest{DecodeDestination(addr->toStdString())};
             if (!std::holds_alternative<PKHash>(dest) && !std::holds_alternative<ScriptHash>(dest)) {
-                errors << row + QLatin1Char(' ') +
-                              QCoreApplication::translate("MnShareSession",
-                                                          "the %1 address must be a valid P2PKH or P2SH address.")
-                                  .arg(kind);
+                row_error(QCoreApplication::translate("MnShareSession",
+                                                      "the %1 address must be a valid P2PKH or P2SH address.")
+                              .arg(kind));
                 continue;
             }
-            if (addr == &share.refundAddress) {
-                const CScript script{GetScriptForDestination(dest)};
-                if (const auto [it, inserted] = seen_refund_scripts.emplace(script, i); !inserted) {
-                    errors << row + QLatin1Char(' ') +
-                                  QCoreApplication::translate("MnShareSession",
-                                                              "the refund address is already used by share %1. Every "
-                                                              "refund address must be unique.")
-                                      .arg(it->second + 1);
-                }
-            }
-            if (voting_key_id && dest == CTxDestination(PKHash(*voting_key_id))) {
-                errors << row + QLatin1Char(' ') +
-                              QCoreApplication::translate("MnShareSession",
-                                                          "the %1 address must not be the voting address.")
-                                  .arg(kind);
-            }
-            for (size_t j = 0; j < owner_key_ids.size(); ++j) {
-                if (owner_key_ids[j] && dest == CTxDestination(PKHash(*owner_key_ids[j]))) {
-                    errors << row + QLatin1Char(' ') +
-                                  QCoreApplication::translate("MnShareSession",
-                                                              "the %1 address must not be share %2's owner address.")
-                                      .arg(kind)
-                                      .arg(j + 1);
-                }
-            }
+            scripts[j] = GetScriptForDestination(dest);
         }
+        shares.emplace_back(share.amount, scripts[0], scripts[1], owner_key_id);
     }
+    if (!errors.isEmpty()) return errors;
 
-    if (!m_shares.empty() && total_amount != required_collateral) {
-        errors << QCoreApplication::translate("MnShareSession",
-                                              "The share amounts must sum to exactly %1 (currently %2).")
-                      .arg(SharedMnFormatAmount(kEngineUnit, required_collateral),
-                           SharedMnFormatAmount(kEngineUnit, total_amount));
-    }
-    if (m_terms.earlyPeriodBlocks > CProRegTx::MAX_EARLY_PERIOD_BLOCKS) {
-        errors << QCoreApplication::translate("MnShareSession",
-                                              "The early period must be at most %1 blocks (about two years).")
-                      .arg(CProRegTx::MAX_EARLY_PERIOD_BLOCKS);
-    }
-    if (m_terms.earlyPenalty < 0) {
-        errors << QCoreApplication::translate("MnShareSession", "The early penalty cannot be negative.");
-    } else if (min_amount != std::numeric_limits<CAmount>::max() && m_terms.earlyPenalty >= min_amount) {
-        errors << QCoreApplication::translate("MnShareSession",
-                                              "The early penalty must be below the smallest share amount (%1).")
-                      .arg(SharedMnFormatAmount(kEngineUnit, min_amount));
+    TxValidationState state;
+    if (!IsShareListTriviallyValid(shares, m_terms.earlyPeriodBlocks, m_terms.earlyPenalty,
+                                   GetMnType(MnType::Regular).collat_amount, voting_key_id, state)) {
+        CAmount min_amount{std::numeric_limits<CAmount>::max()};
+        for (const auto& share : shares) min_amount = std::min(min_amount, share.amount);
+        errors << ShareListErrorText(state.GetRejectReason(), kEngineUnit, min_amount, m_terms.earlyPeriodBlocks);
     }
     return errors;
 }

@@ -216,9 +216,22 @@ public:
     bool fromJson(const UniValue& json, QString& error);
     bool fromJson(const std::string& text, QString& error);
 
-    //! All current draft-side share-table problems at once, mirroring the
-    //! consensus checks in IsShareListTriviallyValid (empty list = valid)
+    //! The draft share table checked by IsShareListTriviallyValid itself, after
+    //! the address strings are parsed (empty list = valid). Parse problems are
+    //! reported per share; a consensus rejection is reported as one message.
     QStringList validateShares() const;
+
+    //! User-facing text for a reject reason of IsShareListTriviallyValid or
+    //! IsEarlyPenaltyValid. min_share_amount and early_period_blocks pick the
+    //! wording of the penalty message.
+    static QString ShareListErrorText(const std::string& reject_reason, BitcoinUnits::Unit unit,
+                                      CAmount min_share_amount, uint32_t early_period_blocks);
+    //! Early-exit penalty rules for the share amounts alone (empty = valid)
+    static QString CheckEarlyPenalty(const std::vector<CAmount>& share_amounts, BitcoinUnits::Unit unit,
+                                     uint32_t early_period_blocks, CAmount early_penalty);
+    //! AreShareAmountsValid for the amounts entered before any address
+    //! exists (empty = valid); validateShares() runs the full list later
+    static QString CheckShareAmounts(const std::vector<CAmount>& share_amounts, BitcoinUnits::Unit unit);
 
     //! Draft only: record a participant's funding contribution and rebuild
     //! the funding transaction deterministically (inputs, then change

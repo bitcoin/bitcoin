@@ -1266,14 +1266,7 @@ bool SharedMnCreateDialog::validatePage(Page page, QString& err)
     case PageParticipants: {
         syncSharesFromTable();
         const auto& shares{m_session.shares()};
-        const CAmount collateral{GetMnType(MnType::Regular).collat_amount};
-        if (shares.size() < CProRegTx::MIN_SHARES || shares.size() > CProRegTx::MAX_SHARES) {
-            err = tr("A shared masternode needs between %1 and %2 participants.")
-                      .arg(CProRegTx::MIN_SHARES)
-                      .arg(CProRegTx::MAX_SHARES);
-            break;
-        }
-        CAmount total{0};
+        std::vector<CAmount> amounts;
         QSet<QString> names;
         for (size_t i = 0; i < shares.size(); ++i) {
             const QString name{shares[i].label.trimmed()};
@@ -1286,19 +1279,10 @@ bool SharedMnCreateDialog::validatePage(Page page, QString& err)
                 break;
             }
             names.insert(name);
-            if (shares[i].amount < CCollateralShare::MIN_AMOUNT) {
-                err = tr("Each share is at least %1.")
-                          .arg(FormatAmount(m_wallet_model, CCollateralShare::MIN_AMOUNT));
-                break;
-            }
-            total += shares[i].amount;
+            amounts.push_back(shares[i].amount);
         }
         if (!err.isEmpty()) break;
-        if (total != collateral) {
-            err = tr("The amounts add up to %1; they must be exactly %2.")
-                      .arg(FormatAmount(m_wallet_model, total), FormatAmount(m_wallet_model, collateral));
-            break;
-        }
+        if (err = MnShareSession::CheckShareAmounts(amounts, SharedMnDisplayUnit(m_wallet_model)); !err.isEmpty()) break;
         if (m_my_share < 0 || static_cast<size_t>(m_my_share) >= shares.size()) {
             err = tr("Select the participant that is you.");
         }
@@ -1325,18 +1309,11 @@ bool SharedMnCreateDialog::validatePage(Page page, QString& err)
         break;
     }
     case PageExitTerms: {
-        const CAmount penalty{m_early_penalty_field->value()};
-        const uint32_t period{static_cast<uint32_t>(m_early_period_spin->value())};
-        CAmount smallest{GetMnType(MnType::Regular).collat_amount};
-        for (const auto& share : m_session.shares()) {
-            if (share.amount > 0) smallest = std::min(smallest, share.amount);
-        }
-        if (period == 0 && penalty != 0) {
-            err = tr("Set the early-exit penalty to 0 when there is no early period.");
-        } else if (penalty >= smallest) {
-            err = tr("The early-exit penalty must be less than the smallest share (%1).")
-                      .arg(FormatAmount(m_wallet_model, smallest));
-        }
+        std::vector<CAmount> amounts;
+        for (const auto& share : m_session.shares()) amounts.push_back(share.amount);
+        err = MnShareSession::CheckEarlyPenalty(amounts, SharedMnDisplayUnit(m_wallet_model),
+                                                static_cast<uint32_t>(m_early_period_spin->value()),
+                                                m_early_penalty_field->value());
         break;
     }
     case PageContribution: {
