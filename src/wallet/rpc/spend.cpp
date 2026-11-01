@@ -625,14 +625,15 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
         }
 
         if (solving_data.exists("descriptors")) {
-            for (const UniValue& desc_univ : solving_data["descriptors"].get_array().getValues()) {
-                const std::string& desc_str  = desc_univ.get_str();
+            const auto& desc_values{solving_data["descriptors"].get_array().getValues()};
+            for (size_t desc_index{0}; desc_index < desc_values.size(); ++desc_index) {
+                const std::string& desc_str{desc_values[desc_index].get_str()};
                 FlatSigningProvider desc_out;
                 std::string error;
                 std::vector<CScript> scripts_temp;
                 auto descs = Parse(desc_str, desc_out, error, true);
                 if (descs.empty()) {
-                    throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unable to parse descriptor '%s': %s", desc_str, error));
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Unable to parse descriptor at index %u: %s", desc_index, error));
                 }
                 for (auto& desc : descs) {
                     desc->Expand(0, desc_out, scripts_temp, desc_out);

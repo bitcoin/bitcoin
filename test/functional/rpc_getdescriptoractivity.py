@@ -136,7 +136,7 @@ class GetBlocksActivityTest(BitcoinTestFramework):
         _, _, addr_1 = getnewdestination()
 
         assert_raises_rpc_error(
-            -5, "is not a valid descriptor",
+            -5, "Not a valid descriptor expression",
             node.getdescriptoractivity, [blockhash], [f"addrx({addr_1})"], True)
 
     def test_confirmed_and_unconfirmed(self, node, wallet):

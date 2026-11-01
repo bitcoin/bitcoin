@@ -160,7 +160,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                 "desc": descsum_create(f"pkh({whitespace_pubkey})"),
                 "timestamp": "now",
                 "internal": True,
-            }, [False, f"pkh(): Key '{whitespace_pubkey}' is invalid due to whitespace"]),
+            }, [False, "pkh(): Key is invalid due to whitespace"]),
         ]
 
         descriptors, expected = map(list, zip(*cases))
@@ -405,13 +405,13 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                                     "timestamp": "now",
                                     "internal": True},
                                     error_code=-5,
-                                    error_message=f"pkh(): Key ' {key.pubkey}' is invalid due to whitespace",
+                                    error_message="pkh(): Key is invalid due to whitespace",
                                     success=False)
         self.test_importdesc({"desc": descsum_create("pkh(" + key.pubkey + " )"),
                                     "timestamp": "now",
                                     "internal": True},
                                     error_code=-5,
-                                    error_message=f"pkh(): Key '{key.pubkey} ' is invalid due to whitespace",
+                                    error_message="pkh(): Key is invalid due to whitespace",
                                     success=False)
 
         # # Test importing of a P2SH-P2WPKH descriptor
@@ -585,12 +585,15 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.test_importdesc({**range_request, "range": [0, 20]}, wallet=wpriv, success=True)
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 21)
 
+        # The error quotes the public form of the descriptor, not the private key
+        public_desc = self.nodes[1].getdescriptorinfo(desc)["descriptor"]
+        assert xpriv not in public_desc
         self.test_importdesc({**range_request, "range": [5, 10]}, wallet=wpriv, success=False,
-                             error_code=-4, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
+                             error_code=-4, error_message=f"Could not add descriptor '{public_desc}': new range must include current range = [0,20]")
         self.test_importdesc({**range_request, "range": [0, 10]}, wallet=wpriv, success=False,
-                             error_code=-4, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
+                             error_code=-4, error_message=f"Could not add descriptor '{public_desc}': new range must include current range = [0,20]")
         self.test_importdesc({**range_request, "range": [5, 20]}, wallet=wpriv, success=False,
-                             error_code=-4, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
+                             error_code=-4, error_message=f"Could not add descriptor '{public_desc}': new range must include current range = [0,20]")
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 21)
 
         self.log.info("Check we can change descriptor internal flag")

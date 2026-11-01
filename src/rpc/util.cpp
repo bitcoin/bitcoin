@@ -1367,7 +1367,7 @@ std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, Fl
         for (const auto& desc : descs) {
             std::vector<CScript> scripts;
             if (!desc->Expand(i, provider, scripts, provider)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Cannot derive script without private keys: '%s'", desc_str));
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Cannot derive script without private keys: '%s'", desc->ToString()));
             }
             if (expand_priv) {
                 desc->ExpandPrivate(/*pos=*/i, provider, /*out=*/provider);
