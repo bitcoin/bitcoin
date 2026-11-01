@@ -122,6 +122,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.chain: str = 'regtest'
         self.setup_clean_chain: bool = False
         self.disable_mocktime: bool = False
+        self.noban_tx_relay: bool = False
         self.nodes: List[TestNode] = []
         self.extra_args = None
         self.network_thread = None
@@ -547,6 +548,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             extra_confs = [[]] * num_nodes
         if extra_args is None:
             extra_args = [[]] * num_nodes
+        # Whitelist peers to speed up tx relay / mempool sync. Don't use it if testing tx relay or timing.
+        if self.noban_tx_relay:
+            for i in range(len(extra_args)):
+                extra_args[i] = extra_args[i] + ["-whitelist=noban,in,out@127.0.0.1"]
         if versions is None:
             versions = [None] * num_nodes
         if binary is None:

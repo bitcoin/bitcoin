@@ -487,6 +487,10 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         return nullptr;
     }
 
+    NetPermissionFlags permission_flags = NetPermissionFlags::None;
+    std::vector<NetWhitelistPermissions> whitelist_permissions = conn_type == ConnectionType::MANUAL ? vWhitelistedRangeOutgoing : std::vector<NetWhitelistPermissions>{};
+    AddWhitelistPermissionFlags(permission_flags, addrConnect, whitelist_permissions);
+
     // Add node
     NodeId id = GetNewNodeId();
     uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
@@ -503,6 +507,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
                              conn_type,
                              /*inbound_onion=*/false,
                              CNodeOptions{
+                                 .permission_flags = permission_flags,
                                  .i2p_sam_session = std::move(i2p_transient_session),
                                  .recv_flood_size = nReceiveFloodSize,
                                  .use_v2transport = use_v2transport,
@@ -545,9 +550,18 @@ void CNode::CloseSocketDisconnect(CConnman* connman)
     ::g_stats_client->inc("peers.disconnect", 1.0f);
 }
 
-void CConnman::AddWhitelistPermissionFlags(NetPermissionFlags& flags, const CNetAddr &addr) const {
-    for (const auto& subnet : vWhitelistedRange) {
-        if (subnet.m_subnet.Match(addr)) NetPermissions::AddFlag(flags, subnet.m_flags);
+void CConnman::AddWhitelistPermissionFlags(NetPermissionFlags& flags, std::optional<CNetAddr> addr, const std::vector<NetWhitelistPermissions>& ranges) const {
+    for (const auto& subnet : ranges) {
+        if (addr.has_value() && subnet.m_subnet.Match(addr.value())) {
+            NetPermissions::AddFlag(flags, subnet.m_flags);
+        }
+    }
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::Implicit)) {
+        NetPermissions::ClearFlag(flags, NetPermissionFlags::Implicit);
+        if (whitelist_forcerelay) NetPermissions::AddFlag(flags, NetPermissionFlags::ForceRelay);
+        if (whitelist_relay) NetPermissions::AddFlag(flags, NetPermissionFlags::Relay);
+        NetPermissions::AddFlag(flags, NetPermissionFlags::Mempool);
+        NetPermissions::AddFlag(flags, NetPermissionFlags::NoBan);
     }
 }
 
@@ -1886,14 +1900,11 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     int nVerifiedInboundMasternodes = 0;
     int nMaxInbound = nMaxConnections - m_max_outbound;
 
-    AddWhitelistPermissionFlags(permission_flags, addr);
-    if (NetPermissions::HasFlag(permission_flags, NetPermissionFlags::Implicit)) {
-        NetPermissions::ClearFlag(permission_flags, NetPermissionFlags::Implicit);
-        if (gArgs.GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY)) NetPermissions::AddFlag(permission_flags, NetPermissionFlags::ForceRelay);
-        if (gArgs.GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY)) NetPermissions::AddFlag(permission_flags, NetPermissionFlags::Relay);
-        NetPermissions::AddFlag(permission_flags, NetPermissionFlags::Mempool);
-        NetPermissions::AddFlag(permission_flags, NetPermissionFlags::NoBan);
-    }
+    const bool inbound_onion = std::find(m_onion_binds.begin(), m_onion_binds.end(), addr_bind) != m_onion_binds.end();
+
+    // Tor inbound connections do not reveal the peer's actual network address.
+    // Therefore do not apply address-based whitelist permissions to them.
+    AddWhitelistPermissionFlags(permission_flags, inbound_onion ? std::optional<CNetAddr>{} : addr, vWhitelistedRangeIncoming);
 
 
     {
@@ -1973,15 +1984,9 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     NodeId id = GetNewNodeId();
     uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
 
-    ServiceFlags nodeServices = nLocalServices;
-    if (NetPermissions::HasFlag(permission_flags, NetPermissionFlags::BloomFilter)) {
-        nodeServices = static_cast<ServiceFlags>(nodeServices | NODE_BLOOM);
-    }
-
-    const bool inbound_onion = std::find(m_onion_binds.begin(), m_onion_binds.end(), addr_bind) != m_onion_binds.end();
     // The V2Transport transparently falls back to V1 behavior when an incoming V1 connection is
     // detected, so use it whenever we signal NODE_P2P_V2.
-    const bool use_v2transport(nodeServices & NODE_P2P_V2);
+    const bool use_v2transport(nLocalServices & NODE_P2P_V2);
 
     CNode* pnode = new CNode(id,
                              std::move(sock),
@@ -1999,7 +2004,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
                                  .use_v2transport = use_v2transport,
                              });
     pnode->AddRef();
-    m_msgproc->InitializeNode(*pnode, nodeServices);
+    m_msgproc->InitializeNode(*pnode, nLocalServices);
 
     {
         LOCK(pnode->m_sock_mutex);

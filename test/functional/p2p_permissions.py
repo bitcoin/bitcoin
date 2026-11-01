@@ -10,12 +10,16 @@ Test that permissions are correctly calculated and applied
 from test_framework.messages import (
     SEQUENCE_FINAL,
 )
-from test_framework.p2p import P2PDataStore
+from test_framework.p2p import (
+    P2PDataStore,
+    P2PInterface,
+)
 from test_framework.test_node import ErrorMatch
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     p2p_port,
+    tor_port,
 )
 from test_framework.wallet import MiniWallet
 
@@ -83,7 +87,21 @@ class P2PPermissionsTests(BitcoinTestFramework):
             ["-whitelist=all@127.0.0.1"],
             ["forcerelay", "noban", "mempool", "bloomfilter", "relay", "download", "addr"])
 
+        for flag, permissions in [(["-whitelist=noban,out@127.0.0.1"], ["noban", "download"]), (["-whitelist=noban@127.0.0.1"], [])]:
+            self.restart_node(0, flag)
+            self.connect_nodes(0, 1)
+            peerinfo = self.nodes[0].getpeerinfo()[0]
+            assert_equal(peerinfo['permissions'], permissions)
+
+        self.log.info("Check that -whitelist does not apply to inbound onion connections")
+        self.restart_node(1, ["-whitelist=noban@127.0.0.1", f"-bind=127.0.0.1:{tor_port(1)}=onion"])
+        self.nodes[1].add_p2p_connection(P2PInterface())
+        self.nodes[1].add_p2p_connection(P2PInterface(), dstport=tor_port(1))
+        permissions = {peer["network"]: peer["permissions"] for peer in self.nodes[1].getpeerinfo()}
+        assert_equal(permissions, {"not_publicly_routable": ["noban", "download"], "onion": []})
+
         self.stop_node(1)
+        self.nodes[1].assert_start_raises_init_error(["-whitelist=in,out@127.0.0.1"], "Only direction was set, no permissions", match=ErrorMatch.PARTIAL_REGEX)
         self.nodes[1].assert_start_raises_init_error(["-whitelist=oopsie@127.0.0.1"], "Invalid P2P permission", match=ErrorMatch.PARTIAL_REGEX)
         self.nodes[1].assert_start_raises_init_error(["-whitelist=noban@127.0.0.1:230"], "Invalid netmask specified in", match=ErrorMatch.PARTIAL_REGEX)
         self.nodes[1].assert_start_raises_init_error(["-whitebind=noban@127.0.0.1/10"], "Cannot resolve -whitebind address", match=ErrorMatch.PARTIAL_REGEX)

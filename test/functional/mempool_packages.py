@@ -31,10 +31,11 @@ class MempoolPackagesTest(BitcoinTestFramework):
 
     def set_test_params(self):
         self.num_nodes = 2
+        # whitelist peers to speed up tx relay / mempool sync
+        self.noban_tx_relay = True
         self.extra_args = [
             [
                 "-maxorphantxsize=1000",
-                "-whitelist=noban@127.0.0.1",  # immediate tx relay
             ],
             [
                 "-maxorphantxsize=1000",

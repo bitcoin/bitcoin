@@ -29,7 +29,8 @@ class RPCPackagesTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
-        self.extra_args = [["-whitelist=noban@127.0.0.1"]] # noban speeds up tx relay
+        # whitelist peers to speed up tx relay / mempool sync
+        self.noban_tx_relay = True
 
     def assert_testres_equal(self, package_hex, testres_expected):
         """Shuffle package_hex and assert that the testmempoolaccept result matches testres_expected. This should only

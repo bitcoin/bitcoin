@@ -103,9 +103,8 @@ class ZMQTest (BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.disable_mocktime = True
-        # This test isn't testing txn relay/timing, so set whitelist on the
-        # peers for instant txn relay. This speeds up the test run time 2-3x.
-        self.extra_args = [["-whitelist=noban@127.0.0.1"]] * self.num_nodes
+        # whitelist peers to speed up tx relay / mempool sync
+        self.noban_tx_relay = True
         self.zmq_port_base = p2p_port(self.num_nodes + 1)
 
     def skip_test_if_missing_module(self):
@@ -143,8 +142,7 @@ class ZMQTest (BitcoinTestFramework):
                 socket.setsockopt(zmq.IPV6, 1)
             subscribers.append(ZMQSubscriber(socket, topic.encode()))
 
-        self.restart_node(0, [f"-zmqpub{topic}={address.replace('ipc://', 'unix:')}" for topic, address in services] +
-                             self.extra_args[0])
+        self.restart_node(0, [f"-zmqpub{topic}={address.replace('ipc://', 'unix:')}" for topic, address in services])
 
         for i, sub in enumerate(subscribers):
             sub.socket.connect(services[i][1])
