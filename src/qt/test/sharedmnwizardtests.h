@@ -27,6 +27,7 @@ public:
 private Q_SLOTS:
     void coordinatorPageOrder();
     void participantPagesAndRoleInference();
+    void participantCannotChooseATakenShare();
     void coordinatorResumesSavedSession();
     void coordinatorResumesFullySignedSession();
     void unauthorisedSignedInputsAreDetected();

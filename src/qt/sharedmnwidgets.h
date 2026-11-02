@@ -17,6 +17,8 @@
 #include <QWidget>
 
 #include <cstdint>
+#include <functional>
+#include <optional>
 #include <vector>
 
 struct CMutableTransaction;
@@ -207,13 +209,26 @@ void SharedMnFitWrappedLabels(QWidget* root);
 //! Add back what the scrolled widgets really want.
 void SharedMnSizeFromContent(QDialog* dialog, int minimum_width);
 
+//! What this wallet puts into the funding transaction, for the term sheet
+struct SharedMnOwnFunding {
+    CAmount spent{0};  //!< value of this wallet's coins among the recorded inputs
+    CAmount change{0}; //!< change paid back to addresses of this wallet
+    int unvalued{0};   //!< inputs of this wallet's contribution that cannot be valued here
+};
+
 //! The term sheet everyone reads before approving: participants, masternode
 //! settings, exit terms, funding and identity, as five HTML cards.
 //!
 //! `you_share_index` is the share this wallet holds (-1 for none); that row is
 //! shown bold with a "(you)" marker. `unit` formats every amount - use
-//! SharedMnDisplayUnit(). Every value coming out of the envelope is
+//! SharedMnDisplayUnit(). `in_this_wallet`, when given, says whether this
+//! wallet holds the key for an address; those addresses are marked so the
+//! reader can confirm which ones are theirs. `own_funding`, when given with a
+//! share of our own, adds what this wallet pays and warns when that is more
+//! than 1 DASH above the share. Every value coming out of the envelope is
 //! HTML-escaped, because participant names are written by other people.
-QString SharedMnTermSheetHtml(const MnShareSession& session, int you_share_index, BitcoinUnits::Unit unit);
+QString SharedMnTermSheetHtml(const MnShareSession& session, int you_share_index, BitcoinUnits::Unit unit,
+                              const std::function<bool(const QString& address)>& in_this_wallet = {},
+                              const std::optional<SharedMnOwnFunding>& own_funding = std::nullopt);
 
 #endif // BITCOIN_QT_SHAREDMNWIDGETS_H

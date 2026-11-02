@@ -22,6 +22,7 @@
 
 #include <QLabel>
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -155,6 +156,40 @@ void SharedMnWidgetTests::statusBoardCells()
     QVERIFY(board.rowName(1).contains("(you)"));
 }
 
+void SharedMnWidgetTests::termSheetWarnsWhenWePayMoreThanOurShare()
+{
+    BasicTestingSetup setup{CBaseChainParams::REGTEST};
+    const MnShareSession session{TwoShareSession()};
+    const CAmount share{session.shares()[1].amount};
+    const auto sheet = [&](int you, std::optional<SharedMnOwnFunding> funding) {
+        return SharedMnTermSheetHtml(session, you, BitcoinUnits::Unit::DASH, {}, funding);
+    };
+    const auto paying = [&](CAmount paid) {
+        return SharedMnOwnFunding{.spent = paid + 5 * COIN, .change = 5 * COIN, .unvalued = 0};
+    };
+
+    // Without a share of our own, or without the wallet's view, there is
+    // nothing of ours to show
+    QVERIFY(!sheet(1, std::nullopt).contains("Your contribution"));
+    QVERIFY(!sheet(-1, paying(share)).contains("Your contribution"));
+
+    // Up to 1 DASH over the share is only shown; signing still refuses a
+    // participant who would lose more than its share
+    const QString fair{sheet(1, paying(share + COIN))};
+    QVERIFY(fair.contains("Your contribution"));
+    QVERIFY(fair.contains(SharedMnFormatAmount(BitcoinUnits::Unit::DASH, share + COIN)));
+    QVERIFY(!fair.contains("⚠"));
+
+    // Anything more is called out before the reader approves
+    QVERIFY(sheet(1, paying(share + COIN + 1)).contains("⚠"));
+
+    // Coins that cannot be valued yet, or none at all, are no reason to warn,
+    // but the coins that can be valued may already be too much
+    QVERIFY(!sheet(1, SharedMnOwnFunding{.spent = 0, .change = 0, .unvalued = 1}).contains("⚠"));
+    QVERIFY(!sheet(1, SharedMnOwnFunding{}).contains("⚠"));
+    QVERIFY(sheet(1, SharedMnOwnFunding{.spent = share + 2 * COIN, .change = 0, .unvalued = 1}).contains("⚠"));
+}
+
 void SharedMnWidgetTests::termSheetEscapesUntrustedText()
 {
     BasicTestingSetup setup{CBaseChainParams::REGTEST};
@@ -181,6 +216,14 @@ void SharedMnWidgetTests::termSheetEscapesUntrustedText()
     const QString anonymous{SharedMnTermSheetHtml(session, /*you_share_index=*/-1, BitcoinUnits::Unit::DASH)};
     QVERIFY(!anonymous.contains("(you)"));
     QVERIFY(anonymous.contains("same as refund"));
+
+    // Only the addresses this wallet holds are marked as in it
+    QVERIFY(!html.contains("in this wallet"));
+    const QString ours{session.shares()[1].refundAddress};
+    const QString marked{SharedMnTermSheetHtml(session, /*you_share_index=*/1, BitcoinUnits::Unit::DASH,
+                                               [&](const QString& address) { return address == ours; })};
+    QCOMPARE(marked.count("in this wallet"), 1);
+    QVERIFY(marked.contains(ours + QStringLiteral(" <i>")));
 
     // The status board's two text lines name participants too, and are plain
     // text rather than the QLabel default of Qt::AutoText

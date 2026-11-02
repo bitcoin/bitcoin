@@ -16,6 +16,7 @@ private Q_SLOTS:
     void importDetection();
     void statusBoardCells();
     void termSheetEscapesUntrustedText();
+    void termSheetWarnsWhenWePayMoreThanOurShare();
 };
 
 #endif // BITCOIN_QT_TEST_SHAREDMNWIDGETTESTS_H

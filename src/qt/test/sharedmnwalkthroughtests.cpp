@@ -65,6 +65,7 @@
 #include <QTextStream>
 #include <QTimer>
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -206,7 +207,7 @@ private:
             // counts down; wait for it rather than cancelling the flow.
             if (target != nullptr && !target->isEnabled()) return;
             m_pending = nullptr;
-            m_seen << (box->text() + QLatin1Char('\n') + box->informativeText());
+            m_seen << (box->text() + QLatin1Char('\n') + box->informativeText() + QLatin1Char('\n') + box->detailedText());
             if (!m_queued.isEmpty()) {
                 const Shot shot{m_queued.takeFirst()};
                 Shots().capture(box, shot.role, shot.page, shot.description, /*fixed_size=*/false);
@@ -252,10 +253,11 @@ void SyncWallet(interfaces::Node& node, CWallet& wallet)
 
 //! Run one RPC through the node the dialogs use. Returns the error text, or an
 //! empty string on success, with the result in `out`.
-QString RunRpc(interfaces::Node& node, const std::string& method, const UniValue& params, UniValue& out)
+QString RunRpc(interfaces::Node& node, const std::string& method, const UniValue& params, UniValue& out,
+               const std::string& uri = "")
 {
     try {
-        out = node.executeRpc(method, params, /*uri=*/"");
+        out = node.executeRpc(method, params, uri);
     } catch (const UniValue& error) {
         return QString::fromStdString(error.write());
     } catch (const std::exception& error) {
@@ -384,6 +386,20 @@ void SharedMnWalkthroughTests::walkthrough()
                  qPrintable(QStringLiteral("wallet %1 only has %2 duffs")
                                 .arg(QString::fromStdString(wallet->GetName()))
                                 .arg(balance)));
+    }
+
+    // Alice sweeps her coins to herself, so her share can only be funded from
+    // her own unconfirmed change, which the wallet itself would spend
+    {
+        const auto dest{alice_wallet->GetNewDestination("sweep")};
+        QVERIFY(dest);
+        UniValue recipients(UniValue::VARR);
+        recipients.push_back(EncodeDestination(*dest));
+        UniValue params(UniValue::VOBJ);
+        params.pushKV("recipients", recipients);
+        UniValue sent;
+        const QString error{RunRpc(m_node, "sendall", params, sent, "/wallet/alice")};
+        QVERIFY2(error.isEmpty(), qPrintable(QStringLiteral("sendall failed: %1").arg(error)));
     }
 
     MasternodeTestUtil::GuiModels models{m_node};
@@ -585,8 +601,22 @@ void SharedMnWalkthroughTests::walkthrough()
         QVERIFY2(!reply.isEmpty(), qPrintable(who.who + " must copy a Details reply"));
         QVERIFY(!reply_code.isEmpty());
         details_replies << reply;
+
+        // The waiting page copies the same reply again for a lost clipboard
+        QApplication::clipboard()->clear();
+        const auto waiting{std::find_if(dialog.m_waiting_pages.begin(), dialog.m_waiting_pages.end(),
+                                        [](const auto& entry) {
+                                            return entry.first == SharedMnCreateDialog::PageWaitTerms;
+                                        })};
+        QVERIFY(waiting != dialog.m_waiting_pages.end());
+        waiting->second.copy->click();
+        QCOMPARE(QApplication::clipboard()->text(), reply);
         Shots().capture(&dialog, who.role, QStringLiteral("14-%1-waiting-for-terms").arg(who.role),
                         who.who + " waiting for the coordinator: what was sent and what comes next");
+    }
+    for (const auto& input : alice.myContribution()->inputs) {
+        const COutPoint outpoint{uint256S(input.txid.toStdString()), input.vout};
+        QCOMPARE(alice_model.wallet().getCoins({outpoint}).front().depth_in_main_chain, 0);
     }
 
     for (int i = 0; i < details_replies.size(); ++i) {
@@ -703,6 +733,10 @@ void SharedMnWalkthroughTests::walkthrough()
         QVERIFY2(int(dialog.currentPage()) == int(SharedMnCreateDialog::PageSignatures),
                  qPrintable(QStringLiteral("%1 did not reach Sign contribution: %2")
                                 .arg(who.who, dialog.m_error_label->text())));
+        // The last step before coins move shows the approved terms again
+        QVERIFY(dialog.m_signatures_unchanged->isVisibleTo(&dialog));
+        QVERIFY(dialog.m_signatures_terms->text().contains(dialog.m_session.shares()[dialog.m_my_share].ownerAddress));
+        QVERIFY(dialog.m_signatures_terms->text().contains("Your contribution"));
         Shots().capture(&dialog, who.role, QStringLiteral("23-%1-sign-contribution").arg(who.role),
                         who.who + " about to sign the coins they reserved");
 
@@ -738,6 +772,18 @@ void SharedMnWalkthroughTests::walkthrough()
     QVERIFY2(int(coord.currentPage()) == int(SharedMnCreateDialog::PageComplete),
              qPrintable(QStringLiteral("broadcast did not complete. Error: \"%1\"; modals: %2")
                             .arg(coord.m_error_label->text(), pilot.seen().join(QStringLiteral(" | ")))));
+    // Show Details carries the whole registration, not only the codes naming it
+    {
+        const auto confirm{std::find_if(pilot.seen().begin(), pilot.seen().end(), [](const QString& text) {
+            return text.startsWith(QStringLiteral("Broadcast this shared masternode registration?"));
+        })};
+        QVERIFY2(confirm != pilot.seen().end(), qPrintable(pilot.seen().join(QStringLiteral(" | "))));
+        QVERIFY(confirm->contains(QStringLiteral("Transaction ID: ")));
+        QVERIFY(confirm->contains(QStringLiteral("\n1. ") + coord.m_session.shares()[0].label));
+        for (const auto& share : coord.m_session.shares()) {
+            QVERIFY(confirm->contains(share.ownerAddress));
+        }
+    }
     Shots().capture(&coord, "coord", "27-complete",
                     "Complete: the proTxHash, the \"what to keep safe\" checklist and the next steps");
 

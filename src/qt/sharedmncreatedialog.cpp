@@ -49,12 +49,16 @@
 #include <QProgressBar>
 #include <QPushButton>
 #include <QRadioButton>
+#include <QRegularExpression>
 #include <QSet>
 #include <QSpacerItem>
 #include <QSpinBox>
 #include <QStackedWidget>
+#include <QStandardItemModel>
 #include <QTableWidget>
 #include <QTableWidgetItem>
+#include <QTextDocument>
+#include <QTextEdit>
 #include <QVBoxLayout>
 
 #include <algorithm>
@@ -87,6 +91,7 @@ constexpr CAmount MAX_EXPECTED_FUNDING_FEE{COIN / 100};
 //! Width the broadcast confirmation is stretched to, so a grouped amount is
 //! never broken across lines
 constexpr int CONFIRM_MINIMUM_WIDTH{460};
+constexpr int CONFIRM_DETAILS_MINIMUM_HEIGHT{320};
 
 //! Width of a standalone amount field. BitcoinAmountField centres its editor
 //! inside whatever width a layout hands it, so it needs one of its own.
@@ -700,6 +705,7 @@ QWidget* SharedMnCreateDialog::createContributionPage()
         connect(m_who_am_i_combo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
             if (m_updating || index < 0) return;
             m_my_share = m_who_am_i_combo->itemData(index).toInt();
+            loadMyShareAddresses();
             refreshContributionPage();
             onPageEdited();
         });
@@ -847,17 +853,6 @@ QWidget* SharedMnCreateDialog::createInvitePage()
     auto [body, body_layout]{MasternodeWidgetUtil::makeScrollBody(page, layout)};
     addBoard(PageInvite, body, body_layout);
 
-    auto* row{new QHBoxLayout()};
-    m_copy_invitation_button = new QPushButton(tr("Copy Invitation"), body);
-    connect(m_copy_invitation_button, &QPushButton::clicked, this, [this] { copySession(tr("Invitation")); });
-    row->addWidget(m_copy_invitation_button);
-    m_save_invitation_button = new QPushButton(tr("Save Invitation…"), body);
-    SharedMnMakeSecondary(m_save_invitation_button);
-    connect(m_save_invitation_button, &QPushButton::clicked, this, &SharedMnCreateDialog::saveSession);
-    row->addWidget(m_save_invitation_button);
-    row->addStretch();
-    body_layout->addLayout(row);
-
     m_invite_edit_warning = makeHint(tr("You changed the draft. Participants who already replied must reply again."),
                                      body);
     m_invite_edit_warning->setStyleSheet(GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_WARNING));
@@ -879,6 +874,17 @@ QWidget* SharedMnCreateDialog::createInvitePage()
         m_lock_confirm_card->setVisible(false);
     }
     body_layout->addStretch();
+
+    auto* row{new QHBoxLayout()};
+    m_copy_invitation_button = new QPushButton(tr("Copy Invitation"), page);
+    connect(m_copy_invitation_button, &QPushButton::clicked, this, [this] { copySession(tr("Invitation")); });
+    row->addWidget(m_copy_invitation_button);
+    m_save_invitation_button = new QPushButton(tr("Save Invitation…"), page);
+    SharedMnMakeSecondary(m_save_invitation_button);
+    connect(m_save_invitation_button, &QPushButton::clicked, this, &SharedMnCreateDialog::saveSession);
+    row->addWidget(m_save_invitation_button);
+    row->addStretch();
+    layout->addLayout(row);
     return page;
 }
 
@@ -906,17 +912,18 @@ QWidget* SharedMnCreateDialog::createApprovalsPage()
         box->addWidget(m_approvals_terms);
     }
 
+    body_layout->addStretch();
+
     auto* row{new QHBoxLayout()};
-    m_copy_terms_button = new QPushButton(tr("Copy Locked Terms"), body);
+    m_copy_terms_button = new QPushButton(tr("Copy Locked Terms"), page);
     connect(m_copy_terms_button, &QPushButton::clicked, this, [this] { copySession(tr("Locked Terms")); });
     row->addWidget(m_copy_terms_button);
-    m_unlock_button = new QPushButton(tr("Unlock terms…"), body);
+    m_unlock_button = new QPushButton(tr("Unlock terms…"), page);
     SharedMnMakeSecondary(m_unlock_button);
     connect(m_unlock_button, &QPushButton::clicked, this, &SharedMnCreateDialog::unlockTerms);
     row->addWidget(m_unlock_button);
     row->addStretch();
-    body_layout->addLayout(row);
-    body_layout->addStretch();
+    layout->addLayout(row);
     return page;
 }
 
@@ -935,13 +942,24 @@ QWidget* SharedMnCreateDialog::createSignaturesPage()
     m_signatures_summary = makeHint(QString(), body);
     body_layout->addWidget(m_signatures_summary);
 
+    // The terms again, so the last step before coins move can be checked
+    // without going back to the approval
+    m_signatures_unchanged = makeHint(QString(), body);
+    body_layout->addWidget(m_signatures_unchanged);
+    {
+        auto* box{MakeTitledCard(body, body_layout, QString())};
+        m_signatures_terms = MakeSheetLabel(box->parentWidget());
+        box->addWidget(m_signatures_terms);
+    }
+
+    body_layout->addStretch();
+
     auto* row{new QHBoxLayout()};
-    m_copy_signing_button = new QPushButton(tr("Copy Signing Request"), body);
+    m_copy_signing_button = new QPushButton(tr("Copy Signing Request"), page);
     connect(m_copy_signing_button, &QPushButton::clicked, this, [this] { copySession(tr("Signing Request")); });
     row->addWidget(m_copy_signing_button);
     row->addStretch();
-    body_layout->addLayout(row);
-    body_layout->addStretch();
+    layout->addLayout(row);
     return page;
 }
 
@@ -960,6 +978,24 @@ QWidget* SharedMnCreateDialog::createWaitingPage(Page page_id)
         widgets.sent = makeHint(QString(), box->parentWidget());
         widgets.sent->setTextFormat(Qt::PlainText);
         box->addWidget(widgets.sent);
+        // The reply is copied once, as the page is entered; a clipboard
+        // overwritten before it reached the coordinator must not strand it
+        widgets.copy = new QPushButton(tr("Copy My Reply"), box->parentWidget());
+        SharedMnMakeSecondary(widgets.copy);
+        connect(widgets.copy, &QPushButton::clicked, this, [this, page_id] {
+            switch (page_id) {
+            case PageWaitTerms:
+                copySession(tr("Details"));
+                break;
+            case PageWaitSigning:
+                copySession(tr("Approval"));
+                break;
+            default:
+                copySession(tr("Signed Contribution"));
+                break;
+            }
+        });
+        box->addWidget(widgets.copy, 0, Qt::AlignLeft);
     }
     {
         auto* box{MakeTitledCard(body, body_layout, tr("What comes next"))};
@@ -1058,17 +1094,18 @@ QWidget* SharedMnCreateDialog::createCompletePage()
         box->addWidget(m_next_steps);
     }
 
+    body_layout->addStretch();
+
     auto* row{new QHBoxLayout()};
-    m_copy_record_button = new QPushButton(tr("Copy Final Record"), body);
+    m_copy_record_button = new QPushButton(tr("Copy Final Record"), page);
     connect(m_copy_record_button, &QPushButton::clicked, this, [this] { copySession(tr("Final Record")); });
     row->addWidget(m_copy_record_button);
-    m_complete_release_button = new QPushButton(tr("Release my coins"), body);
+    m_complete_release_button = new QPushButton(tr("Release my coins"), page);
     m_complete_release_button->setFlat(true);
     connect(m_complete_release_button, &QPushButton::clicked, this, &SharedMnCreateDialog::releaseReservedCoins);
     row->addWidget(m_complete_release_button);
     row->addStretch();
-    body_layout->addLayout(row);
-    body_layout->addStretch();
+    layout->addLayout(row);
     return page;
 }
 
@@ -1216,14 +1253,7 @@ void SharedMnCreateDialog::enterPage(Page page)
         break;
     case PageContribution:
         inferMyShare();
-        // Addresses are filled in on first entry, as the register wizard does,
-        // so the common case needs no typing at all.
-        for (QValidatedLineEdit* const edit : {m_owner_edit, m_refund_edit}) {
-            if (!edit->text().isEmpty() || m_wallet_model == nullptr) continue;
-            QString error;
-            const QString address{MasternodeWidgetUtil::freshAddress(m_wallet_model, error)};
-            if (!address.isEmpty()) edit->setText(address);
-        }
+        fillEmptyAddressEdits();
         refreshContributionPage();
         break;
     case PageSecret:
@@ -1657,6 +1687,8 @@ void SharedMnCreateDialog::refreshShareTable()
     const auto& shares{m_session.shares()};
     const int rows{static_cast<int>(shares.size())};
     const bool editable{m_session.stage() == MnShareSession::Stage::Draft};
+    // Moving "me" to another row would hide the coins already reserved here
+    const bool reserved{myContribution() != nullptr};
     if (m_share_table->rowCount() != rows) {
         // Rebuilding drops the row's widgets, so only do it when rows moved
         m_share_table->setRowCount(0);
@@ -1701,8 +1733,15 @@ void SharedMnCreateDialog::refreshShareTable()
         }
         if (auto* me = qobject_cast<QRadioButton*>(m_me_group->button(row))) {
             me->setChecked(row == m_my_share);
-            me->setEnabled(editable);
+            me->setEnabled(editable && !reserved && !shareTakenByOther(row));
         }
+    }
+    // An exclusive group ignores unchecking its checked button, and a stale
+    // check would be read back as this wallet's share
+    if (auto* const checked{m_me_group->checkedButton()}; checked != nullptr && m_me_group->id(checked) != m_my_share) {
+        m_me_group->setExclusive(false);
+        checked->setChecked(false);
+        m_me_group->setExclusive(true);
     }
     m_add_share_button->setEnabled(editable && shares.size() < CProRegTx::MAX_SHARES);
     m_remove_share_button->setEnabled(editable && shares.size() > CProRegTx::MIN_SHARES);
@@ -1789,12 +1828,19 @@ void SharedMnCreateDialog::refreshContributionPage()
     // theirs is the one thing the invitation cannot know.
     m_who_am_i_row->setVisible(!coordinator && shares.size() > 1);
     m_who_am_i_combo->clear();
+    // Without this the combo would show the first share as chosen while none is.
+    if (m_my_share < 0) m_who_am_i_combo->addItem(tr("Choose your share…"), -1);
+    auto* const combo_model{qobject_cast<QStandardItemModel*>(m_who_am_i_combo->model())};
     for (size_t i = 0; i < shares.size(); ++i) {
-        m_who_am_i_combo->addItem(tr("Share %1 of %2 — %3 — %4")
-                                      .arg(i + 1)
-                                      .arg(shares.size())
-                                      .arg(FormatAmount(m_wallet_model, shares[i].amount), ShareName(m_session, i)),
-                                  static_cast<int>(i));
+        const QString text{tr("Share %1 of %2 — %3 — %4")
+                               .arg(i + 1)
+                               .arg(shares.size())
+                               .arg(FormatAmount(m_wallet_model, shares[i].amount), ShareName(m_session, i))};
+        const bool taken{shareTakenByOther(i)};
+        m_who_am_i_combo->addItem(taken ? tr("%1 (taken)").arg(text) : text, static_cast<int>(i));
+        if (taken && combo_model != nullptr) {
+            combo_model->item(m_who_am_i_combo->count() - 1)->setEnabled(false);
+        }
         if (static_cast<int>(i) == m_my_share) m_who_am_i_combo->setCurrentIndex(m_who_am_i_combo->count() - 1);
     }
     m_updating = false;
@@ -1850,6 +1896,7 @@ void SharedMnCreateDialog::refreshContributionPage()
     m_reserve_button->setEnabled(editable && m_my_share >= 0 && m_wallet_model != nullptr);
     m_release_button->setVisible(reserved);
     m_release_button->setEnabled(editable);
+    m_who_am_i_combo->setEnabled(editable && !reserved);
     for (QValidatedLineEdit* const edit : {m_owner_edit, m_refund_edit, m_reward_edit}) {
         edit->setReadOnly(reserved || !editable);
     }
@@ -1914,6 +1961,14 @@ void SharedMnCreateDialog::refreshSignaturesPage()
     } else {
         m_signatures_summary->setText(QString());
     }
+    // A session only carries an approval that verifies against its consent
+    // digest, which covers the transaction and the registration's fields but
+    // not the names and notes the envelope adds around them
+    const bool approved{m_my_share >= 0 && !m_session.signatureFor(m_my_share).isEmpty()};
+    m_signatures_unchanged->setVisible(approved);
+    m_signatures_unchanged->setText(
+        tr("✓ Your approval covers every amount, address, key and exit term below, and none of them has changed "
+           "since. Participant names, \"Node run by\" and the Identity section are notes it does not cover."));
 }
 
 void SharedMnCreateDialog::refreshWaitingPages()
@@ -2047,11 +2102,22 @@ void SharedMnCreateDialog::refreshBoards()
     }
 }
 
+QString SharedMnCreateDialog::termSheetHtml() const
+{
+    const auto in_this_wallet = [this](const QString& address) {
+        const CTxDestination dest{DecodeDestination(address.toStdString())};
+        return m_wallet_model != nullptr && IsValidDestination(dest) && m_wallet_model->wallet().isSpendable(dest);
+    };
+    return SharedMnTermSheetHtml(m_session, m_my_share, SharedMnDisplayUnit(m_wallet_model), in_this_wallet,
+                                 m_wallet_model != nullptr ? std::optional{ownFunding()} : std::nullopt);
+}
+
 void SharedMnCreateDialog::refreshTermSheets()
 {
-    const QString html{SharedMnTermSheetHtml(m_session, m_my_share, SharedMnDisplayUnit(m_wallet_model))};
+    const QString html{termSheetHtml()};
     m_approvals_terms->setText(html);
     m_lock_terms_label->setText(html);
+    m_signatures_terms->setText(html);
     bool fatal{false};
     m_lock_funding_label->setText(fundingCheck(fatal));
 }
@@ -2078,6 +2144,7 @@ void SharedMnCreateDialog::syncSharesFromTable()
     }
     if (const int checked{m_me_group->checkedId()}; checked >= 0 && checked != m_my_share) {
         m_my_share = checked;
+        loadMyShareAddresses();
     }
     // Name the coordinator as soon as the roster does, so participants see
     // "Waiting for Alice" from the first round and a reopened session can tell
@@ -2625,21 +2692,37 @@ bool SharedMnCreateDialog::confirmBroadcast()
     detail << tr("Collateral: %1").arg(FormatAmount(m_wallet_model, collateral));
     detail << tr("Participants: %1").arg(participants);
     detail << fundingCheck(fatal);
-    SendConfirmationDialog confirmation{
-        tr("Confirm shared masternode registration"),
-        tr("Broadcast this shared masternode registration?"),
-        detail.join(QLatin1Char('\n')),
-        tr("Session %1 · Code %2").arg(m_session.sessionCode(), m_session.fingerprint()),
-        SEND_CONFIRM_DELAY,
-        /*enable_send=*/true,
-        /*always_show_unsigned=*/false,
-        this};
+    // Everything the registration commits to, so "Show Details" is the full
+    // term sheet rather than only the codes naming it
+    QTextDocument sheet;
+    sheet.setHtml(termSheetHtml());
+    QString details{sheet.toPlainText().trimmed()};
+    // Plain text puts each participant's number on a line of its own
+    static const QRegularExpression share_number{QStringLiteral("(^|\\n)(\\d+)\\n")};
+    details.replace(share_number, QStringLiteral("\\1\\2. "));
+    if (QString tx_error; const auto tx{sessionTx(tx_error)}) {
+        details.prepend(tr("Transaction ID: %1").arg(QString::fromStdString(CTransaction(*tx).GetHash().ToString())) +
+                        QStringLiteral("\n\n"));
+    }
+    SendConfirmationDialog confirmation{tr("Confirm shared masternode registration"),
+                                        tr("Broadcast this shared masternode registration?"),
+                                        detail.join(QLatin1Char('\n')),
+                                        details,
+                                        SEND_CONFIRM_DELAY,
+                                        /*enable_send=*/true,
+                                        /*always_show_unsigned=*/false,
+                                        this};
     confirmation.setWindowModality(Qt::WindowModal);
     // A QMessageBox is only as wide as its longest line, which wraps a
     // thousands separator across lines; make it wide enough to read
     if (auto* const grid = qobject_cast<QGridLayout*>(confirmation.layout()); grid != nullptr) {
         grid->addItem(new QSpacerItem(CONFIRM_MINIMUM_WIDTH, 0, QSizePolicy::Minimum, QSizePolicy::Expanding),
                       grid->rowCount(), 0, 1, grid->columnCount());
+    }
+    // The details hold the whole term sheet; the message box's default few
+    // lines would leave nearly all of it behind a scroll bar
+    if (auto* const details = confirmation.findChild<QTextEdit*>(); details != nullptr) {
+        details->setMinimumHeight(CONFIRM_DETAILS_MINIMUM_HEIGHT);
     }
     return confirmation.exec() == QMessageBox::Yes;
 }
@@ -3004,10 +3087,13 @@ bool SharedMnCreateDialog::selectCoins(CAmount target, CoinSelection& selection,
         return false;
     }
 
+    // listCoins() already holds back unconfirmed coins the wallet does not
+    // trust, so an InstantSend-locked coin or this wallet's own unconfirmed
+    // change can fund a share, as it can any other payment
     std::vector<std::pair<CAmount, COutPoint>> candidates;
     for (const auto& [dest, coins] : m_wallet_model->wallet().listCoins()) {
         for (const auto& [outpoint, txout] : coins) {
-            if (txout.is_spent || txout.depth_in_main_chain < 1) continue;
+            if (txout.is_spent) continue;
             if (m_wallet_model->wallet().isLockedCoin(outpoint)) continue;
             if (!m_wallet_model->wallet().isSpendable(txout.txout.scriptPubKey)) continue;
             candidates.emplace_back(txout.txout.nValue, outpoint);
@@ -3055,12 +3141,21 @@ void SharedMnCreateDialog::reserveCoins()
         showError(tr("Select the participant that is you."));
         return;
     }
+    if (shareTakenByOther(m_my_share)) {
+        showError(tr("%1 has already been taken by another participant.").arg(ShareName(m_session, m_my_share)));
+        return;
+    }
     // The reservation fixes these addresses in the share row, so they have to
     // be right before any coin is locked
     const QString owner{m_owner_edit->text().trimmed()};
     const QString refund{m_refund_edit->text().trimmed()};
     if (!MasternodeWidgetUtil::isP2PKHAddress(owner)) {
         showError(tr("Enter a valid owner address (P2PKH)."));
+        return;
+    }
+    // This wallet signs the share's approval with the owner key
+    if (!m_wallet_model->wallet().isSpendable(DecodeDestination(owner.toStdString()))) {
+        showError(tr("The owner address must belong to this wallet."));
         return;
     }
     if (!MasternodeWidgetUtil::isP2PKHorP2SHAddress(refund)) {
@@ -3268,6 +3363,32 @@ SharedMnCreateDialog::FundingTotals SharedMnCreateDialog::fundingTotals() const
     return totals;
 }
 
+SharedMnOwnFunding SharedMnCreateDialog::ownFunding() const
+{
+    SharedMnOwnFunding funding;
+    if (m_wallet_model == nullptr) return funding;
+    interfaces::Wallet& wallet{m_wallet_model->wallet()};
+    const MnShareSession::Contribution* const mine{myContribution()};
+    // A coin of this wallet listed under somebody else's contribution is
+    // still paid by this wallet, so every contribution is counted
+    for (const auto& contribution : m_session.contributions()) {
+        if (contribution.hasChange && wallet.isSpendable(DecodeDestination(contribution.changeAddress.toStdString()))) {
+            funding.change += contribution.changeAmount;
+        }
+        for (const auto& input : contribution.inputs) {
+            const COutPoint outpoint{uint256S(input.txid.toStdString()), input.vout};
+            CTxOut txout{wallet.getCoins({outpoint}).front().txout};
+            if (Coin coin; txout.IsNull() && m_node.getUnspentOutput(outpoint, coin)) txout = coin.out;
+            if (txout.IsNull()) {
+                if (&contribution == mine) ++funding.unvalued;
+                continue;
+            }
+            if (wallet.isSpendable(txout.scriptPubKey)) funding.spent += txout.nValue;
+        }
+    }
+    return funding;
+}
+
 QString SharedMnCreateDialog::fundingCheck(bool& fatal) const
 {
     fatal = false;
@@ -3303,11 +3424,16 @@ QString SharedMnCreateDialog::fundingCheck(bool& fatal) const
 void SharedMnCreateDialog::inferMyShare()
 {
     const auto& shares{m_session.shares()};
-    if (m_my_share >= 0 && static_cast<size_t>(m_my_share) < shares.size()) return;
+    if (m_my_share >= 0 && static_cast<size_t>(m_my_share) < shares.size()) {
+        // Another participant's reply can fill in the row chosen here before
+        // this wallet reserved it
+        if (!shareTakenByOther(m_my_share)) return;
+        m_my_share = -1;
+    }
     if (m_wallet_model != nullptr) {
         for (size_t i = 0; i < shares.size(); ++i) {
             const CTxDestination dest{DecodeDestination(shares[i].ownerAddress.toStdString())};
-            if (IsValidDestination(dest) && m_wallet_model->wallet().isSpendable(dest)) {
+            if (std::holds_alternative<PKHash>(dest) && m_wallet_model->wallet().isSpendable(dest)) {
                 m_my_share = static_cast<int>(i);
                 return;
             }
@@ -3322,6 +3448,58 @@ void SharedMnCreateDialog::inferMyShare()
         candidate = static_cast<int>(i);
     }
     m_my_share = candidate;
+}
+
+bool SharedMnCreateDialog::shareTakenByOther(size_t index) const
+{
+    const auto& shares{m_session.shares()};
+    if (index >= shares.size()) return false;
+    const QString& owner{shares[index].ownerAddress};
+    if (owner.isEmpty()) return false;
+    if (m_wallet_model == nullptr) return true;
+    const CTxDestination dest{DecodeDestination(owner.toStdString())};
+    // Only a P2PKH owner can sign the share's approval
+    return !std::holds_alternative<PKHash>(dest) || !m_wallet_model->wallet().isSpendable(dest);
+}
+
+void SharedMnCreateDialog::loadMyShareAddresses()
+{
+    const auto& shares{m_session.shares()};
+    if (m_my_share < 0 || static_cast<size_t>(m_my_share) >= shares.size()) return;
+    const auto recorded_elsewhere = [&](const QString& address) {
+        for (size_t i = 0; i < shares.size(); ++i) {
+            if (static_cast<int>(i) == m_my_share) continue;
+            const auto& share{shares[i]};
+            if (address == share.ownerAddress || address == share.refundAddress || address == share.rewardAddress) {
+                return true;
+            }
+        }
+        return false;
+    };
+    const auto& share{shares[m_my_share]};
+    for (const auto& [edit, recorded] : {std::pair{m_owner_edit, share.ownerAddress},
+                                         std::pair{m_refund_edit, share.refundAddress},
+                                         std::pair{m_reward_edit, share.rewardAddress}}) {
+        if (!recorded.isEmpty()) {
+            edit->setText(recorded);
+        } else if (const QString current{edit->text().trimmed()}; !current.isEmpty() && recorded_elsewhere(current)) {
+            edit->clear();
+        }
+    }
+    fillEmptyAddressEdits();
+}
+
+void SharedMnCreateDialog::fillEmptyAddressEdits()
+{
+    // Addresses are filled in on first entry, as the register wizard does,
+    // so the common case needs no typing at all.
+    if (m_wallet_model == nullptr) return;
+    for (QValidatedLineEdit* const edit : {m_owner_edit, m_refund_edit}) {
+        if (!edit->text().isEmpty()) continue;
+        QString error;
+        const QString address{MasternodeWidgetUtil::freshAddress(m_wallet_model, error)};
+        if (!address.isEmpty()) edit->setText(address);
+    }
 }
 
 bool SharedMnCreateDialog::needsOwnApproval() const
