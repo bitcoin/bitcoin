@@ -593,6 +593,12 @@ connections to it advertise:
 - transaction relay (`relay=1` in the `version` message);
 - compact block filters (`NODE_COMPACT_FILTERS`). (#7755)
 
+A DKG member whose verification vector shares a coefficient with another
+member's, as happens when one member copies another's contribution, is now
+excluded from the commitment together with that member instead of the round
+failing. Both receive the usual PoSe penalty for failed DKG participation.
+(#8016)
+
 ## Bitcoin Core backports
 
 This release continues the backporting of Bitcoin Core, adding well over 200
@@ -718,6 +724,12 @@ and RPC parameters.
   policy (previously 83 bytes). This better reflects the actual afforded
   protections against CVE-2017-12842 and opens up additional use-cases of
   smaller transaction sizes. (#7666)
+- Asset Lock transactions with more than 100 inputs or larger than 20480 bytes
+  are now non-standard (`assetlocktx-too-many-inputs`, `assetlocktx-too-big`),
+  because Dash Platform cannot process them and the locked funds could be
+  lost. They are not accepted into the mempool or relayed, but remain valid in
+  a block. Software that funds Platform should keep its Asset Locks within these
+  limits. (#7359)
 - Block template creation now checks credit pool limits across complete
   transaction packages. Because Asset Unlock limits are cumulative, a package
   may exceed the block's limit even though its transactions were accepted
@@ -947,6 +959,9 @@ and RPC parameters.
 - Additional flags "in" and "out" have been added to `-whitelist` to control
   whether permissions apply to incoming connections and/or manual (default:
   incoming only). (#8005)
+- `-allowprivatenet` no longer affects which masternode addresses are accepted.
+  On mainnet, testnet and devnets a masternode address in a private (RFC 1918)
+  range is rejected whether or not the option is set. (#7888)
 
 ### Removed options
 
