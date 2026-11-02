@@ -978,6 +978,16 @@ BOOST_AUTO_TEST_CASE(script_json_test)
     }
 }
 
+static std::vector<std::vector<unsigned char>> BytesOf(const std::vector<ScriptStackElem>& stack)
+{
+    std::vector<std::vector<unsigned char>> bytes;
+    bytes.reserve(stack.size());
+    for (const ScriptStackElem& elem : stack) {
+        bytes.push_back(*elem);
+    }
+    return bytes;
+}
+
 BOOST_AUTO_TEST_CASE(script_PushData)
 {
     // Check that PUSHDATA1, PUSHDATA2, and PUSHDATA4 create the same value on
@@ -988,30 +998,30 @@ BOOST_AUTO_TEST_CASE(script_PushData)
     static const unsigned char pushdata4[] = { OP_PUSHDATA4, 1, 0, 0, 0, 0x5a };
 
     ScriptError err;
-    std::vector<std::vector<unsigned char> > directStack;
+    std::vector<ScriptStackElem> directStack;
     BOOST_CHECK(EvalScript(directStack, CScript(direct, direct + sizeof(direct)), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SigVersion::BASE, nullptr, &err));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 
-    std::vector<std::vector<unsigned char> > pushdata1Stack;
+    std::vector<ScriptStackElem> pushdata1Stack;
     BOOST_CHECK(EvalScript(pushdata1Stack, CScript(pushdata1, pushdata1 + sizeof(pushdata1)), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SigVersion::BASE, nullptr, &err));
-    BOOST_CHECK(pushdata1Stack == directStack);
+    BOOST_CHECK(BytesOf(pushdata1Stack) == BytesOf(directStack));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 
-    std::vector<std::vector<unsigned char> > pushdata2Stack;
+    std::vector<ScriptStackElem> pushdata2Stack;
     BOOST_CHECK(EvalScript(pushdata2Stack, CScript(pushdata2, pushdata2 + sizeof(pushdata2)), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SigVersion::BASE, nullptr, &err));
-    BOOST_CHECK(pushdata2Stack == directStack);
+    BOOST_CHECK(BytesOf(pushdata2Stack) == BytesOf(directStack));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 
-    std::vector<std::vector<unsigned char> > pushdata4Stack;
+    std::vector<ScriptStackElem> pushdata4Stack;
     BOOST_CHECK(EvalScript(pushdata4Stack, CScript(pushdata4, pushdata4 + sizeof(pushdata4)), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SigVersion::BASE, nullptr, &err));
-    BOOST_CHECK(pushdata4Stack == directStack);
+    BOOST_CHECK(BytesOf(pushdata4Stack) == BytesOf(directStack));
     BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
 
     const std::vector<unsigned char> pushdata1_trunc{OP_PUSHDATA1, 1};
     const std::vector<unsigned char> pushdata2_trunc{OP_PUSHDATA2, 1, 0};
     const std::vector<unsigned char> pushdata4_trunc{OP_PUSHDATA4, 1, 0, 0, 0};
 
-    std::vector<std::vector<unsigned char>> stack_ignore;
+    std::vector<ScriptStackElem> stack_ignore;
     BOOST_CHECK(!EvalScript(stack_ignore, CScript(pushdata1_trunc.begin(), pushdata1_trunc.end()), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SigVersion::BASE, nullptr, &err));
     BOOST_CHECK_EQUAL(err, SCRIPT_ERR_BAD_OPCODE);
     BOOST_CHECK(!EvalScript(stack_ignore, CScript(pushdata2_trunc.begin(), pushdata2_trunc.end()), SCRIPT_VERIFY_P2SH, BaseSignatureChecker(), SigVersion::BASE, nullptr, &err));
@@ -1024,7 +1034,7 @@ BOOST_AUTO_TEST_CASE(script_cltv_truncated)
 {
     const auto script_cltv_trunc = CScript() << OP_CHECKLOCKTIMEVERIFY;
 
-    std::vector<std::vector<unsigned char>> stack_ignore;
+    std::vector<ScriptStackElem> stack_ignore;
     ScriptError err;
     BOOST_CHECK(!EvalScript(stack_ignore, script_cltv_trunc, SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, BaseSignatureChecker(), SigVersion::BASE, nullptr, &err));
     BOOST_CHECK_EQUAL(err, SCRIPT_ERR_INVALID_STACK_OPERATION);

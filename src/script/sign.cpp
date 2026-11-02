@@ -32,6 +32,7 @@
 #include <cstddef>
 #include <functional>
 #include <iterator>
+#include <memory>
 #include <span>
 #include <string>
 
@@ -843,12 +844,16 @@ public:
 
 struct Stacks
 {
-    std::vector<valtype> script;
-    std::vector<valtype> witness;
+    std::vector<ScriptStackElem> script;
+    std::vector<ScriptStackElem> witness;
 
     Stacks() = delete;
     Stacks(const Stacks&) = delete;
-    explicit Stacks(const SignatureData& data) : witness(data.scriptWitness.stack) {
+    explicit Stacks(const SignatureData& data)
+    {
+        for (const valtype& elem : data.scriptWitness.stack) {
+            witness.push_back(MakeStackElem(valtype(elem)));
+        }
         EvalScript(script, data.scriptSig, SCRIPT_VERIFY_STRICTENC, BaseSignatureChecker(), SigVersion::BASE);
     }
 };
@@ -877,9 +882,9 @@ SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nI
     SigVersion sigversion = SigVersion::BASE;
     CScript next_script = txout.scriptPubKey;
 
-    if (script_type == TxoutType::SCRIPTHASH && !stack.script.empty() && !stack.script.back().empty()) {
+    if (script_type == TxoutType::SCRIPTHASH && !stack.script.empty() && !stack.script.back()->empty()) {
         // Get the redeemScript
-        CScript redeem_script(stack.script.back().begin(), stack.script.back().end());
+        CScript redeem_script(stack.script.back()->begin(), stack.script.back()->end());
         data.redeem_script = redeem_script;
         next_script = std::move(redeem_script);
 
@@ -887,9 +892,9 @@ SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nI
         script_type = Solver(next_script, solutions);
         stack.script.pop_back();
     }
-    if (script_type == TxoutType::WITNESS_V0_SCRIPTHASH && !stack.witness.empty() && !stack.witness.back().empty()) {
+    if (script_type == TxoutType::WITNESS_V0_SCRIPTHASH && !stack.witness.empty() && !stack.witness.back()->empty()) {
         // Get the witnessScript
-        CScript witness_script(stack.witness.back().begin(), stack.witness.back().end());
+        CScript witness_script(stack.witness.back()->begin(), stack.witness.back()->end());
         data.witness_script = witness_script;
         next_script = std::move(witness_script);
 
@@ -905,11 +910,11 @@ SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nI
         assert(solutions.size() > 1);
         unsigned int num_pubkeys = solutions.size()-2;
         unsigned int last_success_key = 0;
-        for (const valtype& sig : stack.script) {
+        for (const auto& sig : stack.script) {
             for (unsigned int i = last_success_key; i < num_pubkeys; ++i) {
                 const valtype& pubkey = solutions[i+1];
                 // We either have a signature for this pubkey, or we have found a signature and it is valid
-                if (data.signatures.contains(CPubKey(pubkey).GetID()) || extractor_checker.CheckECDSASignature(sig, pubkey, next_script, sigversion)) {
+                if (data.signatures.contains(CPubKey(pubkey).GetID()) || extractor_checker.CheckECDSASignature(*sig, pubkey, next_script, sigversion)) {
                     last_success_key = i + 1;
                     break;
                 }

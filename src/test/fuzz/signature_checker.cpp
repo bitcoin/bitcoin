@@ -55,7 +55,7 @@ FUZZ_TARGET(signature_checker)
     const SigVersion sig_version = fuzzed_data_provider.PickValueInArray({SigVersion::BASE, SigVersion::WITNESS_V0});
     const auto script_1{ConsumeScript(fuzzed_data_provider)};
     const auto script_2{ConsumeScript(fuzzed_data_provider)};
-    std::vector<std::vector<unsigned char>> stack;
+    std::vector<ScriptStackElem> stack;
     (void)EvalScript(stack, script_1, flags, FuzzedSignatureChecker(fuzzed_data_provider), sig_version);
     if (!IsValidFlagCombination(flags)) {
         return;

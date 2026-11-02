@@ -480,12 +480,22 @@ static CScript PushAll(const std::vector<valtype>& values)
     return result;
 }
 
-static void ReplaceRedeemScript(CScript& script, const CScript& redeemScript)
+static CScript PushAll(const std::vector<ScriptStackElem>& values)
 {
     std::vector<valtype> stack;
+    stack.reserve(values.size());
+    for (const ScriptStackElem& elem : values) {
+        stack.push_back(*elem);
+    }
+    return PushAll(stack);
+}
+
+static void ReplaceRedeemScript(CScript& script, const CScript& redeemScript)
+{
+    std::vector<ScriptStackElem> stack;
     EvalScript(stack, script, SCRIPT_VERIFY_STRICTENC, BaseSignatureChecker(), SigVersion::BASE);
     assert(stack.size() > 0);
-    stack.back() = std::vector<unsigned char>(redeemScript.begin(), redeemScript.end());
+    stack.back() = MakeStackElem(std::vector<unsigned char>(redeemScript.begin(), redeemScript.end()));
     script = PushAll(stack);
 }
 

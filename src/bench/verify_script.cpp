@@ -131,7 +131,7 @@ static void VerifyScriptP2TR_ScriptPath(benchmark::Bench& bench) { VerifyScriptB
 
 static void VerifyNestedIfScript(benchmark::Bench& bench)
 {
-    std::vector<std::vector<unsigned char>> stack;
+    std::vector<ScriptStackElem> stack;
     CScript script;
     for (int i = 0; i < 100; ++i) {
         script << OP_1 << OP_IF;
@@ -159,7 +159,7 @@ static void VerifyNestedIfScript(benchmark::Bench& bench)
 // per-push allocation side of the stack element representation.
 static void VerifyPushDropSmall(benchmark::Bench& bench)
 {
-    std::vector<std::vector<unsigned char>> stack;
+    std::vector<ScriptStackElem> stack;
     CScript script;
     for (int i = 0; i < MAX_SCRIPT_SIZE / 4; ++i) {
         script << OP_1 << OP_DROP << OP_FALSE << OP_DROP;
@@ -180,7 +180,7 @@ static void VerifyPushDropSmall(benchmark::Bench& bench)
 // size at 2.
 static void VerifyDupDropLarge(benchmark::Bench& bench)
 {
-    std::vector<std::vector<unsigned char>> stack;
+    std::vector<ScriptStackElem> stack;
     CScript script;
     script << std::vector<unsigned char>(MAX_SCRIPT_ELEMENT_SIZE, /*c=*/0xab);
 
@@ -206,7 +206,7 @@ static void VerifyDupDropLarge(benchmark::Bench& bench)
 template <size_t N>
 static void VerifyPushDropSized(benchmark::Bench& bench)
 {
-    std::vector<std::vector<unsigned char>> stack;
+    std::vector<ScriptStackElem> stack;
     CScript script;
     constexpr int kPushes = (N > 100 ? 18 : 100); // keep the script under MAX_SCRIPT_SIZE
     for (int i = 0; i < kPushes; ++i) {

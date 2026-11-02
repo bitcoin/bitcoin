@@ -239,7 +239,7 @@ TxValidationState ValidateInputsStandardness(const CTransaction& tx, const CCoin
             state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, "bad-txns-nonstandard-inputs", strprintf("input %u witness program is undefined", i));
             return state;
         } else if (whichType == TxoutType::SCRIPTHASH) {
-            std::vector<std::vector<unsigned char> > stack;
+            std::vector<ScriptStackElem> stack;
             ScriptError serror;
             // convert the scriptSig into a stack, so we can inspect the redeemScript
             if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SigVersion::BASE, nullptr, &serror)) {
@@ -250,7 +250,7 @@ TxValidationState ValidateInputsStandardness(const CTransaction& tx, const CCoin
                 state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, "bad-txns-nonstandard-inputs", strprintf("input %u P2SH redeemscript missing", i));
                 return state;
             }
-            CScript subscript(stack.back().begin(), stack.back().end());
+            CScript subscript(stack.back()->begin(), stack.back()->end());
             unsigned int sigop_count = subscript.GetSigOpCount(true);
             if (sigop_count > MAX_P2SH_SIGOPS) {
                 state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, "bad-txns-nonstandard-inputs", strprintf("p2sh redeemscript sigops exceed limit (input %u: %u > %u)", i, sigop_count, MAX_P2SH_SIGOPS));
@@ -286,7 +286,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 
         bool p2sh = false;
         if (prevScript.IsPayToScriptHash()) {
-            std::vector <std::vector<unsigned char> > stack;
+            std::vector<ScriptStackElem> stack;
             // If the scriptPubKey is P2SH, we try to extract the redeemScript casually by converting the scriptSig
             // into a stack. We do not check IsPushOnly nor compare the hash as these will be done later anyway.
             // If the check fails at this stage, we know that this txid must be a bad one.
@@ -294,7 +294,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
                 return false;
             if (stack.empty())
                 return false;
-            prevScript = CScript(stack.back().begin(), stack.back().end());
+            prevScript = CScript(stack.back()->begin(), stack.back()->end());
             p2sh = true;
         }
 
@@ -372,12 +372,12 @@ bool SpendsNonAnchorWitnessProg(const CTransaction& tx, const CCoinsViewCache& p
         // function is only ever called after IsStandardTx, which checks the scriptsig is pushonly.
         if (prev_spk.IsPayToScriptHash()) {
             // If EvalScript fails or results in an empty stack, the transaction is invalid by consensus.
-            std::vector <std::vector<uint8_t>> stack;
+            std::vector<ScriptStackElem> stack;
             if (!EvalScript(stack, txin.scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker{}, SigVersion::BASE)
                 || stack.empty()) {
                 continue;
             }
-            const CScript redeem_script{stack.back().begin(), stack.back().end()};
+            const CScript redeem_script{stack.back()->begin(), stack.back()->end()};
             if (redeem_script.IsWitnessProgram(version, program)) {
                 return true;
             }
