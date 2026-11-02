@@ -665,18 +665,30 @@ and RPC parameters.
   the mixing metadata they cannot parse. (#7052)
 - Version 2 Asset Unlock transactions are relayed by instance hash using the new
   inventory type `MSG_ASSET_UNLOCK` (protocol version 70242). (#7639)
-- Startup now fails if any configured `-bind`, `-whitebind` or the implicit Tor
-  onion-service bind (`127.0.0.1:9996` by default) cannot be set up. Dash Core
-  v23 and earlier started as long as at least one bind succeeded.
-- Nodes configured with `-bind` but no specific `-bind=<addr:port>=onion` now
-  refuse to start when `-listenonion` is enabled. This includes nodes without
-  Tor configured, since `-listenonion` is enabled by default when listening.
-  Shared binds cannot distinguish Tor-forwarded connections from direct
-  connections, which can grant Tor peers unintended IP-based whitelist
-  permissions. Nodes without `-bind`, including those using only `-whitebind`,
-  continue to get the default onion target. Users should add a specific
-  `-bind=<addr:port>=onion` to accept incoming Tor connections, or set
-  `-listenonion=0` to disable automatic onion service creation. (#7300, #7786)
+- Startup now fails if any configured `-bind` (including `-bind=...=onion`) or
+  `-whitebind` cannot be set up. Dash Core v23 and earlier started as long as
+  at least one bind succeeded. The implicit Tor onion-service bind
+  (`127.0.0.1:9996` by default) is still best effort, as in v23, unless
+  `-listenonion=1` is set explicitly. (#7300, #8003)
+- The automatic Tor onion service (`-listenonion`) only forwards to a
+  dedicated, non-wildcard onion listener that the node actually bound, so peers
+  arriving through Tor are always recognized as onion peers. Without a
+  `-bind=<addr:port>=onion`, Dash Core adds the default onion bind as v23 did,
+  also when `-bind` is given; with `-bind` and `-listenonion=0` it no longer
+  does. If the default onion bind fails, for example because another instance
+  on the same host holds it, the node logs a warning and creates no onion
+  service rather than pointing Tor at whatever holds that port. It still
+  starts and still uses Tor for outbound onion connections if its control port
+  is reachable; the debug log notes that no onion service was created. With an
+  explicit `-listenonion=1`, a failed default onion bind makes startup fail. To
+  run onion services for several instances on one host, give each its own
+  `-bind=127.0.0.1:<port>=onion`. (#7300, #7786, #8003)
+- A wildcard onion bind such as `-bind=0.0.0.0:<port>=onion` is a startup error
+  unless `-listenonion=0` is set, also with the default `-listenonion`. The node
+  can't tell which connections to a wildcard listener came through Tor, so Tor
+  peers would be treated as clearnet peers. Dash Core v23 accepted it. Use a
+  specific address such as `-bind=127.0.0.1:<port>=onion` instead. (#7786,
+  #8003)
 - `getqrinfo` requests now carry at most 4096 `baseBlockHashes`. A request with
   more is rejected and the sending peer is penalized as misbehaving. No known
   client sends more than a handful. The `quorum rotationinfo` RPC applies the

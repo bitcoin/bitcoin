@@ -220,10 +220,11 @@ Bind to given address and always listen on it (default: 0.0.0.0). Use
 connections to that address and port as incoming Tor connections
 (default: 127.0.0.1:9996=onion, testnet: 127.0.0.1:19996=onion,
 devnet: 127.0.0.1:19796=onion, regtest: 127.0.0.1:19896=onion).
-The default onion bind is added only when no \fB\-bind\fR is specified.
-When \fB\-listenonion\fR is enabled and \fB\-bind\fR is specified, a
-non\-wildcard =onion bind is required, and wildcard =onion binds
-are rejected.
+Without an =onion bind, the default onion bind is added unless
+\fB\-bind\fR is given and \fB\-listenonion\fR is disabled; failing to bind it
+stops startup only with an explicit \fB\-listenonion\fR=\fI\,1\/\fR, and otherwise
+no onion service is created. While \fB\-listenonion\fR is enabled, a
+wildcard =onion bind is an error.
 .HP
 \fB\-cjdnsreachable\fR
 .IP
@@ -283,7 +284,9 @@ Accept connections from outside (default: 1 if no \fB\-proxy\fR, \fB\-connect\fR
 .HP
 \fB\-listenonion\fR
 .IP
-Automatically create Tor onion service (default: 1)
+Automatically create Tor onion service if Tor is available and the onion
+bind could be bound (see \fB\-bind\fR). If set to 1 explicitly, fail to
+start if the onion bind cannot be bound (default: 1)
 .HP
 \fB\-maxconnections=\fR<n>
 .IP
