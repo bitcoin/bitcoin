@@ -91,8 +91,15 @@ struct TxDocOptions {
     std::optional<std::string> fee_doc{};
     /// Elide vin inner fields but keep vin array with prevout expanded.
     std::optional<std::string> vin_inner_elision{};
+    /// Extra fields appended to each vout object (e.g. spentness annotations).
+    std::vector<RPCResult> extra_vout{};
 };
 /** Explain the UniValue "decoded" transaction object, may include extra fields if processed by wallet **/
 std::vector<RPCResult> TxDoc(const TxDocOptions& opts = {});
+
+/** Document a verbose raw transaction, including block context and optional undo data.
+ * RPC-specific context fields are elided along with common fields at verbosity 2.
+ */
+std::vector<RPCResult> RawTransactionDoc(int32_t verbosity, TxDocOptions opts = {}, const std::vector<RPCResult>& extra_context = {});
 
 #endif // BITCOIN_RPC_RAWTRANSACTION_UTIL_H

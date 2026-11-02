@@ -154,6 +154,7 @@ util::Expected<TxoSpender, std::string> TxoSpenderIndex::ReadTransaction(const C
         file.seek(tx_pos.nTxOffset, SEEK_CUR);
         file >> TX_WITH_WITNESS(spender.tx);
         spender.block_hash = header.GetHash();
+        spender.tx_offset = GetSerializeSize(header) + tx_pos.nTxOffset;
         return spender;
     } catch (const std::exception& e) {
         return util::Unexpected(e.what());

@@ -76,6 +76,7 @@ add_executable(test_bitcoin
   netbase_tests.cpp
   node_init_tests.cpp
   node_warnings_tests.cpp
+  ordered_varint_tests.cpp
   orphanage_tests.cpp
   pcp_tests.cpp
   peerman_tests.cpp
@@ -121,6 +122,7 @@ add_executable(test_bitcoin
   txdownload_tests.cpp
   txgraph_tests.cpp
   txindex_tests.cpp
+  txoscriptindex_tests.cpp
   txospenderindex_tests.cpp
   txpackage_tests.cpp
   txreconciliation_tests.cpp

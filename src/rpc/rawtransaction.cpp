@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <rpc/register.h> // IWYU pragma: associated
+#include <rpc/rawtransaction.h>
 
 #include <addresstype.h>
 #include <base58.h>
@@ -32,6 +32,7 @@
 #include <random.h>
 #include <rpc/protocol.h>
 #include <rpc/rawtransaction_util.h>
+#include <rpc/register.h> // IWYU pragma: associated
 #include <rpc/request.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
@@ -81,9 +82,8 @@ using node::PSBTAnalysis;
 
 static constexpr decltype(CTransaction::version) DEFAULT_RAWTX_VERSION{CTransaction::CURRENT_VERSION};
 
-static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry,
-                     Chainstate& active_chainstate, const CTxUndo* txundo = nullptr,
-                     TxVerbosity verbosity = TxVerbosity::SHOW_DETAILS)
+void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry,
+              Chainstate& active_chainstate, const CTxUndo* txundo, TxVerbosity verbosity)
 {
     CHECK_NONFATAL(verbosity >= TxVerbosity::SHOW_DETAILS);
     // Call into TxToUniv() in bitcoin-common to decode the transaction hex.
@@ -239,24 +239,10 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
 
 static RPCMethod getrawtransaction()
 {
-    const std::vector<RPCResult> verbosity_1_block{
+    const std::vector<RPCResult> extra_context{
         {RPCResult::Type::BOOL, "in_active_chain", /*optional=*/true, "Whether specified block is in the active chain or not (only present with explicit \"blockhash\" argument)"},
-        {RPCResult::Type::STR_HEX, "blockhash", /*optional=*/true, "the block hash"},
         {RPCResult::Type::NUM, "vsize_adjusted", /*optional=*/true, "Sigop-adjusted virtual size in bytes, present for mempool transactions."},
-        {RPCResult::Type::NUM, "confirmations", /*optional=*/true, "The confirmations"},
-        {RPCResult::Type::NUM_TIME, "blocktime", /*optional=*/true, "The block time expressed in " + UNIX_EPOCH_TIME},
-        {RPCResult::Type::NUM, "time", /*optional=*/true, "Same as \"blocktime\""},
-        {RPCResult::Type::STR_HEX, "hex", "The serialized, hex-encoded data for 'txid'"},
     };
-    const auto v2_extras = Cat<std::vector<RPCResult>>(
-        std::vector<RPCResult>{{
-            RPCResult::Type::NUM, "fee", /*optional=*/true,
-            "transaction fee in " + CURRENCY_UNIT + ", omitted if block undo data is not available"
-        }},
-        TxDoc({.elision_mode = ElisionMode::Silent,
-               .prevout = true,
-               .prevout_optional = true,
-               .vin_inner_elision = "Same vin fields as verbosity = 1"}));
     return RPCMethod{
                 "getrawtransaction",
 
@@ -281,12 +267,10 @@ static RPCMethod getrawtransaction()
                      },
                      RPCResult{"if verbosity is set to 1",
                          RPCResult::Type::OBJ, "", "",
-                         Cat<std::vector<RPCResult>>(
-                         verbosity_1_block,
-                         TxDoc({.txid_field_doc="The transaction id (same as provided)"})),
+                         RawTransactionDoc(1, {.txid_field_doc="The transaction id (same as provided)"}, extra_context),
                     },
                     RPCResult{"for verbosity = 2", RPCResult::Type::OBJ, "", "",
-                    Cat(ElideGroup(verbosity_1_block, "Same output as verbosity = 1"), v2_extras)},
+                    RawTransactionDoc(2, {}, extra_context)},
                 },
                 RPCExamples{
                     HelpExampleCli("getrawtransaction", "\"mytxid\"")
