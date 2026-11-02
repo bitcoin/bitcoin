@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <chain.h>
+#include <flatfile.h>
 #include <node/blockstorage.h>
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
@@ -32,6 +34,11 @@ static void RestoreFile(const fs::path& file)
     Assert(fs::remove(file));
     fs::rename(file + ".bak", file);
 }
+
+struct ManualPruneSetup : public TestChain100Setup {
+    ManualPruneSetup()
+        : TestChain100Setup{ChainType::REGTEST, {.extra_args = {"-prune=1", "-fastprune"}}} {}
+};
 
 BOOST_AUTO_TEST_SUITE(chainstate_write_tests)
 
@@ -155,6 +162,59 @@ BOOST_FIXTURE_TEST_CASE(chainstate_flush_failure_boundary, TestChain100Setup)
     BOOST_CHECK(WITH_LOCK(::cs_main, return chainstate.CoinsDB().GetBestBlock()) == new_tip->GetBlockHash());
     BOOST_REQUIRE(WITH_LOCK(::cs_main, return chainstate.m_blockman.m_block_tree_db->ReadBlockFileInfo(new_tip->nFile, file_info)));
     BOOST_CHECK_EQUAL(file_info.nHeightLast, new_tip->nHeight);
+}
+
+BOOST_FIXTURE_TEST_CASE(prune_flush_failure, ManualPruneSetup)
+{
+    auto& chainstate{Assert(m_node.chainman)->ActiveChainstate()};
+    auto& blockman{chainstate.m_blockman};
+    BlockValidationState state{};
+    BOOST_REQUIRE(blockman.IsPruneMode());
+
+    while (WITH_LOCK(::cs_main, return chainstate.m_chain.Tip()->nFile) == 0) mineBlocks(1);
+    const int prune_height{WITH_LOCK(::cs_main, return static_cast<int>(blockman.GetBlockFileInfo(0)->nHeightLast))};
+    const int tip_height{WITH_LOCK(::cs_main, return chainstate.m_chain.Height())};
+    mineBlocks(prune_height + static_cast<int>(MIN_BLOCKS_TO_KEEP) - tip_height);
+
+    BOOST_REQUIRE(chainstate.FlushStateToDisk(state, FlushStateMode::FORCE_FLUSH));
+    const auto* flushed_tip{WITH_LOCK(::cs_main, return chainstate.m_chain.Tip())};
+    const auto pruned_size{WITH_LOCK(::cs_main, return blockman.GetBlockFileInfo(0)->nSize)};
+    const auto pruned_blk_file{blockman.GetBlockPosFilename(FlatFilePos{0, 0})};
+    const fs::path pruned_rev_file{pruned_blk_file.parent_path() / "rev00000.dat"};
+
+    mineBlocks(1);
+    const auto tip_blk_file{WITH_LOCK(::cs_main, return blockman.GetBlockPosFilename(chainstate.m_chain.Tip()->GetBlockPos()))};
+    InjectFileOpenFailure(tip_blk_file);
+
+    ASSERT_DEBUG_LOG("Flushing block file to disk failed");
+    BOOST_CHECK(!chainstate.FlushStateToDisk(state, FlushStateMode::NONE, prune_height));
+    BOOST_CHECK(state.IsError());
+    {
+        LOCK(::cs_main);
+        BOOST_CHECK_EQUAL(blockman.GetBlockFileInfo(0)->nSize, 0U);
+        BOOST_CHECK_EQUAL(blockman.GetBlockFileInfo(0)->nUndoSize, 0U);
+        for (int height{0}; height <= prune_height; ++height) {
+            BOOST_CHECK(!(chainstate.m_chain[height]->nStatus & BLOCK_HAVE_DATA));
+        }
+    }
+    bool have_pruned{false};
+    BOOST_REQUIRE(WITH_LOCK(::cs_main, return blockman.m_block_tree_db->ReadFlag("prunedblockfiles", have_pruned)));
+    BOOST_CHECK(have_pruned);
+    node::CBlockFileInfo file_info;
+    BOOST_REQUIRE(WITH_LOCK(::cs_main, return blockman.m_block_tree_db->ReadBlockFileInfo(0, file_info)));
+    BOOST_CHECK_EQUAL(file_info.nSize, pruned_size);
+    BOOST_CHECK(WITH_LOCK(::cs_main, return chainstate.CoinsDB().GetBestBlock()) == flushed_tip->GetBlockHash());
+    BOOST_CHECK(fs::exists(pruned_blk_file));
+    BOOST_CHECK(fs::exists(pruned_rev_file));
+
+    RestoreFile(tip_blk_file);
+    state = {};
+    BOOST_CHECK(chainstate.FlushStateToDisk(state, FlushStateMode::FORCE_FLUSH));
+    BOOST_REQUIRE(WITH_LOCK(::cs_main, return blockman.m_block_tree_db->ReadBlockFileInfo(0, file_info)));
+    BOOST_CHECK_EQUAL(file_info.nSize, 0U);
+    // TODO: delete pruned files after a retried flush
+    BOOST_CHECK(fs::exists(pruned_blk_file));
+    BOOST_CHECK(fs::exists(pruned_rev_file));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
