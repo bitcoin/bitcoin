@@ -32,6 +32,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -1038,6 +1039,258 @@ BOOST_AUTO_TEST_CASE(script_cltv_truncated)
     ScriptError err;
     BOOST_CHECK(!EvalScript(stack_ignore, script_cltv_trunc, SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY, BaseSignatureChecker(), SigVersion::BASE, nullptr, &err));
     BOOST_CHECK_EQUAL(err, SCRIPT_ERR_INVALID_STACK_OPERATION);
+}
+
+// Tests stack element smart pointer handling.
+BOOST_AUTO_TEST_CASE(eval_script_stack_aliasing)
+{
+    const std::vector<unsigned char> vch1{0x5a};
+    const std::vector<unsigned char> vch2{0xa5};
+    const std::vector<unsigned char> vch3{0x33};
+    const std::vector<unsigned char> vch4{0x44};
+    const std::vector<unsigned char> vch5{0x66};
+    const std::vector<unsigned char> vch6{0x77};
+    ScriptError err;
+    const auto EvalOn = [&err](std::vector<ScriptStackElem>& stack, const CScript& script) {
+        return EvalScript(stack, script, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SigVersion::BASE, nullptr, &err);
+    };
+
+    {
+        // OP_DUP retains one pointer shared between the original and the duplicate element.
+        std::vector<ScriptStackElem> stack;
+        BOOST_CHECK(EvalOn(stack, CScript() << vch1 << OP_DUP));
+        BOOST_REQUIRE(stack.size() == 2);
+        BOOST_CHECK(stack[0].get() == stack[1].get());
+        BOOST_CHECK_EQUAL(stack[0].use_count(), 2); // two refs, no other owner
+        BOOST_CHECK((BytesOf(stack) == std::vector<std::vector<unsigned char>>{vch1, vch1}));
+    }
+    {
+        // The altstack round trip returns the same pointer rather than a deep copy.
+        std::vector<ScriptStackElem> stack;
+        BOOST_CHECK(EvalOn(stack, CScript() << vch1 << OP_DUP << OP_TOALTSTACK << OP_FROMALTSTACK));
+        BOOST_REQUIRE(stack.size() == 2);
+        BOOST_CHECK(stack[0].get() == stack[1].get());
+        BOOST_CHECK_EQUAL(stack[0].use_count(), 2);
+    }
+    {
+        // OP_2DUP preserves both duplicated elements' pointers.
+        std::vector<ScriptStackElem> stack;
+        BOOST_CHECK(EvalOn(stack, CScript() << vch1 << vch2 << OP_2DUP));
+        BOOST_REQUIRE(stack.size() == 4);
+        BOOST_CHECK(stack[0].get() == stack[2].get());
+        BOOST_CHECK(stack[1].get() == stack[3].get());
+        BOOST_CHECK(stack[0].get() != stack[1].get()); // distinct pushes are distinct pointers
+        BOOST_CHECK_EQUAL(stack[0].use_count(), 2);
+        BOOST_CHECK_EQUAL(stack[1].use_count(), 2);
+    }
+    {
+        // OP_3DUP preserves all three duplicated elements' pointers.
+        std::vector<ScriptStackElem> stack;
+        BOOST_CHECK(EvalOn(stack, CScript() << vch1 << vch2 << vch3 << OP_3DUP));
+        BOOST_REQUIRE(stack.size() == 6);
+        BOOST_CHECK(stack[0].get() == stack[3].get());
+        BOOST_CHECK(stack[1].get() == stack[4].get());
+        BOOST_CHECK(stack[2].get() == stack[5].get());
+        BOOST_CHECK_EQUAL(stack[0].use_count(), 2);
+        BOOST_CHECK_EQUAL(stack[1].use_count(), 2);
+        BOOST_CHECK_EQUAL(stack[2].use_count(), 2);
+    }
+    {
+        // OP_OVER preserves the duplicated element pointer with the one below the old top.
+        std::vector<ScriptStackElem> stack;
+        BOOST_CHECK(EvalOn(stack, CScript() << vch1 << vch2 << OP_OVER));
+        BOOST_REQUIRE(stack.size() == 3);
+        BOOST_CHECK(stack[0].get() == stack[2].get());
+        BOOST_CHECK_EQUAL(stack[0].use_count(), 2);
+        BOOST_CHECK_EQUAL(stack[1].use_count(), 1); // vch2 was not duplicated
+    }
+    {
+        // OP_2OVER preserves pointers for the two elements it duplicates.
+        std::vector<ScriptStackElem> stack;
+        BOOST_CHECK(EvalOn(stack, CScript() << vch1 << vch2 << vch3 << vch4 << OP_2OVER));
+        BOOST_REQUIRE(stack.size() == 6);
+        BOOST_CHECK(stack[0].get() == stack[4].get());
+        BOOST_CHECK(stack[1].get() == stack[5].get());
+        BOOST_CHECK_EQUAL(stack[0].use_count(), 2);
+        BOOST_CHECK_EQUAL(stack[1].use_count(), 2);
+        BOOST_CHECK_EQUAL(stack[2].use_count(), 1);
+        BOOST_CHECK_EQUAL(stack[3].use_count(), 1);
+    }
+    {
+        // OP_IFDUP preserves pointers if it duplicates.
+        std::vector<ScriptStackElem> stack;
+        BOOST_CHECK(EvalOn(stack, CScript() << vch1 << OP_IFDUP));
+        BOOST_REQUIRE(stack.size() == 2);
+        BOOST_CHECK(stack[0].get() == stack[1].get());
+        BOOST_CHECK_EQUAL(stack[0].use_count(), 2);
+    }
+    {
+        // OP_IFDUP on a false element duplicates nothing.
+        std::vector<ScriptStackElem> stack;
+        BOOST_CHECK(EvalOn(stack, CScript() << std::vector<unsigned char>{} << OP_IFDUP));
+        BOOST_REQUIRE(stack.size() == 1);
+        BOOST_CHECK_EQUAL(stack[0].use_count(), 1);
+    }
+    {
+        // OP_TUCK preserves the pointer for the element it inserts below the top.
+        std::vector<ScriptStackElem> stack;
+        BOOST_CHECK(EvalOn(stack, CScript() << vch1 << vch2 << OP_TUCK));
+        BOOST_REQUIRE(stack.size() == 3);
+        BOOST_CHECK(stack[0].get() == stack[2].get());
+        BOOST_CHECK(stack[1].get() != stack[0].get());
+        BOOST_CHECK_EQUAL(stack[0].use_count(), 2);
+        BOOST_CHECK_EQUAL(stack[1].use_count(), 1);
+        BOOST_CHECK((BytesOf(stack) == std::vector<std::vector<unsigned char>>{vch2, vch1, vch2}));
+    }
+    {
+        // OP_PICK preserves the pointer for the element it duplicates.
+        std::vector<ScriptStackElem> stack;
+        BOOST_CHECK(EvalOn(stack, CScript() << vch1 << vch2 << OP_1 << OP_PICK));
+        BOOST_REQUIRE(stack.size() == 3);
+        BOOST_CHECK(stack[0].get() == stack[2].get());
+        BOOST_CHECK_EQUAL(stack[0].use_count(), 2);
+        BOOST_CHECK_EQUAL(stack[1].use_count(), 1);
+    }
+    {
+        // OP_ROLL drops the source pointer from the stack before pushing the element back.
+        const ScriptStackElem elem1 = MakeStackElem(std::vector<unsigned char>(vch1));
+        const ScriptStackElem elem2 = MakeStackElem(std::vector<unsigned char>(vch2));
+        std::vector<ScriptStackElem> stack;
+        stack.push_back(elem1);
+        stack.push_back(elem2);
+        BOOST_CHECK(EvalOn(stack, CScript() << OP_1 << OP_ROLL));
+        BOOST_REQUIRE(stack.size() == 2);
+        BOOST_CHECK(stack[0].get() == elem2.get());
+        BOOST_CHECK(stack[1].get() == elem1.get());
+        BOOST_CHECK_EQUAL(elem1.use_count(), 2);
+        BOOST_CHECK_EQUAL(elem2.use_count(), 2);
+    }
+    {
+        // OP_SWAP reorders the elements without adding refs.
+        const ScriptStackElem elem1 = MakeStackElem(std::vector<unsigned char>(vch1));
+        const ScriptStackElem elem2 = MakeStackElem(std::vector<unsigned char>(vch2));
+        std::vector<ScriptStackElem> stack;
+        stack.push_back(elem1);
+        stack.push_back(elem2);
+        BOOST_CHECK(EvalOn(stack, CScript() << OP_SWAP));
+        BOOST_REQUIRE(stack.size() == 2);
+        BOOST_CHECK(stack[0].get() == elem2.get());
+        BOOST_CHECK(stack[1].get() == elem1.get());
+        BOOST_CHECK_EQUAL(elem1.use_count(), 2);
+        BOOST_CHECK_EQUAL(elem2.use_count(), 2);
+    }
+    {
+        // OP_ROT reorders the elements without adding refs.
+        const ScriptStackElem elem1 = MakeStackElem(std::vector<unsigned char>(vch1));
+        const ScriptStackElem elem2 = MakeStackElem(std::vector<unsigned char>(vch2));
+        const ScriptStackElem elem3 = MakeStackElem(std::vector<unsigned char>(vch3));
+        std::vector<ScriptStackElem> stack;
+        stack.push_back(elem1);
+        stack.push_back(elem2);
+        stack.push_back(elem3);
+        BOOST_CHECK(EvalOn(stack, CScript() << OP_ROT));
+        BOOST_REQUIRE(stack.size() == 3);
+        BOOST_CHECK(stack[0].get() == elem2.get());
+        BOOST_CHECK(stack[1].get() == elem3.get());
+        BOOST_CHECK(stack[2].get() == elem1.get());
+        BOOST_CHECK_EQUAL(elem1.use_count(), 2);
+        BOOST_CHECK_EQUAL(elem2.use_count(), 2);
+        BOOST_CHECK_EQUAL(elem3.use_count(), 2);
+    }
+    {
+        // OP_2SWAP reorders the elements without adding refs.
+        const ScriptStackElem elem1 = MakeStackElem(std::vector<unsigned char>(vch1));
+        const ScriptStackElem elem2 = MakeStackElem(std::vector<unsigned char>(vch2));
+        const ScriptStackElem elem3 = MakeStackElem(std::vector<unsigned char>(vch3));
+        const ScriptStackElem elem4 = MakeStackElem(std::vector<unsigned char>(vch4));
+        std::vector<ScriptStackElem> stack;
+        stack.push_back(elem1);
+        stack.push_back(elem2);
+        stack.push_back(elem3);
+        stack.push_back(elem4);
+        BOOST_CHECK(EvalOn(stack, CScript() << OP_2SWAP));
+        BOOST_REQUIRE(stack.size() == 4);
+        BOOST_CHECK(stack[0].get() == elem3.get());
+        BOOST_CHECK(stack[1].get() == elem4.get());
+        BOOST_CHECK(stack[2].get() == elem1.get());
+        BOOST_CHECK(stack[3].get() == elem2.get());
+        BOOST_CHECK_EQUAL(elem1.use_count(), 2);
+        BOOST_CHECK_EQUAL(elem2.use_count(), 2);
+        BOOST_CHECK_EQUAL(elem3.use_count(), 2);
+        BOOST_CHECK_EQUAL(elem4.use_count(), 2);
+    }
+    {
+        // OP_2ROT reorders the elements without adding refs.
+        const ScriptStackElem elem1 = MakeStackElem(std::vector<unsigned char>(vch1));
+        const ScriptStackElem elem2 = MakeStackElem(std::vector<unsigned char>(vch2));
+        const ScriptStackElem elem3 = MakeStackElem(std::vector<unsigned char>(vch3));
+        const ScriptStackElem elem4 = MakeStackElem(std::vector<unsigned char>(vch4));
+        const ScriptStackElem elem5 = MakeStackElem(std::vector<unsigned char>(vch5));
+        const ScriptStackElem elem6 = MakeStackElem(std::vector<unsigned char>(vch6));
+        std::vector<ScriptStackElem> stack;
+        stack.push_back(elem1);
+        stack.push_back(elem2);
+        stack.push_back(elem3);
+        stack.push_back(elem4);
+        stack.push_back(elem5);
+        stack.push_back(elem6);
+        BOOST_CHECK(EvalOn(stack, CScript() << OP_2ROT));
+        BOOST_REQUIRE(stack.size() == 6);
+        BOOST_CHECK(stack[0].get() == elem3.get());
+        BOOST_CHECK(stack[1].get() == elem4.get());
+        BOOST_CHECK(stack[4].get() == elem1.get());
+        BOOST_CHECK(stack[5].get() == elem2.get());
+        BOOST_CHECK_EQUAL(elem1.use_count(), 2);
+        BOOST_CHECK_EQUAL(elem2.use_count(), 2);
+        BOOST_CHECK_EQUAL(elem3.use_count(), 2);
+        BOOST_CHECK_EQUAL(elem4.use_count(), 2);
+        BOOST_CHECK_EQUAL(elem5.use_count(), 2);
+        BOOST_CHECK_EQUAL(elem6.use_count(), 2);
+    }
+    {
+        // OP_DROP releases the pointer it removes from the stack.
+        ScriptStackElem elem1 = MakeStackElem(std::vector<unsigned char>(vch1));
+        ScriptStackElem elem2 = MakeStackElem(std::vector<unsigned char>(vch2));
+        std::weak_ptr<const std::vector<unsigned char>> weak{elem2};
+        std::vector<ScriptStackElem> stack;
+        stack.push_back(elem1);
+        stack.push_back(elem2);
+        BOOST_CHECK_EQUAL(elem2.use_count(), 2); // the test handle plus one ref
+        BOOST_CHECK(EvalOn(stack, CScript() << OP_DROP));
+        BOOST_REQUIRE(stack.size() == 1);
+        BOOST_CHECK(stack[0].get() == elem1.get());
+        BOOST_CHECK_EQUAL(elem2.use_count(), 1);
+        BOOST_CHECK(!weak.expired()); // alive via the test handle
+        elem2.reset();
+        BOOST_CHECK(weak.expired());
+    }
+    {
+        // OP_NIP erases a pointer without pushing anything.
+        ScriptStackElem elem1 = MakeStackElem(std::vector<unsigned char>(vch1));
+        const ScriptStackElem elem2 = MakeStackElem(std::vector<unsigned char>(vch2));
+        std::weak_ptr<const std::vector<unsigned char>> weak{elem1};
+        std::vector<ScriptStackElem> stack;
+        stack.push_back(elem1);
+        stack.push_back(elem2);
+        BOOST_CHECK(EvalOn(stack, CScript() << OP_NIP));
+        BOOST_REQUIRE(stack.size() == 1);
+        BOOST_CHECK(stack[0].get() == elem2.get());
+        BOOST_CHECK_EQUAL(elem2.use_count(), 2);
+        BOOST_CHECK_EQUAL(elem1.use_count(), 1); // only the test handle is left
+        BOOST_CHECK(!weak.expired());
+        elem1.reset();
+        BOOST_CHECK(weak.expired());
+    }
+    {
+        // OP_DROP releases an element the interpreter pushed itself.
+        std::vector<ScriptStackElem> stack;
+        BOOST_CHECK(EvalOn(stack, CScript() << vch1));
+        BOOST_REQUIRE(stack.size() == 1);
+        std::weak_ptr<const std::vector<unsigned char>> weak{stack[0]};
+        BOOST_CHECK(EvalOn(stack, CScript() << OP_DROP));
+        BOOST_CHECK(stack.empty());
+        BOOST_CHECK(weak.expired()); // nothing outside the stack ever owned it
+    }
 }
 
 static CScript
