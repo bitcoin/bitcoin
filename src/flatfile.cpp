@@ -12,8 +12,8 @@
 
 #include <stdexcept>
 
-FlatFileSeq::FlatFileSeq(fs::path dir, const char* prefix, size_t chunk_size) :
-    m_dir(std::move(dir)),
+FlatFileSeq::FlatFileSeq(fs::path dir, const char* prefix, uint64_t chunk_size)
+  : m_dir(std::move(dir)),
     m_prefix(prefix),
     m_chunk_size(chunk_size)
 {
@@ -56,16 +56,16 @@ FILE* FlatFileSeq::Open(const FlatFilePos& pos, bool read_only) const
     return file;
 }
 
-size_t FlatFileSeq::Allocate(const FlatFilePos& pos, size_t add_size, bool& out_of_space) const
+uint64_t FlatFileSeq::Allocate(const FlatFilePos& pos, uint64_t add_size, bool& out_of_space) const
 {
     out_of_space = false;
 
-    uint64_t n_old_chunks = CeilDiv(pos.nPos, uint64_t{m_chunk_size});
-    uint64_t n_new_chunks = CeilDiv(pos.nPos + add_size, uint64_t{m_chunk_size});
+    uint64_t n_old_chunks = CeilDiv(pos.nPos, m_chunk_size);
+    uint64_t n_new_chunks = CeilDiv(pos.nPos + add_size, m_chunk_size);
     if (n_new_chunks > n_old_chunks) {
         uint64_t old_size = pos.nPos;
         uint64_t new_size = n_new_chunks * m_chunk_size;
-        size_t inc_size = new_size - old_size;
+        uint64_t inc_size{new_size - old_size};
 
         if (CheckDiskSpace(m_dir, inc_size)) {
             FILE *file = Open(pos);
