@@ -21,6 +21,18 @@ using kernel::ChainstateRole;
 static constexpr auto DATABASE_WRITE_INTERVAL_MIN{50min};
 static constexpr auto DATABASE_WRITE_INTERVAL_MAX{70min};
 
+static void InjectFileOpenFailure(const fs::path& file)
+{
+    fs::rename(file, file + ".bak");
+    Assert(fs::create_directory(file));
+}
+
+static void RestoreFile(const fs::path& file)
+{
+    Assert(fs::remove(file));
+    fs::rename(file + ".bak", file);
+}
+
 BOOST_AUTO_TEST_SUITE(chainstate_write_tests)
 
 BOOST_FIXTURE_TEST_CASE(chainstate_write_interval, TestingSetup)
@@ -113,7 +125,6 @@ BOOST_FIXTURE_TEST_CASE(write_during_multiblock_activation, TestChain100Setup)
 
 BOOST_FIXTURE_TEST_CASE(chainstate_flush_failure_boundary, TestChain100Setup)
 {
-    auto inject_file_open_failure{[](const fs::path& file) { Assert(fs::remove(file)); Assert(fs::create_directory(file)); }};
     auto& chainstate{Assert(m_node.chainman)->ActiveChainstate()};
     BlockValidationState state{};
 
@@ -123,7 +134,8 @@ BOOST_FIXTURE_TEST_CASE(chainstate_flush_failure_boundary, TestChain100Setup)
     mineBlocks(1);
     auto* new_tip{WITH_LOCK(::cs_main, return chainstate.m_chain.Tip())};
     BOOST_REQUIRE_NE(old_flushed, new_tip);
-    inject_file_open_failure(WITH_LOCK(::cs_main, return chainstate.m_blockman.GetBlockPosFilename(new_tip->GetBlockPos())));
+    const auto blk_file{WITH_LOCK(::cs_main, return chainstate.m_blockman.GetBlockPosFilename(new_tip->GetBlockPos()))};
+    InjectFileOpenFailure(blk_file);
 
     ASSERT_DEBUG_LOG("Flushing block file to disk failed");
     bool flushed{chainstate.FlushStateToDisk(state, FlushStateMode::FORCE_FLUSH)};
@@ -134,6 +146,15 @@ BOOST_FIXTURE_TEST_CASE(chainstate_flush_failure_boundary, TestChain100Setup)
     node::CBlockFileInfo file_info;
     BOOST_REQUIRE(WITH_LOCK(::cs_main, return chainstate.m_blockman.m_block_tree_db->ReadBlockFileInfo(new_tip->nFile, file_info)));
     BOOST_CHECK_EQUAL(file_info.nHeightLast, old_flushed->nHeight);
+
+    RestoreFile(blk_file);
+    state = {};
+    BOOST_CHECK(chainstate.FlushStateToDisk(state, FlushStateMode::FORCE_FLUSH));
+    BOOST_CHECK(state.IsValid());
+    BOOST_CHECK_EQUAL(WITH_LOCK(::cs_main, return chainstate.GetLastFlushedBlock()), new_tip);
+    BOOST_CHECK(WITH_LOCK(::cs_main, return chainstate.CoinsDB().GetBestBlock()) == new_tip->GetBlockHash());
+    BOOST_REQUIRE(WITH_LOCK(::cs_main, return chainstate.m_blockman.m_block_tree_db->ReadBlockFileInfo(new_tip->nFile, file_info)));
+    BOOST_CHECK_EQUAL(file_info.nHeightLast, new_tip->nHeight);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
