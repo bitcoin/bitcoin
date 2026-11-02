@@ -212,9 +212,8 @@ BOOST_FIXTURE_TEST_CASE(prune_flush_failure, ManualPruneSetup)
     BOOST_CHECK(chainstate.FlushStateToDisk(state, FlushStateMode::FORCE_FLUSH));
     BOOST_REQUIRE(WITH_LOCK(::cs_main, return blockman.m_block_tree_db->ReadBlockFileInfo(0, file_info)));
     BOOST_CHECK_EQUAL(file_info.nSize, 0U);
-    // TODO: delete pruned files after a retried flush
-    BOOST_CHECK(fs::exists(pruned_blk_file));
-    BOOST_CHECK(fs::exists(pruned_rev_file));
+    BOOST_CHECK(!fs::exists(pruned_blk_file));
+    BOOST_CHECK(!fs::exists(pruned_rev_file));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

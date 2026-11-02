@@ -2828,6 +2828,7 @@ bool Chainstate::FlushStateToDisk(
                     m_blockman.m_block_tree_db->WriteFlag("prunedblockfiles", true);
                     m_blockman.m_have_pruned = true;
                 }
+                m_blockman.m_files_to_unlink.insert(setFilesToPrune.begin(), setFilesToPrune.end());
             }
         }
         const auto nNow{NodeClock::now()};
@@ -2859,6 +2860,9 @@ bool Chainstate::FlushStateToDisk(
                 }
             }
 
+            // Take the pruned files with the dirty entries, which WriteBlockIndexDB() drops
+            // even if it fails, so files are only deleted after the write that marks them pruned.
+            const auto files_to_unlink{std::exchange(m_blockman.m_files_to_unlink, {})};
             // Then update all block file information (which may refer to block and undo files).
             {
                 LOG_TIME_MILLIS_WITH_CATEGORY("write block index to disk", BCLog::BENCH);
@@ -2866,10 +2870,10 @@ bool Chainstate::FlushStateToDisk(
                 m_blockman.WriteBlockIndexDB();
             }
             // Finally remove any pruned files
-            if (fFlushForPrune) {
+            if (!files_to_unlink.empty()) {
                 LOG_TIME_MILLIS_WITH_CATEGORY("unlink pruned files", BCLog::BENCH);
 
-                m_blockman.UnlinkPrunedFiles(setFilesToPrune);
+                m_blockman.UnlinkPrunedFiles(files_to_unlink);
             }
 
             if (!CoinsTip().GetBestBlock().IsNull()) {
