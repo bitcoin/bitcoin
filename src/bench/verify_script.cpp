@@ -126,7 +126,7 @@ static void VerifyNestedIfScript(benchmark::Bench& bench)
         .setup([&] { stack.clear(); })
         .run([&] {
             ScriptError error;
-            const bool ret{EvalScript(stack, script, /*flags=*/0, BaseSignatureChecker(), SigVersion::BASE, &error)};
+            const bool ret{EvalScript(stack, script, /*flags=*/0, BaseSignatureChecker(), SigVersion::BASE, nullptr, &error)};
             assert(ret && error == SCRIPT_ERR_OK);
         });
 }
