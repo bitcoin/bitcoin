@@ -924,8 +924,8 @@ FUZZ_TARGET(txgraph)
                 break;
             } else if ((block_builders.empty() || sims.size() > 1) &&
                        top_sim.GetTransactionCount() > max_cluster_count && !top_sim.IsOversized() && command-- == 0) {
-                // Trim (special case which avoids apparent cycles in the implicit approximate
-                // dependency graph constructed inside the Trim() implementation). This is worth
+                // Trim (special case which avoids apparent cycles in the dependency graph
+                // constructed inside the Trim() implementation). This is worth
                 // testing separately, because such cycles cannot occur in realistic scenarios,
                 // but this is hard to replicate in general in this fuzz test.
 

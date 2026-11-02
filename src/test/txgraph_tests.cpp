@@ -301,6 +301,126 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_big_singletons)
     }
 }
 
+BOOST_AUTO_TEST_CASE(txgraph_trim_no_cascade)
+{
+    // A pre-existing mempool cluster {P, Y, Z} (linearized as P, Y, Z) plus a mempool singleton D.
+    // A reorg re-adds R (from a disconnected block), which is spent by both Y and D:
+    //
+    //        R       P
+    //       / \     / \
+    //      D   \   /   Z
+    //           \ /
+    //            Y
+    //
+    // With a cluster count limit of 3, removing Y alone suffices: {R, D} and {P, Z} remain.
+    // Z is not a descendant of Y, so it must not be removed just because it follows Y in the
+    // existing cluster's linearization.
+    static constexpr int MAX_CLUSTER_COUNT = 3;
+    static constexpr int32_t MAX_CLUSTER_SIZE = 100'000 * 100;
+
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, HIGH_ACCEPTABLE_COST, PointerComparator);
+
+    std::vector<TxGraph::Ref> refs;
+    refs.reserve(5);
+    auto& tx_p = refs.emplace_back();
+    auto& tx_y = refs.emplace_back();
+    auto& tx_z = refs.emplace_back();
+    auto& tx_d = refs.emplace_back();
+    auto& tx_r = refs.emplace_back();
+
+    // Build the pre-existing mempool. The feerates make the linearization of {P, Y, Z} be
+    // P, Y, Z, and make D be processed before Y in Trim().
+    graph->AddTransaction(tx_p, FeePerWeight{10, 100});
+    graph->AddTransaction(tx_y, FeePerWeight{2, 100});
+    graph->AddTransaction(tx_z, FeePerWeight{1, 100});
+    graph->AddTransaction(tx_d, FeePerWeight{5, 100});
+    graph->AddDependency(/*parent=*/tx_p, /*child=*/tx_y);
+    graph->AddDependency(/*parent=*/tx_p, /*child=*/tx_z);
+    // Force the dependencies to be applied, so {P, Y, Z} is an existing cluster.
+    BOOST_CHECK_EQUAL(graph->GetCluster(tx_p, TxGraph::Level::TOP).size(), 3U);
+    graph->SanityCheck();
+    BOOST_CHECK(!graph->IsOversized(TxGraph::Level::TOP));
+
+    // Re-add R from the disconnected block, and connect it to its mempool spenders.
+    graph->AddTransaction(tx_r, FeePerWeight{20, 100});
+    graph->AddDependency(/*parent=*/tx_r, /*child=*/tx_y);
+    graph->AddDependency(/*parent=*/tx_r, /*child=*/tx_d);
+    BOOST_CHECK(graph->IsOversized(TxGraph::Level::TOP));
+
+    auto removed_refs = graph->Trim();
+    graph->SanityCheck();
+    BOOST_CHECK(!graph->IsOversized(TxGraph::Level::TOP));
+
+    // Only Y needs to be removed.
+    BOOST_CHECK_EQUAL(removed_refs.size(), 1U);
+    BOOST_CHECK(!graph->Exists(tx_y, TxGraph::Level::TOP));
+    BOOST_CHECK(graph->Exists(tx_p, TxGraph::Level::TOP));
+    BOOST_CHECK(graph->Exists(tx_z, TxGraph::Level::TOP));
+    BOOST_CHECK(graph->Exists(tx_d, TxGraph::Level::TOP));
+    BOOST_CHECK(graph->Exists(tx_r, TxGraph::Level::TOP));
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 4U);
+}
+
+BOOST_AUTO_TEST_CASE(txgraph_trim_no_overcount)
+{
+    // A pre-existing mempool cluster {B, A, X} (linearized as B, A, X) plus a mempool singleton
+    // D. A reorg re-adds R (from a disconnected block), which is spent by both A and D:
+    //
+    //        R
+    //       / \
+    //      D   A   B
+    //           \ /
+    //            X
+    //
+    // With a cluster count limit of 3, removing X alone suffices: {R, D, A} and {B} remain.
+    // A does not depend on B, so B must not be counted towards A's would-be cluster just
+    // because B precedes A in the existing cluster's linearization.
+    static constexpr int MAX_CLUSTER_COUNT = 3;
+    static constexpr int32_t MAX_CLUSTER_SIZE = 100'000 * 100;
+
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, HIGH_ACCEPTABLE_COST, PointerComparator);
+
+    std::vector<TxGraph::Ref> refs;
+    refs.reserve(5);
+    auto& tx_a = refs.emplace_back();
+    auto& tx_b = refs.emplace_back();
+    auto& tx_x = refs.emplace_back();
+    auto& tx_d = refs.emplace_back();
+    auto& tx_r = refs.emplace_back();
+
+    // Build the pre-existing mempool. The feerates make the linearization of {B, A, X} be
+    // B, A, X, and make D be processed before A in Trim().
+    graph->AddTransaction(tx_a, FeePerWeight{3, 100});
+    graph->AddTransaction(tx_b, FeePerWeight{10, 100});
+    graph->AddTransaction(tx_x, FeePerWeight{1, 100});
+    graph->AddTransaction(tx_d, FeePerWeight{5, 100});
+    graph->AddDependency(/*parent=*/tx_a, /*child=*/tx_x);
+    graph->AddDependency(/*parent=*/tx_b, /*child=*/tx_x);
+    // Force the dependencies to be applied, so {B, A, X} is an existing cluster.
+    BOOST_CHECK_EQUAL(graph->GetCluster(tx_x, TxGraph::Level::TOP).size(), 3U);
+    graph->SanityCheck();
+    BOOST_CHECK(!graph->IsOversized(TxGraph::Level::TOP));
+
+    // Re-add R from the disconnected block, and connect it to its mempool spenders.
+    graph->AddTransaction(tx_r, FeePerWeight{20, 100});
+    graph->AddDependency(/*parent=*/tx_r, /*child=*/tx_a);
+    graph->AddDependency(/*parent=*/tx_r, /*child=*/tx_d);
+    BOOST_CHECK(graph->IsOversized(TxGraph::Level::TOP));
+
+    auto removed_refs = graph->Trim();
+    graph->SanityCheck();
+    BOOST_CHECK(!graph->IsOversized(TxGraph::Level::TOP));
+
+    // Only X needs to be removed.
+    BOOST_CHECK_EQUAL(removed_refs.size(), 1U);
+    BOOST_CHECK(!graph->Exists(tx_x, TxGraph::Level::TOP));
+    BOOST_CHECK(graph->Exists(tx_a, TxGraph::Level::TOP));
+    BOOST_CHECK(graph->Exists(tx_b, TxGraph::Level::TOP));
+    BOOST_CHECK(graph->Exists(tx_d, TxGraph::Level::TOP));
+    BOOST_CHECK(graph->Exists(tx_r, TxGraph::Level::TOP));
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 4U);
+}
+
 BOOST_AUTO_TEST_CASE(txgraph_chunk_chain)
 {
     // Create a new graph for the test.

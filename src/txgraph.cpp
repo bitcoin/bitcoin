@@ -223,8 +223,8 @@ public:
     /** For every chunk in the cluster, append its FeeFrac to ret. */
     virtual void AppendChunkFeerates(std::vector<FeeFrac>& ret) const noexcept = 0;
     /** Add a TrimTxData entry (filling m_chunk_feerate, m_index, m_tx_size) for every
-     *  transaction in the Cluster to ret. Implicit dependencies between consecutive transactions
-     *  in the linearization are added to deps. Return the Cluster's total transaction size. */
+     *  transaction in the Cluster to ret. The (reduced) dependencies between transactions within
+     *  the Cluster are added to deps. Return the Cluster's total transaction size. */
     virtual uint64_t AppendTrimData(std::vector<TrimTxData>& ret, std::vector<std::pair<GraphIndex, GraphIndex>>& deps) const noexcept = 0;
 
     // Functions that implement the Cluster-specific side of public TxGraph functions.
@@ -1400,7 +1400,6 @@ uint64_t GenericClusterImpl::AppendTrimData(std::vector<TrimTxData>& ret, std::v
     auto linchunking = ChunkLinearizationInfo(m_depgraph, m_linearization);
     LinearizationIndex pos{0};
     uint64_t size{0};
-    auto prev_index = GraphIndex(-1);
     // Iterate over the chunks of this cluster's linearization.
     for (const auto& [chunk, chunk_feerate] : linchunking) {
         // Iterate over the transactions of that chunk, in linearization order.
@@ -1413,10 +1412,14 @@ uint64_t GenericClusterImpl::AppendTrimData(std::vector<TrimTxData>& ret, std::v
             auto& entry = ret.emplace_back();
             entry.m_chunk_feerate = FeePerWeight::FromFeeFrac(chunk_feerate);
             entry.m_index = m_mapping[cluster_idx];
-            // If this is not the first transaction of the cluster linearization, it has an
-            // implicit dependency on its predecessor.
-            if (pos != 0) deps.emplace_back(prev_index, entry.m_index);
-            prev_index = entry.m_index;
+            // Add the actual dependencies of this transaction on its parents within the cluster.
+            // Only the reduced set of parents is needed, as the others are implied through
+            // transitivity. Using the real dependencies (rather than implicit ones between
+            // consecutive linearization elements) avoids needlessly merging partitions or
+            // removing transactions in Trim().
+            for (auto parent_idx : m_depgraph.GetReducedParents(cluster_idx)) {
+                deps.emplace_back(m_mapping[parent_idx], entry.m_index);
+            }
             entry.m_tx_size = m_depgraph.FeeRate(cluster_idx).size;
             size += entry.m_tx_size;
             ++pos;
@@ -3316,9 +3319,9 @@ std::vector<TxGraph::Ref*> TxGraphImpl::Trim() noexcept
     // It works by defining for each would-be cluster a rudimentary linearization: at every point
     // the highest-chunk-feerate remaining transaction is picked among those with no unmet
     // dependencies. "Dependency" here means either a to-be-added dependency (m_deps_to_add), or
-    // an implicit dependency added between any two consecutive transaction in their current
-    // cluster linearization. So it can be seen as a "merge sort" of the chunks of the clusters,
-    // but respecting the dependencies being added.
+    // an existing dependency between transactions within one of the involved clusters. So it can
+    // be seen as a "merge sort" of the chunks of the clusters, but respecting the dependencies
+    // being added.
     //
     // This rudimentary linearization is computed lazily, by putting all eligible (no unmet
     // dependencies) transactions in a heap, and popping the highest-feerate one from it. Along the
@@ -3329,8 +3332,8 @@ std::vector<TxGraph::Ref*> TxGraphImpl::Trim() noexcept
     // A next invocation of GroupClusters (after applying the removals) will compute the new
     // resulting clusters, and none of them will violate the limits.
 
-    /** All dependencies (both to be added ones, and implicit ones between consecutive transactions
-     *  in existing cluster linearizations), sorted by parent. */
+    /** All dependencies (both to be added ones, and existing ones within the involved clusters),
+     *  sorted by parent. */
     std::vector<std::pair<GraphIndex, GraphIndex>> deps_by_parent;
     /** Same, but sorted by child. */
     std::vector<std::pair<GraphIndex, GraphIndex>> deps_by_child;
@@ -3346,10 +3349,10 @@ std::vector<TxGraph::Ref*> TxGraphImpl::Trim() noexcept
 
     /** Function to define the ordering of trim_heap. */
     static constexpr auto cmp_fn = [](auto a, auto b) noexcept {
-        // Sort by increasing chunk feerate, and then by decreasing size.
-        // We do not need to sort by cluster or within clusters, because due to the implicit
-        // dependency between consecutive linearization elements, no two transactions from the
-        // same Cluster will ever simultaneously be in the heap.
+        // Sort by increasing chunk feerate, and then by decreasing size. Multiple transactions
+        // from the same Cluster may simultaneously be in the heap, but as chunk feerates are
+        // monotonically decreasing along a Cluster's linearization, and dependencies are
+        // respected, the order in which they are processed remains topologically valid.
         return ByRatioNegSize{a->m_chunk_feerate} < ByRatioNegSize{b->m_chunk_feerate};
     };
 
@@ -3401,7 +3404,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::Trim() noexcept
         deps_by_child.clear();
         deps_by_parent.clear();
 
-        // Gather trim data and implicit dependency data from all involved Clusters.
+        // Gather trim data and intra-Cluster dependency data from all involved Clusters.
         auto cluster_span = std::span{clusterset.m_group_data->m_group_clusters}
                                 .subspan(group_data.m_cluster_offset, group_data.m_cluster_count);
         uint64_t size{0};
@@ -3469,9 +3472,8 @@ std::vector<TxGraph::Ref*> TxGraphImpl::Trim() noexcept
         // skip them if adding them would violate resource limits of the would-be cluster.
         //
         // It is possible that the heap empties without ever hitting either cluster limit, in case
-        // the implied graph (to be added dependencies plus implicit dependency between each
-        // original transaction and its predecessor in the linearization it came from) contains
-        // cycles. Such cycles will be removed entirely, because each of the transactions in the
+        // the implied graph (to be added dependencies plus existing dependencies within the
+        // involved clusters) contains cycles. Such cycles will be removed entirely, because each of the transactions in the
         // cycle permanently have unmet dependencies. However, this cannot occur in real scenarios
         // where Trim() is called to deal with reorganizations that would violate cluster limits,
         // as all added dependencies are in the same direction (from old mempool transactions to
