@@ -110,6 +110,12 @@ template<class T>
                                               uint16_t version, const uint160* platform_node_id, uint16_t platform_p2p_port,
                                               uint16_t platform_http_port, bool allow_empty, TxValidationState& state);
 
+/** The count, per-share bound and sum rules of IsShareListTriviallyValid, usable before any share address exists */
+[[nodiscard]] bool AreShareAmountsValid(const std::vector<CAmount>& amounts, CAmount required_collateral,
+                                        TxValidationState& state);
+/** The early-exit penalty rules of IsShareListTriviallyValid, usable before the whole share list exists */
+[[nodiscard]] bool IsEarlyPenaltyValid(uint32_t early_period_blocks, CAmount early_penalty, CAmount min_share_amount,
+                                       TxValidationState& state);
 [[nodiscard]] bool IsShareListTriviallyValid(const CollateralShares& shares, uint32_t early_period_blocks,
                                              CAmount early_penalty, CAmount required_collateral,
                                              const CKeyID& keyIDVoting, TxValidationState& state);

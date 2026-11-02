@@ -603,7 +603,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-blocknotify=<cmd>", "Execute command when the best block changes (%s in cmd is replaced by block hash)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #endif
     argsman.AddArg("-blockreconstructionextratxn=<n>", strprintf("Extra transactions to keep in memory for compact block reconstructions (default: %u)", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-blocksonly", strprintf("Whether to reject transactions from network peers. Automatic broadcast and rebroadcast of any transactions from inbound peers is disabled, unless the peer has the 'forcerelay' permission. RPC transactions are not affected. (default: %u)", DEFAULT_BLOCKSONLY), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-blocksonly", strprintf("Whether to reject transactions from network peers. Disables automatic broadcast and rebroadcast of transactions, unless the source peer has the 'forcerelay' permission. RPC transactions are not affected. (default: %u)", DEFAULT_BLOCKSONLY), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #if HAVE_SYSTEM
     argsman.AddArg("-chainlocknotify=<cmd>", "Execute command when the best chainlock changes (%s in cmd is replaced by chainlocked block hash)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #endif
@@ -654,7 +654,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-allowprivatenet", strprintf("Allow RFC1918 addresses to be relayed and connected to (default: %u)", DEFAULT_ALLOWPRIVATENET), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-bantime=<n>", strprintf("Default duration (in seconds) of manually configured bans (default: %u)", DEFAULT_MISBEHAVING_BANTIME), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-bind=<addr>[:<port>][=onion]", strprintf("Bind to given address and always listen on it (default: 0.0.0.0). Use [host]:port notation for IPv6. Append =onion to tag any incoming connections to that address and port as incoming Tor connections (default: 127.0.0.1:%u=onion, testnet: 127.0.0.1:%u=onion, devnet: 127.0.0.1:%u=onion, regtest: 127.0.0.1:%u=onion). "
-                                                      "The default onion bind is added only when no -bind is specified. When -listenonion is enabled and -bind is specified, a non-wildcard =onion bind is required, and wildcard =onion binds are rejected.", defaultBaseParams->OnionServiceTargetPort(), testnetBaseParams->OnionServiceTargetPort(), devnetBaseParams->OnionServiceTargetPort(), regtestBaseParams->OnionServiceTargetPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
+                                                      "Without an =onion bind, the default onion bind is added unless -bind is given and -listenonion is disabled; failing to bind it stops startup only with an explicit -listenonion=1, and otherwise no onion service is created. While -listenonion is enabled, a wildcard =onion bind is an error.", defaultBaseParams->OnionServiceTargetPort(), testnetBaseParams->OnionServiceTargetPort(), devnetBaseParams->OnionServiceTargetPort(), regtestBaseParams->OnionServiceTargetPort()), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-cjdnsreachable", "If set, then this host is configured for CJDNS (connecting to fc00::/8 addresses would lead us to the CJDNS network, see doc/cjdns.md) (default: 0)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-connect=<ip>", "Connect only to the specified node; -noconnect disables automatic connections (the rules for this peer are the same as for -addnode). This option can be specified multiple times to connect to multiple nodes.", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-discover", "Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -664,7 +664,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-fixedseeds", strprintf("Allow fixed seeds if DNS seeds don't provide peers (default: %u)", DEFAULT_FIXEDSEEDS), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-forcednsseed", strprintf("Always query for peer addresses via DNS lookup (default: %u)", DEFAULT_FORCEDNSSEED), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-listen", strprintf("Accept connections from outside (default: %u if no -proxy, -connect or -maxconnections=0)", DEFAULT_LISTEN), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
-    argsman.AddArg("-listenonion", strprintf("Automatically create Tor onion service (default: %d)", DEFAULT_LISTEN_ONION), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-listenonion", strprintf("Automatically create Tor onion service if Tor is available and the onion bind could be bound (see -bind). If set to 1 explicitly, fail to start if the onion bind cannot be bound (default: %d)", DEFAULT_LISTEN_ONION), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-maxconnections=<n>", strprintf("Maintain at most <n> connections to peers (temporary service connections excluded) (default: %u). This limit does not apply to connections manually added via -addnode or the addnode RPC, which have a separate limit of %u.", DEFAULT_MAX_PEER_CONNECTIONS, MAX_ADDNODE_CONNECTIONS), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-maxreceivebuffer=<n>", strprintf("Maximum per-connection receive buffer, <n>*1000 bytes (default: %u)", DEFAULT_MAXRECEIVEBUFFER), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-maxsendbuffer=<n>", strprintf("Maximum per-connection memory usage for the send buffer, <n>*1000 bytes (default: %u)", DEFAULT_MAXSENDBUFFER), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -712,9 +712,11 @@ void SetupServerArgs(ArgsManager& argsman)
         "Use [host]:port notation for IPv6. Allowed permissions: " + Join(NET_PERMISSIONS_DOC, ", ") + ". "
         "Specify multiple permissions separated by commas (default: download,noban,mempool,relay). Can be specified multiple times.", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
 
-    argsman.AddArg("-whitelist=<[permissions@]IP address or network>", "Add permission flags to the peers connecting from the given IP address (e.g. 1.2.3.4) or "
+    argsman.AddArg("-whitelist=<[permissions@]IP address or network>", "Add permission flags to the peers using the given IP address (e.g. 1.2.3.4) or "
         "CIDR-notated network (e.g. 1.2.3.0/24). Uses the same permissions as "
-        "-whitebind. Can be specified multiple times." , ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
+        "-whitebind. "
+        "Additional flags \"in\" and \"out\" control whether permissions apply to incoming connections and/or manual (default: incoming only). "
+        "Can be specified multiple times.", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
 
     g_wallet_init_interface.AddWalletOptions(argsman);
 
@@ -849,8 +851,8 @@ void SetupServerArgs(ArgsManager& argsman)
                    OptionsCategory::NODE_RELAY);
     argsman.AddArg("-minrelaytxfee=<amt>", strprintf("Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)",
         CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
-    argsman.AddArg("-whitelistforcerelay", strprintf("Add 'forcerelay' permission to whitelisted inbound peers with default permissions. This will relay transactions even if the transactions were already in the mempool. (default: %d)", DEFAULT_WHITELISTFORCERELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
-    argsman.AddArg("-whitelistrelay", strprintf("Add 'relay' permission to whitelisted inbound peers with default permissions. This will accept relayed transactions even when not relaying transactions (default: %d)", DEFAULT_WHITELISTRELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
+    argsman.AddArg("-whitelistforcerelay", strprintf("Add 'forcerelay' permission to whitelisted peers with default permissions. This will relay transactions even if the transactions were already in the mempool. (default: %d)", DEFAULT_WHITELISTFORCERELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
+    argsman.AddArg("-whitelistrelay", strprintf("Add 'relay' permission to whitelisted peers with default permissions. This will accept relayed transactions even when not relaying transactions (default: %d)", DEFAULT_WHITELISTRELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
 
     argsman.AddArg("-blockmaxsize=<n>", strprintf("Set maximum block size in bytes (default: %d)", DEFAULT_BLOCK_MAX_SIZE), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
     argsman.AddArg("-blockmintxfee=<amt>", strprintf("Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)", CURRENCY_UNIT, FormatMoney(DEFAULT_BLOCK_MIN_TX_FEE)), ArgsManager::ALLOW_ANY, OptionsCategory::BLOCK_CREATION);
@@ -2624,6 +2626,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // wallets may mix with CoinJoin, which connects to the mixing masternode
     connOptions.m_masternode_connections = node.active_ctx != nullptr || quorums_watch ||
                                            node.wallet_loader != nullptr;
+    connOptions.whitelist_forcerelay = args.GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY);
+    connOptions.whitelist_relay = args.GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY);
 
     // Port to bind to if `-bind=addr` is provided without a `:port` suffix.
     const uint16_t default_bind_port =
@@ -2683,24 +2687,25 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
-    if (connOptions.onion_binds.empty() && connOptions.vBinds.empty()) {
+    const bool listen_onion{args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION)};
+    const bool listen_onion_explicit{listen_onion && args.IsArgSet("-listenonion")};
+    if (connOptions.onion_binds.empty() && (connOptions.vBinds.empty() || listen_onion)) {
         connOptions.onion_binds.push_back(DefaultOnionServiceTarget());
+        connOptions.onion_bind_optional = !listen_onion_explicit;
     }
 
-    if (args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION)) {
-        if (connOptions.onion_binds.empty()) {
-            return InitError(_("The automatic Tor onion service requires a dedicated onion bind. Use a specific address such as -bind=127.0.0.1:<port>=onion, or disable the service with -listenonion=0."));
-        }
+    std::optional<CService> onion_service_target;
+    if (listen_onion) {
+        // A wildcard listener can't tag the peers Tor forwards to it as onion.
         if (std::ranges::any_of(connOptions.onion_binds, [](auto& b) { return b.IsBindAny(); })) {
             return InitError(_("The automatic Tor onion service cannot use a wildcard onion bind because the Tor daemon wouldn't be able to forward incoming connections to us. Use a specific address such as -bind=127.0.0.1:<port>=onion, or disable the service with -listenonion=0."));
         }
-        const CService& onion_service_target{connOptions.onion_binds[0]};
+        onion_service_target = connOptions.onion_binds.front();
         if (connOptions.onion_binds.size() > 1) {
             InitWarning(strprintf(_("More than one onion bind address is provided. Using %s "
                                     "for the automatically created Tor onion service."),
-                                  onion_service_target.ToStringAddrPort()));
+                                  onion_service_target->ToStringAddrPort()));
         }
-        StartTorControl(onion_service_target);
     }
 
     if (connOptions.bind_on_any) {
@@ -2711,9 +2716,15 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     for (const auto& net : args.GetArgs("-whitelist")) {
         NetWhitelistPermissions subnet;
+        ConnectionDirection connection_direction;
         bilingual_str error;
-        if (!NetWhitelistPermissions::TryParse(net, subnet, error)) return InitError(error);
-        connOptions.vWhitelistedRange.push_back(subnet);
+        if (!NetWhitelistPermissions::TryParse(net, subnet, connection_direction, error)) return InitError(error);
+        if (connection_direction & ConnectionDirection::In) {
+            connOptions.vWhitelistedRangeIncoming.push_back(subnet);
+        }
+        if (connection_direction & ConnectionDirection::Out) {
+            connOptions.vWhitelistedRangeOutgoing.push_back(subnet);
+        }
     }
 
     connOptions.vSeedNodes = args.GetArgs("-seednode");
@@ -2754,6 +2765,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     if (!node.connman->Start(*node.dmnman, *node.mn_metaman, *node.mn_sync, *node.scheduler, connOptions)) {
         return false;
+    }
+
+    if (listen_onion) {
+        // The optional default onion bind may have failed to bind.
+        if (onion_service_target && !node.connman->HasOnionBind(*onion_service_target)) {
+            onion_service_target.reset();
+        }
+        StartTorControl(onion_service_target);
     }
 
     // ********************************************************* Step 13: finished

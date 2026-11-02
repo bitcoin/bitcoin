@@ -43,10 +43,13 @@
 
 #include <univalue.h>
 
+#include <QAbstractButton>
 #include <QApplication>
+#include <QButtonGroup>
 #include <QClipboard>
 #include <QLabel>
 #include <QPushButton>
+#include <QStandardItemModel>
 #include <QString>
 #include <QTest>
 #include <QTimer>
@@ -173,6 +176,93 @@ void SharedMnWizardTests::participantPagesAndRoleInference()
     QVERIFY(dialog.pageTitle(SharedMnCreateDialog::PageWaitTerms).contains(QStringLiteral("alice")));
 }
 
+void SharedMnWizardTests::participantCannotChooseATakenShare()
+{
+    TestingSetup test{CBaseChainParams::REGTEST};
+    m_node.setContext(&test.m_node);
+    WalletContext& context{*m_node.walletLoader().context()};
+
+    CKey my_key;
+    my_key.MakeNewKey(/*fCompressed=*/true);
+    const auto wallet{MakeSpendingWallet(m_node, context, "part", my_key)};
+    QVERIFY(wallet != nullptr);
+    WalletGuard guard{context, wallet};
+
+    MasternodeTestUtil::GuiModels models{m_node};
+    QVERIFY2(models.ok, qPrintable(QString::fromStdString(models.error.translated)));
+    WalletModel wallet_model(interfaces::MakeWallet(context, wallet), models.client);
+
+    // alice coordinates and has answered for her own row; bob and carol are open
+    const MnShareSession invitation{InvitationSession()};
+    MnShareSession claimed{invitation};
+    QString error;
+    QVERIFY(claimed.absorbDraftReply(DraftReply(invitation, 0, FakeTxid('1')), error) ==
+            MnShareSession::MergeResult::Merged);
+
+    const auto combo_row = [](const SharedMnCreateDialog& dialog, int share) {
+        auto* const model{qobject_cast<QStandardItemModel*>(dialog.m_who_am_i_combo->model())};
+        return model->item(dialog.m_who_am_i_combo->findData(share));
+    };
+
+    {
+        // Two rows are open, so nothing says which one is ours: the combo must
+        // not pretend the first share is chosen, and alice's row is not on offer
+        SharedMnCreateDialog dialog(m_node, &wallet_model, /*parent=*/nullptr);
+        dialog.handleImportedText(claimed.toJsonString());
+        QCOMPARE(int(dialog.m_role), int(SharedMnCreateDialog::Role::Participant));
+        QCOMPARE(int(dialog.currentPage()), int(SharedMnCreateDialog::PageContribution));
+        QCOMPARE(dialog.myShareIndex(), -1);
+        QCOMPARE(dialog.m_who_am_i_combo->currentData().toInt(), -1);
+        QVERIFY(!combo_row(dialog, 0)->isEnabled());
+        QVERIFY(combo_row(dialog, 0)->text().contains(QStringLiteral("taken")));
+        QVERIFY(combo_row(dialog, 1)->isEnabled());
+        QVERIFY(combo_row(dialog, 2)->isEnabled());
+
+        // bob answers for the row chosen here before this wallet reserved it:
+        // that row is now bob's, and so is the reservation recorded for it
+        dialog.m_who_am_i_combo->setCurrentIndex(dialog.m_who_am_i_combo->findData(1));
+        QCOMPARE(dialog.myShareIndex(), 1);
+        MnShareSession answered{claimed};
+        QVERIFY(answered.absorbDraftReply(DraftReply(invitation, 1, FakeTxid('2')), error) ==
+                MnShareSession::MergeResult::Merged);
+        dialog.handleImportedText(answered.toJsonString());
+        QVERIFY2(dialog.m_error_label->text().isEmpty(), qPrintable(dialog.m_error_label->text()));
+        QCOMPARE(dialog.myShareIndex(), 2);
+        QVERIFY(dialog.myContribution() == nullptr);
+        QVERIFY(!combo_row(dialog, 1)->isEnabled());
+        QVERIFY(dialog.m_owner_edit->text() != answered.shares()[1].ownerAddress);
+
+        // An owner address from outside this wallet could never approve the share
+        dialog.m_owner_edit->setText(FreshP2PKHAddress());
+        dialog.reserveCoins();
+        QVERIFY(!dialog.m_error_label->text().isEmpty());
+        QVERIFY(dialog.myContribution() == nullptr);
+        QVERIFY(dialog.m_session.shares()[2].ownerAddress.isEmpty());
+    }
+
+    // This wallet already answered for bob's row and now moves to carol's:
+    // bob's addresses must not follow it there
+    MnShareSession mine{claimed};
+    auto& bob{mine.shares()[1]};
+    bob.ownerAddress = QString::fromStdString(EncodeDestination(PKHash(my_key.GetPubKey())));
+    bob.refundAddress = FreshP2PKHAddress();
+    bob.rewardAddress = FreshP2PKHAddress();
+
+    SharedMnCreateDialog dialog(m_node, &wallet_model, /*parent=*/nullptr);
+    dialog.handleImportedText(mine.toJsonString());
+    QCOMPARE(dialog.myShareIndex(), 1);
+    QCOMPARE(dialog.m_owner_edit->text(), bob.ownerAddress);
+    QCOMPARE(dialog.m_refund_edit->text(), bob.refundAddress);
+    QCOMPARE(dialog.m_reward_edit->text(), bob.rewardAddress);
+    QVERIFY(combo_row(dialog, 1)->isEnabled());
+
+    dialog.m_who_am_i_combo->setCurrentIndex(dialog.m_who_am_i_combo->findData(2));
+    QCOMPARE(dialog.myShareIndex(), 2);
+    QVERIFY(dialog.m_owner_edit->text() != bob.ownerAddress);
+    QVERIFY(dialog.m_refund_edit->text() != bob.refundAddress);
+    QVERIFY(dialog.m_reward_edit->text().isEmpty());
+}
+
 void SharedMnWizardTests::coordinatorResumesSavedSession()
 {
     TestingSetup test{CBaseChainParams::REGTEST};
@@ -223,6 +313,27 @@ void SharedMnWizardTests::coordinatorResumesSavedSession()
     QCOMPARE(int(dialog.currentPage()), int(SharedMnCreateDialog::PageInvite));
     QCOMPARE(dialog.myShareIndex(), 0);
     QVERIFY(dialog.allDetailsCollected());
+
+    // alice's coins are reserved, so the coordinator cannot move to another row
+    dialog.refreshShareTable();
+    QVERIFY(!dialog.m_me_group->button(0)->isEnabled());
+    QVERIFY(!dialog.m_me_group->button(1)->isEnabled());
+
+    // Without the reservation the coordinator's own row is free again, but bob's
+    // and carol's still belong to them
+    dialog.releaseCoins();
+    QVERIFY(dialog.myContribution() == nullptr);
+    QVERIFY(dialog.m_me_group->button(0)->isEnabled());
+    QVERIFY(!dialog.m_me_group->button(1)->isEnabled());
+    QVERIFY(!dialog.m_me_group->button(2)->isEnabled());
+
+    // Once no share is this wallet's, no row may stay checked: the next sync
+    // of the table would read it back as the coordinator's share
+    dialog.m_my_share = -1;
+    dialog.refreshShareTable();
+    QVERIFY(dialog.m_me_group->checkedButton() == nullptr);
+    dialog.syncSharesFromTable();
+    QCOMPARE(dialog.myShareIndex(), -1);
 
     // The operator key everybody was invited to is kept: a fresh one from the
     // key widget would invalidate the terms the others are answering
@@ -412,6 +523,11 @@ void SharedMnWizardTests::refusesToSignCoinsOutsideOwnContribution()
     QCOMPARE(dialog.myShareIndex(), 1);
     QCOMPARE(int(dialog.currentPage()), int(SharedMnCreateDialog::PageSignatures));
 
+    // The term sheet counts the extra coin as paid by this wallet, and none of
+    // the change as coming back to it
+    QCOMPARE(dialog.ownFunding().spent, 10 * COIN);
+    QCOMPARE(dialog.ownFunding().change, CAmount{0});
+
     // The extra coin is named as soon as the session is adopted, and the
     // primary button will not sign it away
     const QString outpoint{known_txid + QStringLiteral(":0")};
@@ -505,6 +621,11 @@ void SharedMnWizardTests::refusesToSignShortChangedOwnContribution()
         QString sign_error;
         QVERIFY(!dialog.signOwnFundingInputs(complete, sign_error));
         QCOMPARE(sign_error, refusal);
+        // The sheet already warned before signing was ever tried
+        QCOMPARE(dialog.ownFunding().spent, 450 * COIN);
+        QCOMPARE(dialog.ownFunding().change, returned);
+        QVERIFY2(dialog.m_signatures_terms->text().contains(QStringLiteral("⚠")),
+                 qPrintable(dialog.m_signatures_terms->text()));
     };
 
     // Honest: the change comes back to this wallet, so nothing stands in the way
@@ -516,6 +637,12 @@ void SharedMnWizardTests::refusesToSignShortChangedOwnContribution()
         dialog.handleImportedText(honest.toJsonString());
         QVERIFY2(dialog.m_funding_refusal.isEmpty(), qPrintable(dialog.m_funding_refusal));
         QVERIFY2(dialog.m_next_button->isEnabled(), qPrintable(dialog.m_next_button->toolTip()));
+        // 450 in, 100 back: exactly the 350 share, with nothing to warn about
+        QCOMPARE(dialog.ownFunding().spent, 450 * COIN);
+        QCOMPARE(dialog.ownFunding().change, 100 * COIN);
+        const QString sheet{dialog.m_signatures_terms->text()};
+        QVERIFY2(sheet.contains(QStringLiteral("Your contribution: %1").arg(amount(350 * COIN))), qPrintable(sheet));
+        QVERIFY(!sheet.contains(QStringLiteral("⚠")));
     }
     // Honest coordinator paying a 0.05 DASH fee, above the usual cap, out of its
     // own coin: what leaves on top of the share is the fee it chose

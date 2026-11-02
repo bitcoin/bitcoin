@@ -371,10 +371,8 @@ public:
      * When there is a discrepancy, most of the time the final change would be slightly bigger than estimated.
      *
      * Following are the possible factors of discrepancy:
-     *  + non-input fees always include segwit flags
-     *  + input fee estimation always include segwit stack size
      *  + input fees are rounded individually and not collectively, which leads to small rounding errors
-     *  - input counter size is always assumed to be 1vbyte
+     *  + input counter is sized for all coins available for selection, not only the selected ones
      *
      * @param[in]  min_viable_change  Minimum amount for change output, if change would be less then we forgo change
      * @param[in]  change_fee         Fees to include change output in the tx

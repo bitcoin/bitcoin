@@ -95,10 +95,11 @@ class BIP68_112_113Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
+        # whitelist peers to speed up tx relay / mempool sync
+        self.noban_tx_relay = True
         # Must set '-dip3params=2000:2000' to create pre-dip3 blocks only
         self.extra_args = [[
             '-peertimeout=999999',  # bump because mocktime might cause a disconnect otherwise
-            '-whitelist=noban@127.0.0.1',
             f'-testactivationheight=csv@{CSV_ACTIVATION_HEIGHT}',
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
             '-dip3params=2000:2000',

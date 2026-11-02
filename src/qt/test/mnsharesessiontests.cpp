@@ -150,6 +150,24 @@ void MnShareSessionTests::validateSharesMirror()
     bad_penalty.terms().earlyPenalty = 250 * COIN;
     QVERIFY(!bad_penalty.validateShares().isEmpty());
 
+    // Without an early period there is no penalty to set
+    MnShareSession penalty_without_period{ValidSession(keys)};
+    penalty_without_period.terms().earlyPeriodBlocks = 0;
+    penalty_without_period.terms().earlyPenalty = 5 * COIN;
+    QVERIFY(!penalty_without_period.validateShares().isEmpty());
+    penalty_without_period.terms().earlyPenalty = 0;
+    QVERIFY(penalty_without_period.validateShares().isEmpty());
+    const auto unit{BitcoinUnits::Unit::DASH};
+    QVERIFY(!MnShareSession::CheckEarlyPenalty({250 * COIN, 750 * COIN}, unit, 0, 5 * COIN).isEmpty());
+    QVERIFY(MnShareSession::CheckEarlyPenalty({250 * COIN, 750 * COIN}, unit, 5000, 5 * COIN).isEmpty());
+
+    // Amounts alone, before any address exists
+    QVERIFY(MnShareSession::CheckShareAmounts({500 * COIN, 500 * COIN}, unit).isEmpty());
+    QVERIFY(MnShareSession::CheckShareAmounts(std::vector<CAmount>(8, 125 * COIN), unit).isEmpty());
+    QVERIFY(!MnShareSession::CheckShareAmounts({1000 * COIN}, unit).isEmpty());
+    QVERIFY(!MnShareSession::CheckShareAmounts({50 * COIN, 950 * COIN}, unit).isEmpty());
+    QVERIFY(!MnShareSession::CheckShareAmounts({500 * COIN, 501 * COIN}, unit).isEmpty());
+
     // The early period is capped
     MnShareSession bad_period{ValidSession(keys)};
     bad_period.terms().earlyPeriodBlocks = CProRegTx::MAX_EARLY_PERIOD_BLOCKS + 1;

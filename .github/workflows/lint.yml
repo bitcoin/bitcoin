@@ -71,6 +71,7 @@ jobs:
           git log --oneline ${COMMIT_RANGE} || echo "Could not show commit range"
 
           ./ci/dash/lint.sh
+          test/lint/cppcheck-dash.py
           du -sh "${CACHE_DIR}/cppcheck"
         shell: bash
 

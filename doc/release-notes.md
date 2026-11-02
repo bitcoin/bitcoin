@@ -462,6 +462,14 @@ does not accept that option. (#7294, #7285, #7577)
   participant's coins. Because admission relies on the declared directions, a
   participant whose entry deviates from what it declared has its collateral
   consumed. (#7052)
+- A wallet that still has coins to mix keeps standard mixing. It joins
+  promotion and demotion queues that other wallets opened, but only opens its
+  own when it has no standard mixing session to join or start, so a conversion
+  waiting for a counterpart never holds up mixing. (#7995)
+- A promotion prefers fully-mixed coins from different mixing transactions. If
+  there are not enough of those, it also spends coins that came out of the same
+  mixing transaction, which links them as one owner's coins, as an ordinary send
+  of the same coins would. (#7996)
 
 See [P2P and network changes](#p2p-and-network-changes) for the related
 protocol changes.
@@ -657,18 +665,30 @@ and RPC parameters.
   the mixing metadata they cannot parse. (#7052)
 - Version 2 Asset Unlock transactions are relayed by instance hash using the new
   inventory type `MSG_ASSET_UNLOCK` (protocol version 70242). (#7639)
-- Startup now fails if any configured `-bind`, `-whitebind` or the implicit Tor
-  onion-service bind (`127.0.0.1:9996` by default) cannot be set up. Dash Core
-  v23 and earlier started as long as at least one bind succeeded.
-- Nodes configured with `-bind` but no specific `-bind=<addr:port>=onion` now
-  refuse to start when `-listenonion` is enabled. This includes nodes without
-  Tor configured, since `-listenonion` is enabled by default when listening.
-  Shared binds cannot distinguish Tor-forwarded connections from direct
-  connections, which can grant Tor peers unintended IP-based whitelist
-  permissions. Nodes without `-bind`, including those using only `-whitebind`,
-  continue to get the default onion target. Users should add a specific
-  `-bind=<addr:port>=onion` to accept incoming Tor connections, or set
-  `-listenonion=0` to disable automatic onion service creation. (#7300, #7786)
+- Startup now fails if any configured `-bind` (including `-bind=...=onion`) or
+  `-whitebind` cannot be set up. Dash Core v23 and earlier started as long as
+  at least one bind succeeded. The implicit Tor onion-service bind
+  (`127.0.0.1:9996` by default) is still best effort, as in v23, unless
+  `-listenonion=1` is set explicitly. (#7300, #8003)
+- The automatic Tor onion service (`-listenonion`) only forwards to a
+  dedicated, non-wildcard onion listener that the node actually bound, so peers
+  arriving through Tor are always recognized as onion peers. Without a
+  `-bind=<addr:port>=onion`, Dash Core adds the default onion bind as v23 did,
+  also when `-bind` is given; with `-bind` and `-listenonion=0` it no longer
+  does. If the default onion bind fails, for example because another instance
+  on the same host holds it, the node logs a warning and creates no onion
+  service rather than pointing Tor at whatever holds that port. It still
+  starts and still uses Tor for outbound onion connections if its control port
+  is reachable; the debug log notes that no onion service was created. With an
+  explicit `-listenonion=1`, a failed default onion bind makes startup fail. To
+  run onion services for several instances on one host, give each its own
+  `-bind=127.0.0.1:<port>=onion`. (#7300, #7786, #8003)
+- A wildcard onion bind such as `-bind=0.0.0.0:<port>=onion` is a startup error
+  unless `-listenonion=0` is set, also with the default `-listenonion`. The node
+  can't tell which connections to a wildcard listener came through Tor, so Tor
+  peers would be treated as clearnet peers. Dash Core v23 accepted it. Use a
+  specific address such as `-bind=127.0.0.1:<port>=onion` instead. (#7786,
+  #8003)
 - `getqrinfo` requests now carry at most 4096 `baseBlockHashes`. A request with
   more is rejected and the sending peer is penalized as misbehaving. No known
   client sends more than a handful. The `quorum rotationinfo` RPC applies the
@@ -688,6 +708,11 @@ and RPC parameters.
   starts without sporks (for example after the `sporks.dat` reset) receives
   them. Repeated `getsporks` requests are ignored while the active spork set is
   unchanged. (#7893, #7343)
+- Address-based `-whitelist` permissions no longer apply to peers that connect
+  through the node's onion service. Tor forwards those peers from its own
+  address, usually `127.0.0.1`, so an entry such as `-whitelist=noban@127.0.0.1`
+  used to grant its permissions to every Tor peer. `-whitebind` is not
+  affected. (#8005)
 
 ## Mining and mempool policy
 
@@ -921,6 +946,9 @@ and RPC parameters.
 
 - `-sporkaddr` now configures a single spork address. Previously it could be
   specified multiple times to configure a set of valid spork signers. (#7505)
+- Additional flags "in" and "out" have been added to `-whitelist` to control
+  whether permissions apply to incoming connections and/or manual (default:
+  incoming only). (#8005)
 
 ### Removed options
 

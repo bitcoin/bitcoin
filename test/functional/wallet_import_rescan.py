@@ -19,6 +19,7 @@ importing nodes pick up the new transactions regardless of whether rescans
 happened previously.
 """
 
+from test_framework.governance import EXPECTED_STDERR_NO_GOV_PRUNE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -143,6 +144,8 @@ class ImportRescanTest(BitcoinTestFramework):
         self.num_nodes = 2 + len(IMPORT_NODES)
         self.supports_cli = False
         self.rpc_timeout = 120
+        # whitelist peers to speed up tx relay / mempool sync
+        self.noban_tx_relay = True
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -161,7 +164,7 @@ class ImportRescanTest(BitcoinTestFramework):
         self.import_deterministic_coinbase_privkeys()
         self.stop_nodes()
 
-        self.start_nodes(extra_args=[["-whitelist=noban@127.0.0.1"]] * self.num_nodes)
+        self.start_nodes()
         for i in range(1, self.num_nodes):
             self.connect_nodes(i, 0)
 
@@ -276,6 +279,10 @@ class ImportRescanTest(BitcoinTestFramework):
                 variant.expected_balance = 0
                 variant.expected_txs = 0
                 variant.check()
+
+        for i, import_node in enumerate(IMPORT_NODES, 2):
+            if import_node.prune:
+                self.stop_node(i, expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
 
 
 if __name__ == "__main__":
