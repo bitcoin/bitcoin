@@ -11,6 +11,14 @@
 #include "scalar.h"
 #include "scratch.h"
 
+/* See STATIC_ASSERT(sizeof(secp256k1_ge_storage) == 64) in group_impl.h. */
+/** Larger values for ECMULT_WINDOW_SIZE result in possibly better
+ *  performance at the cost of an exponentially larger precomputed
+ *  table. The exact table size is
+ *      ECMULT_TABLE_SIZE(ECMULT_WINDOW_SIZE) * 64 bytes.
+ *  Two tables of this size are used (due to the endomorphism
+ *  optimization).
+ */
 #ifndef ECMULT_WINDOW_SIZE
 #  define ECMULT_WINDOW_SIZE 15
 #  ifdef DEBUG_CONFIG
@@ -27,10 +35,10 @@
  * tested.
  *
  * The following limitations are known, and there are probably more:
- * If WINDOW_G > 27 and size_t has 32 bits, then the code is incorrect
+ * If ECMULT_WINDOW_SIZE > 27 and size_t has 32 bits, then the code is incorrect
  * because the size of the memory object that we allocate (in bytes)
  * will not fit in a size_t.
- * If WINDOW_G > 31 and int has 32 bits, then the code is incorrect
+ * If ECMULT_WINDOW_SIZE > 31 and int has 32 bits, then the code is incorrect
  * because certain expressions will overflow.
  */
 #if ECMULT_WINDOW_SIZE < 2 || ECMULT_WINDOW_SIZE > 24

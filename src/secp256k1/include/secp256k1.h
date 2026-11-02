@@ -418,6 +418,9 @@ typedef void (*secp256k1_sha256_compression_function)(
  * The provided callback must exactly implement the effect of n_blocks
  * repeated applications of the SHA256 compression function.
  *
+ * The callback processes secrets such as secret keys, so it must run in
+ * constant time with respect to its input and must not keep or log it.
+ *
  * This API exists to support environments that wish to route the
  * SHA256 compression step through a hardware-accelerated or otherwise
  * specialized implementation. It is NOT meant for replacing SHA256
