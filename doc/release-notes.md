@@ -462,6 +462,14 @@ does not accept that option. (#7294, #7285, #7577)
   participant's coins. Because admission relies on the declared directions, a
   participant whose entry deviates from what it declared has its collateral
   consumed. (#7052)
+- A wallet that still has coins to mix keeps standard mixing. It joins
+  promotion and demotion queues that other wallets opened, but only opens its
+  own when it has no standard mixing session to join or start, so a conversion
+  waiting for a counterpart never holds up mixing. (#7995)
+- A promotion prefers fully-mixed coins from different mixing transactions. If
+  there are not enough of those, it also spends coins that came out of the same
+  mixing transaction, which links them as one owner's coins, as an ordinary send
+  of the same coins would. (#7996)
 
 See [P2P and network changes](#p2p-and-network-changes) for the related
 protocol changes.
@@ -688,6 +696,11 @@ and RPC parameters.
   starts without sporks (for example after the `sporks.dat` reset) receives
   them. Repeated `getsporks` requests are ignored while the active spork set is
   unchanged. (#7893, #7343)
+- Address-based `-whitelist` permissions no longer apply to peers that connect
+  through the node's onion service. Tor forwards those peers from its own
+  address, usually `127.0.0.1`, so an entry such as `-whitelist=noban@127.0.0.1`
+  used to grant its permissions to every Tor peer. `-whitebind` is not
+  affected. (#8005)
 
 ## Mining and mempool policy
 
@@ -921,6 +934,9 @@ and RPC parameters.
 
 - `-sporkaddr` now configures a single spork address. Previously it could be
   specified multiple times to configure a set of valid spork signers. (#7505)
+- Additional flags "in" and "out" have been added to `-whitelist` to control
+  whether permissions apply to incoming connections and/or manual (default:
+  incoming only). (#8005)
 
 ### Removed options
 
