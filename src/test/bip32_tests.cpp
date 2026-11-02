@@ -8,6 +8,7 @@
 #include <key.h>
 #include <key_io.h>
 #include <streams.h>
+#include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <util/bip32.h>
 #include <util/strencodings.h>
@@ -138,16 +139,16 @@ void RunTest(const TestVector& test)
         CExtPubKey pubkey_deser;
         ss >> key_deser;
         ss >> pubkey_deser;
-        BOOST_CHECK(key_deser == key);
-        BOOST_CHECK(pubkey_deser == pubkey);
+        BOOST_CHECK_EQUAL(key_deser, key);
+        BOOST_CHECK_EQUAL(pubkey_deser, pubkey);
 
         // Test private key
         BOOST_CHECK(EncodeExtKey(key) == derive.prv);
-        BOOST_CHECK(DecodeExtKey(derive.prv) == key); //ensure a base58 decoded key also matches
+        BOOST_CHECK_EQUAL(DecodeExtKey(derive.prv), key); //ensure a base58 decoded key also matches
 
         // Test public key
         BOOST_CHECK(EncodeExtPubKey(pubkey) == derive.pub);
-        BOOST_CHECK(DecodeExtPubKey(derive.pub) == pubkey); //ensure a base58 decoded pubkey also matches
+        BOOST_CHECK_EQUAL(DecodeExtPubKey(derive.pub), pubkey); //ensure a base58 decoded pubkey also matches
 
         // Derive new keys
         CExtKey keyNew;
@@ -157,7 +158,7 @@ void RunTest(const TestVector& test)
             // Compare with public derivation
             CExtPubKey pubkeyNew2;
             BOOST_CHECK(pubkey.Derive(pubkeyNew2, derive.nChild));
-            BOOST_CHECK(pubkeyNew == pubkeyNew2);
+            BOOST_CHECK_EQUAL(pubkeyNew, pubkeyNew2);
         }
         key = keyNew;
         pubkey = pubkeyNew;
@@ -232,7 +233,7 @@ BOOST_AUTO_TEST_CASE(bip32_deserialize_invalid)
         DataStream ss{extra};
         CExtKey key;
         ss >> key;
-        BOOST_CHECK(key == master);
+        BOOST_CHECK_EQUAL(key, master);
         BOOST_CHECK_EQUAL(ss.size(), 1);
     }
     {
@@ -241,7 +242,7 @@ BOOST_AUTO_TEST_CASE(bip32_deserialize_invalid)
         DataStream ss{extra};
         CExtPubKey pubkey;
         ss >> pubkey;
-        BOOST_CHECK(pubkey == master_pub);
+        BOOST_CHECK_EQUAL(pubkey, master_pub);
         BOOST_CHECK_EQUAL(ss.size(), 1);
     }
 
@@ -307,13 +308,13 @@ BOOST_AUTO_TEST_CASE(bip32_derive_ext_key)
     KeyOriginInfo expected_origin;
     expected_origin.fingerprint = master.id_key_fingerprint();
     expected_origin.path = path;
-    BOOST_CHECK(derived->second == expected_origin);
+    BOOST_CHECK_EQUAL(derived->second, expected_origin);
 
     const auto root{DeriveExtKey(master, {})};
     BOOST_REQUIRE(root);
-    BOOST_CHECK(root->first == master);
+    BOOST_CHECK_EQUAL(root->first, master);
     expected_origin.path.clear();
-    BOOST_CHECK(root->second == expected_origin);
+    BOOST_CHECK_EQUAL(root->second, expected_origin);
 
     CExtKey max_depth{master};
     for (auto i{0}; i++ < 255;) {
