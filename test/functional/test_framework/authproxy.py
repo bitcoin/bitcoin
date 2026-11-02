@@ -160,7 +160,7 @@ class AuthServiceProxy():
         return response
 
     def _get_response(self):
-        req_start_time = time.time()
+        req_start_time = time.monotonic()
         try:
             http_response = self.__conn.getresponse()
         except socket.timeout:
@@ -196,7 +196,7 @@ class AuthServiceProxy():
             raise JSONRPCException({
                 'code': -342, 'message': f'Cannot decode response in utf8 format, content: {data}, exception: {e}'})
         response = json.loads(responsedata, parse_float=decimal.Decimal)
-        elapsed = time.time() - req_start_time
+        elapsed = time.monotonic() - req_start_time
         if "error" in response and response["error"] is None:
             log.debug("<-%s- [%.6f] %s" % (response["id"], elapsed, self._json_dumps(response["result"])))
         else:

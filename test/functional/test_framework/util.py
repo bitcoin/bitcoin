@@ -414,12 +414,12 @@ def ensure_for(*, duration, f, check_interval=0.2):
     # to checking once in the beginning and once at the end of duration
     if check_interval <= 0 or check_interval > duration:
         check_interval = duration
-    time_end = time.time() + duration
+    time_end = time.monotonic() + duration
     predicate_source = "''''\n" + inspect.getsource(f) + "'''"
     while True:
         if not f():
             raise AssertionError(f"Predicate {predicate_source} became false within {duration} seconds")
-        if time.time() > time_end:
+        if time.monotonic() > time_end:
             return
         time.sleep(check_interval)
 
@@ -434,9 +434,9 @@ def wait_until_helper_internal(predicate, *, timeout=60, lock=None, timeout_fact
     `p2p.py` has a preset lock.
     """
     timeout = timeout * timeout_factor
-    time_end = time.time() + timeout
+    time_end = time.monotonic() + timeout
 
-    while time.time() < time_end:
+    while time.monotonic() < time_end:
         if lock:
             with lock:
                 if predicate():
