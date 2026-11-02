@@ -10,7 +10,10 @@ Test the following RPCs:
 """
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_raises_rpc_error
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+)
 
 class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -39,11 +42,11 @@ class EstimateFeeTest(BitcoinTestFramework):
         for fee_rate_estimator in ["foo", "none", ""]:
             assert_raises_rpc_error(-8, 'Invalid fee_rate_estimator parameter, must be one of: "auto", "block_policy", "mempool_policy"',
                                     self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', {'fee_rate_estimator': fee_rate_estimator})
-        assert_raises_rpc_error(-8, "Unknown named parameter fee_rate_estimator", self.nodes[0].estimatesmartfee, 1, fee_rate_estimator=True)
+            assert_raises_rpc_error(-8, 'Invalid fee_rate_estimator parameter, must be one of: "auto", "block_policy", "mempool_policy"',
+                                    self.nodes[0].estimatesmartfee, 1, fee_rate_estimator=fee_rate_estimator)
         assert_raises_rpc_error(-3, "Unexpected key block_policy_only", self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', {'block_policy_only': True})
         # extra params
-        assert_raises_rpc_error(-1, "estimatesmartfee", self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', {}, 1)
-        assert_raises_rpc_error(-1, "estimatesmartfee", self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', {'verbosity': 1}, 1)
+        assert_raises_rpc_error(-1, "estimatesmartfee", self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', {}, True)
         assert_raises_rpc_error(-1, "estimaterawfee", self.nodes[0].estimaterawfee, 1, 1, 1)
 
         # max value of 1008 per src/policy/fees/block_policy_estimator.h
@@ -58,6 +61,20 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.nodes[0].estimatesmartfee(1, 'ECONOMICAL', {"fee_rate_estimator": "block_policy"})
         self.nodes[0].estimatesmartfee(1, 'ECONOMICAL', {"fee_rate_estimator": "mempool_policy"})
         self.nodes[0].estimatesmartfee(1, 'ECONOMICAL', {'verbosity': 1, 'fee_rate_estimator': "auto"})
+
+        self.log.info("Test estimatesmartfee options")
+        node = self.nodes[0]
+        default_estimate = node.estimatesmartfee(1)
+        for options in [None, {}]:
+            assert_equal(node.estimatesmartfee(1, "economical", options), default_estimate)
+        options = {"fee_rate_estimator": "block_policy", "verbosity": 2}
+        assert_equal(
+            node.estimatesmartfee(1, "economical", options),
+            node.estimatesmartfee(conf_target=1, options=options),
+            node.estimatesmartfee(conf_target=1, **options),
+            node.estimatesmartfee(1, **options),
+        )
+        assert_raises_rpc_error(-3, "Wrong type passed", node.estimatesmartfee, 1, "economical", True)
 
         self.nodes[0].estimaterawfee(1)
         self.nodes[0].estimaterawfee(1, None)
