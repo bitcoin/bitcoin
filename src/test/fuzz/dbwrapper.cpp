@@ -36,6 +36,13 @@
 #include <vector>
 
 namespace {
+BasicTestingSetup* g_setup;
+
+void initialize()
+{
+    static const auto testing_setup = MakeNoLogFileContext<BasicTestingSetup>();
+    g_setup = testing_setup.get();
+}
 
 /**
  * A leveldb::Env that wraps a memenv and captures scheduled background
@@ -209,7 +216,7 @@ void TestDbWrapper(FuzzedDataProvider& provider,
     const bool obfuscate{provider.ConsumeBool()};
 
     const auto make_db{[&](DBOptions options = {}) {
-        return std::make_unique<CDBWrapper>(ConsumeDBParams(provider, testing_env, obfuscate, options));
+        return std::make_unique<CDBWrapper>(g_setup->m_logger, ConsumeDBParams(provider, testing_env, obfuscate, options));
     }};
     std::unique_ptr<CDBWrapper> dbw{make_db()};
 
@@ -333,7 +340,7 @@ void TestDbWrapper(FuzzedDataProvider& provider,
 
 } // namespace
 
-FUZZ_TARGET(dbwrapper, .init = [] { static auto setup{MakeNoLogFileContext<>()}; })
+FUZZ_TARGET(dbwrapper, .init = initialize)
 {
     FuzzedDataProvider provider{buffer.data(), buffer.size()};
 
@@ -346,7 +353,7 @@ FUZZ_TARGET(dbwrapper, .init = [] { static auto setup{MakeNoLogFileContext<>()};
         /*allow_force_compact=*/false);
 }
 
-FUZZ_TARGET(dbwrapper_threaded, .init = [] { static auto setup{MakeNoLogFileContext<>()}; })
+FUZZ_TARGET(dbwrapper_threaded, .init = initialize)
 {
     FuzzedDataProvider provider{buffer.data(), buffer.size()};
 
@@ -358,7 +365,13 @@ FUZZ_TARGET(dbwrapper_threaded, .init = [] { static auto setup{MakeNoLogFileCont
         /*allow_force_compact=*/true);
 }
 
-FUZZ_TARGET(dbwrapper_concurrent_reads, .init = [] { static auto setup{MakeNoLogFileContext<>()}; })
+static void cleanup_concurrent_reads()
+{
+    // Stop worker threads before logger is destroyed because they log when exiting.
+    g_read_pool.Stop();
+}
+
+FUZZ_TARGET(dbwrapper_concurrent_reads, .init = initialize, .cleanup = cleanup_concurrent_reads)
 {
     StartReadPoolIfNeeded();
     SeedRandomStateForTest(SeedRand::ZEROS);
@@ -368,7 +381,7 @@ FUZZ_TARGET(dbwrapper_concurrent_reads, .init = [] { static auto setup{MakeNoLog
     const auto memenv{std::unique_ptr<leveldb::Env>{leveldb::NewMemEnv(leveldb::Env::Default())}};
     DeterministicEnv det_env{memenv.get()};
 
-    CDBWrapper db{ConsumeDBParams(provider, &det_env, /*obfuscate=*/provider.ConsumeBool())};
+    CDBWrapper db{g_setup->m_logger, ConsumeDBParams(provider, &det_env, /*obfuscate=*/provider.ConsumeBool())};
 
     // Seed the DB. Drain work after small batches so we don't deadlock on a
     // scheduled compaction.

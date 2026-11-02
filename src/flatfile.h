@@ -10,6 +10,7 @@
 
 #include <serialize.h>
 #include <util/fs.h>
+#include <util/log.h>
 
 struct FlatFilePos
 {
@@ -41,6 +42,7 @@ struct FlatFilePos
 class FlatFileSeq
 {
 private:
+    const util::log::Context m_log;
     const fs::path m_dir;
     const char* const m_prefix;
     const size_t m_chunk_size;
@@ -53,7 +55,7 @@ public:
      * @param prefix A short prefix given to all file names.
      * @param chunk_size Disk space is pre-allocated in multiples of this amount.
      */
-    FlatFileSeq(fs::path dir, const char* prefix, size_t chunk_size);
+    FlatFileSeq(util::log::Logger& logger, fs::path dir, const char* prefix, size_t chunk_size);
 
     /** Get the name of the file at the given position. */
     fs::path FileName(const FlatFilePos& pos) const;

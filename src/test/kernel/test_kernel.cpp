@@ -714,35 +714,69 @@ public:
     void LogMessage(const LogEntry& entry) { ++m_messages[std::string{entry.Message()}]; }
 };
 
+//! Error logged by LogContextError.
+const std::string EMPTY_DIR_ERROR{"Failed to create chainstate manager options: dir must be non-null and non-empty"};
+
+//! Make the context log EMPTY_DIR_ERROR, by creating chainstate manager options with an empty data
+//! directory.
+void LogContextError(const Context& context)
+{
+    BOOST_CHECK(!btck_chainstate_manager_options_create(context.get(), "", 0, "", 0));
+}
+
 //! This test is focused on the public kernel logging interface, to the extent it is testable.
 BOOST_AUTO_TEST_CASE(logging_connection_tests)
 {
-    std::map<std::string, int> messages;
+    std::map<std::string, int> messages_1;
+    std::map<std::string, int> messages_2;
+    std::map<std::string, int> messages_unused;
     int destroyed{0};
-    logging_set_min_level(LogLevel::INFO_LEVEL);
 
     {
-        // At the default minimum level (INFO), the DEBUG entries are not delivered.
-        Logger logger{std::make_unique<CountingLog>(messages, destroyed)};
-    }
-    BOOST_CHECK(messages.empty());
-    BOOST_CHECK_EQUAL(destroyed, 1);
-    destroyed = 0;
+        Logger logger_1{std::make_unique<CountingLog>(messages_1, destroyed)};
+        Logger logger_2{std::make_unique<CountingLog>(messages_2, destroyed)};
+        Logger logger_unused{std::make_unique<CountingLog>(messages_unused, destroyed)};
+        ContextOptions options_1{};
+        options_1.SetLogger(logger_1);
+        ContextOptions options_2{};
+        options_2.SetLogger(logger_2);
+        Context context_1{options_1};
+        Context context_2{options_2};
+        Context context_no_logger{};
 
-    logging_set_min_level(LogLevel::DEBUG_LEVEL);
-    {
-        // Each connection logs "Logger connected." after registering, and the entry reaches every
-        // connection that exists at that moment: 1 + 2.
-        Logger logger{std::make_unique<CountingLog>(messages, destroyed)};
-        Logger logger_2{std::make_unique<CountingLog>(messages, destroyed)};
-        BOOST_CHECK_EQUAL(messages["Logger connected."], 3);
+        // Each context's entries reach only its own connection.
+        LogContextError(context_1);
+        BOOST_CHECK_EQUAL(messages_1[EMPTY_DIR_ERROR], 1);
+        BOOST_CHECK(messages_2.empty());
+        LogContextError(context_2);
+        BOOST_CHECK_EQUAL(messages_1[EMPTY_DIR_ERROR], 1);
+        BOOST_CHECK_EQUAL(messages_2[EMPTY_DIR_ERROR], 1);
+
+        // Entries from a context without a logging connection are not delivered anywhere, and a
+        // connection that is not set on any context receives nothing.
+        LogContextError(context_no_logger);
+        BOOST_CHECK_EQUAL(messages_1[EMPTY_DIR_ERROR], 1);
+        BOOST_CHECK_EQUAL(messages_2[EMPTY_DIR_ERROR], 1);
+        BOOST_CHECK(messages_unused.empty());
         BOOST_CHECK_EQUAL(destroyed, 0);
     }
-    // "Logger disconnecting." is logged before unregistering, so it still reaches the connection
-    // being destroyed: 2 + 1. Each connection's user_data is destroyed exactly once.
-    BOOST_CHECK_EQUAL(messages["Logger disconnecting."], 3);
-    BOOST_CHECK_EQUAL(destroyed, 2);
-    logging_set_min_level(LogLevel::INFO_LEVEL);
+    // Each connection's user_data is destroyed exactly once.
+    BOOST_CHECK_EQUAL(destroyed, 3);
+    destroyed = 0;
+
+    {
+        // Context options can be destroyed before the contexts created with them. The connection has
+        // to outlive both (destroying it earlier aborts, which is not tested here).
+        std::map<std::string, int> messages;
+        Logger logger{std::make_unique<CountingLog>(messages, destroyed)};
+        auto options{std::make_unique<ContextOptions>()};
+        options->SetLogger(logger);
+        Context context{*options};
+        options.reset();
+        LogContextError(context);
+        BOOST_CHECK_EQUAL(messages[EMPTY_DIR_ERROR], 1);
+    }
+    BOOST_CHECK_EQUAL(destroyed, 1);
 }
 
 BOOST_AUTO_TEST_CASE(btck_chainparams_tests)
