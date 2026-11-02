@@ -464,12 +464,15 @@ std::vector<COutPoint> CWallet::SelectFullyMixedForPromotion(int nDenom, int nCo
 
     LOCK(cs_wallet);
 
-    // Mirror SelectTxDSInsByDenomination: spendable coins only, shuffled, and at most one
-    // coin per transaction. Inputs sharing a parent tx are publicly linked on-chain, and a
-    // demotion in particular leaves 10 sibling outputs of the target denomination that must
-    // never be promoted together - they would be identifiable as one group in the final tx.
+    // Spendable coins only, shuffled, preferring coins from distinct transactions. Unlike
+    // SelectTxDSInsByDenomination this falls back to siblings: standard mixing leaves a
+    // wallet's fully-mixed coins clustered up to COINJOIN_ENTRY_MAX_SIZE per mixing tx, so a
+    // strict one-per-tx rule would rarely find PROMOTION_RATIO of them. Spending siblings
+    // together links them in their last mixing round, as sending them would, but no round is
+    // credited for it: the promotion output starts mixing over at 0 rounds.
     CCoinControl coin_control(CoinType::ONLY_FULLY_MIXED);
     std::set<uint256> setRecentTxIds;
+    std::vector<COutPoint> vecSiblings;
     std::vector<COutput> vCoins{AvailableCoinsListUnspent(*this, &coin_control).All()};
 
     WalletCJLogPrint(this, "CWallet::%s -- vCoins.size(): %d\n", __func__, vCoins.size());
@@ -479,8 +482,15 @@ std::vector<COutPoint> CWallet::SelectFullyMixedForPromotion(int nDenom, int nCo
     for (const auto& out : vCoins) {
         if (static_cast<int>(vecRet.size()) >= nCount) break;
         if (out.txout.nValue != nDenomAmount) continue;
-        if (!setRecentTxIds.insert(out.outpoint.hash).second) continue; // no duplicate txids
-        vecRet.push_back(out.outpoint);
+        if (setRecentTxIds.insert(out.outpoint.hash).second) {
+            vecRet.push_back(out.outpoint);
+        } else {
+            vecSiblings.push_back(out.outpoint);
+        }
+    }
+    for (const auto& outpoint : vecSiblings) {
+        if (static_cast<int>(vecRet.size()) >= nCount) break;
+        vecRet.push_back(outpoint);
     }
 
     return vecRet;

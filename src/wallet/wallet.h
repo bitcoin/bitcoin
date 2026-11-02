@@ -666,9 +666,9 @@ public:
     CoinJoinDenomCounts GetDenominationCounts() const;
 
     /**
-     * Select fully-mixed coins for promotion (post-V24 feature). Selection mirrors
-     * SelectTxDSInsByDenomination: spendable coins only, shuffled, at most one coin
-     * per transaction.
+     * Select fully-mixed coins for promotion (post-V24 feature): spendable coins only,
+     * shuffled, preferring coins from distinct transactions and only then taking
+     * siblings of an already selected coin.
      * @param nDenom The denomination to select (bitshifted integer)
      * @param nCount Maximum number of coins to select
      * @return Vector of outpoints for selected coins
