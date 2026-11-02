@@ -99,7 +99,7 @@ static void help(void) {
     printf("Notes:\n");
     printf("    - All arguments must be provided in the form '--key=value', '-key=value' or '-k=value'.\n");
     printf("    - Single or double dashes are allowed for multi character options.\n");
-    printf("    - Unknown arguments are reported but ignored.\n");
+    printf("    - Unknown arguments are reported and cause the program to exit with an error.\n");
     printf("    - Sequential execution occurs if -jobs=0 or unspecified.\n");
     printf("    - Iterations and seed can also be passed as positional arguments before any other argument for backward compatibility.\n");
 }
