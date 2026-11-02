@@ -993,8 +993,11 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(ChainstateManager& chainman
     const bool fV24Active = CoinJoin::IsPromotionDemotionActive(chainman);
 
     CAmount nBalanceNeedsAnonymized;
-    wallet::CoinJoinDenomCounts denomCounts;
-    bool fRebalanceOpportunity{false};
+    struct Rebalance {
+        int nDenom; //!< session denomination: the smaller of the two, which both conversions run at
+        bool fPromotion;
+    };
+    std::vector<Rebalance> vecRebalances; // post-V24 promotion/demotion opportunities
 
     {
         LOCK(m_wallet->cs_wallet);
@@ -1034,14 +1037,28 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(ChainstateManager& chainman
         if (fV24Active) {
             // Single wallet scan covering all denominations, reused across every
             // adjacent-pair check instead of re-scanning per pair.
-            denomCounts = m_wallet->GetDenominationCounts();
-            for (size_t i = 0; i + 1 < CoinJoin::vecStandardDenominations.size() && !fRebalanceOpportunity; ++i) {
+            const auto denomCounts = m_wallet->GetDenominationCounts();
+            // Denominations: 10, 1, 0.1, 0.01, 0.001 (indices 0-4, smaller index = larger denom)
+            for (size_t i = 0; i + 1 < CoinJoin::vecStandardDenominations.size(); ++i) {
                 const int nLargerDenom = 1 << i;
                 const int nSmallerDenom = 1 << (i + 1);
-                fRebalanceOpportunity = m_clientman.ShouldPromote(nSmallerDenom, nLargerDenom, denomCounts) ||
-                                        m_clientman.ShouldDemote(nLargerDenom, nSmallerDenom, denomCounts);
+                if (m_clientman.ShouldPromote(nSmallerDenom, nLargerDenom, denomCounts)) {
+                    WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::DoAutomaticDenominating -- Promotion opportunity: %d x %s -> 1 x %s\n",
+                        CoinJoin::PROMOTION_RATIO,
+                        CoinJoin::DenominationToString(nSmallerDenom),
+                        CoinJoin::DenominationToString(nLargerDenom));
+                    vecRebalances.push_back({nSmallerDenom, /*fPromotion=*/true});
+                }
+                if (m_clientman.ShouldDemote(nLargerDenom, nSmallerDenom, denomCounts)) {
+                    WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::DoAutomaticDenominating -- Demotion opportunity: 1 x %s -> %d x %s\n",
+                        CoinJoin::DenominationToString(nLargerDenom),
+                        CoinJoin::PROMOTION_RATIO,
+                        CoinJoin::DenominationToString(nSmallerDenom));
+                    vecRebalances.push_back({nSmallerDenom, /*fPromotion=*/false});
+                }
             }
         }
+        const bool fRebalanceOpportunity{!vecRebalances.empty()};
 
         if (nBalanceNeedsAnonymized < 0 && !fRebalanceOpportunity) {
             WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::DoAutomaticDenominating -- Nothing to do\n");
@@ -1166,50 +1183,12 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(ChainstateManager& chainman
         }
     } // LOCK(m_wallet->cs_wallet);
 
-    // Post-V24: Check if we should promote or demote denominations
-    // This helps maintain optimal denomination distribution as coins are spent
-    if (fRebalanceOpportunity) {
-        // Check all adjacent denomination pairs for promotion/demotion opportunities
-        // Denominations: 10, 1, 0.1, 0.01, 0.001 (indices 0-4, smaller index = larger denom)
-        for (size_t i = 0; i + 1 < CoinJoin::vecStandardDenominations.size(); ++i) {
-            const int nLargerDenom = 1 << i;       // Larger denomination (e.g., 10 DASH)
-            const int nSmallerDenom = 1 << (i + 1); // Smaller denomination (e.g., 1 DASH)
-
-            // Check if we should promote smaller -> larger; ShouldPromote() requires
-            // PROMOTION_RATIO fully-mixed coins, the queue functions re-verify on selection
-            if (m_clientman.ShouldPromote(nSmallerDenom, nLargerDenom, denomCounts)) {
-                WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::DoAutomaticDenominating -- Promotion opportunity: %d x %s -> 1 x %s\n",
-                    CoinJoin::PROMOTION_RATIO,
-                    CoinJoin::DenominationToString(nSmallerDenom),
-                    CoinJoin::DenominationToString(nLargerDenom));
-
-                // Try to join an existing queue for promotion
-                if (JoinExistingQueue(nBalanceNeedsAnonymized, connman, nSmallerDenom, /*fPromotion=*/true)) {
-                    return true;
-                }
-                // No existing queue found - try to start a new one for promotion
-                if (StartNewQueue(nBalanceNeedsAnonymized, connman, nSmallerDenom, /*fPromotion=*/true, /*fDemotion=*/false)) {
-                    return true;
-                }
-            }
-
-            // Check if we should demote larger -> smaller
-            if (m_clientman.ShouldDemote(nLargerDenom, nSmallerDenom, denomCounts)) {
-                WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::DoAutomaticDenominating -- Demotion opportunity: 1 x %s -> %d x %s\n",
-                    CoinJoin::DenominationToString(nLargerDenom),
-                    CoinJoin::PROMOTION_RATIO,
-                    CoinJoin::DenominationToString(nSmallerDenom));
-
-                // Try to join an existing queue for demotion
-                if (JoinExistingQueue(nBalanceNeedsAnonymized, connman, nSmallerDenom, /*fPromotion=*/false, /*fDemotion=*/true)) {
-                    return true;
-                }
-                // No existing queue found - try to start a new one for demotion
-                if (StartNewQueue(nBalanceNeedsAnonymized, connman, nSmallerDenom, /*fPromotion=*/false, /*fDemotion=*/true)) {
-                    return true;
-                }
-            }
-        }
+    // Post-V24: joining an existing queue at a conversion's denomination is cheap, but a new
+    // promotion/demotion queue has to wait for participants that may never come (pre-rebalance
+    // clients can't join it). Only start one when there is no standard mixing to do, or a lasting
+    // rebalance opportunity would keep the wallet from ever mixing again.
+    for (const auto& [nDenom, fPromotion] : vecRebalances) {
+        if (JoinExistingQueue(nBalanceNeedsAnonymized, connman, nDenom, fPromotion, !fPromotion)) return true;
     }
 
     // Standard mixing only makes sense while there is still balance to anonymize; a
@@ -1222,6 +1201,10 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(ChainstateManager& chainman
 
         // If we were unable to find/join an existing queue then start a new one.
         if (StartNewQueue(nBalanceNeedsAnonymized, connman)) return true;
+    }
+
+    for (const auto& [nDenom, fPromotion] : vecRebalances) {
+        if (StartNewQueue(nBalanceNeedsAnonymized, connman, nDenom, fPromotion, !fPromotion)) return true;
     }
 
     strAutoDenomResult = _("No compatible Masternode found.");
