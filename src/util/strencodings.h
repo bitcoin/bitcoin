@@ -224,7 +224,7 @@ bool ConvertBits(O outfn, It it, It end, I infn = {})
     constexpr size_t maxv = (1 << tobits) - 1;
     constexpr size_t max_acc = (1 << (frombits + tobits - 1)) - 1;
     while (it != end) {
-        int v = infn(*it);
+        int v{infn(*it)};
         if (v < 0) return false;
         acc = ((acc << frombits) | v) & max_acc;
         bits += frombits;
