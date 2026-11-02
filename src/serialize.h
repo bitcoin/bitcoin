@@ -450,12 +450,12 @@ I ReadVarInt(Stream& is)
     while(true) {
         unsigned char chData = ser_readdata8(is);
         if (n > (std::numeric_limits<I>::max() >> 7)) {
-           throw std::ios_base::failure("ReadVarInt(): size too large");
+           throw std::ios_base::failure("VarInt exceeds destination range");
         }
         n = (n << 7) | (chData & 0x7F);
         if (chData & 0x80) {
             if (n == std::numeric_limits<I>::max()) {
-                throw std::ios_base::failure("ReadVarInt(): size too large");
+                throw std::ios_base::failure("VarInt increment exceeds destination range");
             }
             n++;
         } else {
