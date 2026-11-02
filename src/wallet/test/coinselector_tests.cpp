@@ -871,11 +871,13 @@ BOOST_AUTO_TEST_CASE(bump_fee_test)
         selection.RecalculateWaste(min_viable_change, change_cost, change_fee);
         CAmount expected_waste = fee_diff * -2 + change_cost + /*bump_fees=*/60;
         BOOST_CHECK_EQUAL(expected_waste, selection.GetWaste());
+        BOOST_CHECK_EQUAL(selection.GetTotalBumpFees(), 60);
 
         selection.SetBumpFeeDiscount(30);
         selection.RecalculateWaste(min_viable_change, change_cost, change_fee);
         expected_waste = fee_diff * -2 + change_cost + /*bump_fees=*/60 - /*group_discount=*/30;
         BOOST_CHECK_EQUAL(expected_waste, selection.GetWaste());
+        BOOST_CHECK_EQUAL(selection.GetTotalBumpFees(), 30);
     }
 
     {
