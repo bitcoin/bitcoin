@@ -356,12 +356,11 @@ class P2PConnection(asyncio.Protocol):
                         msg = msg[1:]
                 else:
                     # v1 P2P messages are read
-                    if len(self.recvbuf) < 4:
+                    # Like bitcoind, wait for the full header before checking the magic bytes
+                    if len(self.recvbuf) < 4 + 12 + 4 + 4:
                         return
                     if self.recvbuf[:4] != self.magic_bytes:
                         raise ValueError("magic bytes mismatch: {} != {}".format(repr(self.magic_bytes), repr(self.recvbuf)))
-                    if len(self.recvbuf) < 4 + 12 + 4 + 4:
-                        return
                     msgtype = self.recvbuf[4:4+12].split(b"\x00", 1)[0]
                     msglen = struct.unpack("<i", self.recvbuf[4+12:4+12+4])[0]
                     checksum = self.recvbuf[4+12+4:4+12+4+4]
