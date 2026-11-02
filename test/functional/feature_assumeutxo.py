@@ -758,7 +758,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         # Upon restart, the node must stay in 'limited' mode until the background
         # chain sync completes.
-        self.restart_node(2, extra_args=self.extra_args[2])
+        self.restart_node(2, extra_args=self.extra_args[2], wait_for_full_init=False)
         self.assert_only_network_limited_service(n2)
 
         self.connect_nodes(0, 2)

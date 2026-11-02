@@ -99,9 +99,8 @@ class RpcMiscTest(BitcoinTestFramework):
         # Without any indices running the RPC returns an empty object
         assert_equal(node.getindexinfo(), {})
 
-        # Restart the node with indices and wait for them to sync
+        # Restart the node with indices.
         self.restart_node(0, ["-txindex", "-blockfilterindex", "-coinstatsindex", "-txospenderindex"])
-        self.wait_until(lambda: all(i["synced"] for i in node.getindexinfo().values()))
 
         # Returns a list of all running indices by default
         values = {"synced": True, "best_block_height": 200}

@@ -38,8 +38,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
     def _test_coin_stats_index_compatibility(self):
         node = self.nodes[0]
         legacy_node = self.nodes[1]
-        for n in self.nodes:
-            self.wait_until(lambda: n.getindexinfo()['coinstatsindex']['synced'] is True)
 
         self.log.info("Test that gettxoutsetinfo() output is consistent between the different index versions")
         res0 = node.gettxoutsetinfo('muhash')
@@ -54,7 +52,6 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         msg = f'[warning] Old version of coinstatsindex found at {old_version_path}. This folder can be safely deleted unless you plan to downgrade your node to version 29 or lower.'
         with node.assert_debug_log(expected_msgs=[msg]):
             self.start_node(0, ['-coinstatsindex'])
-        self.wait_until(lambda: node.getindexinfo()['coinstatsindex']['synced'] is True)
         res2 = node.gettxoutsetinfo('muhash')
         assert_equal(res2, res0)
 

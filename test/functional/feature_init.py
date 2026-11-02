@@ -61,7 +61,6 @@ class InitTest(BitcoinTestFramework):
         node.wait_for_rpc_connection()
         height = node.getblockcount()
         assert_equal(200, height)
-        self.wait_until(lambda: all(i["synced"] and i["best_block_height"] == height for i in node.getindexinfo().values()))
 
     def init_stress_test_interrupt(self):
         """

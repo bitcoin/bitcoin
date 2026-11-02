@@ -88,14 +88,14 @@ class ReindexTest(BitcoinTestFramework):
         node.stop_node()
         with node.busy_wait_for_debug_log([b'initload thread start']):
             node.start(['-blockfilterindex', '-reindex'])
-            node.wait_for_rpc_connection(wait_for_import=False)
+            node.wait_for_rpc_connection(wait_for_full_init=False)
         node.stop_node()
 
         # Start node without the reindex flag and verify it does not wipe the indexes data again
         db_path = node.chain_path / 'indexes' / 'blockfilter' / 'basic' / 'db'
         with node.assert_debug_log(expected_msgs=[f'Opening LevelDB in {db_path}'], unexpected_msgs=[f'Wiping LevelDB in {db_path}']):
             node.start(['-blockfilterindex'])
-            node.wait_for_rpc_connection(wait_for_import=False)
+            node.wait_for_rpc_connection(wait_for_full_init=False)
         node.stop_node()
 
     def run_test(self):

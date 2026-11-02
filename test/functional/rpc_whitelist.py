@@ -98,7 +98,7 @@ class RPCWhitelistTest(BitcoinTestFramework):
         # Replace file configurations
         self.nodes[0].replace_in_config([("rpcwhitelistdefault=0", "rpcwhitelistdefault=1")])
         with open(self.nodes[0].datadir_path / "bitcoin.conf", 'a') as f:
-            f.write("rpcwhitelist=__cookie__:getblockcount,getblockchaininfo,getmempoolinfo,stop\n")
+            f.write("rpcwhitelist=__cookie__:getblockcount,getblockchaininfo,getmempoolinfo,getindexinfo,stop\n")
         self.restart_node(0)
 
         self.test_users_permissions()
