@@ -1180,6 +1180,12 @@ BOOST_AUTO_TEST_CASE(checktxinputs_invalid_transactions_test)
                   /*spend_height=*/2,
                   TxValidationResult::TX_CONSENSUS, /*expected_reason=*/"bad-txns-inputvalues-outofrange");
 
+    check_invalid(/*input_values=*/{2 * COIN, -1 * COIN},
+                  /*output_value=*/1,
+                  /*coinbase=*/false,
+                  /*spend_height=*/2,
+                  TxValidationResult::TX_CONSENSUS, /*expected_reason=*/"bad-txns-inputvalues-outofrange");
+
     check_invalid(/*input_values=*/{1 * COIN},
                   /*output_value=*/2 * COIN,
                   /*coinbase=*/false,
