@@ -202,10 +202,7 @@ void AllocateFileRange(FILE* file, uint64_t offset, uint64_t length)
 #if defined(WIN32)
     // Windows-specific version
     HANDLE hFile = (HANDLE)_get_osfhandle(_fileno(file));
-    LARGE_INTEGER nFileSize;
-    int64_t nEndPos = (int64_t)offset + length;
-    nFileSize.u.LowPart = nEndPos & 0xFFFFFFFF;
-    nFileSize.u.HighPart = nEndPos >> 32;
+    LARGE_INTEGER nFileSize{.QuadPart = int64_t(offset + length)};
     SetFilePointerEx(hFile, nFileSize, 0, FILE_BEGIN);
     SetEndOfFile(hFile);
 #elif defined(__APPLE__)
