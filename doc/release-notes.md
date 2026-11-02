@@ -629,11 +629,9 @@ and RPC parameters.
   cache format version was bumped for this: on the first start after upgrading,
   the existing cache is discarded and governance objects and votes are synced
   again from the network. (#7831)
-- This release includes the fixes shipped in Dash Core v23.1.9, including the
-  consensus rule that rejects transactions with a negative `nVersion` once DIP3
-  is active, and the change that stopped masternodes from InstantSend-locking
-  provider transactions (#7858; software waiting for an islock on a provider
-  transaction should wait for a ChainLock or confirmations instead).
+- Provider (masternode) transactions are no longer InstantSend-locked.
+  Software that waits for an InstantSend lock on a provider transaction should
+  wait for a ChainLock or for confirmations instead. (#7858)
 - Network-adjusted time is no longer used to validate block timestamps or to
   build block templates; both use the system clock. Keep the system clock
   accurate. `-maxtimeadjustment` now only affects Dash subsystems that still use
