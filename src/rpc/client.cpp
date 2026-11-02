@@ -316,6 +316,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getorphantxs", 0, "verbosity" },
     { "estimatesmartfee", 0, "conf_target" },
     { "estimatesmartfee", 2, "options" },
+    { "estimatesmartfee", 2, "verbosity" },
     { "estimaterawfee", 0, "conf_target" },
     { "estimaterawfee", 1, "threshold" },
     { "prioritisetransaction", 1, "dummy" },
