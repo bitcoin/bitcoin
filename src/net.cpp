@@ -3984,7 +3984,12 @@ bool CConnman::InitBinds(const Options& options)
         }
     }
     for (const auto& addr_bind : options.onion_binds) {
-        if (!Bind(addr_bind, BF_REPORT_ERROR | BF_DONT_ADVERTISE, NetPermissionFlags::None)) {
+        if (options.onion_bind_optional) {
+            if (!Bind(addr_bind, BF_DONT_ADVERTISE, NetPermissionFlags::None)) {
+                LogWarning("Unable to bind the default onion service target %s, continuing without it\n", addr_bind.ToStringAddrPort());
+                std::erase(m_onion_binds, addr_bind);
+            }
+        } else if (!Bind(addr_bind, BF_REPORT_ERROR | BF_DONT_ADVERTISE, NetPermissionFlags::None)) {
             return false;
         }
     }

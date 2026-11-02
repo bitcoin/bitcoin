@@ -326,6 +326,8 @@ MAX_NODES = 20
 PORT_MIN = int(os.getenv('TEST_RUNNER_PORT_MIN', default=11000))
 # The number of ports to "reserve" for p2p, rpc and tor, each
 PORT_RANGE = 10000
+# Port of dashd's default onion service target on regtest (127.0.0.1:19896)
+REGTEST_ONION_TARGET_PORT = 19896
 
 
 class PortSeed:
@@ -358,17 +360,27 @@ def get_rpc_proxy(url: str, node_number: int, *, timeout: int=None, coveragedir:
     return coverage.AuthServiceProxyWrapper(proxy, url, coverage_logfile)
 
 
-def p2p_port(n):
+def _port(n, range_index):
     assert n <= MAX_NODES
-    return PORT_MIN + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
+    range_start = PORT_MIN + range_index * PORT_RANGE
+    port = range_start + n + (MAX_NODES * PortSeed.n) % (PORT_RANGE - 1 - MAX_NODES)
+    # dashd may bind the regtest default onion service target, so never hand it out.
+    # No port seed and node index reach the last port of a range, so it can't collide.
+    if port == REGTEST_ONION_TARGET_PORT:
+        port = range_start + PORT_RANGE - 1
+    return port
+
+
+def p2p_port(n):
+    return _port(n, 0)
 
 
 def rpc_port(n):
-    return p2p_port(n) + PORT_RANGE
+    return _port(n, 1)
 
 
 def tor_port(n):
-    return p2p_port(n) + PORT_RANGE * 2
+    return _port(n, 2)
 
 
 def rpc_url(datadir, i, chain, rpchost=None):

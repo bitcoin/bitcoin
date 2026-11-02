@@ -312,7 +312,7 @@ std::map<std::string,std::string> ParseTorReplyMapping(const std::string &s)
     return mapping;
 }
 
-TorController::TorController(struct event_base* _base, const std::string& tor_control_center, const CService& target):
+TorController::TorController(struct event_base* _base, const std::string& tor_control_center, const std::optional<CService>& target):
     base(_base),
     m_tor_control_center(tor_control_center), conn(base), reconnect(true), reconnect_timeout(RECONNECT_TIMEOUT_START),
     m_target(target)
@@ -457,13 +457,21 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& 
             _conn.Command("GETINFO net/listeners/socks", std::bind(&TorController::get_socks_cb, this, std::placeholders::_1, std::placeholders::_2));
         }
 
+        if (!m_target) {
+            if (!m_logged_no_target) {
+                LogPrintf("tor: Not creating an onion service because there is no dedicated onion bind. Use -bind=127.0.0.1:<port>=onion to create one.\n");
+                m_logged_no_target = true;
+            }
+            return;
+        }
+
         // Finally - now create the service
         if (private_key.empty()) { // No private key, generate one
             private_key = "NEW:ED25519-V3"; // Explicitly request key type - see issue #9214
         }
         // Request onion service, redirect port.
         // Note that the 'virtual' port is always the default port to avoid decloaking nodes using other ports.
-        _conn.Command(strprintf("ADD_ONION %s Port=%i,%s", private_key, Params().GetDefaultPort(), m_target.ToStringAddrPort()),
+        _conn.Command(strprintf("ADD_ONION %s Port=%i,%s", private_key, Params().GetDefaultPort(), m_target->ToStringAddrPort()),
             std::bind(&TorController::add_onion_cb, this, std::placeholders::_1, std::placeholders::_2));
     } else {
         LogPrintf("tor: Authentication failed\n");
@@ -660,14 +668,14 @@ void TorController::reconnect_cb(evutil_socket_t fd, short what, void *arg)
 static struct event_base *gBase;
 static std::thread torControlThread;
 
-static void TorControlThread(CService onion_service_target)
+static void TorControlThread(std::optional<CService> onion_service_target)
 {
     TorController ctrl(gBase, gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), onion_service_target);
 
     event_base_dispatch(gBase);
 }
 
-void StartTorControl(CService onion_service_target)
+void StartTorControl(std::optional<CService> onion_service_target)
 {
     assert(!gBase);
 #ifdef WIN32

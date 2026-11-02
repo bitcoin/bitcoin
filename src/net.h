@@ -35,6 +35,7 @@
 #include <util/threadinterrupt.h>
 #include <util/wpipe.h>
 
+#include <algorithm>
 #include <atomic>
 #include <condition_variable>
 #include <cstdint>
@@ -1238,6 +1239,9 @@ public:
         std::vector<NetWhitebindPermissions> vWhiteBinds;
         std::vector<CService> vBinds;
         std::vector<CService> onion_binds;
+        /// True if onion_binds holds only the default onion bind and failing to bind it should not
+        /// stop startup.
+        bool onion_bind_optional{false};
         /// True if the user did not specify -bind= or -whitebind= and thus
         /// we should bind on `0.0.0.0` (IPv4) and `::` (IPv6).
         bool bind_on_any;
@@ -1315,6 +1319,8 @@ public:
     void Interrupt() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
     bool GetNetworkActive() const { return fNetworkActive; };
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
+    /** Whether we listen on addr and tag the peers connecting there as onion. */
+    bool HasOnionBind(const CService& addr) const { return std::ranges::find(m_onion_binds, addr) != m_onion_binds.end(); }
     void SetNetworkActive(bool active, CMasternodeSync* const mn_sync);
     bool GetMasternodeThreadActive() const { return m_masternode_thread_active; };
     void SetMasternodeThreadActive(bool active) { m_masternode_thread_active = active; };

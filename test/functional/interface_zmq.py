@@ -542,8 +542,8 @@ class ZMQTest (BitcoinTestFramework):
         # chain lengths on node0 and node1; for this test we only need node0, so
         # we can disable syncing blocks on the setup)
         subscribers = self.setup_zmq_test([
-            ("hashblock", f"tcp://127.0.0.1:{self.zmq_port_base + 1}"),
-            ("hashblock", f"tcp://127.0.0.1:{self.zmq_port_base + 2}"),
+            ("hashblock", f"tcp://127.0.0.1:{p2p_port(self.num_nodes + 2)}"),
+            ("hashblock", f"tcp://127.0.0.1:{p2p_port(self.num_nodes + 3)}"),
         ], sync_blocks=False)
 
         # Generate 1 block in nodes[0] and receive all notifications

@@ -16,6 +16,7 @@
 #include <cstdint>
 #include <deque>
 #include <functional>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -23,7 +24,7 @@ constexpr int DEFAULT_TOR_CONTROL_PORT = 9051;
 extern const std::string DEFAULT_TOR_CONTROL;
 static const bool DEFAULT_LISTEN_ONION = true;
 
-void StartTorControl(CService onion_service_target);
+void StartTorControl(std::optional<CService> onion_service_target);
 void InterruptTorControl();
 void StopTorControl();
 
@@ -101,12 +102,13 @@ private:
 /****** Bitcoin specific TorController implementation ********/
 
 /** Controller that connects to Tor control socket, authenticate, then create
- * and maintain an ephemeral onion service.
+ * and maintain an ephemeral onion service. Without a target it only configures
+ * the onion proxy and creates no onion service.
  */
 class TorController
 {
 public:
-    TorController(struct event_base* base, const std::string& tor_control_center, const CService& target);
+    TorController(struct event_base* base, const std::string& tor_control_center, const std::optional<CService>& target);
     TorController() : conn{nullptr} {
         // Used for testing only.
     }
@@ -127,7 +129,8 @@ private:
     struct event *reconnect_ev = nullptr;
     float reconnect_timeout;
     CService service;
-    const CService m_target;
+    const std::optional<CService> m_target;
+    bool m_logged_no_target{false};
     /** Cookie for SAFECOOKIE auth */
     std::vector<uint8_t> cookie;
     /** ClientNonce for SAFECOOKIE auth */
