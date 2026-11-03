@@ -19,7 +19,8 @@ from test_framework.script_util import (
     keyhash_to_p2pkh_script,
     scripthash_to_p2sh_script,
 )
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_greater_than
+from test_framework.wallet import getnewdestination
 
 class AddressIndexTest(BitcoinTestFramework):
     def add_options(self, parser):
@@ -341,7 +342,30 @@ class AddressIndexTest(BitcoinTestFramework):
         mempool_deltas = self.nodes[2].getaddressmempool({"addresses": [address1]})
         assert_equal(len(mempool_deltas), 2)
 
+        self.test_reorg_while_disabled()
+
         self.log.info("Passed")
+
+    def wait_index_synced(self, node):
+        self.wait_until(lambda: node.getindexinfo()["addressindex"] == {"synced": True, "best_block_height": node.getblockcount()})
+
+    def test_reorg_while_disabled(self):
+        self.log.info("Test that blocks orphaned while the index was disabled are removed from it")
+        node = self.nodes[3]
+        self.disconnect_nodes(0, 3)
+        orphan_address = getnewdestination()[2]
+        orphan_block = self.generatetoaddress(node, 1, orphan_address, sync_fun=self.no_op)[0]
+        self.wait_index_synced(node)
+        assert_greater_than(node.getaddressbalance(orphan_address)["received"], 0)
+
+        self.restart_node(3, ["-addressindex=0"])
+        node.invalidateblock(orphan_block)
+        self.generatetoaddress(node, 2, getnewdestination()[2], sync_fun=self.no_op)
+
+        self.restart_node(3, ["-addressindex"])
+        self.wait_index_synced(node)
+        assert_equal(node.getaddressbalance(orphan_address)["received"], 0)
+        assert_equal(node.getaddresstxids(orphan_address), [])
 
 
 if __name__ == '__main__':
