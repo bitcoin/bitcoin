@@ -639,7 +639,7 @@ static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)
 
     CTxIn tx_in;
     UpdateInput(tx_in, sig_data);
-    return (size_t)GetVirtualTransactionInputSize(tx_in);
+    return (size_t)GetVirtualTransactionSize(GetTransactionInputWeight(tx_in), 0, 0);
 }
 
 BOOST_FIXTURE_TEST_CASE(dummy_input_size_test, BasicTestingSetup)
