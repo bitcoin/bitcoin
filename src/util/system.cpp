@@ -999,13 +999,6 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
                 tfm::format(std::cerr, "warning: -includeconf cannot be used from included files; ignoring -includeconf=%s\n", conf_file_name);
             }
         }
-    } else {
-        // Create an empty dash.conf if it does not exist
-        std::ofstream configFile{conf_path, std::ios_base::app};
-        if (!configFile.good())
-            return false;
-        configFile.close();
-        return true; // Nothing to read, so just return
     }
 
     // If datadir is changed in .conf file:

@@ -598,6 +598,10 @@ void openConfigfile()
 {
     fs::path pathConfig = gArgs.GetConfigFilePath();
 
+    /* Create the file */
+    std::ofstream configFile{pathConfig, std::ios_base::app};
+    configFile.close();
+
     /* Open dash.conf with the associated application */
     if (fs::exists(pathConfig)) {
         // Workaround for macOS-specific behavior; see #15409.
