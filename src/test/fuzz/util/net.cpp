@@ -10,11 +10,13 @@
 #include <protocol.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/util.h>
+#include <test/fuzz/util/check_globals.h>
 #include <test/util/net.h>
 #include <util/sock.h>
 #include <util/time.h>
 
 #include <array>
+#include <atomic>
 #include <cassert>
 #include <cerrno>
 #include <cstdint>
@@ -111,12 +113,25 @@ P ConsumeDeserializationParams(FuzzedDataProvider& fuzzed_data_provider) noexcep
 template CNetAddr::SerParams ConsumeDeserializationParams(FuzzedDataProvider&) noexcept;
 template CAddress::SerParams ConsumeDeserializationParams(FuzzedDataProvider&) noexcept;
 
+/** Socket of the next FuzzedSock. */
+static std::atomic<SOCKET> g_next_fuzzed_socket{INVALID_SOCKET - 1};
+
+std::atomic<bool> g_used_fuzzed_socket{false};
+std::atomic<bool> g_reset_fuzzed_sockets{false};
+
+void ResetFuzzedSockets()
+{
+    g_next_fuzzed_socket = INVALID_SOCKET - 1;
+    g_reset_fuzzed_sockets = true;
+}
+
 FuzzedSock::FuzzedSock(FuzzedDataProvider& fuzzed_data_provider, FakeSteadyClock& clock)
-    : Sock{fuzzed_data_provider.ConsumeIntegralInRange<SOCKET>(INVALID_SOCKET - 1, INVALID_SOCKET)},
+    : Sock{g_next_fuzzed_socket--},
       m_fuzzed_data_provider{fuzzed_data_provider},
       m_selectable{fuzzed_data_provider.ConsumeBool()},
       m_clock{clock}
 {
+    g_used_fuzzed_socket = true;
 }
 
 FuzzedSock::~FuzzedSock()

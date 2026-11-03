@@ -46,6 +46,7 @@ constexpr std::array INBOUND_MSG_TYPES{
 FUZZ_TARGET(p2p_private_broadcast, .init = ::initialize)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
+    ResetFuzzedSockets();
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     auto& node{g_setup->m_node};

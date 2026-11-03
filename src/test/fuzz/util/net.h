@@ -223,6 +223,10 @@ public:
     bool IsConnected(std::string& errmsg) const override;
 };
 
+/** Reset the numbering of fuzzed socket descriptors. Called before each fuzz input so descriptor
+ * values are deterministic. */
+void ResetFuzzedSockets();
+
 [[nodiscard]] inline FuzzedNetEvents ConsumeNetEvents(FuzzedDataProvider& fdp) noexcept
 {
     return FuzzedNetEvents{fdp};

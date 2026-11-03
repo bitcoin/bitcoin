@@ -40,6 +40,7 @@ void initialize_connman()
 FUZZ_TARGET(connman, .init = initialize_connman)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
+    ResetFuzzedSockets();
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
     FakeSteadyClock steady_clock;
