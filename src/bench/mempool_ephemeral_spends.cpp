@@ -29,7 +29,7 @@ static void AddTx(const CTransactionRef& tx, CTxMemPool& pool) EXCLUSIVE_LOCKS_R
     uint64_t sequence{0};
     bool spendsCoinbase{false};
     unsigned int sigOpCost{4};
-    uint64_t fee{0};
+    CAmount fee{0};
     LockPoints lp;
     TryAddToMempool(pool, CTxMemPoolEntry(
         tx, fee, nTime, nHeight, sequence,

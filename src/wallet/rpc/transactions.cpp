@@ -400,7 +400,7 @@ static void PushTxAmountAndFee(const CWallet& wallet, const CWalletTx& wtx, UniV
     CAmount debit = CachedTxGetDebit(wallet, wtx, /*avoid_reuse=*/false);
     CAmount net = credit - debit;
     bool is_from_me = CachedTxIsFromMe(wallet, wtx);
-    CAmount fee = (is_from_me ? wtx.GetTx()->GetValueOut() - debit : 0);
+    CAmount fee = (is_from_me ? wtx.GetTx()->GetValueOut() - debit : CAmount{0});
 
     entry.pushKV("amount", ValueFromAmount(net - fee));
     if (is_from_me)

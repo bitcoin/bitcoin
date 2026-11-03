@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     // Must always return 0
     BOOST_CHECK_EQUAL(feeRate.GetFee(0), CAmount(0));
     BOOST_CHECK_EQUAL(feeRate.GetFee(1e5), CAmount(0));
-    BOOST_CHECK_EQUAL(CFeeRate(0, 0).GetFeePerK(), CAmount{0});
+    BOOST_CHECK_EQUAL(CFeeRate(CAmount{0}, 0).GetFeePerK(), CAmount{0});
     BOOST_CHECK_EQUAL(CFeeRate(CAmount{5}, 0).GetFeePerK(), CAmount{0});
 
     feeRate = CFeeRate(CAmount{1000});
@@ -96,9 +96,9 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     CFeeRate(MAX_MONEY, std::numeric_limits<int32_t>::max()).GetFeePerK();
 
     // Adding to a zero size fee rate should not crash
-    CFeeRate empty_rate(0, 0);
-    empty_rate += CFeeRate(1, 1);
-    BOOST_CHECK(empty_rate == CFeeRate(1, 1));
+    CFeeRate empty_rate(CAmount{0}, 0);
+    empty_rate += CFeeRate(CAmount{1}, 1);
+    BOOST_CHECK(empty_rate == CFeeRate(CAmount{1}, 1));
 
     // check multiplication operator
     // check multiplying by zero
@@ -118,9 +118,9 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     BOOST_CHECK(largeNumber * feeRate == feeRate * largeNumber);
     // check boundary values
     int maxInt = std::numeric_limits<int>::max();
-    feeRate = CFeeRate(maxInt);
-    BOOST_CHECK(feeRate * 2 == CFeeRate(static_cast<int64_t>(maxInt) * 2));
-    BOOST_CHECK(2 * feeRate == CFeeRate(static_cast<int64_t>(maxInt) * 2));
+    feeRate = CFeeRate(CAmount{maxInt});
+    BOOST_CHECK(feeRate * 2 == CFeeRate(CAmount{static_cast<int64_t>(maxInt) * 2}));
+    BOOST_CHECK(2 * feeRate == CFeeRate(CAmount{static_cast<int64_t>(maxInt) * 2}));
     // check with zero fee rate
     feeRate = CFeeRate(CAmount{0});
     BOOST_CHECK(feeRate * 5 == CFeeRate(CAmount{0}));
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(ToStringTest)
     BOOST_CHECK_EQUAL(feeRate.ToString(), "-0.00001000 BTC/kvB");
     BOOST_CHECK_EQUAL(feeRate.ToString(FeeRateFormat::SAT_VB), "-1.000 sat/vB");
 
-    feeRate = CFeeRate(-COIN - 1);
+    feeRate = CFeeRate(-COIN - CAmount{1});
     BOOST_CHECK_EQUAL(feeRate.ToString(), "-1.00000001 BTC/kvB");
     BOOST_CHECK_EQUAL(feeRate.ToString(FeeRateFormat::SAT_VB), "-100000.001 sat/vB");
 }
