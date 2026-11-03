@@ -15,6 +15,7 @@ from test_framework.extendedkey import ExtendedPrivateKey
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_true,
 )
 
 # Linux allow all characters other than \x00

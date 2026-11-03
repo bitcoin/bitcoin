@@ -6,7 +6,7 @@
 from test_framework.address import address_to_scriptpubkey
 from test_framework.messages import COIN
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.util import assert_equal, assert_false, assert_raises_rpc_error, assert_true
 from test_framework.wallet import (
     MiniWallet,
     getnewdestination,

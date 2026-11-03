@@ -28,7 +28,9 @@ from test_framework.script import SEQUENCE_LOCKTIME_TYPE_FLAG
 from test_framework.script_util import keys_to_multisig_script
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_raises_rpc_error,
+    assert_true,
     JSONRPCException,
 )
 from test_framework.wallet_util import (

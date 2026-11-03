@@ -12,7 +12,9 @@ from test_framework.messages import MAX_BIP125_RBF_SEQUENCE
 from test_framework.util import (
     assert_array_result,
     assert_equal,
+    assert_false,
     assert_raises_rpc_error,
+    assert_true,
     wallet_importprivkey,
 )
 from test_framework.wallet_util import generate_keypair

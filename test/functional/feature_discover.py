@@ -7,7 +7,7 @@
 import socket
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_true
 
 
 def is_valid_ipv4_address(address):
