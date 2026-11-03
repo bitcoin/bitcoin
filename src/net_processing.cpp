@@ -205,6 +205,9 @@ static constexpr double MAX_ADDR_RATE_PER_SECOND{0.1};
 static constexpr size_t MAX_ADDR_PROCESSING_TOKEN_BUCKET{MAX_ADDR_TO_SEND};
 /** Private broadcast connections must complete within this time. Disconnect the peer if it takes longer. */
 static constexpr auto PRIVATE_BROADCAST_MAX_CONNECTION_LIFETIME{3min};
+/** Check for scheduled private broadcast transactions that are due for release at this
+ *  interval, plus a random jitter of up to the same duration. */
+static constexpr auto PRIVATE_BROADCAST_RELEASE_INTERVAL{15s};
 
 // Internal stuff
 namespace {
@@ -608,7 +611,7 @@ public:
     std::vector<CTransactionRef> AbortPrivateBroadcast(const uint256& id) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void InitiateTxBroadcastToAll(const Wtxid& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_inv_to_send_mutex);
-    node::TransactionError InitiateTxBroadcastPrivate(const CTransactionRef& tx) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    node::TransactionError InitiateTxBroadcastPrivate(const CTransactionRef& tx, std::optional<int> release_height) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SetBestBlock(int height, std::chrono::seconds time) override
     {
         m_best_height = height;
@@ -634,6 +637,10 @@ private:
 
     /** Rebroadcast stale private transactions (already broadcast but not received back from the network). */
     void ReattemptPrivateBroadcast(CScheduler& scheduler);
+
+    /** Release scheduled private broadcast transactions whose release height has been reached,
+     *  after re-validating them, and request connections for them. Re-schedules itself. */
+    void ReleaseScheduledPrivateBroadcast(CScheduler& scheduler);
 
     /** Get a shared pointer to the Peer object.
      *  May return an empty shared_ptr if the Peer object can't be found. */
@@ -1775,6 +1782,41 @@ void PeerManagerImpl::ReattemptPrivateBroadcast(CScheduler& scheduler)
     scheduler.scheduleFromNow([&] { ReattemptPrivateBroadcast(scheduler); }, delta);
 }
 
+void PeerManagerImpl::ReleaseScheduledPrivateBroadcast(CScheduler& scheduler)
+{
+    size_t num_released{0};
+    const int height{WITH_LOCK(cs_main, return m_chainman.ActiveHeight())};
+    for (const auto& tx : m_tx_for_private_broadcast.ReleaseDue(height)) {
+        // The transaction was validated, possibly only partially (if it was not final yet), when
+        // it was added, but it may be invalid now (e.g. its inputs got spent or the mempool
+        // minimum fee increased), or its timelocks may not be satisfied yet (e.g. BIP68 relative locks).
+        // Only hold lock per single submission
+        LOCK(cs_main);
+        const auto mempool_acceptable{m_chainman.ProcessTransaction(tx, /*test_accept=*/true)};
+        if (mempool_acceptable.m_result_type == MempoolAcceptResult::ResultType::VALID) {
+            LogDebug(BCLog::PRIVBROADCAST, "Releasing scheduled txid=%s wtxid=%s for private broadcast at height %d",
+                     tx->GetHash().ToString(), tx->GetWitnessHash().ToString(), height);
+            ++num_released;
+        } else {
+            LogDebug(BCLog::PRIVBROADCAST, "Dropping scheduled txid=%s wtxid=%s at release: %s",
+                     tx->GetHash().ToString(), tx->GetWitnessHash().ToString(),
+                     mempool_acceptable.m_state.ToString());
+            m_tx_for_private_broadcast.Remove(tx);
+        }
+    }
+
+    if (num_released > 0) {
+        if (!g_reachable_nets.Contains(NET_ONION) && !g_reachable_nets.Contains(NET_I2P)) {
+            LogWarning("Released %u scheduled transaction(s) for private broadcast, but none of the Tor or I2P networks is reachable",
+                       num_released);
+        }
+        m_connman.m_private_broadcast.NumToOpenAdd(num_released * PrivateBroadcast::INITIAL_CONNECTION_COUNT);
+    }
+
+    const auto delta{PRIVATE_BROADCAST_RELEASE_INTERVAL + FastRandomContext().randrange<std::chrono::milliseconds>(PRIVATE_BROADCAST_RELEASE_INTERVAL)};
+    scheduler.scheduleFromNow([&] { ReleaseScheduledPrivateBroadcast(scheduler); }, delta);
+}
+
 void PeerManagerImpl::FinalizeNode(const CNode& node)
 {
     NodeId nodeid = node.GetId();
@@ -2171,6 +2213,7 @@ void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
 
     if (m_opts.private_broadcast) {
         scheduler.scheduleFromNow([&] { ReattemptPrivateBroadcast(scheduler); }, 0min);
+        scheduler.scheduleFromNow([&] { ReleaseScheduledPrivateBroadcast(scheduler); }, PRIVATE_BROADCAST_RELEASE_INTERVAL);
     }
 }
 
@@ -2496,11 +2539,16 @@ void PeerManagerImpl::InitiateTxBroadcastToAll(const Wtxid& wtxid)
     ProcessInvBacklog(NodeClock::now(), /*backlog_bumped=*/true);
 }
 
-node::TransactionError PeerManagerImpl::InitiateTxBroadcastPrivate(const CTransactionRef& tx)
+node::TransactionError PeerManagerImpl::InitiateTxBroadcastPrivate(const CTransactionRef& tx, std::optional<int> release_height)
 {
     const auto txstr{strprintf("txid=%s, wtxid=%s", tx->GetHash().ToString(), tx->GetWitnessHash().ToString())};
-    switch (m_tx_for_private_broadcast.Add(tx)) {
+    switch (m_tx_for_private_broadcast.Add(tx, release_height)) {
     case PrivateBroadcast::AddResult::Added:
+        if (release_height) {
+            // Connections will be requested by ReleaseScheduledPrivateBroadcast() when it is due.
+            LogDebug(BCLog::PRIVBROADCAST, "Scheduling private broadcast at height %d: %s", *release_height, txstr);
+            return node::TransactionError::OK;
+        }
         LogDebug(BCLog::PRIVBROADCAST, "Requesting %d new connections due to %s", PrivateBroadcast::INITIAL_CONNECTION_COUNT, txstr);
         m_connman.m_private_broadcast.NumToOpenAdd(PrivateBroadcast::INITIAL_CONNECTION_COUNT);
         return node::TransactionError::OK;

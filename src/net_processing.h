@@ -162,10 +162,13 @@ public:
     /**
      * Initiate a private transaction broadcast. This is done
      * asynchronously via short-lived connections to peers on privacy networks.
+     * @param[in] tx The transaction to broadcast.
+     * @param[in] release_height If set, hold back the broadcast until the active chain
+     *                           reaches this height (see PrivateBroadcast::ReleaseDue()).
      * @retval node::TransactionError::OK The transaction is scheduled for private broadcast (or was already scheduled).
      * @retval node::TransactionError::PRIVATE_BROADCAST_FULL Rejected because the private broadcast queue is full.
      */
-    [[nodiscard]] virtual node::TransactionError InitiateTxBroadcastPrivate(const CTransactionRef& tx) = 0;
+    [[nodiscard]] virtual node::TransactionError InitiateTxBroadcastPrivate(const CTransactionRef& tx, std::optional<int> release_height) = 0;
 
     /** Send ping message to all peers */
     virtual void SendPings() = 0;
