@@ -476,6 +476,8 @@ struct BlockMan {
     const bool m_wipe_block_tree_db;
     //! Set by the first chainstate manager created with this block manager, which loads its block index
     std::atomic<bool> m_used{false};
+    //! That chainstate manager while it exists. It decides what may be pruned.
+    ChainstateManager* m_chainman GUARDED_BY(::cs_main){nullptr};
 
     BlockMan(std::shared_ptr<const Context> context, const node::BlockManager::Options& options)
         : m_context{std::move(context)},
@@ -1271,6 +1273,20 @@ void btck_block_manager_options_update_block_tree_db_in_memory(btck_BlockManager
     opts.m_blockman_options.block_tree_db_params.memory_only = block_tree_db_in_memory == 1;
 }
 
+void btck_block_manager_options_update_prune(btck_BlockManagerOptions* blockman_opts, int prune)
+{
+    auto& opts{btck_BlockManagerOptions::get(blockman_opts)};
+    LOCK(opts.m_mutex);
+    opts.m_blockman_options.prune_target = prune == 1 ? node::BlockManager::PRUNE_TARGET_MANUAL : 0;
+}
+
+void btck_block_manager_options_update_fast_prune(btck_BlockManagerOptions* blockman_opts, int fast_prune)
+{
+    auto& opts{btck_BlockManagerOptions::get(blockman_opts)};
+    LOCK(opts.m_mutex);
+    opts.m_blockman_options.fast_prune = fast_prune == 1;
+}
+
 void btck_block_manager_options_destroy(btck_BlockManagerOptions* options)
 {
     delete options;
@@ -1291,6 +1307,51 @@ btck_BlockManager* btck_block_manager_create(const btck_BlockManagerOptions* blo
 void btck_block_manager_destroy(btck_BlockManager* block_manager)
 {
     delete block_manager;
+}
+
+int btck_block_manager_prune_up_to_height(btck_BlockManager* block_manager, int32_t height, btck_PruneStatus* status)
+{
+    if (status) *status = btck_PruneStatus_OK;
+    auto& holder{*btck_BlockManager::get(block_manager)};
+    node::BlockManager& blockman{holder.m_blockman};
+    if (!blockman.IsPruneMode()) {
+        LogError("Failed to prune: pruning is not enabled.");
+        return -1;
+    }
+
+    LOCK(::cs_main);
+    if (!holder.m_chainman) {
+        LogError("Failed to prune: no chainstate manager uses this block manager.");
+        return -1;
+    }
+    Chainstate& chainstate{holder.m_chainman->ActiveChainstate()};
+    const auto last_prune{blockman.BeginManualPrune(chainstate.m_chain.Height())};
+    if (!last_prune) return 0;
+    const auto [min_height, max_height]{chainstate.GetPruneRange(std::min(height, *last_prune))};
+    if (max_height < 1) return 0;
+
+    // Pruning does not write the chainstate, so keep the blocks the chainstate
+    // on disk may still need after an unclean shutdown, including those it
+    // would disconnect if it was flushed on a chain that has since reorged.
+    const CBlockIndex* flushed{chainstate.GetLastFlushedBlock()};
+    const int flushed_height{flushed ? Assert(chainstate.m_chain.FindFork(*flushed))->nHeight : -1};
+    if (flushed_height < max_height && status) *status = btck_PruneStatus_NEEDS_FLUSH;
+    const int prune_height{std::min(max_height, flushed_height)};
+    if (prune_height < 1) return 0;
+
+    std::set<int> files_to_prune;
+    blockman.FindFilesToPruneManual(files_to_prune, {.min_height = min_height, .max_height = prune_height});
+    if (files_to_prune.empty()) return 0;
+    blockman.SetHavePruned();
+    if (const auto written{blockman.WriteBlockStorage(chainstate.m_chain.Height(), files_to_prune)}; !written) {
+        if (written.error() == node::WriteBlockStorageError::LowDiskSpace) {
+            BlockValidationState state;
+            FatalError(holder.m_chainman->GetNotifications(), state, _("Disk space is too low!"));
+        }
+        LogError("Failed to prune: writing block storage failed.");
+        return -1;
+    }
+    return 0;
 }
 
 btck_ChainstateManagerOptions* btck_chainstate_manager_options_create(const btck_Context* context, const char* data_dir, size_t data_dir_len)
@@ -1398,6 +1459,7 @@ btck_ChainstateManager* btck_chainstate_manager_create(
         return nullptr;
     }
 
+    WITH_LOCK(::cs_main, blockman->m_chainman = chainman.get());
     return btck_ChainstateManager::create(blockman, std::move(chainman), opts.m_context);
 }
 
@@ -1428,6 +1490,7 @@ void btck_chainstate_manager_destroy(btck_ChainstateManager* chainman)
                 chainstate->ResetCoinsViews();
             }
         }
+        btck_ChainstateManager::get(chainman).m_blockman->m_chainman = nullptr;
     }
 
     delete chainman;
@@ -1675,6 +1738,21 @@ int btck_chainstate_manager_process_block(
         *_new_block = new_block ? 1 : 0;
     }
     return result ? 0 : -1;
+}
+
+int btck_chainstate_manager_flush(btck_ChainstateManager* chainman)
+{
+    auto& chainman_ref{*btck_ChainstateManager::get(chainman).m_chainman};
+    LOCK(chainman_ref.GetMutex());
+    for (const auto& chainstate : chainman_ref.m_chainstates) {
+        if (!chainstate->CanFlushToDisk()) continue;
+        BlockValidationState state;
+        if (!chainstate->FlushStateToDisk(state, FlushStateMode::FORCE_SYNC)) {
+            LogError("Failed to flush: %s", state.ToString());
+            return -1;
+        }
+    }
+    return 0;
 }
 
 btck_BlockValidationState* btck_chainstate_manager_process_block_header(

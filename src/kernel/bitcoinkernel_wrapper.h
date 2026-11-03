@@ -138,6 +138,11 @@ enum class ScriptVerifyStatus : btck_ScriptVerifyStatus {
     ERROR_SPENT_OUTPUTS_REQUIRED = btck_ScriptVerifyStatus_ERROR_SPENT_OUTPUTS_REQUIRED,
 };
 
+enum class PruneStatus : btck_PruneStatus {
+    OK = btck_PruneStatus_OK,
+    NEEDS_FLUSH = btck_PruneStatus_NEEDS_FLUSH,
+};
+
 enum class ScriptVerificationFlags : btck_ScriptVerificationFlags {
     NONE = btck_ScriptVerificationFlags_NONE,
     P2SH = btck_ScriptVerificationFlags_P2SH,
@@ -1320,6 +1325,16 @@ public:
     {
         btck_block_manager_options_update_block_tree_db_in_memory(get(), block_tree_db_in_memory);
     }
+
+    void UpdatePrune(bool prune)
+    {
+        btck_block_manager_options_update_prune(get(), prune);
+    }
+
+    void UpdateFastPrune(bool fast_prune)
+    {
+        btck_block_manager_options_update_fast_prune(get(), fast_prune);
+    }
 };
 
 class ChainstateManagerOptions : public UniqueHandle<btck_ChainstateManagerOptions, btck_chainstate_manager_options_destroy>
@@ -1500,6 +1515,14 @@ public:
     {
         return btck_block_spent_outputs_read(get(), entry.get());
     }
+
+    bool PruneUpToHeight(int32_t height, PruneStatus* status)
+    {
+        btck_PruneStatus _status;
+        int res = btck_block_manager_prune_up_to_height(get(), height, &_status);
+        if (status) *status = static_cast<PruneStatus>(_status);
+        return res == 0;
+    }
 };
 
 class ChainMan : UniqueHandle<btck_ChainstateManager, btck_chainstate_manager_destroy>
@@ -1530,6 +1553,11 @@ public:
         int res = btck_chainstate_manager_process_block(get(), block.get(), &_new_block);
         if (new_block) *new_block = _new_block == 1;
         return res == 0;
+    }
+
+    bool Flush()
+    {
+        return btck_chainstate_manager_flush(get()) == 0;
     }
 
     BlockValidationState ProcessBlockHeader(const BlockHeader& header)

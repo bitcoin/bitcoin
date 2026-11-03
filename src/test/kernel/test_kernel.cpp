@@ -81,6 +81,53 @@ std::string byte_span_to_hex_string_reversed(std::span<const std::byte> bytes)
     return oss.str();
 }
 
+constexpr int32_t PRUNE_KEEP_BLOCKS{288};
+
+void append_le32(std::vector<std::byte>& bytes, uint32_t value)
+{
+    for (int i{0}; i < 4; ++i) bytes.push_back(std::byte(value >> (8 * i)));
+}
+
+Block create_regtest_block(std::span<const std::byte, 32> prev_hash, int32_t height, uint32_t time)
+{
+    assert(height > 16); // lower heights are pushed as OP_1 to OP_16
+    std::vector<std::byte> height_push;
+    for (auto h{static_cast<uint32_t>(height)}; h > 0; h >>= 8) height_push.push_back(std::byte(h));
+    if ((height_push.back() & std::byte{0x80}) != std::byte{0}) height_push.push_back(std::byte{0});
+
+    // Null prevout with the BIP34 height push, and one zero-value OP_TRUE output
+    std::vector<std::byte> coinbase;
+    append_le32(coinbase, 1);
+    coinbase.push_back(std::byte{1});
+    coinbase.insert(coinbase.end(), 32, std::byte{0});
+    append_le32(coinbase, 0xffffffff);
+    coinbase.push_back(std::byte(height_push.size() + 1));
+    coinbase.push_back(std::byte(height_push.size()));
+    coinbase.insert(coinbase.end(), height_push.begin(), height_push.end());
+    append_le32(coinbase, 0xffffffff);
+    coinbase.push_back(std::byte{1});
+    coinbase.insert(coinbase.end(), 8, std::byte{0});
+    coinbase.push_back(std::byte{1});
+    coinbase.push_back(std::byte{0x51});
+    append_le32(coinbase, 0);
+
+    const auto merkle_root{Transaction{coinbase}.Txid().ToBytes()};
+    std::vector<std::byte> block;
+    append_le32(block, 0x20000000);
+    block.insert(block.end(), prev_hash.begin(), prev_hash.end());
+    block.insert(block.end(), merkle_root.begin(), merkle_root.end());
+    append_le32(block, time);
+    append_le32(block, 0x207fffff); // regtest proof of work limit
+    append_le32(block, 0);
+    // Below the regtest target when the most significant byte is below 0x7f
+    for (uint32_t nonce{1}; BlockHeader{block}.Hash().ToBytes()[31] >= std::byte{0x7f}; ++nonce) {
+        for (int i{0}; i < 4; ++i) block[76 + i] = std::byte(nonce >> (8 * i));
+    }
+    block.push_back(std::byte{1});
+    block.insert(block.end(), coinbase.begin(), coinbase.end());
+    return Block{block};
+}
+
 constexpr auto VERIFY_ALL_PRE_SEGWIT{ScriptVerificationFlags::P2SH | ScriptVerificationFlags::DERSIG |
                                      ScriptVerificationFlags::NULLDUMMY | ScriptVerificationFlags::CHECKLOCKTIMEVERIFY |
                                      ScriptVerificationFlags::CHECKSEQUENCEVERIFY};
@@ -910,6 +957,8 @@ BOOST_AUTO_TEST_CASE(btck_chainman_tests)
     ChainMan chainman{context, chainman_opts, blockman};
     // A block manager can only be passed to one chainstate manager
     BOOST_CHECK_THROW(ChainMan(context, chainman_opts, blockman), std::runtime_error);
+    // Pruning is not enabled
+    BOOST_CHECK(!blockman.PruneUpToHeight(1, nullptr));
 }
 
 BlockManager create_block_manager(TestDirectory& test_directory,
@@ -1271,6 +1320,133 @@ BOOST_AUTO_TEST_CASE(btck_block_manager_destroy_order_tests)
         BOOST_CHECK(new_block);
     }
     BOOST_CHECK_EQUAL(chainman->GetChain().Height(), 3);
+}
+
+BOOST_AUTO_TEST_CASE(btck_block_manager_prune_tests)
+{
+    auto test_directory{TestDirectory{"prune_test_bitcoin_kernel"}};
+    auto notifications{std::make_shared<TestKernelNotifications>()};
+    auto context{create_context(notifications, ChainType::REGTEST)};
+
+    const auto create_pruning_block_manager{[&] {
+        BlockManagerOptions blockman_opts{context, PathToString(test_directory.m_directory), PathToString(test_directory.m_directory / "blocks")};
+        blockman_opts.UpdatePrune(true);
+        blockman_opts.UpdateFastPrune(true);
+        return BlockManager{blockman_opts};
+    }};
+
+    int32_t tip_height;
+    {
+        auto blockman{create_pruning_block_manager()};
+        // Pruning needs a chainstate manager to decide what may be deleted
+        BOOST_CHECK(!blockman.PruneUpToHeight(1, nullptr));
+
+        auto chainman{create_chainman(
+            test_directory, /*wipe_chainstate=*/false, /*chainstate_db_in_memory=*/false, context, blockman)};
+        // Nothing to prune while the chain is at its genesis block
+        BOOST_CHECK(blockman.PruneUpToHeight(1, nullptr));
+        for (const auto& raw_block : REGTEST_BLOCK_DATA) {
+            BOOST_REQUIRE(chainman->ProcessBlock(Block{hex_string_to_byte_vec(raw_block)}, nullptr));
+        }
+        const auto chain{chainman->GetChain()};
+        BOOST_CHECK(blockman.PruneUpToHeight(0, nullptr));
+
+        // The tip is in blk00001.dat, but blk00000.dat is kept: its blocks are within 288 of the tip.
+        BOOST_REQUIRE(fs::exists(test_directory.m_directory / "blocks" / "blk00001.dat"));
+        PruneStatus status;
+        BOOST_CHECK(blockman.PruneUpToHeight(chain.Height(), &status));
+        BOOST_CHECK(status == PruneStatus::OK);
+        BOOST_CHECK(blockman.ReadBlock(chain.GetByHeight(1)));
+
+        Block last_block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA.back())};
+        auto prev_hash{last_block.GetHash().ToBytes()};
+        auto time{last_block.GetHeader().Timestamp()};
+        for (int i{0}; i < 300; ++i) {
+            Block block{create_regtest_block(prev_hash, chain.Height() + 1, ++time)};
+            BOOST_REQUIRE(chainman->ProcessBlock(block, nullptr));
+            prev_hash = block.GetHash().ToBytes();
+        }
+        tip_height = chain.Height();
+
+        // The chainstate on disk may still need these blocks
+        BOOST_CHECK(blockman.PruneUpToHeight(tip_height - PRUNE_KEEP_BLOCKS, &status));
+        BOOST_CHECK(status == PruneStatus::NEEDS_FLUSH);
+        BOOST_CHECK(blockman.ReadBlock(chain.GetByHeight(1)));
+
+        BOOST_REQUIRE(chainman->Flush());
+        BOOST_CHECK(blockman.PruneUpToHeight(tip_height - PRUNE_KEEP_BLOCKS, &status));
+        BOOST_CHECK(status == PruneStatus::OK);
+        BOOST_CHECK(!blockman.ReadBlock(chain.GetByHeight(1)));
+        BOOST_CHECK_THROW(blockman.ReadBlockSpentOutputs(chain.GetByHeight(1)), std::runtime_error);
+        BOOST_CHECK(blockman.ReadBlock(chain.GetByHeight(tip_height - PRUNE_KEEP_BLOCKS + 1)));
+
+        chainman.reset();
+        BOOST_CHECK(!blockman.PruneUpToHeight(tip_height - PRUNE_KEEP_BLOCKS, nullptr));
+    }
+
+    { // A pruned data directory only opens with pruning set
+        auto blockman{create_block_manager(test_directory, /*reindex=*/false, /*block_tree_db_in_memory=*/false, context)};
+        BOOST_CHECK_THROW(create_chainman(test_directory, /*wipe_chainstate=*/false, /*chainstate_db_in_memory=*/false, context, blockman),
+                          std::runtime_error);
+    }
+    auto blockman{create_pruning_block_manager()};
+    auto chainman{create_chainman(
+        test_directory, /*wipe_chainstate=*/false, /*chainstate_db_in_memory=*/false, context, blockman)};
+    const auto chain{chainman->GetChain()};
+    BOOST_CHECK_EQUAL(chain.Height(), tip_height);
+    BOOST_CHECK(!blockman.ReadBlock(chain.GetByHeight(1)));
+}
+
+BOOST_AUTO_TEST_CASE(btck_block_manager_prune_reorg_tests)
+{
+    auto test_directory{TestDirectory{"prune_reorg_test_bitcoin_kernel"}};
+    auto notifications{std::make_shared<TestKernelNotifications>()};
+    auto context{create_context(notifications, ChainType::REGTEST)};
+
+    BlockManagerOptions blockman_opts{context, PathToString(test_directory.m_directory), PathToString(test_directory.m_directory / "blocks")};
+    blockman_opts.UpdatePrune(true);
+    blockman_opts.UpdateFastPrune(true);
+    BlockManager blockman{blockman_opts};
+    auto chainman{create_chainman(
+        test_directory, /*wipe_chainstate=*/false, /*chainstate_db_in_memory=*/false, context, blockman)};
+    for (const auto& raw_block : REGTEST_BLOCK_DATA) {
+        BOOST_REQUIRE(chainman->ProcessBlock(Block{hex_string_to_byte_vec(raw_block)}, nullptr));
+    }
+    BOOST_REQUIRE(chainman->Flush());
+
+    constexpr int32_t fork_height{16};
+    const auto chain{chainman->GetChain()};
+    const int32_t flushed_height{chain.Height()};
+    std::vector<BlockTreeEntry> flushed_branch;
+    for (const auto entry : chain.Entries()) {
+        if (entry.GetHeight() > fork_height) flushed_branch.push_back(entry);
+    }
+
+    // Reorg to a longer branch from below the flushed tip, without flushing
+    auto prev_hash{Block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[fork_height - 1])}.GetHash().ToBytes()};
+    auto time{Block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA.back())}.GetHeader().Timestamp()};
+    for (int32_t height{fork_height + 1}; height <= flushed_height + PRUNE_KEEP_BLOCKS + 1; ++height) {
+        Block block{create_regtest_block(prev_hash, height, ++time)};
+        BOOST_REQUIRE(chainman->ProcessBlock(block, nullptr));
+        prev_hash = block.GetHash().ToBytes();
+    }
+    BOOST_REQUIRE_EQUAL(chain.Height(), flushed_height + PRUNE_KEEP_BLOCKS + 1);
+    BOOST_REQUIRE(!chain.Contains(flushed_branch.back()));
+
+    // After an unclean shutdown the chainstate on disk is at the flushed tip.
+    // Disconnecting it needs the blocks and spent outputs above the fork.
+    PruneStatus status;
+    BOOST_CHECK(blockman.PruneUpToHeight(chain.Height(), &status));
+    BOOST_CHECK(status == PruneStatus::NEEDS_FLUSH);
+    for (const auto& entry : flushed_branch) {
+        BOOST_CHECK(blockman.ReadBlock(entry));
+        BOOST_CHECK_NO_THROW(blockman.ReadBlockSpentOutputs(entry));
+    }
+
+    BOOST_REQUIRE(chainman->Flush());
+    BOOST_CHECK(blockman.PruneUpToHeight(chain.Height(), &status));
+    BOOST_CHECK(status == PruneStatus::OK);
+    BOOST_CHECK(!blockman.ReadBlock(flushed_branch.front()));
 }
 
 BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
