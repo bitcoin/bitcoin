@@ -12,11 +12,6 @@ import subprocess
 import re
 import sys
 
-# Disabled warnings:
-DISABLED = [
-    'SC2162', # read without -r will mangle backslashes.
-]
-
 def check_shellcheck_install():
     try:
         subprocess.run(['shellcheck', '--version'], stdout=subprocess.DEVNULL, check=True)
@@ -45,9 +40,6 @@ def get_shebang_files():
 
 def main():
     check_shellcheck_install()
-
-    # build the `exclude` flag
-    exclude = '--exclude=' + ','.join(DISABLED)
 
     # Find files which declare a shell dialect for ShellCheck.
     sourced_files_cmd = [
@@ -85,7 +77,6 @@ def main():
         '--check-sourced',
         '--source-path=SCRIPTDIR',
     ]
-    shellcheck_cmd.append(exclude)
     shellcheck_cmd.extend(files)
 
     # run the `shellcheck` command
