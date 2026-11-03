@@ -10,6 +10,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <consensus/amount.h>
+#include <core_io.h>
 #include <evo/deterministicmns.h>
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
@@ -33,6 +34,7 @@
 #include <script/standard.h>
 #include <test/util/setup_common.h>
 #include <univalue.h>
+#include <util/strencodings.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <validation.h>
@@ -184,6 +186,8 @@ public:
 
     //! Everything answered so far, for failure messages
     const QStringList& seen() const { return m_seen; }
+    //! Window titles of those boxes, in the same order
+    const QStringList& titles() const { return m_titles; }
 
 private:
     void poll()
@@ -207,6 +211,7 @@ private:
             // counts down; wait for it rather than cancelling the flow.
             if (target != nullptr && !target->isEnabled()) return;
             m_pending = nullptr;
+            m_titles << box->windowTitle();
             m_seen << (box->text() + QLatin1Char('\n') + box->informativeText() + QLatin1Char('\n') + box->detailedText());
             if (!m_queued.isEmpty()) {
                 const Shot shot{m_queued.takeFirst()};
@@ -234,6 +239,7 @@ private:
     QTimer m_timer;
     QWidget* m_pending{nullptr};
     QStringList m_seen;
+    QStringList m_titles;
     QList<Shot> m_queued;
 };
 
@@ -1018,6 +1024,34 @@ void SharedMnWalkthroughTests::walkthrough()
         Shots().capture(&dialog, "maintenance", "39-standby-created",
                           "Standby dissolution tab with both offline transactions generated and stored",
                           /*fixed_size=*/false);
+
+        // Pasting the full-principal standby (the file's first transaction) while
+        // the early period still runs: the network refuses it, and the list must
+        // say so, not report it as sent
+        QFile standby_file{standby_path};
+        QVERIFY(standby_file.open(QIODevice::ReadOnly | QIODevice::Text));
+        QString standby_hex;
+        for (const QString& line : QString::fromUtf8(standby_file.readAll()).split(QLatin1Char('\n'))) {
+            if (!line.isEmpty() && IsHex(line.toStdString())) {
+                standby_hex = line;
+                break;
+            }
+        }
+        QVERIFY(!standby_hex.isEmpty());
+        const auto answered{pilot.seen().size()};
+        list.openSharedMessage(standby_hex);
+        QCOMPARE(pilot.seen().size(), answered + 2);
+        const QString result{pilot.seen().last()};
+        QVERIFY2(pilot.titles().last() == QStringLiteral("Broadcast failed") && result.contains("early-exit penalty") &&
+                     result.contains("bad-prodis-penalty-floor"),
+                 qPrintable(pilot.titles().last() + QLatin1Char('\n') + result));
+        CMutableTransaction standby_full;
+        QVERIFY(DecodeHexTx(standby_full, standby_hex.toStdString()));
+        UniValue params(UniValue::VOBJ);
+        params.pushKV("txid", CTransaction(standby_full).GetHash().ToString());
+        UniValue entry;
+        const QString mempool_error{RunRpc(m_node, "getmempoolentry", params, entry)};
+        QVERIFY2(mempool_error.contains("Transaction not in mempool"), qPrintable(mempool_error));
     }
     {
         RotateSharedKeysDialog dialog(m_node, &coord_model, *shared_entry);
