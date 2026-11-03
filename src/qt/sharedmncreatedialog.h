@@ -266,7 +266,12 @@ private:
     bool saveSession();
     void handleImportedText(const QString& text);
     void absorbSession(const MnShareSession& imported);
-    void replaceSession(const MnShareSession& imported);
+    //! Load `imported` in place of the session, answering for row `my_share`
+    //! when it is still this wallet's, or for the row it infers otherwise
+    void replaceSession(const MnShareSession& imported, int my_share = -1);
+    //! A participant's answer to a newer draft invitation: load it when every
+    //! share this wallet holds comes back as sent or still unanswered
+    void followNewerInvitation(const MnShareSession& imported);
 
     // Funding
     //! Confirmed, unlocked, spendable wallet coins covering `target`, largest
@@ -296,6 +301,9 @@ private:
     //! Re-check that every funding coin this wallet contributed is still
     //! unspent, and set m_dead_reason when one is gone
     void checkSessionLiveness();
+    //! Why `session` can never complete because a coin this wallet tracks in
+    //! it was spent, or empty
+    QString deadReason(const MnShareSession& session) const;
     //! Contribution recorded for the share this wallet holds, or nullptr
     const MnShareSession::Contribution* myContribution() const;
     //! Value of a recorded funding input: this wallet's own view for the coins
@@ -419,6 +427,10 @@ private:
     //! coordinator edited the draft after somebody had already answered it,
     //! which is the only case where the replies really are stale.
     int m_replies_absorbed_revision{-1};
+    //! Revision of the coordinator's invitation a participant last loaded, or -1
+    //! when unknown. Reserving coins bumps the participant's own revision as
+    //! well, so only this tells an older invitation from a newer one.
+    int m_invitation_revision{-1};
     //! A recorded funding coin was spent, so the registration can never
     //! complete
     QString m_dead_reason;

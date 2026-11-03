@@ -2365,6 +2365,7 @@ void SharedMnCreateDialog::startSession()
     m_dead_reason.clear();
     m_funding_refusal.clear();
     m_replies_absorbed_revision = -1;
+    m_invitation_revision = -1;
     m_session_imported = false;
     m_operator_key_from_import = false;
 
@@ -3058,14 +3059,14 @@ void SharedMnCreateDialog::handleImportedText(const QString& text)
     if (!warning.isEmpty() && m_error_label->text().isEmpty()) showStatus(warning);
 }
 
-void SharedMnCreateDialog::replaceSession(const MnShareSession& imported)
+void SharedMnCreateDialog::replaceSession(const MnShareSession& imported, int my_share)
 {
     unlockAllContributedCoins();
     const bool ours{coordinatedHere(imported)};
     m_session = imported;
     if (m_role == Role::Undecided) m_role = ours ? Role::Coordinator : Role::Participant;
     m_session_imported = true;
-    m_my_share = -1;
+    m_my_share = my_share;
     m_prepare_warning.clear();
     m_dead_reason.clear();
     m_funding_refusal.clear();
@@ -3085,6 +3086,10 @@ void SharedMnCreateDialog::replaceSession(const MnShareSession& imported)
     }
 
     inferMyShare();
+    // A copy that already holds this wallet's answer is its own saved session,
+    // whose revision counts its own edits and says nothing about the invitation
+    const bool answered{m_my_share >= 0 && !m_session.shares()[m_my_share].ownerAddress.isEmpty()};
+    m_invitation_revision = answered ? -1 : m_session.revision();
     checkSessionLiveness();
     checkOwnFunding();
     if (m_dead_reason.isEmpty()) refreshContributedCoinLocks();
@@ -3122,6 +3127,113 @@ void SharedMnCreateDialog::replaceSession(const MnShareSession& imported)
     }
 }
 
+void SharedMnCreateDialog::followNewerInvitation(const MnShareSession& imported)
+{
+    // The coordinator edited the draft. A row this wallet filled in comes back
+    // either as it was sent, or still empty when the reply was not absorbed
+    // yet. Its addresses, amount and coins always stay the ones this wallet
+    // sent: they are what the next reply repeats, and what the locked terms and
+    // the funding checks are later held to.
+    const auto& shares{m_session.shares()};
+    const auto ours = [&](size_t i) { return !shares[i].ownerAddress.isEmpty() && !shareTakenByOther(i); };
+    MnShareSession revised{imported};
+    auto& rows{revised.shares()};
+    for (size_t i = 0; i < shares.size(); ++i) {
+        const auto& mine{shares[i]};
+        if (!ours(i) || imported.hasShare(mine)) continue;
+        const auto row{std::find_if(rows.begin(), rows.end(), [&](const auto& s) { return s.label == mine.label; })};
+        const bool owner_elsewhere{
+            std::any_of(rows.begin(), rows.end(), [&](const auto& s) { return s.ownerAddress == mine.ownerAddress; })};
+        if (row == rows.end() || owner_elsewhere || !row->ownerAddress.isEmpty() || !row->refundAddress.isEmpty() ||
+            !row->rewardAddress.isEmpty()) {
+            continue;
+        }
+        row->ownerAddress = mine.ownerAddress;
+        row->refundAddress = mine.refundAddress;
+        row->rewardAddress = mine.rewardAddress;
+    }
+
+    const auto refuse = [&](int share) {
+        showError(tr("This newer invitation changes your share (%1), so it was not loaded. If you agreed to that "
+                     "change, close this window and open the new invitation to review it. Otherwise ask %2 to send an "
+                     "invitation with your share unchanged.")
+                      .arg(ShareName(m_session, share), recipientName()));
+    };
+    if (const int changed{ownShareChangedIn(revised)}; changed >= 0) {
+        refuse(changed);
+        return;
+    }
+    // Contributions are found by the share's name, so a renamed row, or a
+    // second contribution under the same name, would let the invitation's
+    // coins stand in for the ones this wallet reserved
+    const auto& contributions{m_session.contributions()};
+    for (size_t i = 0; i < shares.size(); ++i) {
+        if (!ours(i)) continue;
+        const QString& label{shares[i].label};
+        const bool renamed{std::any_of(rows.begin(), rows.end(), [&](const auto& s) {
+            return s.ownerAddress == shares[i].ownerAddress && s.label != label;
+        })};
+        const bool name_reused{std::count_if(rows.begin(), rows.end(), [&](const auto& s) { return s.label == label; }) !=
+                               1};
+        const auto mine{
+            std::find_if(contributions.begin(), contributions.end(), [&](const auto& c) { return c.label == label; })};
+        const auto listed{std::count_if(revised.contributions().begin(), revised.contributions().end(),
+                                        [&](const auto& c) { return c.label == label; })};
+        bool kept{false};
+        if (mine == contributions.end()) {
+            kept = listed == 0;
+        } else if (listed == 1) {
+            kept = revised.hasContribution(*mine);
+        } else if (listed == 0) {
+            QString error;
+            kept = revised.addContribution(*mine, error);
+        }
+        if (renamed || name_reused || !kept) {
+            refuse(static_cast<int>(i));
+            return;
+        }
+    }
+    // Loading picks this wallet's share again by owner address, so another row
+    // given an address from this wallet would take the place of the one it sent
+    if (m_my_share >= 0 && ours(m_my_share)) {
+        for (size_t i = 0; i < rows.size(); ++i) {
+            const CTxDestination owner{DecodeDestination(rows[i].ownerAddress.toStdString())};
+            if (!std::holds_alternative<PKHash>(owner) || !m_wallet_model->wallet().isSpendable(owner)) continue;
+            if (std::any_of(shares.begin(), shares.end(),
+                            [&](const auto& s) { return s.ownerAddress == rows[i].ownerAddress; })) {
+                continue;
+            }
+            showError(tr("This newer invitation gives %1's share an owner address from this wallet, so it was not "
+                         "loaded. Ask %2 to send an invitation in which only your own share uses this wallet's "
+                         "addresses.")
+                          .arg(ShareName(revised, static_cast<int>(i)), recipientName()));
+            return;
+        }
+    }
+    // Loading a session with a spent coin in it would release this wallet's
+    // reservation and leave nothing to reply to
+    if (const QString dead{deadReason(revised)}; !dead.isEmpty()) {
+        showError(dead);
+        return;
+    }
+
+    // Several rows can have an owner from this wallet, for one it released, so
+    // the row selected here stays this wallet's share rather than the first
+    int selected{-1};
+    if (m_my_share >= 0 && static_cast<size_t>(m_my_share) < shares.size()) {
+        const auto& chosen{shares[m_my_share]};
+        const auto row{std::find_if(rows.begin(), rows.end(), [&](const auto& s) {
+            return s.label == chosen.label && s.ownerAddress == chosen.ownerAddress;
+        })};
+        if (row != rows.end()) selected = static_cast<int>(std::distance(rows.begin(), row));
+    }
+    replaceSession(revised, selected);
+    // Re-adding this wallet's coins moved the revision on from the invitation's
+    m_invitation_revision = imported.revision();
+    m_dirty = true;
+    showStatus(tr("Loaded the newer invitation; your share is unchanged. Review it, then send your details again."));
+}
+
 void SharedMnCreateDialog::absorbSession(const MnShareSession& imported)
 {
     const MnShareSession before{m_session};
@@ -3130,6 +3242,19 @@ void SharedMnCreateDialog::absorbSession(const MnShareSession& imported)
 
     if (m_session.stage() == MnShareSession::Stage::Draft &&
         imported.stage() == MnShareSession::Stage::Draft) {
+        // A participant is sent the coordinator's edited draft, not a reply: a
+        // copy that is more than this one filled in is a newer invitation
+        if (m_role == Role::Participant && imported.sessionId() == m_session.sessionId() &&
+            MnShareSession{m_session}.absorbDraftReply(imported, error) != MnShareSession::MergeResult::Merged) {
+            if (imported.revision() < m_invitation_revision) {
+                showError(tr("This invitation is older than the one you already have, so it was not loaded. Ask %1 "
+                             "for the latest invitation.")
+                              .arg(recipientName()));
+                return;
+            }
+            followNewerInvitation(imported);
+            return;
+        }
         // A reply to this exact invitation: only ever fills empty rows in, so
         // replies can be pasted in any order.
         absorbed = m_session.absorbDraftReply(imported, error) == MnShareSession::MergeResult::Merged;
@@ -3491,14 +3616,15 @@ void SharedMnCreateDialog::lockKnownContributedCoins()
     }
 }
 
-void SharedMnCreateDialog::checkSessionLiveness()
+void SharedMnCreateDialog::checkSessionLiveness() { m_dead_reason = deadReason(m_session); }
+
+QString SharedMnCreateDialog::deadReason(const MnShareSession& session) const
 {
-    m_dead_reason.clear();
-    if (m_wallet_model == nullptr || m_session.stage() == MnShareSession::Stage::Broadcast) return;
+    if (m_wallet_model == nullptr || session.stage() == MnShareSession::Stage::Broadcast) return {};
     // Once broadcast, the registration itself is what spends every funding
     // coin, unless it lost to another spend or was abandoned
-    if (CMutableTransaction funding; m_session.stage() == MnShareSession::Stage::FundingSigned &&
-                                     DecodeHexTx(funding, m_session.protxHex().toStdString())) {
+    if (CMutableTransaction funding; session.stage() == MnShareSession::Stage::FundingSigned &&
+                                     DecodeHexTx(funding, session.protxHex().toStdString())) {
         interfaces::WalletTxStatus status;
         interfaces::WalletOrderForm order_form;
         bool in_mempool{false};
@@ -3506,9 +3632,9 @@ void SharedMnCreateDialog::checkSessionLiveness()
         const interfaces::WalletTx registration{
             m_wallet_model->wallet().getWalletTxDetails(CTransaction(funding).GetHash(), status, order_form, in_mempool,
                                                         num_blocks)};
-        if (registration.tx != nullptr && status.depth_in_main_chain >= 0 && !status.is_abandoned) return;
+        if (registration.tx != nullptr && status.depth_in_main_chain >= 0 && !status.is_abandoned) return {};
     }
-    for (const auto& contribution : m_session.contributions()) {
+    for (const auto& contribution : session.contributions()) {
         for (const auto& input : contribution.inputs) {
             const COutPoint outpoint{uint256S(input.txid.toStdString()), input.vout};
             Coin coin;
@@ -3519,11 +3645,11 @@ void SharedMnCreateDialog::checkSessionLiveness()
             // the recorded funding transaction can never confirm.
             const auto known{m_wallet_model->wallet().getCoins({outpoint})};
             if (known.empty() || known.front().depth_in_main_chain < 0 || !known.front().is_spent) continue;
-            m_dead_reason = tr("A coin reserved for this session was spent. The registration can no longer be "
-                               "completed — start over.");
-            return;
+            return tr("A coin reserved for this session was spent. The registration can no longer be completed — "
+                      "start over.");
         }
     }
+    return {};
 }
 
 const MnShareSession::Contribution* SharedMnCreateDialog::myContribution() const

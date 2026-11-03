@@ -313,6 +313,8 @@ public:
 
     //! Whether a row with `share`'s owner address has the same amount and addresses here
     bool hasShare(const Share& share) const;
+    //! Whether a contribution with `contribution`'s label spends the same coins and pays the same change here
+    bool hasContribution(const Contribution& contribution) const;
 
     //! Record the shared_combine result and advance to Combined
     bool setCombinedTx(const QString& tx_hex, QString& error);

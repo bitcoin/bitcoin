@@ -1095,6 +1095,291 @@ void SharedMnWizardTests::newerRevisionKeepsOwnShare()
     QVERIFY2(models.ok, qPrintable(QString::fromStdString(models.error.translated)));
     WalletModel wallet_model(interfaces::MakeWallet(context, wallet), models.client);
 
+    {
+        // This wallet sent its details for bob's row and reserved one of its
+        // coins. The coin it came from is spent, which only this wallet can see.
+        CMutableTransaction parent_tx;
+        parent_tx.vin.emplace_back(COutPoint(uint256::ONE, 0));
+        parent_tx.vout.emplace_back(401 * COIN, GetScriptForDestination(PKHash(own_key.GetPubKey())));
+        QVERIFY(wallet->AddToWallet(MakeTransactionRef(parent_tx), wallet::TxStateInactive{}) != nullptr);
+        CMutableTransaction coin_tx;
+        coin_tx.vin.emplace_back(COutPoint(parent_tx.GetHash(), 0));
+        coin_tx.vout.emplace_back(400 * COIN, GetScriptForDestination(PKHash(own_key.GetPubKey())));
+        QVERIFY(wallet->AddToWallet(MakeTransactionRef(coin_tx), wallet::TxStateInactive{}) != nullptr);
+        const COutPoint coin{coin_tx.GetHash(), 0};
+
+        // The operator key is chosen before anybody is invited, so locking keeps the terms
+        CBLSSecretKey operator_secret;
+        operator_secret.MakeNewKey();
+        MnShareSession invitation{InvitationSession()};
+        invitation.terms().operatorPubKey = QString::fromStdString(
+            operator_secret.GetPublicKey().ToString(/*specificLegacyScheme=*/false));
+        const auto lock = [&](MnShareSession session) {
+            const PreparedRegistration prepared{PrepareRegistration(session, operator_secret)};
+            QString lock_error;
+            session.freeze(prepared.txHex, prepared.consentHashHex, prepared.collateralIndex, lock_error);
+            return session;
+        };
+        MnShareSession sent{invitation};
+        sent.shares()[1].ownerAddress = QString::fromStdString(EncodeDestination(PKHash(own_key.GetPubKey())));
+        sent.shares()[1].refundAddress = FreshP2PKHAddress();
+        MnShareSession::Contribution reserved;
+        reserved.label = sent.shares()[1].label;
+        reserved.inputs.push_back({QString::fromStdString(coin.hash.ToString()), coin.n});
+        reserved.hasChange = true;
+        reserved.changeAddress = sent.shares()[1].ownerAddress;
+        reserved.changeAmount = 50 * COIN;
+        QString error;
+        QVERIFY2(sent.addContribution(reserved, error), qPrintable(error));
+
+        SharedMnCreateDialog dialog(m_node, &wallet_model, /*parent=*/nullptr);
+        dialog.openSharedMessage(invitation.toJsonString());
+        dialog.openSharedMessage(sent.toJsonString());
+        QCOMPARE(dialog.myShareIndex(), 1);
+        QCOMPARE(dialog.m_session.revision(), sent.revision());
+        dialog.goToPage(SharedMnCreateDialog::PageWaitTerms);
+        QVERIFY(wallet_model.wallet().isLockedCoin(coin));
+
+        // The invitation or this wallet's own reply pasted again changes nothing
+        for (const MnShareSession& again : {invitation, sent}) {
+            dialog.openSharedMessage(again.toJsonString());
+            QVERIFY2(dialog.m_error_label->text().isEmpty(), qPrintable(dialog.m_error_label->text()));
+            QCOMPARE(dialog.m_session.revision(), sent.revision());
+            QCOMPARE(int(dialog.currentPage()), int(SharedMnCreateDialog::PageWaitTerms));
+        }
+
+        // The coordinator absorbs that reply or not, then edits the draft once,
+        // which bumps its revision by one, as reserving did here
+        MnShareSession absorbed{invitation};
+        QCOMPARE(int(absorbed.absorbDraftReply(sent, error)), int(MnShareSession::MergeResult::Merged));
+        const auto edited = [](MnShareSession session, const std::function<void(MnShareSession&)>& edit) {
+            edit(session);
+            session.noteDraftChange();
+            return session;
+        };
+        bool edits_applied{true};
+        const auto replace_contribution = [&](const MnShareSession::Contribution& replacement) {
+            return [&, replacement](MnShareSession& s) {
+                QString edit_error;
+                edits_applied &= s.removeContribution(replacement.label, edit_error) &&
+                                 s.addContribution(replacement, edit_error);
+            };
+        };
+        MnShareSession::Contribution skimmed{reserved};
+        skimmed.changeAmount -= 10 * COIN;
+        MnShareSession::Contribution spent_coin{reserved};
+        spent_coin.label = QStringLiteral("carol");
+        spent_coin.inputs = {{QString::fromStdString(parent_tx.GetHash().ToString()), 0}};
+        MnShareSession::Contribution second{skimmed};
+        second.label = QStringLiteral("bobx");
+        second.inputs = {{FakeTxid('9'), 0}};
+
+        // A newer draft that changes this wallet's amount, refund address, name or
+        // coins, with its reply absorbed or not, is refused and names the share
+        const auto more = [](MnShareSession& s) {
+            s.shares()[1].amount += COIN;
+            s.shares()[2].amount -= COIN;
+        };
+        const auto new_refund = [](MnShareSession& s) { s.shares()[1].refundAddress = FreshP2PKHAddress(); };
+        const auto renamed = [](MnShareSession& s) { s.shares()[1].label = QStringLiteral("bobby"); };
+        const auto carol_renamed = [](MnShareSession& s) { s.shares()[2].label = QStringLiteral("carol (renamed)"); };
+        const auto name_reused = [](MnShareSession& s) { s.shares()[2].label = QStringLiteral("bob"); };
+        const auto names_swapped = [](MnShareSession& s) { std::swap(s.shares()[1].label, s.shares()[2].label); };
+        // Changing only coins is a newer draft too once anything else changes
+        const auto skim = [&](MnShareSession& s) {
+            replace_contribution(skimmed)(s);
+            carol_renamed(s);
+        };
+        // Two contributions under bob's name, of which only the first would be used
+        const MnShareSession with_second{edited(absorbed, [&](MnShareSession& s) {
+            QString edit_error;
+            edits_applied &= s.addContribution(second, edit_error);
+            carol_renamed(s);
+        })};
+        QString twice_json{with_second.toJsonString()};
+        twice_json.replace(QStringLiteral("\"bobx\""), QStringLiteral("\"bob\""));
+        MnShareSession twice;
+        QVERIFY2(twice.fromJson(twice_json.toStdString(), error), qPrintable(error));
+        QCOMPARE(twice.contributions().size(), size_t{2});
+        for (const MnShareSession& changed :
+             {edited(absorbed, more), edited(absorbed, new_refund), edited(absorbed, renamed), edited(absorbed, skim),
+              edited(absorbed, name_reused), edited(absorbed, names_swapped), twice, edited(invitation, more)}) {
+            QVERIFY(edits_applied);
+            QVERIFY(changed.revision() >= sent.revision());
+            dialog.openSharedMessage(changed.toJsonString());
+            QVERIFY2(dialog.m_error_label->text().contains(QStringLiteral("changes your share (bob)")),
+                     qPrintable(dialog.m_error_label->text()));
+            QCOMPARE(dialog.m_session.revision(), sent.revision());
+            QVERIFY(dialog.m_session.hasShare(sent.shares()[1]));
+            QVERIFY(wallet_model.wallet().isLockedCoin(coin));
+        }
+
+        // A draft of another session, or one whose funding can never confirm, is
+        // not loaded either, and the reservation stays
+        MnShareSession foreign{InvitationSession()};
+        for (int i = 0; i <= sent.revision(); ++i) {
+            foreign.noteDraftChange();
+        }
+        const auto dead{edited(absorbed, [&](MnShareSession& s) {
+            QString edit_error;
+            edits_applied &= s.addContribution(spent_coin, edit_error);
+            carol_renamed(s);
+        })};
+        // Nor is one that gives an earlier row an owner from this wallet, which
+        // would become the share this wallet answers for
+        const auto other_own{wallet->GetNewDestination("")};
+        QVERIFY(other_own);
+        const auto takes_alice{edited(absorbed, [&](MnShareSession& s) {
+            s.shares()[0].ownerAddress = QString::fromStdString(EncodeDestination(*other_own));
+            carol_renamed(s);
+        })};
+        QVERIFY(edits_applied);
+        for (const auto& [refused, reason] :
+             {std::pair{foreign, QStringLiteral("different session")}, std::pair{dead, QStringLiteral("was spent")},
+              std::pair{takes_alice, QStringLiteral("gives alice's share an owner address from this wallet")}}) {
+            dialog.openSharedMessage(refused.toJsonString());
+            QVERIFY2(dialog.m_error_label->text().contains(reason), qPrintable(dialog.m_error_label->text()));
+            QCOMPARE(dialog.m_session.sessionId(), sent.sessionId());
+            QCOMPARE(dialog.m_session.revision(), sent.revision());
+            QCOMPARE(dialog.myShareIndex(), 1);
+            QVERIFY(wallet_model.wallet().isLockedCoin(coin));
+        }
+
+        // A newer draft that does not carry the reply yet loads with this wallet's
+        // addresses and reservation kept, so it can reply again
+        const MnShareSession unanswered{edited(invitation, carol_renamed)};
+        QCOMPARE(unanswered.revision(), sent.revision());
+        dialog.openSharedMessage(unanswered.toJsonString());
+        QVERIFY2(dialog.m_error_label->text().isEmpty(), qPrintable(dialog.m_error_label->text()));
+        QCOMPARE(dialog.m_session.shares()[2].label, QStringLiteral("carol (renamed)"));
+        QCOMPARE(dialog.myShareIndex(), 1);
+        QVERIFY(dialog.m_session.hasShare(sent.shares()[1]));
+        QVERIFY(dialog.m_session.hasContribution(reserved));
+        QVERIFY(wallet_model.wallet().isLockedCoin(coin));
+        QCOMPARE(int(dialog.currentPage()), int(SharedMnCreateDialog::PageContribution));
+
+        // The reply carries the addresses and coins this wallet sent first, and
+        // the coordinator can absorb it
+        dialog.onNext();
+        QCOMPARE(int(dialog.currentPage()), int(SharedMnCreateDialog::PageWaitTerms));
+        MnShareSession reply;
+        QVERIFY2(reply.fromJson(QApplication::clipboard()->text().toStdString(), error), qPrintable(error));
+        QVERIFY(reply.hasShare(sent.shares()[1]));
+        QVERIFY(reply.hasContribution(reserved));
+        MnShareSession coordinator{unanswered};
+        QCOMPARE(int(coordinator.absorbDraftReply(reply, error)), int(MnShareSession::MergeResult::Merged));
+        QVERIFY(coordinator.hasShare(sent.shares()[1]));
+        QVERIFY(coordinator.hasContribution(reserved));
+
+        // A newer draft that only edits another row loads, reservation and all,
+        // as does one that has lost this wallet's coins
+        const MnShareSession other_row{
+            edited(coordinator, [](MnShareSession& s) { s.shares()[2].label = QStringLiteral("carol"); })};
+        const MnShareSession uncounted{edited(other_row, [&](MnShareSession& s) {
+            QString edit_error;
+            edits_applied &= s.removeContribution(reserved.label, edit_error);
+        })};
+        QVERIFY(edits_applied);
+        for (const MnShareSession& loaded : {other_row, uncounted}) {
+            dialog.openSharedMessage(loaded.toJsonString());
+            QVERIFY2(dialog.m_error_label->text().isEmpty(), qPrintable(dialog.m_error_label->text()));
+            QCOMPARE(dialog.m_session.shares()[2].label, QStringLiteral("carol"));
+            QVERIFY(dialog.m_session.hasShare(sent.shares()[1]));
+            QVERIFY(dialog.m_session.hasContribution(reserved));
+            QVERIFY(wallet_model.wallet().isLockedCoin(coin));
+        }
+
+        // An invitation older than the one loaded is refused in the participant's terms
+        dialog.openSharedMessage(unanswered.toJsonString());
+        QVERIFY2(dialog.m_error_label->text().contains(QStringLiteral("older than the one you already have")),
+                 qPrintable(dialog.m_error_label->text()));
+        QCOMPARE(dialog.m_session.shares()[2].label, QStringLiteral("carol"));
+
+        // Locked terms are still held to the coins this wallet reserved: a copy
+        // that keeps back some of its change is refused, the honest one adopted
+        MnShareSession complete{other_row};
+        for (int i : {0, 2}) {
+            QCOMPARE(int(complete.absorbDraftReply(DraftReply(other_row, i, FakeTxid('1' + i)), error)),
+                     int(MnShareSession::MergeResult::Merged));
+        }
+        MnShareSession short_changed{complete};
+        replace_contribution(skimmed)(short_changed);
+        QVERIFY(edits_applied);
+        short_changed = lock(short_changed);
+        QCOMPARE(int(short_changed.stage()), int(MnShareSession::Stage::Frozen));
+        dialog.openSharedMessage(short_changed.toJsonString());
+        QVERIFY2(dialog.m_error_label->text().contains(QStringLiteral("do not contain the details you sent")),
+                 qPrintable(dialog.m_error_label->text()));
+        QCOMPARE(int(dialog.m_session.stage()), int(MnShareSession::Stage::Draft));
+
+        const MnShareSession locked{lock(complete)};
+        QCOMPARE(int(locked.stage()), int(MnShareSession::Stage::Frozen));
+        dialog.openSharedMessage(locked.toJsonString());
+        QVERIFY2(dialog.m_error_label->text().isEmpty(), qPrintable(dialog.m_error_label->text()));
+        QCOMPARE(int(dialog.currentPage()), int(SharedMnCreateDialog::PageApprovals));
+        QVERIFY2(dialog.m_funding_refusal.isEmpty(), qPrintable(dialog.m_funding_refusal));
+
+        // A saved session reopened after releasing and reserving again carries a
+        // revision past the coordinator's next draft, which still loads
+        MnShareSession resaved{sent};
+        replace_contribution(reserved)(resaved);
+        QVERIFY(edits_applied);
+        QVERIFY(resaved.revision() > unanswered.revision());
+        SharedMnCreateDialog reopened(m_node, &wallet_model, /*parent=*/nullptr);
+        reopened.openSharedMessage(resaved.toJsonString());
+        QCOMPARE(reopened.myShareIndex(), 1);
+        reopened.openSharedMessage(unanswered.toJsonString());
+        QVERIFY2(reopened.m_error_label->text().isEmpty(), qPrintable(reopened.m_error_label->text()));
+        QCOMPARE(reopened.m_session.shares()[2].label, QStringLiteral("carol (renamed)"));
+        QVERIFY(reopened.m_session.hasContribution(reserved));
+        QVERIFY(wallet_model.wallet().isLockedCoin(coin));
+
+        // Releasing bob's row and reserving carol's instead leaves bob's
+        // addresses behind, so two rows have an owner from this wallet. A newer
+        // draft that keeps both still leaves carol as this wallet's share.
+        SharedMnCreateDialog moved(m_node, &wallet_model, /*parent=*/nullptr);
+        moved.openSharedMessage(invitation.toJsonString());
+        moved.openSharedMessage(sent.toJsonString());
+        QCOMPARE(moved.myShareIndex(), 1);
+        moved.releaseCoins();
+        QVERIFY(!wallet_model.wallet().isLockedCoin(coin));
+        moved.m_who_am_i_combo->setCurrentIndex(moved.m_who_am_i_combo->findData(2));
+        QCOMPARE(moved.myShareIndex(), 2);
+        // This coin is not one Reserve Coins can select, so record carol's
+        // reservation the way it does
+        const auto carol_owner{wallet->GetNewDestination("")};
+        QVERIFY(carol_owner);
+        auto& carol_row{moved.m_session.shares()[2]};
+        carol_row.ownerAddress = QString::fromStdString(EncodeDestination(*carol_owner));
+        carol_row.refundAddress = FreshP2PKHAddress();
+        MnShareSession::Contribution carols{reserved};
+        carols.label = carol_row.label;
+        carols.changeAddress = carol_row.ownerAddress;
+        carols.changeAmount = 150 * COIN;
+        QVERIFY2(moved.m_session.addContribution(carols, error), qPrintable(error));
+        moved.setContributionLocked(carols, /*lock=*/true);
+        moved.m_coins_released = false;
+        QVERIFY(!moved.m_session.shares()[1].ownerAddress.isEmpty());
+
+        const MnShareSession both_kept{
+            edited(moved.m_session, [](MnShareSession& s) { s.shares()[0].label = QStringLiteral("alice (renamed)"); })};
+        moved.openSharedMessage(both_kept.toJsonString());
+        QVERIFY2(moved.m_error_label->text().isEmpty(), qPrintable(moved.m_error_label->text()));
+        QCOMPARE(moved.m_session.shares()[0].label, QStringLiteral("alice (renamed)"));
+        QCOMPARE(moved.myShareIndex(), 2);
+        QVERIFY(moved.myContribution() != nullptr && moved.myContribution()->label == carols.label);
+        QVERIFY(wallet_model.wallet().isLockedCoin(coin));
+        // The reply repeats carol's details and reserves nothing for bob
+        moved.onNext();
+        QCOMPARE(int(moved.currentPage()), int(SharedMnCreateDialog::PageWaitTerms));
+        MnShareSession moved_reply;
+        QVERIFY2(moved_reply.fromJson(QApplication::clipboard()->text().toStdString(), error), qPrintable(error));
+        QVERIFY(moved_reply.hasContribution(carols));
+        QCOMPARE(moved_reply.contributions().size(), size_t{1});
+        QVERIFY(wallet_model.wallet().isLockedCoin(coin));
+        wallet_model.wallet().unlockCoin(coin);
+    }
+
     // Locked terms in which bob's row is this wallet's
     const MnShareSession invitation{InvitationSession()};
     MnShareSession draft{invitation};
