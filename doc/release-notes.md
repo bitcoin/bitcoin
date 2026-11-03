@@ -24,7 +24,8 @@ On the first start after upgrading, a node that has `-addressindex`,
 database (see [Asynchronous address, spent and timestamp indexes](#asynchronous-address-spent-and-timestamp-indexes)).
 This can take 20-40 minutes or longer depending on hardware and index size.
 Start v24.0.0 for the first time with the same `-addressindex`, `-spentindex`
-and `-timestampindex` settings the node used before: an index that is left
+and `-timestampindex` settings the node used before (pruned nodes: see
+below): an index that is left
 disabled on any start of v24.0.0 can no longer reuse its old data, and is
 rebuilt from genesis when it is enabled again. The governance cache
 (`governance.dat`) and the spork cache (`sporks.dat`) changed format and are
@@ -32,8 +33,34 @@ discarded and re-synced from the network on the first start.
 
 A node that runs with `-txindex=0` must now also set `-disablegovernance`;
 otherwise it refuses to start (see [Updated settings](#updated-settings)).
-Pruned nodes are not affected, since `-prune` disables governance validation
-already.
+Pruned nodes are not affected by this, since `-prune` disables governance
+validation already.
+
+A pruned node (`-prune`) that also has `-addressindex` or `-spentindex` set
+refuses to start with an error, because these indexes now need the undo data
+that pruning deletes. v23 accepted that combination. Remove the index options
+from such a node before upgrading. Keeping them means running the node
+unpruned, which requires `-reindex` and downloading the whole chain again.
+`-timestampindex` can no longer be enabled on a datadir that has already been
+pruned (see
+[Asynchronous address, spent and timestamp indexes](#asynchronous-address-spent-and-timestamp-indexes)).
+
+Masternodes refuse to start with some settings that v23 accepted, such as
+`-blocksonly=1`, `-peerblockfilters=0` or a nonzero `-maxuploadtarget`. This
+applies from the first start of v24.0.0, not from hard fork activation. Check
+the masternode's configuration against
+[Masternode configuration requirements](#masternode-configuration-requirements)
+and remove such settings before upgrading. Masternodes must be upgraded and
+running before the `v24` start date (November 9, 2026 on mainnet): the
+activation signal needs 85% of the signing quorum's members to run v24, and a
+masternode that refuses to start cannot contribute to it (see
+[Network upgrade](#network-upgrade)).
+
+<!-- TODO(rc.7): upgrade notes for release candidate users, pending
+decision. Remove this comment before the final release. -->
+
+<!-- TODO(rc.7): startup without an existing default data directory, pending
+decision. Remove this comment before the final release. -->
 
 Pruned nodes now keep at least 2304 blocks below the tip instead of 288 (see
 [Pruning](#pruning)). Blocks that an earlier version already pruned are not
@@ -44,10 +71,13 @@ recovered; a node that fails to validate a block after upgrading needs
 
 ### Downgrade to a version < v24.0.0
 
-Once the `v24` hard fork activates, versions older than v24.0.0 can no longer
-follow the network and must not be used.
+There is no supported downgrade after `v24` activation: v23 and older cannot
+follow the network once `v24` is active. They also cannot correctly read the
+masternode list data that v24.0.0 stores after activation, so do not start an
+older version on a datadir that v24.0.0 has used after activation.
 
-Before activation, downgrading to v23.x is possible with the following caveats:
+Before activation, downgrading to v23.1.x is possible with the following
+caveats:
 
 - The address, spent and timestamp indexes are moved out of the block index
   database into separate databases on the first start of v24.0.0. A node that
@@ -58,6 +88,11 @@ Before activation, downgrading to v23.x is possible with the following caveats:
 - v24.0.0 does not upgrade the wallet file format. Wallet records added by
   v24.0.0 that older versions do not know about (such as the new CoinJoin
   pending-observation record) are ignored by them.
+- Dash-Qt moves the dust attack protection setting into the settings it shares
+  with `dashd` (see `-dustprotectionthreshold` under
+  [New options](#new-options)). Older versions don't read it there, so after a
+  downgrade dust protection is disabled and has to be enabled again in the
+  options dialog.
 
 ### Downgrade to a version < v23.0.0
 
@@ -67,8 +102,10 @@ require a reindex.
 ## Compatibility
 
 - Dash Core binaries now require macOS 14 (Sonoma) or later. Dash Core v23.1.x
-  binaries supported macOS 11 (Big Sur) or later. Windows 10 or later continues
-  to be required on Windows.
+  binaries supported macOS 11 (Big Sur) or later. Because v24.0.0 is mandatory,
+  users on macOS 13 or older must upgrade macOS, or move their node or wallet
+  to a supported system, before the `v24` hard fork activates. Windows 10 or
+  later continues to be required on Windows.
 - On Linux, kernel 3.17 or later is now required. The minimum glibc version
   (2.31) is unchanged.
 - `PROTOCOL_VERSION` has been bumped from `70240` to `70242` (see
@@ -330,10 +367,21 @@ moves to extended addresses with a version 3 provider transaction (see
   updates must be updated.
 - Platform HTTPS entries on port 443 are accepted in extended addresses.
 
+<!-- TODO(rc.7, pending decision): if #8018 is backported, add
+its mainnet rule for masternode primary addresses (IPv4 primary on the
+standard port) here and in the masternode upgrade notes. Remove this comment
+either way. -->
+
 ## Version 2 Asset Unlock transactions
 
-Once the `v24` hard fork activates, Platform withdrawals are issued as version 2
-Asset Unlock transactions. Their transaction hash is computed with the quorum
+Once the `v24` hard fork activates, version 2 Asset Unlock transactions become
+valid. Version 1 Asset Unlock transactions remain valid after activation, and
+Platform withdrawals keep using version 1 until a future Dash Platform release
+starts issuing version 2. Until then, the version 2 features described below
+(the stable txid, InstantSend locking and relay by instance hash) do not apply
+to Platform withdrawals.
+
+The transaction hash of a version 2 Asset Unlock is computed with the quorum
 signing fields (`requestedHeight`, `quorumHash`, `quorumSig`) zeroed, so every
 instance Platform re-signs after an expiry is the same transaction with one
 stable txid. Spends of an unmined withdrawal's outputs therefore stay valid
@@ -508,12 +556,18 @@ proofs. (#7107, #7727)
 
 ### Note for masternode operators running Dash Platform
 
-Current versions of Dash Platform read the `service` field and the
-`getblockchaininfo` `softforks` field from Dash Core. Operators running an
-EvoNode with Dash Platform (including setups managed with dashmate) must start
-Dash Core with both `-deprecatedrpc=service` and `-deprecatedrpc=softforks`
-until the Platform version they run no longer requires these fields. Removing
-either option before then can prevent Platform from operating correctly.
+Dash Platform reads the `service` field from Dash Core, and Platform versions
+before v5.0.0 also read the `getblockchaininfo` `softforks` field. EvoNode
+operators should upgrade Dash Platform to v5.0.0 or later together with Dash
+Core:
+
+- dashmate v5.0.0 and later start Dash Core with `-deprecatedrpc=service`, and
+  Platform v5.0.0 and later read deployment status from `getdeploymentinfo`, so
+  no extra configuration is needed.
+- Setups not managed by dashmate v5.0.0 or later must start Dash Core with
+  `-deprecatedrpc=service`, and Platform versions before v5.0.0 also need
+  `-deprecatedrpc=softforks`. Without these options Platform cannot operate
+  correctly.
 
 ## Descriptor wallets by default
 
@@ -526,6 +580,14 @@ used with descriptor wallets, so if your client code relies on these commands
 without specifying `descriptors=false` during wallet creation, you will need to
 update your code. (#7204)
 
+`createwallet` now also refuses `descriptors=false` without `load_on_startup`;
+since v21 this applied only to `descriptors=true`. To create a legacy wallet,
+pass both, for example:
+
+```
+dash-cli -named createwallet wallet_name=mywallet descriptors=false load_on_startup=true
+```
+
 `dash-wallet create` also creates a descriptor wallet by default. Pass the new
 `-legacy` option to create a legacy wallet instead. (#7204)
 
@@ -534,6 +596,10 @@ An experimental RPC `migratewallet` has been added to migrate legacy
 migration process is available in the
 [documentation](https://github.com/dashpay/dash/blob/master/doc/managing-wallets.md#migrating-legacy-wallets-to-descriptor-wallets).
 (#7275)
+
+<!-- TODO(rc.7, pending decision): if #8014 (wallet migration
+fixes) is backported, describe its user-visible `migratewallet` changes here.
+Remove this comment either way. -->
 
 ## Asynchronous address, spent and timestamp indexes
 
@@ -572,6 +638,12 @@ Breaking changes:
 
 ## Masternode configuration requirements
 
+The requirements below apply from the first start of v24.0.0, not from
+`v24` hard fork activation. Remove any conflicting settings from the
+masternode's configuration before upgrading, and upgrade before the `v24`
+start date (November 9, 2026 on mainnet), so that the masternode is running
+when the activation signal is signed.
+
 A masternode (`-masternodeblsprivkey`) now refuses to start unless:
 
 - `-blocksonly=0`
@@ -587,7 +659,12 @@ A masternode (`-masternodeblsprivkey`) now refuses to start unless:
 
 The relay policy checks do not apply on regtest. (#7754)
 
-In addition, DKG members now also vote a member bad if none of their masternode
+As before, a masternode turns on `-peerblockfilters` and
+`-blockfilterindex=basic` unless they are set explicitly, so
+`-blockfilterindex=0` also stops it from starting, as it already did in v23.
+
+In addition, DKG members running v24.0.0 now also vote a member bad (which
+leads to PoSe penalties once enough members agree) if none of their masternode
 connections to it advertise:
 
 - transaction relay (`relay=1` in the `version` message);
