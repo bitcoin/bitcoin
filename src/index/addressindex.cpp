@@ -398,7 +398,9 @@ bool AddressIndex::CustomRewind(const interfaces::BlockKey& current_tip, const i
         }
     }
 
-    return true;
+    CDBBatch locator_batch(GetDB());
+    WriteRewindLocator(locator_batch, new_tip_index);
+    return GetDB().WriteBatch(locator_batch);
 }
 
 BaseIndex::DB& AddressIndex::GetDB() const { return *m_db; }

@@ -118,6 +118,11 @@ protected:
     /// be an ancestor of the current best block.
     [[nodiscard]] virtual bool CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip) { return true; }
 
+    /// For indexes whose CustomRewind() erases entries: if the committed locator is above new_tip on the same
+    /// branch, move it to new_tip. Commit() may not write new_tip yet (it can be ahead of the last flush), but
+    /// leaving the old locator above erased entries would make an unclean restart resume past them.
+    void WriteRewindLocator(CDBBatch& batch, const CBlockIndex* new_tip) const;
+
     virtual DB& GetDB() const = 0;
 
     /// Get the name of the index for display in logs.

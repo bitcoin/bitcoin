@@ -265,6 +265,18 @@ void BaseIndex::Commit()
     }
 }
 
+void BaseIndex::WriteRewindLocator(CDBBatch& batch, const CBlockIndex* new_tip) const
+{
+    const auto locator{GetDB().ReadBestBlock()};
+    if (locator.IsNull()) return;
+    const CBlockIndex* committed{WITH_LOCK(::cs_main, return m_chainstate->m_blockman.LookupBlockIndex(locator.vHave.front()))};
+    // The committed tip was an ancestor of a flushed block when it was written, so it and new_tip below it are in
+    // the block index after a restart. A committed tip at or below new_tip needs no change.
+    if (committed && committed->nHeight > new_tip->nHeight && committed->GetAncestor(new_tip->nHeight) == new_tip) {
+        GetDB().WriteBestBlock(batch, GetLocator(*m_chain, new_tip->GetBlockHash()));
+    }
+}
+
 bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip)
 {
     assert(current_tip->GetAncestor(new_tip->nHeight) == new_tip);
