@@ -20,7 +20,9 @@
 #include <chainparams.h>
 #include <consensus/amount.h>
 #include <core_io.h>
+#include <evo/deterministicmns.h>
 #include <evo/dmn_types.h>
+#include <evo/netinfo.h>
 #include <evo/providertx.h>
 #include <evo/sharedcollateral.h>
 #include <evo/specialtx.h>
@@ -37,6 +39,7 @@
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/translation.h>
+#include <validation.h>
 #include <wallet/context.h>
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
@@ -1204,6 +1207,143 @@ void SharedMnWizardTests::participantsPageGating()
     QVERIFY(dialog.myContribution() == nullptr);
     QVERIFY(amount_editable(0));
     QVERIFY(!name_cell(0)->isReadOnly());
+}
+
+void SharedMnWizardTests::serviceAddressInUseIsRefused()
+{
+    // DIP3 is active at the tip, so the tip's masternode list is what the
+    // network checks a registration's service address against
+    TestChainSetup test{107, CBaseChainParams::REGTEST, {"-dip3params=109:500"}};
+    test.mineBlocks(2);
+    m_node.setContext(&test.m_node);
+    const CBlockIndex* const tip{WITH_LOCK(::cs_main, return test.m_node.chainman->ActiveChain().Tip())};
+    test.m_node.dmnman->UpdatedBlockTip(tip);
+
+    const QString port{QString::number(Params().GetDefaultPort())};
+    const QString in_use{QStringLiteral("1.2.3.4:") + port};
+    auto state{std::make_shared<CDeterministicMNState>()};
+    state->nVersion = ProTxVersion::BasicBLS;
+    state->netInfo = NetInfoInterface::MakeNetInfo(state->nVersion);
+    QCOMPARE(int(state->netInfo->AddEntry(NetInfoPurpose::CORE_P2P, in_use.toStdString())), int(NetInfoStatus::Success));
+    state->keyIDOwner = MasternodeTestUtil::TestKeyID(1);
+    state->keyIDVoting = state->keyIDOwner;
+    auto registered{std::make_shared<CDeterministicMN>(/*_internalId=*/0, MnType::Regular)};
+    registered->proTxHash = uint256::ONE;
+    registered->collateralOutpoint = COutPoint{uint256::ONE, 0};
+    registered->pdmnState = state;
+    CDeterministicMNList mn_list{tip->GetBlockHash(), tip->nHeight, /*_totalRegisteredCount=*/0};
+    mn_list.AddMN(registered);
+    test.m_node.dmnman->SetListForBlockForTesting(mn_list);
+
+    SharedMnCreateDialog dialog(m_node, /*wallet_model=*/nullptr, /*parent=*/nullptr);
+    dialog.m_role = SharedMnCreateDialog::Role::Coordinator;
+    dialog.m_session = InvitationSession();
+    dialog.m_my_share = 0;
+    dialog.rebuildOrder();
+    dialog.goToPage(SharedMnCreateDialog::PageSettings);
+    dialog.m_voting_edit->setText(dialog.m_session.terms().votingAddress);
+
+    QString error;
+    // No service yet stays allowed: the node is then set up by a later service update
+    dialog.m_service_edit->clear();
+    QVERIFY2(dialog.validatePage(SharedMnCreateDialog::PageSettings, error), qPrintable(error));
+    dialog.m_service_edit->setText(QStringLiteral("1.2.3.5:") + port);
+    QVERIFY2(dialog.validatePage(SharedMnCreateDialog::PageSettings, error), qPrintable(error));
+
+    // The registered masternode's address is refused here, while it is still
+    // free to change, rather than by the network at broadcast
+    dialog.m_service_edit->setText(in_use);
+    dialog.onNext();
+    QCOMPARE(int(dialog.currentPage()), int(SharedMnCreateDialog::PageSettings));
+    QVERIFY2(dialog.m_error_label->text().contains(in_use), qPrintable(dialog.m_error_label->text()));
+
+    // A session that got past the settings page before the address was taken
+    // is refused at Lock, before anyone approves it
+    MnShareSession draft{dialog.m_session};
+    for (int i = 0; i < 3; ++i) {
+        QCOMPARE(int(draft.absorbDraftReply(DraftReply(dialog.m_session, i, FakeTxid('1' + i)), error)),
+                 int(MnShareSession::MergeResult::Merged));
+    }
+    draft.terms().coreP2PAddrs = in_use;
+    dialog.m_session = draft;
+    dialog.pushSessionToWidgets();
+    dialog.goToPage(SharedMnCreateDialog::PageInvite);
+    dialog.lockTerms();
+    QCOMPARE(int(dialog.m_session.stage()), int(MnShareSession::Stage::Draft));
+    QVERIFY2(dialog.m_error_label->text().contains(in_use), qPrintable(dialog.m_error_label->text()));
+}
+
+void SharedMnWizardTests::reusedRefundAddressIsRefusedBeforeReserving()
+{
+    TestingSetup test{CBaseChainParams::REGTEST};
+    m_node.setContext(&test.m_node);
+    WalletContext& context{*m_node.walletLoader().context()};
+
+    CKey my_key;
+    my_key.MakeNewKey(/*fCompressed=*/true);
+    const auto wallet{MakeSpendingWallet(m_node, context, "part", my_key)};
+    QVERIFY(wallet != nullptr);
+    WalletGuard guard{context, wallet};
+    MasternodeTestUtil::GuiModels models{m_node};
+    QVERIFY2(models.ok, qPrintable(QString::fromStdString(models.error.translated)));
+    WalletModel wallet_model(interfaces::MakeWallet(context, wallet), models.client);
+
+    // alice has answered for her row; this wallet takes bob's
+    const MnShareSession invitation{InvitationSession()};
+    MnShareSession claimed{invitation};
+    QString error;
+    QVERIFY(claimed.absorbDraftReply(DraftReply(invitation, 0, FakeTxid('1')), error) ==
+            MnShareSession::MergeResult::Merged);
+    const auto& alice{claimed.shares()[0]};
+    const QString owner{QString::fromStdString(EncodeDestination(PKHash(my_key.GetPubKey())))};
+
+    SharedMnCreateDialog dialog(m_node, &wallet_model, /*parent=*/nullptr);
+    dialog.handleImportedText(claimed.toJsonString());
+    QCOMPARE(int(dialog.currentPage()), int(SharedMnCreateDialog::PageContribution));
+    dialog.m_who_am_i_combo->setCurrentIndex(dialog.m_who_am_i_combo->findData(1));
+    QCOMPARE(dialog.myShareIndex(), 1);
+    dialog.m_owner_edit->setText(owner);
+    dialog.m_reward_edit->clear();
+
+    // Lock refuses a refund address that is the voting address, an owner
+    // address, or another share's refund address, so this page does too
+    for (const QString& refund : {owner, claimed.terms().votingAddress, alice.ownerAddress, alice.refundAddress}) {
+        dialog.m_refund_edit->setText(refund);
+        QVERIFY2(!dialog.validatePage(SharedMnCreateDialog::PageContribution, error), qPrintable(refund));
+        QVERIFY2(error.contains(QStringLiteral("refund")), qPrintable(error));
+
+        // The Reserve Coins button reaches the same refusal without Next
+        dialog.reserveCoins();
+        QVERIFY2(dialog.m_error_label->text().contains(QStringLiteral("refund")), qPrintable(dialog.m_error_label->text()));
+        QVERIFY(dialog.myContribution() == nullptr);
+        QVERIFY(dialog.m_session.shares()[1].refundAddress.isEmpty());
+    }
+
+    // A fresh refund address passes, with the reward left to default to it
+    dialog.m_refund_edit->setText(FreshP2PKHAddress());
+    QVERIFY2(dialog.validatePage(SharedMnCreateDialog::PageContribution, error), qPrintable(error));
+
+    // Lock also refuses an owner address that another share pays its refund or
+    // reward to, so neither Next nor Reserve Coins may get that far
+    for (const bool reward : {false, true}) {
+        MnShareSession paying_owner{claimed};
+        auto& other{paying_owner.shares()[0]};
+        (reward ? other.rewardAddress : other.refundAddress) = owner;
+        SharedMnCreateDialog reused(m_node, &wallet_model, /*parent=*/nullptr);
+        reused.handleImportedText(paying_owner.toJsonString());
+        reused.m_who_am_i_combo->setCurrentIndex(reused.m_who_am_i_combo->findData(1));
+        QCOMPARE(reused.myShareIndex(), 1);
+        reused.m_owner_edit->setText(owner);
+        reused.m_refund_edit->setText(FreshP2PKHAddress());
+        reused.m_reward_edit->clear();
+        QVERIFY(!reused.validatePage(SharedMnCreateDialog::PageContribution, error));
+        QVERIFY2(error.contains(QStringLiteral("owner address")), qPrintable(error));
+        reused.reserveCoins();
+        QVERIFY2(reused.m_error_label->text().contains(QStringLiteral("owner address")),
+                 qPrintable(reused.m_error_label->text()));
+        QVERIFY(reused.myContribution() == nullptr);
+        QVERIFY(reused.m_session.shares()[1].ownerAddress.isEmpty());
+    }
 }
 
 void SharedMnWizardTests::statusBoardAbsorbsRepliesInAnyOrder()

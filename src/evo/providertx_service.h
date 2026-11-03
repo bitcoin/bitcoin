@@ -8,6 +8,7 @@
 #include <interfaces/providertx.h>
 
 #include <optional>
+#include <string>
 
 namespace interfaces {
 class Wallet;
@@ -24,6 +25,9 @@ interfaces::ProviderTxCapabilities GetCapabilities(node::NodeContext& node,
 
 std::optional<interfaces::ProviderTxError> ValidateNetInfo(const interfaces::ProviderNetInfo& net_info, MnType type,
                                                            uint16_t version, bool optional);
+
+std::optional<std::string> FindNetInfoInUse(node::NodeContext& node, const interfaces::ProviderNetInfo& net_info,
+                                            MnType type, uint16_t version);
 
 interfaces::ProviderTxResult<interfaces::ProviderTxSubmission> Register(
     node::NodeContext& node, interfaces::Wallet& wallet, const interfaces::ProviderRegistrationRequest& request);

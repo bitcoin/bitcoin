@@ -114,6 +114,10 @@ public:
     {
         return std::nullopt;
     }
+    std::optional<std::string> findProviderNetInfoInUse(const interfaces::ProviderNetInfo&, MnType, uint16_t) override
+    {
+        return std::nullopt;
+    }
 
     interfaces::ProviderTxResult<interfaces::ProviderTxSubmission> registerMasternode(
         interfaces::Wallet&, const interfaces::ProviderRegistrationRequest&) override

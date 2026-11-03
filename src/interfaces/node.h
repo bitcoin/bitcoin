@@ -155,6 +155,11 @@ public:
     //! Transaction creation validates them again against the then-active rules.
     virtual std::optional<ProviderTxError> validateProviderNetInfo(const ProviderNetInfo& net_info, MnType type,
                                                                    uint16_t version, bool optional) = 0;
+    //! The first endpoint a masternode at the chain tip already uses, which a
+    //! registration with a new collateral cannot reuse. Nothing is reported for
+    //! endpoints validateProviderNetInfo refuses.
+    virtual std::optional<std::string> findProviderNetInfoInUse(const ProviderNetInfo& net_info, MnType type,
+                                                                uint16_t version) = 0;
     //! Successful registration with an existing collateral leaves that coin locked,
     //! including when the signed transaction is returned without submission.
     virtual ProviderTxResult<ProviderTxSubmission> registerMasternode(Wallet& wallet,

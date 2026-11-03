@@ -279,6 +279,10 @@ public:
     {
         return evo::provider::ValidateNetInfo(net_info, type, version, optional);
     }
+    std::optional<std::string> findProviderNetInfoInUse(const ProviderNetInfo& net_info, MnType type, uint16_t version) override
+    {
+        return evo::provider::FindNetInfoInUse(context(), net_info, type, version);
+    }
     ProviderTxResult<ProviderTxSubmission> registerMasternode(Wallet& wallet, const ProviderRegistrationRequest& request) override
     {
         return evo::provider::Register(context(), wallet, request);

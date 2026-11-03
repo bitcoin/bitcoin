@@ -818,6 +818,27 @@ std::optional<ProviderTxError> ValidateNetInfo(const ProviderNetInfo& net_info, 
     return ValidateNetworkFields(payload, optional, /*check_platform_node_id=*/false);
 }
 
+std::optional<std::string> FindNetInfoInUse(node::NodeContext& node, const ProviderNetInfo& net_info, MnType type,
+                                            uint16_t version)
+{
+    if (ValidateNetInfo(net_info, type, version, /*optional=*/true) || !node.dmnman) return std::nullopt;
+    CProRegTx payload;
+    payload.nType = type;
+    payload.nVersion = version;
+    payload.netInfo = NetInfoInterface::MakeNetInfo(version);
+    if (ApplyNetInfo(payload, net_info, type == MnType::Evo, /*optional=*/true)) return std::nullopt;
+
+    const auto mn_list{node.dmnman->GetListAtChainTip()};
+    for (const auto& entry : payload.netInfo->GetEntries()) {
+        const auto service{entry.GetAddrPort()};
+        const auto domain{entry.GetDomainPort()};
+        if ((service && mn_list.HasUniqueProperty(*service)) || (domain && mn_list.HasUniqueProperty(*domain))) {
+            return entry.ToStringAddrPort();
+        }
+    }
+    return std::nullopt;
+}
+
 ProviderTxResult<ProviderTxSubmission> Register(node::NodeContext& node, Wallet& wallet,
                                                 const ProviderRegistrationRequest& request)
 {

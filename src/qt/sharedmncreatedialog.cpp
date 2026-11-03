@@ -183,6 +183,22 @@ QString ShareName(const MnShareSession& session, int index)
     }
     return QObject::tr("Share %1 of %2").arg(index + 1).arg(session.shares().size());
 }
+
+//! Why the network would refuse these service addresses because a registered
+//! masternode already uses one of them (empty = none is in use)
+QString ServiceInUseProblem(interfaces::Node& node, const QString& services)
+{
+    interfaces::ProviderNetInfo net_info;
+    for (const QString& entry : MasternodeWidgetUtil::tokenizeEndpointList(services)) {
+        net_info.core_p2p.push_back(entry.toStdString());
+    }
+    const uint16_t version{node.evo().getProviderTxCapabilities().version};
+    const auto in_use{node.evo().findProviderNetInfoInUse(net_info, MnType::Regular, version)};
+    if (!in_use) return {};
+    return SharedMnCreateDialog::tr("%1 is already the service address of a registered masternode. Every service "
+                                    "address must be unique on the network.")
+        .arg(QString::fromStdString(*in_use));
+}
 } // anonymous namespace
 
 //! Keeps the wallet unlocked on the GUI thread while this wallet signs.
@@ -1366,6 +1382,8 @@ bool SharedMnCreateDialog::validatePage(Page page, QString& err)
         if (const auto error{
                 m_node.evo().validateProviderNetInfo(net_info, MnType::Regular, version, /*optional=*/true)}) {
             err = QString::fromStdString(error->message.translated);
+        } else {
+            err = ServiceInUseProblem(m_node, m_service_edit->text());
         }
         break;
     }
@@ -1397,11 +1415,39 @@ bool SharedMnCreateDialog::validatePage(Page page, QString& err)
             err = tr("Enter a valid reward address (P2PKH or P2SH), or leave it empty.");
             break;
         }
-        if (!reward.isEmpty() &&
-            (reward == m_session.terms().votingAddress || reward == owner ||
-             std::any_of(m_session.shares().begin(), m_session.shares().end(),
-                         [&](const auto& share) { return !share.ownerAddress.isEmpty() &&
-                                                         share.ownerAddress == reward; }))) {
+        // The payout rules Lock enforces, applied to the rows known so far
+        const auto& shares{m_session.shares()};
+        const auto is_key_address{[&](const QString& address) {
+            if (address == m_session.terms().votingAddress || address == owner) return true;
+            for (size_t i = 0; i < shares.size(); ++i) {
+                // This row's owner is the field above; the recorded one may be stale
+                if (static_cast<int>(i) != m_my_share && shares[i].ownerAddress == address) return true;
+            }
+            return false;
+        }};
+        for (size_t i = 0; i < shares.size(); ++i) {
+            if (static_cast<int>(i) != m_my_share &&
+                (shares[i].refundAddress == owner || shares[i].rewardAddress == owner)) {
+                err = tr("%1 already pays a refund or reward to this owner address. The owner address must differ from "
+                         "every refund and reward address.")
+                          .arg(ShareName(m_session, static_cast<int>(i)));
+                break;
+            }
+        }
+        if (!err.isEmpty()) break;
+        if (is_key_address(refund)) {
+            err = tr("The refund address must differ from the voting address and every owner address.");
+            break;
+        }
+        for (size_t i = 0; i < shares.size(); ++i) {
+            if (static_cast<int>(i) != m_my_share && shares[i].refundAddress == refund) {
+                err = tr("%1 already uses this refund address. Every refund address must be unique.")
+                          .arg(ShareName(m_session, static_cast<int>(i)));
+                break;
+            }
+        }
+        if (!err.isEmpty()) break;
+        if (!reward.isEmpty() && is_key_address(reward)) {
             err = tr("The reward address must differ from the voting address and every owner address.");
             break;
         }
@@ -2334,6 +2380,11 @@ void SharedMnCreateDialog::lockTerms()
         showError(problems.join(QLatin1Char('\n')));
         return;
     }
+    // A masternode may have taken the service address since the settings page
+    if (const QString in_use{ServiceInUseProblem(m_node, m_session.terms().coreP2PAddrs)}; !in_use.isEmpty()) {
+        showError(in_use);
+        return;
+    }
     bool fatal{false};
     const QString funding{fundingCheck(fatal)};
     if (fatal) {
@@ -3246,6 +3297,10 @@ void SharedMnCreateDialog::reserveCoins()
     }
     if (!MasternodeWidgetUtil::isP2PKHorP2SHAddress(refund)) {
         showError(tr("Enter a valid refund address (P2PKH or P2SH)."));
+        return;
+    }
+    if (QString problem; !validatePage(PageContribution, problem)) {
+        showError(problem);
         return;
     }
 
