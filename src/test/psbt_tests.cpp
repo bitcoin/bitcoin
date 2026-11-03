@@ -31,7 +31,7 @@ static PSBTProprietary MakeProprietary(uint64_t subtype, uint8_t key_data, uint8
     };
 }
 
-void CheckTimeLock(const std::string& base64_psbt, std::optional<uint32_t> timelock)
+static void CheckTimeLock(const std::string& base64_psbt, std::optional<uint32_t> timelock)
 {
     util::Result<PartiallySignedTransaction> psbt = DecodeBase64PSBT(base64_psbt);
     BOOST_CHECK(psbt);

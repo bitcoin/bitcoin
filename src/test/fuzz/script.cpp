@@ -32,7 +32,7 @@
 #include <string>
 #include <vector>
 
-void initialize_script()
+static void initialize_script()
 {
     SelectParams(ChainType::REGTEST);
 }

@@ -19,7 +19,7 @@ const TestingSetup* g_setup;
 constexpr ReachabilityGoal BLOCK_POLICY_ESTIMATOR_READ_SUCCEEDS{"block policy estimator reading succeeds"};
 } // namespace
 
-void initialize_policy_estimator_io()
+static void initialize_policy_estimator_io()
 {
     RegisterReachabilityGoal(BLOCK_POLICY_ESTIMATOR_READ_SUCCEEDS);
     static const auto testing_setup{

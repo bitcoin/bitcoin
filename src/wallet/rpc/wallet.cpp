@@ -496,7 +496,7 @@ static RPCMethod unloadwallet()
     };
 }
 
-RPCMethod simulaterawtransaction()
+static RPCMethod simulaterawtransaction()
 {
     return RPCMethod{
         "simulaterawtransaction",
@@ -651,7 +651,7 @@ static RPCMethod migratewallet()
     };
 }
 
-RPCMethod gethdkeys()
+static RPCMethod gethdkeys()
 {
     return RPCMethod{
         "gethdkeys",
@@ -836,7 +836,7 @@ static RPCMethod createwalletdescriptor()
     };
 }
 
-RPCMethod addhdkey()
+static RPCMethod addhdkey()
 {
     return RPCMethod{
         "addhdkey",
@@ -936,7 +936,7 @@ static RPCMethod exportwatchonlywallet()
     };
 }
 
-RPCMethod derivehdkey()
+static RPCMethod derivehdkey()
 {
     return RPCMethod{
         "derivehdkey",

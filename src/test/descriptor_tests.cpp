@@ -1423,7 +1423,7 @@ BOOST_AUTO_TEST_CASE(descriptor_older_warnings)
     }
 }
 
-void CheckSingleUnparsable(const std::string& desc, const std::string& expected_error)
+static void CheckSingleUnparsable(const std::string& desc, const std::string& expected_error)
 {
     FlatSigningProvider keys;
     std::string error;
@@ -1432,7 +1432,7 @@ void CheckSingleUnparsable(const std::string& desc, const std::string& expected_
     BOOST_CHECK_EQUAL(error, expected_error);
 }
 
-void CheckUnused(const std::string& prv, const std::string& pub)
+static void CheckUnused(const std::string& prv, const std::string& pub)
 {
     FlatSigningProvider keys_priv, keys_pub;
     std::string error;

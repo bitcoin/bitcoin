@@ -221,7 +221,7 @@ UniValue blockheaderToJSON(const CBlockIndex& tip, const CBlockIndex& blockindex
 }
 
 /** Serialize coinbase transaction metadata */
-UniValue coinbaseTxToJSON(const CTransaction& coinbase_tx)
+static UniValue coinbaseTxToJSON(const CTransaction& coinbase_tx)
 {
     CHECK_NONFATAL(!coinbase_tx.vin.empty());
     const CTxIn& vin_0{coinbase_tx.vin[0]};
@@ -995,7 +995,7 @@ static RPCMethod pruneblockchain()
     };
 }
 
-CoinStatsHashType ParseHashType(std::string_view hash_type_input)
+static CoinStatsHashType ParseHashType(std::string_view hash_type_input)
 {
     if (hash_type_input == "hash_serialized_3") {
         return CoinStatsHashType::HASH_SERIALIZED;
@@ -1742,7 +1742,7 @@ static RPCMethod preciousblock()
     };
 }
 
-void InvalidateBlock(ChainstateManager& chainman, const uint256 block_hash) {
+static void InvalidateBlock(ChainstateManager& chainman, const uint256 block_hash) {
     BlockValidationState state;
     CBlockIndex* pblockindex;
     {
@@ -1788,7 +1788,7 @@ static RPCMethod invalidateblock()
     };
 }
 
-void ReconsiderBlock(ChainstateManager& chainman, uint256 block_hash) {
+static void ReconsiderBlock(ChainstateManager& chainman, uint256 block_hash) {
     {
         LOCK(chainman.GetMutex());
         CBlockIndex* pblockindex = chainman.m_blockman.LookupBlockIndex(block_hash);

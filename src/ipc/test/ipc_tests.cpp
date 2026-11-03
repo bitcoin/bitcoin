@@ -63,7 +63,7 @@ static std::string TempPath(std::string_view pattern)
 //! The test creates a thread which creates a FooImplementation object (defined
 //! in ipc_test.h) and a two-way pipe accepting IPC requests which call methods
 //! on the object through FooInterface (defined in ipc_test.capnp).
-void IpcPipeTest()
+static void IpcPipeTest()
 {
     // Setup: create FooImplementation object and listen for FooInterface requests
     std::promise<std::unique_ptr<mp::ProxyClient<gen::FooInterface>>> foo_promise;
@@ -131,7 +131,7 @@ void IpcPipeTest()
 }
 
 //! Test ipc::Protocol connect() and serve() methods connecting over a socketpair.
-void IpcSocketPairTest()
+static void IpcSocketPairTest()
 {
     std::unique_ptr<interfaces::Init> init{std::make_unique<TestInit>()};
     std::unique_ptr<ipc::Protocol> protocol{ipc::capnp::MakeCapnpProtocol("IpcSocketPairTest")};
@@ -155,7 +155,7 @@ void IpcSocketPairTest()
 }
 
 //! Test ipc::Process bind() and connect() methods connecting over a unix socket.
-void IpcSocketTest(const fs::path& datadir)
+static void IpcSocketTest(const fs::path& datadir)
 {
     std::unique_ptr<interfaces::Init> init{std::make_unique<TestInit>()};
     std::unique_ptr<ipc::Protocol> protocol{ipc::capnp::MakeCapnpProtocol("IpcSocketTest")};
@@ -203,7 +203,7 @@ void IpcSocketTest(const fs::path& datadir)
 }
 
 //! Test ipc::Protocol listen() local connection limiting over a unix socket.
-void IpcSocketMaxConnectionsTest(const fs::path& datadir)
+static void IpcSocketMaxConnectionsTest(const fs::path& datadir)
 {
     std::unique_ptr<interfaces::Init> init{std::make_unique<TestInit>()};
     std::unique_ptr<ipc::Protocol> protocol{ipc::capnp::MakeCapnpProtocol("IpcSocketMaxConnectionsTest")};

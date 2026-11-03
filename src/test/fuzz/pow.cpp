@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-void initialize_pow()
+static void initialize_pow()
 {
     SelectParams(ChainType::MAIN);
 }

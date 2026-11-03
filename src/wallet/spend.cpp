@@ -1048,12 +1048,12 @@ void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
     }
 }
 
-uint64_t GetSerializeSizeForRecipient(const CRecipient& recipient)
+static uint64_t GetSerializeSizeForRecipient(const CRecipient& recipient)
 {
     return ::GetSerializeSize(CTxOut(recipient.nAmount, GetScriptForDestination(recipient.dest)));
 }
 
-bool IsDust(const CRecipient& recipient, const CFeeRate& dustRelayFee)
+static bool IsDust(const CRecipient& recipient, const CFeeRate& dustRelayFee)
 {
     return ::IsDust(CTxOut(recipient.nAmount, GetScriptForDestination(recipient.dest)), dustRelayFee);
 }

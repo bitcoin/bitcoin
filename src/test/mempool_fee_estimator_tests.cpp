@@ -38,7 +38,7 @@ static inline CTransactionRef MakeRandomTx()
     return MakeTransactionRef(tx);
 }
 
-void AddRemovedBlock(MemPoolFeeRateEstimator& fee_est,
+static void AddRemovedBlock(MemPoolFeeRateEstimator& fee_est,
                      int32_t removed_txs_weight,
                      int32_t block_txs_weight,
                      unsigned int& height)

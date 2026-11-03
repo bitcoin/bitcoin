@@ -15,7 +15,7 @@
 
 /** Helper for PackageTRUCChecks: Returns a vector containing the indices of transactions (within
  * package) that are direct parents of ptx. */
-std::vector<size_t> FindInPackageParents(const Package& package, const CTransactionRef& ptx)
+static std::vector<size_t> FindInPackageParents(const Package& package, const CTransactionRef& ptx)
 {
     std::vector<size_t> in_package_parents;
 

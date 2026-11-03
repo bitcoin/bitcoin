@@ -32,7 +32,7 @@
 #include <QSystemTrayIcon>
 #include <QTimer>
 
-int setFontChoice(QComboBox* cb, const OptionsModel::FontChoice& fc)
+static int setFontChoice(QComboBox* cb, const OptionsModel::FontChoice& fc)
 {
     int i;
     for (i = cb->count(); --i >= 0; ) {
@@ -54,7 +54,7 @@ int setFontChoice(QComboBox* cb, const OptionsModel::FontChoice& fc)
     return i;
 }
 
-void setupFontOptions(QComboBox* cb, QLabel* preview)
+static void setupFontOptions(QComboBox* cb, QLabel* preview)
 {
     QFont embedded_font{GUIUtil::fixedPitchFont(true)};
     QFont system_font{GUIUtil::fixedPitchFont(false)};

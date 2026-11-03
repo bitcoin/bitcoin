@@ -1310,7 +1310,7 @@ bool AppInitInterfaces(NodeContext& node)
     return true;
 }
 
-bool CheckHostPortOptions(const ArgsManager& args) {
+static bool CheckHostPortOptions(const ArgsManager& args) {
     for (const std::string port_option : {
         "-port",
         "-rpcport",
