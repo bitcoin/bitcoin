@@ -30,6 +30,7 @@ private Q_SLOTS:
     void participantCannotChooseATakenShare();
     void coordinatorResumesSavedSession();
     void coordinatorResumesFullySignedSession();
+    void signedSessionReservation();
     void unauthorisedSignedInputsAreDetected();
     void refusesToSignCoinsOutsideOwnContribution();
     void refusesToSignShortChangedOwnContribution();

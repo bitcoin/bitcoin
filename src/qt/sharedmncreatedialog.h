@@ -261,7 +261,9 @@ private:
     //! Who the current message goes to
     QString recipientName() const;
     void copySession(const QString& what);
-    void saveSession();
+    //! False when nothing was saved: the file dialog was cancelled, the file
+    //! could not be written, or the operator key still has to be saved
+    bool saveSession();
     void handleImportedText(const QString& text);
     void absorbSession(const MnShareSession& imported);
     void replaceSession(const MnShareSession& imported);
@@ -280,14 +282,16 @@ private:
     //! first: if the coins are then spent, nobody can complete the
     //! registration.
     void releaseReservedCoins();
-    //! True when at least one coin this wallet contributed is still locked in
-    //! it, i.e. there is something for "Release my coins" to do
+    //! True when at least one of this wallet's own coins among the session's
+    //! inputs is still locked in it, i.e. there is something for "Release my
+    //! coins" to do
     bool hasLockedContributedCoins() const;
     //! Lock the coins of a session in progress, or unlock them once it is
     //! broadcast and they are spent
     void refreshContributedCoinLocks();
     void setContributionLocked(const MnShareSession::Contribution& contribution, bool lock);
     void unlockAllContributedCoins();
+    //! Lock the session's unspent inputs that this wallet can spend
     void lockKnownContributedCoins();
     //! Re-check that every funding coin this wallet contributed is still
     //! unspent, and set m_dead_reason when one is gone
@@ -387,6 +391,14 @@ private:
     bool m_updating{false}; //!< guards widget refresh against change signals
     bool m_lock_confirming{false};
     bool m_finished{false};
+    //! The user released this wallet's coins with "Release" or "Release my
+    //! coins", and a later copy of the session must not lock them again until
+    //! the user reserves or signs them
+    bool m_coins_released{false};
+    //! Contributions the user withdrew with "Release" on the contribution page,
+    //! less any coins reserved again since. A reply to an earlier invitation
+    //! still carries them, and only Reserve may put them back.
+    std::vector<MnShareSession::Contribution> m_released_contributions;
     Role m_role{Role::Undecided};
     int m_my_share{-1};
     std::optional<Page> m_validation_page;
@@ -490,6 +502,7 @@ private:
     QLabel* m_approvals_terms{nullptr};
     QPushButton* m_copy_terms_button{nullptr};
     QPushButton* m_unlock_button{nullptr};
+    QPushButton* m_approvals_release_button{nullptr};
     QLabel* m_prepare_warning_label{nullptr};
 
     // Signatures / Sign contribution
@@ -499,6 +512,7 @@ private:
     QLabel* m_signatures_unchanged{nullptr};
     QLabel* m_signatures_terms{nullptr};
     QPushButton* m_copy_signing_button{nullptr};
+    QPushButton* m_signatures_release_button{nullptr};
 
     // Waiting pages
     struct WaitingPage {

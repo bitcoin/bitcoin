@@ -48,9 +48,12 @@
 #include <QButtonGroup>
 #include <QClipboard>
 #include <QLabel>
+#include <QMessageBox>
 #include <QPushButton>
+#include <QStackedWidget>
 #include <QStandardItemModel>
 #include <QString>
+#include <QTableWidget>
 #include <QTest>
 #include <QTimer>
 #include <QWidget>
@@ -100,6 +103,26 @@ MnShareSession FrozenSession(const MnShareSession& draft, const std::vector<CKey
         session.addSignature(static_cast<int>(i), QString::fromStdString(EncodeBase64(signature)), error);
     }
     return session;
+}
+
+//! Answer the next message box with its button labelled `answer`, recording
+//! the box's title in `title`, which stays empty if no box opens before the
+//! caller processes events
+void AnswerMessageBox(const QString& answer, QString& title)
+{
+    title.clear();
+    QTimer::singleShot(0, [answer, &title] {
+        auto* const box{qobject_cast<QMessageBox*>(QApplication::activeModalWidget())};
+        if (box == nullptr) return;
+        title = box->windowTitle();
+        for (QAbstractButton* const button : box->buttons()) {
+            if (button->text() == answer) {
+                button->click();
+                return;
+            }
+        }
+        box->reject();
+    });
 }
 } // anonymous namespace
 
@@ -409,6 +432,324 @@ void SharedMnWizardTests::coordinatorResumesFullySignedSession()
     participant.handleImportedText(session.toJsonString());
     QCOMPARE(int(participant.m_role), int(SharedMnCreateDialog::Role::Participant));
     QCOMPARE(int(participant.currentPage()), int(SharedMnCreateDialog::PageWaitBroadcast));
+}
+
+void SharedMnWizardTests::signedSessionReservation()
+{
+    TestingSetup test{CBaseChainParams::REGTEST};
+    m_node.setContext(&test.m_node);
+    WalletContext& context{*m_node.walletLoader().context()};
+
+    // bob's wallet knows a transaction that paid both bob and alice, such as
+    // the change of an earlier shared registration, and each funds their share
+    // in this one with their own output of it
+    CKey bob_key;
+    bob_key.MakeNewKey(/*fCompressed=*/true);
+    const auto wallet{MakeSpendingWallet(m_node, context, "bob", bob_key)};
+    QVERIFY(wallet != nullptr);
+    WalletGuard guard{context, wallet};
+    CKey alice_coin_key;
+    CMutableTransaction earlier;
+    earlier.vin.emplace_back(COutPoint(uint256::ONE, 0));
+    earlier.vout.emplace_back(350 * COIN, GetScriptForDestination(PKHash(bob_key.GetPubKey())));
+    earlier.vout.emplace_back(400 * COIN, GetScriptForDestination(
+                                              DecodeDestination(FreshP2PKHAddress(&alice_coin_key).toStdString())));
+    QVERIFY(wallet->AddToWallet(MakeTransactionRef(earlier), wallet::TxStateInactive{}) != nullptr);
+    const QString earlier_txid{QString::fromStdString(earlier.GetHash().ToString())};
+    const COutPoint bob_coin{earlier.GetHash(), 0};
+    const COutPoint alice_coin{earlier.GetHash(), 1};
+
+    MasternodeTestUtil::GuiModels models{m_node};
+    QVERIFY2(models.ok, qPrintable(QString::fromStdString(models.error.translated)));
+    WalletModel wallet_model(interfaces::MakeWallet(context, wallet), models.client);
+
+    // Share `index`'s approval of `session`'s terms, signed with `key`
+    const auto approve = [](MnShareSession& session, int index, const CKey& key) {
+        std::vector<unsigned char> signature;
+        QString error;
+        return CHashSigner::SignHash(uint256S(session.consentHash().toStdString()), key, signature) &&
+               session.addSignature(index, QString::fromStdString(EncodeBase64(signature)), error);
+    };
+    // The session once every share has signed its coins, as bob receives it or,
+    // with `coordinated`, as bob coordinating it saved it. Without
+    // `fully_signed` it is the signing request, before anybody signed. With
+    // `last_key` it is still collecting approvals: alice and bob have approved,
+    // and `last_key` receives carol's owner key.
+    const auto signed_session = [&](bool coordinated, bool fully_signed = true, CKey* last_key = nullptr) {
+        MnShareSession invitation{InvitationSession()};
+        if (coordinated) {
+            invitation.setCoordinatorLabel(QStringLiteral("bob"));
+            invitation.setPrepareWallet(QStringLiteral("bob"));
+        }
+        MnShareSession draft{invitation};
+        std::vector<CKey> owner_keys(3);
+        QString error;
+        for (int i = 0; i < 3; ++i) {
+            draft.absorbDraftReply(DraftReply(invitation, i, FakeTxid('1' + i), &owner_keys[i]), error);
+        }
+        owner_keys[1] = bob_key;
+        draft.shares()[1].ownerAddress = QString::fromStdString(EncodeDestination(PKHash(bob_key.GetPubKey())));
+        for (const auto& [label, vout] : {std::pair{"alice", 1u}, std::pair{"bob", 0u}}) {
+            MnShareSession::Contribution contribution;
+            contribution.label = QString::fromLatin1(label);
+            contribution.inputs = {{.txid = earlier_txid, .vout = vout}};
+            draft.removeContribution(contribution.label, error);
+            draft.addContribution(contribution, error);
+        }
+        if (last_key != nullptr) {
+            *last_key = owner_keys[2];
+            MnShareSession frozen{FrozenSession(draft, owner_keys, /*sign_all=*/false)};
+            for (const int i : {0, 1}) {
+                approve(frozen, i, owner_keys[i]);
+            }
+            return frozen;
+        }
+        MnShareSession session{FrozenSession(draft, owner_keys, /*sign_all=*/true)};
+        session.setCombinedTx(session.protxHex(), error);
+        CMutableTransaction tx;
+        if (!fully_signed || !DecodeHexTx(tx, session.protxHex().toStdString())) return session;
+        for (auto& input : tx.vin) {
+            input.scriptSig = CScript() << OP_TRUE;
+        }
+        session.setFundingSignedTx(QString::fromStdString(EncodeHexTx(CTransaction(tx))), error);
+        return session;
+    };
+    const MnShareSession received{signed_session(/*coordinated=*/false)};
+    QCOMPARE(int(received.stage()), int(MnShareSession::Stage::FundingSigned));
+
+    {
+        // Only bob's own coin is reserved: a lock on alice's would be one bob
+        // could neither see nor release in Coin Control
+        SharedMnCreateDialog dialog(m_node, &wallet_model, /*parent=*/nullptr);
+        dialog.handleImportedText(received.toJsonString());
+        QCOMPARE(int(dialog.m_role), int(SharedMnCreateDialog::Role::Participant));
+        QCOMPARE(dialog.myShareIndex(), 1);
+        QCOMPARE(int(dialog.currentPage()), int(SharedMnCreateDialog::PageWaitBroadcast));
+        QVERIFY(wallet_model.wallet().isLockedCoin(bob_coin));
+        QVERIFY(!wallet_model.wallet().isLockedCoin(alice_coin));
+
+        // A lock left on alice's coin by an earlier version is not one of bob's
+        // to release
+        wallet_model.wallet().unlockCoin(bob_coin);
+        wallet_model.wallet().lockCoin(alice_coin, /*write_to_db=*/false);
+        QVERIFY(!dialog.hasLockedContributedCoins());
+        wallet_model.wallet().unlockCoin(alice_coin);
+    }
+
+    // Whether the page on screen offers "Release my coins"
+    const auto offers_release = [](const SharedMnCreateDialog& dialog) {
+        const auto buttons{dialog.m_pages->currentWidget()->findChildren<QPushButton*>()};
+        return std::any_of(buttons.begin(), buttons.end(), [](const QPushButton* button) {
+            return button->text() == QStringLiteral("Release my coins") && !button->isHidden();
+        });
+    };
+    const QString keep_prompt{QStringLiteral("Keep this session for later?")};
+    QString prompt;
+    {
+        // Nothing was changed since the session was opened, but its coins stay
+        // reserved once the dialog closes, so Close and Cancel both ask first
+        SharedMnCreateDialog dialog(m_node, &wallet_model, /*parent=*/nullptr);
+        dialog.handleImportedText(received.toJsonString());
+        dialog.show();
+        QVERIFY(offers_release(dialog));
+        AnswerMessageBox(QStringLiteral("Cancel"), prompt);
+        dialog.onNext();
+        QCoreApplication::processEvents();
+        QCOMPARE(prompt, keep_prompt);
+        QVERIFY(dialog.isVisible());
+        QVERIFY(wallet_model.wallet().isLockedCoin(bob_coin));
+
+        AnswerMessageBox(QStringLiteral("Discard and Release Coins"), prompt);
+        dialog.reject();
+        QCoreApplication::processEvents();
+        QCOMPARE(prompt, keep_prompt);
+        QVERIFY(!dialog.isVisible());
+        QVERIFY(!wallet_model.wallet().isLockedCoin(bob_coin));
+    }
+    {
+        // The coordinator's copy, opened from its file, offers the same choice
+        // and, having no waiting page, a way to release the coins where a
+        // registration that cannot be broadcast leaves it
+        SharedMnCreateDialog dialog(m_node, &wallet_model, /*parent=*/nullptr);
+        dialog.handleImportedText(signed_session(/*coordinated=*/true).toJsonString());
+        QCOMPARE(int(dialog.m_role), int(SharedMnCreateDialog::Role::Coordinator));
+        QCOMPARE(int(dialog.currentPage()), int(SharedMnCreateDialog::PageSignatures));
+        QVERIFY(wallet_model.wallet().isLockedCoin(bob_coin));
+        dialog.show();
+        QVERIFY(offers_release(dialog));
+        AnswerMessageBox(QStringLiteral("Cancel"), prompt);
+        dialog.reject();
+        QCoreApplication::processEvents();
+        QCOMPARE(prompt, keep_prompt);
+        QVERIFY(dialog.isVisible());
+        QVERIFY(wallet_model.wallet().isLockedCoin(bob_coin));
+    }
+    {
+        // Released coins stay released when another copy of the session
+        // arrives, so the status line saying so stays true
+        SharedMnCreateDialog dialog(m_node, &wallet_model, /*parent=*/nullptr);
+        dialog.handleImportedText(received.toJsonString());
+        QVERIFY(wallet_model.wallet().isLockedCoin(bob_coin));
+        AnswerMessageBox(QStringLiteral("Release"), prompt);
+        dialog.releaseReservedCoins();
+        QCoreApplication::processEvents();
+        QCOMPARE(prompt, QStringLiteral("Release your coins?"));
+        QVERIFY(!wallet_model.wallet().isLockedCoin(bob_coin));
+        QVERIFY(dialog.m_status_label->text().startsWith(QStringLiteral("Released")));
+
+        dialog.handleImportedText(received.toJsonString());
+        QCOMPARE(int(dialog.currentPage()), int(SharedMnCreateDialog::PageWaitBroadcast));
+        QVERIFY(!wallet_model.wallet().isLockedCoin(bob_coin));
+        QVERIFY(!offers_release(dialog));
+        QVERIFY(dialog.m_status_label->text().startsWith(QStringLiteral("Released")));
+    }
+    {
+        // Signing the coins into the registration reserves them again. This
+        // fixture's coins are not in the chainstate, so the wallet adds no
+        // signature, but the signing step still completes.
+        SharedMnCreateDialog dialog(m_node, &wallet_model, /*parent=*/nullptr);
+        dialog.handleImportedText(signed_session(/*coordinated=*/false, /*fully_signed=*/false).toJsonString());
+        QCOMPARE(int(dialog.currentPage()), int(SharedMnCreateDialog::PageSignatures));
+        QVERIFY(wallet_model.wallet().isLockedCoin(bob_coin));
+        AnswerMessageBox(QStringLiteral("Release"), prompt);
+        dialog.releaseReservedCoins();
+        QCoreApplication::processEvents();
+        QVERIFY(!wallet_model.wallet().isLockedCoin(bob_coin));
+        bool complete{true};
+        QString sign_error;
+        QVERIFY2(dialog.signOwnFundingInputs(complete, sign_error), qPrintable(sign_error));
+        QVERIFY(wallet_model.wallet().isLockedCoin(bob_coin));
+        wallet_model.wallet().unlockCoin(bob_coin);
+    }
+    {
+        // bob coordinates and releases his coins while the approvals come in.
+        // The last approval completes the set, but nothing of bob's is
+        // combined, signed or reserved again until bob asks for it.
+        CKey carol_key;
+        const MnShareSession waiting{signed_session(/*coordinated=*/true, /*fully_signed=*/false, &carol_key)};
+        MnShareSession approved{waiting};
+        QVERIFY(approve(approved, 2, carol_key));
+        SharedMnCreateDialog dialog(m_node, &wallet_model, /*parent=*/nullptr);
+        dialog.handleImportedText(waiting.toJsonString());
+        QCOMPARE(int(dialog.m_role), int(SharedMnCreateDialog::Role::Coordinator));
+        QCOMPARE(int(dialog.currentPage()), int(SharedMnCreateDialog::PageApprovals));
+        QVERIFY(!dialog.allApproved());
+        QVERIFY(wallet_model.wallet().isLockedCoin(bob_coin));
+        AnswerMessageBox(QStringLiteral("Release"), prompt);
+        dialog.releaseReservedCoins();
+        QCoreApplication::processEvents();
+        QVERIFY(!wallet_model.wallet().isLockedCoin(bob_coin));
+
+        dialog.handleImportedText(approved.toJsonString());
+        QVERIFY(dialog.allApproved());
+        QTRY_VERIFY_WITH_TIMEOUT(!dialog.m_busy, 10000);
+        QCOMPARE(int(dialog.m_session.stage()), int(MnShareSession::Stage::Signing));
+        QCOMPARE(dialog.m_session.protxHex(), waiting.protxHex());
+        QCOMPARE(int(dialog.currentPage()), int(SharedMnCreateDialog::PageApprovals));
+        QVERIFY(!wallet_model.wallet().isLockedCoin(bob_coin));
+        QVERIFY2(dialog.m_status_label->text().contains(QStringLiteral("nothing was signed")),
+                 qPrintable(dialog.m_status_label->text()));
+        QCOMPARE(dialog.m_next_button->text(), QStringLiteral("Reserve and Sign"));
+
+        // Pressing it reserves the coins again and combines and signs as usual
+        dialog.onNext();
+        QVERIFY(wallet_model.wallet().isLockedCoin(bob_coin));
+        QTRY_VERIFY_WITH_TIMEOUT(!dialog.m_busy, 10000);
+        QVERIFY2(dialog.m_error_label->text().isEmpty(), qPrintable(dialog.m_error_label->text()));
+        QCOMPARE(int(dialog.m_session.stage()), int(MnShareSession::Stage::Combined));
+        QCOMPARE(int(dialog.currentPage()), int(SharedMnCreateDialog::PageSignatures));
+        QVERIFY(wallet_model.wallet().isLockedCoin(bob_coin));
+        wallet_model.wallet().unlockCoin(bob_coin);
+    }
+    {
+        // bob coordinates, reserves his coin and sends the invitation, which
+        // carries his contribution. He then releases it on the contribution
+        // page. A reply made from that invitation fills in alice's row and her
+        // coins, but bob's contribution comes back only through Reserve.
+        MnShareSession invitation{InvitationSession()};
+        invitation.setCoordinatorLabel(QStringLiteral("bob"));
+        invitation.setPrepareWallet(QStringLiteral("bob"));
+        invitation.shares()[1].ownerAddress = QString::fromStdString(EncodeDestination(PKHash(bob_key.GetPubKey())));
+        invitation.shares()[1].refundAddress = FreshP2PKHAddress();
+        MnShareSession::Contribution reserved;
+        reserved.label = QStringLiteral("bob");
+        reserved.inputs = {{.txid = earlier_txid, .vout = 0}};
+        QString error;
+        QVERIFY2(invitation.addContribution(reserved, error), qPrintable(error));
+
+        SharedMnCreateDialog dialog(m_node, &wallet_model, /*parent=*/nullptr);
+        dialog.handleImportedText(invitation.toJsonString());
+        QCOMPARE(int(dialog.m_role), int(SharedMnCreateDialog::Role::Coordinator));
+        QCOMPARE(dialog.myShareIndex(), 1);
+        QVERIFY(dialog.myContribution() != nullptr);
+        QVERIFY(wallet_model.wallet().isLockedCoin(bob_coin));
+        dialog.releaseCoins();
+        QVERIFY(dialog.myContribution() == nullptr);
+        QVERIFY(!wallet_model.wallet().isLockedCoin(bob_coin));
+
+        const auto contributes = [&dialog](const char* label) {
+            const auto& contributions{dialog.m_session.contributions()};
+            return std::any_of(contributions.begin(), contributions.end(), [label](const auto& contribution) {
+                return contribution.label == QString::fromLatin1(label);
+            });
+        };
+        const MnShareSession reply{DraftReply(invitation, 0, FakeTxid('7'))};
+        dialog.handleImportedText(reply.toJsonString());
+        QVERIFY2(dialog.m_error_label->text().isEmpty(), qPrintable(dialog.m_error_label->text()));
+        QVERIFY(!wallet_model.wallet().isLockedCoin(bob_coin));
+        QCOMPARE(dialog.myShareIndex(), 1);
+        QVERIFY(dialog.myContribution() == nullptr);
+        QVERIFY(!contributes("bob"));
+        QVERIFY(!dialog.m_reserve_button->isHidden());
+        QCOMPARE(dialog.m_session.shares()[0].ownerAddress, reply.shares()[0].ownerAddress);
+        QVERIFY(contributes("alice"));
+
+        // Choosing carol's still empty row as "me" after the release must not
+        // cost carol her contribution when her reply arrives
+        dialog.goToPage(SharedMnCreateDialog::PageParticipants);
+        dialog.m_me_group->button(2)->setChecked(true);
+        dialog.syncSharesFromTable();
+        QCOMPARE(dialog.myShareIndex(), 2);
+        dialog.handleImportedText(DraftReply(invitation, 2, FakeTxid('8')).toJsonString());
+        QVERIFY2(dialog.m_error_label->text().isEmpty(), qPrintable(dialog.m_error_label->text()));
+        QVERIFY(contributes("carol"));
+        QVERIFY(!contributes("bob"));
+        QVERIFY(!wallet_model.wallet().isLockedCoin(bob_coin));
+    }
+
+    // The registration is broadcast, which spends bob's coin as intended
+    CMutableTransaction registration;
+    QVERIFY(DecodeHexTx(registration, received.protxHex().toStdString()));
+    QVERIFY(wallet->AddToWallet(MakeTransactionRef(registration), wallet::TxStateInactive{}) != nullptr);
+    {
+        SharedMnCreateDialog dialog(m_node, &wallet_model, /*parent=*/nullptr);
+        dialog.handleImportedText(received.toJsonString());
+        QCOMPARE(int(dialog.currentPage()), int(SharedMnCreateDialog::PageWaitBroadcast));
+        QCOMPARE(dialog.m_next_button->text(), QStringLiteral("Close"));
+        QVERIFY2(dialog.m_error_label->text().isEmpty(), qPrintable(dialog.m_error_label->text()));
+    }
+
+    {
+        // Another session counting on the same coin can never be broadcast now,
+        // and the page says so next to the "Start Over" it offers instead
+        SharedMnCreateDialog dialog(m_node, &wallet_model, /*parent=*/nullptr);
+        dialog.handleImportedText(signed_session(/*coordinated=*/false).toJsonString());
+        QCOMPARE(dialog.m_next_button->text(), QStringLiteral("Start Over"));
+        QVERIFY2(dialog.m_error_label->text().contains(QStringLiteral("was spent")),
+                 qPrintable(dialog.m_error_label->text()));
+    }
+
+    // An abandoned registration spends nothing: once bob spends the coin
+    // elsewhere, the session is as dead as any other
+    QVERIFY(wallet->AbandonTransaction(registration.GetHash()));
+    CMutableTransaction spend;
+    spend.vin.emplace_back(bob_coin);
+    spend.vout.emplace_back(349 * COIN, GetScriptForDestination(PKHash(bob_key.GetPubKey())));
+    QVERIFY(wallet->AddToWallet(MakeTransactionRef(spend), wallet::TxStateInactive{}) != nullptr);
+    SharedMnCreateDialog dialog(m_node, &wallet_model, /*parent=*/nullptr);
+    dialog.handleImportedText(received.toJsonString());
+    QCOMPARE(dialog.m_next_button->text(), QStringLiteral("Start Over"));
+    QVERIFY2(dialog.m_error_label->text().contains(QStringLiteral("was spent")), qPrintable(dialog.m_error_label->text()));
 }
 
 void SharedMnWizardTests::unauthorisedSignedInputsAreDetected()
@@ -832,6 +1173,37 @@ void SharedMnWizardTests::participantsPageGating()
     dialog.refreshShareTable();
     QVERIFY(!dialog.validatePage(SharedMnCreateDialog::PageParticipants, error));
     QVERIFY(!error.isEmpty());
+
+    // Coins reserved for this wallet's row were sized for its amount and are
+    // recorded under its name, so that row stays fixed until they are released;
+    // the other rows are still the coordinator's to edit
+    const auto name_cell = [&](int row) {
+        return qobject_cast<QLineEdit*>(dialog.m_share_table->cellWidget(row, SharedMnCreateDialog::SHARE_COL_NAME));
+    };
+    // BitcoinAmountField::setEnabled() reaches only the editor inside it
+    const auto amount_editable = [&](int row) {
+        return dialog.m_share_table->cellWidget(row, SharedMnCreateDialog::SHARE_COL_AMOUNT)->findChild<QLineEdit*>()->isEnabled();
+    };
+    MnShareSession::Contribution mine;
+    mine.label = dialog.m_session.shares()[0].label;
+    mine.inputs.push_back({.txid = FakeTxid('1')});
+    QVERIFY2(dialog.m_session.addContribution(mine, error), qPrintable(error));
+    dialog.refreshShareTable();
+    QVERIFY(!amount_editable(0));
+    QVERIFY(name_cell(0)->isReadOnly());
+    QVERIFY(amount_editable(1));
+    QVERIFY(!name_cell(1)->isReadOnly());
+    // Nor can the row be removed from under the reservation
+    dialog.m_share_table->setCurrentCell(0, SharedMnCreateDialog::SHARE_COL_NAME);
+    dialog.m_remove_share_button->click();
+    QCOMPARE(dialog.m_session.shares().size(), size_t{3});
+    QVERIFY(dialog.myContribution() != nullptr);
+    QVERIFY(!dialog.m_error_label->text().isEmpty());
+
+    dialog.releaseCoins();
+    QVERIFY(dialog.myContribution() == nullptr);
+    QVERIFY(amount_editable(0));
+    QVERIFY(!name_cell(0)->isReadOnly());
 }
 
 void SharedMnWizardTests::statusBoardAbsorbsRepliesInAnyOrder()
