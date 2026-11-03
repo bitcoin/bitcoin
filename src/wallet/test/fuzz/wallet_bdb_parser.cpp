@@ -79,6 +79,7 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
             error.original == "Bad overflow record page type" ||
             error.original == "Overflow record has an impossible length" ||
             error.original == "Overflow record data is larger than stated size" ||
+            error.original == "Overflow page data exceeds page size" ||
             error.original == "BTree page has an unexpected level" ||
             error.original == "BTree page referenced more than once" ||
             error.original == "BTree Leaf page is not at level 1" ||
