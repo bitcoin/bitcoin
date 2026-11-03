@@ -32,7 +32,8 @@
 #include <span>
 #include <variant>
 
-void AddInputs(CMutableTransaction& rawTx, const UniValue& inputs_in, std::optional<bool> rbf)
+/** Normalize univalue-represented inputs and add them to the transaction */
+static void AddInputs(CMutableTransaction& rawTx, const UniValue& inputs_in, std::optional<bool> rbf)
 {
     UniValue inputs;
     if (inputs_in.isNull()) {
