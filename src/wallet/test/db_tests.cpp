@@ -560,5 +560,49 @@ BOOST_AUTO_TEST_CASE(bdbro_full_page_parses)
     BOOST_CHECK_EQUAL(db->m_records.size(), entries / 2U);
 }
 
+BOOST_AUTO_TEST_CASE(bdbro_overflow_page_data_does_not_fit)
+{
+    // Overflow page claiming one byte more data than fits, with page 5 to read it from
+    const uint32_t data_len{BDBFileBuilder::PAGE_BYTES - BDBFileBuilder::HEADER_BYTES + 1};
+
+    BDBFileBuilder builder(/*num_pages=*/6);
+    builder.Header(3, BDBFileBuilder::PAGE_LEAF, /*level=*/1, /*entries=*/2);
+    builder.Index(3, 0, 30);
+    builder.Index(3, 1, 34);
+    builder.DataRecord(3, 30, /*len=*/1, /*fill=*/'k');
+    builder.OverflowRecord(3, 34, /*first_page=*/4, /*item_len=*/data_len);
+    builder.OverflowPage(4, data_len, /*next_page=*/0);
+    builder.OverflowPage(5, /*data_len=*/0, /*next_page=*/0);
+
+    CheckRejected(builder, m_path_root / "overflow_page_data.dat", "Overflow page data exceeds page size");
+}
+
+BOOST_AUTO_TEST_CASE(bdbro_full_overflow_pages_parse)
+{
+    // Overflow chain with full pages, as BDB writes them, still parses
+    const uint32_t full_len{BDBFileBuilder::PAGE_BYTES - BDBFileBuilder::HEADER_BYTES};
+    const uint32_t item_len{2 * full_len + 10};
+
+    BDBFileBuilder builder(/*num_pages=*/7);
+    builder.Header(3, BDBFileBuilder::PAGE_LEAF, /*level=*/1, /*entries=*/2);
+    builder.Index(3, 0, 30);
+    builder.Index(3, 1, 34);
+    builder.DataRecord(3, 30, /*len=*/1, /*fill=*/'k');
+    builder.OverflowRecord(3, 34, /*first_page=*/4, item_len);
+    builder.OverflowPage(4, full_len, /*next_page=*/5);
+    builder.OverflowPage(5, full_len, /*next_page=*/6);
+    builder.OverflowPage(6, /*data_len=*/10, /*next_page=*/0);
+
+    const fs::path path{m_path_root / "full_overflow_pages.dat"};
+    builder.WriteTo(path);
+    DatabaseOptions options;
+    DatabaseStatus status;
+    bilingual_str error;
+    const auto db{MakeBerkeleyRODatabase(path, options, status, error)};
+    BOOST_REQUIRE_MESSAGE(db, error.original);
+    BOOST_REQUIRE_EQUAL(db->m_records.size(), 1U);
+    BOOST_CHECK_EQUAL(db->m_records.begin()->second.size(), item_len);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet

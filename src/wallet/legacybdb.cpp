@@ -456,10 +456,11 @@ public:
 class OverflowPage
 {
 public:
-    OverflowPage(const PageHeader& header) : m_header(header) {}
+    OverflowPage(const PageHeader& header, uint32_t page_size) : m_header(header), m_page_size(page_size) {}
     OverflowPage() = delete;
 
     PageHeader m_header;
+    uint32_t m_page_size;
 
     // BDB overloads some page fields to store overflow page data
     // hf_offset contains the length of the overflow data stored on this page
@@ -471,6 +472,10 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s)
     {
+        // The data follows the header, so it must fit in the rest of the page
+        if (m_header.hf_offset > m_page_size - PageHeader::SIZE) {
+            throw std::runtime_error("Overflow page data exceeds page size");
+        }
         data.resize(m_header.hf_offset);
         s.read(std::as_writable_bytes(std::span(data.data(), data.size())));
     }
@@ -727,7 +732,7 @@ void BerkeleyRODatabase::Open()
                         if (opage_header.type != PageType::OVERFLOW_DATA) {
                             throw std::runtime_error("Bad overflow record page type");
                         }
-                        OverflowPage opage(opage_header);
+                        OverflowPage opage(opage_header, page_size);
                         db_file >> opage;
                         data.insert(data.end(), opage.data.begin(), opage.data.end());
                         if (data.size() > orec->item_len) {
