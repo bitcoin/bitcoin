@@ -33,6 +33,7 @@ void initialize_net()
 
 FUZZ_TARGET(net, .init = initialize_net)
 {
+    ResetFuzzedSockets();
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
     FakeSteadyClock steady_clock;
@@ -83,6 +84,7 @@ FUZZ_TARGET(net, .init = initialize_net)
 
 FUZZ_TARGET(local_address, .init = initialize_net)
 {
+    ResetFuzzedSockets();
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
     FakeSteadyClock steady_clock;

@@ -125,6 +125,7 @@ void initialize_cmpctblock()
 FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
+    ResetFuzzedSockets();
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     FakeNodeClock node_clock{1610000000s}; // 2021-01-07, arbitrary

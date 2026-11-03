@@ -39,6 +39,7 @@ void initialize()
 FUZZ_TARGET(p2p_handshake, .init = ::initialize)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
+    ResetFuzzedSockets();
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     auto& node{g_setup->m_node};
