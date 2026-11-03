@@ -51,6 +51,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <limits>
 #include <list>
 #include <map>
 #include <memory>
@@ -98,6 +99,19 @@ static RPCMethod sendrawtransaction()
         "the transaction is not scheduled until an existing one completes or is\n"
         "aborted. Use getprivatebroadcastinfo to inspect the queue and abortprivatebroadcast to abort.\n"
 
+        "\nIf delay_after_lock_time is set (requires -privatebroadcast), the private broadcast is\n"
+        "scheduled for a later block height, derived from the height-based nLockTime of the\n"
+        "transaction: it is broadcast once the active chain reaches the height\n"
+        "nLockTime + delay_after_lock_time. If that height has already been reached, the\n"
+        "transaction is broadcast immediately. Time-based lock times are not supported.\n"
+        "A scheduled transaction is validated at submission, but if it is not final yet (e.g. its\n"
+        "nLockTime is in the future), validation stops early and it is accepted anyway: then only\n"
+        "basic checks are done, and its inputs, scripts and fee (including maxfeerate) are not\n"
+        "checked until it is due. When it is due, it is fully validated, and dropped if it is not\n"
+        "valid; the caller is not notified of this.\n"
+        "Scheduled transactions are not persisted and are lost on restart.\n"
+        "For a scheduled transaction, a successful result means that it is scheduled, not sent.\n"
+
         "\nA specific exception, RPC_TRANSACTION_ALREADY_IN_UTXO_SET, may throw if the transaction cannot be added to the mempool.\n"
 
         "\nRelated RPCs: createrawtransaction, signrawtransactionwithkey\n",
@@ -110,6 +124,10 @@ static RPCMethod sendrawtransaction()
              "Reject transactions with provably unspendable outputs (e.g. 'datacarrier' outputs that use the OP_RETURN opcode) greater than the specified value, expressed in " + CURRENCY_UNIT + ".\n"
              "If burning funds through unspendable outputs is desired, increase this value.\n"
              "This check is based on heuristics and does not guarantee spendability of outputs.\n"},
+            {"delay_after_lock_time", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
+             "Schedule the broadcast for the block height nLockTime + delay_after_lock_time, see above. "
+             "Must be non-negative; 0 schedules it for the nLockTime height. Requires -privatebroadcast "
+             "and a height-based nLockTime."},
         },
         RPCResult{
             RPCResult::Type::STR_HEX, "", "The transaction hash in hex"
@@ -121,6 +139,8 @@ static RPCMethod sendrawtransaction()
             + HelpExampleCli("signrawtransactionwithwallet", "\"myhex\"") +
             "\nSend the transaction (signed hex)\n"
             + HelpExampleCli("sendrawtransaction", "\"signedhex\"") +
+            "\nSend the transaction privately, 6 blocks after its lock time\n"
+            + HelpExampleCli("-named sendrawtransaction", "hexstring=\"signedhex\" delay_after_lock_time=6") +
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("sendrawtransaction", "\"signedhex\"")
                 },
@@ -143,11 +163,27 @@ static RPCMethod sendrawtransaction()
 
             const CFeeRate max_raw_tx_fee_rate{ParseFeeRate(self.Arg<UniValue>("maxfeerate"))};
 
+            std::optional<int> release_height;
+            if (const auto delay{self.MaybeArg<int64_t>("delay_after_lock_time")}) {
+                if (*delay < 0) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "delay_after_lock_time must be non-negative");
+                }
+                if (tx->nLockTime >= LOCKTIME_THRESHOLD) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "delay_after_lock_time is only supported with a height-based nLockTime");
+                }
+                if (*delay > std::numeric_limits<int>::max() - int64_t{tx->nLockTime}) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "delay_after_lock_time is out of range");
+                }
+                release_height = static_cast<int>(tx->nLockTime + *delay);
+            }
 
             std::string err_string;
             AssertLockNotHeld(cs_main);
             NodeContext& node = EnsureAnyNodeContext(request.context);
             const bool private_broadcast_enabled{gArgs.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)};
+            if (release_height && !private_broadcast_enabled) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "delay_after_lock_time is only supported with -privatebroadcast enabled");
+            }
             if (private_broadcast_enabled &&
                 !g_reachable_nets.Contains(NET_ONION) &&
                 !g_reachable_nets.Contains(NET_I2P)) {
@@ -165,7 +201,8 @@ static RPCMethod sendrawtransaction()
                                                               /*max_tx_fee=*/0,
                                                               max_raw_tx_fee_rate,
                                                               method,
-                                                              /*wait_callback=*/true);
+                                                              /*wait_callback=*/true,
+                                                              release_height);
             if (TransactionError::OK != err) {
                 throw JSONRPCTransactionError(err, err_string);
             }
@@ -194,6 +231,7 @@ static RPCMethod getprivatebroadcastinfo()
                                 {RPCResult::Type::STR_HEX, "wtxid", "The transaction witness hash in hex"},
                                 {RPCResult::Type::STR_HEX, "hex", "The serialized, hex-encoded transaction data"},
                                 {RPCResult::Type::NUM_TIME, "time_added", "The time this transaction was added to the private broadcast queue (seconds since epoch)"},
+                                {RPCResult::Type::NUM, "release_height", /*optional=*/true, "The block height at which the broadcast of this transaction is scheduled (only for transactions scheduled with sendrawtransaction delay_after_lock_time)"},
                                 {RPCResult::Type::NUM, "attempts_remaining", "The number of additional private broadcast send attempts allowed for this transaction"},
                                 {RPCResult::Type::ARR, "peers", "Per-peer send and acknowledgment information for this transaction",
                                     {
@@ -228,6 +266,9 @@ static RPCMethod getprivatebroadcastinfo()
                 o.pushKV("wtxid", tx_info.tx->GetWitnessHash().ToString());
                 o.pushKV("hex", EncodeHexTx(*tx_info.tx));
                 o.pushKV("time_added", TicksSinceEpoch<std::chrono::seconds>(tx_info.time_added));
+                if (tx_info.release_height.has_value()) {
+                    o.pushKV("release_height", *tx_info.release_height);
+                }
                 o.pushKV("attempts_remaining", tx_info.attempts_remaining);
                 UniValue peers(UniValue::VARR);
                 for (const auto& peer : tx_info.peers) {

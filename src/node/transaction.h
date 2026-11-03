@@ -10,6 +10,8 @@
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
 
+#include <optional>
+
 class CBlockIndex;
 class CTxMemPool;
 namespace Consensus {
@@ -49,6 +51,12 @@ inline constexpr CAmount DEFAULT_MAX_BURN_AMOUNT{0};
  * @param[in]  max_tx_fee_rate reject txs with fee rate higher than this (if CFeeRate(0), the fee rate is not checked)
  * @param[in]  broadcast_method whether to add the transaction to the mempool and how to broadcast it
  * @param[in]  wait_callback wait until callbacks have been processed to avoid stale result due to a sequentially RPC.
+ * @param[in]  release_height if set and not yet reached by the active chain, schedule the broadcast:
+ *                            the transaction is validated now, but may be accepted if it is not
+ *                            valid yet only because of TX_PREMATURE_SPEND (e.g. its nLockTime is
+ *                            in the future), and is broadcast once the active chain reaches this
+ *                            height.
+ *                            Only supported with TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST.
  * return error
  */
 [[nodiscard]] TransactionError BroadcastTransaction(NodeContext& node,
@@ -57,7 +65,8 @@ inline constexpr CAmount DEFAULT_MAX_BURN_AMOUNT{0};
                                                     const CAmount& max_tx_fee,
                                                     const CFeeRate& max_tx_fee_rate,
                                                     TxBroadcast broadcast_method,
-                                                    bool wait_callback);
+                                                    bool wait_callback,
+                                                    std::optional<int> release_height = std::nullopt);
 
 /**
  * Return transaction with a given hash.
