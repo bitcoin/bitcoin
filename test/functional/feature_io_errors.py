@@ -24,12 +24,10 @@ class IOErrorTest(BitcoinTestFramework):
     def test_blk_dat_io_error(self):
         node = self.nodes[0]
         self.restart_node(0, ["-txindex", "-rest"])
-        self.wait_until(lambda: node.getindexinfo()["txindex"]["synced"])
         wallet = MiniWallet(node)
 
-        tx = wallet.send_self_transfer(from_node=node)
+        tx, tx2 = wallet.send_self_transfer_chain(from_node=node, chain_length=2)
         txid = tx["txid"]
-        tx2 = wallet.send_self_transfer(from_node=node, utxo_to_spend=tx["new_utxo"])
         self.generate(node, 1)
         psbt = node.createpsbt(inputs=[{"txid": txid, "vout": 0}], outputs=[])
 
