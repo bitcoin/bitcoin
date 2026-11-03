@@ -109,6 +109,7 @@ public:
     void IncrementUpdateCounter() override { ++nUpdateCounter; }
     void ReloadDbEnv() override {}
     std::string Filename() override { return "faildb"; }
+    std::vector<fs::path> Files() override { return {}; }
     std::string Format() override { return "faildb"; }
     std::unique_ptr<DatabaseBatch> MakeBatch(bool = true) override { return std::make_unique<FailBatch>(m_pass); }
 };

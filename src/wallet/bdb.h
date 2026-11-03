@@ -134,6 +134,8 @@ public:
     /** Return path to main database filename */
     std::string Filename() override { return fs::PathToString(env->Directory() / m_filename); }
 
+    std::vector<fs::path> Files() override;
+
     std::string Format() override { return "bdb"; }
     /**
      * Pointer to shared database environment.
