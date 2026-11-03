@@ -49,6 +49,7 @@ protected:
 
     /// TimestampIndex works with pruned nodes since it only stores block metadata
     bool AllowPrune() const override { return true; }
+    bool WritesEagerly() const override { return true; }
 
 public:
     /// Constructs a new TimestampIndex.

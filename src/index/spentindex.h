@@ -53,6 +53,7 @@ protected:
 
     /// SpentIndex cannot work with pruned nodes as it requires UTXO data
     bool AllowPrune() const override { return false; }
+    bool WritesEagerly() const override { return true; }
 
 public:
     /// Constructs a new SpentIndex.

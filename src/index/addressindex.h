@@ -61,6 +61,7 @@ protected:
 
     /// Override to return false - we need undo data
     bool AllowPrune() const override { return false; }
+    bool WritesEagerly() const override { return true; }
 
     /// Write block data to the index databases
     bool CustomAppend(const interfaces::BlockInfo& block) override;

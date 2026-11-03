@@ -18,6 +18,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <memory>
+#include <optional>
+#include <vector>
 
 namespace {
 //! A minimal index that, like Dash's address and spent indexes, keeps one entry per block and erases the entries of
@@ -50,6 +52,13 @@ public:
         m_stop_after = nullptr;
         return ok;
     }
+    std::optional<uint256> UncommittedTip() const { return m_db->ReadUncommittedTip(); }
+    void SetUncommittedTip(const uint256& block_hash)
+    {
+        CDBBatch batch(*m_db);
+        m_db->WriteUncommittedTip(batch, block_hash);
+        m_db->WriteBatch(batch);
+    }
     uint256 CommittedTip() const
     {
         const auto locator{m_db->ReadBestBlock()};
@@ -71,6 +80,7 @@ protected:
     }
     BaseIndex::DB& GetDB() const override { return *m_db; }
     bool AllowPrune() const override { return true; }
+    bool WritesEagerly() const override { return true; }
 };
 
 const CBlockIndex* AtHeight(ChainstateManager& chainman, int height)
@@ -223,6 +233,77 @@ BOOST_FIXTURE_TEST_CASE(interrupted_rewind_keeps_locator_below_erased_entries, T
     IndexWaitSynced(index);
     BOOST_CHECK_MESSAGE(index.Indexed(tip), "block 100 was not indexed again");
     index.Stop();
+}
+
+// A sync that ends above the last flush can't commit its locator, but its entries are on disk. If those blocks leave
+// the active chain while the index is off, the next start must rewind them from the tip the sync reached.
+BOOST_FIXTURE_TEST_CASE(restart_rewinds_blocks_synced_above_flush, TestChain100Setup)
+{
+    ChainstateManager& chainman{*Assert(m_node.chainman)};
+    LowerLastFlushedBlock(chainman, 97);
+    const std::vector<const CBlockIndex*> orphaned{AtHeight(chainman, 98), AtHeight(chainman, 99), AtHeight(chainman, 100)};
+    {
+        ErasingIndex index{interfaces::MakeChain(m_node)};
+        BOOST_REQUIRE(index.Start());
+        IndexWaitSynced(index);
+        BOOST_CHECK(index.UncommittedTip() == orphaned.back()->GetBlockHash());
+        index.Stop();
+    }
+
+    // A rewind that stops after its first block moves the uncommitted tip down with it, so the next start, with the
+    // rewound block still on the active chain, indexes it again
+    node::g_indexes_ready_to_sync = false;
+    {
+        ErasingIndex index{interfaces::MakeChain(m_node)};
+        BOOST_REQUIRE(index.Start());
+        BOOST_CHECK(!index.RewindTo(orphaned.back(), AtHeight(chainman, 97), /*stop_after=*/orphaned.back()));
+        BOOST_CHECK(index.UncommittedTip() == orphaned[1]->GetBlockHash());
+        index.Interrupt();
+        index.Stop();
+    }
+    node::g_indexes_ready_to_sync = true;
+    {
+        ErasingIndex index{interfaces::MakeChain(m_node)};
+        BOOST_REQUIRE(index.Start());
+        IndexWaitSynced(index);
+        BOOST_CHECK(index.Indexed(orphaned.back()));
+        index.Stop();
+    }
+
+    // The reorged-away blocks stay in the block index, as after a periodic write before an unclean stop
+    BlockValidationState state;
+    BOOST_REQUIRE(chainman.ActiveChainstate().InvalidateBlock(state, WITH_LOCK(::cs_main, return chainman.ActiveChain()[98])));
+    for (int i{0}; i < 4; ++i) CreateAndProcessBlock({}, CScript() << OP_TRUE);
+
+    {
+        ErasingIndex index{interfaces::MakeChain(m_node)};
+        BOOST_REQUIRE(index.Start());
+        IndexWaitSynced(index);
+        for (const CBlockIndex* block : orphaned) {
+            BOOST_CHECK_MESSAGE(!index.Indexed(block), "orphaned block " << block->nHeight << " is still indexed");
+        }
+        for (int height{98}; height <= 101; ++height) {
+            BOOST_CHECK(index.Indexed(AtHeight(chainman, height)));
+        }
+        chainman.ActiveChainstate().ForceFlushStateToDisk();
+        SyncWithValidationInterfaceQueue();
+        BOOST_CHECK(!index.UncommittedTip());
+        index.Stop();
+    }
+
+    // An uncommitted tip the block index doesn't have, or one that isn't above the locator, is dropped and the index
+    // starts from the locator
+    node::g_indexes_ready_to_sync = false;
+    for (const uint256& stale_tip : {uint256::ONE, orphaned.back()->GetBlockHash()}) {
+        ErasingIndex index{interfaces::MakeChain(m_node)};
+        index.SetUncommittedTip(stale_tip);
+        BOOST_REQUIRE(index.Start());
+        BOOST_CHECK_EQUAL(index.GetSummary().best_block_height, 101);
+        BOOST_CHECK(!index.UncommittedTip());
+        index.Interrupt();
+        index.Stop();
+    }
+    node::g_indexes_ready_to_sync = true;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

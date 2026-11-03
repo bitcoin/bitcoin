@@ -25,6 +25,7 @@ using node::ReadBlockFromDisk;
 using node::g_indexes_ready_to_sync;
 
 constexpr uint8_t DB_BEST_BLOCK{'B'};
+constexpr uint8_t DB_UNCOMMITTED_TIP{'U'};
 
 constexpr auto SYNC_LOG_INTERVAL{30s};
 constexpr auto SYNC_LOCATOR_WRITE_INTERVAL{30s};
@@ -64,6 +65,23 @@ void BaseIndex::DB::WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator
     batch.Write(DB_BEST_BLOCK, locator);
 }
 
+std::optional<uint256> BaseIndex::DB::ReadUncommittedTip() const
+{
+    uint256 block_hash;
+    if (!Read(DB_UNCOMMITTED_TIP, block_hash)) return std::nullopt;
+    return block_hash;
+}
+
+void BaseIndex::DB::WriteUncommittedTip(CDBBatch& batch, const uint256& block_hash)
+{
+    batch.Write(DB_UNCOMMITTED_TIP, block_hash);
+}
+
+void BaseIndex::DB::EraseUncommittedTip(CDBBatch& batch)
+{
+    batch.Erase(DB_UNCOMMITTED_TIP);
+}
+
 BaseIndex::BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name)
     : m_chain{std::move(chain)}, m_name{std::move(name)} {}
 
@@ -76,20 +94,31 @@ BaseIndex::~BaseIndex()
 bool BaseIndex::Init()
 {
     const auto locator{GetDB().ReadBestBlock()};
+    const auto uncommitted_tip_hash{WritesEagerly() ? GetDB().ReadUncommittedTip() : std::nullopt};
 
     LOCK(cs_main);
     CChain& active_chain = m_chainstate->m_chain;
-    if (locator.IsNull()) {
-        SetBestBlockIndex(nullptr);
-    } else {
+    const CBlockIndex* locator_index{nullptr};
+    if (!locator.IsNull()) {
         // Setting the best block to the locator's top block. If it is not part of the
         // best chain, we will rewind to the fork point during index sync
-        const CBlockIndex* locator_index{m_chainstate->m_blockman.LookupBlockIndex(locator.vHave.at(0))};
+        locator_index = m_chainstate->m_blockman.LookupBlockIndex(locator.vHave.at(0));
         if (!locator_index) {
             return InitError(strprintf(Untranslated("%s: best block of the index not found. Please rebuild the index."), GetName()));
         }
-        SetBestBlockIndex(locator_index);
     }
+    // The entries up to the uncommitted tip are on disk, so resume from it while the block index has it above the
+    // locator. Commit() and rewinds keep the locator below it; one that isn't was left behind by an older binary.
+    const CBlockIndex* uncommitted_tip{uncommitted_tip_hash ? m_chainstate->m_blockman.LookupBlockIndex(*uncommitted_tip_hash) : nullptr};
+    if (uncommitted_tip && locator_index && uncommitted_tip->GetAncestor(locator_index->nHeight) != locator_index) {
+        uncommitted_tip = nullptr;
+    }
+    if (uncommitted_tip_hash && !uncommitted_tip) {
+        CDBBatch batch(GetDB());
+        GetDB().EraseUncommittedTip(batch);
+        GetDB().WriteBatch(batch);
+    }
+    SetBestBlockIndex(uncommitted_tip ? uncommitted_tip : locator_index);
 
     // Note: this will latch to true immediately if the user starts up with an empty
     // datadir and an index enabled. If this is the case, indexation will happen solely
@@ -251,12 +280,18 @@ void BaseIndex::Commit()
         if (!last_flushed || last_flushed->GetAncestor(index_tip->nHeight) != index_tip) {
             LogDebug(BCLog::COINDB, "Skipping commit, index is ahead of flushed chainstate (index height %d, last flush at height %d)\n",
                     index_tip->nHeight, last_flushed ? last_flushed->nHeight : -1);
+            if (WritesEagerly()) {
+                CDBBatch batch(GetDB());
+                GetDB().WriteUncommittedTip(batch, index_tip->GetBlockHash());
+                GetDB().WriteBatch(batch);
+            }
             return;
         }
         CDBBatch batch(GetDB());
         ok = CustomCommit(batch);
         if (ok) {
             GetDB().WriteBestBlock(batch, GetLocator(*m_chain, m_best_block_index.load()->GetBlockHash()));
+            if (WritesEagerly()) GetDB().EraseUncommittedTip(batch);
             ok = GetDB().WriteBatch(batch);
         }
     }
@@ -267,13 +302,18 @@ void BaseIndex::Commit()
 
 void BaseIndex::WriteRewindLocator(CDBBatch& batch, const CBlockIndex* new_tip) const
 {
-    const auto locator{GetDB().ReadBestBlock()};
-    if (locator.IsNull()) return;
-    const CBlockIndex* committed{WITH_LOCK(::cs_main, return m_chainstate->m_blockman.LookupBlockIndex(locator.vHave.front()))};
+    const auto above_new_tip{[&](const uint256& block_hash) {
+        const CBlockIndex* block{WITH_LOCK(::cs_main, return m_chainstate->m_blockman.LookupBlockIndex(block_hash))};
+        return block && block->nHeight > new_tip->nHeight && block->GetAncestor(new_tip->nHeight) == new_tip;
+    }};
     // The committed tip was an ancestor of a flushed block when it was written, so it and new_tip below it are in
     // the block index after a restart. A committed tip at or below new_tip needs no change.
-    if (committed && committed->nHeight > new_tip->nHeight && committed->GetAncestor(new_tip->nHeight) == new_tip) {
+    if (const auto locator{GetDB().ReadBestBlock()}; !locator.IsNull() && above_new_tip(locator.vHave.front())) {
         GetDB().WriteBestBlock(batch, GetLocator(*m_chain, new_tip->GetBlockHash()));
+    }
+    // Init() resumes from the uncommitted tip only while the block index has it, and then new_tip below it too.
+    if (const auto uncommitted_tip{GetDB().ReadUncommittedTip()}; uncommitted_tip && above_new_tip(*uncommitted_tip)) {
+        GetDB().WriteUncommittedTip(batch, new_tip->GetBlockHash());
     }
 }
 

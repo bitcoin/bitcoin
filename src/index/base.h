@@ -13,6 +13,7 @@
 
 #include <atomic>
 #include <functional>
+#include <optional>
 #include <string>
 
 class CBlock;
@@ -55,6 +56,11 @@ protected:
 
         /// Write block locator of the chain that the index is in sync with.
         void WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator);
+
+        /// The index tip that Commit() last skipped, if no commit has succeeded since. See WritesEagerly().
+        std::optional<uint256> ReadUncommittedTip() const;
+        void WriteUncommittedTip(CDBBatch& batch, const uint256& block_hash);
+        void EraseUncommittedTip(CDBBatch& batch);
     };
 
 private:
@@ -87,12 +93,19 @@ private:
     /// Will skip the commit if no block has been indexed yet or if the index's best block is
     /// ahead of the chainstate's last flushed block. This avoids persisting state an unclean shutdown
     /// could not roll back from. A later call commits when the chainstate has flushed far enough.
+    /// Indexes that write eagerly record a skipped tip instead, see WritesEagerly().
     void Commit();
 
     /// Loop over disconnected blocks and call CustomRewind.
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
 
     virtual bool AllowPrune() const = 0;
+
+    /// Whether CustomAppend() persists a block's entries right away. Commit() can't write the locator for a tip
+    /// above the last flush, so for these indexes it records that tip separately, and Init() resumes from it while
+    /// the block index still has it. Otherwise a restart would resume from the older locator and never rewind the
+    /// entries of blocks above it that are no longer on the active chain.
+    virtual bool WritesEagerly() const { return false; }
 
 protected:
     std::unique_ptr<interfaces::Chain> m_chain;
