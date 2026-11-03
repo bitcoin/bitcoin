@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test deprecation of RPC calls."""
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_true
 from test_framework.test_framework import BitcoinTestFramework
 
 '''

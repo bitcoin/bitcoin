@@ -10,6 +10,7 @@ from test_framework.address import (
 )
 from test_framework.util import (
     assert_equal,
+    assert_true,
 )
 
 

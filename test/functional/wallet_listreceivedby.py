@@ -10,6 +10,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_array_result,
     assert_equal,
+    assert_false,
     assert_raises_rpc_error,
 )
 from test_framework.wallet_util import test_address

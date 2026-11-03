@@ -17,9 +17,11 @@ from test_framework.extendedkey import ExtendedPrivateKey
 from test_framework.messages import ser_string
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_not_equal,
     assert_equal,
-    assert_raises_rpc_error
+    assert_false,
+    assert_not_equal,
+    assert_raises_rpc_error,
+    assert_true,
 )
 from test_framework.wallet_util import WalletUnlock
 

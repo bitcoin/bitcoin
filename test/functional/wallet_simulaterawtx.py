@@ -12,6 +12,7 @@ from test_framework.util import (
     assert_approx,
     assert_equal,
     assert_raises_rpc_error,
+    assert_true,
 )
 
 class SimulateTxTest(BitcoinTestFramework):

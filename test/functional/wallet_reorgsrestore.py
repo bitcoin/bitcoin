@@ -18,10 +18,12 @@ import shutil
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-        assert_equal,
-        assert_greater_than,
-        assert_not_equal,
-        assert_raises_rpc_error
+    assert_equal,
+    assert_false,
+    assert_greater_than,
+    assert_not_equal,
+    assert_raises_rpc_error,
+    assert_true,
 )
 
 class ReorgsRestoreTest(BitcoinTestFramework):

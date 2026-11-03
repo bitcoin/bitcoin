@@ -11,7 +11,7 @@ from test_framework.messages import ser_uint256, hash256, MAGIC_BYTES
 from test_framework.netutil import ADDRMAN_NEW_BUCKET_COUNT, ADDRMAN_TRIED_BUCKET_COUNT, ADDRMAN_BUCKET_SIZE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import ErrorMatch
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_false, assert_true
 
 def serialize_addrman(
     *,
