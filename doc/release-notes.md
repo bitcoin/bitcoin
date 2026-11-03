@@ -240,6 +240,10 @@ Before activation there is no behavior change. (#7437, #7340)
   payment and every superblock payment must be paid by its own coinbase output,
   so two identical expected payments (same script and amount) require two
   outputs. Before activation one output could satisfy both. (#7362, #7377)
+  Mining pools should build exactly one coinbase output per `masternode[]` and
+  per `superblock[]` entry of `getblocktemplate`, in template order, even when
+  entries share a script or amount. After activation, a block that merges or
+  deduplicates them is invalid (`bad-cb-payee` / `bad-cb-amount`).
 
 ### EvoNode restrictions
 
@@ -411,6 +415,13 @@ longer penalized. (#7639, #7744)
 - `getassetunlockstatuses` reports `instantlock` for mempooled withdrawals.
 - `getrawtransaction` and `decoderawtransaction` report `instanceHash` for
   version 2 Asset Unlock transactions.
+- For pools, explorers and indexers: the txid of a version 2 Asset Unlock is
+  the double SHA-256 of the transaction with `requestedHeight`, `quorumHash`
+  and `quorumSig` zeroed, not of its serialized bytes. The full-bytes hash is
+  `instanceHash`. Block merkle roots and `getblocktemplate`
+  `transactions[].hash` use the txid, so software that hashes raw transaction
+  bytes (`getblocktemplate` `data`, ZMQ `rawtx`/`rawblock`, P2P) must use the
+  `hash` field or apply the same zeroing.
 
 ## Relative asset unlock limit
 
@@ -843,7 +854,10 @@ and RPC parameters.
   arguments of `protx diff` and `protx listdiff`, which take a block hash or a
   height and therefore still accept a height as a string. There is no runtime
   option to restore the old behaviour; `-deprecatedrpc=permissive_bool` only
-  applies to booleans. (#7099)
+  applies to booleans. (#7099) Client libraries that coerce arguments to
+  strings fail with error -3 or -8, for example on the `protx register*`
+  `collateralIndex`, `masternode winners <count>`, `quorum memberof … <n>` and
+  `protx list registered true`.
 - Previously the `setban`, `addpeeraddress` and `walletcreatefundedpsbt` methods
   allowed non-boolean and non-null values to be passed as boolean parameters.
   Any string, number, array, or object value that was passed would be treated
@@ -1144,6 +1158,16 @@ and RPC parameters.
   removed from these RPCs in v25. It can be temporarily re-enabled during the
   deprecation period by launching dashd with the configuration option
   `-deprecatedrpc=walletwarningfield`. (#7711)
+- Some wallet RPC error messages changed with upstream backports, which
+  matters for software that matches on them:
+  - `send` and `walletcreatefundedpsbt` with preselected inputs that don't
+    cover the target return "The preselected coins total amount does not cover
+    the transaction target…" instead of "Insufficient funds".
+  - `importpubkey` quotes the rejected value, for example
+    `Pubkey "<value>" must be a hex string`.
+  - The `protx` error for a `platformP2PAddrs` value that a version 2 ProTx
+    can't carry now reads "…this ProTx version only accepts a bare port
+    number…".
 
 ## GUI changes
 
