@@ -528,7 +528,8 @@ ScanResult ChainScanner::Scan(const uint256& start_block, int start_height, std:
     std::string log_message = "slow variant inspecting all blocks";
     if (chain.hasBlockFilterIndex(BlockFilterType::BASIC)) {
         ctx.filter = std::make_unique<FastWalletRescanFilter>(m_wallet);
-        if (m_wallet.m_wallet_par > 1) {
+        // During IBD, parallel checks would compete with block validation for cores.
+        if (m_wallet.m_wallet_par > 1 && !chain.isInitialBlockDownload()) {
             ctx.checker = std::make_unique<ParallelFilterChecker>(chain, *ctx.filter, "walletscan", m_wallet.m_wallet_par);
             log_message = strprintf("fast variant using block filters (%d threads)", m_wallet.m_wallet_par);
         } else {
