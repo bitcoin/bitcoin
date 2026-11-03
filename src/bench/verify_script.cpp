@@ -27,8 +27,9 @@
 #include <vector>
 
 enum class ScriptType {
-    P2WPKH, // segwitv0, witness-pubkey-hash (ECDSA signature)
-    P2TR_KeyPath, // segwitv1, taproot key-path spend (Schnorr signature)
+    P2WPKH,          // segwitv0, witness-pubkey-hash (ECDSA signature)
+    P2SH_P2WPKH,     // nested segwitv0, pay-to-script-hash wrapping a witness-pubkey-hash (ECDSA signature)
+    P2TR_KeyPath,    // segwitv1, taproot key-path spend (Schnorr signature)
     P2TR_ScriptPath, // segwitv1, taproot script-path spend (Tapscript leaf with a single OP_CHECKSIG)
 };
 
@@ -36,6 +37,7 @@ static size_t ExpectedWitnessStackSize(ScriptType script_type)
 {
     switch (script_type) {
     case ScriptType::P2WPKH: return 2; // [pubkey, signature]
+    case ScriptType::P2SH_P2WPKH: return 2;  // [pubkey, signature]
     case ScriptType::P2TR_KeyPath: return 1; // [signature]
     case ScriptType::P2TR_ScriptPath: return 3; // [signature, tapscript, control block]
     } // no default case, so the compiler can warn about missing cases
@@ -54,6 +56,9 @@ static void VerifyScriptBench(benchmark::Bench& bench, ScriptType script_type)
     XOnlyPubKey xonly_pubkey{pubkey};
     CKeyID key_id = pubkey.GetID();
 
+    // The witness program that a nested segwit output commits to: OP_0 <keyhash>.
+    const CScript p2wpkh_program{GetScriptForDestination(WitnessV0KeyHash(pubkey))};
+
     FlatSigningProvider keystore;
     keystore.keys.emplace(key_id, privkey);
     keystore.pubkeys.emplace(key_id, pubkey);
@@ -62,6 +67,11 @@ static void VerifyScriptBench(benchmark::Bench& bench, ScriptType script_type)
     const auto dest{[&]() -> CTxDestination {
         switch (script_type) {
         case ScriptType::P2WPKH: return WitnessV0KeyHash(pubkey);
+        case ScriptType::P2SH_P2WPKH: {
+            const ScriptHash script_hash{p2wpkh_program};
+            keystore.scripts.emplace(ToScriptID(script_hash), p2wpkh_program);
+            return script_hash;
+        }
         case ScriptType::P2TR_KeyPath: return WitnessV1Taproot(xonly_pubkey);
         case ScriptType::P2TR_ScriptPath:
             TaprootBuilder builder;
@@ -87,6 +97,13 @@ static void VerifyScriptBench(benchmark::Bench& bench, ScriptType script_type)
         assert(complete);
         // Weak sanity check on witness data to ensure we produced the intended spending type
         assert(txSpend.vin[0].scriptWitness.stack.size() == ExpectedWitnessStackSize(script_type));
+        // A nested segwit spend additionally carries the witness program as the single scriptSig
+        // push that VerifyScript requires for a P2SH witness spend; others must be empty.
+        if (script_type == ScriptType::P2SH_P2WPKH) {
+            assert(txSpend.vin[0].scriptSig == (CScript() << std::vector<unsigned char>(p2wpkh_program.begin(), p2wpkh_program.end())));
+        } else {
+            assert(txSpend.vin[0].scriptSig.empty());
+        }
         txdata.Init(txSpend, /*spent_outputs=*/{txCredit.vout[0]});
     }
 
@@ -106,6 +123,7 @@ static void VerifyScriptBench(benchmark::Bench& bench, ScriptType script_type)
 }
 
 static void VerifyScriptP2WPKH(benchmark::Bench& bench) { VerifyScriptBench(bench, ScriptType::P2WPKH); }
+static void VerifyScriptP2SH_P2WPKH(benchmark::Bench& bench) { VerifyScriptBench(bench, ScriptType::P2SH_P2WPKH); }
 static void VerifyScriptP2TR_KeyPath(benchmark::Bench& bench) { VerifyScriptBench(bench, ScriptType::P2TR_KeyPath); }
 static void VerifyScriptP2TR_ScriptPath(benchmark::Bench& bench) { VerifyScriptBench(bench, ScriptType::P2TR_ScriptPath); }
 
@@ -132,6 +150,7 @@ static void VerifyNestedIfScript(benchmark::Bench& bench)
 }
 
 BENCHMARK(VerifyScriptP2WPKH);
+BENCHMARK(VerifyScriptP2SH_P2WPKH);
 BENCHMARK(VerifyScriptP2TR_KeyPath);
 BENCHMARK(VerifyScriptP2TR_ScriptPath);
 BENCHMARK(VerifyNestedIfScript);
