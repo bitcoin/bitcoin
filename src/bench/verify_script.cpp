@@ -7,6 +7,7 @@
 #include <coins.h>
 #include <key.h>
 #include <policy/policy.h>
+#include <prevector.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
@@ -22,6 +23,7 @@
 #include <util/translation.h>
 
 #include <cstddef>
+#include <cstdint>
 #include <map>
 #include <span>
 #include <vector>
@@ -149,8 +151,93 @@ static void VerifyNestedIfScript(benchmark::Bench& bench)
         });
 }
 
+// Benchmark the cost of pushing and dropping small stack elements.
+// The script pushes a 1-byte element (OP_1) and an empty element (OP_FALSE),
+// dropping each right after pushing it. Each 4-byte cycle is repeated
+// MAX_SCRIPT_SIZE / 4 times, filling the tapscript size limit exactly. Every
+// OP_1/OP_FALSE materializes a fresh stack element, so this stresses the
+// per-push allocation side of the stack element representation.
+static void VerifyPushDropSmall(benchmark::Bench& bench)
+{
+    std::vector<std::vector<unsigned char>> stack;
+    CScript script;
+    for (int i = 0; i < MAX_SCRIPT_SIZE / 4; ++i) {
+        script << OP_1 << OP_DROP << OP_FALSE << OP_DROP;
+    }
+    assert(script.size() <= size_t{MAX_SCRIPT_SIZE});
+    bench
+        .setup([&] { stack.clear(); })
+        .run([&] {
+            ScriptError error;
+            const bool ret{EvalScript(stack, script, /*flags=*/0, BaseSignatureChecker(), SigVersion::TAPSCRIPT, nullptr, &error)};
+            assert(ret && error == SCRIPT_ERR_OK);
+        });
+}
+
+// Benchmark the cost of duplicating and dropping a maximum-size stack element.
+// The script pushes one large element and then repeats OP_DUP/OP_DROP as many
+// times as fit in the tapscript size limit (MAX_SCRIPT_SIZE), keeping the stack
+// size at 2.
+static void VerifyDupDropLarge(benchmark::Bench& bench)
+{
+    std::vector<std::vector<unsigned char>> stack;
+    CScript script;
+    script << std::vector<unsigned char>(MAX_SCRIPT_ELEMENT_SIZE, /*c=*/0xab);
+
+    // Fill the rest up to the tapscript size limit with two-byte dup/drop pairs.
+    size_t remaining_space = (size_t{MAX_SCRIPT_SIZE} - script.size());
+    for (size_t i = 0; i < remaining_space / 2; ++i) {
+        script << OP_DUP << OP_DROP;
+    }
+    assert(script.size() <= size_t{MAX_SCRIPT_SIZE});
+    bench
+        .setup([&] { stack.clear(); })
+        .run([&] {
+            ScriptError error;
+            const bool ret{EvalScript(stack, script, /*flags=*/0, BaseSignatureChecker(), SigVersion::TAPSCRIPT, nullptr, &error)};
+            assert(ret && error == SCRIPT_ERR_OK);
+        });
+}
+
+// Benchmark the cost of pushing and dropping data elements of a fixed payload size.
+// Each of the 100 pushes carries its bytes in the script (200 ops in total, under
+// MAX_OPS_PER_SCRIPT), so unlike VerifyPushDropSmall every push materializes an
+// element, and the payload size is swept across the range a script can push.
+template <size_t N>
+static void VerifyPushDropSized(benchmark::Bench& bench)
+{
+    std::vector<std::vector<unsigned char>> stack;
+    CScript script;
+    constexpr int kPushes = (N > 100 ? 18 : 100); // keep the script under MAX_SCRIPT_SIZE
+    for (int i = 0; i < kPushes; ++i) {
+        script << std::vector<unsigned char>(N, uint8_t(0x41 + i));
+    }
+    for (int i = 0; i < kPushes; ++i) {
+        script << OP_DROP;
+    }
+    bench.setup([&] { stack.clear(); })
+        .run([&] {
+            ScriptError error;
+            const bool ret{EvalScript(stack, script, /*flags=*/0, BaseSignatureChecker(), SigVersion::BASE, nullptr, &error)};
+            assert(ret && error == SCRIPT_ERR_OK);
+        });
+}
+
+static void VerifyPushDropSized8(benchmark::Bench& bench) { VerifyPushDropSized<8>(bench); }
+static void VerifyPushDropSized24(benchmark::Bench& bench) { VerifyPushDropSized<24>(bench); }
+static void VerifyPushDropSized40(benchmark::Bench& bench) { VerifyPushDropSized<40>(bench); }
+static void VerifyPushDropSized56(benchmark::Bench& bench) { VerifyPushDropSized<56>(bench); }
+static void VerifyPushDropSized520(benchmark::Bench& bench) { VerifyPushDropSized<520>(bench); }
+
 BENCHMARK(VerifyScriptP2WPKH);
 BENCHMARK(VerifyScriptP2SH_P2WPKH);
 BENCHMARK(VerifyScriptP2TR_KeyPath);
 BENCHMARK(VerifyScriptP2TR_ScriptPath);
 BENCHMARK(VerifyNestedIfScript);
+BENCHMARK(VerifyPushDropSmall);
+BENCHMARK(VerifyDupDropLarge);
+BENCHMARK(VerifyPushDropSized8);
+BENCHMARK(VerifyPushDropSized24);
+BENCHMARK(VerifyPushDropSized40);
+BENCHMARK(VerifyPushDropSized56);
+BENCHMARK(VerifyPushDropSized520);
