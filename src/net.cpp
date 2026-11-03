@@ -3894,29 +3894,36 @@ std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addres
     return cache_entry.m_addrs_response_cache;
 }
 
-bool CConnman::AddNode(const AddedNodeParams& add)
+std::vector<AddedNodeParams>::const_iterator CConnman::FindAddedNode(const std::string& node) const
 {
-    const uint16_t default_port{GetDefaultPort(add.m_added_node)};
-    const CService resolved(LookupNumeric(add.m_added_node, default_port));
+    AssertLockHeld(m_added_nodes_mutex);
+    const uint16_t default_port{GetDefaultPort(node)};
+    const CService resolved(LookupNumeric(node, default_port));
     const bool resolved_is_valid{resolved.IsValid()};
     std::string host;
     uint16_t port{default_port};
-    const bool host_port_is_valid{SplitHostPort(add.m_added_node, port, host)};
+    const bool host_port_is_valid{SplitHostPort(node, port, host)};
 
-    LOCK(m_added_nodes_mutex);
-    for (const auto& it : m_added_node_params) {
-        if (add.m_added_node == it.m_added_node) return false;
+    for (auto it{m_added_node_params.cbegin()}; it != m_added_node_params.cend(); ++it) {
+        if (node == it->m_added_node) return it;
 
-        const uint16_t existing_default_port{GetDefaultPort(it.m_added_node)};
-        if (resolved_is_valid && resolved == LookupNumeric(it.m_added_node, existing_default_port)) return false;
+        const uint16_t existing_default_port{GetDefaultPort(it->m_added_node)};
+        if (resolved_is_valid && resolved == LookupNumeric(it->m_added_node, existing_default_port)) return it;
 
         std::string existing_host;
         uint16_t existing_port{existing_default_port};
-        if (host_port_is_valid && SplitHostPort(it.m_added_node, existing_port, existing_host) &&
+        if (host_port_is_valid && SplitHostPort(it->m_added_node, existing_port, existing_host) &&
             host == existing_host && port == existing_port) {
-            return false;
+            return it;
         }
     }
+    return m_added_node_params.cend();
+}
+
+bool CConnman::AddNode(const AddedNodeParams& add)
+{
+    LOCK(m_added_nodes_mutex);
+    if (FindAddedNode(add.m_added_node) != m_added_node_params.cend()) return false;
 
     m_added_node_params.push_back(add);
     return true;
@@ -3925,13 +3932,11 @@ bool CConnman::AddNode(const AddedNodeParams& add)
 bool CConnman::RemoveAddedNode(std::string_view node)
 {
     LOCK(m_added_nodes_mutex);
-    for (auto it = m_added_node_params.begin(); it != m_added_node_params.end(); ++it) {
-        if (node == it->m_added_node) {
-            m_added_node_params.erase(it);
-            return true;
-        }
-    }
-    return false;
+    const auto it{FindAddedNode(std::string{node})};
+    if (it == m_added_node_params.cend()) return false;
+
+    m_added_node_params.erase(it);
+    return true;
 }
 
 bool CConnman::AddedNodesContain(const CAddress& addr) const

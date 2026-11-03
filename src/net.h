@@ -1636,6 +1636,21 @@ private:
     uint16_t GetDefaultPort(Network net) const;
     uint16_t GetDefaultPort(const std::string& addr) const;
 
+    /**
+     * Return the m_added_node_params entry that refers to the same peer as node,
+     * or cend() if there is none. Two values refer to the same peer if any of
+     * these checks match:
+     * 1. Exact string match.
+     * 2. Same address, compared as a CService. LookupNumeric parses numeric
+     *    addresses and fills in the default port if needed, so different
+     *    spellings of one address match (e.g. "[::1]" and "[0:0:0:0:0:0:0:1]").
+     *    This doesn't apply to names, which LookupNumeric does not resolve.
+     * 3. Same host text and effective port, using SplitHostPort. This one works
+     *    for names, so "node.example" and "node.example:8333" are one peer on
+     *    mainnet.
+     */
+    std::vector<AddedNodeParams>::const_iterator FindAddedNode(const std::string& node) const EXCLUSIVE_LOCKS_REQUIRED(m_added_nodes_mutex);
+
     // Network usage totals
     mutable Mutex m_total_bytes_sent_mutex;
     std::atomic<uint64_t> nTotalBytesRecv{0};

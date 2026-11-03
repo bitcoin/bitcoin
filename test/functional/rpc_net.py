@@ -283,6 +283,10 @@ class NetTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[0].getaddednodeinfo()), 1)
         self.log.info("Check that trying to remove the node again returns an error")
         assert_raises_rpc_error(-24, "Node could not be removed", self.nodes[0].addnode, node=ip_port, command='remove')
+        self.log.info("Check that a node can be removed using an equivalent address")
+        assert_raises_rpc_error(-23, "Node already added", self.nodes[0].addnode, node="11.22.33.44:18444", command='add')
+        self.nodes[0].addnode(node="11.22.33.44:18444", command='remove')
+        assert_equal(self.nodes[0].getaddednodeinfo(), [])
         self.log.info("Check that a non-existent node returns an error")
         assert_raises_rpc_error(-24, "Node has not been added", self.nodes[0].getaddednodeinfo, '1.1.1.1')
 

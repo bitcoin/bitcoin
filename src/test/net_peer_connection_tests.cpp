@@ -203,4 +203,27 @@ BOOST_AUTO_TEST_CASE(addnode_literal_host_and_effective_port_equivalence)
     BOOST_CHECK_EQUAL(connman.GetAddedNodeInfo(/*include_connected=*/true).size(), 3);
 }
 
+BOOST_AUTO_TEST_CASE(remove_added_node_equivalence)
+{
+    ConnmanTestMsg connman{0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params()};
+    const uint16_t default_port{Params().GetDefaultPort()};
+
+    BOOST_CHECK(connman.AddNode({/*m_added_node=*/"node.example", /*m_use_v2transport=*/true}));
+    BOOST_CHECK(connman.AddNode({/*m_added_node=*/strprintf("node.example:%u", default_port + 1), /*m_use_v2transport=*/true}));
+    BOOST_CHECK(connman.AddNode({/*m_added_node=*/"[::1]", /*m_use_v2transport=*/true}));
+
+    // A different port refers to a different peer.
+    BOOST_CHECK(!connman.RemoveAddedNode(strprintf("node.example:%u", default_port + 2)));
+    // The same host with its effective port removes the stored entry.
+    BOOST_CHECK(connman.RemoveAddedNode(strprintf("node.example:%u", default_port)));
+    BOOST_CHECK(!connman.RemoveAddedNode("node.example"));
+    // An equivalent numeric address removes the stored entry.
+    BOOST_CHECK(connman.RemoveAddedNode(strprintf("[0:0:0:0:0:0:0:1]:%u", default_port)));
+    BOOST_CHECK(!connman.RemoveAddedNode("[::1]"));
+
+    const auto added_nodes{connman.GetAddedNodeInfo(/*include_connected=*/true)};
+    BOOST_REQUIRE_EQUAL(added_nodes.size(), 1);
+    BOOST_CHECK_EQUAL(added_nodes[0].m_params.m_added_node, strprintf("node.example:%u", default_port + 1));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
