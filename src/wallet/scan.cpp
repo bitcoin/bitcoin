@@ -145,11 +145,10 @@ static bool ShouldFetchBlock(const FastWalletRescanFilter& filter, const uint256
 }
 } // namespace
 
-bool ChainScanner::QueueNextBlock(const uint256& block_hash, int block_height, std::optional<std::pair<uint256, int>>& next_block, std::optional<int> max_height) {
-    bool block_still_active = false;
+void ChainScanner::QueueNextBlock(const uint256& block_hash, int block_height, std::optional<std::pair<uint256, int>>& next_block, std::optional<int> max_height) {
     bool has_next_block = false;
     uint256 next_block_hash;
-    m_wallet.chain().findBlock(block_hash, FoundBlock().inActiveChain(block_still_active).nextBlock(FoundBlock().inActiveChain(has_next_block).hash(next_block_hash)));
+    m_wallet.chain().findBlock(block_hash, FoundBlock().nextBlock(FoundBlock().inActiveChain(has_next_block).hash(next_block_hash)));
 
     // Queue the next block if it exists and is within range. Whether the scan
     // has caught up with the wallet's tip is checked after the current block
@@ -158,8 +157,6 @@ bool ChainScanner::QueueNextBlock(const uint256& block_hash, int block_height, s
     if (has_next_block && (!max_height || block_height < *max_height)) {
         next_block = {{next_block_hash, block_height + 1}};
     }
-
-    return block_still_active;
 }
 
 void ChainScanner::UpdateProgress(const LoopState& state, double progress_current, int block_height) {
@@ -184,7 +181,7 @@ void ChainScanner::UpdateTipIfChanged(LoopState& state) {
     }
 }
 
-bool ChainScanner::ScanBlock(const uint256& block_hash, int block_height, bool save_progress) {
+ChainScanner::ScanBlockResult ChainScanner::ScanBlock(const uint256& block_hash, int block_height, bool save_progress) {
     // Read block data and locator if needed (the locator is usually null unless we need to save progress)
     CBlock block;
     CBlockLocator loc;
@@ -193,12 +190,20 @@ bool ChainScanner::ScanBlock(const uint256& block_hash, int block_height, bool s
     if (save_progress) found_block.locator(loc);
     m_wallet.chain().findBlock(block_hash, found_block);
 
-    if (block.IsNull()) return false;
+    if (block.IsNull()) return ScanBlockResult::READ_FAILED;
 
     {
         // cs_wallet is a RecursiveMutex; ScanBlock may be called
         // with cs_wallet already held as in AttachChain or without it.
         LOCK(m_wallet.cs_wallet);
+        // Check the block is still active with cs_wallet held, to prevent
+        // marking transactions as coming from the wrong block. If it is
+        // disconnected after this check, the blockDisconnected notification,
+        // which needs cs_wallet, runs after the transactions are synced and
+        // undoes their confirmation.
+        bool active{false};
+        m_wallet.chain().findBlock(block_hash, FoundBlock().inActiveChain(active));
+        if (!active) return ScanBlockResult::NOT_ACTIVE;
         for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
             m_wallet.SyncTransaction(
                 block.vtx[posInBlock], TxStateConfirmed{block_hash, block_height,
@@ -212,7 +217,7 @@ bool ChainScanner::ScanBlock(const uint256& block_hash, int block_height, bool s
             batch.WriteBestBlock(loc);
         }
     }
-    return true;
+    return ScanBlockResult::SCANNED;
 }
 
 ScanResult ChainScanner::Scan(const uint256& start_block, int start_height, std::optional<int> max_height,
@@ -249,10 +254,7 @@ ScanResult ChainScanner::Scan(const uint256& start_block, int start_height, std:
         const uint256 block_hash = next_block->first;
         block_height = next_block->second;
         next_block.reset();
-        // Look up the current block's position separately from reading its
-        // data below, because reading is slow and there might be a reorg
-        // while it is read.
-        const bool block_still_active = QueueNextBlock(block_hash, block_height, next_block, max_height);
+        QueueNextBlock(block_hash, block_height, next_block, max_height);
 
         progress_current = chain.guessVerificationProgress(block_hash);
         UpdateProgress(state, progress_current, block_height);
@@ -269,18 +271,19 @@ ScanResult ChainScanner::Scan(const uint256& start_block, int start_height, std:
             fetch_block = ShouldFetchBlock(*fast_rescan_filter, block_hash, block_height);
         }
 
-        if (fetch_block && !block_still_active) {
+        ScanBlockResult scan_result{ScanBlockResult::SCANNED};
+        if (fetch_block) scan_result = ScanBlock(block_hash, block_height, save_progress && next_interval);
+        if (scan_result == ScanBlockResult::NOT_ACTIVE) {
             // Abort scan if a block that needs to be inspected is no longer
-            // active, to prevent marking transactions as coming from the
-            // wrong block. A block skipped by the filter can stay skipped:
-            // it has no successor in the active chain, so the scan ends
-            // successfully at the reorg point and the replacement blocks are
-            // handled by blockConnected notifications.
+            // active. A block skipped by the filter can stay skipped: it has
+            // no successor in the active chain, so the scan ends successfully
+            // at the reorg point and the replacement blocks are handled by
+            // blockConnected notifications.
             result.last_failed_block = block_hash;
             result.status = ScanResult::FAILURE;
             break;
         }
-        if (!fetch_block || ScanBlock(block_hash, block_height, save_progress && next_interval)) {
+        if (scan_result == ScanBlockResult::SCANNED) {
             // scanned the block, or skipped it via the filter: record it as
             // the most recent successfully scanned block
             result.last_scanned_block = block_hash;

@@ -74,11 +74,17 @@ private:
         uint256 tip_hash;
     };
 
-    //! Locate block_hash in the chain, queueing its active-chain successor
-    //! into next_block if it exists and is within the scan range. Returns
-    //! whether the block itself is still in the active chain.
-    bool QueueNextBlock(const uint256& block_hash, int block_height, std::optional<std::pair<uint256, int>>& next_block, std::optional<int> max_height);
-    bool ScanBlock(const uint256& block_hash, int block_height, bool save_progress);
+    enum class ScanBlockResult {
+        SCANNED,
+        READ_FAILED,
+        //! The block left the active chain, so its transactions were not synced.
+        NOT_ACTIVE,
+    };
+
+    //! Queue block_hash's active-chain successor into next_block if it
+    //! exists and is within the scan range.
+    void QueueNextBlock(const uint256& block_hash, int block_height, std::optional<std::pair<uint256, int>>& next_block, std::optional<int> max_height);
+    ScanBlockResult ScanBlock(const uint256& block_hash, int block_height, bool save_progress);
     void UpdateProgress(const LoopState& state, double progress_current, int block_height);
     void UpdateTipIfChanged(LoopState& state);
 
