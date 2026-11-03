@@ -1340,6 +1340,9 @@ BOOST_AUTO_TEST_CASE(btck_block_manager_prune_tests)
         auto blockman{create_pruning_block_manager()};
         // Pruning needs a chainstate manager to decide what may be deleted
         BOOST_CHECK(!blockman.PruneUpToHeight(1, nullptr));
+        // Prune locks don't
+        blockman.UpdatePruneLock("test", 1);
+        BOOST_CHECK(blockman.DeletePruneLock("test"));
 
         auto chainman{create_chainman(
             test_directory, /*wipe_chainstate=*/false, /*chainstate_db_in_memory=*/false, context, blockman)};
@@ -1374,6 +1377,13 @@ BOOST_AUTO_TEST_CASE(btck_block_manager_prune_tests)
         BOOST_CHECK(blockman.ReadBlock(chain.GetByHeight(1)));
 
         BOOST_REQUIRE(chainman->Flush());
+        blockman.UpdatePruneLock("test", 100);
+        BOOST_CHECK(blockman.PruneUpToHeight(tip_height - PRUNE_KEEP_BLOCKS, &status));
+        BOOST_CHECK(status == PruneStatus::OK);
+        BOOST_CHECK(blockman.ReadBlock(chain.GetByHeight(100)));
+
+        BOOST_CHECK(blockman.DeletePruneLock("test"));
+        BOOST_CHECK(!blockman.DeletePruneLock("test"));
         BOOST_CHECK(blockman.PruneUpToHeight(tip_height - PRUNE_KEEP_BLOCKS, &status));
         BOOST_CHECK(status == PruneStatus::OK);
         BOOST_CHECK(!blockman.ReadBlock(chain.GetByHeight(1)));

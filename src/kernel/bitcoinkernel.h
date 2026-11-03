@@ -1318,12 +1318,12 @@ BITCOINKERNEL_API void btck_block_manager_destroy(btck_BlockManager* block_manag
  * @brief Delete the blocks and spent outputs up to and including a height,
  * except the 288 most recent and those above the chainstate last flushed to
  * disk, which it may still need after an unclean shutdown. Files are deleted
- * whole, so some blocks at or below the height may be kept. Heights below 1
- * delete nothing. The chainstate manager created with this block manager
- * decides what may be deleted, so pruning fails without one. If writing
- * fails, the selected blocks can no longer be read and their files are
- * deleted the next time the chainstate is flushed, as it is when the
- * chainstate manager is destroyed.
+ * whole and prune locks apply, so some blocks at or below the height may be
+ * kept. Heights below 1 delete nothing. The chainstate manager created with
+ * this block manager decides what may be deleted, so pruning fails without
+ * one. If writing fails, the selected blocks can no longer be read and their
+ * files are deleted the next time the chainstate is flushed, as it is when
+ * the chainstate manager is destroyed.
  *
  * @param[in] block_manager Non-null.
  * @param[in] height        The highest height to delete.
@@ -1339,6 +1339,33 @@ BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_manager_prune_
     btck_BlockManager* block_manager,
     int32_t height,
     btck_PruneStatus* status) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Keep the blocks and spent outputs at and above a height from being
+ * pruned until the lock is updated or deleted. Locks are not saved across
+ * restarts, so set them again before pruning.
+ *
+ * @param[in] block_manager Non-null.
+ * @param[in] name          Identifies the lock. Can be null if name_len is 0.
+ * @param[in] name_len      Length of name.
+ * @param[in] height        The lowest height to keep. Must not be negative.
+ */
+BITCOINKERNEL_API void btck_block_manager_update_prune_lock(
+    btck_BlockManager* block_manager,
+    const char* name, size_t name_len,
+    int32_t height) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Delete a lock set with @ref btck_block_manager_update_prune_lock.
+ *
+ * @param[in] block_manager Non-null.
+ * @param[in] name          Identifies the lock. Can be null if name_len is 0.
+ * @param[in] name_len      Length of name.
+ * @return                  1 if the lock existed, 0 otherwise.
+ */
+BITCOINKERNEL_API int btck_block_manager_delete_prune_lock(
+    btck_BlockManager* block_manager,
+    const char* name, size_t name_len) BITCOINKERNEL_ARG_NONNULL(1);
 
 ///@}
 

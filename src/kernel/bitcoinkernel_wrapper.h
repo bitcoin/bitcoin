@@ -1523,6 +1523,16 @@ public:
         if (status) *status = static_cast<PruneStatus>(_status);
         return res == 0;
     }
+
+    void UpdatePruneLock(std::string_view name, int32_t height)
+    {
+        btck_block_manager_update_prune_lock(get(), name.data(), name.length(), height);
+    }
+
+    bool DeletePruneLock(std::string_view name)
+    {
+        return btck_block_manager_delete_prune_lock(get(), name.data(), name.length()) == 1;
+    }
 };
 
 class ChainMan : UniqueHandle<btck_ChainstateManager, btck_chainstate_manager_destroy>

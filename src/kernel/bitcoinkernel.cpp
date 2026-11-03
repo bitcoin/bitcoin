@@ -1354,6 +1354,21 @@ int btck_block_manager_prune_up_to_height(btck_BlockManager* block_manager, int3
     return 0;
 }
 
+void btck_block_manager_update_prune_lock(btck_BlockManager* block_manager, const char* name, size_t name_len, int32_t height)
+{
+    assert(name != nullptr || name_len == 0);
+    assert(height >= 0);
+    LOCK(::cs_main);
+    btck_BlockManager::get(block_manager)->m_blockman.UpdatePruneLock(std::string{name, name_len}, {.height_first = height});
+}
+
+int btck_block_manager_delete_prune_lock(btck_BlockManager* block_manager, const char* name, size_t name_len)
+{
+    assert(name != nullptr || name_len == 0);
+    LOCK(::cs_main);
+    return btck_BlockManager::get(block_manager)->m_blockman.DeletePruneLock(std::string{name, name_len}) ? 1 : 0;
+}
+
 btck_ChainstateManagerOptions* btck_chainstate_manager_options_create(const btck_Context* context, const char* data_dir, size_t data_dir_len)
 {
     assert(data_dir != nullptr || data_dir_len == 0);
