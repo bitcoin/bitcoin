@@ -1000,6 +1000,36 @@ void SharedMnWalkthroughTests::walkthrough()
                           "Dissolve together after Prepare Request: the envelope and the approval board",
                           /*fixed_size=*/false);
 
+        // A refused message blocks Approve, even though the request prepared
+        // above is still loaded: approving would sign that one, not the refused
+        // one. The prepared request and its approvals are kept, and opening the
+        // request again lifts the block.
+        QVERIFY(dialog.m_un_approve->isEnabled());
+        const int approved{dialog.m_un_collector->signedCount()};
+        const QString prepared_tx{dialog.m_un_collector->txHex()};
+        const UniValue genuine{dialog.m_un_collector->envelopeJson()};
+        CMutableTransaction underpaying;
+        QVERIFY(DecodeHexTx(underpaying, prepared_tx.toStdString()));
+        underpaying.vout[0].nValue -= COIN;
+        UniValue underpaying_envelope{genuine};
+        underpaying_envelope.pushKV("tx", EncodeHexTx(CTransaction(underpaying)));
+        UniValue other_network{genuine};
+        other_network.pushKV("network", "main");
+        for (const auto& [refused, reason] :
+             {std::pair{underpaying_envelope, "principal"}, std::pair{other_network, "network"}}) {
+            dialog.preloadEnvelope(QString::fromStdString(refused.write()));
+            const QString status{dialog.m_un_collector->m_status_label->text()};
+            QVERIFY2(status.contains(reason) && status.contains("cannot be approved"), qPrintable(status));
+            QVERIFY(!dialog.m_un_approve->isEnabled());
+            dialog.approveTogether();
+            QVERIFY(!dialog.isBusy());
+            QCOMPARE(dialog.m_un_collector->signedCount(), approved);
+            QCOMPARE(dialog.m_un_collector->txHex(), prepared_tx);
+        }
+        dialog.preloadEnvelope(QString::fromStdString(genuine.write()));
+        QVERIFY(dialog.m_un_approve->isEnabled());
+        QVERIFY(!dialog.m_un_collector->m_status_label->text().contains("cannot be approved"));
+
         dialog.selectStandbyTab();
         ShotRecorder::settle();
         QCOMPARE(dialog.m_tabs->currentIndex(), dialog.m_standby_tab_index);

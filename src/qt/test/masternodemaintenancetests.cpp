@@ -40,17 +40,19 @@
 #include <wallet/wallet.h>
 
 #include <QApplication>
+#include <QClipboard>
 #include <QComboBox>
 #include <QDir>
 #include <QFile>
+#include <QFocusEvent>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QSignalSpy>
 #include <QSpinBox>
-#include <QTableWidget>
 #include <QTabWidget>
+#include <QTableWidget>
 #include <QTemporaryDir>
 #include <QTest>
 #include <QTimer>
@@ -835,6 +837,23 @@ void MasternodeMaintenanceTests::dissolveDialogTabsAndPayouts()
     QVERIFY(preview.payouts[0] < amounts[0]);
     QVERIFY(preview.payouts[1] > amounts[1]);
     QVERIFY(preview.payouts[2] > amounts[2]);
+
+    // A typed fee outside the allowed range is clamped when the field loses
+    // focus, and the preview follows the fee that will actually be sent
+    auto* fee_edit{dialog.m_now_fee->findChild<QLineEdit*>()};
+    QVERIFY(fee_edit != nullptr);
+    for (const auto& [typed, clamped] : {std::pair{"0.5", CProDisTx::MAX_FEE}, std::pair{"0.000005", CAmount{1000}}}) {
+        fee_edit->clear();
+        QTest::keyClicks(fee_edit, typed);
+        QFocusEvent focus_out{QEvent::FocusOut};
+        QApplication::sendEvent(fee_edit, &focus_out);
+        QCOMPARE(dialog.m_now_fee->value(), clamped);
+        const auto clamped_preview{MnShareSession::PenaltyPreviewFor(amounts, /*actor_index=*/0, 5 * COIN,
+                                                                     /*early_period_blocks=*/1000, clamped,
+                                                                     /*at_height=*/100, /*registered_height=*/1)};
+        QCOMPARE(dialog.m_now_table->item(0, 2)->text(),
+                 SharedMnFormatAmount(BitcoinUnits::Unit::DASH, clamped_preview.payouts[0]));
+    }
 }
 
 void MasternodeMaintenanceTests::standbyDissolutionFile()
@@ -980,13 +999,22 @@ void MasternodeMaintenanceTests::dissolveRequestMustReturnPrincipal()
 {
     TestChain100Setup test;
     m_node.setContext(&test.m_node);
+    WalletContext& context{*m_node.walletLoader().context()};
+    const auto wallet{MakeCoinbaseWallet(m_node, context, test, "approver", /*encrypt=*/false)};
+    QVERIFY(wallet != nullptr);
+    WalletGuard guard{context, wallet};
+    MasternodeTestUtil::GuiModels models{m_node};
+    QVERIFY2(models.ok, qPrintable(QString::fromStdString(models.error.translated)));
+    WalletModel wallet_model(interfaces::MakeWallet(context, wallet), models.client);
+
     const std::vector<CAmount> amounts{400 * COIN, 300 * COIN, 300 * COIN};
     auto source{MakeSharedSource(amounts, 5 * COIN, /*early_period_blocks=*/1000)};
+    source->setShareOwner(1, ToKeyID(PKHash(test.coinbaseKey.GetPubKey())));
     MasternodeEntry entry{source, "collateral", 50};
     const auto& shares{entry.shares()};
     const uint256& protx{source->getProTxHash()};
 
-    DissolveDialog dialog(m_node, /*wallet_model=*/nullptr, entry, /*current_height=*/100, /*parent=*/nullptr);
+    DissolveDialog dialog(m_node, &wallet_model, entry, /*current_height=*/100, /*parent=*/nullptr);
 
     // The attack a unanimous dissolution makes possible: name the victim as
     // the actor, drop the actor output, and sweep the whole collateral to
@@ -1032,7 +1060,8 @@ void MasternodeMaintenanceTests::dissolveRequestMustReturnPrincipal()
 
     // The honest template is adopted, and its payouts are on screen next to
     // the button that approves them
-    dialog.preloadEnvelope(MakeDissolveEnvelope(protx, shares));
+    const QString genuine{MakeDissolveEnvelope(protx, shares)};
+    dialog.preloadEnvelope(genuine);
     QVERIFY2(dialog.m_un_collector->hasTransaction(), qPrintable(dialog.m_un_collector->m_status_label->text()));
     QVERIFY(dialog.m_un_table->isVisibleTo(&dialog));
     QCOMPARE(dialog.m_un_table->rowCount(), 3);
@@ -1043,4 +1072,43 @@ void MasternodeMaintenanceTests::dissolveRequestMustReturnPrincipal()
     QCOMPARE(dialog.m_un_table->item(2, 2)->text(), SharedMnFormatAmount(BitcoinUnits::Unit::DASH, amounts[2]));
     QVERIFY(dialog.m_un_fee_label->text().contains(SharedMnFormatAmount(BitcoinUnits::Unit::DASH, TEST_DISSOLVE_FEE)));
     QVERIFY(dialog.m_un_fee_label->text().contains("Share 1 of 3"));
+
+    // A refused message blocks approving, even with a valid request loaded
+    // before it: approving would sign that earlier request, not the refused
+    // one. v24 is not active here, so the button is disabled regardless; what
+    // this checks is the status and that nothing reaching the slot signs.
+    const QString loaded_tx{dialog.m_un_collector->txHex()};
+    CMutableTransaction underpaying{MakeDissolveTemplate(protx, /*actor_index=*/0, shares, TEST_DISSOLVE_FEE)};
+    underpaying.vout[1].nValue -= COIN;
+    UniValue other_network;
+    QVERIFY(other_network.read(genuine.toStdString()));
+    other_network.pushKV("network", "main");
+    for (const auto& [refused, reason] : {std::pair{MakeDissolveEnvelopeFor(protx, underpaying), "principal"},
+                                          std::pair{QString::fromStdString(other_network.write()), "network"}}) {
+        dialog.preloadEnvelope(genuine);
+        dialog.preloadEnvelope(refused);
+        const QString status{dialog.m_un_collector->m_status_label->text()};
+        QVERIFY2(status.contains(reason) && status.contains("cannot be approved") && !status.contains("ignored"),
+                 qPrintable(status));
+
+        dialog.approveTogether();
+        const bool signing_started{dialog.isBusy()};
+        QTRY_VERIFY(!dialog.isBusy());
+        QVERIFY(!signing_started);
+        QCOMPARE(dialog.m_un_collector->signedCount(), 0);
+        QCOMPARE(dialog.m_un_collector->txHex(), loaded_tx);
+    }
+
+    // A pasted message too large to read is refused the same way
+    dialog.preloadEnvelope(genuine);
+    QApplication::clipboard()->setText(QString(MAX_ENVELOPE_FILE_BYTES + 1, QLatin1Char('x')));
+    dialog.m_un_collector->pasteEnvelope();
+    const QString oversized_status{dialog.m_un_collector->m_status_label->text()};
+    QVERIFY2(oversized_status.contains("too large") && oversized_status.contains("cannot be approved"),
+             qPrintable(oversized_status));
+
+    // Opening the genuine request again lifts the block
+    dialog.preloadEnvelope(genuine);
+    QVERIFY2(!dialog.m_un_collector->m_status_label->text().contains("cannot be approved"),
+             qPrintable(dialog.m_un_collector->m_status_label->text()));
 }

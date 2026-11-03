@@ -126,10 +126,16 @@ public:
     std::vector<interfaces::SharedSignature> signatures() const;
     //! The adopted transaction, or null when there is none
     CTransactionRef transaction() const;
+    //! Replace the status line under the buttons
+    void showStatus(const QString& message, bool error);
 
 Q_SIGNALS:
     //! The transaction or the signature set changed
     void changed();
+    //! A pasted or opened message was imported (`accepted`) or refused,
+    //! including one too large or unreadable to parse; `error` is the text
+    //! already shown in the status line
+    void imported(bool accepted, const QString& error);
 
 private Q_SLOTS:
     void saveEnvelope();
@@ -143,7 +149,6 @@ private:
     void showCodeLine(const QString& text);
     bool importEnvelopeChecked(const UniValue& json, QString& error);
     void refreshUi();
-    void showStatus(const QString& message, bool error);
 
     const Kind m_kind;
     const QString m_protx_hash;
@@ -313,6 +318,7 @@ private:
     //! stop warning about it
     void recordStandbySaved();
     void refreshTogetherUi();
+    void togetherImported(bool accepted, const QString& error);
 
     //! Height captured at dialog open, refreshed from the tip in submitNow()
     int m_current_height;
@@ -341,6 +347,10 @@ private:
     QPushButton* m_un_approve{nullptr};
     QPushButton* m_un_send{nullptr};
     QLabel* m_un_reason{nullptr};
+    //! The last message pasted or opened on the Together tab was refused.
+    //! Approving would sign the request loaded before it, not the refused one,
+    //! so approving stays blocked until a message is accepted again.
+    bool m_un_refused{false};
     //! What the adopted request actually pays out, so nobody approves a
     //! transaction on the strength of its title alone
     QLabel* m_un_payouts_title{nullptr};
