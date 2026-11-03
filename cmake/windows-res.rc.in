@@ -1,5 +1,5 @@
-#include <windows.h>             // needed for VERSIONINFO
-#include "clientversion.h"       // holds the needed client version information
+@RC_ICONS@#include <windows.h>             // needed for VERSIONINFO
+#include "@RC_CLIENTVERSION_H@"  // holds the needed client version information
 
 #define VER_PRODUCTVERSION     CLIENT_VERSION_MAJOR,CLIENT_VERSION_MINOR,CLIENT_VERSION_BUILD
 #define VER_FILEVERSION        VER_PRODUCTVERSION
@@ -15,13 +15,13 @@ BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
             VALUE "CompanyName",        CLIENT_NAME " project"
-            VALUE "FileDescription",    "bitcoind (Bitcoin node with a JSON-RPC server)"
+            VALUE "FileDescription",    "@RC_DESCRIPTION@"
             VALUE "FileVersion",        CLIENT_VERSION_STRING
-            VALUE "InternalName",       "bitcoind"
+            VALUE "InternalName",       "@RC_TARGET@"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the MIT software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
-            VALUE "OriginalFilename",   "bitcoind.exe"
-            VALUE "ProductName",        "bitcoind"
+            VALUE "OriginalFilename",   "@RC_TARGET@.exe"
+            VALUE "ProductName",        "@RC_PRODUCT_NAME@"
             VALUE "ProductVersion",     CLIENT_VERSION_STRING
         END
     END

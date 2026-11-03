@@ -9,6 +9,7 @@
 #include <mp/proxy-types.h>
 
 // IWYU pragma: begin_exports
+#include <any>
 #include <capnp/common.h>
 #include <cstddef>
 #include <mp/test/foo.capnp.h>
@@ -36,9 +37,11 @@ namespace mp {
 namespace test {
 namespace messages {
 struct ExtendedCallback; // IWYU pragma: export
+struct FlatCallback; // IWYU pragma: export
 struct FooCallback; // IWYU pragma: export
 struct FooFn; // IWYU pragma: export
 struct FooInterface; // IWYU pragma: export
+struct BarInterface; // IWYU pragma: export
 } // namespace messages
 
 template <typename Output>
@@ -46,6 +49,7 @@ void CustomBuildField(TypeList<FooCustom>, Priority<1>, InvokeContext& invoke_co
 {
     BuildField(TypeList<std::string>(), invoke_context, output, value.v1);
     output.setV2(value.v2);
+    BuildField(TypeList<std::vector<int>>(), invoke_context, output, value.v3);
 }
 
 template <typename Input, typename ReadDest>
@@ -55,6 +59,7 @@ decltype(auto) CustomReadField(TypeList<FooCustom>, Priority<1>, InvokeContext& 
     return read_dest.update([&](FooCustom& value) {
         value.v1 = ReadField(TypeList<std::string>(), invoke_context, mp::Make<mp::ValueField>(custom.getV1()), ReadDestTemp<std::string>());
         value.v2 = custom.getV2();
+        value.v3 = ReadField(TypeList<std::vector<int>>(), invoke_context, mp::Make<mp::ValueField>(custom.getV3()), ReadDestTemp<std::vector<int>>());
     });
 }
 
@@ -72,6 +77,8 @@ inline void CustomBuildMessage(InvokeContext& invoke_context,
                         const test::FooMessage& src,
                         test::messages::FooMessage::Builder&& builder)
 {
+    const auto& hook{invoke_context.connection.m_loop->testing_hook_misc};
+    if (hook) hook("build FooMessage");
     builder.setMessage(src.message + " build");
 }
 

@@ -20,6 +20,14 @@ check_cxx_source_compiles("
   HAVE_PTHREAD_GETNAME_NP)
 
 check_cxx_source_compiles("
+  #include <pthread.h>
+  int main(int argc, char** argv)
+  {
+    return pthread_setname_np(pthread_self(), \"%s\", (void*)\"name\");
+  }"
+  HAVE_PTHREAD_SETNAME_NP_3ARG)
+
+check_cxx_source_compiles("
   #include <cstdint>
   #include <pthread.h>
   int main(int argc, char** argv)
