@@ -105,10 +105,12 @@ template<class T>
 [[nodiscard]] UniValue PayoutListToJson(const MasternodePayoutShares& payouts);
 
 /** Validate all provider network fields using the same rules as special transaction validation.
- *  Pass nullptr for platform_node_id when validating endpoint input separately from the rest of a payload. */
+ *  Pass nullptr for platform_node_id when validating endpoint input separately from the rest of a payload.
+ *  ipv4_optional is SpecialTxRules::ipv4_optional for the block the transaction would be included in. */
 [[nodiscard]] bool CheckProviderNetworkFields(const std::shared_ptr<NetInfoInterface>& net_info, MnType type,
                                               uint16_t version, const uint160* platform_node_id, uint16_t platform_p2p_port,
-                                              uint16_t platform_http_port, bool allow_empty, TxValidationState& state);
+                                              uint16_t platform_http_port, bool allow_empty, bool ipv4_optional,
+                                              TxValidationState& state);
 
 /** The count, per-share bound and sum rules of IsShareListTriviallyValid, usable before any share address exists */
 [[nodiscard]] bool AreShareAmountsValid(const std::vector<CAmount>& amounts, CAmount required_collateral,

@@ -60,13 +60,9 @@ template UniValue GetNetInfoWithLegacyFields(const CDeterministicMNState& obj, c
 template <bool is_p2p, typename Obj>
 int32_t GetPlatformPort(const Obj& obj)
 {
-    // Currently, there is nothing that prevents PLATFORM_{HTTPS,P2P} to be registered to
-    // an addr *different* from the primary addr for CORE_P2P. This breaks the assumptions
-    // under which platform{HTTP,P2P}Port operate under (i.e. all three are hosted with the
-    // same addr).
-    //
-    // TODO: Introduce restrictions that enforce this assumption *until* we remove legacy
-    //       fields for good.
+    // Until DEPLOYMENT_IPV4_OPTIONAL is active, consensus requires the first PLATFORM_{HTTPS,P2P} entries to
+    // use the primary addr for CORE_P2P, as platform{HTTP,P2P}Port assume (i.e. all three are hosted with the
+    // same addr). Once it is (always on testnet and devnets), the ports reported here may belong to another addr.
     //
     bool is_legacy{!(CHECK_NONFATAL(obj.netInfo)->CanStorePlatform())};
     if constexpr (is_p2p) {

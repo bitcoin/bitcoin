@@ -233,7 +233,7 @@ bool CSpecialTxProcessor::CheckSpecialTxInner(const CChain* chain, const CTransa
         case TRANSACTION_PROVIDER_REGISTER:
             return CheckProRegTx(tx, pindexPrev, m_dmnman, view, m_consensus_params, rules, state, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_SERVICE:
-            return CheckProUpServTx(tx, pindexPrev, m_dmnman, m_consensus_params, rules.v24, state, check_sigs);
+            return CheckProUpServTx(tx, pindexPrev, m_dmnman, m_consensus_params, rules, state, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_REGISTRAR:
             return CheckProUpRegTx(tx, pindexPrev, m_dmnman, view, m_consensus_params, rules, state, check_sigs);
         case TRANSACTION_PROVIDER_UPDATE_REVOKE:
@@ -1232,7 +1232,8 @@ bool CheckProRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pin
     // It's allowed to set addr to 0, which will put the MN into PoSe-banned state and require a ProUpServTx to be
     // issues later. If any of both is set, it must be valid however
     if (!CheckProviderNetworkFields(opt_ptx->netInfo, opt_ptx->nType, opt_ptx->nVersion, &opt_ptx->platformNodeID,
-                                    opt_ptx->platformP2PPort, opt_ptx->platformHTTPPort, /*allow_empty=*/true, state)) {
+                                    opt_ptx->platformP2PPort, opt_ptx->platformHTTPPort, /*allow_empty=*/true,
+                                    rules.ipv4_optional, state)) {
         return false;
     }
 
@@ -1381,17 +1382,18 @@ bool CheckProRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pin
 }
 
 bool CheckProUpServTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev,
-                      CDeterministicMNManager& dmnman, const Consensus::Params& consensus_params, bool is_v24_active,
+                      CDeterministicMNManager& dmnman, const Consensus::Params& consensus_params, SpecialTxRules rules,
                       TxValidationState& state, bool check_sigs)
 {
-    const auto opt_ptx = GetValidatedPayload<CProUpServTx>(tx, pindexPrev, consensus_params, is_v24_active, state);
+    const auto opt_ptx = GetValidatedPayload<CProUpServTx>(tx, pindexPrev, consensus_params, rules.v24, state);
     if (!opt_ptx) {
         // pass the state returned by the function above
         return false;
     }
 
     if (!CheckProviderNetworkFields(opt_ptx->netInfo, opt_ptx->nType, opt_ptx->nVersion, &opt_ptx->platformNodeID,
-                                    opt_ptx->platformP2PPort, opt_ptx->platformHTTPPort, /*allow_empty=*/false, state)) {
+                                    opt_ptx->platformP2PPort, opt_ptx->platformHTTPPort, /*allow_empty=*/false,
+                                    rules.ipv4_optional, state)) {
         return false;
     }
 
@@ -1409,21 +1411,21 @@ bool CheckProUpServTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> 
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-type-mismatch");
     }
 
-    if (!IsVersionChangeValid(dmn->pdmnState->nVersion, opt_ptx->nVersion, is_v24_active, state)) {
+    if (!IsVersionChangeValid(dmn->pdmnState->nVersion, opt_ptx->nVersion, rules.v24, state)) {
         // pass the state returned by the function above
         return false;
     }
 
     // From ExtAddr on the Platform ports live in netInfo and are never derived from the scalar fields,
     // so an EvoNode service update has to spell them out
-    if (is_v24_active && opt_ptx->nType == MnType::Evo && opt_ptx->nVersion < ProTxVersion::ExtAddr) {
+    if (rules.v24 && opt_ptx->nType == MnType::Evo && opt_ptx->nVersion < ProTxVersion::ExtAddr) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-version-disallowed");
     }
 
-    if (is_v24_active) {
+    if (rules.v24) {
         CDeterministicMNState new_state{*dmn->pdmnState};
         BlockValidationState migration_state;
-        if (!ApplyProUpServTx(new_state, *opt_ptx, is_v24_active, migration_state)) {
+        if (!ApplyProUpServTx(new_state, *opt_ptx, rules.v24, migration_state)) {
             return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, migration_state.GetRejectReason());
         }
     }
@@ -1432,7 +1434,7 @@ bool CheckProUpServTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> 
     // re-encodes its stored key, moving it to the basic-scheme unique-property slot. If another
     // masternode already holds that key under either encoding, the re-key in UpdateMN() would throw
     // out of block assembly, so reject the migration cleanly here.
-    if (is_v24_active && IsSchemeMigration(dmn->pdmnState->nVersion, opt_ptx->nVersion) &&
+    if (rules.v24 && IsSchemeMigration(dmn->pdmnState->nVersion, opt_ptx->nVersion) &&
         mnList.HasOperatorKeyUnderAnyScheme(dmn->pdmnState->pubKeyOperator.Get(), /*self=*/opt_ptx->proTxHash)) {
         return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-key");
     }

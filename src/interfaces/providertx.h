@@ -66,6 +66,8 @@ struct PreparedProviderRegistration {
 struct ProviderTxCapabilities {
     uint16_t version{0};
     bool extended_addresses{false};
+    //! Masternodes may operate without IPv4 (DEPLOYMENT_IPV4_OPTIONAL)
+    bool ipv4_optional{false};
 };
 
 using ProviderPlatformEndpoints = std::variant<std::monostate, uint16_t, std::vector<std::string>>;

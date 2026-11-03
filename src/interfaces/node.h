@@ -151,15 +151,16 @@ public:
     virtual ~EVO() {}
     virtual std::pair<MnListPtr, const CBlockIndex*> getListAtChainTip() = 0;
     virtual ProviderTxCapabilities getProviderTxCapabilities() = 0;
-    //! Validate provider endpoints against a capability snapshot without changing node or wallet state.
-    //! Transaction creation validates them again against the then-active rules.
+    //! Validate provider endpoints against a capability snapshot without changing node or wallet state or
+    //! taking cs_main. Transaction creation validates them again against the then-active rules.
     virtual std::optional<ProviderTxError> validateProviderNetInfo(const ProviderNetInfo& net_info, MnType type,
-                                                                   uint16_t version, bool optional) = 0;
+                                                                   uint16_t version, bool ipv4_optional,
+                                                                   bool optional) = 0;
     //! The first endpoint a masternode at the chain tip already uses, which a
     //! registration with a new collateral cannot reuse. Nothing is reported for
     //! endpoints validateProviderNetInfo refuses.
     virtual std::optional<std::string> findProviderNetInfoInUse(const ProviderNetInfo& net_info, MnType type,
-                                                                uint16_t version) = 0;
+                                                                uint16_t version, bool ipv4_optional) = 0;
     //! Successful registration with an existing collateral leaves that coin locked,
     //! including when the signed transaction is returned without submission.
     virtual ProviderTxResult<ProviderTxSubmission> registerMasternode(Wallet& wallet,

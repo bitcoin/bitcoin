@@ -192,8 +192,9 @@ QString ServiceInUseProblem(interfaces::Node& node, const QString& services)
     for (const QString& entry : MasternodeWidgetUtil::tokenizeEndpointList(services)) {
         net_info.core_p2p.push_back(entry.toStdString());
     }
-    const uint16_t version{node.evo().getProviderTxCapabilities().version};
-    const auto in_use{node.evo().findProviderNetInfoInUse(net_info, MnType::Regular, version)};
+    const auto capabilities{node.evo().getProviderTxCapabilities()};
+    const auto in_use{node.evo().findProviderNetInfoInUse(net_info, MnType::Regular, capabilities.version,
+                                                          capabilities.ipv4_optional)};
     if (!in_use) return {};
     return SharedMnCreateDialog::tr("%1 is already the service address of a registered masternode. Every service "
                                     "address must be unique on the network.")
@@ -1379,9 +1380,9 @@ bool SharedMnCreateDialog::validatePage(Page page, QString& err)
         for (const QString& entry : MasternodeWidgetUtil::tokenizeEndpointList(m_service_edit->text())) {
             net_info.core_p2p.push_back(entry.toStdString());
         }
-        const uint16_t version{m_node.evo().getProviderTxCapabilities().version};
-        if (const auto error{
-                m_node.evo().validateProviderNetInfo(net_info, MnType::Regular, version, /*optional=*/true)}) {
+        const auto capabilities{m_node.evo().getProviderTxCapabilities()};
+        if (const auto error{m_node.evo().validateProviderNetInfo(net_info, MnType::Regular, capabilities.version,
+                                                                  capabilities.ipv4_optional, /*optional=*/true)}) {
             err = QString::fromStdString(error->message.translated);
         } else {
             err = ServiceInUseProblem(m_node, m_service_edit->text());

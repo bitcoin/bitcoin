@@ -36,8 +36,9 @@ enum BuriedDeployment : int16_t {
     DEPLOYMENT_V20,
     DEPLOYMENT_MN_RR,
     DEPLOYMENT_WITHDRAWALS,
+    DEPLOYMENT_IPV4_OPTIONAL, // Masternodes may operate without IPv4
 };
-constexpr bool ValidDeployment(BuriedDeployment dep) { return dep <= DEPLOYMENT_WITHDRAWALS; }
+constexpr bool ValidDeployment(BuriedDeployment dep) { return dep <= DEPLOYMENT_IPV4_OPTIONAL; }
 
 enum DeploymentPos : uint16_t {
     DEPLOYMENT_TESTDUMMY,
@@ -151,6 +152,12 @@ struct Params {
     int MN_RRHeight;
     /** Block height at which WITHDRAWALS (Deployment of quorum fix and higher limits for withdrawals) becomes active */
     int WithdrawalsHeight;
+    /** Block height from which a masternode's primary addresses no longer need to be IPv4.
+     *  std::numeric_limits<int>::max() while no activation is scheduled. A placeholder: a version bits (EHF)
+     *  deployment replacing it must stay always active on testnet and devnets. The mainnet primary port pins
+     *  don't depend on it, so a first entry that can't use the standard port (such as I2P, which uses port 0)
+     *  stays invalid there. */
+    int IPv4OptionalHeight;
     /** Don't warn about unknown BIP 9 activations below this height.
      * This prevents us from warning about the CSV and DIP activations. */
     int MinBIP9WarningHeight;
@@ -232,6 +239,8 @@ struct Params {
             return MN_RRHeight;
         case DEPLOYMENT_WITHDRAWALS:
             return WithdrawalsHeight;
+        case DEPLOYMENT_IPV4_OPTIONAL:
+            return IPv4OptionalHeight;
         } // no default case, so the compiler can warn about missing cases
         return std::numeric_limits<int>::max();
     }

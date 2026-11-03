@@ -64,6 +64,27 @@ bool IsAllowedPlatformHTTPPort(uint16_t port)
     }
     return false;
 }
+
+uint16_t GetPrimaryAddrPort(NetInfoPurpose purpose)
+{
+    switch (purpose) {
+    case NetInfoPurpose::CORE_P2P:
+        return MainParams().GetDefaultPort();
+    case NetInfoPurpose::PLATFORM_P2P:
+        return MainParams().GetDefaultPlatformP2PPort();
+    case NetInfoPurpose::PLATFORM_HTTPS:
+        return MainParams().GetDefaultPlatformHTTPPort();
+    } // no default case, so the compiler can warn about missing cases
+    Assume(false);
+    return 0;
+}
+
+//! On mainnet, the first entry of a purpose must use that purpose's standard port
+NetInfoStatus ValidateMainnetPrimaryPort(NetInfoPurpose purpose, const NetInfoEntry& primary)
+{
+    if (!IsNodeOnMainnet() || primary.GetPort() == GetPrimaryAddrPort(purpose)) return NetInfoStatus::Success;
+    return NetInfoStatus::BadPort;
+}
 } // anonymous namespace
 
 bool IsNodeOnMainnet() { return Params().NetworkIDString() == CBaseChainParams::MAIN; }
@@ -427,6 +448,11 @@ NetInfoStatus ExtNetInfo::ProcessCandidate(const NetInfoPurpose purpose, const N
         // Domains only allowed for Platform HTTPS API
         return NetInfoStatus::BadInput;
     }
+    if (!HasEntries(purpose)) {
+        if (const auto ret{ValidateMainnetPrimaryPort(purpose, candidate)}; ret != NetInfoStatus::Success) {
+            return ret;
+        }
+    }
     if (auto it{m_data.find(purpose)}; it != m_data.end()) {
         // Existing entries list found, check limit
         auto& [_, entries] = *it;
@@ -617,6 +643,11 @@ NetInfoStatus ExtNetInfo::Validate() const
             if (ret != NetInfoStatus::Success) {
                 return ret;
             }
+        }
+    }
+    for (const auto& [purpose, entries] : m_data) {
+        if (const auto ret{ValidateMainnetPrimaryPort(purpose, entries.front())}; ret != NetInfoStatus::Success) {
+            return ret;
         }
     }
     return NetInfoStatus::Success;

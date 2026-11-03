@@ -109,6 +109,14 @@ bool EvoSharesActive(node::NodeContext& node)
     return DeploymentActiveAfter(chainman.ActiveChain().Tip(), chainman, Consensus::DEPLOYMENT_EVO_SHARES);
 }
 
+bool IPv4OptionalActive(node::NodeContext& node)
+{
+    AssertLockNotHeld(::cs_main);
+    auto& chainman{*Assert(node.chainman)};
+    LOCK(::cs_main);
+    return DeploymentActiveAfter(chainman.ActiveChain().Tip(), chainman, Consensus::DEPLOYMENT_IPV4_OPTIONAL);
+}
+
 struct ChainSnapshot {
     uint16_t provider_tx_version{0};
     CDeterministicMNCPtr dmn;
@@ -253,13 +261,15 @@ std::optional<ProviderTxError> ApplyNetInfo(ProTx& payload, const ProviderNetInf
 }
 
 template <typename ProTx>
-std::optional<ProviderTxError> ValidateNetworkFields(const ProTx& payload, bool allow_empty, bool check_platform_node_id)
+std::optional<ProviderTxError> ValidateNetworkFields(const ProTx& payload, bool allow_empty,
+                                                    bool check_platform_node_id, bool ipv4_optional)
 {
     TxValidationState state;
     const uint160* platform_node_id{check_platform_node_id && payload.nType == MnType::Evo ? &payload.platformNodeID
                                                                                            : nullptr};
     if (!CheckProviderNetworkFields(payload.netInfo, payload.nType, payload.nVersion, platform_node_id,
-                                    payload.platformP2PPort, payload.platformHTTPPort, allow_empty, state)) {
+                                    payload.platformP2PPort, payload.platformHTTPPort, allow_empty, ipv4_optional,
+                                    state)) {
         return Error(ProviderTxErrorCode::CONSENSUS_REJECTED, state.ToString(), state.GetRejectReason());
     }
     return std::nullopt;
@@ -536,8 +546,8 @@ RegistrationResult BuildRegistration(node::NodeContext& node, Wallet& wallet,
     }
 
     if (auto error{ApplyPlatformNodeId(payload, request.platform_node_id)}) return *error;
-    if (auto error{ValidateNetworkFields(payload, /*allow_empty=*/true,
-                                         /*check_platform_node_id=*/true)}) {
+    if (auto error{ValidateNetworkFields(payload, /*allow_empty=*/true, /*check_platform_node_id=*/true,
+                                         IPv4OptionalActive(node))}) {
         return *error;
     }
 
@@ -815,11 +825,20 @@ std::optional<ProviderTxError> CheckRegistrarUpdateFunding(Wallet& wallet, const
 
 interfaces::ProviderTxCapabilities GetCapabilities(node::NodeContext& node, std::optional<bool> basic_override)
 {
-    const uint16_t version{CurrentProviderTxVersion(node, basic_override)};
-    return interfaces::ProviderTxCapabilities{version, version >= ProTxVersion::ExtAddr};
+    AssertLockNotHeld(::cs_main);
+    auto& chainman{*Assert(node.chainman)};
+    LOCK(::cs_main);
+    const CBlockIndex* tip{chainman.ActiveChain().Tip()};
+    const uint16_t version{DeploymentToProtxVersion(tip, chainman, basic_override)};
+    return interfaces::ProviderTxCapabilities{
+        .version = version,
+        .extended_addresses = version >= ProTxVersion::ExtAddr,
+        .ipv4_optional = DeploymentActiveAfter(tip, chainman, Consensus::DEPLOYMENT_IPV4_OPTIONAL),
+    };
 }
 
-std::optional<ProviderTxError> ValidateNetInfo(const ProviderNetInfo& net_info, MnType type, uint16_t version, bool optional)
+std::optional<ProviderTxError> ValidateNetInfo(const ProviderNetInfo& net_info, MnType type, uint16_t version,
+                                               bool ipv4_optional, bool optional)
 {
     if (!IsValidMnType(type)) {
         return Error(ProviderTxErrorCode::INVALID_PARAMETER, "invalid masternode type");
@@ -833,13 +852,15 @@ std::optional<ProviderTxError> ValidateNetInfo(const ProviderNetInfo& net_info, 
     payload.nVersion = version;
     payload.netInfo = NetInfoInterface::MakeNetInfo(version);
     if (auto error{ApplyNetInfo(payload, net_info, type == MnType::Evo, optional)}) return error;
-    return ValidateNetworkFields(payload, optional, /*check_platform_node_id=*/false);
+    return ValidateNetworkFields(payload, optional, /*check_platform_node_id=*/false, ipv4_optional);
 }
 
 std::optional<std::string> FindNetInfoInUse(node::NodeContext& node, const ProviderNetInfo& net_info, MnType type,
-                                            uint16_t version)
+                                            uint16_t version, bool ipv4_optional)
 {
-    if (ValidateNetInfo(net_info, type, version, /*optional=*/true) || !node.dmnman) return std::nullopt;
+    if (ValidateNetInfo(net_info, type, version, ipv4_optional, /*optional=*/true) || !node.dmnman) {
+        return std::nullopt;
+    }
     CProRegTx payload;
     payload.nType = type;
     payload.nVersion = version;
@@ -940,8 +961,8 @@ ProviderTxResult<ProviderTxSubmission> UpdateService(node::NodeContext& node, Wa
         return *error;
     }
     if (auto error{ApplyPlatformNodeId(payload, request.platform_node_id)}) return *error;
-    if (auto error{ValidateNetworkFields(payload, /*allow_empty=*/false,
-                                         /*check_platform_node_id=*/true)}) {
+    if (auto error{ValidateNetworkFields(payload, /*allow_empty=*/false, /*check_platform_node_id=*/true,
+                                         IPv4OptionalActive(node))}) {
         return *error;
     }
     payload.scriptOperatorPayout = request.operator_payout ? GetScriptForDestination(*request.operator_payout)
@@ -1147,7 +1168,8 @@ ProviderTxResult<PreparedSharedRegistration> PrepareSharedRegistration(node::Nod
         return *error;
     }
     if (auto error{ApplyPlatformNodeId(payload, request.platform_node_id)}) return *error;
-    if (auto error{ValidateNetworkFields(payload, /*allow_empty=*/true, /*check_platform_node_id=*/true)}) {
+    if (auto error{ValidateNetworkFields(payload, /*allow_empty=*/true, /*check_platform_node_id=*/true,
+                                         IPv4OptionalActive(node))}) {
         return *error;
     }
 

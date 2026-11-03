@@ -24,10 +24,10 @@ interfaces::ProviderTxCapabilities GetCapabilities(node::NodeContext& node,
                                                    std::optional<bool> basic_override = std::nullopt);
 
 std::optional<interfaces::ProviderTxError> ValidateNetInfo(const interfaces::ProviderNetInfo& net_info, MnType type,
-                                                           uint16_t version, bool optional);
+                                                           uint16_t version, bool ipv4_optional, bool optional);
 
 std::optional<std::string> FindNetInfoInUse(node::NodeContext& node, const interfaces::ProviderNetInfo& net_info,
-                                            MnType type, uint16_t version);
+                                            MnType type, uint16_t version, bool ipv4_optional);
 
 interfaces::ProviderTxResult<interfaces::ProviderTxSubmission> Register(
     node::NodeContext& node, interfaces::Wallet& wallet, const interfaces::ProviderRegistrationRequest& request);

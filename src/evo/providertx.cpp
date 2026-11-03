@@ -229,9 +229,35 @@ static bool CheckNetInfo(const NetInfoInterface& net_info, TxValidationState& st
     assert(false);
 }
 
+//! The primary Core P2P address must be IPv4, and Platform's primary addresses must be on that same address
+static bool CheckIPv4Primaries(const NetInfoInterface& net_info, TxValidationState& state)
+{
+    const CService core_primary{net_info.GetPrimary()};
+    if (!core_primary.IsIPv4()) {
+        return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-addr-type",
+                             strprintf("first %s entry must be IPv4", PurposeToString(NetInfoPurpose::CORE_P2P)));
+    }
+    for (const auto purpose : {NetInfoPurpose::PLATFORM_P2P, NetInfoPurpose::PLATFORM_HTTPS}) {
+        const auto entries{net_info.GetEntries(purpose)};
+        if (entries.empty()) continue;
+        const auto service_opt{entries.front().GetAddrPort()};
+        if (!service_opt || !service_opt->IsIPv4()) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-addr-type",
+                                 strprintf("first %s entry must be IPv4", PurposeToString(purpose)));
+        }
+        if (CNetAddr{*service_opt} != CNetAddr{core_primary}) {
+            return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-netinfo-addr",
+                                 strprintf("first %s entry must use the first %s address", PurposeToString(purpose),
+                                           PurposeToString(NetInfoPurpose::CORE_P2P)));
+        }
+    }
+    return true;
+}
+
 bool CheckProviderNetworkFields(const std::shared_ptr<NetInfoInterface>& net_info, MnType type, uint16_t version,
                                 const uint160* platform_node_id, uint16_t platform_p2p_port,
-                                uint16_t platform_http_port, bool allow_empty, TxValidationState& state)
+                                uint16_t platform_http_port, bool allow_empty, bool ipv4_optional,
+                                TxValidationState& state)
 {
     if (!net_info || net_info->CanStorePlatform() != (version >= ProTxVersion::ExtAddr)) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-protx-netinfo-version");
@@ -242,6 +268,10 @@ bool CheckProviderNetworkFields(const std::shared_ptr<NetInfoInterface>& net_inf
         }
     } else {
         if (!IsNetInfoTriviallyValid(net_info, type, state) || !CheckNetInfo(*net_info, state)) {
+            return false;
+        }
+        // Checked here rather than in Validate(), which also checks stored masternode states without a height
+        if (!ipv4_optional && !CheckIPv4Primaries(*net_info, state)) {
             return false;
         }
     }

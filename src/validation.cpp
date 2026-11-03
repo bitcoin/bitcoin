@@ -6818,6 +6818,7 @@ SpecialTxRules GetSpecialTxRules(const CBlockIndex* pindexPrev, const Chainstate
     return SpecialTxRules{
         .v24 = DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_V24),
         .evo_shares = DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_EVO_SHARES),
+        .ipv4_optional = DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_IPV4_OPTIONAL),
     };
 }
 

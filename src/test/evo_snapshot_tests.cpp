@@ -80,8 +80,11 @@ CDeterministicMNCPtr MN(uint64_t internal_id, uint8_t hash_suffix, MnType type, 
                         NetInfoStatus::Success);
     if (type == MnType::Evo) {
         state->platformNodeID = H160(address_tag + 40);
+        // Platform on another address, with a domain first for HTTPS, as DEPLOYMENT_IPV4_OPTIONAL allows, on the
+        // standard ports, which mainnet pins. Such states load on every network: the IPv4 rule applies to ProTxs,
+        // at the height they are mined at.
         BOOST_REQUIRE_EQUAL(state->netInfo->AddEntry(NetInfoPurpose::PLATFORM_P2P,
-                                                    strprintf("2.2.2.%d:26657", address_tag)),
+                                                    strprintf("2.2.2.%d:26656", address_tag)),
                             NetInfoStatus::Success);
         BOOST_REQUIRE_EQUAL(state->netInfo->AddEntry(NetInfoPurpose::PLATFORM_HTTPS,
                                                     strprintf("evo%d.example.org:443", address_tag)),
@@ -317,7 +320,7 @@ BOOST_AUTO_TEST_CASE(rotation_bitset_larger_than_quorum_roundtrips)
 BOOST_FIXTURE_TEST_CASE(populated_v3_golden_value, BasicTestingSetup)
 {
     BOOST_CHECK_EQUAL(GetEvoSnapshotHash(SyntheticSnapshot()).ToString(),
-                      "5b5d496a66d93775a6a6d1badf2ea2d5bbb25b58031fe0dd2c3c670674c6908d");
+                      "8a2883207069e92589ffcce1f9867736881ecdf04ccfc89b492570740e7d3f31");
 }
 
 BOOST_FIXTURE_TEST_CASE(canonical_mn_reader_rejects_order_and_counter, BasicTestingSetup)

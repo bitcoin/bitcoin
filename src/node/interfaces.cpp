@@ -275,13 +275,14 @@ public:
     }
     ProviderTxCapabilities getProviderTxCapabilities() override { return evo::provider::GetCapabilities(context()); }
     std::optional<ProviderTxError> validateProviderNetInfo(const ProviderNetInfo& net_info, MnType type,
-                                                           uint16_t version, bool optional) override
+                                                           uint16_t version, bool ipv4_optional, bool optional) override
     {
-        return evo::provider::ValidateNetInfo(net_info, type, version, optional);
+        return evo::provider::ValidateNetInfo(net_info, type, version, ipv4_optional, optional);
     }
-    std::optional<std::string> findProviderNetInfoInUse(const ProviderNetInfo& net_info, MnType type, uint16_t version) override
+    std::optional<std::string> findProviderNetInfoInUse(const ProviderNetInfo& net_info, MnType type, uint16_t version,
+                                                        bool ipv4_optional) override
     {
-        return evo::provider::FindNetInfoInUse(context(), net_info, type, version);
+        return evo::provider::FindNetInfoInUse(context(), net_info, type, version, ipv4_optional);
     }
     ProviderTxResult<ProviderTxSubmission> registerMasternode(Wallet& wallet, const ProviderRegistrationRequest& request) override
     {

@@ -160,6 +160,7 @@ private:
     bool m_registered{false};
     bool m_platform_extended_addresses{false};
     uint16_t m_platform_provider_version{0};
+    bool m_platform_ipv4_optional{false};
     std::optional<Page> m_validation_page;
 
     QStackedWidget* m_pages;

@@ -1198,7 +1198,7 @@ void FuncProUpServInvalidNType(TestChainSetup& setup)
         {
             LOCK(cs_main);
             BOOST_CHECK(!CheckProUpServTx(CTransaction(tx), tip_index(), dmnman, chainman.GetConsensus(),
-                                          IsV24Active(chainman), check_state, /*check_sigs=*/true));
+                                          TipRules(chainman), check_state, /*check_sigs=*/true));
         }
         BOOST_CHECK_EQUAL(check_state.GetRejectReason(), "bad-protx-type");
 
@@ -1224,7 +1224,7 @@ void FuncProUpServInvalidNType(TestChainSetup& setup)
         {
             LOCK(cs_main);
             BOOST_CHECK(!CheckProUpServTx(CTransaction(tx), tip_index(), dmnman, chainman.GetConsensus(),
-                                          IsV24Active(chainman), check_state, /*check_sigs=*/true));
+                                          TipRules(chainman), check_state, /*check_sigs=*/true));
         }
         BOOST_CHECK_EQUAL(check_state.GetRejectReason(), "bad-protx-type-mismatch");
         BOOST_CHECK(check_state.GetResult() == TxValidationResult::TX_CONSENSUS);
@@ -1266,7 +1266,7 @@ void FuncProUpServInvalidNType(TestChainSetup& setup)
         {
             LOCK(cs_main);
             BOOST_CHECK_MESSAGE(CheckProUpServTx(CTransaction(tx), tip_index(), dmnman, chainman.GetConsensus(),
-                                                 IsV24Active(chainman), check_state,
+                                                 TipRules(chainman), check_state,
                                                  /*check_sigs=*/true),
                                 "unexpected rejection: " << check_state.GetRejectReason());
         }
@@ -2704,7 +2704,7 @@ void FuncMigrationRejectedWhenKeySquatted(TestChainV24SignalBeforeV19Setup& setu
         TxValidationState st;
         LOCK(cs_main);
         BOOST_CHECK(!CheckProUpServTx(CTransaction(tx), chainman.ActiveChain().Tip(), dmnman, chainman.GetConsensus(),
-                                      IsV24Active(chainman), st, true));
+                                      TipRules(chainman), st, true));
         BOOST_CHECK_EQUAL(st.GetRejectReason(), "bad-protx-dup-key");
     }
 
@@ -2760,7 +2760,7 @@ void FuncProUpServTxMigratesLegacy(TestChainV24SignalBeforeV19Setup& setup)
         TxValidationState val_state;
         LOCK(cs_main);
         BOOST_REQUIRE_MESSAGE(CheckProUpServTx(CTransaction(tx), chainman.ActiveChain().Tip(), dmnman,
-                                               chainman.GetConsensus(), IsV24Active(chainman), val_state,
+                                               chainman.GetConsensus(), TipRules(chainman), val_state,
                                                /*check_sigs=*/true),
                               "migration ProUpServTx rejected: " << val_state.GetRejectReason());
     }
@@ -3062,7 +3062,7 @@ void FuncEvoNodeRaisedToExtAddrByServiceUpdateOnly(TestChainV24SignalBeforeV19Se
         TxValidationState val_state;
         LOCK(cs_main);
         CheckProUpServTx(CTransaction(tx), chainman.ActiveChain().Tip(), dmnman, chainman.GetConsensus(),
-                         IsV24Active(chainman), val_state, /*check_sigs=*/true);
+                         TipRules(chainman), val_state, /*check_sigs=*/true);
         return val_state.GetRejectReason();
     };
     auto check_state = [&](uint16_t version, const std::string& what) {
@@ -3998,7 +3998,8 @@ void FuncPreV24BehaviourUnchanged(TestChainSetup& setup)
         TxValidationState val_state;
         LOCK(cs_main);
         BOOST_CHECK_MESSAGE(CheckProUpServTx(CTransaction(tx_ups), chainman.ActiveChain().Tip(), dmnman,
-                                             chainman.GetConsensus(), IsV24Active(chainman), val_state, /*check_sigs=*/true),
+                                             chainman.GetConsensus(), TipRules(chainman), val_state,
+                                             /*check_sigs=*/true),
                             "pre-v24 v2 ProUpServTx wrongly rejected: " << val_state.GetRejectReason());
     }
     setup.CreateAndProcessBlock({tx_ups}, coinbase_pk);

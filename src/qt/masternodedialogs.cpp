@@ -456,7 +456,8 @@ std::optional<interfaces::ProviderNetInfo> UpdateServiceDialog::buildNetInfo(QSt
         }
     }
     if (const auto validation_error{
-            m_node.evo().validateProviderNetInfo(net_info, m_type, m_capabilities.version, /*optional=*/false)}) {
+            m_node.evo().validateProviderNetInfo(net_info, m_type, m_capabilities.version,
+                                                 m_capabilities.ipv4_optional, /*optional=*/false)}) {
         error = MasternodeOperationRunner::errorText(*validation_error);
         return std::nullopt;
     }

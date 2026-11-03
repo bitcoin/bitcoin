@@ -57,9 +57,12 @@
 #include <QTest>
 #include <QTimer>
 
+#include <chrono>
+#include <future>
 #include <limits>
 #include <memory>
 #include <string>
+#include <thread>
 #include <utility>
 
 using wallet::WalletContext;
@@ -225,7 +228,7 @@ private:
     std::string m_operator_display;
     std::string m_core_endpoint;
     std::string m_platform_p2p{"127.0.0.1:26656"};
-    std::string m_platform_https{"api.example.com:443"};
+    std::string m_platform_https{"127.0.0.1:443"};
     std::string m_platform_node_id{"1111111111111111111111111111111111111111"};
 };
 
@@ -433,7 +436,7 @@ void MasternodeMaintenanceTests::serviceRequestConstruction()
             QCOMPARE(std::get<std::vector<std::string>>(request->net_info.platform_p2p),
                      std::vector<std::string>{"127.0.0.1:26656"});
             QCOMPARE(std::get<std::vector<std::string>>(request->net_info.platform_https),
-                     std::vector<std::string>{"api.example.com:443"});
+                     std::vector<std::string>{"127.0.0.1:443"});
             QVERIFY(request->platform_node_id.has_value());
         } else {
             QCOMPARE(std::get<uint16_t>(request->net_info.platform_p2p), uint16_t{26656});
@@ -458,6 +461,33 @@ void MasternodeMaintenanceTests::serviceRequestConstruction()
     check_request(MnType::Regular, {ProTxVersion::BasicBLS, false});
     check_request(MnType::Evo, {ProTxVersion::BasicBLS, false});
     check_request(MnType::Evo, {ProTxVersion::ExtAddr, true});
+
+    // The dialog validates against its capability snapshot, without waiting for cs_main while the user types
+    auto other_host{std::make_shared<TestMnEntry>(MnType::Evo)};
+    other_host->setPlatformEndpoints("127.0.0.2:26656", "127.0.0.2:443");
+    const MasternodeEntry other_host_entry{other_host, "collateral", 50};
+    for (const bool ipv4_optional : {false, true}) {
+        UpdateServiceDialog dialog(m_node, /*wallet_model=*/nullptr, other_host_entry,
+                                   interfaces::ProviderTxCapabilities{ProTxVersion::ExtAddr, true, ipv4_optional},
+                                   /*parent=*/nullptr);
+        QString error;
+        QCOMPARE(dialog.buildRequest(other_host->operatorSecret(), error).has_value(), ipv4_optional);
+        QVERIFY2(ipv4_optional || error.contains("bad-protx-netinfo-addr"), qPrintable(error));
+
+        std::promise<void> locked;
+        std::promise<void> release;
+        bool lock_timed_out{false};
+        std::thread holder{[&] {
+            LOCK(::cs_main);
+            locked.set_value();
+            lock_timed_out = release.get_future().wait_for(std::chrono::seconds{10}) == std::future_status::timeout;
+        }};
+        locked.get_future().wait();
+        dialog.m_platform_p2p_edit->setText("127.0.0.1:26656");
+        release.set_value();
+        holder.join();
+        QVERIFY(!lock_timed_out);
+    }
 
     auto malformed_source{std::make_shared<TestMnEntry>(MnType::Evo)};
     malformed_source->setPlatformEndpoints("missing-port", "api.example.com:not-a-port");
