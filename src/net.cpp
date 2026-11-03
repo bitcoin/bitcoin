@@ -3718,6 +3718,13 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     // Dump network addresses
     scheduler.scheduleEvery([this] { DumpAddresses(); }, DUMP_PEERS_INTERVAL);
 
+    // Check reachability shortly after startup, and then periodically, so we notice when the
+    // network environment changes.
+    if (!m_reachability_check_nets.empty()) {
+        scheduler.scheduleFromNow([this] { CheckReachability(); }, REACHABILITY_FIRST_CHECK_DELAY);
+        scheduler.scheduleEvery([this] { CheckReachability(); }, REACHABILITY_CHECK_INTERVAL);
+    }
+
     // Run the ASMap Health check once and then schedule it to run every 24h.
     if (m_netgroupman.UsingASMap()) {
         ASMapHealthCheck();
@@ -4341,6 +4348,30 @@ void CConnman::PerformReconnections()
                               item.conn_type,
                               item.use_v2transport,
                               item.proxy_override);
+    }
+}
+
+void CConnman::CheckReachability()
+{
+    // Check both networks, even if only one of them is managed automatically, so that we can
+    // tell whether we are offline altogether. Without a route on any network, we are most likely
+    // offline (or not yet connected), which says nothing about whether a specific network is
+    // available. So only mark networks as unreachable if at least one other network has a route.
+    const std::optional<bool> route_ipv4{HasGlobalRoute(NET_IPV4)};
+    const std::optional<bool> route_ipv6{HasGlobalRoute(NET_IPV6)};
+    const bool any_route{route_ipv4 == true || route_ipv6 == true};
+
+    for (const Network net : m_reachability_check_nets) {
+        const std::optional<bool> has_route{net == NET_IPV4 ? route_ipv4 : route_ipv6};
+        // If this could not be determined (std::nullopt), reachability is left unchanged.
+        const bool reachable{g_reachable_nets.Contains(net)};
+        if (has_route == true && !reachable) {
+            LogInfo("Route to the internet found on %s, marking it as reachable", GetNetworkName(net));
+            g_reachable_nets.Add(net);
+        } else if (has_route == false && reachable && any_route) {
+            LogInfo("No route to the internet found on %s, marking it as unreachable", GetNetworkName(net));
+            g_reachable_nets.Remove(net);
+        }
     }
 }
 
