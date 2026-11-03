@@ -139,6 +139,7 @@ BITCOIN_TESTS =\
   test/hash_tests.cpp \
   test/httpserver_tests.cpp \
   test/i2p_tests.cpp \
+  test/index_migration_tests.cpp \
   test/interfaces_tests.cpp \
   test/key_io_tests.cpp \
   test/key_tests.cpp \
