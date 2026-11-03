@@ -236,6 +236,65 @@ void MasternodeMaintenanceTests::automaticFeeSource()
     QCOMPARE(picker.count(), 1);
     QCOMPARE(picker.currentText(), QString("Automatic (recommended)"));
     QVERIFY(picker.selectedAddress().isEmpty());
+
+    // A wallet funded at an address that is neither a payout nor a share
+    // reward address of the masternode, like a hosting operator's
+    TestChain100Setup test;
+    m_node.setContext(&test.m_node);
+    WalletContext& context{*m_node.walletLoader().context()};
+    const auto wallet{MakeTestWallet(m_node, context, "operator")};
+    QVERIFY(wallet != nullptr);
+    WalletGuard guard{context, wallet};
+    CTxDestination funded;
+    {
+        LOCK(wallet->cs_wallet);
+        const auto destination{wallet->GetNewDestination("")};
+        QVERIFY(destination);
+        funded = *destination;
+        const CBlockIndex* tip{
+            WITH_LOCK(test.m_node.chainman->GetMutex(), return test.m_node.chainman->ActiveChain().Tip())};
+        wallet->SetLastBlockProcessed(tip->nHeight, tip->GetBlockHash());
+        CMutableTransaction funding;
+        funding.vin.emplace_back(GetRandHash(), 0);
+        funding.vout.emplace_back(10 * COIN, GetScriptForDestination(funded));
+        QVERIFY(wallet->AddToWallet(MakeTransactionRef(funding),
+                                    wallet::TxStateConfirmed{tip->GetBlockHash(), tip->nHeight, /*index=*/0}) != nullptr);
+    }
+    MasternodeTestUtil::GuiModels models{m_node};
+    QVERIFY2(models.ok, qPrintable(QString::fromStdString(models.error.translated)));
+    WalletModel wallet_model(interfaces::MakeWallet(context, wallet), models.client);
+    const interfaces::ProviderTxCapabilities capabilities{ProTxVersion::BasicBLS, false};
+
+    // A regular masternode's dialogs leave the fee source to Core
+    auto regular{std::make_shared<TestMnEntry>(MnType::Regular)};
+    MasternodeEntry regular_entry{regular, "collateral", 50};
+    UpdateServiceDialog regular_service(m_node, &wallet_model, regular_entry, capabilities, /*parent=*/nullptr);
+    QCOMPARE(regular_service.m_fee_source->currentText(), QString("Automatic (recommended)"));
+    QString error;
+    const auto regular_update{regular_service.buildRequest(regular->operatorSecret(), error)};
+    QVERIFY2(regular_update.has_value(), qPrintable(error));
+    QVERIFY(!regular_update->fee_source.has_value());
+    RevokeDialog regular_revoke(m_node, &wallet_model, regular_entry, /*parent=*/nullptr);
+    QCOMPARE(regular_revoke.m_fee_source->currentText(), QString("Automatic (recommended)"));
+    const auto regular_revocation{regular_revoke.buildRequest(regular->operatorSecret(), error)};
+    QVERIFY2(regular_revocation.has_value(), qPrintable(error));
+    QVERIFY(!regular_revocation->fee_source.has_value());
+
+    // Core's automatic choice for a shared masternode is the first share's
+    // reward address, which this wallet does not own: pay from this wallet
+    auto shared{std::make_shared<TestMnEntry>(MnType::Regular)};
+    shared->makeShared({400 * COIN, 300 * COIN, 300 * COIN}, 5 * COIN, /*early_period_blocks=*/1000);
+    MasternodeEntry shared_entry{shared, "collateral", 50};
+    UpdateServiceDialog shared_service(m_node, &wallet_model, shared_entry, capabilities, /*parent=*/nullptr);
+    QCOMPARE(shared_service.m_fee_source->findText("Automatic (recommended)"), -1);
+    const auto shared_update{shared_service.buildRequest(shared->operatorSecret(), error)};
+    QVERIFY2(shared_update.has_value(), qPrintable(error));
+    QVERIFY(shared_update->fee_source == std::optional<CTxDestination>{funded});
+    RevokeDialog shared_revoke(m_node, &wallet_model, shared_entry, /*parent=*/nullptr);
+    QCOMPARE(shared_revoke.m_fee_source->findText("Automatic (recommended)"), -1);
+    const auto shared_revocation{shared_revoke.buildRequest(shared->operatorSecret(), error)};
+    QVERIFY2(shared_revocation.has_value(), qPrintable(error));
+    QVERIFY(shared_revocation->fee_source == std::optional<CTxDestination>{funded});
 }
 
 void MasternodeMaintenanceTests::operatorSecretValidation()

@@ -411,9 +411,15 @@ UpdateServiceDialog::UpdateServiceDialog(interfaces::Node& node, WalletModel* wa
         form->addRow(tr("Operator payout address:"), m_operator_payout_edit);
     }
 
-    m_fee_source = addFeeSourceRow(form, tr("Automatic uses the current operator payout, then the masternode payout. "
-                                            "Select an address only "
-                                            "to override that choice."));
+    // Without an operator payout, Automatic funds from the first share's reward
+    // address, which is usually another wallet's: pay from this wallet instead
+    if (entry.isShared()) {
+        m_fee_source = addFeeSourceRow(form, tr("The fee is paid from this address of your wallet."));
+        m_fee_source->setAutomaticOption(QString{});
+    } else {
+        m_fee_source = addFeeSourceRow(form, tr("Automatic uses the current operator payout, then the masternode "
+                                                "payout. Select an address only to override that choice."));
+    }
 
     setupUi(m_type == MnType::Evo ? tr("Update EvoNode Service") : tr("Update Masternode Service"),
             tr("Update the registered service endpoints. A successful update also revives a PoSe-banned "
@@ -664,9 +670,15 @@ RevokeDialog::RevokeDialog(interfaces::Node& node, WalletModel* wallet_model, co
     connect(m_operator_key, &OperatorSecretWidget::changed, this, &RevokeDialog::validate);
     form->addRow(tr("Operator key:"), m_operator_key);
 
-    m_fee_source = addFeeSourceRow(form, tr("Automatic uses the current operator payout, then the masternode payout. "
-                                            "Select an address only "
-                                            "to override that choice."));
+    // Without an operator payout, Automatic funds from the first share's reward
+    // address, which is usually another wallet's: pay from this wallet instead
+    if (entry.isShared()) {
+        m_fee_source = addFeeSourceRow(form, tr("The fee is paid from this address of your wallet."));
+        m_fee_source->setAutomaticOption(QString{});
+    } else {
+        m_fee_source = addFeeSourceRow(form, tr("Automatic uses the current operator payout, then the masternode "
+                                                "payout. Select an address only to override that choice."));
+    }
 
     setupUi(tr("Revoke Masternode Service"),
             tr("Revoking clears the service address and PoSe-bans the masternode until its owner changes the "
