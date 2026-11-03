@@ -508,6 +508,7 @@ try_append_cxx_flags("-Wbidi-chars=any" TARGET warn_interface SKIP_LINK)
 try_append_cxx_flags("-Wundef" TARGET warn_interface SKIP_LINK)
 try_append_cxx_flags("-Wleading-whitespace=spaces" TARGET warn_interface SKIP_LINK)
 try_append_cxx_flags("-Wtrailing-whitespace=any" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wmissing-declarations" TARGET warn_interface SKIP_LINK)
 
 # GCC accepts -Wmissing-prototypes for C++, but warns that it is only
 # valid for C/ObjC.
