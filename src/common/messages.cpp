@@ -61,7 +61,7 @@ const std::vector<std::pair<std::string, FeeEstimateMode>>& FeeModeMap()
     return FEE_MODES;
 }
 
-std::string FeeModeInfo(const std::pair<std::string, FeeEstimateMode>& mode, std::string& default_info)
+static std::string FeeModeInfo(const std::pair<std::string, FeeEstimateMode>& mode, std::string& default_info)
 {
     switch (mode.second) {
         case FeeEstimateMode::UNSET:
