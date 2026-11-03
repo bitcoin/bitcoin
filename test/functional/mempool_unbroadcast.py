@@ -53,7 +53,7 @@ class MempoolUnbroadcastTest(BitcoinTestFramework):
         assert_equal(mempoolinfo['unbroadcastcount'], unbroadcast_count)
         mempool = self.nodes[0].getrawmempool(True)
         for tx in mempool:
-            assert_equal(mempool[tx]['unbroadcast'], True)
+            assert_true(mempool[tx]['unbroadcast'])
 
         # check that second node doesn't have these two txns
         mempool = self.nodes[1].getrawmempool()
@@ -78,7 +78,7 @@ class MempoolUnbroadcastTest(BitcoinTestFramework):
         # check that transactions are no longer in first node's unbroadcast set
         mempool = self.nodes[0].getrawmempool(True)
         for tx in mempool:
-            assert_equal(mempool[tx]['unbroadcast'], False)
+            assert_false(mempool[tx]['unbroadcast'])
 
         self.log.info("Add another connection & ensure transactions aren't broadcast again")
 
