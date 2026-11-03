@@ -16,10 +16,6 @@ from collections import OrderedDict
 from decimal import Decimal
 from itertools import product
 
-from test_framework.blocktools import (
-    NORMAL_GBT_REQUEST_PARAMS,
-    create_block,
-)
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
     COIN,
@@ -98,11 +94,10 @@ class RawTransactionsTest(BitcoinTestFramework):
     def test_getrawtransaction_block_data_errors(self):
         node = self.nodes[0]
         self.log.info("Test getrawtransaction with a header-only block")
-        block = create_block(tmpl=node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS))
-        block.solve()
-        node.submitheader(block.serialize()[:80].hex())
+        block = self.generateblock(node, output="raw(55)", transactions=[], submit=False)
+        node.submitheader(block["hex"][:160])
 
-        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", node.getrawtransaction, txid="a" * 64, blockhash=block.hash_hex)
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", node.getrawtransaction, txid="a" * 64, blockhash=block["hash"])
 
         self.log.info("Test getrawtransaction when block data cannot be read")
         blk_dat = node.blocks_path / "blk00000.dat"
