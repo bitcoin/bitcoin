@@ -208,14 +208,16 @@ static void signal_handler(int signal)
 }
 #endif
 
-// This function is used by libFuzzer
+// These functions are used by libFuzzer
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size);
+extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv);
+
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     test_one_input({data, size});
     return 0;
 }
 
-// This function is used by libFuzzer
 extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
 {
     SetArgs(*argc, *argv);
