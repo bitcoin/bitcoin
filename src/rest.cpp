@@ -12,6 +12,7 @@
 #include <core_io.h>
 #include <crypto/hex_base.h>
 #include <flatfile.h>
+#include <httprpc.h>
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
 #include <index/txindex.h>
