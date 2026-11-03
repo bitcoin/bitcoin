@@ -12,6 +12,7 @@
 #include <rpc/rawtransaction_util.h>
 #include <rpc/util.h>
 #include <script/script.h>
+#include <util/hasher.h>
 #include <util/rbf.h>
 #include <util/translation.h>
 #include <util/vector.h>
@@ -23,6 +24,8 @@
 #include <wallet/wallet.h>
 
 #include <univalue.h>
+
+#include <unordered_set>
 
 using common::FeeModeFromString;
 using common::FeeModesDetail;
@@ -1472,7 +1475,12 @@ RPCMethod sendall()
             } else if (options.exists("inputs") && (options.exists("minconf") || options.exists("maxconf"))) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot combine minconf or maxconf with specific inputs.");
             } else if (options.exists("inputs")) {
+                std::unordered_set<COutPoint, SaltedOutpointHasher> seen_inputs;
+                seen_inputs.reserve(rawTx.vin.size());
                 for (const CTxIn& input : rawTx.vin) {
+                    if (!seen_inputs.insert(input.prevout).second) {
+                        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, duplicated input: %s:%d", input.prevout.hash.ToString(), input.prevout.n));
+                    }
                     if (pwallet->IsSpent(input.prevout)) {
                         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Input not available. UTXO (%s:%d) was already spent.", input.prevout.hash.ToString(), input.prevout.n));
                     }
