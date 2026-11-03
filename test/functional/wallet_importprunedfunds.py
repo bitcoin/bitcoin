@@ -14,7 +14,9 @@ from test_framework.messages import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_raises_rpc_error,
+    assert_true,
     find_vout_for_address,
     wallet_importprivkey,
 )

@@ -55,15 +55,17 @@ from test_framework.script import CScript, LEAF_VERSION_TAPSCRIPT, OP_TRUE, SIGH
 from test_framework.script_util import MIN_STANDARD_TX_NONWITNESS_SIZE, output_key_to_p2tr_script
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_not_equal,
     assert_approx,
     assert_equal,
+    assert_false,
     assert_greater_than,
     assert_greater_than_or_equal,
+    assert_not_equal,
     assert_raises_rpc_error,
+    assert_true,
+    bitflipper,
     find_vout_for_address,
     wallet_importprivkey,
-    bitflipper
 )
 from test_framework.wallet_util import (
     calculate_input_weight,

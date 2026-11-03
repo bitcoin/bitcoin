@@ -8,7 +8,9 @@ from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_raises_rpc_error,
+    assert_true,
 )
 from test_framework.wallet_util import WalletUnlock
 

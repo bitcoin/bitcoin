@@ -14,9 +14,11 @@ from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_greater_than,
     assert_is_hash_string,
     assert_raises_rpc_error,
+    assert_true,
     dumb_sync_blocks,
 )
 

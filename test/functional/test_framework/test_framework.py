@@ -33,6 +33,7 @@ from .util import (
     MAX_NODES,
     PortSeed,
     assert_equal,
+    assert_false,
     check_json_precision,
     export_env_build_path,
     find_vout_for_address,
