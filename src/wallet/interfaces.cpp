@@ -920,7 +920,7 @@ public:
         m_context.node_context = &node_context;
         m_context.coinjoin_loader = &coinjoin_loader;
     }
-    ~WalletLoaderImpl() override { UnloadWallets(m_context); }
+    ~WalletLoaderImpl() override { stop(); }
 
     //! ChainClient methods
     void registerRpcs() override
@@ -931,7 +931,7 @@ public:
     bool load() override { return LoadWallets(m_context); }
     void start(CScheduler& scheduler) override { return StartWallets(m_context, scheduler); }
     void flush() override { return FlushWallets(m_context); }
-    void stop() override { return StopWallets(m_context); }
+    void stop() override { return UnloadWallets(m_context); }
     void setMockTime(int64_t time) override { return SetMockTime(time); }
 
     //! WalletLoader methods
