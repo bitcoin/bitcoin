@@ -608,9 +608,17 @@ migration process is available in the
 [documentation](https://github.com/dashpay/dash/blob/master/doc/managing-wallets.md#migrating-legacy-wallets-to-descriptor-wallets).
 (#7275)
 
-<!-- TODO(rc.7, pending decision): if #8014 (wallet migration
-fixes) is backported, describe its user-visible `migratewallet` changes here.
-Remove this comment either way. -->
+Failure handling in `migratewallet`, `restorewallet` and
+`dash-wallet createfromdump` was fixed with backports from Bitcoin Core 28.x. A
+failed migration restores the original wallet and leaves the rest of the
+wallet directory as it was. After a migration, the migrated wallet and the
+watch-only and solvables wallets it created are reloaded from disk, and if one
+of them fails to load, the migration is rolled back. Migration backups are now
+named `<name>_<time>.legacy.bak` (`default_wallet_<time>.legacy.bak` for the
+unnamed wallet), and the unnamed wallet's watch-only and solvables wallets are
+named `default_wallet_watchonly` and `default_wallet_solvables`.
+`restorewallet` now accepts an existing empty directory and refuses only a
+directory that already contains a `wallet.dat`. (#8014)
 
 ## Asynchronous address, spent and timestamp indexes
 
