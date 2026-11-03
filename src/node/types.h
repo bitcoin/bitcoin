@@ -14,10 +14,11 @@
 #define BITCOIN_NODE_TYPES_H
 
 #include <cstdint>
+#include <string>
+#include <utility>
 
 namespace node {
 enum class TransactionError {
-    OK, //!< No error
     MISSING_INPUTS,
     ALREADY_IN_UTXO_SET,
     MEMPOOL_REJECTED,
@@ -27,6 +28,17 @@ enum class TransactionError {
     MAX_BURN_EXCEEDED,
     INVALID_PACKAGE,
     PRIVATE_BROADCAST_FULL,
+    SUBMISSION_SKIPPED, //!< The wallet did not submit the transaction (e.g. broadcasting disabled or abandoned)
+};
+
+//! Error returned when a transaction cannot be broadcast: a machine-readable
+//! code and an untranslated error message.
+struct TransactionBroadcastError {
+    TransactionError code;
+    std::string message;
+
+    TransactionBroadcastError(TransactionError code, std::string message)
+        : code{code}, message{std::move(message)} {}
 };
 
 /**

@@ -667,13 +667,18 @@ public:
      * Should be called after CreateTransaction unless you want to abort
      * broadcasting the transaction.
      *
+     * The transaction is saved to the wallet before submission and stays saved
+     * if submission fails or is skipped. Throws if it cannot be written to the
+     * wallet database.
+     *
      * @param[in] tx The transaction to be broadcast.
      * @param[in] replaces_txid The txid of the transaction that this transaction replaces
      * @param[in] comment The user's comment for this transaction
      * @param[in] comment_to The comment for this transaction indicating where coins are sent to
      * @param[in] messages The BIP 21 URI messages to attach to this transaction
+     * @return {} if the node accepted the transaction, otherwise the error.
      */
-    void CommitTransaction(
+    [[nodiscard]] util::Expected<void, node::TransactionBroadcastError> CommitTransaction(
         CTransactionRef tx,
         std::optional<Txid> replaces_txid = std::nullopt,
         std::optional<std::string> comment = std::nullopt,
@@ -682,8 +687,10 @@ public:
         const std::vector<std::string>& payment_requests = {}
     );
 
-    /** Pass this transaction to node for optional mempool insertion and relay to peers. */
-    bool SubmitTxMemoryPoolAndRelay(CWalletTx& wtx, std::string& err_string, node::TxBroadcast broadcast_method) const
+    /** Submit for mempool or private broadcast queue acceptance, depending on broadcast_method.
+     * Return {} on acceptance, otherwise the error.
+     */
+    [[nodiscard]] util::Expected<void, node::TransactionBroadcastError> SubmitTxMemoryPoolAndRelay(CWalletTx& wtx, node::TxBroadcast broadcast_method) const
         EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** Updates wallet birth time if 'time' is below it */

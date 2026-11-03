@@ -1828,21 +1828,34 @@ void CWallet::MaybeUpdateBirthTime(int64_t time)
     }
 }
 
-bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
-                                         std::string& err_string,
-                                         node::TxBroadcast broadcast_method) const
+util::Expected<void, node::TransactionBroadcastError> CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
+                                                                                          node::TxBroadcast broadcast_method) const
 {
     AssertLockHeld(cs_wallet);
 
     // Can't relay if wallet is not broadcasting
-    if (!GetBroadcastTransactions()) return false;
+    if (!GetBroadcastTransactions()) {
+        return util::Unexpected{node::TransactionBroadcastError{
+            node::TransactionError::SUBMISSION_SKIPPED, "Wallet transaction broadcasting is disabled"}};
+    }
     // Don't relay abandoned transactions
-    if (wtx.isAbandoned()) return false;
+    if (wtx.isAbandoned()) {
+        return util::Unexpected{node::TransactionBroadcastError{
+            node::TransactionError::SUBMISSION_SKIPPED, "Transaction is abandoned"}};
+    }
     // Don't try to submit coinbase transactions. These would fail anyway but would
     // cause log spam.
-    if (wtx.IsCoinBase()) return false;
+    if (wtx.IsCoinBase()) {
+        return util::Unexpected{node::TransactionBroadcastError{
+            node::TransactionError::SUBMISSION_SKIPPED, "Coinbase transactions cannot be broadcast"}};
+    }
     // Don't try to submit conflicted or confirmed transactions.
-    if (GetTxDepthInMainChain(wtx) != 0) return false;
+    const int depth = GetTxDepthInMainChain(wtx);
+    if (depth != 0) {
+        return util::Unexpected{node::TransactionBroadcastError{
+            node::TransactionError::SUBMISSION_SKIPPED,
+            depth > 0 ? "Transaction is already confirmed" : "Transaction conflicts with a confirmed transaction"}};
+    }
 
     const char* what{""};
     switch (broadcast_method) {
@@ -1866,9 +1879,12 @@ bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
     // If broadcast fails for any reason, trying to set wtx.m_state here would be incorrect.
     // If transaction was previously in the mempool, it should be updated when
     // TransactionRemovedFromMempool fires.
-    bool ret = chain().broadcastTransaction(wtx.GetTx(), m_max_tx_fee, m_max_tx_fee_rate, broadcast_method, err_string);
-    if (ret) wtx.m_state = TxStateInMempool{};
-    return ret;
+    auto result = chain().broadcastTransaction(wtx.GetTx(), m_max_tx_fee, m_max_tx_fee_rate, broadcast_method);
+    if (!result) {
+        return util::Unexpected{std::move(result).error()};
+    }
+    wtx.m_state = TxStateInMempool{};
+    return {};
 }
 
 std::set<Txid> CWallet::GetTxConflicts(const CWalletTx& wtx) const
@@ -1950,8 +1966,7 @@ void CWallet::ResubmitWalletTransactions(node::TxBroadcast broadcast_method, boo
         }
         // Now try submitting the transactions to the memory pool and (optionally) relay them.
         for (auto wtx : to_submit) {
-            std::string unused_err_string;
-            if (SubmitTxMemoryPoolAndRelay(*wtx, unused_err_string, broadcast_method)) ++submitted_tx_count;
+            if (SubmitTxMemoryPoolAndRelay(*wtx, broadcast_method)) ++submitted_tx_count;
         }
     } // cs_wallet
 
@@ -2135,7 +2150,7 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
     return m_default_address_type;
 }
 
-void CWallet::CommitTransaction(
+util::Expected<void, node::TransactionBroadcastError> CWallet::CommitTransaction(
     CTransactionRef tx,
     std::optional<Txid> replaces_txid,
     std::optional<std::string> comment,
@@ -2170,16 +2185,12 @@ void CWallet::CommitTransaction(
         NotifyTransactionChanged(coin.GetHash(), CT_UPDATED);
     }
 
-    if (!fBroadcastTransactions) {
-        // Don't submit tx to the mempool
-        return;
-    }
-
-    std::string err_string;
-    if (!SubmitTxMemoryPoolAndRelay(*wtx, err_string, node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL)) {
-        WalletLogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s", err_string);
+    auto result = SubmitTxMemoryPoolAndRelay(*wtx, node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL);
+    if (!result && result.error().code != node::TransactionError::SUBMISSION_SKIPPED) {
+        WalletLogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s", result.error().message);
         // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
     }
+    return result;
 }
 
 DBErrors CWallet::PopulateWalletFromDB(bilingual_str& error, std::vector<bilingual_str>& warnings)

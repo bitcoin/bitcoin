@@ -372,9 +372,9 @@ public:
         LOCK(::cs_main);
         return chainman().ActiveChainstate().CoinsTip().GetCoin(output);
     }
-    TransactionError broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, CFeeRate max_tx_fee_rate, std::string& err_string) override
+    util::Expected<void, TransactionBroadcastError> broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, CFeeRate max_tx_fee_rate) override
     {
-        return BroadcastTransaction(*m_context, std::move(tx), err_string, max_tx_fee, max_tx_fee_rate, /*broadcast_method=*/TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL, /*wait_callback=*/false);
+        return BroadcastTransaction(*m_context, std::move(tx), max_tx_fee, max_tx_fee_rate, /*broadcast_method=*/TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL, /*wait_callback=*/false);
     }
     WalletLoader& walletLoader() override
     {
@@ -678,17 +678,12 @@ public:
         if (!m_node.mempool) return false;
         return m_node.mempool->HasDescendants(txid);
     }
-    bool broadcastTransaction(const CTransactionRef& tx,
-                              const CAmount& max_tx_fee,
-                              const CFeeRate& max_tx_fee_rate,
-                              TxBroadcast broadcast_method,
-                              std::string& err_string) override
+    util::Expected<void, TransactionBroadcastError> broadcastTransaction(const CTransactionRef& tx,
+                                                                         const CAmount& max_tx_fee,
+                                                                         const CFeeRate& max_tx_fee_rate,
+                                                                         TxBroadcast broadcast_method) override
     {
-        const TransactionError err = BroadcastTransaction(m_node, tx, err_string, max_tx_fee, max_tx_fee_rate, broadcast_method, /*wait_callback=*/false);
-        // Chain clients only care about failures to accept the tx to the mempool. Disregard non-mempool related failures.
-        // Note: this will need to be updated if BroadcastTransactions() is updated to return other non-mempool failures
-        // that Chain clients do not need to know about.
-        return TransactionError::OK == err;
+        return BroadcastTransaction(m_node, tx, max_tx_fee, max_tx_fee_rate, broadcast_method, /*wait_callback=*/false);
     }
     void getTransactionAncestry(const Txid& txid, size_t& ancestors, size_t& cluster_count, size_t* ancestorsize, CAmount* ancestorfees) override
     {

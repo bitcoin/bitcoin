@@ -10,6 +10,7 @@
 #include <common/types.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
+#include <node/types.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <support/allocators/secure.h>
@@ -154,8 +155,10 @@ public:
         bool sign,
         std::optional<unsigned int> change_pos) = 0;
 
-    //! Commit transaction.
-    virtual void commitTransaction(CTransactionRef tx, const std::vector<std::string>& messages) = 0;
+    //! Commit transaction: save it to the wallet, then submit it to the node.
+    //! Returns {} if the node accepted it, otherwise the error. The transaction
+    //! stays saved either way.
+    [[nodiscard]] virtual util::Expected<void, node::TransactionBroadcastError> commitTransaction(CTransactionRef tx, const std::vector<std::string>& messages) = 0;
 
     //! Return whether transaction can be abandoned.
     virtual bool transactionCanBeAbandoned(const Txid& txid) = 0;

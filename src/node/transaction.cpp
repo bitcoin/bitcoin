@@ -5,6 +5,7 @@
 
 #include <node/transaction.h>
 
+#include <common/messages.h>
 #include <consensus/validation.h>
 #include <index/txindex.h>
 #include <net.h>
@@ -14,24 +15,32 @@
 #include <node/types.h>
 #include <policy/feerate.h>
 #include <txmempool.h>
+#include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <string>
+
 namespace node {
-static TransactionError HandleATMPError(const TxValidationState& state, std::string& err_string_out)
+static TransactionBroadcastError HandleATMPError(const TxValidationState& state)
 {
-    err_string_out = state.ToString();
+    const std::string err_string{state.ToString()};
     if (state.IsInvalid()) {
         if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
-            return TransactionError::MISSING_INPUTS;
+            return {TransactionError::MISSING_INPUTS, err_string};
         }
-        return TransactionError::MEMPOOL_REJECTED;
+        return {TransactionError::MEMPOOL_REJECTED, err_string};
     } else {
-        return TransactionError::MEMPOOL_ERROR;
+        return {TransactionError::MEMPOOL_ERROR, err_string};
     }
 }
 
-TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, const CFeeRate& max_tx_fee_rate, TxBroadcast broadcast_method, bool wait_callback)
+static TransactionBroadcastError MakeBroadcastError(TransactionError code)
+{
+    return {code, common::TransactionErrorString(code).original};
+}
+
+util::Expected<void, TransactionBroadcastError> BroadcastTransaction(NodeContext& node, const CTransactionRef tx, const CAmount& max_tx_fee, const CFeeRate& max_tx_fee_rate, TxBroadcast broadcast_method, bool wait_callback)
 {
     // BroadcastTransaction can be called by RPC or by the wallet.
     // chainman, mempool and peerman are initialized before the RPC server and wallet are started
@@ -54,7 +63,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
             const Coin& existingCoin = view.AccessCoin(COutPoint(txid, o));
             // IsSpent doesn't mean the coin is spent, it means the output doesn't exist.
             // So if the output does exist, then this transaction exists in the chain.
-            if (!existingCoin.IsSpent()) return TransactionError::ALREADY_IN_UTXO_SET;
+            if (!existingCoin.IsSpent()) return util::Unexpected{MakeBroadcastError(TransactionError::ALREADY_IN_UTXO_SET)};
         }
 
         if (auto mempool_tx = node.mempool->get(txid); mempool_tx) {
@@ -75,11 +84,11 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
                 // fails here, return error immediately.
                 const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, /*test_accept=*/ true);
                 if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
-                    return HandleATMPError(result.m_state, err_string);
+                    return util::Unexpected{HandleATMPError(result.m_state)};
                 } else if (check_max_fee && result.m_base_fees.value() > max_tx_fee) {
-                    return TransactionError::MAX_FEE_EXCEEDED;
+                    return util::Unexpected{MakeBroadcastError(TransactionError::MAX_FEE_EXCEEDED)};
                 } else if (check_max_feerate && result.m_base_fees.value() > max_tx_fee_rate.GetFee(result.m_vsize.value())) {
-                    return TransactionError::MAX_FEE_RATE_EXCEEDED;
+                    return util::Unexpected{MakeBroadcastError(TransactionError::MAX_FEE_RATE_EXCEEDED)};
                 }
             }
 
@@ -91,7 +100,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
                     const MempoolAcceptResult result =
                         node.chainman->ProcessTransaction(tx, /*test_accept=*/false);
                     if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
-                        return HandleATMPError(result.m_state, err_string);
+                        return util::Unexpected{HandleATMPError(result.m_state)};
                     }
                 }
                 // Transaction was accepted to the mempool.
@@ -136,7 +145,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         return node.peerman->InitiateTxBroadcastPrivate(tx);
     }
 
-    return TransactionError::OK;
+    return {};
 }
 
 CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const Txid& hash, const BlockManager& blockman, uint256& hashBlock)
