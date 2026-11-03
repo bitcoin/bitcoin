@@ -509,6 +509,12 @@ try_append_cxx_flags("-Wundef" TARGET warn_interface SKIP_LINK)
 try_append_cxx_flags("-Wleading-whitespace=spaces" TARGET warn_interface SKIP_LINK)
 try_append_cxx_flags("-Wtrailing-whitespace=any" TARGET warn_interface SKIP_LINK)
 
+# GCC accepts -Wmissing-prototypes for C++, but warns that it is only
+# valid for C/ObjC.
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  try_append_cxx_flags("-Wmissing-prototypes" TARGET warn_interface SKIP_LINK)
+endif()
+
 # Some compilers (gcc) ignore unknown -Wno-* options, but warn about all
 # unknown options if any other warning is produced. Test the -Wfoo case, and
 # set the -Wno-foo case if it works.
