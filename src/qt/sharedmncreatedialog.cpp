@@ -2945,8 +2945,10 @@ void SharedMnCreateDialog::replaceSession(const MnShareSession& imported)
     checkSessionLiveness();
     checkOwnFunding();
     if (m_dead_reason.isEmpty()) refreshContributedCoinLocks();
-    rebuildOrder();
+    // Pushing the session to the widgets decides whether the operator key came
+    // with it, and so whether the page order still needs the secret gate
     refreshAll();
+    rebuildOrder();
     const QString received{tr("Received %1 · Code %2")
                                .arg(messageName(m_session, /*from_coordinator=*/true), m_session.fingerprint())};
     for (const auto& [board_page, board] : m_boards) {

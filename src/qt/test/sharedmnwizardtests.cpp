@@ -314,6 +314,13 @@ void SharedMnWizardTests::coordinatorResumesSavedSession()
     QCOMPARE(dialog.myShareIndex(), 0);
     QVERIFY(dialog.allDetailsCollected());
 
+    // The operator key already went out with the invitation, so Back must not
+    // offer a freshly generated secret to save in its place
+    dialog.onBack();
+    QCOMPARE(int(dialog.currentPage()), int(SharedMnCreateDialog::PageContribution));
+    QVERIFY(!dialog.m_order.contains(SharedMnCreateDialog::PageSecret));
+    dialog.goToPage(SharedMnCreateDialog::PageInvite);
+
     // alice's coins are reserved, so the coordinator cannot move to another row
     dialog.refreshShareTable();
     QVERIFY(!dialog.m_me_group->button(0)->isEnabled());
