@@ -170,7 +170,7 @@ class WalletDeriveHDKeyTest(BitcoinTestFramework):
         self.nodes[0].createwallet(wallet_name="inactive_descriptor", blank=True)
         wallet = self.nodes[0].get_wallet_rpc("inactive_descriptor")
         request = {"desc": desc, "range": [0, 9], "timestamp": "now", "internal": False}
-        assert_equal(wallet.importdescriptors([{**request, "active": True}])[0]["success"], True)
+        assert_true(wallet.importdescriptors([{**request, "active": True}])[0]["success"])
 
         # While the descriptor is active its HD key can be used for derivation.
         xpub = wallet.gethdkeys(active_only=True)[0]["xpub"]
@@ -178,7 +178,7 @@ class WalletDeriveHDKeyTest(BitcoinTestFramework):
 
         # Once deactivated the descriptor is neither active nor unused(KEY), so
         # its HD key is no longer a candidate.
-        assert_equal(wallet.importdescriptors([{**request, "active": False}])[0]["success"], True)
+        assert_true(wallet.importdescriptors([{**request, "active": False}])[0]["success"])
         assert_raises_rpc_error(
             -5,
             "HD key is not used by an active or unused(KEY) descriptor",

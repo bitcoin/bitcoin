@@ -65,7 +65,7 @@ class WalletHDTest(BitcoinTestFramework):
 
         for d in wallet.listdescriptors()["descriptors"]:
             if d["desc"] == expected_unused_desc:
-                assert_equal(d["active"], False)
+                assert_false(d["active"])
                 break
         else:
             assert False, "Added HD key's descriptor was not found in wallet"

@@ -135,7 +135,7 @@ class MiniWallet:
         """Drop all utxos and rescan the utxo set"""
         self._utxos = []
         res = self._test_node.scantxoutset(action="start", scanobjects=[self.get_descriptor()])
-        assert_equal(True, res['success'])
+        assert_true(res['success'])
         for utxo in res['unspents']:
             self._utxos.append(
                 self._create_utxo(txid=utxo["txid"],

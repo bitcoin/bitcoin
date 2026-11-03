@@ -201,7 +201,7 @@ class P2PIBDStallingTest(BitcoinTestFramework):
         self.wait_until(lambda: sum(len(peer['inflight']) for peer in node.getpeerinfo()) == 1)
         self.all_sync_send_with_ping(all_peers)
         assert_equal(manual_peer.getdata_requests.count(stall_block), 1)
-        assert_equal(self.is_block_requested(outbound_peers, stall_block), False)
+        assert_false(self.is_block_requested(outbound_peers, stall_block))
 
         self.log.info("Advance time past stalling timeout and pause block downloads from the manual peer")
         with node.assert_debug_log(["Pausing block downloads from stalling manual peer"]):
@@ -209,7 +209,7 @@ class P2PIBDStallingTest(BitcoinTestFramework):
             node.setmocktime(self.mocktime)
             manual_peer.sync_with_ping()
 
-        assert_equal(manual_peer.is_connected, True)
+        assert_true(manual_peer.is_connected)
         assert_equal(node.num_test_p2p_connections(), len(all_peers))
         assert_equal(manual_peer.getdata_requests.count(stall_block), 1)
         assert_equal(sum(len(peer['inflight']) for peer in node.getpeerinfo() if peer['connection_type'] == 'manual'), 0)
@@ -228,7 +228,7 @@ class P2PIBDStallingTest(BitcoinTestFramework):
         post_cooldown_headers = msg_headers()
         post_cooldown_headers.headers = [CBlockHeader(post_cooldown_block)]
         manual_peer.send_and_ping(post_cooldown_headers)
-        assert_equal(post_cooldown_block.hash_int in manual_peer.getdata_requests, False)
+        assert_false(post_cooldown_block.hash_int in manual_peer.getdata_requests)
 
         self.log.info("Verify the manual peer can request blocks after the cooldown")
         self.mocktime += BLOCK_DOWNLOAD_COOLDOWN + 1
