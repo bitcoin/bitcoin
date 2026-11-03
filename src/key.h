@@ -350,21 +350,18 @@ private:
 /** Check that required EC support is available at runtime. */
 bool ECC_InitSanityCheck();
 
-/** Access the secp256k1 context used for signing and MuSig2 nonce generation. */
-secp256k1_context* GetSecp256k1SignContext();
+/** Access the secp256k1 context used for signing and MuSig2 nonce generation. It is
+ *  created and randomized on first use. Thread-safe. */
+const secp256k1_context* GetSecp256k1SignContext();
 
 /**
- * RAII class initializing and deinitializing global state for elliptic curve support.
- * Only one instance may be initialized at a time.
- *
- * In the future global ECC state could be removed, and this class could contain
- * state and be passed as an argument to ECC key functions.
+ * Creates the secp256k1 signing context, if it does not exist yet. This is not
+ * necessary anymore, as GetSecp256k1SignContext() creates it on first use.
  */
 class ECC_Context
 {
 public:
     ECC_Context();
-    ~ECC_Context();
 };
 
 #endif // BITCOIN_KEY_H
