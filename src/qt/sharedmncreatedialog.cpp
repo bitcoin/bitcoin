@@ -3023,13 +3023,16 @@ void SharedMnCreateDialog::handleImportedText(const QString& text)
         return;
     }
     const QString warning{imported.importWarning()};
+    // An error left by an earlier message no longer applies; one set below is this copy's refusal
+    showError(QString());
     if (m_role == Role::Undecided) {
         replaceSession(imported);
     } else {
         absorbSession(imported);
     }
-    // Both of those land on another page, which clears the message lines
-    if (!warning.isEmpty()) showStatus(warning);
+    // Both of those land on another page, which clears the message lines. A
+    // refused copy leaves its reason up instead, which the warning must not replace.
+    if (!warning.isEmpty() && m_error_label->text().isEmpty()) showStatus(warning);
 }
 
 void SharedMnCreateDialog::replaceSession(const MnShareSession& imported)
@@ -3147,6 +3150,16 @@ void SharedMnCreateDialog::absorbSession(const MnShareSession& imported)
                           .arg(imported.fingerprint(), m_session.fingerprint()));
             return;
         case MnShareSession::MergeResult::OtherNewer:
+            // A newer copy may change other rows and the funding, but not the
+            // amount or addresses of a share this wallet holds
+            if (const int changed{ownShareChangedIn(imported)}; changed >= 0) {
+                showError(tr("This newer copy changes your share (%1), so it was not loaded. If you agreed to "
+                             "that change, close this window and open the copy again to review it. Otherwise ask %2 "
+                             "to send a copy with your share unchanged.")
+                              .arg(ShareName(m_session, changed),
+                                   m_role == Role::Coordinator ? tr("whoever sent it") : recipientName()));
+                return;
+            }
             replaceSession(imported);
             return;
         case MnShareSession::MergeResult::Conflict:
@@ -3621,6 +3634,16 @@ void SharedMnCreateDialog::inferMyShare()
         candidate = static_cast<int>(i);
     }
     m_my_share = candidate;
+}
+
+int SharedMnCreateDialog::ownShareChangedIn(const MnShareSession& imported) const
+{
+    const auto& shares{m_session.shares()};
+    for (size_t i = 0; i < shares.size(); ++i) {
+        const bool ours{!shares[i].ownerAddress.isEmpty() && !shareTakenByOther(i)};
+        if (ours && !imported.hasShare(shares[i])) return static_cast<int>(i);
+    }
+    return -1;
 }
 
 bool SharedMnCreateDialog::shareTakenByOther(size_t index) const

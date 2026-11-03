@@ -1344,6 +1344,13 @@ bool MnShareSession::adoptLockedTerms(const MnShareSession& other, QString& erro
     return true;
 }
 
+bool MnShareSession::hasShare(const Share& share) const
+{
+    return std::any_of(m_shares.begin(), m_shares.end(), [&](const Share& ours) {
+        return ours.ownerAddress == share.ownerAddress && SameShare(ours, share);
+    });
+}
+
 MnShareSession::MergeResult MnShareSession::mergeEnvelope(const MnShareSession& other, QString& error)
 {
     if (other.m_session_id != m_session_id) {

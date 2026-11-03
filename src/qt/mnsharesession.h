@@ -311,6 +311,9 @@ public:
     //! carries any skipped-signature warnings even on success.
     MergeResult mergeEnvelope(const MnShareSession& other, QString& error);
 
+    //! Whether a row with `share`'s owner address has the same amount and addresses here
+    bool hasShare(const Share& share) const;
+
     //! Record the shared_combine result and advance to Combined
     bool setCombinedTx(const QString& tx_hex, QString& error);
     //! Record the fully signed funding transaction and advance to FundingSigned

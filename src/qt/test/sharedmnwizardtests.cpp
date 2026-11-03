@@ -62,6 +62,7 @@
 #include <QWidget>
 
 #include <algorithm>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <string>
@@ -1024,6 +1025,104 @@ void SharedMnWizardTests::refusesToSignShortChangedOwnContribution()
     expect_refusal(session_with_change(own_address, 50 * COIN), 50 * COIN);
 }
 
+void SharedMnWizardTests::newerRevisionKeepsOwnShare()
+{
+    TestingSetup test{CBaseChainParams::REGTEST};
+    m_node.setContext(&test.m_node);
+    WalletContext& context{*m_node.walletLoader().context()};
+
+    CKey own_key;
+    own_key.MakeNewKey(/*fCompressed=*/true);
+    const auto wallet{MakeSpendingWallet(m_node, context, "participant", own_key)};
+    QVERIFY(wallet != nullptr);
+    WalletGuard guard{context, wallet};
+    MasternodeTestUtil::GuiModels models{m_node};
+    QVERIFY2(models.ok, qPrintable(QString::fromStdString(models.error.translated)));
+    WalletModel wallet_model(interfaces::MakeWallet(context, wallet), models.client);
+
+    // Locked terms in which bob's row is this wallet's
+    const MnShareSession invitation{InvitationSession()};
+    MnShareSession draft{invitation};
+    std::vector<CKey> owner_keys(3);
+    QString error;
+    for (int i = 0; i < 3; ++i) {
+        draft.absorbDraftReply(DraftReply(invitation, i, FakeTxid('1' + i), &owner_keys[i]), error);
+    }
+    owner_keys[1] = own_key;
+    draft.shares()[1].ownerAddress = QString::fromStdString(EncodeDestination(PKHash(own_key.GetPubKey())));
+    const MnShareSession frozen{FrozenSession(draft, owner_keys, /*sign_all=*/false)};
+    QCOMPARE(int(frozen.stage()), int(MnShareSession::Stage::Frozen));
+
+    // The same terms locked again as a newer revision, after `edit` changed them
+    const auto relocked = [&](const std::function<void(MnShareSession&)>& edit) {
+        MnShareSession session{frozen};
+        session.unfreeze();
+        edit(session);
+        return FrozenSession(session, owner_keys, /*sign_all=*/false);
+    };
+
+    SharedMnCreateDialog dialog(m_node, &wallet_model, /*parent=*/nullptr);
+    dialog.openSharedMessage(frozen.toJsonString());
+    QCOMPARE(dialog.myShareIndex(), 1);
+    QCOMPARE(int(dialog.currentPage()), int(SharedMnCreateDialog::PageApprovals));
+
+    // A newer revision that changes this wallet's refund, reward or owner address,
+    // or its amount, is not loaded
+    for (const auto& edit : std::vector<std::function<void(MnShareSession&)>>{
+             [](MnShareSession& s) { s.shares()[1].refundAddress = FreshP2PKHAddress(); },
+             [](MnShareSession& s) { s.shares()[1].rewardAddress = FreshP2PKHAddress(); },
+             [](MnShareSession& s) { s.shares()[1].ownerAddress = FreshP2PKHAddress(); },
+             [](MnShareSession& s) {
+                 s.shares()[1].amount += COIN;
+                 s.shares()[2].amount -= COIN;
+             }}) {
+        const MnShareSession edited{relocked(edit)};
+        QCOMPARE(int(edited.stage()), int(MnShareSession::Stage::Frozen));
+        QVERIFY(edited.revision() > frozen.revision());
+        dialog.openSharedMessage(edited.toJsonString());
+        QCOMPARE(dialog.m_session.revision(), frozen.revision());
+        QVERIFY(dialog.m_session.hasShare(frozen.shares()[1]));
+        QVERIFY(dialog.m_error_label->text().contains(QStringLiteral("changes your share")));
+
+        // A fingerprint warning on the same copy does not replace the refusal
+        UniValue mislabeled{edited.toJson()};
+        mislabeled.pushKV("fingerprint", "00000000");
+        dialog.openSharedMessage(QString::fromStdString(mislabeled.write()));
+        QCOMPARE(dialog.m_session.revision(), frozen.revision());
+        QVERIFY(dialog.m_error_label->text().contains(QStringLiteral("changes your share")));
+    }
+
+    // So is a newer unlocked draft that changes it
+    MnShareSession draft_edit{frozen};
+    draft_edit.unfreeze();
+    draft_edit.shares()[1].refundAddress = FreshP2PKHAddress();
+    QCOMPARE(int(draft_edit.stage()), int(MnShareSession::Stage::Draft));
+    QVERIFY(draft_edit.revision() > frozen.revision());
+    dialog.openSharedMessage(draft_edit.toJsonString());
+    QCOMPARE(dialog.m_session.revision(), frozen.revision());
+    QVERIFY(dialog.m_session.hasShare(frozen.shares()[1]));
+    QVERIFY(dialog.m_error_label->text().contains(QStringLiteral("changes your share")));
+
+    // A newer revision that only changes another participant's row is loaded, as
+    // is one where an earlier row was removed and this wallet's share moved up
+    const MnShareSession other_row{relocked([](MnShareSession& s) { s.shares()[2].rewardAddress = FreshP2PKHAddress(); })};
+    dialog.openSharedMessage(other_row.toJsonString());
+    QVERIFY2(dialog.m_error_label->text().isEmpty(), qPrintable(dialog.m_error_label->text()));
+    QCOMPARE(dialog.m_session.revision(), other_row.revision());
+    QCOMPARE(dialog.myShareIndex(), 1);
+
+    MnShareSession removed_row{dialog.m_session};
+    removed_row.unfreeze();
+    removed_row.shares()[2].amount += removed_row.shares()[0].amount;
+    removed_row.shares().erase(removed_row.shares().begin());
+    removed_row = FrozenSession(removed_row, {owner_keys[1], owner_keys[2]}, /*sign_all=*/false);
+    QCOMPARE(int(removed_row.stage()), int(MnShareSession::Stage::Frozen));
+    dialog.openSharedMessage(removed_row.toJsonString());
+    QVERIFY2(dialog.m_error_label->text().isEmpty(), qPrintable(dialog.m_error_label->text()));
+    QCOMPARE(dialog.m_session.revision(), removed_row.revision());
+    QCOMPARE(dialog.myShareIndex(), 0);
+}
+
 void SharedMnWizardTests::savingWaitsForTheOperatorKeyBackup()
 {
     TestingSetup test{CBaseChainParams::REGTEST};
@@ -1398,6 +1497,15 @@ void SharedMnWizardTests::statusBoardAbsorbsRepliesInAnyOrder()
     dialog.handleImportedText(DraftReply(invitation, 1, FakeTxid('4')).toJsonString());
     QVERIFY(dialog.m_error_label->text().contains(QStringLiteral("bob")));
     QCOMPARE(dialog.m_session.revision(), revision);
+
+    // A copy accepted after that refusal shows its own edit warning, not the
+    // earlier refusal
+    UniValue edited{bob.toJson()};
+    edited.pushKV("fingerprint", "0000-0000");
+    dialog.handleImportedText(QString::fromStdString(edited.write()));
+    QVERIFY2(dialog.m_error_label->text().isEmpty(), qPrintable(dialog.m_error_label->text()));
+    QVERIFY2(dialog.m_status_label->text().contains(QStringLiteral("edited after it was copied")),
+             qPrintable(dialog.m_status_label->text()));
 }
 
 void SharedMnWizardTests::pastedMessageRouting()

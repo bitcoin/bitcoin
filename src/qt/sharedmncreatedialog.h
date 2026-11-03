@@ -328,6 +328,8 @@ private:
     //! True when share `index` names an owner address this wallet cannot
     //! spend, so another participant holds it
     bool shareTakenByOther(size_t index) const;
+    //! The first share this wallet holds that `imported` changes or drops, or -1
+    int ownShareChangedIn(const MnShareSession& imported) const;
     //! Put the addresses recorded for the share this wallet holds into the
     //! contribution page, replacing any left over from another share
     void loadMyShareAddresses();
