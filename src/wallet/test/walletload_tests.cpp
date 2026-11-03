@@ -49,8 +49,6 @@ public:
 
 BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)
 {
-    bilingual_str _error;
-    std::vector<bilingual_str> _warnings;
     std::unique_ptr<WalletDatabase> database = CreateMockableWalletDatabase();
     {
         // Write unknown active descriptor
@@ -64,7 +62,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)
     {
         // Now try to load the wallet and verify the error.
         const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(database)));
-        BOOST_CHECK_EQUAL(wallet->PopulateWalletFromDB(_error, _warnings), DBErrors::UNKNOWN_DESCRIPTOR);
+        BOOST_CHECK_EQUAL(wallet->PopulateWalletFromDB().error(), DBErrors::UNKNOWN_DESCRIPTOR);
     }
 
     // Test 2
@@ -82,7 +80,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)
     {
         // Now try to load the wallet and verify the result.
         const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(database)));
-        BOOST_CHECK_EQUAL(wallet->PopulateWalletFromDB(_error, _warnings), DBErrors::LOAD_OK);
+        BOOST_CHECK(wallet->PopulateWalletFromDB());
     }
 }
 
@@ -90,9 +88,6 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_descriptor_cache_invalid_xpub_size, TestingS
 {
     // A cache record whose serialized xpub is not exactly BIP32_EXTKEY_SIZE bytes must be
     // rejected as corruption.
-    bilingual_str error;
-    std::vector<bilingual_str> warnings;
-
     const std::string desc_str = "wpkh([d34db33f/84h/0h/0h]xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY/0/*)#cjjspncu";
     FlatSigningProvider keys;
     std::string parse_error;
@@ -118,14 +113,14 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_descriptor_cache_invalid_xpub_size, TestingS
         std::unique_ptr<WalletDatabase> database = make_db_with_short_cache_xpub("walletdescriptorcache");
         ASSERT_DEBUG_LOG("descriptor cache xpub has invalid size");
         const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(database)));
-        BOOST_CHECK_EQUAL(wallet->PopulateWalletFromDB(error, warnings), DBErrors::CORRUPT);
+        BOOST_CHECK_EQUAL(wallet->PopulateWalletFromDB().error(), DBErrors::CORRUPT);
     }
 
     {
         std::unique_ptr<WalletDatabase> database = make_db_with_short_cache_xpub("walletdescriptorlhcache");
         ASSERT_DEBUG_LOG("descriptor last hardened cache xpub has invalid size");
         const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(database)));
-        BOOST_CHECK_EQUAL(wallet->PopulateWalletFromDB(error, warnings), DBErrors::CORRUPT);
+        BOOST_CHECK_EQUAL(wallet->PopulateWalletFromDB().error(), DBErrors::CORRUPT);
     }
 }
 
