@@ -128,6 +128,20 @@ Block create_regtest_block(std::span<const std::byte, 32> prev_hash, int32_t hei
     return Block{block};
 }
 
+//! Extend the chain processed from REGTEST_BLOCK_DATA by count blocks.
+void extend_regtest_chain(ChainMan& chainman, int count)
+{
+    const auto chain{chainman.GetChain()};
+    Block last_block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA.back())};
+    auto prev_hash{last_block.GetHash().ToBytes()};
+    auto time{last_block.GetHeader().Timestamp()};
+    for (int i{0}; i < count; ++i) {
+        Block block{create_regtest_block(prev_hash, chain.Height() + 1, ++time)};
+        BOOST_REQUIRE(chainman.ProcessBlock(block, nullptr));
+        prev_hash = block.GetHash().ToBytes();
+    }
+}
+
 constexpr auto VERIFY_ALL_PRE_SEGWIT{ScriptVerificationFlags::P2SH | ScriptVerificationFlags::DERSIG |
                                      ScriptVerificationFlags::NULLDUMMY | ScriptVerificationFlags::CHECKLOCKTIMEVERIFY |
                                      ScriptVerificationFlags::CHECKSEQUENCEVERIFY};
@@ -959,6 +973,7 @@ BOOST_AUTO_TEST_CASE(btck_chainman_tests)
     BOOST_CHECK_THROW(ChainMan(context, chainman_opts, blockman), std::runtime_error);
     // Pruning is not enabled
     BOOST_CHECK(!blockman.PruneUpToHeight(1, nullptr));
+    BOOST_CHECK(!blockman.PruneToTarget(0, nullptr));
 }
 
 BlockManager create_block_manager(TestDirectory& test_directory,
@@ -1361,14 +1376,7 @@ BOOST_AUTO_TEST_CASE(btck_block_manager_prune_tests)
         BOOST_CHECK(status == PruneStatus::OK);
         BOOST_CHECK(blockman.ReadBlock(chain.GetByHeight(1)));
 
-        Block last_block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA.back())};
-        auto prev_hash{last_block.GetHash().ToBytes()};
-        auto time{last_block.GetHeader().Timestamp()};
-        for (int i{0}; i < 300; ++i) {
-            Block block{create_regtest_block(prev_hash, chain.Height() + 1, ++time)};
-            BOOST_REQUIRE(chainman->ProcessBlock(block, nullptr));
-            prev_hash = block.GetHash().ToBytes();
-        }
+        extend_regtest_chain(*chainman, 300);
         tip_height = chain.Height();
 
         // The chainstate on disk may still need these blocks
@@ -1457,6 +1465,54 @@ BOOST_AUTO_TEST_CASE(btck_block_manager_prune_reorg_tests)
     BOOST_CHECK(blockman.PruneUpToHeight(chain.Height(), &status));
     BOOST_CHECK(status == PruneStatus::OK);
     BOOST_CHECK(!blockman.ReadBlock(flushed_branch.front()));
+}
+
+BOOST_AUTO_TEST_CASE(btck_block_manager_prune_to_target_tests)
+{
+    auto test_directory{TestDirectory{"prune_to_target_test_bitcoin_kernel"}};
+    auto notifications{std::make_shared<TestKernelNotifications>()};
+    auto context{create_context(notifications, ChainType::REGTEST)};
+
+    BlockManagerOptions blockman_opts{context, PathToString(test_directory.m_directory), PathToString(test_directory.m_directory / "blocks")};
+    blockman_opts.UpdatePrune(true);
+    blockman_opts.UpdateFastPrune(true);
+    BlockManager blockman{blockman_opts};
+    // Pruning needs a chainstate manager to decide what may be deleted
+    BOOST_CHECK(!blockman.PruneToTarget(0, nullptr));
+
+    auto chainman{create_chainman(
+        test_directory, /*wipe_chainstate=*/false, /*chainstate_db_in_memory=*/false, context, blockman)};
+    for (const auto& raw_block : REGTEST_BLOCK_DATA) {
+        BOOST_REQUIRE(chainman->ProcessBlock(Block{hex_string_to_byte_vec(raw_block)}, nullptr));
+    }
+    extend_regtest_chain(*chainman, 300);
+    const auto chain{chainman->GetChain()};
+
+    // Usage is below the target, so no flush is needed
+    PruneStatus status;
+    BOOST_CHECK(blockman.PruneToTarget(std::numeric_limits<uint64_t>::max(), &status));
+    BOOST_CHECK(status == PruneStatus::OK);
+    // Usage is below this target too, but not with the room kept for the next allocation
+    constexpr uint64_t target_bytes{16_MiB};
+    // The chainstate on disk may still need these blocks
+    BOOST_CHECK(blockman.PruneToTarget(target_bytes, &status));
+    BOOST_CHECK(status == PruneStatus::NEEDS_FLUSH);
+    BOOST_CHECK(blockman.ReadBlock(chain.GetByHeight(1)));
+
+    BOOST_REQUIRE(chainman->Flush());
+    blockman.UpdatePruneLock("test", 100);
+    BOOST_CHECK(blockman.PruneToTarget(target_bytes, &status));
+    BOOST_CHECK(status == PruneStatus::OK);
+    BOOST_CHECK(blockman.ReadBlock(chain.GetByHeight(100)));
+
+    BOOST_CHECK(blockman.DeletePruneLock("test"));
+    BOOST_CHECK(blockman.PruneToTarget(std::numeric_limits<uint64_t>::max(), &status));
+    BOOST_CHECK(blockman.ReadBlock(chain.GetByHeight(1)));
+    BOOST_CHECK(blockman.PruneToTarget(target_bytes, &status));
+    BOOST_CHECK(status == PruneStatus::OK);
+    BOOST_CHECK(!blockman.ReadBlock(chain.GetByHeight(1)));
+    BOOST_CHECK_THROW(blockman.ReadBlockSpentOutputs(chain.GetByHeight(1)), std::runtime_error);
+    BOOST_CHECK(blockman.ReadBlock(chain.GetByHeight(chain.Height() - PRUNE_KEEP_BLOCKS + 1)));
 }
 
 BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)

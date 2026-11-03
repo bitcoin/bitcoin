@@ -1309,7 +1309,9 @@ void btck_block_manager_destroy(btck_BlockManager* block_manager)
     delete block_manager;
 }
 
-int btck_block_manager_prune_up_to_height(btck_BlockManager* block_manager, int32_t height, btck_PruneStatus* status)
+namespace {
+//! Prune up to a height, or until usage is below target_bytes if it is set.
+int PruneBlockFiles(btck_BlockManager* block_manager, int32_t height, std::optional<uint64_t> target_bytes, btck_PruneStatus* status)
 {
     if (status) *status = btck_PruneStatus_OK;
     auto& holder{*btck_BlockManager::get(block_manager)};
@@ -1335,12 +1337,19 @@ int btck_block_manager_prune_up_to_height(btck_BlockManager* block_manager, int3
     // would disconnect if it was flushed on a chain that has since reorged.
     const CBlockIndex* flushed{chainstate.GetLastFlushedBlock()};
     const int flushed_height{flushed ? Assert(chainstate.m_chain.FindFork(*flushed))->nHeight : -1};
-    if (flushed_height < max_height && status) *status = btck_PruneStatus_NEEDS_FLUSH;
     const int prune_height{std::min(max_height, flushed_height)};
-    if (prune_height < 1) return 0;
 
     std::set<int> files_to_prune;
-    blockman.FindFilesToPruneManual(files_to_prune, {.min_height = min_height, .max_height = prune_height});
+    if (prune_height >= 1) {
+        if (target_bytes) {
+            blockman.FindFilesToPrune(files_to_prune, {.min_height = min_height, .max_height = prune_height, .target = *target_bytes, .extra_space = 0});
+        } else {
+            blockman.FindFilesToPruneManual(files_to_prune, {.min_height = min_height, .max_height = prune_height});
+        }
+    }
+    if (flushed_height < max_height && (!target_bytes || blockman.CalculateCurrentUsage() + node::PRUNE_TARGET_BUFFER >= *target_bytes) && status) {
+        *status = btck_PruneStatus_NEEDS_FLUSH;
+    }
     if (files_to_prune.empty()) return 0;
     blockman.SetHavePruned();
     if (const auto written{blockman.WriteBlockStorage(chainstate.m_chain.Height(), files_to_prune)}; !written) {
@@ -1352,6 +1361,17 @@ int btck_block_manager_prune_up_to_height(btck_BlockManager* block_manager, int3
         return -1;
     }
     return 0;
+}
+} // namespace
+
+int btck_block_manager_prune_up_to_height(btck_BlockManager* block_manager, int32_t height, btck_PruneStatus* status)
+{
+    return PruneBlockFiles(block_manager, height, std::nullopt, status);
+}
+
+int btck_block_manager_prune_to_target(btck_BlockManager* block_manager, uint64_t target_bytes, btck_PruneStatus* status)
+{
+    return PruneBlockFiles(block_manager, std::numeric_limits<int32_t>::max(), target_bytes, status);
 }
 
 void btck_block_manager_update_prune_lock(btck_BlockManager* block_manager, const char* name, size_t name_len, int32_t height)

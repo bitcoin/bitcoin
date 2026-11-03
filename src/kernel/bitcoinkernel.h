@@ -1276,8 +1276,9 @@ BITCOINKERNEL_API void btck_block_manager_options_update_block_tree_db_in_memory
 
 /**
  * @brief Sets pruning in the options. Blocks are then deleted by
- * @ref btck_block_manager_prune_up_to_height. A pruned data directory only
- * opens with pruning set.
+ * @ref btck_block_manager_prune_up_to_height and
+ * @ref btck_block_manager_prune_to_target. A pruned data directory only opens
+ * with pruning set.
  *
  * @param[in] block_manager_options Non-null, created by @ref btck_block_manager_options_create.
  * @param[in] prune                 Set pruning.
@@ -1338,6 +1339,29 @@ BITCOINKERNEL_API void btck_block_manager_destroy(btck_BlockManager* block_manag
 BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_manager_prune_up_to_height(
     btck_BlockManager* block_manager,
     int32_t height,
+    btck_PruneStatus* status) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Delete the oldest blocks and spent outputs until their usage on disk
+ * is below a target, with room for the next block file allocation. It keeps
+ * the same blocks as @ref btck_block_manager_prune_up_to_height, so usage can
+ * be above the target afterwards, and handles a failed write the same way.
+ * The target has no minimum, and pruning does not wait for the chain to reach
+ * a minimum height.
+ *
+ * @param[in] block_manager Non-null.
+ * @param[in] target_bytes  The target for blocks and spent outputs on disk, in bytes.
+ * @param[out] status       Nullable, set to btck_PruneStatus_NEEDS_FLUSH if usage with that room
+ *                          is not below the target and blocks were kept because the chainstate
+ *                          was not flushed past them, or btck_PruneStatus_OK otherwise. After
+ *                          @ref btck_chainstate_manager_flush, pruning again may delete them.
+ * @return                  0 on success, non-zero if pruning is not enabled, no
+ *                          chainstate manager uses the block manager, or
+ *                          writing to disk failed.
+ */
+BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_manager_prune_to_target(
+    btck_BlockManager* block_manager,
+    uint64_t target_bytes,
     btck_PruneStatus* status) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**

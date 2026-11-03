@@ -1524,6 +1524,14 @@ public:
         return res == 0;
     }
 
+    bool PruneToTarget(uint64_t target_bytes, PruneStatus* status)
+    {
+        btck_PruneStatus _status;
+        int res = btck_block_manager_prune_to_target(get(), target_bytes, &_status);
+        if (status) *status = static_cast<PruneStatus>(_status);
+        return res == 0;
+    }
+
     void UpdatePruneLock(std::string_view name, int32_t height)
     {
         btck_block_manager_update_prune_lock(get(), name.data(), name.length(), height);
