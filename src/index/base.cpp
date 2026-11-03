@@ -162,8 +162,8 @@ void BaseIndex::ThreadSync()
     if (!m_synced) {
         auto& consensus_params = Params().GetConsensus();
 
-        std::chrono::steady_clock::time_point last_log_time{0s};
-        std::chrono::steady_clock::time_point last_locator_write_time{0s};
+        auto last_log_time{NodeClock::now()};
+        auto last_locator_write_time{last_log_time};
         while (true) {
             if (m_interrupt) {
                 SetBestBlockIndex(pindex);
@@ -207,14 +207,14 @@ void BaseIndex::ThreadSync()
                 return;
             }
 
-            auto current_time{std::chrono::steady_clock::now()};
-            if (last_log_time + SYNC_LOG_INTERVAL < current_time) {
+            auto current_time{NodeClock::now()};
+            if (current_time - last_log_time >= SYNC_LOG_INTERVAL) {
                 LogPrintf("Syncing %s with block chain from height %d\n",
                           GetName(), pindex->nHeight);
                 last_log_time = current_time;
             }
 
-            if (last_locator_write_time + SYNC_LOCATOR_WRITE_INTERVAL < current_time) {
+            if (current_time - last_locator_write_time >= SYNC_LOCATOR_WRITE_INTERVAL) {
                 SetBestBlockIndex(pindex);
                 last_locator_write_time = current_time;
                 // No need to handle errors in Commit. See rationale above.
@@ -252,7 +252,6 @@ bool BaseIndex::Commit()
 
 bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip)
 {
-    assert(current_tip == m_best_block_index);
     assert(current_tip->GetAncestor(new_tip->nHeight) == new_tip);
 
     if (!CustomRewind({current_tip->GetBlockHash(), current_tip->nHeight}, {new_tip->GetBlockHash(), new_tip->nHeight})) {
