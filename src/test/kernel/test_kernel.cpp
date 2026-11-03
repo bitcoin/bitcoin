@@ -857,15 +857,17 @@ BOOST_AUTO_TEST_CASE(btck_chainman_tests)
 
     { // test with default context
         Context context{};
-        ChainstateManagerOptions chainman_opts{context, PathToString(test_directory.m_directory), PathToString(test_directory.m_directory / "blocks")};
-        ChainMan chainman{context, chainman_opts};
+        BlockManager blockman{BlockManagerOptions{context, PathToString(test_directory.m_directory), PathToString(test_directory.m_directory / "blocks")}};
+        ChainstateManagerOptions chainman_opts{context, PathToString(test_directory.m_directory)};
+        ChainMan chainman{context, chainman_opts, blockman};
     }
 
     { // test with default context options
         ContextOptions options{};
         Context context{options};
-        ChainstateManagerOptions chainman_opts{context, PathToString(test_directory.m_directory), PathToString(test_directory.m_directory / "blocks")};
-        ChainMan chainman{context, chainman_opts};
+        BlockManager blockman{BlockManagerOptions{context, PathToString(test_directory.m_directory), PathToString(test_directory.m_directory / "blocks")}};
+        ChainstateManagerOptions chainman_opts{context, PathToString(test_directory.m_directory)};
+        ChainMan chainman{context, chainman_opts, blockman};
     }
     { // null or empty data_directory or blocks_directory are not allowed
         Context context{};
@@ -877,49 +879,72 @@ BOOST_AUTO_TEST_CASE(btck_chainman_tests)
             {{nullptr, 0}, {nullptr, 0}},
         };
         for (auto& [data_dir, blocks_dir] : illegal_cases) {
-            BOOST_CHECK_THROW(ChainstateManagerOptions(context, data_dir, blocks_dir),
+            BOOST_CHECK_THROW(BlockManagerOptions(context, data_dir, blocks_dir),
                               std::runtime_error);
         };
+        BOOST_CHECK_THROW(ChainstateManagerOptions(context, ""), std::runtime_error);
+        BOOST_CHECK_THROW(ChainstateManagerOptions(context, {nullptr, 0}), std::runtime_error);
     }
 
     auto notifications{std::make_shared<TestKernelNotifications>()};
     auto context{create_context(notifications, ChainType::MAINNET)};
 
-    ChainstateManagerOptions chainman_opts{context, PathToString(test_directory.m_directory), PathToString(test_directory.m_directory / "blocks")};
+    BlockManagerOptions blockman_opts{context, PathToString(test_directory.m_directory), PathToString(test_directory.m_directory / "blocks")};
+    BOOST_CHECK(!blockman_opts.SetDatabaseCacheBytes(4_MiB - 1));
+    if constexpr (sizeof(void*) == 4) BOOST_CHECK(!blockman_opts.SetDatabaseCacheBytes(2_GiB));
+    BOOST_CHECK(blockman_opts.SetDatabaseCacheBytes(4_MiB));
+
+    ChainstateManagerOptions chainman_opts{context, PathToString(test_directory.m_directory)};
     chainman_opts.SetWorkerThreads(4);
     BOOST_CHECK(!chainman_opts.SetDatabaseCacheBytes(4_MiB - 1));
     if constexpr (sizeof(void*) == 4) BOOST_CHECK(!chainman_opts.SetDatabaseCacheBytes(2_GiB));
     BOOST_CHECK(chainman_opts.SetDatabaseCacheBytes(4_MiB));
-    BOOST_CHECK(!chainman_opts.SetWipeDbs(/*wipe_block_tree=*/true, /*wipe_chainstate=*/false));
-    BOOST_CHECK(chainman_opts.SetWipeDbs(/*wipe_block_tree=*/true, /*wipe_chainstate=*/true));
-    BOOST_CHECK(chainman_opts.SetWipeDbs(/*wipe_block_tree=*/false, /*wipe_chainstate=*/true));
-    BOOST_CHECK(chainman_opts.SetWipeDbs(/*wipe_block_tree=*/false, /*wipe_chainstate=*/false));
-    ChainMan chainman{context, chainman_opts};
+
+    { // the block manager must use the same context as the chainstate manager options
+        Context other_context{};
+        BlockManager blockman{BlockManagerOptions{other_context, PathToString(test_directory.m_directory), PathToString(test_directory.m_directory / "blocks")}};
+        BOOST_CHECK_THROW(ChainMan(context, chainman_opts, blockman), std::runtime_error);
+    }
+
+    BlockManager blockman{blockman_opts};
+    ChainMan chainman{context, chainman_opts, blockman};
+    // A block manager can only be passed to one chainstate manager
+    BOOST_CHECK_THROW(ChainMan(context, chainman_opts, blockman), std::runtime_error);
+}
+
+BlockManager create_block_manager(TestDirectory& test_directory,
+                                  bool reindex,
+                                  bool block_tree_db_in_memory,
+                                  Context& context)
+{
+    BlockManagerOptions blockman_opts{context, PathToString(test_directory.m_directory), PathToString(test_directory.m_directory / "blocks")};
+
+    if (reindex) {
+        blockman_opts.UpdateWipeBlockTreeDb(reindex);
+    }
+    if (block_tree_db_in_memory) {
+        blockman_opts.UpdateBlockTreeDbInMemory(block_tree_db_in_memory);
+    }
+
+    return BlockManager{blockman_opts};
 }
 
 std::unique_ptr<ChainMan> create_chainman(TestDirectory& test_directory,
-                                          bool reindex,
                                           bool wipe_chainstate,
-                                          bool block_tree_db_in_memory,
                                           bool chainstate_db_in_memory,
-                                          Context& context)
+                                          Context& context,
+                                          BlockManager& block_manager)
 {
-    ChainstateManagerOptions chainman_opts{context, PathToString(test_directory.m_directory), PathToString(test_directory.m_directory / "blocks")};
+    ChainstateManagerOptions chainman_opts{context, PathToString(test_directory.m_directory)};
 
-    if (reindex) {
-        chainman_opts.SetWipeDbs(/*wipe_block_tree=*/reindex, /*wipe_chainstate=*/reindex);
-    }
     if (wipe_chainstate) {
-        chainman_opts.SetWipeDbs(/*wipe_block_tree=*/false, /*wipe_chainstate=*/wipe_chainstate);
-    }
-    if (block_tree_db_in_memory) {
-        chainman_opts.UpdateBlockTreeDbInMemory(block_tree_db_in_memory);
+        chainman_opts.UpdateWipeChainstateDb(wipe_chainstate);
     }
     if (chainstate_db_in_memory) {
         chainman_opts.UpdateChainstateDbInMemory(chainstate_db_in_memory);
     }
 
-    auto chainman{std::make_unique<ChainMan>(context, chainman_opts)};
+    auto chainman{std::make_unique<ChainMan>(context, chainman_opts, block_manager)};
     return chainman;
 }
 
@@ -927,9 +952,10 @@ void chainman_reindex_test(TestDirectory& test_directory)
 {
     auto notifications{std::make_shared<TestKernelNotifications>()};
     auto context{create_context(notifications, ChainType::MAINNET)};
+    auto blockman{create_block_manager(test_directory, /*reindex=*/true, /*block_tree_db_in_memory=*/false, context)};
+    // Wiping the block tree db wipes the chainstate db too
     auto chainman{create_chainman(
-        test_directory, /*reindex=*/true, /*wipe_chainstate=*/false,
-        /*block_tree_db_in_memory=*/false, /*chainstate_db_in_memory=*/false, context)};
+        test_directory, /*wipe_chainstate=*/false, /*chainstate_db_in_memory=*/false, context, blockman)};
 
     std::vector<std::string> import_files;
     BOOST_CHECK(chainman->ImportBlocks(import_files));
@@ -939,20 +965,20 @@ void chainman_reindex_test(TestDirectory& test_directory)
     BOOST_CHECK_THROW(chain.GetByHeight(1000), std::runtime_error);
     auto genesis_index{chain.Entries().front()};
     BOOST_CHECK(!genesis_index.GetPrevious());
-    auto genesis_block_raw{chainman->ReadBlock(genesis_index).value().ToBytes()};
+    auto genesis_block_raw{blockman.ReadBlock(genesis_index).value().ToBytes()};
     auto first_index{chain.GetByHeight(0)};
-    auto first_block_raw{chainman->ReadBlock(genesis_index).value().ToBytes()};
+    auto first_block_raw{blockman.ReadBlock(genesis_index).value().ToBytes()};
     check_equal(genesis_block_raw, first_block_raw);
     auto height{first_index.GetHeight()};
     BOOST_CHECK_EQUAL(height, 0);
 
     auto next_index{chain.GetByHeight(first_index.GetHeight() + 1)};
     BOOST_CHECK(chain.Contains(next_index));
-    auto next_block_data{chainman->ReadBlock(next_index).value().ToBytes()};
+    auto next_block_data{blockman.ReadBlock(next_index).value().ToBytes()};
     auto tip_index{chain.Entries().back()};
-    auto tip_block_data{chainman->ReadBlock(tip_index).value().ToBytes()};
+    auto tip_block_data{blockman.ReadBlock(tip_index).value().ToBytes()};
     auto second_index{chain.GetByHeight(1)};
-    auto second_block{chainman->ReadBlock(second_index).value()};
+    auto second_block{blockman.ReadBlock(second_index).value()};
     auto second_block_data{second_block.ToBytes()};
     auto second_height{second_index.GetHeight()};
     BOOST_CHECK_EQUAL(second_height, 1);
@@ -972,9 +998,9 @@ void chainman_reindex_chainstate_test(TestDirectory& test_directory)
 {
     auto notifications{std::make_shared<TestKernelNotifications>()};
     auto context{create_context(notifications, ChainType::MAINNET)};
+    auto blockman{create_block_manager(test_directory, /*reindex=*/false, /*block_tree_db_in_memory=*/false, context)};
     auto chainman{create_chainman(
-        test_directory, /*reindex=*/false, /*wipe_chainstate=*/true,
-        /*block_tree_db_in_memory=*/false, /*chainstate_db_in_memory=*/false, context)};
+        test_directory, /*wipe_chainstate=*/true, /*chainstate_db_in_memory=*/false, context, blockman)};
 
     std::vector<std::string> import_files;
     import_files.push_back(PathToString(test_directory.m_directory / "blocks" / "blk00000.dat"));
@@ -986,9 +1012,9 @@ void chainman_mainnet_validation_test(TestDirectory& test_directory)
     auto notifications{std::make_shared<TestKernelNotifications>()};
     auto validation_interface{std::make_shared<TestValidationInterface>()};
     auto context{create_context(notifications, ChainType::MAINNET, validation_interface)};
+    auto blockman{create_block_manager(test_directory, /*reindex=*/false, /*block_tree_db_in_memory=*/false, context)};
     auto chainman{create_chainman(
-        test_directory, /*reindex=*/false, /*wipe_chainstate=*/false,
-        /*block_tree_db_in_memory=*/false, /*chainstate_db_in_memory=*/false, context)};
+        test_directory, /*wipe_chainstate=*/false, /*chainstate_db_in_memory=*/false, context, blockman)};
 
     // mainnet block 1
     auto raw_block = hex_string_to_byte_vec("010000006fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000982051fd1e4ba744bbbe680e1fee14677ba1a3c3540bf7b1cdb606e857233e0e61bc6649ffff001d01e362990101000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0704ffff001d0104ffffffff0100f2052a0100000043410496b538e853519c726a2c91e61ec11600ae1390813a627c66fb8be7947be63c52da7589379515d4e0a604f8141781e62294721166bf621e73a82cbf2342c858eeac00000000");
@@ -1027,15 +1053,15 @@ void chainman_mainnet_validation_test(TestDirectory& test_directory)
     auto chain{chainman->GetChain()};
     BOOST_CHECK_EQUAL(chain.Height(), 1);
     auto tip{chain.Entries().back()};
-    auto read_block{chainman->ReadBlock(tip)};
+    auto read_block{blockman.ReadBlock(tip)};
     BOOST_REQUIRE(read_block);
     check_equal(read_block.value().ToBytes(), raw_block);
 
     // Check that we can read the previous block
     BlockTreeEntry tip_2{*tip.GetPrevious()};
-    Block read_block_2{*chainman->ReadBlock(tip_2)};
-    BOOST_CHECK_EQUAL(chainman->ReadBlockSpentOutputs(tip_2).Count(), 0);
-    BOOST_CHECK_EQUAL(chainman->ReadBlockSpentOutputs(tip).Count(), 0);
+    Block read_block_2{*blockman.ReadBlock(tip_2)};
+    BOOST_CHECK_EQUAL(blockman.ReadBlockSpentOutputs(tip_2).Count(), 0);
+    BOOST_CHECK_EQUAL(blockman.ReadBlockSpentOutputs(tip).Count(), 0);
 
     // It should be an error if we go another block back, since the genesis has no ancestor
     BOOST_CHECK(!tip_2.GetPrevious());
@@ -1132,13 +1158,9 @@ BOOST_AUTO_TEST_CASE(btck_block_tree_entry_tests)
     auto test_directory{TestDirectory{"block_tree_entry_test_bitcoin_kernel"}};
     auto notifications{std::make_shared<TestKernelNotifications>()};
     auto context{create_context(notifications, ChainType::REGTEST)};
+    auto blockman{create_block_manager(test_directory, /*reindex=*/false, /*block_tree_db_in_memory=*/true, context)};
     auto chainman{create_chainman(
-        test_directory,
-        /*reindex=*/false,
-        /*wipe_chainstate=*/false,
-        /*block_tree_db_in_memory=*/true,
-        /*chainstate_db_in_memory=*/true,
-        context)};
+        test_directory, /*wipe_chainstate=*/false, /*chainstate_db_in_memory=*/true, context, blockman)};
 
     // Process a couple of blocks
     for (size_t i{0}; i < 3; i++) {
@@ -1180,9 +1202,9 @@ BOOST_AUTO_TEST_CASE(btck_chainman_in_memory_tests)
 
     auto notifications{std::make_shared<TestKernelNotifications>()};
     auto context{create_context(notifications, ChainType::REGTEST)};
+    auto blockman{create_block_manager(in_memory_test_directory, /*reindex=*/false, /*block_tree_db_in_memory=*/true, context)};
     auto chainman{create_chainman(
-        in_memory_test_directory, /*reindex=*/false, /*wipe_chainstate=*/false,
-        /*block_tree_db_in_memory=*/true, /*chainstate_db_in_memory=*/true, context)};
+        in_memory_test_directory, /*wipe_chainstate=*/false, /*chainstate_db_in_memory=*/true, context, blockman)};
 
     for (auto& raw_block : REGTEST_BLOCK_DATA) {
         Block block{hex_string_to_byte_vec(raw_block)};
@@ -1198,6 +1220,59 @@ BOOST_AUTO_TEST_CASE(btck_chainman_in_memory_tests)
     BOOST_CHECK(context.interrupt());
 }
 
+BOOST_AUTO_TEST_CASE(btck_block_manager_tests)
+{
+    auto test_directory{TestDirectory{"block_manager_test_bitcoin_kernel"}};
+    auto notifications{std::make_shared<TestKernelNotifications>()};
+    auto context{create_context(notifications, ChainType::REGTEST)};
+    auto blockman{create_block_manager(test_directory, /*reindex=*/false, /*block_tree_db_in_memory=*/true, context)};
+
+    std::vector<BlockTreeEntry> entries;
+    {
+        auto chainman{create_chainman(
+            test_directory, /*wipe_chainstate=*/false, /*chainstate_db_in_memory=*/true, context, blockman)};
+        for (size_t i{0}; i < 3; i++) {
+            Block block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[i])};
+            bool new_block{false};
+            BOOST_CHECK(chainman->ProcessBlock(block, &new_block));
+            BOOST_CHECK(new_block);
+        }
+        auto chain{chainman->GetChain()};
+        for (const auto entry : chain.Entries()) {
+            entries.push_back(entry);
+        }
+    }
+
+    // The block manager reads blocks and spent outputs after its chainstate manager is destroyed
+    BOOST_REQUIRE_EQUAL(entries.size(), 4U);
+    for (size_t i{1}; i < entries.size(); i++) {
+        Block block{blockman.ReadBlock(entries[i]).value()};
+        check_equal(block.ToBytes(), hex_string_to_byte_vec(REGTEST_BLOCK_DATA[i - 1]));
+        BOOST_CHECK_EQUAL(blockman.ReadBlockSpentOutputs(entries[i]).Count(), block.CountTransactions() - 1);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(btck_block_manager_destroy_order_tests)
+{
+    auto test_directory{TestDirectory{"block_manager_destroy_order_test_bitcoin_kernel"}};
+    auto notifications{std::make_shared<TestKernelNotifications>()};
+    std::optional<Context> context{create_context(notifications, ChainType::REGTEST)};
+    std::optional<BlockManager> blockman{create_block_manager(test_directory, /*reindex=*/false, /*block_tree_db_in_memory=*/true, *context)};
+    auto chainman{create_chainman(
+        test_directory, /*wipe_chainstate=*/false, /*chainstate_db_in_memory=*/true, *context, *blockman)};
+
+    // The chainstate manager keeps its block manager and context after their handles are destroyed
+    blockman.reset();
+    context.reset();
+    for (size_t i{0}; i < 3; i++) {
+        Block block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[i])};
+        bool new_block{false};
+        BOOST_CHECK(chainman->ProcessBlock(block, &new_block));
+        BOOST_CHECK(new_block);
+    }
+    BOOST_CHECK_EQUAL(chainman->GetChain().Height(), 3);
+}
+
 BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
 {
     auto test_directory{TestDirectory{"regtest_test_bitcoin_kernel"}};
@@ -1206,9 +1281,9 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     auto context{create_context(notifications, ChainType::REGTEST)};
 
     {
+        auto blockman{create_block_manager(test_directory, /*reindex=*/false, /*block_tree_db_in_memory=*/false, context)};
         auto chainman{create_chainman(
-            test_directory, /*reindex=*/false, /*wipe_chainstate=*/false,
-            /*block_tree_db_in_memory=*/false, /*chainstate_db_in_memory=*/false, context)};
+            test_directory, /*wipe_chainstate=*/false, /*chainstate_db_in_memory=*/false, context, blockman)};
         for (const auto& data : REGTEST_BLOCK_DATA) {
             Block block{hex_string_to_byte_vec(data)};
             BlockHeader header = block.GetHeader();
@@ -1229,9 +1304,9 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     const size_t mid{REGTEST_BLOCK_DATA.size() / 2};
 
     {
+        auto blockman{create_block_manager(test_directory, /*reindex=*/false, /*block_tree_db_in_memory=*/false, context)};
         auto chainman{create_chainman(
-            test_directory, /*reindex=*/false, /*wipe_chainstate=*/false,
-            /*block_tree_db_in_memory=*/false, /*chainstate_db_in_memory=*/false, context)};
+            test_directory, /*wipe_chainstate=*/false, /*chainstate_db_in_memory=*/false, context, blockman)};
         for (size_t i{0}; i < mid; i++) {
             Block block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[i])};
             bool new_block{false};
@@ -1240,9 +1315,9 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
         }
     }
 
+    auto blockman{create_block_manager(test_directory, /*reindex=*/false, /*block_tree_db_in_memory=*/false, context)};
     auto chainman{create_chainman(
-        test_directory, /*reindex=*/false, /*wipe_chainstate=*/false,
-        /*block_tree_db_in_memory=*/false, /*chainstate_db_in_memory=*/false, context)};
+        test_directory, /*wipe_chainstate=*/false, /*chainstate_db_in_memory=*/false, context, blockman)};
 
     for (size_t i{mid}; i < REGTEST_BLOCK_DATA.size(); i++) {
         Block block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[i])};
@@ -1253,11 +1328,11 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
 
     auto chain = chainman->GetChain();
     auto tip = chain.Entries().back();
-    auto read_block = chainman->ReadBlock(tip).value();
+    auto read_block = blockman.ReadBlock(tip).value();
     check_equal(read_block.ToBytes(), hex_string_to_byte_vec(REGTEST_BLOCK_DATA[REGTEST_BLOCK_DATA.size() - 1]));
 
     auto tip_2 = tip.GetPrevious().value();
-    auto read_block_2 = chainman->ReadBlock(tip_2).value();
+    auto read_block_2 = blockman.ReadBlock(tip_2).value();
     check_equal(read_block_2.ToBytes(), hex_string_to_byte_vec(REGTEST_BLOCK_DATA[REGTEST_BLOCK_DATA.size() - 2]));
 
     Txid txid = read_block.Transactions()[0].Txid();
@@ -1266,10 +1341,10 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     BOOST_CHECK(txid == txid);
     CheckHandle(txid, txid_2);
 
-    auto find_transaction = [&chainman](const TxidView& target_txid) -> std::optional<Transaction> {
+    auto find_transaction = [&chainman, &blockman](const TxidView& target_txid) -> std::optional<Transaction> {
         auto chain = chainman->GetChain();
         for (const auto block_tree_entry : chain.Entries()) {
-            auto block{chainman->ReadBlock(block_tree_entry)};
+            auto block{blockman.ReadBlock(block_tree_entry)};
             for (const TransactionView transaction : block->Transactions()) {
                 if (transaction.Txid() == target_txid) {
                     return Transaction{transaction};
@@ -1280,7 +1355,7 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     };
 
     for (const auto block_tree_entry : chain.Entries()) {
-        auto block{chainman->ReadBlock(block_tree_entry)};
+        auto block{blockman.ReadBlock(block_tree_entry)};
         for (const auto transaction : block->Transactions()) {
             std::vector<TransactionInput> inputs;
             std::vector<TransactionOutput> spent_outputs;
@@ -1306,8 +1381,8 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     }
 
     // Read spent outputs for current tip and its previous block
-    BlockSpentOutputs block_spent_outputs{chainman->ReadBlockSpentOutputs(tip)};
-    BlockSpentOutputs block_spent_outputs_prev{chainman->ReadBlockSpentOutputs(*tip.GetPrevious())};
+    BlockSpentOutputs block_spent_outputs{blockman.ReadBlockSpentOutputs(tip)};
+    BlockSpentOutputs block_spent_outputs_prev{blockman.ReadBlockSpentOutputs(*tip.GetPrevious())};
     CheckHandle(block_spent_outputs, block_spent_outputs_prev);
     CheckRange(block_spent_outputs_prev.TxsSpentOutputs(), block_spent_outputs_prev.Count());
     BOOST_CHECK_EQUAL(block_spent_outputs.Count(), 1);
@@ -1348,7 +1423,7 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     CheckRange(chain.Entries(), chain.CountEntries());
 
     for (const BlockTreeEntry entry : chain.Entries()) {
-        std::optional<Block> block{chainman->ReadBlock(entry)};
+        std::optional<Block> block{blockman.ReadBlock(entry)};
         if (block) {
             for (const TransactionView transaction : block->Transactions()) {
                 for (const TransactionOutputView output : transaction.Outputs()) {
@@ -1371,9 +1446,9 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
 
 
     fs::remove(test_directory.m_directory / "blocks" / "blk00000.dat");
-    BOOST_CHECK(!chainman->ReadBlock(tip_2).has_value());
+    BOOST_CHECK(!blockman.ReadBlock(tip_2).has_value());
     fs::remove(test_directory.m_directory / "blocks" / "rev00000.dat");
-    BOOST_CHECK_THROW(chainman->ReadBlockSpentOutputs(tip), std::runtime_error);
+    BOOST_CHECK_THROW(blockman.ReadBlockSpentOutputs(tip), std::runtime_error);
 }
 
 // -----------------------------------------------------------------------------
@@ -1527,9 +1602,9 @@ BOOST_AUTO_TEST_CASE(btck_set_mock_time_tests)
     auto test_directory{TestDirectory{"set_mock_time_test_bitcoin_kernel"}};
     auto notifications{std::make_shared<TestKernelNotifications>()};
     auto context{create_context(notifications, ChainType::REGTEST)};
+    auto blockman{create_block_manager(test_directory, /*reindex=*/false, /*block_tree_db_in_memory=*/true, context)};
     auto chainman{create_chainman(
-        test_directory, /*reindex=*/false, /*wipe_chainstate=*/false,
-        /*block_tree_db_in_memory=*/true, /*chainstate_db_in_memory=*/true, context)};
+        test_directory, /*wipe_chainstate=*/false, /*chainstate_db_in_memory=*/true, context, blockman)};
 
     Block block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[0])};
     BlockHeader header{block.GetHeader()};
