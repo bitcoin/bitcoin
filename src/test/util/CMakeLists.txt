@@ -7,6 +7,7 @@ add_library(test_util STATIC EXCLUDE_FROM_ALL
   coins.cpp
   common.cpp
   coverage.cpp
+  index.cpp
   json.cpp
   logging.cpp
   mining.cpp

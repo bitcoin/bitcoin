@@ -21,7 +21,6 @@ class BlockManager;
 struct NodeContext;
 }
 class BaseIndex;
-class CValidationInterface;
 class FakeNodeClock;
 struct TestingSetup;
 
@@ -51,16 +50,6 @@ struct TestChainstateManager : public ChainstateManager {
     void InvalidChainFound(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     CBlockIndex* FindMostWorkChain() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void ResetBestInvalid() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-};
-
-class ValidationInterfaceTest
-{
-public:
-    static void BlockConnected(
-        const kernel::ChainstateRole& role,
-        CValidationInterface& obj,
-        const std::shared_ptr<const CBlock>& block,
-        const CBlockIndex* pindex);
 };
 
 struct ResetOptions {
