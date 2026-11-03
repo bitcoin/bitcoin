@@ -149,6 +149,10 @@ bilingual_str TransactionErrorString(const TransactionError err)
             return Untranslated("Transaction rejected due to invalid package");
         case TransactionError::PRIVATE_BROADCAST_FULL:
             return Untranslated("Private broadcast queue is full");
+        case TransactionError::MEMPOOL_TIMEOUT:
+            return Untranslated("Timed out waiting for mempool acceptance; the transaction may still be broadcast and accepted. Use getprivatebroadcastinfo to inspect the private broadcast queue.");
+        case TransactionError::SHUTTING_DOWN:
+            return Untranslated("Shutting down");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }

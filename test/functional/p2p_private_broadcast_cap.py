@@ -58,7 +58,7 @@ class PrivateBroadcastCapTest(BitcoinTestFramework):
         # Fill the queue exactly to the cap; every distinct submission succeeds.
         self.log.info(f"Filling private broadcast queue to cap ({MAX_TRANSACTIONS} txns)")
         for child in children[:MAX_TRANSACTIONS]:
-            node.sendrawtransaction(child["hex"])
+            node.sendrawtransaction(child["hex"], timeout=0)
 
         pbinfo = node.getprivatebroadcastinfo()
         assert_equal(len(pbinfo["transactions"]), MAX_TRANSACTIONS)
@@ -85,7 +85,7 @@ class PrivateBroadcastCapTest(BitcoinTestFramework):
         assert children[1]["wtxid"] not in wtxids, "aborted tx should be gone from the queue"
 
         new_child = children[MAX_TRANSACTIONS]  # first previously-rejected tx
-        node.sendrawtransaction(new_child["hex"])
+        node.sendrawtransaction(new_child["hex"], timeout=0)
         wtxids = {t["wtxid"] for t in node.getprivatebroadcastinfo()["transactions"]}
         assert_equal(len(wtxids), MAX_TRANSACTIONS)
         assert new_child["wtxid"] in wtxids, "freed slot should now hold the new tx"
@@ -94,7 +94,7 @@ class PrivateBroadcastCapTest(BitcoinTestFramework):
         # Re-submitting an already-queued transaction is a no-op, not an error,
         # even when the queue is full.
         self.log.info("Re-submitting an already-queued tx should not error")
-        node.sendrawtransaction(children[0]["hex"])
+        node.sendrawtransaction(children[0]["hex"], timeout=0)
         wtxids = {t["wtxid"] for t in node.getprivatebroadcastinfo()["transactions"]}
         assert_equal(len(wtxids), MAX_TRANSACTIONS)
         assert children[0]["wtxid"] in wtxids, "re-submitted tx should remain queued"

@@ -71,6 +71,7 @@ using node::DumpMempool;
 
 using node::DEFAULT_MAX_BURN_AMOUNT;
 using node::DEFAULT_MAX_RAW_TX_FEE_RATE;
+using node::DEFAULT_PRIVATE_BROADCAST_TIMEOUT;
 using node::MempoolPath;
 using node::NodeContext;
 using node::TransactionError;
@@ -92,8 +93,9 @@ static RPCMethod sendrawtransaction()
         "dedicated, short-lived connections to Tor or I2P peers, or to IPv4/IPv6 peers\n"
         "via the Tor network. This provides best-effort concealment of the transaction's origin.\n"
         "Private broadcast is experimental and may change in future releases.\n"
-        "Submission does not itself add the transaction to the local mempool; normal\n"
-        "mempool acceptance and relay apply when it is received back from the network.\n"
+        "By default this RPC waits for mempool acceptance of the returned transaction.\n"
+        "Transactions that never enter the mempool will time out and return an error, but the broadcast will not be cancelled.\n"
+        "Setting timeout=0 will return immediately without waiting for mempool acceptance.\n"
         "The private broadcast queue is bounded: when it is full, this RPC fails and\n"
         "the transaction is not scheduled until an existing one completes or is\n"
         "aborted. Use getprivatebroadcastinfo to inspect the queue and abortprivatebroadcast to abort.\n"
@@ -110,6 +112,7 @@ static RPCMethod sendrawtransaction()
              "Reject transactions with provably unspendable outputs (e.g. 'datacarrier' outputs that use the OP_RETURN opcode) greater than the specified value, expressed in " + CURRENCY_UNIT + ".\n"
              "If burning funds through unspendable outputs is desired, increase this value.\n"
              "This check is based on heuristics and does not guarantee spendability of outputs.\n"},
+            {"timeout", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_PRIVATE_BROADCAST_TIMEOUT.count()}, "With -privatebroadcast, maximum wait for mempool acceptance in milliseconds. Set to 0 to return as soon as it is queued. Does not cancel broadcasting."},
         },
         RPCResult{
             RPCResult::Type::STR_HEX, "", "The transaction hash in hex"
@@ -127,6 +130,7 @@ static RPCMethod sendrawtransaction()
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             const CAmount max_burn_amount = request.params[2].isNull() ? 0 : AmountFromValue(request.params[2]);
+            const auto timeout{request.params[3].isNull() ? DEFAULT_PRIVATE_BROADCAST_TIMEOUT : std::chrono::milliseconds{request.params[3].getInt<uint32_t>()}};
 
             CMutableTransaction mtx;
             if (!DecodeHexTx(mtx, request.params[0].get_str())) {
@@ -165,7 +169,8 @@ static RPCMethod sendrawtransaction()
                                                               /*max_tx_fee=*/0,
                                                               max_raw_tx_fee_rate,
                                                               method,
-                                                              /*wait_callback=*/true);
+                                                              /*wait_callback=*/true,
+                                                              /*private_broadcast_timeout=*/timeout);
             if (TransactionError::OK != err) {
                 throw JSONRPCTransactionError(err, err_string);
             }

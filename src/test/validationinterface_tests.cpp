@@ -4,14 +4,21 @@
 
 #include <boost/test/unit_test.hpp>
 #include <consensus/validation.h>
+#include <interfaces/handler.h>
+#include <net_processing.h>
+#include <node/transaction.h>
 #include <primitives/block.h>
-#include <scheduler.h>
+#include <script/solver.h>
 #include <test/util/setup_common.h>
+#include <txmempool.h>
 #include <util/check.h>
 #include <validationinterface.h>
 
 #include <atomic>
+#include <chrono>
+#include <future>
 #include <memory>
+#include <thread>
 
 BOOST_FIXTURE_TEST_SUITE(validationinterface_tests, ChainTestingSetup)
 
@@ -97,6 +104,77 @@ BOOST_AUTO_TEST_CASE(unregister_all_during_call)
     BOOST_CHECK(!destroyed);
     shared.reset();
     BOOST_CHECK(destroyed);
+}
+
+BOOST_FIXTURE_TEST_CASE(broadcast_transaction_notifications, TestChain100Setup)
+{
+    const auto tx{MakeTransactionRef(CreateValidMempoolTransaction(
+        /*input_transaction=*/m_coinbase_txns[0], /*input_vout=*/0, /*input_height=*/1,
+        /*input_signing_key=*/coinbaseKey, /*output_destination=*/GetScriptForRawPubKey(coinbaseKey.GetPubKey()),
+        /*output_amount=*/49 * COIN, /*submit=*/false))};
+    auto& pool{*m_node.mempool};
+    auto& signals{*m_node.validation_signals};
+    Mutex wallet_mutex;
+    auto submit = [&](bool wait_callback) {
+        auto result = std::async(std::launch::async, [&, wait_callback] {
+            // Model a wallet caller holding its lock when it does not flush notifications.
+            LOCK(wait_callback ? nullptr : &wallet_mutex);
+            std::string err;
+            return node::BroadcastTransaction(/*node=*/m_node, /*tx=*/tx, /*err_string=*/err,
+                /*max_tx_fee=*/0, /*max_tx_fee_rate=*/CFeeRate{0},
+                /*broadcast_method=*/node::TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST,
+                /*wait_callback=*/wait_callback, /*private_broadcast_timeout=*/5s);
+        });
+        const auto deadline{std::chrono::steady_clock::now() + 5s};
+        while (m_node.peerman->GetPrivateBroadcastInfo().empty() && std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(1ms);
+        }
+        BOOST_REQUIRE(!m_node.peerman->GetPrivateBroadcastInfo().empty());
+        return result;
+    };
+
+    auto first{submit(/*wait_callback=*/false)};
+    // Clear the queue so its next entry confirms the second caller has subscribed.
+    // Aborting the broadcast leaves the first caller's acceptance subscription active.
+    m_node.peerman->AbortPrivateBroadcast(tx->GetHash().ToUint256());
+    auto second{submit(/*wait_callback=*/true)};
+
+    // A wallet notification blocks on the lock held by the first caller. Keep
+    // the queue paused after that caller returns to also test wait_callback=true.
+    std::promise<void> resume;
+    auto paused{interfaces::MakeCleanupHandler([&] {
+        resume.set_value();
+        signals.SyncWithValidationInterfaceQueue();
+    })};
+    signals.CallFunctionInValidationInterfaceQueue([&, ready = resume.get_future().share()] {
+        LOCK(wallet_mutex);
+        ready.wait();
+    });
+
+    auto notify = [&](const CTransactionRef& accepted_tx) {
+        LOCK2(cs_main, pool.cs);
+        signals.TransactionAddedToMempool(NewMempoolTransactionInfo{
+            /*tx=*/accepted_tx, /*fee=*/COIN, /*vsize=*/100, /*height=*/1,
+            /*mempool_limit_bypassed=*/false, /*submitted_in_package=*/false,
+            /*chainstate_is_current=*/true, /*has_no_mempool_parents=*/true}, pool.GetAndIncrementSequence());
+    };
+    // Acceptance of another txid must not complete the wait.
+    notify(m_coinbase_txns[1]);
+    BOOST_CHECK(first.wait_for(10ms) == std::future_status::timeout);
+
+    // Insert locally to simulate an accepted echo. The private caller with
+    // wait_callback=false must complete even while wallet notifications are blocked.
+    std::string error;
+    BOOST_REQUIRE(node::BroadcastTransaction(/*node=*/m_node, /*tx=*/tx, /*err_string=*/error,
+        /*max_tx_fee=*/0, /*max_tx_fee_rate=*/CFeeRate{0},
+        /*broadcast_method=*/node::TxBroadcast::MEMPOOL_NO_BROADCAST, /*wait_callback=*/false) == node::TransactionError::OK);
+    WITH_LOCK(pool.cs, pool.removeRecursive(*tx, MemPoolRemovalReason::REPLACED));
+    BOOST_CHECK(first.get() == node::TransactionError::OK);
+    BOOST_CHECK(second.wait_for(10ms) == std::future_status::timeout);
+    // The second callback is still registered; duplicate acceptance must be harmless.
+    notify(tx);
+    paused.reset();
+    BOOST_CHECK(second.get() == node::TransactionError::OK);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

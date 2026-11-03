@@ -27,6 +27,8 @@ enum class TransactionError {
     MAX_BURN_EXCEEDED,
     INVALID_PACKAGE,
     PRIVATE_BROADCAST_FULL,
+    MEMPOOL_TIMEOUT,
+    SHUTTING_DOWN,
 };
 
 /**

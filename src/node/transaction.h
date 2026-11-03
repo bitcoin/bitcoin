@@ -9,6 +9,7 @@
 #include <node/types.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
+#include <util/time.h>
 
 class CBlockIndex;
 class CTxMemPool;
@@ -33,6 +34,9 @@ inline constexpr CFeeRate DEFAULT_MAX_RAW_TX_FEE_RATE{COIN / 10};
  */
 inline constexpr CAmount DEFAULT_MAX_BURN_AMOUNT{0};
 
+/** Default wait for private-broadcast mempool acceptance. */
+inline constexpr std::chrono::milliseconds DEFAULT_PRIVATE_BROADCAST_TIMEOUT{10min};
+
 /**
  * Submit a transaction to the mempool and (optionally) relay it to all P2P peers.
  *
@@ -49,6 +53,11 @@ inline constexpr CAmount DEFAULT_MAX_BURN_AMOUNT{0};
  * @param[in]  max_tx_fee_rate reject txs with fee rate higher than this (if CFeeRate(0), the fee rate is not checked)
  * @param[in]  broadcast_method whether to add the transaction to the mempool and how to broadcast it
  * @param[in]  wait_callback wait until callbacks have been processed to avoid stale result due to a sequentially RPC.
+ * @param[in]  private_broadcast_timeout maximum wait for private-broadcast mempool acceptance;
+ *             zero queues without waiting. Ignored for public broadcasts. Timeout does not
+ *             cancel broadcasting. Shutdown interrupts the wait.
+ *             Do not hold cs_main or cs_mempool when this wait is requested.
+ *             cs_wallet may be held if wait_callback is false.
  * return error
  */
 [[nodiscard]] TransactionError BroadcastTransaction(NodeContext& node,
@@ -57,7 +66,8 @@ inline constexpr CAmount DEFAULT_MAX_BURN_AMOUNT{0};
                                                     const CAmount& max_tx_fee,
                                                     const CFeeRate& max_tx_fee_rate,
                                                     TxBroadcast broadcast_method,
-                                                    bool wait_callback);
+                                                    bool wait_callback,
+                                                    std::chrono::milliseconds private_broadcast_timeout = DEFAULT_PRIVATE_BROADCAST_TIMEOUT);
 
 /**
  * Return transaction with a given hash.

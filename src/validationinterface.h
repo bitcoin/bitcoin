@@ -76,6 +76,11 @@ protected:
     virtual void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t mempool_sequence) {}
 
     /**
+     * Notifies listeners of a transaction having been added to mempool, synchronously.
+     */
+    virtual void TransactionAddedToMempoolSync(const Txid& txid) {}
+
+    /**
      * Notifies listeners of a transaction leaving mempool.
      *
      * This notification fires for transactions that are removed from the
