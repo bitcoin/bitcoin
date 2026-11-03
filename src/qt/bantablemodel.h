@@ -47,8 +47,6 @@ class BanTableModel : public QAbstractTableModel
 public:
     explicit BanTableModel(interfaces::Node& node, QObject* parent);
     ~BanTableModel();
-    void startAutoRefresh();
-    void stopAutoRefresh();
 
     enum ColumnIndex {
         Address = 0,
