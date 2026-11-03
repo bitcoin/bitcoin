@@ -764,6 +764,7 @@ QWidget* SharedMnCreateDialog::createContributionPage()
                 }
             });
             row->addWidget(fresh);
+            m_new_address_buttons.push_back(fresh);
             box->addLayout(row);
         };
         address_row(tr("Owner address:"),
@@ -1953,8 +1954,11 @@ void SharedMnCreateDialog::refreshContributionPage()
     const bool reserved{mine != nullptr};
     if (reserved) {
         CAmount total{0};
+        bool valued{true};
         for (const auto& input : mine->inputs) {
-            if (const auto value{resolveInputValue(input)}) total += *value;
+            const auto value{resolveInputValue(input)};
+            valued = valued && value.has_value();
+            total += value.value_or(0);
         }
         QString text{tr("Reserved — these coins cannot be spent until the session ends or you release them.")};
         text += QLatin1Char('\n');
@@ -1964,6 +1968,18 @@ void SharedMnCreateDialog::refreshContributionPage()
                           .arg(coins, FormatAmount(m_wallet_model, total),
                                FormatAmount(m_wallet_model, mine->changeAmount))
                     : tr("Uses %1 (%2), with no change left over.").arg(coins, FormatAmount(m_wallet_model, total));
+        text += QLatin1Char('\n');
+        // The session does not record the fee, so a reopened reservation may pay
+        // more than the field shows. Only the field sets what may be signed, and
+        // what the coins pay beyond the share need not all be fee.
+        const CAmount paid{total - (mine->hasChange ? mine->changeAmount : 0) - shares[m_my_share].amount};
+        if (coordinator && valued && paid >= 0 && paid != m_fee_field->value()) {
+            text += tr("These coins pay %1 beyond your share, not the %2 Network fee shown below.")
+                        .arg(FormatAmount(m_wallet_model, paid), FormatAmount(m_wallet_model, m_fee_field->value()));
+            text += QLatin1Char('\n');
+        }
+        text += coordinator ? tr("To change your addresses or the network fee, release the coins first.")
+                            : tr("To change your addresses, release the coins first.");
         m_coins_label->setText(text);
     } else {
         const CAmount target{contributionTarget()};
@@ -1991,9 +2007,15 @@ void SharedMnCreateDialog::refreshContributionPage()
     m_release_button->setVisible(reserved);
     m_release_button->setEnabled(editable);
     m_who_am_i_combo->setEnabled(editable && !reserved);
+    // The reservation was made for these addresses and this fee, so they stay
+    // as reserved until the coins are released
     for (QValidatedLineEdit* const edit : {m_owner_edit, m_refund_edit, m_reward_edit}) {
         edit->setReadOnly(reserved || !editable);
     }
+    for (QPushButton* const button : m_new_address_buttons) {
+        button->setEnabled(!reserved && editable);
+    }
+    m_fee_field->setEnabled(!reserved && editable);
 }
 
 void SharedMnCreateDialog::refreshInvitePage()

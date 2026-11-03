@@ -479,6 +479,7 @@ private:
     QValidatedLineEdit* m_owner_edit{nullptr};
     QValidatedLineEdit* m_refund_edit{nullptr};
     QValidatedLineEdit* m_reward_edit{nullptr};
+    QVector<QPushButton*> m_new_address_buttons;
     QWidget* m_fee_box{nullptr};
     BitcoinAmountField* m_fee_field{nullptr};
     QLabel* m_coins_label{nullptr};
