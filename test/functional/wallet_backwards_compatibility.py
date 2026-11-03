@@ -26,9 +26,11 @@ from test_framework.messages import ser_string
 
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_greater_than,
     assert_not_equal,
     assert_raises_rpc_error,
+    assert_true,
 )
 
 LAST_KEYPOOL_INDEX = 9 # Index of the last derived address with the keypool size of 10

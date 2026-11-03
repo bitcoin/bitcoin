@@ -34,8 +34,10 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_approx,
     assert_equal,
+    assert_false,
     assert_not_equal,
     assert_raises_rpc_error,
+    assert_true,
     dumb_sync_blocks,
     ensure_for,
     sha256sum_file,

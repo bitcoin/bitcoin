@@ -11,7 +11,7 @@ their best known block header time is more than -maxtipage in the past.
 import time
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_false, assert_true
 
 
 DEFAULT_MAX_TIP_AGE = 24 * 60 * 60

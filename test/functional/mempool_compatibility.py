@@ -12,7 +12,7 @@ Previous releases are required by this test, see test/README.md.
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_true
 from test_framework.wallet import MiniWallet
 
 
