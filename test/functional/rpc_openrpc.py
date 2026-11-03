@@ -68,7 +68,7 @@ class OpenRPCDocTest(BitcoinTestFramework):
         feerate_percentiles = getblockstats["result"]["schema"]["properties"]["feerate_percentiles"]
         assert_equal(feerate_percentiles["type"], "array")
         assert_equal(feerate_percentiles["items"], [{"type": "number"}] * 5)
-        assert_equal(feerate_percentiles["additionalItems"], False)
+        assert_false(feerate_percentiles["additionalItems"])
         assert_equal(feerate_percentiles["minItems"], 5)
         assert_equal(feerate_percentiles["maxItems"], 5)
 
