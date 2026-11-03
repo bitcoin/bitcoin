@@ -14,7 +14,6 @@
 
 void initialize_key_io()
 {
-    static ECC_Context ecc_context{};
     SelectParams(ChainType::MAIN);
 }
 

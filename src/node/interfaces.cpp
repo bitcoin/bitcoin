@@ -25,7 +25,6 @@
 #include <interfaces/rpc.h>
 #include <interfaces/types.h>
 #include <kernel/context.h>
-#include <key.h>
 #include <logging.h>
 #include <mapport.h>
 #include <net.h>
@@ -132,7 +131,6 @@ public:
 
         m_context->warnings = std::make_unique<node::Warnings>();
         m_context->kernel = std::make_unique<kernel::Context>();
-        m_context->ecc_context = std::make_unique<ECC_Context>();
         if (!AppInitSanityChecks(*m_context->kernel)) return false;
 
         if (!AppInitLockDirectories()) return false;

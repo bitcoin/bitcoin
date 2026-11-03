@@ -354,14 +354,4 @@ bool ECC_InitSanityCheck();
  *  created and randomized on first use. Thread-safe. */
 const secp256k1_context* GetSecp256k1SignContext();
 
-/**
- * Creates the secp256k1 signing context, if it does not exist yet. This is not
- * necessary anymore, as GetSecp256k1SignContext() creates it on first use.
- */
-class ECC_Context
-{
-public:
-    ECC_Context();
-};
-
 #endif // BITCOIN_KEY_H

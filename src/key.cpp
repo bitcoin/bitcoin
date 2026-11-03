@@ -458,8 +458,3 @@ const secp256k1_context* GetSecp256k1SignContext()
     }()};
     return sign_ctx;
 }
-
-ECC_Context::ECC_Context()
-{
-    (void)GetSecp256k1SignContext();
-}

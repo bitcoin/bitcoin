@@ -33,7 +33,6 @@
 
 void initialize_key()
 {
-    static ECC_Context ecc_context{};
     SelectParams(ChainType::REGTEST);
 }
 

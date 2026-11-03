@@ -4,6 +4,7 @@
 
 #include <test/fuzz/fuzz.h>
 
+#include <key.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <test/fuzz/util/check_globals.h>
@@ -163,6 +164,10 @@ static void initialize()
     Assert(!g_test_one_input);
     g_test_one_input = &it->second.test_one_input;
     it->second.opts.init();
+
+    // Create the secp256k1 signing context now rather than on first use, so that its
+    // one-time setup is not attributed to whichever input happens to sign first.
+    (void)GetSecp256k1SignContext();
 
     ResetCoverageCounters();
 }
