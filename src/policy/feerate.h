@@ -56,19 +56,14 @@ public:
      */
     explicit CFeeRate(const FeePerVSize& feerate) : m_feerate{feerate.size > 0 ? feerate : FeePerVSize{}} {}
 
-    /**
-     * Return the fee in satoshis for the given vsize in vbytes.
-     * If the calculated fee would have fractional satoshis, then the
-     * returned fee will always be rounded up to the nearest satoshi.
-     */
+    /// Return the fee in satoshis for the given vsize in vbytes. (Rounds up)
     CAmount GetFee(int32_t virtual_bytes) const;
 
     FeePerVSize GetFeePerVSize() const { return m_feerate; }
 
-    /**
-     * Return the fee in satoshis for a vsize of 1000 vbytes
-     */
+    /// Return the fee in satoshis for a vsize of 1000 vbytes. (Rounds down)
     CAmount GetFeePerK() const;
+
     friend std::strong_ordering operator<=>(const CFeeRate& a, const CFeeRate& b) noexcept
     {
         return ByRatio{a.m_feerate} <=> ByRatio{b.m_feerate};
