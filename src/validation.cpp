@@ -3102,6 +3102,7 @@ bool Chainstate::FlushStateToDisk(
                 // Flush the chainstate (which may refer to block index entries).
                 if (!CoinsTip().Flush())
                     return AbortNode(state, "Failed to write to coin database");
+                m_last_flushed_block = m_blockman.LookupBlockIndex(CoinsTip().GetBestBlock());
             }
             {
                 LOG_TIME_SECONDS("write evodb cache to disk");
@@ -3120,9 +3121,8 @@ bool Chainstate::FlushStateToDisk(
         }
     }
     if (full_flush_completed && this == &m_chainman.ActiveChainstate()) {
-        // Update best block in wallet (so we can detect restored wallets).
         // TODO(assumeutxo): upstream tags this notification with ChainstateRole instead of suppressing; adopt when backporting index/wallet assumeutxo support.
-        GetMainSignals().ChainStateFlushed(m_chain.GetLocator());
+        GetMainSignals().ChainStateFlushed(GetLocator(m_last_flushed_block));
     }
     } catch (const std::runtime_error& e) {
         return AbortNode(state, std::string("System error while flushing: ") + e.what());
@@ -5017,6 +5017,7 @@ bool Chainstate::LoadChainTip()
         return false;
     }
     m_chain.SetTip(*pindex);
+    m_last_flushed_block = pindex;
     PruneBlockIndexCandidates();
 
     tip = m_chain.Tip();
