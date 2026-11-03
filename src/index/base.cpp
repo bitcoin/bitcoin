@@ -277,6 +277,18 @@ void BaseIndex::WriteRewindLocator(CDBBatch& batch, const CBlockIndex* new_tip) 
     }
 }
 
+bool BaseIndex::RewindBlockByBlock(const CBlockIndex* current_tip, const CBlockIndex* new_tip,
+                                   const std::function<bool(const CBlockIndex* pindex, CDBBatch& batch)>& rewind_block)
+{
+    for (const CBlockIndex* pindex = current_tip; pindex != new_tip; pindex = pindex->pprev) {
+        CDBBatch batch(GetDB());
+        if (!rewind_block(pindex, batch)) return false;
+        WriteRewindLocator(batch, pindex->pprev);
+        if (!GetDB().WriteBatch(batch)) return false;
+    }
+    return true;
+}
+
 bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip)
 {
     assert(current_tip->GetAncestor(new_tip->nHeight) == new_tip);

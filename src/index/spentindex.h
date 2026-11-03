@@ -42,7 +42,7 @@ protected:
         bool ReadSpentIndex(const CSpentIndexKey& key, CSpentIndexValue& value);
 
         /// Erase spent index entries
-        bool EraseSpentIndex(const std::vector<CSpentIndexKey>& keys);
+        void EraseSpentIndex(CDBBatch& batch, const std::vector<CSpentIndexKey>& keys);
     };
 
     bool CustomAppend(const interfaces::BlockInfo& block) override;

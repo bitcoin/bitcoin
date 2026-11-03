@@ -20,12 +20,14 @@
 #include <memory>
 
 namespace {
-//! A minimal index that, like Dash's address, spent and timestamp indexes, keeps one entry per block and erases the
-//! entries of rewound blocks in CustomRewind(). The rewind is exposed so a test can leave the on-disk state that an
-//! unclean shutdown in the middle of a reorg would leave, without having to time an actual crash.
+//! A minimal index that, like Dash's address and spent indexes, keeps one entry per block and erases the entries of
+//! rewound blocks in CustomRewind() block by block. The rewind is exposed, and can stop after a given block, so a test
+//! can leave the on-disk state that an unclean shutdown in the middle of a reorg would leave, without having to time
+//! an actual crash.
 class ErasingIndex final : public BaseIndex
 {
     const std::unique_ptr<BaseIndex::DB> m_db;
+    const CBlockIndex* m_stop_after{nullptr};
 
 public:
     explicit ErasingIndex(std::unique_ptr<interfaces::Chain> chain)
@@ -40,9 +42,13 @@ public:
     }
 
     bool Indexed(const CBlockIndex* block) const { return m_db->Exists(std::make_pair(uint8_t{'e'}, block->GetBlockHash())); }
-    bool RewindTo(const CBlockIndex* current_tip, const CBlockIndex* new_tip)
+    //! Rewind, or with stop_after set, stop as a crash would once that block's batch is written
+    bool RewindTo(const CBlockIndex* current_tip, const CBlockIndex* new_tip, const CBlockIndex* stop_after = nullptr)
     {
-        return CustomRewind({current_tip->GetBlockHash(), current_tip->nHeight}, {new_tip->GetBlockHash(), new_tip->nHeight});
+        m_stop_after = stop_after;
+        const bool ok{CustomRewind({current_tip->GetBlockHash(), current_tip->nHeight}, {new_tip->GetBlockHash(), new_tip->nHeight})};
+        m_stop_after = nullptr;
+        return ok;
     }
     uint256 CommittedTip() const
     {
@@ -55,14 +61,13 @@ protected:
     bool CustomAppend(const interfaces::BlockInfo& block) override { return m_db->Write(std::make_pair(uint8_t{'e'}, block.hash), true); }
     bool CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip) override
     {
+        const CBlockIndex* current_tip_index{WITH_LOCK(::cs_main, return m_chainstate->m_blockman.LookupBlockIndex(current_tip.hash))};
         const CBlockIndex* new_tip_index{WITH_LOCK(::cs_main, return m_chainstate->m_blockman.LookupBlockIndex(new_tip.hash))};
-        for (const CBlockIndex* pindex{WITH_LOCK(::cs_main, return m_chainstate->m_blockman.LookupBlockIndex(current_tip.hash))};
-             pindex != new_tip_index; pindex = pindex->pprev) {
-            if (!m_db->Erase(std::make_pair(uint8_t{'e'}, pindex->GetBlockHash()))) return false;
-        }
-        CDBBatch batch(*m_db);
-        WriteRewindLocator(batch, new_tip_index);
-        return m_db->WriteBatch(batch);
+        return RewindBlockByBlock(current_tip_index, new_tip_index, [&](const CBlockIndex* pindex, CDBBatch& batch) {
+            if (m_stop_after && pindex == m_stop_after->pprev) return false;
+            batch.Erase(std::make_pair(uint8_t{'e'}, pindex->GetBlockHash()));
+            return true;
+        });
     }
     BaseIndex::DB& GetDB() const override { return *m_db; }
     bool AllowPrune() const override { return true; }
@@ -181,6 +186,42 @@ BOOST_FIXTURE_TEST_CASE(restart_after_rewind_reindexes_erased_blocks, TestChain1
     for (int height{98}; height <= 100; ++height) {
         BOOST_CHECK_MESSAGE(index.Indexed(AtHeight(chainman, height)), "block " << height << " was not indexed again");
     }
+    index.Stop();
+}
+
+// Each block's erasures are written in one batch with a locator at its parent. A node that stops in the middle of a
+// rewind then resumes from the last block whose entries are still there, and indexes the erased ones again.
+BOOST_FIXTURE_TEST_CASE(interrupted_rewind_keeps_locator_below_erased_entries, TestChain100Setup)
+{
+    ChainstateManager& chainman{*Assert(m_node.chainman)};
+    {
+        ErasingIndex index{interfaces::MakeChain(m_node)};
+        BOOST_REQUIRE(index.Start());
+        IndexWaitSynced(index);
+        chainman.ActiveChainstate().ForceFlushStateToDisk();
+        SyncWithValidationInterfaceQueue();
+        index.Stop();
+    }
+    const CBlockIndex* tip{AtHeight(chainman, 100)};
+
+    node::g_indexes_ready_to_sync = false;
+    {
+        ErasingIndex index{interfaces::MakeChain(m_node)};
+        BOOST_REQUIRE(index.Start());
+        BOOST_CHECK(index.CommittedTip() == tip->GetBlockHash());
+        BOOST_CHECK(!index.RewindTo(tip, AtHeight(chainman, 97), /*stop_after=*/tip));
+        BOOST_CHECK(!index.Indexed(tip));
+        BOOST_CHECK(index.Indexed(AtHeight(chainman, 99)));
+        BOOST_CHECK(index.CommittedTip() == AtHeight(chainman, 99)->GetBlockHash());
+        index.Interrupt();
+        index.Stop();
+    }
+    node::g_indexes_ready_to_sync = true;
+
+    ErasingIndex index{interfaces::MakeChain(m_node)};
+    BOOST_REQUIRE(index.Start());
+    IndexWaitSynced(index);
+    BOOST_CHECK_MESSAGE(index.Indexed(tip), "block 100 was not indexed again");
     index.Stop();
 }
 

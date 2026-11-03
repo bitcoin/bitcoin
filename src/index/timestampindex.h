@@ -37,7 +37,7 @@ protected:
         void ReadRange(uint32_t high, uint32_t low, std::vector<uint256>& hashes);
 
         /// Erase timestamp index entry
-        bool EraseTimestampIndex(const CTimestampIndexKey& key);
+        void EraseTimestampIndex(CDBBatch& batch, const CTimestampIndexKey& key);
     };
 
     bool CustomAppend(const interfaces::BlockInfo& block) override;

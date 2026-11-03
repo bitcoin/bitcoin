@@ -12,6 +12,7 @@
 #include <validationinterface.h>
 
 #include <atomic>
+#include <functional>
 #include <string>
 
 class CBlock;
@@ -122,6 +123,12 @@ protected:
     /// branch, move it to new_tip. Commit() may not write new_tip yet (it can be ahead of the last flush), but
     /// leaving the old locator above erased entries would make an unclean restart resume past them.
     void WriteRewindLocator(CDBBatch& batch, const CBlockIndex* new_tip) const;
+
+    /// For indexes that erase per block in CustomRewind(): walk from current_tip down to new_tip and write each
+    /// block's erasures, filled in by rewind_block, in one batch with WriteRewindLocator() for its parent. A rewind
+    /// interrupted between blocks then never leaves the committed locator above erased entries.
+    [[nodiscard]] bool RewindBlockByBlock(const CBlockIndex* current_tip, const CBlockIndex* new_tip,
+                                          const std::function<bool(const CBlockIndex* pindex, CDBBatch& batch)>& rewind_block);
 
     virtual DB& GetDB() const = 0;
 

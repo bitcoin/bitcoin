@@ -141,11 +141,9 @@ bool AddressIndex::DB::UpdateAddressUnspentIndex(const std::vector<CAddressUnspe
     return CDBWrapper::WriteBatch(batch);
 }
 
-bool AddressIndex::DB::RewindBatch(const std::vector<CAddressIndexEntry>& address_entries,
+void AddressIndex::DB::RewindBatch(CDBBatch& batch, const std::vector<CAddressIndexEntry>& address_entries,
                                    const std::vector<CAddressUnspentIndexEntry>& unspent_entries)
 {
-    CDBBatch batch(*this);
-
     for (const auto& [key, _] : address_entries) {
         batch.Erase(std::make_pair(DB_ADDRESSINDEX, key));
     }
@@ -157,8 +155,6 @@ bool AddressIndex::DB::RewindBatch(const std::vector<CAddressIndexEntry>& addres
             batch.Write(std::make_pair(DB_ADDRESSUNSPENTINDEX, key), value);
         }
     }
-
-    return CDBWrapper::WriteBatch(batch);
 }
 
 AddressIndex::AddressIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe) :
@@ -285,17 +281,17 @@ bool AddressIndex::CustomRewind(const interfaces::BlockKey& current_tip, const i
 
     // Rewind the unspent index by processing blocks in reverse
     // We need to undo all operations from current_tip back to (but not including) new_tip
-    for (const CBlockIndex* pindex = current_tip_index; pindex != new_tip_index; pindex = pindex->pprev) {
+    return RewindBlockByBlock(current_tip_index, new_tip_index, [&](const CBlockIndex* pindex, CDBBatch& batch) {
         CBlock block;
         if (!node::ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
-            LogError("%s: Failed to read block %s from disk during rewind\n", __func__,
+            LogError("%s: Failed to read block %s from disk during rewind\n", "CustomRewind",
                      pindex->GetBlockHash().ToString());
             return false;
         }
 
         CBlockUndo blockundo;
         if (pindex->nHeight > 0 && !node::UndoReadFromDisk(blockundo, pindex)) {
-            LogError("%s: Failed to read undo data for block %s during rewind\n", __func__,
+            LogError("%s: Failed to read undo data for block %s during rewind\n", "CustomRewind",
                      pindex->GetBlockHash().ToString());
             return false;
         }
@@ -308,7 +304,7 @@ bool AddressIndex::CustomRewind(const interfaces::BlockKey& current_tip, const i
         // reverse order ensures spends are undone before outputs, preventing phantom UTXOs.
         // blockundo.vtxundo[i] corresponds to block.vtx[i+1] (coinbase skipped)
         if (blockundo.vtxundo.size() != block.vtx.size() - 1) {
-            LogError("%s: Undo data size mismatch for block %s (expected %zu, got %zu)\n", __func__,
+            LogError("%s: Undo data size mismatch for block %s (expected %zu, got %zu)\n", "CustomRewind",
                      pindex->GetBlockHash().ToString(), block.vtx.size() - 1, blockundo.vtxundo.size());
             return false;
         }
@@ -340,7 +336,7 @@ bool AddressIndex::CustomRewind(const interfaces::BlockKey& current_tip, const i
 
             // Undo inputs (restore to unspent index, remove spending from history)
             if (tx->vin.size() != txundo.vprevout.size()) {
-                LogError("%s: Undo data mismatch for tx %s\n", __func__, txhash.ToString());
+                LogError("%s: Undo data mismatch for tx %s\n", "CustomRewind", txhash.ToString());
                 return false;
             }
 
@@ -391,16 +387,9 @@ bool AddressIndex::CustomRewind(const interfaces::BlockKey& current_tip, const i
             }
         }
 
-        // Apply both rewind updates in a single batch to avoid leaving the index half-rewound.
-        if (!m_db->RewindBatch(addressIndex, addressUnspentIndex)) {
-            LogError("%s: Failed to apply address index rewind batch\n", __func__);
-            return false;
-        }
-    }
-
-    CDBBatch locator_batch(GetDB());
-    WriteRewindLocator(locator_batch, new_tip_index);
-    return GetDB().WriteBatch(locator_batch);
+        m_db->RewindBatch(batch, addressIndex, addressUnspentIndex);
+        return true;
+    });
 }
 
 BaseIndex::DB& AddressIndex::GetDB() const { return *m_db; }
