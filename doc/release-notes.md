@@ -281,7 +281,9 @@ Before activation there is no behavior change. (#7437, #7340)
   alongside the signatures, and repeats the zero-penalty warning for a
   registration. It refuses a registration or dissolution carrying an
   unsatisfied lock time or a relative input lock unless `allowTimeLocks` is
-  set.
+  set. It signs a dissolution only when it returns every share's principal to
+  its refund address, less the fee from the actor's share, as
+  `protx shared_dissolve_prepare` builds it.
 - `protx shared_combine` combines collected signatures and optionally submits.
   A dissolution combined here requires a signature from every share; unilateral
   dissolutions come fully signed from `protx shared_dissolve`. A

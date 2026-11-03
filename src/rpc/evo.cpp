@@ -1232,6 +1232,8 @@ static RPCHelpMan protx_shared_sign()
         "itself is not modified; pass the signatures to \"protx shared_combine\".\n"
         "Only the multi-party flows pass through here: a unilateral dissolution is built, signed and\n"
         "submitted in one step by \"protx shared_dissolve\" and never needs shared_sign.\n"
+        "A dissolution is signed only when it returns every share's principal to its refund address, less\n"
+        "the fee from the actor's share, as \"protx shared_dissolve_prepare\" builds it.\n"
         + HELP_REQUIRING_PASSPHRASE,
         {
             {"tx", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The serialized transaction in hex format."},

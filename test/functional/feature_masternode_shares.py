@@ -10,8 +10,21 @@ import struct
 from decimal import Decimal
 
 from test_framework.descriptors import descsum_create
-from test_framework.key import ORDER
-from test_framework.messages import COIN, CBlock, COutPoint, CTransaction, CTxIn, CTxOut, from_hex, tx_from_hex
+from test_framework.address import key_to_p2pkh
+from test_framework.crypto import secp256k1
+from test_framework.key import ECKey, ORDER, rfc6979_nonce
+from test_framework.messages import (
+    COIN,
+    CBlock,
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxOut,
+    from_hex,
+    hash256,
+    ser_string,
+    tx_from_hex,
+)
 from test_framework.script import CScript
 from test_framework.test_framework import DashTestFramework, p2p_port
 from test_framework.util import (
@@ -21,7 +34,7 @@ from test_framework.util import (
     get_bip9_details,
     softfork_active,
 )
-from test_framework.wallet_util import get_generate_key
+from test_framework.wallet_util import bytes_to_wif, get_generate_key
 
 # Keep the earliest activation height above the ~119 blocks the framework setup mines, so
 # run_test starts with v24 locked in but not yet active and can exercise pre-activation rules
@@ -37,9 +50,35 @@ SHARED_COLLATERAL_SCRIPT = "04445348437551"
 EARLY_PERIOD_BLOCKS = 30
 EARLY_PENALTY = 50 * COIN
 DISSOLVE_FEE = 100000
+MAX_DISSOLVE_FEE = 1000000
 TRANSACTION_PROVIDER_DISSOLVE = 10
 TRANSACTION_PROVIDER_UPDATE_SHARE = 11
 TRANSACTION_PROVIDER_UPDATE_SHARED_REGISTRAR = 12
+
+
+def sign_compact(key, digest):
+    """A recoverable compact signature by `key` over `digest`, as CHashSigner::SignHash produces"""
+    z = int.from_bytes(digest, "big")
+    k = int.from_bytes(rfc6979_nonce(key.get_bytes() + digest), "big")
+    R = k * secp256k1.G
+    r = int(R.x) % ORDER
+    s = pow(k, -1, ORDER) * (z + int.from_bytes(key.get_bytes(), "big") * r) % ORDER
+    recid = (0 if R.y.is_even() else 1) | (2 if int(R.x) >= ORDER else 0)
+    if s > ORDER // 2:
+        s = ORDER - s
+        recid ^= 1
+    return bytes([27 + 4 + recid]) + r.to_bytes(32, "big") + s.to_bytes(32, "big")
+
+
+def prodis_sign_hash(tx, sig_count):
+    """CProDisTx::MakeSignHash: the payload prefix is its 2-byte version, proTxHash and actorIndex"""
+    payload = tx.vExtraPayload
+    data = ser_string(b"DashSharedMNDissolve") + payload[:2]
+    data += struct.pack("<hHI", tx.nVersion, tx.nType, tx.nLockTime)
+    data += b"".join(txin.prevout.serialize() for txin in tx.vin)
+    data += b"".join(struct.pack("<I", txin.nSequence) for txin in tx.vin)
+    data += b"".join(out.serialize() for out in tx.vout)
+    return hash256(data + payload[2:36] + bytes([sig_count]))
 
 
 class MasternodeSharesTest(DashTestFramework):
@@ -138,7 +177,7 @@ class MasternodeSharesTest(DashTestFramework):
         assert_equal(node.getbestblockhash(), tip)
         assert_equal(set(node.getrawmempool()), mempool)
 
-    def test_invalid_dissolutions(self, node, miner, wallets, protx_hash, shares):
+    def test_invalid_dissolutions(self, node, miner, wallets, owner_keys, protx_hash, shares):
         self.log.info("Every actor's dissolution protects all refund destinations and principal amounts")
         state = miner.protx("info", protx_hash)["state"]
         penalty = 10 * COIN
@@ -168,7 +207,7 @@ class MasternodeSharesTest(DashTestFramework):
                 self.assert_rejected_transaction(node, bad, "bad-prodis-payee")
 
             bad = deepcopy(good)
-            bad.vout[-1].nValue -= 1000000 - DISSOLVE_FEE + 1
+            bad.vout[-1].nValue -= MAX_DISSOLVE_FEE - DISSOLVE_FEE + 1
             self.assert_rejected_transaction(node, bad, "bad-prodis-fee")
             bad = deepcopy(good)
             bad.vout.pop()
@@ -194,14 +233,46 @@ class MasternodeSharesTest(DashTestFramework):
             sigs = [wallet.protx("shared_sign", raw)["signatures"][0] for wallet in wallets]
             return tx_from_hex(miner.protx("shared_combine", raw, sigs))
 
+        def sign_outside_wallet(tx):
+            signed = deepcopy(tx)
+            digest = prodis_sign_hash(signed, len(owner_keys))
+            signed.vExtraPayload = (signed.vExtraPayload[:36] + bytes([len(owner_keys)]) +
+                                    b"".join(sign_compact(key, digest) for key in owner_keys))
+            return signed
+
+        def assert_sign_refused(tx, signers=wallets):
+            for wallet in signers:
+                assert_raises_rpc_error(-8, "does not return every share's principal", wallet.protx,
+                                        "shared_sign", tx.serialize().hex())
+
         unsigned = tx_from_hex(prepared["tx"])
         unanimous = sign_unanimous(unsigned)
         assert_equal(node.testmempoolaccept([unanimous.serialize().hex()])[0]["allowed"], True)
+        assert_equal(sign_outside_wallet(unsigned).vExtraPayload, unanimous.vExtraPayload)
+
+        self.log.info("shared_sign signs only a dissolution that returns every share's principal")
+        for actor, fee in ((0, DISSOLVE_FEE), (7, MAX_DISSOLVE_FEE)):
+            edge = miner.protx("shared_dissolve_prepare", protx_hash, actor, fee)["tx"]
+            assert_equal(len(wallets[actor].protx("shared_sign", edge)["signatures"]), 1)
+        # Consensus accepts a redistribution every share owner signs, but no wallet signs one, neither
+        # the actor's that gives its principal away nor the one receiving it
+        redistribution = deepcopy(unsigned)
+        redistribution.vout[0].nValue += redistribution.vout[-1].nValue
+        redistribution.vout.pop()
+        assert_sign_refused(redistribution)
+        redistributed = sign_outside_wallet(redistribution)
+        assert_equal(node.testmempoolaccept([redistributed.serialize().hex()])[0]["allowed"], True)
+        # A zero fee, and a fee above the consensus ceiling
+        for fee_change in (DISSOLVE_FEE, DISSOLVE_FEE - MAX_DISSOLVE_FEE - 1):
+            bad = deepcopy(unsigned)
+            bad.vout[-1].nValue += fee_change
+            assert_sign_refused(bad, [wallets[0], wallets[7]])
         # These outputs satisfy both modes even during the early period. Dropping
         # signatures must fail authorization, rather than only the penalty checks.
         penalty_unsigned = tx_from_hex(wallets[7].protx("shared_dissolve", protx_hash, 7, DISSOLVE_FEE, False))
         penalty_unsigned.vExtraPayload = penalty_unsigned.vExtraPayload[:36] + b"\x00"
-        penalty_unanimous = sign_unanimous(penalty_unsigned)
+        assert_sign_refused(penalty_unsigned, [wallets[0], wallets[7]])
+        penalty_unanimous = sign_outside_wallet(penalty_unsigned)
         assert_equal(node.testmempoolaccept([penalty_unanimous.serialize().hex()])[0]["allowed"], True)
         bad = deepcopy(penalty_unanimous)
         bad.vExtraPayload = bad.vExtraPayload[:36] + b"\x01" + bad.vExtraPayload[-65:]
@@ -209,12 +280,14 @@ class MasternodeSharesTest(DashTestFramework):
         for index in range(len(shares)):
             bad = deepcopy(unsigned)
             bad.vout[index].scriptPubKey = attacker_script
-            self.assert_rejected_transaction(node, sign_unanimous(bad), "bad-prodis-payee")
+            assert_sign_refused(bad, [wallets[index]])
+            self.assert_rejected_transaction(node, sign_outside_wallet(bad), "bad-prodis-payee")
         for index in range(len(shares) - 1):
             bad = deepcopy(unsigned)
             bad.vout[index].nValue -= 1
             bad.vout[-1].nValue += 1
-            self.assert_rejected_transaction(node, sign_unanimous(bad), "bad-prodis-penalty-floor")
+            assert_sign_refused(bad, [wallets[index]])
+            self.assert_rejected_transaction(node, sign_outside_wallet(bad), "bad-prodis-penalty-floor")
 
         self.log.info("Dissolution shape, signer ordering, canonical signatures and signed fields are enforced")
         bad = deepcopy(unanimous)
@@ -384,7 +457,7 @@ class MasternodeSharesTest(DashTestFramework):
         self.log.info("Eight separate wallets fund and authorize a shared masternode")
         node = self.nodes[0]
         miner = node.get_wallet_rpc(self.default_wallet_name)
-        wallets, shares, funding_addresses, change_addresses = [], [], [], []
+        wallets, owner_keys, shares, funding_addresses, change_addresses = [], [], [], [], []
         common_reward = miner.getnewaddress()
         for i, amount in enumerate([100] * 7 + [300]):
             name = f"participant_{i}"
@@ -403,8 +476,19 @@ class MasternodeSharesTest(DashTestFramework):
                     for key in keys:
                         wallet.importprivkey(key.privkey)
                     refund = wallet.addmultisigaddress(2, [key.pubkey for key in keys])["address"]
+            # The test keeps the owner key too, to sign dissolutions the wallet refuses to
+            owner_key = ECKey()
+            owner_key.generate()
+            owner_wif = bytes_to_wif(owner_key.get_bytes())
+            if self.options.descriptors:
+                result, = wallet.importdescriptors([{"desc": descsum_create(f"pkh({owner_wif})"), "timestamp": "now"}])
+                assert_equal(result["success"], True)
+            else:
+                wallet.importprivkey(owner_wif, "", False)
+            owner_keys.append(owner_key)
             shares.append({"amount": amount * COIN, "refundAddress": refund,
-                           "ownerAddress": wallet.getnewaddress(), "rewardAddress": common_reward})
+                           "ownerAddress": key_to_p2pkh(owner_key.get_pubkey().get_bytes().hex()),
+                           "rewardAddress": common_reward})
             funding_addresses.append(wallet.getnewaddress())
             change_addresses.append(wallet.getnewaddress())
 
@@ -585,7 +669,7 @@ class MasternodeSharesTest(DashTestFramework):
         self.generate(node, 1, sync_fun=self.no_op)
         assert_equal(miner.protx("info", protx_hash)["state"]["votingAddress"], voting)
 
-        self.test_invalid_dissolutions(node, miner, wallets, protx_hash, shares)
+        self.test_invalid_dissolutions(node, miner, wallets, owner_keys, protx_hash, shares)
 
         self.log.info("A pre-signed unanimous dissolution survives reindex and pays spendable refunds")
         prepared_dissolve = miner.protx("shared_dissolve_prepare", protx_hash, 7, DISSOLVE_FEE)

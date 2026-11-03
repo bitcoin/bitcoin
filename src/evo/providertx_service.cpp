@@ -682,6 +682,24 @@ std::variant<Dissolution, ProviderTxError> BuildDissolution(const CDeterministic
     return ret;
 }
 
+//! True when `tx` pays what BuildDissolution() builds without a penalty: every share's principal
+//! back to its refund script, less a fee from the actor's share. Consensus also accepts other
+//! payouts every share owner signs, but no RPC or GUI flow builds one, so none is signed here.
+bool ReturnsPrincipal(const CDeterministicMN& dmn, uint16_t actor_index, const CTransaction& tx)
+{
+    CAmount fee{0};
+    for (const auto& share : dmn.pdmnState->shares) fee += share.amount;
+    CAmount out_total{0};
+    for (const auto& out : tx.vout) {
+        if (!MoneyRange(out.nValue) || !MoneyRange(out_total + out.nValue)) return false;
+        out_total += out.nValue;
+    }
+    fee -= out_total;
+    const auto built{BuildDissolution(dmn, actor_index, /*penalty=*/0, fee)};
+    const auto* expected{std::get_if<Dissolution>(&built)};
+    return expected && tx.vout == expected->tx.vout;
+}
+
 //! True when `tx` carries an absolute lock not yet satisfied at the next block, or any BIP68
 //! relative lock (special transactions are version 3, so sequences carry relative-lock
 //! semantics). Wallet-funded inputs use a non-final sequence purely for fee sniping
@@ -1224,6 +1242,13 @@ ProviderTxResult<SharedSignResult> SignShared(node::NodeContext& node, Wallet& w
         }
         const auto dmn{GetSharedMn(node, payload->proTxHash)};
         if (!dmn) return SharedMnNotFound();
+        if (!ReturnsPrincipal(*dmn, payload->actorIndex, tx)) {
+            return Error(ProviderTxErrorCode::INVALID_PARAMETER,
+                         strprintf("dissolution does not return every share's principal to its refund address, "
+                                   "less a fee of at most %d duffs from the actor's share; only dissolutions as "
+                                   "built by \"protx shared_dissolve_prepare\" are signed",
+                                   CProDisTx::MAX_FEE));
+        }
         if (auto error{check_time_lock("dissolution")}) return *error;
         shares = dmn->pdmnState->shares;
         sign_hash = payload->MakeSignHash(tx, static_cast<uint8_t>(shares.size()));
