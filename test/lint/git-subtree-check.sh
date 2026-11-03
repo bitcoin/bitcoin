@@ -53,7 +53,7 @@ find_latest_squash()
     sub=
     git log --grep="^git-subtree-dir: $dir/*\$" \
         --pretty=format:'START %H%n%s%n%n%b%nEND%n' "$COMMIT" |
-    while read a b _; do
+    while read -r a b _; do
         case "$a" in
             START) sq="$b" ;;
             git-subtree-mainline:) main="$b" ;;

@@ -31,10 +31,10 @@ mkdir -p ${TEMPDIR}
 
 stty -echo
 printf "Enter the passphrase for %s: " "$1"
-read cs_key_pass
+read -r cs_key_pass
 printf "\n"
 printf "Enter the passphrase for %s: " "$2"
-read api_key_pass
+read -r api_key_pass
 printf "\n"
 stty echo
 
