@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-void initialize_net()
+static void initialize_net()
 {
     static const auto testing_setup = MakeNoLogFileContext<>(ChainType::MAIN);
 }

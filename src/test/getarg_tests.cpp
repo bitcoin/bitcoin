@@ -21,7 +21,7 @@ using util::SplitString;
 
 BOOST_FIXTURE_TEST_SUITE(getarg_tests, BasicTestingSetup)
 
-void ResetArgs(ArgsManager& local_args, const std::string& strArg)
+static void ResetArgs(ArgsManager& local_args, const std::string& strArg)
 {
     std::vector<std::string> vecArg;
     if (strArg.size()) {
@@ -41,7 +41,7 @@ void ResetArgs(ArgsManager& local_args, const std::string& strArg)
     BOOST_CHECK(local_args.ParseParameters(vecChar.size(), vecChar.data(), error));
 }
 
-void SetupArgs(ArgsManager& local_args, const std::vector<std::pair<std::string, unsigned int>>& args)
+static void SetupArgs(ArgsManager& local_args, const std::vector<std::pair<std::string, unsigned int>>& args)
 {
     for (const auto& arg : args) {
         local_args.AddArg(arg.first, "", arg.second, OptionsCategory::OPTIONS);

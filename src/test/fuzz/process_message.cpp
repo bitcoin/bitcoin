@@ -49,7 +49,7 @@ constexpr ReachabilityGoal PROCESS_MESSAGE_CHANGES_BLOCK_INDEX{"process_message 
 
 extern void MakeRandDeterministicDANGEROUS(const uint256& seed) noexcept;
 
-void initialize_process_message()
+static void initialize_process_message()
 {
     RegisterReachabilityGoal(PROCESS_MESSAGE_CHANGES_MEMPOOL);
     RegisterReachabilityGoal(PROCESS_MESSAGE_CHANGES_BLOCK_INDEX);

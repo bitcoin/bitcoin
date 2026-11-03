@@ -74,7 +74,7 @@ script_verify_flags ParseScriptFlags(std::string strFlags)
 }
 
 // Check that all flags in STANDARD_SCRIPT_VERIFY_FLAGS are present in mapFlagNames.
-bool CheckMapFlagNames()
+static bool CheckMapFlagNames()
 {
     script_verify_flags standard_flags_missing{STANDARD_SCRIPT_VERIFY_FLAGS};
     for (const auto& pair : mapFlagNames) {
@@ -86,7 +86,7 @@ bool CheckMapFlagNames()
 /*
 * Check that the input scripts of a transaction are valid/invalid as expected.
 */
-bool CheckTxScripts(const CTransaction& tx, const std::map<COutPoint, CScript>& map_prevout_scriptPubKeys,
+static bool CheckTxScripts(const CTransaction& tx, const std::map<COutPoint, CScript>& map_prevout_scriptPubKeys,
     const std::map<COutPoint, int64_t>& map_prevout_values, script_verify_flags flags,
     const PrecomputedTransactionData& txdata, const std::string& strTest, bool expect_valid)
 {
@@ -121,7 +121,7 @@ bool CheckTxScripts(const CTransaction& tx, const std::map<COutPoint, CScript>& 
  * CLEANSTACK must be used WITNESS and P2SH
  */
 
-script_verify_flags TrimFlags(script_verify_flags flags)
+static script_verify_flags TrimFlags(script_verify_flags flags)
 {
     // WITNESS requires P2SH
     if (!(flags & SCRIPT_VERIFY_P2SH)) flags &= ~SCRIPT_VERIFY_WITNESS;
@@ -132,7 +132,7 @@ script_verify_flags TrimFlags(script_verify_flags flags)
     return flags;
 }
 
-script_verify_flags FillFlags(script_verify_flags flags)
+static script_verify_flags FillFlags(script_verify_flags flags)
 {
     // CLEANSTACK implies WITNESS
     if (flags & SCRIPT_VERIFY_CLEANSTACK) flags |= SCRIPT_VERIFY_WITNESS;
@@ -147,7 +147,7 @@ script_verify_flags FillFlags(script_verify_flags flags)
 // that are valid and without duplicates. For example: if flags=1111 and the 4 possible flags are
 // 0001, 0010, 0100, and 1000, this should return the set {0111, 1011, 1101, 1110}.
 // Assumes that mapFlagNames contains all script verify flags.
-std::set<script_verify_flags> ExcludeIndividualFlags(script_verify_flags flags)
+static std::set<script_verify_flags> ExcludeIndividualFlags(script_verify_flags flags)
 {
     std::set<script_verify_flags> flags_combos;
     for (const auto& pair : mapFlagNames) {
@@ -557,7 +557,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
     assert(controlCheck);
 }
 
-SignatureData CombineSignatures(const CMutableTransaction& input1, const CMutableTransaction& input2, const CTransactionRef tx)
+static SignatureData CombineSignatures(const CMutableTransaction& input1, const CMutableTransaction& input2, const CTransactionRef tx)
 {
     SignatureData sigdata;
     sigdata = DataFromTransaction(input1, 0, tx->vout[0]);

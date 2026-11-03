@@ -74,7 +74,7 @@ static bool GetConfigOptions(std::istream& stream, const std::string& filepath, 
     return true;
 }
 
-bool IsConfSupported(KeyInfo& key, std::string& error) {
+static bool IsConfSupported(KeyInfo& key, std::string& error) {
     if (key.name == "conf") {
         error = "conf cannot be set in the configuration file; use includeconf= if you want to include additional config files";
         return false;

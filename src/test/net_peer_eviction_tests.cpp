@@ -21,7 +21,7 @@ BOOST_FIXTURE_TEST_SUITE(net_peer_eviction_tests, BasicTestingSetup)
 // call ProtectEvictionCandidatesByRatio() to apply protection logic, and then
 // return true if all of `protected_peer_ids` and none of `unprotected_peer_ids`
 // are protected from eviction, i.e. removed from the eviction candidates.
-bool IsProtected(int num_peers,
+static bool IsProtected(int num_peers,
                  std::function<void(NodeEvictionCandidate&)> candidate_setup_fn,
                  const std::unordered_set<NodeId>& protected_peer_ids,
                  const std::unordered_set<NodeId>& unprotected_peer_ids,
@@ -570,7 +570,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
 }
 
 // Returns true if any of the node ids in node_ids are selected for eviction.
-bool IsEvicted(std::vector<NodeEvictionCandidate> candidates, const std::unordered_set<NodeId>& node_ids, FastRandomContext& random_context)
+static bool IsEvicted(std::vector<NodeEvictionCandidate> candidates, const std::unordered_set<NodeId>& node_ids, FastRandomContext& random_context)
 {
     std::shuffle(candidates.begin(), candidates.end(), random_context);
     const std::optional<NodeId> evicted_node_id = SelectNodeToEvict(std::move(candidates));
@@ -583,7 +583,7 @@ bool IsEvicted(std::vector<NodeEvictionCandidate> candidates, const std::unorder
 // Create number_of_nodes random nodes, apply setup function candidate_setup_fn,
 // apply eviction logic and then return true if any of the node ids in node_ids
 // are selected for eviction.
-bool IsEvicted(const int number_of_nodes, std::function<void(NodeEvictionCandidate&)> candidate_setup_fn, const std::unordered_set<NodeId>& node_ids, FastRandomContext& random_context)
+static bool IsEvicted(const int number_of_nodes, std::function<void(NodeEvictionCandidate&)> candidate_setup_fn, const std::unordered_set<NodeId>& node_ids, FastRandomContext& random_context)
 {
     std::vector<NodeEvictionCandidate> candidates = GetRandomNodeEvictionCandidates(number_of_nodes, random_context);
     for (NodeEvictionCandidate& candidate : candidates) {
