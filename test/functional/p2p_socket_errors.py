@@ -2,20 +2,36 @@
 # Copyright (c) 2026 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test P2P handling of TCP urgent bytes and urgent pointers ahead of received data."""
+"""Test P2P handling of TCP urgent data and resets while sending."""
 
 import socket
 
-from test_framework.messages import MAGIC_BYTES, msg_generic, msg_version
-from test_framework.netutil import get_tcp_urgent_padding, send_tcp_urgent_data
-from test_framework.p2p import P2PInterface, P2P_VERSION
+from test_framework.messages import (
+    CInv,
+    MAGIC_BYTES,
+    MSG_BLOCK,
+    MSG_WITNESS_FLAG,
+    msg_generic,
+    msg_getdata,
+    msg_ping,
+    msg_version,
+)
+from test_framework.netutil import get_tcp_urgent_padding, pack_linger, send_tcp_urgent_data
+from test_framework.p2p import NetworkThread, P2PInterface, P2P_VERSION
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, p2p_port
+from test_framework.util import assert_equal, assert_greater_than, mine_large_block, p2p_port
+from test_framework.wallet import MiniWallet
+
+
+def reset_on_close(sock):
+    """Make a subsequent close send a TCP reset and discard unsent data."""
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, pack_linger(enabled=True, timeout=0))
 
 
 class SocketErrorsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        self.extra_args = [["-maxsendbuffer=1", "-maxreceivebuffer=1"]]
 
     def run_test(self):
         self.message_builder = P2PInterface()
@@ -24,6 +40,7 @@ class SocketErrorsTest(BitcoinTestFramework):
         self.version.nVersion = P2P_VERSION
         self.check_urgent_bytes()
         self.check_urgent_pointer_ahead()
+        self.check_reset_while_sending()
 
     def check_probe(self, send_probe, expected_bytes):
         node = self.nodes[0]
@@ -75,6 +92,36 @@ class SocketErrorsTest(BitcoinTestFramework):
             send_tcp_urgent_data(peer, version, linux_host=self.linux_host)
 
         self.check_probe(send_probe, len(version))
+
+    def check_reset_while_sending(self):
+        self.log.info("Check reset while the node has unsent block data")
+        node = self.nodes[0]
+        wallet = MiniWallet(node)
+        mine_large_block(self, wallet, node)
+        block_hash = node.getbestblockhash()
+        block_size = len(node.getblock(block_hash, 0)) // 2 + 24
+        peer = node.add_p2p_connection(P2PInterface(), supports_v2_p2p=False)
+        peer.sync_with_ping()
+        NetworkThread.network_event_loop.call_soon_threadsafe(peer._transport.pause_reading)
+        requests = 16
+        peer.send_without_ping(msg_getdata([CInv(MSG_BLOCK | MSG_WITNESS_FLAG, int(block_hash, 16))] * requests))
+        sent_bytes = self.wait_for_send_stall(node)
+        assert_greater_than(requests * block_size, sent_bytes)
+        # Exceed the receive-queue limit while processing is blocked by the
+        # outgoing data. Wait until the node has read that first batch.
+        pings = peer.build_message(msg_ping(nonce=123)) * 100
+        received = node.getnettotals()["totalbytesrecv"] + len(pings)
+        peer.send_raw_message(pings)
+        self.wait_until(lambda: node.getnettotals()["totalbytesrecv"] == received)
+        # More input is now queued in the kernel while receiving is paused.
+        peer.send_raw_message(pings)
+        reset_on_close(peer._transport.get_extra_info("socket"))
+        expected_msgs = ["socket send error"] if self.linux_host and not self.windows_target else []
+        with node.assert_debug_log(expected_msgs):
+            peer.peer_disconnect()
+            self.wait_until(lambda: len(node.getpeerinfo()) == 0, timeout=10)
+        assert_equal(node.getnettotals()["totalbytesrecv"], received)
+        node.disconnect_p2ps()
 
 
 if __name__ == '__main__':
