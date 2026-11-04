@@ -226,4 +226,27 @@ BOOST_AUTO_TEST_CASE(remove_added_node_equivalence)
     BOOST_CHECK_EQUAL(added_nodes[0].m_params.m_added_node, strprintf("node.example:%u", default_port + 1));
 }
 
+BOOST_AUTO_TEST_CASE(get_added_node_info_equivalence)
+{
+    ConnmanTestMsg connman{0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params()};
+    const uint16_t default_port{Params().GetDefaultPort()};
+
+    BOOST_CHECK(connman.AddNode({/*m_added_node=*/"node.example", /*m_use_v2transport=*/true}));
+    BOOST_CHECK(connman.AddNode({/*m_added_node=*/"[::1]", /*m_use_v2transport=*/true}));
+
+    // Return the added node value that matches node, or an empty string if none does.
+    const auto find{[&](const std::string& node) {
+        const auto added_nodes{connman.GetAddedNodeInfo(/*include_connected=*/true, node)};
+        BOOST_REQUIRE_LE(added_nodes.size(), 1U);
+        return added_nodes.empty() ? std::string{} : added_nodes[0].m_params.m_added_node;
+    }};
+    BOOST_CHECK_EQUAL(find("node.example"), "node.example");
+    BOOST_CHECK_EQUAL(find(strprintf("node.example:%u", default_port)), "node.example");
+    BOOST_CHECK_EQUAL(find(strprintf("[0:0:0:0:0:0:0:1]:%u", default_port)), "[::1]");
+    BOOST_CHECK_EQUAL(find(strprintf("node.example:%u", default_port + 1)), "");
+    BOOST_CHECK_EQUAL(find("other.example"), "");
+    // Without a filter, all added nodes are returned.
+    BOOST_CHECK_EQUAL(connman.GetAddedNodeInfo(/*include_connected=*/true).size(), 2U);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

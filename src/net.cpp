@@ -3017,7 +3017,7 @@ std::vector<CAddress> CConnman::GetCurrentBlockRelayOnlyConns() const
     return ret;
 }
 
-std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo(bool include_connected) const
+std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo(bool include_connected, std::optional<std::string_view> node) const
 {
     AssertLockNotHeld(m_nodes_mutex);
 
@@ -3026,8 +3026,12 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo(bool include_connected) co
     std::list<AddedNodeParams> lAddresses(0);
     {
         LOCK(m_added_nodes_mutex);
-        ret.reserve(m_added_node_params.size());
-        std::copy(m_added_node_params.cbegin(), m_added_node_params.cend(), std::back_inserter(lAddresses));
+        if (node) {
+            if (const auto it{FindAddedNode(std::string{*node})}; it != m_added_node_params.cend()) lAddresses.push_back(*it);
+        } else {
+            ret.reserve(m_added_node_params.size());
+            std::copy(m_added_node_params.cbegin(), m_added_node_params.cend(), std::back_inserter(lAddresses));
+        }
     }
 
 

@@ -1376,7 +1376,8 @@ public:
      * match. An entry without a port matches addr at any port. Names never match.
      */
     bool AddedNodesContain(const CAddress& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
-    std::vector<AddedNodeInfo> GetAddedNodeInfo(bool include_connected) const
+    /** If node is set, only return the entry that AddNode() considers equivalent to it, if any. */
+    std::vector<AddedNodeInfo> GetAddedNodeInfo(bool include_connected, std::optional<std::string_view> node = std::nullopt) const
         EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_nodes_mutex);
 
     /**

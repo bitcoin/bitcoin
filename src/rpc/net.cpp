@@ -563,20 +563,10 @@ static RPCMethod getaddednodeinfo()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
 
-    std::vector<AddedNodeInfo> vInfo = connman.GetAddedNodeInfo(/*include_connected=*/true);
-
-    if (auto node{self.MaybeArg<std::string_view>("node")}) {
-        bool found = false;
-        for (const AddedNodeInfo& info : vInfo) {
-            if (info.m_params.m_added_node == *node) {
-                vInfo.assign(1, info);
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            throw JSONRPCError(RPC_CLIENT_NODE_NOT_ADDED, "Error: Node has not been added.");
-        }
+    const auto node_arg{self.MaybeArg<std::string_view>("node")};
+    std::vector<AddedNodeInfo> vInfo = connman.GetAddedNodeInfo(/*include_connected=*/true, node_arg);
+    if (node_arg && vInfo.empty()) {
+        throw JSONRPCError(RPC_CLIENT_NODE_NOT_ADDED, "Error: Node has not been added.");
     }
 
     UniValue ret(UniValue::VARR);
