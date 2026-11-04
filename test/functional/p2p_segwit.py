@@ -1340,7 +1340,6 @@ class SegWitTest(BitcoinTestFramework):
             for i in range(NUM_SEGWIT_VERSIONS):
                 self.utxo.append(UTXO(tx.txid_int, i, split_value))
 
-        self.sync_blocks()
         temp_utxo = []
         tx = CTransaction()
         witness_script = CScript([OP_TRUE])
@@ -1848,7 +1847,6 @@ class SegWitTest(BitcoinTestFramework):
 
         self.generate(self.nodes[0], 1)  # Mine and clean up the mempool of non-standard node
         # Valid but non-standard transactions in a block should be accepted by standard node
-        self.sync_blocks()
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
         assert_equal(len(self.nodes[1].getrawmempool()), 0)
 
