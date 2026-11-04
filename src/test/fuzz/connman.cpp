@@ -16,9 +16,11 @@
 #include <test/fuzz/util/threadinterrupt.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
+#include <util/check.h>
 #include <util/translation.h>
 
 #include <cstdint>
+#include <unordered_set>
 #include <vector>
 
 namespace {
@@ -286,7 +288,56 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 connman.InitBindsPublic(options);
             },
             [&] {
+                // Initialize state to accurately flag events during the SocketHandler run.
+                std::unordered_set<const CNode*> paused;
+                for (CNode* node : connman.TestNodes()) {
+                    LOCK(node->m_sock_mutex);
+                    if (!node->m_sock) continue;
+
+                    const auto* sock{Assert(dynamic_cast<const FuzzedSock*>(node->m_sock.get()))};
+                    sock->m_last_requested = 0;
+                    sock->m_last_occurred = 0;
+                    sock->m_last_recv.reset();
+                    sock->m_recv_twice = false;
+                    sock->m_last_send.reset();
+                    sock->m_send_after_short = false;
+
+                    // The message handler pauses receiving from peers whose queue of received messages
+                    // is too large, and resumes it, from its own thread.
+                    node->fPauseRecv = fuzzed_data_provider.ConsumeBool();
+                    if (node->fPauseRecv) paused.insert(node);
+                }
+
                 connman.SocketHandlerPublic();
+
+                // Assert some invariants on the SocketHandler run.
+                for (CNode* node : connman.TestNodes()) {
+                    LOCK(node->m_sock_mutex);
+                    if (!node->m_sock) continue;
+                    const auto* sock{Assert(dynamic_cast<const FuzzedSock*>(node->m_sock.get()))};
+
+                    // Check we only ever read (/send) data when Recv (/send) was reported. The converse
+                    // does not always hold (for instance we may skip a recv() when we have too much to
+                    // send).
+                    Assert(!sock->m_last_recv || (sock->m_last_occurred & (Sock::RecvEvent | Sock::ErrorEvent)));
+                    Assert(!sock->m_last_send || (sock->m_last_occurred & Sock::SendEvent));
+
+                    // Check that we never request a Recv for fPauseRecv peers.
+                    Assert(!paused.contains(node) || !(sock->m_last_requested & Sock::RecvEvent));
+
+                    // Check we only ever read once per wakeup, and we never retry a send on a socket
+                    // that signaled it can't take any more.
+                    Assert(!sock->m_recv_twice);
+                    Assert(!sock->m_send_after_short);
+
+                    // Check that we "fail closed": if the last read or write failed with a fatal error,
+                    // we should no longer hold the socket after the handler ran.
+                    const auto fatal{[](ssize_t ret, int err) {
+                        return ret < 0 && err != WSAEWOULDBLOCK && err != WSAEMSGSIZE && err != WSAEINTR && err != WSAEINPROGRESS;
+                    }};
+                    Assert(!sock->m_last_recv || (sock->m_last_recv->ret != 0 && !fatal(sock->m_last_recv->ret, sock->m_last_recv->err)));
+                    Assert(!sock->m_last_send || !fatal(sock->m_last_send->ret, sock->m_last_send->err));
+                }
             });
     }
     connman.ForEachNode([](CNode* pnode) {

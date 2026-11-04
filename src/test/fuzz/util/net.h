@@ -210,6 +210,10 @@ class FuzzedSock : public Sock
 
     ssize_t RecvAfterFailure(void* buf, size_t len, int flags) const;
 
+    ssize_t ConsumeSend(const void* data, size_t len, int flags) const;
+
+    ssize_t ConsumeRecv(void* buf, size_t len, int flags) const;
+
 public:
     explicit FuzzedSock(FuzzedDataProvider& fuzzed_data_provider, FakeSteadyClock& clock);
 
@@ -244,6 +248,26 @@ public:
     bool WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const override;
 
     bool IsConnected(std::string& errmsg) const override;
+
+    // Events requested/reported for this socket by the last call to either Wait() or WaitMany().
+    mutable Event m_last_occurred{0};
+    mutable Event m_last_requested{0};
+
+    // Length passed to, and result and errno of, the last call to Recv()/Send(), if any.
+    struct IoCall {
+        size_t len;
+        ssize_t ret;
+        int err;
+        bool IsShort() const { return ret != static_cast<ssize_t>(len); }
+    };
+    mutable std::optional<IoCall> m_last_recv;
+    mutable std::optional<IoCall> m_last_send;
+
+    //! Set to true when Recv() is called with m_last_recv set.
+    mutable bool m_recv_twice{false};
+
+    //! Set to true when Send() is called with m_last_send set and representing a short send.
+    mutable bool m_send_after_short{false};
 };
 
 /** Reset the numbering of fuzzed socket descriptors. Called before each fuzz input so descriptor

@@ -153,6 +153,16 @@ FuzzedSock& FuzzedSock::operator=(Sock&& other)
 
 ssize_t FuzzedSock::Send(const void* data, size_t len, int flags) const
 {
+    if (m_last_send && m_last_send->IsShort()) {
+        m_send_after_short = true;
+    }
+    const ssize_t ret{ConsumeSend(data, len, flags)};
+    m_last_send = IoCall{.len = len, .ret = ret, .err = errno};
+    return ret;
+}
+
+ssize_t FuzzedSock::ConsumeSend(const void* data, size_t len, int flags) const
+{
     constexpr std::array send_errnos{
         EACCES,
         EAGAIN,
@@ -189,6 +199,14 @@ ssize_t FuzzedSock::Send(const void* data, size_t len, int flags) const
 }
 
 ssize_t FuzzedSock::Recv(void* buf, size_t len, int flags) const
+{
+    if (m_last_recv) m_recv_twice = true;
+    const ssize_t ret{ConsumeRecv(buf, len, flags)};
+    m_last_recv = IoCall{.len = len, .ret = ret, .err = errno};
+    return ret;
+}
+
+ssize_t FuzzedSock::ConsumeRecv(void* buf, size_t len, int flags) const
 {
     // Have a permanent error at recv_errnos[0] because when the fuzzed data is exhausted
     // SetFuzzedErrNo() will always return the first element and we want to avoid Recv()
@@ -478,6 +496,8 @@ bool FuzzedSock::Wait(std::chrono::milliseconds timeout, Event requested, Event*
     }
     if (occurred != nullptr) {
         *occurred = ConsumeOccurred(requested);
+        m_last_requested = requested;
+        m_last_occurred = *occurred;
     }
     m_clock += timeout;
     return true;
@@ -487,7 +507,10 @@ bool FuzzedSock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& even
 {
     for (auto& [sock, events] : events_per_sock) {
         // All sockets in a fuzz target are FuzzedSock.
-        events.occurred = Assert(dynamic_cast<const FuzzedSock*>(sock.get()))->ConsumeOccurred(events.requested);
+        const auto* s{Assert(dynamic_cast<const FuzzedSock*>(sock.get()))};
+        events.occurred = s->ConsumeOccurred(events.requested);
+        s->m_last_requested = events.requested;
+        s->m_last_occurred = events.occurred;
     }
     m_clock += timeout;
     return true;
