@@ -5,7 +5,7 @@
 """Test the HTTP server basics."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.netutil import NETWORK_ERRORS
+from test_framework.netutil import NETWORK_ERRORS, get_tcp_urgent_padding, send_tcp_urgent_data
 from test_framework.util import (
     assert_equal,
     assert_raises,
@@ -16,6 +16,7 @@ from test_framework.wallet import MiniWallet
 
 import concurrent.futures
 import http.client
+import json
 import re
 import socket
 import threading
@@ -160,6 +161,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         self.check_request_smuggling_cl_te()
         self.check_duplicate_content_length()
         self.check_null_byte_in_uri()
+        self.check_urgent_data()
         self.check_invalid_http_version()
         self.check_whitespace_in_headers()
         self.check_connection_limit()
@@ -605,6 +607,50 @@ class HTTPBasicsTest (BitcoinTestFramework):
         conn.send_raw(raw)
         response = conn.recv_raw().decode()
         assert response.startswith("HTTP/1.1 400")
+
+
+    def check_urgent_data(self):
+        self.log.info("Check HTTP handling of TCP urgent data and urgent pointers ahead")
+        block_count = self.node.getblockcount()
+        for bulk in (False, True):
+            conn = BitcoinHTTPConnection(self.node)
+            conn.set_timeout(10 * self.options.timeout_factor)
+            padding = get_tcp_urgent_padding(linux_host=self.linux_host) if bulk else 0
+            body = b'{"method":"getblockcount"' + b" " * padding + b"}"
+            request = (
+                "POST / HTTP/1.1\r\n"
+                f"Host: {conn.url.hostname}\r\n"
+                f"Authorization: Basic {str_to_b64str(conn.authpair)}\r\n"
+                f"Content-Length: {len(body)}\r\n\r\n"
+            ).encode("ascii") + body
+
+            def send_probe():
+                if bulk:
+                    send_tcp_urgent_data(conn.conn.sock, request, linux_host=self.linux_host)
+                else:
+                    assert_equal(conn.conn.sock.send(b"U", socket.MSG_OOB), 1)
+                    if not self.windows_target:
+                        conn.send_raw(request)
+
+            try:
+                if self.windows_target:
+                    with self.node.assert_debug_log(["HTTP socket error or exceptional condition"]):
+                        try:
+                            send_probe()
+                            assert_equal(conn.recv_raw(), b"")
+                        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+                            # The server can disconnect before the bulk send finishes.
+                            pass
+                else:
+                    send_probe()
+                    # The ordinary request must progress; the urgent byte is
+                    # excluded from the HTTP stream.
+                    response = http.client.HTTPResponse(conn.conn.sock)
+                    response.begin()
+                    assert_equal(response.status, http.client.OK)
+                    assert_equal(json.loads(response.read())["result"], block_count)
+            finally:
+                conn.close_sock()
 
 
     def check_invalid_http_version(self):
