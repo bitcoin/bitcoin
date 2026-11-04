@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <protocol.h>
 #include <staletipmessage.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
@@ -11,6 +12,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <ios>
+#include <optional>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -156,6 +159,27 @@ BOOST_AUTO_TEST_CASE(staletip_malformed_payloads)
     for (size_t i{0}; i <= MAX_STALETIP_HEADERS; ++i) too_many << StaleTipCompressedHeader{};
     too_many << uint8_t{0};
     BOOST_CHECK_THROW(DecodeExact(too_many), StaleTipHeadersLimitExceeded);
+}
+
+BOOST_AUTO_TEST_CASE(staletip_feature_parse)
+{
+    const auto parse{[](std::vector<uint8_t> data) { return StaleTipFeature::Parse(std::as_bytes(std::span{data})); }};
+
+    BOOST_CHECK(parse({}) == std::nullopt);
+    BOOST_CHECK(parse({0x02}) == std::nullopt);
+    BOOST_CHECK(parse({0xff}) == std::nullopt);
+    BOOST_CHECK(parse({0x00, 0x00}) == std::nullopt);
+    BOOST_CHECK(parse({0x01, 0x00}) == std::nullopt);
+    BOOST_CHECK(parse({0x00}) == StaleTipFeature{.prefers_blocks = false});
+    BOOST_CHECK(parse({0x01}) == StaleTipFeature{.prefers_blocks = true});
+
+    for (const bool prefers_blocks : {false, true}) {
+        const StaleTipFeature feature{.prefers_blocks = prefers_blocks};
+        DataStream stream;
+        stream << feature;
+        BOOST_CHECK_EQUAL(stream.size(), 1U);
+        BOOST_CHECK(StaleTipFeature::Parse(stream) == feature);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -50,6 +50,10 @@ public:
     /** Get the tracked tips that are eligible for relay, with their fork
      *  points, in the order they were added. */
     std::vector<StaleFork> GetStaleTips(const CChain& chain) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    /** Whether to ask peers to announce stale tips once they can serve the
+     *  blocks. Always on signet, where a tip is only tracked once its block
+     *  is validated. */
+    bool PrefersBlocks() const;
 
 private:
     const StaleTipRelayOptions m_opts;

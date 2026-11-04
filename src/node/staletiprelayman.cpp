@@ -69,4 +69,9 @@ std::vector<StaleFork> StaleTipRelayManager::GetStaleTips(const CChain& chain) c
     return m_tracker.GetStaleTips(chain);
 }
 
+bool StaleTipRelayManager::PrefersBlocks() const
+{
+    return m_opts.chain_type == ChainType::SIGNET;
+}
+
 } // namespace node

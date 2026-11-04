@@ -15,9 +15,13 @@
 #include <util/time.h>
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <optional>
+#include <span>
 #include <string>
+#include <string_view>
 
 /** Message header.
  * (4) message start.
@@ -322,8 +326,34 @@ inline constexpr size_t MAX_FEATUREID_LENGTH{80};
 inline constexpr size_t MAX_FEATUREDATA_LENGTH{512};
 
 namespace NetMsgFeature {
-//inline constexpr std::string_view FOO{"BIP-FOO"};
+/** BIP 434 feature id for stale-tip relay (BIP 332). */
+inline constexpr std::string_view STALETIP{"BIP332"};
 }
+
+/** Feature data of the BIP 434 stale-tip relay feature (BIP 332). */
+struct StaleTipFeature {
+    //! Whether announcements are preferred once block data is available.
+    bool prefers_blocks{false};
+
+    /** Parse feature data, which must be exactly one byte of 0 or 1.
+     *  @return std::nullopt if the data is malformed. */
+    static std::optional<StaleTipFeature> Parse(std::span<const std::byte> data);
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << uint8_t{prefers_blocks};
+    }
+
+    bool operator==(const StaleTipFeature&) const = default;
+};
+
+/** Recognized BIP 434 features, as advertised by us or by a peer. */
+struct NetFeatures {
+    std::optional<StaleTipFeature> stale_tip;
+
+    bool operator==(const NetFeatures&) const = default;
+};
 
 /** nServices flags */
 enum ServiceFlags : uint64_t {

@@ -123,3 +123,11 @@ GenTxid ToGenTxid(const CInv& inv)
     assert(inv.IsGenTxMsg());
     return inv.IsMsgWtx() ? GenTxid{Wtxid::FromUint256(inv.hash)} : GenTxid{Txid::FromUint256(inv.hash)};
 }
+
+std::optional<StaleTipFeature> StaleTipFeature::Parse(std::span<const std::byte> data)
+{
+    if (data.size() != 1) return std::nullopt;
+    const auto value{std::to_integer<uint8_t>(data[0])};
+    if (value > 1) return std::nullopt;
+    return StaleTipFeature{.prefers_blocks = value == 1};
+}

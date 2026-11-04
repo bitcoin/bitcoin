@@ -3,11 +3,12 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-"""Test stale-tip tracking."""
+"""Test stale-tip P2P relay."""
 
 from test_framework.blocktools import create_block
 from test_framework.messages import (
     CBlockHeader,
+    msg_feature,
     msg_headers,
 )
 from test_framework.p2p import P2PInterface
@@ -16,6 +17,25 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
+
+STALETIP_FEATURE = "BIP332"
+FEATURE_VERSION = 70017
+
+
+class StaleTipPeer(P2PInterface):
+    def __init__(self, *, send_feature=True, feature_data=b"\x00"):
+        super().__init__()
+        self.send_feature = send_feature
+        self.feature_data = feature_data
+        self.features = []
+
+    def on_version(self, message):
+        if self.send_feature and message.nVersion >= FEATURE_VERSION:
+            self.send_without_ping(msg_feature(STALETIP_FEATURE, self.feature_data))
+        super().on_version(message)
+
+    def on_feature(self, message):
+        self.features.append(message)
 
 
 class P2PStaleTipTest(BitcoinTestFramework):
@@ -29,12 +49,16 @@ class P2PStaleTipTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 101)
         self.block_time_offset = 1
 
+        self.test_feature_negotiation()
         self.test_reorged_out_active_tip_tracked()
         self.test_tracked_tip_listed_with_known_descendants()
         self.test_startup_seeding_only_when_enabled()
 
     def tracked_staletips(self):
         return [tip["hash"] for tip in self.nodes[0].getchaintips(staletips_only=True)]
+
+    def connect_peer(self, *, send_feature=True, feature_data=b"\x00", **kwargs):
+        return self.nodes[0].add_p2p_connection(StaleTipPeer(send_feature=send_feature, feature_data=feature_data), **kwargs)
 
     def assert_staletip_hash_tracked(self, block_hash):
         self.wait_until(lambda: block_hash in self.tracked_staletips())
@@ -120,6 +144,33 @@ class P2PStaleTipTest(BitcoinTestFramework):
 
         assert stale.hash_hex not in [tip["hash"] for tip in node.getchaintips()]
         assert stale.hash_hex in self.tracked_staletips()
+
+    def test_feature_negotiation(self):
+        self.log.info("Test staletip feature advertisement modes")
+        node = self.nodes[0]
+        for mode, expected_data in [("headers", b"\x00"), ("none", None)]:
+            self.restart_node(0, extra_args=[f"-staletips={mode}"])
+            peer = self.connect_peer()
+            stale_features = [feature for feature in peer.features if feature.feature_id == STALETIP_FEATURE]
+            if expected_data is None:
+                assert_equal(stale_features, [])
+            else:
+                assert_equal(len(stale_features), 1)
+                assert_equal(stale_features[0].feature_data, expected_data)
+            node.disconnect_p2ps()
+
+        self.log.info("Test peer staletip feature negotiation")
+        self.restart_node(0, extra_args=["-staletips=headers"])
+        for feature_data, expected_log in [
+            (b"", "ignoring malformed BIP332 feature data"),
+            (b"\x02", "ignoring malformed BIP332 feature data"),
+            (b"\x00\x01", "ignoring malformed BIP332 feature data"),
+        ]:
+            with node.assert_debug_log([expected_log], timeout=2):
+                peer = self.connect_peer(feature_data=feature_data)
+                peer.sync_with_ping()
+            assert peer.is_connected
+            node.disconnect_p2ps()
 
     def test_startup_seeding_only_when_enabled(self):
         self.log.info("Test stale-tip tracker is seeded at startup only when enabled")
