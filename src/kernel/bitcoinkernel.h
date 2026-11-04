@@ -407,12 +407,21 @@ typedef struct btck_LogEntry btck_LogEntry;
  * above the minimum level (see @ref btck_logging_set_min_level) while its
  * btck_LoggingConnection exists.
  *
- * The callback may be invoked from any thread. Invocations are serialized: no
- * two invocations run at the same time, and destroying a btck_LoggingConnection
- * waits for an in-flight invocation of its callback to return. The callback may
- * call the btck_log_entry_get_* functions on @p entry. It must not call any
- * other kernel API function (this may deadlock), and should return quickly
- * since it blocks every kernel thread that logs.
+ * The callback may be invoked from any thread, and from multiple threads at the
+ * same time, so it must be thread-safe. Entries logged on different threads
+ * have no global order. Destroying a btck_LoggingConnection waits for running
+ * invocations of its callback on other threads to return.
+ *
+ * No logging lock is held while the callback runs, so besides calling the
+ * btck_log_entry_get_* functions on @p entry, it may call kernel API functions,
+ * including ones that log, and ones that create or destroy other kernel
+ * objects and logging connections. Entries logged from inside the callback are
+ * delivered to it recursively. The callback must not destroy its own
+ * btck_LoggingConnection (this aborts), the connection of a callback it was
+ * called from on the same thread (this hangs), or the object whose function
+ * call logged the entry. Kernel code may hold internal locks such as cs_main
+ * while it logs, so the callback should return quickly, and must not wait for
+ * another thread that calls into the kernel or destroys a logging connection.
  *
  * @param[in] user_data User-defined opaque structure.
  * @param[in] entry     Log entry. Valid only for the duration of the callback.
@@ -959,7 +968,9 @@ BITCOINKERNEL_API btck_LoggingConnection* BITCOINKERNEL_WARN_UNUSED_RESULT btck_
     btck_DestroyCallback user_data_destroy_callback) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
- * Stop logging and destroy the logging connection.
+ * Stop logging and destroy the logging connection. Blocks until running
+ * invocations of its callback on other threads return, then destroys the user
+ * data.
  */
 BITCOINKERNEL_API void btck_logging_connection_destroy(btck_LoggingConnection* logging_connection);
 

@@ -509,6 +509,11 @@ class KernelLogger
     struct Callback {
         btck_LogCallback fn;
         UserData user_data;
+        //! Set under m_mutex when unregistering starts, so that Log() starts no new invocations.
+        bool removed{false};
+        //! Number of running invocations, changed under m_mutex. The callback is not erased from
+        //! m_callbacks while it is nonzero, so Log() can call it without holding m_mutex.
+        mutable std::atomic<int> in_flight{0};
 
         void operator()(const btck_LogEntry* entry) const { fn(user_data.get(), entry); }
     };
@@ -520,9 +525,11 @@ class KernelLogger
     std::atomic<size_t> m_callback_count{0};
     //! Entries below this level are not delivered.
     std::atomic<util::log::Level> m_min_level{util::log::Level::Info};
+    //! Callback running on this thread, used to detect a callback destroying its own connection.
+    static inline thread_local const Callback* t_running{nullptr};
 
-    //! Unregisters and destroys the callback. Waits for an in-flight Log to finish, then destroys
-    //! the callback (and its user_data) outside m_mutex.
+    //! Unregisters and destroys the callback. Waits for its running invocations on other threads
+    //! to return, then destroys the callback (and its user_data) outside m_mutex.
     void UnregisterCallback(std::list<Callback>::iterator it) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
 public:
@@ -559,8 +566,8 @@ public:
         return level >= m_min_level.load(std::memory_order_relaxed) &&
                m_callback_count.load(std::memory_order_relaxed) > 0;
     }
-    //! Deliver the entry to every registered callback while holding m_mutex, regardless of its
-    //! level. Exceptions from callbacks are swallowed.
+    //! Deliver the entry to every registered callback, regardless of its level, without holding
+    //! m_mutex while a callback runs. Exceptions from callbacks are swallowed.
     void Log(const util::log::Entry& entry) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
     //! Log() the entry if ShouldLog() passes for its level.
     void MaybeLog(const util::log::Entry& entry) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
@@ -573,35 +580,57 @@ public:
 
 KernelLogger::CallbackHandle KernelLogger::RegisterCallback(btck_LogCallback fn, UserData user_data)
 {
-    // Construct before locking so that a failed push_back destroys user_data outside m_mutex.
-    Callback cb{fn, std::move(user_data)};
+    // If emplace_back fails, user_data is not moved from, and is destroyed outside m_mutex.
     STDLOCK(m_mutex);
-    m_callbacks.push_back(std::move(cb));
+    m_callbacks.emplace_back(fn, std::move(user_data));
     m_callback_count.fetch_add(1, std::memory_order_relaxed);
     return {*this, std::prev(m_callbacks.end())};
 }
 
 void KernelLogger::UnregisterCallback(std::list<Callback>::iterator it)
 {
-    // Avoid running the callback destructor while holding m_mutex.
+    // Destroying a connection from inside its own callback would wait below forever.
+    assert(t_running != &*it);
+    {
+        STDLOCK(m_mutex);
+        it->removed = true;
+        m_callback_count.fetch_sub(1, std::memory_order_relaxed);
+    }
+    for (int n; (n = it->in_flight) != 0;) it->in_flight.wait(n);
+    // Avoid running the callback destructor while holding m_mutex. Taking m_mutex also waits for
+    // Log() to finish decrementing in_flight and move past the callback.
     std::list<Callback> dying;
     {
         STDLOCK(m_mutex);
         dying.splice(dying.begin(), m_callbacks, it);
-        m_callback_count.fetch_sub(1, std::memory_order_relaxed);
     }
 }
 
 void KernelLogger::Log(const util::log::Entry& entry) const
 {
-    STDLOCK(m_mutex);
-    for (const auto& callback : m_callbacks) {
-        try {
-            callback(btck_LogEntry::ref(&entry));
-        } catch (...) {
-            // Can't log the error here because we're already inside the logging path (would
-            // deadlock on m_mutex).
+    // Hold m_mutex only to step through m_callbacks. The iterator stays valid while m_mutex is
+    // released, because a callback with running invocations is not erased.
+    std::list<Callback>::const_iterator it;
+    for (bool first{true};; first = false) {
+        {
+            STDLOCK(m_mutex);
+            if (first) {
+                it = m_callbacks.begin();
+            } else {
+                if (--it->in_flight == 0) it->in_flight.notify_all();
+                ++it;
+            }
+            while (it != m_callbacks.end() && it->removed) ++it;
+            if (it == m_callbacks.end()) return;
+            ++it->in_flight;
         }
+        const Callback* outer{std::exchange(t_running, &*it)};
+        try {
+            (*it)(btck_LogEntry::ref(&entry));
+        } catch (...) {
+            // Can't log the error here because we're already inside the logging path.
+        }
+        t_running = outer;
     }
 }
 
