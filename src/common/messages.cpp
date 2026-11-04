@@ -74,6 +74,11 @@ static std::string FeeModeInfo(const std::pair<std::string, FeeEstimateMode>& mo
     assert(false);
 }
 
+static std::string FeeModes(const std::string& delimiter)
+{
+    return Join(FeeModeMap(), delimiter, [&](const std::pair<std::string, FeeEstimateMode>& i) { return i.first; });
+}
+
 std::string FeeModesDetail(std::string default_info)
 {
     std::string info;
@@ -81,11 +86,6 @@ std::string FeeModesDetail(std::string default_info)
         info += FeeModeInfo(fee_mode, default_info);
     }
     return strprintf("%s \n%s", FeeModes(", "), info);
-}
-
-std::string FeeModes(const std::string& delimiter)
-{
-    return Join(FeeModeMap(), delimiter, [&](const std::pair<std::string, FeeEstimateMode>& i) { return i.first; });
 }
 
 std::string InvalidEstimateModeErrorMessage()
