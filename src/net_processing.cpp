@@ -276,8 +276,16 @@ struct Peer {
      * Most peers use headers-first syncing, which doesn't use this mechanism */
     uint256 m_continuation_block GUARDED_BY(m_block_inv_mutex) {};
 
+    /** Protects m_features, which GetNodeStateStats reads from outside the
+     *  message handler thread. */
+    mutable Mutex m_features_mutex;
     /** Recognized BIP 434 features this peer advertised. */
-    NetFeatures m_features GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
+    NetFeatures m_features GUARDED_BY(m_features_mutex);
+
+    NetFeatures GetFeatures() const EXCLUSIVE_LOCKS_REQUIRED(!m_features_mutex)
+    {
+        return WITH_LOCK(m_features_mutex, return m_features);
+    }
 
     /** Set to true once initial VERSION message was sent (only relevant for outbound peers). */
     bool m_outbound_version_message_sent GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
@@ -1967,6 +1975,7 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
     stats.m_addr_processed = peer->m_addr_processed.load();
     stats.m_addr_rate_limited = peer->m_addr_rate_limited.load();
     stats.m_addr_relay_enabled = peer->m_addr_relay_enabled.load();
+    stats.m_features = peer->GetFeatures();
     {
         LOCK(peer->m_headers_sync_mutex);
         if (peer->m_headers_sync) {
@@ -2014,6 +2023,7 @@ PeerManagerInfo PeerManagerImpl::GetInfo() const
         .tx_send_rate = m_opts.tx_send_rate,
         .inbound_bucket = m_inbound_inv_bucket.info(),
         .outbound_bucket = m_outbound_inv_bucket.info(),
+        .features = LocalFeatures(),
     };
 }
 
@@ -4318,7 +4328,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                 return;
             }
 
-            peer.m_features.stale_tip = *stale_tip;
+            WITH_LOCK(peer.m_features_mutex, peer.m_features.stale_tip = *stale_tip);
             LogDebug(BCLog::NET, "peer=%d supports staletip announcements with prefers_blocks=%d", pfrom.GetId(), stale_tip->prefers_blocks);
             return;
         }

@@ -83,6 +83,8 @@ struct CNodeStateStats {
     int64_t presync_height{-1};
     std::chrono::seconds time_offset{0};
     NodeClock::time_point m_last_block_announcement;
+    //! Recognized BIP 434 features the peer advertised.
+    NetFeatures m_features;
 };
 
 struct PeerManagerInfo {
@@ -98,6 +100,8 @@ struct PeerManagerInfo {
     unsigned int tx_send_rate{0};
     InvBucketInfo inbound_bucket;
     InvBucketInfo outbound_bucket;
+    //! BIP 434 features we advertise.
+    NetFeatures features;
 };
 
 class PeerManager : public CValidationInterface, public NetEventsInterface

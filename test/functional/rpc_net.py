@@ -160,6 +160,7 @@ class NetTest(BitcoinTestFramework):
                 "bytessent_per_msg": {},
                 "connection_type": "inbound",
                 "conntime": no_version_peer_conntime,
+                "features": {},
                 "id": no_version_peer_id,
                 "inbound": True,
                 "inflight": [],
