@@ -12,7 +12,7 @@ cmake_push_check_state()
 set(CMAKE_REQUIRED_LIBRARIES Threads::Threads)
 check_cxx_source_compiles("
   #include <pthread.h>
-  int main(int argc, char** argv)
+  int main()
   {
     char thread_name[16];
     return pthread_getname_np(pthread_self(), thread_name, sizeof(thread_name));
@@ -20,9 +20,17 @@ check_cxx_source_compiles("
   HAVE_PTHREAD_GETNAME_NP)
 
 check_cxx_source_compiles("
+  #include <pthread.h>
+  int main()
+  {
+    return pthread_setname_np(pthread_self(), \"%s\", (void*)\"name\");
+  }"
+  HAVE_PTHREAD_SETNAME_NP_3ARG)
+
+check_cxx_source_compiles("
   #include <cstdint>
   #include <pthread.h>
-  int main(int argc, char** argv)
+  int main()
   {
     uint64_t tid;
     pthread_threadid_np(nullptr, &tid);
@@ -33,7 +41,7 @@ check_cxx_source_compiles("
 check_cxx_source_compiles("
   #include <pthread.h>
   #include <pthread_np.h>
-  int main(int argc, char** argv)
+  int main()
   {
     return pthread_getthreadid_np();
   }"

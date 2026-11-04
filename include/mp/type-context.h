@@ -12,11 +12,11 @@
 
 namespace mp {
 template <typename Output>
+    requires FieldTypeIs<Output, Context::Builder>
 void CustomBuildField(TypeList<>,
     Priority<1>,
     ClientInvokeContext& invoke_context,
-    Output&& output,
-    typename std::enable_if<std::is_same<decltype(output.get()), Context::Builder>::value>::type* enable = nullptr)
+    Output&& output)
 {
     auto& connection = invoke_context.connection;
     auto& thread_context = invoke_context.thread_context;
@@ -93,7 +93,7 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
         // call. In this case, the callbackThread value should point
         // to the same thread already in the map, so there is no
         // need to update the map.
-        auto& thread_context = g_thread_context;
+        auto& thread_context = CurrentThread();
         auto& request_threads = thread_context.request_threads;
         ConnThread request_thread;
         bool inserted{false};
@@ -131,6 +131,18 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
             std::tie(request_thread, inserted) = SetThread(
                 GuardedRef{thread_context.waiter->m_mutex, request_threads}, server.m_context.connection,
                 [&] { return Accessor::get(call_context.getParams()).getCallbackThread(); });
+            // Initialize the request's results struct here on the event loop
+            // thread, so later getResults() calls on the execution thread
+            // return the response capnp caches on first use instead of
+            // reading Cap'n Proto connection state, which is unsafe off the
+            // event loop thread because RpcConnectionState::disconnect()
+            // overwrites it there without synchronization on an abrupt remote
+            // disconnect (bitcoin-core/libmultiprocess#348). After this call,
+            // the only call_context state accessed by the execution thread is
+            // the params reader and the results struct allocated here; any
+            // future change accessing other call_context state needs to move
+            // that access to the event loop thread the same way.
+            call_context.getResults();
         });
 
         // If an entry was inserted into the request_threads map,
