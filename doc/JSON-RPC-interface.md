@@ -89,7 +89,7 @@ protocol in v27.0 and prior releases.
 | Request marker | `"version": "1.1"` (or none) | `"jsonrpc": "2.0"` |
 | Response marker | (none) | `"jsonrpc": "2.0"` |
 | `"error"` and `"result"` fields in response | both present | only one is present |
-| HTTP codes in response | `200` unless there is any kind of RPC error (invalid parameters, method not found, etc) | Always `200` unless there is an actual HTTP server error (request parsing error, endpoint not found, etc) |
+| HTTP codes in response | `200` unless there is any kind of RPC error (invalid parameters, method not found, etc) | Always `200` unless there is an actual HTTP server error (request body is not valid JSON, endpoint not found, etc) |
 | Notifications: requests that get no reply | (not supported) | Supported for requests that exclude the "id" field. Returns HTTP status `204` "No Content" |
 
 ## Security

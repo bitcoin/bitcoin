@@ -6,7 +6,6 @@
 
 import json
 import os
-import re
 from dataclasses import dataclass
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import JSONRPCException, assert_equal, assert_greater_than_or_equal
@@ -240,32 +239,20 @@ class RPCInterfaceTest(BitcoinTestFramework):
                 {'result': None, 'error': {'code': -32600, 'message': message}}
             )
             assert_equal(status, 400)
-        self.log.info("... JSONRPC 2.0 currently returns HTTP errors, or crashes the node in debug builds")
+        self.log.info("... JSONRPC 2.0 expects HTTP 200 with error message in response")
         for request, message in cases:
             for notification in [True, False]:
                 body = {"jsonrpc": "2.0", **request}
                 if not notification:
                     body["id"] = "1"
-                try:
-                    response, status = send_json_rpc(self.nodes[0], body)
-                except ConnectionError:
-                    self.log.debug("Debug builds abort on the failed Assume() in JSONErrorReply()")
-                    self.nodes[0].wait_until_stopped(
-                        expected_ret_code=[
-                            -6,          # Unix
-                            3,           # Windows native
-                            0xC0000409   # Windows cross builds
-                        ],
-                        expected_stderr=re.compile(r"`jreq\.m_json_version != JSONRPCVersion::V2` check failed")
-                    )
-                    self.start_node(0)
-                    continue
-                self.log.debug("Release builds respond with HTTP 400")
+                response, status = send_json_rpc(self.nodes[0], body)
                 expected = {"jsonrpc": "2.0", "error": {"code": RPC_INVALID_REQUEST, "message": message}}
-                if not notification:
+                if notification:
+                    expected["id"] = None
+                else:
                     expected["id"] = "1"
                 assert_equal(response, expected)
-                assert_equal(status, 400)
+                assert_equal(status, 200)
 
     def test_work_queue_exceeded(self):
         self.log.info("Testing work queue exceeded...")
