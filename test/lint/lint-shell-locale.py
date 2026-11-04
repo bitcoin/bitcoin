@@ -14,6 +14,8 @@ import subprocess
 import sys
 import re
 
+from lint_ignore_dirs import SHARED_EXCLUDED_SUBTREES
+
 OPT_OUT_LINES = [
     'export LC_ALL=C.UTF-8',
 ]
@@ -37,7 +39,7 @@ def main():
     exit_code = 0
     shell_files = get_shell_files_list()
     for file_path in shell_files:
-        if re.search('src/(ipc/libmultiprocess|secp256k1|minisketch)/', file_path):
+        if any(file_path.startswith(subtree) for subtree in SHARED_EXCLUDED_SUBTREES):
             continue
 
         with open(file_path, 'r') as file_obj:
