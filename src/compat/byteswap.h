@@ -6,10 +6,6 @@
 #define BITCOIN_COMPAT_BYTESWAP_H
 
 #include <cstdint>
-#ifdef _MSC_VER
-#include <cstdlib>
-#endif
-
 
 // All internal_bswap_* functions can be replaced with std::byteswap once we
 // require c++23. Both libstdc++ and libc++ implement std::byteswap via these
