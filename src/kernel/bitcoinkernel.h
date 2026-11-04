@@ -1395,6 +1395,10 @@ BITCOINKERNEL_API btck_BlockValidationState* BITCOINKERNEL_WARN_UNUSED_RESULT bt
  * set for the chainstate manager. Can also import an array of existing block
  * files selected by the user.
  *
+ * Do not call this while another btck_chainstate_manager_import_blocks call
+ * on the same chainstate manager is in progress. The process aborts when this
+ * is detected.
+ *
  * @param[in] chainstate_manager        Non-null.
  * @param[in] block_file_paths_data     Nullable, array of block files described by their full filesystem paths.
  * @param[in] block_file_paths_lens     Nullable, array containing the lengths of each of the paths.
