@@ -15,7 +15,7 @@ replace_subtree() {
 }
 
 add_llvm_apt_repository() {
-  curl -s "https://apt.llvm.org/llvm-snapshot.gpg.key" | sudo tee "/etc/apt/trusted.gpg.d/apt.llvm.org.asc" > /dev/null
+  curl --fail --silent --show-error --location "https://apt.llvm.org/llvm-snapshot.gpg.key" | sudo tee "/etc/apt/trusted.gpg.d/apt.llvm.org.asc" > /dev/null
   source /etc/os-release
   echo "deb http://apt.llvm.org/${VERSION_CODENAME}/ llvm-toolchain-${VERSION_CODENAME}-${LLVM_VERSION} main" | sudo tee "/etc/apt/sources.list.d/llvm.list"
   sudo apt-get update
