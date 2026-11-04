@@ -105,13 +105,13 @@ using node::NodeContext;
 using node::SnapshotMetadata;
 using util::MakeUnorderedList;
 
-std::tuple<std::unique_ptr<CCoinsViewCursor>, CCoinsStats, const CBlockIndex*>
+static std::tuple<std::unique_ptr<CCoinsViewCursor>, CCoinsStats, const CBlockIndex*>
 PrepareUTXOSnapshot(
     Chainstate& chainstate,
     const std::function<void()>& interruption_point = {})
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-UniValue WriteUTXOSnapshot(
+static UniValue WriteUTXOSnapshot(
     Chainstate& chainstate,
     CCoinsViewCursor* pcursor,
     CCoinsStats* maybe_stats,
@@ -121,7 +121,7 @@ UniValue WriteUTXOSnapshot(
     const fs::path& temppath,
     const std::function<void()>& interruption_point = {});
 
-UniValue CreateRolledBackUTXOSnapshot(
+static UniValue CreateRolledBackUTXOSnapshot(
     NodeContext& node,
     Chainstate& chainstate,
     const CBlockIndex* target,
@@ -3223,7 +3223,7 @@ public:
     }
 };
 
-UniValue CreateRolledBackUTXOSnapshot(
+static UniValue CreateRolledBackUTXOSnapshot(
     NodeContext& node,
     Chainstate& chainstate,
     const CBlockIndex* target,
@@ -3361,7 +3361,7 @@ UniValue CreateRolledBackUTXOSnapshot(
                              node.rpc_interruption_point);
 }
 
-std::tuple<std::unique_ptr<CCoinsViewCursor>, CCoinsStats, const CBlockIndex*>
+static std::tuple<std::unique_ptr<CCoinsViewCursor>, CCoinsStats, const CBlockIndex*>
 PrepareUTXOSnapshot(
     Chainstate& chainstate,
     const std::function<void()>& interruption_point)
@@ -3399,7 +3399,7 @@ PrepareUTXOSnapshot(
     return {std::move(pcursor), *CHECK_NONFATAL(maybe_stats), tip};
 }
 
-UniValue WriteUTXOSnapshot(
+static UniValue WriteUTXOSnapshot(
     Chainstate& chainstate,
     CCoinsViewCursor* pcursor,
     CCoinsStats* maybe_stats,
