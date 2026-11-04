@@ -72,6 +72,12 @@ def send_tcp_urgent_data(sock, message, *, linux_host):
     sock.sendall(message + b"U", socket.MSG_OOB)
 
 
+def pack_linger(*, enabled, timeout):
+    """Pack the socket linger settings using the Python host's native layout."""
+    # Windows struct linger contains two unsigned shorts; Unix uses two ints.
+    return struct.pack("HH" if os.name == "nt" else "ii", enabled, timeout)
+
+
 def get_socket_inodes(pid):
     '''
     Get list of socket inodes for process pid.
