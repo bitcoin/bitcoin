@@ -244,9 +244,11 @@ bool Sock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per
         if (FD_ISSET(s, &send)) {
             events.occurred |= SendEvent;
         }
+#ifdef WIN32
         if (FD_ISSET(s, &err)) {
             events.occurred |= ErrorEvent;
         }
+#endif
     }
 
     return true;
