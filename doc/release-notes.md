@@ -97,7 +97,7 @@ caveats:
   database into separate databases on the first start of v24.0.0. A node that
   had any of these indexes enabled must be restarted with `-reindex` after
   downgrading. Older versions enforce this: they refuse to start with an index
-  that v24.0.0 has migrated until `-reindex` is given. (#8033)
+  that v24.0.0 has migrated until `-reindex` is given. (#8031)
 - The governance and spork caches written by v24.0.0 are not readable by older
   versions; they are discarded and re-synced from the network.
 - v24.0.0 does not upgrade the wallet file format. Wallet records added by
@@ -686,7 +686,7 @@ Breaking changes:
   in the block index (for example after `blocks/` and `chainstate/` were
   deleted but `indexes/` was kept) is refused at startup with "best block of
   the index not found"; delete that index's directory or use `-reindex`.
-  (#8033, bitcoin#25193)
+  (bitcoin#25193)
 
 Release candidates rc.1 through rc.6 could leave these indexes inconsistent
 with the active chain after a reorg combined with an unclean shutdown or with
@@ -694,13 +694,16 @@ an index being disabled for a while, and could report one of them as synced
 while it was empty after its directory was deleted on a datadir migrated from
 v23. v24.0.0 fixes both: indexes no longer commit their state ahead of the
 node's flushed chain state, and an empty or partially rebuilt index is rebuilt
-from genesis instead of being taken as migrated data. (#8033, bitcoin#33212,
-bitcoin#34897)
+from genesis instead of being taken as migrated data. (#8031; #8042, merge
+9e5e3d59a1e, ported commit by commit)
 
-As in earlier versions, these indexes can also keep entries of a block that was
+If an unclean shutdown loses blocks whose entries an index had already
+written, the node can now refuse to start with "<index>: the block the index
+was last synced to is not found. Please rebuild the index." In other cases, as
+in earlier versions, these indexes can keep entries of a block that was
 connected shortly before an unclean shutdown and then lost, if the network
-never sends that block again because a competing block won. Rebuild them as
-described in [How to Upgrade](#how-to-upgrade) after such a crash.
+never sends that block again because a competing block won. In either case,
+rebuild them as described in [How to Upgrade](#how-to-upgrade). (#8042)
 
 ## Masternode configuration requirements
 
