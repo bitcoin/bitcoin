@@ -17,6 +17,7 @@
 #include <uint256.h>
 #include <univalue.h>
 #include <util/bitdeque.h>
+#include <util/blockingqueue.h>
 #include <util/byte_units.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
@@ -29,13 +30,17 @@
 #include <util/tokenbucket.h>
 #include <util/vector.h>
 
+#include <algorithm>
 #include <array>
+#include <atomic>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <fstream>
 #include <limits>
 #include <map>
+#include <numeric>
 #include <optional>
 #include <string>
 #include <thread>
@@ -2045,6 +2050,129 @@ BOOST_AUTO_TEST_CASE(token_bucket_refill_from_debt)
     BOOST_CHECK_EQUAL(b.value(), -20);
     b.increment(NodeClock::time_point{100s}); // +960 but clamped to cap
     BOOST_CHECK_EQUAL(b.value(), 100);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+namespace {
+// Only needed by util_tests_blockingqueue, below.
+/** Wait up to a quarter of a second for `flag`, so a queue that fails to block
+ * shows up as a failed check rather than a hung test. */
+bool WaitFor(const std::atomic<bool>& flag)
+{
+    for (int i{0}; i < 250 && !flag; ++i) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    return flag;
+}
+} // namespace
+
+BOOST_AUTO_TEST_SUITE(util_tests_blockingqueue)
+
+BOOST_AUTO_TEST_CASE(items_come_out_in_order)
+{
+    util::BlockingQueue<int> queue{2};
+    queue.Push(1);
+    queue.Push(2);
+    queue.Finish();
+
+    int item{0};
+    BOOST_CHECK(queue.Pop(item));
+    BOOST_CHECK_EQUAL(item, 1);
+    BOOST_CHECK(queue.Pop(item));
+    BOOST_CHECK_EQUAL(item, 2);
+    BOOST_CHECK(!queue.Pop(item));
+}
+
+BOOST_AUTO_TEST_CASE(push_waits_while_full)
+{
+    util::BlockingQueue<int> queue{1};
+    queue.Push(1);
+
+    std::atomic<bool> pushed{false};
+    std::thread producer{[&] {
+        queue.Push(2);
+        pushed = true;
+    }};
+    BOOST_CHECK(!WaitFor(pushed));
+
+    // The pop that makes room is what lets the producer finish.
+    int item{0};
+    BOOST_CHECK(queue.Pop(item));
+    BOOST_CHECK_EQUAL(item, 1);
+    producer.join();
+    BOOST_CHECK(pushed);
+    queue.Finish();
+}
+
+BOOST_AUTO_TEST_CASE(push_after_finish_is_dropped)
+{
+    util::BlockingQueue<int> queue{1};
+    queue.Push(1);
+    queue.Finish();
+    queue.Push(2); // must not block, though the queue is full, and must be dropped
+
+    int item{0};
+    BOOST_CHECK(queue.Pop(item));
+    BOOST_CHECK_EQUAL(item, 1);
+    BOOST_CHECK(!queue.Pop(item));
+}
+
+BOOST_AUTO_TEST_CASE(every_item_goes_to_one_consumer)
+{
+    constexpr int NUM_ITEMS{1000};
+    constexpr int NUM_CONSUMERS{4};
+    util::BlockingQueue<int> queue{8};
+
+    std::vector<std::vector<int>> taken(NUM_CONSUMERS);
+    std::vector<std::thread> consumers;
+    consumers.reserve(NUM_CONSUMERS);
+    for (int i{0}; i < NUM_CONSUMERS; ++i) {
+        consumers.emplace_back([&queue, &taken, i] {
+            int item{0};
+            while (queue.Pop(item)) taken[i].push_back(item);
+        });
+    }
+    for (int i{0}; i < NUM_ITEMS; ++i) queue.Push(i);
+    queue.Finish();
+    for (auto& consumer : consumers) consumer.join();
+
+    std::vector<int> all;
+    for (const auto& per_consumer : taken) {
+        all.insert(all.end(), per_consumer.begin(), per_consumer.end());
+    }
+    std::sort(all.begin(), all.end());
+    std::vector<int> expected(NUM_ITEMS);
+    std::iota(expected.begin(), expected.end(), 0);
+    BOOST_CHECK(all == expected);
+}
+
+BOOST_AUTO_TEST_CASE(measures_waits)
+{
+    util::BlockingQueue<int, true> queue{1};
+
+    // A consumer with nothing to take has to wait, and the wait is recorded.
+    std::atomic<bool> popped{false};
+    std::atomic<bool> started{false};
+    std::thread consumer{[&] {
+        int item{0};
+        started = true;
+        popped = queue.Pop(item);
+    }};
+
+    BOOST_CHECK(WaitFor(started));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    queue.Push(1);
+    consumer.join();
+
+    BOOST_CHECK(popped);
+    const auto pushed{queue.PushWaits()};
+    const auto consumed{queue.PopWaits()};
+    BOOST_CHECK_EQUAL(pushed.events, 1U); // one push, and it had room, so it did not wait
+    BOOST_CHECK_LT(pushed.total.count(), 10'000);
+    BOOST_CHECK_EQUAL(consumed.events, 1U);
+    BOOST_CHECK_GT(consumed.total.count(), 0);
+    BOOST_CHECK_LE(consumed.longest, consumed.total);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

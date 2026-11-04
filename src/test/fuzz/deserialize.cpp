@@ -29,6 +29,7 @@
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
 #include <undo.h>
+#include <utxo_snapshot.h>
 
 #include <cstdint>
 #include <exception>
@@ -36,7 +37,6 @@
 #include <stdexcept>
 
 using kernel::CBlockFileInfo;
-using node::SnapshotMetadata;
 
 void initialize_deserialize()
 {
@@ -304,8 +304,7 @@ FUZZ_TARGET_DESERIALIZE(blocktransactionsrequest_deserialize, {
     DeserializeFromFuzzingInput(buffer, btr);
 })
 FUZZ_TARGET_DESERIALIZE(snapshotmetadata_deserialize, {
-    auto msg_start = Params().MessageStart();
-    SnapshotMetadata snapshot_metadata{msg_start};
+    SnapshotMetadata snapshot_metadata;
     DeserializeFromFuzzingInput(buffer, snapshot_metadata);
 })
 FUZZ_TARGET_DESERIALIZE(uint160_deserialize, {
