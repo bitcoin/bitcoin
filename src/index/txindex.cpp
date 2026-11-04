@@ -20,11 +20,9 @@
 #include <serialize.h>
 #include <streams.h>
 #include <sync.h>
-#include <tinyformat.h>
 #include <uint256.h>
 #include <util/fs.h>
 #include <util/log.h>
-#include <util/string.h>
 #include <validation.h>
 
 #include <algorithm>
@@ -32,11 +30,11 @@
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <exception>
 #include <functional>
 #include <memory>
 #include <optional>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -165,14 +163,6 @@ bool TxIndex::CustomAppend(const interfaces::BlockInfo& block)
 
 BaseIndex::DB& TxIndex::GetDB() const { return *m_db; }
 
-template <typename... Args>
-[[noreturn]] static void WarnAndThrowErr(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
-{
-    const std::string err{tfm::format(fmt, args...)};
-    LogWarning("%s", err);
-    throw std::runtime_error{err};
-}
-
 std::optional<TxIndexResult> TxIndex::FindTx(const Txid& tx_hash) const
 {
     struct Candidate {
@@ -193,8 +183,8 @@ std::optional<TxIndexResult> TxIndex::FindTx(const Txid& tx_hash) const
             uint256 candidate_block_hash;
             if (!m_db->Read(txindex::BlockSeqKey{key.pos.block_seq}, candidate_block_hash)) {
                 // A missing key can only happen after corruption.
-                WarnAndThrowErr("%s: Corrupt index: block sequence %u not found for txid %s",
-                                GetName(), key.pos.block_seq, tx_hash.ToString());
+                FatalError("%s: Corrupt index: block sequence %u not found for txid %s", GetName(), key.pos.block_seq, tx_hash.ToString());
+                std::abort();
             }
             LOCK(cs_main);
             const CBlockIndex* block_index{m_chainstate->m_blockman.LookupBlockIndex(candidate_block_hash)};
@@ -206,8 +196,8 @@ std::optional<TxIndexResult> TxIndex::FindTx(const Txid& tx_hash) const
                 // A stale entry may also refer to a known block without data.
                 // Skip it if it is not in the active chain.
                 if (!in_active_chain) continue;
-                WarnAndThrowErr("%s: Block data %s unexpectedly unavailable for txid %s. Caused by data corruption?",
-                                GetName(), candidate_block_hash.ToString(), tx_hash.ToString());
+                FatalError("%s: Block data %s unexpectedly unavailable for txid %s. Caused by data corruption?", GetName(), candidate_block_hash.ToString(), tx_hash.ToString());
+                std::abort();
             }
             const FlatFilePos tx_position{block_index->nFile, block_index->nDataPos + key.pos.tx_offset_in_block};
             candidates.emplace_back(tx_position, candidate_block_hash, key.pos.block_seq, in_active_chain);
@@ -220,15 +210,15 @@ std::optional<TxIndexResult> TxIndex::FindTx(const Txid& tx_hash) const
     for (const auto& candidate : candidates) {
         AutoFile file{m_chainstate->m_blockman.OpenBlockFile(candidate.tx_position, /*fReadOnly=*/true)};
         if (file.IsNull()) {
-            WarnAndThrowErr("%s: Failed to open block file for txid %s at %s in block %s",
-                            GetName(), tx_hash.ToString(), candidate.tx_position.ToString(), candidate.block_hash.ToString());
+            FatalError("%s: Failed to open block file for txid %s at %s in block %s", GetName(), tx_hash.ToString(), candidate.tx_position.ToString(), candidate.block_hash.ToString());
+            std::abort();
         }
         CTransactionRef tx;
         try {
             file >> TX_WITH_WITNESS(tx);
         } catch (const std::exception& e) {
-            WarnAndThrowErr("%s: Deserialize or I/O error (%s). txid %s at %s in block %s",
-                            GetName(), e.what(), tx_hash.ToString(), candidate.tx_position.ToString(), candidate.block_hash.ToString());
+            FatalError("%s: Deserialize or I/O error (%s). txid %s at %s in block %s", GetName(), e.what(), tx_hash.ToString(), candidate.tx_position.ToString(), candidate.block_hash.ToString());
+            std::abort();
         }
         if (tx->GetHash() == tx_hash) {
             return TxIndexResult{candidate.block_hash, std::move(tx)};
@@ -248,8 +238,8 @@ std::optional<TxIndexResult> TxIndex::FindLegacyTx(const Txid& tx_hash) const
 
     AutoFile file{m_chainstate->m_blockman.OpenBlockFile(postx, /*fReadOnly=*/true)};
     if (file.IsNull()) {
-        WarnAndThrowErr("%s: Failed to open block file for txid %s at %s",
-                        GetName(), tx_hash.ToString(), postx.ToString());
+        FatalError("%s: Failed to open block file for txid %s at %s", GetName(), tx_hash.ToString(), postx.ToString());
+        std::abort();
     }
     CBlockHeader header;
     CTransactionRef tx;
@@ -258,12 +248,12 @@ std::optional<TxIndexResult> TxIndex::FindLegacyTx(const Txid& tx_hash) const
         file.seek(postx.nTxOffset, SEEK_CUR);
         file >> TX_WITH_WITNESS(tx);
     } catch (const std::exception& e) {
-        WarnAndThrowErr("%s: Deserialize or I/O error (%s). txid %s at %s",
-                        GetName(), e.what(), tx_hash.ToString(), postx.ToString());
+        FatalError("%s: Deserialize or I/O error (%s). txid %s at %s", GetName(), e.what(), tx_hash.ToString(), postx.ToString());
+        std::abort();
     }
     if (tx->GetHash() != tx_hash) {
-        WarnAndThrowErr("%s: txid mismatch in legacy index. txid %s at %s",
-                        GetName(), tx_hash.ToString(), postx.ToString());
+        FatalError("%s: txid mismatch in legacy index. txid %s at %s", GetName(), tx_hash.ToString(), postx.ToString());
+        std::abort();
     }
     return TxIndexResult{header.GetHash(), std::move(tx)};
 }
