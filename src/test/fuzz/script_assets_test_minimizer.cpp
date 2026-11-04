@@ -127,7 +127,7 @@ std::vector<script_verify_flags> AllFlags()
 
 const std::vector<script_verify_flags> ALL_FLAGS = AllFlags();
 
-script_verify_flags ParseScriptFlags(const std::string& str)
+static script_verify_flags ParseScriptFlags(const std::string& str)
 {
     if (str.empty()) return 0;
 
