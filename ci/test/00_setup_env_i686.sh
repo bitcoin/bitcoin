@@ -11,12 +11,13 @@ export DPKG_ADD_ARCH="i386"
 export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:26.04"
 export CI_IMAGE_PLATFORM="linux/amd64"
 export CI_CONTAINER_CAP="--security-opt seccomp=unconfined"
-export PACKAGES="g++-i686-linux-gnu binutils-i686-linux-gnu libstdc++6:i386 libatomic1:i386"
-export DEP_OPTS="DEBUG=1 NO_IPC=1"
+export PACKAGES="g++-i686-linux-gnu binutils-i686-linux-gnu libstdc++6:i386 libatomic1:i386 python3-pip"
+export PIP_PACKAGES="--break-system-packages pycapnp"
+export DEP_OPTS="DEBUG=1"
 export CI_LIMIT_STACK_SIZE=1
 printf -v BITCOIN_CONFIG "%q " \
  --preset=dev-mode \
- -DENABLE_IPC=OFF \
  -DCMAKE_BUILD_TYPE=Debug \
  -DAPPEND_CPPFLAGS=-DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE
 export BITCOIN_CONFIG
+export BITCOIN_CMD="bitcoin -m" # Used in functional tests
