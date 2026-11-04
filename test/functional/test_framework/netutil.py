@@ -45,6 +45,33 @@ NETWORK_ERRORS = (
     http.client.ResponseNotReady,    # server response not ready or connection out of sync
 )
 
+def get_tcp_urgent_padding(*, linux_host):
+    """Choose padding for a message sent with send_tcp_urgent_data()."""
+    # Pad a message so that it spans several TCP segments.
+    # Only the final sentinel byte is urgent. The urgent pointer in each
+    # earlier segment then points beyond that segment's own payload, so the
+    # node sees the urgent indication, and reads that stop at the urgent
+    # mark, while the urgent byte itself is still in flight. The sentinel
+    # is not part of the message and must not be counted.
+    #
+    # On Linux the loopback maximum segment size (MSS) approaches 64 KiB,
+    # so a larger message is needed to get more than one segment.
+    # BSD-derived stacks (macOS, FreeBSD, OpenBSD, NetBSD) pass a MSG_OOB
+    # send to TCP one send-buffer chunk at a time and mark the last byte of
+    # each chunk urgent; macOS also caps chunks at 64 KiB. Keep the whole
+    # send within one chunk there. Their smaller loopback MTU still splits
+    # the message into several segments.
+    return 256 * 1024 if linux_host else 60 * 1024
+
+
+def send_tcp_urgent_data(sock, message, *, linux_host):
+    """Send a message followed by an urgent sentinel outside the message."""
+    # Fit BSD sends in one buffer chunk; keep Linux send-buffer autotuning.
+    if not linux_host:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 128 * 1024)
+    sock.sendall(message + b"U", socket.MSG_OOB)
+
+
 def get_socket_inodes(pid):
     '''
     Get list of socket inodes for process pid.

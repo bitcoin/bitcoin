@@ -224,6 +224,16 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         PortSeed.n = self.options.port_seed
 
+    @property
+    def linux_host(self):
+        """Whether the Python test process runs on Linux."""
+        return platform.system() == "Linux"
+
+    @property
+    def windows_target(self):
+        """Whether the tested binaries target Windows, including under Wine."""
+        return self.config["environment"]["EXEEXT"] == ".exe"
+
     def get_binaries(self, bin_dir=None):
         return Binaries(self.binary_paths, bin_dir, use_valgrind=self.options.valgrind)
 
