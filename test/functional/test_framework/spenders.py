@@ -551,6 +551,9 @@ ERR_EVAL_FALSE = {"err_msg": "Script evaluated without error but finished with a
 ERR_WITNESS_PROGRAM_WITNESS_EMPTY = {"err_msg": "Witness program was passed an empty witness"}
 ERR_CHECKSIGVERIFY = {"err_msg": "Script failed an OP_CHECKSIGVERIFY operation"}
 ERR_SCRIPT_NUM = {"err_msg": "Script number overflowed or is non-minimally encoded"}
+ERR_NEGATIVE_LOCKTIME = {"err_msg": "Negative locktime"}
+ERR_EQUALVERIFY = {"err_msg": "Script failed an OP_EQUALVERIFY operation"}
+ERR_SIG_PUSHONLY = {"err_msg": "Only push operators allowed in signatures"}
 
 DUST_LIMIT = 600
 MIN_FEE = 50000
