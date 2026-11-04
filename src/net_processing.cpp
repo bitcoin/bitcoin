@@ -1014,32 +1014,32 @@ private:
     /**
     * \brief Find next blocks to download from a peer after a starting block.
     *
-    * \param vBlocks      Vector of blocks to download which will be appended to.
+    * \param blocks       Vector of blocks to download which will be appended to.
     *                     Must not contain nullptr.
     * \param peer         Peer which blocks will be downloaded from.
     * \param state        Pointer to the state of the peer.
-    * \param index_walk   The starting block to add to vBlocks.
-    * \param count        Maximum number of blocks to allow in vBlocks. No more
+    * \param index_walk   The starting block to add to blocks.
+    * \param count        Maximum number of blocks to allow in blocks. No more
     *                     blocks will be added if it reaches this size.
-    * \param nWindowEnd   Maximum height of blocks to allow in vBlocks. No
+    * \param window_end   Maximum height of blocks to allow in blocks. No
     *                     blocks will be added above this height.
-    * \param activeChain  Optional pointer to a chain to compare against. If
+    * \param active_chain Optional pointer to a chain to compare against. If
     *                     provided, any next blocks which are already contained
-    *                     in this chain will not be appended to vBlocks, but
+    *                     in this chain will not be appended to blocks, but
     *                     instead will be used to update the
     *                     state->pindexLastCommonBlock pointer.
-    * \param nodeStaller  Optional pointer to a NodeId variable that will receive
+    * \param node_staller Optional pointer to a NodeId variable that will receive
     *                     the ID of another peer that might be causing this peer
     *                     to stall. This is set to the ID of the peer which
     *                     first requested the first in-flight block in the
-    *                     download window. It is only set if vBlocks is empty at
+    *                     download window. It is only set if blocks is empty at
     *                     the end of this function call and if increasing
-    *                     nWindowEnd by 1 would cause it to be non-empty (which
+    *                     window_end by 1 would cause it to be non-empty (which
     *                     indicates the download might be stalled because every
     *                     block in the window is in flight and no other peer is
     *                     trying to download the next block).
     */
-    void FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, const Peer& peer, CNodeState *state, const CBlockIndex& index_walk, unsigned int count, int nWindowEnd, const CChain* activeChain=nullptr, NodeId* nodeStaller=nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void FindNextBlocks(std::vector<const CBlockIndex*>& blocks, const Peer& peer, CNodeState *state, const CBlockIndex& index_walk, unsigned int count, int window_end, const CChain* active_chain=nullptr, NodeId* node_staller=nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /* Multimap used to preserve insertion order */
     typedef std::multimap<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator>> BlockDownloadMap;
@@ -1574,10 +1574,10 @@ void PeerManagerImpl::TryDownloadingHistoricalBlocks(const Peer& peer, unsigned 
     FindNextBlocks(block_indexes, peer, state, from_tip, count, std::min<int>(from_tip.nHeight + BLOCK_DOWNLOAD_WINDOW, target_block.nHeight));
 }
 
-void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, const Peer& peer, CNodeState *state, const CBlockIndex& index_walk, unsigned int count, int nWindowEnd, const CChain* activeChain, NodeId* nodeStaller)
+void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& blocks, const Peer& peer, CNodeState *state, const CBlockIndex& index_walk, unsigned int count, int window_end, const CChain* active_chain, NodeId* node_staller)
 {
     std::vector<const CBlockIndex*> vToFetch;
-    int nMaxHeight = std::min<int>(state->pindexBestKnownBlock->nHeight, nWindowEnd + 1);
+    int nMaxHeight = std::min<int>(state->pindexBestKnownBlock->nHeight, window_end + 1);
     bool is_limited_peer = IsLimitedPeer(peer);
     NodeId waitingfor = -1;
     const CBlockIndex* pindexWalk = &index_walk;
@@ -1585,7 +1585,7 @@ void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, c
         // Read up to 128 (or more, if more blocks than that are needed) successors of pindexWalk (towards
         // pindexBestKnownBlock) into vToFetch. We fetch 128, because CBlockIndex::GetAncestor may be as expensive
         // as iterating over ~100 CBlockIndex* entries anyway.
-        int nToFetch = std::min(nMaxHeight - pindexWalk->nHeight, std::max<int>(count - vBlocks.size(), 128));
+        int nToFetch = std::min(nMaxHeight - pindexWalk->nHeight, std::max<int>(count - blocks.size(), 128));
         vToFetch.resize(nToFetch);
         pindexWalk = state->pindexBestKnownBlock->GetAncestor(pindexWalk->nHeight + nToFetch);
         vToFetch[nToFetch - 1] = pindexWalk;
@@ -1594,7 +1594,7 @@ void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, c
         }
 
         // Iterate over those blocks in vToFetch (in forward direction), adding the ones that
-        // are not yet downloaded and not in flight to vBlocks. In the meantime, update
+        // are not yet downloaded and not in flight to blocks. In the meantime, update
         // pindexLastCommonBlock as long as all ancestors are already downloaded, or if it's
         // already part of our chain (and therefore don't need it even if pruned).
         for (const CBlockIndex* pindex : vToFetch) {
@@ -1608,8 +1608,8 @@ void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, c
                 return;
             }
 
-            if (pindex->nStatus & BLOCK_HAVE_DATA || (activeChain && activeChain->Contains(*pindex))) {
-                if (activeChain && pindex->HaveNumChainTxs()) {
+            if (pindex->nStatus & BLOCK_HAVE_DATA || (active_chain && active_chain->Contains(*pindex))) {
+                if (active_chain && pindex->HaveNumChainTxs()) {
                     state->pindexLastCommonBlock = pindex;
                 }
                 continue;
@@ -1625,11 +1625,11 @@ void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, c
             }
 
             // The block is not already downloaded, and not yet in flight.
-            if (pindex->nHeight > nWindowEnd) {
+            if (pindex->nHeight > window_end) {
                 // We reached the end of the window.
-                if (vBlocks.size() == 0 && waitingfor != peer.m_id) {
+                if (blocks.size() == 0 && waitingfor != peer.m_id) {
                     // We aren't able to fetch anything, but we would be if the download window was one larger.
-                    if (nodeStaller) *nodeStaller = waitingfor;
+                    if (node_staller) *node_staller = waitingfor;
                 }
                 return;
             }
@@ -1639,8 +1639,8 @@ void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, c
                 continue;
             }
 
-            vBlocks.push_back(pindex);
-            if (vBlocks.size() == count) {
+            blocks.push_back(pindex);
+            if (blocks.size() == count) {
                 return;
             }
         }
