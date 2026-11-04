@@ -105,8 +105,8 @@ private:
     virtual bool AllowPrune() const = 0;
 
     /// Whether CustomAppend() persists a block's entries right away. Commit() can't write the locator for a tip
-    /// above the last flush, so for these indexes it records that tip separately, and Init() resumes from it while
-    /// the block index still has it. Otherwise a restart would resume from the older locator and never rewind the
+    /// above the last flush, so for these indexes it records that tip separately, and Init() resumes from it, or
+    /// fails if the block index lost it. Otherwise a restart would resume from the older locator and never rewind the
     /// entries of blocks above it that are no longer on the active chain.
     virtual bool WritesEagerly() const { return false; }
 

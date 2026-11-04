@@ -107,7 +107,15 @@ bool BaseIndex::Init()
         }
     }
     const CBlockIndex* resume_block{ResumeBlock(m_chainstate->m_blockman, locator_index)};
-    if (resume_block == locator_index && WritesEagerly() && GetDB().ReadUncommittedTip()) {
+    const auto uncommitted_tip{WritesEagerly() ? GetDB().ReadUncommittedTip() : std::nullopt};
+    if (uncommitted_tip && resume_block == locator_index) {
+        // The entries of the blocks up to it are on disk, but without the blocks the index can't tell whether they
+        // are still on the active chain, nor rewind them.
+        if (!m_chainstate->m_blockman.LookupBlockIndex(*uncommitted_tip)) {
+            return InitError(strprintf(Untranslated("%s: the block the index was last synced to is not found. Please "
+                                                    "rebuild the index."),
+                                       GetName()));
+        }
         CDBBatch batch(GetDB());
         GetDB().EraseUncommittedTip(batch);
         GetDB().WriteBatch(batch);

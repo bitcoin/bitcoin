@@ -43,7 +43,13 @@ public:
         Stop();
     }
 
-    bool Indexed(const CBlockIndex* block) const { return m_db->Exists(std::make_pair(uint8_t{'e'}, block->GetBlockHash())); }
+    bool Indexed(const CBlockIndex* block) const { return Indexed(block->GetBlockHash()); }
+    bool Indexed(const uint256& block_hash) const { return m_db->Exists(std::make_pair(uint8_t{'e'}, block_hash)); }
+    //! Write the entry CustomAppend() writes, for a block the block index doesn't have
+    void WriteEntry(const uint256& block_hash)
+    {
+        BOOST_REQUIRE(m_db->Write(std::make_pair(uint8_t{'e'}, block_hash), true));
+    }
     //! Rewind, or with stop_after set, stop as a crash would once that block's batch is written
     bool RewindTo(const CBlockIndex* current_tip, const CBlockIndex* new_tip, const CBlockIndex* stop_after = nullptr)
     {
@@ -291,17 +297,30 @@ BOOST_FIXTURE_TEST_CASE(restart_rewinds_blocks_synced_above_flush, TestChain100S
         index.Stop();
     }
 
-    // An uncommitted tip the block index doesn't have, or one that isn't above the locator, is dropped and the index
+    // An uncommitted tip that isn't above the locator was left behind by an older binary: it is dropped and the index
     // starts from the locator
     node::g_indexes_ready_to_sync = false;
-    for (const uint256& stale_tip : {uint256::ONE, orphaned.back()->GetBlockHash()}) {
+    {
         ErasingIndex index{interfaces::MakeChain(m_node)};
-        index.SetUncommittedTip(stale_tip);
+        index.SetUncommittedTip(orphaned.back()->GetBlockHash());
         BOOST_REQUIRE(index.Start());
         BOOST_CHECK_EQUAL(index.GetSummary().best_block_height, 101);
         BOOST_CHECK(!index.UncommittedTip());
         index.Interrupt();
         index.Stop();
+    }
+
+    // An unclean stop can lose blocks the index already wrote entries for from the block index. Startup can't rewind
+    // those entries, so it must fail rather than resume from the locator with them in place.
+    const CBlock lost_block{CreateBlock({}, CScript() << OP_TRUE, chainman.ActiveChainstate())};
+    BOOST_REQUIRE(!WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(lost_block.GetHash())));
+    {
+        ErasingIndex index{interfaces::MakeChain(m_node)};
+        index.WriteEntry(lost_block.GetHash());
+        index.SetUncommittedTip(lost_block.GetHash());
+        BOOST_CHECK(!index.Start());
+        BOOST_CHECK(index.UncommittedTip() == lost_block.GetHash());
+        BOOST_CHECK(index.Indexed(lost_block.GetHash()));
     }
     node::g_indexes_ready_to_sync = true;
 }
