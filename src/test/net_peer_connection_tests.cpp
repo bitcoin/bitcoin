@@ -163,6 +163,31 @@ BOOST_FIXTURE_TEST_CASE(test_addnode_getaddednodeinfo_and_connection_detection, 
     connman->ClearTestNodes();
 }
 
+BOOST_AUTO_TEST_CASE(added_nodes_contain_numeric_aliases)
+{
+    const uint16_t default_port{Params().GetDefaultPort()};
+    const std::string expanded{"[2001:4860:4860:0:0:0:0:8888]"};
+    const std::string canonical{"[2001:4860:4860::8888]"};
+    const CAddress addr{LookupNumeric(canonical, default_port), NODE_NONE};
+    const CAddress other_port{LookupNumeric(canonical, default_port + 1), NODE_NONE};
+    const CAddress other_addr{LookupNumeric("[2001:4860:4860::8844]", default_port), NODE_NONE};
+
+    for (const bool explicit_port : {false, true}) {
+        const std::string added_node{explicit_port ? strprintf("%s:%u", expanded, default_port) : expanded};
+        BOOST_TEST_CONTEXT(added_node) {
+            ConnmanTestMsg connman{0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params()};
+            BOOST_REQUIRE(connman.AddNode({/*m_added_node=*/added_node, /*m_use_v2transport=*/true}));
+            // The canonical spelling is a duplicate, so only the first spelling is stored.
+            BOOST_CHECK(!connman.AddNode({/*m_added_node=*/addr.ToStringAddrPort(), /*m_use_v2transport=*/true}));
+
+            BOOST_CHECK(connman.AddedNodesContain(addr));
+            // An entry without a port matches any port; an explicit port only matches itself.
+            BOOST_CHECK_EQUAL(connman.AddedNodesContain(other_port), !explicit_port);
+            BOOST_CHECK(!connman.AddedNodesContain(other_addr));
+        }
+    }
+}
+
 BOOST_AUTO_TEST_CASE(addnode_literal_host_and_effective_port_equivalence)
 {
     ConnmanTestMsg connman{0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params()};
