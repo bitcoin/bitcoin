@@ -26,6 +26,8 @@ public:
     BLSVerificationVectorPtr vvec;
     std::shared_ptr<CBLSIESMultiRecipientObjects<CBLSSecretKey>> contributions;
     CBLSSignature sig;
+    //! Not serialized: whether vvec was deserialized under the legacy BLS scheme, which skips the subgroup check
+    bool vvecLegacyScheme{false};
 
 public:
     template <typename Stream>
@@ -52,7 +54,11 @@ public:
         s >> llmqType;
         s >> quorumHash;
         s >> proTxHash;
-        s >> tmp1;
+        // Decode the whole vvec under one scheme, so that vvecLegacyScheme describes every point in it
+        vvecLegacyScheme = bls::bls_legacy_scheme.load();
+        for (uint64_t i = 0, size = ReadCompactSize(s); i < size; i++) {
+            s >> CBLSPublicKeyVersionWrapper(tmp1.emplace_back(), vvecLegacyScheme);
+        }
         s >> tmp2;
         s >> sig;
 

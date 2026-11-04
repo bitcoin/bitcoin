@@ -205,6 +205,13 @@ bool CBLSPublicKey::PublicKeyShare(Span<CBLSPublicKey> mpk, const CBLSId& _id)
     return true;
 }
 
+void CBLSPublicKey::MulInsecure(const CBLSSecretKey& factor)
+{
+    assert(IsValid() && factor.IsValid());
+    impl = factor.impl * impl;
+    cachedHash.SetNull();
+}
+
 bool CBLSPublicKey::DHKeyExchange(const CBLSSecretKey& sk, const CBLSPublicKey& pk)
 {
     fValid = false;
@@ -290,6 +297,13 @@ void CBLSSignature::SubInsecure(const CBLSSignature& o)
 {
     assert(IsValid() && o.IsValid());
     impl = impl + o.impl.Negate();
+    cachedHash.SetNull();
+}
+
+void CBLSSignature::MulInsecure(const CBLSSecretKey& factor)
+{
+    assert(IsValid() && factor.IsValid());
+    impl = factor.impl * impl;
     cachedHash.SetNull();
 }
 

@@ -390,6 +390,56 @@ class DashGovernanceTest (DashTestFramework):
             self.check_superblockbudget(True)
             self.check_superblock()
 
+        self.log.info("A matching trigger relayed before the maturity window must still be funded")
+        sb_block_height = 240
+        window_start = sb_block_height - sb_maturity_window
+        # Blocks above came faster than 2.5 minutes apart, so get clear of the per-masternode trigger rate limit
+        self.bump_mocktime(3 * sb_cycle * 150, update_schedulers=False)
+        self.generate(self.nodes[0], window_start - 3 - self.nodes[0].getblockcount(), sync_fun=self.sync_blocks())
+
+        # The payee at window_start creates the trigger, so let it reach the window alone, then rewind it
+        payee_address = self.nodes[0].masternode("winners")[str(window_start + 1)]
+        early_idx = next(mn.nodeIdx for mn in self.mninfo
+                         if self.nodes[0].protx("info", mn.proTxHash)["state"]["payoutAddress"] in payee_address)
+        early_node = self.nodes[early_idx]
+        self.isolate_node(early_idx)
+        fork_point = early_node.getblockcount() + 1
+        for _ in range(3):
+            self.bump_mocktime(1)
+            self.generate(early_node, 1, sync_fun=self.no_op)
+        self.wait_until(lambda: have_trigger_for_height([early_node], sb_block_height), timeout=5)
+        early_trigger_hash = next(h for h, t in early_node.gobject("list", "valid", "triggers").items()
+                                  if json.loads(t["DataString"])["event_block_height"] == sb_block_height)
+        early_node.invalidateblock(early_node.getblockhash(fork_point))
+        self.reconnect_isolated_node(early_idx, 0)
+        self.sync_blocks()
+
+        def early_trigger_relayed():
+            # Each bump runs the once-a-second governance relay flush
+            self.bump_mocktime(1)
+            return all(early_trigger_hash in node.gobject("list", "valid", "triggers") for node in self.nodes)
+        self.wait_until(early_trigger_relayed, timeout=10)
+
+        self.log.info("Masternodes must not vote NO on it before the window opens")
+        for _ in range(2):
+            self.bump_mocktime(1)
+            self.generate(self.nodes[0], 1, sync_fun=self.sync_blocks())
+        assert_equal(self.nodes[0].getblockcount(), window_start - 1)
+        for node in self.nodes:
+            # A masternode's own vote is visible on its own node without waiting for relay
+            node.syncwithvalidationinterfacequeue()
+            assert_equal(node.gobject("list", "valid", "triggers")[early_trigger_hash]["NoCount"], 0)
+
+        self.log.info("Every masternode votes YES on it once the window opens")
+        self.bump_mocktime(1)
+        self.generate(self.nodes[0], 1, sync_fun=self.sync_blocks())
+        self.wait_until(lambda: self.nodes[0].gobject("list", "valid", "triggers")[early_trigger_hash]["YesCount"] == self.mn_count, timeout=5)
+        n = sb_block_height - self.nodes[0].getblockcount()
+        self.bump_mocktime(n)
+        self.generate(self.nodes[0], n, sync_fun=self.sync_blocks())
+        assert_equal(self.nodes[0].getblockcount(), sb_block_height)
+        self.check_superblock()
+
 
 if __name__ == '__main__':
     DashGovernanceTest().main()

@@ -292,6 +292,30 @@ static void AddMessage(std::vector<Message>& vec, uint32_t sourceId, uint32_t ms
     vec.emplace_back(m);
 }
 
+// Adds two wrong signatures whose errors cancel out when both are aggregated unweighted
+static void AddCancellingMessages(std::vector<Message>& vec, uint32_t sourceId1, uint32_t msgId1, uint8_t msgHash1,
+                                  uint32_t sourceId2, uint32_t msgId2, uint8_t msgHash2, bool sameKey)
+{
+    const bool legacy_scheme = bls::bls_legacy_scheme.load();
+    AddMessage(vec, sourceId1, msgId1, msgHash1, true);
+    AddMessage(vec, sourceId2, msgId2, msgHash2, true);
+    auto& m1 = vec[vec.size() - 2];
+    auto& m2 = vec[vec.size() - 1];
+    if (sameKey) {
+        m2.sk = m1.sk;
+        m2.pk = m1.pk;
+        m2.sig = m2.sk.Sign(m2.msgHash, legacy_scheme);
+    }
+
+    CBLSSecretKey sk_error;
+    sk_error.MakeNewKey();
+    const CBLSSignature error{sk_error.Sign(uint256::ONE, legacy_scheme)};
+    m1.sig.AggregateInsecure(error);
+    m2.sig.SubInsecure(error);
+    m1.valid = false;
+    m2.valid = false;
+}
+
 static void Verify(std::vector<Message>& vec, bool secureVerification, bool perMessageFallback)
 {
     CBLSBatchVerifier<uint32_t, uint32_t> batchVerifier(secureVerification, perMessageFallback);
@@ -368,6 +392,18 @@ void FuncBatchVerifier(const bool legacy_scheme)
 
     // last message invalid from one source
     AddMessage(msgs, 1, 7, 1, false);
+    Verify(msgs);
+
+    msgs.clear();
+    // errors cancelling out between distinct messages from one source
+    AddMessage(msgs, 1, 1, 1, true);
+    AddCancellingMessages(msgs, 2, 2, 2, 2, 3, 3, /*sameKey=*/false);
+    Verify(msgs);
+
+    // errors cancelling out between distinct sources signing the same message with the same key
+    msgs.clear();
+    AddMessage(msgs, 1, 1, 1, true);
+    AddCancellingMessages(msgs, 2, 2, 2, 3, 3, 2, /*sameKey=*/true);
     Verify(msgs);
 }
 
@@ -636,6 +672,30 @@ void FuncVerifyContributionSharesHonest(const bool legacy_scheme)
         }
     }
 
+    // 3. With the defaults the DKG uses, only the dealers of wrong shares are blamed:
+    //    - two colluding dealers in the same batch swap their shares: each one is wrong, but their sum is not, so the
+    //      errors cancel in an unweighted aggregate;
+    //    - a missing (invalid) share fails its batch and is blamed alone.
+    auto swapped = skContributions;
+    std::swap(swapped[1], swapped[2]);
+    auto missing = skContributions;
+    missing[5] = CBLSSecretKey{};
+    std::vector<std::pair<std::vector<CBLSSecretKey>, std::set<size_t>>> cases{
+        {swapped, {1, 2}},
+        {missing, {5}},
+    };
+    for (auto& [shares, bad] : cases) {
+        for (const bool parallel : {true, false}) {
+            const auto result = worker.VerifyContributionShares(myId, vvecs, shares, parallel);
+            BOOST_REQUIRE_EQUAL(result.size(), QUORUM_SIZE);
+            for (const size_t i : util::irange(QUORUM_SIZE)) {
+                const bool expected{bad.count(i) == 0};
+                BOOST_CHECK_MESSAGE(result[i] == expected, "index " << i << " expected " << expected << " got "
+                                                                    << result[i] << " (parallel=" << parallel << ")");
+            }
+        }
+    }
+
     worker.Stop();
 }
 
@@ -693,6 +753,23 @@ void FuncVerifyContributionSharesDuplicateCoefficient(const bool legacy_scheme)
     BOOST_CHECK(!res[0]);  // the member that planted the duplicate is caught alone
     BOOST_CHECK(res[1]);   // the honest member whose coefficient was copied is unaffected
     BOOST_CHECK(res[2]);   // the other honest member is unaffected
+    BOOST_CHECK(CBLSWorker::FindVerificationVectorsWithSharedCoefficients(vvecs) == (std::set<size_t>{0, 1}));
+
+    // Dealer 0 copies dealer 1's whole contribution, vvec and share alike: every share verifies,
+    // but the quorum verification vector can't be built until both copies are dropped.
+    vvecs[0] = std::make_shared<std::vector<CBLSPublicKey>>(*vvecs[1]);
+    recvShares[0] = skShares[1][R];
+    res = worker.VerifyContributionShares(recvId, vvecs, recvShares);
+    BOOST_REQUIRE_EQUAL(res.size(), 3U);
+    BOOST_CHECK(res[0] && res[1] && res[2]);
+    BOOST_CHECK(worker.BuildQuorumVerificationVector(vvecs) == nullptr);
+    BOOST_CHECK(CBLSWorker::FindVerificationVectorsWithSharedCoefficients(vvecs) == (std::set<size_t>{0, 1}));
+    std::vector<BLSVerificationVectorPtr> remaining{vvecs[2]};
+    BOOST_CHECK(worker.BuildQuorumVerificationVector(remaining) != nullptr);
+
+    // Distinct vvecs share nothing, and a missing vvec is skipped.
+    std::vector<BLSVerificationVectorPtr> distinct{vvecs[1], nullptr, vvecs[2]};
+    BOOST_CHECK(CBLSWorker::FindVerificationVectorsWithSharedCoefficients(distinct).empty());
 
     worker.Stop();
 }
@@ -701,6 +778,61 @@ BOOST_AUTO_TEST_CASE(bls_verify_contribution_shares_duplicate_coefficient_tests)
 {
     FuncVerifyContributionSharesDuplicateCoefficient(true);
     FuncVerifyContributionSharesDuplicateCoefficient(false);
+}
+
+void FuncAggregateCollidingContributionShares(const bool legacy_scheme)
+{
+    bls::bls_legacy_scheme.store(legacy_scheme);
+
+    CBLSWorker worker;
+    worker.Start(4);
+
+    // The receiver's id is -1 mod the group order, so a degree-1 polynomial b0 + b1 * x takes the value b0 - b1 there
+    uint256 recvIdHash;
+    const auto minusOne{ParseHex("73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000000")};
+    std::copy(minusOne.begin(), minusOne.end(), recvIdHash.begin());
+    const CBLSId recvId{recvIdHash};
+
+    // Dealer 0 is honest. Dealers 1 and 2 collude: their polynomials differ, but agree at the receiver's id
+    const auto makeKey = [] { CBLSSecretKey sk; sk.MakeNewKey(); return sk; };
+    std::vector<std::vector<CBLSSecretKey>> polys{{makeKey(), makeKey()}, {makeKey(), makeKey()}, {}};
+    CBLSSecretKey share1;
+    BOOST_REQUIRE(share1.SecretKeyShare(polys[1], recvId));
+    const CBLSSecretKey b1{makeKey()};
+    CBLSSecretKey b0{share1};
+    b0.AggregateInsecure(b1);
+    polys[2] = {b0, b1};
+
+    std::vector<BLSVerificationVectorPtr> vvecs;
+    std::vector<CBLSSecretKey> recvShares;
+    for (auto& poly : polys) {
+        auto vvec = std::make_shared<std::vector<CBLSPublicKey>>();
+        for (const auto& coefficient : poly) {
+            vvec->emplace_back(coefficient.GetPublicKey());
+        }
+        vvecs.emplace_back(vvec);
+        BOOST_REQUIRE(recvShares.emplace_back().SecretKeyShare(poly, recvId));
+    }
+    BOOST_REQUIRE(recvShares[1] == recvShares[2]);
+
+    // Every contribution verifies and nothing in the vvecs collides
+    const std::vector<bool> ok{worker.VerifyContributionShares(recvId, vvecs, recvShares)};
+    BOOST_CHECK(ok == std::vector<bool>(3, true));
+    const BLSVerificationVectorPtr quorumVvec{worker.BuildQuorumVerificationVector(vvecs)};
+    BOOST_REQUIRE(quorumVvec != nullptr);
+
+    // so the receiver must still get the quorum secret key share matching the quorum vvec
+    const CBLSSecretKey skShare{worker.AggregateSecretKeys(recvShares)};
+    BOOST_REQUIRE(skShare.IsValid());
+    BOOST_CHECK(skShare.GetPublicKey() == CBLSWorker::BuildPubKeyShare(quorumVvec, recvId));
+
+    worker.Stop();
+}
+
+BOOST_AUTO_TEST_CASE(bls_aggregate_colliding_contribution_shares_tests)
+{
+    FuncAggregateCollidingContributionShares(true);
+    FuncAggregateCollidingContributionShares(false);
 }
 
 // A dummy BLS object that satisfies the minimal interface expected by CBLSLazyWrapper.

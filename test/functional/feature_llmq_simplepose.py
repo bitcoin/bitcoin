@@ -60,6 +60,8 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
+        self.test_cloned_contributions()
+
         if not self.options.disable_spork23:
             # Lets isolate MNs one by one and verify that punishment/banning happens
             self.test_banning(self.isolate_mn, 2)
@@ -107,6 +109,31 @@ class LLMQSimplePoSeTest(DashTestFramework):
             self.test_no_service(relay, services, reason, banned=not self.options.disable_spork23)
             self.repair_masternodes(True)
             self.reset_probe_timeouts()
+
+    def test_cloned_contributions(self):
+        self.log.info("Two members dealing identical contributions are both excluded and the quorum still forms")
+        cloners = self.mninfo[:2]
+        others = self.mninfo[2:]
+        for mn in cloners:
+            mn.get_node(self).quorum('dkgsimerror', 'contribution-clone', 100)
+        qh = self.mine_quorum(mninfos_valid=others)
+        for mn in cloners:
+            mn.get_node(self).quorum('dkgsimerror', 'contribution-clone', 0)
+
+        valid_members = {m['proTxHash'] for m in self.nodes[0].quorum('info', 100, qh)['members'] if m['valid']}
+        assert_equal(valid_members, {mn.proTxHash for mn in others})
+        for mn in cloners:
+            assert check_punished(self.nodes[0], mn)
+            assert not check_banned(self.nodes[0], mn)
+
+        self.log.info("Let the PoSe penalty of the cloners decay without running any DKG")
+        self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 4070908800)
+        self.wait_for_sporks_same()
+        self.generate(self.nodes[0], 66)
+        for mn in self.mninfo:
+            assert not check_punished(self.nodes[0], mn)
+        self.nodes[0].sporkupdate("SPORK_17_QUORUM_DKG_ENABLED", 0)
+        self.wait_for_sporks_same()
 
     def isolate_mn(self, mn: MasternodeInfo):
         mn.get_node(self).setnetworkactive(False)

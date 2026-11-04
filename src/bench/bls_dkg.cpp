@@ -47,7 +47,8 @@ private:
 
     void VerifyContributionShares(size_t whoAmI, const std::set<size_t>& invalidIndexes, bool aggregated)
     {
-        auto result = blsWorker.VerifyContributionShares(members[whoAmI].id, receivedVvecs, receivedSkShares, aggregated);
+        auto result = blsWorker.VerifyContributionShares(members[whoAmI].id, receivedVvecs, receivedSkShares,
+                                                         /*parallel=*/true, aggregated);
         for (const size_t i : util::irange(receivedVvecs.size())) {
             if (invalidIndexes.count(i)) {
                 assert(!result[i]);

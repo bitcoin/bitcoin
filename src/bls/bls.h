@@ -314,6 +314,8 @@ public:
     void AggregateInsecure(const CBLSPublicKey& o);
     static CBLSPublicKey AggregateInsecure(Span<CBLSPublicKey> pks);
 
+    void MulInsecure(const CBLSSecretKey& factor);
+
     bool PublicKeyShare(Span<CBLSPublicKey> mpk, const CBLSId& id);
     bool DHKeyExchange(const CBLSSecretKey& sk, const CBLSPublicKey& pk);
 
@@ -360,6 +362,7 @@ public:
     static CBLSSignature AggregateSecure(Span<CBLSSignature> sigs, Span<CBLSPublicKey> pks, const uint256& hash);
 
     void SubInsecure(const CBLSSignature& o);
+    void MulInsecure(const CBLSSecretKey& factor);
     [[nodiscard]] bool VerifyInsecure(const CBLSPublicKey& pubKey, const uint256& hash, const bool specificLegacyScheme) const;
     [[nodiscard]] bool VerifyInsecure(const CBLSPublicKey& pubKey, const uint256& hash) const;
     [[nodiscard]] bool VerifyInsecureAggregated(Span<CBLSPublicKey> pubKeys, Span<uint256> hashes) const;
