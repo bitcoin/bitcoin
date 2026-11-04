@@ -56,11 +56,25 @@ activation signal needs 85% of the signing quorum's members to run v24, and a
 masternode that refuses to start cannot contribute to it (see
 [Network upgrade](#network-upgrade)).
 
-<!-- TODO(rc.7): upgrade notes for release candidate users, pending
-decision. Remove this comment before the final release. -->
+On mainnet, a masternode that moves to extended addresses must keep an IPv4
+address on the standard port as the first entry of each address list (see
+[Extended addresses](#extended-addresses)). (#8018)
 
-<!-- TODO(rc.7): startup without an existing default data directory, pending
-decision. Remove this comment before the final release. -->
+A node that ran a v24.0.0 release candidate with `-addressindex`,
+`-spentindex` or `-timestampindex` enabled should rebuild these indexes once
+after upgrading (see
+[Asynchronous address, spent and timestamp indexes](#asynchronous-address-spent-and-timestamp-indexes)),
+in one of two ways:
+
+- restart once with `-reindex`; or
+- start v24.0.0 once with `-addressindex=0 -spentindex=0 -timestampindex=0`,
+  stop it, delete the `indexes/addressindex`, `indexes/spentindex` and
+  `indexes/timestampindex` directories, then start it again with the indexes
+  enabled. They are rebuilt in the background.
+
+Do not only delete the index directories without the intermediate start: on a
+datadir a release candidate has used, that can leave empty indexes that report
+themselves as synced.
 
 Pruned nodes now keep at least 2304 blocks below the tip instead of 288 (see
 [Pruning](#pruning)). Blocks that an earlier version already pruned are not
@@ -82,7 +96,8 @@ caveats:
 - The address, spent and timestamp indexes are moved out of the block index
   database into separate databases on the first start of v24.0.0. A node that
   had any of these indexes enabled must be restarted with `-reindex` after
-  downgrading.
+  downgrading. Older versions enforce this: they refuse to start with an index
+  that v24.0.0 has migrated until `-reindex` is given. (#8033)
 - The governance and spork caches written by v24.0.0 are not readable by older
   versions; they are discarded and re-synced from the network.
 - v24.0.0 does not upgrade the wallet file format. Wallet records added by
@@ -372,11 +387,21 @@ moves to extended addresses with a version 3 provider transaction (see
   transaction, but third-party tools that build version 2 EvoNode service
   updates must be updated.
 - Platform HTTPS entries on port 443 are accepted in extended addresses.
-
-<!-- TODO(rc.7, pending decision): if #8018 is backported, add
-its mainnet rule for masternode primary addresses (IPv4 primary on the
-standard port) here and in the masternode upgrade notes. Remove this comment
-either way. -->
+- A version 3 (extended addresses) ProRegTx or ProUpServTx must list an IPv4
+  address as its first `coreP2PAddrs` entry, and an EvoNode's first
+  `platformP2PAddrs` and `platformHTTPSAddrs` entries must use that same IPv4
+  address. Further entries may use other addresses and network types (IPv6,
+  Tor, I2P, CJDNS, and domains for Platform HTTPS). Violations are rejected
+  with `bad-protx-netinfo-addr-type` or `bad-protx-netinfo-addr`. This applies
+  until masternodes are allowed to operate without IPv4, which is not scheduled
+  on mainnet. Testnet and devnets already allow it, so they are unaffected.
+  Regtest follows mainnet unless `-testactivationheight=ipv4_optional@<height>`
+  is set. (#8018)
+- On mainnet, the first entry of each address list must also use that list's
+  standard port: 9999 for `coreP2PAddrs`, 26656 for `platformP2PAddrs` and 443
+  for `platformHTTPSAddrs`, as legacy ProTx versions already require there.
+  Additional entries may use any otherwise valid port. Violations are rejected
+  with `bad-protx-netinfo-port`. (#8018)
 
 ## Version 2 Asset Unlock transactions
 
@@ -656,6 +681,26 @@ Breaking changes:
   (`getaddressbalance`, `getaddressdeltas`, `getaddresstxids`,
   `getaddressutxos`, `getspentinfo` and `getblockhashes`) return an
   "… index is syncing" error instead of results. (#7101)
+- `-reindex-chainstate` can now be used with optional indexes enabled; they no
+  longer need to be turned off first. An index whose best block is no longer
+  in the block index (for example after `blocks/` and `chainstate/` were
+  deleted but `indexes/` was kept) is refused at startup with "best block of
+  the index not found"; delete that index's directory or use `-reindex`.
+  (#8033, bitcoin#25193)
+
+Release candidates rc.1 through rc.6 could leave these indexes inconsistent
+with the active chain after a reorg combined with an unclean shutdown or with
+an index being disabled for a while, and could report one of them as synced
+while it was empty after its directory was deleted on a datadir migrated from
+v23. v24.0.0 fixes both: indexes no longer commit their state ahead of the
+node's flushed chain state, and an empty or partially rebuilt index is rebuilt
+from genesis instead of being taken as migrated data. (#8033, bitcoin#33212,
+bitcoin#34897)
+
+As in earlier versions, these indexes can also keep entries of a block that was
+connected shortly before an unclean shutdown and then lost, if the network
+never sends that block again because a competing block won. Rebuild them as
+described in [How to Upgrade](#how-to-upgrade) after such a crash.
 
 ## Masternode configuration requirements
 
@@ -1016,6 +1061,9 @@ and RPC parameters.
 - Fee estimates are now saved hourly, and `fee_estimates.dat` is ignored at
   startup if it is more than 60 hours old, so a node that was offline for longer
   than that rebuilds its estimates. (#7711)
+- `dashd` no longer creates an empty `dash.conf` when none exists, matching
+  Bitcoin Core. `dash-qt`'s "Open Configuration File" still creates it on
+  demand. (#8029)
 
 ## Pruning
 
