@@ -93,6 +93,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <tuple>
 #include <vector>
 
@@ -3074,13 +3075,15 @@ static RPCMethod getblockfilter()
 static std::atomic<bool> g_dumptxoutset_in_progress{false};
 
 /**
- * RAII class that allows only one dumptxoutset run at a time and holds the
- * prune lock protecting the blocks a rollback needs.
+ * RAII class that allows only one dumptxoutset run at a time, holds the
+ * prune lock protecting the blocks a rollback needs and removes the output
+ * file of a run that did not complete.
  */
 class DumptxoutsetGuard
 {
     static constexpr const char* LOCK_NAME{"dumptxoutset-rollback"};
     BlockManager& m_blockman;
+    std::optional<fs::path> m_temppath;
 public:
     explicit DumptxoutsetGuard(BlockManager& blockman) : m_blockman(blockman)
     {
@@ -3094,8 +3097,14 @@ public:
         m_blockman.UpdatePruneLock(LOCK_NAME, {height});
         LogDebug(BCLog::PRUNE, "dumptxoutset: registered prune lock at height %d", height);
     }
+    void RemoveOnFailure(const fs::path& temppath) { m_temppath = temppath; }
     ~DumptxoutsetGuard()
     {
+        if (m_temppath) {
+            // No-op after a completed run, which renamed the file
+            std::error_code ec;
+            fs::remove(*m_temppath, ec);
+        }
         // The prune lock must be gone before the next run can register its own
         if (WITH_LOCK(::cs_main, return m_blockman.DeletePruneLock(LOCK_NAME))) {
             LogDebug(BCLog::PRUNE, "dumptxoutset: released prune lock");
@@ -3190,6 +3199,7 @@ static RPCMethod dumptxoutset()
             RPC_INVALID_PARAMETER,
             "Couldn't open file " + temppath.utf8string() + " for writing.");
     }
+    if (!fs::is_fifo(path_info)) guard.RemoveOnFailure(temppath);
 
     UniValue result;
     Chainstate& chainstate{node.chainman->ActiveChainstate()};

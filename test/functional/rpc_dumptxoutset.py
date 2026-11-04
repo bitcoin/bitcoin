@@ -55,6 +55,7 @@ class DumptxoutsetTest(BitcoinTestFramework):
         # Rolling back to a hash on the stale branch is rejected
         assert_raises_rpc_error(
             -8, "Block is not in main chain", node.dumptxoutset, "txoutset_stale.dat", "rollback", {"rollback": stale_hash})
+        assert not (node.chain_path / "txoutset_stale.dat.incomplete").exists()
 
     def test_concurrent_dumps_rejected(self):
         node = self.nodes[0]
