@@ -1155,7 +1155,7 @@ static RPCMethod bumpfee_helper(std::string method_name)
 
         result.pushKV("txid", txid.GetHex());
     } else {
-        PartiallySignedTransaction psbtx(mtx, psbt_version);
+        PartiallySignedTransaction psbtx{mtx, psbt_version};
         bool complete = false;
         const auto err{pwallet->FillPSBT(psbtx, {.sign = false, .bip32_derivs = true}, complete)};
         CHECK_NONFATAL(!err);
@@ -1817,10 +1817,7 @@ RPCMethod walletcreatefundedpsbt()
     auto txr = FundTransaction(wallet, rawTx, recipients, options, coin_control, /*override_min_fee=*/true);
 
     // Make a blank psbt
-    uint32_t psbt_version = 2;
-    if (!request.params[6].isNull()) {
-        psbt_version = request.params[6].getInt<int>();
-    }
+    const uint32_t psbt_version{self.Arg<uint32_t>("psbt_version")};
     if (psbt_version != 2 && psbt_version != 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "The PSBT version can only be 2 or 0");
     }
