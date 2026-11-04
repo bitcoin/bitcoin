@@ -494,7 +494,7 @@ std::optional<std::vector<SilentPaymentsOutput>> SilentPaymentsReceiver::Scan(
 
     // Scan the outputs!
     uint32_t n_found_outputs = 0;
-    ret = secp256k1_silentpayments_recipient_scan_outputs(secp256k1_context_static,
+    ret = secp256k1_silentpayments_recipient_scan_outputs(GetSecp256k1SignContext(),
         found_output_ptrs.data(), &n_found_outputs,
         tx_output_ptrs.data(), tx_output_ptrs.size(),
         UCharCast(m_scan_key.begin()),

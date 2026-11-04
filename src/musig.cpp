@@ -231,7 +231,7 @@ std::optional<uint256> CreateMuSig2PartialSig(const uint256& sighash, const CKey
 
     // Create partial signature
     secp256k1_musig_partial_sig psig;
-    if (!secp256k1_musig_partial_sign(secp256k1_context_static, &psig, secnonce.Get(), &keypair, &keyagg_cache, &session)) {
+    if (!secp256k1_musig_partial_sign(GetSecp256k1SignContext(), &psig, secnonce.Get(), &keypair, &keyagg_cache, &session)) {
         return std::nullopt;
     }
     // The secnonce must be deleted after signing to prevent nonce reuse.
