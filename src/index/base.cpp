@@ -94,7 +94,6 @@ BaseIndex::~BaseIndex()
 bool BaseIndex::Init()
 {
     const auto locator{GetDB().ReadBestBlock()};
-    const auto uncommitted_tip_hash{WritesEagerly() ? GetDB().ReadUncommittedTip() : std::nullopt};
 
     LOCK(cs_main);
     CChain& active_chain = m_chainstate->m_chain;
@@ -107,18 +106,13 @@ bool BaseIndex::Init()
             return InitError(strprintf(Untranslated("%s: best block of the index not found. Please rebuild the index."), GetName()));
         }
     }
-    // The entries up to the uncommitted tip are on disk, so resume from it while the block index has it above the
-    // locator. Commit() and rewinds keep the locator below it; one that isn't was left behind by an older binary.
-    const CBlockIndex* uncommitted_tip{uncommitted_tip_hash ? m_chainstate->m_blockman.LookupBlockIndex(*uncommitted_tip_hash) : nullptr};
-    if (uncommitted_tip && locator_index && uncommitted_tip->GetAncestor(locator_index->nHeight) != locator_index) {
-        uncommitted_tip = nullptr;
-    }
-    if (uncommitted_tip_hash && !uncommitted_tip) {
+    const CBlockIndex* resume_block{ResumeBlock(m_chainstate->m_blockman, locator_index)};
+    if (resume_block == locator_index && WritesEagerly() && GetDB().ReadUncommittedTip()) {
         CDBBatch batch(GetDB());
         GetDB().EraseUncommittedTip(batch);
         GetDB().WriteBatch(batch);
     }
-    SetBestBlockIndex(uncommitted_tip ? uncommitted_tip : locator_index);
+    SetBestBlockIndex(resume_block);
 
     // Note: this will latch to true immediately if the user starts up with an empty
     // datadir and an index enabled. If this is the case, indexation will happen solely
@@ -315,6 +309,19 @@ void BaseIndex::WriteRewindLocator(CDBBatch& batch, const CBlockIndex* new_tip) 
     if (const auto uncommitted_tip{GetDB().ReadUncommittedTip()}; uncommitted_tip && above_new_tip(*uncommitted_tip)) {
         GetDB().WriteUncommittedTip(batch, new_tip->GetBlockHash());
     }
+}
+
+const CBlockIndex* BaseIndex::ResumeBlock(const node::BlockManager& blockman, const CBlockIndex* locator_block) const
+{
+    AssertLockHeld(::cs_main);
+    // The entries up to the uncommitted tip are on disk, so resume from it while the block index has it above the
+    // locator. Commit() and rewinds keep the locator below it; one that isn't was left behind by an older binary.
+    const auto uncommitted_tip_hash{WritesEagerly() ? GetDB().ReadUncommittedTip() : std::nullopt};
+    const CBlockIndex* uncommitted_tip{uncommitted_tip_hash ? blockman.LookupBlockIndex(*uncommitted_tip_hash) : nullptr};
+    if (uncommitted_tip && (!locator_block || uncommitted_tip->GetAncestor(locator_block->nHeight) == locator_block)) {
+        return uncommitted_tip;
+    }
+    return locator_block;
 }
 
 bool BaseIndex::RewindBlockByBlock(const CBlockIndex* current_tip, const CBlockIndex* new_tip,

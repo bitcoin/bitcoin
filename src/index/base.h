@@ -19,6 +19,9 @@
 class CBlock;
 class CBlockIndex;
 class Chainstate;
+namespace node {
+class BlockManager;
+} // namespace node
 namespace interfaces {
 class Chain;
 } // namespace interfaces
@@ -136,6 +139,11 @@ protected:
     /// branch, move it to new_tip. Commit() may not write new_tip yet (it can be ahead of the last flush), but
     /// leaving the old locator above erased entries would make an unclean restart resume past them.
     void WriteRewindLocator(CDBBatch& batch, const CBlockIndex* new_tip) const;
+
+    /// The block Init() resumes from, given the block of the committed locator: the uncommitted tip if the block
+    /// index has it above that block (see WritesEagerly()), otherwise the locator block itself.
+    const CBlockIndex* ResumeBlock(const node::BlockManager& blockman, const CBlockIndex* locator_block) const
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /// For indexes that erase per block in CustomRewind(): walk from current_tip down to new_tip and write each
     /// block's erasures, filled in by rewind_block, in one batch with WriteRewindLocator() for its parent. A rewind
