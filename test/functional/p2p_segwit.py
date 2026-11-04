@@ -1952,19 +1952,22 @@ class SegWitTest(BitcoinTestFramework):
         self.update_witness_block_with_transactions(block_5, [tx2])
         test_witness_block(self.nodes[0], self.test_node, block_5, accepted=True)
 
-        p2sh_tx = CTransaction()
-        p2sh_tx.vin = [CTxIn(COutPoint(tx.txid_int, outputs + i), CScript([witness_script])) for i in range(p2sh_outputs)]
-        p2sh_tx.vout.append(CTxOut(0, CScript([OP_TRUE])))
+        p2sh_txs = []
+        for i in range(p2sh_outputs):
+            p2sh_tx = CTransaction()
+            p2sh_tx.vin.append(CTxIn(COutPoint(tx.txid_int, outputs + i), CScript([witness_script])))
+            p2sh_tx.vout.append(CTxOut(0, CScript([OP_TRUE])))
+            p2sh_txs.append(p2sh_tx)
         block_6 = self.build_next_block()
-        self.update_witness_block_with_transactions(block_6, [p2sh_tx])
+        self.update_witness_block_with_transactions(block_6, p2sh_txs)
         test_witness_block(self.nodes[0], self.test_node, block_6, accepted=False, reason='bad-blk-sigops')
 
         # Add witness data to verify that the transaction's P2SH sigops are still counted.
-        p2sh_tx.vin.append(CTxIn(COutPoint(tx.txid_int, outputs - 2), b""))
-        p2sh_tx.wit.vtxinwit = [CTxInWitness() for _ in p2sh_tx.vin]
-        p2sh_tx.wit.vtxinwit[-1].scriptWitness.stack = [witness_script_toomany]
+        p2sh_txs[-1].vin.append(CTxIn(COutPoint(tx.txid_int, outputs - 2), b""))
+        p2sh_txs[-1].wit.vtxinwit = [CTxInWitness() for _ in p2sh_txs[-1].vin]
+        p2sh_txs[-1].wit.vtxinwit[-1].scriptWitness.stack = [witness_script_toomany]
         block_7 = self.build_next_block()
-        self.update_witness_block_with_transactions(block_7, [p2sh_tx])
+        self.update_witness_block_with_transactions(block_7, p2sh_txs)
         test_witness_block(self.nodes[0], self.test_node, block_7, accepted=False, reason='bad-blk-sigops')
 
         # Cleanup and prep for next test
