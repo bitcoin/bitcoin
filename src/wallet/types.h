@@ -50,7 +50,7 @@ enum class AddressPurpose {
 struct CreatedTransactionResult
 {
     CTransactionRef tx;
-    CAmount fee;
+    CAmount fee{0};
     FeeReason fee_reason;
     std::optional<unsigned int> change_pos;
 

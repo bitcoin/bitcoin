@@ -189,7 +189,7 @@ std::unique_ptr<CTxMemPool> MakeEphemeralMempool(const NodeContext& node)
     mempool_opts.require_standard = true;
 
     // And set minrelay to 0 to allow ephemeral parent tx even with non-TRUC
-    mempool_opts.min_relay_feerate = CFeeRate(0);
+    mempool_opts.min_relay_feerate = CFeeRate(0*sats);
 
     bilingual_str error;
     // ...and construct a CTxMemPool from it
@@ -241,7 +241,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_ephemeral_package_eval)
     std::unordered_map<COutPoint, CAmount, SaltedOutpointHasher> outpoints_value;
     for (const auto& outpoint : g_outpoints_coinbase_init_mature) {
         Assert(mempool_outpoints.insert(outpoint).second);
-        outpoints_value[outpoint] = 50 * COIN;
+        outpoints_value.insert_or_assign(outpoint, 50 * COIN);
     }
 
     auto outpoints_updater = std::make_shared<OutpointsUpdater>(mempool_outpoints);
@@ -310,7 +310,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_ephemeral_package_eval)
                     tx_mut.vin.push_back(in);
                 }
 
-                const auto amount_fee = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(0, amount_in);
+                const CAmount amount_fee{ConsumeMoney(fuzzed_data_provider, amount_in)};
                 const auto amount_out = (amount_in - amount_fee) / num_out;
                 for (int i = 0; i < num_out; ++i) {
                     tx_mut.vout.emplace_back(amount_out, P2WSH_EMPTY);
@@ -319,7 +319,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_ephemeral_package_eval)
                 // Note output amounts can naturally drop to dust on their own.
                 if (!outpoint_to_rbf && fuzzed_data_provider.ConsumeBool()) {
                     uint32_t dust_index = fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(0, num_out);
-                    tx_mut.vout.insert(tx_mut.vout.begin() + dust_index, CTxOut(0, P2WSH_EMPTY));
+                    tx_mut.vout.insert(tx_mut.vout.begin() + dust_index, CTxOut(0*sats, P2WSH_EMPTY));
                 }
 
                 auto tx = MakeTransactionRef(tx_mut);
@@ -335,7 +335,7 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_ephemeral_package_eval)
                 }
                 // We need newly-created values for the duration of this run
                 for (size_t i = 0; i < tx->vout.size(); ++i) {
-                    outpoints_value[COutPoint(tx->GetHash(), i)] = tx->vout[i].nValue;
+                    outpoints_value.insert_or_assign(COutPoint(tx->GetHash(), i), tx->vout[i].nValue);
                 }
                 return tx;
             }());
@@ -345,12 +345,12 @@ FUZZ_TARGET(ephemeral_package_eval, .init = initialize_ephemeral_package_eval)
             const auto& txid = fuzzed_data_provider.ConsumeBool() ?
                                    txs.back()->GetHash() :
                                    PickValue(fuzzed_data_provider, mempool_outpoints).hash;
-            const auto delta = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-50 * COIN, +50 * COIN);
+            const CAmount delta{ConsumeMoney(fuzzed_data_provider, -50 * COIN, +50 * COIN)};
             // We only prioritise out of mempool transactions since PrioritiseTransaction doesn't
             // filter for ephemeral dust
             if (tx_pool.exists(txid)) {
                 const auto tx_info{tx_pool.info(txid)};
-                if (GetDust(*tx_info.tx, tx_pool.m_opts.dust_relay_feerate).empty()) {
+                if (GetDust(*tx_info->tx, tx_pool.m_opts.dust_relay_feerate).empty()) {
                     tx_pool.PrioritiseTransaction(txid, delta);
                 }
             }
@@ -399,7 +399,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_package_eval)
     std::unordered_map<COutPoint, CAmount, SaltedOutpointHasher> outpoints_value;
     for (const auto& outpoint : g_outpoints_coinbase_init_mature) {
         Assert(mempool_outpoints.insert(outpoint).second);
-        outpoints_value[outpoint] = 50 * COIN;
+        outpoints_value.insert_or_assign(outpoint, 50 * COIN);
     }
 
     auto outpoints_updater = std::make_shared<OutpointsUpdater>(mempool_outpoints);
@@ -474,14 +474,14 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_package_eval)
                 }
 
                 // Make a p2pk output to make sigops adjusted vsize to violate TRUC rules, potentially, which is never spent
-                if (last_tx && amount_in > 1000 && fuzzed_data_provider.ConsumeBool()) {
-                    tx_mut.vout.emplace_back(1000, CScript() << std::vector<unsigned char>(33, 0x02) << OP_CHECKSIG);
+                if (last_tx && amount_in > 1000*sats && fuzzed_data_provider.ConsumeBool()) {
+                    tx_mut.vout.emplace_back(1000*sats, CScript() << std::vector<unsigned char>(33, 0x02) << OP_CHECKSIG);
                     // Don't add any other outputs.
                     num_out = 1;
-                    amount_in -= 1000;
+                    amount_in -= 1000*sats;
                 }
 
-                const auto amount_fee = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(0, amount_in);
+                const CAmount amount_fee{ConsumeMoney(fuzzed_data_provider, amount_in)};
                 const auto amount_out = (amount_in - amount_fee) / num_out;
                 for (int i = 0; i < num_out; ++i) {
                     tx_mut.vout.emplace_back(amount_out, P2WSH_EMPTY);
@@ -500,7 +500,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_package_eval)
                 }
                 // We need newly-created values for the duration of this run
                 for (size_t i = 0; i < tx->vout.size(); ++i) {
-                    outpoints_value[COutPoint(tx->GetHash(), i)] = tx->vout[i].nValue;
+                    outpoints_value.insert_or_assign(COutPoint(tx->GetHash(), i), tx->vout[i].nValue);
                 }
                 return tx;
             }());
@@ -516,7 +516,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_package_eval)
             const auto& txid = fuzzed_data_provider.ConsumeBool() ?
                                    txs.back()->GetHash() :
                                    PickValue(fuzzed_data_provider, mempool_outpoints).hash;
-            const auto delta = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-50 * COIN, +50 * COIN);
+            const CAmount delta{ConsumeMoney(fuzzed_data_provider, -50 * COIN, +50 * COIN)};
             tx_pool.PrioritiseTransaction(txid, delta);
         }
 
@@ -533,7 +533,7 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_package_eval)
         // Exercise client_maxfeerate logic
         std::optional<CFeeRate> client_maxfeerate{};
         if (fuzzed_data_provider.ConsumeBool()) {
-            client_maxfeerate = CFeeRate(fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-1, 50 * COIN), 100);
+            client_maxfeerate = CFeeRate(ConsumeMoney(fuzzed_data_provider, -1*sats, 50 * COIN), 100);
         }
 
         const auto result_package = WITH_LOCK(::cs_main,

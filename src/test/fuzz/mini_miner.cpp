@@ -67,7 +67,7 @@ FUZZ_TARGET(mini_miner, .init = initialize_miner)
             available_coins.pop_front();
         }
         for (uint32_t n{0}; n < num_outputs; ++n) {
-            mtx.vout.emplace_back(100, P2WSH_OP_TRUE);
+            mtx.vout.emplace_back(100*sats, P2WSH_OP_TRUE);
         }
         CTransactionRef tx = MakeTransactionRef(mtx);
         TestMemPoolEntryHelper entry;
@@ -98,7 +98,7 @@ FUZZ_TARGET(mini_miner, .init = initialize_miner)
 
     const CFeeRate target_feerate{CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/MAX_MONEY/1000)}};
     std::optional<CAmount> total_bumpfee;
-    CAmount sum_fees = 0;
+    CAmount sum_fees{0};
     {
         node::MiniMiner mini_miner{pool, outpoints};
         assert(mini_miner.IsReadyToCalculate());
@@ -106,7 +106,7 @@ FUZZ_TARGET(mini_miner, .init = initialize_miner)
         for (const auto& outpoint : outpoints) {
             auto it = bump_fees.find(outpoint);
             assert(it != bump_fees.end());
-            assert(it->second >= 0);
+            assert(it->second >= 0*sats);
             sum_fees += it->second;
         }
         assert(!mini_miner.IsReadyToCalculate());

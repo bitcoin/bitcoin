@@ -79,7 +79,7 @@ static bool BroadcastTestSimpleSpend(interfaces::Chain& chain, ChainstateManager
     const auto tx_vsize{GetVirtualTransactionSize(*tx_ref, tx_sigops, nBytesPerSigOp)};
     const auto tx_feerate{CFeeRate{DEFAULT_TRANSACTION_MAXFEE, static_cast<int32_t>(tx_vsize)}};
     // TestSimpleSpend pays a high fee; use a limit just above its feerate.
-    const auto tx_feerate_limit{CFeeRate{tx_feerate.GetFeePerK() + 1}};
+    const auto tx_feerate_limit{CFeeRate{tx_feerate.GetFeePerK() + 1*sats}};
     return chain.broadcastTransaction(tx_ref, DEFAULT_TRANSACTION_MAXFEE, tx_feerate_limit, node::TxBroadcast::MEMPOOL_NO_BROADCAST, error);
 }
 

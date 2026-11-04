@@ -26,7 +26,7 @@ public:
     // Todo: This is a hack, should be replaced with a cleaner solution!
     QString address;
     QString label;
-    CAmount amount;
+    CAmount amount{0};
     // If from a payment request, this is used for storing the memo
     QString message;
     // Keep the payment request around as a serialized string to ensure

@@ -19,6 +19,7 @@
 #include <common/messages.h>
 #include <common/system.h>
 #include <compat/compat.h>
+#include <consensus/amount.h>
 #include <consensus/params.h>
 #include <crypto/hex_base.h>
 #include <dbwrapper.h>
