@@ -1322,9 +1322,9 @@ std::vector<CAddress> AddrMan::GetAddr(size_t max_addresses, size_t max_pct, std
     return m_impl->GetAddr(max_addresses, max_pct, network, filtered);
 }
 
-std::vector<std::pair<AddrInfo, AddressPosition>> AddrMan::GetEntries(bool use_tried) const
+std::vector<std::pair<AddrInfo, AddressPosition>> AddrMan::GetEntries(bool from_tried) const
 {
-    return m_impl->GetEntries(use_tried);
+    return m_impl->GetEntries(from_tried);
 }
 
 void AddrMan::Connected(const CService& addr, NodeSeconds time)

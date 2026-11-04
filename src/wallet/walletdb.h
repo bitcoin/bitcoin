@@ -244,7 +244,7 @@ public:
     bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);
     bool EraseMasterKey(unsigned int id);
 
-    bool WriteWatchOnly(const CScript &script, const CKeyMetadata &keymeta);
+    bool WriteWatchOnly(const CScript &dest, const CKeyMetadata &keymeta);
 
     bool WriteBestBlock(const CBlockLocator& locator);
     bool ReadBestBlock(CBlockLocator& locator);

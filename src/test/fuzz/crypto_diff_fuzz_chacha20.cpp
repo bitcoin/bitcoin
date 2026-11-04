@@ -52,29 +52,29 @@ typedef struct
 /* Mandatory functions */
 
 void ECRYPT_keysetup(
-    ECRYPT_ctx* ctx,
-    const u8* key,
-    u32 keysize, /* Key size in bits. */
-    u32 ivsize); /* IV size in bits. */
+    ECRYPT_ctx* x,
+    const u8* k,
+    u32 kbits,   /* Key size in bits. */
+    u32 ivbits); /* IV size in bits. */
 
 void ECRYPT_ivsetup(
-    ECRYPT_ctx* ctx,
+    ECRYPT_ctx* x,
     const u8* iv);
 
 void ECRYPT_encrypt_bytes(
-    ECRYPT_ctx* ctx,
-    const u8* plaintext,
-    u8* ciphertext,
-    u32 msglen); /* Message length in bytes. */
+    ECRYPT_ctx* x,
+    const u8* m,
+    u8* c,
+    u32 bytes); /* Message length in bytes. */
 
 /* ------------------------------------------------------------------------- */
 
 /* Optional features */
 
 void ECRYPT_keystream_bytes(
-    ECRYPT_ctx* ctx,
-    u8* keystream,
-    u32 length); /* Length of keystream in bytes. */
+    ECRYPT_ctx* x,
+    u8* stream,
+    u32 bytes); /* Length of keystream in bytes. */
 
 /* ------------------------------------------------------------------------- */
 

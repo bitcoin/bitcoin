@@ -186,7 +186,7 @@ private:
     class LockedPageArena: public Arena
     {
     public:
-        LockedPageArena(LockedPageAllocator *alloc_in, void *base_in, size_t size, size_t align);
+        LockedPageArena(LockedPageAllocator *allocator_in, void *base_in, size_t size, size_t align);
         ~LockedPageArena();
     private:
         void *base;

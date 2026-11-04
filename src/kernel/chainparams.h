@@ -204,6 +204,6 @@ protected:
     void ApplyDeploymentOptions(const DeploymentOptions& opts);
 };
 
-std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& pchMessageStart);
+std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message);
 
 #endif // BITCOIN_KERNEL_CHAINPARAMS_H

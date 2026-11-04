@@ -229,7 +229,7 @@ public:
     void EraseForBlock(const CBlock& block) override;
     std::vector<std::pair<Wtxid, NodeId>> AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext& rng) override;
     bool HaveTxToReconsider(NodeId peer) override;
-    std::vector<CTransactionRef> GetChildrenFromSamePeer(const CTransactionRef& parent, NodeId nodeid) const override;
+    std::vector<CTransactionRef> GetChildrenFromSamePeer(const CTransactionRef& parent, NodeId peer) const override;
     std::vector<OrphanInfo> GetOrphanTransactions() const override;
     TxOrphanage::Usage TotalOrphanUsage() const override;
     void SanityCheck() const override;

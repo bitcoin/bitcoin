@@ -99,7 +99,7 @@ private:
     bool getAddressData(const QString &address, std::string* name, wallet::AddressPurpose* purpose) const;
 
     /** Notify listeners that data changed. */
-    void emitDataChanged(int index);
+    void emitDataChanged(int idx);
 
 public Q_SLOTS:
     /* Update address list from core.

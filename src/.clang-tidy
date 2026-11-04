@@ -45,6 +45,7 @@ performance-*,
 readability-avoid-const-params-in-decls,
 readability-const-return-type,
 readability-container-contains,
+readability-inconsistent-declaration-parameter-name,
 readability-redundant-declaration,
 readability-redundant-string-init,
 '

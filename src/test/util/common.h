@@ -96,7 +96,7 @@ std::ostream& operator<<(std::ostream& os, const CTxDestination& dest);
 std::ostream& operator<<(std::ostream& os, const CPubKey& pk);
 std::ostream& operator<<(std::ostream& os, const KeyOriginInfo& info);
 std::ostream& operator<<(std::ostream& os, const ByRatioNegSize<FeeFrac>& b);
-std::ostream& operator<<(std::ostream& os, const XOnlyPubKey& x);
+std::ostream& operator<<(std::ostream& os, const XOnlyPubKey& pk);
 
 template <typename T, typename U>
     requires requires(std::ostream& os, const T& t, const U& u) { os << t; os << u; }

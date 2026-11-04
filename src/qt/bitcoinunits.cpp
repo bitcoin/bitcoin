@@ -83,11 +83,11 @@ int BitcoinUnits::decimals(Unit unit)
     assert(false);
 }
 
-QString BitcoinUnits::format(Unit unit, const CAmount& nIn, bool fPlus, SeparatorStyle separators, bool justify)
+QString BitcoinUnits::format(Unit unit, const CAmount& amount, bool plussign, SeparatorStyle separators, bool justify)
 {
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
-    qint64 n = (qint64)nIn;
+    qint64 n = (qint64)amount;
     qint64 coin = factor(unit);
     int num_decimals = decimals(unit);
     qint64 n_abs = (n > 0 ? n : -n);
@@ -107,7 +107,7 @@ QString BitcoinUnits::format(Unit unit, const CAmount& nIn, bool fPlus, Separato
 
     if (n < 0)
         quotient_str.insert(0, '-');
-    else if (fPlus && n > 0)
+    else if (plussign && n > 0)
         quotient_str.insert(0, '+');
 
     if (num_decimals > 0) {

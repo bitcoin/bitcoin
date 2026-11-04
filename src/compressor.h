@@ -38,7 +38,7 @@ bool DecompressScript(CScript& script, unsigned int nSize, const CompressedScrip
  */
 uint64_t CompressAmount(uint64_t nAmount);
 
-uint64_t DecompressAmount(uint64_t nAmount);
+uint64_t DecompressAmount(uint64_t x);
 
 /** Compact serializer for scripts.
  *

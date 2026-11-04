@@ -238,7 +238,7 @@ private:
     AddrInfo* Create(const CAddress& addr, const CNetAddr& addrSource, nid_type* pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Swap two elements in vRandom.
-    void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void SwapRandom(unsigned int nRndPos1, unsigned int nRndPos2) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Delete an entry. It must not be in tried, and have refcount 0.
     void Delete(nid_type nId) EXCLUSIVE_LOCKS_REQUIRED(cs);

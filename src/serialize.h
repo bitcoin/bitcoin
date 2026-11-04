@@ -747,7 +747,7 @@ template<typename Stream, typename K, typename Pred, typename A> void Unserializ
  * shared_ptr
  */
 template<typename Stream, typename T> void Serialize(Stream& os, const std::shared_ptr<const T>& p);
-template<typename Stream, typename T> void Unserialize(Stream& os, std::shared_ptr<const T>& p);
+template<typename Stream, typename T> void Unserialize(Stream& is, std::shared_ptr<const T>& p);
 
 
 /**

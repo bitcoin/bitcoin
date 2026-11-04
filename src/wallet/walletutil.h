@@ -169,7 +169,7 @@ public:
     bool IsCanonicallyEquivalent(const WalletDescriptor& other) const;
 };
 
-WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& output_type, bool internal);
+WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& addr_type, bool internal);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_WALLETUTIL_H

@@ -330,7 +330,7 @@ private:
 
 public:
     /** Create new FeeFilterRounder */
-    explicit FeeFilterRounder(const CFeeRate& min_incremental_fee, FastRandomContext& rng);
+    explicit FeeFilterRounder(const CFeeRate& minIncrementalFee, FastRandomContext& rng);
 
     /** Quantize a minimum fee for privacy purpose before broadcast. */
     CAmount round(CAmount currentMinFee) EXCLUSIVE_LOCKS_REQUIRED(!m_insecure_rand_mutex);

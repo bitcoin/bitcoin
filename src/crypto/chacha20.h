@@ -66,9 +66,9 @@ public:
 
     /** en/deciphers the message <input> and write the result into <output>
      *
-     * The size of input and output must be equal, and be a multiple of BLOCKLEN.
+     * The size of in_bytes and out_bytes must be equal, and be a multiple of BLOCKLEN.
      */
-    void Crypt(std::span<const std::byte> input, std::span<std::byte> output) noexcept;
+    void Crypt(std::span<const std::byte> in_bytes, std::span<std::byte> out_bytes) noexcept;
 };
 
 /** Unrestricted ChaCha20 cipher. */
@@ -107,9 +107,9 @@ public:
 
     /** en/deciphers the message <in_bytes> and write the result into <out_bytes>
      *
-     * The size of in_bytes and out_bytes must be equal.
+     * The size of input and output must be equal.
      */
-    void Crypt(std::span<const std::byte> in_bytes, std::span<std::byte> out_bytes) noexcept;
+    void Crypt(std::span<const std::byte> input, std::span<std::byte> output) noexcept;
 
     /** outputs the keystream to out. */
     void Keystream(std::span<std::byte> out) noexcept;

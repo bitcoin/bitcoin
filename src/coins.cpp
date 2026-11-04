@@ -141,7 +141,7 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
     }
 }
 
-bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout) {
+bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveto) {
     CCoinsMap::iterator it = FetchCoin(outpoint);
     if (it == cacheCoins.end()) return false;
     Assume(TrySub(m_dirty_count, it->second.IsDirty()));
@@ -152,8 +152,8 @@ bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout) {
            (uint32_t)it->second.coin.nHeight,
            (int64_t)it->second.coin.out.nValue,
            (bool)it->second.coin.IsCoinBase());
-    if (moveout) {
-        *moveout = std::move(it->second.coin);
+    if (moveto) {
+        *moveto = std::move(it->second.coin);
     }
     if (it->second.IsFresh()) {
         cacheCoins.erase(it);
@@ -300,14 +300,14 @@ void CCoinsViewCache::Reset() noexcept
     SetBestBlock(uint256::ZERO);
 }
 
-void CCoinsViewCache::Uncache(const COutPoint& hash)
+void CCoinsViewCache::Uncache(const COutPoint& outpoint)
 {
-    CCoinsMap::iterator it = cacheCoins.find(hash);
+    CCoinsMap::iterator it = cacheCoins.find(outpoint);
     if (it != cacheCoins.end() && !it->second.IsDirty()) {
         Assume(TrySub(cachedCoinsUsage, it->second.coin.DynamicMemoryUsage()));
         TRACEPOINT(utxocache, uncache,
-               hash.hash.data(),
-               (uint32_t)hash.n,
+               outpoint.hash.data(),
+               (uint32_t)outpoint.n,
                (uint32_t)it->second.coin.nHeight,
                (int64_t)it->second.coin.out.nValue,
                (bool)it->second.coin.IsCoinBase());

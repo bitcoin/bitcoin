@@ -120,7 +120,7 @@ public:
 
 Q_SIGNALS:
     //! An intermediate signal for emitting from the `paint() const` member function.
-    void width_changed(const QModelIndex& index) const;
+    void width_changed(const QModelIndex& index) const; // NOLINT(readability-inconsistent-declaration-parameter-name)
 
 private:
     const PlatformStyle* platformStyle;
