@@ -175,8 +175,9 @@ public:
      * Capped at `MAX_WAIT_TIMEOUT`.
      * @param[in] requested Wait for those events, bitwise-or of `RecvEvent` and `SendEvent`.
      * @param[out] occurred If not nullptr and the function returns `true`, then this
-     * indicates which of the requested events occurred (`ErrorEvent` will be added, even if
-     * not requested, if an exceptional event occurs on the socket).
+     * indicates which requested events occurred. `ErrorEvent` may also be set by
+     * poll() for errors or hangups, or by Windows select() for exceptional conditions
+     * when `RecvEvent` was requested. The non-Windows select() path does not report `ErrorEvent`.
      * A timeout is indicated by return value of `true` and `occurred` being set to 0.
      * @return true on success (or timeout, if `occurred` of 0 is returned), false otherwise
      */

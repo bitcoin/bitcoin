@@ -29,16 +29,25 @@ class SocketErrorsTest(BitcoinTestFramework):
         node = self.nodes[0]
         with socket.create_connection(("127.0.0.1", p2p_port(0)), timeout=10) as peer:
             self.wait_until(lambda: len(node.getpeerinfo()) == 1)
-            send_probe(peer)
-            # Processing the ordinary version message demonstrates progress
-            # despite the urgent indication. The urgent byte is excluded.
-            def received_version():
-                peers = node.getpeerinfo()
-                assert_equal(len(peers), 1)
-                return peers[0]["version"] == self.version.nVersion
+            if self.windows_target:
+                with node.assert_debug_log(["socket exceptional condition"]):
+                    try:
+                        send_probe(peer)
+                    except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+                        # The node can disconnect before the bulk send finishes.
+                        pass
+                    self.wait_until(lambda: len(node.getpeerinfo()) == 0)
+            else:
+                send_probe(peer)
+                # Processing the ordinary version message demonstrates progress
+                # despite the urgent indication. The urgent byte is excluded.
+                def received_version():
+                    peers = node.getpeerinfo()
+                    assert_equal(len(peers), 1)
+                    return peers[0]["version"] == self.version.nVersion
 
-            self.wait_until(received_version)
-            assert_equal(node.getpeerinfo()[0]["bytesrecv"], expected_bytes)
+                self.wait_until(received_version)
+                assert_equal(node.getpeerinfo()[0]["bytesrecv"], expected_bytes)
         self.wait_until(lambda: len(node.getpeerinfo()) == 0)
 
     def check_urgent_bytes(self):
@@ -50,7 +59,9 @@ class SocketErrorsTest(BitcoinTestFramework):
             def send_probe(peer):
                 peer.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
                 assert_equal(peer.send(bytes([byte]), socket.MSG_OOB), 1)
-                peer.sendall(version)
+                # Windows should disconnect immediately on the urgent indication.
+                if not self.windows_target:
+                    peer.sendall(version)
 
             self.check_probe(send_probe, len(version))
 

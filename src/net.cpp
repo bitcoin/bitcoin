@@ -2201,6 +2201,18 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
             }
         }
 
+#ifdef WIN32
+        if (errorSet) {
+            // select() can keep reporting a TCP urgent indication even when
+            // recv() has no data to read. P2P has no use for exceptional
+            // conditions on established connections, so disconnect to avoid
+            // a busy loop.
+            LogDebug(BCLog::NET, "socket exceptional condition, %s", pnode->DisconnectMsg());
+            pnode->CloseSocketDisconnect();
+            continue;
+        }
+#endif
+
         if (sendSet) {
             // Send data
             auto [bytes_sent, data_left] = WITH_LOCK(pnode->cs_vSend, return SocketSendData(*pnode));
