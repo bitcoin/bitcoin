@@ -57,73 +57,7 @@ struct CommandLine {
     std::vector<const char*> args;
 };
 
-CommandLine ParseCommandLine(int argc, char* argv[]);
-bool UseMultiprocess(const CommandLine& cmd);
-static void ExecCommand(const std::vector<const char*>& args, std::string_view argv0);
-
-int main(int argc, char* argv[])
-{
-    SetupEnvironment();
-
-    try {
-        CommandLine cmd{ParseCommandLine(argc, argv)};
-        if (cmd.show_version) {
-            tfm::format(std::cout, "%s version %s\n%s", CLIENT_NAME, FormatFullVersion(), FormatParagraph(LicenseInfo()));
-            return EXIT_SUCCESS;
-        }
-
-        std::string exe_name{fs::PathToString(fs::PathFromString(argv[0]).filename())};
-        std::vector<const char*> args;
-        if (cmd.show_help || cmd.command.empty()) {
-            tfm::format(std::cout, HELP_USAGE, exe_name);
-            if (cmd.show_help) {
-                tfm::format(std::cout, HELP_FULL);
-                return EXIT_SUCCESS;
-            } else {
-                tfm::format(std::cout, HELP_SHORT, exe_name);
-                return EXIT_FAILURE;
-            }
-        } else if (cmd.command == "gui") {
-            args.emplace_back(UseMultiprocess(cmd) ? "bitcoin-gui" : "bitcoin-qt");
-        } else if (cmd.command == "node") {
-            args.emplace_back(UseMultiprocess(cmd) ? "bitcoin-node" : "bitcoind");
-        } else if (cmd.command == "rpc") {
-            args.emplace_back("bitcoin-cli");
-            // Since "bitcoin rpc" is a new interface that doesn't need to be
-            // backward compatible, enable -named by default so it is convenient
-            // for callers to use a mix of named and unnamed parameters. Callers
-            // can override this by specifying -nonamed, but it handles parameters
-            // that contain '=' characters, so -nonamed should rarely be needed.
-            args.emplace_back("-named");
-        } else if (cmd.command == "wallet") {
-            args.emplace_back("bitcoin-wallet");
-        } else if (cmd.command == "tx") {
-            args.emplace_back("bitcoin-tx");
-        } else if (cmd.command == "bench") {
-            args.emplace_back("bench_bitcoin");
-        } else if (cmd.command == "chainstate") {
-            args.emplace_back("bitcoin-chainstate");
-        } else if (cmd.command == "test") {
-            args.emplace_back("test_bitcoin");
-        } else if (cmd.command == "test-gui") {
-            args.emplace_back("test_bitcoin-qt");
-        } else if (cmd.command == "util") {
-            args.emplace_back("bitcoin-util");
-        } else {
-            throw std::runtime_error(strprintf("Unrecognized command: '%s'", cmd.command));
-        }
-        if (!args.empty()) {
-            args.insert(args.end(), cmd.args.begin(), cmd.args.end());
-            ExecCommand(args, argv[0]);
-        }
-    } catch (const std::exception& e) {
-        tfm::format(std::cerr, "Error: %s\nTry '%s --help' for more information.\n", e.what(), argv[0]);
-        return EXIT_FAILURE;
-    }
-    return EXIT_SUCCESS;
-}
-
-CommandLine ParseCommandLine(int argc, char* argv[])
+static CommandLine ParseCommandLine(int argc, char* argv[])
 {
     CommandLine cmd;
     cmd.args.reserve(argc);
@@ -148,7 +82,7 @@ CommandLine ParseCommandLine(int argc, char* argv[])
     return cmd;
 }
 
-bool UseMultiprocess(const CommandLine& cmd)
+static bool UseMultiprocess(const CommandLine& cmd)
 {
     // If -m or -M options were explicitly specified, there is no need to
     // further parse arguments to determine which to use.
@@ -237,4 +171,66 @@ static void ExecCommand(const std::vector<const char*>& args, std::string_view w
     (!wrapper_dir.empty() && try_exec(wrapper_dir / arg0.filename(), fallback_os_search)) ||
     // Otherwise just look on the system path.
     (fallback_os_search && try_exec(arg0.filename(), false));
+}
+
+int main(int argc, char* argv[])
+{
+    SetupEnvironment();
+
+    try {
+        CommandLine cmd{ParseCommandLine(argc, argv)};
+        if (cmd.show_version) {
+            tfm::format(std::cout, "%s version %s\n%s", CLIENT_NAME, FormatFullVersion(), FormatParagraph(LicenseInfo()));
+            return EXIT_SUCCESS;
+        }
+
+        std::string exe_name{fs::PathToString(fs::PathFromString(argv[0]).filename())};
+        std::vector<const char*> args;
+        if (cmd.show_help || cmd.command.empty()) {
+            tfm::format(std::cout, HELP_USAGE, exe_name);
+            if (cmd.show_help) {
+                tfm::format(std::cout, HELP_FULL);
+                return EXIT_SUCCESS;
+            } else {
+                tfm::format(std::cout, HELP_SHORT, exe_name);
+                return EXIT_FAILURE;
+            }
+        } else if (cmd.command == "gui") {
+            args.emplace_back(UseMultiprocess(cmd) ? "bitcoin-gui" : "bitcoin-qt");
+        } else if (cmd.command == "node") {
+            args.emplace_back(UseMultiprocess(cmd) ? "bitcoin-node" : "bitcoind");
+        } else if (cmd.command == "rpc") {
+            args.emplace_back("bitcoin-cli");
+            // Since "bitcoin rpc" is a new interface that doesn't need to be
+            // backward compatible, enable -named by default so it is convenient
+            // for callers to use a mix of named and unnamed parameters. Callers
+            // can override this by specifying -nonamed, but it handles parameters
+            // that contain '=' characters, so -nonamed should rarely be needed.
+            args.emplace_back("-named");
+        } else if (cmd.command == "wallet") {
+            args.emplace_back("bitcoin-wallet");
+        } else if (cmd.command == "tx") {
+            args.emplace_back("bitcoin-tx");
+        } else if (cmd.command == "bench") {
+            args.emplace_back("bench_bitcoin");
+        } else if (cmd.command == "chainstate") {
+            args.emplace_back("bitcoin-chainstate");
+        } else if (cmd.command == "test") {
+            args.emplace_back("test_bitcoin");
+        } else if (cmd.command == "test-gui") {
+            args.emplace_back("test_bitcoin-qt");
+        } else if (cmd.command == "util") {
+            args.emplace_back("bitcoin-util");
+        } else {
+            throw std::runtime_error(strprintf("Unrecognized command: '%s'", cmd.command));
+        }
+        if (!args.empty()) {
+            args.insert(args.end(), cmd.args.begin(), cmd.args.end());
+            ExecCommand(args, argv[0]);
+        }
+    } catch (const std::exception& e) {
+        tfm::format(std::cerr, "Error: %s\nTry '%s --help' for more information.\n", e.what(), argv[0]);
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
 }
