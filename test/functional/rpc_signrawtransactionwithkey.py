@@ -16,6 +16,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    assert_true,
 )
 from test_framework.script_util import (
     key_to_p2pk_script,
@@ -56,7 +57,7 @@ class SignRawTransactionWithKeyTest(BitcoinTestFramework):
     def assert_signing_completed_successfully(self, signed_tx):
         assert 'errors' not in signed_tx
         assert 'complete' in signed_tx
-        assert_equal(signed_tx['complete'], True)
+        assert_true(signed_tx['complete'])
 
     def successful_signing_test(self):
         """Create and sign a valid raw transaction with one input.

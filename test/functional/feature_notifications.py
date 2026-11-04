@@ -15,6 +15,7 @@ from test_framework.extendedkey import ExtendedPrivateKey
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_true,
 )
 
 # Linux allow all characters other than \x00
@@ -135,7 +136,7 @@ class NotificationsTest(BitcoinTestFramework):
             # Generate transaction on node 0, sync mempools, and check for
             # notification on node 1.
             tx1 = self.nodes[0].sendtoaddress(address=ADDRESS_BCRT1_UNSPENDABLE, amount=1, replaceable=True)
-            assert_equal(tx1 in self.nodes[0].getrawmempool(), True)
+            assert_true(tx1 in self.nodes[0].getrawmempool())
             self.sync_mempools()
             self.expect_wallet_notify([(tx1, -1, UNCONFIRMED_HASH_STRING)])
 
@@ -144,7 +145,7 @@ class NotificationsTest(BitcoinTestFramework):
             # https://github.com/bitcoin/bitcoin/pull/9371, it might be better
             # to have notifications for both tx1 and bump1.
             bump1 = self.nodes[0].bumpfee(tx1)["txid"]
-            assert_equal(bump1 in self.nodes[0].getrawmempool(), True)
+            assert_true(bump1 in self.nodes[0].getrawmempool())
             self.sync_mempools()
             self.expect_wallet_notify([(bump1, -1, UNCONFIRMED_HASH_STRING)])
 
@@ -158,7 +159,7 @@ class NotificationsTest(BitcoinTestFramework):
 
             # Generate a second transaction to be bumped.
             tx2 = self.nodes[0].sendtoaddress(address=ADDRESS_BCRT1_UNSPENDABLE, amount=1, replaceable=True)
-            assert_equal(tx2 in self.nodes[0].getrawmempool(), True)
+            assert_true(tx2 in self.nodes[0].getrawmempool())
             self.sync_mempools()
             self.expect_wallet_notify([(tx2, -1, UNCONFIRMED_HASH_STRING)])
 
@@ -170,7 +171,7 @@ class NotificationsTest(BitcoinTestFramework):
             blockhash2 = self.generatetoaddress(self.nodes[0], 1, ADDRESS_BCRT1_UNSPENDABLE, sync_fun=self.no_op)[0]
             blockheight2 = self.nodes[0].getblockcount()
             assert_equal(self.nodes[0].gettransaction(bump2)["confirmations"], 1)
-            assert_equal(tx2 in self.nodes[1].getrawmempool(), True)
+            assert_true(tx2 in self.nodes[1].getrawmempool())
             self.connect_nodes(0, 1)
             self.sync_blocks()
             self.expect_wallet_notify([(bump2, blockheight2, blockhash2), (tx2, -1, UNCONFIRMED_HASH_STRING)])
