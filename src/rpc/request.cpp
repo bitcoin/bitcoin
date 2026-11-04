@@ -68,7 +68,17 @@ UniValue JSONRPCReplyObj(UniValue result, UniValue error, std::optional<UniValue
         if (jsonrpc_version == JSONRPCVersion::V1_LEGACY) reply.pushKV("result", NullUniValue);
         reply.pushKV("error", std::move(error));
     }
-    if (id.has_value()) reply.pushKV("id", std::move(id.value()));
+    if (id.has_value()) {
+        reply.pushKV("id", std::move(id.value()));
+    } else if (jsonrpc_version == JSONRPCVersion::V2) {
+        // The request had no "id" member. This happens for notifications, and
+        // for invalid requests that left out the id (for example with a missing
+        // or non-string method name). The JSON-RPC 2.0 spec requires every
+        // response to have an "id", set to null when the request's id could not
+        // be determined, so add "id": null. For notifications this is harmless,
+        // because their replies are never sent.
+        reply.pushKV("id", NullUniValue);
+    }
     return reply;
 }
 
