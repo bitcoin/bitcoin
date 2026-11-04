@@ -903,6 +903,20 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
         bool recv_ready = events.occurred & Sock::RecvEvent;
         bool err_ready = events.occurred & Sock::ErrorEvent;
 
+#ifdef WIN32
+        const bool disconnect{err_ready};
+#else
+        // poll() reports errors and hangups even when reading was not requested.
+        // When reads are paused, disconnect instead of bypassing backpressure.
+        const bool disconnect{err_ready && !recv_ready};
+#endif
+        if (disconnect) {
+            LogDebug(BCLog::HTTP, "HTTP socket error or exceptional condition from %s (id=%llu)",
+                     client->GetOrigin(), client->GetId());
+            client->Disconnect();
+            continue;
+        }
+
         if (send_ready) {
             // Try to send as much data as is ready for this client.
             // If there's an error we can skip the receive phase for this client
@@ -912,7 +926,7 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
             }
         }
 
-        if (recv_ready || err_ready) {
+        if (recv_ready) {
             client->Receive();
         }
         // Process as much received data as we can.
