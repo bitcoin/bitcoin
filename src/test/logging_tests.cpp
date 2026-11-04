@@ -31,11 +31,6 @@
 using util::SplitString;
 using util::TrimString;
 
-/* defined in logging.cpp */
-namespace BCLog {
-    std::string LogEscapeMessage(std::string_view str);
-}
-
 template <auto str>
 concept IsLogFormatString = requires { typename std::bool_constant<(util::log::FormatString<0>{str()}, true)>; };
 

@@ -161,6 +161,9 @@ inline constexpr script_verify_flags::value_type MAX_SCRIPT_VERIFY_FLAGS = ((scr
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, script_verify_flags flags, ScriptError* serror);
 
+/** Interpret a stack element as a boolean. */
+bool CastToBool(const std::vector<unsigned char>& vch);
+
 struct PrecomputedTransactionData
 {
     // BIP341 precomputed data.
