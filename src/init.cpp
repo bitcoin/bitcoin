@@ -2242,7 +2242,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     const uint16_t default_bind_port =
         static_cast<uint16_t>(args.GetIntArg("-port", Params().GetDefaultPort()));
 
-    const uint16_t default_bind_port_onion = default_bind_port + 1;
+    // The default onion port is the P2P port + 1. It does not exist if the P2P port is already
+    // the highest valid port, in which case an explicit onion port must be given.
+    const bool onion_port_overflow{default_bind_port == std::numeric_limits<uint16_t>::max()};
+    const uint16_t default_bind_port_onion{static_cast<uint16_t>(default_bind_port + 1)};
+    const auto OnionPortError = [] {
+        return InitError(_("Cannot derive a default onion port from -port=65535 (it is -port + 1). "
+                           "Use a lower -port or specify the onion port explicitly, e.g. -bind=<addr>:<port>=onion."));
+    };
 
     const auto BadPortWarning = [](const char* prefix, uint16_t port) {
         return strprintf(_("%s request to listen on port %u. This port is considered \"bad\" and "
@@ -2270,6 +2277,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 const std::string truncated_bind_arg = bind_arg.substr(0, index);
                 bind_addr = Lookup(truncated_bind_arg, default_bind_port_onion, false);
                 if (bind_addr.has_value()) {
+                    if (onion_port_overflow && bind_addr->GetPort() == 0) return OnionPortError();
                     connOptions.onion_binds.push_back(bind_addr.value());
                     continue;
                 }
@@ -2304,6 +2312,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     } else if (!connOptions.vBinds.empty()) {
         onion_service_target = connOptions.vBinds.front();
     } else {
+        if (onion_port_overflow) return OnionPortError();
         onion_service_target = DefaultOnionServiceTarget(default_bind_port_onion);
         connOptions.onion_binds.push_back(onion_service_target);
     }

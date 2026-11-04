@@ -74,6 +74,16 @@ class PortTest(BitcoinTestFramework):
         node.extra_args = ["-listen", "-port=0"]
         node.assert_start_raises_init_error(expected_msg="Error: Invalid port specified in -port: '0'")
 
+        self.log.info("-port=65535 leaves no default onion port (-port + 1), which must not wrap around to 0")
+        onion_port_err = (
+            "Error: Cannot derive a default onion port from -port=65535 (it is -port + 1). "
+            "Use a lower -port or specify the onion port explicitly, e.g. -bind=<addr>:<port>=onion.")
+        node.assert_start_raises_init_error(extra_args=["-listen", "-port=65535"], expected_msg=onion_port_err)
+        node.assert_start_raises_init_error(extra_args=["-listen", "-port=65535", "-bind=127.0.0.1=onion"], expected_msg=onion_port_err)
+        self.log.info("An explicit onion port is still accepted with -port=65535")
+        with node.assert_debug_log(expected_msgs=[f'Bound to 127.0.0.1:{port1}']):
+            self.start_node(0, extra_args=["-listen", "-port=65535", f"-bind=127.0.0.1:{port1}=onion"])
+
 
 if __name__ == '__main__':
     PortTest(__file__).main()
