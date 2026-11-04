@@ -116,7 +116,7 @@ class SocketErrorsTest(BitcoinTestFramework):
         # More input is now queued in the kernel while receiving is paused.
         peer.send_raw_message(pings)
         reset_on_close(peer._transport.get_extra_info("socket"))
-        expected_msgs = ["socket send error"] if self.linux_host and not self.windows_target else []
+        expected_msgs = ["socket error or hangup"] if self.linux_host and not self.windows_target else []
         with node.assert_debug_log(expected_msgs):
             peer.peer_disconnect()
             self.wait_until(lambda: len(node.getpeerinfo()) == 0, timeout=10)

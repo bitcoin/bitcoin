@@ -2187,7 +2187,7 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
         //
         bool recvSet = false;
         bool sendSet = false;
-        bool errorSet = false;
+        [[maybe_unused]] bool errorSet = false; // Only read on Windows and with poll()
         {
             LOCK(pnode->m_sock_mutex);
             if (!pnode->m_sock) {
@@ -2213,6 +2213,19 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
         }
 #endif
 
+#ifdef USE_POLL
+        // poll() always reports POLLERR/POLLHUP, whichever events we requested.
+        // If we requested POLLIN, then recv() below can read buffered data
+        // before it detects the disconnect, unless a failed send disconnects
+        // first. If receiving is paused, we did not request POLLIN, so
+        // disconnect now: sending on a broken connection would fail anyway.
+        if (errorSet && !recvSet) {
+            LogDebug(BCLog::NET, "socket error or hangup, %s", pnode->DisconnectMsg());
+            pnode->CloseSocketDisconnect();
+            continue;
+        }
+#endif
+
         if (sendSet) {
             // Send data
             auto [bytes_sent, data_left] = WITH_LOCK(pnode->cs_vSend, return SocketSendData(*pnode));
@@ -2230,7 +2243,7 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
             }
         }
 
-        if (recvSet || errorSet)
+        if (recvSet)
         {
             // typical socket buffer is 8K-64K
             uint8_t pchBuf[0x10000];
