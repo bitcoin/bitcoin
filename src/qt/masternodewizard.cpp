@@ -492,7 +492,7 @@ QWidget* RegisterMasternodeWizard::createPlatformPage()
         card.body_layout->addWidget(m_platform_p2p);
         card.body_layout->addWidget(makeHint(tr("Platform HTTPS API"), m_platform_addr_box));
         m_platform_https = new QLineEdit(card.body);
-        m_platform_https->setPlaceholderText(QString("platform.example.org:443"));
+        m_platform_https->setPlaceholderText(QString("1.2.3.4:443"));
         card.body_layout->addWidget(m_platform_https);
         layout->addWidget(m_platform_addr_box);
     }
@@ -849,6 +849,7 @@ void RegisterMasternodeWizard::enterPage(Page page)
         const auto capabilities{m_node.evo().getProviderTxCapabilities()};
         const bool v3{capabilities.extended_addresses};
         m_platform_provider_version = capabilities.version;
+        m_platform_ipv4_optional = capabilities.ipv4_optional;
         m_platform_extended_addresses = v3;
         m_platform_addr_box->setVisible(v3);
         m_platform_port_box->setVisible(!v3);
@@ -926,9 +927,9 @@ bool RegisterMasternodeWizard::validatePage(Page page, QString& err)
         } else if (!list.isEmpty()) {
             interfaces::ProviderNetInfo core_only;
             for (const QString& entry : list) core_only.core_p2p.push_back(entry.toStdString());
-            const uint16_t version{m_node.evo().getProviderTxCapabilities().version};
+            const auto capabilities{m_node.evo().getProviderTxCapabilities()};
             if (const auto error{m_node.evo().validateProviderNetInfo(
-                    core_only, MnType::Regular, version, /*optional=*/true)}) {
+                    core_only, MnType::Regular, capabilities.version, capabilities.ipv4_optional, /*optional=*/true)}) {
                 err = QString::fromStdString(error->message.translated);
             }
         }
@@ -1047,11 +1048,15 @@ interfaces::ProviderNetInfo RegisterMasternodeWizard::providerNetInfo() const
 
 bool RegisterMasternodeWizard::validateProviderNetInfo(bool optional, QString& err) const
 {
-    const uint16_t version{isEvo() && m_platform_provider_version != 0 ?
-                               m_platform_provider_version :
-                               m_node.evo().getProviderTxCapabilities().version};
-    if (const auto error{m_node.evo().validateProviderNetInfo(
-            providerNetInfo(), isEvo() ? MnType::Evo : MnType::Regular, version, optional)}) {
+    // The Platform page pins the rules it was entered with, so typing there doesn't wait for cs_main
+    const interfaces::ProviderTxCapabilities pinned{.version = m_platform_provider_version,
+                                                    .extended_addresses = m_platform_extended_addresses,
+                                                    .ipv4_optional = m_platform_ipv4_optional};
+    const auto capabilities{isEvo() && m_platform_provider_version != 0 ? pinned
+                                                                        : m_node.evo().getProviderTxCapabilities()};
+    const MnType type{isEvo() ? MnType::Evo : MnType::Regular};
+    if (const auto error{m_node.evo().validateProviderNetInfo(providerNetInfo(), type, capabilities.version,
+                                                              capabilities.ipv4_optional, optional)}) {
         err = QString::fromStdString(error->message.translated);
         return false;
     }

@@ -340,11 +340,15 @@ public:
     bool IsCoinBase() const { return tx->IsCoinBase(); }
     bool IsPlatformTransfer() const { return tx->IsPlatformTransfer(); }
 
+private:
     // Disable copying of CWalletTx objects to prevent bugs where instances get
     // copied in and out of the mapWallet map, and fields are updated in the
     // wrong copy.
-    CWalletTx(CWalletTx const &) = delete;
-    void operator=(CWalletTx const &x) = delete;
+    CWalletTx(const CWalletTx&) = default;
+    CWalletTx& operator=(const CWalletTx&) = default;
+public:
+    // Instead have an explicit copy function
+    void CopyFrom(const CWalletTx&);
 };
 
 struct WalletTxOrderComparator {

@@ -311,7 +311,7 @@ class TestNode():
                 if self.version_is_at_least(180000):
                     # getmempoolinfo.loaded is available since commit
                     # 71e38b9ebcb78b3a264a4c25c7c4e373317f2a40 (version 0.18.0)
-                    wait_until_helper(lambda: rpc.getmempoolinfo()['loaded'])
+                    wait_until_helper(lambda: rpc.getmempoolinfo()['loaded'], timeout_factor=self.timeout_factor)
                     # Wait for the node to finish reindex, block import, and
                     # loading the mempool. Usually importing happens fast or
                     # even "immediate" when the node is started. However, there
@@ -458,9 +458,15 @@ class TestNode():
         self.log.debug("Node stopped")
         return True
 
-    def wait_until_stopped(self, timeout=BITCOIND_PROC_WAIT_TIMEOUT, expect_error=False):
-        expected_ret_code = 1 if expect_error else None  # Whether node shutdown return EXIT_FAILURE or EXIT_SUCCESS
-        wait_until_helper(lambda: self.is_node_stopped(expected_ret_code=expected_ret_code), timeout=timeout, timeout_factor=self.timeout_factor)
+    def wait_until_stopped(self, *, timeout=BITCOIND_PROC_WAIT_TIMEOUT, expect_error=False, **kwargs):
+        if "expected_ret_code" not in kwargs:
+            kwargs["expected_ret_code"] = 1 if expect_error else None  # Whether node shutdown return EXIT_FAILURE or EXIT_SUCCESS
+        wait_until_helper(lambda: self.is_node_stopped(**kwargs), timeout=timeout, timeout_factor=self.timeout_factor)
+
+    def kill_process(self):
+        self.process.kill()
+        self.wait_until_stopped(expected_ret_code=1 if platform.system() == "Windows" else -9)
+        assert self.is_node_stopped()
 
     def replace_in_config(self, replacements):
         """

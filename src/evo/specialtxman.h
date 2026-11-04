@@ -50,6 +50,8 @@ struct SpecialTxRules {
     bool v24{false};
     //! EvoNodes may register with shared collateral and have multiple owner payouts
     bool evo_shares{false};
+    //! A masternode's primary addresses need not be IPv4
+    bool ipv4_optional{false};
 };
 
 class CSpecialTxProcessor
@@ -183,7 +185,7 @@ bool CheckProRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pin
                    const CCoinsViewCache& view, const Consensus::Params& consensus_params, SpecialTxRules rules,
                    TxValidationState& state, bool check_sigs);
 bool CheckProUpServTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev,
-                      CDeterministicMNManager& dmnman, const Consensus::Params& consensus_params, bool is_v24_active,
+                      CDeterministicMNManager& dmnman, const Consensus::Params& consensus_params, SpecialTxRules rules,
                       TxValidationState& state, bool check_sigs);
 bool CheckProUpRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, CDeterministicMNManager& dmnman,
                      const CCoinsViewCache& view, const Consensus::Params& consensus_params, SpecialTxRules rules,

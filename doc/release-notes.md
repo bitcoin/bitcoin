@@ -24,7 +24,8 @@ On the first start after upgrading, a node that has `-addressindex`,
 database (see [Asynchronous address, spent and timestamp indexes](#asynchronous-address-spent-and-timestamp-indexes)).
 This can take 20-40 minutes or longer depending on hardware and index size.
 Start v24.0.0 for the first time with the same `-addressindex`, `-spentindex`
-and `-timestampindex` settings the node used before: an index that is left
+and `-timestampindex` settings the node used before (pruned nodes: see
+below): an index that is left
 disabled on any start of v24.0.0 can no longer reuse its old data, and is
 rebuilt from genesis when it is enabled again. The governance cache
 (`governance.dat`) and the spork cache (`sporks.dat`) changed format and are
@@ -32,8 +33,48 @@ discarded and re-synced from the network on the first start.
 
 A node that runs with `-txindex=0` must now also set `-disablegovernance`;
 otherwise it refuses to start (see [Updated settings](#updated-settings)).
-Pruned nodes are not affected, since `-prune` disables governance validation
-already.
+Pruned nodes are not affected by this, since `-prune` disables governance
+validation already.
+
+A pruned node (`-prune`) that also has `-addressindex` or `-spentindex` set
+refuses to start with an error, because these indexes now need the undo data
+that pruning deletes. v23 accepted that combination. Remove the index options
+from such a node before upgrading. Keeping them means running the node
+unpruned, which requires `-reindex` and downloading the whole chain again.
+`-timestampindex` can no longer be enabled on a datadir that has already been
+pruned (see
+[Asynchronous address, spent and timestamp indexes](#asynchronous-address-spent-and-timestamp-indexes)).
+
+Masternodes refuse to start with some settings that v23 accepted, such as
+`-blocksonly=1`, `-peerblockfilters=0` or a nonzero `-maxuploadtarget`. This
+applies from the first start of v24.0.0, not from hard fork activation. Check
+the masternode's configuration against
+[Masternode configuration requirements](#masternode-configuration-requirements)
+and remove such settings before upgrading. Masternodes must be upgraded and
+running before the `v24` start date (November 9, 2026 on mainnet): the
+activation signal needs 85% of the signing quorum's members to run v24, and a
+masternode that refuses to start cannot contribute to it (see
+[Network upgrade](#network-upgrade)).
+
+On mainnet, a masternode that moves to extended addresses must keep an IPv4
+address on the standard port as the first entry of each address list (see
+[Extended addresses](#extended-addresses)). (#8018)
+
+A node that ran a v24.0.0 release candidate with `-addressindex`,
+`-spentindex` or `-timestampindex` enabled should rebuild these indexes once
+after upgrading (see
+[Asynchronous address, spent and timestamp indexes](#asynchronous-address-spent-and-timestamp-indexes)),
+in one of two ways:
+
+- restart once with `-reindex`; or
+- start v24.0.0 once with `-addressindex=0 -spentindex=0 -timestampindex=0`,
+  stop it, delete the `indexes/addressindex`, `indexes/spentindex` and
+  `indexes/timestampindex` directories, then start it again with the indexes
+  enabled. They are rebuilt in the background.
+
+Do not only delete the index directories without the intermediate start: on a
+datadir a release candidate has used, that can leave empty indexes that report
+themselves as synced.
 
 Pruned nodes now keep at least 2304 blocks below the tip instead of 288 (see
 [Pruning](#pruning)). Blocks that an earlier version already pruned are not
@@ -44,20 +85,29 @@ recovered; a node that fails to validate a block after upgrading needs
 
 ### Downgrade to a version < v24.0.0
 
-Once the `v24` hard fork activates, versions older than v24.0.0 can no longer
-follow the network and must not be used.
+There is no supported downgrade after `v24` activation: v23 and older cannot
+follow the network once `v24` is active. They also cannot correctly read the
+masternode list data that v24.0.0 stores after activation, so do not start an
+older version on a datadir that v24.0.0 has used after activation.
 
-Before activation, downgrading to v23.x is possible with the following caveats:
+Before activation, downgrading to v23.1.x is possible with the following
+caveats:
 
 - The address, spent and timestamp indexes are moved out of the block index
   database into separate databases on the first start of v24.0.0. A node that
   had any of these indexes enabled must be restarted with `-reindex` after
-  downgrading.
+  downgrading. Older versions enforce this: they refuse to start with an index
+  that v24.0.0 has migrated until `-reindex` is given. (#8031)
 - The governance and spork caches written by v24.0.0 are not readable by older
   versions; they are discarded and re-synced from the network.
 - v24.0.0 does not upgrade the wallet file format. Wallet records added by
   v24.0.0 that older versions do not know about (such as the new CoinJoin
   pending-observation record) are ignored by them.
+- Dash-Qt moves the dust attack protection setting into the settings it shares
+  with `dashd` (see `-dustprotectionthreshold` under
+  [New options](#new-options)). Older versions don't read it there, so after a
+  downgrade dust protection is disabled and has to be enabled again in the
+  options dialog.
 
 ### Downgrade to a version < v23.0.0
 
@@ -67,8 +117,10 @@ require a reindex.
 ## Compatibility
 
 - Dash Core binaries now require macOS 14 (Sonoma) or later. Dash Core v23.1.x
-  binaries supported macOS 11 (Big Sur) or later. Windows 10 or later continues
-  to be required on Windows.
+  binaries supported macOS 11 (Big Sur) or later. Because v24.0.0 is mandatory,
+  users on macOS 13 or older must upgrade macOS, or move their node or wallet
+  to a supported system, before the `v24` hard fork activates. Windows 10 or
+  later continues to be required on Windows.
 - On Linux, kernel 3.17 or later is now required. The minimum glibc version
   (2.31) is unchanged.
 - `PROTOCOL_VERSION` has been bumped from `70240` to `70242` (see
@@ -203,6 +255,10 @@ Before activation there is no behavior change. (#7437, #7340)
   payment and every superblock payment must be paid by its own coinbase output,
   so two identical expected payments (same script and amount) require two
   outputs. Before activation one output could satisfy both. (#7362, #7377)
+  Mining pools should build exactly one coinbase output per `masternode[]` and
+  per `superblock[]` entry of `getblocktemplate`, in template order, even when
+  entries share a script or amount. After activation, a block that merges or
+  deduplicates them is invalid (`bad-cb-payee` / `bad-cb-amount`).
 
 ### EvoNode restrictions
 
@@ -240,7 +296,9 @@ Before activation there is no behavior change. (#7437, #7340)
   alongside the signatures, and repeats the zero-penalty warning for a
   registration. It refuses a registration or dissolution carrying an
   unsatisfied lock time or a relative input lock unless `allowTimeLocks` is
-  set.
+  set. It signs a dissolution only when it returns every share's principal to
+  its refund address, less the fee from the actor's share, as
+  `protx shared_dissolve_prepare` builds it.
 - `protx shared_combine` combines collected signatures and optionally submits.
   A dissolution combined here requires a signature from every share; unilateral
   dissolutions come fully signed from `protx shared_dissolve`. A
@@ -329,11 +387,32 @@ moves to extended addresses with a version 3 provider transaction (see
   transaction, but third-party tools that build version 2 EvoNode service
   updates must be updated.
 - Platform HTTPS entries on port 443 are accepted in extended addresses.
+- A version 3 (extended addresses) ProRegTx or ProUpServTx must list an IPv4
+  address as its first `coreP2PAddrs` entry, and an EvoNode's first
+  `platformP2PAddrs` and `platformHTTPSAddrs` entries must use that same IPv4
+  address. Further entries may use other addresses and network types (IPv6,
+  Tor, I2P, CJDNS, and domains for Platform HTTPS). Violations are rejected
+  with `bad-protx-netinfo-addr-type` or `bad-protx-netinfo-addr`. This applies
+  until masternodes are allowed to operate without IPv4, which is not scheduled
+  on mainnet. Testnet and devnets already allow it, so they are unaffected.
+  Regtest follows mainnet unless `-testactivationheight=ipv4_optional@<height>`
+  is set. (#8018)
+- On mainnet, the first entry of each address list must also use that list's
+  standard port: 9999 for `coreP2PAddrs`, 26656 for `platformP2PAddrs` and 443
+  for `platformHTTPSAddrs`, as legacy ProTx versions already require there.
+  Additional entries may use any otherwise valid port. Violations are rejected
+  with `bad-protx-netinfo-port`. (#8018)
 
 ## Version 2 Asset Unlock transactions
 
-Once the `v24` hard fork activates, Platform withdrawals are issued as version 2
-Asset Unlock transactions. Their transaction hash is computed with the quorum
+Once the `v24` hard fork activates, version 2 Asset Unlock transactions become
+valid. Version 1 Asset Unlock transactions remain valid after activation, and
+Platform withdrawals keep using version 1 until a future Dash Platform release
+starts issuing version 2. Until then, the version 2 features described below
+(the stable txid, InstantSend locking and relay by instance hash) do not apply
+to Platform withdrawals.
+
+The transaction hash of a version 2 Asset Unlock is computed with the quorum
 signing fields (`requestedHeight`, `quorumHash`, `quorumSig`) zeroed, so every
 instance Platform re-signs after an expiry is the same transaction with one
 stable txid. Spends of an unmined withdrawal's outputs therefore stay valid
@@ -363,6 +442,13 @@ longer penalized. (#7639, #7744)
 - `getassetunlockstatuses` reports `instantlock` for mempooled withdrawals.
 - `getrawtransaction` and `decoderawtransaction` report `instanceHash` for
   version 2 Asset Unlock transactions.
+- For pools, explorers and indexers: the txid of a version 2 Asset Unlock is
+  the double SHA-256 of the transaction with `requestedHeight`, `quorumHash`
+  and `quorumSig` zeroed, not of its serialized bytes. The full-bytes hash is
+  `instanceHash`. Block merkle roots and `getblocktemplate`
+  `transactions[].hash` use the txid, so software that hashes raw transaction
+  bytes (`getblocktemplate` `data`, ZMQ `rawtx`/`rawblock`, P2P) must use the
+  `hash` field or apply the same zeroing.
 
 ## Relative asset unlock limit
 
@@ -508,12 +594,18 @@ proofs. (#7107, #7727)
 
 ### Note for masternode operators running Dash Platform
 
-Current versions of Dash Platform read the `service` field and the
-`getblockchaininfo` `softforks` field from Dash Core. Operators running an
-EvoNode with Dash Platform (including setups managed with dashmate) must start
-Dash Core with both `-deprecatedrpc=service` and `-deprecatedrpc=softforks`
-until the Platform version they run no longer requires these fields. Removing
-either option before then can prevent Platform from operating correctly.
+Dash Platform reads the `service` field from Dash Core, and Platform versions
+before v5.0.0 also read the `getblockchaininfo` `softforks` field. EvoNode
+operators should upgrade Dash Platform to v5.0.0 or later together with Dash
+Core:
+
+- dashmate v5.0.0 and later start Dash Core with `-deprecatedrpc=service`, and
+  Platform v5.0.0 and later read deployment status from `getdeploymentinfo`, so
+  no extra configuration is needed.
+- Setups not managed by dashmate v5.0.0 or later must start Dash Core with
+  `-deprecatedrpc=service`, and Platform versions before v5.0.0 also need
+  `-deprecatedrpc=softforks`. Without these options Platform cannot operate
+  correctly.
 
 ## Descriptor wallets by default
 
@@ -526,6 +618,14 @@ used with descriptor wallets, so if your client code relies on these commands
 without specifying `descriptors=false` during wallet creation, you will need to
 update your code. (#7204)
 
+`createwallet` now also refuses `descriptors=false` without `load_on_startup`;
+since v21 this applied only to `descriptors=true`. To create a legacy wallet,
+pass both, for example:
+
+```
+dash-cli -named createwallet wallet_name=mywallet descriptors=false load_on_startup=true
+```
+
 `dash-wallet create` also creates a descriptor wallet by default. Pass the new
 `-legacy` option to create a legacy wallet instead. (#7204)
 
@@ -534,6 +634,18 @@ An experimental RPC `migratewallet` has been added to migrate legacy
 migration process is available in the
 [documentation](https://github.com/dashpay/dash/blob/master/doc/managing-wallets.md#migrating-legacy-wallets-to-descriptor-wallets).
 (#7275)
+
+Failure handling in `migratewallet`, `restorewallet` and
+`dash-wallet createfromdump` was fixed with backports from Bitcoin Core 28.x. A
+failed migration restores the original wallet and leaves the rest of the
+wallet directory as it was. After a migration, the migrated wallet and the
+watch-only and solvables wallets it created are reloaded from disk, and if one
+of them fails to load, the migration is rolled back. Migration backups are now
+named `<name>_<time>.legacy.bak` (`default_wallet_<time>.legacy.bak` for the
+unnamed wallet), and the unnamed wallet's watch-only and solvables wallets are
+named `default_wallet_watchonly` and `default_wallet_solvables`.
+`restorewallet` now accepts an existing empty directory and refuses only a
+directory that already contains a `wallet.dat`. (#8014)
 
 ## Asynchronous address, spent and timestamp indexes
 
@@ -569,8 +681,37 @@ Breaking changes:
   (`getaddressbalance`, `getaddressdeltas`, `getaddresstxids`,
   `getaddressutxos`, `getspentinfo` and `getblockhashes`) return an
   "… index is syncing" error instead of results. (#7101)
+- `-reindex-chainstate` can now be used with optional indexes enabled; they no
+  longer need to be turned off first. An index whose best block is no longer
+  in the block index (for example after `blocks/` and `chainstate/` were
+  deleted but `indexes/` was kept) is refused at startup with "best block of
+  the index not found"; delete that index's directory or use `-reindex`.
+  (bitcoin#25193)
+
+Release candidates rc.1 through rc.6 could leave these indexes inconsistent
+with the active chain after a reorg combined with an unclean shutdown or with
+an index being disabled for a while, and could report one of them as synced
+while it was empty after its directory was deleted on a datadir migrated from
+v23. v24.0.0 fixes both: indexes no longer commit their state ahead of the
+node's flushed chain state, and an empty or partially rebuilt index is rebuilt
+from genesis instead of being taken as migrated data. (#8031; #8042, merge
+9e5e3d59a1e, ported commit by commit)
+
+If an unclean shutdown loses blocks whose entries an index had already
+written, the node can now refuse to start with "<index>: the block the index
+was last synced to is not found. Please rebuild the index." In other cases, as
+in earlier versions, these indexes can keep entries of a block that was
+connected shortly before an unclean shutdown and then lost, if the network
+never sends that block again because a competing block won. In either case,
+rebuild them as described in [How to Upgrade](#how-to-upgrade). (#8042)
 
 ## Masternode configuration requirements
+
+The requirements below apply from the first start of v24.0.0, not from
+`v24` hard fork activation. Remove any conflicting settings from the
+masternode's configuration before upgrading, and upgrade before the `v24`
+start date (November 9, 2026 on mainnet), so that the masternode is running
+when the activation signal is signed.
 
 A masternode (`-masternodeblsprivkey`) now refuses to start unless:
 
@@ -587,7 +728,12 @@ A masternode (`-masternodeblsprivkey`) now refuses to start unless:
 
 The relay policy checks do not apply on regtest. (#7754)
 
-In addition, DKG members now also vote a member bad if none of their masternode
+As before, a masternode turns on `-peerblockfilters` and
+`-blockfilterindex=basic` unless they are set explicitly, so
+`-blockfilterindex=0` also stops it from starting, as it already did in v23.
+
+In addition, DKG members running v24.0.0 now also vote a member bad (which
+leads to PoSe penalties once enough members agree) if none of their masternode
 connections to it advertise:
 
 - transaction relay (`relay=1` in the `version` message);
@@ -776,7 +922,10 @@ and RPC parameters.
   arguments of `protx diff` and `protx listdiff`, which take a block hash or a
   height and therefore still accept a height as a string. There is no runtime
   option to restore the old behaviour; `-deprecatedrpc=permissive_bool` only
-  applies to booleans. (#7099)
+  applies to booleans. (#7099) Client libraries that coerce arguments to
+  strings fail with error -3 or -8, for example on the `protx register*`
+  `collateralIndex`, `masternode winners <count>`, `quorum memberof … <n>` and
+  `protx list registered true`.
 - Previously the `setban`, `addpeeraddress` and `walletcreatefundedpsbt` methods
   allowed non-boolean and non-null values to be passed as boolean parameters.
   Any string, number, array, or object value that was passed would be treated
@@ -925,6 +1074,9 @@ and RPC parameters.
 - Fee estimates are now saved hourly, and `fee_estimates.dat` is ignored at
   startup if it is more than 60 hours old, so a node that was offline for longer
   than that rebuilds its estimates. (#7711)
+- `dashd` no longer creates an empty `dash.conf` when none exists, matching
+  Bitcoin Core. `dash-qt`'s "Open Configuration File" still creates it on
+  demand. (#8029)
 
 ## Pruning
 
@@ -1080,6 +1232,16 @@ and RPC parameters.
   removed from these RPCs in v25. It can be temporarily re-enabled during the
   deprecation period by launching dashd with the configuration option
   `-deprecatedrpc=walletwarningfield`. (#7711)
+- Some wallet RPC error messages changed with upstream backports, which
+  matters for software that matches on them:
+  - `send` and `walletcreatefundedpsbt` with preselected inputs that don't
+    cover the target return "The preselected coins total amount does not cover
+    the transaction target…" instead of "Insufficient funds".
+  - `importpubkey` quotes the rejected value, for example
+    `Pubkey "<value>" must be a hex string`.
+  - The `protx` error for a `platformP2PAddrs` value that a version 2 ProTx
+    can't carry now reads "…this ProTx version only accepts a bare port
+    number…".
 
 ## GUI changes
 

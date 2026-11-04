@@ -162,6 +162,9 @@ public:
     /** Return path to main database file for logs and error messages. */
     virtual std::string Filename() = 0;
 
+    /** Return paths to all database created files */
+    virtual std::vector<fs::path> Files() = 0;
+
     virtual std::string Format() = 0;
 
     std::atomic<unsigned int> nUpdateCounter;
@@ -216,6 +219,7 @@ public:
     void IncrementUpdateCounter() override { ++nUpdateCounter; }
     void ReloadDbEnv() override {}
     std::string Filename() override { return "dummy"; }
+    std::vector<fs::path> Files() override { return {}; }
     std::string Format() override { return "dummy"; }
     std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override { return std::make_unique<DummyBatch>(); }
 };

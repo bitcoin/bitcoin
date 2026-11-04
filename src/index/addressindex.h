@@ -54,13 +54,14 @@ protected:
         /// Update address unspent index (handles both adds and deletes)
         bool UpdateAddressUnspentIndex(const std::vector<CAddressUnspentIndexEntry>& entries);
 
-        /// Atomically erase address history entries and update unspent outputs during rewind.
-        bool RewindBatch(const std::vector<CAddressIndexEntry>& address_entries,
+        /// Add the erasures of address history entries and the unspent output updates of a rewind to batch.
+        void RewindBatch(CDBBatch& batch, const std::vector<CAddressIndexEntry>& address_entries,
                          const std::vector<CAddressUnspentIndexEntry>& unspent_entries);
     };
 
     /// Override to return false - we need undo data
     bool AllowPrune() const override { return false; }
+    bool WritesEagerly() const override { return true; }
 
     /// Write block data to the index databases
     bool CustomAppend(const interfaces::BlockInfo& block) override;

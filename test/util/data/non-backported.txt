@@ -96,6 +96,7 @@ src/test/unordered_lru_cache_tests.cpp
 src/test/util/llmq_tests.h
 src/test/util/masternode.*
 src/test/governance*.cpp
+src/test/index_migration_tests.cpp
 src/unordered_lru_cache.h
 src/util/edge.*
 src/util/helpers.h

@@ -109,6 +109,14 @@ bool EvoSharesActive(node::NodeContext& node)
     return DeploymentActiveAfter(chainman.ActiveChain().Tip(), chainman, Consensus::DEPLOYMENT_EVO_SHARES);
 }
 
+bool IPv4OptionalActive(node::NodeContext& node)
+{
+    AssertLockNotHeld(::cs_main);
+    auto& chainman{*Assert(node.chainman)};
+    LOCK(::cs_main);
+    return DeploymentActiveAfter(chainman.ActiveChain().Tip(), chainman, Consensus::DEPLOYMENT_IPV4_OPTIONAL);
+}
+
 struct ChainSnapshot {
     uint16_t provider_tx_version{0};
     CDeterministicMNCPtr dmn;
@@ -253,13 +261,15 @@ std::optional<ProviderTxError> ApplyNetInfo(ProTx& payload, const ProviderNetInf
 }
 
 template <typename ProTx>
-std::optional<ProviderTxError> ValidateNetworkFields(const ProTx& payload, bool allow_empty, bool check_platform_node_id)
+std::optional<ProviderTxError> ValidateNetworkFields(const ProTx& payload, bool allow_empty,
+                                                    bool check_platform_node_id, bool ipv4_optional)
 {
     TxValidationState state;
     const uint160* platform_node_id{check_platform_node_id && payload.nType == MnType::Evo ? &payload.platformNodeID
                                                                                            : nullptr};
     if (!CheckProviderNetworkFields(payload.netInfo, payload.nType, payload.nVersion, platform_node_id,
-                                    payload.platformP2PPort, payload.platformHTTPPort, allow_empty, state)) {
+                                    payload.platformP2PPort, payload.platformHTTPPort, allow_empty, ipv4_optional,
+                                    state)) {
         return Error(ProviderTxErrorCode::CONSENSUS_REJECTED, state.ToString(), state.GetRejectReason());
     }
     return std::nullopt;
@@ -536,8 +546,8 @@ RegistrationResult BuildRegistration(node::NodeContext& node, Wallet& wallet,
     }
 
     if (auto error{ApplyPlatformNodeId(payload, request.platform_node_id)}) return *error;
-    if (auto error{ValidateNetworkFields(payload, /*allow_empty=*/true,
-                                         /*check_platform_node_id=*/true)}) {
+    if (auto error{ValidateNetworkFields(payload, /*allow_empty=*/true, /*check_platform_node_id=*/true,
+                                         IPv4OptionalActive(node))}) {
         return *error;
     }
 
@@ -682,6 +692,24 @@ std::variant<Dissolution, ProviderTxError> BuildDissolution(const CDeterministic
     return ret;
 }
 
+//! True when `tx` pays what BuildDissolution() builds without a penalty: every share's principal
+//! back to its refund script, less a fee from the actor's share. Consensus also accepts other
+//! payouts every share owner signs, but no RPC or GUI flow builds one, so none is signed here.
+bool ReturnsPrincipal(const CDeterministicMN& dmn, uint16_t actor_index, const CTransaction& tx)
+{
+    CAmount fee{0};
+    for (const auto& share : dmn.pdmnState->shares) fee += share.amount;
+    CAmount out_total{0};
+    for (const auto& out : tx.vout) {
+        if (!MoneyRange(out.nValue) || !MoneyRange(out_total + out.nValue)) return false;
+        out_total += out.nValue;
+    }
+    fee -= out_total;
+    const auto built{BuildDissolution(dmn, actor_index, /*penalty=*/0, fee)};
+    const auto* expected{std::get_if<Dissolution>(&built)};
+    return expected && tx.vout == expected->tx.vout;
+}
+
 //! True when `tx` carries an absolute lock not yet satisfied at the next block, or any BIP68
 //! relative lock (special transactions are version 3, so sequences carry relative-lock
 //! semantics). Wallet-funded inputs use a non-final sequence purely for fee sniping
@@ -797,11 +825,20 @@ std::optional<ProviderTxError> CheckRegistrarUpdateFunding(Wallet& wallet, const
 
 interfaces::ProviderTxCapabilities GetCapabilities(node::NodeContext& node, std::optional<bool> basic_override)
 {
-    const uint16_t version{CurrentProviderTxVersion(node, basic_override)};
-    return interfaces::ProviderTxCapabilities{version, version >= ProTxVersion::ExtAddr};
+    AssertLockNotHeld(::cs_main);
+    auto& chainman{*Assert(node.chainman)};
+    LOCK(::cs_main);
+    const CBlockIndex* tip{chainman.ActiveChain().Tip()};
+    const uint16_t version{DeploymentToProtxVersion(tip, chainman, basic_override)};
+    return interfaces::ProviderTxCapabilities{
+        .version = version,
+        .extended_addresses = version >= ProTxVersion::ExtAddr,
+        .ipv4_optional = DeploymentActiveAfter(tip, chainman, Consensus::DEPLOYMENT_IPV4_OPTIONAL),
+    };
 }
 
-std::optional<ProviderTxError> ValidateNetInfo(const ProviderNetInfo& net_info, MnType type, uint16_t version, bool optional)
+std::optional<ProviderTxError> ValidateNetInfo(const ProviderNetInfo& net_info, MnType type, uint16_t version,
+                                               bool ipv4_optional, bool optional)
 {
     if (!IsValidMnType(type)) {
         return Error(ProviderTxErrorCode::INVALID_PARAMETER, "invalid masternode type");
@@ -815,7 +852,30 @@ std::optional<ProviderTxError> ValidateNetInfo(const ProviderNetInfo& net_info, 
     payload.nVersion = version;
     payload.netInfo = NetInfoInterface::MakeNetInfo(version);
     if (auto error{ApplyNetInfo(payload, net_info, type == MnType::Evo, optional)}) return error;
-    return ValidateNetworkFields(payload, optional, /*check_platform_node_id=*/false);
+    return ValidateNetworkFields(payload, optional, /*check_platform_node_id=*/false, ipv4_optional);
+}
+
+std::optional<std::string> FindNetInfoInUse(node::NodeContext& node, const ProviderNetInfo& net_info, MnType type,
+                                            uint16_t version, bool ipv4_optional)
+{
+    if (ValidateNetInfo(net_info, type, version, ipv4_optional, /*optional=*/true) || !node.dmnman) {
+        return std::nullopt;
+    }
+    CProRegTx payload;
+    payload.nType = type;
+    payload.nVersion = version;
+    payload.netInfo = NetInfoInterface::MakeNetInfo(version);
+    if (ApplyNetInfo(payload, net_info, type == MnType::Evo, /*optional=*/true)) return std::nullopt;
+
+    const auto mn_list{node.dmnman->GetListAtChainTip()};
+    for (const auto& entry : payload.netInfo->GetEntries()) {
+        const auto service{entry.GetAddrPort()};
+        const auto domain{entry.GetDomainPort()};
+        if ((service && mn_list.HasUniqueProperty(*service)) || (domain && mn_list.HasUniqueProperty(*domain))) {
+            return entry.ToStringAddrPort();
+        }
+    }
+    return std::nullopt;
 }
 
 ProviderTxResult<ProviderTxSubmission> Register(node::NodeContext& node, Wallet& wallet,
@@ -901,8 +961,8 @@ ProviderTxResult<ProviderTxSubmission> UpdateService(node::NodeContext& node, Wa
         return *error;
     }
     if (auto error{ApplyPlatformNodeId(payload, request.platform_node_id)}) return *error;
-    if (auto error{ValidateNetworkFields(payload, /*allow_empty=*/false,
-                                         /*check_platform_node_id=*/true)}) {
+    if (auto error{ValidateNetworkFields(payload, /*allow_empty=*/false, /*check_platform_node_id=*/true,
+                                         IPv4OptionalActive(node))}) {
         return *error;
     }
     payload.scriptOperatorPayout = request.operator_payout ? GetScriptForDestination(*request.operator_payout)
@@ -1108,7 +1168,8 @@ ProviderTxResult<PreparedSharedRegistration> PrepareSharedRegistration(node::Nod
         return *error;
     }
     if (auto error{ApplyPlatformNodeId(payload, request.platform_node_id)}) return *error;
-    if (auto error{ValidateNetworkFields(payload, /*allow_empty=*/true, /*check_platform_node_id=*/true)}) {
+    if (auto error{ValidateNetworkFields(payload, /*allow_empty=*/true, /*check_platform_node_id=*/true,
+                                         IPv4OptionalActive(node))}) {
         return *error;
     }
 
@@ -1203,6 +1264,13 @@ ProviderTxResult<SharedSignResult> SignShared(node::NodeContext& node, Wallet& w
         }
         const auto dmn{GetSharedMn(node, payload->proTxHash)};
         if (!dmn) return SharedMnNotFound();
+        if (!ReturnsPrincipal(*dmn, payload->actorIndex, tx)) {
+            return Error(ProviderTxErrorCode::INVALID_PARAMETER,
+                         strprintf("dissolution does not return every share's principal to its refund address, "
+                                   "less a fee of at most %d duffs from the actor's share; only dissolutions as "
+                                   "built by \"protx shared_dissolve_prepare\" are signed",
+                                   CProDisTx::MAX_FEE));
+        }
         if (auto error{check_time_lock("dissolution")}) return *error;
         shares = dmn->pdmnState->shares;
         sign_hash = payload->MakeSignHash(tx, static_cast<uint8_t>(shares.size()));

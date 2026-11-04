@@ -226,6 +226,7 @@ const KnownError KNOWN_ERRORS[]{
     {"bad-protx-version", QT_TRANSLATE_NOOP("MasternodeOperationRunner", "The network does not accept this transaction version yet. Wait for the network upgrade that introduces it to activate.")},
     {"too-early", QT_TRANSLATE_NOOP("MasternodeOperationRunner", "This feature is not active on the network yet. Wait for the network upgrade that introduces it to activate.")},
     {"bad-prodis-dup", QT_TRANSLATE_NOOP("MasternodeOperationRunner", "A dissolution for this masternode is already pending.")},
+    {"bad-prodis-penalty-floor", QT_TRANSLATE_NOOP("MasternodeOperationRunner", "This dissolution pays a share less than the network requires: its full principal plus its part of any early-exit penalty. A dissolution that pays no penalty is accepted only once the early period has ended; if it has already ended, prepare a new dissolution.")},
 };
 } // namespace
 

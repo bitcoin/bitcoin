@@ -152,7 +152,7 @@ class PruneTest(BitcoinTestFramework):
         )
 
     def test_rescan_blockchain(self):
-        self.restart_node(0, ["-prune=550"] + DEPLOYMENT_ARGS)
+        self.restart_node(0, ["-prune=550"] + DEPLOYMENT_ARGS, expected_stderr=EXPECTED_STDERR_NO_GOV_PRUNE)
         assert_raises_rpc_error(-1, "Can't rescan beyond pruned data. Use RPC call getblockchaininfo to determine your pruned height.", self.nodes[0].rescanblockchain)
 
     def test_height_min(self):
@@ -486,6 +486,15 @@ class PruneTest(BitcoinTestFramework):
 
         self.log.info("Test manual pruning with timestamps")
         self.manual_test(4, use_timestamp=True)
+
+        self.log.info("Syncing node 5 to node 0")
+        self.connect_nodes(0, 5)
+        self.sync_blocks([self.nodes[0], self.nodes[5]], wait=5, timeout=300)
+
+        self.log.info("Test prune with a new index")
+        self.restart_node(0, extra_args=["-txindex=0", "-prune=550", "-blockfilterindex=1"] + DEPLOYMENT_ARGS)
+        node = self.nodes[0]
+        self.wait_until(lambda: node.getindexinfo()["basic block filter index"]["best_block_height"] >= 10, timeout=300)
 
         if self.is_wallet_compiled():
             self.log.info("Test wallet re-scan")

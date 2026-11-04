@@ -25,6 +25,9 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
+#include <future>
+#include <thread>
 
 #include <boost/test/unit_test.hpp>
 
@@ -86,6 +89,41 @@ BOOST_AUTO_TEST_CASE(providerTxCapabilities)
                                                              *Assert(m_node.chainman)))};
     BOOST_CHECK_EQUAL(capabilities.version, expected_version);
     BOOST_CHECK_EQUAL(capabilities.extended_addresses, expected_version >= ProTxVersion::ExtAddr);
+    BOOST_CHECK(!capabilities.ipv4_optional); // Not active on regtest by default
+}
+
+struct IPv4OptionalChainSetup : public TestChain100Setup {
+    IPv4OptionalChainSetup()
+        : TestChain100Setup{CBaseChainParams::REGTEST, {"-testactivationheight=ipv4_optional@1"}} {}
+};
+
+BOOST_FIXTURE_TEST_CASE(providerTxCapabilitiesIPv4Optional, IPv4OptionalChainSetup)
+{
+    BOOST_CHECK(interfaces::MakeNode(m_node)->evo().getProviderTxCapabilities().ipv4_optional);
+}
+
+BOOST_AUTO_TEST_CASE(providerNetInfoValidationDoesNotWaitForChain)
+{
+    // Dialogs validate endpoints on every keystroke, so that must not wait for cs_main
+    auto node{interfaces::MakeNode(m_node)};
+    const interfaces::ProviderNetInfo net_info{.core_p2p = {"1.1.1.1:9998"},
+                                               .platform_p2p = std::vector<std::string>{"1.1.1.1:22200"},
+                                               .platform_https = std::vector<std::string>{"1.1.1.1:443"}};
+    std::promise<void> locked;
+    std::promise<void> release;
+    bool lock_timed_out{false};
+    std::thread holder{[&] {
+        LOCK(::cs_main);
+        locked.set_value();
+        lock_timed_out = release.get_future().wait_for(std::chrono::seconds{10}) == std::future_status::timeout;
+    }};
+    locked.get_future().wait();
+    const auto error{node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::ExtAddr,
+                                                         /*ipv4_optional=*/false, /*optional=*/false)};
+    release.set_value();
+    holder.join();
+    BOOST_CHECK(!lock_timed_out);
+    BOOST_CHECK(!error);
 }
 
 BOOST_AUTO_TEST_CASE(providerNetInfoValidation)
@@ -97,33 +135,47 @@ BOOST_AUTO_TEST_CASE(providerNetInfoValidation)
         .platform_https = std::vector<std::string>{"server.example.com:443"},
     };
 
-    BOOST_CHECK(!node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::ExtAddr, /*optional=*/false));
+    // Unless the caller's capabilities say masternodes may operate without IPv4, Platform must use the Core address
+    auto error{node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::ExtAddr,
+                                                   /*ipv4_optional=*/false, /*optional=*/false)};
+    BOOST_REQUIRE(error);
+    BOOST_CHECK_EQUAL(error->reject_reason, "bad-protx-netinfo-addr");
+
+    net_info.platform_p2p = std::vector<std::string>{"1.1.1.1:22200"};
+    net_info.platform_https = std::vector<std::string>{"1.1.1.1:443", "server.example.com:443"};
+    BOOST_CHECK(!node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::ExtAddr,
+                                                     /*ipv4_optional=*/false, /*optional=*/false));
 
     net_info.platform_p2p = std::vector<std::string>{"server.example.com:22200"};
-    auto error{node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::ExtAddr, /*optional=*/false)};
+    error = node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::ExtAddr,
+                                                /*ipv4_optional=*/false, /*optional=*/false);
     BOOST_REQUIRE(error);
     BOOST_CHECK_EQUAL(error->code, interfaces::ProviderTxErrorCode::INVALID_PARAMETER);
     BOOST_CHECK_EQUAL(error->message.original,
                       "Error setting platformP2PAddrs[0] to 'server.example.com:22200' (invalid input)");
 
     net_info.platform_p2p = std::vector<std::string>{"1.1.1.1:9998"};
-    error = node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::ExtAddr, /*optional=*/false);
+    error = node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::ExtAddr,
+                                                /*ipv4_optional=*/false, /*optional=*/false);
     BOOST_REQUIRE(error);
     BOOST_CHECK_EQUAL(error->message.original, "Error setting platformP2PAddrs[0] to '1.1.1.1:9998' (duplicate)");
 
     net_info.platform_p2p = std::vector<std::string>{"1.1.1.2:22200", "1.1.1.3:22200", "1.1.1.4:22200", "1.1.1.5:22200",
                                                      "1.1.1.6:22200"};
-    error = node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::ExtAddr, /*optional=*/false);
+    error = node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::ExtAddr,
+                                                /*ipv4_optional=*/false, /*optional=*/false);
     BOOST_REQUIRE(error);
     BOOST_CHECK_EQUAL(error->message.original,
                       "Error setting platformP2PAddrs[4] to '1.1.1.6:22200' (too many entries)");
 
     net_info.platform_p2p = uint16_t{22200};
     net_info.platform_https = uint16_t{22201};
-    BOOST_CHECK(!node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::BasicBLS, /*optional=*/false));
+    BOOST_CHECK(!node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::BasicBLS,
+                                                     /*ipv4_optional=*/false, /*optional=*/false));
 
     net_info.platform_p2p = std::vector<std::string>{"1.1.1.2:22200"};
-    error = node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::BasicBLS, /*optional=*/false);
+    error = node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::BasicBLS,
+                                                /*ipv4_optional=*/false, /*optional=*/false);
     BOOST_REQUIRE(error);
     BOOST_CHECK(error->message.original.find("only accepts a bare port number") != std::string::npos);
 
@@ -132,7 +184,8 @@ BOOST_AUTO_TEST_CASE(providerNetInfoValidation)
         .platform_p2p = std::vector<std::string>{"1.1.1.2:22200"},
         .platform_https = std::vector<std::string>{"server.example.com:443"},
     };
-    error = node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::ExtAddr, /*optional=*/true);
+    error = node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::ExtAddr,
+                                                /*ipv4_optional=*/false, /*optional=*/true);
     BOOST_REQUIRE(error);
     BOOST_CHECK_EQUAL(error->reject_reason, "bad-protx-netinfo-empty");
 
@@ -141,14 +194,17 @@ BOOST_AUTO_TEST_CASE(providerNetInfoValidation)
         .platform_p2p = std::monostate{},
         .platform_https = std::monostate{},
     };
-    error = node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::ExtAddr, /*optional=*/true);
+    error = node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::ExtAddr,
+                                                /*ipv4_optional=*/false, /*optional=*/true);
     BOOST_REQUIRE(error);
     BOOST_CHECK(error->message.original.find("platformP2PAddrs, cannot be empty if other fields populated") !=
                 std::string::npos);
-    BOOST_CHECK(!node->evo().validateProviderNetInfo(net_info, MnType::Regular, ProTxVersion::ExtAddr, /*optional=*/true));
+    BOOST_CHECK(!node->evo().validateProviderNetInfo(net_info, MnType::Regular, ProTxVersion::ExtAddr,
+                                                     /*ipv4_optional=*/false, /*optional=*/true));
 
     net_info.platform_p2p = std::vector<std::string>{"1.1.1.2:22200"};
-    error = node->evo().validateProviderNetInfo(net_info, MnType::Regular, ProTxVersion::ExtAddr, /*optional=*/true);
+    error = node->evo().validateProviderNetInfo(net_info, MnType::Regular, ProTxVersion::ExtAddr,
+                                                /*ipv4_optional=*/false, /*optional=*/true);
     BOOST_REQUIRE(error);
     BOOST_CHECK_EQUAL(error->message.original, "Platform endpoints are only valid for an EvoNode");
 
@@ -157,7 +213,8 @@ BOOST_AUTO_TEST_CASE(providerNetInfoValidation)
         .platform_p2p = std::vector<std::string>{"1.1.1.2:22200"},
         .platform_https = std::monostate{},
     };
-    error = node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::ExtAddr, /*optional=*/true);
+    error = node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::ExtAddr,
+                                                /*ipv4_optional=*/false, /*optional=*/true);
     BOOST_REQUIRE(error);
     BOOST_CHECK(error->message.original.find("platformHTTPSAddrs, cannot be empty if other fields populated") !=
                 std::string::npos);
@@ -167,13 +224,15 @@ BOOST_AUTO_TEST_CASE(providerNetInfoValidation)
         .platform_p2p = uint16_t{22200},
         .platform_https = uint16_t{22200},
     };
-    error = node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::BasicBLS, /*optional=*/false);
+    error = node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::BasicBLS,
+                                                /*ipv4_optional=*/false, /*optional=*/false);
     BOOST_REQUIRE(error);
     BOOST_CHECK_EQUAL(error->reject_reason, "bad-protx-platform-dup-ports");
 
     net_info.platform_p2p = uint16_t{MainParams().GetDefaultPort()};
     net_info.platform_https = uint16_t{22201};
-    error = node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::BasicBLS, /*optional=*/false);
+    error = node->evo().validateProviderNetInfo(net_info, MnType::Evo, ProTxVersion::BasicBLS,
+                                                /*ipv4_optional=*/false, /*optional=*/false);
     BOOST_REQUIRE(error);
     BOOST_CHECK_EQUAL(error->reject_reason, "bad-protx-platform-p2p-port");
 }

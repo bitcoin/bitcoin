@@ -109,6 +109,7 @@ public:
     void IncrementUpdateCounter() override { ++nUpdateCounter; }
     void ReloadDbEnv() override {}
     std::string Filename() override { return "faildb"; }
+    std::vector<fs::path> Files() override { return {}; }
     std::string Format() override { return "faildb"; }
     std::unique_ptr<DatabaseBatch> MakeBatch(bool = true) override { return std::make_unique<FailBatch>(m_pass); }
 };
@@ -249,8 +250,8 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
 
         {
             CBlockLocator locator;
-            BOOST_CHECK(!WalletBatch{wallet.GetDatabase()}.ReadBestBlock(locator));
-            BOOST_CHECK(locator.IsNull());
+            BOOST_CHECK(WalletBatch{wallet.GetDatabase()}.ReadBestBlock(locator));
+            BOOST_CHECK(!locator.IsNull() && locator.vHave.front() == newTip->GetBlockHash());
         }
 
         CWallet::ScanResult result = wallet.ScanForWalletTransactions(/*start_block=*/oldTip->GetBlockHash(), /*start_height=*/oldTip->nHeight, /*max_height=*/{}, reserver, /*fUpdate=*/false, /*save_progress=*/true);
@@ -263,7 +264,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
         {
             CBlockLocator locator;
             BOOST_CHECK(WalletBatch{wallet.GetDatabase()}.ReadBestBlock(locator));
-            BOOST_CHECK(!locator.IsNull());
+            BOOST_CHECK(!locator.IsNull() && locator.vHave.front() == newTip->GetBlockHash());
         }
     }
 

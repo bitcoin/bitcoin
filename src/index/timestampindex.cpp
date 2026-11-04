@@ -41,9 +41,9 @@ void TimestampIndex::DB::ReadRange(uint32_t high, uint32_t low, std::vector<uint
     }
 }
 
-bool TimestampIndex::DB::EraseTimestampIndex(const CTimestampIndexKey& key)
+void TimestampIndex::DB::EraseTimestampIndex(CDBBatch& batch, const CTimestampIndexKey& key)
 {
-    return CDBWrapper::Erase(std::make_pair(DB_TIMESTAMPINDEX, key));
+    batch.Erase(std::make_pair(DB_TIMESTAMPINDEX, key));
 }
 
 TimestampIndex::TimestampIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe) :
@@ -72,20 +72,17 @@ bool TimestampIndex::CustomRewind(const interfaces::BlockKey& current_tip, const
     const CBlockIndex* new_tip_index = WITH_LOCK(cs_main, return m_chainstate->m_blockman.LookupBlockIndex(new_tip.hash));
     assert(current_tip_index->GetAncestor(new_tip_index->nHeight) == new_tip_index);
 
-    // Erase timestamp index entries for blocks being rewound
+    // Erase timestamp index entries for blocks being rewound, in one batch with the locator
+    CDBBatch batch(GetDB());
     for (const CBlockIndex* pindex = current_tip_index; pindex != new_tip_index; pindex = pindex->pprev) {
         // Skip genesis block
         if (pindex->nHeight == 0) continue;
 
-        CTimestampIndexKey key(pindex->nTime, pindex->GetBlockHash());
-        if (!m_db->EraseTimestampIndex(key)) {
-            LogError("%s: Failed to erase timestamp index for block %s during rewind\n", __func__,
-                     pindex->GetBlockHash().ToString());
-            return false;
-        }
+        m_db->EraseTimestampIndex(batch, CTimestampIndexKey(pindex->nTime, pindex->GetBlockHash()));
     }
 
-    return true;
+    WriteRewindLocator(batch, new_tip_index);
+    return GetDB().WriteBatch(batch);
 }
 
 BaseIndex::DB& TimestampIndex::GetDB() const { return *m_db; }

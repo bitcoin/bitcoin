@@ -6,6 +6,7 @@
 
 from test_framework.util import (
     assert_equal,
+    assert_raises_rpc_error,
     softfork_active
 )
 from test_framework.script import (
@@ -24,6 +25,8 @@ from typing import List, Optional
 
 # Height at which BIP9 deployment DEPLOYMENT_V24 is activated
 V24_ACTIVATION_THRESHOLD = 100
+# Height from which masternodes may operate without IPv4, see DEPLOYMENT_IPV4_OPTIONAL in src/consensus/params.h
+IPV4_OPTIONAL_HEIGHT = 500
 # See CMainParams in src/chainparams.cpp
 DEFAULT_PORT_MAINNET_CORE_P2P = 9999
 # See CRegTestParams in src/chainparams.cpp
@@ -160,7 +163,8 @@ class NetInfoTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         self.extra_args = [[
-            "-dip3params=2:2", f"-vbparams=v24:{self.mocktime}:999999999999:{V24_ACTIVATION_THRESHOLD}:10:8:6:5:0"
+            "-dip3params=2:2", f"-vbparams=v24:{self.mocktime}:999999999999:{V24_ACTIVATION_THRESHOLD}:10:8:6:5:0",
+            f"-testactivationheight=ipv4_optional@{IPV4_OPTIONAL_HEIGHT}"
         ] for _ in range(self.num_nodes)]
         self.extra_args[2] += ["-deprecatedrpc=service"]
 
@@ -210,6 +214,8 @@ class NetInfoTest(BitcoinTestFramework):
         self.test_deprecation()
         self.log.info("Mine blocks to activate DEPLOYMENT_V24")
         self.activate_v24()
+        self.log.info("Test that primary addresses must be IPv4 until DEPLOYMENT_IPV4_OPTIONAL")
+        self.test_ipv4_optional()
         self.log.info("Test input validation for masternode address fields (post-fork)")
         self.test_validation_common()
         self.test_validation_extended()
@@ -404,6 +410,48 @@ class NetInfoTest(BitcoinTestFramework):
         # coreP2PAddrs cannot omit the port, extended addresses require explicit port specification
         self.node_evo.register_mn(self, False, "127.0.0.1", DEFAULT_PORT_PLATFORM_P2P, DEFAULT_PORT_PLATFORM_HTTP,
                                   -8, "Error setting coreP2PAddrs[0] to '127.0.0.1' (invalid port)")
+
+    def test_ipv4_optional(self):
+        port_evo, port_two = self.node_evo.mn.nodePort, self.node_two.mn.nodePort
+        p2p, https = DEFAULT_PORT_PLATFORM_P2P, DEFAULT_PORT_PLATFORM_HTTP
+        # The first entry of each purpose must be IPv4, and Platform's must use the first Core P2P address
+        cases = [
+            ([f"[::1]:{port_evo}", f"127.0.0.1:{port_evo}"], [f"127.0.0.1:{p2p}"], [f"127.0.0.1:{https}"],
+             "bad-protx-netinfo-addr-type, first core_p2p entry must be IPv4"),
+            ([f"127.0.0.1:{port_evo}"], [f"127.0.0.2:{p2p}"], [f"127.0.0.1:{https}"],
+             "bad-protx-netinfo-addr, first platform_p2p entry must use the first core_p2p address"),
+            ([f"127.0.0.1:{port_evo}"], [f"127.0.0.1:{p2p}"], [f"{DOMAINS_CLR[0]}:{https}", f"127.0.0.1:{https}"],
+             "bad-protx-netinfo-addr-type, first platform_https entry must be IPv4"),
+        ]
+        update = ([f"127.0.0.1:{port_two}"], [f"{DOMAINS_TOR[0]}:{p2p}", f"127.0.0.1:{p2p}"], [f"127.0.0.2:{https}"],
+                  "bad-protx-netinfo-addr-type, first platform_p2p entry must be IPv4")
+
+        # The block after the tip is the one these would be included in
+        assert self.nodes[0].getblockcount() < IPV4_OPTIONAL_HEIGHT - 2
+        self.generate(self.nodes[0], IPV4_OPTIONAL_HEIGHT - 2 - self.nodes[0].getblockcount())
+        for core, plat_p2p, plat_https, error in cases:
+            self.node_evo.register_mn(self, False, core, plat_p2p, plat_https, -1, error)
+        self.node_two.update_mn(self, False, *update[:3], -1, update[3])
+
+        self.generate(self.nodes[0], 1)
+        txs = [self.node_evo.register_mn(self, False, *case[:3]) for case in cases]
+        txs.append(self.node_two.update_mn(self, False, *update[:3]))
+        for tx in txs:
+            assert self.nodes[0].testmempoolaccept([tx])[0]['allowed']
+
+        # Validation outside the RPCs, for the mempool and for blocks, applies the same rule at the same height
+        tip = self.nodes[0].getbestblockhash()
+        self.nodes[0].invalidateblock(tip)
+        address = self.nodes[0].getnewaddress()
+        for tx, (*_, error) in zip(txs, cases + [update]):
+            reason = error.split(",")[0]
+            result = self.nodes[0].testmempoolaccept([tx])[0]
+            assert_equal(result['allowed'], False)
+            assert_equal(result['reject-reason'], reason)
+            assert_raises_rpc_error(-25, f"TestBlockValidity failed: {reason}", self.nodes[0].generateblock, address,
+                                    [tx], invalid_call=False)
+        self.nodes[0].reconsiderblock(tip)
+        self.sync_blocks()
 
     def test_deprecation(self):
         # netInfo is represented with JSON in CProRegTx, CProUpServTx, CDeterministicMNState and CSimplifiedMNListEntry,

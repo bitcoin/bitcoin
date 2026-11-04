@@ -55,6 +55,8 @@ std::string DeploymentName(Consensus::BuriedDeployment dep)
         return "mn_rr";
     case Consensus::DEPLOYMENT_WITHDRAWALS:
         return "withdrawals";
+    case Consensus::DEPLOYMENT_IPV4_OPTIONAL:
+        return "ipv4_optional";
     } // no default case, so the compiler can warn about missing cases
     return "";
 }

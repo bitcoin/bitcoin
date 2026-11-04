@@ -102,8 +102,9 @@ QString SharedMnBroadcast(interfaces::Node& node, const CTransactionRef& tx)
     const TransactionError error{
         node.broadcastTransaction(tx, node::DEFAULT_MAX_RAW_TX_FEE_RATE.GetFee(GetVirtualTransactionSize(*tx)), message)};
     if (error == TransactionError::OK) return {};
-    if (message.empty()) message = TransactionErrorString(error);
-    return MasternodeOperationRunner::errorText({interfaces::ProviderTxErrorCode::BROADCAST_ERROR, message, {}, error});
+    // BroadcastTransaction() reports a mempool rejection only in message.original
+    return MasternodeOperationRunner::errorText(
+        {interfaces::ProviderTxErrorCode::BROADCAST_ERROR, TransactionErrorString(error), message.original, error});
 }
 
 SharedMnStatusBoard::SharedMnStatusBoard(QWidget* parent) : QWidget(parent)

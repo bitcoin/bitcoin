@@ -766,6 +766,9 @@ public:
 
     std::string ToString() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+    //! Get the last block that was flushed to disk.
+    const CBlockIndex* GetLastFlushedBlock() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main) { return m_last_flushed_block; }
+
     //! Indirection necessary to make lock annotations work with an optional mempool.
     RecursiveMutex* MempoolMutex() const LOCK_RETURNED(m_mempool->cs)
     {
@@ -810,6 +813,7 @@ private:
 
     SteadyClock::time_point m_last_write{};
     SteadyClock::time_point m_last_flush{};
+    const CBlockIndex* m_last_flushed_block GUARDED_BY(::cs_main){nullptr};
 
     /**
      * In case of an invalid snapshot, rename the coins leveldb directory so

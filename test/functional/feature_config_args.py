@@ -335,6 +335,27 @@ class ConfArgsTest(BitcoinTestFramework):
         self.start_node(0, [f'-conf={node.datadir}/dash.conf'])
         self.stop_node(0)
 
+    def test_missing_default_datadir(self):
+        # Overriding the default datadir through the environment does not work on Windows
+        if sys.platform == "win32":
+            return
+
+        self.log.info('Test -version, -help and a first start without a default data directory')
+        node = self.nodes[0]
+        node_args = node.args
+        node.args = [arg for arg in node.args if not arg.startswith("-datadir=")]
+        for name, extra_args in [("version", ["-version"]), ("help", ["-help"]), ("start", ["-regtest", "-listen=0", "-server=0"])]:
+            env, default_datadir = util.get_temp_default_datadir(pathlib.Path(self.options.tmpdir, "no_datadir", name))
+            default_datadir.parent.mkdir(parents=True)
+            node.start(extra_args, env=env)
+            if name == "start":
+                debug_log = default_datadir / "regtest" / "debug.log"
+                self.wait_until(lambda: node.process.poll() is not None or (debug_log.exists() and "Done loading" in debug_log.read_text(encoding="utf-8")))
+                assert node.process.poll() is None
+                node.process.terminate()
+            node.wait_until_stopped()
+        node.args = node_args
+
     def test_ignored_default_conf(self):
         # Disable this test for windows currently because trying to override
         # the default datadir through the environment does not seem to work.
@@ -379,6 +400,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.test_config_file_log()
         self.test_invalid_command_line_options()
         self.test_ignored_conf()
+        self.test_missing_default_datadir()
         self.test_ignored_default_conf()
 
         # Remove the -datadir argument so it doesn't override the config file

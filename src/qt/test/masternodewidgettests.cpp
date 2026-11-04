@@ -110,7 +110,12 @@ public:
     std::pair<interfaces::MnListPtr, const CBlockIndex*> getListAtChainTip() override { return {}; }
     interfaces::ProviderTxCapabilities getProviderTxCapabilities() override { return {}; }
     std::optional<interfaces::ProviderTxError> validateProviderNetInfo(const interfaces::ProviderNetInfo&, MnType,
-                                                                       uint16_t, bool) override
+                                                                       uint16_t, bool, bool) override
+    {
+        return std::nullopt;
+    }
+    std::optional<std::string> findProviderNetInfoInUse(const interfaces::ProviderNetInfo&, MnType, uint16_t,
+                                                        bool) override
     {
         return std::nullopt;
     }
@@ -310,11 +315,10 @@ void MasternodeWidgetTests::providerNetInfoValidation_data()
     const int evo{static_cast<int>(MnType::Evo)};
     const int basic{ProTxVersion::BasicBLS};
     const int extended{ProTxVersion::ExtAddr};
-    const QString core1{QString("1.1.1.1:%1").arg(Params().GetDefaultPort())};
-    const QString core2{QString("1.1.1.2:%1").arg(Params().GetDefaultPort())};
-    const int wrong_network_port{Params().GetDefaultPort() == MainParams().GetDefaultPort()
-                                     ? MainParams().GetDefaultPort() + 1
-                                     : MainParams().GetDefaultPort()};
+    // providerNetInfoValidation() runs on mainnet
+    const QString core1{QString("1.1.1.1:%1").arg(MainParams().GetDefaultPort())};
+    const QString core2{QString("1.1.1.2:%1").arg(MainParams().GetDefaultPort())};
+    const int wrong_network_port{MainParams().GetDefaultPort() + 1};
 
     const auto add_row = [](const char* name, int type, int version, bool optional, QStringList core, QStringList p2p,
                             QStringList https, int p2p_port, int https_port, bool valid, QString error = {}) {
@@ -343,18 +347,18 @@ void MasternodeWidgetTests::providerNetInfoValidation_data()
     add_row("evo-basic-ports", evo, basic, true, {core1}, {}, {}, 26656, 443, true);
     add_row("evo-basic-zero-port", evo, basic, true, {core1}, {}, {}, 0, 443, false, "valid port");
     add_row("evo-extended-all-empty", evo, extended, true, {}, {}, {}, -1, -1, true);
-    add_row("evo-extended-complete", evo, extended, true, {core1}, {"1.1.1.2:26656"}, {"example.com:443"}, -1, -1, true);
+    add_row("evo-extended-complete", evo, extended, true, {core1}, {"1.1.1.1:26656"}, {"1.1.1.1:443"}, -1, -1, true);
     add_row("evo-extended-platform-only", evo, extended, true, {}, {"1.1.1.2:26656"}, {"example.com:443"}, -1, -1,
             false, "bad-protx-netinfo-empty");
-    add_row("evo-extended-https-domain", evo, extended, true, {core1}, {"1.1.1.2:26656"}, {"rpc.example.org:443"}, -1,
-            -1, true);
+    add_row("evo-extended-https-domain", evo, extended, true, {core1}, {"1.1.1.1:26656"},
+            {"1.1.1.1:443", "rpc.example.org:443"}, -1, -1, true);
     add_row("evo-extended-p2p-domain", evo, extended, true, {core1}, {"p2p.example.org:26656"}, {"rpc.example.org:443"},
             -1, -1, false, "invalid input");
     add_row("evo-extended-core-only", evo, extended, true, {core1}, {}, {}, -1, -1, false,
             "cannot be empty if other fields populated");
-    add_row("evo-extended-one-platform-family", evo, extended, true, {core1}, {"1.1.1.2:26656"}, {}, -1, -1, false,
+    add_row("evo-extended-one-platform-family", evo, extended, true, {core1}, {"1.1.1.1:26656"}, {}, -1, -1, false,
             "cannot be empty if other fields populated");
-    add_row("evo-extended-cross-purpose-duplicate", evo, extended, true, {core1}, {"1.1.1.2:26656"}, {"1.1.1.2:26656"},
+    add_row("evo-extended-cross-purpose-duplicate", evo, extended, true, {core1}, {"1.1.1.1:26656"}, {"1.1.1.1:26656"},
             -1, -1, false, "duplicate");
     add_row("invalid-version", regular, 0, true, {}, {}, {}, -1, -1, false, "invalid provider transaction version");
     add_row("invalid-type", static_cast<int>(MnType::Invalid), basic, true, {}, {}, {}, -1, -1, false,
@@ -363,6 +367,8 @@ void MasternodeWidgetTests::providerNetInfoValidation_data()
 
 void MasternodeWidgetTests::providerNetInfoValidation()
 {
+    BasicTestingSetup test{CBaseChainParams::MAIN};
+    m_node.setContext(&test.m_node);
     QFETCH(int, mn_type);
     QFETCH(int, version);
     QFETCH(bool, optional);
@@ -394,7 +400,8 @@ void MasternodeWidgetTests::providerNetInfoValidation()
     }
 
     const auto error{m_node.evo().validateProviderNetInfo(net_info, static_cast<MnType>(mn_type),
-                                                          static_cast<uint16_t>(version), optional)};
+                                                          static_cast<uint16_t>(version), /*ipv4_optional=*/false,
+                                                          optional)};
     QCOMPARE(!error.has_value(), valid);
     if (!valid) {
         QVERIFY(error.has_value());

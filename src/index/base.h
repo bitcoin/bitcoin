@@ -12,11 +12,16 @@
 #include <validationinterface.h>
 
 #include <atomic>
+#include <functional>
+#include <optional>
 #include <string>
 
 class CBlock;
 class CBlockIndex;
 class Chainstate;
+namespace node {
+class BlockManager;
+} // namespace node
 namespace interfaces {
 class Chain;
 } // namespace interfaces
@@ -49,10 +54,16 @@ protected:
            bool f_memory = false, bool f_wipe = false, bool f_obfuscate = false);
 
         /// Read block locator of the chain that the index is in sync with.
-        bool ReadBestBlock(CBlockLocator& locator) const;
+        /// Note, the returned locator will be empty if no record exists.
+        CBlockLocator ReadBestBlock() const;
 
         /// Write block locator of the chain that the index is in sync with.
         void WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator);
+
+        /// The index tip that Commit() last skipped, if no commit has succeeded since. See WritesEagerly().
+        std::optional<uint256> ReadUncommittedTip() const;
+        void WriteUncommittedTip(CDBBatch& batch, const uint256& block_hash);
+        void EraseUncommittedTip(CDBBatch& batch);
     };
 
 private:
@@ -82,19 +93,22 @@ private:
     void ThreadSync();
 
     /// Write the current index state (eg. chain block locator and subclass-specific items) to disk.
-    ///
-    /// Recommendations for error handling:
-    /// If called on a successor of the previous committed best block in the index, the index can
-    /// continue processing without risk of corruption, though the index state will need to catch up
-    /// from further behind on reboot. If the new state is not a successor of the previous state (due
-    /// to a chain reorganization), the index must halt until Commit succeeds or else it could end up
-    /// getting corrupted.
-    bool Commit();
+    /// Will skip the commit if no block has been indexed yet or if the index's best block is
+    /// ahead of the chainstate's last flushed block. This avoids persisting state an unclean shutdown
+    /// could not roll back from. A later call commits when the chainstate has flushed far enough.
+    /// Indexes that write eagerly record a skipped tip instead, see WritesEagerly().
+    void Commit();
 
     /// Loop over disconnected blocks and call CustomRewind.
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
 
     virtual bool AllowPrune() const = 0;
+
+    /// Whether CustomAppend() persists a block's entries right away. Commit() can't write the locator for a tip
+    /// above the last flush, so for these indexes it records that tip separately, and Init() resumes from it, or
+    /// fails if the block index lost it. Otherwise a restart would resume from the older locator and never rewind the
+    /// entries of blocks above it that are no longer on the active chain.
+    virtual bool WritesEagerly() const { return false; }
 
 protected:
     std::unique_ptr<interfaces::Chain> m_chain;
@@ -120,6 +134,22 @@ protected:
     /// Rewind index to an earlier chain tip during a chain reorg. The tip must
     /// be an ancestor of the current best block.
     [[nodiscard]] virtual bool CustomRewind(const interfaces::BlockKey& current_tip, const interfaces::BlockKey& new_tip) { return true; }
+
+    /// For indexes whose CustomRewind() erases entries: if the committed locator is above new_tip on the same
+    /// branch, move it to new_tip. Commit() may not write new_tip yet (it can be ahead of the last flush), but
+    /// leaving the old locator above erased entries would make an unclean restart resume past them.
+    void WriteRewindLocator(CDBBatch& batch, const CBlockIndex* new_tip) const;
+
+    /// The block Init() resumes from, given the block of the committed locator: the uncommitted tip if the block
+    /// index has it above that block (see WritesEagerly()), otherwise the locator block itself.
+    const CBlockIndex* ResumeBlock(const node::BlockManager& blockman, const CBlockIndex* locator_block) const
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    /// For indexes that erase per block in CustomRewind(): walk from current_tip down to new_tip and write each
+    /// block's erasures, filled in by rewind_block, in one batch with WriteRewindLocator() for its parent. A rewind
+    /// interrupted between blocks then never leaves the committed locator above erased entries.
+    [[nodiscard]] bool RewindBlockByBlock(const CBlockIndex* current_tip, const CBlockIndex* new_tip,
+                                          const std::function<bool(const CBlockIndex* pindex, CDBBatch& batch)>& rewind_block);
 
     virtual DB& GetDB() const = 0;
 

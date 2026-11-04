@@ -261,10 +261,17 @@ private:
     //! Who the current message goes to
     QString recipientName() const;
     void copySession(const QString& what);
-    void saveSession();
+    //! False when nothing was saved: the file dialog was cancelled, the file
+    //! could not be written, or the operator key still has to be saved
+    bool saveSession();
     void handleImportedText(const QString& text);
     void absorbSession(const MnShareSession& imported);
-    void replaceSession(const MnShareSession& imported);
+    //! Load `imported` in place of the session, answering for row `my_share`
+    //! when it is still this wallet's, or for the row it infers otherwise
+    void replaceSession(const MnShareSession& imported, int my_share = -1);
+    //! A participant's answer to a newer draft invitation: load it when every
+    //! share this wallet holds comes back as sent or still unanswered
+    void followNewerInvitation(const MnShareSession& imported);
 
     // Funding
     //! Confirmed, unlocked, spendable wallet coins covering `target`, largest
@@ -280,18 +287,23 @@ private:
     //! first: if the coins are then spent, nobody can complete the
     //! registration.
     void releaseReservedCoins();
-    //! True when at least one coin this wallet contributed is still locked in
-    //! it, i.e. there is something for "Release my coins" to do
+    //! True when at least one of this wallet's own coins among the session's
+    //! inputs is still locked in it, i.e. there is something for "Release my
+    //! coins" to do
     bool hasLockedContributedCoins() const;
     //! Lock the coins of a session in progress, or unlock them once it is
     //! broadcast and they are spent
     void refreshContributedCoinLocks();
     void setContributionLocked(const MnShareSession::Contribution& contribution, bool lock);
     void unlockAllContributedCoins();
+    //! Lock the session's unspent inputs that this wallet can spend
     void lockKnownContributedCoins();
     //! Re-check that every funding coin this wallet contributed is still
     //! unspent, and set m_dead_reason when one is gone
     void checkSessionLiveness();
+    //! Why `session` can never complete because a coin this wallet tracks in
+    //! it was spent, or empty
+    QString deadReason(const MnShareSession& session) const;
     //! Contribution recorded for the share this wallet holds, or nullptr
     const MnShareSession::Contribution* myContribution() const;
     //! Value of a recorded funding input: this wallet's own view for the coins
@@ -324,6 +336,8 @@ private:
     //! True when share `index` names an owner address this wallet cannot
     //! spend, so another participant holds it
     bool shareTakenByOther(size_t index) const;
+    //! The first share this wallet holds that `imported` changes or drops, or -1
+    int ownShareChangedIn(const MnShareSession& imported) const;
     //! Put the addresses recorded for the share this wallet holds into the
     //! contribution page, replacing any left over from another share
     void loadMyShareAddresses();
@@ -387,6 +401,14 @@ private:
     bool m_updating{false}; //!< guards widget refresh against change signals
     bool m_lock_confirming{false};
     bool m_finished{false};
+    //! The user released this wallet's coins with "Release" or "Release my
+    //! coins", and a later copy of the session must not lock them again until
+    //! the user reserves or signs them
+    bool m_coins_released{false};
+    //! Contributions the user withdrew with "Release" on the contribution page,
+    //! less any coins reserved again since. A reply to an earlier invitation
+    //! still carries them, and only Reserve may put them back.
+    std::vector<MnShareSession::Contribution> m_released_contributions;
     Role m_role{Role::Undecided};
     int m_my_share{-1};
     std::optional<Page> m_validation_page;
@@ -405,6 +427,10 @@ private:
     //! coordinator edited the draft after somebody had already answered it,
     //! which is the only case where the replies really are stale.
     int m_replies_absorbed_revision{-1};
+    //! Revision of the coordinator's invitation a participant last loaded, or -1
+    //! when unknown. Reserving coins bumps the participant's own revision as
+    //! well, so only this tells an older invitation from a newer one.
+    int m_invitation_revision{-1};
     //! A recorded funding coin was spent, so the registration can never
     //! complete
     QString m_dead_reason;
@@ -465,6 +491,7 @@ private:
     QValidatedLineEdit* m_owner_edit{nullptr};
     QValidatedLineEdit* m_refund_edit{nullptr};
     QValidatedLineEdit* m_reward_edit{nullptr};
+    QVector<QPushButton*> m_new_address_buttons;
     QWidget* m_fee_box{nullptr};
     BitcoinAmountField* m_fee_field{nullptr};
     QLabel* m_coins_label{nullptr};
@@ -490,6 +517,7 @@ private:
     QLabel* m_approvals_terms{nullptr};
     QPushButton* m_copy_terms_button{nullptr};
     QPushButton* m_unlock_button{nullptr};
+    QPushButton* m_approvals_release_button{nullptr};
     QLabel* m_prepare_warning_label{nullptr};
 
     // Signatures / Sign contribution
@@ -499,6 +527,7 @@ private:
     QLabel* m_signatures_unchanged{nullptr};
     QLabel* m_signatures_terms{nullptr};
     QPushButton* m_copy_signing_button{nullptr};
+    QPushButton* m_signatures_release_button{nullptr};
 
     // Waiting pages
     struct WaitingPage {

@@ -40,24 +40,29 @@
 #include <wallet/wallet.h>
 
 #include <QApplication>
+#include <QClipboard>
 #include <QComboBox>
 #include <QDir>
 #include <QFile>
+#include <QFocusEvent>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QSignalSpy>
 #include <QSpinBox>
-#include <QTableWidget>
 #include <QTabWidget>
+#include <QTableWidget>
 #include <QTemporaryDir>
 #include <QTest>
 #include <QTimer>
 
+#include <chrono>
+#include <future>
 #include <limits>
 #include <memory>
 #include <string>
+#include <thread>
 #include <utility>
 
 using wallet::WalletContext;
@@ -223,7 +228,7 @@ private:
     std::string m_operator_display;
     std::string m_core_endpoint;
     std::string m_platform_p2p{"127.0.0.1:26656"};
-    std::string m_platform_https{"api.example.com:443"};
+    std::string m_platform_https{"127.0.0.1:443"};
     std::string m_platform_node_id{"1111111111111111111111111111111111111111"};
 };
 
@@ -236,6 +241,65 @@ void MasternodeMaintenanceTests::automaticFeeSource()
     QCOMPARE(picker.count(), 1);
     QCOMPARE(picker.currentText(), QString("Automatic (recommended)"));
     QVERIFY(picker.selectedAddress().isEmpty());
+
+    // A wallet funded at an address that is neither a payout nor a share
+    // reward address of the masternode, like a hosting operator's
+    TestChain100Setup test;
+    m_node.setContext(&test.m_node);
+    WalletContext& context{*m_node.walletLoader().context()};
+    const auto wallet{MakeTestWallet(m_node, context, "operator")};
+    QVERIFY(wallet != nullptr);
+    WalletGuard guard{context, wallet};
+    CTxDestination funded;
+    {
+        LOCK(wallet->cs_wallet);
+        const auto destination{wallet->GetNewDestination("")};
+        QVERIFY(destination);
+        funded = *destination;
+        const CBlockIndex* tip{
+            WITH_LOCK(test.m_node.chainman->GetMutex(), return test.m_node.chainman->ActiveChain().Tip())};
+        wallet->SetLastBlockProcessed(tip->nHeight, tip->GetBlockHash());
+        CMutableTransaction funding;
+        funding.vin.emplace_back(GetRandHash(), 0);
+        funding.vout.emplace_back(10 * COIN, GetScriptForDestination(funded));
+        QVERIFY(wallet->AddToWallet(MakeTransactionRef(funding),
+                                    wallet::TxStateConfirmed{tip->GetBlockHash(), tip->nHeight, /*index=*/0}) != nullptr);
+    }
+    MasternodeTestUtil::GuiModels models{m_node};
+    QVERIFY2(models.ok, qPrintable(QString::fromStdString(models.error.translated)));
+    WalletModel wallet_model(interfaces::MakeWallet(context, wallet), models.client);
+    const interfaces::ProviderTxCapabilities capabilities{ProTxVersion::BasicBLS, false};
+
+    // A regular masternode's dialogs leave the fee source to Core
+    auto regular{std::make_shared<TestMnEntry>(MnType::Regular)};
+    MasternodeEntry regular_entry{regular, "collateral", 50};
+    UpdateServiceDialog regular_service(m_node, &wallet_model, regular_entry, capabilities, /*parent=*/nullptr);
+    QCOMPARE(regular_service.m_fee_source->currentText(), QString("Automatic (recommended)"));
+    QString error;
+    const auto regular_update{regular_service.buildRequest(regular->operatorSecret(), error)};
+    QVERIFY2(regular_update.has_value(), qPrintable(error));
+    QVERIFY(!regular_update->fee_source.has_value());
+    RevokeDialog regular_revoke(m_node, &wallet_model, regular_entry, /*parent=*/nullptr);
+    QCOMPARE(regular_revoke.m_fee_source->currentText(), QString("Automatic (recommended)"));
+    const auto regular_revocation{regular_revoke.buildRequest(regular->operatorSecret(), error)};
+    QVERIFY2(regular_revocation.has_value(), qPrintable(error));
+    QVERIFY(!regular_revocation->fee_source.has_value());
+
+    // Core's automatic choice for a shared masternode is the first share's
+    // reward address, which this wallet does not own: pay from this wallet
+    auto shared{std::make_shared<TestMnEntry>(MnType::Regular)};
+    shared->makeShared({400 * COIN, 300 * COIN, 300 * COIN}, 5 * COIN, /*early_period_blocks=*/1000);
+    MasternodeEntry shared_entry{shared, "collateral", 50};
+    UpdateServiceDialog shared_service(m_node, &wallet_model, shared_entry, capabilities, /*parent=*/nullptr);
+    QCOMPARE(shared_service.m_fee_source->findText("Automatic (recommended)"), -1);
+    const auto shared_update{shared_service.buildRequest(shared->operatorSecret(), error)};
+    QVERIFY2(shared_update.has_value(), qPrintable(error));
+    QVERIFY(shared_update->fee_source == std::optional<CTxDestination>{funded});
+    RevokeDialog shared_revoke(m_node, &wallet_model, shared_entry, /*parent=*/nullptr);
+    QCOMPARE(shared_revoke.m_fee_source->findText("Automatic (recommended)"), -1);
+    const auto shared_revocation{shared_revoke.buildRequest(shared->operatorSecret(), error)};
+    QVERIFY2(shared_revocation.has_value(), qPrintable(error));
+    QVERIFY(shared_revocation->fee_source == std::optional<CTxDestination>{funded});
 }
 
 void MasternodeMaintenanceTests::operatorSecretValidation()
@@ -372,7 +436,7 @@ void MasternodeMaintenanceTests::serviceRequestConstruction()
             QCOMPARE(std::get<std::vector<std::string>>(request->net_info.platform_p2p),
                      std::vector<std::string>{"127.0.0.1:26656"});
             QCOMPARE(std::get<std::vector<std::string>>(request->net_info.platform_https),
-                     std::vector<std::string>{"api.example.com:443"});
+                     std::vector<std::string>{"127.0.0.1:443"});
             QVERIFY(request->platform_node_id.has_value());
         } else {
             QCOMPARE(std::get<uint16_t>(request->net_info.platform_p2p), uint16_t{26656});
@@ -397,6 +461,33 @@ void MasternodeMaintenanceTests::serviceRequestConstruction()
     check_request(MnType::Regular, {ProTxVersion::BasicBLS, false});
     check_request(MnType::Evo, {ProTxVersion::BasicBLS, false});
     check_request(MnType::Evo, {ProTxVersion::ExtAddr, true});
+
+    // The dialog validates against its capability snapshot, without waiting for cs_main while the user types
+    auto other_host{std::make_shared<TestMnEntry>(MnType::Evo)};
+    other_host->setPlatformEndpoints("127.0.0.2:26656", "127.0.0.2:443");
+    const MasternodeEntry other_host_entry{other_host, "collateral", 50};
+    for (const bool ipv4_optional : {false, true}) {
+        UpdateServiceDialog dialog(m_node, /*wallet_model=*/nullptr, other_host_entry,
+                                   interfaces::ProviderTxCapabilities{ProTxVersion::ExtAddr, true, ipv4_optional},
+                                   /*parent=*/nullptr);
+        QString error;
+        QCOMPARE(dialog.buildRequest(other_host->operatorSecret(), error).has_value(), ipv4_optional);
+        QVERIFY2(ipv4_optional || error.contains("bad-protx-netinfo-addr"), qPrintable(error));
+
+        std::promise<void> locked;
+        std::promise<void> release;
+        bool lock_timed_out{false};
+        std::thread holder{[&] {
+            LOCK(::cs_main);
+            locked.set_value();
+            lock_timed_out = release.get_future().wait_for(std::chrono::seconds{10}) == std::future_status::timeout;
+        }};
+        locked.get_future().wait();
+        dialog.m_platform_p2p_edit->setText("127.0.0.1:26656");
+        release.set_value();
+        holder.join();
+        QVERIFY(!lock_timed_out);
+    }
 
     auto malformed_source{std::make_shared<TestMnEntry>(MnType::Evo)};
     malformed_source->setPlatformEndpoints("missing-port", "api.example.com:not-a-port");
@@ -776,6 +867,23 @@ void MasternodeMaintenanceTests::dissolveDialogTabsAndPayouts()
     QVERIFY(preview.payouts[0] < amounts[0]);
     QVERIFY(preview.payouts[1] > amounts[1]);
     QVERIFY(preview.payouts[2] > amounts[2]);
+
+    // A typed fee outside the allowed range is clamped when the field loses
+    // focus, and the preview follows the fee that will actually be sent
+    auto* fee_edit{dialog.m_now_fee->findChild<QLineEdit*>()};
+    QVERIFY(fee_edit != nullptr);
+    for (const auto& [typed, clamped] : {std::pair{"0.5", CProDisTx::MAX_FEE}, std::pair{"0.000005", CAmount{1000}}}) {
+        fee_edit->clear();
+        QTest::keyClicks(fee_edit, typed);
+        QFocusEvent focus_out{QEvent::FocusOut};
+        QApplication::sendEvent(fee_edit, &focus_out);
+        QCOMPARE(dialog.m_now_fee->value(), clamped);
+        const auto clamped_preview{MnShareSession::PenaltyPreviewFor(amounts, /*actor_index=*/0, 5 * COIN,
+                                                                     /*early_period_blocks=*/1000, clamped,
+                                                                     /*at_height=*/100, /*registered_height=*/1)};
+        QCOMPARE(dialog.m_now_table->item(0, 2)->text(),
+                 SharedMnFormatAmount(BitcoinUnits::Unit::DASH, clamped_preview.payouts[0]));
+    }
 }
 
 void MasternodeMaintenanceTests::standbyDissolutionFile()
@@ -921,13 +1029,22 @@ void MasternodeMaintenanceTests::dissolveRequestMustReturnPrincipal()
 {
     TestChain100Setup test;
     m_node.setContext(&test.m_node);
+    WalletContext& context{*m_node.walletLoader().context()};
+    const auto wallet{MakeCoinbaseWallet(m_node, context, test, "approver", /*encrypt=*/false)};
+    QVERIFY(wallet != nullptr);
+    WalletGuard guard{context, wallet};
+    MasternodeTestUtil::GuiModels models{m_node};
+    QVERIFY2(models.ok, qPrintable(QString::fromStdString(models.error.translated)));
+    WalletModel wallet_model(interfaces::MakeWallet(context, wallet), models.client);
+
     const std::vector<CAmount> amounts{400 * COIN, 300 * COIN, 300 * COIN};
     auto source{MakeSharedSource(amounts, 5 * COIN, /*early_period_blocks=*/1000)};
+    source->setShareOwner(1, ToKeyID(PKHash(test.coinbaseKey.GetPubKey())));
     MasternodeEntry entry{source, "collateral", 50};
     const auto& shares{entry.shares()};
     const uint256& protx{source->getProTxHash()};
 
-    DissolveDialog dialog(m_node, /*wallet_model=*/nullptr, entry, /*current_height=*/100, /*parent=*/nullptr);
+    DissolveDialog dialog(m_node, &wallet_model, entry, /*current_height=*/100, /*parent=*/nullptr);
 
     // The attack a unanimous dissolution makes possible: name the victim as
     // the actor, drop the actor output, and sweep the whole collateral to
@@ -973,7 +1090,8 @@ void MasternodeMaintenanceTests::dissolveRequestMustReturnPrincipal()
 
     // The honest template is adopted, and its payouts are on screen next to
     // the button that approves them
-    dialog.preloadEnvelope(MakeDissolveEnvelope(protx, shares));
+    const QString genuine{MakeDissolveEnvelope(protx, shares)};
+    dialog.preloadEnvelope(genuine);
     QVERIFY2(dialog.m_un_collector->hasTransaction(), qPrintable(dialog.m_un_collector->m_status_label->text()));
     QVERIFY(dialog.m_un_table->isVisibleTo(&dialog));
     QCOMPARE(dialog.m_un_table->rowCount(), 3);
@@ -984,4 +1102,43 @@ void MasternodeMaintenanceTests::dissolveRequestMustReturnPrincipal()
     QCOMPARE(dialog.m_un_table->item(2, 2)->text(), SharedMnFormatAmount(BitcoinUnits::Unit::DASH, amounts[2]));
     QVERIFY(dialog.m_un_fee_label->text().contains(SharedMnFormatAmount(BitcoinUnits::Unit::DASH, TEST_DISSOLVE_FEE)));
     QVERIFY(dialog.m_un_fee_label->text().contains("Share 1 of 3"));
+
+    // A refused message blocks approving, even with a valid request loaded
+    // before it: approving would sign that earlier request, not the refused
+    // one. v24 is not active here, so the button is disabled regardless; what
+    // this checks is the status and that nothing reaching the slot signs.
+    const QString loaded_tx{dialog.m_un_collector->txHex()};
+    CMutableTransaction underpaying{MakeDissolveTemplate(protx, /*actor_index=*/0, shares, TEST_DISSOLVE_FEE)};
+    underpaying.vout[1].nValue -= COIN;
+    UniValue other_network;
+    QVERIFY(other_network.read(genuine.toStdString()));
+    other_network.pushKV("network", "main");
+    for (const auto& [refused, reason] : {std::pair{MakeDissolveEnvelopeFor(protx, underpaying), "principal"},
+                                          std::pair{QString::fromStdString(other_network.write()), "network"}}) {
+        dialog.preloadEnvelope(genuine);
+        dialog.preloadEnvelope(refused);
+        const QString status{dialog.m_un_collector->m_status_label->text()};
+        QVERIFY2(status.contains(reason) && status.contains("cannot be approved") && !status.contains("ignored"),
+                 qPrintable(status));
+
+        dialog.approveTogether();
+        const bool signing_started{dialog.isBusy()};
+        QTRY_VERIFY(!dialog.isBusy());
+        QVERIFY(!signing_started);
+        QCOMPARE(dialog.m_un_collector->signedCount(), 0);
+        QCOMPARE(dialog.m_un_collector->txHex(), loaded_tx);
+    }
+
+    // A pasted message too large to read is refused the same way
+    dialog.preloadEnvelope(genuine);
+    QApplication::clipboard()->setText(QString(MAX_ENVELOPE_FILE_BYTES + 1, QLatin1Char('x')));
+    dialog.m_un_collector->pasteEnvelope();
+    const QString oversized_status{dialog.m_un_collector->m_status_label->text()};
+    QVERIFY2(oversized_status.contains("too large") && oversized_status.contains("cannot be approved"),
+             qPrintable(oversized_status));
+
+    // Opening the genuine request again lifts the block
+    dialog.preloadEnvelope(genuine);
+    QVERIFY2(!dialog.m_un_collector->m_status_label->text().contains("cannot be approved"),
+             qPrintable(dialog.m_un_collector->m_status_label->text()));
 }

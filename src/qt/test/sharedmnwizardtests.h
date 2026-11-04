@@ -30,12 +30,16 @@ private Q_SLOTS:
     void participantCannotChooseATakenShare();
     void coordinatorResumesSavedSession();
     void coordinatorResumesFullySignedSession();
+    void signedSessionReservation();
     void unauthorisedSignedInputsAreDetected();
     void refusesToSignCoinsOutsideOwnContribution();
     void refusesToSignShortChangedOwnContribution();
+    void newerRevisionKeepsOwnShare();
     void savingWaitsForTheOperatorKeyBackup();
     void coordinatorCanRetryOwnApproval();
     void participantsPageGating();
+    void serviceAddressInUseIsRefused();
+    void reusedRefundAddressIsRefusedBeforeReserving();
     void statusBoardAbsorbsRepliesInAnyOrder();
     void pastedMessageRouting();
     void copyPutsFingerprintedEnvelopeOnClipboard();

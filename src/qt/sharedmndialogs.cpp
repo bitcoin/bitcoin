@@ -761,7 +761,9 @@ void SharedSigCollector::pasteEnvelope()
     // Same cap as loadEnvelope(): a request is a few kilobytes and parsing
     // happens on the GUI thread
     if (text.toUtf8().size() > MAX_ENVELOPE_FILE_BYTES) {
-        showStatus(tr("That message is too large to be a shared masternode message."), /*error=*/true);
+        const QString error{tr("That message is too large to be a shared masternode message.")};
+        showStatus(error, /*error=*/true);
+        Q_EMIT imported(/*accepted=*/false, error);
         return;
     }
     importAndReport(text);
@@ -773,6 +775,7 @@ void SharedSigCollector::importAndReport(const QString& text)
     QString error;
     const bool ok{importEnvelope(text, error)};
     showStatus(error, /*error=*/!ok || !error.isEmpty());
+    Q_EMIT imported(ok, error);
     if (!ok) return;
     UniValue json;
     if (!json.read(text.trimmed().toStdString())) return;
@@ -792,7 +795,9 @@ void SharedSigCollector::loadEnvelope()
     if (filename.isEmpty()) return;
     QFile file(filename);
     if (!file.open(QIODevice::ReadOnly) || file.size() > MAX_ENVELOPE_FILE_BYTES) {
-        showStatus(tr("Could not read %1.").arg(filename), /*error=*/true);
+        const QString error{tr("Could not read %1.").arg(filename)};
+        showStatus(error, /*error=*/true);
+        Q_EMIT imported(/*accepted=*/false, error);
         return;
     }
     const QString text{QString::fromUtf8(file.readAll())};
@@ -1166,7 +1171,10 @@ QWidget* DissolveDialog::buildNowTab()
 
     m_now_fee = makeFeeField(tab);
     m_now_fee->setToolTip(tr("Transaction fee, paid from your share's refund."));
-    connect(m_now_fee, &BitcoinAmountField::valueChanged, this, &DissolveDialog::updateNowPreview);
+    // Follow the editor's text rather than valueChanged: the field clamps an
+    // out-of-range fee on focus-out without emitting valueChanged, and the
+    // preview must show the fee that is actually sent
+    connect(m_now_fee->findChild<QLineEdit*>(), &QLineEdit::textChanged, this, &DissolveDialog::updateNowPreview);
     form->addRow(tr("Fee:"), m_now_fee);
     layout->addLayout(form);
 
@@ -1405,6 +1413,7 @@ QWidget* DissolveDialog::buildTogetherTab()
     m_un_collector = new SharedSigCollector(SharedSigCollector::Kind::Dissolve, m_protx_hash, m_shares, m_wallet_model,
                                             approvals_card);
     connect(m_un_collector, &SharedSigCollector::changed, this, &DissolveDialog::refreshTogetherUi);
+    connect(m_un_collector, &SharedSigCollector::imported, this, &DissolveDialog::togetherImported);
     approvals_layout->addWidget(m_un_collector);
 
     m_un_approve = new QPushButton(tr("Approve and Copy Reply"), approvals_card);
@@ -1490,10 +1499,11 @@ void DissolveDialog::refreshTogetherUi()
         if (m_un_actor->count() == 0) m_un_prepare->setToolTip(NoShareKeysMessage());
     }
     if (gateButton(m_un_approve)) {
-        m_un_approve->setEnabled(alive && has_tx && holdsAnyShareKey() && !m_un_collector->complete());
+        m_un_approve->setEnabled(alive && has_tx && holdsAnyShareKey() && !m_un_collector->complete() && !m_un_refused);
         m_un_approve->setToolTip(!holdsAnyShareKey() ? NoShareKeysMessage()
-                                : !has_tx           ? tr("Prepare or paste a request first.")
-                                                    : QString{});
+                                 : !has_tx           ? tr("Prepare or paste a request first.")
+                                 : m_un_refused      ? tr("This dissolution cannot be approved.")
+                                                     : QString{});
     }
     if (gateButton(m_un_send)) {
         m_un_send->setEnabled(alive && m_un_collector->complete());
@@ -1503,6 +1513,16 @@ void DissolveDialog::refreshTogetherUi()
                        : tr("Every share must approve first (%1 of %2 so far).")
                              .arg(m_un_collector->signedCount())
                              .arg(m_shares.size()));
+}
+
+void DissolveDialog::togetherImported(bool accepted, const QString& error)
+{
+    m_un_refused = !accepted;
+    if (m_un_refused) {
+        m_un_collector->showStatus(error + QLatin1Char('\n') + tr("This dissolution cannot be approved."),
+                                   /*error=*/true);
+    }
+    refreshTogetherUi();
 }
 
 void DissolveDialog::prepareTogether()
@@ -1518,6 +1538,10 @@ void DissolveDialog::prepareTogether()
         [this](MasternodeOperationRunner::SharedConsentResult result) {
             const auto* prepared{ValueOrReport(result, m_un_status)};
             if (prepared == nullptr || !adoptPreparedTx(m_un_collector, *prepared, m_un_status)) return;
+            if (m_un_refused) {
+                m_un_refused = false;
+                m_un_collector->showStatus(QString{}, /*error=*/false);
+            }
             m_un_fee->setEnabled(false);
             m_un_actor->setEnabled(false);
             m_un_prepare->setEnabled(false);
@@ -1530,6 +1554,7 @@ void DissolveDialog::prepareTogether()
 
 void DissolveDialog::approveTogether()
 {
+    if (m_un_refused) return;
     signWithWallet(m_un_collector, m_un_status, [this](bool absorbed) {
         if (!absorbed) return;
         m_un_collector->copyEnvelope();

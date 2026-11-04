@@ -145,6 +145,7 @@ bool RemoveWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet
 
     interfaces::Chain& chain = wallet->chain();
     std::string name = wallet->GetName();
+    WITH_LOCK(wallet->cs_wallet, wallet->WriteBestBlock());
 
     // Unregister with the validation interface which also drops shared pointers.
     wallet->m_chain_notifications_handler.reset();
@@ -514,6 +515,7 @@ std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& b
     const fs::path wallet_path = fsbridge::AbsPathJoin(GetWalletDir(), fs::u8path(wallet_name));
     auto wallet_file = wallet_path / "wallet.dat";
     std::shared_ptr<CWallet> wallet;
+    bool wallet_file_copied = false;
     bool created_parent_dir = false;
 
     try {
@@ -523,14 +525,34 @@ std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& b
             return nullptr;
         }
 
-        if (fs::exists(wallet_path) || !TryCreateDirectories(wallet_path)) {
-            error = Untranslated(strprintf("Failed to create database path '%s'. Database already exists.", fs::PathToString(wallet_path)));
-            status = DatabaseStatus::FAILED_ALREADY_EXISTS;
-            return nullptr;
+        // Wallet directories are allowed to exist, but must not contain a .dat file.
+        // Any existing wallet database is treated as a hard failure to prevent overwriting.
+        if (fs::exists(wallet_path)) {
+            // If this is a file, it is the db and we don't want to overwrite it.
+            if (!fs::is_directory(wallet_path)) {
+                error = Untranslated(strprintf("Failed to restore wallet. Database file exists '%s'.", fs::PathToString(wallet_path)));
+                status = DatabaseStatus::FAILED_ALREADY_EXISTS;
+                return nullptr;
+            }
+
+            // Check we are not going to overwrite an existing db file
+            if (fs::exists(wallet_file)) {
+                error = Untranslated(strprintf("Failed to restore wallet. Database file exists in '%s'.", fs::PathToString(wallet_file)));
+                status = DatabaseStatus::FAILED_ALREADY_EXISTS;
+                return nullptr;
+            }
+        } else {
+            // The directory doesn't exist, create it
+            if (!TryCreateDirectories(wallet_path)) {
+                error = Untranslated(strprintf("Failed to restore database path '%s'.", fs::PathToString(wallet_path)));
+                status = DatabaseStatus::FAILED_ALREADY_EXISTS;
+                return nullptr;
+            }
+            created_parent_dir = true;
         }
 
-        created_parent_dir = true;
         fs::copy_file(backup_file, wallet_file, fs::copy_options::none);
+        wallet_file_copied = true;
 
         wallet = LoadWallet(context, wallet_name, load_on_start, options, status, error, warnings);
     } catch (const std::exception& e) {
@@ -539,8 +561,19 @@ std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& b
         error += strprintf(Untranslated("Unexpected exception: %s"), e.what());
         status = DatabaseStatus::FAILED_LOAD;
     }
-    if (!wallet && created_parent_dir) {
-        fs::remove_all(wallet_path);
+
+    // Remove created wallet path only when loading fails
+    if (!wallet) {
+        if (wallet_file_copied) fs::remove(wallet_file);
+        // Clean up the parent directory if we created it during restoration.
+        // Verifying a corrupt BDB file leaves its environment files (db.log,
+        // .walletlock, database/) next to the wallet file, so the directory is
+        // not necessarily empty. It did not exist before this call, so removing
+        // it recursively only touches what this restore created.
+        // TODO(bitcoin#28710): once BDB is gone nothing but wallet.dat can be
+        //       created here; restore upstream's `Assume(fs::is_empty(wallet_path));
+        //       fs::remove(wallet_path);` (bitcoin#34156, 4ed0693a3f).
+        if (created_parent_dir) fs::remove_all(wallet_path);
     }
 
     return wallet;
@@ -636,15 +669,20 @@ bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
     return false;
 }
 
-void CWallet::chainStateFlushed(const CBlockLocator& loc)
+void CWallet::SetLastBlockProcessedInMem(int block_height, uint256 block_hash)
 {
-    // Don't update the best block until the chain is attached so that in case of a shutdown,
-    // the rescan will be restarted at next startup.
-    if (m_attaching_chain) {
-        return;
-    }
-    WalletBatch batch(GetDatabase());
-    batch.WriteBestBlock(loc);
+    AssertLockHeld(cs_wallet);
+
+    m_last_block_processed = block_hash;
+    m_last_block_processed_height = block_height;
+}
+
+void CWallet::SetLastBlockProcessed(int block_height, uint256 block_hash)
+{
+    AssertLockHeld(cs_wallet);
+
+    SetLastBlockProcessedInMem(block_height, block_hash);
+    WriteBestBlock();
 }
 
 void CWallet::SetMinVersion(enum WalletFeature nVersion, WalletBatch* batch_in)
@@ -1389,11 +1427,14 @@ void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, c
 {
     LOCK(cs_wallet);
 
-    int conflictconfirms = (m_last_block_processed_height - conflicting_height + 1) * -1;
     // If number of conflict confirms cannot be determined, this means
     // that the block is still unknown or not yet part of the main chain,
     // for example when loading the wallet during a reindex. Do nothing in that
     // case.
+    if (m_last_block_processed_height < 0 || conflicting_height < 0) {
+        return;
+    }
+    int conflictconfirms = (m_last_block_processed_height - conflicting_height + 1) * -1;
     if (conflictconfirms >= 0)
         return;
 
@@ -1458,10 +1499,10 @@ void CWallet::RecursiveUpdateTxState(const uint256& tx_hash, const TryUpdatingSt
     fAnonymizableTallyCachedNonDenom = false;
 }
 
-void CWallet::SyncTransaction(const CTransactionRef& ptx, const SyncTxState& state, WalletBatch& batch, bool update_tx, bool rescanning_old_block)
+bool CWallet::SyncTransaction(const CTransactionRef& ptx, const SyncTxState& state, WalletBatch& batch, bool update_tx, bool rescanning_old_block)
 {
     if (!AddToWalletIfInvolvingMe(ptx, state, batch, update_tx, rescanning_old_block))
-        return; // Not one of ours
+        return false; // Not one of ours
 
     // If a transaction changes 'conflicted' state, that changes the balance
     // available of the outputs it spends. So force those to be
@@ -1470,6 +1511,7 @@ void CWallet::SyncTransaction(const CTransactionRef& ptx, const SyncTxState& sta
 
     fAnonymizableTallyCached = false;
     fAnonymizableTallyCachedNonDenom = false;
+    return true;
 }
 
 void CWallet::transactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime) {
@@ -1534,12 +1576,20 @@ void CWallet::blockConnected(const interfaces::BlockInfo& block)
     assert(block.data);
     LOCK(cs_wallet);
 
-    m_last_block_processed_height = block.height;
-    m_last_block_processed = block.hash;
+    // Update the best block in memory first. This will set the best block's height, which is
+    // needed by MarkConflicted.
+    SetLastBlockProcessedInMem(block.height, block.hash);
+
     WalletBatch batch(GetDatabase());
+    bool wallet_updated = false;
     for (size_t index = 0; index < block.data->vtx.size(); index++) {
-        SyncTransaction(block.data->vtx[index], TxStateConfirmed{block.hash, block.height, static_cast<int>(index)}, batch);
+        wallet_updated |= SyncTransaction(block.data->vtx[index], TxStateConfirmed{block.hash, block.height, static_cast<int>(index)}, batch);
         transactionRemovedFromMempool(block.data->vtx[index], MemPoolRemovalReason::BLOCK);
+    }
+
+    // Update on disk if this block resulted in us updating a tx, or periodically every 144 blocks (~1 day)
+    if (wallet_updated || block.height % 144 == 0) {
+        WriteBestBlock();
     }
 
     // reset cache to make sure no longer immature coins are included
@@ -1556,9 +1606,6 @@ void CWallet::blockDisconnected(const interfaces::BlockInfo& block)
     // be unconfirmed, whether or not the transaction is added back to the mempool.
     // User may have to call abandontransaction again. It may be addressed in the
     // future with a stickier abandoned state or even removing abandontransaction call.
-    m_last_block_processed_height = block.height - 1;
-    m_last_block_processed = *Assert(block.prev_hash);
-
     int disconnect_height = block.height;
 
     WalletBatch batch(GetDatabase());
@@ -1594,6 +1641,9 @@ void CWallet::blockDisconnected(const interfaces::BlockInfo& block)
     // reset cache to make sure no longer mature coins are excluded
     fAnonymizableTallyCached = false;
     fAnonymizableTallyCachedNonDenom = false;
+
+    // Update the best block
+    SetLastBlockProcessed(block.height - 1, *Assert(block.prev_hash));
 }
 
 void CWallet::updatedBlockTip()
@@ -2505,7 +2555,7 @@ DBErrors CWallet::LoadWallet()
     if (HaveChain()) {
         const std::optional<int> tip_height = chain().getHeight();
         if (tip_height) {
-            SetLastBlockProcessed(*tip_height, chain().getBlockHash(*tip_height));
+            SetLastBlockProcessedInMem(*tip_height, chain().getBlockHash(*tip_height));
             for (auto& pair : mapWallet) {
                 for(unsigned int i = 0; i < pair.second.tx->vout.size(); ++i) {
                     COutPoint outpoint(pair.first, i);
@@ -3240,6 +3290,8 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
                      !walletInstance->IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET);
     if (fFirstRun)
     {
+        LOCK(walletInstance->cs_wallet);
+
         walletInstance->SetMinVersion(FEATURE_LATEST);
 
         walletInstance->InitWalletFlags(wallet_creation_flags);
@@ -3267,7 +3319,6 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
                     }
                     // add default account
                     newHdChain.AddAccount();
-                    LOCK(walletInstance->cs_wallet);
                     if (auto spk_man = walletInstance->GetLegacyScriptPubKeyMan()) {
                         if (!spk_man->AddHDChainSingle(newHdChain)) {
                             error = strprintf(_("%s failed"), "AddHDChainSingle");
@@ -3286,7 +3337,6 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
 
                     mnemonic = args.GetArg("-mnemonic", "");
                     mnemonic_passphrase = args.GetArg("-mnemonicpassphrase", "");
-                    LOCK(walletInstance->cs_wallet);
                     if (auto spk_man = walletInstance->GetLegacyScriptPubKeyMan()) {
                         spk_man->GenerateNewHDChain(mnemonic, mnemonic_passphrase);
                     }
@@ -3298,7 +3348,6 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
                 args.ForceRemoveArg("mnemonicpassphrase");
             } // Otherwise, do not create a new HD chain
 
-            LOCK(walletInstance->cs_wallet);
             if (walletInstance->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
                 SecureString mnemonic, mnemonic_passphrase;
                 mnemonic.reserve(256);
@@ -3321,7 +3370,10 @@ std::shared_ptr<CWallet> CWallet::Create(WalletContext& context, const std::stri
         }
 
         if (chain) {
-            walletInstance->chainStateFlushed(chain->getTipLocator());
+            std::optional<int> tip_height = chain->getHeight();
+            if (tip_height) {
+                walletInstance->SetLastBlockProcessed(*tip_height, chain->getBlockHash(*tip_height));
+            }
         }
 
         // Try to create wallet backup right after new wallet was created
@@ -3530,16 +3582,11 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
     }
 
     // Register wallet with validationinterface. It's done before rescan to avoid
-    // missing block connections between end of rescan and validation subscribing.
-    // Because of wallet lock being hold, block connection notifications are going to
-    // be pending on the validation-side until lock release. It's likely to have
-    // block processing duplicata (if rescan block range overlaps with notification one)
-    // but we guarantee at least than wallet state is correct after notifications delivery.
-    // However, chainStateFlushed notifications are ignored until the rescan is finished
-    // so that in case of a shutdown event, the rescan will be repeated at the next start.
-    // This is temporary until rescan and notifications delivery are unified under same
-    // interface.
-    walletInstance->m_attaching_chain = true; //ignores chainStateFlushed notifications
+    // missing block connections during the rescan.
+    // Because of the wallet lock being held, block connection notifications are going to
+    // be pending on the validation-side until lock release. Blocks that are connected while the
+    // rescan is ongoing will not be processed in the rescan but with the block connected notifications,
+    // so the wallet will only be completeley synced after the notifications delivery.
     walletInstance->m_chain_notifications_handler = walletInstance->chain().handleNotifications(walletInstance);
 
     // If rescan_required = true, rescan_height remains equal to 0
@@ -3557,11 +3604,9 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
 
     const std::optional<int> tip_height = chain.getHeight();
     if (tip_height) {
-        walletInstance->m_last_block_processed = chain.getBlockHash(*tip_height);
-        walletInstance->m_last_block_processed_height = *tip_height;
+        walletInstance->SetLastBlockProcessedInMem(*tip_height, chain.getBlockHash(*tip_height));
     } else {
-        walletInstance->m_last_block_processed.SetNull();
-        walletInstance->m_last_block_processed_height = -1;
+        walletInstance->SetLastBlockProcessedInMem(-1, uint256());
     }
 
     if (tip_height && *tip_height != rescan_height)
@@ -3620,16 +3665,22 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
         walletInstance->WalletLogPrintf("Rescanning last %i blocks (from block %i)...\n", *tip_height - rescan_height, rescan_height);
         {
             WalletRescanReserver reserver(*walletInstance);
-            if (!reserver.reserve() || (ScanResult::SUCCESS != walletInstance->ScanForWalletTransactions(chain.getBlockHash(rescan_height), rescan_height, /*max_height=*/{}, reserver, /*fUpdate=*/true, /*save_progress=*/true).status)) {
+            if (!reserver.reserve()) {
+                error = _("Failed to acquire rescan reserver during wallet initialization");
+                return false;
+            }
+            ScanResult scan_res = walletInstance->ScanForWalletTransactions(chain.getBlockHash(rescan_height), rescan_height, /*max_height=*/{}, reserver, /*fUpdate=*/true, /*save_progress=*/true);
+            if (ScanResult::SUCCESS != scan_res.status) {
                 error = _("Failed to rescan the wallet during initialization");
                 return false;
             }
+            // Set and update the best block record
+            // Set last block scanned as the last block processed as it may be different in case of a reorg.
+            // Also save the best block locator because rescanning only updates it intermittently.
+            walletInstance->SetLastBlockProcessed(*scan_res.last_scanned_height, scan_res.last_scanned_block);
         }
-        walletInstance->m_attaching_chain = false;
-        walletInstance->chainStateFlushed(chain.getTipLocator());
         walletInstance->GetDatabase().IncrementUpdateCounter();
     }
-    walletInstance->m_attaching_chain = false;
 
     return true;
 }
@@ -3688,6 +3739,8 @@ void CWallet::InitAutoBackup()
 
 bool CWallet::BackupWallet(const std::string& strDest) const
 {
+    // TODO: bitcoin#30678 added a best block write here that bitcoin#30221 then replaced with this call; drop its hunk when backporting it
+    WITH_LOCK(cs_wallet, WriteBestBlock());
     return GetDatabase().Backup(strDest);
 }
 
@@ -4744,9 +4797,36 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
         }
     }
 
+    // Get best block locator so that we can copy it to the watchonly and solvables
+    CBlockLocator best_block_locator;
+    if (!WalletBatch(GetDatabase()).ReadBestBlock(best_block_locator)) {
+        error = _("Error: Unable to read wallet's best block locator record");
+        return false;
+    }
+
     // Check if the transactions in the wallet are still ours. Either they belong here, or they belong in the watchonly wallet.
     // We need to go through these in the tx insertion order so that lookups to spends works.
     std::vector<uint256> txids_to_delete;
+    std::unique_ptr<WalletBatch> watchonly_batch;
+    if (data.watchonly_wallet) {
+        watchonly_batch = std::make_unique<WalletBatch>(data.watchonly_wallet->GetDatabase());
+        // Copy the next tx order pos to the watchonly wallet
+        LOCK(data.watchonly_wallet->cs_wallet);
+        data.watchonly_wallet->nOrderPosNext = nOrderPosNext;
+        watchonly_batch->WriteOrderPosNext(data.watchonly_wallet->nOrderPosNext);
+        // Write the best block locator to avoid rescanning on reload
+        if (!watchonly_batch->WriteBestBlock(best_block_locator)) {
+            error = _("Error: Unable to write watchonly wallet best block locator record");
+            return false;
+        }
+    }
+    if (data.solvable_wallet) {
+        // Write the best block locator to avoid rescanning on reload
+        if (!WalletBatch(data.solvable_wallet->GetDatabase()).WriteBestBlock(best_block_locator)) {
+            error = _("Error: Unable to write solvable wallet best block locator record");
+            return false;
+        }
+    }
     for (const auto& [_pos, wtx] : wtxOrdered) {
         // Check it is the watchonly wallet's
         // solvable_wallet doesn't need to be checked because transactions for those scripts weren't being watched for
@@ -4755,13 +4835,21 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
             LOCK(data.watchonly_wallet->cs_wallet);
             if (data.watchonly_wallet->IsMine(*wtx->tx) || data.watchonly_wallet->IsFromMe(*wtx->tx)) {
                 // Add to watchonly wallet
-                if (!data.watchonly_wallet->AddToWallet(wtx->tx, wtx->m_state)) {
-                    error = _("Error: Could not add watchonly tx to watchonly wallet");
+                const uint256& hash = wtx->GetHash();
+                const CWalletTx& to_copy_wtx = *wtx;
+                if (!data.watchonly_wallet->LoadToWallet(hash, [&](CWalletTx& ins_wtx, bool new_tx) EXCLUSIVE_LOCKS_REQUIRED(data.watchonly_wallet->cs_wallet) {
+                    if (!new_tx) return false;
+                    ins_wtx.SetTx(to_copy_wtx.tx);
+                    ins_wtx.CopyFrom(to_copy_wtx);
+                    return true;
+                })) {
+                    error = strprintf(_("Error: Could not add watchonly tx %s to watchonly wallet"), wtx->GetHash().GetHex());
                     return false;
                 }
+                watchonly_batch->WriteTx(data.watchonly_wallet->mapWallet.at(hash));
                 // Mark as to remove from the migrated wallet only if it does not also belong to it
                 if (!is_mine) {
-                    txids_to_delete.push_back(wtx->GetHash());
+                    txids_to_delete.push_back(hash);
                 }
                 continue;
             }
@@ -4772,6 +4860,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
             return false;
         }
     }
+    watchonly_batch.reset(); // Flush
     // Do the removes
     if (txids_to_delete.size() > 0) {
         std::vector<uint256> deleted_txids;
@@ -4834,7 +4923,7 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
                 return false;
             }
         } else {
-            // Labels for everything else (send) should be cloned to all
+            // Labels for everything else ("send") should be cloned to all
             if (data.watchonly_wallet) {
                 LOCK(data.watchonly_wallet->cs_wallet);
                 // Add to the watchonly. Preserve the labels, purpose, and change-ness
@@ -4843,7 +4932,6 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
                 if (!addr_pair.second.IsChange()) {
                     data.watchonly_wallet->m_address_book[addr_pair.first].SetLabel(label);
                 }
-                continue;
             }
             if (data.solvable_wallet) {
                 LOCK(data.solvable_wallet->cs_wallet);
@@ -4853,7 +4941,6 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
                 if (!addr_pair.second.IsChange()) {
                     data.solvable_wallet->m_address_book[addr_pair.first].SetLabel(label);
                 }
-                continue;
             }
         }
     }
@@ -4864,10 +4951,10 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
         WalletBatch batch{wallet.GetDatabase()};
         for (const auto& [destination, addr_book_data] : wallet.m_address_book) {
             auto address{EncodeDestination(destination)};
-            auto label{addr_book_data.GetLabel()};
-            // don't bother writing default values (unknown purpose, empty label)
+            std::optional<std::string> label = addr_book_data.IsChange() ? std::nullopt : std::make_optional(addr_book_data.GetLabel());
+            // don't bother writing default values (unknown purpose)
             if (addr_book_data.purpose) batch.WritePurpose(address, PurposeToString(*addr_book_data.purpose));
-            if (!label.empty()) batch.WriteName(address, label);
+            if (label) batch.WriteName(address, *label);
         }
     };
     if (data.watchonly_wallet) persist_address_book(*data.watchonly_wallet);
@@ -4892,6 +4979,15 @@ bool CWallet::ApplyMigrationData(MigrationData& data, bilingual_str& error)
     return true;
 }
 
+// Returns wallet prefix for migration.
+// Used to name the backup file and newly created wallets.
+// E.g. a watch-only wallet is named "<prefix>_watchonly".
+static std::string MigrationPrefixName(CWallet& wallet)
+{
+    const std::string& name{wallet.GetName()};
+    return name.empty() ? "default_wallet" : name;
+}
+
 bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, MigrationResult& res) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     AssertLockHeld(wallet.cs_wallet);
@@ -4905,6 +5001,10 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
         DatabaseOptions options;
         options.require_existing = false;
         options.require_create = true;
+        options.require_format = DatabaseFormat::SQLITE;
+
+        WalletContext empty_context;
+        empty_context.args = context.args;
 
         // Make the wallets
         options.create_flags = WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET | WALLET_FLAG_DESCRIPTORS;
@@ -4919,9 +5019,15 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
 
             DatabaseStatus status;
             std::vector<bilingual_str> warnings;
-            std::string wallet_name = wallet.GetName() + "_watchonly";
-            data->watchonly_wallet = CreateWallet(context, wallet_name, std::nullopt, options, status, error, warnings);
-            if (status != DatabaseStatus::SUCCESS) {
+            std::string wallet_name = MigrationPrefixName(wallet) + "_watchonly";
+            std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(wallet_name, options, status, error);
+            if (!database) {
+                error = strprintf(_("Wallet file creation failed: %s"), error);
+                return false;
+            }
+
+            data->watchonly_wallet = CWallet::Create(empty_context, wallet_name, std::move(database), options.create_flags, error, warnings);
+            if (!data->watchonly_wallet) {
                 error = _("Error: Failed to create new watchonly wallet");
                 return false;
             }
@@ -4950,9 +5056,15 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
 
             DatabaseStatus status;
             std::vector<bilingual_str> warnings;
-            std::string wallet_name = wallet.GetName() + "_solvables";
-            data->solvable_wallet = CreateWallet(context, wallet_name, std::nullopt, options, status, error, warnings);
-            if (status != DatabaseStatus::SUCCESS) {
+            std::string wallet_name = MigrationPrefixName(wallet) + "_solvables";
+            std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(wallet_name, options, status, error);
+            if (!database) {
+                error = strprintf(_("Wallet file creation failed: %s"), error);
+                return false;
+            }
+
+            data->solvable_wallet = CWallet::Create(empty_context, wallet_name, std::move(database), options.create_flags, error, warnings);
+            if (!data->solvable_wallet) {
                 error = _("Error: Failed to create new watchonly wallet");
                 return false;
             }
@@ -4994,6 +5106,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
     // If the wallet is still loaded, unload it so that nothing else tries to use it while we're changing it
     bool was_loaded = false;
     if (auto wallet = GetWallet(context, wallet_name)) {
+        // TODO: bitcoin#30678 flushed the best block here; RemoveWallet() writes it since bitcoin#30221, drop that hunk when backporting it
         if (!RemoveWallet(context, wallet, /*load_on_start=*/std::nullopt, warnings)) {
             return util::Error{_("Unable to unload the wallet before migrating")};
         }
@@ -5025,7 +5138,12 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         std::string name = to_reload->GetName();
         to_reload.reset();
         to_reload = LoadWallet(context, name, /*load_on_start=*/std::nullopt, options, status, error, warnings);
-        return to_reload != nullptr;
+        if (!to_reload) {
+            LogError("Failed to load wallet '%s' after migration. Rolling back migration to preserve consistency. "
+                     "Error cause: %s\n", name, error.original);
+            return false;
+        }
+        return true;
     };
 
     // Before anything else, check if there is something to migrate.
@@ -5038,10 +5156,13 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
 
     // Make a backup of the DB in the wallet's directory with a unique filename
     // based on the wallet name and current timestamp. The backup filename uses
-    // the basename of the wallet path (or "wallet" if the name is blank) so that
-    // path-style wallet names cannot escape the wallet directory.
-    // TODO: backport bitcoin/bitcoin#32273 to also move the backup into the
-    //       top-level walletdir and unify with upstream.
+    // the basename of the wallet path (or "default_wallet" if the name is blank)
+    // so that path-style wallet names cannot escape the wallet directory.
+    // TODO(bitcoin#32273): backups move to the top-level walletdir and are named
+    //       from the wallet path. When backported, drop the basename reduction
+    //       below, replace test_wallet_name_with_slashes with upstream's path
+    //       tests, re-derive the bitcoin#34226 path cases from master, then
+    //       take bitcoin#33104 and bitcoin#33122.
     fs::path this_wallet_dir = fs::absolute(fs::PathFromString(local_wallet->GetDatabase().Filename())).parent_path();
     std::string backup_prefix;
     if (!wallet_name.empty()) {
@@ -5050,9 +5171,9 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         backup_prefix = fs::PathToString(legacy_wallet_path.filename());
     }
     // Fall back when the name was blank or canonicalizes to an empty filename
-    // (e.g. "/", "."), so we never emit a file like "-1748432384.legacy.bak".
-    if (backup_prefix.empty()) backup_prefix = "wallet";
-    fs::path backup_filename = fs::PathFromString(strprintf("%s-%d.legacy.bak", backup_prefix, GetTime()));
+    // (e.g. "/", "."), so we never emit a file like "_1748432384.legacy.bak".
+    if (backup_prefix.empty()) backup_prefix = MigrationPrefixName(*local_wallet);
+    fs::path backup_filename = fs::PathFromString(strprintf("%s_%d.legacy.bak", backup_prefix, GetTime()));
     fs::path backup_path = this_wallet_dir / backup_filename;
     if (!local_wallet->BackupWallet(fs::PathToString(backup_path))) {
         if (was_loaded) {
@@ -5085,68 +5206,140 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         // First change to using SQLite
         if (!local_wallet->MigrateToSQLite(error)) return util::Error{error};
 
+        // In case we're migrating from file to directory, move the backup into it
+        // TODO(bitcoin#32273): this block exists only on the 28.x/29.x branches. Remove
+        //       it together with the backup naming TODO above: once backups live in
+        //       the top-level walletdir they never need to be moved.
+        this_wallet_dir = fs::absolute(fs::PathFromString(local_wallet->GetDatabase().Filename())).parent_path();
+        backup_path = this_wallet_dir / backup_filename;
+        fs::rename(res.backup_path, backup_path);
+        res.backup_path = backup_path;
+
         // Do the migration, and cleanup if it fails
         success = DoMigration(*local_wallet, context, error, res);
     }
 
+    // In case of loading failure, we need to remember the wallet files we have created to remove.
+    // A `set` is used as it may be populated with the same wallet directory paths multiple times,
+    // both before and after loading. This ensures the set is complete even if one of the wallets
+    // fails to load.
+    std::set<fs::path> wallet_files_to_remove;
+    std::set<fs::path> wallet_empty_dirs_to_remove;
+
+    // Helper to track wallet files and directories for cleanup on failure.
+    // Only directories of wallets created during migration (not the main wallet) are tracked.
+    auto track_for_cleanup = [&](const CWallet& wallet) {
+        const auto files = wallet.GetDatabase().Files();
+        wallet_files_to_remove.insert(files.begin(), files.end());
+        if (wallet.GetName() != wallet_name) {
+            // If this isn’t the main wallet, mark its directory for removal.
+            // This applies to the watch-only and solvable wallets.
+            // Wallets stored directly as files in the top-level directory
+            // (e.g. default unnamed wallets) don’t have a removable parent directory.
+            wallet_empty_dirs_to_remove.insert(fs::PathFromString(wallet.GetDatabase().Filename()).parent_path());
+        }
+    };
+
+
     if (success) {
-        // Migration successful, unload the wallet locally, then reload it.
-        assert(local_wallet.use_count() == 1);
-        local_wallet.reset();
-        res.wallet = LoadWallet(context, wallet_name, /*load_on_start=*/std::nullopt, options, status, error, warnings);
+        // Migration successful, unload all wallets locally, then reload them.
+        // Reload the main wallet
+        LogInfo("Loading new wallets after migration...\n");
+        track_for_cleanup(*local_wallet);
+        success = reload_wallet(local_wallet);
+        res.wallet = local_wallet;
         res.wallet_name = wallet_name;
-    } else {
+        if (success && res.watchonly_wallet) {
+            // Reload watchonly
+            track_for_cleanup(*res.watchonly_wallet);
+            success = reload_wallet(res.watchonly_wallet);
+        }
+        if (success && res.solvables_wallet) {
+            // Reload solvables
+            track_for_cleanup(*res.solvables_wallet);
+            success = reload_wallet(res.solvables_wallet);
+        }
+    }
+    if (!success) {
         // Migration failed, cleanup
-        // Copy the backup to the actual wallet dir
-        fs::path temp_backup_location = fsbridge::AbsPathJoin(GetWalletDir(), backup_filename);
-        fs::copy_file(backup_path, temp_backup_location, fs::copy_options::none);
 
-        // Remember this wallet's walletdir to remove after unloading
-        std::vector<fs::path> wallet_dirs;
-        wallet_dirs.emplace_back(fs::PathFromString(local_wallet->GetDatabase().Filename()).parent_path());
-
-        // Unload the wallet locally
-        assert(local_wallet.use_count() == 1);
-        local_wallet.reset();
+        // Drop the second reference to the reloaded main wallet: UnloadWallet() below
+        // waits until the last reference is gone, and this one would only die on return.
+        // Dash-only: upstream 28.x/29.x carry the same latent hang when a watch-only or
+        // solvables reload fails after the main wallet reloaded, and master only moves
+        // the pointer into res.wallet, which then skips the rollback instead.
+        res.wallet.reset();
 
         // Make list of wallets to cleanup
         std::vector<std::shared_ptr<CWallet>> created_wallets;
+        if (local_wallet) created_wallets.push_back(std::move(local_wallet));
         if (res.watchonly_wallet) created_wallets.push_back(std::move(res.watchonly_wallet));
         if (res.solvables_wallet) created_wallets.push_back(std::move(res.solvables_wallet));
 
         // Get the directories to remove after unloading
-        for (std::shared_ptr<CWallet>& w : created_wallets) {
-            wallet_dirs.emplace_back(fs::PathFromString(w->GetDatabase().Filename()).parent_path());
+        for (std::shared_ptr<CWallet>& wallet : created_wallets) {
+            track_for_cleanup(*wallet);
         }
 
         // Unload the wallets
         for (std::shared_ptr<CWallet>& w : created_wallets) {
-            if (!RemoveWallet(context, w, /*load_on_start=*/false)) {
-                error += _("\nUnable to cleanup failed migration");
-                return util::Error{error};
+            if (w->HaveChain()) {
+                // Unloading for wallets that were loaded for normal use
+                if (!RemoveWallet(context, w, /*load_on_start=*/false)) {
+                    error += _("\nUnable to cleanup failed migration");
+                    return util::Error{error};
+                }
+                UnloadWallet(std::move(w));
+            } else {
+                // Unloading for wallets in local context
+                assert(w.use_count() == 1);
+                w.reset();
             }
-            UnloadWallet(std::move(w));
         }
 
-        // Delete the wallet directories
-        for (fs::path& dir : wallet_dirs) {
-            fs::remove_all(dir);
+        // First, delete the db files we have created throughout this process and nothing else
+        for (const fs::path& file : wallet_files_to_remove) {
+            fs::remove(file);
+        }
+
+        // Second, delete the created wallet directories and nothing else. They must be empty at this point.
+        for (const fs::path& dir : wallet_empty_dirs_to_remove) {
+            Assume(fs::is_empty(dir));
+            fs::remove(dir);
         }
 
         // Restore the backup
-        DatabaseStatus status;
-        std::vector<bilingual_str> warnings;
-        if (!RestoreWallet(context, temp_backup_location, wallet_name, /*load_on_start=*/std::nullopt, status, error, warnings)) {
-            error += _("\nUnable to restore backup of wallet.");
+        // Convert the backup file to the wallet db file by renaming it and moving it into the wallet's directory.
+        // Reload it into memory if the wallet was previously loaded.
+        // TODO(bitcoin#31451): RestoreWallet loads the wallet even when it was not loaded
+        //       before migration. When backporting bitcoin#31451, add its load_after_restore
+        //       parameter to RestoreWallet, pass was_loaded here, assert that the wallet is
+        //       reloaded only if was_loaded, and re-derive this function from the 29.x commits
+        //       d91f56e1e3 and a074d36254 (bitcoin#34222), which already have that shape.
+        bilingual_str restore_error;
+        const auto& ptr_wallet = RestoreWallet(context, backup_path, wallet_name, /*load_on_start=*/std::nullopt, status, restore_error, warnings);
+        if (!restore_error.empty()) {
+            error += restore_error + _("\nUnable to restore backup of wallet.");
             return util::Error{error};
         }
-
-        // Move the backup to the wallet dir
-        fs::copy_file(temp_backup_location, backup_path, fs::copy_options::none);
-        fs::remove(temp_backup_location);
 
         return util::Error{error};
     }
     return res;
+}
+
+void CWallet::WriteBestBlock() const
+{
+    AssertLockHeld(cs_wallet);
+
+    if (!m_last_block_processed.IsNull()) {
+        CBlockLocator loc;
+        chain().findBlock(m_last_block_processed, FoundBlock().locator(loc));
+
+        if (!loc.IsNull()) {
+            WalletBatch batch(GetDatabase());
+            batch.WriteBestBlock(loc);
+        }
+    }
 }
 } // namespace wallet

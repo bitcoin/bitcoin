@@ -54,7 +54,8 @@ Paths
 All three configurations assume several paths that might need to be adjusted.
 
     Binary:              /usr/bin/dashd
-    Configuration file:  /etc/dashcore/dash.conf
+    Configuration file:  /etc/dash/dash.conf (systemd), /etc/dashcore/dash.conf (OpenRC and Upstart)
+                         or <datadir>/dash.conf (CentOS, whose init script passes no -conf)
     Data directory:      /var/lib/dashd
     PID file:            /var/run/dashd/dashd.pid (OpenRC and Upstart) or /run/dashd/dashd.pid (systemd)
     Lock file:           /var/lock/subsys/dashd (CentOS)
@@ -73,10 +74,10 @@ dashcore user and group to do so. This does not allow
 for the listing of files under the directory.
 
 NOTE: It is not currently possible to override `datadir` in
-`/etc/dash/dash.conf` with the current systemd, OpenRC, and Upstart init
+the configuration file with the current systemd, OpenRC, and Upstart init
 files out-of-the-box. This is because the command line options specified in the
 init files take precedence over the configurations in
-`/etc/dash/dash.conf`. However, some init systems have their own
+the configuration file. However, some init systems have their own
 configuration mechanisms that would allow for overriding the command line
 options specified in the init files (e.g. setting `BITCOIND_DATADIR` for
 OpenRC).

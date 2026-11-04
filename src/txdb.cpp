@@ -479,14 +479,17 @@ static bool FinalizeMigration(CDBWrapper& target_db, const uint256& best_block_h
     return true;
 }
 
-// Returns true if the target index database has no best-block locator yet —
-// i.e. the new async index has never been finalized on this datadir. Used to
-// guard FinalizeMigration so we don't regress an already-advanced locator
-// (e.g. left by ThreadSync after a previous successful migration).
+// Returns true if the target index database holds migrated entries but no best-block
+// locator yet, i.e. a migration copied data that was never finalized. Used to guard
+// FinalizeMigration so we don't regress an already-advanced locator (e.g. left by
+// ThreadSync after a previous successful migration), and so we never stamp the chain
+// tip onto an empty target (e.g. index directories deleted after an earlier migration
+// already moved the legacy entries), which would report an empty index as synced.
 static bool TargetNeedsLocator(CDBWrapper& target_db)
 {
     CBlockLocator existing;
-    return !target_db.Read(DB_BEST_BLOCK, existing) || existing.IsNull();
+    if (target_db.Read(DB_BEST_BLOCK, existing) && !existing.IsNull()) return false;
+    return !target_db.IsEmpty();
 }
 
 bool CBlockTreeDB::MigrateOldIndexData()
@@ -523,7 +526,11 @@ bool CBlockTreeDB::MigrateOldIndexData()
     // the legacy entries don't cover the suffix of the chain that ran with the index
     // disabled, and copying them while stamping the chainstate tip as the locator would
     // mark an incomplete index as fully synced. In that case we discard the source entries
-    // instead and let the new async index resync from genesis.
+    // instead and let the new async index resync from genesis. Once an enabled index has been
+    // processed its legacy entries are gone, so its flag is cleared: a later start must never
+    // adopt whatever the new database then holds (for example a partial rebuild after the
+    // index directory was deleted) as migrated data, and older versions see that their
+    // synchronous index needs a reindex.
     bool legacy_flag = false;
     const bool addressindex_was_current   = ReadFlag("addressindex",   legacy_flag) && legacy_flag;
     const bool spentindex_was_current     = ReadFlag("spentindex",     legacy_flag) && legacy_flag;
@@ -579,12 +586,14 @@ bool CBlockTreeDB::MigrateOldIndexData()
             return false;
         }
         // Finalize even when count==0 to recover from a previous run that crashed
-        // after writing target data but before writing the locator.
+        // after writing target data but before writing the locator. An empty target is
+        // left without a locator, so the index rebuilds from genesis.
         if (timestampindex_was_current && TargetNeedsLocator(timestamp_db)) {
             if (!FinalizeMigration(timestamp_db, best_block_hash, "timestamp index")) {
                 return false;
             }
         }
+        WriteFlag("timestampindex", false);
     }
 
     // Migrate spent index (only if enabled)
@@ -603,6 +612,7 @@ bool CBlockTreeDB::MigrateOldIndexData()
                 return false;
             }
         }
+        WriteFlag("spentindex", false);
     }
 
     // Migrate address index (includes both address and unspent indexes) (only if enabled)
@@ -631,6 +641,7 @@ bool CBlockTreeDB::MigrateOldIndexData()
                 return false;
             }
         }
+        WriteFlag("addressindex", false);
     }
 
     if (total_count > 0) {

@@ -22,8 +22,10 @@
 
 using node::PruneLockInfo;
 using node::ReadBlockFromDisk;
+using node::g_indexes_ready_to_sync;
 
 constexpr uint8_t DB_BEST_BLOCK{'B'};
+constexpr uint8_t DB_UNCOMMITTED_TIP{'U'};
 
 constexpr auto SYNC_LOG_INTERVAL{30s};
 constexpr auto SYNC_LOCATOR_WRITE_INTERVAL{30s};
@@ -46,18 +48,38 @@ BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool
     CDBWrapper(path, n_cache_size, f_memory, f_wipe, f_obfuscate)
 {}
 
-bool BaseIndex::DB::ReadBestBlock(CBlockLocator& locator) const
+CBlockLocator BaseIndex::DB::ReadBestBlock() const
 {
+    CBlockLocator locator;
+
     bool success = Read(DB_BEST_BLOCK, locator);
     if (!success) {
         locator.SetNull();
     }
-    return success;
+
+    return locator;
 }
 
 void BaseIndex::DB::WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator)
 {
     batch.Write(DB_BEST_BLOCK, locator);
+}
+
+std::optional<uint256> BaseIndex::DB::ReadUncommittedTip() const
+{
+    uint256 block_hash;
+    if (!Read(DB_UNCOMMITTED_TIP, block_hash)) return std::nullopt;
+    return block_hash;
+}
+
+void BaseIndex::DB::WriteUncommittedTip(CDBBatch& batch, const uint256& block_hash)
+{
+    batch.Write(DB_UNCOMMITTED_TIP, block_hash);
+}
+
+void BaseIndex::DB::EraseUncommittedTip(CDBBatch& batch)
+{
+    batch.Erase(DB_UNCOMMITTED_TIP);
 }
 
 BaseIndex::BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name)
@@ -71,24 +93,42 @@ BaseIndex::~BaseIndex()
 
 bool BaseIndex::Init()
 {
-    CBlockLocator locator;
-    if (!GetDB().ReadBestBlock(locator)) {
-        locator.SetNull();
-    }
+    const auto locator{GetDB().ReadBestBlock()};
 
     LOCK(cs_main);
     CChain& active_chain = m_chainstate->m_chain;
-    if (locator.IsNull()) {
-        SetBestBlockIndex(nullptr);
-    } else {
-        SetBestBlockIndex(m_chainstate->FindForkInGlobalIndex(locator));
+    const CBlockIndex* locator_index{nullptr};
+    if (!locator.IsNull()) {
+        // Setting the best block to the locator's top block. If it is not part of the
+        // best chain, we will rewind to the fork point during index sync
+        locator_index = m_chainstate->m_blockman.LookupBlockIndex(locator.vHave.at(0));
+        if (!locator_index) {
+            return InitError(strprintf(Untranslated("%s: best block of the index not found. Please rebuild the index."), GetName()));
+        }
     }
+    const CBlockIndex* resume_block{ResumeBlock(m_chainstate->m_blockman, locator_index)};
+    const auto uncommitted_tip{WritesEagerly() ? GetDB().ReadUncommittedTip() : std::nullopt};
+    if (uncommitted_tip && resume_block == locator_index) {
+        // The entries of the blocks up to it are on disk, but without the blocks the index can't tell whether they
+        // are still on the active chain, nor rewind them.
+        if (!m_chainstate->m_blockman.LookupBlockIndex(*uncommitted_tip)) {
+            return InitError(strprintf(Untranslated("%s: the block the index was last synced to is not found. Please "
+                                                    "rebuild the index."),
+                                       GetName()));
+        }
+        CDBBatch batch(GetDB());
+        GetDB().EraseUncommittedTip(batch);
+        GetDB().WriteBatch(batch);
+    }
+    SetBestBlockIndex(resume_block);
 
     // Note: this will latch to true immediately if the user starts up with an empty
     // datadir and an index enabled. If this is the case, indexation will happen solely
     // via `BlockConnected` signals until, possibly, the next restart.
     m_synced = m_best_block_index.load() == active_chain.Tip();
-    if (!m_synced) {
+
+    // Skip pruning check if indexes are not ready to sync (because reindex-chainstate has wiped the chain).
+    if (!m_synced && g_indexes_ready_to_sync) {
         bool prune_violation = false;
         if (!m_best_block_index) {
             // index is not built yet
@@ -133,22 +173,34 @@ static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& 
         return chain.Genesis();
     }
 
-    const CBlockIndex* pindex = chain.Next(pindex_prev);
-    if (pindex) {
+    if (const auto* pindex{chain.Next(pindex_prev)}) {
         return pindex;
     }
 
+    // If there is no next block, we might be synced
+    if (pindex_prev == chain.Tip()) {
+        return nullptr;
+    }
+
+    // Since block is not in the chain, return the next block in the chain AFTER the last common ancestor.
+    // Caller will be responsible for rewinding back to the common ancestor.
     return chain.Next(chain.FindFork(pindex_prev));
 }
 
 void BaseIndex::ThreadSync()
 {
+    // Wait for a possible reindex-chainstate to finish until continuing
+    // with the index sync
+    while (!g_indexes_ready_to_sync) {
+        if (!m_interrupt.sleep_for(std::chrono::milliseconds(500))) return;
+    }
+
     const CBlockIndex* pindex = m_best_block_index.load();
     if (!m_synced) {
         auto& consensus_params = Params().GetConsensus();
 
-        std::chrono::steady_clock::time_point last_log_time{0s};
-        std::chrono::steady_clock::time_point last_locator_write_time{0s};
+        auto last_log_time{NodeClock::now()};
+        auto last_locator_write_time{last_log_time};
         while (true) {
             if (m_interrupt) {
                 SetBestBlockIndex(pindex);
@@ -192,14 +244,14 @@ void BaseIndex::ThreadSync()
                 return;
             }
 
-            auto current_time{std::chrono::steady_clock::now()};
-            if (last_log_time + SYNC_LOG_INTERVAL < current_time) {
+            auto current_time{NodeClock::now()};
+            if (current_time - last_log_time >= SYNC_LOG_INTERVAL) {
                 LogPrintf("Syncing %s with block chain from height %d\n",
                           GetName(), pindex->nHeight);
                 last_log_time = current_time;
             }
 
-            if (last_locator_write_time + SYNC_LOCATOR_WRITE_INTERVAL < current_time) {
+            if (current_time - last_locator_write_time >= SYNC_LOCATOR_WRITE_INTERVAL) {
                 SetBestBlockIndex(pindex);
                 last_locator_write_time = current_time;
                 // No need to handle errors in Commit. See rationale above.
@@ -215,47 +267,98 @@ void BaseIndex::ThreadSync()
     }
 }
 
-bool BaseIndex::Commit()
+void BaseIndex::Commit()
 {
     // Don't commit anything if we haven't indexed any block yet
     // (this could happen if init is interrupted).
     bool ok = m_best_block_index != nullptr;
     if (ok) {
+        // Don't commit if the index best block is not an ancestor of the chainstate's last flushed
+        // block. Otherwise, after an unclean shutdown, the index could be
+        // persisted ahead of a chainstate it can no longer roll back to, which
+        // would corrupt indexes with state (e.g. coinstatsindex).
+        const CBlockIndex* index_tip = m_best_block_index.load();
+        const CBlockIndex* last_flushed = WITH_LOCK(::cs_main, return m_chainstate->GetLastFlushedBlock());
+        if (!last_flushed || last_flushed->GetAncestor(index_tip->nHeight) != index_tip) {
+            LogDebug(BCLog::COINDB, "Skipping commit, index is ahead of flushed chainstate (index height %d, last flush at height %d)\n",
+                    index_tip->nHeight, last_flushed ? last_flushed->nHeight : -1);
+            if (WritesEagerly()) {
+                CDBBatch batch(GetDB());
+                GetDB().WriteUncommittedTip(batch, index_tip->GetBlockHash());
+                GetDB().WriteBatch(batch);
+            }
+            return;
+        }
         CDBBatch batch(GetDB());
         ok = CustomCommit(batch);
         if (ok) {
             GetDB().WriteBestBlock(batch, GetLocator(*m_chain, m_best_block_index.load()->GetBlockHash()));
+            if (WritesEagerly()) GetDB().EraseUncommittedTip(batch);
             ok = GetDB().WriteBatch(batch);
         }
     }
     if (!ok) {
         LogError("%s: Failed to commit latest %s state\n", __func__, GetName());
-        return false;
+    }
+}
+
+void BaseIndex::WriteRewindLocator(CDBBatch& batch, const CBlockIndex* new_tip) const
+{
+    const auto above_new_tip{[&](const uint256& block_hash) {
+        const CBlockIndex* block{WITH_LOCK(::cs_main, return m_chainstate->m_blockman.LookupBlockIndex(block_hash))};
+        return block && block->nHeight > new_tip->nHeight && block->GetAncestor(new_tip->nHeight) == new_tip;
+    }};
+    // The committed tip was an ancestor of a flushed block when it was written, so it and new_tip below it are in
+    // the block index after a restart. A committed tip at or below new_tip needs no change.
+    if (const auto locator{GetDB().ReadBestBlock()}; !locator.IsNull() && above_new_tip(locator.vHave.front())) {
+        GetDB().WriteBestBlock(batch, GetLocator(*m_chain, new_tip->GetBlockHash()));
+    }
+    // Init() resumes from the uncommitted tip only while the block index has it, and then new_tip below it too.
+    if (const auto uncommitted_tip{GetDB().ReadUncommittedTip()}; uncommitted_tip && above_new_tip(*uncommitted_tip)) {
+        GetDB().WriteUncommittedTip(batch, new_tip->GetBlockHash());
+    }
+}
+
+const CBlockIndex* BaseIndex::ResumeBlock(const node::BlockManager& blockman, const CBlockIndex* locator_block) const
+{
+    AssertLockHeld(::cs_main);
+    // The entries up to the uncommitted tip are on disk, so resume from it while the block index has it above the
+    // locator. Commit() and rewinds keep the locator below it; one that isn't was left behind by an older binary.
+    const auto uncommitted_tip_hash{WritesEagerly() ? GetDB().ReadUncommittedTip() : std::nullopt};
+    const CBlockIndex* uncommitted_tip{uncommitted_tip_hash ? blockman.LookupBlockIndex(*uncommitted_tip_hash) : nullptr};
+    if (uncommitted_tip && (!locator_block || uncommitted_tip->GetAncestor(locator_block->nHeight) == locator_block)) {
+        return uncommitted_tip;
+    }
+    return locator_block;
+}
+
+bool BaseIndex::RewindBlockByBlock(const CBlockIndex* current_tip, const CBlockIndex* new_tip,
+                                   const std::function<bool(const CBlockIndex* pindex, CDBBatch& batch)>& rewind_block)
+{
+    for (const CBlockIndex* pindex = current_tip; pindex != new_tip; pindex = pindex->pprev) {
+        CDBBatch batch(GetDB());
+        if (!rewind_block(pindex, batch)) return false;
+        WriteRewindLocator(batch, pindex->pprev);
+        if (!GetDB().WriteBatch(batch)) return false;
     }
     return true;
 }
 
 bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip)
 {
-    assert(current_tip == m_best_block_index);
     assert(current_tip->GetAncestor(new_tip->nHeight) == new_tip);
 
     if (!CustomRewind({current_tip->GetBlockHash(), current_tip->nHeight}, {new_tip->GetBlockHash(), new_tip->nHeight})) {
         return false;
     }
 
-    // In the case of a reorg, ensure persisted block locator is not stale.
+    // Don't commit here - the committed index state must never be ahead of the
+    // flushed chainstate, otherwise unclean restarts would lead to index corruption.
     // Pruning has a minimum of 288 blocks-to-keep and getting the index
     // out of sync may be possible but a users fault.
     // In case we reorg beyond the pruned depth, ReadBlockFromDisk would
     // throw and lead to a graceful shutdown
     SetBestBlockIndex(new_tip);
-    if (!Commit()) {
-        // If commit fails, revert the best block index to avoid corruption.
-        SetBestBlockIndex(current_tip);
-        return false;
-    }
-
     return true;
 }
 
@@ -438,9 +541,9 @@ void BaseIndex::SetBestBlockIndex(const CBlockIndex* block)
 {
     assert(!m_chainstate->m_blockman.IsPruneMode() || AllowPrune());
 
-    if (AllowPrune() && block) {
+    if (AllowPrune()) {
         PruneLockInfo prune_lock;
-        prune_lock.height_first = block->nHeight;
+        prune_lock.height_first = block ? block->nHeight : 0;
         WITH_LOCK(::cs_main, m_chainstate->m_blockman.UpdatePruneLock(GetName(), prune_lock));
     }
 

@@ -42,7 +42,7 @@ protected:
         bool ReadSpentIndex(const CSpentIndexKey& key, CSpentIndexValue& value);
 
         /// Erase spent index entries
-        bool EraseSpentIndex(const std::vector<CSpentIndexKey>& keys);
+        void EraseSpentIndex(CDBBatch& batch, const std::vector<CSpentIndexKey>& keys);
     };
 
     bool CustomAppend(const interfaces::BlockInfo& block) override;
@@ -53,6 +53,7 @@ protected:
 
     /// SpentIndex cannot work with pruned nodes as it requires UTXO data
     bool AllowPrune() const override { return false; }
+    bool WritesEagerly() const override { return true; }
 
 public:
     /// Constructs a new SpentIndex.

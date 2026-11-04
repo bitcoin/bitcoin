@@ -43,13 +43,11 @@ bool SpentIndex::DB::ReadSpentIndex(const CSpentIndexKey& key, CSpentIndexValue&
     return Read(std::make_pair(DB_SPENTINDEX, key), value);
 }
 
-bool SpentIndex::DB::EraseSpentIndex(const std::vector<CSpentIndexKey>& keys)
+void SpentIndex::DB::EraseSpentIndex(CDBBatch& batch, const std::vector<CSpentIndexKey>& keys)
 {
-    CDBBatch batch(*this);
     for (const auto& key : keys) {
         batch.Erase(std::make_pair(DB_SPENTINDEX, key));
     }
-    return CDBWrapper::WriteBatch(batch);
 }
 
 SpentIndex::SpentIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe) :
@@ -127,14 +125,14 @@ bool SpentIndex::CustomRewind(const interfaces::BlockKey& current_tip, const int
     assert(current_tip_index->GetAncestor(new_tip_index->nHeight) == new_tip_index);
 
     // Erase spent index entries for blocks being rewound
-    for (const CBlockIndex* pindex = current_tip_index; pindex != new_tip_index; pindex = pindex->pprev) {
+    return RewindBlockByBlock(current_tip_index, new_tip_index, [&](const CBlockIndex* pindex, CDBBatch& batch) {
         // Skip genesis block
-        if (pindex->nHeight == 0) continue;
+        if (pindex->nHeight == 0) return true;
 
         // Read block to get transactions
         CBlock block;
         if (!node::ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
-            LogError("%s: Failed to read block %s from disk during rewind\n", __func__,
+            LogError("%s: Failed to read block %s from disk during rewind\n", "CustomRewind",
                      pindex->GetBlockHash().ToString());
             return false;
         }
@@ -152,13 +150,9 @@ bool SpentIndex::CustomRewind(const interfaces::BlockKey& current_tip, const int
             }
         }
 
-        if (!keys_to_erase.empty() && !m_db->EraseSpentIndex(keys_to_erase)) {
-            LogError("%s: Failed to erase spent index during rewind\n", __func__);
-            return false;
-        }
-    }
-
-    return true;
+        m_db->EraseSpentIndex(batch, keys_to_erase);
+        return true;
+    });
 }
 
 BaseIndex::DB& SpentIndex::GetDB() const { return *m_db; }
