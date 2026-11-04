@@ -30,6 +30,7 @@
 #include <sync.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/log.h>
 #include <util/not_null.h>
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
@@ -1150,6 +1151,10 @@ public:
             // peer doesn't support it or immediately disconnects us for another reason.
             const bool use_v2transport(GetLocalServices() & NODE_P2P_V2);
             for (const std::string& added_node : connOptions.m_added_nodes) {
+                if (const auto it{FindAddedNode(added_node)}; it != m_added_node_params.cend()) {
+                    LogWarning("Ignoring duplicate -addnode value: %s (matches %s)", added_node, it->m_added_node);
+                    continue;
+                }
                 m_added_node_params.push_back({added_node, use_v2transport});
             }
         }
