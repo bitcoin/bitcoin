@@ -406,6 +406,8 @@ struct WalletTx
     std::optional<std::string> message; // Deprecated
     std::optional<std::string> comment;
     std::optional<std::string> comment_to;
+    std::optional<Txid> replaces_txid;
+    std::optional<Txid> replaced_by_txid;
     bool is_coinbase;
 
     bool operator<(const WalletTx& a) const { return tx->GetHash() < a.tx->GetHash(); }
