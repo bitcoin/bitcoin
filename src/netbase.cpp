@@ -576,8 +576,8 @@ std::unique_ptr<Sock> CreateSockOS(int domain, int type, int protocol)
 
 std::function<std::unique_ptr<Sock>(int, int, int)> CreateSock = CreateSockOS;
 
-template<typename... Args>
-static void LogConnectFailure(bool manual_connection, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+template <typename... Args>
+static void LogConnectFailure(bool manual_connection, util::log::FormatString<sizeof...(Args)> fmt, const Args&... args)
 {
     std::string error_message = tfm::format(fmt, args...);
     if (manual_connection) {

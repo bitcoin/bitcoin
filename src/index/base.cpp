@@ -23,7 +23,6 @@
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/log.h>
-#include <util/string.h>
 #include <util/thread.h>
 #include <util/threadinterrupt.h>
 #include <util/time.h>
@@ -50,7 +49,7 @@ constexpr auto SYNC_LOG_INTERVAL{30s};
 constexpr auto SYNC_LOCATOR_WRITE_INTERVAL{30s};
 
 template <typename... Args>
-void BaseIndex::FatalErrorf(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+void BaseIndex::FatalErrorf(util::log::FormatString<sizeof...(Args)> fmt, const Args&... args)
 {
     auto message = tfm::format(fmt, args...);
     node::AbortNode(m_chain->context()->shutdown_request, m_chain->context()->exit_status, Untranslated(message), m_chain->context()->warnings.get());
