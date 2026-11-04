@@ -17,6 +17,7 @@
 #include <util/byte_units.h>
 #include <util/check.h>
 #include <util/strencodings.h>
+#include <validation.h>
 
 #include <map>
 #include <string>
@@ -26,9 +27,6 @@
 #include <boost/test/unit_test.hpp>
 
 using namespace util::hex_literals;
-
-int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out);
-void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight);
 
 namespace
 {
