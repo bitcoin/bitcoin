@@ -454,7 +454,7 @@ RPCMethod getbalances()
     };
 }
 
-static const UniValue* GetOptionWithAlias(
+const UniValue* GetOptionWithAlias(
     const UniValue& options,
     const std::string& canonical_name,
     const std::string& deprecated_name)
