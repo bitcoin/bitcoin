@@ -102,6 +102,12 @@ public:
     virtual void interruptWait() = 0;
 };
 
+//! Memory usage of block templates held on behalf of clients.
+struct MemoryLoad
+{
+    uint64_t usage{0};
+};
+
 //! Interface giving clients (RPC, Stratum v2 Template Provider in the future)
 //! ability to create block templates.
 class Mining
@@ -203,6 +209,16 @@ public:
      *                     transaction if found, otherwise nullptr
      */
     virtual std::vector<CTransactionRef> getTransactionsByWitnessID(const std::vector<Wtxid>& wtxids) = 0;
+
+    /**
+     * Returns the current memory load of templates held on behalf of
+     * clients: their own data, plus the transactions they reference that
+     * are no longer in the mempool. The dummy coinbase is not counted.
+     *
+     * Only counts templates created through this interface. The template
+     * cached by the getblocktemplate RPC is excluded.
+     */
+    virtual MemoryLoad getMemoryLoad() = 0;
 
     //! Get internal node context. Useful for RPC and testing,
     //! but not accessible across processes.
