@@ -13,7 +13,7 @@ export CI_RETRY_EXE="/ci_retry"
 
 pushd "/"
 
-${CI_RETRY_EXE} apt-get update
+${CI_RETRY_EXE} apt-get update --error-on=any
 # Lint dependencies:
 # - cargo (used to run the lint tests)
 # - curl/xz-utils (to install shellcheck)
