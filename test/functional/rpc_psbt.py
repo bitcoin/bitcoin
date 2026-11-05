@@ -749,6 +749,44 @@ class PSBTTest(BitcoinTestFramework):
 
         wallet.unloadwallet()
 
+    def test_taproot_sighash_field_absent(self):
+        self.log.info("Test that a taproot input without a sighash field accepts signatures of other sighash types")
+        node = self.nodes[0]
+        privkey1, pubkey1 = generate_keypair(wif=True)
+        privkey2, pubkey2 = generate_keypair(wif=True)
+        desc = "tr({},multi_a(2,{},{}))"
+        signer1 = descsum_create(desc.format(H_POINT, privkey1, pubkey2.hex()))
+        signer2 = descsum_create(desc.format(H_POINT, pubkey1.hex(), privkey2))
+        addr = node.deriveaddresses(descsum_create(desc.format(H_POINT, pubkey1.hex(), pubkey2.hex())))[0]
+
+        for sighash in ["ALL", "NONE", "ALL|ANYONECANPAY"]:
+            self.log.info(f"The first signer uses {sighash}, then the sighash field is removed")
+            utxo = self.create_outpoints(node, outputs=[{addr: 1}])[0]
+            psbt = node.createpsbt([utxo], [{addr: 0.9999}])
+            psbt = node.descriptorprocesspsbt(psbt=psbt, descriptors=[signer1], sighashtype=sighash, finalize=False)["psbt"]
+            assert_equal(len(node.decodepsbt(psbt)["inputs"][0]["taproot_script_path_sigs"][0]["sig"]), 65 * 2)
+            mod_psbt = PSBT.from_base64(psbt)
+            del mod_psbt.i[0].map[PSBT_IN_SIGHASH_TYPE]
+            mod_psbt.i[0].map[PSBT_IN_NON_WITNESS_UTXO] = bytes.fromhex(node.getrawtransaction(utxo["txid"]))
+            psbt = mod_psbt.to_base64()
+
+            self.log.info("Asking for SIGHASH_DEFAULT rejects the signature")
+            assert_raises_rpc_error(-22, "Specified sighash value does not match value stored in PSBT", node.descriptorprocesspsbt, psbt=psbt, descriptors=[signer2], sighashtype="DEFAULT")
+
+            self.log.info("Without a sighash type, the second signer signs, and the previous transaction is kept only for ANYONECANPAY")
+            signed = node.descriptorprocesspsbt(psbt=psbt, descriptors=[signer2], finalize=False)["psbt"]
+            assert_equal("non_witness_utxo" in node.decodepsbt(signed)["inputs"][0], sighash == "ALL|ANYONECANPAY")
+            res = node.finalizepsbt(signed)
+            assert_equal(res["complete"], True)
+            assert_equal(node.testmempoolaccept([res["hex"]])[0]["allowed"], True)
+
+        self.log.info("A sighash field set to SIGHASH_DEFAULT still rejects the ANYONECANPAY signature")
+        mod_psbt = PSBT.from_base64(psbt)
+        mod_psbt.i[0].map[PSBT_IN_SIGHASH_TYPE] = (0).to_bytes(4, byteorder="little")
+        psbt = mod_psbt.to_base64()
+        assert_raises_rpc_error(-22, "Specified sighash value does not match value stored in PSBT", node.descriptorprocesspsbt, psbt=psbt, descriptors=[signer2])
+        assert_equal(node.finalizepsbt(psbt)["complete"], False)
+
     def assert_change_type(self, psbtx, expected_type):
         """Assert that the given PSBT has a change output with the given type."""
 
@@ -1819,6 +1857,7 @@ class PSBTTest(BitcoinTestFramework):
         self.test_sighash_single()
         self.test_decodepsbt_long_sighash_type()
         self.test_combinepsbt_sighash_type()
+        self.test_taproot_sighash_field_absent()
         self.test_psbt_named_parameter_handling()
         self.test_psbt_roundtrip()
         self.test_psbt_version()
