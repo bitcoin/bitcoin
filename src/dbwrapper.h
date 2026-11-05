@@ -155,6 +155,9 @@ public:
 
     bool Valid() const;
 
+    /** Throw dbwrapper_error if the iterator encountered an underlying database error. */
+    void CheckStatus() const;
+
     void SeekToFirst();
 
     template<typename K> void Seek(const K& key) {
