@@ -101,7 +101,6 @@ Sketch* Construct(int bits, int impl)
         default:
             return nullptr;
         }
-        break;
 #ifdef HAVE_CLMUL
     case FieldImpl::CLMUL:
         if (EnableClmul()) {
