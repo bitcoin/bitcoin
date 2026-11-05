@@ -40,7 +40,7 @@ BOOST_FIXTURE_TEST_SUITE(denialofservice_tests, TestingSetup)
 
 // Test eviction of an outbound peer whose chain never advances
 // Mock a node connection, and use mocktime to simulate a peer
-// which never sends any headers messages.  PeerLogic should
+// which never sends any headers messages.  PeerManager should
 // decide to evict that outbound peer, after the appropriate timeouts.
 // Note that we protect 4 outbound nodes from being subject to
 // this logic; this test takes advantage of that protection only

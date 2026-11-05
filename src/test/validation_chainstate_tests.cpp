@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(validation_chainstate_resize_caches)
         const auto outpoint = AddTestCoin(m_rng, c1.CoinsTip());
 
         // Set a meaningless bestblock value in the coinsview cache - otherwise we won't
-        // flush during ResizecoinsCaches() and will subsequently hit an assertion.
+        // flush during ResizeCoinsCaches() and will subsequently hit an assertion.
         c1.CoinsTip().SetBestBlock(m_rng.rand256());
 
         BOOST_CHECK(c1.CoinsTip().HaveCoinInCache(outpoint));

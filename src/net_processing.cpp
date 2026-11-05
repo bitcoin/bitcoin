@@ -1778,7 +1778,7 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
     {
     LOCK(cs_main);
     {
-        // We remove the PeerRef from g_peer_map here, but we don't always
+        // We remove the PeerRef from m_peer_map here, but we don't always
         // destruct the Peer. Sometimes another thread is still holding a
         // PeerRef, so the refcount is >= 1. Be careful not to do any
         // processing here that assumes Peer won't be changed before it's

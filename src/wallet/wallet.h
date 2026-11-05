@@ -226,7 +226,7 @@ public:
     ReserveDestination(const ReserveDestination&) = delete;
     ReserveDestination& operator=(const ReserveDestination&) = delete;
 
-    //! Destructor. If a key has been reserved and not KeepKey'ed, it will be returned to the keypool
+    //! Destructor. If a key has been reserved and not kept (see KeepDestination()), it will be returned to the keypool
     ~ReserveDestination()
     {
         ReturnDestination();
@@ -326,7 +326,7 @@ private:
     /** The next scheduled rebroadcast of wallet transactions. */
     NodeClock::time_point m_next_resend{GetDefaultNextResend()};
     /** Whether this wallet will submit newly created transactions to the node's mempool and
-     * prompt rebroadcasts (see ResendWalletTransactions()). */
+     * prompt rebroadcasts (see ResubmitWalletTransactions()). */
     bool fBroadcastTransactions = false;
     // Local time that the tip block was received. Used to schedule wallet rebroadcasts.
     std::atomic<int64_t> m_best_block_time {0};
