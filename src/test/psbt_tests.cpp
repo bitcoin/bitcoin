@@ -195,8 +195,8 @@ BOOST_AUTO_TEST_CASE(merge_proprietary_fields)
     tx.vin.emplace_back(COutPoint{});
     tx.vout.emplace_back(0, CScript{});
 
-    PartiallySignedTransaction left(tx);
-    PartiallySignedTransaction right(tx);
+    PartiallySignedTransaction left(tx, /*version=*/2);
+    PartiallySignedTransaction right(tx, /*version=*/2);
 
     const auto left_prop = MakeProprietary(/*subtype=*/1, /*key_data=*/0x01, /*value=*/0xaa);
     const auto right_prop = MakeProprietary(/*subtype=*/2, /*key_data=*/0x02, /*value=*/0xbb);
@@ -254,7 +254,7 @@ struct PSBTOutputTest {
         CMutableTransaction tx;
         if (has_input) tx.vin.emplace_back();
         tx.vout.emplace_back(0, script_pubkey);
-        PartiallySignedTransaction psbt{tx};
+        PartiallySignedTransaction psbt{tx, /*version=*/2};
         UpdatePSBTOutput(provider, psbt, 0);
         return psbt.outputs[0];
     }

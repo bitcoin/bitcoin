@@ -125,7 +125,7 @@ FUZZ_TARGET(psbt)
     psbt_mut = psbt;
     CMutableTransaction result;
     if (FinalizeAndExtractPSBT(psbt_mut, result)) {
-        const PartiallySignedTransaction psbt_from_tx{result};
+        const PartiallySignedTransaction psbt_from_tx{result, /*version=*/2};
     }
 
     PartiallySignedTransaction psbt_merge = psbt;
