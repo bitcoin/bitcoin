@@ -56,7 +56,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         # Create a transaction and submit it to node0's mempool.
         tx_before_reorg = self.wallet.send_self_transfer(from_node=self.nodes[0])
 
-        # Create a child of that transaction and submit it to node0's mempool.
+        # Create a child of tx_disconnected and submit it to node0's mempool.
         tx_child = self.wallet.send_self_transfer(utxo_to_spend=tx_disconnected["new_utxo"], from_node=self.nodes[0])
         assert_equal(self.nodes[0].getmempoolentry(tx_child["txid"])["ancestorcount"], 1)
         assert_equal(len(peer1.get_invs()), 0)
@@ -163,7 +163,6 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
 
         self.log.info("Broadcast and mine spend_3_1")
         spend_3_1_id = self.nodes[0].sendrawtransaction(spend_3_1['hex'])
-        self.log.info("Generate a block")
 
         # Prep for fork, only go FORK_LENGTH  seconds into the MTP future max
         fork_blocks = create_empty_fork(self.nodes[0], fork_length=FORK_LENGTH)
