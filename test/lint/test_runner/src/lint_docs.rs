@@ -21,8 +21,8 @@ pub fn lint_doc_release_note_snippets() -> LintResult {
         Err(r#"
 Release note snippets and other docs must be put into the doc/ folder directly.
 
-The doc/release-notes/ folder is for archived release notes of previous releases only. Snippets are
-expected to follow the naming "/doc/release-notes-<PR number>.md".
+The doc/release-notes/ folder is for archived release notes of previous releases only. Snippets must
+be uniquely named and placed directly in the doc/ folder.
             "#
         .trim()
         .to_string())
