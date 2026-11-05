@@ -57,19 +57,21 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
     escrow << OP_2 << ToByteVector(key[0].GetPubKey()) << ToByteVector(key[1].GetPubKey()) << ToByteVector(key[2].GetPubKey()) << OP_3 << OP_CHECKMULTISIG;
 
     CMutableTransaction txFrom;  // Funding transaction
-    txFrom.vout.resize(3);
-    txFrom.vout[0].scriptPubKey = a_and_b;
-    txFrom.vout[1].scriptPubKey = a_or_b;
-    txFrom.vout[2].scriptPubKey = escrow;
+    txFrom.vout = {
+        CTxOut{-1, a_and_b},
+        CTxOut{-1, a_or_b},
+        CTxOut{-1, escrow},
+    };
 
     CMutableTransaction txTo[3]; // Spending transaction
-    for (int i = 0; i < 3; i++)
+    for (uint32_t i = 0; i < 3; i++)
     {
-        txTo[i].vin.resize(1);
-        txTo[i].vout.resize(1);
-        txTo[i].vin[0].prevout.n = i;
-        txTo[i].vin[0].prevout.hash = txFrom.GetHash();
-        txTo[i].vout[0].nValue = 1;
+        txTo[i].vin = {
+            CTxIn{COutPoint{txFrom.GetHash(), i}},
+        };
+        txTo[i].vout = {
+            CTxOut{1, CScript{}},
+        };
     }
 
     std::vector<CKey> keys;
@@ -202,19 +204,21 @@ BOOST_AUTO_TEST_CASE(multisig_Sign)
     escrow << OP_2 << ToByteVector(key[0].GetPubKey()) << ToByteVector(key[1].GetPubKey()) << ToByteVector(key[2].GetPubKey()) << OP_3 << OP_CHECKMULTISIG;
 
     CMutableTransaction txFrom;  // Funding transaction
-    txFrom.vout.resize(3);
-    txFrom.vout[0].scriptPubKey = a_and_b;
-    txFrom.vout[1].scriptPubKey = a_or_b;
-    txFrom.vout[2].scriptPubKey = escrow;
+    txFrom.vout = {
+        CTxOut{-1, a_and_b},
+        CTxOut{-1, a_or_b},
+        CTxOut{-1, escrow},
+    };
 
     CMutableTransaction txTo[3]; // Spending transaction
-    for (int i = 0; i < 3; i++)
+    for (uint32_t i = 0; i < 3; i++)
     {
-        txTo[i].vin.resize(1);
-        txTo[i].vout.resize(1);
-        txTo[i].vin[0].prevout.n = i;
-        txTo[i].vin[0].prevout.hash = txFrom.GetHash();
-        txTo[i].vout[0].nValue = 1;
+        txTo[i].vin = {
+            CTxIn{COutPoint{txFrom.GetHash(), i}},
+        };
+        txTo[i].vout = {
+            CTxOut{1, CScript{}},
+        };
     }
 
     for (int i = 0; i < 3; i++)
