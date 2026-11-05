@@ -207,6 +207,12 @@ std::optional<PubKey> GetPubKeyFromInput(const CTxIn& txin, const CScript& spk)
     }
 
     if (type == TxoutType::SCRIPTHASH) {
+        // Bail early on an empty witness, so that the scriptSigs (up to MAX_SCRIPT_SIZE) of
+        // non-segwit P2SH spends aren't evaluated, as consensus requires their witness to be empty.
+        if (txin.scriptWitness.stack.empty()) return std::nullopt;
+        CPubKey key{txin.scriptWitness.stack.back()};
+        if (!key.IsCompressed()) return std::nullopt;
+
         // P2SH-P2WPKH only: eval scriptSig, verify redeem script is P2WPKH. Unlike P2PKH above,
         // evaluating is safe here, as consensus (BIP-141) requires the scriptSig to be a single
         // push of the redeem script.
@@ -217,9 +223,7 @@ std::optional<PubKey> GetPubKeyFromInput(const CTxIn& txin, const CScript& spk)
         if (stack.empty()) return std::nullopt;
         CScript redeem{stack.back().begin(), stack.back().end()};
         if (Solver(redeem, solutions) != TxoutType::WITNESS_V0_KEYHASH) return std::nullopt;
-        if (txin.scriptWitness.stack.empty()) return std::nullopt;
-        CPubKey key{txin.scriptWitness.stack.back()};
-        if (!key.IsCompressed() || !key.IsFullyValid()) return std::nullopt;
+        if (!key.IsFullyValid()) return std::nullopt;
         return PubKey{key};
     }
 
