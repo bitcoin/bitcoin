@@ -5,9 +5,12 @@
 #ifndef BITCOIN_NODE_BLOCK_TEMPLATE_MANAGER_H
 #define BITCOIN_NODE_BLOCK_TEMPLATE_MANAGER_H
 
+#include <kernel/cs_main.h>
 #include <node/mining_types.h>
+#include <threadsafety.h>
 #include <util/time.h>
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -25,9 +28,29 @@ namespace node {
 class KernelNotifications;
 struct CBlockTemplate;
 
+/** Block template shared by getblocktemplate calls, and the state of its last build attempt. */
+struct CachedBlockTemplate {
+    //! CTxMemPool::GetTransactionsUpdated() sampled before the last build attempt.
+    unsigned int transactions_updated{0};
+    //! Mockable time of the last build attempt.
+    NodeSeconds time_start{};
+    //! nullptr if no template was built yet, or if the last rebuild failed.
+    std::shared_ptr<const CBlockTemplate> block_template;
+};
+
+/** Size of the last block template built by BlockTemplateManager, reported by getmininginfo. */
+struct LastBlockStats {
+    //! Number of transactions, excluding the coinbase.
+    int64_t num_txs;
+    //! Weight, including the reserved weight for the block header, transaction count and coinbase.
+    int64_t weight;
+};
+
 /**
  * Creates block templates, submits solved blocks, and provides tip-waiting
- * helpers for mining code. Owns the init-time block creation args.
+ * helpers for mining code. Owns the init-time block creation args, the
+ * template cached for getblocktemplate, and the size of the last template
+ * built.
  */
 class BlockTemplateManager
 {
@@ -36,6 +59,8 @@ private:
     ChainstateManager& m_chainman;
     KernelNotifications& m_notifications;
     const BlockCreateOptions m_block_create_args;
+    CachedBlockTemplate m_cached_template GUARDED_BY(::cs_main);
+    std::optional<LastBlockStats> m_last_block_stats GUARDED_BY(::cs_main);
 
 public:
     explicit BlockTemplateManager(CTxMemPool& mempool,
@@ -46,8 +71,26 @@ public:
     /** @return the block creation args set during node init. */
     const BlockCreateOptions& BlockCreateArgs() const { return m_block_create_args; }
 
-    /** Create a fresh block template, applying init-time defaults to any unset options. */
+    /** Create a fresh block template, applying init-time defaults to any unset
+     *  options, and record its size for GetLastBlockStats(). Locks cs_main. */
     std::unique_ptr<CBlockTemplate> CreateNewTemplate(const BlockCreateOptions& options);
+
+    /** @return the size of the last template built by CreateNewTemplate(), or
+     *  nullopt if none was built yet. */
+    std::optional<LastBlockStats> GetLastBlockStats() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    /** @return CTxMemPool::GetTransactionsUpdated() as sampled before the last
+     *  getblocktemplate template build attempt, for longpolling. */
+    unsigned int GetCachedTransactionsUpdated() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    /** Rebuild the cached getblocktemplate template with init-time options if
+     *  none is cached, if it does not build on the active chain tip, or if the
+     *  mempool changed and the template is more than 5 seconds old.
+     *  @return the cached template, rebuilt if needed. Its block_template is
+     *  never null.
+     *  @throws std::runtime_error if building the template fails. The cache is
+     *  then left without a template, so the next call tries again. */
+    CachedBlockTemplate RefreshCachedTemplate() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Submit a block via ProcessNewBlock and capture validation state.
      *  @return whether the block was accepted as a new valid block. */
