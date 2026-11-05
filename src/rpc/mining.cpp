@@ -806,7 +806,7 @@ static RPCMethod getblocktemplate()
         }
     }
 
-    static unsigned int nTransactionsUpdatedLast;
+    static uint32_t nTransactionsUpdatedLast;
     const CTxMemPool& mempool = EnsureMemPool(node);
 
     WAIT_LOCK(cs_main, cs_main_lock);
@@ -829,7 +829,7 @@ static RPCMethod getblocktemplate()
          * The longpollid is assumed to be a tip hash if it has the right format.
          */
         uint256 hashWatchedChain;
-        unsigned int nTransactionsUpdatedLastLP;
+        uint32_t nTransactionsUpdatedLastLP;
 
         if (lpval.isStr())
         {
@@ -839,7 +839,7 @@ static RPCMethod getblocktemplate()
             // Assume the longpollid is a block hash. If it's not then we return
             // early below.
             hashWatchedChain = ParseHashV(lpstr.substr(0, 64), "longpollid");
-            nTransactionsUpdatedLastLP = LocaleIndependentAtoi<int64_t>(lpstr.substr(64));
+            nTransactionsUpdatedLastLP = static_cast<uint32_t>(LocaleIndependentAtoi<int64_t>(lpstr.substr(64)));
         }
         else
         {
