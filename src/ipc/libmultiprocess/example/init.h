@@ -14,7 +14,7 @@ class Init
 public:
     virtual ~Init() = default;
     virtual std::unique_ptr<Printer> makePrinter() { return nullptr; }
-    virtual std::unique_ptr<Calculator> makeCalculator(std::unique_ptr<Printer> printer) { return nullptr; }
+    virtual std::unique_ptr<Calculator> makeCalculator(std::unique_ptr<Printer>) { return nullptr; }
 };
 
 #endif // EXAMPLE_INIT_H

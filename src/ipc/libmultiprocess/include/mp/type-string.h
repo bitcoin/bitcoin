@@ -7,22 +7,24 @@
 
 #include <mp/util.h>
 
+#include <algorithm>
+
 namespace mp {
 template <typename Value, typename Output>
 void CustomBuildField(TypeList<std::string>,
     Priority<1>,
-    InvokeContext& invoke_context,
+    InvokeContext&,
     Value&& value,
     Output&& output)
 {
     auto result = output.init(value.size());
-    memcpy(result.begin(), value.data(), value.size());
+    std::ranges::copy(value, result.begin());
 }
 
 template <typename Input, typename ReadDest>
 decltype(auto) CustomReadField(TypeList<std::string>,
     Priority<1>,
-    InvokeContext& invoke_context,
+    InvokeContext&,
     Input&& input,
     ReadDest&& read_dest)
 {
