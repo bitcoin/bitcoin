@@ -96,7 +96,7 @@ public:
     /** Return a new block template when fees rise to a certain threshold or
      *  after a new tip; return nullptr if timeout is reached. */
     std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(
-        const std::unique_ptr<CBlockTemplate>& block_template,
+        const CBlockTemplate& block_template,
         const BlockWaitOptions& wait_options,
         const BlockCreateOptions& create_options,
         bool& interrupt_wait);
