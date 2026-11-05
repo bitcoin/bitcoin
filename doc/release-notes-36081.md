@@ -5,4 +5,4 @@ Updated RPCs
   the existing `next` object this lets mining software obtain the tip hash and
   the next block's `nBits` atomically from a single call, without a race
   against a concurrent tip change between `getblockchaininfo` and
-  `getmininginfo`.
+  `getmininginfo`. (#36081)
