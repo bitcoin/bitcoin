@@ -128,6 +128,7 @@ static void TestBnBSuccess(std::string test_title, std::vector<OutputGroup>& utx
     BOOST_CHECK_MESSAGE(result->GetSelectedValue() == expected_amount, strprintf("Selected amount mismatch in BnB-Success: %s. Expected %d, but got %d", test_title, expected_amount, result->GetSelectedValue()));
     BOOST_CHECK_MESSAGE(result->GetWeight() <= max_selection_weight, strprintf("Selected weight is higher than permitted in BnB-Success: %s. Expected %d, but got %d", test_title, max_selection_weight, result->GetWeight()));
     BOOST_CHECK_MESSAGE(result->GetSelectionsEvaluated() == expected_attempts, strprintf("Unexpected number of attempts in BnB-Success: %s. Expected %i attempts, but got %i", test_title, expected_attempts, result->GetSelectionsEvaluated()));
+    BOOST_CHECK_MESSAGE(result->GetAlgoCompleted(), "Expected BnB to exhaust the search space in BnB-Success: " + test_title);
 }
 
 static void TestBnBFail(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CoinSelectionParams& cs_params = default_cs_params, int max_selection_weight = MAX_STANDARD_TX_WEIGHT, const bool expect_max_weight_exceeded = false)
