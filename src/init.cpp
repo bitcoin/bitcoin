@@ -367,10 +367,8 @@ void Shutdown(NodeContext& node)
     // FlushStateToDisk generates a ChainStateFlushed callback, which we should avoid missing
     if (node.chainman) {
         LOCK(cs_main);
-        for (const auto& chainstate : node.chainman->m_chainstates) {
-            if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
-            }
+        if (node.chainman->m_chainstate && node.chainman->m_chainstate->CanFlushToDisk()) {
+            node.chainman->m_chainstate->ForceFlushStateToDisk();
         }
     }
 
@@ -397,11 +395,9 @@ void Shutdown(NodeContext& node)
     // Callbacks queued by this final chainstate flush will not run during shutdown
     if (node.chainman) {
         LOCK(cs_main);
-        for (const auto& chainstate : node.chainman->m_chainstates) {
-            if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
-                chainstate->ResetCoinsViews();
-            }
+        if (node.chainman->m_chainstate && node.chainman->m_chainstate->CanFlushToDisk()) {
+            node.chainman->m_chainstate->ForceFlushStateToDisk();
+            node.chainman->m_chainstate->ResetCoinsViews();
         }
     }
 
@@ -538,8 +534,8 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-prune=<n>", strprintf("Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex. "
             "Warning: Reverting this setting requires re-downloading the entire blockchain. Wallets and indexes should be loaded at startup and kept active while pruning is enabled so they stay synchronized before old block data is deleted; wallets or indexes that fall behind pruned data may require a reindex. "
             "(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >=%u = automatically prune block files to stay under the specified target size in MiB)", MIN_DISK_SPACE_FOR_BLOCK_FILES / 1_MiB), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-reindex", "If enabled, wipe chain state and block index, and rebuild them from blk*.dat files on disk. Also wipe and rebuild other optional indexes that are active. If an assumeutxo snapshot was loaded, its chainstate will be wiped as well. The snapshot can then be reloaded via RPC.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-reindex-chainstate", "If enabled, wipe chain state, and rebuild it from blk*.dat files on disk. If an assumeutxo snapshot was loaded, its chainstate will be wiped as well. The snapshot can then be reloaded via RPC.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-reindex", "If enabled, wipe chain state and block index, and rebuild them from blk*.dat files on disk. Also wipe and rebuild other optional indexes that are active.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-reindex-chainstate", "If enabled, wipe chain state, and rebuild it from blk*.dat files on disk.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-settings=<file>", strprintf("Specify path to dynamic settings data file. Can be disabled with -nosettings. File is written at runtime and not meant to be edited by users (use %s instead for custom settings). Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME, BITCOIN_SETTINGS_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #if HAVE_SYSTEM
     argsman.AddArg("-startupnotify=<cmd>", "Execute command on startup.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -1459,26 +1455,6 @@ static ChainstateLoadResult InitAndLoadChainstate(
     ChainstateManager& chainman = *node.chainman;
     if (chainman.m_interrupt) return {ChainstateLoadStatus::INTERRUPTED, {}};
 
-    // This is defined and set here instead of inline in validation.h to avoid a hard
-    // dependency between validation and index/base, since the latter is not in
-    // libbitcoinkernel.
-    chainman.snapshot_download_completed = [&node]() {
-        if (!node.chainman->m_blockman.IsPruneMode()) {
-            LogInfo("[snapshot] re-enabling NODE_NETWORK services");
-            node.connman->AddLocalServices(NODE_NETWORK);
-        }
-        LogInfo("[snapshot] restarting indexes");
-        // Drain the validation interface queue to ensure that the old indexes
-        // don't have any pending work.
-        Assert(node.validation_signals)->SyncWithValidationInterfaceQueue();
-        for (auto* index : node.indexes) {
-            index->Interrupt();
-            index->Stop();
-            if (!(index->Init() && index->StartBackgroundSync())) {
-                LogWarning("[snapshot] Failed to restart index %s on snapshot chain", index->GetName());
-            }
-        }
-    };
     node::ChainstateLoadOptions options;
     options.mempool = Assert(node.mempool.get());
     options.wipe_chainstate_db = do_reindex || do_reindex_chainstate;
@@ -2043,20 +2019,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // after any wallet rescanning has taken place.
     if (chainman.m_blockman.IsPruneMode()) {
         if (chainman.m_blockman.m_blockfiles_indexed) {
-            LOCK(cs_main);
-            for (const auto& chainstate : chainman.m_chainstates) {
-                uiInterface.InitMessage(_("Pruning blockstore…"));
-                chainstate->PruneAndFlush();
-            }
+            uiInterface.InitMessage(_("Pruning blockstore…"));
+            chainman.ActiveChainstate().PruneAndFlush();
         }
     } else {
-        // Prior to setting NODE_NETWORK, check if we can provide historical blocks.
-        if (!WITH_LOCK(chainman.GetMutex(), return chainman.HistoricalChainstate())) {
-            LogInfo("Setting NODE_NETWORK in non-prune mode");
-            g_local_services = ServiceFlags(g_local_services | NODE_NETWORK);
-        } else {
-            LogInfo("Running node in NODE_NETWORK_LIMITED mode until snapshot background sync completes");
-        }
+        LogInfo("Setting NODE_NETWORK in non-prune mode");
+        g_local_services = ServiceFlags(g_local_services | NODE_NETWORK);
     }
 
     // ********************************************************* Step 11: import blocks
@@ -2169,7 +2137,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     /*
      * Wait for genesis block to be processed. Typically kernel_notifications.m_tip_block
-     * has already been set by a call to LoadChainTip() in CompleteChainstateInitialization().
+     * has already been set by a call to LoadChainTip() in LoadChainstate().
      * But this is skipped if the chainstate doesn't exist yet or is being wiped:
      *
      * 1. first startup with an empty datadir
@@ -2461,8 +2429,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 bool StartIndexBackgroundSync(NodeContext& node)
 {
     ChainstateManager& chainman = *Assert(node.chainman);
-    const Chainstate& chainstate = WITH_LOCK(::cs_main, return chainman.ValidatedChainstate());
-    const CChain& index_chain = chainstate.m_chain;
+    const CChain& index_chain = chainman.ActiveChainstate().m_chain;
     const int current_height = WITH_LOCK(::cs_main, return index_chain.Height());
 
     // Skip checking data availability if we have not synced any blocks yet

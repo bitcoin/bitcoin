@@ -24,7 +24,6 @@
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
 #include <kernel/mempool_removal_reason.h>
-#include <kernel/types.h>
 #include <key.h>
 #include <key_io.h>
 #include <node/types.h>
@@ -92,7 +91,6 @@ using common::AmountErrMsg;
 using common::AmountHighWarn;
 using common::PSBTError;
 using interfaces::FoundBlock;
-using kernel::ChainstateRole;
 using util::ReplaceAll;
 using util::ToString;
 
@@ -1549,11 +1547,8 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
     }
 }
 
-void CWallet::blockConnected(const ChainstateRole& role, const interfaces::BlockInfo& block)
+void CWallet::blockConnected(const interfaces::BlockInfo& block)
 {
-    if (role.historical) {
-        return;
-    }
     assert(block.data);
     LOCK(cs_wallet);
 
@@ -3107,7 +3102,7 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
         // Technically we could execute the code below in any case, but performing the
         // `while` loop below can make startup very slow, so only check blocks on disk
         // if necessary.
-        if (chain.havePruned() || chain.hasAssumedValidChain()) {
+        if (chain.havePruned()) {
             int block_height = *tip_height;
             while (block_height > 0 && chain.haveBlockOnDisk(block_height - 1) && rescan_height != block_height) {
                 --block_height;
@@ -3118,19 +3113,10 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
                 // This might happen if a user uses an old wallet within a pruned node
                 // or if they ran -disablewallet for a longer time, then decided to re-enable
                 // Exit early and print an error.
-                // It also may happen if an assumed-valid chain is in use and therefore not
-                // all block data is available.
                 // If a block is pruned after this check, we will load the wallet,
                 // but fail the rescan with a generic error.
 
-                error = chain.havePruned() ?
-                     _("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of a pruned node)") :
-                     strprintf(_(
-                        "Error loading wallet. Wallet requires blocks to be downloaded, "
-                        "and software does not currently support loading wallets while "
-                        "blocks are being downloaded out of order when using assumeutxo "
-                        "snapshots. Wallet should be able to load successfully after "
-                        "node sync reaches height %s"), block_height);
+                error = _("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of a pruned node)");
                 return false;
             }
         }

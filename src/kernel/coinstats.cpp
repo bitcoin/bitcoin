@@ -72,18 +72,7 @@ void RemoveCoinHash(MuHash3072& muhash, const COutPoint& outpoint, const Coin& c
 
 static void ApplyCoinHash(std::nullptr_t, const COutPoint& outpoint, const Coin& coin) {}
 
-//! Warning: be very careful when changing this! assumeutxo and UTXO snapshot
-//! validation commitments are reliant on the hash constructed by this
-//! function.
-//!
-//! If the construction of this hash is changed, it will invalidate
-//! existing UTXO snapshots. This will not result in any kind of consensus
-//! failure, but it will force clients that were expecting to make use of
-//! assumeutxo to do traditional IBD instead.
-//!
-//! It is also possible, though very unlikely, that a change in this
-//! construction could cause a previously invalid (and potentially malicious)
-//! UTXO snapshot to be considered valid.
+//! Keep hash construction stable for clients comparing UTXO set hashes.
 template <typename T>
 static void ApplyHash(T& hash_obj, const Txid& hash, const std::map<uint32_t, Coin>& outputs)
 {

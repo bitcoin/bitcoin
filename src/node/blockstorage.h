@@ -24,13 +24,11 @@
 #include <util/hasher.h>
 #include <util/obfuscation.h>
 
-#include <algorithm>
 #include <array>
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
-#include <iosfwd>
 #include <limits>
 #include <map>
 #include <memory>
@@ -150,15 +148,6 @@ struct PruneLockInfo {
     int height_first{std::numeric_limits<int>::max()};
 };
 
-enum BlockfileType {
-    // Values used as array indexes - do not change carelessly.
-    NORMAL = 0,
-    ASSUMED = 1,
-    NUM_TYPES = 2,
-};
-
-std::ostream& operator<<(std::ostream& os, const BlockfileType& type);
-
 struct BlockfileCursor {
     // The latest blockfile number.
     int file_num{0};
@@ -175,8 +164,6 @@ struct BlockfileCursor {
     // more data written later.
     int undo_height{0};
 };
-
-std::ostream& operator<<(std::ostream& os, const BlockfileCursor& cursor);
 
 enum class ReadRawError {
     IO,
@@ -203,11 +190,11 @@ private:
      * per index entry (nStatus, nChainWork, nTimeMax, etc.) as well as peripheral
      * collections like m_dirty_blockindex.
      */
-    bool LoadBlockIndex(const std::optional<uint256>& snapshot_blockhash)
+    bool LoadBlockIndex()
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Return false if block file or undo file flushing fails. */
-    [[nodiscard]] bool FlushBlockFile(int blockfile_num, bool fFinalize, bool finalize_undo) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] bool FlushBlockFile(bool fFinalize = false, bool finalize_undo = false) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Return false if undo file flushing fails. */
     [[nodiscard]] bool FlushUndoFile(int block_file, bool finalize = false);
@@ -222,7 +209,6 @@ private:
      * separator fields (STORAGE_HEADER_BYTES).
      */
     [[nodiscard]] FlatFilePos FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    [[nodiscard]] bool FlushChainstateBlockFile(int tip_height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     [[nodiscard]] bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     AutoFile OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false) const;
@@ -231,7 +217,7 @@ private:
     void FindFilesToPruneManual(
         std::set<int>& setFilesToPrune,
         int nManualPruneHeight,
-        const Chainstate& chain);
+        int chain_tip_height);
 
     /**
      * Prune block and undo files (blk???.dat and rev???.dat) so that the disk space used is less than a user-defined target.
@@ -252,32 +238,10 @@ private:
     void FindFilesToPrune(
         std::set<int>& setFilesToPrune,
         int last_prune,
-        const Chainstate& chain,
+        int chain_tip_height,
         ChainstateManager& chainman);
 
-    //! Since assumedvalid chainstates may be syncing a range of the chain that is very
-    //! far away from the normal/background validation process, we should segment blockfiles
-    //! for assumed chainstates. Otherwise, we might have wildly different height ranges
-    //! mixed into the same block files, which would impair our ability to prune
-    //! effectively.
-    //!
-    //! This data structure maintains separate blockfile number cursors for each
-    //! BlockfileType. The ASSUMED state is initialized, when necessary, in FindNextBlockPos().
-    //!
-    //! The first element is the NORMAL cursor, second is ASSUMED.
-    std::array<std::optional<BlockfileCursor>, BlockfileType::NUM_TYPES>
-        m_blockfile_cursors GUARDED_BY(::cs_main) = {
-            BlockfileCursor{},
-            std::nullopt,
-    };
-    int MaxBlockfileNum() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
-    {
-        AssertLockHeld(::cs_main);
-        static const BlockfileCursor empty_cursor;
-        const auto& normal = m_blockfile_cursors[BlockfileType::NORMAL].value_or(empty_cursor);
-        const auto& assumed = m_blockfile_cursors[BlockfileType::ASSUMED].value_or(empty_cursor);
-        return std::max(normal.file_num, assumed.file_num);
-    }
+    BlockfileCursor m_blockfile_cursor GUARDED_BY(::cs_main);
 
     /** Global flag to indicate we should check to see if there are
      *  block/undo files that should be deleted.  Set on startup
@@ -296,8 +260,6 @@ private:
      * below will be pruned, but callers should avoid assuming any particular buffer size.
      */
     std::unordered_map<std::string, PruneLockInfo> m_prune_locks GUARDED_BY(::cs_main);
-
-    BlockfileType BlockfileTypeForHeight(int height);
 
     const kernel::BlockManagerOpts m_opts;
 
@@ -332,20 +294,6 @@ public:
 
     BlockMap m_block_index GUARDED_BY(cs_main);
 
-    /**
-     * The height of the base block of an assumeutxo snapshot, if one is in use.
-     *
-     * This controls how blockfiles are segmented by chainstate type to avoid
-     * comingling different height regions of the chain when an assumedvalid chainstate
-     * is in use. If heights are drastically different in the same blockfile, pruning
-     * suffers.
-     *
-     * This is set during ActivateSnapshot() or upon LoadBlockIndex() if a snapshot
-     * had been previously loaded. After the snapshot is validated, this is unset to
-     * restore normal LoadBlockIndex behavior.
-     */
-    std::optional<int> m_snapshot_height;
-
     std::vector<CBlockIndex*> GetAllBlockIndices() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /**
@@ -357,7 +305,7 @@ public:
     std::unique_ptr<BlockTreeDB> m_block_tree_db GUARDED_BY(::cs_main);
 
     void WriteBlockIndexDB() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    bool LoadBlockIndexDB(const std::optional<uint256>& snapshot_blockhash)
+    bool LoadBlockIndexDB()
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /**

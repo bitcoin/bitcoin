@@ -34,9 +34,6 @@ enum class MemPoolRemovalReason;
 enum class RBFTransactionState;
 struct bilingual_str;
 struct CBlockLocator;
-namespace kernel {
-struct ChainstateRole;
-} // namespace kernel
 namespace node {
 struct NodeContext;
 enum class TxBroadcast : uint8_t;
@@ -309,10 +306,10 @@ public:
         virtual ~Notifications() = default;
         virtual void transactionAddedToMempool(const CTransactionRef& tx) {}
         virtual void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) {}
-        virtual void blockConnected(const kernel::ChainstateRole& role, const BlockInfo& block) {}
+        virtual void blockConnected(const BlockInfo& block) {}
         virtual void blockDisconnected(const BlockInfo& block) {}
         virtual void updatedBlockTip() {}
-        virtual void chainStateFlushed(const kernel::ChainstateRole& role, const CBlockLocator& locator) {}
+        virtual void chainStateFlushed(const CBlockLocator& locator) {}
     };
 
     //! Options specifying which chain notifications are required.
@@ -385,11 +382,6 @@ public:
     //! to be prepared to handle this by ignoring notifications about unknown
     //! removed transactions and already added new transactions.
     virtual void requestMempoolTransactions(Notifications& notifications) = 0;
-
-    //! Return true if an assumed-valid snapshot is in use. Note that this
-    //! returns true even after the snapshot is validated, until the next node
-    //! restart.
-    virtual bool hasAssumedValidChain() = 0;
 
     //! Get internal node context. Useful for testing, but not
     //! accessible across processes.
