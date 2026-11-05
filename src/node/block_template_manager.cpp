@@ -49,6 +49,36 @@ std::unique_ptr<CBlockTemplate> BlockTemplateManager::CreateNewTemplate(const Bl
     }.CreateNewBlock();
 }
 
+void BlockTemplateManager::RegisterTemplate(const std::shared_ptr<const CBlockTemplate>& block_template)
+{
+    LOCK(m_mutex);
+    m_templates.emplace_back(block_template);
+}
+
+void BlockTemplateManager::UnregisterTemplate(const std::shared_ptr<const CBlockTemplate>& block_template)
+{
+    LOCK(m_mutex);
+    // Find and erase the template from m_templates. In tests this may be a
+    // no-op, because they recreate the mempool, and with it the manager, while
+    // templates registered with the previous instance are still alive.
+    // In the same pass, prune entries for templates that were destroyed
+    // without unregistering.
+    std::erase_if(m_templates, [&](const auto& weak) {
+        const auto locked{weak.lock()};
+        return locked == block_template || !locked;
+    });
+}
+
+void BlockTemplateManager::SanityCheck() const
+{
+    LOCK(m_mutex);
+    // Templates unregister themselves before they are destroyed, so no
+    // entry should be expired.
+    for (const auto& weak : m_templates) {
+        Assume(!weak.expired());
+    }
+}
+
 bool BlockTemplateManager::SubmitBlock(const std::shared_ptr<const CBlock>& block, std::string& reason, std::string& debug)
 {
     reason.clear();

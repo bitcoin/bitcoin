@@ -882,6 +882,14 @@ public:
                                                           m_node(node)
     {
         assert(m_block_template);
+        // Register here because the template's memory footprint is tied to
+        // this object's lifetime.
+        block_template_manager().RegisterTemplate(m_block_template);
+    }
+
+    ~BlockTemplateImpl() override
+    {
+        block_template_manager().UnregisterTemplate(m_block_template);
     }
 
     CBlockHeader getBlockHeader() override
@@ -936,7 +944,9 @@ public:
 
     const BlockCreateOptions m_create_options;
 
-    const std::unique_ptr<CBlockTemplate> m_block_template;
+    // Shared so that BlockTemplateManager can hold a non-owning reference
+    // for memory accounting.
+    const std::shared_ptr<CBlockTemplate> m_block_template;
 
     bool m_interrupt_wait{false};
     node::BlockTemplateManager& block_template_manager() { return *Assert(m_node.block_template_manager); }
