@@ -591,7 +591,7 @@ void ProcRand(unsigned char* out, int num, RNGLevel level, bool always_use_real_
 } // namespace
 
 
-/** Internal function to set g_determinstic_rng. Only accessed from tests. */
+/** Internal function to set m_deterministic_prng. Only accessed from tests. */
 void MakeRandDeterministicDANGEROUS(const uint256& seed) noexcept
 {
     GetRNGState().MakeDeterministic(seed);

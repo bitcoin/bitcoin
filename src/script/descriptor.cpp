@@ -836,7 +836,7 @@ public:
         return std::ranges::all_of(m_participants, [&](const auto& prov) { return prov->HavePrivateKeys(arg); });
     }
 
-    // Get RootPubKey and GetRootExtPubKey are used to return the single pubkey underlying the pubkey provider
+    // GetRootPubKey and GetRootExtPubKey are used to return the single pubkey underlying the pubkey provider
     // to be presented to the user in gethdkeys. As this is a multisig construction, there is no single underlying
     // pubkey hence nothing should be returned.
     // While the aggregate pubkey could be returned as the root (ext)pubkey, it is not a pubkey that anyone should

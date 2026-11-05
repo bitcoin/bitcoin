@@ -1641,7 +1641,7 @@ ClusterSetIndex TxGraphImpl::InsertCluster(int level, std::unique_ptr<Cluster>&&
     // The passed-in Cluster must not currently be in the TxGraphImpl.
     Assume(cluster->m_quality == QualityLevel::NONE);
 
-    // Append it at the end of the relevant TxGraphImpl::m_cluster.
+    // Append it at the end of the relevant TxGraphImpl::ClusterSet::m_clusters.
     auto& clusterset = GetClusterSet(level);
     auto& quality_clusters = clusterset.m_clusters[int(quality)];
     ClusterSetIndex ret = quality_clusters.size();
@@ -2961,7 +2961,7 @@ void TxGraphImpl::SanityCheck() const
             assert(entry.m_locator[0].IsPresent());
             expected_chunkindex.insert(idx);
         }
-        // Verify the Entry m_locators.
+        // Verify the Entry m_locator.
         bool was_present{false}, was_removed{false};
         for (int level = 0; level < MAX_LEVELS; ++level) {
             const auto& locator = entry.m_locator[level];
@@ -3424,7 +3424,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::Trim() noexcept
         // Sort deps_by_child by child transaction GraphIndex. The order will not be changed
         // anymore after this.
         std::ranges::sort(deps_by_child, [](auto& a, auto& b) noexcept { return a.second < b.second; });
-        // Fill m_parents_count and m_parents_offset in trim_data, as well as m_deps_left, and
+        // Fill m_parent_count and m_parent_offset in trim_data, as well as m_deps_left, and
         // initially populate trim_heap. Because of the sort above, all dependencies involving the
         // same child are grouped together, so a single linear scan suffices.
         auto deps_it = deps_by_child.begin();

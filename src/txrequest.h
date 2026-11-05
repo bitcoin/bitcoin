@@ -180,7 +180,7 @@ public:
      *  provided peer and txhash, nothing happens.
      *
      * It should be called whenever a transaction or NOTFOUND was received from a peer. When the transaction is
-     * not needed entirely anymore, ForgetTxhash should be called instead of, or in addition to, this call.
+     * not needed entirely anymore, ForgetTxHash should be called instead of, or in addition to, this call.
      */
     void ReceivedResponse(NodeId peer, const uint256& txhash);
 

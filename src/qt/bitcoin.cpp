@@ -361,7 +361,7 @@ void BitcoinApplication::requestShutdown()
 #ifdef ENABLE_WALLET
     // Delete wallet controller here manually, instead of relying on Qt object
     // tracking (https://doc.qt.io/qt-5/objecttrees.html). This makes sure
-    // walletmodel m_handle_* notification handlers are deleted before wallets
+    // walletmodel m_handler_* notification handlers are deleted before wallets
     // are unloaded, which can simplify wallet implementations. It also avoids
     // these notifications having to be handled while GUI objects are being
     // destroyed, making GUI code less fragile as well.
@@ -489,7 +489,7 @@ int GuiMain(int argc, char* argv[])
     btcsignals::scoped_connection handler_question{::uiInterface.ThreadSafeQuestion.connect(noui_ThreadSafeQuestion)};
     btcsignals::scoped_connection handler_init_message{::uiInterface.InitMessage.connect(noui_InitMessage)};
 
-    // Do not refer to data directory yet, this can be overridden by Intro::pickDataDirectory
+    // Do not refer to data directory yet, this can be overridden by Intro::showIfNeeded
 
     /// 1. Basic Qt initialization (not dependent on parameters or configuration)
     Q_INIT_RESOURCE(bitcoin);

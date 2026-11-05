@@ -25,7 +25,7 @@
 static constexpr node::TxOrphanage::Usage TINY_TX_WEIGHT{240};
 static constexpr int64_t APPROX_WEIGHT_PER_INPUT{200};
 
-// Creates a transaction with num_inputs inputs and 1 output, padded to target_weight. Use this function to maximize m_outpoint_to_orphan_it operations.
+// Creates a transaction with num_inputs inputs and 1 output, padded to target_weight. Use this function to maximize m_outpoint_to_orphan_wtxids operations.
 // If num_inputs is 0, we maximize the number of inputs.
 static CTransactionRef MakeTransactionBulkedTo(unsigned int num_inputs, int64_t target_weight, FastRandomContext& det_rand)
 {
