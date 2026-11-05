@@ -7,6 +7,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - run: cmake -B build -DBUILD_SHARED_LIBS=OFF
+      - run: cmake -B build -DBUILD_SHARED_LIBS=OFF -DCMAKE_CXX_STANDARD=20 -DCMAKE_CXX_EXTENSIONS=OFF
       - run: cmake --build build -j$(nproc)
       - run: ctest --test-dir build --output-on-failure -j$(nproc)
