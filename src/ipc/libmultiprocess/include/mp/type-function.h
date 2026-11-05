@@ -61,7 +61,7 @@ decltype(auto) CustomReadField(TypeList<std::function<FnR(FnParams...)>> types,
         return read_dest.construct(ProxyCallFn<decltype(client)>{std::move(client)});
     }
     return read_dest.construct();
-};
+}
 } // namespace mp
 
 #endif // MP_PROXY_TYPE_FUNCTION_H
