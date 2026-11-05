@@ -339,7 +339,7 @@ void BlockManager::FindFilesToPrune(
     // We don't check to prune until after we've allocated new space for files
     // So we should leave a buffer under our target to account for another allocation
     // before the next pruning.
-    uint64_t nBuffer = BLOCKFILE_CHUNK_SIZE + UNDOFILE_CHUNK_SIZE;
+    uint64_t nBuffer = PRUNE_TARGET_BUFFER;
     uint64_t nBytesToPrune;
 
     if (nCurrentUsage + nBuffer >= limits.target) {

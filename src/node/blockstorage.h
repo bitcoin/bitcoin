@@ -120,6 +120,8 @@ using kernel::BlockTreeDB;
 inline constexpr unsigned int BLOCKFILE_CHUNK_SIZE{16_MiB};
 /** The pre-allocation chunk size for rev?????.dat files (since 0.8) */
 inline constexpr unsigned int UNDOFILE_CHUNK_SIZE{1_MiB};
+/** Room kept below a prune target for the block and undo file allocations before the next prune */
+inline constexpr uint64_t PRUNE_TARGET_BUFFER{BLOCKFILE_CHUNK_SIZE + UNDOFILE_CHUNK_SIZE};
 /** The maximum size of a blk?????.dat file (since 0.8) */
 inline constexpr unsigned int MAX_BLOCKFILE_SIZE{128_MiB};
 
