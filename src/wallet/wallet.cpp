@@ -1835,8 +1835,9 @@ util::Expected<void, WalletError> CWallet::RebroadcastSingleTransaction(const Tx
     if (it == mapWallet.end()) {
         return util::Unexpected{WalletError{WalletErrorCode::InvalidParameter, strprintf(_("%s not in wallet"), txid.ToString())}};
     }
-    if (!TransactionCanBeBroadcast(it->second)) {
-        return util::Unexpected{WalletError{WalletErrorCode::InvalidParameter, strprintf(_("%s is not eligible to be rebroadcast"), txid.ToString())}};
+    util::Expected<void, WalletError> can_broadcast = TransactionCanBeBroadcast(it->second);
+    if (!can_broadcast) {
+        return util::Unexpected{can_broadcast.error()};
     }
     std::string err;
     if (!SubmitTxMemoryPoolAndRelay(it->second, err, node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL)) {
@@ -1845,26 +1846,30 @@ util::Expected<void, WalletError> CWallet::RebroadcastSingleTransaction(const Tx
     return {};
 }
 
-bool CWallet::TransactionCanBeBroadcast(const Txid& txid) const
+util::Expected<void, WalletError> CWallet::TransactionCanBeBroadcast(const Txid& txid) const
 {
     LOCK(cs_wallet);
     const CWalletTx* wtx = GetWalletTx(txid);
-    return wtx && TransactionCanBeBroadcast(*wtx);
+    if (!wtx) {
+        return util::Unexpected{WalletError{WalletErrorCode::InvalidParameter, strprintf(_("%s not in wallet"), txid.ToString())}};
+    }
+    return TransactionCanBeBroadcast(*wtx);
 }
 
-bool CWallet::TransactionCanBeBroadcast(const CWalletTx& wtx) const
+util::Expected<void, WalletError> CWallet::TransactionCanBeBroadcast(const CWalletTx& wtx) const
 {
     AssertLockHeld(cs_wallet);
     // Can't relay if wallet is not broadcasting
-    if (!GetBroadcastTransactions()) return false;
+    if (!GetBroadcastTransactions()) return util::Unexpected{WalletError{WalletErrorCode::MiscError, _("Wallet broadcast is disabled")}};
     // Don't relay abandoned transactions
-    if (wtx.isAbandoned()) return false;
+    if (wtx.isAbandoned()) return util::Unexpected{WalletError{WalletErrorCode::InvalidParameter, strprintf(_("%s is not eligible to be rebroadcast, tx is abandoned"), wtx.GetHash().ToString())}};
     // Don't try to submit coinbase transactions. These would fail anyway but would
     // cause log spam.
-    if (wtx.IsCoinBase()) return false;
+    if (wtx.IsCoinBase()) return util::Unexpected{WalletError{WalletErrorCode::InvalidParameter, strprintf(_("%s is not eligible to be rebroadcast, tx is a coinbase"), wtx.GetHash().ToString())}};
     // Don't try to submit conflicted or confirmed transactions.
-    if (GetTxDepthInMainChain(wtx) != 0) return false;
-    return true;
+    if (GetTxDepthInMainChain(wtx) > 0) return util::Unexpected{WalletError{WalletErrorCode::InvalidParameter, strprintf(_("%s is not eligible to be rebroadcast, tx is confirmed"), wtx.GetHash().ToString())}};
+    if (GetTxDepthInMainChain(wtx) < 0) return util::Unexpected{WalletError{WalletErrorCode::InvalidParameter, strprintf(_("%s is not eligible to be rebroadcast, tx is conflicted"), wtx.GetHash().ToString())}};
+    return {};
 }
 
 bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,

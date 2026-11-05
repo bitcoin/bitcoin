@@ -446,7 +446,7 @@ private:
     //! Update mempool conflicts for TRUC sibling transactions
     void UpdateTrucSiblingConflicts(const CWalletTx& parent_wtx, const Txid& child_txid, bool add_conflict) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    bool TransactionCanBeBroadcast(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    util::Expected<void, WalletError> TransactionCanBeBroadcast(const CWalletTx& wtx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
 public:
     /**
@@ -638,7 +638,7 @@ public:
     /** Return true if all conditions for periodically resending transactions are met. */
     bool ShouldResend() const;
     void ResubmitWalletTransactions(node::TxBroadcast broadcast_method, bool force);
-    bool TransactionCanBeBroadcast(const Txid& txid) const;
+    util::Expected<void, WalletError> TransactionCanBeBroadcast(const Txid& txid) const;
     util::Expected<void, WalletError> RebroadcastSingleTransaction(const Txid& txid);
 
     OutputType TransactionChangeType(const std::optional<OutputType>& change_type, const std::vector<CRecipient>& vecSend) const;
