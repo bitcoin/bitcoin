@@ -4664,7 +4664,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                 return;
             }
             if (!BlockRequestAllowed(*pindex)) {
-                LogDebug(BCLog::NET, "%s: ignoring request from peer=%i for old block header that isn't in the main chain\n", __func__, pfrom.GetId());
+                LogDebug(BCLog::NET, "ignoring request from peer=%i for old block header that isn't in the main chain\n", pfrom.GetId());
                 return;
             }
         }
