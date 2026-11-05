@@ -1,3 +1,5 @@
+target-version = "py310"
+
 [lint]
 select = [
     "B006", # mutable-argument-default
