@@ -30,5 +30,7 @@ race:CZMQAbstractPublishNotifier::SendZmqMessage
 # https://github.com/bitcoin/bitcoin/pull/27498#issuecomment-1517410478
 race:epoll_ctl
 
-# https://github.com/bitcoin/bitcoin/issues/23366
+# std::__1::ios_base::width(), see https://github.com/bitcoin/bitcoin/issues/23366
 race:std::__1::ios_base::*
+# width() through __pad_and_output()
+race:std::__1::__pad_and_output*
