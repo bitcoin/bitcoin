@@ -26,20 +26,27 @@ from test_framework.p2p import (
     P2PInterface,
 )
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than,
+)
 from test_framework.wallet import MiniWallet
 
 
-class SlowP2PDataStore(P2PDataStore):
+class DelayedPongMixin:
+    """Hold back the pong to the node's ping, so the test can answer it after bumping mocktime."""
+    ping_nonce = None
+
     def on_ping(self, message):
-        time.sleep(0.1)
-        self.send_without_ping(msg_pong(message.nonce))
+        self.ping_nonce = message.nonce
 
 
-class SlowP2PInterface(P2PInterface):
-    def on_ping(self, message):
-        time.sleep(0.1)
-        self.send_without_ping(msg_pong(message.nonce))
+class DelayedPongP2PInterface(DelayedPongMixin, P2PInterface):
+    pass
+
+
+class DelayedPongP2PDataStore(DelayedPongMixin, P2PDataStore):
+    pass
 
 
 class P2PEvict(BitcoinTestFramework):
@@ -52,16 +59,51 @@ class P2PEvict(BitcoinTestFramework):
         # 4 by netgroup, 4 that sent us blocks, 4 that sent us transactions and 8 via lowest ping time
         self.extra_args = [['-maxconnections=53']]
 
+    def add_peer(self, peer, ping_time):
+        """Connect peer with the given min ping time and return its index in node.p2ps and getpeerinfo."""
+        node = self.nodes[0]
+        node.add_p2p_connection(peer)
+        peer_id = len(node.p2ps) - 1
+        if ping_time > 0:
+            node.bumpmocktime(ping_time)
+            peer.send_without_ping(msg_pong(peer.ping_nonce))
+        self.wait_until(lambda: "minping" in node.getpeerinfo()[peer_id])
+        assert_equal(node.getpeerinfo()[peer_id]["minping"], ping_time)
+        # Give every peer a distinct connection time, so the order of connections is well defined
+        node.bumpmocktime(1)
+        return peer_id
+
     def run_test(self):
         protected_peers = set()  # peers that we expect to be protected from eviction
-        current_peer = -1
         node = self.nodes[0]
+        node.setmocktime(int(time.time()))
         self.wallet = MiniWallet(node)
+
+        # Netgroup protection picks 4 arbitrary peers here (all peers share one netgroup,
+        # so the choice depends on the std::sort implementation). Whatever it takes from
+        # another group is made up from the eviction candidates: they connect first, so
+        # tx- and block-time protection fall back to them as the oldest connections, and
+        # they ping faster than the tx and block peers. Removing any protection then gets
+        # one of its peers evicted, unless netgroup protection covered all of them.
+        self.log.info("Create 5 peers that will be eviction candidates")
+        for _ in range(5):
+            self.add_peer(DelayedPongP2PInterface(), ping_time=1)
+
+        self.log.info("Create 4 peers and protect them from eviction by sending us a tx")
+        for _ in range(4):
+            txpeer = DelayedPongP2PDataStore()
+            peer_id = self.add_peer(txpeer, ping_time=2)
+            txpeer.sync_with_ping()
+
+            tx = self.wallet.create_self_transfer()['tx']
+            txpeer.send_and_ping(msg_tx(tx))
+            assert_greater_than(node.getpeerinfo()[peer_id]["last_transaction"], 0)
+            protected_peers.add(peer_id)
 
         self.log.info("Create 4 peers and protect them from eviction by sending us a block")
         for _ in range(4):
-            block_peer = node.add_p2p_connection(SlowP2PDataStore())
-            current_peer += 1
+            block_peer = DelayedPongP2PDataStore()
+            peer_id = self.add_peer(block_peer, ping_time=2)
             block_peer.sync_with_ping()
             best_block = node.getbestblockhash()
             tip = int(best_block, 16)
@@ -69,43 +111,15 @@ class P2PEvict(BitcoinTestFramework):
             block = create_block(tip, height=node.getblockcount() + 1, ntime=best_block_time + 1)
             block.solve()
             block_peer.send_blocks_and_test([block], node, success=True)
-            protected_peers.add(current_peer)
-
-        self.log.info("Create 5 slow-pinging peers, making them eviction candidates")
-        for _ in range(5):
-            node.add_p2p_connection(SlowP2PInterface())
-            current_peer += 1
-
-        self.log.info("Create 4 peers and protect them from eviction by sending us a tx")
-        for i in range(4):
-            txpeer = node.add_p2p_connection(SlowP2PInterface())
-            current_peer += 1
-            txpeer.sync_with_ping()
-
-            tx = self.wallet.create_self_transfer()['tx']
-            txpeer.send_without_ping(msg_tx(tx))
-            protected_peers.add(current_peer)
+            assert_greater_than(node.getpeerinfo()[peer_id]["last_block"], 0)
+            protected_peers.add(peer_id)
 
         self.log.info("Create 8 peers and protect them from eviction by having faster pings")
         for _ in range(8):
-            fastpeer = node.add_p2p_connection(P2PInterface())
-            current_peer += 1
-            self.wait_until(lambda: "ping" in fastpeer.last_message, timeout=10)
-
-        # Make sure by asking the node what the actual min pings are
-        peerinfo = node.getpeerinfo()
-        pings = {}
-        for i in range(len(peerinfo)):
-            pings[i] = peerinfo[i]['minping'] if 'minping' in peerinfo[i] else 1000000
-        sorted_pings = sorted(pings.items(), key=lambda x: x[1])
-
-        # Usually the 8 fast peers are protected. In rare case of unreliable pings,
-        # one of the slower peers might have a faster min ping though.
-        for i in range(8):
-            protected_peers.add(sorted_pings[i][0])
+            protected_peers.add(self.add_peer(P2PInterface(), ping_time=0))
 
         self.log.info("Create peer that triggers the eviction mechanism")
-        node.add_p2p_connection(SlowP2PInterface())
+        node.add_p2p_connection(P2PInterface())
 
         # One of the non-protected peers must be evicted. We can't be sure which one because
         # 4 peers are protected via netgroup, which is identical for all peers,
