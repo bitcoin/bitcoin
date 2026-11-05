@@ -166,8 +166,9 @@ BOOST_AUTO_TEST_CASE(deferred_cfilter_response_reaches_peer)
     // parked rather than dropped.
     BOOST_CHECK(!cfilter_sent);
 
-    // Must still not resolve while the scheduler remains parked: the filter
-    // index has made no progress, so the retry isn't attempted.
+    // Must still not resolve while the scheduler remains parked: a retry
+    // finds the filter index has made no progress.
+    m_clock += 1s;
     connman.ProcessMessagesOnce(peer);
     BOOST_CHECK(!cfilter_sent);
 
@@ -175,7 +176,9 @@ BOOST_AUTO_TEST_CASE(deferred_cfilter_response_reaches_peer)
     blocker->Release();
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
 
-    // The next ProcessMessages call must now resolve the parked request.
+    // The next ProcessMessages call must now resolve the parked request,
+    // once enough time has passed for a retry.
+    m_clock += 1s;
     connman.ProcessMessagesOnce(peer);
     BOOST_CHECK(cfilter_sent);
 
@@ -272,6 +275,8 @@ BOOST_AUTO_TEST_CASE(pending_request_pauses_message_processing)
     blocker->Release();
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
 
+    m_clock += 1s;
+
     // One call resolves the parked request, the next answers the ping: the
     // responses arrive in the order the requests were made. (The response
     // push flips the test node's fPauseSend, so reset it between calls.)
@@ -363,9 +368,10 @@ BOOST_AUTO_TEST_CASE(deferred_cfheaders_response_reaches_peer)
     peer.fPauseSend = false;
     connman.ProcessMessagesOnce(peer);
 
-    // Must be parked, not dropped, and must not resolve while the scheduler
-    // remains parked.
+    // Must be parked, not dropped, and a retry must not resolve it while the
+    // scheduler remains parked.
     BOOST_CHECK(!cfheaders_sent);
+    m_clock += 1s;
     connman.ProcessMessagesOnce(peer);
     BOOST_CHECK(!cfheaders_sent);
 
@@ -373,8 +379,209 @@ BOOST_AUTO_TEST_CASE(deferred_cfheaders_response_reaches_peer)
     blocker->Release();
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
 
+    m_clock += 1s;
     connman.ProcessMessagesOnce(peer);
     BOOST_CHECK(cfheaders_sent);
+
+    CaptureMessage = CaptureMessageOrig;
+    m_node.validation_signals->UnregisterSharedValidationInterface(blocker);
+    connman.FlushSendBuffer(peer);
+    DestroyBlockFilterIndex(BlockFilterType::BASIC);
+}
+
+// A parked request is not retried more often than the retry interval: even
+// once the filter index has caught up, the request stays parked until enough
+// time has passed since it was parked.
+BOOST_AUTO_TEST_CASE(parked_request_retries_are_throttled)
+{
+    LOCK(NetEventsInterface::g_msgproc_mutex);
+
+    auto blocker = std::make_shared<PreFilterBlocker>();
+    m_node.validation_signals->RegisterSharedValidationInterface(blocker);
+
+    DestroyBlockFilterIndex(BlockFilterType::BASIC);
+    BOOST_REQUIRE(InitBlockFilterIndex([&] { return interfaces::MakeChain(m_node); },
+                                       BlockFilterType::BASIC, /*n_cache_size=*/1_MiB, /*f_memory=*/true));
+    BlockFilterIndex* filter_index = GetBlockFilterIndex(BlockFilterType::BASIC);
+    BOOST_REQUIRE(filter_index);
+    BOOST_REQUIRE(filter_index->Init());
+    filter_index->Sync();
+
+    auto& connman = static_cast<ConnmanTestMsg&>(*m_node.connman);
+    m_node.connman->SetCaptureMessages(true);
+
+    blocker->Arm();
+    const CScript coinbase_script = GetScriptForDestination(PKHash(coinbaseKey.GetPubKey()));
+    const CBlock new_block = CreateAndProcessBlock({}, coinbase_script, /*sync=*/false);
+    blocker->WaitForEntry();
+
+    const CBlockIndex* new_tip;
+    {
+        LOCK(cs_main);
+        new_tip = m_node.chainman->m_blockman.LookupBlockIndex(new_block.GetHash());
+    }
+    BOOST_REQUIRE(new_tip);
+
+    CNode peer{/*id=*/0,
+               /*sock=*/nullptr,
+               /*addrIn=*/CAddress{CService{}, NODE_NETWORK},
+               /*nKeyedNetGroupIn=*/0,
+               /*nLocalHostNonceIn=*/0,
+               /*addrBindIn=*/CService{},
+               /*addrNameIn=*/std::string{},
+               /*conn_type_in=*/ConnectionType::INBOUND,
+               /*inbound_onion=*/false,
+               /*network_key=*/0};
+    m_node.peerman->InitializeNode(peer, ServiceFlags(NODE_NETWORK | NODE_WITNESS | NODE_COMPACT_FILTERS));
+
+    BOOST_REQUIRE(connman.ReceiveMsgFrom(peer, NetMsg::Make(NetMsgType::VERSION, PROTOCOL_VERSION,
+                                                            uint64_t{NODE_NETWORK}, int64_t{0},
+                                                            uint64_t{NODE_NETWORK}, CAddress::V1_NETWORK(CService{}))));
+    peer.fPauseSend = false;
+    connman.ProcessMessagesOnce(peer);
+    m_node.peerman->SendMessages(peer);
+    connman.FlushSendBuffer(peer);
+
+    BOOST_REQUIRE(connman.ReceiveMsgFrom(peer, NetMsg::Make(NetMsgType::VERACK)));
+    peer.fPauseSend = false;
+    connman.ProcessMessagesOnce(peer);
+    m_node.peerman->SendMessages(peer);
+    connman.FlushSendBuffer(peer);
+
+    bool cfilter_sent = false;
+    const auto CaptureMessageOrig = CaptureMessage;
+    CaptureMessage = [&](const CAddress&, const std::string& msg_type, std::span<const unsigned char>, bool is_incoming) {
+        if (!is_incoming && msg_type == NetMsgType::CFILTER) cfilter_sent = true;
+    };
+
+    BOOST_REQUIRE(connman.ReceiveMsgFrom(peer, NetMsg::Make(NetMsgType::GETCFILTERS,
+                                                            static_cast<uint8_t>(BlockFilterType::BASIC),
+                                                            static_cast<uint32_t>(new_tip->nHeight),
+                                                            new_tip->GetBlockHash())));
+    peer.fPauseSend = false;
+    connman.ProcessMessagesOnce(peer);
+    BOOST_CHECK(!cfilter_sent);
+
+    // Release the scheduler; the filter lands on disk, so a retry would succeed.
+    blocker->Release();
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+
+    // No time has passed since the request was parked, so no retry is made.
+    connman.ProcessMessagesOnce(peer);
+    BOOST_CHECK(!cfilter_sent);
+
+    // Once the retry interval has passed, the retry resolves the request.
+    m_clock += 1s;
+    connman.ProcessMessagesOnce(peer);
+    BOOST_CHECK(cfilter_sent);
+
+    CaptureMessage = CaptureMessageOrig;
+    m_node.validation_signals->UnregisterSharedValidationInterface(blocker);
+    connman.FlushSendBuffer(peer);
+    DestroyBlockFilterIndex(BlockFilterType::BASIC);
+}
+
+// A request that stays parked for too long is released even though the filter
+// index never caught up: the peer is no longer paused (its later ping is
+// answered) and, as the filter does not exist, no filter is sent.
+BOOST_AUTO_TEST_CASE(parked_request_is_released_after_timeout)
+{
+    LOCK(NetEventsInterface::g_msgproc_mutex);
+
+    auto blocker = std::make_shared<PreFilterBlocker>();
+    m_node.validation_signals->RegisterSharedValidationInterface(blocker);
+
+    DestroyBlockFilterIndex(BlockFilterType::BASIC);
+    BOOST_REQUIRE(InitBlockFilterIndex([&] { return interfaces::MakeChain(m_node); },
+                                       BlockFilterType::BASIC, /*n_cache_size=*/1_MiB, /*f_memory=*/true));
+    BlockFilterIndex* filter_index = GetBlockFilterIndex(BlockFilterType::BASIC);
+    BOOST_REQUIRE(filter_index);
+    BOOST_REQUIRE(filter_index->Init());
+    filter_index->Sync();
+
+    auto& connman = static_cast<ConnmanTestMsg&>(*m_node.connman);
+    m_node.connman->SetCaptureMessages(true);
+
+    blocker->Arm();
+    const CScript coinbase_script = GetScriptForDestination(PKHash(coinbaseKey.GetPubKey()));
+    const CBlock new_block = CreateAndProcessBlock({}, coinbase_script, /*sync=*/false);
+    blocker->WaitForEntry();
+
+    const CBlockIndex* new_tip;
+    {
+        LOCK(cs_main);
+        new_tip = m_node.chainman->m_blockman.LookupBlockIndex(new_block.GetHash());
+    }
+    BOOST_REQUIRE(new_tip);
+
+    CNode peer{/*id=*/0,
+               /*sock=*/nullptr,
+               /*addrIn=*/CAddress{CService{}, NODE_NETWORK},
+               /*nKeyedNetGroupIn=*/0,
+               /*nLocalHostNonceIn=*/0,
+               /*addrBindIn=*/CService{},
+               /*addrNameIn=*/std::string{},
+               /*conn_type_in=*/ConnectionType::INBOUND,
+               /*inbound_onion=*/false,
+               /*network_key=*/0};
+    m_node.peerman->InitializeNode(peer, ServiceFlags(NODE_NETWORK | NODE_WITNESS | NODE_COMPACT_FILTERS));
+
+    BOOST_REQUIRE(connman.ReceiveMsgFrom(peer, NetMsg::Make(NetMsgType::VERSION, PROTOCOL_VERSION,
+                                                            uint64_t{NODE_NETWORK}, int64_t{0},
+                                                            uint64_t{NODE_NETWORK}, CAddress::V1_NETWORK(CService{}))));
+    peer.fPauseSend = false;
+    connman.ProcessMessagesOnce(peer);
+    m_node.peerman->SendMessages(peer);
+    connman.FlushSendBuffer(peer);
+
+    BOOST_REQUIRE(connman.ReceiveMsgFrom(peer, NetMsg::Make(NetMsgType::VERACK)));
+    peer.fPauseSend = false;
+    connman.ProcessMessagesOnce(peer);
+    m_node.peerman->SendMessages(peer);
+    connman.FlushSendBuffer(peer);
+
+    std::vector<std::string> sent_types;
+    const auto CaptureMessageOrig = CaptureMessage;
+    CaptureMessage = [&](const CAddress&, const std::string& msg_type, std::span<const unsigned char>, bool is_incoming) {
+        if (!is_incoming && (msg_type == NetMsgType::CFILTER || msg_type == NetMsgType::PONG)) {
+            sent_types.push_back(msg_type);
+        }
+    };
+
+    // A racing getcfilters request, followed by a ping.
+    BOOST_REQUIRE(connman.ReceiveMsgFrom(peer, NetMsg::Make(NetMsgType::GETCFILTERS,
+                                                            static_cast<uint8_t>(BlockFilterType::BASIC),
+                                                            static_cast<uint32_t>(new_tip->nHeight),
+                                                            new_tip->GetBlockHash())));
+    BOOST_REQUIRE(connman.ReceiveMsgFrom(peer, NetMsg::Make(NetMsgType::PING, uint64_t{0x1234})));
+    peer.fPauseSend = false;
+
+    // The request is parked, and the ping behind it is not processed.
+    connman.ProcessMessagesOnce(peer);
+    connman.ProcessMessagesOnce(peer);
+    BOOST_CHECK(sent_types.empty());
+
+    // Still within the limit: a retry is attempted but the index has not
+    // caught up, so the request stays parked and the ping stays unanswered.
+    m_clock += 1s;
+    connman.ProcessMessagesOnce(peer);
+    BOOST_CHECK(sent_types.empty());
+
+    // Well past the limit, with the scheduler still parked: the request is
+    // given up on. The filter does not exist, so nothing is sent for it.
+    m_clock += 60s;
+    connman.ProcessMessagesOnce(peer);
+    BOOST_CHECK(sent_types.empty());
+
+    // The request is gone, so the ping behind it is processed.
+    peer.fPauseSend = false;
+    connman.ProcessMessagesOnce(peer);
+    BOOST_REQUIRE_EQUAL(sent_types.size(), 1U);
+    BOOST_CHECK_EQUAL(sent_types[0], NetMsgType::PONG);
+
+    // Unblock the scheduler so it can shut down cleanly.
+    blocker->Release();
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
 
     CaptureMessage = CaptureMessageOrig;
     m_node.validation_signals->UnregisterSharedValidationInterface(blocker);

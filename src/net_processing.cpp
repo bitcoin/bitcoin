@@ -195,6 +195,10 @@ static constexpr auto MAX_FEEFILTER_CHANGE_DELAY{5min};
 static constexpr uint32_t MAX_GETCFILTERS_SIZE = 1000;
 /** Maximum number of cf hashes that may be requested with one getcfheaders. See BIP 157. */
 static constexpr uint32_t MAX_GETCFHEADERS_SIZE = 2000;
+/** Minimum interval between attempts to answer a parked cf request. */
+static constexpr auto PARKED_CF_RETRY_INTERVAL{100ms};
+/** Maximum interval to hold a parked cf request. */
+static constexpr auto MAX_CF_PARK_INTERVAL{5s};
 /** the maximum percentage of addresses from our addrman to return in response to a getaddr message. */
 static constexpr size_t MAX_PCT_ADDR_TO_SEND = 23;
 /** The maximum number of address records permitted in an ADDR message. */
@@ -284,9 +288,13 @@ struct Peer {
 
     /** A received message that could not be answered when it was processed.
      *  While set, ProcessMessages() consumes no further messages from this
-     *  peer, keeping responses in order; each alternative carries the state
-     *  needed to retry its request later. */
-    using PendingRequest = std::variant<PendingGetCFilters, PendingGetCFHeaders, PendingGetCFCheckPt>;
+     *  peer, keeping responses in order; request_data carries the state
+     *  needed to retry the request later. */
+    struct PendingRequest {
+        NodeClock::time_point park_time;
+        NodeClock::time_point last_retry_time;
+        std::variant<PendingGetCFilters, PendingGetCFHeaders, PendingGetCFCheckPt> request_data;
+    };
     std::unique_ptr<PendingRequest> m_pending_request GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
 
     /** List of blocks that we'll announce via an `inv` message.
@@ -1158,6 +1166,7 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
     /** Retry peer.m_pending_request if it has become worth retrying.
+     *  If the request has been parked for too long, serve what we have right now and clear parked request.
      *
      *  @return  True if the request resolved -- the caller may process further
      *           messages from this peer. False if the peer stays paused.
@@ -3673,7 +3682,12 @@ void PeerManagerImpl::ProcessGetCFilters(CNode& node, Peer& peer, DataStream& vR
     if (ShouldDeferCFilterRequest(filter_type, stop_hash)) {
         LogDebug(BCLog::NET, "getcfilters request is racing the filter index, deferring: filter_type=%s, start_height=%d, stop_hash=%s, peer=%d\n",
                  BlockFilterTypeName(filter_type), start_height, stop_hash.ToString(), node.GetId());
-        ParkPendingRequest(peer, Peer::PendingGetCFilters{{filter_type, stop_hash}, start_height});
+        const auto now{NodeClock::now()};
+        ParkPendingRequest(peer, Peer::PendingRequest{
+                .park_time = now,
+                .last_retry_time = now,
+                .request_data = Peer::PendingGetCFilters{{filter_type, stop_hash}, start_height}
+                });
     } else {
         ServeGetCFilters(node, peer, filter_type, start_height, stop_hash);
     }
@@ -3714,7 +3728,12 @@ void PeerManagerImpl::ProcessGetCFHeaders(CNode& node, Peer& peer, DataStream& v
     if (ShouldDeferCFilterRequest(filter_type, stop_hash)) {
         LogDebug(BCLog::NET, "getcfheaders request is racing the filter index, deferring: filter_type=%s, start_height=%d, stop_hash=%s, peer=%d\n",
                  BlockFilterTypeName(filter_type), start_height, stop_hash.ToString(), node.GetId());
-        ParkPendingRequest(peer, Peer::PendingGetCFHeaders{{filter_type, stop_hash}, start_height});
+        const auto now{NodeClock::now()};
+        ParkPendingRequest(peer, Peer::PendingRequest{
+                .park_time = now,
+                .last_retry_time = now,
+                .request_data = Peer::PendingGetCFHeaders{{filter_type, stop_hash}, start_height}
+                });
     } else {
         ServeGetCFHeaders(node, peer, filter_type, start_height, stop_hash);
     }
@@ -3767,7 +3786,12 @@ void PeerManagerImpl::ProcessGetCFCheckPt(CNode& node, Peer& peer, DataStream& v
     if (ShouldDeferCFilterRequest(filter_type, stop_hash)) {
         LogDebug(BCLog::NET, "getcfcheckpt request is racing the filter index, deferring: filter_type=%s, stop_hash=%s, peer=%d\n",
                  BlockFilterTypeName(filter_type), stop_hash.ToString(), node.GetId());
-        ParkPendingRequest(peer, Peer::PendingGetCFCheckPt{{filter_type, stop_hash}});
+        const auto now{NodeClock::now()};
+        ParkPendingRequest(peer, Peer::PendingRequest{
+                .park_time = now,
+                .last_retry_time = now,
+                .request_data = Peer::PendingGetCFCheckPt{{filter_type, stop_hash}}
+                });
     } else {
         ServeGetCFCheckPt(node, peer, filter_type, stop_hash);
     }
@@ -3814,13 +3838,27 @@ void PeerManagerImpl::ParkPendingRequest(Peer& peer, Peer::PendingRequest reques
 bool PeerManagerImpl::AttemptPendingRequest(CNode& node, Peer& peer)
 {
     Assume(peer.m_pending_request);
+    const auto now{NodeClock::now()};
+
+    // Reduce excessive cs_main taking in ShouldDeferCFilterRequest due to too frequent response attempts.
+    // The first last_retry_time is set to the park time.
+    if (now - peer.m_pending_request->last_retry_time < PARKED_CF_RETRY_INTERVAL) return false;
+    peer.m_pending_request->last_retry_time = now;
     const auto ready_check{util::Overloaded{
         [&](const Peer::PendingCFRequestBase& base) {
             // Ready unless still racing the filter index.
             return !ShouldDeferCFilterRequest(base.filter_type, base.stop_hash);
         },
     }};
-    if (!std::visit(ready_check, *peer.m_pending_request)) return false;
+
+    const auto timed_out{now - peer.m_pending_request->park_time > MAX_CF_PARK_INTERVAL};
+    if (timed_out) {
+        LogDebug(BCLog::NET, "waiting for parked cf request timed out after %d ms, serving what we can: peer=%d\n",
+                 Ticks<std::chrono::milliseconds>(now - peer.m_pending_request->park_time), node.GetId());
+    }
+    // If we hit timeout we still try to serve what we can.
+    const bool should_serve{timed_out || std::visit(ready_check, peer.m_pending_request->request_data)};
+    if (!should_serve) return false;
 
     auto pending_request{std::move(peer.m_pending_request)};
     const auto serve{util::Overloaded{
@@ -3834,7 +3872,7 @@ bool PeerManagerImpl::AttemptPendingRequest(CNode& node, Peer& peer)
             ServeGetCFCheckPt(node, peer, request.filter_type, request.stop_hash);
         },
     }};
-    std::visit(serve, *pending_request);
+    std::visit(serve, pending_request->request_data);
     return true;
 }
 
