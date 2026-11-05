@@ -850,11 +850,8 @@ static RPCMethod setban()
             throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: IP/Subnet already banned");
         }
 
-        int64_t banTime = 0; //use standard bantime if not specified
-        if (!request.params[2].isNull())
-            banTime = request.params[2].getInt<int64_t>();
-
-        const bool absolute{request.params[3].isNull() ? false : request.params[3].get_bool()};
+        const int64_t banTime{help.Arg<int64_t>("bantime")};
+        const bool absolute{help.Arg<bool>("absolute")};
 
         if (absolute && banTime < GetTime()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Absolute timestamp is in the past");
@@ -1008,7 +1005,7 @@ static RPCMethod getnodeaddresses()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
 
-    const int count{request.params[0].isNull() ? 1 : request.params[0].getInt<int>()};
+    const int count{self.Arg<int>("count")};
     if (count < 0) throw JSONRPCError(RPC_INVALID_PARAMETER, "Address count out of range");
 
     const std::optional<Network> network{request.params[1].isNull() ? std::nullopt : std::optional<Network>{ParseNetwork(request.params[1].get_str())}};
@@ -1060,7 +1057,7 @@ static RPCMethod addpeeraddress()
 
     const std::string& addr_string{request.params[0].get_str()};
     const auto port{request.params[1].getInt<uint16_t>()};
-    const bool tried{request.params[2].isNull() ? false : request.params[2].get_bool()};
+    const bool tried{self.Arg<bool>("tried")};
 
     UniValue obj(UniValue::VOBJ);
     std::optional<CNetAddr> net_addr{LookupHost(addr_string, false)};

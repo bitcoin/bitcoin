@@ -247,7 +247,7 @@ RPCMethod listreceivedbyaddress()
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    const bool include_immature_coinbase{request.params[4].isNull() ? false : request.params[4].get_bool()};
+    const bool include_immature_coinbase{self.Arg<bool>("include_immature_coinbase")};
 
     LOCK(pwallet->cs_wallet);
 
@@ -292,7 +292,7 @@ RPCMethod listreceivedbylabel()
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    const bool include_immature_coinbase{request.params[3].isNull() ? false : request.params[3].get_bool()};
+    const bool include_immature_coinbase{self.Arg<bool>("include_immature_coinbase")};
 
     LOCK(pwallet->cs_wallet);
 
@@ -752,7 +752,7 @@ RPCMethod listsinceblock()
 
     std::optional<int> height;    // Height of the specified block or the common ancestor, if the block provided was in a deactivated chain.
     std::optional<int> altheight; // Height of the specified block, even if it's in a deactivated chain.
-    int target_confirms = 1;
+    int target_confirms{self.Arg<int>("target_confirmations")};
 
     uint256 blockId;
     if (!request.params[0].isNull() && !request.params[0].get_str().empty()) {
@@ -764,16 +764,12 @@ RPCMethod listsinceblock()
         }
     }
 
-    if (!request.params[1].isNull()) {
-        target_confirms = request.params[1].getInt<int>();
-
-        if (target_confirms < 1) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
-        }
+    if (target_confirms < 1) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
     }
 
-    bool include_removed = (request.params[3].isNull() || request.params[3].get_bool());
-    bool include_change = (!request.params[4].isNull() && request.params[4].get_bool());
+    const bool include_removed{self.Arg<bool>("include_removed")};
+    const bool include_change{self.Arg<bool>("include_change")};
 
     // Only set it if 'label' was provided.
     std::optional<std::string> filter_label;
@@ -893,7 +889,7 @@ RPCMethod gettransaction()
 
     Txid hash{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
 
-    bool verbose = request.params[2].isNull() ? false : request.params[2].get_bool();
+    const bool verbose{self.Arg<bool>("verbose")};
 
     UniValue entry(UniValue::VOBJ);
     auto it = pwallet->mapWallet.find(hash);
@@ -1002,7 +998,7 @@ RPCMethod rescanblockchain()
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
     }
 
-    int start_height = 0;
+    const int start_height{self.Arg<int>("start_height")};
     std::optional<int> stop_height;
     uint256 start_block;
 
@@ -1012,11 +1008,8 @@ RPCMethod rescanblockchain()
         EnsureWalletIsUnlocked(*pwallet);
         int tip_height = pwallet->GetLastBlockHeight();
 
-        if (!request.params[0].isNull()) {
-            start_height = request.params[0].getInt<int>();
-            if (start_height < 0 || start_height > tip_height) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid start_height");
-            }
+        if (start_height < 0 || start_height > tip_height) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid start_height");
         }
 
         if (!request.params[1].isNull()) {
