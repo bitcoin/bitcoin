@@ -89,7 +89,7 @@ bool HTTPServer::ClientAllowed(const CNetAddr& netaddr) const
 /** Initialize ACL list for HTTP server */
 bool HTTPServer::InitHTTPAllowList()
 {
-    // Must be run before StartSocketThreads() because ThreadSocketHandler()
+    // Must be run before StartSocketsThreads() because ThreadSocketHandler()
     // will check m_allow_subnets from the I/O thread.
     Assume(!m_thread_socket_handler.joinable());
 

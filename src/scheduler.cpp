@@ -155,7 +155,7 @@ void SerialTaskRunner::ProcessQueue()
         m_callbacks_pending.pop_front();
     }
 
-    // RAII the setting of fCallbacksRunning and calling MaybeScheduleProcessQueue
+    // RAII the setting of m_are_callbacks_running and calling MaybeScheduleProcessQueue
     // to ensure both happen safely even if callback() throws.
     struct RAIICallbacksRunning {
         SerialTaskRunner* instance;
