@@ -738,8 +738,11 @@ void TorController::connected_cb(TorControlConnection& _conn)
 void TorController::disconnected_cb(TorControlConnection& _conn)
 {
     // Stop advertising service when disconnected
-    if (m_service.IsValid())
+    if (m_service.IsValid()) {
         RemoveLocal(m_service);
+        // Losing the service is expected on shutdown
+        if (m_reconnect) LogInfo("Lost connection to Tor control port, no longer advertising service %s", m_service.ToStringAddrPort());
+    }
     m_service = CService();
     if (!m_reconnect)
         return;
