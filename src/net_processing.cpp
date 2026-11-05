@@ -864,6 +864,9 @@ private:
     /** Send `feefilter` message. */
     void MaybeSendFeefilter(CNode& node, Peer& peer, std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
+    /** Send `staletip` messages for any new stale tips. */
+    void MaybeSendStaleTips(CNode& node, Peer& peer, CNodeState& state) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, cs_main);
+
     void ProcessStaleTip(CNode& pfrom, Peer& peer, DataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
     /** Track `tip`, and if `peer_has_block` and it has more work than the
@@ -1753,6 +1756,7 @@ void PeerManagerImpl::InitializeNode(const CNode& node, ServiceFlags our_service
     {
         LOCK(cs_main); // For m_node_states
         m_node_states.try_emplace(m_node_states.end(), nodeid);
+        if (m_staletiprelayman) m_staletiprelayman->ConnectedPeer(nodeid);
     }
     WITH_LOCK(m_tx_download_mutex, m_txdownloadman.CheckIsEmpty(nodeid));
 
@@ -1856,6 +1860,7 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         m_txdownloadman.DisconnectedPeer(nodeid);
     }
     if (m_txreconciliation) m_txreconciliation->ForgetPeer(nodeid);
+    if (m_staletiprelayman) m_staletiprelayman->DisconnectedPeer(nodeid);
     m_num_preferred_download_peers -= state->fPreferredDownload;
     m_peers_downloading_from -= (!state->vBlocksInFlight.empty());
     assert(m_peers_downloading_from >= 0);
@@ -1871,6 +1876,7 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         assert(m_peers_downloading_from == 0);
         assert(m_outbound_peers_with_protect_from_disconnect == 0);
         WITH_LOCK(m_tx_download_mutex, m_txdownloadman.CheckIsEmpty());
+        if (m_staletiprelayman) m_staletiprelayman->CheckIsEmpty();
     }
     } // cs_main
     if (node.fSuccessfullyConnected &&
@@ -2297,7 +2303,7 @@ void PeerManagerImpl::BlockDisconnected(const std::shared_ptr<const CBlock> &blo
 {
     if (m_staletiprelayman) {
         LOCK(::cs_main);
-        m_staletiprelayman->BlockDisconnected(m_chainman.ActiveChain(), *pindex);
+        if (m_staletiprelayman->BlockDisconnected(m_chainman.ActiveChain(), *pindex)) m_connman.WakeMessageHandler();
     }
 
     LOCK(m_tx_download_mutex);
@@ -2308,7 +2314,7 @@ void PeerManagerImpl::AcceptedStaleTip(const CBlockIndex* pindex)
 {
     if (!m_staletiprelayman) return;
     LOCK(::cs_main);
-    m_staletiprelayman->AcceptedStaleTip(m_chainman.ActiveChain(), *pindex);
+    if (m_staletiprelayman->AcceptedStaleTip(m_chainman.ActiveChain(), *pindex)) m_connman.WakeMessageHandler();
 }
 
 /**
@@ -5972,6 +5978,31 @@ void PeerManagerImpl::MaybeSendFeefilter(CNode& pto, Peer& peer, std::chrono::mi
     }
 }
 
+void PeerManagerImpl::MaybeSendStaleTips(CNode& node, Peer& peer, CNodeState& state)
+{
+    AssertLockHeld(g_msgproc_mutex);
+    AssertLockHeld(cs_main);
+
+    const auto stale_tip_feature{NegotiatedStaleTip(peer)};
+    if (!stale_tip_feature) return;
+    if (m_chainman.IsInitialBlockDownload()) return;
+
+    ProcessBlockAvailability(node.GetId());
+
+    // This runs on every SendMessages() pass, but the tracker holds at most
+    // MAX_ADVERTISED_STALETIPS tips, so rebuilding the list each time is cheap.
+    const auto announcements{m_staletiprelayman->GetStaleTipsToAnnounce(
+        node.GetId(), m_chainman.ActiveChain(),
+        /*peer_has_header=*/[&](const CBlockIndex& block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) { return PeerHasHeader(&state, &block); },
+        /*can_serve_branch=*/[&](const node::StaleFork& fork) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+            return (fork.tip->nStatus & BLOCK_HAVE_DATA) && BlockRequestAllowed(*fork.tip);
+        })};
+    for (const StaleTipMessage& data : announcements) {
+        MakeAndPushMessage(node, NetMsgType::STALETIP, data);
+        LogDebug(BCLog::NET, "sending staletip with %u header(s) to peer=%d", data.headers.size(), node.GetId());
+    }
+}
+
 void PeerManagerImpl::ProcessStaleTip(CNode& pfrom, Peer& peer, DataStream& vRecv)
 {
     if (!NegotiatedStaleTip(peer)) {
@@ -6051,6 +6082,9 @@ void PeerManagerImpl::HandleStaleTip(CNode& pfrom, Peer& peer, const CBlockIndex
 
     // A known-invalid tip must not advance the peer's header state.
     if (!tip.IsValid(BLOCK_VALID_TREE)) return;
+    if (m_staletiprelayman->ReceivedStaleTip(pfrom.GetId(), m_chainman.ActiveChain(), tip)) {
+        m_connman.WakeMessageHandler();
+    }
 
     const CBlockIndex* active_tip{m_chainman.ActiveTip()};
     if (peer_has_block && active_tip != nullptr && tip.nChainWork > active_tip->nChainWork) {
@@ -6060,8 +6094,6 @@ void PeerManagerImpl::HandleStaleTip(CNode& pfrom, Peer& peer, const CBlockIndex
         UpdatePeerStateForReceivedHeaders(pfrom, tip, received_new_header, /*may_have_more_headers=*/false);
         HeadersDirectFetchBlocks(pfrom, peer, tip);
     }
-
-    m_staletiprelayman->AcceptedStaleTip(m_chainman.ActiveChain(), tip);
 }
 
 bool PeerManagerImpl::RejectIncomingTxs(const CNode& peer) const
@@ -6304,6 +6336,8 @@ bool PeerManagerImpl::SendMessages(CNode& node)
         if (m_chainman.m_best_header == nullptr) {
             m_chainman.m_best_header = m_chainman.ActiveChain().Tip();
         }
+
+        MaybeSendStaleTips(node, peer, state);
 
         // Determine whether we might try initial headers sync or parallel
         // block download from this peer -- this mostly affects behavior while

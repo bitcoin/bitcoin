@@ -132,6 +132,8 @@ public:
     /** Get the tracked tips that are currently eligible, with their fork
      *  points, in the order they were added. */
     std::vector<StaleFork> GetStaleTips(const CChain& active_chain) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    /** Whether `tip` is tracked, even if it is currently ineligible. */
+    bool IsTracked(const CBlockIndex& tip) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
 
 } // namespace node

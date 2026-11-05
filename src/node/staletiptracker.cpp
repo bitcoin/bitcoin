@@ -170,4 +170,10 @@ std::vector<StaleFork> StaleTipTracker::GetStaleTips(const CChain& active_chain)
     return tips;
 }
 
+bool StaleTipTracker::IsTracked(const CBlockIndex& tip) const
+{
+    AssertLockHeld(::cs_main);
+    return std::ranges::find(m_tips, &tip) != m_tips.end();
+}
+
 } // namespace node

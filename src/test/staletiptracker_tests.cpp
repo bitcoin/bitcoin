@@ -166,6 +166,8 @@ BOOST_AUTO_TEST_CASE(staletip_tracker_keeps_temporarily_ineligible_tip)
     // adding another tip does not drop it.
     tree.active_chain.SetTip(*stale);
     BOOST_CHECK(tracker.GetStaleTips(tree.active_chain).empty());
+    BOOST_CHECK(tracker.IsTracked(*stale));
+    BOOST_CHECK(!tracker.IsTracked(*active));
     CBlockIndex* other{tree.Add(Assert(active->GetAncestor(active->nHeight - 3)), /*active=*/false)};
     BOOST_CHECK(tracker.AddStaleTip(tree.active_chain, *other));
 

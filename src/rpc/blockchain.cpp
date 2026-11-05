@@ -1609,7 +1609,7 @@ static RPCMethod getchaintips()
                     {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
                         {
                             {"max_depth", RPCArg::Type::NUM, RPCArg::DefaultHint{"all tips"}, "Only return tips at most this many blocks below the active tip. The active tip, and tips higher than it, are always returned."},
-                            {"staletips_only", RPCArg::Type::BOOL, RPCArg::Default{false}, "Only return the recent stale tips tracked for stale-tip relay (BIP 332), including tracked tips that a known block builds on. Requires -staletips."},
+                            {"staletips_only", RPCArg::Type::BOOL, RPCArg::Default{false}, "Only return the recent stale tips relayed to peers (BIP 332), including tips that a known block builds on. Requires -staletips."},
                         },
                         RPCArgOptions{.oneline_description="options"}},
                 },

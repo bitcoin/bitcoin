@@ -7,12 +7,18 @@
 
 #include <arith_uint256.h>
 #include <kernel/cs_main.h>
+#include <net.h>
 #include <node/staletiptracker.h>
 #include <staletipmessage.h>
 #include <sync.h>
 #include <util/chaintype.h>
 #include <util/expected.h>
 
+#include <cstddef>
+#include <deque>
+#include <functional>
+#include <map>
+#include <set>
 #include <vector>
 
 class CBlockIndex;
@@ -20,6 +26,11 @@ class CChain;
 
 namespace node {
 class BlockManager;
+
+/** Maximum number of stale tips announced by a peer that are remembered, so
+ *  they are not announced back to it. Leaves room for a peer's
+ *  MAX_ADVERTISED_STALETIPS previously known tips plus new ones. */
+inline constexpr size_t MAX_STALETIPS_FROM_PEER{2 * MAX_ADVERTISED_STALETIPS};
 
 /** Why ValidateStaleTipAnnouncement() rejected an announcement. */
 enum class StaleTipAnnouncementError {
@@ -48,14 +59,29 @@ struct StaleTipRelayOptions {
 StaleTipMessage MakeStaleTipMessage(const StaleFork& fork, bool have_block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 /**
- * Class responsible for deciding which stale tips to track for BIP 332
- * stale-tip relay.
+ * Class responsible for deciding which stale tips to track and announce for
+ * BIP 332 stale-tip relay. Its data structures include the StaleTipTracker
+ * and, per peer, the stale tips the peer announced to us and the ones we
+ * announced to it.
+ *
+ * It decides but does not act: PeerManager parses and validates `staletip`
+ * messages, sends them, and serves blocks. What it knows about a peer is
+ * passed in as callbacks that are only used during the call.
+ *
+ * Caller needs to interact with StaleTipRelayManager:
+ * - ValidationInterface callbacks.
+ * - When a peer connects or disconnects.
+ * - When a peer announces a stale tip.
+ * - To get the stale tips to announce.
  *
  * This class is not thread-safe. Callers must hold cs_main.
  */
 class StaleTipRelayManager
 {
 public:
+    using PeerHasHeaderFn = std::function<bool(const CBlockIndex&)>;
+    using CanServeBranchFn = std::function<bool(const StaleFork&)>;
+
     explicit StaleTipRelayManager(const StaleTipRelayOptions& opts);
 
     /** Seed the tracker with the eligible stale tips in the block index. */
@@ -63,8 +89,34 @@ public:
 
     // Responses to chain events. StaleTipRelayManager is not an actual client
     // of ValidationInterface, these are called through PeerManager.
-    void BlockDisconnected(const CChain& chain, const CBlockIndex& block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    void AcceptedStaleTip(const CChain& chain, const CBlockIndex& tip) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    /** @return Whether a new stale tip is tracked, so it should be relayed. */
+    bool BlockDisconnected(const CChain& chain, const CBlockIndex& block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    /** @return Whether a new stale tip is tracked, so it should be relayed. */
+    bool AcceptedStaleTip(const CChain& chain, const CBlockIndex& tip) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    void ConnectedPeer(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void DisconnectedPeer(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    /** Remember a stale tip `peer` announced, and track it if it is eligible.
+     *
+     * @return Whether a new stale tip is tracked, so it should be relayed.
+     */
+    bool ReceivedStaleTip(NodeId peer, const CChain& chain, const CBlockIndex& tip) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    /** Build the `staletip` messages to send to `peer` now, for tracked stale
+     *  tips in the order they were tracked, and remember the tips as
+     *  announced.
+     *
+     * A tip is not announced twice, nor back to a peer that announced it to
+     * us, nor to a peer that lacks its fork point or already has the tip.
+     *
+     * @param[in] peer_has_header  Whether the peer is known to have a header.
+     * @param[in] can_serve_branch Whether we can serve the stale tip's block.
+     */
+    std::vector<StaleTipMessage> GetStaleTipsToAnnounce(
+        NodeId peer, const CChain& chain,
+        const PeerHasHeaderFn& peer_has_header,
+        const CanServeBranchFn& can_serve_branch) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Get the tracked tips that are eligible for relay, with their fork
      *  points, in the order they were added. */
@@ -74,9 +126,22 @@ public:
      *  is validated. */
     bool PrefersBlocks() const;
 
+    /** Check that no per-peer state remains. */
+    void CheckIsEmpty() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
 private:
+    struct PeerInfo {
+        /** Stale tips this peer announced to us, oldest first. Kept
+         *  independently of our tracker, so tips we don't track (yet) are
+         *  remembered too. */
+        std::deque<const CBlockIndex*> m_staletips_from_peer;
+        /** Tracked stale tips we announced to this peer. */
+        std::set<const CBlockIndex*> m_staletips_to_peer;
+    };
+
     const StaleTipRelayOptions m_opts;
     StaleTipTracker m_tracker GUARDED_BY(::cs_main);
+    std::map<NodeId, PeerInfo> m_peers GUARDED_BY(::cs_main);
 };
 
 } // namespace node
