@@ -14,7 +14,7 @@ from test_framework.blocktools import (
 )
 from test_framework.descriptors import descsum_create
 from test_framework.extendedkey import hardened
-from test_framework.key import H_POINT
+from test_framework.key import H_POINT, compute_xonly_pubkey
 from test_framework.messages import (
     COutPoint,
     CTransaction,
@@ -66,6 +66,7 @@ from test_framework.util import (
     bitflipper
 )
 from test_framework.wallet_util import (
+    bytes_to_wif,
     calculate_input_weight,
     generate_keypair,
     get_generate_key,
@@ -786,6 +787,34 @@ class PSBTTest(BitcoinTestFramework):
         psbt = mod_psbt.to_base64()
         assert_raises_rpc_error(-22, "Specified sighash value does not match value stored in PSBT", node.descriptorprocesspsbt, psbt=psbt, descriptors=[signer2])
         assert_equal(node.finalizepsbt(psbt)["complete"], False)
+
+    def test_taproot_final_witness_anyonecanpay(self):
+        self.log.info("Test that a finalized taproot input keeps the previous transaction only for ANYONECANPAY")
+        node = self.nodes[0]
+        signer, other = (2).to_bytes(32, "big"), (1).to_bytes(32, "big")
+        signer_pub, other_pub = compute_xonly_pubkey(signer)[0].hex(), compute_xonly_pubkey(other)[0].hex()
+        tree = "tr({},{{pk({}),pk({})}})"
+        for path, desc, pub_desc in [("Key path", "tr({})".format(bytes_to_wif(signer)), "tr({})".format(signer_pub)),
+                                     ("Script path", tree.format(H_POINT, bytes_to_wif(signer), other_pub), tree.format(H_POINT, signer_pub, other_pub))]:
+            desc = descsum_create(desc)
+            addr = node.deriveaddresses(descsum_create(pub_desc))[0]
+            for sighash, kept in [("ALL|ANYONECANPAY", True), ("DEFAULT", False)]:
+                self.log.info(f"{path}: signed with {sighash}, finalized, then processed again")
+                utxo = self.create_outpoints(node, outputs=[{addr: 1}])[0]
+                psbt = node.createpsbt([utxo], [{addr: 0.9999}])
+                res = node.descriptorprocesspsbt(psbt=psbt, descriptors=[desc], sighashtype=sighash)
+                assert_equal(res["complete"], True)
+                mod_psbt = PSBT.from_base64(res["psbt"])
+                assert PSBT_IN_SIGHASH_TYPE not in mod_psbt.i[0].map
+                mod_psbt.i[0].map[PSBT_IN_NON_WITNESS_UTXO] = bytes.fromhex(node.getrawtransaction(utxo["txid"]))
+                final = mod_psbt.to_base64()
+                for processed in [node.utxoupdatepsbt(final), node.descriptorprocesspsbt(psbt=final, descriptors=[desc], sighashtype=sighash)["psbt"]]:
+                    assert_equal("non_witness_utxo" in node.decodepsbt(processed)["inputs"][0], kept)
+
+        self.log.info("The last control block is 65 bytes and its last byte has 0x80, as a signature with ANYONECANPAY would")
+        control_block = bytes.fromhex(node.decodepsbt(res["psbt"])["inputs"][0]["final_scriptwitness"][-1])
+        assert_equal(len(control_block), 65)
+        assert control_block[-1] & 0x80
 
     def assert_change_type(self, psbtx, expected_type):
         """Assert that the given PSBT has a change output with the given type."""
@@ -1858,6 +1887,7 @@ class PSBTTest(BitcoinTestFramework):
         self.test_decodepsbt_long_sighash_type()
         self.test_combinepsbt_sighash_type()
         self.test_taproot_sighash_field_absent()
+        self.test_taproot_final_witness_anyonecanpay()
         self.test_psbt_named_parameter_handling()
         self.test_psbt_roundtrip()
         self.test_psbt_version()
