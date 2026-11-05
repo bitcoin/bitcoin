@@ -208,6 +208,8 @@ std::optional<TxIndexResult> TxIndex::FindTx(const Txid& tx_hash) const
             const FlatFilePos tx_position{block_index->nFile, block_index->nDataPos + key.pos.tx_offset_in_block};
             candidates.emplace_back(tx_position, candidate_block_hash, key.pos.block_seq, in_active_chain);
         }
+        // An iterator can stop or skip entries after an underlying database error.
+        it->CheckStatus();
     }
 
     // Prefer active-chain matches, then later-connected blocks.
