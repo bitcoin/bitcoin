@@ -36,7 +36,7 @@ inline constexpr int64_t TRUC_CHILD_MAX_WEIGHT{TRUC_CHILD_MAX_VSIZE * WITNESS_SC
 static_assert(TRUC_MAX_VSIZE + TRUC_CHILD_MAX_VSIZE <= DEFAULT_CLUSTER_SIZE_LIMIT_KVB * 1000);
 
 /** Must be called for every transaction, even if not TRUC. Not strictly necessary for transactions
- * accepted through AcceptMultipleTransactions.
+ * accepted through AcceptMultipleTransactionsInternal.
  *
  * Checks the following rules:
  * 1. A TRUC tx must only have TRUC unconfirmed ancestors.

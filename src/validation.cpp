@@ -413,7 +413,7 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationS
         if (coin.IsSpent()) return false;
 
         // If the Coin is available, there are 2 possibilities:
-        // it is available in our current ChainstateActive UTXO set,
+        // it is available in the active chainstate UTXO set,
         // or it's a UTXO provided by a transaction in our mempool.
         // Ensure the scriptPubKeys in Coins from CoinsView are correct.
         const CTransactionRef& txFrom = pool.get(txin.prevout.hash);
@@ -466,7 +466,7 @@ public:
         const bool m_allow_replacement;
         /** When true, allow sibling eviction. This only occurs in single transaction package settings. */
         const bool m_allow_sibling_eviction;
-        /** Used to skip the LimitMempoolSize() call within AcceptSingleTransaction(). This should be used when multiple
+        /** Used to skip the LimitMempoolSize() call within AcceptSingleTransactionInternal(). This should be used when multiple
          * AcceptSubPackage calls are expected and the mempool will be trimmed at the end of AcceptPackage(). */
         const bool m_package_submission;
         /** When true, use package feerates instead of individual transaction feerates for fee-based
@@ -598,11 +598,11 @@ public:
 
     /**
      * Submission of a subpackage.
-     * If subpackage size == 1, calls AcceptSingleTransaction() with adjusted ATMPArgs to
+     * If subpackage size == 1, calls AcceptSingleTransactionInternal() with adjusted ATMPArgs to
      * enable sibling eviction and creates a PackageMempoolAcceptResult
      * wrapping the result.
      *
-     * If subpackage size > 1, calls AcceptMultipleTransactions() with the provided ATMPArgs.
+     * If subpackage size > 1, calls AcceptMultipleTransactionsInternal() with the provided ATMPArgs.
      *
      * Also cleans up all non-chainstate coins from m_view at the end.
     */
@@ -662,7 +662,7 @@ private:
     // only tests that are fast should be done here (to avoid CPU DoS).
     bool PreChecks(ATMPArgs& args, Workspace& ws) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
-    // Run checks for mempool replace-by-fee, only used in AcceptSingleTransaction.
+    // Run checks for mempool replace-by-fee, only used in AcceptSingleTransactionInternal.
     bool ReplacementChecks(Workspace& ws) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     bool PackageRBFChecks(const std::vector<CTransactionRef>& txns,
@@ -735,7 +735,7 @@ private:
     Chainstate& m_active_chainstate;
 
     // Fields below are per *sub*package state and must be reset prior to subsequent
-    // AcceptSingleTransaction and AcceptMultipleTransactions invocations
+    // AcceptSingleTransactionInternal and AcceptMultipleTransactionsInternal invocations
     struct SubPackageState {
         /** Aggregated modified fees of all transactions, used to calculate package feerate. */
         CAmount m_total_modified_fees{0};
@@ -1042,7 +1042,7 @@ bool MemPoolAccept::PackageRBFChecks(const std::vector<CTransactionRef>& txns,
     // If the package has in-mempool parents, we won't consider a package RBF
     // since it would result in a cluster larger than 2.
     // N.B. To relax this constraint we will need to revisit how CCoinsViewMemPool::PackageAddTransaction
-    // is being used inside AcceptMultipleTransactions to track available inputs while processing a package.
+    // is being used inside AcceptMultipleTransactionsInternal to track available inputs while processing a package.
     // Specifically we would need to check that the ancestors of the new
     // transactions don't intersect with the set of transactions to be removed
     // due to RBF, which is not checked at all in the package acceptance
@@ -1482,7 +1482,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactionsInternal(con
     // too low feerate to pay for themselves, or that the child transactions are higher feerate than
     // their parents. Using aggregate feerate may allow "parents pay for child" behavior and permit
     // a child that is below mempool minimum feerate. To avoid these behaviors, callers of
-    // AcceptMultipleTransactions need to restrict txns topology (e.g. to ancestor sets) and check
+    // AcceptMultipleTransactionsInternal need to restrict txns topology (e.g. to ancestor sets) and check
     // the feerates of individuals and subsets.
     m_subpackage.m_total_vsize = std::accumulate(workspaces.cbegin(), workspaces.cend(), int64_t{0},
         [](int64_t sum, auto& ws) { return sum + ws.m_vsize; });
@@ -1658,7 +1658,7 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
             // policy differences to pin or delay propagation of transactions. As such, it's possible for
             // some package transaction(s) to already be in the mempool, and we don't want to reject the
             // entire package in that case (as that could be a censorship vector). De-duplicate the
-            // transactions that are already in the mempool, and only call AcceptMultipleTransactions() with
+            // transactions that are already in the mempool, and only call AcceptSubPackage() with
             // the new transactions. This ensures we don't double-count transaction counts and sizes when
             // checking ancestor/descendant limits, or double-count transaction fees for fee-related policy.
             const auto& entry{*Assert(m_pool.GetEntry(txid))};
@@ -1776,7 +1776,7 @@ MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTra
 
     if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
         // Remove coins that were not present in the coins cache before calling
-        // AcceptSingleTransaction(); this is to prevent memory DoS in case we receive a large
+        // AcceptSingleTransactionAndCleanup(); this is to prevent memory DoS in case we receive a large
         // number of invalid transactions that attempt to overrun the in-memory coins cache
         // (`CCoinsViewCache::cacheCoins`).
 
@@ -4567,8 +4567,8 @@ BlockValidationState TestBlockValidity(
         return state;
     }
 
-    // For signets CheckBlock() verifies the challenge iff fCheckPow is set.
-    if (!CheckBlock(block, state, chainstate.m_chainman.GetConsensus(), /*fCheckPow=*/check_pow, /*fCheckMerkleRoot=*/check_merkle_root)) {
+    // For signets CheckBlock() verifies the challenge iff fCheckPOW is set.
+    if (!CheckBlock(block, state, chainstate.m_chainman.GetConsensus(), /*fCheckPOW=*/check_pow, /*fCheckMerkleRoot=*/check_merkle_root)) {
         // This should never happen, but belt-and-suspenders don't approve the
         // block if it does.
         if (state.IsValid()) NONFATAL_UNREACHABLE();
@@ -4672,7 +4672,7 @@ bool Chainstate::LoadChainTip()
               FormatISO8601DateTime(tip->GetBlockTime()),
               m_chainman.GuessVerificationProgress(tip));
 
-    // Ensure KernelNotifications m_tip_block is set even if no new block arrives.
+    // Ensure KernelNotifications::m_state.tip_block is set even if no new block arrives.
     if (!this->GetRole().historical) {
         // Ignoring return value for now.
         (void)m_chainman.GetNotifications().blockTip(

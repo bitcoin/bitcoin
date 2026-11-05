@@ -3226,7 +3226,7 @@ bool CWallet::IsTxImmatureCoinBase(const CWalletTx& wtx) const
 {
     AssertLockHeld(cs_wallet);
 
-    // note GetBlocksToMaturity is 0 for non-coinbase tx
+    // note GetTxBlocksToMaturity is 0 for non-coinbase tx
     return GetTxBlocksToMaturity(wtx) > 0;
 }
 
