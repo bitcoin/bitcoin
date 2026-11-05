@@ -145,7 +145,8 @@ COutPoint ProcessBlock(const NodeContext& node, const std::shared_ptr<CBlock>& b
     bool new_block;
     node::BlockValidationStateCatcher bvsc{block->GetHash()};
     node.validation_signals->RegisterValidationInterface(&bvsc);
-    const bool processed{chainman.ProcessNewBlock(block, true, true, &new_block)};
+    auto res{chainman.ProcessNewBlock(block, true, true, &new_block)};
+    const bool processed{res && *res};
     const bool duplicate{!new_block && processed};
     assert(!duplicate);
     node.validation_signals->UnregisterValidationInterface(&bvsc);

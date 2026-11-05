@@ -33,17 +33,18 @@ FUZZ_TARGET(block, .init = initialize_block)
     const Consensus::Params& consensus_params = Params().GetConsensus();
     BlockValidationState validation_state_pow_and_merkle;
     const bool valid_incl_pow_and_merkle = CheckBlock(block, validation_state_pow_and_merkle, consensus_params, /* fCheckPOW= */ true, /* fCheckMerkleRoot= */ true);
-    assert(validation_state_pow_and_merkle.IsValid() || validation_state_pow_and_merkle.IsInvalid() || validation_state_pow_and_merkle.IsError());
-    (void)validation_state_pow_and_merkle.Error("");
+    // CheckBlock() returns true iff it leaves the state valid; a false return
+    // must set the state invalid (it can no longer report an error state).
+    assert(valid_incl_pow_and_merkle == validation_state_pow_and_merkle.IsValid());
     BlockValidationState validation_state_pow;
     const bool valid_incl_pow = CheckBlock(block, validation_state_pow, consensus_params, /* fCheckPOW= */ true, /* fCheckMerkleRoot= */ false);
-    assert(validation_state_pow.IsValid() || validation_state_pow.IsInvalid() || validation_state_pow.IsError());
+    assert(valid_incl_pow == validation_state_pow.IsValid());
     BlockValidationState validation_state_merkle;
     const bool valid_incl_merkle = CheckBlock(block, validation_state_merkle, consensus_params, /* fCheckPOW= */ false, /* fCheckMerkleRoot= */ true);
-    assert(validation_state_merkle.IsValid() || validation_state_merkle.IsInvalid() || validation_state_merkle.IsError());
+    assert(valid_incl_merkle == validation_state_merkle.IsValid());
     BlockValidationState validation_state_none;
     const bool valid_incl_none = CheckBlock(block, validation_state_none, consensus_params, /* fCheckPOW= */ false, /* fCheckMerkleRoot= */ false);
-    assert(validation_state_none.IsValid() || validation_state_none.IsInvalid() || validation_state_none.IsError());
+    assert(valid_incl_none == validation_state_none.IsValid());
     if (valid_incl_pow_and_merkle) {
         assert(valid_incl_pow && valid_incl_merkle && valid_incl_none);
     } else if (valid_incl_merkle || valid_incl_pow) {

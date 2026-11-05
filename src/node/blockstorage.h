@@ -13,6 +13,7 @@
 #include <kernel/chainparams.h>
 #include <kernel/cs_main.h>
 #include <kernel/messagestartchars.h>
+#include <kernel/notifications_interface.h>
 #include <primitives/block.h>
 #include <serialize.h>
 #include <streams.h>
@@ -42,10 +43,10 @@
 #include <utility>
 #include <vector>
 
-class BlockValidationState;
 class CBlockUndo;
 class Chainstate;
 class ChainstateManager;
+
 namespace Consensus {
 struct Params;
 }
@@ -206,11 +207,11 @@ private:
     bool LoadBlockIndex(const std::optional<uint256>& snapshot_blockhash)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    /** Return false if block file or undo file flushing fails. */
-    [[nodiscard]] bool FlushBlockFile(int blockfile_num, bool fFinalize, bool finalize_undo) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    /** Return a FatalError if block file or undo file flushing fails. The flushError notification has already fired. */
+    [[nodiscard]] util::Expected<void, kernel::FatalError> FlushBlockFile(int blockfile_num, bool fFinalize, bool finalize_undo) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    /** Return false if undo file flushing fails. */
-    [[nodiscard]] bool FlushUndoFile(int block_file, bool finalize = false);
+    /** Return a FatalError if undo file flushing fails. The flushError notification has already fired. */
+    [[nodiscard]] util::Expected<void, kernel::FatalError> FlushUndoFile(int block_file, bool finalize = false);
 
     /**
      * Helper function performing various preparations before a block can be saved to disk:
@@ -221,9 +222,9 @@ private:
      * The nAddSize argument passed to this function should include not just the size of the serialized CBlock, but also the size of
      * separator fields (STORAGE_HEADER_BYTES).
      */
-    [[nodiscard]] FlatFilePos FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    [[nodiscard]] bool FlushChainstateBlockFile(int tip_height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    [[nodiscard]] bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] util::Expected<FlatFilePos, kernel::FatalError> FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] util::Expected<void, kernel::FatalError> FlushChainstateBlockFile(int tip_height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] util::Expected<FlatFilePos, kernel::FatalError> FindUndoPos(int nFile, unsigned int nAddSize) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     AutoFile OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false) const;
 
@@ -380,7 +381,7 @@ public:
     /** Get block file info entry for one block file */
     CBlockFileInfo* GetBlockFileInfo(size_t n) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    bool WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex& block)
+    [[nodiscard]] util::Expected<void, kernel::FatalError> WriteBlockUndo(const CBlockUndo& blockundo, CBlockIndex& block)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Store block on disk and update block file statistics.
@@ -389,9 +390,9 @@ public:
      * @param[in]  nHeight      the height of the block
      *
      * @returns in case of success, the position to which the block was written to
-     *          in case of an error, an empty FlatFilePos
+     *          in case of an error, a FatalError
      */
-    FlatFilePos WriteBlock(const CBlock& block, int nHeight) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] util::Expected<FlatFilePos, kernel::FatalError> WriteBlock(const CBlock& block, int nHeight) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Update blockfile info while processing a block during reindex. The block must be available on disk.
      *
