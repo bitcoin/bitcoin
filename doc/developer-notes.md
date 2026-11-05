@@ -1298,8 +1298,8 @@ Release notes should be written for any PR that:
 - changes an API or configuration model
 - makes any other visible change to the end-user experience.
 
-Release notes should be added to a PR-specific release note file at
-`/doc/release-notes-<PR number>.md` to avoid conflicts between multiple PRs.
+Release notes should be added to a uniquely named release note file, such as
+`/doc/release-notes-remove-feature-foo.md`, to avoid conflicts between multiple PRs.
 All `release-notes*` files are merged into a single `release-notes-<version>.md` file prior to the release.
 
 ## RPC interface guidelines
