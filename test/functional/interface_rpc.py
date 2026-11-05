@@ -6,6 +6,7 @@
 
 import json
 import os
+import re
 from dataclasses import dataclass
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import JSONRPCException, assert_equal, assert_greater_than_or_equal
@@ -224,6 +225,47 @@ class RPCInterfaceTest(BitcoinTestFramework):
         expect_http_rpc_status(204, None, self.nodes[0], "generatetoaddress", [1, "invalid_address"], 2, True)
         # Sanity check: command was not executed
         assert_equal(block_count + 1, self.nodes[0].getblockcount())
+
+        self.log.info("Testing error handling of requests with malformed body")
+        cases = [
+            ({},                                       "Missing method"),
+            ({"method": 1},                            "Method must be a string"),
+            ({"method": "getblockcount", "params": 1}, "Params must be an array or object"),
+        ]
+        self.log.info("... JSONRPC 1.1 expects HTTP error codes")
+        for request, message in cases:
+            response, status = send_json_rpc(self.nodes[0], {**request})
+            assert_equal(
+                response,
+                {'result': None, 'error': {'code': -32600, 'message': message}}
+            )
+            assert_equal(status, 400)
+        self.log.info("... JSONRPC 2.0 currently returns HTTP errors, or crashes the node in debug builds")
+        for request, message in cases:
+            for notification in [True, False]:
+                body = {"jsonrpc": "2.0", **request}
+                if not notification:
+                    body["id"] = "1"
+                try:
+                    response, status = send_json_rpc(self.nodes[0], body)
+                except ConnectionError:
+                    self.log.debug("Debug builds abort on the failed Assume() in JSONErrorReply()")
+                    self.nodes[0].wait_until_stopped(
+                        expected_ret_code=[
+                            -6,          # Unix
+                            3,           # Windows native
+                            0xC0000409   # Windows cross builds
+                        ],
+                        expected_stderr=re.compile(r"`jreq\.m_json_version != JSONRPCVersion::V2` check failed")
+                    )
+                    self.start_node(0)
+                    continue
+                self.log.debug("Release builds respond with HTTP 400")
+                expected = {"jsonrpc": "2.0", "error": {"code": RPC_INVALID_REQUEST, "message": message}}
+                if not notification:
+                    expected["id"] = "1"
+                assert_equal(response, expected)
+                assert_equal(status, 400)
 
     def test_work_queue_exceeded(self):
         self.log.info("Testing work queue exceeded...")
