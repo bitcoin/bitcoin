@@ -142,7 +142,6 @@ private:
     const std::string m_tor_control_center;
     TorControlConnection m_conn;
     std::string m_private_key;
-    std::string m_service_id;
     std::atomic<bool> m_reconnect;
     std::chrono::duration<double> m_reconnect_timeout;
     CService m_service;
