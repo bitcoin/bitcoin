@@ -9,11 +9,12 @@
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 
+#include <boost/test/unit_test.hpp>
+
 #include <algorithm>
 #include <cstdint>
+#include <limits>
 #include <string>
-
-#include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(serialize_tests, BasicTestingSetup)
 
@@ -133,6 +134,35 @@ BOOST_AUTO_TEST_CASE(varints)
         ss >> VARINT(j);
         BOOST_CHECK_MESSAGE(i == j, "decoded:" << j << " expected:" << i);
     }
+}
+
+BOOST_AUTO_TEST_CASE(varints_overflow)
+{
+    const auto read_varint = [](uint64_t serialized, auto value) {
+        DataStream ss{};
+        ss << VARINT(serialized);
+        ss >> VARINT(value);
+        return value;
+    };
+
+    for (const uint32_t small_value : {
+             uint32_t{0},
+             uint32_t{1},
+             std::numeric_limits<uint32_t>::max(),
+         }) {
+        BOOST_CHECK_EQUAL(read_varint(small_value, uint32_t{}), small_value);
+    }
+
+    for (const uint64_t large_value : {
+             uint64_t{std::numeric_limits<uint32_t>::max()} + 1,
+             std::numeric_limits<uint64_t>::max(),
+         }) {
+        BOOST_CHECK_EQUAL(read_varint(large_value, uint64_t{}), large_value);
+
+        BOOST_CHECK_EXCEPTION(read_varint(large_value, uint32_t{}), std::ios_base::failure, HasReason{"VarInt exceeds destination range"});
+    }
+
+    BOOST_CHECK_EXCEPTION(read_varint(uint64_t{1} << 39, uint32_t{}), std::ios_base::failure, HasReason{"VarInt increment exceeds destination range"});
 }
 
 BOOST_AUTO_TEST_CASE(varints_bitpatterns)

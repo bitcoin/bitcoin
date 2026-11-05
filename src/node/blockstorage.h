@@ -117,17 +117,17 @@ using kernel::CBlockFileInfo;
 using kernel::BlockTreeDB;
 
 /** The pre-allocation chunk size for blk?????.dat files (since 0.8) */
-inline constexpr unsigned int BLOCKFILE_CHUNK_SIZE{16_MiB};
+inline constexpr uint64_t BLOCKFILE_CHUNK_SIZE{16_MiB};
 /** The pre-allocation chunk size for rev?????.dat files (since 0.8) */
-inline constexpr unsigned int UNDOFILE_CHUNK_SIZE{1_MiB};
+inline constexpr uint64_t UNDOFILE_CHUNK_SIZE{1_MiB};
 /** The maximum size of a blk?????.dat file (since 0.8) */
-inline constexpr unsigned int MAX_BLOCKFILE_SIZE{128_MiB};
+inline constexpr uint64_t MAX_BLOCKFILE_SIZE{128_MiB};
 
 /** Size of header written by WriteBlock before a serialized CBlock (8 bytes) */
-inline constexpr uint32_t STORAGE_HEADER_BYTES{std::tuple_size_v<MessageStartChars> + sizeof(unsigned int)};
+inline constexpr uint64_t STORAGE_HEADER_BYTES{std::tuple_size_v<MessageStartChars> + sizeof(uint32_t)};
 
 /** Total overhead when writing undo data: header (8 bytes) plus checksum (32 bytes) */
-inline constexpr uint32_t UNDO_DATA_DISK_OVERHEAD{STORAGE_HEADER_BYTES + uint256::size()};
+inline constexpr uint64_t UNDO_DATA_DISK_OVERHEAD{STORAGE_HEADER_BYTES + uint256::size()};
 
 // Because validation code takes pointers to the map's CBlockIndex objects, if
 // we ever switch to another associative container, we need to either use a
@@ -221,9 +221,9 @@ private:
      * The nAddSize argument passed to this function should include not just the size of the serialized CBlock, but also the size of
      * separator fields (STORAGE_HEADER_BYTES).
      */
-    [[nodiscard]] FlatFilePos FindNextBlockPos(unsigned int nAddSize, unsigned int nHeight, uint64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] FlatFilePos FindNextBlockPos(uint64_t nAddSize, unsigned int nHeight, uint64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     [[nodiscard]] bool FlushChainstateBlockFile(int tip_height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    [[nodiscard]] bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, uint64_t nAddSize) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     AutoFile OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false) const;
 
