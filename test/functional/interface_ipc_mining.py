@@ -10,6 +10,8 @@ from copy import deepcopy
 from decimal import Decimal
 from io import BytesIO
 from test_framework.blocktools import (
+    MAX_FUTURE_BLOCK_TIME,
+    NORMAL_GBT_REQUEST_PARAMS,
     NULL_OUTPOINT,
     script_BIP34_coinbase_height,
     WITNESS_COMMITMENT_HEADER,
@@ -34,6 +36,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
     assert_not_equal,
+    assert_raises_rpc_error,
 )
 from test_framework.wallet import MiniWallet
 from test_framework.p2p import P2PInterface
@@ -770,6 +773,64 @@ class IPCMiningTest(BitcoinTestFramework):
 
         asyncio.run(capnp.run(async_routine()))
 
+    def run_unsatisfiable_timestamp_test(self):
+        """Test template creation when timestamp constraints conflict.
+
+        Simulate an attacker releasing six blocks with timestamps exactly at
+        the victim's two-hour future-time limit. Test both the getblocktemplate
+        RPC and the IPC mining interface. This attack is impractical, and
+        mining works again one second later.
+        """
+        self.log.info("Test unsatisfiable block timestamp constraints")
+        victim = self.nodes[0]
+        attacker = self.nodes[1]
+
+        # Six of the last eleven blocks determine the median time past.
+        NUM_ATTACK_BLOCKS = 6
+        # Time as seen by the victim and other non-attacker nodes.
+        actual_time = int(time.time())
+
+        # The six attack blocks use the highest timestamp the victim accepts,
+        # putting MTP at its future-time limit. The next block needs MTP + 1,
+        # so template creation fails instead of returning an unmineable template.
+        error = "TestBlockValidity failed: time-too-new, block timestamp too far in the future"
+
+        for node in self.nodes:
+            node.setmocktime(actual_time)
+
+        attacker_time = actual_time + MAX_FUTURE_BLOCK_TIME
+        attacker.setmocktime(attacker_time)
+        self.generate(attacker, NUM_ATTACK_BLOCKS)
+
+        assert_equal(victim.getblockchaininfo()["mediantime"], attacker_time)
+
+        # Check template creation failure over RPC, followed by IPC.
+        assert_raises_rpc_error(-1, error, victim.getblocktemplate, NORMAL_GBT_REQUEST_PARAMS)
+
+        async def assert_ipc_failure_and_recovery():
+            ctx, mining = await make_mining_ctx(self)
+            opts = self.capnp_modules["mining"].BlockCreateOptions()
+            await assert_create_new_block_fails(ctx, mining, opts, error)
+
+            # One second later, MTP + 1 is exactly at the future-time limit.
+            # Reuse the IPC connection to verify the remote exception did not
+            # tear it down.
+            victim.setmocktime(actual_time + 1)
+            async with destroying((await mining.createNewBlock(ctx, opts)).result, ctx) as template:
+                block = await mining_get_block(template, ctx)
+                assert_equal(block.nTime, attacker_time + 1)
+
+        asyncio.run(capnp.run(assert_ipc_failure_and_recovery()))
+
+        # The async block bumped the victim's time by one second, so
+        # creation via RPC succeeds again.
+        rpc_template = victim.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
+        assert_equal(rpc_template["mintime"], attacker_time + 1)
+        assert_equal(rpc_template["curtime"], attacker_time + 1)
+
+        for node in self.nodes:
+            node.setmocktime(0)
+
     def run_low_height_test(self):
         """Test that IPC createNewBlock() works at low block heights on a
         clean chain, in particular with regard to bad-cb-length.
@@ -832,6 +893,7 @@ class IPCMiningTest(BitcoinTestFramework):
         self.run_block_max_weight_test()
         self.run_ipc_option_override_test()
         self.run_transaction_lookup_test()
+        self.run_unsatisfiable_timestamp_test()
 
         # Needs to run last because it resets the chain.
         self.run_low_height_test()
