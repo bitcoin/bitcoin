@@ -3668,7 +3668,10 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* const
         // and we're not doing a very deep invalidation (in which case
         // keeping the mempool up to date is probably futile anyway).
         MaybeUpdateMempoolForReorg(disconnectpool, /* fAddToMempool = */ (++disconnected <= 10) && ret);
-        if (!ret) return false;
+        if (!ret) {
+            return state.Error(strprintf("Failed to disconnect block %s, chain was partially rolled back to height %d",
+                                         disconnected_tip->GetBlockHash().ToString(), m_chain.Height()));
+        }
         CBlockIndex* new_tip{m_chain.Tip()};
         assert(disconnected_tip->pprev == new_tip);
 
@@ -3728,7 +3731,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* const
         LOCK(cs_main);
         if (m_chain.Contains(*to_mark_failed)) {
             // If the to-be-marked invalid block is in the active chain, something is interfering and we can't proceed.
-            return false;
+            return state.Error(strprintf("Block %s was not invalidated because it is still in the active chain (interrupted?)", to_mark_failed->GetBlockHash().ToString()));
         }
 
         // Mark pindex as invalid if it never was in the main chain
