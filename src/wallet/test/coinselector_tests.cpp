@@ -871,11 +871,13 @@ BOOST_AUTO_TEST_CASE(bump_fee_test)
         selection.RecalculateWaste(min_viable_change, change_cost, change_fee);
         CAmount expected_waste = fee_diff * -2 + change_cost + /*bump_fees=*/60;
         BOOST_CHECK_EQUAL(expected_waste, selection.GetWaste());
+        BOOST_CHECK_EQUAL(selection.GetTotalBumpFees(), 60);
 
         selection.SetBumpFeeDiscount(30);
         selection.RecalculateWaste(min_viable_change, change_cost, change_fee);
         expected_waste = fee_diff * -2 + change_cost + /*bump_fees=*/60 - /*group_discount=*/30;
         BOOST_CHECK_EQUAL(expected_waste, selection.GetWaste());
+        BOOST_CHECK_EQUAL(selection.GetTotalBumpFees(), 30);
     }
 
     {
@@ -902,6 +904,29 @@ BOOST_AUTO_TEST_CASE(bump_fee_test)
         selection.RecalculateWaste(min_viable_change, change_cost, change_fee);
         expected_waste = fee_diff * -2 + /*bump_fees=*/60 - /*group_discount=*/30 + /*excess = 100 - bump_fees + group_discount*/70;
         BOOST_CHECK_EQUAL(expected_waste, selection.GetWaste());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(merge_algo_test)
+{
+    // Preset inputs are merged into the automatic selection result, which keeps its algorithm
+    {
+        SelectionResult automatic{2 * CENT, SelectionAlgorithm::BNB};
+        add_coin(2 * CENT, 1, automatic);
+        SelectionResult preselected{1 * CENT, SelectionAlgorithm::MANUAL};
+        add_coin(1 * CENT, 2, preselected);
+        automatic.Merge(preselected);
+        BOOST_CHECK_EQUAL(GetAlgorithmName(automatic.GetAlgo()), GetAlgorithmName(SelectionAlgorithm::BNB));
+    }
+
+    // A manual result takes the algorithm of the result merged into it
+    {
+        SelectionResult preselected{1 * CENT, SelectionAlgorithm::MANUAL};
+        add_coin(1 * CENT, 1, preselected);
+        SelectionResult automatic{2 * CENT, SelectionAlgorithm::BNB};
+        add_coin(2 * CENT, 2, automatic);
+        preselected.Merge(automatic);
+        BOOST_CHECK_EQUAL(GetAlgorithmName(preselected.GetAlgo()), GetAlgorithmName(SelectionAlgorithm::BNB));
     }
 }
 
