@@ -81,7 +81,7 @@ namespace dbwrapper_private {
  * specific database.
  */
 const Obfuscation& GetObfuscation(const CDBWrapper&);
-}; // namespace dbwrapper_private
+} // namespace dbwrapper_private
 
 bool DestroyDB(const std::string& path_str);
 

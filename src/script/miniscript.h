@@ -394,7 +394,7 @@ struct Ops {
     //! Number of keys in possibly executed OP_CHECKMULTISIG(VERIFY)s to dissatisfy.
     MaxInt<uint32_t> dsat;
 
-    Ops(uint32_t in_count, MaxInt<uint32_t> in_sat, MaxInt<uint32_t> in_dsat) : count(in_count), sat(in_sat), dsat(in_dsat) {};
+    Ops(uint32_t in_count, MaxInt<uint32_t> in_sat, MaxInt<uint32_t> in_dsat) : count(in_count), sat(in_sat), dsat(in_dsat) {}
 };
 
 /** A data structure to help the calculation of stack size limits.
@@ -509,8 +509,8 @@ class StackSize
     SatInfo sat, dsat;
 
 public:
-    constexpr StackSize(SatInfo in_sat, SatInfo in_dsat) noexcept : sat(in_sat), dsat(in_dsat) {};
-    constexpr StackSize(SatInfo in_both) noexcept : sat(in_both), dsat(in_both) {};
+    constexpr StackSize(SatInfo in_sat, SatInfo in_dsat) noexcept : sat(in_sat), dsat(in_dsat) {}
+    constexpr StackSize(SatInfo in_both) noexcept : sat(in_both), dsat(in_both) {}
 
     const SatInfo& Sat() const { return sat; }
     const SatInfo& Dsat() const { return dsat; }
@@ -522,7 +522,7 @@ struct WitnessSize {
     //! Maximum witness size to dissatisfy;
     MaxInt<uint32_t> dsat;
 
-    WitnessSize(MaxInt<uint32_t> in_sat, MaxInt<uint32_t> in_dsat) : sat(in_sat), dsat(in_dsat) {};
+    WitnessSize(MaxInt<uint32_t> in_sat, MaxInt<uint32_t> in_dsat) : sat(in_sat), dsat(in_dsat) {}
 };
 
 struct NoDupCheck {};

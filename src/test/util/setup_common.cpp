@@ -668,7 +668,7 @@ SocketTestingSetup::SocketTestingSetup()
         // Connected Sockets from the queue via its Accept() method.
         return std::make_unique<DynSock>(std::make_shared<DynSock::Pipes>(), &m_accepted_sockets);
     };
-};
+}
 
 SocketTestingSetup::~SocketTestingSetup()
 {

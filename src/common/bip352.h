@@ -81,7 +81,7 @@ private:
         std::span<const unsigned char> extension_data = {}
     ) : m_version(version), m_scan_pubkey(scan_pubkey),
         m_spend_pubkey(spend_pubkey),
-        m_extension_data(extension_data.begin(), extension_data.end()) {};
+        m_extension_data(extension_data.begin(), extension_data.end()) {}
 public:
     static std::optional<SilentPaymentsDestination> From(
         const CPubKey& scan_pubkey,
@@ -301,5 +301,5 @@ public:
      */
     std::optional<std::vector<SilentPaymentsOutput>> Scan(const PrevoutsSummary& prevouts_summary, const std::vector<XOnlyPubKey>& tx_outputs) const;
 };
-}; // namespace bip352
+} // namespace bip352
 #endif // BITCOIN_COMMON_BIP352_H

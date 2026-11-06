@@ -68,7 +68,7 @@ public:
         mem.reset(new std::atomic<uint8_t>[size]);
         for (uint32_t i = 0; i < size; ++i)
             mem[i].store(0xFF);
-    };
+    }
 
     /** setup marks all entries and ensures that bit_packed_atomic_flags can store
      * at least `b` entries.

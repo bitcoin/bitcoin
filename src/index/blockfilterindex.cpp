@@ -79,7 +79,7 @@ struct DBVal {
     SERIALIZE_METHODS(DBVal, obj) { READWRITE(obj.hash, obj.header, obj.pos); }
 };
 
-}; // namespace
+} // namespace
 
 static std::map<BlockFilterType, BlockFilterIndex> g_filter_indexes;
 
