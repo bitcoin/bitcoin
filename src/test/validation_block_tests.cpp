@@ -428,11 +428,13 @@ BOOST_AUTO_TEST_CASE(connectblock_mutated_block_is_fatal_error)
     {
         // Also redirects the fatal error message from stderr to the debug log
         ASSERT_DEBUG_LOG("A fatal internal error occurred");
+        // The original Invalid state is logged before being overwritten
+        ASSERT_DEBUG_LOG("Corrupt block found: bad-txnmrklroot, hashMerkleRoot mismatch");
         BOOST_CHECK(!chainstate.ConnectBlock(mutated, state, pindex, view));
     }
     BOOST_CHECK(state.IsError());
-    BOOST_CHECK(state.GetResult() == BlockValidationResult::BLOCK_MUTATED);
-    BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-txnmrklroot");
-    BOOST_CHECK_EQUAL(state.GetDebugMessage(), "hashMerkleRoot mismatch");
+    BOOST_CHECK(state.GetResult() == BlockValidationResult::BLOCK_RESULT_UNSET);
+    BOOST_CHECK_EQUAL(state.GetRejectReason(), "Corrupt block found indicating potential hardware failure.");
+    BOOST_CHECK_EQUAL(state.GetDebugMessage(), "");
 }
 BOOST_AUTO_TEST_SUITE_END()

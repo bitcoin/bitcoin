@@ -2395,6 +2395,9 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
             // We don't write down blocks to disk if they may have been
             // corrupted, so this should be impossible unless we're having hardware
             // problems.
+            LogError("%s: Consensus::CheckBlock: Corrupt block found: %s", __func__, state.ToString());
+            // Replace the Invalid state with an Error state; the original reason was logged above
+            state = BlockValidationState{};
             return FatalError(m_chainman.GetNotifications(), state, _("Corrupt block found indicating potential hardware failure."));
         }
         LogError("%s: Consensus::CheckBlock: %s\n", __func__, state.ToString());
