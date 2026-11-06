@@ -24,6 +24,7 @@ from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.wallet import MiniWallet
 from test_framework.blocktools import (
     create_empty_fork,
+    trigger_reorg,
 )
 
 # Number of blocks to create in temporary blockchain branch for reorg testing
@@ -33,12 +34,6 @@ FORK_LENGTH = 20
 class MempoolCoinbaseTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-
-    def trigger_reorg(self, fork_blocks, node):
-        """Trigger reorg of the fork blocks."""
-        for block in fork_blocks:
-            node.submitblock(block.serialize().hex())
-        assert_equal(node.getbestblockhash(), fork_blocks[-1].hash_hex)
 
     def test_reorg_relay(self):
         self.log.info("Test that transactions from disconnected blocks are available for relay immediately")
@@ -62,7 +57,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         assert_equal(len(peer1.get_invs()), 0)
 
         # Activate the longer chain in which tx_disconnected was not confirmed.
-        self.trigger_reorg(fork_blocks, self.nodes[0])
+        trigger_reorg(self.nodes[0], fork_blocks)
 
         # Child now has an ancestor from the disconnected block
         assert_equal(self.nodes[0].getmempoolentry(tx_child["txid"])["ancestorcount"], 2)
@@ -182,7 +177,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
 
         assert_equal(set(self.nodes[0].getrawmempool()), {spend_1_id, spend_2_1_id, timelock_tx_id})
 
-        self.trigger_reorg(fork_blocks, self.nodes[0])
+        trigger_reorg(self.nodes[0], fork_blocks)
 
         # We went backwards in time to boot timelock_tx_id
         fork_block_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time']
