@@ -5,6 +5,8 @@ $(package)_download_file=$(native_$(package)_download_file)
 $(package)_file_name=$(native_$(package)_file_name)
 $(package)_sha256_hash=$(native_$(package)_sha256_hash)
 $(package)_patches=macos_accept_dead_socket.patch
+$(package)_patches += kj_atomicaddref_atomic_read.patch
+$(package)_patches += kj_mutex_atomic_futex_reads.patch
 
 define $(package)_set_vars
   $(package)_config_opts := -DBUILD_TESTING=OFF
@@ -14,7 +16,9 @@ define $(package)_set_vars
 endef
 
 define $(package)_preprocess_cmds
-  patch -p2 < $($(package)_patch_dir)/macos_accept_dead_socket.patch
+  patch -p2 < $($(package)_patch_dir)/macos_accept_dead_socket.patch && \
+  patch -p2 < $($(package)_patch_dir)/kj_atomicaddref_atomic_read.patch && \
+  patch -p2 < $($(package)_patch_dir)/kj_mutex_atomic_futex_reads.patch
 endef
 
 define $(package)_config_cmds
