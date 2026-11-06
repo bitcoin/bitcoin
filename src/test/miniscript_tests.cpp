@@ -135,6 +135,9 @@ struct KeyConverter {
     constexpr KeyConverter(miniscript::MiniscriptContext ctx) noexcept : m_script_ctx{ctx} {}
 
     bool KeyCompare(const Key& a, const Key& b) const {
+        if (miniscript::IsTapscript(m_script_ctx)) {
+            return XOnlyPubKey{a} < XOnlyPubKey{b};
+        }
         return a < b;
     }
 
