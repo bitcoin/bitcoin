@@ -19,11 +19,17 @@ from test_framework.compressor import (
     compress_amount,
 )
 from test_framework.messages import (
+    CBlock,
     CBlockHeader,
     from_hex,
     MAGIC_BYTES,
     MAX_MONEY,
+    MSG_BLOCK,
+    MSG_CMPCT_BLOCK,
+    MSG_TYPE_MASK,
+    msg_block,
     msg_headers,
+    msg_sendcmpct,
     ser_varint,
     tx_from_hex,
 )
@@ -56,6 +62,21 @@ START_HEIGHT = 199
 SNAPSHOT_BASE_HEIGHT = 299
 FINAL_HEIGHT = 399
 COMPLETE_IDX = {'synced': True, 'best_block_height': FINAL_HEIGHT}
+
+
+class BlockServingPeer(P2PInterface):
+    """Serves the given blocks and silently ignores requests for any other block."""
+    def __init__(self, blocks):
+        super().__init__()
+        self.blocks = blocks
+        self.getdata_requests = []
+
+    def on_getdata(self, message):
+        for inv in message.inv:
+            self.getdata_requests.append((inv.type, inv.hash))
+            block = self.blocks.get(inv.hash)
+            if block is not None and (inv.type & MSG_TYPE_MASK) == MSG_BLOCK:
+                self.send_without_ping(msg_block(block))
 
 
 class AssumeutxoTest(BitcoinTestFramework):
@@ -346,6 +367,78 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.connect_nodes(snapshot_node.index, ibd_node.index)
         assert 'NETWORK' in ibd_node.getpeerinfo()[0]['servicesnames']
         self.sync_blocks(nodes=(ibd_node, snapshot_node))
+
+    def test_compact_blocks_during_background_validation(self, snapshot):
+        """
+        While the background chain is still being validated, blocks at the tip
+        of the snapshot chain must still be requested as compact blocks.
+        """
+        self.log.info("Testing compact block requests during background validation")
+        miner = self.nodes[0]
+        snapshot_node = self.nodes[2]
+        tip_height = miner.getblockcount()
+
+        def headers_msg(first, last):
+            msg = msg_headers()
+            for height in range(first, last + 1):
+                header_hex = miner.getblockheader(miner.getblockhash(height), verbose=False)
+                msg.headers.append(from_hex(CBlockHeader(), header_hex))
+            return msg
+
+        # Start from a clean snapshot node and load the snapshot
+        self.stop_node(snapshot_node.index)
+        self.cleanup_folder(snapshot_node.chain_path)
+        self.start_node(snapshot_node.index, extra_args=self.extra_args[snapshot_node.index])
+
+        headers_provider = snapshot_node.add_p2p_connection(P2PInterface())
+        headers_provider.wait_for_getheaders()
+        headers_provider.send_without_ping(headers_msg(1, tip_height))
+        tip_hash = miner.getbestblockhash()
+        self.wait_until(lambda: any(t['hash'] == tip_hash and t['status'] == "headers-only" for t in snapshot_node.getchaintips()))
+        snapshot_node.disconnect_p2ps()
+        snapshot_node.loadtxoutset(snapshot['path'])
+
+        # A peer that serves the blocks above the snapshot base, but never
+        # answers requests for historical blocks, which therefore stay in flight.
+        blocks = {}
+        for height in range(SNAPSHOT_BASE_HEIGHT + 1, tip_height + 1):
+            block = from_hex(CBlock(), miner.getblock(miner.getblockhash(height), 0))
+            blocks[block.hash_int] = block
+        peer = snapshot_node.add_outbound_p2p_connection(BlockServingPeer(blocks), p2p_idx=0, connection_type="outbound-full-relay")
+        peer.send_and_ping(msg_sendcmpct(announce=False, version=2))
+        peer.wait_for_getheaders()
+        peer.send_without_ping(headers_msg(1, tip_height))
+
+        self.log.info("  - sync the snapshot chain while historical blocks stay in flight")
+        self.wait_until(lambda: snapshot_node.getblockcount() == tip_height)
+        self.wait_until(lambda: any(height <= SNAPSHOT_BASE_HEIGHT for height in snapshot_node.getpeerinfo()[0]['inflight']))
+
+        self.log.info("  - a new block at the tip is requested as a compact block")
+        # The first peer has all of its in-flight slots taken by the historical
+        # blocks it never answers, so the new block is announced by another peer.
+        announcer = snapshot_node.add_outbound_p2p_connection(BlockServingPeer(blocks), p2p_idx=1, connection_type="outbound-full-relay")
+        announcer.send_and_ping(msg_sendcmpct(announce=False, version=2))
+        tip_time = miner.getblockheader(miner.getbestblockhash())['time']
+        for node in (miner, snapshot_node):
+            node.setmocktime(tip_time + 600)
+        new_hash = self.generate(miner, 1, sync_fun=self.no_op)[0]
+        new_hash_int = int(new_hash, 16)
+        new_header = from_hex(CBlockHeader(), miner.getblockheader(new_hash, verbose=False))
+        msg = msg_headers()
+        msg.headers.append(new_header)
+        announcer.send_without_ping(msg)
+        announcer.wait_until(lambda: any(h == new_hash_int for _, h in announcer.getdata_requests))
+        request_types = [t for t, h in announcer.getdata_requests if h == new_hash_int]
+        assert_equal(request_types, [MSG_CMPCT_BLOCK])
+
+        for node in (miner, snapshot_node):
+            node.setmocktime(0)
+        snapshot_node.disconnect_p2ps()
+
+        self.log.info("  - finish background validation so later tests start from a clean state")
+        self.connect_nodes(snapshot_node.index, miner.index)
+        self.sync_blocks(nodes=(miner, snapshot_node))
+        self.wait_until(lambda: len(snapshot_node.getchainstates()['chainstates']) == 1)
 
     def test_sync_to_most_work_chain_after_background_validation(self):
         """
@@ -808,6 +901,8 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         # The following test cleans node2 and node3 chain directories.
         self.test_sync_from_assumeutxo_node(snapshot=dump_output)
+
+        self.test_compact_blocks_during_background_validation(snapshot=dump_output)
 
         self.test_sync_to_most_work_chain_after_background_validation()
 
