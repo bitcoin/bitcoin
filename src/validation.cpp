@@ -5676,21 +5676,16 @@ Chainstate& ChainstateManager::InitializeChainstate(CTxMemPool* mempool)
     return destroyed && !fs::exists(db_path);
 }
 
-util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
+util::Result<void> ChainstateManager::ActivateSnapshot(
         AutoFile& coins_file,
         const SnapshotMetadata& metadata,
         bool in_memory)
 {
     uint256 base_blockhash = metadata.m_base_blockhash;
 
-    CBlockIndex* snapshot_start_block{};
-
     {
         LOCK(::cs_main);
 
-        if (this->CurrentChainstate().m_from_snapshot_blockhash) {
-            return util::Error{Untranslated("Can't activate a snapshot-based chainstate more than once")};
-        }
         if (!GetParams().AssumeutxoForBlockhash(base_blockhash).has_value()) {
             auto available_heights = GetParams().GetAvailableSnapshotHeights();
             std::string heights_formatted = util::Join(available_heights, ", ", [&](const auto& i) { return util::ToString(i); });
@@ -5699,9 +5694,9 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
                 heights_formatted))};
         }
 
-        snapshot_start_block = m_blockman.LookupBlockIndex(base_blockhash);
+        const CBlockIndex* snapshot_start_block{m_blockman.LookupBlockIndex(base_blockhash)};
         if (!snapshot_start_block) {
-            return util::Error{Untranslated(strprintf("The base block header (%s) must appear in the headers chain. Make sure all headers are syncing, and call loadtxoutset again",
+            return util::Error{Untranslated(strprintf("The base block header (%s) must appear in the headers chain",
                           base_blockhash.ToString()))};
         }
 
@@ -5713,43 +5708,6 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
         if (!m_best_header || m_best_header->GetAncestor(snapshot_start_block->nHeight) != snapshot_start_block) {
             return util::Error{Untranslated("A forked headers-chain with more work than the chain with the snapshot base block header exists. Please proceed to sync without AssumeUtxo.")};
         }
-
-        auto mempool{CurrentChainstate().GetMempool()};
-        if (mempool && mempool->size() > 0) {
-            return util::Error{Untranslated("Can't activate a snapshot when mempool not empty")};
-        }
-    }
-
-    int64_t current_coinsdb_cache_size{0};
-    int64_t current_coinstip_cache_size{0};
-
-    // Cache percentages to allocate to each chainstate.
-    //
-    // These particular percentages don't matter so much since they will only be
-    // relevant during snapshot activation; caches are rebalanced at the conclusion of
-    // this function. We want to give (essentially) all available cache capacity to the
-    // snapshot to aid the bulk load later in this function.
-    static constexpr double IBD_CACHE_PERC = 0.01;
-    static constexpr double SNAPSHOT_CACHE_PERC = 0.99;
-
-    {
-        LOCK(::cs_main);
-        // Resize the coins caches to ensure we're not exceeding memory limits.
-        //
-        // Allocate the majority of the cache to the incoming snapshot chainstate, since
-        // (optimistically) getting to its tip will be the top priority. We'll need to call
-        // `MaybeRebalanceCaches()` once we're done with this function to ensure
-        // the right allocation (including the possibility that no snapshot was activated
-        // and that we should restore the active chainstate caches to their original size).
-        //
-        current_coinsdb_cache_size = this->ActiveChainstate().m_coinsdb_cache_size_bytes;
-        current_coinstip_cache_size = this->ActiveChainstate().m_coinstip_cache_size_bytes;
-
-        // Temporarily resize the active coins cache to make room for the newly-created
-        // snapshot chain.
-        this->ActiveChainstate().ResizeCoinsCaches(
-            static_cast<size_t>(current_coinstip_cache_size * IBD_CACHE_PERC),
-            static_cast<size_t>(current_coinsdb_cache_size * IBD_CACHE_PERC));
     }
 
     auto snapshot_chainstate = WITH_LOCK(::cs_main,
@@ -5759,15 +5717,12 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
     {
         LOCK(::cs_main);
         snapshot_chainstate->InitCoinsDB(
-            static_cast<size_t>(current_coinsdb_cache_size * SNAPSHOT_CACHE_PERC),
+            m_total_coinsdb_cache,
             in_memory, /*should_wipe=*/false);
-        snapshot_chainstate->InitCoinsCache(
-            static_cast<size_t>(current_coinstip_cache_size * SNAPSHOT_CACHE_PERC));
+        snapshot_chainstate->InitCoinsCache(m_total_coinstip_cache);
     }
 
     auto cleanup_bad_snapshot = [&](bilingual_str reason) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
-        this->MaybeRebalanceCaches();
-
         // PopulateAndValidateSnapshot can return (in error) before the leveldb datadir
         // has been created, so only attempt removal if we got that far.
         if (auto snapshot_datadir = node::FindAssumeutxoChainstateDir(m_options.datadir)) {
@@ -5791,12 +5746,6 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
 
     LOCK(::cs_main);  // cs_main required for rest of snapshot activation.
 
-    // Do a final check to ensure that the snapshot chainstate is actually a more
-    // work chain than the active chainstate; a user could have loaded a snapshot
-    // very late in the IBD process, and we wouldn't want to load a useless chainstate.
-    if (!CBlockIndexWorkComparator()(ActiveTip(), snapshot_chainstate->m_chain.Tip())) {
-        return cleanup_bad_snapshot(Untranslated("work does not exceed active chainstate"));
-    }
     // If not in-memory, persist the base blockhash for use during subsequent
     // initialization.
     if (!in_memory) {
@@ -5815,7 +5764,7 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
               chainstate.CoinsTip().DynamicMemoryUsage() / (1000 * 1000));
 
     this->MaybeRebalanceCaches();
-    return snapshot_start_block;
+    return {};
 }
 
 static void FlushSnapshotToDisk(CCoinsViewCache& coins_cache, bool snapshot_loaded)
@@ -5871,13 +5820,6 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
     }
 
     const AssumeutxoData& au_data = *maybe_au_data;
-
-    // This work comparison is a duplicate check with the one performed later in
-    // ActivateSnapshot(), but is done so that we avoid doing the long work of staging
-    // a snapshot that isn't actually usable.
-    if (WITH_LOCK(::cs_main, return !CBlockIndexWorkComparator()(ActiveTip(), snapshot_start_block))) {
-        return util::Error{Untranslated("Work does not exceed active chainstate")};
-    }
 
     const uint64_t coins_count = metadata.m_coins_count;
     uint64_t coins_left = metadata.m_coins_count;
@@ -6030,8 +5972,8 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
         m_blockman.m_dirty_blockindex.insert(index);
         // Changes to the block index will be flushed to disk after this call
         // returns in `ActivateSnapshot()`, when `MaybeRebalanceCaches()` is
-        // called, since we've added a snapshot chainstate and therefore will
-        // have to downsize the IBD chainstate, which will result in a call to
+        // called, since the snapshot chainstate starts with the full cache
+        // budget and will have to be downsized, which will result in a call to
         // `FlushStateToDisk(FORCE_FLUSH)`.
     }
 
@@ -6271,7 +6213,8 @@ Chainstate& ChainstateManager::AddChainstate(std::unique_ptr<Chainstate> chainst
     assert(&curr_chainstate == m_chainstates.back().get());
 
     // Transfer possession of the mempool to the chainstate.
-    // Mempool is empty at this point because we're still in IBD.
+    // Mempool is empty at this point because snapshot chainstates are only
+    // added during startup, before the mempool is loaded.
     assert(!prev_chainstate.m_mempool || prev_chainstate.m_mempool->size() == 0);
     assert(!curr_chainstate.m_mempool);
     std::swap(curr_chainstate.m_mempool, prev_chainstate.m_mempool);

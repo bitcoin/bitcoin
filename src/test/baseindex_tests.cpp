@@ -61,6 +61,23 @@ static const std::vector<std::pair<std::string, IndexFactory>> INDEX_FACTORIES{
 // concrete index is being used.
 BOOST_AUTO_TEST_SUITE(baseindex_tests)
 
+BOOST_FIXTURE_TEST_CASE(baseindex_duplicate_genesis, TestingSetup)
+{
+    const auto* genesis{WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Genesis())};
+    auto block{std::make_shared<const CBlock>(Params().GenesisBlock())};
+    for (auto& [index_name, make_index] : INDEX_FACTORIES) {
+        BOOST_TEST_INFO_SCOPE(index_name);
+        auto index{make_index(m_node)};
+        BOOST_REQUIRE(index->Init());
+        index->Sync();
+        // A queued genesis notification can arrive after the index has caught up during startup
+        ValidationInterfaceTest::BlockConnected(ChainstateRole{}, *index, block, genesis);
+        BOOST_CHECK(index->GetSummary().synced);
+        BOOST_CHECK_EQUAL(index->GetSummary().best_block_height, 0);
+        StopIndex(*index, m_node);
+    }
+}
+
 // Test that the index does not commit ahead of the chainstate's last
 // flushed block. If it did, a subsequent unclean shutdown would corrupt
 // the index, because during reverting it would require blocks that were
