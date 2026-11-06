@@ -677,6 +677,13 @@ class AssumeutxoTest(BitcoinTestFramework):
         snapshot_block = n0.getblock(snapshot_hash, 0)
         n1.submitblock(snapshot_block)
 
+        self.log.info("Restart while some of the snapshot block's ancestors are missing")
+        self.restart_node(1, extra_args=self.extra_args[1])
+        n1.getblock(snapshot_hash)
+        normal, snapshot = n1.getchainstates()['chainstates']
+        assert_equal(normal['blocks'], START_HEIGHT)
+        assert_equal(snapshot['blocks'], PAUSE_HEIGHT)
+
         self.connect_nodes(0, 1)
 
         self.log.info(f"Ensuring snapshot chain syncs to tip. ({FINAL_HEIGHT})")
