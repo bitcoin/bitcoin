@@ -429,7 +429,7 @@ jobs:
             run_functional_tests: false
 
           - name: 'ASan + LSan + UBSan + integer'
-            warp-runner: 'warp-ubuntu-2404-x64-8x' # has to match container in ci/test/00_setup_env_native_asan.sh for tracing tools
+            warp-runner: 'warp-ubuntu-2404-x64-8x'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_asan.sh'
@@ -546,12 +546,6 @@ jobs:
       - name: Clear unnecessary files
         if: ${{ github.repository != 'bitcoin/bitcoin' || matrix.provider == 'gha' }} # Only needed on GHA runners
         uses: ./.github/actions/clear-files
-
-      - name: Enable bpfcc script
-        if: ${{ env.CONTAINER_NAME == 'ci_native_asan' }}
-        # In the image build step, no external environment variables are available,
-        # so any settings will need to be written to the settings env file:
-        run: sed -i "s|\${INSTALL_BCC_TRACING_TOOLS}|true|g" ./ci/test/00_setup_env_native_asan.sh
 
       - name: Set mmap_rnd_bits
         if: ${{ env.CONTAINER_NAME == 'ci_native_tsan' || env.CONTAINER_NAME == 'ci_native_msan' || env.CONTAINER_NAME == 'ci_native_fuzz_with_msan' }}
