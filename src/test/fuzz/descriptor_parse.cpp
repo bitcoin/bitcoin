@@ -44,6 +44,7 @@ static void TestDescriptor(const Descriptor& desc, FlatSigningProvider& sig_prov
     (void)desc.Expand(0, sig_provider, out_scripts, sig_provider, &cache);
     (void)desc.ExpandPrivate(0, sig_provider, sig_provider);
     (void)desc.ExpandFromCache(0, cache, out_scripts, sig_provider);
+    (void)desc.GetExtPubKeysWithOrigins(&cache);
 
     // If we could serialize to script we must be able to infer using the same provider.
     if (!out_scripts.empty()) {
