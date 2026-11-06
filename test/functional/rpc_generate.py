@@ -5,6 +5,7 @@
 """Test generate* RPCs."""
 
 from concurrent.futures import ThreadPoolExecutor
+from decimal import Decimal
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.wallet import MiniWallet
@@ -12,7 +13,7 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
-
+from test_framework.messages import COIN
 
 class RPCGenerateTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -37,17 +38,74 @@ class RPCGenerateTest(BitcoinTestFramework):
         node.submitblock(hexdata=generated_block['hex'])
         assert_equal(generated_block['hash'], node.getbestblockhash())
 
+        self.log.info('Generate an empty block without address and fallback to OP_RETURN')
+        hash = self.generateblock(node, transactions=[])['hash']
+        block = node.getblock(blockhash=hash, verbose=2)
+        assert_equal(len(block['tx']), 1)
+        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['asm'], 'OP_RETURN')
+
         self.log.info('Generate an empty block to address')
         hash = self.generateblock(node, output=address, transactions=[])['hash']
         block = node.getblock(blockhash=hash, verbose=2)
         assert_equal(len(block['tx']), 1)
         assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['address'], address)
 
-        self.log.info('Generate an empty block to a descriptor')
-        hash = self.generateblock(node, 'addr(' + address + ')', [])['hash']
-        block = node.getblock(blockhash=hash, verbosity=2)
+        self.log.info('Generate an empty block to a list of addresses')
+        address2 = miniwallet.get_address()
+        hash = self.generateblock(node, output=[address, address2], transactions=[])['hash']
+        block = node.getblock(blockhash=hash, verbose=2)
         assert_equal(len(block['tx']), 1)
         assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['address'], address)
+        assert_equal(block['tx'][0]['vout'][1]['scriptPubKey']['address'], address2)
+
+        self.log.info('Generate an empty block to a descriptor')
+        hash = self.generateblock(node, 'addr(' + address + ')', [])['hash']
+        block = node.getblock(blockhash=hash, verbose=2)
+        assert_equal(len(block['tx']), 1)
+        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['address'], address)
+
+        self.log.info('Generate an empty block to a list of descriptors')
+        hash = self.generateblock(node, ['addr(' + address + ')', 'addr('+ address2 + ')'], [])['hash']
+        block = node.getblock(blockhash=hash, verbose=2)
+        assert_equal(len(block['tx']), 1)
+        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['address'], address)
+        assert_equal(block['tx'][0]['vout'][1]['scriptPubKey']['address'], address2)
+
+        # The chain starts from the framework's cached 199-block chain (see
+        # _initialize_chain), so the block subsidy here is 25 BTC. The custom
+        # rewards below are additional to the equal split of the remaining
+        # subsidy, and may not exceed it in total.
+        self.log.info('Generate an empty block to a list of descriptors with custom reward')
+        hash = self.generateblock(node, [{'addr(' + address + ')': 10*COIN},
+            {'addr(' + address2 + ')': 15*COIN}], [])['hash']
+        block = node.getblock(blockhash=hash, verbose=2)
+        assert_equal(len(block['tx']), 1)
+        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['address'], address)
+        assert_equal(block['tx'][0]['vout'][1]['scriptPubKey']['address'], address2)
+        assert_equal(block['tx'][0]['vout'][0]['value'], Decimal('10.00000000'))
+        assert_equal(block['tx'][0]['vout'][1]['value'], Decimal('15.00000000'))
+
+        self.log.info('Generate an empty block to a list of addresses with custom reward and check remainder distribution')
+        hash = self.generateblock(node, [{address: 8*COIN}, {address2: 12*COIN - 1}], [])['hash']
+        block = node.getblock(blockhash=hash, verbose=2)
+        assert_equal(len(block['tx']), 1)
+        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['address'], address)
+        assert_equal(block['tx'][0]['vout'][1]['scriptPubKey']['address'], address2)
+        assert_equal(block['tx'][0]['vout'][0]['value'], Decimal('10.50000001'))
+        assert_equal(block['tx'][0]['vout'][1]['value'], Decimal('14.49999999'))
+        assert_equal(block['tx'][0]['vout'][0]['value'] + block['tx'][0]['vout'][1]['value'], Decimal('25.00000000'))
+
+        address3 = miniwallet.get_address()
+        self.log.info('Generate an empty block to a list of addresses with and without custom reward')
+        hash = self.generateblock(node, [address, {address2: 8*COIN}, address3], [])['hash']
+        block = node.getblock(blockhash=hash, verbose=2)
+        assert_equal(len(block['tx']), 1)
+        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['address'], address)
+        assert_equal(block['tx'][0]['vout'][1]['scriptPubKey']['address'], address2)
+        assert_equal(block['tx'][0]['vout'][2]['scriptPubKey']['address'], address3)
+        assert_equal(block['tx'][0]['vout'][0]['value'], Decimal('5.66666667'))
+        assert_equal(block['tx'][0]['vout'][1]['value'], Decimal('13.66666667'))
+        assert_equal(block['tx'][0]['vout'][2]['value'], Decimal('5.66666666'))
 
         self.log.info('Generate an empty block to a combo descriptor with compressed pubkey')
         combo_key = '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'
@@ -65,6 +123,14 @@ class RPCGenerateTest(BitcoinTestFramework):
         assert_equal(len(block['tx']), 1)
         assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['address'], combo_address)
 
+        # Generate some extra mempool transactions to verify that they are mined if no txs are provided
+        for _ in range(10):
+            miniwallet.send_self_transfer(from_node=node)
+        self.log.info("Generate a block with mempool txs")
+        hash = self.generateblock(node, address)['hash']
+        block = node.getblock(hash, 1)
+        assert_equal(len(block['tx']), 11)
+
         # Generate some extra mempool transactions to verify they don't get mined
         for _ in range(10):
             miniwallet.send_self_transfer(from_node=node)
@@ -76,14 +142,39 @@ class RPCGenerateTest(BitcoinTestFramework):
         assert_equal(len(block['tx']), 2)
         assert_equal(block['tx'][1], txid)
 
+        self.log.info('Generate block with multiple txid')
+        # Generate some transactions to get mined
+        txs = []
+        for _ in range(3):
+            txs.append(miniwallet.send_self_transfer(from_node=node)['txid'])
+        # Generate some extra mempool transactions to verify they don't get mined
+        for _ in range(10):
+            miniwallet.send_self_transfer(from_node=node)
+        hash = self.generateblock(node, address, txs)['hash']
+        block = node.getblock(hash, 1)
+        assert_equal(len(block['tx']), 4)
+        for i, tx in enumerate(txs):
+            assert_equal(block['tx'][i+1], tx)
+        # Clean the mempool for next test by mining a block
+        self.generateblock(node, address)
+
         self.log.info('Generate block with raw tx')
         rawtx = miniwallet.create_self_transfer()['hex']
         hash = self.generateblock(node, address, [rawtx])['hash']
-
         block = node.getblock(hash, 1)
         assert_equal(len(block['tx']), 2)
         txid = block['tx'][1]
         assert_equal(node.getrawtransaction(txid=txid, verbose=False, blockhash=hash), rawtx)
+
+        self.log.info('Generate empty block')
+        # put some txs into the mempool
+        for _ in range(10):
+            miniwallet.send_self_transfer(from_node=node)
+        hash = self.generateblock(node, address, [])['hash']
+        block = node.getblock(hash, 1)
+        assert_equal(len(block['tx']), 1) # it contains the coinbase tx
+        # Clean the mempool for next test by mining a block
+        self.generateblock(node, address)
 
         # Ensure that generateblock can be called concurrently by many threads.
         self.log.info('Generate blocks in parallel')
@@ -118,6 +209,30 @@ class RPCGenerateTest(BitcoinTestFramework):
         self.log.info('Fail to generate block with a descriptor missing a private key')
         child_descriptor = 'pkh(tpubD6NzVbkrYhZ4XgiXtGrdW5XDAPFCL9h7we1vwNCpn8tGbBcgfVYjXyhWo4E1xkh56hjod1RhGjxbaTLV3X4FyWuejifB9jusQ46QzG87VKp/0\'/0)'
         assert_raises_rpc_error(-5, 'Cannot derive script without private keys', self.generateblock, node, child_descriptor, [])
+
+        self.log.info('Fail to generate block with a custom reward object with negative reward')
+        reward_object = [{address: -8*COIN}]
+        assert_raises_rpc_error(-3, 'Amount out of range', self.generateblock, node, reward_object, [])
+
+        self.log.info('Fail to generate block with a custom reward object with more reward than the bitcoin supply')
+        reward_object = [{address: 21000000*COIN + 1}]
+        assert_raises_rpc_error(-3, 'Amount out of range', self.generateblock, node, reward_object, [])
+
+        self.log.info('Fail to generate block with a custom reward object with decimals in the reward')
+        reward_object = [{address: 8*COIN + 0.1}]
+        assert_raises_rpc_error(-3, 'Invalid amount', self.generateblock, node, reward_object, [])
+
+        self.log.info('Fail to generate block with a custom reward empty object')
+        reward_object = [{}]
+        assert_raises_rpc_error(-8, 'Error: Custom reward must be a string address/descriptor or an object {\"address/descriptor\": amount}', self.generateblock, node, reward_object, [])
+
+        self.log.info('Fail to generate block with a bigger reward than the block reward')
+        reward_object = [{address: 51*COIN}]
+        assert_raises_rpc_error(-8, 'Error: Sum of custom rewards exceeds the total block reward', self.generateblock, node, reward_object, [])
+
+        self.log.info('Fail to generate block with more than one \"address/descriptor\" in custom reward object')
+        reward_object = [{address: 100000000, combo_address: 200000000}]
+        assert_raises_rpc_error(-8, 'Error: Custom reward object must contain exactly one \"address/descriptor\": amount pair', self.generateblock, node, reward_object, [])
 
     def test_generate(self):
         message = (
