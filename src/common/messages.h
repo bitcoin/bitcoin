@@ -13,7 +13,6 @@
 
 #include <string>
 #include <string_view>
-#include <utility>
 
 struct bilingual_str;
 enum class FeeEstimateMode;
@@ -29,7 +28,6 @@ bool FeeModeFromString(std::string_view mode_string, FeeEstimateMode& fee_estima
 std::string StringForFeeReason(FeeReason reason);
 std::string FeeReasons(const std::string& delimiter);
 std::string FeeModes(const std::string& delimiter);
-std::string FeeModeInfo(std::pair<std::string, FeeEstimateMode>& mode);
 std::string FeeModesDetail(std::string default_info);
 std::string InvalidEstimateModeErrorMessage();
 bilingual_str PSBTErrorString(PSBTError error);
