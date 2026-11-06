@@ -1654,6 +1654,7 @@ RPCMethod walletprocesspsbt()
             "       \"SINGLE|ANYONECANPAY\""},
                     {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
                     {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible"},
+                    {"keypath_only", RPCArg::Type::BOOL, RPCArg::Default{DEFAULT_SIGN_TAPROOT_KEYPATH_ONLY}, "Only add Taproot key-path data, and only sign and finalize Taproot inputs using the key path. Existing script-path data is not signed or finalized."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -1690,11 +1691,12 @@ RPCMethod walletprocesspsbt()
     const bool sign{self.Arg<bool>("sign")};
     const bool bip32derivs{self.Arg<bool>("bip32derivs")};
     const bool finalize{self.Arg<bool>("finalize")};
+    const bool keypath_only{self.Arg<bool>("keypath_only")};
     bool complete = true;
 
     if (sign) EnsureWalletIsUnlocked(*pwallet);
 
-    const auto err{wallet.FillPSBT(psbtx, {.sign = sign, .sighash_type = nHashType, .finalize = finalize, .bip32_derivs = bip32derivs}, complete)};
+    const auto err{wallet.FillPSBT(psbtx, {.sign = sign, .sighash_type = nHashType, .finalize = finalize, .bip32_derivs = bip32derivs, .taproot_keypath_only = keypath_only}, complete)};
     if (err) {
         throw JSONRPCPSBTError(*err);
     }
