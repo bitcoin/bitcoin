@@ -20,6 +20,7 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
+#include <test/util/validation.h>
 #include <util/string.h>
 #include <util/time.h>
 #include <validation.h>
@@ -296,6 +297,57 @@ BOOST_FIXTURE_TEST_CASE(block_relay_only_eviction, OutboundTest)
     }
     BOOST_CHECK(vNodes[max_outbound_block_relay - 1]->fDisconnect == true);
     BOOST_CHECK(vNodes.back()->fDisconnect == false);
+
+    for (const CNode* node : vNodes) {
+        peerLogic->FinalizeNode(*node);
+    }
+    connman->ClearTestNodes();
+}
+
+BOOST_FIXTURE_TEST_CASE(no_tx_relay_peer_replacement, OutboundTest)
+{
+    NodeId id{0};
+    FakeNodeClock clock{};
+    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params());
+    auto peerLogic = PeerManager::make(*connman, *m_node.addrman, nullptr, *m_node.chainman, *m_node.mempool, *m_node.warnings, {});
+
+    constexpr int max_outbound_full_relay{MAX_OUTBOUND_FULL_RELAY_CONNECTIONS};
+    constexpr auto MINIMUM_CONNECT_TIME{30s};
+    CConnman::Options options;
+    options.m_max_automatic_connections = DEFAULT_MAX_PEER_CONNECTIONS;
+
+    connman->Init(options);
+    std::vector<CNode*> vNodes;
+
+    for (int i = 0; i < max_outbound_full_relay; ++i) {
+        AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY, /*onion_peer=*/i == 0);
+        vNodes.back()->m_relays_txs = true;
+    }
+    // The onion peer can't be replaced as the only one on its network
+    vNodes[0]->m_relays_txs = false;
+    vNodes[1]->m_relays_txs = false;
+
+    // No replacement during IBD
+    peerLogic->CheckForStaleTipAndEvictPeers();
+    BOOST_CHECK(!connman->GetReplaceNoTxRelayPeer());
+
+    static_cast<TestChainstateManager&>(*m_node.chainman).JumpOutOfIbd();
+    peerLogic->CheckForStaleTipAndEvictPeers();
+    BOOST_CHECK(connman->GetReplaceNoTxRelayPeer());
+    for (const CNode* node : vNodes) {
+        BOOST_CHECK(!node->fDisconnect);
+    }
+
+    // Add the replacement (mocks ThreadOpenConnections): the peer not relaying
+    // txs is evicted, not the youngest one
+    AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY);
+    vNodes.back()->m_relays_txs = true;
+    clock += MINIMUM_CONNECT_TIME + 1s;
+    peerLogic->CheckForStaleTipAndEvictPeers();
+    for (size_t i = 0; i < vNodes.size(); ++i) {
+        BOOST_CHECK_EQUAL(vNodes[i]->fDisconnect, i == 1);
+    }
+    BOOST_CHECK(!connman->GetReplaceNoTxRelayPeer());
 
     for (const CNode* node : vNodes) {
         peerLogic->FinalizeNode(*node);
