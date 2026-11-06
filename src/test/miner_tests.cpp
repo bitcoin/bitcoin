@@ -148,6 +148,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     BOOST_REQUIRE(block_template);
     CBlock block{block_template->getBlock()};
     BOOST_REQUIRE_EQUAL(block.vtx.size(), 1U);
+    BOOST_CHECK_EQUAL(block_template->getTotalFees(), 0);
 
     // waitNext() on an empty mempool should return nullptr because there is no better template
     auto should_be_nullptr = block_template->waitNext({.timeout = MillisecondsDouble{0}, .fee_threshold = 1});
@@ -216,6 +217,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     BOOST_CHECK(block.vtx[1]->GetHash() == hashParentTx);
     BOOST_CHECK(block.vtx[2]->GetHash() == hashHighFeeTx);
     BOOST_CHECK(block.vtx[3]->GetHash() == hashMediumFeeTx);
+    BOOST_CHECK_EQUAL(block_template->getTotalFees(), 61'000);
 
     // Test the inclusion of package feerates in the block template and ensure they are sequential.
     // Can't use the Mining interface because it needs access to m_package_feerates.
@@ -275,6 +277,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     BOOST_REQUIRE_EQUAL(block.vtx.size(), 6U);
     BOOST_CHECK(block.vtx[4]->GetHash() == hashFreeTx);
     BOOST_CHECK(block.vtx[5]->GetHash() == hashLowFeeTx);
+    BOOST_CHECK_EQUAL(block_template->getTotalFees(), 61'000 + feeToUse + 2);
 
     // Test that transaction selection properly updates ancestor fee
     // calculations as ancestor transactions get included in a block.
@@ -810,6 +813,7 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
     BOOST_CHECK(block.vtx[3]->GetHash() == hashParentTx);
     BOOST_CHECK(block.vtx[4]->GetHash() == hashPrioritsedChild);
     BOOST_CHECK(block.vtx[5]->GetHash() == hashFreeChild);
+    BOOST_CHECK_EQUAL(block_template->getTotalFees(), 2'000); // Prioritisation deltas are excluded.
     for (size_t i=0; i<block.vtx.size(); ++i) {
         // The FreeParent and FreeChild's prioritisations should not impact the child.
         BOOST_CHECK(block.vtx[i]->GetHash() != hashFreeGrandchild);
