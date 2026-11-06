@@ -3292,6 +3292,11 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex&
             // If we're unable to disconnect a block during normal operation,
             // then that is a failure of our local system -- we should abort
             // rather than stay on a less work chain.
+            if (state.IsError()) {
+                LogError("%s: Failed to disconnect block (DisconnectTip() error): %s", __func__, state.ToString());
+                return false;
+            }
+            Assume(state.IsValid());
             FatalError(m_chainman.GetNotifications(), state, _("Failed to disconnect block."));
             return false;
         }
