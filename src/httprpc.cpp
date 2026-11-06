@@ -214,12 +214,6 @@ static void HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
     jreq.URI = req->GetURI();
     if (!RPCAuthorized(*auth_header, jreq.authUser)) {
         LogWarning("ThreadRPCServer incorrect password attempt from %s", jreq.peerAddr);
-
-        /* Deter brute-forcing
-           If this results in a DoS the user really
-           shouldn't have their RPC port exposed. */
-        UninterruptibleSleep(std::chrono::milliseconds{250});
-
         req->WriteHeader("WWW-Authenticate", WWW_AUTH_HEADER_DATA);
         req->WriteReply(HTTP_UNAUTHORIZED);
         return;
