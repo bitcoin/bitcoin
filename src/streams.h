@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cerrno>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -522,7 +523,8 @@ private:
             return false;
         size_t nBytes{m_src.detail_fread(std::span{vchBuf}.subspan(pos, readNow))};
         if (nBytes == 0) {
-            throw std::ios_base::failure{m_src.feof() ? "BufferedFile::Fill: end of file" : "BufferedFile::Fill: fread failed"};
+            const int err{errno};
+            throw std::ios_base::failure{m_src.feof() ? "BufferedFile::Fill: end of file" : "BufferedFile::Fill: fread failed: " + SysErrorString(err)};
         }
         nSrcPos += nBytes;
         return true;

@@ -9,6 +9,7 @@
 #include <util/obfuscation.h>
 
 #include <array>
+#include <cerrno>
 
 AutoFile::AutoFile(std::FILE* file, const Obfuscation& obfuscation) : m_file{file}, m_obfuscation{obfuscation}
 {
@@ -36,7 +37,8 @@ void AutoFile::seek(int64_t offset, int origin)
         throw std::ios_base::failure("AutoFile::seek: file handle is nullptr");
     }
     if (FileSeek64(m_file, offset, origin) != 0) {
-        throw std::ios_base::failure(feof() ? "AutoFile::seek: end of file" : "AutoFile::seek: fseek failed");
+        const int err{errno};
+        throw std::ios_base::failure(feof() ? "AutoFile::seek: end of file" : "AutoFile::seek: fseek failed: " + SysErrorString(err));
     }
     if (origin == SEEK_SET) {
         m_position = offset;
@@ -74,7 +76,8 @@ int64_t AutoFile::size()
 void AutoFile::read(std::span<std::byte> dst)
 {
     if (detail_fread(dst) != dst.size()) {
-        throw std::ios_base::failure(feof() ? "AutoFile::read: end of file" : "AutoFile::read: fread failed");
+        const int err{errno};
+        throw std::ios_base::failure(feof() ? "AutoFile::read: end of file" : "AutoFile::read: fread failed: " + SysErrorString(err));
     }
 }
 
@@ -85,7 +88,8 @@ void AutoFile::ignore(size_t nSize)
     while (nSize > 0) {
         size_t nNow = std::min<size_t>(nSize, sizeof(data));
         if (std::fread(data, 1, nNow, m_file) != nNow) {
-            throw std::ios_base::failure(feof() ? "AutoFile::ignore: end of file" : "AutoFile::ignore: fread failed");
+            const int err{errno};
+            throw std::ios_base::failure(feof() ? "AutoFile::ignore: end of file" : "AutoFile::ignore: fread failed: " + SysErrorString(err));
         }
         nSize -= nNow;
         if (m_position.has_value()) *m_position += nNow;
@@ -97,7 +101,8 @@ void AutoFile::write(std::span<const std::byte> src)
     if (!m_file) throw std::ios_base::failure("AutoFile::write: file handle is nullptr");
     if (!m_obfuscation) {
         if (std::fwrite(src.data(), 1, src.size(), m_file) != src.size()) {
-            throw std::ios_base::failure("AutoFile::write: write failed");
+            const int err{errno};
+            throw std::ios_base::failure("AutoFile::write: write failed: " + SysErrorString(err));
         }
         m_was_written = true;
         if (m_position.has_value()) *m_position += src.size();
@@ -120,7 +125,8 @@ void AutoFile::write_buffer(std::span<std::byte> src)
         m_obfuscation(src, *m_position); // obfuscate in-place
     }
     if (std::fwrite(src.data(), 1, src.size(), m_file) != src.size()) {
-        throw std::ios_base::failure("AutoFile::write_buffer: write failed");
+        const int err{errno};
+        throw std::ios_base::failure("AutoFile::write_buffer: write failed: " + SysErrorString(err));
     }
     m_was_written = true;
     if (m_position) *m_position += src.size();
