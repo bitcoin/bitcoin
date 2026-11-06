@@ -5,27 +5,50 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <clientversion.h>
+#include <consensus/amount.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
 #include <node/kernel_notifications.h>
+#include <node/mining_types.h>
+#include <script/script.h>
 #include <script/solver.h>
 #include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <serialize.h>
+#include <streams.h>
 #include <util/chaintype.h>
+#include <util/strencodings.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 #include <test/util/common.h>
 #include <test/util/logging.h>
+#include <test/util/mining.h>
 #include <test/util/setup_common.h>
+
+#include <cstddef>
+#include <cstdint>
+#include <ios>
+#include <span>
+#include <utility>
+#include <vector>
 
 using kernel::CBlockFileInfo;
 using node::STORAGE_HEADER_BYTES;
 using node::BlockManager;
 using node::KernelNotifications;
 using node::MAX_BLOCKFILE_SIZE;
+using namespace util::hex_literals;
 
 // use BasicTestingSetup here for the data directory configuration, setup, and cleanup
 BOOST_FIXTURE_TEST_SUITE(blockmanager_tests, BasicTestingSetup)
+
+static std::vector<std::byte> SerializeBlock(const CBlock& block, const TransactionSerParams& params)
+{
+    DataStream stream;
+    stream << params(block);
+    return {stream.begin(), stream.end()};
+}
 
 BOOST_AUTO_TEST_CASE(blockmanager_find_block_pos)
 {
@@ -227,9 +250,51 @@ BOOST_FIXTURE_TEST_CASE(blockmanager_readblock_hash_mismatch, TestingSetup)
         index.phashBlock = &uint256::ONE; // mismatched block hash
     }
 
+    { // Finish this log check before the other reader can emit the same error.
+        ASSERT_DEBUG_LOG("GetHash() doesn't match index");
+        CBlock block;
+        BOOST_CHECK(!m_node.chainman->m_blockman.ReadBlock(block, index));
+    }
+    const auto pos{WITH_LOCK(cs_main, return index.GetBlockPos())};
     ASSERT_DEBUG_LOG("GetHash() doesn't match index");
-    CBlock block;
-    BOOST_CHECK(!m_node.chainman->m_blockman.ReadBlock(block, index));
+    BOOST_CHECK(!m_node.chainman->m_blockman.ReadBlockWithoutWitness(pos, index.GetBlockHash()));
+}
+
+BOOST_FIXTURE_TEST_CASE(blockmanager_readblock_validation, RegTestingSetup)
+{
+    MineBlock(m_node, {}); // Adds a block with a coinbase witness on top of genesis
+    LOCK(cs_main);
+    auto& blockman{m_node.chainman->m_blockman};
+    const auto check_read_fails{[&](const FlatFilePos& pos, const uint256& hash, const char* error) {
+        { // Finish this log check before the other reader can emit the same error.
+            ASSERT_DEBUG_LOG(error);
+            CBlock block;
+            BOOST_CHECK(!blockman.ReadBlock(block, pos, hash));
+        }
+        ASSERT_DEBUG_LOG(error);
+        BOOST_CHECK(!blockman.ReadBlockWithoutWitness(pos, hash));
+    }};
+    for (const auto* index : {m_node.chainman->ActiveChain()[0], m_node.chainman->ActiveTip()}) {
+        CBlock block;
+        BOOST_REQUIRE(blockman.ReadBlock(block, *index));
+        BOOST_CHECK_EQUAL(block.vtx[0]->HasWitness(), index->nHeight > 0);
+        BOOST_CHECK(*Assert(blockman.ReadBlockWithoutWitness(index->GetBlockPos(), index->GetBlockHash())) == SerializeBlock(block, TX_NO_WITNESS));
+    }
+    check_read_fails(FlatFilePos{}, uint256::ZERO, "while reading raw block storage header");
+
+    const auto& genesis{Params().GenesisBlock()};
+    CBlock corrupt{genesis};
+    corrupt.nBits = 0; // Invalid proof-of-work target, with an otherwise intact block
+    check_read_fails(blockman.WriteBlock(corrupt, 0), corrupt.GetHash(), "Errors in block header");
+
+    const auto genesis_pos{blockman.WriteBlock(genesis, 0)};
+    // WriteBlock returns the payload position, after the storage magic and size.
+    auto file{blockman.OpenBlockFile({genesis_pos.nFile, genesis_pos.nPos - STORAGE_HEADER_BYTES}, false)};
+    BOOST_REQUIRE(!file.IsNull());
+    // Shorten the recorded size to end before the first transaction, without truncating the file.
+    file << Params().MessageStart() << unsigned(GetSerializeSize(CBlockHeader{}) + GetSizeOfCompactSize(genesis.vtx.size()));
+    BOOST_REQUIRE_EQUAL(file.fclose(), 0);
+    check_read_fails(genesis_pos, genesis.GetHash(), "Deserialize or I/O error");
 }
 
 BOOST_AUTO_TEST_CASE(blockmanager_flush_block_file)
@@ -322,6 +387,124 @@ BOOST_FIXTURE_TEST_CASE(prune_lock_update_and_delete, TestingSetup)
 
     // Deleting a non-existent lock returns false
     BOOST_CHECK(!blockman.DeletePruneLock("nonexistent"));
+}
+
+static void CheckStripped(const CBlock& block)
+{
+    const auto expected{SerializeBlock(block, TX_NO_WITNESS)};
+    auto data{SerializeBlock(block, TX_WITH_WITNESS)};
+    data.insert(data.end(), {std::byte{0xff}, std::byte{0x00}}); // Trailing bytes are ignored by the decoder and excluded by the strip
+    CBlock decoded;
+    SpanReader{data} >> TX_WITH_WITNESS(decoded);
+    BOOST_CHECK(SerializeBlock(decoded, TX_NO_WITNESS) == expected);
+    BOOST_CHECK(node::StripBlockWitness(std::move(data)) == expected);
+    BOOST_CHECK(node::StripBlockWitness(expected) == expected); // Legacy encodings pass through unchanged
+}
+
+BOOST_AUTO_TEST_CASE(strip_mixed_transactions)
+{
+    CBlock block;
+    block.nVersion = -1;
+    block.nTime = 12345;
+    block.nNonce = 54321;
+    CheckStripped(block);
+
+    CMutableTransaction tx;
+    tx.vin.resize(1);
+    tx.vout.emplace_back(50 * COIN, CScript{} << OP_TRUE);
+    tx.vin[0].scriptWitness.stack = {std::vector<uint8_t>(32)};
+    tx.vout.emplace_back(0, CScript{} << OP_RETURN << "aa21a9ed0000000000000000000000000000000000000000000000000000000000000000"_hex_v_u8);
+    block.vtx.push_back(MakeTransactionRef(tx));
+    tx.vin[0].scriptWitness.SetNull();
+    tx.nLockTime = 42;
+    block.vtx.push_back(MakeTransactionRef(tx));
+    tx.vin.resize(3);
+    tx.vin[0].scriptWitness.stack = {{}, {1, 2, 3}};
+    tx.vin[2].scriptWitness.stack = {{}}; // A nonempty stack containing an empty item is still witness data
+    block.vtx.push_back(MakeTransactionRef(tx));
+    block.vtx.push_back(block.vtx[1]);
+    CheckStripped(block);
+
+    // Preserve the decoder's empty-transaction encoding even though consensus rejects these transactions.
+    block.vtx = {MakeTransactionRef(CMutableTransaction{})};
+    CheckStripped(block);
+}
+
+BOOST_AUTO_TEST_CASE(strip_compactsize_lengths)
+{
+    CMutableTransaction tx;
+    tx.vin.resize(1);
+    tx.vout.resize(1);
+    CBlock block;
+    for (const auto size : {0, 1, 252, 253, 65535, 65536}) {
+        tx.vin[0].scriptSig.assign(size, 0x51);
+        tx.vout[0].scriptPubKey = tx.vin[0].scriptSig;
+        tx.vin[0].scriptWitness.stack = {std::vector<uint8_t>(size, 0x42)};
+        block.vtx = {MakeTransactionRef(tx)};
+        CheckStripped(block);
+    }
+    tx.vin[0].scriptSig.clear();
+    tx.vout[0].scriptPubKey.clear();
+    tx.vin[0].scriptWitness.stack = {{0x42}};
+    const auto small_tx{MakeTransactionRef(tx)};
+    for (const auto count : {1, 252, 253}) {
+        tx.vin.resize(count);
+        tx.vout.resize(count);
+        tx.vin[0].scriptWitness.stack.assign(count, {});
+        block.vtx = {MakeTransactionRef(tx)};
+        block.vtx.resize(count, small_tx);
+        CheckStripped(block);
+    }
+    // Five-byte counts for outputs and witness items
+    tx.vin.resize(1);
+    tx.vout.resize(65'536);
+    tx.vin[0].scriptWitness.stack.resize(65'536);
+    block.vtx = {MakeTransactionRef(tx)};
+    CheckStripped(block);
+}
+
+BOOST_AUTO_TEST_CASE(strip_invalid_encodings)
+{
+    CMutableTransaction tx;
+    tx.vin.resize(1);
+    tx.vout.resize(1);
+    tx.vin[0].scriptWitness.stack = {{1, 2, 3}};
+    CBlock block;
+    block.vtx = {MakeTransactionRef(tx), MakeTransactionRef(tx)};
+    const auto check_rejected{[](std::span<const std::byte> data, const char* reason) {
+        CBlock decoded;
+        BOOST_CHECK_EXCEPTION(SpanReader{data} >> TX_WITH_WITNESS(decoded), std::ios_base::failure, HasReason(reason));
+        BOOST_CHECK_EXCEPTION((void)node::StripBlockWitness({data.begin(), data.end()}), std::ios_base::failure, HasReason(reason));
+    }};
+    const auto full{SerializeBlock(block, TX_WITH_WITNESS)};
+    for (size_t size{0}; size < full.size(); ++size) check_rejected({full.begin(), full.begin() + size}, "end of data");
+
+    block.vtx.resize(1);
+    const auto valid{SerializeBlock(block, TX_WITH_WITNESS)};
+    for (uint8_t flag : {2, 3, 0xff}) {
+        auto data{valid};
+        data[86] = std::byte{flag};
+        check_rejected(data, "Unknown transaction optional data");
+    }
+    auto empty_witness{valid};
+    empty_witness[139] = std::byte{0};
+    check_rejected(empty_witness, "Superfluous witness record");
+
+    // CompactSizes for transactions, inputs, scriptSig, outputs, scriptPubKey, witness items and item length
+    for (const auto offset : {80, 87, 124, 129, 138, 139, 140}) {
+        for (const auto& [encoding, reason] : {
+                 std::pair{"fd0000"_hex_v, "non-canonical"},
+                 std::pair{"fe00000000"_hex_v, "non-canonical"},
+                 std::pair{"ff0000000000000000"_hex_v, "non-canonical"},
+                 std::pair{"fe01000002"_hex_v, "size too large"},
+             }) {
+            auto data{valid};
+            data.erase(data.begin() + offset);
+            data.insert(data.begin() + offset, encoding.begin(), encoding.end());
+            check_rejected(data, reason);
+            for (size_t size{1}; size < encoding.size(); ++size) check_rejected({data.begin(), data.begin() + offset + size}, "end of data");
+        }
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE(blockmanager_add_to_block_index_best_header, TestingSetup)

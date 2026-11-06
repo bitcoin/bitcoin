@@ -182,6 +182,42 @@ inline constexpr TransactionSerParams TX_WITH_WITNESS{.allow_witness = true};
 inline constexpr TransactionSerParams TX_NO_WITNESS{.allow_witness = false};
 
 /**
+ * Read inputs, outputs and optional witnesses, either materializing fields or skipping their bytes.
+ * read_inputs(extended) returns the input count and runs again with extended=true after a nonzero flags byte.
+ * read_witness() reads the witness stacks and returns whether any is nonempty.
+ */
+template<typename Stream, typename ReadInputs, typename ReadOutputs, typename ReadWitness>
+void UnserializeTransactionBody(Stream& s, bool fAllowWitness, ReadInputs read_inputs, ReadOutputs read_outputs, ReadWitness read_witness)
+{
+    unsigned char flags = 0;
+    /* Try to read the vin. In case the dummy is there, this will be read as an empty vector. */
+    const auto input_count{read_inputs(/*extended=*/false)};
+    if (input_count == 0 && fAllowWitness) {
+        /* We read a dummy or an empty vin. */
+        s >> flags;
+        if (flags != 0) {
+            read_inputs(/*extended=*/true);
+            read_outputs();
+        }
+    } else {
+        /* We read a non-empty vin. Assume a normal vout follows. */
+        read_outputs();
+    }
+    if ((flags & 1) && fAllowWitness) {
+        /* The witness flag is present, and we support witnesses. */
+        flags ^= 1;
+        if (!read_witness()) {
+            /* It's illegal to encode witnesses when all witness stacks are empty. */
+            throw std::ios_base::failure("Superfluous witness record");
+        }
+    }
+    if (flags) {
+        /* Unknown flag in the serialization */
+        throw std::ios_base::failure("Unknown transaction optional data");
+    }
+}
+
+/**
  * Basic transaction serialization format:
  * - uint32_t version
  * - std::vector<CTxIn> vin
@@ -204,37 +240,17 @@ void UnserializeTransaction(TxType& tx, Stream& s, const TransactionSerParams& p
     const bool fAllowWitness = params.allow_witness;
 
     s >> tx.version;
-    unsigned char flags = 0;
     tx.vin.clear();
     tx.vout.clear();
-    /* Try to read the vin. In case the dummy is there, this will be read as an empty vector. */
-    s >> tx.vin;
-    if (tx.vin.size() == 0 && fAllowWitness) {
-        /* We read a dummy or an empty vin. */
-        s >> flags;
-        if (flags != 0) {
-            s >> tx.vin;
-            s >> tx.vout;
-        }
-    } else {
-        /* We read a non-empty vin. Assume a normal vout follows. */
-        s >> tx.vout;
-    }
-    if ((flags & 1) && fAllowWitness) {
-        /* The witness flag is present, and we support witnesses. */
-        flags ^= 1;
-        for (size_t i = 0; i < tx.vin.size(); i++) {
-            s >> tx.vin[i].scriptWitness.stack;
-        }
-        if (!tx.HasWitness()) {
-            /* It's illegal to encode witnesses when all witness stacks are empty. */
-            throw std::ios_base::failure("Superfluous witness record");
-        }
-    }
-    if (flags) {
-        /* Unknown flag in the serialization */
-        throw std::ios_base::failure("Unknown transaction optional data");
-    }
+    UnserializeTransactionBody(s, fAllowWitness,
+        /*read_inputs=*/[&](bool) { s >> tx.vin; return tx.vin.size(); },
+        /*read_outputs=*/[&] { s >> tx.vout; },
+        /*read_witness=*/[&] {
+            for (size_t i = 0; i < tx.vin.size(); i++) {
+                s >> tx.vin[i].scriptWitness.stack;
+            }
+            return tx.HasWitness();
+        });
     s >> tx.nLockTime;
 }
 
