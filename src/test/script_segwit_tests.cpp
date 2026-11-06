@@ -35,6 +35,16 @@ BOOST_AUTO_TEST_CASE(IsPayToWitnessScriptHash_Invalid_Size)
     CScript notp2wsh;
     notp2wsh << OP_0 << ToByteVector(dummy);
     BOOST_CHECK(!notp2wsh.IsPayToWitnessScriptHash());
+
+    // 35 bytes starting with OP_0 0x20
+    std::vector<unsigned char> bytes = {OP_0, 0x20};
+    bytes.insert(bytes.end(), 33, 0);
+    BOOST_CHECK(!CScript(bytes.begin(), bytes.end()).IsPayToWitnessScriptHash());
+
+    // 34 bytes starting with OP_0 0x1f
+    bytes = {OP_0, 0x1f};
+    bytes.insert(bytes.end(), 32, 0);
+    BOOST_CHECK(!CScript(bytes.begin(), bytes.end()).IsPayToWitnessScriptHash());
 }
 
 BOOST_AUTO_TEST_CASE(IsPayToWitnessScriptHash_Invalid_Nop)
@@ -65,6 +75,92 @@ BOOST_AUTO_TEST_CASE(IsPayToWitnessScriptHash_Invalid_Pushdata)
     bytes = {OP_0, OP_PUSHDATA4, 32, 0, 0, 0};
     bytes.insert(bytes.end(), 32, 0);
     BOOST_CHECK(!CScript(bytes.begin(), bytes.end()).IsPayToWitnessScriptHash());
+}
+
+BOOST_AUTO_TEST_CASE(IsPayToTaproot_Valid)
+{
+    uint256 dummy;
+    CScript p2tr;
+    p2tr << OP_1 << ToByteVector(dummy);
+    BOOST_CHECK(p2tr.IsPayToTaproot());
+
+    std::vector<unsigned char> bytes = {OP_1, 32};
+    bytes.insert(bytes.end(), 32, 0);
+    BOOST_CHECK(CScript(bytes.begin(), bytes.end()).IsPayToTaproot());
+}
+
+BOOST_AUTO_TEST_CASE(IsPayToTaproot_Invalid_NotOp1)
+{
+    uint256 dummy;
+    CScript notp2tr;
+    notp2tr << OP_0 << ToByteVector(dummy);
+    BOOST_CHECK(!notp2tr.IsPayToTaproot());
+
+    notp2tr.clear();
+    notp2tr << OP_2 << ToByteVector(dummy);
+    BOOST_CHECK(!notp2tr.IsPayToTaproot());
+
+    notp2tr.clear();
+    notp2tr << OP_16 << ToByteVector(dummy);
+    BOOST_CHECK(!notp2tr.IsPayToTaproot());
+}
+
+BOOST_AUTO_TEST_CASE(IsPayToTaproot_Invalid_Size)
+{
+    uint160 dummy160;
+    CScript notp2tr;
+    notp2tr << OP_1 << ToByteVector(dummy160);
+    BOOST_CHECK(!notp2tr.IsPayToTaproot());
+
+    // 31 bytes
+    std::vector<unsigned char> bytes = {OP_1, 31};
+    bytes.insert(bytes.end(), 31, 0);
+    BOOST_CHECK(!CScript(bytes.begin(), bytes.end()).IsPayToTaproot());
+
+    // 33 bytes
+    bytes = {OP_1, 33};
+    bytes.insert(bytes.end(), 33, 0);
+    BOOST_CHECK(!CScript(bytes.begin(), bytes.end()).IsPayToTaproot());
+
+    // 34-byte script that does not match OP_1 0x20
+    bytes = {OP_0, 0x01, 32};
+    bytes.insert(bytes.end(), 31, 0);
+    BOOST_CHECK(!CScript(bytes.begin(), bytes.end()).IsPayToTaproot());
+
+    // 35 bytes starting with OP_1 0x20
+    bytes = {OP_1, 0x20};
+    bytes.insert(bytes.end(), 33, 0);
+    BOOST_CHECK(!CScript(bytes.begin(), bytes.end()).IsPayToTaproot());
+}
+
+BOOST_AUTO_TEST_CASE(IsPayToTaproot_Invalid_Nop)
+{
+    uint256 dummy;
+    CScript notp2tr;
+    notp2tr << OP_1 << OP_NOP << ToByteVector(dummy);
+    BOOST_CHECK(!notp2tr.IsPayToTaproot());
+}
+
+BOOST_AUTO_TEST_CASE(IsPayToTaproot_Invalid_EmptyScript)
+{
+    CScript notp2tr;
+    BOOST_CHECK(!notp2tr.IsPayToTaproot());
+}
+
+BOOST_AUTO_TEST_CASE(IsPayToTaproot_Invalid_Pushdata)
+{
+    // A script is not P2TR if OP_PUSHDATA is used to push the 32-byte key.
+    std::vector<unsigned char> bytes = {OP_1, OP_PUSHDATA1, 32};
+    bytes.insert(bytes.end(), 32, 0);
+    BOOST_CHECK(!CScript(bytes.begin(), bytes.end()).IsPayToTaproot());
+
+    bytes = {OP_1, OP_PUSHDATA2, 32, 0};
+    bytes.insert(bytes.end(), 32, 0);
+    BOOST_CHECK(!CScript(bytes.begin(), bytes.end()).IsPayToTaproot());
+
+    bytes = {OP_1, OP_PUSHDATA4, 32, 0, 0, 0};
+    bytes.insert(bytes.end(), 32, 0);
+    BOOST_CHECK(!CScript(bytes.begin(), bytes.end()).IsPayToTaproot());
 }
 
 namespace {
