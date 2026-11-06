@@ -199,6 +199,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   httpserver.cpp
   i2p.cpp
   index/base.cpp
+  index/block_seq.cpp
   index/blockfilterindex.cpp
   index/coinstatsindex.cpp
   index/txindex.cpp
