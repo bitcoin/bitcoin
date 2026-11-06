@@ -1424,7 +1424,7 @@ void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent
     bool uses_bip143_segwit = force;
     bool uses_bip341_taproot = force;
     for (size_t inpos = 0; inpos < txTo.vin.size() && !(uses_bip143_segwit && uses_bip341_taproot); ++inpos) {
-        if (!txTo.vin[inpos].scriptWitness.IsNull()) {
+        if (!txTo.vin[inpos].scriptWitness.empty()) {
             if (m_spent_outputs_ready && m_spent_outputs[inpos].scriptPubKey.size() == 2 + WITNESS_V1_TAPROOT_SIZE &&
                 m_spent_outputs[inpos].scriptPubKey[0] == OP_1) {
                 // Treat every witness-bearing spend with 34-byte scriptPubKey that starts with OP_1 as a Taproot
@@ -1839,10 +1839,10 @@ bool GenericTransactionSignatureChecker<T>::CheckSequence(const CScriptNum& nSeq
 template class GenericTransactionSignatureChecker<CTransaction>;
 template class GenericTransactionSignatureChecker<CMutableTransaction>;
 
-static bool ExecuteWitnessScript(const std::span<const valtype>& stack_span, const CScript& exec_script, script_verify_flags flags, SigVersion sigversion, const BaseSignatureChecker& checker, ScriptExecutionData& execdata, ScriptError* serror)
+/** Execute the script of a witness program spend (exec_script), with the remaining witness elements
+ *  (stack) as its initial stack. */
+static bool ExecuteWitnessScript(std::vector<valtype> stack, const CScript& exec_script, script_verify_flags flags, SigVersion sigversion, const BaseSignatureChecker& checker, ScriptExecutionData& execdata, ScriptError* serror)
 {
-    std::vector<valtype> stack{stack_span.begin(), stack_span.end()};
-
     if (sigversion == SigVersion::TAPSCRIPT) {
         // OP_SUCCESSx processing overrides everything, including stack element size limits
         CScript::const_iterator pc = exec_script.begin();
@@ -1927,7 +1927,16 @@ static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, c
 static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, const std::vector<unsigned char>& program, script_verify_flags flags, const BaseSignatureChecker& checker, ScriptError* serror, bool is_p2sh)
 {
     CScript exec_script; //!< Actually executed script (last stack item in P2WSH; implied P2PKH script in P2WPKH; leaf script in P2TR)
-    std::span stack{witness.stack};
+    // The witness stack. Elements with other roles (the witness script, the annex, the control block,
+    // and the leaf script) are popped from it, and the remaining elements are moved into the initial
+    // execution stack.
+    auto stack = witness.ToVectors();
+    // Remove the top element from the stack, and return it.
+    const auto pop{[&] {
+        auto ret{std::move(stack.back())};
+        stack.pop_back();
+        return ret;
+    }};
     ScriptExecutionData execdata;
 
     if (witversion == 0) {
@@ -1936,21 +1945,21 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             if (stack.size() == 0) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
             }
-            const valtype& script_bytes = SpanPopBack(stack);
+            const valtype script_bytes = pop();
             exec_script = CScript(script_bytes.begin(), script_bytes.end());
             uint256 hash_exec_script;
             CSHA256().Write(exec_script.data(), exec_script.size()).Finalize(hash_exec_script.begin());
             if (memcmp(hash_exec_script.begin(), program.data(), 32)) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
             }
-            return ExecuteWitnessScript(stack, exec_script, flags, SigVersion::WITNESS_V0, checker, execdata, serror);
+            return ExecuteWitnessScript(std::move(stack), exec_script, flags, SigVersion::WITNESS_V0, checker, execdata, serror);
         } else if (program.size() == WITNESS_V0_KEYHASH_SIZE) {
             // BIP141 P2WPKH: 20-byte witness v0 program (which encodes Hash160(pubkey))
             if (stack.size() != 2) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH); // 2 items in witness
             }
             exec_script << OP_DUP << OP_HASH160 << program << OP_EQUALVERIFY << OP_CHECKSIG;
-            return ExecuteWitnessScript(stack, exec_script, flags, SigVersion::WITNESS_V0, checker, execdata, serror);
+            return ExecuteWitnessScript(std::move(stack), exec_script, flags, SigVersion::WITNESS_V0, checker, execdata, serror);
         } else {
             return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WRONG_LENGTH);
         }
@@ -1960,7 +1969,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
         if (stack.size() == 0) return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
         if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
             // Drop annex (this is non-standard; see IsWitnessStandard)
-            const valtype& annex = SpanPopBack(stack);
+            const valtype annex = pop();
             execdata.m_annex_hash = (HashWriter{} << annex).GetSHA256();
             execdata.m_annex_present = true;
         } else {
@@ -1975,8 +1984,8 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             return set_success(serror);
         } else {
             // Script path spending (stack size is >1 after removing optional annex)
-            const valtype& control = SpanPopBack(stack);
-            const valtype& script = SpanPopBack(stack);
+            const valtype control = pop();
+            const valtype script = pop();
             if (control.size() < TAPROOT_CONTROL_BASE_SIZE || control.size() > TAPROOT_CONTROL_MAX_SIZE || ((control.size() - TAPROOT_CONTROL_BASE_SIZE) % TAPROOT_CONTROL_NODE_SIZE) != 0) {
                 return set_error(serror, SCRIPT_ERR_TAPROOT_WRONG_CONTROL_SIZE);
             }
@@ -1988,9 +1997,9 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             if ((control[0] & TAPROOT_LEAF_MASK) == TAPROOT_LEAF_TAPSCRIPT) {
                 // Tapscript (leaf version 0xc0)
                 exec_script = CScript(script.begin(), script.end());
-                execdata.m_validation_weight_left = ::GetSerializeSize(witness.stack) + VALIDATION_WEIGHT_OFFSET;
+                execdata.m_validation_weight_left = ::GetSerializeSize(witness) + VALIDATION_WEIGHT_OFFSET;
                 execdata.m_validation_weight_left_init = true;
-                return ExecuteWitnessScript(stack, exec_script, flags, SigVersion::TAPSCRIPT, checker, execdata, serror);
+                return ExecuteWitnessScript(std::move(stack), exec_script, flags, SigVersion::TAPSCRIPT, checker, execdata, serror);
             }
             if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION) {
                 return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION);
@@ -2122,7 +2131,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
         // that WITNESS implies P2SH. Otherwise, going from WITNESS->P2SH+WITNESS would be
         // possible, which is not a softfork.
         assert((flags & SCRIPT_VERIFY_P2SH) != 0);
-        if (!hadWitness && !witness->IsNull()) {
+        if (!hadWitness && !witness->empty()) {
             return set_error(serror, SCRIPT_ERR_WITNESS_UNEXPECTED);
         }
     }
@@ -2136,8 +2145,8 @@ size_t static WitnessSigOps(int witversion, const std::vector<unsigned char>& wi
         if (witprogram.size() == WITNESS_V0_KEYHASH_SIZE)
             return 1;
 
-        if (witprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE && witness.stack.size() > 0) {
-            CScript subscript(witness.stack.back().begin(), witness.stack.back().end());
+        if (witprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE && witness.size() > 0) {
+            CScript subscript(witness.back().begin(), witness.back().end());
             return subscript.GetSigOpCount(true);
         }
     }

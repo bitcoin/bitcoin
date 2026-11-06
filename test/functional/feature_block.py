@@ -196,13 +196,14 @@ class FullBlockTest(BitcoinTestFramework):
             if TxTemplate != invalid_txs.InputMissing:
                 self.sign_tx(badtx, attempt_spend_tx)
             badblock = self.update_block(blockname, [badtx])
-            reject_reason = (template.block_reject_reason or template.reject_reason)
+            reject_reason = (template.p2p_deserialization_error or template.block_reject_reason or template.reject_reason)
             if reject_reason.startswith("mempool-script-verify-flag-failed"):
                 reject_reason = "block-script-verify-flag-failed" + reject_reason[33:]
+            # Blocks that fail deserialization are ignored, without disconnecting the peer.
             self.send_blocks(
                 [badblock], success=False,
                 reject_reason=reject_reason,
-                reconnect=True, timeout=2)
+                reconnect=template.p2p_deserialization_error is None, timeout=2)
 
             self.move_tip(2)
 
@@ -374,7 +375,8 @@ class FullBlockTest(BitcoinTestFramework):
         tx.vout = [CTxOut(0, script_output)]
         b24 = self.update_block(24, [tx])
         assert_equal(b24.get_weight(), MAX_BLOCK_WEIGHT + 1 * 4)
-        self.send_blocks([b24], success=False, reject_reason='bad-blk-length', reconnect=True)
+        # Blocks exceeding the weight limit already fail deserialization, and are ignored without disconnecting the peer.
+        self.send_blocks([b24], success=False, reject_reason='Weight limit exceeded')
 
         b25 = self.next_block(25, spend=out[7])
         self.send_blocks([b25], False)

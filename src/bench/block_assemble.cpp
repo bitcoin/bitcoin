@@ -27,7 +27,7 @@ static void AssembleBlock(benchmark::Bench& bench)
     const auto test_setup = MakeNoLogFileContext<const TestingSetup>();
 
     CScriptWitness witness;
-    witness.stack.push_back(WITNESS_STACK_ELEM_OP_TRUE);
+    witness = CScriptWitness{{WITNESS_STACK_ELEM_OP_TRUE}};
     BlockCreateOptions options{
         .coinbase_output_script = P2WSH_OP_TRUE,
     };

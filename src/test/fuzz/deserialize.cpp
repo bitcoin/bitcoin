@@ -133,7 +133,7 @@ FUZZ_TARGET_DESERIALIZE(block_file_info_deserialize, {
 })
 FUZZ_TARGET_DESERIALIZE(block_header_and_short_txids_deserialize, {
     CBlockHeaderAndShortTxIDs block_header_and_short_txids;
-    DeserializeFromFuzzingInput(buffer, block_header_and_short_txids);
+    DeserializeFromFuzzingInput(buffer, TX_WITH_WITNESS_P2P(block_header_and_short_txids));
 })
 FUZZ_TARGET_DESERIALIZE(fee_rate_deserialize, {
     CFeeRate fee_rate;
@@ -182,7 +182,7 @@ FUZZ_TARGET_DESERIALIZE(partially_signed_transaction_deserialize, {
 })
 FUZZ_TARGET_DESERIALIZE(prefilled_transaction_deserialize, {
     PrefilledTransaction prefilled_transaction;
-    DeserializeFromFuzzingInput(buffer, prefilled_transaction);
+    DeserializeFromFuzzingInput(buffer, TX_WITH_WITNESS_P2P(prefilled_transaction));
 })
 FUZZ_TARGET_DESERIALIZE(psbt_input_deserialize, {
     PSBTInput psbt_input(0, Txid{}, 0);
@@ -297,7 +297,7 @@ FUZZ_TARGET_DESERIALIZE(txoutcompressor_deserialize, {
 })
 FUZZ_TARGET_DESERIALIZE(blocktransactions_deserialize, {
     BlockTransactions bt;
-    DeserializeFromFuzzingInput(buffer, bt);
+    DeserializeFromFuzzingInput(buffer, TX_WITH_WITNESS_P2P(bt));
 })
 FUZZ_TARGET_DESERIALIZE(blocktransactionsrequest_deserialize, {
     BlockTransactionsRequest btr;

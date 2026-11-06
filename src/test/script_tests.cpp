@@ -383,7 +383,9 @@ public:
     TestBuilder& AsWit()
     {
         assert(havePush);
-        scriptWitness.stack.push_back(push);
+        auto stack = scriptWitness.ToVectors();
+        stack.push_back(push);
+        scriptWitness = CScriptWitness{stack};
         havePush = false;
         return *this;
     }
@@ -392,10 +394,11 @@ public:
     {
         DoPush();
         UniValue array(UniValue::VARR);
-        if (!scriptWitness.stack.empty()) {
+        if (!scriptWitness.empty()) {
             UniValue wit(UniValue::VARR);
-            for (unsigned i = 0; i < scriptWitness.stack.size(); i++) {
-                wit.push_back(HexStr(scriptWitness.stack[i]));
+            // Indexing a CScriptWitness is O(n), so this loop is quadratic, which is fine for the small witnesses here.
+            for (unsigned i = 0; i < scriptWitness.size(); i++) {
+                wit.push_back(HexStr(scriptWitness[i]));
             }
             wit.push_back(ValueFromAmount(nValue));
             array.push_back(std::move(wit));
@@ -921,7 +924,7 @@ BOOST_AUTO_TEST_CASE(script_json_test)
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         const UniValue& test = tests[idx];
         std::string strTest = test.write();
-        CScriptWitness witness;
+        std::vector<std::vector<unsigned char>> witness_stack;
         TaprootBuilder taprootBuilder;
         CAmount nValue = 0;
         unsigned int pos = 0;
@@ -934,20 +937,20 @@ BOOST_AUTO_TEST_CASE(script_json_test)
                 static const std::string SCRIPT_FLAG{"#SCRIPT#"};
                 if (element.starts_with(SCRIPT_FLAG)) {
                     CScript script = ParseScript(element.substr(SCRIPT_FLAG.size()));
-                    witness.stack.push_back(ToByteVector(script));
+                    witness_stack.push_back(ToByteVector(script));
                 } else if (element == "#CONTROLBLOCK#") {
                     // Taproot script control block - second from the last element in witness stack
                     // If #CONTROLBLOCK# we auto-generate the control block
-                    taprootBuilder.Add(/*depth=*/0, witness.stack.back(), TAPROOT_LEAF_TAPSCRIPT, /*track=*/true);
+                    taprootBuilder.Add(/*depth=*/0, witness_stack.back(), TAPROOT_LEAF_TAPSCRIPT, /*track=*/true);
                     taprootBuilder.Finalize(XOnlyPubKey(keys.key0.GetPubKey()));
-                    auto controlblocks = taprootBuilder.GetSpendData().scripts[{witness.stack.back(), TAPROOT_LEAF_TAPSCRIPT}];
-                    witness.stack.push_back(*(controlblocks.begin()));
+                    auto controlblocks = taprootBuilder.GetSpendData().scripts[{witness_stack.back(), TAPROOT_LEAF_TAPSCRIPT}];
+                    witness_stack.push_back(*(controlblocks.begin()));
                 } else {
                     const auto witness_value{TryParseHex<unsigned char>(element)};
                     if (!witness_value.has_value()) {
                         BOOST_ERROR("Bad witness in test: " << strTest << " witness is not hex: " << element);
                     }
-                    witness.stack.push_back(witness_value.value());
+                    witness_stack.push_back(witness_value.value());
                 }
             }
             nValue = AmountFromValue(test[pos][i]);
@@ -974,7 +977,7 @@ BOOST_AUTO_TEST_CASE(script_json_test)
         script_verify_flags scriptflags = ParseScriptFlags(test[pos++].get_str());
         int scriptError = ParseScriptError(test[pos++].get_str());
 
-        DoTest(scriptPubKey, scriptSig, witness, scriptflags, strTest, scriptError, nValue);
+        DoTest(scriptPubKey, scriptSig, CScriptWitness{witness_stack}, scriptflags, strTest, scriptError, nValue);
     }
 }
 
@@ -1731,6 +1734,59 @@ BOOST_AUTO_TEST_CASE(formatscriptflags)
     BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_TAPROOT | script_verify_flags::from_int(1u<<27)), "TAPROOT,0x08000000");
     BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_TAPROOT | script_verify_flags::from_int((1u<<28) | (1ull<<58))), "TAPROOT,0x400000010000000");
     BOOST_CHECK_EQUAL(FormatScriptFlags(script_verify_flags::from_int(1u<<26)), "0x04000000");
+}
+
+BOOST_AUTO_TEST_CASE(script_witness_representation)
+{
+    // Element counts and sizes around CompactSize encoding boundaries.
+    static constexpr size_t COUNTS[]{0, 1, 2, 3, 252, 253, 254};
+    static constexpr size_t SIZES[]{0, 1, 32, 252, 253, 65535, 65536};
+    for (const size_t count : COUNTS) {
+        for (int iter = 0; iter < 3; ++iter) {
+            std::vector<std::vector<unsigned char>> stack(count);
+            for (auto& element : stack) {
+                // Mostly small elements, as large ones make big stacks slow.
+                const auto size = m_rng.randrange(8) == 0 ? SIZES[m_rng.randrange(std::size(SIZES))] : m_rng.randrange(40);
+                element = m_rng.randbytes(size);
+            }
+            const CScriptWitness witness{stack};
+
+            BOOST_CHECK(witness.ToVectors() == stack);
+            BOOST_CHECK(CScriptWitness{witness.ToVectors()} == witness);
+            BOOST_CHECK_EQUAL(witness.size(), stack.size());
+            BOOST_CHECK_EQUAL(witness.empty(), stack.empty());
+            BOOST_CHECK_EQUAL(std::distance(witness.begin(), witness.end()), (std::ptrdiff_t)stack.size());
+            if (!stack.empty()) {
+                BOOST_CHECK(std::ranges::equal(witness.front(), stack.front()));
+                BOOST_CHECK(std::ranges::equal(witness.back(), stack.back()));
+                for (size_t i = 0; i < stack.size(); ++i) BOOST_CHECK(std::ranges::equal(witness[i], stack[i]));
+            }
+            const auto spans = witness.ToSpans();
+            BOOST_REQUIRE_EQUAL(spans.size(), stack.size());
+            for (size_t i = 0; i < stack.size(); ++i) BOOST_CHECK(std::ranges::equal(spans[i], stack[i]));
+
+            // Serialization matches that of the vector of vectors, in both directions.
+            std::vector<unsigned char> ser_vec, ser_wit;
+            VectorWriter{ser_vec, 0, stack};
+            VectorWriter{ser_wit, 0, witness};
+            BOOST_CHECK(ser_vec == ser_wit);
+            BOOST_CHECK_EQUAL(::GetSerializeSize(witness), ser_vec.size());
+            CScriptWitness deser;
+            SpanReader{ser_vec} >> deser;
+            BOOST_CHECK(deser == witness);
+            if (!stack.empty()) BOOST_CHECK(std::ranges::equal(deser.back(), stack.back()));
+
+            // Moving leaves the source empty.
+            CScriptWitness moved{std::move(deser)};
+            BOOST_CHECK(moved == witness);
+            BOOST_CHECK(deser.empty() && deser.size() == 0 && deser.begin() == deser.end()); // NOLINT(bugprone-use-after-move)
+
+            CScriptWitness copy{witness};
+            copy = {};
+            BOOST_CHECK(copy.empty());
+            BOOST_CHECK(copy.begin() == copy.end());
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
