@@ -152,7 +152,7 @@ public:
         size_t chunks_free;
     };
 
-    /** Create a new LockedPool. This takes ownership of the MemoryPageLocker,
+    /** Create a new LockedPool. This takes ownership of the LockedPageAllocator,
      * you can only instantiate this with LockedPool(std::move(...)).
      *
      * The second argument is an optional callback when locking a newly allocated arena failed.

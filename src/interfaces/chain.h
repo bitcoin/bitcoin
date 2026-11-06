@@ -97,7 +97,7 @@ using SettingsUpdate = std::function<std::optional<interfaces::SettingsAction>(c
 //! internal workings of the bitcoin node, and not being very convenient to use.
 //! Chain methods should be cleaned up and simplified over time. Examples:
 //!
-//! * The initMessages() and showProgress() methods which the wallet uses to send
+//! * The initMessage() and showProgress() methods which the wallet uses to send
 //!   notifications to the GUI should go away when GUI and wallet can directly
 //!   communicate with each other without going through the node
 //!   (https://github.com/bitcoin/bitcoin/pull/15288#discussion_r253321096).
@@ -238,12 +238,12 @@ public:
     //  it means that one transaction has multiple change outputs or paid the same wallet using multiple
     //  outputs in the same transaction) or have shared ancestry, the bump fees are calculated
     //  independently, i.e. as if only one of them is spent. This may result in double-fee-bumping. This
-    //  caveat can be rectified per use of the sister-function CalculateCombinedBumpFee(…).
+    //  caveat can be rectified per use of the sister-function calculateCombinedBumpFee(…).
     virtual std::map<COutPoint, CAmount> calculateIndividualBumpFees(const std::vector<COutPoint>& outpoints, const CFeeRate& target_feerate) = 0;
 
     //! Calculate the combined bump fee for an input set per the same strategy
-    //  as in CalculateIndividualBumpFees(…).
-    //  Unlike CalculateIndividualBumpFees(…), this does not return individual
+    //  as in calculateIndividualBumpFees(…).
+    //  Unlike calculateIndividualBumpFees(…), this does not return individual
     //  bump fees per outpoint, but a single bump fee for the shared ancestry.
     //  The combined bump fee may be used to correct overestimation due to
     //  shared ancestry by multiple UTXOs after coin selection.

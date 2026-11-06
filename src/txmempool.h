@@ -456,7 +456,7 @@ public:
 
     /** The minimum fee to get into the mempool, which may itself not be enough
      *  for larger-sized transactions.
-     *  The m_incremental_relay_feerate policy variable is used to bound the time it
+     *  The incremental_relay_feerate policy variable is used to bound the time it
      *  takes the fee rate to go back down all the way to 0. When the feerate
      *  would otherwise be half of this, it is set to 0 instead.
      */

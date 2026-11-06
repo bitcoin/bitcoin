@@ -526,12 +526,12 @@ private:
          *
          * A packet is received, and decrypted/verified. If that succeeds, the state becomes
          * APP_READY and the decrypted contents is kept in m_recv_decode_buffer until it is
-         * retrieved as a message by GetMessage(). */
+         * retrieved as a message by GetReceivedMessage(). */
         APP,
 
-        /** Nothing (an application packet is available for GetMessage()).
+        /** Nothing (an application packet is available for GetReceivedMessage()).
          *
-         * Nothing can be received in this state. When the message is retrieved by GetMessage,
+         * Nothing can be received in this state. When the message is retrieved by GetReceivedMessage,
          * the state becomes APP again. */
         APP_READY,
 
@@ -1822,7 +1822,7 @@ private:
     bool m_capture_messages{false};
 
     /**
-     * Mutex protecting m_i2p_sam_sessions.
+     * Mutex protecting m_unused_i2p_sessions.
      */
     Mutex m_unused_i2p_sessions_mutex;
 

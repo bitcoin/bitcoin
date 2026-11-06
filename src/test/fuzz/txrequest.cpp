@@ -62,7 +62,7 @@ struct Initializer
  * as well.
  *
  * Check() calls the TxRequestTracker's sanity check, plus compares the
- * output of the constant accessors (Size(), CountLoad(), CountTracked())
+ * output of the constant accessors (Size(), Count(), CountInFlight(), CountCandidates())
  * with expected values.
  */
 class Tester
@@ -287,7 +287,7 @@ public:
 
     void Check()
     {
-        // Compare CountTracked and CountLoad with naive structure.
+        // Compare Count, CountInFlight and CountCandidates with naive structure.
         size_t total = 0;
         for (int peer = 0; peer < MAX_PEERS; ++peer) {
             size_t tracked = 0;
