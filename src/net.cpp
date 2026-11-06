@@ -3017,7 +3017,7 @@ std::vector<CAddress> CConnman::GetCurrentBlockRelayOnlyConns() const
     return ret;
 }
 
-std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo(bool include_connected) const
+std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo(bool include_connected, std::optional<std::string_view> node) const
 {
     AssertLockNotHeld(m_nodes_mutex);
 
@@ -3026,8 +3026,12 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo(bool include_connected) co
     std::list<AddedNodeParams> lAddresses(0);
     {
         LOCK(m_added_nodes_mutex);
-        ret.reserve(m_added_node_params.size());
-        std::copy(m_added_node_params.cbegin(), m_added_node_params.cend(), std::back_inserter(lAddresses));
+        if (node) {
+            if (const auto it{FindAddedNode(std::string{*node})}; it != m_added_node_params.cend()) lAddresses.push_back(*it);
+        } else {
+            ret.reserve(m_added_node_params.size());
+            std::copy(m_added_node_params.cbegin(), m_added_node_params.cend(), std::back_inserter(lAddresses));
+        }
     }
 
 
@@ -3894,15 +3898,36 @@ std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addres
     return cache_entry.m_addrs_response_cache;
 }
 
+std::vector<AddedNodeParams>::const_iterator CConnman::FindAddedNode(const std::string& node) const
+{
+    AssertLockHeld(m_added_nodes_mutex);
+    const uint16_t default_port{GetDefaultPort(node)};
+    const CService resolved(LookupNumeric(node, default_port));
+    const bool resolved_is_valid{resolved.IsValid()};
+    std::string host;
+    uint16_t port{default_port};
+    const bool host_port_is_valid{SplitHostPort(node, port, host)};
+
+    for (auto it{m_added_node_params.cbegin()}; it != m_added_node_params.cend(); ++it) {
+        if (node == it->m_added_node) return it;
+
+        const uint16_t existing_default_port{GetDefaultPort(it->m_added_node)};
+        if (resolved_is_valid && resolved == LookupNumeric(it->m_added_node, existing_default_port)) return it;
+
+        std::string existing_host;
+        uint16_t existing_port{existing_default_port};
+        if (host_port_is_valid && SplitHostPort(it->m_added_node, existing_port, existing_host) &&
+            host == existing_host && port == existing_port) {
+            return it;
+        }
+    }
+    return m_added_node_params.cend();
+}
+
 bool CConnman::AddNode(const AddedNodeParams& add)
 {
-    const CService resolved(LookupNumeric(add.m_added_node, GetDefaultPort(add.m_added_node)));
-    const bool resolved_is_valid{resolved.IsValid()};
-
     LOCK(m_added_nodes_mutex);
-    for (const auto& it : m_added_node_params) {
-        if (add.m_added_node == it.m_added_node || (resolved_is_valid && resolved == LookupNumeric(it.m_added_node, GetDefaultPort(it.m_added_node)))) return false;
-    }
+    if (FindAddedNode(add.m_added_node) != m_added_node_params.cend()) return false;
 
     m_added_node_params.push_back(add);
     return true;
@@ -3911,24 +3936,27 @@ bool CConnman::AddNode(const AddedNodeParams& add)
 bool CConnman::RemoveAddedNode(std::string_view node)
 {
     LOCK(m_added_nodes_mutex);
-    for (auto it = m_added_node_params.begin(); it != m_added_node_params.end(); ++it) {
-        if (node == it->m_added_node) {
-            m_added_node_params.erase(it);
-            return true;
-        }
-    }
-    return false;
+    const auto it{FindAddedNode(std::string{node})};
+    if (it == m_added_node_params.cend()) return false;
+
+    m_added_node_params.erase(it);
+    return true;
 }
 
 bool CConnman::AddedNodesContain(const CAddress& addr) const
 {
     AssertLockNotHeld(m_added_nodes_mutex);
-    const std::string addr_str{addr.ToStringAddr()};
-    const std::string addr_port_str{addr.ToStringAddrPort()};
-    LOCK(m_added_nodes_mutex);
-    return (m_added_node_params.size() < 24 // bound the query to a reasonable limit
-            && std::any_of(m_added_node_params.cbegin(), m_added_node_params.cend(),
-                           [&](const auto& p) { return p.m_added_node == addr_str || p.m_added_node == addr_port_str; }));
+    std::vector<std::string> added_nodes;
+    {
+        LOCK(m_added_nodes_mutex);
+        if (m_added_node_params.size() >= 24) return false; // bound the query to a reasonable limit
+        for (const auto& params : m_added_node_params) added_nodes.push_back(params.m_added_node);
+    }
+    return std::ranges::any_of(added_nodes, [&](const std::string& added_node) {
+        // Use addr's port as the default, so an entry without a port matches addr at any port.
+        const CService service{MaybeFlipIPv6toCJDNS(LookupNumeric(added_node, addr.GetPort()))};
+        return service.IsValid() && service == addr;
+    });
 }
 
 size_t CConnman::GetNodeCount(ConnectionDirection flags) const

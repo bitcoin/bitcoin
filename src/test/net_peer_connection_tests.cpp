@@ -163,4 +163,90 @@ BOOST_FIXTURE_TEST_CASE(test_addnode_getaddednodeinfo_and_connection_detection, 
     connman->ClearTestNodes();
 }
 
+BOOST_AUTO_TEST_CASE(added_nodes_contain_numeric_aliases)
+{
+    const uint16_t default_port{Params().GetDefaultPort()};
+    const std::string expanded{"[2001:4860:4860:0:0:0:0:8888]"};
+    const std::string canonical{"[2001:4860:4860::8888]"};
+    const CAddress addr{LookupNumeric(canonical, default_port), NODE_NONE};
+    const CAddress other_port{LookupNumeric(canonical, default_port + 1), NODE_NONE};
+    const CAddress other_addr{LookupNumeric("[2001:4860:4860::8844]", default_port), NODE_NONE};
+
+    for (const bool explicit_port : {false, true}) {
+        const std::string added_node{explicit_port ? strprintf("%s:%u", expanded, default_port) : expanded};
+        BOOST_TEST_CONTEXT(added_node) {
+            ConnmanTestMsg connman{0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params()};
+            BOOST_REQUIRE(connman.AddNode({/*m_added_node=*/added_node, /*m_use_v2transport=*/true}));
+            // The canonical spelling is a duplicate, so only the first spelling is stored.
+            BOOST_CHECK(!connman.AddNode({/*m_added_node=*/addr.ToStringAddrPort(), /*m_use_v2transport=*/true}));
+
+            BOOST_CHECK(connman.AddedNodesContain(addr));
+            // An entry without a port matches any port; an explicit port only matches itself.
+            BOOST_CHECK_EQUAL(connman.AddedNodesContain(other_port), !explicit_port);
+            BOOST_CHECK(!connman.AddedNodesContain(other_addr));
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(addnode_literal_host_and_effective_port_equivalence)
+{
+    ConnmanTestMsg connman{0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params()};
+    const uint16_t default_port{Params().GetDefaultPort()};
+
+    BOOST_CHECK(connman.AddNode({/*m_added_node=*/"node.example", /*m_use_v2transport=*/true}));
+    BOOST_CHECK(!connman.AddNode({/*m_added_node=*/strprintf("node.example:%u", default_port), /*m_use_v2transport=*/true}));
+    BOOST_CHECK(connman.AddNode({/*m_added_node=*/strprintf("node.example:%u", default_port + 1), /*m_use_v2transport=*/true}));
+
+    BOOST_CHECK(connman.AddNode({/*m_added_node=*/strprintf("explicit.example:%u", default_port), /*m_use_v2transport=*/true}));
+    BOOST_CHECK(!connman.AddNode({/*m_added_node=*/"explicit.example", /*m_use_v2transport=*/true}));
+
+    BOOST_CHECK_EQUAL(connman.GetAddedNodeInfo(/*include_connected=*/true).size(), 3);
+}
+
+BOOST_AUTO_TEST_CASE(remove_added_node_equivalence)
+{
+    ConnmanTestMsg connman{0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params()};
+    const uint16_t default_port{Params().GetDefaultPort()};
+
+    BOOST_CHECK(connman.AddNode({/*m_added_node=*/"node.example", /*m_use_v2transport=*/true}));
+    BOOST_CHECK(connman.AddNode({/*m_added_node=*/strprintf("node.example:%u", default_port + 1), /*m_use_v2transport=*/true}));
+    BOOST_CHECK(connman.AddNode({/*m_added_node=*/"[::1]", /*m_use_v2transport=*/true}));
+
+    // A different port refers to a different peer.
+    BOOST_CHECK(!connman.RemoveAddedNode(strprintf("node.example:%u", default_port + 2)));
+    // The same host with its effective port removes the stored entry.
+    BOOST_CHECK(connman.RemoveAddedNode(strprintf("node.example:%u", default_port)));
+    BOOST_CHECK(!connman.RemoveAddedNode("node.example"));
+    // An equivalent numeric address removes the stored entry.
+    BOOST_CHECK(connman.RemoveAddedNode(strprintf("[0:0:0:0:0:0:0:1]:%u", default_port)));
+    BOOST_CHECK(!connman.RemoveAddedNode("[::1]"));
+
+    const auto added_nodes{connman.GetAddedNodeInfo(/*include_connected=*/true)};
+    BOOST_REQUIRE_EQUAL(added_nodes.size(), 1);
+    BOOST_CHECK_EQUAL(added_nodes[0].m_params.m_added_node, strprintf("node.example:%u", default_port + 1));
+}
+
+BOOST_AUTO_TEST_CASE(get_added_node_info_equivalence)
+{
+    ConnmanTestMsg connman{0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params()};
+    const uint16_t default_port{Params().GetDefaultPort()};
+
+    BOOST_CHECK(connman.AddNode({/*m_added_node=*/"node.example", /*m_use_v2transport=*/true}));
+    BOOST_CHECK(connman.AddNode({/*m_added_node=*/"[::1]", /*m_use_v2transport=*/true}));
+
+    // Return the added node value that matches node, or an empty string if none does.
+    const auto find{[&](const std::string& node) {
+        const auto added_nodes{connman.GetAddedNodeInfo(/*include_connected=*/true, node)};
+        BOOST_REQUIRE_LE(added_nodes.size(), 1U);
+        return added_nodes.empty() ? std::string{} : added_nodes[0].m_params.m_added_node;
+    }};
+    BOOST_CHECK_EQUAL(find("node.example"), "node.example");
+    BOOST_CHECK_EQUAL(find(strprintf("node.example:%u", default_port)), "node.example");
+    BOOST_CHECK_EQUAL(find(strprintf("[0:0:0:0:0:0:0:1]:%u", default_port)), "[::1]");
+    BOOST_CHECK_EQUAL(find(strprintf("node.example:%u", default_port + 1)), "");
+    BOOST_CHECK_EQUAL(find("other.example"), "");
+    // Without a filter, all added nodes are returned.
+    BOOST_CHECK_EQUAL(connman.GetAddedNodeInfo(/*include_connected=*/true).size(), 2U);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
