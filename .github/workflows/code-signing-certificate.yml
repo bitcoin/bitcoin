@@ -1,0 +1,73 @@
+# Copyright (c) 2026-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or https://opensource.org/license/mit.
+
+name: Code signing certificate
+on:
+  workflow_dispatch:
+  schedule:
+    # Mondays at 09:23 UTC.
+    - cron: '23 9 * * 1'
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: code-signing-certificate
+
+jobs:
+  check-certificate:
+    if: github.repository == 'bitcoin/bitcoin'
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: master
+          persist-credentials: false
+
+      - name: Check certificate
+        id: certificate
+        shell: bash
+        run: |
+          status=0
+          ./contrib/devtools/check-code-signing-certificates.py > "$RUNNER_TEMP/certificate-report.txt" || status=$?
+          cat "$RUNNER_TEMP/certificate-report.txt"
+          if (( status == 1 )); then
+            echo "warning=true" >> "$GITHUB_OUTPUT"
+          else
+            exit "$status"
+          fi
+
+      - name: Report certificate warning
+        if: steps.certificate.outputs.warning == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: bitcoin/bitcoin
+        shell: bash
+        run: |
+          export TITLE="Code signing certificate warning"
+          REPORT=$(cat "$RUNNER_TEMP/certificate-report.txt")
+          export REPORT
+          # Include closed issues so closing an alert acknowledges this report.
+          EXISTING=$(gh issue list --state all --search "\"$TITLE\" in:title" \
+            --json title,body,url --jq '.[] | select(.title == env.TITLE) | select(.body | contains(env.REPORT)) | .url')
+          if [[ -n "$EXISTING" ]]; then
+            echo "Certificate warning already reported: $EXISTING"
+            exit 0
+          fi
+
+          COMMIT=$(git rev-parse HEAD)
+          cat > "$RUNNER_TEMP/certificate-issue.md" <<EOF
+          Code signing certificates need replacement. Please update the certificates listed below and backport the updates to maintained release branches.
+
+          Certificates checked on [master at $COMMIT]($GITHUB_SERVER_URL/$GH_REPO/tree/$COMMIT):
+
+          \`\`\`text
+          $REPORT
+          \`\`\`
+
+          [Weekly check]($GITHUB_SERVER_URL/$GH_REPO/actions/runs/$GITHUB_RUN_ID).
+          EOF
+          gh issue create --title "$TITLE" --body-file "$RUNNER_TEMP/certificate-issue.md"
