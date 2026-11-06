@@ -19,6 +19,7 @@
 #include <primitives/transaction_identifier.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
+#include <script/keyorigin.h>
 #include <script/script.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
@@ -1075,6 +1076,11 @@ public:
     using HDPubKeyMap = std::map<CExtPubKey, std::set<DescriptorScriptPubKeyMan*>>;
     //! Retrieve descriptor xpubs matching the requested filter.
     HDPubKeyMap GetHDPubKeys(HDKeyFilter filter) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    //! Derive an HD key at the given path. Without hdkey, unused(KEY)
+    //! descriptors are preferred over active ones. The path must contain at
+    //! least one hardened step, so that sibling keys are not exposed.
+    util::Expected<std::pair<CExtKey, KeyOriginInfo>, WalletError> DeriveHDKey(const std::vector<uint32_t>& path, std::optional<CExtPubKey> hdkey) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Find the private key for the given key id from the wallet's descriptors, if available
     //! Returns nullopt when no descriptor has the key or if the wallet is locked.
