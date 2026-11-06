@@ -685,11 +685,9 @@ public:
     }
 };
 
-/**
- * Wrapper that buffers writes to an underlying stream.
- * Requires underlying stream to support write_buffer() method
- * for efficient buffer flushing and obfuscation.
- */
+/// Wrapper that buffers writes to an underlying stream.
+/// Requires underlying stream to support write_buffer() method for efficient buffer flushing and obfuscation.
+/// Call flush() explicitly before destruction to handle write errors.
 template <typename S>
 class BufferedWriter
 {
@@ -700,7 +698,11 @@ class BufferedWriter
 public:
     explicit BufferedWriter(S& stream LIFETIMEBOUND, size_t size = 1 << 16) : m_dst{stream}, m_buf(size) {}
 
-    ~BufferedWriter() { flush(); }
+    ~BufferedWriter()
+    {
+        Assume(m_buf_pos == 0); // Use explicit flush()
+        flush();
+    }
 
     //! Discard the buffered bytes even if writing them throws
     void flush()
