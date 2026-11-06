@@ -1846,6 +1846,9 @@ bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
 
     const char* what{""};
     switch (broadcast_method) {
+    case node::TxBroadcast::MEMPOOL_AND_BROADCAST_ADDED:
+        what = "to mempool and for broadcast of added txs to peers";
+        break;
     case node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL:
         what = "to mempool and for broadcast to peers";
         break;
@@ -1966,7 +1969,7 @@ void MaybeResendWalletTxs(WalletContext& context)
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
         if (!pwallet->ShouldResend()) continue;
-        pwallet->ResubmitWalletTransactions(node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL, /*force=*/false);
+        pwallet->ResubmitWalletTransactions(node::TxBroadcast::MEMPOOL_AND_BROADCAST_ADDED, /*force=*/false);
         pwallet->SetNextResend();
     }
 }
