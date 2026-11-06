@@ -9,6 +9,7 @@
 #include <consensus/validation.h>
 #include <node/block_template_manager.h>
 #include <node/blockstorage.h>
+#include <node/kernel_notifications.h>
 #include <node/miner.h>
 #include <pow.h>
 #include <primitives/block.h>
@@ -17,6 +18,7 @@
 #include <script/script.h>
 #include <sync.h>
 #include <test/util/common.h>
+#include <test/util/logging.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
@@ -383,5 +385,56 @@ BOOST_AUTO_TEST_CASE(witness_commitment_index)
     pblock.vtx[0] = MakeTransactionRef(std::move(txCoinbase));
 
     BOOST_CHECK_EQUAL(GetWitnessCommitmentIndex(pblock), 2);
+}
+
+BOOST_AUTO_TEST_CASE(connectblock_mutated_block_is_fatal_error)
+{
+    // A fatal error is expected below; don't request a shutdown of the test node.
+    m_node.notifications->m_shutdown_on_fatal_error = false;
+
+    ChainstateManager& chainman{*Assert(m_node.chainman)};
+    const uint256 tip_hash{WITH_LOCK(chainman.GetMutex(), return chainman.ActiveChain().Tip()->GetBlockHash())};
+    // Valid block whose header has been processed, so it has a block index entry
+    const auto good_block{GoodBlock(tip_hash)};
+
+    LOCK(chainman.GetMutex());
+    CBlockIndex* pindex{chainman.m_blockman.LookupBlockIndex(good_block->GetHash())};
+    BOOST_REQUIRE(pindex);
+
+    // Same header (hence same hash), but a modified body, so the merkle root no
+    // longer matches. Constructing from the header leaves the CheckBlock cache flags unset.
+    CBlock mutated{static_cast<const CBlockHeader&>(*good_block)};
+    mutated.vtx = good_block->vtx;
+    CMutableTransaction coinbase{*mutated.vtx[0]};
+    coinbase.vout[0].nValue += 1;
+    mutated.vtx[0] = MakeTransactionRef(std::move(coinbase));
+    BOOST_REQUIRE_EQUAL(mutated.GetHash(), good_block->GetHash());
+
+    // Pre-check the return of CheckBlock, it reports the block as mutated
+    {
+        BlockValidationState state;
+        BOOST_CHECK(!CheckBlock(mutated, state, chainman.GetConsensus()));
+        BOOST_CHECK(state.IsInvalid());
+        BOOST_CHECK(state.GetResult() == BlockValidationResult::BLOCK_MUTATED);
+        BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-txnmrklroot");
+        BOOST_CHECK_EQUAL(state.GetDebugMessage(), "hashMerkleRoot mismatch");
+    }
+
+    // In ConnectBlock, a mutated block indicates corruption and is a fatal error.
+    // The invalid state is replaced with an error state.
+    Chainstate& chainstate{chainman.ActiveChainstate()};
+    CCoinsViewCache view{&chainstate.CoinsTip()};
+    BlockValidationState state;
+    {
+        // Also redirects the fatal error message from stderr to the debug log
+        ASSERT_DEBUG_LOG("A fatal internal error occurred");
+        // The original Invalid state is logged before being overwritten
+        ASSERT_DEBUG_LOG("Corrupt block found: bad-txnmrklroot, hashMerkleRoot mismatch");
+        BOOST_CHECK(!chainstate.ConnectBlock(mutated, state, pindex, view));
+    }
+    BOOST_CHECK(state.IsError());
+    BOOST_CHECK(state.GetResult() == BlockValidationResult::BLOCK_RESULT_UNSET);
+    BOOST_CHECK_EQUAL(state.GetRejectReason(), "Corrupt block found indicating potential hardware failure.");
+    BOOST_CHECK_EQUAL(state.GetDebugMessage(), "");
 }
 BOOST_AUTO_TEST_SUITE_END()
