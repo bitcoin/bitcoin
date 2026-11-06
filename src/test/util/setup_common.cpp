@@ -27,6 +27,7 @@
 #include <netbase.h>
 #include <netgroup.h>
 #include <node/block_template_manager.h>
+#include <node/blockmanager_args.h>
 #include <node/blockstorage.h>
 #include <node/chainstate.h>
 #include <node/context.h>
@@ -317,7 +318,7 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
             chainman_opts.script_execution_cache_bytes = 0;
             chainman_opts.signature_cache_bytes = 0;
         }
-        const BlockManager::Options blockman_opts{
+        BlockManager::Options blockman_opts{
             .chainparams = chainman_opts.chainparams,
             .blocks_dir = m_args.GetBlocksDirPath(),
             .notifications = chainman_opts.notifications,
@@ -328,7 +329,10 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
                 .wipe_data = m_args.GetBoolArg("-reindex", false),
             },
         };
-        m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown_signal), chainman_opts, blockman_opts);
+        Assert(ApplyArgsManOptions(*m_node.args, blockman_opts));
+        m_node.blockman.reset();
+        m_node.blockman = std::make_unique<BlockManager>(*Assert(m_node.shutdown_signal), blockman_opts);
+        m_node.chainman = std::make_unique<ChainstateManager>(*Assert(m_node.shutdown_signal), chainman_opts, *m_node.blockman);
     };
     m_make_chainman();
     CreateBlockTemplateManager();
@@ -356,6 +360,7 @@ ChainTestingSetup::~ChainTestingSetup()
     m_node.mempool.reset();
     Assert(!m_node.fee_estimator_man); // Each test must create a local object, if they wish to use the fee_estimator_man
     m_node.chainman.reset();
+    m_node.blockman.reset();
     m_node.validation_signals.reset();
     m_node.scheduler.reset();
 }
@@ -367,7 +372,6 @@ void ChainTestingSetup::LoadVerifyActivateChainstate()
     options.mempool = Assert(m_node.mempool.get());
     options.coins_db_in_memory = m_coins_db_in_memory;
     options.wipe_chainstate_db = m_args.GetBoolArg("-reindex", false) || m_args.GetBoolArg("-reindex-chainstate", false);
-    options.prune = chainman.m_blockman.IsPruneMode();
     options.check_blocks = m_args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
     options.check_level = m_args.GetIntArg("-checklevel", DEFAULT_CHECKLEVEL);
     options.require_full_verification = m_args.IsArgSet("-checkblocks") || m_args.IsArgSet("-checklevel");

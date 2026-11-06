@@ -15,7 +15,7 @@
 #include <kernel/chainparams.h>
 #include <kernel/messagestartchars.h>
 #include <kernel/notifications_interface.h>
-#include <kernel/types.h>
+#include <logging/timer.h>
 #include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -30,10 +30,10 @@
 #include <util/check.h>
 #include <util/expected.h>
 #include <util/fs.h>
+#include <util/fs_helpers.h>
 #include <util/log.h>
 #include <util/obfuscation.h>
 #include <util/overflow.h>
-#include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 #include <util/syserror.h>
@@ -46,6 +46,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <exception>
+#include <limits>
 #include <map>
 #include <optional>
 #include <ostream>
@@ -53,6 +54,7 @@
 #include <stdexcept>
 #include <system_error>
 #include <unordered_map>
+#include <utility>
 
 namespace kernel {
 static constexpr uint8_t DB_BLOCK_FILES{'f'};
@@ -170,6 +172,12 @@ std::string CBlockFileInfo::ToString() const
 } // namespace kernel
 
 namespace node {
+/** The number of blocks to keep below the deepest prune lock.
+ *  There is nothing special about this number. It is higher than what we
+ *  expect to see in regular mainnet reorgs, but not so high that it would
+ *  noticeably interfere with the pruning mechanism.
+ * */
+static constexpr int PRUNE_LOCK_BUFFER{10};
 
 bool CBlockIndexWorkComparator::operator()(const CBlockIndex* pa, const CBlockIndex* pb) const
 {
@@ -302,81 +310,39 @@ void BlockManager::PruneOneBlockFile(const int fileNumber)
 
 void BlockManager::FindFilesToPruneManual(
     std::set<int>& setFilesToPrune,
-    int nManualPruneHeight,
-    const Chainstate& chain)
+    ManualPruneLimits limits)
 {
-    assert(IsPruneMode() && nManualPruneHeight > 0);
+    assert(IsPruneMode());
+    Assume(limits.min_height >= 0 && limits.max_height >= 0);
 
     LOCK(::cs_main);
-    if (chain.m_chain.Height() < 0) {
-        return;
-    }
-
-    const auto [min_block_to_prune, last_block_can_prune] = chain.GetPruneRange(nManualPruneHeight);
-
-    int count = 0;
     for (int fileNumber = 0; fileNumber < this->MaxBlockfileNum(); fileNumber++) {
         const auto& fileinfo = m_blockfile_info[fileNumber];
-        if (fileinfo.nSize == 0 || fileinfo.nHeightLast > (unsigned)last_block_can_prune || fileinfo.nHeightFirst < (unsigned)min_block_to_prune) {
+        if (fileinfo.nSize == 0 || fileinfo.nHeightLast > (unsigned)limits.max_height || fileinfo.nHeightFirst < (unsigned)limits.min_height) {
             continue;
         }
 
         PruneOneBlockFile(fileNumber);
         setFilesToPrune.insert(fileNumber);
-        count++;
     }
-    LogInfo("[%s] Prune (Manual): prune_height=%d removed %d blk/rev pairs",
-        chain.GetRole(), last_block_can_prune, count);
 }
 
 void BlockManager::FindFilesToPrune(
     std::set<int>& setFilesToPrune,
-    int last_prune,
-    const Chainstate& chain,
-    ChainstateManager& chainman)
+    TargetPruneLimits limits)
 {
+    Assume(limits.min_height >= 0 && limits.max_height >= 0);
+
     LOCK(::cs_main);
-    // Compute `target` value with maximum size (in bytes) of blocks below the
-    // `last_prune` height which should be preserved and not pruned. The
-    // `target` value will be derived from the -prune preference provided by the
-    // user. If there is a historical chainstate being used to populate indexes
-    // and validate the snapshot, the target is divided by two so half of the
-    // block storage will be reserved for the historical chainstate, and the
-    // other half will be reserved for the most-work chainstate.
-    const int num_chainstates{chainman.HistoricalChainstate() ? 2 : 1};
-    const auto target = std::max(
-        MIN_DISK_SPACE_FOR_BLOCK_FILES, GetPruneTarget() / num_chainstates);
-    const uint64_t target_sync_height = chainman.m_best_header->nHeight;
-
-    if (chain.m_chain.Height() < 0 || target == 0) {
-        return;
-    }
-    if (static_cast<uint64_t>(chain.m_chain.Height()) <= chainman.GetParams().PruneAfterHeight()) {
-        return;
-    }
-
-    const auto [min_block_to_prune, last_block_can_prune] = chain.GetPruneRange(last_prune);
-
     uint64_t nCurrentUsage = CalculateCurrentUsage();
     // We don't check to prune until after we've allocated new space for files
     // So we should leave a buffer under our target to account for another allocation
     // before the next pruning.
     uint64_t nBuffer = BLOCKFILE_CHUNK_SIZE + UNDOFILE_CHUNK_SIZE;
     uint64_t nBytesToPrune;
-    int count = 0;
 
-    if (nCurrentUsage + nBuffer >= target) {
-        // On a prune event, the chainstate DB is flushed.
-        // To avoid excessive prune events negating the benefit of high dbcache
-        // values, we should not prune too rapidly.
-        // So when pruning in IBD, increase the buffer to avoid a re-prune too soon.
-        const auto chain_tip_height = chain.m_chain.Height();
-        if (chainman.IsInitialBlockDownload() && target_sync_height > (uint64_t)chain_tip_height) {
-            // Since this is only relevant during IBD, we assume blocks are at least 1 MB on average
-            static constexpr uint64_t average_block_size = 1000000;  /* 1 MB */
-            const uint64_t remaining_blocks = target_sync_height - chain_tip_height;
-            nBuffer += average_block_size * remaining_blocks;
-        }
+    if (nCurrentUsage + nBuffer >= limits.target) {
+        nBuffer += limits.extra_space;
 
         for (int fileNumber = 0; fileNumber < this->MaxBlockfileNum(); fileNumber++) {
             const auto& fileinfo = m_blockfile_info[fileNumber];
@@ -386,13 +352,13 @@ void BlockManager::FindFilesToPrune(
                 continue;
             }
 
-            if (nCurrentUsage + nBuffer < target) { // are we below our target?
+            if (nCurrentUsage + nBuffer < limits.target) { // are we below our target?
                 break;
             }
 
             // don't prune files that could have a block that's not within the allowable
             // prune range for the chain being pruned.
-            if (fileinfo.nHeightLast > (unsigned)last_block_can_prune || fileinfo.nHeightFirst < (unsigned)min_block_to_prune) {
+            if (fileinfo.nHeightLast > (unsigned)limits.max_height || fileinfo.nHeightFirst < (unsigned)limits.min_height) {
                 continue;
             }
 
@@ -400,14 +366,17 @@ void BlockManager::FindFilesToPrune(
             // Queue up the files for removal
             setFilesToPrune.insert(fileNumber);
             nCurrentUsage -= nBytesToPrune;
-            count++;
         }
     }
+}
 
-    LogDebug(BCLog::PRUNE, "[%s] target=%dMiB actual=%dMiB diff=%dMiB min_height=%d max_prune_height=%d removed %d blk/rev pairs\n",
-             chain.GetRole(), target / 1_MiB, nCurrentUsage / 1_MiB,
-             (int64_t(target) - int64_t(nCurrentUsage)) / int64_t(1_MiB),
-             min_block_to_prune, last_block_can_prune, count);
+void BlockManager::SetHavePruned()
+{
+    AssertLockHeld(::cs_main);
+    if (!m_have_pruned) {
+        m_block_tree_db->WriteFlag("prunedblockfiles", true);
+        m_have_pruned = true;
+    }
 }
 
 void BlockManager::UpdatePruneLock(const std::string& name, const PruneLockInfo& lock_info) {
@@ -419,6 +388,53 @@ bool BlockManager::DeletePruneLock(const std::string& name)
 {
     AssertLockHeld(::cs_main);
     return m_prune_locks.erase(name) > 0;
+}
+
+int BlockManager::GetLastPrunableHeight(int last_prune) const
+{
+    AssertLockHeld(::cs_main);
+    std::optional<std::string> limiting_lock; // prune lock that actually was the limiting factor, only used for logging
+
+    for (const auto& prune_lock : m_prune_locks) {
+        if (prune_lock.second.height_first == std::numeric_limits<int>::max()) continue;
+        // Remove the buffer and one additional block here to get actual height that is outside of the buffer
+        const int lock_height{prune_lock.second.height_first - PRUNE_LOCK_BUFFER - 1};
+        last_prune = std::max(1, std::min(last_prune, lock_height));
+        if (last_prune == lock_height) {
+            limiting_lock = prune_lock.first;
+        }
+    }
+
+    if (limiting_lock) {
+        LogDebug(BCLog::PRUNE, "%s limited pruning to height %d\n", limiting_lock.value(), last_prune);
+    }
+    return last_prune;
+}
+
+std::optional<int> BlockManager::BeginManualPrune(int tip_height)
+{
+    AssertLockHeld(::cs_main);
+    if (!IsPruneMode() || !m_blockfiles_indexed) return std::nullopt;
+    return GetLastPrunableHeight(tip_height);
+}
+
+std::optional<int> BlockManager::BeginTargetPrune(int tip_height)
+{
+    AssertLockHeld(::cs_main);
+    if (!IsPruneMode() || !m_check_for_pruning || !m_blockfiles_indexed) return std::nullopt;
+    m_check_for_pruning = false;
+    return GetLastPrunableHeight(tip_height);
+}
+
+void BlockManager::MovePruneLocksBack(int max_height_first)
+{
+    AssertLockHeld(::cs_main);
+    for (auto& prune_lock : m_prune_locks) {
+        if (prune_lock.second.height_first <= max_height_first) continue;
+
+        prune_lock.second.height_first = max_height_first;
+        LogDebug(BCLog::PRUNE, "%s prune lock moved back to %d\n", prune_lock.first, max_height_first);
+    }
 }
 
 CBlockIndex* BlockManager::InsertBlockIndex(const uint256& hash)
@@ -808,6 +824,51 @@ bool BlockManager::FlushChainstateBlockFile(int tip_height)
     return true;
 }
 
+util::Expected<void, WriteBlockStorageError> BlockManager::WriteBlockStorage(int tip_height, const std::set<int>& files_to_prune)
+{
+    AssertLockHeld(::cs_main);
+    Assume(files_to_prune.empty() || m_have_pruned);
+    m_files_to_unlink.insert(files_to_prune.begin(), files_to_prune.end());
+    // Ensure we can write block index
+    if (!CheckDiskSpace(m_opts.blocks_dir)) return util::Unexpected{WriteBlockStorageError::LowDiskSpace};
+    {
+        LOG_TIME_MILLIS_WITH_CATEGORY("write block and undo data to disk", BCLog::BENCH);
+
+        // First make sure all block and undo data is flushed to disk.
+        if (!FlushChainstateBlockFile(tip_height)) return util::Unexpected{WriteBlockStorageError::FlushFailed};
+    }
+
+    // Take the pruned files with the dirty entries, which WriteBlockIndexDB() drops
+    // even if it fails, so files are only deleted after the write that marks them pruned.
+    const auto files_to_unlink{std::exchange(m_files_to_unlink, {})};
+    // Then update all block file information (which may refer to block and undo files).
+    {
+        LOG_TIME_MILLIS_WITH_CATEGORY("write block index to disk", BCLog::BENCH);
+
+        WriteBlockIndexDB();
+    }
+    // Finally remove any pruned files
+    if (!files_to_unlink.empty()) {
+        LOG_TIME_MILLIS_WITH_CATEGORY("unlink pruned files", BCLog::BENCH);
+
+        UnlinkPrunedFiles(files_to_unlink);
+    }
+    return {};
+}
+
+void BlockManager::MarkBlockIndexDirty(CBlockIndex& index)
+{
+    AssertLockHeld(::cs_main);
+    m_dirty_blockindex.insert(&index);
+}
+
+void BlockManager::SetBlockfilesIndexed()
+{
+    AssertLockHeld(::cs_main);
+    m_block_tree_db->WriteReindexing(false);
+    m_blockfiles_indexed = true;
+}
+
 uint64_t BlockManager::CalculateCurrentUsage()
 {
     AssertLockHeld(::cs_main);
@@ -895,6 +956,8 @@ FlatFilePos BlockManager::FindNextBlockPos(uint64_t nAddSize, unsigned int nHeig
             m_blockfile_info.resize(nFile + 1);
         }
     }
+    // Don't delete a pruned file that is about to hold a new block.
+    m_files_to_unlink.erase(nFile);
     FlatFilePos pos;
     pos.nFile = nFile;
     pos.nPos = m_blockfile_info[nFile].nSize;
@@ -1248,80 +1311,6 @@ BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
             CleanupBlockRevFiles();
         }
     }
-}
-
-class ImportingNow
-{
-    std::atomic<bool>& m_importing;
-
-public:
-    ImportingNow(std::atomic<bool>& importing) : m_importing{importing}
-    {
-        assert(m_importing == false);
-        m_importing = true;
-    }
-    ~ImportingNow()
-    {
-        assert(m_importing == true);
-        m_importing = false;
-    }
-};
-
-void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_paths)
-{
-    ImportingNow imp{chainman.m_blockman.m_importing};
-
-    // -reindex
-    if (!chainman.m_blockman.m_blockfiles_indexed) {
-        int total_files{0};
-        while (fs::exists(chainman.m_blockman.GetBlockPosFilename(FlatFilePos(total_files, 0)))) {
-            total_files++;
-        }
-
-        // Map of disk positions for blocks with unknown parent (only used for reindex);
-        // parent hash -> child disk position, multiple children can have the same parent.
-        std::multimap<uint256, FlatFilePos> blocks_with_unknown_parent;
-
-        for (int nFile{0}; nFile < total_files; ++nFile) {
-            FlatFilePos pos(nFile, 0);
-            AutoFile file{chainman.m_blockman.OpenBlockFile(pos, /*fReadOnly=*/true)};
-            if (file.IsNull()) {
-                break; // This error is logged in OpenBlockFile
-            }
-            LogInfo("Reindexing block file blk%05u.dat (%d%% complete)...", (unsigned int)nFile, nFile * 100 / total_files);
-            chainman.LoadExternalBlockFile(file, &pos, &blocks_with_unknown_parent);
-            if (chainman.m_interrupt) {
-                LogInfo("Interrupt requested. Exit reindexing.");
-                return;
-            }
-        }
-        WITH_LOCK(::cs_main, chainman.m_blockman.m_block_tree_db->WriteReindexing(false));
-        chainman.m_blockman.m_blockfiles_indexed = true;
-        LogInfo("Reindexing finished");
-        // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
-        (void)chainman.LoadGenesisBlock();
-    }
-
-    // -loadblock=
-    for (const fs::path& path : import_paths) {
-        AutoFile file{fsbridge::fopen(path, "rb")};
-        if (!file.IsNull()) {
-            LogInfo("Importing blocks file %s...", fs::PathToString(path));
-            chainman.LoadExternalBlockFile(file);
-            if (chainman.m_interrupt) {
-                LogInfo("Interrupt requested. Exit block importing.");
-                return;
-            }
-        } else {
-            LogWarning("Could not open blocks file %s", fs::PathToString(path));
-        }
-    }
-
-    // scan for better chains in the block chain database, that are not yet connected in the active best chain
-    if (auto result = chainman.ActivateBestChains(); !result) {
-        chainman.GetNotifications().fatalError(util::ErrorString(result));
-    }
-    // End scope of ImportingNow
 }
 
 std::ostream& operator<<(std::ostream& os, const BlockfileType& type) {

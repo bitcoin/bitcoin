@@ -5,11 +5,13 @@
 #ifndef BITCOIN_NODE_CHAINSTATE_H
 #define BITCOIN_NODE_CHAINSTATE_H
 
+#include <util/fs.h>
 #include <util/translation.h>
 #include <validation.h>
 
 #include <cstdint>
 #include <functional>
+#include <span>
 #include <tuple>
 
 class CTxMemPool;
@@ -26,7 +28,6 @@ struct ChainstateLoadOptions {
     // Whether to wipe the chainstate database when loading it. If set, this
     // will cause the chainstate database to be rebuilt starting from genesis.
     bool wipe_chainstate_db{false};
-    bool prune{false};
     //! Setting require_full_verification to true will require all checks at
     //! check_level (below) to succeed for loading to succeed. Setting it to
     //! false will skip checks if cache is not big enough to run them, so may be
@@ -69,6 +70,9 @@ using ChainstateLoadResult = std::tuple<ChainstateLoadStatus, bilingual_str>;
 ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const kernel::CacheSizes& cache_sizes,
                                     const ChainstateLoadOptions& options);
 ChainstateLoadResult VerifyLoadedChainstate(ChainstateManager& chainman, const ChainstateLoadOptions& options);
+
+// Calls ActivateBestChain() even if no blocks are imported.
+void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_paths);
 } // namespace node
 
 #endif // BITCOIN_NODE_CHAINSTATE_H
