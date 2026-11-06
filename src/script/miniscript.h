@@ -302,7 +302,7 @@ Type ComputeType(Fragment fragment, Type x, Type y, Type z, const std::vector<Ty
 size_t ComputeScriptLen(Fragment fragment, Type sub0typ, size_t subsize, uint32_t k, size_t n_subs, size_t n_keys, MiniscriptContext ms_ctx);
 
 //! A helper sanitizer/checker for the output of CalcType.
-Type SanitizeType(Type x);
+Type SanitizeType(Type e);
 
 //! An object representing a sequence of witness stack elements.
 struct InputStack {
@@ -1809,7 +1809,7 @@ enum class ParseContext {
     CLOSE_BRACKET,
 };
 
-int FindNextChar(std::span<const char> in, char m);
+int FindNextChar(std::span<const char> sp, char m);
 
 /** Parse a key expression fully contained within a fragment with the name given by 'func' */
 template<typename Key, typename Ctx>

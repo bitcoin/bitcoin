@@ -64,7 +64,7 @@ struct ScriptHash : public BaseHash<uint160>
     explicit ScriptHash(const PKHash& hash) = delete;
 
     explicit ScriptHash(const uint160& hash) : BaseHash(hash) {}
-    explicit ScriptHash(const CScript& script);
+    explicit ScriptHash(const CScript& in);
 };
 CScriptID ToScriptID(const ScriptHash& script_hash);
 
@@ -72,7 +72,7 @@ struct WitnessV0ScriptHash : public BaseHash<uint256>
 {
     WitnessV0ScriptHash() : BaseHash() {}
     explicit WitnessV0ScriptHash(const uint256& hash) : BaseHash(hash) {}
-    explicit WitnessV0ScriptHash(const CScript& script);
+    explicit WitnessV0ScriptHash(const CScript& in);
 };
 
 struct WitnessV0KeyHash : public BaseHash<uint160>

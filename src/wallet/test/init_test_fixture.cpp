@@ -14,7 +14,7 @@
 #include <wallet/test/init_test_fixture.h>
 
 namespace wallet {
-InitWalletDirTestingSetup::InitWalletDirTestingSetup(const ChainType chainType) : BasicTestingSetup(chainType)
+InitWalletDirTestingSetup::InitWalletDirTestingSetup(const ChainType chain_type) : BasicTestingSetup(chain_type)
 {
     m_wallet_loader = MakeWalletLoader(*m_node.chain, m_args);
 

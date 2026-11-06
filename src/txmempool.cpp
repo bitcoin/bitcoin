@@ -357,7 +357,7 @@ void CTxMemPool::removeRecursive(const CTransaction &origTx, MemPoolRemovalReaso
     }
 }
 
-void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check_final_and_mature)
+void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> filter_final_and_mature)
 {
     // Remove transactions spending a coinbase which are now immature and no-longer-final transactions
     AssertLockHeld(cs);
@@ -366,7 +366,7 @@ void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check
 
     std::vector<const TxGraph::Ref*> to_remove;
     for (txiter it = mapTx.begin(); it != mapTx.end(); it++) {
-        if (check_final_and_mature(it)) {
+        if (filter_final_and_mature(it)) {
             to_remove.emplace_back(&*it);
         }
     }

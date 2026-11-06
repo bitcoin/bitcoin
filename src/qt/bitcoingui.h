@@ -220,10 +220,10 @@ private:
 Q_SIGNALS:
     void quitRequested();
     /** Signal raised when a URI was entered or dragged to the GUI */
-    void receivedURI(const QString &uri);
+    void receivedURI(const QString &uri); // NOLINT(readability-inconsistent-declaration-parameter-name)
     /** Signal raised when RPC console shown */
-    void consoleShown(RPCConsole* console);
-    void setPrivacy(bool privacy);
+    void consoleShown(RPCConsole* console); // NOLINT(readability-inconsistent-declaration-parameter-name)
+    void setPrivacy(bool privacy); // NOLINT(readability-inconsistent-declaration-parameter-name)
 
 public Q_SLOTS:
     /** Set number of connections shown in the UI */

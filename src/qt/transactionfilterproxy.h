@@ -38,7 +38,7 @@ public:
     void setShowInactive(bool showInactive);
 
 protected:
-    bool filterAcceptsRow(int source_row, const QModelIndex & source_parent) const override;
+    bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
 
 private:
     std::optional<QDateTime> dateFrom;

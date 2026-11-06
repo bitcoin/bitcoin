@@ -54,8 +54,8 @@ public Q_SLOTS:
     void checkSubtractFeeFromAmount();
 
 Q_SIGNALS:
-    void removeEntry(SendCoinsEntry *entry);
-    void useAvailableBalance(SendCoinsEntry* entry);
+    void removeEntry(SendCoinsEntry *entry); // NOLINT(readability-inconsistent-declaration-parameter-name)
+    void useAvailableBalance(SendCoinsEntry* entry); // NOLINT(readability-inconsistent-declaration-parameter-name)
     void payAmountChanged();
     void subtractFeeFromAmountChanged();
 

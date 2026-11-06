@@ -34,7 +34,7 @@ public Q_SLOTS:
     void setEnabled(bool enabled);
 
 Q_SIGNALS:
-    void validationDidChange(QValidatedLineEdit *validatedLineEdit);
+    void validationDidChange(QValidatedLineEdit *validatedLineEdit); // NOLINT(readability-inconsistent-declaration-parameter-name)
 
 private Q_SLOTS:
     void markValid();

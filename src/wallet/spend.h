@@ -23,7 +23,7 @@ namespace wallet {
 /** Get the marginal bytes if spending the specified output from this transaction.
  * Use CoinControl to determine whether to expect signature grinding when calculating the size of the input spend. */
 int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* pwallet, const CCoinControl* coin_control);
-int CalculateMaximumSignedInputSize(const CTxOut& txout, COutPoint outpoint, const SigningProvider* pwallet, bool can_grind_r, const CCoinControl* coin_control);
+int CalculateMaximumSignedInputSize(const CTxOut& txout, COutPoint outpoint, const SigningProvider* provider, bool can_grind_r, const CCoinControl* coin_control);
 struct TxSize {
     int64_t vsize{-1};
     int64_t weight{-1};
@@ -98,11 +98,6 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                            const CoinFilterParams& params = {}) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /**
- * Find non-change parent output.
- */
-const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const COutPoint& outpoint) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
-
-/**
  * Return list of available coins and locked coins grouped by non-change output address.
  */
 std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
@@ -149,42 +144,11 @@ util::Result<SelectionResult> AttemptSelection(interfaces::Chain& chain, const C
                         const CoinSelectionParams& coin_selection_params, bool allow_mixed_output_types);
 
 /**
- * Attempt to find a valid input set that meets the provided eligibility filter and target.
- * Multiple coin selection algorithms will be run and the input set that produces the least waste
- * (according to the waste metric) will be chosen.
- *
- * @param[in]  chain                     The chain interface to get information on bump fees for unconfirmed UTXOs
- * @param[in]  nTargetValue              The target value
- * @param[in]  groups                    The struct containing the outputs grouped by script and divided by (1) positive only outputs and (2) all outputs (positive + negative).
- * @param[in]  coin_selection_params     Parameters for the coin selection
- * returns                               If successful, a SelectionResult containing the input set
- *                                       If failed, returns (1) an empty error message if the target was not reached (general "Insufficient funds")
- *                                                  or (2) a specific error message if there was something particularly wrong (e.g. a selection
- *                                                  result that surpassed the tx max weight size).
- */
-util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, const CAmount& nTargetValue, Groups& groups, const CoinSelectionParams& coin_selection_params);
-
-/**
  * Fetch and validate coin control selected inputs.
  * Coins could be internal (from the wallet) or external.
 */
 util::Result<CoinsResult> FetchSelectedInputs(const CWallet& wallet, const CCoinControl& coin_control,
                                                     const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
-
-/**
- * Select a set of coins such that nTargetValue is met; never select unconfirmed coins if they are not ours
- * @param[in]   wallet                 The wallet which provides data necessary to spend the selected coins
- * @param[in]   available_coins        The struct of coins, organized by OutputType, available for selection prior to filtering
- * @param[in]   nTargetValue           The target value
- * @param[in]   coin_selection_params  Parameters for this coin selection such as feerates, whether to avoid partial spends,
- *                                     and whether to subtract the fee from the outputs.
- * returns                             If successful, a SelectionResult containing the selected coins
- *                                     If failed, returns (1) an empty error message if the target was not reached (general "Insufficient funds")
- *                                                or (2) an specific error message if there was something particularly wrong (e.g. a selection
- *                                                result that surpassed the tx max weight size).
- */
-util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, CoinsResult& available_coins, const CAmount& nTargetValue,
-                 const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /**
  * Select all coins from coin_control, and if coin_control 'm_allow_other_inputs=true', call 'AutomaticCoinSelection' to

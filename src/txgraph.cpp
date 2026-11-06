@@ -296,7 +296,7 @@ public:
     void Compact() noexcept final;
     void ApplyRemovals(TxGraphImpl& graph, int level, std::span<GraphIndex>& to_remove) noexcept final;
     [[nodiscard]] bool Split(TxGraphImpl& graph, int level) noexcept final;
-    void Merge(TxGraphImpl& graph, int level, Cluster& cluster) noexcept final;
+    void Merge(TxGraphImpl& graph, int level, Cluster& other) noexcept final;
     void ApplyDependencies(TxGraphImpl& graph, int level, std::span<std::pair<GraphIndex, GraphIndex>> to_apply) noexcept final;
     std::pair<uint64_t, bool> Relinearize(TxGraphImpl& graph, int level, uint64_t max_cost) noexcept final;
     void AppendChunkFeerates(std::vector<FeeFrac>& ret) const noexcept final;
@@ -686,7 +686,7 @@ public:
     /** Make a transaction not exist at a specified level. It must currently exist there.
      *  oversized_tx indicates whether the transaction is an individually-oversized one
      *  (OVERSIZED_SINGLETON). */
-    void ClearLocator(int level, GraphIndex index, bool oversized_tx) noexcept;
+    void ClearLocator(int level, GraphIndex idx, bool oversized_tx) noexcept;
     /** Find which Clusters in main conflict with ones in staging. */
     std::vector<Cluster*> GetConflicts() const noexcept;
     /** Clear an Entry's ChunkData. */

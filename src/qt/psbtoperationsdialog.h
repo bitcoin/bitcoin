@@ -22,7 +22,7 @@ class PSBTOperationsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit PSBTOperationsDialog(QWidget* parent, WalletModel* walletModel, ClientModel* clientModel);
+    explicit PSBTOperationsDialog(QWidget* parent, WalletModel* wallet_model, ClientModel* client_model);
     ~PSBTOperationsDialog();
 
     void openWithPSBT(PartiallySignedTransaction psbtx);

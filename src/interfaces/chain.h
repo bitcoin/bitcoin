@@ -426,7 +426,7 @@ public:
 };
 
 //! Return implementation of Chain interface.
-std::unique_ptr<Chain> MakeChain(node::NodeContext& node);
+std::unique_ptr<Chain> MakeChain(node::NodeContext& context);
 
 } // namespace interfaces
 

@@ -30,7 +30,7 @@ inline constexpr auto OUTPUT_TYPES = std::array{
     OutputType::BECH32M,
 };
 
-std::optional<OutputType> ParseOutputType(std::string_view str);
+std::optional<OutputType> ParseOutputType(std::string_view type);
 const std::string& FormatOutputType(OutputType type);
 std::string FormatAllOutputTypes();
 

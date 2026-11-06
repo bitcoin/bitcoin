@@ -519,7 +519,14 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
     }
 }
 
-std::unique_ptr<Sock> CreateSockOS(int domain, int type, int protocol)
+/**
+ * Create a real socket from the operating system.
+ * @param[in] domain Communications domain, first argument to the socket(2) syscall.
+ * @param[in] type Type of the socket, second argument to the socket(2) syscall.
+ * @param[in] protocol The particular protocol to be used with the socket, third argument to the socket(2) syscall.
+ * @return pointer to the created Sock object or unique_ptr that owns nothing in case of failure
+ */
+static std::unique_ptr<Sock> CreateSockOS(int domain, int type, int protocol)
 {
     // Not IPv4, IPv6 or UNIX
     if (domain == AF_UNSPEC) return nullptr;

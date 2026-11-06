@@ -29,7 +29,7 @@ class BitcoinAmountField: public QWidget
 public:
     explicit BitcoinAmountField(QWidget *parent = nullptr);
 
-    CAmount value(bool *value=nullptr) const;
+    CAmount value(bool *valid_out=nullptr) const;
     void setValue(const CAmount& value);
 
     /** If allow empty is set to false the field will be set to the minimum allowed value if left empty. **/

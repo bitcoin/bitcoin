@@ -24,7 +24,7 @@ public:
 };
 
 //! Return implementation of Rpc interface.
-std::unique_ptr<Rpc> MakeRpc(node::NodeContext& node);
+std::unique_ptr<Rpc> MakeRpc(node::NodeContext& context);
 
 } // namespace interfaces
 

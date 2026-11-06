@@ -64,6 +64,6 @@ struct NodeEvictionCandidate {
  * disadvantaged under our eviction criteria for their higher min ping times
  * relative to IPv4/IPv6 peers, and favorise the diversity of peer connections.
  */
-void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& vEvictionCandidates);
+void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& eviction_candidates);
 
 #endif // BITCOIN_NODE_EVICTION_H

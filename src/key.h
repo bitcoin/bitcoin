@@ -193,7 +193,7 @@ public:
     bool VerifyPubKey(const CPubKey& vchPubKey) const;
 
     //! Load private key and check that public key matches.
-    bool Load(const CPrivKey& privkey, const CPubKey& vchPubKey, bool fSkipCheck);
+    bool Load(const CPrivKey& seckey, const CPubKey& vchPubKey, bool fSkipCheck);
 
     /** Create an ellswift-encoded public key for this key, with specified entropy.
      *

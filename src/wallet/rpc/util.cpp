@@ -30,6 +30,15 @@ bool GetAvoidReuseFlag(const CWallet& wallet, const UniValue& param) {
     return avoid_reuse;
 }
 
+static std::optional<std::string> GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request)
+{
+    if (request.URI.starts_with(WALLET_ENDPOINT_BASE)) {
+        // wallet endpoint was used
+        return UrlDecode(std::string_view{request.URI}.substr(WALLET_ENDPOINT_BASE.size()));
+    }
+    return std::nullopt;
+}
+
 std::string EnsureUniqueWalletName(const JSONRPCRequest& request, std::optional<std::string_view> wallet_name)
 {
     if (auto endpoint_wallet{GetWalletNameFromJSONRPCRequest(request)}) {
@@ -48,15 +57,6 @@ std::string EnsureUniqueWalletName(const JSONRPCRequest& request, std::optional<
     }
 
     return std::string{*wallet_name};
-}
-
-std::optional<std::string> GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request)
-{
-    if (request.URI.starts_with(WALLET_ENDPOINT_BASE)) {
-        // wallet endpoint was used
-        return UrlDecode(std::string_view{request.URI}.substr(WALLET_ENDPOINT_BASE.size()));
-    }
-    return std::nullopt;
 }
 
 std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request)

@@ -3521,8 +3521,8 @@ void CConnman::SetNetworkActive(bool active)
     }
 }
 
-CConnman::CConnman(uint64_t nSeed0In,
-                   uint64_t nSeed1In,
+CConnman::CConnman(uint64_t seed0,
+                   uint64_t seed1,
                    AddrMan& addrman_in,
                    const NetGroupManager& netgroupman,
                    const CChainParams& params,
@@ -3530,8 +3530,8 @@ CConnman::CConnman(uint64_t nSeed0In,
                    std::shared_ptr<CThreadInterrupt> interrupt_net)
     : addrman(addrman_in)
     , m_netgroupman{netgroupman}
-    , nSeed0(nSeed0In)
-    , nSeed1(nSeed1In)
+    , nSeed0(seed0)
+    , nSeed1(seed1)
     , m_interrupt_net{interrupt_net}
     , m_params(params)
 {

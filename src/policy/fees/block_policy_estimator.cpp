@@ -151,10 +151,10 @@ public:
     /**
      * Record a new transaction data point in the current block stats
      * @param blocksToConfirm the number of blocks it took this transaction to confirm
-     * @param val the feerate of the transaction
+     * @param feerate the feerate of the transaction
      * @warning blocksToConfirm is 1-based and has to be >= 1
      */
-    void Record(int blocksToConfirm, double val);
+    void Record(int blocksToConfirm, double feerate);
 
     /** Record a new transaction entering the mempool*/
     unsigned int NewTx(unsigned int nBlockHeight, double val);
@@ -173,11 +173,11 @@ public:
      * of being confirmed within the target number of confirmations
      * @param confTarget target number of confirmations
      * @param sufficientTxVal required average number of transactions per block in a bucket range
-     * @param minSuccess the success probability we require
+     * @param successBreakPoint the success probability we require
      * @param nBlockHeight the current block height
      */
     double EstimateMedianVal(int confTarget, double sufficientTxVal,
-                             double minSuccess, unsigned int nBlockHeight,
+                             double successBreakPoint, unsigned int nBlockHeight,
                              EstimationResult *result = nullptr) const;
 
     /** Return the max number of confirms we're tracking */

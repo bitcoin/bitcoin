@@ -310,16 +310,16 @@ bool CKey::Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const
     return ret;
 }
 
-EllSwiftPubKey CKey::EllSwiftCreate(std::span<const std::byte> ent32) const
+EllSwiftPubKey CKey::EllSwiftCreate(std::span<const std::byte> entropy) const
 {
     assert(keydata);
-    assert(ent32.size() == 32);
+    assert(entropy.size() == 32);
     std::array<std::byte, EllSwiftPubKey::size()> encoded_pubkey;
 
     auto success = secp256k1_ellswift_create(secp256k1_context_sign,
                                              UCharCast(encoded_pubkey.data()),
                                              keydata->data(),
-                                             UCharCast(ent32.data()));
+                                             UCharCast(entropy.data()));
 
     // Should always succeed for valid keys (asserted above).
     assert(success);

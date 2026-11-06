@@ -247,7 +247,7 @@ namespace GUIUtil
 
     QString formatBytes(uint64_t bytes);
 
-    qreal calculateIdealFontSize(int width, const QString& text, QFont font, qreal minPointSize = 4, qreal startPointSize = 14);
+    qreal calculateIdealFontSize(int width, const QString& text, QFont font, qreal minPointSize = 4, qreal font_size = 14);
 
     class ThemedLabel : public QLabel
     {

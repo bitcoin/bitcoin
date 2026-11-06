@@ -97,7 +97,7 @@ public Q_SLOTS:
     void request(const QString &command, const QString& wallet_name);
 
 Q_SIGNALS:
-    void reply(int category, const QString &command);
+    void reply(int category, const QString &command); // NOLINT(readability-inconsistent-declaration-parameter-name)
 
 private:
     interfaces::Node& m_node;

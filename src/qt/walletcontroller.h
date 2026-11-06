@@ -186,7 +186,7 @@ public:
     MigrateWalletActivity(WalletController* wallet_controller, QWidget* parent) : WalletControllerActivity(wallet_controller, parent) {}
 
     void restore_and_migrate(const fs::path& path, const std::string& wallet_name);
-    void migrate(const std::string& path);
+    void migrate(const std::string& name);
 
 Q_SIGNALS:
     void migrated(WalletModel* wallet_model);
