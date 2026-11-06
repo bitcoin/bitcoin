@@ -20,7 +20,7 @@ void QValueComboBox::setValue(const QVariant &value)
     setCurrentIndex(findData(value, role));
 }
 
-void QValueComboBox::handleSelectionChanged(int idx)
+void QValueComboBox::handleSelectionChanged(int)
 {
     Q_EMIT valueChanged();
 }

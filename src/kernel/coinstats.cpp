@@ -70,7 +70,7 @@ void RemoveCoinHash(MuHash3072& muhash, const COutPoint& outpoint, const Coin& c
     muhash.Remove(MakeUCharSpan(ss));
 }
 
-static void ApplyCoinHash(std::nullptr_t, const COutPoint& outpoint, const Coin& coin) {}
+static void ApplyCoinHash(std::nullptr_t, const COutPoint&, const Coin&) {}
 
 //! Warning: be very careful when changing this! assumeutxo and UTXO snapshot
 //! validation commitments are reliant on the hash constructed by this
@@ -182,6 +182,6 @@ static void FinalizeHash(MuHash3072& muhash, CCoinsStats& stats)
     muhash.Finalize(out);
     stats.hashSerialized = out;
 }
-static void FinalizeHash(std::nullptr_t, CCoinsStats& stats) {}
+static void FinalizeHash(std::nullptr_t, CCoinsStats&) {}
 
 } // namespace kernel
