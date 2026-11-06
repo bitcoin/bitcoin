@@ -84,6 +84,9 @@ public:
     }
     void FailNextErase(std::string record_type) { m_fail_erase = {std::move(record_type)}; }
     void FailNextCommit() { m_fail_commit = true; }
+    void FailNextRewrite() { m_fail_rewrite = true; }
+
+    bool Rewrite() override { return !std::exchange(m_fail_rewrite, false) && MockableSQLiteDatabase::Rewrite(); }
 
     std::optional<SerializeData> GetRecordValue(const std::string& record_type)
     {
@@ -148,6 +151,7 @@ private:
     std::optional<Failure> m_fail_write;
     std::optional<Failure> m_fail_erase;
     bool m_fail_commit{false};
+    bool m_fail_rewrite{false};
 };
 
 std::unique_ptr<WalletDatabase> CreateMockableWalletDatabase();
