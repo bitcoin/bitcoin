@@ -179,8 +179,12 @@ BOOST_AUTO_TEST_CASE(memusage_test)
             resource_map[i];
         }
 
-        // Eventually the resource_map should have a much lower memory usage because it has less malloc overhead
-        BOOST_TEST(memusage::DynamicUsage(resource_map) <= memusage::DynamicUsage(std_map) * 90 / 100);
+        // Eventually the resource_map should have a much lower memory usage because it has less malloc overhead, if
+        // malloc has a per-allocation overhead for nodes of this size at all (macOS's does not).
+        const size_t node_size{sizeof(memusage::unordered_node<Map::value_type>)};
+        if (memusage::MallocUsage(node_size) >= node_size * 5 / 4) {
+            BOOST_TEST(memusage::DynamicUsage(resource_map) <= memusage::DynamicUsage(std_map) * 90 / 100);
+        }
 
         // Make sure the pool is actually used by the nodes
         auto max_nodes_per_chunk = resource.ChunkSizeBytes() / sizeof(Map::value_type);
