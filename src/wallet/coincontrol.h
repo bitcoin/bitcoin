@@ -115,6 +115,8 @@ public:
     uint32_t m_version = DEFAULT_WALLET_TX_VERSION;
     //! Locktime
     std::optional<uint32_t> m_locktime;
+    //! Minimum locktime for the transaction being created
+    std::optional<uint32_t> m_minimum_locktime;
     //! Caps weight of resulting tx
     std::optional<int> m_max_tx_weight{std::nullopt};
 
