@@ -4,11 +4,12 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the send RPC command."""
 
-from decimal import Decimal, getcontext
+from decimal import Decimal, getcontext, localcontext
 from itertools import product
 
 from test_framework.descriptors import descsum_create
 from test_framework.extendedkey import ExtendedPrivateKey
+from test_framework.mempool_util import fill_mempool
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
@@ -390,15 +391,6 @@ class WalletSendTest(BitcoinTestFramework):
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=invalid_value, expect_error=(-3, msg))
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=invalid_value, expect_error=(-3, msg))
 
-        # TODO: Return hex if fee rate is below -maxmempool
-        # res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.1, estimate_mode="sat/b", add_to_wallet=False)
-        # assert res["hex"]
-        # hex = res["hex"]
-        # res = self.nodes[0].testmempoolaccept([hex])
-        # assert not res[0]["allowed"]
-        # assert_equal(res[0]["reject-reason"], "...") # low fee
-        # assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.000001"))
-
         self.log.info("If inputs are specified, do not automatically add more...")
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=51, inputs=[], add_to_wallet=False)
         assert res["complete"]
@@ -557,6 +549,40 @@ class WalletSendTest(BitcoinTestFramework):
         self.test_weight_limits()
 
         self.test_maxfeerate()
+
+        self.test_fee_rate_below_mempoolminfee()
+
+    def test_fee_rate_below_mempoolminfee(self):
+        self.log.info("Test fee_rate below mempoolminfee")
+        # -maxmempool is required by fill_mempool, dropping
+        # -datacarriersize=16 makes its OP_RETURN txs standard
+        self.restart_node(0, extra_args=["-maxmempool=5", "-persistmempool=0", "-mintxfee=0.000001"]) # Lower -mintxfee so fee_rate can be set below mempoolminfee.
+        self.connect_nodes(0, 1)
+        node = self.nodes[0]
+        w0 = node.get_wallet_rpc(self.default_wallet_name)
+
+        with localcontext() as ctx:
+            ctx.prec = 28 # Set precision high to avoid rounding errors in fee calculations
+            fill_mempool(self, node, tx_sync_fun=self.no_op)
+
+        fee_rate = Decimal("0.2") # sat/vB
+        assert_greater_than(node.getmempoolinfo()["mempoolminfee"], fee_rate / 10**5)
+
+        self.log.info("Don't broadcast tx with fee_rate below mempoolminfee...")
+        res = w0.send(outputs={w0.getnewaddress(): 1}, fee_rate=fee_rate, options={"add_to_wallet": False})
+        assert res["complete"]
+        mempool_res = node.testmempoolaccept([res["hex"]])[0]
+        assert not mempool_res["allowed"]
+        assert_equal(mempool_res["reject-reason"], "mempool min fee not met")
+
+        self.log.info("Create mempool-invalid tx (due to fee_rate below mempoolminfee)...")
+        # The failed broadcast is only logged, see Cwallet::CommitTransaction.
+        res = w0.send(outputs={w0.getnewaddress(): 1}, fee_rate=fee_rate, options={"add_to_wallet": True})
+        assert res["complete"]
+        assert "hex" not in res
+        assert w0.gettransaction(res["txid"])
+        assert res["txid"] not in node.getrawmempool()
+        assert_greater_than(0, w0.getbalances()["mine"]["nonmempool"])
 
     def test_weight_limits(self):
         self.log.info("Test weight limits")
