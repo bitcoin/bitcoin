@@ -27,6 +27,7 @@
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/fuzz/util/psbt.h>
 #include <test/util/setup_common.h>
 #include <undo.h>
 
@@ -177,9 +178,13 @@ FUZZ_TARGET_DESERIALIZE(key_origin_info_deserialize, {
     DeserializeFromFuzzingInput(buffer, key_origin_info);
     AssertEqualAfterSerializeDeserialize(key_origin_info);
 })
-FUZZ_TARGET_DESERIALIZE(partially_signed_transaction_deserialize, {
-    PartiallySignedTransaction partially_signed_transaction = DeserializeConstructFromFuzzingInput<PartiallySignedTransaction>(buffer);
-})
+FUZZ_TARGET(partially_signed_transaction_deserialize, .init = initialize_deserialize, .mutator = PSBTCustomMutator)
+{
+    try {
+        PartiallySignedTransaction partially_signed_transaction = DeserializeConstructFromFuzzingInput<PartiallySignedTransaction>(buffer);
+    } catch (const invalid_fuzzing_input_exception&) {
+    }
+}
 FUZZ_TARGET_DESERIALIZE(prefilled_transaction_deserialize, {
     PrefilledTransaction prefilled_transaction;
     DeserializeFromFuzzingInput(buffer, prefilled_transaction);
