@@ -4260,17 +4260,17 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
     }
 
     // Received from a peer demonstrating readiness to announce transactions via reconciliations.
-    // This feature negotiation must happen between VERSION and VERACK to avoid relay problems
-    // from switching announcement protocols after the connection is up.
     if (msg_type == NetMsgType::SENDTXRCNCL) {
-        if (!m_txreconciliation) {
-            LogDebug(BCLog::NET, "sendtxrcncl from peer=%d ignored, as our node does not have txreconciliation enabled\n", pfrom.GetId());
-            return;
-        }
-
+        // This feature negotiation must happen between VERSION and VERACK to avoid relay problems
+        // from switching announcement protocols after the connection is up.
         if (pfrom.fSuccessfullyConnected) {
             LogDebug(BCLog::NET, "sendtxrcncl received after verack, %s", pfrom.DisconnectMsg());
             pfrom.fDisconnect = true;
+            return;
+        }
+
+        if (!m_txreconciliation) {
+            LogDebug(BCLog::NET, "sendtxrcncl from peer=%d ignored, as our node does not have txreconciliation enabled", pfrom.GetId());
             return;
         }
 
