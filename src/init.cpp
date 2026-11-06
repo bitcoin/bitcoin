@@ -428,7 +428,6 @@ void Shutdown(NodeContext& node)
     node.chainman.reset();
     node.validation_signals.reset();
     node.scheduler.reset();
-    node.ecc_context.reset();
     node.kernel.reset();
 
     RemovePidFile(*node.args);

@@ -27,7 +27,6 @@ constexpr ReachabilityGoal V1_TRANSPORT_RECEIVES_COMPLETE_MESSAGE{"v1 transport 
 
 void initialize_p2p_transport()
 {
-    static ECC_Context ecc_context{};
     SelectParams(ChainType::REGTEST);
     std::sort(g_all_messages.begin(), g_all_messages.end());
 }
