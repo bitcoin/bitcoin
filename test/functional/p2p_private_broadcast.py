@@ -6,6 +6,7 @@
 Test how locally submitted transactions are sent to the network when private broadcast is used.
 """
 
+from decimal import Decimal
 import time
 import threading
 
@@ -35,6 +36,7 @@ from test_framework.test_framework import (
 )
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_greater_than_or_equal,
     assert_not_equal,
     assert_raises_rpc_error,
@@ -47,6 +49,7 @@ from test_framework.wallet import (
 P2P_PRIVATE_VERSION = 70016
 NUM_PRIVATE_BROADCAST_PER_TX = 3
 MAX_PRIVATE_BROADCAST_ATTEMPTS = 1000
+LOCKTIME_THRESHOLD = 500000000
 
 
 class NoRelayP2PInterface(P2PInterface):
@@ -231,6 +234,158 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         assert all("address" in p and "sent" in p for p in peers)
         assert_greater_than_or_equal(sum(1 for p in peers if "received" in p), broadcasts_to_expect)
 
+    def test_scheduled_broadcast(self, wallet, tx_returner):
+        tx_originator = self.nodes[0]
+
+        def pb_entry(tx):
+            entries = [t for t in tx_originator.getprivatebroadcastinfo()["transactions"] if t["wtxid"] == tx["wtxid"]]
+            assert len(entries) <= 1
+            return entries[0] if entries else None
+
+        def log_contains(msg, offset):
+            with open(tx_originator.debug_log_path, encoding="utf-8", errors="replace") as dl:
+                dl.seek(offset)
+                return msg in dl.read()
+
+        def release_msg(tx):
+            return f"Releasing scheduled txid={tx['txid']} wtxid={tx['wtxid']}"
+
+        def check_release_point():
+            """Run the periodic release check (synchronously, see mockscheduler)."""
+            tx_originator.mockscheduler(60)
+
+        def mine(n):
+            self.generate(tx_originator, n, sync_fun=self.no_op)
+
+        def submit_scheduled(tx, delay_after_lock_time, release_height):
+            tx_originator.sendrawtransaction(hexstring=tx["hex"], maxfeerate=0.1, delay_after_lock_time=delay_after_lock_time)
+            entry = pb_entry(tx)
+            assert entry is not None
+            assert_equal(entry["release_height"], release_height)
+            assert_equal(entry["peers"], [])
+
+        def confirm_utxo():
+            """Create and confirm a transaction (at the next height), return its output."""
+            parent = wallet.create_self_transfer()
+            tx_returner.send_without_ping(msg_tx(parent["tx"]))
+            self.wait_until(lambda: parent["txid"] in tx_originator.getrawmempool())
+            mine(1)
+            return parent["new_utxo"]
+
+        self.log.info("Scheduled broadcast: aborting pending private broadcasts, so they do not compete")
+        for t in tx_originator.getprivatebroadcastinfo()["transactions"]:
+            tx_originator.abortprivatebroadcast(t["wtxid"])
+        assert_equal(tx_originator.getprivatebroadcastinfo()["transactions"], [])
+
+        self.log.info("Scheduled broadcast: invalid parameters are rejected")
+        tx = wallet.create_self_transfer(locktime=tx_originator.getblockcount() + 1)
+        assert_raises_rpc_error(-8, "delay_after_lock_time must be non-negative",
+                                tx_originator.sendrawtransaction, hexstring=tx["hex"], delay_after_lock_time=-1)
+        tx_time_locked = wallet.create_self_transfer(locktime=LOCKTIME_THRESHOLD)
+        assert_raises_rpc_error(-8, "delay_after_lock_time is only supported with a height-based nLockTime",
+                                tx_originator.sendrawtransaction, hexstring=tx_time_locked["hex"], delay_after_lock_time=0)
+        assert_raises_rpc_error(-8, "delay_after_lock_time is only supported with -privatebroadcast enabled",
+                                self.nodes[1].sendrawtransaction, hexstring=tx["hex"], delay_after_lock_time=0)
+        assert_equal(tx_originator.getprivatebroadcastinfo()["transactions"], [])
+
+        self.log.info("Scheduled broadcast: held back until its release height, with unsatisfied timelocks at submission")
+        # Spend an output confirmed at the next height, with a relative (BIP68) lock of 3 blocks,
+        # and an absolute lock time of 1 block ahead. Neither is satisfied at submission.
+        utxo = confirm_utxo()
+        tip = tx_originator.getblockcount()
+        delay_after_lock_time = 2
+        tx = wallet.create_self_transfer(utxo_to_spend=utxo, locktime=tip + 1, sequence=3)
+        release_height = tip + 1 + delay_after_lock_time
+        assert_equal(tx_originator.testmempoolaccept([tx["hex"]])[0]["reject-reason"], "non-final")
+        log_offset = tx_originator.debug_log_size(encoding="utf-8")
+        submit_scheduled(tx, delay_after_lock_time, release_height)
+        while tx_originator.getblockcount() < release_height - 1:
+            mine(1)
+            check_release_point()
+            assert not log_contains(release_msg(tx), log_offset)
+            assert_equal(pb_entry(tx)["peers"], [])
+        mine(1)
+        assert_equal(tx_originator.getblockcount(), release_height)
+        check_release_point()
+        assert log_contains(release_msg(tx), log_offset)
+        self.log.info("Scheduled broadcast: released, waiting for it to be sent")
+        self.wait_until(lambda: any("received" in p for p in pb_entry(tx)["peers"]))
+        assert_equal(pb_entry(tx)["release_height"], release_height)
+        tx_originator.abortprivatebroadcast(tx["wtxid"])
+
+        self.log.info("Scheduled broadcast: a transaction whose release height is already reached is broadcast immediately")
+        tip = tx_originator.getblockcount()
+        tx = wallet.create_self_transfer(locktime=tip - 1)
+        tx_originator.sendrawtransaction(hexstring=tx["hex"], maxfeerate=0.1, delay_after_lock_time=1)
+        assert "release_height" not in pb_entry(tx)
+        self.wait_until(lambda: any("received" in p for p in pb_entry(tx)["peers"]))
+        tx_originator.abortprivatebroadcast(tx["wtxid"])
+
+        self.log.info("Scheduled broadcast: a transaction aborted before its release height is not sent")
+        tip = tx_originator.getblockcount()
+        tx = wallet.create_self_transfer(locktime=tip + 1)
+        log_offset = tx_originator.debug_log_size(encoding="utf-8")
+        submit_scheduled(tx, 0, tip + 1)
+        abort_res = tx_originator.abortprivatebroadcast(tx["txid"])
+        assert_equal([t["wtxid"] for t in abort_res["removed_transactions"]], [tx["wtxid"]])
+        assert_equal(pb_entry(tx), None)
+        mine(2)
+        check_release_point()
+        assert not log_contains(release_msg(tx), log_offset)
+        assert_equal(pb_entry(tx), None)
+
+        self.log.info("Scheduled broadcast: a competing transaction sent without delay invalidates the scheduled one")
+        utxo = wallet.get_utxo()
+        tip = tx_originator.getblockcount()
+        tx_scheduled = wallet.create_self_transfer(utxo_to_spend=utxo, locktime=tip + 1)
+        tx_competing = wallet.create_self_transfer(utxo_to_spend=utxo, fee_rate=Decimal("0.01"))
+        assert_not_equal(tx_scheduled["txid"], tx_competing["txid"])
+        drop_msg = f"Dropping scheduled txid={tx_scheduled['txid']} wtxid={tx_scheduled['wtxid']} at release"
+        log_offset = tx_originator.debug_log_size(encoding="utf-8")
+        submit_scheduled(tx_scheduled, 1, tip + 2)
+        # The scheduled transaction is not in the mempool, so the competing one is accepted.
+        tx_originator.sendrawtransaction(hexstring=tx_competing["hex"], maxfeerate=0.1)
+        # Let the competing transaction come back from the network, into the mempool.
+        tx_returner.send_without_ping(msg_tx(tx_competing["tx"]))
+        self.wait_until(lambda: tx_competing["txid"] in tx_originator.getrawmempool())
+        assert_equal(pb_entry(tx_competing), None)
+        mine(2)
+        check_release_point()
+        assert log_contains(drop_msg, log_offset)
+        assert not log_contains(release_msg(tx_scheduled), log_offset)
+        assert_equal(pb_entry(tx_scheduled), None)
+
+        self.log.info("Scheduled broadcast: an invalid transaction is rejected at submission")
+        # Its release height is ahead, but its input is spent already. Its nLockTime has been
+        # reached, so it is fully validated at submission.
+        assert_greater_than_or_equal(tx_originator.getblockcount(), tx_scheduled["tx"].nLockTime)
+        assert_greater_than(tx_scheduled["tx"].nLockTime + 10, tx_originator.getblockcount())
+        assert_raises_rpc_error(-25, "bad-txns-inputs-missingorspent",
+                                tx_originator.sendrawtransaction, hexstring=tx_scheduled["hex"], maxfeerate=0.1, delay_after_lock_time=10)
+        assert_equal(pb_entry(tx_scheduled), None)
+
+        self.log.info("Scheduled broadcast: an invalid non-final transaction is accepted at submission, but dropped at release")
+        # Spends the same, already spent, input. Its nLockTime is ahead, so validation at submission
+        # stops at the lock time check, before the inputs are checked.
+        tip = tx_originator.getblockcount()
+        delay_after_lock_time = 1
+        tx_invalid = wallet.create_self_transfer(utxo_to_spend=utxo, locktime=tip + 1)
+        release_height = tip + 1 + delay_after_lock_time
+        assert_equal(tx_originator.testmempoolaccept([tx_invalid["hex"]])[0]["reject-reason"], "non-final")
+        drop_msg = f"Dropping scheduled txid={tx_invalid['txid']} wtxid={tx_invalid['wtxid']} at release: bad-txns-inputs-missingorspent"
+        log_offset = tx_originator.debug_log_size(encoding="utf-8")
+        submit_scheduled(tx_invalid, delay_after_lock_time, release_height)
+        mine(1)
+        check_release_point()
+        assert not log_contains(drop_msg, log_offset)
+        assert_equal(pb_entry(tx_invalid)["peers"], [])
+        mine(1)
+        assert_equal(tx_originator.getblockcount(), release_height)
+        check_release_point()
+        assert log_contains(drop_msg, log_offset)
+        assert not log_contains(release_msg(tx_invalid), log_offset)
+        assert_equal(pb_entry(tx_invalid), None)
+
     def run_test(self):
         tx_originator = self.nodes[0]
         tx_receiver = self.nodes[1]
@@ -404,6 +559,8 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
             self.no_relay_peer.wait_until(lambda: self.no_relay_peer.message_count["version"] == 1, check_connected=False)
             self.no_relay_peer.wait_for_disconnect()
         assert_equal(self.no_relay_peer.message_count, {"version": 1})
+
+        self.test_scheduled_broadcast(wallet, tx_returner)
 
         # Stop the SOCKS5 proxy server to avoid it being upset by the bitcoin
         # node disconnecting in the middle of the SOCKS5 handshake when we
