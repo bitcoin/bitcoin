@@ -28,16 +28,15 @@ util::Result<int64_t> ParseIntOption(std::string_view name, std::string_view val
 namespace interfaces {
 util::Result<ipc::ListenAddress> Ipc::parseListenAddress(std::string address)
 {
-    constexpr std::string_view UNIX_PREFIX{"unix:"};
-
     // Only Unix socket -ipcbind values support inline socket options. Leave
     // other address families untouched so ipc::Process can report address
     // scheme errors consistently with -ipcconnect.
-    if (!address.starts_with(UNIX_PREFIX)) {
+    if (!address.starts_with("unix:") && !address.starts_with("unix,")) {
         return ipc::ListenAddress{.address = std::move(address)};
     }
 
     // Socket options follow the first comma:
+    //   unix,max-connections=8
     //   unix:,max-connections=8
     //   unix:/custom/path,max-connections=8
     // Commas in socket paths must be URL-encoded as %2C.
