@@ -115,11 +115,13 @@ static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const 
     // Make a blank psbt
     PartiallySignedTransaction psbtx(rawTx, /*version=*/2);
 
+    bool keypath_only{options.exists("keypath_only") ? options["keypath_only"].get_bool() : DEFAULT_SIGN_TAPROOT_KEYPATH_ONLY};
+
     // First fill transaction with our data without signing,
     // so external signers are not asked to sign more than once.
     bool complete;
-    pwallet->FillPSBT(psbtx, {.sign = false, .bip32_derivs = true}, complete);
-    const auto err{pwallet->FillPSBT(psbtx, {.sign = true, .bip32_derivs = false}, complete)};
+    pwallet->FillPSBT(psbtx, {.sign = false, .bip32_derivs = true, .taproot_keypath_only = keypath_only}, complete);
+    const auto err{pwallet->FillPSBT(psbtx, {.sign = true, .bip32_derivs = false, .taproot_keypath_only = keypath_only}, complete)};
     if (err) {
         throw JSONRPCPSBTError(*err);
     }
@@ -517,6 +519,7 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                     {"includeWatching", UniValueType(UniValue::VBOOL)},
                     {"include_watching", UniValueType(UniValue::VBOOL)},
                     {"inputs", UniValueType(UniValue::VARR)},
+                    {"keypath_only", UniValueType(UniValue::VBOOL)},
                     {"lockUnspents", UniValueType(UniValue::VBOOL)},
                     {"lock_unspents", UniValueType(UniValue::VBOOL)},
                     {"locktime", UniValueType(UniValue::VNUM)},
@@ -829,6 +832,9 @@ RPCMethod fundrawtransaction()
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
     }
     UniValue options = request.params[1];
+    if (options.exists("keypath_only")) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "Unexpected key keypath_only");
+    }
     std::vector<std::pair<CTxDestination, CAmount>> destinations;
     for (const auto& tx_out : tx.vout) {
         CTxDestination dest;
@@ -1241,6 +1247,7 @@ RPCMethod send()
                           }},
                         },
                     },
+                    {"keypath_only", RPCArg::Type::BOOL, RPCArg::Default{DEFAULT_SIGN_TAPROOT_KEYPATH_ONLY}, "Only add Taproot key-path data, and only sign and finalize Taproot inputs using the key path. Existing script-path data is not signed or finalized."},
                     {"locktime", RPCArg::Type::NUM, RPCArg::DefaultHint{"locktime close to block height to prevent fee sniping"}, "Raw locktime. Non-0 value also locktime-activates inputs"},
                     {"lock_unspents", RPCArg::Type::BOOL, RPCArg::Default{false}, "Lock selected unspent outputs"},
                     {"psbt", RPCArg::Type::BOOL,  RPCArg::DefaultHint{"automatic"}, "Always return a PSBT, implies add_to_wallet=false."},
@@ -1365,6 +1372,7 @@ RPCMethod sendall()
                         {"send_max", RPCArg::Type::BOOL, RPCArg::Default{false}, "When true, only use UTXOs that can pay for their own fees to maximize the output amount. When 'false' (default), no UTXO is left behind. send_max is incompatible with providing specific inputs."},
                         {"minconf", RPCArg::Type::NUM, RPCArg::Default{0}, "Require inputs with at least this many confirmations."},
                         {"maxconf", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Require inputs with at most this many confirmations."},
+                        {"keypath_only", RPCArg::Type::BOOL, RPCArg::Default{DEFAULT_SIGN_TAPROOT_KEYPATH_ONLY}, "Only add Taproot key-path data, and only sign and finalize Taproot inputs using the key path. Existing script-path data is not signed or finalized."},
                         {"version", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_WALLET_TX_VERSION}, "Transaction version"},
                     },
                     FundTxDoc()
@@ -1408,6 +1416,7 @@ RPCMethod sendall()
                     {"fee_rate", UniValueType()},
                     {"include_watching", UniValueType(UniValue::VBOOL)},
                     {"inputs", UniValueType(UniValue::VARR)},
+                    {"keypath_only", UniValueType(UniValue::VBOOL)},
                     {"locktime", UniValueType(UniValue::VNUM)},
                     {"lock_unspents", UniValueType(UniValue::VBOOL)},
                     {"psbt", UniValueType(UniValue::VBOOL)},
@@ -1654,6 +1663,7 @@ RPCMethod walletprocesspsbt()
             "       \"SINGLE|ANYONECANPAY\""},
                     {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
                     {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible"},
+                    {"keypath_only", RPCArg::Type::BOOL, RPCArg::Default{DEFAULT_SIGN_TAPROOT_KEYPATH_ONLY}, "Only add Taproot key-path data, and only sign and finalize Taproot inputs using the key path. Existing script-path data is not signed or finalized."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -1690,11 +1700,12 @@ RPCMethod walletprocesspsbt()
     const bool sign{self.Arg<bool>("sign")};
     const bool bip32derivs{self.Arg<bool>("bip32derivs")};
     const bool finalize{self.Arg<bool>("finalize")};
+    const bool keypath_only{self.Arg<bool>("keypath_only")};
     bool complete = true;
 
     if (sign) EnsureWalletIsUnlocked(*pwallet);
 
-    const auto err{wallet.FillPSBT(psbtx, {.sign = sign, .sighash_type = nHashType, .finalize = finalize, .bip32_derivs = bip32derivs}, complete)};
+    const auto err{wallet.FillPSBT(psbtx, {.sign = sign, .sighash_type = nHashType, .finalize = finalize, .bip32_derivs = bip32derivs, .taproot_keypath_only = keypath_only}, complete)};
     if (err) {
         throw JSONRPCPSBTError(*err);
     }
@@ -1764,6 +1775,7 @@ RPCMethod walletcreatefundedpsbt()
                             {"change_position|changePosition", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
                             {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if changeAddress is not specified. Options are " + FormatAllOutputTypes() + "."},
                             {"includeWatching", RPCArg::Type::BOOL, RPCArg::Default{false}, "(DEPRECATED) No longer used"},
+                            {"keypath_only", RPCArg::Type::BOOL, RPCArg::Default{DEFAULT_SIGN_TAPROOT_KEYPATH_ONLY}, "Only add Taproot key-path data to the PSBT. Script-path data is not added."},
                             {"lock_unspents|lockUnspents", RPCArg::Type::BOOL, RPCArg::Default{false}, "Lock selected unspent outputs"},
                             {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."},
                             {"feeRate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_UNIT + "/kvB."},
@@ -1842,8 +1854,9 @@ RPCMethod walletcreatefundedpsbt()
 
     // Fill transaction with our data but don't sign
     const bool bip32derivs{self.Arg<bool>("bip32derivs")};
+    bool keypath_only{options.exists("keypath_only") ? options["keypath_only"].get_bool() : DEFAULT_SIGN_TAPROOT_KEYPATH_ONLY};
     bool complete = true;
-    const auto err{wallet.FillPSBT(psbtx, {.sign = false, .bip32_derivs = bip32derivs}, complete)};
+    const auto err{wallet.FillPSBT(psbtx, {.sign = false, .bip32_derivs = bip32derivs, .taproot_keypath_only = keypath_only}, complete)};
     if (err) {
         throw JSONRPCPSBTError(*err);
     }
