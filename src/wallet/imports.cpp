@@ -266,17 +266,30 @@ std::vector<ImportResult> ProcessDescriptorsImport(CWallet& wallet,
         CHECK_NONFATAL(wallet.chain().findBlock(wallet.GetLastBlockHash(), interfaces::FoundBlock().time(lowest_timestamp).mtpTime(now)));
 
         for (ImportDescriptorRequest& request : requests) {
-            request.timestamp = request.timestamp.value_or(now);
+            // A timestamp of -1 ("never") means: import the descriptor, but do not
+            // let this request trigger a rescan. Resolve it to `now` so the sentinel
+            // never flows into `lowest_timestamp` or `ImportDescriptor`.
+            const bool is_never = request.timestamp && *request.timestamp == -1;
+
+            if (is_never) {
+                request.timestamp = now;
+            }
+            else {
+                request.timestamp = request.timestamp.value_or(now);
+            }
+
             const ImportResult& import_result = ImportDescriptor(wallet, request);
 
             if (lowest_timestamp > request.timestamp.value()) {
                 lowest_timestamp = request.timestamp.value();
             }
+            bool success = false;
             if (!import_result.has_error()) {
                 // At least one request succeeded, so we need to rescan
-                rescan = true;
+                success = true;
             }
             response.push_back(import_result);
+            rescan = rescan || (success && !is_never);
         }
         wallet.ConnectScriptPubKeyManNotifiers();
         wallet.RefreshAllTXOs();
