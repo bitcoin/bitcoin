@@ -2,22 +2,28 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <bip324.h>
 #include <chainparams.h>
 #include <hash.h>
 #include <net.h>
 #include <netmessagemaker.h>
 #include <protocol.h>
+#include <span.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/reachability.h>
+#include <uint256.h>
 #include <util/chaintype.h>
 
 #include <algorithm>
+#include <array>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <optional>
+#include <span>
 #include <vector>
 
 namespace {
@@ -413,4 +419,114 @@ FUZZ_TARGET(p2p_transport_bidirectional_v1v2, .init = initialize_p2p_transport)
     auto t2 = MakeV2Transport(NodeId{1}, false, rng, provider);
     if (!t1 || !t2) return;
     SimulationTest(*t1, *t2, rng, provider);
+}
+
+FUZZ_TARGET(p2p_transport_v2_receive, .init = initialize_p2p_transport)
+{
+    // Feed a V2 transport a byte stream built from the fuzz input, and receive it in arbitrary
+    // pieces. The stream is made of arbitrary bytes, and of the pieces of a valid handshake: the
+    // peer's key, garbage, the garbage terminator, and packets encrypted with the keys shared with
+    // the transport. This lets the fuzzer reach the v2 receive states, and corrupt what it finds
+    // there. Only the absence of crashes and a few sanity checks are verified.
+    FuzzedDataProvider provider{buffer.data(), buffer.size()};
+
+    // The transport uses a key and entropy known here, so a cipher with the same keys can be made.
+    const bool initiating = provider.ConsumeBool();
+    auto key = ConsumePrivateKey(provider);
+    auto peer_key = ConsumePrivateKey(provider);
+    if (!key.IsValid() || !peer_key.IsValid()) return;
+    const auto ent{ConsumeFixedLengthByteVector<std::byte>(provider, 32)};
+    const auto peer_ent{ConsumeFixedLengthByteVector<std::byte>(provider, 32)};
+    V2Transport transport{NodeId{0}, initiating, key, ent, /*garbage=*/{}};
+    BIP324Cipher peer{peer_key, peer_ent};
+    peer.Initialize(key.EllSwiftCreate(ent), /*initiator=*/!initiating);
+
+    // Build the byte stream.
+    std::vector<std::byte> stream;
+    // Garbage appended since the last key, which the first packet after the terminator must
+    // authenticate.
+    std::vector<std::byte> aad;
+    auto append_fn = [&](std::span<const std::byte> bytes) {
+        stream.insert(stream.end(), bytes.begin(), bytes.end());
+    };
+    // Flip a bit in stream, at or after position start.
+    auto flip_fn = [&](size_t start) {
+        stream[provider.ConsumeIntegralInRange<size_t>(start, stream.size() - 1)] ^= std::byte{1} << provider.ConsumeIntegralInRange<unsigned>(0, 7);
+    };
+    LIMITED_WHILE (provider.remaining_bytes(), 100) {
+        CallOneOf(provider,
+            // Arbitrary bytes.
+            [&] {
+                append_fn(provider.ConsumeBytes<std::byte>(provider.ConsumeIntegralInRange<size_t>(0, 256)));
+            },
+            // The peer's key.
+            [&] {
+                append_fn(peer.GetOurPubKey());
+                aad.clear();
+            },
+            // Garbage.
+            [&] {
+                const auto garbage{provider.ConsumeBytes<std::byte>(provider.ConsumeIntegralInRange<size_t>(0, V2Transport::MAX_GARBAGE_LEN))};
+                append_fn(garbage);
+                aad.insert(aad.end(), garbage.begin(), garbage.end());
+            },
+            // The garbage terminator, possibly corrupted.
+            [&] {
+                const auto start = stream.size();
+                append_fn(peer.GetSendGarbageTerminator());
+                if (provider.ConsumeBool()) flip_fn(start);
+            },
+            // A packet, possibly corrupted. The first one after the garbage authenticates it.
+            [&] {
+                auto contents = provider.ConsumeBytes<std::byte>(provider.ConsumeIntegralInRange<size_t>(0, 1000));
+                const bool ignore = provider.ConsumeBool();
+                const bool corrupt = provider.ConsumeBool();
+                const auto start = stream.size();
+                stream.resize(start + contents.size() + BIP324Cipher::EXPANSION);
+                peer.Encrypt(contents, aad, ignore, std::span{stream}.subspan(start));
+                aad.clear();
+                if (corrupt) flip_fn(start);
+            },
+            // A run of empty decoys, so that the transport has to rekey (every REKEY_INTERVAL packets).
+            [&] {
+                const auto count{provider.ConsumeIntegralInRange<unsigned>(1, BIP324Cipher::REKEY_INTERVAL)};
+                for (unsigned i{0}; i < count; ++i) {
+                    const auto start = stream.size();
+                    stream.resize(start + BIP324Cipher::EXPANSION);
+                    peer.Encrypt({}, aad, /*ignore=*/true, std::span{stream}.subspan(start));
+                    aad.clear();
+                }
+            }
+        );
+    }
+
+    // Receive the stream in pieces, and send what the transport wants to send in between.
+    std::span<const uint8_t> to_recv{MakeUCharSpan(stream)};
+    while (!to_recv.empty()) {
+        const size_t piece_len = provider.ConsumeIntegralInRange<size_t>(1, to_recv.size());
+        std::span<const uint8_t> piece = to_recv.first(piece_len);
+        to_recv = to_recv.subspan(piece_len);
+        while (!piece.empty()) {
+            const size_t old_len = piece.size();
+            if (!transport.ReceivedBytes(piece)) return;
+            bool progress = piece.size() < old_len;
+            if (transport.ReceivedMessageComplete()) {
+                bool reject{false};
+                const auto msg = transport.GetReceivedMessage(NodeClock::time_point::max(), reject);
+                if (!reject) {
+                    assert(msg.m_type.size() <= CMessageHeader::MESSAGE_TYPE_SIZE);
+                    assert(msg.m_message_size == msg.m_recv.size());
+                }
+                progress = true;
+            }
+            // Bytes must be consumed, or a message returned.
+            assert(progress);
+        }
+        const auto& [bytes, _more, _msg_type] = transport.GetBytesToSend(/*have_next_message=*/false);
+        if (!bytes.empty()) transport.MarkBytesSent(provider.ConsumeIntegralInRange<size_t>(0, bytes.size()));
+    }
+    const auto info{transport.GetInfo()};
+    if (info.transport_type == TransportProtocolType::V2) {
+        assert(info.session_id == uint256{MakeUCharSpan(peer.GetSessionID())});
+    }
 }
