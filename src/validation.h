@@ -18,6 +18,7 @@
 #include <kernel/chainparams.h>
 #include <kernel/chainstatemanager_opts.h>
 #include <kernel/cs_main.h> // IWYU pragma: export
+#include <kernel/error.h>
 #include <node/blockstorage.h>
 #include <policy/feerate.h>
 #include <policy/packages.h>
@@ -104,7 +105,14 @@ extern const std::vector<std::string> CHECKLEVEL_DOC;
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
 
-bool FatalError(kernel::Notifications& notifications, BlockValidationState& state, const bilingual_str& message);
+//! Reject reason for the errors reported through BlockValidationState::Error(),
+//! which submitblock and submitheader surface. Empty for the errors that are
+//! only reported through Notifications::fatalError(). This is not a user-facing
+//! message: building and translating that is the application's job, see
+//! node/kernel_notifications.cpp.
+std::string FatalErrorString(const kernel::FatalError& error);
+
+bool FatalError(kernel::Notifications& notifications, BlockValidationState& state, const kernel::FatalError& error);
 
 /** Prune block files up to a given height */
 void PruneBlockFilesManual(Chainstate& active_chainstate, int nManualPruneHeight);
@@ -902,9 +910,10 @@ protected:
 
     /**
      * In case of an invalid snapshot, rename the coins leveldb directory so
-     * that it can be examined for issue diagnosis.
+     * that it can be examined for issue diagnosis. Returns the failure, or
+     * std::nullopt on success.
      */
-    [[nodiscard]] util::Result<void> InvalidateCoinsDBOnDisk() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    [[nodiscard]] std::optional<kernel::CoinsDbRenameFailed> InvalidateCoinsDBOnDisk() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     friend ChainstateManager;
 };
