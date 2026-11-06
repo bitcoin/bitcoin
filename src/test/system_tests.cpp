@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(run_command)
         const std::vector<std::string> command = mock_executable("nonzeroexit_nooutput");
         BOOST_CHECK_EXCEPTION(RunCommandParseJSON(command), std::runtime_error, [&](const std::runtime_error& e) {
             const std::string what{e.what()};
-            BOOST_CHECK(what.find(strprintf("RunCommandParseJSON error: process(%s) returned %d: \n", util::Join(command, " "), EXIT_FAILURE)) != std::string::npos);
+            BOOST_CHECK(what.contains(strprintf("RunCommandParseJSON error: process(%s) returned %d: \n", util::Join(command, " "), EXIT_FAILURE)));
             return true;
         });
     }
@@ -103,8 +103,8 @@ BOOST_AUTO_TEST_CASE(run_command)
         const std::string expected{"err"};
         BOOST_CHECK_EXCEPTION(RunCommandParseJSON(command), std::runtime_error, [&](const std::runtime_error& e) {
             const std::string what(e.what());
-            BOOST_CHECK(what.find(strprintf("RunCommandParseJSON error: process(%s) returned %s: %s", util::Join(command, " "), EXIT_FAILURE, "err")) != std::string::npos);
-            BOOST_CHECK(what.find(expected) != std::string::npos);
+            BOOST_CHECK(what.contains(strprintf("RunCommandParseJSON error: process(%s) returned %s: %s", util::Join(command, " "), EXIT_FAILURE, "err")));
+            BOOST_CHECK(what.contains(expected));
             return true;
         });
     }
