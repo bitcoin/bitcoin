@@ -4,6 +4,7 @@
 
 #include <dbwrapper.h>
 
+#include <kernel/notifications_interface.h>
 #include <leveldb/cache.h>
 #include <leveldb/db.h>
 #include <leveldb/env.h>
@@ -24,14 +25,17 @@
 #include <util/log.h>
 #include <util/obfuscation.h>
 #include <util/strencodings.h>
+#include <util/translation.h>
 
 #include <algorithm>
 #include <cassert>
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <memory>
 #include <optional>
+#include <string_view>
 #include <utility>
 
 static auto CharCast(const std::byte* data) { return reinterpret_cast<const char*>(data); }
@@ -242,7 +246,9 @@ struct LevelDBContext {
 };
 
 CDBWrapper::CDBWrapper(const DBParams& params)
-    : m_db_context{std::make_unique<LevelDBContext>()}, m_name{fs::PathToString(params.path.stem())}
+    : m_db_context{std::make_unique<LevelDBContext>()},
+      m_path{fs::PathToString(params.path)},
+      m_notifications{params.notifications}
 {
     DBContext().penv = nullptr;
     DBContext().readoptions.verify_checksums = true;
@@ -321,7 +327,7 @@ void CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
     if (log_memory) {
         double mem_after{DynamicMemoryUsage() / double(1_MiB)};
         LogDebug(BCLog::LEVELDB, "WriteBatch memory usage: db=%s, before=%.1fMiB, after=%.1fMiB\n",
-                 m_name, mem_before, mem_after);
+                 m_path, mem_before, mem_after);
     }
 }
 
@@ -351,25 +357,16 @@ std::optional<std::string> CDBWrapper::ReadImpl(std::span<const std::byte> key) 
     if (!status.ok()) {
         if (status.IsNotFound())
             return std::nullopt;
-        LogError("LevelDB read failure: %s", status.ToString());
-        HandleError(status);
+        FatalReadError("LevelDB read failure", status.ToString());
     }
     return strValue;
 }
 
-bool CDBWrapper::ExistsImpl(std::span<const std::byte> key) const
+void CDBWrapper::FatalReadError(std::string_view what, std::string_view detail) const
 {
-    leveldb::Slice slKey(CharCast(key.data()), key.size());
-
-    std::string strValue;
-    leveldb::Status status = DBContext().pdb->Get(DBContext().readoptions, slKey, &strValue);
-    if (!status.ok()) {
-        if (status.IsNotFound())
-            return false;
-        LogError("LevelDB read failure: %s", status.ToString());
-        HandleError(status);
-    }
-    return true;
+    LogError("%s in %s: %s", what, m_path, detail);
+    if (m_notifications) m_notifications->fatalError(_("Error reading from database, shutting down."));
+    std::abort();
 }
 
 size_t CDBWrapper::EstimateSizeImpl(std::span<const std::byte> key1, std::span<const std::byte> key2) const
