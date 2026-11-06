@@ -9,7 +9,7 @@ Skip building/installing unneeded tools:
 
 --- a/qtbase/cmake/QtBaseGlobalTargets.cmake
 +++ b/qtbase/cmake/QtBaseGlobalTargets.cmake
-@@ -128,9 +128,6 @@ qt_generate_global_module_pri_file()
+@@ -145,9 +145,6 @@ qt_generate_global_module_pri_file()
  qt_generate_global_device_pri_file()
  qt_generate_qmake_and_qtpaths_wrapper_for_target()
  
@@ -19,20 +19,29 @@ Skip building/installing unneeded tools:
  
  qt_internal_add_platform_internal_target(GlobalConfigPrivate)
  target_link_libraries(GlobalConfigPrivate INTERFACE GlobalConfig)
-@@ -400,12 +397,3 @@ elseif(WASM)
-     qt_install(PROGRAMS "${QT_BUILD_DIR}/${INSTALL_LIBEXECDIR}/qt-wasmtestrunner.py"
-         DESTINATION "${INSTALL_LIBEXECDIR}")
- endif()
--
--# Install CI support files to libexec.
--qt_path_join(__qt_libexec_install_dir "${QT_INSTALL_DIR}" "${INSTALL_LIBEXECDIR}")
--qt_copy_or_install(FILES coin/instructions/qmake/ensure_pro_file.cmake
--    DESTINATION "${__qt_libexec_install_dir}")
--qt_copy_or_install(PROGRAMS "util/testrunner/qt-testrunner.py"
--    DESTINATION "${__qt_libexec_install_dir}")
--qt_copy_or_install(PROGRAMS "util/testrunner/sanitizer-testrunner.py"
--    DESTINATION "${__qt_libexec_install_dir}")
 
+--- a/qtbase/cmake/QtBaseGlobalTargets.cmake
++++ b/qtbase/cmake/QtBaseGlobalTargets.cmake
+@@ -487,19 +487,6 @@ elseif(WIN32)
+     )
+ endif()
+ 
+-# Install CI support files to libexec.
+-if(QT_INSTALL_CI_FILES)
+-    qt_path_join(__qt_libexec_install_dir "${QT_INSTALL_DIR}" "${INSTALL_LIBEXECDIR}")
+-    qt_copy_or_install(FILES coin/instructions/qmake/ensure_pro_file.cmake
+-        DESTINATION "${__qt_libexec_install_dir}")
+-    qt_copy_or_install(PROGRAMS "util/testrunner/qt-testrunner.py"
+-        DESTINATION "${__qt_libexec_install_dir}")
+-    qt_copy_or_install(PROGRAMS "util/testrunner/sanitizer-testrunner.py"
+-        DESTINATION "${__qt_libexec_install_dir}")
+-    qt_copy_or_install(PROGRAMS "util/json_schema/check_qt_module_json_schemas.py"
+-        DESTINATION "${__qt_libexec_install_dir}")
+-endif()
+-
+ # Install json schemas for the users as well
+ qt_copy_or_install(FILES
+     "util/json_schema/modules.json"
 
 --- a/qtbase/src/CMakeLists.txt
 +++ b/qtbase/src/CMakeLists.txt
