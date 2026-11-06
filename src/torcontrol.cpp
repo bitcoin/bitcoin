@@ -106,9 +106,9 @@ bool TorControlConnection::Connect(const std::string& tor_control_center)
         return false;
     }
 
-    m_sock = ConnectDirectly(control_service.value(), /*manual_connection=*/true);
+    m_sock = ConnectDirectly(control_service.value(), /*manual_connection=*/false);
     if (!m_sock) {
-        LogWarning("tor: Error connecting to address %s", tor_control_center);
+        LogDebug(BCLog::TOR, "Error connecting to address %s", tor_control_center);
         return false;
     }
 
@@ -414,7 +414,7 @@ void TorController::ThreadControl()
                 if (!m_conn.ReceiveAndProcess()) break;
             }
         } else {
-            LogWarning("tor: Initiating connection to Tor control port %s failed", m_tor_control_center);
+            LogDebug(BCLog::TOR, "Initiating connection to Tor control port %s failed", m_tor_control_center);
         }
         disconnected_cb(m_conn);
     }
