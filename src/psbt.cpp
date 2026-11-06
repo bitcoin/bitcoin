@@ -809,7 +809,9 @@ bool FinalizePSBT(PartiallySignedTransaction& psbtx)
     for (unsigned int i = 0; i < psbtx.inputs.size(); ++i) {
         PSBTInput& input = psbtx.inputs.at(i);
         const auto sign_result = SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, &txdata, {.sighash_type = input.sighash_type, .finalize = true}, /*out_sigdata=*/nullptr);
-        complete &= sign_result.has_value();
+        // SignPSBTInput trusts existing final_script_sig/final_script_witness fields without
+        // checking them, so verify the final scripts before reporting the input as complete.
+        complete &= sign_result.has_value() && PSBTInputSignedAndVerified(psbtx, i, &txdata);
     }
 
     return complete;
