@@ -79,7 +79,7 @@ fn get_linter_list() -> Vec<&'static Linter> {
             lint_fn: lint_boost_assert
         },
         &Linter {
-            description: "Check that release note snippets are in the right folder",
+            description: "Check the location and PR references of release note snippets",
             name: "doc_release_note_snippets",
             lint_fn: lint_doc_release_note_snippets
         },
