@@ -5,6 +5,7 @@
 #include <core_io.h>
 #include <interfaces/chain.h>
 #include <node/context.h>
+#include <policy/feerate.h>
 #include <rpc/blockchain.h>
 #include <rpc/client.h>
 #include <rpc/server.h>
@@ -303,6 +304,42 @@ BOOST_AUTO_TEST_CASE(rpc_format_monetary_values)
     BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::min() + 2).write(), "-92233720368.54775806");
     BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::min() + 1).write(), "-92233720368.54775807");
     BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::min()).write(), "-92233720368.54775808");
+}
+
+BOOST_AUTO_TEST_CASE(rpc_format_feerate_values)
+{
+
+    // sat/kvB to btc/kvB
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(1), FeeRateFormat::BTC_KVB).write(), "0.00000001");
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(10), FeeRateFormat::BTC_KVB).write(), "0.00000010");
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(1000), FeeRateFormat::BTC_KVB).write(), "0.00001000");
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(-1), FeeRateFormat::BTC_KVB).write(), "-0.00000001");
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(-10), FeeRateFormat::BTC_KVB).write(), "-0.00000010");
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(-1000), FeeRateFormat::BTC_KVB).write(), "-0.00001000");
+
+    // sat/kvB to sat/vB
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(1), FeeRateFormat::SAT_VB).write(), "0.001");
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(10), FeeRateFormat::SAT_VB).write(), "0.010");
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(1000), FeeRateFormat::SAT_VB).write(), "1.000");
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(-1), FeeRateFormat::SAT_VB).write(), "-0.001");
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(-10), FeeRateFormat::SAT_VB).write(), "-0.010");
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(-1000), FeeRateFormat::SAT_VB).write(), "-1.000");
+
+    // sat/vB to btc/kvB
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(1,1), FeeRateFormat::BTC_KVB).write(), "0.00001000");
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(10,1), FeeRateFormat::BTC_KVB).write(), "0.00010000");
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(1000,1), FeeRateFormat::BTC_KVB).write(), "0.01000000");
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(-1,1), FeeRateFormat::BTC_KVB).write(), "-0.00001000");
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(-10,1), FeeRateFormat::BTC_KVB).write(), "-0.00010000");
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(-1000,1), FeeRateFormat::BTC_KVB).write(), "-0.01000000");
+
+    // sat/vB to sat/vB
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(1, 1), FeeRateFormat::SAT_VB).write(), "1.000");
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(10, 1), FeeRateFormat::SAT_VB).write(), "10.000");
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(1000, 1), FeeRateFormat::SAT_VB).write(), "1000.000");
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(-1, 1), FeeRateFormat::SAT_VB).write(), "-1.000");
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(-10, 1), FeeRateFormat::SAT_VB).write(), "-10.000");
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(-1000, 1), FeeRateFormat::SAT_VB).write(), "-1000.000");
 }
 
 static UniValue ValueFromString(const std::string& str) noexcept
