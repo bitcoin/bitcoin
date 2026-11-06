@@ -708,8 +708,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """
         rpc_connections = nodes or self.nodes
         timeout = int(timeout * self.options.timeout_factor)
-        stop_time = time.time() + timeout
-        while time.time() <= stop_time:
+        stop_time = time.monotonic() + timeout
+        while time.monotonic() <= stop_time:
             best_hash = [x.getbestblockhash() for x in rpc_connections]
             if best_hash.count(best_hash[0]) == len(rpc_connections):
                 return
@@ -728,8 +728,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """
         rpc_connections = nodes or self.nodes
         timeout = int(timeout * self.options.timeout_factor)
-        stop_time = time.time() + timeout
-        while time.time() <= stop_time:
+        stop_time = time.monotonic() + timeout
+        while time.monotonic() <= stop_time:
             pool = [set(r.getrawmempool()) for r in rpc_connections]
             if pool.count(pool[0]) == len(rpc_connections):
                 if flush_scheduler:
