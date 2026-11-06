@@ -4,13 +4,16 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the scantxoutset rpc call."""
 from test_framework.address import address_to_scriptpubkey
+from test_framework.authproxy import JSONRPCException
 from test_framework.messages import COIN
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.descriptors import descsum_create
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.wallet import (
     MiniWallet,
     getnewdestination,
 )
+from test_framework.wallet_util import generate_keypair
 
 from decimal import Decimal
 
@@ -73,6 +76,21 @@ class ScantxoutsetTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].scantxoutset("start", ["combo(" + pubk1.hex() + ")", "combo(" + pubk2.hex() + ")", "combo(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.007"))
         assert_equal(self.nodes[0].scantxoutset("start", ["addr(" + addr_P2SH_SEGWIT + ")", "addr(" + addr_LEGACY + ")", "addr(" + addr_BECH32 + ")"])['total_amount'], Decimal("0.007"))
         assert_equal(self.nodes[0].scantxoutset("start", ["addr(" + addr_P2SH_SEGWIT + ")", "addr(" + addr_LEGACY + ")", "combo(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.007"))
+
+        self.log.info("Check that the error for a descriptor that cannot be derived does not contain its private key")
+        priv_key = generate_keypair(wif=True)[0]
+        xpub = "tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B"
+        desc = descsum_create(f"wsh(multi(1,{priv_key},{xpub}/0h/*))")
+        public_desc = self.nodes[0].getdescriptorinfo(desc)["descriptor"]
+        assert priv_key not in public_desc
+        try:
+            self.nodes[0].scantxoutset("start", [desc])
+        except JSONRPCException as e:
+            assert_equal(e.error["code"], -5)
+            assert_equal(e.error["message"], f"Cannot derive script without private keys: '{public_desc}'")
+            assert priv_key not in e.error["message"]
+        else:
+            raise AssertionError("No exception raised")
 
         self.log.info("Test range validation.")
         assert_raises_rpc_error(-8, "End of range is too high", self.nodes[0].scantxoutset, "start", [{"desc": "desc", "range": -1}])

@@ -201,7 +201,7 @@ ImportResult ImportDescriptor(CWallet& wallet, const ImportDescriptorRequest& re
         if (!spk_manager_res) {
             return ImportResult(
                 WalletErrorCode::GenericError,
-                strprintf("Could not add descriptor '%s': %s", request.descriptor, util::ErrorString(spk_manager_res).original),
+                strprintf("Could not add descriptor '%s': %s", w_desc.descriptor->ToString(), util::ErrorString(spk_manager_res).original),
                 warnings
             );
         }
