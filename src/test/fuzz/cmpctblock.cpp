@@ -437,8 +437,6 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
 
         bool more_work{true};
         while (more_work) {
-            random_node.fPauseSend = false;
-
             more_work = connman.ProcessMessagesOnce(random_node);
             peerman->SendMessages(random_node);
         }
