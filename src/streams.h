@@ -25,6 +25,7 @@
 #include <limits>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 /* Minimal stream for overwriting and/or appending to an existing byte vector
@@ -688,6 +689,8 @@ public:
  * Wrapper that buffers writes to an underlying stream.
  * Requires underlying stream to support write_buffer() method
  * for efficient buffer flushing and obfuscation.
+ * Call flush() explicitly to handle write errors. The destructor flushes
+ * pending bytes as a fallback, but cannot report failures to the caller.
  */
 template <typename S>
 class BufferedWriter
@@ -703,8 +706,9 @@ public:
 
     void flush()
     {
-        if (m_buf_pos) m_dst.write_buffer(std::span{m_buf}.first(m_buf_pos));
-        m_buf_pos = 0;
+        if (auto buf_pos{std::exchange(m_buf_pos, 0)}) {
+            m_dst.write_buffer(std::span{m_buf}.first(buf_pos));
+        }
     }
 
     void write(std::span<const std::byte> src)
