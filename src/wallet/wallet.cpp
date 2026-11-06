@@ -178,7 +178,8 @@ bool RemoveWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet
 
     interfaces::Chain& chain = wallet->chain();
     std::string name = wallet->GetName();
-    WITH_LOCK(wallet->cs_wallet, wallet->WriteBestBlock());
+    // Write failure is ok, next load will need to rescan
+    WITH_LOCK(wallet->cs_wallet, (void)wallet->WriteBestBlock());
 
     // Unregister with the validation interface which also drops shared pointers.
     wallet->DisconnectChainNotifications();
@@ -685,7 +686,9 @@ void CWallet::SetLastBlockProcessed(int block_height, uint256 block_hash)
     AssertLockHeld(cs_wallet);
 
     SetLastBlockProcessedInMem(block_height, block_hash);
-    WriteBestBlock();
+    if (!WriteBestBlock()) {
+        WalletLogPrintf("Unable to update best block record, next load may need to rescan");
+    }
 }
 
 std::set<Txid> CWallet::GetConflicts(const Txid& txid) const
@@ -956,19 +959,19 @@ DBErrors CWallet::ReorderTransactions()
                 return DBErrors::LOAD_FAIL;
         }
     }
-    batch.WriteOrderPosNext(nOrderPosNext);
+    if (!batch.WriteOrderPosNext(nOrderPosNext)) {
+        return DBErrors::LOAD_FAIL;
+    }
 
     return DBErrors::LOAD_OK;
 }
 
-int64_t CWallet::IncOrderPosNext(WalletBatch* batch)
+std::optional<int64_t> CWallet::IncOrderPosNext(WalletBatch& batch)
 {
     AssertLockHeld(cs_wallet);
     int64_t nRet = nOrderPosNext++;
-    if (batch) {
-        batch->WriteOrderPosNext(nOrderPosNext);
-    } else {
-        WalletBatch(GetDatabase()).WriteOrderPosNext(nOrderPosNext);
+    if (!batch.WriteOrderPosNext(nOrderPosNext)) {
+        return std::nullopt;
     }
     return nRet;
 }
@@ -1084,7 +1087,11 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
     bool fUpdated = update_wtx && update_wtx(wtx, fInsertedNew);
     if (fInsertedNew) {
         wtx.nTimeReceived = GetTime();
-        wtx.nOrderPos = IncOrderPosNext(&batch);
+        std::optional<int64_t> pos = IncOrderPosNext(batch);
+        if (!pos) {
+            return nullptr;
+        }
+        wtx.nOrderPos = *pos;
         wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
         wtx.nTimeSmart = ComputeTimeSmart(wtx, rescanning_old_block);
         AddToSpends(wtx);
@@ -1120,7 +1127,9 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const 
             desc_tx->m_state = inactive_state;
             // Break caches since we have changed the state
             desc_tx->MarkDirty();
-            batch.WriteTxMetadata(*desc_tx);
+            if (!batch.WriteTxMetadata(*desc_tx)) {
+                return nullptr;
+            }
             MarkInputsDirty(desc_tx->GetTx());
             for (unsigned int i = 0; i < desc_tx->GetTx()->vout.size(); ++i) {
                 COutPoint outpoint(desc_tx->GetHash(), i);
@@ -1403,7 +1412,11 @@ void CWallet::RecursiveUpdateTxState(WalletBatch* batch, const Txid& tx_hash, co
         TxUpdate update_state = try_updating_state(wtx);
         if (update_state != TxUpdate::UNCHANGED) {
             wtx.MarkDirty();
-            if (batch) batch->WriteTxMetadata(wtx);
+            if (batch) {
+                if (!batch->WriteTxMetadata(wtx)) {
+                    throw std::runtime_error(strprintf("Unable to update state for %s", wtx.GetHash().ToString()));
+                }
+            }
             // Iterate over all its outputs, and update those tx states as well (if applicable)
             for (unsigned int i = 0; i < wtx.GetTx()->vout.size(); ++i) {
                 std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range = mapTxSpends.equal_range(COutPoint(now, i));
@@ -1574,7 +1587,9 @@ void CWallet::blockConnected(const ChainstateRole& role, const interfaces::Block
 
     // Update on disk if this block resulted in us updating a tx, or periodically every 144 blocks (~1 day)
     if (wallet_updated || block.height % 144 == 0) {
-        WriteBestBlock();
+        if (!WriteBestBlock()) {
+            WalletLogPrintf("Unable to update best block record, next load may need to rescan");
+        }
     }
 }
 
@@ -3181,7 +3196,9 @@ void CWallet::postInitProcess()
 
 bool CWallet::BackupWallet(const std::string& strDest) const
 {
-    WITH_LOCK(cs_wallet, WriteBestBlock());
+    if (!WITH_LOCK(cs_wallet, return WriteBestBlock())) {
+        return false;
+    }
     return GetDatabase().Backup(strDest);
 }
 
@@ -3935,7 +3952,9 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         // Copy the next tx order pos to the watchonly wallet
         LOCK(data.watchonly_wallet->cs_wallet);
         data.watchonly_wallet->nOrderPosNext = nOrderPosNext;
-        watchonly_batch->WriteOrderPosNext(data.watchonly_wallet->nOrderPosNext);
+        if (!watchonly_batch->WriteOrderPosNext(data.watchonly_wallet->nOrderPosNext)) {
+            return util::Error{_("Error: Unable to write watchonly wallet next transaction order")};
+        }
         // Write the locator record. An empty locator is valid and triggers rescan on load.
         if (!watchonly_batch->WriteBestBlock(best_block_locator)) {
             return util::Error{_("Error: Unable to write watchonly wallet best block locator record")};
@@ -3965,7 +3984,9 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
                 if (!data.watchonly_wallet->LoadToWallet(std::move(copy_wtx))) {
                     return util::Error{strprintf(_("Error: Could not add watchonly tx %s to watchonly wallet"), wtx->GetHash().GetHex())};
                 }
-                watchonly_batch->WriteFullTx(data.watchonly_wallet->mapWallet.at(hash));
+                if (!watchonly_batch->WriteFullTx(data.watchonly_wallet->mapWallet.at(hash))) {
+                    return util::Error{strprintf(_("Error: Could not write watchonly tx %s to watchonly wallet"), wtx->GetHash().GetHex())};
+                }
                 // Mark as to remove from the migrated wallet only if it does not also belong to it
                 if (!is_mine) {
                     txids_to_delete.push_back(hash);
@@ -3978,7 +3999,9 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
             return util::Error{strprintf(_("Error: Transaction %s in wallet cannot be identified to belong to migrated wallets"), wtx->GetHash().GetHex())};
         }
         // Rewrite the transaction so that anything that may have changed about it in memory also persists to disk
-        local_wallet_batch.WriteTxMetadata(*wtx);
+        if (!local_wallet_batch.WriteTxMetadata(*wtx)) {
+            return util::Error{strprintf(_("Error: Could not update tx %s in migrated wallet"), wtx->GetHash().GetHex())};
+        }
     }
 
     // Do the removes
@@ -3996,12 +4019,27 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
     // Write address book entry to disk
     auto func_store_addr = [](WalletBatch& batch, const CTxDestination& dest, const CAddressBookData& entry) {
         auto address{EncodeDestination(dest)};
-        if (entry.purpose) batch.WritePurpose(address, PurposeToString(*entry.purpose));
-        if (entry.label) batch.WriteName(address, *entry.label);
-        for (const auto& [id, request] : entry.receive_requests) {
-            batch.WriteAddressReceiveRequest(dest, id, request);
+        if (entry.purpose) {
+            if (!batch.WritePurpose(address, PurposeToString(*entry.purpose))) {
+                return false;
+            }
         }
-        if (entry.previously_spent) batch.WriteAddressPreviouslySpent(dest, true);
+        if (entry.label) {
+            if (!batch.WriteName(address, *entry.label)) {
+                return false;
+            }
+        }
+        for (const auto& [id, request] : entry.receive_requests) {
+            if (!batch.WriteAddressReceiveRequest(dest, id, request)) {
+                return false;
+            }
+        }
+        if (entry.previously_spent) {
+            if (!batch.WriteAddressPreviouslySpent(dest, true)) {
+                return false;
+            }
+        }
+        return true;
     };
 
     // Check the address book data in the same way we did for transactions
@@ -4017,7 +4055,9 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
 
             // Copy the entire address book entry
             wallet->m_address_book[dest] = record;
-            func_store_addr(*batch, dest, record);
+            if (!func_store_addr(*batch, dest, record)) {
+                return util::Error{_("Error: Unable to write address book data")};
+            }
 
             copied = true;
             // Only delete 'receive' records that are no longer part of the original wallet
@@ -4502,7 +4542,7 @@ std::optional<CExtKey> CWallet::GetExtKey(const CExtPubKey& xpub) const
     return std::nullopt;
 }
 
-void CWallet::WriteBestBlock() const
+bool CWallet::WriteBestBlock() const
 {
     AssertLockHeld(cs_wallet);
 
@@ -4512,9 +4552,10 @@ void CWallet::WriteBestBlock() const
 
         if (!loc.IsNull()) {
             WalletBatch batch(GetDatabase());
-            batch.WriteBestBlock(loc);
+            return batch.WriteBestBlock(loc);
         }
     }
+    return true;
 }
 
 void CWallet::RefreshTXOsFromTx(const CWalletTx& wtx)
