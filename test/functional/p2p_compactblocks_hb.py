@@ -5,7 +5,11 @@
 """Test compact blocks HB selection logic."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    append_config,
+    assert_equal,
+    p2p_port,
+)
 
 
 class CompactBlocksConnectionTest(BitcoinTestFramework):
@@ -94,6 +98,40 @@ class CompactBlocksConnectionTest(BitcoinTestFramework):
             assert not status[0]
             assert status[nodeid - 2]
         assert_equal(status, [False, True, True, True])
+
+        self.log.info("Testing a configured peer alongside automatic selection...")
+        self.stop_node(1)
+        append_config(self.nodes[1].datadir_path, [f"addnode=127.0.0.1:{p2p_port(2)}=bip152-hb"])
+        self.start_node(1)
+
+        def configured_peer_connected():
+            info_to = self.peer_info(1, 2)
+            info_from = self.peer_info(2, 1)
+            return (
+                info_to is not None
+                and info_from is not None
+                and info_to["bip152_hb_to"]
+                and info_from["bip152_hb_from"]
+            )
+
+        self.wait_until(configured_peer_connected)
+        self.connect_nodes(3, 1)
+        self.connect_nodes(4, 1)
+        self.connect_nodes(5, 1)
+
+        # The configured peer is additional to the three peers selected after
+        # they announce blocks.
+        for nodeid in range(3, 6):
+            status = self.relay_block_through(nodeid)
+            assert_equal(status, [True, nodeid >= 3, nodeid >= 4, nodeid >= 5])
+
+        # Receiving another block from the configured peer must not insert it
+        # into the automatic list or displace one of those three peers.
+        assert_equal(self.relay_block_through(2), [True, True, True, True])
+
+        # Peer initialization re-reads persistent intent after reconnecting.
+        self.restart_node(1)
+        self.wait_until(configured_peer_connected)
 
 
 if __name__ == '__main__':
