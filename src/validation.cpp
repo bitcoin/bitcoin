@@ -350,21 +350,20 @@ void Chainstate::MaybeUpdateMempoolForReorg(
         if (!CheckFinalTxAtTip(*Assert(m_chain.Tip()), tx)) return true;
 
         const LockPoints& lp = it->GetLockPoints();
-        // CheckSequenceLocksAtTip checks if the transaction will be final in the next block to be
-        // created on top of the new chain.
-        if (TestLockPointValidity(m_chain, lp)) {
-            if (!CheckSequenceLocksAtTip(m_chain.Tip(), lp)) {
-                return true;
-            }
-        } else {
+        // Fast path: the cached lockpoints still refer to blocks in the active chain and let the
+        // tx into the next block, so keep it.
+        // A failure here is not conclusive. Inputs that were unconfirmed when the tx entered the
+        // mempool were assumed to confirm at the old tip + 1 (at the old tip's median time past),
+        // which is too strict once the tip has moved back. Recompute the lockpoints against the
+        // new tip and decide on those. (A cached pass needs no recheck: unconfirmed inputs can
+        // only have zero relative locks, which recomputed lockpoints always satisfy.)
+        const bool cached_lock_points_pass{TestLockPointValidity(m_chain, lp) && CheckSequenceLocksAtTip(m_chain.Tip(), lp)};
+        if (!cached_lock_points_pass) {
             const CCoinsViewMemPool view_mempool{&CoinsTip(), *m_mempool};
             const std::optional<LockPoints> new_lock_points{CalculateLockPointsAtTip(m_chain.Tip(), view_mempool, tx)};
-            if (new_lock_points.has_value() && CheckSequenceLocksAtTip(m_chain.Tip(), *new_lock_points)) {
-                // Now update the mempool entry lockpoints as well.
-                it->UpdateLockPoints(*new_lock_points);
-            } else {
-                return true;
-            }
+            // Evict only if the tx can't go in the next block with its recomputed lockpoints.
+            if (!new_lock_points || !CheckSequenceLocksAtTip(m_chain.Tip(), *new_lock_points)) return true;
+            it->UpdateLockPoints(*new_lock_points);
         }
 
         // If the transaction spends any coinbase outputs, it must be mature.
