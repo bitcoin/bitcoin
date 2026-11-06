@@ -92,6 +92,7 @@ using interfaces::Chain;
 using interfaces::FoundBlock;
 using interfaces::Handler;
 using interfaces::MakeSignalHandler;
+using interfaces::MemoryLoad;
 using interfaces::Mining;
 using interfaces::Node;
 using interfaces::Rpc;
@@ -882,6 +883,14 @@ public:
                                                           m_node(node)
     {
         assert(m_block_template);
+        // Register here because the template's memory footprint is tied to
+        // this object's lifetime.
+        block_template_manager().RegisterTemplate(m_block_template);
+    }
+
+    ~BlockTemplateImpl() override
+    {
+        block_template_manager().UnregisterTemplate(m_block_template);
     }
 
     CBlockHeader getBlockHeader() override
@@ -924,7 +933,7 @@ public:
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
     {
         auto new_template = block_template_manager().WaitAndCreateNewBlock(
-            m_block_template, options, m_create_options, m_interrupt_wait);
+            *m_block_template, options, m_create_options, m_interrupt_wait);
         if (new_template) return std::make_unique<BlockTemplateImpl>(m_create_options, std::move(new_template), m_node);
         return nullptr;
     }
@@ -936,7 +945,9 @@ public:
 
     const BlockCreateOptions m_create_options;
 
-    const std::unique_ptr<CBlockTemplate> m_block_template;
+    // Shared so that BlockTemplateManager can hold a non-owning reference
+    // for memory accounting.
+    const std::shared_ptr<CBlockTemplate> m_block_template;
 
     bool m_interrupt_wait{false};
     node::BlockTemplateManager& block_template_manager() { return *Assert(m_node.block_template_manager); }
@@ -1036,6 +1047,11 @@ public:
             results.emplace_back(m_node.mempool->get(wtxid));
         }
         return results;
+    }
+
+    MemoryLoad getMemoryLoad() override
+    {
+        return {.usage = block_template_manager().GetTemplateMemoryUsage()};
     }
 
     const NodeContext* context() override { return &m_node; }
