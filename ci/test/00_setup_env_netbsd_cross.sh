@@ -14,12 +14,18 @@ export NETBSD_SDK_BASENAME="netbsd-${HOST}-${NETBSD_VERSION}"
 export NETBSD_SDK_SHA512SUMS="\
 e8871bbedb8c3e0f696cc2596ced0c1e6497939f725fb3495b8d2c168430325907550f5f840f4dd0e3c73e6090394747c5e54762f2737de81177b984403522a8  base.tar.xz\n\
 d8df6c07e9142dd8189292b769ac312f86185a6a278a752c18c840f7cd3a8dd3c535f9b0c8e06b62d556b2c75b97a01d786184e8a18f5e080ccd213591c8628f  comp.tar.xz"
+export NETBSD_GCC_PACKAGE_DIR="https://cdn.netbsd.org/pub/pkgsrc/packages/NetBSD/x86_64/${NETBSD_VERSION}/All"
+export NETBSD_GCC_SHA512SUMS="\
+081327f9e35b59d37edcff23350d7b07334c0b90a4d2ca6c1783daef40ce683f45b88c34d42a6fb9588a7b20fa91b8d2aa0773c058137a61ba46509fe50cc0ed  gcc14-14.3.0nb3.tgz\n\
+4d1ef96912edcdaeac3f4fcf5529251fcd74f26112b9ae66af3814b5d7734c964508402fd61290db7fb5c20a5deb4e0513d23551cf0eeb9aec1d779d91c1e23b  gcc14-libs-14.3.0nb4.tgz"
 export PACKAGES="clang-${APT_LLVM_V} llvm-${APT_LLVM_V} lld-${APT_LLVM_V}"
 export SYSROOT="--sysroot=${DEPENDS_DIR}/SDKs/${NETBSD_SDK_BASENAME}"
+export NETBSD_GCC_ROOT="${DEPENDS_DIR}/SDKs/${NETBSD_SDK_BASENAME}/usr/pkg/gcc14"
+export NETBSD_GCC_CXXFLAGS="-nostdinc++ -isystem ${NETBSD_GCC_ROOT}/include/c++ -isystem ${NETBSD_GCC_ROOT}/include/c++/x86_64--netbsd -isystem ${NETBSD_GCC_ROOT}/include/c++/backward"
 export DEP_OPTS="build_CC=clang build_CXX=clang++ \
  CC='clang --target=${HOST} ${SYSROOT}' \
- CXX='clang++ --target=${HOST} ${SYSROOT} -stdlib=libstdc++' \
- LDFLAGS='-fuse-ld=lld -lgcc_s' \
+ CXX='clang++ --target=${HOST} ${SYSROOT} ${NETBSD_GCC_CXXFLAGS}' \
+ LDFLAGS='-fuse-ld=lld -stdlib=libstdc++ -L${NETBSD_GCC_ROOT}/lib -lgcc_s' \
  AR=llvm-ar-${APT_LLVM_V} \
  NM=llvm-nm-${APT_LLVM_V} \
  OBJCOPY=llvm-objcopy-${APT_LLVM_V} \
