@@ -62,6 +62,8 @@ public:
     //! Dynamically alter the underlying leveldb cache size.
     void ResizeCache(size_t new_cache_size) EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_db_mutex);
 
+    bool IsMemoryOnly() const { return m_db_params.memory_only; }
+
     //! Perform a full compaction of the underlying LevelDB on a one-shot background thread.
     std::shared_future<void> CompactFullAsync() EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_db_mutex);
 
