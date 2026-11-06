@@ -22,6 +22,7 @@
 #include <util/log.h>
 #include <util/time.h>
 
+#include <algorithm>
 #include <cmath>
 #include <optional>
 
@@ -610,7 +611,7 @@ bool AddrManImpl::Good_(const CService& addr, bool test_before_evict, NodeSecond
 
     nid_type nId;
 
-    m_last_good = time;
+    m_last_good[addr.GetNetwork()] = time;
 
     AddrInfo* pinfo = Find(addr, &nId);
 
@@ -671,6 +672,22 @@ bool AddrManImpl::Add_(const std::vector<CAddress>& vAddr, const CNetAddr& sourc
     return added > 0;
 }
 
+NodeSeconds AddrManImpl::GetLastGoodForNet_(Network net, NodeSeconds now) const
+{
+    AssertLockHeld(cs);
+
+    // If we haven't connected to this network for a long time (or never),
+    // we are probably unable to reach it at all, e.g. because we don't have IPv6 connectivity.
+    // Fall back to successful connections to any network then, so that its addresses
+    // can eventually become terrible.
+    // Until then, addresses of such a network don't accumulate nAttempts (which also means that
+    // they are not deprioritized by GetChance()).
+    if (now - std::max(m_last_good[net], m_start_time) > ADDRMAN_NET_UNREACHABLE) {
+        return std::ranges::max(m_last_good);
+    }
+    return m_last_good[net];
+}
+
 void AddrManImpl::Attempt_(const CService& addr, bool fCountFailure, NodeSeconds time)
 {
     AssertLockHeld(cs);
@@ -685,7 +702,7 @@ void AddrManImpl::Attempt_(const CService& addr, bool fCountFailure, NodeSeconds
 
     // update info
     info.m_last_try = time;
-    if (fCountFailure && info.m_last_count_attempt < m_last_good) {
+    if (fCountFailure && info.m_last_count_attempt < GetLastGoodForNet_(info.GetNetwork(), time)) {
         info.m_last_count_attempt = time;
         info.nAttempts++;
     }
