@@ -12,6 +12,7 @@
 
 #include <addresstype.h>
 #include <util/feefrac.h>
+#include <util/fs.h>
 
 #include <chrono>
 #include <optional>
@@ -28,6 +29,10 @@ class CScript;
 class CService;
 struct KeyOriginInfo;
 class XOnlyPubKey;
+
+#ifndef WIN32
+#include <unistd.h>
+#endif
 
 /**
  * BOOST_CHECK_EXCEPTION predicates to check the specific validation error.
@@ -106,5 +111,14 @@ inline std::ostream& operator<<(std::ostream& os, const std::pair<T, U>& p)
 }
 
 // @}
+
+/**
+ * Simulate a filesystem access failure for `path` by temporarily making it
+ * unavailable. The target is removed and its parent made inaccessible while
+ * `fn()` executes, then everything is restored.
+ *
+ * Note: Returns early if the environment does not allow simulating a fs error.
+ */
+void SimulateFileSystemError(const fs::path& test_root_dir, const fs::path& path, const std::function<void()>& fn);
 
 #endif // BITCOIN_TEST_UTIL_COMMON_H
