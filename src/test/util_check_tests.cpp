@@ -10,7 +10,7 @@
 BOOST_AUTO_TEST_SUITE(util_check_tests)
 
 namespace {
-void TriggerNonFatalUnreachable()
+[[noreturn]] void TriggerNonFatalUnreachable()
 {
     NONFATAL_UNREACHABLE();
 }

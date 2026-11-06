@@ -11,6 +11,7 @@
 #include <util/strencodings.h>
 #include <util/threadnames.h>
 
+#include <cstdlib>
 #include <map>
 #include <mutex>
 #include <set>
@@ -103,7 +104,7 @@ LockData& GetLockData() {
     return lock_data;
 }
 
-static void potential_deadlock_detected(const LockPair& mismatch, const LockStack& s1, const LockStack& s2)
+[[noreturn]] static void potential_deadlock_detected(const LockPair& mismatch, const LockStack& s1, const LockStack& s2)
 {
     LogError("POTENTIAL DEADLOCK DETECTED");
     LogError("Previous lock order was:");
@@ -134,12 +135,12 @@ static void potential_deadlock_detected(const LockPair& mismatch, const LockStac
     }
     if (g_debug_lockorder_abort) {
         tfm::format(std::cerr, "Assertion failed: detected inconsistent lock order for %s, details in debug log.\n", s2.back().second.ToString());
-        abort();
+        std::abort();
     }
     throw std::logic_error(strprintf("potential deadlock detected: %s -> %s -> %s", mutex_b, mutex_a, mutex_b));
 }
 
-static void double_lock_detected(const void* mutex, const LockStack& lock_stack)
+[[noreturn]] static void double_lock_detected(const void* mutex, const LockStack& lock_stack)
 {
     LogError("DOUBLE LOCK DETECTED");
     LogError("Lock order:");
@@ -154,7 +155,7 @@ static void double_lock_detected(const void* mutex, const LockStack& lock_stack)
         tfm::format(std::cerr,
                     "Assertion failed: detected double lock for %s, details in debug log.\n",
                     lock_stack.back().second.ToString());
-        abort();
+        std::abort();
     }
     throw std::logic_error("double lock detected");
 }
@@ -245,7 +246,7 @@ void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, c
     }
     if (g_debug_lockorder_abort) {
         tfm::format(std::cerr, "%s:%s %s was not most recent critical section locked, details in debug log.\n", file, line, guardname);
-        abort();
+        std::abort();
     }
     throw std::logic_error(strprintf("%s was not most recent critical section locked", guardname));
 }
@@ -285,7 +286,7 @@ void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine,
 {
     if (LockHeld(cs)) return;
     tfm::format(std::cerr, "Assertion failed: lock %s not held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld());
-    abort();
+    std::abort();
 }
 template void AssertLockHeldInternal(const char*, const char*, int, Mutex*);
 template void AssertLockHeldInternal(const char*, const char*, int, RecursiveMutex*);
@@ -295,7 +296,7 @@ void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLi
 {
     if (!LockHeld(cs)) return;
     tfm::format(std::cerr, "Assertion failed: lock %s held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld());
-    abort();
+    std::abort();
 }
 template void AssertLockNotHeldInternal(const char*, const char*, int, Mutex*);
 template void AssertLockNotHeldInternal(const char*, const char*, int, RecursiveMutex*);
