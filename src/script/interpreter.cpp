@@ -1959,7 +1959,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
         if (!(flags & SCRIPT_VERIFY_TAPROOT)) return set_success(serror);
         if (stack.size() == 0) return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
         if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
-            // Drop annex (this is non-standard; see IsWitnessStandard)
+            // Drop the optional annex (see IsWitnessStandard for policy restrictions).
             const valtype& annex = SpanPopBack(stack);
             execdata.m_annex_hash = (HashWriter{} << annex).GetSHA256();
             execdata.m_annex_present = true;
