@@ -68,7 +68,13 @@ UniValue JSONRPCReplyObj(UniValue result, UniValue error, std::optional<UniValue
         if (jsonrpc_version == JSONRPCVersion::V1_LEGACY) reply.pushKV("result", NullUniValue);
         reply.pushKV("error", std::move(error));
     }
-    if (id.has_value()) reply.pushKV("id", std::move(id.value()));
+    if (id.has_value()) {
+        reply.pushKV("id", std::move(id.value()));
+    } else if (jsonrpc_version == JSONRPCVersion::V2) {
+        // id is required in JSONRPC 2.0 responses, can be null if there
+        // was an error parsing the request.
+        reply.pushKV("id", NullUniValue);
+    }
     return reply;
 }
 

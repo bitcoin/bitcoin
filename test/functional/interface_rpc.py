@@ -225,6 +225,35 @@ class RPCInterfaceTest(BitcoinTestFramework):
         # Sanity check: command was not executed
         assert_equal(block_count + 1, self.nodes[0].getblockcount())
 
+        self.log.info("Testing error handling of requests with malformed body")
+        cases = [
+            ({},                                       "Missing method"),
+            ({"method": 1},                            "Method must be a string"),
+            ({"method": "getblockcount", "params": 1}, "Params must be an array or object"),
+        ]
+        self.log.info("... JSONRPC 1.1 expects HTTP error codes")
+        for request, message in cases:
+            response, status = send_json_rpc(self.nodes[0], {**request})
+            assert_equal(
+                response,
+                {'result': None, 'error': {'code': -32600, 'message': message}}
+            )
+            assert_equal(status, 400)
+        self.log.info("... JSONRPC 2.0 expects HTTP 200 with error message in response")
+        for request, message in cases:
+            for notification in [True, False]:
+                body = {"jsonrpc": "2.0", **request}
+                if not notification:
+                    body["id"] = "1"
+                response, status = send_json_rpc(self.nodes[0], body)
+                expected = {"jsonrpc": "2.0", "error": {"code": RPC_INVALID_REQUEST, "message": message}}
+                if notification:
+                    expected["id"] = None
+                else:
+                    expected["id"] = "1"
+                assert_equal(response, expected)
+                assert_equal(status, 200)
+
     def test_work_queue_exceeded(self):
         self.log.info("Testing work queue exceeded...")
         self.restart_node(0, ['-rpcworkqueue=1', '-rpcthreads=1'])
