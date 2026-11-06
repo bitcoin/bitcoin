@@ -608,7 +608,7 @@ public:
     std::vector<PrivateBroadcast::TxBroadcastInfo> GetPrivateBroadcastInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     std::vector<CTransactionRef> AbortPrivateBroadcast(const uint256& id) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void InitiateTxBroadcastToAll(const Wtxid& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_inv_to_send_mutex);
+    void InitiateTxBroadcastToAll(const Wtxid& wtxid, node::TxAnnounceReason reason) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_inv_to_send_mutex);
     node::TransactionError InitiateTxBroadcastPrivate(const CTransactionRef& tx) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SetBestBlock(int height, std::chrono::seconds time) override
     {
@@ -1727,7 +1727,7 @@ void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
         CTransactionRef tx = m_mempool.get(txid);
 
         if (tx != nullptr) {
-            InitiateTxBroadcastToAll(tx->GetWitnessHash());
+            InitiateTxBroadcastToAll(tx->GetWitnessHash(), node::TxAnnounceReason::REQUESTED);
         } else {
             m_mempool.RemoveUnbroadcastTx(txid, true);
         }
@@ -2480,8 +2480,18 @@ void PeerManagerImpl::ProcessInvBacklog(NodeClock::time_point now, bool backlog_
     }
 }
 
-void PeerManagerImpl::InitiateTxBroadcastToAll(const Wtxid& wtxid)
+void PeerManagerImpl::InitiateTxBroadcastToAll(const Wtxid& wtxid, node::TxAnnounceReason reason)
 {
+    if (reason != node::TxAnnounceReason::RELAY && m_tx_for_private_broadcast.Contains(wtxid)) {
+        // Announcing a privately broadcast transaction to all peers, other than relaying it
+        // after it has been received from the network, would reveal us as its origin.
+        const auto tx{m_mempool.get(wtxid)};
+        if (tx) m_mempool.RemoveUnbroadcastTx(tx->GetHash());
+        LogDebug(BCLog::PRIVBROADCAST, "Not announcing privately broadcast transaction to all peers: %swtxid=%s",
+                 tx ? strprintf("txid=%s, ", tx->GetHash().ToString()) : "", wtxid.ToString());
+        return;
+    }
+
     {
         LOCK(m_inv_to_send_mutex);
         m_inbound_inv_bucket.backlog.push_back(wtxid);
@@ -3415,7 +3425,7 @@ void PeerManagerImpl::ProcessValidTx(NodeId nodeid, const CTransactionRef& tx, c
              tx->GetWitnessHash().ToString(),
              m_mempool.size(), m_mempool.DynamicMemoryUsage() / 1000);
 
-    InitiateTxBroadcastToAll(tx->GetWitnessHash());
+    InitiateTxBroadcastToAll(tx->GetWitnessHash(), node::TxAnnounceReason::RELAY);
 
     for (const CTransactionRef& removedTx : replaced_transactions) {
         AddToCompactExtraTransactions(removedTx);
@@ -4724,7 +4734,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         const uint256& hash = peer.m_wtxid_relay ? wtxid.ToUint256() : txid.ToUint256();
         AddKnownTx(peer, hash);
 
-        if (m_tx_for_private_broadcast.MarkResolved(ptx)) {
+        if (m_tx_for_private_broadcast.MarkResolved(ptx, pfrom.addr)) {
             LogDebug(BCLog::PRIVBROADCAST, "Received our privately broadcast transaction (txid=%s) from the "
                                            "network from %s",
                      txid.ToString(), pfrom.LogPeer());
@@ -4744,7 +4754,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                 } else {
                     LogInfo("Force relaying tx %s (wtxid=%s) from peer=%d\n",
                               txid.ToString(), wtxid.ToString(), pfrom.GetId());
-                    InitiateTxBroadcastToAll(wtxid);
+                    InitiateTxBroadcastToAll(wtxid, node::TxAnnounceReason::RELAY);
                 }
             }
 
