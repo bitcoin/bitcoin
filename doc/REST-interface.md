@@ -60,10 +60,15 @@ Given a block hash: returns a block part, in binary or hex-encoded binary format
 Responds with 404 if the block or the byte range doesn't exist.
 
 #### Blockheaders
-`GET /rest/headers/<BLOCK-HASH>.<bin|hex|json>?count=<COUNT=5>`
+`GET /rest/headers/<BLOCK-HASH>.<bin|hex|json>?count=<COUNT=5>&activechainonly=<ACTIVECHAINONLY=TRUE>`
 
 Given a block hash: returns <COUNT> amount of blockheaders in upward direction.
-Returns empty if the block doesn't exist or it isn't in the active chain.
+
+Returns empty if the block doesn't exist or it isn't in the active chain by
+default.
+
+Single stale block headers can be retrieved with <COUNT> set to 1, and
+<ACTIVECHAINONLY> set to false.
 
 *Deprecated (but not removed) since 24.0:*
 `GET /rest/headers/<COUNT>/<BLOCK-HASH>.<bin|hex|json>`
