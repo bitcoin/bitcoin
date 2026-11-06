@@ -147,9 +147,10 @@ class IPCMiningTest(BitcoinTestFramework):
             current_block_height = self.nodes[0].getchaintips()[0]["height"]
             assert_equal(blockref.result.height, current_block_height)
 
+            long_timeout = max(self.default_ipc_timeout, 60000.0)  # at least 1 minute
             self.log.debug("Mine a block")
             newblockref = (await wait_and_do(
-                mining.waitTipChanged(ctx, blockref.result.hash, self.default_ipc_timeout),
+                mining.waitTipChanged(ctx, blockref.result.hash, long_timeout),
                 lambda: self.generate(self.nodes[0], 1))).result
             assert_equal(len(newblockref.hash), block_hash_size)
             assert_equal(newblockref.height, current_block_height + 1)
@@ -161,7 +162,6 @@ class IPCMiningTest(BitcoinTestFramework):
 
             self.log.debug("interrupt() should abort waitTipChanged()")
             async def wait_for_tip():
-                long_timeout = max(self.default_ipc_timeout, 60000.0)  # at least 1 minute
                 result = (await mining.waitTipChanged(ctx, newblockref.hash, long_timeout)).result
                 # Unlike a timeout, interrupt() returns an empty BlockRef.
                 assert_equal(len(result.hash), 0)
