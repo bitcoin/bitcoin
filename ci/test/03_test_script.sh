@@ -157,6 +157,12 @@ if [ -n "${CI_LIMIT_STACK_SIZE}" ]; then
   ulimit -s 512
 fi
 
+if [ -n "${CI_LIMIT_FD_COUNT}" ]; then
+  # Only the node processes are capped (via BITCOIN_CMD), not the Python
+  # test runner, which needs more descriptors when running jobs in parallel.
+  export BITCOIN_CMD="${BASE_ROOT_DIR}/ci/test/wrap-fd-limit.sh ${BITCOIN_CMD:-bitcoin}"
+fi
+
 WITH_SANITIZER_ENV=(python3 "${BASE_BUILD_DIR}/test/with_sanitizer_env.py")
 
 if [[ ${BARE_METAL_RISCV} == "true" ]]; then
