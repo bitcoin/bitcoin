@@ -187,6 +187,26 @@ BOOST_FIXTURE_TEST_CASE(encrypt_wallet_commit_failure, EncryptionFailureSetup)
     BOOST_CHECK( fail_db->HasRecordType(DBKeys::WALLETDESCRIPTORCKEY));
 }
 
+BOOST_FIXTURE_TEST_CASE(encrypt_wallet_rewrite_failure, EncryptionFailureSetup)
+{
+    for (bool rewrite_failure : {false, true}) {
+        RecreateWallet(WALLET_FLAG_DESCRIPTORS);
+        AddKey(*wallet, GenerateRandomKey());
+        if (rewrite_failure) fail_db->FailNextRewrite();
+
+        bool warned{false};
+        DebugLogHelper log_helper{"Wallet database rewrite failed after encryption", [&](const std::string* line) {
+            if (line) warned = true;
+            return false;
+        }};
+        BOOST_REQUIRE(wallet->EncryptWallet("passphrase"));
+        BOOST_CHECK(wallet->HaveCryptedKeys());
+        BOOST_CHECK(wallet->IsLocked());
+        BOOST_CHECK(wallet->Unlock("passphrase"));
+        BOOST_CHECK_EQUAL(warned, rewrite_failure);
+    }
+}
+
 BOOST_FIXTURE_TEST_CASE(encrypt_wallet_descriptor_key_write_failure, EncryptionFailureSetup)
 {
     AddKey(*wallet, GenerateRandomKey());
