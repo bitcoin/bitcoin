@@ -7,20 +7,20 @@
 
 #include <attributes.h>
 #include <compat/compat.h>
-#include <netmessagemaker.h>
 #include <net.h>
 #include <net_permissions.h>
 #include <net_processing.h>
 #include <netaddress.h>
+#include <netmessagemaker.h>
 #include <node/connection_types.h>
 #include <node/eviction.h>
 #include <span.h>
 #include <sync.h>
+#include <util/check.h>
 #include <util/sock.h>
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <chrono>
 #include <condition_variable>
 #include <cstdint>

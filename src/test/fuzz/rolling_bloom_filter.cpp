@@ -8,8 +8,8 @@
 #include <test/fuzz/util.h>
 #include <test/util/random.h>
 #include <uint256.h>
+#include <util/check.h>
 
-#include <cassert>
 #include <cstdint>
 #include <optional>
 #include <string>

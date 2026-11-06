@@ -7,6 +7,7 @@
 #include <rpc/blockchain.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <util/string.h>
 
 #include <boost/test/unit_test.hpp>

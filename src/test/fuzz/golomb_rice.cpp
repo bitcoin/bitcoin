@@ -10,10 +10,10 @@
 #include <test/fuzz/util.h>
 #include <test/util/random.h>
 #include <util/bytevectorhash.h>
+#include <util/check.h>
 #include <util/golombrice.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cstdint>
 #include <iosfwd>
 #include <unordered_set>

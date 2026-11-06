@@ -15,9 +15,9 @@
 #include <test/fuzz/util.h>
 #include <test/util/transaction_utils.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 #include <util/translation.h>
 
-#include <cassert>
 #include <cstdint>
 #include <iostream>
 #include <map>

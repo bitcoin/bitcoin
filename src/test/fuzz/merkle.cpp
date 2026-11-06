@@ -3,14 +3,15 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/merkle.h>
-#include <test/fuzz/fuzz.h>
+
+#include <hash.h>
 #include <test/fuzz/FuzzedDataProvider.h>
+#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/str.h>
+#include <util/check.h>
 #include <util/strencodings.h>
-#include <hash.h>
 
-#include <cassert>
 #include <cstdint>
 #include <vector>
 

@@ -11,9 +11,9 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <util/threadpool.h>
 
-#include <cassert>
 #include <cstdint>
 #include <memory>
 #include <optional>
