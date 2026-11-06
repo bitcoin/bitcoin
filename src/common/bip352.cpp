@@ -210,12 +210,12 @@ std::optional<PubKey> GetPubKeyFromInput(const CTxIn& txin, const CScript& spk)
         // P2SH-P2WPKH only: eval scriptSig, verify redeem script is P2WPKH. Unlike P2PKH above,
         // evaluating is safe here, as consensus (BIP-141) requires the scriptSig to be a single
         // push of the redeem script.
-        std::vector<std::vector<unsigned char>> stack;
+        std::vector<ScriptStackElem> stack;
         if (!EvalScript(stack, txin.scriptSig, SCRIPT_VERIFY_NONE, DUMMY_CHECKER, SigVersion::BASE)) {
             return std::nullopt;
         }
         if (stack.empty()) return std::nullopt;
-        CScript redeem{stack.back().begin(), stack.back().end()};
+        CScript redeem{stack.back()->begin(), stack.back()->end()};
         if (Solver(redeem, solutions) != TxoutType::WITNESS_V0_KEYHASH) return std::nullopt;
         if (txin.scriptWitness.stack.empty()) return std::nullopt;
         CPubKey key{txin.scriptWitness.stack.back()};
