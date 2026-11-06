@@ -4,7 +4,6 @@
 // file COPYING or https://opensource.org/licenses/mit-license.php.
 
 #include <univalue.h>
-
 #include <univalue/test/fail1.json.h>
 #include <univalue/test/fail10.json.h>
 #include <univalue/test/fail11.json.h>
@@ -67,15 +66,9 @@
 #include <string_view>
 #include <tuple>
 
-static std::string rtrim(std::string s)
+static void runtest(std::string_view filename, std::string_view jdata)
 {
-    s.erase(s.find_last_not_of(" \n\r\t") + 1);
-    return s;
-}
-
-static void runtest(std::string filename, const std::string& jdata)
-{
-    std::string prefix = filename.substr(0, 4);
+    const std::string_view prefix = filename.substr(0, 4);
 
     bool wantPass = (prefix == "pass") || (prefix == "roun");
     bool wantFail = (prefix == "fail");
@@ -93,7 +86,7 @@ static void runtest(std::string filename, const std::string& jdata)
 
     if (wantRoundTrip) {
         std::string odata = val.write(0, 0);
-        assert(odata == rtrim(jdata));
+        assert(std::string_view{odata} == jdata);
     }
 }
 
@@ -179,21 +172,26 @@ void unescape_unicode_test()
     assert(val[0].get_str() == "\xf0\x9d\x85\xa1");
 }
 
-void no_nul_test()
+void bounded_input_test()
 {
-    char buf[] = "___[1,2,3]___";
+    const std::array<char, 1> keyword{'n'};
     UniValue val;
-    assert(val.read({buf + 3, 7}));
+    assert(!val.read({keyword.data(), keyword.size()}));
+
+    const std::array<char, 2> number{'-', '0'};
+    assert(val.read({number.data(), number.size()}));
+    assert(val.isNum());
+    assert(val.getValStr() == "-0");
 }
 
 int main(int argc, char* argv[])
 {
     for (const auto& [file, json] : tests) {
-        runtest(std::string{file}, std::string{json});
+        runtest(file, json);
     }
 
     unescape_unicode_test();
-    no_nul_test();
+    bounded_input_test();
 
     return 0;
 }
