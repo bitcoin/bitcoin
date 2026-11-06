@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/license/mit/.
 
+use std::fs;
 use std::io::ErrorKind;
 use std::process::{Command, Stdio};
 
@@ -14,19 +15,38 @@ pub fn lint_doc_release_note_snippets() -> LintResult {
         "doc/release-notes/",
         ":(exclude)doc/release-notes/*.*.md", // Assume that at least one dot implies a proper release note
     ]))?;
-    if non_release_notes.is_empty() {
-        Ok(())
-    } else {
+    if !non_release_notes.is_empty() {
         println!("{non_release_notes}");
-        Err(r#"
+        return Err(r#"
 Release note snippets and other docs must be put into the doc/ folder directly.
 
 The doc/release-notes/ folder is for archived release notes of previous releases only. Snippets must
 be uniquely named and placed directly in the doc/ folder.
             "#
         .trim()
-        .to_string())
+        .to_string());
     }
+
+    let snippets = check_output(git().args([
+        "ls-files",
+        "--",
+        ":(glob)doc/release-notes-*.md",
+        ":(exclude)doc/release-notes-empty-template.md",
+    ]))?;
+    let mut missing = Vec::new();
+    for path in snippets.lines() {
+        let note = fs::read_to_string(path).expect("must be able to read release note snippet");
+        if !note.contains("(#") && !note.contains("(gui#") {
+            missing.push(path);
+        }
+    }
+    if !missing.is_empty() {
+        return Err(format!(
+            "Release note snippets must mention their PR as (#12345) or (gui#123):\n{}",
+            missing.join("\n")
+        ));
+    }
+    Ok(())
 }
 
 pub fn lint_doc_args() -> LintResult {
