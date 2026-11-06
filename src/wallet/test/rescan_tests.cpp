@@ -107,7 +107,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
     {
         LOCK(cs_main);
         file_number = oldTip->GetBlockPos().nFile;
-        Assert(m_node.chainman)->m_blockman.PruneOneBlockFile(file_number);
+        Assert(m_node.chainman)->m_blockman.PruneBlockFiles({file_number});
     }
     m_node.chainman->m_blockman.UnlinkPrunedFiles({file_number});
 
@@ -136,7 +136,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
     {
         LOCK(cs_main);
         file_number = newTip->GetBlockPos().nFile;
-        Assert(m_node.chainman)->m_blockman.PruneOneBlockFile(file_number);
+        Assert(m_node.chainman)->m_blockman.PruneBlockFiles({file_number});
     }
     m_node.chainman->m_blockman.UnlinkPrunedFiles({file_number});
 
@@ -234,7 +234,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_reorged_block, TestChain100
     {
         LOCK(cs_main);
         file_number = stale_block->GetBlockPos().nFile;
-        Assert(m_node.chainman)->m_blockman.PruneOneBlockFile(file_number);
+        Assert(m_node.chainman)->m_blockman.PruneBlockFiles({file_number});
     }
     m_node.chainman->m_blockman.UnlinkPrunedFiles({file_number});
 
@@ -468,7 +468,7 @@ BOOST_FIXTURE_TEST_CASE(rescan_from_time, TestChain100Setup)
     {
         LOCK(cs_main);
         file_number = old_tip->GetBlockPos().nFile;
-        Assert(m_node.chainman)->m_blockman.PruneOneBlockFile(file_number);
+        Assert(m_node.chainman)->m_blockman.PruneBlockFiles({file_number});
     }
     m_node.chainman->m_blockman.UnlinkPrunedFiles({file_number});
 
