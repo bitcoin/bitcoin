@@ -1615,8 +1615,8 @@ static RPCMethod getchaintips()
                             {RPCResult::Type::STR, "status", "status of the chain, \"active\" for the main chain\n"
             "Possible values for status:\n"
             "1.  \"invalid\"               This branch contains at least one invalid block\n"
-            "2.  \"headers-only\"          Not all blocks for this branch are available, but the headers are valid\n"
-            "3.  \"valid-headers\"         All blocks are available for this branch, but they were never fully validated\n"
+            "2.  \"headers-only\"          Not all blocks for this branch have been received, but the headers are valid\n"
+            "3.  \"valid-headers\"         All blocks for this branch were received at some point, but they were never fully validated\n"
             "4.  \"valid-fork\"            This branch is not part of the active chain, but is fully validated\n"
             "5.  \"active\"                This is the tip of the active main chain, which is certainly valid"},
                         }}}},
@@ -1676,7 +1676,7 @@ static RPCMethod getchaintips()
             // This block or one of its ancestors is invalid.
             status = "invalid";
         } else if (!block->HaveNumChainTxs()) {
-            // This block cannot be connected because full block data for it or one of its parents is missing.
+            // This block cannot be connected because full block data for it or one of its parents was never received.
             status = "headers-only";
         } else if (block->IsValid(BLOCK_VALID_SCRIPTS)) {
             // This block is fully validated, but no longer part of the active chain. It was probably the active block once, but was reorganized.
