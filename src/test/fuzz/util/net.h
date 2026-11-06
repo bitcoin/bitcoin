@@ -187,6 +187,33 @@ class FuzzedSock : public Sock
      */
     FakeSteadyClock& m_clock;
 
+    struct FailedConnection {
+        size_t recv_budget;
+        bool recv_error_returned{false};
+    };
+
+    /**
+     * Whether the connection failed, as reported by a wait with `ErrorEvent`. From then on, waits
+     * report it, `Recv()` returns at most `m_failed->recv_budget` more bytes (what was buffered
+     * before) and then fails for good, and `Send()` fails.
+     */
+    mutable std::optional<FailedConnection> m_failed;
+
+    /** At most this much is buffered when a connection fails: what a receive buffer can hold. */
+    static constexpr size_t MAX_FAILED_RECV_BYTES{256 * 1024};
+
+    /** Pick what a wait reports for this socket, among what the real OS can report. */
+    Event ConsumeOccurred(Event requested) const;
+
+    /** Pick a subset of the requested events. */
+    Event ConsumeSubset(Event requested) const;
+
+    ssize_t RecvAfterFailure(void* buf, size_t len, int flags) const;
+
+    ssize_t ConsumeSend(const void* data, size_t len, int flags) const;
+
+    ssize_t ConsumeRecv(void* buf, size_t len, int flags) const;
+
 public:
     explicit FuzzedSock(FuzzedDataProvider& fuzzed_data_provider, FakeSteadyClock& clock);
 
@@ -221,7 +248,31 @@ public:
     bool WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const override;
 
     bool IsConnected(std::string& errmsg) const override;
+
+    // Events requested/reported for this socket by the last call to either Wait() or WaitMany().
+    mutable Event m_last_occurred{0};
+    mutable Event m_last_requested{0};
+
+    // Length passed to, and result and errno of, the last call to Recv()/Send(), if any.
+    struct IoCall {
+        size_t len;
+        ssize_t ret;
+        int err;
+        bool IsShort() const { return ret != static_cast<ssize_t>(len); }
+    };
+    mutable std::optional<IoCall> m_last_recv;
+    mutable std::optional<IoCall> m_last_send;
+
+    //! Set to true when Recv() is called with m_last_recv set.
+    mutable bool m_recv_twice{false};
+
+    //! Set to true when Send() is called with m_last_send set and representing a short send.
+    mutable bool m_send_after_short{false};
 };
+
+/** Reset the numbering of fuzzed socket descriptors. Called before each fuzz input so descriptor
+ * values are deterministic. */
+void ResetFuzzedSockets();
 
 [[nodiscard]] inline FuzzedNetEvents ConsumeNetEvents(FuzzedDataProvider& fdp) noexcept
 {

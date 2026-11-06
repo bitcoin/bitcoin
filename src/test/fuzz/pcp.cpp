@@ -31,6 +31,7 @@ void port_map_target_init()
 
 FUZZ_TARGET(pcp_request_port_map, .init = port_map_target_init)
 {
+    ResetFuzzedSockets();
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     FakeSteadyClock steady_clock;
 
@@ -63,6 +64,7 @@ FUZZ_TARGET(pcp_request_port_map, .init = port_map_target_init)
 
 FUZZ_TARGET(natpmp_request_port_map, .init = port_map_target_init)
 {
+    ResetFuzzedSockets();
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     FakeSteadyClock steady_clock;
 

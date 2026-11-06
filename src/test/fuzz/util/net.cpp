@@ -10,13 +10,17 @@
 #include <protocol.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/util.h>
+#include <test/fuzz/util/check_globals.h>
 #include <test/util/net.h>
+#include <util/check.h>
 #include <util/sock.h>
 #include <util/time.h>
 
 #include <array>
+#include <atomic>
 #include <cassert>
 #include <cerrno>
+#include <climits>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -111,12 +115,25 @@ P ConsumeDeserializationParams(FuzzedDataProvider& fuzzed_data_provider) noexcep
 template CNetAddr::SerParams ConsumeDeserializationParams(FuzzedDataProvider&) noexcept;
 template CAddress::SerParams ConsumeDeserializationParams(FuzzedDataProvider&) noexcept;
 
+/** Socket of the next FuzzedSock. */
+static std::atomic<SOCKET> g_next_fuzzed_socket{INVALID_SOCKET - 1};
+
+std::atomic<bool> g_used_fuzzed_socket{false};
+std::atomic<bool> g_reset_fuzzed_sockets{false};
+
+void ResetFuzzedSockets()
+{
+    g_next_fuzzed_socket = INVALID_SOCKET - 1;
+    g_reset_fuzzed_sockets = true;
+}
+
 FuzzedSock::FuzzedSock(FuzzedDataProvider& fuzzed_data_provider, FakeSteadyClock& clock)
-    : Sock{fuzzed_data_provider.ConsumeIntegralInRange<SOCKET>(INVALID_SOCKET - 1, INVALID_SOCKET)},
+    : Sock{g_next_fuzzed_socket--},
       m_fuzzed_data_provider{fuzzed_data_provider},
       m_selectable{fuzzed_data_provider.ConsumeBool()},
       m_clock{clock}
 {
+    g_used_fuzzed_socket = true;
 }
 
 FuzzedSock::~FuzzedSock()
@@ -135,6 +152,16 @@ FuzzedSock& FuzzedSock::operator=(Sock&& other)
 }
 
 ssize_t FuzzedSock::Send(const void* data, size_t len, int flags) const
+{
+    if (m_last_send && m_last_send->IsShort()) {
+        m_send_after_short = true;
+    }
+    const ssize_t ret{ConsumeSend(data, len, flags)};
+    m_last_send = IoCall{.len = len, .ret = ret, .err = errno};
+    return ret;
+}
+
+ssize_t FuzzedSock::ConsumeSend(const void* data, size_t len, int flags) const
 {
     constexpr std::array send_errnos{
         EACCES,
@@ -156,6 +183,11 @@ ssize_t FuzzedSock::Send(const void* data, size_t len, int flags) const
         EPIPE,
         EWOULDBLOCK,
     };
+    if (m_failed) {
+        // A send on a failed connection fails for good (EPIPE on Linux and macOS).
+        errno = EPIPE;
+        return -1;
+    }
     if (m_fuzzed_data_provider.ConsumeBool()) {
         return len;
     }
@@ -167,6 +199,14 @@ ssize_t FuzzedSock::Send(const void* data, size_t len, int flags) const
 }
 
 ssize_t FuzzedSock::Recv(void* buf, size_t len, int flags) const
+{
+    if (m_last_recv) m_recv_twice = true;
+    const ssize_t ret{ConsumeRecv(buf, len, flags)};
+    m_last_recv = IoCall{.len = len, .ret = ret, .err = errno};
+    return ret;
+}
+
+ssize_t FuzzedSock::ConsumeRecv(void* buf, size_t len, int flags) const
 {
     // Have a permanent error at recv_errnos[0] because when the fuzzed data is exhausted
     // SetFuzzedErrNo() will always return the first element and we want to avoid Recv()
@@ -189,6 +229,8 @@ ssize_t FuzzedSock::Recv(void* buf, size_t len, int flags) const
     if (m_fuzzed_data_provider.ConsumeBool() && std::getenv("FUZZED_SOCKET_FAKE_LATENCY") != nullptr) {
         std::this_thread::sleep_for(std::chrono::milliseconds{2});
     }
+
+    if (m_failed) return RecvAfterFailure(buf, len, flags);
 
     if (len == 0 || m_fuzzed_data_provider.ConsumeBool()) {
         const ssize_t r = m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
@@ -232,6 +274,43 @@ ssize_t FuzzedSock::Recv(void* buf, size_t len, int flags) const
     std::memset(reinterpret_cast<uint8_t*>(buf) + copied_so_far, 0x0, len - copied_so_far);
 
     return len;
+}
+
+ssize_t FuzzedSock::RecvAfterFailure(void* buf, size_t len, int flags) const
+{
+    if (len == 0) return 0;
+
+    // First of all, if the last read was a peek, make sure to return the peeked data.
+    if (!m_peek_data.empty()) {
+        const size_t copy_len{std::min(len, m_peek_data.size())};
+        std::memcpy(buf, m_peek_data.data(), copy_len);
+        if ((flags & MSG_PEEK) == 0) {
+            m_peek_data.erase(m_peek_data.begin(), m_peek_data.begin() + copy_len);
+        }
+        return copy_len;
+    }
+
+    // If anything was received before the connection failed, return it.
+    if (m_failed->recv_budget > 0) {
+        const auto data{ConsumeRandomLengthByteVector(m_fuzzed_data_provider, std::min(len, m_failed->recv_budget))};
+        if (!data.empty()) {
+            m_failed->recv_budget -= data.size();
+            std::memcpy(buf, data.data(), data.size());
+            if ((flags & MSG_PEEK) != 0) {
+                m_peek_data.insert(m_peek_data.end(), data.begin(), data.end());
+            }
+            return data.size();
+        }
+        m_failed->recv_budget = 0;
+    }
+
+    // Then recv() fails for good: ECONNRESET once, then end of stream, as on Linux and macOS.
+    if (!m_failed->recv_error_returned) {
+        m_failed->recv_error_returned = true;
+        errno = ECONNRESET;
+        return -1;
+    }
+    return 0;
 }
 
 int FuzzedSock::Connect(const sockaddr*, socklen_t) const
@@ -416,10 +495,9 @@ bool FuzzedSock::Wait(std::chrono::milliseconds timeout, Event requested, Event*
         return false;
     }
     if (occurred != nullptr) {
-        // We simulate the requested event as occurred when ConsumeBool()
-        // returns false. This avoids simulating endless waiting if the
-        // FuzzedDataProvider runs out of data.
-        *occurred = m_fuzzed_data_provider.ConsumeBool() ? 0 : requested;
+        *occurred = ConsumeOccurred(requested);
+        m_last_requested = requested;
+        m_last_occurred = *occurred;
     }
     m_clock += timeout;
     return true;
@@ -428,18 +506,66 @@ bool FuzzedSock::Wait(std::chrono::milliseconds timeout, Event requested, Event*
 bool FuzzedSock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const
 {
     for (auto& [sock, events] : events_per_sock) {
-        (void)sock;
-        // We simulate the requested event as occurred when ConsumeBool()
-        // returns false. This avoids simulating endless waiting if the
-        // FuzzedDataProvider runs out of data.
-        events.occurred = m_fuzzed_data_provider.ConsumeBool() ? 0 : events.requested;
+        // All sockets in a fuzz target are FuzzedSock.
+        const auto* s{Assert(dynamic_cast<const FuzzedSock*>(sock.get()))};
+        events.occurred = s->ConsumeOccurred(events.requested);
+        s->m_last_requested = events.requested;
+        s->m_last_occurred = events.occurred;
     }
     m_clock += timeout;
     return true;
 }
 
+Sock::Event FuzzedSock::ConsumeOccurred(Event requested) const
+{
+    // A reset connection stays ready for whatever is requested under both poll() and select().
+    if (m_failed) return requested | ErrorEvent;
+
+    // Nothing happened before the timeout.
+    if (m_fuzzed_data_provider.ConsumeBool()) {
+        return 0;
+    }
+
+    // Urgent data happened before the timeout (which wakes select() when RecvEvent is requested).
+    if ((requested & RecvEvent) != 0 && m_fuzzed_data_provider.ConsumeBool()) {
+        return ConsumeSubset(requested) | ErrorEvent;
+    }
+
+    // A subset of requested events happened before the timeout.
+    if (m_fuzzed_data_provider.ConsumeBool()) {
+        return ConsumeSubset(requested);
+    }
+
+    // The connection failed.
+    if (m_fuzzed_data_provider.ConsumeBool()) {
+        m_failed = FailedConnection{.recv_budget = m_fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, MAX_FAILED_RECV_BYTES)};
+        return requested | ErrorEvent;
+    }
+
+    // The exact set of requested events happened before the timeout. Intentionally last,
+    // to avoid an infinite wait when the provider is out of data and returns 0.
+    return requested;
+}
+
+Sock::Event FuzzedSock::ConsumeSubset(Event requested) const
+{
+    // Mask using ConsumeBool() rather than ConsumeIntegral() because fuzzers generally
+    // operate at the byte level.
+    Event occurred{requested};
+    for (size_t bit{0}; bit < sizeof(requested) * CHAR_BIT; ++bit) {
+        if ((occurred & (1 << bit)) && m_fuzzed_data_provider.ConsumeBool()) {
+            occurred &= ~(1 << bit);
+        }
+    }
+    return occurred;
+}
+
 bool FuzzedSock::IsConnected(std::string& errmsg) const
 {
+    if (m_peek_data.empty() && m_failed && m_failed->recv_budget == 0) {
+        errmsg = "connection failed";
+        return false;
+    }
     if (m_fuzzed_data_provider.ConsumeBool()) {
         return true;
     }
