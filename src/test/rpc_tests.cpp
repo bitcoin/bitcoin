@@ -15,10 +15,11 @@
 #include <univalue.h>
 #include <util/time.h>
 
-#include <any>
-#include <string_view>
-
 #include <boost/test/unit_test.hpp>
+
+#include <any>
+#include <array>
+#include <string_view>
 
 using util::SplitString;
 
@@ -542,16 +543,20 @@ BOOST_AUTO_TEST_CASE(rpc_getblockstats_calculate_percentiles_by_weight)
 BOOST_AUTO_TEST_CASE(check_dup_param_names)
 {
     enum ParamType { POSITIONAL, NAMED, NAMED_ONLY };
-    auto make_rpc = [](std::vector<std::tuple<std::string, ParamType>> param_names) {
+    struct RpcArgEntry {
+        ConstevalRpcArgName name;
+        ParamType type;
+    };
+    auto make_rpc = [](std::vector<RpcArgEntry> param_names) {
         std::vector<RPCArg> params;
         std::vector<RPCArg> options;
-        auto push_options = [&] { if (!options.empty()) params.emplace_back(strprintf("options%i", params.size()), RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "", std::move(options)); };
+        auto push_options = [&] { if (!options.empty()) params.emplace_back(std::to_array<ConstevalRpcArgName>({"options0", "options1"}).at(params.size()), RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "", std::move(options)); };
         for (auto& [param_name, param_type] : param_names) {
             if (param_type == POSITIONAL) {
                 push_options();
-                params.emplace_back(std::move(param_name), RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "description");
+                params.emplace_back(param_name, RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "description");
             } else {
-                options.emplace_back(std::move(param_name), RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "description", RPCArgOptions{.also_positional = param_type == NAMED});
+                options.emplace_back(param_name, RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "description", RPCArgOptions{.also_positional = param_type == NAMED});
             }
         }
         push_options();
