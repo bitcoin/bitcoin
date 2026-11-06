@@ -933,7 +933,7 @@ void SendCoinsDialog::coinControlChangeChecked(int state)
 {
     if (state == Qt::Unchecked)
     {
-        m_coin_control->destChange = CNoDestination();
+        m_coin_control->destChange.reset();
         ui->labelCoinControlChangeLabel->clear();
     }
     else
@@ -949,7 +949,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
     if (model && model->getAddressTableModel())
     {
         // Default to no change address until verified
-        m_coin_control->destChange = CNoDestination();
+        m_coin_control->destChange.reset();
         ui->labelCoinControlChangeLabel->setStyleSheet("QLabel{color:red;}");
 
         const CTxDestination dest = DecodeDestination(text.toStdString());
@@ -972,7 +972,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
                     QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
 
                 if(btnRetVal == QMessageBox::Yes)
-                    m_coin_control->destChange = dest;
+                    m_coin_control->destChange = PaymentDestination{dest};
                 else
                 {
                     ui->lineEditCoinControlChange->setText("");
@@ -991,7 +991,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
                 else
                     ui->labelCoinControlChangeLabel->setText(tr("(no label)"));
 
-                m_coin_control->destChange = dest;
+                m_coin_control->destChange = PaymentDestination{dest};
             }
         }
     }
