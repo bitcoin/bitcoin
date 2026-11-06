@@ -34,6 +34,8 @@
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <util/check.h>
+#include <util/fs.h>
+#include <util/result.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 #include <validation.h>
@@ -45,6 +47,7 @@
 #include <wallet/spend.h>
 #include <wallet/test/util.h>
 #include <wallet/test/wallet_test_fixture.h>
+#include <wallet/walletutil.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -793,6 +796,37 @@ BOOST_FIXTURE_TEST_CASE(CreateWalletWithoutChain, BasicTestingSetup)
     auto wallet = TestCreateWallet(context);
     BOOST_CHECK(wallet);
     WaitForDeleteWallet(std::move(wallet));
+}
+
+BOOST_AUTO_TEST_CASE(CreateWalletSignerFailure)
+{
+    // Without -signer, setting up an external signer wallet throws. Creating the
+    // wallet through the wallet loader, as the GUI does, must return the error
+    // instead of letting the exception escape.
+    const uint64_t flags{WALLET_FLAG_DESCRIPTORS | WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_EXTERNAL_SIGNER};
+    std::vector<bilingual_str> warnings;
+    const auto wallet{m_wallet_loader->createWallet("signer_wallet", /*passphrase=*/{}, flags, warnings)};
+    BOOST_REQUIRE(!wallet);
+    BOOST_CHECK_EQUAL(util::ErrorString(wallet).original, "Wallet creation failed. restart bitcoind with -signer=<cmd>");
+    BOOST_CHECK(!fs::exists(GetWalletDir() / "signer_wallet"));
+
+    // Nothing was left behind, so creating a wallet with the same name fails for the same reason.
+    const auto retry{m_wallet_loader->createWallet("signer_wallet", /*passphrase=*/{}, flags, warnings)};
+    BOOST_REQUIRE(!retry);
+    BOOST_CHECK_EQUAL(util::ErrorString(retry).original, "Wallet creation failed. restart bitcoind with -signer=<cmd>");
+    BOOST_CHECK(!fs::exists(GetWalletDir() / "signer_wallet"));
+}
+
+BOOST_AUTO_TEST_CASE(CreateWalletInvalidArgs)
+{
+    // Wallet creation can also fail without an exception, here because of an
+    // invalid -addresstype. The files created for the wallet are removed as well.
+    m_node.args->ForceSetArg("-addresstype", "invalid");
+    std::vector<bilingual_str> warnings;
+    const auto wallet{m_wallet_loader->createWallet("invalid_args", /*passphrase=*/{}, WALLET_FLAG_DESCRIPTORS, warnings)};
+    BOOST_REQUIRE(!wallet);
+    BOOST_CHECK_EQUAL(util::ErrorString(wallet).original, "Wallet creation failed. Unknown address type 'invalid'");
+    BOOST_CHECK(!fs::exists(GetWalletDir() / "invalid_args"));
 }
 
 BOOST_FIXTURE_TEST_CASE(RemoveTxs, TestChain100Setup)

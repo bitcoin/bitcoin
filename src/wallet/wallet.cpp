@@ -81,6 +81,7 @@
 #include <limits>
 #include <optional>
 #include <stdexcept>
+#include <system_error>
 #include <thread>
 #include <tuple>
 #include <utility>
@@ -363,6 +364,12 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
         return nullptr;
     }
 
+    // Note what exists before the database is created, so that a failed
+    // creation below only removes what was created here.
+    const util::Result<fs::path> wallet_path{GetWalletPath(name)};
+    const bool created_wallet_dir{wallet_path && !fs::exists(*wallet_path)};
+    const bool created_wallet_file{wallet_path && !fs::exists(SQLiteDataFile(*wallet_path))};
+
     // Wallet::Verify will check if we're trying to create a wallet with a duplicate name.
     std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(name, options, status, error);
     if (!database) {
@@ -370,11 +377,30 @@ std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string&
         status = DatabaseStatus::FAILED_VERIFY;
         return nullptr;
     }
+    const std::vector<fs::path> database_files{database->Files()};
 
     // Make the wallet
     context.chain->initMessage(_("Creating wallet…"));
-    std::shared_ptr<CWallet> wallet = CWallet::CreateNew(context, name, std::move(database), wallet_creation_flags, born_encrypted, error, warnings);
+    std::shared_ptr<CWallet> wallet;
+    try {
+        wallet = CWallet::CreateNew(context, name, std::move(database), wallet_creation_flags, born_encrypted, error, warnings);
+    } catch (const std::runtime_error& e) {
+        // Setting up the wallet can throw, for example when an external signer
+        // fails or returns an invalid descriptor.
+        error = Untranslated(e.what());
+    }
     if (!wallet) {
+        // Remove the files that were created for the wallet, so that the wallet
+        // name can be used again. Use non-throwing overloads, as the GUI does not
+        // catch exceptions here.
+        std::error_code ec;
+        if (created_wallet_file) {
+            for (const fs::path& file : database_files) {
+                fs::remove(file, ec);
+            }
+        }
+        // This only removes the directory if it is empty.
+        if (created_wallet_dir) fs::remove(*wallet_path, ec);
         error = Untranslated("Wallet creation failed.") + Untranslated(" ") + error;
         status = DatabaseStatus::FAILED_CREATE;
         return nullptr;
