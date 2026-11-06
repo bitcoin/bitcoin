@@ -910,6 +910,13 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
             if (!client->MaybeSendBytesFromBuffer()) {
                 recv_ready = false;
             }
+            // A client with queued data is polled for writeability instead of
+            // readability, so a request it has half-delivered cannot make
+            // progress while the response goes out. Restart its completion
+            // deadline, because the client is waiting on the server.
+            // Nothing is restarted while the socket stays unwriteable, so a
+            // client that never reads still times out.
+            client->RestartRequestDeadline();
         }
 
         if (recv_ready || err_ready) {
@@ -1099,10 +1106,25 @@ std::unique_ptr<HTTPRequest> HTTPRemoteClient::TryReadRequestInternal()
 {
     try {
         if (!m_recv_buffer.empty()) {
+            // Start the completion deadline when the first bytes of a request arrive.
+            // Later reads must not restart it, otherwise a client could hold on to the
+            // connection forever by sending one byte every -rpcservertimeout seconds.
+            // A complete request held back below while the send buffer is full
+            // doesn't start one. Bytes left in the receive buffer belong to the
+            // next request and wait until this one reaches a worker.
+            if (!m_request_since && m_req->GetState() != HTTPRequest::State::Complete) {
+                m_request_since = MockableSteadyClock::now();
+            }
+
             // Read data from the buffer into the current request
             LineReader reader(m_recv_buffer, MAX_HEADERS_SIZE);
             try {
-                m_req->Load(reader);
+                if (m_req->Load(reader) == HTTPRequest::State::Complete) {
+                    // The request is complete, so its deadline no longer applies.
+                    // Anything left in the buffer belongs to the next request and
+                    // starts a new deadline.
+                    m_request_since.reset();
+                }
             } catch (...) {
                 m_recv_buffer.clear();
                 throw;
@@ -1203,6 +1225,23 @@ bool HTTPRemoteClient::ShouldDisconnect(MockableSteadyClock::time_point now, std
                !m_req_busy) {
         LogDebug(BCLog::HTTP,
                  "HTTP client idle timeout %s (id=%llu)",
+                 m_origin,
+                 m_id);
+        return true;
+    // Then check the request completion deadline. A client that keeps sending
+    // data without ever finishing a request resets the idle timer with every
+    // read, so that timer alone would let it hold a connection slot forever.
+    // The deadline starts when the first byte of a request arrives and is not
+    // extended by later reads, see m_request_since. Parsing clears it before
+    // the request goes to a worker thread, so it is never armed while one is
+    // busy, and disconnecting a client a worker still owes a response would
+    // be unsafe.
+    } else if (rpcservertimeout.count() > 0 &&
+               m_request_since &&
+               now - *m_request_since > rpcservertimeout &&
+               Assume(!m_req_busy)) {
+        LogDebug(BCLog::HTTP,
+                 "HTTP client took too long to send a complete request %s (id=%llu)",
                  m_origin,
                  m_id);
         return true;
