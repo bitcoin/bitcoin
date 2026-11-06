@@ -1189,13 +1189,13 @@ void TestNode(const MsCtx script_ctx, const std::optional<Node>& node, FuzzedDat
 
 } // namespace
 
-void FuzzInit()
+static void FuzzInit()
 {
     static ECC_Context ecc_context{};
     TEST_DATA.Init();
 }
 
-void FuzzInitSmart()
+static void FuzzInitSmart()
 {
     FuzzInit();
     SMARTINFO.Init();

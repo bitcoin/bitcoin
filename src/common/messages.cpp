@@ -24,7 +24,7 @@ using node::TransactionError;
 using util::Join;
 
 namespace common {
-const std::map<FeeReason, std::string>& FeeReasonMap()
+static const std::map<FeeReason, std::string>& FeeReasonMap()
 {
     static const std::map<FeeReason, std::string> fee_reason_strings = {
         {FeeReason::FEE_RATE_ESTIMATOR, "Fee Rate Estimator"},
@@ -51,7 +51,7 @@ std::string FeeReasons(const std::string& delimiter)
     return Join(FeeReasonMap(), delimiter, [](const auto& reason) { return reason.second; });
 }
 
-const std::vector<std::pair<std::string, FeeEstimateMode>>& FeeModeMap()
+static const std::vector<std::pair<std::string, FeeEstimateMode>>& FeeModeMap()
 {
     static const std::vector<std::pair<std::string, FeeEstimateMode>> FEE_MODES = {
         {"unset", FeeEstimateMode::UNSET},
@@ -61,7 +61,7 @@ const std::vector<std::pair<std::string, FeeEstimateMode>>& FeeModeMap()
     return FEE_MODES;
 }
 
-std::string FeeModeInfo(const std::pair<std::string, FeeEstimateMode>& mode, std::string& default_info)
+static std::string FeeModeInfo(const std::pair<std::string, FeeEstimateMode>& mode, std::string& default_info)
 {
     switch (mode.second) {
         case FeeEstimateMode::UNSET:
@@ -74,6 +74,11 @@ std::string FeeModeInfo(const std::pair<std::string, FeeEstimateMode>& mode, std
     assert(false);
 }
 
+static std::string FeeModes(const std::string& delimiter)
+{
+    return Join(FeeModeMap(), delimiter, [&](const std::pair<std::string, FeeEstimateMode>& i) { return i.first; });
+}
+
 std::string FeeModesDetail(std::string default_info)
 {
     std::string info;
@@ -81,11 +86,6 @@ std::string FeeModesDetail(std::string default_info)
         info += FeeModeInfo(fee_mode, default_info);
     }
     return strprintf("%s \n%s", FeeModes(", "), info);
-}
-
-std::string FeeModes(const std::string& delimiter)
-{
-    return Join(FeeModeMap(), delimiter, [&](const std::pair<std::string, FeeEstimateMode>& i) { return i.first; });
 }
 
 std::string InvalidEstimateModeErrorMessage()

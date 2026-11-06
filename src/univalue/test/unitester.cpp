@@ -157,7 +157,7 @@ inline constexpr std::array tests{std::to_array<std::tuple<std::string_view, std
 })};
 
 // Test \u handling
-void unescape_unicode_test()
+static void unescape_unicode_test()
 {
     UniValue val;
     bool testResult;
@@ -179,7 +179,7 @@ void unescape_unicode_test()
     assert(val[0].get_str() == "\xf0\x9d\x85\xa1");
 }
 
-void no_nul_test()
+static void no_nul_test()
 {
     char buf[] = "___[1,2,3]___";
     UniValue val;

@@ -33,7 +33,7 @@ const TestingSetup* g_setup;
 constexpr ReachabilityGoal MEMPOOL_LOAD_SUCCEEDS{"mempool loading succeeds"};
 } // namespace
 
-void initialize_validation_load_mempool()
+static void initialize_validation_load_mempool()
 {
     RegisterReachabilityGoal(MEMPOOL_LOAD_SUCCEEDS);
     static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();

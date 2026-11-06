@@ -12,7 +12,7 @@
 #include <cstdint>
 #include <functional>
 
-void initialize_timeoffsets()
+static void initialize_timeoffsets()
 {
     static const auto testing_setup = MakeNoLogFileContext<>(ChainType::MAIN);
 }

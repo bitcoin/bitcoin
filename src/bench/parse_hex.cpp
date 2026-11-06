@@ -11,7 +11,7 @@
 #include <optional>
 #include <string>
 
-std::string generateHexString(size_t length) {
+static std::string generateHexString(size_t length) {
     const auto hex_digits = "0123456789ABCDEF";
     FastRandomContext rng(/*fDeterministic=*/true);
 

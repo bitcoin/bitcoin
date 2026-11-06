@@ -180,7 +180,7 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-ipcconnect=<address>", "Connect to bitcoin-node through IPC socket instead of TCP socket to execute requests. Valid <address> values are 'auto' to try to connect to default socket path at <datadir>/node.sock but fall back to TCP if it is not available, 'unix' to connect to the default socket and fail if it isn't available, or 'unix:<socket path>' to connect to a socket at a nonstandard path. -noipcconnect can be specified to avoid attempting to use IPC at all. Default value: auto", ArgsManager::ALLOW_ANY, OptionsCategory::IPC);
 }
 
-std::optional<std::string> RpcWalletName(const ArgsManager& args)
+static std::optional<std::string> RpcWalletName(const ArgsManager& args)
 {
     // Check IsArgNegated to return nullopt instead of "0" if -norpcwallet is specified
     if (args.IsArgNegated("-rpcwallet")) return std::nullopt;

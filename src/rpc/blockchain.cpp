@@ -105,13 +105,13 @@ using node::NodeContext;
 using node::SnapshotMetadata;
 using util::MakeUnorderedList;
 
-std::tuple<std::unique_ptr<CCoinsViewCursor>, CCoinsStats, const CBlockIndex*>
+static std::tuple<std::unique_ptr<CCoinsViewCursor>, CCoinsStats, const CBlockIndex*>
 PrepareUTXOSnapshot(
     Chainstate& chainstate,
     const std::function<void()>& interruption_point = {})
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-UniValue WriteUTXOSnapshot(
+static UniValue WriteUTXOSnapshot(
     Chainstate& chainstate,
     CCoinsViewCursor* pcursor,
     CCoinsStats* maybe_stats,
@@ -121,7 +121,7 @@ UniValue WriteUTXOSnapshot(
     const fs::path& temppath,
     const std::function<void()>& interruption_point = {});
 
-UniValue CreateRolledBackUTXOSnapshot(
+static UniValue CreateRolledBackUTXOSnapshot(
     NodeContext& node,
     Chainstate& chainstate,
     const CBlockIndex* target,
@@ -221,7 +221,7 @@ UniValue blockheaderToJSON(const CBlockIndex& tip, const CBlockIndex& blockindex
 }
 
 /** Serialize coinbase transaction metadata */
-UniValue coinbaseTxToJSON(const CTransaction& coinbase_tx)
+static UniValue coinbaseTxToJSON(const CTransaction& coinbase_tx)
 {
     CHECK_NONFATAL(!coinbase_tx.vin.empty());
     const CTxIn& vin_0{coinbase_tx.vin[0]};
@@ -995,7 +995,7 @@ static RPCMethod pruneblockchain()
     };
 }
 
-CoinStatsHashType ParseHashType(std::string_view hash_type_input)
+static CoinStatsHashType ParseHashType(std::string_view hash_type_input)
 {
     if (hash_type_input == "hash_serialized_3") {
         return CoinStatsHashType::HASH_SERIALIZED;
@@ -1742,7 +1742,7 @@ static RPCMethod preciousblock()
     };
 }
 
-void InvalidateBlock(ChainstateManager& chainman, const uint256 block_hash) {
+static void InvalidateBlock(ChainstateManager& chainman, const uint256 block_hash) {
     BlockValidationState state;
     CBlockIndex* pblockindex;
     {
@@ -1788,7 +1788,7 @@ static RPCMethod invalidateblock()
     };
 }
 
-void ReconsiderBlock(ChainstateManager& chainman, uint256 block_hash) {
+static void ReconsiderBlock(ChainstateManager& chainman, uint256 block_hash) {
     {
         LOCK(chainman.GetMutex());
         CBlockIndex* pblockindex = chainman.m_blockman.LookupBlockIndex(block_hash);
@@ -3223,7 +3223,7 @@ public:
     }
 };
 
-UniValue CreateRolledBackUTXOSnapshot(
+static UniValue CreateRolledBackUTXOSnapshot(
     NodeContext& node,
     Chainstate& chainstate,
     const CBlockIndex* target,
@@ -3361,7 +3361,7 @@ UniValue CreateRolledBackUTXOSnapshot(
                              node.rpc_interruption_point);
 }
 
-std::tuple<std::unique_ptr<CCoinsViewCursor>, CCoinsStats, const CBlockIndex*>
+static std::tuple<std::unique_ptr<CCoinsViewCursor>, CCoinsStats, const CBlockIndex*>
 PrepareUTXOSnapshot(
     Chainstate& chainstate,
     const std::function<void()>& interruption_point)
@@ -3399,7 +3399,7 @@ PrepareUTXOSnapshot(
     return {std::move(pcursor), *CHECK_NONFATAL(maybe_stats), tip};
 }
 
-UniValue WriteUTXOSnapshot(
+static UniValue WriteUTXOSnapshot(
     Chainstate& chainstate,
     CCoinsViewCursor* pcursor,
     CCoinsStats* maybe_stats,

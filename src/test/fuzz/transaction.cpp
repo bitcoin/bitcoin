@@ -22,7 +22,7 @@
 
 #include <cassert>
 
-void initialize_transaction()
+static void initialize_transaction()
 {
     SelectParams(ChainType::REGTEST);
 }

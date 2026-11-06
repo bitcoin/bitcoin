@@ -127,7 +127,7 @@ static void ThreadMapPort()
     } while (g_mapport_interrupt.sleep_for(PORT_MAPPING_RETRY_PERIOD));
 }
 
-void StartThreadMapPort()
+static void StartThreadMapPort()
 {
     if (!g_mapport_thread.joinable()) {
         assert(!g_mapport_interrupt);

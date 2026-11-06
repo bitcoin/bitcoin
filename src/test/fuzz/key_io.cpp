@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-void initialize_key_io()
+static void initialize_key_io()
 {
     static ECC_Context ecc_context{};
     SelectParams(ChainType::MAIN);

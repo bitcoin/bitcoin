@@ -765,7 +765,7 @@ BOOST_AUTO_TEST_CASE(test_ToIntegral)
     BOOST_CHECK(!ToIntegral<uint8_t>("256"));
 }
 
-int64_t atoi64_legacy(const std::string& str)
+static int64_t atoi64_legacy(const std::string& str)
 {
     return strtoll(str.c_str(), nullptr, 10);
 }

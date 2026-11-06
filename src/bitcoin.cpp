@@ -57,8 +57,8 @@ struct CommandLine {
     std::vector<const char*> args;
 };
 
-CommandLine ParseCommandLine(int argc, char* argv[]);
-bool UseMultiprocess(const CommandLine& cmd);
+static CommandLine ParseCommandLine(int argc, char* argv[]);
+static bool UseMultiprocess(const CommandLine& cmd);
 static void ExecCommand(const std::vector<const char*>& args, std::string_view argv0);
 
 int main(int argc, char* argv[])
@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
     return EXIT_SUCCESS;
 }
 
-CommandLine ParseCommandLine(int argc, char* argv[])
+static CommandLine ParseCommandLine(int argc, char* argv[])
 {
     CommandLine cmd;
     cmd.args.reserve(argc);
@@ -148,7 +148,7 @@ CommandLine ParseCommandLine(int argc, char* argv[])
     return cmd;
 }
 
-bool UseMultiprocess(const CommandLine& cmd)
+static bool UseMultiprocess(const CommandLine& cmd)
 {
     // If -m or -M options were explicitly specified, there is no need to
     // further parse arguments to determine which to use.

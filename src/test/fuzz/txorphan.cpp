@@ -31,7 +31,7 @@
 #include <utility>
 #include <vector>
 
-void initialize_orphanage()
+static void initialize_orphanage()
 {
     static const auto testing_setup = MakeNoLogFileContext();
 }

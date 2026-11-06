@@ -31,7 +31,7 @@
 #include <string>
 #include <vector>
 
-void initialize_key()
+static void initialize_key()
 {
     static ECC_Context ecc_context{};
     SelectParams(ChainType::REGTEST);

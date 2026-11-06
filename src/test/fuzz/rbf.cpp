@@ -30,13 +30,13 @@ const int NUM_ITERS = 10000;
 
 std::vector<COutPoint> g_outpoints;
 
-void initialize_rbf()
+static void initialize_rbf()
 {
     static const auto testing_setup = MakeNoLogFileContext<>();
     g_setup = testing_setup.get();
 }
 
-void initialize_package_rbf()
+static void initialize_package_rbf()
 {
     static const auto testing_setup = MakeNoLogFileContext<>();
     g_setup = testing_setup.get();

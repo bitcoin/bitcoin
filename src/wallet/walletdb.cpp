@@ -308,7 +308,7 @@ bool WalletBatch::EraseLockedUTXO(const COutPoint& output)
     return EraseIC(std::make_pair(DBKeys::LOCKED_UTXO, std::make_pair(output.hash, output.n)));
 }
 
-bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
+static bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
 {
     LOCK(pwallet->cs_wallet);
     try {
@@ -371,7 +371,7 @@ bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::stri
     return true;
 }
 
-bool LoadCryptedKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
+static bool LoadCryptedKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
 {
     LOCK(pwallet->cs_wallet);
     try {
@@ -410,7 +410,7 @@ bool LoadCryptedKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, st
     return true;
 }
 
-bool LoadEncryptionKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
+static bool LoadEncryptionKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
 {
     LOCK(pwallet->cs_wallet);
     try {
@@ -437,7 +437,7 @@ bool LoadEncryptionKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue,
     return true;
 }
 
-bool LoadHDChain(CWallet* pwallet, DataStream& ssValue, std::string& strErr)
+static bool LoadHDChain(CWallet* pwallet, DataStream& ssValue, std::string& strErr)
 {
     LOCK(pwallet->cs_wallet);
     try {
@@ -522,13 +522,7 @@ static LoadResult LoadRecords(CWallet* pwallet, DatabaseBatch& batch, const std:
     return LoadRecords(pwallet, batch, key, prefix, load_func);
 }
 
-bool HasLegacyRecords(CWallet& wallet)
-{
-    const auto& batch = wallet.GetDatabase().MakeBatch();
-    return HasLegacyRecords(wallet, *batch);
-}
-
-bool HasLegacyRecords(CWallet& wallet, DatabaseBatch& batch)
+static bool HasLegacyRecords(CWallet& wallet, DatabaseBatch& batch)
 {
     for (const auto& type : DBKeys::LEGACY_TYPES) {
         DataStream key;
@@ -549,6 +543,13 @@ bool HasLegacyRecords(CWallet& wallet, DatabaseBatch& batch)
     }
     return false;
 }
+
+bool HasLegacyRecords(CWallet& wallet)
+{
+    const auto& batch = wallet.GetDatabase().MakeBatch();
+    return HasLegacyRecords(wallet, *batch);
+}
+
 
 static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, int last_client) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {

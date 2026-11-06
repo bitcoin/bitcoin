@@ -16,9 +16,11 @@
 #include <cstdint>
 #include <deque>
 #include <functional>
+#include <map>
 #include <memory>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 inline constexpr uint16_t DEFAULT_TOR_SOCKS_PORT{9050};
@@ -32,6 +34,11 @@ inline constexpr int TOR_REPLY_UNRECOGNIZED{510};
 inline constexpr int TOR_REPLY_SYNTAX_ERROR{512}; //!< Syntax error in command argument
 
 CService DefaultOnionServiceTarget(uint16_t port);
+
+/** Split a Tor control reply line into its command and arguments. */
+std::pair<std::string, std::string> SplitTorReplyLine(const std::string& s);
+/** Parse a Tor control reply's KEY=VALUE arguments. */
+std::map<std::string, std::string> ParseTorReplyMapping(const std::string& s);
 
 /** Reply from Tor, can be single or multi-line */
 class TorControlReply

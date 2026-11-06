@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-void initialize_torcontrol()
+static void initialize_torcontrol()
 {
     static const auto testing_setup = MakeNoLogFileContext<>();
 }

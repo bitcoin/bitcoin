@@ -45,9 +45,6 @@ void SignTransactionResultToJSON(CMutableTransaction& mtx, bool complete, const 
   */
 void ParsePrevouts(const UniValue& prevTxsUnival, FlatSigningProvider* keystore, std::map<COutPoint, Coin>& coins);
 
-/** Normalize univalue-represented inputs and add them to the transaction */
-void AddInputs(CMutableTransaction& rawTx, const UniValue& inputs_in, bool rbf);
-
 /** Normalize univalue-represented outputs */
 UniValue NormalizeOutputs(const UniValue& outputs_in);
 

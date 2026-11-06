@@ -17,7 +17,7 @@
 #include <cassert>
 #include <string>
 
-void initialize_block()
+static void initialize_block()
 {
     SelectParams(ChainType::REGTEST);
 }

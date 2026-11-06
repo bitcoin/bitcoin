@@ -142,7 +142,7 @@ static std::optional<int64_t> GetSignedTxinWeight(const CWallet* wallet, const C
 }
 
 // txouts needs to be in the order of tx.vin
-TxSize CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts, const CCoinControl* coin_control)
+static TxSize CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts, const CCoinControl* coin_control)
 {
     // version + nLockTime + input count + output count
     int64_t weight = (4 + 4 + GetSizeOfCompactSize(tx.vin.size()) + GetSizeOfCompactSize(tx.vout.size())) * WITNESS_SCALE_FACTOR;
@@ -521,7 +521,12 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     return result;
 }
 
-const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const COutPoint& outpoint)
+/**
+ * Find non-change parent output.
+ */
+static const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const COutPoint& outpoint) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+
+static const CTxOut& FindNonChangeParentOutput(const CWallet& wallet, const COutPoint& outpoint)
 {
     AssertLockHeld(wallet.cs_wallet);
     const CWalletTx* wtx{Assert(wallet.GetWalletTx(outpoint.hash))};
@@ -696,6 +701,22 @@ FilteredOutputGroups GroupOutputs(const CWallet& wallet,
 // Returns true if the result contains an error and the message is not empty
 static bool HasErrorMsg(const util::Result<SelectionResult>& res) { return !util::ErrorString(res).empty(); }
 
+/**
+ * Attempt to find a valid input set that meets the provided eligibility filter and target.
+ * Multiple coin selection algorithms will be run and the input set that produces the least waste
+ * (according to the waste metric) will be chosen.
+ *
+ * @param[in]  chain                     The chain interface to get information on bump fees for unconfirmed UTXOs
+ * @param[in]  nTargetValue              The target value
+ * @param[in]  groups                    The struct containing the outputs grouped by script and divided by (1) positive only outputs and (2) all outputs (positive + negative).
+ * @param[in]  coin_selection_params     Parameters for the coin selection
+ * returns                               If successful, a SelectionResult containing the input set
+ *                                       If failed, returns (1) an empty error message if the target was not reached (general "Insufficient funds")
+ *                                                  or (2) a specific error message if there was something particularly wrong (e.g. a selection
+ *                                                  result that surpassed the tx max weight size).
+ */
+static util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, const CAmount& nTargetValue, Groups& groups, const CoinSelectionParams& coin_selection_params);
+
 util::Result<SelectionResult> AttemptSelection(interfaces::Chain& chain, const CAmount& nTargetValue, OutputGroupTypeMap& groups,
                                const CoinSelectionParams& coin_selection_params, bool allow_mixed_output_types)
 {
@@ -723,7 +744,7 @@ util::Result<SelectionResult> AttemptSelection(interfaces::Chain& chain, const C
     return util::Error();
 };
 
-util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, const CAmount& nTargetValue, Groups& groups, const CoinSelectionParams& coin_selection_params)
+static util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, const CAmount& nTargetValue, Groups& groups, const CoinSelectionParams& coin_selection_params)
 {
     // Vector of results. We will choose the best one based on waste.
     std::vector<SelectionResult> results;
@@ -809,6 +830,21 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
     return *std::min_element(results.begin(), results.end());
 }
 
+/**
+ * Select a set of coins such that nTargetValue is met; never select unconfirmed coins if they are not ours
+ * @param[in]   wallet                 The wallet which provides data necessary to spend the selected coins
+ * @param[in]   available_coins        The struct of coins, organized by OutputType, available for selection prior to filtering
+ * @param[in]   nTargetValue           The target value
+ * @param[in]   coin_selection_params  Parameters for this coin selection such as feerates, whether to avoid partial spends,
+ *                                     and whether to subtract the fee from the outputs.
+ * returns                             If successful, a SelectionResult containing the selected coins
+ *                                     If failed, returns (1) an empty error message if the target was not reached (general "Insufficient funds")
+ *                                                or (2) an specific error message if there was something particularly wrong (e.g. a selection
+ *                                                result that surpassed the tx max weight size).
+ */
+static util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, CoinsResult& available_coins, const CAmount& nTargetValue,
+                 const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+
 util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& available_coins, const CoinsResult& pre_set_inputs,
                                           const CAmount& nTargetValue, const CCoinControl& coin_control,
                                           const CoinSelectionParams& coin_selection_params)
@@ -867,7 +903,7 @@ util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& av
     return op_selection_result;
 }
 
-util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, CoinsResult& available_coins, const CAmount& value_to_select, const CoinSelectionParams& coin_selection_params)
+static util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, CoinsResult& available_coins, const CAmount& value_to_select, const CoinSelectionParams& coin_selection_params)
 {
     // Try to enforce a mixture of cluster limits and ancestor/descendant limits on transactions we create by limiting
     // the ancestors and the maximum cluster count of any UTXO we use. We use the ancestor/descendant limits, which are
@@ -1048,12 +1084,12 @@ void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
     }
 }
 
-uint64_t GetSerializeSizeForRecipient(const CRecipient& recipient)
+static uint64_t GetSerializeSizeForRecipient(const CRecipient& recipient)
 {
     return ::GetSerializeSize(CTxOut(recipient.nAmount, GetScriptForDestination(recipient.dest)));
 }
 
-bool IsDust(const CRecipient& recipient, const CFeeRate& dustRelayFee)
+static bool IsDust(const CRecipient& recipient, const CFeeRate& dustRelayFee)
 {
     return ::IsDust(CTxOut(recipient.nAmount, GetScriptForDestination(recipient.dest)), dustRelayFee);
 }

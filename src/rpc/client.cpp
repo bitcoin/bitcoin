@@ -426,7 +426,7 @@ static UniValue Parse(std::string_view raw, ParamFormat format = ParamFormat::JS
 
 namespace rpc_convert
 {
-const CRPCConvertParam* FromPosition(std::string_view method, size_t pos)
+static const CRPCConvertParam* FromPosition(std::string_view method, size_t pos)
 {
     auto it = std::ranges::find_if(vRPCConvertParams, [&](const auto& p) {
         return p.methodName == method && p.paramIdx == static_cast<int>(pos);
@@ -435,7 +435,7 @@ const CRPCConvertParam* FromPosition(std::string_view method, size_t pos)
     return it == std::end(vRPCConvertParams) ? nullptr : &*it;
 }
 
-const CRPCConvertParam* FromName(std::string_view method, std::string_view name)
+static const CRPCConvertParam* FromName(std::string_view method, std::string_view name)
 {
     auto it = std::ranges::find_if(vRPCConvertParams, [&](const auto& p) {
         return p.methodName == method && p.paramName == name;

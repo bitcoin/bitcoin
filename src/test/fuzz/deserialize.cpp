@@ -38,7 +38,7 @@
 using kernel::CBlockFileInfo;
 using node::SnapshotMetadata;
 
-void initialize_deserialize()
+static void initialize_deserialize()
 {
     static const auto testing_setup = MakeNoLogFileContext<>();
 }

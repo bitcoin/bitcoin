@@ -20,6 +20,7 @@ class CBlockIndex;
 class CChain;
 class UniValue;
 class AutoFile;
+class RPCMethod;
 class uint256;
 enum class TxVerbosity;
 
@@ -61,5 +62,9 @@ UniValue CreateUTXOSnapshot(
 //! Return height of highest block that has been pruned, or std::nullopt if no blocks have been pruned
 std::optional<int> GetPruneHeight(const node::BlockManager& blockman, const CChain& chain) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 void CheckBlockDataAvailability(node::BlockManager& blockman, const CBlockIndex& blockindex, bool check_for_undo) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+//! Also used by the REST interface
+RPCMethod getblockchaininfo();
+RPCMethod getdeploymentinfo();
 
 #endif // BITCOIN_RPC_BLOCKCHAIN_H
