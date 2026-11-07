@@ -40,16 +40,37 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     CScript garbage;
     for (unsigned int i = 0; i < 128; i++)
         garbage.push_back('X');
-    CMutableTransaction tx;
-    tx.vin.resize(1);
-    tx.vin[0].scriptSig = garbage;
-    tx.vout.resize(1);
-    tx.vout[0].nValue=0LL;
-    CFeeRate baseRate(basefee, GetVirtualTransactionSize(CTransaction(tx)));
+    const auto make_tx{[&](uint32_t prevout_n) {
+        CMutableTransaction tx;
+        tx.vin = {
+            CTxIn{COutPoint{Txid{}, prevout_n}, garbage},
+        };
+        tx.vout = {
+            CTxOut{0, CScript{}},
+        };
+        return MakeTransactionRef(tx);
+    }};
+    CFeeRate baseRate(basefee, GetVirtualTransactionSize(*make_tx(0)));
 
     // Create a fake block
     std::vector<RemovedMempoolTransactionInfo> block_txs;
     int blocknum = 0;
+
+    const auto add_tx{[&](int j, int k) {
+        const CTransactionRef tx{make_tx(10000*blocknum+100*j+k)}; // make transaction unique
+        CTxMemPoolEntry tx_entry{entry.Fee(feeV[j]).Time(Now<NodeSeconds>()).Height(blocknum).FromTx(tx)};
+        const int64_t virtual_size = GetVirtualTransactionSize(*tx);
+        const NewMempoolTransactionInfo tx_info{NewMempoolTransactionInfo(tx,
+                                                                          feeV[j],
+                                                                          virtual_size,
+                                                                          entry.nHeight,
+                                                                          /*mempool_limit_bypassed=*/false,
+                                                                          /*submitted_in_package=*/false,
+                                                                          /*chainstate_is_current=*/true,
+                                                                          /*has_no_mempool_parents=*/true)};
+        feeEst.processTransaction(tx_info);
+        return tx_entry;
+    }};
 
     // Loop through 200 blocks
     // At a decay .9952 and 4 fee transactions per block
@@ -57,19 +78,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     while (blocknum < 200) {
         for (int j = 0; j < 10; j++) { // For each fee
             for (int k = 0; k < 4; k++) { // add 4 fee txs
-                tx.vin[0].prevout.n = 10000*blocknum+100*j+k; // make transaction unique
-                // Simulate the tx being added to the mempool by calling processTransaction(tx_info)
-                mempool_txs[j].emplace_back(entry.Fee(feeV[j]).Time(Now<NodeSeconds>()).Height(blocknum).FromTx(tx));
-                const int64_t virtual_size = GetVirtualTransactionSize(*MakeTransactionRef(tx));
-                const NewMempoolTransactionInfo tx_info{NewMempoolTransactionInfo(MakeTransactionRef(tx),
-                                                                                  feeV[j],
-                                                                                  virtual_size,
-                                                                                  entry.nHeight,
-                                                                                  /*mempool_limit_bypassed=*/false,
-                                                                                  /*submitted_in_package=*/false,
-                                                                                  /*chainstate_is_current=*/true,
-                                                                                  /*has_no_mempool_parents=*/true)};
-                feeEst.processTransaction(tx_info);
+                mempool_txs[j].push_back(add_tx(j, k));
             }
         }
         //Create blocks where higher fee txs are included more often
@@ -138,19 +147,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     while (blocknum < 265) {
         for (int j = 0; j < 10; j++) { // For each fee multiple
             for (int k = 0; k < 4; k++) { // add 4 fee txs
-                tx.vin[0].prevout.n = 10000*blocknum+100*j+k;
-                // Simulate the tx being added to the mempool by calling processTransaction(tx_info)
-                mempool_txs[j].emplace_back(entry.Fee(feeV[j]).Time(Now<NodeSeconds>()).Height(blocknum).FromTx(tx));
-                const int64_t virtual_size = GetVirtualTransactionSize(*MakeTransactionRef(tx));
-                const NewMempoolTransactionInfo tx_info{NewMempoolTransactionInfo(MakeTransactionRef(tx),
-                                                                                  feeV[j],
-                                                                                  virtual_size,
-                                                                                  entry.nHeight,
-                                                                                  /*mempool_limit_bypassed=*/false,
-                                                                                  /*submitted_in_package=*/false,
-                                                                                  /*chainstate_is_current=*/true,
-                                                                                  /*has_no_mempool_parents=*/true)};
-                feeEst.processTransaction(tx_info);
+                mempool_txs[j].push_back(add_tx(j, k));
             }
         }
         feeEst.processBlock(block_txs, ++blocknum);
@@ -183,22 +180,9 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     while (blocknum < 665) {
         for (int j = 0; j < 10; j++) { // For each fee multiple
             for (int k = 0; k < 4; k++) { // add 4 fee txs
-                tx.vin[0].prevout.n = 10000*blocknum+100*j+k;
                 // These txs are mined in the same block, so there is no need to
                 // retain them in mempool_txs; use a local entry to build block_txs.
-                const CTxMemPoolEntry tx_entry{entry.Fee(feeV[j]).Time(Now<NodeSeconds>()).Height(blocknum).FromTx(tx)};
-                const int64_t virtual_size = GetVirtualTransactionSize(*MakeTransactionRef(tx));
-                const NewMempoolTransactionInfo tx_info{NewMempoolTransactionInfo(MakeTransactionRef(tx),
-                                                                                  feeV[j],
-                                                                                  virtual_size,
-                                                                                  entry.nHeight,
-                                                                                  /*mempool_limit_bypassed=*/false,
-                                                                                  /*submitted_in_package=*/false,
-                                                                                  /*chainstate_is_current=*/true,
-                                                                                  /*has_no_mempool_parents=*/true)};
-
-                feeEst.processTransaction(tx_info);
-                block_txs.emplace_back(tx_entry);
+                block_txs.emplace_back(add_tx(j, k));
             }
         }
 
