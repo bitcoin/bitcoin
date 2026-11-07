@@ -132,22 +132,14 @@ FUZZ_TARGET(key, .init = initialize_key)
         assert(tx_multisig_script.HasValidOps());
         assert(tx_multisig_script.size() == 37);
 
-        FillableSigningProvider fillable_signing_provider;
-        assert(!IsSegWitOutput(fillable_signing_provider, tx_pubkey_script));
-        assert(!IsSegWitOutput(fillable_signing_provider, tx_multisig_script));
-        assert(fillable_signing_provider.GetKeys().size() == 0);
-        assert(!fillable_signing_provider.HaveKey(pubkey.GetID()));
+        FlatSigningProvider signing_provider;
+        assert(!IsSegWitOutput(signing_provider, tx_pubkey_script));
+        assert(!IsSegWitOutput(signing_provider, tx_multisig_script));
+        assert(!signing_provider.HaveKey(pubkey.GetID()));
 
-        const bool ok_add_key = fillable_signing_provider.AddKey(key);
+        const bool ok_add_key = signing_provider.keys.emplace(key.GetPubKey().GetID(), key).second;
         assert(ok_add_key);
-        assert(fillable_signing_provider.HaveKey(pubkey.GetID()));
-
-        FillableSigningProvider fillable_signing_provider_pub;
-        assert(!fillable_signing_provider_pub.HaveKey(pubkey.GetID()));
-
-        const bool ok_add_key_pubkey = fillable_signing_provider_pub.AddKeyPubKey(key, pubkey);
-        assert(ok_add_key_pubkey);
-        assert(fillable_signing_provider_pub.HaveKey(pubkey.GetID()));
+        assert(signing_provider.HaveKey(pubkey.GetID()));
 
         TxoutType which_type_tx_pubkey;
         const bool is_standard_tx_pubkey = IsStandard(tx_pubkey_script, which_type_tx_pubkey);
@@ -188,20 +180,22 @@ FUZZ_TARGET(key, .init = initialize_key)
         CKeyID key_id = pubkey.GetID();
         assert(!key_id.IsNull());
         assert(key_id == CKeyID{key_id});
-        assert(key_id == GetKeyForDestination(fillable_signing_provider, tx_destination));
+        assert(key_id == GetKeyForDestination(signing_provider, tx_destination));
 
+        const bool ok_add_pubkey = signing_provider.pubkeys.emplace(key.GetPubKey().GetID(), key.GetPubKey()).second;
+        assert(ok_add_pubkey);
         CPubKey pubkey_out;
-        const bool ok_get_pubkey = fillable_signing_provider.GetPubKey(key_id, pubkey_out);
+        const bool ok_get_pubkey = signing_provider.GetPubKey(key_id, pubkey_out);
         assert(ok_get_pubkey);
 
         CKey key_out;
-        const bool ok_get_key = fillable_signing_provider.GetKey(key_id, key_out);
+        const bool ok_get_key = signing_provider.GetKey(key_id, key_out);
         assert(ok_get_key);
-        assert(fillable_signing_provider.GetKeys().size() == 1);
-        assert(fillable_signing_provider.HaveKey(key_id));
+        assert(signing_provider.keys.size() == 1);
+        assert(signing_provider.HaveKey(key_id));
 
         KeyOriginInfo key_origin_info;
-        const bool ok_get_key_origin = fillable_signing_provider.GetKeyOrigin(key_id, key_origin_info);
+        const bool ok_get_key_origin = signing_provider.GetKeyOrigin(key_id, key_origin_info);
         assert(!ok_get_key_origin);
     }
 
