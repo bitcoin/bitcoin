@@ -33,29 +33,21 @@ Wallet encryption may prevent unauthorized access. However, this significantly i
 
 Wallet encryption may also not protect against more sophisticated attacks. An attacker can, for example, obtain the password by installing a keylogger on the user's machine.
 
-After encrypting the wallet or changing the passphrase, a new backup needs to be created immediately. The reason is that the keypool is flushed and a new HD seed is generated after encryption. Any bitcoins received by the new seed cannot be recovered from the previous backups.
-
-The wallet's private key may be encrypted with the following command:
+Encrypting an existing wallet is deprecated and not recommended, if encryption is desired, creating a new wallet that is encrypted from creation is recommended. This is accompolished by invoking the `createwallet` RPC with a passphrase argument, for example:
 
 ```
-$ bitcoin-cli -rpcwallet="wallet-01" encryptwallet "passphrase"
+$ bitcoin-cli -named createwallet wallet_name="phillip" passphrase="dontlosethispassphrase"
 ```
 
-Once encrypted, the passphrase can be changed with the `walletpassphrasechange` command.
+The passphrase of an encrypted wallet can be changed with the `walletpassphrasechange` command:
 
 ```
-$ bitcoin-cli -rpcwallet="wallet-01" walletpassphrasechange "oldpassphrase" "newpassphrase"
+$ bitcoin-cli -rpcwallet="phillip" walletpassphrasechange "oldpassphrase" "newpassphrase"
 ```
 
 The argument passed to `-rpcwallet` is the name of the wallet to be encrypted.
 
-Only the wallet's private key is encrypted. All other wallet information, such as transactions, is still visible.
-
-The wallet's private key can also be encrypted in the `createwallet` command via the `passphrase` argument:
-
-```
-$ bitcoin-cli -named createwallet wallet_name="wallet-01" passphrase="passphrase"
-```
+Only the wallet's private keys are encrypted. All other wallet information, like transactions and public keys, is still visible.
 
 Note that if the passphrase is lost, all the coins in the wallet will also be lost forever.
 
