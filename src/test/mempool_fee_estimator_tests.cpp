@@ -27,14 +27,13 @@ BOOST_FIXTURE_TEST_SUITE(mempool_fee_estimator_tests, TestingSetup)
 static inline CTransactionRef MakeRandomTx()
 {
     auto rng = FastRandomContext();
-    auto tx = CMutableTransaction();
-    tx.vin.resize(1);
-    tx.vout.resize(1);
-    tx.vin[0].prevout.hash = Txid::FromUint256(rng.rand256());
-    tx.vin[0].prevout.n = 0;
-    tx.vin[0].scriptSig << OP_TRUE;
-    tx.vout[0].scriptPubKey = CScript() << OP_TRUE;
-    tx.vout[0].nValue = COIN;
+    CMutableTransaction tx;
+    tx.vin = {
+        CTxIn{COutPoint{Txid::FromUint256(rng.rand256()), 0}, CScript{} << OP_TRUE},
+    };
+    tx.vout = {
+        CTxOut{COIN, CScript{} << OP_TRUE},
+    };
     return MakeTransactionRef(tx);
 }
 
