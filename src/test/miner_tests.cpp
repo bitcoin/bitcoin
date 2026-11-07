@@ -332,14 +332,10 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
 static CMutableTransaction CreateBigSigOpsTx(const COutPoint& input, unsigned int num_outputs)
 {
     CMutableTransaction tx;
-    tx.vin.resize(1);
-    tx.vin[0].prevout = input;
-    tx.vin[0].scriptSig = CScript() << OP_1;
-    tx.vout.resize(num_outputs);
-    for (auto& out : tx.vout) {
-        out.nValue = 0;
-        out.scriptPubKey = CScript() << OP_0 << OP_0 << OP_0 << OP_NOP << OP_CHECKMULTISIG << OP_1;
-    }
+    tx.vin = {
+        CTxIn{input, CScript{} << OP_1},
+    };
+    tx.vout.assign(num_outputs, CTxOut{0, CScript{} << OP_0 << OP_0 << OP_0 << OP_NOP << OP_CHECKMULTISIG << OP_1});
     return tx;
 }
 
@@ -349,17 +345,10 @@ std::vector<CTransactionRef> CreateBigSigOpsCluster(const CTransactionRef& first
 
     CMutableTransaction tx;
     // block sigops > limit: 1000 CHECKMULTISIG + 1
-    tx.vin.resize(1);
-    // NOTE: OP_NOP is used to force 20 SigOps for the CHECKMULTISIG
-    tx.vin[0].scriptSig = CScript() << OP_0 << OP_0 << OP_CHECKSIG << OP_1;
-    tx.vin[0].prevout.hash = first_tx->GetHash();
-    tx.vin[0].prevout.n = 0;
-    tx.vout.resize(50);
-    for (auto &out : tx.vout) {
-        out.nValue = first_tx->vout[0].nValue / 50;
-        out.scriptPubKey = CScript() << OP_1;
-    }
-
+    tx.vin = {
+        CTxIn{COutPoint{first_tx->GetHash(), 0}, CScript{} << OP_0 << OP_0 << OP_CHECKSIG << OP_1},
+    };
+    tx.vout.assign(50, CTxOut{first_tx->vout[0].nValue / 50, CScript{} << OP_1});
     tx.vout[0].nValue -= CENT;
     CTransactionRef parent_tx = MakeTransactionRef(tx);
     ret.push_back(parent_tx);
