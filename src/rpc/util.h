@@ -395,10 +395,6 @@ struct RPCResult {
 
     /** Append the sections of the result. */
     void ToSections(Sections& sections, OuterType outer_type = OuterType::NONE, int current_indent = 0) const;
-    /** Return the type string of the result when it is in an object (dict). */
-    std::string ToStringObj() const;
-    /** Return the description string, including the result type. */
-    std::string ToDescriptionString() const;
     /** Check whether the result JSON type matches.
      * Returns true if type matches, or object describing error(s) if not.
      */
