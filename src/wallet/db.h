@@ -135,10 +135,6 @@ public:
     /** Open the database if it is not already opened. */
     virtual void Open() = 0;
 
-    /** Rewrite the entire database on disk
-     */
-    virtual bool Rewrite() = 0;
-
     /** Back up the entire database to a file.
      */
     virtual bool Backup(const std::string& strDest) const = 0;
