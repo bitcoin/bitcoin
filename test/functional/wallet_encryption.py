@@ -8,6 +8,11 @@ import time
 import os
 import subprocess
 
+try:
+    import sqlite3
+except ImportError:
+    pass
+
 from test_framework.address import base58_to_byte
 from test_framework.messages import hash256
 from test_framework.test_framework import BitcoinTestFramework
@@ -26,6 +31,7 @@ class WalletEncryptionTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+        self.skip_if_no_py_sqlite3()
 
     def run_test(self):
         passphrase = "WalletPassphrase"
@@ -68,6 +74,16 @@ class WalletEncryptionTest(BitcoinTestFramework):
             wallet_bytes = f.read()
             for priv in privkeys:
                 assert_equal(wallet_bytes.find(priv), -1)
+
+        # Retrieve the mkey record data
+        conn = sqlite3.connect(wallet_db)
+        with conn:
+            rows = conn.execute("SELECT value FROM main WHERE key = ?", (b'\x04mkey\x01\x00\x00\x00',))
+            mkeys = [v for v in rows]
+            assert_equal(len(mkeys), 1)
+            mkey_data = mkeys[0][0]
+        conn.close()
+
         self.nodes[0].loadwallet(self.default_wallet_name)
 
         # Check that walletpassphrase works
@@ -94,6 +110,13 @@ class WalletEncryptionTest(BitcoinTestFramework):
         with WalletUnlock(self.nodes[0], passphrase2):
             sig = self.nodes[0].signmessage(address, msg)
             assert self.nodes[0].verifymessage(address, sig, msg)
+
+        # Check that original passphrase does not live anywhere in the wallet file
+        self.nodes[0].unloadwallet(self.default_wallet_name)
+        with open(wallet_db, "rb") as f:
+            wallet_bytes = f.read()
+            assert_equal(wallet_bytes.find(mkey_data), -1)
+        self.nodes[0].loadwallet(self.default_wallet_name)
 
         # Test timeout bounds
         assert_raises_rpc_error(-8, "Timeout cannot be negative.", self.nodes[0].walletpassphrase, passphrase2, -10)
