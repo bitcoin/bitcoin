@@ -5,6 +5,8 @@
 #ifndef BITCOIN_CRYPTO_HKDF_SHA256_32_H
 #define BITCOIN_CRYPTO_HKDF_SHA256_32_H
 
+#include <crypto/hmac_sha256.h>
+
 #include <cstddef>
 #include <span>
 #include <string>
@@ -13,7 +15,7 @@
 class CHKDF_HMAC_SHA256_L32
 {
 private:
-    unsigned char m_prk[32];
+    CHMAC_SHA256 m_hmac; //!< Prepared HMAC state, copied for each expansion.
     static constexpr size_t OUTPUT_SIZE{32};
 
 public:
