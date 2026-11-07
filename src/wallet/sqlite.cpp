@@ -349,13 +349,6 @@ void SQLiteDatabase::Open(int additional_flags)
     }
 }
 
-bool SQLiteDatabase::Rewrite()
-{
-    // Rewrite the database using the VACUUM command: https://sqlite.org/lang_vacuum.html
-    int ret = sqlite3_exec(m_db, "VACUUM", nullptr, nullptr, nullptr);
-    return ret == SQLITE_OK;
-}
-
 bool SQLiteDatabase::Backup(const std::string& dest) const
 {
     sqlite3* db_copy;

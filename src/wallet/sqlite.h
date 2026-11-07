@@ -147,9 +147,6 @@ public:
     /** Close the database */
     void Close() override;
 
-    /** Rewrite the entire database on disk */
-    bool Rewrite() override;
-
     /** Back up the entire database to a file.
      */
     bool Backup(const std::string& dest) const override;
