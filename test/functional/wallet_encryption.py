@@ -5,13 +5,16 @@
 """Test Wallet encryption"""
 
 import time
+import os
 import subprocess
 
+from test_framework.address import base58_to_byte
 from test_framework.messages import hash256
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_raises_rpc_error,
     assert_equal,
+    assert_greater_than,
 )
 from test_framework.wallet_util import WalletUnlock
 
@@ -36,6 +39,19 @@ class WalletEncryptionTest(BitcoinTestFramework):
         assert_raises_rpc_error(-15, "Error: running with an unencrypted wallet, but walletpassphrase was called", self.nodes[0].walletpassphrase, 'ff', 1)
         assert_raises_rpc_error(-15, "Error: running with an unencrypted wallet, but walletpassphrasechange was called.", self.nodes[0].walletpassphrasechange, 'ff', 'ff')
 
+        # Get unencrypted private keys and verify that they exist in the database
+        privkeys = []
+        for hdkey in self.nodes[0].gethdkeys(active_only=False, private=True):
+            xprv = hdkey["xprv"]
+            privkeys.append(base58_to_byte(xprv)[0][-32:])
+        self.nodes[0].unloadwallet(self.default_wallet_name)
+        wallet_db = os.path.join(self.nodes[0].wallets_path, self.default_wallet_name, "wallet.dat")
+        with open(wallet_db, "rb") as f:
+            wallet_bytes = f.read()
+            for priv in privkeys:
+                assert_greater_than(wallet_bytes.find(priv), -1)
+        self.nodes[0].loadwallet(self.default_wallet_name)
+
         # Encrypt the wallet
         assert_raises_rpc_error(-8, "passphrase cannot be empty", self.nodes[0].encryptwallet, '')
         self.nodes[0].encryptwallet(passphrase)
@@ -45,6 +61,14 @@ class WalletEncryptionTest(BitcoinTestFramework):
         assert_raises_rpc_error(-15, "Error: running with an encrypted wallet, but encryptwallet was called.", self.nodes[0].encryptwallet, 'ff')
         assert_raises_rpc_error(-8, "passphrase cannot be empty", self.nodes[0].walletpassphrase, '', 1)
         assert_raises_rpc_error(-8, "passphrase cannot be empty", self.nodes[0].walletpassphrasechange, '', 'ff')
+
+        # Check that no unencrypted private keys live anywhere in the wallet file
+        self.nodes[0].unloadwallet(self.default_wallet_name)
+        with open(wallet_db, "rb") as f:
+            wallet_bytes = f.read()
+            for priv in privkeys:
+                assert_equal(wallet_bytes.find(priv), -1)
+        self.nodes[0].loadwallet(self.default_wallet_name)
 
         # Check that walletpassphrase works
         self.nodes[0].walletpassphrase(passphrase, 2)
