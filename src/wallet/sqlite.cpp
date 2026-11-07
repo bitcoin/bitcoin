@@ -308,6 +308,9 @@ void SQLiteDatabase::Open(int additional_flags)
         SetPragma(m_db, "synchronous", "OFF", "Failed to set synchronous mode to OFF");
     }
 
+    // Enable secure_delete
+    SetPragma(m_db, "secure_delete", "ON", "Failed to enable secure_delete");
+
     // Make the table for our key-value pairs
     // First check that the main table exists
     sqlite3_stmt* check_main_stmt{nullptr};
