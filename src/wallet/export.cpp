@@ -92,8 +92,9 @@ util::Result<std::string> ExportWatchOnlyWallet(const CWallet& wallet, const fs:
             // Parse the descriptor
             FlatSigningProvider dummy_keys;
             std::string dummy_err;
-            std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_info.descriptor, dummy_keys, dummy_err, /*require_checksum=*/true);
-            CHECK_NONFATAL(descs.size() == 1); // All of our descriptors should be valid, and not multipath
+            std::unique_ptr<Descriptor> desc = Parse(desc_info.descriptor, dummy_keys, dummy_err, /*require_checksum=*/true);
+            CHECK_NONFATAL(desc); // All of our descriptors should be valid
+            CHECK_NONFATAL(!desc->IsMultipath()); // and not multipath
             CHECK_NONFATAL(dummy_keys.keys.size() == 0); // No private keys should be present in our exported descriptors
 
             // Get the range if there is one
@@ -104,7 +105,7 @@ util::Result<std::string> ExportWatchOnlyWallet(const CWallet& wallet, const fs:
                 range_end = desc_info.range->second;
             }
 
-            WalletDescriptor w_desc(std::move(descs.at(0)), desc_info.creation_time, range_start, range_end, desc_info.next_index);
+            WalletDescriptor w_desc(std::move(desc), desc_info.creation_time, range_start, range_end, desc_info.next_index);
 
             // For descriptors that cannot self expand (i.e. needs private keys or cache), set the cache
             if (!w_desc.descriptor->CanSelfExpand()) {
