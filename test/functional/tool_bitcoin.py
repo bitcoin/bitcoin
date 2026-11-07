@@ -68,51 +68,39 @@ class ToolBitcoinTest(BitcoinTestFramework):
                                 capture_output=True, text=True)
         return result.returncode, result.stdout, result.stderr
 
-    def test_version(self):
-        self.log.info("Ensure bitcoin -v and --version report the version")
-        for arg in ["-v", "--version"]:
-            returncode, stdout, stderr = self.run_wrapper(arg)
-            assert_equal(returncode, 0)
+    def test_wrapper_args(self):
+        self.log.info("Ensure bitcoin handles version, help, and invalid arguments")
+        for args, expected_returncode in [
+            (["-v"], 0),
+            (["--version"], 0),
+            (["-h"], 0),
+            (["--help"], 0),
+            (["help"], 0),
+            ([], 1),
+        ]:
+            returncode, stdout, stderr = self.run_wrapper(*args)
+            assert_equal(returncode, expected_returncode)
             assert_equal(stderr, "")
-            assert "version" in stdout, f"Unexpected output from bitcoin {arg}: {stdout!r}"
+            if args in (["-v"], ["--version"]):
+                assert "version" in stdout, f"Unexpected output from bitcoin {args}: {stdout!r}"
+            else:
+                assert stdout.startswith("Usage:"), f"Unexpected output from bitcoin {args}: {stdout!r}"
+                if args:
+                    assert "Commands:" in stdout
 
-    def test_help(self):
-        self.log.info("Ensure bitcoin -h, --help and help print the full help")
-        for arg in ["-h", "--help", "help"]:
+        for arg, expected_error in [
+            ("nonexistentcommand", "Unrecognized command: 'nonexistentcommand'"),
+            ("-nonexistentoption", "Unknown option: -nonexistentoption"),
+        ]:
             returncode, stdout, stderr = self.run_wrapper(arg)
-            assert_equal(returncode, 0)
-            assert_equal(stderr, "")
-            assert stdout.startswith("Usage:"), f"Unexpected output from bitcoin {arg}: {stdout!r}"
-            assert "Commands:" in stdout
-
-    def test_no_command(self):
-        self.log.info("Ensure bitcoin without a command prints usage and fails")
-        returncode, stdout, stderr = self.run_wrapper()
-        assert_equal(returncode, 1)
-        assert_equal(stderr, "")
-        assert stdout.startswith("Usage:"), f"Unexpected output from bitcoin: {stdout!r}"
-
-    def test_unrecognized(self):
-        self.log.info("Ensure bitcoin rejects an unknown command and an unknown option")
-        command = "nonexistentcommand"
-        returncode, stdout, stderr = self.run_wrapper(command)
-        assert_equal(returncode, 1)
-        assert_equal(stdout, "")
-        assert f"Unrecognized command: '{command}'" in stderr, f"Unexpected stderr: {stderr!r}"
-
-        option = "-nonexistentoption"
-        returncode, stdout, stderr = self.run_wrapper(option)
-        assert_equal(returncode, 1)
-        assert_equal(stdout, "")
-        assert f"Unknown option: {option}" in stderr, f"Unexpected stderr: {stderr!r}"
+            assert_equal(returncode, 1)
+            assert_equal(stdout, "")
+            assert expected_error in stderr, f"Unexpected stderr from bitcoin {arg}: {stderr!r}"
 
     def run_test(self):
         node = self.nodes[0]
 
-        self.test_version()
-        self.test_help()
-        self.test_no_command()
-        self.test_unrecognized()
+        self.test_wrapper_args()
 
         self.log.info("Ensure bitcoin node command invokes bitcoind by default")
         self.test_args([], [], expect_exe="bitcoind")
