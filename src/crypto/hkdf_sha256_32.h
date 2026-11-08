@@ -6,6 +6,7 @@
 #define BITCOIN_CRYPTO_HKDF_SHA256_32_H
 
 #include <cstddef>
+#include <span>
 #include <string>
 
 /** A rfc5869 HKDF implementation with HMAC_SHA256 and fixed key output length of 32 bytes (L=32) */
@@ -17,7 +18,7 @@ private:
 
 public:
     CHKDF_HMAC_SHA256_L32(const unsigned char* ikm, size_t ikmlen, const std::string& salt);
-    void Expand32(const std::string& info, unsigned char hash[OUTPUT_SIZE]);
+    void Expand32(const std::string& info, std::span<std::byte, OUTPUT_SIZE> hash) const;
 };
 
 #endif // BITCOIN_CRYPTO_HKDF_SHA256_32_H

@@ -23,6 +23,8 @@
 #include <util/strencodings.h>
 
 #include <algorithm>
+#include <array>
+#include <cstddef>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
@@ -350,7 +352,7 @@ void TestHKDF_SHA256_32(const std::string &ikm_hex, const std::string &salt_hex,
     std::string info_stringified(reinterpret_cast<char*>(info.data()), info.size());
 
     CHKDF_HMAC_SHA256_L32 hkdf32(initial_key_material.data(), initial_key_material.size(), salt_stringified);
-    unsigned char out[32];
+    std::array<std::byte, 32> out;
     hkdf32.Expand32(info_stringified, out);
     BOOST_CHECK(HexStr(out) == okm_check_hex);
 }
