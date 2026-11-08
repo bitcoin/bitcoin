@@ -11,7 +11,6 @@
 #include <key.h>
 #include <pubkey.h>
 #include <random.h>
-#include <span.h>
 #include <support/cleanse.h>
 #include <uint256.h>
 
@@ -20,6 +19,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <span>
 #include <string>
 
 BIP324Cipher::BIP324Cipher(const CKey& key, std::span<const std::byte> ent32) noexcept
@@ -42,7 +42,7 @@ void BIP324Cipher::Initialize(const EllSwiftPubKey& their_pubkey, bool initiator
 
     // Derive encryption keys from shared secret, and initialize stream ciphers and AEADs.
     bool side = (initiator != self_decrypt);
-    CHKDF_HMAC_SHA256_L32 hkdf(UCharCast(ecdh_secret.data()), ecdh_secret.size(), salt);
+    CHKDF_HMAC_SHA256_L32 hkdf{ecdh_secret, salt};
     std::array<std::byte, 32> hkdf_32_okm;
     hkdf.Expand32("initiator_L", hkdf_32_okm);
     (side ? m_send_l_cipher : m_recv_l_cipher).emplace(hkdf_32_okm, REKEY_INTERVAL);

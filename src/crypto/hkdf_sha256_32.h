@@ -17,7 +17,7 @@ private:
     static constexpr size_t OUTPUT_SIZE{32};
 
 public:
-    CHKDF_HMAC_SHA256_L32(const unsigned char* ikm, size_t ikmlen, const std::string& salt);
+    CHKDF_HMAC_SHA256_L32(std::span<const std::byte> ikm, const std::string& salt);
     void Expand32(const std::string& info, std::span<std::byte, OUTPUT_SIZE> hash) const;
 };
 

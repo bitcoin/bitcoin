@@ -12,9 +12,14 @@
 #include <cstdint>
 #include <span>
 
-CHKDF_HMAC_SHA256_L32::CHKDF_HMAC_SHA256_L32(const unsigned char* ikm, size_t ikmlen, const std::string& salt)
+static void PrepareHMAC(std::span<const std::byte> ikm, const std::string& salt, std::span<uint8_t, CHMAC_SHA256::OUTPUT_SIZE> prk)
 {
-    CHMAC_SHA256((const unsigned char*)salt.data(), salt.size()).Write(ikm, ikmlen).Finalize(m_prk);
+    CHMAC_SHA256{UCharCast(salt.data()), salt.size()}.Write(UCharCast(ikm.data()), ikm.size()).Finalize(prk.data());
+}
+
+CHKDF_HMAC_SHA256_L32::CHKDF_HMAC_SHA256_L32(std::span<const std::byte> ikm, const std::string& salt)
+{
+    PrepareHMAC(ikm, salt, m_prk);
 }
 
 void CHKDF_HMAC_SHA256_L32::Expand32(const std::string& info, std::span<std::byte, OUTPUT_SIZE> hash) const

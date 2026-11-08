@@ -342,7 +342,7 @@ void TestFSChaCha20Poly1305(const std::string& plain_hex, const std::string& aad
 }
 
 void TestHKDF_SHA256_32(const std::string &ikm_hex, const std::string &salt_hex, const std::string &info_hex, const std::string &okm_check_hex) {
-    std::vector<unsigned char> initial_key_material = ParseHex(ikm_hex);
+    const auto initial_key_material{ParseHex<std::byte>(ikm_hex)};
     std::vector<unsigned char> salt = ParseHex(salt_hex);
     std::vector<unsigned char> info = ParseHex(info_hex);
 
@@ -351,7 +351,7 @@ void TestHKDF_SHA256_32(const std::string &ikm_hex, const std::string &salt_hex,
     std::string salt_stringified(reinterpret_cast<char*>(salt.data()), salt.size());
     std::string info_stringified(reinterpret_cast<char*>(info.data()), info.size());
 
-    CHKDF_HMAC_SHA256_L32 hkdf32(initial_key_material.data(), initial_key_material.size(), salt_stringified);
+    CHKDF_HMAC_SHA256_L32 hkdf32{initial_key_material, salt_stringified};
     std::array<std::byte, 32> out;
     hkdf32.Expand32(info_stringified, out);
     BOOST_CHECK(HexStr(out) == okm_check_hex);
