@@ -3,14 +3,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <span.h>
+
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
-#include <test/fuzz/util.h>
 
 #include <cstddef>
-#include <cstdint>
 #include <string>
-#include <vector>
 
 FUZZ_TARGET(span)
 {

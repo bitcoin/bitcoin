@@ -7,28 +7,42 @@
 
 #include <addrman.h>
 #include <addrman_impl.h>
+#include <crypto/siphash.h>
 #include <net.h>
-#include <net_permissions.h>
+#include <net_types.h>
 #include <netaddress.h>
 #include <netgroup.h>
 #include <node/connection_types.h>
-#include <node/eviction.h>
 #include <protocol.h>
+#include <random.h>
 #include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/util.h>
 #include <test/util/net.h>
-#include <test/util/time.h>
 #include <util/asmap.h>
 #include <util/sock.h>
+#include <util/time.h>
 
-#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
+#include <tuple>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
+#ifndef WIN32
+#include <sys/socket.h>
+#include <sys/types.h>
+#endif
+
+class FakeSteadyClock;
+enum class NetPermissionFlags : uint32_t;
 
 /**
  * Create a CNetAddr. It may have `addr.IsValid() == false`.

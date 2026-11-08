@@ -2,8 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <sync.h>
 #include <test/fuzz/util/reachability.h>
+
+#include <sync.h>
 #include <util/check.h>
 
 #include <compare>
@@ -14,6 +15,7 @@
 #include <map>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace {
 struct GoalId {

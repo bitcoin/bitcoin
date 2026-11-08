@@ -12,12 +12,14 @@
 #include <uint256.h>
 #include <util/check.h>
 
+#include <array>
 #include <bit>
-#include <cassert>
 #include <chrono>
 #include <concepts>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <span>
 #include <type_traits>
 #include <vector>
 

@@ -7,9 +7,11 @@
 
 #include <util/check.h>
 
+#include <algorithm>
 #include <cstring>
 #include <memory>
 #include <type_traits>
+#include <utility>
 
 /** Data structure largely mimicking std::deque, but using single preallocated ring buffer.
  *

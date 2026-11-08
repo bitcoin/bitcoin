@@ -3,7 +3,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <dbwrapper.h>
+
 #include <compat/byteswap.h>
+#include <leveldb/env.h>
+#include <leveldb/helpers/memenv/memenv.h>
 #include <random.h>
 #include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -11,18 +14,17 @@
 #include <test/fuzz/util.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
-#include <util/byte_units.h>
+#include <uint256.h>
 #include <util/check.h>
 #include <util/threadpool.h>
-
-#include <leveldb/env.h>
-#include <leveldb/helpers/memenv/memenv.h>
 
 #include <algorithm>
 #include <cstdint>
 #include <deque>
 #include <functional>
 #include <future>
+#include <ios>
+#include <iterator>
 #include <latch>
 #include <map>
 #include <memory>
@@ -32,6 +34,7 @@
 #include <span>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace {

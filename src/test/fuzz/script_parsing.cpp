@@ -8,6 +8,11 @@
 #include <util/byte_units.h>
 #include <util/string.h>
 
+#include <algorithm>
+#include <cstddef>
+#include <span>
+#include <string>
+
 using util::Split;
 
 FUZZ_TARGET(script_parsing)

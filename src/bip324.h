@@ -5,15 +5,15 @@
 #ifndef BITCOIN_BIP324_H
 #define BITCOIN_BIP324_H
 
-#include <array>
-#include <cstddef>
-#include <optional>
-
 #include <crypto/chacha20.h>
 #include <crypto/chacha20poly1305.h>
 #include <key.h>
 #include <pubkey.h>
-#include <span.h>
+
+#include <array>
+#include <cstddef>
+#include <optional>
+#include <span>
 
 inline constexpr unsigned BIP324_SHORTIDS_IMPLEMENTED{38};
 

@@ -5,7 +5,7 @@
 #include <crypto/muhash.h>
 
 #include <arith_uint256.h>
-#include <span.h>
+#include <crypto/common.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -14,6 +14,8 @@
 
 #include <algorithm>
 #include <array>
+#include <cstdint>
+#include <span>
 #include <vector>
 
 namespace {

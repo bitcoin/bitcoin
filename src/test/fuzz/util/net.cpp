@@ -8,23 +8,25 @@
 #include <netaddress.h>
 #include <node/protocol_version.h>
 #include <protocol.h>
+#include <serialize.h>
+#include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/util.h>
 #include <test/util/net.h>
+#include <test/util/time.h>
 #include <util/check.h>
 #include <util/sock.h>
 #include <util/time.h>
 
+#include <algorithm>
 #include <array>
 #include <cerrno>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-#include <ranges>
 #include <thread>
+#include <type_traits>
 #include <vector>
-
-class CNode;
 
 CNetAddr ConsumeNetAddr(FuzzedDataProvider& fuzzed_data_provider, FastRandomContext* rand) noexcept
 {

@@ -6,6 +6,9 @@
 #include <script/script.h>
 #include <test/fuzz/fuzz.h>
 
+#include <stdexcept>
+#include <string>
+
 FUZZ_TARGET(parse_script)
 {
     const std::string script_string(buffer.begin(), buffer.end());

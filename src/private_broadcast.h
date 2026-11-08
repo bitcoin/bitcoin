@@ -5,16 +5,23 @@
 #ifndef BITCOIN_PRIVATE_BROADCAST_H
 #define BITCOIN_PRIVATE_BROADCAST_H
 
-#include <net.h>
+#include <net_types.h>
+#include <netaddress.h>
 #include <primitives/transaction.h>
-#include <primitives/transaction_identifier.h>
 #include <sync.h>
+#include <uint256.h>
 #include <util/time.h>
 
+#include <cstddef>
 #include <optional>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
+
+// IWYU incorrectly suggest adding these forward declarations.
+// See https://github.com/include-what-you-use/include-what-you-use/pull/2142.
+// IWYU pragma: no_forward_declare PrivateBroadcast::CTransactionRefComp
+// IWYU pragma: no_forward_declare PrivateBroadcast::CTransactionRefHash
 
 /**
  * Store a list of transactions to be broadcast privately. Supports the following operations:

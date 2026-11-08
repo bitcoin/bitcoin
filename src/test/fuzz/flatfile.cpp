@@ -9,10 +9,8 @@
 #include <test/fuzz/util.h>
 #include <util/check.h>
 
-#include <cstdint>
 #include <optional>
 #include <string>
-#include <vector>
 
 FUZZ_TARGET(flatfile)
 {

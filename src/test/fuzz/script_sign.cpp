@@ -3,12 +3,17 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <coins.h>
 #include <key.h>
+#include <primitives/transaction.h>
 #include <psbt.h>
 #include <pubkey.h>
+#include <script/interpreter.h>
 #include <script/keyorigin.h>
+#include <script/script.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
+#include <serialize.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -19,10 +24,10 @@
 #include <util/translation.h>
 
 #include <cstdint>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <optional>
-#include <string>
 #include <vector>
 
 void initialize_script_sign()

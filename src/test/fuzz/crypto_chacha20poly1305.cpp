@@ -4,14 +4,13 @@
 
 #include <crypto/chacha20poly1305.h>
 #include <random.h>
-#include <span.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
-#include <test/fuzz/util.h>
 #include <util/check.h>
 
 #include <cstddef>
 #include <cstdint>
+#include <span>
 #include <vector>
 
 constexpr static inline void crypt_till_rekey(FSChaCha20Poly1305& aead, int rekey_interval, bool encrypt)

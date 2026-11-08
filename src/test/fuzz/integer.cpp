@@ -5,18 +5,15 @@
 #include <arith_uint256.h>
 #include <chainparams.h>
 #include <common/args.h>
-#include <common/system.h>
 #include <compressor.h>
 #include <consensus/amount.h>
 #include <consensus/merkle.h>
 #include <core_io.h>
 #include <crypto/common.h>
+#include <crypto/hex_base.h>
 #include <crypto/siphash.h>
-#include <key_io.h>
 #include <memusage.h>
-#include <netbase.h>
 #include <policy/policy.h>
-#include <policy/settings.h>
 #include <pow.h>
 #include <protocol.h>
 #include <pubkey.h>
@@ -34,11 +31,22 @@
 #include <util/overflow.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <util/time.h>
 
-#include <chrono>
-#include <limits>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <ios>
+#include <optional>
 #include <set>
+#include <span>
+#include <string>
+#include <utility>
 #include <vector>
+
+namespace Consensus {
+struct Params;
+} // namespace Consensus
 
 using util::ToString;
 

@@ -10,14 +10,17 @@
 #include <netaddress.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
-#include <streams.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/time.h>
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
+#include <ios>
 #include <limits>
 #include <string>
+#include <vector>
 
 /** Message header.
  * (4) message start.
