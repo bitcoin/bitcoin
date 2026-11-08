@@ -16,6 +16,7 @@
 #include <script/interpreter.h>
 #include <script/script.h>
 #include <script/script_error.h>
+#include <script/verify_flags.h>
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>

@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(published_simple_proofs)
                 ++signatures;
                 const auto destination = DecodeDestination(row["address"].get_str());
                 const auto message = row["message"].get_str();
-                auto proof = value.get_str();
+                const auto& proof = value.get_str();
                 const auto raw = proof.starts_with("smp") ? proof.substr(3) : proof;
                 BOOST_TEST_CONTEXT(source << " signature " << signatures) {
                     BOOST_CHECK(BIP322Verify(destination, proof, message) == Result::OK);

@@ -8,7 +8,6 @@
 
 #include <addresstype.h>
 #include <primitives/transaction.h>
-#include <script/script.h>
 #include <script/script_error.h>
 #include <uint256.h>
 
@@ -16,6 +15,7 @@
 #include <string_view>
 
 class CKey;
+class CScript;
 
 extern const std::string MESSAGE_MAGIC;
 

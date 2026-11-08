@@ -21,6 +21,7 @@
 #include <test/util/time.h>
 #include <univalue.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/translation.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/test/util.h>
@@ -105,7 +106,7 @@ std::string MultisigDescriptor(const UniValue& row)
     const CScript script{bytes.begin(), bytes.end()};
     std::vector<std::vector<unsigned char>> solutions;
     BOOST_REQUIRE(Solver(script, solutions) == TxoutType::MULTISIG);
-    std::string descriptor = "wsh(multi(" + std::to_string(solutions.front()[0]);
+    std::string descriptor = "wsh(multi(" + util::ToString(static_cast<unsigned int>(solutions.front()[0]));
     for (size_t i{1}; i + 1 < solutions.size(); ++i) {
         const auto& pubkey = solutions[i];
         bool found{false};
