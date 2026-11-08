@@ -14,6 +14,9 @@
 #include <test/fuzz/util/mempool.h>
 #include <test/util/setup_common.h>
 
+#include <cstdint>
+#include <functional>
+#include <list>
 #include <memory>
 #include <optional>
 #include <vector>

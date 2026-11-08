@@ -3,14 +3,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <core_io.h>
+#include <crypto/hex_base.h>
 #include <primitives/transaction.h>
 #include <test/fuzz/fuzz.h>
 #include <util/check.h>
-#include <util/strencodings.h>
 
-#include <cstdint>
 #include <string>
-#include <vector>
 
 FUZZ_TARGET(decode_tx)
 {

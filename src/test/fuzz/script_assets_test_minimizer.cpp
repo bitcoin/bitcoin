@@ -2,19 +2,26 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <test/fuzz/fuzz.h>
-
 #include <primitives/transaction.h>
-#include <pubkey.h>
 #include <script/interpreter.h>
+#include <script/script.h>
+#include <script/verify_flags.h>
 #include <serialize.h>
 #include <streams.h>
+#include <test/fuzz/fuzz.h>
 #include <univalue.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
+#include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <ios>
+#include <map>
+#include <span>
+#include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 using util::SplitString;

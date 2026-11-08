@@ -2,24 +2,40 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <addrman.h>
 #include <chainparams.h>
-#include <common/args.h>
+#include <compat/compat.h>
 #include <net.h>
-#include <net_processing.h>
+#include <net_permissions.h>
+#include <net_types.h>
 #include <netaddress.h>
+#include <netbase.h>
+#include <netgroup.h>
+#include <node/connection_types.h>
 #include <protocol.h>
+#include <semaphore_grant.h>
+#include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
 #include <test/fuzz/util/threadinterrupt.h>
+#include <test/util/net.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <util/check.h>
-#include <util/translation.h>
+#include <util/sock.h>
+#include <util/time.h>
 
+#include <algorithm>
 #include <cstdint>
+#include <functional>
+#include <ios>
+#include <memory>
+#include <optional>
+#include <span>
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace {

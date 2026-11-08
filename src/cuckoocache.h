@@ -12,7 +12,8 @@
 #include <array>
 #include <atomic>
 #include <cmath>
-#include <cstring>
+#include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <memory>
 #include <utility>

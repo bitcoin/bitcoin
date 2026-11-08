@@ -11,7 +11,6 @@
 #include <concepts>
 #include <limits>
 #include <optional>
-#include <type_traits>
 
 template <std::integral T>
 [[nodiscard]] bool AdditionOverflow(const T i, const T j) noexcept

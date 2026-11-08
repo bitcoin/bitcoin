@@ -8,9 +8,9 @@
 #include <test/fuzz/util.h>
 #include <util/check.h>
 
+#include <compare>
 #include <cstdint>
 #include <limits>
-#include <vector>
 
 namespace {
 bool IsValidAddition(const CScriptNum& lhs, const CScriptNum& rhs)

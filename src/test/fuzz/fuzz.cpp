@@ -4,7 +4,6 @@
 
 #include <test/fuzz/fuzz.h>
 
-#include <netaddress.h>
 #include <netbase.h>
 #include <test/fuzz/util/check_globals.h>
 #include <test/util/coverage.h>
@@ -16,6 +15,7 @@
 #include <util/time.h>
 
 #include <algorithm>
+#include <atomic>
 #include <csignal>
 #include <cstdint>
 #include <cstdio>
@@ -29,7 +29,6 @@
 #include <memory>
 #include <random>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
 

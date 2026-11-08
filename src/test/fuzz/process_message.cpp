@@ -4,11 +4,8 @@
 
 #include <addrman.h>
 #include <banman.h>
-#include <kernel/chainparams.h>
 #include <net.h>
 #include <net_processing.h>
-#include <primitives/block.h>
-#include <primitives/transaction.h>
 #include <protocol.h>
 #include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -21,10 +18,10 @@
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <test/util/validation.h>
+#include <txmempool.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/time.h>
-#include <validation.h>
 #include <validationinterface.h>
 
 #include <algorithm>
@@ -33,7 +30,6 @@
 #include <functional>
 #include <iostream>
 #include <memory>
-#include <optional>
 #include <string>
 #include <string_view>
 #include <utility>

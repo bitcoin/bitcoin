@@ -8,11 +8,16 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <util/check.h>
+#include <util/result.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
-#include <ranges>
+#include <algorithm>
+#include <cstddef>
+#include <optional>
+#include <span>
 #include <string>
+#include <string_view>
 #include <vector>
 
 using util::TrimStringView;

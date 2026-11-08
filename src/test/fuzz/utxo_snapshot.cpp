@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <node/utxo_snapshot.h>
+
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
@@ -10,11 +12,9 @@
 #include <kernel/coinstats.h>
 #include <node/block_template_manager.h>
 #include <node/blockstorage.h>
-#include <node/utxo_snapshot.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
-#include <span.h>
 #include <streams.h>
 #include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -22,13 +22,13 @@
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/reachability.h>
 #include <test/util/mining.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/result.h>
-#include <util/time.h>
 #include <validation.h>
 
 #include <cstdint>
@@ -36,6 +36,7 @@
 #include <ios>
 #include <memory>
 #include <optional>
+#include <span>
 #include <vector>
 
 using node::SnapshotMetadata;

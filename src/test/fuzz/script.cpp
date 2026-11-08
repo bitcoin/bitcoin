@@ -4,13 +4,12 @@
 
 #include <script/script.h>
 
+#include <addresstype.h>
 #include <chainparams.h>
 #include <compressor.h>
-#include <core_io.h>
 #include <core_memusage.h>
 #include <key_io.h>
 #include <policy/policy.h>
-#include <pubkey.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/interpreter.h>
@@ -18,7 +17,7 @@
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
-#include <streams.h>
+#include <script/verify_flags.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -26,10 +25,13 @@
 #include <util/chaintype.h>
 #include <util/check.h>
 
-#include <algorithm>
 #include <cstdint>
+#include <functional>
 #include <optional>
+#include <span>
 #include <string>
+#include <utility>
+#include <variant>
 #include <vector>
 
 void initialize_script()

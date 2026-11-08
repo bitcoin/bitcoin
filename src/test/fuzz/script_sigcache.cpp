@@ -7,15 +7,17 @@
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/sigcache.h>
-#include <span.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
 
 #include <cstddef>
+#include <functional>
 #include <optional>
+#include <span>
 #include <vector>
 
 void initialize_script_sigcache()

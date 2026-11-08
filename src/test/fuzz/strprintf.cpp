@@ -12,7 +12,6 @@
 #include <algorithm>
 #include <cstdint>
 #include <string>
-#include <vector>
 
 template <typename... Args>
 void fuzz_fmt(const std::string& fmt, const Args&... args)

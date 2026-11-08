@@ -3,18 +3,30 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <node/psbt.h>
+
+#include <primitives/transaction.h>
 #include <psbt.h>
 #include <pubkey.h>
 #include <script/script.h>
+#include <script/sign.h>
+#include <serialize.h>
+#include <span.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/util/random.h>
+#include <tinyformat.h>
 #include <util/check.h>
+#include <util/result.h>
 
+#include <algorithm>
 #include <cstdint>
+#include <map>
 #include <optional>
+#include <set>
+#include <span>
 #include <string>
+#include <tuple>
 #include <vector>
 
 using node::AnalyzePSBT;

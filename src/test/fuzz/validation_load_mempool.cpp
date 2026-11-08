@@ -3,25 +3,27 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <node/mempool_persist.h>
-#include <test/util/time.h>
-
-#include <node/mempool_args.h>
 #include <node/mempool_persist_args.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/mempool.h>
 #include <test/fuzz/util/reachability.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
 #include <util/check.h>
-#include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
 
-#include <cstdint>
-#include <vector>
+#include <functional>
+#include <memory>
+
+namespace fs {
+class path;
+} // namespace fs
 
 using node::DumpMempool;
 using node::LoadMempool;

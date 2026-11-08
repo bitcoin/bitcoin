@@ -11,17 +11,23 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <core_memusage.h>
+#include <policy/feerate.h>
 #include <policy/policy.h>
-#include <policy/settings.h>
+#include <serialize.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
 #include <test/util/random.h>
+#include <uint256.h>
 #include <univalue.h>
 #include <util/chaintype.h>
 #include <util/check.h>
 #include <util/rbf.h>
-#include <validation.h>
 
+#include <functional>
+#include <ios>
+#include <optional>
+#include <stdexcept>
+#include <string>
 
 void initialize_transaction()
 {

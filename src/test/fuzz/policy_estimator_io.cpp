@@ -12,6 +12,7 @@
 #include <test/fuzz/util/reachability.h>
 #include <test/util/setup_common.h>
 
+#include <functional>
 #include <memory>
 
 namespace {

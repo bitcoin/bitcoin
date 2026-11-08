@@ -5,10 +5,8 @@
 #ifndef BITCOIN_TEST_FUZZ_UTIL_CHECK_GLOBALS_H
 #define BITCOIN_TEST_FUZZ_UTIL_CHECK_GLOBALS_H
 
-#include <atomic>
+#include <atomic> // IWYU pragma: keep
 #include <memory>
-#include <optional>
-#include <string>
 
 extern std::atomic<bool> g_used_system_time;
 

@@ -5,14 +5,17 @@
 #ifndef BITCOIN_TXREQUEST_H
 #define BITCOIN_TXREQUEST_H
 
+#include <net_types.h>
 #include <primitives/transaction.h>
-#include <net.h>
-#include <uint256.h>
+#include <util/time.h>
 
-#include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <utility>
 #include <vector>
+
+class uint256;
 
 /** Data structure to keep track of, and schedule, transaction downloads from peers.
  *

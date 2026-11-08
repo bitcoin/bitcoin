@@ -8,8 +8,6 @@
 #include <util/check.h>
 
 #include <cstdint>
-#include <string>
-#include <vector>
 
 namespace {
 template <typename T>

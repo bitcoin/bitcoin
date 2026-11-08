@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <addrman.h>
 #include <banman.h>
 #include <net.h>
 #include <net_processing.h>
@@ -13,13 +14,18 @@
 #include <test/fuzz/util/net.h>
 #include <test/fuzz/util/reachability.h>
 #include <test/util/net.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <test/util/validation.h>
 #include <util/time.h>
-#include <validationinterface.h>
 
+#include <array>
+#include <cstdint>
+#include <functional>
 #include <ios>
+#include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
