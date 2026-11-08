@@ -59,6 +59,7 @@
 #include <util/log.h>
 #include <util/moneystr.h>
 #include <util/result.h>
+#include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -2072,6 +2073,33 @@ SigningResult CWallet::SignMessage(const std::string& message, const PKHash& pkh
         }
     }
     return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
+}
+
+SigningResult CWallet::SignBIP322Message(const std::string& message, const CTxDestination& destination, std::string& signature) const
+{
+    if (!std::holds_alternative<WitnessV0KeyHash>(destination) &&
+        !std::holds_alternative<WitnessV0ScriptHash>(destination) &&
+        !std::holds_alternative<WitnessV1Taproot>(destination)) {
+        return SigningResult::SIGNING_FAILED;
+    }
+
+    LOCK(cs_wallet);
+    if (IsLocked() || !IsMine(destination)) return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
+
+    auto txs = CreateBIP322Transactions(GetScriptForDestination(destination), message);
+    const std::map<COutPoint, Coin> coins{{txs.to_sign.vin[0].prevout, Coin{txs.to_spend.vout[0], 0, false}}};
+    std::map<int, bilingual_str> input_errors;
+    // ALL is required for witness v0 and is also valid for Taproot.
+    if (!SignTransaction(txs.to_sign, coins, SIGHASH_ALL, input_errors)) return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
+    if (!txs.to_sign.vin[0].scriptSig.empty()) return SigningResult::SIGNING_FAILED;
+
+    DataStream bytes;
+    bytes << txs.to_sign.vin[0].scriptWitness.stack;
+    const std::string proof = "smp" + EncodeBase64(bytes);
+    // Ordinary transaction signing may satisfy scripts forbidden by BIP322.
+    if (BIP322Verify(destination, proof, message) != BIP322VerificationResult::OK) return SigningResult::SIGNING_FAILED;
+    signature = proof;
+    return SigningResult::OK;
 }
 
 OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& change_type, const std::vector<CRecipient>& vecSend) const
