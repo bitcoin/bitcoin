@@ -6,9 +6,14 @@
 #ifndef BITCOIN_COMMON_SIGNMESSAGE_H
 #define BITCOIN_COMMON_SIGNMESSAGE_H
 
+#include <addresstype.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
+#include <script/script_error.h>
 #include <uint256.h>
 
 #include <string>
+#include <string_view>
 
 class CKey;
 
@@ -71,6 +76,35 @@ bool MessageSign(
  * inadvertently signing a transaction.
  */
 uint256 MessageHash(const std::string& message);
+
+/** Hash raw message bytes with the BIP0322-signed-message tag. */
+uint256 BIP322MessageHash(std::string_view message);
+
+/** The virtual transactions used by BIP322 simple signing and verification. */
+struct BIP322Transactions {
+    CMutableTransaction to_spend;
+    CMutableTransaction to_sign;
+};
+
+/** Construct the zero-valued BIP322 simple transactions for a challenge script. */
+BIP322Transactions CreateBIP322Transactions(const CScript& message_challenge, std::string_view message);
+
+enum class BIP322VerificationResult {
+    OK,
+    INVALID,
+    INCONCLUSIVE,
+    UNSUPPORTED_ADDRESS,
+    UNSUPPORTED_FORMAT,
+    MALFORMED_BASE64,
+    MALFORMED_WITNESS,
+};
+
+/** Verify a prefixed or pre-final unprefixed BIP322 simple proof, without chain or wallet data.
+ * Only OK establishes a valid proof. Inconclusive upgrade mechanisms never establish success.
+ * script_error, when provided, receives the failing interpreter rule for an invalid proof.
+ */
+BIP322VerificationResult BIP322Verify(const CTxDestination& destination, std::string_view signature,
+                                    std::string_view message, ScriptError* script_error = nullptr);
 
 std::string SigningResultString(SigningResult res);
 
