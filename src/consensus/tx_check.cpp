@@ -11,9 +11,9 @@
 #include <script/script.h>
 #include <serialize.h>
 
-#include <set>
+#include <algorithm>
+#include <cstddef>
 #include <string>
-#include <utility>
 #include <vector>
 
 bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
@@ -46,9 +46,32 @@ bool CheckTransaction(const CTransaction& tx, TxValidationState& state)
     // of a tx as spent, it does not check if the tx has duplicate inputs.
     // Failure to run this check will result in either a crash or an inflation bug, depending on the implementation of
     // the underlying coins database.
-    std::set<COutPoint> vInOutPoints;
-    for (const auto& txin : tx.vin) {
-        if (!vInOutPoints.insert(txin.prevout).second)
+    //
+    // This runs for every transaction of every connected block, so it is on the initial block download
+    // critical path. Two strategies are used, both of which avoid the per-transaction node allocations of
+    // a std::set:
+    //
+    // * Small transactions (essentially all of them) are checked by comparing every pair of inputs. The
+    //   output index is compared first, which is cheap and rejects nearly all pairs without touching the
+    //   32-byte transaction id.
+    // * Large transactions fall back to sorting a contiguous buffer, which is O(n log n) instead of the
+    //   O(n^2) of the pairwise scan.
+    static constexpr size_t MAX_PAIRWISE_INPUTS{96};
+    if (tx.vin.size() <= MAX_PAIRWISE_INPUTS) {
+        for (size_t i{0}; i < tx.vin.size(); ++i) {
+            const COutPoint& prevout{tx.vin[i].prevout};
+            for (size_t j{0}; j < i; ++j) {
+                const COutPoint& other{tx.vin[j].prevout};
+                if (prevout.n == other.n && prevout.hash == other.hash)
+                    return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputs-duplicate");
+            }
+        }
+    } else {
+        std::vector<COutPoint> sorted;
+        sorted.reserve(tx.vin.size());
+        for (const auto& txin : tx.vin) sorted.push_back(txin.prevout);
+        std::sort(sorted.begin(), sorted.end());
+        if (std::adjacent_find(sorted.begin(), sorted.end()) != sorted.end())
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputs-duplicate");
     }
 

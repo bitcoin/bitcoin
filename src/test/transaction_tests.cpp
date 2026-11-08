@@ -38,6 +38,8 @@
 
 #include <functional>
 #include <map>
+#include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -1242,6 +1244,178 @@ BOOST_AUTO_TEST_CASE(calculatesequencelocks_tx_version_test)
     check_min_height(/*version=*/std::numeric_limits<uint32_t>::max(), /*expected_min_height=*/coin_height);
 }
 
+/**
+ * EvaluateSequenceLocks() compares the lock pair against the block height and the
+ * median time past of the previous block. Only a time-based (non-negative) entry in
+ * lockPair.second may cause the median-time-past comparison; the {-1, -1} pair that
+ * CalculateSequenceLocks() returns when no relative lock applies must always pass.
+ *
+ * These tests pin the exact boundaries, since the fast path in EvaluateSequenceLocks()
+ * relies on all three of: block times are non-negative, -1 sorts below every real time,
+ * and the height comparison is strict.
+ */
+BOOST_AUTO_TEST_CASE(evaluatesequencelocks_boundaries)
+{
+    // Previous block supplies the median time past. GetMedianTimePast() of a single
+    // element is that element's time, so this is exactly @prev_time.
+    constexpr int64_t prev_time{1'600'000'000};
+    CBlockIndex prev{};
+    prev.nHeight = 99;
+    prev.nTime = static_cast<uint32_t>(prev_time);
+
+    CBlockIndex block{};
+    block.pprev = &prev;
+    block.nHeight = 100;
+
+    const auto evaluate{[&](int min_height, int64_t min_time) {
+        return EvaluateSequenceLocks(block, {min_height, min_time});
+    }};
+
+    // The "no relative lock" pair always passes, and must not read the median time past.
+    BOOST_CHECK(evaluate(-1, -1));
+
+    // Height comparison is strict: nMinHeight >= block height fails, one below passes.
+    BOOST_CHECK(!evaluate(/*min_height=*/100, /*min_time=*/-1));
+    BOOST_CHECK(evaluate(/*min_height=*/99, /*min_time=*/-1));
+    BOOST_CHECK(!evaluate(/*min_height=*/101, /*min_time=*/-1));
+
+    // Time comparison is strict against the previous block's median time past.
+    BOOST_CHECK(!evaluate(/*min_height=*/-1, /*min_time=*/prev_time));
+    BOOST_CHECK(evaluate(/*min_height=*/-1, /*min_time=*/prev_time - 1));
+
+    // A failing height must be reported even when the time would pass, and vice versa.
+    BOOST_CHECK(!evaluate(/*min_height=*/100, /*min_time=*/prev_time - 1));
+    BOOST_CHECK(!evaluate(/*min_height=*/99, /*min_time=*/prev_time));
+
+    // max int64 is the saturating value used for effectively unlimited relative locks.
+    BOOST_CHECK(!evaluate(/*min_height=*/std::numeric_limits<int>::max(), /*min_time=*/-1));
+    BOOST_CHECK(!evaluate(/*min_height=*/-1, /*min_time=*/std::numeric_limits<int64_t>::max()));
+
+    // Genesis-like case: a median time past of 0 must still reject a lock time of 0,
+    // because the comparison is >=, not >.
+    CBlockIndex prev_zero{};
+    prev_zero.nHeight = 0;
+    prev_zero.nTime = 0;
+    CBlockIndex block_one{};
+    block_one.pprev = &prev_zero;
+    block_one.nHeight = 1;
+    BOOST_CHECK(!EvaluateSequenceLocks(block_one, {-1, 0}));
+    BOOST_CHECK(EvaluateSequenceLocks(block_one, {-1, -1}));
+}
+
+/**
+ * ConnectBlock() skips the per-input coin lookups that fill prevheights when no height
+ * can possibly be read: when BIP68 is not enforced for the block, when the tx version is
+ * below 2, or when no input has an active relative lock.
+ *
+ * This pins the invariant that makes that safe: in exactly those cases the result of
+ * SequenceLocks() is independent of the input heights. It also checks the converse, so the
+ * test would fail if the skip condition were widened to a case where heights do matter.
+ */
+BOOST_AUTO_TEST_CASE(sequencelocks_heights_only_matter_when_bip68_applies)
+{
+    // Build a small chain so that GetMedianTimePast() and GetAncestor() work for the
+    // time-based branch: 11 entries are needed for a non-trivial median.
+    constexpr int64_t base_time{1'600'000'000};
+    std::vector<std::unique_ptr<CBlockIndex>> chain;
+    for (int h{0}; h < 120; ++h) {
+        chain.push_back(std::make_unique<CBlockIndex>());
+        chain.back()->nHeight = h;
+        chain.back()->nTime = static_cast<uint32_t>(base_time + h * 600);
+        chain.back()->pprev = h == 0 ? nullptr : chain[h - 1].get();
+    }
+    const CBlockIndex& block{*chain.back()};
+
+    // One input with the given sequence, and the given number of inputs.
+    const auto make_tx{[&](uint32_t version, std::vector<uint32_t> sequences) {
+        CMutableTransaction mtx;
+        mtx.version = version;
+        for (const uint32_t seq : sequences) {
+            mtx.vin.emplace_back(COutPoint{}, CScript{}, seq);
+        }
+        mtx.vout.emplace_back(1, CScript{} << OP_TRUE);
+        return CTransaction{mtx};
+    }};
+
+    // The condition under which ConnectBlock() fills in prevheights.
+    const auto heights_needed{[](int flags, const CTransaction& tx) {
+        if (!(flags & LOCKTIME_VERIFY_SEQUENCE)) return false;
+        if (tx.version < 2) return false;
+        return std::any_of(tx.vin.begin(), tx.vin.end(), [](const CTxIn& txin) {
+            return !(txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLE_FLAG);
+        });
+    }};
+
+    // Three very different sets of input heights. If the heights are read at all, at least
+    // one of these must change the outcome. All values stay within the test chain so that
+    // the time-based branch's GetAncestor() lookup is valid.
+    const std::vector<std::vector<int>> height_sets{
+        {0},
+        {100},
+        {5, 60},
+        {2, 3, 4, 5, 6},
+    };
+
+    struct Case {
+        uint32_t version;
+        std::vector<uint32_t> sequences;
+        int flags;
+    };
+    const std::vector<Case> cases{
+        // No relative lock signal at all.
+        {2, {CTxIn::SEQUENCE_FINAL}, LOCKTIME_VERIFY_SEQUENCE},
+        {2, {CTxIn::SEQUENCE_FINAL | CTxIn::SEQUENCE_LOCKTIME_DISABLE_FLAG}, LOCKTIME_VERIFY_SEQUENCE},
+        {2, {1 | CTxIn::SEQUENCE_LOCKTIME_DISABLE_FLAG}, LOCKTIME_VERIFY_SEQUENCE},
+        // BIP68 not enforced for the block.
+        {2, {1}, 0},
+        {2, {CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | 1}, 0},
+        // Version below 2.
+        {1, {1}, LOCKTIME_VERIFY_SEQUENCE},
+        {0, {CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | 1}, LOCKTIME_VERIFY_SEQUENCE},
+        // Real relative locks: heights and times are consulted.
+        {2, {1}, LOCKTIME_VERIFY_SEQUENCE},
+        {2, {100}, LOCKTIME_VERIFY_SEQUENCE},
+        {2, {CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | 1}, LOCKTIME_VERIFY_SEQUENCE},
+        // A mix where one input is exempt and another is height-locked.
+        {2, {CTxIn::SEQUENCE_FINAL, 5}, LOCKTIME_VERIFY_SEQUENCE},
+    };
+
+    for (const Case& c : cases) {
+        const CTransaction tx{make_tx(c.version, c.sequences)};
+        const bool needed{heights_needed(c.flags, tx)};
+
+        // Evaluate with several plausible height vectors, always sized to the input count.
+        std::vector<bool> results;
+        for (const auto& heights : height_sets) {
+            std::vector<int> prev_heights(tx.vin.size());
+            for (size_t i{0}; i < prev_heights.size(); ++i) {
+                prev_heights[i] = heights[i % heights.size()];
+            }
+            results.push_back(SequenceLocks(tx, c.flags, prev_heights, block));
+        }
+
+        if (!needed) {
+            // The skip in ConnectBlock is only sound if every height assignment gives the
+            // same answer -- including all zeros, which is what an un-filled vector holds.
+            std::vector<int> zeros(tx.vin.size(), 0);
+            const bool with_zeros{SequenceLocks(tx, c.flags, zeros, block)};
+            for (const bool r : results) BOOST_CHECK_EQUAL(r, with_zeros);
+        } else {
+            // Sanity check that the test is sensitive: the heights must matter here, i.e. the
+            // outcome is not constant across the height vectors. A prevout confirmed as late
+            // as the block being evaluated is the strongest case: both the height-based and
+            // the time-based branches then have to reject.
+            std::vector<int> prev_heights(tx.vin.size(), 0);
+            const bool with_zeros{SequenceLocks(tx, c.flags, prev_heights, block)};
+            std::vector<int> prev_late(tx.vin.size(), block.nHeight);
+            const bool with_late{SequenceLocks(tx, c.flags, prev_late, block)};
+            BOOST_CHECK_MESSAGE(with_zeros != with_late,
+                                "expected heights to affect the result (version=" << c.version
+                                    << ", first sequence=" << c.sequences.front() << ")");
+        }
+    }
+}
+
 BOOST_AUTO_TEST_CASE(getvalueout_out_of_range_throws)
 {
     CMutableTransaction mtx;
@@ -1429,6 +1603,75 @@ BOOST_AUTO_TEST_CASE(tx_malformed_serialization)
     DataStream bad_flag;
     bad_flag << mtx.version << uint8_t{0x00} << uint8_t{0x02} << mtx.vin << mtx.vout << mtx.vin[0].scriptWitness.stack << mtx.nLockTime;
     BOOST_CHECK_EXCEPTION(bad_flag >> TX_WITH_WITNESS(tx), std::ios_base::failure, HasReason{"Unknown transaction optional data"});
+}
+
+/**
+ * The duplicate-input check in CheckTransaction() compares every pair of inputs for small
+ * transactions and sorts a heap buffer for large ones. Both paths must report the same
+ * reject reason for the same transaction, and neither may report a duplicate when every
+ * prevout is distinct.
+ */
+BOOST_AUTO_TEST_CASE(duplicate_inputs_inline_and_large)
+{
+    // Build a tx with @num_inputs distinct prevouts, then optionally make the two
+    // entries at @dup_a and @dup_b identical.
+    auto make_tx{[](size_t num_inputs, std::optional<std::pair<size_t, size_t>> dup) {
+        CMutableTransaction mtx;
+        mtx.vin.reserve(num_inputs);
+        for (size_t i{0}; i < num_inputs; ++i) {
+            mtx.vin.emplace_back(COutPoint{Txid::FromUint256(uint256::ONE), static_cast<uint32_t>(i)}, CScript{}, CTxIn::SEQUENCE_FINAL);
+        }
+        if (dup) {
+            mtx.vin[dup->second].prevout = mtx.vin[dup->first].prevout;
+        }
+        mtx.vout.emplace_back(1, CScript{} << OP_TRUE);
+        return CTransaction{mtx};
+    }};
+
+    const auto check_reason{[&](const CTransaction& tx) {
+        TxValidationState state;
+        const bool ok{CheckTransaction(tx, state)};
+        return std::make_pair(ok, state.GetRejectReason());
+    }};
+
+    // The pairwise scan is used up to 96 inputs, the sorting path above that.
+    // Exercise both sides of that boundary and well past it.
+    for (const size_t num_inputs : {size_t{1}, size_t{2}, size_t{7}, size_t{8}, size_t{9}, size_t{16}, size_t{64},
+                                     size_t{95}, size_t{96}, size_t{97}, size_t{128}, size_t{1000}}) {
+        // No duplicates: accepted.
+        {
+            const auto [ok, reason]{check_reason(make_tx(num_inputs, std::nullopt))};
+            BOOST_CHECK_MESSAGE(ok, "distinct inputs rejected at n=" << num_inputs << " (" << reason << ")");
+        }
+        if (num_inputs < 2) continue;
+
+        // Duplicate at the first and the last position: this forces the insertion sort to
+        // scan the whole buffer and the sorting path to compare the extremes.
+        for (const auto& [a, b] : std::vector<std::pair<size_t, size_t>>{
+                 {0, num_inputs - 1}, {0, 1}, {num_inputs - 2, num_inputs - 1}}) {
+            const auto [ok, reason]{check_reason(make_tx(num_inputs, std::pair{a, b}))};
+            BOOST_CHECK_MESSAGE(!ok, "duplicate inputs accepted at n=" << num_inputs << " (" << a << "," << b << ")");
+            BOOST_CHECK_EQUAL(reason, "bad-txns-inputs-duplicate");
+        }
+
+        // Adjacent duplicates anywhere: same reject reason regardless of which path is taken.
+        for (size_t i{0}; i + 1 < num_inputs; ++i) {
+            const auto [ok, reason]{check_reason(make_tx(num_inputs, std::pair{i, i + 1}))};
+            BOOST_CHECK_MESSAGE(!ok, "duplicate inputs accepted at n=" << num_inputs << " (" << i << ")");
+            BOOST_CHECK_EQUAL(reason, "bad-txns-inputs-duplicate");
+        }
+    }
+
+    // Same prevout hash but a different output index is not a duplicate. CheckTransaction()
+    // treats the outpoint as a whole, so this must still be accepted.
+    {
+        CMutableTransaction mtx;
+        for (uint32_t n{0}; n < 4; ++n) {
+            mtx.vin.emplace_back(COutPoint{Txid::FromUint256(uint256::ONE), n}, CScript{}, CTxIn::SEQUENCE_FINAL);
+        }
+        mtx.vout.emplace_back(1, CScript{} << OP_TRUE);
+        BOOST_CHECK(check_reason(CTransaction{mtx}).first);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

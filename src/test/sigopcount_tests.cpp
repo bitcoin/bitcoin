@@ -229,4 +229,153 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
     }
 }
 
+/**
+ * GetTransactionSigOpCost() accumulates legacy, P2SH and witness sigops. P2SH and
+ * witness sigops both need the spent output of every input, and are computed in a
+ * single pass. This test uses transactions that mix P2SH, non-P2SH and witness inputs
+ * in several orders, so a mistake in which contribution is applied to which input
+ * (or in the flag gating) changes the total.
+ */
+BOOST_AUTO_TEST_CASE(GetTxSigOpCost_mixed_inputs)
+{
+    CKey key{GenerateRandomKey()};
+    const CPubKey pubkey{key.GetPubKey()};
+
+    // A P2SH output whose redeem script is a 2-of-2 multisig, so it contributes
+    // MAX_PUBKEYS_PER_MULTISIG sigops through GetSigOpCount(scriptSig).
+    const CScript redeem_script{CScript() << 1 << ToByteVector(pubkey) << ToByteVector(pubkey) << 2 << OP_CHECKMULTISIGVERIFY};
+    const CScript p2sh_spk{GetScriptForDestination(ScriptHash(redeem_script))};
+    const CScript p2sh_sig{CScript() << OP_0 << OP_0 << ToByteVector(redeem_script)};
+
+    // A plain P2PKH output: neither P2SH nor a witness program, so it contributes nothing
+    // to either count even though it is spent.
+    const CScript p2pkh_spk{GetScriptForDestination(PKHash(pubkey))};
+    const CScript p2pkh_sig{CScript() << OP_0 << OP_0};
+
+    // A P2WPKH output: contributes exactly one witness sigop.
+    const CScript p2wpkh_spk{GetScriptForDestination(WitnessV0KeyHash(pubkey))};
+    CScriptWitness witness;
+    witness.stack.emplace_back(0);
+    witness.stack.emplace_back(0);
+
+    enum class Kind { P2SH, P2PKH, P2WPKH };
+
+    // Expected contributions per input kind.
+    const auto expect{[&](std::span<const Kind> kinds, script_verify_flags flags) {
+        int64_t expected{0};
+        for (const Kind kind : kinds) {
+            switch (kind) {
+            case Kind::P2SH:
+                if (flags & SCRIPT_VERIFY_P2SH) expected += 2 * WITNESS_SCALE_FACTOR;
+                break;
+            case Kind::P2PKH:
+                break;
+            case Kind::P2WPKH:
+                if (flags & SCRIPT_VERIFY_WITNESS) expected += 1;
+                break;
+            }
+        }
+        return expected;
+    }};
+
+    const script_verify_flags all_flags{SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS};
+
+    std::vector<std::vector<Kind>> orders{
+        {Kind::P2SH, Kind::P2PKH, Kind::P2WPKH},
+        {Kind::P2WPKH, Kind::P2PKH, Kind::P2SH},
+        {Kind::P2PKH, Kind::P2SH, Kind::P2WPKH},
+        {Kind::P2SH},
+        {Kind::P2WPKH},
+        {Kind::P2PKH},
+        {Kind::P2SH, Kind::P2SH},
+        {Kind::P2SH, Kind::P2WPKH, Kind::P2SH, Kind::P2WPKH},
+    };
+
+    for (const auto& kinds : orders) {
+        // Fresh coin view per order: outpoint hashes are derived from the outputs.
+        CCoinsViewCache coins{&CoinsViewEmpty::Get()};
+        CMutableTransaction spending;
+        spending.version = 1;
+
+        for (const Kind kind : kinds) {
+            CMutableTransaction creation;
+            creation.version = 1;
+            creation.vin = {CTxIn{COutPoint{}}};
+            CTxIn input;
+            switch (kind) {
+            case Kind::P2SH:
+                creation.vout = {CTxOut{1, p2sh_spk}};
+                input = CTxIn{COutPoint{}, p2sh_sig};
+                break;
+            case Kind::P2PKH:
+                creation.vout = {CTxOut{1, p2pkh_spk}};
+                input = CTxIn{COutPoint{}, p2pkh_sig};
+                break;
+            case Kind::P2WPKH:
+                creation.vout = {CTxOut{1, p2wpkh_spk}};
+                input = CTxIn{COutPoint{}, CScript{}};
+                input.scriptWitness = witness;
+                break;
+            }
+            const CTransaction creation_tx{creation};
+            // Distinguish the outpoints of identical outputs in the same order.
+            input.prevout = COutPoint{creation_tx.GetHash(), 0};
+            spending.vin.push_back(input);
+            AddCoins(coins, creation_tx, 0);
+        }
+        spending.vout = {CTxOut{1, CScript{}}};
+
+        const CTransaction spending_tx{spending};
+        BOOST_CHECK_EQUAL(GetTransactionSigOpCost(spending_tx, coins, all_flags), expect(kinds, all_flags));
+        // Note: WITNESS without P2SH is not a valid combination for this function
+        // (CountWitnessSigOps asserts P2SH is set whenever WITNESS is).
+        BOOST_CHECK_EQUAL(GetTransactionSigOpCost(spending_tx, coins, SCRIPT_VERIFY_P2SH), expect(kinds, SCRIPT_VERIFY_P2SH));
+        BOOST_CHECK_EQUAL(GetTransactionSigOpCost(spending_tx, coins, /*flags=*/0), 0);
+    }
+}
+
+/**
+ * The legacy sigop count covers every scriptSig and scriptPubKey of the transaction and
+ * is independent of the flags; the witness contribution is added per input. This pins the
+ * relative weighting so a merge of the two passes cannot silently double-count.
+ */
+BOOST_AUTO_TEST_CASE(GetTxSigOpCost_legacy_and_witness_weighting)
+{
+    // Two multisig outputs: plain legacy sigops in the scriptPubKeys.
+    CMutableTransaction mtx;
+    mtx.version = 1;
+    mtx.vin = {CTxIn{COutPoint{Txid::FromUint256(uint256::ONE), 0}, CScript{}, CTxIn::SEQUENCE_FINAL}};
+    const CScript multisig{CScript() << 1 << std::vector<unsigned char>(33, 0x02) << std::vector<unsigned char>(33, 0x03) << 2 << OP_CHECKMULTISIG};
+    mtx.vout = {CTxOut{1, multisig}, CTxOut{1, multisig}};
+
+    CCoinsViewCache coins{&CoinsViewEmpty::Get()};
+
+    // The prevout is not P2SH and not a witness program, so it adds nothing to either
+    // the P2SH or the witness count. The cost must be exactly the legacy count scaled by
+    // WITNESS_SCALE_FACTOR.
+    CMutableTransaction creation;
+    creation.version = 1;
+    creation.vin = {CTxIn{COutPoint{}}};
+    creation.vout = {CTxOut{1, CScript() << OP_TRUE}};
+    const CTransaction creation_tx{creation};
+    AddCoins(coins, creation_tx, 0);
+    mtx.vin[0].prevout = COutPoint{creation_tx.GetHash(), 0};
+
+    const CTransaction tx{mtx};
+    const int64_t legacy{static_cast<int64_t>(GetLegacySigOpCount(tx)) * WITNESS_SCALE_FACTOR};
+    BOOST_CHECK_GT(legacy, 0);
+
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(tx, coins, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS), legacy);
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(tx, coins, /*flags=*/0), legacy);
+
+    // Coinbase transactions short-circuit after the legacy count, without touching the
+    // coins view (an empty view would otherwise trip the !coin.IsSpent() assertion).
+    CMutableTransaction coinbase{mtx};
+    coinbase.vin[0].prevout.SetNull();
+    const CCoinsViewCache empty_coins{&CoinsViewEmpty::Get()};
+    BOOST_CHECK_EQUAL(GetTransactionSigOpCost(CTransaction{coinbase}, empty_coins,
+                                              SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS),
+                      legacy);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

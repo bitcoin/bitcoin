@@ -103,11 +103,17 @@ std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags
 bool EvaluateSequenceLocks(const CBlockIndex& block, std::pair<int, int64_t> lockPair)
 {
     assert(block.pprev);
-    int64_t nBlockTime = block.pprev->GetMedianTimePast();
-    if (lockPair.first >= block.nHeight || lockPair.second >= nBlockTime)
+    // CalculateSequenceLocks() returns {-1, -1} when no input carries an active
+    // relative lock-time, which covers the overwhelming majority of transactions:
+    // pre-BIP68 ones, version-1 ones, and any whose inputs all use
+    // SEQUENCE_LOCKTIME_DISABLE_FLAG or a height-based lock. Only a time-based
+    // lock can make the result depend on the median time past, so avoid that walk
+    // (11 pointer chases plus a sort) unless it is actually needed. Block times are
+    // non-negative, so -1 never compares as `>= nBlockTime`.
+    if (lockPair.second >= 0 && lockPair.second >= block.pprev->GetMedianTimePast())
         return false;
 
-    return true;
+    return lockPair.first < block.nHeight;
 }
 
 bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>& prevHeights, const CBlockIndex& block)
@@ -153,15 +159,19 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     if (tx.IsCoinBase())
         return nSigOps;
 
-    if (flags & SCRIPT_VERIFY_P2SH) {
-        nSigOps += GetP2SHSigOpCount(tx, inputs) * WITNESS_SCALE_FACTOR;
-    }
-
+    // Both the P2SH and the witness sigop counts need the spent output of every
+    // input, so walk the inputs once and add both contributions for each instead
+    // of looking every input's coin up twice. This runs for every transaction of
+    // every connected block. The additions are independent, so the order in which
+    // they are accumulated does not affect the result (no overflow is reachable).
     for (unsigned int i = 0; i < tx.vin.size(); i++)
     {
         const Coin& coin = inputs.AccessCoin(tx.vin[i].prevout);
         assert(!coin.IsSpent());
         const CTxOut &prevout = coin.out;
+        if ((flags & SCRIPT_VERIFY_P2SH) && prevout.scriptPubKey.IsPayToScriptHash()) {
+            nSigOps += prevout.scriptPubKey.GetSigOpCount(tx.vin[i].scriptSig) * WITNESS_SCALE_FACTOR;
+        }
         nSigOps += CountWitnessSigOps(tx.vin[i].scriptSig, prevout.scriptPubKey, tx.vin[i].scriptWitness, flags);
     }
     return nSigOps;

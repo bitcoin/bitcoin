@@ -2622,8 +2622,21 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
             // BIP68 lock checks (as opposed to nLockTime checks) must
             // be in ConnectBlock because they require the UTXO set
             prevheights.resize(tx.vin.size());
-            for (size_t j = 0; j < tx.vin.size(); j++) {
-                prevheights[j] = view.AccessCoin(tx.vin[j].prevout).nHeight;
+            // CalculateSequenceLocks() bails out before reading any heights unless
+            // BIP68 is being enforced for this block, and it only consults the coin
+            // height of inputs that are not exempted by SEQUENCE_LOCKTIME_DISABLE_FLAG
+            // (which is set in almost every mainnet input). Skip the per-input coin
+            // cache lookups in the cases where no entry can be read; this drops the
+            // lookups entirely for every block before CSV activation.
+            if ((nLockTimeFlags & LOCKTIME_VERIFY_SEQUENCE) && tx.version >= 2) {
+                const bool any_relative_lock{std::any_of(tx.vin.begin(), tx.vin.end(), [](const CTxIn& txin) {
+                    return !(txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLE_FLAG);
+                })};
+                if (any_relative_lock) {
+                    for (size_t j = 0; j < tx.vin.size(); j++) {
+                        prevheights[j] = view.AccessCoin(tx.vin[j].prevout).nHeight;
+                    }
+                }
             }
 
             if (!SequenceLocks(tx, nLockTimeFlags, prevheights, *pindex)) {
