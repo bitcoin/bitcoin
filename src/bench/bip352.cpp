@@ -11,6 +11,7 @@
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/script.h>
+#include <script/solver.h>
 #include <util/check.h>
 
 #include <optional>
@@ -22,6 +23,7 @@
 enum class InputType {
     P2PKH,           // legacy pubkey-hash
     P2SH_P2WPKH,     // nested segwitv0 witness-pubkey-hash
+    P2SH_Multisig,   // legacy 2-of-3 multisig script-hash (not eligible, no pubkey extracted)
     P2WPKH,          // segwitv0 witness-pubkey-hash
     P2TR,            // segwitv1, taproot script-path spend (covers more extraction logic than key-path)
     P2PKH_WorstCase, // legacy pubkey-hash, with scriptSig malleated for worst-case performance (see below)
@@ -40,7 +42,7 @@ static void GetPubKeyBench(benchmark::Bench& bench, InputType input_type)
 
     CScript spk;
     CTxIn txin;
-    bip352::PubKey expected_pubkey{pubkey};
+    std::optional<bip352::PubKey> expected_pubkey{pubkey};
     switch (input_type) {
     case InputType::P2PKH:
         spk = GetScriptForDestination(PKHash{pubkey});
@@ -51,6 +53,16 @@ static void GetPubKeyBench(benchmark::Bench& bench, InputType input_type)
         spk = GetScriptForDestination(ScriptHash{redeem_script});
         txin.scriptSig = CScript() << ToByteVector(redeem_script);
         txin.scriptWitness.stack = {DUMMY_ECDSA_SIG, ToByteVector(pubkey)};
+        break;
+    }
+    case InputType::P2SH_Multisig: {
+        // The most common non-segwit P2SH spend. It is ineligible for BIP-352, but the extraction
+        // still has to inspect it before it can rule it out.
+        const std::vector<CPubKey> pubkeys{pubkey, GenerateRandomKey().GetPubKey(), GenerateRandomKey().GetPubKey()};
+        const CScript redeem_script{GetScriptForMultisig(/*nRequired=*/2, pubkeys)};
+        spk = GetScriptForDestination(ScriptHash{redeem_script});
+        txin.scriptSig = CScript() << OP_0 << DUMMY_ECDSA_SIG << DUMMY_ECDSA_SIG << ToByteVector(redeem_script);
+        expected_pubkey = std::nullopt;
         break;
     }
     case InputType::P2WPKH:
@@ -100,12 +112,14 @@ static void GetPubKeyBench(benchmark::Bench& bench, InputType input_type)
 
 static void BIP352_GetPubKey_P2PKH(benchmark::Bench& bench)           { GetPubKeyBench(bench, InputType::P2PKH);           }
 static void BIP352_GetPubKey_P2SH_P2WPKH(benchmark::Bench& bench)     { GetPubKeyBench(bench, InputType::P2SH_P2WPKH);     }
+static void BIP352_GetPubKey_P2SH_Multisig(benchmark::Bench& bench)   { GetPubKeyBench(bench, InputType::P2SH_Multisig);   }
 static void BIP352_GetPubKey_P2WPKH(benchmark::Bench& bench)          { GetPubKeyBench(bench, InputType::P2WPKH);          }
 static void BIP352_GetPubKey_P2TR(benchmark::Bench& bench)            { GetPubKeyBench(bench, InputType::P2TR);            }
 static void BIP352_GetPubKey_P2PKH_WorstCase(benchmark::Bench& bench) { GetPubKeyBench(bench, InputType::P2PKH_WorstCase); }
 
 BENCHMARK(BIP352_GetPubKey_P2PKH);
 BENCHMARK(BIP352_GetPubKey_P2SH_P2WPKH);
+BENCHMARK(BIP352_GetPubKey_P2SH_Multisig);
 BENCHMARK(BIP352_GetPubKey_P2WPKH);
 BENCHMARK(BIP352_GetPubKey_P2TR);
 BENCHMARK(BIP352_GetPubKey_P2PKH_WorstCase);
