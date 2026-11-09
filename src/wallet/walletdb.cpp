@@ -515,13 +515,7 @@ static LoadResult LoadRecords(CWallet* pwallet, DatabaseBatch& batch, const std:
     return LoadRecords(pwallet, batch, key, prefix, load_func);
 }
 
-bool HasLegacyRecords(CWallet& wallet)
-{
-    const auto& batch = wallet.GetDatabase().MakeBatch();
-    return HasLegacyRecords(wallet, *batch);
-}
-
-bool HasLegacyRecords(CWallet& wallet, DatabaseBatch& batch)
+static bool HasLegacyRecords(DatabaseBatch& batch)
 {
     for (const auto& type : DBKeys::LEGACY_TYPES) {
         DataStream key;
@@ -550,7 +544,7 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
 
     // Make sure descriptor wallets don't have any legacy records
     if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-        if (HasLegacyRecords(*pwallet, batch)) {
+        if (HasLegacyRecords(batch)) {
             pwallet->WalletLogPrintf("Error: Unexpected legacy entry found in descriptor wallet %s. The wallet might have been tampered with or created with malicious intent.", pwallet->GetName());
             return DBErrors::UNEXPECTED_LEGACY_ENTRY;
         }
