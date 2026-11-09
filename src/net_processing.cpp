@@ -916,6 +916,26 @@ private:
         return peer.GetFeatures().stale_tip;
     }
 
+    /** Whether `peer`, which sent the invalid block `hash`, is exempt from
+     *  punishment, as for BIP 152 compact blocks, because the block is on a
+     *  stale branch it announced with have_block set.
+     *
+     * BIP 332 lets the peer serve the branch's blocks without having connected
+     * them, so it may have sent a block that only fails once connected, or one
+     * that turned out invalid, through an ancestor, after we asked for it. A
+     * block failing the checks done before it is stored is not exempt, as the
+     * peer must have passed them to store it.
+     */
+    bool IsExemptStaleBranchFailure(NodeId peer, const uint256& hash, const BlockValidationState& state) const EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+    {
+        if (!m_staletiprelayman) return false;
+        const CBlockIndex* block_index{m_chainman.m_blockman.LookupBlockIndex(hash)};
+        if (block_index == nullptr) return false;
+        const bool stored{(block_index->nStatus & BLOCK_HAVE_DATA) != 0};
+        if (!stored && state.GetResult() != BlockValidationResult::BLOCK_CACHED_INVALID) return false;
+        return m_staletiprelayman->IsAnnouncedStaleBranchBlock(peer, m_chainman.ActiveChain(), *block_index);
+    }
+
     node::Warnings& m_warnings;
     TimeOffsets m_outbound_time_offsets{m_warnings};
 
@@ -2426,7 +2446,8 @@ void PeerManagerImpl::BlockChecked(const std::shared_ptr<const CBlock>& block, c
     if (state.IsInvalid() &&
         it != mapBlockSource.end() &&
         State(it->second.first)) {
-            MaybePunishNodeForBlock(/*nodeid=*/ it->second.first, state, /*via_compact_block=*/ !it->second.second);
+            MaybePunishNodeForBlock(/*nodeid=*/ it->second.first, state,
+                                    /*via_compact_block=*/ !it->second.second || IsExemptStaleBranchFailure(it->second.first, hash, state));
     }
     // Check that:
     // 1. The block is valid
@@ -6082,7 +6103,7 @@ void PeerManagerImpl::HandleStaleTip(CNode& pfrom, Peer& peer, const CBlockIndex
 
     // A known-invalid tip must not advance the peer's header state.
     if (!tip.IsValid(BLOCK_VALID_TREE)) return;
-    if (m_staletiprelayman->ReceivedStaleTip(pfrom.GetId(), m_chainman.ActiveChain(), tip)) {
+    if (m_staletiprelayman->ReceivedStaleTip(pfrom.GetId(), m_chainman.ActiveChain(), tip, peer_has_block)) {
         m_connman.WakeMessageHandler();
     }
 

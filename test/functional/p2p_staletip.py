@@ -9,9 +9,14 @@ from test_framework.blocktools import create_block
 from test_framework.messages import (
     CBlockHeader,
     CInv,
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxOut,
     MSG_BLOCK,
     MSG_TYPE_MASK,
     StaleTipCompressedHeader,
+    msg_block,
     msg_feature,
     msg_getheaders,
     msg_headers,
@@ -20,6 +25,7 @@ from test_framework.messages import (
     msg_staletip,
 )
 from test_framework.p2p import P2PInterface
+from test_framework.script import CScript, OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -57,8 +63,17 @@ class StaleTipPeer(P2PInterface):
 
     def on_version(self, message):
         if self.send_feature and message.nVersion >= FEATURE_VERSION:
+            # On a connection the node made, our version is only sent in reply,
+            # and must come before the feature message.
+            if not self.p2p_connected_to_node:
+                super().send_version()
+                self.version_sent = True
             self.send_without_ping(msg_feature(STALETIP_FEATURE, self.feature_data))
         super().on_version(message)
+
+    def send_version(self):
+        if not getattr(self, "version_sent", False):
+            super().send_version()
 
     def on_feature(self, message):
         self.features.append(message)
@@ -118,6 +133,9 @@ class P2PStaleTipTest(BitcoinTestFramework):
         self.test_active_tip_announced_to_source_peer()
         self.test_no_reannouncement_after_transient_ineligibility()
         self.test_higher_work_staletip_requests_block()
+        self.test_invalid_stale_branch_block_not_punished()
+        self.test_early_invalid_stale_branch_block_punished()
+        self.test_requested_block_of_invalid_branch_not_punished()
         self.test_inbound_staletip_handling()
         self.test_startup_seeding_only_when_enabled()
 
@@ -181,6 +199,14 @@ class P2PStaleTipTest(BitcoinTestFramework):
 
     def block_getdata_hashes(self, peer):
         return [inv.hash for inv in peer.getdata if inv.type & MSG_TYPE_MASK == MSG_BLOCK]
+
+    def add_tx_spending(self, block, outpoints):
+        tx = CTransaction()
+        tx.vin = [CTxIn(outpoint) for outpoint in outpoints]
+        tx.vout.append(CTxOut(0, CScript([OP_TRUE])))
+        block.vtx.append(tx)
+        block.hashMerkleRoot = block.calc_merkle_root()
+        block.solve()
 
     def assert_staletip_tracked(self, block):
         self.assert_staletip_hash_tracked(block.hash_hex)
@@ -439,6 +465,62 @@ class P2PStaleTipTest(BitcoinTestFramework):
         equal_work_peer.sync_with_ping()
         assert_equal(self.block_getdata_hashes(equal_work_peer), [])
         self.nodes[0].disconnect_p2ps()
+
+    def test_invalid_stale_branch_block_not_punished(self):
+        self.log.info("Test a peer is not disconnected for serving an invalid block on a branch it announced")
+        node = self.nodes[0]
+        peer = self.connect_peer()
+        block, fork_point_hash = self.active_block()
+        # Spending a missing output passes the checks done before a block is
+        # stored, but fails once the block is connected.
+        self.add_tx_spending(block, [COutPoint(0xdead, 0)])
+
+        peer.send_and_ping(self.staletip_msg(block, fork_point_hash, have_block=True))
+        peer.wait_for_getdata_hash(block.hash_int)
+        peer.send_without_ping(msg_block(block))
+        self.wait_until(lambda: any(tip["hash"] == block.hash_hex and tip["status"] == "invalid" for tip in node.getchaintips()))
+        peer.sync_with_ping()
+        assert peer.is_connected
+        node.disconnect_p2ps()
+
+    def test_early_invalid_stale_branch_block_punished(self):
+        self.log.info("Test a peer is punished for a block on a branch it announced that fails the checks done before storing it")
+        peer = self.connect_peer()
+        block, fork_point_hash = self.active_block()
+        # A transaction spending the same input twice fails CheckBlock(), which
+        # the peer must have passed to store the block.
+        self.add_tx_spending(block, [COutPoint(0xdead, 0), COutPoint(0xdead, 0)])
+
+        peer.send_and_ping(self.staletip_msg(block, fork_point_hash, have_block=True))
+        peer.wait_for_getdata_hash(block.hash_int)
+        with self.nodes[0].assert_debug_log(["bad-txns-inputs-duplicate"]):
+            peer.send_without_ping(msg_block(block))
+            peer.wait_for_disconnect()
+
+    def test_requested_block_of_invalid_branch_not_punished(self):
+        self.log.info("Test an outbound peer is not punished for a requested block whose ancestor turned out invalid")
+        node = self.nodes[0]
+        peer = node.add_outbound_p2p_connection(StaleTipPeer(), p2p_idx=0)
+        peer.send_and_ping(msg_inv([CInv(MSG_BLOCK, int(node.getbestblockhash(), 16))]))
+        blocks, fork_point_hash = self.stale_branch(length=3, fork_depth=1)
+        invalid, child, tip = blocks
+        # Spending a missing output fails only once the block is connected.
+        self.add_tx_spending(invalid, [COutPoint(0xdead, 0)])
+        child.hashPrevBlock = invalid.hash_int
+        child.solve()
+        tip.hashPrevBlock = child.hash_int
+        tip.solve()
+
+        peer.send_and_ping(self.staletip_msg(blocks, fork_point_hash, have_block=True))
+        self.wait_until(lambda: {block.hash_int for block in blocks} <= set(self.block_getdata_hashes(peer)))
+        # Connecting the branch finds the first block invalid, and with it the
+        # tip, which is then delivered as we requested it.
+        peer.send_and_ping(msg_block(child))
+        peer.send_and_ping(msg_block(invalid))
+        self.wait_until(lambda: any(t["hash"] == tip.hash_hex and t["status"] == "invalid" for t in node.getchaintips()))
+        peer.send_and_ping(msg_block(tip))
+        assert peer.is_connected
+        node.disconnect_p2ps()
 
     def test_active_tip_announced_to_source_peer(self):
         self.log.info("Test active tip is announced to staletip peers that announced it first, but not to other peers")

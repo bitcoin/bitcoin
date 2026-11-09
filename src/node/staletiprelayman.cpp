@@ -89,17 +89,30 @@ void StaleTipRelayManager::DisconnectedPeer(NodeId peer)
     m_peers.erase(peer);
 }
 
-bool StaleTipRelayManager::ReceivedStaleTip(NodeId peer, const CChain& chain, const CBlockIndex& tip)
+bool StaleTipRelayManager::ReceivedStaleTip(NodeId peer, const CChain& chain, const CBlockIndex& tip, bool have_block)
 {
     AssertLockHeld(::cs_main);
     const auto it{m_peers.find(peer)};
     if (!Assume(it != m_peers.end())) return false;
     auto& from_peer{it->second.m_staletips_from_peer};
-    if (std::ranges::find(from_peer, &tip) == from_peer.end()) {
+    if (auto announced{std::ranges::find(from_peer, &tip, &StaleTipAnnouncement::tip)}; announced != from_peer.end()) {
+        announced->have_block |= have_block;
+    } else {
         if (from_peer.size() >= MAX_STALETIPS_FROM_PEER) from_peer.pop_front();
-        from_peer.push_back(&tip);
+        from_peer.push_back({.tip = &tip, .have_block = have_block});
     }
     return m_tracker.AddStaleTip(chain, tip);
+}
+
+bool StaleTipRelayManager::IsAnnouncedStaleBranchBlock(NodeId peer, const CChain& chain, const CBlockIndex& block) const
+{
+    AssertLockHeld(::cs_main);
+    if (chain.Contains(block)) return false;
+    const auto it{m_peers.find(peer)};
+    if (it == m_peers.end()) return false;
+    return std::ranges::any_of(it->second.m_staletips_from_peer, [&](const StaleTipAnnouncement& announced) {
+        return announced.have_block && HasAncestor(*announced.tip, block);
+    });
 }
 
 std::vector<StaleTipMessage> StaleTipRelayManager::GetStaleTipsToAnnounce(
@@ -118,7 +131,7 @@ std::vector<StaleTipMessage> StaleTipRelayManager::GetStaleTipsToAnnounce(
         // Don't announce a tip twice.
         if (info.m_staletips_to_peer.contains(&stale_tip)) continue;
         // Don't announce a tip back to the peer that announced it to us.
-        if (std::ranges::find(info.m_staletips_from_peer, &stale_tip) != info.m_staletips_from_peer.end()) continue;
+        if (std::ranges::find(info.m_staletips_from_peer, &stale_tip, &StaleTipAnnouncement::tip) != info.m_staletips_from_peer.end()) continue;
         // The compressed payload reconstructs headers from the fork point, so
         // only announce tips whose fork point the peer is known to have.
         if (!peer_has_header(*fork.fork_point)) continue;

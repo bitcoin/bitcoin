@@ -98,10 +98,17 @@ public:
     void DisconnectedPeer(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Remember a stale tip `peer` announced, and track it if it is eligible.
+     *  The peer's offer of the branch's blocks is kept once made.
      *
      * @return Whether a new stale tip is tracked, so it should be relayed.
      */
-    bool ReceivedStaleTip(NodeId peer, const CChain& chain, const CBlockIndex& tip) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool ReceivedStaleTip(NodeId peer, const CChain& chain, const CBlockIndex& tip, bool have_block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    /** Whether `block` is on a stale branch `peer` announced with have_block
+     *  set. The branch is the part of the announced tip's ancestry that is not
+     *  on `chain`. A block known to be invalid is still included, as it may
+     *  have turned out invalid after the peer announced it. */
+    bool IsAnnouncedStaleBranchBlock(NodeId peer, const CChain& chain, const CBlockIndex& block) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Build the `staletip` messages to send to `peer` now, for tracked stale
      *  tips in the order they were tracked, and remember the tips as
@@ -130,11 +137,19 @@ public:
     void CheckIsEmpty() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 private:
+    /** A stale tip a peer announced to us. */
+    struct StaleTipAnnouncement {
+        const CBlockIndex* tip;
+        //! Whether the peer offered to serve the blocks on the tip's branch. It
+        //! may not have connected them, so their scripts may be unchecked.
+        bool have_block;
+    };
+
     struct PeerInfo {
         /** Stale tips this peer announced to us, oldest first. Kept
          *  independently of our tracker, so tips we don't track (yet) are
          *  remembered too. */
-        std::deque<const CBlockIndex*> m_staletips_from_peer;
+        std::deque<StaleTipAnnouncement> m_staletips_from_peer;
         /** Tracked stale tips we announced to this peer. */
         std::set<const CBlockIndex*> m_staletips_to_peer;
     };
