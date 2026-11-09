@@ -1057,7 +1057,7 @@ public:
      * A backup is not created.
      * May crash if something unexpected happens in the filesystem.
      */
-    bool MigrateToSQLite(bilingual_str& error) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool MigrateToSQLite(const std::unordered_set<std::string>& skip_types, bilingual_str& error, bool& had_legacy_records) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Get all of the descriptors from a legacy wallet
     std::optional<MigrationData> GetDescriptorsForLegacy(bilingual_str& error) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
