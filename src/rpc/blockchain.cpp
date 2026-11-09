@@ -2452,7 +2452,6 @@ static RPCMethod scantxoutset()
 
         // Scan the unspent transaction output set for inputs
         UniValue unspents(UniValue::VARR);
-        std::vector<CTxOut> input_txos;
         std::map<COutPoint, Coin> coins;
         g_should_abort_scan = false;
         int64_t count = 0;
@@ -2478,7 +2477,6 @@ static RPCMethod scantxoutset()
             const Coin& coin = it.second;
             const CTxOut& txo = coin.out;
             const CBlockIndex& coinb_block{*CHECK_NONFATAL(tip->GetAncestor(coin.nHeight))};
-            input_txos.push_back(txo);
             total_in += txo.nValue;
 
             UniValue unspent(UniValue::VOBJ);
