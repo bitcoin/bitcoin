@@ -250,8 +250,6 @@ public:
     /** Get the DescriptorScriptPubKeyMans (with private keys) that have the same scriptPubKeys as this LegacyDataSPKM.
      * Does not modify this LegacyDataSPKM. */
     std::optional<MigrationData> MigrateToDescriptor();
-    /** Delete the legacy wallet records from disk. */
-    bool DeleteRecordsWithDB(WalletBatch& batch);
 };
 
 /** SigningProvider wrapper for LegacyDataSPKM that does not provide private keys. */

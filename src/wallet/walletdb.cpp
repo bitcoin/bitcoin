@@ -1341,13 +1341,6 @@ bool WalletBatch::WriteLastDecryptedFeatures()
     return WriteIC(DBKeys::LAST_DECRYPTED_FEATURES, WALLET_CLIENT_FEATURES);
 }
 
-bool WalletBatch::EraseRecords(const std::unordered_set<std::string>& types)
-{
-    return std::all_of(types.begin(), types.end(), [&](const std::string& type) {
-        return m_batch->ErasePrefix(DataStream() << type);
-    });
-}
-
 bool WalletBatch::TxnBegin()
 {
     return m_batch->TxnBegin();
