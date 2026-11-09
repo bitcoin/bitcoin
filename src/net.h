@@ -691,6 +691,8 @@ public:
 
     const NetPermissionFlags m_permission_flags;
 
+    const ConnectionType m_conn_type;
+
     /**
      * Socket used for communication with the node.
      * May not own a Sock object (after `CloseSocketDisconnect()` or during tests).
@@ -730,6 +732,7 @@ public:
     const std::string m_dest;
     //! Whether this peer is an inbound onion, i.e. connected via our Tor onion service.
     const bool m_inbound_onion;
+    const bool m_prefer_evict{false}; // This peer is preferred for eviction.
     std::atomic<int> nVersion{0};
     Mutex m_subver_mutex;
     /**
@@ -737,7 +740,6 @@ public:
      * from the wire. This cleaned string can safely be logged or displayed.
      */
     std::string cleanSubVer GUARDED_BY(m_subver_mutex){};
-    const bool m_prefer_evict{false}; // This peer is preferred for eviction.
     bool HasPermission(NetPermissionFlags permission) const {
         return NetPermissions::HasFlag(m_permission_flags, permission);
     }
@@ -746,20 +748,18 @@ public:
     // Setting fDisconnect to true will cause the node to be disconnected the
     // next time DisconnectNodes() runs
     std::atomic_bool fDisconnect{false};
-    CountingSemaphoreGrant<> grantOutbound;
-    std::atomic<int> nRefCount{0};
-
-    const uint64_t nKeyedNetGroup;
     std::atomic_bool fPauseRecv{false};
     std::atomic_bool fPauseSend{false};
+    std::atomic<int> nRefCount{0};
+    CountingSemaphoreGrant<> grantOutbound;
+
+    const uint64_t nKeyedNetGroup;
     /** When was fPauseSend last set from false to true */
     std::atomic<NodeClock::time_point> m_pause_send_since{NodeClock::epoch};
 
     /** Network key used to prevent fingerprinting our node across networks.
      *  Influenced by the network and the bind address (+ bind port for inbounds) */
     const uint64_t m_network_key;
-
-    const ConnectionType m_conn_type;
 
     /** Move all messages from the received queue to the processing queue. */
     void MarkReceivedMsgsForProcessing()
@@ -1656,6 +1656,7 @@ private:
     std::vector<ListenSocket> vhListenSocket;
     std::atomic<bool> fNetworkActive{true};
     bool fAddressesInitialized{false};
+    bool m_use_addrman_outgoing;
     std::reference_wrapper<AddrMan> addrman;
     const NetGroupManager& m_netgroupman;
     std::deque<std::string> m_addr_fetches GUARDED_BY(m_addr_fetches_mutex);
@@ -1742,7 +1743,6 @@ private:
     int m_max_inbound;
     int m_max_inbound_full_relay;
 
-    bool m_use_addrman_outgoing;
     CClientUIInterface* m_client_interface;
     NetEventsInterface* m_msgproc;
     /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
@@ -1759,11 +1759,10 @@ private:
     /** SipHasher seeds for deterministic randomness */
     const uint64_t nSeed0, nSeed1;
 
-    /** flag for waking the message processor. */
-    bool fMsgProcWake GUARDED_BY(mutexMsgProc);
-
     std::condition_variable condMsgProc;
     Mutex mutexMsgProc;
+    /** flag for waking the message processor. */
+    bool fMsgProcWake GUARDED_BY(mutexMsgProc);
     std::atomic<bool> flagInterruptMsgProc{false};
 
     /**
@@ -1787,6 +1786,12 @@ private:
     std::thread threadI2PAcceptIncoming;
     std::thread threadPrivateBroadcast;
 
+    /**
+     * A vector of -bind=<address>:<port>=onion arguments each of which is
+     * an address and port that are designated for incoming Tor connections.
+     */
+    std::vector<CService> m_onion_binds;
+
     /** flag for deciding to connect to an extra outbound peer,
      *  in excess of m_max_outbound_full_relay
      *  This takes the place of a feeler connection */
@@ -1797,12 +1802,6 @@ private:
      *  as these connections are intended to be short-lived and low-bandwidth.
      */
     std::atomic_bool m_start_extra_block_relay_peers{false};
-
-    /**
-     * A vector of -bind=<address>:<port>=onion arguments each of which is
-     * an address and port that are designated for incoming Tor connections.
-     */
-    std::vector<CService> m_onion_binds;
 
     /**
      * flag for adding 'forcerelay' permission to whitelisted inbound
