@@ -67,6 +67,48 @@ BOOST_AUTO_TEST_CASE(IsPayToWitnessScriptHash_Invalid_Pushdata)
     BOOST_CHECK(!CScript(bytes.begin(), bytes.end()).IsPayToWitnessScriptHash());
 }
 
+BOOST_AUTO_TEST_CASE(IsPayToWitnessPubKeyHash_Valid)
+{
+    uint160 dummy;
+    CScript p2wpkh;
+    p2wpkh << OP_0 << ToByteVector(dummy);
+    BOOST_CHECK(p2wpkh.IsPayToWitnessPubKeyHash());
+
+    std::vector<unsigned char> bytes = {OP_0, 20};
+    bytes.insert(bytes.end(), 20, 0);
+    BOOST_CHECK(CScript(bytes.begin(), bytes.end()).IsPayToWitnessPubKeyHash());
+}
+
+BOOST_AUTO_TEST_CASE(IsPayToWitnessPubKeyHash_Invalid_NotOp0)
+{
+    uint160 dummy;
+    CScript notp2wpkh;
+    notp2wpkh << OP_1 << ToByteVector(dummy);
+    BOOST_CHECK(!notp2wpkh.IsPayToWitnessPubKeyHash());
+}
+
+BOOST_AUTO_TEST_CASE(IsPayToWitnessPubKeyHash_Invalid_Size)
+{
+    uint256 dummy;
+    CScript notp2wpkh;
+    notp2wpkh << OP_0 << ToByteVector(dummy);
+    BOOST_CHECK(!notp2wpkh.IsPayToWitnessPubKeyHash());
+}
+
+BOOST_AUTO_TEST_CASE(IsPayToWitnessPubKeyHash_Invalid_Nop)
+{
+    uint160 dummy;
+    CScript notp2wpkh;
+    notp2wpkh << OP_0 << OP_NOP << ToByteVector(dummy);
+    BOOST_CHECK(!notp2wpkh.IsPayToWitnessPubKeyHash());
+}
+
+BOOST_AUTO_TEST_CASE(IsPayToWitnessPubKeyHash_Invalid_EmptyScript)
+{
+    CScript notp2wpkh;
+    BOOST_CHECK(!notp2wpkh.IsPayToWitnessPubKeyHash());
+}
+
 namespace {
 
 bool IsExpectedWitnessProgram(const CScript& script, const int expectedVersion, const std::vector<unsigned char>& expectedProgram)
