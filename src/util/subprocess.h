@@ -1,6 +1,11 @@
 // Based on the https://github.com/arun11299/cpp-subprocess project.
 
+#ifndef BITCOIN_UTIL_SUBPROCESS_H
+#define BITCOIN_UTIL_SUBPROCESS_H
+
 /*!
+@file
+@brief C++ subprocessing library.
 
 Documentation for C++ subprocessing library.
 
@@ -32,9 +37,6 @@ Documentation for C++ subprocessing library.
 
 @version 1.0.0
 */
-
-#ifndef BITCOIN_UTIL_SUBPROCESS_H
-#define BITCOIN_UTIL_SUBPROCESS_H
 
 #include <util/check.h>
 #include <util/syserror.h>
