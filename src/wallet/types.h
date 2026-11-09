@@ -3,8 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-//! @file wallet/types.h is a home for public enum and struct type definitions
-//! that are used by internally by wallet code, but also used externally by node
+//! @file
+//! @brief Home for public enum and struct type definitions.
+//!
+//! These are used internally by wallet code, but also used externally by node
 //! or GUI code.
 //!
 //! This file is intended to define only simple types that do not have external
