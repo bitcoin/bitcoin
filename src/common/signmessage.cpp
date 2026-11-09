@@ -229,8 +229,16 @@ BIP322VerificationResult BIP322Verify(const CTxDestination& destination, std::st
     const TransactionSignatureChecker txchecker{&tx, 0, 0, txdata, MissingDataBehavior::FAIL};
     const BIP322SignatureChecker checker{txchecker};
     const auto& proof = tx.vin[0].scriptWitness;
-    if (!VerifyScript({}, challenge, &proof, BIP322_REQUIRED_FLAGS, checker, script_error)) {
-        return BIP322VerificationResult::INVALID;
+    // Valid proofs need only one pass. On failure, required rules take precedence
+    // over upgrades; keep the upgrade error if the required-only pass succeeds.
+    ScriptError upgrade_error;
+    const bool upgrade_valid = VerifyScript({}, challenge, &proof, BIP322_REQUIRED_FLAGS | BIP322_UPGRADE_FLAGS, checker, &upgrade_error);
+    if (!upgrade_valid) {
+        ScriptError required_error;
+        if (!VerifyScript({}, challenge, &proof, BIP322_REQUIRED_FLAGS, checker, &required_error)) {
+            if (script_error) *script_error = required_error;
+            return BIP322VerificationResult::INVALID;
+        }
     }
 
     // Only inspect scripts after Core has verified their commitment to the address.
@@ -254,8 +262,8 @@ BIP322VerificationResult BIP322Verify(const CTxDestination& destination, std::st
             }
         }
     }
-    // Required failure takes precedence over upgrades, including annexes and unknown keys.
-    if (!VerifyScript({}, challenge, &proof, BIP322_REQUIRED_FLAGS | BIP322_UPGRADE_FLAGS, checker, script_error) || annex || !known) {
+    if (script_error) *script_error = upgrade_error;
+    if (!upgrade_valid || annex || !known) {
         return BIP322VerificationResult::INCONCLUSIVE;
     }
     return BIP322VerificationResult::OK;

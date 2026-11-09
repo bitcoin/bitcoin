@@ -6,6 +6,7 @@
 #include <arith_uint256.h>
 #include <common/signmessage.h>
 #include <consensus/consensus.h>
+#include <consensus/validation.h>
 #include <core_io.h>
 #include <hash.h>
 #include <key.h>
@@ -27,6 +28,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -54,10 +56,13 @@ std::string EncodeProof(const Witness& witness)
     return "smp" + EncodeBase64(bytes);
 }
 
-void CheckProof(const CTxDestination& destination, const Witness& witness, Result expected)
+void CheckProof(const CTxDestination& destination, const Witness& witness, Result expected,
+                std::optional<ScriptError> expected_error = std::nullopt)
 {
-    const auto actual = BIP322Verify(destination, EncodeProof(witness), RULE_MESSAGE);
+    ScriptError error{SCRIPT_ERR_UNKNOWN_ERROR};
+    const auto actual = BIP322Verify(destination, EncodeProof(witness), RULE_MESSAGE, &error);
     BOOST_CHECK_EQUAL(static_cast<int>(actual), static_cast<int>(expected));
+    if (expected_error) BOOST_CHECK_EQUAL(error, *expected_error);
 }
 
 bool OrdinaryVerify(const CTxDestination& destination, const Witness& witness, script_verify_flags flags = CONSENSUS_FLAGS)
@@ -566,23 +571,26 @@ BOOST_AUTO_TEST_CASE(upgradeable_rules_and_precedence)
         for (const auto final : {OP_1, OP_0}) {
             const auto script = CScript() << opcode << final;
             const Witness witness{{script.begin(), script.end()}};
-            CheckProof(WitnessV0ScriptHash{script}, witness, final == OP_1 ? Result::INCONCLUSIVE : Result::INVALID);
+            const auto error = final == OP_1 ? SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS : SCRIPT_ERR_EVAL_FALSE;
+            CheckProof(WitnessV0ScriptHash{script}, witness, final == OP_1 ? Result::INCONCLUSIVE : Result::INVALID, error);
             const auto tap = MakeTapProof(script);
-            CheckProof(tap.destination, tap.witness, final == OP_1 ? Result::INCONCLUSIVE : Result::INVALID);
+            CheckProof(tap.destination, tap.witness, final == OP_1 ? Result::INCONCLUSIVE : Result::INVALID, error);
         }
     }
     auto tap = MakeTapProof(CScript() << OP_1, {}, 0xc2);
-    CheckProof(tap.destination, tap.witness, Result::INCONCLUSIVE);
+    CheckProof(tap.destination, tap.witness, Result::INCONCLUSIVE, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION);
     tap.witness.back()[1] ^= 1;
-    CheckProof(tap.destination, tap.witness, Result::INVALID); // Bind before classifying an unknown leaf.
+    CheckProof(tap.destination, tap.witness, Result::INVALID, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH); // Bind before classifying an unknown leaf.
     tap = MakeTapProof(CScript() << OP_RESERVED);
     CheckProof(tap.destination, tap.witness, Result::INCONCLUSIVE); // OP_SUCCESS80.
     tap = MakeTapProof(CScript() << OP_0 << OP_IF << OP_RESERVED << OP_ENDIF << OP_0);
     CheckProof(tap.destination, tap.witness, Result::INCONCLUSIVE); // OP_SUCCESS also applies in inactive branches.
     tap = MakeTapProof(CScript() << OP_RESERVED << OP_CODESEPARATOR);
-    CheckProof(tap.destination, tap.witness, Result::INVALID); // Required separator prohibition survives OP_SUCCESS.
+    CheckProof(tap.destination, tap.witness, Result::INVALID, SCRIPT_ERR_OP_CODESEPARATOR); // Required separator prohibition survives OP_SUCCESS.
+    tap.witness.back()[0] ^= 1;
+    CheckProof(tap.destination, tap.witness, Result::INVALID, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH); // Invalid commitment wins over the separator scan.
     tap = MakeTapProof(CScript() << OP_CODESEPARATOR, {}, 0xc2);
-    CheckProof(tap.destination, tap.witness, Result::INCONCLUSIVE); // Unknown leaf semantics are opaque.
+    CheckProof(tap.destination, tap.witness, Result::INCONCLUSIVE, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION); // Unknown leaf semantics are opaque.
     tap = MakeTapProof(CScript() << OP_RESERVED, Witness(MAX_STACK_SIZE + 1, std::vector<unsigned char>(521)));
     BOOST_REQUIRE(OrdinaryVerify(tap.destination, tap.witness));
     CheckProof(tap.destination, tap.witness, Result::INCONCLUSIVE); // OP_SUCCESS overrides consensus stack limits.
@@ -595,34 +603,59 @@ BOOST_AUTO_TEST_CASE(upgradeable_rules_and_precedence)
     const CScript nonminimal_script{nonminimal.begin(), nonminimal.end()};
     const Witness nonminimal_proof{{nonminimal_script.begin(), nonminimal_script.end()}};
     BOOST_REQUIRE(OrdinaryVerify(WitnessV0ScriptHash{nonminimal_script}, nonminimal_proof));
-    CheckProof(WitnessV0ScriptHash{nonminimal_script}, nonminimal_proof, Result::INVALID);
+    CheckProof(WitnessV0ScriptHash{nonminimal_script}, nonminimal_proof, Result::INVALID, SCRIPT_ERR_MINIMALDATA);
     tap = MakeTapProof(nonminimal_script);
-    CheckProof(tap.destination, tap.witness, Result::INVALID); // Required MINIMALDATA before upgrade classification.
+    CheckProof(tap.destination, tap.witness, Result::INVALID, SCRIPT_ERR_MINIMALDATA); // Required MINIMALDATA before upgrade classification.
     const auto ecdsa_key = TestKey(9);
     const auto sighash_script = CScript() << OP_NOP1 << ToByteVector(ecdsa_key.GetPubKey()) << OP_CHECKSIG;
     const WitnessV0ScriptHash sighash_destination{sighash_script};
     const Witness sighash_proof{SignECDSA(ecdsa_key, sighash_destination, sighash_script, SIGHASH_NONE),
         {sighash_script.begin(), sighash_script.end()}};
     BOOST_REQUIRE(OrdinaryVerify(sighash_destination, sighash_proof));
-    CheckProof(sighash_destination, sighash_proof, Result::INVALID);
+    CheckProof(sighash_destination, sighash_proof, Result::INVALID, SCRIPT_ERR_SIG_NULLFAIL);
     for (const auto final : {OP_1, OP_0}) {
         tap = MakeTapProof(CScript() << final);
         tap.witness.push_back({ANNEX_TAG, 1});
-        CheckProof(tap.destination, tap.witness, final == OP_1 ? Result::INCONCLUSIVE : Result::INVALID);
+        CheckProof(tap.destination, tap.witness, final == OP_1 ? Result::INCONCLUSIVE : Result::INVALID,
+                   final == OP_1 ? SCRIPT_ERR_OK : SCRIPT_ERR_EVAL_FALSE);
     }
     const auto key = TestKey(7);
     const WitnessV1Taproot dest{XOnlyPubKey{key.GetPubKey()}};
     const std::vector<unsigned char> annex{ANNEX_TAG, 9};
     const auto sig = SignSchnorr(key, dest, SIGHASH_ALL, nullptr, &annex);
     BOOST_REQUIRE(OrdinaryVerify(dest, {sig, annex}));
-    CheckProof(dest, {sig, annex}, Result::INCONCLUSIVE);
+    CheckProof(dest, {sig, annex}, Result::INCONCLUSIVE, SCRIPT_ERR_OK);
     auto bad = sig;
     bad[0] ^= 1;
-    CheckProof(dest, {bad, annex}, Result::INVALID);
+    CheckProof(dest, {bad, annex}, Result::INVALID, SCRIPT_ERR_SCHNORR_SIG);
     for (int version{2}; version <= 16; ++version) {
-        CheckProof(WitnessUnknown{version, std::vector<unsigned char>(32, 3)}, {}, Result::INCONCLUSIVE);
+        CheckProof(WitnessUnknown{version, std::vector<unsigned char>(32, 3)}, {}, Result::INCONCLUSIVE,
+                   SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM);
     }
     CheckProof(PayToAnchor{}, {}, Result::UNSUPPORTED_ADDRESS);
+}
+
+BOOST_AUTO_TEST_CASE(transaction_weight_boundary)
+{
+    // Unknown leaves are opaque, so script execution cannot mask the weight guard.
+    for (const size_t size : {3'999'714, 3'999'715}) {
+        BOOST_TEST_CONTEXT("script bytes: " << size) {
+            const std::vector<unsigned char> script_bytes(size, OP_NOP);
+            const CScript script{script_bytes.begin(), script_bytes.end()};
+            const auto tap = MakeTapProof(script, {}, 0xc2);
+            BOOST_REQUIRE_EQUAL(tap.witness.back().size(), TAPROOT_CONTROL_BASE_SIZE);
+            DataStream bytes;
+            bytes << tap.witness;
+            BOOST_CHECK_EQUAL(bytes.size(), size + 40);
+            auto txs = CreateBIP322Transactions(GetScriptForDestination(tap.destination), RULE_MESSAGE);
+            txs.to_sign.vin[0].scriptWitness.stack = tap.witness;
+            const auto weight = GetTransactionWeight(CTransaction{txs.to_sign});
+            BOOST_CHECK_EQUAL(weight, size + 286);
+            const bool at_limit = weight == MAX_BLOCK_WEIGHT;
+            CheckProof(tap.destination, tap.witness, at_limit ? Result::INCONCLUSIVE : Result::INVALID,
+                       at_limit ? SCRIPT_ERR_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION : SCRIPT_ERR_UNKNOWN_ERROR);
+        }
+    }
 }
 
 BOOST_AUTO_TEST_CASE(large_consensus_witnesses)
