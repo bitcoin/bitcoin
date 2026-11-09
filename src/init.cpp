@@ -2314,7 +2314,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                     "for the automatically created Tor onion service."),
                                   onion_service_target.ToStringAddrPort()));
         }
-        node.tor_controller = std::make_unique<TorController>(gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), onion_service_target);
+        const bool tor_control_configured{gArgs.IsArgSet("-listenonion") || gArgs.IsArgSet("-torcontrol") || gArgs.IsArgSet("-torpassword")};
+        node.tor_controller = std::make_unique<TorController>(gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), onion_service_target,
+                                                              tor_control_configured);
     }
 
     bool should_discover = connOptions.bind_on_any;
