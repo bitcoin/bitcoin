@@ -557,7 +557,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
     assert(controlCheck);
 }
 
-SignatureData CombineSignatures(const CMutableTransaction& input1, const CMutableTransaction& input2, const CTransactionRef tx)
+static SignatureData CombineSignatures(const CMutableTransaction& input1, const CMutableTransaction& input2, const CTransactionRef tx)
 {
     SignatureData sigdata;
     sigdata = DataFromTransaction(input1, 0, tx->vout[0]);
