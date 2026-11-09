@@ -34,7 +34,6 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 
-#include <cassert>
 #include <chrono>
 #include <limits>
 #include <set>

@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <chainparams.h>
 #include <coins.h>
 #include <consensus/tx_check.h>
@@ -20,7 +21,6 @@
 #include <util/rbf.h>
 #include <validation.h>
 
-#include <cassert>
 
 void initialize_transaction()
 {

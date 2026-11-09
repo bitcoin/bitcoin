@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <net.h>
 #include <protocol.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -10,7 +11,6 @@
 #include <test/fuzz/util/net.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cstdint>
 #include <optional>
 #include <vector>

@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <blockfilter.h>
 #include <serialize.h>
 #include <streams.h>
@@ -13,7 +14,6 @@
 #include <util/golombrice.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cstdint>
 #include <iosfwd>
 #include <unordered_set>
