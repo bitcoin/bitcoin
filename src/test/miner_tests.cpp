@@ -546,6 +546,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
 
         // double spend txn pair in tx_mempool, template creation fails
         tx.vin[0].prevout.hash = txFirst[0]->GetHash();
+        tx.vin[0].prevout.n = 0;
         tx.vin[0].scriptSig = CScript() << OP_1;
         tx.vout[0].nValue = BLOCKSUBSIDY - HIGHFEE;
         tx.vout[0].scriptPubKey = CScript() << OP_1;
