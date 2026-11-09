@@ -61,7 +61,7 @@ static std::string MigrationFilePrefix(CWallet& wallet)
     return fs::PathToString(legacy_wallet_path.filename());
 }
 
-bool CWallet::MigrateToSQLite(bilingual_str& error)
+bool CWallet::MigrateToSQLite(const std::unordered_set<std::string>& skip_types, bilingual_str& error, bool& had_legacy_records)
 {
     AssertLockHeld(cs_wallet);
 
@@ -90,6 +90,14 @@ bool CWallet::MigrateToSQLite(bilingual_str& error)
         }
         SerializeData key(ss_key.begin(), ss_key.end());
         SerializeData value(ss_value.begin(), ss_value.end());
+
+        std::string type;
+        ss_key >> type;
+        if (skip_types.contains(type)) {
+            had_legacy_records = true;
+            continue;
+        }
+
         records.emplace_back(key, value);
     }
     cursor.reset();
@@ -237,11 +245,6 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         AddScriptPubKeyMan(id, std::move(desc_spkm));
     }
 
-    // Remove the LegacyDataSPKM's records from disk
-    if (!legacy_spkm->DeleteRecordsWithDB(local_wallet_batch)) {
-        return util::Error{_("Error: cannot remove legacy wallet records")};
-    }
-
     // Remove the LegacyDataSPKM from memory
     m_spk_managers.erase(legacy_spkm->GetID());
     m_external_spk_managers.clear();
@@ -283,7 +286,6 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
 
     // Check if the transactions in the wallet are still ours. Either they belong here, or they belong in the watchonly wallet.
     // We need to go through these in the tx insertion order so that lookups to spends works.
-    std::vector<Txid> txids_to_delete;
     std::unique_ptr<WalletBatch> watchonly_batch;
     if (data.watchonly_wallet) {
         watchonly_batch = std::make_unique<WalletBatch>(data.watchonly_wallet->GetDatabase());
@@ -322,9 +324,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
                     return util::Error{strprintf(_("Error: Could not add watchonly tx %s to watchonly wallet"), wtx->GetHash().GetHex())};
                 }
                 watchonly_batch->WriteFullTx(data.watchonly_wallet->mapWallet.at(hash));
-                // Mark as to remove from the migrated wallet only if it does not also belong to it
                 if (!is_mine) {
-                    txids_to_delete.push_back(hash);
                     continue;
                 }
             }
@@ -335,13 +335,6 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         }
         // Rewrite the transaction so that anything that may have changed about it in memory also persists to disk
         local_wallet_batch.WriteTxMetadata(*wtx);
-    }
-
-    // Do the removes
-    if (txids_to_delete.size() > 0) {
-        if (auto res = RemoveTxs(local_wallet_batch, txids_to_delete); !res) {
-            return util::Error{_("Error: Could not delete watchonly transactions. ") + util::ErrorString(res)};
-        }
     }
 
     // Pair external wallets with their corresponding db handler
@@ -617,10 +610,13 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
     try {
         LOCK(local_wallet->cs_wallet);
         // First change to using SQLite
-        if (!local_wallet->MigrateToSQLite(error)) return util::Error{error};
+        std::unordered_set<std::string> skip_types = DBKeys::LEGACY_TYPES;
+        skip_types.insert(DBKeys::TX);
+        bool had_legacy_records = false;
+        if (!local_wallet->MigrateToSQLite(skip_types, error, had_legacy_records)) return util::Error{error};
 
         // Do the migration of keys and scripts for non-empty wallets, and cleanup if it fails
-        if (HasLegacyRecords(*local_wallet)) {
+        if (had_legacy_records) {
             success = DoMigration(*local_wallet, context, error, res, load_wallet);
             // No scripts mean empty wallet after migration
             empty_local_wallet = local_wallet->GetAllScriptPubKeyMans().empty();
