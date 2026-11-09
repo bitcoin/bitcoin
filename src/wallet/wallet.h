@@ -1058,7 +1058,7 @@ public:
      * Returns false, with the original database untouched, if the new one can't be built. Once the original
      * database may have been erased or replaced, failures throw instead, so the caller restores the backup.
      */
-    bool MigrateToSQLite(bilingual_str& error) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool MigrateToSQLite(bilingual_str& error, bool& had_legacy_records) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Get all of the descriptors from a legacy wallet
     std::optional<MigrationData> GetDescriptorsForLegacy(bilingual_str& error) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);

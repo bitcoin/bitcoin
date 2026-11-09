@@ -86,6 +86,8 @@ extern const std::string WTX_VARIANT;
 extern const std::string VERSION;
 extern const std::string WALLETDESCRIPTOR;
 extern const std::string WALLETDESCRIPTORCKEY;
+extern const std::string WALLETDESCRIPTORCACHE;
+extern const std::string WALLETDESCRIPTORLHCACHE;
 extern const std::string WALLETDESCRIPTORKEY;
 extern const std::string WATCHMETA;
 extern const std::string WATCHS;
