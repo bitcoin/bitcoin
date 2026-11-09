@@ -17,6 +17,7 @@
 #include <sync.h>
 
 #include <chrono>
+#include <memory>
 #include <optional>
 #include <vector>
 
@@ -334,7 +335,8 @@ bool DynSock::Wait(std::chrono::milliseconds timeout,
                    Event* occurred) const
 {
     EventsPerSock ev;
-    ev.emplace(this, Events{requested});
+    // Non-owning: an owning shared_ptr would delete this socket when `ev` goes out of scope.
+    ev.emplace(std::shared_ptr<const Sock>{this, [](const Sock*) {}}, Events{requested});
     const bool ret{WaitMany(timeout, ev)};
     if (occurred != nullptr) {
         *occurred = ev.begin()->second.occurred;
