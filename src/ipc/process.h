@@ -5,10 +5,10 @@
 #ifndef BITCOIN_IPC_PROCESS_H
 #define BITCOIN_IPC_PROCESS_H
 
+#include <mp/util.h>
 #include <util/fs.h>
 
 #include <memory>
-#include <ipc/util.h>
 #include <optional>
 #include <string>
 
