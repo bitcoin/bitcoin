@@ -8,10 +8,13 @@
 #include <common/signmessage.h>
 #include <key.h>
 #include <key_io.h>
+#include <musig.h>
 #include <primitives/transaction.h>
+#include <psbt.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/script.h>
+#include <script/signingprovider.h>
 #include <script/solver.h>
 #include <span.h>
 #include <streams.h>
@@ -19,6 +22,7 @@
 #include <test/data/bip322_vectors.json.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
+#include <uint256.h>
 #include <univalue.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -228,6 +232,151 @@ BOOST_AUTO_TEST_CASE(taproot_paths)
         BOOST_CHECK(witness[1] == std::vector<unsigned char>(expected_script.begin(), expected_script.end()));
         BOOST_REQUIRE_EQUAL(witness[2].size(), TAPROOT_CONTROL_BASE_SIZE);
         BOOST_CHECK(std::equal(witness[2].begin() + 1, witness[2].end(), XOnlyPubKey::NUMS_H.begin()));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(musig_nonce_lifetime)
+{
+    const auto vectors = Vectors();
+    const auto& secrets = vectors["basic"]["simple"][2]["private_keys"];
+    const auto local_key = DecodeSecret(secrets[0].get_str());
+    const std::vector<CPubKey> participants{local_key.GetPubKey(), DecodeSecret(secrets[1].get_str()).GetPubKey()};
+    const auto aggregate = MuSig2AggregatePubkeys(participants);
+    BOOST_REQUIRE(aggregate);
+    for (const bool fallback : {false, true}) {
+        BOOST_TEST_CONTEXT("script fallback " << fallback) {
+            CWallet wallet{m_node.chain.get(), "", CreateMockableWalletDatabase()};
+            const std::string descriptor = "tr(musig(" + secrets[0].get_str() + "," + HexStr(participants[1]) + ")" +
+                (fallback ? ",pk(" + secrets[0].get_str() + ")" : "") + ")";
+            auto* spkm = CreateDescriptor(wallet, descriptor, /*success=*/true);
+            BOOST_REQUIRE(spkm);
+            const auto scripts = spkm->GetScriptPubKeys();
+            BOOST_REQUIRE_EQUAL(scripts.size(), 1);
+            CTxDestination destination;
+            BOOST_REQUIRE(ExtractDestination(*scripts.begin(), destination));
+
+            LOCK(wallet.cs_wallet);
+            auto provider = spkm->GetSigningProvider(local_key.GetPubKey());
+            BOOST_REQUIRE(provider);
+            BOOST_REQUIRE(provider->musig2_secnonces);
+
+            // Preserve a valid nonce from an unrelated, ongoing signing session.
+            MuSig2SecNonce nonce;
+            const auto pubnonce = CreateMuSig2Nonce(nonce, uint256{}, local_key, *aggregate, participants);
+            BOOST_REQUIRE_EQUAL(pubnonce.size(), MUSIG2_PUBNONCE_SIZE);
+            const auto session_id = MuSig2SessionID(*aggregate, local_key.GetPubKey(), uint256{}, pubnonce);
+            {
+                LOCK(spkm->cs_desc_man);
+                BOOST_REQUIRE(provider->musig2_secnonces->empty());
+                provider->SetMuSig2SecNonce(session_id, std::move(nonce));
+            }
+            for (size_t attempt{0}; attempt < 3; ++attempt) {
+                if (fallback) {
+                    const auto witness = SignProof(wallet, destination, "MuSig2 script fallback");
+                    BOOST_REQUIRE_EQUAL(witness.size(), 3);
+                } else {
+                    std::string proof{"unchanged"};
+                    BOOST_CHECK(wallet.SignBIP322Message("MuSig2 missing participant", destination, proof) == SigningResult::PRIVATE_KEY_NOT_AVAILABLE);
+                    BOOST_CHECK_EQUAL(proof, "unchanged");
+                }
+                auto txs = CreateBIP322Transactions(GetScriptForDestination(destination), "raw transaction signing");
+                txs.to_sign.version = 2;
+                const std::map<COutPoint, Coin> coins{{txs.to_sign.vin[0].prevout, Coin{txs.to_spend.vout[0], 0, false}}};
+                std::map<int, bilingual_str> errors;
+                BOOST_CHECK_EQUAL(wallet.SignTransaction(txs.to_sign, coins, SIGHASH_DEFAULT, errors), fallback);
+                if (fallback) {
+                    const CTransaction tx{txs.to_sign};
+                    PrecomputedTransactionData data;
+                    data.Init(tx, {txs.to_spend.vout[0]}, true);
+                    const TransactionSignatureChecker checker{&tx, 0, 0, data, MissingDataBehavior::FAIL};
+                    BOOST_CHECK(VerifyScript({}, txs.to_spend.vout[0].scriptPubKey, &tx.vin[0].scriptWitness,
+                        SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_TAPROOT, checker));
+                }
+                LOCK(spkm->cs_desc_man);
+                BOOST_CHECK_EQUAL(provider->musig2_secnonces->size(), 1);
+                const auto saved_nonce = provider->GetMuSig2SecNonce(session_id);
+                BOOST_REQUIRE(saved_nonce);
+                BOOST_CHECK(saved_nonce->get().IsValid());
+            }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(musig_psbt_session_survives_transaction_signing)
+{
+    const auto vectors = Vectors();
+    const auto& secrets = vectors["basic"]["simple"][2]["private_keys"];
+    const auto local_pubkey = DecodeSecret(secrets[0].get_str()).GetPubKey();
+    const auto other_pubkey = DecodeSecret(secrets[1].get_str()).GetPubKey();
+    for (const bool all_local : {false, true}) {
+        BOOST_TEST_CONTEXT("all participants local " << all_local) {
+            CWallet wallet{m_node.chain.get(), "", CreateMockableWalletDatabase()};
+            CWallet other_wallet{m_node.chain.get(), "", CreateMockableWalletDatabase()};
+            auto* spkm = CreateDescriptor(wallet, "tr(musig(" + secrets[0].get_str() + "," +
+                (all_local ? secrets[1].get_str() : HexStr(other_pubkey)) + "))", /*success=*/true);
+            BOOST_REQUIRE(spkm);
+            const auto scripts = spkm->GetScriptPubKeys();
+            BOOST_REQUIRE_EQUAL(scripts.size(), 1);
+            CTxDestination destination;
+            BOOST_REQUIRE(ExtractDestination(*scripts.begin(), destination));
+            BOOST_REQUIRE(Import(other_wallet, "tr(musig(" + HexStr(local_pubkey) + "," + secrets[1].get_str() + "))") == destination);
+            const auto script = GetScriptForDestination(destination);
+            auto txs = CreateBIP322Transactions(script, "persistent PSBT session");
+            PartiallySignedTransaction psbt{txs.to_sign, /*version=*/0};
+            psbt.inputs[0].witness_utxo = txs.to_spend.vout[0];
+            bool complete{false};
+            BOOST_REQUIRE(!wallet.FillPSBT(psbt, {.finalize = false}, complete));
+            BOOST_CHECK(!complete);
+            BOOST_REQUIRE_EQUAL(psbt.inputs[0].m_musig2_pubnonces.size(), 1);
+            const auto pubnonces = psbt.inputs[0].m_musig2_pubnonces;
+            BOOST_REQUIRE_EQUAL(pubnonces.begin()->second.size(), all_local ? 2 : 1);
+
+            LOCK(wallet.cs_wallet);
+            auto provider = spkm->GetSigningProvider(local_pubkey);
+            BOOST_REQUIRE(provider);
+            BOOST_REQUIRE(provider->musig2_secnonces);
+            std::vector<uint256> sessions;
+            {
+                LOCK(spkm->cs_desc_man);
+                BOOST_REQUIRE_EQUAL(provider->musig2_secnonces->size(), all_local ? 2 : 1);
+                for (auto& [id, nonce] : *provider->musig2_secnonces) {
+                    BOOST_REQUIRE(nonce.IsValid());
+                    sessions.push_back(id);
+                }
+            }
+            // Transaction-only signing cannot exchange nonces, even when all keys are local.
+            CheckFailure(wallet, destination, SigningResult::PRIVATE_KEY_NOT_AVAILABLE);
+            for (int attempt{0}; attempt < 3; ++attempt) {
+                auto raw = CreateBIP322Transactions(script, "intervening raw transaction");
+                raw.to_sign.version = 2;
+                const std::map<COutPoint, Coin> coins{{raw.to_sign.vin[0].prevout, Coin{raw.to_spend.vout[0], 0, false}}};
+                std::map<int, bilingual_str> errors;
+                BOOST_CHECK(!wallet.SignTransaction(raw.to_sign, coins, SIGHASH_DEFAULT, errors));
+            }
+            {
+                LOCK(spkm->cs_desc_man);
+                BOOST_CHECK_EQUAL(provider->musig2_secnonces->size(), sessions.size());
+                for (const auto& id : sessions) {
+                    const auto nonce = provider->GetMuSig2SecNonce(id);
+                    BOOST_REQUIRE(nonce);
+                    BOOST_CHECK(nonce->get().IsValid());
+                }
+            }
+            BOOST_CHECK(psbt.inputs[0].m_musig2_pubnonces == pubnonces);
+            if (!all_local) BOOST_REQUIRE(!other_wallet.FillPSBT(psbt, {.finalize = false}, complete));
+            BOOST_REQUIRE(!wallet.FillPSBT(psbt, {.finalize = false}, complete));
+            BOOST_REQUIRE_EQUAL(psbt.inputs[0].m_musig2_partial_sigs.size(), 1);
+            BOOST_CHECK_EQUAL(psbt.inputs[0].m_musig2_partial_sigs.begin()->second.size(), all_local ? 2 : 1);
+            BOOST_CHECK(WITH_LOCK(spkm->cs_desc_man, return provider->musig2_secnonces->empty()));
+            if (!all_local) BOOST_REQUIRE(!other_wallet.FillPSBT(psbt, {.finalize = false}, complete));
+            BOOST_REQUIRE(!wallet.FillPSBT(psbt, {}, complete));
+            BOOST_CHECK(complete);
+            CMutableTransaction signed_tx;
+            BOOST_REQUIRE(FinalizeAndExtractPSBT(psbt, signed_tx));
+            DataStream bytes;
+            bytes << signed_tx.vin[0].scriptWitness.stack;
+            BOOST_CHECK(BIP322Verify(destination, "smp" + EncodeBase64(bytes), "persistent PSBT session") == BIP322VerificationResult::OK);
+        }
     }
 }
 
