@@ -20,6 +20,9 @@ RPCMethod signmessage()
         "signmessage",
         "Sign a message for a wallet address. P2PKH uses the legacy compact format; native P2WPKH, P2WSH and P2TR use BIP322 simple proofs.\n"
         "BIP322 signing requires a complete satisfaction using the wallet's available descriptor keys, scripts and other data. Partial proofs are not returned.\n"
+        "BIP322 simple proofs fix transaction version, locktime and input sequence to zero.\n"
+        "Timelock requirements incompatible with these fields cannot be satisfied by waiting or importing more keys.\n"
+        "Signing may still succeed through another satisfiable script branch or a Taproot key path.\n"
         "Full signatures, proofs of funds and P2SH (including wrapped SegWit) are unsupported. signmessagewithprivkey remains legacy-only.\n"
         "A message proof does not establish a current balance or a past payment." +
           HELP_REQUIRING_PASSPHRASE,

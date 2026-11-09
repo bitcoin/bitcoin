@@ -157,13 +157,20 @@ BOOST_AUTO_TEST_CASE(official_vectors)
                     BOOST_CHECK(witness[1] == ToByteVector(DecodeSecret(secret).GetPubKey()));
                 } else if (type == "p2tr") {
                     BOOST_REQUIRE_EQUAL(witness.size(), 1);
-                    BOOST_REQUIRE_EQUAL(witness[0].size(), 65);
-                    BOOST_CHECK_EQUAL(witness[0].back(), SIGHASH_ALL);
+                    BOOST_REQUIRE_EQUAL(witness[0].size(), 64);
                 } else {
                     BOOST_REQUIRE_EQUAL(witness.size(), row["private_keys"].size() + 2);
                     BOOST_CHECK(witness.front().empty());
                     BOOST_CHECK_EQUAL(HexStr(witness.back()), row["witness_script"].get_str());
                     for (size_t i{1}; i + 1 < witness.size(); ++i) BOOST_CHECK_EQUAL(witness[i].back(), SIGHASH_ALL);
+                }
+                if (type != "p2tr") {
+                    // DEFAULT must preserve the deterministic witness-v0 proof bytes from explicit ALL.
+                    auto txs = CreateBIP322Transactions(GetScriptForDestination(destination), message);
+                    const std::map<COutPoint, Coin> coins{{txs.to_sign.vin[0].prevout, Coin{txs.to_spend.vout[0], 0, false}}};
+                    std::map<int, bilingual_str> errors;
+                    BOOST_REQUIRE(WITH_LOCK(wallet.cs_wallet, return wallet.SignTransaction(txs.to_sign, coins, SIGHASH_ALL, errors)));
+                    BOOST_CHECK(witness == txs.to_sign.vin[0].scriptWitness.stack);
                 }
                 ++rows;
             }
@@ -218,16 +225,14 @@ BOOST_AUTO_TEST_CASE(taproot_paths)
         BOOST_CHECK(destination != DecodeDestination(vectors["basic"]["simple"][3]["address"].get_str()));
         const auto witness = SignProof(wallet, destination, "Taproot key path with tree");
         BOOST_REQUIRE_EQUAL(witness.size(), 1);
-        BOOST_REQUIRE_EQUAL(witness[0].size(), 65);
-        BOOST_CHECK_EQUAL(witness[0].back(), SIGHASH_ALL);
+        BOOST_REQUIRE_EQUAL(witness[0].size(), 64);
     }
     {
         CWallet wallet{m_node.chain.get(), "", CreateMockableWalletDatabase()};
         const auto destination = Import(wallet, "tr(" + HexStr(XOnlyPubKey::NUMS_H) + ",pk(" + leaf_secret + "))");
         const auto witness = SignProof(wallet, destination, "Taproot forced script path");
         BOOST_REQUIRE_EQUAL(witness.size(), 3);
-        BOOST_REQUIRE_EQUAL(witness[0].size(), 65);
-        BOOST_CHECK_EQUAL(witness[0].back(), SIGHASH_ALL);
+        BOOST_REQUIRE_EQUAL(witness[0].size(), 64);
         const auto expected_script = CScript{} << ToByteVector(leaf_pubkey) << OP_CHECKSIG;
         BOOST_CHECK(witness[1] == std::vector<unsigned char>(expected_script.begin(), expected_script.end()));
         BOOST_REQUIRE_EQUAL(witness[2].size(), TAPROOT_CONTROL_BASE_SIZE);
