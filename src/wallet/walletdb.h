@@ -281,9 +281,6 @@ public:
     //! Write the current wallet client features to the LAST_DECRYPTED_FEATURES record
     [[nodiscard]] bool WriteLastDecryptedFeatures();
 
-    //! Delete records of the given types
-    bool EraseRecords(const std::unordered_set<std::string>& types);
-
     bool WriteWalletFlags(uint64_t flags);
 
     //! Begin a new transaction
