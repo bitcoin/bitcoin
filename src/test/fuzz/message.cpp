@@ -8,7 +8,10 @@
 #include <crypto/common.h>
 #include <key_io.h>
 #include <pubkey.h>
+#include <script/interpreter.h>
+#include <script/script.h>
 #include <script/script_error.h>
+#include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -65,6 +68,41 @@ FUZZ_TARGET(message, .init = initialize_message)
                 if (type == 3) assert(result != BIP322VerificationResult::OK);
             }
         }
+    }
+
+    {
+        // Consume independently so existing program/proof seeds and legacy checks
+        // keep their encoding. Recompute the commitment after every script mutation.
+        // BTR\0 selects a depth-zero Taproot tree. Other inputs retain the
+        // script-derived P2WSH encoding, including its existing seeds.
+        const bool taproot = buffer.size() >= 4 && ReadLE32(buffer.data()) == 0x00525442;
+        const auto input = taproot ? buffer.subspan(4) : buffer;
+        FuzzedDataProvider derived(input.data(), input.size());
+        const auto script_bytes = derived.ConsumeBytes<unsigned char>(derived.ConsumeIntegralInRange<size_t>(0, 1024));
+        const CScript script{script_bytes.begin(), script_bytes.end()};
+        std::vector<std::vector<unsigned char>> witness;
+        const auto stack_size = derived.ConsumeIntegralInRange<size_t>(0, 16);
+        for (size_t i{0}; i < stack_size; ++i) {
+            witness.push_back(derived.ConsumeBytes<unsigned char>(derived.ConsumeIntegralInRange<size_t>(0, 520)));
+        }
+        witness.push_back(script_bytes);
+        CTxDestination destination{WitnessV0ScriptHash{script}};
+        if (taproot) {
+            // The generator's x coordinate is a fixed valid internal key.
+            static const XOnlyPubKey internal{ParseHex("79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798")};
+            const auto version = derived.ConsumeIntegral<uint8_t>() & TAPROOT_LEAF_MASK;
+            const auto leaf = ComputeTapleafHash(version, script);
+            if (const auto tweaked = internal.CreateTapTweak(&leaf)) {
+                std::vector<unsigned char> control{static_cast<unsigned char>(version | tweaked->second)};
+                control.insert(control.end(), internal.begin(), internal.end());
+                witness.push_back(control);
+                destination = WitnessV1Taproot{tweaked->first};
+            }
+        }
+        DataStream proof;
+        proof << witness;
+        const auto message = derived.ConsumeRandomLengthString(1024);
+        (void)BIP322Verify(destination, "smp" + EncodeBase64(proof), message);
     }
 
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
