@@ -784,10 +784,6 @@ public:
 
     DBErrors PopulateWalletFromDB(bilingual_str& error, std::vector<bilingual_str>& warnings);
 
-    /** Erases the provided transactions from the wallet. */
-    util::Result<void> RemoveTxs(std::vector<Txid>& txs_to_remove) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    util::Result<void> RemoveTxs(WalletBatch& batch, std::vector<Txid>& txs_to_remove) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-
     /**
      * Drop all in-memory transaction state: the transactions themselves, the
      * outputs derived from them, the spends index and any coin locks. The
