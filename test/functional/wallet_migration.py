@@ -1178,6 +1178,57 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         wallet.unloadwallet()
 
+    def test_watchonly_txs_no_privkeys(self):
+        self.log.info("Test migrating a blank wallet with watch-only transactions and no spendable coins")
+        default = self.master_node.get_wallet_rpc(self.default_wallet_name)
+        wallet_name = "watchonly_no_privkeys"
+        wallet = self.create_legacy_wallet(wallet_name, blank=True)
+        key = get_generate_key()
+        addr = key.p2pkh_addr
+        wallet.importaddress(addr)
+
+        # Migrate blank legacy wallet to a dedicated watch-only descriptor wallet
+        # without dropping any watched transaction.
+        assert_equal(wallet.getwalletinfo()["private_keys_enabled"], True)
+        received_txids = [default.sendtoaddress(addr, amount) for amount in (10, 5)]
+        self.generate(self.master_node, 1)
+        transactions = {
+            txid: wallet.gettransaction(txid, include_watchonly=True)
+            for txid in received_txids
+        }
+
+        res, wallet = self.migrate_and_get_rpc(wallet_name)
+        assert_equal(res["wallet_name"], f"{wallet_name}_watchonly")
+        assert_equal(wallet.getwalletinfo()["private_keys_enabled"], False)
+        assert wallet_name not in self.master_node.listwallets()
+        assert wallet_name not in [entry["name"] for entry in self.master_node.listwalletdir()["wallets"]]
+
+        def check_transactions():
+            assert_equal(wallet.getaddressinfo(addr)["ismine"], True)
+
+            for txid, original in transactions.items():
+                migrated = wallet.gettransaction(txid)
+                for field in ("hex", "amount", "confirmations"):
+                    assert_equal(migrated[field], original[field])
+
+            assert_equal(wallet.getbalances()["mine"]["trusted"], Decimal("15"))
+
+        check_transactions()
+
+        # Reload wallet without rescanning to verify that transactions were persisted,
+        # rather than just copied into the descriptor wallet's in-memory mapWallet.
+        wallet.unloadwallet()
+
+        with self.master_node.assert_debug_log(
+            expected_msgs=[],
+            unexpected_msgs=["Rescanning"],
+        ):
+            self.master_node.loadwallet(res["wallet_name"])
+
+        wallet = self.master_node.get_wallet_rpc(res["wallet_name"])
+        check_transactions()
+        wallet.unloadwallet()
+
     def test_migrate_simple_watch_only(self):
         self.log.info("Test migrating a watch-only p2pk script")
         wallet = self.create_legacy_wallet("bare_p2pk", blank=True)
@@ -1788,6 +1839,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_avoidreuse()
         self.test_preserve_tx_extra_info()
         self.test_blank()
+        self.test_watchonly_txs_no_privkeys()
         self.test_migrate_simple_watch_only()
         self.test_manual_keys_import()
         self.test_p2wsh()

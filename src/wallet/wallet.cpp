@@ -4063,7 +4063,13 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
     // migrated records will be presented to the user.
     if (!has_spendable_material) {
         if (!m_address_book.empty()) return util::Error{_("Error: Not all address book records were migrated")};
-        if (!mapWallet.empty()) return util::Error{_("Error: Not all transaction records were migrated")};
+
+        const std::set<Txid> pending_removals(txids_to_delete.begin(), txids_to_delete.end());
+        if (pending_removals.size() != mapWallet.size()) return util::Error{_("Error: Not all transaction records were migrated")};
+
+        for (const auto& [txid, wtx] : mapWallet) {
+            if (!pending_removals.contains(txid)) return util::Error{_("Error: Not all transaction records were migrated")};
+        }
     }
 
     return {}; // all good
