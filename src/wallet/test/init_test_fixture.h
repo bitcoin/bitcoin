@@ -24,5 +24,6 @@ struct InitWalletDirTestingSetup: public BasicTestingSetup {
     std::unique_ptr<interfaces::WalletLoader> m_wallet_loader;
 };
 
-#endif // BITCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
 } // namespace wallet
+
+#endif // BITCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
