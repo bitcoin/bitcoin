@@ -420,6 +420,31 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
 
 namespace legacy_migration {
 
+static std::shared_ptr<CWallet> LoadWalletForMigration(const std::string& name, bilingual_str& error)
+{
+    // Load the wallet but only in the context of migration.
+    // No signals should be connected nor should anything else be aware of this wallet
+    WalletContext empty_context;
+    DatabaseOptions options;
+    options.require_existing = true;
+    options.require_format = DatabaseFormat::BERKELEY_RO;
+    DatabaseStatus status;
+    std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(name, options, status, error);
+    if (!database) return nullptr;
+
+    std::shared_ptr<CWallet> walletInstance(new CWallet(/*chain=*/nullptr, name, std::move(database)));
+
+    // Load wallet
+    std::vector<bilingual_str> warnings;
+    auto nLoadWalletRet = walletInstance->PopulateWalletFromDB(error, warnings);
+    bool rescan_required = nLoadWalletRet == DBErrors::NEED_RESCAN;
+    if (nLoadWalletRet != DBErrors::LOAD_OK && nLoadWalletRet != DBErrors::NONCRITICAL_ERROR && !rescan_required) {
+        return nullptr;
+    }
+
+    return walletInstance;
+}
+
 bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, MigrationResult& res, const bool load_on_startup = true) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     AssertLockHeld(wallet.cs_wallet);
@@ -519,7 +544,6 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
 
 util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& wallet_name, const SecureString& passphrase, WalletContext& context, bool load_wallet)
 {
-    std::vector<bilingual_str> warnings;
     bilingual_str error;
 
     // The only kind of wallets that could be loaded are descriptor ones, which don't need to be migrated.
@@ -540,21 +564,8 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         }
     }
 
-    // Load the wallet but only in the context of this function.
-    // No signals should be connected nor should anything else be aware of this wallet
-    WalletContext empty_context;
-    empty_context.args = context.args;
-    DatabaseOptions options;
-    options.require_existing = true;
-    options.require_format = DatabaseFormat::BERKELEY_RO;
-    DatabaseStatus status;
-    std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(wallet_name, options, status, error);
-    if (!database) {
-        return util::Error{Untranslated("Wallet file verification failed.") + Untranslated(" ") + error};
-    }
-
     // Make the local wallet
-    std::shared_ptr<CWallet> local_wallet = CWallet::LoadExisting(empty_context, wallet_name, std::move(database), error, warnings);
+    std::shared_ptr<CWallet> local_wallet = LoadWalletForMigration(wallet_name, error);
     if (!local_wallet) {
         return util::Error{Untranslated("Wallet loading failed.") + Untranslated(" ") + error};
     }
