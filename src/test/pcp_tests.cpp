@@ -4,9 +4,10 @@
 
 #include <common/pcp.h>
 #include <netbase.h>
-#include <test/util/logging.h>
 #include <test/util/common.h>
+#include <test/util/logging.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <util/time.h>
 
 #include <boost/test/unit_test.hpp>
@@ -100,8 +101,7 @@ public:
 
     PCPTestSock& operator=(Sock&& other) override
     {
-        assert(false && "Move of Sock into PCPTestSock not allowed.");
-        return *this;
+        AssertUnreachable(); // Move of Sock into PCPTestSock not allowed.
     }
 
     ssize_t Send(const void* data, size_t len, int) const override {

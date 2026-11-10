@@ -1182,9 +1182,8 @@ void TestNode(const MsCtx script_ctx, const std::optional<Node>& node, FuzzedDat
         case Fragment::HASH160:
             return TEST_DATA.hash160_preimages.contains(node.Data());
         default:
-            assert(false);
+            AssertUnreachable();
         }
-        return false;
     });
     assert(mal_success == satisfiable);
 }

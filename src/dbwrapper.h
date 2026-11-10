@@ -293,7 +293,7 @@ public:
             case ReadFailure::Code::DeserializationError: return false;
             case ReadFailure::Code::DatabaseError: throw dbwrapper_error(err_msg);
         } // no default case, so the compiler can warn about missing cases
-        std::abort(); // unreachable
+        AssertUnreachable();
     }
 
     template <typename K, typename V>
