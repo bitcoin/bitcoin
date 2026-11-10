@@ -887,6 +887,8 @@ static bool ExecuteCommand(const CRPCCommand& command, const JSONRPCRequest& req
         }
     } catch (const UniValue::type_error& e) {
         throw JSONRPCError(RPC_TYPE_ERROR, e.what());
+    } catch (const HelpResult& e) {
+        throw JSONRPCError(RPC_MISC_ERROR, e.what());
     } catch (const std::exception& e) {
         throw JSONRPCError(RPC_MISC_ERROR, e.what());
     }
