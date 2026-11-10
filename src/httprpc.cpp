@@ -18,6 +18,8 @@
 #include <walletinitinterface.h>
 
 #include <algorithm>
+#include <cstddef>
+#include <functional>
 #include <iterator>
 #include <map>
 #include <memory>
@@ -100,6 +102,52 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     return CheckUserAuthorized(user, pass);
 }
 
+/**
+ * Handle a JSON-RPC batch: parse each element into its own request, call
+ * `handle` with each request that parses and its index in the batch, and
+ * collect the replies, leaving out notifications.
+ *
+ * Batches never return HTTP errors. Every error, including an element's parse
+ * error, goes in the reply array, which is sent with HTTP OK.
+ */
+static UniValue ProcessBatch(const UniValue& batch, const JSONRPCClient& client, HTTPStatusCode& status,
+                             const std::function<UniValue(const JSONRPCRequest&, size_t)>& handle)
+{
+    status = HTTP_OK;
+    UniValue reply{UniValue::VARR};
+    for (size_t i{0}; i < batch.size(); ++i) {
+        UniValue response;
+        // Each element gets its own request, so that nothing parsed from one
+        // element ends up in the reply to the next
+        JSONRPCRequest req{client};
+        try {
+            req.parse(batch[i]);
+            response = handle(req, i);
+        } catch (UniValue& e) {
+            response = JSONRPCReplyObj(NullUniValue, std::move(e), req.id, req.m_json_version);
+        } catch (const std::exception& e) {
+            response = JSONRPCReplyObj(NullUniValue, JSONRPCError(RPC_PARSE_ERROR, e.what()), req.id, req.m_json_version);
+        }
+        if (!req.IsNotification()) {
+            reply.push_back(std::move(response));
+        }
+    }
+    // Return no response for an all-notification batch, but only if the
+    // batch request is non-empty. Technically according to the JSON-RPC
+    // 2.0 spec, an empty batch request should also return no response,
+    // However, if the batch request is empty, it means the request did
+    // not contain any JSON-RPC version numbers, so returning an empty
+    // response could break backwards compatibility with old RPC clients
+    // relying on previous behavior. Return an empty array instead of an
+    // empty response in this case to favor being backwards compatible
+    // over complying with the JSON-RPC 2.0 spec in this case.
+    if (reply.empty() && !batch.empty()) {
+        status = HTTP_NO_CONTENT;
+        return {};
+    }
+    return reply;
+}
+
 UniValue ExecuteHTTPRPC(const UniValue& valRequest, const JSONRPCClient& client, HTTPStatusCode& status)
 {
     status = HTTP_OK;
@@ -154,41 +202,9 @@ UniValue ExecuteHTTPRPC(const UniValue& valRequest, const JSONRPCClient& client,
                 }
             }
 
-            // Execute each request
-            UniValue reply = UniValue::VARR;
-            for (size_t i{0}; i < valRequest.size(); ++i) {
-                // Batches never throw HTTP errors, they are always just included
-                // in "HTTP OK" responses. Notifications never get any response.
-                UniValue response;
-                // Each element gets its own request, so that nothing parsed
-                // from one element ends up in the reply to the next
-                JSONRPCRequest elem_jreq{client};
-                try {
-                    elem_jreq.parse(valRequest[i]);
-                    response = JSONRPCExec(elem_jreq, /*catch_errors=*/true);
-                } catch (UniValue& e) {
-                    response = JSONRPCReplyObj(NullUniValue, std::move(e), elem_jreq.id, elem_jreq.m_json_version);
-                } catch (const std::exception& e) {
-                    response = JSONRPCReplyObj(NullUniValue, JSONRPCError(RPC_PARSE_ERROR, e.what()), elem_jreq.id, elem_jreq.m_json_version);
-                }
-                if (!elem_jreq.IsNotification()) {
-                    reply.push_back(std::move(response));
-                }
-            }
-            // Return no response for an all-notification batch, but only if the
-            // batch request is non-empty. Technically according to the JSON-RPC
-            // 2.0 spec, an empty batch request should also return no response,
-            // However, if the batch request is empty, it means the request did
-            // not contain any JSON-RPC version numbers, so returning an empty
-            // response could break backwards compatibility with old RPC clients
-            // relying on previous behavior. Return an empty array instead of an
-            // empty response in this case to favor being backwards compatible
-            // over complying with the JSON-RPC 2.0 spec in this case.
-            if (reply.size() == 0 && valRequest.size() > 0) {
-                status = HTTP_NO_CONTENT;
-                return {};
-            }
-            return reply;
+            return ProcessBatch(valRequest, client, status, [](const JSONRPCRequest& req, size_t) {
+                return JSONRPCExec(req, /*catch_errors=*/true);
+            });
         }
         else
             throw JSONRPCError(RPC_PARSE_ERROR, "Top-level object parse error");
