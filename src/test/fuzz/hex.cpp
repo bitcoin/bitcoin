@@ -10,10 +10,10 @@
 #include <test/fuzz/fuzz.h>
 #include <uint256.h>
 #include <univalue.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cstdint>
 #include <string>
 #include <vector>

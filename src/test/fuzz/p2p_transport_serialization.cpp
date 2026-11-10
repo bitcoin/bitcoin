@@ -12,9 +12,9 @@
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/reachability.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cstdint>
 #include <limits>
 #include <optional>
