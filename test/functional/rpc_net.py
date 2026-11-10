@@ -275,7 +275,7 @@ class NetTest(BitcoinTestFramework):
         assert_equal(len(added_nodes), 1)
         assert_equal(added_nodes[0]['addednode'], "11.22.33.44")
         self.log.info("Check that an invalid command returns an error")
-        assert_raises_rpc_error(-1, 'addnode "node" "command"', self.nodes[0].addnode, node=ip_port, command='abc')
+        assert_raises_rpc_error(-8, 'addnode "node" "command"', self.nodes[0].addnode, node=ip_port, command='abc')
         self.log.info("Check that an empty node address returns an error")
         for command in ['add', 'remove', 'onetry']:
             assert_raises_rpc_error(-8, "Node address cannot be empty", self.nodes[0].addnode, node="", command=command)

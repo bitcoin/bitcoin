@@ -365,7 +365,7 @@ static RPCMethod addnode()
 {
     const auto command{self.Arg<std::string_view>("command")};
     if (command != "onetry" && command != "add" && command != "remove") {
-        throw std::runtime_error(
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
             self.ToString());
     }
 
@@ -822,7 +822,7 @@ static RPCMethod setban()
 {
     auto command{help.Arg<std::string_view>("command")};
     if (command != "add" && command != "remove") {
-        throw std::runtime_error(help.ToString());
+        throw JSONRPCError(RPC_INVALID_PARAMETER, help.ToString());
     }
     NodeContext& node = EnsureAnyNodeContext(request.context);
     BanMan& banman = EnsureBanman(node);
