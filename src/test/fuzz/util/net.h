@@ -10,6 +10,7 @@
 #include <net.h>
 #include <net_permissions.h>
 #include <netaddress.h>
+#include <netgroup.h>
 #include <node/connection_types.h>
 #include <node/eviction.h>
 #include <protocol.h>

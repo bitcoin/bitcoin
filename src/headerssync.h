@@ -8,6 +8,7 @@
 #include <arith_uint256.h>
 #include <chain.h>
 #include <consensus/params.h>
+#include <kernel/chainparams.h>
 #include <net.h>
 #include <primitives/block.h>
 #include <uint256.h>

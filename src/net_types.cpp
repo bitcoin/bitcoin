@@ -9,6 +9,10 @@
 #include <univalue.h>
 #include <util/log.h>
 
+#include <string>
+#include <utility>
+#include <vector>
+
 static const char* BANMAN_JSON_VERSION_KEY{"version"};
 
 CBanEntry::CBanEntry(const UniValue& json)

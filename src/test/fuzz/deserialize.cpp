@@ -8,6 +8,7 @@
 #include <blockencodings.h>
 #include <blockfilter.h>
 #include <chain.h>
+#include <chainparams.h>
 #include <coins.h>
 #include <common/args.h>
 #include <compressor.h>
