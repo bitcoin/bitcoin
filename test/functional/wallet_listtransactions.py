@@ -156,7 +156,7 @@ class ListTransactionsTest(BitcoinTestFramework):
 
     def run_coinjoin_test(self):
         self.log.info('Check "coin-join" transaction')
-        input_0 = next(i for i in self.nodes[0].listunspent(query_options={"minimumAmount": 0.2}, include_unsafe=False))
+        input_0 = next(i for i in self.nodes[0].listunspent(minimum_amount=0.2, include_unsafe=False))
         input_1 = next(i for i in self.nodes[1].listunspent(query_options={"minimumAmount": 0.2}, include_unsafe=False))
         raw_hex = self.nodes[0].createrawtransaction(
             inputs=[
