@@ -99,7 +99,7 @@ static void WalletMigration(benchmark::Bench& bench)
             }
         })
         .run([&] {
-            auto res{MigrateLegacyToDescriptor(std::move(wallet), /*passphrase=*/"", *loader->context())};
+            auto res{legacy_migration::MigrateLegacyToDescriptor(std::move(wallet), /*passphrase=*/"", *loader->context())};
             assert(res);
             assert(res->wallet);
             assert(res->watchonly_wallet);

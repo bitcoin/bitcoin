@@ -10,6 +10,7 @@
 #include <optional>
 
 namespace wallet {
+namespace legacy_migration {
 
 using BerkeleyROData = std::map<SerializeData, SerializeData, std::less<>>;
 
@@ -105,6 +106,7 @@ public:
 
 //! Return object giving access to Berkeley Read Only database at specified path.
 std::unique_ptr<BerkeleyRODatabase> MakeBerkeleyRODatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
+} // namespace legacy_migration
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_BDBRO_H

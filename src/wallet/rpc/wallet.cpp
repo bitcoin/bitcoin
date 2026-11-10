@@ -632,7 +632,7 @@ static RPCMethod migratewallet()
             const bool loadwallet = self.Arg<bool>("load_wallet");
 
             WalletContext& context = EnsureWalletContext(request.context);
-            util::Result<MigrationResult> res = MigrateLegacyToDescriptor(wallet_name, wallet_pass, context, loadwallet);
+            util::Result<legacy_migration::MigrationResult> res = legacy_migration::MigrateLegacyToDescriptor(wallet_name, wallet_pass, context, loadwallet);
             if (!res) {
                 throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(res).original);
             }

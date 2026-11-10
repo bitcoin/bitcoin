@@ -4,6 +4,7 @@
 #include <wallet/wallet.h>
 
 namespace wallet {
+namespace legacy_migration {
 
 struct MigrationResult {
     std::string wallet_name;
@@ -20,6 +21,7 @@ struct MigrationResult {
 //! Requirement: The wallet provided to this function must be isolated, with no attachment to the node's context.
 [[nodiscard]] util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet> local_wallet, const SecureString& passphrase, WalletContext& context, bool load_wallet = true);
 
+} // namespace legacy_migration
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_LEGACY_MIGRATION_H

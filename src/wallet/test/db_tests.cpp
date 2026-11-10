@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(erase_prefix)
     auto make_key = [](std::string type, std::string id) { return std::make_pair(type, id); };
 
     for (const auto& database : TestDatabases(m_path_root)) {
-        if (dynamic_cast<BerkeleyRODatabase*>(database.get())) {
+        if (dynamic_cast<legacy_migration::BerkeleyRODatabase*>(database.get())) {
             // Skip this test if BerkeleyRO
             continue;
         }

@@ -17,6 +17,7 @@
 #include <vector>
 
 namespace wallet {
+namespace legacy_migration {
 // Magic bytes in both endianness's
 constexpr uint32_t BTREE_MAGIC = 0x00053162;    // If the file endianness matches our system, we see this magic
 constexpr uint32_t BTREE_MAGIC_OE = 0x62310500; // If the file endianness is the other one, we will see this magic
@@ -805,4 +806,5 @@ std::unique_ptr<BerkeleyRODatabase> MakeBerkeleyRODatabase(const fs::path& path,
         return nullptr;
     }
 }
+} // namespace legacy_migration
 } // namespace wallet
