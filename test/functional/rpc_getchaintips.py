@@ -15,7 +15,10 @@ from test_framework.blocktools import (
     create_coinbase,
 )
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+)
 
 class GetChainTipsTest (BitcoinTestFramework):
     def set_test_params(self):
@@ -58,9 +61,17 @@ class GetChainTipsTest (BitcoinTestFramework):
 
         assert_equal(tips[1]['branchlen'], 10)
         assert_equal(tips[1]['status'], 'valid-fork')
+        assert_equal(tips[1].pop('fork_point'), self.nodes[0].getblockhash(200))
         tips[1]['branchlen'] = 0
         tips[1]['status'] = 'active'
         assert_equal(tips[1], shortTip)
+
+        self.log.info("Test getchaintips max_depth")
+        assert_equal(self.nodes[0].getchaintips(max_depth=10), self.nodes[0].getchaintips())
+        assert_equal(self.nodes[0].getchaintips({"max_depth": None}), self.nodes[0].getchaintips())
+        assert_equal(self.nodes[0].getchaintips({"max_depth": 9}), [longTip])
+        assert_equal(self.nodes[0].getchaintips(max_depth=0), [longTip])
+        assert_raises_rpc_error(-8, "max_depth must be non-negative", self.nodes[0].getchaintips, max_depth=-1)
 
         self.log.info("Test getchaintips behavior with invalid blocks")
         self.disconnect_nodes(0, 1)

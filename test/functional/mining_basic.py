@@ -508,7 +508,10 @@ class MiningTest(BitcoinTestFramework):
         block.solve()
 
         def chain_tip(b_hash, *, status='headers-only', branchlen=1):
-            return {'hash': b_hash, 'height': 202, 'branchlen': branchlen, 'status': status}
+            tip = {'hash': b_hash, 'height': 202, 'branchlen': branchlen, 'status': status}
+            if branchlen > 0:
+                tip['fork_point'] = node.getblockhash(202 - branchlen)
+            return tip
 
         assert chain_tip(block.hash_hex) not in node.getchaintips()
         node.submitheader(hexdata=block.serialize().hex())
