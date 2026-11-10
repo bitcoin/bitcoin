@@ -33,6 +33,19 @@ class P2PSeedNodes(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log(expected_msgs=[f"Empty addrman, adding seednode ({seed_node}) to addrfetch"], timeout=ADD_NEXT_SEEDNODE):
             self.restart_node(0, extra_args=self.nodes[0].extra_args + [f'-seednode={seed_node}'])
 
+    def test_seednode_network_inactive(self):
+        self.log.info("Check that seednodes are not used up while the network is inactive")
+        seed_node = "25.0.0.3"
+        node = self.nodes[0]
+        msg = f"Empty addrman, adding seednode ({seed_node}) to addrfetch"
+        with node.assert_debug_log(expected_msgs=["opencon thread start"], unexpected_msgs=[msg]):
+            self.restart_node(0, extra_args=node.extra_args + [f"-seednode={seed_node}", "-networkactive=0"])
+            # Let ThreadOpenConnections run a few passes while the network is inactive
+            time.sleep(1)
+        # Once the network is active, the seednode is still there and is used.
+        with node.assert_debug_log(expected_msgs=[msg], timeout=ADD_NEXT_SEEDNODE):
+            node.setnetworkactive(True)
+
     def test_seednode_non_empty_addrman(self):
         self.log.info("Check that if addrman is non-empty, seednodes are queried with a delay")
         seed_node = "25.0.0.2"
@@ -53,6 +66,7 @@ class P2PSeedNodes(BitcoinTestFramework):
     def run_test(self):
         self.test_no_seednode()
         self.test_seednode_empty_addrman()
+        self.test_seednode_network_inactive()
         self.test_seednode_non_empty_addrman()
 
 
