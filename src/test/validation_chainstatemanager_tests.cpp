@@ -816,6 +816,10 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_completion, SnapshotTestSetup
     const uint256 snapshot_tip_hash = WITH_LOCK(chainman.GetMutex(),
         return chainman.ActiveTip()->GetBlockHash());
 
+    auto prune_range = WITH_LOCK(::cs_main, return active_cs.GetPruneRange(active_cs.m_chain.Height()));
+    BOOST_CHECK_EQUAL(prune_range.first, 111);
+    BOOST_CHECK_EQUAL(prune_range.second, 0);
+
     res = WITH_LOCK(::cs_main, return chainman.MaybeValidateSnapshot(validated_cs, active_cs));
     BOOST_CHECK_EQUAL(res, SnapshotCompletionResult::SUCCESS);
     BOOST_CHECK(chainman.ActivateBestChains());
