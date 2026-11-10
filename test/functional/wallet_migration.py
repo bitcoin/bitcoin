@@ -1178,6 +1178,53 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         wallet.unloadwallet()
 
+    def test_watchonly_txs_no_privkeys(self):
+        self.log.info("Test migrating a blank wallet with watch-only transactions and no spendable coins")
+        default = self.master_node.get_wallet_rpc(self.default_wallet_name)
+        wallet_name = "watchonly_no_privkeys"
+        wallet = self.create_legacy_wallet(wallet_name, blank=True)
+        key = get_generate_key()
+        addr = key.p2pkh_addr
+        wallet.importaddress(addr)
+
+        # Private keys enabled but blank wallet has no spendable key material
+        received_txid = default.sendtoaddress(addr, 10)
+        self.generate(self.master_node, 1)
+        original_tx = wallet.gettransaction(received_txid, include_watchonly=True)
+
+        # Migrate blank legacy wallet to a dedicated watch-only descriptor wallet
+        # without dropping any watched transaction.
+        res, wallet = self.migrate_and_get_rpc(wallet_name)
+        assert_equal(res["wallet_name"], f"{wallet_name}_watchonly")
+        assert wallet_name not in self.master_node.listwallets()
+        assert wallet_name not in [entry["name"] for entry in self.master_node.listwalletdir()["wallets"]]
+
+        def check_transaction():
+            assert_equal(wallet.getaddressinfo(addr)["ismine"], True)
+
+            migrated_tx = wallet.gettransaction(received_txid)
+            assert_equal(migrated_tx["hex"], original_tx["hex"])
+            assert_equal(migrated_tx["amount"], original_tx["amount"])
+            assert_equal(migrated_tx["confirmations"], original_tx["confirmations"])
+
+            assert_equal(wallet.getbalances()["mine"]["trusted"], Decimal("10"))
+
+        check_transaction()
+
+        # Reload wallet without rescanning to verify that transactions were persisted,
+        # rather than just copied into the descriptor wallet's in-memory mapWallet.
+        wallet.unloadwallet()
+
+        with self.master_node.assert_debug_log(
+            expected_msgs=[],
+            unexpected_msgs=["Rescanning"],
+        ):
+            self.master_node.loadwallet(res["wallet_name"])
+
+        wallet = self.master_node.get_wallet_rpc(res["wallet_name"])
+        check_transaction()
+        wallet.unloadwallet()
+
     def test_migrate_simple_watch_only(self):
         self.log.info("Test migrating a watch-only p2pk script")
         wallet = self.create_legacy_wallet("bare_p2pk", blank=True)
@@ -1788,6 +1835,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.test_avoidreuse()
         self.test_preserve_tx_extra_info()
         self.test_blank()
+        self.test_watchonly_txs_no_privkeys()
         self.test_migrate_simple_watch_only()
         self.test_manual_keys_import()
         self.test_p2wsh()
