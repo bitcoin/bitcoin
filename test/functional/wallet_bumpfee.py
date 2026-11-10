@@ -187,7 +187,7 @@ class BumpFeeTest(BitcoinTestFramework):
                 rbf_node.bumpfee, rbfid, {"outputs": [{"data": "deadbeef"}, {"data": "deadbeef"}]})
 
         self.log.info("Test original_change_index option")
-        assert_raises_rpc_error(-1, "JSON integer out of range", rbf_node.bumpfee, rbfid, {"original_change_index": -1})
+        assert_raises_rpc_error(-3, "JSON integer out of range", rbf_node.bumpfee, rbfid, {"original_change_index": -1})
         assert_raises_rpc_error(-8, "Change position is out of range", rbf_node.bumpfee, rbfid, {"original_change_index": 2})
 
         self.log.info("Test outputs and original_change_index cannot both be provided")
