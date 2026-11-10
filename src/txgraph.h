@@ -2,6 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#ifndef BITCOIN_TXGRAPH_H
+#define BITCOIN_TXGRAPH_H
+
 #include <compare>
 #include <cstdint>
 #include <functional>
@@ -11,9 +14,6 @@
 #include <vector>
 
 #include <util/feefrac.h>
-
-#ifndef BITCOIN_TXGRAPH_H
-#define BITCOIN_TXGRAPH_H
 
 inline constexpr unsigned MAX_CLUSTER_COUNT_LIMIT{64};
 
