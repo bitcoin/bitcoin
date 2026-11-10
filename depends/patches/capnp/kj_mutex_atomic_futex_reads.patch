@@ -1,0 +1,65 @@
+From cc13c8c45fa25de7872709ca8d2009da8abc7773 Mon Sep 17 00:00:00 2001
+From: xyzconstant <263061129+xyzconstant@users.noreply.github.com>
+Date: Sun, 11 Oct 2026 22:13:18 -0300
+Subject: [PATCH] kj: Fix non-atomic reads of futex state
+
+Backport of capnproto/capnproto#2843 from v2 to 1.x.
+
+Uses __atomic_load_n because kj/atomic.h (#2780) is not available on 1.x.
+---
+ c++/src/kj/mutex.c++ | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/c++/src/kj/mutex.c++ b/c++/src/kj/mutex.c++
+index edccdf40..68d01935 100644
+--- a/c++/src/kj/mutex.c++
++++ b/c++/src/kj/mutex.c++
+@@ -345,7 +345,8 @@ bool Mutex::lock(Exclusivity exclusivity, Maybe<Duration> timeout, LockSourceLoc
+ void Mutex::unlock(Exclusivity exclusivity, Waiter* waiterToSkip) {
+   switch (exclusivity) {
+     case EXCLUSIVE: {
+-      KJ_DASSERT(futex & EXCLUSIVE_HELD, "Unlocked a mutex that wasn't locked.");
++      KJ_DASSERT(__atomic_load_n(&futex, __ATOMIC_RELAXED) & EXCLUSIVE_HELD,
++          "Unlocked a mutex that wasn't locked.");
+ 
+ #ifdef KJ_CONTENTION_WARNING_THRESHOLD
+       auto acquiredLocation = releasingExclusive();
+@@ -427,7 +428,8 @@ void Mutex::unlock(Exclusivity exclusivity, Waiter* waiterToSkip) {
+     }
+ 
+     case SHARED: {
+-      KJ_DASSERT(futex & SHARED_COUNT_MASK, "Unshared a mutex that wasn't shared.");
++      KJ_DASSERT(__atomic_load_n(&futex, __ATOMIC_RELAXED) & SHARED_COUNT_MASK,
++          "Unshared a mutex that wasn't shared.");
+       uint state = __atomic_sub_fetch(&futex, 1, __ATOMIC_RELEASE);
+ 
+       // The only case where anyone is waiting is if EXCLUSIVE_REQUESTED is set, and the only time
+@@ -446,13 +448,14 @@ void Mutex::unlock(Exclusivity exclusivity, Waiter* waiterToSkip) {
+ }
+ 
+ void Mutex::assertLockedByCaller(Exclusivity exclusivity) const {
++  // Contenders can update the futex even while the caller holds the lock.
+   switch (exclusivity) {
+     case EXCLUSIVE:
+-      KJ_ASSERT(futex & EXCLUSIVE_HELD,
++      KJ_ASSERT(__atomic_load_n(&futex, __ATOMIC_RELAXED) & EXCLUSIVE_HELD,
+                 "Tried to call getAlreadyLocked*() but lock is not held.");
+       break;
+     case SHARED:
+-      KJ_ASSERT(futex & SHARED_COUNT_MASK,
++      KJ_ASSERT(__atomic_load_n(&futex, __ATOMIC_RELAXED) & SHARED_COUNT_MASK,
+                 "Tried to call getAlreadyLocked*() but lock is not held.");
+       break;
+   }
+@@ -568,7 +571,7 @@ void Mutex::induceSpuriousWakeupForTest() {
+ 
+ uint Mutex::numReadersWaitingForTest() const {
+   assertLockedByCaller(EXCLUSIVE);
+-  return futex & SHARED_COUNT_MASK;
++  return __atomic_load_n(&futex, __ATOMIC_RELAXED) & SHARED_COUNT_MASK;
+ }
+ 
+ void Once::runOnce(Initializer& init, LockSourceLocationArg location) {
+-- 
+2.54.0 (Apple Git-157)
+
