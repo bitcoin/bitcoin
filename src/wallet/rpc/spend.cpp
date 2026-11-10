@@ -173,11 +173,6 @@ static void PreventOutdatedOptions(const UniValue& options)
     }
 }
 
-const UniValue* GetOptionWithAlias(
-    const UniValue& options,
-    const std::string& canonical_name,
-    const std::string& deprecated_name);
-
 static UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vector<CRecipient> &recipients, std::optional<std::string> comment, std::optional<std::string> comment_to, bool verbose)
 {
     EnsureWalletIsUnlocked(wallet);

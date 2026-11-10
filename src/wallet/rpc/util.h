@@ -49,6 +49,8 @@ WalletContext& EnsureWalletContext(const std::any& context);
 
 bool GetAvoidReuseFlag(const CWallet& wallet, const UniValue& param);
 std::string LabelFromValue(const UniValue& value);
+//! Get an option by its canonical or deprecated name. Throws if both are set.
+const UniValue* GetOptionWithAlias(const UniValue& options, const std::string& canonical_name, const std::string& deprecated_name);
 //! Fetch parent descriptors of this scriptPubKey.
 void PushParentDescriptors(const CWallet& wallet, const CScript& script_pubkey, UniValue& entry);
 
