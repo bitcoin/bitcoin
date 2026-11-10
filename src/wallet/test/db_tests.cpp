@@ -9,7 +9,7 @@
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/translation.h>
-#include <wallet/legacybdb.h>
+#include <wallet/legacy/bdbro.h>
 #include <wallet/sqlite.h>
 #include <wallet/test/util.h>
 #include <wallet/walletutil.h>

@@ -1,7 +1,7 @@
 #include <key_io.h>
 
 #include <wallet/context.h>
-#include <wallet/migration.h>
+#include <wallet/legacy/migration.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 

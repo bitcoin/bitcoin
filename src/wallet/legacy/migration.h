@@ -1,5 +1,5 @@
-#ifndef BITCOIN_WALLET_MIGRATION_H
-#define BITCOIN_WALLET_MIGRATION_H
+#ifndef BITCOIN_WALLET_LEGACY_MIGRATION_H
+#define BITCOIN_WALLET_LEGACY_MIGRATION_H
 
 #include <wallet/wallet.h>
 
@@ -22,4 +22,4 @@ struct MigrationResult {
 
 } // namespace wallet
 
-#endif // BITCOIN_WALLET_MIGRATION_H
+#endif // BITCOIN_WALLET_LEGACY_MIGRATION_H

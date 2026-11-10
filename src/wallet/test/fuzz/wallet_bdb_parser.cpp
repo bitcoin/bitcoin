@@ -12,7 +12,7 @@
 #include <util/translation.h>
 #include <wallet/db.h>
 #include <wallet/dump.h>
-#include <wallet/legacybdb.h>
+#include <wallet/legacy/bdbro.h>
 
 #include <fstream>
 #include <iostream>

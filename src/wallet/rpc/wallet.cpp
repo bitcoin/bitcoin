@@ -18,7 +18,7 @@
 #include <util/translation.h>
 #include <wallet/context.h>
 #include <wallet/export.h>
-#include <wallet/migration.h>
+#include <wallet/legacy/migration.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/util.h>
 #include <wallet/scan.h>
