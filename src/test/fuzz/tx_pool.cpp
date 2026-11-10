@@ -290,14 +290,12 @@ void CheckATMPInvariants(const MempoolAcceptResult& res, bool txid_in_mempool, b
     case MempoolAcceptResult::ResultType::MEMPOOL_ENTRY:
     {
         // ATMP never sets this; only set in package settings
-        Assert(false);
-        break;
+        AssertUnreachable();
     }
     case MempoolAcceptResult::ResultType::DIFFERENT_WITNESS:
     {
         // ATMP never sets this; only set in package settings
-        Assert(false);
-        break;
+        AssertUnreachable();
     }
     }
 }

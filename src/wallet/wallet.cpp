@@ -1812,7 +1812,7 @@ void CWallet::InitWalletFlags(uint64_t flags)
         throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
     }
 
-    if (!LoadWalletFlags(flags)) assert(false);
+    Assert(LoadWalletFlags(flags));
 }
 
 uint64_t CWallet::GetWalletFlags() const
