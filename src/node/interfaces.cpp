@@ -359,11 +359,12 @@ public:
     }
     UniValue executeRpc(const std::string& command, const UniValue& params, const std::string& uri) override
     {
-        JSONRPCRequest req;
-        req.context = m_context;
+        JSONRPCClient client;
+        client.context = m_context;
+        client.URI = uri;
+        JSONRPCRequest req{client};
         req.params = params;
         req.strMethod = command;
-        req.URI = uri;
         return ::tableRPC.execute(req);
     }
     std::vector<std::string> listRpcCommands() override { return ::tableRPC.listCommands(); }
@@ -1054,12 +1055,12 @@ public:
 
     UniValue executeRpc(UniValue request, std::string uri, std::string user) override
     {
-        JSONRPCRequest req;
-        req.context = &m_node;
-        req.URI = std::move(uri);
-        req.authUser = std::move(user);
+        JSONRPCClient client;
+        client.context = &m_node;
+        client.URI = std::move(uri);
+        client.authUser = std::move(user);
         HTTPStatusCode status;
-        return ExecuteHTTPRPC(request, req, status);
+        return ExecuteHTTPRPC(request, client, status);
     }
 
     NodeContext& m_node;

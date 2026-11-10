@@ -15,9 +15,9 @@
 namespace wallet {
 static std::string TestWalletName(const std::string& endpoint, std::optional<std::string> parameter = std::nullopt)
 {
-    JSONRPCRequest req;
-    req.URI = endpoint;
-    return EnsureUniqueWalletName(req, parameter);
+    JSONRPCClient client;
+    client.URI = endpoint;
+    return EnsureUniqueWalletName(JSONRPCRequest{client}, parameter);
 }
 
 BOOST_FIXTURE_TEST_SUITE(wallet_rpc_tests, BasicTestingSetup)

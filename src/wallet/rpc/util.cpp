@@ -52,9 +52,9 @@ std::string EnsureUniqueWalletName(const JSONRPCRequest& request, std::optional<
 
 std::optional<std::string> GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request)
 {
-    if (request.URI.starts_with(WALLET_ENDPOINT_BASE)) {
+    if (request.client.URI.starts_with(WALLET_ENDPOINT_BASE)) {
         // wallet endpoint was used
-        return UrlDecode(std::string_view{request.URI}.substr(WALLET_ENDPOINT_BASE.size()));
+        return UrlDecode(std::string_view{request.client.URI}.substr(WALLET_ENDPOINT_BASE.size()));
     }
     return std::nullopt;
 }

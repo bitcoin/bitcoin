@@ -100,21 +100,24 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     return CheckUserAuthorized(user, pass);
 }
 
-UniValue ExecuteHTTPRPC(const UniValue& valRequest, JSONRPCRequest& jreq, HTTPStatusCode& status)
+UniValue ExecuteHTTPRPC(const UniValue& valRequest, const JSONRPCClient& client, HTTPStatusCode& status)
 {
     status = HTTP_OK;
+    // Only parsed for a single request. Used for its id and version in error
+    // replies, which stay unset for a batch or a body that is not an object.
+    JSONRPCRequest jreq{client};
     try {
-        bool user_has_whitelist = g_rpc_whitelist.contains(jreq.authUser);
+        bool user_has_whitelist = g_rpc_whitelist.contains(client.authUser);
         if (!user_has_whitelist && g_rpc_whitelist_default) {
-            LogWarning("RPC User %s not allowed to call any methods", jreq.authUser);
+            LogWarning("RPC User %s not allowed to call any methods", client.authUser);
             status = HTTP_FORBIDDEN;
             return {};
 
         // singleton request
         } else if (valRequest.isObject()) {
             jreq.parse(valRequest);
-            if (user_has_whitelist && !g_rpc_whitelist[jreq.authUser].contains(jreq.strMethod)) {
-                LogWarning("RPC User %s not allowed to call method %s", jreq.authUser, jreq.strMethod);
+            if (user_has_whitelist && !g_rpc_whitelist[client.authUser].contains(jreq.strMethod)) {
+                LogWarning("RPC User %s not allowed to call method %s", client.authUser, jreq.strMethod);
                 status = HTTP_FORBIDDEN;
                 return {};
             }
@@ -142,8 +145,8 @@ UniValue ExecuteHTTPRPC(const UniValue& valRequest, JSONRPCRequest& jreq, HTTPSt
                         const UniValue& request = valRequest[reqIdx].get_obj();
                         // Parse method
                         std::string strMethod = request.find_value("method").get_str();
-                        if (!g_rpc_whitelist[jreq.authUser].contains(strMethod)) {
-                            LogWarning("RPC User %s not allowed to call method %s", jreq.authUser, strMethod);
+                        if (!g_rpc_whitelist[client.authUser].contains(strMethod)) {
+                            LogWarning("RPC User %s not allowed to call method %s", client.authUser, strMethod);
                             status = HTTP_FORBIDDEN;
                             return {};
                         }
@@ -157,10 +160,9 @@ UniValue ExecuteHTTPRPC(const UniValue& valRequest, JSONRPCRequest& jreq, HTTPSt
                 // Batches never throw HTTP errors, they are always just included
                 // in "HTTP OK" responses. Notifications never get any response.
                 UniValue response;
-                // Each element gets its own copy of the unparsed request, so
-                // that nothing parsed from one element ends up in the reply to
-                // the next
-                JSONRPCRequest elem_jreq{jreq};
+                // Each element gets its own request, so that nothing parsed
+                // from one element ends up in the reply to the next
+                JSONRPCRequest elem_jreq{client};
                 try {
                     elem_jreq.parse(valRequest[i]);
                     response = JSONRPCExec(elem_jreq, /*catch_errors=*/true);
@@ -212,12 +214,12 @@ static void HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
         return;
     }
 
-    JSONRPCRequest jreq;
-    jreq.context = context;
-    jreq.peerAddr = req->GetPeer().ToStringAddrPort();
-    jreq.URI = req->GetURI();
-    if (!RPCAuthorized(*auth_header, jreq.authUser)) {
-        LogWarning("ThreadRPCServer incorrect password attempt from %s", jreq.peerAddr);
+    JSONRPCClient client;
+    client.context = context;
+    client.peerAddr = req->GetPeer().ToStringAddrPort();
+    client.URI = req->GetURI();
+    if (!RPCAuthorized(*auth_header, client.authUser)) {
+        LogWarning("ThreadRPCServer incorrect password attempt from %s", client.peerAddr);
 
         /* Deter brute-forcing
            If this results in a DoS the user really
@@ -234,9 +236,9 @@ static void HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
     UniValue reply;
     UniValue request;
     if (request.read(req->ReadBody())) {
-        reply = ExecuteHTTPRPC(request, jreq, status);
+        reply = ExecuteHTTPRPC(request, client, status);
     } else {
-        reply = JSONErrorReply(JSONRPCError(RPC_PARSE_ERROR, "Parse error"), jreq, status);
+        reply = JSONErrorReply(JSONRPCError(RPC_PARSE_ERROR, "Parse error"), JSONRPCRequest{client}, status);
     }
 
     // Write reply

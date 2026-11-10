@@ -198,6 +198,10 @@ std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue& in)
     return batch;
 }
 
+static const JSONRPCClient g_no_client;
+
+JSONRPCRequest::JSONRPCRequest() : JSONRPCRequest{g_no_client} {}
+
 void JSONRPCRequest::parse(const UniValue& valRequest)
 {
     // Parse request
@@ -241,9 +245,9 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
     const std::string log_id{id && !id->isNull() ? SanitizeString(id->getValStr()) : ""};
     if (fLogIPs)
         LogDebug(BCLog::RPC, "ThreadRPCServer method=%s user=%s peeraddr=%s id=%s", SanitizeString(strMethod),
-            this->authUser, this->peerAddr, log_id);
+            client.authUser, client.peerAddr, log_id);
     else
-        LogDebug(BCLog::RPC, "ThreadRPCServer method=%s user=%s id=%s", SanitizeString(strMethod), this->authUser,
+        LogDebug(BCLog::RPC, "ThreadRPCServer method=%s user=%s id=%s", SanitizeString(strMethod), client.authUser,
             log_id);
 
     // Parse params
