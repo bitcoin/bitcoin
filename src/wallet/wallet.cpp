@@ -2292,7 +2292,7 @@ util::Result<void> CWallet::RemoveTxs(WalletBatch& batch, std::vector<Txid>& txs
         }
 
         MarkDirty();
-    }, .on_abort={}});
+    }, .on_abort= []() {}});
 
     return {};
 }
