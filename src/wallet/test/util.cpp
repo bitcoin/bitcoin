@@ -7,7 +7,9 @@
 #include <chain.h>
 #include <key.h>
 #include <key_io.h>
+#include <node/context.h>
 #include <test/util/setup_common.h>
+#include <validation.h>
 #include <validationinterface.h>
 #include <wallet/context.h>
 #include <wallet/scan.h>
@@ -19,17 +21,22 @@
 #include <memory>
 
 namespace wallet {
-std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cchain, const CKey& key)
+std::unique_ptr<CWallet> NewWallet(const node::NodeContext& node)
 {
-    auto wallet = std::make_unique<CWallet>(&chain, "", CreateMockableWalletDatabase());
+    std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(node.chain.get(), "", CreateMockableWalletDatabase());
+    LOCK(wallet->cs_wallet);
+    wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+    wallet->SetupDescriptorScriptPubKeyMans();
+    return wallet;
+}
+
+std::unique_ptr<CWallet> CreateSyncedWallet(const node::NodeContext& node, const CKey& key)
+{
+    const CChain& cchain{WITH_LOCK(Assert(node.chainman)->GetMutex(), return node.chainman->ActiveChain())};
+    auto wallet = NewWallet(node);
     {
         LOCK2(wallet->cs_wallet, ::cs_main);
         wallet->SetLastBlockProcessed(cchain.Height(), cchain.Tip()->GetBlockHash());
-    }
-    {
-        LOCK(wallet->cs_wallet);
-        wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
-        wallet->SetupDescriptorScriptPubKeyMans();
     }
     AddKey(*wallet, key);
     WalletRescanReserver reserver(*wallet);

@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(max_signed_input_size_uses_external_outpoint)
 BOOST_FIXTURE_TEST_CASE(SubtractFee, TestChain100Setup)
 {
     CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-    auto wallet = CreateSyncedWallet(*m_node.chain, WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return m_node.chainman->ActiveChain()), coinbaseKey);
+    auto wallet = CreateSyncedWallet(m_node, coinbaseKey);
 
     // Check that a subtract-from-recipient transaction slightly less than the
     // coinbase input amount does not create a change output (because it would
@@ -83,7 +83,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_duplicated_preset_inputs_test, TestChain100Setup)
 
     // Add 4 spendable UTXO, 50 BTC each, to the wallet (total balance 200 BTC)
     for (int i = 0; i < 4; i++) CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-    auto wallet = CreateSyncedWallet(*m_node.chain, WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return m_node.chainman->ActiveChain()), coinbaseKey);
+    auto wallet = CreateSyncedWallet(m_node, coinbaseKey);
 
     LOCK(wallet->cs_wallet);
     auto available_coins = AvailableCoins(*wallet);
