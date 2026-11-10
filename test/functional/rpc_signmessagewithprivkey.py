@@ -4,8 +4,20 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test RPC commands for signing messages with private key."""
 
+import base64
+
+from test_framework.address import (
+    program_to_witness,
+    script_to_p2wsh,
+)
 from test_framework.descriptors import (
     descsum_create,
+)
+from test_framework.messages import ser_string_vector
+from test_framework.script import (
+    CScript,
+    OP_NOP4,
+    OP_TRUE,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -39,9 +51,26 @@ class SignMessagesWithPrivTest(BitcoinTestFramework):
         assert_equal(addresses[0], 'mpLQjfK79b7CCV4VMJWEWAj5Mpx8Up5zxB')
         assert self.nodes[0].verifymessage(addresses[0], signature, message)
 
-        self.log.info('test that verifying with non-P2PKH addresses throws error')
-        for non_p2pkh_address in addresses[1:]:
-            assert_raises_rpc_error(-3, "Address does not refer to key", self.nodes[0].verifymessage, non_p2pkh_address, signature, message)
+        self.log.info('test that nested SegWit remains unsupported and compact proofs are not used for native SegWit')
+        assert_raises_rpc_error(-3, "Address does not refer to key", self.nodes[0].verifymessage, addresses[1], signature, message)
+        assert_raises_rpc_error(-3, "Malformed BIP322 witness", self.nodes[0].verifymessage, addresses[2], signature, message)
+
+        self.log.info('test witness proof errors and boolean failures')
+        assert_raises_rpc_error(-3, "Malformed base64 encoding", self.nodes[0].verifymessage, addresses[2], "smp!!!!", message)
+        assert_raises_rpc_error(-3, "Malformed BIP322 witness", self.nodes[0].verifymessage, addresses[2], "smpAQ==", message)
+        for proof in ["smpAA==", "fulAA==", "pofAA=="]:
+            assert not self.nodes[0].verifymessage(addresses[2], proof, message)
+        unknown_address = program_to_witness(2, bytes(32))
+        assert_raises_rpc_error(-3, "Address does not refer to key", self.nodes[0].verifymessage, unknown_address, "smpAA==", message)
+        script = CScript([OP_NOP4, OP_TRUE])
+        proof = "smp" + base64.b64encode(ser_string_vector([script])).decode()
+        assert not self.nodes[0].verifymessage(script_to_p2wsh(script), proof, message)
+
+        self.log.info('test legacy wrong message, wrong key and invalid compact proof')
+        assert not self.nodes[0].verifymessage(addresses[0], signature, message + '!')
+        assert not self.nodes[0].verifymessage(addresses[0], 'AA==', message)
+        other_address = self.addresses_from_privkey(self.nodes[0].get_deterministic_priv_key().key)[0]
+        assert not self.nodes[0].verifymessage(other_address, signature, message)
 
         self.log.info('test parameter validity and error codes')
         # signmessagewithprivkey has two required parameters

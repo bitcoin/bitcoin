@@ -1,0 +1,362 @@
+{
+  "provenance": {
+    "repository": "https://github.com/bitcoin/bips",
+    "commit": "a34f044bb8d5cd684d7a742d2f6483c14b719046",
+    "bip322_version": "2.1.0",
+    "license": "CC0-1.0",
+    "sources": [
+      {
+        "path": "basic-test-vectors.json",
+        "url": "https://raw.githubusercontent.com/bitcoin/bips/a34f044bb8d5cd684d7a742d2f6483c14b719046/bip-0322/basic-test-vectors.json",
+        "sha256": "a9184da5687b9cb7a1863807f4a8f4d743ec07d4f683f707cb85ce72f5b33f47"
+      },
+      {
+        "path": "generated-test-vectors.json",
+        "url": "https://raw.githubusercontent.com/bitcoin/bips/a34f044bb8d5cd684d7a742d2f6483c14b719046/bip-0322/generated-test-vectors.json",
+        "sha256": "187205f77b4a639f8d7e9a8e9d9070204a4c6658cf925569001b4d15f02a6539"
+      }
+    ]
+  },
+  "scope": {
+    "basic": {
+      "tx_hashes": [
+        0,
+        1,
+        2
+      ],
+      "simple": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "error": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    "generated": {
+      "simple": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "error": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    "unsupported": {
+      "generated": {
+        "full": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "proof_of_funds": [
+          0,
+          1,
+          2
+        ],
+        "error": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27
+        ]
+      }
+    },
+    "counts": {
+      "hash_rows": 3,
+      "simple_rows": 8,
+      "simple_signatures": 10,
+      "errors": 16
+    }
+  },
+  "basic": {
+    "tx_hashes": [
+      {
+        "message": "",
+        "address": "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l",
+        "message_hash": "c90c269c4f8fcbe6880f72a721ddfbf1914268a794cbb21cfafee13770ae19f1",
+        "to_spend_tx_hash": "c5680aa69bb8d860bf82d4e9cd3504b55dde018de765a91bb566283c545a99a7",
+        "to_sign_tx_hash": "1e9654e951a5ba44c8604c4de6c67fd78a27e81dcadcfe1edf638ba3aaebaed6"
+      },
+      {
+        "message": "Hello World",
+        "address": "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l",
+        "message_hash": "f0eb03b1a75ac6d9847f55c624a99169b5dccba2a31f5b23bea77ba270de0a7a",
+        "to_spend_tx_hash": "b79d196740ad5217771c1098fc4a4b51e0535c32236c71f1ea4d61a2d603352b",
+        "to_sign_tx_hash": "88737ae86f2077145f93cc4b153ae9a1cb8d56afa511988c149c5c8c9d93bddf"
+      },
+      {
+        "message": "UTF-8 support: öäüéàè 测试文本 😄",
+        "address": "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l",
+        "message_hash": "43936b237ea38c7794eb5d755e0d220b6db92ebfc5c8f482759d22b1286376d7",
+        "to_spend_tx_hash": "c8f4f525fe8afb1bc09b44175bd2096f079c98425e8a1be676b712add1fb62f0",
+        "to_sign_tx_hash": "8f488e06b89eafd019ec528109eafaf7f1d1811fd617aa1eeb9658f1c1be6586"
+      }
+    ],
+    "simple": [
+      {
+        "message": "",
+        "private_keys": [
+          "L3VFeEujGtevx9w18HD1fhRbCH67Az2dpCymeRE1SoPK6XQtaN2k"
+        ],
+        "address": "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l",
+        "type": "p2wpkh",
+        "witness_script": "",
+        "bip322_signatures": [
+          "smpAkcwRAIgM2gBAQqvZX15ZiysmKmQpDrG83avLIT492QBzLnQIxYCIBaTpOaD20qRlEylyxFSeEA2ba9YOixpX8z46TSDtS40ASECx/EgAxlkQpQ9hYjgGu6EBCPMVPwVIVJqO4XCsMvViHI=",
+          "smpAkgwRQIhAPkJ1Q4oYS0htvyuSFHLxRQpFAY56b70UvE7Dxazen0ZAiAtZfFz1S6T6I23MWI2lK/pcNTWncuyL8UL+oMdydVgzAEhAsfxIAMZZEKUPYWI4BruhAQjzFT8FSFSajuFwrDL1Yhy"
+        ]
+      },
+      {
+        "message": "Hello World",
+        "private_keys": [
+          "L3VFeEujGtevx9w18HD1fhRbCH67Az2dpCymeRE1SoPK6XQtaN2k"
+        ],
+        "address": "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l",
+        "type": "p2wpkh",
+        "witness_script": "",
+        "bip322_signatures": [
+          "smpAkcwRAIgZRfIY3p7/DoVTty6YZbWS71bc5Vct9p9Fia83eRmw2QCICK/ENGfwLtptFluMGs2KsqoNSk89pO7F29zJLUx9a/sASECx/EgAxlkQpQ9hYjgGu6EBCPMVPwVIVJqO4XCsMvViHI=",
+          "smpAkgwRQIhAOzyynlqt93lOKJr+wmmxIens//zPzl9tqIOua93wO6MAiBi5n5EyAcPScOjf1lAqIUIQtr3zKNeavYabHyR8eGhowEhAsfxIAMZZEKUPYWI4BruhAQjzFT8FSFSajuFwrDL1Yhy"
+        ]
+      },
+      {
+        "message": "This will be a p2wsh 3-of-3 multisig BIP 322 signed message",
+        "private_keys": [
+          "L4DksdGZ4KQJfcLHD5Dv25fu8Rxyv7hHi2RjZR4TYzr8c6h9VNrp",
+          "KzSRqnCVwjzY8id2X5oHEJWXkSHwKUYaAXusjwgkES8BuQPJnPNu",
+          "L1zt9Rw7HrU7jaguMbVzhiX8ffuVkmMis5wLHddXYuHWYf8u8uRj"
+        ],
+        "address": "bc1qp0ahvfh83088w49k405szqgg4f3pptr7p2g06tdxfjcd40z4lh4q95lsz9",
+        "type": "p2wsh-multisig-3of3",
+        "witness_script": "5321027568b11f122ff8a7bc1c57e5c7642055bc618967b2f7bfe8e11fe99903c94dd321020a8bdf79cfa421d9655e9282800f115ff1d9db1e721ceb4248a3fcfec7faa67c21030c529e0ea40a00975d202624e39915daf7bdd2b71f31aa08596838781ce5f33a53ae",
+        "bip322_signatures": [
+          "smpBQBHMEQCIFX9aaqPJWq2Ff2kpen5bFDTid+ehgUOpHV0LfjncXy4AiA3GNicF7aKPzdpa9PCpmaYQs3pHd+qbvvhXdxOCKCAMAFIMEUCIQD/ELXg6CNYyUQijCg96JtgvgjZb9dsl1Ctof4QAeyTcQIgVM/1AAblFl/DCt6A1gJg+T/i2qU5SQD09+chFJzolRwBSDBFAiEAlqRfSFyWNVQhvaCnmeV5tyneiCWMTcFbuujoD/pFa3wCIGnZjfQb8NolSYq9asV+ZeBSkCGHJcqnaV4JYS5MYPEGAWlTIQJ1aLEfEi/4p7wcV+XHZCBVvGGJZ7L3v+jhH+mZA8lN0yECCovfec+kIdllXpKCgA8RX/HZ2x5yHOtCSKP8/sf6pnwhAwxSng6kCgCXXSAmJOOZFdr3vdK3HzGqCFloOHgc5fM6U64="
+        ]
+      },
+      {
+        "message": "No prefix fallback",
+        "private_keys": [
+          "KyrSGCFPhqZMjCe5fNTYddiLMp4tMj4gLKuJ26TsB2rvr1VJGPbt"
+        ],
+        "address": "bc1pss0zhytly75awhm6x2hhvd5lnzv3vssgrf9axfheq8ldyzn88ges79fler",
+        "type": "p2tr",
+        "witness_script": "",
+        "bip322_signatures": [
+          "AUCJYOwOjxYAvatTAGYaVlNXBVyFuc4MwNQkOuK2tl8xhfKDONd0NjfYyNSYcRqeCp8hsAnCEPHAVEkO9h6vbQ/R"
+        ]
+      }
+    ],
+    "error": [
+      {
+        "description": "invalid base64 encoding",
+        "message": "",
+        "address": "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l",
+        "signature": "not-valid-base64!!!",
+        "error_substr": "base64"
+      },
+      {
+        "description": "empty signature",
+        "message": "",
+        "address": "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l",
+        "signature": "",
+        "error_substr": "signature too short"
+      },
+      {
+        "description": "wrong message for valid simple p2wpkh signature (empty message was signed)",
+        "message": "Wrong message that was not signed",
+        "address": "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l",
+        "signature": "smpAkcwRAIgM2gBAQqvZX15ZiysmKmQpDrG83avLIT492QBzLnQIxYCIBaTpOaD20qRlEylyxFSeEA2ba9YOixpX8z46TSDtS40ASECx/EgAxlkQpQ9hYjgGu6EBCPMVPwVIVJqO4XCsMvViHI=",
+        "error_substr": "invalid signature"
+      },
+      {
+        "description": "wrong address for valid simple p2wpkh signature (signed for different address)",
+        "message": "",
+        "address": "bc1qp0ahvfh83088w49k405szqgg4f3pptr7p2g06tdxfjcd40z4lh4q95lsz9",
+        "signature": "smpAkcwRAIgM2gBAQqvZX15ZiysmKmQpDrG83avLIT492QBzLnQIxYCIBaTpOaD20qRlEylyxFSeEA2ba9YOixpX8z46TSDtS40ASECx/EgAxlkQpQ9hYjgGu6EBCPMVPwVIVJqO4XCsMvViHI=",
+        "error_substr": "invalid signature"
+      },
+      {
+        "description": "empty witness stack (single zero byte)",
+        "message": "",
+        "address": "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l",
+        "signature": "smpAA==",
+        "error_substr": "invalid signature"
+      },
+      {
+        "description": "wrong message for valid simple p2wsh 3-of-3 multisig signature",
+        "message": "This is not the message that was signed",
+        "address": "bc1qp0ahvfh83088w49k405szqgg4f3pptr7p2g06tdxfjcd40z4lh4q95lsz9",
+        "signature": "smpBQBHMEQCIFX9aaqPJWq2Ff2kpen5bFDTid+ehgUOpHV0LfjncXy4AiA3GNicF7aKPzdpa9PCpmaYQs3pHd+qbvvhXdxOCKCAMAFIMEUCIQD/ELXg6CNYyUQijCg96JtgvgjZb9dsl1Ctof4QAeyTcQIgVM/1AAblFl/DCt6A1gJg+T/i2qU5SQD09+chFJzolRwBSDBFAiEAlqRfSFyWNVQhvaCnmeV5tyneiCWMTcFbuujoD/pFa3wCIGnZjfQb8NolSYq9asV+ZeBSkCGHJcqnaV4JYS5MYPEGAWlTIQJ1aLEfEi/4p7wcV+XHZCBVvGGJZ7L3v+jhH+mZA8lN0yECCovfec+kIdllXpKCgA8RX/HZ2x5yHOtCSKP8/sf6pnwhAwxSng6kCgCXXSAmJOOZFdr3vdK3HzGqCFloOHgc5fM6U64=",
+        "error_substr": "invalid signature"
+      },
+      {
+        "description": "invalid signature prefix",
+        "message": "",
+        "address": "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l",
+        "signature": "fooAA==",
+        "error_substr": "error decoding signature as base64"
+      },
+      {
+        "description": "incorrect prefix type",
+        "message": "incorrect prefix",
+        "address": "bc1pyrgrm6cu6n54jrvkdjd9rvyd3xfyu84s2623awu2srn6mxhscwpsm5644w",
+        "signature": "fulAUDZwFXUp+adN+/UZj5dVrGAbB3zKs1Vcalz5fCF9srxS63eSWNGvH1NYbrBkPt1BJDUyWUz9zgUxfc63/QheT6M",
+        "error_substr": "error parsing signature as full variant"
+      }
+    ]
+  },
+  "generated": {
+    "simple": [
+      {
+        "message": "2V6TUTMSH4VQ3Z7WZWKYD7DFNH",
+        "private_keys": [
+          "KySmn2yeCukjHXnSu3M6vX7tNok4weu1FKbNEuVvm2b3ZidKhB4L"
+        ],
+        "address": "bc1qqthe0hz8klx90e7stf6shclhsvqd5ly96pn53v",
+        "type": "p2wpkh",
+        "witness_script": "",
+        "bip322_signatures": [
+          "smpAkgwRQIhALC6hdfxNy1n45d7UXSskRBdfZW0Al259E1kDMpipdYkAiAJPfZqb+WurZuf1apU5xeE6Igui9dvt5tihQLDvxlY1AEhAqbnruyo677ktQjio7XOchO3w51Dh9AbRVngha5jtNfT"
+        ]
+      },
+      {
+        "message": "PURVOQ544B6HUATVBJZN5EZJUU",
+        "private_keys": [
+          "L5XqN6ckPPsDiTbRxcsthwiWpDBfWLo4uquUEydsPt8rSMoTpqpc"
+        ],
+        "address": "bc1pcquvhrqv0q68t4m0hfq6tpn006qrskyc7yrqnp2uyrf2emg3wynsdjyk38",
+        "type": "p2tr",
+        "witness_script": "",
+        "bip322_signatures": [
+          "smpAUB6B2Rbupzua8LTQIF06516wzl+cwKy1be8RgoiW0riyXdKwe6GTz/5Hnb37m67pJwIKCh+D5jDueG6KpvYpmu8"
+        ]
+      },
+      {
+        "message": "G7ZTXXOVJFHGDD6XYJAGBAMT5A",
+        "private_keys": [
+          "L1jKMveHa8DnPfPVcVsz5r5FHe3D6KdPyBiQSND14uGyMMc8mAcK",
+          "L3P5FL8vCZLyDYrHekomd76KTFb7dnXiiLHc1dhs4CfKKTa5BSRd"
+        ],
+        "address": "bc1qw6g0rgrpuxvj4edkwtvzpmt3c5m08mhp8nuk3mrk4erufvlczp5ssdscjd",
+        "type": "p2wsh-multisig-2of2",
+        "witness_script": "5221036cbbf3b066eac7bc9328889a120269821cba2a21ce566e587eade93eeeb84048210281856452ca5e031c117cceafe0644184dfe01b14dfa4fa99b8e9412186714c9652ae",
+        "bip322_signatures": [
+          "smpBABIMEUCIQCKl1f9Cj26k0fFWE48+O4ibhYJYPytbDZWJRaaG9BybwIgCbk+3BViWkpuu2RI+41dwtlQ/m/01G860pTFCzDFfokBSDBFAiEA0O77DJsaM7IO+Ht06sp3umzXB64CNNOwf2isZuPfdmwCIGlggOwRSkXsqlPhE1gMdd5hf7ycL33Orfrr4v/XnMGSAUdSIQNsu/OwZurHvJMoiJoSAmmCHLoqIc5Wblh+rek+7rhASCECgYVkUspeAxwRfM6v4GRBhN/gGxTfpPqZuOlBIYZxTJZSrg=="
+        ]
+      },
+      {
+        "message": "Z3SB7SRL555ZGOHVMYT5WG7RIZ",
+        "private_keys": [
+          "L3QqMaMh8XnkLFGe8gAL4J1ko1froHUzFAJBxy4u5QPNf8Cp36if",
+          "L1j2AddkFs9aKz6tCPd99CaYHUVmqVZHt1HHESWajvFsQeTobyJi",
+          "KwEoVwAeuWQBiRhp76wD6siaxkj3rCrjHeG2xRMLtngbZbq8w88a"
+        ],
+        "address": "bc1qazhmhwl9sxgjmwnd96hh926s3x5l0cf64yy6hvyn6qms438x550qy5sgva",
+        "type": "p2wsh-multisig-3of3",
+        "witness_script": "532102a8d34dd98e3f4983f913eec380edc4dd20a9b3b2b218040b8f77d863f0566e1c2102e8175a94cb706e3731daf26355e96fec1266974ad8ed0e737be3d67a7ead6f9b21032b697ab95806cebdb5b9fceadde920da97cb4373b6d2992a2e98f17f944905da53ae",
+        "bip322_signatures": [
+          "smpBQBHMEQCICNI6H6b+VCZV9Z2H6EW5hPrE1buC6SJuy2ljSNmQlGfAiASbm5UrA8KH6TwF6evx7COV+i27ubiq2v9TyLYPOO63gFIMEUCIQCMOFnJbg0sy88G6wUXjv5stjVgfvAokOogWsisdkAnlAIgETfBw7kJhISFu9vIomFcEF/1NsN6c0h3KjNcpmNAZtMBSDBFAiEA/lUU+wBeA3prt8vHRpcQN763OYZ8L61DfN0QI/gkHpMCIB2qHwgoXNTH0sdqeAMD2ah7dSTie2bflax3Q3I/GibQAWlTIQKo003Zjj9Jg/kT7sOA7cTdIKmzsrIYBAuPd9hj8FZuHCEC6BdalMtwbjcx2vJjVelv7BJml0rY7Q5ze+PWen6tb5shAytperlYBs69tbn86t3pINqXy0NzttKZKi6Y8X+USQXaU64="
+        ]
+      }
+    ],
+    "error": [
+      {
+        "description": "wrong message for p2wpkh simple signature",
+        "message": "EFGJ4AZYXDV7NDUDSUDB3NCDUC",
+        "address": "bc1qqthe0hz8klx90e7stf6shclhsvqd5ly96pn53v",
+        "signature": "smpAkgwRQIhALC6hdfxNy1n45d7UXSskRBdfZW0Al259E1kDMpipdYkAiAJPfZqb+WurZuf1apU5xeE6Igui9dvt5tihQLDvxlY1AEhAqbnruyo677ktQjio7XOchO3w51Dh9AbRVngha5jtNfT",
+        "error_substr": "invalid signature"
+      },
+      {
+        "description": "wrong signer for p2wpkh simple signature",
+        "message": "2V6TUTMSH4VQ3Z7WZWKYD7DFNH",
+        "address": "bc1qgg6lpr05az2l5kz402ddz5ez7fdu25kgmd40lf",
+        "signature": "smpAkgwRQIhALC6hdfxNy1n45d7UXSskRBdfZW0Al259E1kDMpipdYkAiAJPfZqb+WurZuf1apU5xeE6Igui9dvt5tihQLDvxlY1AEhAqbnruyo677ktQjio7XOchO3w51Dh9AbRVngha5jtNfT",
+        "error_substr": "invalid signature"
+      },
+      {
+        "description": "wrong message for p2tr simple signature",
+        "message": "56VM6YK6Y76XTBXNPITF232EPX",
+        "address": "bc1pcquvhrqv0q68t4m0hfq6tpn006qrskyc7yrqnp2uyrf2emg3wynsdjyk38",
+        "signature": "smpAUB6B2Rbupzua8LTQIF06516wzl+cwKy1be8RgoiW0riyXdKwe6GTz/5Hnb37m67pJwIKCh+D5jDueG6KpvYpmu8",
+        "error_substr": "invalid signature"
+      },
+      {
+        "description": "wrong signer for p2tr simple signature",
+        "message": "PURVOQ544B6HUATVBJZN5EZJUU",
+        "address": "bc1pltvk000nd54v3hrrcn7lsffdra72hphpm40rhzf9hn8arqkgermq2p9029",
+        "signature": "smpAUB6B2Rbupzua8LTQIF06516wzl+cwKy1be8RgoiW0riyXdKwe6GTz/5Hnb37m67pJwIKCh+D5jDueG6KpvYpmu8",
+        "error_substr": "invalid signature"
+      },
+      {
+        "description": "wrong message for p2wsh-multisig-2of2 simple signature",
+        "message": "DL2KXDPQAN63YIQPIP34O3XYVX",
+        "address": "bc1qw6g0rgrpuxvj4edkwtvzpmt3c5m08mhp8nuk3mrk4erufvlczp5ssdscjd",
+        "signature": "smpBABIMEUCIQCKl1f9Cj26k0fFWE48+O4ibhYJYPytbDZWJRaaG9BybwIgCbk+3BViWkpuu2RI+41dwtlQ/m/01G860pTFCzDFfokBSDBFAiEA0O77DJsaM7IO+Ht06sp3umzXB64CNNOwf2isZuPfdmwCIGlggOwRSkXsqlPhE1gMdd5hf7ycL33Orfrr4v/XnMGSAUdSIQNsu/OwZurHvJMoiJoSAmmCHLoqIc5Wblh+rek+7rhASCECgYVkUspeAxwRfM6v4GRBhN/gGxTfpPqZuOlBIYZxTJZSrg==",
+        "error_substr": "invalid signature"
+      },
+      {
+        "description": "wrong signer for p2wsh-multisig-2of2 simple signature",
+        "message": "G7ZTXXOVJFHGDD6XYJAGBAMT5A",
+        "address": "bc1q47vnwr6fsarstmmw89wrkvl89540sn5g79x75ms8aly9rrsnq8eqh3v9gz",
+        "signature": "smpBABIMEUCIQCKl1f9Cj26k0fFWE48+O4ibhYJYPytbDZWJRaaG9BybwIgCbk+3BViWkpuu2RI+41dwtlQ/m/01G860pTFCzDFfokBSDBFAiEA0O77DJsaM7IO+Ht06sp3umzXB64CNNOwf2isZuPfdmwCIGlggOwRSkXsqlPhE1gMdd5hf7ycL33Orfrr4v/XnMGSAUdSIQNsu/OwZurHvJMoiJoSAmmCHLoqIc5Wblh+rek+7rhASCECgYVkUspeAxwRfM6v4GRBhN/gGxTfpPqZuOlBIYZxTJZSrg==",
+        "error_substr": "invalid signature"
+      },
+      {
+        "description": "wrong message for p2wsh-multisig-3of3 simple signature",
+        "message": "UKLIJM5HKKQEIFJ44R7UIQFMYL",
+        "address": "bc1qazhmhwl9sxgjmwnd96hh926s3x5l0cf64yy6hvyn6qms438x550qy5sgva",
+        "signature": "smpBQBHMEQCICNI6H6b+VCZV9Z2H6EW5hPrE1buC6SJuy2ljSNmQlGfAiASbm5UrA8KH6TwF6evx7COV+i27ubiq2v9TyLYPOO63gFIMEUCIQCMOFnJbg0sy88G6wUXjv5stjVgfvAokOogWsisdkAnlAIgETfBw7kJhISFu9vIomFcEF/1NsN6c0h3KjNcpmNAZtMBSDBFAiEA/lUU+wBeA3prt8vHRpcQN763OYZ8L61DfN0QI/gkHpMCIB2qHwgoXNTH0sdqeAMD2ah7dSTie2bflax3Q3I/GibQAWlTIQKo003Zjj9Jg/kT7sOA7cTdIKmzsrIYBAuPd9hj8FZuHCEC6BdalMtwbjcx2vJjVelv7BJml0rY7Q5ze+PWen6tb5shAytperlYBs69tbn86t3pINqXy0NzttKZKi6Y8X+USQXaU64=",
+        "error_substr": "invalid signature"
+      },
+      {
+        "description": "wrong signer for p2wsh-multisig-3of3 simple signature",
+        "message": "Z3SB7SRL555ZGOHVMYT5WG7RIZ",
+        "address": "bc1qnckc2q6804depn2240l66p93e0mscp7vd9ndptfuznex86ehpcvseq6e8a",
+        "signature": "smpBQBHMEQCICNI6H6b+VCZV9Z2H6EW5hPrE1buC6SJuy2ljSNmQlGfAiASbm5UrA8KH6TwF6evx7COV+i27ubiq2v9TyLYPOO63gFIMEUCIQCMOFnJbg0sy88G6wUXjv5stjVgfvAokOogWsisdkAnlAIgETfBw7kJhISFu9vIomFcEF/1NsN6c0h3KjNcpmNAZtMBSDBFAiEA/lUU+wBeA3prt8vHRpcQN763OYZ8L61DfN0QI/gkHpMCIB2qHwgoXNTH0sdqeAMD2ah7dSTie2bflax3Q3I/GibQAWlTIQKo003Zjj9Jg/kT7sOA7cTdIKmzsrIYBAuPd9hj8FZuHCEC6BdalMtwbjcx2vJjVelv7BJml0rY7Q5ze+PWen6tb5shAytperlYBs69tbn86t3pINqXy0NzttKZKi6Y8X+USQXaU64=",
+        "error_substr": "invalid signature"
+      }
+    ]
+  }
+}
