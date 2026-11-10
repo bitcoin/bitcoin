@@ -57,7 +57,6 @@
 #include <optional>
 #include <span>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -439,7 +438,7 @@ static RPCMethod addconnection()
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     if (Params().GetChainType() != ChainType::REGTEST) {
-        throw std::runtime_error("addconnection is for regression testing (-regtest mode) only.");
+        throw JSONRPCError(RPC_MISC_ERROR, "addconnection is for regression testing (-regtest mode) only.");
     }
 
     const std::string address = request.params[0].get_str();

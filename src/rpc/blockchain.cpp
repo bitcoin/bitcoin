@@ -3465,7 +3465,7 @@ UniValue WriteUTXOSnapshot(
     CHECK_NONFATAL(written_coins_count == maybe_stats->coins_count);
 
     if (afile.fclose() != 0) {
-        throw std::ios_base::failure(
+        throw JSONRPCError(RPC_MISC_ERROR,
             strprintf("Error closing %s: %s", fs::PathToString(temppath), SysErrorString(errno)));
     }
 
