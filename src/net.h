@@ -16,6 +16,7 @@
 #include <i2p.h>
 #include <kernel/messagestartchars.h>
 #include <net_permissions.h>
+#include <net_types.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <netgroup.h>
@@ -104,8 +105,6 @@ inline constexpr size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
 inline constexpr size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 
 inline constexpr bool DEFAULT_V2_TRANSPORT{true};
-
-typedef int64_t NodeId;
 
 struct AddedNodeParams {
     std::string m_added_node;
