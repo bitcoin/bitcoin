@@ -6,7 +6,7 @@
 #define BITCOIN_IPC_PROTOCOL_H
 
 #include <interfaces/init.h>
-#include <ipc/util.h>
+#include <mp/util.h>
 
 #include <cstddef>
 #include <functional>

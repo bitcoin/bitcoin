@@ -7,7 +7,6 @@
 #include <ipc/test/fuzz/ipc_fuzz.capnp.h>
 #include <ipc/test/fuzz/ipc_fuzz.capnp.proxy.h>
 #include <ipc/test/fuzz/ipc_fuzz.h>
-#include <ipc/util.h>
 #include <kj/memory.h>
 #include <mp/proxy-io.h>
 #include <mp/proxy.h>
