@@ -2,8 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-//! @file common/types.h is a home for simple enum and struct type definitions
-//! that can be used internally by functions in the libbitcoin_common library,
+//! @file
+//! @brief Home for simple enum and struct type definitions.
+//!
+//! These can be used internally by functions in the libbitcoin_common library,
 //! but also used externally by node, wallet, and GUI code.
 //!
 //! This file is intended to define only simple types that do not have external

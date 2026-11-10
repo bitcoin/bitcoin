@@ -3,9 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-//! @file common/messages.h is a home for simple string functions returning
-//! descriptive messages that are used in RPC and GUI interfaces or log
-//! messages, and are called in different parts of the codebase across
+//! @file
+//! @brief Home for simple string functions returning descriptive messages.
+//!
+//! The messages are used in RPC and GUI interfaces or log messages, and the
+//! functions are called in different parts of the codebase across
 //! node/wallet/gui boundaries.
 
 #ifndef BITCOIN_COMMON_MESSAGES_H

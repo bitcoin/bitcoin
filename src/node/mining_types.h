@@ -2,8 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-//! @file node/mining_types.h is used externally by mining IPC clients, so it should
-//! only declare simple data definitions.
+//! @file
+//! @brief Simple data definitions used by mining IPC clients.
+//!
+//! This file is used externally by mining IPC clients, so it should only
+//! declare simple data definitions.
 //!
 //! Avoid declaring functions or classes with methods here unless they are
 //! header-only or provided by the util library.
