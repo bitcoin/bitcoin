@@ -3754,6 +3754,27 @@ util::Expected<CExtPubKey, WalletError> CWallet::AddHDKey(const std::optional<CE
     return *extpubs.begin();
 }
 
+// Returns wallet prefix for migration.
+// Used to name the backup file and newly created wallets.
+// E.g. a watch-only wallet is named "<prefix>_watchonly".
+static std::string MigrationPrefixName(CWallet& wallet)
+{
+    const std::string& name{wallet.GetName()};
+    return name.empty() ? "default_wallet" : name;
+}
+
+// Returns prefix for files created in the wallets directory during migration:
+// the backup file and the temporary database. Unlike MigrationPrefixName(),
+// this is a single path component, because the wallet name can be a path.
+static std::string MigrationFilePrefix(CWallet& wallet)
+{
+    const std::string& name{wallet.GetName()};
+    if (name.empty()) return MigrationPrefixName(wallet);
+    // fs::weakly_canonical resolves relative specifiers and removes trailing slashes.
+    const fs::path legacy_wallet_path{fs::weakly_canonical(GetWalletDir() / fs::PathFromString(name))};
+    return fs::PathToString(legacy_wallet_path.filename());
+}
+
 bool CWallet::MigrateToSQLite(bilingual_str& error)
 {
     AssertLockHeld(cs_wallet);
@@ -4076,15 +4097,6 @@ bool CWallet::CanGrindR() const
     return !IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
 }
 
-// Returns wallet prefix for migration.
-// Used to name the backup file and newly created wallets.
-// E.g. a watch-only wallet is named "<prefix>_watchonly".
-static std::string MigrationPrefixName(CWallet& wallet)
-{
-    const std::string& name{wallet.GetName()};
-    return name.empty() ? "default_wallet" : name;
-}
-
 bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, MigrationResult& res, const bool load_on_startup = true) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     AssertLockHeld(wallet.cs_wallet);
@@ -4250,11 +4262,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
     // cases, but in the case where the wallet name is a path to a data file,
     // the name of the data file is used, and in the case where the wallet name
     // is blank, "default_wallet" is used.
-    const std::string backup_prefix = wallet_name.empty() ? MigrationPrefixName(*local_wallet) : [&] {
-        // fs::weakly_canonical resolves relative specifiers and remove trailing slashes.
-        const auto legacy_wallet_path = fs::weakly_canonical(GetWalletDir() / fs::PathFromString(wallet_name));
-        return fs::PathToString(legacy_wallet_path.filename());
-    }();
+    const std::string backup_prefix = MigrationFilePrefix(*local_wallet);
 
     fs::path backup_filename = fs::PathFromString(strprintf("%s_%d.legacy.bak", backup_prefix, GetTime()));
     fs::path backup_path = fsbridge::AbsPathJoin(GetWalletDir(), backup_filename);
