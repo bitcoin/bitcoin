@@ -135,4 +135,68 @@ BOOST_FIXTURE_TEST_CASE(unrequested_qfcommit_is_dropped_and_scored, TestChain100
     SetMockTime(0s);
 }
 
+// A relayed commitment for a quorum we already hold a mineable commitment for is only worth
+// verifying, and relaying, when it has more signers than ours.
+BOOST_FIXTURE_TEST_CASE(qfcommit_with_more_signers_replaces_stored_one, TestChain100Setup)
+{
+    LOCK(NetEventsInterface::g_msgproc_mutex);
+    BOOST_REQUIRE(!m_node.chainman->ActiveChainstate().IsInitialBlockDownload());
+    BOOST_REQUIRE(m_node.mn_metaman->LoadCache(/*load_cache=*/false));
+
+    auto& blockprocessor = *m_node.llmq_ctx->quorum_block_processor;
+    const auto& llmq_params = GetLLMQParams(Consensus::LLMQType::LLMQ_TEST_V17);
+    BOOST_REQUIRE(Params().GetLLMQ(llmq_params.type).has_value());
+    BOOST_REQUIRE_EQUAL(llmq_params.size, 3);
+
+    const CBlockIndex* base_index{WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Tip())};
+    base_index = base_index->GetAncestor(base_index->nHeight - (base_index->nHeight % llmq_params.dkgInterval));
+
+    auto with_signers = [&](const CFinalCommitment& qc, size_t count) {
+        CFinalCommitment ret{qc};
+        for (size_t i = 0; i < ret.signers.size(); ++i) {
+            ret.signers[i] = i < count;
+        }
+        return ret;
+    };
+    const auto base_qc = CreateValidCommitment(llmq_params, base_index->GetBlockHash());
+    const auto qc_one = with_signers(base_qc, 1);
+    const auto qc_two = with_signers(base_qc, 2);
+    const auto qc_three = with_signers(base_qc, 3);
+    auto qc_two_other{qc_three};
+    qc_two_other.signers[0] = false;
+
+    BOOST_REQUIRE(blockprocessor.AddMineableCommitment(qc_two).has_value());
+
+    NodeId next_id{61};
+    // Returns the misbehavior score the peer collected. The payloads carry random signatures, so a
+    // commitment that reaches verification is rejected with 100, while one dropped by the
+    // signer-count pre-check costs nothing.
+    auto deliver = [&](const CFinalCommitment& qc) EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex) {
+        auto peer{MakeTestPeer(next_id++)};
+        m_node.peerman->InitializeNode(*peer, NODE_NETWORK);
+        AnnounceInv(*m_node.peerman, *peer, CInv{MSG_QUORUM_FINAL_COMMITMENT, ::SerializeHash(qc)});
+        SetMockTime(GetTime<std::chrono::seconds>() + 61s);
+        m_node.peerman->SendMessages(peer.get());
+        SendMessage(*m_node.peerman, *peer, NetMsgType::QFCOMMITMENT, Serialized(qc));
+        const int score{MisbehaviorScore(*m_node.peerman, *peer)};
+        m_node.peerman->FinalizeNode(*peer);
+        return score;
+    };
+
+    BOOST_CHECK_EQUAL(deliver(qc_one), 0);
+    BOOST_CHECK_EQUAL(deliver(qc_two_other), 0);
+    BOOST_CHECK_EQUAL(deliver(qc_three), 100);
+
+    BOOST_CHECK(!blockprocessor.AddMineableCommitment(qc_one).has_value());
+    BOOST_CHECK(blockprocessor.HasMineableCommitment(::SerializeHash(qc_two)));
+
+    const auto inv = blockprocessor.AddMineableCommitment(qc_three);
+    BOOST_REQUIRE(inv.has_value());
+    BOOST_CHECK(inv->hash == ::SerializeHash(qc_three));
+    BOOST_CHECK(blockprocessor.HasMineableCommitment(::SerializeHash(qc_three)));
+    BOOST_CHECK(!blockprocessor.HasMineableCommitment(::SerializeHash(qc_two)));
+
+    SetMockTime(0s);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
