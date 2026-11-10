@@ -1609,6 +1609,7 @@ static RPCMethod getchaintips()
                     {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
                         {
                             {"max_depth", RPCArg::Type::NUM, RPCArg::DefaultHint{"all tips"}, "Only return tips at most this many blocks below the active tip. The active tip, and tips higher than it, are always returned."},
+                            {"staletips_only", RPCArg::Type::BOOL, RPCArg::Default{false}, "Only return the recent stale tips tracked for stale-tip relay (BIP 332), including tracked tips that a known block builds on. Requires -staletips."},
                         },
                         RPCArgOptions{.oneline_description="options"}},
                 },
@@ -1631,15 +1632,18 @@ static RPCMethod getchaintips()
                 RPCExamples{
                     HelpExampleCli("getchaintips", "")
             + HelpExampleCliNamed("getchaintips", {{"max_depth", 1000}})
+            + HelpExampleCliNamed("getchaintips", {{"staletips_only", true}})
             + HelpExampleRpc("getchaintips", "")
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
-    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    ChainstateManager& chainman = EnsureChainman(node);
     const UniValue options{request.params[0].isNull() ? UniValue::VOBJ : request.params[0]};
     RPCTypeCheckObj(options,
                     {
                         {"max_depth", UniValueType(UniValue::VNUM)},
+                        {"staletips_only", UniValueType(UniValue::VBOOL)},
                     },
                     /*fAllowNull=*/true, /*fStrict=*/true);
     std::optional<int> max_depth;
@@ -1647,9 +1651,15 @@ static RPCMethod getchaintips()
         max_depth = options["max_depth"].getInt<int>();
         if (*max_depth < 0) throw JSONRPCError(RPC_INVALID_PARAMETER, "max_depth must be non-negative");
     }
+    const bool staletips_only{!options["staletips_only"].isNull() && options["staletips_only"].get_bool()};
 
     LOCK(cs_main);
     CChain& active_chain = chainman.ActiveChain();
+    std::optional<std::vector<const CBlockIndex*>> stale_tips;
+    if (staletips_only) {
+        stale_tips = EnsurePeerman(node).GetTrackedStaleTips();
+        if (!stale_tips) throw JSONRPCError(RPC_MISC_ERROR, "Stale-tip tracking is disabled (-staletips=none)");
+    }
 
     /*
      * Idea: The set of chain tips is the active chain tip, plus orphan blocks which do not have another orphan building off of them.
@@ -1659,24 +1669,30 @@ static RPCMethod getchaintips()
      *  - Add the active chain tip
      */
     std::set<const CBlockIndex*, CompareBlocksByHeight> setTips;
-    std::set<const CBlockIndex*> setOrphans;
-    std::set<const CBlockIndex*> setPrevs;
+    if (stale_tips) {
+        // Tracked tips are listed directly, so a tip that a known block
+        // builds on, and is therefore not a chain tip, is still reported.
+        setTips.insert(stale_tips->begin(), stale_tips->end());
+    } else {
+        std::set<const CBlockIndex*> setOrphans;
+        std::set<const CBlockIndex*> setPrevs;
 
-    for (const auto& [_, block_index] : chainman.BlockIndex()) {
-        if (!active_chain.Contains(block_index)) {
-            setOrphans.insert(&block_index);
-            setPrevs.insert(block_index.pprev);
+        for (const auto& [_, block_index] : chainman.BlockIndex()) {
+            if (!active_chain.Contains(block_index)) {
+                setOrphans.insert(&block_index);
+                setPrevs.insert(block_index.pprev);
+            }
         }
-    }
 
-    for (std::set<const CBlockIndex*>::iterator it = setOrphans.begin(); it != setOrphans.end(); ++it) {
-        if (setPrevs.erase(*it) == 0) {
-            setTips.insert(*it);
+        for (std::set<const CBlockIndex*>::iterator it = setOrphans.begin(); it != setOrphans.end(); ++it) {
+            if (setPrevs.erase(*it) == 0) {
+                setTips.insert(*it);
+            }
         }
-    }
 
-    // Always report the currently active tip.
-    setTips.insert(active_chain.Tip());
+        // Always report the currently active tip.
+        setTips.insert(active_chain.Tip());
+    }
 
     /* Construct the output array.  */
     UniValue res(UniValue::VARR);

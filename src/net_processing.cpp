@@ -607,6 +607,7 @@ public:
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     std::vector<node::TxOrphanage::OrphanInfo> GetOrphanTransactions() override EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
     PeerManagerInfo GetInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_inv_to_send_mutex);
+    std::optional<std::vector<const CBlockIndex*>> GetTrackedStaleTips() const override EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     std::vector<PrivateBroadcast::TxBroadcastInfo> GetPrivateBroadcastInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     std::vector<CTransactionRef> AbortPrivateBroadcast(const uint256& id) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -889,6 +890,8 @@ private:
     const std::unique_ptr<node::StaleTipTracker> m_staletip_tracker{
         m_opts.stale_tip_relay_mode == StaleTipRelayMode::NONE ? nullptr :
             std::make_unique<node::StaleTipTracker>(m_chainparams.GetChainType())};
+
+    bool StaleTipRelayEnabled() const { return m_staletip_tracker != nullptr; }
 
     bool RejectIncomingTxs(const CNode& peer) const;
 
@@ -1970,6 +1973,17 @@ std::vector<node::TxOrphanage::OrphanInfo> PeerManagerImpl::GetOrphanTransaction
 {
     LOCK(m_tx_download_mutex);
     return m_txdownloadman.GetOrphanTransactions();
+}
+
+std::optional<std::vector<const CBlockIndex*>> PeerManagerImpl::GetTrackedStaleTips() const
+{
+    AssertLockHeld(::cs_main);
+    if (!StaleTipRelayEnabled()) return std::nullopt;
+    std::vector<const CBlockIndex*> tips;
+    for (const node::StaleFork& fork : m_staletip_tracker->GetStaleTips(m_chainman.ActiveChain())) {
+        tips.push_back(fork.tip);
+    }
+    return tips;
 }
 
 PeerManagerInfo PeerManagerImpl::GetInfo() const

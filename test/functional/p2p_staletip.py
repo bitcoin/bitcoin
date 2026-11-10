@@ -5,7 +5,17 @@
 
 """Test stale-tip tracking."""
 
+from test_framework.blocktools import create_block
+from test_framework.messages import (
+    CBlockHeader,
+    msg_headers,
+)
+from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+)
 
 
 class P2PStaleTipTest(BitcoinTestFramework):
@@ -15,6 +25,19 @@ class P2PStaleTipTest(BitcoinTestFramework):
 
     def run_test(self):
         self.test_staletip_option_validation()
+
+        self.generate(self.nodes[0], 101)
+        self.block_time_offset = 1
+
+        self.test_reorged_out_active_tip_tracked()
+        self.test_tracked_tip_listed_with_known_descendants()
+        self.test_startup_seeding_only_when_enabled()
+
+    def tracked_staletips(self):
+        return [tip["hash"] for tip in self.nodes[0].getchaintips(staletips_only=True)]
+
+    def assert_staletip_hash_tracked(self, block_hash):
+        self.wait_until(lambda: block_hash in self.tracked_staletips())
 
     def test_staletip_option_validation(self):
         self.log.info("Test staletip option validation")
@@ -27,6 +50,92 @@ class P2PStaleTipTest(BitcoinTestFramework):
             self.start_node(0, extra_args=[valid_arg])
             self.stop_node(0)
         self.start_node(0)
+
+    def test_reorged_out_active_tip_tracked(self):
+        self.log.info("Test reorged-out active tip is tracked as stale")
+        node = self.nodes[0]
+        active_tip_hash = node.getbestblockhash()
+        active_tip = node.getblock(active_tip_hash)
+
+        fork_block = create_block(
+            hashprev=int(active_tip["previousblockhash"], 16),
+            height=active_tip["height"],
+            ntime=active_tip["time"] + self.block_time_offset,
+        )
+        self.block_time_offset += 1
+        fork_block.solve()
+        assert_equal(node.submitblock(fork_block.serialize().hex()), "inconclusive")
+
+        reorg_block = create_block(
+            hashprev=fork_block.hash_int,
+            height=active_tip["height"] + 1,
+            ntime=active_tip["time"] + self.block_time_offset,
+        )
+        self.block_time_offset += 1
+        reorg_block.solve()
+        assert_equal(node.submitblock(reorg_block.serialize().hex()), None)
+        assert_equal(node.getbestblockhash(), reorg_block.hash_hex)
+        self.assert_staletip_hash_tracked(active_tip_hash)
+
+        stale_tip = next(tip for tip in node.getchaintips() if tip["hash"] == active_tip_hash)
+        assert_equal(stale_tip["fork_point"], active_tip["previousblockhash"])
+        assert_equal(stale_tip["branchlen"], 1)
+
+        # max_depth applies to tracked tips too.
+        assert_equal([tip["hash"] for tip in node.getchaintips(staletips_only=True, max_depth=1)], [active_tip_hash])
+        assert_equal(node.getchaintips(staletips_only=True, max_depth=0), [])
+
+    def test_tracked_tip_listed_with_known_descendants(self):
+        self.log.info("Test a tracked stale tip is listed after a known block builds on it")
+        node = self.nodes[0]
+        active_tip = node.getblock(node.getbestblockhash())
+        stale = create_block(
+            hashprev=int(active_tip["previousblockhash"], 16),
+            height=active_tip["height"],
+            ntime=active_tip["time"] + self.block_time_offset,
+        )
+        self.block_time_offset += 1
+        stale.solve()
+        assert_equal(node.submitblock(stale.serialize().hex()), "inconclusive")
+        self.assert_staletip_hash_tracked(stale.hash_hex)
+
+        # Headers that extend the stale tip beyond the active tip's work are
+        # not tracked when they arrive in one batch, but they mean the stale
+        # tip is no longer a chain tip.
+        descendants = []
+        prev_hash = stale.hash_int
+        for height in [active_tip["height"] + 1, active_tip["height"] + 2]:
+            block = create_block(hashprev=prev_hash, height=height, ntime=active_tip["time"] + self.block_time_offset)
+            self.block_time_offset += 1
+            block.solve()
+            descendants.append(block)
+            prev_hash = block.hash_int
+        peer = node.add_p2p_connection(P2PInterface())
+        peer.send_and_ping(msg_headers([CBlockHeader(block) for block in descendants]))
+        node.disconnect_p2ps()
+        # Mark the descendants invalid, so their higher-work headers are not
+        # left as a better chain for the rest of the test. They are still
+        # known blocks building on the stale tip.
+        node.invalidateblock(descendants[0].hash_hex)
+
+        assert stale.hash_hex not in [tip["hash"] for tip in node.getchaintips()]
+        assert stale.hash_hex in self.tracked_staletips()
+
+    def test_startup_seeding_only_when_enabled(self):
+        self.log.info("Test stale-tip tracker is seeded at startup only when enabled")
+        node = self.nodes[0]
+        tracked = sorted(self.tracked_staletips())
+        assert len(tracked) > 0
+
+        # With stale-tip relay disabled, tracking is not reported.
+        for disabled_arg in ["-staletips=none", "-nostaletips"]:
+            self.restart_node(0, extra_args=[disabled_arg])
+            assert_raises_rpc_error(-1, "Stale-tip tracking is disabled", node.getchaintips, staletips_only=True)
+
+        # With stale-tip relay enabled, the same stale tips are seeded from
+        # the block index at startup.
+        self.restart_node(0)
+        assert_equal(sorted(self.tracked_staletips()), tracked)
 
 
 if __name__ == "__main__":

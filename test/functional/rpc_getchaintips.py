@@ -68,7 +68,7 @@ class GetChainTipsTest (BitcoinTestFramework):
 
         self.log.info("Test getchaintips max_depth")
         assert_equal(self.nodes[0].getchaintips(max_depth=10), self.nodes[0].getchaintips())
-        assert_equal(self.nodes[0].getchaintips({"max_depth": None}), self.nodes[0].getchaintips())
+        assert_equal(self.nodes[0].getchaintips({"max_depth": None, "staletips_only": None}), self.nodes[0].getchaintips())
         assert_equal(self.nodes[0].getchaintips({"max_depth": 9}), [longTip])
         assert_equal(self.nodes[0].getchaintips(max_depth=0), [longTip])
         assert_raises_rpc_error(-8, "max_depth must be non-negative", self.nodes[0].getchaintips, max_depth=-1)

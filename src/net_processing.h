@@ -7,6 +7,7 @@
 #define BITCOIN_NET_PROCESSING_H
 
 #include <consensus/amount.h>
+#include <kernel/cs_main.h>
 #include <net.h>
 #include <node/txorphanage.h>
 #include <node/types.h>
@@ -149,6 +150,10 @@ public:
 
     /** Get peer manager info. */
     virtual PeerManagerInfo GetInfo() const = 0;
+
+    /** The tracked stale tips, leaving out any that are ineligible for now,
+     *  or std::nullopt if stale-tip tracking is disabled. */
+    virtual std::optional<std::vector<const CBlockIndex*>> GetTrackedStaleTips() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main) = 0;
 
     /** Get info about transactions currently being privately broadcast. */
     virtual std::vector<PrivateBroadcast::TxBroadcastInfo> GetPrivateBroadcastInfo() const = 0;

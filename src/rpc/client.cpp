@@ -161,6 +161,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getblockheader", 1, "verbose" },
     { "getchaintips", 0, "options" },
     { "getchaintips", 0, "max_depth" },
+    { "getchaintips", 0, "staletips_only" },
     { "getchaintxstats", 0, "nblocks" },
     { "gettransaction", 1, "include_watchonly" },
     { "gettransaction", 2, "verbose" },
