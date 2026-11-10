@@ -8,6 +8,7 @@ A test for RPC users with restricted permissions
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_raises_process_error,
     str_to_b64str,
 )
 import http.client
@@ -15,16 +16,39 @@ import json
 import urllib.parse
 
 
-def rpccall(node, user, method, *, batch=False):
+def rpcpost(node, user, body):
     url = urllib.parse.urlparse(node.url)
     headers = {"Authorization": "Basic " + str_to_b64str('{}:{}'.format(user[0], user[3]))}
-    request = {"method": method}
     conn = http.client.HTTPConnection(url.hostname, url.port, timeout=node.rpc_timeout)
     conn.connect()
-    conn.request('POST', '/', json.dumps([request] if batch else request), headers)
+    conn.request('POST', '/', body, headers)
     resp = conn.getresponse()
+    # Read the body before closing the connection so callers can inspect it.
+    resp.body = resp.read()
     conn.close()
     return resp
+
+
+def rpccall(node, user, method, *, batch=False):
+    request = {"method": method}
+    return rpcpost(node, user, json.dumps([request] if batch else request))
+
+
+def rpccall_v2(node, user, method, *, notification=False):
+    request = {"jsonrpc": "2.0", "method": method}
+    if not notification:
+        request["id"] = 1
+    return rpcpost(node, user, json.dumps(request))
+
+
+def rpcbatch(node, user, methods):
+    batch = [{"method": method, "id": i, "jsonrpc": "2.0"} for i, method in enumerate(methods)]
+    return rpcpost(node, user, json.dumps(batch))
+
+
+def reply(resp):
+    """Return the HTTP status of a response and its body parsed as JSON, or None if the body is empty."""
+    return resp.status, json.loads(resp.body) if resp.body else None
 
 
 def get_permissions(whitelist):
@@ -34,6 +58,8 @@ def get_permissions(whitelist):
 class RPCWhitelistTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        # Use a wallet if one is compiled, for the bitcoin-cli -generate check.
+        self.uses_wallet = None
 
     def run_test(self):
         # 0 => Username
@@ -59,11 +85,15 @@ class RPCWhitelistTest(BitcoinTestFramework):
             # Test non-whitelisted user
             ["strangedude6", "67e5583538958883291f6917883eca64$8a866953ef9c5b7d078a62c64754a4eb74f47c2c17821eb4237021d7ef44f991", None, "N4SziYbHmhC1"]
         ]
+        # May call the node methods bitcoin-cli -getinfo uses but not the wallet
+        # ones, one method that changes state, and the first of the two methods
+        # bitcoin-cli -generate calls.
+        self.batch_user = ["batchuser", "35f04be82e1e20a1d4a248763828a98e$9198bf9c68f21382fd5eb80726b80432e4149f84abf8e2b8ebf3de71f554f15e", "getnetworkinfo,getblockchaininfo,setnetworkactive,getnewaddress", "g3tInf0"]
         # These commands shouldn't be allowed for any user to test failures
         self.never_allowed = ["getnetworkinfo"]
         with open(self.nodes[0].datadir_path / "bitcoin.conf", "a") as f:
             f.write("\nrpcwhitelistdefault=0\n")
-            for user in self.users:
+            for user in self.users + [self.batch_user]:
                 f.write("rpcauth=" + user[0] + ":" + user[1] + "\n")
                 f.write("rpcwhitelist=" + user[0] + ":" + user[2] + "\n")
             # Special cases
@@ -91,6 +121,9 @@ class RPCWhitelistTest(BitcoinTestFramework):
         self.log.info("Strange test 5")
         assert_equal(200, rpccall(self.nodes[0], self.strange_users[4], "getblockcount").status)
 
+        self.test_denied_requests()
+        self.test_denied_batches()
+
         self.test_users_permissions()
         self.test_rpcwhitelistdefault_permissions(0, 200)
         self.test_rejected_method_logging()
@@ -111,6 +144,61 @@ class RPCWhitelistTest(BitcoinTestFramework):
         self.restart_node(0)
         self.test_users_permissions()
         self.test_rpcwhitelistdefault_permissions(1, 403)
+
+    def test_denied_requests(self):
+        """Replies to single requests for a method the user may not call."""
+        self.log.info("A denied request")
+        assert_equal(reply(rpccall(self.nodes[0], self.users[0], "getblockchaininfo")), (403, None))
+
+        self.log.info("A denied JSON-RPC 2.0 request")
+        assert_equal(reply(rpccall_v2(self.nodes[0], self.users[0], "getblockchaininfo")), (403, None))
+
+        self.log.info("A denied JSON-RPC 2.0 notification")
+        assert_equal(reply(rpccall_v2(self.nodes[0], self.users[0], "getblockchaininfo", notification=True)), (403, None))
+
+        self.log.info("bitcoin-cli reports a denied request")
+        cli = self.nodes[0].cli(f"-rpcuser={self.users[0][0]}", f"-rpcpassword={self.users[0][3]}")
+        assert_raises_process_error(1, "server returned HTTP error 403", cli.getblockchaininfo)
+
+        if self.is_wallet_compiled():
+            self.log.info("bitcoin-cli -generate reports a denied generatetoaddress call")
+            self.nodes[0].createwallet("generate")
+            cli = self.nodes[0].cli(f"-rpcuser={self.batch_user[0]}", f"-rpcpassword={self.batch_user[3]}")
+            assert_raises_process_error(1, "server returned HTTP error 403", cli("-generate").send_cli)
+            self.nodes[0].unloadwallet("generate")
+
+    def test_denied_batches(self):
+        """Replies to batches that include a method the user may not call."""
+        self.log.info("A batch including a denied request")
+        # user1 may call getblockcount but not getblockchaininfo or getnetworkinfo.
+        assert_equal(reply(rpcbatch(self.nodes[0], self.users[0], ["getblockcount", "getblockchaininfo", "getblockcount", "getnetworkinfo"])),
+                     (403, None))
+
+        self.log.info("bitcoin-cli -getinfo, which sends a batch, reports a denied request")
+        cli = self.nodes[0].cli(f"-rpcuser={self.users[0][0]}", f"-rpcpassword={self.users[0][3]}")
+        assert_raises_process_error(1, "server returned HTTP error 403", cli("-getinfo").send_cli)
+
+        self.log.info("bitcoin-cli -getinfo reports a denied request when the first request is permitted")
+        cli = self.nodes[0].cli(f"-rpcuser={self.batch_user[0]}", f"-rpcpassword={self.batch_user[3]}")
+        assert_raises_process_error(1, "server returned HTTP error 403", cli("-getinfo").send_cli)
+
+        self.log.info("A batch including a denied request has no effect")
+        resp = rpcpost(self.nodes[0], self.batch_user,
+                       '[{"method": "setnetworkactive", "params": [false], "id": 0}, {"method": "getbestblockhash", "id": 1}]')
+        assert_equal(reply(resp), (403, None))
+        assert_equal(True, self.nodes[0].getnetworkinfo()["networkactive"])
+
+        self.log.info("A batch with a request missing its method, and a denied request")
+        resp = rpcpost(self.nodes[0], self.users[0], '[{"id": 0}, {"method": "getnetworkinfo", "id": 1}]')
+        assert_equal(reply(resp), (500, {"result": None, "error": {"code": -32700, "message": "JSON value of type null is not of expected type string"}, "id": None}))
+
+        self.log.info("A batch with a request missing its method")
+        resp = rpcpost(self.nodes[0], self.users[0], '[{"method": "getblockcount", "id": 0}, {"id": 1}]')
+        assert_equal(reply(resp), (500, {"result": None, "error": {"code": -32700, "message": "JSON value of type null is not of expected type string"}, "id": None}))
+
+        self.log.info("A batch with a request that is not an object")
+        resp = rpcpost(self.nodes[0], self.users[0], '[{"method": "getblockcount", "id": 0}, "not an object"]')
+        assert_equal(reply(resp), (400, {"result": None, "error": {"code": -32600, "message": "Invalid Request object"}, "id": None}))
 
     def test_rejected_method_logging(self):
         """Test logging a method rejected by the RPC whitelist."""
@@ -149,6 +237,7 @@ class RPCWhitelistTest(BitcoinTestFramework):
         for permission in ["getbestblockhash", "getblockchaininfo"]:
             self.log.info(f"[{user[0]}]: Testing rpcwhitelistdefault={default_value} no specified permission ({permission})")
             assert_equal(expected_status, rpccall(self.nodes[0], user, permission).status)
+            assert_equal(expected_status, rpccall_v2(self.nodes[0], user, permission).status)
 
 
 if __name__ == "__main__":
