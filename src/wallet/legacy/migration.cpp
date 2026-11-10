@@ -2,6 +2,7 @@
 
 #include <wallet/context.h>
 #include <wallet/legacy/migration.h>
+#include <wallet/legacy/load.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
@@ -419,31 +420,6 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
 }
 
 namespace legacy_migration {
-
-static std::shared_ptr<CWallet> LoadWalletForMigration(const std::string& name, bilingual_str& error)
-{
-    // Load the wallet but only in the context of migration.
-    // No signals should be connected nor should anything else be aware of this wallet
-    WalletContext empty_context;
-    DatabaseOptions options;
-    options.require_existing = true;
-    options.require_format = DatabaseFormat::BERKELEY_RO;
-    DatabaseStatus status;
-    std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(name, options, status, error);
-    if (!database) return nullptr;
-
-    std::shared_ptr<CWallet> walletInstance(new CWallet(/*chain=*/nullptr, name, std::move(database)));
-
-    // Load wallet
-    std::vector<bilingual_str> warnings;
-    auto nLoadWalletRet = walletInstance->PopulateWalletFromDB(error, warnings);
-    bool rescan_required = nLoadWalletRet == DBErrors::NEED_RESCAN;
-    if (nLoadWalletRet != DBErrors::LOAD_OK && nLoadWalletRet != DBErrors::NONCRITICAL_ERROR && !rescan_required) {
-        return nullptr;
-    }
-
-    return walletInstance;
-}
 
 bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, MigrationResult& res, const bool load_on_startup = true) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
