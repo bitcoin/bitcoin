@@ -768,6 +768,7 @@ public:
 
     UniValue ProcessReply(const UniValue &reply) override
     {
+        if (!reply["error"].isNull()) return reply;
         UniValue result(UniValue::VOBJ);
         result.pushKV("address", address_str);
         result.pushKV("blocks", reply.get_obj()["result"]);
