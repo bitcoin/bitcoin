@@ -71,6 +71,7 @@ void initialize_process_message()
 FUZZ_TARGET(process_message, .init = initialize_process_message)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
+    ResetFuzzedSockets();
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     auto& node{g_setup->m_node};

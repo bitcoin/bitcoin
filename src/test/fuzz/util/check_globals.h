@@ -12,6 +12,9 @@
 
 extern std::atomic<bool> g_used_system_time;
 
+extern std::atomic<bool> g_used_fuzzed_socket;
+extern std::atomic<bool> g_reset_fuzzed_sockets;
+
 struct CheckGlobalsImpl;
 struct CheckGlobals {
     CheckGlobals();
