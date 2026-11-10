@@ -50,22 +50,22 @@ enum RPCErrorCode
 {
     /// @name Standard JSON-RPC 2.0 errors
     /// @{
-    // RPC_INVALID_REQUEST is internally mapped to HTTP_BAD_REQUEST (400).
-    // It should not be used for application-layer errors.
+    /// RPC_INVALID_REQUEST is internally mapped to HTTP_BAD_REQUEST (400).
+    /// It should not be used for application-layer errors.
     RPC_INVALID_REQUEST  = -32600,
-    // RPC_METHOD_NOT_FOUND is internally mapped to HTTP_NOT_FOUND (404).
-    // It should not be used for application-layer errors.
+    /// RPC_METHOD_NOT_FOUND is internally mapped to HTTP_NOT_FOUND (404).
+    /// It should not be used for application-layer errors.
     RPC_METHOD_NOT_FOUND = -32601,
     RPC_INVALID_PARAMS   = -32602,
-    // RPC_INTERNAL_ERROR should only be used for genuine errors in bitcoind
-    // (for example datadir corruption).
+    /// RPC_INTERNAL_ERROR should only be used for unreachable internal errors
+    /// (for example datadir corruption).
     RPC_INTERNAL_ERROR   = -32603,
     RPC_PARSE_ERROR      = -32700,
     /// @}
 
     /// @name General application defined errors
     /// @{
-    RPC_MISC_ERROR                  = -1,  //!< std::exception thrown in command handling
+    RPC_MISC_ERROR                  = -1,  //!< Errors that do not fit any of the other categories
     RPC_TYPE_ERROR                  = -3,  //!< Unexpected type was passed as parameter
     RPC_INVALID_ADDRESS_OR_KEY      = -5,  //!< Invalid address or key
     RPC_OUT_OF_MEMORY               = -7,  //!< Ran out of memory during operation
