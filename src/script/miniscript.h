@@ -1441,8 +1441,7 @@ private:
                 case Fragment::JUST_0: return {EMPTY, INVALID};
                 case Fragment::JUST_1: return {INVALID, EMPTY};
             }
-            assert(false);
-            return {INVALID, INVALID};
+            AssertUnreachable();
         };
 
         auto tester = [&helper](const Node& node, std::span<InputResult> subres) -> InputResult {

@@ -421,8 +421,7 @@ FUZZ_TARGET(clusterlin_depgraph_sim)
             if (offset == 0) return i;
             --offset;
         }
-        assert(false);
-        return DepGraphIndex(-1);
+        AssertUnreachable();
     };
 
     /** Read a valid subset of the transactions from the provider. */

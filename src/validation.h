@@ -1140,7 +1140,7 @@ public:
         for (auto& cs : m_chainstates) {
             if (cs && cs->m_assumeutxo != Assumeutxo::INVALID && !cs->TargetBlockHash()) return *cs;
         }
-        abort();
+        AssertUnreachable();
     }
 
     //! Return historical chainstate targeting a specific block, if any.
@@ -1160,7 +1160,7 @@ public:
         for (auto* cs : {&CurrentChainstate(), HistoricalChainstate()}) {
             if (cs && cs->m_assumeutxo == Assumeutxo::VALIDATED) return *cs;
         }
-        abort();
+        AssertUnreachable();
     }
 
     //! Remove a chainstate.
