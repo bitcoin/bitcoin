@@ -42,8 +42,6 @@ constexpr ReachabilityGoal PROCESS_MESSAGES_CHANGES_BLOCK_INDEX{"process_message
 
 } // namespace
 
-extern void MakeRandDeterministicDANGEROUS(const uint256& seed) noexcept;
-
 static void initialize_process_messages()
 {
     RegisterReachabilityGoal(PROCESS_MESSAGES_CHANGES_MEMPOOL);

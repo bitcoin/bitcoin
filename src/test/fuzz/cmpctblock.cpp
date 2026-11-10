@@ -107,8 +107,6 @@ public:
 
 } // namespace
 
-extern void MakeRandDeterministicDANGEROUS(const uint256& seed) noexcept;
-
 static void initialize_cmpctblock()
 {
     RegisterReachabilityGoal(CMPCTBLOCK_CHANGES_MEMPOOL);
