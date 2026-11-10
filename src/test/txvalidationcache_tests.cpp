@@ -28,13 +28,13 @@ BOOST_AUTO_TEST_SUITE(txvalidationcache_tests)
 struct DoubleSpendSetup : public Dersig100Setup {
     const CScript scriptPubKey{CScript{} << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG};
 
-    // Returns a signed spend of the first mature coinbase txn.
-    CMutableTransaction MakeSpend() const
+    // Returns a signed spend of the first mature coinbase txn, paying the given value.
+    CMutableTransaction MakeSpend(CAmount value) const
     {
         CMutableTransaction spend;
         spend.version = 1;
         spend.vin = {CTxIn{m_coinbase_txns[0]->GetHash(), 0}};
-        spend.vout = {CTxOut{11 * CENT, scriptPubKey}};
+        spend.vout = {CTxOut{value, scriptPubKey}};
 
         // Sign:
         std::vector<unsigned char> vchSig;
@@ -46,7 +46,7 @@ struct DoubleSpendSetup : public Dersig100Setup {
     }
 
     // A double-spend of a mature coinbase txn.
-    const std::vector<CMutableTransaction> spends{MakeSpend(), MakeSpend()};
+    const std::vector<CMutableTransaction> spends{MakeSpend(11 * CENT), MakeSpend(12 * CENT)};
 
     bool ToMemPool(const CMutableTransaction& tx)
     {
@@ -90,6 +90,10 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend_second_in_mempool, DoubleSp
 
 BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend_one_in_mempool_other_in_block, DoubleSpendSetup)
 {
+    // The spends must be distinct transactions, so that the one in the
+    // memory pool is removed as a conflict rather than as mined:
+    BOOST_REQUIRE(spends[0].GetHash() != spends[1].GetHash());
+
     // Final sanity test: second spend in the memory pool, first in block, that's OK:
     BOOST_CHECK(ToMemPool(spends[1]));
     const CBlock block{CreateAndProcessBlock({spends[0]}, scriptPubKey)};
