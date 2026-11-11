@@ -36,6 +36,7 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -158,7 +159,28 @@ std::vector<Wtxid> WtxidsToRelay(FuzzedDataProvider& fuzzed_data_provider, const
     return res;
 }
 
-void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, DummyChainState& chainstate)
+/** Append some transactions the mempool rejected to a mined block, giving the reorg topologies the
+ * mempool won't build (e.g. a TRUC parent with two children). Skip any that would spend an outpoint
+ * twice, as a block can't. They need not be otherwise valid: re-adding an invalid transaction fails
+ * for a reason the reorg Assumes allow. */
+void AddRejectedToBlock(FuzzedDataProvider& fuzzed_data_provider, const std::vector<CTransactionRef>& rejected,
+                        std::vector<CTransactionRef>& vtx)
+{
+    std::set<COutPoint> spent;
+    for (const auto& tx : vtx) {
+        for (const auto& in : tx->vin) spent.insert(in.prevout);
+    }
+    for (const auto& tx : rejected) {
+        if (!fuzzed_data_provider.ConsumeBool()) continue;
+        // Without inputs a transaction is invalid, and two of them could repeat a txid.
+        if (tx->vin.empty() || std::ranges::any_of(tx->vin, [&](const CTxIn& in) { return spent.contains(in.prevout); })) continue;
+        for (const auto& in : tx->vin) spent.insert(in.prevout);
+        vtx.push_back(tx);
+    }
+}
+
+void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, DummyChainState& chainstate,
+            const std::vector<CTransactionRef>& rejected)
 {
     WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
     {
@@ -171,7 +193,8 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Dum
         Assert(block_template->block.vtx.size() >= 1);
 
         LOCK2(::cs_main, tx_pool.cs);
-        const auto& vtx{block_template->block.vtx};
+        auto vtx{block_template->block.vtx};
+        AddRejectedToBlock(fuzzed_data_provider, rejected, vtx);
 
         // Try updating the mempool for this block, as though it were mined.
         tx_pool.removeForBlock(vtx);
@@ -327,6 +350,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool_standard)
     chainstate.SetMempool(&tx_pool);
 
     bool accepted_transaction{false};
+    std::vector<CTransactionRef> rejected;
 
     // Helper to query an amount
     const CCoinsViewMemPool amount_view{WITH_LOCK(::cs_main, return &chainstate.CoinsTip()), tx_pool};
@@ -433,6 +457,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool_standard)
         const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, GetTime(), /*bypass_limits=*/false, /*test_accept=*/false));
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
         accepted_transaction |= accepted;
+        if (!accepted) rejected.push_back(tx);
         node.validation_signals->SyncWithValidationInterfaceQueue();
         node.validation_signals->UnregisterSharedValidationInterface(txr);
 
@@ -486,7 +511,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool_standard)
         }
     }
     ObserveReachabilityGoal(accepted_transaction, TX_POOL_STANDARD_ACCEPTS_TRANSACTION);
-    Finish(fuzzed_data_provider, tx_pool, chainstate);
+    Finish(fuzzed_data_provider, tx_pool, chainstate, rejected);
 }
 
 FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
@@ -517,6 +542,8 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
 
     bool accepted_transaction{false};
 
+    std::vector<CTransactionRef> rejected;
+
     // If we ever bypass limits, do not do TRUC invariants checks
     bool ever_bypassed_limits{false};
 
@@ -544,6 +571,7 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
         const auto res = WITH_LOCK(::cs_main, return AcceptToMemoryPool(chainstate, tx, GetTime(), bypass_limits, /*test_accept=*/false));
         const bool accepted = res.m_result_type == MempoolAcceptResult::ResultType::VALID;
         accepted_transaction |= accepted;
+        if (!accepted) rejected.push_back(tx);
         if (accepted) {
             txids.push_back(tx->GetHash());
             if (!ever_bypassed_limits) {
@@ -552,6 +580,6 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
         }
     }
     ObserveReachabilityGoal(accepted_transaction, TX_POOL_ACCEPTS_TRANSACTION);
-    Finish(fuzzed_data_provider, tx_pool, chainstate);
+    Finish(fuzzed_data_provider, tx_pool, chainstate, rejected);
 }
 } // namespace
