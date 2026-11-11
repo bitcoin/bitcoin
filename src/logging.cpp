@@ -332,7 +332,7 @@ namespace BCLog {
     /** Belts and suspenders: make sure outgoing log messages don't contain
      * potentially suspicious characters, such as terminal control codes.
      *
-     * This escapes control characters, including newline ('\n'), in C syntax,
+     * This escapes control characters, including newline, in C syntax,
      * so untrusted data can't forge log lines. It escapes instead of removes
      * them to still allow for troubleshooting issues where they accidentally
      * end up in strings.

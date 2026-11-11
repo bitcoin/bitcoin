@@ -293,7 +293,7 @@ std::map<std::string,std::string> ParseTorReplyMapping(const std::string &s)
             if (ptr == s.size()) // unexpected end of line
                 return std::map<std::string,std::string>();
             ++ptr; // skip closing '"'
-            /**
+            /*
              * Unescape value. Per https://spec.torproject.org/control-spec section 2.1.1:
              *
              *   For future-proofing, controller implementers MAY use the following
