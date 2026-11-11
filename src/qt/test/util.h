@@ -10,6 +10,7 @@
 #include <qglobal.h>
 
 QT_BEGIN_NAMESPACE
+class QObject;
 class QString;
 QT_END_NAMESPACE
 
@@ -18,7 +19,9 @@ QT_END_NAMESPACE
  *
  * @param text - Optionally store dialog text.
  * @param msec - Number of milliseconds to pause before triggering the callback.
+ * @param context - Optionally cancel the callback when this object is destroyed,
+ *                  so it cannot answer a later message box or outlive `text`.
  */
-void ConfirmMessage(QString* text, std::chrono::milliseconds msec);
+void ConfirmMessage(QString* text, std::chrono::milliseconds msec, QObject* context = nullptr);
 
 #endif // BITCOIN_QT_TEST_UTIL_H

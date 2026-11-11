@@ -22,6 +22,7 @@
 
 #include <chrono>
 
+#include <QAbstractButton>
 #include <QApplication>
 #include <QLineEdit>
 #include <QMessageBox>
@@ -47,11 +48,14 @@ void EditAddressAndSubmit(
         const QString& label, const QString& address, QString expected_msg)
 {
     QString warning_text;
+    // A successful edit opens no message box, and the answer must not wait
+    // for the next one, which belongs to whoever opens it
+    QObject scope;
 
     dialog->findChild<QLineEdit*>("labelEdit")->setText(label);
     dialog->findChild<QValidatedLineEdit*>("addressEdit")->setText(address);
 
-    ConfirmMessage(&warning_text, 5ms);
+    ConfirmMessage(&warning_text, 5ms, &scope);
     dialog->accept();
     QCOMPARE(warning_text, expected_msg);
 }
@@ -166,6 +170,13 @@ void TestAddAddressesToSendBook(interfaces::Node& node)
         &editAddressDialog, QString("i0 - new B"), new_address_b, QString(""));
     check_addbook_size(4);
     QCOMPARE(table_view->model()->rowCount(), 3);
+
+    // The next message box is answered by whoever opens it
+    QMessageBox later(QMessageBox::Question, QString(), QString(), QMessageBox::Yes | QMessageBox::No);
+    later.setDefaultButton(QMessageBox::Yes);
+    QTimer::singleShot(100ms, &later, [&later] { later.button(QMessageBox::No)->click(); });
+    later.exec();
+    QCOMPARE(later.clickedButton(), later.button(QMessageBox::No));
 
     auto search_line = address_book.findChild<QLineEdit*>("searchLineEdit");
 
