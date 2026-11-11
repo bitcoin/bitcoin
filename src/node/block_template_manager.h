@@ -6,11 +6,13 @@
 #define BITCOIN_NODE_BLOCK_TEMPLATE_MANAGER_H
 
 #include <node/mining_types.h>
+#include <sync.h>
 #include <util/time.h>
 
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 class CBlock;
 class ChainstateManager;
@@ -36,6 +38,10 @@ private:
     ChainstateManager& m_chainman;
     KernelNotifications& m_notifications;
     const BlockCreateOptions m_block_create_args;
+    mutable Mutex m_mutex;
+    /** Templates we hold on to on behalf of connected IPC clients. Non-owning,
+     *  so that accounting never extends a template's lifetime. */
+    std::vector<std::weak_ptr<const CBlockTemplate>> m_templates GUARDED_BY(m_mutex);
 
 public:
     explicit BlockTemplateManager(CTxMemPool& mempool,
@@ -48,6 +54,20 @@ public:
 
     /** Create a fresh block template, applying init-time defaults to any unset options. */
     std::unique_ptr<CBlockTemplate> CreateNewTemplate(const BlockCreateOptions& options);
+
+    /** Include a live block template in GetTemplateMemoryUsage(). */
+    void RegisterTemplate(const std::shared_ptr<const CBlockTemplate>& block_template)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Stop including a block template in GetTemplateMemoryUsage(). Should
+     *  be called before the template is destroyed, but also prunes entries
+     *  for templates that were already destroyed. */
+    void UnregisterTemplate(const std::shared_ptr<const CBlockTemplate>& block_template)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Check internal tracking invariants. */
+    void SanityCheck() const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** Submit a block via ProcessNewBlock and capture validation state.
      *  @return whether the block was accepted as a new valid block. */
