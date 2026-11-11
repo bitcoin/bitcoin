@@ -4,11 +4,22 @@
 
 #include <headerssync.h>
 
+#include <chain.h>
 #include <pow.h>
+#include <random.h>
+#include <tinyformat.h>
 #include <util/check.h>
 #include <util/log.h>
 #include <util/time.h>
 #include <util/vector.h>
+
+#include <compare>
+#include <string>
+#include <utility>
+
+namespace Consensus {
+struct Params;
+} // namespace Consensus
 
 // Our memory analysis in headerssync-params.py assumes this many bytes for a
 // CompressedHeader (we should re-calculate parameters if we compress further).

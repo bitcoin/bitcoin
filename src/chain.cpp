@@ -4,8 +4,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
+
+#include <consensus/params.h>
 #include <tinyformat.h>
 #include <util/check.h>
+
+#include <limits>
+#include <utility>
 
 std::string CBlockIndex::ToString() const
 {

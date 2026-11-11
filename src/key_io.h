@@ -7,13 +7,15 @@
 #define BITCOIN_KEY_IO_H
 
 #include <addresstype.h>
-#include <chainparams.h>
 #include <key.h>
 #include <pubkey.h>
 
 #include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
+
+class CChainParams;
 
 CKey DecodeSecret(std::string_view str);
 std::string EncodeSecret(const CKey& key);
