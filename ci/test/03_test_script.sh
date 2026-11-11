@@ -230,8 +230,20 @@ if [[ "${RUN_IWYU}" == true ]]; then
   jq --arg patterns "$SUBTREES" 'map(select(.file | test($patterns) | not))' "${BASE_BUILD_DIR}/compile_commands.json" > "${BASE_BUILD_DIR}/compile_commands_no_subtrees.json"
   mv "${BASE_BUILD_DIR}/compile_commands_no_subtrees.json" "${BASE_BUILD_DIR}/compile_commands.json"
 
+  # Source files directly in src/ where IWYU warnings are treated as errors.
+  IWYU_SRC_FILES=(
+    clientversion.cpp
+    core_io.cpp
+    init.cpp
+    net.cpp
+    net_types.cpp
+    rest.cpp
+    signet.cpp
+  )
+  IWYU_SRC_REGEX="$(IFS='|'; echo "${IWYU_SRC_FILES[*]//./\\.}")"
+  # FILES_WITH_ENFORCED_IWYU represents source files where IWYU warnings are treated as errors.
   # TODO: Consider enforcing IWYU across the entire codebase.
-  FILES_WITH_ENFORCED_IWYU='/src/((bench|common|consensus|crypto|index|init|kernel|primitives|rpc|script|univalue/(lib|test)|util|zmq)/.*|node/(block_template_manager|blockstorage|eviction|interfaces|miner|mining_args|utxo_snapshot)|test/fuzz/(kitchen_sink|minisketch|parse_univalue)|clientversion|core_io|init|net|net_types|rest|signet)\.cpp'
+  FILES_WITH_ENFORCED_IWYU="/src/(((bench|common|consensus|crypto|index|init|kernel|primitives|rpc|script|univalue/(lib|test)|util|zmq)/.*|node/(block_template_manager|blockstorage|eviction|interfaces|miner|mining_args|utxo_snapshot)|test/fuzz/(kitchen_sink|minisketch|parse_univalue))\.cpp|${IWYU_SRC_REGEX})"
   jq --arg patterns "$FILES_WITH_ENFORCED_IWYU" 'map(select(.file | test($patterns)))' "${BASE_BUILD_DIR}/compile_commands.json" > "${BASE_BUILD_DIR}/compile_commands_iwyu_errors.json"
   jq --arg patterns "$FILES_WITH_ENFORCED_IWYU" 'map(select(.file | test($patterns) | not))' "${BASE_BUILD_DIR}/compile_commands.json" > "${BASE_BUILD_DIR}/compile_commands_iwyu_warnings.json"
 
