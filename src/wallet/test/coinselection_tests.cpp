@@ -263,6 +263,25 @@ BOOST_AUTO_TEST_CASE(bnb_feerate_sensitivity_test)
     TestBnBSuccess("Prefer two light inputs over two heavy inputs at high feerates", high_feerate_pool, /*selection_target=*/13 * CENT, /*expected_input_amounts=*/{3 * CENT, 10 * CENT}, /*expected_attempts=*/9, high_feerate_params);
 }
 
+BOOST_AUTO_TEST_CASE(knapsack_skips_overweight_groups_test)
+{
+    // Only one light coin fits the weight limit, and it matches the target exactly
+    const int max_selection_weight{4 * P2WPKH_INPUT_VSIZE};
+    std::vector<OutputGroup> utxo_pool;
+    for (int i = 0; i < 10; ++i) {
+        utxo_pool.push_back(MakeCoin(5 * CENT, true, default_cs_params, P2WPKH_INPUT_VSIZE + 1));
+    }
+    utxo_pool.push_back(MakeCoin(1 * CENT));
+
+    // Knapsack shuffles the coins, so try several times. Heavy coins must be
+    // skipped, not end the search, wherever they end up in the order.
+    for (int i = 0; i < 10; ++i) {
+        const auto result{KnapsackSolver(utxo_pool, 1 * CENT, default_cs_params.m_min_change_target, default_rand, max_selection_weight)};
+        BOOST_REQUIRE(result);
+        BOOST_CHECK_EQUAL(result->GetSelectedEffectiveValue(), 1 * CENT);
+    }
+}
+
 static void TestSRDSuccess(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CoinSelectionParams& cs_params = default_cs_params, const int max_selection_weight = MAX_STANDARD_TX_WEIGHT)
 {
     CAmount expected_min_amount = selection_target + cs_params.m_change_fee + CHANGE_LOWER;
