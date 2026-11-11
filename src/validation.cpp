@@ -312,10 +312,16 @@ void Chainstate::MaybeUpdateMempoolForReorg(
         auto it = queuedTx.rbegin();
         while (it != queuedTx.rend()) {
             // ignore validation errors in resurrected transactions
-            if (!fAddToMempool || (*it)->IsCoinBase() ||
-                AcceptToMemoryPool(*this, *it, GetTime(),
-                    /*bypass_limits=*/true, /*test_accept=*/false).m_result_type !=
-                        MempoolAcceptResult::ResultType::VALID) {
+            bool accepted{false};
+            if (fAddToMempool && !(*it)->IsCoinBase()) {
+                const auto size_before{m_mempool->size()};
+                const auto result{AcceptToMemoryPool(*this, *it, GetTime(), /*bypass_limits=*/true, /*test_accept=*/false)};
+                accepted = result.m_result_type == MempoolAcceptResult::ResultType::VALID;
+                // A transaction from a disconnected block doesn't conflict with the mempool and
+                // bypasses its limits, so re-adding it never removes anything.
+                Assume(m_mempool->size() == size_before + accepted);
+            }
+            if (!accepted) {
                 // If the transaction doesn't make it in to the mempool, remove any
                 // transactions that depend on it (which would now be orphans).
                 m_mempool->removeRecursive(**it, MemPoolRemovalReason::REORG);
