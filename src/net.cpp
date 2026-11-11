@@ -1771,6 +1771,7 @@ std::pair<size_t, bool> CConnman::SocketSendData(CNode& node) const
                     LogPrint(BCLog::NET, "socket send error for peer=%d: %s\n", node.GetId(), NetworkErrorString(nErr));
                     node.fDisconnect = true;
                 }
+                node.fCanSendData = false;
             }
             break;
         }
