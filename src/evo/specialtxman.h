@@ -97,6 +97,8 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool UndoSpecialTxsInBlock(const Chainstate& chainstate, const CBlock& block, const CBlockIndex* pindex, MNListUpdates& updatesRet)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void RemoveMineableCommitmentsForBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex)
+        EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 
     // the returned list will not contain the correct block hash (we can't know it yet as the coinbase TX is not updated yet)
