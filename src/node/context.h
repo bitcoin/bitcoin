@@ -84,7 +84,7 @@ struct NodeContext {
     //! Issues blocking calls about sync status, errors and warnings
     std::unique_ptr<KernelNotifications> notifications;
     //! Must be destroyed before its dependencies (holds references to them).
-    std::unique_ptr<BlockTemplateManager> block_template_manager;
+    std::shared_ptr<BlockTemplateManager> block_template_manager;
     //! Issues calls about blocks and transactions
     std::unique_ptr<ValidationSignals> validation_signals;
     std::atomic<int> exit_status{EXIT_SUCCESS};
