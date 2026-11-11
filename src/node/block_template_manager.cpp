@@ -8,14 +8,20 @@
 #include <consensus/amount.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
+#include <core_memusage.h>
 #include <interfaces/types.h>
 #include <kernel/chainparams.h>
+#include <logging/categories.h>
+#include <logging/timer.h>
+#include <memusage.h>
 #include <node/block_validation_state_catcher.h>
 #include <node/kernel_notifications.h>
 #include <node/miner.h>
 #include <node/mining_args.h>
 #include <primitives/block.h>
+#include <primitives/transaction.h>
 #include <sync.h>
+#include <txmempool.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/signalinterrupt.h>
@@ -26,6 +32,8 @@
 #include <compare>
 #include <condition_variable>
 #include <numeric>
+#include <ranges>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -64,6 +72,58 @@ void BlockTemplateManager::UnregisterTemplate(const std::shared_ptr<const CBlock
         const auto locked{weak.lock()};
         return locked == block_template || !locked;
     });
+}
+
+size_t BlockTemplateManager::GetTemplateMemoryUsage() const
+{
+    LOG_TIME_MILLIS_WITH_CATEGORY("Calculate template transaction reference memory footprint", BCLog::BENCH);
+
+    // Take a snapshot of the live templates so that m_mutex is not held while
+    // mempool.exists() below repeatedly locks mempool.cs. Holding it would
+    // block template creation and destruction for the duration of this
+    // calculation. The snapshot keeps the templates alive until it goes out
+    // of scope.
+    std::vector<std::shared_ptr<const CBlockTemplate>> templates;
+    {
+        LOCK(m_mutex);
+        templates.reserve(m_templates.size());
+        for (const auto& weak : m_templates) {
+            if (auto block_template{weak.lock()}) templates.push_back(std::move(block_template));
+        }
+    }
+
+    size_t usage_bytes{0};
+    // Templates created from the same mempool share transaction objects.
+    // Remember which ones were seen, so that each is counted (and looked up
+    // in the mempool) only once.
+    std::unordered_set<const CTransaction*> seen;
+    for (const auto& block_template : templates) {
+        // The template's own vectors are never shared with the mempool.
+        usage_bytes += memusage::DynamicUsage(block_template->block.vtx) +
+                       memusage::DynamicUsage(block_template->vTxFees) +
+                       memusage::DynamicUsage(block_template->vTxSigOpsCost) +
+                       memusage::DynamicUsage(block_template->m_package_feerates);
+        // Skip the dummy coinbase: submitSolution() replaces it in-place
+        // without a lock, so reading it here could race with that write.
+        for (const CTransactionRef& tx_ref : block_template->block.vtx | std::views::drop(1)) {
+            CHECK_NONFATAL(tx_ref);
+            if (!seen.insert(tx_ref.get()).second) continue;
+            // mempool.exists() locks mempool.cs each time, which slows down
+            // our calculation. This is preferable to potentially blocking
+            // the node from processing new transactions while this
+            // (non-urgent) calculation is in progress.
+            //
+            // As a side-effect the result is not an accurate snapshot, because
+            // the mempool may change during the loop.
+            //
+            // Checking by wtxid can also underestimate usage if a transaction
+            // is evicted and re-added as a different object while a template
+            // still holds the original object.
+            if (m_mempool.exists(tx_ref->GetWitnessHash())) continue;
+            usage_bytes += RecursiveDynamicUsage(tx_ref);
+        }
+    }
+    return usage_bytes;
 }
 
 void BlockTemplateManager::SanityCheck() const
