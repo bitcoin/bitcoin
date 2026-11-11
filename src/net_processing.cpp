@@ -124,6 +124,9 @@ static constexpr int STALE_RELAY_AGE_LIMIT = 30 * 24 * 60 * 60;
 /// Age after which a block is considered historical for purposes of rate
 /// limiting block relay. Set to one week, denominated in seconds.
 static constexpr int HISTORICAL_BLOCK_AGE = 7 * 24 * 60 * 60;
+/** Number of blocks below the active tip that a headers chain may fork from
+ *  and still meet the default anti-DoS work threshold. */
+static constexpr int ANTI_DOS_WORK_WINDOW{144};
 /** Time between pings automatically sent out for latency probing and keepalive */
 static constexpr auto PING_INTERVAL{2min};
 /** Time to wait for a pong after the last block a peer delivered, before applying the ping timeout */
@@ -753,8 +756,9 @@ private:
     /** Various helpers for headers processing, invoked by ProcessHeadersMessage() */
     /** Return true if headers are continuous and have valid proof-of-work (DoS points assigned on failure) */
     bool CheckHeadersPoW(const std::vector<CBlockHeader>& headers, Peer& peer);
-    /** Calculate an anti-DoS work threshold for headers chains */
-    arith_uint256 GetAntiDoSWorkThreshold();
+    /** Calculate an anti-DoS work threshold for headers chains forking up to
+     *  `window` blocks below the active tip */
+    arith_uint256 GetAntiDoSWorkThreshold(int window = ANTI_DOS_WORK_WINDOW);
     /** Deal with state tracking and headers sync for peers that send
      * non-connecting headers (this can happen due to BIP 130 headers
      * announcements for blocks interacting with the 2hr (MAX_FUTURE_BLOCK_TIME) rule). */
@@ -2944,15 +2948,15 @@ bool PeerManagerImpl::CheckHeadersPoW(const std::vector<CBlockHeader>& headers, 
     return true;
 }
 
-arith_uint256 PeerManagerImpl::GetAntiDoSWorkThreshold()
+arith_uint256 PeerManagerImpl::GetAntiDoSWorkThreshold(int window)
 {
     arith_uint256 near_chaintip_work = 0;
     LOCK(cs_main);
     if (m_chainman.ActiveChain().Tip() != nullptr) {
         const CBlockIndex *tip = m_chainman.ActiveChain().Tip();
-        // Use a 144 block buffer, so that we'll accept headers that fork from
-        // near our tip.
-        near_chaintip_work = tip->nChainWork - std::min<arith_uint256>(144*GetBlockProof(*tip), tip->nChainWork);
+        // Use a `window` block buffer, so that we'll accept headers that fork
+        // from near our tip.
+        near_chaintip_work = tip->nChainWork - std::min<arith_uint256>(window * GetBlockProof(*tip), tip->nChainWork);
     }
     return std::max(near_chaintip_work, m_chainman.MinimumChainWork());
 }
