@@ -26,6 +26,7 @@
 #include <script/standard.h>
 #include <streams.h>
 #include <test/util/net.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <tinyformat.h>
 #include <txmempool.h>
@@ -42,6 +43,7 @@
 #include <iterator>
 #include <memory>
 #include <ranges>
+#include <utility>
 #include <vector>
 
 BOOST_FIXTURE_TEST_SUITE(coinjoin_inouts_tests, TestingSetup)
@@ -246,6 +248,67 @@ static std::unique_ptr<CNode> MakePeer(NodeId id, uint32_t ipv4)
     peer->nVersion = PROTOCOL_VERSION;
     peer->SetCommonVersion(PROTOCOL_VERSION);
     return peer;
+}
+
+BOOST_AUTO_TEST_CASE(server_signing_timeout_charges_each_offender_once)
+{
+    struct DeterministicRandom {
+        const bool previous{g_mock_deterministic_tests};
+        DeterministicRandom() { g_mock_deterministic_tests = true; }
+        ~DeterministicRandom() { g_mock_deterministic_tests = previous; }
+    } deterministic_random;
+    BOOST_REQUIRE_LE(GetRand<int>(100), 33);
+
+    auto& connman{static_cast<ConnmanTestMsg&>(*Assert(m_node.connman))};
+    CActiveMasternodeManager mn_activeman(connman, *Assert(m_node.dmnman), MakeSecretKey());
+    CKey key;
+    key.MakeNewKey(true);
+    FillableSigningProvider provider;
+    BOOST_REQUIRE(provider.AddKey(key));
+    const CScript previous_script{GetScriptForDestination(PKHash(key.GetPubKey()))};
+
+    // One missing signature, several missing signatures from the same participant,
+    // no offenders, and every participant offending.
+    uint32_t collateral_index{0};
+    const std::array<std::pair<int, int>, 4> scenarios{{{1, 1}, {3, 1}, {0, 0}, {3, 3}}};
+    for (const auto& [unsigned_inputs, offenders] : scenarios) {
+        TestableCoinJoinServer server(m_node.peerman.get(), *Assert(m_node.chainman), connman,
+                                      *Assert(m_node.dmnman), *Assert(m_node.dstxman), *Assert(m_node.mn_metaman),
+                                      *Assert(m_node.mempool), mn_activeman, *Assert(m_node.mn_sync), *Assert(m_node.isman));
+        std::vector<uint256> collaterals;
+        for (int participant{0}; participant < 3; ++participant) {
+            const uint32_t index{collateral_index++};
+            const COutPoint collateral_input{uint256::TWO, index};
+            {
+                LOCK(cs_main);
+                m_node.chainman->ActiveChainstate().CoinsTip().AddCoin(
+                    collateral_input, Coin{CTxOut{COIN / 10, previous_script}, 0, false}, false);
+            }
+            CMutableTransaction collateral;
+            collateral.vin.emplace_back(collateral_input);
+            collateral.vout.emplace_back(COIN / 10 - CoinJoin::GetCollateralAmount(), P2PKHScript());
+            BOOST_REQUIRE(SignSignature(provider, previous_script, collateral, 0, COIN / 10, SIGHASH_ALL));
+            collaterals.push_back(collateral.GetHash());
+            server.SeedSessionCollateral(collateral, CoinJoin::MixShape::STANDARD);
+
+            CCoinJoinEntry entry;
+            entry.txCollateral = MakeTransactionRef(collateral);
+            for (int input{0}; input < 3; ++input) {
+                CTxDSIn txin{CTxIn{COutPoint{uint256::ONE, index * 3 + static_cast<uint32_t>(input)}}, previous_script, 0};
+                txin.fHasSig = participant >= offenders || input >= unsigned_inputs;
+                entry.vecTxDSIn.push_back(txin);
+                entry.vecTxOut.emplace_back(CoinJoin::GetSmallestDenomination(), P2PKHScript(static_cast<uint8_t>(input + 1)));
+            }
+            server.SeedEntry(std::move(entry));
+        }
+        server.EnterSigningState();
+        BOOST_REQUIRE(server.HasTimedOut());
+        server.CheckTimeout();
+        for (size_t participant{0}; participant < collaterals.size(); ++participant) {
+            BOOST_CHECK_EQUAL(m_node.mempool->exists(collaterals[participant]), offenders == 1 && participant == 0);
+        }
+        BOOST_CHECK_EQUAL(server.GetState(), int{offenders == 0 ? POOL_STATE_SIGNING : POOL_STATE_IDLE});
+    }
 }
 
 BOOST_AUTO_TEST_CASE(server_signfinaltx_completes_with_legacy_and_full_signatures)

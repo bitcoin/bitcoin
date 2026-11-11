@@ -571,6 +571,7 @@ CTransactionRef CCoinJoinServer::SelectCollateralToCharge()
                              "CCoinJoinServer::SelectCollateralToCharge -- found uncooperative node (didn't sign), "
                              "found offence\n");
                     vecOffendersCollaterals.push_back(entry.txCollateral);
+                    break;
                 }
             }
         }
