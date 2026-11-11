@@ -7,6 +7,7 @@
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
+#include <kernel/disconnected_transactions.h>
 #include <node/miner.h>
 #include <node/mining_types.h>
 #include <policy/feerate.h>
@@ -157,7 +158,7 @@ std::vector<Wtxid> WtxidsToRelay(FuzzedDataProvider& fuzzed_data_provider, const
     return res;
 }
 
-void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Chainstate& chainstate)
+void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, DummyChainState& chainstate)
 {
     WITH_LOCK(::cs_main, tx_pool.check(chainstate.CoinsTip(), chainstate.m_chain.Height() + 1));
     {
@@ -169,21 +170,17 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Cha
         auto block_template = assembler.CreateNewBlock();
         Assert(block_template->block.vtx.size() >= 1);
 
-        // Try updating the mempool for this block, as though it were mined.
         LOCK2(::cs_main, tx_pool.cs);
-        tx_pool.removeForBlock(block_template->block.vtx);
+        const auto& vtx{block_template->block.vtx};
+
+        // Try updating the mempool for this block, as though it were mined.
+        tx_pool.removeForBlock(vtx);
 
         // Now try to add those transactions back, as though a reorg happened.
-        std::vector<Txid> hashes_to_update;
-        for (const auto& tx : block_template->block.vtx) {
-            const auto res = AcceptToMemoryPool(chainstate, tx, GetTime(), true, /*test_accept=*/false);
-            if (res.m_result_type == MempoolAcceptResult::ResultType::VALID) {
-                hashes_to_update.push_back(tx->GetHash());
-            } else {
-                tx_pool.removeRecursive(*tx, MemPoolRemovalReason::REORG);
-            }
-        }
-        tx_pool.UpdateTransactionsFromBlock(hashes_to_update);
+        DisconnectedBlockTransactions disconnectpool{MAX_DISCONNECTED_TX_POOL_BYTES};
+        Assert(disconnectpool.AddTransactionsFromBlock(vtx).empty());
+        LOCK(chainstate.MempoolMutex()); // tx_pool.cs, named the way the annotation expects
+        chainstate.MaybeUpdateMempoolForReorg(disconnectpool, /*fAddToMempool=*/true);
     }
     const auto info_all = tx_pool.infoAll();
     if (!info_all.empty()) {
