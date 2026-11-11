@@ -313,6 +313,9 @@ public:
 
     //! Whether a row with `share`'s owner address has the same amount and addresses here
     bool hasShare(const Share& share) const;
+    //! Same inputs, in order and with their sequences, and the same change.
+    //! Labels and changeIndex are ignored.
+    static bool SameContribution(const Contribution& a, const Contribution& b);
     //! Whether a contribution with `contribution`'s label spends the same coins and pays the same change here
     bool hasContribution(const Contribution& contribution) const;
 

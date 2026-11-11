@@ -104,19 +104,6 @@ bool SameShare(const MnShareSession::Share& a, const MnShareSession::Share& b)
            a.rewardAddress == b.rewardAddress;
 }
 
-bool SameContribution(const MnShareSession::Contribution& a, const MnShareSession::Contribution& b)
-{
-    if (a.inputs.size() != b.inputs.size() || a.hasChange != b.hasChange) return false;
-    if (a.hasChange && (a.changeAddress != b.changeAddress || a.changeAmount != b.changeAmount)) return false;
-    for (size_t i = 0; i < a.inputs.size(); ++i) {
-        if (a.inputs[i].txid.compare(b.inputs[i].txid, Qt::CaseInsensitive) != 0 ||
-            a.inputs[i].vout != b.inputs[i].vout || a.inputs[i].sequence != b.inputs[i].sequence) {
-            return false;
-        }
-    }
-    return true;
-}
-
 bool IsTxidHex(const QString& txid)
 {
     return txid.size() == 64 && IsHex(txid.toStdString());
@@ -190,6 +177,19 @@ bool DecodeSharedProTx(const QString& protx_hex, CMutableTransaction& tx, CProRe
 }
 
 } // anonymous namespace
+
+bool MnShareSession::SameContribution(const Contribution& a, const Contribution& b)
+{
+    if (a.inputs.size() != b.inputs.size() || a.hasChange != b.hasChange) return false;
+    if (a.hasChange && (a.changeAddress != b.changeAddress || a.changeAmount != b.changeAmount)) return false;
+    for (size_t i = 0; i < a.inputs.size(); ++i) {
+        if (a.inputs[i].txid.compare(b.inputs[i].txid, Qt::CaseInsensitive) != 0 ||
+            a.inputs[i].vout != b.inputs[i].vout || a.inputs[i].sequence != b.inputs[i].sequence) {
+            return false;
+        }
+    }
+    return true;
+}
 
 namespace {
 //! U+202F NARROW NO-BREAK SPACE. BitcoinUnits groups thousands with a plain
