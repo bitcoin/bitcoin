@@ -3060,14 +3060,6 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
         }
     }
 
-    // Register wallet with validationinterface. It's done before rescan to avoid
-    // missing block connections during the rescan.
-    // Because of the wallet lock being held, block connection notifications are going to
-    // be pending on the validation-side until lock release. Blocks that are connected while the
-    // rescan is ongoing will not be processed in the rescan but with the block connected notifications,
-    // so the wallet will only be completeley synced after the notifications delivery.
-    walletInstance->m_chain_notifications_handler = walletInstance->chain().handleNotifications(walletInstance);
-
     // If rescan_required = true, rescan_height remains equal to 0
     int rescan_height = 0;
     if (!rescan_required)
@@ -3082,11 +3074,6 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
     }
 
     const std::optional<int> tip_height = chain.getHeight();
-    if (tip_height) {
-        walletInstance->SetLastBlockProcessedInMem(*tip_height, chain.getBlockHash(*tip_height));
-    } else {
-        walletInstance->SetLastBlockProcessedInMem(-1, uint256());
-    }
 
     if (tip_height && *tip_height != rescan_height)
     {
@@ -3134,7 +3121,24 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
                 return false;
             }
         }
+    }
 
+    // Register wallet with validationinterface. It's done before rescan to avoid
+    // missing block connections during the rescan.
+    // Because of the wallet lock being held, block connection notifications are going to
+    // be pending on the validation-side until lock release. Blocks that are connected while the
+    // rescan is ongoing will not be processed in the rescan but with the block connected notifications,
+    // so the wallet will only be completely synced after the notifications delivery.
+    walletInstance->m_chain_notifications_handler = walletInstance->chain().handleNotifications(walletInstance);
+
+    if (tip_height) {
+        walletInstance->SetLastBlockProcessedInMem(*tip_height, chain.getBlockHash(*tip_height));
+    } else {
+        walletInstance->SetLastBlockProcessedInMem(-1, uint256());
+    }
+
+    if (tip_height && *tip_height != rescan_height)
+    {
         chain.initMessage(_("Rescanning…"));
         walletInstance->WalletLogPrintf("Rescanning last %i blocks (from block %i)...", *tip_height - rescan_height, rescan_height);
 
