@@ -9,6 +9,7 @@
 #include <sync.h>
 #include <util/time.h>
 
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>
@@ -67,6 +68,18 @@ public:
 
     /** Check internal tracking invariants. */
     void SanityCheck() const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /**
+     * Estimate the non-mempool memory footprint of registered block templates:
+     * their own vectors, plus the transactions they reference that are no
+     * longer in the mempool. A transaction shared by several templates is
+     * counted once.
+     *
+     * Result is not guaranteed to be an accurate snapshot, because it does not
+     * lock mempool.cs while iterating over transaction references.
+     */
+    size_t GetTemplateMemoryUsage() const
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** Submit a block via ProcessNewBlock and capture validation state.
