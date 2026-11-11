@@ -9,9 +9,11 @@
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
+#include <core_memusage.h>
 #include <interfaces/mining.h>
 #include <interfaces/types.h>
 #include <kernel/chainparams.h>
+#include <kernel/mempool_removal_reason.h>
 #include <node/block_template_manager.h>
 #include <node/miner.h>
 #include <node/mining_args.h>
@@ -980,6 +982,132 @@ BOOST_AUTO_TEST_CASE(block_template_manager)
     BOOST_CHECK(block.vtx[0]->IsCoinBase());
     BOOST_CHECK(block_template->vTxFees.empty());
     BOOST_CHECK(block_template->vTxSigOpsCost.empty());
+}
+
+BOOST_AUTO_TEST_CASE(block_template_manager_lifetime)
+{
+    auto mining{MakeMining()};
+    auto block_template{mining->createNewBlock({.use_mempool = false}, /*cooldown=*/false)};
+    BOOST_REQUIRE(block_template);
+
+    // IPC client templates may be destroyed asynchronously after shutdown has
+    // already reset the manager.
+    std::weak_ptr<node::BlockTemplateManager> weak_manager{m_node.block_template_manager};
+    m_node.block_template_manager.reset();
+    BOOST_CHECK(weak_manager.expired());
+    block_template.reset();
+}
+
+BOOST_FIXTURE_TEST_CASE(template_memory_usage, TestChain100Setup)
+{
+    // Prepare overlapping templates from two mining clients: the first holds
+    // tx1, and the second holds both tx1 and tx2.
+    // Then evict transactions and release templates to check that, while any
+    // client template still references a transaction outside the mempool, its
+    // memory usage is counted once.
+    //
+    // Reported usage consists of each template's overhead (its own vectors,
+    // counted regardless of the mempool) plus the transactions it references
+    // that are no longer in the mempool. The coinbase is not counted.
+    auto client1{interfaces::MakeMining(m_node, /*wait_loaded=*/false)};
+    auto client2{interfaces::MakeMining(m_node, /*wait_loaded=*/false)};
+    const auto usage = [&] { return client2->getMemoryLoad().usage; };
+
+    BOOST_CHECK_EQUAL(usage(), 0U);
+    auto empty_template{client1->createNewBlock({.use_mempool = false}, /*cooldown=*/false)};
+    BOOST_REQUIRE(empty_template);
+    BOOST_REQUIRE_EQUAL(empty_template->getBlock().vtx.size(), 1U);
+    // Only the overhead is reported: the coinbase transaction is not counted.
+    const uint64_t empty_template_overhead{usage()};
+    BOOST_CHECK_GT(empty_template_overhead, 0U);
+
+    // Mine one more block so two separate coinbase outputs are spendable.
+    mineBlocks(1);
+
+    // Transactions still in the mempool are not counted, even when templates
+    // reference them, so creating templates for tx1 and tx2 only adds their
+    // overhead. This is verified below, when evicting a transaction adds
+    // exactly its own memory usage.
+    const CScript destination{GetScriptForDestination(WitnessV0KeyHash(coinbaseKey.GetPubKey()))};
+    const auto tx1{MakeTransactionRef(CreateValidMempoolTransaction(
+        m_coinbase_txns[0], /*input_vout=*/0, /*input_height=*/1,
+        coinbaseKey, destination, /*output_amount=*/49 * COIN))};
+    auto template1{client1->createNewBlock({}, /*cooldown=*/false)};
+    BOOST_REQUIRE(template1);
+    BOOST_REQUIRE_EQUAL(template1->getBlock().vtx.size(), 2U);
+    const uint64_t template1_overhead{usage() - empty_template_overhead};
+    BOOST_CHECK_GT(template1_overhead, 0U);
+
+    // The second template will contain both tx1 and tx2.
+    const auto tx2{MakeTransactionRef(CreateValidMempoolTransaction(
+        m_coinbase_txns[1], /*input_vout=*/0, /*input_height=*/2,
+        coinbaseKey, destination, /*output_amount=*/49 * COIN))};
+    auto template2{client2->createNewBlock({}, /*cooldown=*/false)};
+    BOOST_REQUIRE(template2);
+    BOOST_REQUIRE_EQUAL(template2->getBlock().vtx.size(), 3U);
+    const uint64_t template2_overhead{usage() - empty_template_overhead - template1_overhead};
+    BOOST_CHECK_GT(template2_overhead, 0U);
+    const uint64_t all_overhead{empty_template_overhead + template1_overhead + template2_overhead};
+
+    // Only templates returned through the Mining interface contribute to usage.
+    // Create a template directly through the manager, as the getblocktemplate RPC
+    // does, and keep it alive after releasing the client templates below to check
+    // that its transaction references do not contribute to the reported usage.
+    auto& manager{*Assert(m_node.block_template_manager)};
+    auto untracked_template{manager.CreateNewTemplate({})};
+    BOOST_REQUIRE(untracked_template);
+    BOOST_REQUIRE_EQUAL(untracked_template->block.vtx.size(), 3U);
+
+    // Use removeRecursive to simulate mempool eviction without mining a block
+    // or releasing the templates.
+    auto& mempool{*Assert(m_node.mempool)};
+    {
+        LOCK(mempool.cs);
+        mempool.removeRecursive(*tx2, MemPoolRemovalReason::SIZELIMIT);
+    }
+    // The second client template still references tx2 after eviction, so its
+    // memory contributes to usage until that template is released. tx1 is
+    // still in the mempool and is excluded from usage.
+    const size_t tx2_usage{RecursiveDynamicUsage(tx2)};
+    BOOST_REQUIRE_GT(tx2_usage, 0U);
+    BOOST_CHECK_EQUAL(usage(), all_overhead + tx2_usage);
+    {
+        LOCK(mempool.cs);
+        mempool.removeRecursive(*tx1, MemPoolRemovalReason::SIZELIMIT);
+    }
+    // tx1 is shared by two clients' templates, but must be counted just once.
+    const size_t tx1_usage{RecursiveDynamicUsage(tx1)};
+    BOOST_REQUIRE_GT(tx1_usage, 0U);
+    BOOST_CHECK_EQUAL(usage(), all_overhead + tx1_usage + tx2_usage);
+    manager.SanityCheck();
+
+    // Re-entry into the mempool must stop attributing tx1 to templates.
+    {
+        LOCK(cs_main);
+        const auto result{m_node.chainman->ProcessTransaction(tx1)};
+        BOOST_REQUIRE(result.m_result_type == MempoolAcceptResult::ResultType::VALID);
+    }
+    BOOST_CHECK_EQUAL(usage(), all_overhead + tx2_usage);
+    {
+        LOCK(mempool.cs);
+        mempool.removeRecursive(*tx1, MemPoolRemovalReason::SIZELIMIT);
+    }
+    BOOST_CHECK_EQUAL(usage(), all_overhead + tx1_usage + tx2_usage);
+
+    // The templates, not the Mining interface that created them, own the accounting.
+    client1.reset();
+    BOOST_CHECK_EQUAL(usage(), all_overhead + tx1_usage + tx2_usage);
+    template2.reset();
+    BOOST_CHECK_EQUAL(usage(), empty_template_overhead + template1_overhead + tx1_usage);
+    manager.SanityCheck();
+    template1.reset();
+    // Local transaction references and the untracked template still exist, but
+    // they do not contribute now that no client template references these
+    // transactions.
+    BOOST_CHECK_EQUAL(usage(), empty_template_overhead);
+    empty_template.reset();
+    BOOST_CHECK_EQUAL(usage(), 0U);
+    manager.SanityCheck();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
