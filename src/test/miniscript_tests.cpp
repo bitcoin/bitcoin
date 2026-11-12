@@ -379,7 +379,7 @@ void TestSatisfy(const KeyConverter& converter, const Node& node)
                 // - For P2WSH spends, the witness script
                 // - For Tapscript spends, both the witness script and the control block
                 const size_t max_stack_size{*node.GetStackSize() + 1 + miniscript::IsTapscript(converter.MsContext())};
-                BOOST_CHECK(witness_nonmal.stack.size() <= max_stack_size);
+                BOOST_CHECK(witness_nonmal.size() <= max_stack_size);
                 // If a non-malleable satisfaction exists, the malleable one must also exist, and be identical to it.
                 BOOST_CHECK(mal_success);
                 BOOST_CHECK(witness_nonmal.stack == witness_mal.stack);
