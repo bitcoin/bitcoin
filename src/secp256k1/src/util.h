@@ -69,16 +69,18 @@ static void print_buf_plain(const unsigned char *buf, size_t len) {
 
 /** Assert statically that expr is true.
  *
- * This is a statement-like macro and can only be used inside functions.
+ * This is a declaration-like macro that can be used at file scope and before
+ * any statements in a block.
  */
-#define STATIC_ASSERT(expr) do { \
-    switch(0) { \
-        case 0: \
-        /* If expr evaluates to 0, we have two case labels "0", which is illegal. */ \
-        case /* ERROR: static assertion failed */ (expr): \
-        ; \
-    } \
-} while(0)
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+#  define STATIC_ASSERT(expr) _Static_assert(expr, #expr)
+#elif !defined(__cplusplus) && (defined(__clang__) || (defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6))))
+/* GCC >= 4.6 and Clang support _Static_assert as an extension in pre-C11 modes,
+ * but g++ does not support it in C++. */
+#  define STATIC_ASSERT(expr) __extension__ _Static_assert(expr, #expr)
+#else
+#  define STATIC_ASSERT(expr) extern int secp256k1_static_assert_dummy[(expr) ? 1 : -1]
+#endif
 
 /** Assert statically that expr is an integer constant expression, and run stmt.
  *

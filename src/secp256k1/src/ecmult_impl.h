@@ -30,15 +30,6 @@
 #else
 /* optimal for 128-bit and 256-bit exponents. */
 #  define WINDOW_A 5
-/** Larger values for ECMULT_WINDOW_SIZE result in possibly better
- *  performance at the cost of an exponentially larger precomputed
- *  table. The exact table size is
- *      (1 << (WINDOW_G - 2)) * sizeof(secp256k1_ge_storage)  bytes,
- *  where sizeof(secp256k1_ge_storage) is typically 64 bytes but can
- *  be larger due to platform-specific padding and alignment.
- *  Two tables of this size are used (due to the endomorphism
- *  optimization).
- */
 #endif
 
 #define WNAF_BITS 128

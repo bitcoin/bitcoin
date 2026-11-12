@@ -118,7 +118,7 @@ static void bench_ecmult_const(void* arg, int iters) {
     int i;
 
     for (i = 0; i < iters; ++i) {
-        secp256k1_ecmult_const(&data->output[i], &data->pubkeys[(data->offset1+i) % POINTS], &data->scalars[(data->offset2+i) % POINTS]);
+        secp256k1_ecmult_const_gej(&data->output[i], &data->pubkeys[(data->offset1+i) % POINTS], &data->scalars[(data->offset2+i) % POINTS]);
     }
 }
 
