@@ -289,11 +289,11 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
     }
 
     if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
-        if (const auto opt_proTx = GetTxPayload<CProRegTx>(tx)) {
+        if (const auto opt_proTx = GetTxPayload<CProRegTx>(tx); opt_proTx && opt_proTx->netInfo) {
             entry.pushKV("proRegTx", opt_proTx->ToJson());
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
-        if (const auto opt_proTx = GetTxPayload<CProUpServTx>(tx)) {
+        if (const auto opt_proTx = GetTxPayload<CProUpServTx>(tx); opt_proTx && opt_proTx->netInfo) {
             entry.pushKV("proUpServTx", opt_proTx->ToJson());
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {

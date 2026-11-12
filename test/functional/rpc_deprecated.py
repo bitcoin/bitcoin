@@ -63,11 +63,13 @@ class DeprecatedRpcTest(BitcoinTestFramework):
         self.log.info("Test malformed provider payloads do not crash -deprecatedrpc=service")
         node = self.nodes[2]
         block_count = node.getblockcount()
-        for tx_hex in [
-            "03000100000000000000020000",  # ProRegTx with only nVersion=0 payload
-            "03000200000000000000020000",  # ProUpServTx with only nVersion=0 payload
+        for tx_hex, payload_field in [
+            ("03000100000000000000020000", "proRegTx"),  # ProRegTx with only nVersion=0 payload
+            ("03000200000000000000020000", "proUpServTx"),  # ProUpServTx with only nVersion=0 payload
         ]:
-            assert_raises_rpc_error(-1, "Internal bug detected: obj.netInfo", node.decoderawtransaction, tx_hex)
+            decoded = node.decoderawtransaction(tx_hex)
+            assert payload_field not in decoded
+            assert_equal(decoded["extraPayload"], "0000")
             assert_equal(node.getblockcount(), block_count)
 
 if __name__ == '__main__':
