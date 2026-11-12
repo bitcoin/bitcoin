@@ -25,7 +25,7 @@ namespace util {
 /// used. So instead of passing an existing pointer into NotNull, it is
 /// recommended to use the type when creating the smart pointer. E.g.:
 ///
-/// util::NotNull p{std::make_shared<Thing>()};
+/// auto p{util::MakeNotNullShared<Thing>()};
 ///
 /// This makes it obvious that a pointer really is not null and that the
 /// constructor will not fail.
@@ -119,8 +119,22 @@ NotNull(T) -> NotNull<T>;
 template <typename T, typename Deleter = std::default_delete<T>>
 using NotNullUniquePtr = NotNull<std::unique_ptr<T, Deleter>>;
 
+/// Like std::make_unique, but returns a NotNullUniquePtr.
+template <typename T, typename... Args>
+NotNullUniquePtr<T> MakeNotNullUnique(Args&&... args)
+{
+    return NotNull{std::make_unique<T>(std::forward<Args>(args)...)};
+}
+
 template <typename T>
 using NotNullSharedPtr = NotNull<std::shared_ptr<T>>;
+
+/// Like std::make_shared, but returns a NotNullSharedPtr.
+template <typename T, typename... Args>
+NotNullSharedPtr<T> MakeNotNullShared(Args&&... args)
+{
+    return NotNull{std::make_shared<T>(std::forward<Args>(args)...)};
+}
 
 } // namespace util
 

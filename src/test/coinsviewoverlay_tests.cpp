@@ -25,7 +25,7 @@ namespace {
 
 util::NotNullSharedPtr<ThreadPool> MakeStartedThreadPool()
 {
-    util::NotNull pool{std::make_shared<ThreadPool>("fetch_test")};
+    auto pool{util::MakeNotNullShared<ThreadPool>("fetch_test")};
     pool->Start(DEFAULT_PREVOUTFETCH_THREADS);
     return pool;
 }
@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(fetch_unstarted_thread_pool)
     CCoinsViewDB db{{.path = "", .cache_bytes = 1_MiB, .memory_only = true}, {}};
     CCoinsViewCache main_cache{&db};
     PopulateView(block, main_cache);
-    util::NotNull thread_pool{std::make_shared<ThreadPool>("fetch_none")};
+    auto thread_pool{util::MakeNotNullShared<ThreadPool>("fetch_none")};
     CoinsViewOverlay view{&main_cache, thread_pool};
     const auto reset_guard{view.StartFetching(block)};
     CheckCache(block, view);
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(fetch_interrupted_thread_pool_uses_normal_lookup)
     CCoinsViewCache main_cache{&db};
     PopulateView(block, main_cache);
 
-    util::NotNull thread_pool{std::make_shared<ThreadPool>("fetch_intr")};
+    auto thread_pool{util::MakeNotNullShared<ThreadPool>("fetch_intr")};
     thread_pool->Start(DEFAULT_PREVOUTFETCH_THREADS);
     thread_pool->Interrupt();
     CoinsViewOverlay view{&main_cache, thread_pool};
