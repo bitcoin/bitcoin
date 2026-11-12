@@ -23,6 +23,7 @@
 #include <timedata.h>
 #include <util/check.h>
 #include <util/time.h>
+#include <validation.h>
 #include <validationinterface.h>
 
 #include <univalue.h>
@@ -102,6 +103,7 @@ bool CGovernanceManager::LoadCache(bool load_cache)
     assert(m_db != nullptr);
     is_loaded = load_cache ? m_db->Load(*this) : m_db->Store(*this);
     if (is_loaded && load_cache) {
+        nCachedBlockHeight = WITH_LOCK(::cs_main, return m_chainman.ActiveChain().Height());
         CheckAndRemove();
         InitOnLoad();
     }
