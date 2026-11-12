@@ -358,7 +358,7 @@ public:
                 return self.prevout == other.prevout &&
                     self.nSequence == other.nSequence &&
                     (opts.include_script_sig ? self.scriptSig == other.scriptSig : true) &&
-                    (opts.include_witness_data ? self.scriptWitness.stack == other.scriptWitness.stack : true);
+                    (opts.include_witness_data ? self.scriptWitness == other.scriptWitness : true);
             });
     }
 
@@ -406,7 +406,7 @@ struct CMutableTransaction
     bool HasWitness() const
     {
         for (size_t i = 0; i < vin.size(); i++) {
-            if (!vin[i].scriptWitness.IsNull()) {
+            if (!vin[i].scriptWitness.empty()) {
                 return true;
             }
         }

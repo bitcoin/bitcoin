@@ -1281,7 +1281,7 @@ static RPCMethod decodepsbt()
             scriptsig.pushKV("hex", HexStr(input.final_script_sig));
             in.pushKV("final_scriptSig", std::move(scriptsig));
         }
-        if (!input.final_script_witness.IsNull()) {
+        if (!input.final_script_witness.empty()) {
             UniValue txinwitness(UniValue::VARR);
             for (const auto& item : input.final_script_witness.stack) {
                 txinwitness.push_back(HexStr(item));
@@ -1805,7 +1805,7 @@ static RPCMethod converttopsbt()
 
     // Remove all scriptSigs and scriptWitnesses from inputs
     for (CTxIn& input : tx.vin) {
-        if ((!input.scriptSig.empty() || !input.scriptWitness.IsNull()) && !permitsigdata) {
+        if ((!input.scriptSig.empty() || !input.scriptWitness.empty()) && !permitsigdata) {
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Inputs must not have scriptSigs and scriptWitnesses");
         }
         input.scriptSig.clear();
