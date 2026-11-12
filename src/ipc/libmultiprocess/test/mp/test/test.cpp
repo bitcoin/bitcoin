@@ -238,6 +238,15 @@ KJ_TEST("Call FooInterface methods")
     KJ_EXPECT(saved.use_count() == 1);
     KJ_EXPECT(foo->callbackExtended(callback, 11) == 12);
 
+    class FlatCallbackImpl : public FlatCallback
+    {
+    public:
+        int call(int arg) override { return arg + 1; }
+        int callExtended(int arg) override { return arg * 10; }
+    };
+    FlatCallbackImpl flat_callback;
+    KJ_EXPECT(foo->callbackFlat(flat_callback, 2) == 23);
+
     FooCustom custom_in;
     custom_in.v1 = "v1";
     custom_in.v2 = 5;
@@ -755,6 +764,126 @@ KJ_TEST("Call async IPC method without thread or pool errors correctly")
     });
     done.get_future().get();
     KJ_EXPECT(error_thrown);
+}
+
+KJ_TEST("Calling IPC method after destroy and destroy during a call")
+{
+    // Regression test for bitcoin-core/libmultiprocess#378 where a
+    // non-libmultiprocess client could:
+    //
+    // 1. Call a method after destroy, making the server call it through a
+    //    null m_impl pointer.
+    // 2. Call destroy while another call on the same object was running,
+    //    making the server free m_impl under that call.
+    //
+    // This test builds requests directly through Cap'n Proto, mimicking the
+    // behavior of a buggy client.
+    TestSetup setup;
+    ProxyClient<messages::FooInterface>* foo = setup.client.get();
+    EventLoop& loop = *foo->m_context.loop;
+    foo->initThreadMap();
+
+    // Create two pool threads, so the destroy() and value() calls run on
+    // different threads.
+    std::promise<void> pool_ready;
+    loop.sync([&] {
+        auto pool_req = foo->m_context.connection->m_thread_map.makePoolRequest();
+        pool_req.setCount(2);
+        loop.m_task_set->add(pool_req.send().then([&](auto&&) { pool_ready.set_value(); }));
+    });
+    pool_ready.get_future().get();
+
+    // Create two Bar objects, one for each case below. BarInterface declares a
+    // destroy method, unlike FooInterface.
+    std::optional<messages::BarInterface::Client> bar1;
+    std::optional<messages::BarInterface::Client> bar2;
+    std::promise<void> bars_ready;
+    loop.sync([&] {
+        auto request{foo->m_client.listBarsRequest()};
+        request.initContext();
+        request.setN(2);
+        loop.m_task_set->add(request.send().then([&](auto&& results) {
+            bar1.emplace(results.getResult()[0]);
+            bar2.emplace(results.getResult()[1]);
+            bars_ready.set_value();
+        }));
+    });
+    bars_ready.get_future().get();
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Case 1: method called after destroy.
+    ////////////////////////////////////////////////////////////////////////////
+
+    std::promise<void> destroyed;
+    loop.sync([&] {
+        auto request{bar1->destroyRequest()};
+        request.initContext();
+        loop.m_task_set->add(request.send().then([&](auto&&) { destroyed.set_value(); }));
+    });
+    destroyed.get_future().get();
+
+    // Calls after destroy are rejected.
+    std::promise<std::string> value_error;
+    loop.sync([&] {
+        auto request{bar1->valueRequest()};
+        request.initContext();
+        loop.m_task_set->add(request.send().then(
+            [&](auto&&) { value_error.set_value(""); },
+            [&](kj::Exception&& e) { value_error.set_value(e.getDescription().cStr()); }));
+    });
+    KJ_EXPECT(value_error.get_future().get().find("method called after destroy") != std::string::npos);
+
+    // Release bar1.
+    loop.sync([&] { bar1.reset(); });
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Case 2: destroy called while another call is running.
+    ////////////////////////////////////////////////////////////////////////////
+
+    // Block the next async request, the value() call, before it calls m_impl.
+    std::promise<void> value_started;
+    std::promise<void> value_release;
+    std::atomic<bool> blocked{false};
+    loop.testing_hook_async_request_start = [&] {
+        if (blocked.exchange(true)) return;
+        value_started.set_value();
+        value_release.get_future().wait();
+    };
+    std::promise<int> value;
+    loop.sync([&] {
+        auto request{bar2->valueRequest()};
+        request.initContext();
+        loop.m_task_set->add(request.send().then([&](auto&& results) { value.set_value(results.getResult()); }));
+    });
+    value_started.get_future().get();
+
+    // Destroy fails if value() request is being executed.
+    std::promise<std::string> destroy_error;
+    loop.sync([&] {
+        auto request{bar2->destroyRequest()};
+        request.initContext();
+        loop.m_task_set->add(request.send().then(
+            [&](auto&&) { destroy_error.set_value(""); },
+            [&](kj::Exception&& e) { destroy_error.set_value(e.getDescription().cStr()); }));
+    });
+    KJ_EXPECT(destroy_error.get_future().get().find("destroy called while other calls are in progress") != std::string::npos);
+
+    value_release.set_value();
+    KJ_EXPECT(value.get_future().get() == 1);
+
+    // Destroy succeeds after the value() call has finished.
+    std::promise<std::string> destroy_result;
+    loop.sync([&] {
+        auto request{bar2->destroyRequest()};
+        request.initContext();
+        loop.m_task_set->add(request.send().then(
+            [&](auto&&) { destroy_result.set_value(""); },
+            [&](kj::Exception&& e) { destroy_result.set_value(e.getDescription().cStr()); }));
+    });
+    KJ_EXPECT(destroy_result.get_future().get() == "");
+
+    // Release bar2.
+    loop.sync([&] { bar2.reset(); });
 }
 
 } // namespace test

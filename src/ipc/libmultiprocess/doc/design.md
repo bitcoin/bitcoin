@@ -108,7 +108,7 @@ Each `ServerField` invokes `PassField`, which:
 
 `ServerRet` invokes the next layer (typically `ServerCall`), stores the result, and calls `BuildField` to serialize it into the `Results::Builder`.
 
-`ServerCall` uses the generated `ProxyMethod<MethodParams>::impl` pointer-to-member to invoke the actual C++ method on the wrapped implementation object.
+`ServerCall` uses the generated `ProxyMethod<Interface, MethodParams>::impl` pointer-to-member to invoke the actual C++ method on the wrapped implementation object.
 
 ```mermaid
 sequenceDiagram
@@ -134,7 +134,7 @@ sequenceDiagram
     SF1->>serverInvoke: return
 ```
 
-Destroy methods are a special case: a capnp interface can declare a `destroy` method that is handled by `ServerDestroy` instead of `ServerCall`. Rather than dispatching through the `ServerField`/`ServerRet`/`ServerCall` chain to a C++ interface method, `ServerDestroy` calls `invokeDestroy()` on the `ProxyServer`, which resets `m_impl` and runs any registered cleanup functions, giving the client a way to synchronously destroy the wrapped object on the server side.
+Destroy methods are a special case: a capnp interface can declare a `destroy` method that is handled by `ServerDestroy` instead of `ServerCall`. Rather than dispatching through the `ServerField`/`ServerRet`/`ServerCall` chain to a C++ interface method, `ServerDestroy` calls `invokeDestroy()` on the `ProxyServer`, which resets `m_impl` and runs any registered cleanup functions, giving the client a way to synchronously destroy the wrapped object on the server side. The destroy request fails if other requests on the object are running or queued, and requests sent after it fail. Clients that use Cap'n Proto directly should normally drop the capability instead, which is safe even with requests in flight: the server frees the object after they finish.
 
 ## Advanced Features
 
