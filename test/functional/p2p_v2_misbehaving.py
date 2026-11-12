@@ -63,6 +63,9 @@ class WrongGarbageTerminatorState(EncryptedP2PState):
 
     def complete_handshake(self, response):
         length, handshake_bytes = super().complete_handshake(response)
+        if not handshake_bytes:
+            # Not all 64 ellswift bytes received yet; let the caller wait for more
+            return length, handshake_bytes
         # first 16 bytes returned by complete_handshake() is the garbage terminator
         wrong_garbage_terminator = random_bitflip(handshake_bytes[:16])
         return length, wrong_garbage_terminator + handshake_bytes[16:]
