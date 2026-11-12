@@ -18,7 +18,7 @@ const std::vector<std::string> NET_PERMISSIONS_DOC{
     "mempool (allow requesting BIP35 mempool contents)",
     "download (allow getheaders during IBD, no disconnect after maxuploadtarget limit)",
     "addr (responses to GETADDR avoid hitting the cache and contain random records with the most up-to-date info)",
-    "bip152hb (request BIP152 high-bandwidth compact block announcements, in addition to the automatically selected peers)",
+    "bip152hb (request BIP152 high-bandwidth compact block announcements, in addition to the automatically selected peers; incompatible with -blocksonly)",
 };
 
 namespace {
