@@ -249,7 +249,9 @@ static int GetnScore(const CService& addr)
 [[nodiscard]] static bool IsPeerAddrLocalGood(CNode *pnode)
 {
     CService addrLocal = pnode->GetAddrLocal();
-    return fDiscover && pnode->addr.IsRoutable() && addrLocal.IsRoutable() &&
+    // Tor/I2P peers can't see our clearnet address and the Tor/I2P address won't fit in addrMe (addrv1). so ignore it.
+    return fDiscover && !pnode->IsConnectedThroughPrivacyNet() &&
+           pnode->addr.IsRoutable() && addrLocal.IsRoutable() &&
            g_reachable_nets.Contains(addrLocal);
 }
 
