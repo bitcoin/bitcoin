@@ -105,8 +105,11 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
 
     ApplyArgsManOptions(argsman, mempool_opts.limits);
 
-    if (mempool_opts.limits.cluster_count > MAX_CLUSTER_COUNT_LIMIT) {
-        return util::Error{Untranslated(strprintf("limitclustercount must be less than or equal to %d", MAX_CLUSTER_COUNT_LIMIT))};
+    if (mempool_opts.limits.cluster_count < 1 || mempool_opts.limits.cluster_count > MAX_CLUSTER_COUNT_LIMIT) {
+        return util::Error{Untranslated(strprintf("limitclustercount must be between 1 and %d", MAX_CLUSTER_COUNT_LIMIT))};
+    }
+    if (mempool_opts.limits.cluster_size_vbytes <= 0) {
+        return util::Error{Untranslated("limitclustersize must be greater than 0")};
     }
 
     return {};
