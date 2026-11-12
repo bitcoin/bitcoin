@@ -15,8 +15,6 @@
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <uint256.h>
-#include <univalue.h>
-#include <util/bitdeque.h>
 #include <util/byte_units.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
@@ -32,7 +30,6 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
-#include <cstring>
 #include <fstream>
 #include <limits>
 #include <map>
@@ -42,8 +39,6 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-
-#include <sys/types.h>
 
 #ifndef WIN32
 #include <sys/wait.h>
