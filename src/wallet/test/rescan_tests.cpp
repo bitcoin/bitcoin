@@ -24,7 +24,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <cassert>
 #include <chrono>
 #include <memory>
 #include <string>

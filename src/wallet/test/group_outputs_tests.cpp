@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <test/util/setup_common.h>
 
 #include <wallet/coinselection.h>

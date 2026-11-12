@@ -5,6 +5,7 @@
 #ifndef BITCOIN_TEST_UTIL_CHAINSTATE_H
 #define BITCOIN_TEST_UTIL_CHAINSTATE_H
 
+#include <util/check.h>
 #include <clientversion.h>
 #include <node/context.h>
 #include <node/utxo_snapshot.h>
