@@ -221,6 +221,40 @@ class NotificationsTest(BitcoinTestFramework):
         self.stop_nodes()
         self.wait_until(lambda: os.path.isfile(self.shutdownnotify_file), timeout=10)
 
+        self.test_negated_notify_options()
+
+    def test_negated_notify_options(self):
+        self.log.info("test -noblocknotify, -noalertnotify and -nowalletnotify disable earlier commands")
+        # Each option comes after the command it disables, as when a user
+        # turns off a command set in bitcoin.conf. Before NEGATE_TO_EMPTY,
+        # these options ran the command "0", which writes no files but fails,
+        # printing "0: command not found" to stderr (which stop_nodes()
+        # checks) and logging a runCommand error. The commands run in
+        # detached threads, so the test stops the nodes before checking.
+        #
+        # node0 still has the large-work invalid chain from the test above, so
+        # the warning is raised again on restart and -alertnotify would run.
+        with open(self.alertnotify_file) as f:
+            alert_text = f.read()
+        blocknotify_files = sorted(os.listdir(self.blocknotify_dir))
+        walletnotify_files = sorted(os.listdir(self.walletnotify_dir))
+        with self.nodes[0].assert_debug_log(expected_msgs=[], unexpected_msgs=["runCommand error"]), \
+             self.nodes[1].assert_debug_log(expected_msgs=[], unexpected_msgs=["runCommand error"]):
+            self.start_node(0, extra_args=self.extra_args[0] + ["-noblocknotify", "-noalertnotify"])
+            self.start_node(1, extra_args=self.extra_args[1] + ["-nowalletnotify"])
+            self.connect_nodes(0, 1)
+            if self.is_wallet_compiled():
+                # The wallet was created with load_on_startup=True
+                address = self.nodes[1].get_wallet_rpc(self.wallet).getnewaddress()
+            else:
+                address = ADDRESS_BCRT1_UNSPENDABLE
+            self.generatetoaddress(self.nodes[1], 2, address)
+            self.stop_nodes()
+        assert_equal(sorted(os.listdir(self.blocknotify_dir)), blocknotify_files)
+        assert_equal(sorted(os.listdir(self.walletnotify_dir)), walletnotify_files)
+        with open(self.alertnotify_file) as f:
+            assert_equal(f.read(), alert_text)
+
     def large_work_invalid_chain_warning_in_alert_file(self):
         with open(self.alertnotify_file, 'r') as f:
             alert_text = f.read()

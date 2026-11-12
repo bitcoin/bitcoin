@@ -7,7 +7,10 @@ Test ports handling for I2P hosts
 """
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import p2p_port
+from test_framework.util import (
+    assert_equal,
+    p2p_port,
+)
 
 
 class I2PPorts(BitcoinTestFramework):
@@ -30,6 +33,14 @@ class I2PPorts(BitcoinTestFramework):
         addr = "h3r6bkn46qxftwja53pxiykntegfyfjqtnzbm6iv6r5mungmqgmq.b32.i2p:0"
         with node.assert_debug_log(expected_msgs=[f"Error connecting to {addr}: Cannot connect to {self.proxy}"]):
             node.addnode(node=addr, command="onetry")
+
+        self.log.info("Ensure -noi2psam disables an earlier -i2psam")
+        # Before NEGATE_TO_EMPTY, -noi2psam was read as the proxy address "0"
+        # and startup failed.
+        self.restart_node(0, extra_args=[f"-i2psam={self.proxy}", "-noi2psam"])
+        i2p = next(n for n in node.getnetworkinfo()["networks"] if n["name"] == "i2p")
+        assert_equal(i2p["reachable"], False)
+        assert_equal(i2p["proxy"], "")
 
 
 if __name__ == '__main__':

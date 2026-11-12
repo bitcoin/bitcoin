@@ -236,6 +236,16 @@ class TestBitcoinCli(BitcoinTestFramework):
         self.log.info("Test connecting with invalid cookie file")
         assert_raises_process_error(1, "Cookie file credentials were invalid and no rpcpassword was specified.", self.nodes[0].cli(f"-rpccookiefile={self.nodes[0].datadir_path / 'bitcoin.conf'}").echo)
 
+        self.log.info("Test -norpcpassword uses the cookie file")
+        # Before NEGATE_TO_EMPTY, bitcoin-cli sent the password "0" instead.
+        assert_equal(BLOCKS, self.nodes[0].cli('-rpcpassword=foo', '-norpcpassword').getblockcount())
+        assert_raises_process_error(1, "Cookie file was disabled via -norpccookiefile and no rpcpassword was specified.", self.nodes[0].cli("-norpccookiefile", "-norpcpassword").echo)
+
+        self.log.info("Test -norpcuser sends an empty user name")
+        # The node's cookie user is __cookie__, so an empty user name fails
+        # here. Node-side -norpcuser is tested in rpc_users.py.
+        assert_raises_process_error(1, 'Incorrect rpcuser or rpcpassword were specified', self.nodes[0].cli('-norpccookiefile', f'-rpcuser={user}', '-norpcuser', f'-rpcpassword={password}').echo)
+
         self.log.info("Test connecting without RPC cookie file and with password arg")
         assert_equal(BLOCKS, self.nodes[0].cli('-norpccookiefile', f'-rpcuser={user}', f'-rpcpassword={password}').getblockcount())
 

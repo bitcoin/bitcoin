@@ -137,6 +137,29 @@ class HTTPBasicsTest(BitcoinTestFramework):
         assert_equal(200, call_with_auth(self.nodes[0], "rt", self.rtpassword, method="stop").status)
         self.nodes[0].wait_until_stopped()
 
+    def test_negated_rpc_credentials(self, node0_cookie_path):
+        assert self.nodes[0].is_node_stopped(), "We expect previous test to stopped the node"
+
+        self.log.info('Check -norpcpassword disables an earlier -rpcpassword and enables cookie authentication')
+        # Before NEGATE_TO_EMPTY, the password was "0", so no cookie file was
+        # written and the node couldn't be reached through it.
+        self.start_node(0, extra_args=["-rpcuser=alice", "-rpcpassword=secret", "-norpcpassword"])
+        assert node0_cookie_path.exists()
+        assert_equal(401, call_with_auth(self.nodes[0], "alice", "secret").status)
+        assert_equal(401, call_with_auth(self.nodes[0], "alice", "0").status)
+        self.stop_node(0)
+
+        self.log.info('Check -norpcuser makes the user name empty')
+        # An empty user name is what -rpcuser= already gives. Before
+        # NEGATE_TO_EMPTY, the user name was "0".
+        with self.nodes[0].busy_wait_for_debug_log([b'init message: Done loading']):
+            self.nodes[0].start(extra_args=["-norpccookiefile", "-rpcuser=alice", "-norpcuser", "-rpcpassword=secret"])
+        assert_equal(200, call_with_auth(self.nodes[0], "", "secret").status)
+        assert_equal(401, call_with_auth(self.nodes[0], "0", "secret").status)
+        assert_equal(401, call_with_auth(self.nodes[0], "alice", "secret").status)
+        assert_equal(200, call_with_auth(self.nodes[0], "", "secret", method="stop").status)
+        self.nodes[0].wait_until_stopped()
+
     def run_test(self):
         self.conf_setup()
         self.log.info('Check correctness of the rpcauth config option')
@@ -195,6 +218,8 @@ class HTTPBasicsTest(BitcoinTestFramework):
         self.test_rpccookieperms()
 
         self.test_norpccookiefile(cookie_path)
+
+        self.test_negated_rpc_credentials(cookie_path)
 
 if __name__ == '__main__':
     HTTPBasicsTest(__file__).main()
