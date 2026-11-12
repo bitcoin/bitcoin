@@ -217,8 +217,8 @@ std::optional<PubKey> GetPubKeyFromInput(const CTxIn& txin, const CScript& spk)
         if (stack.empty()) return std::nullopt;
         CScript redeem{stack.back().begin(), stack.back().end()};
         if (Solver(redeem, solutions) != TxoutType::WITNESS_V0_KEYHASH) return std::nullopt;
-        if (txin.scriptWitness.stack.empty()) return std::nullopt;
-        CPubKey key{txin.scriptWitness.stack.back()};
+        if (txin.scriptWitness.empty()) return std::nullopt;
+        CPubKey key{txin.scriptWitness.back()};
         if (!key.IsCompressed() || !key.IsFullyValid()) return std::nullopt;
         return PubKey{key};
     }
