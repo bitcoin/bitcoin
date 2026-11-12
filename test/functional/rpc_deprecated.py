@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test deprecation of RPC calls."""
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_raises_rpc_error
 
 
 class DeprecatedRpcTest(BitcoinTestFramework):
@@ -25,9 +26,16 @@ class DeprecatedRpcTest(BitcoinTestFramework):
         # at least one other functional test that still tests the RPCs
         # functionality using the respective -deprecatedrpc flag.
 
-        # Please don't delete nor modify this comment
+        # Please don't delete nor modify the comments and the boilerplate setup
         self.log.info("Tests for deprecated RPC methods (if any)")
-        self.log.info("Currently no tests for deprecated RPC methods")
+        if self.is_wallet_compiled():
+            self.log.info("Tests for deprecated wallet-related RPC methods (if any)")
+            self.nodes[0].createwallet("wtest")
+            wallet = self.nodes[0].get_wallet_rpc("wtest")  # Keep this setup, even if unused
+
+            self.log.info("Test confTarget option deprecation")
+            for rpc in (wallet.bumpfee, wallet.psbtbumpfee):
+                assert_raises_rpc_error(-32, "start the RPC server with the `-deprecatedrpc=confTarget`", rpc, "0" * 64, {"confTarget": 1})
 
 
 if __name__ == '__main__':
