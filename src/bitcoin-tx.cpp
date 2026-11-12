@@ -686,7 +686,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
         if (!fHashSingle || (i < mergedTx.vout.size()))
             ProduceSignature(keystore, MutableTransactionSignatureCreator(mergedTx, i, amount, {.sighash_type = nHashType}), prevPubKey, sigdata);
 
-        if (amount == MAX_MONEY && !sigdata.scriptWitness.IsNull()) {
+        if (amount == MAX_MONEY && !sigdata.scriptWitness.empty()) {
             throw std::runtime_error(strprintf("Missing amount for CTxOut with scriptPubKey=%s", HexStr(prevPubKey)));
         }
 

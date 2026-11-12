@@ -382,7 +382,7 @@ void TestSatisfy(const KeyConverter& converter, const Node& node)
                 BOOST_CHECK(witness_nonmal.size() <= max_stack_size);
                 // If a non-malleable satisfaction exists, the malleable one must also exist, and be identical to it.
                 BOOST_CHECK(mal_success);
-                BOOST_CHECK(witness_nonmal.stack == witness_mal.stack);
+                BOOST_CHECK(witness_nonmal == witness_mal);
                 assert(wit_size <= *node.GetWitnessSize());
 
                 // Test non-malleable satisfaction.
@@ -397,7 +397,7 @@ void TestSatisfy(const KeyConverter& converter, const Node& node)
                             (!node.CheckStackSize() && serror == ScriptError::SCRIPT_ERR_STACK_SIZE));
             }
 
-            if (mal_success && (!nonmal_success || witness_mal.stack != witness_nonmal.stack)) {
+            if (mal_success && (!nonmal_success || witness_mal != witness_nonmal)) {
                 // Test malleable satisfaction only if it's different from the non-malleable one.
                 ScriptError serror;
                 bool res = VerifyScript(CScript(), script_pubkey, &witness_mal, STANDARD_SCRIPT_VERIFY_FLAGS, checker, &serror);

@@ -368,7 +368,7 @@ public:
             SerializeToVector(s, witness_utxo);
         }
 
-        if (final_script_sig.empty() && final_script_witness.IsNull()) {
+        if (final_script_sig.empty() && final_script_witness.empty()) {
             // Write any partial signatures
             for (const auto& sig_pair : partial_sigs) {
                 SerializeToVector(s, CompactSizeWriter(PSBT_IN_PARTIAL_SIG), std::span{sig_pair.second.first});
@@ -511,7 +511,7 @@ public:
             s << final_script_sig;
         }
         // write script witness
-        if (!final_script_witness.IsNull()) {
+        if (!final_script_witness.empty()) {
             SerializeToVector(s, CompactSizeWriter(PSBT_IN_SCRIPTWITNESS));
             SerializeToVector(s, final_script_witness.stack);
         }
@@ -1399,7 +1399,7 @@ public:
                     UnserializeFromVector(s, TX_NO_WITNESS(*tx));
                     // Make sure that all scriptSigs and scriptWitnesses are empty
                     for (const CTxIn& txin : tx->vin) {
-                        if (!txin.scriptSig.empty() || !txin.scriptWitness.IsNull()) {
+                        if (!txin.scriptSig.empty() || !txin.scriptWitness.empty()) {
                             throw std::ios_base::failure("Unsigned tx does not have empty scriptSigs and scriptWitnesses.");
                         }
                     }
