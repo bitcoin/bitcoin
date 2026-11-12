@@ -11,6 +11,9 @@
 class CSubNet;
 class UniValue;
 
+/// Identifier of a peer connection.
+using NodeId = int64_t;
+
 class CBanEntry
 {
 public:
