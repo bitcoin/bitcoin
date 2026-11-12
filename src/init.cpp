@@ -1057,6 +1057,9 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     if (!args.GetBoolArg("-listen", DEFAULT_LISTEN) && args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION)) {
         return InitError(Untranslated("Cannot set -listen=0 together with -listenonion=1"));
     }
+    if (args.IsArgNegated("-torcontrol") && args.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION)) {
+        return InitError(Untranslated("-notorcontrol cannot be used while -listenonion is enabled (the default). Use -nolistenonion to stop connecting to the Tor control port."));
+    }
 
     // Make sure enough file descriptors are available. We need to reserve enough FDs to account for the bare minimum,
     // plus all manual connections and all bound interfaces. Any remainder will be available for connection sockets
