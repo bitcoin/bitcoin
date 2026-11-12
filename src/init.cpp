@@ -1641,7 +1641,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
-    if (!args.IsArgSet("-cjdnsreachable")) {
+    if (!args.GetBoolArg("-cjdnsreachable", false)) {
         if (!onlynets.empty() && g_reachable_nets.Contains(NET_CJDNS)) {
             return InitError(
                 _("Outbound connections restricted to CJDNS (-onlynet=cjdns) but "

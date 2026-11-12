@@ -57,6 +57,10 @@ class HelpTest(BitcoinTestFramework):
         assert b'Error parsing command line arguments' in output
         self.log.info(f"Error message received: {output[0:60]} (...)")
 
+        self.log.info("Start bitcoind with -nohelp to make sure it starts normally")
+        self.start_node(0, extra_args=['-nohelp'])
+        self.stop_node(0)
+
 
 if __name__ == '__main__':
     HelpTest(__file__).main()
