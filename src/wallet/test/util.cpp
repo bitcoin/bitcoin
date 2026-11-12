@@ -25,6 +25,7 @@ std::unique_ptr<CWallet> NewWallet(const node::NodeContext& node)
 {
     std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(node.chain.get(), "", CreateMockableWalletDatabase());
     LOCK(wallet->cs_wallet);
+    wallet->m_keypool_size = 1; // Avoid pre-deriving a large keypool
     wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
     wallet->SetupDescriptorScriptPubKeyMans();
     return wallet;
