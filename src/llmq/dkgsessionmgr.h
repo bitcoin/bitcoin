@@ -140,8 +140,10 @@ public:
     bool GetPrematureCommitment(const uint256& hash, CDKGPrematureCommitment& ret) const;
 
     // Contributions are written while in the DKG
-    void WriteVerifiedVvecContribution(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& proTxHash, const BLSVerificationVectorPtr& vvec);
-    void WriteVerifiedSkContribution(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& proTxHash, const CBLSSecretKey& skContribution);
+    void WriteVerifiedVvecContribution(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& proTxHash, const BLSVerificationVectorPtr& vvec)
+        EXCLUSIVE_LOCKS_REQUIRED(!contributionsCacheCs);
+    void WriteVerifiedSkContribution(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& proTxHash, const CBLSSecretKey& skContribution)
+        EXCLUSIVE_LOCKS_REQUIRED(!contributionsCacheCs);
     bool GetVerifiedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex,
                                   const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet,
                                   std::vector<BLSVerificationVectorPtr>& vvecsRet,

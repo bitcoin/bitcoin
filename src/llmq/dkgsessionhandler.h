@@ -71,7 +71,8 @@ public:
      * Enqueue a serialized DKG message under @p from with content hash @p hash.
      * @p sender_protx keys the per-proTx quota: the sender's MNAuth-verified
      * proTxHash for remote messages, or this node's own for messages it
-     * produced itself (@p from == -1). Drops the message silently on quota
+     * produced itself (@p from == -1), which go to the front of the queue.
+     * Drops the message silently on quota
      * overflow or duplicate hash; quota-dropped messages are not marked seen,
      * so another peer with budget can re-deliver them. Caller is responsible
      * for hashing the payload and (for real peers) routing the erase-request

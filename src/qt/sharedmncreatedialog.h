@@ -21,6 +21,7 @@
 #include <memory>
 #include <optional>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 struct SharedMnOwnFunding;
@@ -274,6 +275,16 @@ private:
     void followNewerInvitation(const MnShareSession& imported);
 
     // Funding
+    //! Whether a P2PKH output of `value` would be dust
+    bool isDust(CAmount value) const;
+    //! This wallet's unspent, unlocked, spendable coins that may fund a share
+    std::vector<std::pair<CAmount, COutPoint>> fundingCandidates() const;
+    //! Whether `released`'s coins are all still funding candidates, and fund
+    //! exactly what the share needs now
+    bool fundsShareAgain(const MnShareSession::Contribution& released, CAmount* total_out = nullptr) const;
+    //! The most recently released contribution of this wallet's share that
+    //! Reserve would put back as it was, with its input total, or nullptr
+    const MnShareSession::Contribution* reservableAgain(CAmount* total_out = nullptr) const;
     //! Confirmed, unlocked, spendable wallet coins covering `target`, largest
     //! first, with the change kept above the dust threshold when possible
     bool selectCoins(CAmount target, CoinSelection& selection, QString& error) const;
@@ -409,6 +420,9 @@ private:
     //! less any coins reserved again since. A reply to an earlier invitation
     //! still carries them, and only Reserve may put them back.
     std::vector<MnShareSession::Contribution> m_released_contributions;
+    //! Contributions Reserve has reserved, built from this wallet's own coin
+    //! selection or put back: the only ones it may put back after a release
+    std::vector<MnShareSession::Contribution> m_built_contributions;
     Role m_role{Role::Undecided};
     int m_my_share{-1};
     std::optional<Page> m_validation_page;

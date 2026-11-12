@@ -6,6 +6,8 @@
 #include <consensus/amount.h>
 #include <evo/chainhelper.h>
 #include <evo/deterministicmns.h>
+#include <evo/providertx.h>
+#include <evo/specialtx.h>
 #include <governance/governance.h>
 #include <governance/object.h>
 #include <governance/vote.h>
@@ -88,8 +90,8 @@ struct GovernanceVoteSetup : public TestChainSetup {
     int64_t proposal_time{0};
     std::string proposal_payment_address;
 
-    GovernanceVoteSetup() :
-        TestChainSetup(DIP3_ACTIVATION_HEIGHT - 2, CBaseChainParams::REGTEST, {"-dip3params=109:500"})
+    explicit GovernanceVoteSetup(const char* dip3_params = "-dip3params=109:500") :
+        TestChainSetup(DIP3_ACTIVATION_HEIGHT - 2, CBaseChainParams::REGTEST, {dip3_params})
     {
         // A failed BOOST_REQUIRE below throws, and a throwing constructor means no destructor runs.
         // Tear the globals down by hand so one broken invariant here doesn't leave a live tx index
@@ -231,6 +233,73 @@ struct TestGovernanceStore : GovernanceStore {
 } // namespace
 
 BOOST_FIXTURE_TEST_SUITE(governance_vote_processing_tests, GovernanceVoteSetup)
+
+struct GovernanceReorgSetup : GovernanceVoteSetup {
+    GovernanceReorgSetup() :
+        GovernanceVoteSetup("-dip3params=109:109")
+    {
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(votes_follow_masternode_identity_across_reorg, GovernanceReorgSetup)
+{
+    auto& chainman = *m_node.chainman;
+    auto& govman = *m_node.govman;
+    CKey owner_key, other_owner_key, voting_key;
+    CBLSSecretKey operator_key, other_operator_key;
+    voting_key.MakeNewKey(true);
+    const auto registration = CreateProRegTx(chainman, utxos, 2, payout_script(), coinbaseKey, owner_key, operator_key);
+    const auto other_registration = CreateProRegTx(chainman, utxos, 3, payout_script(), coinbaseKey, other_owner_key,
+                                                   other_operator_key);
+    MineBlock({registration});
+    CBlockIndex* fork_block{WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip())};
+    const auto old_id = tip_mn_list().GetMN(registration.GetHash())->GetInternalId();
+
+    CProUpRegTx update;
+    update.nVersion = ProTxVersion::GetMax(!bls::bls_legacy_scheme, /*is_extended_addr=*/false);
+    update.proTxHash = registration.GetHash();
+    update.pubKeyOperator.Set(operator_key.GetPublicKey(), /*specificLegacyScheme=*/bls::bls_legacy_scheme);
+    update.keyIDVoting = voting_key.GetPubKey().GetID();
+    update.scriptPayout = payout_script();
+    CMutableTransaction tx;
+    tx.nVersion = 3;
+    tx.nType = TRANSACTION_PROVIDER_UPDATE_REGISTRAR;
+    const auto spent = FundTransaction(chainman, tx, utxos, payout_script(), COIN);
+    update.inputsHash = CalcTxInputsHash(CTransaction(tx));
+    BOOST_REQUIRE(CHashSigner::SignHash(::SerializeHash(update), owner_key, update.vchSig));
+    SetTxPayload(tx, update);
+    SignTransaction(tx, spent, coinbaseKey);
+    MineBlock({tx});
+    govman.UpdatedBlockTip(WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()));
+
+    const auto proposal = MakeProposal(uint256::ONE);
+    const auto parent_hash = proposal.GetHash();
+    govman.AddGovernanceObjectForTesting(proposal);
+    auto unchanged_vote = MakeVote(parent_hash, VOTE_SIGNAL_FUNDING, VOTE_OUTCOME_YES);
+    SignWithVotingKey(unchanged_vote, mn_voting_key);
+    CGovernanceVote changed_vote{COutPoint{registration.GetHash(), 0}, parent_hash, VOTE_SIGNAL_FUNDING, VOTE_OUTCOME_YES};
+    SignWithVotingKey(changed_vote, voting_key);
+    CGovernanceException exception;
+    uint256 hash_to_request;
+    BOOST_REQUIRE(govman.ProcessVote(unchanged_vote, exception, hash_to_request));
+    BOOST_REQUIRE(govman.ProcessVote(changed_vote, exception, hash_to_request));
+    BOOST_REQUIRE(govman.HaveVoteForHash(changed_vote.GetHash()));
+
+    BlockValidationState state;
+    BOOST_REQUIRE(chainman.ActiveChainstate().InvalidateBlock(state, fork_block));
+    MineBlock({other_registration});
+    MineBlock({registration});
+    BOOST_REQUIRE(old_id != tip_mn_list().GetMN(registration.GetHash())->GetInternalId());
+    govman.UpdatedBlockTip(WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()));
+
+    BOOST_CHECK(!govman.HaveVoteForHash(changed_vote.GetHash()));
+    BOOST_CHECK(govman.GetCurrentVotes(parent_hash, changed_vote.GetMasternodeOutpoint()).empty());
+    BOOST_CHECK(govman.HaveVoteForHash(unchanged_vote.GetHash()));
+    BOOST_CHECK_EQUAL(govman.GetCurrentVotes(parent_hash, mn_collateral).size(), 1U);
+    const auto stored = govman.FindConstGovernanceObject(parent_hash);
+    BOOST_REQUIRE(stored != nullptr);
+    BOOST_CHECK_EQUAL(stored->GetAbsoluteYesCount(tip_mn_list(), VOTE_SIGNAL_FUNDING), 1);
+}
 
 // A vote that arrives before its parent object must be kept and replayed once the object shows up,
 // otherwise every vote that races ahead of its proposal is lost for good.

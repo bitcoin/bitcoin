@@ -2925,6 +2925,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
     // Block is committed: keep the scheme it switched to (fJustCheck dry runs returned above).
     bls_scheme_guard.Commit();
+    m_chain_helper->special_tx->RemoveMineableCommitmentsForBlock(block, pindex);
 
     if (this == &m_chainman.ActiveChainstate() && mnlist_updates.diff.HasChanges()) {
         GetMainSignals().NotifyMasternodeListChanged(false, mnlist_updates.old_list, mnlist_updates.diff);
@@ -5218,6 +5219,7 @@ bool Chainstate::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& in
         return false;
     }
     RecordBackgroundMNListHash(pindex, mnlist_updates.new_list);
+    m_chain_helper->special_tx->RemoveMineableCommitmentsForBlock(block, pindex);
 
     for (size_t i = 0; i < block.vtx.size(); i++) {
         const CTransactionRef& tx = block.vtx[i];

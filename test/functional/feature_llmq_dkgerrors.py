@@ -116,6 +116,17 @@ class LLMQDKGErrors(DashTestFramework):
         # TODO: test signers
         # TODO: test validMembers
 
+        # The commitment is mineable again after invalidateblock and must stay so when a block that
+        # carries it is rejected by a check that runs after the commitments were processed
+        assert self.node_has_quorum_commitment(self.nodes[0], quorumHash, 100)
+        bad_block = copy.deepcopy(block)
+        bad_block.vtx[0].vout[0].nValue += 1
+        bad_block.vtx[0].rehash()
+        bad_block.hashMerkleRoot = bad_block.calc_merkle_root()
+        bad_block.solve()
+        assert_equal(self.nodes[0].submitblock(bad_block.serialize().hex()), 'bad-cb-amount')
+        assert self.node_has_quorum_commitment(self.nodes[0], quorumHash, 100)
+
         self.nodes[0].reconsiderblock(best)
         # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligible for signing sessions
         self.generate(self.nodes[0], 8, sync_fun=lambda: self.sync_blocks(self.nodes))

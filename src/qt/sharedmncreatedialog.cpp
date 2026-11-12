@@ -1986,8 +1986,18 @@ void SharedMnCreateDialog::refreshContributionPage()
         const CAmount target{contributionTarget()};
         CoinSelection selection;
         QString error;
+        CAmount again_total{0};
         if (target <= 0) {
             m_coins_label->setText(tr("Choose which participant you are."));
+        } else if (const auto* again{reservableAgain(&again_total)}) {
+            const QString coins{CoinCount(again->inputs.size())};
+            m_coins_label->setText(
+                again->hasChange
+                    ? tr("Uses %1 (%2) as reserved before; change %3 returns to the same address of yours.")
+                          .arg(coins, FormatAmount(m_wallet_model, again_total),
+                               FormatAmount(m_wallet_model, again->changeAmount))
+                    : tr("Uses %1 (%2) as reserved before, with no change left over.")
+                          .arg(coins, FormatAmount(m_wallet_model, again_total)));
         } else if (selectCoins(target, selection, error)) {
             const QString coins{CoinCount(selection.inputs.size())};
             m_coins_label->setText(
@@ -2358,6 +2368,7 @@ void SharedMnCreateDialog::startSession()
     unlockAllContributedCoins();
     m_coins_released = false;
     m_released_contributions.clear();
+    m_built_contributions.clear();
     m_session = MnShareSession();
     m_role = Role::Coordinator;
     m_my_share = 0;
@@ -3372,6 +3383,65 @@ CAmount SharedMnCreateDialog::contributionTarget() const
     return m_role == Role::Coordinator ? share + m_fee_field->value() : share;
 }
 
+bool SharedMnCreateDialog::isDust(CAmount value) const
+{
+    const CTxOut probe{value, GetScriptForDestination(PKHash{CKeyID{}})};
+    return IsDust(probe, m_node.getDustRelayFee());
+}
+
+std::vector<std::pair<CAmount, COutPoint>> SharedMnCreateDialog::fundingCandidates() const
+{
+    std::vector<std::pair<CAmount, COutPoint>> candidates;
+    if (m_wallet_model == nullptr) return candidates;
+    // listCoins() already holds back unconfirmed coins the wallet does not
+    // trust, so an InstantSend-locked coin or this wallet's own unconfirmed
+    // change can fund a share, as it can any other payment
+    for (const auto& [dest, coins] : m_wallet_model->wallet().listCoins()) {
+        for (const auto& [outpoint, txout] : coins) {
+            if (txout.is_spent) continue;
+            if (m_wallet_model->wallet().isLockedCoin(outpoint)) continue;
+            if (!m_wallet_model->wallet().isSpendable(txout.txout.scriptPubKey)) continue;
+            candidates.emplace_back(txout.txout.nValue, outpoint);
+        }
+    }
+    return candidates;
+}
+
+bool SharedMnCreateDialog::fundsShareAgain(const MnShareSession::Contribution& released, CAmount* total_out) const
+{
+    if (m_wallet_model == nullptr || released.inputs.empty()) return false;
+    const auto candidates{fundingCandidates()};
+    CAmount total{0};
+    for (const auto& input : released.inputs) {
+        const COutPoint outpoint{uint256S(input.txid.toStdString()), input.vout};
+        const auto coin{std::find_if(candidates.begin(), candidates.end(),
+                                     [&](const auto& candidate) { return candidate.second == outpoint; })};
+        if (coin == candidates.end()) return false;
+        total += coin->first;
+    }
+    if (total_out != nullptr) *total_out = total;
+    const CAmount target{contributionTarget()};
+    if (released.hasChange) return total - released.changeAmount == target;
+    // Without change, a dust remainder goes to the fee, as selectCoins() leaves it
+    return total == target || (total > target && isDust(total - target));
+}
+
+const MnShareSession::Contribution* SharedMnCreateDialog::reservableAgain(CAmount* total_out) const
+{
+    if (m_my_share < 0 || static_cast<size_t>(m_my_share) >= m_session.shares().size()) return nullptr;
+    const QString& label{m_session.shares()[m_my_share].label};
+    // Only a contribution this wallet built itself goes back: one absorbed from
+    // a reply under this share's name can carry anything the sender chose
+    for (auto released{m_released_contributions.rbegin()}; released != m_released_contributions.rend(); ++released) {
+        if (released->label != label) continue;
+        const auto built{std::find_if(m_built_contributions.begin(), m_built_contributions.end(), [&](const auto& c) {
+            return c.label == label && MnShareSession::SameContribution(c, *released);
+        })};
+        if (built != m_built_contributions.end() && fundsShareAgain(*built, total_out)) return &*built;
+    }
+    return nullptr;
+}
+
 bool SharedMnCreateDialog::selectCoins(CAmount target, CoinSelection& selection, QString& error) const
 {
     selection = CoinSelection{};
@@ -3385,18 +3455,7 @@ bool SharedMnCreateDialog::selectCoins(CAmount target, CoinSelection& selection,
         return false;
     }
 
-    // listCoins() already holds back unconfirmed coins the wallet does not
-    // trust, so an InstantSend-locked coin or this wallet's own unconfirmed
-    // change can fund a share, as it can any other payment
-    std::vector<std::pair<CAmount, COutPoint>> candidates;
-    for (const auto& [dest, coins] : m_wallet_model->wallet().listCoins()) {
-        for (const auto& [outpoint, txout] : coins) {
-            if (txout.is_spent) continue;
-            if (m_wallet_model->wallet().isLockedCoin(outpoint)) continue;
-            if (!m_wallet_model->wallet().isSpendable(txout.txout.scriptPubKey)) continue;
-            candidates.emplace_back(txout.txout.nValue, outpoint);
-        }
-    }
+    std::vector<std::pair<CAmount, COutPoint>> candidates{fundingCandidates()};
     // Largest first keeps the input count, and with it everyone's signing work
     // and the transaction fee, as small as possible.
     std::sort(candidates.begin(), candidates.end(),
@@ -3405,13 +3464,9 @@ bool SharedMnCreateDialog::selectCoins(CAmount target, CoinSelection& selection,
     // A change output below the dust threshold cannot be relayed, so keep
     // adding coins until the change clears it; if nothing does, drop the
     // change and let the remainder go to the fee.
-    const auto is_dust = [this](CAmount value) {
-        const CTxOut probe{value, GetScriptForDestination(PKHash{CKeyID{}})};
-        return IsDust(probe, m_node.getDustRelayFee());
-    };
     size_t used{0};
     for (; used < candidates.size(); ++used) {
-        if (selection.total >= target && (selection.total == target || !is_dust(selection.total - target))) break;
+        if (selection.total >= target && (selection.total == target || !isDust(selection.total - target))) break;
         selection.total += candidates[used].first;
         MnShareSession::Input input;
         input.txid = QString::fromStdString(candidates[used].second.hash.ToString());
@@ -3428,7 +3483,7 @@ bool SharedMnCreateDialog::selectCoins(CAmount target, CoinSelection& selection,
         return false;
     }
     const CAmount change{selection.total - target};
-    selection.change = (change > 0 && !is_dust(change)) ? change : 0;
+    selection.change = (change > 0 && !isDust(change)) ? change : 0;
     return true;
 }
 
@@ -3475,28 +3530,37 @@ void SharedMnCreateDialog::reserveCoins()
         return;
     }
 
-    CoinSelection selection;
-    if (!selectCoins(contributionTarget(), selection, error)) {
-        showError(error);
-        return;
-    }
+    // Whoever replied before a release holds the contribution as it was then,
+    // and refuses locked terms with any other. While its coins are still free
+    // and fund the same amount, reserve exactly that contribution again.
     MnShareSession::Contribution contribution;
-    contribution.label = share.label;
-    contribution.inputs = selection.inputs;
-    if (selection.change > 0) {
-        const QString change_address{MasternodeWidgetUtil::freshAddress(m_wallet_model, error)};
-        if (change_address.isEmpty()) {
+    const auto* const again{reservableAgain()};
+    if (again != nullptr) {
+        contribution = *again;
+    } else {
+        CoinSelection selection;
+        if (!selectCoins(contributionTarget(), selection, error)) {
             showError(error);
             return;
         }
-        contribution.hasChange = true;
-        contribution.changeAddress = change_address;
-        contribution.changeAmount = selection.change;
+        contribution.label = share.label;
+        contribution.inputs = selection.inputs;
+        if (selection.change > 0) {
+            const QString change_address{MasternodeWidgetUtil::freshAddress(m_wallet_model, error)};
+            if (change_address.isEmpty()) {
+                showError(error);
+                return;
+            }
+            contribution.hasChange = true;
+            contribution.changeAddress = change_address;
+            contribution.changeAmount = selection.change;
+        }
     }
     if (!m_session.addContribution(contribution, error)) {
         showError(error);
         return;
     }
+    if (again == nullptr) m_built_contributions.push_back(contribution);
     setContributionLocked(contribution, /*lock=*/true);
     m_coins_released = false;
     // Coins reserved again are no longer released

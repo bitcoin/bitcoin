@@ -12,10 +12,16 @@ import typing
 import urllib.parse
 
 
+from test_framework.blocktools import create_block, create_coinbase
 from test_framework.messages import (
     BLOCK_HEADER_SIZE,
     COIN,
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxOut,
 )
+from test_framework.script import CScript, OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -448,6 +454,45 @@ class RESTTest (BitcoinTestFramework):
         self.connect_nodes(0, 1)
         self.sync_all()
         assert_equal(self.test_rest_request(f"/deploymentinfo/{header_only_hash}"), self.nodes[0].getdeploymentinfo(header_only_hash))
+
+        self.log.info("Test rendering stored ProTx payloads with unsupported versions")
+        node = self.nodes[0]
+        tip = node.getbestblockhash()
+        protxes = []
+        for tx_type in (1, 2):
+            for version in (0, 65535):
+                tx = CTransaction()
+                tx.nVersion = 3
+                tx.nType = tx_type
+                tx.vin = [CTxIn(COutPoint(0x1234, len(protxes)))]
+                tx.vout = [CTxOut(1000, CScript([OP_TRUE]))]
+                tx.vExtraPayload = version.to_bytes(2, "little")
+                tx.calc_sha256()
+                protxes.append(tx)
+        block = create_block(
+            tmpl=node.getblocktemplate(),
+            coinbase=create_coinbase(node.getblockcount() + 1, dip4_activated=True, v20_activated=True),
+            txlist=protxes,
+        )
+        block.solve()
+        assert_equal(node.submitblock(block.serialize().hex()), "bad-protx-version")
+        assert_equal(node.getblock(block.hash, 0), block.serialize().hex())
+
+        for deprecated_service in (False, True):
+            if deprecated_service:
+                self.restart_node(0, extra_args=self.extra_args[0] + ["-deprecatedrpc=service"])
+            self.test_rest_request(f"/block/notxdetails/{block.hash}")
+            block_json = self.test_rest_request(f"/block/{block.hash}")
+            assert_equal(block_json, node.getblock(block.hash, 2))
+            assert_equal(len(block_json["tx"]), len(block.vtx))
+            for tx, tx_json in zip(protxes, block_json["tx"][1:]):
+                field = "proRegTx" if tx.nType == 1 else "proUpServTx"
+                for decoded in (tx_json, node.decoderawtransaction(tx.serialize().hex()),
+                                node.getrawtransaction(tx.hash, True, block.hash)):
+                    assert field not in decoded
+                    assert_equal(decoded["extraPayload"], tx.vExtraPayload.hex())
+            assert_equal(node.getbestblockhash(), tip)
+            assert_equal(self.test_rest_request("/chaininfo")["bestblockhash"], tip)
 
 if __name__ == '__main__':
     RESTTest().main()

@@ -13,9 +13,9 @@
 #include <QTimer>
 #include <QWidget>
 
-void ConfirmMessage(QString* text, std::chrono::milliseconds msec)
+void ConfirmMessage(QString* text, std::chrono::milliseconds msec, QObject* context)
 {
-    QTimer::singleShot(msec, [text]() {
+    QTimer::singleShot(msec, context, [text]() {
         for (QWidget* widget : QApplication::topLevelWidgets()) {
             if (widget->inherits("QMessageBox")) {
                 QMessageBox* messageBox = qobject_cast<QMessageBox*>(widget);

@@ -136,6 +136,7 @@ BASE_SCRIPTS = [
     'feature_masternode_params_devnet.py', # NOTE: needs dash_hash to pass
     'feature_governance.py --descriptors',
     'feature_governance_cl.py --descriptors',
+    'feature_governance_trigger_voting.py --descriptors',
     'rpc_verifyislock.py',
     'feature_dip3_deterministicmns.py --descriptors', # NOTE: needs dash_hash to pass
     'feature_notifications.py',

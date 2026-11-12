@@ -9,6 +9,7 @@
 #include <llmq/commitment.h>
 #include <llmq/options.h>
 #include <llmq/utils.h>
+#include <util/check.h>
 #include <util/helpers.h>
 #include <util/std23.h>
 
@@ -254,8 +255,7 @@ bool CQuorumBlockProcessor::ProcessBlock(Chainstate& chainstate, const CBlock& b
 
     // ProcessCommitment accepts a commitment identical to the stored one, so
     // rotation's multiple commitments per type need an explicit per-block check.
-    // It runs before any commitment is processed, because ProcessCommitment
-    // updates in-memory state that a rejected block would not restore.
+    // It runs before the signature checks, so a duplicate is rejected cheaply.
     // Null commitments stay exempt: they were never subject to bad-qc-dup.
     std::set<std::pair<Consensus::LLMQType, uint256>> seen_quorums;
     for (const auto& [_, qc] : qcs) {
@@ -445,12 +445,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(Chainstate& chainstate, int nHeigh
     // invalidation should not depend on that.
     DropQcHashesCache();
 
-    {
-        LOCK(minableCommitmentsCs);
-        mapMinedCommitmentBlockCache.erase(qc.llmqType, qc.quorumHash);
-        minableCommitmentsByQuorum.erase(cacheKey);
-        minableCommitments.erase(::SerializeHash(qc));
-    }
+    WITH_LOCK(minableCommitmentsCs, mapMinedCommitmentBlockCache.erase(qc.llmqType, qc.quorumHash));
 
     LogPrint(BCLog::LLMQ, "%s -- processed commitment from block. type=%d, quorumIndex=%d, quorumHash=%s\n", __func__,
              std23::to_underlying(qc.llmqType), qc.quorumIndex, quorumHash.ToString());
@@ -559,6 +554,23 @@ bool CQuorumBlockProcessor::UndoBlock(const Chainstate& chainstate, const CBlock
     m_evoDb.Write(DB_BEST_BLOCK_UPGRADE, pindex->pprev->GetBlockHash());
 
     return true;
+}
+
+void CQuorumBlockProcessor::RemoveMineableCommitmentsForBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex)
+{
+    AssertLockHeld(::cs_main);
+
+    std::multimap<Consensus::LLMQType, CFinalCommitment> qcs;
+    if (BlockValidationState dummy; !Assume(GetCommitmentsFromBlock(block, pindex, qcs, dummy))) {
+        return;
+    }
+
+    LOCK(minableCommitmentsCs);
+    for (const auto& [_, qc] : qcs) {
+        if (qc.IsNull()) continue;
+        minableCommitmentsByQuorum.erase(std::make_pair(qc.llmqType, qc.quorumHash));
+        minableCommitments.erase(::SerializeHash(qc));
+    }
 }
 
 bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, gsl::not_null<const CBlockIndex*> pindex, std::multimap<Consensus::LLMQType, CFinalCommitment>& ret, BlockValidationState& state)

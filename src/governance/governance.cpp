@@ -23,6 +23,7 @@
 #include <timedata.h>
 #include <util/check.h>
 #include <util/time.h>
+#include <validation.h>
 #include <validationinterface.h>
 
 #include <univalue.h>
@@ -102,6 +103,7 @@ bool CGovernanceManager::LoadCache(bool load_cache)
     assert(m_db != nullptr);
     is_loaded = load_cache ? m_db->Load(*this) : m_db->Store(*this);
     if (is_loaded && load_cache) {
+        nCachedBlockHeight = WITH_LOCK(::cs_main, return m_chainman.ActiveChain().Height());
         CheckAndRemove();
         InitOnLoad();
     }
@@ -1190,10 +1192,14 @@ void CGovernanceManager::RemoveInvalidVotes()
 
     std::vector<COutPoint> changedKeyMNs;
     for (const auto& [internalId, pdmnState] : diff.updatedMNs) {
-        auto oldDmn = lastMNListForVotingKeys->GetMNByInternalId(internalId);
-        // BuildDiff will construct itself with MNs that we already have knowledge
-        // of, meaning that fetch operations should never fail.
-        assert(oldDmn);
+        auto newDmn = tip_mn_list.GetMNByInternalId(internalId);
+        if (!Assume(newDmn)) {
+            continue;
+        }
+        auto oldDmn = lastMNListForVotingKeys->GetMN(newDmn->proTxHash);
+        if (!Assume(oldDmn)) {
+            continue;
+        }
         if ((pdmnState.fields & CDeterministicMNStateDiff::Field_keyIDVoting) && pdmnState.state.keyIDVoting != oldDmn->pdmnState->keyIDVoting) {
             changedKeyMNs.emplace_back(oldDmn->collateralOutpoint);
         } else if ((pdmnState.fields & CDeterministicMNStateDiff::Field_pubKeyOperator) && pdmnState.state.pubKeyOperator != oldDmn->pdmnState->pubKeyOperator) {
@@ -1202,9 +1208,9 @@ void CGovernanceManager::RemoveInvalidVotes()
     }
     for (const auto& id : diff.removedMns) {
         auto oldDmn = lastMNListForVotingKeys->GetMNByInternalId(id);
-        // BuildDiff will construct itself with MNs that we already have knowledge
-        // of, meaning that fetch operations should never fail.
-        assert(oldDmn);
+        if (!Assume(oldDmn)) {
+            continue;
+        }
         changedKeyMNs.emplace_back(oldDmn->collateralOutpoint);
     }
 

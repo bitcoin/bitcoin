@@ -21,6 +21,7 @@
 
 namespace {
 constexpr std::chrono::seconds GOVERNANCE_FUDGE_WINDOW{2h};
+constexpr int NO_VOTE_DEADLINE_BLOCKS{3};
 } // anonymous namespace
 
 GovernanceSigner::GovernanceSigner(CDeterministicMNManager& dmnman, CGovernanceManager& govman,
@@ -178,7 +179,8 @@ std::optional<const CGovernanceObject> GovernanceSigner::CreateGovernanceTrigger
     return std::make_optional<CGovernanceObject>(gov_sb);
 }
 
-void GovernanceSigner::VoteGovernanceTriggers(const std::optional<const CGovernanceObject>& trigger_opt, int nHeight)
+void GovernanceSigner::VoteGovernanceTriggers(const std::optional<const CGovernanceObject>& trigger_opt,
+                                              std::optional<int> superblock_height, int nHeight)
 {
     // only active masternodes can vote on triggers
     if (m_mn_activeman.GetProTxHash().IsNull()) return;
@@ -189,7 +191,7 @@ void GovernanceSigner::VoteGovernanceTriggers(const std::optional<const CGoverna
 
     if (trigger_opt.has_value()) {
         // We should never vote "yes" on another trigger or the same trigger twice
-        assert(!votedFundingYesTriggerHash.has_value());
+        assert(!votedFundingYesTrigger.has_value());
         // Vote YES-FUNDING for the trigger we like, unless we already did
         const uint256 gov_sb_hash = trigger_opt.value().GetHash();
         bool voted_already{false};
@@ -199,7 +201,7 @@ void GovernanceSigner::VoteGovernanceTriggers(const std::optional<const CGoverna
             voted_already = std::ranges::any_of(voteRecord.mapInstances, [&](const auto& voteInstancePair) {
                 if (voteInstancePair.first == VOTE_SIGNAL_FUNDING) {
                     if (voteInstancePair.second.eOutcome == VOTE_OUTCOME_YES) {
-                        votedFundingYesTriggerHash = gov_sb_hash;
+                        votedFundingYesTrigger = FundingTriggerVote{gov_sb_hash, superblock_height.value()};
                     }
                     LogPrint(BCLog::GOBJECT, /* Continued */
                              "%s -- Not voting YES-FUNDING for trigger:%s, we voted %s for it already\n", strFunc,
@@ -215,7 +217,7 @@ void GovernanceSigner::VoteGovernanceTriggers(const std::optional<const CGoverna
             if (VoteFundingTrigger(gov_sb_hash, VOTE_OUTCOME_YES)) {
                 LogPrint(BCLog::GOBJECT, "%s -- Voting YES-FUNDING for new trigger:%s success\n", __func__,
                          gov_sb_hash.ToString());
-                votedFundingYesTriggerHash = gov_sb_hash;
+                votedFundingYesTrigger = FundingTriggerVote{gov_sb_hash, superblock_height.value()};
             } else {
                 LogPrint(BCLog::GOBJECT, "%s -- Voting YES-FUNDING for new trigger:%s failed\n", __func__,
                          gov_sb_hash.ToString());
@@ -223,6 +225,13 @@ void GovernanceSigner::VoteGovernanceTriggers(const std::optional<const CGoverna
                 return;
             }
         }
+    }
+
+    if (superblock_height.has_value() && !trigger_opt.has_value() &&
+        nHeight + NO_VOTE_DEADLINE_BLOCKS < superblock_height.value()) {
+        LogPrint(BCLog::GOBJECT, "%s -- Not voting NO-FUNDING at height:%d, waiting for a trigger for superblock:%d\n",
+                 __func__, nHeight, superblock_height.value());
+        return;
     }
 
     // Vote NO-FUNDING for the rest of the active triggers
@@ -248,7 +257,7 @@ void GovernanceSigner::VoteGovernanceTriggers(const std::optional<const CGoverna
                      __func__, trigger_hash.ToString());
             continue;
         }
-        if (trigger_hash == votedFundingYesTriggerHash) {
+        if (votedFundingYesTrigger.has_value() && trigger_hash == votedFundingYesTrigger->hash) {
             // Skip actual trigger
             LogPrint(BCLog::GOBJECT, "%s -- Not voting NO-FUNDING for trigger:%s, we voted yes for it already\n",
                      __func__, trigger_hash.ToString());
@@ -296,19 +305,23 @@ bool GovernanceSigner::VoteFundingTrigger(const uint256& nHash, const vote_outco
 
 bool GovernanceSigner::HasAlreadyVotedFundingTrigger() const
 {
-    return votedFundingYesTriggerHash.has_value();
+    return votedFundingYesTrigger.has_value();
 }
 
 void GovernanceSigner::ResetVotedFundingTrigger()
 {
-    votedFundingYesTriggerHash = std::nullopt;
+    votedFundingYesTrigger = std::nullopt;
 }
 
 void GovernanceSigner::UpdatedBlockTip(const CBlockIndex* pindex)
 {
+    if (votedFundingYesTrigger.has_value() && pindex->nHeight >= votedFundingYesTrigger->superblock_height) {
+        ResetVotedFundingTrigger();
+    }
     const auto sb_opt = CreateSuperblockCandidate(pindex->nHeight);
     const auto trigger_opt = CreateGovernanceTrigger(sb_opt);
-    VoteGovernanceTriggers(trigger_opt, pindex->nHeight);
+    VoteGovernanceTriggers(trigger_opt, sb_opt ? std::make_optional(sb_opt->GetBlockHeight()) : std::nullopt,
+                           pindex->nHeight);
     CSuperblock_sptr pSuperblock;
     if (m_superblocks.GetBestSuperblock(m_dmnman.GetListAtChainTip(), pSuperblock, pindex->nHeight)) {
         ResetVotedFundingTrigger();

@@ -36,7 +36,11 @@ private:
     const CMasternodeSync& m_mn_sync;
 
 private:
-    std::optional<uint256> votedFundingYesTriggerHash{std::nullopt};
+    struct FundingTriggerVote {
+        uint256 hash;
+        int superblock_height{0};
+    };
+    std::optional<FundingTriggerVote> votedFundingYesTrigger{std::nullopt};
 
 public:
     GovernanceSigner() = delete;
@@ -54,7 +58,8 @@ private:
     std::optional<const CGovernanceObject> CreateGovernanceTrigger(const std::optional<const CSuperblock>& sb_opt);
     std::optional<const CSuperblock> CreateSuperblockCandidate(int nHeight) const;
     void ResetVotedFundingTrigger();
-    void VoteGovernanceTriggers(const std::optional<const CGovernanceObject>& trigger_opt, int nHeight);
+    void VoteGovernanceTriggers(const std::optional<const CGovernanceObject>& trigger_opt,
+                                std::optional<int> superblock_height, int nHeight);
 };
 
 #endif // BITCOIN_GOVERNANCE_SIGNING_H

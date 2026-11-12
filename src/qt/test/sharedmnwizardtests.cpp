@@ -75,6 +75,7 @@ using MasternodeTestUtil::FreshOperatorPubKey;
 using MasternodeTestUtil::FreshP2PKHAddress;
 using MasternodeTestUtil::DraftReply;
 using MasternodeTestUtil::MakeSpendingWallet;
+using MasternodeTestUtil::MakeTestWallet;
 using MasternodeTestUtil::PrepareRegistration;
 using MasternodeTestUtil::PreparedRegistration;
 using MasternodeTestUtil::WalletGuard;
@@ -398,6 +399,228 @@ void SharedMnWizardTests::coordinatorResumesSavedSession()
     participant.handleImportedText(saved.toJsonString());
     QCOMPARE(int(participant.m_role), int(SharedMnCreateDialog::Role::Participant));
     QCOMPARE(int(participant.currentPage()), int(SharedMnCreateDialog::PageContribution));
+}
+
+void SharedMnWizardTests::reservingAgainKeepsEarlierReplies()
+{
+    TestChain100Setup test;
+    m_node.setContext(&test.m_node);
+    WalletContext& context{*m_node.walletLoader().context()};
+    const auto wallet{MakeTestWallet(m_node, context, "coord")};
+    QVERIFY(wallet != nullptr);
+    WalletGuard guard{context, wallet};
+    CTxDestination owner;
+    COutPoint coin;
+    COutPoint other_coin;
+    COutPoint twice_coin;
+    COutPoint dust_coin;
+    COutPoint dust_change_coin;
+    COutPoint sequence_coin;
+    COutPoint larger_coin;
+    {
+        LOCK(wallet->cs_wallet);
+        const auto destination{wallet->GetNewDestination("")};
+        QVERIFY(destination);
+        owner = *destination;
+        const CBlockIndex* tip{
+            WITH_LOCK(test.m_node.chainman->GetMutex(), return test.m_node.chainman->ActiveChain().Tip())};
+        wallet->SetLastBlockProcessed(tip->nHeight, tip->GetBlockHash());
+        CMutableTransaction funding;
+        funding.vin.emplace_back(GetRandHash(), 0);
+        funding.vout.emplace_back(450 * COIN, GetScriptForDestination(owner));
+        QVERIFY(wallet->AddToWallet(MakeTransactionRef(funding),
+                                    wallet::TxStateConfirmed{tip->GetBlockHash(), tip->nHeight, /*index=*/0}) != nullptr);
+        coin = COutPoint{funding.GetHash(), 0};
+        CMutableTransaction other_funding;
+        other_funding.vin.emplace_back(GetRandHash(), 0);
+        other_funding.vout.emplace_back(420 * COIN, GetScriptForDestination(owner));
+        QVERIFY(wallet->AddToWallet(MakeTransactionRef(other_funding),
+                                    wallet::TxStateConfirmed{tip->GetBlockHash(), tip->nHeight, /*index=*/1}) != nullptr);
+        other_coin = COutPoint{other_funding.GetHash(), 0};
+        // 410 for a contribution listing its coin twice; one with a dust
+        // remainder over a share of 400 and the default 0.001 fee
+        CMutableTransaction more_funding;
+        more_funding.vin.emplace_back(GetRandHash(), 0);
+        more_funding.vout.emplace_back(410 * COIN, GetScriptForDestination(owner));
+        more_funding.vout.emplace_back(400 * COIN + COIN / 1000 + 100, GetScriptForDestination(owner));
+        more_funding.vout.emplace_back(400 * COIN + COIN / 1000 + 100, GetScriptForDestination(owner));
+        more_funding.vout.emplace_back(405 * COIN, GetScriptForDestination(owner));
+        QVERIFY(wallet->AddToWallet(MakeTransactionRef(more_funding),
+                                    wallet::TxStateConfirmed{tip->GetBlockHash(), tip->nHeight, /*index=*/2}) != nullptr);
+        twice_coin = COutPoint{more_funding.GetHash(), 0};
+        dust_coin = COutPoint{more_funding.GetHash(), 1};
+        dust_change_coin = COutPoint{more_funding.GetHash(), 2};
+        sequence_coin = COutPoint{more_funding.GetHash(), 3};
+        // A larger coin a fresh selection would prefer, held back until needed
+        CMutableTransaction larger_funding;
+        larger_funding.vin.emplace_back(GetRandHash(), 0);
+        larger_funding.vout.emplace_back(600 * COIN, GetScriptForDestination(owner));
+        QVERIFY(wallet->AddToWallet(MakeTransactionRef(larger_funding),
+                                    wallet::TxStateConfirmed{tip->GetBlockHash(), tip->nHeight, /*index=*/3}) != nullptr);
+        larger_coin = COutPoint{larger_funding.GetHash(), 0};
+    }
+    MasternodeTestUtil::GuiModels models{m_node};
+    QVERIFY2(models.ok, qPrintable(QString::fromStdString(models.error.translated)));
+    WalletModel wallet_model(interfaces::MakeWallet(context, wallet), models.client);
+    wallet_model.wallet().lockCoin(larger_coin, /*write_to_db=*/false);
+
+    // This wallet coordinates and has answered for alice's row, but has not
+    // reserved its coins yet
+    CBLSSecretKey operator_secret;
+    operator_secret.MakeNewKey();
+    MnShareSession draft{InvitationSession()};
+    draft.setPrepareWallet(QStringLiteral("coord"));
+    draft.terms().operatorPubKey =
+        QString::fromStdString(operator_secret.GetPublicKey().ToString(/*specificLegacyScheme=*/false));
+    draft.shares()[0].ownerAddress = QString::fromStdString(EncodeDestination(owner));
+    draft.shares()[0].refundAddress = FreshP2PKHAddress();
+
+    SharedMnCreateDialog dialog(m_node, &wallet_model, /*parent=*/nullptr);
+    dialog.handleImportedText(draft.toJsonString());
+    QCOMPARE(int(dialog.m_role), int(SharedMnCreateDialog::Role::Coordinator));
+    QCOMPARE(dialog.myShareIndex(), 0);
+    dialog.goToPage(SharedMnCreateDialog::PageContribution);
+    dialog.reserveCoins();
+    QVERIFY2(dialog.myContribution() != nullptr, qPrintable(dialog.m_error_label->text()));
+    const MnShareSession::Contribution sent{*dialog.myContribution()};
+    QVERIFY(sent.hasChange);
+    QVERIFY(wallet_model.wallet().isLockedCoin(coin));
+
+    // bob and carol answer the invitation that carried this contribution
+    const MnShareSession invitation{dialog.m_session};
+    const MnShareSession bob{DraftReply(invitation, 1, FakeTxid('2'))};
+    const MnShareSession carol{DraftReply(invitation, 2, FakeTxid('3'))};
+    QVERIFY(bob.hasContribution(sent));
+
+    // The coordinator releases its coins, takes in bob's reply, and reserves
+    // again: the same coins and change, which bob's copy already lists
+    dialog.releaseCoins();
+    QVERIFY(!wallet_model.wallet().isLockedCoin(coin));
+    dialog.handleImportedText(bob.toJsonString());
+    QVERIFY2(dialog.m_error_label->text().isEmpty(), qPrintable(dialog.m_error_label->text()));
+    QVERIFY(dialog.myContribution() == nullptr);
+    QVERIFY(!wallet_model.wallet().isLockedCoin(coin));
+
+    // The coins card describes those coins, not the larger one that has
+    // become available since and a fresh selection would take
+    const auto amount = [&](CAmount value) { return SharedMnFormatAmount(SharedMnDisplayUnit(&wallet_model), value); };
+    wallet_model.wallet().unlockCoin(larger_coin);
+    dialog.refreshContributionPage();
+    const QString preview{dialog.m_coins_label->text()};
+    QVERIFY2(preview.contains(amount(sent.changeAmount)) && !preview.contains(amount(600 * COIN)), qPrintable(preview));
+    wallet_model.wallet().lockCoin(larger_coin, /*write_to_db=*/false);
+    dialog.reserveCoins();
+    QVERIFY2(dialog.myContribution() != nullptr, qPrintable(dialog.m_error_label->text()));
+    QVERIFY(dialog.m_session.hasContribution(sent));
+    QVERIFY(wallet_model.wallet().isLockedCoin(coin));
+
+    // So the terms locked from it are the ones bob agreed to answer
+    dialog.handleImportedText(carol.toJsonString());
+    QVERIFY2(dialog.m_error_label->text().isEmpty(), qPrintable(dialog.m_error_label->text()));
+    QVERIFY(dialog.allDetailsCollected());
+    MnShareSession locked{dialog.m_session};
+    const PreparedRegistration prepared{PrepareRegistration(locked, operator_secret)};
+    QString error;
+    QVERIFY2(locked.freeze(prepared.txHex, prepared.consentHashHex, prepared.collateralIndex, error),
+             qPrintable(error));
+    MnShareSession bob_copy{bob};
+    QVERIFY2(bob_copy.adoptLockedTerms(locked, error), qPrintable(error));
+
+    // A contribution a reply lists under alice's name is never reserved again
+    // after a release, however well it funds the share: this wallet goes back
+    // to the one it built. First, one spending another coin of this wallet
+    // with its change paid elsewhere.
+    dialog.releaseCoins();
+    MnShareSession planting{dialog.m_session};
+    MnShareSession::Contribution planted;
+    planted.label = sent.label;
+    planted.inputs = {{QString::fromStdString(other_coin.hash.ToString()), other_coin.n}};
+    planted.hasChange = true;
+    planted.changeAddress = FreshP2PKHAddress();
+    planted.changeAmount = 420 * COIN - (400 * COIN + dialog.m_fee_field->value());
+    QVERIFY2(planting.addContribution(planted, error), qPrintable(error));
+    dialog.handleImportedText(planting.toJsonString());
+    QVERIFY(dialog.m_session.hasContribution(planted));
+    dialog.releaseCoins();
+    dialog.reserveCoins();
+    QVERIFY2(dialog.myContribution() != nullptr, qPrintable(dialog.m_error_label->text()));
+    QVERIFY(!dialog.m_session.hasContribution(planted));
+    QVERIFY(dialog.m_session.hasContribution(sent));
+    QVERIFY(wallet_model.wallet().isLockedCoin(coin));
+    QVERIFY(!wallet_model.wallet().isLockedCoin(other_coin));
+
+    // One listing a coin twice, with this wallet's own change address
+    const auto plant_and_reserve_again = [&](const MnShareSession::Contribution& contribution) {
+        dialog.releaseCoins();
+        MnShareSession reply{dialog.m_session};
+        QString plant_error;
+        QVERIFY2(reply.addContribution(contribution, plant_error), qPrintable(plant_error));
+        dialog.handleImportedText(reply.toJsonString());
+        QVERIFY(dialog.m_session.hasContribution(contribution));
+        dialog.releaseCoins();
+        dialog.reserveCoins();
+        QVERIFY2(dialog.myContribution() != nullptr, qPrintable(dialog.m_error_label->text()));
+    };
+    MnShareSession::Contribution twice{planted};
+    const MnShareSession::Input twice_input{QString::fromStdString(twice_coin.hash.ToString()), twice_coin.n};
+    twice.inputs = {twice_input, twice_input};
+    twice.changeAddress = sent.changeAddress;
+    twice.changeAmount = 2 * 410 * COIN - (400 * COIN + dialog.m_fee_field->value());
+    plant_and_reserve_again(twice);
+    QVERIFY(!dialog.m_session.hasContribution(twice));
+    QVERIFY(dialog.m_session.hasContribution(sent));
+
+    // One with 100 duffs of change to this wallet, which could never be relayed
+    MnShareSession::Contribution dust_change{twice};
+    dust_change.inputs = {{QString::fromStdString(dust_change_coin.hash.ToString()), dust_change_coin.n}};
+    dust_change.changeAmount = 100;
+    plant_and_reserve_again(dust_change);
+    QVERIFY(!dialog.m_session.hasContribution(dust_change));
+    QVERIFY(dialog.m_session.hasContribution(sent));
+    QVERIFY(!wallet_model.wallet().isLockedCoin(dust_change_coin));
+
+    // One that funds the share exactly, with change to this wallet, but whose
+    // input has a relative-lock sequence this wallet refuses to sign
+    MnShareSession::Contribution relative{twice};
+    relative.inputs = {{QString::fromStdString(sequence_coin.hash.ToString()), sequence_coin.n, /*sequence=*/1}};
+    relative.changeAmount = 405 * COIN - (400 * COIN + dialog.m_fee_field->value());
+    plant_and_reserve_again(relative);
+    QVERIFY(!dialog.m_session.hasContribution(relative));
+    QVERIFY(dialog.m_session.hasContribution(sent));
+    QVERIFY(!wallet_model.wallet().isLockedCoin(sequence_coin));
+
+    // Without change, a dust remainder over the share is left to the fee. A
+    // contribution Reserve built that way is reserved again as it was.
+    dialog.releaseCoins();
+    const std::vector<COutPoint> held{coin, other_coin, twice_coin, dust_change_coin, sequence_coin};
+    for (const auto& outpoint : held) {
+        wallet_model.wallet().lockCoin(outpoint, /*write_to_db=*/false);
+    }
+    dialog.reserveCoins();
+    QVERIFY2(dialog.myContribution() != nullptr, qPrintable(dialog.m_error_label->text()));
+    const MnShareSession::Contribution no_change{*dialog.myContribution()};
+    QVERIFY(!no_change.hasChange);
+    QCOMPARE(no_change.inputs.size(), size_t{1});
+    QCOMPARE(no_change.inputs[0].txid, QString::fromStdString(dust_coin.hash.ToString()));
+    for (const auto& outpoint : held) {
+        wallet_model.wallet().unlockCoin(outpoint);
+    }
+    dialog.releaseCoins();
+    dialog.reserveCoins();
+    QVERIFY(dialog.m_session.hasContribution(no_change));
+    QVERIFY(wallet_model.wallet().isLockedCoin(dust_coin));
+    QVERIFY(!wallet_model.wallet().isLockedCoin(coin));
+
+    // With a different fee the released coins no longer fund the share as they
+    // did, so reserving again selects anew and earlier replies are out of date
+    dialog.releaseCoins();
+    dialog.m_fee_field->setValue(dialog.m_fee_field->value() + COIN / 1000);
+    dialog.reserveCoins();
+    QVERIFY2(dialog.myContribution() != nullptr, qPrintable(dialog.m_error_label->text()));
+    QVERIFY(!dialog.m_session.hasContribution(sent));
+    QCOMPARE(dialog.myContribution()->changeAmount, sent.changeAmount - COIN / 1000);
+    QVERIFY(wallet_model.wallet().isLockedCoin(coin));
+    wallet_model.wallet().unlockCoin(coin);
 }
 
 void SharedMnWizardTests::coordinatorResumesFullySignedSession()

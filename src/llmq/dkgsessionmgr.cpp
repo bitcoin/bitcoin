@@ -130,11 +130,22 @@ void CDKGSessionManager::WriteVerifiedVvecContribution(Consensus::LLMQType llmqT
         s << CBLSPublicKeyVersionWrapper(pubkey, false);
     }
     db->Write(std::make_tuple(DB_VVEC, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash), Span{s});
+
+    // Reading the vvec back at commit time costs a point decompression and subgroup check per coefficient
+    LOCK(contributionsCacheCs);
+    auto& entry = contributionsCache[{llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash}];
+    entry.entryTime = SteadyClock::now();
+    entry.vvec = vvec;
 }
 
 void CDKGSessionManager::WriteVerifiedSkContribution(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& proTxHash, const CBLSSecretKey& skContribution)
 {
     db->Write(std::make_tuple(DB_SKCONTRIB, llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash), skContribution);
+
+    LOCK(contributionsCacheCs);
+    if (auto it = contributionsCache.find({llmqType, pQuorumBaseBlockIndex->GetBlockHash(), proTxHash}); it != contributionsCache.end()) {
+        it->second.skContribution = skContribution;
+    }
 }
 
 void CDKGSessionManager::WriteEncryptedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& proTxHash, const CBLSIESMultiRecipientObjects<CBLSSecretKey>& contributions)
@@ -228,13 +239,10 @@ void CDKGSessionManager::CleanupCache() const
 {
     LOCK(contributionsCacheCs);
     const auto curTime = SteadyClock::now();
-    for (auto it = contributionsCache.begin(); it != contributionsCache.end(); ) {
-        if (curTime - it->second.entryTime > MAX_CONTRIBUTION_CACHE_TIME) {
-            it = contributionsCache.erase(it);
-        } else {
-            ++it;
-        }
-    }
+    // A vvec still referenced elsewhere (by its DKG session) costs nothing to keep and is expensive to reload
+    std::erase_if(contributionsCache, [&](const auto& entry) {
+        return entry.second.vvec.use_count() == 1 && curTime - entry.second.entryTime > MAX_CONTRIBUTION_CACHE_TIME;
+    });
 }
 
 void CDKGSessionManager::CleanupOldContributions() const
