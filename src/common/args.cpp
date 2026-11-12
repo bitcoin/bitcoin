@@ -796,7 +796,7 @@ std::string ArgsManager::GetHelpMessage() const
 
 bool HelpRequested(const ArgsManager& args)
 {
-    return args.IsArgSet("-?") || args.IsArgSet("-h") || args.IsArgSet("-help") || args.IsArgSet("-help-debug");
+    return args.GetBoolArg("-?", false) || args.GetBoolArg("-h", false) || args.GetBoolArg("-help", false) || args.GetBoolArg("-help-debug", false);
 }
 
 void SetupHelpOptions(ArgsManager& args)
