@@ -1427,7 +1427,7 @@ BOOST_AUTO_TEST_CASE(tx_malformed_serialization)
 
     // A flag other than 1 is unknown, including one without the witness bit.
     DataStream bad_flag;
-    bad_flag << mtx.version << uint8_t{0x00} << uint8_t{0x02} << mtx.vin << mtx.vout << mtx.vin[0].scriptWitness.stack << mtx.nLockTime;
+    bad_flag << mtx.version << uint8_t{0x00} << uint8_t{0x02} << mtx.vin << mtx.vout << mtx.vin[0].scriptWitness << mtx.nLockTime;
     BOOST_CHECK_EXCEPTION(bad_flag >> TX_WITH_WITNESS(tx), std::ios_base::failure, HasReason{"Unknown transaction optional data"});
 }
 
