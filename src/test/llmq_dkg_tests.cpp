@@ -60,6 +60,23 @@ BOOST_AUTO_TEST_CASE(pending_messages_own_messages_share_quota_path)
     BOOST_CHECK_EQUAL(pending.PopPendingMessages(3).size(), 2U);
 }
 
+BOOST_AUTO_TEST_CASE(pending_messages_own_message_is_processed_first)
+{
+    using namespace llmq;
+
+    CDKGPendingMessages pending{/*_maxMessagesPerProTx=*/2};
+    pending.PushPendingMessage(/*from=*/1, MakeTestHash(0xa1), MakeDKGMessage(), MakeTestHash(1));
+    pending.PushPendingMessage(/*from=*/2, MakeTestHash(0xa2), MakeDKGMessage(), MakeTestHash(2));
+    pending.PushPendingMessage(/*from=*/-1, MakeTestHash(0xee), MakeDKGMessage(), MakeTestHash(3));
+
+    const auto msgs = pending.PopPendingMessages(3);
+    BOOST_REQUIRE_EQUAL(msgs.size(), 3U);
+    auto it = msgs.begin();
+    BOOST_CHECK_EQUAL((it++)->first, -1);
+    BOOST_CHECK_EQUAL((it++)->first, 1);
+    BOOST_CHECK_EQUAL((it++)->first, 2);
+}
+
 BOOST_AUTO_TEST_CASE(pending_messages_quota_survives_reconnect)
 {
     using namespace llmq;

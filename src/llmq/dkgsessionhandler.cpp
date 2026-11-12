@@ -52,7 +52,12 @@ void CDKGPendingMessages::PushPendingMessage(NodeId from, const uint256& sender_
     count++;
 
     seenMessages.emplace(hash);
-    pendingMessages.emplace_back(from, std::move(pm));
+    if (from == -1) {
+        // Our own message must not wait behind a backlog of peer messages before it is relayed
+        pendingMessages.emplace_front(from, std::move(pm));
+    } else {
+        pendingMessages.emplace_back(from, std::move(pm));
+    }
 }
 
 std::list<CDKGPendingMessages::BinaryMessage> CDKGPendingMessages::PopPendingMessages(size_t maxCount)
