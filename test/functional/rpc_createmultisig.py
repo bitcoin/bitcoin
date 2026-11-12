@@ -52,6 +52,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
         self.test_combinerawtransaction_preconditions()
         self.test_multisig_script_limit()
+        self.test_multisig_nrequired_errors()
         self.test_mixing_uncompressed_and_compressed_keys(node0)
         self.test_sortedmulti_descriptors_bip67()
 
@@ -82,6 +83,17 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         self.log.info('Test invalid 16-21 multisig p2sh-legacy and bech32 (no wallet)')
         assert_raises_rpc_error(-8, "Number of keys involved in the multisignature address creation > 20", node1.createmultisig, 16, self.pub, 'p2sh-segwit')
         assert_raises_rpc_error(-8, "Number of keys involved in the multisignature address creation > 20", node1.createmultisig, 16, self.pub, 'bech32')
+
+    def test_multisig_nrequired_errors(self):
+        node1 = self.nodes[1]
+
+        self.log.info('Test createmultisig nrequired bounds')
+        # nrequired must be at least 1
+        assert_raises_rpc_error(-8, "a multisignature address must require at least one key to redeem",
+                                node1.createmultisig, 0, self.pub[0:2])
+        # nrequired may not exceed the number of supplied keys
+        assert_raises_rpc_error(-8, "not enough keys supplied (got 2 keys, but need at least 3 to redeem)",
+                                node1.createmultisig, 3, self.pub[0:2])
 
     def test_combinerawtransaction_preconditions(self):
         self.log.info('Test combinerawtransaction preconditions')
