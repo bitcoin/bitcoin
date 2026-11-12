@@ -59,4 +59,21 @@ BOOST_AUTO_TEST_CASE(span_constructor_sfinae)
     BOOST_CHECK(!Spannable(SpannableNo{}));
 }
 
+BOOST_AUTO_TEST_CASE(same_span)
+{
+    const std::vector<int> a{1, 2, 3}, b{1, 2, 3};
+    const std::span<const int> span_a{a}, span_b{b};
+    // Spans over the same memory are the same, but spans over equal contents elsewhere are not.
+    BOOST_CHECK(SameSpan(span_a, std::span<const int>{a}));
+    BOOST_CHECK(!SameSpan(span_a, span_b));
+    // Both the start and the size matter.
+    BOOST_CHECK(!SameSpan(span_a, span_a.first(2)));
+    BOOST_CHECK(!SameSpan(span_a.first(2), span_a.last(2)));
+    BOOST_CHECK(SameSpan(span_a.subspan(1), span_a.last(2)));
+    // Empty spans are the same only if they are in the same place.
+    BOOST_CHECK(SameSpan(span_a.first(0), span_a.first(0)));
+    BOOST_CHECK(!SameSpan(span_a.first(0), span_a.last(0)));
+    BOOST_CHECK(SameSpan(std::span<const int>{}, std::span<const int>{}));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
