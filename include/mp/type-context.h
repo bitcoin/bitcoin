@@ -64,6 +64,8 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
     auto& server = server_context.proxy_server;
     EventLoop& loop = *server.m_context.loop;
     int req = server_context.req;
+    ++server.m_active_calls;
+    auto active_call = std::shared_ptr<void>{nullptr, [&server](void*) { --server.m_active_calls; }};
     // Keep a reference to the ProxyServer instance by assigning it to the self
     // variable. ProxyServer instances are reference-counted and if the client
     // drops its reference and the IPC call is canceled, this variable keeps the
@@ -71,7 +73,7 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
     // needs to be destroyed on the event loop thread so it is freed in a sync()
     // call below.
     auto self = server.thisCap();
-    auto invoke = [self = kj::mv(self), call_context = kj::mv(server_context.call_context), &server, &loop, req, fn, args...](CancelMonitor& cancel_monitor) mutable {
+    auto invoke = [self = kj::mv(self), active_call = kj::mv(active_call), call_context = kj::mv(server_context.call_context), &server, &loop, req, fn, args...](CancelMonitor& cancel_monitor) mutable {
         MP_LOG(loop, Log::Debug) << "IPC server executing request #" << req;
         if (loop.testing_hook_async_request_start) loop.testing_hook_async_request_start();
         KJ_DEFER(if (loop.testing_hook_async_request_done) loop.testing_hook_async_request_done());
@@ -176,6 +178,7 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
                 // scope when it happens.
                 cancel_monitor.m_on_cancel = nullptr;
                 auto self_dispose{kj::mv(self)};
+                auto active_call_dispose{kj::mv(active_call)};
                 if (erase_thread) {
                     // Look up the thread again without using existing
                     // iterator since entry may no longer be there after
