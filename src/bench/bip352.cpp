@@ -52,12 +52,12 @@ static void GetPubKeyBench(benchmark::Bench& bench, InputType input_type)
         const CScript redeem_script{GetScriptForDestination(WitnessV0KeyHash{pubkey})};
         spk = GetScriptForDestination(ScriptHash{redeem_script});
         txin.scriptSig = CScript() << ToByteVector(redeem_script);
-        txin.scriptWitness.stack = {DUMMY_ECDSA_SIG, ToByteVector(pubkey)};
+        txin.scriptWitness = CScriptWitness{{DUMMY_ECDSA_SIG, ToByteVector(pubkey)}};
         break;
     }
     case InputType::P2WPKH:
         spk = GetScriptForDestination(WitnessV0KeyHash{pubkey});
-        txin.scriptWitness.stack = {DUMMY_ECDSA_SIG, ToByteVector(pubkey)};
+        txin.scriptWitness = CScriptWitness{{DUMMY_ECDSA_SIG, ToByteVector(pubkey)}};
         break;
     case InputType::P2TR: {
         // Script-path spend, as it runs all of the key-path extraction logic plus the control
@@ -67,7 +67,7 @@ static void GetPubKeyBench(benchmark::Bench& bench, InputType input_type)
         std::vector<unsigned char> control_block{TAPROOT_LEAF_TAPSCRIPT};
         const XOnlyPubKey internal_key{GenerateRandomKey().GetPubKey()};
         control_block.insert(control_block.end(), internal_key.begin(), internal_key.end());
-        txin.scriptWitness.stack = {DUMMY_SCHNORR_SIG, ToByteVector(DUMMY_LEAF_SCRIPT), control_block};
+        txin.scriptWitness = CScriptWitness{{DUMMY_SCHNORR_SIG, ToByteVector(DUMMY_LEAF_SCRIPT), control_block}};
         expected_pubkey = XOnlyPubKey{pubkey};
         break;
     }

@@ -648,7 +648,7 @@ static RPCMethod combinerawtransaction()
             // Remove all scriptSigs and scriptWitnesses from inputs
             for (CTxIn& input : tx_variants_copy[k].vin) {
                 input.scriptSig.clear();
-                input.scriptWitness.SetNull();
+                input.scriptWitness = {};
             }
             if (k == 0) {
                 first_txid = tx_variants_copy[k].GetHash();
@@ -1809,7 +1809,7 @@ static RPCMethod converttopsbt()
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Inputs must not have scriptSigs and scriptWitnesses");
         }
         input.scriptSig.clear();
-        input.scriptWitness.SetNull();
+        input.scriptWitness = {};
     }
 
     // Make a blank psbt

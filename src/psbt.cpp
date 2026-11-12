@@ -179,7 +179,7 @@ bool PartiallySignedTransaction::AddInput(const PSBTInput& psbtin)
         inputs.push_back(psbtin);
         inputs.back().partial_sigs.clear();
         inputs.back().final_script_sig.clear();
-        inputs.back().final_script_witness.SetNull();
+        inputs.back().final_script_witness = {};
         return true;
     }
 

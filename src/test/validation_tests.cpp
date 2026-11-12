@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         // Test malleating the coinbase witness reserved value
         {
             CMutableTransaction mtx{*block.vtx[0]};
-            mtx.vin[0].scriptWitness.stack.resize(0);
+            mtx.vin[0].scriptWitness = {};
             block.vtx[0] = MakeTransactionRef(mtx);
             block.hashMerkleRoot = BlockMerkleRoot(block);
         }

@@ -46,7 +46,7 @@ static CTransactionRef MakeTransactionSpending(const std::vector<COutPoint>& out
         }
     }
     // Ensure txid != wtxid
-    tx.vin[0].scriptWitness.stack.push_back({1});
+    tx.vin[0].scriptWitness = CScriptWitness{{{1}}};
     tx.vout.resize(2);
     tx.vout[0].nValue = CENT;
     tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
