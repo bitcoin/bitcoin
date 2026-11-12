@@ -87,7 +87,7 @@ static void BlockEncodingBench(benchmark::Bench& bench, size_t n_pool, size_t n_
         CMutableTransaction tx = CMutableTransaction();
         tx.vin.resize(1);
         tx.vin[0].scriptSig = CScript() << sigspam;
-        tx.vin[0].scriptWitness.stack.push_back({1});
+        tx.vin[0].scriptWitness = CScriptWitness{{{1}}};
         tx.vout = {CTxOut{CAmount(i), CScript() << OP_1 << OP_EQUAL}};
         refs.push_back(MakeTransactionRef(tx));
     }

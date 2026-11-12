@@ -1410,7 +1410,7 @@ BOOST_AUTO_TEST_CASE(tx_malformed_serialization)
     // A transaction with one input, one output and a one-element witness.
     CMutableTransaction mtx;
     mtx.vin.resize(1);
-    mtx.vin[0].scriptWitness.stack = {{0xaa}};
+    mtx.vin[0].scriptWitness = CScriptWitness{{{0xaa}}};
     mtx.vout.emplace_back(1, CScript{} << OP_TRUE);
     DataStream ser;
     ser << TX_WITH_WITNESS(mtx);

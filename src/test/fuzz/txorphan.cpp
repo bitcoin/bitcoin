@@ -458,7 +458,7 @@ FUZZ_TARGET(txorphanage_sim)
                 input.scriptWitness.stack.resize(1);
                 input.scriptWitness.stack[0].resize(rng.randrange(100));
             } else {
-                input.scriptWitness.stack.resize(0);
+                input.scriptWitness = {};
             }
         }
         // Convert to CTransactionRef.
