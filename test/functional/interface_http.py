@@ -93,14 +93,14 @@ class BitcoinHTTPConnection:
         # Wait for response, but expect a timeout disconnection
         start = time.monotonic()
         response1 = self.recv_raw()
-        stop = time.monotonic()
+        duration = time.monotonic() - start
         # Server disconnected with EOF
         assert_equal(response1, b"")
-        # Server disconnected within an acceptable range of time:
-        # not immediately, and not too far over the configured duration.
-        # This allows for some jitter in the test between client and server.
-        duration = stop - start
-        assert duration <= seconds + 2, f"Server disconnected too slow: {duration} > {seconds}"
+        # Server did not disconnect before the configured idle duration
+        # (allowing 1s of jitter between client and server). There is no
+        # upper bound: slow CI machines can overshoot arbitrarily, and the
+        # socket timeout (rpc_timeout) already catches a server that never
+        # disconnects. Exact timing is covered by httpserver_tests.
         assert duration >= seconds - 1, f"Server disconnected too fast: {duration} < {seconds}"
         # The connection is definitely closed.
         assert self.sock_closed()
