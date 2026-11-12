@@ -63,9 +63,11 @@ public:
     std::string peerAddr;
     std::any context;
     JSONRPCVersion m_json_version = JSONRPCVersion::V1_LEGACY;
+    //! Set at the end of a successful parse() of a JSON-RPC 2.0 request without an "id" member.
+    bool m_notification{false};
 
     void parse(const UniValue& valRequest);
-    [[nodiscard]] bool IsNotification() const { return !id.has_value() && m_json_version == JSONRPCVersion::V2; };
+    [[nodiscard]] bool IsNotification() const { return m_notification; };
 };
 
 #endif // BITCOIN_RPC_REQUEST_H

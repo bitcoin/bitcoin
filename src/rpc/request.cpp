@@ -264,4 +264,9 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
         params = UniValue(UniValue::VARR);
     else
         throw JSONRPCError(RPC_INVALID_REQUEST, "Params must be an array or object");
+
+    // A notification is a valid JSON-RPC 2.0 request without an "id" member.
+    // Invalid requests are not notifications, and get an error reply even
+    // without an id.
+    m_notification = m_json_version == JSONRPCVersion::V2 && !id.has_value();
 }

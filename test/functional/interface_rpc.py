@@ -44,7 +44,7 @@ def format_request(options, idx, fields):
 
 
 def format_response(options, idx, fields):
-    if options.version == 2 and options.notification:
+    if options.version == 2 and options.notification and options.response_fields is None:
         return None
     response = {}
     if not options.notification:
@@ -152,8 +152,10 @@ class RPCInterfaceTest(BitcoinTestFramework):
         self.log.info("Testing JSON-RPC 2.0 batch with notifications...")
         self.test_batch_request(lambda idx: BatchOptions(version=2, notification=idx < 2))
 
-        self.log.info("Testing JSON-RPC 2.0 batch of ALL notifications...")
-        self.test_batch_request(lambda idx: BatchOptions(version=2, notification=True))
+        self.log.info("Testing JSON-RPC 2.0 batch of requests without ids...")
+        # The request with no method (index 4) is invalid, so it is not a
+        # notification, and gets an error reply with "id": null.
+        self.test_batch_request(lambda idx: BatchOptions(version=2, notification=True, response_fields={"id": None} if idx == 4 else None))
 
         # JSONRPC 1.1 does not support batch requests, but test them for backwards compatibility.
         self.log.info("Testing nonstandard JSON-RPC 1.1 batch request...")
