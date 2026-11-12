@@ -1199,4 +1199,23 @@ BOOST_AUTO_TEST_CASE(ccoins_peekcoin)
     BOOST_CHECK(!main_cache.HaveCoinInCache(outpoint));
 }
 
+BOOST_AUTO_TEST_CASE(coins_cursor_malformed_first_key)
+{
+    // A record in the coin keyspace that is too short to decode as a
+    // CoinEntry must not be reported as a valid first entry.
+    const fs::path path{m_args.GetDataDirBase() / "coins_cursor_malformed_first_key"};
+    {
+        CDBWrapper dbw{{.path = path, .cache_bytes = 1_MiB, .wipe_data = true}};
+        dbw.Write(uint8_t{'C'}, Coin{CTxOut{1, CScript{}}, /*nHeightIn=*/1, /*fCoinBaseIn=*/false});
+    }
+
+    CCoinsViewDB view{{.path = path, .cache_bytes = 1_MiB}, {}};
+    std::unique_ptr<CCoinsViewCursor> cursor{view.Cursor()};
+    BOOST_REQUIRE(cursor);
+
+    COutPoint outpoint;
+    BOOST_CHECK(!cursor->Valid());
+    BOOST_CHECK(!cursor->GetKey(outpoint));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
