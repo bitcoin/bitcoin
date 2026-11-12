@@ -12,10 +12,9 @@
 namespace wallet {
 fs::path GetWalletDir()
 {
-    fs::path path;
+    fs::path path{gArgs.GetPathArg("-walletdir")};
 
-    if (gArgs.IsArgSet("-walletdir")) {
-        path = gArgs.GetPathArg("-walletdir");
+    if (!path.empty()) {
         if (!fs::is_directory(path)) {
             // If the path specified doesn't exist, we return the deliberately
             // invalid empty string.

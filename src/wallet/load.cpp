@@ -29,8 +29,8 @@ bool VerifyWallets(WalletContext& context)
     interfaces::Chain& chain = *context.chain;
     ArgsManager& args = *Assert(context.args);
 
-    if (args.IsArgSet("-walletdir")) {
-        const fs::path wallet_dir{args.GetPathArg("-walletdir")};
+    const fs::path wallet_dir{args.GetPathArg("-walletdir")};
+    if (!wallet_dir.empty()) {
         std::error_code error;
         // The canonical path cleans the path, preventing >1 Berkeley environment instances for the same directory
         // It also lets the fs::exists and fs::is_directory checks below pass on windows, since they return false

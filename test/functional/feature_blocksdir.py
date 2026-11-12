@@ -32,6 +32,16 @@ class BlocksdirTest(BitcoinTestFramework):
         assert (blocksdir_path / self.chain / "blocks" / "blk00000.dat").is_file()
         assert (self.nodes[0].blocks_path / "index").is_dir()
 
+        self.log.info("Starting with -noblocksdir fails ...")
+        self.stop_node(0)
+        self.nodes[0].assert_start_raises_init_error(["-noblocksdir"], "Error: Error parsing command line arguments: Negating of -blocksdir is meaningless and therefore forbidden")
+
+        self.log.info("Starting with an empty -blocksdir uses the datadir ...")
+        self.cleanup_folder(self.nodes[0].datadir_path)
+        initialize_datadir(self.options.tmpdir, 0, self.chain)
+        self.start_node(0, ["-blocksdir="])
+        assert (self.nodes[0].blocks_path / "blk00000.dat").is_file()
+
 
 if __name__ == '__main__':
     BlocksdirTest(__file__).main()
