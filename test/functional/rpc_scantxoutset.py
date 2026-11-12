@@ -80,6 +80,14 @@ class ScantxoutsetTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "End of range is too high", self.nodes[0].scantxoutset, "start", [{"desc": "desc", "range": [(2 << 31 + 1) - 1000000, (2 << 31 + 1)]}])
         assert_raises_rpc_error(-8, "Range specified as [begin,end] must not have begin after end", self.nodes[0].scantxoutset, "start", [{"desc": "desc", "range": [2, 1]}])
         assert_raises_rpc_error(-8, "Range is too large", self.nodes[0].scantxoutset, "start", [{"desc": "desc", "range": [0, 1000001]}])
+
+        self.log.info("Test scan object structure validation.")
+        # a scan object must be a descriptor string or an object
+        assert_raises_rpc_error(-8, "Scan object needs to be either a string or an object", self.nodes[0].scantxoutset, "start", [1])
+        # an object scan object must contain a descriptor
+        assert_raises_rpc_error(-8, "Descriptor needs to be provided in scan object", self.nodes[0].scantxoutset, "start", [{}])
+        # a range must be an integer or a [begin,end] pair
+        assert_raises_rpc_error(-8, "Range must be specified as end or as [begin,end]", self.nodes[0].scantxoutset, "start", [{"desc": "desc", "range": "foo"}])
         range_end = 2**31 - 1
         assert_equal(self.nodes[0].scantxoutset("start", [{"desc": "combo(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0h/0'/*)", "range": [range_end, range_end]}])['success'], True)
 
