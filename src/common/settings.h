@@ -45,7 +45,10 @@ bool ReadSettings(const fs::path& path,
     std::map<std::string, SettingsValue>& values,
     std::vector<std::string>& errors);
 
-//! Write settings file.
+//! Write a settings file by writing to a temporary `.tmp` file next to `path`
+//! and using RenameOver() to replace the destination. This avoids leaving a
+//! truncated or empty file if the process is interrupted while writing. The
+//! file is not synced to disk, so this does not protect against power loss.
 bool WriteSettings(const fs::path& path,
     const std::map<std::string, SettingsValue>& values,
     std::vector<std::string>& errors);

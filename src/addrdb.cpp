@@ -141,19 +141,15 @@ CBanDB::CBanDB(fs::path ban_list_path)
 
 bool CBanDB::Write(const banmap_t& banSet)
 {
-    const fs::path banlist_tmp{m_banlist_json + ".tmp"};
     std::vector<std::string> errors;
-    if (!common::WriteSettings(banlist_tmp, {{JSON_KEY, BanMapToJson(banSet)}}, errors)) {
-        for (const auto& err : errors) {
-            LogError("%s\n", err);
-        }
-        return false;
+    if (common::WriteSettings(m_banlist_json, {{JSON_KEY, BanMapToJson(banSet)}}, errors)) {
+        return true;
     }
-    if (!RenameOver(banlist_tmp, m_banlist_json)) {
-        LogError("Failed renaming JSON file %s to %s\n", fs::PathToString(banlist_tmp), fs::PathToString(m_banlist_json));
-        return false;
+
+    for (const auto& err : errors) {
+        LogError("%s\n", err);
     }
-    return true;
+    return false;
 }
 
 bool CBanDB::Read(banmap_t& banSet)
