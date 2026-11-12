@@ -228,6 +228,11 @@ class ConfArgsTest(BitcoinTestFramework):
                     extra_args=[f'-nowallet={value}'],
                 )
 
+    def test_negated_default_off_options(self):
+        self.log.info("Test that negating options that are off by default keeps them off")
+        self.start_node(0, extra_args=['-noi2psam', '-norpcpassword'])
+        self.stop_node(0)
+
     def test_log_buffer(self):
         with self.nodes[0].assert_debug_log(expected_msgs=["[warning] Parsed potentially confusing double-negative -listen=0\n"]):
             self.start_node(0, extra_args=['-nolisten=0'])
@@ -544,6 +549,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.test_config_file_parser()
         self.test_config_file_log()
         self.test_invalid_command_line_options()
+        self.test_negated_default_off_options()
         self.test_ignored_conf()
         self.test_ignored_default_conf()
         self.test_acceptstalefeeestimates_arg_support()

@@ -218,11 +218,16 @@ BOOST_AUTO_TEST_CASE(stringarg)
     ArgsManager local_args;
 
     const auto foo = std::make_pair("-foo", ArgsManager::ALLOW_ANY);
-    const auto bar = std::make_pair("-bar", ArgsManager::ALLOW_ANY);
+    const auto bar = std::make_pair("-bar", ArgsManager::ALLOW_ANY | ArgsManager::NEGATE_TO_EMPTY);
     SetupArgs(local_args, {foo, bar});
     ResetArgs(local_args, "");
     BOOST_CHECK_EQUAL(local_args.GetArg("-foo", ""), "");
     BOOST_CHECK_EQUAL(local_args.GetArg("-foo", "eleven"), "eleven");
+
+    ResetArgs(local_args, "-nofoo -nobar");
+    BOOST_CHECK_EQUAL(local_args.GetArg("-foo", "eleven"), "0");
+    BOOST_CHECK_EQUAL(local_args.GetArg("-bar", "eleven"), "");
+    BOOST_CHECK(local_args.GetArg("-bar") == "");
 
     ResetArgs(local_args, "-foo -bar");
     BOOST_CHECK_EQUAL(local_args.GetArg("-foo", ""), "");

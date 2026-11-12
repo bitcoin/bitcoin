@@ -523,6 +523,7 @@ std::string ArgsManager::GetArg(const std::string& strArg, const std::string& st
 std::optional<std::string> ArgsManager::GetArg(const std::string& strArg) const
 {
     const common::SettingsValue value = GetSetting(strArg);
+    if (value.isFalse() && (GetArgFlags(strArg).value_or(0) & NEGATE_TO_EMPTY)) return "";
     return SettingToString(value);
 }
 
