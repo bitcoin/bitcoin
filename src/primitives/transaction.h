@@ -224,7 +224,7 @@ void UnserializeTransaction(TxType& tx, Stream& s, const TransactionSerParams& p
         /* The witness flag is present, and we support witnesses. */
         flags ^= 1;
         for (size_t i = 0; i < tx.vin.size(); i++) {
-            s >> tx.vin[i].scriptWitness.stack;
+            s >> tx.vin[i].scriptWitness;
         }
         if (!tx.HasWitness()) {
             /* It's illegal to encode witnesses when all witness stacks are empty. */
@@ -262,7 +262,7 @@ void SerializeTransaction(const TxType& tx, Stream& s, const TransactionSerParam
     s << tx.vout;
     if (flags & 1) {
         for (size_t i = 0; i < tx.vin.size(); i++) {
-            s << tx.vin[i].scriptWitness.stack;
+            s << tx.vin[i].scriptWitness;
         }
     }
     s << tx.nLockTime;

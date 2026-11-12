@@ -513,7 +513,7 @@ public:
         // write script witness
         if (!final_script_witness.empty()) {
             SerializeToVector(s, CompactSizeWriter(PSBT_IN_SCRIPTWITNESS));
-            SerializeToVector(s, final_script_witness.stack);
+            SerializeToVector(s, final_script_witness);
         }
 
         // Write PSBTv2 fields
@@ -659,7 +659,7 @@ public:
                 case PSBT_IN_SCRIPTWITNESS:
                 {
                     ExpectedKeySize("Input Final scriptWitness", key, 1);
-                    UnserializeFromVector(s, final_script_witness.stack);
+                    UnserializeFromVector(s, final_script_witness);
                     break;
                 }
                 case PSBT_IN_RIPEMD160:
