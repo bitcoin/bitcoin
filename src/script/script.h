@@ -581,21 +581,15 @@ public:
  *  Currently, the class stores the stack as a vector of vectors, but this will change in a future
  *  commit.
  */
-struct CScriptWitness
+class CScriptWitness
 {
     /** The stack, represented as a vector of stack elements. This will change in a future commit. */
     std::vector<std::vector<unsigned char> > stack;
 
+public:
     // Some compilers complain without a default constructor
     CScriptWitness() = default;
     explicit CScriptWitness(const std::vector<std::vector<unsigned char>>& stack_in) : stack{stack_in} {}
-
-    // Old interface:
-
-    bool IsNull() const { return stack.empty(); }
-    void SetNull() { stack.clear(); stack.shrink_to_fit(); }
-
-    // New interface:
 
     /** Forward iterator over the elements of the stack, exposing them as spans. */
     class Iterator
