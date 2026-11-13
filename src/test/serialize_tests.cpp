@@ -218,6 +218,21 @@ BOOST_AUTO_TEST_CASE(array)
     BOOST_CHECK(array1 == array2);
 }
 
+BOOST_AUTO_TEST_CASE(compactsize_value_range)
+{
+    const auto ser_deser = [](uint64_t value, bool range_check = true) {
+        DataStream ss{};
+        WriteCompactSize(ss, value);
+        return ReadCompactSize(ss, range_check);
+    };
+
+    BOOST_CHECK_EQUAL(ser_deser(MAX_SIZE), MAX_SIZE);
+    for (const uint64_t value : {MAX_SIZE + 1, std::numeric_limits<uint64_t>::max()}) {
+        BOOST_CHECK_EXCEPTION(ser_deser(value), std::ios_base::failure, HasReason{"ReadCompactSize(): size too large"});
+        BOOST_CHECK_EQUAL(ser_deser(value, /*range_check=*/false), value);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(noncanonical)
 {
     const HasReason isCanonicalException{"non-canonical ReadCompactSize()"};
