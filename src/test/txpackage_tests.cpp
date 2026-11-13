@@ -16,6 +16,7 @@
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
+#include <util/translation.h>
 #include <test/util/txmempool.h>
 #include <validation.h>
 
@@ -1228,6 +1229,45 @@ BOOST_AUTO_TEST_CASE(package_rbf_tests)
         LOCK(m_node.mempool->cs);
         BOOST_CHECK(m_node.mempool->GetIter(tx_parent_1->GetHash()).has_value());
         BOOST_CHECK(m_node.mempool->GetIter(tx_child_1->GetHash()).has_value());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(package_trim_tests)
+{
+    LOCK(::cs_main);
+    // Package transactions submitted together and evicted when AcceptPackage() limits the mempool size
+    // at the end are TX_RECONSIDERABLE, with the package's fee information. The mempool has no room, so
+    // everything is evicted.
+    CTxMemPool::Options opts{MemPoolOptionsForTest(m_node)};
+    opts.max_size_bytes = 0;
+    bilingual_str error;
+    CTxMemPool pool{std::move(opts), error};
+    BOOST_REQUIRE(error.empty());
+
+    // The parent pays no fee, so it can only be accepted with its child.
+    CKey parent_key{GenerateRandomKey()};
+    const CAmount child_fee{2000};
+    const auto tx_parent{MakeTransactionRef(CreateValidMempoolTransaction(m_coinbase_txns[0], /*input_vout=*/0, /*input_height=*/0, coinbaseKey,
+                                                                          GetScriptForDestination(WitnessV0KeyHash(parent_key.GetPubKey())),
+                                                                          m_coinbase_txns[0]->vout[0].nValue, /*submit=*/false))};
+    const auto tx_child{MakeTransactionRef(CreateValidMempoolTransaction(tx_parent, /*input_vout=*/0, /*input_height=*/101, parent_key,
+                                                                         GetScriptForDestination(WitnessV0KeyHash(GenerateRandomKey().GetPubKey())),
+                                                                         tx_parent->vout[0].nValue - child_fee, /*submit=*/false))};
+    const Package package{tx_parent, tx_child};
+    const auto result{ProcessNewPackage(m_node.chainman->ActiveChainstate(), pool, package, /*test_accept=*/false, /*client_maxfeerate=*/{})};
+    if (auto err{CheckPackageMempoolAcceptResult(package, result, /*expect_valid=*/false, &pool)}) {
+        BOOST_ERROR(err.value());
+    }
+    BOOST_CHECK(result.m_state.IsInvalid());
+    BOOST_CHECK_EQUAL(pool.size(), 0);
+
+    const CFeeRate package_feerate(child_fee, GetVirtualTransactionSize(*tx_parent) + GetVirtualTransactionSize(*tx_child));
+    for (const auto& tx : package) {
+        const auto& tx_result{result.m_tx_results.at(tx->GetWitnessHash())};
+        BOOST_CHECK_EQUAL(tx_result.m_state.GetResult(), TxValidationResult::TX_RECONSIDERABLE);
+        BOOST_CHECK_EQUAL(tx_result.m_state.GetRejectReason(), "mempool full");
+        BOOST_CHECK(tx_result.m_effective_feerate == package_feerate);
+        BOOST_CHECK(tx_result.m_wtxids_fee_calculations == std::vector<Wtxid>({tx_parent->GetWitnessHash(), tx_child->GetWitnessHash()}));
     }
 }
 BOOST_AUTO_TEST_SUITE_END()
