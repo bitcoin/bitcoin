@@ -436,7 +436,7 @@ CBlock ConsumeBlock(FuzzedDataProvider& fuzzed_data_provider, const CBlock& prev
 }
 
 
-FUZZ_TARGET(connect_block, .init = initialize_connect_block)
+FUZZ_TARGET(test_connect_block, .init = initialize_connect_block)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
@@ -469,11 +469,10 @@ FUZZ_TARGET(connect_block, .init = initialize_connect_block)
 
     // Try to connect the block.
     BlockValidationState state;
-    bool connected = active_chainstate.ConnectBlock(block,
+    bool connected = active_chainstate.TestConnectBlock(block,
                                                     state,
-                                                    &new_index,
-                                                    active_coins,
-                                                    /*fJustCheck=*/true);
+                                                    new_index,
+                                                    active_coins);
     Assert(connected == state.IsValid());
 }
 
