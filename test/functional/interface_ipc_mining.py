@@ -147,9 +147,10 @@ class IPCMiningTest(BitcoinTestFramework):
             current_block_height = self.nodes[0].getchaintips()[0]["height"]
             assert_equal(blockref.result.height, current_block_height)
 
+            long_timeout = max(self.default_ipc_timeout, 60000.0)  # at least 1 minute
             self.log.debug("Mine a block")
             newblockref = (await wait_and_do(
-                mining.waitTipChanged(ctx, blockref.result.hash, self.default_ipc_timeout),
+                mining.waitTipChanged(ctx, blockref.result.hash, long_timeout),
                 lambda: self.generate(self.nodes[0], 1))).result
             assert_equal(len(newblockref.hash), block_hash_size)
             assert_equal(newblockref.height, current_block_height + 1)
@@ -161,7 +162,6 @@ class IPCMiningTest(BitcoinTestFramework):
 
             self.log.debug("interrupt() should abort waitTipChanged()")
             async def wait_for_tip():
-                long_timeout = max(self.default_ipc_timeout, 60000.0)  # at least 1 minute
                 result = (await mining.waitTipChanged(ctx, newblockref.hash, long_timeout)).result
                 # Unlike a timeout, interrupt() returns an empty BlockRef.
                 assert_equal(len(result.hash), 0)
@@ -216,22 +216,22 @@ class IPCMiningTest(BitcoinTestFramework):
                 header = from_hex(CBlockHeader(), self.nodes[1].getblockheader(node1_block_hash, False))
                 header_only_peer = self.nodes[0].add_p2p_connection(P2PInterface())
                 header_only_peer.send_and_ping(msg_headers([header]))
-                start = time.time()
+                start = time.monotonic()
                 async with destroying((await mining.createNewBlock(ctx, self.default_block_create_options)).result, ctx):
                     pass
                 # Lower-bound only: a heavily loaded CI host might still exceed 0.9s
                 # even without the cooldown, so this can miss regressions but avoids
                 # spurious failures.
-                assert_greater_than_or_equal(time.time() - start, 0.9)
+                assert_greater_than_or_equal(time.monotonic() - start, 0.9)
 
                 self.log.debug("createNewBlock() should wake up promptly after tip advances")
                 success = False
                 duration = 0.0
                 async def wait_fn():
                     nonlocal success, duration
-                    start = time.time()
+                    start = time.monotonic()
                     res = await mining.createNewBlock(ctx, self.default_block_create_options)
-                    duration = time.time() - start
+                    duration = time.monotonic() - start
                     success = res._has("result")
                 def do_fn():
                     block_hex = self.nodes[1].getblock(node1_block_hash, False)
