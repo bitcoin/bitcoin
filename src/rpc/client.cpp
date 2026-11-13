@@ -22,10 +22,13 @@ enum ParamFormat { JSON, STRING, JSON_OR_STRING };
 class CRPCConvertParam
 {
 public:
+    CRPCConvertParam(std::string method_name, int param_idx, std::string param_name, ParamFormat param_format = ParamFormat::JSON)
+        : methodName{std::move(method_name)}, paramName{std::move(param_name)}, paramIdx{param_idx}, format{param_format} {}
+
     std::string methodName; //!< method whose params want conversion
-    int paramIdx;           //!< 0-based idx of param to convert
     std::string paramName;  //!< parameter name
-    ParamFormat format{ParamFormat::JSON}; //!< parameter format
+    int paramIdx;           //!< 0-based idx of param to convert
+    ParamFormat format;     //!< parameter format
 };
 
 // clang-format off
