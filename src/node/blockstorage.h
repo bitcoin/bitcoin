@@ -184,6 +184,22 @@ enum class ReadRawError {
 };
 
 /**
+ * Instances for the same directory in one process share one lock, and
+ * destroying any of them releases it.
+ */
+class BlocksDirLock
+{
+    const fs::path m_dir;
+
+public:
+    explicit BlocksDirLock(fs::path dir);
+    ~BlocksDirLock();
+
+    BlocksDirLock(const BlocksDirLock&) = delete;
+    BlocksDirLock& operator=(const BlocksDirLock&) = delete;
+};
+
+/**
  * Maintains a tree of blocks (stored in `m_block_index`) which is consulted
  * to determine where the most-work tip is.
  *
@@ -196,6 +212,10 @@ class BlockManager
     friend ChainstateManager;
 
 private:
+    //! First member, so the lock is held before any other member uses the
+    //! blocks directory and until all of them are destroyed.
+    const BlocksDirLock m_blocks_dir_lock;
+
     const CChainParams& GetParams() const { return m_opts.chainparams; }
     const Consensus::Params& GetConsensus() const { return m_opts.chainparams.GetConsensus(); }
     /**

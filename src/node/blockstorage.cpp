@@ -30,6 +30,7 @@
 #include <util/check.h>
 #include <util/expected.h>
 #include <util/fs.h>
+#include <util/fs_helpers.h>
 #include <util/log.h>
 #include <util/obfuscation.h>
 #include <util/overflow.h>
@@ -1179,6 +1180,24 @@ FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
     return pos;
 }
 
+BlocksDirLock::BlocksDirLock(fs::path dir) : m_dir{std::move(dir)}
+{
+    switch (util::LockDirectory(m_dir, ".lock")) {
+    case util::LockResult::ErrorWrite:
+        throw std::runtime_error{strprintf("Cannot write to directory '%s'; check permissions.", fs::PathToString(m_dir))};
+    case util::LockResult::ErrorLock:
+        throw std::runtime_error{strprintf("Cannot obtain a lock on directory %s. It is probably in use by another process.", fs::PathToString(m_dir))};
+    case util::LockResult::Success:
+        return;
+    }
+    assert(false);
+}
+
+BlocksDirLock::~BlocksDirLock()
+{
+    UnlockDirectory(m_dir, ".lock");
+}
+
 static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
 {
     // Bytes are serialized without length indicator, so this is also the exact
@@ -1231,7 +1250,8 @@ static auto InitBlocksdirXorKey(const BlockManager::Options& opts)
 }
 
 BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
-    : m_prune_mode{opts.prune_target > 0},
+    : m_blocks_dir_lock{opts.blocks_dir},
+      m_prune_mode{opts.prune_target > 0},
       m_obfuscation{InitBlocksdirXorKey(opts)},
       m_opts{std::move(opts)},
       m_block_file_seq{FlatFileSeq{m_opts.blocks_dir, "blk", m_opts.fast_prune ? 0x4000 /* 16kB */ : BLOCKFILE_CHUNK_SIZE}},
