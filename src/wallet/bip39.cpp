@@ -132,7 +132,7 @@ bool CMnemonic::Check(const SecureString& mnemonic)
     CSHA256().Write(bits.data(), nWordCount * 4 / 3).Finalize(bits.data());
 
     const char checksum_length = nWordCount / 3;
-    const char mask = (2 ^ checksum_length) << (8 - checksum_length);
+    const uint8_t mask = static_cast<uint8_t>(0xFF << (8 - checksum_length));
 
     return (bits[0] & mask) == (bits[32] & mask);
 }

@@ -5,6 +5,7 @@
 #include <test/data/bip39_vectors.json.h>
 
 #include <wallet/bip39.h>
+#include <wallet/bip39_english.h>
 #include <key.h>
 #include <key_io.h>
 #include <test/util/json.h>
@@ -58,6 +59,27 @@ BOOST_AUTO_TEST_CASE(bip39_vectors)
 
         // printf("CBitcoinExtKey: %s\n", EncodeExtKey(key).c_str());
         BOOST_CHECK(EncodeExtKey(key) == test[3].get_str());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(bip39_checksum_validation)
+{
+    for (const int entropy_bytes : {16, 20, 24, 28, 32}) {
+        const SecureVector entropy(entropy_bytes, 0);
+        const SecureString mnemonic = CMnemonic::FromData(entropy, entropy_bytes);
+        BOOST_CHECK(CMnemonic::Check(mnemonic));
+
+        const size_t last_word_pos = mnemonic.rfind(' ') + 1;
+        uint32_t last_word_index{0};
+        while (mnemonic.substr(last_word_pos) != wordlist[last_word_index]) {
+            ++last_word_index;
+        }
+
+        const int checksum_bits = entropy_bytes / 4;
+        for (int bit = 0; bit < checksum_bits; ++bit) {
+            const SecureString bad_checksum = mnemonic.substr(0, last_word_pos) + wordlist[last_word_index ^ (1 << bit)];
+            BOOST_CHECK_MESSAGE(!CMnemonic::Check(bad_checksum), bad_checksum);
+        }
     }
 }
 
