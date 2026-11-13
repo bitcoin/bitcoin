@@ -10,6 +10,9 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <cstdint>
+#include <limits>
+
 BOOST_FIXTURE_TEST_SUITE(flatfile_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(flatfile_filename)
@@ -91,6 +94,80 @@ BOOST_AUTO_TEST_CASE(flatfile_open)
         BOOST_CHECK_THROW(file >> LIMITED_STRING(text, 256), std::ios_base::failure);
         BOOST_REQUIRE_EQUAL(file.fclose(), 0);
     }
+}
+
+BOOST_AUTO_TEST_CASE(flatfile_pos_serialization)
+{
+    for (const uint64_t offset : {uint64_t{0},
+                                  (uint64_t{1} << 31) - 1, uint64_t{1} << 31, (uint64_t{1} << 31) + 1,
+                                  (uint64_t{1} << 32) - 1, uint64_t{1} << 32, (uint64_t{1} << 32) + 1,
+                                  std::numeric_limits<uint64_t>::max()}) {
+        BOOST_TEST_CONTEXT("offset=" << offset)
+        {
+            // Decode an independently encoded 64-bit offset, not one already narrowed by FlatFilePos.
+            DataStream encoded{};
+            const int32_t file_number{3};
+            encoded << VARINT_MODE(file_number, VarIntMode::NONNEGATIVE_SIGNED) << VARINT(offset);
+            FlatFilePos decoded;
+            encoded >> decoded;
+            BOOST_CHECK_EQUAL(decoded.nFile, file_number);
+            BOOST_CHECK_EQUAL(decoded.nPos, offset);
+            BOOST_CHECK(encoded.empty());
+
+            DataStream serialized{};
+            serialized << FlatFilePos(file_number, offset);
+            int32_t decoded_file{0};
+            uint64_t decoded_offset{0};
+            serialized >> VARINT_MODE(decoded_file, VarIntMode::NONNEGATIVE_SIGNED) >> VARINT(decoded_offset);
+            BOOST_CHECK_EQUAL(decoded_file, file_number);
+            BOOST_CHECK_EQUAL(decoded_offset, offset);
+            BOOST_CHECK(serialized.empty());
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(flatfile_large_position)
+{
+#ifndef WIN32
+    // Non-Windows FileSeek64 still uses fseek, whose offset is a long.
+    if constexpr (sizeof(long) < sizeof(int64_t)) {
+        BOOST_WARN_MESSAGE(false, "Skipping large file seeks: fseek has a 32-bit offset");
+        return;
+    }
+#endif
+    FlatFileSeq seq{m_args.GetDataDirBase(), "large", 100};
+    {
+        AutoFile file{seq.Open(FlatFilePos(0, 0))};
+        BOOST_REQUIRE(!file.IsNull());
+        file << uint8_t{0x5a};
+        BOOST_REQUIRE_EQUAL(file.fclose(), 0);
+    }
+
+    for (const uint64_t offset : {(uint64_t{1} << 31) - 1, uint64_t{1} << 31, (uint64_t{1} << 31) + 1,
+                                  (uint64_t{1} << 32) - 1, uint64_t{1} << 32, (uint64_t{1} << 32) + 1}) {
+        for (const bool read_only : {false, true}) {
+            BOOST_TEST_CONTEXT("offset=" << offset << ", read_only=" << read_only)
+            {
+                // Seeking past EOF does not allocate a large file. Never write at this position.
+                AutoFile file{seq.Open(FlatFilePos(0, offset), read_only)};
+                BOOST_REQUIRE(!file.IsNull());
+                BOOST_CHECK_EQUAL(file.tell(), offset);
+                BOOST_CHECK_EQUAL(file.size(), 1);
+                BOOST_CHECK_EQUAL(file.tell(), offset);
+                file.seek(-1, SEEK_CUR);
+                BOOST_CHECK_EQUAL(file.tell(), offset - 1);
+                file.seek(offset, SEEK_SET);
+                BOOST_CHECK_EQUAL(file.tell(), offset);
+                file.seek(0, SEEK_END);
+                BOOST_CHECK_EQUAL(file.tell(), 1);
+                file.seek(0, SEEK_SET);
+                uint8_t marker{0};
+                file >> marker;
+                BOOST_CHECK_EQUAL(marker, 0x5a);
+            }
+        }
+    }
+    BOOST_CHECK_EQUAL(fs::file_size(seq.FileName(FlatFilePos(0, 0))), 1);
 }
 
 BOOST_AUTO_TEST_CASE(flatfile_allocate)
