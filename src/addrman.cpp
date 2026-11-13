@@ -555,7 +555,8 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, std::c
         pinfo->nServices = ServiceFlags(pinfo->nServices | addr.nServices);
 
         // do not update if no new information is present
-        if (addr.nTime <= pinfo->nTime) {
+        // (the stored nTime already had the time penalty applied, so apply it here too)
+        if (addr.nTime - time_penalty <= pinfo->nTime) {
             return false;
         }
 
