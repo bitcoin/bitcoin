@@ -275,7 +275,7 @@ class NetTest(BitcoinTestFramework):
         assert_equal(len(added_nodes), 1)
         assert_equal(added_nodes[0]['addednode'], "11.22.33.44")
         self.log.info("Check that an invalid command returns an error")
-        assert_raises_rpc_error(-1, 'addnode "node" "command"', self.nodes[0].addnode, node=ip_port, command='abc')
+        assert_raises_rpc_error(-8, 'addnode "node" "command"', self.nodes[0].addnode, node=ip_port, command='abc')
         self.log.info("Check that an empty node address returns an error")
         for command in ['add', 'remove', 'onetry']:
             assert_raises_rpc_error(-8, "Node address cannot be empty", self.nodes[0].addnode, node="", command=command)
@@ -369,8 +369,8 @@ class NetTest(BitcoinTestFramework):
         assert_raises_rpc_error(-3, "JSON value of type string is not of expected type bool", self.nodes[0].addpeeraddress, address="1.2.3.4", tried="True", port=1234)
 
         self.log.debug("Test that adding an address with invalid port fails")
-        assert_raises_rpc_error(-1, "JSON integer out of range", self.nodes[0].addpeeraddress, address="1.2.3.4", port=-1)
-        assert_raises_rpc_error(-1, "JSON integer out of range", self.nodes[0].addpeeraddress, address="1.2.3.4", port=65536)
+        assert_raises_rpc_error(-3, "JSON integer out of range", self.nodes[0].addpeeraddress, address="1.2.3.4", port=-1)
+        assert_raises_rpc_error(-3, "JSON integer out of range", self.nodes[0].addpeeraddress, address="1.2.3.4", port=65536)
 
         self.log.debug("Test that adding a valid address to the new table succeeds")
         assert_equal(node.addpeeraddress(address="1.0.0.0", tried=False, port=8333), {"success": True})

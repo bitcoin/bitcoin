@@ -90,7 +90,7 @@ ChainstateManager& EnsureAnyChainman(const std::any& context)
 FeeRateEstimatorManager& EnsureFeeEstimatorMan(const NodeContext& node)
 {
     if (!node.fee_estimator_man) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Fee estimation disabled");
+        throw JSONRPCError(RPC_MISC_ERROR, "Fee estimation disabled");
     }
     return *node.fee_estimator_man;
 }

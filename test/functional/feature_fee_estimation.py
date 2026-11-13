@@ -768,7 +768,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Testing that fee estimation is disabled in blocksonly.")
         self.restart_node(0, ["-blocksonly"])
         assert_raises_rpc_error(
-            -32603, "Fee estimation disabled", self.nodes[0].estimatesmartfee, 2
+            -1, "Fee estimation disabled", self.nodes[0].estimatesmartfee, 2
         )
 
 

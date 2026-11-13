@@ -74,7 +74,7 @@ double UniValue::get_real() const
     if (const auto retval{ParseDouble(getValStr())}) {
         return *retval;
     }
-    throw std::runtime_error("JSON double out of range");
+    throw type_error{"JSON double out of range"};
 }
 
 const UniValue& UniValue::get_obj() const

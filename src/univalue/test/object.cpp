@@ -100,25 +100,25 @@ void univalue_typecheck()
     {
         UniValue v_negative;
         v_negative.setNumStr("-1");
-        BOOST_CHECK_THROW(v_negative.getInt<uint8_t>(), std::runtime_error);
+        BOOST_CHECK_THROW(v_negative.getInt<uint8_t>(), UniValue::type_error);
         BOOST_CHECK_EQUAL(v_negative.getInt<int8_t>(), -1);
     }
 
     UniValue v2;
     v2.setBool(true);
     BOOST_CHECK_EQUAL(v2.get_bool(), true);
-    BOOST_CHECK_THROW(v2.getInt<int>(), std::runtime_error);
+    BOOST_CHECK_THROW(v2.getInt<int>(), UniValue::type_error);
 
     UniValue v3;
     v3.setNumStr("32482348723847471234");
-    BOOST_CHECK_THROW(v3.getInt<int64_t>(), std::runtime_error);
+    BOOST_CHECK_THROW(v3.getInt<int64_t>(), UniValue::type_error);
     v3.setNumStr("1000");
     BOOST_CHECK_EQUAL(v3.getInt<int64_t>(), 1000);
 
     UniValue v4;
     v4.setNumStr("2147483648");
     BOOST_CHECK_EQUAL(v4.getInt<int64_t>(), 2147483648);
-    BOOST_CHECK_THROW(v4.getInt<int>(), std::runtime_error);
+    BOOST_CHECK_THROW(v4.getInt<int>(), UniValue::type_error);
     v4.setNumStr("1000");
     BOOST_CHECK_EQUAL(v4.getInt<int>(), 1000);
     BOOST_CHECK_THROW(v4.get_str(), std::runtime_error);
@@ -132,7 +132,7 @@ void univalue_typecheck()
     BOOST_CHECK(v5.read("[true, 10]"));
     BOOST_CHECK_NO_THROW(v5.get_array());
     std::vector<UniValue> vals = v5.getValues();
-    BOOST_CHECK_THROW(vals[0].getInt<int>(), std::runtime_error);
+    BOOST_CHECK_THROW(vals[0].getInt<int>(), UniValue::type_error);
     BOOST_CHECK_EQUAL(vals[0].get_bool(), true);
 
     BOOST_CHECK_EQUAL(vals[1].getInt<int>(), 10);
