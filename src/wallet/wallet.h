@@ -1053,9 +1053,10 @@ public:
     util::Expected<CExtPubKey, WalletError> AddHDKey(const std::optional<CExtKey>& key);
 
     /** Move all records from the BDB database to a new SQLite database for storage.
-     * The original BDB file will be deleted and replaced with a new SQLite file.
+     * The new database is built in a temporary directory and then moved into place, replacing the original one.
      * A backup is not created.
-     * May crash if something unexpected happens in the filesystem.
+     * Returns false, with the original database untouched, if the new one can't be built. Once the original
+     * database may have been erased or replaced, failures throw instead, so the caller restores the backup.
      */
     bool MigrateToSQLite(bilingual_str& error) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 

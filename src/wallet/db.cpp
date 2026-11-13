@@ -7,6 +7,7 @@
 #include <common/args.h>
 #include <util/fs.h>
 #include <util/log.h>
+#include <util/translation.h>
 #include <wallet/db.h>
 
 #include <algorithm>
@@ -86,6 +87,26 @@ fs::path BDBDataFile(const fs::path& wallet_path)
     }
 }
 
+static bilingual_str FileError(const fs::path& path, const std::error_code& ec)
+{
+    bilingual_str error{strprintf(_("Error: Wallet db file cannot be modified. Path: %s, Error: %s."), fs::PathToString(path), ec.message())};
+    if (ec == std::errc::permission_denied || ec == std::errc::operation_not_permitted || ec == std::errc::read_only_file_system) {
+        error += Untranslated(" ") + _("Adjust directory or file permissions and try again.");
+    }
+    return error;
+}
+
+util::Result<void> WalletDatabase::Erase()
+{
+    Close();
+    for (const fs::path& file : Files()) {
+        std::error_code ec;
+        fs::remove(file, ec);
+        if (ec) return util::Error{FileError(file, ec)};
+    }
+    return {};
+}
+
 fs::path SQLiteDataFile(const fs::path& path)
 {
     return path / "wallet.dat";
@@ -154,6 +175,47 @@ void ReadDatabaseArgs(const ArgsManager& args, DatabaseOptions& options)
 {
     // Override current options with args values, if any were specified
     options.use_unsafe_sync = args.GetBoolArg("-unsafesqlitesync", options.use_unsafe_sync);
+}
+
+util::Result<void> MoveDatabase(std::unique_ptr<WalletDatabase>& db, const fs::path& dst_path, DatabaseOptions& opts)
+{
+    const fs::path wallet_file{fs::PathFromString(db->Filename())};
+    const std::vector<fs::path> files{db->Files()};
+    db->Close();
+
+    const fs::path dst_file{dst_path / fs::path{wallet_file.filename()}};
+
+    // Other files of this db should never be present at the destination, but an interrupted earlier migration or an
+    // outside process may leave them there. Return an error if one looks like a wallet database, delete it otherwise.
+    // A leftover journal is the main case, as SQLite would roll it back into the moved db, corrupting it.
+    std::error_code ec;
+    for (const fs::path& file : files) {
+        const fs::path leftover{dst_path / fs::path{file.filename()}};
+        if (leftover == dst_file) continue; // Replaced atomically by the rename below
+        if (IsBDBFile(leftover) || IsSQLiteFile(leftover)) {
+            return util::Error{strprintf(_("Error: Unable to move the wallet db, %s is a wallet database."), fs::PathToString(leftover))};
+        }
+        if (fs::remove(leftover, ec)) LogInfo("Removed db leftover during move: %s", fs::PathToString(leftover));
+        if (ec) return util::Error{FileError(leftover, ec)};
+    }
+
+    fs::create_directories(dst_path, ec);
+    if (ec) return util::Error{strprintf(_("Error: Unable to create wallet directory %s: %s."), fs::PathToString(dst_path), ec.message())};
+    fs::rename(wallet_file, dst_file, ec);
+    if (ec) return util::Error{strprintf(_("Error: Unable to move the new wallet db from %s to %s: %s."), fs::PathToString(wallet_file), fs::PathToString(dst_file), ec.message())};
+
+    // Reload db connection
+    DatabaseStatus db_status;
+    opts.require_create = false;
+    opts.require_existing = true;
+    bilingual_str error;
+    std::unique_ptr<WalletDatabase> moved_db{MakeDatabase(dst_path, opts, db_status, error)};
+    if (!moved_db) {
+        fs::remove(dst_file, ec); // Don't leave a db that can't be opened at the destination
+        return util::Error{error};
+    }
+    db = std::move(moved_db);
+    return {};
 }
 
 } // namespace wallet
