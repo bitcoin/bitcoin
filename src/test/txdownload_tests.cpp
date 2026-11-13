@@ -4,13 +4,20 @@
 
 #include <addresstype.h>
 #include <consensus/validation.h>
+#include <kernel/mempool_removal_reason.h>
+#include <net.h>
 #include <net_processing.h>
+#include <netmessagemaker.h>
 #include <node/txdownloadman_impl.h>
 #include <primitives/transaction.h>
+#include <protocol.h>
 #include <script/script.h>
 #include <test/util/common.h>
+#include <test/util/net.h>
 #include <test/util/random.h>
+#include <test/util/script.h>
 #include <test/util/setup_common.h>
+#include <txmempool.h>
 #include <validation.h>
 
 #include <array>
@@ -65,7 +72,7 @@ static std::map<TxValidationResult, Behaviors> expected_behaviors{
     {TxValidationResult::TX_PREMATURE_SPEND,         {                0,                 1,              0,               0,        1,            0,             1}},
     {TxValidationResult::TX_WITNESS_MUTATED,         {                0,                 1,              0,               0,        1,            0,             1}},
     {TxValidationResult::TX_WITNESS_STRIPPED,        {                0,                 0,              0,               0,        0,            0,             0}},
-    {TxValidationResult::TX_CONFLICT,                {                0,                 1,              0,               0,        1,            0,             1}},
+    {TxValidationResult::TX_CONFLICT,                {                0,                 0,              0,               0,        1,            0,             0}},
     {TxValidationResult::TX_MEMPOOL_POLICY,          {                0,                 1,              0,               0,        1,            0,             1}},
     {TxValidationResult::TX_NO_MEMPOOL,              {                0,                 1,              0,               0,        1,            0,             1}},
     {TxValidationResult::TX_RECONSIDERABLE,          {                0,                 0,              0,               1,        1,            0,             1}},
@@ -334,6 +341,189 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
                                                 /*expect_orphan=*/true, /*expect_keep=*/true, /*expected_parents=*/1);
             BOOST_CHECK_MESSAGE(ok, err_msg);
         }
+    }
+}
+
+// A witnessed parent in the mempool, a stripped copy of it rejected as TX_CONFLICT, then the parent is
+// gone: a later child must not be rejected because the known parent's txid is in the reject filter.
+BOOST_FIXTURE_TEST_CASE(known_mempool_parent_replay_does_not_poison_after_eviction, TestChain100Setup)
+{
+    const auto p_input_mtx = CreateValidMempoolTransaction(m_coinbase_txns[0], /*input_vout=*/0, /*input_height=*/1, coinbaseKey, P2WSH_OP_TRUE, 49 * COIN, /*submit=*/false);
+    CreateAndProcessBlock({p_input_mtx}, CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG);
+    CMutableTransaction parent_mtx;
+    parent_mtx.vin.emplace_back(p_input_mtx.GetHash(), 0);
+    parent_mtx.vin[0].scriptWitness.stack.push_back(WITNESS_STACK_ELEM_OP_TRUE);
+    parent_mtx.vout.emplace_back(49 * COIN - 10000, P2WSH_OP_TRUE); // pays its own fee: accepted alone
+    const auto parent = MakeTransactionRef(parent_mtx);
+    CMutableTransaction stripped_mtx{parent_mtx};
+    stripped_mtx.vin[0].scriptWitness.SetNull();
+    const auto parent_stripped = MakeTransactionRef(stripped_mtx);
+    CMutableTransaction child_mtx;
+    child_mtx.vin.emplace_back(parent->GetHash(), 0);
+    child_mtx.vin[0].scriptWitness.stack.push_back(WITNESS_STACK_ELEM_OP_TRUE);
+    child_mtx.vout.emplace_back(49 * COIN - 20000, P2WSH_OP_TRUE);
+    const auto child = MakeTransactionRef(child_mtx);
+
+    LOCK(cs_main);
+    CTxMemPool& pool = *Assert(m_node.mempool);
+    node::TxDownloadManagerImpl txdownload_impl{node::TxDownloadOptions{.m_mempool = pool, .m_deterministic_txrequest = true}};
+    constexpr NodeId honest{1}, other{2};
+    txdownload_impl.ConnectedPeer(honest, {/*m_preferred=*/true, /*m_relay_permissions=*/false, /*m_wtxid_relay=*/true});
+    txdownload_impl.ConnectedPeer(other, {/*m_preferred=*/false, /*m_relay_permissions=*/false, /*m_wtxid_relay=*/true});
+
+    // Parent accepted into the mempool.
+    BOOST_REQUIRE(m_node.chainman->ProcessTransaction(parent).m_result_type == MempoolAcceptResult::ResultType::VALID);
+    txdownload_impl.MempoolAcceptedTx(parent);
+    // Another peer replays a stripped copy: same non-witness data as the mempool entry.
+    BOOST_REQUIRE(txdownload_impl.ReceivedTx(other, parent_stripped).first);
+    const auto stripped_result = m_node.chainman->ProcessTransaction(parent_stripped);
+    BOOST_REQUIRE_MESSAGE(stripped_result.m_state.GetResult() == TxValidationResult::TX_CONFLICT, stripped_result.m_state.ToString());
+    txdownload_impl.MempoolRejectedTx(parent_stripped, stripped_result.m_state, other, /*first_time_failure=*/true);
+    // The parent leaves the mempool (evicted or replaced), without a tip change.
+    WITH_LOCK(pool.cs, pool.removeRecursive(*parent, MemPoolRemovalReason::SIZELIMIT));
+    BOOST_REQUIRE(!pool.exists(parent->GetHash()));
+    // A child arrives: the parent is genuinely missing now. It must be stored, not rejected.
+    BOOST_REQUIRE(txdownload_impl.ReceivedTx(honest, child).first);
+    const auto child_result = m_node.chainman->ProcessTransaction(child);
+    BOOST_REQUIRE(child_result.m_state.GetResult() == TxValidationResult::TX_MISSING_INPUTS);
+    txdownload_impl.MempoolRejectedTx(child, child_result.m_state, honest, /*first_time_failure=*/true);
+    BOOST_CHECK_MESSAGE(txdownload_impl.m_orphanage->HaveTxFromPeer(child->GetWitnessHash(), honest),
+                        "child rejected because the evicted parent's txid was poisoned by a stripped replay");
+}
+
+// A parent rejected for its feerate is delivered again while another witness version of it is in the
+// mempool, and is evaluated as a 1p1c package with a child from the orphanage. Its wtxid must not enter
+// the reject filter: once the other version leaves the mempool, the honest parent is needed again.
+BOOST_FIXTURE_TEST_CASE(known_parent_in_package_does_not_poison_after_eviction, TestChain100Setup)
+{
+    const CScript drop_true{CScript() << OP_DROP << OP_TRUE};
+    const CScript p2wsh_drop_true{GetScriptForDestination(WitnessV0ScriptHash(drop_true))};
+    const std::vector<unsigned char> drop_true_bytes{drop_true.begin(), drop_true.end()};
+    const auto funding_mtx = CreateValidMempoolTransaction(m_coinbase_txns[0], /*input_vout=*/0, /*input_height=*/1, coinbaseKey, p2wsh_drop_true, 49 * COIN, /*submit=*/false);
+    CreateAndProcessBlock({funding_mtx}, CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG);
+
+    // Two versions of the parent: OP_DROP accepts any dummy, and the larger one is below the minimum
+    // relay feerate on its own while the smaller one is not.
+    auto make_parent = [&](size_t dummy_size, CAmount fee) {
+        CMutableTransaction mtx;
+        mtx.vin.emplace_back(funding_mtx.GetHash(), 0);
+        mtx.vin[0].scriptWitness.stack = {std::vector<unsigned char>(dummy_size, 1), drop_true_bytes};
+        mtx.vout.emplace_back(49 * COIN - fee, p2wsh_drop_true);
+        return MakeTransactionRef(mtx);
+    };
+    const CFeeRate min_relay_feerate{m_node.mempool->m_opts.min_relay_feerate};
+    const CAmount parent_fee{min_relay_feerate.GetFee(GetVirtualTransactionSize(*make_parent(0, 0)))};
+    const auto parent{make_parent(MAX_STANDARD_P2WSH_STACK_ITEM_SIZE, parent_fee)};
+    const auto parent_other{make_parent(0, parent_fee)};
+    BOOST_REQUIRE(min_relay_feerate.GetFee(GetVirtualTransactionSize(*parent)) > parent_fee);
+    BOOST_REQUIRE(parent->GetHash() == parent_other->GetHash());
+
+    // The honest child pays for the pair. The fake child also spends an unknown outpoint, so it stays
+    // in the orphanage.
+    CMutableTransaction child_mtx;
+    child_mtx.vin.emplace_back(parent->GetHash(), 0);
+    child_mtx.vin[0].scriptWitness.stack = {{}, drop_true_bytes};
+    child_mtx.vout.emplace_back(49 * COIN - parent_fee - 10000, p2wsh_drop_true);
+    const auto child{MakeTransactionRef(child_mtx)};
+    CMutableTransaction fake_child_mtx{child_mtx};
+    fake_child_mtx.vin.emplace_back(Txid::FromUint256(uint256::ONE), 0);
+    fake_child_mtx.vin[1].scriptWitness.stack = {{}, drop_true_bytes};
+    const auto fake_child{MakeTransactionRef(fake_child_mtx)};
+
+    ConnmanTestMsg connman{0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params()};
+    auto peerman{PeerManager::make(connman, *m_node.addrman, /*banman=*/nullptr, *m_node.chainman, *m_node.mempool, *m_node.warnings,
+                                   PeerManager::Options{.deterministic_rng = true})};
+    CConnman::Options connman_options;
+    connman_options.m_msgproc = peerman.get();
+    connman.Init(connman_options);
+
+    LOCK(NetEventsInterface::g_msgproc_mutex);
+    constexpr ServiceFlags services{NODE_NETWORK | NODE_WITNESS};
+    std::vector<CNode*> peers;
+    for (NodeId id : {0, 1}) {
+        in_addr address{};
+        address.s_addr = htonl(0x0a000001U + static_cast<uint32_t>(id));
+        peers.push_back(new CNode{id, /*sock=*/nullptr, CAddress{CService{address, 8333}, NODE_NETWORK},
+                                  /*nKeyedNetGroupIn=*/static_cast<uint64_t>(id), /*nLocalHostNonceIn=*/0, CAddress{},
+                                  /*addrNameIn=*/"", ConnectionType::INBOUND, /*inbound_onion=*/false, /*network_key=*/static_cast<uint64_t>(id + 1)});
+        connman.AddTestNode(*peers.back());
+        connman.Handshake(*peers.back(), /*successfully_connected=*/true, services, services, PROTOCOL_VERSION, /*relay_txs=*/true);
+    }
+    CNode& attacker{*peers[0]};
+    CNode& honest{*peers[1]};
+    auto deliver = [&](CNode& peer, const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex) {
+        connman.FlushSendBuffer(peer);
+        BOOST_REQUIRE(connman.ReceiveMsgFrom(peer, NetMsg::Make(NetMsgType::TX, TX_WITH_WITNESS(*tx))));
+        peer.fPauseSend = false;
+        while (connman.ProcessMessagesOnce(peer)) {}
+    };
+    auto orphaned = [&](const CTransactionRef& tx) {
+        return std::ranges::any_of(peerman->GetOrphanTransactions(), [&](const auto& o) { return o.tx->GetWitnessHash() == tx->GetWitnessHash(); });
+    };
+
+    deliver(attacker, parent);
+    BOOST_REQUIRE(!m_node.mempool->exists(parent->GetHash()));
+    deliver(attacker, fake_child);
+    BOOST_REQUIRE(orphaned(fake_child));
+    deliver(attacker, parent_other);
+    BOOST_REQUIRE(m_node.mempool->exists(parent->GetHash()));
+    // Evaluated with the fake child: the parent's result is DIFFERENT_WITNESS.
+    deliver(attacker, parent);
+    BOOST_REQUIRE(orphaned(fake_child));
+    // The other version leaves the mempool (evicted or replaced), without a tip change.
+    WITH_LOCK(m_node.mempool->cs, m_node.mempool->removeRecursive(*parent_other, MemPoolRemovalReason::SIZELIMIT));
+
+    deliver(honest, child);
+    BOOST_REQUIRE(orphaned(child));
+    deliver(honest, parent);
+    BOOST_CHECK(m_node.mempool->exists(child->GetHash()));
+
+    for (CNode* peer : peers) peerman->FinalizeNode(*peer);
+    connman.ClearTestNodes();
+    connman.SetMsgProc(nullptr);
+}
+
+BOOST_FIXTURE_TEST_CASE(orphan_parent_request_survives_reject_from_other_peer, TestChain100Setup)
+{
+    CTxMemPool& pool = *Assert(m_node.mempool);
+    node::TxDownloadOptions DEFAULT_OPTS{.m_mempool = pool, .m_deterministic_txrequest = true};
+    constexpr NodeId honest{1}, other{2};
+    const std::chrono::microseconds now{GetTime<std::chrono::microseconds>()};
+    TxValidationState state_orphan, state_reconsiderable;
+    state_orphan.Invalid(TxValidationResult::TX_MISSING_INPUTS, "");
+    state_reconsiderable.Invalid(TxValidationResult::TX_RECONSIDERABLE, "");
+
+    // A parent without witness data has wtxid == txid: either a nonsegwit tx or a segwit tx whose
+    // witness was stripped by the sender (indistinguishable here). Rejecting it must not cancel the
+    // orphan resolution requests (by txid) that other peers are candidates for. The witness-bearing
+    // parent is the control: its rejection never touched those requests.
+    for (const auto segwit_parent : {false, true}) {
+        node::TxDownloadManagerImpl txdownload_impl{DEFAULT_OPTS};
+        txdownload_impl.ConnectedPeer(honest, {/*m_preferred=*/true, /*m_relay_permissions=*/false, /*m_wtxid_relay=*/true});
+        txdownload_impl.ConnectedPeer(other, {/*m_preferred=*/false, /*m_relay_permissions=*/false, /*m_wtxid_relay=*/true});
+
+        const auto parent = CreatePlaceholderTx(segwit_parent);
+        const auto child = CreatePlaceholderTx(/*segwit=*/true);
+        BOOST_REQUIRE(child->vin[0].prevout.hash == parent->GetHash());
+
+        // Honest peer delivers the child. It is an orphan; the parent will be requested by txid.
+        BOOST_REQUIRE(txdownload_impl.ReceivedTx(honest, child).first);
+        txdownload_impl.MempoolRejectedTx(child, state_orphan, honest, /*first_time_failure=*/true);
+        BOOST_REQUIRE(txdownload_impl.m_orphanage->HaveTxFromPeer(child->GetWitnessHash(), honest));
+
+        // Before that request is sent, another peer (not an announcer of the child) delivers the
+        // parent unsolicited and it fails for low feerate.
+        BOOST_REQUIRE(txdownload_impl.ReceivedTx(other, parent).first);
+        const auto ret = txdownload_impl.MempoolRejectedTx(parent, state_reconsiderable, other, /*first_time_failure=*/true);
+        BOOST_CHECK(!ret.m_package_to_validate.has_value());
+        BOOST_CHECK(txdownload_impl.m_orphanage->HaveTxFromPeer(child->GetWitnessHash(), honest));
+
+        // The honest peer must still be asked for the parent: its version may carry a witness that
+        // makes the package acceptable.
+        const auto requests = txdownload_impl.GetRequestsToSend(honest, now + std::chrono::seconds{10});
+        BOOST_REQUIRE_EQUAL(requests.size(), 1);
+        BOOST_CHECK(!requests[0].IsWtxid());
+        BOOST_CHECK(requests[0].ToUint256() == parent->GetHash().ToUint256());
     }
 }
 

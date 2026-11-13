@@ -858,8 +858,10 @@ private:
     /** Synchronizes tx download including TxRequestTracker, rejection filters, and TxOrphanage.
      * Lock invariants:
      * - A txhash (txid or wtxid) in m_txrequest is not also in m_orphanage.
-     * - A txhash (txid or wtxid) in m_txrequest is not also in m_lazy_recent_rejects.
-     * - A txhash (txid or wtxid) in m_txrequest is not also in m_lazy_recent_rejects_reconsiderable.
+     * - A wtxid announcement in m_txrequest does not have its wtxid in m_lazy_recent_rejects or
+     *   m_lazy_recent_rejects_reconsiderable. Txid announcements are not constrained by wtxids in those filters,
+     *   even an equal one (the wtxid of a copy without witness): a txid announcement asks for the transaction
+     *   with any witness.
      * - A txhash (txid or wtxid) in m_txrequest is not also in m_lazy_recent_confirmed_transactions.
      * - Each data structure's limits hold (m_orphanage max size, m_txrequest per-peer limits, etc).
      */
@@ -3455,9 +3457,25 @@ void PeerManagerImpl::ProcessPackageResult(const node::PackageToValidate& packag
                     ProcessValidTx(nodeid, tx, tx_result.m_replaced_transactions);
                     break;
                 }
-                case MempoolAcceptResult::ResultType::INVALID:
                 case MempoolAcceptResult::ResultType::DIFFERENT_WITNESS:
                 {
+                    // Another version of this tx is in the mempool: like TX_CONFLICT, the tx is known,
+                    // not invalid, so its wtxid must not enter the reject filter.
+                    break;
+                }
+                case MempoolAcceptResult::ResultType::INVALID:
+                {
+                    // TX_RECONSIDERABLE here is a package feerate failure, a duplicate of this tx's
+                    // standalone rejection, or the child's own low feerate after the parent was
+                    // accepted by itself (it is then reconsidered via the parent's work set). The
+                    // first is a property of this wtxid pair (already cached by
+                    // MempoolRejectedPackage), not of the tx: don't erase or reject the child, as
+                    // another peer may have a version of the parent with a different witness that
+                    // makes the package acceptable.
+                    if (tx_result.m_state.GetResult() == TxValidationResult::TX_RECONSIDERABLE) {
+                        Assume(package_result.m_state.IsInvalid());
+                        break;
+                    }
                     // Don't add to vExtraTxnForCompact, as these transactions should have already been
                     // added there when added to the orphanage or rejected for TX_RECONSIDERABLE.
                     // This should be updated if package submission is ever used for transactions
