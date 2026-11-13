@@ -216,6 +216,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   net_processing.cpp
   netgroup.cpp
   node/abort.cpp
+  node/blockfetcher.cpp
   node/block_template_manager.cpp
   node/blockmanager_args.cpp
   node/blockstorage.cpp
