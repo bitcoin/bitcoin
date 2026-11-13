@@ -727,7 +727,7 @@ public:
     {
         Assume(!m_have_changeset);
         m_have_changeset = true;
-        return util::NotNull{std::make_unique<ChangeSet>(this)};
+        return util::MakeNotNullUnique<ChangeSet>(this);
     }
 
     bool m_have_changeset GUARDED_BY(cs){false};

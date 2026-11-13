@@ -4143,9 +4143,9 @@ ServiceFlags CConnman::GetLocalServices() const
 static util::NotNullUniquePtr<Transport> MakeTransport(NodeId id, bool use_v2transport, bool inbound) noexcept
 {
     if (use_v2transport) {
-        return util::NotNull{std::make_unique<V2Transport>(id, /*initiating=*/!inbound)};
+        return util::MakeNotNullUnique<V2Transport>(id, /*initiating=*/!inbound);
     } else {
-        return util::NotNull{std::make_unique<V1Transport>(id)};
+        return util::MakeNotNullUnique<V1Transport>(id);
     }
 }
 
