@@ -147,10 +147,9 @@ class IPCMiningTest(BitcoinTestFramework):
             current_block_height = self.nodes[0].getchaintips()[0]["height"]
             assert_equal(blockref.result.height, current_block_height)
 
-            long_timeout = max(self.default_ipc_timeout, 60000.0)  # at least 1 minute
             self.log.debug("Mine a block")
             newblockref = (await wait_and_do(
-                mining.waitTipChanged(ctx, blockref.result.hash, long_timeout),
+                mining.waitTipChanged(ctx, blockref.result.hash, self.long_ipc_timeout),
                 lambda: self.generate(self.nodes[0], 1))).result
             assert_equal(len(newblockref.hash), block_hash_size)
             assert_equal(newblockref.height, current_block_height + 1)
@@ -162,7 +161,7 @@ class IPCMiningTest(BitcoinTestFramework):
 
             self.log.debug("interrupt() should abort waitTipChanged()")
             async def wait_for_tip():
-                result = (await mining.waitTipChanged(ctx, newblockref.hash, long_timeout)).result
+                result = (await mining.waitTipChanged(ctx, newblockref.hash, self.long_ipc_timeout)).result
                 # Unlike a timeout, interrupt() returns an empty BlockRef.
                 assert_equal(len(result.hash), 0)
             await wait_and_do(wait_for_tip(), mining.interrupt())
@@ -276,7 +275,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 # Ignore fee increases, wait only for the tip update
                 waitoptions.feeThreshold = MAX_MONEY
                 # Keep the wait alive past the first one-second fee tick.
-                waitoptions.timeout = 2000.0 * self.options.timeout_factor
+                waitoptions.timeout = self.long_ipc_timeout
                 self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
                 template2 = await wait_and_do(
                     mining_wait_next_template(template, stack, ctx, waitoptions),
@@ -318,6 +317,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 waitoptions.feeThreshold = 1
 
                 self.log.debug("Wait for another, get one after increase in fees in the mempool")
+                waitoptions.timeout = self.long_ipc_timeout
                 template6 = await wait_and_do(
                     mining_wait_next_template(template5, stack, ctx, waitoptions),
                     lambda: self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0]))
@@ -334,7 +334,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 self.log.debug("interruptWait should abort the current wait")
                 async def wait_for_block():
                     new_waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
-                    new_waitoptions.timeout = max(self.default_ipc_timeout, 60000.0)  # at least 1 minute
+                    new_waitoptions.timeout = self.long_ipc_timeout
                     new_waitoptions.feeThreshold = 1
                     template7 = await mining_wait_next_template(template6, stack, ctx, new_waitoptions)
                     assert template7 is None
@@ -879,6 +879,9 @@ class IPCMiningTest(BitcoinTestFramework):
         self.miniwallet = MiniWallet(self.nodes[0])
         # Amount of time in milliseconds the test is allowed to wait or be idle before it should fail.
         self.default_ipc_timeout = 1000.0 * self.options.timeout_factor
+        # Timeout for waits that should return early because of an event the test
+        # triggers, long enough not to expire on a slow host.
+        self.long_ipc_timeout = max(self.default_ipc_timeout, 60000.0)  # at least 1 minute
         # Expected timeout checks allow up to 5 seconds on slow CI runners.
         self.no_event_timeout_ms = min(self.default_ipc_timeout, 5000.0)
         self.default_block_create_options = self.capnp_modules['mining'].BlockCreateOptions()
