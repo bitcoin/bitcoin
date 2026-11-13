@@ -824,12 +824,6 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
     return out;
 }
 
-bool LegacyDataSPKM::DeleteRecordsWithDB(WalletBatch& batch)
-{
-    LOCK(cs_KeyStore);
-    return batch.EraseRecords(DBKeys::LEGACY_TYPES);
-}
-
 std::unique_ptr<DescriptorScriptPubKeyMan> DescriptorScriptPubKeyMan::CreateFromImport(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const FlatSigningProvider& provider)
 {
     auto spkm = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(storage, descriptor, keypool_size));
