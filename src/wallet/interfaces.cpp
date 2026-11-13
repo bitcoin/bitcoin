@@ -299,7 +299,7 @@ public:
         CAmount& new_fee,
         CMutableTransaction& mtx) override
     {
-        std::vector<CTxOut> outputs; // just an empty list of new recipients for now
+        std::vector<std::pair<PaymentDestination, CAmount>> outputs; // just an empty list of new recipients for now
         auto bump{feebumper::CreateRateBumpTransaction(*m_wallet.get(), txid, coin_control, /*require_mine=*/true, outputs)};
         if (!bump) {
             errors = std::move(bump.error().errors);

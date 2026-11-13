@@ -165,7 +165,7 @@ bool TransactionCanBeBumped(const CWallet& wallet, const Txid& txid)
 }
 
 util::Expected<BumpTransaction, BumpError> CreateRateBumpTransaction(CWallet& wallet, const Txid& txid, const CCoinControl& coin_control, bool require_mine,
-                                                                     const std::vector<CTxOut>& outputs, std::optional<uint32_t> original_change_index)
+                                                                     const std::vector<std::pair<PaymentDestination, CAmount>>& outputs, std::optional<uint32_t> original_change_index)
 {
     std::vector<bilingual_str> errors;
     // For now, cannot specify both new outputs to use and an output index to send change
@@ -266,18 +266,27 @@ util::Expected<BumpTransaction, BumpError> CreateRateBumpTransaction(CWallet& wa
     // outputs with its contents, otherwise use original outputs.
     std::vector<CRecipient> recipients;
     CAmount new_outputs_value = 0;
-    const auto& txouts = outputs.empty() ? tx->vout : outputs;
-    for (size_t i = 0; i < txouts.size(); ++i) {
-        const CTxOut& output = txouts.at(i);
-        CTxDestination dest;
-        ExtractDestination(output.scriptPubKey, dest);
-        if (original_change_index.has_value() ?  original_change_index.value() == i : OutputIsChange(wallet, output)) {
-            new_coin_control.destChange = PaymentDestination{dest};
-        } else {
-            CRecipient recipient = {PaymentDestination{dest}, output.nValue, false};
-            recipients.push_back(recipient);
+    if (!outputs.empty()) {
+        for (const auto& [dest, amount] : outputs) {
+            if (ScriptIsChange(wallet, *Assert(dest.GetScript()))) {
+                new_coin_control.destChange = dest;
+            } else {
+                recipients.push_back({dest, amount, false});
+            }
+            new_outputs_value += amount;
         }
-        new_outputs_value += output.nValue;
+    } else {
+        for (size_t i = 0; i < tx->vout.size(); ++i) {
+            const CTxOut& output = tx->vout[i];
+            CTxDestination dest;
+            ExtractDestination(output.scriptPubKey, dest);
+            if (original_change_index.has_value() ? original_change_index.value() == i : OutputIsChange(wallet, output)) {
+                new_coin_control.destChange = PaymentDestination{dest};
+            } else {
+                recipients.push_back({PaymentDestination{dest}, output.nValue, false});
+            }
+            new_outputs_value += output.nValue;
+        }
     }
 
     // If no recipients, means that we are sending coins to a change address
@@ -303,7 +312,13 @@ util::Expected<BumpTransaction, BumpError> CreateRateBumpTransaction(CWallet& wa
             txin.scriptSig.clear();
             txin.scriptWitness.SetNull();
         }
-        temp_mtx.vout = txouts;
+        if (!outputs.empty()) {
+            temp_mtx.vout.clear();
+            for (const auto& [dest, amount] : outputs) {
+                temp_mtx.vout.emplace_back(amount, *Assert(dest.GetScript()));
+            }
+        }
+
         const int64_t maxTxSize{CalculateMaximumSignedTxSize(CTransaction(temp_mtx), &wallet, &new_coin_control).vsize};
         Result res = CheckFeeRate(wallet, temp_mtx, *new_coin_control.m_feerate, maxTxSize, old_fee, errors);
         if (res != Result::OK) {
