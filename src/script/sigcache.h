@@ -7,14 +7,16 @@
 #define BITCOIN_SCRIPT_SIGCACHE_H
 
 #include <consensus/amount.h>
-#include <crypto/sha256.h>
 #include <cuckoocache.h>
+#include <hash.h>
 #include <script/interpreter.h>
 #include <uint256.h>
 #include <util/byte_units.h>
 #include <util/hasher.h>
 
+#include <array>
 #include <cstddef>
+#include <cstdint>
 #include <shared_mutex>
 #include <span>
 #include <vector>
@@ -31,6 +33,8 @@ inline constexpr size_t DEFAULT_SIGNATURE_CACHE_BYTES{DEFAULT_VALIDATION_CACHE_B
 inline constexpr size_t DEFAULT_SCRIPT_EXECUTION_CACHE_BYTES{DEFAULT_VALIDATION_CACHE_BYTES / 2};
 static_assert(DEFAULT_VALIDATION_CACHE_BYTES == DEFAULT_SIGNATURE_CACHE_BYTES + DEFAULT_SCRIPT_EXECUTION_CACHE_BYTES);
 
+inline constexpr std::array<uint8_t, 31> SIGNATURE_CACHE_PADDING{}; // Complete the ECDSA salt block so it is compressed once per cache.
+
 /**
  * Valid signature cache, to avoid doing expensive ECDSA signature checking
  * twice for every transaction (once when accepted into memory pool, and
@@ -39,22 +43,27 @@ static_assert(DEFAULT_VALIDATION_CACHE_BYTES == DEFAULT_SIGNATURE_CACHE_BYTES + 
 class SignatureCache
 {
 private:
-    //! Entries are SHA256(nonce || 'E' or 'S' || 31 zero bytes || signature hash || public key || signature):
-    CSHA256 m_salted_hasher_ecdsa;
-    CSHA256 m_salted_hasher_schnorr;
+    /** Entries are SHA256(nonce [32 bytes] || 'E' or 'S' || salt padding || signature hash [32 bytes] || public key || signature), where the signature excludes the sighash type byte.
+     * The ECDSA salt has 31 zero padding bytes, while the Schnorr salt has none.
+     * ECDSA keys and signatures serialize with CompactSize prefixes and x-only keys are fixed-size, so the key/signature boundary is unambiguous for any input.
+     */
+    const HashWriter m_salted_hasher_ecdsa;
+    const HashWriter m_salted_hasher_schnorr;
     typedef CuckooCache::cache<uint256, SignatureCacheHasher> map_type;
     map_type setValid;
     std::shared_mutex cs_sigcache;
 
 public:
     SignatureCache(size_t max_size_bytes);
+    //! Salts entries with the given nonce instead of a random one, so tests can recompute them
+    SignatureCache(size_t max_size_bytes, const uint256& nonce);
 
     SignatureCache(const SignatureCache&) = delete;
     SignatureCache& operator=(const SignatureCache&) = delete;
 
-    void ComputeEntryECDSA(uint256& entry, const uint256 &hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubkey) const;
+    uint256 ComputeEntryECDSA(const uint256& hash, const std::vector<uint8_t>& vchSig, const CPubKey& pubkey) const;
 
-    void ComputeEntrySchnorr(uint256& entry, const uint256 &hash, std::span<const unsigned char> sig, const XOnlyPubKey& pubkey) const;
+    uint256 ComputeEntrySchnorr(const uint256& hash, std::span<const uint8_t> sig, const XOnlyPubKey& pubkey) const;
 
     bool Get(const uint256& entry, bool erase);
 
