@@ -129,7 +129,14 @@ struct TcpSocketPair {
         char recv_buf[10];
 
         BOOST_CHECK_EQUAL(sender.Send(msg, msg_len, 0), msg_len);
-        BOOST_CHECK_EQUAL(receiver.Recv(recv_buf, sizeof(recv_buf), 0), msg_len);
+        // TCP may deliver the data in several pieces
+        ssize_t received{0};
+        while (received < msg_len) {
+            const ssize_t ret{receiver.Recv(recv_buf + received, sizeof(recv_buf) - received, 0)};
+            BOOST_REQUIRE_GT(ret, 0);
+            received += ret;
+        }
+        BOOST_CHECK_EQUAL(received, msg_len);
         BOOST_CHECK_EQUAL(strncmp(msg, recv_buf, msg_len), 0);
     }
 };
