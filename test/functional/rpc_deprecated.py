@@ -37,6 +37,13 @@ class DeprecatedRpcTest(BitcoinTestFramework):
             for rpc in (wallet.bumpfee, wallet.psbtbumpfee):
                 assert_raises_rpc_error(-32, "start the RPC server with the `-deprecatedrpc=confTarget`", rpc, "0" * 64, {"confTarget": 1})
 
+            self.log.info("Test encryptwallet deprecation")
+            assert_raises_rpc_error(
+                -32, "Start bitcoind with the `-deprecatedrpc=encryptwallet`",
+                wallet.encryptwallet,
+                "passphrase"
+            )
+
 
 if __name__ == '__main__':
     DeprecatedRpcTest(__file__).main()

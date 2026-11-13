@@ -16,6 +16,7 @@ from test_framework.util import (
 class WalletBlankTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        self.extra_args = [["-deprecatedrpc=encryptwallet"]]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -33,6 +34,7 @@ class WalletBlankTest(BitcoinTestFramework):
         }])
         assert_equal(wallet.getwalletinfo()["blank"], True)
 
+    # This test will be deleted when `encryptwallet` is removed.
     def test_encrypt_descriptors(self):
         self.log.info("Test that encrypting a blank descriptor wallet preserves the blank flag and descriptors remain the same")
         self.nodes[0].createwallet(wallet_name="encblankdesc", blank=True)

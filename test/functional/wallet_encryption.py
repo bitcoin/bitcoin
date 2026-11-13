@@ -20,6 +20,7 @@ class WalletEncryptionTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
+        self.extra_args = [["-deprecatedrpc=encryptwallet"]]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -45,6 +46,11 @@ class WalletEncryptionTest(BitcoinTestFramework):
         assert_raises_rpc_error(-15, "Error: running with an encrypted wallet, but encryptwallet was called.", self.nodes[0].encryptwallet, 'ff')
         assert_raises_rpc_error(-8, "passphrase cannot be empty", self.nodes[0].walletpassphrase, '', 1)
         assert_raises_rpc_error(-8, "passphrase cannot be empty", self.nodes[0].walletpassphrasechange, '', 'ff')
+
+        self.log.info("Test encryptwallet persistence")
+        self.nodes[0].unloadwallet(self.default_wallet_name)
+        self.nodes[0].loadwallet(self.default_wallet_name)
+        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].signmessage, address, msg)
 
         # Check that walletpassphrase works
         self.nodes[0].walletpassphrase(passphrase, 2)
