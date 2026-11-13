@@ -483,6 +483,12 @@ struct ChainMan {
 
     ChainMan(std::unique_ptr<ChainstateManager> chainman, std::shared_ptr<const Context> context)
         : m_chainman(std::move(chainman)), m_context(std::move(context)) {}
+
+    ~ChainMan()
+    {
+        // Holds references into m_context
+        m_chainman.reset();
+    }
 };
 
 struct UserDataDeleter {
