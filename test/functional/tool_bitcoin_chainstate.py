@@ -83,14 +83,16 @@ class BitcoinChainstateTest(BitcoinTestFramework):
     def assumeutxo_test(self, dump_output_path):
         n0 = self.nodes[0]
         n1 = self.nodes[1]
+        self.cleanup_folder(n1.blocks_path)
+        self.cleanup_folder(n1.chain_path / "chainstate")
         self.start_node(1)
         self.log.info("Submit headers for new blocks to node1, then load the snapshot so it activates")
-        for height in range(START_HEIGHT+2, SNAPSHOT_BASE_BLOCK_HEIGHT+1):
+        for height in range(1, SNAPSHOT_BASE_BLOCK_HEIGHT+1):
             block = n0.getblock(n0.getblockhash(height), 0)
             n1.submitheader(block)
-        assert_equal(n1.getblockcount(), START_HEIGHT+1)
-        loaded = n1.loadtxoutset(dump_output_path)
-        assert_equal(loaded['base_height'], SNAPSHOT_BASE_BLOCK_HEIGHT)
+        assert_equal(n1.getblockcount(), 0)
+        self.restart_node(1, extra_args=[f"-loadtxoutset={dump_output_path}"])
+        assert_equal(n1.getblockcount(), SNAPSHOT_BASE_BLOCK_HEIGHT)
         datadir = n1.chain_path
         n1.stop_node()
         self.log.info(f"Test bitcoin-chainstate {self.get_binaries().chainstate_argv()} with an assumeutxo datadir: {datadir}")

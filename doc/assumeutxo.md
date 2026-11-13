@@ -13,20 +13,24 @@ no source for the snapshot you need, you can generate it yourself using
 `dumptxoutset` on another node that is already synced (see
 [Generating a snapshot](#generating-a-snapshot)).
 
-Once you've obtained the snapshot, you can use the RPC command `loadtxoutset` to
-load it.
+Before importing, the node must be at genesis and its block index must already contain the header chain through the snapshot's base block.
+Startup fails if the required headers are missing, reindexing is unfinished, the chainstate has advanced, or block data beyond genesis is stored.
+With the receiver started with `-networkactive=0`, use `submitheader` to populate its block index without downloading blocks, then restart with `-loadtxoutset`.
+The import finishes before networking and normal RPC operation begin.
+Existing snapshot chainstates resume without this option.
 
 ```
-$ bitcoin-cli -rpcclienttimeout=0 loadtxoutset /path/to/input
+$ bitcoind -loadtxoutset=/path/to/input
 ```
 
+Remove `-loadtxoutset` after the first successful import.
 After the snapshot has loaded, the syncing process of both the snapshot chain
 and the background IBD chain can be monitored with the `getchainstates` RPC.
 
 ### Pruning
 
 A pruned node can load a snapshot. To save space, it's possible to delete the
-snapshot file as soon as `loadtxoutset` finishes.
+snapshot file once startup finishes.
 
 The minimum `-prune` setting is 550 MiB, but this functionality ignores that
 minimum and uses at least 1100 MiB.
@@ -57,7 +61,7 @@ to the snapshot block.
 The RPC command `dumptxoutset` can be used to generate a snapshot for the current
 tip (using type "latest") or a recent height (using type "rollback"). A generated
 snapshot from one node can then be loaded
-on any other node. However, keep in mind that the snapshot hash needs to be
+into another node that meets the requirements above. However, keep in mind that the snapshot hash needs to be
 listed in the chainparams to make it usable. If there is no snapshot hash for
 the height you have chosen already, you will need to change the code there and
 re-compile.

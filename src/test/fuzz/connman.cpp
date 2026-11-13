@@ -83,7 +83,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
     options.m_msgproc = &net_events;
     options.nMaxOutboundLimit = max_outbound_limit;
 
-    const auto local_services{ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS)};
+    auto local_services{ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS)};
     options.m_local_services = local_services;
 
     const auto use_addrman_outgoing{fuzzed_data_provider.ConsumeBool()};
@@ -222,19 +222,9 @@ FUZZ_TARGET(connman, .init = initialize_connman)
             },
             [&] {
                 const auto services{ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS)};
-                const auto before{connman.GetLocalServices()};
-                if (fuzzed_data_provider.ConsumeBool()) {
-                    connman.AddLocalServices(services);
-                    assert((connman.GetLocalServices() & services) == services);
-                    // Restore by clearing only the bits that weren't already set.
-                    connman.RemoveLocalServices(ServiceFlags(services & ~before));
-                } else {
-                    connman.RemoveLocalServices(services);
-                    assert((connman.GetLocalServices() & services) == 0);
-                    // Restore by re-adding only the bits that were previously set.
-                    connman.AddLocalServices(ServiceFlags(services & before));
-                }
-                assert(connman.GetLocalServices() == before);
+                connman.AddLocalServices(services);
+                local_services = ServiceFlags(local_services | services);
+                assert(connman.GetLocalServices() == local_services);
             },
             [&] {
                 ConnectionType conn_type{
