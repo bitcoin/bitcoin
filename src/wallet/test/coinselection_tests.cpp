@@ -314,8 +314,12 @@ BOOST_AUTO_TEST_CASE(srd_test)
         std::vector<OutputGroup> mixed_weight_pool;
         AddDuplicateCoins(mixed_weight_pool, /*count=*/100, /*amount=*/5 * CENT, cs_params);
         mixed_weight_pool.push_back(MakeCoin(5 * CENT, true, cs_params, /*custom_spending_vsize=*/P2WPKH_INPUT_VSIZE - 1));
-        TestSRDSuccess("Tie-break same effective value with lower weight", utxo_pool, /*selection_target=*/9 * CENT, cs_params,
-        /*max_selection_weight=*/4 * 3 * (P2WPKH_INPUT_VSIZE - 1));
+        mixed_weight_pool.push_back(MakeCoin(5 * CENT, true, cs_params, /*custom_spending_vsize=*/P2WPKH_INPUT_VSIZE - 1));
+        const auto result = SelectCoinsSRD(mixed_weight_pool, /*target_value=*/9 * CENT, cs_params.m_change_fee, cs_params.rng_fast,
+                                           /*max_selection_weight=*/4 * 2 * (P2WPKH_INPUT_VSIZE - 1));
+        BOOST_CHECK_EQUAL(result->GetInputSet().size(), 2U);
+        BOOST_CHECK_EQUAL(result->GetWeight(), 4 * 2 * (P2WPKH_INPUT_VSIZE - 1));
+        BOOST_CHECK(result->GetSelectedEffectiveValue() >= 9 * CENT + cs_params.m_change_fee + CHANGE_LOWER);
     }
 }
 
