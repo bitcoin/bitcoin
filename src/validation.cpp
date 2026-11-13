@@ -268,11 +268,6 @@ static void LimitMempoolSize(CTxMemPool& pool, CCoinsViewCache& coins_cache)
 {
     AssertLockHeld(::cs_main);
     AssertLockHeld(pool.cs);
-    int expired = pool.Expire(GetTime<std::chrono::seconds>() - pool.m_opts.expiry);
-    if (expired != 0) {
-        LogDebug(BCLog::MEMPOOL, "Expired %i transactions from the memory pool\n", expired);
-    }
-
     std::vector<COutPoint> vNoSpendsRemaining;
     pool.TrimToSize(pool.m_opts.max_size_bytes, &vNoSpendsRemaining);
     for (const COutPoint& removed : vNoSpendsRemaining)
