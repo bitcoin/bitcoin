@@ -201,7 +201,7 @@ class TorControlTest(BitcoinTestFramework):
         with socket.socket() as occupied:
             occupied.bind(("127.0.0.1", tor_port(0)))
             occupied.listen()
-            with self.nodes[0].assert_debug_log(["torcontrol thread start"]):  # TODO: Do not start Tor control when binding fails
+            with self.nodes[0].assert_debug_log([], unexpected_msgs=["torcontrol thread start"]):
                 self.nodes[0].assert_start_raises_init_error(
                     ["-listenonion=1", f"-bind=127.0.0.1:{tor_port(0)}=onion", "-torcontrol=127.0.0.1:1"],
                     "Failed to listen on any port",

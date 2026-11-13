@@ -2314,7 +2314,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                     "for the automatically created Tor onion service."),
                                   onion_service_target.ToStringAddrPort()));
         }
-        node.tor_controller = std::make_unique<TorController>(args.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), onion_service_target);
     }
 
     bool should_discover = connOptions.bind_on_any;
@@ -2428,6 +2427,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     if (!node.connman->Start(scheduler, connOptions)) {
         return false;
+    }
+
+    if (listenonion) {
+        node.tor_controller = std::make_unique<TorController>(args.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), onion_service_target);
     }
 
     // ********************************************************* Step 13: finished
