@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_FEEBUMPER_H
 #define BITCOIN_WALLET_FEEBUMPER_H
 
+#include <common/paymentdestination.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <script/interpreter.h>
@@ -68,7 +69,7 @@ util::Expected<BumpTransaction, BumpError> CreateRateBumpTransaction(CWallet& wa
     const Txid& txid,
     const CCoinControl& coin_control,
     bool require_mine,
-    const std::vector<CTxOut>& outputs,
+    const std::vector<std::pair<PaymentDestination, CAmount>>& outputs,
     std::optional<uint32_t> original_change_index = std::nullopt);
 
 //! Sign the new transaction,
