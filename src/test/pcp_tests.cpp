@@ -576,6 +576,43 @@ BOOST_AUTO_TEST_CASE(pcp_ipv4_fail_unsupported_version)
     BOOST_CHECK_EQUAL(*err, MappingError::UNSUPP_VERSION);
 }
 
+// NAT-PMP result codes are 16-bit. A result code with low byte 1 but non-zero
+// high byte (e.g. 0x0101) must not be mistaken for UNSUPP_VERSION.
+BOOST_AUTO_TEST_CASE(pcp_natpmp_result_code_16bit)
+{
+    const std::vector<TestOp> script{
+        {
+            0ms, TestOp::SEND,
+            {
+                0x02, 0x01, 0x00, 0x00, // version, opcode
+                0x00, 0x00, 0x03, 0xe8, // lifetime
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xc0, 0xa8, 0x00, 0x06, // internal IP
+                0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, // nonce
+                0x06, 0x00, 0x00, 0x00, // protocol (TCP), reserved
+                0x04, 0xd2, 0x04, 0xd2, // internal port, suggested external port
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, // suggested external IP
+            }, 0
+        },
+        {
+            500ms, TestOp::RECV,
+            {
+                0x00, 0x81, 0x01, 0x01, // 16-bit result 0x0101 (high byte non-zero)
+                0x00, 0x00, 0x00, 0x00,
+            }, 0
+        },
+    };
+    CreateSock = [this, &script](int domain, int type, int protocol) {
+        if (domain == AF_INET && type == SOCK_DGRAM && protocol == IPPROTO_UDP) return std::make_unique<PCPTestSock>(default_local_ipv4, default_gateway_ipv4, script);
+        return std::unique_ptr<PCPTestSock>();
+    };
+
+    auto res = PCPRequestPortMap(TEST_NONCE, default_gateway_ipv4, bind_any_ipv4, 1234, 1000, g_interrupt, 1, 1000ms);
+
+    MappingError* err = std::get_if<MappingError>(&res);
+    BOOST_REQUIRE(err);
+    BOOST_CHECK_EQUAL(*err, MappingError::NETWORK_ERROR);
+}
+
 // NAT-PMP IPv4 protocol error scenarii.
 BOOST_AUTO_TEST_CASE(natpmp_protocol_error)
 {

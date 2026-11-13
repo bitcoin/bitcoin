@@ -483,7 +483,8 @@ std::variant<MappingResult, MappingError> PCPRequestPortMap(const PCPMappingNonc
     auto recv_res = PCPSendRecv(*sock, "pcp", request, num_tries, timeout_per_try,
         [&](const std::span<const uint8_t> response) -> bool {
             // Unsupported version according to RFC6887 appendix A and RFC6886 section 3.5, can fall back to NAT-PMP.
-            if (response.size() == NATPMP_RESPONSE_HDR_SIZE && response[PCP_HDR_VERSION_OFS] == NATPMP_VERSION && response[PCP_RESPONSE_HDR_RESULT_OFS] == NATPMP_RESULT_UNSUPP_VERSION) {
+            if (response.size() == NATPMP_RESPONSE_HDR_SIZE && response[NATPMP_HDR_VERSION_OFS] == NATPMP_VERSION &&
+                ReadBE16(response.data() + NATPMP_RESPONSE_HDR_RESULT_OFS) == NATPMP_RESULT_UNSUPP_VERSION) {
                 is_natpmp = true;
                 return true; // Let it through to caller.
             }
