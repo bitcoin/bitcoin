@@ -164,7 +164,7 @@ static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const 
         CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
         result.pushKV("txid", tx->GetHash().GetHex());
         if (add_to_wallet && !psbt_opt_in) {
-            pwallet->CommitTransaction(tx);
+            pwallet->CommitTransaction(tx, /*replaces_txid=*/std::nullopt, /*comment=*/std::nullopt, /*comment_to=*/std::nullopt, /*messages=*/{}, /*payment_requests=*/{}, sp_recipients);
         } else {
             result.pushKV("hex", hex);
         }
@@ -240,7 +240,7 @@ UniValue SendMoney(CWallet& wallet, CCoinControl &coin_control, std::vector<CRec
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, util::ErrorString(res).original);
     }
     const CTransactionRef& tx = res->tx;
-    wallet.CommitTransaction(tx, /*replaces_txid=*/std::nullopt, comment, comment_to);
+    wallet.CommitTransaction(tx, /*replaces_txid=*/std::nullopt, comment, comment_to, /*messages=*/{}, /*payment_requests=*/{}, GetSilentPaymentsDestinations(recipients, coin_control, *res));
     if (verbose) {
         UniValue entry(UniValue::VOBJ);
         entry.pushKV("txid", tx->GetHash().GetHex());
