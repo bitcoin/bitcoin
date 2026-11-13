@@ -331,4 +331,117 @@ BOOST_AUTO_TEST_CASE(rejection_at_cap)
     BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), num_cap);
 }
 
+BOOST_AUTO_TEST_CASE(scheduled_release)
+{
+    FakeNodeClock clock{};
+
+    PrivateBroadcast pb;
+    in_addr ipv4_addr;
+    ipv4_addr.s_addr = 0xa0b0c001;
+    const CService address{ipv4_addr, 1111};
+    NodeId node_id{0};
+
+    // Without a release height, the transaction is released immediately.
+    const auto tx_now{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
+    BOOST_REQUIRE_EQUAL(pb.Add(tx_now), PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK(pb.ReleaseDue(/*height=*/1'000'000).empty());
+    BOOST_CHECK(pb.HavePendingTransactions());
+    BOOST_CHECK(!pb.GetBroadcastInfo()[0].release_height.has_value());
+    BOOST_CHECK_EQUAL(pb.Remove(tx_now).value(), PrivateBroadcast::INITIAL_CONNECTION_COUNT);
+
+    const auto tx{MakeDummyTx(/*id=*/2, /*num_witness=*/0)};
+    const int release_height{100};
+    BOOST_REQUIRE_EQUAL(pb.Add(tx, release_height), PrivateBroadcast::AddResult::Added);
+
+    // Adding again keeps the original release height.
+    BOOST_CHECK_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::AlreadyPresent);
+    const auto info{pb.GetBroadcastInfo()};
+    BOOST_REQUIRE_EQUAL(info.size(), 1);
+    BOOST_CHECK_EQUAL(info[0].release_height.value(), release_height);
+
+    // Not sendable, nor stale, before its release.
+    BOOST_CHECK(!pb.HavePendingTransactions());
+    BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/node_id++, address).has_value());
+    BOOST_CHECK(pb.ReleaseDue(release_height - 1).empty());
+    clock += PrivateBroadcast::INITIAL_STALE_DURATION + 1h;
+    BOOST_CHECK(pb.ReleaseDue(release_height - 1).empty());
+    BOOST_CHECK(pb.GetStale().empty());
+
+    // Reaching the release height does not by itself make it sendable; ReleaseDue() does.
+    BOOST_CHECK(!pb.HavePendingTransactions());
+    const auto released{pb.ReleaseDue(release_height)};
+    BOOST_REQUIRE_EQUAL(released.size(), 1);
+    BOOST_CHECK_EQUAL(released[0], tx);
+    BOOST_CHECK(pb.ReleaseDue(release_height + 1).empty());
+    BOOST_CHECK(pb.HavePendingTransactions());
+    BOOST_CHECK_EQUAL(pb.GetBroadcastInfo()[0].release_height.value(), release_height);
+
+    // Staleness is measured from the release, not from when it was added.
+    BOOST_CHECK(pb.GetStale().empty());
+    clock += PrivateBroadcast::INITIAL_STALE_DURATION + 1s;
+    BOOST_CHECK_EQUAL(pb.GetStale().size(), 1);
+
+    BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/node_id++, address).value(), tx);
+    BOOST_CHECK_EQUAL(pb.Remove(tx).value(), PrivateBroadcast::INITIAL_CONNECTION_COUNT - 1);
+}
+
+BOOST_AUTO_TEST_CASE(scheduled_release_past_height)
+{
+    PrivateBroadcast pb;
+    const auto tx{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
+    BOOST_REQUIRE_EQUAL(pb.Add(tx, /*release_height=*/100), PrivateBroadcast::AddResult::Added);
+
+    // A height beyond the release height also releases it.
+    BOOST_CHECK_EQUAL(pb.ReleaseDue(/*height=*/150).size(), 1);
+    BOOST_CHECK(pb.HavePendingTransactions());
+}
+
+BOOST_AUTO_TEST_CASE(scheduled_remove_before_release)
+{
+    PrivateBroadcast pb;
+    const auto tx{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
+    BOOST_REQUIRE_EQUAL(pb.Add(tx, /*release_height=*/100), PrivateBroadcast::AddResult::Added);
+
+    // No sends are planned (no connections requested) before the release.
+    BOOST_CHECK_EQUAL(pb.Remove(tx).value(), 0);
+
+    // A removed scheduled transaction is not released later.
+    BOOST_CHECK(pb.ReleaseDue(/*height=*/200).empty());
+}
+
+BOOST_AUTO_TEST_CASE(scheduled_readd_exhausted)
+{
+    PrivateBroadcast pb{PrivateBroadcast::MAX_TRANSACTIONS, /*max_send_attempts=*/1};
+    in_addr ipv4_addr;
+    ipv4_addr.s_addr = 0xa0b0c001;
+    const CService address{ipv4_addr, 1111};
+
+    const auto tx{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
+    BOOST_REQUIRE_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::Added);
+    BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/0, address).value(), tx);
+    BOOST_CHECK(!pb.HavePendingTransactions());
+
+    // Re-adding an exhausted transaction with a release height holds it back again.
+    BOOST_REQUIRE_EQUAL(pb.Add(tx, /*release_height=*/100), PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK(!pb.HavePendingTransactions());
+    BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/1, address).has_value());
+    BOOST_CHECK(pb.ReleaseDue(/*height=*/99).empty());
+    BOOST_CHECK_EQUAL(pb.ReleaseDue(/*height=*/100).size(), 1);
+    BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/2, address).value(), tx);
+}
+
+BOOST_AUTO_TEST_CASE(scheduled_resolve_before_release)
+{
+    PrivateBroadcast pb;
+    const auto tx{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
+    BOOST_REQUIRE_EQUAL(pb.Add(tx, /*release_height=*/100), PrivateBroadcast::AddResult::Added);
+
+    // Received from the network before its release: it is forgotten, not released later.
+    BOOST_CHECK(pb.MarkResolved(tx));
+    BOOST_CHECK(pb.GetBroadcastInfo().empty());
+    BOOST_CHECK(!pb.Remove(tx).has_value());
+    BOOST_CHECK(pb.ReleaseDue(/*height=*/200).empty());
+    BOOST_CHECK(!pb.HavePendingTransactions());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

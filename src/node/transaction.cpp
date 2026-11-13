@@ -7,6 +7,7 @@
 
 #include <consensus/validation.h>
 #include <index/txindex.h>
+#include <logging.h>
 #include <net.h>
 #include <net_processing.h>
 #include <node/blockstorage.h>
@@ -15,6 +16,7 @@
 #include <policy/feerate.h>
 #include <tinyformat.h>
 #include <txmempool.h>
+#include <util/check.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -34,7 +36,7 @@ static TransactionError HandleATMPError(const TxValidationState& state, std::str
     }
 }
 
-TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, const CFeeRate& max_tx_fee_rate, TxBroadcast broadcast_method, bool wait_callback)
+TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, const CFeeRate& max_tx_fee_rate, TxBroadcast broadcast_method, bool wait_callback, std::optional<int> release_height)
 {
     // BroadcastTransaction can be called by RPC or by the wallet.
     // chainman, mempool and peerman are initialized before the RPC server and wallet are started
@@ -42,6 +44,8 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     assert(node.chainman);
     assert(node.mempool);
     assert(node.peerman);
+    // A scheduled broadcast is only supported with private broadcast.
+    Assume(!release_height || broadcast_method == TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST);
 
     Txid txid = tx->GetHash();
     Wtxid wtxid = tx->GetWitnessHash();
@@ -49,6 +53,9 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
 
     {
         LOCK(cs_main);
+
+        // If the release height has already been reached, broadcast without scheduling.
+        if (release_height && *release_height <= node.chainman->ActiveHeight()) release_height.reset();
 
         // If the transaction is already confirmed in the chain, don't do anything
         // and return early.
@@ -78,7 +85,15 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
                 // fails here, return error immediately.
                 const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, /*test_accept=*/ true);
                 if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
-                    return HandleATMPError(result.m_state, err_string);
+                    // A scheduled transaction may not be valid yet, only at a later height
+                    // (e.g. its nLockTime is in the future). Accept it then, after the checks
+                    // ATMP did before it stopped; it is fully validated when it is released.
+                    if (release_height && result.m_state.GetResult() == TxValidationResult::TX_PREMATURE_SPEND) {
+                        LogDebug(BCLog::PRIVBROADCAST, "Scheduling txid=%s not valid yet: %s",
+                                 txid.ToString(), result.m_state.ToString());
+                    } else {
+                        return HandleATMPError(result.m_state, err_string);
+                    }
                 } else if (check_max_fee && result.m_base_fees.value() > max_tx_fee) {
                     return TransactionError::MAX_FEE_EXCEEDED;
                 } else if (check_max_feerate && result.m_base_fees.value() > max_tx_fee_rate.GetFee(result.m_vsize.value())) {
@@ -136,7 +151,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         node.peerman->InitiateTxBroadcastToAll(wtxid);
         break;
     case TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST:
-        return node.peerman->InitiateTxBroadcastPrivate(tx);
+        return node.peerman->InitiateTxBroadcastPrivate(tx, release_height);
     }
 
     return TransactionError::OK;
