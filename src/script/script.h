@@ -10,14 +10,18 @@
 #include <crypto/common.h>
 #include <prevector.h>
 #include <serialize.h>
+#include <span.h>
 #include <uint256.h>
 #include <util/hash_type.h>
 
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <ios>
 #include <iterator>
 #include <limits>
+#include <memory>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -574,22 +578,194 @@ public:
     }
 };
 
-struct CScriptWitness
+/** A witness stack. Elements are accessed as spans, by forward iteration or by index. A witness
+ *  can only be constructed as a whole (from a vector of its elements), not modified.
+ *
+ *  The stack is stored as its serialization (the CompactSize-encoded number of elements, followed
+ *  by each element as a CompactSize-prefixed byte string), in a single allocation. Access by index
+ *  is O(n) in the position from the bottom of the stack, except for the last element.
+ */
+class CScriptWitness
 {
-    // Note that this encodes the data elements being pushed, rather than
-    // encoding them as a CScript that pushes them.
-    std::vector<std::vector<unsigned char> > stack;
+    /** Null pointer for an empty stack. Otherwise, it points to a header followed by the stack's
+     *  serialization. For example, the stack {{0xaa}, {}, {0xbb, 0xcc}} is stored as (bytes in
+     *  hex):
+     *
+     *    |<-------- header --------->|<--------- serialization ---------->|
+     *                                  0      1         3      4   (offsets within the serialization)
+     *    +-------------+-------------+------+---------+------+------------+
+     *    | 07 00 00 00 | 04 00 00 00 | 03   | 01 aa   | 00   | 02 bb cc   |
+     *    +-------------+-------------+------+---------+------+------------+
+     *      |             |             |      |         |      |
+     *      |             |             |      |         |      element 2 (the last element)
+     *      |             |             |      |         element 1 (empty)
+     *      |             |             |      element 0: its size (CompactSize), then its bytes
+     *      |             |             number of elements (CompactSize)
+     *      |             offset of the last element's size prefix (4 bytes, little endian)
+     *      size of the serialization (4 bytes, little endian)
+     */
+    std::unique_ptr<std::byte[]> m_data;
+    static constexpr size_t HEADER_SIZE{8};
 
-    // Some compilers complain without a default constructor
+    /** The serialization of the stack (empty for an empty stack). */
+    std::span<const std::byte> Data() const noexcept
+    {
+        if (!m_data) return {};
+        return {m_data.get() + HEADER_SIZE, ReadLE32(m_data.get())};
+    }
+    /** Set the stack from its serialization (which must be empty, for an empty stack), and the
+     *  offset within it of the last element's size prefix. */
+    void Assign(std::span<const std::byte> data, size_t last_offset);
+    /** Allocate m_data for a non-empty stack whose serialization has the given size, and whose last
+     *  element's size prefix is at last_offset within it, and write the header. Returns where the
+     *  serialization goes, which the caller must fill. */
+    std::span<std::byte> Allocate(size_t size, size_t last_offset);
+    /** Make this a copy of other. */
+    void CopyFrom(const CScriptWitness& other);
+
+public:
+    /** Forward iterator over the elements of the stack, exposing them as spans. */
+    class Iterator
+    {
+        std::span<const std::byte> m_rest; //!< The serialization of the remaining elements.
+
+        friend CScriptWitness;
+        explicit Iterator(std::span<const std::byte> rest) noexcept : m_rest{rest} {}
+
+    public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = std::span<const unsigned char>;
+        using difference_type = std::ptrdiff_t;
+        using pointer = void;
+        using reference = value_type;
+
+        Iterator() noexcept = default;
+        value_type operator*() const noexcept
+        {
+            auto data = m_rest;
+            const auto len = DecodeCompactSize(data);
+            // The serialization is std::byte, but elements are returned as unsigned char, like other script data.
+            return UCharSpanCast(data.first(len));
+        }
+        Iterator& operator++() noexcept
+        {
+            const auto len = DecodeCompactSize(m_rest);
+            m_rest = m_rest.subspan(len);
+            return *this;
+        }
+        Iterator operator++(int) noexcept { auto ret{*this}; ++*this; return ret; }
+        /** Iterators over the same stack are equal if they point to the same remaining elements. */
+        friend bool operator==(const Iterator& a, const Iterator& b) noexcept { return a.m_rest.data() == b.m_rest.data(); }
+    };
+    using iterator = Iterator;
+    using const_iterator = Iterator;
+
     CScriptWitness() = default;
+    explicit CScriptWitness(const std::vector<std::vector<unsigned char>>& stack);
+    CScriptWitness(const CScriptWitness& other) { CopyFrom(other); }
+    CScriptWitness& operator=(const CScriptWitness& other)
+    {
+        if (this != &other) CopyFrom(other);
+        return *this;
+    }
+    /** Moving leaves the source empty. */
+    CScriptWitness(CScriptWitness&&) noexcept = default;
+    CScriptWitness& operator=(CScriptWitness&&) noexcept = default;
 
-    bool IsNull() const { return stack.empty(); }
+    bool empty() const noexcept { return !m_data; }
 
-    void SetNull() { stack.clear(); stack.shrink_to_fit(); }
+    /** Number of elements. */
+    size_t size() const noexcept
+    {
+        if (!m_data) return 0;
+        auto data = Data();
+        return DecodeCompactSize(data);
+    }
+    Iterator begin() const noexcept LIFETIMEBOUND
+    {
+        if (!m_data) return Iterator{};
+        auto data = Data();
+        DecodeCompactSize(data);
+        return Iterator{data};
+    }
+    Iterator end() const noexcept LIFETIMEBOUND
+    {
+        if (!m_data) return Iterator{};
+        const auto data = Data();
+        return Iterator{data.subspan(data.size())};
+    }
+    /** The first (bottom) element. The stack must not be empty. */
+    std::span<const unsigned char> front() const noexcept LIFETIMEBOUND { return *begin(); }
+    /** The last (top) element. The stack must not be empty. */
+    std::span<const unsigned char> back() const noexcept LIFETIMEBOUND
+    {
+        auto data = Data().subspan(ReadLE32(m_data.get() + 4));
+        const auto len = DecodeCompactSize(data);
+        return UCharSpanCast(data.first(len));
+    }
+    /** The element at a given index (from the bottom), which must exist. This is O(index), except for the last
+     *  element, so avoid it in loops over the elements; iterate instead. */
+    std::span<const unsigned char> operator[](size_t index) const noexcept LIFETIMEBOUND;
+
+    /** The elements, bottom to top, as vectors. For code that needs to modify or take ownership of them (e.g. to
+     *  execute a script with them as its initial stack). */
+    std::vector<std::vector<unsigned char>> ToVectors() const;
+    /** Spans of the elements, bottom to top, which are valid as long as this witness is. For code that accesses many
+     *  elements by index, as indexing a witness need not be constant-time. */
+    std::vector<std::span<const unsigned char>> ToSpans() const LIFETIMEBOUND;
+
+    /** The dynamic memory usage of the stack, including that of its elements. */
+    size_t DynamicMemoryUsage() const noexcept;
+
+    template <typename Stream>
+    void Serialize(Stream& s) const
+    {
+        if (!m_data) {
+            s << uint8_t{0};
+        } else {
+            s.write(Data());
+        }
+    }
+
+    /** Deserialize a witness stack, with the same semantics (and failures) as deserializing a
+     *  std::vector<std::vector<unsigned char>>. */
+    template <typename Stream>
+    void Unserialize(Stream& s)
+    {
+        const auto count = ReadCompactSize(s);
+        if (count == 0) {
+            m_data.reset();
+            return;
+        }
+        // Build the serialization directly. Like deserializing a vector of vectors, this rejects
+        // non-canonical CompactSizes and sizes above MAX_SIZE (through ReadCompactSize), and reads
+        // large elements in chunks (so that a bogus size does not cause a large allocation).
+        std::vector<std::byte> data;
+        AppendCompactSize(data, count);
+        size_t last_offset{0};
+        for (uint64_t i = 0; i < count; ++i) {
+            // The element about to be read (its size prefix) starts here.
+            last_offset = data.size();
+            auto len = ReadCompactSize(s);
+            AppendCompactSize(data, len);
+            while (len > 0) {
+                const size_t chunk = std::min<uint64_t>(len, MAX_VECTOR_ALLOCATE);
+                const auto old_size = data.size();
+                data.resize(old_size + chunk);
+                s.read(std::span{data}.subspan(old_size));
+                len -= chunk;
+            }
+        }
+        // Throw a deserialization error (rather than Assign's std::length_error) if the serialization
+        // is too large for the header.
+        if (data.size() > std::numeric_limits<uint32_t>::max()) throw std::ios_base::failure("Witness stack too large");
+        Assign(data, last_offset);
+    }
 
     std::string ToString() const;
 
-    bool operator==(const CScriptWitness&) const = default;
+    /** Witnesses are equal exactly when their stacks are, as a stack has only one serialization. */
+    friend bool operator==(const CScriptWitness& a, const CScriptWitness& b) noexcept { return std::ranges::equal(a.Data(), b.Data()); }
 };
 
 /** A reference to a CScript: the Hash160 of its serialization */

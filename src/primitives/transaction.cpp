@@ -74,7 +74,7 @@ Txid CMutableTransaction::GetHash() const
 bool CTransaction::ComputeHasWitness() const
 {
     return std::any_of(vin.begin(), vin.end(), [](const auto& input) {
-        return !input.scriptWitness.IsNull();
+        return !input.scriptWitness.empty();
     });
 }
 

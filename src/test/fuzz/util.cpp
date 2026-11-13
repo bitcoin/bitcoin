@@ -58,7 +58,7 @@ CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider,
         const auto script_sig = p2wsh_op_true ? CScript{} : ConsumeScript(fuzzed_data_provider);
         CScriptWitness script_wit;
         if (p2wsh_op_true) {
-            script_wit.stack = std::vector<std::vector<uint8_t>>{WITNESS_STACK_ELEM_OP_TRUE};
+            script_wit = CScriptWitness{std::vector<std::vector<uint8_t>>{WITNESS_STACK_ELEM_OP_TRUE}};
         } else {
             script_wit = ConsumeScriptWitness(fuzzed_data_provider);
         }
@@ -82,12 +82,13 @@ CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider,
 
 CScriptWitness ConsumeScriptWitness(FuzzedDataProvider& fuzzed_data_provider, const size_t max_stack_elem_size) noexcept
 {
-    CScriptWitness ret;
+    std::vector<std::vector<unsigned char>> stack;
     const auto n_elements = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, max_stack_elem_size);
+    stack.reserve(n_elements);
     for (size_t i = 0; i < n_elements; ++i) {
-        ret.stack.push_back(ConsumeRandomLengthByteVector(fuzzed_data_provider));
+        stack.push_back(ConsumeRandomLengthByteVector(fuzzed_data_provider));
     }
-    return ret;
+    return CScriptWitness{stack};
 }
 
 CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider, const bool maybe_p2wsh) noexcept

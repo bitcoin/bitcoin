@@ -455,10 +455,9 @@ FUZZ_TARGET(txorphanage_sim)
         while (wtxids.contains(CTransaction(tx).GetWitnessHash()) || rng.randrange(4) == 0) {
             auto& input = tx.vin[rng.randrange(tx.vin.size())];
             if (rng.randbool()) {
-                input.scriptWitness.stack.resize(1);
-                input.scriptWitness.stack[0].resize(rng.randrange(100));
+                input.scriptWitness = CScriptWitness{{std::vector<unsigned char>(rng.randrange(100))}};
             } else {
-                input.scriptWitness.stack.resize(0);
+                input.scriptWitness = {};
             }
         }
         // Convert to CTransactionRef.
