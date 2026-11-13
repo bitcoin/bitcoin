@@ -294,6 +294,29 @@ class TorControlTest(BitcoinTestFramework):
 
         mock_tor.stop()
 
+    def test_connect_failure_warning(self):
+        self.log.info("Test that failing to connect to an explicitly set -torcontrol is logged as a warning")
+        port = self.next_port()
+        with self.nodes[0].assert_debug_log([
+            f"connect() to 127.0.0.1:{port} failed",
+            f"[warning] tor: Error connecting to address 127.0.0.1:{port}",
+        ], timeout=10):
+            self.restart_node(0, extra_args=[f"-torcontrol=127.0.0.1:{port}", "-listenonion=1"])
+
+    def test_lost_service(self):
+        self.log.info("Test that losing an active onion service is logged")
+        mock_tor = MockTorControlServer(self.next_port())
+        with self.nodes[0].assert_debug_log([f"Got tor service ID {SERVICE_ID}"], timeout=10):
+            self.restart_with_mock(mock_tor)
+        lost_msg = f"Lost connection to Tor control port, no longer advertising service {SERVICE_ID}.onion"
+        with self.nodes[0].assert_debug_log([lost_msg, f"Got tor service ID {SERVICE_ID}"], timeout=10):
+            mock_tor.conn.shutdown(socket.SHUT_WR)
+
+        self.log.info("Test that shutting down with an active onion service does not log it as lost")
+        with self.nodes[0].assert_debug_log([], unexpected_msgs=[lost_msg]):
+            self.stop_node(0)
+        mock_tor.stop()
+
     def test_invalid_service_id(self):
         invalid_service_id = "a" + SERVICE_ID[1:]
         key_path = self.private_key_path()
@@ -368,6 +391,8 @@ class TorControlTest(BitcoinTestFramework):
         self.test_invalid_service_id()
         self.test_private_key_tor_command_injection()
         self.test_reconnect_backoff()
+        self.test_connect_failure_warning()
+        self.test_lost_service()
 
 
 if __name__ == '__main__':

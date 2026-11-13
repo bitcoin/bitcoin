@@ -94,7 +94,7 @@ TorControlConnection::~TorControlConnection()
     Disconnect();
 }
 
-bool TorControlConnection::Connect(const std::string& tor_control_center)
+bool TorControlConnection::Connect(const std::string& tor_control_center, bool tor_control_configured)
 {
     if (m_sock) {
         Disconnect();
@@ -106,9 +106,13 @@ bool TorControlConnection::Connect(const std::string& tor_control_center)
         return false;
     }
 
-    m_sock = ConnectDirectly(control_service.value(), /*manual_connection=*/true);
+    m_sock = ConnectDirectly(control_service.value(), /*manual_connection=*/tor_control_configured);
     if (!m_sock) {
-        LogWarning("tor: Error connecting to address %s", tor_control_center);
+        if (tor_control_configured) {
+            LogWarning("tor: Error connecting to address %s", tor_control_center);
+        } else {
+            LogDebug(BCLog::TOR, "Error connecting to address %s", tor_control_center);
+        }
         return false;
     }
 
@@ -359,8 +363,9 @@ std::map<std::string,std::string> ParseTorReplyMapping(const std::string &s)
     return mapping;
 }
 
-TorController::TorController(const std::string& tor_control_center, const CService& target)
+TorController::TorController(const std::string& tor_control_center, const CService& target, bool tor_control_configured)
     : m_tor_control_center(tor_control_center),
+      m_tor_control_configured(tor_control_configured),
       m_conn(m_interrupt),
       m_reconnect(true),
       m_reconnect_timeout(RECONNECT_TIMEOUT_START),
@@ -403,7 +408,7 @@ void TorController::ThreadControl()
 
     while (!m_interrupt) {
         LogDebug(BCLog::TOR, "Attempting to connect to Tor control port %s", m_tor_control_center);
-        if (m_conn.Connect(m_tor_control_center)) {
+        if (m_conn.Connect(m_tor_control_center, m_tor_control_configured)) {
             connected_cb(m_conn);
             while (!m_interrupt) {
                 if (!m_conn.WaitForData(std::chrono::seconds(1))) {
@@ -413,8 +418,6 @@ void TorController::ThreadControl()
                 }
                 if (!m_conn.ReceiveAndProcess()) break;
             }
-        } else {
-            LogWarning("tor: Initiating connection to Tor control port %s failed", m_tor_control_center);
         }
         disconnected_cb(m_conn);
     }
@@ -738,8 +741,11 @@ void TorController::connected_cb(TorControlConnection& _conn)
 void TorController::disconnected_cb(TorControlConnection& _conn)
 {
     // Stop advertising service when disconnected
-    if (m_service.IsValid())
+    if (m_service.IsValid()) {
         RemoveLocal(m_service);
+        // Losing the service is expected on shutdown
+        if (m_reconnect) LogInfo("Lost connection to Tor control port, no longer advertising service %s", m_service.ToStringAddrPort());
+    }
     m_service = CService();
     if (!m_reconnect)
         return;
