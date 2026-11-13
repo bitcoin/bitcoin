@@ -16,6 +16,7 @@ export PIP_PACKAGES="--break-system-packages pycapnp"
 export DEP_OPTS="DEBUG=1"
 export CI_LIMIT_STACK_SIZE=1
 printf -v BITCOIN_CONFIG "%q " \
+ -DCMAKE_CXX_FLAGS="-Wno-error=maybe-uninitialized" `# for std::optional::emplace in test_kernel.cpp` \
  --preset=dev-mode \
  -DCMAKE_BUILD_TYPE=Debug \
  -DAPPEND_CPPFLAGS=-DBOOST_MULTI_INDEX_ENABLE_SAFE_MODE
