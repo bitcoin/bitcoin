@@ -34,19 +34,21 @@
 class VectorWriter
 {
 public:
-/*
- * @param[in]  vchDataIn  Referenced byte vector to overwrite/append
- * @param[in]  nPosIn Starting position. Vector index where writes should start. The vector will initially
- *                    grow as necessary to max(nPosIn, vec.size()). So to append, use vec.size().
+/**
+ * @param[in,out]  vchDataIn  Referenced byte vector to overwrite/append
+ * @param[in]      nPosIn Starting position. Vector index where writes should start. The vector will
+ *                    initially grow as necessary to max(nPosIn, vec.size()). So to append, use vec.size().
 */
     VectorWriter(std::vector<unsigned char>& vchDataIn, size_t nPosIn) : vchData{vchDataIn}, nPos{nPosIn}
     {
         if(nPos > vchData.size())
             vchData.resize(nPos);
     }
-/*
- * (other params same as above)
- * @param[in]  args  A list of items to serialize starting at nPosIn.
+/**
+ * @param[in,out]  vchDataIn  Referenced byte vector to overwrite/append
+ * @param[in]      nPosIn Starting position. Vector index where writes should start. The vector will
+ *                    initially grow as necessary to max(nPosIn, vec.size()). So to append, use vec.size().
+ * @param[in]      args  A list of items to serialize starting at nPosIn.
 */
     template <typename... Args>
     VectorWriter(std::vector<unsigned char>& vchDataIn, size_t nPosIn, Args&&... args) : VectorWriter{vchDataIn, nPosIn}

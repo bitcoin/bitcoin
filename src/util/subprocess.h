@@ -299,12 +299,11 @@ namespace util
 
   /*!
    * Function: split
-   * Parameters:
-   * [in] str : Input string which needs to be split based upon the
-   *            delimiters provided.
-   * [in] deleims : Delimiter characters based upon which the string needs
-   *                to be split. Default constructed to ' '(space) and '\t'(tab)
-   * [out] vector<string> : Vector of strings split at deleimiter.
+   * @param[in] str    Input string which needs to be split based upon the
+   *                   delimiters provided.
+   * @param[in] delims Delimiter characters based upon which the string needs
+   *                   to be split. Default constructed to space and tab.
+   * @return Vector of strings split at delimiter.
    */
   static inline std::vector<std::string>
   split(const std::string& str, const std::string& delims=" \t")
@@ -332,10 +331,9 @@ namespace util
    * Function: set_clo_on_exec
    * Sets/Resets the FD_CLOEXEC flag on the provided file descriptor
    * based upon the `set` parameter.
-   * Parameters:
-   * [in] fd : The descriptor on which FD_CLOEXEC needs to be set/reset.
-   * [in] set : If 'true', set FD_CLOEXEC.
-   *            If 'false' unset FD_CLOEXEC.
+   * @param[in] fd  The descriptor on which FD_CLOEXEC needs to be set/reset.
+   * @param[in] set If 'true', set FD_CLOEXEC.
+   *                If 'false' unset FD_CLOEXEC.
    */
   static inline
   void set_clo_on_exec(int fd, bool set = true)
@@ -356,8 +354,7 @@ namespace util
    * Function: pipe_cloexec
    * Creates a pipe and sets FD_CLOEXEC flag on both
    * read and write descriptors of the pipe.
-   * Parameters:
-   * [out] : A pair of file descriptors.
+   * @return A pair of file descriptors.
    *         First element of pair is the read descriptor of pipe.
    *         Second element is the write descriptor of pipe.
    */
@@ -382,12 +379,11 @@ namespace util
    * Function: write_n
    * Writes `length` bytes to the file descriptor `fd`
    * from the buffer `buf`.
-   * Parameters:
-   * [in] fd : The file descriptotr to write to.
-   * [in] buf: Buffer from which data needs to be written to fd.
-   * [in] length: The number of bytes that needs to be written from
-   *              `buf` to `fd`.
-   * [out] int : Number of bytes written or -1 in case of failure.
+   * @param[in] fd     The file descriptor to write to.
+   * @param[in] buf    Buffer from which data needs to be written to fd.
+   * @param[in] length The number of bytes that needs to be written from
+   *                   `buf` to `fd`.
+   * @return Number of bytes written or -1 in case of failure.
    */
   static inline
   int write_n(int fd, const char* buf, size_t length)
@@ -406,12 +402,12 @@ namespace util
    * Function: read_atmost_n
    * Reads at the most `read_upto` bytes from the
    * file object `fp` before returning.
-   * Parameters:
-   * [in] fp : The file object from which it needs to read.
-   * [in] buf : The buffer into which it needs to write the data.
-   * [in] read_upto: Max number of bytes which must be read from `fd`.
-   * [out] int : Number of bytes written to `buf` or read from `fd`
-   *             OR -1 in case of error.
+   * @param[in]  fp        The file object from which it needs to read.
+   * @param[out] buf       The buffer into which it needs to write the data.
+   * @param[in]  read_upto Max number of bytes which must be read from `fd`.
+   * @return Number of bytes written to `buf` or read from `fd`
+   *         OR -1 in case of error.
+   *
    *  NOTE: In case of EINTR while reading from socket, this API
    *  will retry to read from `fd`, but only till the EINTR counter
    *  reaches 50 after which it will return with whatever data it read.
@@ -449,11 +445,10 @@ namespace util
    * Function: read_all
    * Reads all the available data from `fp` into
    * `buf`. Internally calls read_atmost_n.
-   * Parameters:
-   * [in] fp : The file object from which to read from.
-   * [in] buf : The buffer of type `class Buffer` into which
-   *            the read data is written to.
-   * [out] int: Number of bytes read OR -1 in case of failure.
+   * @param[in]     fp  The file object from which to read from.
+   * @param[in,out] buf The buffer of type `class Buffer` into which
+   *                    the read data is written to.
+   * @return Number of bytes read OR -1 in case of failure.
    *
    * NOTE: `class Buffer` is a exposed public class. See below.
    */
@@ -497,9 +492,8 @@ namespace util
    * Function: wait_for_child_exit
    * Waits for the process with pid `pid` to exit
    * and returns its status.
-   * Parameters:
-   * [in] pid : The pid of the process.
-   * [out] pair<int, int>:
+   * @param[in] pid The pid of the process.
+   * @return pair<int, int>:
    *    pair.first : Return code of the waitpid call.
    *    pair.second : Exit status of the process.
    *

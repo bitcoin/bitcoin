@@ -233,7 +233,7 @@ inline std::string MakeUnorderedList(const std::vector<std::string>& items)
 }
 
 /**
- * Check if a string contains any embedded NUL (\0) characters
+ * Check if a string contains any embedded NUL characters
  */
 [[nodiscard]] inline bool ContainsNUL(std::string_view str) noexcept
 {
@@ -276,12 +276,12 @@ public:
     explicit LineReader(std::string_view str LIFETIMEBOUND, size_t max_line_length);
 
     /**
-     * Returns a string from current iterator position up to (but not including) next \n
-     * and advances iterator to the character following the \n on success.
+     * Returns a string from current iterator position up to (but not including) next newline
+     * and advances iterator to the character following the newline on success.
      * Will not return a line longer than max_line_length.
      * @returns the next string from the buffer.
-     *          std::nullopt if end of buffer is reached without finding a \n.
-     * @throws a std::runtime_error if max_line_length + 1 bytes are read without finding \n.
+     *          std::nullopt if end of buffer is reached without finding a newline.
+     * @throws a std::runtime_error if max_line_length + 1 bytes are read without finding a newline.
      */
     std::optional<std::string_view> ReadLine() LIFETIMEBOUND;
 
