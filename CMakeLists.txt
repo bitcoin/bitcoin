@@ -453,6 +453,20 @@ if(BUILD_FUZZ_BINARY)
     LDFLAGS ${SANITIZER_LDFLAGS} ${fuzz_flag}
     LINK_LIBRARIES ${FUZZ_LIBS}
   )
+  # Custom mutators need the real libFuzzer runtime (a working LLVMFuzzerMutate
+  # and -len_control). AFL++ and honggfuzz also define LLVMFuzzerMutate, and
+  # AFL++ even accepts -fsanitize=fuzzer while linking its own driver, so check
+  # for a symbol only libFuzzer itself defines.
+  check_cxx_source_compiles_with_flags("
+      #include <cstdint>
+      #include <cstddef>
+      namespace fuzzer { int FuzzerDriver(int*, char***, int (*)(const uint8_t*, size_t)); }
+      extern \"C\" int LLVMFuzzerTestOneInput(const uint8_t*, size_t) { return 0; }
+      extern \"C\" int LLVMFuzzerInitialize(int*, char***) { return fuzzer::FuzzerDriver(nullptr, nullptr, nullptr); }
+    " FUZZ_BINARY_USES_LIBFUZZER
+    LDFLAGS ${SANITIZER_LDFLAGS} ${fuzz_flag}
+    LINK_LIBRARIES ${FUZZ_LIBS}
+  )
   add_library(fuzzer_interface INTERFACE)
   target_link_options(fuzzer_interface INTERFACE ${fuzz_flag})
   target_link_libraries(fuzzer_interface INTERFACE ${FUZZ_LIBS})

@@ -79,6 +79,9 @@ void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target,
 
 static std::string_view g_fuzz_target;
 static const TypeTestOneInput* g_test_one_input{nullptr};
+#if defined(PROVIDE_FUZZ_CUSTOM_MUTATOR)
+static TypeCustomMutator g_custom_mutator{nullptr};
+#endif
 
 static void test_one_input(FuzzBufferType buffer)
 {
@@ -162,6 +165,9 @@ static void initialize()
     }
     Assert(!g_test_one_input);
     g_test_one_input = &it->second.test_one_input;
+#if defined(PROVIDE_FUZZ_CUSTOM_MUTATOR)
+    g_custom_mutator = it->second.opts.mutator;
+#endif
     it->second.opts.init();
 
     ResetCoverageCounters();
@@ -215,11 +221,53 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     return 0;
 }
 
+#if defined(PROVIDE_FUZZ_CUSTOM_MUTATOR)
+extern "C" size_t LLVMFuzzerMutate(uint8_t* data, size_t size, size_t max_size);
+
+size_t FuzzDefaultMutate(uint8_t* data, size_t size, size_t max_size)
+{
+    return LLVMFuzzerMutate(data, size, max_size);
+}
+
+extern "C" size_t LLVMFuzzerCustomMutator(uint8_t* data, size_t size, size_t max_size, unsigned int seed)
+{
+    if (g_custom_mutator) return g_custom_mutator(data, size, max_size, seed);
+    return LLVMFuzzerMutate(data, size, max_size);
+}
+
+// libFuzzer disables -len_control by default whenever LLVMFuzzerCustomMutator
+// is linked in, even for targets that don't provide a mutator. Restore
+// libFuzzer's usual default for those targets, unless the user set it.
+static void restore_default_len_control(int* argc, char*** argv)
+{
+    if (g_custom_mutator) return;
+    for (int i{1}; i < *argc; ++i) {
+        if (std::string_view{(*argv)[i]}.starts_with("-len_control=")) return;
+    }
+    static char len_control_arg[]{"-len_control=100"};
+    static std::vector<char*> g_argv;
+    g_argv.assign(*argv, *argv + *argc);
+    // Insert right after argv[0], so that -ignore_remaining_args=1 doesn't drop it.
+    g_argv.insert(g_argv.begin() + 1, len_control_arg);
+    g_argv.push_back(nullptr);
+    *argc = g_argv.size() - 1;
+    *argv = g_argv.data();
+}
+#else
+size_t FuzzDefaultMutate(uint8_t*, size_t size, size_t)
+{
+    return size;
+}
+#endif
+
 // This function is used by libFuzzer
 extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
 {
     SetArgs(*argc, *argv);
     initialize();
+#if defined(PROVIDE_FUZZ_CUSTOM_MUTATOR)
+    restore_default_len_control(argc, argv);
+#endif
     return 0;
 }
 
