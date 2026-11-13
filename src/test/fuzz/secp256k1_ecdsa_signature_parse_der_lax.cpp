@@ -26,7 +26,6 @@ FUZZ_TARGET(secp256k1_ecdsa_signature_parse_der_lax)
     secp256k1_ecdsa_signature sig_der_lax;
     const bool parsed_der_lax = ecdsa_signature_parse_der_lax(&sig_der_lax, signature_bytes.data(), signature_bytes.size()) == 1;
     if (parsed_der_lax) {
-        ECC_Context ecc_context{};
         (void)SigHasLowR(&sig_der_lax);
     }
 }

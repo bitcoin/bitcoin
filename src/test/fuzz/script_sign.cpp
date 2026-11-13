@@ -27,7 +27,6 @@
 
 void initialize_script_sign()
 {
-    static ECC_Context ecc_context{};
     SelectParams(ChainType::REGTEST);
 }
 

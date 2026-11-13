@@ -6,7 +6,6 @@
 #include <coins.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
-#include <key.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -26,8 +25,6 @@
 // (https://github.com/bitcoin/bitcoin/issues/7883#issuecomment-224807484)
 static void CCoinsCaching(benchmark::Bench& bench)
 {
-    ECC_Context ecc_context{};
-
     FillableSigningProvider keystore;
     CCoinsViewCache coins{&CoinsViewEmpty::Get()};
     std::vector<CMutableTransaction> dummyTransactions =

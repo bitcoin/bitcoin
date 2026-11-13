@@ -20,7 +20,6 @@ namespace {
 
 void Initialize()
 {
-    static ECC_Context ecc_context{};
     SelectParams(ChainType::MAIN);
 }
 
