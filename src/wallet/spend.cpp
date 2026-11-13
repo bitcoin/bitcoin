@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <common/args.h>
 #include <common/messages.h>
+#include <common/bip352.h>
 #include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
@@ -33,6 +34,7 @@
 #include <cmath>
 #include <vector>
 
+using bip352::SilentPaymentsDestination;
 using common::StringForFeeReason;
 using common::TransactionErrorString;
 using interfaces::FoundBlock;
@@ -1048,6 +1050,11 @@ void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
     }
 }
 
+CTxOut GetDummyTxOut(const PaymentDestination& dest, CAmount amount)
+{
+    return CTxOut{amount, GetScriptForDestination(dest.GetTxDestination())};
+}
+
 uint64_t GetSerializeSizeForRecipient(const CRecipient& recipient)
 {
     return ::GetSerializeSize(CTxOut(recipient.nAmount, GetScriptForDestination(recipient.dest.GetTxDestination())));
@@ -1056,6 +1063,22 @@ uint64_t GetSerializeSizeForRecipient(const CRecipient& recipient)
 bool IsDust(const CRecipient& recipient, const CFeeRate& dustRelayFee)
 {
     return ::IsDust(CTxOut(recipient.nAmount, GetScriptForDestination(recipient.dest.GetTxDestination())), dustRelayFee);
+}
+
+std::vector<SilentPaymentsDestination> GetSilentPaymentsDestinations(const std::vector<CRecipient>& recipients, const CCoinControl& coin_control, const CreatedTransactionResult& txr)
+{
+    std::vector<SilentPaymentsDestination> sp_dests;
+    for (const auto& recipient : recipients) {
+        if (const auto* sp = recipient.dest.GetSilentPaymentsDestination()) {
+            sp_dests.push_back(*sp);
+        }
+    }
+    if (txr.change_pos) {
+        if (const auto* sp = coin_control.destChange.GetSilentPaymentsDestination()) {
+            sp_dests.push_back(*sp);
+        }
+    }
+    return sp_dests;
 }
 
 static util::Result<CreatedTransactionResult> CreateTransactionInternal(
