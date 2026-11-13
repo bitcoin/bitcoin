@@ -23,6 +23,8 @@
 #include <util/strencodings.h>
 
 #include <algorithm>
+#include <array>
+#include <cstddef>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
@@ -340,7 +342,7 @@ void TestFSChaCha20Poly1305(const std::string& plain_hex, const std::string& aad
 }
 
 void TestHKDF_SHA256_32(const std::string &ikm_hex, const std::string &salt_hex, const std::string &info_hex, const std::string &okm_check_hex) {
-    std::vector<unsigned char> initial_key_material = ParseHex(ikm_hex);
+    const auto initial_key_material{ParseHex<std::byte>(ikm_hex)};
     std::vector<unsigned char> salt = ParseHex(salt_hex);
     std::vector<unsigned char> info = ParseHex(info_hex);
 
@@ -349,8 +351,13 @@ void TestHKDF_SHA256_32(const std::string &ikm_hex, const std::string &salt_hex,
     std::string salt_stringified(reinterpret_cast<char*>(salt.data()), salt.size());
     std::string info_stringified(reinterpret_cast<char*>(info.data()), info.size());
 
-    CHKDF_HMAC_SHA256_L32 hkdf32(initial_key_material.data(), initial_key_material.size(), salt_stringified);
-    unsigned char out[32];
+    CHKDF_HMAC_SHA256_L32 hkdf32{initial_key_material, salt_stringified};
+    std::array<std::byte, 32> out;
+    hkdf32.Expand32(info_stringified, out);
+    BOOST_CHECK(HexStr(out) == okm_check_hex);
+
+    // Expansions must not modify the shared context state used by later labels
+    hkdf32.Expand32(info_stringified + '\0', out);
     hkdf32.Expand32(info_stringified, out);
     BOOST_CHECK(HexStr(out) == okm_check_hex);
 }
@@ -1069,6 +1076,27 @@ BOOST_AUTO_TEST_CASE(hkdf_hmac_sha256_l32_tests)
                 "",
                 "",
                 "8da4e775a563c18f715f802a063c5a31b8a11f5c5ee1879ec3454e5f3c738d2d");
+
+    // Fixed outputs for the six BIP324 labels, using one context
+    constexpr auto ikm{"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"_hex};
+    const std::string salt{"bitcoin_v2_shared_secret\xf9\xbe\xb4\xd9"};
+    CHKDF_HMAC_SHA256_L32 hkdf{ikm, salt};
+    const struct {
+        const char* info;
+        const char* expected;
+    } vectors[]{
+        {"initiator_L", "a981b0e5b1c52476fc979403b26d39ba2286c5b51cbb1cb1dbb86ca8268311f8"},
+        {"initiator_P", "bf878db606c3bef41e096c18d57f39f92e591a83f459b645d6834e988d0c55bf"},
+        {"responder_L", "fa66158f0d89289d52c4d828b9bd6ae0a443af760e963cf274018093dab8ee18"},
+        {"responder_P", "c6e3528d1600ec8444f4f39eb0ebfb24b4b2ab72f371a9908005d4fe4cf4a1f9"},
+        {"garbage_terminators", "d5b4dcfc2f5fa9f1511623eb99db5d81f2e6cb1f1920617fb019d0a8457fb2d2"},
+        {"session_id", "31240e251b9cbbd21db1e2f0584281d42e892b122343c7b4a7e16d69a9374502"},
+    };
+    for (const auto& [info, expected] : vectors) {
+        std::array<std::byte, 32> out;
+        hkdf.Expand32(info, out);
+        BOOST_CHECK_EQUAL(HexStr(out), expected);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(sha256d64)
