@@ -89,12 +89,12 @@ static void EraseLastKElements(
     elements.erase(std::remove_if(elements.end() - eraseSize, elements.end(), predicate), elements.end());
 }
 
-void ProtectNoBanConnections(std::vector<NodeEvictionCandidate>& eviction_candidates)
+static void ProtectNoBanConnections(std::vector<NodeEvictionCandidate>& eviction_candidates)
 {
     std::erase_if(eviction_candidates, [](const NodeEvictionCandidate& n) { return n.m_noban; });
 }
 
-void ProtectOutboundConnections(std::vector<NodeEvictionCandidate>& eviction_candidates)
+static void ProtectOutboundConnections(std::vector<NodeEvictionCandidate>& eviction_candidates)
 {
     std::erase_if(eviction_candidates, [](const NodeEvictionCandidate& n) { return n.m_conn_type != ConnectionType::INBOUND; });
 }

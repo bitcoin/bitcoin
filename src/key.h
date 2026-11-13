@@ -353,6 +353,11 @@ bool ECC_InitSanityCheck();
 /** Access the secp256k1 context used for signing and MuSig2 nonce generation. */
 secp256k1_context* GetSecp256k1SignContext();
 
+/** DER private key import/export and low-R check. Exposed for fuzzing. */
+int ec_seckey_import_der(const secp256k1_context* ctx, unsigned char* out32, const unsigned char* seckey, size_t seckeylen);
+int ec_seckey_export_der(const secp256k1_context* ctx, unsigned char* seckey, size_t* seckeylen, const unsigned char* key32, bool compressed);
+bool SigHasLowR(const secp256k1_ecdsa_signature* sig);
+
 /**
  * RAII class initializing and deinitializing global state for elliptic curve support.
  * Only one instance may be initialized at a time.

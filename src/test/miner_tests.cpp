@@ -339,7 +339,7 @@ static CMutableTransaction CreateBigSigOpsTx(const COutPoint& input, unsigned in
     return tx;
 }
 
-std::vector<CTransactionRef> CreateBigSigOpsCluster(const CTransactionRef& first_tx)
+static std::vector<CTransactionRef> CreateBigSigOpsCluster(const CTransactionRef& first_tx)
 {
     std::vector<CTransactionRef> ret;
 

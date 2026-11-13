@@ -35,7 +35,7 @@ int32_t GetCheckRatio()
 }
 } // namespace
 
-void initialize_addrman()
+static void initialize_addrman()
 {
     static const auto testing_setup = MakeNoLogFileContext<>(ChainType::REGTEST);
     g_setup = testing_setup.get();
@@ -57,7 +57,7 @@ FUZZ_TARGET(data_stream_addr_man, .init = initialize_addrman)
 /**
  * Generate a random address. Always returns a valid address.
  */
-CNetAddr RandAddr(FuzzedDataProvider& fuzzed_data_provider, FastRandomContext& fast_random_context)
+static CNetAddr RandAddr(FuzzedDataProvider& fuzzed_data_provider, FastRandomContext& fast_random_context)
 {
     CNetAddr addr;
     assert(!addr.IsValid());
@@ -80,7 +80,7 @@ CNetAddr RandAddr(FuzzedDataProvider& fuzzed_data_provider, FastRandomContext& f
 }
 
 /** Fill addrman with lots of addresses from lots of sources.  */
-void FillAddrman(AddrMan& addrman, FuzzedDataProvider& fuzzed_data_provider)
+static void FillAddrman(AddrMan& addrman, FuzzedDataProvider& fuzzed_data_provider)
 {
     // Add a fraction of the addresses to the "tried" table.
     // 0, 1, 2, 3 corresponding to 0%, 100%, 50%, 33%

@@ -32,7 +32,7 @@ int32_t GetCheckRatio()
 
 } // namespace
 
-void initialize_connman()
+static void initialize_connman()
 {
     static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
     g_setup = testing_setup.get();

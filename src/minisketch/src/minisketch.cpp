@@ -25,34 +25,6 @@
 #  endif
 #endif
 
-Sketch* ConstructGeneric1Byte(int bits, int implementation);
-Sketch* ConstructGeneric2Bytes(int bits, int implementation);
-Sketch* ConstructGeneric3Bytes(int bits, int implementation);
-Sketch* ConstructGeneric4Bytes(int bits, int implementation);
-Sketch* ConstructGeneric5Bytes(int bits, int implementation);
-Sketch* ConstructGeneric6Bytes(int bits, int implementation);
-Sketch* ConstructGeneric7Bytes(int bits, int implementation);
-Sketch* ConstructGeneric8Bytes(int bits, int implementation);
-
-#ifdef HAVE_CLMUL
-Sketch* ConstructClMul1Byte(int bits, int implementation);
-Sketch* ConstructClMul2Bytes(int bits, int implementation);
-Sketch* ConstructClMul3Bytes(int bits, int implementation);
-Sketch* ConstructClMul4Bytes(int bits, int implementation);
-Sketch* ConstructClMul5Bytes(int bits, int implementation);
-Sketch* ConstructClMul6Bytes(int bits, int implementation);
-Sketch* ConstructClMul7Bytes(int bits, int implementation);
-Sketch* ConstructClMul8Bytes(int bits, int implementation);
-Sketch* ConstructClMulTri1Byte(int bits, int implementation);
-Sketch* ConstructClMulTri2Bytes(int bits, int implementation);
-Sketch* ConstructClMulTri3Bytes(int bits, int implementation);
-Sketch* ConstructClMulTri4Bytes(int bits, int implementation);
-Sketch* ConstructClMulTri5Bytes(int bits, int implementation);
-Sketch* ConstructClMulTri6Bytes(int bits, int implementation);
-Sketch* ConstructClMulTri7Bytes(int bits, int implementation);
-Sketch* ConstructClMulTri8Bytes(int bits, int implementation);
-#endif
-
 namespace {
 
 enum class FieldImpl {

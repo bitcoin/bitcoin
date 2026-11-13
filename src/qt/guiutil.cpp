@@ -79,9 +79,9 @@
 
 #if defined(Q_OS_MACOS)
 
-#include <QProcess>
+#include <qt/macdockiconhandler.h>
 
-void ForceActivation();
+#include <QProcess>
 #endif
 
 using namespace std::chrono_literals;
@@ -390,7 +390,7 @@ Qt::ConnectionType blockingGUIThreadConnection()
     }
 }
 
-bool checkPoint(const QPoint &p, const QWidget *w)
+static bool checkPoint(const QPoint &p, const QWidget *w)
 {
     QWidget *atW = QApplication::widgetAt(w->mapToGlobal(p));
     if (!atW) return false;

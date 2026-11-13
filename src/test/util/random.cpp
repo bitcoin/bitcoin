@@ -14,8 +14,6 @@
 
 std::atomic<bool> g_seeded_g_prng_zero{false};
 
-extern void MakeRandDeterministicDANGEROUS(const uint256& seed) noexcept;
-
 void SeedRandomStateForTest(SeedRand seedtype)
 {
     constexpr auto RANDOM_CTX_SEED{"RANDOM_CTX_SEED"};

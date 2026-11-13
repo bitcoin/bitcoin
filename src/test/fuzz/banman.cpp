@@ -30,7 +30,7 @@ int64_t ConsumeBanTimeOffset(FuzzedDataProvider& fuzzed_data_provider) noexcept
 }
 } // namespace
 
-void initialize_banman()
+static void initialize_banman()
 {
     static const auto testing_setup = MakeNoLogFileContext<>();
 }

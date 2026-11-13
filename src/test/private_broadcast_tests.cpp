@@ -12,7 +12,7 @@
 #include <ostream>
 #include <boost/test/unit_test.hpp>
 
-std::ostream& operator<<(std::ostream& os, PrivateBroadcast::AddResult r)
+static std::ostream& operator<<(std::ostream& os, PrivateBroadcast::AddResult r)
 {
     switch (r) {
     case PrivateBroadcast::AddResult::Added: return os << "Added";

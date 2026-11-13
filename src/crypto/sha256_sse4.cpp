@@ -10,6 +10,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#include <crypto/sha256_impl.h>
+
 namespace sha256_sse4
 {
 /*

@@ -1229,7 +1229,7 @@ static RPCMethod exportasmap()
     };
 }
 
-UniValue AddrmanEntryToJSON(const AddrInfo& info, const CConnman& connman)
+static UniValue AddrmanEntryToJSON(const AddrInfo& info, const CConnman& connman)
 {
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("address", info.ToStringAddr());
@@ -1250,7 +1250,7 @@ UniValue AddrmanEntryToJSON(const AddrInfo& info, const CConnman& connman)
     return ret;
 }
 
-UniValue AddrmanTableToJSON(const std::vector<std::pair<AddrInfo, AddressPosition>>& tableInfos, const CConnman& connman)
+static UniValue AddrmanTableToJSON(const std::vector<std::pair<AddrInfo, AddressPosition>>& tableInfos, const CConnman& connman)
 {
     UniValue table(UniValue::VOBJ);
     for (const auto& e : tableInfos) {

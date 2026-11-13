@@ -54,7 +54,10 @@ static std::optional<CPubKey> GetCPubKeyFromMuSig2KeyAggCache(secp256k1_musig_ke
     return CPubKey(ser_agg_pubkey, ser_agg_pubkey + ser_agg_pubkey_len);
 }
 
-std::optional<CPubKey> MuSig2AggregatePubkeys(const std::vector<CPubKey>& pubkeys, secp256k1_musig_keyagg_cache& keyagg_cache, const std::optional<CPubKey>& expected_aggregate)
+//! Compute the full aggregate pubkey from the given participant pubkeys in their current order.
+//! Outputs the secp256k1_musig_keyagg_cache and validates that the computed aggregate pubkey matches an expected aggregate pubkey.
+//! This is necessary for most MuSig2 operations.
+static std::optional<CPubKey> MuSig2AggregatePubkeys(const std::vector<CPubKey>& pubkeys, secp256k1_musig_keyagg_cache& keyagg_cache, const std::optional<CPubKey>& expected_aggregate)
 {
     if (!GetMuSig2KeyAggCache(pubkeys, keyagg_cache)) {
         return std::nullopt;

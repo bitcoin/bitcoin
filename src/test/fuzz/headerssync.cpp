@@ -26,7 +26,7 @@ static void initialize_headers_sync_state_fuzz()
         /*chain_type=*/ChainType::MAIN);
 }
 
-void MakeHeadersContinuous(
+static void MakeHeadersContinuous(
     const CBlockHeader& genesis_header,
     const std::vector<CBlockHeader>& all_headers,
     std::vector<CBlockHeader>& new_headers)

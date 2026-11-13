@@ -19,6 +19,8 @@
 #include <span>
 #include <vector>
 
+struct secp256k1_ecdsa_signature;
+
 inline constexpr unsigned int BIP32_EXTKEY_SIZE = 74;
 inline constexpr unsigned int BIP32_EXTKEY_WITH_VERSION_SIZE = 78;
 
@@ -391,5 +393,8 @@ struct CExtPubKey {
     }
     [[nodiscard]] bool Derive(CExtPubKey& out, unsigned int nChild, uint256* bip32_tweak_out = nullptr) const;
 };
+
+/** Lax DER parsing of an ECDSA signature. Exposed for fuzzing. */
+int ecdsa_signature_parse_der_lax(secp256k1_ecdsa_signature* sig, const unsigned char* input, size_t inputlen);
 
 #endif // BITCOIN_PUBKEY_H

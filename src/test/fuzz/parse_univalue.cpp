@@ -14,7 +14,7 @@
 #include <stdexcept>
 #include <string>
 
-void initialize_parse_univalue()
+static void initialize_parse_univalue()
 {
     SelectParams(ChainType::REGTEST);
 }

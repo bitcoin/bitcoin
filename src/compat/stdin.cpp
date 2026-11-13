@@ -16,7 +16,7 @@
 #endif
 
 // https://stackoverflow.com/questions/1413445/reading-a-password-from-stdcin
-void SetStdinEcho(bool enable)
+static void SetStdinEcho(bool enable)
 {
     if (!StdinTerminal()) {
         return;

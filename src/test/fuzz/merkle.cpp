@@ -15,7 +15,7 @@
 #include <cstdint>
 #include <vector>
 
-uint256 ComputeMerkleRootFromPath(const CBlock& block, uint32_t position, const std::vector<uint256>& merkle_path) {
+static uint256 ComputeMerkleRootFromPath(const CBlock& block, uint32_t position, const std::vector<uint256>& merkle_path) {
     if (position >= block.vtx.size()) {
         throw std::out_of_range("Position out of range");
     }

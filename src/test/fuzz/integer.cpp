@@ -41,7 +41,7 @@
 
 using util::ToString;
 
-void initialize_integer()
+static void initialize_integer()
 {
     SelectParams(ChainType::REGTEST);
 }

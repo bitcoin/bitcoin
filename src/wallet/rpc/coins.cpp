@@ -11,6 +11,7 @@
 #include <wallet/coincontrol.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/util.h>
+#include <wallet/rpc/wallet.h>
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
 
@@ -452,23 +453,6 @@ RPCMethod getbalances()
     return balances;
 },
     };
-}
-
-const UniValue* GetOptionWithAlias(
-    const UniValue& options,
-    const std::string& canonical_name,
-    const std::string& deprecated_name)
-{
-    if (options.exists(canonical_name) && options.exists(deprecated_name)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Use " + canonical_name + " (" + deprecated_name + " is deprecated). Do not set both.");
-    }
-    if (options.exists(deprecated_name)) {
-        return &options[deprecated_name];
-    }
-    if (options.exists(canonical_name)) {
-        return &options[canonical_name];
-    }
-    return nullptr;
 }
 
 RPCMethod listunspent()

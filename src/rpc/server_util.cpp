@@ -87,7 +87,7 @@ ChainstateManager& EnsureAnyChainman(const std::any& context)
     return EnsureChainman(EnsureAnyNodeContext(context));
 }
 
-FeeRateEstimatorManager& EnsureFeeEstimatorMan(const NodeContext& node)
+static FeeRateEstimatorManager& EnsureFeeEstimatorMan(const NodeContext& node)
 {
     if (!node.fee_estimator_man) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Fee estimation disabled");
@@ -124,7 +124,7 @@ PeerManager& EnsurePeerman(const NodeContext& node)
     return *node.peerman;
 }
 
-AddrMan& EnsureAddrman(const NodeContext& node)
+static AddrMan& EnsureAddrman(const NodeContext& node)
 {
     if (!node.addrman) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Address manager functionality missing or disabled");

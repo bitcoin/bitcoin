@@ -806,7 +806,7 @@ BOOST_AUTO_TEST_CASE(LimitedAndReachable_NetworkCaseUnroutableAndInternal)
     g_reachable_nets.Add(NET_INTERNAL);
 }
 
-CNetAddr UtilBuildAddress(unsigned char p1, unsigned char p2, unsigned char p3, unsigned char p4)
+static CNetAddr UtilBuildAddress(unsigned char p1, unsigned char p2, unsigned char p3, unsigned char p4)
 {
     unsigned char ip[] = {p1, p2, p3, p4};
 

@@ -24,7 +24,7 @@ constexpr int NUM_TRIES{5};
 //! Timeout for each attempt to request a port mapping.
 constexpr std::chrono::duration TIMEOUT{100ms};
 
-void port_map_target_init()
+static void port_map_target_init()
 {
     LogInstance().DisableLogging();
 }

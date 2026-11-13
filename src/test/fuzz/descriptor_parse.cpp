@@ -72,13 +72,13 @@ static void TestDescriptor(const Descriptor& desc, FlatSigningProvider& sig_prov
     assert((max_key_expr == 0 && key_count == 0) || max_key_expr + 1 == key_count);
 }
 
-void initialize_descriptor_parse()
+static void initialize_descriptor_parse()
 {
     static ECC_Context ecc_context{};
     SelectParams(ChainType::MAIN);
 }
 
-void initialize_mocked_descriptor_parse()
+static void initialize_mocked_descriptor_parse()
 {
     initialize_descriptor_parse();
     MOCKED_DESC_CONVERTER.Init();

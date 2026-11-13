@@ -34,7 +34,7 @@ constexpr ReachabilityGoal COMPACT_BLOCK_INITIALIZATION_SUCCEEDS{"compact block 
 constexpr ReachabilityGoal COMPACT_BLOCK_RECONSTRUCTION_SUCCEEDS{"compact block reconstruction succeeds"};
 } // namespace
 
-void initialize_pdb()
+static void initialize_pdb()
 {
     RegisterReachabilityGoal(COMPACT_BLOCK_INITIALIZATION_SUCCEEDS);
     RegisterReachabilityGoal(COMPACT_BLOCK_RECONSTRUCTION_SUCCEEDS);
@@ -42,7 +42,7 @@ void initialize_pdb()
     g_setup = testing_setup.get();
 }
 
-PartiallyDownloadedBlock::IsBlockMutatedFn FuzzedIsBlockMutated(bool result)
+static PartiallyDownloadedBlock::IsBlockMutatedFn FuzzedIsBlockMutated(bool result)
 {
     return [result](const CBlock& block, bool) {
         return result;

@@ -12,6 +12,7 @@
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <netaddress.h>
@@ -53,6 +54,9 @@ enum class HTTPRequestMethod {
     HEAD,
     PUT
 };
+
+/** HTTP request method as string - use for logging only */
+std::string_view RequestMethodString(HTTPRequestMethod m);
 
 class HTTPRequest;
 

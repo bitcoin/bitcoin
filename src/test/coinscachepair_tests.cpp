@@ -12,7 +12,7 @@ BOOST_AUTO_TEST_SUITE(coinscachepair_tests)
 
 static constexpr auto NUM_NODES{4};
 
-std::list<CoinsCachePair> CreatePairs(CoinsCachePair& sentinel)
+static std::list<CoinsCachePair> CreatePairs(CoinsCachePair& sentinel)
 {
     std::list<CoinsCachePair> nodes;
     for (auto i{0}; i < NUM_NODES; ++i) {

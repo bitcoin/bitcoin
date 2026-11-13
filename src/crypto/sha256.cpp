@@ -4,6 +4,7 @@
 
 #include <crypto/sha256.h>
 #include <crypto/common.h>
+#include <crypto/sha256_impl.h>
 
 #include <algorithm>
 #include <cassert>
@@ -21,43 +22,6 @@
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #endif
-
-#if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
-namespace sha256_sse4
-{
-void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
-}
-#endif
-
-namespace sha256d64_sse41
-{
-void Transform_4way(unsigned char* out, const unsigned char* in);
-}
-
-namespace sha256d64_avx2
-{
-void Transform_8way(unsigned char* out, const unsigned char* in);
-}
-
-namespace sha256d64_x86_shani
-{
-void Transform_2way(unsigned char* out, const unsigned char* in);
-}
-
-namespace sha256_x86_shani
-{
-void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
-}
-
-namespace sha256_arm_shani
-{
-void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
-}
-
-namespace sha256d64_arm_shani
-{
-void Transform_2way(unsigned char* out, const unsigned char* in);
-}
 #endif // DISABLE_OPTIMIZED_SHA256
 
 // Internal implementation code.

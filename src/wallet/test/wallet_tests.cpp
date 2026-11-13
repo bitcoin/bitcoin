@@ -405,7 +405,7 @@ BOOST_AUTO_TEST_CASE(ComputeTimeSmart)
     BOOST_CHECK_EQUAL(AddTx(*m_node.chainman, m_wallet, 5, 50s, 600), 300);
 }
 
-void TestLoadWallet(const std::string& name, DatabaseFormat format, std::function<void(std::shared_ptr<CWallet>)> f)
+static void TestLoadWallet(const std::string& name, DatabaseFormat format, std::function<void(std::shared_ptr<CWallet>)> f)
 {
     node::NodeContext node;
     auto chain{interfaces::MakeChain(node)};
@@ -557,7 +557,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
     BOOST_CHECK_EQUAL(list.begin()->second.size(), 2U);
 }
 
-void TestCoinsResult(ListCoinsTest& context, OutputType out_type, CAmount amount,
+static void TestCoinsResult(ListCoinsTest& context, OutputType out_type, CAmount amount,
                      std::map<OutputType, size_t>& expected_coins_sizes)
 {
     LOCK(context.wallet->cs_wallet);
@@ -648,7 +648,7 @@ BOOST_FIXTURE_TEST_CASE(dummy_input_size_test, BasicTestingSetup)
     BOOST_CHECK_EQUAL(CalculateNestedKeyhashInputSize(true), DUMMY_NESTED_P2WPKH_INPUT_SIZE);
 }
 
-bool malformed_descriptor(std::ios_base::failure e)
+static bool malformed_descriptor(std::ios_base::failure e)
 {
     std::string s(e.what());
     return s.find("Missing checksum") != std::string::npos;
