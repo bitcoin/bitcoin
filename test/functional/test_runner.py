@@ -27,8 +27,10 @@ import signal
 import subprocess
 import sys
 import tempfile
+import io
 import re
 import logging
+import unittest
 from test_framework.util import (
     Binaries,
     export_env_build_path,
@@ -761,6 +763,16 @@ def write_results(test_results, filepath, total_runtime):
             results_writer.writerow([test_result.name, test_result.status, str(test_result.time)])
         results_writer.writerow(['ALL', ("Passed" if all_passed else "Failed"), str(total_runtime)])
 
+def read_captured_output(log_file):
+    """Decode a finished test's captured stdout or stderr.
+
+    errors='replace' because a node inherits the test process's stderr, so a node that aborts
+    can put raw bytes there. Decoding strictly would raise inside the handler and take the
+    whole run down before it could report which test produced them.
+    """
+    return log_file.read().decode('utf-8', errors='replace')
+
+
 class TestHandler:
     """
     Trigger the test scripts passed in via the list.
@@ -826,7 +838,7 @@ class TestHandler:
                 (name, start_time, proc, testdir, log_out, log_err) = job.result()
 
                 log_out.seek(0), log_err.seek(0)
-                [stdout, stderr] = [log_file.read().decode('utf-8') for log_file in (log_out, log_err)]
+                [stdout, stderr] = [read_captured_output(log_file) for log_file in (log_out, log_err)]
                 log_out.close(), log_err.close()
                 skip_reason = None
                 if proc.returncode == TEST_EXIT_PASSED and stderr == "":
@@ -975,6 +987,18 @@ class RPCCoverage():
                 covered_cmds.update([line.strip() for line in coverage_file.readlines()])
 
         return all_cmds - covered_cmds
+
+
+class TestRunnerUnitTests(unittest.TestCase):
+    def test_captured_output_decodes_utf8(self):
+        self.assertEqual(read_captured_output(io.BytesIO("ok ✓\n".encode())), "ok ✓\n")
+
+    def test_captured_output_survives_undecodable_bytes(self):
+        """A node that aborts can leave raw bytes on stderr. Reading them must not raise,
+        or the whole run dies before reporting which test produced them."""
+        decoded = read_captured_output(io.BytesIO(b"Assertion failed\x80\x81 at 0x7f\n"))
+        self.assertIn("Assertion failed", decoded)
+        self.assertIn("at 0x7f", decoded)
 
 
 if __name__ == '__main__':

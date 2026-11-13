@@ -42,6 +42,10 @@ def run_unit_tests():
         test_framework_tests.addTest(
             unittest.TestLoader().loadTestsFromName(f"test_framework.{module}")
         )
+    # test_runner is not a test_framework module, so it is loaded by name.
+    test_framework_tests.addTest(
+        unittest.TestLoader().loadTestsFromName("test_runner")
+    )
     result = unittest.TextTestRunner(stream=sys.stdout, verbosity=1, failfast=True).run(
         test_framework_tests
     )
