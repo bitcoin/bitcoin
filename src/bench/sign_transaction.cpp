@@ -49,7 +49,7 @@ static void SignTransactionSingleInput(benchmark::Bench& bench, InputType input_
             case InputType::P2TR:
                 return GetScriptForDestination(WitnessV1Taproot(XOnlyPubKey{pubkey}));
             } // no default case, so the compiler can warn about missing cases
-            assert(false);
+            AssertUnreachable();
         }();
         prev_spks.push_back(prev_spk);
     }

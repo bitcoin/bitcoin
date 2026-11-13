@@ -4,15 +4,15 @@
 
 #include <qt/peertablemodel.h>
 
+#include <interfaces/node.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
-
-#include <interfaces/node.h>
-
-#include <utility>
+#include <util/check.h>
 
 #include <QList>
 #include <QTimer>
+
+#include <utility>
 
 PeerTableModel::PeerTableModel(interfaces::Node& node, QObject* parent)
     : QAbstractTableModel(parent),
@@ -90,7 +90,7 @@ QVariant PeerTableModel::data(const QModelIndex& index, int role) const
         case Subversion:
             return QString::fromStdString(rec->nodeStats.cleanSubVer);
         } // no default case, so the compiler can warn about missing cases
-        assert(false);
+        AssertUnreachable();
     } else if (role == Qt::TextAlignmentRole) {
         switch (column) {
         case NetNodeId:
@@ -109,7 +109,7 @@ QVariant PeerTableModel::data(const QModelIndex& index, int role) const
         case Subversion:
             return {};
         } // no default case, so the compiler can warn about missing cases
-        assert(false);
+        AssertUnreachable();
     } else if (role == StatsRole) {
         return QVariant::fromValue(rec);
     }

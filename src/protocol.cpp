@@ -6,6 +6,7 @@
 #include <protocol.h>
 
 #include <common/system.h>
+#include <util/check.h>
 
 CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* msg_type, unsigned int nMessageSizeIn)
     : pchMessageStart{pchMessageStartIn}
@@ -92,7 +93,7 @@ static std::string serviceFlagToStr(size_t bit)
 {
     const uint64_t service_flag = 1ULL << bit;
     switch ((ServiceFlags)service_flag) {
-    case NODE_NONE: abort();  // impossible
+    case NODE_NONE: AssertUnreachable();
     case NODE_NETWORK:         return "NETWORK";
     case NODE_BLOOM:           return "BLOOM";
     case NODE_WITNESS:         return "WITNESS";
