@@ -13,6 +13,10 @@
 #include <util/strencodings.h>
 
 #include <cassert>
+#include <cstdint>
+#include <optional>
+#include <stdexcept>
+#include <vector>
 
 void SetupChainParamsBaseOptions(ArgsManager& argsman)
 {
@@ -36,18 +40,28 @@ const CBaseChainParams& BaseParams()
     return *globalChainBaseParams;
 }
 
+std::optional<std::vector<uint8_t>> ReadSignetChallengeArg(const ArgsManager& args)
+{
+    // no default to treat no -signetchallenge (default signet) as distinct from
+    // the empty -signetchallenge= (custom signet)
+    const auto challenge_hex = args.GetArgs("-signetchallenge");
+    if (challenge_hex.empty()) {
+        return std::nullopt;
+    }
+    if (challenge_hex.size() != 1) {
+        throw std::runtime_error("-signetchallenge cannot be multiple values.");
+    }
+    const auto challenge_bytes = TryParseHex<uint8_t>(challenge_hex[0]);
+    if (!challenge_bytes) {
+        throw std::runtime_error(strprintf("-signetchallenge must be hex, not '%s'.", challenge_hex[0]));
+    }
+    return challenge_bytes;
+}
+
 std::string GetSignetDataDir(const ArgsManager& args)
 {
     std::string base_data_dir = "signet";
-    // no default to treat no -signetchallenge (default signet) as distinct from
-    // the empty -signetchallenge= (custom signet)
-    const auto challenge_hex = args.GetArg("-signetchallenge");
-    if (!challenge_hex) {
-        return base_data_dir;
-    }
-    // -signetchallenge can be invalid hex here (it's checked later in
-    // ReadSigNetArgs), but we don't mind to keep validation in one place.
-    const auto challenge_bytes = TryParseHex<uint8_t>(*challenge_hex);
+    const auto challenge_bytes = ReadSignetChallengeArg(args);
     if (!challenge_bytes || *challenge_bytes == kernel::SIGNET_DEFAULT_CHALLENGE) {
         return base_data_dir;
     }
