@@ -452,12 +452,6 @@ jobs:
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_netbsd_cross.sh'
 
-          - name: 'FreeBSD Cross'
-            warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_freebsd_cross.sh'
-
           - name: 'OpenBSD Cross'
             warp-runner: 'warp-ubuntu-latest-x64-8x'
             fallback-runner: 'ubuntu-latest'
@@ -565,6 +559,85 @@ jobs:
         uses: ./.github/actions/cache/save
         with:
           provider: ${{ matrix.provider || (github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha') }}
+
+  bsd:
+    name: ${{ matrix.name }}
+    runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-latest-x64-8x' || 'ubuntu-latest' }}
+    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+    timeout-minutes: 120
+
+    env:
+      DANGER_RUN_CI_ON_HOST: 1
+      FILE_ENV: ${{ matrix.file-env }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: FreeBSD
+            os: freebsd
+            file-env: './ci/test/00_setup_env_freebsd_native.sh'
+            prepare: |
+              pkg update
+              pkg install -y $PACKAGES
+              pip install $PIP_PACKAGES
+
+    steps:
+      - *ANNOTATION_PR_NUMBER
+
+      - *CHECKOUT
+
+      - name: Configure environment
+        uses: ./.github/actions/configure-environment
+
+      - name: Configure VM resources and cache paths
+        run: |
+          # shellcheck disable=SC1090
+          source "$FILE_ENV"
+          workspace_parent="${GITHUB_WORKSPACE%/*}"
+          {
+            echo "BSD_RELEASE=${BSD_RELEASE}"
+            echo "BSD_CPU=$(nproc)"
+            # Leave a quarter of host RAM for the runner and VM overhead.
+            echo "BSD_MEM=$(awk '/^MemTotal:/ {print int($2 * 3 / 4 / 1024)}' /proc/meminfo)"
+            echo "BASE_ROOT_DIR=${GITHUB_WORKSPACE}"
+            echo "BASE_BUILD_DIR=${workspace_parent}/build_ ₿🧪_"
+            echo "BASE_SCRATCH_DIR=${workspace_parent}/scratch_ ₿🧪_"
+            echo "CCACHE_DIR=${GITHUB_WORKSPACE}/ci/scratch/ccache"
+            echo "DEPENDS_DIR=${GITHUB_WORKSPACE}/depends"
+            echo "BASE_CACHE=${GITHUB_WORKSPACE}/depends/built"
+            echo "SOURCES_PATH=${GITHUB_WORKSPACE}/depends/sources"
+            echo "PREVIOUS_RELEASES_DIR=${GITHUB_WORKSPACE}/releases"
+          } >> "$GITHUB_ENV"
+
+      - name: Restore caches
+        uses: ./.github/actions/cache/restore
+        with:
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+
+      - name: Start FreeBSD VM
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: ${{ env.BSD_RELEASE }}
+          cpu: ${{ env.BSD_CPU }}
+          mem: ${{ env.BSD_MEM }}
+          custom-shell-name: bsd
+          envs: DANGER_RUN_CI_ON_HOST FILE_ENV BASE_ROOT_DIR BASE_BUILD_DIR BASE_SCRATCH_DIR CCACHE_DIR DEPENDS_DIR PREVIOUS_RELEASES_DIR
+          cache-after-prepare: true
+          # Keep prepared BSD images fresh when shared CI or depends inputs change.
+          prepare: |
+            echo "BSD CI cache epoch: ${{ hashFiles('ci/test/00_setup_env_*bsd_native.sh') }}" >/dev/null
+            . "${{ matrix.file-env }}"
+            ${{ matrix.prepare }}
+
+      - name: CI script
+        shell: bsd {0}
+        run: ./ci/test_run_all.sh
+
+      - name: Save caches
+        uses: ./.github/actions/cache/save
+        with:
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
 
   lint:
     name: 'lint'
