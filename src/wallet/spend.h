@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_SPEND_H
 #define BITCOIN_WALLET_SPEND_H
 
+#include <common/paymentdestination.h>
 #include <consensus/amount.h>
 #include <util/result.h>
 #include <wallet/coinselection.h>
@@ -195,6 +196,13 @@ util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& av
                                           const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /**
+ * Return an output of the same size as the one paying amount to dest, to estimate the
+ * transaction size or check for dust before the inputs are known. See
+ * PaymentDestination::GetTxDestination.
+ */
+CTxOut GetDummyTxOut(const PaymentDestination& dest, CAmount amount);
+
+/**
  * Set a height-based locktime for new transactions (uses the height of the
  * current chain tip unless we are not synced with the current chain).
  * The locktime is occasionally backdated, but never below minimum_height
@@ -202,6 +210,12 @@ util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& av
  * If minimum_height is above the local tip, locktime is 0.
  */
 void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, interfaces::Chain& chain, const uint256& block_hash, int block_height, uint32_t minimum_height = 0);
+
+/**
+ * Get the silent payments destinations a created transaction pays to, in the order their outputs
+ * are derived: the recipients, then the change destination if the transaction has a change output.
+ */
+std::vector<bip352::SilentPaymentsDestination> GetSilentPaymentsDestinations(const std::vector<CRecipient>& recipients, const CCoinControl& coin_control, const CreatedTransactionResult& txr);
 
 /**
  * Create a new transaction paying the recipients with a set of coins
