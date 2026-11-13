@@ -273,8 +273,9 @@ class P2PConnection(asyncio.Protocol):
         `connection_made()`. The rest of the initial v2 handshake functions are handled here.
         """
         if not self.v2_state.peer:
-            if not self.v2_state.initiating and not self.v2_state.sent_garbage:
-                # if the responder hasn't sent garbage yet, the responder is still reading ellswift bytes
+            if not self.v2_state.initiating and self.v2_state.ellswift_ours is None:
+                # if the responder hasn't sent its ellswift bytes yet, the responder is still reading ellswift bytes
+                # (sent_garbage can't be used for this check, as the garbage may be empty)
                 # reads ellswift bytes till the first mismatch from 12 bytes V1_PREFIX
                 length, send_handshake_bytes = self.v2_state.respond_v2_handshake(BytesIO(self.recvbuf))
                 self.recvbuf = self.recvbuf[length:]
