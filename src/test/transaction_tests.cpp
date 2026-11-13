@@ -51,9 +51,6 @@ using util::ToString;
 
 typedef std::vector<unsigned char> valtype;
 
-static CFeeRate g_dust{DUST_RELAY_TX_FEE};
-static bool g_bare_multi{DEFAULT_PERMIT_BAREMULTISIG};
-
 static const std::map<std::string, script_verify_flag_name>& mapFlagNames = ScriptFlagNamesToEnum();
 
 script_verify_flags ParseScriptFlags(std::string strFlags)
@@ -744,6 +741,29 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
 }
 
+namespace {
+/** Policy settings passed to IsStandardTx, defaulting to the node defaults. */
+struct StandardPolicy {
+    unsigned int max_op_return_relay{MAX_OP_RETURN_RELAY};
+    bool permit_bare_multisig{DEFAULT_PERMIT_BAREMULTISIG};
+    CFeeRate dust_relay_fee{DUST_RELAY_TX_FEE};
+};
+
+void CheckIsStandard(const CMutableTransaction& t, const StandardPolicy& policy = {})
+{
+    std::string reason;
+    BOOST_CHECK(IsStandardTx(CTransaction{t}, policy.max_op_return_relay, policy.permit_bare_multisig, policy.dust_relay_fee, reason));
+    BOOST_CHECK(reason.empty());
+}
+
+void CheckIsNotStandard(const CMutableTransaction& t, const std::string& reason_in, const StandardPolicy& policy = {})
+{
+    std::string reason;
+    BOOST_CHECK(!IsStandardTx(CTransaction{t}, policy.max_op_return_relay, policy.permit_bare_multisig, policy.dust_relay_fee, reason));
+    BOOST_CHECK_EQUAL(reason_in, reason);
+}
+} // namespace
+
 BOOST_AUTO_TEST_CASE(test_IsStandard)
 {
     FillableSigningProvider keystore;
@@ -761,21 +781,10 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     CKey key = GenerateRandomKey();
     t.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
 
-    constexpr auto CheckIsStandard = [](const auto& t, const unsigned int max_op_return_relay = MAX_OP_RETURN_RELAY) {
-        std::string reason;
-        BOOST_CHECK(IsStandardTx(CTransaction{t}, max_op_return_relay, g_bare_multi, g_dust, reason));
-        BOOST_CHECK(reason.empty());
-    };
-    constexpr auto CheckIsNotStandard = [](const auto& t, const std::string& reason_in, const unsigned int max_op_return_relay = MAX_OP_RETURN_RELAY) {
-        std::string reason;
-        BOOST_CHECK(!IsStandardTx(CTransaction{t}, max_op_return_relay, g_bare_multi, g_dust, reason));
-        BOOST_CHECK_EQUAL(reason_in, reason);
-    };
-
     CheckIsStandard(t);
 
     // Check dust with default relay fee:
-    CAmount nDustThreshold = 182 * g_dust.GetFeePerK() / 1000;
+    CAmount nDustThreshold = 182 * CFeeRate{DUST_RELAY_TX_FEE}.GetFeePerK() / 1000;
     BOOST_CHECK_EQUAL(nDustThreshold, 546);
 
     // Add dust outputs up to allowed maximum, still standard!
@@ -810,14 +819,12 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
     // Check dust with odd relay fee to verify rounding:
     // nDustThreshold = 182 * 3702 / 1000
-    g_dust = CFeeRate(3702);
     // dust:
     t.vout[0].nValue = 674 - 1;
-    CheckIsNotStandard(t, "dust");
+    CheckIsNotStandard(t, "dust", {.dust_relay_fee = CFeeRate{3702}});
     // not dust:
     t.vout[0].nValue = 674;
-    CheckIsStandard(t);
-    g_dust = CFeeRate{DUST_RELAY_TX_FEE};
+    CheckIsStandard(t, {.dust_relay_fee = CFeeRate{3702}});
 
     t.vout[0].scriptPubKey = CScript() << OP_1;
     CheckIsNotStandard(t, "scriptpubkey");
@@ -825,10 +832,10 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     // Custom 83-byte TxoutType::NULL_DATA (standard with max_op_return_relay of 83)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
     BOOST_CHECK_EQUAL(83, t.vout[0].scriptPubKey.size());
-    CheckIsStandard(t, /*max_op_return_relay=*/83);
+    CheckIsStandard(t, {.max_op_return_relay = 83});
 
     // Non-standard if max_op_return_relay datacarrier arg is one less
-    CheckIsNotStandard(t, "datacarrier", /*max_op_return_relay=*/82);
+    CheckIsNotStandard(t, "datacarrier", {.max_op_return_relay = 82});
 
     // Data payload can be encoded in any way...
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ""_hex;
@@ -868,10 +875,10 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
     t.vout[1].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
-    const auto datacarrier_size = t.vout[0].scriptPubKey.size() + t.vout[1].scriptPubKey.size();
+    const unsigned int datacarrier_size = t.vout[0].scriptPubKey.size() + t.vout[1].scriptPubKey.size();
     CheckIsStandard(t); // Default max relay should never trigger
-    CheckIsStandard(t, /*max_op_return_relay=*/datacarrier_size);
-    CheckIsNotStandard(t, "datacarrier", /*max_op_return_relay=*/datacarrier_size-1);
+    CheckIsStandard(t, {.max_op_return_relay = datacarrier_size});
+    CheckIsNotStandard(t, "datacarrier", {.max_op_return_relay = datacarrier_size - 1});
 
     // Check large scriptSig (non-standard if size is >1650 bytes)
     t.vout.resize(1);
@@ -934,16 +941,12 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     BOOST_CHECK_EQUAL(GetTransactionWeight(CTransaction(t)), 400004);
     CheckIsNotStandard(t, "tx-size");
 
-    // Check bare multisig (standard if policy flag g_bare_multi is set)
-    g_bare_multi = true;
+    // Check bare multisig (standard if policy flag permit_bare_multisig is set)
     t.vout[0].scriptPubKey = GetScriptForMultisig(1, {key.GetPubKey()}); // simple 1-of-1
     t.vin.resize(1);
     t.vin[0].scriptSig = CScript() << std::vector<unsigned char>(65, 0);
-    CheckIsStandard(t);
-
-    g_bare_multi = false;
-    CheckIsNotStandard(t, "bare-multisig");
-    g_bare_multi = DEFAULT_PERMIT_BAREMULTISIG;
+    CheckIsStandard(t, {.permit_bare_multisig = true});
+    CheckIsNotStandard(t, "bare-multisig", {.permit_bare_multisig = false});
 
     // Add dust outputs up to allowed maximum
     assert(t.vout.size() == 1);
