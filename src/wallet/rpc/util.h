@@ -49,6 +49,8 @@ void EnsureWalletIsUnlocked(const CWallet&);
 WalletContext& EnsureWalletContext(const std::any& context);
 
 bool GetAvoidReuseFlag(const CWallet& wallet, const UniValue& param);
+/// Reject deprecated watchonly options unless explicitly enabled. The options have no effect.
+void CheckDeprecatedWatchonlyOption(const CWallet& wallet, const UniValue& options, const std::string& option_name);
 std::string LabelFromValue(const UniValue& value);
 //! Fetch parent descriptors of this scriptPubKey.
 void PushParentDescriptors(const CWallet& wallet, const CScript& script_pubkey, UniValue& entry);
