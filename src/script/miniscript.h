@@ -1449,7 +1449,7 @@ private:
             auto ret = helper(node, subres);
 
             // Do a consistency check between the satisfaction code and the type checker
-            // (the actual satisfaction code in ProduceInputHelper does not use GetType)
+            // (the actual satisfaction code in ProduceInput does not use GetType)
 
             // For 'z' nodes, available satisfactions/dissatisfactions must have stack size 0.
             if (node.GetType() << "z"_mst && ret.nsat.available != Availability::NO) CHECK_NONFATAL(ret.nsat.stack.size() == 0);
@@ -1702,7 +1702,7 @@ public:
     bool IsSane() const { return IsValidTopLevel() && IsSaneSubexpression() && NeedsSignature(); }
 
     //! Produce a witness for this script, if possible and given the information available in the context.
-    //! The non-malleable satisfaction is guaranteed to be valid if it exists, and ValidSatisfaction()
+    //! The non-malleable satisfaction is guaranteed to be valid if it exists, and ValidSatisfactions()
     //! is true. If IsSane() holds, this satisfaction is guaranteed to succeed in case the node's
     //! conditions are satisfied (private keys and hash preimages available, locktimes satisfied).
     template<typename Ctx>
@@ -1848,7 +1848,7 @@ void BuildBack(const MiniscriptContext script_ctx, Fragment nt, std::vector<Node
 /**
  * Parse a miniscript from its textual descriptor form.
  * This does not check whether the script is valid, let alone sane. The caller is expected to use
- * the `IsValidTopLevel()` and `IsSaneTopLevel()` to check for these properties on the node.
+ * the `IsValidTopLevel()` and `IsSane()` to check for these properties on the node.
  */
 template <typename Key, typename Ctx>
 inline std::optional<Node<Key>> Parse(std::span<const char> in, const Ctx& ctx)

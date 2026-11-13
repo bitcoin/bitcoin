@@ -17,8 +17,8 @@ BOOST_FIXTURE_TEST_SUITE(walletdb_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(walletdb_readkeyvalue)
 {
     /**
-     * When ReadKeyValue() reads from either a "key" or "wkey" it first reads the DataStream into a
-     * CPrivKey or CWalletKey respectively and then reads a hash of the pubkey and privkey into a uint256.
+     * When LoadKey() reads from a "key", it first reads the DataStream into a CPrivKey, and then reads
+     * a hash of the pubkey and privkey into a uint256.
      * Wallets from 0.8 or before do not store the pubkey/privkey hash, trying to read the hash from old
      * wallets throws an exception, for backwards compatibility this read is wrapped in a try block to
      * silently fail. The test here makes sure the type of exception thrown from DataStream::read()

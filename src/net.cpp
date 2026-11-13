@@ -1276,7 +1276,7 @@ bool V2Transport::ProcessReceivedPacketBytes() noexcept
                 SetReceiveState(RecvState::APP);
                 break;
             case RecvState::APP:
-                // Application message decrypted correctly. It can be extracted using GetMessage().
+                // Application message decrypted correctly. It can be extracted using GetReceivedMessage().
                 SetReceiveState(RecvState::APP_READY);
                 break;
             default:
@@ -1333,7 +1333,7 @@ size_t V2Transport::GetMaxBytesToProcess() noexcept
             return BIP324Cipher::EXPANSION + m_recv_len - m_recv_buffer.size();
         }
     case RecvState::APP_READY:
-        // No bytes can be processed until GetMessage() is called.
+        // No bytes can be processed until GetReceivedMessage() is called.
         return 0;
     case RecvState::V1:
         // Not allowed (must be dealt with by the caller).
@@ -4200,7 +4200,7 @@ void CNode::MarkReceivedMsgsForProcessing()
     size_t nSizeAdded = 0;
     for (const auto& msg : vRecvMsg) {
         // vRecvMsg contains only completed CNetMessage
-        // the single possible partially deserialized message are held by TransportDeserializer
+        // the single possible partially deserialized message are held by m_transport
         nSizeAdded += msg.GetMemoryUsage();
     }
 

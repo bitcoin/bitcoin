@@ -33,7 +33,7 @@
 
 namespace ipc {
 namespace capnp {
-//! Construct a ParamStream wrapping a data stream with serialization parameters
+//! Construct a ParamsStream wrapping a data stream with serialization parameters
 //! needed to pass transaction objects between bitcoin processes.
 //! In the future, more params may be added here to serialize other objects that
 //! require serialization parameters. Params should just be chosen to serialize

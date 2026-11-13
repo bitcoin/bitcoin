@@ -2168,7 +2168,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     });
 
     /*
-     * Wait for genesis block to be processed. Typically kernel_notifications.m_tip_block
+     * Wait for genesis block to be processed. Typically kernel_notifications.m_state.tip_block
      * has already been set by a call to LoadChainTip() in CompleteChainstateInitialization().
      * But this is skipped if the chainstate doesn't exist yet or is being wiped:
      *
