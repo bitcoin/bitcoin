@@ -46,10 +46,17 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
         }
     }
 
-    if (auto value{args.GetIntArg("-maxtipage")}) opts.max_tip_age = std::chrono::seconds{*value};
+    if (auto value{args.GetIntArg("-maxtipage")}) {
+        // A negative max tip age would put the IBD cutoff in the future, so the
+        // node would never consider its tip recent and would stay in IBD.
+        if (*value < 0) {
+            return util::Error{Untranslated(strprintf("-maxtipage must be non-negative (got %d).", *value))};
+        }
+        opts.max_tip_age = std::chrono::seconds{*value};
+    }
 
     ReadDatabaseArgs(args, opts.coins_db);
-    ReadCoinsViewArgs(args, opts.coins_view);
+    if (auto result{ReadCoinsViewArgs(args, opts.coins_view)}; !result) return util::Error{util::ErrorString(result)};
 
     int script_threads = args.GetIntArg("-par", DEFAULT_SCRIPTCHECK_THREADS);
     if (script_threads <= 0) {

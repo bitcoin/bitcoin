@@ -2929,7 +2929,24 @@ bool CWallet::LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContex
                            _("The wallet will avoid paying less than the minimum relay fee."));
     }
 
-    wallet->m_confirm_target = args.GetIntArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
+    // m_confirm_target is unsigned, so a negative value would wrap to a huge
+    // target. Fee estimation rejects targets above the maximum it tracks, which
+    // makes every transaction silently fall back to -fallbackfee, so bound the
+    // target by what the estimator can actually serve. A maximum of 0 means no
+    // estimator is running (e.g. -blocksonly), in which case there is no bound
+    // to enforce.
+    if (const auto confirm_target{args.GetIntArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET)};
+        confirm_target < 1 || confirm_target > std::numeric_limits<unsigned int>::max()) {
+        error = strprintf(_("-txconfirmtarget must be between 1 and %u (got %d)."), std::numeric_limits<unsigned int>::max(), confirm_target);
+        return false;
+    } else if (const unsigned int max_target{chain ? chain->maximumFeeEstimationTargetBlocks() : 0};
+               max_target != 0 && static_cast<unsigned int>(confirm_target) > max_target) {
+        error = strprintf(_("-txconfirmtarget must be between 1 and %u (got %d)."), max_target, confirm_target);
+        return false;
+    } else {
+        wallet->m_confirm_target = static_cast<unsigned int>(confirm_target);
+    }
+
     wallet->m_spend_zero_conf_change = args.GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
     wallet->m_signal_rbf = DEFAULT_WALLET_RBF;
     if (auto value{args.GetBoolArg("-walletrbf")}) {
