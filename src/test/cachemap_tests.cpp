@@ -135,4 +135,33 @@ BOOST_AUTO_TEST_CASE(cachemap_test)
     BOOST_CHECK(Compare(cmapTest1, mapTest4));
 }
 
+BOOST_AUTO_TEST_CASE(capacity_limits)
+{
+    CacheMap<int,int> cache(0);
+    BOOST_CHECK(!cache.Insert(1, 1));
+    BOOST_CHECK_EQUAL(cache.GetSize(), 0);
+    BOOST_CHECK(!cache.HasKey(1));
+
+    cache.Clear();
+    cache.SetMaxSize(10);
+    for (int i = 0; i < 10; ++i) {
+        BOOST_REQUIRE(cache.Insert(i, i));
+    }
+    cache.SetMaxSize(5);
+    BOOST_CHECK_EQUAL(cache.GetSize(), 5);
+    for (int i = 0; i < 10; ++i) {
+        int value = -1;
+        if (i < 5) {
+            BOOST_CHECK(!cache.Get(i, value));
+        } else {
+            BOOST_CHECK(cache.Get(i, value));
+            BOOST_CHECK_EQUAL(value, i);
+        }
+    }
+    cache.SetMaxSize(0);
+    BOOST_CHECK_EQUAL(cache.GetSize(), 0);
+    BOOST_CHECK(!cache.HasKey(9));
+    BOOST_CHECK(!cache.Insert(1, 1));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

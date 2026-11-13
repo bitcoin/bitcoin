@@ -57,7 +57,7 @@ public:
           mapIndex()
     {}
 
-    explicit CacheMultiMap(const CacheMap<K,V>& other)
+    CacheMultiMap(const CacheMultiMap& other)
         : nMaxSize(other.nMaxSize),
           listItems(other.listItems),
           mapIndex()
@@ -74,6 +74,9 @@ public:
     void SetMaxSize(size_type nMaxSizeIn)
     {
         nMaxSize = nMaxSizeIn;
+        while (listItems.size() > nMaxSize) {
+            PruneLast();
+        }
     }
 
     size_type GetMaxSize() const {
@@ -86,22 +89,20 @@ public:
 
     bool Insert(const K& key, const V& value)
     {
-        map_it mit = mapIndex.find(key);
-        if(mit == mapIndex.end()) {
-            mit = mapIndex.emplace(key, it_map_t()).first;
+        if (nMaxSize == 0) {
+            return false;
         }
-        it_map_t& mapIt = mit->second;
-
-        if(mapIt.count(value) > 0) {
+        if (map_cit mit = mapIndex.find(key); mit != mapIndex.end() && mit->second.count(value) > 0) {
             // Don't insert duplicates
             return false;
         }
 
-        if(listItems.size() == nMaxSize) {
+        // Pruning may erase this key's entry in mapIndex, so look it up only afterwards
+        while (listItems.size() >= nMaxSize) {
             PruneLast();
         }
         listItems.push_front(item_t(key, value));
-        mapIt.emplace(value, listItems.begin());
+        mapIndex[key].emplace(value, listItems.begin());
         return true;
     }
 
@@ -184,8 +185,11 @@ public:
         return listItems;
     }
 
-    CacheMap<K,V>& operator=(const CacheMap<K,V>& other)
+    CacheMultiMap& operator=(const CacheMultiMap& other)
     {
+        if (this == &other) {
+            return *this;
+        }
         nMaxSize = other.nMaxSize;
         listItems = other.listItems;
         RebuildIndex();

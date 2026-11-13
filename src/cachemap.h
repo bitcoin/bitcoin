@@ -89,6 +89,9 @@ public:
     void SetMaxSize(size_type nMaxSizeIn)
     {
         nMaxSize = nMaxSizeIn;
+        while (listItems.size() > nMaxSize) {
+            PruneLast();
+        }
     }
 
     size_type GetMaxSize() const {
@@ -101,10 +104,13 @@ public:
 
     bool Insert(const K& key, const V& value)
     {
+        if (nMaxSize == 0) {
+            return false;
+        }
         if(mapIndex.find(key) != mapIndex.end()) {
             return false;
         }
-        if(listItems.size() == nMaxSize) {
+        while (listItems.size() >= nMaxSize) {
             PruneLast();
         }
         listItems.push_front(item_t(key, value));
