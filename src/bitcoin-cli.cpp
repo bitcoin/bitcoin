@@ -279,7 +279,7 @@ struct BaseRequestHandler {
 
 /** Process addrinfo requests */
 struct AddrinfoRequestHandler : BaseRequestHandler {
-    UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
+    UniValue PrepareRequest(const std::string&, const std::vector<std::string>& args) override
     {
         if (!args.empty()) {
             throw std::runtime_error("-addrinfo takes no arguments");
@@ -323,7 +323,7 @@ struct GetinfoRequestHandler : BaseRequestHandler {
     const int ID_BALANCES = 3;
 
     /** Create a simulated `getinfo` request. */
-    UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
+    UniValue PrepareRequest(const std::string&, const std::vector<std::string>& args) override
     {
         if (!args.empty()) {
             throw std::runtime_error("-getinfo takes no arguments");
@@ -483,7 +483,7 @@ public:
     static constexpr int ID_PEERINFO = 0;
     static constexpr int ID_NETWORKINFO = 1;
 
-    UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
+    UniValue PrepareRequest(const std::string&, const std::vector<std::string>& args) override
     {
         if (!args.empty()) {
             uint8_t n{0};
@@ -759,7 +759,7 @@ public:
 class GenerateToAddressRequestHandler : public BaseRequestHandler
 {
 public:
-    UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
+    UniValue PrepareRequest(const std::string&, const std::vector<std::string>& args) override
     {
         address_str = args.at(1);
         UniValue params{RPCConvertValues("generatetoaddress", args)};

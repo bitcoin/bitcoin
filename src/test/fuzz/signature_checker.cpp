@@ -24,22 +24,22 @@ public:
     {
     }
 
-    bool CheckECDSASignature(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override
+    bool CheckECDSASignature(const std::vector<unsigned char>&, const std::vector<unsigned char>&, const CScript&, SigVersion) const override
     {
         return m_fuzzed_data_provider.ConsumeBool();
     }
 
-    bool CheckSchnorrSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror = nullptr) const override
+    bool CheckSchnorrSignature(std::span<const unsigned char>, std::span<const unsigned char>, SigVersion, ScriptExecutionData&, ScriptError* = nullptr) const override
     {
         return m_fuzzed_data_provider.ConsumeBool();
     }
 
-    bool CheckLockTime(const CScriptNum& nLockTime) const override
+    bool CheckLockTime(const CScriptNum&) const override
     {
         return m_fuzzed_data_provider.ConsumeBool();
     }
 
-    bool CheckSequence(const CScriptNum& nSequence) const override
+    bool CheckSequence(const CScriptNum&) const override
     {
         return m_fuzzed_data_provider.ConsumeBool();
     }
