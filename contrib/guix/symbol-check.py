@@ -10,6 +10,8 @@ Example usage:
 
     find ../path/to/guix/binaries -type f -executable | xargs python3 contrib/guix/symbol-check.py
 '''
+import argparse
+import os
 import sys
 
 import lief
@@ -95,14 +97,14 @@ ELF_ALLOWED_LIBRARIES = {
 'libc.so.6', # C library
 'libpthread.so.0', # threading
 'libm.so.6', # math library
-'ld-linux-x86-64.so.2', # 64-bit dynamic linker
 'ld-linux.so.2', # 32-bit dynamic linker
-'ld-linux-aarch64.so.1', # 64-bit ARM dynamic linker
 'ld-linux-armhf.so.3', # 32-bit ARM dynamic linker
 'ld64.so.1', # POWER64 ABIv1 dynamic linker
 'ld64.so.2', # POWER64 ABIv2 dynamic linker
 'ld-linux-riscv64-lp64d.so.1', # 64-bit RISC-V dynamic linker
 # bitcoin-qt only
+'ld-linux-x86-64.so.2', # 64-bit dynamic linker
+'ld-linux-aarch64.so.1', # 64-bit ARM dynamic linker
 'libfontconfig.so.1', # font support
 'libfreetype.so.6', # font parsing
 'libdl.so.2', # programming interface to dynamic linker
@@ -291,6 +293,26 @@ def check_ELF_ABI(binary) -> bool:
     assert note.abi == lief.ELF.NoteAbi.ABI.LINUX
     return note.version == expected_abi
 
+# Static binary will have:
+# no imported, or exported symbols
+#   single 0-value dynamic symbol for x86_64
+#   aarch64 has 3 symbols
+# no library dependencies
+# no interpreter (redundant second check)
+def check_ELF_STATIC(binary) -> bool:
+    assert len(binary.dynamic_symbols) <= 3
+    assert len(binary.imported_symbols) == 0
+    assert len(binary.libraries) == 0
+    assert binary.concrete.interpreter == ""
+    assert check_ELF_ABI(binary) is True
+    assert check_RUNPATH(binary) is True
+    return True
+
+ELF_DYNAMIC_EXECUTABLES = {
+'bitcoin-qt',
+'bitcoin-gui',
+}
+
 CHECKS = {
 lief.Binary.FORMATS.ELF: [
     ('IMPORTED_SYMBOLS', check_imported_symbols),
@@ -314,16 +336,33 @@ lief.Binary.FORMATS.PE: [
 }
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--static', action='store_true', help='require ELF executables to be statically linked')
+    parser.add_argument('files', nargs='+')
+    args = parser.parse_args()
+
     retval: int = 0
-    for filename in sys.argv[1:]:
+    for filename in args.files:
         binary = lief.parse(filename)
 
         etype = binary.format # type: ignore[union-attr]
 
         failed: list[str] = []
-        for (name, func) in CHECKS[etype]:
-            if not func(binary):
-                failed.append(name)
+
+        if etype == lief.Binary.FORMATS.ELF:
+
+            if args.static and os.path.basename(filename) not in ELF_DYNAMIC_EXECUTABLES:
+                check_ELF_STATIC(binary)
+
+            else: # non-static
+                for (name, func) in CHECKS[etype]:
+                    if not func(binary):
+                        failed.append(name)
+
+        else: # macho / pe
+            for (name, func) in CHECKS[etype]:
+                if not func(binary):
+                    failed.append(name)
         if failed:
             print(f'{filename}: failed {" ".join(failed)}')
             retval = 1
