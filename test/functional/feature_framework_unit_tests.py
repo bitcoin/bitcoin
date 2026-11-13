@@ -18,7 +18,6 @@ TEST_FRAMEWORK_MODULES = [
     "address",
     "crypto.bip324_cipher",
     "blocktools",
-    "compressor",
     "crypto.chacha20",
     "crypto.ellswift",
     "extendedkey",
