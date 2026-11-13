@@ -224,6 +224,16 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         PortSeed.n = self.options.port_seed
 
+    @property
+    def linux_host(self):
+        """Whether the Python test process runs on Linux."""
+        return platform.system() == "Linux"
+
+    @property
+    def windows_target(self):
+        """Whether the tested binaries target Windows, including under Wine."""
+        return self.config["environment"]["EXEEXT"] == ".exe"
+
     def get_binaries(self, bin_dir=None):
         return Binaries(self.binary_paths, bin_dir, use_valgrind=self.options.valgrind)
 
@@ -758,6 +768,18 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
     def wait_until(self, test_function, *, timeout=60, check_interval=0.05):
         return wait_until_helper_internal(test_function, timeout=timeout, timeout_factor=self.options.timeout_factor, check_interval=check_interval)
+
+    def wait_for_send_stall(self, node):
+        """Wait until sending blocks to the first peer stalls. Return its byte count."""
+        previous_bytes = 0
+
+        def stalled():
+            nonlocal previous_bytes
+            block_bytes, previous_bytes = previous_bytes, node.getpeerinfo()[0]["bytessent_per_msg"].get("block", 0)
+            return block_bytes > 0 and block_bytes == previous_bytes
+
+        self.wait_until(stalled, check_interval=1)
+        return previous_bytes
 
     def fill_node_addrman(self, *, node_index, address_types_to_add):
         ADDRESSES = {
