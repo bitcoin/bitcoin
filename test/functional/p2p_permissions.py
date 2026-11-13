@@ -88,6 +88,11 @@ class P2PPermissionsTests(BitcoinTestFramework):
             ["-whitelist=all@127.0.0.1"],
             ["forcerelay", "noban", "mempool", "bloomfilter", "relay", "download", "addr"])
 
+        self.checkpermission(
+            # bip152hb is only granted explicitly, it is not implied by "all"
+            ["-whitelist=bip152hb@127.0.0.1"],
+            ["bip152hb"])
+
         for flag, permissions in [(["-whitelist=noban,out@127.0.0.1"], ["noban", "download"]), (["-whitelist=noban@127.0.0.1"], [])]:
             self.restart_node(0, flag)
             self.connect_nodes(0, 1)
@@ -100,6 +105,8 @@ class P2PPermissionsTests(BitcoinTestFramework):
         self.nodes[1].assert_start_raises_init_error(["-whitelist=noban@127.0.0.1:230"], "Invalid netmask specified in", match=ErrorMatch.PARTIAL_REGEX)
         self.nodes[1].assert_start_raises_init_error(["-whitebind=noban@127.0.0.1/10"], "Cannot resolve -whitebind address", match=ErrorMatch.PARTIAL_REGEX)
         self.nodes[1].assert_start_raises_init_error(["-whitebind=noban@127.0.0.1", "-bind=127.0.0.1", "-listen=0"], "Cannot set -bind or -whitebind together with -listen=0", match=ErrorMatch.PARTIAL_REGEX)
+        self.nodes[1].assert_start_raises_init_error(["-whitelist=bip152hb@127.0.0.1", "-blocksonly"], "Cannot use the bip152hb permission in -whitelist together with -blocksonly", match=ErrorMatch.PARTIAL_REGEX)
+        self.nodes[1].assert_start_raises_init_error([f"-whitebind=bip152hb@127.0.0.1:{p2p_port(1)}", "-blocksonly"], "Cannot use the bip152hb permission in -whitebind together with -blocksonly", match=ErrorMatch.PARTIAL_REGEX)
 
     def check_tx_relay(self):
         self.log.debug("Create a connection from a forcerelay peer that rebroadcasts raw txs")

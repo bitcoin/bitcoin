@@ -17,7 +17,8 @@ const std::vector<std::string> NET_PERMISSIONS_DOC{
     "relay (relay even in -blocksonly mode, and unlimited transaction announcements)",
     "mempool (allow requesting BIP35 mempool contents)",
     "download (allow getheaders during IBD, no disconnect after maxuploadtarget limit)",
-    "addr (responses to GETADDR avoid hitting the cache and contain random records with the most up-to-date info)"
+    "addr (responses to GETADDR avoid hitting the cache and contain random records with the most up-to-date info)",
+    "bip152hb (request BIP152 high-bandwidth compact block announcements, in addition to the automatically selected peers; incompatible with -blocksonly)",
 };
 
 namespace {
@@ -55,6 +56,7 @@ static bool TryParsePermissionFlags(const std::string& str, NetPermissionFlags& 
             else if (permission == "all") NetPermissions::AddFlag(flags, NetPermissionFlags::All);
             else if (permission == "relay") NetPermissions::AddFlag(flags, NetPermissionFlags::Relay);
             else if (permission == "addr") NetPermissions::AddFlag(flags, NetPermissionFlags::Addr);
+            else if (permission == "bip152hb") NetPermissions::AddFlag(flags, NetPermissionFlags::Bip152HighBandwidth);
             else if (permission == "in") connection_direction |= ConnectionDirection::In;
             else if (permission == "out") {
                 if (output_connection_direction == nullptr) {
@@ -99,6 +101,7 @@ std::vector<std::string> NetPermissions::ToStrings(NetPermissionFlags flags)
     if (NetPermissions::HasFlag(flags, NetPermissionFlags::Mempool)) strings.emplace_back("mempool");
     if (NetPermissions::HasFlag(flags, NetPermissionFlags::Download)) strings.emplace_back("download");
     if (NetPermissions::HasFlag(flags, NetPermissionFlags::Addr)) strings.emplace_back("addr");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::Bip152HighBandwidth)) strings.emplace_back("bip152hb");
     return strings;
 }
 

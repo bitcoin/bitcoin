@@ -11,9 +11,11 @@
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <net.h>
+#include <net_permissions.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
 #include <node/blockstorage.h>
+#include <node/protocol_version.h>
 #include <policy/truc_policy.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -446,14 +448,20 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
         std::vector<CNodeStats> stats;
         connman.GetNodeStats(stats);
 
-        // We should have at maximum 3 HB peers.
+        // We should have at maximum 3 automatically selected HB peers. Peers
+        // with the bip152hb permission are additional to those.
         int num_hb = 0;
         for (const CNodeStats& stat : stats) {
+            const CNode* peer{peers[stat.nodeid]};
+            const bool hb_permission{peer->HasPermission(NetPermissionFlags::Bip152HighBandwidth)};
             if (stat.m_bip152_highbandwidth_to) {
                 // HB peers cannot be feelers or other "special" connections (besides addr-fetch).
-                CNode* hb_peer = peers[stat.nodeid];
-                if (!hb_peer->fDisconnect) num_hb += 1;
-                assert(hb_peer->IsInboundConn() || hb_peer->IsOutboundOrBlockRelayConn() || hb_peer->IsManualConn() || hb_peer->IsAddrFetchConn());
+                if (!peer->fDisconnect && !hb_permission) num_hb += 1;
+                assert(peer->IsInboundConn() || peer->IsOutboundOrBlockRelayConn() || peer->IsManualConn() || peer->IsAddrFetchConn());
+            } else if (hb_permission && peer->fSuccessfullyConnected && !peer->IsPrivateBroadcastConn()) {
+                // Peers with the bip152hb permission are asked for HB mode
+                // when the handshake completes, and are never demoted.
+                assert(peer->GetCommonVersion() < SHORT_IDS_BLOCKS_VERSION);
             }
         }
         assert(num_hb <= 3);
