@@ -180,6 +180,10 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
     auto max_pct = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 100);
     auto filtered = fuzzed_data_provider.ConsumeBool();
     (void)const_addr_man.GetAddr(max_addresses, max_pct, network, filtered);
+    if (network) {
+        const auto all_addresses{const_addr_man.GetAddr(/*max_addresses=*/0, /*max_pct=*/0, network, /*filtered=*/false)};
+        assert(all_addresses.size() == const_addr_man.Size(network));
+    }
 
     std::unordered_set<Network> nets;
     for (const auto& net : ALL_NETWORKS) {
