@@ -45,6 +45,7 @@
 #include <wallet/spend.h>
 #include <wallet/test/util.h>
 #include <wallet/test/wallet_test_fixture.h>
+#include <wallet/walletdb.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -820,10 +821,29 @@ BOOST_FIXTURE_TEST_CASE(RemoveTxs, TestChain100Setup)
         BOOST_CHECK(wallet->mapWallet.contains(block_hash));
 
         std::vector<Txid> vHashIn{ block_hash };
-        BOOST_CHECK(wallet->RemoveTxs(vHashIn));
+        auto db_batch{wallet->GetDatabase().MakeBatch()};
+        const auto tx_key{std::make_pair(DBKeys::TX, block_hash)};
+        BOOST_REQUIRE(db_batch->Exists(tx_key));
 
+        // Confirm that aborting a RemoveTxs() transaction invokes the no-op listener
+        // callback safely and restores the transaction's database record
+        {
+            WalletBatch batch{wallet->GetDatabase()};
+            BOOST_REQUIRE(batch.TxnBegin());
+            BOOST_REQUIRE(wallet->RemoveTxs(batch, vHashIn));
+            BOOST_CHECK(wallet->HasWalletSpend(prev_tx));
+            BOOST_CHECK(wallet->mapWallet.contains(block_hash));
+            BOOST_CHECK(!db_batch->Exists(tx_key));
+            BOOST_REQUIRE(batch.TxnAbort());
+        }
+        BOOST_CHECK(wallet->HasWalletSpend(prev_tx));
+        BOOST_CHECK(wallet->mapWallet.contains(block_hash));
+        BOOST_CHECK(db_batch->Exists(tx_key));
+
+        BOOST_CHECK(wallet->RemoveTxs(vHashIn));
         BOOST_CHECK(!wallet->HasWalletSpend(prev_tx));
         BOOST_CHECK(!wallet->mapWallet.contains(block_hash));
+        BOOST_CHECK(!db_batch->Exists(tx_key));
     }
 
     TestUnloadWallet(std::move(wallet));
