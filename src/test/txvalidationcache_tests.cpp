@@ -22,78 +22,82 @@ struct Dersig100Setup : public TestChain100Setup {
 
 BOOST_AUTO_TEST_SUITE(txvalidationcache_tests)
 
-BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, Dersig100Setup)
-{
-    // Make sure skipping validation of transactions that were
-    // validated going into the memory pool does not allow
-    // double-spends in blocks to pass validation when they should not.
+// Make sure skipping validation of transactions that were
+// validated going into the memory pool does not allow
+// double-spends in blocks to pass validation when they should not.
+struct DoubleSpendSetup : public Dersig100Setup {
+    const CScript scriptPubKey{CScript{} << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG};
 
-    CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+    // Returns a signed spend of the first mature coinbase txn, paying the given value.
+    CMutableTransaction MakeSpend(CAmount value) const
+    {
+        CMutableTransaction spend;
+        spend.version = 1;
+        spend.vin = {CTxIn{m_coinbase_txns[0]->GetHash(), 0}};
+        spend.vout = {CTxOut{value, scriptPubKey}};
 
-    const auto ToMemPool = [this](const CMutableTransaction& tx) {
+        // Sign:
+        std::vector<unsigned char> vchSig;
+        uint256 hash = SignatureHash(scriptPubKey, spend, /*nIn=*/0, SIGHASH_ALL, /*amount=*/0, SigVersion::BASE);
+        BOOST_CHECK(coinbaseKey.Sign(hash, vchSig));
+        vchSig.push_back((unsigned char)SIGHASH_ALL);
+        spend.vin[0].scriptSig << vchSig;
+        return spend;
+    }
+
+    // A double-spend of a mature coinbase txn.
+    const std::vector<CMutableTransaction> spends{MakeSpend(11 * CENT), MakeSpend(12 * CENT)};
+
+    bool ToMemPool(const CMutableTransaction& tx)
+    {
         LOCK(cs_main);
 
         const MempoolAcceptResult result = m_node.chainman->ProcessTransaction(MakeTransactionRef(tx));
         return result.m_result_type == MempoolAcceptResult::ResultType::VALID;
-    };
-
-    // Create a double-spend of mature coinbase txn:
-    std::vector<CMutableTransaction> spends;
-    spends.resize(2);
-    for (int i = 0; i < 2; i++)
-    {
-        spends[i].version = 1;
-        spends[i].vin = {CTxIn{m_coinbase_txns[0]->GetHash(), 0}};
-        spends[i].vout = {CTxOut{11*CENT, scriptPubKey}};
-
-        // Sign:
-        std::vector<unsigned char> vchSig;
-        uint256 hash = SignatureHash(scriptPubKey, spends[i], 0, SIGHASH_ALL, 0, SigVersion::BASE);
-        BOOST_CHECK(coinbaseKey.Sign(hash, vchSig));
-        vchSig.push_back((unsigned char)SIGHASH_ALL);
-        spends[i].vin[0].scriptSig << vchSig;
     }
 
-    CBlock block;
-
-    // Test 1: block with both of those transactions should be rejected.
-    block = CreateAndProcessBlock(spends, scriptPubKey);
+    bool IsTip(const CBlock& block)
     {
         LOCK(cs_main);
-        BOOST_CHECK(m_node.chainman->ActiveChain().Tip()->GetBlockHash() != block.GetHash());
+        return m_node.chainman->ActiveChain().Tip()->GetBlockHash() == block.GetHash();
     }
+};
 
-    // Test 2: ... and should be rejected if spend1 is in the memory pool
+BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend_both_in_block, DoubleSpendSetup)
+{
+    // A block with both of those transactions should be rejected.
+    const CBlock block{CreateAndProcessBlock(spends, scriptPubKey)};
+    BOOST_CHECK(!IsTip(block));
+}
+
+BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend_first_in_mempool, DoubleSpendSetup)
+{
+    // ... and should be rejected if spend1 is in the memory pool
     BOOST_CHECK(ToMemPool(spends[0]));
-    block = CreateAndProcessBlock(spends, scriptPubKey);
-    {
-        LOCK(cs_main);
-        BOOST_CHECK(m_node.chainman->ActiveChain().Tip()->GetBlockHash() != block.GetHash());
-    }
+    const CBlock block{CreateAndProcessBlock(spends, scriptPubKey)};
+    BOOST_CHECK(!IsTip(block));
     BOOST_CHECK_EQUAL(m_node.mempool->size(), 1U);
-    WITH_LOCK(m_node.mempool->cs, m_node.mempool->removeRecursive(CTransaction{spends[0]}, MemPoolRemovalReason::CONFLICT));
-    BOOST_CHECK_EQUAL(m_node.mempool->size(), 0U);
+}
 
-    // Test 3: ... and should be rejected if spend2 is in the memory pool
+BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend_second_in_mempool, DoubleSpendSetup)
+{
+    // ... and should be rejected if spend2 is in the memory pool
     BOOST_CHECK(ToMemPool(spends[1]));
-    block = CreateAndProcessBlock(spends, scriptPubKey);
-    {
-        LOCK(cs_main);
-        BOOST_CHECK(m_node.chainman->ActiveChain().Tip()->GetBlockHash() != block.GetHash());
-    }
+    const CBlock block{CreateAndProcessBlock(spends, scriptPubKey)};
+    BOOST_CHECK(!IsTip(block));
     BOOST_CHECK_EQUAL(m_node.mempool->size(), 1U);
-    WITH_LOCK(m_node.mempool->cs, m_node.mempool->removeRecursive(CTransaction{spends[1]}, MemPoolRemovalReason::CONFLICT));
-    BOOST_CHECK_EQUAL(m_node.mempool->size(), 0U);
+}
 
-    // Final sanity test: first spend in *m_node.mempool, second in block, that's OK:
-    std::vector<CMutableTransaction> oneSpend;
-    oneSpend.push_back(spends[0]);
+BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend_one_in_mempool_other_in_block, DoubleSpendSetup)
+{
+    // The spends must be distinct transactions, so that the one in the
+    // memory pool is removed as a conflict rather than as mined:
+    BOOST_REQUIRE(spends[0].GetHash() != spends[1].GetHash());
+
+    // Final sanity test: second spend in the memory pool, first in block, that's OK:
     BOOST_CHECK(ToMemPool(spends[1]));
-    block = CreateAndProcessBlock(oneSpend, scriptPubKey);
-    {
-        LOCK(cs_main);
-        BOOST_CHECK(m_node.chainman->ActiveChain().Tip()->GetBlockHash() == block.GetHash());
-    }
+    const CBlock block{CreateAndProcessBlock({spends[0]}, scriptPubKey)};
+    BOOST_CHECK(IsTip(block));
     // spends[1] should have been removed from the mempool when the
     // block with spends[0] is accepted:
     BOOST_CHECK_EQUAL(m_node.mempool->size(), 0U);
