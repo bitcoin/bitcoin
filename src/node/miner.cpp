@@ -240,6 +240,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
              Ticks<MillisecondsDouble>(time_2 - time_1),
              Ticks<MillisecondsDouble>(time_2 - time_start));
 
+    pblocktemplate->m_total_fees = nFees;
     return std::move(pblocktemplate);
 }
 

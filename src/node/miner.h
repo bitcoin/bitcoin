@@ -32,6 +32,8 @@ namespace node {
 struct CBlockTemplate
 {
     CBlock block;
+    //! Total transaction fees in satoshis.
+    CAmount m_total_fees{0};
     // Fees per transaction, not including coinbase transaction (unlike CBlock::vtx).
     std::vector<CAmount> vTxFees;
     // Sigops per transaction, not including coinbase transaction (unlike CBlock::vtx).
