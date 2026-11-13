@@ -5030,10 +5030,23 @@ bool ChainstateManager::LoadGenesisBlock()
     }
 
     try {
-        FlatFilePos blockPos{m_blockman.WriteBlock(genesis_block, 0)};
-        if (blockPos.IsNull()) {
-            LogError("Writing genesis block to disk failed");
-            return false;
+        // The block index can be missing while block file 0 still holds
+        // the genesis block. Reuse it rather than writing it again: a
+        // rewrite would allocate from the start of the file, which on
+        // platforms whose AllocateFileRange() fallback writes zeroes
+        // would overwrite the blocks that follow genesis. Record it in
+        // the blockfile info as WriteBlock() would, so the next block
+        // is not written over it.
+        CBlock existing_block;
+        FlatFilePos blockPos{0, node::STORAGE_HEADER_BYTES};
+        if (m_blockman.ReadBlock(existing_block, blockPos, genesis_block.GetHash())) {
+            m_blockman.UpdateBlockInfo(genesis_block, 0, blockPos);
+        } else {
+            blockPos = m_blockman.WriteBlock(genesis_block, 0);
+            if (blockPos.IsNull()) {
+                LogError("Writing genesis block to disk failed");
+                return false;
+            }
         }
         CBlockIndex* pindex{m_blockman.AddToBlockIndex(genesis_block, m_best_header)};
         ReceivedBlockTransactions(genesis_block, pindex, blockPos);
