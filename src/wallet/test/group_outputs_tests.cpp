@@ -16,15 +16,6 @@ BOOST_FIXTURE_TEST_SUITE(group_outputs_tests, TestingSetup)
 
 static int nextLockTime = 0;
 
-static std::shared_ptr<CWallet> NewWallet(const node::NodeContext& m_node)
-{
-    std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(m_node.chain.get(), "", CreateMockableWalletDatabase());
-    LOCK(wallet->cs_wallet);
-    wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
-    wallet->SetupDescriptorScriptPubKeyMans();
-    return wallet;
-}
-
 static void addCoin(CoinsResult& coins,
                      CWallet& wallet,
                      const CTxDestination& dest,
@@ -106,7 +97,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(outputs_grouping_tests)
 {
-    const auto& wallet = NewWallet(m_node);
+    const std::shared_ptr<CWallet> wallet = NewWallet(m_node);
     GroupVerifier group_verifier;
     group_verifier.wallet = wallet;
 

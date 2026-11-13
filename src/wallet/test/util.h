@@ -17,12 +17,11 @@
 #include <utility>
 
 class ArgsManager;
-class CChain;
 class CKey;
 enum class OutputType;
-namespace interfaces {
-class Chain;
-} // namespace interfaces
+namespace node {
+struct NodeContext;
+} // namespace node
 
 namespace wallet {
 class CWallet;
@@ -35,7 +34,8 @@ inline constexpr DatabaseFormat DATABASE_FORMATS[] = {
 
 inline const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj";
 
-std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cchain, const CKey& key);
+std::unique_ptr<CWallet> NewWallet(const node::NodeContext& node);
+std::unique_ptr<CWallet> CreateSyncedWallet(const node::NodeContext& node, const CKey& key);
 
 void AddKey(CWallet& wallet, const CKey& key);
 
