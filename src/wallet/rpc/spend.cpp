@@ -379,7 +379,7 @@ RPCMethod sendtoaddress()
         sffo_set.insert(0);
     }
 
-    std::vector<CRecipient> recipients{CreateRecipients(ParseOutputs(address_amounts, /*allow_silent_payments=*/false), sffo_set)};
+    std::vector<CRecipient> recipients{CreateRecipients(ParseOutputs(address_amounts, /*allow_silent_payments=*/true), sffo_set)};
     const bool verbose{self.Arg<bool>("verbose")};
 
     return SendMoney(*pwallet, coin_control, recipients, comment, comment_to, verbose);
@@ -473,7 +473,7 @@ RPCMethod sendmany()
     SetFeeEstimateMode(*pwallet, coin_control, /*conf_target=*/request.params[6], /*estimate_mode=*/request.params[7], /*fee_rate=*/request.params[8], /*override_min_fee=*/false);
 
     std::vector<CRecipient> recipients = CreateRecipients(
-            ParseOutputs(sendTo, /*allow_silent_payments=*/false),
+            ParseOutputs(sendTo, /*allow_silent_payments=*/true),
             InterpretSubtractFeeFromOutputInstructions(&request.params[4], sendTo.getKeys())
     );
     const bool verbose{self.Arg<bool>("verbose")};
@@ -1339,7 +1339,7 @@ RPCMethod send()
             UniValue outputs(UniValue::VOBJ);
             outputs = NormalizeOutputs(request.params[0]);
             std::vector<CRecipient> recipients = CreateRecipients(
-                    ParseOutputs(outputs, /*allow_silent_payments=*/false),
+                    ParseOutputs(outputs, /*allow_silent_payments=*/true),
                     InterpretSubtractFeeFromOutputInstructions(&options["subtract_fee_from_outputs"], outputs.getKeys())
             );
             CCoinControl coin_control;
