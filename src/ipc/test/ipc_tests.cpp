@@ -3,32 +3,32 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <interfaces/init.h>
+#include <interfaces/ipc.h>
 #include <ipc/capnp/mining.capnp.h>
 #include <ipc/capnp/protocol.h>
-#include <interfaces/ipc.h>
 #include <ipc/process.h>
 #include <ipc/protocol.h>
 #include <ipc/test/ipc_test.capnp.h>
 #include <ipc/test/ipc_test.capnp.proxy.h>
 #include <ipc/test/ipc_test.h>
-#include <mp/proxy-types.h>
 #include <ipc/types.h>
-
-#include <test/util/common.h>
-#include <test/util/setup_common.h>
-#include <tinyformat.h>
-#include <util/log.h>
-#include <validation.h>
-
-#include <future>
-#include <optional>
-#include <thread>
 #include <kj/common.h>
 #include <kj/memory.h>
 #include <kj/test.h>
-#include <stdexcept>
+#include <mp/proxy-types.h>
+#include <test/util/common.h>
+#include <test/util/setup_common.h>
+#include <tinyformat.h>
+#include <util/check.h>
+#include <util/log.h>
+#include <validation.h>
 
 #include <boost/test/unit_test.hpp>
+
+#include <future>
+#include <optional>
+#include <stdexcept>
+#include <thread>
 
 static_assert(ipc::capnp::messages::MAX_MONEY == MAX_MONEY);
 static_assert(ipc::capnp::messages::MAX_DOUBLE == std::numeric_limits<double>::max());
