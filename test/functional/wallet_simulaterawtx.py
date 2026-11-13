@@ -18,6 +18,7 @@ class SimulateTxTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
+        self.extra_args = [["-deprecatedrpc=watchonly"]]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -54,6 +55,8 @@ class SimulateTxTest(BitcoinTestFramework):
         # w0 should be unaffected, w2 should see +5 for tx1
         assert_equal(w0.simulaterawtransaction([tx1])["balance_change"], 0.0)
         assert_equal(w2.simulaterawtransaction([tx1])["balance_change"], 5.0)
+        for include_watchonly in (False, True):  # deprecation dummy test
+            assert_equal(w2.simulaterawtransaction([tx1], include_watchonly=include_watchonly)["balance_change"], 5.0)
 
         # w1 should see +5 balance for tx1
         assert_equal(w1.simulaterawtransaction([tx1])["balance_change"], 5.0)

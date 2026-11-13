@@ -30,6 +30,16 @@ bool GetAvoidReuseFlag(const CWallet& wallet, const UniValue& param) {
     return avoid_reuse;
 }
 
+void CheckDeprecatedWatchonlyOption(const CWallet& wallet, const UniValue& options, const std::string& option_name)
+{
+    if (options[option_name].isNull() || wallet.chain().rpcEnableDeprecated("watchonly")) return;
+
+    throw JSONRPCError(
+        RPC_METHOD_DEPRECATED,
+        "DEPRECATION WARNING: The `" + option_name + "` option, passed as a named argument or in the options object, is no longer used and will be removed in the next release. "
+        "To continue passing this deprecated no-op option, start the RPC server with `-deprecatedrpc=watchonly`.");
+}
+
 std::string EnsureUniqueWalletName(const JSONRPCRequest& request, std::optional<std::string_view> wallet_name)
 {
     if (auto endpoint_wallet{GetWalletNameFromJSONRPCRequest(request)}) {
