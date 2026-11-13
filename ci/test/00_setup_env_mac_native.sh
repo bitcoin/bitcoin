@@ -20,3 +20,4 @@ printf -v BITCOIN_CONFIG "%q " \
   -DCMAKE_EXE_LINKER_FLAGS="-Wl,-stack_size -Wl,0x80000"
 export BITCOIN_CONFIG
 export BITCOIN_CMD="bitcoin -m" # Used in functional tests
+export CI_LIMIT_FD_COUNT=256    # Same as FD_SETSIZE on NetBSD, see test_framework/util.py
