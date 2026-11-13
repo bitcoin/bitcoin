@@ -12,6 +12,7 @@
 #include <node/block_template_manager.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
+#include <node/indexes.h>
 #include <node/mining_types.h>
 #include <test/util/mining.h>
 #include <test/util/script.h>
@@ -115,7 +116,7 @@ std::vector<std::pair<COutPoint, CAmount>> ResetChainmanAndMempool(TestingSetup&
 {
     node_clock.set(setup.m_node.chainman->GetParams().GenesisBlock().Time());
 
-    DestroyAllBlockFilterIndexes();
+    node::DestroyAllBlockFilterIndexes(setup.m_node);
 
     bilingual_str error{};
     setup.m_node.block_template_manager.reset();
@@ -142,8 +143,8 @@ std::vector<std::pair<COutPoint, CAmount>> ResetChainmanAndMempool(TestingSetup&
     }
 
     if (opts.init_block_filter_basic) {
-        Assert(InitBlockFilterIndex([&] { return interfaces::MakeChain(setup.m_node); }, BlockFilterType::BASIC, 1_MiB, /*f_memory=*/true, /*f_wipe=*/true));
-        auto& index = *Assert(GetBlockFilterIndex(BlockFilterType::BASIC));
+        Assert(node::InitBlockFilterIndex(setup.m_node, [&] { return interfaces::MakeChain(setup.m_node); }, BlockFilterType::BASIC, 1_MiB, /*f_memory=*/true, /*f_wipe=*/true));
+        auto& index = *Assert(node::GetBlockFilterIndex(setup.m_node, BlockFilterType::BASIC));
         Assert(index.Init());
         index.Sync();
         // The index serves the static setup chain only. Leaving it registered

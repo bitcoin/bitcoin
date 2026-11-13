@@ -30,6 +30,7 @@
 #include <node/blockstorage.h>
 #include <node/chainstate.h>
 #include <node/context.h>
+#include <node/indexes.h>
 #include <node/kernel_notifications.h>
 #include <node/miner.h>
 #include <node/mining_args.h>
@@ -346,7 +347,7 @@ ChainTestingSetup::~ChainTestingSetup()
 {
     if (m_node.scheduler) m_node.scheduler->stop();
     if (m_node.validation_signals) m_node.validation_signals->FlushBackgroundCallbacks();
-    DestroyAllBlockFilterIndexes();
+    node::DestroyAllBlockFilterIndexes(m_node);
     m_node.block_template_manager.reset();
     m_node.connman.reset();
     m_node.banman.reset();
@@ -409,6 +410,9 @@ TestingSetup::TestingSetup(
     PeerManager::Options peerman_opts;
     ApplyArgsManOptions(*m_node.args, peerman_opts);
     peerman_opts.deterministic_rng = true;
+    peerman_opts.get_block_filter_index = [this](BlockFilterType filter_type) {
+        return node::GetBlockFilterIndex(m_node, filter_type);
+    };
     m_node.peerman = PeerManager::make(*m_node.connman, *m_node.addrman,
                                        m_node.banman.get(), *m_node.chainman,
                                        *m_node.mempool, *m_node.warnings,
