@@ -1400,8 +1400,12 @@ class PSBTTest(BitcoinTestFramework):
         test_psbt_input_keys(decoded['inputs'][1], psbt_v2_required_keys + ['non_witness_utxo', 'bip32_derivs'])
         test_psbt_input_keys(decoded['inputs'][2], psbt_v2_required_keys + ['non_witness_utxo', 'witness_utxo', 'bip32_derivs', 'redeem_script'])
 
-        # Cannot join PSBTv2s
+        # joinpsbts requires at least two PSBTs
         psbt1 = self.nodes[1].createpsbt(inputs=[utxo1], outputs={self.nodes[0].getnewaddress():Decimal('10.999')}, psbt_version=0)
+        assert_raises_rpc_error(-8, "At least two PSBTs are required to join PSBTs", self.nodes[1].joinpsbts, [])
+        assert_raises_rpc_error(-8, "At least two PSBTs are required to join PSBTs", self.nodes[1].joinpsbts, [psbt1])
+
+        # Cannot join PSBTv2s
         psbt2 = self.nodes[1].createpsbt(inputs=[utxo1], outputs={self.nodes[0].getnewaddress():Decimal('10.999')}, psbt_version=2)
         assert_raises_rpc_error(-8, "joinpsbts only operates on version 0 PSBTs", self.nodes[1].joinpsbts, [psbt1, psbt2])
 
