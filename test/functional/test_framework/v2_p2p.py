@@ -138,16 +138,18 @@ class EncryptedP2PState:
                  - returns -1 to downgrade the connection to v1 P2P.
         """
         v1_prefix = MAGIC_BYTES[self.net] + b'version\x00\x00\x00\x00\x00'
+        # received_prefix may already hold bytes from earlier calls; only report the bytes consumed in this call
+        start_len = len(self.received_prefix)
         while len(self.received_prefix) < 16:
             byte = response.read(1)
             # return b"" if we need to receive more bytes
             if not byte:
-                return len(self.received_prefix), b""
+                return len(self.received_prefix) - start_len, b""
             self.received_prefix += byte
             if self.received_prefix[-1] != v1_prefix[len(self.received_prefix) - 1]:
-                return len(self.received_prefix), self.generate_keypair_and_garbage()
+                return len(self.received_prefix) - start_len, self.generate_keypair_and_garbage()
         # return -1 to decide v1 only after all 16 bytes processed
-        return len(self.received_prefix), -1
+        return len(self.received_prefix) - start_len, -1
 
     def complete_handshake(self, response):
         """ Instantiates the encrypted transport and
