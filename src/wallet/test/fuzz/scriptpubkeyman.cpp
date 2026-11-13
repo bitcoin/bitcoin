@@ -25,6 +25,7 @@
 #include <util/string.h>
 #include <validation.h>
 #include <wallet/context.h>
+#include <wallet/legacy/migration.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/test/util.h>
 #include <wallet/types.h>
@@ -222,8 +223,8 @@ FUZZ_TARGET(spkm_migration, .init = initialize_spkm_migration)
     const auto& node{g_setup->m_node};
     Chainstate& chainstate{node.chainman->ActiveChainstate()};
 
-    std::unique_ptr<CWallet> wallet_ptr{std::make_unique<CWallet>(node.chain.get(), "", CreateMockableWalletDatabase())};
-    CWallet& wallet{*wallet_ptr};
+    std::unique_ptr<legacy_migration::LegacyWallet> wallet_ptr{std::make_unique<legacy_migration::LegacyWallet>("", CreateMockableWalletDatabase())};
+    legacy_migration::LegacyWallet& wallet{*wallet_ptr};
     wallet.m_keypool_size = 1;
     {
         LOCK(wallet.cs_wallet);

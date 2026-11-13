@@ -5,12 +5,12 @@
 #ifndef BITCOIN_WALLET_LEGACY_LOAD_H
 #define BITCOIN_WALLET_LEGACY_LOAD_H
 
-#include <wallet/wallet.h>
+#include <wallet/legacy/migration.h>
 
 namespace wallet {
 namespace legacy_migration {
 
-std::shared_ptr<CWallet> LoadWalletForMigration(const std::string& name, bilingual_str& error);
+std::shared_ptr<LegacyWallet> LoadWalletForMigration(const std::string& name, bilingual_str& error);
 
 } // namespace legacy_migration
 } // namespace wallet
