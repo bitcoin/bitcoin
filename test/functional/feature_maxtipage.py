@@ -56,9 +56,11 @@ class MaxTipAgeTest(BitcoinTestFramework):
             self.log.info(f"Test IBD with maximum tip age of {hours} hours (-maxtipage={maxtipage}).")
             self.test_maxtipage(maxtipage)
 
-        max_long_val = 9223372036854775807
-        self.log.info(f"Test IBD with highest allowable maximum tip age ({max_long_val}).")
-        self.test_maxtipage(max_long_val, test_deltas=False)
+        # The value is parsed as a uint32, so the highest allowable maximum tip age
+        # is UINT32_MAX seconds rather than the full int64 range.
+        max_tip_age = 2**32 - 1
+        self.log.info(f"Test IBD with highest allowable maximum tip age ({max_tip_age}).")
+        self.test_maxtipage(max_tip_age, test_deltas=False)
 
 
 if __name__ == '__main__':
