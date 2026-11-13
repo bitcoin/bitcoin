@@ -69,6 +69,8 @@ mkdir -p "$DISTSRC"
 
     # Install built Bitcoin Core
     cmake --install build
+
+    cp build/test/config.ini guix-test-config.ini
 )
 
 rm -rf "$DISTSRC"/build
