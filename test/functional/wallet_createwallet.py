@@ -181,7 +181,7 @@ class CreateWalletTest(BitcoinTestFramework):
         self.log.info('Test making a wallet with avoid reuse flag')
         self.nodes[0].createwallet('w8', False, False, '', True) # Use positional arguments to check for bug where avoid_reuse could not be set for wallets without needing them to be encrypted
         w8 = node.get_wallet_rpc('w8')
-        assert_raises_rpc_error(-15, 'Error: running with an unencrypted wallet, but walletpassphrase was called.', w7.walletpassphrase, '', 60)
+        assert_raises_rpc_error(-15, 'Error: running with an unencrypted wallet, but walletpassphrase was called.', w8.walletpassphrase, '', 60)
         assert_equal(w8.getwalletinfo()["avoid_reuse"], True)
 
         self.log.info('Using a passphrase with private keys disabled returns error')
