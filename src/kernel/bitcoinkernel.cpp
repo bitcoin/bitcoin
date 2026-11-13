@@ -455,22 +455,14 @@ public:
     }
 };
 
-//! Helper struct to wrap the ChainstateManager-related Options
-struct ChainstateManagerOptions {
+//! Helper struct to wrap the BlockManager-related Options
+struct BlockManagerOptions {
     mutable Mutex m_mutex;
-    ChainstateManager::Options m_chainman_options GUARDED_BY(m_mutex);
     node::BlockManager::Options m_blockman_options GUARDED_BY(m_mutex);
     std::shared_ptr<const Context> m_context;
-    node::ChainstateLoadOptions m_chainstate_load_options GUARDED_BY(m_mutex);
-    uint64_t m_db_cache_bytes GUARDED_BY(m_mutex){DEFAULT_KERNEL_CACHE};
 
-    ChainstateManagerOptions(const std::shared_ptr<const Context>& context, const fs::path& data_dir, const fs::path& blocks_dir)
-        : m_chainman_options{ChainstateManager::Options{
-              .chainparams = *context->m_chainparams,
-              .datadir = data_dir,
-              .notifications = *context->m_notifications,
-              .signals = context->m_signals.get()}},
-          m_blockman_options{node::BlockManager::Options{
+    BlockManagerOptions(const std::shared_ptr<const Context>& context, const fs::path& data_dir, const fs::path& blocks_dir)
+        : m_blockman_options{node::BlockManager::Options{
               .chainparams = *context->m_chainparams,
               .blocks_dir = blocks_dir,
               .notifications = *context->m_notifications,
@@ -478,17 +470,58 @@ struct ChainstateManagerOptions {
                   .path = data_dir / "blocks" / "index",
                   .cache_bytes = kernel::CacheSizes{DEFAULT_KERNEL_CACHE}.block_tree_db,
               }}},
+          m_context{context}
+    {
+    }
+};
+
+//! Shared by a block manager handle and the chainstate manager it is passed to
+struct BlockMan {
+    std::shared_ptr<const Context> m_context;
+    node::BlockManager m_blockman;
+    const bool m_wipe_block_tree_db;
+    //! Set by the first chainstate manager created with this block manager, which loads its block index
+    std::atomic<bool> m_used{false};
+
+    BlockMan(std::shared_ptr<const Context> context, const node::BlockManager::Options& options)
+        : m_context{std::move(context)},
+          m_blockman{*m_context->m_interrupt, options},
+          m_wipe_block_tree_db{options.block_tree_db_params.wipe_data} {}
+};
+
+//! Helper struct to wrap the ChainstateManager-related Options
+struct ChainstateManagerOptions {
+    mutable Mutex m_mutex;
+    ChainstateManager::Options m_chainman_options GUARDED_BY(m_mutex);
+    std::shared_ptr<const Context> m_context;
+    node::ChainstateLoadOptions m_chainstate_load_options GUARDED_BY(m_mutex);
+    uint64_t m_db_cache_bytes GUARDED_BY(m_mutex){DEFAULT_KERNEL_CACHE};
+
+    ChainstateManagerOptions(const std::shared_ptr<const Context>& context, const fs::path& data_dir)
+        : m_chainman_options{ChainstateManager::Options{
+              .chainparams = *context->m_chainparams,
+              .datadir = data_dir,
+              .notifications = *context->m_notifications,
+              .signals = context->m_signals.get()}},
           m_context{context}, m_chainstate_load_options{node::ChainstateLoadOptions{}}
     {
     }
 };
 
 struct ChainMan {
+    std::shared_ptr<BlockMan> m_blockman;
     std::unique_ptr<ChainstateManager> m_chainman;
     std::shared_ptr<const Context> m_context;
 
-    ChainMan(std::unique_ptr<ChainstateManager> chainman, std::shared_ptr<const Context> context)
-        : m_chainman(std::move(chainman)), m_context(std::move(context)) {}
+    ChainMan(std::shared_ptr<BlockMan> blockman, std::unique_ptr<ChainstateManager> chainman, std::shared_ptr<const Context> context)
+        : m_blockman(std::move(blockman)), m_chainman(std::move(chainman)), m_context(std::move(context)) {}
+
+    ~ChainMan()
+    {
+        // Both hold references into m_context
+        m_chainman.reset();
+        m_blockman.reset();
+    }
 };
 
 struct UserDataDeleter {
@@ -614,6 +647,8 @@ struct btck_LoggingConnection : Handle<btck_LoggingConnection, KernelLogger::Cal
 struct btck_ContextOptions : Handle<btck_ContextOptions, ContextOptions> {};
 struct btck_Context : Handle<btck_Context, std::shared_ptr<const Context>> {};
 struct btck_ChainParameters : Handle<btck_ChainParameters, CChainParams> {};
+struct btck_BlockManagerOptions : Handle<btck_BlockManagerOptions, BlockManagerOptions> {};
+struct btck_BlockManager : Handle<btck_BlockManager, std::shared_ptr<BlockMan>> {};
 struct btck_ChainstateManagerOptions : Handle<btck_ChainstateManagerOptions, ChainstateManagerOptions> {};
 struct btck_ChainstateManager : Handle<btck_ChainstateManager, ChainMan> {};
 struct btck_Chain : Handle<btck_Chain, CChain> {};
@@ -1218,12 +1253,12 @@ btck_BlockValidationResult btck_block_validation_state_get_block_validation_resu
     assert(false);
 }
 
-btck_ChainstateManagerOptions* btck_chainstate_manager_options_create(const btck_Context* context, const char* data_dir, size_t data_dir_len, const char* blocks_dir, size_t blocks_dir_len)
+btck_BlockManagerOptions* btck_block_manager_options_create(const btck_Context* context, const char* data_dir, size_t data_dir_len, const char* blocks_dir, size_t blocks_dir_len)
 {
     assert(data_dir != nullptr || data_dir_len == 0);
     assert(blocks_dir != nullptr || blocks_dir_len == 0);
     if (data_dir_len == 0 || blocks_dir_len == 0) {
-        LogError("Failed to create chainstate manager options: dir must be non-null and non-empty");
+        LogError("Failed to create block manager options: dir must be non-null and non-empty");
         return nullptr;
     }
     try {
@@ -1231,7 +1266,73 @@ btck_ChainstateManagerOptions* btck_chainstate_manager_options_create(const btck
         fs::create_directories(abs_data_dir);
         fs::path abs_blocks_dir{fs::absolute(fs::PathFromString({blocks_dir, blocks_dir_len}))};
         fs::create_directories(abs_blocks_dir);
-        return btck_ChainstateManagerOptions::create(btck_Context::get(context), abs_data_dir, abs_blocks_dir);
+        return btck_BlockManagerOptions::create(btck_Context::get(context), abs_data_dir, abs_blocks_dir);
+    } catch (const std::exception& e) {
+        LogError("Failed to create block manager options: %s", e.what());
+        return nullptr;
+    }
+}
+
+int btck_block_manager_options_set_database_cache_bytes(btck_BlockManagerOptions* blockman_opts, uint64_t database_cache_bytes)
+{
+    if (database_cache_bytes < MIN_DBCACHE_BYTES || database_cache_bytes > MAX_DBCACHE_BYTES) {
+        LogError("Failed to set database cache: size is outside the supported range.");
+        return -1;
+    }
+
+    auto& opts{btck_BlockManagerOptions::get(blockman_opts)};
+    LOCK(opts.m_mutex);
+    opts.m_blockman_options.block_tree_db_params.cache_bytes = kernel::CacheSizes{database_cache_bytes}.block_tree_db;
+    return 0;
+}
+
+void btck_block_manager_options_update_wipe_block_tree_db(btck_BlockManagerOptions* blockman_opts, int wipe_block_tree_db)
+{
+    auto& opts{btck_BlockManagerOptions::get(blockman_opts)};
+    LOCK(opts.m_mutex);
+    opts.m_blockman_options.block_tree_db_params.wipe_data = wipe_block_tree_db == 1;
+}
+
+void btck_block_manager_options_update_block_tree_db_in_memory(btck_BlockManagerOptions* blockman_opts, int block_tree_db_in_memory)
+{
+    auto& opts{btck_BlockManagerOptions::get(blockman_opts)};
+    LOCK(opts.m_mutex);
+    opts.m_blockman_options.block_tree_db_params.memory_only = block_tree_db_in_memory == 1;
+}
+
+void btck_block_manager_options_destroy(btck_BlockManagerOptions* options)
+{
+    delete options;
+}
+
+btck_BlockManager* btck_block_manager_create(const btck_BlockManagerOptions* blockman_opts)
+{
+    auto& opts{btck_BlockManagerOptions::get(blockman_opts)};
+    try {
+        LOCK(opts.m_mutex);
+        return btck_BlockManager::create(std::make_shared<BlockMan>(opts.m_context, opts.m_blockman_options));
+    } catch (const std::exception& e) {
+        LogError("Failed to create block manager: %s", e.what());
+        return nullptr;
+    }
+}
+
+void btck_block_manager_destroy(btck_BlockManager* block_manager)
+{
+    delete block_manager;
+}
+
+btck_ChainstateManagerOptions* btck_chainstate_manager_options_create(const btck_Context* context, const char* data_dir, size_t data_dir_len)
+{
+    assert(data_dir != nullptr || data_dir_len == 0);
+    if (data_dir_len == 0) {
+        LogError("Failed to create chainstate manager options: dir must be non-null and non-empty");
+        return nullptr;
+    }
+    try {
+        fs::path abs_data_dir{fs::absolute(fs::PathFromString({data_dir, data_dir_len}))};
+        fs::create_directories(abs_data_dir);
+        return btck_ChainstateManagerOptions::create(btck_Context::get(context), abs_data_dir);
     } catch (const std::exception& e) {
         LogError("Failed to create chainstate manager options: %s", e.what());
         return nullptr;
@@ -1254,7 +1355,6 @@ int btck_chainstate_manager_options_set_database_cache_bytes(btck_ChainstateMana
     auto& opts{btck_ChainstateManagerOptions::get(chainman_opts)};
     LOCK(opts.m_mutex);
     opts.m_db_cache_bytes = database_cache_bytes;
-    opts.m_blockman_options.block_tree_db_params.cache_bytes = kernel::CacheSizes{database_cache_bytes}.block_tree_db;
     return 0;
 }
 
@@ -1263,26 +1363,11 @@ void btck_chainstate_manager_options_destroy(btck_ChainstateManagerOptions* opti
     delete options;
 }
 
-int btck_chainstate_manager_options_set_wipe_dbs(btck_ChainstateManagerOptions* chainman_opts, int wipe_block_tree_db, int wipe_chainstate_db)
+void btck_chainstate_manager_options_update_wipe_chainstate_db(btck_ChainstateManagerOptions* chainman_opts, int wipe_chainstate_db)
 {
-    if (wipe_block_tree_db == 1 && wipe_chainstate_db != 1) {
-        LogError("Wiping the block tree db without also wiping the chainstate db is currently unsupported.");
-        return -1;
-    }
     auto& opts{btck_ChainstateManagerOptions::get(chainman_opts)};
     LOCK(opts.m_mutex);
-    opts.m_blockman_options.block_tree_db_params.wipe_data = wipe_block_tree_db == 1;
     opts.m_chainstate_load_options.wipe_chainstate_db = wipe_chainstate_db == 1;
-    return 0;
-}
-
-void btck_chainstate_manager_options_update_block_tree_db_in_memory(
-    btck_ChainstateManagerOptions* chainman_opts,
-    int block_tree_db_in_memory)
-{
-    auto& opts{btck_ChainstateManagerOptions::get(chainman_opts)};
-    LOCK(opts.m_mutex);
-    opts.m_blockman_options.block_tree_db_params.memory_only = block_tree_db_in_memory == 1;
 }
 
 void btck_chainstate_manager_options_update_chainstate_db_in_memory(
@@ -1295,21 +1380,33 @@ void btck_chainstate_manager_options_update_chainstate_db_in_memory(
 }
 
 btck_ChainstateManager* btck_chainstate_manager_create(
-    const btck_ChainstateManagerOptions* chainman_opts)
+    const btck_ChainstateManagerOptions* chainman_opts,
+    btck_BlockManager* block_manager)
 {
     auto& opts{btck_ChainstateManagerOptions::get(chainman_opts)};
+    const auto& blockman{btck_BlockManager::get(block_manager)};
+    auto chainstate_load_opts{WITH_LOCK(opts.m_mutex, return opts.m_chainstate_load_options)};
+    // Wiping the block tree db without the chainstate db is unsupported
+    if (blockman->m_wipe_block_tree_db) chainstate_load_opts.wipe_chainstate_db = true;
+    if (blockman->m_context != opts.m_context) {
+        LogError("Failed to create chainstate manager: the block manager uses a different context.");
+        return nullptr;
+    }
+    if (blockman->m_used.exchange(true)) {
+        LogError("Failed to create chainstate manager: the block manager was already passed to another chainstate manager.");
+        return nullptr;
+    }
+
     std::unique_ptr<ChainstateManager> chainman;
     try {
         LOCK(opts.m_mutex);
-        chainman = std::make_unique<ChainstateManager>(*opts.m_context->m_interrupt, opts.m_chainman_options, opts.m_blockman_options);
+        chainman = std::make_unique<ChainstateManager>(*opts.m_context->m_interrupt, opts.m_chainman_options, blockman->m_blockman);
     } catch (const std::exception& e) {
         LogError("Failed to create chainstate manager: %s", e.what());
         return nullptr;
     }
 
     try {
-        const auto chainstate_load_opts{WITH_LOCK(opts.m_mutex, return opts.m_chainstate_load_options)};
-
         const kernel::CacheSizes cache_sizes{WITH_LOCK(opts.m_mutex, return opts.m_db_cache_bytes)};
         auto [status, chainstate_err]{node::LoadChainstate(*chainman, cache_sizes, chainstate_load_opts)};
         if (status != node::ChainstateLoadStatus::SUCCESS) {
@@ -1330,7 +1427,7 @@ btck_ChainstateManager* btck_chainstate_manager_create(
         return nullptr;
     }
 
-    return btck_ChainstateManager::create(std::move(chainman), opts.m_context);
+    return btck_ChainstateManager::create(blockman, std::move(chainman), opts.m_context);
 }
 
 const btck_BlockTreeEntry* btck_chainstate_manager_get_block_tree_entry_by_hash(const btck_ChainstateManager* chainman, const btck_BlockHash* block_hash)
@@ -1458,10 +1555,10 @@ void btck_block_destroy(btck_Block* block)
     delete block;
 }
 
-btck_Block* btck_block_read(const btck_ChainstateManager* chainman, const btck_BlockTreeEntry* entry)
+btck_Block* btck_block_read(const btck_BlockManager* block_manager, const btck_BlockTreeEntry* entry)
 {
     auto block{std::make_shared<CBlock>()};
-    if (!btck_ChainstateManager::get(chainman).m_chainman->m_blockman.ReadBlock(*block, btck_BlockTreeEntry::get(entry))) {
+    if (!btck_BlockManager::get(block_manager)->m_blockman.ReadBlock(*block, btck_BlockTreeEntry::get(entry))) {
         LogError("Failed to read block.");
         return nullptr;
     }
@@ -1513,14 +1610,14 @@ void btck_block_hash_destroy(btck_BlockHash* hash)
     delete hash;
 }
 
-btck_BlockSpentOutputs* btck_block_spent_outputs_read(const btck_ChainstateManager* chainman, const btck_BlockTreeEntry* entry)
+btck_BlockSpentOutputs* btck_block_spent_outputs_read(const btck_BlockManager* block_manager, const btck_BlockTreeEntry* entry)
 {
     auto block_undo{std::make_shared<CBlockUndo>()};
     if (btck_BlockTreeEntry::get(entry).nHeight < 1) {
         LogDebug(BCLog::KERNEL, "The genesis block does not have any spent outputs.");
         return btck_BlockSpentOutputs::create(block_undo);
     }
-    if (!btck_ChainstateManager::get(chainman).m_chainman->m_blockman.ReadBlockUndo(*block_undo, btck_BlockTreeEntry::get(entry))) {
+    if (!btck_BlockManager::get(block_manager)->m_blockman.ReadBlockUndo(*block_undo, btck_BlockTreeEntry::get(entry))) {
         LogError("Failed to read block spent outputs data.");
         return nullptr;
     }

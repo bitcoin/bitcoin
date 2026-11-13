@@ -172,12 +172,15 @@ int main(int argc, char* argv[])
 
     Context context{options};
 
-    ChainstateManagerOptions chainman_opts{context, abs_datadir.string(), (abs_datadir / "blocks").string()};
+    BlockManagerOptions blockman_opts{context, abs_datadir.string(), (abs_datadir / "blocks").string()};
+    ChainstateManagerOptions chainman_opts{context, abs_datadir.string()};
     chainman_opts.SetWorkerThreads(4);
 
+    std::unique_ptr<BlockManager> blockman;
     std::unique_ptr<ChainMan> chainman;
     try {
-        chainman = std::make_unique<ChainMan>(context, chainman_opts);
+        blockman = std::make_unique<BlockManager>(blockman_opts);
+        chainman = std::make_unique<ChainMan>(context, chainman_opts, *blockman);
     } catch (std::exception&) {
         std::cerr << "Failed to instantiate ChainMan, exiting" << std::endl;
         return 1;
