@@ -31,121 +31,159 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
     def setup_network(self):
         self.setup_nodes()  # Don't connect nodes
 
-    def run_test(self):
+    def mine_empty_block(self, node):
+        # Create and submit a block without transactions.
+        # Transactions are only rebroadcast if there has been a block at least five minutes
+        # after the last time we tried to broadcast. Use mocktime and give an extra minute to be sure.
+        if node.mocktime is None:
+            node.setmocktime(int(time.time()))
+        node.bumpmocktime(6 * 60)
+        block = create_block(int(node.getbestblockhash(), 16), height=node.getblockcount() + 1, ntime=node.mocktime)
+        block.solve()
+        node.submitblock(block.serialize().hex())
+
+    def evict_mempool_transaction(self, conflict_utxo, node, wallet, indep_wallet):
+        # Evict a transaction spending conflict_utxo by creating a conflict with it that pays a higher feerate
+        indep_utxo = indep_wallet.listunspent()[0]
+        psbt = indep_wallet.send(outputs=[{indep_wallet.getnewaddress(): 0.00001}], psbt=True, fee_rate=30, inputs=[conflict_utxo, indep_utxo], solving_data={"descriptors":[conflict_utxo["desc"]]})["psbt"]
+        psbt = wallet.walletprocesspsbt(psbt)["psbt"]
+        txid1 = node.sendrawtransaction(node.finalizepsbt(psbt)["hex"])
+        # Create a conflict with just indep_utxo to evict the previous transaction so that the original can be rebroadcast
+        r = indep_wallet.send(outputs=[{indep_wallet.getnewaddress(): 0.00001}], fee_rate=60, inputs=[indep_utxo], add_to_wallet=False)
+        txid2 = node.sendrawtransaction(r["hex"])
+        mempool = node.getrawmempool()
+        assert txid1 not in mempool
+        assert txid2 in mempool
+
+    def test_resubmit_timer(self):
+        self.log.info("Test periodic rebroadcast of sent transaction")
+
         node = self.nodes[0]  # alias
+        node.createwallet("resubmit")
+        wallet = node.get_wallet_rpc("resubmit")
+
+        self.default_wallet.sendtoaddress(wallet.getnewaddress(), 5)
+        self.generate(node, 1, sync_fun=self.no_op)
+        parent_utxo = wallet.listunspent()[0]
 
         peer_first = node.add_p2p_connection(P2PTxInvStore())
 
-        self.log.info("Create a new transaction and wait until it's broadcast")
-        parent_utxo, indep_utxo = node.listunspent()[:2]
-        addr = node.getnewaddress()
-        txid = node.send(outputs=[{addr: 1}], inputs=[parent_utxo])["txid"]
+        self.log.debug("Create a new transaction and wait until it's broadcast")
+        txid = wallet.send(outputs=[{self.default_wallet.getnewaddress(): 1}], inputs=[parent_utxo])["txid"]
+        wtxid = wallet.gettransaction(txid)["wtxid"]
 
         # Can take a few seconds due to transaction trickling
-        peer_first.wait_for_broadcast([txid])
+        peer_first.wait_for_broadcast([wtxid])
+
+        self.mine_empty_block(node)
+
+        # Set correct m_best_block_time, which is used in ResubmitWalletTransactions
+        node.syncwithvalidationinterfacequeue()
 
         # Add a second peer since txs aren't rebroadcast to the same peer (see m_tx_inventory_known_filter)
         peer_second = node.add_p2p_connection(P2PTxInvStore())
 
-        self.log.info("Create a block")
-        # Create and submit a block without the transaction.
-        # Transactions are only rebroadcast if there has been a block at least five minutes
-        # after the last time we tried to broadcast. Use mocktime and give an extra minute to be sure.
-        block_time = int(time.time()) + 6 * 60
-        node.setmocktime(block_time)
-        block = create_block(int(node.getbestblockhash(), 16), height=node.getblockcount() + 1, ntime=block_time)
-        block.solve()
-        node.submitblock(block.serialize().hex())
+        # Transaction should be scheduled for rebroadcast approximately 24 hours in the future,
+        # but can range from 12-36. So bump 36 hours to be sure.
+        # Since it is still in the mempool, it will not actually be rebroadcast
+        with node.assert_debug_log(['resubmit 1 unconfirmed transactions']):
+            node.setmocktime(int(time.time()) + RESEND_TIMER_LIMIT)
+            # Tell scheduler to call MaybeResendWalletTxs now.
+            node.mockscheduler(60)
+            unrelated_txid = self.default_wallet.sendtoaddress(self.default_wallet.getnewaddress(), 1)
+            unrelated_wtxid = self.default_wallet.gettransaction(unrelated_txid)["wtxid"]
+            assert unrelated_txid in node.getrawmempool()
+            peer_second.wait_for_broadcast([unrelated_wtxid])
+        assert int(wtxid, 16) not in peer_second.get_invs()
+        assert txid in node.getrawmempool()
 
-        # Set correct m_best_block_time, which is used in ResubmitWalletTransactions
-        node.syncwithvalidationinterfacequeue()
-        now = int(time.time())
+        # Evict the transaction so that it is actually rebroadcast
+        self.evict_mempool_transaction(parent_utxo, node, wallet, self.default_wallet)
+        assert txid not in node.getrawmempool()
 
         # Transaction should not be rebroadcast within first 12 hours
         # Leave 2 mins for buffer
-        twelve_hrs = 12 * 60 * 60
-        two_min = 2 * 60
-        node.setmocktime(now + twelve_hrs - two_min)
-        node.mockscheduler(60)  # Tell scheduler to call MaybeResendWalletTxs now
-        assert_equal(int(txid, 16) in peer_second.get_invs(), False)
+        with node.assert_debug_log(expected_msgs=[], unexpected_msgs=["resubmit 1 unconfirmed transactions"]):
+            twelve_hrs = 12 * 60 * 60
+            two_min = 2 * 60
+            node.bumpmocktime(twelve_hrs - two_min)
+            node.mockscheduler(60)  # Tell scheduler to call MaybeResendWalletTxs now
+            assert_equal(int(wtxid, 16) in peer_second.get_invs(), False)
 
-        self.log.info("Bump time & check that transaction is rebroadcast")
-        # Transaction should be rebroadcast approximately 24 hours in the future,
-        # but can range from 12-36. So bump 36 hours to be sure.
         with node.assert_debug_log(['resubmit 1 unconfirmed transactions']):
-            node.setmocktime(now + RESEND_TIMER_LIMIT)
+            node.bumpmocktime(RESEND_TIMER_LIMIT)
             # Tell scheduler to call MaybeResendWalletTxs now.
             node.mockscheduler(60)
-            peer_second.wait_for_broadcast([txid])
+            assert txid in node.getrawmempool()
+            peer_second.wait_for_single_broadcast(wtxid)
 
-        self.log.info("Chain of unconfirmed not-in-mempool txs are rebroadcast")
+        self.generate(node, 1, sync_fun=self.no_op)
+
+    def test_chained_tx_resubmission(self):
+        self.log.info("Test that chain of unconfirmed not-in-mempool txs are rebroadcast")
+        node = self.nodes[0]  # alias
+        node.createwallet("chained")
+        wallet = node.get_wallet_rpc("chained")
+
         # We cannot predict the ordering in mapWallet of parent and child, so
         # try a few times to get both.
-        evict_time = 0
         for _ in range(10):
-            child_inputs = [{"txid": txid, "vout": 0}]
-            child_txid = node.sendall(recipients=[addr], inputs=child_inputs)["txid"]
-            # Get the child tx's info for manual bumping
-            entry_time = node.getmempoolentry(child_txid)["time"]
+            self.default_wallet.sendtoaddress(wallet.getnewaddress(), 1)
+            self.generate(node, 1, sync_fun=self.no_op)
+            parent_txid = wallet.sendall(recipients=[wallet.getnewaddress()])["txid"]
+            parent_utxo = {"txid": parent_txid, "vout": 0}
 
-            # tx must be at least 5 minutes older than the last block to be rebroadcast
-            block_time = entry_time + 5 * 60 + 1
-            node.setmocktime(block_time)
-            block = create_block(int(node.getbestblockhash(), 16), height=node.getblockcount() + 1, ntime=block_time)
-            block.solve()
-            node.submitblock(block.serialize().hex())
-            # Set correct m_best_block_time, which is used in ResubmitWalletTransactions
+            child_txid = wallet.sendall(recipients=[wallet.getnewaddress()], inputs=[parent_utxo])["txid"]
+
+            self.mine_empty_block(node)
             node.syncwithvalidationinterfacequeue()
 
-            evict_time = block_time + 60 * 60 * DEFAULT_MEMPOOL_EXPIRY_HOURS + 5
+            evict_time = node.mocktime + 60 * 60 * DEFAULT_MEMPOOL_EXPIRY_HOURS + 5
             # Flush out currently scheduled resubmit attempt now so that there can't be one right between eviction and check.
             with node.assert_debug_log(['resubmit 2 unconfirmed transactions'], timeout=2):
                 node.setmocktime(evict_time)
                 node.mockscheduler(60)
 
             # Evict these txs from the mempool
-            indep_send = node.send(outputs=[{node.getnewaddress(): 1}], inputs=[indep_utxo])
+            indep_send = self.default_wallet.send(outputs=[{self.default_wallet.getnewaddress(): 1}])
             node.getmempoolentry(indep_send["txid"])
-            assert_raises_rpc_error(-5, "Transaction not in mempool", node.getmempoolentry, txid)
+            assert_raises_rpc_error(-5, "Transaction not in mempool", node.getmempoolentry, parent_txid)
             assert_raises_rpc_error(-5, "Transaction not in mempool", node.getmempoolentry, child_txid)
 
             # Rebroadcast and check that parent and child are both in the mempool
             with node.assert_debug_log(['resubmit 2 unconfirmed transactions'], timeout=2):
                 node.setmocktime(evict_time + RESEND_TIMER_LIMIT)
                 node.mockscheduler(60)
-            node.getmempoolentry(txid)
+            node.getmempoolentry(parent_txid)
             node.getmempoolentry(child_txid)
 
-            # clear mempool
-            self.generate(node, 1, sync_fun=self.no_op)
-            parent_utxo, indep_utxo = node.listunspent()[:2]
-            txid = node.send(outputs=[{addr: 1}], inputs=[parent_utxo])["txid"]
-
+    def test_received_rebroadcast(self):
         self.log.info("Test rebroadcast of transactions received by others")
+        self.nodes[1].createwallet("otherrecv")
+        wallet = self.nodes[1].get_wallet_rpc("otherrecv")
+
         # clear mempool
-        self.generate(node, 1, sync_fun=self.no_op)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+
         # Sync node1's mocktime to node0's before connecting so it accepts node0's blocks
         node1 = self.nodes[1]
-        node1.setmocktime(evict_time + RESEND_TIMER_LIMIT)
+        node1.setmocktime(self.nodes[0].mocktime)
         self.connect_nodes(1, 0)
         self.sync_all()
 
-        self.log.info("node0 sends a tx to node1 and disconnects")
-        recv_addr = node1.getnewaddress()
-        recv_txid = node.sendtoaddress(recv_addr, 1)
+        self.log.debug("node0 sends a tx to node1 and disconnects")
+        utxo = self.default_wallet.listunspent()[0]
+        recv_txid = self.default_wallet.send(outputs=[{wallet.getnewaddress(): 1}], inputs=[utxo])["txid"]
         self.sync_mempools()
         node1.syncwithvalidationinterfacequeue()
 
-        wallet_tx = node1.gettransaction(recv_txid)
+        wallet_tx = wallet.gettransaction(recv_txid)
         assert_equal(wallet_tx["confirmations"], 0)
         recv_wtxid = node1.getmempoolentry(recv_txid)["wtxid"]
         self.disconnect_nodes(0, 1)
 
-        self.log.info("Create a block without the transaction")
-        node1.bumpmocktime(6 * 60)
-        block = create_block(int(node1.getbestblockhash(), 16), height=node1.getblockcount() + 1, ntime=node1.mocktime)
-        block.solve()
-        node1.submitblock(block.serialize().hex())
+        self.mine_empty_block(node1)
+        self.evict_mempool_transaction(utxo, node1, self.default_wallet, node1.get_wallet_rpc(self.default_wallet_name))
         node1.syncwithvalidationinterfacequeue()
 
         self.log.info("Connect p2p who hasn't seen the tx")
@@ -157,6 +195,46 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
             node1.mockscheduler(60)
             peer.wait_for_broadcast([recv_wtxid])
 
+    def test_resubmit_on_load(self):
+        self.log.info("Test loading a wallet only resubmits to the mempool and does not broadcast")
+        self.nodes[0].createwallet("loading_resubmit")
+        wallet = self.nodes[0].get_wallet_rpc("loading_resubmit")
+
+        self.default_wallet.sendtoaddress(wallet.getnewaddress(), 1)
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+
+        txid1 = wallet.sendtoaddress(self.default_wallet.getnewaddress(), 0.5)
+        txid2 = self.default_wallet.sendtoaddress(wallet.getnewaddress(), 1)
+
+        self.restart_node(0, extra_args=self.nodes[0].extra_args + ["-persistmempool=0", "-nowallet", f"-mocktime={self.nodes[0].mocktime}"])
+        assert_equal(self.nodes[0].getrawmempool(), [])
+        peer = self.nodes[0].add_p2p_connection(P2PTxInvStore())
+
+        self.nodes[0].loadwallet("loading_resubmit")
+        mempool = self.nodes[0].getrawmempool()
+        assert txid1 in mempool
+        assert txid2 in mempool
+
+        self.nodes[0].loadwallet(self.default_wallet_name)
+        self.default_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        # Send an unrelated transaction to make sure the unconfirmed txs in the wallet are not broadcast
+        broadcast_txid = self.default_wallet.sendtoaddress(self.default_wallet.getnewaddress(), 1)
+        broadcast_wtxid = self.default_wallet.gettransaction(broadcast_txid)["wtxid"]
+        peer.wait_for_broadcast([broadcast_wtxid])
+        invs = peer.get_invs()
+        assert int(txid1, 16) not in invs
+        assert int(txid2, 16) not in invs
+
+        self.generate(self.nodes[0], 1, sync_fun=self.no_op)
+
+    def run_test(self):
+        self.default_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+
+        self.test_resubmit_timer()
+        self.test_chained_tx_resubmission()
+        self.test_received_rebroadcast()
+        self.test_resubmit_on_load()
 
 if __name__ == '__main__':
     ResendWalletTransactionsTest(__file__).main()
