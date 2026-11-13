@@ -33,7 +33,7 @@
  * - All signatures use SIGHASH_ALL (default sighash)
  * - Each transaction spends all outputs from the previous transaction
  */
-CBlock CreateTestBlock(
+static CBlock CreateTestBlock(
     TestChain100Setup& test_setup,
     const std::vector<CKey>& keys,
     const std::vector<CTxOut>& outputs,

@@ -79,9 +79,9 @@
 
 #if defined(Q_OS_MACOS)
 
-#include <QProcess>
+#include <qt/macdockiconhandler.h>
 
-void ForceActivation();
+#include <QProcess>
 #endif
 
 using namespace std::chrono_literals;
