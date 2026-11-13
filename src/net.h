@@ -23,6 +23,7 @@
 #include <sync.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/log.h>
 #include <util/not_null.h>
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
@@ -1151,6 +1152,10 @@ public:
             // peer doesn't support it or immediately disconnects us for another reason.
             const bool use_v2transport(GetLocalServices() & NODE_P2P_V2);
             for (const std::string& added_node : connOptions.m_added_nodes) {
+                if (const auto it{FindAddedNode(added_node)}; it != m_added_node_params.cend()) {
+                    LogWarning("Ignoring duplicate -addnode value: %s (matches %s)", added_node, it->m_added_node);
+                    continue;
+                }
                 m_added_node_params.push_back({added_node, use_v2transport});
             }
         }
@@ -1366,8 +1371,14 @@ public:
 
     bool AddNode(const AddedNodeParams& add) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
     bool RemoveAddedNode(std::string_view node) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
+    /**
+     * Whether addr is an added node, so automatic outbound connections should skip it.
+     * Entries are compared as numeric addresses, so different spellings of one address
+     * match. An entry without a port matches addr at any port. Names never match.
+     */
     bool AddedNodesContain(const CAddress& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex);
-    std::vector<AddedNodeInfo> GetAddedNodeInfo(bool include_connected) const
+    /** If node is set, only return the entry that AddNode() considers equivalent to it, if any. */
+    std::vector<AddedNodeInfo> GetAddedNodeInfo(bool include_connected, std::optional<std::string_view> node = std::nullopt) const
         EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_nodes_mutex);
 
     /**
@@ -1631,6 +1642,21 @@ private:
 
     uint16_t GetDefaultPort(Network net) const;
     uint16_t GetDefaultPort(const std::string& addr) const;
+
+    /**
+     * Return the m_added_node_params entry that refers to the same peer as node,
+     * or cend() if there is none. Two values refer to the same peer if any of
+     * these checks match:
+     * 1. Exact string match.
+     * 2. Same address, compared as a CService. LookupNumeric parses numeric
+     *    addresses and fills in the default port if needed, so different
+     *    spellings of one address match (e.g. "[::1]" and "[0:0:0:0:0:0:0:1]").
+     *    This doesn't apply to names, which LookupNumeric does not resolve.
+     * 3. Same host text and effective port, using SplitHostPort. This one works
+     *    for names, so "node.example" and "node.example:8333" are one peer on
+     *    mainnet.
+     */
+    std::vector<AddedNodeParams>::const_iterator FindAddedNode(const std::string& node) const EXCLUSIVE_LOCKS_REQUIRED(m_added_nodes_mutex);
 
     // Network usage totals
     mutable Mutex m_total_bytes_sent_mutex;
