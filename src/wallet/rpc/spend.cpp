@@ -1137,7 +1137,11 @@ static RPCMethod bumpfee_helper(std::string method_name)
             if (options["outputs"].isArray() && options["outputs"].empty()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, output argument cannot be an empty array");
             }
-            outputs = ParseOutputs(NormalizeOutputs(options["outputs"]), /*allow_silent_payments=*/false);
+            // Silent payments outputs are derived from the private keys of the transaction's
+            // inputs, and the transaction must be added to the wallet when it is created, see
+            // EnsureSilentPaymentsTxIsAddedToWallet. A PSBT may be signed elsewhere and its inputs
+            // may change before signing, so only allow silent payments addresses for bumpfee RPC.
+            outputs = ParseOutputs(NormalizeOutputs(options["outputs"]), /*allow_silent_payments=*/!want_psbt);
         }
 
         if (options.exists("original_change_index")) {
@@ -1160,6 +1164,14 @@ static RPCMethod bumpfee_helper(std::string method_name)
 
     EnsureWalletIsUnlocked(*pwallet);
 
+
+    if (want_psbt) {
+        // A PSBT is not added to the wallet when it is created, see EnsureSilentPaymentsTxIsAddedToWallet,
+        // so a silent payments transaction can only be bumped with bumpfee
+        if (const CWalletTx* wtx{pwallet->GetWalletTx(hash)}; wtx && wtx->RBFNeedsSilentPayments()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "psbtbumpfee does not support silent payments transactions, use bumpfee instead");
+        }
+    }
 
     // Targeting feerate bump.
     auto bump{feebumper::CreateRateBumpTransaction(*pwallet, hash, coin_control, /*require_mine=*/ !want_psbt, outputs, original_change_index)};
@@ -1197,7 +1209,7 @@ static RPCMethod bumpfee_helper(std::string method_name)
         }
 
         Txid txid;
-        if (feebumper::CommitTransaction(*pwallet, hash, std::move(mtx), errors, txid) != feebumper::Result::OK) {
+        if (feebumper::CommitTransaction(*pwallet, hash, std::move(mtx), errors, txid, bump->sp_recipients) != feebumper::Result::OK) {
             throw JSONRPCError(RPC_WALLET_ERROR, errors[0].original);
         }
 
