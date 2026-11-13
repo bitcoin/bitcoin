@@ -1,0 +1,24 @@
+{
+  "script": {
+    "asm": "0411db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5cb2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3 OP_CHECKSIG",
+    "hex": "410411db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5cb2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3ac",
+    "type": "pubkey"
+  },
+  "sigversion": "base",
+  "script_flags": [
+    "CHECKLOCKTIMEVERIFY",
+    "CHECKSEQUENCEVERIFY",
+    "DERSIG",
+    "NULLDUMMY",
+    "P2SH",
+    "TAPROOT",
+    "WITNESS"
+  ],
+  "dummy_sig_checker": false,
+  "stack_after": [
+    ""
+  ],
+  "sigop_cost": 4,
+  "success": false,
+  "error": "Script evaluated without error but finished with a false/empty top stack element"
+}
