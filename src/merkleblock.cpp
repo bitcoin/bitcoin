@@ -5,10 +5,12 @@
 
 #include <merkleblock.h>
 
+#include <common/bloom.h>
 #include <consensus/consensus.h>
 #include <hash.h>
+#include <primitives/transaction.h>
+#include <util/check.h>
 #include <util/overflow.h>
-
 
 std::vector<unsigned char> BitsToBytes(const std::vector<bool>& bits)
 {
