@@ -18,6 +18,7 @@ from test_framework.p2p import (
 from test_framework.messages import (
     CAddress,
     CInv,
+    MAX_PROTOCOL_MESSAGE_LENGTH,
     MSG_WTX,
     malleate_tx_to_invalid_witness,
     msg_inv,
@@ -217,6 +218,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
             assert_equal(peer.last_message["version"].nStartingHeight, 0)
             assert_equal(peer.last_message["version"].relay, 0)
             assert_equal(peer.last_message["tx"].tx.txid_hex, tx["txid"])
+            assert_equal(peer.last_message["tx"].tx.wtxid_hex, tx["wtxid"])
             self.log.info(f"{label}: ok: outbound connection i={i} is private broadcast of txid={tx['txid']}")
             broadcasts_done += 1
 
@@ -321,9 +323,11 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         pending = [t for t in pbinfo["transactions"] if t["txid"] == txs[0]["txid"] and t["wtxid"] == txs[0]["wtxid"]]
         assert_equal(len(pending), 0)
 
-        self.log.info("Sending a transaction that is already in the mempool")
+        self.log.info("Sending an oversized witness variant of a transaction already in the mempool")
         skip_destinations = len(self.destinations)
-        tx_originator.sendrawtransaction(hexstring=txs[0]["hex"], maxfeerate=0)
+        oversized = malleate_tx_to_invalid_witness(txs[0])
+        oversized.wit.vtxinwit[0].scriptWitness.stack = [b"\x00" * MAX_PROTOCOL_MESSAGE_LENGTH]
+        tx_originator.sendrawtransaction(hexstring=oversized.serialize_with_witness().hex(), maxfeerate=0)
         self.check_broadcasts("Broadcast of mempool transaction", txs[0], NUM_PRIVATE_BROADCAST_PER_TX, skip_destinations)
 
         self.log.info("Sending a transaction with a dependency in the mempool")
