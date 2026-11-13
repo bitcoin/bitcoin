@@ -31,21 +31,14 @@ std::unique_ptr<ExternalSignerScriptPubKeyMan> ExternalSignerScriptPubKeyMan::Cr
     int64_t creation_time = GetTime();
 
     // Make the descriptor
-    WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
+    WalletDescriptor w_desc(std::move(desc), creation_time, /*range_start=*/0, /*range_end=*/0, /*next_index=*/0);
 
     auto spkm = std::unique_ptr<ExternalSignerScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(storage, w_desc, keypool_size));
 
-    LOCK(spkm->cs_desc_man);
     assert(storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
     assert(storage.IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER));
 
-    // Store the descriptor
-    if (!batch.WriteDescriptor(spkm->GetID(), spkm->m_wallet_descriptor)) {
-        throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
-    }
-
-    // TopUp
-    spkm->TopUpWithDB(batch);
+    spkm->SetupDescriptor(batch);
 
     storage.UnsetBlankWalletFlag(batch);
     return spkm;
