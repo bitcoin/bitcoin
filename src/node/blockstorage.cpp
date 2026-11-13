@@ -13,6 +13,8 @@
 #include <hash.h>
 #include <kernel/blockmanager_opts.h>
 #include <kernel/chainparams.h>
+#include <kernel/cs_main.h>
+#include <kernel/fatal_error.h>
 #include <kernel/messagestartchars.h>
 #include <kernel/notifications_interface.h>
 #include <logging/timer.h>
@@ -39,7 +41,6 @@
 #include <util/syserror.h>
 #include <util/time.h>
 #include <util/translation.h>
-#include <validation.h>
 
 #include <cerrno>
 #include <compare>
