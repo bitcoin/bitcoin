@@ -139,4 +139,30 @@ BOOST_AUTO_TEST_CASE(rename)
     fs::remove(path2);
 }
 
+// Catches a libstdc++ bug on Windows (fixed in GCC 13.4/14.3/15.1, never
+// in 12.x) where copy_file() with overwrite_existing wrongly fails with
+// file_exists for a distinct destination file.
+BOOST_AUTO_TEST_CASE(copy_file_overwrite_existing)
+{
+    const fs::path tmpfolder{m_args.GetDataDirBase()};
+
+    const fs::path path1{tmpfolder / "a"};
+    const fs::path path2{tmpfolder / "b"};
+
+    const std::string path1_contents{"1111"};
+    const std::string path2_contents{"2222"};
+
+    std::ofstream{path1.std_path()} << path1_contents;
+    std::ofstream{path2.std_path()} << path2_contents;
+
+    BOOST_CHECK(fs::copy_file(path1, path2, fs::copy_options::overwrite_existing));
+
+    {
+        std::ifstream file{path2.std_path()};
+        std::string contents;
+        file >> contents;
+        BOOST_CHECK_EQUAL(contents, path1_contents);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
