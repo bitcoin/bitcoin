@@ -66,6 +66,7 @@ endif
 base_build_dir=$(WORK_PATH)/build
 base_staging_dir=$(WORK_PATH)/staging
 base_download_dir=$(WORK_PATH)/download
+base_local_source_dir=$(WORK_PATH)/local-sources
 build:=$(shell ./config.sub $(BUILD))
 
 host:=$(build)
