@@ -395,7 +395,7 @@ CoinsResult AvailableCoins(const CWallet& wallet,
             }
 
             if (nDepth == 0 && params.check_version_trucness) {
-                if (coinControl->m_version == TRUC_VERSION) {
+                if (coinControl && coinControl->m_version == TRUC_VERSION) {
                     if (wtx.GetTx()->version != TRUC_VERSION) continue;
                     // this unconfirmed v3 transaction already has a child
                     if (wtx.truc_child_in_mempool.has_value()) continue;
