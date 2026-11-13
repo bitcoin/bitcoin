@@ -105,7 +105,7 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
 
     // Tally
     std::map<CTxDestination, tallyitem> mapTally;
-    for (const auto& [_, wtx] : wallet.mapWallet) {
+    for (const auto& wtx : wallet.m_txs_by_txid) {
 
         int nDepth = wallet.GetTxDepthInMainChain(wtx);
         if (nDepth < nMinDepth)
@@ -567,13 +567,8 @@ RPCMethod listtransactions()
     {
         LOCK(pwallet->cs_wallet);
 
-        const CWallet::TxItems & txOrdered = pwallet->wtxOrdered;
-
-        // iterate backwards until we have count items to return:
-        for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
-        {
-            CWalletTx *const pwtx = (*it).second;
-            ListTransactions(*pwallet, *pwtx, 0, true, ret, filter_label);
+        for (auto it = pwallet->m_txs_by_pos.rbegin(); it != pwallet->m_txs_by_pos.rend(); ++it) {
+            ListTransactions(*pwallet, *it, 0, true, ret, filter_label);
             if (ret.size() >= limit) break;
         }
     }
@@ -657,14 +652,11 @@ RPCMethod listrawtransactions()
     {
         LOCK(pwallet->cs_wallet);
 
-        const CWallet::TxItems& tx_ordered = pwallet->wtxOrdered;
-
         int skipped = 0;
-        for (CWallet::TxItems::const_reverse_iterator it = tx_ordered.rbegin(); it != tx_ordered.rend(); ++it) {
+        for (auto it = pwallet->m_txs_by_pos.rbegin(); it != pwallet->m_txs_by_pos.rend(); ++it) {
             if ((int)ret.size() >= count) break;
             if (skipped++ < skip) continue;
-            CWalletTx* const pwtx = (*it).second;
-            ListRawTransaction(*pwallet, *pwtx, ret, verbose);
+            ListRawTransaction(*pwallet, *it, ret, verbose);
         }
     }
 
@@ -779,7 +771,7 @@ RPCMethod listsinceblock()
 
     UniValue transactions(UniValue::VARR);
 
-    for (const auto& [_, tx] : wallet.mapWallet) {
+    for (const auto& tx : wallet.m_txs_by_txid) {
 
         if (depth == -1 || abs(wallet.GetTxDepthInMainChain(tx)) < depth) {
             ListTransactions(wallet, tx, 0, true, transactions, filter_label, include_change);
@@ -795,11 +787,10 @@ RPCMethod listsinceblock()
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
         }
         for (const CTransactionRef& tx : block.vtx) {
-            auto it = wallet.mapWallet.find(tx->GetHash());
-            if (it != wallet.mapWallet.end()) {
+            if (const CWalletTx* wtx = wallet.GetWalletTx(tx->GetHash())) {
                 // We want all transactions regardless of confirmation count to appear here,
                 // even negative confirmation ones, hence the big negative.
-                ListTransactions(wallet, it->second, -100000000, true, removed, filter_label, include_change);
+                ListTransactions(wallet, *wtx, -100000000, true, removed, filter_label, include_change);
             }
         }
         blockId = block.hashPrevBlock;
@@ -892,11 +883,11 @@ RPCMethod gettransaction()
     const bool verbose{self.Arg<bool>("verbose")};
 
     UniValue entry(UniValue::VOBJ);
-    auto it = pwallet->mapWallet.find(hash);
-    if (it == pwallet->mapWallet.end()) {
+    const CWalletTx* pwtx = pwallet->GetWalletTx(hash);
+    if (!pwtx) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
     }
-    const CWalletTx& wtx = it->second;
+    const CWalletTx& wtx = *pwtx;
 
     PushTxAmountAndFee(*pwallet, wtx, entry);
 
@@ -948,7 +939,7 @@ RPCMethod abandontransaction()
 
     Txid hash{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
 
-    if (!pwallet->mapWallet.contains(hash)) {
+    if (!pwallet->GetWalletTx(hash)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
     }
     if (!pwallet->AbandonTransaction(hash)) {
