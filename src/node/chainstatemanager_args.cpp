@@ -20,6 +20,8 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstdint>
+#include <limits>
 #include <string>
 
 namespace node {
@@ -46,10 +48,27 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, ChainstateManage
         }
     }
 
-    if (auto value{args.GetIntArg("-maxtipage")}) opts.max_tip_age = std::chrono::seconds{*value};
+    if (const auto arg{args.GetArg("-maxtipage")}) {
+        // Parse directly into the widest type the destination can hold. max_tip_age
+        // is a std::chrono::seconds, which the standard only guarantees can represent
+        // 35 bits, so every uint32_t fits (asserted below) and no manual upper bound
+        // is needed. A negative value would put the IBD cutoff in the future, so the
+        // node would never consider its tip recent and would stay in IBD.
+        //
+        // ToIntegral is used rather than GetArg<uint32_t>() because the typed getter
+        // saturates values that fail to parse, and a leading '-' is not valid for an
+        // unsigned type, so "-maxtipage=-1" would silently become 0 instead of being
+        // rejected.
+        static_assert(std::numeric_limits<uint32_t>::max() <= std::chrono::seconds::max().count());
+        const auto seconds{ToIntegral<uint32_t>(*arg)};
+        if (!seconds) {
+            return util::Error{Untranslated(strprintf("-maxtipage must be between 0 and %u seconds (got %s).", std::numeric_limits<uint32_t>::max(), *arg))};
+        }
+        opts.max_tip_age = std::chrono::seconds{*seconds};
+    }
 
     ReadDatabaseArgs(args, opts.coins_db);
-    ReadCoinsViewArgs(args, opts.coins_view);
+    if (auto result{ReadCoinsViewArgs(args, opts.coins_view)}; !result) return util::Error{util::ErrorString(result)};
 
     int script_threads = args.GetIntArg("-par", DEFAULT_SCRIPTCHECK_THREADS);
     if (script_threads <= 0) {

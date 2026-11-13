@@ -17,9 +17,12 @@
 #include <txgraph.h>
 #include <util/log.h>
 #include <util/moneystr.h>
+#include <util/strencodings.h>
 #include <util/translation.h>
 
 #include <chrono>
+#include <cstdint>
+#include <limits>
 #include <memory>
 
 using common::AmountErrMsg;
@@ -30,15 +33,49 @@ using kernel::MemPoolOptions;
 static constexpr int MAX_32BIT_MEMPOOL_MB{500};
 
 namespace {
-void ApplyArgsManOptions(const ArgsManager& argsman, MemPoolLimits& mempool_limits)
+util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, MemPoolLimits& mempool_limits)
 {
-    mempool_limits.cluster_count = argsman.GetIntArg("-limitclustercount", mempool_limits.cluster_count);
+    if (const auto arg{argsman.GetArg("-limitclustercount")}) {
+        // cluster_count is unsigned and TxGraph requires at least one transaction per
+        // cluster, so parse into the destination's width and check the range once.
+        // ToIntegral is used rather than GetArg<uint32_t>() because the typed getter
+        // saturates values that fail to parse, so "-limitclustercount=-1" would turn
+        // into 0 and the error would misleadingly report "(got 0)".
+        const auto count{ToIntegral<uint32_t>(*arg)};
+        if (!count || *count < 1 || *count > MAX_CLUSTER_COUNT_LIMIT) {
+            return util::Error{Untranslated(strprintf("limitclustercount must be between 1 and %u (got %s)", MAX_CLUSTER_COUNT_LIMIT, *arg))};
+        }
+        mempool_limits.cluster_count = *count;
+    }
 
-    if (auto vkb = argsman.GetIntArg("-limitclustersize")) mempool_limits.cluster_size_vbytes = *vkb * 1'000;
+    if (auto vkb = argsman.GetIntArg("-limitclustersize")) {
+        // The value is multiplied by 1000 below and later passed to MakeTxGraph,
+        // which takes a uint64_t, so a negative value would wrap to a huge limit
+        // and effectively disable the cluster size limit. A zero limit is also
+        // rejected: it would make every transaction exceed the cluster size and
+        // prevent any normal mempool admission. Values too large to scale to
+        // bytes without overflowing are rejected as well.
+        constexpr int64_t MAX_CLUSTER_SIZE_KVB{std::numeric_limits<int64_t>::max() / 1'000};
+        if (*vkb < 1 || *vkb > MAX_CLUSTER_SIZE_KVB) {
+            return util::Error{Untranslated(strprintf("limitclustersize must be between 1 and %d kilobytes (got %d)", MAX_CLUSTER_SIZE_KVB, *vkb))};
+        }
+        mempool_limits.cluster_size_vbytes = *vkb * 1'000;
+    }
 
-    mempool_limits.ancestor_count = argsman.GetIntArg("-limitancestorcount", mempool_limits.ancestor_count);
+    if (auto value{argsman.GetIntArg("-limitancestorcount")}) {
+        if (*value < 0) {
+            return util::Error{Untranslated(strprintf("limitancestorcount must be non-negative (got %d)", *value))};
+        }
+        mempool_limits.ancestor_count = *value;
+    }
 
-    mempool_limits.descendant_count = argsman.GetIntArg("-limitdescendantcount", mempool_limits.descendant_count);
+    if (auto value{argsman.GetIntArg("-limitdescendantcount")}) {
+        if (*value < 0) {
+            return util::Error{Untranslated(strprintf("limitdescendantcount must be non-negative (got %d)", *value))};
+        }
+        mempool_limits.descendant_count = *value;
+    }
+    return {};
 }
 }
 
@@ -54,7 +91,27 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
         mempool_opts.max_size_bytes = *mb * 1'000'000;
     }
 
-    if (auto hours = argsman.GetIntArg("-mempoolexpiry")) mempool_opts.expiry = std::chrono::hours{*hours};
+    if (auto hours = argsman.GetIntArg("-mempoolexpiry")) {
+        // The expiry is subtracted from the current time to form the cutoff passed
+        // to CTxMemPool::Expire(), which removes every entry older than the cutoff
+        // together with its descendants. A negative expiry puts that cutoff in the
+        // future, so ordinary transactions are expired at the next limiting pass
+        // rather than kept, and LoadMempool() likewise treats them as already
+        // expired instead of reloading them.
+        //
+        // The value is stored as std::chrono::seconds, so it must be bounded by
+        // the largest number of seconds that fits. Do not go through
+        // std::chrono::hours to find that bound: hours is not guaranteed to have
+        // a 64-bit representation (it is 32-bit on MSVC), which would make the
+        // bound itself wrap before it could be compared against.
+        constexpr int64_t SECONDS_PER_HOUR{3600};
+        constexpr int64_t MAX_EXPIRY_HOURS{std::chrono::seconds::max().count() / SECONDS_PER_HOUR};
+        if (*hours < 0 || *hours > MAX_EXPIRY_HOURS) {
+            return util::Error{Untranslated(strprintf("-mempoolexpiry must be between 0 and %d hours (got %d).", MAX_EXPIRY_HOURS, *hours))};
+        }
+        // Validated above, so this multiplication cannot overflow.
+        mempool_opts.expiry = std::chrono::seconds{*hours * SECONDS_PER_HOUR};
+    }
 
     // incremental relay fee sets the minimum feerate increase necessary for replacement in the mempool
     // and the amount the mempool min fee increases above the feerate of txs evicted due to mempool limiting.
@@ -93,7 +150,17 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
     mempool_opts.permit_bare_multisig = argsman.GetBoolArg("-permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
 
     if (argsman.GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER)) {
-        mempool_opts.max_datacarrier_bytes = argsman.GetIntArg("-datacarriersize", MAX_OP_RETURN_RELAY);
+        if (auto bytes{argsman.GetIntArg("-datacarriersize")}) {
+            // max_datacarrier_bytes is unsigned, so an out-of-range value would
+            // wrap: negative to a huge budget that accepts any amount of
+            // OP_RETURN data, and above UINT_MAX to a smaller one.
+            if (*bytes < 0 || static_cast<uint64_t>(*bytes) > std::numeric_limits<unsigned>::max()) {
+                return util::Error{Untranslated(strprintf("-datacarriersize must be between 0 and %u (got %d).", std::numeric_limits<unsigned>::max(), *bytes))};
+            }
+            mempool_opts.max_datacarrier_bytes = static_cast<unsigned>(*bytes);
+        } else {
+            mempool_opts.max_datacarrier_bytes = MAX_OP_RETURN_RELAY;
+        }
     } else {
         mempool_opts.max_datacarrier_bytes = std::nullopt;
     }
@@ -103,11 +170,7 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, const CChainP
         return util::Error{Untranslated(strprintf("acceptnonstdtxn is not currently supported for %s chain", chainparams.GetChainTypeString()))};
     }
 
-    ApplyArgsManOptions(argsman, mempool_opts.limits);
-
-    if (mempool_opts.limits.cluster_count > MAX_CLUSTER_COUNT_LIMIT) {
-        return util::Error{Untranslated(strprintf("limitclustercount must be less than or equal to %d", MAX_CLUSTER_COUNT_LIMIT))};
-    }
+    if (auto result{ApplyArgsManOptions(argsman, mempool_opts.limits)}; !result) return util::Error{util::ErrorString(result)};
 
     return {};
 }
