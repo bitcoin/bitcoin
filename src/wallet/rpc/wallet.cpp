@@ -529,6 +529,8 @@ RPCMethod simulaterawtransaction()
     if (!rpc_wallet) return UniValue::VNULL;
     const CWallet& wallet = *rpc_wallet;
 
+    CheckDeprecatedWatchonlyOption(wallet, request.params[1], "include_watchonly");
+
     LOCK(wallet.cs_wallet);
 
     const auto& txs = request.params[0].get_array();

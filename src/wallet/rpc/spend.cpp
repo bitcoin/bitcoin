@@ -505,8 +505,8 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                     {"changePosition", UniValueType(UniValue::VNUM)},
                     {"change_position", UniValueType(UniValue::VNUM)},
                     {"change_type", UniValueType(UniValue::VSTR)},
-                    {"includeWatching", UniValueType(UniValue::VBOOL)},
-                    {"include_watching", UniValueType(UniValue::VBOOL)},
+                    {"includeWatching", UniValueType(UniValue::VBOOL)}, // deprecated
+                    {"include_watching", UniValueType(UniValue::VBOOL)}, // deprecated
                     {"inputs", UniValueType(UniValue::VARR)},
                     {"lockUnspents", UniValueType(UniValue::VBOOL)},
                     {"lock_unspents", UniValueType(UniValue::VBOOL)},
@@ -525,7 +525,10 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                     {"input_weights", UniValueType(UniValue::VARR)},
                     {"max_tx_weight", UniValueType(UniValue::VNUM)},
                 },
-                true, true);
+                /*fAllowNull=*/true, /*fStrict=*/true);
+
+        CheckDeprecatedWatchonlyOption(wallet, options, "includeWatching");
+        CheckDeprecatedWatchonlyOption(wallet, options, "include_watching");
 
         if (options.exists("add_inputs")) {
             coinControl.m_allow_other_inputs = options["add_inputs"].get_bool();
@@ -1400,7 +1403,7 @@ RPCMethod sendall()
                 {
                     {"add_to_wallet", UniValueType(UniValue::VBOOL)},
                     {"fee_rate", UniValueType()},
-                    {"include_watching", UniValueType(UniValue::VBOOL)},
+                    {"include_watching", UniValueType(UniValue::VBOOL)}, // deprecated
                     {"inputs", UniValueType(UniValue::VARR)},
                     {"locktime", UniValueType(UniValue::VNUM)},
                     {"lock_unspents", UniValueType(UniValue::VBOOL)},
@@ -1415,6 +1418,7 @@ RPCMethod sendall()
                     {"solving_data", UniValueType(UniValue::VOBJ)},
                 },
                 /*fAllowNull=*/true, /*fStrict=*/true);
+            CheckDeprecatedWatchonlyOption(*pwallet, options, "include_watching");
             InterpretFeeEstimationInstructions(/*conf_target=*/request.params[1], /*estimate_mode=*/request.params[2], /*fee_rate=*/request.params[3], options);
 
 
