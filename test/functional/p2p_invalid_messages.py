@@ -20,6 +20,7 @@ from test_framework.messages import (
     msg_inv,
     msg_ping,
     msg_version,
+    ser_compact_size,
     ser_string,
 )
 from test_framework.p2p import (
@@ -32,6 +33,7 @@ from test_framework.util import (
 )
 
 VALID_DATA_LIMIT = MAX_PROTOCOL_MESSAGE_LENGTH - 5  # Account for the 5-byte length prefix
+MAX_SIZE = 0x02000000
 
 
 class msg_unrecognized:
@@ -66,6 +68,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         self.test_magic_bytes()
         self.test_checksum()
         self.test_size()
+        self.test_corrupt_compactsize()
         self.test_msgtype()
         self.test_addrv2_empty()
         self.test_addrv2_no_addresses()
@@ -151,6 +154,18 @@ class InvalidMessagesTest(BitcoinTestFramework):
             msg = conn.build_message(msg)
             conn.send_raw_message(msg)
             conn.wait_for_disconnect(timeout=1)
+        self.nodes[0].disconnect_p2ps()
+
+    def test_corrupt_compactsize(self):
+        self.log.info("Test message with a vector length exceeding MAX_SIZE")
+        conn = self.nodes[0].add_p2p_connection(P2PInterface())
+        # Any vector with this many entries exceeds the P2P payload limit,
+        # so this CompactSize value is only possible in a corrupt payload.
+        msg = msg_unrecognized(str_data="")
+        msg.msgtype = b'inv'
+        msg.serialize = lambda: ser_compact_size(MAX_SIZE + 1)
+        with self.nodes[0].assert_debug_log(["ReadCompactSize(): size too large"]):
+            conn.send_and_ping(msg)
         self.nodes[0].disconnect_p2ps()
 
     def test_msgtype(self):

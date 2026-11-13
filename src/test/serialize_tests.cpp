@@ -205,17 +205,6 @@ BOOST_AUTO_TEST_CASE(compactsize)
     }
 }
 
-static bool isCanonicalException(const std::ios_base::failure& ex)
-{
-    std::ios_base::failure expectedException("non-canonical ReadCompactSize()");
-
-    // The string returned by what() can be different for different platforms.
-    // Instead of directly comparing the ex.what() with an expected string,
-    // create an instance of exception to see if ex.what() matches
-    // the expected explanatory string returned by the exception instance.
-    return strcmp(expectedException.what(), ex.what()) == 0;
-}
-
 BOOST_AUTO_TEST_CASE(vector_bool)
 {
     std::vector<uint8_t> vec1{1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1};
@@ -235,12 +224,25 @@ BOOST_AUTO_TEST_CASE(array)
     BOOST_CHECK(array1 == array2);
 }
 
+BOOST_AUTO_TEST_CASE(compactsize_value_range)
+{
+    const auto ser_deser = []<bool RangeCheck = true>(uint64_t value) {
+        DataStream ss{};
+        WriteCompactSize(ss, value);
+        return ReadCompactSize(ss, RangeCheck);
+    };
+
+    BOOST_CHECK_EQUAL(ser_deser(MAX_SIZE), MAX_SIZE);
+    BOOST_CHECK_EXCEPTION(ser_deser(MAX_SIZE + 1), std::ios_base::failure, HasReason{"ReadCompactSize(): size too large"});
+    BOOST_CHECK_EQUAL(ser_deser.operator()</*RangeCheck=*/false>(MAX_SIZE + 1), MAX_SIZE + 1);
+}
+
 BOOST_AUTO_TEST_CASE(noncanonical)
 {
+    const HasReason isCanonicalException{"non-canonical ReadCompactSize()"};
     // Write some non-canonical CompactSize encodings, and
     // make sure an exception is thrown when read back.
     DataStream ss{};
-    std::vector<char>::size_type n;
 
     // zero encoded with three bytes:
     ss << std::span{"\xfd\x00\x00"}.first(3);
@@ -252,8 +254,7 @@ BOOST_AUTO_TEST_CASE(noncanonical)
 
     // 0xfd encoded with three bytes is OK:
     ss << std::span{"\xfd\xfd\x00"}.first(3);
-    n = ReadCompactSize(ss);
-    BOOST_CHECK(n == 0xfd);
+    BOOST_CHECK_EQUAL(ReadCompactSize(ss), 0xfd);
 
     // zero encoded with five bytes:
     ss << std::span{"\xfe\x00\x00\x00\x00"}.first(5);
