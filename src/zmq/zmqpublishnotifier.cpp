@@ -11,13 +11,17 @@
 #include <primitives/transaction.h>
 #include <serialize.h>
 #include <streams.h>
+#include <tinyformat.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/log.h>
+#include <util/result.h>
+#include <util/translation.h>
 #include <zmq/zmqutil.h>
 
 #include <zmq.h>
 
+#include <cerrno>
 #include <cstdarg>
 #include <cstddef>
 #include <cstdint>
@@ -49,7 +53,7 @@ static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)
         int rc = zmq_msg_init_size(&msg, size);
         if (rc != 0)
         {
-            zmqError("Unable to initialize ZMQ msg");
+            zmqDebug("Unable to initialize ZMQ msg");
             va_end(args);
             return -1;
         }
@@ -62,7 +66,7 @@ static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)
         rc = zmq_msg_send(&msg, sock, data ? ZMQ_SNDMORE : 0);
         if (rc == -1)
         {
-            zmqError("Unable to send ZMQ msg");
+            zmqDebug("Unable to send ZMQ msg");
             zmq_msg_close(&msg);
             va_end(args);
             return -1;
@@ -92,7 +96,7 @@ static bool IsZMQAddressIPV6(const std::string &zmq_address)
     return false;
 }
 
-bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
+util::Result<void> CZMQAbstractPublishNotifier::Initialize(void *pcontext)
 {
     assert(!psocket);
 
@@ -104,8 +108,7 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
         psocket = zmq_socket(pcontext, ZMQ_PUB);
         if (!psocket)
         {
-            zmqError("Failed to create socket");
-            return false;
+            return util::Error{Untranslated(strprintf("Failed to create socket for %s (address %s): %s", type, address, zmq_strerror(errno)))};
         }
 
         LogDebug(BCLog::ZMQ, "Outbound message high water mark for %s at %s is %d\n", type, address, outbound_message_high_water_mark);
@@ -113,39 +116,40 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
         int rc = zmq_setsockopt(psocket, ZMQ_SNDHWM, &outbound_message_high_water_mark, sizeof(outbound_message_high_water_mark));
         if (rc != 0)
         {
-            zmqError("Failed to set outbound message high water mark");
+            // compose the message before zmq_close, which may overwrite errno
+            auto msg{strprintf("Failed to set outbound message high water mark for %s (address %s): %s", type, address, zmq_strerror(errno))};
             zmq_close(psocket);
-            return false;
+            return util::Error{Untranslated(msg)};
         }
 
         const int so_keepalive_option {1};
         rc = zmq_setsockopt(psocket, ZMQ_TCP_KEEPALIVE, &so_keepalive_option, sizeof(so_keepalive_option));
         if (rc != 0) {
-            zmqError("Failed to set SO_KEEPALIVE");
+            auto msg{strprintf("Failed to set SO_KEEPALIVE for %s (address %s): %s", type, address, zmq_strerror(errno))};
             zmq_close(psocket);
-            return false;
+            return util::Error{Untranslated(msg)};
         }
 
         // On some systems (e.g. OpenBSD) the ZMQ_IPV6 must not be enabled, if the address to bind isn't IPv6
         const int enable_ipv6 { IsZMQAddressIPV6(address) ? 1 : 0};
         rc = zmq_setsockopt(psocket, ZMQ_IPV6, &enable_ipv6, sizeof(enable_ipv6));
         if (rc != 0) {
-            zmqError("Failed to set ZMQ_IPV6");
+            auto msg{strprintf("Failed to set ZMQ_IPV6 for %s (address %s): %s", type, address, zmq_strerror(errno))};
             zmq_close(psocket);
-            return false;
+            return util::Error{Untranslated(msg)};
         }
 
         rc = zmq_bind(psocket, address.c_str());
         if (rc != 0)
         {
-            zmqError("Failed to bind address");
+            auto msg{strprintf("Failed to bind address %s for %s: %s", address, type, zmq_strerror(errno))};
             zmq_close(psocket);
-            return false;
+            return util::Error{Untranslated(msg)};
         }
 
         // register this notifier for the address, so it can be reused for other publish notifier
         mapPublishNotifiers.insert(std::make_pair(address, this));
-        return true;
+        return {};
     }
     else
     {
@@ -155,7 +159,7 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
         psocket = i->second->psocket;
         mapPublishNotifiers.insert(std::make_pair(address, this));
 
-        return true;
+        return {};
     }
 }
 
@@ -235,7 +239,7 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 
     std::vector<std::byte> block{};
     if (!m_get_block_by_index(block, *pindex)) {
-        zmqError("Can't read block from disk");
+        zmqDebug("Can't read block from disk");
         return false;
     }
 
