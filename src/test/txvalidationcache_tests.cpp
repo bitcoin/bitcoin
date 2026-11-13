@@ -370,4 +370,51 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
     }
 }
 
+BOOST_FIXTURE_TEST_CASE(testblockvalidity_script_cache, TestChain100Setup)
+{
+    // Test that TestBlockValidity adds the block's transactions to the script
+    // execution cache, but only if all script checks of the block passed.
+    const CScript p2pk_spk{CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG};
+    const auto spend{[&](const COutPoint& prevout, CAmount value, const CKey& key) {
+        CMutableTransaction tx;
+        tx.vin = {CTxIn{prevout}};
+        tx.vout = {CTxOut{value, p2pk_spk}};
+        std::vector<unsigned char> sig;
+        BOOST_CHECK(key.Sign(SignatureHash(p2pk_spk, tx, 0, SIGHASH_ALL, 0, SigVersion::BASE), sig));
+        sig.push_back(SIGHASH_ALL);
+        tx.vin[0].scriptSig << sig;
+        return tx;
+    }};
+    // Create a parent spending a mature coinbase and two children spending its
+    // output, one with an invalid signature. They are not submitted to the
+    // mempool since that would add them to the script execution cache too.
+    const CMutableTransaction parent{spend(COutPoint{m_coinbase_txns[0]->GetHash(), 0}, 11 * CENT, coinbaseKey)};
+    const CMutableTransaction good_child{spend(COutPoint{parent.GetHash(), 0}, 10 * CENT, coinbaseKey)};
+    const CMutableTransaction bad_child{spend(COutPoint{parent.GetHash(), 0}, 10 * CENT, GenerateRandomKey())};
+
+    const auto test_block_validity{[&](const std::vector<CMutableTransaction>& txs) {
+        const CBlock block{CreateBlock(txs, p2pk_spk)};
+        LOCK(cs_main);
+        return TestBlockValidity(m_node.chainman->ActiveChainstate(), block, /*check_pow=*/true, /*check_merkle_root=*/true);
+    }};
+    const auto is_cached{[&](const CMutableTransaction& tx) {
+        LOCK(cs_main);
+        // On regtest the tip's script flags also apply to the next block
+        const auto flags{GetBlockScriptFlags(*m_node.chainman->ActiveChain().Tip(), *m_node.chainman)};
+        // Don't remove a matching entry from the cache
+        return !GetScriptCacheEntry(CTransaction{tx}, flags, /*cacheFullScriptStore=*/true, m_node.chainman->m_validation_cache);
+    }};
+
+    // Test 1: a block failing a script check should be rejected without caching
+    // any of its transactions, not even the parent with valid scripts.
+    BOOST_CHECK(test_block_validity({parent, bad_child}).GetRejectReason().starts_with("block-script-verify-flag-failed"));
+    BOOST_CHECK(!is_cached(parent));
+    BOOST_CHECK(!is_cached(bad_child));
+
+    // Test 2: a valid block should add all of its transactions to the cache.
+    BOOST_CHECK(test_block_validity({parent, good_child}).IsValid());
+    BOOST_CHECK(is_cached(parent));
+    BOOST_CHECK(is_cached(good_child));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
