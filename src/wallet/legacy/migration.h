@@ -6,6 +6,34 @@
 namespace wallet {
 namespace legacy_migration {
 
+class LegacyWallet : public CWallet
+{
+public:
+    LegacyWallet(const std::string& name, std::unique_ptr<WalletDatabase> database) : CWallet::CWallet(/*chain=*/nullptr, name, std::move(database)) {}
+
+    //! Get the LegacyDataSPKM used for all legacy output types and both internal and external chains.
+    LegacyDataSPKM* GetLegacyDataSPKM() const;
+    LegacyDataSPKM* GetOrCreateLegacyDataSPKM();
+
+    //! Create a LegacyDataSPKM and set it for all legacy output types and both internal and external chains.
+    void SetupLegacyDataSPKM();
+
+    /** Move all records from the BDB database to a new SQLite database for storage.
+     * The new database is built in a temporary directory and then moved into place, replacing the original one.
+     * A backup is not created.
+     * Returns false, with the original database untouched, if the new one can't be built. Once the original
+     * database may have been erased or replaced, failures throw instead, so the caller restores the backup.
+     */
+    bool MigrateToSQLite(const std::unordered_set<std::string>& skip_types, bilingual_str& error, bool& had_legacy_records) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    //! Get all of the descriptors from a legacy wallet
+    std::optional<MigrationData> GetDescriptorsForLegacy(bilingual_str& error) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    //! Adds the ScriptPubKeyMans from MigrationData to this wallet, removes the LegacyDataSPKM,
+    //! and moves transaction and address book entries to watchonly_wallet or solvable_wallet as needed.
+    util::Result<void> ApplyMigrationData(WalletBatch& local_wallet_batch, MigrationData& data) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+};
+
 struct MigrationResult {
     std::string wallet_name;
     std::optional<std::string> watchonly_wallet_name;

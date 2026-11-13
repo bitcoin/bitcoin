@@ -435,9 +435,9 @@ std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& b
 
 CWallet::CWallet(interfaces::Chain* chain, const std::string& name, std::unique_ptr<WalletDatabase> database)
     : m_chain(chain),
+      m_scanner(std::make_unique<ChainScanner>(*this)),
       m_name(name),
-      m_database(std::move(database)),
-      m_scanner(std::make_unique<ChainScanner>(*this))
+      m_database(std::move(database))
 {
 }
 

@@ -56,12 +56,12 @@ static void WalletMigration(benchmark::Bench& bench)
     std::vector<CKey> keys(500);
     std::ranges::generate(keys, []{ return GenerateRandomKey(); });
 
-    std::unique_ptr<CWallet> wallet;
+    std::unique_ptr<legacy_migration::LegacyWallet> wallet;
     size_t i = 0;
     bench.epochs(/*numEpochs=*/1) // run the migration exactly once
         .setup([&] {
             // Setup legacy wallet
-            wallet = std::make_unique<CWallet>(test_setup->m_node.chain.get(), std::string(i++, 'A'), CreateMockableWalletDatabase());
+            wallet = std::make_unique<legacy_migration::LegacyWallet>(std::string(i++, 'A'), CreateMockableWalletDatabase());
             LegacyDataSPKM* legacy_spkm = wallet->GetOrCreateLegacyDataSPKM();
             WalletBatch batch{wallet->GetDatabase()};
 

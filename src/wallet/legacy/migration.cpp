@@ -7,8 +7,9 @@
 #include <wallet/walletutil.h>
 
 namespace wallet {
+namespace legacy_migration {
 
-LegacyDataSPKM* CWallet::GetLegacyDataSPKM() const
+LegacyDataSPKM* LegacyWallet::GetLegacyDataSPKM() const
 {
     if (IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
         return nullptr;
@@ -18,13 +19,13 @@ LegacyDataSPKM* CWallet::GetLegacyDataSPKM() const
     return dynamic_cast<LegacyDataSPKM*>(it->second);
 }
 
-LegacyDataSPKM* CWallet::GetOrCreateLegacyDataSPKM()
+LegacyDataSPKM* LegacyWallet::GetOrCreateLegacyDataSPKM()
 {
     SetupLegacyDataSPKM();
     return GetLegacyDataSPKM();
 }
 
-void CWallet::SetupLegacyDataSPKM()
+void LegacyWallet::SetupLegacyDataSPKM()
 {
     if (!m_internal_spk_managers.empty() || !m_external_spk_managers.empty() || !m_spk_managers.empty() || IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
         return;
@@ -62,7 +63,7 @@ static std::string MigrationFilePrefix(CWallet& wallet)
     return fs::PathToString(legacy_wallet_path.filename());
 }
 
-bool CWallet::MigrateToSQLite(const std::unordered_set<std::string>& skip_types, bilingual_str& error, bool& had_legacy_records)
+bool LegacyWallet::MigrateToSQLite(const std::unordered_set<std::string>& skip_types, bilingual_str& error, bool& had_legacy_records)
 {
     AssertLockHeld(cs_wallet);
 
@@ -193,7 +194,7 @@ bool CWallet::MigrateToSQLite(const std::unordered_set<std::string>& skip_types,
     return true;
 }
 
-std::optional<MigrationData> CWallet::GetDescriptorsForLegacy(bilingual_str& error) const
+std::optional<MigrationData> LegacyWallet::GetDescriptorsForLegacy(bilingual_str& error) const
 {
     AssertLockHeld(cs_wallet);
 
@@ -212,7 +213,7 @@ std::optional<MigrationData> CWallet::GetDescriptorsForLegacy(bilingual_str& err
     return res;
 }
 
-util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, MigrationData& data)
+util::Result<void> LegacyWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, MigrationData& data)
 {
     AssertLockHeld(cs_wallet);
 
@@ -234,9 +235,9 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
 
     // When the legacy wallet has no spendable scripts, the main wallet will be empty, leaving its script cache empty as well.
     // The watch-only and/or solvable wallet(s) will contain the scripts in their respective caches.
-    if (!data.desc_spkms.empty()) Assume(!m_cached_spks.empty());
-    if (!data.watch_descs.empty()) Assume(!data.watchonly_wallet->m_cached_spks.empty());
-    if (!data.solvable_descs.empty()) Assume(!data.solvable_wallet->m_cached_spks.empty());
+    if (!data.desc_spkms.empty()) Assume(GetCachedSPKsSize() != 0);
+    if (!data.watch_descs.empty()) Assume(data.watchonly_wallet->GetCachedSPKsSize() != 0);
+    if (!data.solvable_descs.empty()) Assume(data.solvable_wallet->GetCachedSPKsSize() != 0);
 
     for (auto& desc_spkm : data.desc_spkms) {
         if (m_spk_managers.contains(desc_spkm->GetID())) {
@@ -419,9 +420,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
     return {}; // all good
 }
 
-namespace legacy_migration {
-
-bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, MigrationResult& res, const bool load_on_startup = true) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+bool DoMigration(LegacyWallet& wallet, WalletContext& context, bilingual_str& error, MigrationResult& res, const bool load_on_startup = true) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     AssertLockHeld(wallet.cs_wallet);
 
@@ -541,7 +540,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
     }
 
     // Make the local wallet
-    std::shared_ptr<CWallet> local_wallet = LoadWalletForMigration(wallet_name, error);
+    std::shared_ptr<LegacyWallet> local_wallet = LoadWalletForMigration(wallet_name, error);
     if (!local_wallet) {
         return util::Error{Untranslated("Wallet loading failed.") + Untranslated(" ") + error};
     }
@@ -597,18 +596,19 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
     bool empty_local_wallet = false;
 
     try {
+        std::shared_ptr<LegacyWallet> legacy_local_wallet = static_pointer_cast<LegacyWallet>(local_wallet);
         LOCK(local_wallet->cs_wallet);
         // First change to using SQLite
         std::unordered_set<std::string> skip_types = DBKeys::LEGACY_TYPES;
         skip_types.insert(DBKeys::TX);
         bool had_legacy_records = false;
-        if (!local_wallet->MigrateToSQLite(skip_types, error, had_legacy_records)) return util::Error{error};
+        if (!legacy_local_wallet->MigrateToSQLite(skip_types, error, had_legacy_records)) return util::Error{error};
 
         // Do the migration of keys and scripts for non-empty wallets, and cleanup if it fails
         if (had_legacy_records) {
-            success = DoMigration(*local_wallet, context, error, res, load_wallet);
+            success = DoMigration(*legacy_local_wallet, context, error, res, load_wallet);
             // No scripts mean empty wallet after migration
-            empty_local_wallet = local_wallet->GetAllScriptPubKeyMans().empty();
+            empty_local_wallet = legacy_local_wallet->GetAllScriptPubKeyMans().empty();
         } else {
             // Make sure that descriptors flag is actually set
             local_wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
@@ -659,7 +659,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet>
         }
         // Migration successful, if load_wallet is set load all the migrated wallets.
         bool main_wallet_set{false};
-        for (std::shared_ptr<CWallet>* wallet_ptr : {&local_wallet, &res.watchonly_wallet, &res.solvables_wallet}) {
+        for (std::shared_ptr<CWallet>* wallet_ptr : std::array<std::shared_ptr<CWallet>*, 3>{&local_wallet, &res.watchonly_wallet, &res.solvables_wallet}) {
             if (success && *wallet_ptr) {
                 std::shared_ptr<CWallet>& wallet = *wallet_ptr;
                 // Track db path

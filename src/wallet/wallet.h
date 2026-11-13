@@ -314,7 +314,7 @@ struct CRecipient
 /**
  * A CWallet maintains a set of transactions and balances, and provides the ability to create new transactions.
  */
-class CWallet final : public WalletStorage, public interfaces::Chain::Notifications
+class CWallet : public WalletStorage, public interfaces::Chain::Notifications
 {
 private:
     CKeyingMaterial vMasterKey GUARDED_BY(cs_wallet);
@@ -381,12 +381,6 @@ private:
     /** Interface for accessing chain state. */
     interfaces::Chain* m_chain;
 
-    /** Wallet name: relative directory name or "" for default wallet. */
-    std::string m_name;
-
-    /** Internal database handle. */
-    std::unique_ptr<WalletDatabase> m_database;
-
     std::unique_ptr<ChainScanner> m_scanner;
 
     /**
@@ -405,28 +399,11 @@ private:
      */
     int m_last_block_processed_height GUARDED_BY(cs_wallet) = -1;
 
-    std::map<OutputType, ScriptPubKeyMan*> m_external_spk_managers;
-    std::map<OutputType, ScriptPubKeyMan*> m_internal_spk_managers;
-
-    // Indexed by a unique identifier produced by each ScriptPubKeyMan using
-    // ScriptPubKeyMan::GetID. In many cases it will be the hash of an internal structure
-    std::map<uint256, std::unique_ptr<ScriptPubKeyMan>> m_spk_managers;
-
-    // Appends spk managers into the main 'm_spk_managers'.
-    // Must be the only method adding data to it.
-    void AddScriptPubKeyMan(const uint256& id, std::unique_ptr<ScriptPubKeyMan> spkm_man);
-
     // Same as 'AddActiveScriptPubKeyMan' but designed for use within a batch transaction context
     void AddActiveScriptPubKeyManWithDb(WalletBatch& batch, uint256 id, OutputType type, bool internal);
 
-    /** Store wallet flags */
-    void SetWalletFlagWithDB(WalletBatch& batch, uint64_t flags);
-
     //! Cache of descriptor ScriptPubKeys used for IsMine. Maps ScriptPubKey to set of spkms
     std::unordered_map<CScript, std::vector<ScriptPubKeyMan*>, SaltedSipHasher> m_cached_spks;
-
-    //! Set of both spent and unspent transaction outputs owned by this wallet
-    std::unordered_map<COutPoint, WalletTXO, SaltedOutpointHasher> m_txos GUARDED_BY(cs_wallet);
 
     //! Features of the last client to decrypt this wallet
     std::optional<uint64_t> m_last_decrypted_features GUARDED_BY(cs_wallet);
@@ -445,6 +422,30 @@ private:
 
     //! Update mempool conflicts for TRUC sibling transactions
     void UpdateTrucSiblingConflicts(const CWalletTx& parent_wtx, const Txid& child_txid, bool add_conflict) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+protected:
+    /** Wallet name: relative directory name or "" for default wallet. */
+    std::string m_name;
+
+    /** Internal database handle. */
+    std::unique_ptr<WalletDatabase> m_database;
+
+    std::map<OutputType, ScriptPubKeyMan*> m_external_spk_managers;
+    std::map<OutputType, ScriptPubKeyMan*> m_internal_spk_managers;
+
+    // Indexed by a unique identifier produced by each ScriptPubKeyMan using
+    // ScriptPubKeyMan::GetID. In many cases it will be the hash of an internal structure
+    std::map<uint256, std::unique_ptr<ScriptPubKeyMan>> m_spk_managers;
+
+    // Appends spk managers into the main 'm_spk_managers'.
+    // Must be the only method adding data to it.
+    void AddScriptPubKeyMan(const uint256& id, std::unique_ptr<ScriptPubKeyMan> spkm_man);
+
+    /** Store wallet flags */
+    void SetWalletFlagWithDB(WalletBatch& batch, uint64_t flags);
+
+    //! Set of both spent and unspent transaction outputs owned by this wallet
+    std::unordered_map<COutPoint, WalletTXO, SaltedOutpointHasher> m_txos GUARDED_BY(cs_wallet);
 
 public:
     /**
@@ -962,13 +963,6 @@ public:
     //! Get the wallet descriptors for a script.
     std::vector<WalletDescriptor> GetWalletDescriptors(const CScript& script) const;
 
-    //! Get the LegacyDataSPKM used for all legacy output types and both internal and external chains.
-    LegacyDataSPKM* GetLegacyDataSPKM() const;
-    LegacyDataSPKM* GetOrCreateLegacyDataSPKM();
-
-    //! Create a LegacyDataSPKM and set it for all legacy output types and both internal and external chains.
-    void SetupLegacyDataSPKM();
-
     bool WithEncryptionKey(std::function<bool (const CKeyingMaterial&)> cb) const override;
 
     bool HasEncryptionKeys() const override;
@@ -1048,21 +1042,6 @@ public:
     //! @return The master xpub for the added HD key, or a `WalletError` on failure.
     util::Expected<CExtPubKey, WalletError> AddHDKey(const std::optional<CExtKey>& key);
 
-    /** Move all records from the BDB database to a new SQLite database for storage.
-     * The new database is built in a temporary directory and then moved into place, replacing the original one.
-     * A backup is not created.
-     * Returns false, with the original database untouched, if the new one can't be built. Once the original
-     * database may have been erased or replaced, failures throw instead, so the caller restores the backup.
-     */
-    bool MigrateToSQLite(const std::unordered_set<std::string>& skip_types, bilingual_str& error, bool& had_legacy_records) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-
-    //! Get all of the descriptors from a legacy wallet
-    std::optional<MigrationData> GetDescriptorsForLegacy(bilingual_str& error) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-
-    //! Adds the ScriptPubKeyMans from MigrationData to this wallet, removes the LegacyDataSPKM,
-    //! and moves transaction and address book entries to watchonly_wallet or solvable_wallet as needed.
-    util::Result<void> ApplyMigrationData(WalletBatch& local_wallet_batch, MigrationData& data) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-
     //! Whether the (external) signer performs R-value signature grinding
     bool CanGrindR() const;
 
@@ -1094,6 +1073,8 @@ public:
 
     //! Set the features of the last client to decrypt this wallet
     void SetLastDecryptedFeatures(uint64_t features) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    size_t GetCachedSPKsSize() { return m_cached_spks.size(); }
 };
 
 /**
