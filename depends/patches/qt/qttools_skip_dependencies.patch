@@ -6,34 +6,46 @@ QtTools: Skip unnecessary dependencies:
 
 --- a/qttools/configure.cmake
 +++ b/qttools/configure.cmake
-@@ -17,7 +17,7 @@
- # Presumably because 6.0 ClangConfig.cmake files are not good enough?
- # In any case explicitly request a minimum version of 8.x for now, otherwise
- # building with CMake will fail at compilation time.
--qt_find_package(WrapLibClang 8 PROVIDED_TARGETS WrapLibClang::WrapLibClang)
-+#qt_find_package(WrapLibClang 8 PROVIDED_TARGETS WrapLibClang::WrapLibClang)
- # special case end
+@@ -6,17 +6,6 @@ include(${CMAKE_CURRENT_LIST_DIR}/src/qdoc/cmake/QDocConfiguration.cmake)
  
+ #### Tests
+ 
+-qt_find_package(WrapLibClang 8 PROVIDED_TARGETS WrapLibClang::WrapLibClang)
+-qt_find_package_extend_sbom(TARGETS WrapLibClang::WrapLibClang
+-    PACKAGE_VERSION "${QT_LIB_CLANG_VERSION}"
+-    LICENSE_EXPRESSION "Apache-2.0 WITH LLVM-exception"
+-    SUPPLIER "LLVM Foundation"
+-    DOWNLOAD_LOCATION "https://github.com/llvm/llvm-project/releases"
+-    COPYRIGHTS
+-        "Copyright (c) 2003-2019 University of Illinois at Urbana-Champaign."
+-        "Copyright (c) 2019-2025 Contributors to the LLVM Project."
+-)
+-
  if(TARGET WrapLibClang::WrapLibClang)
+     set(TEST_libclang "ON" CACHE BOOL "Required libclang version found." FORCE)
+ endif()
 
 --- a/qttools/src/linguist/CMakeLists.txt
 +++ b/qttools/src/linguist/CMakeLists.txt
-@@ -9,15 +9,8 @@ if(NOT QT_FEATURE_linguist)
-     return()
- endif()
+@@ -14,17 +14,8 @@ add_subdirectory(shared/trlib)
+ add_subdirectory(shared/linguistproject)
+ 
  add_subdirectory(lconvert)
--add_subdirectory(lprodump)
+-add_subdirectory(lcheck)
  add_subdirectory(lrelease)
 -add_subdirectory(lrelease-pro)
  add_subdirectory(lupdate)
 -add_subdirectory(lupdate-pro)
+-add_subdirectory(ltext2id)
 -if(QT_FEATURE_process AND QT_FEATURE_pushbutton AND QT_FEATURE_toolbutton
--    AND QT_FEATURE_png AND QT_FEATURE_printsupport AND TARGET Qt::Widgets)
+-    AND QT_FEATURE_png AND QT_FEATURE_mdiarea AND QT_FEATURE_syntaxhighlighter
+-    AND TARGET Qt::Widgets AND TARGET Qt::Quick)
 -    add_subdirectory(linguist)
 -endif()
  
  # Create a fake module that would emulate the Qt5::LinguistTools CMake Config package
  qt_internal_add_module(Linguist
+
 --- a/qttools/src/qdbus/CMakeLists.txt
 +++ b/qttools/src/qdbus/CMakeLists.txt
 @@ -7,6 +7,3 @@ endif()

@@ -8,7 +8,7 @@ For the reference, see:
 
 --- a/qtbase/src/corelib/plugin/qelfparser_p.cpp
 +++ b/qtbase/src/corelib/plugin/qelfparser_p.cpp
-@@ -341,7 +341,9 @@ Q_DECL_UNUSED Q_DECL_COLD_FUNCTION static QDebug &operator<<(QDebug &d, ElfHeade
+@@ -342,7 +342,9 @@ Q_DECL_UNUSED Q_DECL_COLD_FUNCTION static QDebug &operator<<(QDebug &d, ElfHeade
      case ELFOSABI_NETBSD:   d << " (NetBSD"; break;
      case ELFOSABI_LINUX:    d << " (GNU/Linux"; break;
      case ELFOSABI_SOLARIS:  d << " (Solaris"; break;
