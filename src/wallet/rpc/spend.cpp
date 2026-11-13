@@ -207,10 +207,11 @@ static void EnableSilentPayments(const CWallet& wallet, CCoinControl& coin_contr
     coin_control.m_silent_payments = true;
 }
 
-//! Enable silent payments in coin_control if any recipient is a silent payments destination
+//! Enable silent payments in coin_control if any recipient or the change is a silent payments destination
 static void MaybeEnableSilentPayments(const CWallet& wallet, CCoinControl& coin_control, const std::vector<CRecipient>& recipients)
 {
-    if (std::ranges::any_of(recipients, [](const auto& r) { return r.dest.IsSilentPayment(); })) {
+    if (std::ranges::any_of(recipients, [](const auto& r) { return r.dest.IsSilentPayment(); }) ||
+        coin_control.destChange.IsSilentPayment()) {
         EnableSilentPayments(wallet, coin_control);
     }
 }
@@ -572,13 +573,12 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
         }
 
         if (const UniValue* change_address = GetOptionWithAlias(options, "change_address", "changeAddress")) {
-            CTxDestination dest{DecodeDestination(change_address->get_str())};
-
-            if (!IsValidDestination(dest)) {
+            auto dest{PaymentDestination::FromString(change_address->get_str())};
+            if (!dest) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Change address must be a valid bitcoin address");
             }
 
-            coinControl.destChange = PaymentDestination{dest};
+            coinControl.destChange = std::move(*dest);
         }
 
         if (const UniValue* change_position_option = GetOptionWithAlias(options, "change_position", "changePosition")) {
@@ -880,6 +880,13 @@ RPCMethod fundrawtransaction()
     // This sets us up for a future PR to completely remove tx from the function signature in favor of passing inputs directly
     tx.vout.clear();
     auto txr = FundTransaction(*pwallet, tx, recipients, options, coin_control, /*override_min_fee=*/true);
+    // Outputs taken from the raw transaction are plain scripts, so silent payments can only be
+    // enabled here by a silent payments changeAddress. Reject it: the funded transaction is not
+    // added to the wallet and its inputs may change before signing, see
+    // EnsureSilentPaymentsTxIsAddedToWallet.
+    if (coin_control.m_silent_payments) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "fundrawtransaction does not support silent payments change addresses, use send instead");
+    }
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("hex", EncodeHexTx(*txr.tx));
@@ -1931,6 +1938,12 @@ RPCMethod walletcreatefundedpsbt()
     coin_control.m_allow_other_inputs = rawTx.vin.size() == 0;
     SetOptionsInputWeights(request.params[0], options);
     auto txr = FundTransaction(wallet, rawTx, recipients, options, coin_control, /*override_min_fee=*/true);
+    // Silent payments recipients are rejected by ParseOutputs, so silent payments can only be
+    // enabled here by a silent payments changeAddress. Reject it: the PSBT is not added to the
+    // wallet and its inputs may change before signing, see EnsureSilentPaymentsTxIsAddedToWallet.
+    if (coin_control.m_silent_payments) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "walletcreatefundedpsbt does not support silent payments change addresses, use send instead");
+    }
 
     // Make a blank psbt
     const uint32_t psbt_version{self.Arg<uint32_t>("psbt_version")};
