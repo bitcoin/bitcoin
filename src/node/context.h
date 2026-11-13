@@ -83,8 +83,11 @@ struct NodeContext {
     std::function<void()> rpc_interruption_point = [] {};
     //! Issues blocking calls about sync status, errors and warnings
     std::unique_ptr<KernelNotifications> notifications;
-    //! Must be destroyed before its dependencies (holds references to them).
-    std::unique_ptr<BlockTemplateManager> block_template_manager;
+    //! Reset before mempool, chainman, and notifications.
+    //! IPC template cleanup may temporarily keep the manager alive after those
+    //! dependencies are destroyed. This is safe because UnregisterTemplate() and
+    //! the manager's destructor only access the manager's own members.
+    std::shared_ptr<BlockTemplateManager> block_template_manager;
     //! Issues calls about blocks and transactions
     std::unique_ptr<ValidationSignals> validation_signals;
     std::atomic<int> exit_status{EXIT_SUCCESS};

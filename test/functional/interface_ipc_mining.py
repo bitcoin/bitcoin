@@ -34,6 +34,7 @@ from test_framework.messages import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_greater_than_or_equal,
     assert_not_equal,
     assert_raises_rpc_error,
@@ -325,6 +326,13 @@ class IPCMiningTest(BitcoinTestFramework):
                 block4 = await mining_get_block(template6, ctx)
                 assert_equal(len(block4.vtx), 3)
 
+                self.log.debug("Templates still in scope contribute to the memory load, even without mempool churn")
+                # Their overhead (own vectors) counts. The exact accounting is
+                # covered by template_memory_usage in miner_tests.cpp.
+                with self.nodes[0].assert_debug_log(["Calculate template transaction reference memory footprint"]):
+                    memory_load = await mining.getMemoryLoad(ctx)
+                assert_greater_than(memory_load.result.usage, 0)
+
                 self.log.debug("Wait for another, but time out, since the fee threshold is set now")
                 waitoptions.timeout = self.no_event_timeout_ms
                 template7 = await mining_wait_next_template(template6, stack, ctx, waitoptions)
@@ -339,6 +347,11 @@ class IPCMiningTest(BitcoinTestFramework):
                     template7 = await mining_wait_next_template(template6, stack, ctx, new_waitoptions)
                     assert template7 is None
                 await wait_and_do(wait_for_block(), template6.interruptWait())
+
+                self.log.debug("Template objects go out of scope")
+
+            self.log.debug("Template objects are out of scope, so memory load should be zero")
+            assert_equal((await mining.getMemoryLoad(ctx)).result.usage, 0)
 
         asyncio.run(capnp.run(async_routine()))
 
@@ -623,6 +636,18 @@ class IPCMiningTest(BitcoinTestFramework):
                 assert_equal(self.nodes[2].getchaintips()[0]["height"], current_block_height + 1)
                 self.log.debug("submitBlock should reject the duplicate complete block")
                 await self.assert_submit_block(mining2, ctx2, block, result=False, reason="duplicate")
+
+                self.log.debug("Reported memory load should be > 0")
+                # Clients are expected to drop references to stale block templates
+                # briefly after the tip updates. In practice we mainly care about
+                # the memory footprint caused by mempool churn, but this scenario
+                # is easier to test.
+                assert_greater_than((await mining.getMemoryLoad(ctx)).result.usage, 0)
+
+                # Manually release the template:
+                await template.destroy(ctx)
+                self.log.debug("Reported memory load should be 0")
+                assert_equal((await mining.getMemoryLoad(ctx)).result.usage, 0)
 
             self.log.debug("Block should propagate")
             # Check that the IPC node actually updates its own chain
