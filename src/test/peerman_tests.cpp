@@ -5,8 +5,10 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <consensus/params.h>
+#include <net.h>
 #include <net_processing.h>
 #include <node/block_template_manager.h>
+#include <node/connection_types.h>
 #include <node/miner.h>
 #include <pow.h>
 #include <primitives/block.h>
@@ -20,7 +22,10 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <atomic>
+#include <chrono>
 #include <cstdint>
+#include <future>
 #include <memory>
 
 BOOST_FIXTURE_TEST_SUITE(peerman_tests, RegTestingSetup)
@@ -87,6 +92,37 @@ BOOST_AUTO_TEST_CASE(connections_desirable_service_flags)
     // Lastly, verify the stale tip checks can disallow limited peers connections after not receiving blocks for a prolonged period.
     clock += std::chrono::seconds{consensus.nPowTargetSpacing * NODE_NETWORK_LIMITED_ALLOW_CONN_BLOCKS + 1};
     BOOST_CHECK(peerman->GetDesirableServiceFlags(peer_flags) == ServiceFlags(NODE_NETWORK | NODE_WITNESS));
+}
+
+BOOST_AUTO_TEST_CASE(process_messages_without_orphan_work)
+{
+    CNode node{/*id=*/0,
+               /*sock=*/nullptr,
+               CAddress{},
+               /*nKeyedNetGroupIn=*/0,
+               /*nLocalHostNonceIn=*/0,
+               CAddress{},
+               /*addrNameIn=*/"",
+               ConnectionType::INBOUND,
+               /*inbound_onion=*/false,
+               /*network_key=*/0};
+    m_node.peerman->InitializeNode(node, NODE_NETWORK);
+
+    // A peer with no orphan work is processed while cs_main is held elsewhere.
+    // The future outlives the lock, so a regression fails instead of hanging.
+    std::future<void> processed;
+    {
+        LOCK(cs_main);
+        processed = std::async(std::launch::async, [&] {
+            std::atomic<bool> interrupt{false};
+            LOCK(NetEventsInterface::g_msgproc_mutex);
+            m_node.peerman->ProcessMessages(node, interrupt);
+        });
+        BOOST_CHECK(processed.wait_for(10s) == std::future_status::ready);
+    }
+    processed.get();
+
+    m_node.peerman->FinalizeNode(node);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
