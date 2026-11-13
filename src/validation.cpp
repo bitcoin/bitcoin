@@ -429,7 +429,7 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationS
     }
 
     // Call CheckInputScripts() to cache signature and script validity against current tip consensus rules.
-    return CheckInputScripts(tx, state, view, flags, CheckInputScriptsFor::Mempool, /* cacheSigStore= */ true, /* cacheFullScriptStore= */ true, txdata, validation_cache);
+    return CheckInputScripts(tx, state, view, flags, /* cacheSigStore= */ true, /* cacheFullScriptStore= */ true, txdata, validation_cache);
 }
 
 namespace {
@@ -1130,7 +1130,7 @@ bool MemPoolAccept::PolicyScriptChecks(Workspace& ws)
 
     // Check input scripts and signatures.
     // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-    if (!CheckInputScripts(tx, state, m_view, scriptVerifyFlags, CheckInputScriptsFor::Mempool, true, false, ws.m_precomputed_txdata, GetValidationCache())) {
+    if (!CheckInputScripts(tx, state, m_view, scriptVerifyFlags, true, false, ws.m_precomputed_txdata, GetValidationCache())) {
         // Detect a failure due to a missing witness so that p2p code can handle rejection caching appropriately.
         if (!tx.HasWitness() && SpendsNonAnchorWitnessProg(tx, m_view)) {
             state.Invalid(TxValidationResult::TX_WITNESS_STRIPPED,
@@ -2078,7 +2078,8 @@ static void EnsureTxData(const CTransaction& tx, const CCoinsViewCache& inputs, 
  * of that transaction).
  *
  * Setting cacheFullScriptStore to false will remove the entry from the script execution cache if it
- * is matched.
+ * is matched. This is useful for checking blocks where we will likely never need the cache entry
+ * again.
  */
 std::optional<uint256> GetScriptCacheEntry(const CTransaction& tx, script_verify_flags flags,
                                            bool cacheFullScriptStore, ValidationCache& validation_cache)
@@ -2102,11 +2103,10 @@ std::optional<uint256> GetScriptCacheEntry(const CTransaction& tx, script_verify
  * only be called after the cheap sanity checks in CheckTxInputs passed.
  *
  * Setting cacheSigStore/cacheFullScriptStore to false will remove elements from the corresponding cache
- * which are matched. This is useful for checking blocks where we will likely never need the cache
- * entry again.
+ * which are matched.
  */
 bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
-                       const CCoinsViewCache& inputs, script_verify_flags flags, CheckInputScriptsFor check_for,
+                       const CCoinsViewCache& inputs, script_verify_flags flags,
                        bool cacheSigStore,
                        bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
                        ValidationCache& validation_cache)
@@ -2133,13 +2133,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
             // non-standard DER encodings or non-null dummy
             // arguments) or due to new consensus rules introduced in
             // soft forks.
-            switch (check_for) {
-            case CheckInputScriptsFor::Mempool:
-                return state.Invalid(TxValidationResult::TX_NOT_STANDARD, strprintf("mempool-script-verify-flag-failed (%s)", ScriptErrorString(result->first)), result->second);
-            case CheckInputScriptsFor::Block:
-                return state.Invalid(TxValidationResult::TX_CONSENSUS, strprintf("block-script-verify-flag-failed (%s)", ScriptErrorString(result->first)), result->second);
-            }
-            assert(false); // unreachable
+            return state.Invalid(TxValidationResult::TX_NOT_STANDARD, strprintf("mempool-script-verify-flag-failed (%s)", ScriptErrorString(result->first)), result->second);
         }
     }
 
