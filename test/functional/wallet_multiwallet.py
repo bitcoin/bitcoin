@@ -17,7 +17,9 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import ErrorMatch
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_raises_rpc_error,
+    assert_true,
     ensure_for,
     JSONRPCException,
 )
@@ -90,7 +92,7 @@ class MultiWalletTest(BitcoinTestFramework):
 
         # check wallet.dat is created
         self.stop_nodes()
-        assert_equal(os.path.isfile(wallet_dir(node, self.default_wallet_name, self.wallet_data_filename)), True)
+        assert_true(os.path.isfile(wallet_dir(node, self.default_wallet_name, self.wallet_data_filename)))
 
         self.test_scanning_main_dir_access(node)
         empty_wallet, empty_created_wallet, wallet_names, in_wallet_dir = self.test_mixed_wallets(node)
@@ -211,7 +213,7 @@ class MultiWalletTest(BitcoinTestFramework):
         # check that all requested wallets were created
         self.stop_node(0)
         for wallet_name in wallet_names:
-            assert_equal(os.path.isfile(self.wallet_file(node, wallet_name)), True)
+            assert_true(os.path.isfile(self.wallet_file(node, wallet_name)))
 
         node.assert_start_raises_init_error(['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" does not exist')
         node.assert_start_raises_init_error(['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" is a relative path', cwd=data_dir(node))
@@ -334,7 +336,7 @@ class MultiWalletTest(BitcoinTestFramework):
         for t in threads:
             t.join()
         global got_loading_error
-        assert_equal(got_loading_error, True)
+        assert_true(got_loading_error)
 
         self.log.info("Load remaining wallets")
         for wallet_name in wallet_names[2:]:
@@ -444,11 +446,11 @@ class MultiWalletTest(BitcoinTestFramework):
             node.unloadwallet(wallet_name)
             shutil.copyfile(empty_created_wallet if wallet_name == self.default_wallet_name else empty_wallet, self.wallet_file(node, wallet_name))
             node.loadwallet(wallet_name)
-            assert_equal(rpc.getaddressinfo(addr)['ismine'], False)
+            assert_false(rpc.getaddressinfo(addr)['ismine'])
             node.unloadwallet(wallet_name)
             shutil.copyfile(backup, self.wallet_file(node, wallet_name))
             node.loadwallet(wallet_name)
-            assert_equal(rpc.getaddressinfo(addr)['ismine'], True)
+            assert_true(rpc.getaddressinfo(addr)['ismine'])
 
     def test_lock_file_closed(self, node):
         self.log.info("Test wallet lock file is closed")
