@@ -168,6 +168,7 @@ BASE_SCRIPTS = [
     'wallet_labels.py',
     'p2p_compactblocks.py',
     'p2p_compactblocks_blocksonly.py',
+    'p2p_compactblocks_far_ahead.py',
     'p2p_node_network_limited.py --v1transport',
     'p2p_node_network_limited.py --v2transport',
     'p2p_sendheaders.py',
