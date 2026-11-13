@@ -5,7 +5,6 @@
 #ifndef BITCOIN_SPAN_H
 #define BITCOIN_SPAN_H
 
-#include <cassert>
 #include <cstddef>
 #include <span>
 #include <type_traits>

@@ -11,7 +11,6 @@
 #include <util/check.h>
 
 #include <cstdint>
-#include <vector>
 
 FUZZ_TARGET(netaddress)
 {

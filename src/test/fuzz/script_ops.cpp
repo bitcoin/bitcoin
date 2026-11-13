@@ -8,7 +8,8 @@
 #include <test/fuzz/util.h>
 
 #include <cstdint>
-#include <string>
+#include <span>
+#include <utility>
 #include <vector>
 
 FUZZ_TARGET(script_ops)

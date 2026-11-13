@@ -3,16 +3,20 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <net.h>
-#include <protocol.h>
+#include <net_types.h>
+#include <node/eviction.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
-#include <test/fuzz/util/net.h>
+#include <test/util/net.h>
 #include <util/check.h>
+#include <util/time.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cstdint>
 #include <optional>
+#include <utility>
 #include <vector>
 
 FUZZ_TARGET(node_eviction)

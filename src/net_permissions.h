@@ -6,12 +6,14 @@
 #define BITCOIN_NET_PERMISSIONS_H
 
 #include <netaddress.h>
-#include <netbase.h>
+#include <util/check.h>
 
+#include <cstdint>
 #include <string>
 #include <type_traits>
 #include <vector>
 
+enum class ConnectionDirection;
 struct bilingual_str;
 
 extern const std::vector<std::string> NET_PERMISSIONS_DOC;

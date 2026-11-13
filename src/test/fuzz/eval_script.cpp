@@ -2,12 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <pubkey.h>
 #include <script/interpreter.h>
+#include <script/script.h>
+#include <script/verify_flags.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 
-#include <limits>
+#include <cstdint>
+#include <vector>
 
 FUZZ_TARGET(eval_script)
 {

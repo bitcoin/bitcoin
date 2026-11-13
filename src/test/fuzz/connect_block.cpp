@@ -4,9 +4,15 @@
 
 #include <addresstype.h>
 #include <chain.h>
+#include <coins.h>
 #include <consensus/amount.h>
+#include <consensus/consensus.h>
 #include <consensus/merkle.h>
+#include <consensus/validation.h>
+#include <cuckoocache.h>
+#include <kernel/chainparams.h>
 #include <node/block_template_manager.h>
+#include <node/blockstorage.h>
 #include <node/kernel_notifications.h>
 #include <node/mining_types.h>
 #include <primitives/block.h>
@@ -14,23 +20,31 @@
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/script.h>
+#include <span.h>
 #include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/mining.h>
+#include <test/util/random.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/hasher.h>
+#include <util/time.h>
 #include <validation.h>
 #include <validationinterface.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <memory>
+#include <optional>
+#include <span>
 #include <utility>
 #include <vector>
 

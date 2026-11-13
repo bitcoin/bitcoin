@@ -18,7 +18,6 @@
 #include <rpc/request.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
-#include <script/descriptor.h>
 #include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
@@ -26,16 +25,15 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <util/check.h>
-#include <util/fees.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 
 #include <cstdint>
-#include <cstdlib>
-#include <ios>
 #include <stdexcept>
 #include <string>
 #include <vector>
+
+enum class FeeEstimateMode;
 
 using common::AmountErrMsg;
 using common::AmountHighWarn;

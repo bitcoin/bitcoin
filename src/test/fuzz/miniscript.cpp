@@ -4,19 +4,34 @@
 
 #include <script/miniscript.h>
 
-#include <core_io.h>
+#include <addresstype.h>
+#include <crypto/hex_base.h>
+#include <crypto/ripemd160.h>
+#include <crypto/sha256.h>
 #include <hash.h>
 #include <key.h>
+#include <policy/policy.h>
+#include <prevector.h>
+#include <pubkey.h>
+#include <script/interpreter.h>
 #include <script/script.h>
+#include <script/script_error.h>
 #include <script/signingprovider.h>
+#include <script/verify_flags.h>
+#include <serialize.h>
+#include <span.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/descriptor.h>
+#include <uint256.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 
 #include <algorithm>
+#include <array>
+#include <compare>
+#include <iterator>
 #include <map>
 #include <optional>
 #include <vector>

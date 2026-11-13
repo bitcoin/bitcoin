@@ -6,11 +6,16 @@
 #define BITCOIN_VERSIONBITS_H
 
 #include <chain.h>
+#include <consensus/params.h>
 #include <sync.h>
 
 #include <array>
+#include <cstdint>
+#include <functional>
 #include <map>
 #include <optional>
+#include <string>
+#include <utility>
 #include <vector>
 
 class CChainParams;

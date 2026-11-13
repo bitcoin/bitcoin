@@ -4,17 +4,16 @@
 
 #include <net_permissions.h>
 
-#include <netbase.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
-#include <test/fuzz/util/net.h>
+#include <test/util/net.h>
 #include <util/check.h>
 #include <util/translation.h>
 
-#include <cstdint>
 #include <string>
-#include <vector>
+
+enum class ConnectionDirection;
 
 FUZZ_TARGET(net_permissions)
 {

@@ -8,9 +8,7 @@
 #include <consensus/amount.h>
 #include <policy/feerate.h>
 #include <primitives/transaction_identifier.h>
-#include <random.h>
 #include <sync.h>
-#include <uint256.h>
 #include <util/expected.h>
 #include <util/fees.h>
 #include <util/fs.h>
@@ -22,6 +20,8 @@
 #include <set>
 #include <string>
 #include <vector>
+
+class FastRandomContext;
 
 
 /** Block policy estimate files that are more than 60 hours (2.5 days) old will not be read,

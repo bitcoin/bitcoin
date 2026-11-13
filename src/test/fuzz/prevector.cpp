@@ -4,7 +4,6 @@
 
 #include <prevector.h>
 
-#include <serialize.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -12,6 +11,7 @@
 
 #include <ranges>
 #include <vector>
+
 namespace {
 
 template <unsigned int N, typename T>

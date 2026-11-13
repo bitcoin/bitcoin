@@ -10,9 +10,10 @@
 
 #include <netaddress.h>
 #include <util/fs.h>
-#include <util/sock.h>
 #include <util/threadinterrupt.h>
 
+#include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <deque>
 #include <functional>
@@ -20,6 +21,8 @@
 #include <string>
 #include <thread>
 #include <vector>
+
+class Sock;
 
 inline constexpr uint16_t DEFAULT_TOR_SOCKS_PORT{9050};
 inline constexpr int DEFAULT_TOR_CONTROL_PORT = 9051;

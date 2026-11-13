@@ -8,6 +8,9 @@
 #include <kernel/mempool_entry.h>
 #include <validation.h>
 
+#include <cstdint>
+#include <limits>
+
 class CTransaction;
 class CTxMemPool;
 class FuzzedDataProvider;

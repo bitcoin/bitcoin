@@ -15,7 +15,9 @@
 #include <util/feefrac.h>
 
 #include <algorithm>
+#include <compare>
 #include <cstdint>
+#include <ios>
 #include <utility>
 #include <vector>
 

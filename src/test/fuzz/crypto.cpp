@@ -9,12 +9,15 @@
 #include <crypto/sha256.h>
 #include <crypto/sha3.h>
 #include <crypto/sha512.h>
+#include <crypto/siphash.h>
 #include <hash.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 
+#include <cstddef>
 #include <cstdint>
+#include <span>
 #include <vector>
 
 FUZZ_TARGET(crypto)

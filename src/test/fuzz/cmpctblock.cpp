@@ -6,9 +6,7 @@
 #include <blockencodings.h>
 #include <chain.h>
 #include <chainparams.h>
-#include <coins.h>
 #include <consensus/amount.h>
-#include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <net.h>
 #include <net_processing.h>
@@ -46,7 +44,6 @@
 #include <functional>
 #include <iterator>
 #include <memory>
-#include <optional>
 #include <string>
 #include <utility>
 #include <vector>

@@ -6,8 +6,8 @@
 #define BITCOIN_TEST_FUZZ_UTIL_DESCRIPTOR_H
 
 #include <array>
-#include <cinttypes>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <optional>
 #include <span>

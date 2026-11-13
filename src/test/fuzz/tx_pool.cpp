@@ -28,6 +28,7 @@
 #include <test/util/setup_common.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
+#include <uint256.h>
 #include <util/check.h>
 #include <util/string.h>
 #include <util/time.h>
@@ -35,6 +36,7 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -48,6 +50,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+
 using node::BlockAssembler;
 using node::BlockCreateOptions;
 using node::NodeContext;

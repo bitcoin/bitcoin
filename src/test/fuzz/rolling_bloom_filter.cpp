@@ -10,9 +10,8 @@
 #include <uint256.h>
 #include <util/check.h>
 
-#include <cstdint>
-#include <optional>
-#include <string>
+#include <limits>
+#include <span>
 #include <vector>
 
 FUZZ_TARGET(rolling_bloom_filter)

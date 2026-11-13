@@ -5,11 +5,12 @@
 #include <util/bitset.h>
 
 #include <random.h>
-#include <span.h>
-#include <test/fuzz/util.h>
+#include <test/fuzz/fuzz.h>
 #include <util/check.h>
 
 #include <bitset>
+#include <cstdint>
+#include <utility>
 #include <vector>
 
 namespace {

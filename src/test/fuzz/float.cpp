@@ -9,7 +9,9 @@
 #include <util/check.h>
 #include <util/serfloat.h>
 
+#include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <limits>
 #include <optional>
 

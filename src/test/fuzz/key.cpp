@@ -4,7 +4,10 @@
 
 #include <key.h>
 
+#include <addresstype.h>
 #include <chainparams.h>
+#include <crypto/hex_base.h>
+#include <hash.h>
 #include <key_io.h>
 #include <outputtype.h>
 #include <policy/policy.h>
@@ -20,16 +23,19 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/random.h>
+#include <uint256.h>
 #include <util/chaintype.h>
 #include <util/check.h>
-#include <util/strencodings.h>
 
 #include <array>
 #include <cstddef>
-#include <cstdint>
+#include <functional>
 #include <numeric>
-#include <optional>
+#include <set>
+#include <span>
 #include <string>
+#include <utility>
+#include <variant>
 #include <vector>
 
 void initialize_key()

@@ -15,7 +15,6 @@
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/verify_flags.h>
-#include <span.h>
 #include <test/util/transaction_utils.h>
 #include <uint256.h>
 #include <util/check.h>

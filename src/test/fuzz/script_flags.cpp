@@ -5,6 +5,8 @@
 #include <consensus/amount.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
+#include <script/script_error.h>
+#include <script/verify_flags.h>
 #include <serialize.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>

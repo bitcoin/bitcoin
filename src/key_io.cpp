@@ -6,16 +6,22 @@
 
 #include <base58.h>
 #include <bech32.h>
+#include <chainparams.h>
 #include <script/interpreter.h>
-#include <script/solver.h>
+#include <script/script.h>
+#include <span.h>
 #include <streams.h>
+#include <support/cleanse.h>
 #include <tinyformat.h>
+#include <uint256.h>
+#include <util/check.h>
 #include <util/overflow.h>
 #include <util/strencodings.h>
 
 #include <algorithm>
-#include <cassert>
-#include <cstring>
+#include <cstddef>
+#include <span>
+#include <variant>
 
 /// Maximum witness length for Bech32 addresses.
 static constexpr std::size_t BECH32_WITNESS_PROG_MAX_LEN = 40;
