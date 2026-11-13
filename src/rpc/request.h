@@ -6,6 +6,7 @@
 #ifndef BITCOIN_RPC_REQUEST_H
 #define BITCOIN_RPC_REQUEST_H
 
+#include <attributes.h>
 #include <univalue.h>
 #include <util/fs.h>
 
@@ -51,16 +52,39 @@ void DeleteAuthCookie();
 /** Parse JSON-RPC batch reply into a vector */
 std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue& in);
 
+/**
+ * Client that sent a JSON-RPC request: the connection-level fields shared by
+ * every request in an HTTP body or IPC call, including every element of a
+ * batch.
+ */
+struct JSONRPCClient
+{
+    std::string URI;
+    std::string authUser;
+    std::string peerAddr;
+    //! Default context for requests from this client.
+    std::any context;
+};
+
+/**
+ * Single JSON-RPC call. Refers to the client that sent it instead of holding
+ * a copy, so requests parsed from a batch start out empty and share nothing
+ * but the client.
+ */
 class JSONRPCRequest
 {
 public:
+    //! Request with no client, for calls made internally and in tests.
+    JSONRPCRequest();
+    explicit JSONRPCRequest(const JSONRPCClient& client LIFETIMEBOUND) : client{client}, context{client.context} {}
+
+    const JSONRPCClient& client;
     std::optional<UniValue> id = UniValue::VNULL;
     std::string strMethod;
     UniValue params;
     enum Mode { EXECUTE, GET_HELP, GET_ARGS } mode = EXECUTE;
-    std::string URI;
-    std::string authUser;
-    std::string peerAddr;
+    //! Context passed to the handler. Starts as the client's context, and
+    //! dispatchers like the wallet's replace it with their own.
     std::any context;
     JSONRPCVersion m_json_version = JSONRPCVersion::V1_LEGACY;
 
