@@ -894,10 +894,6 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         SetupWalletGeneration();
 
         Lock();
-
-        // Need to completely rewrite the wallet file; if we don't, the database might keep
-        // bits of the unencrypted private key in slack space in the database file.
-        GetDatabase().Rewrite();
     }
     NotifyStatusChanged(this);
 
