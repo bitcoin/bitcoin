@@ -5,13 +5,11 @@
 """Test running bitcoind with the -rpcbind and -rpcallowip options."""
 
 import socket
-import subprocess
-import time
 
 from test_framework.netutil import NETWORK_ERRORS, all_interfaces, addr_to_hex, get_bind_addrs, test_ipv6_local
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
 from test_framework.test_node import ErrorMatch
-from test_framework.util import assert_equal, get_auth_cookie, rpc_port, str_to_b64str
+from test_framework.util import assert_equal, rpc_port
 
 class RPCBindTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -68,47 +66,9 @@ class RPCBindTest(BitcoinTestFramework):
         if explicit_binds:
             extra_args += ['-rpcallowip=127.0.0.1', '-rpcbind=127.0.0.1', '-rpcbind=[::1]']
 
-        self.nodes[0].rpchost = '[::1]'
-        with socket.create_server(('127.0.0.1', self.defaultport)) as sock:
-            sock.settimeout(0.1)
-            self.start_node(0, extra_args=extra_args)  # TODO: an occupied RPC listener must abort startup to protect credentials
-            cli = subprocess.Popen([
-                self.nodes[0].binaries.paths.bitcoincli,
-                f'-datadir={self.nodes[0].datadir_path}',
-                '-noipcconnect',
-                '-rpcclienttimeout=2',
-                'getblockcount',
-            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            try:
-                conn = None
-                deadline = time.monotonic() + 5
-                while conn is None and time.monotonic() < deadline:
-                    try:
-                        conn = sock.accept()[0]
-                    except TimeoutError:
-                        if cli.poll() is not None:
-                            _, stderr = cli.communicate()
-                            raise AssertionError(f'bitcoin-cli exited before connecting: {stderr.decode()}')
-                assert conn is not None
-                with conn:
-                    conn.settimeout(5)
-                    request = b''
-                    while b'\r\n\r\n' not in request:
-                        chunk = conn.recv(4096)
-                        assert chunk
-                        request += chunk
-                    conn.sendall(b'HTTP/1.1 401 Unauthorized\r\nContent-Length: 0\r\nConnection: close\r\n\r\n')
-                cli.communicate(timeout=5)
-            finally:
-                if cli.poll() is None:
-                    cli.kill()
-                    cli.wait()
-            user, password = get_auth_cookie(self.nodes[0].datadir_path, self.chain)
-            credential_captured = f'Authorization: Basic {str_to_b64str(f"{user}:{password}")}\r\n'.encode() in request
-            self.stop_node(0)
-        self.nodes[0].rpchost = None
-
-        assert_equal(credential_captured, True)  # TODO: a client credential must not reach another process's listener
+        with (socket.create_server(('127.0.0.1', self.defaultport)),
+              self.nodes[0].assert_debug_log([f"Binding RPC on required address '127.0.0.1:{self.defaultport}' failed:"])):
+            self.nodes[0].assert_start_raises_init_error(extra_args, 'Error: Unable to start HTTP server. See debug log for details.')
 
     def run_allowip_test(self, allow_ips, rpchost, rpcport):
         '''

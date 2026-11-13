@@ -211,7 +211,14 @@ static void RejectRequest(std::unique_ptr<HTTPRequest> hreq)
 
 struct BindAddress {
     CService addr;
+    bool required{true};
 };
+
+static bool BindDefaultLoopbackAddresses()
+{
+    // Default to loopback if not allowing external IPs
+    return gArgs.GetArgs("-rpcallowip").empty() || gArgs.GetArgs("-rpcbind").empty();
+}
 
 static std::vector<BindAddress> GetBindAddresses()
 {
@@ -226,11 +233,14 @@ static std::vector<BindAddress> GetBindAddresses()
     // interface, require -rpcallowip and -rpcbind to both be specified
     // together. If either is missing, ignore both values, bind to localhost
     // instead, and log warnings.
-    if (gArgs.GetArgs("-rpcallowip").empty() || gArgs.GetArgs("-rpcbind").empty()) { // Default to loopback if not allowing external IPs
+    if (BindDefaultLoopbackAddresses()) {
+        // We allow the default IPv6 bind to fail, but IPv4 is required even
+        // with the default port as bitcoin-cli will default to handing RPC
+        // credentials in plaintext to whatever process is running on that port.
         // Numeric literals always parse, InitHTTPAllowList() relies on the same.
         // Never fall back to CService{}, which is [::]:0 and binds every interface.
-        endpoints.push_back({.addr = Lookup("::1", http_port, /*fAllowLookup=*/allow_names).value()});
-        endpoints.push_back({.addr = Lookup("127.0.0.1", http_port, /*fAllowLookup=*/allow_names).value()});
+        endpoints.push_back({.addr = Lookup("::1", http_port, /*fAllowLookup=*/allow_names).value(),       .required = false});
+        endpoints.push_back({.addr = Lookup("127.0.0.1", http_port, /*fAllowLookup=*/allow_names).value(), .required = true});
         if (!gArgs.GetArgs("-rpcallowip").empty()) {
             LogWarning("Option -rpcallowip was specified without -rpcbind; this doesn't usually make sense");
         }
@@ -252,11 +262,12 @@ static std::vector<BindAddress> GetBindAddresses()
                         // CNetAddr, but binding must distinguish interfaces.
                         return *addr == e.addr && addr->GetScope() == e.addr.GetScope();
                     }) == endpoints.end()) {
-                    endpoints.push_back({.addr = *addr});
+                    endpoints.push_back({.addr = *addr, .required = true});
                 }
             } else {
-                LogWarning("Could not lookup RPC bind address '%s' port %i "
-                           "(only numeric addresses are allowed).", host, port);
+                LogError("Could not lookup RPC bind address '%s' port %i "
+                         "(only numeric addresses are allowed).", host, port);
+                return {}; // empty
             }
         }
     }
@@ -1361,23 +1372,31 @@ bool InitHTTPServer()
 
     // Bind HTTP server to specified addresses
     std::vector<BindAddress> endpoints{GetBindAddresses()};
-    bool bind_success{false};
-    for (const auto& [addr] : endpoints) {
+    if (endpoints.empty()) {
+        // GetBindAddresses() already emitted a LogError() before returning empty.
+        return false;
+    }
+
+    for (const auto& [addr, required] : endpoints) {
         LogInfo("Binding RPC on address '%s'", addr.ToStringAddrPort());
         if (addr.IsBindAny()) {
             LogWarning("The RPC server is not safe to expose to untrusted networks such as the public internet");
         }
         auto result{g_http_server->BindAndStartListening(addr)};
         if (!result) {
-            LogWarning("Binding RPC on address '%s' failed: %s", addr.ToStringAddrPort(), result.error());
-        } else {
-            bind_success = true;
+            if (required) {
+                LogError("Binding RPC on required address '%s' failed: %s", addr.ToStringAddrPort(), result.error());
+                g_http_server->StopListening();
+                if (BindDefaultLoopbackAddresses()) {
+                    LogError("Unable to bind default required IPv4 endpoint. Ensure the port is free "
+                             "and retry, or specify endpoints via -rpcbind together with -rpcallowip.");
+                } else {
+                    LogError("Unable to bind all specified endpoints for RPC server.");
+                }
+                return false;
+            }
+            LogWarning("Binding RPC on optional address '%s' failed: %s", addr.ToStringAddrPort(), result.error());
         }
-    }
-
-    if (!bind_success) {
-        LogError("Unable to bind any endpoint for RPC server");
-        return false;
     }
 
     LogDebug(BCLog::HTTP, "Initialized HTTP server");
