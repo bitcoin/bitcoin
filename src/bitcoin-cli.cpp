@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <chainparamsbase.h>
@@ -441,7 +442,7 @@ private:
         case ChainType::MAIN:
             return "";
         }
-        assert(false);
+        AssertUnreachable();
     }
     std::string PingTimeToString(double seconds) const
     {

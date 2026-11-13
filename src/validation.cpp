@@ -67,7 +67,6 @@
 #include <validationinterface.h>
 
 #include <algorithm>
-#include <cassert>
 #include <chrono>
 #include <deque>
 #include <numeric>
@@ -2111,7 +2110,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
             case CheckInputScriptsFor::Block:
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, strprintf("block-script-verify-flag-failed (%s)", ScriptErrorString(result->first)), result->second);
             }
-            assert(false); // unreachable
+            AssertUnreachable(); // unreachable
         }
     }
 

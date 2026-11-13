@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <qt/sendcoinsdialog.h>
@@ -426,7 +427,7 @@ void SendCoinsDialog::presentPSBT(PartiallySignedTransaction& psbtx)
     case QMessageBox::Discard:
         break;
     default:
-        assert(false);
+        AssertUnreachable();
     } // msgBox.exec()
 }
 

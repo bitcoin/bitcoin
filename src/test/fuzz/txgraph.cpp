@@ -391,7 +391,7 @@ FUZZ_TARGET(txgraph)
                     if (choice == 0) return sim.GetRef(i);
                     --choice;
                 }
-                assert(false);
+                AssertUnreachable();
             } else {
                 choice -= tx_count[level];
             }

@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <clientversion.h>
 #include <common/signmessage.h>
 #include <compat/compat.h>
@@ -32,6 +33,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <limits>
@@ -1031,7 +1033,7 @@ enum : char {
                 case util::LockResult::ErrorWrite: return ResErrorWrite;
                 case util::LockResult::ErrorLock: return ResErrorLock;
                 } // no default case, so the compiler can warn about missing cases
-                assert(false);
+                AssertUnreachable();
             }();
             rv = write(fd, &ch, 1);
             assert(rv == 1);
@@ -1044,9 +1046,9 @@ enum : char {
             break;
         case ExitCommand:
             close(fd);
-            exit(0);
+            std::exit(0);
         default:
-            assert(0);
+            AssertUnreachable();
         }
     }
 }

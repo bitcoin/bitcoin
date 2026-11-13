@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <qt/transactiontablemodel.h>
 
 #include <qt/addresstablemodel.h>
@@ -478,7 +479,7 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
     case TransactionStatus::NotAccepted:
         return QIcon(":/icons/transaction_0");
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 QString TransactionTableModel::formatTooltip(const TransactionRecord *rec) const
@@ -510,7 +511,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
             return txAddressDecoration(rec);
         case Amount: return {};
         } // no default case, so the compiler can warn about missing cases
-        assert(false);
+        AssertUnreachable();
     case Qt::DecorationRole:
     {
         QIcon icon = qvariant_cast<QIcon>(index.data(RawDecorationRole));
@@ -528,7 +529,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         case Amount:
             return formatTxAmount(rec, true, BitcoinUnits::SeparatorStyle::ALWAYS);
         } // no default case, so the compiler can warn about missing cases
-        assert(false);
+        AssertUnreachable();
     case Qt::EditRole:
         // Edit role is used for sorting, so return the unformatted values
         switch (column) {
@@ -543,7 +544,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         case Amount:
             return qint64(rec->credit + rec->debit);
         } // no default case, so the compiler can warn about missing cases
-        assert(false);
+        AssertUnreachable();
     case Qt::ToolTipRole:
         return formatTooltip(rec);
     case Qt::TextAlignmentRole:

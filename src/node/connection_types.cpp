@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <node/connection_types.h>
-#include <cassert>
 
 std::string ConnectionTypeAsString(ConnectionType conn_type)
 {
@@ -24,7 +24,7 @@ std::string ConnectionTypeAsString(ConnectionType conn_type)
         return "private-broadcast";
     } // no default case, so the compiler can warn about missing cases
 
-    assert(false);
+    AssertUnreachable();
 }
 
 std::string TransportTypeAsString(TransportProtocolType transport_type)
@@ -38,5 +38,5 @@ std::string TransportTypeAsString(TransportProtocolType transport_type)
         return "v2";
     } // no default case, so the compiler can warn about missing cases
 
-    assert(false);
+    AssertUnreachable();
 }

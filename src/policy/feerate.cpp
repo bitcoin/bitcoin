@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <consensus/amount.h>
 #include <policy/feerate.h>
 #include <tinyformat.h>
@@ -45,5 +46,5 @@ std::string CFeeRate::ToString(FeeRateFormat fee_rate_format) const
     case FeeRateFormat::BTC_KVB: return format_feerate(feerate_per_kvb, COIN, /*decimals=*/8, CURRENCY_UNIT, "kvB");
     case FeeRateFormat::SAT_VB: return format_feerate(feerate_per_kvb, 1000, /*decimals=*/3, CURRENCY_ATOM, "vB");
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }

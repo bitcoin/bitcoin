@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <qt/bitcoin.h>
@@ -46,6 +47,7 @@
 #endif // ENABLE_WALLET
 
 #include <chrono>
+#include <cstdlib>
 #include <memory>
 
 #include <QApplication>
@@ -166,7 +168,7 @@ static bool ErrorSettingsRead(const bilingual_str& error, const std::vector<std:
     case QMessageBox::Abort:
         return true;
     default:
-        assert(false);
+        AssertUnreachable();
     }
 }
 
@@ -436,7 +438,7 @@ void BitcoinApplication::handleRunawayException(const QString &message)
         nullptr, tr("Runaway exception"),
         tr("A fatal error occurred. %1 can no longer continue safely and will quit.").arg(CLIENT_NAME) +
         QLatin1String("<br><br>") + GUIUtil::MakeHtmlLink(message, CLIENT_BUGREPORT));
-    ::exit(EXIT_FAILURE);
+    std::exit(EXIT_FAILURE);
 }
 
 void BitcoinApplication::handleNonFatalException(const QString& message)
@@ -618,7 +620,7 @@ int GuiMain(int argc, char* argv[])
     // - Do this after creating app and setting up translations, so errors are
     // translated properly.
     if (PaymentServer::ipcSendCommandLine())
-        exit(EXIT_SUCCESS);
+        std::exit(EXIT_SUCCESS);
 
     // Start up the payment server early, too, so impatient users that click on
     // bitcoin: links repeatedly have their payment requests routed to this process:

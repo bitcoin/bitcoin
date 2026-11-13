@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <arith_uint256.h>
@@ -243,7 +244,7 @@ MAIN_FUNCTION
         } else if (cmd->command == "getchainparams") {
             ret = GetChainParams(cmd->args, strPrint);
         } else {
-            assert(false); // unknown command should be caught earlier
+            AssertUnreachable(); // unknown command should be caught earlier
         }
     } catch (const std::exception& e) {
         strPrint = std::string("error: ") + e.what();

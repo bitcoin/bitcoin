@@ -13,6 +13,7 @@
 #include <serialize.h>
 #include <uint256.h>
 #include <util/byte_units.h>
+#include <util/check.h>
 #include <util/log.h>
 #include <util/threadnames.h>
 #include <util/vector.h>
@@ -97,7 +98,7 @@ std::optional<Coin> CCoinsViewDB::GetCoin(const COutPoint& outpoint) const
             case CDBWrapper::ReadFailure::Code::DatabaseError:
                 throw dbwrapper_error{strprintf("Coin DB read failure: %s", err_msg)};
         } // no default case, so the compiler can warn about missing cases
-        std::abort(); // unreachable
+        AssertUnreachable();
     }
 
     // Check whether the coin exists
@@ -183,7 +184,7 @@ void CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block
                 static FastRandomContext rng;
                 if (rng.randrange(m_options.simulate_crash_ratio) == 0) {
                     LogError("Simulating a crash. Goodbye.");
-                    _Exit(0);
+                    std::_Exit(0);
                 }
             }
         }

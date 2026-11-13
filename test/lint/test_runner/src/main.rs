@@ -14,8 +14,8 @@ use std::fs;
 use std::process::{Command, ExitCode};
 
 use lint_cpp::{
-    lint_boost_assert, lint_includes_build_config, lint_remove_all, lint_rpc_assert,
-    lint_std_filesystem,
+    lint_assert_falsy, lint_boost_assert, lint_includes_build_config, lint_remove_all,
+    lint_rpc_assert, lint_std_filesystem,
 };
 use lint_docs::{lint_doc_args, lint_doc_release_note_snippets, lint_markdown};
 use lint_py::{lint_py_lint, lint_rmtree};
@@ -72,6 +72,11 @@ fn get_linter_list() -> Vec<&'static Linter> {
             description: "Check that fatal assertions are not used in RPC code",
             name: "rpc_assert",
             lint_fn: lint_rpc_assert
+        },
+        &Linter {
+            description: "Check that assertions with falsy literal values are not used",
+            name: "assert_falsy",
+            lint_fn: lint_assert_falsy
         },
         &Linter {
             description: "Check that boost assertions are not used",

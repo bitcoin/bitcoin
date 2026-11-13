@@ -18,7 +18,7 @@ struct ExpectedException : std::runtime_error {
 };
 
 struct ThrowTask {
-    void operator()() const { throw ExpectedException("fail"); }
+    [[noreturn]] void operator()() const { throw ExpectedException("fail"); }
 };
 
 struct CounterTask {
@@ -35,7 +35,7 @@ static void GetFuture(std::future<void>& future, uint32_t& fail_counter)
     } catch (const ExpectedException&) {
         fail_counter++;
     } catch (...) {
-        assert(false && "Unexpected exception type");
+        AssertUnreachable(); // Unexpected exception type
     }
 }
 

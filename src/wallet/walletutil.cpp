@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <wallet/walletutil.h>
 
 #include <chainparams.h>
@@ -62,7 +63,7 @@ WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const Ou
     case OutputType::UNKNOWN: {
         // We should never have a DescriptorScriptPubKeyMan for an UNKNOWN OutputType,
         // so if we get to this point something is wrong
-        assert(false);
+        AssertUnreachable();
     }
     } // no default case, so the compiler can warn about missing cases
     assert(!desc_prefix.empty());

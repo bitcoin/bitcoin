@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <chainparamsbase.h>
 
 #include <common/args.h>
@@ -12,7 +13,6 @@
 #include <util/chaintype.h>
 #include <util/strencodings.h>
 
-#include <cassert>
 
 void SetupChainParamsBaseOptions(ArgsManager& argsman)
 {
@@ -72,7 +72,7 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const ArgsManager& args,
     case ChainType::REGTEST:
         return std::make_unique<CBaseChainParams>("regtest", 18443);
     }
-    assert(false);
+    AssertUnreachable();
 }
 
 void SelectBaseParams(const ChainType chain)

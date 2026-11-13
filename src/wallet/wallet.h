@@ -6,6 +6,7 @@
 #ifndef BITCOIN_WALLET_WALLET_H
 #define BITCOIN_WALLET_WALLET_H
 
+#include <util/check.h>
 #include <addresstype.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
@@ -41,7 +42,6 @@
 #include <wallet/walletutil.h>
 
 #include <atomic>
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -292,7 +292,7 @@ inline std::string PurposeToString(AddressPurpose p)
     case AddressPurpose::SEND: return "send";
     case AddressPurpose::REFUND: return "refund";
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 inline std::optional<AddressPurpose> PurposeFromString(std::string_view s)

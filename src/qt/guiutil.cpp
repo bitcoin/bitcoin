@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <qt/guiutil.h>
 
 #include <qt/bitcoinaddressvalidator.h>
@@ -70,7 +71,6 @@
 #include <QUrlQuery>
 #include <QtGlobal>
 
-#include <cassert>
 #include <chrono>
 #include <exception>
 #include <fstream>
@@ -695,9 +695,9 @@ QString NetworkToQString(Network net)
     //: Name of CJDNS network in peer info
     case NET_CJDNS: return QObject::tr("CJDNS", "network name");
     case NET_INTERNAL: return "Internal";  // should never actually happen
-    case NET_MAX: assert(false);
+    case NET_MAX: AssertUnreachable();
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction)
@@ -728,7 +728,7 @@ QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction
     //: Short-lived peer connection type that is used for broadcasting privacy-sensitive data.
     case ConnectionType::PRIVATE_BROADCAST: return prefix + QObject::tr("Private Broadcast");
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 QString formatDurationStr(std::chrono::nanoseconds dur)

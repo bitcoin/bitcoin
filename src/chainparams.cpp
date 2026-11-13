@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/check.h>
 #include <chainparams.h>
 
 #include <chainparamsbase.h>
@@ -15,7 +16,6 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 
-#include <cassert>
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
@@ -159,7 +159,7 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
         return CChainParams::RegTest(opts);
     }
     }
-    assert(false);
+    AssertUnreachable();
 }
 
 void SelectParams(const ChainType chain)
