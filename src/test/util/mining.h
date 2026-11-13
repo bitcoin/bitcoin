@@ -6,6 +6,7 @@
 #define BITCOIN_TEST_UTIL_MINING_H
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -15,6 +16,9 @@ class CBlockIndex;
 class CChainParams;
 class COutPoint;
 class CScript;
+namespace Consensus {
+struct Params;
+} // namespace Consensus
 namespace node {
 struct BlockCreateOptions;
 struct NodeContext;
@@ -22,6 +26,12 @@ struct NodeContext;
 
 /** Create a blockchain, starting from genesis */
 std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const CChainParams& params);
+
+/**
+ * Switch a coinbase-only block template to a different parent and timestamp.
+ * Rebuild the difficulty, coinbase height, locktime, subsidy and input script, then update the merkle root.
+ */
+void SwitchBlockParent(CBlock& block, const CBlockIndex& parent, uint32_t new_time, const Consensus::Params& params);
 
 /**
  * Build a chain of `length` coinbase-only blocks on top of `pindex` (which need
