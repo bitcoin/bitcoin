@@ -5,6 +5,7 @@
 #ifndef BITCOIN_INDEX_TXOSPENDERINDEX_H
 #define BITCOIN_INDEX_TXOSPENDERINDEX_H
 
+#include <crypto/siphash.h>
 #include <index/base.h>
 #include <interfaces/chain.h>
 #include <primitives/transaction.h>
@@ -16,10 +17,12 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <utility>
-#include <vector>
 
 struct CDiskTxPos;
+namespace txospenderindex_tests {
+class TxoSpenderIndexTest;
+}
+struct FlatFilePos;
 
 inline constexpr bool DEFAULT_TXOSPENDERINDEX{false};
 
@@ -31,24 +34,27 @@ struct TxoSpender {
 /**
  * TxoSpenderIndex is used to look up which transaction spent a given output.
  * The index is written to a LevelDB database and, for each input of each transaction in a block,
- * records the outpoint that is spent and the hash of the spending transaction.
+ * records a hash prefix of the outpoint that is spent and the block sequence number and offset of the spending transaction.
  */
 class TxoSpenderIndex final : public BaseIndex
 {
 private:
+    friend class txospenderindex_tests::TxoSpenderIndexTest;
+    /// Whether the database contains any legacy (disk position) entries.
+    const bool m_has_legacy;
     std::unique_ptr<BaseIndex::DB> m_db;
-    std::pair<uint64_t, uint64_t> m_siphash_key;
+    /// Used to hash the outpoint to compute the key prefix.
+    const SipHasher13UJ m_hasher;
+    /// Hasher of the legacy entries. Only set if the database contains any.
+    std::optional<PresaltedSipHasher> m_legacy_hasher;
     bool AllowPrune() const override { return false; }
-    void WriteSpenderInfos(const std::vector<std::pair<COutPoint, CDiskTxPos>>& items);
-    void EraseSpenderInfos(const std::vector<std::pair<COutPoint, CDiskTxPos>>& items);
-    util::Expected<TxoSpender, std::string> ReadTransaction(const CDiskTxPos& pos) const;
+    util::Expected<CTransactionRef, std::string> ReadTransaction(const FlatFilePos& pos) const;
+    util::Expected<TxoSpender, std::string> ReadLegacyTransaction(const CDiskTxPos& pos) const;
+    /// Look up a spender among the legacy entries.
+    std::optional<TxoSpender> FindLegacySpender(const COutPoint& txo) const;
 
 protected:
-    interfaces::Chain::NotifyOptions CustomOptions() override;
-
     bool CustomAppend(const interfaces::BlockInfo& block) override;
-
-    bool CustomRemove(const interfaces::BlockInfo& block) override;
 
     BaseIndex::DB& GetDB() const override;
 
@@ -60,12 +66,13 @@ public:
      *
      * @param[in] txo  The outpoint to search for.
      *
-     * @return  std::nullopt               if the outpoint has not been spent on-chain.
-     *          std::optional{TxoSpender}  if the output has been spent on-chain. Contains the spending transaction
-     *                                     and the block it was confirmed in.
-     *          util::Unexpected{error}    if something unexpected happened (i.e. disk or deserialization error).
+     * @return  std::nullopt               if the outpoint has not been spent in the active chain.
+     *          TxoSpender                 if the output has been spent in the active chain. Contains the spending
+     *                                     transaction and the block it was confirmed in.
+     *
+     * Candidates whose transaction cannot be read are skipped, as in TxIndex::FindTx.
      */
-    util::Expected<std::optional<TxoSpender>, std::string> FindSpender(const COutPoint& txo) const;
+    std::optional<TxoSpender> FindSpender(const COutPoint& txo) const;
 };
 
 /// The global txo spender index. May be null.

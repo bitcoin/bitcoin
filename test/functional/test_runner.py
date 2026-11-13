@@ -121,6 +121,7 @@ BASE_SCRIPTS = [
     'wallet_v3_txs.py',
     'p2p_tx_download.py',
     'feature_txindex_compatibility.py',
+    'feature_txospenderindex_compatibility.py',
     'wallet_avoidreuse.py',
     'feature_abortnode.py',
     'p2p_orphan_handling.py',
