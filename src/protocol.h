@@ -268,7 +268,7 @@ inline constexpr const char* SENDTXRCNCL{"sendtxrcncl"};
  * BIP 434 Peer feature negotiation
  */
 inline constexpr const char* FEATURE{"feature"};
-}; // namespace NetMsgType
+} // namespace NetMsgType
 
 /** All known message types (see above). Keep this in the same order as the list of messages above. */
 inline const std::array ALL_NET_MESSAGE_TYPES{std::to_array<std::string>({
@@ -413,9 +413,9 @@ class CAddress : public CService
     static_assert((DISK_VERSION_ADDRV2 & DISK_VERSION_IGNORE_MASK) == 0, "DISK_VERSION_ADDRV2 must not be covered by DISK_VERSION_IGNORE_MASK");
 
 public:
-    CAddress() : CService{} {};
-    CAddress(CService ipIn, ServiceFlags nServicesIn) : CService{ipIn}, nServices{nServicesIn} {};
-    CAddress(CService ipIn, ServiceFlags nServicesIn, NodeSeconds time) : CService{ipIn}, nTime{time}, nServices{nServicesIn} {};
+    CAddress() : CService{} {}
+    CAddress(CService ipIn, ServiceFlags nServicesIn) : CService{ipIn}, nServices{nServicesIn} {}
+    CAddress(CService ipIn, ServiceFlags nServicesIn, NodeSeconds time) : CService{ipIn}, nTime{time}, nServices{nServicesIn} {}
 
     enum class Format {
         Disk,

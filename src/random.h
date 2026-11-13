@@ -339,7 +339,7 @@ public:
         return range.count() > 0 ? /* interval [0..range) */ Dur{Impl().randrange(range.count())} :
                range.count() < 0 ? /* interval (range..0] */ -Dur{Impl().randrange(-range.count())} :
                                    /* interval [0..0] */ Dur{0};
-    };
+    }
 
     /** Generate a uniform random duration in the range [0..max). Precondition: max.count() > 0 */
     template <StdChronoDuration Dur>

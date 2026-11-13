@@ -23,4 +23,4 @@ COutPoint AddTestCoin(FastRandomContext& rng, CCoinsViewCache& coins_view)
     coins_view.AddCoin(outpoint, std::move(new_coin), /*possible_overwrite=*/false);
 
     return outpoint;
-};
+}

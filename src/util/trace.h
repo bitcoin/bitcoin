@@ -51,7 +51,9 @@
 
 #else
 
-#define TRACEPOINT_SEMAPHORE(context, event)
+// Expands to a forward declaration so the trailing
+// ';' at the call site is a valid declaration
+#define TRACEPOINT_SEMAPHORE(context, event) struct bitcoin_tracepoint_semaphore_##context##_##event
 #define TRACEPOINT_ACTIVE(context, event) false
 #define TRACEPOINT(context, ...)
 
