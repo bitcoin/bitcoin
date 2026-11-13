@@ -414,7 +414,8 @@ static RPCHelpMan masternode_payments()
         }
     }
 
-    int64_t nCount = request.params.size() > 1 ? request.params[1].getInt<int64_t>() : 1;
+    const int64_t nCount = request.params[1].isNull() ? 1 : request.params[1].getInt<int64_t>();
+    const uint64_t nAbsCount = nCount < 0 ? ~static_cast<uint64_t>(nCount) + 1 : static_cast<uint64_t>(nCount);
 
     // A temporary vector which is used to sort results properly (there is no "reverse" in/for UniValue)
     std::vector<UniValue> vecPayments;
@@ -422,7 +423,7 @@ static RPCHelpMan masternode_payments()
     CHECK_NONFATAL(node.chain_helper);
     CHECK_NONFATAL(node.dmnman);
     // Payees are selected from the previous block's list, so the genesis block has none
-    while (vecPayments.size() < uint64_t(std::abs(nCount)) && pindex != nullptr && pindex->pprev != nullptr) {
+    while (vecPayments.size() < nAbsCount && pindex != nullptr && pindex->pprev != nullptr) {
         CBlock block;
         if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");

@@ -55,6 +55,7 @@ class RPCMasternodeTest(DashTestFramework):
                 checked_non_0_operator_reward = True
 
         self.log.info("test various `payments` RPC options")
+        assert_equal(self.nodes[0].masternode("payments", blockhash, None), payments)
         payments1 = self.nodes[0].masternode("payments", blockhash, -1)
         assert_equal(payments, payments1)
         payments2_1 = self.nodes[0].masternode("payments", blockhash, 2)
@@ -69,6 +70,7 @@ class RPCMasternodeTest(DashTestFramework):
         assert_equal(self.nodes[0].masternode("payments", self.nodes[0].getblockhash(0)), [])
         payments_to_genesis = self.nodes[0].masternode("payments", self.nodes[0].getblockhash(1), -2)
         assert_equal([p["height"] for p in payments_to_genesis], [1])
+        assert_equal(self.nodes[0].masternode("payments", self.nodes[0].getblockhash(1), -9223372036854775808), payments_to_genesis)
 
         self.log.info("test that `masternode payments` results at chaintip match `getblocktemplate` results for that block")
         gbt_masternode = self.nodes[0].getblocktemplate()["masternode"]
@@ -119,8 +121,14 @@ class RPCMasternodeTest(DashTestFramework):
         tip = self.generate(node, 1, sync_fun=self.no_op)[0]
         assert_equal(node.getbestblockhash(), tip)
 
-        self.log.info("test payments without historical transaction data")
         spend_blockhash = self.nodes[0].getrawtransaction(self.mninfo[0].proTxHash, True)["blockhash"]
+
+        self.log.info("test getspecialtxes skip/count bounds")
+        special_txs = self.nodes[0].getspecialtxes(spend_blockhash, -1, 2147483647)
+        assert len(special_txs) > 1
+        assert_equal(self.nodes[0].getspecialtxes(spend_blockhash, -1, 2147483647, 1), special_txs[1:])
+
+        self.log.info("test payments without historical transaction data")
         self.restart_node(0, extra_args=self.nodes[0].extra_args + ["-txindex=0"])
         assert_raises_rpc_error(-1, "previous transaction not found",
                                 self.nodes[0].masternode, "payments", spend_blockhash)

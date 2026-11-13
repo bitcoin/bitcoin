@@ -728,21 +728,6 @@ static RPCHelpMan getblockheaders()
 
     ChainstateManager& chainman = EnsureChainman(node);
 
-    Chainstate& active_chainstate = chainman.ActiveChainstate();
-    CChain& active_chain = active_chainstate.m_chain;
-
-    const CBlockIndex* pblockindex;
-    const CBlockIndex* tip;
-    {
-        LOCK(cs_main);
-        pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
-        tip = active_chain.Tip();
-    }
-
-    if (!pblockindex) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
-    }
-
     int nCount = MAX_HEADERS_UNCOMPRESSED_RESULT;
     if (!request.params[1].isNull())
         nCount = request.params[1].getInt<int>();
@@ -754,28 +739,35 @@ static RPCHelpMan getblockheaders()
     if (!request.params[2].isNull())
         fVerbose = request.params[2].get_bool();
 
-    UniValue arrHeaders(UniValue::VARR);
-
-    if (!fVerbose)
+    std::vector<const CBlockIndex*> headers;
+    const CBlockIndex* tip;
     {
-        for (; pblockindex; pblockindex = active_chain.Next(pblockindex))
-        {
+        LOCK(cs_main);
+        const CChain& active_chain = chainman.ActiveChain();
+        const CBlockIndex* pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
+        tip = active_chain.Tip();
+        if (!pblockindex) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+        }
+        headers.reserve(nCount);
+        for (; pblockindex && static_cast<int>(headers.size()) < nCount; pblockindex = active_chain.Next(pblockindex)) {
+            headers.push_back(pblockindex);
+        }
+    }
+
+    UniValue arrHeaders(UniValue::VARR);
+    if (!fVerbose) {
+        for (const CBlockIndex* pblockindex : headers) {
             CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
             ssBlock << pblockindex->GetBlockHeader();
-            std::string strHex = HexStr(ssBlock);
-            arrHeaders.push_back(strHex);
-            if (--nCount <= 0)
-                break;
+            arrHeaders.push_back(HexStr(ssBlock));
         }
         return arrHeaders;
     }
 
     CHECK_NONFATAL(node.chainlocks);
-    for (; pblockindex; pblockindex = active_chain.Next(pblockindex))
-    {
+    for (const CBlockIndex* pblockindex : headers) {
         arrHeaders.push_back(blockheaderToJSON(tip, pblockindex, *node.chainlocks));
-        if (--nCount <= 0)
-            break;
     }
 
     return arrHeaders;
@@ -2539,7 +2531,7 @@ static RPCHelpMan getspecialtxes()
 
         nTxNum++;
         if (nTxNum <= nSkip) continue;
-        if (nTxNum > nSkip + nCount) break;
+        if (nTxNum - nSkip > nCount) break;
 
         switch (nVerbosity)
         {

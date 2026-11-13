@@ -320,7 +320,7 @@ static RPCHelpMan mnauth()
     }
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
-    return node.connman->TryMarkVerified(nodeId, proTxHash, publicKey.GetHash());
+    return EnsureConnman(node).TryMarkVerified(nodeId, proTxHash, publicKey.GetHash());
 },
     };
 }
@@ -571,17 +571,18 @@ static RPCHelpMan getaddressdeltas()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    UniValue startValue = request.params[0].get_obj().find_value("start");
-    UniValue endValue = request.params[0].get_obj().find_value("end");
-
     int start = 0;
     int end = 0;
 
-    if (startValue.isNum() && endValue.isNum()) {
-        start = startValue.getInt<int>();
-        end = endValue.getInt<int>();
-        if (end < start) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "End value is expected to be greater than start");
+    if (request.params[0].isObject()) {
+        const UniValue& startValue = request.params[0].find_value("start");
+        const UniValue& endValue = request.params[0].find_value("end");
+        if (startValue.isNum() && endValue.isNum()) {
+            start = startValue.getInt<int>();
+            end = endValue.getInt<int>();
+            if (end < start) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "End value is expected to be greater than start");
+            }
         }
     }
 
