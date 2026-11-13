@@ -875,6 +875,14 @@ void HTTPServer::NewSockAccepted(std::unique_ptr<Sock>&& sock, const CService& a
                  addr.ToStringAddrPort());
     }
 
+    // On Linux, accepted sockets do not inherit O_NONBLOCK. On other platforms they do. We
+    // always call recv() and send() with MSG_DONTWAIT, but as a belt-and-suspenders check,
+    // make sure our http sockets are always non-blocking.
+    if (!sock->SetNonBlocking()) {
+        LogWarning("Error setting socket to non-blocking: %s", NetworkErrorString(WSAGetLastError()));
+        return;
+    }
+
     const Id id{GetNewId()};
 
     m_connected.push_back(std::make_shared<HTTPRemoteClient>(id, addr, std::move(sock)));

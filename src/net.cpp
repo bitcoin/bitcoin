@@ -1840,6 +1840,14 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
                  addr.ToStringAddrPort());
     }
 
+    // On Linux, accepted sockets do not inherit O_NONBLOCK. On other platforms they do. We
+    // always call recv() and send() with MSG_DONTWAIT, but as a belt-and-suspenders check,
+    // make sure our p2p sockets are always non-blocking.
+    if (!sock->SetNonBlocking()) {
+        LogWarning("Error setting socket to non-blocking: %s", NetworkErrorString(WSAGetLastError()));
+        return;
+    }
+
     // Don't accept connections from banned peers.
     bool banned = m_banman && m_banman->IsBanned(addr);
     if (!NetPermissions::HasFlag(permission_flags, NetPermissionFlags::NoBan) && banned)
