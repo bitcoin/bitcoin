@@ -1,0 +1,33 @@
+From 144c12195001b08b9ccecb8a3fd041d22ae24474 Mon Sep 17 00:00:00 2001
+From: wbond <will@wbond.net>
+Date: Mon, 13 Jul 2026 19:28:28 -0400
+Subject: [PATCH] Handle KDF generation on very fast ARM machines
+
+---
+ oscrypto/kdf.py | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/oscrypto/kdf.py b/oscrypto/kdf.py
+index 5db07cd..961f105 100644
+--- a/oscrypto/kdf.py
++++ b/oscrypto/kdf.py
+@@ -50,8 +50,8 @@ def _get_start():
+     def _get_elapsed(start):
+         length = datetime.now() - start
+         seconds = length.seconds + (length.days * 24 * 3600)
+-        milliseconds = (length.microseconds / 10 ** 3)
+-        return int(milliseconds + (seconds * 10 ** 3))
++        milliseconds = length.microseconds / 10 ** 3
++        return milliseconds + (seconds * 10 ** 3)
+ 
+ 
+ def pbkdf2_iteration_calculator(hash_algorithm, key_length, target_ms=100, quiet=False):
+@@ -135,6 +135,8 @@ def _measure():
+         start = _get_start()
+         pbkdf2(hash_algorithm, password, salt, iterations, key_length)
+         observed_ms = _get_elapsed(start)
++        if observed_ms < 1:
++            observed_ms = 1
+         if not quiet:
+             print('%s iterations in %sms' % (iterations, observed_ms))
+         return 1.0 / target_ms * observed_ms
