@@ -12,6 +12,7 @@ from test_framework.util import (
 )
 
 import re
+import subprocess
 
 
 class ToolBitcoinTest(BitcoinTestFramework):
@@ -49,8 +50,46 @@ class ToolBitcoinTest(BitcoinTestFramework):
             except Exception as e:
                 raise RuntimeError(f"Unexpected output from {node.args + extra_args}: {out=!r} {err=!r} {ret=!r}") from e
 
+    def run_wrapper(self, *args):
+        """Run the bitcoin wrapper directly and return (returncode, stdout, stderr)."""
+        binaries = self.nodes[0].binaries
+        result = subprocess.run([*binaries.valgrind_cmd, binaries.paths.bitcoin_bin, *args],
+                                capture_output=True, text=True)
+        return result.returncode, result.stdout, result.stderr
+
+    def test_wrapper_args(self):
+        self.log.info("Ensure bitcoin handles version, help, and invalid arguments")
+        for args, expected_returncode in [
+            (["-v"], 0),
+            (["--version"], 0),
+            (["-h"], 0),
+            (["--help"], 0),
+            (["help"], 0),
+            ([], 1),
+        ]:
+            returncode, stdout, stderr = self.run_wrapper(*args)
+            assert_equal(returncode, expected_returncode)
+            assert_equal(stderr, "")
+            if args in (["-v"], ["--version"]):
+                assert "version" in stdout, f"Unexpected output from bitcoin {args}: {stdout!r}"
+            else:
+                assert stdout.startswith("Usage:"), f"Unexpected output from bitcoin {args}: {stdout!r}"
+                if args:
+                    assert "Commands:" in stdout
+
+        for arg, expected_error in [
+            ("nonexistentcommand", "Unrecognized command: 'nonexistentcommand'"),
+            ("-nonexistentoption", "Unknown option: -nonexistentoption"),
+        ]:
+            returncode, stdout, stderr = self.run_wrapper(arg)
+            assert_equal(returncode, 1)
+            assert_equal(stdout, "")
+            assert expected_error in stderr, f"Unexpected stderr from bitcoin {arg}: {stderr!r}"
+
     def run_test(self):
         node = self.nodes[0]
+
+        self.test_wrapper_args()
 
         self.log.info("Ensure bitcoin node command invokes bitcoind by default")
         self.test_args([], [], expect_exe="bitcoind")
