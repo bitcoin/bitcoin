@@ -762,26 +762,41 @@ void CheckIsNotStandard(const CMutableTransaction& t, const std::string& reason_
     BOOST_CHECK(!IsStandardTx(CTransaction{t}, policy.max_op_return_relay, policy.permit_bare_multisig, policy.dust_relay_fee, reason));
     BOOST_CHECK_EQUAL(reason_in, reason);
 }
+
+CScript P2PKHScript()
+{
+    return GetScriptForDestination(PKHash(GenerateRandomKey().GetPubKey()));
+}
+
+/** A standard output, for cases that do not test the outputs. */
+CTxOut StandardOutput()
+{
+    return CTxOut{90 * CENT, P2PKHScript()};
+}
+
+/**
+ * A transaction with a single input. IsStandardTx does not look up the spent
+ * outputs, so the prevout is arbitrary. The default scriptSig is standard.
+ */
+CMutableTransaction MakeTx(std::vector<CTxOut> vout, CScript script_sig = CScript() << std::vector<unsigned char>(65, 0))
+{
+    CMutableTransaction t;
+    t.vin = {
+        CTxIn{COutPoint{Txid::FromUint256(uint256::ONE), 1}, std::move(script_sig)},
+    };
+    t.vout = std::move(vout);
+    return t;
+}
 } // namespace
 
 BOOST_AUTO_TEST_CASE(test_IsStandard)
 {
-    FillableSigningProvider keystore;
-    CCoinsViewCache coins{&CoinsViewEmpty::Get()};
-    std::vector<CMutableTransaction> dummyTransactions =
-        SetupDummyInputs(keystore, coins, {11*CENT, 50*CENT, 21*CENT, 22*CENT});
+    CheckIsStandard(MakeTx({StandardOutput()}));
+}
 
-    CMutableTransaction t;
-    t.vin.resize(1);
-    t.vin[0].prevout.hash = dummyTransactions[0].GetHash();
-    t.vin[0].prevout.n = 1;
-    t.vin[0].scriptSig << std::vector<unsigned char>(65, 0);
-    t.vout.resize(1);
-    t.vout[0].nValue = 90*CENT;
-    CKey key = GenerateRandomKey();
-    t.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
-
-    CheckIsStandard(t);
+BOOST_AUTO_TEST_CASE(test_IsStandard_dust_limit)
+{
+    CMutableTransaction t{MakeTx({StandardOutput()})};
 
     // Check dust with default relay fee:
     CAmount nDustThreshold = 182 * CFeeRate{DUST_RELAY_TX_FEE}.GetFeePerK() / 1000;
@@ -800,6 +815,20 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].nValue = nDustThreshold;
     CheckIsStandard(t);
 
+    // Check dust with odd relay fee to verify rounding:
+    // nDustThreshold = 182 * 3702 / 1000
+    // dust:
+    t.vout[0].nValue = 674 - 1;
+    CheckIsNotStandard(t, "dust", {.dust_relay_fee = CFeeRate{3702}});
+    // not dust:
+    t.vout[0].nValue = 674;
+    CheckIsStandard(t, {.dust_relay_fee = CFeeRate{3702}});
+}
+
+BOOST_AUTO_TEST_CASE(test_IsStandard_version)
+{
+    CMutableTransaction t{MakeTx({StandardOutput()})};
+
     // Disallowed version
     t.version = std::numeric_limits<uint32_t>::max();
     CheckIsNotStandard(t, "version");
@@ -816,18 +845,18 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
     t.version = 2;
     CheckIsStandard(t);
+}
 
-    // Check dust with odd relay fee to verify rounding:
-    // nDustThreshold = 182 * 3702 / 1000
-    // dust:
-    t.vout[0].nValue = 674 - 1;
-    CheckIsNotStandard(t, "dust", {.dust_relay_fee = CFeeRate{3702}});
-    // not dust:
-    t.vout[0].nValue = 674;
-    CheckIsStandard(t, {.dust_relay_fee = CFeeRate{3702}});
-
+BOOST_AUTO_TEST_CASE(test_IsStandard_scriptpubkey)
+{
+    CMutableTransaction t{MakeTx({StandardOutput()})};
     t.vout[0].scriptPubKey = CScript() << OP_1;
     CheckIsNotStandard(t, "scriptpubkey");
+}
+
+BOOST_AUTO_TEST_CASE(test_IsStandard_op_return)
+{
+    CMutableTransaction t{MakeTx({StandardOutput()})};
 
     // Custom 83-byte TxoutType::NULL_DATA (standard with max_op_return_relay of 83)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38"_hex;
@@ -853,9 +882,13 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     CheckIsNotStandard(t, "scriptpubkey");
 
     // TxoutType::NULL_DATA w/o PUSHDATA
-    t.vout.resize(1);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
     CheckIsStandard(t);
+}
+
+BOOST_AUTO_TEST_CASE(test_IsStandard_multiple_op_return)
+{
+    CMutableTransaction t{MakeTx({StandardOutput()})};
 
     // Multiple TxoutType::NULL_DATA are permitted
     t.vout.resize(2);
@@ -879,17 +912,24 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     CheckIsStandard(t); // Default max relay should never trigger
     CheckIsStandard(t, {.max_op_return_relay = datacarrier_size});
     CheckIsNotStandard(t, "datacarrier", {.max_op_return_relay = datacarrier_size - 1});
+}
+
+BOOST_AUTO_TEST_CASE(test_IsStandard_scriptsig_size)
+{
+    CMutableTransaction t{MakeTx({StandardOutput()})};
 
     // Check large scriptSig (non-standard if size is >1650 bytes)
-    t.vout.resize(1);
-    t.vout[0].nValue = MAX_MONEY;
-    t.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
     // OP_PUSHDATA2 with len (3 bytes) + data (1647 bytes) = 1650 bytes
     t.vin[0].scriptSig = CScript() << std::vector<unsigned char>(1647, 0); // 1650
     CheckIsStandard(t);
 
     t.vin[0].scriptSig = CScript() << std::vector<unsigned char>(1648, 0); // 1651
     CheckIsNotStandard(t, "scriptsig-size");
+}
+
+BOOST_AUTO_TEST_CASE(test_IsStandard_scriptsig_pushonly)
+{
+    CMutableTransaction t{MakeTx({StandardOutput()})};
 
     // Check scriptSig format (non-standard if there are any other ops than just PUSHs)
     t.vin[0].scriptSig = CScript()
@@ -923,6 +963,11 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
         t.vin[0].scriptSig[index] = orig_op; // restore op
         CheckIsStandard(t);
     }
+}
+
+BOOST_AUTO_TEST_CASE(test_IsStandard_tx_size)
+{
+    CMutableTransaction t{MakeTx({StandardOutput()})};
 
     // Check tx-size (non-standard if transaction weight is > MAX_STANDARD_TX_WEIGHT)
     t.vin.clear();
@@ -940,13 +985,22 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << std::vector<unsigned char>(20, 0); // output size: 31 bytes
     BOOST_CHECK_EQUAL(GetTransactionWeight(CTransaction(t)), 400004);
     CheckIsNotStandard(t, "tx-size");
+}
+
+BOOST_AUTO_TEST_CASE(test_IsStandard_bare_multisig)
+{
+    CMutableTransaction t{MakeTx({StandardOutput()})};
 
     // Check bare multisig (standard if policy flag permit_bare_multisig is set)
+    const CKey key{GenerateRandomKey()};
     t.vout[0].scriptPubKey = GetScriptForMultisig(1, {key.GetPubKey()}); // simple 1-of-1
-    t.vin.resize(1);
-    t.vin[0].scriptSig = CScript() << std::vector<unsigned char>(65, 0);
     CheckIsStandard(t, {.permit_bare_multisig = true});
     CheckIsNotStandard(t, "bare-multisig", {.permit_bare_multisig = false});
+}
+
+BOOST_AUTO_TEST_CASE(test_IsStandard_dust_thresholds)
+{
+    CMutableTransaction t{MakeTx({StandardOutput()})};
 
     // Add dust outputs up to allowed maximum
     assert(t.vout.size() == 1);
