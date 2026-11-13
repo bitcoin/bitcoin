@@ -752,9 +752,21 @@ public:
 
     const uint64_t nKeyedNetGroup;
     std::atomic_bool fPauseRecv{false};
-    std::atomic_bool fPauseSend{false};
-    /** When was fPauseSend last set from false to true */
-    std::atomic<NodeClock::time_point> m_pause_send_since{NodeClock::epoch};
+
+    bool IsSendPaused() const { return !!GetPauseSendSince(); }
+
+    std::optional<NodeClock::time_point> GetPauseSendSince() const
+    {
+        if (auto since{m_pause_send_since.load()}; since != NodeClock::epoch) return since;
+        return std::nullopt;
+    }
+
+    void SetPauseSend(bool pause_send) EXCLUSIVE_LOCKS_REQUIRED(cs_vSend)
+    {
+        if (pause_send != IsSendPaused()) {
+            m_pause_send_since = pause_send ? NodeClock::now() : NodeClock::epoch;
+        }
+    }
 
     /** Network key used to prevent fingerprinting our node across networks.
      *  Influenced by the network and the bind address (+ bind port for inbounds) */
@@ -1023,6 +1035,9 @@ private:
     // Our address, as reported by the peer
     CService m_addr_local GUARDED_BY(m_addr_local_mutex);
     mutable Mutex m_addr_local_mutex;
+
+    /** When sending was paused, or epoch if it is not paused */
+    std::atomic<NodeClock::time_point> m_pause_send_since{NodeClock::epoch};
 
     mapMsgTypeSize mapSendBytesPerMsgType GUARDED_BY(cs_vSend);
     mapMsgTypeSize mapRecvBytesPerMsgType GUARDED_BY(cs_vRecv);
