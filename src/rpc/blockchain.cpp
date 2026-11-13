@@ -94,6 +94,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <tuple>
 #include <vector>
 
@@ -3058,26 +3059,44 @@ static RPCMethod getblockfilter()
     };
 }
 
+static std::atomic<bool> g_dumptxoutset_in_progress{false};
+
 /**
- * RAII class that registers a prune lock in its constructor to prevent
- * block data from being pruned, and removes it in its destructor.
+ * RAII class that allows only one dumptxoutset run at a time, holds the
+ * prune lock protecting the blocks a rollback needs and removes the output
+ * file of a run that did not complete.
  */
-class TemporaryPruneLock
+class DumptxoutsetGuard
 {
     static constexpr const char* LOCK_NAME{"dumptxoutset-rollback"};
     BlockManager& m_blockman;
+    std::optional<fs::path> m_temppath;
 public:
-    TemporaryPruneLock(BlockManager& blockman, int height) : m_blockman(blockman)
+    explicit DumptxoutsetGuard(BlockManager& blockman) : m_blockman(blockman)
     {
-        LOCK(::cs_main);
+        if (g_dumptxoutset_in_progress.exchange(true)) {
+            throw JSONRPCError(RPC_MISC_ERROR, "dumptxoutset is already running");
+        }
+    }
+    void LockPruning(int height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    {
+        AssertLockHeld(::cs_main);
         m_blockman.UpdatePruneLock(LOCK_NAME, {height});
         LogDebug(BCLog::PRUNE, "dumptxoutset: registered prune lock at height %d", height);
     }
-    ~TemporaryPruneLock()
+    void RemoveOnFailure(const fs::path& temppath) { m_temppath = temppath; }
+    ~DumptxoutsetGuard()
     {
-        LOCK(::cs_main);
-        m_blockman.DeletePruneLock(LOCK_NAME);
-        LogDebug(BCLog::PRUNE, "dumptxoutset: released prune lock");
+        if (m_temppath) {
+            // No-op after a completed run, which renamed the file
+            std::error_code ec;
+            fs::remove(*m_temppath, ec);
+        }
+        // The prune lock must be gone before the next run can register its own
+        if (WITH_LOCK(::cs_main, return m_blockman.DeletePruneLock(LOCK_NAME))) {
+            LogDebug(BCLog::PRUNE, "dumptxoutset: released prune lock");
+        }
+        g_dumptxoutset_in_progress = false;
     }
 };
 
@@ -3125,6 +3144,7 @@ static RPCMethod dumptxoutset()
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
+    DumptxoutsetGuard guard{node.chainman->m_blockman};
     const CBlockIndex* tip{WITH_LOCK(::cs_main, return node.chainman->ActiveChain().Tip())};
     const CBlockIndex* target_index{nullptr};
     const auto snapshot_type{self.Arg<std::string_view>("type")};
@@ -3166,6 +3186,7 @@ static RPCMethod dumptxoutset()
             RPC_INVALID_PARAMETER,
             "Couldn't open file " + temppath.utf8string() + " for writing.");
     }
+    if (!fs::is_fifo(path_info)) guard.RemoveOnFailure(temppath);
 
     UniValue result;
     Chainstate& chainstate{node.chainman->ActiveChainstate()};
@@ -3175,7 +3196,6 @@ static RPCMethod dumptxoutset()
     } else {
         // Check pruning constraints before attempting rollback and prevent
         // pruning of the necessary blocks with a temporary prune lock
-        std::optional<TemporaryPruneLock> temp_prune_lock;
         if (node.chainman->m_blockman.IsPruneMode()) {
             LOCK(node.chainman->GetMutex());
             const CBlockIndex* current_tip{node.chainman->ActiveChain().Tip()};
@@ -3183,7 +3203,7 @@ static RPCMethod dumptxoutset()
             if (first_block.nHeight > target_index->nHeight) {
                 throw JSONRPCError(RPC_MISC_ERROR, "Could not roll back to requested height since necessary block data is already pruned.");
             }
-            temp_prune_lock.emplace(node.chainman->m_blockman, target_index->nHeight);
+            guard.LockPruning(target_index->nHeight);
         }
 
         const bool in_memory{options.exists("in_memory") ? options["in_memory"].get_bool() : false};
@@ -3268,6 +3288,10 @@ UniValue CreateRolledBackUTXOSnapshot(
         {
             LOCK(::cs_main);
             tip = chainstate.m_chain.Tip();
+            // The target may have left the active chain since the RPC was called
+            if (tip->GetAncestor(target->nHeight) != target) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Block is not in main chain");
+            }
             chainstate.ForceFlushStateToDisk(/*wipe_cache=*/false);
             cursor = chainstate.CoinsDB().Cursor();
         }
