@@ -168,7 +168,7 @@ static void test_exhaustive_ecmult(const secp256k1_ge *group, const secp256k1_ge
             secp256k1_scalar_set_int(&ng, j);
 
             /* Test secp256k1_ecmult_const. */
-            secp256k1_ecmult_const(&tmp, &group[i], &ng);
+            secp256k1_ecmult_const_gej(&tmp, &group[i], &ng);
             CHECK(secp256k1_gej_eq_ge_var(&tmp, &group[(i * j) % EXHAUSTIVE_TEST_ORDER]));
 
             if (i != 0 && j != 0) {
@@ -358,7 +358,7 @@ static void test_exhaustive_sign(const secp256k1_context *ctx, const secp256k1_g
 #include "modules/schnorrsig/tests_exhaustive_impl.h"
 #endif
 
-#ifdef ENABLE_MODULE_ELLSWIFT
+#if defined(ENABLE_MODULE_ELLSWIFT) && !EXHAUSTIVE_TEST_CURVE_HAS_EVEN_ORDER
 #include "modules/ellswift/tests_exhaustive_impl.h"
 #endif
 

@@ -32,14 +32,16 @@ env:
   WITH_VALGRIND: 'yes'
   EXTRAFLAGS:
   ### secp256k1 modules
-  EXPERIMENTAL: 'no'
-  ECDH: 'no'
-  RECOVERY: 'no'
-  EXTRAKEYS: 'no'
-  SCHNORRSIG: 'no'
-  MUSIG: 'no'
-  ELLSWIFT: 'no'
-  SILENTPAYMENTS: 'no'
+  EXPERIMENTAL: 'yes'
+  ECDH: 'yes'
+  RECOVERY: 'yes'
+  EXTRAKEYS: 'yes'
+  SCHNORRSIG: 'yes'
+  MUSIG: 'yes'
+  FULLAGG: 'yes'
+  ELLSWIFT: 'yes'
+  SILENTPAYMENTS: 'yes'
+  SCHNORRSIG_HALFAGG: 'yes'
   ### test options
   SECP256K1_TEST_ITERS: 64
   BENCH: 'yes'
@@ -48,6 +50,9 @@ env:
   SYMBOL_CHECK: 'yes'
   # Compile and run the examples.
   EXAMPLES: 'yes'
+  # Also run exhaustive_tests for this group order, with these command line arguments.
+  EXHAUSTIVE_TEST_ORDER:
+  EXHAUSTIVE_TEST_ARGS:
   # Disable Docker build summary generation.
   # See https://github.com/docker/build-push-action/blob/master/README.md#environment-variables.
   DOCKER_BUILD_SUMMARY: false
@@ -96,21 +101,25 @@ jobs:
       fail-fast: false
       matrix:
         configuration:
-          - env_vars: { WIDEMUL: 'int64',  RECOVERY: 'yes' }
-          - env_vars: { WIDEMUL: 'int64',                   ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes' }
+          - env_vars: { WIDEMUL: 'int64' }
           - env_vars: { WIDEMUL: 'int128' }
-          - env_vars: { WIDEMUL: 'int128_struct',                                                             ELLSWIFT: 'yes' }
-          - env_vars: { WIDEMUL: 'int128', RECOVERY: 'yes',              EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
-          - env_vars: { WIDEMUL: 'int128',                  ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', SILENTPAYMENTS: 'yes' }
-          - env_vars: { WIDEMUL: 'int128', ASM: 'x86_64',                                                     ELLSWIFT: 'yes' }
-          - env_vars: {                    RECOVERY: 'yes',              EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes' }
-          - env_vars: { CTIMETESTS: 'no',  RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', SILENTPAYMENTS: 'yes', CPPFLAGS: '-DVERIFY' }
+          - env_vars: { WIDEMUL: 'int128_struct' }
+          - env_vars: { WIDEMUL: 'int128', ASM: 'x86_64' }
+          - env_vars: { CTIMETESTS: 'no', CPPFLAGS: '-DVERIFY' }
           - env_vars: { BUILD: 'distcheck', WITH_VALGRIND: 'no', CTIMETESTS: 'no', BENCH: 'no' }
           - env_vars: { CPPFLAGS: '-DDETERMINISTIC' }
           - env_vars: { CFLAGS: '-O0', CTIMETESTS: 'no' }
-          - env_vars: { CFLAGS: '-O1',     RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes' }
+          - env_vars: { CFLAGS: '-O1' }
           - env_vars: { ECMULTGENKB: 2, ECMULTWINDOW: 2 }
           - env_vars: { ECMULTGENKB: 86, ECMULTWINDOW: 4 }
+          - env_vars: { ECDH: 'no' }
+          - env_vars: { RECOVERY: 'no' }
+          - env_vars: { EXTRAKEYS: 'no', SCHNORRSIG: 'no', MUSIG: 'no', SILENTPAYMENTS: 'no', FULLAGG: 'no', SCHNORRSIG_HALFAGG: 'no' }
+          - env_vars: { SCHNORRSIG: 'no', MUSIG: 'no', SCHNORRSIG_HALFAGG: 'no' }
+          - env_vars: { MUSIG: 'no' }
+          - env_vars: { ELLSWIFT: 'no' }
+          - env_vars: { SILENTPAYMENTS: 'no' }
+          - env_vars: { EXPERIMENTAL: 'no', FULLAGG: 'no', SCHNORRSIG_HALFAGG: 'no' }
         cc:
           - 'gcc'
           - 'clang'
@@ -155,13 +164,6 @@ jobs:
 
     env:
       HOST: 'i686-linux-gnu'
-      ECDH: 'yes'
-      RECOVERY: 'yes'
-      EXTRAKEYS: 'yes'
-      SCHNORRSIG: 'yes'
-      MUSIG: 'yes'
-      ELLSWIFT: 'yes'
-      SILENTPAYMENTS: 'yes'
       CC: ${{ matrix.cc }}
 
     steps:
@@ -184,13 +186,6 @@ jobs:
       SECP256K1_TEST_ITERS: 16
       HOST: 's390x-linux-gnu'
       WITH_VALGRIND: 'no'
-      ECDH: 'yes'
-      RECOVERY: 'yes'
-      EXTRAKEYS: 'yes'
-      SCHNORRSIG: 'yes'
-      MUSIG: 'yes'
-      ELLSWIFT: 'yes'
-      SILENTPAYMENTS: 'yes'
       CTIMETESTS: 'no'
 
     steps:
@@ -215,13 +210,6 @@ jobs:
       SECP256K1_TEST_ITERS: 16
       HOST: 'arm-linux-gnueabihf'
       WITH_VALGRIND: 'no'
-      ECDH: 'yes'
-      RECOVERY: 'yes'
-      EXTRAKEYS: 'yes'
-      SCHNORRSIG: 'yes'
-      MUSIG: 'yes'
-      ELLSWIFT: 'yes'
-      SILENTPAYMENTS: 'yes'
       CTIMETESTS: 'no'
 
     steps:
@@ -236,15 +224,6 @@ jobs:
 
     env:
       SECP256K1_TEST_ITERS: 16
-      WITH_VALGRIND: 'no'
-      ECDH: 'yes'
-      RECOVERY: 'yes'
-      EXTRAKEYS: 'yes'
-      SCHNORRSIG: 'yes'
-      MUSIG: 'yes'
-      ELLSWIFT: 'yes'
-      SILENTPAYMENTS: 'yes'
-      CTIMETESTS: 'no'
       CC: ${{ matrix.cc }}
 
     strategy:
@@ -278,13 +257,6 @@ jobs:
       SECP256K1_TEST_ITERS: 16
       HOST: 'powerpc64le-linux-gnu'
       WITH_VALGRIND: 'no'
-      ECDH: 'yes'
-      RECOVERY: 'yes'
-      EXTRAKEYS: 'yes'
-      SCHNORRSIG: 'yes'
-      MUSIG: 'yes'
-      ELLSWIFT: 'yes'
-      SILENTPAYMENTS: 'yes'
       CTIMETESTS: 'no'
 
     steps:
@@ -309,7 +281,7 @@ jobs:
             env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'auto' }
           - runner: ubuntu-24.04-arm
             binary_arch: arm64
-            env_vars: { CC: 'clang',                                      ASM: 'auto' }
+            env_vars: { CC: 'clang',                                      ASM: 'auto', CTIMETESTS: 'yes' }
           - runner: ubuntu-latest
             binary_arch: x64
             env_vars: { CC: 'clang',                                      ASM: 'no', ECMULTGENKB: 2, ECMULTWINDOW: 2 }
@@ -318,19 +290,12 @@ jobs:
             env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'no', ECMULTGENKB: 2, ECMULTWINDOW: 2 }
           - runner: ubuntu-24.04-arm
             binary_arch: arm64
-            env_vars: { CC: 'clang',                                      ASM: 'no', ECMULTGENKB: 2, ECMULTWINDOW: 2 }
+            env_vars: { CC: 'clang',                                      ASM: 'no', ECMULTGENKB: 2, ECMULTWINDOW: 2, CTIMETESTS: 'yes' }
 
     env:
       # The `--error-exitcode` is required to make the test fail if valgrind found errors,
       # otherwise it will return 0 (https://www.valgrind.org/docs/manual/manual-core.html).
       WRAPPER_CMD: 'valgrind --error-exitcode=42'
-      ECDH: 'yes'
-      RECOVERY: 'yes'
-      EXTRAKEYS: 'yes'
-      SCHNORRSIG: 'yes'
-      MUSIG: 'yes'
-      ELLSWIFT: 'yes'
-      SILENTPAYMENTS: 'yes'
       CTIMETESTS: 'no'
       SECP256K1_TEST_ITERS: 2
 
@@ -354,19 +319,39 @@ jobs:
           - env_vars: { CC: 'i686-linux-gnu-gcc', HOST: 'i686-linux-gnu', ASM: 'no', ECMULTGENKB: 2, ECMULTWINDOW: 2 }
 
     env:
-      ECDH: 'yes'
-      RECOVERY: 'yes'
-      EXTRAKEYS: 'yes'
-      SCHNORRSIG: 'yes'
-      MUSIG: 'yes'
-      ELLSWIFT: 'yes'
-      SILENTPAYMENTS: 'yes'
       CTIMETESTS: 'no'
       CFLAGS: '-fsanitize=undefined,address -g'
       UBSAN_OPTIONS: 'print_stacktrace=1:halt_on_error=1'
       ASAN_OPTIONS: 'strict_string_checks=1:detect_stack_use_after_return=1:detect_leaks=1'
       LSAN_OPTIONS: 'use_unaligned=1'
       SECP256K1_TEST_ITERS: 32
+      SYMBOL_CHECK: 'no'
+
+    steps:
+      - *CHECKOUT
+      - *CI_SCRIPT_IN_DOCKER
+      - *PRINT_LOGS
+
+  exhaustive_debian:
+    name: "Exhaustive tests, group order ${{ matrix.configuration.env_vars.EXHAUSTIVE_TEST_ORDER }}"
+    runs-on: ubuntu-latest
+    needs: docker_cache
+
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration:
+          - env_vars: { EXHAUSTIVE_TEST_ORDER: 7 }
+          # A full run takes weeks: run one part in 20000.
+          - env_vars: { EXHAUSTIVE_TEST_ORDER: 199, EXHAUSTIVE_TEST_ARGS: '2 00000000000000000000000000000000 20000 0' }
+
+    env:
+      CC: 'gcc'
+      BUILD: 'exhaustive_tests'
+      WITH_VALGRIND: 'no'
+      CTIMETESTS: 'no'
+      BENCH: 'no'
+      EXAMPLES: 'no'
       SYMBOL_CHECK: 'no'
 
     steps:
@@ -401,13 +386,6 @@ jobs:
           - 'clang-snapshot'
 
     env:
-      ECDH: 'yes'
-      RECOVERY: 'yes'
-      EXTRAKEYS: 'yes'
-      SCHNORRSIG: 'yes'
-      MUSIG: 'yes'
-      ELLSWIFT: 'yes'
-      SILENTPAYMENTS: 'yes'
       CC: ${{ matrix.cc }}
       SECP256K1_TEST_ITERS: 32
       ASM: 'no'
@@ -427,13 +405,6 @@ jobs:
     env:
       WRAPPER_CMD: 'wine'
       WITH_VALGRIND: 'no'
-      ECDH: 'yes'
-      RECOVERY: 'yes'
-      EXTRAKEYS: 'yes'
-      SCHNORRSIG: 'yes'
-      MUSIG: 'yes'
-      ELLSWIFT: 'yes'
-      SILENTPAYMENTS: 'yes'
       CTIMETESTS: 'no'
 
     strategy:
@@ -466,15 +437,13 @@ jobs:
       fail-fast: false
       matrix:
         env_vars:
-          - { WIDEMUL: 'int64',  RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes' }
+          - { WIDEMUL: 'int64' }
           - { WIDEMUL: 'int128_struct', ECMULTGENKB: 2, ECMULTWINDOW: 4 }
-          - { WIDEMUL: 'int128',                  ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes' }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes' }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes' }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes', CC: 'gcc' }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes',            WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes', CC: 'gcc', WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', CPPFLAGS: '-DVERIFY', CTIMETESTS: 'no' }
+          - { WIDEMUL: 'int128' }
+          - { WIDEMUL: 'int128', CC: 'gcc' }
+          - { WIDEMUL: 'int128',            WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
+          - { WIDEMUL: 'int128', CC: 'gcc', WRAPPER_CMD: 'valgrind --error-exitcode=42', SECP256K1_TEST_ITERS: 2 }
+          - { WIDEMUL: 'int128', CPPFLAGS: '-DVERIFY', CTIMETESTS: 'no' }
           - BUILD: 'distcheck'
 
     steps:
@@ -507,9 +476,9 @@ jobs:
       - *PRINT_LOGS
 
   arm64-macos-native:
-    name: "ARM64: macOS Sonoma"
+    name: "ARM64: macOS Sequoia"
     # See: https://github.com/actions/runner-images#available-images.
-    runs-on: macos-14
+    runs-on: macos-15
 
     env:
       CC: 'clang'
@@ -523,13 +492,11 @@ jobs:
       fail-fast: false
       matrix:
         env_vars:
-          - { WIDEMUL: 'int64',  RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes' }
+          - { WIDEMUL: 'int64' }
           - { WIDEMUL: 'int128_struct', ECMULTGENKB: 2, ECMULTWINDOW: 4 }
-          - { WIDEMUL: 'int128',                  ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes' }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes' }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes' }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes', CC: 'gcc' }
-          - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes', SILENTPAYMENTS: 'yes', CPPFLAGS: '-DVERIFY' }
+          - { WIDEMUL: 'int128' }
+          - { WIDEMUL: 'int128', CC: 'gcc' }
+          - { WIDEMUL: 'int128', CPPFLAGS: '-DVERIFY' }
           - BUILD: 'distcheck'
 
     steps:
@@ -635,13 +602,6 @@ jobs:
       CFLAGS: '-fpermissive -g'
       CPPFLAGS: '-DSECP256K1_CPLUSPLUS_TEST_OVERRIDE'
       WERROR_CFLAGS:
-      ECDH: 'yes'
-      RECOVERY: 'yes'
-      EXTRAKEYS: 'yes'
-      SCHNORRSIG: 'yes'
-      MUSIG: 'yes'
-      ELLSWIFT: 'yes'
-      SILENTPAYMENTS: 'yes'
 
     steps:
       - *CHECKOUT
