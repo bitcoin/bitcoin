@@ -319,5 +319,29 @@ BOOST_AUTO_TEST_CASE(srd_test)
     }
 }
 
+BOOST_AUTO_TEST_CASE(eligible_for_spending_test)
+{
+    // Our own outputs need 1 confirmation, outputs from others need 6
+    const CoinEligibilityFilter filter{1, 6, 0};
+    const auto make_group{[](int depth, bool from_me) {
+        CMutableTransaction tx;
+        tx.vout = {
+            CTxOut{COIN, CScript{}},
+        };
+        tx.nLockTime = next_lock_time++;
+        OutputGroup group{default_cs_params};
+        group.Insert(std::make_shared<COutput>(COutPoint{tx.GetHash(), 0}, tx.vout.at(0), depth, P2WPKH_INPUT_VSIZE, true, true, 0, from_me, 0), 0, 0);
+        return group;
+    }};
+
+    // Exactly the required number of confirmations is enough
+    BOOST_CHECK(make_group(1, true).EligibleForSpending(filter));
+    BOOST_CHECK(make_group(6, false).EligibleForSpending(filter));
+
+    // One confirmation less is not
+    BOOST_CHECK(!make_group(0, true).EligibleForSpending(filter));
+    BOOST_CHECK(!make_group(5, false).EligibleForSpending(filter));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
