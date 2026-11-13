@@ -10,7 +10,6 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
-#include <kj/async.h>
 #include <kj/common.h>
 #include <kj/memory.h>
 #include <memory>
