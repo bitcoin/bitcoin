@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <common/args.h>
 #include <common/messages.h>
-#include <common/bip352.h>
 #include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
@@ -262,7 +261,7 @@ static OutputType GetOutputType(TxoutType type, bool is_from_p2sh)
     }
 }
 
-static bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet& wallet)
+bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet& wallet)
 {
     std::vector<std::vector<unsigned char>> solutions;
     TxoutType type = Solver(input, solutions);

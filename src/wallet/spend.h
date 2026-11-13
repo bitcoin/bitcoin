@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_SPEND_H
 #define BITCOIN_WALLET_SPEND_H
 
+#include <common/bip352.h>
 #include <common/paymentdestination.h>
 #include <consensus/amount.h>
 #include <util/result.h>
@@ -212,6 +213,9 @@ CTxOut GetDummyTxOut(const PaymentDestination& dest, CAmount amount);
  * If minimum_height is above the local tip, locktime is 0.
  */
 void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast, interfaces::Chain& chain, const uint256& block_hash, int block_height, uint32_t minimum_height = 0);
+
+/** Whether the input is used for the silent payments shared secret derivation (BIP352 eligible) */
+bool IsInputForSharedSecretDerivation(const CScript& input, const CWallet& wallet);
 
 /**
  * Get the silent payments destinations a created transaction pays to, in the order their outputs

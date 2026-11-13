@@ -1548,11 +1548,23 @@ RPCMethod sendall()
             CMutableTransaction rawTx{ConstructTransaction(options["inputs"], /*outputs_in=*/std::nullopt, options["locktime"], rbf, coin_control.m_version)};
             // Output i pays to the address in key i of the normalized outputs
             const UniValue outputs{NormalizeOutputs(recipient_key_value_pairs)};
-            const auto parsed_outputs{ParseOutputs(outputs, /*allow_silent_payments=*/false)};
+            const auto parsed_outputs{ParseOutputs(outputs, /*allow_silent_payments=*/true)};
+            std::map<size_t, SilentPaymentsDestination> sp_destinations;
+            for (size_t i = 0; i < parsed_outputs.size(); ++i) {
+                if (const auto* sp = parsed_outputs[i].first.GetSilentPaymentsDestination()) {
+                    sp_destinations.emplace(i, *sp);
+                }
+            }
+            if (!sp_destinations.empty()) {
+                EnsureSilentPaymentsTxIsAddedToWallet(options);
+                EnableSilentPayments(*pwallet, coin_control);
+            }
 
             LOCK(pwallet->cs_wallet);
             CAmount total_input_value(0);
             bool send_max{options.exists("send_max") ? options["send_max"].get_bool() : false};
+            // silent payments input coins
+            OutputSet sp_input_coins;
             if (options.exists("inputs") && options.exists("send_max")) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot combine send_max with specific inputs.");
             } else if (options.exists("inputs") && (options.exists("minconf") || options.exists("maxconf"))) {
@@ -1579,11 +1591,28 @@ RPCMethod sendall()
                         }
                     }
                     total_input_value += tx->GetTx()->vout[input.prevout.n].nValue;
+                    if (!sp_destinations.empty()) {
+                        const CTxOut& txout{tx->GetTx()->vout[input.prevout.n]};
+                        if (auto res{CheckSilentPaymentsInput(*pwallet, input.prevout, txout)}; !res) {
+                            throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(res).original);
+                        }
+                        sp_input_coins.insert(std::make_shared<COutput>(
+                            input.prevout, tx->GetTx()->vout[input.prevout.n],
+                            /*depth=*/0, /*input_bytes=*/-1, /*solvable=*/true, /*safe=*/true,
+                            /*time=*/0, /*from_me=*/false));
+                    }
                 }
             } else {
                 CoinFilterParams coins_params;
                 coins_params.min_amount = 0;
-                for (const COutput& output : AvailableCoins(*pwallet, &coin_control, fee_rate, coins_params).All()) {
+                const CoinsResult available_coins{AvailableCoins(*pwallet, &coin_control, fee_rate, coins_params)};
+                // Silent payments transactions skip coins that cannot be spent in them. Fail
+                // instead of silently leaving those coins behind.
+                if (available_coins.skipped_silent_payments_ineligible) {
+                    throw JSONRPCError(RPC_WALLET_ERROR, "The wallet has coins that cannot be spent in a silent payments transaction. "
+                                                         "Use the inputs option to choose the coins to spend.");
+                }
+                for (const COutput& output : available_coins.All()) {
                     if (send_max && fee_rate.GetFee(output.input_bytes) > output.txout.nValue) {
                         continue;
                     }
@@ -1594,11 +1623,27 @@ RPCMethod sendall()
                     CTxIn input(output.outpoint.hash, output.outpoint.n, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::MAX_SEQUENCE_NONFINAL);
                     rawTx.vin.push_back(input);
                     total_input_value += output.txout.nValue;
+                    if (!sp_destinations.empty()) {
+                        sp_input_coins.insert(std::make_shared<COutput>(output));
+                    }
                 }
             }
 
-            for (const auto& [dest, amount] : parsed_outputs) {
-                rawTx.vout.emplace_back(amount, *CHECK_NONFATAL(dest.GetScript()));
+            // Silent payments output scripts are derived from the inputs, keyed by output index
+            std::map<size_t, WitnessV1Taproot> sp_outputs;
+            if (!sp_destinations.empty()) {
+                auto sp_result = CreateSilentPaymentsOutputs(*pwallet, sp_destinations, sp_input_coins);
+                if (!sp_result) {
+                    // Fail if Silent Payments transaction cannot be created, else
+                    // the receivers cannot find the payments.
+                    throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(sp_result).original);
+                }
+                sp_outputs = std::move(*sp_result);
+            }
+            for (size_t i = 0; i < parsed_outputs.size(); ++i) {
+                const auto& [dest, amount] = parsed_outputs[i];
+                const auto sp_it{sp_outputs.find(i)};
+                rawTx.vout.emplace_back(amount, sp_it != sp_outputs.end() ? GetScriptForDestination(sp_it->second) : *CHECK_NONFATAL(dest.GetScript()));
             }
 
             std::vector<COutPoint> outpoints_spent;
@@ -1682,7 +1727,12 @@ RPCMethod sendall()
                 }
             }
 
-            return FinishTransaction(pwallet, options, rawTx);
+            std::vector<SilentPaymentsDestination> sp_dests;
+            sp_dests.reserve(sp_destinations.size());
+            for (auto& [idx, dest] : sp_destinations) {
+                sp_dests.emplace_back(std::move(dest));
+            }
+            return FinishTransaction(pwallet, options, rawTx, std::move(sp_dests));
         }
     };
 }
