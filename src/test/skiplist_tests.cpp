@@ -10,7 +10,7 @@
 #include <vector>
 #include <utility>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #define SKIPLIST_LENGTH 300000
 

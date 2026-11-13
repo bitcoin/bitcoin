@@ -11,7 +11,7 @@
 #include <test/util/time.h>
 #include <util/readwritefile.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 BOOST_FIXTURE_TEST_SUITE(banman_tests, BasicTestingSetup)
 

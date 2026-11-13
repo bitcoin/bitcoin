@@ -10,7 +10,7 @@
 #include <util/threadpool.h>
 #include <util/time.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <array>
 #include <functional>
