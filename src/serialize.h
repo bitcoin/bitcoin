@@ -407,23 +407,6 @@ struct CheckVarIntMode {
     }
 };
 
-template<VarIntMode Mode, typename I>
-inline unsigned int GetSizeOfVarInt(I n)
-{
-    CheckVarIntMode<Mode, I>();
-    int nRet = 0;
-    while(true) {
-        nRet++;
-        if (n <= 0x7F)
-            break;
-        n = (n >> 7) - 1;
-    }
-    return nRet;
-}
-
-template<typename I>
-inline void WriteVarInt(SizeComputer& os, I n);
-
 template<typename Stream, VarIntMode Mode, typename I>
 void WriteVarInt(Stream& os, I n)
 {
@@ -749,12 +732,6 @@ template<typename Stream, typename K, typename Pred, typename A> void Unserializ
 template<typename Stream, typename T> void Serialize(Stream& os, const std::shared_ptr<const T>& p);
 template<typename Stream, typename T> void Unserialize(Stream& os, std::shared_ptr<const T>& p);
 
-/**
- * unique_ptr
- */
-template<typename Stream, typename T> void Serialize(Stream& os, const std::unique_ptr<const T>& p);
-template<typename Stream, typename T> void Unserialize(Stream& os, std::unique_ptr<const T>& p);
-
 
 /**
  * If none of the specialized versions above matched, default to calling member function.
@@ -1008,23 +985,6 @@ void Unserialize(Stream& is, std::set<K, Pred, A>& m)
 
 
 /**
- * unique_ptr
- */
-template<typename Stream, typename T> void
-Serialize(Stream& os, const std::unique_ptr<const T>& p)
-{
-    Serialize(os, *p);
-}
-
-template<typename Stream, typename T>
-void Unserialize(Stream& is, std::unique_ptr<const T>& p)
-{
-    p.reset(new T(deserialize, is));
-}
-
-
-
-/**
  * shared_ptr
  */
 template<typename Stream, typename T> void
@@ -1141,12 +1101,6 @@ public:
         return m_size;
     }
 };
-
-template<typename I>
-inline void WriteVarInt(SizeComputer &s, I n)
-{
-    s.seek(GetSizeOfVarInt<I>(n));
-}
 
 inline void WriteCompactSize(SizeComputer &s, uint64_t nSize)
 {

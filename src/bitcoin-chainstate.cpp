@@ -17,7 +17,6 @@
 #include <charconv>
 #include <filesystem>
 #include <iostream>
-#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -57,8 +56,6 @@ class TestValidationInterface : public ValidationInterface
 {
 public:
     TestValidationInterface() = default;
-
-    std::optional<std::string> m_expected_valid_block = std::nullopt;
 
     void BlockChecked(Block block, BlockValidationStateView state) override
     {

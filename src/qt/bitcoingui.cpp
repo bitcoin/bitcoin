@@ -1608,9 +1608,6 @@ void BitcoinGUI::showModalOverlay()
 [[nodiscard]] static bool ThreadSafeMessageBox(BitcoinGUI* gui, const bilingual_str& message, unsigned int style)
 {
     bool modal = (style & CClientUIInterface::MODAL);
-    // The SECURE flag has no effect in the Qt GUI.
-    // bool secure = (style & CClientUIInterface::SECURE);
-    style &= ~CClientUIInterface::SECURE;
     bool ret = false;
 
     QString detailed_message; // This is original message, in English, for googling and referencing.

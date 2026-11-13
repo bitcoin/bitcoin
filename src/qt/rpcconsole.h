@@ -166,7 +166,6 @@ private:
     QStringList history;
     int historyPtr = 0;
     QString cmdBeforeBrowsing;
-    QList<NodeId> cachedNodeids;
     const PlatformStyle* const platformStyle;
     QMenu *peersTableContextMenu = nullptr;
     QMenu *banTableContextMenu = nullptr;

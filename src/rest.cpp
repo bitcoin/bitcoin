@@ -1225,10 +1225,6 @@ void StartREST(const std::any& context)
     }
 }
 
-void InterruptREST()
-{
-}
-
 void StopREST()
 {
     for (const auto& up : uri_prefixes) {
