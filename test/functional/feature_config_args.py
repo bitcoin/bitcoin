@@ -215,6 +215,70 @@ class ConfArgsTest(BitcoinTestFramework):
         # Restore node arguments after the test
         node.args = node_args
 
+    def test_invalid_numeric_options(self):
+        self.log.info('Test that options with invalid numeric values are rejected')
+        # Negative values for options whose backing member is unsigned, or whose
+        # value is subtracted from the current time, would wrap or invert. Values
+        # that are too large would overflow or wrap when narrowed.
+        for arg, expected_msg in [
+            ("-dbbatchsize=-1", "Error: -dbbatchsize must be non-negative (got -1)."),
+            ("-dbcrashratio=-1", "Error: -dbcrashratio must be non-negative (got -1)."),
+            ("-limitclustersize=-1", "Error: limitclustersize must be between 1 and 9223372036854775 kilobytes (got -1)"),
+            ("-limitclustercount=0", "Error: limitclustercount must be between 1 and 64 (got 0)"),
+            ("-limitclustercount=-1", "Error: limitclustercount must be between 1 and 64 (got -1)"),
+            ("-limitancestorcount=-1", "Error: limitancestorcount must be non-negative (got -1)"),
+            ("-limitdescendantcount=-1", "Error: limitdescendantcount must be non-negative (got -1)"),
+            ("-datacarriersize=-1", "Error: -datacarriersize must be between 0 and 4294967295 (got -1)."),
+            ("-mempoolexpiry=-1", "Error: -mempoolexpiry must be between 0 and 2562047788015215 hours (got -1)."),
+            ("-maxtipage=-1", "Error: -maxtipage must be non-negative (got -1)."),
+            ("-bytespersigop=-1", "Error: -bytespersigop must be between 0 and 4294967295 (got -1)."),
+            ("-maxsendbuffer=-1", "Error: -maxsendbuffer must be between 0 and 4294967 (got -1)."),
+            ("-maxsendbuffer=4294968", "Error: -maxsendbuffer must be between 0 and 4294967 (got 4294968)."),  # would overflow when scaled to bytes
+            ("-maxreceivebuffer=-1", "Error: -maxreceivebuffer must be between 0 and 4294967 (got -1)."),
+            ("-maxreceivebuffer=4294968", "Error: -maxreceivebuffer must be between 0 and 4294967 (got 4294968)."),
+            ("-bantime=-1", "Error: -bantime must be greater than 0 (got -1)."),
+            ("-bantime=0", "Error: -bantime must be greater than 0 (got 0)."),
+            ("-limitclustersize=0", "Error: limitclustersize must be between 1 and 9223372036854775 kilobytes (got 0)"),
+            ("-limitclustersize=9223372036854776", "Error: limitclustersize must be between 1 and 9223372036854775 kilobytes (got 9223372036854776)"),
+            ("-mempoolexpiry=2562047788015216", "Error: -mempoolexpiry must be between 0 and 2562047788015215 hours (got 2562047788015216)."),
+            ("-timeout=0", "Error: timeout must be a positive integer."),
+            ("-timeout=4294967297", "Error: -timeout cannot exceed 2147483647 milliseconds (got 4294967297)."),  # would narrow to 1
+            ("-timeout=2147483648", "Error: -timeout cannot exceed 2147483647 milliseconds (got 2147483648)."),
+        ]:
+            self.nodes[0].assert_start_raises_init_error(expected_msg=expected_msg, extra_args=[arg])
+
+        if self.is_wallet_compiled():
+            # -txconfirmtarget is only registered when the wallet is built in.
+            # Negative and out-of-range values are rejected during parameter
+            # interaction; the fee estimator's maximum is enforced on load.
+            for arg, expected_msg in [
+                ("-txconfirmtarget=-1", "Error: -txconfirmtarget must be between 1 and 4294967295 (got -1)."),
+                ("-txconfirmtarget=0", "Error: -txconfirmtarget must be between 1 and 4294967295 (got 0)."),
+                ("-txconfirmtarget=4294967296", "Error: -txconfirmtarget must be between 1 and 4294967295 (got 4294967296)."),
+            ]:
+                self.nodes[0].assert_start_raises_init_error(expected_msg=expected_msg, extra_args=[arg])
+
+        self.log.info('Test that negating a numeric option is rejected')
+        # Negating a numeric option would otherwise be parsed as 0, which for
+        # some options is a value that was explicitly rejected above.
+        negatable = ["-nolimitclustersize", "-nobantime", "-nomempoolexpiry", "-notimeout",
+                     "-nopeertimeout", "-nomaxtipage", "-nodatacarriersize", "-nobytespersigop",
+                     "-nomaxsendbuffer", "-nomaxreceivebuffer", "-nolimitclustercount",
+                     "-nolimitancestorcount", "-nolimitdescendantcount", "-nodbbatchsize"]
+        if self.is_wallet_compiled():
+            negatable.append("-notxconfirmtarget")
+        for arg in negatable:
+            self.nodes[0].assert_start_raises_init_error(
+                expected_msg=f'Error: Error parsing command line arguments: Negating of {arg.replace("-no", "-", 1)} is meaningless and therefore forbidden',
+                extra_args=[arg])
+
+        self.log.info('Test that zero is still accepted where it is meaningful')
+        for arg in ["-dbbatchsize=0", "-datacarriersize=0", "-mempoolexpiry=0",
+                    "-maxtipage=0", "-bytespersigop=0", "-maxsendbuffer=0",
+                    "-maxreceivebuffer=0", "-limitclustersize=1", "-bantime=1"]:
+            self.start_node(0, extra_args=[arg])
+            self.stop_node(0)
+
     def test_invalid_command_line_options(self):
         self.nodes[0].assert_start_raises_init_error(
             expected_msg='Error: Error parsing command line arguments: Can not set -proxy with no value. Please specify value with -proxy=value.',
@@ -544,6 +608,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.test_config_file_parser()
         self.test_config_file_log()
         self.test_invalid_command_line_options()
+        self.test_invalid_numeric_options()
         self.test_ignored_conf()
         self.test_ignored_default_conf()
         self.test_acceptstalefeeestimates_arg_support()

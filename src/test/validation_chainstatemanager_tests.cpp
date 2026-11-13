@@ -1009,6 +1009,22 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_args, BasicTestingSetup)
     BOOST_CHECK_EQUAL(get_valid_opts({"-prevoutfetchthreads=3"}).prevoutfetch_threads_num, 3);
     BOOST_CHECK_EQUAL(get_valid_opts({"-prevoutfetchthreads=100"}).prevoutfetch_threads_num, MAX_PREVOUTFETCH_THREADS);
     BOOST_CHECK(!get_opts({"-prevoutfetchthreads=-1"}));
+
+    // test -maxtipage
+    BOOST_CHECK_EQUAL(get_valid_opts({}).max_tip_age, DEFAULT_MAX_TIP_AGE);
+    BOOST_CHECK_EQUAL(get_valid_opts({"-maxtipage=0"}).max_tip_age, std::chrono::seconds{0});
+    BOOST_CHECK_EQUAL(get_valid_opts({"-maxtipage=600"}).max_tip_age, std::chrono::seconds{600});
+    BOOST_CHECK(!get_opts({"-maxtipage=-1"})); // a negative age would put the IBD cutoff in the future
+
+    // test -dbbatchsize and -dbcrashratio
+    BOOST_CHECK_EQUAL(get_valid_opts({}).coins_view.batch_write_bytes, DEFAULT_DB_CACHE_BATCH);
+    BOOST_CHECK_EQUAL(get_valid_opts({"-dbbatchsize=0"}).coins_view.batch_write_bytes, 0U);
+    BOOST_CHECK_EQUAL(get_valid_opts({"-dbbatchsize=1000"}).coins_view.batch_write_bytes, 1000U);
+    BOOST_CHECK(!get_opts({"-dbbatchsize=-1"})); // would wrap to a huge batch size and disable flushing
+
+    BOOST_CHECK_EQUAL(get_valid_opts({}).coins_view.simulate_crash_ratio, 0);
+    BOOST_CHECK_EQUAL(get_valid_opts({"-dbcrashratio=8"}).coins_view.simulate_crash_ratio, 8);
+    BOOST_CHECK(!get_opts({"-dbcrashratio=-1"}));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
