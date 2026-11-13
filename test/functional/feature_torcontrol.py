@@ -11,6 +11,7 @@ from test_framework.util import (
     assert_equal,
     ensure_for,
     p2p_port,
+    tor_port,
 )
 
 SERVICE_ID = "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd"
@@ -136,6 +137,7 @@ class TorControlTest(BitcoinTestFramework):
             f"-torcontrol=127.0.0.1:{mock_tor.port}",
             "-listenonion=1",
             "-debug=tor",
+            f"-bind=127.0.0.1:{tor_port(0)}=onion",
         ])
 
         # Wait for connection and PROTOCOLINFO command
