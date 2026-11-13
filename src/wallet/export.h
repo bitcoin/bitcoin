@@ -18,12 +18,15 @@ namespace wallet {
 // Used when exporting descriptors from the wallet.
 struct WalletDescInfo {
     std::string descriptor;
+    std::optional<std::string> multipath_descriptor;
     uint64_t creation_time;
     bool active;
     std::optional<bool> internal;
     std::optional<std::pair<int64_t,int64_t>> range;
     int64_t next_index;
     DescriptorCache cache;
+    uint256 spkm_id;
+    std::vector<uint256> mp_rel_ids;
 };
 
 //! Export the descriptors from a wallet so that they can be imported elsewhere
