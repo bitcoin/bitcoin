@@ -40,10 +40,17 @@ static bool g_rpc_whitelist_default = false;
 
 static UniValue JSONErrorReply(UniValue objError, const JSONRPCRequest& jreq, HTTPStatusCode& nStatus)
 {
-    // HTTP errors should never be returned if JSON-RPC v2 was requested. This
-    // function should only be called when a v1 request fails or when a request
-    // cannot be parsed, so the version is unknown.
-    Assume(jreq.m_json_version != JSONRPCVersion::V2);
+    // A request known to be JSON-RPC 2.0 gets the error in the reply with HTTP
+    // OK, or no reply if it is a notification. HTTP error statuses are only
+    // returned for 1.x requests and requests whose version is unknown.
+    if (jreq.m_json_version == JSONRPCVersion::V2) {
+        if (jreq.IsNotification()) {
+            nStatus = HTTP_NO_CONTENT;
+            return {};
+        }
+        nStatus = HTTP_OK;
+        return JSONRPCReplyObj(NullUniValue, std::move(objError), jreq.id, jreq.m_json_version);
+    }
 
     // Send error reply from json-rpc error object
     nStatus = HTTP_INTERNAL_SERVER_ERROR;
