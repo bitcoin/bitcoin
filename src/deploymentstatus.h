@@ -11,6 +11,12 @@
 #include <limits>
 
 /** Determine if a deployment is active for the next block */
+inline bool DeploymentActiveAfter(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::BuriedDeployment dep)
+{
+    assert(Consensus::ValidDeployment(dep));
+    return (pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1) >= params.DeploymentHeight(dep);
+}
+
 inline bool DeploymentActiveAfter(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::BuriedDeployment dep, [[maybe_unused]] VersionBitsCache& versionbitscache)
 {
     assert(Consensus::ValidDeployment(dep));
