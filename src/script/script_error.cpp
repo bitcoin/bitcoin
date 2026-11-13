@@ -76,6 +76,7 @@ std::string ScriptErrorString(const ScriptError serror)
         case SCRIPT_ERR_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION:
             return "Taproot version reserved for soft-fork upgrades";
         case SCRIPT_ERR_DISCOURAGE_OP_SUCCESS:
+        case SCRIPT_ERR_DISCOURAGE_OP_CAT:
             return "OP_SUCCESSx reserved for soft-fork upgrades";
         case SCRIPT_ERR_DISCOURAGE_UPGRADABLE_PUBKEYTYPE:
             return "Public key version reserved for soft-fork upgrades";
