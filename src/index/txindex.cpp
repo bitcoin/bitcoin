@@ -20,11 +20,9 @@
 #include <serialize.h>
 #include <streams.h>
 #include <sync.h>
-#include <tinyformat.h>
 #include <uint256.h>
 #include <util/fs.h>
 #include <util/log.h>
-#include <util/string.h>
 #include <validation.h>
 
 #include <algorithm>
@@ -32,14 +30,18 @@
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <exception>
 #include <functional>
 #include <memory>
 #include <optional>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
+
+namespace kernel {
+class Notifications;
+}
 
 std::unique_ptr<TxIndex> g_txindex;
 
@@ -60,7 +62,7 @@ SipHasher13UJ ReadOrCreateTxidHasher(CDBWrapper& db)
 class TxIndex::DB : public BaseIndex::DB
 {
 public:
-    explicit DB(size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
+    DB(size_t n_cache_size, bool f_memory, bool f_wipe, kernel::Notifications* notifications);
 
     /// Write a block of transaction positions to the DB.
     void WriteTxs(const interfaces::BlockInfo& block);
@@ -75,23 +77,24 @@ public:
     void WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator) override;
 
 private:
-    DB(size_t n_cache_size, bool f_memory, bool f_wipe, bool has_legacy);
+    DB(size_t n_cache_size, bool f_memory, bool f_wipe, bool has_legacy, kernel::Notifications* notifications);
 };
 
 static fs::path TxIndexDBPath() { return gArgs.GetDataDirNet() / "indexes" / "txindex"; }
 
-TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe) :
+TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe, kernel::Notifications* notifications) :
     // Bloom filters are built for every key but only consulted by point reads,
     // which iterators bypass: the per-tx hashed ('x') lookups seek with an
     // iterator, and the 's'/'h' point reads are at most one per block against a
     // tiny keyspace. Only the legacy entries' per-tx point lookups benefit, so
     // enable the filters only for databases still containing them.
     DB(n_cache_size, f_memory, f_wipe,
-       /*has_legacy=*/!f_memory && !f_wipe && CDBWrapper::HasKeyStartingWith(TxIndexDBPath(), txindex::DB_TXINDEX))
+       /*has_legacy=*/!f_memory && !f_wipe && CDBWrapper::HasKeyStartingWith(TxIndexDBPath(), txindex::DB_TXINDEX),
+       notifications)
 {}
 
-TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe, bool has_legacy) :
-    BaseIndex::DB(TxIndexDBPath(), n_cache_size, f_memory, f_wipe, /*f_obfuscate=*/false, /*f_bloom=*/has_legacy),
+TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe, bool has_legacy, kernel::Notifications* notifications) :
+    BaseIndex::DB(TxIndexDBPath(), n_cache_size, f_memory, f_wipe, /*f_obfuscate=*/false, /*f_bloom=*/has_legacy, notifications),
     m_hasher{ReadOrCreateTxidHasher(*this)},
     m_has_legacy{has_legacy}
 {}
@@ -119,7 +122,7 @@ void TxIndex::DB::WriteTxs(const interfaces::BlockInfo& block)
     if (Exists(txindex::BlockHashKey{block.hash})) return;
 
     uint32_t block_seq{0};
-    Read(txindex::DB_NEXT_BLOCK_SEQ, block_seq);
+    (void)Read(txindex::DB_NEXT_BLOCK_SEQ, block_seq);
 
     CDBBatch batch(*this);
     batch.Write(txindex::BlockHashKey{block.hash}, block_seq);
@@ -136,7 +139,8 @@ void TxIndex::DB::WriteTxs(const interfaces::BlockInfo& block)
 }
 
 TxIndex::TxIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe)
-    : BaseIndex(std::move(chain), "txindex", "txidx"), m_db(std::make_unique<TxIndex::DB>(n_cache_size, f_memory, f_wipe))
+    : BaseIndex(std::move(chain), "txindex", "txidx"),
+      m_db(std::make_unique<TxIndex::DB>(n_cache_size, f_memory, f_wipe, GetNotifications()))
 {
     if (m_db->m_has_legacy) {
         LogInfo("txindex contains entries in the legacy format, which uses excessive disk space. "
@@ -159,14 +163,6 @@ bool TxIndex::CustomAppend(const interfaces::BlockInfo& block)
 
 BaseIndex::DB& TxIndex::GetDB() const { return *m_db; }
 
-template <typename... Args>
-[[noreturn]] static void WarnAndThrowErr(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
-{
-    const std::string err{tfm::format(fmt, args...)};
-    LogWarning("%s", err);
-    throw std::runtime_error{err};
-}
-
 std::optional<TxIndexResult> TxIndex::FindTx(const Txid& tx_hash) const
 {
     struct Candidate {
@@ -186,11 +182,9 @@ std::optional<TxIndexResult> TxIndex::FindTx(const Txid& tx_hash) const
         for (it->Seek(key); it->Valid() && it->GetKey(key) && key.hash_prefix == prefix; it->Next()) {
             uint256 candidate_block_hash;
             if (!m_db->Read(txindex::BlockSeqKey{key.pos.block_seq}, candidate_block_hash)) {
-                // Read may throw dbwrapper_error.
-                // Read returns false for internal deserialize errors or a
-                // missing key. A missing key can only happen after corruption.
-                WarnAndThrowErr("%s: Corrupt index: block sequence %u not found for txid %s",
-                                GetName(), key.pos.block_seq, tx_hash.ToString());
+                // A missing key can only happen after corruption.
+                FatalError("%s: Corrupt index: block sequence %u not found for txid %s", GetName(), key.pos.block_seq, tx_hash.ToString());
+                std::abort();
             }
             LOCK(cs_main);
             const CBlockIndex* block_index{m_chainstate->m_blockman.LookupBlockIndex(candidate_block_hash)};
@@ -202,8 +196,8 @@ std::optional<TxIndexResult> TxIndex::FindTx(const Txid& tx_hash) const
                 // A stale entry may also refer to a known block without data.
                 // Skip it if it is not in the active chain.
                 if (!in_active_chain) continue;
-                WarnAndThrowErr("%s: Block data %s unexpectedly unavailable for txid %s. Caused by data corruption?",
-                                GetName(), candidate_block_hash.ToString(), tx_hash.ToString());
+                FatalError("%s: Block data %s unexpectedly unavailable for txid %s. Caused by data corruption?", GetName(), candidate_block_hash.ToString(), tx_hash.ToString());
+                std::abort();
             }
             const FlatFilePos tx_position{block_index->nFile, block_index->nDataPos + key.pos.tx_offset_in_block};
             candidates.emplace_back(tx_position, candidate_block_hash, key.pos.block_seq, in_active_chain);
@@ -216,15 +210,15 @@ std::optional<TxIndexResult> TxIndex::FindTx(const Txid& tx_hash) const
     for (const auto& candidate : candidates) {
         AutoFile file{m_chainstate->m_blockman.OpenBlockFile(candidate.tx_position, /*fReadOnly=*/true)};
         if (file.IsNull()) {
-            WarnAndThrowErr("%s: Failed to open block file for txid %s at %s in block %s",
-                            GetName(), tx_hash.ToString(), candidate.tx_position.ToString(), candidate.block_hash.ToString());
+            FatalError("%s: Failed to open block file for txid %s at %s in block %s", GetName(), tx_hash.ToString(), candidate.tx_position.ToString(), candidate.block_hash.ToString());
+            std::abort();
         }
         CTransactionRef tx;
         try {
             file >> TX_WITH_WITNESS(tx);
         } catch (const std::exception& e) {
-            WarnAndThrowErr("%s: Deserialize or I/O error (%s). txid %s at %s in block %s",
-                            GetName(), e.what(), tx_hash.ToString(), candidate.tx_position.ToString(), candidate.block_hash.ToString());
+            FatalError("%s: Deserialize or I/O error (%s). txid %s at %s in block %s", GetName(), e.what(), tx_hash.ToString(), candidate.tx_position.ToString(), candidate.block_hash.ToString());
+            std::abort();
         }
         if (tx->GetHash() == tx_hash) {
             return TxIndexResult{candidate.block_hash, std::move(tx)};
@@ -238,19 +232,14 @@ std::optional<TxIndexResult> TxIndex::FindTx(const Txid& tx_hash) const
 std::optional<TxIndexResult> TxIndex::FindLegacyTx(const Txid& tx_hash) const
 {
     CDiskTxPos postx;
-    const auto read{m_db->TryRead(txindex::LegacyTxKey(tx_hash), postx)};
-    if (!read) {
-        WarnAndThrowErr("%s: Failed to read legacy entry for txid %s: %s",
-                        GetName(), tx_hash.ToString(), read.error().err_msg);
-    }
-    if (!read.value()) {
+    if (!m_db->Read(txindex::LegacyTxKey(tx_hash), postx)) {
         return std::nullopt;
     }
 
     AutoFile file{m_chainstate->m_blockman.OpenBlockFile(postx, /*fReadOnly=*/true)};
     if (file.IsNull()) {
-        WarnAndThrowErr("%s: Failed to open block file for txid %s at %s",
-                        GetName(), tx_hash.ToString(), postx.ToString());
+        FatalError("%s: Failed to open block file for txid %s at %s", GetName(), tx_hash.ToString(), postx.ToString());
+        std::abort();
     }
     CBlockHeader header;
     CTransactionRef tx;
@@ -259,12 +248,12 @@ std::optional<TxIndexResult> TxIndex::FindLegacyTx(const Txid& tx_hash) const
         file.seek(postx.nTxOffset, SEEK_CUR);
         file >> TX_WITH_WITNESS(tx);
     } catch (const std::exception& e) {
-        WarnAndThrowErr("%s: Deserialize or I/O error (%s). txid %s at %s",
-                        GetName(), e.what(), tx_hash.ToString(), postx.ToString());
+        FatalError("%s: Deserialize or I/O error (%s). txid %s at %s", GetName(), e.what(), tx_hash.ToString(), postx.ToString());
+        std::abort();
     }
     if (tx->GetHash() != tx_hash) {
-        WarnAndThrowErr("%s: txid mismatch in legacy index. txid %s at %s",
-                        GetName(), tx_hash.ToString(), postx.ToString());
+        FatalError("%s: txid mismatch in legacy index. txid %s at %s", GetName(), tx_hash.ToString(), postx.ToString());
+        std::abort();
     }
     return TxIndexResult{header.GetHash(), std::move(tx)};
 }

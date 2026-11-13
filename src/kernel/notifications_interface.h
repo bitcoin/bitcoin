@@ -54,10 +54,10 @@ public:
     //! The fatal error notification is sent to notify the user when an error
     //! occurs in kernel code that can't be recovered from. After this
     //! notification is sent, whatever function triggered the error should also
-    //! return an error code or raise an exception. Applications can choose to
-    //! handle the fatal error notification by logging the error, or notifying
-    //! the user, or triggering an early shutdown as a precaution against
-    //! causing more errors.
+    //! return an error code, raise an exception, or abort the process.
+    //! Applications can choose to handle the fatal error notification by
+    //! logging the error, or notifying the user, or triggering an early
+    //! shutdown as a precaution against causing more errors.
     virtual void fatalError(const bilingual_str& message) {}
 };
 } // namespace kernel

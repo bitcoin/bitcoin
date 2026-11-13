@@ -566,6 +566,11 @@ class TestNode():
             kwargs["expected_ret_code"] = 1 if expect_error else 0  # Whether node shutdown return EXIT_FAILURE or EXIT_SUCCESS
         self.wait_until(lambda: self.is_node_stopped(**kwargs), timeout=timeout)
 
+    def wait_until_aborted(self, *, fatal_error):
+        """Wait until the node has exited through std::abort() after reporting a fatal internal error starting with fatal_error."""
+        self.wait_until_stopped(expected_ret_code=[-6, 3, 0xC0000409],  # Unix, Windows native, Windows cross builds
+                                expected_stderr=re.compile(f"A fatal internal error occurred, see .* for details: {re.escape(fatal_error)}"))
+
     def kill_process(self):
         self.process.kill()
         self.wait_until_stopped(expected_ret_code=1 if platform.system() == "Windows" else -9)

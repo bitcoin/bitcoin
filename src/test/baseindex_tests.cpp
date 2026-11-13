@@ -171,7 +171,8 @@ public:
     {
         const fs::path path = gArgs.GetDataDirNet() / "index";
         fs::create_directories(path);
-        m_db = std::make_unique<BaseIndex::DB>(path / "db", /*n_cache_size=*/0, /*f_memory=*/true, /*f_wipe=*/false);
+        m_db = std::make_unique<BaseIndex::DB>(path / "db", /*n_cache_size=*/0, /*f_memory=*/true, /*f_wipe=*/false,
+                                               /*f_obfuscate=*/false, /*f_bloom=*/true, GetNotifications());
     }
 
     bool AllowPrune() const override { return false; }
