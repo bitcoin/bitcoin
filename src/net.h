@@ -100,6 +100,14 @@ inline constexpr bool DEFAULT_PRIVATE_BROADCAST{false};
 inline constexpr int NUM_FDS_MESSAGE_CAPTURE = 1;
 /** Interval for ASMap Health Check **/
 inline constexpr std::chrono::hours ASMAP_HEALTH_CHECK_INTERVAL{24};
+/** Interval for re-checking whether IPv4/IPv6 are reachable (if automatic detection is enabled). */
+inline constexpr std::chrono::minutes REACHABILITY_CHECK_INTERVAL{10};
+/**
+ * Delay of the first reachability check after startup. Checking right at startup could wrongly
+ * mark a network as unreachable during short gaps at boot (e.g. while addresses are still being
+ * configured), which would drop its anchors and fixed seeds for the entire run.
+ */
+inline constexpr std::chrono::minutes REACHABILITY_FIRST_CHECK_DELAY{1};
 
 inline constexpr bool DEFAULT_FORCEDNSSEED{false};
 inline constexpr bool DEFAULT_DNSSEED{true};
@@ -1119,6 +1127,8 @@ public:
         bool whitelist_forcerelay = DEFAULT_WHITELISTFORCERELAY;
         bool whitelist_relay = DEFAULT_WHITELISTRELAY;
         bool m_capture_messages = false;
+        /// Networks (only NET_IPV4/NET_IPV6) whose reachability is managed automatically, see CheckReachability().
+        std::vector<Network> m_reachability_check_nets;
     };
 
     void Init(const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_total_bytes_sent_mutex)
@@ -1158,6 +1168,7 @@ public:
         whitelist_forcerelay = connOptions.whitelist_forcerelay;
         whitelist_relay = connOptions.whitelist_relay;
         m_capture_messages = connOptions.m_capture_messages;
+        m_reachability_check_nets = connOptions.m_reachability_check_nets;
     }
 
     // test only
@@ -1456,6 +1467,12 @@ private:
     bool BindListenPort(const CService& bindAddr, bilingual_str& strError, NetPermissionFlags permissions);
     bool Bind(const CService& addr, unsigned int flags, NetPermissionFlags permissions);
     bool InitBinds(const Options& options);
+
+    /**
+     * Mark the networks in m_reachability_check_nets as reachable or unreachable, depending on
+     * whether the OS has a route to the global internet on them.
+     */
+    void CheckReachability();
 
     /// \anchor addcon
     void ThreadOpenAddedConnections() EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex,
@@ -1821,6 +1838,9 @@ private:
      * flag for whether messages are captured
      */
     bool m_capture_messages{false};
+
+    /** Networks whose reachability is managed automatically, see CheckReachability(). */
+    std::vector<Network> m_reachability_check_nets;
 
     /**
      * Mutex protecting m_i2p_sam_sessions.
