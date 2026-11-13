@@ -98,6 +98,17 @@ class OpenRPCDocTest(BitcoinTestFramework):
         stats = find_param(getblockstats, "stats")
         assert_equal(stats["schema"]["x-bitcoin-default-hint"], "all values")
 
+        self.log.info("Checking discriminated result annotations")
+        schema = getblock["result"]["schema"]
+        discriminator = schema["x-bitcoin-discriminated-result"]
+        assert_equal(discriminator, {"parameter": "verbosity", "parameterIndex": 1, "values": [0, 1, 2, 3]})
+        assert_equal(getblock["params"][discriminator["parameterIndex"]]["name"], discriminator["parameter"])
+        arms = schema["oneOf"]
+        vin2 = arms[discriminator["values"].index(2)]["properties"]["tx"]["items"]["properties"]["vin"]["items"]["properties"]
+        vin3 = arms[discriminator["values"].index(3)]["properties"]["tx"]["items"]["properties"]["vin"]["items"]["properties"]
+        assert "prevout" not in vin2
+        assert "prevout" in vin3
+
         self.log.info("Checking numeric amount result annotations")
         analyzepsbt = find_method(openrpc, "analyzepsbt")
         result_schema = analyzepsbt["result"]["schema"]
