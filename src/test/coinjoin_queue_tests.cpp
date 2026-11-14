@@ -2,20 +2,106 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <test/util/masternode.h>
 #include <test/util/setup_common.h>
 
 #include <active/masternode.h>
 #include <bls/bls.h>
 #include <coinjoin/coinjoin.h>
 #include <coinjoin/common.h>
+#include <coinjoin/walletman.h>
 #include <consensus/amount.h>
+#include <evo/deterministicmns.h>
+#include <masternode/meta.h>
+#include <masternode/sync.h>
+#include <net.h>
+#include <protocol.h>
+#include <script/standard.h>
+#include <streams.h>
+#include <validation.h>
 
 #include <uint256.h>
 
 #include <climits>
 #include <cstdint>
+#include <memory>
 
 #include <boost/test/unit_test.hpp>
+
+#ifdef ENABLE_WALLET
+namespace {
+// TestChainSetup only accepts checkpointed chain lengths, so 107 blocks plus -dip3params=109:500
+// is the shortest chain a ProRegTx can be mined on. Same setup as TestChainDIP3Setup in
+// evo_deterministicmns_tests.cpp.
+constexpr int DIP3_ACTIVATION_HEIGHT{109};
+
+//! A synced chain with one registered masternode whose operator key is known to the test, so
+//! DSQUEUE messages can be signed for real and pass every check that does not depend on their
+//! content.
+struct RegisteredMasternodeSetup : public TestChainSetup {
+    CBLSSecretKey operator_key;
+    uint256 protx_hash;
+
+    RegisteredMasternodeSetup() :
+        TestChainSetup(DIP3_ACTIVATION_HEIGHT - 2, CBaseChainParams::REGTEST, {"-dip3params=109:500"})
+    {
+        auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
+        // Activate DIP3, then register the masternode
+        MineBlock({});
+        CKey owner_key;
+        const auto protx = CreateProRegTx(*m_node.chainman, utxos, /*port=*/1,
+                                          GetScriptForDestination(PKHash(coinbaseKey.GetPubKey())), coinbaseKey,
+                                          owner_key, operator_key);
+        protx_hash = protx.GetHash();
+        MineBlock({protx});
+        BOOST_REQUIRE(m_node.dmnman->GetListAtChainTip().GetValidMN(protx_hash));
+
+        BOOST_REQUIRE(m_node.mn_metaman->LoadCache(/*load_cache=*/false));
+        // The bound is just a loop guard
+        for (int i = 0; i < 5 && !m_node.mn_sync->IsBlockchainSynced(); ++i) {
+            m_node.mn_sync->SwitchToNextAsset();
+        }
+        BOOST_REQUIRE(m_node.mn_sync->IsBlockchainSynced());
+    }
+
+    void MineBlock(const std::vector<CMutableTransaction>& txns)
+    {
+        CreateAndProcessBlock(txns, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+        m_node.dmnman->UpdatedBlockTip(WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Tip()));
+    }
+
+    CCoinJoinQueue MakeQueue(int denom) const
+    {
+        return CCoinJoinQueue{denom, COutPoint{}, protx_hash, GetAdjustedTime(), /*fReady=*/false};
+    }
+
+    static void Sign(CCoinJoinQueue& dsq, const CBLSSecretKey& key)
+    {
+        dsq.vchSig = key.Sign(dsq.GetSignatureHash(), /*specificLegacyScheme=*/false)
+                         .ToByteVector(/*specificLegacyScheme=*/false);
+    }
+};
+
+std::unique_ptr<CNode> MakePeer(NodeId id)
+{
+    in_addr peer_in_addr{};
+    peer_in_addr.s_addr = htonl(0x0a000001 + static_cast<uint32_t>(id));
+    auto peer{std::make_unique<CNode>(id,
+                                      /*sock=*/nullptr,
+                                      /*addrIn=*/CAddress{CService{peer_in_addr, 9999}, NODE_NETWORK},
+                                      /*nKeyedNetGroupIn=*/0,
+                                      /*nLocalHostNonceIn=*/0,
+                                      /*addrBindIn=*/CAddress{},
+                                      /*addrNameIn=*/std::string{},
+                                      /*conn_type_in=*/ConnectionType::INBOUND,
+                                      /*inbound_onion=*/false)};
+    peer->nVersion = PROTOCOL_VERSION;
+    peer->SetCommonVersion(PROTOCOL_VERSION);
+    peer->fSuccessfullyConnected = true;
+    return peer;
+}
+} // namespace
+#endif // ENABLE_WALLET
 
 BOOST_FIXTURE_TEST_SUITE(coinjoin_queue_tests, TestingSetup)
 
@@ -259,5 +345,52 @@ BOOST_AUTO_TEST_CASE(queuemanager_try_check_duplicate)
     // Different masternode: allowed.
     BOOST_CHECK(!is_dup(MakeQueue(denom, now, /*fReady=*/false, other_mn)));
 }
+
+#ifdef ENABLE_WALLET
+BOOST_FIXTURE_TEST_CASE(client_rejects_invalid_queues, RegisteredMasternodeSetup)
+{
+    auto& cj_walletman = *Assert(m_node.cj_walletman);
+    const auto peer{MakePeer(/*id=*/0)};
+    auto process = [&](const CCoinJoinQueue& dsq) {
+        CDataStream stream{SER_NETWORK, PROTOCOL_VERSION};
+        stream << dsq;
+        return cj_walletman.processMessage(*peer, m_node.chainman->ActiveChainstate(), *m_node.connman,
+                                           *m_node.mempool, NetMsgType::DSQUEUE, stream);
+    };
+    auto check_rejected = [&](CCoinJoinQueue dsq, const CBLSSecretKey& key, int score) {
+        Sign(dsq, key);
+        const auto result{process(dsq)};
+        BOOST_REQUIRE(result.m_error.has_value());
+        BOOST_CHECK_EQUAL(result.m_error->score, score);
+        BOOST_CHECK(!cj_walletman.hasQueue(dsq.GetHash()));
+    };
+
+    const int denom{CoinJoin::AmountToDenomination(CoinJoin::GetSmallestDenomination())};
+
+    BOOST_TEST_CONTEXT("invalid denomination") check_rejected(MakeQueue(/*denom=*/999), operator_key, 10);
+
+    auto ready_invalid{MakeQueue(/*denom=*/999)};
+    ready_invalid.fReady = true;
+    BOOST_TEST_CONTEXT("invalid denomination, ready") check_rejected(ready_invalid, operator_key, 10);
+
+    auto no_protx{MakeQueue(denom)};
+    no_protx.m_protxHash.SetNull();
+    BOOST_TEST_CONTEXT("no masternode") check_rejected(no_protx, operator_key, 100);
+
+    auto unknown_protx{MakeQueue(denom)};
+    unknown_protx.m_protxHash = uint256::ONE;
+    BOOST_TEST_CONTEXT("unknown masternode") check_rejected(unknown_protx, operator_key, 10);
+
+    CBLSSecretKey other_key;
+    other_key.MakeNewKey();
+    BOOST_TEST_CONTEXT("wrong signer") check_rejected(MakeQueue(denom), other_key, 10);
+
+    // A valid queue from the same masternode is accepted
+    auto valid{MakeQueue(denom)};
+    Sign(valid, operator_key);
+    BOOST_CHECK(!process(valid).m_error.has_value());
+    BOOST_CHECK(cj_walletman.hasQueue(valid.GetHash()));
+}
+#endif // ENABLE_WALLET
 
 BOOST_AUTO_TEST_SUITE_END()

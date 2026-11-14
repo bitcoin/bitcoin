@@ -258,49 +258,28 @@ MessageProcessingResult CJWalletManagerImpl::ProcessDSQueue(NodeId from, CConnma
     MessageProcessingResult ret{};
     ret.m_to_erase = CInv{MSG_DSQ, dsq.GetHash()};
 
-    if (dsq.masternodeOutpoint.IsNull() && dsq.m_protxHash.IsNull()) {
-        ret.m_error = MisbehavingError{100};
-        return ret;
-    }
-
     const auto tip_mn_list = m_dmnman.GetListAtChainTip();
-    if (dsq.masternodeOutpoint.IsNull()) {
-        if (auto dmn = tip_mn_list.GetValidMN(dsq.m_protxHash)) {
-            dsq.masternodeOutpoint = dmn->collateralOutpoint;
-        } else {
-            ret.m_error = MisbehavingError{10};
-            return ret;
-        }
-    }
 
     {
         LOCK(cs_ProcessDSQueue);
 
-        if (m_queueman->HasQueue(dsq.GetHash())) return ret;
-
-        if (m_queueman->HasQueueFromMasternode(dsq.masternodeOutpoint, dsq.fReady)) {
-            // no way the same mn can send another dsq with the same readiness this soon
-            LogPrint(BCLog::COINJOIN, /* Continued */
-                     "DSQUEUE -- Peer %d is sending WAY too many dsq messages for a masternode with collateral %s\n",
-                     from, dsq.masternodeOutpoint.ToStringShort());
+        const auto validation = CoinJoin::ValidateDSQueue(dsq, tip_mn_list, [this, from](const CCoinJoinQueue& q) {
+            if (m_queueman->HasQueue(q.GetHash())) return true;
+            if (m_queueman->HasQueueFromMasternode(q.masternodeOutpoint, q.fReady)) {
+                // no way the same mn can send another dsq with the same readiness this soon
+                LogPrint(BCLog::COINJOIN, /* Continued */
+                         "DSQUEUE -- Peer %d is sending WAY too many dsq messages for a masternode with collateral %s\n",
+                         from, q.masternodeOutpoint.ToStringShort());
+                return true;
+            }
+            return false;
+        });
+        if (validation.misbehavior > 0) {
+            ret.m_error = MisbehavingError{validation.misbehavior};
             return ret;
         }
-
-        LogPrint(BCLog::COINJOIN, "DSQUEUE -- %s new\n", dsq.ToString());
-
-        if (dsq.IsTimeOutOfBounds()) return ret;
-
-        auto dmn = tip_mn_list.GetValidMNByCollateral(dsq.masternodeOutpoint);
+        const auto& dmn = validation.dmn;
         if (!dmn) return ret;
-
-        if (dsq.m_protxHash.IsNull()) {
-            dsq.m_protxHash = dmn->proTxHash;
-        }
-
-        if (!dsq.CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
-            ret.m_error = MisbehavingError{10};
-            return ret;
-        }
 
         // if the queue is ready, submit if we can
         if (dsq.fReady && ForAnyCJClientMan([&connman, &dmn](CCoinJoinClientManager& clientman) {

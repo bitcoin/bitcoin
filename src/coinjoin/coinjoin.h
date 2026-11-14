@@ -8,6 +8,7 @@
 #include <coinjoin/common.h>
 
 #include <core_io.h>
+#include <evo/types.h>
 #include <kernel/cs_main.h> // IWYU pragma: export
 #include <netaddress.h>
 #include <primitives/block.h>
@@ -20,6 +21,7 @@
 #include <version.h>
 
 #include <atomic>
+#include <functional>
 #include <map>
 #include <optional>
 #include <utility>
@@ -29,6 +31,7 @@
 class Chainstate;
 class CBLSPublicKey;
 class CBlockIndex;
+class CDeterministicMNList;
 class ChainstateManager;
 class CTxMemPool;
 
@@ -536,6 +539,24 @@ namespace CoinJoin
      */
     bool ValidateFinalTxComposition(size_t nTotalInputs, size_t nTotalOutputs,
                                     size_t nLargerInputs, size_t nLargerOutputs);
+
+    struct DSQueueValidation {
+        //! The masternode that signed the queue, null if the queue was rejected
+        CDeterministicMNCPtr dmn{};
+        //! Score to penalize the sending peer with, 0 if the queue was accepted or the rejection
+        //! is not the peer's fault
+        int misbehavior{0};
+    };
+
+    /**
+     * Runs the DSQUEUE checks common to mixing clients and servers and fills in the queue's
+     * masternodeOutpoint from the masternode list.
+     * @param is_duplicate Called once the outpoint is known and before the signature is verified,
+     *                     so duplicates are dropped without a BLS check. Returning true rejects
+     *                     the queue without a penalty.
+     */
+    DSQueueValidation ValidateDSQueue(CCoinJoinQueue& dsq, const CDeterministicMNList& mn_list,
+                                      const std::function<bool(const CCoinJoinQueue&)>& is_duplicate);
 }
 
 class CDSTXManager

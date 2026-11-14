@@ -138,52 +138,20 @@ void CCoinJoinServer::ProcessDSQUEUE(NodeId from, CDataStream& vRecv)
 
     WITH_LOCK(cs_main, m_peer_manager->PeerEraseObjectRequest(from, CInv{MSG_DSQ, dsq.GetHash()}));
 
-    // Validate denomination first
-    if (!CoinJoin::IsValidDenomination(dsq.nDenom)) {
-        LogPrint(BCLog::COINJOIN, "DSQUEUE -- invalid denomination %d from peer %d\n", dsq.nDenom, from);
-        m_peer_manager->PeerMisbehaving(from, 10);
-        return;
-    }
-
-    if (dsq.masternodeOutpoint.IsNull() && dsq.m_protxHash.IsNull()) {
-        m_peer_manager->PeerMisbehaving(from, 100);
-        return;
-    }
-
     const auto tip_mn_list = m_dmnman.GetListAtChainTip();
-    if (dsq.masternodeOutpoint.IsNull()) {
-        if (auto dmn = tip_mn_list.GetValidMN(dsq.m_protxHash)) {
-            dsq.masternodeOutpoint = dmn->collateralOutpoint;
-        } else {
-            m_peer_manager->PeerMisbehaving(from, 10);
-            return;
-        }
-    }
-
-    {
-        const auto isDup = m_queueman.TryCheckDuplicate(dsq);
-        if (!isDup.has_value()) return;
+    const auto [dmn, misbehavior] = CoinJoin::ValidateDSQueue(dsq, tip_mn_list, [this, from](const CCoinJoinQueue& q) {
+        const auto isDup = m_queueman.TryCheckDuplicate(q);
+        if (!isDup.has_value()) return true;
         if (*isDup) {
-            LogPrint(BCLog::COINJOIN, "DSQUEUE -- Peer %d is sending WAY too many dsq messages for a masternode with collateral %s\n", from, dsq.masternodeOutpoint.ToStringShort());
-            return;
+            LogPrint(BCLog::COINJOIN, "DSQUEUE -- Peer %d is sending WAY too many dsq messages for a masternode with collateral %s\n", from, q.masternodeOutpoint.ToStringShort());
         }
-    }
-
-    LogPrint(BCLog::COINJOIN, "DSQUEUE -- %s new\n", dsq.ToString());
-
-    if (dsq.IsTimeOutOfBounds()) return;
-
-    auto dmn = tip_mn_list.GetValidMNByCollateral(dsq.masternodeOutpoint);
-    if (!dmn) return;
-
-    if (dsq.m_protxHash.IsNull()) {
-        dsq.m_protxHash = dmn->proTxHash;
-    }
-
-    if (!dsq.CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
-        m_peer_manager->PeerMisbehaving(from, 10);
+        return *isDup;
+    });
+    if (misbehavior > 0) {
+        m_peer_manager->PeerMisbehaving(from, misbehavior);
         return;
     }
+    if (!dmn) return;
 
     if (!dsq.fReady) {
         //don't allow a few nodes to dominate the queuing process

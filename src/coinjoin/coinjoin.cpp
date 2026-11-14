@@ -6,6 +6,7 @@
 
 #include <bls/bls.h>
 #include <chainlock/chainlock.h>
+#include <evo/deterministicmns.h>
 #include <instantsend/instantsend.h>
 #include <util/helpers.h>
 
@@ -766,4 +767,44 @@ bool CoinJoin::ValidateFinalTxComposition(size_t nTotalInputs, size_t nTotalOutp
     const size_t nSessionOutputs = nTotalOutputs - nLargerOutputs;
     return nSessionInputs >= nLargerOutputs * size_t(PROMOTION_RATIO) &&
            nSessionOutputs >= nLargerInputs * size_t(PROMOTION_RATIO);
+}
+
+CoinJoin::DSQueueValidation CoinJoin::ValidateDSQueue(CCoinJoinQueue& dsq, const CDeterministicMNList& mn_list,
+                                                      const std::function<bool(const CCoinJoinQueue&)>& is_duplicate)
+{
+    if (!IsValidDenomination(dsq.nDenom)) {
+        LogPrint(BCLog::COINJOIN, "DSQUEUE -- invalid denomination %d\n", dsq.nDenom);
+        return {.misbehavior = 10};
+    }
+
+    if (dsq.masternodeOutpoint.IsNull() && dsq.m_protxHash.IsNull()) {
+        return {.misbehavior = 100};
+    }
+
+    if (dsq.masternodeOutpoint.IsNull()) {
+        if (auto dmn = mn_list.GetValidMN(dsq.m_protxHash)) {
+            dsq.masternodeOutpoint = dmn->collateralOutpoint;
+        } else {
+            return {.misbehavior = 10};
+        }
+    }
+
+    if (is_duplicate(dsq)) return {};
+
+    LogPrint(BCLog::COINJOIN, "DSQUEUE -- %s new\n", dsq.ToString());
+
+    if (dsq.IsTimeOutOfBounds()) return {};
+
+    auto dmn = mn_list.GetValidMNByCollateral(dsq.masternodeOutpoint);
+    if (!dmn) return {};
+
+    if (dsq.m_protxHash.IsNull()) {
+        dsq.m_protxHash = dmn->proTxHash;
+    }
+
+    if (!dsq.CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
+        return {.misbehavior = 10};
+    }
+
+    return {.dmn = std::move(dmn)};
 }
