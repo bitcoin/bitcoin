@@ -28,7 +28,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.extra_args = [['-keypool=100']]
+        self.extra_args = [['-keypool=100', '-deprecatedrpc=iswatchonly']]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -104,6 +104,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
         addr_info = wallet.getaddressinfo(addr)
         assert addr_info['desc'].startswith('pkh(')
         assert_equal(addr_info['hdkeypath'], 'm/44h/1h/0h/0/0')
+        assert_equal(addr_info['iswatchonly'], False)
 
         addr = wallet.getnewaddress("", "p2sh-segwit")
         addr_info = wallet.getaddressinfo(addr)
