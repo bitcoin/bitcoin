@@ -145,6 +145,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   rpc/util.cpp
   scheduler.cpp
   script/descriptor.cpp
+  script/descriptor_analyzer.cpp
   script/miniscript.cpp
   script/parsing.cpp
   script/sign.cpp
