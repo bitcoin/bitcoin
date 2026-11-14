@@ -12,6 +12,7 @@
 #include <common/url.h>
 #include <compat/compat.h>
 #include <logging.h>
+#include <netaddress.h>
 #include <netbase.h>
 #include <node/interface_ui.h>
 #include <rpc/protocol.h>
@@ -127,6 +128,8 @@ std::string_view RequestMethodString(HTTPRequestMethod m)
     assert(false);
 }
 
+namespace {
+
 static void WriteNoStoreErrorReply(HTTPRequest& req, HTTPStatusCode status, std::string_view reply = {})
 {
     req.WriteHeader("Cache-Control", "no-store");
@@ -205,10 +208,17 @@ static void RejectRequest(std::unique_ptr<HTTPRequest> hreq)
     WriteNoStoreErrorReply(*hreq, HTTP_SERVICE_UNAVAILABLE);
 }
 
-static std::vector<std::pair<std::string, uint16_t>> GetBindAddresses()
+struct BindAddress {
+    CService addr;
+};
+
+static std::vector<BindAddress> GetBindAddresses()
 {
-    uint16_t http_port{static_cast<uint16_t>(gArgs.GetIntArg("-rpcport", BaseParams().RPCPort()))};
-    std::vector<std::pair<std::string, uint16_t>> endpoints;
+    auto http_port{gArgs.GetArg<uint16_t>("-rpcport", BaseParams().RPCPort())};
+    std::vector<BindAddress> endpoints;
+
+    // Don't allow hostname lookups when binding to local interfaces.
+    const bool allow_names{false};
 
     // Determine what addresses to bind to
     // To prevent misconfiguration and accidental exposure of the RPC
@@ -216,8 +226,10 @@ static std::vector<std::pair<std::string, uint16_t>> GetBindAddresses()
     // together. If either is missing, ignore both values, bind to localhost
     // instead, and log warnings.
     if (gArgs.GetArgs("-rpcallowip").empty() || gArgs.GetArgs("-rpcbind").empty()) { // Default to loopback if not allowing external IPs
-        endpoints.emplace_back("::1", http_port);
-        endpoints.emplace_back("127.0.0.1", http_port);
+        // Numeric literals always parse, InitHTTPAllowList() relies on the same.
+        // Never fall back to CService{}, which is [::]:0 and binds every interface.
+        endpoints.push_back({.addr = Lookup("::1", http_port, /*fAllowLookup=*/allow_names).value()});
+        endpoints.push_back({.addr = Lookup("127.0.0.1", http_port, /*fAllowLookup=*/allow_names).value()});
         if (!gArgs.GetArgs("-rpcallowip").empty()) {
             LogWarning("Option -rpcallowip was specified without -rpcbind; this doesn't usually make sense");
         }
@@ -232,11 +244,18 @@ static std::vector<std::pair<std::string, uint16_t>> GetBindAddresses()
                 LogError("%s\n", InvalidPortErrMsg("-rpcbind", strRPCBind).original);
                 return {}; // empty
             }
-            endpoints.emplace_back(host, port);
+            if (const std::optional addr{Lookup(host, port, /*fAllowLookup=*/allow_names)}) {
+                endpoints.push_back({.addr = *addr});
+            } else {
+                LogWarning("Could not lookup RPC bind address '%s' port %i "
+                           "(only numeric addresses are allowed).", host, port);
+            }
         }
     }
     return endpoints;
 }
+
+} // namespace
 
 void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPRequestHandler &handler)
 {
@@ -1333,23 +1352,18 @@ bool InitHTTPServer()
     g_http_server->SetMaxConnections(std::max(gArgs.GetArg<int>("-rpcmaxconnections", DEFAULT_MAX_HTTP_CONNECTIONS), 1));
 
     // Bind HTTP server to specified addresses
-    std::vector<std::pair<std::string, uint16_t>> endpoints{GetBindAddresses()};
+    std::vector<BindAddress> endpoints{GetBindAddresses()};
     bool bind_success{false};
-    for (const auto& [address_string, port] : endpoints) {
-        LogInfo("Binding RPC on address %s port %i", address_string, port);
-        const std::optional<CService> addr{Lookup(address_string, port, false)};
-        if (addr) {
-            if (addr->IsBindAny()) {
-                LogWarning("The RPC server is not safe to expose to untrusted networks such as the public internet");
-            }
-            auto result{g_http_server->BindAndStartListening(addr.value())};
-            if (!result) {
-                LogWarning("Binding RPC on address %s failed: %s", addr->ToStringAddrPort(), result.error());
-            } else {
-                bind_success = true;
-            }
+    for (const auto& [addr] : endpoints) {
+        LogInfo("Binding RPC on address '%s'", addr.ToStringAddrPort());
+        if (addr.IsBindAny()) {
+            LogWarning("The RPC server is not safe to expose to untrusted networks such as the public internet");
+        }
+        auto result{g_http_server->BindAndStartListening(addr)};
+        if (!result) {
+            LogWarning("Binding RPC on address '%s' failed: %s", addr.ToStringAddrPort(), result.error());
         } else {
-            LogWarning("Could not bind RPC on address %s port %i: Address lookup failed.", address_string, port);
+            bind_success = true;
         }
     }
 
