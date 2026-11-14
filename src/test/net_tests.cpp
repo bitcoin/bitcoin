@@ -21,6 +21,7 @@
 #include <test/util/net.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <test/util/validation.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -138,6 +139,73 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     BOOST_CHECK(pnode4->IsInboundConn() == true);
     BOOST_CHECK(pnode4->m_inbound_onion == true);
     BOOST_CHECK_EQUAL(pnode4->ConnectedThroughNetwork(), Network::NET_ONION);
+}
+
+// A continuously full send buffer must time out; draining it permits a fresh pause interval.
+BOOST_AUTO_TEST_CASE(paused_send_timeout)
+{
+    FakeNodeClock clock{1'700'000'000s};
+    ConnmanTestMsg connman{/*seed0=*/0, /*seed1=*/0, *m_node.addrman, *m_node.netgroupman, Params()};
+    CConnman::Options options;
+    options.nSendBufferMaxSize = 1024;
+    connman.Init(options);
+    CNode node{/*id=*/0,
+               /*sock=*/nullptr,
+               /*addrIn=*/CAddress{},
+               /*nKeyedNetGroupIn=*/0,
+               /*nLocalHostNonceIn=*/0,
+               /*addrBindIn=*/CService{},
+               /*addrNameIn=*/"",
+               /*conn_type_in=*/ConnectionType::INBOUND,
+               /*inbound_onion=*/false,
+               /*network_key=*/0};
+    node.fSuccessfullyConnected = true;
+
+    auto queue_message = [&] {
+        CSerializedNetMsg msg;
+        msg.m_type = NetMsgType::TX;
+        msg.data.resize(2048);
+        connman.PushMessage(&node, std::move(msg));
+    };
+    auto inactive = [&] {
+        // Recent socket activity must not hide a continuously full send buffer.
+        node.m_last_send = node.m_last_recv = NodeClock::now();
+        return connman.InactivityCheckPublic(node, NodeClock::now());
+    };
+
+    BOOST_CHECK(!node.fPauseSend);
+    queue_message();
+    BOOST_REQUIRE(node.fPauseSend);
+    const auto first_pause{node.m_pause_send_since.load()};
+    BOOST_CHECK(first_pause == NodeClock::now());
+
+    clock += TIMEOUT_INTERVAL;
+    queue_message();
+    BOOST_CHECK(node.m_pause_send_since.load() == first_pause);
+    connman.SocketSendDataPublic(node);
+    BOOST_CHECK(node.m_pause_send_since.load() == first_pause);
+    BOOST_CHECK(!inactive()); // Disconnect only after the full timeout interval has elapsed.
+    clock += 1s;
+    BOOST_CHECK(inactive());
+
+    // Drain through the real send path with a socket that accepts every byte.
+    const auto sent_before{WITH_LOCK(node.cs_vSend, return node.nSendBytes)};
+    WITH_LOCK(node.m_sock_mutex, node.m_sock = std::make_shared<ZeroSock>());
+    connman.SocketSendDataPublic(node);
+    BOOST_CHECK(WITH_LOCK(node.cs_vSend, return node.nSendBytes) > sent_before);
+    BOOST_REQUIRE(!node.fPauseSend);
+    BOOST_CHECK(!inactive());
+
+    // A subsequent pause gets a fresh deadline rather than inheriting the old one.
+    WITH_LOCK(node.m_sock_mutex, node.m_sock.reset());
+    queue_message();
+    BOOST_REQUIRE(node.fPauseSend);
+    BOOST_CHECK(node.m_pause_send_since.load() == NodeClock::now());
+    BOOST_CHECK(node.m_pause_send_since.load() != first_pause);
+    clock += TIMEOUT_INTERVAL;
+    BOOST_CHECK(!inactive());
+    clock += 1s;
+    BOOST_CHECK(inactive());
 }
 
 BOOST_AUTO_TEST_CASE(cnetaddr_basic)

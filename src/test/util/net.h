@@ -47,6 +47,17 @@ struct ConnmanTestMsg : public CConnman {
         m_peer_connect_timeout = timeout;
     }
 
+    bool InactivityCheckPublic(const CNode& node, NodeClock::time_point now) const
+    {
+        return InactivityCheck(node, now);
+    }
+
+    void SocketSendDataPublic(CNode& node) const
+    {
+        LOCK(node.cs_vSend);
+        SocketSendData(node);
+    }
+
     void ResetAddrCache();
     void ResetMaxOutboundCycle();
     /// Reset the internal state.
