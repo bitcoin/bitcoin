@@ -314,6 +314,9 @@ static RPCHelpMan masternode_winners()
 
     if (!request.params[0].isNull()) {
         nCount = request.params[0].getInt<int>();
+        if (nCount < 0) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
+        }
     }
 
     if (!request.params[1].isNull()) {

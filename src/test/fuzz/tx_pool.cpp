@@ -147,7 +147,7 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
     outpoints_rbf = outpoints_supply;
 
     // The sum of the values of all spendable outpoints
-    constexpr CAmount SUPPLY_TOTAL{COINBASE_MATURITY * 50 * COIN};
+    constexpr CAmount SUPPLY_TOTAL{COINBASE_MATURITY * 500 * COIN};
 
     SetMempoolConstraints(*node.args, fuzzed_data_provider);
     CTxMemPool tx_pool_{MakeMempool(fuzzed_data_provider, node)};
@@ -166,8 +166,8 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool)
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 300)
     {
         {
-            // Total supply is all outpoints
-            CAmount supply_now{0};
+            // Total supply is the mempool fee + all outpoints
+            CAmount supply_now{WITH_LOCK(tx_pool.cs, return tx_pool.GetTotalFee())};
             for (const auto& op : outpoints_supply) {
                 supply_now += GetAmount(op);
             }

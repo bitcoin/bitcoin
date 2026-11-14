@@ -1320,7 +1320,9 @@ static RPCHelpMan verifyislock()
         }
     }
 
-    CHECK_NONFATAL(pBlockIndex != nullptr);
+    if (pBlockIndex == nullptr) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
+    }
 
     CBLSSignature sig;
     const bool use_bls_legacy{!DeploymentActiveAfter(pBlockIndex, chainman.GetConsensus(), Consensus::DEPLOYMENT_V19)};

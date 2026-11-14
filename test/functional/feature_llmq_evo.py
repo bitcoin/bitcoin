@@ -20,7 +20,7 @@ from test_framework.test_framework import (
     MasternodeInfo,
 )
 from test_framework.util import (
-    assert_equal, assert_greater_than_or_equal,
+    assert_equal, assert_greater_than_or_equal, assert_raises_rpc_error,
 )
 
 
@@ -200,6 +200,7 @@ class LLMQEvoNodesTest(DashTestFramework):
         assert_equal(detailed_count['evo']['total'], expected_evo_count)
 
     def test_masternode_winners(self, mn_rr_active=False):
+        assert_raises_rpc_error(-8, "Negative count", self.nodes[0].masternode, 'winners', -1)
         # ignore recent winners, test future ones only
         # we get up to 21 entries here: tip + up to 20 future payees
         winners = self.nodes[0].masternode('winners', 0)
