@@ -502,8 +502,6 @@ class SendallTest(BitcoinTestFramework):
         self.assert_sendall_bump_fee_over_limit(fee_rate=400, error="Fee exceeds maximum configured by user (maxtxfee)")
         self.restart_node(0)
         self.reload_wallets()
-        self.restart_node(0)
-        self.reload_wallets()
 
     @cleanup
     def sendall_anti_fee_sniping(self):
