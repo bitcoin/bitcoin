@@ -20,7 +20,6 @@ class WalletHDTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.extra_args = [[], ['-keypool=0']]
         self.noban_tx_relay = True  # faster tx relay
 
     def skip_test_if_missing_module(self):
@@ -164,7 +163,7 @@ class WalletHDTest(BitcoinTestFramework):
             self.nodes[1].datadir_path / "hd.bak",
             self.nodes[1].wallets_path / self.default_wallet_name / self.wallet_data_filename
         )
-        self.start_node(1, extra_args=self.extra_args[1])
+        self.start_node(1)
         self.connect_nodes(0, 1)
         self.sync_all()
         # Wallet automatically scans blocks older than key on startup
