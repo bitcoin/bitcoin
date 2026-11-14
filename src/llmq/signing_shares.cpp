@@ -222,6 +222,25 @@ void CSigSharesNodeState::RemoveSession(const uint256& signHash)
     pendingIncomingSigShares.EraseAllForSignHash(signHash);
 }
 
+static void ReleaseRequestForDroppedSigShare(SigShareMap<std::pair<NodeId, int64_t>>& sigSharesRequested, NodeId nodeId,
+                                             CSigSharesNodeState& nodeState, const SigShareKey& key)
+{
+    // A banned node's requests were released when it was banned or have timed out, and it is never asked again.
+    if (nodeState.banned) {
+        return;
+    }
+    const auto* requested = sigSharesRequested.Get(key);
+    if (requested == nullptr || requested->first != nodeId || nodeState.pendingIncomingSigShares.Has(key)) {
+        return;
+    }
+    // We asked this node for the share but had no room for it. Make it requestable again, from this node too,
+    // instead of waiting for the request to time out and for another node to have announced it.
+    sigSharesRequested.Erase(key);
+    if (auto* session = nodeState.GetSessionBySignHash(key.first)) {
+        session->announced.Set(key.second, true);
+    }
+}
+
 //////////////////////
 
 CSigSharesManager::CSigSharesManager(CConnman& connman, const ChainstateManager& chainman, CSigningManager& _sigman,
@@ -437,7 +456,9 @@ bool CSigSharesManager::ProcessMessageBatchedSigShares(const CNode& pfrom, const
     LOCK(cs);
     auto& nodeState = nodeStates[pfrom.GetId()];
     for (const auto& s : sigSharesToProcess) {
-        TryAddPendingIncomingSigShare(pfrom.GetId(), nodeState, s);
+        if (!TryAddPendingIncomingSigShare(pfrom.GetId(), nodeState, s)) {
+            ReleaseRequestForDroppedSigShare(sigSharesRequested, pfrom.GetId(), nodeState, s.GetKey());
+        }
     }
     return true;
 }
