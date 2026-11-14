@@ -14,7 +14,7 @@ Then 5 iterations of 1/2/3 sending coins amongst
 themselves to get transactions in the wallets,
 and the miner mining one block.
 
-Wallets are backed up using dumpwallet/backupwallet.
+Wallets are backed up using backupwallet.
 Then 5 more iterations of transactions and mining a block.
 
 Miner then generates 101 more blocks, so any
@@ -23,12 +23,13 @@ transaction fees paid mature.
 Sanity check:
   Sum(1,2,3,4 balances) == 114*50
 
-1/2/3 are shutdown, and their wallets erased.
-Then restore using wallet.dat backup. And
-confirm 1/2/3/4 balances are same as before.
+The backups of 1/2/3 are restored on the miner
+using restorewallet, and their balances are
+confirmed to be the same as those of 1/2/3.
 
-Shutdown again, restore using importwallet,
-and confirm again balances are correct.
+Then restorewallet error cases, backing up onto
+the source wallet, and restoring on a pruned node
+are tested.
 """
 from decimal import Decimal
 import os
