@@ -47,7 +47,7 @@ QString BitcoinUnits::description(Unit unit)
 {
     const QString maybe_prefix{Params().NetworkIDString() == CBaseChainParams::MAIN ? "" : "Test"};
     switch(unit) {
-    case Unit::DASH:  return QString("%1Dash");
+    case Unit::DASH:  return QString("%1Dash").arg(maybe_prefix);
     case Unit::mDASH: return QString("Milli-%1Dash (1 / 1" THIN_SP_UTF8 "000)").arg(maybe_prefix);
     case Unit::uDASH: return QString("Micro-%1Dash (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)").arg(maybe_prefix);
     case Unit::duffs: return QString("Ten Nano-%1Dash (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)").arg(maybe_prefix);

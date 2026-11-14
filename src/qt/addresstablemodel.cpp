@@ -276,10 +276,11 @@ bool AddressTableModel::setData(const QModelIndex &index, const QVariant &value,
             // Double-check that we're not overwriting a receiving address
             else if(rec->type == AddressTableEntry::Sending)
             {
+                const std::string curLabel = rec->label.toStdString();
                 // Remove old entry
                 walletModel->wallet().delAddressBook(curAddress);
                 // Add new entry with new address
-                walletModel->wallet().setAddressBook(newAddress, value.toString().toStdString(), purpose);
+                walletModel->wallet().setAddressBook(newAddress, curLabel, purpose);
             }
         }
         return true;

@@ -80,6 +80,10 @@ void ProposalInfo::setClientModel(ClientModel* model)
     if (!m_client_model) {
         return;
     }
+    if (m_client_model->getOptionsModel()) {
+        connect(m_client_model->getOptionsModel(), &OptionsModel::displayUnitChanged,
+                this, &ProposalInfo::updateProposalInfo, Qt::UniqueConnection);
+    }
     m_feed_masternode = m_client_model->feedMasternode();
     m_feed_proposal = m_client_model->feedProposal();
     if (m_feed_masternode && m_feed_proposal) {
@@ -93,9 +97,6 @@ void ProposalInfo::setClientModel(ClientModel* model)
 void ProposalInfo::setWalletModel(WalletModel* model)
 {
     this->m_wallet_model = model;
-    if (!m_wallet_model) {
-        return;
-    }
     if (m_feed_masternode && m_feed_proposal) {
         updateProposalInfo();
     }

@@ -48,6 +48,7 @@ private Q_SLOTS:
 
 private:
     BitcoinUnit m_display_unit{BitcoinUnit::DASH};
+    bool m_creditpool_loaded{false};
     CAmount m_creditpool_diff{0};
     CAmount m_creditpool_limit{0};
     CAmount m_creditpool_locked{0};

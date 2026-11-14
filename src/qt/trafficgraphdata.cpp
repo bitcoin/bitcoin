@@ -264,7 +264,7 @@ TrafficGraphData::SampleQueue TrafficGraphData::getCurrentRangeQueueWithAverageB
 void TrafficGraphData::clear()
 {
     sampleMap.clear();
-    sampleMap.clear();
+    sampleStash.clear();
     currentSampleCounter = 0;
     nLastBytesIn = 0;
     nLastBytesOut = 0;
