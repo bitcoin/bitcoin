@@ -6,14 +6,42 @@
 #include <key_io.h>
 #include <pubkey.h>
 #include <script/descriptor.h>
+#include <script/descriptor_analyzer.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util/descriptor.h>
 #include <util/chaintype.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 
+#include <memory>
+#include <set>
+#include <span>
+
 //! The converter of mocked descriptors, needs to be initialized when the target is.
 MockedDescriptorConverter MOCKED_DESC_CONVERTER;
+
+/** Check the multisig analysis of the descriptors parsed from one string. */
+static void TestAnalysis(std::span<const std::unique_ptr<Descriptor>> descs)
+{
+    if (descs.empty()) return;
+    const auto analysis{AnalyzeDescriptor(descs)};
+    const size_t num_keys{analysis.policy.keys.occurrences.size()};
+    if (analysis.IsRecognized()) {
+        assert(analysis.issues.empty());
+        assert(analysis.threshold >= 1 && analysis.threshold <= analysis.cosigners.size());
+    } else {
+        // An unrecognized descriptor claims no setup.
+        assert(!analysis.issues.empty());
+        assert(!analysis.sorted && analysis.key_path == DescriptorAnalysis::KeyPath::NONE);
+        assert(analysis.threshold == 0 && analysis.cosigners.empty());
+    }
+    for (const size_t id : analysis.cosigners) assert(id < num_keys);
+    for (const auto& issue : analysis.issues) {
+        for (const size_t id : issue.keys) assert(id < num_keys);
+    }
+    // Each issue is reported once, even when several multipath branches have it.
+    assert(std::set(analysis.issues.begin(), analysis.issues.end()).size() == analysis.issues.size());
+}
 
 /** Check the public policy projection, including inferred key indices. */
 static void TestPolicy(const Descriptor& desc)
@@ -152,6 +180,7 @@ FUZZ_TARGET(mocked_descriptor_parse, .init = initialize_mocked_descriptor_parse)
             assert(d);
             TestDescriptor(*d, signing_provider, error, is_ranged, is_solvable);
         }
+        TestAnalysis(desc);
     }
 }
 
@@ -170,5 +199,6 @@ FUZZ_TARGET(descriptor_parse, .init = initialize_descriptor_parse)
             assert(d);
             TestDescriptor(*d, signing_provider, error, is_ranged, is_solvable);
         }
+        TestAnalysis(desc);
     }
 }
