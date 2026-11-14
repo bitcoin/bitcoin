@@ -208,6 +208,7 @@ public:
 
     explicit CNetAddr(const struct in6_addr& pipv6Addr, uint32_t scope = 0);
     bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
+    uint32_t GetScope() const { return m_scope_id; }
 
     friend bool operator==(const CNetAddr& a, const CNetAddr& b);
     friend bool operator<(const CNetAddr& a, const CNetAddr& b);

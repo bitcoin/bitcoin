@@ -28,6 +28,7 @@
 #include <util/time.h>
 #include <util/translation.h>
 
+#include <algorithm>
 #include <condition_variable>
 #include <cstdio>
 #include <cstdlib>
@@ -245,7 +246,14 @@ static std::vector<BindAddress> GetBindAddresses()
                 return {}; // empty
             }
             if (const std::optional addr{Lookup(host, port, /*fAllowLookup=*/allow_names)}) {
-                endpoints.push_back({.addr = *addr});
+                // Skip repeated endpoints, binding the same one twice would fail.
+                if (std::ranges::find_if(endpoints, [&](const BindAddress& e) {
+                        // CService equality ignores the IPv6 scope IDs of
+                        // CNetAddr, but binding must distinguish interfaces.
+                        return *addr == e.addr && addr->GetScope() == e.addr.GetScope();
+                    }) == endpoints.end()) {
+                    endpoints.push_back({.addr = *addr});
+                }
             } else {
                 LogWarning("Could not lookup RPC bind address '%s' port %i "
                            "(only numeric addresses are allowed).", host, port);
