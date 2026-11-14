@@ -116,6 +116,7 @@ static std::string DummyAddress(const CChainParams &params)
     case ChainType::SIGNET:
     case ChainType::TESTNET:
     case ChainType::TESTNET4:
+    case ChainType::TESTNET5:
         addr = "tb1p35yvjel7srp783ztf8v6jdra7dhfzk5jaun8xz2qp6ws7z80n4tqa6qnlg";
         break;
     case ChainType::REGTEST:
