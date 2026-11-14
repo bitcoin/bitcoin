@@ -857,6 +857,23 @@ BOOST_AUTO_TEST_CASE(http_should_disconnect_tests)
     }
 }
 
+BOOST_AUTO_TEST_CASE(rpc_bind_scopes)
+{
+    // Same link-local address on two interfaces: both must be bound
+    const char* argv[]{"", "-rpcbind=[fe80::1%1]", "-rpcbind=[fe80::1%2]"};
+    std::string error;
+    BOOST_REQUIRE(gArgs.ParseParameters(std::size(argv), argv, error));
+
+    int sockets{0};
+    CreateSock = [&sockets, create_sock{CreateSock}](int domain, int type, int protocol) {
+        ++sockets;
+        return create_sock(domain, type, protocol);
+    };
+    BOOST_CHECK(InitHTTPServer());
+    StopHTTPServer();
+    BOOST_CHECK_EQUAL(sockets, 2);
+}
+
 BOOST_AUTO_TEST_CASE(http_server_socket_tests)
 {
     // Hard code the timestamp for the Date header in the HTTP response

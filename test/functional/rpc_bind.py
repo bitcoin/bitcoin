@@ -4,6 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test running bitcoind with the -rpcbind and -rpcallowip options."""
 
+import socket
+
 from test_framework.netutil import NETWORK_ERRORS, all_interfaces, addr_to_hex, get_bind_addrs, test_ipv6_local
 from test_framework.test_framework import BitcoinTestFramework, SkipTest
 from test_framework.test_node import ErrorMatch
@@ -57,6 +59,16 @@ class RPCBindTest(BitcoinTestFramework):
         init_error = 'Error: Invalid port specified in -rpcbind: '
         for addr in addresses:
             self.nodes[0].assert_start_raises_init_error(base_args + [f'-rpcbind={addr}'], init_error + f"'{addr}'")
+
+    def run_partial_bind_test(self, explicit_binds):
+        self.log.info(f'Check startup when the {"explicit" if explicit_binds else "default IPv4"} RPC address is already owned')
+        extra_args = ['-disablewallet', '-nolisten']
+        if explicit_binds:
+            extra_args += ['-rpcallowip=127.0.0.1', '-rpcbind=127.0.0.1', '-rpcbind=[::1]']
+
+        with (socket.create_server(('127.0.0.1', self.defaultport)),
+              self.nodes[0].assert_debug_log([f"Binding RPC on required address '127.0.0.1:{self.defaultport}' failed:"])):
+            self.nodes[0].assert_start_raises_init_error(extra_args, 'Error: Unable to start HTTP server. See debug log for details.')
 
     def run_allowip_test(self, allow_ips, rpchost, rpcport):
         '''
@@ -144,8 +156,8 @@ class RPCBindTest(BitcoinTestFramework):
             # check only IPv4 localhost (explicit) with alternative port
             self.run_bind_test(['127.0.0.1'], '127.0.0.1:32171', ['127.0.0.1:32171'],
                 [('127.0.0.1', 32171)])
-            # check only IPv4 localhost (explicit) with multiple alternative ports on same host
-            self.run_bind_test(['127.0.0.1'], '127.0.0.1:32171', ['127.0.0.1:32171', '127.0.0.1:32172'],
+            # check only IPv4 localhost (explicit) with multiple alternative ports on same host, one of them repeated
+            self.run_bind_test(['127.0.0.1'], '127.0.0.1:32171', ['127.0.0.1:32171', '127.0.0.1:32172', '127.0.0.1:32172'],
                 [('127.0.0.1', 32171), ('127.0.0.1', 32172)])
         else:
             # check default without rpcallowip (IPv4 and IPv6 localhost)
@@ -160,6 +172,8 @@ class RPCBindTest(BitcoinTestFramework):
             # check both IPv4 and IPv6 localhost (explicit)
             self.run_bind_test(['127.0.0.1'], '127.0.0.1', ['127.0.0.1', '[::1]'],
                 [('127.0.0.1', self.defaultport), ('::1', self.defaultport)])
+            for explicit_binds in [False, True]:
+                self.run_partial_bind_test(explicit_binds)
 
     def _run_nonloopback_tests(self):
         self.log.info("Using interface %s for testing" % self.non_loopback_ip)
