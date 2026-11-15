@@ -178,6 +178,14 @@ bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid,
     // - peer can be an orphan resolution candidate
     if (const auto* wtxid = std::get_if<Wtxid>(&gtxid)) {
         if (auto orphan_tx{m_orphanage->GetTx(*wtxid)}) {
+            // Looking up every parent of a large orphan is expensive. Skip it when the peer cannot
+            // become an orphan resolution candidate, mirroring MaybeAddOrphanResolutionCandidate.
+            if (m_orphanage->HaveTxFromPeer(*wtxid, peer)) return true;
+            if (auto it{m_peer_info.find(peer)}; it != m_peer_info.end() && !it->second.m_connection_info.m_relay_permissions) {
+                // The number of inputs is an upper bound for the number of missing parents.
+                if (m_txrequest.Count(peer) + orphan_tx->vin.size() > MAX_PEER_TX_ANNOUNCEMENTS) return true;
+            }
+
             auto unique_parents{GetUniqueParents(*orphan_tx)};
             std::erase_if(unique_parents, [&](const auto& txid) {
                 return AlreadyHaveTx(txid, /*include_reconsiderable=*/false);
