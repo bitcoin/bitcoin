@@ -9,6 +9,7 @@ add_library(bitcoin_wallet STATIC EXCLUDE_FROM_ALL
   context.cpp
   crypter.cpp
   db.cpp
+  descriptor_analyzer.cpp
   dump.cpp
   export.cpp
   external_signer_scriptpubkeyman.cpp

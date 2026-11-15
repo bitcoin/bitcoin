@@ -1315,6 +1315,17 @@ std::unique_ptr<FlatSigningProvider> DescriptorScriptPubKeyMan::GetSigningProvid
     return out;
 }
 
+std::optional<KeyOriginInfo> DescriptorScriptPubKeyMan::GetPubKeyOrigin(const CPubKey& pubkey) const
+{
+    LOCK(cs_desc_man);
+    const auto it{m_map_pubkeys.find(pubkey)};
+    if (it == m_map_pubkeys.end()) return std::nullopt;
+    const auto provider{GetSigningProvider(it->second, /*include_private=*/false)};
+    KeyOriginInfo info;
+    if (!provider || !provider->GetKeyOrigin(pubkey.GetID(), info)) return std::nullopt;
+    return info;
+}
+
 std::unique_ptr<FlatSigningProvider> DescriptorScriptPubKeyMan::GetSigningProvider(int32_t index, bool include_private) const
 {
     AssertLockHeld(cs_desc_man);

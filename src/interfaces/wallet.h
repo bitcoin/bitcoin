@@ -46,6 +46,7 @@ class CCoinControl;
 class CWallet;
 struct ImportDescriptorRequest;
 struct ImportResult;
+struct WalletDescriptorAnalysis;
 struct CRecipient;
 struct WalletContext;
 } // namespace wallet
@@ -106,6 +107,15 @@ public:
     //!
     //! Return the master xpub for the added HD key, or a `WalletError` on failure.
     virtual util::Expected<CExtPubKey, wallet::WalletError> addHDKey(const std::optional<CExtKey>& key) = 0;
+
+    //! Analyze any descriptor: which of its keys this wallet holds, whether it
+    //! can sign, its first address on each path, and whether it is a
+    //! recognized multisig setup. A locked wallet is not an error: keys that
+    //! need a private key to check are reported as unknown, and the caller may
+    //! ask the user to unlock and retry.
+    //!
+    //! Return the analysis, or a `WalletError` if the descriptor can't be parsed.
+    virtual util::Expected<wallet::WalletDescriptorAnalysis, wallet::WalletError> analyzeDescriptor(const std::string& descriptor) = 0;
 
     //! Sign message
     virtual SigningResult signMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) = 0;
