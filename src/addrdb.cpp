@@ -195,9 +195,7 @@ void ReadFromStream(AddrMan& addr, DataStream& ssPeers)
 
 util::Result<std::unique_ptr<AddrMan>> LoadAddrman(const NetGroupManager& netgroupman, const ArgsManager& args)
 {
-    auto check_addrman = std::clamp<int32_t>(args.GetIntArg("-checkaddrman", DEFAULT_ADDRMAN_CONSISTENCY_CHECKS), 0, 1000000);
-    bool deterministic = HasTestOption(args, "addrman"); // use a deterministic addrman only for tests
-
+    const auto check_addrman = static_cast<int32_t>(std::clamp<int64_t>(args.GetIntArg("-checkaddrman", DEFAULT_ADDRMAN_CONSISTENCY_CHECKS), 0, 1000000)); //Clamp before narrowing the integer.
     auto addrman{std::make_unique<AddrMan>(netgroupman, deterministic, /*consistency_check_ratio=*/check_addrman)};
 
     const auto start{SteadyClock::now()};
