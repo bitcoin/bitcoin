@@ -45,12 +45,20 @@ inline bool set_error(ScriptError* ret, const ScriptError serror)
 
 bool CastToBool(const valtype& vch)
 {
-    for (unsigned int i = 0; i < vch.size(); i++)
+    const size_t size = vch.size();
+    size_t i = 0;
+    // find the first nonzero 8-byte word.
+    for (; i + 8 <= size; i += 8) {
+        uint64_t word;
+        memcpy(&word, vch.data() + i, sizeof(word));
+        if (word != 0) break;
+    }
+    for (; i < size; i++)
     {
         if (vch[i] != 0)
         {
             // Can be negative zero
-            if (i == vch.size()-1 && vch[i] == 0x80)
+            if (i == size - 1 && vch[i] == 0x80)
                 return false;
             return true;
         }
