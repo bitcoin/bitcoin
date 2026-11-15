@@ -5,6 +5,7 @@
 #include <wallet/wallet.h>
 
 #include <algorithm>
+#include <functional>
 #include <future>
 #include <iostream>
 #include <memory>
@@ -16,6 +17,7 @@
 #include <coinjoin/coinjoin.h>
 #include <evo/deterministicmns.h>
 #include <evo/dmn_types.h>
+#include <index/blockfilterindex.h>
 #include <interfaces/chain.h>
 #include <interfaces/coinjoin.h>
 #include <key_io.h>
@@ -24,6 +26,7 @@
 #include <policy/settings.h>
 #include <rpc/rawtransaction_util.h>
 #include <rpc/server.h>
+#include <test/util/index.h>
 #include <test/util/logging.h>
 #include <test/util/masternode.h>
 #include <test/util/random.h>
@@ -323,6 +326,52 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
         BOOST_CHECK(!result.last_scanned_height);
         BOOST_CHECK_EQUAL(GetBalance(wallet).m_mine_immature, 0);
     }
+}
+
+BOOST_FIXTURE_TEST_CASE(fast_rescan_finds_key_added_mid_scan, TestChain100Setup)
+{
+    BOOST_REQUIRE(InitBlockFilterIndex([&] { return interfaces::MakeChain(m_node); }, BlockFilterType::BASIC_FILTER, 1 << 20, /*f_memory=*/true));
+    BlockFilterIndex& filter_index{*Assert(GetBlockFilterIndex(BlockFilterType::BASIC_FILTER))};
+    BOOST_REQUIRE(filter_index.Start());
+    IndexWaitSynced(filter_index);
+
+    // The first progress report comes after the rescan has built its block
+    // filter, so the key paying the coinbases is added behind the filter.
+    const auto rescan_adding_key{[&](bool descriptors, const std::function<void(CWallet&)>& add_key) {
+        CWallet wallet(m_node.chain.get(), m_node.coinjoin_loader.get(), "", m_args, CreateMockWalletDatabase());
+        uint256 genesis_hash;
+        {
+            LOCK(wallet.cs_wallet);
+            LOCK(Assert(m_node.chainman)->GetMutex());
+            if (descriptors) wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+            wallet.SetLastBlockProcessed(m_node.chainman->ActiveChain().Height(), m_node.chainman->ActiveChain().Tip()->GetBlockHash());
+            genesis_hash = m_node.chainman->ActiveChain().Genesis()->GetBlockHash();
+        }
+        bool key_added{false};
+        auto progress_connection{wallet.ShowProgress.connect([&](const std::string&, int) {
+            if (!std::exchange(key_added, true)) add_key(wallet);
+        })};
+        WalletRescanReserver reserver(wallet);
+        BOOST_REQUIRE(reserver.reserve());
+        const CWallet::ScanResult result{wallet.ScanForWalletTransactions(genesis_hash, /*start_height=*/0, /*max_height=*/{}, reserver, /*fUpdate=*/false, /*save_progress=*/false)};
+        progress_connection.disconnect();
+
+        BOOST_CHECK(key_added);
+        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
+        BOOST_CHECK_EQUAL(GetBalance(wallet).m_mine_immature, 500 * COIN * COINBASE_MATURITY);
+    }};
+
+    rescan_adding_key(/*descriptors=*/true, [&](CWallet& wallet) { AddKey(wallet, coinbaseKey); });
+    // A blank wallet that is not a descriptor wallet can gain a legacy
+    // manager mid-scan, as importprivkey with rescan=false does.
+    rescan_adding_key(/*descriptors=*/false, [&](CWallet& wallet) {
+        auto spk_man{wallet.GetOrCreateLegacyScriptPubKeyMan()};
+        LOCK2(wallet.cs_wallet, spk_man->cs_KeyStore);
+        spk_man->AddKeyPubKey(coinbaseKey, coinbaseKey.GetPubKey());
+    });
+
+    filter_index.Stop();
+    BOOST_CHECK(DestroyBlockFilterIndex(BlockFilterType::BASIC_FILTER));
 }
 
 BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
