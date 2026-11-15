@@ -17,6 +17,7 @@
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/descriptor_analysis.h>
+#include <script/descriptor_analyzer.h>
 #include <script/miniscript.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
@@ -322,6 +323,66 @@ static UniValue DescriptorKeysToUniv(const DescriptorKeyInventory& inventory)
     return keys;
 }
 
+static std::string ShapeName(DescriptorAnalysis::Shape shape)
+{
+    using Shape = DescriptorAnalysis::Shape;
+    switch (shape) {
+    case Shape::UNRECOGNIZED: return "unrecognized";
+    case Shape::WSH_MULTI: return "wsh_multi";
+    case Shape::TR_MULTI_A: return "tr_multi_a";
+    } // no default case, so the compiler can warn about missing cases
+    NONFATAL_UNREACHABLE();
+}
+
+static std::string KeyPathName(DescriptorAnalysis::KeyPath key_path)
+{
+    using KeyPath = DescriptorAnalysis::KeyPath;
+    switch (key_path) {
+    case KeyPath::NONE: return "none";
+    case KeyPath::NUMS: return "nums";
+    case KeyPath::MUSIG: return "musig";
+    } // no default case, so the compiler can warn about missing cases
+    NONFATAL_UNREACHABLE();
+}
+
+static std::string IssueName(DescriptorAnalysis::Issue::Kind kind)
+{
+    using Kind = DescriptorAnalysis::Issue::Kind;
+    switch (kind) {
+    case Kind::UNSUPPORTED_SHAPE: return "unsupported_shape";
+    case Kind::REPEATED_KEY: return "repeated_key";
+    case Kind::KEY_PATH_SPENDABLE: return "key_path_spendable";
+    case Kind::NOT_EXTENDED_KEY: return "not_extended_key";
+    case Kind::NOT_RANGED: return "not_ranged";
+    case Kind::HARDENED_DERIVATION: return "hardened_derivation";
+    case Kind::BRANCHES_DIFFER: return "branches_differ";
+    } // no default case, so the compiler can warn about missing cases
+    NONFATAL_UNREACHABLE();
+}
+
+static UniValue DescriptorAnalysisToUniv(const DescriptorAnalysis& analysis)
+{
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("recognized", analysis.IsRecognized());
+    // An unrecognized descriptor claims no setup, only the issues.
+    if (analysis.IsRecognized()) {
+        result.pushKV("shape", ShapeName(analysis.shape));
+        result.pushKV("sorted", analysis.sorted);
+        if (analysis.key_path != DescriptorAnalysis::KeyPath::NONE) result.pushKV("key_path", KeyPathName(analysis.key_path));
+        result.pushKV("threshold", analysis.threshold);
+        result.pushKV("cosigners", IdsToUniv(analysis.cosigners));
+    }
+    UniValue issues(UniValue::VARR);
+    for (const auto& issue : analysis.issues) {
+        UniValue issue_obj(UniValue::VOBJ);
+        issue_obj.pushKV("type", IssueName(issue.kind));
+        issue_obj.pushKV("keys", IdsToUniv(issue.keys));
+        issues.push_back(std::move(issue_obj));
+    }
+    result.pushKV("issues", std::move(issues));
+    return result;
+}
+
 static UniValue DescriptorPolicyToUniv(const DescriptorPolicy& policy)
 {
     UniValue nodes(UniValue::VARR);
@@ -365,8 +426,8 @@ static RPCMethod getdescriptorinfo()
         "Analyses a descriptor.\n",
         {
             {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor."},
-            {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, also return the descriptor's key occurrences and policy structure. "
-                "For a multipath descriptor, only the first path is described.\n"
+            {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, also return the descriptor's key occurrences, policy structure and multisig analysis. "
+                "For a multipath descriptor, the keys and policy describe only the first path, while the analysis checks every path.\n"
                 "EXPERIMENTAL warning: the format of these fields may be changed in future releases."},
         },
         RPCResult{
@@ -428,13 +489,46 @@ static RPCMethod getdescriptorinfo()
                         }},
                     }},
                 }},
+                {RPCResult::Type::OBJ, "analysis", /*optional=*/true, "Only if verbose is true. Whether the descriptor is a recognized k-of-n multisig setup: "
+                    "one where any threshold of the cosigners can spend, and nothing else can. Recognized shapes are wsh(multi) and wsh(sortedmulti), "
+                    "and tr(K,multi_a) and tr(K,sortedmulti_a) with a single leaf, where K is the BIP 341 NUMS point H or a musig() of at least threshold distinct cosigners. "
+                    "Every cosigner must be an extended key with an unhardened ranged derivation, and no two cosigners may be the same key. "
+                    "This looks at the descriptor only: it does not say which keys belong to whom.",
+                {
+                    {RPCResult::Type::BOOL, "recognized", "Whether the descriptor is a recognized setup. If false, only the issues are returned"},
+                    {RPCResult::Type::STR, "shape", /*optional=*/true, "The setup: \"wsh_multi\" or \"tr_multi_a\""},
+                    {RPCResult::Type::BOOL, "sorted", /*optional=*/true, "Whether the keys are sorted (sortedmulti or sortedmulti_a)"},
+                    {RPCResult::Type::STR, "key_path", /*optional=*/true, "For \"tr_multi_a\": the Taproot internal key, \"nums\" (unspendable) or \"musig\" (an aggregate of cosigners)"},
+                    {RPCResult::Type::NUM, "threshold", /*optional=*/true, "The number of cosigners needed to spend"},
+                    {RPCResult::Type::ARR, "cosigners", /*optional=*/true, "The key IDs of the cosigner slots, in expression order",
+                    {
+                        {RPCResult::Type::NUM, "", "Key ID"},
+                    }},
+                    {RPCResult::Type::ARR, "issues", "Why the descriptor is not recognized. Empty if it is",
+                    {
+                        {RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::STR, "type", "\"unsupported_shape\" (not a recognized shape), "
+                                "\"repeated_key\" (cosigner slots, or musig() participants, held by the same key), "
+                                "\"key_path_spendable\" (the Taproot internal key may let fewer than threshold cosigners spend), "
+                                "\"not_extended_key\" (a cosigner is not an extended key), "
+                                "\"not_ranged\" (a cosigner does not end in an unhardened wildcard), "
+                                "\"hardened_derivation\" (a cosigner or musig() participant needs a private key to derive addresses), or "
+                                "\"branches_differ\" (the paths of a multipath descriptor are not the same setup)"},
+                            {RPCResult::Type::ARR, "keys", "The key IDs involved, if any",
+                            {
+                                {RPCResult::Type::NUM, "", "Key ID"},
+                            }},
+                        }},
+                    }},
+                }},
             }
         },
         RPCExamples{
             "Analyse a descriptor\n" +
             HelpExampleCli("getdescriptorinfo", "\"" + EXAMPLE_DESCRIPTOR + "\"") +
             HelpExampleRpc("getdescriptorinfo", "\"" + EXAMPLE_DESCRIPTOR + "\"") +
-            "Analyse a descriptor, including its keys and policy\n" +
+            "Analyse a descriptor, including its keys, policy and multisig analysis\n" +
             HelpExampleCli("getdescriptorinfo", "\"" + EXAMPLE_DESCRIPTOR + "\" true")
         },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
@@ -463,9 +557,11 @@ static RPCMethod getdescriptorinfo()
             result.pushKV("hasprivatekeys", provider.keys.size() > 0);
 
             if (self.Arg<bool>("verbose")) {
-                const DescriptorPolicy policy{descs.at(0)->GetPolicy()};
-                result.pushKV("keys", DescriptorKeysToUniv(policy.keys));
-                result.pushKV("policy", DescriptorPolicyToUniv(policy));
+                // The analysis refers to the first path's keys and policy.
+                const DescriptorAnalysis analysis{AnalyzeDescriptor(descs)};
+                result.pushKV("keys", DescriptorKeysToUniv(analysis.policy.keys));
+                result.pushKV("policy", DescriptorPolicyToUniv(analysis.policy));
+                result.pushKV("analysis", DescriptorAnalysisToUniv(analysis));
             }
             return result;
         },
