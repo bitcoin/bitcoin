@@ -19,6 +19,7 @@
 #include <util/result.h>
 #include <wallet/db.h>
 #include <wallet/legacy/migration.h>
+#include <wallet/legacy/spkm.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/test/util.h>
 #include <wallet/transaction.h>
@@ -62,7 +63,7 @@ static void WalletMigration(benchmark::Bench& bench)
         .setup([&] {
             // Setup legacy wallet
             wallet = std::make_unique<legacy_migration::LegacyWallet>(std::string(i++, 'A'), CreateMockableWalletDatabase());
-            LegacyDataSPKM* legacy_spkm = wallet->GetOrCreateLegacyDataSPKM();
+            legacy_migration::LegacyDataSPKM* legacy_spkm = wallet->GetOrCreateLegacyDataSPKM();
             WalletBatch batch{wallet->GetDatabase()};
 
             LOCK(wallet->cs_wallet);

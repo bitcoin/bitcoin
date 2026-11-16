@@ -20,6 +20,7 @@ add_library(bitcoin_wallet STATIC EXCLUDE_FROM_ALL
   legacy/bdbro.cpp
   legacy/load.cpp
   legacy/migration.cpp
+  legacy/spkm.cpp
   receive.cpp
   rpc/addresses.cpp
   rpc/backup.cpp
