@@ -32,7 +32,7 @@ jobs:
     runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-2604-x64-8x' || 'ubuntu-26.04' }}
     env:
       TEST_RUNNER_PORT_MIN: "14000"  # Use a larger port range to avoid colliding with other CI services.
-    if: github.event_name == 'pull_request' && github.event.pull_request.commits != 1
+    if: false
     timeout-minutes: 360  # Use maximum time, see https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_idtimeout-minutes.
     steps:
       - name: Determine fetch depth
@@ -114,7 +114,7 @@ jobs:
     # one for the branch push and one for the pull request.
     # This can be avoided by setting SKIP_BRANCH_PUSH=true as a custom env variable
     # in Github repository settings.
-    if: &PULL_FILTER ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+    if: false
 
     timeout-minutes: 120
 
@@ -195,7 +195,7 @@ jobs:
     name: ${{ matrix.job-name }}
     runs-on: windows-2025-vs2026
 
-    if: *PULL_FILTER
+    if: false
 
     env:
       PYTHONUTF8: 1
@@ -288,6 +288,7 @@ jobs:
           py -3 .github/ci-windows.py ${{ matrix.job-type }} run_tests
 
   record-frozen-commit:
+    if: false
     # Record frozen commit, so that the native tests on cross-builds can run on
     # the exact same commit id of the build.
     name: '[meta] record frozen commit'
@@ -305,7 +306,7 @@ jobs:
     name: 'Windows-cross to x86_64'
     needs: record-frozen-commit
     runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-latest-x64-4x' || 'ubuntu-latest' }}
-    if: *PULL_FILTER
+    if: false
 
     env:
       FILE_ENV: './ci/test/00_setup_env_win64.sh'
@@ -353,6 +354,7 @@ jobs:
             ${{ env.BASE_BUILD_DIR }}/test/config.ini
 
   windows-native-test:
+    if: false
     name: 'Windows, test cross-built'
     runs-on: windows-2022
     needs: [windows-cross, record-frozen-commit]
@@ -400,7 +402,7 @@ jobs:
   ci-matrix:
     name: ${{ matrix.name }}
     runs-on: ${{ github.repository == 'bitcoin/bitcoin' && matrix.warp-runner || matrix.fallback-runner }}
-    if: *PULL_FILTER
+    if: false
     timeout-minutes: ${{ matrix.timeout-minutes }}
 
     env:
@@ -561,9 +563,9 @@ jobs:
           provider: ${{ matrix.provider || (github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha') }}
 
   bsd:
-    name: ${{ matrix.name }}
+    name: ${{ matrix.name }} ${{ matrix.trial }}
     runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-2604-x64-8x;nested-virtualization.enabled=true' || 'ubuntu-latest' }}
-    if: *PULL_FILTER
+    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
     timeout-minutes: 120
 
     env:
@@ -573,6 +575,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        trial: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
         include:
           - name: FreeBSD
             os: freebsd
@@ -655,7 +658,7 @@ jobs:
   lint:
     name: 'lint'
     runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-latest-x64-2x' || 'ubuntu-latest' }}
-    if: *PULL_FILTER
+    if: false
     timeout-minutes: 20
     env:
       CONTAINER_NAME: "bitcoin-linter"
