@@ -64,6 +64,7 @@ if(ENABLE_IPC)
   add_subdirectory(ipc)
 else()
   add_library(bitcoin_ipc STATIC EXCLUDE_FROM_ALL ipc/stub.cpp)
+  target_link_libraries(bitcoin_ipc PRIVATE core_interface)
 endif()
 
 add_library(bitcoin_consensus STATIC EXCLUDE_FROM_ALL
