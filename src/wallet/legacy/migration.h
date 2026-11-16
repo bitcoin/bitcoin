@@ -3,6 +3,8 @@
 
 #include <wallet/wallet.h>
 
+#include <wallet/legacy/spkm.h>
+
 namespace wallet {
 namespace legacy_migration {
 

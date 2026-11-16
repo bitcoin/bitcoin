@@ -7,6 +7,7 @@
 #include <key_io.h>
 #include <util/bip32.h>
 #include <wallet/context.h>
+#include <wallet/legacy/spkm.h>
 #include <wallet/wallet.h>
 
 namespace wallet {
