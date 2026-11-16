@@ -50,11 +50,7 @@ pub fn lint_includes_build_config() -> LintResult {
                 } else {
                     "--files-with-matches"
                 },
-                if mode {
-                    "^#include <bitcoin-build-config.h>$"
-                } else {
-                    "#include <bitcoin-build-config.h>" // Catch redundant includes with and without the IWYU pragma
-                },
+                "#include <bitcoin-build-config.h>",
                 "--",
             ])
             .args(defines_files.lines())
@@ -74,9 +70,6 @@ even though bitcoin-build-config.h indicates that a faster feature is available 
 
 If you are unsure which symbol is used, you can find it with this command:
 git grep --perl-regexp '{defines_regex}' -- file_name
-
-Make sure to include it with the IWYU pragma. Otherwise, IWYU may falsely instruct to remove the
-include again.
 
 #include <bitcoin-build-config.h>
             "#
