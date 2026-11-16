@@ -462,11 +462,12 @@ static DBErrors LoadWalletFlags(CWallet* pwallet, DatabaseBatch& batch) EXCLUSIV
             pwallet->WalletLogPrintf("Error reading wallet database: Unknown non-tolerable wallet flags found");
             return DBErrors::TOO_NEW;
         }
-        // All wallets must be descriptor wallets unless opened with a bdb_ro db
-        // bdb_ro is only used for legacy to descriptor migration.
-        if (pwallet->GetDatabase().Format() != "bdb_ro" && !pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
-            return DBErrors::LEGACY_WALLET;
-        }
+    }
+    // All wallets must be descriptor wallets unless opened with a bdb_ro db
+    // bdb_ro is only used for legacy to descriptor migration.
+    // This also covers a wallet without a FLAGS record, which has no flags set.
+    if (pwallet->GetDatabase().Format() != "bdb_ro" && !pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+        return DBErrors::LEGACY_WALLET;
     }
     return DBErrors::LOAD_OK;
 }
@@ -1173,7 +1174,6 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 
     try {
         // Load wallet flags, so they are known when processing other records.
-        // The FLAGS key is absent during wallet creation.
         if ((result = LoadWalletFlags(pwallet, *m_batch)) != DBErrors::LOAD_OK) return result;
 
 #ifndef ENABLE_EXTERNAL_SIGNER
