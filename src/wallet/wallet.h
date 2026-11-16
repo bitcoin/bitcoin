@@ -592,7 +592,6 @@ public:
      * @return next transaction order id
      */
     int64_t IncOrderPosNext(WalletBatch *batch = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    DBErrors ReorderTransactions();
 
     void MarkDirty();
 
