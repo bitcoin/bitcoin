@@ -699,6 +699,11 @@ void BerkeleyRODatabase::Open()
                         }
                         OverflowPage opage(opage_header);
                         db_file >> opage;
+                        if (opage.data.empty()) {
+                            // A page that adds nothing makes no progress towards item_len,
+                            // so a chain of such pages could link back to itself forever
+                            throw std::runtime_error("Overflow page has no data");
+                        }
                         data.insert(data.end(), opage.data.begin(), opage.data.end());
                         if (data.size() > orec->item_len) {
                             throw std::runtime_error("Overflow record data is larger than stated size");
