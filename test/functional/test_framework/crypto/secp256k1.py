@@ -331,28 +331,73 @@ class FastGEMul:
 
     During multiplication, one table entry per chunk is added up, i.e. 256/WINDOW point
     additions take place (instead of ~128 on average for a bit-by-bit approach).
+
+    The table entries are stored as affine integer coordinates (or None for infinity), and the
+    running sum is kept in Jacobian coordinates (x = X/Z^2, y = Y/Z^3) using plain integers,
+    so that only a single modular inversion is needed at the end, instead of performing a full
+    affine GE addition (with FE fraction arithmetic) for every table entry.
     """
 
     WINDOW = 4
 
     def __init__(self, p):
-        self.table = []  # table[i][j] = j * (2^(WINDOW*i)) * p
+        self.table = []  # table[i][j] = j * (2^(WINDOW*i)) * p, as (x, y) integers or None
         for _ in range((256 + self.WINDOW - 1) // self.WINDOW):
             row = [GE()]
             for _ in range((1 << self.WINDOW) - 1):
                 row.append(row[-1] + p)
-            self.table.append(row)
+            self.table.append([None if e.infinity else (int(e.x), int(e.y)) for e in row])
             for _ in range(self.WINDOW):
                 p = p + p
 
+    @staticmethod
+    def _jacobian_double(x1, y1, z1):
+        """Double a point in Jacobian coordinates (curve has a=0); (_, _, 0) is infinity."""
+        # y1 == 0 cannot happen on secp256k1 (no points of order 2), kept for completeness.
+        if y1 == 0 or z1 == 0:
+            return 0, 1, 0
+        m = FE.SIZE
+        yy = y1 * y1 % m
+        s = 4 * x1 * yy % m
+        u = 3 * x1 * x1 % m
+        x3 = (u * u - 2 * s) % m
+        y3 = (u * (s - x3) - 8 * yy * yy) % m
+        return x3, y3, 2 * y1 * z1 % m
+
+    @staticmethod
+    def _jacobian_add_affine(x1, y1, z1, x2, y2):
+        """Add affine point (x2, y2) to Jacobian point (x1, y1, z1)."""
+        if z1 == 0:
+            return x2, y2, 1
+        m = FE.SIZE
+        z1z1 = z1 * z1 % m
+        h = (x2 * z1z1 - x1) % m
+        r = (y2 * z1 * z1z1 - y1) % m
+        if h == 0:
+            # Same x coordinate: either the same point (double) or its negation (infinity).
+            return FastGEMul._jacobian_double(x1, y1, z1) if r == 0 else (0, 1, 0)
+        hh = h * h % m
+        hhh = h * hh % m
+        v = x1 * hh % m
+        x3 = (r * r - hhh - 2 * v) % m
+        y3 = (r * (v - x3) - y1 * hhh) % m
+        return x3, y3, z1 * h % m
+
     def mul(self, a):
-        result = GE()
         a = a % GE.ORDER
         mask = (1 << self.WINDOW) - 1
+        x, y, z = 0, 1, 0  # Jacobian point at infinity
         for row in self.table:
-            result += row[a & mask]
+            entry = row[a & mask]
             a >>= self.WINDOW
-        return result
+            if entry is not None:
+                x, y, z = self._jacobian_add_affine(x, y, z, entry[0], entry[1])
+        if z == 0:
+            return GE()
+        m = FE.SIZE
+        z_inv = pow(z, -1, m)
+        z_inv2 = z_inv * z_inv % m
+        return GE(x * z_inv2 % m, y * z_inv2 * z_inv % m)
 
 # Precomputed table with multiples of G for fast multiplication
 FAST_G = FastGEMul(G)
@@ -362,6 +407,36 @@ def mul_G(a):
     return FAST_G.mul(a)
 
 class TestFrameworkSecp256k1(unittest.TestCase):
+    def test_fast_mul(self):
+        """Check FastGEMul against the generic GE.mul implementation."""
+        def coords(p):
+            return None if p.infinity else (int(p.x), int(p.y))
+        H = GE.lift_x(0x50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0)
+        fast_h = FastGEMul(H)
+        scalars = [0, 1, 2, 15, 16, 17, 2**255, GE.ORDER - 1, GE.ORDER, GE.ORDER + 1, -1, 2**256 - 1]
+        scalars += [int.from_bytes(sha256(i.to_bytes(4, 'big')).digest(), 'big') for i in range(32)]
+        for a in scalars:
+            self.assertEqual(coords(FAST_G.mul(a)), coords(GE.mul((a, G))))
+            self.assertEqual(coords(mul_G(a % GE.ORDER)), coords(GE.mul((a, G))))
+            self.assertEqual(coords(fast_h.mul(a)), coords(GE.mul((a, H))))
+
+    def test_jacobian_degenerate(self):
+        """Check the P + P and P + (-P) cases of the Jacobian helpers, unreachable via FastGEMul.mul."""
+        m = FE.SIZE
+        def to_affine(x, y, z):
+            z_inv = pow(z, -1, m)
+            return x * z_inv * z_inv % m, y * z_inv * z_inv * z_inv % m
+        for k in (1, 7, 12345):
+            P = GE.mul((k, G))
+            P2 = GE.mul((2 * k, G))
+            px, py = int(P.x), int(P.y)
+            z = 0xdeadbeef + k
+            jx, jy = px * z * z % m, py * z * z * z % m
+            self.assertEqual(to_affine(*FastGEMul._jacobian_add_affine(jx, jy, z, px, py)), (int(P2.x), int(P2.y)))
+            self.assertEqual(to_affine(*FastGEMul._jacobian_double(jx, jy, z)), (int(P2.x), int(P2.y)))
+            self.assertEqual(FastGEMul._jacobian_add_affine(jx, jy, z, px, -py % m)[2], 0)
+        self.assertEqual(FastGEMul._jacobian_double(0, 1, 0)[2], 0)
+
     def test_H(self):
         H = sha256(G.to_bytes_uncompressed()).digest()
         assert GE.lift_x(FE.from_bytes(H)) is not None
