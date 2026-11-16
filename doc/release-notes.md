@@ -1,9 +1,9 @@
-v30.4 Release Notes
+v30.5 Release Notes
 ===================
 
-Bitcoin Core version v30.4 is now available from:
+Bitcoin Core version v30.5 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-30.4/>
+  <https://bitcoincore.org/bin/bitcoin-core-30.5/>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -40,54 +40,25 @@ unsupported systems.
 Notable changes
 ===============
 
-- BIP 9 bits 5 to 28 inclusive are now ignored for soft fork signaling, as per
-  BIP 323. We won't warn about unknown deployments when receiving blocks that
-  set any of those bits in their version. (#34779)
-
-### Versionbits
-
-- #34779 BIP 323: reserve version bits 5-28 as extra nonce space
-
-### P2P
-
-- #35691 chainparams: delete my DNS seed
-- #35766 p2p: Assume v2transport for addresses from seeds
-
 ### Net
 
-- #36665 sock: align exception monitoring between poll() and select() backends
-- #36667 net: enforce timeout interval for paused send peers
+- #35878 net_processing: process unique tx INVs only
 
-### Util
+### CI
 
-- #36669 refactor: store positions as a 64 bits integer in flatfiles
-
-### Build
-
-- #36218 build: avoid pipe2 on Darwin (for now)
-
-### Fuzz
-
-- #35679 fuzz: Remove unused DeserializeFromFuzzingInput params overload
-
-### Doc
-
-- #36377 doc: add 461 (Deterministic ECDSA signatures with low-R grinding) to bips.md
-- #36441 doc: fix How to Upgrade section for bitcoin wrapper and libexec
+- #33693 ci: use pycapnp 2.2.1
+- #35348 ci: switch to GitHub cache for all runners
+- #35441 ci: inline runner selection
+- #35571 ci: use warp docker buildkit cache
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- ajtowns
-- darosior
 - fanquake
-- Hennadii Stepanov
-- Martin Zumsande
-- Sebastian Falbesoner
-- sipa
-- spidey279
+- Greg Sanders
+- willcl-ark
 
 As well as to everyone that helped with translations on
 [Transifex](https://explore.transifex.com/bitcoin/bitcoin/).
