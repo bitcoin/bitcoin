@@ -51,7 +51,7 @@ pub fn lint_includes_build_config() -> LintResult {
                     "--files-with-matches"
                 },
                 if mode {
-                    "^#include <bitcoin-build-config.h> // IWYU pragma: keep$"
+                    "^#include <bitcoin-build-config.h>$"
                 } else {
                     "#include <bitcoin-build-config.h>" // Catch redundant includes with and without the IWYU pragma
                 },
@@ -78,7 +78,7 @@ git grep --perl-regexp '{defines_regex}' -- file_name
 Make sure to include it with the IWYU pragma. Otherwise, IWYU may falsely instruct to remove the
 include again.
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h>
             "#
         )
         .trim()
