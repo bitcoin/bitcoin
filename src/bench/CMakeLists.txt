@@ -53,6 +53,7 @@ add_executable(bench_bitcoin
   strencodings.cpp
   txgraph.cpp
   txorphanage.cpp
+  txreconciliation.cpp
   uint256_blob.cpp
   util_time.cpp
   verify_script.cpp
@@ -70,6 +71,7 @@ target_link_libraries(bench_bitcoin
   core_interface
   test_util
   bitcoin_node
+  minisketch
   Boost::headers
 )
 
