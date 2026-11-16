@@ -398,7 +398,6 @@ util::Expected<FeeRateEstimation, FeeRateEstimationError> MemPoolFeeRateEstimato
     node::BlockCreateOptions options;
     options.test_block_validity = false;
     const auto blocktemplate = WITH_LOCK(::cs_main, return (node::BlockAssembler{m_chainman.CurrentChainstate(), &m_mempool, options}).CreateNewBlock());
-    if (!blocktemplate) return EstimationError(strprintf("%s: Failed to create block template for fee rate estimation", FeeRateEstimatorTypeToString(estimator_type)));
     // Sort again because the rounding up when converting from weight to vsize may cause slight misorder.
     std::sort(blocktemplate->m_package_feerates.begin(), blocktemplate->m_package_feerates.end(), [](const auto& a, const auto& b) { return ByRatio{a} > ByRatio{b}; });
     const auto percentiles = CalculateMaxWeightPercentiles(blocktemplate->m_package_feerates);

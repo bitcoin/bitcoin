@@ -10,6 +10,7 @@
 #include <primitives/transaction.h>
 #include <sync.h>
 #include <uint256.h>
+#include <util/not_null.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -166,9 +167,10 @@ protected:
 };
 
 class ValidationSignalsImpl;
-class ValidationSignals {
+class ValidationSignals
+{
 private:
-    std::unique_ptr<ValidationSignalsImpl> m_internals;
+    util::NotNullUniquePtr<ValidationSignalsImpl> m_internals;
 
 public:
     // The task runner will block validation if it calls its insert method's
