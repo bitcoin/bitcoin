@@ -8,12 +8,16 @@
 - Stop the node and restart it with -reindex. Verify that the node has reindexed up to block 3.
 - Stop the node and restart it with -reindex-chainstate. Verify that the node has reindexed up to block 3.
 - Verify that out-of-order blocks are correctly processed, see LoadExternalBlockFile()
+- Verify that a node killed right after -reindex or -reindex-chainstate restarts without another reindex,
+  on a chain past DIP0003 activation so that the EvoDB state is checked against the coins DB.
 """
 
 import os
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import MAGIC_BYTES
 from test_framework.util import assert_equal
+
+DIP0003_HEIGHT = 432
 
 
 class ReindexTest(BitcoinTestFramework):
@@ -74,6 +78,16 @@ class ReindexTest(BitcoinTestFramework):
         # All blocks should be accepted and processed.
         assert_equal(self.nodes[0].getblockcount(), 24)
 
+    def kill_after_reindex(self, justchainstate):
+        node = self.nodes[0]
+        blockcount = node.getblockcount()
+        self.stop_nodes()
+        with node.assert_debug_log(["loadblk thread exit"], timeout=10):
+            self.start_node(0, extra_args=["-reindex-chainstate" if justchainstate else "-reindex"])
+        node.kill_process()
+        self.start_node(0)
+        assert_equal(node.getblockcount(), blockcount)
+
     def run_test(self):
         for txindex in [0, 1]:
             self.reindex(False, txindex)
@@ -82,6 +96,11 @@ class ReindexTest(BitcoinTestFramework):
             self.reindex(True, txindex)
 
         self.out_of_order()
+
+        node = self.nodes[0]
+        self.generatetoaddress(node, DIP0003_HEIGHT + 8 - node.getblockcount(), node.get_deterministic_priv_key().address)
+        self.kill_after_reindex(False)
+        self.kill_after_reindex(True)
 
 
 if __name__ == '__main__':
