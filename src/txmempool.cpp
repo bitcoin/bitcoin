@@ -451,6 +451,13 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
 
     const auto score_with_topo{GetSortedScoreWithTopology()};
 
+    // The order obtained from TxGraph::GetMainOrder must match sorting by pairwise comparison.
+    auto sorted{score_with_topo};
+    std::sort(sorted.begin(), sorted.end(), [this](const auto& a, const auto& b) EXCLUSIVE_LOCKS_REQUIRED(cs) noexcept {
+        return m_txgraph->CompareMainOrder(*a, *b) < 0;
+    });
+    assert(sorted == score_with_topo);
+
     // Number of chunks is bounded by number of transactions.
     const auto diagram{GetFeerateDiagram()};
     assert(diagram.size() <= score_with_topo.size() + 1);
@@ -614,13 +621,9 @@ std::vector<CTxMemPool::indexed_transaction_set::const_iterator> CTxMemPool::Get
     AssertLockHeld(cs);
 
     iters.reserve(mapTx.size());
-
-    for (indexed_transaction_set::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi) {
-        iters.push_back(mi);
+    for (TxGraph::Ref* ref : m_txgraph->GetMainOrder()) {
+        iters.push_back(mapTx.iterator_to(static_cast<const CTxMemPoolEntry&>(*ref)));
     }
-    std::sort(iters.begin(), iters.end(), [this](const auto& a, const auto& b) EXCLUSIVE_LOCKS_REQUIRED(cs) noexcept {
-        return m_txgraph->CompareMainOrder(*a, *b) < 0;
-    });
     return iters;
 }
 
