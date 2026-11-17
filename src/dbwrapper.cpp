@@ -102,7 +102,7 @@ public:
 
                 assert(p <= limit);
                 base[std::min(bufsize - 1, (int)(p - base))] = '\0';
-                LogDebug(BCLog::LEVELDB, "%s\n", util::RemoveSuffixView(base, "\n"));
+                LogDebug(BCLog::LEVELDB, "%s", util::RemoveSuffixView(base, "\n"));
                 if (base != buffer) {
                     delete[] base;
                 }
@@ -132,7 +132,7 @@ static void SetMaxOpenFiles(leveldb::Options *options) {
         options->max_open_files = 64;
     }
 #endif
-    LogDebug(BCLog::LEVELDB, "LevelDB using max_open_files=%d (default=%d)\n",
+    LogDebug(BCLog::LEVELDB, "LevelDB using max_open_files=%d (default=%d)",
              options->max_open_files, default_open_files);
 }
 
@@ -320,7 +320,7 @@ void CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
     HandleError(status);
     if (log_memory) {
         double mem_after{DynamicMemoryUsage() / double(1_MiB)};
-        LogDebug(BCLog::LEVELDB, "WriteBatch memory usage: db=%s, before=%.1fMiB, after=%.1fMiB\n",
+        LogDebug(BCLog::LEVELDB, "WriteBatch memory usage: db=%s, before=%.1fMiB, after=%.1fMiB",
                  m_name, mem_before, mem_after);
     }
 }
@@ -337,7 +337,7 @@ size_t CDBWrapper::DynamicMemoryUsage() const
 {
     std::optional<size_t> parsed;
     if (auto memory{GetProperty("leveldb.approximate-memory-usage")}; !memory || !(parsed = ToIntegral<size_t>(*memory))) {
-        LogDebug(BCLog::LEVELDB, "Failed to get approximate-memory-usage property\n");
+        LogDebug(BCLog::LEVELDB, "Failed to get approximate-memory-usage property");
         return 0;
     }
     return parsed.value();

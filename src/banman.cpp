@@ -193,7 +193,7 @@ void BanMan::SweepBanned()
             m_banned.erase(it++);
             m_is_dirty = true;
             notify_ui = true;
-            LogDebug(BCLog::NET, "Removed banned node address/subnet: %s\n", sub_net.ToString());
+            LogDebug(BCLog::NET, "Removed banned node address/subnet: %s", sub_net.ToString());
         } else {
             ++it;
         }
