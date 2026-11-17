@@ -9,20 +9,18 @@
 #include <prevector.h>
 #include <support/allocators/pool.h>
 
-#include <cassert>
 #include <cstdlib>
 #include <list>
 #include <map>
 #include <memory>
 #include <set>
 #include <string>
-#include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 
-namespace memusage
-{
+namespace memusage {
 
 /** Compute the total memory used by allocating alloc bytes. */
 static size_t MallocUsage(size_t alloc);
@@ -54,12 +52,12 @@ static inline size_t MallocUsage(size_t alloc)
     // Measured on libc6 2.19 on Linux.
     if (alloc == 0) {
         return 0;
-    } else if (sizeof(void*) == 8) {
+    } else if constexpr (sizeof(void*) == 8) {
         return ((alloc + 31) >> 4) << 4;
-    } else if (sizeof(void*) == 4) {
+    } else if constexpr (sizeof(void*) == 4) {
         return ((alloc + 15) >> 3) << 3;
     } else {
-        assert(0);
+        static_assert(sizeof(void*) == 4 || sizeof(void*) == 8);
     }
 }
 
