@@ -1,9 +1,9 @@
-v31.3 Release Notes
+v31.x Release Notes
 ===================
 
-Bitcoin Core version 31.3 is now available from:
+Bitcoin Core version 31.x is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-31.3/>
+  <https://bitcoincore.org/bin/bitcoin-core-31.x/>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -41,20 +41,23 @@ Notable changes
 
 ### Net
 
-- #35878 net_processing: process unique tx INVs only
+- #36894 net_processing: set fDisconnect instead of calling DisconnectNode
 
-### CI
+### Build
 
-- #35441 ci: inline runner selection
-- #35571 ci: use warp docker buildkit cache
+- #36889 cmake: Switch include_directories -> target_include_directories
+
+### Misc
+
+- #36869 refactor, memusage: Make fields of STL helper structs public
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- Greg Sanders
-- willcl-ark
+- Eugene Siegel
+- hebasto
 
 As well as to everyone that helped with translations on
 [Transifex](https://explore.transifex.com/bitcoin/bitcoin/).
