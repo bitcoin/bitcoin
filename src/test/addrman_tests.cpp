@@ -1200,6 +1200,43 @@ BOOST_AUTO_TEST_CASE(addrman_update_address)
     BOOST_CHECK_EQUAL(vAddr6.at(0).nServices, NODE_NETWORK | NODE_P2P_V2);
 }
 
+BOOST_AUTO_TEST_CASE(addrman_update_time)
+{
+    // Tests updating nTime of an existing entry via Add()
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+    const auto stored_time{[&] {
+        const std::vector<CAddress> addrs{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt)};
+        BOOST_REQUIRE_EQUAL(addrs.size(), 1U);
+        return addrs.at(0).nTime;
+    }};
+    const auto time_penalty{2h};
+    const auto start_time{Now<NodeSeconds>() - 24h};
+
+    CAddress addr{CAddress(ResolveService("250.1.1.1", 8333), NODE_NONE)};
+    addr.nTime = start_time;
+    BOOST_CHECK(addrman->Add({addr}, ResolveIP("1.2.2.2"), time_penalty));
+    BOOST_CHECK(stored_time() == start_time - time_penalty);
+
+    // Receiving the same announcement from another peer doesn't change nTime
+    addrman->Add({addr}, ResolveIP("2.2.2.2"), time_penalty);
+    BOOST_CHECK(stored_time() == start_time - time_penalty);
+
+    // A newer announcement updates nTime
+    addr.nTime = start_time + 1s;
+    addrman->Add({addr}, ResolveIP("3.2.2.2"), time_penalty);
+    BOOST_CHECK(stored_time() == start_time + 1s - time_penalty);
+
+    // An older announcement doesn't decrease nTime
+    CAddress addr_old{addr};
+    addr_old.nTime = start_time - 10h;
+    BOOST_CHECK(!addrman->Add({addr_old}, ResolveIP("4.2.2.2"), time_penalty));
+    BOOST_CHECK(stored_time() == start_time + 1s - time_penalty);
+
+    // No penalty is applied to a self-announcement
+    addrman->Add({addr}, addr, time_penalty);
+    BOOST_CHECK(stored_time() == start_time + 1s);
+}
+
 BOOST_AUTO_TEST_CASE(addrman_size)
 {
     auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
