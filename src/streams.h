@@ -687,7 +687,7 @@ public:
 
 /// Wrapper that buffers writes to an underlying stream.
 /// Requires underlying stream to support write_buffer() method for efficient buffer flushing and obfuscation.
-/// Call flush() explicitly before destruction to handle write errors.
+/// Call flush() explicitly to handle write errors, or discard() to abandon pending bytes.
 template <typename S>
 class BufferedWriter
 {
@@ -700,9 +700,12 @@ public:
 
     ~BufferedWriter()
     {
-        Assume(m_buf_pos == 0); // Use explicit flush()
+        Assume(m_buf_pos == 0); // Use explicit flush() or discard()
         flush();
     }
+
+    //! Drop buffered bytes without writing them, e.g. after a write error.
+    void discard() { m_buf_pos = 0; }
 
     //! Discard the buffered bytes even if writing them throws. The stream may
     //! have obfuscated them in place, and a short write may have already put
