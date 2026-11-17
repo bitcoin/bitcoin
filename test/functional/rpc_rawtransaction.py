@@ -312,6 +312,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # Test `createrawtransaction` invalid `outputs`
         address = getnewdestination()[2]
         assert_raises_rpc_error(-3, "JSON value of type string is not of expected type array", self.nodes[0].createrawtransaction, [], 'foo')
+        assert_raises_rpc_error(-8, "Invalid parameter, output argument must be non-null", self.nodes[0].createrawtransaction, [], None)
         self.nodes[0].createrawtransaction(inputs=[], outputs={})  # Should not throw for backwards compatibility
         self.nodes[0].createrawtransaction(inputs=[], outputs=[])
         assert_raises_rpc_error(-8, "Data must be hexadecimal string", self.nodes[0].createrawtransaction, [], {'data': 'foo'})
