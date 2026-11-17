@@ -117,6 +117,22 @@ using CSuperblock_sptr = std::shared_ptr<CSuperblock>;
 
 namespace governance {
 
+/** Estimate when the block at `height` will be mined, measured from a chain point at `ref_height` and `ref_time`. */
+int64_t EstimateBlockTime(int height, int ref_height, int64_t ref_time);
+
+struct ProposalWindow {
+    int64_t start_epoch;
+    int64_t end_epoch;
+};
+
+/**
+ * Payment window of a proposal paid by `payments` consecutive superblocks starting at `first_superblock`: from half
+ * a cycle before the first one to half a cycle after the last one. Masternodes only put a proposal into a superblock
+ * whose estimated time lies inside this window.
+ */
+ProposalWindow EstimateProposalWindow(int first_superblock, int payments, int superblock_cycle, int ref_height,
+                                      int64_t ref_time);
+
 /**
  * Owns the set of active superblock triggers. Trigger lifecycle is fully
  * owned here; CGovernanceManager pushes new TRIGGER objects in via

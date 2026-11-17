@@ -6,6 +6,7 @@
 #include <qt/forms/ui_proposalcreate.h>
 
 #include <governance/object.h>
+#include <governance/superblock.h>
 #include <interfaces/node.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>
@@ -25,8 +26,6 @@
 #include <QSpinBox>
 
 #include <univalue.h>
-
-#include <algorithm>
 
 ProposalCreate::ProposalCreate(WalletModel* walletModel, QWidget* parent) :
     QDialog(parent),
@@ -50,16 +49,18 @@ ProposalCreate::ProposalCreate(WalletModel* walletModel, QWidget* parent) :
         const auto info = m_walletModel->node().gov().getGovernanceInfo();
         m_relay_confs = info.relayRequiredConfs;
         m_superblock_cycle = info.superblockcycle;
-        m_target_spacing = info.targetSpacing;
+        m_superblock_maturity_window = info.superblockmaturitywindow;
+        m_ref_height = m_walletModel->node().getNumBlocks();
+        m_ref_time = QDateTime::currentSecsSinceEpoch();
 
         // Populate first-payment options by default using governance info
         m_ui->comboFirstPayment->clear();
-        const int nextSb = info.nextsuperblock;
-        const int cycle = info.superblockcycle;
+        // A superblock whose voting deadline has passed can no longer pick up a new proposal
+        const bool skip_next{m_ref_height >= info.nextsuperblock - m_superblock_maturity_window};
+        const int first_sb = info.nextsuperblock + (skip_next ? m_superblock_cycle : 0);
         for (int i = 0; i < 12; ++i) {
-            const int sbHeight = nextSb + i * cycle;
-            const qint64 secs = static_cast<qint64>(i) * cycle * m_target_spacing;
-            const auto dt = QDateTime::currentDateTimeUtc().addSecs(secs).toLocalTime();
+            const int sbHeight = first_sb + i * m_superblock_cycle;
+            const auto dt = QDateTime::fromSecsSinceEpoch(governance::EstimateBlockTime(sbHeight, m_ref_height, m_ref_time));
             m_ui->comboFirstPayment->addItem(QLocale().toString(dt, QLocale::ShortFormat), sbHeight);
         }
     }
@@ -95,30 +96,11 @@ ProposalCreate::~ProposalCreate()
 
 void ProposalCreate::buildJsonAndHex()
 {
-    const int64_t multiplier = std::numeric_limits<int64_t>::max() / std::max<int64_t>(1, m_target_spacing);
-
-    // Compute start/end epochs from selected superblocks
-    int64_t start_epoch = 0;
-    int64_t end_epoch = 0;
-    const int64_t first_sb = m_ui->comboFirstPayment->currentData().toInt();
-    const int64_t payments = m_ui->spinPayments->value();
-    if (first_sb > 0 && payments > 0) {
-        if (m_superblock_cycle > 0) {
-            const int64_t prev_sb{first_sb - m_superblock_cycle};
-            const int64_t last_sb{first_sb + (payments - 1) * m_superblock_cycle};
-            const int64_t next_sb{last_sb + m_superblock_cycle};
-            // Midpoints in blocks; convert roughly to seconds relative to now
-            const int64_t start_blocks{(first_sb + prev_sb) / 2};
-            const int64_t end_blocks{(last_sb + next_sb) / 2};
-            // We don't know absolute time for those heights in GUI; approximate using consensus block time
-            // Use now as baseline; this is only to pass validator and give a stable window
-            const qint64 now{QDateTime::currentSecsSinceEpoch()};
-            const int64_t delta_start{start_blocks - first_sb};
-            const int64_t delta_end{end_blocks - first_sb};
-            // Guard against overflow when multiplying by clamping deltas first
-            start_epoch = now + std::clamp<int64_t>(delta_start, -multiplier, multiplier) * m_target_spacing;
-            end_epoch = now + std::clamp<int64_t>(delta_end, -multiplier, multiplier) * m_target_spacing;
-        }
+    governance::ProposalWindow window{};
+    const int first_sb = m_ui->comboFirstPayment->currentData().toInt();
+    const int payments = m_ui->spinPayments->value();
+    if (first_sb > 0 && payments > 0 && m_superblock_cycle > 0) {
+        window = governance::EstimateProposalWindow(first_sb, payments, m_superblock_cycle, m_ref_height, m_ref_time);
     }
 
     UniValue o(UniValue::VOBJ);
@@ -128,12 +110,20 @@ void ProposalCreate::buildJsonAndHex()
     amount.setNumStr(FormatMoney(m_ui->paymentAmount->value()));
     o.pushKV("payment_amount", amount);
     o.pushKV("url", m_ui->editUrl->text().toStdString());
-    if (start_epoch > 0) o.pushKV("start_epoch", start_epoch);
-    if (end_epoch > 0) o.pushKV("end_epoch", end_epoch);
+    if (window.start_epoch > 0) o.pushKV("start_epoch", window.start_epoch);
+    if (window.end_epoch > 0) o.pushKV("end_epoch", window.end_epoch);
     o.pushKV("type", 1);
     const auto json{o.write()};
     m_json = QString::fromStdString(json);
     m_hex = QString::fromStdString(HexStr(json));
+}
+
+bool ProposalCreate::votingDeadlinePassed()
+{
+    const int first_sb = m_ui->comboFirstPayment->currentData().toInt();
+    if (m_walletModel->node().getNumBlocks() < first_sb - m_superblock_maturity_window) return false;
+    m_ui->labelError->setText(tr("Voting deadline has passed for this date"));
+    return true;
 }
 
 void ProposalCreate::onViewJson()
@@ -172,6 +162,8 @@ void ProposalCreate::onCreate()
         return; // Don't proceed if there are errors
     }
 
+    if (votingDeadlinePassed()) return;
+
     buildJsonAndHex();
 
     // Unlock wallet if necessary
@@ -189,6 +181,8 @@ void ProposalCreate::onCreate()
     if (diag_confirm.result() != QMessageBox::Yes) {
         return;
     }
+    // Blocks keep arriving while the unlock and confirmation prompts are open
+    if (votingDeadlinePassed()) return;
 
     const int64_t now = QDateTime::currentSecsSinceEpoch();
     std::string txid_str;
