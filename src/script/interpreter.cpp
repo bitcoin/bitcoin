@@ -5,6 +5,7 @@
 
 #include <script/interpreter.h>
 
+#include <crypto/common.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha1.h>
 #include <crypto/sha256.h>
@@ -45,15 +46,12 @@ inline bool set_error(ScriptError* ret, const ScriptError serror)
 
 bool CastToBool(const valtype& vch)
 {
-    for (unsigned int i = 0; i < vch.size(); i++)
-    {
-        if (vch[i] != 0)
-        {
-            // Can be negative zero
-            if (i == vch.size()-1 && vch[i] == 0x80)
-                return false;
-            return true;
-        }
+    size_t i{0};
+    for (; i + sizeof(uint64_t) <= vch.size(); i += sizeof(uint64_t)) {
+        if (ReadLE64(vch.data() + i)) break;
+    }
+    for (; i < vch.size(); i++) {
+        if (vch[i]) return !(i == vch.size() - 1 && vch[i] == 0x80); // Negative zero is false
     }
     return false;
 }
