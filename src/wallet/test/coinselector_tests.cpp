@@ -1039,6 +1039,7 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
         // Demonstrate how following improvements reduce iteration count and catch any regressions in the future.
         size_t expected_attempts = 37;
         BOOST_CHECK_MESSAGE(res->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, res->GetSelectionsEvaluated()));
+        BOOST_CHECK(res->GetAlgoCompleted());
     }
 
     {
@@ -1061,6 +1062,7 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
         // Demonstrate how following improvements reduce iteration count and catch any regressions in the future.
         size_t expected_attempts = 3;
         BOOST_CHECK_MESSAGE(res->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, res->GetSelectionsEvaluated()));
+        BOOST_CHECK(res->GetAlgoCompleted());
     }
 
     {
@@ -1090,6 +1092,7 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
         // Demonstrate how following improvements reduce iteration count and catch any regressions in the future.
         size_t expected_attempts = 92;
         BOOST_CHECK_MESSAGE(res->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, res->GetSelectionsEvaluated()));
+        BOOST_CHECK(res->GetAlgoCompleted());
     }
 
     {
@@ -1129,6 +1132,7 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
         // Demonstrate how following improvements reduce iteration count and catch any regressions in the future.
         size_t expected_attempts = 38;
         BOOST_CHECK_MESSAGE(res->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, res->GetSelectionsEvaluated()));
+        BOOST_CHECK(res->GetAlgoCompleted());
     }
 
     {
@@ -1155,6 +1159,7 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
         // Demonstrate how following improvements reduce iteration count and catch any regressions in the future.
         size_t expected_attempts = 7;
         BOOST_CHECK_MESSAGE(res->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, res->GetSelectionsEvaluated()));
+        BOOST_CHECK(res->GetAlgoCompleted());
     }
 
     {
@@ -1180,6 +1185,7 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
         // Demonstrate a solution is found before the attempts limit is reached.
         size_t expected_attempts = 87'525;
         BOOST_CHECK_MESSAGE(result_a->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, result_a->GetSelectionsEvaluated()));
+        BOOST_CHECK(result_a->GetAlgoCompleted());
 
         // Adding one more doppelganger causes the attempt limit to be reached before finding a solution.
         const auto& result_b = CoinGrinder(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {

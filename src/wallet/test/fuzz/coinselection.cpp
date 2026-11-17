@@ -122,6 +122,7 @@ FUZZ_TARGET(coin_grinder)
     auto result_cg = CoinGrinder(group_pos, target, coin_params.m_min_change_target, MAX_STANDARD_TX_WEIGHT);
     if (target + coin_params.m_min_change_target > max_spendable || HasErrorMsg(result_cg)) return; // We only need to compare algorithms if CoinGrinder has a solution
     assert(result_cg);
+    assert(result_cg->GetAlgoCompleted() == (result_cg->GetSelectionsEvaluated() < 100'000));
     if (!result_cg->GetAlgoCompleted()) return; // Bail out if CoinGrinder solution is not optimal
 
     auto result_srd = SelectCoinsSRD(group_pos, target, coin_params.m_change_fee, fast_random_context, MAX_STANDARD_TX_WEIGHT);
@@ -198,6 +199,7 @@ FUZZ_TARGET(coin_grinder_is_optimal)
 
         auto result_cg = CoinGrinder(group_pos, target, coin_params.m_min_change_target, high_max_selection_weight);
         assert(result_cg);
+        assert(result_cg->GetAlgoCompleted() == (result_cg->GetSelectionsEvaluated() < 100'000));
         assert(result_cg->GetWeight() <= high_max_selection_weight);
         assert(result_cg->GetSelectedEffectiveValue() >= target + coin_params.m_min_change_target);
         assert(best_weight < result_cg->GetWeight() || (best_weight == result_cg->GetWeight() && best_amount <= result_cg->GetSelectedEffectiveValue()));
