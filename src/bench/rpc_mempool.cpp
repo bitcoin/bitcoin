@@ -15,6 +15,7 @@
 #include <univalue.h>
 #include <util/check.h>
 
+#include <cstddef>
 #include <memory>
 #include <vector>
 
@@ -49,3 +50,38 @@ static void RpcMempool(benchmark::Bench& bench)
 }
 
 BENCHMARK(RpcMempool);
+
+/** getrawmempool without verbose on chains of CHAIN_LEN small transactions that each spend the previous one.
+ *  The fees are not monotonic along a chain, so that each chain is split into several chunks. */
+static void RpcMempoolTxids(benchmark::Bench& bench)
+{
+    static constexpr int NUM_TXS{10000};
+    static constexpr int CHAIN_LEN{25};
+    static constexpr CAmount FEE_STEP{7919};
+    static constexpr CAmount FEE_RANGE{5000};
+
+    const auto testing_setup = MakeNoLogFileContext<const ChainTestingSetup>(ChainType::MAIN);
+    CTxMemPool& pool = *Assert(testing_setup->m_node.mempool);
+    LOCK2(cs_main, pool.cs);
+
+    CTransactionRef prev;
+    for (int i = 0; i < NUM_TXS; ++i) {
+        CMutableTransaction tx;
+        tx.vin.resize(1);
+        if (i % CHAIN_LEN != 0) tx.vin[0].prevout = COutPoint{prev->GetHash(), 0};
+        tx.vin[0].scriptSig = CScript() << OP_1;
+        tx.vin[0].scriptWitness.stack.push_back({1});
+        tx.vout.resize(1);
+        tx.vout[0].scriptPubKey = CScript() << OP_1 << OP_EQUAL;
+        tx.vout[0].nValue = i;
+        prev = MakeTransactionRef(tx);
+        AddTx(prev, /*fee=*/(i * FEE_STEP) % FEE_RANGE, pool);
+    }
+    Assert(pool.size() == static_cast<size_t>(NUM_TXS));
+
+    bench.run([&] {
+        (void)MempoolToJSON(pool, /*verbose=*/false);
+    });
+}
+
+BENCHMARK(RpcMempoolTxids);
