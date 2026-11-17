@@ -432,4 +432,41 @@ BOOST_AUTO_TEST_CASE(txgraph_staging)
     graph->SanityCheck();
 }
 
+BOOST_AUTO_TEST_CASE(txgraph_main_order)
+{
+    auto graph = MakeTxGraph(50, 1000, HIGH_ACCEPTABLE_COST, PointerComparator);
+
+    // GetMainOrder must list the same transactions as a BlockBuilder that skips nothing.
+    auto check_main_order = [&graph] {
+        std::vector<TxGraph::Ref*> expected;
+        auto builder = graph->GetBlockBuilder();
+        while (auto chunk = builder->GetCurrentChunk()) {
+            expected.insert(expected.end(), chunk->first.begin(), chunk->first.end());
+            builder->Include();
+        }
+        builder.reset();
+        BOOST_CHECK(graph->GetMainOrder() == expected);
+    };
+
+    BOOST_CHECK(graph->GetMainOrder().empty());
+
+    // A chain A -> B -> C -> D whose feerates are split into several chunks, plus two unrelated
+    // transactions, one of them with the same feerate as A.
+    std::vector<TxGraph::Ref> refs;
+    refs.reserve(6);
+    const FeePerWeight feerates[]{{2, 10}, {1, 10}, {2, 10}, {4, 10}, {3, 10}, {2, 10}};
+    for (size_t i = 0; i < std::size(feerates); ++i) {
+        graph->AddTransaction(refs.emplace_back(), feerates[i]);
+        if (i > 0 && i < 4) graph->AddDependency(/*parent=*/refs[i - 1], /*child=*/refs[i]);
+        check_main_order();
+    }
+    BOOST_CHECK_EQUAL(graph->GetMainOrder().size(), refs.size());
+
+    // The order also holds after a removal.
+    graph->RemoveTransaction(refs[4]);
+    check_main_order();
+    BOOST_CHECK_EQUAL(graph->GetMainOrder().size(), refs.size() - 1);
+    graph->SanityCheck();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
