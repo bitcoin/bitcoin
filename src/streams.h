@@ -704,7 +704,9 @@ public:
         flush();
     }
 
-    //! Discard the buffered bytes even if writing them throws
+    //! Discard the buffered bytes even if writing them throws. The stream may
+    //! have obfuscated them in place, and a short write may have already put
+    //! some of them on disk, so retrying the write is unsafe.
     void flush()
     {
         if (auto buf_pos{std::exchange(m_buf_pos, 0)}) {
