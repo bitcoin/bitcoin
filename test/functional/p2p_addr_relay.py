@@ -99,6 +99,7 @@ class AddrTest(BitcoinTestFramework):
         self.oversized_addr_test()
         self.relay_tests()
         self.inbound_blackhole_tests()
+        self.bad_timestamp_test()
 
         self.destination_rotates_once_in_24_hours_test()
         self.destination_rotates_more_than_once_over_several_days_test()
@@ -252,6 +253,27 @@ class AddrTest(BitcoinTestFramework):
 
         # And that peer received addresses
         assert_equal(blackhole_peer.num_ipv4_received, 2)
+
+        self.nodes[0].disconnect_p2ps()
+
+    def bad_timestamp_test(self):
+        self.log.info('Test that addresses with out-of-range timestamps are stored as 5 days old')
+        self.mocktime = int(time.time())
+        self.nodes[0].setmocktime(self.mocktime)
+        peer = self.nodes[0].add_p2p_connection(AddrReceiver())
+
+        msg = self.setup_addr_msg(2, sequential_ips=False)
+        msg.addrs[0].time = self.mocktime + TEN_MINUTES + 1
+        msg.addrs[1].time = 100000000
+        peer.send_and_ping(msg)
+
+        sent = {(a.ip, a.port) for a in msg.addrs}
+        entries = [e for table in self.nodes[0].getrawaddrman().values() for e in table.values()
+                   if (e["address"], e["port"]) in sent]
+        assert_equal(len(entries), 2)
+        for e in entries:
+            # 5 days in the past, minus the 2 hour time penalty applied by addrman
+            assert_equal(e["time"], self.mocktime - 5 * ONE_DAY - TWO_HOURS)
 
         self.nodes[0].disconnect_p2ps()
 
