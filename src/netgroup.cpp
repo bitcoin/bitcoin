@@ -129,7 +129,7 @@ void NetGroupManager::ASMapHealthCheck(const std::vector<CNetAddr>& clearnet_add
         clearnet_asns.insert(asn);
     }
 
-    LogInfo("ASMap Health Check: %i clearnet peers are mapped to %i ASNs with %i peers being unmapped\n", clearnet_addrs.size(), clearnet_asns.size(), unmapped_count);
+    LogInfo("ASMap Health Check: %i clearnet peers are mapped to %i ASNs with %i peers being unmapped", clearnet_addrs.size(), clearnet_asns.size(), unmapped_count);
 }
 
 bool NetGroupManager::UsingASMap() const {
