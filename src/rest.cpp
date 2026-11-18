@@ -1038,6 +1038,8 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
     }
     }
 
+    if (vOutPoints.empty()) return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
+
     // limit max outpoints
     if (vOutPoints.size() > MAX_GETUTXOS_OUTPOINTS)
         return RESTERR(req, HTTP_BAD_REQUEST, strprintf("Error: max outpoints exceeded (max: %d, tried: %d)", MAX_GETUTXOS_OUTPOINTS, vOutPoints.size()));

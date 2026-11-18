@@ -183,6 +183,11 @@ class RESTTest(BitcoinTestFramework):
         for body in [bin_request.hex() + '0', bin_request.hex() + 'zz']:
             self.test_rest_request("/getutxos", http_method='POST', req_type=ReqType.HEX, body=body, status=400, ret_type=RetType.OBJ)
 
+        empty_request = b'\x01' + ser_vector([])
+        for req_type, body in [(ReqType.BIN, empty_request), (ReqType.HEX, empty_request.hex()), (ReqType.HEX, ' ')]:
+            response = self.test_rest_request("/getutxos", http_method='POST', req_type=req_type, body=body, status=400, ret_type=RetType.BYTES)
+            assert_equal(response, b"Error: empty request\r\n")
+
         self.log.info("Test the /getutxos URI with and without /checkmempool")
         # Create a transaction, check that it's found with /checkmempool, but
         # not found without. Then confirm the transaction and check that it's
