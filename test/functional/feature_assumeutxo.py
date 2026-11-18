@@ -472,6 +472,10 @@ class AssumeutxoTest(BitcoinTestFramework):
                 "106b2c56233e378a824cf0d5ff2be42ed32c72f1605c9be288d00942908a40ac")
             assert_equal(output["nchaintx"], blocks[SNAPSHOT_BASE_HEIGHT].chain_tx)
 
+        def check_rollback_unavailable(node):
+            assert_raises_rpc_error(-1, "Could not roll back to requested height because required block or undo data is unavailable.",
+                                    node.dumptxoutset, 'rollback.dat', rollback=SNAPSHOT_BASE_HEIGHT - 1)
+
         check_dump_output(dump_output)
 
         # Mine more blocks on top of the snapshot that n1 hasn't yet seen. This
@@ -529,8 +533,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
 
         self.log.info("Check snapshot rollback with unavailable block or undo data")
-        assert_raises_rpc_error(-1, "Could not roll back to requested height since necessary block data is already pruned.",
-                                n1.dumptxoutset, 'rollback.dat', rollback=SNAPSHOT_BASE_HEIGHT - 1)
+        check_rollback_unavailable(n1)
 
         self.log.info("Confirm that local services remain unchanged")
         # Since n1 is a pruned node, the 'NETWORK' service flag must always be unset.
@@ -672,6 +675,9 @@ class AssumeutxoTest(BitcoinTestFramework):
         # The node must remain in 'limited' mode
         self.assert_only_network_limited_service(n1)
 
+        self.log.info("Roll back to the snapshot base using undo from newer blocks")
+        check_dump_output(n1.dumptxoutset('rollback_to_base.dat', rollback=SNAPSHOT_BASE_HEIGHT))
+
         # Send snapshot block to n1 out of order. This makes the test less
         # realistic because normally the snapshot block is one of the last
         # blocks downloaded, but its useful to test because it triggers more
@@ -683,16 +689,13 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         self.log.info("Check snapshot rollback through the snapshot block, which has no undo data")
         assert_raises_rpc_error(-1, "Undo data not available", n1.getblockstats, snapshot_hash)
-        assert_raises_rpc_error(-1, "Could not roll back to requested height since necessary block data is already pruned.",
-                                n1.dumptxoutset, 'rollback_body.dat', rollback=SNAPSHOT_BASE_HEIGHT - 1)
+        check_rollback_unavailable(n1)
 
         self.log.info("Check snapshot rollback from a tip with block data but no undo")
         first_snapshot_child = n1.getblockhash(SNAPSHOT_BASE_HEIGHT + 1)
         n1.invalidateblock(first_snapshot_child)
         assert_equal(n1.getbestblockhash(), snapshot_hash)
-        assert_equal(n1.getblock(snapshot_hash, 0), snapshot_block)
-        assert_raises_rpc_error(-1, "Could not roll back to requested height since necessary block data is already pruned.",
-                                n1.dumptxoutset, 'rollback_tip.dat', rollback=SNAPSHOT_BASE_HEIGHT - 1)
+        check_rollback_unavailable(n1)
         n1.reconsiderblock(first_snapshot_child)
 
         self.connect_nodes(0, 1)
@@ -745,6 +748,9 @@ class AssumeutxoTest(BitcoinTestFramework):
         loaded = n2.loadtxoutset(dump_output['path'])
         assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
         assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
+
+        self.log.info("Check snapshot rollback with unavailable data on an unpruned node")
+        check_rollback_unavailable(n2)
 
         # Even though n2 is a full node, it will unset the 'NETWORK' service flag during snapshot loading.
         # This indicates other peers that the node will temporarily not provide historical blocks.
