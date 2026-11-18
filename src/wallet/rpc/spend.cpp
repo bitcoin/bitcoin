@@ -41,7 +41,7 @@ std::vector<CRecipient> CreateRecipients(const std::vector<std::pair<CTxDestinat
     std::vector<CRecipient> recipients;
     for (size_t i = 0; i < outputs.size(); ++i) {
         const auto& [destination, amount] = outputs.at(i);
-        CRecipient recipient{destination, amount, subtract_fee_outputs.contains(i)};
+        CRecipient recipient{PaymentDestination{destination}, amount, subtract_fee_outputs.contains(i)};
         recipients.push_back(recipient);
     }
     return recipients;
@@ -538,7 +538,7 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Change address must be a valid bitcoin address");
             }
 
-            coinControl.destChange = dest;
+            coinControl.destChange = PaymentDestination{dest};
         }
 
         if (const UniValue* change_position_option = GetOptionWithAlias(options, "change_position", "changePosition")) {

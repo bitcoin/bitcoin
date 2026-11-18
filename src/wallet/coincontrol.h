@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_COINCONTROL_H
 #define BITCOIN_WALLET_COINCONTROL_H
 
+#include <common/paymentdestination.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
@@ -82,8 +83,8 @@ public:
 class CCoinControl
 {
 public:
-    //! Custom change destination, if not set an address is generated
-    CTxDestination destChange = CNoDestination();
+    //! Custom change destination, if CNoDestination an address is generated
+    PaymentDestination destChange{CNoDestination{}};
     //! Override the default change type if set, ignored if destChange is set
     std::optional<OutputType> m_change_type;
     //! If false, only safe inputs will be used
