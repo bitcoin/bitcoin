@@ -36,7 +36,7 @@ class ReobfuscationTest(BitcoinTestFramework):
         before_rev = rev0.read_bytes()
 
         self.log.info("Add many dummy block/undo files for progress logging (10 pairs in total)")
-        for i in range(1, 10):
+        for i in [*range(1, 9), 100_000]:
             (blocks_dir / f"blk{i:05d}.dat").write_bytes(b"\0")
             (blocks_dir / f"rev{i:05d}.dat").write_bytes(b"\0")
         self.stop_node(0)
@@ -82,14 +82,17 @@ class ReobfuscationTest(BitcoinTestFramework):
             self.stop_node(0)
 
         self.log.info("Simulate interrupted rename stage; ensure resume without flag")
-        dummy_reobfuscated = blocks_dir / "blk99999.dat.reobfuscated"
-        dummy_reobfuscated.write_bytes(b"\x00")
+        blk100001 = blocks_dir / "blk100001.dat"
+        staged(blk100001).write_bytes(b"\x00")
+        unrelated_staged = staged(blocks_dir / "notes")
+        unrelated_staged.touch()
         xor_new.write_bytes(node.read_xor_key())
         xor_dat.unlink()
         self.run_startup()
 
-        assert (blocks_dir / "blk99999.dat").exists(), "resume did not rename staged block file"
-        assert not dummy_reobfuscated.exists(), "resume did not remove reobfuscated suffix"
+        assert blk100001.exists(), "resume did not rename staged block file"
+        assert not staged(blk100001).exists(), "resume did not remove reobfuscated suffix"
+        assert unrelated_staged.exists()
         assert xor_dat.exists(), "resume did not restore xor.dat"
         assert not xor_new.exists(), "resume did not remove xor.dat.reobfuscated"
 

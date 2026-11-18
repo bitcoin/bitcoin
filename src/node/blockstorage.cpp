@@ -52,6 +52,7 @@
 #include <ostream>
 #include <span>
 #include <stdexcept>
+#include <string_view>
 #include <system_error>
 #include <unordered_map>
 
@@ -178,20 +179,25 @@ constexpr auto BLOCK_REOBFUSCATION_SUFFIX{".reobfuscated"};
 constexpr size_t REOBFUSCATION_BUFFER_SIZE{1_MiB}; // Independent of FlatFileSeq preallocation
 
 struct BlockFileEntry {
-    std::string file_num;
+    int file_num;
     bool is_block;
     fs::path path;
 };
 
-std::vector<BlockFileEntry> CollectBlockAndUndoFiles(const fs::path& blocks_dir)
+std::vector<BlockFileEntry> CollectBlockAndUndoFiles(const fs::path& blocks_dir, std::string_view suffix = {})
 {
     std::vector<BlockFileEntry> files;
     for (auto& entry : fs::directory_iterator(blocks_dir)) {
-        auto filename{fs::PathToString(entry.path().filename())};
-        if (filename.length() == 12 && filename.ends_with(".dat") && entry.is_regular_file()) {
-            if (bool is_block{filename.starts_with("blk")}; is_block || filename.starts_with("rev")) {
-                files.emplace_back(filename.substr(3, 5), is_block, entry.path());
-            }
+        const auto filename{fs::PathToString(entry.path().filename())};
+        const auto extension{filename.find('.', 3)};
+        if (extension == std::string::npos) continue;
+        const auto file_num{ToIntegral<int>(std::string_view{filename}.substr(3, extension - 3))};
+        const bool is_block{filename.starts_with("blk")};
+        // Match FlatFileSeq::FileName() with the optional staging suffix
+        if (file_num &&
+            filename == strprintf("%s%05u.dat%s", is_block ? "blk" : "rev", static_cast<unsigned>(*file_num), suffix) &&
+            entry.is_regular_file()) {
+            files.emplace_back(*file_num, is_block, entry.path());
         }
     }
     return files;
@@ -747,15 +753,15 @@ bool BlockManager::CheckBlockDataAvailability(const CBlockIndex& upper_block, co
 // works correctly.
 void BlockManager::CleanupBlockRevFiles() const
 {
-    std::map<std::string, fs::path> mapBlockFiles;
+    std::map<int, fs::path> mapBlockFiles;
 
-    // Glob all blk?????.dat and rev?????.dat files from the blocks directory.
+    // Find block and undo files in the blocks directory.
     // Remove the rev files immediately and insert the blk file paths into an
     // ordered map keyed by block file index.
-    LogInfo("Removing unusable blk?????.dat and rev?????.dat files for -reindex with -prune");
+    LogInfo("Removing unusable block and undo files for -reindex with -prune");
     for (auto& file : CollectBlockAndUndoFiles(m_opts.blocks_dir)) {
         if (file.is_block) {
-            mapBlockFiles.emplace(std::move(file.file_num), std::move(file.path));
+            mapBlockFiles.emplace(file.file_num, std::move(file.path));
         } else {
             remove(file.path);
         }
@@ -766,12 +772,12 @@ void BlockManager::CleanupBlockRevFiles() const
     // keeping a separate counter.  Once we hit a gap (or if 0 doesn't exist)
     // start removing block files.
     int nContigCounter = 0;
-    for (const std::pair<const std::string, fs::path>& item : mapBlockFiles) {
-        if (LocaleIndependentAtoi<int>(item.first) == nContigCounter) {
+    for (const auto& [file_num, path] : mapBlockFiles) {
+        if (file_num == nContigCounter) {
             nContigCounter++;
             continue;
         }
-        remove(item.second);
+        remove(path);
     }
 }
 
@@ -1372,14 +1378,8 @@ void ObfuscateBlocks(
     CommitBlocksDir(blocks_dir);
 
     // Activate staged data files before the new key. Renaming the key signals completion
-    std::vector<fs::path> staged_files;
-    for (auto& entry : fs::directory_iterator(blocks_dir)) {
-        if (entry.path().extension() == BLOCK_REOBFUSCATION_SUFFIX && entry.path() != xor_new && entry.is_regular_file()) {
-            staged_files.emplace_back(entry.path());
-        }
-    }
-    for (auto& staged : staged_files) {
-        fs::rename(staged, staged.parent_path() / staged.stem());
+    for (const auto& file : CollectBlockAndUndoFiles(blocks_dir, BLOCK_REOBFUSCATION_SUFFIX)) {
+        fs::rename(file.path, file.path.parent_path() / file.path.stem());
     }
     CommitBlocksDir(blocks_dir);
     fs::rename(xor_new, xor_dat);
