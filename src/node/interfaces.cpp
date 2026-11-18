@@ -81,6 +81,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -929,11 +930,13 @@ public:
         return TransactionMerklePath(m_block_template->block, 0);
     }
 
-    bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase, std::string& reason, std::string& debug) override
+    std::unique_ptr<interfaces::Block> submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase, bool& accepted, std::string& reason, std::string& debug) override
     {
-        if (!coinbase) return false;
-        AddMerkleRootAndCoinbase(m_block_template->block, std::move(coinbase), version, timestamp, nonce);
-        return block_template_manager().SubmitBlock(std::make_shared<const CBlock>(m_block_template->block), reason, debug);
+        if (!coinbase) throw std::invalid_argument("Coinbase transaction must not be null");
+        auto block{std::make_shared<CBlock>(m_block_template->block)};
+        AddMerkleRootAndCoinbase(*block, std::move(coinbase), version, timestamp, nonce);
+        accepted = block_template_manager().SubmitBlock(block, reason, debug);
+        return std::make_unique<BlockImpl>(std::move(block));
     }
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
@@ -951,7 +954,7 @@ public:
 
     const BlockCreateOptions m_create_options;
 
-    const util::NotNullSharedPtr<CBlockTemplate> m_block_template;
+    const util::NotNullSharedPtr<const CBlockTemplate> m_block_template;
 
     bool m_interrupt_wait{false};
     node::BlockTemplateManager& block_template_manager() { return *Assert(m_node.block_template_manager); }
