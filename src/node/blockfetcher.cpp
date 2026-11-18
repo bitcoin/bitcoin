@@ -65,6 +65,7 @@ void BlockFetcher::FillQueue(const CBlockIndex* last_index, int next_height)
             return std::shared_ptr<CBlock>{};
         });
     }
+    if (tasks.empty()) return;
     if (auto followups{m_pool.Submit(std::move(tasks))}) std::ranges::move(*followups, std::back_inserter(m_followups));
 }
 } // namespace node

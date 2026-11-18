@@ -38,9 +38,9 @@ public:
 
     //! Discard unneeded read-ahead results without cancelling submitted reads
     void Clear() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    //! Supply a prefetched block for connection, or nullptr to fall back to synchronous reading
+    //! Return the next prefetched block if its hash matches, or nullptr if unavailable
     std::shared_ptr<const CBlock> Load(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    //! Queue upcoming blocks so disk reads overlap block connection
+    //! Queue upcoming blocks to be read and deserialized asynchronously
     void FillQueue(const CBlockIndex* last_index, int next_height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
 } // namespace node
