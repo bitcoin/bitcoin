@@ -52,6 +52,7 @@ class ReindexTest(BitcoinTestFramework):
         assert_equal(cached_block_count(self.nodes[0], log_start), blockcount if justchainstate else blockcount - 1)
         block_hash = self.nodes[0].getblockhash(1)  # Reconnect in a second activation to check worker reuse
         self.nodes[0].invalidateblock(block_hash)
+        assert_equal(self.nodes[0].getblockcount(), 0)
         log_start = self.nodes[0].debug_log_size(encoding='utf-8')
         with self.nodes[0].assert_debug_log(expected_msgs=[], unexpected_msgs=blockread_msgs(2)):
             self.nodes[0].reconsiderblock(block_hash)
