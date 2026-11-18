@@ -64,7 +64,6 @@ private:
     void useNewAddress();
 
     const bool m_v24_active;
-    const bool m_is_shared;
     const QString m_voting_address;
     const std::vector<interfaces::MnShare> m_shares;
 

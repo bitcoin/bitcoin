@@ -160,6 +160,7 @@ MasternodeActionDialog::MasternodeActionDialog(interfaces::Node& node, WalletMod
     m_wallet_model{wallet_model},
     m_protx_hash{entry.proTxHashRaw()},
     m_operator_pubkey{entry.operatorPubKeyBytes()},
+    m_is_shared{entry.isShared()},
     m_runner{wallet_model ? new MasternodeOperationRunner(node.evo(), wallet_model->wallet(), this) : nullptr}
 {
 }
@@ -228,10 +229,11 @@ bool MasternodeActionDialog::canSign() const
     return m_wallet_model != nullptr && !m_wallet_model->wallet().privateKeysDisabled();
 }
 
-void MasternodeActionDialog::setOkValid(bool valid)
+void MasternodeActionDialog::setOkValid(bool valid, const QString& tooltip)
 {
     m_valid = valid;
     if (m_ok_button) m_ok_button->setEnabled(valid && canSign() && !m_busy);
+    if (m_ok_button && canSign()) m_ok_button->setToolTip(tooltip);
 }
 
 void MasternodeActionDialog::showError(const QString& message)
@@ -279,7 +281,7 @@ void MasternodeActionDialog::setBusy(bool busy)
         QApplication::restoreOverrideCursor();
     }
     if (m_button_box) m_button_box->setEnabled(!busy);
-    setOkValid(m_valid);
+    if (m_ok_button) setOkValid(m_valid, m_ok_button->toolTip());
 }
 
 void MasternodeActionDialog::resolveOperatorKey(OperatorSecretWidget& widget, SecretCallback callback)
@@ -421,6 +423,8 @@ UpdateServiceDialog::UpdateServiceDialog(interfaces::Node& node, WalletModel* wa
                                                 "payout. Select an address only to override that choice."));
     }
 
+    connect(m_fee_source, qOverload<int>(&QComboBox::currentIndexChanged), this, &UpdateServiceDialog::validate);
+
     setupUi(m_type == MnType::Evo ? tr("Update EvoNode Service") : tr("Update Masternode Service"),
             tr("Update the registered service endpoints. A successful update also revives a PoSe-banned "
                "masternode. Every current value is prefilled so unchanged fields are preserved."),
@@ -438,7 +442,9 @@ void UpdateServiceDialog::validate()
     if (m_type == MnType::Evo) {
         ok &= IsValidPlatformNodeId(m_platform_node_id_edit->text().trimmed());
     }
-    setOkValid(ok);
+    const bool has_fee_source{!m_is_shared || !m_fee_source->selectedAddress().isEmpty()};
+    setOkValid(ok && has_fee_source,
+               has_fee_source ? QString{} : tr("Select a wallet address with funds to pay the transaction fee."));
 }
 
 std::optional<interfaces::ProviderNetInfo> UpdateServiceDialog::buildNetInfo(QString& error) const
@@ -681,13 +687,20 @@ RevokeDialog::RevokeDialog(interfaces::Node& node, WalletModel* wallet_model, co
                                                 "payout. Select an address only to override that choice."));
     }
 
+    connect(m_fee_source, qOverload<int>(&QComboBox::currentIndexChanged), this, &RevokeDialog::validate);
+
     setupUi(tr("Revoke Masternode Service"),
             tr("Revoking clears the service address and PoSe-bans the masternode until its owner changes the "
                "operator key. The collateral is not affected."),
             form, tr("Revoke"));
 }
 
-void RevokeDialog::validate() { setOkValid(m_operator_key->isValid()); }
+void RevokeDialog::validate()
+{
+    const bool has_fee_source{!m_is_shared || !m_fee_source->selectedAddress().isEmpty()};
+    setOkValid(m_operator_key->isValid() && has_fee_source,
+               has_fee_source ? QString{} : tr("Select a wallet address with funds to pay the transaction fee."));
+}
 
 std::optional<interfaces::ProviderRevokeRequest> RevokeDialog::buildRequest(CBLSSecretKey operator_key, QString& error) const
 {

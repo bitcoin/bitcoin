@@ -95,7 +95,7 @@ protected:
     FeeSourcePicker* addFeeSourceRow(QFormLayout* form, const QString& automatic_note);
 
     bool canSign() const;
-    void setOkValid(bool valid);
+    void setOkValid(bool valid, const QString& tooltip = {});
     void showError(const QString& message);
     void clearError();
     void abortOperation(const QString& message);
@@ -106,6 +106,7 @@ protected:
     WalletModel* const m_wallet_model;
     const uint256 m_protx_hash;
     const std::vector<unsigned char> m_operator_pubkey;
+    const bool m_is_shared;
     MasternodeOperationRunner* const m_runner;
 
 protected Q_SLOTS:

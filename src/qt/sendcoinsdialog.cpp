@@ -190,7 +190,7 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         fKeepChangeAddress = _model->getOptionsModel()->getKeepChangeAddress();
 
         QSettings settings;
-        if (fKeepChangeAddress && settings.contains("sCustomChangeAddress")) {
+        if (!m_coin_control->IsUsingCoinJoin() && fKeepChangeAddress && settings.contains("sCustomChangeAddress")) {
             ui->checkBoxCoinControlChange->setChecked(true);
             ui->lineEditCoinControlChange->setText(settings.value("sCustomChangeAddress").toString());
             coinControlChangeEdited(ui->lineEditCoinControlChange->text());
@@ -254,7 +254,7 @@ void SendCoinsDialog::setModel(WalletModel *_model)
 SendCoinsDialog::~SendCoinsDialog()
 {
     QSettings settings;
-    if (fKeepChangeAddress) {
+    if (fKeepChangeAddress && !m_coin_control->IsUsingCoinJoin()) {
         settings.setValue("sCustomChangeAddress", ui->lineEditCoinControlChange->text());
     }
     settings.setValue("fFeeSectionMinimized", fFeeMinimized);
@@ -532,9 +532,13 @@ void SendCoinsDialog::presentPSBT(PartiallySignedTransaction& psbtx)
         if (filename.isEmpty()) {
             return;
         }
-        std::ofstream out{filename.toLocal8Bit().data(), std::ofstream::out | std::ofstream::binary};
+        std::ofstream out(GUIUtil::QStringToPath(filename), std::ofstream::out | std::ofstream::binary);
         out << ssTx.str();
         out.close();
+        if (!out) {
+            Q_EMIT message(tr("PSBT save failed"), tr("Failed to save PSBT to disk"), CClientUIInterface::MSG_ERROR);
+            break;
+        }
         Q_EMIT message(tr("PSBT saved"), "PSBT saved to disk", CClientUIInterface::MSG_INFORMATION);
         break;
     }

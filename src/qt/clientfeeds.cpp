@@ -211,6 +211,7 @@ void ProposalFeed::fetch()
 
     const auto data_mn = m_feed_masternode.data();
     if (!data_mn || !data_mn->m_valid) {
+        m_retry_pending.store(true);
         return;
     }
 

@@ -42,6 +42,7 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QComboBox>
+#include <QDialogButtonBox>
 #include <QDir>
 #include <QFile>
 #include <QFocusEvent>
@@ -300,6 +301,39 @@ void MasternodeMaintenanceTests::automaticFeeSource()
     const auto shared_revocation{shared_revoke.buildRequest(shared->operatorSecret(), error)};
     QVERIFY2(shared_revocation.has_value(), qPrintable(error));
     QVERIFY(shared_revocation->fee_source == std::optional<CTxDestination>{funded});
+
+    const auto empty_wallet{MakeTestWallet(m_node, context, "unfunded_operator")};
+    QVERIFY(empty_wallet != nullptr);
+    guard.keep(empty_wallet);
+    WalletModel empty_model(interfaces::MakeWallet(context, empty_wallet), models.client);
+    UpdateServiceDialog unfunded_service(m_node, &empty_model, shared_entry, capabilities, nullptr);
+    RevokeDialog unfunded_revoke(m_node, &empty_model, shared_entry, nullptr);
+    auto check_fee_selection = [&](MasternodeActionDialog& dialog, bool has_funds) {
+        auto* key_widget = dialog.findChild<OperatorSecretWidget*>();
+        QVERIFY(key_widget);
+        key_widget->findChild<QLineEdit*>()->setText(QString::fromStdString(shared->operatorSecret().ToString(false)));
+        QVERIFY(key_widget->isValid());
+        auto* fee_picker = dialog.findChild<FeeSourcePicker*>();
+        auto* buttons = dialog.findChild<QDialogButtonBox*>();
+        QVERIFY(fee_picker);
+        QVERIFY(buttons);
+        QCOMPARE(fee_picker->count(), has_funds ? 1 : 0);
+        auto* ok_button = buttons->button(QDialogButtonBox::Ok);
+        QCOMPARE(ok_button->isEnabled(), has_funds);
+        QCOMPARE(ok_button->toolTip().isEmpty(), has_funds);
+        if (has_funds) {
+            fee_picker->setCurrentIndex(-1);
+            QVERIFY(!ok_button->isEnabled());
+            QVERIFY(!ok_button->toolTip().isEmpty());
+            fee_picker->setCurrentIndex(0);
+            QVERIFY(ok_button->isEnabled());
+            QVERIFY(ok_button->toolTip().isEmpty());
+        }
+    };
+    check_fee_selection(unfunded_service, false);
+    check_fee_selection(unfunded_revoke, false);
+    check_fee_selection(shared_service, true);
+    check_fee_selection(shared_revoke, true);
 }
 
 void MasternodeMaintenanceTests::operatorSecretValidation()

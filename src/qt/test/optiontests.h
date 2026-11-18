@@ -25,6 +25,7 @@ private Q_SLOTS:
     void invalidLangSetting();
     void parametersInteraction();
     void extractFilter();
+    void tabsWithoutWallet();
     void effectivePointSize();
     void updateFontsWithPixelSizedWidget();
 
