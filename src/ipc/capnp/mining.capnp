@@ -36,22 +36,28 @@ interface Mining $Proxy.wrap("interfaces::Mining") {
 interface Block $Proxy.wrap("interfaces::Block") {
     destroy @0 (context :Proxy.Context) -> ();
     data @1 (context :Proxy.Context) -> (result :Data);
+    header @2 (context :Proxy.Context) -> (result :Data);
+    coinbaseMerklePath @3 (context :Proxy.Context) -> (result :List(Data));
 }
 
 interface BlockTemplate $Proxy.wrap("interfaces::BlockTemplate") {
     destroy @0 (context :Proxy.Context) -> ();
-    getBlockHeader @1 (context: Proxy.Context) -> (result: Data);
     getTxFees @3 (context: Proxy.Context) -> (result: List(Int64));
     getTxSigops @4 (context: Proxy.Context) -> (result: List(Int64));
     getCoinbaseTx @5 (context: Proxy.Context) -> (result: CoinbaseTx);
-    getCoinbaseMerklePath @6 (context: Proxy.Context) -> (result: List(Data));
     waitNext @8 (context: Proxy.Context, options: BlockWaitOptions) -> (result: BlockTemplate);
     interruptWait @9() -> ();
     block @11 (context: Proxy.Context) -> (result: Block);
     submitSolution @12 (context: Proxy.Context, version: UInt32, timestamp: UInt32, nonce: UInt32, coinbase :Data) -> (accepted: Bool, reason: Text, debug: Text, result: Block);
 
+    # DEPRECATED: older version of Block.header which returns an error.
+    getBlockHeaderOld1 @1 (context: Proxy.Context) -> (result: Data);
+
     # DEPRECATED: older version of block which returns an error.
     getBlockOld2 @2 (context: Proxy.Context) -> (result: Data);
+
+    # DEPRECATED: older version of Block.coinbaseMerklePath which returns an error.
+    getCoinbaseMerklePathOld6 @6 (context: Proxy.Context) -> (result: List(Data));
 
     # DEPRECATED: older version of submitSolution which returns an error.
     submitSolutionOld7 @7 (context: Proxy.Context, version: UInt32, timestamp: UInt32, nonce: UInt32, coinbase :Data) -> (result: Bool);

@@ -37,8 +37,18 @@ class Block
 public:
     virtual ~Block() = default;
 
+    //! Return the block header.
+    virtual CBlockHeader header() = 0;
+
     //! Return the full block.
     virtual CBlock data() = 0;
+
+    /**
+     * Compute merkle path to the coinbase transaction
+     *
+     * @return merkle path ordered from the deepest
+     */
+    virtual std::vector<uint256> coinbaseMerklePath() = 0;
 };
 
 //! Block template interface
@@ -47,7 +57,6 @@ class BlockTemplate
 public:
     virtual ~BlockTemplate() = default;
 
-    virtual CBlockHeader getBlockHeader() = 0;
     /**
      * Return the template block. It contains a dummy coinbase transaction
      * that should not be used and may not match a transaction constructed from
@@ -56,6 +65,9 @@ public:
      * The handle remains valid after the template is destroyed.
      */
     virtual std::unique_ptr<Block> block() = 0;
+
+    //! Deprecated: no longer supported, returns an error.
+    virtual CBlockHeader getBlockHeaderOld1() { throw std::runtime_error("Old getBlockHeader (@1) not supported. Please update your client!"); }
 
     //! Deprecated: no longer supported, returns an error.
     virtual CBlock getBlockOld2() { throw std::runtime_error("Old getBlock (@2) not supported. Please update your client!"); }
@@ -68,12 +80,8 @@ public:
     /** Return fields needed to construct a coinbase transaction */
     virtual node::CoinbaseTx getCoinbaseTx() = 0;
 
-    /**
-     * Compute merkle path to the coinbase transaction
-     *
-     * @return merkle path ordered from the deepest
-     */
-    virtual std::vector<uint256> getCoinbaseMerklePath() = 0;
+    //! Deprecated: no longer supported, returns an error.
+    virtual std::vector<uint256> getCoinbaseMerklePathOld6() { throw std::runtime_error("Old getCoinbaseMerklePath (@6) not supported. Please update your client!"); }
 
     /**
      * Construct and broadcast a block from a copy of the template,

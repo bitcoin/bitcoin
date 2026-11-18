@@ -879,9 +879,19 @@ class BlockImpl : public interfaces::Block
 public:
     explicit BlockImpl(std::shared_ptr<const CBlock> block) : m_block(std::move(block)) {}
 
+    CBlockHeader header() override
+    {
+        return *m_block;
+    }
+
     CBlock data() override
     {
         return *m_block;
+    }
+
+    std::vector<uint256> coinbaseMerklePath() override
+    {
+        return TransactionMerklePath(*m_block, 0);
     }
 
 private:
@@ -897,11 +907,6 @@ public:
                                                           m_block_template(std::move(block_template)),
                                                           m_node(node)
     {
-    }
-
-    CBlockHeader getBlockHeader() override
-    {
-        return m_block_template->block;
     }
 
     std::unique_ptr<interfaces::Block> block() override
@@ -923,11 +928,6 @@ public:
     CoinbaseTx getCoinbaseTx() override
     {
         return m_block_template->m_coinbase_tx;
-    }
-
-    std::vector<uint256> getCoinbaseMerklePath() override
-    {
-        return TransactionMerklePath(m_block_template->block, 0);
     }
 
     std::unique_ptr<interfaces::Block> submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase, bool& accepted, std::string& reason, std::string& debug) override

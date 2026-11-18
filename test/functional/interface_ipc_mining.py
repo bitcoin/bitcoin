@@ -261,7 +261,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 assert template is not None
 
                 self.log.debug("Test some inspectors of Template")
-                header = (await template.getBlockHeader(ctx)).result
+                header = (await template.block(ctx).result.header(ctx)).result
                 assert_equal(len(header), block_header_size)
                 block = await mining_get_block(template, ctx)
                 current_tip = self.nodes[0].getbestblockhash()
@@ -538,6 +538,10 @@ class IPCMiningTest(BitcoinTestFramework):
                 coinbase = block.vtx[0]
                 self.log.debug("Template should include a mempool transaction")
                 assert len(block.vtx) >= 2, "Block should include at least the coinbase and the mempool tx"
+                self.log.debug("Block handle returns the header and the coinbase merkle path")
+                assert_equal((await template_block.header(ctx)).result, remote_block_before.serialize()[:80])
+                merkle_path = (await template_block.coinbaseMerklePath(ctx)).result
+                assert_equal(merkle_path[0], ser_uint256(block.vtx[1].txid_int))
                 balance = self.miniwallet.get_balance()
                 original_version = block.nVersion
 
@@ -922,12 +926,12 @@ class IPCMiningTest(BitcoinTestFramework):
 
                 done = asyncio.Event()
 
-                header_before = bytes((await template.getBlockHeader(reader_ctx)).result)
+                header_before = bytes((await template.block(reader_ctx).result.header(reader_ctx)).result)
                 block_before = block.serialize()
 
                 async def read_loop():
                     while not done.is_set():
-                        assert_equal(bytes((await template.getBlockHeader(reader_ctx)).result), header_before)
+                        assert_equal(bytes((await template.block(reader_ctx).result.header(reader_ctx)).result), header_before)
                         assert_equal((await mining_get_block(template, reader_ctx)).serialize(), block_before)
 
                 async def submit_loop():
@@ -946,7 +950,7 @@ class IPCMiningTest(BitcoinTestFramework):
                         task.cancel()
                     await asyncio.gather(*tasks, return_exceptions=True)
                 assert_equal(self.nodes[0].getblockcount(), height)
-                assert_equal(bytes((await template.getBlockHeader(reader_ctx)).result), header_before)
+                assert_equal(bytes((await template.block(reader_ctx).result.header(reader_ctx)).result), header_before)
                 assert_equal((await mining_get_block(template, reader_ctx)).serialize(), block_before)
             finally:
                 # Limit how long we wait for the template destruction IPC call.
