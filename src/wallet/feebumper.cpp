@@ -191,6 +191,15 @@ util::Expected<BumpTransaction, BumpError> CreateRateBumpTransaction(CWallet& wa
         errors.emplace_back(Untranslated("Change position is out of range"));
         return util::Unexpected{BumpError{Result::INVALID_PARAMETER, std::move(errors)}};
     }
+    // An output without a destination, such as an OP_RETURN, cannot be used as change
+    if (original_change_index.has_value()) {
+        CTxDestination change_dest;
+        ExtractDestination(tx->vout.at(*original_change_index).scriptPubKey, change_dest);
+        if (std::holds_alternative<CNoDestination>(change_dest)) {
+            errors.emplace_back(Untranslated("Change position does not refer to an output that cannot receive change (e.g. OP_RETURN)"));
+            return util::Unexpected{BumpError{Result::INVALID_PARAMETER, std::move(errors)}};
+        }
+    }
 
     // Retrieve all of the UTXOs and add them to coin control
     // While we're here, calculate the input amount
