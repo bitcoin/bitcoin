@@ -4840,7 +4840,7 @@ VerifyDBResult CVerifyDB::VerifyDB(
         return VerifyDBResult::SKIPPED_L3_CHECKS;
     }
     if (skipped_missing_data) {
-        return VerifyDBResult::SKIPPED_MISSING_BLOCKS;
+        return VerifyDBResult::SKIPPED_MISSING_DATA;
     }
     return VerifyDBResult::SUCCESS;
 }

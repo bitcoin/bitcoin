@@ -260,7 +260,7 @@ ChainstateLoadResult VerifyLoadedChainstate(ChainstateManager& chainman, const C
                 options.check_blocks);
             switch (result) {
             case VerifyDBResult::SUCCESS:
-            case VerifyDBResult::SKIPPED_MISSING_BLOCKS:
+            case VerifyDBResult::SKIPPED_MISSING_DATA:
                 break;
             case VerifyDBResult::INTERRUPTED:
                 return {ChainstateLoadStatus::INTERRUPTED, _("Block verification was interrupted")};
