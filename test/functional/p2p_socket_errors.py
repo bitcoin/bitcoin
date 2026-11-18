@@ -110,7 +110,7 @@ class SocketErrorsTest(BitcoinTestFramework):
         # Linux is the only platform where the node uses poll(), unless it is
         # a Windows binary running under Wine.
         uses_poll = self.linux_host and not self.windows_target
-        expected_msgs = ["socket send error"] if uses_poll else []
+        expected_msgs = ["socket error or hangup"] if uses_poll else []
         with node.assert_debug_log(expected_msgs):
             peer.peer_disconnect(reset=True)
             self.wait_until(lambda: len(node.getpeerinfo()) == 0, timeout=10)
