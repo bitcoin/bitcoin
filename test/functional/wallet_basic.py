@@ -437,7 +437,7 @@ class WalletTest(BitcoinTestFramework):
         # check if wallet or blockchain maintenance changes the balance
         self.sync_all()
         blocks = self.generate(self.nodes[0], 2)
-        balance_nodes = [self.nodes[i].getbalance() for i in range(3)]
+        balance_nodes = [node.getbalance() for node in self.nodes]
         block_count = self.nodes[0].getblockcount()
 
         # Check modes:
@@ -462,8 +462,8 @@ class WalletTest(BitcoinTestFramework):
         self.start_node(1, ['-reindex', "-limitclustercount=" + str(chainlimit)])
         self.start_node(2, ['-reindex', "-limitclustercount=" + str(chainlimit)])
         # reindex will leave rpc warm up "early"; Wait for it to finish
-        self.wait_until(lambda: [block_count] * 3 == [self.nodes[i].getblockcount() for i in range(3)])
-        assert_equal(balance_nodes, [self.nodes[i].getbalance() for i in range(3)])
+        self.wait_until(lambda: [block_count] * len(self.nodes) == [node.getblockcount() for node in self.nodes])
+        assert_equal(balance_nodes, [node.getbalance() for node in self.nodes])
 
         # Exercise listsinceblock with the last two blocks
         coinbase_tx_1 = self.nodes[0].listsinceblock(blocks[0])
