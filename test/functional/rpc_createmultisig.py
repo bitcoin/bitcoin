@@ -15,8 +15,9 @@ from test_framework.messages import COIN
 from test_framework.script_util import keys_to_multisig_script
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_raises_rpc_error,
     assert_equal,
+    assert_false,
+    assert_raises_rpc_error,
 )
 from test_framework.wallet_util import generate_keypair
 from test_framework.wallet import (
@@ -149,9 +150,9 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "redeemScript/witnessScript does not match scriptPubKey", node2.signrawtransactionwithkey, rawtx, priv_keys[0:nsigs-1], [prevtx_err])
 
         rawtx2 = node2.signrawtransactionwithkey(rawtx, priv_keys[0:nsigs - 1], prevtxs)
-        assert_equal(rawtx2["complete"], False)
+        assert_false(rawtx2["complete"])
         rawtx3 = node2.signrawtransactionwithkey(rawtx, [priv_keys[-1]], prevtxs)
-        assert_equal(rawtx3["complete"], False)
+        assert_false(rawtx3["complete"])
 
         if assert_mergeability:
             # Test boundary conditions

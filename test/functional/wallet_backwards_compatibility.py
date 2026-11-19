@@ -26,9 +26,11 @@ from test_framework.messages import ser_string
 
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_greater_than,
     assert_not_equal,
     assert_raises_rpc_error,
+    assert_true,
 )
 
 LAST_KEYPOOL_INDEX = 9 # Index of the last derived address with the keypool size of 10
@@ -219,7 +221,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         # Taproot descriptor with a public-only internal key: the wallet can only
         # spend via the script path, so the key path is signed separately below.
         script_path_desc = descsum_create(f"tr({xpubs[0].to_string()}/*,pk({xprvs[1].to_string()}/*))")
-        assert_equal(wallet.importdescriptors([{"desc": script_path_desc, "active": True, "timestamp": "now"}])[0]["success"], True)
+        assert_true(wallet.importdescriptors([{"desc": script_path_desc, "active": True, "timestamp": "now"}])[0]["success"])
 
         # Fund tr output owned by the wallet
         node_miner.sendtoaddress(wallet.getnewaddress(address_type="bech32m"), 1)
@@ -319,7 +321,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         node_master.createwallet(wallet_name="w2", disable_private_keys=True)
         wallet = node_master.get_wallet_rpc("w2")
         info = wallet.getwalletinfo()
-        assert_equal(info['private_keys_enabled'], False)
+        assert_false(info['private_keys_enabled'])
         assert_equal(info['keypoolsize'], 0)
 
         # w3: blank wallet, created on master: update this
@@ -337,7 +339,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         assert miniscript_apos != miniscript_desc
         for desc in [miniscript_desc, miniscript_apos]:
             res = wallet.importdescriptors([{"desc": descsum_create(desc), "timestamp":"now"}])
-            assert_equal(res[0]["success"], True)
+            assert_true(res[0]["success"])
 
         # Unload wallets and copy to older nodes:
         node_master_wallets_dir = node_master.wallets_path
@@ -379,7 +381,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                     wallet = n.get_wallet_rpc(wallet_name)
                     info = wallet.getwalletinfo()
                     if wallet_name == "w1":
-                        assert_equal(info['private_keys_enabled'], True)
+                        assert_true(info['private_keys_enabled'])
                         assert info['keypoolsize'] > 0
                         txs = wallet.listtransactions()
                         assert_equal(len(txs), 5)
@@ -394,10 +396,10 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                         assert_equal(txs[3]["replaced_by_txid"], tx4_id)
                         assert not hasattr(txs[3], "blockindex")
                     elif wallet_name == "w2":
-                        assert_equal(info['private_keys_enabled'], False)
+                        assert_false(info['private_keys_enabled'])
                         assert_equal(info['keypoolsize'], 0)
                     elif wallet_name == "w3":
-                        assert_equal(info['private_keys_enabled'], True)
+                        assert_true(info['private_keys_enabled'])
                         assert_equal(info['keypoolsize'], 0)
                     elif wallet_name == "miniscript":
                         descs = wallet.listdescriptors()["descriptors"]
@@ -438,7 +440,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
             if self.major_version_at_least(node, 24):
                 res = wallet_prev.importdescriptors([{"desc": descsum_create(miniscript_desc), "timestamp":"now"}])
-                assert_equal(res[0]["success"], True)
+                assert_true(res[0]["success"])
 
             # Make a backup of the wallet file
             backup_path = os.path.join(self.options.tmpdir, f"{wallet_name}.dat")

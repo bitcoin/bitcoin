@@ -17,6 +17,8 @@ from test_framework.messages import COIN
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
+    assert_true,
     bpf_cflags,
 )
 from test_framework.wallet import MiniWallet
@@ -204,7 +206,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
                 assert_equal(0, event.index)  # prevout index
                 assert_equal(EARLY_BLOCK_HEIGHT, event.height)
                 assert_equal(50 * COIN, event.value)
-                assert_equal(True, event.is_coinbase)
+                assert_true(event.is_coinbase)
             except AssertionError:
                 self.log.exception("Assertion failed")
             else:
@@ -216,7 +218,7 @@ class UTXOCacheTracepointTest(BitcoinTestFramework):
             "testmempoolaccept the invalid transaction to trigger an UTXO-cache uncache")
         result = self.nodes[0].testmempoolaccept(
             [invalid_tx.serialize().hex()])[0]
-        assert_equal(result["allowed"], False)
+        assert_false(result["allowed"])
 
         bpf.perf_buffer_poll(timeout=100)
         bpf.cleanup()

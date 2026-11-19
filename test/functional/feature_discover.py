@@ -7,7 +7,7 @@
 import socket
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_true
 
 
 def is_valid_ipv4_address(address):
@@ -38,7 +38,7 @@ class DiscoverTest(BitcoinTestFramework):
             self.log.info(f"Validating {address}")
             valid = (is_valid_ipv4_address(address)
                      or is_valid_ipv6_address(address))
-            assert_equal(valid, True)
+            assert_true(valid)
 
     def test_local_addresses(self, test_case, *, expect_empty=False):
         self.log.info(f"Restart node with {test_case}")

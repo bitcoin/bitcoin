@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test deprecation of RPC calls."""
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_true
 from test_framework.test_framework import BitcoinTestFramework
 
 '''
@@ -28,7 +28,7 @@ class WalletDeprecatedRBFTest(BitcoinTestFramework):
       wallet = node.get_wallet_rpc("deprecated_optinrbf")
       self.generatetoaddress(node, nblocks=101, address=wallet.getnewaddress(), sync_fun=self.no_op)
       tx = wallet.gettransaction(wallet.sendall(recipients=[wallet.getnewaddress()])["txid"])
-      assert_equal("bip125-replaceable" in tx, True)
+      assert_true("bip125-replaceable" in tx)
       assert_equal(tx["bip125-replaceable"], "no")
       self.stop_node(0, expected_stderr="Warning: -walletrbf is deprecated and will be fully removed in the next release.")
 

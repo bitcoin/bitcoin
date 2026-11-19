@@ -15,8 +15,10 @@ except ImportError:
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_greater_than,
     assert_raises_rpc_error,
+    assert_true,
     bpf_cflags,
 )
 
@@ -190,7 +192,7 @@ class CoinSelectionTracepointTest(BitcoinTestFramework):
         wallet.sendtoaddress(wallet.getnewaddress(), 10)
         events = self.get_tracepoints([1, 2, 3, 1, 4])
         success, use_aps, _algo, _waste, change_pos = self.determine_selection_from_usdt(events)
-        assert_equal(success, True)
+        assert_true(success)
         assert_greater_than(change_pos, -1)
 
         self.log.info("Failing to fund results in 1 tracepoint")
@@ -199,7 +201,7 @@ class CoinSelectionTracepointTest(BitcoinTestFramework):
         assert_raises_rpc_error(-6, "Insufficient funds", wallet.sendtoaddress, wallet.getnewaddress(), 102 * 50)
         events = self.get_tracepoints([2])
         success, use_aps, _algo, _waste, change_pos = self.determine_selection_from_usdt(events)
-        assert_equal(success, False)
+        assert_false(success)
 
         self.log.info("Explicitly enabling APS results in 2 tracepoints")
         # We should have 2 tracepoints in the order
@@ -209,7 +211,7 @@ class CoinSelectionTracepointTest(BitcoinTestFramework):
         wallet.sendtoaddress(address=wallet.getnewaddress(), amount=10, avoid_reuse=True)
         events = self.get_tracepoints([1, 2])
         success, use_aps, _algo, _waste, change_pos = self.determine_selection_from_usdt(events)
-        assert_equal(success, True)
+        assert_true(success)
         assert_equal(use_aps, None)
 
         self.log.info("Change position is -1 if no change is created with APS when APS was initially not used")
@@ -222,7 +224,7 @@ class CoinSelectionTracepointTest(BitcoinTestFramework):
         wallet.sendtoaddress(address=wallet.getnewaddress(), amount=wallet.getbalance(), subtractfeefromamount=True, avoid_reuse=False)
         events = self.get_tracepoints([1, 2, 3, 1, 4])
         success, use_aps, _algo, _waste, change_pos = self.determine_selection_from_usdt(events)
-        assert_equal(success, True)
+        assert_true(success)
         assert_equal(change_pos, -1)
 
         self.log.info("Change position is -1 if no change is created normally and APS is not used")
@@ -232,7 +234,7 @@ class CoinSelectionTracepointTest(BitcoinTestFramework):
         wallet.sendtoaddress(address=wallet.getnewaddress(), amount=wallet.getbalance(), subtractfeefromamount=True)
         events = self.get_tracepoints([1, 2])
         success, use_aps, _algo, _waste, change_pos = self.determine_selection_from_usdt(events)
-        assert_equal(success, True)
+        assert_true(success)
         assert_equal(change_pos, -1)
 
         self.bpf.cleanup()
