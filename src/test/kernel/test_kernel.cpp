@@ -564,6 +564,7 @@ BOOST_AUTO_TEST_CASE(btck_transaction_input)
     WitnessStackView ws_0 = input_0.GetWitnessStack();
     BOOST_CHECK_EQUAL(ws_0.CountItems(), 0);
     BOOST_CHECK(ws_0.Items().empty());
+    BOOST_CHECK(ws_0.ToBytes() == hex_string_to_byte_vec("00"));
 
     // P2PKH: DER sig + compressed pubkey push.
     BOOST_CHECK(input_0.GetScriptSig() == hex_string_to_byte_vec("473044022004893432347f39beaa280e99da595681ddb20fc45010176897e6e055d716dbfa022040a9e46648a5d10c33ef7cee5e6cf4b56bd513eae3ae044f0039824b02d0f44c012102982331a52822fd9b62e9b5d120da1d248558fac3da3a3c51cd7d9c8ad3da760e"));
@@ -583,6 +584,13 @@ BOOST_AUTO_TEST_CASE(btck_transaction_input)
     for (size_t i = 0; i < items.size(); ++i) {
         BOOST_CHECK(items[i] == ws.GetItem(i));
     }
+    // Consensus serialization: item count, then each item prefixed by its length.
+    BOOST_CHECK(ws.ToBytes() == hex_string_to_byte_vec(
+        "04"
+        "00"
+        "47" "30440220565d170eed95ff95027a69b313758450ba84a01224e1f7f130dda46e94d13f8602207bdd20e307f062594022f12ed5017bbf4a055a06aea91c10110a0e3bb23117fc01"
+        "47" "30440220647d2dc5b15f60bc37dc42618a370b2a1490293f9e5c8464f53ec4fe1dfe067302203598773895b4b16d37485cbe21b337f4e4b650739880098c592553add7dd435501"
+        "69" "52210375e00eb72e29da82b89367947f29ef34afb75e8654f6ea368e0acdfd92976b7c2103a1b26313f430c4b15bb1fdce663207659d8cac749a0e53d70eff01874496feff2103c96d495bfdd5ba4145e3e046fee45e84a8a48ad05bd8dbb395c011a32cf9f88053ae"));
     WitnessStack owned_ws_0{ws_0};
     WitnessStack owned_ws{ws};
     CheckHandle(owned_ws_0, owned_ws);
