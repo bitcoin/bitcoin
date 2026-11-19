@@ -33,6 +33,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -101,6 +102,11 @@ struct FakeTor {
     std::deque<std::string> unanswered;
     //! Written bytes after the last line break.
     std::string written_line;
+    //! Arguments of AUTH lines written on this connection. Parsing them all is slow, so Offered()
+    //! only does it when a command needs it.
+    std::vector<std::string> unparsed_auth_args;
+    //! Authentication methods listed by the parsed AUTH lines.
+    std::set<std::string> offered_methods;
     //! SERVERHASH and SERVERNONCE of every AUTHCHALLENGE line written on this connection that has
     //! both, however it was generated.
     std::vector<std::pair<std::vector<uint8_t>, std::vector<uint8_t>>> challenges;
@@ -113,21 +119,28 @@ struct FakeTor {
         sent.clear();
         unanswered.clear();
         written_line.clear();
+        unparsed_auth_args.clear();
+        offered_methods.clear();
         challenges.clear();
     }
 
-    //! Parses a written line as TorControlConnection::ProcessBuffer() and authchallenge_cb() do.
-    void RecordChallenge(std::string_view line)
+    //! Records what a written line tells the controller, parsed as
+    //! TorControlConnection::ProcessBuffer() and the reply callbacks do. Any line counts, whatever
+    //! command it answers.
+    void RecordLine(std::string_view line)
     {
         if (line.size() < 4) return;
         const auto [verb, args]{SplitTorReplyLine(std::string{line.substr(4)})};
-        if (verb != "AUTHCHALLENGE") return;
-        // authchallenge_cb() rejects a challenge missing a key, so skipping it loses nothing.
-        const auto mapping{ParseTorReplyMapping(args)};
-        const auto hash{mapping.find("SERVERHASH")};
-        const auto nonce{mapping.find("SERVERNONCE")};
-        if (hash != mapping.end() && nonce != mapping.end()) {
-            challenges.emplace_back(ParseHex(hash->second), ParseHex(nonce->second));
+        if (verb == "AUTH") {
+            unparsed_auth_args.push_back(args);
+        } else if (verb == "AUTHCHALLENGE") {
+            // authchallenge_cb() rejects a challenge missing a key, so skipping it loses nothing.
+            const auto mapping{ParseTorReplyMapping(args)};
+            const auto hash{mapping.find("SERVERHASH")};
+            const auto nonce{mapping.find("SERVERNONCE")};
+            if (hash != mapping.end() && nonce != mapping.end()) {
+                challenges.emplace_back(ParseHex(hash->second), ParseHex(nonce->second));
+            }
         }
     }
 
@@ -139,6 +152,22 @@ struct FakeTor {
             return server_hash == SafeCookieHash(SERVER_HASH_KEY, client_nonce, server_nonce) &&
                    client_hash == HexStr(SafeCookieHash(CLIENT_HASH_KEY, client_nonce, server_nonce));
         });
+    }
+
+    //! Whether an AUTH line written on this connection, parsed as protocolinfo_cb() does, offered
+    //! `method`.
+    bool Offered(const std::string& method)
+    {
+        for (const auto& args : unparsed_auth_args) {
+            const auto mapping{ParseTorReplyMapping(args)};
+            if (const auto it{mapping.find("METHODS")}; it != mapping.end()) {
+                for (auto& offered : util::SplitString(it->second, ',')) {
+                    offered_methods.insert(std::move(offered));
+                }
+            }
+        }
+        unparsed_auth_args.clear();
+        return offered_methods.contains(method);
     }
 
     //! Writes the first `n` queued bytes to the socket.
@@ -154,7 +183,7 @@ struct FakeTor {
         written_line += pending.substr(0, n);
         // No length limit: lines the controller rejects as too long only loosen the checks.
         util::LineReader reader{written_line, std::numeric_limits<size_t>::max()};
-        while (const auto line{reader.ReadLine()}) RecordChallenge(*line);
+        while (const auto line{reader.ReadLine()}) RecordLine(*line);
         written_line.erase(0, reader.Consumed());
         pending.erase(0, n);
     }
@@ -173,11 +202,19 @@ struct FakeTor {
             assert(cmd.find_first_of("\r\n") == std::string_view::npos);
             assert(std::ranges::any_of(VERBS, [&](std::string_view verb) { return cmd.starts_with(verb); }));
             unanswered.emplace_back(cmd.substr(0, cmd.find(' ')));
-            // SAFECOOKIE: send the proof only after Tor proved it knows the cookie.
-            if (cmd.starts_with("AUTHENTICATE ") && password.empty()) {
-                assert(ProvedCookie(cmd.substr(std::string_view{"AUTHENTICATE "}.size())));
-            }
-            if (cmd.starts_with("AUTHCHALLENGE SAFECOOKIE ")) {
+            // Each authentication method may only be used once Tor offered it on this connection.
+            if (cmd == "AUTHENTICATE") {
+                assert(Offered("NULL"));
+            } else if (cmd.starts_with("AUTHENTICATE ")) {
+                const std::string_view arg{cmd.substr(std::string_view{"AUTHENTICATE "}.size())};
+                if (password.empty()) {
+                    // SAFECOOKIE: send the proof only after Tor proved it knows the cookie.
+                    assert(ProvedCookie(arg));
+                } else {
+                    assert(Offered("HASHEDPASSWORD"));
+                }
+            } else if (cmd.starts_with("AUTHCHALLENGE SAFECOOKIE ")) {
+                assert(Offered("SAFECOOKIE"));
                 client_nonce = ParseHex(cmd.substr(std::string_view{"AUTHCHALLENGE SAFECOOKIE "}.size()));
             }
         }
