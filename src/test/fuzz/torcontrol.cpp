@@ -85,6 +85,24 @@ std::vector<uint8_t> SafeCookieHash(std::string_view key, std::span<const uint8_
     return hash;
 }
 
+//! Decodes an AUTHENTICATE argument as the control spec defines it: hex, or a QuotedString in
+//! which a backslash escapes the next character.
+std::optional<std::string> DecodeAuthArg(std::string_view arg)
+{
+    if (!arg.starts_with('"')) {
+        if (!IsHex(arg)) return std::nullopt;
+        const auto bytes{ParseHex(arg)};
+        return std::string{bytes.begin(), bytes.end()};
+    }
+    std::string decoded;
+    for (size_t i{1}; i < arg.size(); ++i) {
+        if (arg[i] == '"') return i + 1 == arg.size() ? std::optional{decoded} : std::nullopt;
+        if (arg[i] == '\\' && ++i == arg.size()) break;
+        decoded += arg[i];
+    }
+    return std::nullopt;
+}
+
 //! The Tor side of the control connection.
 struct FakeTor {
     std::shared_ptr<DynSock::Pipes> pipes{std::make_shared<DynSock::Pipes>()};
@@ -225,6 +243,7 @@ struct FakeTor {
                     assert(ProvedCookie(arg));
                 } else {
                     assert(Offered("HASHEDPASSWORD"));
+                    assert(DecodeAuthArg(arg) == password);
                 }
             } else if (cmd.starts_with("AUTHCHALLENGE SAFECOOKIE ")) {
                 assert(Offered("SAFECOOKIE"));
@@ -397,9 +416,13 @@ FUZZ_TARGET(torcontrol, .init = initialize_torcontrol)
 
     // A successful add_onion_cb() advertises the service through the global AddLocal().
     ClearLocal();
-    std::string torpassword{fuzzed_data_provider.ConsumeBool() ? fuzzed_data_provider.ConsumeRandomLengthString(32) : ""};
-    // The password is local config, not Tor input; a line break in it would trip the command check.
-    std::erase_if(torpassword, [](char c) { return c == '\r' || c == '\n'; });
+    // Raw bytes, as ConsumeRandomLengthString() rarely yields the backslashes and quotes that need
+    // escaping.
+    std::string torpassword;
+    if (fuzzed_data_provider.ConsumeBool()) {
+        const auto size{fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 32)};
+        torpassword = fuzzed_data_provider.ConsumeBytesAsString(size);
+    }
     gArgs.ForceSetArg("-torpassword", torpassword);
 
     FakeTor tor;
