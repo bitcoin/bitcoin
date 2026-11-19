@@ -5,7 +5,10 @@
 include(AddWindowsResources)
 
 configure_file(${PROJECT_SOURCE_DIR}/cmake/bitcoin-build-config.h.in bitcoin-build-config.h USE_SOURCE_PERMISSIONS @ONLY)
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(core_interface INTERFACE
+  ${CMAKE_CURRENT_BINARY_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 #=============================
 # Subprojects
@@ -64,6 +67,7 @@ if(ENABLE_IPC)
   add_subdirectory(ipc)
 else()
   add_library(bitcoin_ipc STATIC EXCLUDE_FROM_ALL ipc/stub.cpp)
+  target_link_libraries(bitcoin_ipc PRIVATE core_interface)
 endif()
 
 add_library(bitcoin_consensus STATIC EXCLUDE_FROM_ALL

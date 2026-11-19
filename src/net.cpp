@@ -3937,13 +3937,13 @@ bool CConnman::DisconnectNode(std::string_view strNode)
     return false;
 }
 
-bool CConnman::DisconnectNode(const CSubNet& subnet, bool disconnect_private_broadcast)
+bool CConnman::DisconnectNode(const CSubNet& subnet)
 {
     AssertLockNotHeld(m_nodes_mutex);
     bool disconnected = false;
     LOCK(m_nodes_mutex);
     for (CNode* pnode : m_nodes) {
-        if (subnet.Match(pnode->addr) && (disconnect_private_broadcast || !pnode->IsPrivateBroadcastConn())) {
+        if (subnet.Match(pnode->addr)) {
             LogDebug(BCLog::NET, "disconnect by subnet%s match, %s", (fLogIPs ? strprintf("=%s", subnet.ToString()) : ""), pnode->DisconnectMsg());
             pnode->fDisconnect = true;
             disconnected = true;

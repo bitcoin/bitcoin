@@ -86,7 +86,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
         # Ensure we disconnect if a block-relay-only connection sends us a transaction
         self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=0, connection_type="block-relay-only")
         assert_equal(self.nodes[0].getpeerinfo()[0]['relaytxes'], False)
-        _, txid, _, tx_hex = self.check_p2p_tx_violation()
+        _, _, wtxid, tx_hex = self.check_p2p_tx_violation()
 
         self.log.info("Tests with node in normal mode with block-relay-only connection, sending an inv")
         conn = self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=0, connection_type="block-relay-only")
@@ -105,14 +105,17 @@ class P2PBlocksOnly(BitcoinTestFramework):
 
         self.log.info("Check that txs from RPC are not sent to blockrelay connection")
         conn = self.nodes[0].add_outbound_p2p_connection(P2PTxInvStore(), p2p_idx=1, connection_type="block-relay-only")
+        tx_relay_peer = self.nodes[0].add_outbound_p2p_connection(P2PTxInvStore(), p2p_idx=2, connection_type="outbound-full-relay")
 
         self.nodes[0].sendrawtransaction(tx_hex)
 
         # Bump time forward to ensure m_next_inv_send_time timer pops
         self.nodes[0].setmocktime(int(time.time()) + 60)
 
+        tx_relay_peer.sync_with_ping()
         conn.sync_with_ping()
-        assert int(txid, 16) not in conn.get_invs()
+        assert int(wtxid, 16) in tx_relay_peer.get_invs()
+        assert int(wtxid, 16) not in conn.get_invs()
 
     def check_p2p_inv_violation(self, peer):
         self.log.info("Check that tx-invs from P2P are rejected and result in disconnect")
