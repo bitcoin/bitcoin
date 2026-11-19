@@ -1923,10 +1923,11 @@ static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, c
 static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, const std::vector<unsigned char>& program, script_verify_flags flags, const BaseSignatureChecker& checker, ScriptError* serror, bool is_p2sh)
 {
     CScript exec_script; //!< Actually executed script (last stack item in P2WSH; implied P2PKH script in P2WPKH; leaf script in P2TR)
-    // The witness stack. Elements with other roles (the witness script, the annex, the control block,
-    // and the leaf script) are popped from it, and the remaining elements are moved into the initial
-    // execution stack.
-    auto stack = witness.ToVectors();
+    // The witness stack as vectors. The conversion only happens for witness programs whose rules use the
+    // witness, as it is expensive for a huge witness. Elements with other roles (the witness script, the
+    // annex, the control block, and the leaf script) are popped from it, and the remaining elements are
+    // moved into the initial execution stack.
+    std::vector<valtype> stack;
     // Remove the top element from the stack, and return it.
     const auto pop{[&] {
         auto ret{std::move(stack.back())};
@@ -1938,6 +1939,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
     if (witversion == 0) {
         if (program.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
             // BIP141 P2WSH: 32-byte witness v0 program (which encodes SHA256(script))
+            stack = witness.ToVectors();
             if (stack.size() == 0) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
             }
@@ -1951,9 +1953,10 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             return ExecuteWitnessScript(std::move(stack), exec_script, flags, SigVersion::WITNESS_V0, checker, execdata, serror);
         } else if (program.size() == WITNESS_V0_KEYHASH_SIZE) {
             // BIP141 P2WPKH: 20-byte witness v0 program (which encodes Hash160(pubkey))
-            if (stack.size() != 2) {
+            if (witness.size() != 2) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH); // 2 items in witness
             }
+            stack = witness.ToVectors();
             exec_script << OP_DUP << OP_HASH160 << program << OP_EQUALVERIFY << OP_CHECKSIG;
             return ExecuteWitnessScript(std::move(stack), exec_script, flags, SigVersion::WITNESS_V0, checker, execdata, serror);
         } else {
@@ -1962,6 +1965,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
     } else if (witversion == 1 && program.size() == WITNESS_V1_TAPROOT_SIZE && !is_p2sh) {
         // BIP341 Taproot: 32-byte non-P2SH witness v1 program (which encodes a P2C-tweaked pubkey)
         if (!(flags & SCRIPT_VERIFY_TAPROOT)) return set_success(serror);
+        stack = witness.ToVectors();
         if (stack.size() == 0) return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
         if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
             // Drop annex (this is non-standard; see IsWitnessStandard)
