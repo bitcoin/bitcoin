@@ -901,13 +901,16 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         std::string reason{"stale reason"};
         std::string debug{"stale debug"};
         if (current_height % 2 == 0) {
-            BOOST_REQUIRE(mining->submitBlock(block, reason, debug));
+            bool accepted{false};
+            BOOST_CHECK(mining->submitBlock(block, accepted, reason, debug)->data().GetHash() == block.GetHash());
+            BOOST_REQUIRE(accepted);
             BOOST_REQUIRE_EQUAL(reason, "");
             BOOST_REQUIRE_EQUAL(debug, "");
 
             reason = "stale reason";
             debug = "stale debug";
-            BOOST_REQUIRE(!mining->submitBlock(block, reason, debug));
+            mining->submitBlock(block, accepted, reason, debug);
+            BOOST_REQUIRE(!accepted);
             BOOST_REQUIRE_EQUAL(reason, "duplicate");
             BOOST_REQUIRE_EQUAL(debug, "");
         } else {

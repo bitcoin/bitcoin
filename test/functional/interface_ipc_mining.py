@@ -130,9 +130,10 @@ class IPCMiningTest(BitcoinTestFramework):
         block.hashMerkleRoot = block.calc_merkle_root()
         return block
 
-    async def assert_submit_block(self, mining, ctx, block, *, result, reason="", debug=""):
+    async def assert_submit_block(self, mining, ctx, block, *, accepted, reason="", debug=""):
         submit = await mining.submitBlock(ctx, block.serialize())
-        assert_equal(submit.result, result)
+        assert_equal(submit.accepted, accepted)
+        assert_equal((await submit.result.data(ctx)).result, block.serialize())
         assert_equal(submit.reason, reason)
         assert_equal(submit.debug, debug)
 
@@ -568,7 +569,7 @@ class IPCMiningTest(BitcoinTestFramework):
                     mining2,
                     ctx2,
                     block,
-                    result=False,
+                    accepted=False,
                     reason="bad-version(0x00000000)",
                     debug="rejected nVersion=0x00000000 block",
                 )
@@ -611,7 +612,7 @@ class IPCMiningTest(BitcoinTestFramework):
                     mining2,
                     ctx2,
                     missing_witness_block,
-                    result=False,
+                    accepted=False,
                     reason="bad-witness-nonce-size",
                     debug="CheckWitnessMalleation : invalid witness reserved value size",
                 )
@@ -623,10 +624,10 @@ class IPCMiningTest(BitcoinTestFramework):
                 assert_equal(result.debug, "")
 
                 self.log.debug("Submit a valid complete block through the disconnected node")
-                await self.assert_submit_block(mining2, ctx2, block, result=True)
+                await self.assert_submit_block(mining2, ctx2, block, accepted=True)
                 assert_equal(self.nodes[2].getchaintips()[0]["height"], current_block_height + 1)
                 self.log.debug("submitBlock should reject the duplicate complete block")
-                await self.assert_submit_block(mining2, ctx2, block, result=False, reason="duplicate")
+                await self.assert_submit_block(mining2, ctx2, block, accepted=False, reason="duplicate")
 
             self.log.debug("A Block handle remains usable after its template is destroyed")
             assert_equal((await template_block.data(ctx)).result, block.serialize())
@@ -651,7 +652,7 @@ class IPCMiningTest(BitcoinTestFramework):
             assert_equal(check.result, False)
             assert_equal(check.reason, "inconclusive-not-best-prevblk")
             self.log.debug("submitBlock on the same node should fail with duplicate after submitSolution succeeds")
-            await self.assert_submit_block(mining, ctx, block, result=False, reason="duplicate")
+            await self.assert_submit_block(mining, ctx, block, accepted=False, reason="duplicate")
 
             self.log.debug("submitSolution should return duplicate after submitBlock succeeds")
             async with destroying((await mining2.createNewBlock(ctx2, self.default_block_create_options)).result, ctx2) as template2:
@@ -659,7 +660,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 duplicate_coinbase = duplicate_block.vtx[0]
                 duplicate_block.solve()
                 self.log.debug("Submit a valid complete block before duplicate submitSolution")
-                await self.assert_submit_block(mining2, ctx2, duplicate_block, result=True)
+                await self.assert_submit_block(mining2, ctx2, duplicate_block, accepted=True)
                 self.nodes[2].waitforblockheight(current_block_height + 2)
                 self.log.debug("submitSolution should reject the duplicate block")
                 result = await template2.submitSolution(ctx2, duplicate_block.nVersion, duplicate_block.nTime, duplicate_block.nNonce, duplicate_coinbase.serialize())
@@ -694,7 +695,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 # All three templates share a parent. The first block becomes
                 # active, so the remaining valid blocks are accepted as stale.
                 await self.assert_submit_block(
-                    mining2, ctx2, active_block, result=True)
+                    mining2, ctx2, active_block, accepted=True)
 
                 solution_coinbase = solution_block.vtx[0]
                 result = await solution_template.submitSolution(
@@ -709,7 +710,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 assert_equal(result.debug, "")
 
                 await self.assert_submit_block(
-                    mining2, ctx2, submit_block, result=False, reason="inconclusive")
+                    mining2, ctx2, submit_block, accepted=False, reason="inconclusive")
             self.sync_all()
 
             self.log.debug("Submit the same invalid block twice")
@@ -723,7 +724,7 @@ class IPCMiningTest(BitcoinTestFramework):
                     mining2,
                     ctx2,
                     invalid_block,
-                    result=False,
+                    accepted=False,
                     reason="bad-txns-nonfinal",
                     debug="non-final transaction",
                 )
@@ -732,7 +733,7 @@ class IPCMiningTest(BitcoinTestFramework):
                     mining2,
                     ctx2,
                     invalid_block,
-                    result=False,
+                    accepted=False,
                     reason="duplicate-invalid",
                     debug=f"block {invalid_block.hash_hex} was previously marked invalid",
                 )

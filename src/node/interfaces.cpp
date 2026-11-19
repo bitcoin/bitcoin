@@ -1022,9 +1022,11 @@ public:
         return state.IsValid();
     }
 
-    bool submitBlock(const CBlock& block_in, std::string& reason, std::string& debug) override
+    std::unique_ptr<interfaces::Block> submitBlock(const CBlock& block_in, bool& accepted, std::string& reason, std::string& debug) override
     {
-        return block_template_manager().SubmitBlock(std::make_shared<const CBlock>(block_in), reason, debug);
+        auto block{std::make_shared<const CBlock>(block_in)};
+        accepted = block_template_manager().SubmitBlock(block, reason, debug);
+        return std::make_unique<BlockImpl>(std::move(block));
     }
 
     std::vector<CTransactionRef> getTransactionsByTxID(const std::vector<Txid>& txids) override

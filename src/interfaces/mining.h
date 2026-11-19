@@ -197,18 +197,22 @@ public:
      * blocks may then be announced to peers through normal validation signals.
      *
      * @param[in]  block  the complete block to submit
+     * @param[out] accepted true if the block was accepted as a new block. Set
+     *                    to false, with reason set, if the block is a duplicate
+     *                    or the validation result is inconclusive.
      * @param[out] reason failure reason (BIP22)
      * @param[out] debug  more detailed rejection reason
-     * @returns           true if the block was accepted as a new block. Returns
-     *                    false and sets reason if the block is a duplicate or
-     *                    the validation result is inconclusive.
+     * @returns           a handle to the submitted block, including on rejection
      *
      * @note Unlike the submitblock RPC, this method does not call
      *       UpdateUncommittedBlockStructures to add a missing coinbase witness
      *       reserved value. Callers must submit a fully formed block, including
      *       the coinbase witness when a witness commitment is present.
      */
-    virtual bool submitBlock(const CBlock& block, std::string& reason, std::string& debug) = 0;
+    virtual std::unique_ptr<Block> submitBlock(const CBlock& block, bool& accepted, std::string& reason, std::string& debug) = 0;
+
+    //! Deprecated: no longer supported, returns an error.
+    virtual bool submitBlockOld7(const CBlock&, std::string&, std::string&) { throw std::runtime_error("Old submitBlock (@7) not supported. Please update your client!"); }
 
     /**
      * Fetch raw transactions from the mempool by txid.
