@@ -24,6 +24,7 @@ TEST_FRAMEWORK_MODULES = [
     "extendedkey",
     "key",
     "messages",
+    "netutil",
     "crypto.muhash",
     "crypto.poly1305",
     "crypto.ripemd160",

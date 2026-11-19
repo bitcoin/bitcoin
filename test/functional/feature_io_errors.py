@@ -5,9 +5,9 @@
 """Test handling of I/O errors."""
 
 from contextlib import closing
-import http.client
 import urllib.parse
 
+from test_framework.netutil import HTTPConnection
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -45,7 +45,7 @@ class IOErrorTest(BitcoinTestFramework):
 
         self.log.info("Check REST /tx/ on I/O errors")
         url = urllib.parse.urlparse(node.url)
-        with closing(http.client.HTTPConnection(url.hostname, url.port)) as conn:
+        with closing(HTTPConnection(url.hostname, url.port)) as conn:
             conn.request("GET", f"/rest/tx/{txid}.json")
             response = conn.getresponse()
             assert_equal(response.status, 500)

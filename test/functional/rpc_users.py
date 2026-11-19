@@ -4,13 +4,13 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test multiple RPC users."""
 
+from test_framework.netutil import HTTPConnection
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     str_to_b64str,
 )
 
-import http.client
 import os
 import platform
 import urllib.parse
@@ -25,7 +25,7 @@ def call_with_auth(node, user, password, method="getbestblockhash"):
     url = urllib.parse.urlparse(node.url)
     headers = {"Authorization": "Basic " + str_to_b64str('{}:{}'.format(user, password))}
 
-    conn = http.client.HTTPConnection(url.hostname, url.port, timeout=node.rpc_timeout)
+    conn = HTTPConnection(url.hostname, url.port, timeout=node.rpc_timeout)
     conn.connect()
     conn.request('POST', '/', f'{{"method": "{method}"}}', headers)
     resp = conn.getresponse()
