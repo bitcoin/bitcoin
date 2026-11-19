@@ -876,6 +876,16 @@ int btck_witness_stack_get_item_at(const btck_WitnessStack* witness_stack, size_
     return writer(element.data(), element.size(), user_data);
 }
 
+void btck_witness_stack_get_items(const btck_WitnessStack* witness_stack, const void** items, size_t* item_sizes, size_t items_len)
+{
+    const auto& stack{btck_WitnessStack::get(witness_stack)};
+    assert(items_len == stack.size());
+    for (const auto item : stack) {
+        *items++ = item.data();
+        *item_sizes++ = item.size();
+    }
+}
+
 btck_WitnessStack* btck_witness_stack_copy(const btck_WitnessStack* witness_stack)
 {
     return btck_WitnessStack::copy(witness_stack);

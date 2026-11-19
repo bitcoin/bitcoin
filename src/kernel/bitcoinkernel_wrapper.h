@@ -676,6 +676,21 @@ public:
         });
     }
 
+    std::vector<std::vector<std::byte>> GetItems() const
+    {
+        const size_t count{CountItems()};
+        std::vector<const void*> items(count);
+        std::vector<size_t> sizes(count);
+        btck_witness_stack_get_items(impl(), items.data(), sizes.data(), count);
+        std::vector<std::vector<std::byte>> copies;
+        copies.reserve(count);
+        for (size_t i{0}; i < count; ++i) {
+            const auto* first{static_cast<const std::byte*>(items[i])};
+            copies.emplace_back(first, first + sizes[i]);
+        }
+        return copies;
+    }
+
     MAKE_RANGE_METHOD(Items, Derived, &WitnessStackApi<Derived>::CountItems, &WitnessStackApi<Derived>::GetItem, *static_cast<const Derived*>(this))
 };
 

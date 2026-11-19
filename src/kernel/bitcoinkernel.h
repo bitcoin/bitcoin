@@ -1879,6 +1879,24 @@ BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_witness_stack_get_it
     void* user_data) BITCOINKERNEL_ARG_NONNULL(1, 3);
 
 /**
+ * @brief Get the pointer and size of each witness stack item, from the bottom
+ * of the stack to the top.
+ *
+ * @param[in] witness_stack Non-null.
+ * @param[out] items        Nullable if items_len is 0. Each pointer is valid as
+ *                          long as the witness stack and can be null for an
+ *                          empty item.
+ * @param[out] item_sizes   Nullable if items_len is 0.
+ * @param[in] items_len     Length of the items and item_sizes arrays.
+ * @pre                     items_len is the number of items in the witness stack.
+ */
+BITCOINKERNEL_API void btck_witness_stack_get_items(
+    const btck_WitnessStack* witness_stack,
+    const void** items,
+    size_t* item_sizes,
+    size_t items_len) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
  * @brief Copy a witness stack.
  *
  * @param[in] witness_stack Non-null.

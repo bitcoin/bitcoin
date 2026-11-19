@@ -564,6 +564,7 @@ BOOST_AUTO_TEST_CASE(btck_transaction_input)
     WitnessStackView ws_0 = input_0.GetWitnessStack();
     BOOST_CHECK_EQUAL(ws_0.CountItems(), 0);
     BOOST_CHECK(ws_0.Items().empty());
+    BOOST_CHECK(ws_0.GetItems().empty());
 
     // P2PKH: DER sig + compressed pubkey push.
     BOOST_CHECK(input_0.GetScriptSig() == hex_string_to_byte_vec("473044022004893432347f39beaa280e99da595681ddb20fc45010176897e6e055d716dbfa022040a9e46648a5d10c33ef7cee5e6cf4b56bd513eae3ae044f0039824b02d0f44c012102982331a52822fd9b62e9b5d120da1d248558fac3da3a3c51cd7d9c8ad3da760e"));
@@ -583,6 +584,7 @@ BOOST_AUTO_TEST_CASE(btck_transaction_input)
     for (size_t i = 0; i < items.size(); ++i) {
         BOOST_CHECK(items[i] == ws.GetItem(i));
     }
+    BOOST_CHECK(std::ranges::equal(ws.GetItems(), items, std::ranges::equal));
     WitnessStack owned_ws_0{ws_0};
     WitnessStack owned_ws{ws};
     CheckHandle(owned_ws_0, owned_ws);
