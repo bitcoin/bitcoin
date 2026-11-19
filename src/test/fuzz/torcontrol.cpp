@@ -95,6 +95,8 @@ struct FakeTor {
     //! From the last AUTHCHALLENGE command, to answer with a matching server hash and check the
     //! proof. Kept across reconnects, as the controller keeps its own.
     std::vector<uint8_t> client_nonce;
+    //! Every client nonce sent, to check none repeats.
+    std::set<std::vector<uint8_t>> client_nonces;
     //! The -torpassword. While set, the controller authenticates with it rather than SAFECOOKIE.
     std::string password;
     //! Verbs of the commands not yet answered on this connection, oldest first. Other operations can
@@ -216,6 +218,8 @@ struct FakeTor {
             } else if (cmd.starts_with("AUTHCHALLENGE SAFECOOKIE ")) {
                 assert(Offered("SAFECOOKIE"));
                 client_nonce = ParseHex(cmd.substr(std::string_view{"AUTHCHALLENGE SAFECOOKIE "}.size()));
+                // A repeated nonce would let a recorded server hash prove the cookie again.
+                assert(client_nonce.size() == 32 && client_nonces.insert(client_nonce).second);
             }
         }
     }
