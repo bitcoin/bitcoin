@@ -5,6 +5,8 @@
 #ifndef BITCOIN_TEST_FUZZ_UTIL_CHECK_GLOBALS_H
 #define BITCOIN_TEST_FUZZ_UTIL_CHECK_GLOBALS_H
 
+#include <util/not_null.h>
+
 #include <atomic>
 #include <memory>
 #include <optional>
@@ -16,7 +18,7 @@ struct CheckGlobalsImpl;
 struct CheckGlobals {
     CheckGlobals();
     ~CheckGlobals();
-    std::unique_ptr<CheckGlobalsImpl> m_impl;
+    util::NotNullUniquePtr<CheckGlobalsImpl> m_impl;
 };
 
 #endif // BITCOIN_TEST_FUZZ_UTIL_CHECK_GLOBALS_H

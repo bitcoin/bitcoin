@@ -4,7 +4,7 @@
 
 #include <node/kernel_notifications.h>
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h>
 
 #include <chain.h>
 #include <common/args.h>

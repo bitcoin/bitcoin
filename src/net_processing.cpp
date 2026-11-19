@@ -5398,10 +5398,10 @@ bool PeerManagerImpl::MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer)
         return true;
     }
 
-    // Normal case: Disconnect the peer and discourage all nodes sharing the address
+    // Normal case: Disconnect the peer only, but discourage all nodes sharing the address
     LogDebug(BCLog::NET, "Disconnecting and discouraging peer %d!\n", peer.m_id);
     if (m_banman) m_banman->Discourage(pnode.addr);
-    m_connman.DisconnectNode(CSubNet{pnode.addr}, /*disconnect_private_broadcast=*/false);
+    pnode.fDisconnect = true;
     return true;
 }
 

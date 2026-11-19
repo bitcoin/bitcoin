@@ -6,6 +6,7 @@
 #define BITCOIN_MUSIG_H
 
 #include <pubkey.h>
+#include <util/not_null.h>
 
 #include <optional>
 #include <vector>
@@ -40,7 +41,7 @@ CExtPubKey CreateMuSig2SyntheticXpub(const CPubKey& pubkey);
 class MuSig2SecNonce
 {
 private:
-    std::unique_ptr<MuSig2SecNonceImpl> m_impl;
+    util::NotNullUniquePtr<MuSig2SecNonceImpl> m_impl;
 
 public:
     MuSig2SecNonce();
