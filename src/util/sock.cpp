@@ -287,7 +287,11 @@ void Sock::SendComplete(std::span<const unsigned char> data,
         // Wait for a short while (or the socket to become ready for sending) before retrying
         // if nothing was sent.
         const auto wait_time = std::min(deadline - now, std::chrono::milliseconds{MAX_WAIT_FOR_IO});
-        (void)Wait(wait_time, SendEvent);
+        Event occurred{0};
+        if (Wait(wait_time, SendEvent, &occurred) && (occurred & ErrorEvent)) {
+            throw std::runtime_error(strprintf(
+                "Socket error (sent only %u of %u bytes before that)", sent, data.size()));
+        }
     }
 }
 
@@ -377,7 +381,11 @@ std::string Sock::RecvUntilTerminator(uint8_t terminator,
 
         // Wait for a short while (or the socket to become ready for reading) before retrying.
         const auto wait_time = std::min(deadline - now, std::chrono::milliseconds{MAX_WAIT_FOR_IO});
-        (void)Wait(wait_time, RecvEvent);
+        Event occurred{0};
+        if (Wait(wait_time, RecvEvent, &occurred) && (occurred & ErrorEvent)) {
+            throw std::runtime_error(strprintf(
+                "Socket error (received %u bytes without terminator before that)", data.size()));
+        }
     }
 }
 

@@ -903,6 +903,12 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
         bool recv_ready = events.occurred & Sock::RecvEvent;
         bool err_ready = events.occurred & Sock::ErrorEvent;
 
+        if (err_ready) {
+            LogDebug(BCLog::HTTP, "Socket error from %s (id=%llu)", client->GetOrigin(), client->GetId());
+            client->Disconnect();
+            continue;
+        }
+
         if (send_ready) {
             // Try to send as much data as is ready for this client.
             // If there's an error we can skip the receive phase for this client
@@ -912,7 +918,7 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
             }
         }
 
-        if (recv_ready || err_ready) {
+        if (recv_ready) {
             client->Receive();
         }
         // Process as much received data as we can.

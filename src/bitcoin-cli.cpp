@@ -914,7 +914,7 @@ bool HTTPClient::SendRequest(std::string_view request)
         }
 
         // The wait either timed out or the socket reported an error without becoming writable.
-        if (!(event & Sock::SendEvent)) {
+        if (!(event & Sock::SendEvent) || (event & Sock::ErrorEvent)) {
             return false;
         }
 
@@ -1120,6 +1120,9 @@ std::optional<std::string> HTTPClient::Recv()
         Sock::Event event{0};
         if (!m_socket->Wait(timeout, Sock::RecvEvent, &event)) {
             return false;
+        }
+        if (event & Sock::ErrorEvent) {
+            throw CConnectionFailed{"socket error"};
         }
         return (event & Sock::RecvEvent) != 0;
     }};
