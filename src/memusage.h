@@ -68,7 +68,6 @@ static inline size_t MallocUsage(size_t alloc)
 template<typename X>
 struct stl_tree_node
 {
-private:
     int color;
     void* parent;
     void* left;
@@ -165,7 +164,6 @@ static inline size_t DynamicUsage(const std::shared_ptr<X>& p)
 template<typename X>
 struct list_node
 {
-private:
     void* ptr_next;
     void* ptr_prev;
     X x;
@@ -180,7 +178,6 @@ static inline size_t DynamicUsage(const std::list<X>& l)
 template<typename X>
 struct unordered_node : private X
 {
-private:
     void* ptr;
 };
 

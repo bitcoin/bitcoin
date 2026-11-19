@@ -1,9 +1,9 @@
-v30.5 Release Notes
+v30.x Release Notes
 ===================
 
-Bitcoin Core version v30.5 is now available from:
+Bitcoin Core version v30.x is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-30.5/>
+  <https://bitcoincore.org/bin/bitcoin-core-30.x/>
 
 This release includes various bug fixes and performance
 improvements, as well as updated translations.
@@ -40,25 +40,20 @@ unsupported systems.
 Notable changes
 ===============
 
-### Net
+### Build
 
-- #35878 net_processing: process unique tx INVs only
+- #36889 cmake: Switch include_directories -> target_include_directories
 
-### CI
+### Misc
 
-- #33693 ci: use pycapnp 2.2.1
-- #35348 ci: switch to GitHub cache for all runners
-- #35441 ci: inline runner selection
-- #35571 ci: use warp docker buildkit cache
+- #36869 refactor, memusage: Make fields of STL helper structs public
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- fanquake
-- Greg Sanders
-- willcl-ark
+- hebasto
 
 As well as to everyone that helped with translations on
 [Transifex](https://explore.transifex.com/bitcoin/bitcoin/).
