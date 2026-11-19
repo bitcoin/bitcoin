@@ -26,6 +26,21 @@ struct NodeContext;
 
 namespace interfaces {
 
+//! Handle to a block.
+//!
+//! The handle keeps the block and its transactions in memory until it is
+//! destroyed, also after the transactions leave the mempool and after any
+//! template it came from is destroyed. Clients should destroy handles they
+//! no longer need.
+class Block
+{
+public:
+    virtual ~Block() = default;
+
+    //! Return the full block.
+    virtual CBlock data() = 0;
+};
+
 //! Block template interface
 class BlockTemplate
 {
@@ -33,9 +48,18 @@ public:
     virtual ~BlockTemplate() = default;
 
     virtual CBlockHeader getBlockHeader() = 0;
-    // Block contains a dummy coinbase transaction that should not be used and
-    // it may not match a transaction constructed from getCoinbaseTx().
-    virtual CBlock getBlock() = 0;
+    /**
+     * Return the template block. It contains a dummy coinbase transaction
+     * that should not be used and may not match a transaction constructed from
+     * getCoinbaseTx(). The handle shares the block with the template, so it
+     * reflects changes made by submitSolution().
+     *
+     * The handle remains valid after the template is destroyed.
+     */
+    virtual std::unique_ptr<Block> block() = 0;
+
+    //! Deprecated: no longer supported, returns an error.
+    virtual CBlock getBlockOld2() { throw std::runtime_error("Old getBlock (@2) not supported. Please update your client!"); }
 
     // Fees per transaction, not including coinbase transaction.
     virtual std::vector<CAmount> getTxFees() = 0;

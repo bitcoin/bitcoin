@@ -873,6 +873,20 @@ public:
     NodeContext& m_node;
 };
 
+class BlockImpl : public interfaces::Block
+{
+public:
+    explicit BlockImpl(std::shared_ptr<const CBlock> block) : m_block(std::move(block)) {}
+
+    CBlock data() override
+    {
+        return *m_block;
+    }
+
+private:
+    const std::shared_ptr<const CBlock> m_block;
+};
+
 class BlockTemplateImpl : public BlockTemplate
 {
 public:
@@ -889,9 +903,10 @@ public:
         return m_block_template->block;
     }
 
-    CBlock getBlock() override
+    std::unique_ptr<interfaces::Block> block() override
     {
-        return m_block_template->block;
+        // Share ownership of the template, so the handle can outlive it without a copy.
+        return std::make_unique<BlockImpl>(std::shared_ptr<const CBlock>{m_block_template.get(), &m_block_template->block});
     }
 
     std::vector<CAmount> getTxFees() override
@@ -936,7 +951,7 @@ public:
 
     const BlockCreateOptions m_create_options;
 
-    const util::NotNullUniquePtr<CBlockTemplate> m_block_template;
+    const util::NotNullSharedPtr<CBlockTemplate> m_block_template;
 
     bool m_interrupt_wait{false};
     node::BlockTemplateManager& block_template_manager() { return *Assert(m_node.block_template_manager); }

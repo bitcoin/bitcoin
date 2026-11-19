@@ -126,7 +126,9 @@ async def mining_wait_next_template(template, stack, ctx, opts):
 
 
 async def mining_get_block(block_template, ctx):
-    block_data = BytesIO((await block_template.getBlock(ctx)).result)
+    # Use Cap'n Proto promise pipelining to call data() on the returned Block
+    # without first waiting for block() to return.
+    block_data = BytesIO((await block_template.block(ctx).result.data(ctx)).result)
     block = CBlock()
     block.deserialize(block_data)
     return block

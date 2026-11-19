@@ -528,6 +528,10 @@ class IPCMiningTest(BitcoinTestFramework):
 
             async with destroying((await mining.createNewBlock(ctx, self.default_block_create_options)).result, ctx) as template:
                 block = await self.build_candidate_block(template, ctx)
+                template_block = (await template.block(ctx)).result
+                self.log.debug("Deprecated getBlock() returns an error")
+                await assert_capnp_raises(lambda: template.getBlockOld2(ctx),
+                                          "remote exception: std::exception: Old getBlock (@2) not supported. Please update your client!")
                 coinbase = block.vtx[0]
                 self.log.debug("Template should include a mempool transaction")
                 assert len(block.vtx) >= 2, "Block should include at least the coinbase and the mempool tx"
@@ -623,6 +627,10 @@ class IPCMiningTest(BitcoinTestFramework):
                 assert_equal(self.nodes[2].getchaintips()[0]["height"], current_block_height + 1)
                 self.log.debug("submitBlock should reject the duplicate complete block")
                 await self.assert_submit_block(mining2, ctx2, block, result=False, reason="duplicate")
+
+            self.log.debug("A Block handle remains usable after its template is destroyed")
+            assert_equal((await template_block.data(ctx)).result, block.serialize())
+            await template_block.destroy(ctx)
 
             self.log.debug("Block should propagate")
             # Check that the IPC node actually updates its own chain
