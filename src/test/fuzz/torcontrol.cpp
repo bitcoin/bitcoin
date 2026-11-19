@@ -9,6 +9,7 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <span.h>
+#include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -113,6 +114,8 @@ struct FakeTor {
     //! SERVERHASH and SERVERNONCE of every AUTHCHALLENGE line written on this connection that has
     //! both, however it was generated.
     std::vector<std::pair<std::vector<uint8_t>, std::vector<uint8_t>>> challenges;
+    //! Onion services named by a ServiceID in a line written on this connection.
+    std::set<CNetAddr> services;
 
     void NewConnection()
     {
@@ -125,6 +128,7 @@ struct FakeTor {
         unparsed_auth_args.clear();
         offered_methods.clear();
         challenges.clear();
+        services.clear();
     }
 
     //! Records what a written line tells the controller, parsed as
@@ -133,7 +137,13 @@ struct FakeTor {
     void RecordLine(std::string_view line)
     {
         if (line.size() < 4) return;
-        const auto [verb, args]{SplitTorReplyLine(std::string{line.substr(4)})};
+        const std::string text{line.substr(4)};
+        // add_onion_cb() parses whole lines, not a verb and its arguments.
+        const auto line_mapping{ParseTorReplyMapping(text)};
+        if (const auto it{line_mapping.find("ServiceID")}; it != line_mapping.end()) {
+            services.insert(LookupNumeric(it->second + ".onion", Params().GetDefaultPort()));
+        }
+        const auto [verb, args]{SplitTorReplyLine(text)};
         if (verb == "AUTH") {
             unparsed_auth_args.push_back(args);
         } else if (verb == "AUTHCHALLENGE") {
@@ -351,6 +361,17 @@ std::string ConsumeWireReply(FuzzedDataProvider& provider, const TorControlReply
     }
     return wire;
 }
+
+//! Onion addresses the node advertises as its own.
+std::vector<CNetAddr> LocalOnions()
+{
+    LOCK(g_maplocalhost_mutex);
+    std::vector<CNetAddr> onions;
+    for (const auto& [addr, info] : mapLocalHost) {
+        if (addr.IsTor()) onions.push_back(addr);
+    }
+    return onions;
+}
 } // namespace
 
 void initialize_torcontrol()
@@ -405,6 +426,8 @@ FUZZ_TARGET(torcontrol, .init = initialize_torcontrol)
     const auto receive{[&] {
         if (conn.ReceiveAndProcess()) return;
         tor_controller.disconnected_cb(conn);
+        // Tor removes the service with the control connection, so it must stop being advertised.
+        assert(LocalOnions().empty());
         tor.ProcessCommands();
         tor.NewConnection();
         connect();
@@ -442,5 +465,9 @@ FUZZ_TARGET(torcontrol, .init = initialize_torcontrol)
                 (void)conn.WaitForData(0ms);
             });
         tor.ProcessCommands();
+        // At most one onion address is advertised: a service Tor named on the current connection.
+        const auto onions{LocalOnions()};
+        assert(onions.size() <= 1);
+        assert(onions.empty() || tor.services.contains(onions.front()));
     }
 }
