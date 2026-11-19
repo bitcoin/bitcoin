@@ -874,6 +874,17 @@ int btck_witness_stack_get_item_at(const btck_WitnessStack* witness_stack, size_
     return writer(stack[index].data(), stack[index].size(), user_data);
 }
 
+int btck_witness_stack_to_bytes(const btck_WitnessStack* witness_stack, btck_WriteBytes writer, void* user_data)
+{
+    try {
+        WriterStream ws{writer, user_data};
+        ws << btck_WitnessStack::get(witness_stack).stack;
+        return 0;
+    } catch (...) {
+        return -1;
+    }
+}
+
 btck_WitnessStack* btck_witness_stack_copy(const btck_WitnessStack* witness_stack)
 {
     return btck_WitnessStack::copy(witness_stack);

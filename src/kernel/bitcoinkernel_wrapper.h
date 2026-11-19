@@ -676,6 +676,11 @@ public:
         });
     }
 
+    std::vector<std::byte> ToBytes() const
+    {
+        return write_bytes(impl(), btck_witness_stack_to_bytes);
+    }
+
     MAKE_RANGE_METHOD(Items, Derived, &WitnessStackApi<Derived>::CountItems, &WitnessStackApi<Derived>::GetItem, *static_cast<const Derived*>(this))
 };
 

@@ -1879,6 +1879,21 @@ BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_witness_stack_get_it
     void* user_data) BITCOINKERNEL_ARG_NONNULL(1, 3);
 
 /**
+ * @brief Serialize a witness stack through the passed in callback.
+ * The serialization is the consensus encoding used in transactions
+ *
+ * @param[in] witness_stack Non-null.
+ * @param[in] writer        Non-null, callback to a write bytes function.
+ * @param[in] user_data     Holds a user-defined opaque structure that will be
+ *                          passed back through the writer callback.
+ * @return                  0 on success.
+ */
+BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_witness_stack_to_bytes(
+    const btck_WitnessStack* witness_stack,
+    btck_WriteBytes writer,
+    void* user_data) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
+/**
  * @brief Copy a witness stack.
  *
  * @param[in] witness_stack Non-null.
