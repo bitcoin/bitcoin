@@ -37,6 +37,9 @@ class DeprecatedRpcTest(BitcoinTestFramework):
             for rpc in (wallet.bumpfee, wallet.psbtbumpfee):
                 assert_raises_rpc_error(-32, "start the RPC server with the `-deprecatedrpc=confTarget`", rpc, "0" * 64, {"confTarget": 1})
 
+            self.log.info("Test getaddressinfo iswatchonly field deprecation")
+            assert "iswatchonly" not in wallet.getaddressinfo(wallet.getnewaddress())
+
 
 if __name__ == '__main__':
     DeprecatedRpcTest(__file__).main()
