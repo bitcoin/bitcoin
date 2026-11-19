@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <chainparams.h>
 #include <common/args.h>
 #include <crypto/hmac_sha256.h>
 #include <net.h>
@@ -220,6 +221,15 @@ struct FakeTor {
                 client_nonce = ParseHex(cmd.substr(std::string_view{"AUTHCHALLENGE SAFECOOKIE "}.size()));
                 // A repeated nonce would let a recorded server hash prove the cookie again.
                 assert(client_nonce.size() == 32 && client_nonces.insert(client_nonce).second);
+            } else if (cmd.starts_with("ADD_ONION ")) {
+                // One port mapping, always from the default virtual port, so the service doesn't
+                // reveal a node using another port.
+                std::vector<std::string> ports;
+                for (auto& arg : util::SplitString(cmd, ' ')) {
+                    if (arg.starts_with("Port=")) ports.push_back(std::move(arg));
+                }
+                assert(ports.size() == 1);
+                assert(ports.front().starts_with(strprintf("Port=%u,", Params().GetDefaultPort())));
             }
         }
     }
