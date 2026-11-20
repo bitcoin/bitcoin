@@ -247,11 +247,23 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
         nScanCommitments = std::max(nCountRequested, static_cast<size_t>(llmq_params_opt->keepOldConnections));
     }
 
-    // Get the block indexes of the mined commitments to build the required quorums from
-    std::vector<const CBlockIndex*> pQuorumBaseBlockIndexes{ llmq_params_opt->useRotation ?
-            quorumBlockProcessor.GetMinedCommitmentsIndexedUntilBlock(llmqType, pIndexScanCommitments, nScanCommitments) :
-            quorumBlockProcessor.GetMinedCommitmentsUntilBlock(llmqType, pIndexScanCommitments, nScanCommitments)
-    };
+    // Get the block indexes of the mined commitments to build the required quorums from.
+    // The mined commitment index follows the active chain, so a scan from a block that is
+    // not on it (e.g. a tip notification processed after a reorg) reads another branch.
+    // Check that under the same cs_main hold so a reorg cannot slip in between.
+    bool scan_on_active_chain{false};
+    std::vector<const CBlockIndex*> pQuorumBaseBlockIndexes;
+    {
+        LOCK(::cs_main);
+        const CChain& active_chain{m_chainman.ActiveChain()};
+        scan_on_active_chain = active_chain.Contains(pindexStore) && active_chain.Contains(pIndexScanCommitments);
+        pQuorumBaseBlockIndexes = llmq_params_opt->useRotation
+                                      ? quorumBlockProcessor.GetMinedCommitmentsIndexedUntilBlock(llmqType,
+                                                                                                  pIndexScanCommitments,
+                                                                                                  nScanCommitments)
+                                      : quorumBlockProcessor.GetMinedCommitmentsUntilBlock(llmqType, pIndexScanCommitments,
+                                                                                           nScanCommitments);
+    }
     vecResultQuorums.reserve(vecResultQuorums.size() + pQuorumBaseBlockIndexes.size());
 
     for (auto& pQuorumBaseBlockIndex : pQuorumBaseBlockIndexes) {
@@ -280,14 +292,18 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
     }
 
     const size_t nCountResult{vecResultQuorums.size()};
-    if (nCountResult > 0 && chain == nullptr) {
-        LOCK(m_cs_maps);
-        // Don't cache more than keepOldConnections elements
-        // because signing by old quorums requires the exact quorum hash
-        // to be specified and quorum scanning isn't needed there.
-        const size_t nCacheEndIndex = std::min(nCountResult, static_cast<size_t>(llmq_params_opt->keepOldConnections));
-        scanQuorumsCache.emplace(llmqType, pindexStore->GetBlockHash(),
-                                 {vecResultQuorums.begin(), vecResultQuorums.begin() + nCacheEndIndex});
+    if (nCountResult > 0 && chain == nullptr && scan_on_active_chain) {
+        LOCK2(::cs_main, m_cs_maps);
+        // GetQuorum() read commitments by quorum hash without cs_main; if pindexStore was disconnected
+        // meanwhile they may be another branch's commitments for the same quorums.
+        if (m_chainman.ActiveChain().Contains(pindexStore)) {
+            // Don't cache more than keepOldConnections elements
+            // because signing by old quorums requires the exact quorum hash
+            // to be specified and quorum scanning isn't needed there.
+            const size_t nCacheEndIndex = std::min(nCountResult, static_cast<size_t>(llmq_params_opt->keepOldConnections));
+            scanQuorumsCache.emplace(llmqType, pindexStore->GetBlockHash(),
+                                     {vecResultQuorums.begin(), vecResultQuorums.begin() + nCacheEndIndex});
+        }
     }
     // Don't return more than nCountRequested elements
     const size_t nResultEndIndex = std::min(nCountResult, nCountRequested);
@@ -381,11 +397,23 @@ std::vector<CFinalCommitment> CQuorumManager::ScanCommitments(Consensus::LLMQTyp
         pIndexScanCommitments = pLastIndex->pprev;
     }
 
-    // Get the block indexes of the mined commitments to build the required quorums from
-    std::vector<const CBlockIndex*> pQuorumBaseBlockIndexes{ llmq_params_opt->useRotation ?
-            quorumBlockProcessor.GetMinedCommitmentsIndexedUntilBlock(llmqType, pIndexScanCommitments, nScanCommitments) :
-            quorumBlockProcessor.GetMinedCommitmentsUntilBlock(llmqType, pIndexScanCommitments, nScanCommitments)
-    };
+    // Get the block indexes of the mined commitments to build the required quorums from.
+    // The mined commitment index follows the active chain, so a scan from a block that is
+    // not on it (e.g. a tip notification processed after a reorg) reads another branch.
+    // Check that under the same cs_main hold so a reorg cannot slip in between.
+    bool scan_on_active_chain{false};
+    std::vector<const CBlockIndex*> pQuorumBaseBlockIndexes;
+    {
+        LOCK(::cs_main);
+        const CChain& active_chain{m_chainman.ActiveChain()};
+        scan_on_active_chain = active_chain.Contains(pindexStore) && active_chain.Contains(pIndexScanCommitments);
+        pQuorumBaseBlockIndexes = llmq_params_opt->useRotation
+                                      ? quorumBlockProcessor.GetMinedCommitmentsIndexedUntilBlock(llmqType,
+                                                                                                  pIndexScanCommitments,
+                                                                                                  nScanCommitments)
+                                      : quorumBlockProcessor.GetMinedCommitmentsUntilBlock(llmqType, pIndexScanCommitments,
+                                                                                           nScanCommitments);
+    }
     vecResultCommitments.reserve(vecResultCommitments.size() + pQuorumBaseBlockIndexes.size());
 
     for (auto& pQuorumBaseBlockIndex : pQuorumBaseBlockIndexes) {
@@ -403,14 +431,19 @@ std::vector<CFinalCommitment> CQuorumManager::ScanCommitments(Consensus::LLMQTyp
     }
 
     const size_t nCountResult{vecResultCommitments.size()};
-    if (nCountResult > 0) {
-        LOCK(m_cs_maps);
-        // Don't cache more than keepOldConnections elements
-        // because signing by old quorums requires the exact quorum hash
-        // to be specified and quorum scanning isn't needed there.
-        auto& cache = scanCommitmentsCache[llmqType];
-        const size_t nCacheEndIndex = std::min(nCountResult, static_cast<size_t>(llmq_params_opt->keepOldConnections));
-        cache.emplace(pindexStore->GetBlockHash(), {vecResultCommitments.begin(), vecResultCommitments.begin() + nCacheEndIndex});
+    if (nCountResult > 0 && scan_on_active_chain) {
+        LOCK2(::cs_main, m_cs_maps);
+        // The commitments were read by quorum hash without cs_main; if pindexStore was disconnected
+        // meanwhile they may be another branch's commitments for the same quorums.
+        if (m_chainman.ActiveChain().Contains(pindexStore)) {
+            // Don't cache more than keepOldConnections elements
+            // because signing by old quorums requires the exact quorum hash
+            // to be specified and quorum scanning isn't needed there.
+            auto& cache = scanCommitmentsCache[llmqType];
+            const size_t nCacheEndIndex = std::min(nCountResult, static_cast<size_t>(llmq_params_opt->keepOldConnections));
+            cache.emplace(pindexStore->GetBlockHash(),
+                          {vecResultCommitments.begin(), vecResultCommitments.begin() + nCacheEndIndex});
+        }
     }
     // Don't return more than nCountRequested elements
     const size_t nResultEndIndex = std::min(nCountResult, nCountRequested);
