@@ -186,7 +186,8 @@ bool StaleTipRelayManager::IsAnnouncedStaleBranchBlock(NodeId peer, const CChain
 std::vector<StaleTipMessage> StaleTipRelayManager::GetStaleTipsToAnnounce(
     NodeId peer, const CChain& chain,
     const CanServeBlockFn& can_serve_block,
-    const PeerHasHeaderFn& peer_has_header)
+    const PeerHasHeaderFn& peer_has_header, bool peer_prefers_blocks,
+    const IsRequestedFn& is_requested)
 {
     AssertLockHeld(::cs_main);
     const auto it{m_peers.find(peer)};
@@ -215,17 +216,24 @@ std::vector<StaleTipMessage> StaleTipRelayManager::GetStaleTipsToAnnounce(
         // branch may be served whatever its age (see
         // CanServeStaleBranchBlock()).
         const bool have_tip_data{(stale_tip.nStatus & BLOCK_HAVE_DATA) != 0};
+        const bool wait_for_block{m_opts.fetch_blocks && peer_prefers_blocks && !have_tip_data};
+        bool downloading{false};
         bool within_serve_limits{true};
         for (const CBlockIndex* block{&stale_tip}; block != fork.fork_point; block = block->pprev) {
             if (!can_serve_block(*block)) {
                 within_serve_limits = false;
                 break;
             }
+            if (wait_for_block && !(block->nStatus & BLOCK_HAVE_DATA)) {
+                const uint256& hash{block->GetBlockHash()};
+                downloading |= m_requests.contains(hash) || is_requested(hash);
+            }
         }
         const bool have_block{have_tip_data && within_serve_limits};
         // Signet stale tips can only be validated with the block data, and
         // peers may disconnect for announcements without it.
         if (!have_block && m_opts.chain_type == ChainType::SIGNET) continue;
+        if (within_serve_limits && downloading) continue;
         info.m_staletips_to_peer.insert(&stale_tip);
         announcements.push_back(MakeStaleTipMessage(fork, have_block));
     }
@@ -251,7 +259,7 @@ std::vector<StaleFork> StaleTipRelayManager::GetStaleTips(const CChain& chain) c
 
 bool StaleTipRelayManager::PrefersBlocks() const
 {
-    return m_opts.chain_type == ChainType::SIGNET;
+    return m_opts.fetch_blocks || m_opts.chain_type == ChainType::SIGNET;
 }
 
 void StaleTipRelayManager::CheckIsEmpty() const

@@ -25,6 +25,7 @@ std::string_view StaleTipRelayModeToString(StaleTipRelayMode mode)
     switch (mode) {
     case StaleTipRelayMode::NONE: return "none";
     case StaleTipRelayMode::HEADERS: return "headers";
+    case StaleTipRelayMode::BLOCKS: return "blocks";
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }

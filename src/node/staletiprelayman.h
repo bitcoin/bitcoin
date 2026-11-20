@@ -88,6 +88,7 @@ public:
     using PeerHasHeaderFn = std::function<bool(const CBlockIndex&)>;
     using CanServeBlockFn = std::function<bool(const CBlockIndex&)>;
     using CanRequestBlockFn = std::function<bool(const CBlockIndex&)>;
+    using IsRequestedFn = std::function<bool(const uint256&)>;
 
     explicit StaleTipRelayManager(const StaleTipRelayOptions& opts);
 
@@ -138,11 +139,14 @@ public:
      * @param[in] can_serve_block Whether our serving limits let the peer fetch
      *                            a block, if we have it.
      * @param[in] peer_has_header Whether the peer is known to have a header.
+     * @param[in] peer_prefers_blocks Whether to defer while fetching the branch.
+     * @param[in] is_requested Whether ordinary download has requested a block.
      */
     std::vector<StaleTipMessage> GetStaleTipsToAnnounce(
         NodeId peer, const CChain& chain,
         const CanServeBlockFn& can_serve_block,
-        const PeerHasHeaderFn& peer_has_header) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+        const PeerHasHeaderFn& peer_has_header, bool peer_prefers_blocks,
+        const IsRequestedFn& is_requested) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Whether `block` is stored on a tracked, still-eligible stale branch and
      *  may be served to a peer that negotiated stale-tip relay. */
@@ -152,8 +156,8 @@ public:
      *  points, in the order they were added. */
     std::vector<StaleFork> GetStaleTips(const CChain& chain) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     /** Whether to ask peers to announce stale tips once they can serve the
-     *  blocks. Always on signet, where a tip is only tracked once its block
-     *  is validated. */
+     *  blocks: in blocks mode, and always on signet, where a tip is only
+     *  tracked once its block is validated. */
     bool PrefersBlocks() const;
 
     /** Check that no per-peer state remains. */

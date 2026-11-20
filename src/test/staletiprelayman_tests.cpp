@@ -42,12 +42,13 @@ struct TestPeer {
 };
 
 std::vector<StaleTipMessage> Announce(node::StaleTipRelayManager& manager, const CChain& chain, const TestPeer& peer,
-                                      std::optional<int> max_serve_depth = std::nullopt) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+                                      std::optional<int> max_serve_depth = std::nullopt, bool prefers_blocks = false) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     return manager.GetStaleTipsToAnnounce(
         peer.id, chain,
         [&](const CBlockIndex& block) { return !max_serve_depth || chain.Height() - block.nHeight <= *max_serve_depth; },
-        [&](const CBlockIndex& block) { return peer.HasHeader(block); });
+        [&](const CBlockIndex& block) { return peer.HasHeader(block); }, prefers_blocks,
+        /*is_requested=*/[](const uint256&) { return false; });
 }
 
 using Blocks = std::vector<const CBlockIndex*>;
@@ -277,7 +278,9 @@ BOOST_AUTO_TEST_CASE(announces_servable_branches)
             // Like the historical block serving limit, refuse blocks older
             // than a cutoff, here the first block after the fork point.
             /*can_serve_block=*/[&](const CBlockIndex& block) { return block.GetBlockTime() >= first->GetBlockTime(); },
-            /*peer_has_header=*/[&](const CBlockIndex& block) { return peer.HasHeader(block); })};
+            /*peer_has_header=*/[&](const CBlockIndex& block) { return peer.HasHeader(block); },
+            /*peer_prefers_blocks=*/false,
+            /*is_requested=*/[](const uint256&) { return false; })};
         BOOST_REQUIRE_EQUAL(announcements.size(), 1U);
         return announcements.front().have_block;
     }};
@@ -368,6 +371,38 @@ BOOST_AUTO_TEST_CASE(higher_work_block_requests)
         manager.CheckIsEmpty();
         tip->nStatus &= ~BLOCK_HAVE_DATA;
     }
+}
+
+BOOST_AUTO_TEST_CASE(defers_while_requesting)
+{
+    LOCK(::cs_main);
+
+    BlockTree tree;
+    CBlockIndex* active{tree.AddChain(/*height=*/2, {.have_data = true})};
+    CBlockIndex* tip{tree.Add(active->pprev, /*active=*/false)};
+    const CChain& chain{tree.active_chain};
+
+    node::StaleTipRelayManager manager{{.fetch_blocks = true, .block_request_timeout = 10s}};
+    BOOST_CHECK(manager.PrefersBlocks());
+    for (NodeId id : {0, 1, 2, 3}) manager.ConnectedPeer(id);
+    manager.ReceivedStaleTip(0, chain, *tip, /*have_block=*/true);
+    BOOST_REQUIRE(manager.GetBlockRequestsToSend(0, chain, 0s, 1, AnyBlock) == Blocks{tip});
+
+    const TestPeer headers{.id = 1, .best_known = active};
+    const TestPeer blocks{.id = 2, .best_known = active};
+    const TestPeer late{.id = 3, .best_known = active};
+    BOOST_CHECK(Tips(Announce(manager, chain, headers)) == Hashes({tip}));
+    BOOST_CHECK(Announce(manager, chain, blocks, std::nullopt, /*prefers_blocks=*/true).empty());
+    BOOST_CHECK(Announce(manager, chain, late, std::nullopt, /*prefers_blocks=*/true).empty());
+
+    BOOST_CHECK(manager.GetBlockRequestsToSend(0, chain, 10s, 1, AnyBlock).empty());
+    const auto timed_out{Announce(manager, chain, blocks, std::nullopt, /*prefers_blocks=*/true)};
+    BOOST_REQUIRE_EQUAL(timed_out.size(), 1U);
+    BOOST_CHECK(!timed_out.front().have_block);
+    tip->nStatus |= BLOCK_HAVE_DATA;
+    const auto stored{Announce(manager, chain, late, std::nullopt, /*prefers_blocks=*/true)};
+    BOOST_REQUIRE_EQUAL(stored.size(), 1U);
+    BOOST_CHECK(stored.front().have_block);
 }
 
 BOOST_AUTO_TEST_CASE(staletip_make_message)

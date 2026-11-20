@@ -152,6 +152,9 @@ class P2PStaleTipTest(BitcoinTestFramework):
         self.test_startup_seeding_only_when_enabled()
         self.test_serves_tracked_stale_branch()
 
+        self.restart_node(0, extra_args=["-staletips=blocks"])
+        self.test_normal_download_takes_over()
+
     def tracked_staletips(self):
         return [tip["hash"] for tip in self.nodes[0].getchaintips(staletips_only=True)]
 
@@ -232,9 +235,9 @@ class P2PStaleTipTest(BitcoinTestFramework):
         self.stop_node(0)
         self.nodes[0].assert_start_raises_init_error(
             extra_args=["-staletips=bogus"],
-            expected_msg="Error: Invalid value for -staletips=<mode>: 'bogus'. Expected one of: none, headers.",
+            expected_msg="Error: Invalid value for -staletips=<mode>: 'bogus'. Expected one of: none, headers, blocks.",
         )
-        for valid_arg in ["-staletips=none", "-nostaletips", "-staletips=headers"]:
+        for valid_arg in ["-staletips=none", "-nostaletips", "-staletips=headers", "-staletips=blocks"]:
             self.start_node(0, extra_args=[valid_arg])
             self.stop_node(0)
         self.start_node(0)
@@ -313,7 +316,7 @@ class P2PStaleTipTest(BitcoinTestFramework):
         self.log.info("Test staletip feature advertisement modes")
         node = self.nodes[0]
         block, fork_point_hash = self.stale_block()
-        for mode, expected_data in [("headers", b"\x00"), ("none", None)]:
+        for mode, expected_data in [("headers", b"\x00"), ("blocks", b"\x01"), ("none", None)]:
             self.restart_node(0, extra_args=[f"-staletips={mode}"])
             peer = self.connect_peer()
             stale_features = [feature for feature in peer.features if feature.feature_id == STALETIP_FEATURE]
@@ -736,6 +739,33 @@ class P2PStaleTipTest(BitcoinTestFramework):
         unnegotiated_peer.send_and_ping(msg_getdata([CInv(MSG_BLOCK, block.hash_int) for block in blocks]))
         assert_equal(unnegotiated_peer.blocks, [])
         self.nodes[0].disconnect_p2ps()
+
+    def test_normal_download_takes_over(self):
+        self.log.info("Test normal block download can take over an outstanding stale-branch request")
+        node = self.nodes[0]
+        height = node.getblockcount()
+        # Hold time fixed so the optional request cannot expire during the reorg.
+        node.setmocktime(node.getblockheader(node.getbestblockhash())["time"] + 1)
+        stale_peer = self.connect_peer()
+        blocks, fork_point_hash = self.stale_branch(length=2, fork_depth=1)
+        parent, tip = blocks
+        stale_peer.send_and_ping(self.staletip_msg(parent, fork_point_hash, have_block=True))
+        stale_peer.wait_for_getdata_hash(parent.hash_int)
+        assert_equal(node.getpeerinfo()[0]["inflight"], [])
+
+        normal_peer = self.connect_peer(send_feature=False)
+        normal_peer.send_and_ping(msg_headers([CBlockHeader(block) for block in blocks]))
+        normal_peer.wait_for_getdata_hash(parent.hash_int)
+        normal_peer.wait_for_getdata_hash(tip.hash_int)
+        normal_info, = [peer for peer in node.getpeerinfo() if STALETIP_FEATURE not in peer["features"]]
+        assert_equal(normal_info["inflight"], [height, height + 1])
+        for block in blocks:
+            normal_peer.send_without_ping(msg_block(block))
+        normal_peer.sync_with_ping()
+        assert_equal(node.getbestblockhash(), tip.hash_hex)
+        assert stale_peer.is_connected
+        node.disconnect_p2ps()
+        node.setmocktime(0)
 
 
 if __name__ == "__main__":

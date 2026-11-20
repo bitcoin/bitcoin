@@ -964,6 +964,7 @@ private:
         m_opts.stale_tip_relay_mode == StaleTipRelayMode::NONE ? nullptr :
             std::make_unique<node::StaleTipRelayManager>(node::StaleTipRelayOptions{
                 .chain_type = m_chainparams.GetChainType(),
+                .fetch_blocks = m_opts.stale_tip_relay_mode == StaleTipRelayMode::BLOCKS,
                 .block_request_timeout = std::chrono::seconds{m_chainparams.GetConsensus().nPowTargetSpacing},
             })};
 
@@ -6073,7 +6074,9 @@ void PeerManagerImpl::MaybeSendStaleTips(CNode& node, Peer& peer, CNodeState& st
             return !BelowLimitedServingThreshold(node, peer, block) &&
                    !HistoricalServingLimitReached(node, block, /*filtered=*/false);
         },
-        /*peer_has_header=*/[&](const CBlockIndex& block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) { return PeerHasHeader(&state, &block); })};
+        /*peer_has_header=*/[&](const CBlockIndex& block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) { return PeerHasHeader(&state, &block); },
+        stale_tip_feature->prefers_blocks,
+        /*is_requested=*/[&](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) { return IsBlockRequested(hash); })};
     for (const StaleTipMessage& data : announcements) {
         MakeAndPushMessage(node, NetMsgType::STALETIP, data);
         LogDebug(BCLog::NET, "sending staletip with %u header(s) to peer=%d", data.headers.size(), node.GetId());

@@ -721,7 +721,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
                    DEFAULT_PRIVATE_BROADCAST),
                    ArgsManager::ALLOW_ANY,
                    OptionsCategory::NODE_RELAY);
-    argsman.AddArg("-staletips=<mode>", strprintf("Relay recent stale chain tips to peers that support it (BIP 332). 'headers' tracks and announces stale tips, and serves available blocks on their branches. Options are: %s (default: %s)", ListStaleTipRelayModes(), StaleTipRelayModeToString(DEFAULT_STALETIP_RELAY_MODE)), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
+    argsman.AddArg("-staletips=<mode>", strprintf("Relay recent stale chain tips to peers that support it (BIP 332). 'headers' tracks and announces stale tips and serves available blocks. 'blocks' also downloads offered stale-branch blocks and asks peers to announce tips with block data. Both modes try to fetch offered branches with more work than the active tip. Options are: %s (default: %s)", ListStaleTipRelayModes(), StaleTipRelayModeToString(DEFAULT_STALETIP_RELAY_MODE)), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-whitelistforcerelay", strprintf("Add 'forcerelay' permission to whitelisted peers with default permissions. This will relay transactions even if the transactions were already in the mempool. (default: %d)", DEFAULT_WHITELISTFORCERELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-whitelistrelay", strprintf("Add 'relay' permission to whitelisted peers with default permissions. This will accept relayed transactions even when not relaying transactions (default: %d)", DEFAULT_WHITELISTRELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
 

@@ -47,9 +47,11 @@ enum class StaleTipRelayMode {
     NONE,
     //! Track and announce stale tips, and serve available stale branch blocks.
     HEADERS,
+    //! Also download offered stale-branch blocks.
+    BLOCKS,
 };
 /** All stale-tip relay modes, in the order -help lists them. */
-inline constexpr std::array ALL_STALETIP_RELAY_MODES{StaleTipRelayMode::NONE, StaleTipRelayMode::HEADERS};
+inline constexpr std::array ALL_STALETIP_RELAY_MODES{StaleTipRelayMode::NONE, StaleTipRelayMode::HEADERS, StaleTipRelayMode::BLOCKS};
 /** Default stale-tip relay mode. Stale-tip relay is opt-in. */
 inline constexpr StaleTipRelayMode DEFAULT_STALETIP_RELAY_MODE{StaleTipRelayMode::NONE};
 /** Default number of non-mempool transactions to keep around for block reconstruction. Includes
