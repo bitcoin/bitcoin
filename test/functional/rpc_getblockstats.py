@@ -36,6 +36,9 @@ class GetblockstatsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
+        # Disable the consensus cleanup for this check as the hardcoded block's coinbases
+        # use nLockTime=0 and the --gen-test-data is currently broken (see https://github.com/bitcoin/bitcoin/issues/31838).
+        self.extra_args = [["-vbparams=consensuscleanup:0:0"]]
 
     def get_stats(self):
         return [self.nodes[0].getblockstats(hash_or_height=self.start_height + i) for i in range(self.max_stat_pos+1)]

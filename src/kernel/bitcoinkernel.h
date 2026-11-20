@@ -546,6 +546,7 @@ typedef uint8_t btck_ChainType;
 #define btck_ChainType_TESTNET_4 ((btck_ChainType)(2))
 #define btck_ChainType_SIGNET ((btck_ChainType)(3))
 #define btck_ChainType_REGTEST ((btck_ChainType)(4))
+#define btck_ChainType_TESTNET_5 ((btck_ChainType)(5))
 
 /** @name TxValidationState
  *  Introspection for transaction validation state.

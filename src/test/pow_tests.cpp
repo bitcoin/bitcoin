@@ -81,6 +81,33 @@ BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
     BOOST_CHECK(!PermittedDifficultyTransition(chainParams->GetConsensus(), pindexLast.nHeight+1, pindexLast.nBits, invalid_nbits));
 }
 
+/* Testnet 5 drops the 20-minute minimum-difficulty exception of Testnet 4 */
+BOOST_AUTO_TEST_CASE(get_next_work_min_difficulty_exception)
+{
+    for (const auto chain_type : {ChainType::TESTNET4, ChainType::TESTNET5}) {
+        const auto chain_params{CreateChainParams(*m_node.args, chain_type)};
+        const auto& consensus{chain_params->GetConsensus()};
+        const uint32_t pow_limit_nbits{UintToArith256(consensus.powLimit).GetCompact()};
+        CBlockIndex last;
+        last.nHeight = 1;
+        last.nTime = 1800000000;
+        last.nBits = 0x1903a30c;
+        CBlockHeader next;
+        next.nTime = last.nTime + consensus.nPowTargetSpacing * 2 + 1;
+        const bool exception{chain_type == ChainType::TESTNET4};
+        BOOST_CHECK_EQUAL(GetNextWorkRequired(&last, &next, consensus), exception ? pow_limit_nbits : last.nBits);
+        BOOST_CHECK_EQUAL(PermittedDifficultyTransition(consensus, last.nHeight + 1, last.nBits, pow_limit_nbits), exception);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_testnet5_pow_limit)
+{
+    const auto consensus{CreateChainParams(*m_node.args, ChainType::TESTNET5)->GetConsensus()};
+    BOOST_CHECK_EQUAL(UintToArith256(consensus.powLimit).GetCompact(), 0x1a0fffffU);
+    // Testnet 4's minimum difficulty is too easy for Testnet 5.
+    BOOST_CHECK(!CheckProofOfWork(uint256{1}, 0x1d00ffff, consensus));
+}
+
 BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_negative_target)
 {
     const auto consensus = CreateChainParams(*m_node.args, ChainType::MAIN)->GetConsensus();
@@ -203,6 +230,11 @@ BOOST_AUTO_TEST_CASE(ChainParams_TESTNET_sanity)
 BOOST_AUTO_TEST_CASE(ChainParams_TESTNET4_sanity)
 {
     sanity_check_chainparams(*m_node.args, ChainType::TESTNET4);
+}
+
+BOOST_AUTO_TEST_CASE(ChainParams_TESTNET5_sanity)
+{
+    sanity_check_chainparams(*m_node.args, ChainType::TESTNET5);
 }
 
 BOOST_AUTO_TEST_CASE(ChainParams_SIGNET_sanity)

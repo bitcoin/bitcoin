@@ -177,6 +177,8 @@ public:
     static std::unique_ptr<const CChainParams> TestNet() { const TestNetOptions opts{}; return TestNet(opts); }
     static std::unique_ptr<const CChainParams> TestNet4(const TestNetOptions& options);
     static std::unique_ptr<const CChainParams> TestNet4() { const TestNetOptions opts{}; return TestNet4(opts); }
+    static std::unique_ptr<const CChainParams> TestNet5(const TestNetOptions& options);
+    static std::unique_ptr<const CChainParams> TestNet5() { const TestNetOptions opts{}; return TestNet5(opts); }
 
 protected:
     CChainParams() = default;
