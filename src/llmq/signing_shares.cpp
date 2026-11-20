@@ -888,6 +888,15 @@ bool CSigSharesManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const ui
     }
 
     if (allowReSign) {
+        // Signing again is activity on this session, but a re-created share only duplicates ours and does not
+        // refresh it. Restart the timeout so Cleanup does not drop the shares we hold before they are re-announced.
+        const uint256 signHash{SignHash(llmqType, quorum->qc->quorumHash, id, msgHash).Get()};
+        {
+            LOCK(cs);
+            if (auto it = timeSeenForSessions.find(signHash); it != timeSeenForSessions.end()) {
+                it->second = GetTime<std::chrono::seconds>().count();
+            }
+        }
         // make us re-announce all known shares (other nodes might have run into a timeout)
         ForceReAnnouncement(*quorum, llmqType, id, msgHash);
     }
