@@ -388,6 +388,11 @@ void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const
                       best_block_index->GetBlockHash().ToString());
             return;
         }
+        // Init() can resume from an uncommitted tip above the active chain. The blocks below it are indexed already,
+        // and after an unclean stop their data may not be on disk again yet, so they can't be rewound.
+        if (best_block_index->GetAncestor(pindex->nHeight) == pindex) {
+            return;
+        }
         if (best_block_index != pindex->pprev && !Rewind(best_block_index, pindex->pprev)) {
             FatalError("%s: Failed to rewind index %s to a previous chain tip",
                        __func__, GetName());

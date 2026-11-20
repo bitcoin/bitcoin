@@ -3,11 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
+#include <chainparams.h>
 #include <consensus/validation.h>
 #include <index/coinstatsindex.h>
 #include <interfaces/chain.h>
 #include <node/blockstorage.h>
+#include <pow.h>
 #include <script/script.h>
+#include <shutdown.h>
 #include <test/util/index.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
@@ -23,9 +26,9 @@
 
 namespace {
 //! A minimal index that, like Dash's address and spent indexes, keeps one entry per block and erases the entries of
-//! rewound blocks in CustomRewind() block by block. The rewind is exposed, and can stop after a given block, so a test
-//! can leave the on-disk state that an unclean shutdown in the middle of a reorg would leave, without having to time
-//! an actual crash.
+//! rewound blocks in CustomRewind() block by block, reading each one from disk. The rewind is exposed, and can stop
+//! after a given block, so a test can leave the on-disk state that an unclean shutdown in the middle of a reorg would
+//! leave, without having to time an actual crash.
 class ErasingIndex final : public BaseIndex
 {
     const std::unique_ptr<BaseIndex::DB> m_db;
@@ -45,7 +48,7 @@ public:
 
     bool Indexed(const CBlockIndex* block) const { return Indexed(block->GetBlockHash()); }
     bool Indexed(const uint256& block_hash) const { return m_db->Exists(std::make_pair(uint8_t{'e'}, block_hash)); }
-    //! Write the entry CustomAppend() writes, for a block the block index doesn't have
+    //! Write the entry CustomAppend() writes, for a block whose data the node doesn't have
     void WriteEntry(const uint256& block_hash)
     {
         BOOST_REQUIRE(m_db->Write(std::make_pair(uint8_t{'e'}, block_hash), true));
@@ -80,6 +83,8 @@ protected:
         const CBlockIndex* new_tip_index{WITH_LOCK(::cs_main, return m_chainstate->m_blockman.LookupBlockIndex(new_tip.hash))};
         return RewindBlockByBlock(current_tip_index, new_tip_index, [&](const CBlockIndex* pindex, CDBBatch& batch) {
             if (m_stop_after && pindex == m_stop_after->pprev) return false;
+            CBlock block;
+            if (!node::ReadBlockFromDisk(block, pindex, Params().GetConsensus())) return false;
             batch.Erase(std::make_pair(uint8_t{'e'}, pindex->GetBlockHash()));
             return true;
         });
@@ -323,6 +328,36 @@ BOOST_FIXTURE_TEST_CASE(restart_rewinds_blocks_synced_above_flush, TestChain100S
         BOOST_CHECK(index.Indexed(lost_block.GetHash()));
     }
     node::g_indexes_ready_to_sync = true;
+
+    // After an unclean stop the blocks above the flush can also be left with only their headers, as headers are
+    // stored before the blocks. The node connects them again as it downloads them, before the ones above them are
+    // on disk again, so the index must keep their entries rather than rewind blocks it can't read.
+    const CBlock reconnected{CreateBlock({}, CScript() << OP_2, chainman.ActiveChainstate())};
+    BOOST_REQUIRE(chainman.ProcessNewBlockHeaders({reconnected}, state));
+    const CBlockIndex* reconnected_index{
+        WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(reconnected.GetHash()))};
+    CBlockHeader header_only{reconnected};
+    header_only.hashPrevBlock = reconnected.GetHash();
+    header_only.nTime = reconnected.nTime + 1;
+    header_only.nBits = GetNextWorkRequired(reconnected_index, &header_only, Params().GetConsensus());
+    while (!CheckProofOfWork(header_only.GetHash(), header_only.nBits, Params().GetConsensus())) ++header_only.nNonce;
+    BOOST_REQUIRE(chainman.ProcessNewBlockHeaders({header_only}, state));
+    {
+        ErasingIndex index{interfaces::MakeChain(m_node)};
+        index.WriteEntry(reconnected.GetHash());
+        index.WriteEntry(header_only.GetHash());
+        index.SetUncommittedTip(header_only.GetHash());
+        BOOST_REQUIRE(index.Start());
+        IndexWaitSynced(index);
+        BOOST_REQUIRE(chainman.ProcessNewBlock(std::make_shared<const CBlock>(reconnected), /*force_processing=*/true,
+                                               /*new_block=*/nullptr));
+        SyncWithValidationInterfaceQueue();
+        BOOST_CHECK(!ShutdownRequested());
+        BOOST_CHECK(index.Indexed(reconnected_index));
+        BOOST_CHECK(index.Indexed(header_only.GetHash()));
+        BOOST_CHECK_EQUAL(index.GetSummary().best_block_height, reconnected_index->nHeight + 1);
+        index.Stop();
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
