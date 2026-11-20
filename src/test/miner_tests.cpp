@@ -65,10 +65,6 @@ struct MinerTestingSetup : public TestingSetup {
         int baseheight{0};
     };
     MinedChain MineBlockInfoChain(Mining& mining);
-    void TestPackageSelection(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    void TestBasicMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    void TestPrioritisedMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    void TestSigOpsAdjustedWeightChunkLimit(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool TestSequenceLocks(const CTransaction& tx, CTxMemPool& tx_mempool) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
     {
         CCoinsViewMemPool view_mempool{&m_node.chainman->ActiveChainstate().CoinsTip(), tx_mempool};
@@ -233,15 +229,16 @@ static CMutableTransaction MakeTx(const COutPoint& prevout, CAmount value, const
     return tx;
 }
 
-// Test suite for ancestor feerate transaction selection.
-// Implemented as an additional function, rather than a separate test case,
-// to allow reusing the blockchain created in CreateNewBlock_validity.
-void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst)
+// Test ancestor feerate transaction selection.
+BOOST_AUTO_TEST_CASE(package_selection)
 {
+    const auto txFirst{MineBlockInfoChain(*MakeMining()).txFirst};
+    LOCK(cs_main);
+
     CTxMemPool& tx_mempool{MakeMempool()};
     auto mining{MakeMining()};
     BlockCreateOptions options{
-        .coinbase_output_script = scriptPubKey,
+        .coinbase_output_script = COINBASE_OUTPUT_SCRIPT,
     };
 
     LOCK(tx_mempool.cs);
@@ -455,8 +452,11 @@ std::vector<CTransactionRef> CreateBigSigOpsCluster(const CTransactionRef& first
     return ret;
 }
 
-void MinerTestingSetup::TestSigOpsAdjustedWeightChunkLimit(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst)
+BOOST_AUTO_TEST_CASE(sigops_adjusted_weight_chunk_limit)
 {
+    const auto txFirst{MineBlockInfoChain(*MakeMining()).txFirst};
+    LOCK(cs_main);
+
     auto mining{MakeMining()};
     BOOST_REQUIRE(mining);
 
@@ -473,15 +473,18 @@ void MinerTestingSetup::TestSigOpsAdjustedWeightChunkLimit(const CScript& script
     BlockCreateOptions options{
         // +1 because TestChunkBlockLimits rejects on >= (exact fit doesn't count).
         .block_max_weight = DEFAULT_BLOCK_RESERVED_WEIGHT + sigop_entry.GetTxWeight() + 1,
-        .coinbase_output_script = scriptPubKey,
+        .coinbase_output_script = COINBASE_OUTPUT_SCRIPT,
     };
     const CBlock block{mining->createNewBlock(options, /*cooldown=*/false)->getBlock()};
     BOOST_CHECK_EQUAL(block.vtx.size(), 2U);
     BOOST_CHECK(block.vtx[1]->GetHash() == tx.GetHash());
 }
 
-void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst, int baseheight)
+BOOST_AUTO_TEST_CASE(basic_mining)
 {
+    const auto [txFirst, baseheight]{MineBlockInfoChain(*MakeMining())};
+    LOCK(cs_main);
+
     FakeNodeClock clock{};
 
     Txid hash;
@@ -498,7 +501,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     BOOST_REQUIRE(mining);
 
     BlockCreateOptions options{
-        .coinbase_output_script = scriptPubKey,
+        .coinbase_output_script = COINBASE_OUTPUT_SCRIPT,
     };
 
     {
@@ -842,13 +845,16 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     BOOST_CHECK_EQUAL(block.vtx.size(), 5U);
 }
 
-void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst)
+BOOST_AUTO_TEST_CASE(prioritised_mining)
 {
+    const auto txFirst{MineBlockInfoChain(*MakeMining()).txFirst};
+    LOCK(cs_main);
+
     auto mining{MakeMining()};
     BOOST_REQUIRE(mining);
 
     BlockCreateOptions options{
-        .coinbase_output_script = scriptPubKey,
+        .coinbase_output_script = COINBASE_OUTPUT_SCRIPT,
     };
 
     CTxMemPool& tx_mempool{MakeMempool()};
@@ -972,21 +978,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         }
     }
 
-    const auto [txFirst, baseheight]{MineBlockInfoChain(*mining)};
-
-    LOCK(cs_main);
-
-    TestBasicMining(COINBASE_OUTPUT_SCRIPT, txFirst, baseheight);
-
-    m_node.chainman->ActiveChain().Tip()->nHeight--;
-
-    TestPackageSelection(COINBASE_OUTPUT_SCRIPT, txFirst);
-
-    m_node.chainman->ActiveChain().Tip()->nHeight--;
-
-    TestPrioritisedMining(COINBASE_OUTPUT_SCRIPT, txFirst);
-
-    TestSigOpsAdjustedWeightChunkLimit(COINBASE_OUTPUT_SCRIPT, txFirst);
+    MineBlockInfoChain(*mining);
 }
 
 BOOST_AUTO_TEST_CASE(block_template_manager)
