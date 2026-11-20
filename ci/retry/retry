@@ -4,7 +4,7 @@ __sleep_amount() {
   if [ -n "$constant_sleep" ]; then
     sleep_time=$constant_sleep
   else
-    sleep_time=`awk "BEGIN {t = $min_sleep * $(( (1<<($attempts -1)) )); print (t > $max_sleep ? $max_sleep : t)}"`
+    sleep_time=$(awk "BEGIN {t = $min_sleep * $((1 << (attempts - 1))); print (t > $max_sleep ? $max_sleep : t)}")
   fi
 }
 
@@ -36,7 +36,7 @@ retry()
     if [ $attempts -gt 0 ]; then
       __sleep_amount
       __log_out "Before retry #$attempts: sleeping $sleep_time seconds"
-      sleep $sleep_time
+      sleep "$sleep_time"
     fi
 
     P="$1"
@@ -49,14 +49,14 @@ retry()
       # command not found
       exit $return_code
     elif [ $return_code -ne 0 ]; then
-      attempts=$[$attempts +1]
+      attempts=$((attempts + 1))
     fi
   done
 
-  if [ $attempts -gt $max_tries ]; then
+  if [ "$attempts" -gt "$max_tries" ]; then
     if [ -n "$fail_script" ]; then
       __log_out "Retries exhausted, running fail script"
-      eval $fail_script
+      eval "$fail_script"
     else
       __log_out "Retries exhausted"
     fi

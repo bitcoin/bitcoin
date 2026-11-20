@@ -9,10 +9,12 @@
 #
 
 # Source function library.
+# shellcheck disable=SC1091
 . /etc/init.d/functions
 
 # you can override defaults in /etc/sysconfig/bitcoind, see below
 if [ -f /etc/sysconfig/bitcoind ]; then
+        # shellcheck disable=SC1091
         . /etc/sysconfig/bitcoind
 fi
 
@@ -30,10 +32,11 @@ bitcoind_opts=${BITCOIND_OPTS--disablewallet}
 
 start() {
     echo -n $"Starting $prog: "
+    # shellcheck disable=SC2086
     daemon $DAEMONOPTS $bitcoind $bitcoind_opts
     RETVAL=$?
     echo
-    [ $RETVAL -eq 0 ] && touch $lockfile
+    [ $RETVAL -eq 0 ] && touch "$lockfile"
     return $RETVAL
 }
 
@@ -42,7 +45,7 @@ stop() {
     killproc $prog -t600
     RETVAL=$?
     echo
-    [ $RETVAL -eq 0 ] && rm -f $lockfile
+    [ $RETVAL -eq 0 ] && rm -f "$lockfile"
     return $RETVAL
 }
 
