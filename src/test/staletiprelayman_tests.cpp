@@ -17,10 +17,13 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <chrono>
 #include <cstddef>
 #include <initializer_list>
 #include <optional>
 #include <vector>
+
+using namespace std::chrono_literals;
 
 BOOST_FIXTURE_TEST_SUITE(staletiprelayman_tests, BasicTestingSetup)
 
@@ -46,6 +49,10 @@ std::vector<StaleTipMessage> Announce(node::StaleTipRelayManager& manager, const
         [&](const CBlockIndex& block) { return !max_serve_depth || chain.Height() - block.nHeight <= *max_serve_depth; },
         [&](const CBlockIndex& block) { return peer.HasHeader(block); });
 }
+
+using Blocks = std::vector<const CBlockIndex*>;
+
+bool AnyBlock(const CBlockIndex&) { return true; }
 
 std::vector<uint256> Tips(const std::vector<StaleTipMessage>& announcements)
 {
@@ -176,6 +183,13 @@ BOOST_AUTO_TEST_CASE(signet_announces_with_block)
     BOOST_REQUIRE_EQUAL(announcements.size(), 1U);
     BOOST_CHECK(announcements.front().have_block);
     manager.DisconnectedPeer(peer.id);
+
+    node::StaleTipRelayManager downloading{{.chain_type = ChainType::SIGNET, .fetch_blocks = true}};
+    downloading.ConnectedPeer(peer.id);
+    CBlockIndex* header{tree.Add(active->pprev, /*active=*/false)};
+    BOOST_CHECK(downloading.ReceivedStaleTip(peer.id, tree.active_chain, *header, /*have_block=*/true));
+    BOOST_CHECK(downloading.GetStaleTips(tree.active_chain).empty());
+    BOOST_CHECK(downloading.GetBlockRequestsToSend(peer.id, tree.active_chain, 0s, 1, AnyBlock) == Blocks{header});
 }
 
 BOOST_AUTO_TEST_CASE(announced_branch_blocks)
@@ -274,6 +288,86 @@ BOOST_AUTO_TEST_CASE(announces_servable_branches)
     // older than both ends is checked too.
     middle->nTime = first->nTime - 1;
     BOOST_CHECK(!have_block_by_time());
+}
+
+BOOST_AUTO_TEST_CASE(block_request_lifecycle)
+{
+    LOCK(::cs_main);
+
+    BlockTree tree;
+    CBlockIndex* active{tree.AddChain(/*height=*/3, {.have_data = true})};
+    CBlockIndex* parent{tree.Add(active->GetAncestor(1), /*active=*/false)};
+    CBlockIndex* tip{tree.Add(parent, /*active=*/false)};
+    const CChain& chain{tree.active_chain};
+
+    node::StaleTipRelayManager manager{{.fetch_blocks = true, .block_request_timeout = 10s}};
+    manager.ConnectedPeer(0);
+    manager.ConnectedPeer(1);
+    manager.ReceivedStaleTip(0, chain, *tip, /*have_block=*/false);
+    BOOST_CHECK(manager.GetBlockRequestsToSend(0, chain, 0s, 2, AnyBlock).empty());
+    BOOST_CHECK(manager.ReceivedStaleTip(0, chain, *tip, /*have_block=*/true));
+    manager.ReceivedStaleTip(1, chain, *tip, /*have_block=*/true);
+
+    BOOST_CHECK(manager.GetBlockRequestsToSend(0, chain, 0s, 0, AnyBlock).empty());
+    BOOST_CHECK(manager.GetBlockRequestsToSend(0, chain, 0s, 1, AnyBlock) == Blocks{tip});
+    BOOST_CHECK(!manager.TakeBlockRequest(1, tip->GetBlockHash()));
+    BOOST_CHECK(manager.GetBlockRequestsToSend(0, chain, 0s, 1, AnyBlock).empty());
+    BOOST_CHECK(manager.GetBlockRequestsToSend(1, chain, 0s, 1, AnyBlock) == Blocks{parent});
+
+    // Storage from any source frees a slot. Neither storage nor timeout
+    // requires a network response from the peer we selected.
+    parent->nStatus |= BLOCK_HAVE_DATA;
+    BOOST_CHECK(manager.GetBlockRequestsToSend(1, chain, 9s, 1, AnyBlock).empty());
+    BOOST_CHECK(!manager.TakeBlockRequest(1, parent->GetBlockHash()));
+    BOOST_CHECK(manager.GetBlockRequestsToSend(0, chain, 10s, 1, AnyBlock).empty());
+    BOOST_CHECK(!manager.ReceivedStaleTip(0, chain, *tip, /*have_block=*/true));
+    BOOST_CHECK(manager.GetBlockRequestsToSend(0, chain, 10s, 1, AnyBlock).empty());
+    BOOST_CHECK(manager.GetBlockRequestsToSend(1, chain, 10s, 1, AnyBlock) == Blocks{tip});
+
+    BOOST_CHECK(manager.TakeBlockRequest(1, tip->GetBlockHash()));
+    BOOST_CHECK(!manager.TakeBlockRequest(1, tip->GetBlockHash()));
+    BOOST_CHECK(manager.GetBlockRequestsToSend(1, chain, 10s, 1, AnyBlock).empty());
+    manager.DisconnectedPeer(0);
+    manager.DisconnectedPeer(1);
+    manager.CheckIsEmpty();
+}
+
+BOOST_AUTO_TEST_CASE(higher_work_block_requests)
+{
+    LOCK(::cs_main);
+
+    BlockTree tree;
+    CBlockIndex* active{tree.AddChain(/*height=*/MAX_STALETIP_HEADERS + 1, {.have_data = true})};
+    CBlockIndex* stale{tree.Add(active->pprev, /*active=*/false)};
+    CBlockIndex* prefix{tree.active_chain.Genesis()};
+    while (prefix->nHeight < active->nHeight - 1) {
+        prefix = tree.Add(prefix, /*active=*/false, {.have_data = true});
+        prefix->m_chain_tx_count = prefix->nHeight + 1;
+    }
+    CBlockIndex* parent{tree.Add(prefix, /*active=*/false)};
+    CBlockIndex* tip{tree.Add(parent, /*active=*/false)};
+    const CChain& chain{tree.active_chain};
+
+    for (bool fetch_blocks : {false, true}) {
+        node::StaleTipRelayManager manager{{.fetch_blocks = fetch_blocks}};
+        manager.ConnectedPeer(0);
+        manager.ReceivedStaleTip(0, chain, *stale, /*have_block=*/true);
+        BOOST_CHECK(manager.ReceivedStaleTip(0, chain, *tip, /*have_block=*/true));
+
+        // The older fork already has a complete prefix. The higher-work
+        // offer gets the first slot, even in headers mode.
+        BOOST_CHECK(manager.GetBlockRequestsToSend(0, chain, 0s, 1, AnyBlock) == Blocks{tip});
+        BOOST_CHECK(manager.TakeBlockRequest(0, tip->GetBlockHash()));
+        tip->nStatus |= BLOCK_HAVE_DATA;
+        BOOST_CHECK(manager.GetBlockRequestsToSend(0, chain, 0s, 1, [](const CBlockIndex&) { return false; }).empty());
+        BOOST_CHECK(manager.GetBlockRequestsToSend(0, chain, 0s, 1, AnyBlock) == Blocks{parent});
+        const auto remaining{manager.GetBlockRequestsToSend(0, chain, 0s, 2, AnyBlock)};
+        BOOST_CHECK(remaining == (fetch_blocks ? Blocks{stale} : Blocks{}));
+
+        manager.DisconnectedPeer(0);
+        manager.CheckIsEmpty();
+        tip->nStatus &= ~BLOCK_HAVE_DATA;
+    }
 }
 
 BOOST_AUTO_TEST_CASE(staletip_make_message)

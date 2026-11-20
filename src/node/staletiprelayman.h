@@ -11,9 +11,12 @@
 #include <node/staletiptracker.h>
 #include <staletipmessage.h>
 #include <sync.h>
+#include <uint256.h>
 #include <util/chaintype.h>
 #include <util/expected.h>
 
+#include <bitset>
+#include <chrono>
 #include <cstddef>
 #include <deque>
 #include <functional>
@@ -51,6 +54,8 @@ util::Expected<void, StaleTipAnnouncementError> ValidateStaleTipAnnouncement(con
 
 struct StaleTipRelayOptions {
     ChainType chain_type{ChainType::MAIN};
+    bool fetch_blocks{false};
+    std::chrono::microseconds block_request_timeout{std::chrono::minutes{10}};
 };
 
 /** Build the `staletip` message announcing `fork`, compressing the headers
@@ -59,7 +64,7 @@ struct StaleTipRelayOptions {
 StaleTipMessage MakeStaleTipMessage(const StaleFork& fork, bool have_block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 /**
- * Class responsible for deciding which stale tips to track and announce for
+ * Class responsible for deciding which stale tips to track, fetch and announce for
  * BIP 332 stale-tip relay. Its data structures include the StaleTipTracker
  * and, per peer, the stale tips the peer announced to us and the ones we
  * announced to it.
@@ -72,6 +77,7 @@ StaleTipMessage MakeStaleTipMessage(const StaleFork& fork, bool have_block) EXCL
  * - ValidationInterface callbacks.
  * - When a peer connects or disconnects.
  * - When a peer announces a stale tip.
+ * - To get block requests to send and match replies from their source.
  * - To get the stale tips to announce.
  *
  * This class is not thread-safe. Callers must hold cs_main.
@@ -81,6 +87,7 @@ class StaleTipRelayManager
 public:
     using PeerHasHeaderFn = std::function<bool(const CBlockIndex&)>;
     using CanServeBlockFn = std::function<bool(const CBlockIndex&)>;
+    using CanRequestBlockFn = std::function<bool(const CBlockIndex&)>;
 
     explicit StaleTipRelayManager(const StaleTipRelayOptions& opts);
 
@@ -98,11 +105,22 @@ public:
     void DisconnectedPeer(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Remember a stale tip `peer` announced, and track it if it is eligible.
-     *  The peer's offer of the branch's blocks is kept once made.
+     *  The peer's offer of the tip block is kept once made.
      *
-     * @return Whether a new stale tip is tracked, so it should be relayed.
+     * @return Whether there is a newly tracked tip to relay or a new offer to fetch.
      */
     bool ReceivedStaleTip(NodeId peer, const CChain& chain, const CBlockIndex& tip, bool have_block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    /** Choose and record best-effort requests from this peer. max_pending is
+     *  the total number of optional requests allowed after ordinary download
+     *  has taken its slots. can_request applies ordinary in-flight and peer
+     *  capability checks. Requests for higher-work branches take priority. */
+    std::vector<const CBlockIndex*> GetBlockRequestsToSend(
+        NodeId peer, const CChain& chain, std::chrono::microseconds now,
+        size_t max_pending, const CanRequestBlockFn& can_request) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    /** Consume the request if this is the peer we asked for the block. */
+    bool TakeBlockRequest(NodeId peer, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Whether `block` is on a stale branch `peer` announced with have_block
      *  set. The branch is the part of the announced tip's ancestry that is not
@@ -145,9 +163,12 @@ private:
     /** A stale tip a peer announced to us. */
     struct StaleTipAnnouncement {
         const CBlockIndex* tip;
-        //! Whether the peer offered to serve the blocks on the tip's branch. It
-        //! may not have connected them, so their scripts may be unchecked.
+        //! Whether the peer offered to serve the tip block. It may also have
+        //! earlier blocks on the branch, whose scripts may be unchecked.
         bool have_block;
+        //! Indexed by distance below the offered tip, so an unanswered
+        //! request is not repeated on every send pass.
+        std::bitset<MAX_STALETIP_HEADERS> attempted{};
     };
 
     struct PeerInfo {
@@ -159,9 +180,31 @@ private:
         std::set<const CBlockIndex*> m_staletips_to_peer;
     };
 
+    struct BlockRequest {
+        const CBlockIndex* block;
+        NodeId peer;
+        std::chrono::microseconds expires;
+    };
+
+    /** Find the fork point of the branch ending at `tip`, if its blocks
+     *  should be fetched. The missing blocks above the fork point, up to
+     *  `tip`, are the ones to fetch.
+     *
+     * An eligible stale branch is fetched in blocks mode only. A branch with
+     * more work than `chain` is fetched in either mode. Its fork point is the
+     * nearest ancestor that is on `chain` or stored along with all of its own
+     * ancestors, so a downloaded prefix of the branch is not fetched again. A
+     * branch that is known to be invalid, or already downloaded, is not
+     * fetched.
+     *
+     * @return The fork point, or nullptr if the branch should not be fetched.
+     */
+    const CBlockIndex* GetFetchableForkPoint(const CChain& chain, const CBlockIndex& tip) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
     const StaleTipRelayOptions m_opts;
     StaleTipTracker m_tracker GUARDED_BY(::cs_main);
     std::map<NodeId, PeerInfo> m_peers GUARDED_BY(::cs_main);
+    std::map<uint256, BlockRequest> m_requests GUARDED_BY(::cs_main);
 };
 
 } // namespace node

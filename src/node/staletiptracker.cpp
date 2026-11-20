@@ -54,6 +54,7 @@ StaleTipTracker::StaleTipTracker(ChainType chain_type, int recent_window, size_t
 
 const CBlockIndex* StaleTipTracker::GetEligibleForkPoint(const CChain& active_chain, const CBlockIndex& stale_tip) const
 {
+    AssertLockHeld(::cs_main);
     const CBlockIndex* active_tip{active_chain.Tip()};
     if (active_tip == nullptr) return nullptr;
     if (active_chain.Contains(stale_tip)) return nullptr;

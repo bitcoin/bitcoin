@@ -78,13 +78,6 @@ private:
     //! Maximum stale branch length to track.
     const size_t m_max_headers{MAX_STALETIP_HEADERS};
 
-    /** Find the fork point of `stale_tip` with the active chain, checking that
-     *  the tip is eligible. On signet, AddStaleTip() also requires the tip's
-     *  block to have been validated.
-     *
-     * @return The fork point, or nullptr if the tip is not eligible.
-     */
-    const CBlockIndex* GetEligibleForkPoint(const CChain& active_chain, const CBlockIndex& stale_tip) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     /** Whether `stale_tip` is known to be invalid or too far below the active
      *  tip. Such a tip is unlikely to become eligible again, so it is not
      *  worth keeping. */
@@ -129,6 +122,14 @@ public:
      * @return Whether the tracker was updated to track `stale_tip`.
      */
     bool AddStaleTip(const CChain& active_chain, const CBlockIndex& stale_tip) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    /** Find the fork point of `stale_tip` with the active chain, checking that
+     *  the tip is eligible. On signet, AddStaleTip() also requires the tip's
+     *  block to have been validated.
+     *
+     * @return The fork point, or nullptr if the tip is not eligible.
+     */
+    const CBlockIndex* GetEligibleForkPoint(const CChain& active_chain, const CBlockIndex& stale_tip) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Whether `block` is stored on a tracked, still-eligible stale branch and
      *  may be served to a peer that negotiated stale-tip relay. */

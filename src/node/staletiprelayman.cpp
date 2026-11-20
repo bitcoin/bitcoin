@@ -87,6 +87,7 @@ void StaleTipRelayManager::DisconnectedPeer(NodeId peer)
 {
     AssertLockHeld(::cs_main);
     m_peers.erase(peer);
+    std::erase_if(m_requests, [&](const auto& entry) { return entry.second.peer == peer; });
 }
 
 bool StaleTipRelayManager::ReceivedStaleTip(NodeId peer, const CChain& chain, const CBlockIndex& tip, bool have_block)
@@ -95,13 +96,80 @@ bool StaleTipRelayManager::ReceivedStaleTip(NodeId peer, const CChain& chain, co
     const auto it{m_peers.find(peer)};
     if (!Assume(it != m_peers.end())) return false;
     auto& from_peer{it->second.m_staletips_from_peer};
+    bool new_offer{have_block};
     if (auto announced{std::ranges::find(from_peer, &tip, &StaleTipAnnouncement::tip)}; announced != from_peer.end()) {
+        new_offer = have_block && !announced->have_block;
         announced->have_block |= have_block;
     } else {
         if (from_peer.size() >= MAX_STALETIPS_FROM_PEER) from_peer.pop_front();
         from_peer.push_back({.tip = &tip, .have_block = have_block});
     }
-    return m_tracker.AddStaleTip(chain, tip);
+    return m_tracker.AddStaleTip(chain, tip) || (new_offer && GetFetchableForkPoint(chain, tip) != nullptr);
+}
+
+const CBlockIndex* StaleTipRelayManager::GetFetchableForkPoint(const CChain& chain, const CBlockIndex& tip) const
+{
+    AssertLockHeld(::cs_main);
+    if (!chain.Tip() || !tip.IsValid(BLOCK_VALID_TREE) || tip.HaveNumChainTxs()) return nullptr;
+    if (tip.nChainWork <= chain.Tip()->nChainWork) {
+        return m_opts.fetch_blocks ? m_tracker.GetEligibleForkPoint(chain, tip) : nullptr;
+    }
+
+    // A short announcement may extend a downloaded off-chain prefix. An
+    // isolated stored block can still be missing parents, so keep walking
+    // until the transaction data is linked or we reach the active chain.
+    const CBlockIndex* fork_point{tip.pprev};
+    for (size_t i{0}; fork_point && i < MAX_STALETIP_HEADERS; ++i, fork_point = fork_point->pprev) {
+        if (chain.Contains(*fork_point) || fork_point->HaveNumChainTxs()) return fork_point;
+    }
+    return nullptr;
+}
+
+std::vector<const CBlockIndex*> StaleTipRelayManager::GetBlockRequestsToSend(
+    NodeId peer, const CChain& chain, std::chrono::microseconds now,
+    size_t max_pending, const CanRequestBlockFn& can_request)
+{
+    AssertLockHeld(::cs_main);
+    const auto it{m_peers.find(peer)};
+    if (!Assume(it != m_peers.end()) || it->second.m_staletips_from_peer.empty()) return {};
+
+    // A block may have been stored by another peer or submitblock.
+    std::erase_if(m_requests, [&](const auto& entry) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        return entry.second.expires <= now || (entry.second.block->nStatus & BLOCK_HAVE_DATA);
+    });
+    size_t pending = std::ranges::count_if(m_requests, [&](const auto& entry) { return entry.second.peer == peer; });
+    if (pending >= max_pending || !chain.Tip()) return {};
+
+    std::vector<const CBlockIndex*> blocks;
+    for (const bool higher_work : {true, false}) {
+        if (!higher_work && !m_opts.fetch_blocks) break;
+        for (StaleTipAnnouncement& offer : it->second.m_staletips_from_peer) {
+            const CBlockIndex& tip{*offer.tip};
+            if (!offer.have_block || (tip.nChainWork > chain.Tip()->nChainWork) != higher_work) continue;
+            const CBlockIndex* fork_point{GetFetchableForkPoint(chain, tip)};
+            if (!fork_point) continue;
+            for (const CBlockIndex* block{&tip}; block != fork_point && !block->HaveNumChainTxs(); block = block->pprev) {
+                const size_t depth = tip.nHeight - block->nHeight;
+                if (offer.attempted.test(depth) || (block->nStatus & BLOCK_HAVE_DATA)) continue;
+                const uint256& hash{block->GetBlockHash()};
+                if (m_requests.contains(hash) || !can_request(*block)) continue;
+                offer.attempted.set(depth);
+                m_requests.emplace(hash, BlockRequest{block, peer, now + m_opts.block_request_timeout});
+                blocks.push_back(block);
+                if (++pending == max_pending) return blocks;
+            }
+        }
+    }
+    return blocks;
+}
+
+bool StaleTipRelayManager::TakeBlockRequest(NodeId peer, const uint256& hash)
+{
+    AssertLockHeld(::cs_main);
+    const auto it{m_requests.find(hash)};
+    if (it == m_requests.end() || it->second.peer != peer) return false;
+    m_requests.erase(it);
+    return true;
 }
 
 bool StaleTipRelayManager::IsAnnouncedStaleBranchBlock(NodeId peer, const CChain& chain, const CBlockIndex& block) const
@@ -139,8 +207,8 @@ std::vector<StaleTipMessage> StaleTipRelayManager::GetStaleTipsToAnnounce(
         // its active tip).
         if (peer_has_header(stale_tip)) continue;
 
-        // BIP 332: have_block promises the stale tip's block. The peer then
-        // fetches the branch oldest first. A request for a block we lack is
+        // BIP 332: have_block promises the stale tip's block. The peer may
+        // also fetch its ancestors. A request for a block we lack is
         // ignored, but one that our serving limits refuse disconnects the
         // peer, so every block on the branch must be within them. Block
         // times need not increase, so each block is checked. A tracked
@@ -190,6 +258,7 @@ void StaleTipRelayManager::CheckIsEmpty() const
 {
     AssertLockHeld(::cs_main);
     assert(m_peers.empty());
+    assert(m_requests.empty());
 }
 
 } // namespace node
