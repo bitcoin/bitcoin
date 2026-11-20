@@ -9,6 +9,7 @@
 
 #include <common/system.h>
 #include <key_io.h>
+#include <primitives/block.h>
 #include <primitives/transaction_identifier.h>
 #include <protocol.h>
 #include <script/script.h>
