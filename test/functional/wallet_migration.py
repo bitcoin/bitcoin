@@ -6,10 +6,12 @@
 from contextlib import suppress
 from pathlib import Path
 import json
-import os.path
+import os
 import random
 import shutil
+import stat
 import struct
+import tempfile
 import time
 from decimal import Decimal
 
@@ -30,6 +32,7 @@ from test_framework.util import (
     assert_greater_than,
     assert_raises_rpc_error,
     find_vout_for_address,
+    is_dir_writable,
     sha256sum_file,
 )
 from test_framework.wallet_util import (
@@ -113,6 +116,11 @@ class WalletMigrationTest(BitcoinTestFramework):
         else:
             assert_equal(addr_info['labels'], []),
 
+    def assert_no_tmp_db(self, path):
+        """Assert that no temporary migration database was left behind under 'path'"""
+        for _, dirs, files in os.walk(path):
+            assert not [f for f in dirs + files if "_sqlite_" in f and f.endswith(".tmp")]
+
     def migrate_and_get_rpc(self, wallet_name, **kwargs):
         # Since we may rescan on loading of a wallet, make sure that the best block
         # is written before beginning migration
@@ -161,6 +169,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         expected_backup_path = self.master_node.wallets_path / backup_filename
         assert_equal(str(expected_backup_path), migrate_info['backup_path'])
         assert {"name": backup_filename} not in self.master_node.listwalletdir()["wallets"]
+        self.assert_no_tmp_db(self.master_node.wallets_path)
 
         # Open the wallet with sqlite and verify that the wallet has the last hardened cache flag
         # set and the last hardened cache entries
@@ -182,6 +191,95 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.inspect_sqlite_db(inspect_path, check_last_hardened)
 
         return migrate_info, wallet
+
+    def test_unwritable_dir_failure(self):
+        self.log.info("Test migration failure due to non-writable directory")
+        wallet_name = "bad_permissions"
+        wallet = self.create_legacy_wallet(wallet_name)
+        wallet.unloadwallet()
+        shutil.copytree(self.old_node.wallets_path / wallet_name, self.master_node.wallets_path / wallet_name, dirs_exist_ok=True)
+
+        # Change dir perms and migrate
+        wallet_path = self.master_node.wallets_path / wallet_name
+        original_dir_perms = wallet_path.stat().st_mode
+        wallet_path.chmod(original_dir_perms & ~(stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH))
+        if is_dir_writable(wallet_path):
+            self.log.warning("Skipping migration non-writable directory test: unable to enforce read-only permissions")
+        else:
+            assert_raises_rpc_error(-4, "Error: Unable to create the new database for wallet 'bad_permissions'.", self.master_node.migratewallet, wallet_name)
+        # Reset directory permissions
+        wallet_path.chmod(original_dir_perms)
+        self.assert_no_tmp_db(self.master_node.wallets_path)
+
+        # Check the wallet we tried to migrate is still BDB
+        self.assert_is_bdb(wallet_name)
+
+    def test_stale_journal(self):
+        self.log.info("Test migration removes a leftover database journal from the wallet location")
+        try:
+            import sqlite3  # type: ignore[import]
+        except ImportError:
+            self.log.warning("Skipping stale journal test: sqlite3 module not available")
+            return
+        wallet_name = "stale_journal"
+        self.create_legacy_wallet(wallet_name)
+        journal_path = self.master_node.wallets_path / wallet_name / "wallet.dat-journal"
+        journal_path.parent.mkdir(parents=True)
+
+        # Leave the journal of an unrelated db at the wallet location, as a write interrupted by a crash would.
+        # Copying it in the middle of a transaction makes it "hot": SQLite rolls it back on the next open.
+        src_db = os.path.join(self.options.tmpdir, "unrelated.dat")
+        conn = sqlite3.connect(src_db, isolation_level=None)
+        conn.execute("CREATE TABLE t(v BLOB)")
+        conn.execute("BEGIN")
+        for _ in range(400):
+            conn.execute("INSERT INTO t VALUES (randomblob(200))")
+        conn.execute("COMMIT")
+        conn.execute("PRAGMA cache_size=2")  # Make the next transaction write its changes to disk
+        conn.execute("BEGIN")
+        conn.execute("UPDATE t SET v = randomblob(200)")
+        shutil.copyfile(f"{src_db}-journal", journal_path)
+        conn.close()
+
+        # Migration must remove the journal. Otherwise, SQLite rolls it back into the migrated wallet when opening it,
+        # logging "recovered N pages", and corrupts it.
+        with self.master_node.assert_debug_log([f"Removed db leftover during move: {journal_path}"], unexpected_msgs=["recovered"]):
+            _, wallet = self.migrate_and_get_rpc(wallet_name)
+        wallet.unloadwallet()
+
+    def test_db_named_as_journal(self):
+        self.log.info("Test migration does not remove a wallet database named like a journal of the migrated wallet")
+        wallet_name = "db_named_as_journal"
+        wallet = self.create_legacy_wallet(wallet_name)
+        wallet.unloadwallet()
+        wallet_path = self.master_node.wallets_path / wallet_name
+        shutil.copytree(self.old_node.wallets_path / wallet_name, wallet_path, dirs_exist_ok=True)
+        journal_path = wallet_path / "wallet.dat-journal"
+        shutil.copyfile(wallet_path / "wallet.dat", journal_path)
+
+        assert_raises_rpc_error(-4, f"Error: Unable to move the wallet db, {journal_path} is a wallet database.", self.master_node.migratewallet, wallet_name)
+        assert journal_path.exists()
+        self.assert_no_tmp_db(self.master_node.wallets_path)
+        self.assert_is_bdb(wallet_name)
+
+    def test_other_filesystem(self):
+        self.log.info("Test migration of a wallet located on a different filesystem than the wallets directory")
+        wallets_dev = os.stat(self.master_node.wallets_path).st_dev
+        other_fs = next((p for p in [Path("/dev/shm"), Path(tempfile.gettempdir())] if p.is_dir() and os.stat(p).st_dev != wallets_dev), None)
+        if other_fs is None:
+            self.log.warning("Skipping migration on other filesystem test: no other filesystem available")
+            return
+
+        with tempfile.TemporaryDirectory(prefix="wallet_migration_", dir=other_fs) as parent_dir:
+            wallet_name = str(Path(parent_dir) / "wallet")
+            wallet = self.create_legacy_wallet(wallet_name)
+            addr = wallet.getnewaddress()
+
+            migrate_res, wallet = self.migrate_and_get_rpc(wallet_name)
+            assert_equal(wallet.getaddressinfo(addr)["ismine"], True)
+            self.assert_no_tmp_db(parent_dir)  # tmp db is created next to the wallet, check it was cleaned up
+            wallet.unloadwallet()
+        os.remove(migrate_res["backup_path"])
 
     def test_basic(self):
         # Update listtransctions' output from old nodes to be compatible
@@ -1758,6 +1856,10 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.generate(self.master_node, 101)
 
         # TODO: Test the actual records in the wallet for these tests too. The behavior may be correct, but the data written may not be what we actually want
+        self.test_unwritable_dir_failure()
+        self.test_stale_journal()
+        self.test_db_named_as_journal()
+        self.test_other_filesystem()
         self.test_basic()
         self.test_multisig()
         self.test_other_watchonly()
