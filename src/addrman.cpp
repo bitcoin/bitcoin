@@ -1045,7 +1045,7 @@ void AddrManImpl::Check() const
     const int err{CheckAddrman()};
     if (err) {
         LogError("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i", err);
-        assert(false);
+        AssertUnreachable();
     }
 }
 

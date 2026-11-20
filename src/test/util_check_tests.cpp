@@ -9,13 +9,6 @@
 
 BOOST_AUTO_TEST_SUITE(util_check_tests)
 
-namespace {
-void TriggerNonFatalUnreachable()
-{
-    NONFATAL_UNREACHABLE();
-}
-} // namespace
-
 BOOST_AUTO_TEST_CASE(check_pass)
 {
     Assume(true);
@@ -36,14 +29,8 @@ BOOST_AUTO_TEST_CASE(check_fail)
     BOOST_CHECK_EXCEPTION(CHECK_NONFATAL(false), NonFatalCheckError, HasReason{"Internal bug detected: `false` check failed"});
     void* this_should_be_nonnull{nullptr};
     BOOST_CHECK_EXCEPTION(Assert(this_should_be_nonnull != nullptr), NonFatalCheckError, HasReason{"Internal bug detected: `this_should_be_nonnull != nullptr` check failed"});
-}
-
-BOOST_AUTO_TEST_CASE(unreachable_diagnostics)
-{
-    // Disable aborts for easier testing here
-    test_only_CheckFailuresAreExceptionsNotAborts mock_checks{};
-
-    BOOST_CHECK_EXCEPTION(TriggerNonFatalUnreachable(), NonFatalCheckError, HasReason{"Internal bug detected: unreachable"});
+    BOOST_CHECK_EXCEPTION(AssertUnreachable(), NonFatalCheckError, HasReason{"Internal bug detected: unreachable"});
+    BOOST_CHECK_EXCEPTION(NONFATAL_UNREACHABLE(), NonFatalCheckError, HasReason{"Internal bug detected: unreachable"});
 }
 
 BOOST_AUTO_TEST_SUITE_END()

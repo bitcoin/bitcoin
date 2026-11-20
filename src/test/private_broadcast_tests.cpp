@@ -6,11 +6,13 @@
 #include <private_broadcast.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
+#include <util/check.h>
 #include <util/time.h>
+
+#include <boost/test/unit_test.hpp>
 
 #include <algorithm>
 #include <ostream>
-#include <boost/test/unit_test.hpp>
 
 std::ostream& operator<<(std::ostream& os, PrivateBroadcast::AddResult r)
 {
@@ -19,7 +21,7 @@ std::ostream& operator<<(std::ostream& os, PrivateBroadcast::AddResult r)
     case PrivateBroadcast::AddResult::AlreadyPresent: return os << "AlreadyPresent";
     case PrivateBroadcast::AddResult::QueueFull: return os << "QueueFull";
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 BOOST_FIXTURE_TEST_SUITE(private_broadcast_tests, BasicTestingSetup)

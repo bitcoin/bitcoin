@@ -147,8 +147,8 @@ pub fn lint_rpc_assert() -> LintResult {
         .args([
             "grep",
             "--line-number",
-            "--extended-regexp",
-            r"\<(A|a)ss(ume|ert)\(",
+            "--perl-regexp",
+            r"\b(Assume|[aA]ssert|AssertUnreachable)\(",
             "--",
             "src/rpc/",
             "src/wallet/rpc*",
@@ -160,10 +160,40 @@ pub fn lint_rpc_assert() -> LintResult {
         .success();
     if found {
         Err(r#"
-CHECK_NONFATAL(condition) or NONFATAL_UNREACHABLE should be used instead of assert for RPC code.
+CHECK_NONFATAL(...) or NONFATAL_UNREACHABLE() should be used instead of asserts or aborts in RPC
+code.
 
 Aborting the whole process is undesirable for RPC code. So nonfatal
-checks should be used over assert. See: src/util/check.h
+checks should be used. See: src/util/check.h
+            "#
+        .trim()
+        .to_string())
+    } else {
+        Ok(())
+    }
+}
+
+pub fn lint_assert_falsy() -> LintResult {
+    let found = git()
+        .args([
+            "grep",
+            "--line-number",
+            "--perl-regexp",
+            r"\b[aA]ssert\s*\(\s*(0|false)\s*(&&|\))",
+            "--",
+            "src/",
+            // Temporary exclusions, which are not linking the util lib:
+            ":(exclude)src/script/interpreter.cpp",
+            ":(exclude)src/univalue/",
+            ":(exclude)src/tinyformat.h", // Avoid flagging ~dead code in temporary std::format port
+        ])
+        .args(get_pathspecs_default_excludes())
+        .status()
+        .expect("command error")
+        .success();
+    if found {
+        Err(r#"
+Assertions with a falsy literal value should be replaced with AssertUnreachable().
             "#
         .trim()
         .to_string())

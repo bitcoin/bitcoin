@@ -318,7 +318,7 @@ FUZZ_TARGET(versionbits, .init = initialize)
             }
             return;
         } // no default case, so the compiler can warn about missing cases
-        assert(false);
+        AssertUnreachable();
     }();
 
     if (blocks.size() >= period * max_periods) {
