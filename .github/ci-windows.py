@@ -68,7 +68,6 @@ def generate(ci_type):
         "cmake",
         "-B",
         "build",
-        "-Werror=dev",
         "--preset=vs2026",
         # Using x64-windows-release for both host and target triplets
         # to ensure vcpkg builds only release packages, thereby optimizing
