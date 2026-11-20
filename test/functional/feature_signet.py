@@ -131,6 +131,7 @@ class SignetBasicTest(BitcoinTestFramework):
         assert_node_datadir(self.nodes[7], f"signet_{message_start(self.signets[4].challenge)}")
 
         self.test_cli_signetchallenge_hint()
+        self.test_cli_signetchallenge_validation()
 
         self.log.info("test that signet logs the network magic on node start")
         with self.nodes[0].assert_debug_log(["Signet derived magic (message start)"]):
@@ -152,6 +153,26 @@ class SignetBasicTest(BitcoinTestFramework):
             node = self.nodes[node_idx]
             missing_cookie = node.datadir_path / "nonexistent.cookie"
             assert_raises_process_error(1, hint, node.cli(f"-rpccookiefile={missing_cookie}").getblockcount)
+
+    def test_cli_signetchallenge_validation(self):
+        if not self.is_cli_compiled():
+            self.log.info("Skipping bitcoin-cli -signetchallenge validation test")
+            return
+
+        self.log.info("Test that bitcoin-cli rejects a malformed -signetchallenge")
+        # default signet node (without existing -signetchallenge)
+        node = self.nodes[3]
+        assert_raises_process_error(1, "-signetchallenge must be hex, not 'abc'.", node.cli("-signetchallenge=abc").getblockcount)
+
+        self.log.info("Test that bitcoin-cli rejects -signetchallenge from the command line and the config file")
+        # append signetchallenge=51 to bitcoin.conf
+        conf_path = node.datadir_path / "bitcoin.conf"
+        conf = conf_path.read_text()
+        conf_path.write_text(conf + "signetchallenge=51\n")
+        # command line and config file values are not merged, but rejected as multiple values
+        assert_raises_process_error(1, "-signetchallenge cannot be multiple values.", node.cli("-signetchallenge=51").getblockcount)
+        # undo changes to bitcoin.conf
+        conf_path.write_text(conf)
 
 
 if __name__ == '__main__':

@@ -101,17 +101,7 @@ void ReadSigNetArgs(const ArgsManager& args, CChainParams::SigNetOptions& option
     if (!args.GetArgs("-signetseednode").empty()) {
         options.seeds.emplace(args.GetArgs("-signetseednode"));
     }
-    if (!args.GetArgs("-signetchallenge").empty()) {
-        const auto signet_challenge = args.GetArgs("-signetchallenge");
-        if (signet_challenge.size() != 1) {
-            throw std::runtime_error("-signetchallenge cannot be multiple values.");
-        }
-        const auto val{TryParseHex<uint8_t>(signet_challenge[0])};
-        if (!val) {
-            throw std::runtime_error(strprintf("-signetchallenge must be hex, not '%s'.", signet_challenge[0]));
-        }
-        options.challenge.emplace(*val);
-    }
+    options.challenge = ReadSignetChallengeArg(args);
     HandleDeploymentArgs(args, options.dep_opts);
 }
 

@@ -9,7 +9,9 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
+#include <vector>
 
 class ArgsManager;
 
@@ -36,6 +38,13 @@ private:
  * Creates and returns a std::unique_ptr<CBaseChainParams> of the chosen chain.
  */
 std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const ArgsManager& args, ChainType chain);
+
+/**
+ * Parse the -signetchallenge argument. Returns std::nullopt if it is unset.
+ *
+ * @throws std::runtime_error if the value is not hex, or there are multiple values.
+ */
+std::optional<std::vector<uint8_t>> ReadSignetChallengeArg(const ArgsManager& args);
 
 /**
  *Set the arguments for chainparams
