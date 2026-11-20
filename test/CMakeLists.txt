@@ -98,6 +98,7 @@ function(create_test_directory_links)
   endforeach()
 
   configure_file(${PROJECT_SOURCE_DIR}/src/test/data/siphash.json ${PROJECT_BINARY_DIR}/src/test/data/siphash.json COPYONLY)
+  configure_file(${PROJECT_SOURCE_DIR}/src/test/data/bip352_send_and_receive_vectors.json ${PROJECT_BINARY_DIR}/src/test/data/bip352_send_and_receive_vectors.json COPYONLY)
 endfunction()
 
 create_test_directory_links()

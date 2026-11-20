@@ -296,6 +296,13 @@ class BumpFeeTest(BitcoinTestFramework):
 
         assert_greater_than(change_value, new_change_value)
 
+        self.log.info("Test that original_change_index cannot designate an output without a destination as change")
+        send_res = rbf_node.send(outputs=[{dest_addr: 1}, {"data": "deadbeef"}])
+        assert send_res["complete"]
+        tx = rbf_node.gettransaction(txid=send_res["txid"], verbose=True)
+        data_pos = next(out["n"] for out in tx["decoded"]["vout"] if out["scriptPubKey"]["type"] == "nulldata")
+        assert_raises_rpc_error(-8, "Change position does not refer to an output with a destination", rbf_node.bumpfee, send_res["txid"], {"original_change_index": data_pos})
+
 
     def test_single_output(self):
         self.log.info("Test that single output txs can be bumped")
