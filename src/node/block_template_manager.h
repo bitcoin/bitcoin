@@ -33,8 +33,9 @@ struct CBlockTemplate;
 struct CachedBlockTemplate {
     //! CTxMemPool::GetTransactionsUpdated() sampled before the last build attempt.
     uint32_t transactions_updated{0};
-    //! Mockable time of the last build attempt.
-    NodeSeconds time_start{};
+    //! Steady time of the last build attempt, so that a system clock
+    //! adjustment does not change how old the template appears.
+    MockableSteadyClock::time_point time_start{};
     //! nullptr if no template was built yet, or if the last rebuild failed.
     std::shared_ptr<const CBlockTemplate> block_template;
 };

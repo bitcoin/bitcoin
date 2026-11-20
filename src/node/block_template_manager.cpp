@@ -64,14 +64,14 @@ CachedBlockTemplate BlockTemplateManager::GetNewOrCachedBlockTemplate()
     const uint256 tip{CHECK_NONFATAL(m_chainman.ActiveChain().Tip())->GetBlockHash()};
     if (!cache.block_template || cache.block_template->block.hashPrevBlock != tip ||
         (m_mempool.GetTransactionsUpdated() != cache.transactions_updated &&
-         Now<NodeSeconds>() - cache.time_start > GBT_TEMPLATE_REBUILD_INTERVAL)) {
+         MockableSteadyClock::now() - cache.time_start > GBT_TEMPLATE_REBUILD_INTERVAL)) {
         // Clear the template so future calls make a new block, despite any failures from here on
         cache.block_template.reset();
 
         // Sample the mempool counter before building, so that a change made
         // while CreateNewTemplate runs is seen as a change on the next call
         cache.transactions_updated = m_mempool.GetTransactionsUpdated();
-        cache.time_start = Now<NodeSeconds>();
+        cache.time_start = MockableSteadyClock::now();
 
         // Create new block. Opt-out of cooldown mechanism, because it would add
         // a delay to each getblocktemplate call. This differs from typical

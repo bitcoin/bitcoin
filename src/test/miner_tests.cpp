@@ -972,7 +972,7 @@ BOOST_FIXTURE_TEST_CASE(block_template_manager_cached_template, RegTestingSetup)
 {
     auto& block_template_manager{*Assert(m_node.block_template_manager)};
     auto& mempool{*Assert(m_node.mempool)};
-    FakeNodeClock clock{};
+    FakeSteadyClock clock{};
     constexpr auto rebuild_interval{node::BlockTemplateManager::GBT_TEMPLATE_REBUILD_INTERVAL};
     const auto active_tip{[&] { return WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Tip()->GetBlockHash()); }};
     const auto refresh{[&] { return WITH_LOCK(::cs_main, return block_template_manager.GetNewOrCachedBlockTemplate()); }};
@@ -983,7 +983,7 @@ BOOST_FIXTURE_TEST_CASE(block_template_manager_cached_template, RegTestingSetup)
     BOOST_REQUIRE(first.block_template);
     BOOST_CHECK_EQUAL(first.block_template->block.hashPrevBlock, tip);
     BOOST_CHECK_EQUAL(first.transactions_updated, mempool.GetTransactionsUpdated());
-    BOOST_CHECK_EQUAL(first.time_start, Now<NodeSeconds>());
+    BOOST_CHECK_EQUAL(first.time_start, MockableSteadyClock::now());
 
     // Without a mempool change, the template is reused however old it is.
     clock += 1h;
@@ -994,7 +994,7 @@ BOOST_FIXTURE_TEST_CASE(block_template_manager_cached_template, RegTestingSetup)
     const auto second{refresh()};
     BOOST_CHECK(second.block_template != first.block_template);
     BOOST_CHECK_EQUAL(second.transactions_updated, mempool.GetTransactionsUpdated());
-    BOOST_CHECK_EQUAL(second.time_start, Now<NodeSeconds>());
+    BOOST_CHECK_EQUAL(second.time_start, MockableSteadyClock::now());
     BOOST_CHECK_EQUAL(WITH_LOCK(::cs_main, return block_template_manager.GetCachedTransactionsUpdated()), second.transactions_updated);
 
     // A mempool change does not rebuild a template that is not older than the
