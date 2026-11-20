@@ -197,8 +197,8 @@ private:
     //! holds all leveldb-specific fields of this class
     util::NotNullUniquePtr<LevelDBContext> m_db_context;
 
-    //! the name of this database
-    std::string m_name;
+    //! the path of this database
+    fs::path m_path;
 
     //! optional XOR-obfuscation of the database
     Obfuscation m_obfuscation;
