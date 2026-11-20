@@ -8,6 +8,7 @@
 #include <node/types.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
+#include <script/script.h>
 #include <script/signingprovider.h>
 #include <util/check.h>
 #include <util/result.h>
@@ -15,6 +16,8 @@
 
 #include <algorithm>
 #include <set>
+#include <span>
+#include <vector>
 
 using common::PSBTError;
 
@@ -701,23 +704,26 @@ util::Expected<void, PSBTError> SignPSBTInput(const SigningProvider& provider, P
         input.sighash_type = sighash;
     }
 
-    // Check all existing signatures use the sighash type
-    if (sighash == SIGHASH_DEFAULT) {
-        if (!input.m_tap_key_sig.empty() && input.m_tap_key_sig.size() != 64) {
-            return util::Unexpected{PSBTError::SIGHASH_MISMATCH};
-        }
-        for (const auto& [_, sig] : input.m_tap_script_sigs) {
-            if (sig.size() != 64) return util::Unexpected{PSBTError::SIGHASH_MISMATCH};
-        }
-    } else {
-        if (!input.m_tap_key_sig.empty() && (input.m_tap_key_sig.size() != 65 || input.m_tap_key_sig.back() != sighash)) {
-            return util::Unexpected{PSBTError::SIGHASH_MISMATCH};
-        }
-        for (const auto& [_, sig] : input.m_tap_script_sigs) {
-            if (sig.size() != 65 || sig.back() != sighash) return util::Unexpected{PSBTError::SIGHASH_MISMATCH};
-        }
-        for (const auto& [_, sig] : input.partial_sigs) {
-            if (sig.second.back() != sighash) return util::Unexpected{PSBTError::SIGHASH_MISMATCH};
+    // Check all existing signatures use the sighash type, if the field or the parameter provides one.
+    // Without either, BIP 174 lets each signer choose its sighash type.
+    if (options.sighash_type || input.sighash_type) {
+        if (sighash == SIGHASH_DEFAULT) {
+            if (!input.m_tap_key_sig.empty() && input.m_tap_key_sig.size() != 64) {
+                return util::Unexpected{PSBTError::SIGHASH_MISMATCH};
+            }
+            for (const auto& [_, sig] : input.m_tap_script_sigs) {
+                if (sig.size() != 64) return util::Unexpected{PSBTError::SIGHASH_MISMATCH};
+            }
+        } else {
+            if (!input.m_tap_key_sig.empty() && (input.m_tap_key_sig.size() != 65 || input.m_tap_key_sig.back() != sighash)) {
+                return util::Unexpected{PSBTError::SIGHASH_MISMATCH};
+            }
+            for (const auto& [_, sig] : input.m_tap_script_sigs) {
+                if (sig.size() != 65 || sig.back() != sighash) return util::Unexpected{PSBTError::SIGHASH_MISMATCH};
+            }
+            for (const auto& [_, sig] : input.partial_sigs) {
+                if (sig.second.back() != sighash) return util::Unexpected{PSBTError::SIGHASH_MISMATCH};
+            }
         }
     }
 
@@ -776,9 +782,18 @@ void RemoveUnnecessaryTransactions(PartiallySignedTransaction& psbtx)
             break;
         }
         // non_witness_utxos cannot be dropped if the sighash type includes SIGHASH_ANYONECANPAY
-        // Since callers should have called SignPSBTInput which updates the sighash type in the PSBT, we only
-        // need to look at that field. If it is not present, then we can assume SIGHASH_DEFAULT or SIGHASH_ALL.
-        if (input.sighash_type != std::nullopt && (*input.sighash_type & 0x80) == SIGHASH_ANYONECANPAY) {
+        // Callers should have called SignPSBTInput, which sets the sighash type field when one was requested.
+        // Without the field, existing signatures may use any sighash type, so also look at the taproot signatures.
+        const auto is_acp{[](const std::vector<unsigned char>& sig) { return sig.size() == 65 && (sig.back() & 0x80) == SIGHASH_ANYONECANPAY; }};
+        // A finalized input has only its final witness: its signatures are among the items left once the annex
+        // and, for a script path, the script and the control block are removed.
+        std::span<const std::vector<unsigned char>> final_sigs{input.final_script_witness.stack};
+        if (final_sigs.size() >= 2 && !final_sigs.back().empty() && final_sigs.back()[0] == ANNEX_TAG) final_sigs = final_sigs.first(final_sigs.size() - 1);
+        if (final_sigs.size() >= 2) final_sigs = final_sigs.first(final_sigs.size() - 2);
+        if ((input.sighash_type != std::nullopt && (*input.sighash_type & 0x80) == SIGHASH_ANYONECANPAY) ||
+            is_acp(input.m_tap_key_sig) ||
+            std::ranges::any_of(input.m_tap_script_sigs, [&](const auto& entry) { return is_acp(entry.second); }) ||
+            std::ranges::any_of(final_sigs, is_acp)) {
             to_drop.clear();
             break;
         }
