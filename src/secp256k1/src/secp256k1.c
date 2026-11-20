@@ -263,12 +263,18 @@ static void secp256k1_pubkey_save(secp256k1_pubkey* pubkey, secp256k1_ge* ge) {
 
 int secp256k1_ec_pubkey_parse(const secp256k1_context* ctx, secp256k1_pubkey* pubkey, const unsigned char *input, size_t inputlen) {
     secp256k1_ge Q;
+    int is_pubkey_valid;
 
     VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(pubkey != NULL);
     memset(pubkey, 0, sizeof(*pubkey));
     ARG_CHECK(input != NULL);
-    if (!secp256k1_ge_parse(&Q, input, inputlen)) {
+    switch (inputlen) {
+        case 33: is_pubkey_valid = secp256k1_ge_parse33(&Q, input); break;
+        case 65: is_pubkey_valid = secp256k1_ge_parse_with_hybrid65(&Q, input); break;
+        default: is_pubkey_valid = 0;
+    }
+    if (!is_pubkey_valid) {
         return 0;
     }
     if (!secp256k1_ge_is_in_correct_subgroup(&Q)) {

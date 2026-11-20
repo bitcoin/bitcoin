@@ -88,7 +88,8 @@ static int secp256k1_modinv64_det_check_pow2(const secp256k1_modinv64_trans2x2 *
 static void secp256k1_modinv64_normalize_62(secp256k1_modinv64_signed62 *r, int64_t sign, const secp256k1_modinv64_modinfo *modinfo) {
     const int64_t M62 = (int64_t)(UINT64_MAX >> 2);
     int64_t r0 = r->v[0], r1 = r->v[1], r2 = r->v[2], r3 = r->v[3], r4 = r->v[4];
-    volatile int64_t cond_add, cond_negate;
+    int64_t cond_negate;
+    volatile int64_t vcond_add, vcond_negate;
 
 #ifdef VERIFY
     /* Verify that all limbs are in range (-2^62,2^62). */
@@ -106,13 +107,15 @@ static void secp256k1_modinv64_normalize_62(secp256k1_modinv64_signed62 *r, int6
      * limbs are in range (-2^62,2^62), this cannot overflow an int64_t. Note that the right
      * shifts below are signed sign-extending shifts (see assumptions.h for tests that that is
      * indeed the behavior of the right shift operator). */
-    cond_add = r4 >> 63;
-    r0 += modinfo->modulus.v[0] & cond_add;
-    r1 += modinfo->modulus.v[1] & cond_add;
-    r2 += modinfo->modulus.v[2] & cond_add;
-    r3 += modinfo->modulus.v[3] & cond_add;
-    r4 += modinfo->modulus.v[4] & cond_add;
-    cond_negate = sign >> 63;
+    vcond_add = r4 >> 63;
+    r0 += modinfo->modulus.v[0] & vcond_add;
+    r1 += modinfo->modulus.v[1] & vcond_add;
+    r2 += modinfo->modulus.v[2] & vcond_add;
+    r3 += modinfo->modulus.v[3] & vcond_add;
+    r4 += modinfo->modulus.v[4] & vcond_add;
+    vcond_negate = sign >> 63;
+    /* Unsequenced reads to volatile variables are UB, so copy to a non-volatile variable first.*/
+    cond_negate = vcond_negate;
     r0 = (r0 ^ cond_negate) - cond_negate;
     r1 = (r1 ^ cond_negate) - cond_negate;
     r2 = (r2 ^ cond_negate) - cond_negate;
@@ -126,12 +129,12 @@ static void secp256k1_modinv64_normalize_62(secp256k1_modinv64_signed62 *r, int6
 
     /* In a second step add the modulus again if the result is still negative, bringing
      * r to range [0,modulus). */
-    cond_add = r4 >> 63;
-    r0 += modinfo->modulus.v[0] & cond_add;
-    r1 += modinfo->modulus.v[1] & cond_add;
-    r2 += modinfo->modulus.v[2] & cond_add;
-    r3 += modinfo->modulus.v[3] & cond_add;
-    r4 += modinfo->modulus.v[4] & cond_add;
+    vcond_add = r4 >> 63;
+    r0 += modinfo->modulus.v[0] & vcond_add;
+    r1 += modinfo->modulus.v[1] & vcond_add;
+    r2 += modinfo->modulus.v[2] & vcond_add;
+    r3 += modinfo->modulus.v[3] & vcond_add;
+    r4 += modinfo->modulus.v[4] & vcond_add;
     /* And propagate again. */
     r1 += r0 >> 62; r0 &= M62;
     r2 += r1 >> 62; r1 &= M62;
@@ -194,7 +197,7 @@ static int64_t secp256k1_modinv64_divsteps_59(int64_t zeta, uint64_t f0, uint64_
         g += x & mask2;
         q += y & mask2;
         r += z & mask2;
-        /* In what follows, c1 is a condition mask for (zeta < 0) and (g & 1). */
+        /* In what follows, mask1 is a condition mask for (zeta < 0) and (g & 1). */
         mask1 &= mask2;
         /* Conditionally change zeta into -zeta-2 or zeta-1. */
         zeta = (zeta ^ mask1) - 1;
