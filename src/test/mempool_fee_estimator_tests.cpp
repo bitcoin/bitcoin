@@ -13,6 +13,7 @@
 #include <test/util/txmempool.h>
 #include <txmempool.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/feefrac.h>
 #include <util/fees.h>
 #include <util/time.h>

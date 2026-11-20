@@ -8,11 +8,13 @@
 #include <test/util/logging.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <util/overflow.h>
 #include <util/string.h>
 #include <util/threadpool.h>
 
 #include <boost/test/unit_test.hpp>
+
 #include <memory>
 
 using util::LineReader;

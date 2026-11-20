@@ -10,6 +10,7 @@
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
 #include <tinyformat.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/string.h>

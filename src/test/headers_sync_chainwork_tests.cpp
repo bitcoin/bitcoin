@@ -11,12 +11,13 @@
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
+#include <util/check.h>
 #include <validation.h>
+
+#include <boost/test/unit_test.hpp>
 
 #include <cstddef>
 #include <vector>
-
-#include <boost/test/unit_test.hpp>
 
 using State = HeadersSyncState::State;
 
