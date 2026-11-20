@@ -12,6 +12,7 @@ from itertools import combinations_with_replacement
 from test_framework.netutil import (
     addr_to_hex,
     get_bind_addrs,
+    test_ipv6_local,
 )
 from test_framework.test_framework import (
     BitcoinTestFramework,
@@ -23,13 +24,16 @@ from test_framework.util import (
     rpc_port,
 )
 
+# Enable the automatic onion service without reaching a real Tor control port
+TOR_ARGS = ["-listenonion=1", "-torcontrol=127.0.0.1:1"]
+
 class BindExtraTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         # Avoid any -bind= on the command line. Force the framework to avoid
         # adding -bind=127.0.0.1.
         self.bind_to_localhost_only = False
-        self.num_nodes = 3
+        self.num_nodes = 4
 
     def skip_test_if_missing_module(self):
         self.skip_if_platform_not_posix()
@@ -57,11 +61,11 @@ class BindExtraTest(BitcoinTestFramework):
             ],
         )
 
-        # Node1, both -bind=... and -bind=...=onion.
+        # Node1, both -bind=... and -bind=...=onion with -listenonion=1.
         port = [extra_port(), extra_port()]
         self.expected.append(
             [
-                [f"-bind=127.0.0.1:{port[0]}", f"-bind=127.0.0.1:{port[1]}=onion"],
+                [f"-bind=127.0.0.1:{port[0]}", f"-bind=127.0.0.1:{port[1]}=onion"] + TOR_ARGS,
                 [(loopback_ipv4, port[0]), (loopback_ipv4, port[1])],
             ],
         )
@@ -72,6 +76,15 @@ class BindExtraTest(BitcoinTestFramework):
             [
                 [f"-bind=127.0.0.1:{port}"],
                 [(loopback_ipv4, port)],
+            ],
+        )
+
+        # Node3, wildcard -bind=...=onion with -listenonion=0.
+        port = extra_port()
+        self.expected.append(
+            [
+                [f"-bind=0.0.0.0:{port}=onion"],
+                [(addr_to_hex("0.0.0.0"), port)],
             ],
         )
 
@@ -101,6 +114,16 @@ class BindExtraTest(BitcoinTestFramework):
                         [opt1, opt2],
                         "Error: Duplicate binding configuration",
                         match=ErrorMatch.PARTIAL_REGEX)
+
+        self.log.info("Test wildcard onion bind with -listenonion=1")
+        for address in ["0.0.0.0", "[::]"]:
+            if address == "[::]" and not test_ipv6_local():
+                continue
+            extra_args = [f"-bind={address}:{p2p_port(0)}=onion"] + TOR_ARGS
+            self.nodes[0].assert_start_raises_init_error(
+                extra_args,
+                "Error: The automatic Tor onion service cannot use a wildcard onion bind. Use a specific address such as -bind=127.0.0.1:<port>=onion, or disable the service with -listenonion=0.",
+            )
 
 if __name__ == '__main__':
     BindExtraTest(__file__).main()

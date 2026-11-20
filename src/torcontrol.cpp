@@ -359,7 +359,7 @@ std::map<std::string,std::string> ParseTorReplyMapping(const std::string &s)
     return mapping;
 }
 
-TorController::TorController(const std::string& tor_control_center, const CService& target)
+TorController::TorController(const std::string& tor_control_center, const std::optional<CService>& target)
     : m_tor_control_center(tor_control_center),
       m_conn(m_interrupt),
       m_reconnect(true),
@@ -367,10 +367,12 @@ TorController::TorController(const std::string& tor_control_center, const CServi
       m_target(target)
 {
     // Read service private key if cached
-    std::pair<bool,std::string> pkf = ReadBinaryFile(GetPrivateKeyFile());
-    if (pkf.first) {
-        LogDebug(BCLog::TOR, "Reading cached private key from %s", fs::PathToString(GetPrivateKeyFile()));
-        m_private_key = pkf.second;
+    if (m_target) {
+        std::pair<bool,std::string> pkf = ReadBinaryFile(GetPrivateKeyFile());
+        if (pkf.first) {
+            LogDebug(BCLog::TOR, "Reading cached private key from %s", fs::PathToString(GetPrivateKeyFile()));
+            m_private_key = pkf.second;
+        }
     }
     m_thread = std::thread(&util::TraceThread, "torcontrol", [this] { ThreadControl(); });
 }
@@ -547,7 +549,7 @@ void TorController::add_onion_cb(TorControlConnection& _conn, const TorControlRe
         LogWarning("tor: Add onion failed with unrecognized command (You probably need to upgrade Tor)");
     } else if (pow_was_enabled && reply.code == TOR_REPLY_SYNTAX_ERROR) {
         LogDebug(BCLog::TOR, "ADD_ONION failed with PoW defenses, retrying without");
-        _conn.Command(MakeAddOnionCmd(m_private_key, m_target.ToStringAddrPort(), /*enable_pow=*/false),
+        _conn.Command(MakeAddOnionCmd(m_private_key, m_target->ToStringAddrPort(), /*enable_pow=*/false),
                       [this](TorControlConnection& conn, const TorControlReply& reply) {
                           add_onion_cb(conn, reply, /*pow_was_enabled=*/false);
                       });
@@ -567,6 +569,11 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& 
             _conn.Command("GETINFO net/listeners/socks", std::bind_front(&TorController::get_socks_cb, this));
         }
 
+        if (!m_target) {
+            LogWarning("tor: Skipping automatic onion service creation because no dedicated onion bind is configured. Use -bind=<addr>:<port>=onion to accept incoming Tor connections.");
+            return;
+        }
+
         // Finally - now create the service
         if (m_private_key.empty()) { // No private key, generate one
             m_private_key = PRIVATE_KEY_NEW; // Explicitly request key type - see issue #9214
@@ -576,7 +583,7 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& 
             return;
         }
         // Request onion service, redirect port.
-        _conn.Command(MakeAddOnionCmd(m_private_key, m_target.ToStringAddrPort(), /*enable_pow=*/true),
+        _conn.Command(MakeAddOnionCmd(m_private_key, m_target->ToStringAddrPort(), /*enable_pow=*/true),
                       [this](TorControlConnection& conn, const TorControlReply& reply) {
                           add_onion_cb(conn, reply, /*pow_was_enabled=*/true);
                       });
