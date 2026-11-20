@@ -212,7 +212,7 @@ UniValue blockheaderToJSON(const CBlockIndex& tip, const CBlockIndex& blockindex
     result.pushKV("target", GetTarget(blockindex, pow_limit).GetHex());
     result.pushKV("difficulty", GetDifficulty(blockindex));
     result.pushKV("chainwork", blockindex.nChainWork.GetHex());
-    result.pushKV("nTx", blockindex.nTx);
+    result.pushKV("nTx", WITH_LOCK(cs_main, return blockindex.nTx));
 
     if (blockindex.pprev)
         result.pushKV("previousblockhash", blockindex.pprev->GetBlockHash().GetHex());
@@ -1904,6 +1904,9 @@ static RPCMethod getchaintxstats()
 
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("time", pindex->nTime);
+
+    LOCK(cs_main);
+
     if (pindex->m_chain_tx_count) {
         ret.pushKV("txcount", pindex->m_chain_tx_count);
     }
@@ -3475,7 +3478,7 @@ UniValue WriteUTXOSnapshot(
     result.pushKV("base_height", tip->nHeight);
     result.pushKV("path", path.utf8string());
     result.pushKV("txoutset_hash", maybe_stats->hashSerialized.ToString());
-    result.pushKV("nchaintx", tip->m_chain_tx_count);
+    result.pushKV("nchaintx", WITH_LOCK(cs_main, return tip->m_chain_tx_count));
     return result;
 }
 
