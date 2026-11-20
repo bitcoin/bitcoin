@@ -300,7 +300,7 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
 
     m_node.notifications = std::make_unique<KernelNotifications>(Assert(m_node.shutdown_request), m_node.exit_status, *Assert(m_node.warnings));
 
-    m_make_chainman = [this, &chainparams, opts] {
+    m_make_chainman = [this, &chainparams] {
         Assert(!m_node.chainman);
         ChainstateManager::Options chainman_opts{
             .chainparams = chainparams,
@@ -313,10 +313,6 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
             .worker_threads_num = EnableFuzzDeterminism() ? 0 : 2,
             .prevoutfetch_threads_num = EnableFuzzDeterminism() ? 0 : 2,
         };
-        if (opts.min_validation_cache) {
-            chainman_opts.script_execution_cache_bytes = 0;
-            chainman_opts.signature_cache_bytes = 0;
-        }
         const BlockManager::Options blockman_opts{
             .chainparams = chainman_opts.chainparams,
             .blocks_dir = m_args.GetBlocksDirPath(),
@@ -324,7 +320,7 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
             .block_tree_db_params = DBParams{
                 .path = m_args.GetDataDirNet() / "blocks" / "index",
                 .cache_bytes = m_kernel_cache_sizes.block_tree_db,
-                .memory_only = opts.block_tree_db_in_memory,
+                .memory_only = true,
                 .wipe_data = m_args.GetBoolArg("-reindex", false),
             },
         };
@@ -365,7 +361,7 @@ void ChainTestingSetup::LoadVerifyActivateChainstate()
     auto& chainman{*Assert(m_node.chainman)};
     node::ChainstateLoadOptions options;
     options.mempool = Assert(m_node.mempool.get());
-    options.coins_db_in_memory = m_coins_db_in_memory;
+    options.coins_db_in_memory = true;
     options.wipe_chainstate_db = m_args.GetBoolArg("-reindex", false) || m_args.GetBoolArg("-reindex-chainstate", false);
     options.prune = chainman.m_blockman.IsPruneMode();
     options.check_blocks = m_args.GetIntArg("-checkblocks", DEFAULT_CHECKBLOCKS);
@@ -390,8 +386,6 @@ TestingSetup::TestingSetup(
     TestOpts opts)
     : ChainTestingSetup(chainType, opts)
 {
-    m_coins_db_in_memory = opts.coins_db_in_memory;
-    m_block_tree_db_in_memory = opts.block_tree_db_in_memory;
     // Ideally we'd move all the RPC tests to the functional testing framework
     // instead of unit tests, but for now we need these here.
     RegisterAllCoreRPCCommands(tableRPC);

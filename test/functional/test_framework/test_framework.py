@@ -1191,9 +1191,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Checks whether Qt was built with vcpkg (VCPKG_TARGET_TRIPLET is set)."""
         return bool(self.config.get("components", "VCPKG_TARGET_TRIPLET"))
 
-    def has_blockfile(self, node, filenum: str):
-        return (node.blocks_path/ f"blk{filenum}.dat").is_file()
-
     def inspect_sqlite_db(self, path, fn, *args, **kwargs):
         try:
             import sqlite3 # type: ignore[import]

@@ -186,11 +186,7 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
                     (coin.IsSpent() ? added_an_entry : updated_an_entry) = true;
                     coin = newcoin;
                 }
-                if (COutPoint op(txid, 0); !stack.back()->map().contains(op) && !newcoin.out.scriptPubKey.IsUnspendable() && m_rng.randbool()) {
-                    stack.back()->EmplaceCoinInternalDANGER(op, std::move(newcoin));
-                } else {
-                    stack.back()->AddCoin(op, std::move(newcoin), /*possible_overwrite=*/!coin.IsSpent() || m_rng.randbool());
-                }
+                stack.back()->AddCoin(COutPoint(txid, 0), std::move(newcoin), /*possible_overwrite=*/!coin.IsSpent() || m_rng.randbool());
             } else {
                 // Spend the coin.
                 removed_an_entry = true;
@@ -1105,23 +1101,6 @@ BOOST_AUTO_TEST_CASE(ccoins_addcoin_exception_keeps_usage_balanced)
 
     const Coin coin2{CTxOut{m_rng.randrange(20), CScript{} << m_rng.randbytes(CScriptBase::STATIC_SIZE + 2)}, 2, false};
     BOOST_CHECK_THROW(cache.AddCoin(outpoint, Coin{coin2}, /*possible_overwrite=*/false), std::logic_error);
-    cache.SelfTest();
-
-    BOOST_CHECK_EQUAL(cache.AccessCoin(outpoint), coin1);
-}
-
-BOOST_AUTO_TEST_CASE(ccoins_emplace_duplicate_keeps_usage_balanced)
-{
-    CCoinsViewCacheTest cache{&CoinsViewEmpty::Get()};
-
-    const COutPoint outpoint{Txid::FromUint256(m_rng.rand256()), m_rng.rand32()};
-
-    const Coin coin1{CTxOut{m_rng.randrange(10), CScript{} << m_rng.randbytes(CScriptBase::STATIC_SIZE + 1)}, 1, false};
-    cache.EmplaceCoinInternalDANGER(outpoint, Coin{coin1});
-    cache.SelfTest();
-
-    const Coin coin2{CTxOut{m_rng.randrange(20), CScript{} << m_rng.randbytes(CScriptBase::STATIC_SIZE + 2)}, 2, false};
-    cache.EmplaceCoinInternalDANGER(outpoint, Coin{coin2});
     cache.SelfTest();
 
     BOOST_CHECK_EQUAL(cache.AccessCoin(outpoint), coin1);
