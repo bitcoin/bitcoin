@@ -2,10 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/license/mit.
 
-#include <key_io.h>
-
-#include <wallet/context.h>
 #include <wallet/migration.h>
+
+#include <key_io.h>
+#include <primitives/block.h>
+#include <wallet/context.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 

@@ -6,14 +6,16 @@
 #ifndef BITCOIN_POW_H
 #define BITCOIN_POW_H
 
-#include <consensus/params.h>
-
 #include <cstdint>
+#include <optional>
 
 class CBlockHeader;
 class CBlockIndex;
 class uint256;
 class arith_uint256;
+namespace Consensus {
+struct Params;
+} // namespace Consensus
 
 /**
  * Convert nBits value to target.

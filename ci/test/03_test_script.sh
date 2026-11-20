@@ -232,11 +232,16 @@ if [[ "${RUN_IWYU}" == true ]]; then
 
   # Source files directly in src/ where IWYU warnings are treated as errors.
   IWYU_SRC_FILES=(
+    chain.cpp
     clientversion.cpp
     core_io.cpp
+    headerssync.cpp
     init.cpp
+    key_io.cpp
+    merkleblock.cpp
     net.cpp
     net_types.cpp
+    pow.cpp
     rest.cpp
     signet.cpp
   )
