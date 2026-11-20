@@ -47,12 +47,14 @@ Notable changes
 ### Misc
 
 - #36869 refactor, memusage: Make fields of STL helper structs public
+- #36927 build: remove *dev* errors from dev-mode
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
+- fanquake
 - hebasto
 
 As well as to everyone that helped with translations on

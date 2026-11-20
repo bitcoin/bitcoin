@@ -27,7 +27,6 @@ def main():
         "cmake",
         "-B",
         "build",
-        "-Werror=dev",
         # Use clang++, because it is a bit faster and uses less memory than g++
         "-DCMAKE_C_COMPILER=clang",
         "-DCMAKE_CXX_COMPILER=clang++",
