@@ -15,6 +15,7 @@
 #include <vector>
 
 #include <netaddress.h>
+#include <netbase.h>
 #include <rpc/protocol.h>
 #include <util/byte_units.h>
 #include <util/expected.h>
@@ -184,10 +185,8 @@ public:
     const HTTPVersion& GetVersion() const LIFETIMEBOUND { return m_version; }
     std::shared_ptr<HTTPRemoteClient> GetClient() const { return m_client.lock(); }
 
-    // These methods reimplement the API from http_libevent::HTTPRequest
-    // for downstream JSONRPC and REST modules.
     std::string GetURI() const { return m_target; }
-    CService GetPeer() const;
+    SocketAddr GetPeer() const;
     HTTPRequestMethod GetRequestMethod() const { return m_method; }
     std::optional<std::string> GetQueryParameter(std::string_view key) const;
     std::optional<std::string> GetHeader(std::string_view hdr) const;
@@ -264,7 +263,7 @@ public:
      * @param[in] to Where to bind.
      * @returns {} or the reason for failure.
      */
-    util::Expected<void, std::string> BindAndStartListening(const CService& to);
+    util::Expected<void, std::string> BindAndStartListening(const SocketAddr& to);
 
     /**
      * Stop listening by closing all listening sockets.
@@ -434,7 +433,7 @@ private:
     /**
      * Check an incoming connection's source IP against the allow list
      */
-    bool ClientAllowed(const CNetAddr& netaddr) const;
+    bool ClientAllowed(const SocketAddr& netaddr) const;
 
     /**
      * Maximum amount of concurrent connections
@@ -447,7 +446,7 @@ private:
      * @param[out] addr Address of the peer that was accepted.
      * @return Newly created socket for the accepted connection.
      */
-    std::unique_ptr<Sock> AcceptConnection(const Sock& listen_sock, CService& addr);
+    std::unique_ptr<Sock> AcceptConnection(const Sock& listen_sock, SocketAddr& addr);
 
     /**
      * Generate an id for a newly created connection.
@@ -460,7 +459,7 @@ private:
      * @param[in] sock The newly created socket.
      * @param[in] addr Address of the new peer.
      */
-    void NewSockAccepted(std::unique_ptr<Sock>&& sock, const CService& addr);
+    void NewSockAccepted(std::unique_ptr<Sock>&& sock, const SocketAddr& addr);
 
     /**
      * Do the read/write for connected sockets that are ready for IO.
@@ -502,7 +501,7 @@ std::optional<std::string> GetQueryParameterFromUri(std::string_view uri, std::s
 class HTTPRemoteClient
 {
 public:
-    explicit HTTPRemoteClient(HTTPServer::Id id, const CService& addr, std::unique_ptr<Sock> socket)
+    explicit HTTPRemoteClient(HTTPServer::Id id, const SocketAddr& addr, std::unique_ptr<Sock> socket)
         : m_id(id), m_addr(addr), m_origin(addr.ToStringAddrPort()), m_sock{std::move(socket)}, m_idle_since{MockableSteadyClock::now()} {}
 
     // Disable copies (should only be used as shared pointers)
@@ -511,7 +510,7 @@ public:
 
     HTTPServer::Id GetId() const { return m_id; }
     const std::string& GetOrigin() const LIFETIMEBOUND { return m_origin; }
-    const CService& GetPeer() const LIFETIMEBOUND { return m_addr; }
+    const SocketAddr& GetPeer() const LIFETIMEBOUND { return m_addr; }
     std::shared_ptr<Sock> GetSock() EXCLUSIVE_LOCKS_REQUIRED(!m_sock_mutex) { return WITH_LOCK(m_sock_mutex, return m_sock;); }
     bool ReadyToSend() const EXCLUSIVE_LOCKS_REQUIRED(!m_send_mutex) { return WITH_LOCK(m_send_mutex, return m_send_ready;); }
     bool ReceiveBufferEmpty() const { return m_recv_buffer.empty(); }
@@ -556,7 +555,7 @@ private:
     const HTTPServer::Id m_id;
 
     //! Remote address of connected client
-    const CService m_addr;
+    const SocketAddr m_addr;
 
     //! IP:port of connected client, cached for logging purposes
     const std::string m_origin;
