@@ -134,5 +134,5 @@ int main(void) {
      * will remove any writes that aren't used. */
     secure_erase(seckey, sizeof(seckey));
 
-    return EXIT_SUCCESS;
+    return is_signature_valid ? EXIT_SUCCESS : EXIT_FAILURE;
 }

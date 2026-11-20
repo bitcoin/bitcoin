@@ -261,7 +261,9 @@ typedef struct secp256k1_silentpayments_prevouts_summary {
  *  The resulting data can be used for scanning on the recipient side.
  *
  *  Returns: 1 if prevouts summary creation was successful.
- *           0 if the transaction is not a Silent Payments transaction.
+ *           0 if the transaction is not a Silent Payments transaction, e.g.,
+ *             if no public keys are passed (the transaction has no eligible
+ *             inputs) or if the public keys sum to the point at infinity.
  *
  *  Args:                 ctx: pointer to a context object
  *  Out:     prevouts_summary: pointer to prevouts_summary object containing the
@@ -347,20 +349,23 @@ typedef struct secp256k1_silentpayments_found_output {
  *  key group than this limit.
  *
  *  Returns: 1 if output scanning was successful.
- *           0 if the transaction is not a Silent Payments transaction,
+ *           0 if the transaction is not a Silent Payments transaction (e.g.,
+ *             if it has no taproot outputs, i.e., n_tx_outputs is 0),
  *             or if the arguments are invalid.
  *
  *  Args:                   ctx: pointer to a context object
  *  Out:          found_outputs: pointer to an array of pointers to found
  *                               output objects. The found outputs array MUST
- *                               have the same length as the tx_outputs array.
+ *                               have the same length as the tx_outputs array
+ *                               (can be NULL if n_tx_outputs is 0).
  *              n_found_outputs: pointer to an integer indicating the final
  *                               size of the found outputs array. This number
  *                               represents the number of outputs found while
  *                               scanning (0 if none are found). Can't be larger than
  *                               SECP256K1_SILENTPAYMENTS_RECIPIENT_GROUP_LIMIT.
  *  In:              tx_outputs: pointer to the transaction's x-only public key outputs,
- *                               in their original transaction (vout) order
+ *                               in their original transaction (vout) order (can be
+ *                               NULL if n_tx_outputs is 0)
  *                 n_tx_outputs: the size of the tx_outputs array.
  *                   scan_key32: pointer to the recipient's 32 byte scan key. The scan
  *                               key is valid if it passes secp256k1_ec_seckey_verify
@@ -387,7 +392,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_silentpayments_recipien
     const secp256k1_pubkey *unlabeled_spend_pubkey,
     secp256k1_silentpayments_label_lookup label_lookup,
     const void *label_context
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4) SECP256K1_ARG_NONNULL(6) SECP256K1_ARG_NONNULL(7) SECP256K1_ARG_NONNULL(8);
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(6) SECP256K1_ARG_NONNULL(7) SECP256K1_ARG_NONNULL(8);
 
 #ifdef __cplusplus
 }
