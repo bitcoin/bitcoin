@@ -120,13 +120,13 @@ public:
     //! Number of transactions in this block. This will be nonzero if the block
     //! reached the VALID_TRANSACTIONS level, and zero otherwise.
     //! Note: in a potential headers-first mode, this number cannot be relied upon
-    unsigned int nTx{0};
+    unsigned int nTx GUARDED_BY(::cs_main){0};
 
     //! (memory only) Number of transactions in the chain up to and including this block.
     //! This value will be non-zero if this block and all previous blocks back
     //! to the genesis block or an assumeutxo snapshot block have reached the
     //! VALID_TRANSACTIONS level.
-    uint64_t m_chain_tx_count{0};
+    uint64_t m_chain_tx_count GUARDED_BY(::cs_main){0};
 
     //! Verification status of this block. See enum BlockStatus
     //!
@@ -211,7 +211,7 @@ public:
      * Note that this will be true for the snapshot base block, if one is loaded, since its m_chain_tx_count value will have
      * been set manually based on the related AssumeutxoData entry.
      */
-    bool HaveNumChainTxs() const { return m_chain_tx_count != 0; }
+    bool HaveNumChainTxs() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main) { return m_chain_tx_count != 0; }
 
     NodeSeconds Time() const
     {
