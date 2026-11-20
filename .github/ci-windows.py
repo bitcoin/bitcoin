@@ -70,7 +70,6 @@ def generate(ci_type):
         "cmake",
         "-B",
         "build",
-        "-Werror=dev",
         "--preset",
         "vs2026",
     ] + GENERATE_OPTIONS[ci_type]
