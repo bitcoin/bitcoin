@@ -1690,7 +1690,7 @@ RPCHelpMan getdeploymentinfo()
     return RPCHelpMan{"getdeploymentinfo",
         "Returns an object containing various state info regarding deployments of consensus changes.",
         {
-            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Default{"hash of current chain tip"}, "The block hash at which to query deployment state"},
+            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Default{"hash of current chain tip"}, "The block hash at which to query deployment state. Other than the genesis block, the block must have passed full validation and must not be marked invalid."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "", {
@@ -1719,6 +1719,10 @@ RPCHelpMan getdeploymentinfo()
                 blockindex = chainman.m_blockman.LookupBlockIndex(hash);
                 if (!blockindex) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+                }
+                // ConnectBlock skips the genesis block, so it never reaches BLOCK_VALID_SCRIPTS
+                if (blockindex->pprev && !blockindex->IsValid(BLOCK_VALID_SCRIPTS)) {
+                    throw JSONRPCError(RPC_MISC_ERROR, "MNHF signals unavailable for an invalid or unvalidated block");
                 }
             }
 

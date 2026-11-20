@@ -108,7 +108,7 @@ static CBlock FindDevNetGenesisBlock(const CBlock &prevBlock, const CAmount& rew
 
 bool CChainParams::IsValidMNActivation(int nBit, int64_t timePast) const
 {
-    assert(nBit < VERSIONBITS_NUM_BITS);
+    if (nBit < 0 || nBit >= VERSIONBITS_NUM_BITS) return false;
 
     for (int index = 0; index < Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++index) {
         if (consensus.vDeployments[index].bit == nBit) {

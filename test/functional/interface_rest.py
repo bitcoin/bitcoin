@@ -432,6 +432,8 @@ class RESTTest (BitcoinTestFramework):
         previous_bb_hash = self.nodes[0].getblockhash(self.nodes[0].getblockcount() - 1)
         deployment_info = self.nodes[0].getdeploymentinfo(previous_bb_hash)
         assert_equal(deployment_info, self.test_rest_request(f"/deploymentinfo/{previous_bb_hash}"))
+        genesis_hash = self.nodes[0].getblockhash(0)
+        assert_equal(self.nodes[0].getdeploymentinfo(genesis_hash)["height"], 0)
 
         non_existing_blockhash = '42759cde25462784395a337460bde75f58e73d3f08bd31fdc3507cbac856a2c4'
         resp = self.test_rest_request(f'/deploymentinfo/{non_existing_blockhash}', ret_type=RetType.OBJ, status=400)
@@ -448,7 +450,7 @@ class RESTTest (BitcoinTestFramework):
         self.nodes[0].submitheader(self.nodes[1].getblockheader(header_only_hash, False))
         resp = self.test_rest_request(f"/deploymentinfo/{header_only_hash}", ret_type=RetType.OBJ, status=500)
         assert_equal(resp.getheader('Content-Type'), 'text/plain')
-        assert_equal(resp.read().decode('utf-8').rstrip(), "failed-getehfforblock-read")
+        assert_equal(resp.read().decode('utf-8').rstrip(), "MNHF signals unavailable for an invalid or unvalidated block")
         assert_equal(self.nodes[0].getbestblockhash(), tip_before_request)
         assert_equal(self.test_rest_request('/deploymentinfo'), self.nodes[0].getdeploymentinfo())
         self.connect_nodes(0, 1)

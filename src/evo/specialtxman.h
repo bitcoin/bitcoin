@@ -115,6 +115,9 @@ public:
     /** Passthrough to CDeterministicMNManager::UpdatedBlockTip */
     void UpdatedMNListTip(gsl::not_null<const CBlockIndex*> pindex);
 
+    /** Passthrough to CMNHFManager::RebuildSignals */
+    void RebuildMNHFSignals(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
 private:
     friend class CMNListBuilder;
 

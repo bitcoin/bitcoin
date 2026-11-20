@@ -854,6 +854,8 @@ bool CMNListBuilder::Finish(const CBlock& block, BlockValidationState& state, CD
 
 void CSpecialTxProcessor::UpdatedMNListTip(gsl::not_null<const CBlockIndex*> pindex) { m_dmnman.UpdatedBlockTip(pindex); }
 
+void CSpecialTxProcessor::RebuildMNHFSignals(const CBlockIndex* pindex) { m_mnhfman.RebuildSignals(pindex); }
+
 bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(Chainstate& chainstate, const CChain& chain, const CBlock& block,
                                                    const CBlockIndex* pindex, SpecialTxRules rules,
                                                    const CCoinsViewCache& view, CAmount blockSubsidy, bool fJustCheck,
@@ -1047,8 +1049,8 @@ bool CSpecialTxProcessor::ProcessSpecialTxsInBlock(Chainstate& chainstate, const
             LogPrintf("CSpecialTxProcessor::%s -- bls_legacy_scheme=%d\n", __func__, bls::bls_legacy_scheme.load());
         }
     } catch (const EvoDbInconsistencyError& e) {
-        // Local EvoDB corruption detected below (the node is already
-        // aborting): fail with M_ERROR so the block is not marked invalid.
+        // Local EvoDB inconsistency detected below (missing or mismatched
+        // state): fail with M_ERROR so the block is not marked invalid.
         return state.Error(e.what());
     } catch (const std::exception& e) {
         LogPrintf("CSpecialTxProcessor::%s -- FAILURE! %s\n", __func__, e.what());
@@ -1120,8 +1122,8 @@ bool CSpecialTxProcessor::CheckCreditPoolDiffForBlock(const CBlock& block, const
         }
 
     } catch (const EvoDbInconsistencyError& e) {
-        // Local EvoDB corruption detected below (the node is already
-        // aborting): fail with M_ERROR so the block is not marked invalid.
+        // Local EvoDB inconsistency detected below (missing or mismatched
+        // state): fail with M_ERROR so the block is not marked invalid.
         return state.Error(e.what());
     } catch (const std::exception& e) {
         LogPrintf("CSpecialTxProcessor::%s -- FAILURE! %s\n", __func__, e.what());
