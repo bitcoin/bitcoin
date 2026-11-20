@@ -272,10 +272,11 @@ class IPCMiningTest(BitcoinTestFramework):
 
                 self.log.debug("Wait for a new template, get one after the tip updates")
                 waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
+                fee_ticks_wait_s = 2  # Sleep for more than one fee tick, accommodating slow machines.
                 # Ignore fee increases, wait only for the tip update
                 waitoptions.feeThreshold = MAX_MONEY
                 # Keep the wait alive past the first one-second fee tick.
-                waitoptions.timeout = self.long_ipc_timeout
+                waitoptions.timeout = self.default_ipc_timeout_ms + fee_ticks_wait_s * 1000
                 self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
                 template2 = await wait_and_do(
                     mining_wait_next_template(template, stack, ctx, waitoptions),
@@ -283,7 +284,7 @@ class IPCMiningTest(BitcoinTestFramework):
                     lambda: self.generate(self.nodes[0], 1),
                     # Mine after that tick, so waitNext would return early for
                     # the fee increase if MAX_MONEY was ignored.
-                    sleep_time=1.1 * self.options.timeout_factor)
+                    sleep_time=fee_ticks_wait_s)
                 assert template2 is not None
                 block2 = await mining_get_block(template2, ctx)
                 # If waitNext had returned for a fee increase instead of tip
