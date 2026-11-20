@@ -140,6 +140,10 @@ static const unsigned int MAX_INV_SZ = 50000;
 static const unsigned int MAX_GETDATA_SZ = 1000;
 /** Number of blocks that can be requested at any given time from a single peer. */
 static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16;
+/** A peer is only sent best-effort stale-tip block requests while it has fewer
+ *  than this many blocks in flight, counting ordinary block download, so those
+ *  requests use at most half of its block slots. */
+static const int MAX_BLOCKS_IN_TRANSIT_FOR_STALETIP_REQUESTS = MAX_BLOCKS_IN_TRANSIT_PER_PEER / 2;
 /** Default time during which a peer must stall block download progress before being disconnected.
  * the actual timeout is increased temporarily if peers are disconnected for hitting the timeout */
 static constexpr auto BLOCK_STALLING_TIMEOUT_DEFAULT{2s};
@@ -869,9 +873,12 @@ private:
 
     void ProcessStaleTip(CNode& pfrom, Peer& peer, DataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
-    /** Track `tip`, and if `peer_has_block` and it has more work than the
-     *  active tip, update the peer's header state and request its blocks. */
-    void HandleStaleTip(CNode& pfrom, Peer& peer, const CBlockIndex& tip, bool peer_has_block, bool received_new_header) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, cs_main);
+    /** Track `tip` and remember the peer's block offer for SendMessages(). */
+    void HandleStaleTip(NodeId peer, const CBlockIndex& tip, bool peer_has_block, bool received_new_header) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, cs_main);
+
+    /** Add best-effort requests to `getdata` for missing blocks on the
+     *  branches `peer` offered with have_block. */
+    void MaybeRequestStaleBranchBlocks(const Peer& peer, const CNodeState& state, std::chrono::microseconds now, std::vector<CInv>& getdata) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     FastRandomContext m_rng GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
 
@@ -921,9 +928,11 @@ private:
         NodeId peer;
         //! False if the peer should not be punished if the block is invalid.
         bool may_punish_peer{true};
+        //! The block answers a best-effort stale-tip request we sent the peer.
+        bool requested_staletip{false};
     };
 
-    /** Whether `peer`, which sent the invalid block `hash`, is exempt from
+    /** Whether the peer that sent the invalid block `hash` is exempt from
      *  punishment, as for BIP 152 compact blocks, because the block is on a
      *  stale branch it announced with have_block set.
      *
@@ -933,14 +942,14 @@ private:
      * block failing the checks done before it is stored is not exempt, as the
      * peer must have passed them to store it.
      */
-    bool IsExemptStaleBranchFailure(NodeId peer, const uint256& hash, const BlockValidationState& state) const EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+    bool IsExemptStaleBranchFailure(const BlockSource& source, const uint256& hash, const BlockValidationState& state) const EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     {
         if (!m_staletiprelayman) return false;
         const CBlockIndex* block_index{m_chainman.m_blockman.LookupBlockIndex(hash)};
         if (block_index == nullptr) return false;
         const bool stored{(block_index->nStatus & BLOCK_HAVE_DATA) != 0};
         if (!stored && state.GetResult() != BlockValidationResult::BLOCK_CACHED_INVALID) return false;
-        return m_staletiprelayman->IsAnnouncedStaleBranchBlock(peer, m_chainman.ActiveChain(), *block_index);
+        return source.requested_staletip || m_staletiprelayman->IsAnnouncedStaleBranchBlock(source.peer, m_chainman.ActiveChain(), *block_index);
     }
 
     node::Warnings& m_warnings;
@@ -955,6 +964,7 @@ private:
         m_opts.stale_tip_relay_mode == StaleTipRelayMode::NONE ? nullptr :
             std::make_unique<node::StaleTipRelayManager>(node::StaleTipRelayOptions{
                 .chain_type = m_chainparams.GetChainType(),
+                .block_request_timeout = std::chrono::seconds{m_chainparams.GetConsensus().nPowTargetSpacing},
             })};
 
     bool StaleTipRelayEnabled() const { return m_staletiprelayman != nullptr; }
@@ -995,8 +1005,9 @@ private:
     uint256 m_last_block_inv_triggering_headers_sync GUARDED_BY(g_msgproc_mutex){};
 
     /**
-     * Sources of received blocks, saved to be able punish them when processing
-     * happens afterwards.
+     * Sources of received blocks, saved to decide whether to punish a peer
+     * if the block fails validation later. An offer may have been forgotten
+     * by then, so remember if the peer fulfilled a stale-tip request.
      */
     std::map<uint256, BlockSource> mapBlockSource GUARDED_BY(cs_main);
 
@@ -1124,8 +1135,11 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex, peer.m_getdata_requests_mutex, NetEventsInterface::g_msgproc_mutex)
         LOCKS_EXCLUDED(::cs_main);
 
+    /** Whether we requested a received block: not at all, through block
+     *  download, or only as a best-effort stale-tip block. */
+    enum class BlockRequestKind { NONE, NORMAL, STALETIP };
     /** Process a new block. Perform any post-processing housekeeping */
-    void ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked);
+    void ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, BlockRequestKind request, bool min_pow_checked);
 
     /** Process compact block txns  */
     void ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const BlockTransactions& block_transactions)
@@ -2486,7 +2500,7 @@ void PeerManagerImpl::BlockChecked(const std::shared_ptr<const CBlock>& block, c
         it != mapBlockSource.end() &&
         State(it->second.peer)) {
             MaybePunishNodeForBlock(/*nodeid=*/ it->second.peer, state,
-                                    /*via_compact_block=*/ !it->second.may_punish_peer || IsExemptStaleBranchFailure(it->second.peer, hash, state));
+                                    /*via_compact_block=*/ !it->second.may_punish_peer || IsExemptStaleBranchFailure(it->second, hash, state));
     }
     // Check that:
     // 1. The block is valid
@@ -3825,19 +3839,20 @@ void PeerManagerImpl::ProcessGetCFCheckPt(CNode& node, Peer& peer, DataStream& v
               headers);
 }
 
-void PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked)
+void PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, BlockRequestKind request, bool min_pow_checked)
 {
     bool new_block{false};
-    m_chainman.ProcessNewBlock(block, force_processing, min_pow_checked, &new_block);
+    m_chainman.ProcessNewBlock(block, /*force_processing=*/request != BlockRequestKind::NONE, min_pow_checked, &new_block);
+    LOCK(cs_main);
     if (new_block) {
-        node.m_last_block_time = GetTime<std::chrono::seconds>();
+        if (request != BlockRequestKind::STALETIP) node.m_last_block_time = GetTime<std::chrono::seconds>();
         // In case this block came from a different peer than we requested
         // from, we can erase the block request now anyway (as we just stored
         // this block to disk).
-        LOCK(cs_main);
         RemoveBlockRequest(block->GetHash(), std::nullopt);
-    } else {
-        LOCK(cs_main);
+    }
+    // An optional block can remain stored without ever reaching BlockChecked().
+    if (!new_block || request == BlockRequestKind::STALETIP) {
         mapBlockSource.erase(block->GetHash());
     }
 }
@@ -3924,7 +3939,7 @@ void PeerManagerImpl::ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const Bl
         // disk-space attacks), but this should be safe due to the
         // protections in the compact block handler -- see related comment
         // in compact block optimistic reconstruction handling.
-        ProcessBlock(pfrom, pblock, /*force_processing=*/true, /*min_pow_checked=*/true);
+        ProcessBlock(pfrom, pblock, BlockRequestKind::NORMAL, /*min_pow_checked=*/true);
     }
     return;
 }
@@ -5196,7 +5211,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             // we have a chain with at least the minimum chain work), and we ignore
             // compact blocks with less work than our tip, it is safe to treat
             // reconstructed compact blocks as having been requested.
-            ProcessBlock(pfrom, pblock, /*force_processing=*/true, /*min_pow_checked=*/true);
+            ProcessBlock(pfrom, pblock, BlockRequestKind::NORMAL, /*min_pow_checked=*/true);
             LOCK(cs_main); // hold cs_main for CBlockIndex::IsValid()
             if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS)) {
                 // Clear download state for this block, which is in
@@ -5277,37 +5292,43 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
 
         LogDebug(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom.GetId());
 
-        const CBlockIndex* prev_block{WITH_LOCK(m_chainman.GetMutex(), return m_chainman.m_blockman.LookupBlockIndex(pblock->hashPrevBlock))};
+        const uint256 hash{pblock->GetHash()};
+        const CBlockIndex* prev_block;
+        bool requested_staletip;
+        {
+            LOCK(cs_main);
+            prev_block = m_chainman.m_blockman.LookupBlockIndex(pblock->hashPrevBlock);
+            requested_staletip = m_staletiprelayman && m_staletiprelayman->TakeBlockRequest(peer.m_id, hash);
+        }
 
         // Check for possible mutation if it connects to something we know so we can check for DEPLOYMENT_SEGWIT being active
         if (prev_block && IsBlockMutated(/*block=*/*pblock,
                            /*check_witness_root=*/DeploymentActiveAfter(prev_block, m_chainman, Consensus::DEPLOYMENT_SEGWIT))) {
             LogDebug(BCLog::NET, "Received mutated block from peer=%d\n", peer.m_id);
             Misbehaving(peer, "mutated block");
-            WITH_LOCK(cs_main, RemoveBlockRequest(pblock->GetHash(), peer.m_id));
+            WITH_LOCK(cs_main, RemoveBlockRequest(hash, peer.m_id));
             return;
         }
 
-        bool forceProcessing = false;
-        const uint256 hash(pblock->GetHash());
+        BlockRequestKind request{requested_staletip ? BlockRequestKind::STALETIP : BlockRequestKind::NONE};
         bool min_pow_checked = false;
         {
             LOCK(cs_main);
             // Always process the block if we requested it, since we may
             // need it even when it's not a candidate for a new best tip.
-            forceProcessing = IsBlockRequested(hash);
+            if (IsBlockRequested(hash)) request = BlockRequestKind::NORMAL;
             RemoveBlockRequest(hash, pfrom.GetId());
             // mapBlockSource is only used for punishing peers and setting
             // which peers send us compact blocks, so the race between here and
             // cs_main in ProcessNewBlock is fine.
-            mapBlockSource.emplace(hash, BlockSource{.peer = pfrom.GetId(), .may_punish_peer = true});
+            mapBlockSource.emplace(hash, BlockSource{.peer = pfrom.GetId(), .may_punish_peer = true, .requested_staletip = requested_staletip});
 
             // Check claimed work on this block against our anti-dos thresholds.
             if (prev_block && prev_block->nChainWork + GetBlockProof(*pblock) >= GetAntiDoSWorkThreshold()) {
                 min_pow_checked = true;
             }
         }
-        ProcessBlock(pfrom, pblock, forceProcessing, min_pow_checked);
+        ProcessBlock(pfrom, pblock, request, min_pow_checked);
         return;
     }
 
@@ -6097,7 +6118,7 @@ void PeerManagerImpl::ProcessStaleTip(CNode& pfrom, Peer& peer, DataStream& vRec
         LOCK(cs_main);
 
         if (const CBlockIndex* known_tip{m_chainman.m_blockman.LookupBlockIndex(tip_hash)}) {
-            HandleStaleTip(pfrom, peer, *known_tip, /*peer_has_block=*/msg.have_block, /*received_new_header=*/false);
+            HandleStaleTip(peer.m_id, *known_tip, /*peer_has_block=*/msg.have_block, /*received_new_header=*/false);
             return;
         }
 
@@ -6128,27 +6149,51 @@ void PeerManagerImpl::ProcessStaleTip(CNode& pfrom, Peer& peer, DataStream& vRec
 
     LOCK(cs_main);
     if (!Assume(last_header)) return;
-    HandleStaleTip(pfrom, peer, *last_header, /*peer_has_block=*/msg.have_block, /*received_new_header=*/true);
+    HandleStaleTip(peer.m_id, *last_header, /*peer_has_block=*/msg.have_block, /*received_new_header=*/true);
 }
 
-void PeerManagerImpl::HandleStaleTip(CNode& pfrom, Peer& peer, const CBlockIndex& tip, bool peer_has_block, bool received_new_header)
+void PeerManagerImpl::HandleStaleTip(NodeId peer, const CBlockIndex& tip, bool peer_has_block, bool received_new_header)
 {
     AssertLockHeld(g_msgproc_mutex);
     AssertLockHeld(cs_main);
 
-    // A known-invalid tip must not advance the peer's header state.
+    // A known-invalid tip is neither tracked nor counted as a block
+    // announcement.
     if (!tip.IsValid(BLOCK_VALID_TREE)) return;
-    if (m_staletiprelayman->ReceivedStaleTip(pfrom.GetId(), m_chainman.ActiveChain(), tip, peer_has_block)) {
+    if (m_staletiprelayman->ReceivedStaleTip(peer, m_chainman.ActiveChain(), tip, peer_has_block)) {
         m_connman.WakeMessageHandler();
     }
 
     const CBlockIndex* active_tip{m_chainman.ActiveTip()};
-    if (peer_has_block && active_tip != nullptr && tip.nChainWork > active_tip->nChainWork) {
-        // Update the peer's state as for a headers message: this can protect
-        // an outbound peer from eviction, or during IBD disconnect one whose
-        // chain is below the minimum chain work.
-        UpdatePeerStateForReceivedHeaders(pfrom, tip, received_new_header, /*may_have_more_headers=*/false);
-        HeadersDirectFetchBlocks(pfrom, peer, tip);
+    if (received_new_header && peer_has_block && active_tip && tip.nChainWork > active_tip->nChainWork) {
+        // Record the announcement. Updating the peer's best-known block as for
+        // a headers message would make it responsible for every missing parent.
+        Assert(State(peer))->m_last_block_announcement = NodeClock::now();
+    }
+}
+
+void PeerManagerImpl::MaybeRequestStaleBranchBlocks(const Peer& peer, const CNodeState& state, std::chrono::microseconds now, std::vector<CInv>& getdata)
+{
+    AssertLockHeld(cs_main);
+
+    if (!NegotiatedStaleTip(peer)) return;
+
+    // The manager is still called without a budget, so that it expires the
+    // requests that timed out.
+    int max_pending{0};
+    if (CanServeBlocks(peer) && now >= state.m_block_download_paused_until && !m_chainman.IsInitialBlockDownload() && !m_chainman.m_blockman.LoadingBlocks()) {
+        max_pending = std::max(0, MAX_BLOCKS_IN_TRANSIT_FOR_STALETIP_REQUESTS - static_cast<int>(state.vBlocksInFlight.size()));
+    }
+    const int peer_height{std::max(m_chainman.ActiveHeight(), state.pindexBestKnownBlock ? state.pindexBestKnownBlock->nHeight : 0)};
+    const auto can_request{[&](const CBlockIndex& block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        // As in FindNextBlocksToDownload(), don't request a block that a
+        // limited peer may have pruned, as it would disconnect us.
+        return !IsBlockRequested(block.GetBlockHash()) &&
+               (CanServeWitnesses(peer) || !DeploymentActiveAt(block, m_chainman, Consensus::DEPLOYMENT_SEGWIT)) &&
+               (!IsLimitedPeer(peer) || peer_height - block.nHeight < static_cast<int>(NODE_NETWORK_LIMITED_MIN_BLOCKS) - 2);
+    }};
+    for (const CBlockIndex* block : m_staletiprelayman->GetBlockRequestsToSend(peer.m_id, m_chainman.ActiveChain(), now, max_pending, can_request)) {
+        getdata.emplace_back(MSG_BLOCK | GetFetchFlags(peer), block->GetBlockHash());
     }
 }
 
@@ -6855,6 +6900,10 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                 }
             }
         }
+
+        // Stale-tip block requests are optional, so they go after the blocks
+        // the active chain needs.
+        MaybeRequestStaleBranchBlocks(peer, state, current_time, vGetData);
 
         //
         // Message: getdata (transactions)

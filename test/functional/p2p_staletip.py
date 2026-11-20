@@ -16,6 +16,7 @@ from test_framework.messages import (
     MSG_BLOCK,
     MSG_TYPE_MASK,
     StaleTipCompressedHeader,
+    from_hex,
     msg_block,
     msg_feature,
     msg_getdata,
@@ -36,6 +37,8 @@ from test_framework.util import (
 STALETIP_FEATURE = "BIP332"
 FEATURE_VERSION = 70017
 STALETIP_RECENT_WINDOW = 1000  # Mirrors STALETIP_RECENT_WINDOW in src/node/staletiptracker.h
+MAX_STALETIPS_FROM_PEER = 20  # Mirrors MAX_STALETIPS_FROM_PEER in src/node/staletiprelayman.h
+STALETIP_BLOCK_REQUEST_TIMEOUT = 10 * 60  # One block interval, as set in src/net_processing.cpp
 
 
 class msg_raw_staletip:
@@ -140,7 +143,8 @@ class P2PStaleTipTest(BitcoinTestFramework):
         self.test_relay_targeting()
         self.test_active_tip_announced_to_source_peer()
         self.test_no_reannouncement_after_transient_ineligibility()
-        self.test_higher_work_staletip_requests_block()
+        self.test_higher_work_staletip_reorg()
+        self.test_staletip_request_timeout()
         self.test_invalid_stale_branch_block_not_punished()
         self.test_early_invalid_stale_branch_block_punished()
         self.test_requested_block_of_invalid_branch_not_punished()
@@ -453,18 +457,26 @@ class P2PStaleTipTest(BitcoinTestFramework):
         self.check_inbound_staletip(self.staletip_msg(block, fork_point_hash), block, outcome="ignore", expected_log="ignoring low-work staletip")
         self.restart_node(0, extra_args=["-staletips=headers"])
 
-    def test_higher_work_staletip_requests_block(self):
-        self.log.info("Test block data is requested for a higher-work staletip")
-        headers_peer = self.connect_peer()
-        block, fork_point_hash = self.active_block()
-        headers_peer.send_and_ping(self.staletip_msg(block, fork_point_hash, have_block=False))
-        assert_equal(self.block_getdata_hashes(headers_peer), [])
-        self.nodes[0].disconnect_p2ps()
+    def test_higher_work_staletip_reorg(self):
+        self.log.info("Test headers mode reorgs to a higher-work branch offered only through staletip")
+        node = self.nodes[0]
+        peer = self.connect_peer()
+        blocks, fork_point_hash = self.stale_branch(length=2, fork_depth=1)
+        parent, tip = blocks
+        original_tip = node.getbestblockhash()
 
-        block_peer = self.connect_peer()
-        block_peer.send_and_ping(self.staletip_msg(block, fork_point_hash, have_block=True))
-        block_peer.wait_for_getdata_hash(block.hash_int)
-        self.nodes[0].disconnect_p2ps()
+        peer.send_and_ping(self.staletip_msg(blocks, fork_point_hash, have_block=False))
+        assert_equal(self.block_getdata_hashes(peer), [])
+        peer.send_and_ping(self.staletip_msg(blocks, fork_point_hash, have_block=True))
+        peer.wait_for_getdata_hash(tip.hash_int)
+        peer.wait_for_getdata_hash(parent.hash_int)
+        assert_equal(node.getpeerinfo()[0]["inflight"], [])
+
+        peer.send_and_ping(msg_block(tip))
+        assert_equal(node.getbestblockhash(), original_tip)
+        peer.send_and_ping(msg_block(parent))
+        assert_equal(node.getbestblockhash(), tip.hash_hex)
+        node.disconnect_p2ps()
 
         # Headers mode does not download a stale tip that has no more work.
         equal_work_peer = self.connect_peer()
@@ -473,7 +485,35 @@ class P2PStaleTipTest(BitcoinTestFramework):
         self.assert_staletip_tracked(equal_work_block)
         equal_work_peer.sync_with_ping()
         assert_equal(self.block_getdata_hashes(equal_work_peer), [])
-        self.nodes[0].disconnect_p2ps()
+        node.disconnect_p2ps()
+
+    def test_staletip_request_timeout(self):
+        self.log.info("Test an unanswered stale-tip block request expires without a disconnect, and another offering peer is asked")
+        node = self.nodes[0]
+        node.setmocktime(node.getblockheader(node.getbestblockhash())["time"] + 1)
+        first = self.connect_peer()
+        second = self.connect_peer()
+        block, fork_point_hash = self.active_block()
+        offer = self.staletip_msg(block, fork_point_hash, have_block=True)
+
+        first.send_and_ping(offer)
+        first.wait_for_getdata_hash(block.hash_int)
+        # A block is only requested from one offering peer at a time.
+        second.send_and_ping(offer)
+        assert_equal(self.block_getdata_hashes(second), [])
+
+        node.bumpmocktime(STALETIP_BLOCK_REQUEST_TIMEOUT)
+        second.sync_with_ping()
+        second.wait_for_getdata_hash(block.hash_int)
+        # The peer that did not answer stays connected and is not asked again.
+        first.sync_with_ping()
+        assert first.is_connected
+        assert_equal(self.block_getdata_hashes(first), [block.hash_int])
+
+        second.send_and_ping(msg_block(block))
+        assert_equal(node.getbestblockhash(), block.hash_hex)
+        node.disconnect_p2ps()
+        node.setmocktime(0)
 
     def test_invalid_stale_branch_block_not_punished(self):
         self.log.info("Test a peer is not disconnected for serving an invalid block on a branch it announced")
@@ -522,6 +562,12 @@ class P2PStaleTipTest(BitcoinTestFramework):
 
         peer.send_and_ping(self.staletip_msg(blocks, fork_point_hash, have_block=True))
         self.wait_until(lambda: {block.hash_int for block in blocks} <= set(self.block_getdata_hashes(peer)))
+        # The peer announces enough other tips for the node to forget the
+        # offer, so that only the requests show the blocks were asked for.
+        for height in range(node.getblockcount() - MAX_STALETIPS_FROM_PEER + 1, node.getblockcount() + 1):
+            header = from_hex(CBlockHeader(), node.getblockheader(node.getblockhash(height), False))
+            peer.send_without_ping(self.staletip_msg(header, header.hashPrevBlock))
+        peer.sync_with_ping()
         # Connecting the branch finds the first block invalid, and with it the
         # tip, which is then delivered as we requested it.
         peer.send_and_ping(msg_block(child))
