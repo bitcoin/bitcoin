@@ -355,16 +355,15 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         def template_txids():
             return [tx["txid"] for tx in self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)["transactions"]]
 
-        mock_time = int(time.time())
-        self.nodes[0].setmocktime(mock_time)
         assert tx_id in template_txids()
         self.nodes[0].prioritisetransaction(txid=tx_id, fee_delta=-int(self.relayfee*COIN))
 
         # Calling prioritisetransaction with the inverse amount should delete its prioritisation entry
         assert tx_id not in self.nodes[0].getprioritisedtransactions()
 
-        self.nodes[0].setmocktime(mock_time+10)
-        assert tx_id not in template_txids()
+        # The template's age is measured with a steady clock, which mocktime
+        # does not advance, so wait for the rebuild interval to pass.
+        self.wait_until(lambda: tx_id not in template_txids())
 
 if __name__ == '__main__':
     PrioritiseTransactionTest(__file__).main()
