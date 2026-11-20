@@ -186,9 +186,9 @@ MinerTestingSetup::MinedChain MinerTestingSetup::MineBlockInfoChain(Mining& mini
             BOOST_REQUIRE(block_template->submitSolution(block.nVersion, block.nTime, block.nNonce, MakeTransactionRef(txCoinbase), reason, debug));
             BOOST_REQUIRE_EQUAL(reason, "");
             BOOST_REQUIRE_EQUAL(debug, "");
-            BOOST_CHECK_THROW(block_template->submitSolutionOld7(block.nVersion, block.nTime, block.nNonce,
-                                                                 MakeTransactionRef(txCoinbase)),
-                              std::runtime_error);
+            BOOST_CHECK_EXCEPTION(block_template->submitSolutionOld7(block.nVersion, block.nTime, block.nNonce,
+                                                                     MakeTransactionRef(txCoinbase)),
+                                  std::runtime_error, HasReason{"Old submitSolution (@7) not supported"});
         }
         {
             LOCK(cs_main);
