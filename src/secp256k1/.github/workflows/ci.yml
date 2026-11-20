@@ -40,6 +40,7 @@ env:
   MUSIG: 'yes'
   ELLSWIFT: 'yes'
   SILENTPAYMENTS: 'yes'
+  BATCH: 'yes'
   ### test options
   SECP256K1_TEST_ITERS: 64
   BENCH: 'yes'
@@ -117,6 +118,7 @@ jobs:
           - env_vars: { MUSIG: 'no' }
           - env_vars: { ELLSWIFT: 'no' }
           - env_vars: { SILENTPAYMENTS: 'no' }
+          - env_vars: { BATCH: 'no' }
         cc:
           - 'gcc'
           - 'clang'
