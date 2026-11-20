@@ -916,6 +916,13 @@ private:
         return peer.GetFeatures().stale_tip;
     }
 
+    /** The peer that sent us a block, saved for when the block is checked. */
+    struct BlockSource {
+        NodeId peer;
+        //! False if the peer should not be punished if the block is invalid.
+        bool may_punish_peer{true};
+    };
+
     /** Whether `peer`, which sent the invalid block `hash`, is exempt from
      *  punishment, as for BIP 152 compact blocks, because the block is on a
      *  stale branch it announced with have_block set.
@@ -990,10 +997,8 @@ private:
     /**
      * Sources of received blocks, saved to be able punish them when processing
      * happens afterwards.
-     * Set mapBlockSource[hash].second to false if the node should not be
-     * punished if the block is invalid.
      */
-    std::map<uint256, std::pair<NodeId, bool>> mapBlockSource GUARDED_BY(cs_main);
+    std::map<uint256, BlockSource> mapBlockSource GUARDED_BY(cs_main);
 
     /** Number of outbound peers with m_chain_sync.m_protect. */
     int m_outbound_peers_with_protect_from_disconnect GUARDED_BY(cs_main) = 0;
@@ -2473,15 +2478,15 @@ void PeerManagerImpl::BlockChecked(const std::shared_ptr<const CBlock>& block, c
     LOCK(cs_main);
 
     const uint256 hash(block->GetHash());
-    std::map<uint256, std::pair<NodeId, bool>>::iterator it = mapBlockSource.find(hash);
+    std::map<uint256, BlockSource>::iterator it = mapBlockSource.find(hash);
 
     // If the block failed validation, we know where it came from and we're still connected
     // to that peer, maybe punish.
     if (state.IsInvalid() &&
         it != mapBlockSource.end() &&
-        State(it->second.first)) {
-            MaybePunishNodeForBlock(/*nodeid=*/ it->second.first, state,
-                                    /*via_compact_block=*/ !it->second.second || IsExemptStaleBranchFailure(it->second.first, hash, state));
+        State(it->second.peer)) {
+            MaybePunishNodeForBlock(/*nodeid=*/ it->second.peer, state,
+                                    /*via_compact_block=*/ !it->second.may_punish_peer || IsExemptStaleBranchFailure(it->second.peer, hash, state));
     }
     // Check that:
     // 1. The block is valid
@@ -2493,7 +2498,7 @@ void PeerManagerImpl::BlockChecked(const std::shared_ptr<const CBlock>& block, c
              !m_chainman.IsInitialBlockDownload() &&
              mapBlocksInFlight.count(hash) == mapBlocksInFlight.size()) {
         if (it != mapBlockSource.end()) {
-            MaybeSetPeerAsAnnouncingHeaderAndIDs(it->second.first);
+            MaybeSetPeerAsAnnouncingHeaderAndIDs(it->second.peer);
         }
     }
     if (it != mapBlockSource.end())
@@ -3909,7 +3914,7 @@ void PeerManagerImpl::ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const Bl
             // BIP 152 permits peers to relay compact blocks after validating
             // the header only; we should not punish peers if the block turns
             // out to be invalid.
-            mapBlockSource.emplace(block_transactions.blockhash, std::make_pair(pfrom.GetId(), false));
+            mapBlockSource.emplace(block_transactions.blockhash, BlockSource{.peer = pfrom.GetId(), .may_punish_peer = false});
         }
     } // Don't hold cs_main when we call into ProcessNewBlock
     if (fBlockRead) {
@@ -5180,7 +5185,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             // block that is in flight from some other peer.
             {
                 LOCK(cs_main);
-                mapBlockSource.emplace(pblock->GetHash(), std::make_pair(pfrom.GetId(), false));
+                mapBlockSource.emplace(pblock->GetHash(), BlockSource{.peer = pfrom.GetId(), .may_punish_peer = false});
             }
             // Setting force_processing to true means that we bypass some of
             // our anti-DoS protections in AcceptBlock, which filters
@@ -5295,7 +5300,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             // mapBlockSource is only used for punishing peers and setting
             // which peers send us compact blocks, so the race between here and
             // cs_main in ProcessNewBlock is fine.
-            mapBlockSource.emplace(hash, std::make_pair(pfrom.GetId(), true));
+            mapBlockSource.emplace(hash, BlockSource{.peer = pfrom.GetId(), .may_punish_peer = true});
 
             // Check claimed work on this block against our anti-dos thresholds.
             if (prev_block && prev_block->nChainWork + GetBlockProof(*pblock) >= GetAntiDoSWorkThreshold()) {
