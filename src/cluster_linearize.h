@@ -5,20 +5,25 @@
 #ifndef BITCOIN_CLUSTER_LINEARIZE_H
 #define BITCOIN_CLUSTER_LINEARIZE_H
 
-#include <algorithm>
-#include <cstdint>
-#include <numeric>
-#include <optional>
-#include <ranges>
-#include <utility>
-#include <vector>
-
 #include <attributes.h>
 #include <memusage.h>
 #include <random.h>
-#include <span.h>
+#include <util/check.h>
 #include <util/feefrac.h>
 #include <util/vecdeque.h>
+
+#include <algorithm>
+#include <array>
+#include <concepts>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <optional>
+#include <span>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace cluster_linearize {
 

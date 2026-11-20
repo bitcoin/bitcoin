@@ -4,6 +4,7 @@
 
 #include <bitcoin-build-config.h>
 
+#include <chainparams.h>
 #include <chainparamsbase.h>
 #include <clientversion.h>
 #include <coins.h>

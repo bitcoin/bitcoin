@@ -5,10 +5,11 @@
 #ifndef BITCOIN_TEST_FUZZ_UTIL_THREADINTERRUPT_H
 #define BITCOIN_TEST_FUZZ_UTIL_THREADINTERRUPT_H
 
-#include <test/fuzz/FuzzedDataProvider.h>
 #include <util/threadinterrupt.h>
 
 #include <memory>
+
+class FuzzedDataProvider;
 
 /**
  * Mocked CThreadInterrupt that returns "randomly" whether it is interrupted and never sleeps.

@@ -7,6 +7,7 @@
 #include <consensus/merkle.h>
 #include <kernel/coinstats.h>
 #include <node/miner.h>
+#include <node/mining_types.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -18,7 +19,6 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
-#include <txdb.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <validation.h>

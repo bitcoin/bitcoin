@@ -13,6 +13,9 @@
 #include <univalue.h>
 #include <util/chaintype.h>
 
+#include <functional>
+#include <string>
+
 void initialize_script_format()
 {
     SelectParams(ChainType::REGTEST);

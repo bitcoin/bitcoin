@@ -2,16 +2,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <consensus/amount.h>
-#include <pubkey.h>
 #include <test/fuzz/util.h>
+
+#include <consensus/amount.h>
+#include <crypto/sha256.h>
+#include <pubkey.h>
+#include <test/fuzz/fuzz.h>
 #include <test/util/script.h>
 #include <util/check.h>
 #include <util/overflow.h>
 #include <util/rbf.h>
 #include <util/time.h>
 
-#include <memory>
+#include <cstring>
+#include <variant>
 
 std::vector<uint8_t> ConstructPubKeyBytes(FuzzedDataProvider& fuzzed_data_provider, std::span<const uint8_t> byte_data, const bool compressed) noexcept
 {

@@ -2,8 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <test/fuzz/util.h>
 #include <test/fuzz/util/threadinterrupt.h>
+
+#include <test/fuzz/FuzzedDataProvider.h>
+#include <test/fuzz/util.h>
+#include <util/time.h>
 
 FuzzedThreadInterrupt::FuzzedThreadInterrupt(FuzzedDataProvider& fuzzed_data_provider)
     : m_fuzzed_data_provider{fuzzed_data_provider}

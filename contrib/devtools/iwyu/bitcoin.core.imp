@@ -1,3 +1,5 @@
 # Nothing for now.
 [
+  # Standard C library symbols.
+  { "include": [ "<bits/types/cookie_io_functions_t.h>", "private", "<cstdio>", "public" ] },
 ]

@@ -7,10 +7,8 @@
 
 #include <util/not_null.h>
 
-#include <atomic>
+#include <atomic> // IWYU pragma: keep
 #include <memory>
-#include <optional>
-#include <string>
 
 extern std::atomic<bool> g_used_system_time;
 

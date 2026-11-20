@@ -3,20 +3,30 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <coins.h>
+#include <consensus/amount.h>
 #include <crypto/sha256.h>
 #include <kernel/chainstatemanager_opts.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <script/script.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <uint256.h>
 #include <util/check.h>
+#include <util/not_null.h>
 #include <util/threadpool.h>
 
+#include <algorithm>
+#include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <map>
 #include <memory>
 #include <optional>
+#include <utility>
 #include <vector>
 
 namespace {

@@ -4,10 +4,10 @@
 
 #include <test/fuzz/util/descriptor.h>
 
+#include <crypto/hex_base.h>
 #include <key.h>
 #include <key_io.h>
 #include <pubkey.h>
-#include <span.h>
 #include <util/strencodings.h>
 
 #include <ranges>

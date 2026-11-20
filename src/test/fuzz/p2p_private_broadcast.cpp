@@ -2,26 +2,41 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <addrman.h>
 #include <banman.h>
 #include <net.h>
 #include <net_processing.h>
+#include <net_types.h>
+#include <netaddress.h>
+#include <netmessagemaker.h>
+#include <node/connection_types.h>
+#include <node/protocol_version.h>
+#include <primitives/transaction.h>
 #include <protocol.h>
+#include <serialize.h>
+#include <streams.h>
 #include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
 #include <test/util/net.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <test/util/validation.h>
 #include <util/check.h>
 #include <util/time.h>
-#include <validationinterface.h>
 
 #include <array>
+#include <cstdint>
+#include <functional>
 #include <ios>
 #include <memory>
+#include <optional>
+#include <span>
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace {
