@@ -433,6 +433,22 @@ CGovernancePayment::CGovernancePayment(const CTxDestination& destIn, CAmount nAm
 
 namespace governance {
 
+int64_t EstimateBlockTime(int height, int ref_height, int64_t ref_time)
+{
+    // Blocks arrive slightly slower than the target spacing in practice
+    return static_cast<int64_t>(ref_time + (height - ref_height) * 2.62 * 60);
+}
+
+ProposalWindow EstimateProposalWindow(int first_superblock, int payments, int superblock_cycle, int ref_height,
+                                      int64_t ref_time)
+{
+    const int last_superblock{first_superblock + (payments - 1) * superblock_cycle};
+    return {
+        .start_epoch = EstimateBlockTime(first_superblock - superblock_cycle / 2, ref_height, ref_time),
+        .end_epoch = EstimateBlockTime(last_superblock + superblock_cycle / 2, ref_height, ref_time),
+    };
+}
+
 bool SuperblockManager::AddTrigger(std::shared_ptr<CGovernanceObject> obj, int cachedHeight)
 {
     AssertLockNotHeld(cs_sb);

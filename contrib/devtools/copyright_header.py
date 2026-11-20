@@ -300,7 +300,7 @@ def report_cmd(argv):
     elif argv[3] == 'verbose':
         verbose = True
     else:
-        sys.exit("*** unknown argument: %s" % argv[2])
+        sys.exit("*** unknown argument: %s" % argv[3])
 
     exec_report(base_directory, verbose)
 
@@ -588,7 +588,7 @@ copyright_header.py - utilities for managing copyright headers of 'The Dash
 Core developers' in repository source files.
 
 Usage:
-    $ ./copyright_header <subcommand>
+    $ ./copyright_header.py <subcommand>
 
 Subcommands:
     report

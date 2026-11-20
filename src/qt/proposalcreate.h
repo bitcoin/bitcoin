@@ -37,13 +37,18 @@ private:
 
     // State
     int m_relay_confs{0};
-    int64_t m_superblock_cycle{0};
-    int64_t m_target_spacing{0};
+    int m_superblock_cycle{0};
+    int m_superblock_maturity_window{0};
+    // Chain point superblock times are estimated from
+    int m_ref_height{0};
+    int64_t m_ref_time{0};
     QString m_fee_formatted;
     QString m_hex;
     QString m_json;
 
     void buildJsonAndHex();
+    //! Whether the selected first payment can no longer pick up a new proposal; reports it to the user if so
+    bool votingDeadlinePassed();
 };
 
 #endif // BITCOIN_QT_PROPOSALCREATE_H

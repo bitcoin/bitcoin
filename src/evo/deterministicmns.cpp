@@ -1306,11 +1306,6 @@ void CDeterministicMNManager::CompleteRepair()
     auto dbTx = m_evoDb.BeginTransaction();
     m_evoDb.Write(DB_LIST_REPAIRED, 1);
     dbTx->Commit();
-    // flush it to disk
-    if (!m_evoDb.CommitRootTransaction()) {
-        LogPrintf("CDeterministicMNManager::%s -- Failed to commit to evoDB\n", __func__);
-        assert(false);
-    }
 }
 
 std::vector<const CBlockIndex*> CDeterministicMNManager::CollectSnapshotBlocks(

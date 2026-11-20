@@ -414,7 +414,7 @@ std::optional<CCreditPoolDiff> GetCreditPoolDiffForBlock(CCreditPoolManager& cpo
         }
         return creditPoolDiff;
     } catch (const EvoDbInconsistencyError& e) {
-        // Local EvoDB corruption (the node is already aborting): fail with
+        // Local EvoDB inconsistency (missing or mismatched state): fail with
         // M_ERROR so the block is not marked invalid.
         state.Error(e.what());
         return std::nullopt;

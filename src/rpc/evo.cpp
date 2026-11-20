@@ -172,8 +172,8 @@ static RPCArg GetRpcArg(const std::string& strParamName)
         },
         {"operatorReward",
             {"operatorReward", RPCArg::Type::STR, RPCArg::Optional::NO,
-                "The fraction in %% to share with the operator.\n"
-                "The value must be between 0 and 10000.",
+                "The fraction in % to share with the operator.\n"
+                "The value must be between 0 and 100.",
                 RPCArgOptions{.skip_type_check = true}}
         },
         {"ownerAddress",
@@ -927,7 +927,7 @@ static UniValue protx_register_common_wrapper(const JSONRPCRequest& request,
         throw JSONRPCError(RPC_INVALID_PARAMETER, "operatorReward must be a number");
     }
     if (operatorReward < 0 || operatorReward > 10000) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "operatorReward must be between 0 and 10000");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "operatorReward must be between 0 and 100");
     }
     typed_request.operator_reward = static_cast<uint16_t>(operatorReward);
     const auto capabilities{evo::provider::GetCapabilities(node, /*basic_override=*/!specific_legacy_bls_scheme)};
@@ -2028,8 +2028,8 @@ static UniValue evodb_verify_or_repair_impl(const JSONRPCRequest& request, bool 
         } else {
             uint256 start_block_hash = ParseBlock(request.params[0], chainman, "startBlock");
             start_index = chainman.m_blockman.LookupBlockIndex(start_block_hash);
-            if (!start_index) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Start block not found");
+            if (!start_index || !chainman.ActiveChain().Contains(start_index)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Start block not found in active chain");
             }
         }
 
@@ -2042,8 +2042,8 @@ static UniValue evodb_verify_or_repair_impl(const JSONRPCRequest& request, bool 
         } else {
             uint256 stop_block_hash = ParseBlock(request.params[1], chainman, "stopBlock");
             stop_index = chainman.m_blockman.LookupBlockIndex(stop_block_hash);
-            if (!stop_index) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Stop block not found");
+            if (!stop_index || !chainman.ActiveChain().Contains(stop_index)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Stop block not found in active chain");
             }
         }
     }
@@ -2200,7 +2200,7 @@ static RPCHelpMan protx_shared_register_prepare_wrapper(const MnType mn_type)
              RPCArgOptions{.skip_type_check = true}},
             {"operatorPubKey", RPCArg::Type::STR, RPCArg::Optional::NO, "The operator BLS public key."},
             {"votingAddress", RPCArg::Type::STR, RPCArg::Optional::NO, "The voting key address."},
-            {"operatorReward", RPCArg::Type::STR, RPCArg::Optional::NO, "The fraction in %% to share with the operator (0.00 to 100.00).",
+            {"operatorReward", RPCArg::Type::STR, RPCArg::Optional::NO, "The fraction in % to share with the operator (0.00 to 100.00).",
              RPCArgOptions{.skip_type_check = true}},
             {"earlyPeriodBlocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "Length in blocks of the early period during which unilateral dissolution is penalized (up to 420480)."},
             {"earlyPenalty", RPCArg::Type::NUM, RPCArg::Optional::NO, "Penalty in duffs for unilateral dissolution during the early period (must be below the smallest share, and zero when earlyPeriodBlocks is zero)."},
@@ -2278,7 +2278,7 @@ static RPCHelpMan protx_shared_register_prepare_wrapper(const MnType mn_type)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "operatorReward must be a number");
     }
     if (operatorReward < 0 || operatorReward > 10000) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "operatorReward must be between 0 and 10000");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "operatorReward must be between 0 and 100");
     }
     typed_request.operator_reward = static_cast<uint16_t>(operatorReward);
 

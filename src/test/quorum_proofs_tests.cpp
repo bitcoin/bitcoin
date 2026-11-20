@@ -317,6 +317,54 @@ BOOST_FIXTURE_TEST_CASE(generation_retries_retired_checkpoint_signer, QuorumProo
         return error["message"].get_str().find("historical block unavailable") != std::string::npos;
     });
 }
+BOOST_FIXTURE_TEST_CASE(scan_from_stale_fork_block_is_rescanned_once_active, QuorumProofGenerationSetup)
+{
+    // A scan may start from a block that a reorg has already disconnected, e.g. a
+    // queued tip notification. Once that block's branch becomes active, scanning
+    // it must return its own branch's quorums.
+    CreateHistory();
+    auto& chain = *WITH_LOCK(cs_main, return &m_node.chainman->ActiveChain());
+    const auto params = *Params().GetLLMQ(Params().GetConsensus().llmqTypeChainLocks);
+    const auto& qman = *m_node.llmq_ctx->qman;
+    BOOST_REQUIRE_EQUAL(commitments.size(), 2U);
+    const auto& newest = commitments.back();
+    const auto& previous = commitments.front();
+
+    // A competing block at the height that mined the newest commitment, without it.
+    CBlockIndex* fork = WITH_LOCK(cs_main, return m_node.chainman->m_blockman.InsertBlockIndex(uint256::ONE));
+    fork->pprev = chain[checkpoint_height - 1];
+    fork->nHeight = checkpoint_height;
+
+    const auto quorum_hashes = [&] {
+        std::vector<uint256> result;
+        for (const auto& quorum : qman.ScanQuorums(params.type, fork, 2)) {
+            result.push_back(quorum->qc->quorumHash);
+        }
+        return result;
+    };
+    const auto commitment_hashes = [&] {
+        std::vector<uint256> result;
+        for (const auto& qc : qman.ScanCommitments(params.type, fork, 2)) {
+            result.push_back(qc.quorumHash);
+        }
+        return result;
+    };
+    // Scanned while the other branch is still active.
+    quorum_hashes();
+    commitment_hashes();
+
+    // Reorg onto the competing block: the newest commitment is no longer mined.
+    m_node.evodb->Erase(std::make_pair(std::string{"q_mc"}, std::make_pair(params.type, newest.quorumHash)));
+    m_node.evodb->Erase(
+        std::make_tuple(std::string{"q_mcih"}, params.type, htobe32_internal(UINT32_MAX - checkpoint_height)));
+    WITH_LOCK(cs_main, chain.SetTip(*fork));
+
+    const std::vector<uint256> expected{previous.quorumHash};
+    const auto quorums = quorum_hashes();
+    const auto scanned = commitment_hashes();
+    BOOST_CHECK_EQUAL_COLLECTIONS(quorums.begin(), quorums.end(), expected.begin(), expected.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(scanned.begin(), scanned.end(), expected.begin(), expected.end());
+}
 BOOST_FIXTURE_TEST_CASE(consensus_valid_envelopes_are_provable, QuorumProofGenerationSetup)
 {
     // A handoff must stay provable whatever shape the miner gave the mined

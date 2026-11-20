@@ -91,4 +91,46 @@ BOOST_AUTO_TEST_CASE(isvalid_duplicate_payments_require_distinct_outputs)
     }
 }
 
+// The masternode building a trigger estimates the superblock's time from its own height and clock, within the last
+// maturity window before the superblock, and accepts a proposal whose window is at most two hours off that estimate.
+BOOST_AUTO_TEST_CASE(proposal_window_holds_exactly_the_chosen_superblocks)
+{
+    const int cycle{16616};
+    const int maturity_window{1662};
+    const int next_superblock{155 * cycle};
+    const int64_t now{1'800'000'000};
+    const int64_t fudge{2 * 60 * 60};
+
+    for (const double block_seconds : {2.62 * 60 * 0.99, 2.62 * 60, 2.62 * 60 * 1.01}) {
+        for (const int blocks_to_next : {maturity_window + 1, cycle / 2 - 1, cycle / 2 + 1, cycle - 1}) {
+            const int tip{next_superblock - blocks_to_next};
+            const auto estimated_by_trigger_builder = [&](int superblock, int trigger_height) {
+                const auto trigger_time{static_cast<int64_t>(now + (trigger_height - tip) * block_seconds)};
+                return governance::EstimateBlockTime(superblock, trigger_height, trigger_time);
+            };
+            for (int skipped{0}; skipped < 12; ++skipped) {
+                for (int payments{1}; payments <= 12; ++payments) {
+                    const int first_superblock{next_superblock + skipped * cycle};
+                    const auto window{governance::EstimateProposalWindow(first_superblock, payments, cycle, tip, now)};
+
+                    for (int n{-1}; n <= payments; ++n) {
+                        const int superblock{first_superblock + n * cycle};
+                        if (superblock <= tip) continue;
+                        const bool chosen{n >= 0 && n < payments};
+                        const int64_t slack{chosen ? 0 : fudge};
+                        for (const int trigger_height : {superblock - maturity_window, superblock - 1}) {
+                            const int64_t time{estimated_by_trigger_builder(superblock, trigger_height)};
+                            const bool inside{window.start_epoch - slack <= time && time <= window.end_epoch + slack};
+                            BOOST_CHECK_MESSAGE(inside == chosen,
+                                                "blocks_to_next=" << blocks_to_next << " skipped=" << skipped
+                                                                  << " payments=" << payments << " n=" << n
+                                                                  << " trigger_height=" << trigger_height);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

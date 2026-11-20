@@ -48,6 +48,15 @@ public:
     using std::runtime_error::runtime_error;
 };
 
+/** Thrown when block-derived state that EvoDB should hold for a block is missing. Like a mismatch it
+ *  is never evidence about the block, but it does not abort the node: an RPC may ask about a block
+ *  whose state was never stored. */
+class EvoDbMissingStateError : public EvoDbInconsistencyError
+{
+public:
+    using EvoDbInconsistencyError::EvoDbInconsistencyError;
+};
+
 class CEvoDB;
 
 class CEvoDBScopedCommitter

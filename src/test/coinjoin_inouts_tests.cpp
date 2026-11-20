@@ -10,16 +10,26 @@
 #include <coinjoin/common.h>
 #include <coinjoin/options.h>
 #include <coinjoin/server.h>
+#include <coins.h>
 #include <evo/chainhelper.h>
+#include <key.h>
 #include <llmq/context.h>
 #include <masternode/sync.h>
 #include <net.h>
 #include <node/connection_types.h>
+#include <policy/policy.h>
 #include <protocol.h>
+#include <script/interpreter.h>
 #include <script/script.h>
+#include <script/sign.h>
+#include <script/signingprovider.h>
+#include <script/standard.h>
 #include <streams.h>
+#include <test/util/net.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <tinyformat.h>
+#include <txmempool.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/time.h>
@@ -30,7 +40,10 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <iterator>
 #include <memory>
+#include <ranges>
+#include <utility>
 #include <vector>
 
 BOOST_FIXTURE_TEST_SUITE(coinjoin_inouts_tests, TestingSetup)
@@ -188,7 +201,13 @@ public:
     // A live session always carries a non-zero id, and AddEntry rejects entries that don't
     // belong to one, so seed an id along with the state.
     void EnterSigningState() { nSessionID = 1; nState = POOL_STATE_SIGNING; }
-    void EnterAcceptingEntriesState() { nSessionID = 1; nState = POOL_STATE_ACCEPTING_ENTRIES; }
+    void EnterAcceptingEntriesState(int denom = 0) { nSessionID = 1; nSessionDenom = denom; nState = POOL_STATE_ACCEPTING_ENTRIES; }
+
+    CMutableTransaction FinalTransaction() const EXCLUSIVE_LOCKS_REQUIRED(!cs_coinjoin)
+    {
+        LOCK(cs_coinjoin);
+        return finalMutableTransaction;
+    }
 
     void SeedParticipant(const CService& addr) EXCLUSIVE_LOCKS_REQUIRED(!cs_coinjoin)
     {
@@ -229,6 +248,205 @@ static std::unique_ptr<CNode> MakePeer(NodeId id, uint32_t ipv4)
     peer->nVersion = PROTOCOL_VERSION;
     peer->SetCommonVersion(PROTOCOL_VERSION);
     return peer;
+}
+
+BOOST_AUTO_TEST_CASE(server_signing_timeout_charges_each_offender_once)
+{
+    struct DeterministicRandom {
+        const bool previous{g_mock_deterministic_tests};
+        DeterministicRandom() { g_mock_deterministic_tests = true; }
+        ~DeterministicRandom() { g_mock_deterministic_tests = previous; }
+    } deterministic_random;
+    BOOST_REQUIRE_LE(GetRand<int>(100), 33);
+
+    auto& connman{static_cast<ConnmanTestMsg&>(*Assert(m_node.connman))};
+    CActiveMasternodeManager mn_activeman(connman, *Assert(m_node.dmnman), MakeSecretKey());
+    CKey key;
+    key.MakeNewKey(true);
+    FillableSigningProvider provider;
+    BOOST_REQUIRE(provider.AddKey(key));
+    const CScript previous_script{GetScriptForDestination(PKHash(key.GetPubKey()))};
+
+    // One missing signature, several missing signatures from the same participant,
+    // no offenders, and every participant offending.
+    uint32_t collateral_index{0};
+    const std::array<std::pair<int, int>, 4> scenarios{{{1, 1}, {3, 1}, {0, 0}, {3, 3}}};
+    for (const auto& [unsigned_inputs, offenders] : scenarios) {
+        TestableCoinJoinServer server(m_node.peerman.get(), *Assert(m_node.chainman), connman,
+                                      *Assert(m_node.dmnman), *Assert(m_node.dstxman), *Assert(m_node.mn_metaman),
+                                      *Assert(m_node.mempool), mn_activeman, *Assert(m_node.mn_sync), *Assert(m_node.isman));
+        std::vector<uint256> collaterals;
+        for (int participant{0}; participant < 3; ++participant) {
+            const uint32_t index{collateral_index++};
+            const COutPoint collateral_input{uint256::TWO, index};
+            {
+                LOCK(cs_main);
+                m_node.chainman->ActiveChainstate().CoinsTip().AddCoin(
+                    collateral_input, Coin{CTxOut{COIN / 10, previous_script}, 0, false}, false);
+            }
+            CMutableTransaction collateral;
+            collateral.vin.emplace_back(collateral_input);
+            collateral.vout.emplace_back(COIN / 10 - CoinJoin::GetCollateralAmount(), P2PKHScript());
+            BOOST_REQUIRE(SignSignature(provider, previous_script, collateral, 0, COIN / 10, SIGHASH_ALL));
+            collaterals.push_back(collateral.GetHash());
+            server.SeedSessionCollateral(collateral, CoinJoin::MixShape::STANDARD);
+
+            CCoinJoinEntry entry;
+            entry.txCollateral = MakeTransactionRef(collateral);
+            for (int input{0}; input < 3; ++input) {
+                CTxDSIn txin{CTxIn{COutPoint{uint256::ONE, index * 3 + static_cast<uint32_t>(input)}}, previous_script, 0};
+                txin.fHasSig = participant >= offenders || input >= unsigned_inputs;
+                entry.vecTxDSIn.push_back(txin);
+                entry.vecTxOut.emplace_back(CoinJoin::GetSmallestDenomination(), P2PKHScript(static_cast<uint8_t>(input + 1)));
+            }
+            server.SeedEntry(std::move(entry));
+        }
+        server.EnterSigningState();
+        BOOST_REQUIRE(server.HasTimedOut());
+        server.CheckTimeout();
+        for (size_t participant{0}; participant < collaterals.size(); ++participant) {
+            BOOST_CHECK_EQUAL(m_node.mempool->exists(collaterals[participant]), offenders == 1 && participant == 0);
+        }
+        BOOST_CHECK_EQUAL(server.GetState(), int{offenders == 0 ? POOL_STATE_SIGNING : POOL_STATE_IDLE});
+    }
+}
+
+BOOST_AUTO_TEST_CASE(server_signfinaltx_completes_with_legacy_and_full_signatures)
+{
+    m_node.mn_sync->SwitchToNextAsset();
+    BOOST_REQUIRE(m_node.mn_sync->IsBlockchainSynced());
+    auto& connman{static_cast<ConnmanTestMsg&>(*Assert(m_node.connman))};
+    CActiveMasternodeManager mn_activeman(connman, *Assert(m_node.dmnman), MakeSecretKey());
+    TestableCoinJoinServer server(m_node.peerman.get(), *Assert(m_node.chainman), connman,
+                                  *Assert(m_node.dmnman), *Assert(m_node.dstxman), *Assert(m_node.mn_metaman),
+                                  *Assert(m_node.mempool), mn_activeman, *Assert(m_node.mn_sync), *Assert(m_node.isman));
+    struct PeerCleanup {
+        ConnmanTestMsg& connman;
+        ~PeerCleanup() { connman.ClearTestNodes(); }
+    } cleanup{connman};
+    FillableSigningProvider provider;
+    const CAmount amount{CoinJoin::GetSmallestDenomination()};
+    const int participants{std::max(3, CoinJoin::GetMinPoolParticipants())};
+    std::vector<CNode*> peers;
+    std::vector<CScript> previous_scripts;
+    std::vector<CCoinJoinEntry> entries;
+
+    for (int i{0}; i < participants; ++i) {
+        auto peer = MakePeer(i + 100, 0x0a000010 + i);
+        peer->fSuccessfullyConnected = true;
+        peers.push_back(peer.get());
+        connman.AddTestNode(*peer.release());
+        CKey key;
+        key.MakeNewKey(true);
+        BOOST_REQUIRE(provider.AddKey(key));
+        const CScript previous_script{GetScriptForDestination(PKHash(key.GetPubKey()))};
+        previous_scripts.push_back(previous_script);
+        const COutPoint input{uint256::ONE, static_cast<uint32_t>(100 + participants - i)};
+        const COutPoint collateral_input{uint256::TWO, static_cast<uint32_t>(100 + i)};
+        {
+            LOCK(cs_main);
+            auto& coins{m_node.chainman->ActiveChainstate().CoinsTip()};
+            coins.AddCoin(input, Coin{CTxOut{amount, previous_script}, 0, false}, false);
+            coins.AddCoin(collateral_input, Coin{CTxOut{COIN / 10, previous_script}, 0, false}, false);
+        }
+        CMutableTransaction collateral;
+        collateral.vin.emplace_back(collateral_input);
+        collateral.vout.emplace_back(COIN / 10 - CoinJoin::GetCollateralAmount(), P2PKHScript(100 + i));
+        BOOST_REQUIRE(SignSignature(provider, previous_script, collateral, 0, COIN / 10, SIGHASH_ALL));
+        server.SeedSessionCollateral(collateral, CoinJoin::MixShape::STANDARD);
+        // Descending output order requires verification against the canonical BIP69 transaction.
+        CCoinJoinEntry original{{CTxDSIn{CTxIn{input}, previous_script, 0}},
+                               {CTxOut{amount, P2PKHScript(participants - i)}}, CTransaction{collateral}};
+        CDataStream wire{SER_NETWORK, PROTOCOL_VERSION};
+        wire << original;
+        CCoinJoinEntry entry;
+        wire >> entry;
+        BOOST_REQUIRE(entry.vecTxDSIn[0].prevPubKey.empty());
+        entry.addr = peers[i == participants - 1 ? 0 : i]->addr;
+        entries.push_back(std::move(entry));
+    }
+    server.EnterAcceptingEntriesState(CoinJoin::AmountToDenomination(amount));
+    for (const auto& entry : entries) {
+        PoolMessage message{MSG_NOERR};
+        BOOST_REQUIRE(server.AddEntry(entry, message));
+    }
+    server.CreateFinalTransaction(/*session_id=*/1, /*charge_fees=*/false);
+    BOOST_REQUIRE_EQUAL(server.GetState(), int{POOL_STATE_SIGNING});
+    CMutableTransaction final{server.FinalTransaction()};
+    BOOST_REQUIRE(final.vout.front().scriptPubKey == P2PKHScript(1));
+
+    const auto input_index = [&final](const COutPoint& prevout) {
+        return std::distance(final.vin.begin(), std::ranges::find(final.vin, prevout, &CTxIn::prevout));
+    };
+    std::vector<CTxIn> signed_inputs;
+    for (int i{0}; i < participants; ++i) {
+        const auto index{input_index(entries[i].vecTxDSIn[0].prevout)};
+        BOOST_REQUIRE(SignSignature(provider, previous_scripts[i], final, index, amount,
+                                    SIGHASH_ALL | (i == 0 ? SIGHASH_ANYONECANPAY : 0)));
+        signed_inputs.push_back(final.vin[index]);
+    }
+    const auto rejected = [](CNode& peer) {
+        LOCK(peer.cs_vSend);
+        for (const auto& msg : peer.vSendMsg) {
+            if (msg.m_type != NetMsgType::DSSTATUSUPDATE) continue;
+            CDataStream wire{msg.data, SER_NETWORK, PROTOCOL_VERSION};
+            CCoinJoinStatusUpdate status;
+            wire >> status;
+            if (status.nStatusUpdate == STATUS_REJECTED) return true;
+        }
+        return false;
+    };
+    const auto submit = [&server, &peers, participants](int participant, const CTxIn& input) {
+        for (auto* peer : peers) {
+            LOCK(peer->cs_vSend);
+            peer->vSendMsg.clear();
+        }
+        CDataStream wire{SER_NETWORK, PROTOCOL_VERSION};
+        wire << std::vector<CTxIn>{input};
+        server.ProcessMessage(*peers[participant == participants - 1 ? 0 : participant], NetMsgType::DSSIGNFINALTX, wire);
+    };
+    const auto check_rejected = [&](int participant, const CTxIn& input) {
+        const auto before{server.FinalTransaction()};
+        submit(participant, input);
+        BOOST_CHECK(rejected(*peers[participant == participants - 1 ? 0 : participant]));
+        BOOST_CHECK(server.FinalTransaction().GetHash() == before.GetHash());
+        BOOST_CHECK_EQUAL(server.GetState(), int{POOL_STATE_SIGNING});
+    };
+
+    // An admitted connection cannot sign an input belonging to another connection.
+    check_rejected(1, signed_inputs[0]);
+    CMutableTransaction modified_proposal{final};
+    modified_proposal.vout.front().scriptPubKey = P2PKHScript(0xff);
+    const auto first_index{input_index(signed_inputs[0].prevout)};
+    constexpr int legacy_mode{SIGHASH_ALL | SIGHASH_ANYONECANPAY};
+    BOOST_REQUIRE(SignSignature(provider, previous_scripts[0], modified_proposal, first_index, amount, legacy_mode));
+    BOOST_REQUIRE(VerifyScript(modified_proposal.vin[first_index].scriptSig, previous_scripts[0],
+                               STANDARD_SCRIPT_VERIFY_FLAGS,
+                               MutableTransactionSignatureChecker(&modified_proposal, first_index, amount,
+                                                                  MissingDataBehavior::ASSERT_FAIL)));
+    check_rejected(0, modified_proposal.vin[first_index]);
+    // A signature that only passes consensus rules would keep the final transaction out of the mempool.
+    CTxIn padded{signed_inputs[0]};
+    padded.scriptSig.insert(padded.scriptSig.begin(), OP_1);
+    BOOST_REQUIRE(VerifyScript(padded.scriptSig, previous_scripts[0], SCRIPT_VERIFY_P2SH,
+                               MutableTransactionSignatureChecker(&final, first_index, amount,
+                                                                  MissingDataBehavior::ASSERT_FAIL)));
+    check_rejected(0, padded);
+
+    submit(0, signed_inputs[0]);
+    BOOST_CHECK(!rejected(*peers[0]));
+    // Multiple entries on this connection can receive the same final proposal again.
+    submit(0, signed_inputs[0]);
+    BOOST_CHECK(!rejected(*peers[0]));
+    CTxIn invalid_retry{signed_inputs[0]};
+    invalid_retry.scriptSig.clear();
+    check_rejected(0, invalid_retry);
+    for (int i{1}; i < participants; ++i) {
+        submit(i, signed_inputs[i]);
+        BOOST_CHECK(!rejected(*peers[i == participants - 1 ? 0 : i]));
+    }
+    BOOST_CHECK(m_node.mempool->exists(final.GetHash()));
+    BOOST_CHECK_EQUAL(server.GetState(), int{POOL_STATE_IDLE});
 }
 
 BOOST_AUTO_TEST_CASE(server_signfinaltx_nonparticipant_cannot_abort_session)

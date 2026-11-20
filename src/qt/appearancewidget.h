@@ -44,7 +44,7 @@ private Q_SLOTS:
 private:
     Ui::AppearanceWidget* ui;
     QDataWidgetMapper* mapper;
-    OptionsModel* model;
+    OptionsModel* model{nullptr};
     bool fAcceptChanges{false};
     QString prevTheme;
     int prevScale;

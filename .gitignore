@@ -152,7 +152,7 @@ dashd
 dash-qt
 make
 
-/docker/bin
+/contrib/containers/deploy/bin
 
 # CLion
 .idea

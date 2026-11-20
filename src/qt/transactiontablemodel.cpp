@@ -211,7 +211,9 @@ public:
                 TransactionRecord *rec = &cachedWallet[i];
                 rec->status.needsUpdate = true;
             }
-            Q_EMIT parent->dataChanged(parent->index(lowerIndex, TransactionTableModel::Status), parent->index(upperIndex, TransactionTableModel::Status));
+            if (lowerIndex < upperIndex) {
+                Q_EMIT parent->dataChanged(parent->index(lowerIndex, TransactionTableModel::Status), parent->index(upperIndex - 1, TransactionTableModel::Status));
+            }
             break;
         }
     }

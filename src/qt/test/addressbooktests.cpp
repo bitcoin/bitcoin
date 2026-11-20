@@ -9,6 +9,7 @@
 #include <interfaces/chain.h>
 #include <interfaces/node.h>
 #include <qt/addressbookpage.h>
+#include <qt/addresstablemodel.h>
 #include <qt/clientmodel.h>
 #include <qt/editaddressdialog.h>
 #include <qt/optionsmodel.h>
@@ -215,6 +216,17 @@ void TestAddAddressesToSendBook(interfaces::Node& node)
 
     search_line->setText("");
     QCOMPARE(table_view->model()->rowCount(), 3);
+
+    auto* address_model = walletModel.getAddressTableModel();
+    const QString replacement = build_address().second;
+    EditAddressDialog edit_contact{EditAddressDialog::EditSendingAddress};
+    edit_contact.setModel(address_model);
+    edit_contact.loadRow(address_model->lookupAddress(preexisting_s_address));
+    edit_contact.findChild<QValidatedLineEdit*>("addressEdit")->setText(replacement);
+    edit_contact.accept();
+    QCOMPARE(edit_contact.result(), static_cast<int>(QDialog::Accepted));
+    QCOMPARE(address_model->labelForAddress(replacement), s_label);
+    QCOMPARE(address_model->lookupAddress(preexisting_s_address), -1);
 }
 
 } // namespace

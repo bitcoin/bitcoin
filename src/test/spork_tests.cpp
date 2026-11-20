@@ -4,6 +4,7 @@
 
 #include <key.h>
 #include <key_io.h>
+#include <protocol.h>
 #include <script/standard.h>
 #include <spork.h>
 #include <timedata.h>
@@ -14,6 +15,7 @@
 
 #include <cstdint>
 #include <limits>
+#include <utility>
 
 BOOST_FIXTURE_TEST_SUITE(spork_tests, RegTestingSetup)
 
@@ -79,6 +81,46 @@ BOOST_AUTO_TEST_CASE(check_and_remove_drops_sporks_not_signed_by_the_spork_key)
 
     BOOST_CHECK_EQUAL(sporkman.GetSporkValue(SPORK_2_INSTANTSEND_ENABLED), default_value);
     BOOST_CHECK(!sporkman.GetSporkByHash(spork.GetHash()).has_value());
+}
+
+BOOST_AUTO_TEST_CASE(rapid_updates_are_accepted_by_peers)
+{
+    CSporkManager signer;
+    CSporkManager peer;
+    CKey key;
+    key.MakeNewKey(/*fCompressed=*/true);
+    const auto address = EncodeDestination(PKHash{key.GetPubKey()});
+    BOOST_REQUIRE(signer.SetSporkAddress(address));
+    BOOST_REQUIRE(signer.SetPrivKey(EncodeSecret(key)));
+    BOOST_REQUIRE(peer.SetSporkAddress(address));
+
+    constexpr int64_t now{1791370200};
+    const std::pair<int64_t, int64_t> times[] = {
+        {now, now},
+        {now, now + 1},
+        {now - 10, now + 2},
+        {now + 100, now + 100},
+    };
+    SporkValue value{0};
+    for (const auto& [mock_time, signed_time] : times) {
+        SetMockTime(mock_time);
+        ++value;
+        const auto inv = signer.UpdateSpork(SPORK_2_INSTANTSEND_ENABLED, value);
+        BOOST_REQUIRE(inv.has_value());
+        const auto spork = signer.GetSporkByHash(inv->hash);
+        BOOST_REQUIRE(spork.has_value());
+        BOOST_CHECK_EQUAL(spork->nTimeSigned, signed_time);
+        BOOST_REQUIRE(peer.IsValidSpork(*spork));
+        BOOST_CHECK(peer.ProcessSpork(*spork));
+        BOOST_CHECK_EQUAL(peer.GetSporkValue(SPORK_2_INSTANTSEND_ENABLED), value);
+        BOOST_CHECK_EQUAL(signer.GetSporkValue(SPORK_2_INSTANTSEND_ENABLED), value);
+        BOOST_CHECK(!peer.ProcessSpork(*spork));
+    }
+
+    // a successor to the active spork would be too far in the future for peers to accept
+    SetMockTime(now - 3 * 60 * 60);
+    BOOST_CHECK(!signer.UpdateSpork(SPORK_2_INSTANTSEND_ENABLED, value + 1).has_value());
+    BOOST_CHECK_EQUAL(signer.GetSporkValue(SPORK_2_INSTANTSEND_ENABLED), value);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -147,7 +147,7 @@ private:
     Mutex cs_check_pool;
 
     /// Add signature to a txin
-    bool AddScriptSig(const CTxIn& txin) EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
+    bool AddScriptSig(const CTxIn& txin, const CService& sender) EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
     /// Collaterals chosen to be charged whose consumption has not finished yet. They are chosen
     /// under cs_coinjoin, but ConsumeCollateral() takes cs_main and runs after cs_coinjoin is
@@ -210,8 +210,6 @@ private:
 
     /// Check that all inputs are signed. (Are all inputs signed?)
     bool IsSignaturesComplete() const EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
-    /// Check to make sure a given input matches an input in the pool and its scriptSig is valid
-    bool IsInputScriptSigValid(const CTxIn& txin) const EXCLUSIVE_LOCKS_REQUIRED(cs_coinjoin);
 
     // Set the 'state' value, with some logging and capturing when the state changed.
     // Requires cs_coinjoin so that a transition and the session data it describes are always

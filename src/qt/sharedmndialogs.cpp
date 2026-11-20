@@ -317,7 +317,6 @@ bool ComputeSharedSignHash(SharedSigCollector::Kind kind, const QString& pro_tx_
 UpdateShareDialog::UpdateShareDialog(interfaces::Node& node, WalletModel* wallet_model, const MasternodeEntry& entry, QWidget* parent) :
     MasternodeActionDialog(node, wallet_model, entry, parent),
     m_v24_active{node.isV24Active()},
-    m_is_shared{entry.isShared()},
     m_voting_address{entry.votingAddress()},
     m_shares{entry.shares()}
 {

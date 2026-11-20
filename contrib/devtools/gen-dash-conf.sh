@@ -75,6 +75,9 @@ cat >> "${EXAMPLE_CONF_FILE}" << 'EOF'
 # Options for testnet
 [test]
 
+# Options for devnet
+[devnet]
+
 # Options for regtest
 [regtest]
 EOF

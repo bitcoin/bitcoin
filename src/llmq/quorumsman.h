@@ -142,7 +142,7 @@ public:
     std::vector<CQuorumCPtr> ScanQuorums(Consensus::LLMQType llmqType, size_t nCountRequested) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !m_cs_maps, !m_cache_cs);
 
-    // this one is cs_main-free
+    // this one needs no cs_main held; it locks cs_main briefly unless the full result is cached
     std::vector<CQuorumCPtr> ScanQuorums(Consensus::LLMQType llmqType, gsl::not_null<const CBlockIndex*> pindexStart,
                                          size_t nCountRequested) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_db, !m_cs_maps, !m_cache_cs);
@@ -185,7 +185,8 @@ public:
     void QueueQuorumForWarming(CQuorumCPtr pQuorum) const EXCLUSIVE_LOCKS_REQUIRED(!m_cache_cs);
 
 private:
-    // all private methods here are cs_main-free
+    //! Unless the full result is cached it locks cs_main, so that only results computed against the
+    //! active chain are cached.
     std::vector<CQuorumCPtr> ScanQuorums(Consensus::LLMQType llmqType,
                                          gsl::not_null<const CBlockIndex*> pindexStart,
                                          size_t nCountRequested, const CChain* chain) const

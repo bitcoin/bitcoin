@@ -311,30 +311,27 @@ public:
     FastWalletRescanFilter(const CWallet& wallet) : m_wallet(wallet)
     {
         // fast rescanning via block filters is only supported by descriptor wallets right now
-        assert(!m_wallet.IsLegacy());
+        assert(m_wallet.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
 
-        // create initial filter with scripts from all ScriptPubKeyMans
-        for (auto spkm : m_wallet.GetAllScriptPubKeyMans()) {
-            auto desc_spkm{dynamic_cast<DescriptorScriptPubKeyMan*>(spkm)};
-            assert(desc_spkm != nullptr);
-            AddScriptPubKeys(desc_spkm);
-            // save each range descriptor's end for possible future filter updates
-            if (desc_spkm->IsHDEnabled()) {
-                m_last_range_ends.emplace(desc_spkm->GetID(), desc_spkm->GetEndRange());
-            }
-        }
+        UpdateIfNeeded();
     }
 
     void UpdateIfNeeded()
     {
-        // repopulate filter with new scripts if top-up has happened since last iteration
-        for (const auto& [desc_spkm_id, last_range_end] : m_last_range_ends) {
-            auto desc_spkm{dynamic_cast<DescriptorScriptPubKeyMan*>(m_wallet.GetScriptPubKeyMan(desc_spkm_id))};
+        // Descriptors can be added, topped up or rebuilt while a rescan runs,
+        // so every pass re-reads the full list, and each descriptor whole.
+        LOCK(m_wallet.cs_wallet);
+        for (auto spkm : m_wallet.GetAllScriptPubKeyMans()) {
+            auto desc_spkm{dynamic_cast<DescriptorScriptPubKeyMan*>(spkm)};
             assert(desc_spkm != nullptr);
-            int32_t current_range_end{desc_spkm->GetEndRange()};
-            if (current_range_end > last_range_end) {
-                AddScriptPubKeys(desc_spkm, last_range_end);
-                m_last_range_ends.at(desc_spkm->GetID()) = current_range_end;
+            LOCK(desc_spkm->cs_desc_man);
+            const int32_t current_range_end{desc_spkm->GetEndRange()};
+            const auto [it, inserted]{m_last_range_ends.try_emplace(desc_spkm->GetID(), current_range_end)};
+            if (inserted) {
+                AddScriptPubKeys(desc_spkm);
+            } else if (current_range_end > it->second) {
+                AddScriptPubKeys(desc_spkm, it->second);
+                it->second = current_range_end;
             }
         }
     }
@@ -346,11 +343,12 @@ public:
 
 private:
     const CWallet& m_wallet;
-    /** Map for keeping track of each range descriptor's last seen end range.
-      * This information is used to detect whether new addresses were derived
-      * (that is, if the current end range is larger than the saved end range)
-      * after processing a block and hence a filter set update is needed to
-      * take possible keypool top-ups into account.
+    /** Map for keeping track of each descriptor's last seen end range.
+      * This information is used to detect descriptors added since the last
+      * update, and whether new addresses were derived (that is, if the current
+      * end range is larger than the saved end range) after processing a block
+      * and hence a filter set update is needed to take possible keypool
+      * top-ups into account.
       */
     std::map<uint256, int32_t> m_last_range_ends;
     GCSFilter::ElementSet m_filter_set;
@@ -2041,7 +2039,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
     ScanResult result;
 
     std::unique_ptr<FastWalletRescanFilter> fast_rescan_filter;
-    if (!IsLegacy() && chain().hasBlockFilterIndex(BlockFilterType::BASIC_FILTER)) fast_rescan_filter = std::make_unique<FastWalletRescanFilter>(*this);
+    if (IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS) && chain().hasBlockFilterIndex(BlockFilterType::BASIC_FILTER)) fast_rescan_filter = std::make_unique<FastWalletRescanFilter>(*this);
 
     WalletLogPrintf("Rescan started from block %s... (%s)\n", start_block.ToString(),
                     fast_rescan_filter ? "fast variant using block filters" : "slow variant inspecting all blocks");

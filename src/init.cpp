@@ -2475,23 +2475,21 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         // TODO: move cache updates from NetInstantSend to g_ds_notification due to specific of Tip's processing
         node.isman->CacheTipHeight(WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()));
 
-        {
-            // Get all UTXOs for each MN collateral in one go so that we can fill coin cache early
-            // and reduce further locking overhead for cs_main in other parts of code including GUI
-            LogPrintf("Filling coin cache with masternode UTXOs...\n");
-            LOCK(cs_main);
-            const auto start{SteadyClock::now()};
-            const auto mnList{node.dmnman->GetListAtChainTip()};
-            mnList.ForEachMN(/*onlyValid=*/false, [&](const auto& dmn) {
-                Coin coin;
-                GetUTXOCoin(chainman.ActiveChainstate(), dmn.collateralOutpoint, coin);
-            });
-            LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
-        }
+        // The repair marker shares the EvoDB root transaction with the blocks connected during the
+        // import, so persist it with a full flush that writes the coins DB first.
+        const auto complete_repair = [&] {
+            LOCK(::cs_main);
+            node.dmnman->CompleteRepair();
+            for (Chainstate* chainstate : chainman.GetAll()) {
+                if (chainstate->CanFlushToDisk()) {
+                    chainstate->ForceFlushStateToDisk();
+                }
+            }
+        };
 
         if (skip_evodb_repair_on_reindex) {
             LogPrintf("Skipping evodb repair during reindex\n");
-            WITH_LOCK(::cs_main, node.dmnman->CompleteRepair());  // Mark as repaired since we're rebuilding fresh
+            complete_repair(); // Mark as repaired since we're rebuilding fresh
         } else if (node.dmnman->IsRepaired() && !args.GetBoolArg("-forceevodbrepair", false)) {
             LogPrintf("Masternode list diffs are already repaired\n");
         } else {
@@ -2531,11 +2529,25 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     StartShutdown();
                     return;
                 }
-                WITH_LOCK(::cs_main, node.dmnman->CompleteRepair());
+                complete_repair();
                 LogPrintf("Successfully repaired %d masternode list diffs, verified %d snapshots in %ds\n",
                           result.diffs_recalculated, result.snapshots_verified,
                           Ticks<std::chrono::seconds>(SteadyClock::now() - start));
             }
+        }
+
+        {
+            // Get all UTXOs for each MN collateral in one go so that we can fill coin cache early
+            // and reduce further locking overhead for cs_main in other parts of code including GUI
+            LogPrintf("Filling coin cache with masternode UTXOs...\n");
+            LOCK(cs_main);
+            const auto start{SteadyClock::now()};
+            const auto mnList{node.dmnman->GetListAtChainTip()};
+            mnList.ForEachMN(/*onlyValid=*/false, [&](const auto& dmn) {
+                Coin coin;
+                GetUTXOCoin(chainman.ActiveChainstate(), dmn.collateralOutpoint, coin);
+            });
+            LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
         }
 
         if (node.active_ctx) {

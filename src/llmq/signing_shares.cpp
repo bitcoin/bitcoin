@@ -222,6 +222,25 @@ void CSigSharesNodeState::RemoveSession(const uint256& signHash)
     pendingIncomingSigShares.EraseAllForSignHash(signHash);
 }
 
+static void ReleaseRequestForDroppedSigShare(SigShareMap<std::pair<NodeId, int64_t>>& sigSharesRequested, NodeId nodeId,
+                                             CSigSharesNodeState& nodeState, const SigShareKey& key)
+{
+    // A banned node's requests were released when it was banned or have timed out, and it is never asked again.
+    if (nodeState.banned) {
+        return;
+    }
+    const auto* requested = sigSharesRequested.Get(key);
+    if (requested == nullptr || requested->first != nodeId || nodeState.pendingIncomingSigShares.Has(key)) {
+        return;
+    }
+    // We asked this node for the share but had no room for it. Make it requestable again, from this node too,
+    // instead of waiting for the request to time out and for another node to have announced it.
+    sigSharesRequested.Erase(key);
+    if (auto* session = nodeState.GetSessionBySignHash(key.first)) {
+        session->announced.Set(key.second, true);
+    }
+}
+
 //////////////////////
 
 CSigSharesManager::CSigSharesManager(CConnman& connman, const ChainstateManager& chainman, CSigningManager& _sigman,
@@ -437,7 +456,9 @@ bool CSigSharesManager::ProcessMessageBatchedSigShares(const CNode& pfrom, const
     LOCK(cs);
     auto& nodeState = nodeStates[pfrom.GetId()];
     for (const auto& s : sigSharesToProcess) {
-        TryAddPendingIncomingSigShare(pfrom.GetId(), nodeState, s);
+        if (!TryAddPendingIncomingSigShare(pfrom.GetId(), nodeState, s)) {
+            ReleaseRequestForDroppedSigShare(sigSharesRequested, pfrom.GetId(), nodeState, s.GetKey());
+        }
     }
     return true;
 }
@@ -867,6 +888,15 @@ bool CSigSharesManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const ui
     }
 
     if (allowReSign) {
+        // Signing again is activity on this session, but a re-created share only duplicates ours and does not
+        // refresh it. Restart the timeout so Cleanup does not drop the shares we hold before they are re-announced.
+        const uint256 signHash{SignHash(llmqType, quorum->qc->quorumHash, id, msgHash).Get()};
+        {
+            LOCK(cs);
+            if (auto it = timeSeenForSessions.find(signHash); it != timeSeenForSessions.end()) {
+                it->second = GetTime<std::chrono::seconds>().count();
+            }
+        }
         // make us re-announce all known shares (other nodes might have run into a timeout)
         ForceReAnnouncement(*quorum, llmqType, id, msgHash);
     }

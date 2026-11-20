@@ -11,6 +11,7 @@
 #include <QFont>
 #include <QWidget>
 
+#include <cstdint>
 #include <limits>
 #include <memory>
 
@@ -55,6 +56,10 @@ private:
     ClientModel* clientModel{nullptr};
     WalletModel* walletModel{nullptr};
     bool m_privacy{false};
+    bool m_cj_initial{true};
+    bool m_cj_last_visible{false};
+    bool m_cj_last_show_advanced{false};
+    int64_t m_last_ds_progress_block_time{0};
     BitcoinUnit m_display_bitcoin_unit;
     bool fShowAdvancedCJUI;
     int cachedNumISLocks{-1};

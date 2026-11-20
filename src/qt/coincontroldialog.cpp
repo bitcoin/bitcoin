@@ -468,11 +468,11 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
 
     size_t i = 0;
     for (const auto& out : model->wallet().getCoins(vCoinControl)) {
+        const COutPoint& outpt = vCoinControl[i++];
         if (out.depth_in_main_chain < 0) continue;
 
         // unselect already spent, very unlikely scenario, this could happen
         // when selected are spent elsewhere, like rpc or another computer
-        const COutPoint& outpt = vCoinControl[i++];
         if (out.is_spent)
         {
             m_coin_control.UnSelect(outpt);

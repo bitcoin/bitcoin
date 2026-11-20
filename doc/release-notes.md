@@ -1,17 +1,18 @@
-# Dash Core version v24.0.2
+# Dash Core version v24.0.3
 
-This is a new patch version release. It fixes a memory leak introduced in
-v24.0.0 that makes a node's memory use grow until the node is restarted, a
-crash of the macOS GUI during shutdown, and several other bugs.
+This is a new patch version release with bug fixes, most of them for edge
+cases, across governance, CoinJoin, masternodes, the wallet, the GUI and RPC.
 
-Like v24.0.0 and v24.0.1, this release carries the `v24` network upgrade (hard
-fork), which is **mandatory** for all nodes: every node must run v24.0.0 or
-later before the hard fork activates. Masternodes should upgrade to v24.0.2 as
-soon as possible, and upgrading is strongly recommended for all other nodes.
-The upgrade itself and everything else introduced in v24 are described in the
+Like v24.0.0, v24.0.1 and v24.0.2, this release carries the `v24` network
+upgrade (hard fork), which is **mandatory** for all nodes: every node must run
+v24.0.0 or later before the hard fork activates. Upgrading to v24.0.3 is
+recommended for all nodes. The upgrade itself and everything else introduced
+in v24 are described in the
 [v24.0.0 release notes](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-24.0.0.md),
-and the fixes for `v24` activation in the
-[v24.0.1 release notes](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-24.0.1.md).
+the fixes for `v24` activation in the
+[v24.0.1 release notes](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-24.0.1.md),
+and the memory leak fix in the
+[v24.0.2 release notes](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-24.0.2.md).
 
 Please report bugs using the issue tracker at GitHub:
 
@@ -26,17 +27,18 @@ shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over /Applications/Dash-Qt (on Mac) or
 dashd/dash-qt (on Linux).
 
-Upgrading from v24.0.0 or v24.0.1 needs no further steps. If you are upgrading
-from v23.1.x or older, read "How to Upgrade" in the
+Upgrading from v24.0.0, v24.0.1 or v24.0.2 needs no further steps. If you are
+upgrading from v23.1.x or older, read "How to Upgrade" in the
 [v24.0.0 release notes](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-24.0.0.md)
 first: the first start migrates the address, spent and timestamp indexes, and
 some settings changed.
 
 ## Downgrade warning
 
-### Downgrade to v24.0.0 or v24.0.1
+### Downgrade to v24.0.0, v24.0.1 or v24.0.2
 
-Downgrading to v24.0.0 or v24.0.1 is possible and needs no special steps.
+Downgrading to v24.0.0, v24.0.1 or v24.0.2 is possible and needs no special
+steps.
 
 ### Downgrade to a version < v24.0.0
 
@@ -46,64 +48,78 @@ activation has caveats. See "Downgrade warning" in the
 
 # Release Notes
 
-## Memory leak
+## Governance
 
-- Fixed a memory leak introduced in v24.0.0. A node's memory use grew
-  steadily with normal network activity and the memory was not returned until
-  the node was restarted. Masternodes were affected the most, but every node
-  was affected. (#8115)
+- Create Proposal dialog (Qt): the payment window is now based on the chosen
+  superblocks instead of the time the proposal was created. Previously, a
+  payment could come at a different superblock than the one chosen, or be
+  missed. The dialog also no longer offers superblocks whose voting deadline
+  has passed. (#8154)
+- Hardened the cache of governance votes that arrive before their object.
+  (#8122)
 
-## GUI
+## Reindex and indexes
 
-- macOS: fixed a crash when a wallet item of the File menu was used while the
-  application was shutting down. The menu bar stays available on macOS after
-  the main window closes; the menus are now removed when shutdown starts.
-  (#8073)
-
-## Network
-
-- A node now answers a governance sync request only to the peer that sent it.
-  Previously it announced every governance object, or every vote of the
-  requested object, to all of its peers each time one peer asked. (#8112)
-- A governance vote that arrived before its governance object can be served to
-  peers once the object arrives. Previously the node announced such a vote but
-  could not send it when a peer requested it. (#8112)
-
-## Shutdown and masternodes
-
-- The ChainLocks thread is now stopped before the rest of the node shuts
-  down. Previously it could still be running during shutdown, which could
-  crash or stall the shutdown. (#8117)
-- Masternodes: a batch of signature shares is no longer processed partially
-  when the quorum of one of its shares can't be found. (#8117)
+- The node now flushes all of its databases once a reindex completes, so an
+  unclean stop right after a reindex no longer needs another reindex. A node
+  that already fails to start for this reason needs one more reindex. (#8103)
+- Fixed index startup after an unclean stop with `-addressindex`,
+  `-spentindex` or `-timestampindex`. (#8047)
 
 ## Wallet
 
-- CoinJoin: with more than one wallet loaded, automatic mixing used one
-  schedule shared by all wallets, so a wallet could miss many of its turns.
-  Each wallet now has its own schedule. (#8113)
-- CoinJoin: fixed undefined behaviour in a mixing session when the number of
-  rounds was lowered while inputs were being selected. (#8113)
+- Mnemonic validation now checks every BIP39 checksum bit, so mnemonics with
+  an invalid checksum are refused instead of creating or restoring a different
+  wallet. Existing wallet files are not affected, but such a mnemonic can no
+  longer be used to restore one. (#8111)
+- Fixed a race in block-filter rescans (`-blockfilterindex`) that could miss
+  transactions when descriptors changed during the rescan. (#8139)
 
-## Statistics
+## CoinJoin
 
-These apply to nodes started with `-statshost`.
+- Masternodes check participants' signatures against the final mixing
+  transaction. (#7815)
+- A participant with several unsigned inputs is now counted once when choosing
+  whose collateral to charge. (#8116)
+- Mixing clients reject queue announcements with an invalid denomination, as
+  masternodes already do. (#7955)
 
-- The `transactions.inputValue` metric reported the output value minus the
-  fee. It now reports the value of the inputs spent. (#8119)
-- Fixed a possible crash when statistics were collected before the node had a
-  chain tip, for example at startup or during a reindex, and a data race on
-  the counters of sent messages. (#8119)
+## Masternodes, quorums and sporks
 
-Nodes that don't use `-statshost` no longer compute these statistics for every
-transaction and block. (#8119)
+- Nodes now keep the final quorum commitment with the most signers. (#8085)
+- A signature share dropped because the pending queue was full is requested
+  again. (#7994)
+- Spork updates signed within the same second are now accepted by other
+  nodes. (#8127)
+- Re-signing an InstantSend or ChainLock request restarts the signing
+  session's timeout. (#8203)
+- Quorum lists used for ChainLocks and InstantSend are now cached only for the
+  active chain, so a node no longer needs a restart to accept ChainLocks after
+  some reorgs. (#8102)
 
-## Command-line tools
+## GUI
 
-- `dash-cli` and `dash-tx` accept `-printcrashinfo`, which their own crash
-  message asks the user to run. Previously they rejected the option. (#8120)
+- Address book, Coin Control, options dialog, PSBT dialog, CoinJoin send tab,
+  shared masternode dialogs, wallet migration, proposal list, traffic graph and
+  overview page fixes. (#8123, #8124)
 
-# v24.0.2 Change log
+## RPC
+
+- Quorum RPCs reject quorum types outside 0..255 instead of truncating them.
+  (#7954)
+- `masternode payments`, `masternode winners`, `getspecialtxes`,
+  `verifyislock`, `getaddressdeltas`, `evodb verify`/`repair` and
+  `getblockheaders`: argument handling, range checks and locking fixes.
+  (#8118, #8125)
+- `getdeploymentinfo` and REST `/deploymentinfo` now return an error for
+  blocks that are not fully validated. (#8098)
+
+## Contrib
+
+- Fixed the OpenRC init script, `contrib/zmq/zmq_sub.py` on Python 3.14 and
+  IPv6 handling in `contrib/qos/tc.sh`. (#8109)
+
+# v24.0.3 Change log
 
 See detailed [set of changes][set-of-changes].
 
@@ -111,7 +127,6 @@ See detailed [set of changes][set-of-changes].
 
 Thanks to everyone who directly contributed to this release:
 
-- Konstantin Akimov
 - PastaPastaPasta
 
 As well as everyone that submitted issues and reviewed pull requests.
@@ -120,6 +135,7 @@ As well as everyone that submitted issues and reviewed pull requests.
 
 These releases are considered obsolete. Old release notes can be found here:
 
+- [v24.0.2](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-24.0.2.md) released Nov/14/2026
 - [v24.0.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-24.0.1.md) released Nov/13/2026
 - [v24.0.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-24.0.0.md) released Nov/5/2026
 - [v23.1.10](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.1.10.md) released Nov/2/2026
@@ -190,4 +206,4 @@ These releases are considered obsolete. Old release notes can be found here:
 - [v0.10.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.10.0.md) released Sep/25/2014
 - [v0.9.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.9.0.md) released Mar/13/2014
 
-[set-of-changes]: https://github.com/dashpay/dash/compare/v24.0.1...dashpay:v24.0.2
+[set-of-changes]: https://github.com/dashpay/dash/compare/v24.0.2...dashpay:v24.0.3

@@ -187,7 +187,7 @@ MessageProcessingResult CQuorumBlockProcessor::ProcessMessage(const CNode& peer,
         auto it = minableCommitmentsByQuorum.find(k);
         if (it != minableCommitmentsByQuorum.end()) {
             auto jt = minableCommitments.find(it->second);
-            if (jt != minableCommitments.end() && jt->second.CountSigners() <= qc.CountSigners()) {
+            if (jt != minableCommitments.end() && jt->second.CountSigners() >= qc.CountSigners()) {
                 return ret;
             }
         }
@@ -866,8 +866,8 @@ std::optional<CInv> CQuorumBlockProcessor::AddMineableCommitment(const CFinalCom
             const auto& oldFqc = minableCommitments.at(insertedQuorumHash);
             if (fqc.CountSigners() > oldFqc.CountSigners()) {
                 // new commitment has more signers, so override the known one
-                insertedQuorumHash = commitmentHash;
                 minableCommitments.erase(insertedQuorumHash);
+                insertedQuorumHash = commitmentHash;
                 minableCommitments.try_emplace(commitmentHash, fqc);
                 return true;
             }

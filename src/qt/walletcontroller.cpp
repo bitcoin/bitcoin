@@ -573,15 +573,27 @@ void MigrateWalletActivity::migrate(WalletModel* wallet_model)
                 "an incorrect migration, the backup can be restored with the \"Restore Wallet\" functionality."));
     box.setStandardButtons(QMessageBox::Yes|QMessageBox::Cancel);
     box.setDefaultButton(QMessageBox::Yes);
-    if (box.exec() != QMessageBox::Yes) return;
+    if (box.exec() != QMessageBox::Yes) {
+        Q_EMIT finished();
+        return;
+    }
 
     // Get the passphrase if it is encrypted regardless of it is locked or unlocked. We need the passphrase itself.
     SecureString passphrase;
     WalletModel::EncryptionStatus enc_status = wallet_model->getEncryptionStatus();
-    if (enc_status == WalletModel::EncryptionStatus::Locked || enc_status == WalletModel::EncryptionStatus::Unlocked) {
+    if (enc_status == WalletModel::EncryptionStatus::Locked ||
+        enc_status == WalletModel::EncryptionStatus::Unlocked ||
+        enc_status == WalletModel::EncryptionStatus::UnlockedForMixingOnly) {
         AskPassphraseDialog dlg(AskPassphraseDialog::Unlock, m_parent_widget, &passphrase);
         dlg.setModel(wallet_model);
-        dlg.exec();
+        if (dlg.exec() != QDialog::Accepted) {
+            // A failed unlock attempt can leave the wallet unlocked.
+            if (enc_status != WalletModel::EncryptionStatus::Unlocked) {
+                wallet_model->setWalletLocked(true, {}, enc_status == WalletModel::EncryptionStatus::UnlockedForMixingOnly);
+            }
+            Q_EMIT finished();
+            return;
+        }
     }
 
     // GUI needs to remove the wallet so that it can actually be unloaded by migration

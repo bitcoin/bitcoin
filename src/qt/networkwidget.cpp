@@ -108,6 +108,7 @@ void NetworkWidget::handleCrDataChanged()
         return;
     }
 
+    m_creditpool_loaded = true;
     m_creditpool_diff = data->m_counts.m_diff;
     m_creditpool_limit = data->m_counts.m_limit;
     m_creditpool_locked = data->m_counts.m_locked;
@@ -254,6 +255,9 @@ void NetworkWidget::handleQrDataChanged()
 void NetworkWidget::updateDisplayUnit(BitcoinUnit unit)
 {
     m_display_unit = unit;
+    if (!m_creditpool_loaded) {
+        return;
+    }
     ui->labelCrLastBlock->setText(GUIUtil::formatAmount(m_display_unit, m_creditpool_diff, /*is_signed=*/true, /*truncate=*/2));
     ui->labelCrLocked->setText(GUIUtil::formatAmount(m_display_unit, m_creditpool_locked, /*is_signed=*/false, /*truncate=*/2));
     ui->labelCrLimit->setText(GUIUtil::formatAmount(m_display_unit, m_creditpool_limit, /*is_signed=*/false, /*truncate=*/2));

@@ -161,9 +161,13 @@ void PSBTOperationsDialog::saveTransaction() {
     if (filename.isEmpty()) {
         return;
     }
-    std::ofstream out{filename.toLocal8Bit().data(), std::ofstream::out | std::ofstream::binary};
+    std::ofstream out(GUIUtil::QStringToPath(filename), std::ofstream::out | std::ofstream::binary);
     out << ssTx.str();
     out.close();
+    if (!out) {
+        showStatus(tr("Failed to save PSBT to disk."), StatusLevel::ERR);
+        return;
+    }
     showStatus(tr("PSBT saved to disk."), StatusLevel::INFO);
 }
 
@@ -191,7 +195,7 @@ QString PSBTOperationsDialog::renderTransaction(const PartiallySignedTransaction
 
     PSBTAnalysis analysis = AnalyzePSBT(psbtx);
     tx_description.append(bullet_point);
-    if (!*analysis.fee) {
+    if (!analysis.fee.has_value()) {
         // This happens if the transaction is missing input UTXO information.
         tx_description.append(tr("Unable to calculate transaction fee or total transaction amount."));
     } else {

@@ -164,16 +164,20 @@ void TrafficGraphDataTests::switchRangeTests()
 void TrafficGraphDataTests::clearTests()
 {
     TrafficGraphData trafficGraphData(TrafficGraphData::Range_5m);
-    for (int i = 1; i <= TrafficGraphData::DESIRED_DATA_SAMPLES; i++){
-        trafficGraphData.update(TrafficSample(1, 1));
+    for (int i = 0; i < TrafficGraphData::DESIRED_DATA_SAMPLES + 1; ++i) {
+        trafficGraphData.update(TrafficSample(100, 200));
     }
-    QCOMPARE(trafficGraphData.getCurrentRangeQueue().size(),TrafficGraphData::DESIRED_DATA_SAMPLES);
+    QCOMPARE(trafficGraphData.getCurrentRangeQueue().size(), TrafficGraphData::DESIRED_DATA_SAMPLES);
     trafficGraphData.clear();
     QCOMPARE(trafficGraphData.getCurrentRangeQueue().size(), 0);
-    for (int i = 1; i <= TrafficGraphData::DESIRED_DATA_SAMPLES; i++){
+    for (int i = 0; i < TrafficGraphData::DESIRED_DATA_SAMPLES; ++i) {
         trafficGraphData.update(TrafficSample(1, 1));
     }
     QCOMPARE(trafficGraphData.getCurrentRangeQueue().size(), TrafficGraphData::DESIRED_DATA_SAMPLES);
+    trafficGraphData.switchRange(TrafficGraphData::Range_15m);
+    const auto queue = trafficGraphData.getCurrentRangeQueue();
+    QCOMPARE(queue.size(), TrafficGraphData::DESIRED_DATA_SAMPLES / 3);
+    checkQueue(queue, 3);
 }
 
 void TrafficGraphDataTests::averageBandwidthTest()

@@ -282,12 +282,11 @@ void OverviewPage::updateWatchOnlyLabels(bool showWatchOnly)
     if (!showWatchOnly){
         ui->labelWatchImmature->hide();
     }
-    else{
-        ui->labelBalance->setIndent(20);
-        ui->labelUnconfirmed->setIndent(20);
-        ui->labelImmature->setIndent(20);
-        ui->labelTotal->setIndent(20);
-    }
+    const int indent = showWatchOnly ? 20 : -1;
+    ui->labelBalance->setIndent(indent);
+    ui->labelUnconfirmed->setIndent(indent);
+    ui->labelImmature->setIndent(indent);
+    ui->labelTotal->setIndent(indent);
 }
 
 void OverviewPage::setClientModel(ClientModel *model)
@@ -369,7 +368,7 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 {
     ui->labelWalletStatus->setVisible(fShow);
     ui->labelCoinJoinSyncStatus->setVisible(fShow);
-    ui->labelTransactionsStatus->setVisible(fShow);
+    ui->labelTransactionsStatus->setVisible(fShow && !m_privacy);
 }
 
 void OverviewPage::setMonospacedFont(const QFont& f)
@@ -562,13 +561,10 @@ void OverviewPage::coinJoinStatus(bool fForce)
     };
 
     auto setWidgetsVisible = [&](bool fVisible) {
-        static bool fInitial{true};
-        static bool fLastVisible{false};
-        static bool fLastShowAdvanced{false};
         // Only update the widget's visibility if something changed since the last call of setWidgetsVisible
-        if (fLastShowAdvanced == fShowAdvancedCJUI && fLastVisible == fVisible) {
-            if (fInitial) {
-                fInitial = false;
+        if (m_cj_last_show_advanced == fShowAdvancedCJUI && m_cj_last_visible == fVisible) {
+            if (m_cj_initial) {
+                m_cj_initial = false;
             } else {
                 return;
             }
@@ -577,16 +573,15 @@ void OverviewPage::coinJoinStatus(bool fForce)
         for (const auto& it : coinJoinWidgets) {
             it.first->setVisible(fVisible && (!it.second || it.second == fShowAdvancedCJUI));
         }
-        fLastVisible = fVisible;
-        fLastShowAdvanced = fShowAdvancedCJUI;
+        m_cj_last_visible = fVisible;
+        m_cj_last_show_advanced = fShowAdvancedCJUI;
     };
 
-    static int64_t nLastDSProgressBlockTime = 0;
     int nBestHeight = clientModel->node().getNumBlocks();
 
     // We are processing more than 1 block per second, we'll just leave
-    if (nBestHeight > nCachedNumBlocks && GetTime() - nLastDSProgressBlockTime <= 1) return;
-    nLastDSProgressBlockTime = GetTime();
+    if (nBestHeight > nCachedNumBlocks && GetTime() - m_last_ds_progress_block_time <= 1) return;
+    m_last_ds_progress_block_time = GetTime();
 
     QString strKeysLeftText(tr("keys left: %1").arg(walletModel->getKeysLeftSinceAutoBackup()));
     if(walletModel->getKeysLeftSinceAutoBackup() < COINJOIN_KEYS_THRESHOLD_WARNING) {

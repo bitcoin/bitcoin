@@ -325,7 +325,13 @@ class BlockchainTest(BitcoinTestFramework):
         blockhash = self.nodes[0].getblockhash(HEIGHT)
         self.nodes[0].invalidateblock(blockhash)
         assert_raises_rpc_error(-8, "Block is not in main chain", self.nodes[0].getchaintxstats, blockhash=blockhash)
+        for command in ("verify", "repair"):
+            assert_raises_rpc_error(-8, "Start block not found in active chain", self.nodes[0].evodb, command, blockhash, blockhash)
+            assert_raises_rpc_error(-8, "Stop block not found in active chain", self.nodes[0].evodb, command, HEIGHT - 1, blockhash)
         self.nodes[0].reconsiderblock(blockhash)
+        verification = self.nodes[0].evodb("verify", blockhash, blockhash)
+        assert_equal(verification["startHeight"], HEIGHT)
+        assert_equal(verification["stopHeight"], HEIGHT)
 
         chaintxstats = self.nodes[0].getchaintxstats(nblocks=1)
         # 200 txs plus genesis tx
@@ -455,6 +461,10 @@ class BlockchainTest(BitcoinTestFramework):
         # Test with verbose=False, which should return the header as hex.
         header_hex = rpc_call(blockhash=besthash, verbose=False)
         if rpc_name == 'getblockheaders':
+            headers = node.getblockheaders(secondbesthash, 2)
+            assert_equal([h['hash'] for h in headers], [secondbesthash, besthash])
+            assert_equal(node.getblockheaders(secondbesthash, 1), headers[:1])
+            assert_equal(node.getblockheaders(secondbesthash, 2, False), [node.getblockheader(h['hash'], False) for h in headers])
             header_hex = header_hex[0]
 
         assert_is_hex_string(header_hex)

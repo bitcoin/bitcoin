@@ -137,9 +137,21 @@ std::vector<CSporkMessage> CSporkManager::ActiveSporks() const
 
 std::optional<CInv> CSporkManager::UpdateSpork(SporkId nSporkID, SporkValue nValue)
 {
-    CSporkMessage spork(nSporkID, nValue, GetAdjustedTime());
-
     LOCK(cs);
+
+    const auto now = GetAdjustedTime();
+    auto spork_time = now;
+    if (const auto it = mapSporksActive.find(nSporkID); it != mapSporksActive.end()) {
+        const auto min_next_time = it->second.TimeSigned() + 1s;
+        if (spork_time < min_next_time) {
+            spork_time = min_next_time;
+        }
+    }
+    if (spork_time > now + 2h) {
+        LogPrintf("CSporkManager::%s -- ERROR: spork %d needs a timestamp too far into the future for peers\n", __func__, nSporkID);
+        return std::nullopt;
+    }
+    CSporkMessage spork(nSporkID, nValue, spork_time);
 
     if (!spork.Sign(sporkPrivKey)) {
         LogPrintf("CSporkManager::%s -- ERROR: signing failed for spork %d\n", __func__, nSporkID);

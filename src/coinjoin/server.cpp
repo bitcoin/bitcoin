@@ -10,10 +10,12 @@
 #include <masternode/meta.h>
 #include <masternode/sync.h>
 
+#include <coins.h>
 #include <core_io.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
+#include <policy/policy.h>
 #include <scheduler.h>
 #include <script/interpreter.h>
 #include <serialize.h>
@@ -26,6 +28,8 @@
 
 #include <univalue.h>
 
+#include <algorithm>
+#include <iterator>
 #include <ranges>
 
 CCoinJoinServer::CCoinJoinServer(PeerManagerInternal* peer_manager, ChainstateManager& chainman, CConnman& _connman,
@@ -134,52 +138,20 @@ void CCoinJoinServer::ProcessDSQUEUE(NodeId from, CDataStream& vRecv)
 
     WITH_LOCK(cs_main, m_peer_manager->PeerEraseObjectRequest(from, CInv{MSG_DSQ, dsq.GetHash()}));
 
-    // Validate denomination first
-    if (!CoinJoin::IsValidDenomination(dsq.nDenom)) {
-        LogPrint(BCLog::COINJOIN, "DSQUEUE -- invalid denomination %d from peer %d\n", dsq.nDenom, from);
-        m_peer_manager->PeerMisbehaving(from, 10);
-        return;
-    }
-
-    if (dsq.masternodeOutpoint.IsNull() && dsq.m_protxHash.IsNull()) {
-        m_peer_manager->PeerMisbehaving(from, 100);
-        return;
-    }
-
     const auto tip_mn_list = m_dmnman.GetListAtChainTip();
-    if (dsq.masternodeOutpoint.IsNull()) {
-        if (auto dmn = tip_mn_list.GetValidMN(dsq.m_protxHash)) {
-            dsq.masternodeOutpoint = dmn->collateralOutpoint;
-        } else {
-            m_peer_manager->PeerMisbehaving(from, 10);
-            return;
-        }
-    }
-
-    {
-        const auto isDup = m_queueman.TryCheckDuplicate(dsq);
-        if (!isDup.has_value()) return;
+    const auto [dmn, misbehavior] = CoinJoin::ValidateDSQueue(dsq, tip_mn_list, [this, from](const CCoinJoinQueue& q) {
+        const auto isDup = m_queueman.TryCheckDuplicate(q);
+        if (!isDup.has_value()) return true;
         if (*isDup) {
-            LogPrint(BCLog::COINJOIN, "DSQUEUE -- Peer %d is sending WAY too many dsq messages for a masternode with collateral %s\n", from, dsq.masternodeOutpoint.ToStringShort());
-            return;
+            LogPrint(BCLog::COINJOIN, "DSQUEUE -- Peer %d is sending WAY too many dsq messages for a masternode with collateral %s\n", from, q.masternodeOutpoint.ToStringShort());
         }
-    }
-
-    LogPrint(BCLog::COINJOIN, "DSQUEUE -- %s new\n", dsq.ToString());
-
-    if (dsq.IsTimeOutOfBounds()) return;
-
-    auto dmn = tip_mn_list.GetValidMNByCollateral(dsq.masternodeOutpoint);
-    if (!dmn) return;
-
-    if (dsq.m_protxHash.IsNull()) {
-        dsq.m_protxHash = dmn->proTxHash;
-    }
-
-    if (!dsq.CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
-        m_peer_manager->PeerMisbehaving(from, 10);
+        return *isDup;
+    });
+    if (misbehavior > 0) {
+        m_peer_manager->PeerMisbehaving(from, misbehavior);
         return;
     }
+    if (!dmn) return;
 
     if (!dsq.fReady) {
         //don't allow a few nodes to dominate the queuing process
@@ -281,7 +253,7 @@ void CCoinJoinServer::ProcessDSSIGNFINALTX(CNode& peer, CDataStream& vRecv)
         int nTxInsCount = static_cast<int>(vecTxIn.size());
         for (const auto& txin : vecTxIn) {
             nTxInIndex++;
-            if (!AddScriptSig(txin)) {
+            if (!AddScriptSig(txin, peer.addr)) {
                 LogPrint(BCLog::COINJOIN, "DSSIGNFINALTX -- AddScriptSig() failed at %d/%d, session: %d\n", nTxInIndex,
                          nTxInsCount, session_id);
                 RelayStatus(STATUS_REJECTED);
@@ -567,6 +539,7 @@ CTransactionRef CCoinJoinServer::SelectCollateralToCharge()
                              "CCoinJoinServer::SelectCollateralToCharge -- found uncooperative node (didn't sign), "
                              "found offence\n");
                     vecOffendersCollaterals.push_back(entry.txCollateral);
+                    break;
                 }
             }
         }
@@ -778,51 +751,6 @@ void CCoinJoinServer::CheckForCompleteQueue()
     m_queueman.AddQueue(std::move(dsq));
 }
 
-// Check to make sure a given input matches an input in the pool and its scriptSig is valid
-bool CCoinJoinServer::IsInputScriptSigValid(const CTxIn& txin) const
-{
-    AssertLockHeld(cs_coinjoin);
-    CMutableTransaction txNew;
-    txNew.vin.clear();
-    txNew.vout.clear();
-
-    int nTxInIndex = -1;
-    CScript sigPubKey = CScript();
-
-    {
-        int i = 0;
-        for (const auto &entry: vecEntries) {
-            for (const auto &txout: entry.vecTxOut) {
-                txNew.vout.push_back(txout);
-            }
-            for (const auto &txdsin: entry.vecTxDSIn) {
-                txNew.vin.push_back(txdsin);
-
-                if (txdsin.prevout == txin.prevout) {
-                    nTxInIndex = i;
-                    sigPubKey = txdsin.prevPubKey;
-                }
-                i++;
-            }
-        }
-    }
-    if (nTxInIndex >= 0) { //might have to do this one input at a time?
-        txNew.vin[nTxInIndex].scriptSig = txin.scriptSig;
-        LogPrint(BCLog::COINJOIN, "CCoinJoinServer::IsInputScriptSigValid -- verifying scriptSig %s\n", ScriptToAsmStr(txin.scriptSig).substr(0, 24));
-        // TODO we're using amount=0 here but we should use the correct amount. This works because Dash ignores the amount while signing/verifying (only used in Bitcoin/Segwit)
-        if (!VerifyScript(txNew.vin[nTxInIndex].scriptSig, sigPubKey, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC, MutableTransactionSignatureChecker(&txNew, nTxInIndex, 0, MissingDataBehavior::ASSERT_FAIL))) {
-            LogPrint(BCLog::COINJOIN, "CCoinJoinServer::IsInputScriptSigValid -- VerifyScript() failed on input %d\n", nTxInIndex);
-            return false;
-        }
-    } else {
-        LogPrint(BCLog::COINJOIN, "CCoinJoinServer::IsInputScriptSigValid -- Failed to find matching input in pool, %s\n", txin.ToString());
-        return false;
-    }
-
-    LogPrint(BCLog::COINJOIN, "CCoinJoinServer::IsInputScriptSigValid -- Successfully validated input and scriptSig\n");
-    return true;
-}
-
 //
 // Add a client's transaction inputs/outputs to the pool
 //
@@ -966,6 +894,21 @@ bool CCoinJoinServer::AddEntry(const CCoinJoinEntry& entry, PoolMessage& nMessag
         return false;
     }
 
+    CCoinJoinEntry admitted_entry{entry};
+    {
+        LOCK(cs_main);
+        CCoinsViewMemPool view{&m_chainman.ActiveChainstate().CoinsTip(), mempool};
+        for (auto& input : admitted_entry.vecTxDSIn) {
+            Coin coin;
+            if (!view.GetCoin(input.prevout, coin) || coin.IsSpent()) {
+                nMessageIDRet = ERR_MISSING_TX;
+                return false;
+            }
+            // prevPubKey is memory-only; keep the admitted script even if chainstate changes before signing.
+            input.prevPubKey = coin.out.scriptPubKey;
+        }
+    }
+
     {
         LOCK(cs_coinjoin);
         // cs_coinjoin was released around the UTXO checks above, so the scheduler thread may
@@ -979,7 +922,7 @@ bool CCoinJoinServer::AddEntry(const CCoinJoinEntry& entry, PoolMessage& nMessag
             nMessageIDRet = ERR_SESSION;
             return false;
         }
-        vecEntries.push_back(entry);
+        vecEntries.push_back(std::move(admitted_entry));
     }
 
     LogPrint(BCLog::COINJOIN, "CCoinJoinServer::%s -- adding entry %d of %d required\n", __func__, GetEntriesCount(), CoinJoin::GetMaxPoolParticipants());
@@ -988,41 +931,36 @@ bool CCoinJoinServer::AddEntry(const CCoinJoinEntry& entry, PoolMessage& nMessag
     return true;
 }
 
-bool CCoinJoinServer::AddScriptSig(const CTxIn& txinNew)
+bool CCoinJoinServer::AddScriptSig(const CTxIn& txinNew, const CService& sender)
 {
     AssertLockHeld(cs_coinjoin);
-    LogPrint(BCLog::COINJOIN, "CCoinJoinServer::AddScriptSig -- scriptSig=%s\n", ScriptToAsmStr(txinNew.scriptSig).substr(0, 24));
+    if (nState != POOL_STATE_SIGNING) return false;
 
-    for (const auto& entry : vecEntries) {
-        if (std::ranges::any_of(entry.vecTxDSIn,
-                                [&txinNew](const auto& txdsin) { return txdsin.scriptSig == txinNew.scriptSig; })) {
-            LogPrint(BCLog::COINJOIN, "CCoinJoinServer::AddScriptSig -- already exists\n");
-            return false;
-        }
-    }
+    const auto matches_input = [&txinNew](const CTxIn& input) {
+        return input.prevout == txinNew.prevout && input.nSequence == txinNew.nSequence;
+    };
+    const auto entry = std::ranges::find_if(vecEntries, [&](const auto& candidate) {
+        return candidate.addr == sender && std::ranges::any_of(candidate.vecTxDSIn, matches_input);
+    });
+    if (entry == vecEntries.end()) return false;
 
-    if (!IsInputScriptSigValid(txinNew)) {
+    const auto admitted_input = std::ranges::find_if(entry->vecTxDSIn, matches_input);
+    const auto final_input = std::ranges::find_if(finalMutableTransaction.vin, matches_input);
+    if (final_input == finalMutableTransaction.vin.end() || admitted_input->prevPubKey.empty()) return false;
+    if (admitted_input->fHasSig && admitted_input->scriptSig == txinNew.scriptSig) return true;
+
+    const auto index = static_cast<unsigned int>(std::distance(finalMutableTransaction.vin.begin(), final_input));
+    // Dash's legacy signature hash does not use the input amount.
+    if (!VerifyScript(txinNew.scriptSig, admitted_input->prevPubKey,
+                      STANDARD_SCRIPT_VERIFY_FLAGS | SCRIPT_VERIFY_SIGPUSHONLY,
+                      MutableTransactionSignatureChecker(&finalMutableTransaction, index, 0, MissingDataBehavior::ASSERT_FAIL))) {
         LogPrint(BCLog::COINJOIN, "CCoinJoinServer::AddScriptSig -- Invalid scriptSig\n");
         return false;
     }
-
-    LogPrint(BCLog::COINJOIN, "CCoinJoinServer::AddScriptSig -- scriptSig=%s new\n", ScriptToAsmStr(txinNew.scriptSig).substr(0, 24));
-
-    for (auto& txin : finalMutableTransaction.vin) {
-        if (txin.prevout == txinNew.prevout && txin.nSequence == txinNew.nSequence) {
-            txin.scriptSig = txinNew.scriptSig;
-            LogPrint(BCLog::COINJOIN, "CCoinJoinServer::AddScriptSig -- adding to finalMutableTransaction, scriptSig=%s\n", ScriptToAsmStr(txinNew.scriptSig).substr(0, 24));
-        }
-    }
-    for (auto& entry : vecEntries) {
-        if (entry.AddScriptSig(txinNew)) {
-            LogPrint(BCLog::COINJOIN, "CCoinJoinServer::AddScriptSig -- adding to entries, scriptSig=%s\n", ScriptToAsmStr(txinNew.scriptSig).substr(0, 24));
-            return true;
-        }
-    }
-
-    LogPrint(BCLog::COINJOIN, "CCoinJoinServer::AddScriptSig -- Couldn't set sig!\n");
-    return false;
+    if (admitted_input->fHasSig) return true;
+    if (!entry->AddScriptSig(txinNew)) return false;
+    final_input->scriptSig = txinNew.scriptSig;
+    return true;
 }
 
 // Check to make sure everything is signed
