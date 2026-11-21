@@ -362,7 +362,8 @@ node::RejectedTxTodo TxDownloadManagerImpl::MempoolRejectedTx(const CTransaction
     const CTransaction& tx{*ptx};
     // Results returned to caller
     // Whether we should call AddToCompactExtraTransactions at the end
-    bool add_extra_compact_tx{first_time_failure};
+    // Consensus-invalid transactions cannot help reconstruct a valid block.
+    bool add_extra_compact_tx{first_time_failure && state.GetResult() != TxValidationResult::TX_CONSENSUS};
     // Hashes to pass to AddKnownTx later
     std::vector<Txid> unique_parents;
     // Populated if failure is reconsiderable and eligible package is found.

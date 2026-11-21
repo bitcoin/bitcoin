@@ -58,7 +58,7 @@ struct Behaviors {
 // Map from failure reason to expected behavior for a segwit tx that fails
 // Txid and Wtxid are assumed to be different here. For a nonsegwit transaction, use the wtxid results.
 static std::map<TxValidationResult, Behaviors> expected_behaviors{
-    {TxValidationResult::TX_CONSENSUS,               {/*txid_rejects*/0,/*wtxid_rejects*/1,/*txid_recon*/0,/*wtxid_recon*/0,/*keep*/1,/*txid_inv*/0,/*wtxid_inv*/1}},
+    {TxValidationResult::TX_CONSENSUS,               {/*txid_rejects*/0,/*wtxid_rejects*/1,/*txid_recon*/0,/*wtxid_recon*/0,/*keep*/0,/*txid_inv*/0,/*wtxid_inv*/1}},
     {TxValidationResult::TX_INPUTS_NOT_STANDARD,     {                1,                 1,              0,               0,        1,            1,             1}},
     {TxValidationResult::TX_NOT_STANDARD,            {                0,                 1,              0,               0,        1,            0,             1}},
     {TxValidationResult::TX_MISSING_INPUTS,          {                0,                 0,              0,               0,        1,            0,             1}},
