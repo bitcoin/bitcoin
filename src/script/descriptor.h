@@ -204,6 +204,14 @@ struct Descriptor {
     /** Semantic/safety warnings (includes subdescriptors). */
     virtual std::vector<std::string> Warnings() const = 0;
 
+    /** Get the multipath descriptor expansion for this descriptor */
+    virtual std::vector<std::unique_ptr<Descriptor>> GetMultipathExpansion() const = 0;
+
+    /** Given the additional multipath expansion descriptors, reconstruct a multipath descriptor */
+    virtual std::unique_ptr<Descriptor> ReconstructMultipath(const std::vector<const Descriptor*>& relatives) const = 0;
+
+    virtual bool IsMultipath() const = 0;
+
     /** Get the maximum key expression index. Used only for tests */
     virtual uint32_t GetMaxKeyExpr() const = 0;
 
@@ -226,7 +234,7 @@ util::Expected<void, std::string> CheckDescriptorRangeBounds(int64_t low, int64_
  * If a parse error occurs, or the checksum is missing/invalid, or anything
  * else is wrong, an empty vector is returned.
  */
-std::vector<std::unique_ptr<Descriptor>> Parse(std::string_view descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum = false);
+std::unique_ptr<Descriptor> Parse(std::string_view descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum = false);
 
 /** Get the checksum for a `descriptor`.
  *
