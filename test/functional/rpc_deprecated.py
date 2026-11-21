@@ -33,6 +33,18 @@ class DeprecatedRpcTest(BitcoinTestFramework):
             self.nodes[0].createwallet("wtest")
             wallet = self.nodes[0].get_wallet_rpc("wtest")  # Keep this setup, even if unused
 
+            self.log.info("Test watchonly option deprecation")
+            address = wallet.getnewaddress()
+            rawtx = self.nodes[0].createrawtransaction([], [{address: 1}])
+            for rpc in (
+                lambda: wallet.fundrawtransaction(rawtx, {"includeWatching": True}),
+                lambda: wallet.walletcreatefundedpsbt([], [{address: 1}], options={"includeWatching": False}),
+                lambda: wallet.send([{address: 1}], include_watching=True),
+                lambda: wallet.sendall([address], include_watching=False),
+                lambda: wallet.simulaterawtransaction([rawtx], include_watchonly=True),
+            ):
+                assert_raises_rpc_error(-32, "deprecated no-op option", rpc)
+
             self.log.info("Test confTarget option deprecation")
             for rpc in (wallet.bumpfee, wallet.psbtbumpfee):
                 assert_raises_rpc_error(-32, "start the RPC server with the `-deprecatedrpc=confTarget`", rpc, "0" * 64, {"confTarget": 1})
