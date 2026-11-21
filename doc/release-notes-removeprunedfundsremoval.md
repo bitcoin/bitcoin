@@ -1,5 +1,5 @@
 Updated RPCs
 ------------
 
-- The `removeprunedfunds` RPC was deprecated in v32 and is being removed in this
-  release.
+- The `removeprunedfunds` RPC was deprecated in v32 and is being
+  removed in this release. (#36333)

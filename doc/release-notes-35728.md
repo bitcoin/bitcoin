@@ -3,15 +3,15 @@ Updated RPCs
 
 - The `getrawtransaction` and `gettxoutproof` RPCs now return an internal error
   when block files or the transaction index cannot be read or are corrupt.
-  Previously, they reported the transaction as missing.
+  Previously, they reported the transaction as missing. (#35728)
 
 - Similarly, the `utxoupdatepsbt` and `descriptorprocesspsbt` RPCs now return
   an internal error in this case, instead of silently continuing without the
-  transaction data.
+  transaction data. (#35728)
 
 Updated REST APIs
 -----------------
 
 - The `/rest/tx/<TX-HASH>` endpoint now returns an internal error when block
   files or the transaction index cannot be read or are corrupt.
-  Previously, it reported the transaction as not found.
+  Previously, it reported the transaction as not found. (#35728)

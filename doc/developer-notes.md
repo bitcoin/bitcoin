@@ -1300,6 +1300,8 @@ Release notes should be written for any PR that:
 
 Release notes should be added to a uniquely named release note file, such as
 `/doc/release-notes-remove-feature-foo.md`, to avoid conflicts between multiple PRs.
+Include the pull request number in the snippet, using `(#12345)` for a
+bitcoin/bitcoin PR or `(gui#123)` for a bitcoin-core/gui PR.
 All `release-notes*` files are merged into a single `release-notes-<version>.md` file prior to the release.
 
 ## RPC interface guidelines
