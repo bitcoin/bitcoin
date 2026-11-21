@@ -136,14 +136,21 @@ bool FileCommit(FILE* file)
     return true;
 }
 
-void DirectoryCommit(const fs::path& dirname)
+bool DirectoryCommit(const fs::path& dirname)
 {
 #ifndef WIN32
-    FILE* file = fsbridge::fopen(dirname, "r");
-    if (file) {
-        fsync(fileno(file));
-        fclose(file);
+    if (FILE* file{fsbridge::fopen(dirname, "r")}) {
+        const int sync_error{fsync(fileno(file)) == 0 ? 0 : errno};
+        if (fclose(file) == 0) {
+            if (!sync_error) return true;
+            if (sync_error == EINVAL) return false; // Directory sync is unsupported
+            errno = sync_error;
+        }
     }
+    LogError("Error committing directory %s: %s", fs::PathToString(dirname), SysErrorString(errno));
+    return false;
+#else
+    return true;
 #endif
 }
 
