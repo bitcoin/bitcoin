@@ -6,6 +6,7 @@
 #define BITCOIN_ZMQ_ZMQNOTIFICATIONINTERFACE_H
 
 #include <primitives/transaction.h>
+#include <util/result.h>
 #include <validationinterface.h>
 
 #include <cstddef>
@@ -15,6 +16,7 @@
 #include <memory>
 #include <vector>
 
+class ArgsManager;
 class CBlockIndex;
 class CZMQAbstractNotifier;
 
@@ -25,10 +27,14 @@ public:
 
     std::list<const CZMQAbstractNotifier*> GetActiveNotifiers() const;
 
-    static std::unique_ptr<CZMQNotificationInterface> Create(std::function<bool(std::vector<std::byte>&, const CBlockIndex&)> get_block_by_index);
+    static std::list<std::unique_ptr<CZMQAbstractNotifier>> GetNotifiers(
+        const ArgsManager& args,
+        std::function<bool(std::vector<std::byte>&, const CBlockIndex&)> get_block_by_index);
+    // error with the failure reason if initialization fails
+    static util::Result<std::unique_ptr<CZMQNotificationInterface>> Create(std::list<std::unique_ptr<CZMQAbstractNotifier>>&& notifiers);
 
 protected:
-    bool Initialize();
+    util::Result<void> Initialize();
     void Shutdown();
 
     // CValidationInterface
