@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <expected>
 #include <optional>
 #include <span>
 #include <sstream>
