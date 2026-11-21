@@ -1040,6 +1040,40 @@ BOOST_AUTO_TEST_CASE(addrman_noevict)
     BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
 }
 
+BOOST_AUTO_TEST_CASE(addrman_select_tried_collision_networks)
+{
+    auto addrman{std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node))};
+    CNetAddr source{ResolveIP("252.2.2.2")};
+
+    // addr36 collides with addr19 in the tried table (both IPv4).
+    CService addr19{ResolveService("250.1.1.19")};
+    BOOST_CHECK(addrman->Add({CAddress(addr19, NODE_NONE)}, source));
+    BOOST_CHECK(addrman->Good(addr19));
+    CService addr36{ResolveService("250.1.1.36")};
+    BOOST_CHECK(addrman->Add({CAddress(addr36, NODE_NONE)}, source));
+    BOOST_CHECK(!addrman->Good(addr36));
+
+    // addr_ipv6_26 collides with addr_ipv6_9 in the tried table (both IPv6).
+    CService addr_ipv6_9{ResolveService("2a01::9")};
+    BOOST_CHECK(addrman->Add({CAddress(addr_ipv6_9, NODE_NONE)}, source));
+    BOOST_CHECK(addrman->Good(addr_ipv6_9));
+    CService addr_ipv6_26{ResolveService("2a01::26")};
+    BOOST_CHECK(addrman->Add({CAddress(addr_ipv6_26, NODE_NONE)}, source));
+    BOOST_CHECK(!addrman->Good(addr_ipv6_26));
+
+    // No to-be-evicted entry is on the allowed network: nothing is returned,
+    // and the collisions are kept.
+    BOOST_CHECK_EQUAL(addrman->SelectTriedCollision({NET_ONION}).first.ToStringAddrPort(), "[::]:0");
+
+    // The filter finds the collision on the allowed network wherever the
+    // random start is. With no filter, either one can be returned.
+    for (int i = 0; i < 20; i++) {
+        BOOST_CHECK_EQUAL(addrman->SelectTriedCollision({NET_IPV4}).first.ToStringAddrPort(), "250.1.1.19:0");
+        BOOST_CHECK_EQUAL(addrman->SelectTriedCollision({NET_IPV6}).first.ToStringAddrPort(), "[2a01::9]:0");
+        BOOST_CHECK(addrman->SelectTriedCollision().first.IsValid());
+    }
+}
+
 BOOST_AUTO_TEST_CASE(addrman_evictionworks)
 {
     auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));

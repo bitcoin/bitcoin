@@ -165,10 +165,13 @@ public:
      * Randomly select an address in the tried table that another address is
      * attempting to evict.
      *
+     * @param[in] networks Select only among collisions whose to-be-evicted address is
+     *                     on one of these networks. If empty, no filter is applied.
+     *
      * @return CAddress The record for the selected tried peer.
      *         seconds  The last time we attempted to connect to that peer.
      */
-    std::pair<CAddress, NodeSeconds> SelectTriedCollision();
+    std::pair<CAddress, NodeSeconds> SelectTriedCollision(const std::unordered_set<Network>& networks = {});
 
     /**
      * Choose an address to connect to.
