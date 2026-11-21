@@ -68,14 +68,14 @@ static void WalletMigration(benchmark::Bench& bench)
 
             // Write a best block record as migration expects one to exist
             CBlockLocator loc;
-            batch.WriteBestBlock(loc);
+            (void)batch.WriteBestBlock(loc);
 
             // Add watch-only addresses
             for (size_t w = 0; w < scripts_watch_only.size(); ++w) {
                 const auto& [script, dest] = scripts_watch_only.at(w);
                 assert(legacy_spkm->LoadWatchOnly(script));
                 assert(wallet->SetAddressBook(dest, strprintf("watch_%d", w), /*purpose=*/std::nullopt));
-                batch.WriteWatchOnly(script, CKeyMetadata());
+                (void)batch.WriteWatchOnly(script, CKeyMetadata());
             }
 
             // Generate transactions and local addresses
@@ -94,7 +94,7 @@ static void WalletMigration(benchmark::Bench& bench)
                 mtx.vin.emplace_back(COutPoint(Txid::FromUint256(uint256{uint8_t(j + 1)}), 0));
                 mtx.vin.emplace_back(COutPoint(Txid::FromUint256(uint256{uint8_t(j + 1)}), 1));
                 wallet->AddToWallet(MakeTransactionRef(mtx), TxStateInactive{}, /*update_wtx=*/nullptr, /*rescanning_old_block=*/true);
-                batch.WriteKey(pubkey, key.GetPrivKey(), CKeyMetadata());
+                (void)batch.WriteKey(pubkey, key.GetPrivKey(), CKeyMetadata());
             }
         })
         .run([&] {
