@@ -42,6 +42,8 @@ const CBaseChainParams& BaseParams()
 
 std::optional<std::vector<uint8_t>> ReadSignetChallengeArg(const ArgsManager& args)
 {
+    // no default to treat no -signetchallenge (default signet) as distinct from
+    // the empty -signetchallenge= (custom signet)
     const auto challenge_hex = args.GetArgs("-signetchallenge");
     if (challenge_hex.empty()) {
         return std::nullopt;
@@ -59,15 +61,7 @@ std::optional<std::vector<uint8_t>> ReadSignetChallengeArg(const ArgsManager& ar
 std::string GetSignetDataDir(const ArgsManager& args)
 {
     std::string base_data_dir = "signet";
-    // no default to treat no -signetchallenge (default signet) as distinct from
-    // the empty -signetchallenge= (custom signet)
-    const auto challenge_hex = args.GetArg("-signetchallenge");
-    if (!challenge_hex) {
-        return base_data_dir;
-    }
-    // -signetchallenge can be invalid hex here (it's checked later in
-    // ReadSigNetArgs), but we don't mind to keep validation in one place.
-    const auto challenge_bytes = TryParseHex<uint8_t>(*challenge_hex);
+    const auto challenge_bytes = ReadSignetChallengeArg(args);
     if (!challenge_bytes || *challenge_bytes == kernel::SIGNET_DEFAULT_CHALLENGE) {
         return base_data_dir;
     }
