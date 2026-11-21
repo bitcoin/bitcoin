@@ -13,7 +13,6 @@
 #include <script/script.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
-#include <tinyformat.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/result.h>
@@ -27,6 +26,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstddef>
+#include <format>
 #include <memory>
 #include <optional>
 #include <string>
@@ -74,7 +74,7 @@ static void WalletMigration(benchmark::Bench& bench)
             for (size_t w = 0; w < scripts_watch_only.size(); ++w) {
                 const auto& [script, dest] = scripts_watch_only.at(w);
                 assert(legacy_spkm->LoadWatchOnly(script));
-                assert(wallet->SetAddressBook(dest, strprintf("watch_%d", w), /*purpose=*/std::nullopt));
+                assert(wallet->SetAddressBook(dest, std::format("watch_{}", w), /*purpose=*/std::nullopt));
                 batch.WriteWatchOnly(script, CKeyMetadata());
             }
 
@@ -85,7 +85,7 @@ static void WalletMigration(benchmark::Bench& bench)
                 CPubKey pubkey = key.GetPubKey();
                 Assert(legacy_spkm->LoadKey(key, pubkey));
                 CTxDestination dest{PKHash(pubkey)};
-                Assert(wallet->SetAddressBook(dest, strprintf("legacy_%d", j), /*purpose=*/std::nullopt));
+                Assert(wallet->SetAddressBook(dest, std::format("legacy_{}", j), /*purpose=*/std::nullopt));
 
                 CMutableTransaction mtx;
                 mtx.vout.emplace_back(COIN, GetScriptForDestination(dest));

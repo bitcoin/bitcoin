@@ -9,11 +9,10 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <format>
 #include <initializer_list>
-#include <locale>
 #include <optional>
 #include <span>
-#include <sstream>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -249,10 +248,7 @@ inline std::string MakeUnorderedList(const std::vector<std::string>& items)
 template <typename T>
 std::string ToString(const T& t)
 {
-    std::ostringstream oss;
-    oss.imbue(std::locale::classic());
-    oss << t;
-    return oss.str();
+    return std::format("{}", t);
 }
 
 /**
