@@ -20,5 +20,6 @@ export BUILD_TARGETS="all deploy"
 printf -v BITCOIN_CONFIG "%q " \
  --preset=dev-mode \
  -DWITH_USDT=OFF \
- -DREDUCE_EXPORTS=ON
+ -DREDUCE_EXPORTS=ON \
+ -DCMAKE_LINK_WARNING_AS_ERROR=ON
 export BITCOIN_CONFIG
