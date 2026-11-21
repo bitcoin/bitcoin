@@ -349,10 +349,22 @@ public:
     std::vector<CBlockIndex*> GetAllBlockIndices() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /**
-     * All pairs A->B, where A (or one of its ancestors) misses transactions, but B has transactions.
+     * Pairs A->B, where the transactions of B have been received at some point,
+     * but B is not a candidate for connection, because for A or one of its ancestors
+     * the transactions were never received, or the block data is no longer
+     * available (the latter is only tracked for blocks that were candidates for
+     * the most-work chain). B is reconsidered as a chain candidate when the
+     * block of A is received.
+     *
+     * Membership depends on transactions ever having been received (nTx > 0),
+     * not on block data currently being available (BLOCK_HAVE_DATA): pruning B
+     * only removes it from here if B already has its m_chain_tx_count. If it
+     * doesn't, B stays here so that m_chain_tx_count is set for it (and its
+     * descendants) once the transactions of its ancestors are received.
      */
     std::multimap<CBlockIndex*, CBlockIndex*> m_blocks_unlinked;
     void AddUnlinkedBlock(CBlockIndex* block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void RemoveUnlinkedBlock(CBlockIndex* block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     std::unique_ptr<BlockTreeDB> m_block_tree_db GUARDED_BY(::cs_main);
 
