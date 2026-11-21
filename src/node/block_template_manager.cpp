@@ -116,7 +116,7 @@ std::unique_ptr<CBlockTemplate> BlockTemplateManager::WaitAndCreateNewBlock(
 
     // Alternate waiting for a new tip and checking if fees have risen.
     // The latter check is expensive so we only run it once per second.
-    auto now{NodeClock::now()};
+    auto now{std::chrono::steady_clock::now()};
     const auto deadline = now + wait_options.timeout;
     const MillisecondsDouble tick{1000};
     const bool allow_min_difficulty{m_chainman.GetParams().GetConsensus().fPowAllowMinDifficultyBlocks};
@@ -151,7 +151,7 @@ std::unique_ptr<CBlockTemplate> BlockTemplateManager::WaitAndCreateNewBlock(
         // On test networks return a minimum difficulty block after 20 minutes
         if (!tip_changed && allow_min_difficulty) {
             const NodeClock::time_point tip_time{std::chrono::seconds{m_chainman.ActiveChain().Tip()->GetBlockTime()}};
-            if (now > tip_time + 20min) {
+            if (NodeClock::now() > tip_time + 20min) {
                 tip_changed = true;
             }
         }
@@ -181,7 +181,7 @@ std::unique_ptr<CBlockTemplate> BlockTemplateManager::WaitAndCreateNewBlock(
             if (new_fees >= current_fees + wait_options.fee_threshold) return new_tmpl;
         }
 
-        now = NodeClock::now();
+        now = std::chrono::steady_clock::now();
     } while (now < deadline);
 
     return nullptr;
