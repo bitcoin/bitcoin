@@ -103,6 +103,10 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # is cleared. This will move the versionbit state to ACTIVE.
         self.generatetoaddress(node, VB_PERIOD, node_deterministic_address)
 
+        # The versionbit state is ACTIVE now, so the node has already raised the
+        # unknown rules warning and run -alertnotify.
+        self.wait_until(lambda: self.versionbits_in_alert_file())
+
         # Stop-start the node. This is required because bitcoind will only warn once about unknown versions or unknown rules activating.
         self.restart_node(0)
 
