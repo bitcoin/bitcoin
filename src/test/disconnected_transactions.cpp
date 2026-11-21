@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 #include <core_memusage.h>
 #include <kernel/disconnected_transactions.h>
 #include <test/util/setup_common.h>
