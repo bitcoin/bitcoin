@@ -288,6 +288,12 @@ public:
         LOCK(m_wallet->cs_wallet);
         return m_wallet->AbandonTransaction(txid);
     }
+    bool transactionCanBeBroadcast(const Txid& txid) override { return m_wallet->TransactionCanBeBroadcast(txid).has_value(); }
+    util::Expected<void, WalletError> rebroadcastTransaction(const Txid& txid) override
+    {
+        LOCK(m_wallet->cs_wallet);
+        return m_wallet->RebroadcastSingleTransaction(txid);
+    }
     bool transactionCanBeBumped(const Txid& txid) override
     {
         return feebumper::TransactionCanBeBumped(*m_wallet.get(), txid);
