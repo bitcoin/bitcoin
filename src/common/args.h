@@ -92,6 +92,7 @@ struct SectionInfo {
 };
 
 std::optional<std::string> SettingToString(const common::SettingsValue&);
+std::optional<fs::path> SettingToPath(const common::SettingsValue&);
 
 template <std::integral Int>
 std::optional<Int> SettingTo(const common::SettingsValue&);

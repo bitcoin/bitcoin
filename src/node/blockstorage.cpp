@@ -16,6 +16,7 @@
 #include <kernel/messagestartchars.h>
 #include <kernel/notifications_interface.h>
 #include <kernel/types.h>
+#include <node/settings.h>
 #include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
