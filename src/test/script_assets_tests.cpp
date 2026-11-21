@@ -11,6 +11,7 @@
 #include <span.h>
 #include <streams.h>
 #include <test/util/json.h>
+#include <test/util/script.h>
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/strencodings.h>
@@ -24,8 +25,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <univalue.h>
-
-script_verify_flags ParseScriptFlags(std::string strFlags);
 
 BOOST_AUTO_TEST_SUITE(script_assets_tests)
 

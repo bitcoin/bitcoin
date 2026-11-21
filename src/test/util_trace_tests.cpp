@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(test_tracepoints)
     BOOST_CHECK(true);
 }
 
-int fail_test_if_executed()
+[[maybe_unused]] static int fail_test_if_executed()
 {
     BOOST_CHECK(false);
     return 0;

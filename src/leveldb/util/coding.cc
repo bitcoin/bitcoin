@@ -142,16 +142,6 @@ bool GetVarint64(Slice* input, uint64_t* value) {
   }
 }
 
-const char* GetLengthPrefixedSlice(const char* p, const char* limit,
-                                   Slice* result) {
-  uint32_t len;
-  p = GetVarint32Ptr(p, limit, &len);
-  if (p == nullptr) return nullptr;
-  if (p + len > limit) return nullptr;
-  *result = Slice(p, len);
-  return p + len;
-}
-
 bool GetLengthPrefixedSlice(Slice* input, Slice* result) {
   uint32_t len;
   if (GetVarint32(input, &len) && input->size() >= len) {

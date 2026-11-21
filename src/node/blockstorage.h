@@ -30,7 +30,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
-#include <iosfwd>
 #include <limits>
 #include <map>
 #include <memory>
@@ -157,8 +156,6 @@ enum BlockfileType {
     NUM_TYPES = 2,
 };
 
-std::ostream& operator<<(std::ostream& os, const BlockfileType& type);
-
 struct BlockfileCursor {
     // The latest blockfile number.
     int file_num{0};
@@ -175,8 +172,6 @@ struct BlockfileCursor {
     // more data written later.
     int undo_height{0};
 };
-
-std::ostream& operator<<(std::ostream& os, const BlockfileCursor& cursor);
 
 enum class ReadRawError {
     IO,

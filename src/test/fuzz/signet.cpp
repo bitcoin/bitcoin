@@ -17,7 +17,7 @@
 #include <optional>
 #include <vector>
 
-void initialize_signet()
+static void initialize_signet()
 {
     static const auto testing_setup = MakeNoLogFileContext<>(ChainType::SIGNET);
 }

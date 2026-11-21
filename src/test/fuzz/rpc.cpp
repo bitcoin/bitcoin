@@ -362,7 +362,7 @@ RPCFuzzTestingSetup* InitializeRPCFuzzTestingSetup()
 }
 }; // namespace
 
-void initialize_rpc()
+static void initialize_rpc()
 {
     rpc_testing_setup = InitializeRPCFuzzTestingSetup();
     const std::vector<std::string> supported_rpc_commands = rpc_testing_setup->GetRPCCommands();

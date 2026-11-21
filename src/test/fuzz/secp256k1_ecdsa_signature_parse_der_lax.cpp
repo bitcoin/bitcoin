@@ -12,9 +12,6 @@
 #include <cstdint>
 #include <vector>
 
-bool SigHasLowR(const secp256k1_ecdsa_signature* sig);
-int ecdsa_signature_parse_der_lax(secp256k1_ecdsa_signature* sig, const unsigned char* input, size_t inputlen);
-
 FUZZ_TARGET(secp256k1_ecdsa_signature_parse_der_lax)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);

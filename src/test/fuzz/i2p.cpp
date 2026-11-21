@@ -17,7 +17,7 @@
 #include <util/fs_helpers.h>
 #include <util/threadinterrupt.h>
 
-void initialize_i2p()
+static void initialize_i2p()
 {
     static const auto testing_setup = MakeNoLogFileContext<>();
 }

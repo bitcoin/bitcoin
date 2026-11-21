@@ -27,7 +27,7 @@
 namespace bip352 {
 BOOST_FIXTURE_TEST_SUITE(bip352_tests, BasicTestingSetup)
 
-CKey ParseHexToCKey(std::string_view hex) {
+static CKey ParseHexToCKey(std::string_view hex) {
     CKey output;
     std::vector<unsigned char> hex_data = ParseHex(hex);
     output.Set(hex_data.begin(), hex_data.end(), true);

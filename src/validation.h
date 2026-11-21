@@ -54,6 +54,7 @@
 class Chainstate;
 class CTxMemPool;
 class ChainstateManager;
+class CTxUndo;
 struct ChainTxData;
 class DisconnectedBlockTransactions;
 struct PrecomputedTransactionData;
@@ -453,6 +454,12 @@ enum DisconnectResult
     DISCONNECT_UNCLEAN, // Rolled back, but UTXO set was inconsistent with block.
     DISCONNECT_FAILED   // Something else went wrong.
 };
+
+/** Apply the effects of a transaction on the UTXO set, recording the spent coins in txundo. */
+void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo& txundo, int nHeight);
+
+/** Restore a spent coin to the UTXO set. Returns a DisconnectResult. */
+int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out);
 
 struct ConnectedBlock;
 

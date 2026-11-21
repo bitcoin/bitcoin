@@ -76,7 +76,4 @@ bool AppInitMain(node::NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip
  */
 void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc=false);
 
-/** Validates requirements to run the indexes and spawns each index initial sync thread */
-bool StartIndexBackgroundSync(node::NodeContext& node);
-
 #endif // BITCOIN_INIT_H

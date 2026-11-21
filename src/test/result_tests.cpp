@@ -23,29 +23,29 @@ struct NoCopy {
     std::unique_ptr<int> m_n;
 };
 
-bool operator==(const NoCopy& a, const NoCopy& b)
+static bool operator==(const NoCopy& a, const NoCopy& b)
 {
     return *a.m_n == *b.m_n;
 }
 
-std::ostream& operator<<(std::ostream& os, const NoCopy& o)
+static std::ostream& operator<<(std::ostream& os, const NoCopy& o)
 {
     return os << "NoCopy(" << *o.m_n << ")";
 }
 
-util::Result<int> IntFn(int i, bool success)
+static util::Result<int> IntFn(int i, bool success)
 {
     if (success) return i;
     return util::Error{Untranslated(strprintf("int %i error.", i))};
 }
 
-util::Result<bilingual_str> StrFn(bilingual_str s, bool success)
+static util::Result<bilingual_str> StrFn(bilingual_str s, bool success)
 {
     if (success) return s;
     return util::Error{Untranslated(strprintf("str %s error.", s.original))};
 }
 
-util::Result<NoCopy> NoCopyFn(int i, bool success)
+static util::Result<NoCopy> NoCopyFn(int i, bool success)
 {
     if (success) return {i};
     return util::Error{Untranslated(strprintf("nocopy %i error.", i))};

@@ -522,7 +522,7 @@ static std::vector<RPCResult> MempoolEntryDescription()
     return list;
 }
 
-void AppendChunkInfo(UniValue& all_chunks, FeePerWeight chunk_feerate, std::vector<const CTxMemPoolEntry *> chunk_txs)
+static void AppendChunkInfo(UniValue& all_chunks, FeePerWeight chunk_feerate, std::vector<const CTxMemPoolEntry *> chunk_txs)
 {
     UniValue chunk(UniValue::VOBJ);
     chunk.pushKV("chunkfee", ValueFromAmount(chunk_feerate.fee));

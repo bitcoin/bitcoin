@@ -171,6 +171,20 @@ std::string CBlockFileInfo::ToString() const
 
 namespace node {
 
+static std::ostream& operator<<(std::ostream& os, const BlockfileType& type) {
+    switch(type) {
+        case BlockfileType::NORMAL: os << "normal"; break;
+        case BlockfileType::ASSUMED: os << "assumed"; break;
+        default: os.setstate(std::ios_base::failbit);
+    }
+    return os;
+}
+
+static std::ostream& operator<<(std::ostream& os, const BlockfileCursor& cursor) {
+    os << strprintf("BlockfileCursor(file_num=%d, undo_height=%d)", cursor.file_num, cursor.undo_height);
+    return os;
+}
+
 bool CBlockIndexWorkComparator::operator()(const CBlockIndex* pa, const CBlockIndex* pb) const
 {
     // First sort by most total work, ...
@@ -1322,19 +1336,5 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
         chainman.GetNotifications().fatalError(util::ErrorString(result));
     }
     // End scope of ImportingNow
-}
-
-std::ostream& operator<<(std::ostream& os, const BlockfileType& type) {
-    switch(type) {
-        case BlockfileType::NORMAL: os << "normal"; break;
-        case BlockfileType::ASSUMED: os << "assumed"; break;
-        default: os.setstate(std::ios_base::failbit);
-    }
-    return os;
-}
-
-std::ostream& operator<<(std::ostream& os, const BlockfileCursor& cursor) {
-    os << strprintf("BlockfileCursor(file_num=%d, undo_height=%d)", cursor.file_num, cursor.undo_height);
-    return os;
 }
 } // namespace node

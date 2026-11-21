@@ -32,7 +32,7 @@
         } \
     }
 
-void univalue_constructor()
+static void univalue_constructor()
 {
     UniValue v1;
     BOOST_CHECK(v1.isNull());
@@ -80,7 +80,7 @@ void univalue_constructor()
     BOOST_CHECK_EQUAL(v9.getValStr(), "zappa");
 }
 
-void univalue_push_throw()
+static void univalue_push_throw()
 {
     UniValue j;
     BOOST_CHECK_THROW(j.push_back(1), std::runtime_error);
@@ -90,7 +90,7 @@ void univalue_push_throw()
     BOOST_CHECK_THROW(j.pushKVs({}), std::runtime_error);
 }
 
-void univalue_typecheck()
+static void univalue_typecheck()
 {
     UniValue v1;
     v1.setNumStr("1");
@@ -139,7 +139,7 @@ void univalue_typecheck()
     BOOST_CHECK_THROW(vals[1].get_bool(), std::runtime_error);
 }
 
-void univalue_set()
+static void univalue_set()
 {
     UniValue v(UniValue::VSTR, "foo");
     v.clear();
@@ -206,7 +206,7 @@ void univalue_set()
     BOOST_CHECK(v.isNull());
 }
 
-void univalue_array()
+static void univalue_array()
 {
     UniValue arr(UniValue::VARR);
 
@@ -265,7 +265,7 @@ void univalue_array()
     BOOST_CHECK_EQUAL(arr.size(), 0);
 }
 
-void univalue_object()
+static void univalue_object()
 {
     UniValue obj(UniValue::VOBJ);
     std::string strKey, strVal;
@@ -384,7 +384,7 @@ void univalue_object()
 static const char *json1 =
 "[1.10000000,{\"key1\":\"str\\u0000\",\"key2\":800,\"key3\":{\"name\":\"martian http://test.com\"}}]";
 
-void univalue_readwrite()
+static void univalue_readwrite()
 {
     UniValue v;
     BOOST_CHECK(v.read(json1));

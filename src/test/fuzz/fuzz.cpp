@@ -65,7 +65,7 @@ struct FuzzTarget {
     const FuzzTargetOptions opts;
 };
 
-auto& FuzzTargets()
+static auto& FuzzTargets()
 {
     static std::map<std::string_view, FuzzTarget> g_fuzz_targets;
     return g_fuzz_targets;
@@ -197,7 +197,7 @@ static bool read_file(fs::path p, std::vector<uint8_t>& data)
 
 #if defined(PROVIDE_FUZZ_MAIN_FUNCTION) && !defined(__AFL_LOOP)
 static fs::path g_input_path;
-void signal_handler(int signal)
+static void signal_handler(int signal)
 {
     if (signal == SIGABRT) {
         std::cerr << "Error processing input " << g_input_path << std::endl;
@@ -208,14 +208,16 @@ void signal_handler(int signal)
 }
 #endif
 
-// This function is used by libFuzzer
+// These functions are used by libFuzzer
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size);
+extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv);
+
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     test_one_input({data, size});
     return 0;
 }
 
-// This function is used by libFuzzer
 extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
 {
     SetArgs(*argc, *argv);

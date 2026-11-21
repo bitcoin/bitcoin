@@ -34,12 +34,10 @@ ArgsManager& EnsureArgsman(const node::NodeContext& node);
 ArgsManager& EnsureAnyArgsman(const std::any& context);
 ChainstateManager& EnsureChainman(const node::NodeContext& node);
 ChainstateManager& EnsureAnyChainman(const std::any& context);
-FeeRateEstimatorManager& EnsureFeeEstimatorMan(const node::NodeContext& node);
 FeeRateEstimatorManager& EnsureAnyFeeEstimatorMan(const std::any& context);
 CConnman& EnsureConnman(const node::NodeContext& node);
 node::BlockTemplateManager& EnsureBlockTemplateManager(const node::NodeContext& node);
 PeerManager& EnsurePeerman(const node::NodeContext& node);
-AddrMan& EnsureAddrman(const node::NodeContext& node);
 AddrMan& EnsureAnyAddrman(const std::any& context);
 
 /** Return an empty block index on top of the tip, with height, time and nBits set */

@@ -44,7 +44,7 @@ uint64_t GetDefaultDBCache()
     return DEFAULT_KERNEL_CACHE;
 }
 
-uint64_t CalculateDbCacheBytes(const ArgsManager& args)
+static uint64_t CalculateDbCacheBytes(const ArgsManager& args)
 {
     if (auto db_cache{args.GetIntArg("-dbcache")}) {
         if (*db_cache < 0) db_cache = 0;

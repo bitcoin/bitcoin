@@ -36,7 +36,7 @@ const CBaseChainParams& BaseParams()
     return *globalChainBaseParams;
 }
 
-std::string GetSignetDataDir(const ArgsManager& args)
+static std::string GetSignetDataDir(const ArgsManager& args)
 {
     std::string base_data_dir = "signet";
     // no default to treat no -signetchallenge (default signet) as distinct from

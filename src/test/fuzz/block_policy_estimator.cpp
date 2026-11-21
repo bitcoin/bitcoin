@@ -22,7 +22,7 @@ namespace {
 const BasicTestingSetup* g_setup;
 } // namespace
 
-void initialize_block_policy_estimator()
+static void initialize_block_policy_estimator()
 {
     static const auto testing_setup = MakeNoLogFileContext<>();
     g_setup = testing_setup.get();

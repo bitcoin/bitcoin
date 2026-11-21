@@ -38,7 +38,6 @@ inline const RPCResult RESULT_LAST_PROCESSED_BLOCK { RPCResult::Type::OBJ, "last
  * @return nullptr if no wallet should be used, or a pointer to the CWallet
  */
 std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request);
-std::optional<std::string> GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request);
 /**
  * Ensures that a wallet name is specified across the endpoint and wallet_name.
  * Throws `RPC_INVALID_PARAMETER` if none or different wallet names are specified.
@@ -50,6 +49,8 @@ WalletContext& EnsureWalletContext(const std::any& context);
 
 bool GetAvoidReuseFlag(const CWallet& wallet, const UniValue& param);
 std::string LabelFromValue(const UniValue& value);
+//! Get an option by its canonical or deprecated name. Throws if both are set.
+const UniValue* GetOptionWithAlias(const UniValue& options, const std::string& canonical_name, const std::string& deprecated_name);
 //! Fetch parent descriptors of this scriptPubKey.
 void PushParentDescriptors(const CWallet& wallet, const CScript& script_pubkey, UniValue& entry);
 

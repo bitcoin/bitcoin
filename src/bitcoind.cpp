@@ -50,7 +50,7 @@ const TranslateFn G_TRANSLATION_FUN{nullptr};
  *          In case of success, endpoint will be one end of a pipe from the child to parent process,
  *          which can be used with TokenWrite (in the child) or TokenRead (in the parent).
  */
-int fork_daemon(bool nochdir, bool noclose, TokenPipeEnd& endpoint)
+static int fork_daemon(bool nochdir, bool noclose, TokenPipeEnd& endpoint)
 {
     // communication pipe with child process
     std::optional<TokenPipe> umbilical = TokenPipe::Make();

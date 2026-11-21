@@ -12,6 +12,7 @@
 #include <util/vector.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/util.h>
+#include <wallet/rpc/wallet.h>
 #include <wallet/scan.h>
 #include <wallet/wallet.h>
 

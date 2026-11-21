@@ -9,6 +9,7 @@
 
 #include <attributes.h>
 #include <crypto/common.h>
+#include <crypto/sha256_impl.h>
 
 namespace sha256d64_avx2 {
 namespace {

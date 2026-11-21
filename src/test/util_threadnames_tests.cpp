@@ -24,7 +24,7 @@ const std::string TEST_THREAD_NAME_BASE = "test_thrd.";
  *
  * @return the set of name each thread has after attempted renaming.
  */
-std::set<std::string> RenameEnMasse(int num_threads)
+static std::set<std::string> RenameEnMasse(int num_threads)
 {
     std::vector<std::thread> threads;
     std::set<std::string> names;

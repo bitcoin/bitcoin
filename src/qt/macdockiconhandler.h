@@ -24,4 +24,7 @@ private:
     MacDockIconHandler();
 };
 
+/** Force application activation on macOS. */
+void ForceActivation();
+
 #endif // BITCOIN_QT_MACDOCKICONHANDLER_H

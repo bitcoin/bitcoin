@@ -14,7 +14,7 @@
 #include <algorithm>
 #include <ostream>
 
-std::ostream& operator<<(std::ostream& os, PrivateBroadcast::AddResult r)
+static std::ostream& operator<<(std::ostream& os, PrivateBroadcast::AddResult r)
 {
     switch (r) {
     case PrivateBroadcast::AddResult::Added: return os << "Added";

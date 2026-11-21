@@ -24,6 +24,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -267,6 +268,9 @@ namespace BCLog {
         //! Return log flag if str parses as a log category.
         static std::optional<BCLog::LogFlags> GetLogCategory(std::string_view str);
     };
+
+    /** Escape control characters in a log message. */
+    std::string LogEscapeMessage(std::string_view str);
 } // namespace BCLog
 
 BCLog::Logger& LogInstance();

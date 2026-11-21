@@ -37,7 +37,7 @@ CAmount OutputGetCredit(const CWallet& wallet, const CTxOut& txout)
     return (wallet.IsMine(txout) ? txout.nValue : 0);
 }
 
-CAmount TxGetCredit(const CWallet& wallet, const CTransaction& tx)
+static CAmount TxGetCredit(const CWallet& wallet, const CTransaction& tx)
 {
     CAmount nCredit = 0;
     for (const CTxOut& txout : tx.vout)
@@ -76,7 +76,8 @@ bool OutputIsChange(const CWallet& wallet, const CTxOut& txout)
     return ScriptIsChange(wallet, txout.scriptPubKey);
 }
 
-CAmount OutputGetChange(const CWallet& wallet, const CTxOut& txout)
+static CAmount OutputGetChange(const CWallet& wallet, const CTxOut& txout) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+static CAmount OutputGetChange(const CWallet& wallet, const CTxOut& txout)
 {
     AssertLockHeld(wallet.cs_wallet);
     if (!MoneyRange(txout.nValue))
@@ -84,7 +85,7 @@ CAmount OutputGetChange(const CWallet& wallet, const CTxOut& txout)
     return (OutputIsChange(wallet, txout) ? txout.nValue : 0);
 }
 
-CAmount TxGetChange(const CWallet& wallet, const CTransaction& tx)
+static CAmount TxGetChange(const CWallet& wallet, const CTransaction& tx)
 {
     LOCK(wallet.cs_wallet);
     CAmount nChange = 0;

@@ -13,6 +13,7 @@
 #include <immintrin.h>
 
 #include <attributes.h>
+#include <crypto/sha256_impl.h>
 
 namespace {
 

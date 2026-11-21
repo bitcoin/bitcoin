@@ -128,6 +128,9 @@ void GetRandBytes(std::span<unsigned char> bytes) noexcept;
  */
 void GetStrongRandBytes(std::span<unsigned char> bytes) noexcept;
 
+/** Make the global RNG deterministic with the given seed. Only for use in tests. */
+void MakeRandDeterministicDANGEROUS(const uint256& seed) noexcept;
+
 
 /* ============================= RANDOM NUMBER GENERATION CLASSES =============================
  *

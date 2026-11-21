@@ -12,7 +12,7 @@
 #include <vector>
 
 
-std::vector<std::byte> BitsToBytes(std::span<const uint8_t> bits) noexcept
+static std::vector<std::byte> BitsToBytes(std::span<const uint8_t> bits) noexcept
 {
     std::vector<std::byte> ret;
     uint8_t next_byte{0};

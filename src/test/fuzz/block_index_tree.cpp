@@ -23,7 +23,7 @@
 
 const TestingSetup* g_setup;
 
-CBlockHeader ConsumeBlockHeader(FuzzedDataProvider& provider, uint256 prev_hash, int& nonce_counter)
+static CBlockHeader ConsumeBlockHeader(FuzzedDataProvider& provider, uint256 prev_hash, int& nonce_counter)
 {
     CBlockHeader header;
     header.nVersion = provider.ConsumeIntegral<decltype(header.nVersion)>();
@@ -35,7 +35,7 @@ CBlockHeader ConsumeBlockHeader(FuzzedDataProvider& provider, uint256 prev_hash,
     return header;
 }
 
-void initialize_block_index_tree()
+static void initialize_block_index_tree()
 {
     static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
     g_setup = testing_setup.get();

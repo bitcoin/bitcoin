@@ -382,7 +382,7 @@ unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target)
     return unsigned_target;
 }
 
-RPCErrorCode RPCErrorFromPSBTError(PSBTError err)
+static RPCErrorCode RPCErrorFromPSBTError(PSBTError err)
 {
     switch (err) {
         case PSBTError::UNSUPPORTED:

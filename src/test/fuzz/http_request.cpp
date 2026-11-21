@@ -19,8 +19,6 @@
 #include <string_view>
 #include <vector>
 
-std::string_view RequestMethodString(HTTPRequestMethod m);
-
 using namespace bitcoin_http;
 
 namespace {

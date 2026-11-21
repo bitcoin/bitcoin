@@ -17,7 +17,7 @@
 #include <string>
 #include <vector>
 
-void initialize_message()
+static void initialize_message()
 {
     static ECC_Context ecc_context{};
     SelectParams(ChainType::REGTEST);

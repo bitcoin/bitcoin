@@ -86,17 +86,17 @@ static void HandleDeploymentArgs(const ArgsManager& args, CChainParams::Deployme
     }
 }
 
-void ReadMainNetArgs(const ArgsManager& args, CChainParams::MainNetOptions& options)
+static void ReadMainNetArgs(const ArgsManager& args, CChainParams::MainNetOptions& options)
 {
     HandleDeploymentArgs(args, options.dep_opts);
 }
 
-void ReadTestNetArgs(const ArgsManager& args, CChainParams::TestNetOptions& options)
+static void ReadTestNetArgs(const ArgsManager& args, CChainParams::TestNetOptions& options)
 {
     HandleDeploymentArgs(args, options.dep_opts);
 }
 
-void ReadSigNetArgs(const ArgsManager& args, CChainParams::SigNetOptions& options)
+static void ReadSigNetArgs(const ArgsManager& args, CChainParams::SigNetOptions& options)
 {
     if (!args.GetArgs("-signetseednode").empty()) {
         options.seeds.emplace(args.GetArgs("-signetseednode"));
@@ -115,7 +115,7 @@ void ReadSigNetArgs(const ArgsManager& args, CChainParams::SigNetOptions& option
     HandleDeploymentArgs(args, options.dep_opts);
 }
 
-void ReadRegTestArgs(const ArgsManager& args, CChainParams::RegTestOptions& options)
+static void ReadRegTestArgs(const ArgsManager& args, CChainParams::RegTestOptions& options)
 {
     if (auto value = args.GetBoolArg("-fastprune")) options.fastprune = *value;
     if (HasTestOption(args, "bip94")) options.enforce_bip94 = true;

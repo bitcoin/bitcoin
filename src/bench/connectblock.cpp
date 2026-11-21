@@ -33,7 +33,7 @@
  * - All signatures use SIGHASH_ALL (default sighash)
  * - Each transaction spends all outputs from the previous transaction
  */
-CBlock CreateTestBlock(
+static CBlock CreateTestBlock(
     TestChain100Setup& test_setup,
     const std::vector<CKey>& keys,
     const std::vector<CTxOut>& outputs,
@@ -80,7 +80,7 @@ CBlock CreateTestBlock(
  * - For Ecdsa signatures: Creates P2WPKH (native SegWit v0) outputs
  * - All outputs have value of 1 BTC
  */
-std::pair<std::vector<CKey>, std::vector<CTxOut>> CreateKeysAndOutputs(const CKey& coinbaseKey, size_t num_schnorr, size_t num_ecdsa)
+static std::pair<std::vector<CKey>, std::vector<CTxOut>> CreateKeysAndOutputs(const CKey& coinbaseKey, size_t num_schnorr, size_t num_ecdsa)
 {
     std::vector<CKey> keys{coinbaseKey};
     keys.reserve(num_schnorr + num_ecdsa + 1);
@@ -101,7 +101,7 @@ std::pair<std::vector<CKey>, std::vector<CTxOut>> CreateKeysAndOutputs(const CKe
     return {keys, outputs};
 }
 
-void BenchmarkConnectBlock(benchmark::Bench& bench, std::vector<CKey>& keys, std::vector<CTxOut>& outputs, TestChain100Setup& test_setup)
+static void BenchmarkConnectBlock(benchmark::Bench& bench, std::vector<CKey>& keys, std::vector<CTxOut>& outputs, TestChain100Setup& test_setup)
 {
     const auto& test_block{CreateTestBlock(test_setup, keys, outputs)};
     bench.unit("block").run([&] {

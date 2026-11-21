@@ -52,14 +52,14 @@ struct TipBlock
     int tip_height;
 };
 
-TipBlock getTip(const CChainParams& params, const node::NodeContext& context)
+static TipBlock getTip(const CChainParams& params, const node::NodeContext& context)
 {
     auto tip = WITH_LOCK(::cs_main, return context.chainman->ActiveTip());
     return (tip) ? TipBlock{tip->GetBlockHash(), tip->GetBlockTime(), tip->nHeight} :
            TipBlock{params.GenesisBlock().GetHash(), params.GenesisBlock().GetBlockTime(), 0};
 }
 
-void generateFakeBlock(const CChainParams& params,
+static void generateFakeBlock(const CChainParams& params,
                        const node::NodeContext& context,
                        CWallet& wallet,
                        const CScript& coinbase_out_script)

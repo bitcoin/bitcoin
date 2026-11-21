@@ -13,7 +13,7 @@
 #include <univalue.h>
 #include <util/chaintype.h>
 
-void initialize_script_format()
+static void initialize_script_format()
 {
     SelectParams(ChainType::REGTEST);
 }

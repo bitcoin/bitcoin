@@ -57,7 +57,7 @@ static void addCoin(CoinsResult& coins,
                    fee_rate});
 }
 
- CoinSelectionParams makeSelectionParams(FastRandomContext& rand, bool avoid_partial_spends)
+ static CoinSelectionParams makeSelectionParams(FastRandomContext& rand, bool avoid_partial_spends)
 {
     return CoinSelectionParams{
             rand,

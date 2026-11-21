@@ -16,7 +16,7 @@
 
 /** IsTopoSortedPackage where a set of txids has been pre-populated. The set is assumed to be correct and
  * is mutated within this function (even if return value is false). */
-bool IsTopoSortedPackage(const Package& txns, std::unordered_set<Txid, SaltedTxidHasher>& later_txids)
+static bool IsTopoSortedPackage(const Package& txns, std::unordered_set<Txid, SaltedTxidHasher>& later_txids)
 {
     // Avoid misusing this function: later_txids should contain the txids of txns.
     Assume(txns.size() == later_txids.size());

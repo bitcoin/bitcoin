@@ -1310,7 +1310,7 @@ bool AppInitInterfaces(NodeContext& node)
     return true;
 }
 
-bool CheckHostPortOptions(const ArgsManager& args) {
+static bool CheckHostPortOptions(const ArgsManager& args) {
     for (const std::string port_option : {
         "-port",
         "-rpcport",
@@ -1519,6 +1519,9 @@ static ChainstateLoadResult InitAndLoadChainstate(
     }
     return {status, error};
 };
+
+/** Validates requirements to run the indexes and spawns each index initial sync thread */
+static bool StartIndexBackgroundSync(NodeContext& node);
 
 bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 {
@@ -2458,7 +2461,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     return true;
 }
 
-bool StartIndexBackgroundSync(NodeContext& node)
+static bool StartIndexBackgroundSync(NodeContext& node)
 {
     ChainstateManager& chainman = *Assert(node.chainman);
     const Chainstate& chainstate = WITH_LOCK(::cs_main, return chainman.ValidatedChainstate());

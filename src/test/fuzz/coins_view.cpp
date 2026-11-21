@@ -126,12 +126,12 @@ CBlock BuildRandomBlock(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& vi
 
 } // namespace
 
-void initialize_coins_view()
+static void initialize_coins_view()
 {
     static const auto testing_setup = MakeNoLogFileContext<>();
 }
 
-void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& coins_view_cache, CCoinsView* backend_coins_view)
+static void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& coins_view_cache, CCoinsView* backend_coins_view)
 {
     auto* const db{dynamic_cast<CCoinsViewDB*>(backend_coins_view)};
     auto* const overlay{dynamic_cast<CoinsViewOverlay*>(&coins_view_cache)};

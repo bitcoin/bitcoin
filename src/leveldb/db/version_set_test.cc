@@ -173,10 +173,6 @@ TEST(FindFileTest, OverlappingFiles) {
   ASSERT_TRUE(Overlaps("600", "700"));
 }
 
-void AddBoundaryInputs(const InternalKeyComparator& icmp,
-                       const std::vector<FileMetaData*>& level_files,
-                       std::vector<FileMetaData*>* compaction_files);
-
 class AddBoundaryInputsTest {
  public:
   std::vector<FileMetaData*> level_files_;

@@ -18,7 +18,7 @@
 #include <optional>
 #include <vector>
 
-void initialize_script_sigcache()
+static void initialize_script_sigcache()
 {
     static const auto testing_setup = MakeNoLogFileContext<>();
 }

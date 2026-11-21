@@ -19,7 +19,7 @@ bool Spannable(T&& value, decltype(std::span{value})* enable = nullptr)
 {
     return true;
 }
-bool Spannable(Ignore)
+static bool Spannable(Ignore)
 {
     return false;
 }

@@ -55,7 +55,7 @@ void BaseIndex::FatalErrorf(util::log::FormatString<sizeof...(Args)> fmt, const 
     node::AbortNode(m_chain->context()->shutdown_request, m_chain->context()->exit_status, Untranslated(message), m_chain->context()->warnings.get());
 }
 
-CBlockLocator GetLocator(interfaces::Chain& chain, const uint256& block_hash)
+static CBlockLocator GetLocator(interfaces::Chain& chain, const uint256& block_hash)
 {
     CBlockLocator locator;
     bool found = chain.findBlock(block_hash, interfaces::FoundBlock().locator(locator));

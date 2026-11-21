@@ -30,6 +30,15 @@ bool GetAvoidReuseFlag(const CWallet& wallet, const UniValue& param) {
     return avoid_reuse;
 }
 
+static std::optional<std::string> GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request)
+{
+    if (request.URI.starts_with(WALLET_ENDPOINT_BASE)) {
+        // wallet endpoint was used
+        return UrlDecode(std::string_view{request.URI}.substr(WALLET_ENDPOINT_BASE.size()));
+    }
+    return std::nullopt;
+}
+
 std::string EnsureUniqueWalletName(const JSONRPCRequest& request, std::optional<std::string_view> wallet_name)
 {
     if (auto endpoint_wallet{GetWalletNameFromJSONRPCRequest(request)}) {
@@ -48,15 +57,6 @@ std::string EnsureUniqueWalletName(const JSONRPCRequest& request, std::optional<
     }
 
     return std::string{*wallet_name};
-}
-
-std::optional<std::string> GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request)
-{
-    if (request.URI.starts_with(WALLET_ENDPOINT_BASE)) {
-        // wallet endpoint was used
-        return UrlDecode(std::string_view{request.URI}.substr(WALLET_ENDPOINT_BASE.size()));
-    }
-    return std::nullopt;
 }
 
 std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
@@ -172,6 +172,23 @@ void AppendLastProcessedBlock(UniValue& entry, const CWallet& wallet)
     lastprocessedblock.pushKV("hash", wallet.GetLastBlockHash().GetHex());
     lastprocessedblock.pushKV("height", wallet.GetLastBlockHeight());
     entry.pushKV("lastprocessedblock", std::move(lastprocessedblock));
+}
+
+const UniValue* GetOptionWithAlias(
+    const UniValue& options,
+    const std::string& canonical_name,
+    const std::string& deprecated_name)
+{
+    if (options.exists(canonical_name) && options.exists(deprecated_name)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Use " + canonical_name + " (" + deprecated_name + " is deprecated). Do not set both.");
+    }
+    if (options.exists(deprecated_name)) {
+        return &options[deprecated_name];
+    }
+    if (options.exists(canonical_name)) {
+        return &options[canonical_name];
+    }
+    return nullptr;
 }
 
 } // namespace wallet

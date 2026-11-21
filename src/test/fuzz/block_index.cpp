@@ -48,7 +48,7 @@ CBlockHeader ConsumeBlockHeader(FuzzedDataProvider& provider)
 
 } // namespace
 
-void init_block_index()
+static void init_block_index()
 {
     static const auto testing_setup = MakeNoLogFileContext<>(ChainType::MAIN);
     g_setup = testing_setup.get();

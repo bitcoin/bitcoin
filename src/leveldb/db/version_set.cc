@@ -1297,9 +1297,9 @@ Compaction* VersionSet::PickCompaction() {
 
 // Finds the largest key in a vector of files. Returns true if files it not
 // empty.
-bool FindLargestKey(const InternalKeyComparator& icmp,
-                    const std::vector<FileMetaData*>& files,
-                    InternalKey* largest_key) {
+static bool FindLargestKey(const InternalKeyComparator& icmp,
+                           const std::vector<FileMetaData*>& files,
+                           InternalKey* largest_key) {
   if (files.empty()) {
     return false;
   }
@@ -1315,7 +1315,7 @@ bool FindLargestKey(const InternalKeyComparator& icmp,
 
 // Finds minimum file b2=(l2, u2) in level file for which l2 > u1 and
 // user_key(l2) = user_key(u1)
-FileMetaData* FindSmallestBoundaryFile(
+static FileMetaData* FindSmallestBoundaryFile(
     const InternalKeyComparator& icmp,
     const std::vector<FileMetaData*>& level_files,
     const InternalKey& largest_key) {

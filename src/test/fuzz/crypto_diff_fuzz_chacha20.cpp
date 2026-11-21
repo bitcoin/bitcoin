@@ -49,36 +49,6 @@ typedef struct
     u32 input[16];
 } ECRYPT_ctx;
 
-/* ------------------------------------------------------------------------- */
-/* Mandatory functions */
-
-void ECRYPT_keysetup(
-    ECRYPT_ctx* ctx,
-    const u8* key,
-    u32 keysize, /* Key size in bits. */
-    u32 ivsize); /* IV size in bits. */
-
-void ECRYPT_ivsetup(
-    ECRYPT_ctx* ctx,
-    const u8* iv);
-
-void ECRYPT_encrypt_bytes(
-    ECRYPT_ctx* ctx,
-    const u8* plaintext,
-    u8* ciphertext,
-    u32 msglen); /* Message length in bytes. */
-
-/* ------------------------------------------------------------------------- */
-
-/* Optional features */
-
-void ECRYPT_keystream_bytes(
-    ECRYPT_ctx* ctx,
-    u8* keystream,
-    u32 length); /* Length of keystream in bytes. */
-
-/* ------------------------------------------------------------------------- */
-
 #define ROTATE(v, c) (ROTL32(v, c))
 #define XOR(v, w) ((v) ^ (w))
 #define PLUS(v, w) (U32V((v) + (w)))
@@ -93,7 +63,7 @@ void ECRYPT_keystream_bytes(
 static const char sigma[] = "expand 32-byte k";
 static const char tau[] = "expand 16-byte k";
 
-void ECRYPT_keysetup(ECRYPT_ctx* x, const u8* k, u32 kbits, u32 ivbits)
+static void ECRYPT_keysetup(ECRYPT_ctx* x, const u8* k, u32 kbits, u32 ivbits)
 {
     const char* constants;
 
@@ -117,7 +87,7 @@ void ECRYPT_keysetup(ECRYPT_ctx* x, const u8* k, u32 kbits, u32 ivbits)
     x->input[3] = U8TO32_LITTLE(constants + 12);
 }
 
-void ECRYPT_ivsetup(ECRYPT_ctx* x, const u8* iv)
+static void ECRYPT_ivsetup(ECRYPT_ctx* x, const u8* iv)
 {
     x->input[12] = 0;
     x->input[13] = 0;
@@ -125,7 +95,7 @@ void ECRYPT_ivsetup(ECRYPT_ctx* x, const u8* iv)
     x->input[15] = U8TO32_LITTLE(iv + 4);
 }
 
-void ECRYPT_encrypt_bytes(ECRYPT_ctx* x, const u8* m, u8* c, u32 bytes)
+static void ECRYPT_encrypt_bytes(ECRYPT_ctx* x, const u8* m, u8* c, u32 bytes)
 {
     u32 x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15;
     u32 j0, j1, j2, j3, j4, j5, j6, j7, j8, j9, j10, j11, j12, j13, j14, j15;
@@ -258,7 +228,7 @@ void ECRYPT_encrypt_bytes(ECRYPT_ctx* x, const u8* m, u8* c, u32 bytes)
     }
 }
 
-void ECRYPT_keystream_bytes(ECRYPT_ctx* x, u8* stream, u32 bytes)
+static void ECRYPT_keystream_bytes(ECRYPT_ctx* x, u8* stream, u32 bytes)
 {
     u32 i;
     for (i = 0; i < bytes; ++i)

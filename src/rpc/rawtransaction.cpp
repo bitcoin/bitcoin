@@ -152,7 +152,7 @@ static std::vector<RPCArg> CreateTxDoc()
 
 // Update PSBT with information from the mempool, the UTXO set, the txindex, and the provided descriptors.
 // Optionally, sign the inputs that we can using information from the descriptors.
-PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std::any& context, const HidingSigningProvider& provider, std::optional<int> sighash_type, bool finalize)
+static PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std::any& context, const HidingSigningProvider& provider, std::optional<int> sighash_type, bool finalize)
 {
     // Unserialize the transactions
     util::Result<PartiallySignedTransaction> psbt_res = DecodeBase64PSBT(psbt_string);
@@ -814,7 +814,7 @@ static RPCMethod signrawtransactionwithkey()
     };
 }
 
-const RPCResult& DecodePSBTInputs()
+static const RPCResult& DecodePSBTInputs()
 {
     static const RPCResult decodepsbt_inputs{
         RPCResult::Type::ARR, "inputs", "",
@@ -980,7 +980,7 @@ const RPCResult& DecodePSBTInputs()
     return decodepsbt_inputs;
 }
 
-const RPCResult& DecodePSBTOutputs()
+static const RPCResult& DecodePSBTOutputs()
 {
     static const RPCResult decodepsbt_outputs{
         RPCResult::Type::ARR, "outputs", "",
@@ -2068,7 +2068,7 @@ static RPCMethod analyzepsbt()
     };
 }
 
-RPCMethod descriptorprocesspsbt()
+static RPCMethod descriptorprocesspsbt()
 {
     return RPCMethod{
         "descriptorprocesspsbt",

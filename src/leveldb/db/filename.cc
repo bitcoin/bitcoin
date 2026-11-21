@@ -13,10 +13,6 @@
 
 namespace leveldb {
 
-// A utility routine: write "data" to the named file and Sync() it.
-Status WriteStringToFileSync(Env* env, const Slice& data,
-                             const std::string& fname);
-
 static std::string MakeFileName(const std::string& dbname, uint64_t number,
                                 const char* suffix) {
   char buf[100];

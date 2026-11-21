@@ -24,7 +24,7 @@ namespace {
 TestingSetup* g_setup;
 } // namespace
 
-void initialize_wallet_bdb_parser()
+static void initialize_wallet_bdb_parser()
 {
     static auto testing_setup = MakeNoLogFileContext<TestingSetup>();
     g_setup = testing_setup.get();

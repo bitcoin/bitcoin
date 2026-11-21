@@ -33,7 +33,7 @@
 
 using namespace btck;
 
-std::string random_string(uint32_t length)
+static std::string random_string(uint32_t length)
 {
     const std::string chars = "0123456789"
                               "abcdefghijklmnopqrstuvwxyz"
@@ -51,7 +51,7 @@ std::string random_string(uint32_t length)
     return random;
 }
 
-std::vector<std::byte> hex_string_to_byte_vec(std::string_view hex)
+static std::vector<std::byte> hex_string_to_byte_vec(std::string_view hex)
 {
     std::vector<std::byte> bytes;
     bytes.reserve(hex.length() / 2);
@@ -68,7 +68,7 @@ std::vector<std::byte> hex_string_to_byte_vec(std::string_view hex)
     return bytes;
 }
 
-std::string byte_span_to_hex_string_reversed(std::span<const std::byte> bytes)
+static std::string byte_span_to_hex_string_reversed(std::span<const std::byte> bytes)
 {
     std::ostringstream oss;
 
@@ -86,7 +86,7 @@ constexpr auto VERIFY_ALL_PRE_SEGWIT{ScriptVerificationFlags::P2SH | ScriptVerif
                                      ScriptVerificationFlags::CHECKSEQUENCEVERIFY};
 constexpr auto VERIFY_ALL_PRE_TAPROOT{VERIFY_ALL_PRE_SEGWIT | ScriptVerificationFlags::WITNESS};
 
-void check_equal(std::span<const std::byte> _actual, std::span<const std::byte> _expected)
+static void check_equal(std::span<const std::byte> _actual, std::span<const std::byte> _expected)
 {
     std::span<const uint8_t> actual{reinterpret_cast<const unsigned char*>(_actual.data()), _actual.size()};
     std::span<const uint8_t> expected{reinterpret_cast<const unsigned char*>(_expected.data()), _expected.size()};
@@ -215,7 +215,7 @@ public:
     }
 };
 
-void run_verify_test(
+static void run_verify_test(
     const ScriptPubkey& spent_script_pubkey,
     const Transaction& spending_tx,
     const PrecomputedTransactionData* precomputed_txdata,
@@ -837,7 +837,7 @@ BOOST_AUTO_TEST_CASE(btck_block)
     BOOST_CHECK_THROW(Block{empty_data}, std::runtime_error);
 }
 
-Context create_context(std::shared_ptr<TestKernelNotifications> notifications, ChainType chain_type, std::shared_ptr<TestValidationInterface> validation_interface = nullptr)
+static Context create_context(std::shared_ptr<TestKernelNotifications> notifications, ChainType chain_type, std::shared_ptr<TestValidationInterface> validation_interface = nullptr)
 {
     ContextOptions options{};
     ChainParams params{chain_type};
@@ -897,7 +897,7 @@ BOOST_AUTO_TEST_CASE(btck_chainman_tests)
     ChainMan chainman{context, chainman_opts};
 }
 
-std::unique_ptr<ChainMan> create_chainman(TestDirectory& test_directory,
+static std::unique_ptr<ChainMan> create_chainman(TestDirectory& test_directory,
                                           bool reindex,
                                           bool wipe_chainstate,
                                           bool block_tree_db_in_memory,
@@ -923,7 +923,7 @@ std::unique_ptr<ChainMan> create_chainman(TestDirectory& test_directory,
     return chainman;
 }
 
-void chainman_reindex_test(TestDirectory& test_directory)
+static void chainman_reindex_test(TestDirectory& test_directory)
 {
     auto notifications{std::make_shared<TestKernelNotifications>()};
     auto context{create_context(notifications, ChainType::MAINNET)};
@@ -968,7 +968,7 @@ void chainman_reindex_test(TestDirectory& test_directory)
     BOOST_CHECK_EQUAL(second_height, another_second_height);
 }
 
-void chainman_reindex_chainstate_test(TestDirectory& test_directory)
+static void chainman_reindex_chainstate_test(TestDirectory& test_directory)
 {
     auto notifications{std::make_shared<TestKernelNotifications>()};
     auto context{create_context(notifications, ChainType::MAINNET)};
@@ -981,7 +981,7 @@ void chainman_reindex_chainstate_test(TestDirectory& test_directory)
     BOOST_CHECK(chainman->ImportBlocks(import_files));
 }
 
-void chainman_mainnet_validation_test(TestDirectory& test_directory)
+static void chainman_mainnet_validation_test(TestDirectory& test_directory)
 {
     auto notifications{std::make_shared<TestKernelNotifications>()};
     auto validation_interface{std::make_shared<TestValidationInterface>()};

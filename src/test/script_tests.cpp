@@ -21,6 +21,7 @@
 #include <test/util/common.h>
 #include <test/util/json.h>
 #include <test/util/random.h>
+#include <test/util/script.h>
 #include <test/util/setup_common.h>
 #include <test/util/transaction_utils.h>
 #include <univalue.h>
@@ -41,8 +42,6 @@
 using namespace util::hex_literals;
 
 static const script_verify_flags gFlags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC;
-
-script_verify_flags ParseScriptFlags(std::string strFlags);
 
 struct ScriptErrorDesc
 {
@@ -1261,7 +1260,7 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
 }
 
 /* Wrapper around ProduceSignature to combine two scriptsigs */
-SignatureData CombineSignatures(const CTxOut& txout, const CMutableTransaction& tx, const SignatureData& scriptSig1, const SignatureData& scriptSig2)
+static SignatureData CombineSignatures(const CTxOut& txout, const CMutableTransaction& tx, const SignatureData& scriptSig1, const SignatureData& scriptSig2)
 {
     SignatureData data;
     data.MergeSignatureData(scriptSig1);

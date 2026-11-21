@@ -15,6 +15,8 @@
 #include <cstddef>
 #include <arm_neon.h>
 
+#include <crypto/sha256_impl.h>
+
 namespace {
 alignas(uint32x4_t) static constexpr std::array<uint32_t, 64> K =
 {

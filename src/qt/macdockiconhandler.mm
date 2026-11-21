@@ -9,7 +9,7 @@
 
 static MacDockIconHandler *s_instance = nullptr;
 
-bool dockClickHandler(id self, SEL _cmd, ...) {
+static bool dockClickHandler(id self, SEL _cmd, ...) {
     Q_UNUSED(self)
     Q_UNUSED(_cmd)
 
@@ -19,7 +19,7 @@ bool dockClickHandler(id self, SEL _cmd, ...) {
     return false;
 }
 
-void setupDockClickHandler() {
+static void setupDockClickHandler() {
     if (NSApp == nil) return;
     Class delClass = (Class)[[NSApp delegate] class];
     SEL shouldHandle = sel_registerName("applicationShouldHandleReopen:hasVisibleWindows:");
