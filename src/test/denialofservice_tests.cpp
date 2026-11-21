@@ -512,7 +512,6 @@ BOOST_FIXTURE_TEST_CASE(orphan_reconsideration_interruptible, TestChain100Setup)
     const auto send_tx{[&](const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex) {
         connman.FlushSendBuffer(peer); // Drop messages we sent, the transport is shared with the fake peer.
         BOOST_REQUIRE(connman.ReceiveMsgFrom(peer, NetMsg::Make(NetMsgType::TX, TX_WITH_WITNESS(*tx))));
-        peer.fPauseSend = false;
         return connman.ProcessMessagesOnce(peer);
     }};
 
