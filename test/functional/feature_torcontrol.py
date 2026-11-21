@@ -6,9 +6,11 @@
 from contextlib import contextmanager
 import socket
 import threading
+from time import monotonic
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than_or_equal,
     ensure_for,
     p2p_port,
 )
@@ -22,6 +24,7 @@ class MockTorControlServer:
         self.port = port
         self.sock = None
         self.conn = None
+        self.last_accept_time = None
         self.running = False
         self.thread = None
         self.received_commands = []
@@ -54,6 +57,7 @@ class MockTorControlServer:
         while self.running:
             try:
                 self.conn, _ = self.sock.accept()
+                self.last_accept_time = monotonic()
                 self.conn.settimeout(1.0)
                 self.conn_ready.set()
                 self._handle_connection(self.conn)
@@ -146,15 +150,15 @@ class TorControlTest(BitcoinTestFramework):
     @contextmanager
     def expect_disconnect(self, expect, mock_tor):
         initial_len = len(mock_tor.received_commands)
+        start = monotonic()
         yield
 
         if expect:
-            # No reconnect before the initial reconnect timeout of 1s has passed
-            ensure_for(duration=0.5, f=lambda: len(mock_tor.received_commands) == initial_len)
-            # Expect to receive a PROTOCOLINFO 1 on reconnect, bumping the received
-            # commands length.
+            # The reconnect may already have happened while the test was sending data.
             self.wait_until(lambda: len(mock_tor.received_commands) == initial_len + 1)
             assert_equal(mock_tor.received_commands[initial_len], "PROTOCOLINFO 1")
+            # Allow a half-second margin on the initial one-second backoff.
+            assert_greater_than_or_equal(mock_tor.last_accept_time - start, 0.5)
         else:
             # No disconnect, so no reconnect message
             ensure_for(duration=2, f=lambda: len(mock_tor.received_commands) == initial_len)
