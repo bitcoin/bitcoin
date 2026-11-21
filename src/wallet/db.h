@@ -42,6 +42,7 @@ public:
         DONE,
     };
 
+    /** Advance to the next record, replacing key and value (including unread data) when returning MORE. */
     virtual Status Next(DataStream& key, DataStream& value) { return Status::FAIL; }
 };
 

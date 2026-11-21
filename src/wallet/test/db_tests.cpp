@@ -47,8 +47,9 @@ static void CheckPrefix(DatabaseBatch& batch, std::span<const std::byte> prefix,
 {
     std::unique_ptr<DatabaseCursor> cursor = batch.GetNewPrefixCursor(prefix);
     MockableData actual;
+    // Reuse unread streams to check that each record replaces the previous one.
+    DataStream key, value;
     while (true) {
-        DataStream key, value;
         DatabaseCursor::Status status = cursor->Next(key, value);
         if (status == DatabaseCursor::Status::DONE) break;
         BOOST_CHECK(status == DatabaseCursor::Status::MORE);
@@ -59,6 +60,24 @@ static void CheckPrefix(DatabaseBatch& batch, std::span<const std::byte> prefix,
 }
 
 BOOST_FIXTURE_TEST_SUITE(db_tests, BasicTestingSetup)
+
+BOOST_AUTO_TEST_CASE(berkeley_cursor_replaces_record_streams)
+{
+    BerkeleyRODatabase database(m_path_root / "unopened-bdb", /*open=*/false);
+    database.m_records = {{StringData("aa"), StringData("first")}, {StringData("bb"), StringData("second")}};
+    BerkeleyROCursor cursor(database);
+    DataStream key, value;
+    BOOST_REQUIRE(cursor.Next(key, value) == DatabaseCursor::Status::MORE);
+    // Record loaders may leave optional suffix fields unread.
+    key.ignore(1);
+    value.ignore(4);
+    BOOST_REQUIRE(cursor.Next(key, value) == DatabaseCursor::Status::MORE);
+    const auto expected_key{StringData("bb")};
+    const auto expected_value{StringData("second")};
+    BOOST_CHECK_EQUAL_COLLECTIONS(key.begin(), key.end(), expected_key.begin(), expected_key.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(value.begin(), value.end(), expected_value.begin(), expected_value.end());
+    BOOST_CHECK(cursor.Next(key, value) == DatabaseCursor::Status::DONE);
+}
 
 static std::vector<std::unique_ptr<WalletDatabase>> TestDatabases(const fs::path& path_root)
 {
