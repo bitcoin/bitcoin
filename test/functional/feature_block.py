@@ -8,6 +8,7 @@ import time
 
 from test_framework.blocktools import (
     add_witness_commitment,
+    COINBASE_MATURITY,
     create_block,
     create_coinbase,
     create_tx_with_script,
@@ -870,11 +871,11 @@ class FullBlockTest(BitcoinTestFramework):
         #
         self.move_tip(57)
         self.next_block('spend_dup_cb')
-        tx = CTransaction()
-        tx.vin.append(CTxIn(COutPoint(duplicate_tx.txid_int, 0)))
-        tx.vout.append(CTxOut(0, CScript([OP_TRUE])))
-        self.sign_tx(tx, duplicate_tx)
-        b_spend_dup_cb = self.update_block('spend_dup_cb', [tx])
+        dup_cb_spend_tx = CTransaction()
+        dup_cb_spend_tx.vin.append(CTxIn(COutPoint(duplicate_tx.txid_int, 0)))
+        dup_cb_spend_tx.vout.append(CTxOut(0, CScript([OP_TRUE])))
+        self.sign_tx(dup_cb_spend_tx, duplicate_tx)
+        b_spend_dup_cb = self.update_block('spend_dup_cb', [dup_cb_spend_tx])
 
         b_dup_2 = self.next_block('dup_2')
         b_dup_2.vtx[0].nLockTime = 0
@@ -886,13 +887,45 @@ class FullBlockTest(BitcoinTestFramework):
         # The duplicate has less confirmations
         assert_equal(self.nodes[0].gettxout(txid=duplicate_tx.txid_hex, n=0)['confirmations'], 1)
 
+        # Test BIP30 (reject duplicate non-coinbase)
+        #
+        # -> b_spend_dup_cb (b_dup_cb) -> b_dup_2 () -> ... (98 blocks) -> b_dup_cb_mature
+        #                                                                                  \-> b_dup_cb_spend_2 (spend_dup_cb)
+        #
+        # Once the duplicate coinbase from b_dup_2 is mature, dup_cb_spend_tx has valid inputs
+        # again. Its own output is still unspent, so re-including it must be rejected.
+        #
+        self.log.info("Reject a block with a non-coinbase transaction with a duplicate hash of a previous transaction (BIP30)")
+        self.send_blocks([self.next_block(f"dup_cb_mature_{i}") for i in range(COINBASE_MATURITY - 2)] + [self.next_block('dup_cb_mature')], True)
+        assert_equal(self.nodes[0].gettxout(txid=duplicate_tx.txid_hex, n=0)['confirmations'], COINBASE_MATURITY)
+        assert self.nodes[0].gettxout(txid=dup_cb_spend_tx.txid_hex, n=0) is not None
+        self.next_block('dup_cb_spend_2')
+        b_dup_cb_spend_2 = self.update_block('dup_cb_spend_2', [dup_cb_spend_tx])
+        assert_equal(dup_cb_spend_tx.serialize(), b_dup_cb_spend_2.vtx[1].serialize())
+        self.send_blocks([b_dup_cb_spend_2], success=False, reject_reason='bad-txns-BIP30', reconnect=True)
+
+        # Test BIP30 (allow duplicate non-coinbase if spent)
+        #
+        # -> b_dup_cb_mature () -> b_spend_dup_cb_spend () -> b_dup_cb_spend_3 (spend_dup_cb)
+        #
+        self.log.info("Accept a block with a non-coinbase transaction with a duplicate hash of a previous, fully spent transaction (BIP30)")
+        self.move_tip('dup_cb_mature')
+        self.next_block('spend_dup_cb_spend')
+        b_spend_dup_cb_spend = self.update_block('spend_dup_cb_spend', [self.create_and_sign_transaction(dup_cb_spend_tx, 0)])
+        self.next_block('dup_cb_spend_3')
+        b_dup_cb_spend_3 = self.update_block('dup_cb_spend_3', [dup_cb_spend_tx])
+        assert_equal(dup_cb_spend_tx.serialize(), b_dup_cb_spend_3.vtx[1].serialize())
+        self.send_blocks([b_spend_dup_cb_spend, b_dup_cb_spend_3], success=True)
+        # The duplicate has less confirmations
+        assert_equal(self.nodes[0].gettxout(txid=dup_cb_spend_tx.txid_hex, n=0)['confirmations'], 1)
+
         # Test tx.isFinal is properly rejected (not an exhaustive tx.isFinal test, that should be in data-driven transaction tests)
         #
-        # -> b_spend_dup_cb (b_dup_cb) -> b_dup_2 ()
-        #                                           \-> b62 (18)
+        # -> b_spend_dup_cb_spend () -> b_dup_cb_spend_3 ()
+        #                                                \-> b62 (18)
         #
         self.log.info("Reject a block with a transaction with a nonfinal locktime")
-        self.move_tip('dup_2')
+        self.move_tip('dup_cb_spend_3')
         self.next_block(62)
         tx = CTransaction()
         tx.nLockTime = 0xffffffff  # this locktime is non-final
@@ -904,11 +937,11 @@ class FullBlockTest(BitcoinTestFramework):
 
         # Test a non-final coinbase is also rejected
         #
-        # -> b_spend_dup_cb (b_dup_cb) -> b_dup_2 ()
-        #                                           \-> b63 (-)
+        # -> b_spend_dup_cb_spend () -> b_dup_cb_spend_3 ()
+        #                                                \-> b63 (-)
         #
         self.log.info("Reject a block with a coinbase transaction with a nonfinal locktime")
-        self.move_tip('dup_2')
+        self.move_tip('dup_cb_spend_3')
         b63 = self.next_block(63)
         b63.vtx[0].nLockTime = 0xffffffff
         b63.vtx[0].vin[0].nSequence = 0xDEADBEEF
@@ -923,14 +956,14 @@ class FullBlockTest(BitcoinTestFramework):
         #  What matters is that the receiving node should not reject the bloated block, and then reject the canonical
         #  block on the basis that it's the same as an already-rejected block (which would be a consensus failure.)
         #
-        #  -> b_spend_dup_cb (b_dup_cb) -> b_dup_2 () -> b64 (18)
-        #                                              \
-        #                                               b64a (18)
+        #  -> b_spend_dup_cb_spend () -> b_dup_cb_spend_3 () -> b64 (18)
+        #                                                   \
+        #                                                    b64a (18)
         #  b64a is a bloated block (non-canonical varint)
         #  b64 is a good block (same as b64 but w/ canonical varint)
         #
         self.log.info("Accept a valid block even if a bloated version of the block has previously been sent")
-        self.move_tip('dup_2')
+        self.move_tip('dup_cb_spend_3')
         regular_block = self.next_block("64a", spend=out[18])
 
         # make it a "broken_block," with non-canonical serialization
@@ -956,7 +989,7 @@ class FullBlockTest(BitcoinTestFramework):
         node.disconnect_p2ps()
         self.reconnect_p2p()
 
-        self.move_tip('dup_2')
+        self.move_tip('dup_cb_spend_3')
         b64 = CBlock(b64a)
         b64.vtx = copy.deepcopy(b64a.vtx)
         assert_equal(b64.hash_hex, b64a.hash_hex)
@@ -968,7 +1001,7 @@ class FullBlockTest(BitcoinTestFramework):
 
         # Spend an output created in the block itself
         #
-        # -> b_dup_2 () -> b64 (18) -> b65 (19)
+        # -> b_dup_cb_spend_3 () -> b64 (18) -> b65 (19)
         #
         self.log.info("Accept a block with a transaction spending an output created in the same block")
         self.move_tip(64)
