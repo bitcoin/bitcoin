@@ -1093,6 +1093,16 @@ private:
     bool CanDirectFetch() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /**
+     * Whether `block` is only needed by the assumeutxo background chainstate,
+     * i.e. it is an ancestor of the snapshot base block.
+     */
+    bool IsHistoricalBlock(const CBlockIndex& block) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool IsHistoricalBlockHash(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /** Number of blocks in flight that are not only needed by the background chainstate. */
+    size_t NonHistoricalBlocksInFlight() const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
      * Estimates the distance, in blocks, between the best-known block and the network chain tip.
      * Utilizes the best-block time and the chainparams blocks spacing to approximate it.
      */
@@ -1444,6 +1454,30 @@ int64_t PeerManagerImpl::ApproximateBestBlockDepth() const
 bool PeerManagerImpl::CanDirectFetch()
 {
     return m_chainman.ActiveChain().Tip()->Time() > NodeClock::now() - m_chainparams.GetConsensus().PowTargetSpacing() * 20;
+}
+
+bool PeerManagerImpl::IsHistoricalBlock(const CBlockIndex& block) const
+{
+    const auto historical{m_chainman.GetHistoricalBlockRange()};
+    return historical && historical->second && historical->second->GetAncestor(block.nHeight) == &block;
+}
+
+bool PeerManagerImpl::IsHistoricalBlockHash(const uint256& hash) const
+{
+    const CBlockIndex* pindex{m_chainman.m_blockman.LookupBlockIndex(hash)};
+    return pindex && IsHistoricalBlock(*pindex);
+}
+
+size_t PeerManagerImpl::NonHistoricalBlocksInFlight() const
+{
+    const auto historical{m_chainman.GetHistoricalBlockRange()};
+    if (!historical || !historical->second) return mapBlocksInFlight.size();
+    size_t count{0};
+    for (const auto& entry : mapBlocksInFlight) {
+        const CBlockIndex& block{*entry.second.second->pindex};
+        if (historical->second->GetAncestor(block.nHeight) != &block) ++count;
+    }
+    return count;
 }
 
 static bool PeerHasHeader(CNodeState *state, const CBlockIndex *pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -2338,12 +2372,15 @@ void PeerManagerImpl::BlockChecked(const std::shared_ptr<const CBlock>& block, c
     // Check that:
     // 1. The block is valid
     // 2. We're not in initial block download
-    // 3. This is currently the best block we're aware of. We haven't updated
+    // 3. The block is not only needed by the assumeutxo background chainstate.
+    // 4. This is currently the best block we're aware of. We haven't updated
     //    the tip yet so we have no way to check this directly here. Instead we
-    //    just check that there are currently no other blocks in flight.
+    //    just check that there are currently no other blocks in flight, not
+    //    counting the ones only needed by the background chainstate.
     else if (state.IsValid() &&
              !m_chainman.IsInitialBlockDownload() &&
-             mapBlocksInFlight.count(hash) == mapBlocksInFlight.size()) {
+             !IsHistoricalBlockHash(hash) &&
+             mapBlocksInFlight.count(hash) == NonHistoricalBlocksInFlight()) {
         if (it != mapBlockSource.end()) {
             MaybeSetPeerAsAnnouncingHeaderAndIDs(it->second.first);
         }
@@ -3146,7 +3183,7 @@ void PeerManagerImpl::HeadersDirectFetchBlocks(CNode& pfrom, const Peer& peer, c
                 if (!m_opts.ignore_incoming_txs &&
                         nodestate->m_provides_cmpctblocks &&
                         vGetData.size() == 1 &&
-                        mapBlocksInFlight.size() == 1 &&
+                        NonHistoricalBlocksInFlight() == 1 &&
                         last_header.pprev->IsValid(BLOCK_VALID_CHAIN)) {
                     // In any case, we want to download using a compact block, not a regular one
                     vGetData[0] = CInv(MSG_CMPCT_BLOCK, vGetData[0].hash);
