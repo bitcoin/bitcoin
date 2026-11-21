@@ -1,0 +1,74 @@
+# syntax=docker/dockerfile:1
+# Copyright (c) 2026 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+FROM alpine:3.24
+
+RUN apk --no-cache add \
+    bash \
+    bzip2 \
+    ca-certificates \
+    curl \
+    git \
+    make \
+    rsync \
+    shadow \
+    xz
+
+ARG guix_download_path=https://ftp.gnu.org/gnu/guix
+ARG guix_version=1.5.0
+ARG guix_checksum_aarch64=a5d58b1d0294cad6adb1f2aff627d37feb5db763fdffbceb8551f2b12123cf39
+ARG guix_checksum_x86_64=aa41025489c5061543e9c48873eaa829b900b2da75d40f9648913622f5f47817
+ARG builder_count=32
+ARG substitute_server=https://guix.fish.foo
+ARG substitute_server_key_sha256=5796b4e6cc23635052ba7cecdc4b8b92ba6a53ef374208ce5094c0920a72f40f
+
+ENV PATH=/root/.config/guix/current/bin:$PATH
+ENV LC_ALL=C.UTF-8
+
+RUN guix_file_name=guix-binary-${guix_version}.$(uname -m)-linux.tar.xz && \
+    eval "guix_checksum=\${guix_checksum_$(uname -m)}" && \
+    cd /tmp && \
+    curl --fail --location --retry 3 --silent --show-error --output "$guix_file_name" \
+        "${guix_download_path}/${guix_file_name}" && \
+    echo "${guix_checksum}  ${guix_file_name}" | sha256sum -c && \
+    tar xJf "$guix_file_name" && \
+    mv var/guix /var/ && \
+    mv gnu / && \
+    rm "$guix_file_name"
+
+RUN mkdir -p /root/.config/guix && \
+    ln -s /var/guix/profiles/per-user/root/current-guix /root/.config/guix/current && \
+    groupadd --system guixbuild && \
+    for i in $(seq -w 1 ${builder_count}); do \
+        useradd -g guixbuild -G guixbuild \
+            -d /var/empty -s $(which nologin) \
+            -c "Guix build user ${i}" --system "guixbuilder${i}"; \
+    done
+
+RUN curl --fail --location --retry 3 --silent --show-error --output /guix-fish-signing-key.pub \
+        "${substitute_server}/signing-key.pub" && \
+    echo "${substitute_server_key_sha256}  /guix-fish-signing-key.pub" | sha256sum -c
+
+COPY ci/guix-entrypoint.sh /usr/local/bin/guix-entrypoint
+RUN chmod +x /usr/local/bin/guix-entrypoint
+
+# Keep the pinned Guix, its profile, and channel checkout in the cached image.
+# Guix needs namespaces and personality syscalls while preparing its profile.
+ARG guix_time_machine_url
+ARG guix_time_machine_commit
+RUN --security=insecure guix-daemon --build-users-group=guixbuild & \
+    daemon_pid=$!; \
+    trap 'kill "$daemon_pid"' EXIT; \
+    until guix gc --list-failures > /dev/null; do \
+        kill -0 "$daemon_pid" || exit 1; sleep 0.1; \
+    done; \
+    guix archive --authorize < /guix-fish-signing-key.pub && \
+    guix time-machine --url="$guix_time_machine_url" \
+        --commit="${guix_time_machine_commit:?}" \
+        --substitute-urls="https://guix.fish.foo https://guix2.fish.foo" \
+        -- --version
+
+ENTRYPOINT ["/usr/local/bin/guix-entrypoint"]
+CMD ["bash"]
