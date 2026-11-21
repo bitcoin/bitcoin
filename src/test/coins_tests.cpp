@@ -20,8 +20,13 @@
 
 #include <map>
 #include <string>
+#include <type_traits>
 #include <variant>
 #include <vector>
+
+#ifdef __GLIBCXX__
+#include <bits/functional_hash.h>
+#endif
 
 #include <boost/test/unit_test.hpp>
 
@@ -298,6 +303,16 @@ BOOST_FIXTURE_TEST_CASE(coins_cache_dbbase_simulation_test, CacheTest)
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(coins_tests, BasicTestingSetup)
+
+BOOST_AUTO_TEST_CASE(coins_cache_hasher_cache_policy)
+{
+    constexpr bool nothrow_invocable{std::is_nothrow_invocable_v<const CCoinsMap::hasher&, const CCoinsMap::key_type&>};
+    BOOST_CHECK(!nothrow_invocable);
+
+#ifdef __GLIBCXX__
+    BOOST_CHECK(std::__is_fast_hash<CCoinsMap::hasher>::value);
+#endif
+}
 
 struct UpdateTest : BasicTestingSetup {
 // Store of all necessary tx and undo data for next test
