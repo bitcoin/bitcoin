@@ -5,9 +5,11 @@
 #ifndef BITCOIN_WALLET_EXTERNAL_SIGNER_SCRIPTPUBKEYMAN_H
 #define BITCOIN_WALLET_EXTERNAL_SIGNER_SCRIPTPUBKEYMAN_H
 
+#include <external_signer.h>
 #include <wallet/scriptpubkeyman.h>
 
 #include <memory>
+#include <string>
 #include <util/result.h>
 
 struct bilingual_str;
@@ -16,13 +18,17 @@ namespace wallet {
 class ExternalSignerScriptPubKeyMan : public DescriptorScriptPubKeyMan
 {
 private:
+    std::string m_external_signer_command;
+    std::string m_external_signer_chain;
+
     using DescriptorScriptPubKeyMan::DescriptorScriptPubKeyMan;
 
 public:
-    static std::unique_ptr<ExternalSignerScriptPubKeyMan> LoadFromStorage(WalletStorage& storage, const uint256& id, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys);
-    static std::unique_ptr<ExternalSignerScriptPubKeyMan> CreateNew(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, std::unique_ptr<Descriptor> desc);
+    static std::unique_ptr<ExternalSignerScriptPubKeyMan> LoadFromStorage(WalletStorage& storage, const uint256& id, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys, const std::string& external_signer_command, const std::string& external_signer_chain);
+    static std::unique_ptr<ExternalSignerScriptPubKeyMan> CreateNew(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, std::unique_ptr<Descriptor> desc, const std::string& external_signer_command, const std::string& external_signer_chain);
 
-  static util::Result<ExternalSigner> GetExternalSigner();
+    //! Find the external signer for the given command (the -signer arg) and chain.
+    static util::Result<ExternalSigner> GetExternalSigner(const std::string& command, const std::string& chain);
 
   /**
   * Display address on the device and verify that the returned value matches.
