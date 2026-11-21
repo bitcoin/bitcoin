@@ -255,6 +255,17 @@ void ValidationSignals::BlockDisconnected(std::shared_ptr<const CBlock> pblock, 
     ENQUEUE_AND_LOG_EVENT(std::move(event), std::move(log_msg));
 }
 
+void ValidationSignals::AcceptedStaleTip(const CBlockIndex* pindex)
+{
+    auto log_msg = LOG_MSG("%s: block hash=%s block height=%d", __func__,
+                          pindex->GetBlockHash().ToString(),
+                          pindex->nHeight);
+    auto event = [pindex, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.AcceptedStaleTip(pindex); });
+    };
+    ENQUEUE_AND_LOG_EVENT(std::move(event), std::move(log_msg));
+}
+
 void ValidationSignals::ChainStateFlushed(const ChainstateRole& role, const CBlockLocator& locator)
 {
     auto log_msg = LOG_MSG("%s: block hash=%s", __func__,

@@ -33,6 +33,7 @@
 #include <node/blockstorage.h>
 #include <node/connection_types.h>
 #include <node/protocol_version.h>
+#include <node/staletiptracker.h>
 #include <node/timeoffsets.h>
 #include <node/txdownloadman.h>
 #include <node/txorphanage.h>
@@ -581,6 +582,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
+    void AcceptedStaleTip(const CBlockIndex* pindex) override;
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& state) override
@@ -605,6 +607,7 @@ public:
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     std::vector<node::TxOrphanage::OrphanInfo> GetOrphanTransactions() override EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
     PeerManagerInfo GetInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_inv_to_send_mutex);
+    std::optional<std::vector<const CBlockIndex*>> GetTrackedStaleTips() const override EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     std::vector<PrivateBroadcast::TxBroadcastInfo> GetPrivateBroadcastInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     std::vector<CTransactionRef> AbortPrivateBroadcast(const uint256& id) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -880,6 +883,15 @@ private:
     TimeOffsets m_outbound_time_offsets{m_warnings};
 
     const Options m_opts;
+
+    /** Recent stale tips tracked for stale-tip relay (BIP 332), or nullptr if
+     *  stale-tip relay is disabled. Unrelated to m_stale_tip_check_time, which
+     *  checks whether our own tip has gone stale. */
+    const std::unique_ptr<node::StaleTipTracker> m_staletip_tracker{
+        m_opts.stale_tip_relay_mode == StaleTipRelayMode::NONE ? nullptr :
+            std::make_unique<node::StaleTipTracker>(m_chainparams.GetChainType())};
+
+    bool StaleTipRelayEnabled() const { return m_staletip_tracker != nullptr; }
 
     bool RejectIncomingTxs(const CNode& peer) const;
 
@@ -1963,6 +1975,17 @@ std::vector<node::TxOrphanage::OrphanInfo> PeerManagerImpl::GetOrphanTransaction
     return m_txdownloadman.GetOrphanTransactions();
 }
 
+std::optional<std::vector<const CBlockIndex*>> PeerManagerImpl::GetTrackedStaleTips() const
+{
+    AssertLockHeld(::cs_main);
+    if (!StaleTipRelayEnabled()) return std::nullopt;
+    std::vector<const CBlockIndex*> tips;
+    for (const node::StaleFork& fork : m_staletip_tracker->GetStaleTips(m_chainman.ActiveChain())) {
+        tips.push_back(fork.tip);
+    }
+    return tips;
+}
+
 PeerManagerInfo PeerManagerImpl::GetInfo() const
 {
     LOCK(m_inv_to_send_mutex);
@@ -2143,6 +2166,11 @@ PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
       m_inbound_inv_bucket(/*rate=*/m_opts.tx_send_rate, /*mult=*/1.0),
       m_outbound_inv_bucket(/*rate=*/m_opts.tx_send_rate, /*mult=*/OUTBOUND_INVENTORY_BUCKET_MULTIPLIER)
 {
+    if (m_staletip_tracker) {
+        LOCK(::cs_main);
+        m_staletip_tracker->SeedFromBlockIndex(m_chainman.m_blockman, m_chainman.ActiveChain());
+    }
+
     // While Erlay support is incomplete, it must be enabled explicitly via -txreconciliation.
     // This argument can go away after Erlay support is complete.
     if (opts.reconcile_txs) {
@@ -2220,8 +2248,20 @@ void PeerManagerImpl::BlockConnected(
 
 void PeerManagerImpl::BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex)
 {
+    if (m_staletip_tracker) {
+        LOCK(::cs_main);
+        m_staletip_tracker->AddStaleTip(m_chainman.ActiveChain(), *pindex);
+    }
+
     LOCK(m_tx_download_mutex);
     m_txdownloadman.BlockDisconnected();
+}
+
+void PeerManagerImpl::AcceptedStaleTip(const CBlockIndex* pindex)
+{
+    if (!m_staletip_tracker) return;
+    LOCK(::cs_main);
+    m_staletip_tracker->AddStaleTip(m_chainman.ActiveChain(), *pindex);
 }
 
 /**

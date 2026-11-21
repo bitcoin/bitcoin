@@ -6,11 +6,21 @@
 #define BITCOIN_NODE_PEERMAN_ARGS_H
 
 #include <net_processing.h>
+#include <util/result.h>
+
+#include <optional>
+#include <string>
+#include <string_view>
 
 class ArgsManager;
 
 namespace node {
-void ApplyArgsManOptions(const ArgsManager& argsman, PeerManager::Options& options);
+std::string_view StaleTipRelayModeToString(StaleTipRelayMode mode);
+std::optional<StaleTipRelayMode> StaleTipRelayModeFromString(std::string_view name);
+/** Comma-separated list of the -staletips modes. */
+std::string ListStaleTipRelayModes();
+
+util::Result<void> ApplyArgsManOptions(const ArgsManager& argsman, PeerManager::Options& options);
 } // namespace node
 
 #endif // BITCOIN_NODE_PEERMAN_ARGS_H
