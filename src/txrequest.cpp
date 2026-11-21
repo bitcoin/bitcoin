@@ -313,7 +313,7 @@ class TxRequestTracker::Impl {
 public:
     void SanityCheck() const
     {
-        // Recompute m_peerdata from m_index. This verifies the data in it as it should just be caching statistics
+        // Recompute m_peerinfo from m_index. This verifies the data in it as it should just be caching statistics
         // on m_index. It also verifies the invariant that no PeerInfo announcements with m_total==0 exist.
         assert(m_peerinfo == RecomputePeerInfo(m_index));
 

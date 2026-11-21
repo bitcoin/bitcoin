@@ -36,7 +36,7 @@ class Init;
 //!    interfaces::Ipc::spawnProcess() then calls ipc::Protocol::connect()
 //!    passing the socketpair descriptor, which returns a local proxy
 //!    interfaces::Init implementation calling remote interfaces::Init methods.
-//! 2. The spawned process calls interfaces::Ipc::startSpawnProcess(), which
+//! 2. The spawned process calls interfaces::Ipc::startSpawnedProcess(), which
 //!    calls ipc::Process::checkSpawned() to read command line arguments and
 //!    determine whether it is a spawned process and what socketpair file
 //!    descriptor it should use. It then calls ipc::Protocol::serve() to handle

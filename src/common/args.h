@@ -193,7 +193,7 @@ public:
     [[nodiscard]] bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
-     * Log warnings for options in m_section_only_args when
+     * Log warnings for options in m_network_only_args when
      * they are specified in the default section but not overridden
      * on the command line or in a network-specific section in the
      * config file.

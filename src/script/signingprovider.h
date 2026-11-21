@@ -294,10 +294,8 @@ protected:
      * future wallet code can have flexibility to be more selective about what
      * transaction outputs it recognizes as payments, instead of having to treat
      * all outputs spending to keys it knows as payments. By contrast,
-     * mapScripts entries added by AddCScript(script),
-     * LearnRelatedScripts(pubkey, type), and LearnAllRelatedScripts(pubkey)
-     * calls are saved because they are all intentionally used to receive
-     * payments.
+     * mapScripts entries added by AddCScript(script) calls are saved because
+     * they are all intentionally used to receive payments.
      *
      * The FillableSigningProvider::mapScripts script map should not be confused
      * with the wallet::LegacyDataSPKM::setWatchOnly script set. The two collections

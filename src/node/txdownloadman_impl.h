@@ -158,9 +158,9 @@ public:
     /** Check whether we already have this gtxid in:
      *  - mempool
      *  - orphanage
-     *  - m_recent_rejects
-     *  - m_recent_rejects_reconsiderable (if include_reconsiderable = true)
-     *  - m_recent_confirmed_transactions
+     *  - RecentRejectsFilter()
+     *  - RecentRejectsReconsiderableFilter() (if include_reconsiderable = true)
+     *  - RecentConfirmedTransactionsFilter()
      *  */
     bool AlreadyHaveTx(const GenTxid& gtxid, bool include_reconsiderable);
 

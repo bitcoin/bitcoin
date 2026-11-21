@@ -644,7 +644,7 @@ private:
 };
 
 /** Initialize HTTP server.
- * Call this before RegisterHTTPHandler or EventBase().
+ * Call this before RegisterHTTPHandler.
  */
 bool InitHTTPServer();
 

@@ -1105,7 +1105,7 @@ struct ActionUnserialize {
  * object of type SizeComputer, which only records the number of bytes written
  * to it.
  *
- * If your Serialize or SerializationOp method has non-trivial overhead for
+ * If your Serialize or SerializationOps method has non-trivial overhead for
  * serialization, it may be worthwhile to implement a specialized version for
  * SizeComputer, which uses the s.seek() method to record bytes that would
  * be written instead.
