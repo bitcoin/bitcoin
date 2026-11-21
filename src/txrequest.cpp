@@ -563,11 +563,48 @@ public:
         }
     }
 
+    void ForgetTxHash(const GenTxid& gtxid)
+    {
+        const uint256& txhash = gtxid.ToUint256();
+        // Collect the peers first: deleting an announcement can change the state of other announcements for the same
+        // txhash (and so their position in the ByTxHash index), or delete all of them.
+        std::vector<NodeId> peers;
+        auto it = m_index.get<ByTxHash>().lower_bound(ByTxHashView{txhash, State::CANDIDATE_DELAYED, 0});
+        while (it != m_index.get<ByTxHash>().end() && it->m_gtxid.ToUint256() == txhash) {
+            if (it->m_gtxid.IsWtxid() == gtxid.IsWtxid()) peers.push_back(it->m_peer);
+            ++it;
+        }
+        for (const NodeId peer : peers) {
+            auto it_peer = m_index.get<ByPeer>().find(ByPeerView{peer, false, txhash});
+            if (it_peer == m_index.get<ByPeer>().end()) {
+                it_peer = m_index.get<ByPeer>().find(ByPeerView{peer, true, txhash});
+            }
+            // Already deleted, along with all other announcements for this txhash, when an earlier one was the last
+            // non-COMPLETED announcement.
+            if (it_peer == m_index.get<ByPeer>().end()) continue;
+            // As in DisconnectedPeer: make it COMPLETED first (which selects the next best CANDIDATE if needed, or
+            // deletes all announcements for this txhash if no non-COMPLETED ones are left), then delete it.
+            if (MakeCompleted(m_index.project<ByTxHash>(it_peer))) {
+                Erase<ByPeer>(it_peer);
+            }
+        }
+    }
+
     void GetCandidatePeers(const uint256& txhash, std::vector<NodeId>& result_peers) const
     {
         auto it = m_index.get<ByTxHash>().lower_bound(ByTxHashView{txhash, State::CANDIDATE_DELAYED, 0});
         while (it != m_index.get<ByTxHash>().end() && it->m_gtxid.ToUint256() == txhash && it->GetState() != State::COMPLETED) {
             result_peers.push_back(it->m_peer);
+            ++it;
+        }
+    }
+
+    void GetCandidatePeers(const GenTxid& gtxid, std::vector<NodeId>& result_peers) const
+    {
+        const uint256& txhash = gtxid.ToUint256();
+        auto it = m_index.get<ByTxHash>().lower_bound(ByTxHashView{txhash, State::CANDIDATE_DELAYED, 0});
+        while (it != m_index.get<ByTxHash>().end() && it->m_gtxid.ToUint256() == txhash && it->GetState() != State::COMPLETED) {
+            if (it->m_gtxid.IsWtxid() == gtxid.IsWtxid()) result_peers.push_back(it->m_peer);
             ++it;
         }
     }
@@ -714,12 +751,14 @@ TxRequestTracker::TxRequestTracker(bool deterministic) :
 TxRequestTracker::~TxRequestTracker() = default;
 
 void TxRequestTracker::ForgetTxHash(const uint256& txhash) { m_impl->ForgetTxHash(txhash); }
+void TxRequestTracker::ForgetTxHash(const GenTxid& gtxid) { m_impl->ForgetTxHash(gtxid); }
 void TxRequestTracker::DisconnectedPeer(NodeId peer) { m_impl->DisconnectedPeer(peer); }
 size_t TxRequestTracker::CountInFlight(NodeId peer) const { return m_impl->CountInFlight(peer); }
 size_t TxRequestTracker::CountCandidates(NodeId peer) const { return m_impl->CountCandidates(peer); }
 size_t TxRequestTracker::Count(NodeId peer) const { return m_impl->Count(peer); }
 size_t TxRequestTracker::Size() const { return m_impl->Size(); }
 void TxRequestTracker::GetCandidatePeers(const uint256& txhash, std::vector<NodeId>& result_peers) const { return m_impl->GetCandidatePeers(txhash, result_peers); }
+void TxRequestTracker::GetCandidatePeers(const GenTxid& gtxid, std::vector<NodeId>& result_peers) const { return m_impl->GetCandidatePeers(gtxid, result_peers); }
 void TxRequestTracker::SanityCheck() const { m_impl->SanityCheck(); }
 
 void TxRequestTracker::PostGetRequestableSanityCheck(std::chrono::microseconds now) const
