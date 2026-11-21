@@ -14,7 +14,6 @@ from test_framework.messages import (
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_not_equal,
     assert_equal,
     assert_raises_rpc_error,
     create_lots_of_big_transactions,
@@ -351,18 +350,21 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
 
         # Test that calling prioritisetransaction is sufficient to trigger
         # getblocktemplate to (eventually) return a new block.
+        # Compare the template transactions rather than the whole template,
+        # whose curtime follows the clock even when the template is reused.
+        def template_txids():
+            return [tx["txid"] for tx in self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)["transactions"]]
+
         mock_time = int(time.time())
         self.nodes[0].setmocktime(mock_time)
-        template = self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
+        assert tx_id in template_txids()
         self.nodes[0].prioritisetransaction(txid=tx_id, fee_delta=-int(self.relayfee*COIN))
 
         # Calling prioritisetransaction with the inverse amount should delete its prioritisation entry
         assert tx_id not in self.nodes[0].getprioritisedtransactions()
 
         self.nodes[0].setmocktime(mock_time+10)
-        new_template = self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
-
-        assert_not_equal(template, new_template)
+        assert tx_id not in template_txids()
 
 if __name__ == '__main__':
     PrioritiseTransactionTest(__file__).main()
