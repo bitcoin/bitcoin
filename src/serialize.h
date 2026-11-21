@@ -298,29 +298,21 @@ constexpr inline unsigned int GetSizeOfCompactSize(uint64_t nSize)
 
 inline void WriteCompactSize(SizeComputer& os, uint64_t nSize);
 
-template<typename Stream>
+template <typename Stream>
 void WriteCompactSize(Stream& os, uint64_t nSize)
 {
-    if (nSize < 253)
-    {
+    if (nSize < 253) {
         ser_writedata8(os, nSize);
-    }
-    else if (nSize <= std::numeric_limits<uint16_t>::max())
-    {
+    } else if (nSize <= std::numeric_limits<uint16_t>::max()) {
         ser_writedata8(os, 253);
         ser_writedata16(os, nSize);
-    }
-    else if (nSize <= std::numeric_limits<unsigned int>::max())
-    {
+    } else if (nSize <= std::numeric_limits<unsigned int>::max()) {
         ser_writedata8(os, 254);
         ser_writedata32(os, nSize);
-    }
-    else
-    {
+    } else {
         ser_writedata8(os, 255);
         ser_writedata64(os, nSize);
     }
-    return;
 }
 
 /**
@@ -329,29 +321,22 @@ void WriteCompactSize(Stream& os, uint64_t nSize)
  * As these are primarily used to encode the size of vector-like serializations, by default a range
  * check is performed. When used as a generic number encoding, range_check should be set to false.
  */
-template<typename Stream>
+template <typename Stream>
 uint64_t ReadCompactSize(Stream& is, bool range_check = true)
 {
     uint8_t chSize = ser_readdata8(is);
     uint64_t nSizeRet = 0;
-    if (chSize < 253)
-    {
+    if (chSize < 253) {
         nSizeRet = chSize;
-    }
-    else if (chSize == 253)
-    {
+    } else if (chSize == 253) {
         nSizeRet = ser_readdata16(is);
         if (nSizeRet < 253)
             throw std::ios_base::failure("non-canonical ReadCompactSize()");
-    }
-    else if (chSize == 254)
-    {
+    } else if (chSize == 254) {
         nSizeRet = ser_readdata32(is);
         if (nSizeRet < 0x10000u)
             throw std::ios_base::failure("non-canonical ReadCompactSize()");
-    }
-    else
-    {
+    } else {
         nSizeRet = ser_readdata64(is);
         if (nSizeRet < 0x100000000ULL)
             throw std::ios_base::failure("non-canonical ReadCompactSize()");
