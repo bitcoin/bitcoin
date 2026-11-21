@@ -457,4 +457,29 @@ BOOST_AUTO_TEST_CASE(TransactionsRequestDeserializationOverflowTest) {
     BOOST_CHECK_EXCEPTION(stream >> req1, std::ios_base::failure, HasReason{"differential value overflow"});
 }
 
+BOOST_AUTO_TEST_CASE(EmptyTransactionDeserializationTest)
+{
+    // Transactions without inputs or without outputs are rejected in compact blocks and blocktxn messages.
+    auto rand_ctx(FastRandomContext(uint256{42}));
+    CBlock block{BuildBlockTestCase(rand_ctx)};
+    for (const bool with_input : {false, true}) {
+        CMutableTransaction empty_tx;
+        if (with_input) empty_tx.vin.resize(1);
+        // A compact block prefills the first transaction of its block.
+        block.vtx[0] = MakeTransactionRef(empty_tx);
+        const CBlockHeaderAndShortTxIDs short_ids{block, rand_ctx.rand64()};
+        BlockTransactions block_txn;
+        block_txn.blockhash = block.GetHash();
+        block_txn.txn = block.vtx;
+
+        const auto check{[&]<typename T>(const T& obj) {
+            const auto data{DataStream{} << obj};
+            const auto reason = with_input ? "Transaction without outputs" : "Transaction without inputs";
+            BOOST_CHECK_EXCEPTION(SpanReader{data} >> T{}, std::ios_base::failure, HasReason{reason});
+        }};
+        check(short_ids);
+        check(block_txn);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

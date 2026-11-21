@@ -6,7 +6,6 @@
 
 from copy import deepcopy
 from decimal import Decimal
-import math
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.blocktools import MAX_STANDARD_TX_WEIGHT
@@ -232,11 +231,18 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
 
         self.log.info('A really large transaction')
         tx = tx_from_hex(raw_tx_reference)
-        tx.vin = [tx.vin[0]] * math.ceil((MAX_BLOCK_WEIGHT // WITNESS_SCALE_FACTOR) / len(tx.vin[0].serialize()))
+        assert_equal(len(tx.vin[0].serialize()), 41)
+        tx.vin = [tx.vin[0]] * (MAX_BLOCK_WEIGHT // (WITNESS_SCALE_FACTOR * 41))
         self.check_mempool_result(
             result_expected=[{'txid': tx.txid_hex, 'allowed': False, 'reject-reason': 'bad-txns-oversize'}],
             rawtxs=[tx.serialize().hex()],
         )
+
+        self.log.info('A transaction with more inputs than fit in a block')
+        tx = tx_from_hex(raw_tx_reference)
+        assert_equal(len(tx.vin[0].serialize()), 41)
+        tx.vin = [tx.vin[0]] * (MAX_BLOCK_WEIGHT // (WITNESS_SCALE_FACTOR * 41) + 1)
+        assert_raises_rpc_error(-22, 'TX decode failed', lambda: node.testmempoolaccept(rawtxs=[tx.serialize().hex()]))
 
         self.log.info('A transaction with negative output value')
         tx = tx_from_hex(raw_tx_reference)
