@@ -3,15 +3,18 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
+#include <crypto/hkdf_sha256_32.h>
 #include <key.h>
 #include <pubkey.h>
 #include <random.h>
 #include <span.h>
+#include <support/cleanse.h>
 
 #include <algorithm>
 #include <array>
 #include <cstddef>
 #include <span>
+#include <string>
 
 static void BIP324_ECDH(benchmark::Bench& bench)
 {
@@ -48,3 +51,24 @@ static void BIP324_ECDH(benchmark::Bench& bench)
 }
 
 BENCHMARK(BIP324_ECDH);
+
+static void BIP324_HKDF(benchmark::Bench& bench)
+{
+    FastRandomContext rng;
+    auto secret{rng.randbytes<32>()};
+    const std::string salt{"bitcoin_v2_shared_secret\xf9\xbe\xb4\xd9"};
+    const std::array<std::string, 6> labels{"initiator_L", "initiator_P", "responder_L", "responder_P", "garbage_terminators", "session_id"};
+
+    bench.unit("derivation").run([&] {
+        CHKDF_HMAC_SHA256_L32 hkdf{secret, salt};
+        std::array<std::byte, 32> out;
+        for (const auto& label : labels) {
+            hkdf.Expand32(label, out);
+        }
+        secret[0] = out[0];
+        memory_cleanse(out.data(), out.size());
+        memory_cleanse(&hkdf, sizeof(hkdf));
+    });
+}
+
+BENCHMARK(BIP324_HKDF);

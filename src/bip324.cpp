@@ -11,7 +11,6 @@
 #include <key.h>
 #include <pubkey.h>
 #include <random.h>
-#include <span.h>
 #include <support/cleanse.h>
 #include <uint256.h>
 
@@ -20,6 +19,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <span>
 #include <string>
 
 BIP324Cipher::BIP324Cipher(const CKey& key, std::span<const std::byte> ent32) noexcept
@@ -42,26 +42,26 @@ void BIP324Cipher::Initialize(const EllSwiftPubKey& their_pubkey, bool initiator
 
     // Derive encryption keys from shared secret, and initialize stream ciphers and AEADs.
     bool side = (initiator != self_decrypt);
-    CHKDF_HMAC_SHA256_L32 hkdf(UCharCast(ecdh_secret.data()), ecdh_secret.size(), salt);
+    CHKDF_HMAC_SHA256_L32 hkdf{ecdh_secret, salt};
     std::array<std::byte, 32> hkdf_32_okm;
-    hkdf.Expand32("initiator_L", UCharCast(hkdf_32_okm.data()));
+    hkdf.Expand32("initiator_L", hkdf_32_okm);
     (side ? m_send_l_cipher : m_recv_l_cipher).emplace(hkdf_32_okm, REKEY_INTERVAL);
-    hkdf.Expand32("initiator_P", UCharCast(hkdf_32_okm.data()));
+    hkdf.Expand32("initiator_P", hkdf_32_okm);
     (side ? m_send_p_cipher : m_recv_p_cipher).emplace(hkdf_32_okm, REKEY_INTERVAL);
-    hkdf.Expand32("responder_L", UCharCast(hkdf_32_okm.data()));
+    hkdf.Expand32("responder_L", hkdf_32_okm);
     (side ? m_recv_l_cipher : m_send_l_cipher).emplace(hkdf_32_okm, REKEY_INTERVAL);
-    hkdf.Expand32("responder_P", UCharCast(hkdf_32_okm.data()));
+    hkdf.Expand32("responder_P", hkdf_32_okm);
     (side ? m_recv_p_cipher : m_send_p_cipher).emplace(hkdf_32_okm, REKEY_INTERVAL);
 
     // Derive garbage terminators from shared secret.
-    hkdf.Expand32("garbage_terminators", UCharCast(hkdf_32_okm.data()));
+    hkdf.Expand32("garbage_terminators", hkdf_32_okm);
     std::copy(std::begin(hkdf_32_okm), std::begin(hkdf_32_okm) + GARBAGE_TERMINATOR_LEN,
         (initiator ? m_send_garbage_terminator : m_recv_garbage_terminator).begin());
     std::copy(std::end(hkdf_32_okm) - GARBAGE_TERMINATOR_LEN, std::end(hkdf_32_okm),
         (initiator ? m_recv_garbage_terminator : m_send_garbage_terminator).begin());
 
     // Derive session id from shared secret.
-    hkdf.Expand32("session_id", UCharCast(m_session_id.data()));
+    hkdf.Expand32("session_id", m_session_id);
 
     // Wipe all variables that contain information which could be used to re-derive encryption keys.
     memory_cleanse(ecdh_secret.data(), ecdh_secret.size());
