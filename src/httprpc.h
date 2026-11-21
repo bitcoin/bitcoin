@@ -7,7 +7,7 @@
 
 #include <any>
 
-class JSONRPCRequest;
+struct JSONRPCClient;
 class UniValue;
 enum HTTPStatusCode : int;
 
@@ -24,9 +24,9 @@ void InterruptHTTPRPC();
 void StopHTTPRPC();
 
 /** Execute a single HTTP request containing one or more JSONRPC requests.
- * Specified `jreq` will be modified and `status` will be returned.
+ * `status` will be returned.
  */
-UniValue ExecuteHTTPRPC(const UniValue& valRequest, JSONRPCRequest& jreq, HTTPStatusCode& status);
+UniValue ExecuteHTTPRPC(const UniValue& valRequest, const JSONRPCClient& client, HTTPStatusCode& status);
 
 /** Start HTTP REST subsystem.
  * Precondition; HTTP and RPC has been started.
