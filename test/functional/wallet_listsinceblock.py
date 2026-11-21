@@ -7,6 +7,7 @@
 from test_framework.address import key_to_p2wpkh
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.descriptors import descsum_create
+from test_framework.extendedkey import ExtendedPrivateKey
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import MAX_BIP125_RBF_SEQUENCE
 from test_framework.util import (
@@ -418,8 +419,9 @@ class ListSinceBlockTest(BitcoinTestFramework):
         self.log.info("Test descriptor lookup by scriptPubKey.")
 
         # Create a watchonly wallet tracking two multisig descriptors.
-        multi_a = descsum_create("wsh(multi(1,tpubD6NzVbkrYhZ4YBNjUo96Jxd1u4XKWgnoc7LsA1jz3Yc2NiDbhtfBhaBtemB73n9V5vtJHwU6FVXwggTbeoJWQ1rzdz8ysDuQkpnaHyvnvzR/*,tpubD6NzVbkrYhZ4YHdDGMAYGaWxMSC1B6tPRTHuU5t3BcfcS3nrF523iFm5waFd1pP3ZvJt4Jr8XmCmsTBNx5suhcSgtzpGjGMASR3tau1hJz4/*))")
-        multi_b = descsum_create("wsh(multi(1,tpubD6NzVbkrYhZ4YHdDGMAYGaWxMSC1B6tPRTHuU5t3BcfcS3nrF523iFm5waFd1pP3ZvJt4Jr8XmCmsTBNx5suhcSgtzpGjGMASR3tau1hJz4/*,tpubD6NzVbkrYhZ4Y2RLiuEzNQkntjmsLpPYDm3LTRBYynUQtDtpzeUKAcb9sYthSFL3YR74cdFgF5mW8yKxv2W2CWuZDFR2dUpE5PF9kbrVXNZ/*))")
+        xpubs = [ExtendedPrivateKey.generate().pubkey().to_string() for _ in range(0, 3)]
+        multi_a = descsum_create(f"wsh(multi(1,{xpubs[0]}/*,{xpubs[1]}/*))")
+        multi_b = descsum_create(f"wsh(multi(1,{xpubs[1]}/*,{xpubs[2]}/*))")
         self.nodes[0].createwallet(wallet_name="wo", disable_private_keys=True)
         wo_wallet = self.nodes[0].get_wallet_rpc("wo")
         wo_wallet.importdescriptors([
