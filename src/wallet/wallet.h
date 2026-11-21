@@ -651,7 +651,7 @@ public:
      * Sets `complete` if the PSBT is now complete (i.e. has all required
      * signatures or signature-parts, and is ready to finalize.)
      *
-     * @param[in]  psbtx PartiallySignedTransaction to fill in
+     * @param[in,out] psbtx PartiallySignedTransaction to fill in
      * @param[in]  options options for filling or signing
      * @param[out] complete indicates whether the PSBT is now complete
      * @param[out] n_signed the number of inputs signed by this wallet

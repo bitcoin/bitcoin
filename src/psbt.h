@@ -1666,8 +1666,8 @@ bool FinalizePSBT(PartiallySignedTransaction& psbtx);
 /**
  * Finalizes a PSBT if possible, and extracts it to a CMutableTransaction if it could be finalized.
  *
- * @param[in]  psbtx PartiallySignedTransaction
- * @param[out] result CMutableTransaction representing the complete transaction, if successful
+ * @param[in,out] psbtx PartiallySignedTransaction
+ * @param[out]    result CMutableTransaction representing the complete transaction, if successful
  * @return True if we successfully extracted the transaction, false otherwise
  */
 bool FinalizeAndExtractPSBT(PartiallySignedTransaction& psbtx, CMutableTransaction& result);
