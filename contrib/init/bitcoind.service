@@ -25,7 +25,7 @@ ExecStart=/usr/bin/bitcoind -pid=/run/bitcoind/bitcoind.pid \
                             -shutdownnotify='systemd-notify --stopping'
 
 # Make sure the config directory is readable by the service user
-ExecStartPre=!/bin/chgrp bitcoin /etc/bitcoin
+ExecStartPre=+/bin/chgrp bitcoin /etc/bitcoin
 
 # Process management
 ####################
@@ -81,6 +81,54 @@ MemoryDenyWriteExecute=true
 
 # Restrict ABIs to help ensure MemoryDenyWriteExecute is enforced
 SystemCallArchitectures=native
+
+# Make kernel tunables in /proc and /sys read-only.
+ProtectKernelTunables=true
+
+# Deny explicit kernel module loading.
+ProtectKernelModules=true
+
+# Deny access to the kernel log ring buffer.
+ProtectKernelLogs=true
+
+# Mount the control group hierarchy read-only.
+ProtectControlGroups=true
+
+# Deny changes to the system clock.
+ProtectClock=true
+
+# Deny changes to the hostname.
+ProtectHostname=true
+
+# Hide processes owned by other users in /proc.
+ProtectProc=invisible
+
+# Deny creation of new namespaces.
+RestrictNamespaces=true
+
+# Deny acquiring realtime scheduling.
+RestrictRealtime=true
+
+# Deny setting the set-user-ID and set-group-ID bits on files.
+RestrictSUIDSGID=true
+
+# Prevent changes to the execution domain (personality).
+LockPersonality=true
+
+# Remove IPC objects owned by the service user when it stops.
+RemoveIPC=true
+
+# Only allow IP, UNIX and netlink sockets. Netlink is used for
+# NAT-PMP/PCP gateway discovery and getifaddrs().
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+
+# Only allow system calls used by typical system services, minus
+# privileged ones.
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged
+
+# Drop all capabilities.
+CapabilityBoundingSet=
 
 [Install]
 WantedBy=multi-user.target
