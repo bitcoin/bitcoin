@@ -32,7 +32,7 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.extra_args = [
-            ["-fastprune", "-prune=1", "-blockfilterindex=1"],
+            ["-fastprune", "-prune=1", "-blockfilterindex=1", "-txindex=1"],
             ["-fastprune", "-prune=1", "-coinstatsindex=1"],
             ["-fastprune", "-prune=1", "-blockfilterindex=1", "-coinstatsindex=1"],
             [],
@@ -142,6 +142,7 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
             self.nodes[i].assert_start_raises_init_error(extra_args=self.extra_args[i], expected_msg=msg+end_msg)
 
         self.log.info("fetching the missing blocks with getblockfrompeer doesn't work for block filter index and coinstatsindex")
+        last_indexed_height = 1500
         # Only checking the first two nodes since this test takes a long time
         # and the third node is kind of redundant in this context
         for i, msg in enumerate([filter_msg, stats_msg]):
@@ -153,8 +154,7 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
             assert_equal(len(peers), 1)
             peer_id = peers[0]["id"]
 
-            # 1500 is the height to where the indices were able to sync previously
-            hashes = send_batch_request(node, "getblockhash", [[a] for a in range(1500, prune_height)])
+            hashes = send_batch_request(node, "getblockhash", [[height] for height in range(last_indexed_height, prune_height)])
             send_batch_request(node, "getblockfrompeer", [[bh, peer_id] for bh in hashes])
             # Ensure all necessary blocks have been fetched before proceeding
             for bh in hashes:
@@ -166,6 +166,12 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
             # can not provide that.
             self.stop_node(i)
             node.assert_start_raises_init_error(extra_args=self.extra_args[i], expected_msg=msg+end_msg)
+
+        self.log.info("txindex can resume after fetching missing block bodies without undo data")
+        txindex_node = self.nodes[0]
+        self.start_node(0, extra_args=["-prune=1", "-fastprune", "-txindex=1"])
+        refetched_block = txindex_node.getblock(txindex_node.getblockhash(last_indexed_height + 1))
+        assert_equal(txindex_node.getrawtransaction(refetched_block["tx"][0], 1)["blockhash"], refetched_block["hash"])
 
         self.log.info("make sure the nodes start again with the indices and an additional -reindex arg")
         for i in range(3):

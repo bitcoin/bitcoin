@@ -18,6 +18,7 @@
 #include <node/blockstorage.h>
 #include <node/context.h>
 #include <node/transaction.h>
+#include <node/tx_lookup_result.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <rpc/blockchain.h>
@@ -47,6 +48,7 @@
 #include <ios>
 #include <memory>
 #include <optional>
+#include <set>
 #include <span>
 #include <stdexcept>
 #include <string_view>
@@ -903,11 +905,14 @@ static bool rest_tx(const std::any& context, HTTPRequest* req, const std::string
 
     const NodeContext* const node = GetNodeContext(context, req);
     if (!node) return false;
-    uint256 hashBlock = uint256();
-    const CTransactionRef tx{GetTransaction(/*block_index=*/nullptr, node->mempool.get(), *hash,  node->chainman->m_blockman, hashBlock)};
-    if (!tx) {
+    const TxLookupResult result{GetTransaction(/*block_index=*/nullptr, node->mempool.get(), *hash, node->chainman->m_blockman)};
+    if (const auto* miss{result.GetMiss()}) {
+        if (!miss->pruned_block_hashes.empty()) {
+            return RESTERR(req, HTTP_NOT_FOUND, PrunedBlocksErrorMessage(miss->pruned_block_hashes));
+        }
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
     }
+    const auto& [tx, hashBlock]{*result.GetFound()};
     switch (rf) {
     case RESTResponseFormat::BINARY: {
         DataStream ssTx;

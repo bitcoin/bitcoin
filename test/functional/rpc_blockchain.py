@@ -747,6 +747,8 @@ class BlockchainTest(BitcoinTestFramework):
         block.solve()
         node.submitheader(block.serialize().hex())
         assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", lambda: node.getblock(block.hash_hex))
+        with node.assert_debug_log([], unexpected_msgs=["while reading raw block storage header"]):
+            assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", node.getrawtransaction, block.vtx[0].txid_hex, 0, block.hash_hex)
 
         self.log.info("Test getblock when block data is available but undo data isn't")
         # Submits a block building on the header-only block, so it can't be connected and has no undo data
@@ -759,6 +761,10 @@ class BlockchainTest(BitcoinTestFramework):
         assert_fee_not_in_block(block_noundo.hash_hex, 3)
         assert_vin_does_not_contain_prevout(block_noundo.hash_hex, 2)
         assert_vin_does_not_contain_prevout(block_noundo.hash_hex, 3)
+
+        tx_without_undo = node.getrawtransaction(tx.txid_hex, 2, block_noundo.hash_hex)
+        assert "fee" not in tx_without_undo
+        assert "prevout" not in tx_without_undo["vin"][0]
 
         self.log.info("Test getblock when block is missing")
         move_block_file('blk00000.dat', 'blk00000.dat.bak')
