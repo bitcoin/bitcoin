@@ -102,16 +102,6 @@ class PingIBDTest(BitcoinTestFramework):
     def bytes_sent(self, node, msg_type):
         return node.getpeerinfo()[0]["bytessent_per_msg"].get(msg_type, 0)
 
-    def wait_for_send_stall(self, node):
-        """Wait until the node can't make any progress sending blocks to its peer anymore."""
-        previous_bytes = 0
-
-        def stalled():
-            nonlocal previous_bytes
-            block_bytes, previous_bytes = previous_bytes, self.bytes_sent(node, "block")
-            return block_bytes > 0 and block_bytes == previous_bytes
-        self.wait_until(stalled, check_interval=1)
-
     def test_pong_delay_ibd(self):
         # Tests that we only serve pings after serving all outstanding block requests, which could make a peer
         # timeout our node for not answering with a pong, even though the reason is their own slowness in downloading blocks.

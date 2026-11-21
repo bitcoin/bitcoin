@@ -216,7 +216,13 @@ bool Sock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per
         const auto& s = sock->m_socket;
         if (events.requested & RecvEvent) {
             FD_SET(s, &recv);
-            FD_SET(s, &err);
+            // select err events are not useful for us except for detecting
+            // connection failures on some platforms (Windows). Only detect
+            // these events if ConnErrorEventFlag was explicitly used to opt-in
+            // to them.
+            if (events.requested & ConnErrorEventFlag) {
+                FD_SET(s, &err);
+            }
         }
         if (events.requested & SendEvent) {
             FD_SET(s, &send);

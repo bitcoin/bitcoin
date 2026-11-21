@@ -2200,6 +2200,7 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
         //
         // Receive
         //
+        bool recvRequested = false;
         bool recvSet = false;
         bool sendSet = false;
         bool errorSet = false;
@@ -2210,10 +2211,24 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
             }
             const auto it = events_per_sock.find(pnode->m_sock);
             if (it != events_per_sock.end()) {
+                recvRequested = it->second.requested & Sock::RecvEvent;
                 recvSet = it->second.occurred & Sock::RecvEvent;
                 sendSet = it->second.occurred & Sock::SendEvent;
                 errorSet = it->second.occurred & Sock::ErrorEvent;
             }
+        }
+
+        // Only poll() reports errors here: select() does not monitor exceptions
+        // on established connections. poll() always reports POLLERR/POLLHUP,
+        // whichever events we requested.
+        // If we requested POLLIN, then recv() below can read buffered data
+        // before it detects the disconnect, unless a failed send disconnects
+        // first. If receiving is paused, we did not request POLLIN, so
+        // disconnect now: sending on a broken connection would fail anyway.
+        if (errorSet && !recvRequested) {
+            LogDebug(BCLog::NET, "socket error or hangup, %s", pnode->DisconnectMsg());
+            pnode->CloseSocketDisconnect();
+            continue;
         }
 
         if (sendSet) {

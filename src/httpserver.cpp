@@ -902,6 +902,16 @@ void HTTPServer::SocketHandlerConnected(const IOReadiness& io_readiness) const
         bool send_ready = events.occurred & Sock::SendEvent;
         bool recv_ready = events.occurred & Sock::RecvEvent;
         bool err_ready = events.occurred & Sock::ErrorEvent;
+        const bool recv_requested = events.requested & Sock::RecvEvent;
+
+        // poll() reports errors and hangups even when reading was not requested.
+        // When reads are paused, disconnect instead of bypassing backpressure.
+        if (err_ready && !recv_requested) {
+            LogDebug(BCLog::HTTP, "HTTP socket error or hangup from %s (id=%llu)",
+                     client->GetOrigin(), client->GetId());
+            client->Disconnect();
+            continue;
+        }
 
         if (send_ready) {
             // Try to send as much data as is ready for this client.

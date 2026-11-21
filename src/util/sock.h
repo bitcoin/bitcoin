@@ -156,10 +156,33 @@ public:
     static constexpr Event SendEvent = 0b010;
 
     /**
-     * Ignored if passed to `Wait()`, but could be set in the occurred events if an
-     * exceptional condition has occurred on the socket or if it has been disconnected.
+     * Ignored if passed to `Wait()`, but could be set in the occurred events.
+     * With `poll()` it reports an error or hangup, whichever events were
+     * requested. With `select()` it reports an exceptional condition, and only
+     * if `ConnErrorEventFlag` was requested.
      */
     static constexpr Event ErrorEvent = 0b100;
+
+    /**
+     * Modifiers for the events requested from `Wait()`. They share the bits of
+     * an `Event` and are never set in the occurred events.
+     */
+    using EventFlag = uint8_t;
+
+    /**
+     * If passed to `Wait()`, then it will also wait for a non-blocking
+     * connect() to fail. A failure is reported as `ErrorEvent`. It has no
+     * effect without `RecvEvent`.
+     *
+     * This is only needed for `select()`, where Windows reports a failed
+     * connect in the exception set and nowhere else. `poll()` reports errors
+     * whichever events were requested, so the flag is ignored there.
+     *
+     * Do not use on established connections: the `select()` exception set
+     * also reports TCP urgent data, which `recv()` does not return, so
+     * `Wait()` could keep returning with nothing to read.
+     */
+    static constexpr EventFlag ConnErrorEventFlag = 0b10000;
 
     /**
      * Maximum timeout supported by `Wait()` and `WaitMany()` (about 24.8 days).
@@ -173,10 +196,11 @@ public:
      * Wait for readiness for input (recv) or output (send).
      * @param[in] timeout Wait this much for at least one of the requested events to occur.
      * Capped at `MAX_WAIT_TIMEOUT`.
-     * @param[in] requested Wait for those events, bitwise-or of `RecvEvent` and `SendEvent`.
+     * @param[in] requested Wait for those events, bitwise-or of `RecvEvent` and `SendEvent`,
+     * optionally with `ConnErrorEventFlag`.
      * @param[out] occurred If not nullptr and the function returns `true`, then this
-     * indicates which of the requested events occurred (`ErrorEvent` will be added, even if
-     * not requested, if an exceptional event occurs on the socket).
+     * indicates which of the requested events occurred. `ErrorEvent` may be added
+     * without being requested, see `ConnErrorEventFlag`.
      * A timeout is indicated by return value of `true` and `occurred` being set to 0.
      * @return true on success (or timeout, if `occurred` of 0 is returned), false otherwise
      */
