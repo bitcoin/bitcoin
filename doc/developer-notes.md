@@ -694,6 +694,41 @@ Test placement depends on existing coverage and the type of change:
   Remove the comments when updating those assertions in the behavior-changing
   commit.
 
+### Tests Targeting Surviving Mutants
+
+When a test is added or extended to kill a mutant that survived
+[mutation testing](https://en.wikipedia.org/wiki/Mutation_testing), describe
+the mutant in the commit message of the test commit and/or in the PR description.
+Include the file and the change, preferably as a minimal diff, for example:
+
+```diff
+--- a/src/script/interpreter.cpp
++++ b/src/script/interpreter.cpp
+@@ -459,7 +459,7 @@ bool EvalScript(...)
+             if (sigversion == SigVersion::BASE || sigversion == SigVersion::WITNESS_V0) {
+                 // Note how OP_RESERVED does not count towards the opcode limit.
+-                if (opcode > OP_16 && ++nOpCount > MAX_OPS_PER_SCRIPT) {
++                if (opcode >= OP_16 && ++nOpCount > MAX_OPS_PER_SCRIPT) {
+                     return set_error(serror, SCRIPT_ERR_OP_COUNT);
+                 }
+```
+
+This lets reviewers verify the test by applying the mutant and checking that
+the test fails.
+
+Not every surviving mutant is meant to be killed. Many are equivalent (the
+mutation does not change the program's observable behavior) or unproductive
+to target (e.g. mutations to logging), and tests written only to kill them add
+maintenance cost without improving coverage.
+
+Surviving mutants are tracked on [MutantHub](https://mutanthub.space). Before
+writing a test, check whether the mutant is already listed there and, if it is
+not, submit it first. This gives other contributors the chance to point out
+whether the mutant is useful to kill before effort goes into writing a test.
+When writing the test, reference the mutant's MutantHub link in the commit
+message and/or PR description, next to the diff. The link does not replace
+the diff, since links can break and mutants refer to a specific commit.
+
 ## Locking/mutex usage notes
 
 The code is multi-threaded and uses mutexes and the
