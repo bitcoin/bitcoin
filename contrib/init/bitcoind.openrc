@@ -41,27 +41,13 @@ depend() {
 	use net
 }
 
-# verify
-# 1) that the datadir exists and is writable (or create it)
-# 2) that a directory for the pid exists and is writable
-# 3) ownership and permissions on the config file
 start_pre() {
-	checkpath \
-	-d \
-	--mode 0750 \
-	--owner ${command_user} \
-	"${BITCOIND_DATADIR}"
-
-	checkpath \
-	-d \
-	--mode 0755 \
-	--owner ${command_user} \
-	"${BITCOIND_PIDDIR}"
-
-	checkpath -f \
-	--owner ${command_user} \
-	-m 0660 \
-	"${BITCOIND_CONFIGFILE}"
+	# 1) datadir exists and is writable
+	# 2) piddir exists and is writable
+	# 3) conffile ownership and permissions
+	checkpath -d -o ${command_user} -m 0750 "${BITCOIND_DATADIR}"
+	checkpath -d -o ${command_user} -m 0755 "${BITCOIND_PIDDIR}"
+	checkpath -f -o ${command_user} -m 0660 "${BITCOIND_CONFIGFILE}"
 
 	checkconfig || return 1
 }
@@ -90,3 +76,4 @@ checkconfig()
 		return 1
 	fi
 }
+
