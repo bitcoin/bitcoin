@@ -35,10 +35,6 @@ public:
     /** Open the database if it is not already opened. */
     void Open() override;
 
-    /** Rewrite the entire database on disk
-     */
-    bool Rewrite() override { return false; }
-
     /** Back up the entire database to a file.
      */
     bool Backup(const std::string& strDest) const override;
