@@ -3,14 +3,22 @@
              ((gnu packages crypto) #:select (osslsigncode))
              ((gnu packages nss) #:select (nss-certs))
              ((gnu packages python-build) #:select (python-poetry-core python-setuptools))
-             ((gnu packages python-crypto) #:select (python-asn1crypto python-oscrypto))
+             ((gnu packages python-crypto)
+              #:select (python-asn1crypto
+                        (python-oscrypto . guix:python-oscrypto)))
              ((gnu packages tls) #:select (openssl))
              ((gnu packages version-control) #:select (git-minimal))
              (guix build-system python)
              (guix build-system pyproject)
+             (guix gexp)
              (guix git-download)
              ((guix licenses) #:prefix license:)
              (guix packages))
+
+(define-public python-oscrypto
+  ;; Avoid division by zero when PBKDF2 takes less than a millisecond.
+  (package-with-extra-patches guix:python-oscrypto
+    (list (local-file "patches/oscrypto-pbkdf2-timing.patch"))))
 
 (define-public python-elfesteem
   (let ((commit "2eb1e5384ff7a220fd1afacd4a0170acff54fe56"))
