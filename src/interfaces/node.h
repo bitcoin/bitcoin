@@ -13,7 +13,6 @@
 #include <netbase.h>
 #include <primitives/transaction.h>
 #include <uint256.h>
-#include <util/log.h>
 #include <util/translation.h>
 
 #include <cstddef>
@@ -31,6 +30,7 @@ class Coin;
 class UniValue;
 enum class SynchronizationState;
 struct CNodeStateStats;
+
 namespace node {
 enum class TransactionError;
 struct NodeContext;
@@ -79,8 +79,8 @@ public:
     //! Get exit status.
     virtual int getExitStatus() = 0;
 
-    // Get log flags.
-    virtual BCLog::CategoryMask getLogCategories() = 0;
+    //! Returns true if any debug logging categories are enabled.
+    virtual bool isAnyDebugLoggingEnabled() = 0;
 
     //! Initialize app dependencies.
     virtual bool baseInitialize() = 0;
