@@ -290,6 +290,9 @@ BOOST_AUTO_TEST_CASE(parse_address_test)
     }};
     check_listen_address("unix", "unix", ipc::DEFAULT_MAX_CONNECTIONS);
     check_listen_address("unix:", "unix:", ipc::DEFAULT_MAX_CONNECTIONS);
+    check_listen_address("unix,max-connections=8", "unix", 8);
+    check_listen_address("unix,max-connections=0", "", 0, "max-connections must be at least 1");
+    check_listen_address("unixpath.sock,max-connections=8", "unixpath.sock,max-connections=8", ipc::DEFAULT_MAX_CONNECTIONS);
     check_listen_address("unix:,max-connections=8", "unix:", 8);
     check_listen_address("unix:path.sock,max-connections=8", "unix:path.sock", 8);
     check_listen_address("unix:,max-connections=1", "unix:", 1);
