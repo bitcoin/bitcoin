@@ -74,6 +74,7 @@
 
 #include <any>
 #include <atomic>
+#include <compare>
 #include <condition_variable>
 #include <cstdint>
 #include <cstdlib>
@@ -81,6 +82,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -923,6 +925,8 @@ public:
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
     {
+        // Timeout can come from an IPC client. The negated comparison also catches NaN.
+        if (!(options.timeout >= 0ms)) throw std::runtime_error("Invalid timeout: must not be negative or NaN");
         auto new_template = block_template_manager().WaitAndCreateNewBlock(
             *m_block_template, options, m_create_options, m_interrupt_wait);
         if (new_template) return std::make_unique<BlockTemplateImpl>(m_create_options, util::NotNull{std::move(new_template)}, m_node);
@@ -965,6 +969,8 @@ public:
 
     std::optional<BlockRef> waitTipChanged(uint256 current_tip, MillisecondsDouble timeout) override
     {
+        // Timeout can come from an IPC client. The negated comparison also catches NaN.
+        if (!(timeout >= 0ms)) throw std::runtime_error("Invalid timeout: must not be negative or NaN");
         return block_template_manager().WaitTipChanged(current_tip, timeout, m_interrupt_mining);
     }
 

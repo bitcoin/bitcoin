@@ -159,6 +159,17 @@ class IPCMiningTest(BitcoinTestFramework):
             assert_equal(oldblockref.hash, newblockref.hash)
             assert_equal(oldblockref.height, newblockref.height)
 
+            self.log.debug("Negative or NaN timeout is rejected")
+            for timeout in (-1.0, float("-inf"), float("nan")):
+                await assert_capnp_raises(lambda: mining.waitTipChanged(ctx, newblockref.hash, timeout),
+                                          "remote exception: std::exception: Invalid timeout: must not be negative or NaN")
+
+            self.log.debug("Infinite timeout is accepted")
+            async def wait_for_tip_inf():
+                result = (await mining.waitTipChanged(ctx, newblockref.hash, float("inf"))).result
+                assert_equal(len(result.hash), 0)
+            await wait_and_do(wait_for_tip_inf(), mining.interrupt, check_order=True)
+
             self.log.debug("interrupt() should abort waitTipChanged()")
             async def wait_for_tip():
                 result = (await mining.waitTipChanged(ctx, newblockref.hash, self.long_ipc_timeout)).result
@@ -330,6 +341,21 @@ class IPCMiningTest(BitcoinTestFramework):
                 waitoptions.timeout = self.no_event_timeout_ms
                 template7 = await mining_wait_next_template(template6, stack, ctx, waitoptions)
                 assert template7 is None
+
+                self.log.debug("Negative or NaN timeout is rejected")
+                for timeout in (-1.0, float("-inf"), float("nan")):
+                    waitoptions.timeout = timeout
+                    await assert_capnp_raises(lambda: template6.waitNext(ctx, waitoptions),
+                                              "remote exception: std::exception: Invalid timeout: must not be negative or NaN")
+
+                self.log.debug("Infinite timeout is accepted")
+                async def wait_for_block_inf():
+                    inf_waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
+                    inf_waitoptions.timeout = float("inf")
+                    inf_waitoptions.feeThreshold = MAX_MONEY
+                    template8 = await mining_wait_next_template(template6, stack, ctx, inf_waitoptions)
+                    assert template8 is None
+                await wait_and_do(wait_for_block_inf(), template6.interruptWait, check_order=True)
                 waitoptions.timeout = self.default_ipc_timeout_ms
 
                 self.log.debug("interruptWait should abort the current wait")
