@@ -475,6 +475,15 @@ BOOST_AUTO_TEST_CASE(netpermissions_test)
     BOOST_CHECK(NetWhitelistPermissions::TryParse("in,out,bloom@1.2.3.4", whitelistPermissions, connection_direction, error));
     BOOST_CHECK_EQUAL(connection_direction, ConnectionDirection::Both);
 
+    // "bip152hb" can be combined with other flags, but is not implied by "all"
+    BOOST_CHECK(NetWhitelistPermissions::TryParse("bip152hb,out@1.2.3.4", whitelistPermissions, connection_direction, error));
+    BOOST_CHECK_EQUAL(whitelistPermissions.m_flags, NetPermissionFlags::Bip152HighBandwidth);
+    BOOST_CHECK_EQUAL(connection_direction, ConnectionDirection::Out);
+    BOOST_CHECK(NetWhitebindPermissions::TryParse("noban,bip152hb@1.2.3.4:32", whitebindPermissions, error));
+    BOOST_CHECK_EQUAL(whitebindPermissions.m_flags, NetPermissionFlags::NoBan | NetPermissionFlags::Bip152HighBandwidth);
+    BOOST_CHECK(NetWhitebindPermissions::TryParse("all@1.2.3.4:32", whitebindPermissions, error));
+    BOOST_CHECK(!NetPermissions::HasFlag(whitebindPermissions.m_flags, NetPermissionFlags::Bip152HighBandwidth));
+
     const auto strings = NetPermissions::ToStrings(NetPermissionFlags::All);
     BOOST_CHECK_EQUAL(strings.size(), 7U);
     BOOST_CHECK(std::find(strings.begin(), strings.end(), "bloomfilter") != strings.end());
@@ -484,6 +493,10 @@ BOOST_AUTO_TEST_CASE(netpermissions_test)
     BOOST_CHECK(std::find(strings.begin(), strings.end(), "mempool") != strings.end());
     BOOST_CHECK(std::find(strings.begin(), strings.end(), "download") != strings.end());
     BOOST_CHECK(std::find(strings.begin(), strings.end(), "addr") != strings.end());
+
+    const auto bip152hb_strings{NetPermissions::ToStrings(NetPermissionFlags::Bip152HighBandwidth)};
+    BOOST_REQUIRE_EQUAL(bip152hb_strings.size(), 1U);
+    BOOST_CHECK_EQUAL(bip152hb_strings[0], "bip152hb");
 }
 
 BOOST_AUTO_TEST_CASE(netbase_dont_resolve_strings_with_embedded_nul_characters)

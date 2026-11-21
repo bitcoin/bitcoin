@@ -40,6 +40,11 @@ enum class NetPermissionFlags : uint32_t {
     // Can request addrs without hitting a privacy-preserving cache, and send us
     // unlimited amounts of addrs.
     Addr = (1U << 7),
+    // Request BIP152 high-bandwidth compact block announcements from this peer
+    // for the whole connection, in addition to the automatically selected
+    // high-bandwidth peers. Not part of All: this grants the peer nothing and
+    // costs bandwidth, so existing "all" configurations must not enable it.
+    Bip152HighBandwidth = (1U << 8),
 
     // True if the user did not specifically set fine-grained permissions with
     // the -whitebind or -whitelist configuration options.

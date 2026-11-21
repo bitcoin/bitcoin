@@ -95,6 +95,61 @@ class CompactBlocksConnectionTest(BitcoinTestFramework):
             assert status[nodeid - 2]
         assert_equal(status, [False, True, True, True])
 
+        self.test_bip152hb_permission_outbound()
+        self.test_bip152hb_permission_inbound()
+
+    def hb_established(self, from_node, to_node):
+        """Whether from_node requested, and to_node granted, high-bandwidth mode."""
+        info_to = self.peer_info(from_node, to_node)
+        info_from = self.peer_info(to_node, from_node)
+        return (info_to is not None and info_from is not None and
+                info_to['bip152_hb_to'] and info_from['bip152_hb_from'])
+
+    def test_bip152hb_permission_outbound(self):
+        self.log.info("Testing bip152hb permission on an outbound peer alongside automatic selection...")
+        # Only manual outbound connections get the permission, so of the
+        # topology below only node 2 has it. Nodes 3-5 connect inbound.
+        self.restart_node(1, extra_args=["-whitelist=bip152hb,out@127.0.0.1"])
+        self.connect_nodes(1, 2)
+        # High-bandwidth mode is requested during the handshake, before the
+        # peer relays any block.
+        self.wait_until(lambda: self.hb_established(1, 2))
+        assert_equal(self.peer_info(1, 2)['permissions'], ['bip152hb'])
+        self.connect_nodes(3, 1)
+        self.connect_nodes(4, 1)
+        self.connect_nodes(5, 1)
+
+        # Nodes 3-5 fill all three automatic slots in addition to node 2.
+        for nodeid in range(3, 6):
+            status = self.relay_block_through(nodeid)
+            assert_equal(status, [True, nodeid >= 3, nodeid >= 4, nodeid >= 5])
+
+        # A block from node 2 is accepted as a high-bandwidth announcement, but
+        # node 2 does not take an automatic slot, even though an outbound peer
+        # would normally displace an inbound one.
+        with self.nodes[1].assert_debug_log(
+                expected_msgs=["Successfully reconstructed block"],
+                unexpected_msgs=["sent us an unsolicited compact block"]):
+            assert_equal(self.relay_block_through(2), [True, True, True, True])
+
+        # A new connection to node 2 gets the permission, and thus
+        # high-bandwidth mode, again.
+        self.disconnect_nodes(1, 2)
+        self.connect_nodes(1, 2)
+        self.wait_until(lambda: self.hb_established(1, 2))
+        assert_equal(self.relay_block_through(3), [True, True, True, True])
+
+    def test_bip152hb_permission_inbound(self):
+        self.log.info("Testing bip152hb permission on an inbound peer...")
+        # Without "out", -whitelist only applies to inbound connections.
+        self.restart_node(1, extra_args=["-whitelist=bip152hb@127.0.0.1"])
+        self.connect_nodes(1, 2)
+        self.connect_nodes(3, 1)
+        self.wait_until(lambda: self.hb_established(1, 3))
+        assert_equal(self.peer_info(1, 3)['permissions'], ['bip152hb'])
+        assert_equal(self.peer_info(1, 2)['permissions'], [])
+        assert not self.peer_info(1, 2)['bip152_hb_to']
+
 
 if __name__ == '__main__':
     CompactBlocksConnectionTest(__file__).main()

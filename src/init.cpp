@@ -2282,6 +2282,13 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         NetWhitebindPermissions whitebind;
         bilingual_str error;
         if (!NetWhitebindPermissions::TryParse(strBind, whitebind, error)) return InitError(error);
+        // Our mempool would not contain the transactions needed to reconstruct
+        // high-bandwidth compact block announcements, so these are never
+        // requested in -blocksonly mode. Reject the permission instead of
+        // ignoring it.
+        if (peerman_opts.ignore_incoming_txs && NetPermissions::HasFlag(whitebind.m_flags, NetPermissionFlags::Bip152HighBandwidth)) {
+            return InitError(strprintf(_("Cannot use the bip152hb permission in -%s together with -blocksonly"), "whitebind"));
+        }
         connOptions.vWhiteBinds.push_back(whitebind);
     }
 
@@ -2347,6 +2354,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         ConnectionDirection connection_direction;
         bilingual_str error;
         if (!NetWhitelistPermissions::TryParse(net, subnet, connection_direction, error)) return InitError(error);
+        if (peerman_opts.ignore_incoming_txs && NetPermissions::HasFlag(subnet.m_flags, NetPermissionFlags::Bip152HighBandwidth)) {
+            return InitError(strprintf(_("Cannot use the bip152hb permission in -%s together with -blocksonly"), "whitelist"));
+        }
         if (connection_direction & ConnectionDirection::In) {
             connOptions.vWhitelistedRangeIncoming.push_back(subnet);
         }

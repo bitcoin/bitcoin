@@ -136,6 +136,7 @@ inline constexpr NetPermissionFlags ALL_NET_PERMISSION_FLAGS[]{
     NetPermissionFlags::Mempool,
     NetPermissionFlags::Addr,
     NetPermissionFlags::Download,
+    NetPermissionFlags::Bip152HighBandwidth,
     NetPermissionFlags::Implicit,
     NetPermissionFlags::All,
 };
