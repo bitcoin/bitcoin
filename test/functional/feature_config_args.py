@@ -220,6 +220,11 @@ class ConfArgsTest(BitcoinTestFramework):
             expected_msg='Error: Error parsing command line arguments: Can not set -proxy with no value. Please specify value with -proxy=value.',
             extra_args=['-proxy'],
         )
+        for option in ['checkblocks', 'maxreceivebuffer', 'maxsendbuffer', 'maxtipage']:
+            self.nodes[0].assert_start_raises_init_error(
+                expected_msg=f'Error: Error parsing command line arguments: Negating of -{option} is meaningless and therefore forbidden',
+                extra_args=[f'-no{option}'],
+            )
         # Provide a value different from 1 to the -wallet negated option
         if self.is_wallet_compiled():
             for value in [0, 'not_a_boolean']:
@@ -227,6 +232,11 @@ class ConfArgsTest(BitcoinTestFramework):
                     expected_msg="Error: Invalid value detected for '-wallet' or '-nowallet'. '-wallet' requires a string value, while '-nowallet' accepts only '1' to disable all wallets",
                     extra_args=[f'-nowallet={value}'],
                 )
+
+    def test_negated_default_off_options(self):
+        self.log.info("Test that negating options that are off by default keeps them off")
+        self.start_node(0, extra_args=['-noi2psam', '-norpcpassword'])
+        self.stop_node(0)
 
     def test_log_buffer(self):
         with self.nodes[0].assert_debug_log(expected_msgs=["[warning] Parsed potentially confusing double-negative -listen=0\n"]):
@@ -544,6 +554,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.test_config_file_parser()
         self.test_config_file_log()
         self.test_invalid_command_line_options()
+        self.test_negated_default_off_options()
         self.test_ignored_conf()
         self.test_ignored_default_conf()
         self.test_acceptstalefeeestimates_arg_support()

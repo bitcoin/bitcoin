@@ -330,6 +330,13 @@ class TorControlTest(BitcoinTestFramework):
 
         mock_tor.stop()
 
+    def test_notorcontrol(self):
+        self.log.info("Test that -notorcontrol requires -nolistenonion")
+        self.stop_node(0)
+        self.nodes[0].replace_in_config([("listenonion=0\n", "")])
+        self.nodes[0].assert_start_raises_init_error(["-notorcontrol"], "Error: -notorcontrol requires -nolistenonion")
+        self.start_node(0, extra_args=["-notorcontrol", "-nolistenonion"])
+
     def test_invalid_service_id(self):
         invalid_service_id = "a" + SERVICE_ID[1:]
         key_path = self.private_key_path()
@@ -405,6 +412,7 @@ class TorControlTest(BitcoinTestFramework):
         self.test_invalid_service_id()
         self.test_private_key_tor_command_injection()
         self.test_reconnect_backoff()
+        self.test_notorcontrol()
 
 
 if __name__ == '__main__':

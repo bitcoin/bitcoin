@@ -305,8 +305,9 @@ fs::path ArgsManager::GetBlocksDirPath() const
     // this function
     if (!path.empty()) return path;
 
-    if (!GetSetting_("-blocksdir").isNull()) {
-        path = fs::absolute(GetPathArg_("-blocksdir"));
+    const fs::path blocksdir{GetPathArg_("-blocksdir")};
+    if (!blocksdir.empty()) {
+        path = fs::absolute(blocksdir);
         if (!fs::is_directory(path)) {
             path = "";
             return path;
@@ -523,6 +524,7 @@ std::string ArgsManager::GetArg(const std::string& strArg, const std::string& st
 std::optional<std::string> ArgsManager::GetArg(const std::string& strArg) const
 {
     const common::SettingsValue value = GetSetting(strArg);
+    if (value.isFalse() && (GetArgFlags(strArg).value_or(0) & NEGATE_TO_EMPTY)) return "";
     return SettingToString(value);
 }
 
@@ -795,7 +797,7 @@ std::string ArgsManager::GetHelpMessage() const
 
 bool HelpRequested(const ArgsManager& args)
 {
-    return args.IsArgSet("-?") || args.IsArgSet("-h") || args.IsArgSet("-help") || args.IsArgSet("-help-debug");
+    return args.GetBoolArg("-?", false) || args.GetBoolArg("-h", false) || args.GetBoolArg("-help", false) || args.GetBoolArg("-help-debug", false);
 }
 
 void SetupHelpOptions(ArgsManager& args)
