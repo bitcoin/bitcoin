@@ -90,6 +90,53 @@ const std::function<std::string()> G_TEST_GET_FULL_NAME{[]{
     return std::string{g_fuzz_target};
 }};
 
+#if defined(PROVIDE_FUZZ_MAIN_FUNCTION)
+static bool read_stdin(std::vector<uint8_t>& data)
+{
+    std::istream::char_type buffer[1024];
+    std::streamsize length;
+    while ((std::cin.read(buffer, 1024), length = std::cin.gcount()) > 0) {
+        data.insert(data.end(), buffer, buffer + length);
+    }
+    return length == 0;
+}
+#endif
+
+#if defined(PROVIDE_FUZZ_MAIN_FUNCTION) && !defined(__AFL_LOOP)
+static bool read_file(fs::path p, std::vector<uint8_t>& data)
+{
+    uint8_t buffer[1024];
+    FILE* f = fsbridge::fopen(p, "rb");
+    if (f == nullptr) return false;
+    do {
+        const size_t length = fread(buffer, sizeof(uint8_t), sizeof(buffer), f);
+        if (ferror(f)) return false;
+        data.insert(data.end(), buffer, buffer + length);
+    } while (!feof(f));
+    fclose(f);
+    return true;
+}
+#endif
+
+#if defined(PROVIDE_FUZZ_MAIN_FUNCTION) && !defined(__AFL_LOOP)
+static fs::path g_input_path;
+[[noreturn]] void signal_handler(int signal)
+{
+    if (signal == SIGABRT) {
+        std::cerr << "Error processing input " << g_input_path << std::endl;
+    } else {
+        std::cerr << "Unexpected signal " << signal << " received\n";
+    }
+    std::_Exit(EXIT_FAILURE);
+}
+#endif
+
+// Whether or not these return depends on the build config.
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-noreturn"
+#endif
+
 static void initialize()
 {
     CheckGlobals check{};
@@ -167,47 +214,6 @@ static void initialize()
     ResetCoverageCounters();
 }
 
-#if defined(PROVIDE_FUZZ_MAIN_FUNCTION)
-static bool read_stdin(std::vector<uint8_t>& data)
-{
-    std::istream::char_type buffer[1024];
-    std::streamsize length;
-    while ((std::cin.read(buffer, 1024), length = std::cin.gcount()) > 0) {
-        data.insert(data.end(), buffer, buffer + length);
-    }
-    return length == 0;
-}
-#endif
-
-#if defined(PROVIDE_FUZZ_MAIN_FUNCTION) && !defined(__AFL_LOOP)
-static bool read_file(fs::path p, std::vector<uint8_t>& data)
-{
-    uint8_t buffer[1024];
-    FILE* f = fsbridge::fopen(p, "rb");
-    if (f == nullptr) return false;
-    do {
-        const size_t length = fread(buffer, sizeof(uint8_t), sizeof(buffer), f);
-        if (ferror(f)) return false;
-        data.insert(data.end(), buffer, buffer + length);
-    } while (!feof(f));
-    fclose(f);
-    return true;
-}
-#endif
-
-#if defined(PROVIDE_FUZZ_MAIN_FUNCTION) && !defined(__AFL_LOOP)
-static fs::path g_input_path;
-void signal_handler(int signal)
-{
-    if (signal == SIGABRT) {
-        std::cerr << "Error processing input " << g_input_path << std::endl;
-    } else {
-        std::cerr << "Unexpected signal " << signal << " received\n";
-    }
-    std::_Exit(EXIT_FAILURE);
-}
-#endif
-
 // This function is used by libFuzzer
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
@@ -222,6 +228,9 @@ extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
     initialize();
     return 0;
 }
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 #if defined(PROVIDE_FUZZ_MAIN_FUNCTION)
 int main(int argc, char** argv)
