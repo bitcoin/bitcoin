@@ -75,6 +75,12 @@ class BIP68Test(BitcoinTestFramework):
         self.log.info("Activating BIP68 (and 112/113)")
         self.activateCSV()
 
+        self.log.info("Running test reorg with stale BIP68 lockpoints")
+        self.test_reorg_stale_lockpoints()
+
+        self.log.info("Running test reorg evicts BIP68 transactions whose lock is no longer satisfied")
+        self.test_reorg_unsatisfied_lock_evicted()
+
         self.log.info("Verifying version=2 transactions are standard.")
         self.log.info("Note that version=2 transactions are always standard (independent of BIP68 activation status).")
         self.test_version2_relay()
@@ -395,6 +401,118 @@ class BIP68Test(BitcoinTestFramework):
         self.generate(self.wallet, 1, sync_fun=self.no_op)
         assert softfork_active(self.nodes[0], 'csv')
         self.sync_blocks()
+
+    # Test that BIP68 transactions whose cached lockpoints become stale after
+    # a reorg are not wrongly evicted from the mempool by removeForReorg.
+    def test_reorg_stale_lockpoints(self):
+        node = self.nodes[0]
+
+        # Confirm a utxo one block below the block we will invalidate, so that
+        # the mixed spend below keeps a confirmed input through the reorg.
+        mixed_funding = self.wallet.send_self_transfer(from_node=node, confirmed_only=True)
+        self.generate(node, 1, sync_fun=self.sync_blocks)
+
+        funding = self.wallet.send_self_transfer_multi(from_node=node, num_outputs=2, confirmed_only=True)
+        block_setup = self.generate(node, 1, sync_fun=self.sync_blocks)[0]
+        height = node.getblockcount()
+
+        parent_a = self.wallet.send_self_transfer(from_node=node, utxo_to_spend=funding["new_utxos"][0])
+        parent_b = self.wallet.send_self_transfer(from_node=node, utxo_to_spend=funding["new_utxos"][1])
+        # BIP68 disabled
+        child_a = self.wallet.send_self_transfer(from_node=node, utxo_to_spend=parent_a["new_utxo"], sequence=0xfffffffe)
+        # Height-based zero relative lock on an unconfirmed parent
+        child_b = self.wallet.send_self_transfer(from_node=node, utxo_to_spend=parent_b["new_utxo"], sequence=0)
+        # child_mixed spends one confirmed input (mixed_funding) and one
+        # unconfirmed input (child_b's output). The confirmed input's block
+        # survives the reorg, so TestLockPointValidity passes on lockpoints
+        # that were computed with the unconfirmed input at the old tip+1.
+        child_mixed = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=[mixed_funding["new_utxo"], child_b["new_utxo"]],
+            sequence=0,
+        )
+        node.sendrawtransaction(child_mixed["hex"])
+
+        node.invalidateblock(block_setup)
+        assert_equal(node.getblockcount(), height - 1)
+        mempool = node.getrawmempool()
+        assert child_a["txid"] in mempool
+        assert child_b["txid"] in mempool
+        assert child_mixed["txid"] in mempool
+
+        # Time-based variant. The MTP of a block is the median of the previous
+        # 11. Mine 6 blocks sharing one timestamp so the median is predictable,
+        # then 6 blocks with a higher timestamp so the median moves up. A tx with
+        # a zero time-based relative lock entering the mempool now caches
+        # lockpoints against the raised MTP. Invalidating the high-timestamp
+        # blocks lowers the MTP again, making the cached lockpoints stale while
+        # the transaction itself stays valid (its relative lock is zero).
+        # Timestamps stay within the 2 hour future limit so node1 accepts the
+        # blocks.
+        cur_time = node.getblockheader(node.getbestblockhash())["time"]
+        node.setmocktime(cur_time + 600)
+        self.generate(node, 6, sync_fun=self.no_op)
+        median_old = node.getblockheader(node.getbestblockhash())["mediantime"]
+
+        node.setmocktime(cur_time + 3600)
+        block_time_setup = self.generate(node, 6, sync_fun=self.sync_blocks)[0]
+        median_new = node.getblockheader(node.getbestblockhash())["mediantime"]
+        assert_greater_than(median_new, median_old)
+        assert_equal(node.getblockcount(), height + 11)
+
+        parent_time = self.wallet.send_self_transfer(from_node=node, confirmed_only=True)
+        child_time = self.wallet.send_self_transfer(from_node=node, utxo_to_spend=parent_time["new_utxo"], sequence=SEQUENCE_LOCKTIME_TYPE_FLAG)
+
+        node.invalidateblock(block_time_setup)
+        assert_equal(node.getblockcount(), height + 5)
+        assert child_time["txid"] in node.getrawmempool()
+
+        # Restore the chain and mocktime for the remaining tests.
+        node.setmocktime(0)
+        node.reconsiderblock(block_time_setup)
+        node.reconsiderblock(block_setup)
+        assert_equal(node.getblockcount(), height + 11)
+        self.sync_blocks()
+
+    # Counterpart to test_reorg_stale_lockpoints(): a transaction whose relative
+    # lock is genuinely unsatisfied at the new tip must still be evicted, with its
+    # descendants, even though its cached lockpoints stay valid (the block of its
+    # confirmed input survives the reorg).
+    def test_reorg_unsatisfied_lock_evicted(self):
+        node = self.nodes[0]
+        relative_height = 3
+
+        funding_locked = self.wallet.send_self_transfer(from_node=node, confirmed_only=True)
+        funding_mixed = self.wallet.send_self_transfer(from_node=node, confirmed_only=True)
+        funding_parent = self.wallet.send_self_transfer(from_node=node, confirmed_only=True)
+        self.generate(node, 1, sync_fun=self.sync_blocks)
+        # The block after these is the first one that satisfies the relative lock.
+        blocks = self.generate(node, relative_height - 1, sync_fun=self.sync_blocks)
+
+        locked = self.wallet.send_self_transfer(from_node=node, utxo_to_spend=funding_locked["new_utxo"], sequence=relative_height)
+        locked_child = self.wallet.send_self_transfer(from_node=node, utxo_to_spend=locked["new_utxo"])
+        # Mixed inputs: the same lock on a confirmed input, a zero lock on an unconfirmed one.
+        parent = self.wallet.send_self_transfer(from_node=node, utxo_to_spend=funding_parent["new_utxo"])
+        mixed = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=[funding_mixed["new_utxo"], parent["new_utxo"]],
+            sequence=[relative_height, 0],
+        )
+        node.sendrawtransaction(mixed["hex"])
+        mempool = node.getrawmempool()
+        for tx in (locked, locked_child, parent, mixed):
+            assert tx["txid"] in mempool
+
+        # One block back: the funding block stays in the chain, so the cached
+        # lockpoints remain valid, but the next block no longer satisfies the locks.
+        node.invalidateblock(blocks[-1])
+        mempool = node.getrawmempool()
+        assert locked["txid"] not in mempool
+        assert locked_child["txid"] not in mempool
+        assert mixed["txid"] not in mempool
+        assert parent["txid"] in mempool
+
+        node.reconsiderblock(blocks[-1])
+        self.sync_blocks()
+        self.wallet.rescan_utxos()
 
     # Use self.nodes[1] to test that version 2 transactions are standard.
     def test_version2_relay(self):
