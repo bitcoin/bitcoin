@@ -159,6 +159,12 @@ class IPCMiningTest(BitcoinTestFramework):
             assert_equal(oldblockref.hash, newblockref.hash)
             assert_equal(oldblockref.height, newblockref.height)
 
+            self.log.debug("Negative or NaN timeout returns the current tip")
+            for timeout in (-1.0, float("nan")):
+                res = (await mining.waitTipChanged(ctx, newblockref.hash, timeout)).result
+                assert_equal(res.hash, newblockref.hash)
+                assert_equal(res.height, newblockref.height)
+
             self.log.debug("interrupt() should abort waitTipChanged()")
             async def wait_for_tip():
                 result = (await mining.waitTipChanged(ctx, newblockref.hash, self.long_ipc_timeout)).result
@@ -329,6 +335,15 @@ class IPCMiningTest(BitcoinTestFramework):
                 waitoptions.timeout = self.no_event_timeout_ms
                 template7 = await mining_wait_next_template(template6, stack, ctx, waitoptions)
                 assert template7 is None
+
+                self.log.debug("Negative or NaN timeout times out without a new template")
+                waitoptions.feeThreshold = MAX_MONEY
+                for timeout in (-1.0, float("nan")):
+                    waitoptions.timeout = timeout
+                    with self.nodes[0].assert_debug_log(expected_msgs=[], unexpected_msgs=["CreateNewBlock()"]):
+                        template8 = await mining_wait_next_template(template6, stack, ctx, waitoptions)
+                    assert template8 is None
+                waitoptions.feeThreshold = 1
                 waitoptions.timeout = self.default_ipc_timeout
 
                 self.log.debug("interruptWait should abort the current wait")

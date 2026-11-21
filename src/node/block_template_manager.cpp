@@ -229,8 +229,9 @@ std::optional<BlockRef> BlockTemplateManager::WaitTipChanged(const uint256& curr
 
 std::optional<BlockRef> BlockTemplateManager::WaitTipChanged(const uint256& current_tip, MillisecondsDouble& timeout, bool& interrupt)
 {
-    Assume(timeout >= 0ms); // No internal callers should use a negative timeout
-    if (timeout < 0ms) timeout = 0ms;
+    // Timeout can come from an IPC client, so handle negative and NaN values
+    // instead of asserting.
+    if (!(timeout >= 0ms)) timeout = 0ms;
     if (timeout > std::chrono::years{100}) timeout = std::chrono::years{100}; // Upper bound to avoid UB in std::chrono
     auto deadline{std::chrono::steady_clock::now() + timeout};
     {
