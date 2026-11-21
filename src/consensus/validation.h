@@ -11,6 +11,7 @@
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <serialize.h>
+#include <util/check.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -70,7 +71,8 @@ enum class BlockValidationResult {
     BLOCK_MISSING_PREV,      //!< We don't have the previous block the checked one is built on
     BLOCK_INVALID_PREV,      //!< A block this one builds on is invalid
     BLOCK_TIME_FUTURE,       //!< block timestamp was > 2 hours in the future (or our clock is bad)
-    BLOCK_HEADER_LOW_WORK    //!< the block header may be on a too-little-work chain
+    BLOCK_HEADER_LOW_WORK,   //!< the block header may be on a too-little-work chain
+    BLOCK_INCONCLUSIVE,      //!< validity could not be determined (e.g. we don't have the block it's building on)
 };
 
 
@@ -93,9 +95,11 @@ private:
 
 public:
     bool Invalid(Result result,
-                 const std::string& reject_reason = "",
-                 const std::string& debug_message = "")
+                 const std::string& reject_reason,
+                 const std::string& debug_message = {})
     {
+        Assume(result != Result{});
+        Assume(!reject_reason.empty());
         m_result = result;
         m_reject_reason = reject_reason;
         m_debug_message = debug_message;
