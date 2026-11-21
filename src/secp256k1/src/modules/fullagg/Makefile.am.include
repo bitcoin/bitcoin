@@ -1,0 +1,5 @@
+include_HEADERS += include/secp256k1_fullagg.h
+noinst_HEADERS += src/modules/fullagg/main_impl.h
+noinst_HEADERS += src/modules/fullagg/tests_impl.h
+noinst_HEADERS += src/modules/fullagg/vectors.h
+noinst_HEADERS += src/modules/fullagg/bench_impl.h
