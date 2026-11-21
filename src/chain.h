@@ -7,6 +7,7 @@
 #define BITCOIN_CHAIN_H
 
 #include <arith_uint256.h>
+#include <attributes.h>
 #include <consensus/params.h>
 #include <flatfile.h>
 #include <kernel/cs_main.h>
@@ -19,6 +20,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -309,8 +311,11 @@ inline arith_uint256 GetBlockProof(const CBlockHeader& header) { return GetBitsP
 
 /** Return the time it would take to redo the work difference between from and to, assuming the current hashrate corresponds to the difficulty at tip, in seconds. */
 int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& from, const CBlockIndex& tip, const Consensus::Params&);
-/** Find the forking point between two chain tips. */
-const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* pb);
+/**
+ * Find the forking point between two chain tips.
+ * The two chains must share a common ancestor (at least the same genesis).
+ */
+const CBlockIndex& LastCommonAncestor(const CBlockIndex& a LIFETIMEBOUND, const CBlockIndex& b LIFETIMEBOUND);
 
 
 /** Used to marshal pointers into hashes for db storage. */
@@ -379,7 +384,7 @@ public:
 class CChain
 {
 private:
-    std::vector<CBlockIndex*> vChain;
+    std::vector<std::reference_wrapper<CBlockIndex>> m_chain;
 
 public:
     CChain() = default;
@@ -389,21 +394,21 @@ public:
     /** Returns the index entry for the genesis block of this chain, or nullptr if none. */
     CBlockIndex* Genesis() const
     {
-        return vChain.size() > 0 ? vChain[0] : nullptr;
+        return m_chain.size() > 0 ? &(m_chain[0].get()) : nullptr;
     }
 
     /** Returns the index entry for the tip of this chain, or nullptr if none. */
     CBlockIndex* Tip() const
     {
-        return vChain.size() > 0 ? vChain[vChain.size() - 1] : nullptr;
+        return m_chain.size() > 0 ? &(m_chain[m_chain.size() - 1].get()) : nullptr;
     }
 
     /** Returns the index entry at a particular height in this chain, or nullptr if no such height exists. */
     CBlockIndex* operator[](int nHeight) const
     {
-        if (nHeight < 0 || nHeight >= (int)vChain.size())
+        if (nHeight < 0 || nHeight >= (int)m_chain.size())
             return nullptr;
-        return vChain[nHeight];
+        return &(m_chain[nHeight].get());
     }
 
     /** Efficiently check whether a block is present in this chain. */
@@ -424,7 +429,7 @@ public:
     /** Return the maximal height in the chain. Is equal to chain.Tip() ? chain.Tip()->nHeight : -1. */
     int Height() const
     {
-        return int(vChain.size()) - 1;
+        return int(m_chain.size()) - 1;
     }
 
     /** Check whether this chain's tip exists, has enough work, and is recent. */
