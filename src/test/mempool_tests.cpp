@@ -2,12 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/args.h>
 #include <common/system.h>
+#include <chainparams.h>
+#include <kernel/mempool_options.h>
+#include <node/mempool_args.h>
 #include <policy/policy.h>
 #include <test/util/time.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
 #include <util/time.h>
+#include <util/vector.h>
 
 #include <test/util/setup_common.h>
 
@@ -530,6 +535,56 @@ BOOST_AUTO_TEST_CASE(MempoolUnbroadcastMemoryUsage)
 
     pool.RemoveUnbroadcastTx(txid);
     BOOST_CHECK_EQUAL(pool.DynamicMemoryUsage(), usage_before);
+}
+
+BOOST_AUTO_TEST_CASE(mempool_args_validation)
+{
+    // ApplyArgsManOptions is applied once during startup, so values that would
+    // wrap when narrowed into the options struct must be rejected instead.
+    auto get_opts = [&](const std::vector<const char*>& args) {
+        ArgsManager args_man;
+        args_man.ClearArgs();
+        for (const char* arg : {"-limitclustercount=<n>", "-limitclustersize=<n>",
+                                "-limitancestorcount=<n>", "-limitdescendantcount=<n>",
+                                "-mempoolexpiry=<n>", "-datacarriersize=<n>",
+                                "-maxmempool=<n>", "-permitbaremultisig", "-datacarrier"}) {
+            args_man.AddArg(arg, "", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+        }
+        const auto argv{Cat({"ignore"}, args)};
+        std::string error{};
+        BOOST_REQUIRE(args_man.ParseParameters(argv.size(), argv.data(), error));
+        kernel::MemPoolOptions opts{};
+        return ApplyArgsManOptions(args_man, ::Params(), opts);
+    };
+
+    // Cluster limits must fit the range TxGraph accepts.
+    BOOST_CHECK(get_opts({}).has_value());
+    BOOST_CHECK(get_opts({"-limitclustercount=1"}).has_value());
+    BOOST_CHECK(get_opts({"-limitclustercount=64"}).has_value());
+    BOOST_CHECK(!get_opts({"-limitclustercount=0"}));   // TxGraph requires at least one
+    BOOST_CHECK(!get_opts({"-limitclustercount=65"}));  // above MAX_CLUSTER_COUNT_LIMIT
+    BOOST_CHECK(!get_opts({"-limitclustercount=-1"}));
+
+    BOOST_CHECK(!get_opts({"-limitclustersize=0"})); // would make every tx oversized
+    BOOST_CHECK(get_opts({"-limitclustersize=1"}).has_value());
+    BOOST_CHECK(!get_opts({"-limitclustersize=-1"})); // would wrap to an effectively unlimited cluster
+
+    BOOST_CHECK(get_opts({"-limitancestorcount=0"}).has_value());
+    BOOST_CHECK(!get_opts({"-limitancestorcount=-1"}));
+    BOOST_CHECK(get_opts({"-limitdescendantcount=0"}).has_value());
+    BOOST_CHECK(!get_opts({"-limitdescendantcount=-1"}));
+
+    // A negative expiry would move the expiration cutoff into the future, and a
+    // huge one would overflow the hours-to-seconds conversion.
+    BOOST_CHECK(get_opts({"-mempoolexpiry=0"}).has_value());
+    BOOST_CHECK(!get_opts({"-mempoolexpiry=-1"}));
+    BOOST_CHECK(!get_opts({"-mempoolexpiry=2562047788015216"})); // first hour count that overflows int64 seconds
+
+    // A negative carrier size would wrap to an unlimited OP_RETURN budget.
+    BOOST_CHECK(get_opts({"-datacarriersize=0"}).has_value());
+    BOOST_CHECK(!get_opts({"-datacarriersize=-1"}));
+    BOOST_CHECK(!get_opts({"-datacarriersize=4294967296"})); // above UINT_MAX would wrap to a tiny budget
+    BOOST_CHECK(get_opts({"-datacarrier=0", "-datacarriersize=-1"}).has_value()); // ignored when disabled
 }
 
 BOOST_AUTO_TEST_SUITE_END()

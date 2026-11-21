@@ -70,6 +70,13 @@ class WalletFallbackFeeTest(BitcoinTestFramework):
         expected_error = "Warning: -fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available."
         self.stop_node(0, expected_stderr=expected_error)
 
+        # A confirmation target above what the fee estimator tracks would make
+        # every transaction fall back to -fallbackfee, so it is rejected instead
+        # of being silently accepted. The estimator's maximum is 1008 here.
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=["-txconfirmtarget=1009"],
+            expected_msg="Error: -txconfirmtarget must be between 1 and 1008 (got 1009).")
+
 
 if __name__ == '__main__':
     WalletFallbackFeeTest(__file__).main()

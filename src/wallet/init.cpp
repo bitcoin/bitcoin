@@ -22,6 +22,8 @@
 #include <wallet/wallet.h>
 #include <walletinitinterface.h>
 
+#include <limits>
+
 using node::NodeContext;
 
 namespace wallet {
@@ -68,7 +70,7 @@ void WalletInit::AddWalletOptions(ArgsManager& argsman) const
     argsman.AddArg("-signer=<cmd>", "External signing tool, see doc/external-signer.md", ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
 #endif
     argsman.AddArg("-spendzeroconfchange", strprintf("Spend unconfirmed change when sending transactions (default: %u)", DEFAULT_SPEND_ZEROCONF_CHANGE), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
-    argsman.AddArg("-txconfirmtarget=<n>", strprintf("Include enough fee so transactions begin confirmation on average within n blocks (default: %u)", DEFAULT_TX_CONFIRM_TARGET), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
+    argsman.AddArg("-txconfirmtarget=<n>", strprintf("Include enough fee so transactions begin confirmation on average within n blocks (minimum: 1, default: %u)", DEFAULT_TX_CONFIRM_TARGET), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
     argsman.AddArg("-wallet=<path>", "Specify wallet path to load at startup. Can be used multiple times to load multiple wallets. Path is to a directory containing wallet data and log files. If the path is not absolute, it is interpreted relative to <walletdir>. This only loads existing wallets and does not create new ones. For backwards compatibility this also accepts names of existing top-level data files in <walletdir>.", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::WALLET);
     argsman.AddArg("-walletbroadcast",  strprintf("Make the wallet broadcast transactions (default: %u)", DEFAULT_WALLETBROADCAST), ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
     argsman.AddArg("-walletdir=<dir>", "Specify directory to hold wallets (default: <datadir>/wallets if it exists, otherwise <datadir>)", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::WALLET);
@@ -95,6 +97,16 @@ bool WalletInit::ParameterInteraction() const
 
     if (gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) && gArgs.SoftSetBoolArg("-walletbroadcast", false)) {
         LogInfo("Parameter interaction: -blocksonly=1 -> setting -walletbroadcast=0");
+    }
+
+    // m_confirm_target is unsigned, so a negative value would wrap to a huge
+    // target. Fee estimation rejects targets outside the range it tracks, which
+    // makes every transaction silently fall back to -fallbackfee, so also reject
+    // targets above the estimator's maximum. The upper bound is only known once
+    // the chain is up, so it is enforced here as well as in LoadWalletArgs.
+    if (const auto confirm_target{gArgs.GetIntArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET)};
+        confirm_target < 1 || confirm_target > std::numeric_limits<unsigned int>::max()) {
+        return InitError(Untranslated(strprintf("-txconfirmtarget must be between 1 and %u (got %d).", std::numeric_limits<unsigned int>::max(), confirm_target)));
     }
 
     return true;

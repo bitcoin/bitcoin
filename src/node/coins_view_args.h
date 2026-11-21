@@ -5,11 +5,13 @@
 #ifndef BITCOIN_NODE_COINS_VIEW_ARGS_H
 #define BITCOIN_NODE_COINS_VIEW_ARGS_H
 
+#include <util/result.h>
+
 class ArgsManager;
 struct CoinsViewOptions;
 
 namespace node {
-void ReadCoinsViewArgs(const ArgsManager& args, CoinsViewOptions& options);
+[[nodiscard]] util::Result<void> ReadCoinsViewArgs(const ArgsManager& args, CoinsViewOptions& options);
 } // namespace node
 
 #endif // BITCOIN_NODE_COINS_VIEW_ARGS_H
