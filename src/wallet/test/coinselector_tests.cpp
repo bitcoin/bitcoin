@@ -1387,5 +1387,43 @@ BOOST_FIXTURE_TEST_CASE(wallet_coinsresult_test, BasicTestingSetup)
     }
 }
 
+BOOST_AUTO_TEST_CASE(generate_change_target_range)
+{
+    // The change target is randomized for privacy. It must stay inside its
+    // allowed range, and for larger payments it must actually vary.
+    FastRandomContext rng{};
+    const CAmount change_fee{1000};
+
+    // Small payments always get the fixed minimum.
+    for (const CAmount payment : {CAmount{1}, CHANGE_LOWER / 2}) {
+        BOOST_CHECK_EQUAL(GenerateChangeTarget(payment, change_fee, rng), change_fee + CHANGE_LOWER);
+    }
+
+    // Larger payments get a random value in [CHANGE_LOWER, min(2 * payment, CHANGE_UPPER)).
+    for (const CAmount payment : {CHANGE_LOWER / 2 + 1, CHANGE_LOWER, 3 * CHANGE_LOWER / 2, 10 * CHANGE_UPPER}) {
+        const CAmount upper{std::min(2 * payment, CHANGE_UPPER)};
+        CAmount lowest{GenerateChangeTarget(payment, change_fee, rng)};
+        CAmount highest{lowest};
+        const CAmount base{change_fee + CHANGE_LOWER};
+        const CAmount range{upper - CHANGE_LOWER};
+        int upper_half{0};
+        for (int i = 0; i < 1000; ++i) {
+            const CAmount target{GenerateChangeTarget(payment, change_fee, rng)};
+            lowest = std::min(lowest, target);
+            highest = std::max(highest, target);
+            if (target - base >= range / 2) ++upper_half;
+        }
+        BOOST_CHECK_GE(lowest, change_fee + CHANGE_LOWER);
+        BOOST_CHECK_LT(highest, change_fee + upper);
+        BOOST_CHECK_GT(highest, lowest);
+        BOOST_CHECK_GE(highest - lowest, range * 9 / 10);
+
+        // A fair generator puts about half of the 1000 samples in the upper half of the range.
+        // Allow 400 to 600 so correct code never fails by chance, but a biased generator does.
+        BOOST_CHECK_GT(upper_half, 400);
+        BOOST_CHECK_LT(upper_half, 600);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
