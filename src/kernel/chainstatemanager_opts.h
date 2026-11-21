@@ -41,6 +41,10 @@ struct ChainstateManagerOpts {
     std::optional<uint256> assumed_valid_block{};
     //! If the tip is older than this, the node is considered to be in initial block download.
     std::chrono::seconds max_tip_age{DEFAULT_MAX_TIP_AGE};
+    //! If set, the clock time to use for validation until it is changed;
+    //! otherwise the system clock is used. Set here instead of after
+    //! construction so it also applies to checks made while loading the chainstate.
+    std::optional<NodeSeconds> clock_time{};
     DBOptions coins_db{};
     CoinsViewOptions coins_view{};
     Notifications& notifications;
