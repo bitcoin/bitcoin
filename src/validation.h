@@ -372,8 +372,10 @@ private:
     //! Pre-initialized hasher to avoid having to recreate it for every hash calculation.
     CSHA256 m_script_execution_cache_hasher;
 
-public:
+    //! Cache for script verification results to avoid re-validation.
     CuckooCache::cache<uint256, SignatureCacheHasher> m_script_execution_cache;
+
+public:
     SignatureCache m_signature_cache;
 
     ValidationCache(size_t script_execution_cache_bytes, size_t signature_cache_bytes);
@@ -383,6 +385,10 @@ public:
 
     //! Return a copy of the pre-initialized hasher.
     CSHA256 ScriptExecutionCacheHasher() const { return m_script_execution_cache_hasher; }
+
+    bool IsScriptValidated(const uint256& entry, bool erase) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void CacheScriptValidation(const uint256& entry) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void TestOnlyResetScriptExecutionCache() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
 
 /** Functions for validating blocks and updating the block tree */
@@ -1445,25 +1451,16 @@ inline constexpr script_verify_flags CONSENSUS_SCRIPT_VERIFY_FLAGS{
 // (a subset of CONSENSUS_SCRIPT_VERIFY_FLAGS)
 script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const ChainstateManager& chainman);
 
-/** The context CheckInputScripts is called in, which decides how a
- *  script failure is reported: as a consensus failure for blocks,
- *  or as a standardness failure for the mempool. The flags alone can't
- *  determine this, as the mempool may check with consensus flags only
- *  (-acceptnonstdtxn).
- */
-enum class CheckInputScriptsFor {
-    Block,
-    Mempool,
-};
-
 bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        const CCoinsViewCache& inputs,
                        script_verify_flags flags,
-                       CheckInputScriptsFor check_for,
                        bool cacheSigStore,
                        bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
-                       ValidationCache& validation_cache,
-                       std::vector<CScriptCheck>* pvChecks = nullptr)
+                       ValidationCache& validation_cache)
                        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+std::optional<uint256> GetScriptCacheEntry(const CTransaction& tx, script_verify_flags flags,
+                                           bool cacheFullScriptStore, ValidationCache& validation_cache)
+                                           EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 #endif // BITCOIN_VALIDATION_H
