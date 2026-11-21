@@ -1300,12 +1300,37 @@ public:
     }
 };
 
+class BlockManagerOptions : public UniqueHandle<btck_BlockManagerOptions, btck_block_manager_options_destroy>
+{
+public:
+    BlockManagerOptions(const Context& context, std::string_view data_dir, std::string_view blocks_dir)
+        : UniqueHandle{btck_block_manager_options_create(
+              context.get(), data_dir.data(), data_dir.length(), blocks_dir.data(), blocks_dir.length())}
+    {
+    }
+
+    bool SetDatabaseCacheBytes(uint64_t database_cache_bytes)
+    {
+        return btck_block_manager_options_set_database_cache_bytes(get(), database_cache_bytes) == 0;
+    }
+
+    void UpdateWipeBlockTreeDb(bool wipe_block_tree_db)
+    {
+        btck_block_manager_options_update_wipe_block_tree_db(get(), wipe_block_tree_db);
+    }
+
+    void UpdateBlockTreeDbInMemory(bool block_tree_db_in_memory)
+    {
+        btck_block_manager_options_update_block_tree_db_in_memory(get(), block_tree_db_in_memory);
+    }
+};
+
 class ChainstateManagerOptions : public UniqueHandle<btck_ChainstateManagerOptions, btck_chainstate_manager_options_destroy>
 {
 public:
-    ChainstateManagerOptions(const Context& context, std::string_view data_dir, std::string_view blocks_dir)
+    ChainstateManagerOptions(const Context& context, std::string_view data_dir)
         : UniqueHandle{btck_chainstate_manager_options_create(
-              context.get(), data_dir.data(), data_dir.length(), blocks_dir.data(), blocks_dir.length())}
+              context.get(), data_dir.data(), data_dir.length())}
     {
     }
 
@@ -1319,14 +1344,9 @@ public:
         return btck_chainstate_manager_options_set_database_cache_bytes(get(), database_cache_bytes) == 0;
     }
 
-    bool SetWipeDbs(bool wipe_block_tree, bool wipe_chainstate)
+    void UpdateWipeChainstateDb(bool wipe_chainstate_db)
     {
-        return btck_chainstate_manager_options_set_wipe_dbs(get(), wipe_block_tree, wipe_chainstate) == 0;
-    }
-
-    void UpdateBlockTreeDbInMemory(bool block_tree_db_in_memory)
-    {
-        btck_chainstate_manager_options_update_block_tree_db_in_memory(get(), block_tree_db_in_memory);
+        btck_chainstate_manager_options_update_wipe_chainstate_db(get(), wipe_chainstate_db);
     }
 
     void UpdateChainstateDbInMemory(bool chainstate_db_in_memory)
@@ -1464,11 +1484,32 @@ public:
     MAKE_RANGE_METHOD(TxsSpentOutputs, BlockSpentOutputs, &BlockSpentOutputs::Count, &BlockSpentOutputs::GetTxSpentOutputs, *this)
 };
 
+class BlockManager : public UniqueHandle<btck_BlockManager, btck_block_manager_destroy>
+{
+public:
+    explicit BlockManager(const BlockManagerOptions& block_manager_opts)
+        : UniqueHandle{btck_block_manager_create(block_manager_opts.get())}
+    {
+    }
+
+    std::optional<Block> ReadBlock(const BlockTreeEntry& entry) const
+    {
+        auto block{btck_block_read(get(), entry.get())};
+        if (!block) return std::nullopt;
+        return block;
+    }
+
+    BlockSpentOutputs ReadBlockSpentOutputs(const BlockTreeEntry& entry) const
+    {
+        return btck_block_spent_outputs_read(get(), entry.get());
+    }
+};
+
 class ChainMan : UniqueHandle<btck_ChainstateManager, btck_chainstate_manager_destroy>
 {
 public:
-    ChainMan(const Context& context, const ChainstateManagerOptions& chainman_opts)
-        : UniqueHandle{btck_chainstate_manager_create(chainman_opts.get())}
+    ChainMan(const Context& context, const ChainstateManagerOptions& chainman_opts, BlockManager& block_manager)
+        : UniqueHandle{btck_chainstate_manager_create(chainman_opts.get(), block_manager.get())}
     {
     }
 
@@ -1515,18 +1556,6 @@ public:
     BlockTreeEntry GetBestEntry() const
     {
         return btck_chainstate_manager_get_best_entry(get());
-    }
-
-    std::optional<Block> ReadBlock(const BlockTreeEntry& entry) const
-    {
-        auto block{btck_block_read(get(), entry.get())};
-        if (!block) return std::nullopt;
-        return block;
-    }
-
-    BlockSpentOutputs ReadBlockSpentOutputs(const BlockTreeEntry& entry) const
-    {
-        return btck_block_spent_outputs_read(get(), entry.get());
     }
 };
 
