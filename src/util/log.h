@@ -69,14 +69,6 @@ struct Entry {
     std::string message;
 };
 
-/// Return whether messages with specified category should be debug logged.
-/// Applications using the logging library need to provide this.
-bool ShouldDebugLog(Category category);
-
-/// Return whether messages with specified category should be trace logged.
-/// Applications using the logging library need to provide this.
-bool ShouldTraceLog(Category category);
-
 /** Send message to be logged. Applications using the logging library need to provide this. */
 void Log(Entry entry);
 
@@ -90,8 +82,9 @@ struct FormatString : util::ConstevalFormatString<num_params> {
     }
 };
 
+namespace detail {
 template <typename... Args>
-inline void LogPrintFormatInternal_(SourceLocation&& source_loc, BCLog::LogFlags flag, util::log::Level level, bool should_ratelimit, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+inline void LogWithSrcLoc(bool should_ratelimit, SourceLocation&& source_loc, BCLog::LogFlags flag, util::log::Level level, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
     std::string log_msg;
     try {
@@ -107,16 +100,61 @@ inline void LogPrintFormatInternal_(SourceLocation&& source_loc, BCLog::LogFlags
         .message = std::move(log_msg)});
 }
 
+/* Treats lack of NO_RATE_LIMIT tag as should_ratelimit=true and delegates to function above */
 template <typename... Args>
-inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags flag, util::log::Level level, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+inline void LogWithSrcLoc(SourceLocation&& source_loc, BCLog::LogFlags flag, util::log::Level level, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
-    return LogPrintFormatInternal_(std::move(source_loc), flag, level, /*should_ratelimit=*/true, fmt, args...);
+    return LogWithSrcLoc(/*should_ratelimit=*/true, std::move(source_loc), flag, level, fmt, args...);
 }
 
+/* Treats presence of NO_RATE_LIMIT tag as should_ratelimit=false and delegates to function above */
 template <typename... Args>
-inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags flag, util::log::Level level, util::log::NoRateLimitTag, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+inline void LogWithSrcLoc(SourceLocation&& source_loc, BCLog::LogFlags flag, util::log::Level level, util::log::NoRateLimitTag, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
-    return LogPrintFormatInternal_(std::move(source_loc), flag, level, /*should_ratelimit=*/false, fmt, args...);
+    return LogWithSrcLoc(/*should_ratelimit=*/false, std::move(source_loc), flag, level, fmt, args...);
+}
+} // namespace util::log::detail
+
+/**
+ * Holds the global "is this category enabled?" state used by the
+ * @ref ShouldDebugLog and @ref ShouldTraceLog fast paths.
+ *
+ * The two bitmasks are `constinit` atomics, so they are initialized
+ * before any logging functions can be called (even from
+ * static-initialization-time code). Reads are lock-free relaxed loads,
+ * cheap enough to inline at every `LogDebug`/`LogTrace` call site.
+ *
+ * This class is never instantiated. It exists only to scope the
+ * atomics and grant friendship to the inline accessors below;
+ * mutation is performed through `BCLog::Logger`, which inherits
+ * privately to gain access.
+ *
+ * The util::log::Log() provider should use a subclass of
+ * util::log::Logger in order to be able to access and update
+ * the enabled categories.
+ */
+class Logger
+{
+protected:
+    /** Debug-enabled categories bitfield. */
+    static constinit std::atomic<BCLog::CategoryMask> m_debug_categories;
+    /** Tracing-enabled categories bitfield. */
+    static constinit std::atomic<BCLog::CategoryMask> m_trace_categories;
+
+    friend inline bool ShouldDebugLog(Category category);
+    friend inline bool ShouldTraceLog(Category category);
+};
+
+/// Return whether messages in @p category should be debug logged.
+inline bool ShouldDebugLog(Category category)
+{
+    return (Logger::m_debug_categories.load(std::memory_order_relaxed) & category) != 0;
+}
+
+/// Return whether messages in @p category should be trace logged.
+inline bool ShouldTraceLog(Category category)
+{
+    return (Logger::m_trace_categories.load(std::memory_order_relaxed) & category) != 0;
 }
 } // namespace util::log
 
@@ -127,7 +165,7 @@ using Level = util::log::Level;
 
 // Allow __func__ to be used in any context without warnings:
 // NOLINTNEXTLINE(bugprone-lambda-function-name)
-#define detail_LogWithSrcLoc(category, level, ...) util::log::LogPrintFormatInternal(SourceLocation{__func__}, category, level, __VA_ARGS__)
+#define detail_LogWithSrcLoc(category, level, ...) util::log::detail::LogWithSrcLoc(SourceLocation{__func__}, category, level, __VA_ARGS__)
 
 // Log unconditionally. Uses basic rate limiting to mitigate disk filling attacks.
 // Be conservative when using functions that unconditionally log to debug.log!
