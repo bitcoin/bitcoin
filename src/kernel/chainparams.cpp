@@ -542,9 +542,10 @@ public:
         assert(consensus.hashGenesisBlock == uint256{"00000000000008c1637e7d3252dc1c333d4546fd6fff6a474b200d674a91d497"});
         assert(genesis.hashMerkleRoot == uint256{"8c5899b65c5b0834adb17af314e22a9bf067e7ed8144c37967b5ec56b5a6e28d"});
 
-        // No DNS or fixed seeds defined for Testnet 5 yet.
         vFixedSeeds.clear();
         vSeeds.clear();
+        // nodes with support for servicebits filtering should be at the top
+        vSeeds.emplace_back("seed.testnet5.achownodes.xyz."); // Ava Chow, only supports x1, x5, x9, x49, x809, x849, xd, x400, x404, x408, x448, xc08, xc48, x40c
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
