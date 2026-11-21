@@ -33,6 +33,8 @@
 #include <node/blockstorage.h>
 #include <node/connection_types.h>
 #include <node/protocol_version.h>
+#include <node/staletiprelayman.h>
+#include <node/staletiptracker.h>
 #include <node/timeoffsets.h>
 #include <node/txdownloadman.h>
 #include <node/txorphanage.h>
@@ -51,6 +53,7 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <span.h>
+#include <staletipmessage.h>
 #include <streams.h>
 #include <sync.h>
 #include <tinyformat.h>
@@ -122,6 +125,9 @@ static constexpr int STALE_RELAY_AGE_LIMIT = 30 * 24 * 60 * 60;
 /// Age after which a block is considered historical for purposes of rate
 /// limiting block relay. Set to one week, denominated in seconds.
 static constexpr int HISTORICAL_BLOCK_AGE = 7 * 24 * 60 * 60;
+/** Number of blocks below the active tip that a headers chain may fork from
+ *  and still meet the default anti-DoS work threshold. */
+static constexpr int ANTI_DOS_WORK_WINDOW{144};
 /** Time between pings automatically sent out for latency probing and keepalive */
 static constexpr auto PING_INTERVAL{2min};
 /** Time to wait for a pong after the last block a peer delivered, before applying the ping timeout */
@@ -134,6 +140,10 @@ static const unsigned int MAX_INV_SZ = 50000;
 static const unsigned int MAX_GETDATA_SZ = 1000;
 /** Number of blocks that can be requested at any given time from a single peer. */
 static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16;
+/** A peer is only sent best-effort stale-tip block requests while it has fewer
+ *  than this many blocks in flight, counting ordinary block download, so those
+ *  requests use at most half of its block slots. */
+static const int MAX_BLOCKS_IN_TRANSIT_FOR_STALETIP_REQUESTS = MAX_BLOCKS_IN_TRANSIT_PER_PEER / 2;
 /** Default time during which a peer must stall block download progress before being disconnected.
  * the actual timeout is increased temporarily if peers are disconnected for hitting the timeout */
 static constexpr auto BLOCK_STALLING_TIMEOUT_DEFAULT{2s};
@@ -273,6 +283,17 @@ struct Peer {
      * the peer to request the next sequence of block hashes.
      * Most peers use headers-first syncing, which doesn't use this mechanism */
     uint256 m_continuation_block GUARDED_BY(m_block_inv_mutex) {};
+
+    /** Protects m_features, which GetNodeStateStats reads from outside the
+     *  message handler thread. */
+    mutable Mutex m_features_mutex;
+    /** Recognized BIP 434 features this peer advertised. */
+    NetFeatures m_features GUARDED_BY(m_features_mutex);
+
+    NetFeatures GetFeatures() const EXCLUSIVE_LOCKS_REQUIRED(!m_features_mutex)
+    {
+        return WITH_LOCK(m_features_mutex, return m_features);
+    }
 
     /** Set to true once initial VERSION message was sent (only relevant for outbound peers). */
     bool m_outbound_version_message_sent GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
@@ -581,6 +602,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
+    void AcceptedStaleTip(const CBlockIndex* pindex) override;
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& state) override
@@ -605,6 +627,7 @@ public:
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     std::vector<node::TxOrphanage::OrphanInfo> GetOrphanTransactions() override EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
     PeerManagerInfo GetInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_inv_to_send_mutex);
+    std::optional<std::vector<const CBlockIndex*>> GetTrackedStaleTips() const override EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     std::vector<PrivateBroadcast::TxBroadcastInfo> GetPrivateBroadcastInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     std::vector<CTransactionRef> AbortPrivateBroadcast(const uint256& id) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -738,8 +761,9 @@ private:
     /** Various helpers for headers processing, invoked by ProcessHeadersMessage() */
     /** Return true if headers are continuous and have valid proof-of-work (DoS points assigned on failure) */
     bool CheckHeadersPoW(const std::vector<CBlockHeader>& headers, Peer& peer);
-    /** Calculate an anti-DoS work threshold for headers chains */
-    arith_uint256 GetAntiDoSWorkThreshold();
+    /** Calculate an anti-DoS work threshold for headers chains forking up to
+     *  `window` blocks below the active tip */
+    arith_uint256 GetAntiDoSWorkThreshold(int window = ANTI_DOS_WORK_WINDOW);
     /** Deal with state tracking and headers sync for peers that send
      * non-connecting headers (this can happen due to BIP 130 headers
      * announcements for blocks interacting with the 2hr (MAX_FUTURE_BLOCK_TIME) rule). */
@@ -817,6 +841,9 @@ private:
         MakeAndPushMessage(node, NetMsgType::FEATURE, feature_id, std::move(feature_data));
     }
 
+    /** The BIP 434 features we advertise. */
+    NetFeatures LocalFeatures() const;
+
     /** Send a version message to a peer */
     void PushNodeVersion(CNode& pnode, const Peer& peer);
 
@@ -840,6 +867,18 @@ private:
 
     /** Send `feefilter` message. */
     void MaybeSendFeefilter(CNode& node, Peer& peer, std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+
+    /** Send `staletip` messages for any new stale tips. */
+    void MaybeSendStaleTips(CNode& node, Peer& peer, CNodeState& state) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, cs_main);
+
+    void ProcessStaleTip(CNode& pfrom, Peer& peer, DataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+
+    /** Track `tip` and remember the peer's block offer for SendMessages(). */
+    void HandleStaleTip(NodeId peer, const CBlockIndex& tip, bool peer_has_block, bool received_new_header) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, cs_main);
+
+    /** Add best-effort requests to `getdata` for missing blocks on the
+     *  branches `peer` offered with have_block. */
+    void MaybeRequestStaleBranchBlocks(const Peer& peer, const CNodeState& state, std::chrono::microseconds now, std::vector<CInv>& getdata) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     FastRandomContext m_rng GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
 
@@ -876,10 +915,60 @@ private:
     /** Next time to check for stale tip */
     std::chrono::seconds m_stale_tip_check_time GUARDED_BY(cs_main){0s};
 
+    /** The peer's staletip feature, or std::nullopt if either side has
+     *  stale-tip relay disabled. */
+    std::optional<StaleTipFeature> NegotiatedStaleTip(const Peer& peer) const
+    {
+        if (!StaleTipRelayEnabled()) return std::nullopt;
+        return peer.GetFeatures().stale_tip;
+    }
+
+    /** The peer that sent us a block, saved for when the block is checked. */
+    struct BlockSource {
+        NodeId peer;
+        //! False if the peer should not be punished if the block is invalid.
+        bool may_punish_peer{true};
+        //! The block answers a best-effort stale-tip request we sent the peer.
+        bool requested_staletip{false};
+    };
+
+    /** Whether the peer that sent the invalid block `hash` is exempt from
+     *  punishment, as for BIP 152 compact blocks, because the block is on a
+     *  stale branch it announced with have_block set.
+     *
+     * BIP 332 lets the peer serve the branch's blocks without having connected
+     * them, so it may have sent a block that only fails once connected, or one
+     * that turned out invalid, through an ancestor, after we asked for it. A
+     * block failing the checks done before it is stored is not exempt, as the
+     * peer must have passed them to store it.
+     */
+    bool IsExemptStaleBranchFailure(const BlockSource& source, const uint256& hash, const BlockValidationState& state) const EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+    {
+        if (!m_staletiprelayman) return false;
+        const CBlockIndex* block_index{m_chainman.m_blockman.LookupBlockIndex(hash)};
+        if (block_index == nullptr) return false;
+        const bool stored{(block_index->nStatus & BLOCK_HAVE_DATA) != 0};
+        if (!stored && state.GetResult() != BlockValidationResult::BLOCK_CACHED_INVALID) return false;
+        return source.requested_staletip || m_staletiprelayman->IsAnnouncedStaleBranchBlock(source.peer, m_chainman.ActiveChain(), *block_index);
+    }
+
     node::Warnings& m_warnings;
     TimeOffsets m_outbound_time_offsets{m_warnings};
 
     const Options m_opts;
+
+    /** Stale-tip relay (BIP 332) state and policy, or nullptr if stale-tip
+     *  relay is disabled. Unrelated to m_stale_tip_check_time, which checks
+     *  whether our own tip has gone stale. */
+    const std::unique_ptr<node::StaleTipRelayManager> m_staletiprelayman{
+        m_opts.stale_tip_relay_mode == StaleTipRelayMode::NONE ? nullptr :
+            std::make_unique<node::StaleTipRelayManager>(node::StaleTipRelayOptions{
+                .chain_type = m_chainparams.GetChainType(),
+                .fetch_blocks = m_opts.stale_tip_relay_mode == StaleTipRelayMode::BLOCKS,
+                .block_request_timeout = std::chrono::seconds{m_chainparams.GetConsensus().nPowTargetSpacing},
+            })};
+
+    bool StaleTipRelayEnabled() const { return m_staletiprelayman != nullptr; }
 
     bool RejectIncomingTxs(const CNode& peer) const;
 
@@ -917,12 +1006,11 @@ private:
     uint256 m_last_block_inv_triggering_headers_sync GUARDED_BY(g_msgproc_mutex){};
 
     /**
-     * Sources of received blocks, saved to be able punish them when processing
-     * happens afterwards.
-     * Set mapBlockSource[hash].second to false if the node should not be
-     * punished if the block is invalid.
+     * Sources of received blocks, saved to decide whether to punish a peer
+     * if the block fails validation later. An offer may have been forgotten
+     * by then, so remember if the peer fulfilled a stale-tip request.
      */
-    std::map<uint256, std::pair<NodeId, bool>> mapBlockSource GUARDED_BY(cs_main);
+    std::map<uint256, BlockSource> mapBlockSource GUARDED_BY(cs_main);
 
     /** Number of outbound peers with m_chain_sync.m_protect. */
     int m_outbound_peers_with_protect_from_disconnect GUARDED_BY(cs_main) = 0;
@@ -1048,8 +1136,11 @@ private:
         EXCLUSIVE_LOCKS_REQUIRED(!m_most_recent_block_mutex, peer.m_getdata_requests_mutex, NetEventsInterface::g_msgproc_mutex)
         LOCKS_EXCLUDED(::cs_main);
 
+    /** Whether we requested a received block: not at all, through block
+     *  download, or only as a best-effort stale-tip block. */
+    enum class BlockRequestKind { NONE, NORMAL, STALETIP };
     /** Process a new block. Perform any post-processing housekeeping */
-    void ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked);
+    void ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, BlockRequestKind request, bool min_pow_checked);
 
     /** Process compact block txns  */
     void ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const BlockTransactions& block_transactions)
@@ -1105,6 +1196,17 @@ private:
      * about and we fully-validated them at some point.
      */
     bool BlockRequestAllowed(const CBlockIndex& block_index) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    /** Whether this negotiated peer may fetch a stored block on an eligible
+     *  tracked stale branch, even if it has never been connected. */
+    bool StaleTipBlockRequestAllowed(const Peer& peer, const CBlockIndex& block_index) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, cs_main);
+    /** Whether a block is too deep to serve to this peer. When we only signal
+     *  NODE_NETWORK_LIMITED, serving deeper blocks would leak our prune height. */
+    bool BelowLimitedServingThreshold(const CNode& node, const Peer& peer, const CBlockIndex& block_index) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    /** Whether serving a block to this peer would exceed the historical
+     *  block serving limit, which keeps -maxuploadtarget capacity for recent
+     *  blocks. Applies to blocks older than HISTORICAL_BLOCK_AGE, and to every
+     *  `filtered` (merkleblock) request. */
+    bool HistoricalServingLimitReached(const CNode& node, const CBlockIndex& block_index, bool filtered) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool AlreadyHaveBlock(const uint256& block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& inv)
         EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex, !m_most_recent_block_mutex);
@@ -1705,6 +1807,7 @@ void PeerManagerImpl::InitializeNode(const CNode& node, ServiceFlags our_service
     {
         LOCK(cs_main); // For m_node_states
         m_node_states.try_emplace(m_node_states.end(), nodeid);
+        if (m_staletiprelayman) m_staletiprelayman->ConnectedPeer(nodeid);
     }
     WITH_LOCK(m_tx_download_mutex, m_txdownloadman.CheckIsEmpty(nodeid));
 
@@ -1808,6 +1911,7 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         m_txdownloadman.DisconnectedPeer(nodeid);
     }
     if (m_txreconciliation) m_txreconciliation->ForgetPeer(nodeid);
+    if (m_staletiprelayman) m_staletiprelayman->DisconnectedPeer(nodeid);
     m_num_preferred_download_peers -= state->fPreferredDownload;
     m_peers_downloading_from -= (!state->vBlocksInFlight.empty());
     assert(m_peers_downloading_from >= 0);
@@ -1823,6 +1927,7 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         assert(m_peers_downloading_from == 0);
         assert(m_outbound_peers_with_protect_from_disconnect == 0);
         WITH_LOCK(m_tx_download_mutex, m_txdownloadman.CheckIsEmpty());
+        if (m_staletiprelayman) m_staletiprelayman->CheckIsEmpty();
     }
     } // cs_main
     if (node.fSuccessfullyConnected &&
@@ -1946,6 +2051,7 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
     stats.m_addr_processed = peer->m_addr_processed.load();
     stats.m_addr_rate_limited = peer->m_addr_rate_limited.load();
     stats.m_addr_relay_enabled = peer->m_addr_relay_enabled.load();
+    stats.m_features = peer->GetFeatures();
     {
         LOCK(peer->m_headers_sync_mutex);
         if (peer->m_headers_sync) {
@@ -1963,6 +2069,26 @@ std::vector<node::TxOrphanage::OrphanInfo> PeerManagerImpl::GetOrphanTransaction
     return m_txdownloadman.GetOrphanTransactions();
 }
 
+std::optional<std::vector<const CBlockIndex*>> PeerManagerImpl::GetTrackedStaleTips() const
+{
+    AssertLockHeld(::cs_main);
+    if (!StaleTipRelayEnabled()) return std::nullopt;
+    std::vector<const CBlockIndex*> tips;
+    for (const node::StaleFork& fork : m_staletiprelayman->GetStaleTips(m_chainman.ActiveChain())) {
+        tips.push_back(fork.tip);
+    }
+    return tips;
+}
+
+NetFeatures PeerManagerImpl::LocalFeatures() const
+{
+    NetFeatures features;
+    if (m_staletiprelayman) {
+        features.stale_tip = StaleTipFeature{.prefers_blocks = m_staletiprelayman->PrefersBlocks()};
+    }
+    return features;
+}
+
 PeerManagerInfo PeerManagerImpl::GetInfo() const
 {
     LOCK(m_inv_to_send_mutex);
@@ -1973,6 +2099,7 @@ PeerManagerInfo PeerManagerImpl::GetInfo() const
         .tx_send_rate = m_opts.tx_send_rate,
         .inbound_bucket = m_inbound_inv_bucket.info(),
         .outbound_bucket = m_outbound_inv_bucket.info(),
+        .features = LocalFeatures(),
     };
 }
 
@@ -2079,6 +2206,29 @@ bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex& block_index)
            (GetBlockProofEquivalentTime(*m_chainman.m_best_header, block_index, *m_chainman.m_best_header, m_chainparams.GetConsensus()) < STALE_RELAY_AGE_LIMIT);
 }
 
+bool PeerManagerImpl::StaleTipBlockRequestAllowed(const Peer& peer, const CBlockIndex& block_index)
+{
+    AssertLockHeld(g_msgproc_mutex);
+    AssertLockHeld(cs_main);
+    return NegotiatedStaleTip(peer) &&
+           m_staletiprelayman->CanServeStaleBranchBlock(m_chainman.ActiveChain(), block_index);
+}
+
+bool PeerManagerImpl::BelowLimitedServingThreshold(const CNode& node, const Peer& peer, const CBlockIndex& block_index) const
+{
+    AssertLockHeld(cs_main);
+    return !node.HasPermission(NetPermissionFlags::NoBan) &&
+           (((peer.m_our_services & NODE_NETWORK_LIMITED) == NODE_NETWORK_LIMITED) && ((peer.m_our_services & NODE_NETWORK) != NODE_NETWORK) && (m_chainman.ActiveChain().Height() - block_index.nHeight > (int)NODE_NETWORK_LIMITED_MIN_BLOCKS + 2 /* add two blocks buffer extension for possible races */));
+}
+
+bool PeerManagerImpl::HistoricalServingLimitReached(const CNode& node, const CBlockIndex& block_index, bool filtered) const
+{
+    AssertLockHeld(cs_main);
+    return m_connman.OutboundTargetReached(true) &&
+           (((m_chainman.m_best_header != nullptr) && (m_chainman.m_best_header->GetBlockTime() - block_index.GetBlockTime() > HISTORICAL_BLOCK_AGE)) || filtered) &&
+           !node.HasPermission(NetPermissionFlags::Download); // nodes with the download permission may exceed target
+}
+
 util::Expected<void, std::string> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBlockIndex& block_index)
 {
     if (m_chainman.m_blockman.LoadingBlocks()) return util::Unexpected{"Loading blocks ..."};
@@ -2143,6 +2293,11 @@ PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
       m_inbound_inv_bucket(/*rate=*/m_opts.tx_send_rate, /*mult=*/1.0),
       m_outbound_inv_bucket(/*rate=*/m_opts.tx_send_rate, /*mult=*/OUTBOUND_INVENTORY_BUCKET_MULTIPLIER)
 {
+    if (m_staletiprelayman) {
+        LOCK(::cs_main);
+        m_staletiprelayman->Initialize(m_chainman.m_blockman, m_chainman.ActiveChain());
+    }
+
     // While Erlay support is incomplete, it must be enabled explicitly via -txreconciliation.
     // This argument can go away after Erlay support is complete.
     if (opts.reconcile_txs) {
@@ -2220,8 +2375,20 @@ void PeerManagerImpl::BlockConnected(
 
 void PeerManagerImpl::BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex)
 {
+    if (m_staletiprelayman) {
+        LOCK(::cs_main);
+        if (m_staletiprelayman->BlockDisconnected(m_chainman.ActiveChain(), *pindex)) m_connman.WakeMessageHandler();
+    }
+
     LOCK(m_tx_download_mutex);
     m_txdownloadman.BlockDisconnected();
+}
+
+void PeerManagerImpl::AcceptedStaleTip(const CBlockIndex* pindex)
+{
+    if (!m_staletiprelayman) return;
+    LOCK(::cs_main);
+    if (m_staletiprelayman->AcceptedStaleTip(m_chainman.ActiveChain(), *pindex)) m_connman.WakeMessageHandler();
 }
 
 /**
@@ -2326,14 +2493,15 @@ void PeerManagerImpl::BlockChecked(const std::shared_ptr<const CBlock>& block, c
     LOCK(cs_main);
 
     const uint256 hash(block->GetHash());
-    std::map<uint256, std::pair<NodeId, bool>>::iterator it = mapBlockSource.find(hash);
+    std::map<uint256, BlockSource>::iterator it = mapBlockSource.find(hash);
 
     // If the block failed validation, we know where it came from and we're still connected
     // to that peer, maybe punish.
     if (state.IsInvalid() &&
         it != mapBlockSource.end() &&
-        State(it->second.first)) {
-            MaybePunishNodeForBlock(/*nodeid=*/ it->second.first, state, /*via_compact_block=*/ !it->second.second);
+        State(it->second.peer)) {
+            MaybePunishNodeForBlock(/*nodeid=*/ it->second.peer, state,
+                                    /*via_compact_block=*/ !it->second.may_punish_peer || IsExemptStaleBranchFailure(it->second, hash, state));
     }
     // Check that:
     // 1. The block is valid
@@ -2345,7 +2513,7 @@ void PeerManagerImpl::BlockChecked(const std::shared_ptr<const CBlock>& block, c
              !m_chainman.IsInitialBlockDownload() &&
              mapBlocksInFlight.count(hash) == mapBlocksInFlight.size()) {
         if (it != mapBlockSource.end()) {
-            MaybeSetPeerAsAnnouncingHeaderAndIDs(it->second.first);
+            MaybeSetPeerAsAnnouncingHeaderAndIDs(it->second.peer);
         }
     }
     if (it != mapBlockSource.end())
@@ -2608,24 +2776,19 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
         if (!pindex) {
             return;
         }
-        if (!BlockRequestAllowed(*pindex)) {
+        if (!BlockRequestAllowed(*pindex) && !StaleTipBlockRequestAllowed(peer, *pindex)) {
             LogDebug(BCLog::NET, "%s: ignoring request from peer=%i for old block that isn't in the main chain\n", __func__, pfrom.GetId());
             return;
         }
         // disconnect node in case we have reached the outbound limit for serving historical blocks
-        if (m_connman.OutboundTargetReached(true) &&
-            (((m_chainman.m_best_header != nullptr) && (m_chainman.m_best_header->GetBlockTime() - pindex->GetBlockTime() > HISTORICAL_BLOCK_AGE)) || inv.IsMsgFilteredBlk()) &&
-            !pfrom.HasPermission(NetPermissionFlags::Download) // nodes with the download permission may exceed target
-        ) {
+        if (HistoricalServingLimitReached(pfrom, *pindex, inv.IsMsgFilteredBlk())) {
             LogDebug(BCLog::NET, "historical block serving limit reached, %s", pfrom.DisconnectMsg());
             pfrom.fDisconnect = true;
             return;
         }
         tip = m_chainman.ActiveChain().Tip();
         // Avoid leaking prune-height by never sending blocks below the NODE_NETWORK_LIMITED threshold
-        if (!pfrom.HasPermission(NetPermissionFlags::NoBan) && (
-                (((peer.m_our_services & NODE_NETWORK_LIMITED) == NODE_NETWORK_LIMITED) && ((peer.m_our_services & NODE_NETWORK) != NODE_NETWORK) && (tip->nHeight - pindex->nHeight > (int)NODE_NETWORK_LIMITED_MIN_BLOCKS + 2 /* add two blocks buffer extension for possible races */) )
-           )) {
+        if (BelowLimitedServingThreshold(pfrom, peer, *pindex)) {
             LogDebug(BCLog::NET, "Ignore block request below NODE_NETWORK_LIMITED threshold, %s", pfrom.DisconnectMsg());
             //disconnect node and prevent it from stalling (would otherwise wait for the missing block)
             pfrom.fDisconnect = true;
@@ -2876,15 +3039,15 @@ bool PeerManagerImpl::CheckHeadersPoW(const std::vector<CBlockHeader>& headers, 
     return true;
 }
 
-arith_uint256 PeerManagerImpl::GetAntiDoSWorkThreshold()
+arith_uint256 PeerManagerImpl::GetAntiDoSWorkThreshold(int window)
 {
     arith_uint256 near_chaintip_work = 0;
     LOCK(cs_main);
     if (m_chainman.ActiveChain().Tip() != nullptr) {
         const CBlockIndex *tip = m_chainman.ActiveChain().Tip();
-        // Use a 144 block buffer, so that we'll accept headers that fork from
-        // near our tip.
-        near_chaintip_work = tip->nChainWork - std::min<arith_uint256>(144*GetBlockProof(*tip), tip->nChainWork);
+        // Use a `window` block buffer, so that we'll accept headers that fork
+        // from near our tip.
+        near_chaintip_work = tip->nChainWork - std::min<arith_uint256>(window * GetBlockProof(*tip), tip->nChainWork);
     }
     return std::max(near_chaintip_work, m_chainman.MinimumChainWork());
 }
@@ -3677,19 +3840,20 @@ void PeerManagerImpl::ProcessGetCFCheckPt(CNode& node, Peer& peer, DataStream& v
               headers);
 }
 
-void PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked)
+void PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, BlockRequestKind request, bool min_pow_checked)
 {
     bool new_block{false};
-    m_chainman.ProcessNewBlock(block, force_processing, min_pow_checked, &new_block);
+    m_chainman.ProcessNewBlock(block, /*force_processing=*/request != BlockRequestKind::NONE, min_pow_checked, &new_block);
+    LOCK(cs_main);
     if (new_block) {
-        node.m_last_block_time = GetTime<std::chrono::seconds>();
+        if (request != BlockRequestKind::STALETIP) node.m_last_block_time = GetTime<std::chrono::seconds>();
         // In case this block came from a different peer than we requested
         // from, we can erase the block request now anyway (as we just stored
         // this block to disk).
-        LOCK(cs_main);
         RemoveBlockRequest(block->GetHash(), std::nullopt);
-    } else {
-        LOCK(cs_main);
+    }
+    // An optional block can remain stored without ever reaching BlockChecked().
+    if (!new_block || request == BlockRequestKind::STALETIP) {
         mapBlockSource.erase(block->GetHash());
     }
 }
@@ -3766,7 +3930,7 @@ void PeerManagerImpl::ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const Bl
             // BIP 152 permits peers to relay compact blocks after validating
             // the header only; we should not punish peers if the block turns
             // out to be invalid.
-            mapBlockSource.emplace(block_transactions.blockhash, std::make_pair(pfrom.GetId(), false));
+            mapBlockSource.emplace(block_transactions.blockhash, BlockSource{.peer = pfrom.GetId(), .may_punish_peer = false});
         }
     } // Don't hold cs_main when we call into ProcessNewBlock
     if (fBlockRead) {
@@ -3776,7 +3940,7 @@ void PeerManagerImpl::ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const Bl
         // disk-space attacks), but this should be safe due to the
         // protections in the compact block handler -- see related comment
         // in compact block optimistic reconstruction handling.
-        ProcessBlock(pfrom, pblock, /*force_processing=*/true, /*min_pow_checked=*/true);
+        ProcessBlock(pfrom, pblock, BlockRequestKind::NORMAL, /*min_pow_checked=*/true);
     }
     return;
 }
@@ -3993,8 +4157,10 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         }
 
         if (greatest_common_version >= FEATURE_VERSION) {
-            // announce supported features
-            // MakeAndPushFeature(pfrom, NetMsgFeature::FOO, uint32_t{1});
+            const NetFeatures local_features{LocalFeatures()};
+            if (local_features.stale_tip) {
+                MakeAndPushFeature(pfrom, NetMsgFeature::STALETIP, *local_features.stale_tip);
+            }
         }
 
         // If we have too many tx-relaying inbound peers, attempt to evict an existing one.
@@ -4249,10 +4415,19 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             return;
         }
 
-        // if (feature_id == NetMsgFeature::FOO) {
-        //     ...
-        //     return;
-        // }
+        if (feature_id == NetMsgFeature::STALETIP) {
+            // If the peer advertises the feature again, the later data replaces
+            // the earlier.
+            const auto stale_tip{StaleTipFeature::Parse(feature_data)};
+            if (!stale_tip) {
+                LogDebug(BCLog::NET, "ignoring malformed %s feature data from peer=%d", NetMsgFeature::STALETIP, pfrom.GetId());
+                return;
+            }
+
+            WITH_LOCK(peer.m_features_mutex, peer.m_features.stale_tip = *stale_tip);
+            LogDebug(BCLog::NET, "peer=%d supports staletip announcements with prefers_blocks=%d", pfrom.GetId(), stale_tip->prefers_blocks);
+            return;
+        }
 
         // ignore unknown feature_id
         LogDebug(BCLog::NET, "unknown feature advertised: %s", SanitizeString(feature_id));
@@ -4325,6 +4500,11 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             LogDebug(BCLog::PRIVBROADCAST, "Ignoring incoming message '%s', %s", msg_type, pfrom.LogPeer());
             return;
         }
+    }
+
+    if (msg_type == NetMsgType::STALETIP) {
+        ProcessStaleTip(pfrom, peer, vRecv);
+        return;
     }
 
     if (msg_type == NetMsgType::ADDR || msg_type == NetMsgType::ADDRV2) {
@@ -5021,7 +5201,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             // block that is in flight from some other peer.
             {
                 LOCK(cs_main);
-                mapBlockSource.emplace(pblock->GetHash(), std::make_pair(pfrom.GetId(), false));
+                mapBlockSource.emplace(pblock->GetHash(), BlockSource{.peer = pfrom.GetId(), .may_punish_peer = false});
             }
             // Setting force_processing to true means that we bypass some of
             // our anti-DoS protections in AcceptBlock, which filters
@@ -5032,7 +5212,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             // we have a chain with at least the minimum chain work), and we ignore
             // compact blocks with less work than our tip, it is safe to treat
             // reconstructed compact blocks as having been requested.
-            ProcessBlock(pfrom, pblock, /*force_processing=*/true, /*min_pow_checked=*/true);
+            ProcessBlock(pfrom, pblock, BlockRequestKind::NORMAL, /*min_pow_checked=*/true);
             LOCK(cs_main); // hold cs_main for CBlockIndex::IsValid()
             if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS)) {
                 // Clear download state for this block, which is in
@@ -5113,37 +5293,43 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
 
         LogDebug(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom.GetId());
 
-        const CBlockIndex* prev_block{WITH_LOCK(m_chainman.GetMutex(), return m_chainman.m_blockman.LookupBlockIndex(pblock->hashPrevBlock))};
+        const uint256 hash{pblock->GetHash()};
+        const CBlockIndex* prev_block;
+        bool requested_staletip;
+        {
+            LOCK(cs_main);
+            prev_block = m_chainman.m_blockman.LookupBlockIndex(pblock->hashPrevBlock);
+            requested_staletip = m_staletiprelayman && m_staletiprelayman->TakeBlockRequest(peer.m_id, hash);
+        }
 
         // Check for possible mutation if it connects to something we know so we can check for DEPLOYMENT_SEGWIT being active
         if (prev_block && IsBlockMutated(/*block=*/*pblock,
                            /*check_witness_root=*/DeploymentActiveAfter(prev_block, m_chainman, Consensus::DEPLOYMENT_SEGWIT))) {
             LogDebug(BCLog::NET, "Received mutated block from peer=%d\n", peer.m_id);
             Misbehaving(peer, "mutated block");
-            WITH_LOCK(cs_main, RemoveBlockRequest(pblock->GetHash(), peer.m_id));
+            WITH_LOCK(cs_main, RemoveBlockRequest(hash, peer.m_id));
             return;
         }
 
-        bool forceProcessing = false;
-        const uint256 hash(pblock->GetHash());
+        BlockRequestKind request{requested_staletip ? BlockRequestKind::STALETIP : BlockRequestKind::NONE};
         bool min_pow_checked = false;
         {
             LOCK(cs_main);
             // Always process the block if we requested it, since we may
             // need it even when it's not a candidate for a new best tip.
-            forceProcessing = IsBlockRequested(hash);
+            if (IsBlockRequested(hash)) request = BlockRequestKind::NORMAL;
             RemoveBlockRequest(hash, pfrom.GetId());
             // mapBlockSource is only used for punishing peers and setting
             // which peers send us compact blocks, so the race between here and
             // cs_main in ProcessNewBlock is fine.
-            mapBlockSource.emplace(hash, std::make_pair(pfrom.GetId(), true));
+            mapBlockSource.emplace(hash, BlockSource{.peer = pfrom.GetId(), .may_punish_peer = true, .requested_staletip = requested_staletip});
 
             // Check claimed work on this block against our anti-dos thresholds.
             if (prev_block && prev_block->nChainWork + GetBlockProof(*pblock) >= GetAntiDoSWorkThreshold()) {
                 min_pow_checked = true;
             }
         }
-        ProcessBlock(pfrom, pblock, forceProcessing, min_pow_checked);
+        ProcessBlock(pfrom, pblock, request, min_pow_checked);
         return;
     }
 
@@ -5869,6 +6055,151 @@ void PeerManagerImpl::MaybeSendFeefilter(CNode& pto, Peer& peer, std::chrono::mi
     }
 }
 
+void PeerManagerImpl::MaybeSendStaleTips(CNode& node, Peer& peer, CNodeState& state)
+{
+    AssertLockHeld(g_msgproc_mutex);
+    AssertLockHeld(cs_main);
+
+    const auto stale_tip_feature{NegotiatedStaleTip(peer)};
+    if (!stale_tip_feature) return;
+    if (m_chainman.IsInitialBlockDownload()) return;
+
+    ProcessBlockAvailability(node.GetId());
+
+    // This runs on every SendMessages() pass, but the tracker holds at most
+    // MAX_ADVERTISED_STALETIPS tips, so rebuilding the list each time is cheap.
+    const auto announcements{m_staletiprelayman->GetStaleTipsToAnnounce(
+        node.GetId(), m_chainman.ActiveChain(),
+        /*can_serve_block=*/[&](const CBlockIndex& block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+            return !BelowLimitedServingThreshold(node, peer, block) &&
+                   !HistoricalServingLimitReached(node, block, /*filtered=*/false);
+        },
+        /*peer_has_header=*/[&](const CBlockIndex& block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) { return PeerHasHeader(&state, &block); },
+        stale_tip_feature->prefers_blocks,
+        /*is_requested=*/[&](const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) { return IsBlockRequested(hash); })};
+    for (const StaleTipMessage& data : announcements) {
+        MakeAndPushMessage(node, NetMsgType::STALETIP, data);
+        LogDebug(BCLog::NET, "sending staletip with %u header(s) to peer=%d", data.headers.size(), node.GetId());
+    }
+}
+
+void PeerManagerImpl::ProcessStaleTip(CNode& pfrom, Peer& peer, DataStream& vRecv)
+{
+    if (!NegotiatedStaleTip(peer)) {
+        LogDebug(BCLog::NET, "ignoring unnegotiated staletip from peer=%d", pfrom.GetId());
+        return;
+    }
+
+    StaleTipMessage msg;
+    try {
+        vRecv >> msg;
+        if (!vRecv.empty()) throw std::ios_base::failure{"trailing staletip bytes"};
+    } catch (const StaleTipHeadersLimitExceeded& e) {
+        LogDebug(BCLog::NET, "ignoring staletip from peer=%d: %s", pfrom.GetId(), e.what());
+        return;
+    } catch (const std::exception& e) {
+        LogDebug(BCLog::NET, "malformed staletip from peer=%d: %s, %s", pfrom.GetId(), e.what(), pfrom.DisconnectMsg());
+        pfrom.fDisconnect = true;
+        return;
+    }
+
+    const std::vector<CBlockHeader> headers{msg.DecompressHeaders()};
+    const uint256 tip_hash{headers.back().GetHash()};
+    Assume(CheckHeadersAreContinuous(headers));
+
+    if (!HasValidProofOfWork(headers, m_chainparams.GetConsensus())) {
+        LogDebug(BCLog::NET, "ignoring staletip %s with invalid headers from peer=%d", tip_hash.ToString(), pfrom.GetId());
+        return;
+    }
+
+    const arith_uint256 claimed_headers_work{CalculateClaimedHeadersWork(headers)};
+    // Use the stale-tip recency window instead of the default anti-DoS
+    // window, so tips that senders may advertise aren't discarded. This
+    // check is what makes min_pow_checked=true below safe.
+    const arith_uint256 stale_tip_work_threshold{GetAntiDoSWorkThreshold(node::STALETIP_RECENT_WINDOW)};
+    {
+        LOCK(cs_main);
+
+        if (const CBlockIndex* known_tip{m_chainman.m_blockman.LookupBlockIndex(tip_hash)}) {
+            HandleStaleTip(peer.m_id, *known_tip, /*peer_has_block=*/msg.have_block, /*received_new_header=*/false);
+            return;
+        }
+
+        const CBlockIndex* fork_point{m_chainman.m_blockman.LookupBlockIndex(msg.fork_point)};
+        if (fork_point == nullptr) {
+            LogDebug(BCLog::NET, "ignoring staletip %s with unknown fork point %s from peer=%d", tip_hash.ToString(), msg.fork_point.ToString(), pfrom.GetId());
+            return;
+        }
+        if (const auto valid{node::ValidateStaleTipAnnouncement(*fork_point, headers.size(), claimed_headers_work, m_chainman.ActiveTip(), stale_tip_work_threshold)}; !valid) {
+            switch (valid.error()) {
+            case node::StaleTipAnnouncementError::OUTSIDE_RECENT_WINDOW:
+                LogDebug(BCLog::NET, "ignoring staletip %s outside recency window from peer=%d", tip_hash.ToString(), pfrom.GetId());
+                break;
+            case node::StaleTipAnnouncementError::LOW_WORK:
+                LogDebug(BCLog::NET, "ignoring low-work staletip %s from peer=%d", tip_hash.ToString(), pfrom.GetId());
+                break;
+            } // no default case, so the compiler can warn about missing cases
+            return;
+        }
+    }
+
+    BlockValidationState state;
+    const CBlockIndex* last_header{nullptr};
+    if (!m_chainman.ProcessNewBlockHeaders(headers, /*min_pow_checked=*/true, state, &last_header)) {
+        LogDebug(BCLog::NET, "ignoring staletip %s headers from peer=%d: %s", tip_hash.ToString(), pfrom.GetId(), state.ToString());
+        return;
+    }
+
+    LOCK(cs_main);
+    if (!Assume(last_header)) return;
+    HandleStaleTip(peer.m_id, *last_header, /*peer_has_block=*/msg.have_block, /*received_new_header=*/true);
+}
+
+void PeerManagerImpl::HandleStaleTip(NodeId peer, const CBlockIndex& tip, bool peer_has_block, bool received_new_header)
+{
+    AssertLockHeld(g_msgproc_mutex);
+    AssertLockHeld(cs_main);
+
+    // A known-invalid tip is neither tracked nor counted as a block
+    // announcement.
+    if (!tip.IsValid(BLOCK_VALID_TREE)) return;
+    if (m_staletiprelayman->ReceivedStaleTip(peer, m_chainman.ActiveChain(), tip, peer_has_block)) {
+        m_connman.WakeMessageHandler();
+    }
+
+    const CBlockIndex* active_tip{m_chainman.ActiveTip()};
+    if (received_new_header && peer_has_block && active_tip && tip.nChainWork > active_tip->nChainWork) {
+        // Record the announcement. Updating the peer's best-known block as for
+        // a headers message would make it responsible for every missing parent.
+        Assert(State(peer))->m_last_block_announcement = NodeClock::now();
+    }
+}
+
+void PeerManagerImpl::MaybeRequestStaleBranchBlocks(const Peer& peer, const CNodeState& state, std::chrono::microseconds now, std::vector<CInv>& getdata)
+{
+    AssertLockHeld(cs_main);
+
+    if (!NegotiatedStaleTip(peer)) return;
+
+    // The manager is still called without a budget, so that it expires the
+    // requests that timed out.
+    int max_pending{0};
+    if (CanServeBlocks(peer) && now >= state.m_block_download_paused_until && !m_chainman.IsInitialBlockDownload() && !m_chainman.m_blockman.LoadingBlocks()) {
+        max_pending = std::max(0, MAX_BLOCKS_IN_TRANSIT_FOR_STALETIP_REQUESTS - static_cast<int>(state.vBlocksInFlight.size()));
+    }
+    const int peer_height{std::max(m_chainman.ActiveHeight(), state.pindexBestKnownBlock ? state.pindexBestKnownBlock->nHeight : 0)};
+    const auto can_request{[&](const CBlockIndex& block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        // As in FindNextBlocksToDownload(), don't request a block that a
+        // limited peer may have pruned, as it would disconnect us.
+        return !IsBlockRequested(block.GetBlockHash()) &&
+               (CanServeWitnesses(peer) || !DeploymentActiveAt(block, m_chainman, Consensus::DEPLOYMENT_SEGWIT)) &&
+               (!IsLimitedPeer(peer) || peer_height - block.nHeight < static_cast<int>(NODE_NETWORK_LIMITED_MIN_BLOCKS) - 2);
+    }};
+    for (const CBlockIndex* block : m_staletiprelayman->GetBlockRequestsToSend(peer.m_id, m_chainman.ActiveChain(), now, max_pending, can_request)) {
+        getdata.emplace_back(MSG_BLOCK | GetFetchFlags(peer), block->GetBlockHash());
+    }
+}
+
 bool PeerManagerImpl::RejectIncomingTxs(const CNode& peer) const
 {
     // block-relay-only peers may never send txs to us
@@ -6110,6 +6441,8 @@ bool PeerManagerImpl::SendMessages(CNode& node)
             m_chainman.m_best_header = m_chainman.ActiveChain().Tip();
         }
 
+        MaybeSendStaleTips(node, peer, state);
+
         // Determine whether we might try initial headers sync or parallel
         // block download from this peer -- this mostly affects behavior while
         // in IBD (once out of IBD, we sync from all peers).
@@ -6288,6 +6621,21 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                         LogDebug(BCLog::NET, "%s: sending inv peer=%d hash=%s\n", __func__,
                             node.GetId(), hashToAnnounce.ToString());
                     }
+                }
+            }
+            // BIP 332 peers infer which fork points we know from the blocks
+            // we announce, so announce our active tip by inv even if they
+            // already have its header, for example because they announced it
+            // to us.
+            if (NegotiatedStaleTip(peer) && !peer.m_blocks_for_headers_relay.empty()) {
+                const CBlockIndex* tip{m_chainman.ActiveChain().Tip()};
+                const uint256& tip_hash{tip->GetBlockHash()};
+                if (peer.m_blocks_for_headers_relay.back() == tip_hash &&
+                    state.pindexBestHeaderSent != tip &&
+                    std::ranges::find(peer.m_blocks_for_inv_relay, tip_hash) == peer.m_blocks_for_inv_relay.end()) {
+                    peer.m_blocks_for_inv_relay.push_back(tip_hash);
+                    LogDebug(BCLog::NET, "%s: queueing active tip inv peer=%d hash=%s", __func__,
+                        node.GetId(), tip_hash.ToString());
                 }
             }
             peer.m_blocks_for_headers_relay.clear();
@@ -6555,6 +6903,10 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                 }
             }
         }
+
+        // Stale-tip block requests are optional, so they go after the blocks
+        // the active chain needs.
+        MaybeRequestStaleBranchBlocks(peer, state, current_time, vGetData);
 
         //
         // Message: getdata (transactions)

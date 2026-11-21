@@ -75,6 +75,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
                 'height': height,
                 'hash': tip_hash,
                 'branchlen': height,
+                'fork_point': self.nodes[3].getblockhash(0),
                 'status': 'headers-only',
             } in node3_chaintips
 

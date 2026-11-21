@@ -54,6 +54,7 @@ BIPs that are implemented by Bitcoin Core:
 * [`BIP 325`](https://github.com/bitcoin/bips/blob/master/bip-0325.mediawiki): Signet test network is supported as of **v0.21.0** ([PR 18267](https://github.com/bitcoin/bitcoin/pull/18267)).
 * [`BIP 327`](https://github.com/bitcoin/bips/blob/master/bip-0327.mediawiki): Key aggregation via `musig()` descriptors is supported as of **v30.0** ([PR 31244](https://github.com/bitcoin/bitcoin/pull/31244)). Signing is supported as of **v31.0** ([PR 29675](https://github.com/bitcoin/bitcoin/pull/29675))
 * [`BIP 328`](https://github.com/bitcoin/bips/blob/master/bip-0328.mediawiki): MuSig2 derivation via `musig()` descriptors is supported as of **v30.0** ([PR 31244](https://github.com/bitcoin/bitcoin/pull/31244))
+* [`BIP 332`](https://github.com/bitcoin/bips/blob/master/bip-0332.md): Stale tip relay is supported with `-staletips` (off by default) as of **v33.0** ([PR 36920](https://github.com/bitcoin/bitcoin/pull/36920)).
 * [`BIP 339`](https://github.com/bitcoin/bips/blob/master/bip-0339.mediawiki): Relay of transactions by wtxid is supported as of **v0.21.0** ([PR 18044](https://github.com/bitcoin/bitcoin/pull/18044)).
 * [`BIP 340`](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki)
   [`341`](https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki)

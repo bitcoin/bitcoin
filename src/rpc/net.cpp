@@ -144,6 +144,28 @@ static UniValue GetServicesNames(ServiceFlags services)
     return servicesNames;
 }
 
+/** Returns the recognized BIP 434 features, keyed by feature id */
+static UniValue FeaturesToJSON(const NetFeatures& features)
+{
+    UniValue obj(UniValue::VOBJ);
+    if (features.stale_tip) {
+        UniValue stale_tip(UniValue::VOBJ);
+        stale_tip.pushKV("prefers_blocks", features.stale_tip->prefers_blocks);
+        obj.pushKV(std::string{NetMsgFeature::STALETIP}, std::move(stale_tip));
+    }
+    return obj;
+}
+
+static std::vector<RPCResult> FeaturesDoc()
+{
+    return {
+        {RPCResult::Type::OBJ, std::string{NetMsgFeature::STALETIP}, /*optional=*/true, "stale-tip relay (BIP 332)",
+        {
+            {RPCResult::Type::BOOL, "prefers_blocks", "whether stale-tip announcements are preferred once block data is available"},
+        }},
+    };
+}
+
 static RPCMethod getpeerinfo()
 {
     return RPCMethod{
@@ -168,6 +190,8 @@ static RPCMethod getpeerinfo()
                     {
                         {RPCResult::Type::STR, "SERVICE_NAME", "the service name if it is recognised"}
                     }},
+                    {RPCResult::Type::OBJ, "features", "the BIP 434 features advertised by the peer, keyed by feature id (unrecognized features are omitted)",
+                        FeaturesDoc()},
                     {RPCResult::Type::BOOL, "relaytxes", "Whether we relay transactions to this peer"},
                     {RPCResult::Type::NUM, "last_inv_sequence", "Mempool sequence number of this peer's last INV"},
                     {RPCResult::Type::NUM, "inv_to_send", "How many txs we have queued to announce to this peer"},
@@ -266,6 +290,7 @@ static RPCMethod getpeerinfo()
         ServiceFlags services{statestats.their_services};
         obj.pushKV("services", strprintf("%016x", services));
         obj.pushKV("servicesnames", GetServicesNames(services));
+        obj.pushKV("features", FeaturesToJSON(statestats.m_features));
         obj.pushKV("relaytxes", statestats.m_relay_txs);
         obj.pushKV("last_inv_sequence", statestats.m_last_inv_seq);
         obj.pushKV("inv_to_send", statestats.m_inv_to_send);
@@ -689,6 +714,8 @@ static RPCMethod getnetworkinfo()
                         {
                             {RPCResult::Type::STR, "SERVICE_NAME", "the service name"},
                         }},
+                        {RPCResult::Type::OBJ, "localfeatures", "the BIP 434 features we advertise to peers that support them, keyed by feature id",
+                            FeaturesDoc()},
                         {RPCResult::Type::BOOL, "localrelay", "true if transaction relay is requested from peers"},
                         {RPCResult::Type::NUM, "timeoffset", "the time offset"},
                         {RPCResult::Type::NUM, "tx_send_rate", "configured target for maximum number of transactions per second to send to inbound peers"},
@@ -755,6 +782,7 @@ static RPCMethod getnetworkinfo()
     obj.pushKV("localservices", strprintf("%016x", services));
     obj.pushKV("localservicesnames", GetServicesNames(services));
     auto peerman_info{EnsurePeerman(node).GetInfo()};
+    obj.pushKV("localfeatures", FeaturesToJSON(peerman_info.features));
     obj.pushKV("localrelay", !peerman_info.ignores_incoming_txs);
     obj.pushKV("timeoffset", Ticks<std::chrono::seconds>(peerman_info.median_outbound_time_offset));
     obj.pushKV("tx_send_rate", peerman_info.tx_send_rate);

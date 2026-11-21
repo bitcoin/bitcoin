@@ -313,6 +313,7 @@ BASE_SCRIPTS = [
     'p2p_leak.py',
     'p2p_bip434_feature.py',
     'p2p_bip434_feature.py --v2transport',
+    'p2p_staletip.py',
     'wallet_encryption.py',
     'feature_dersig.py',
     'feature_reindex_init.py',

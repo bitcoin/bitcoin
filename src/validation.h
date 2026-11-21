@@ -954,6 +954,9 @@ private:
     CBlockIndex* m_last_notified_header GUARDED_BY(GetMutex()){nullptr};
 
     bool NotifyHeaderTip() LOCKS_EXCLUDED(GetMutex());
+    //! Notify AcceptedStaleTip if `pindex` is off the active chain and has no
+    //! more work than the active tip. Does nothing if `pindex` is null.
+    void MaybeNotifyAcceptedStaleTip(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     //! Internal helper for ActivateSnapshot().
     //!
