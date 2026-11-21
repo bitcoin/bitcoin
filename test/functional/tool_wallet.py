@@ -6,6 +6,7 @@
 
 import os
 import stat
+import struct
 import subprocess
 import textwrap
 
@@ -434,6 +435,65 @@ class ToolWalletTest(BitcoinTestFramework):
         else:
             assert False, "Big transaction was not found in wallet dump"
 
+    def test_dump_bdb_empty_overflow_page(self):
+        self.log.info("Test that a BDB file with an empty overflow page that links to itself is rejected")
+
+        # Minimal BDB btree file with 5 pages: outer metadata, outer root, inner metadata,
+        # a leaf with one key whose value is an overflow record, and the overflow page.
+        page_size = 4096
+
+        def page_header(page_num, next_page, entries, hf_offset, level, page_type):
+            return struct.pack("<IIIIIHHBB", 0, 1, page_num, 0, next_page, entries, hf_offset, level, page_type)
+
+        def meta_page(page_num, root):
+            page = struct.pack("<IIIIII", 0, 1, page_num, 0x00053162, 9, page_size)
+            page += struct.pack("<BBBB", 0, 9, 0, 0)  # BTREE_META
+            page += struct.pack("<IIIII", 0, 4, 0, 0, 0)  # last_page is 4
+            page += struct.pack("<I", 0x20)  # SUBDB
+            page += bytes(20)
+            page += struct.pack("<IIIII", 0, 2, 0, 0, root)
+            return page.ljust(page_size, b"\x00")
+
+        def leaf_page(page_num, records):
+            page = bytearray(page_size)
+            offset = page_size
+            indexes = b""
+            for record in records:
+                offset -= len(record)
+                page[offset:offset + len(record)] = record
+                indexes += struct.pack("<H", offset)
+            header = page_header(page_num, 0, len(records), offset, 1, 5) + indexes
+            page[:len(header)] = header
+            return bytes(page)
+
+        def data_record(data):
+            return struct.pack("<HB", len(data), 1) + data
+
+        def overflow_record(page_num, item_len):
+            return struct.pack("<HBBII", 0, 3, 0, page_num, item_len)
+
+        def write_wallet(name, overflow_page):
+            wallet_dir = self.nodes[0].wallets_path / name
+            wallet_dir.mkdir()
+            with open(wallet_dir / self.wallet_data_filename, "wb") as f:
+                f.write(meta_page(0, 1))
+                f.write(leaf_page(1, [data_record(b"main"), data_record(struct.pack(">I", 2))]))
+                f.write(meta_page(2, 3))
+                f.write(leaf_page(3, [data_record(b"\x04name"), overflow_record(4, 100)]))
+                f.write(overflow_page.ljust(page_size, b"\x00"))
+
+        # An overflow page that holds the whole item can be dumped
+        write_wallet("bdb_overflow", page_header(4, 0, 0, 100, 0, 7) + b"A" * 100)
+        wallet_dump = self.nodes[0].datadir_path / "bdb_overflow.dump"
+        self.assert_tool_output("The dumpfile may contain private keys. To ensure the safety of your Bitcoin, do not share the dumpfile.\n", "-wallet=bdb_overflow", f"-dumpfile={wallet_dump}", "dump")
+        assert_equal(self.read_dump(wallet_dump)["046e616d65"], (b"A" * 100).hex())
+
+        # An overflow page without data that names itself as the next page
+        write_wallet("bdb_empty_overflow", page_header(4, 4, 0, 0, 0, 7))
+        wallet_dump = self.nodes[0].datadir_path / "bdb_empty_overflow.dump"
+        self.assert_raises_tool_error("Overflow page has no data", "-wallet=bdb_empty_overflow", f"-dumpfile={wallet_dump}", "dump")
+        assert not wallet_dump.exists()
+
     def test_no_create_legacy(self):
         self.log.info("Test that legacy wallets cannot be created")
 
@@ -463,6 +523,7 @@ class ToolWalletTest(BitcoinTestFramework):
         self.test_dump_createfromdump()
         self.test_chainless_conflicts()
         self.test_dump_very_large_records()
+        self.test_dump_bdb_empty_overflow_page()
         self.test_no_create_legacy()
         self.test_no_create_unnamed()
 
