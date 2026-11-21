@@ -81,6 +81,13 @@ if(CMAKE_VERSION VERSION_LESS 4.2 AND CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NO
 endif()
 enable_language(CXX)
 
+if(MSVC AND NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  message(FATAL_ERROR
+  "Unsupported C++ compiler: ${CMAKE_CXX_COMPILER}.\n"
+  "See the recommended doc/build-windows-native.md#building "
+  "or remove this check and continue at your own risk without support.")
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
