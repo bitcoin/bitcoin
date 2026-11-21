@@ -42,7 +42,7 @@ public:
 } // namespace init
 
 namespace interfaces {
-std::unique_ptr<Init> MakeGuiInit(int argc, char* argv[])
+std::unique_ptr<Init> MakeGuiInit(int, char*[])
 {
     return std::make_unique<init::BitcoinQtInit>();
 }
