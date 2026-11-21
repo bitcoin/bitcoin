@@ -21,10 +21,10 @@ jobs:
           # than 14.x require `-DKJ_NO_EXCEPTIONS=0` when
           # processing `capnproto/c++/src/kj/common.h`.
           # See https://github.com/capnproto/capnproto/pull/2756/changes/28fa1a6753514d8de56875ec2222fa0e1c3a04f7.
-          - release: '10.1'
+          - release: '10.2'
             capnproto-cppflags: 'CPPFLAGS="-DKJ_NO_EXCEPTIONS=0"'
             env_vars: 'CXXFLAGS="-DKJ_NO_EXCEPTIONS=0"'
-          - release: '11.0'
+          - release: '11.1'
             capnproto-cppflags: 'CPPFLAGS="-DKJ_NO_EXCEPTIONS=0"'
             env_vars: 'CXXFLAGS="-DKJ_NO_EXCEPTIONS=0"'
     steps:

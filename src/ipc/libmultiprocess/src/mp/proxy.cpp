@@ -13,6 +13,7 @@
 #include <atomic>
 #include <capnp/capability.h>
 #include <capnp/common.h> // IWYU pragma: keep
+#include <capnp/rpc-twoparty.h>
 #include <capnp/rpc.h>
 #include <condition_variable>
 #include <functional>
@@ -24,10 +25,10 @@
 #include <kj/debug.h>
 #include <kj/exception.h>
 #include <kj/function.h>
-#include <kj/io.h>
 #include <kj/memory.h>
 #include <kj/string.h>
 #include <cstdint>
+#include <cstring>
 #include <map>
 #include <memory>
 #include <optional>
@@ -69,10 +70,7 @@ EventLoopRef::EventLoopRef(EventLoop& loop, Lock* lock) : m_loop(&loop), m_lock(
     m_loop->m_num_refs += 1;
 }
 
-// Due to the conditionals in this function, MP_NO_TSA is required to avoid
-// error "error: mutex 'loop_lock' is not held on every path through here
-// [-Wthread-safety-analysis]"
-void EventLoopRef::reset(bool relock) MP_NO_TSA
+void EventLoopRef::reset()
 {
     if (auto* loop{m_loop}) {
         m_loop = nullptr;
@@ -81,25 +79,11 @@ void EventLoopRef::reset(bool relock) MP_NO_TSA
         assert(loop->m_num_refs > 0);
         loop->m_num_refs -= 1;
         if (loop->done()) {
-            loop->m_cv.notify_all();
-            // Capture loop->m_post_writer pointer before releasing the lock.
-            // The pointer can't actually change before the write() call below,
-            // but copying it with the lock held instead of accessing it
-            // directly below prevents TSAN false positives because TSAN is
-            // unaware of socketpair write() synchronization and might falsely
-            // report the pointer being used in this thread and assigned in the
-            // other thread without synchronization between.
-            kj::OutputStream* post_writer{loop->m_post_writer.get()};
-            loop_lock->unlock();
-            char buffer = 0;
-            // It safe to access post_writer here because the loop can't
-            // exit until this write takes place. See "Intentionally do not
-            // break..."  comment in EventLoop::loop
-            post_writer->write(&buffer, 1);
-            // By default, do not try to relock `loop_lock` after writing,
-            // because the event loop could wake up and destroy itself and the
-            // mutex might no longer exist.
-            if (relock) loop_lock->lock();
+            // Wake up EventLoop::loop() so it can exit. This is called with
+            // m_mutex held, and loop() locks m_mutex before returning, so the
+            // loop can't exit and destroy the fulfiller while fulfill() is
+            // running. Do not unlock m_mutex before this call.
+            loop->m_stop_promise_fulfiller_pair.fulfiller->fulfill();
         }
     }
 }
@@ -111,8 +95,31 @@ Connection::~Connection() noexcept(false)
     // Connection destructor is always called on the event loop thread. If this
     // is a local disconnect, it will trigger I/O, so this needs to run on the
     // event loop thread, and if there was a remote disconnect, this is called
-    // by an onDisconnect callback directly from the event loop thread.
+    // by a TwoPartyVatNetwork::onDisconnect callback directly from the event
+    // loop thread.
     assert(std::this_thread::get_id() == m_loop->m_thread_id);
+    disconnect();
+}
+
+void Connection::disconnect()
+{
+    // Disconnecting triggers I/O and tears down capnp state, so it must run on
+    // the event loop thread, like the destructor.
+    assert(std::this_thread::get_id() == m_loop->m_thread_id);
+
+    // m_network is reset at the end of teardown below, so treat it being null
+    // as the "already disconnected" state: a second call (including the one
+    // from the destructor) is a no-op.
+    if (!m_network) return;
+
+    // Expire m_alive before severing the connection below so onDisconnect
+    // handlers will not trigger and delete this Connection object. The
+    // onDisconnect handlers trigger on remote disconnects and automatically
+    // delete Connection objects. But on local disconnects, they should not
+    // trigger, because local code that disconnects is responsible for freeing
+    // Connection objects, and it may want to wait for in-flight calls to finish
+    // before destroying them.
+    m_alive.reset();
 
     // Try to cancel any calls that may be executing.
     m_canceler.cancel("Interrupted by disconnect");
@@ -132,13 +139,13 @@ Connection::~Connection() noexcept(false)
     //
     // Sending pending data is important if the connection is a socketpair
     // because when one side of the socketpair is closed, the other side doesn't
-    // seem to receive any onDisconnect event. So it is important for the other
-    // side to instead receive Cap'n Proto "release" messages (see `struct
-    // Release` in capnp/rpc.capnp) from local Client objects being destroyed so
-    // the remote side can free resources and shut down cleanly. Without this,
-    // when one side of a socket pair is closed the other side may not receive
-    // these messages, preventing the remote side from freeing ProxyServer
-    // resources and shutting down cleanly.
+    // seem to receive any TwoPartyVatNetwork::onDisconnect event. So it is
+    // important for the other side to instead receive Cap'n Proto "release"
+    // messages (see `struct Release` in capnp/rpc.capnp) from local Client
+    // objects being destroyed so the remote side can free resources and shut
+    // down cleanly. Without this, when one side of a socket pair is closed the
+    // other side may not receive these messages, preventing the remote side
+    // from freeing ProxyServer resources and shutting down cleanly.
     // Use kj::runCatchingExceptions instead of try/catch because on macOS with
     // dynamic libraries, kj::Exception typeinfo differs between libcapnp and
     // the calling binary, so catch (const kj::Exception&) silently fails to
@@ -184,28 +191,49 @@ Connection::~Connection() noexcept(false)
     // connection implementing the Init interface and handling the Init.makeX() calls.
     //
     // Either way when a connection is closed, capnp behavior is to call all
-    // ProxyServer object destructors first, and then trigger an onDisconnect
-    // callback.
+    // ProxyServer object destructors first, and then trigger a
+    // TwoPartyVatNetwork::onDisconnect callback.
     //
-    // On incoming side of the connection, the onDisconnect callback is written
-    // to delete the Connection object from the m_incoming_connections and call
-    // this destructor which calls Connection::disconnect.
+    // On incoming side of the connection, the TwoPartyVatNetwork::onDisconnect
+    // callback is written to delete the Connection object from the
+    // m_incoming_connections list and call this destructor.
     //
-    // On the outgoing side, the Connection object is owned by top level client
-    // object client, which onDisconnect handler doesn't have ready access to,
-    // so onDisconnect handler just calls Connection::disconnect directly
-    // instead.
+    // On the outgoing side, the Connection object is heap-allocated and owned
+    // by a top-level ProxyClient object. In this case, the
+    // TwoPartyVatNetwork::onDisconnect handler deletes the Connection object
+    // directly, calling this destructor, and loop below sets Connection
+    // pointers in all associated ProxyClient objects to null.
     //
     // Either way disconnect code runs in the event loop thread and called both
     // on clean and unclean shutdowns. In unclean shutdown case when the
     // connection is broken, sync and async cleanup lists will be filled with
     // callbacks. In the clean shutdown case both lists will be empty.
-    Lock lock{m_loop->m_mutex};
-    while (!m_sync_cleanup_fns.empty()) {
-        CleanupList fn;
-        fn.splice(fn.begin(), m_sync_cleanup_fns, m_sync_cleanup_fns.begin());
-        Unlock(lock, fn.front());
+    {
+        Lock lock{m_loop->m_mutex};
+        while (!m_sync_cleanup_fns.empty()) {
+            CleanupList fn;
+            fn.splice(fn.begin(), m_sync_cleanup_fns, m_sync_cleanup_fns.begin());
+            Unlock(lock, fn.front());
+        }
     }
+
+    // Release Thread capabilities so idle worker threads are stopped and
+    // joined at disconnect time, whether or not this object is destroyed right
+    // away. (A worker thread currently executing a call body is unaffected:
+    // its ProxyServer<Thread> object is pinned by the post() call and released
+    // when the body finishes.)
+    m_thread_pool.clear();
+    m_thread_map = nullptr;
+
+    // Destroy the network and close the stream so the peer observes the
+    // disconnect, reading EOF and failing its outstanding calls with
+    // DISCONNECTED errors. This has to be explicit because when disconnect()
+    // is called without destroying this object, nothing else severs the
+    // transport: m_rpc_system.reset() above stops reading from the stream but
+    // does not reliably close it. The network is destroyed first since it
+    // references the stream.
+    m_network.reset();
+    m_stream = nullptr;
 }
 
 CleanupIt Connection::addSyncCleanup(std::function<void()> fn)
@@ -218,7 +246,8 @@ CleanupIt Connection::addSyncCleanup(std::function<void()> fn)
     // order should not be significant because the cleanup callbacks run
     // synchronously in a single batch when the connection is broken, and they
     // only reset the connection pointers in the client objects without actually
-    // deleting the client objects.
+    // deleting the client objects, or update ListenConnections max_connections
+    // bookkeeping.
     return m_sync_cleanup_fns.emplace(m_sync_cleanup_fns.begin(), std::move(fn));
 }
 
@@ -257,28 +286,17 @@ void EventLoop::addAsyncCleanup(std::function<void()> fn)
 EventLoop::EventLoop(const char* exe_name, LogOptions log_opts, void* context)
     : m_exe_name(exe_name),
       m_io_context(kj::setupAsyncIo()),
+      m_executor(kj::getCurrentThreadExecutor()),
+      m_stop_promise_fulfiller_pair(kj::newPromiseAndCrossThreadFulfiller<void>()),
       m_task_set(new kj::TaskSet(m_error_handler)),
       m_log_opts(std::move(log_opts)),
-      m_context(context)
-{
-    auto pipe = m_io_context.provider->newTwoWayPipe();
-    m_wait_stream = kj::mv(pipe.ends[0]);
-    m_post_stream = kj::mv(pipe.ends[1]);
-    KJ_IF_MAYBE(fd, m_post_stream->getFd()) {
-        m_post_writer = kj::heap<kj::FdOutputStream>(*fd);
-    } else {
-        throw std::logic_error("Could not get file descriptor for new pipe.");
-    }
-}
+      m_context(context) {}
 
 EventLoop::~EventLoop()
 {
     if (m_async_thread.joinable()) m_async_thread.join();
     const Lock lock(m_mutex);
-    KJ_ASSERT(m_sync_fn == nullptr);
     KJ_ASSERT(!m_async_fns);
-    KJ_ASSERT(!m_wait_stream);
-    KJ_ASSERT(!m_post_stream);
     KJ_ASSERT(m_num_refs == 0);
 
     // Spin event loop. wait for any promises triggered by RPC shutdown.
@@ -298,37 +316,13 @@ void EventLoop::loop()
         m_async_fns.emplace();
     }
 
-    kj::Own<kj::AsyncIoStream>& wait_stream{m_wait_stream};
-    char buffer = 0;
-    for (;;) {
-        const size_t read_bytes = wait_stream->read(&buffer, 0, 1).wait(m_io_context.waitScope);
-        if (read_bytes != 1) throw std::logic_error("EventLoop wait_stream closed unexpectedly");
-        Lock lock(m_mutex);
-        if (m_sync_fn) {
-            // m_sync_fn throwing is never expected. If it does happen, the caller
-            // of EventLoop::sync() will return without any indication of failure,
-            // which will likely cause other bugs. Log the error and continue.
-            KJ_IF_MAYBE(exception, kj::runCatchingExceptions([&]() MP_REQUIRES(m_mutex) { Unlock(lock, *m_sync_fn); })) {
-                MP_LOG(*this, Log::Error) << "EventLoop: m_sync_fn threw: " << kj::str(*exception).cStr();
-            }
-            m_sync_fn = nullptr;
-            m_cv.notify_all();
-        } else if (done()) {
-            // Intentionally do not break if m_sync_fn was set, even if done()
-            // would return true, to ensure that the sync() m_post_writer->write()
-            // call always succeeds and the loop does not exit between the time
-            // that the done condition is set and the write call is made.
-            break;
-        }
-    }
+    // Block execution here until all references are dropped
+    m_stop_promise_fulfiller_pair.promise.wait(m_io_context.waitScope);
+
     MP_LOG(*this, Log::Info) << "EventLoop::loop done, cancelling event listeners.";
     m_task_set.reset();
     MP_LOG(*this, Log::Info) << "EventLoop::loop bye.";
-    wait_stream = nullptr;
     const Lock lock(m_mutex);
-    m_post_writer = nullptr;
-    m_wait_stream = nullptr;
-    m_post_stream = nullptr;
     m_async_fns.reset();
     m_cv.notify_all();
 }
@@ -339,15 +333,12 @@ void EventLoop::sync(kj::FunctionParam<void()> fn)
         fn();
         return;
     }
-    Lock lock(m_mutex);
-    EventLoopRef ref(*this, &lock);
-    m_cv.wait(lock.m_lock, [this]() MP_REQUIRES(m_mutex) { return m_sync_fn == nullptr; });
-    m_sync_fn = &fn;
-    Unlock(lock, [&] {
-        char buffer = 0;
-        m_post_writer->write(&buffer, 1);
-    });
-    m_cv.wait(lock.m_lock, [this, &fn]() MP_REQUIRES(m_mutex) { return m_sync_fn != &fn; });
+    // fn throwing is never expected. If it does happen, the caller of
+    // EventLoop::sync() will return without any indication of failure, which
+    // will likely cause other bugs. Log the error and continue.
+    KJ_IF_MAYBE(exception, kj::runCatchingExceptions([&]() { m_executor.executeSync(fn); })) {
+        MP_LOG(*this, Log::Error) << "EventLoop: m_executor.executeSync threw: " << kj::str(*exception).cStr();
+    }
 }
 
 void EventLoop::startAsyncThread()
@@ -366,8 +357,6 @@ void EventLoop::startAsyncThread()
                     const std::function<void()> fn = std::move(m_async_fns->front());
                     m_async_fns->pop_front();
                     Unlock(lock, fn);
-                    // Important to relock because of the wait() call below.
-                    ref.reset(/*relock=*/true);
                     // Continue without waiting in case there are more async_fns
                     continue;
                 }
@@ -394,20 +383,26 @@ std::tuple<ConnThread, bool> SetThread(GuardedRef<ConnThreads> threads, Connecti
     }
     if (inserted) {
         thread->second.emplace(make_thread(), connection, /* destroy_connection= */ false);
-        thread->second->m_disconnect_cb = connection->addSyncCleanup([threads, thread] {
-            // Note: it is safe to use the `thread` iterator in this cleanup
-            // function, because the iterator would only be invalid if the map entry
-            // was removed, and if the map entry is removed the ProxyClient<Thread>
-            // destructor unregisters the cleanup.
-
-            // Connection is being destroyed before thread client is, so reset
-            // thread client m_disconnect_cb member so thread client destructor does not
-            // try to unregister this callback after connection is destroyed.
-            thread->second->m_disconnect_cb.reset();
-
-            // Remove connection pointer about to be destroyed from the map
-            const Lock lock(threads.mutex);
-            threads.ref.erase(thread);
+        thread->second->m_disconnect_cb = connection->addSyncCleanup([threads, connection] {
+            // Remove and destroy this connection's map entry, unless the
+            // thread owning the map is exiting and ~ThreadContext already took
+            // the entry, in which case that thread destroys it. Look the entry
+            // up by key rather than capturing the iterator, which would be
+            // invalid in that case.
+            ConnThreads::node_type removed;
+            {
+                const Lock lock(threads.mutex);
+                auto it = threads.ref.find(connection);
+                if (it == threads.ref.end()) return;
+                // Reset so ~ProxyClient<Thread> does not try to unregister
+                // this callback, which is already running.
+                it->second->m_disconnect_cb.reset();
+                removed = threads.ref.extract(it);
+            }
+            // The entry is destroyed here with Waiter::m_mutex released, as in
+            // ~ThreadContext. (Holding it would be safe on the event loop
+            // thread, where EventLoop::sync() runs directly, but releasing it
+            // keeps the two consistent.)
         });
     }
     return {thread, inserted};
@@ -415,6 +410,9 @@ std::tuple<ConnThread, bool> SetThread(GuardedRef<ConnThreads> threads, Connecti
 
 ProxyClient<Thread>::~ProxyClient()
 {
+    EventLoop& loop{*m_context.loop};
+    if (loop.testing_hook_thread_client_destroy) loop.testing_hook_thread_client_destroy(this);
+
     // If thread is being destroyed before connection is destroyed, remove the
     // cleanup callback that was registered to handle the connection being
     // destroyed before the thread being destroyed.
@@ -424,10 +422,40 @@ ProxyClient<Thread>::~ProxyClient()
         // between this thread trying to remove the callback and the disconnect
         // handler attempting to call it.
         m_context.loop->sync([&]() {
-            if (m_disconnect_cb) {
+            // Skip if the connection was disconnected while this thread waited
+            // for the event loop: Connection::disconnect() has already run and
+            // freed the cleanup list m_disconnect_cb points into, and the
+            // ProxyClientBase disconnect callback has nulled
+            // m_context.connection. (The SetThread callback resets
+            // m_disconnect_cb only when it finds this object in the thread
+            // map, so if ~ThreadContext took the entry first, m_disconnect_cb
+            // is still set here.)
+            if (m_disconnect_cb && m_context.connection) {
                 m_context.connection->removeSyncCleanup(*m_disconnect_cb);
             }
         });
+    }
+}
+
+ThreadContext::~ThreadContext()
+{
+    // Server threads created by ProxyServer<ThreadMap>::makeThread have no
+    // waiter here: ~ProxyServer<Thread> moves it away and clears the maps
+    // before the thread exits.
+    if (!waiter) return;
+
+    // Take the thread client maps under Waiter::m_mutex, because the SetThread
+    // disconnect callback removes entries from them concurrently on the event
+    // loop thread when connections are broken, and whichever side removes an
+    // entry destroys it. Destroy the maps with the mutex released, because
+    // ~ProxyClient<Thread> blocks in EventLoop::sync() and the event loop
+    // thread locks Waiter::m_mutex itself (see the blocking rule in the
+    // Waiter::m_mutex documentation).
+    ConnThreads request, callback;
+    {
+        const Lock lock(waiter->m_mutex);
+        request.swap(request_threads);
+        callback.swap(callback_threads);
     }
 }
 

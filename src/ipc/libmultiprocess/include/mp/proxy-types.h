@@ -557,6 +557,7 @@ struct ServerCall
         return TryFinally(
             [&]() -> decltype(auto) {
                 return ProxyServerMethodTraits<
+                    typename std::remove_reference_t<decltype(server_context.proxy_server)>::Interface,
                     typename decltype(server_context.call_context.getParams())::Reads
                 >::invoke(server_context, std::forward<Args>(args)...);
             },
@@ -751,7 +752,7 @@ void clientInvoke(ProxyClient& proxy_client, const GetRequest& get_request, Fiel
 
         auto request = (proxy_client.m_client.*get_request)(nullptr);
         using Request = CapRequestTraits<decltype(request)>;
-        using FieldList = typename ProxyClientMethodTraits<typename Request::Params>::Fields;
+        using FieldList = typename ProxyClientMethodTraits<typename ProxyClient::Interface, typename Request::Params>::Fields;
         invoke_context.emplace(*proxy_client.m_context.connection, thread_context);
         IterateFields().handleChain(*invoke_context, request, FieldList(), typename FieldObjs::BuildParams{&fields}...);
         MP_LOGPLAIN(*proxy_client.m_context.loop, Log::Debug)
@@ -835,9 +836,13 @@ kj::Promise<void> serverInvoke(Server& server, CallContext& call_context, Fn fn)
     MP_LOG(loop, Log::Trace) << "request data: "
         << LogEscape(params.toString(), server.m_context.loop->m_log_opts.max_chars);
 
+    if (!server.m_impl) {
+        MP_LOG(loop, Log::Error) << "IPC server error request #" << req << ", method called after destroy";
+        throw std::runtime_error("method called after destroy");
+    }
     try {
         using ServerContext = ServerInvokeContext<Server, CallContext>;
-        using ArgList = typename ProxyClientMethodTraits<typename Params::Reads>::Params;
+        using ArgList = typename ProxyClientMethodTraits<typename Server::Interface, typename Params::Reads>::Params;
         ServerContext server_context{server, call_context, req};
         // ReplaceVoid is used to support fn.invoke implementations that
         // execute asynchronously and return promises, as well as

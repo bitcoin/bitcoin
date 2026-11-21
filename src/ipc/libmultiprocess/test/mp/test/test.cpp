@@ -8,6 +8,7 @@
 #include <any>
 #include <atomic>
 #include <capnp/capability.h>
+#include <capnp/rpc-twoparty.h>
 #include <cassert>
 #include <chrono>
 #include <condition_variable>
@@ -238,6 +239,15 @@ KJ_TEST("Call FooInterface methods")
     KJ_EXPECT(saved.use_count() == 1);
     KJ_EXPECT(foo->callbackExtended(callback, 11) == 12);
 
+    class FlatCallbackImpl : public FlatCallback
+    {
+    public:
+        int call(int arg) override { return arg + 1; }
+        int callExtended(int arg) override { return arg * 10; }
+    };
+    FlatCallbackImpl flat_callback;
+    KJ_EXPECT(foo->callbackFlat(flat_callback, 2) == 23);
+
     FooCustom custom_in;
     custom_in.v1 = "v1";
     custom_in.v2 = 5;
@@ -419,8 +429,8 @@ KJ_TEST("Calling async IPC method with a remote disconnect while results are bui
     // throw InterruptException instead of proceeding into getResults().
     // Keeping it alive matches the window in the original report, where the
     // worker races with capnp's own internal teardown, which runs before any
-    // onDisconnect notification. The connection is destroyed explicitly at the
-    // end of the test instead.
+    // TwoPartyVatNetwork::onDisconnect notification. The connection is
+    // destroyed explicitly at the end of the test instead.
 
     TestSetup setup{/*client_owns_connection=*/false, /*server_owns_connection=*/false};
     ProxyClient<messages::FooInterface>* foo = setup.client.get();
@@ -494,6 +504,54 @@ KJ_TEST("Worker thread destroyed before it is initialized")
     EXPECT_EXCEPTION(foo->callFnAsync(), "IPC client method call interrupted by disconnect.");
 }
 
+KJ_TEST("Thread exiting while its connection is destroyed")
+{
+    // Regression test for a race between a thread exiting after making IPC
+    // calls and its connection being destroyed on the event loop thread.
+    // ~ThreadContext on the exiting thread and the SetThread disconnect
+    // callback run by ~Connection both remove the thread's map entries for
+    // the connection, and previously nothing synchronized them, so both could
+    // destroy the same ProxyClient<Thread> object.
+    //
+    // The testing_hook_thread_client_destroy hook, called at the start of
+    // ~ProxyClient<Thread>, blocks the exiting thread inside its first map
+    // entry destructor while the main thread destroys the connection. The
+    // disconnect callback must leave that entry alone: it resets
+    // m_disconnect_cb only when it finds the entry in the map and takes over
+    // destroying it, so the entry's m_disconnect_cb must still be set when
+    // the exiting thread resumes.
+    TestSetup setup{/*client_owns_connection=*/false};
+    ProxyClient<messages::FooInterface>* foo = setup.client.get();
+    foo->initThreadMap();
+    setup.server->m_impl->m_fn = [] {};
+    EventLoop& loop = *foo->m_context.loop;
+
+    std::promise<void> caller_exiting, release_caller;
+    bool caller_blocked{false};   // caller thread only
+    bool disconnect_cb_set{false}; // caller thread, read after join
+    loop.testing_hook_thread_client_destroy = [&](ProxyClient<Thread>* client) {
+        // The hook also runs on the event loop thread for entries the
+        // disconnect callback destroys. Block only the exiting caller thread,
+        // in the first destructor it runs.
+        if (std::this_thread::get_id() == loop.m_thread_id || caller_blocked) return;
+        caller_blocked = true;
+        caller_exiting.set_value();
+        release_caller.get_future().get();
+        disconnect_cb_set = client->m_disconnect_cb.has_value();
+    };
+
+    // Make a call taking an mp.Context argument, which adds callback and
+    // request thread entries for the connection to the caller's thread-local
+    // ThreadContext maps. They are destroyed when the thread exits.
+    std::thread caller{[&] { foo->callFnAsync(); }};
+    caller_exiting.get_future().get();
+    setup.client_disconnect();
+    release_caller.set_value();
+    caller.join();
+    loop.testing_hook_thread_client_destroy = nullptr;
+    KJ_EXPECT(disconnect_cb_set);
+}
+
 KJ_TEST("Calling async IPC method, with server disconnect racing the call")
 {
     // Regression test for bitcoin/bitcoin#34777 heap-use-after-free where
@@ -541,6 +599,81 @@ KJ_TEST("Calling async IPC method, with server disconnect after cleanup")
     };
 
     EXPECT_EXCEPTION(foo->callFnAsync(), "IPC client method call interrupted by disconnect.");
+}
+
+KJ_TEST("Waiting for in-flight server call to finish after disconnect")
+{
+    // Regression test for bitcoin/bitcoin#35845. Disconnecting a connection
+    // cancels the KJ promise of an in-flight call, but a C++ server method
+    // body already dispatched to a worker thread runs to completion. Verify
+    // that Connection::waitDrained() blocks until such a body finishes and its
+    // server object is destroyed, so shutdown code can wait for a disconnected
+    // connection to become quiescent before freeing state the body accesses.
+
+    std::promise<void> body_started, release_body;
+    TestSetup setup;
+    ProxyClient<messages::FooInterface>* foo = setup.client.get();
+    foo->initThreadMap();
+
+    // A server call body that signals when it starts and then blocks until the
+    // test releases it, so the in-flight state can be observed
+    // deterministically.
+    setup.server->m_impl->m_fn = [&] {
+        body_started.set_value();
+        release_body.get_future().get();
+    };
+
+    // Grab the server Connection object on the event loop thread before
+    // disconnecting. It stays valid until server_disconnect() destroys it
+    // below.
+    Connection* connection{nullptr};
+    foo->m_context.loop->sync([&] { connection = setup.server->m_context.connection; });
+
+    // Invoke the async method on a separate thread so its body blocks there
+    // while this thread makes assertions. callFnAsync() takes an mp.Context,
+    // so its body runs on a worker thread via ProxyServer<Thread>::post().
+    std::thread call_thread([&] {
+        EXPECT_EXCEPTION(foo->callFnAsync(), "IPC client method call interrupted by disconnect.");
+    });
+    body_started.get_future().get();
+
+    // The FooInterface server object is the connection's only counted server
+    // object, and its call body is executing.
+    KJ_EXPECT(connection->tracker()->pendingServerObjects() == 1);
+
+    // Disconnect. This cancels the call's promise (the client above sees the
+    // disconnect error), but the body is still blocked on the worker thread,
+    // so its server object must still be alive.
+    foo->m_context.loop->sync([&] { connection->disconnect(); });
+    KJ_EXPECT(connection->tracker()->pendingServerObjects() == 1);
+
+    // A drain must block while the body runs and return only once it
+    // finishes, which is what Ipc::disconnectIncoming relies on during
+    // shutdown.
+    std::promise<void> drain_waiting;
+    connection->tracker()->testing_hook_wait = [&] { drain_waiting.set_value(); };
+    std::atomic<bool> drained{false};
+    std::thread drain_thread([&] {
+        connection->tracker()->waitDrained();
+        drained = true;
+    });
+
+    // Wait until waitDrained() has observed the live server object and is
+    // about to block, then verify it does not return while the body is blocked.
+    drain_waiting.get_future().get();
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    KJ_EXPECT(!drained);
+
+    // Let the body finish; the drain should now complete.
+    release_body.set_value();
+    drain_thread.join();
+    KJ_EXPECT(drained);
+    KJ_EXPECT(connection->tracker()->pendingServerObjects() == 0);
+    call_thread.join();
+
+    // Destroy the drained connection. (~Connection notices disconnect() has
+    // already run and does not tear things down twice.)
+    setup.server_disconnect();
 }
 
 KJ_TEST("Destroying ProxyClient<> with destroy method after peer disconnect")
@@ -730,6 +863,85 @@ KJ_TEST("Async cleanup thread has OS thread name")
 }
 #endif // HAVE_PTHREAD_GETNAME_NP
 
+KJ_TEST("onDisconnect handler does not run after the connection is destroyed")
+{
+    // Regression test for a race condition where an onDisconnect handler
+    // could fire even after the connection had already been disconnected
+    // locally. Local disconnects are supposed to preempt onDisconnect
+    // handlers so they are able to free Connection objects without risking double
+    // deletions.
+    //
+    // To hit the previous race window deterministically without relying on
+    // socket timing, this test exploits two ordering facts:
+    // m_network.onDisconnect() hands out branches of a forked promise that fire
+    // in the order they were added, and kj::evalLater tasks queued during one
+    // event loop turn run on the next turn in FIFO order. A "destroyer" branch
+    // is registered before the handler under test, so when the peer disconnects
+    // the destroyer fires first and queues an evalLater task that destroys the
+    // Connection ahead of the handler. The handler records whether it ran after
+    // the Connection was destroyed, reading only test-owned flags (never the
+    // freed Connection), so a violation is a deterministic wrong result rather
+    // than a flaky crash.
+    //
+    // The Connection must be destroyed from that separate task, not from inside
+    // an onDisconnect continuation: destroying it there tears down m_network
+    // while a continuation of m_network's promise is still running, and crashes.
+
+    std::atomic<bool> connection_destroyed{false};
+    std::atomic<bool> handler_ran{false};
+    std::atomic<bool> handler_ran_after_destroy{false};
+
+    std::thread thread{[&] {
+        EventLoop loop("mptest", [](mp::LogMessage log) {
+            KJ_LOG(INFO, log.level, log.message);
+            if (log.level == mp::Log::Raise) throw std::runtime_error(log.message);
+        });
+        auto pipe = loop.m_io_context.provider->newTwoWayPipe();
+
+        // Server-side connection whose onDisconnect handler is under test.
+        auto server_conn = std::make_unique<Connection>(
+            loop, kj::mv(pipe.ends[0]), [&](Connection& connection) {
+                return ::capnp::Capability::Client(kj::heap<ProxyServer<messages::FooInterface>>(
+                    std::make_shared<FooImplementation>(), connection));
+            });
+
+        // Raw peer end of the pipe. Closing it makes the server connection's
+        // m_network.onDisconnect() resolve, i.e. a real remote disconnect.
+        kj::Own<kj::AsyncIoStream> peer_end = kj::mv(pipe.ends[1]);
+
+        // Destroyer branch, registered BEFORE the handler under test so it
+        // fires first and its destroy task E_d is queued before the buggy
+        // bounced handler task E_f. It schedules the destroy on a *separate*
+        // task, so the connection is not torn down from inside an onDisconnect
+        // continuation.
+        loop.m_task_set->add(server_conn->m_network->onDisconnect().then([&] {
+            loop.m_task_set->add(kj::evalLater([&] {
+                server_conn.reset();
+                connection_destroyed = true;
+            }));
+        }));
+
+        // Handler under test. It intentionally does not dereference the
+        // Connection; it only records whether it ran after the connection was
+        // destroyed, so the result is deterministic.
+        server_conn->onDisconnect([&] {
+            handler_ran = true;
+            handler_ran_after_destroy = connection_destroyed.load();
+        });
+
+        // Trigger the remote disconnect once the loop is running.
+        loop.m_task_set->add(kj::evalLater([&] { peer_end = nullptr; }));
+
+        loop.loop();
+    }};
+    thread.join();
+
+    // The handler must have run (both versions schedule it), but it must never
+    // run after the connection was destroyed.
+    KJ_EXPECT(handler_ran);
+    KJ_EXPECT(!handler_ran_after_destroy);
+}
+
 KJ_TEST("Call async IPC method without thread or pool errors correctly")
 {
     TestSetup setup;
@@ -755,6 +967,126 @@ KJ_TEST("Call async IPC method without thread or pool errors correctly")
     });
     done.get_future().get();
     KJ_EXPECT(error_thrown);
+}
+
+KJ_TEST("Calling IPC method after destroy and destroy during a call")
+{
+    // Regression test for bitcoin-core/libmultiprocess#378 where a
+    // non-libmultiprocess client could:
+    //
+    // 1. Call a method after destroy, making the server call it through a
+    //    null m_impl pointer.
+    // 2. Call destroy while another call on the same object was running,
+    //    making the server free m_impl under that call.
+    //
+    // This test builds requests directly through Cap'n Proto, mimicking the
+    // behavior of a buggy client.
+    TestSetup setup;
+    ProxyClient<messages::FooInterface>* foo = setup.client.get();
+    EventLoop& loop = *foo->m_context.loop;
+    foo->initThreadMap();
+
+    // Create two pool threads, so the destroy() and value() calls run on
+    // different threads.
+    std::promise<void> pool_ready;
+    loop.sync([&] {
+        auto pool_req = foo->m_context.connection->m_thread_map.makePoolRequest();
+        pool_req.setCount(2);
+        loop.m_task_set->add(pool_req.send().then([&](auto&&) { pool_ready.set_value(); }));
+    });
+    pool_ready.get_future().get();
+
+    // Create two Bar objects, one for each case below. BarInterface declares a
+    // destroy method, unlike FooInterface.
+    std::optional<messages::BarInterface::Client> bar1;
+    std::optional<messages::BarInterface::Client> bar2;
+    std::promise<void> bars_ready;
+    loop.sync([&] {
+        auto request{foo->m_client.listBarsRequest()};
+        request.initContext();
+        request.setN(2);
+        loop.m_task_set->add(request.send().then([&](auto&& results) {
+            bar1.emplace(results.getResult()[0]);
+            bar2.emplace(results.getResult()[1]);
+            bars_ready.set_value();
+        }));
+    });
+    bars_ready.get_future().get();
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Case 1: method called after destroy.
+    ////////////////////////////////////////////////////////////////////////////
+
+    std::promise<void> destroyed;
+    loop.sync([&] {
+        auto request{bar1->destroyRequest()};
+        request.initContext();
+        loop.m_task_set->add(request.send().then([&](auto&&) { destroyed.set_value(); }));
+    });
+    destroyed.get_future().get();
+
+    // Calls after destroy are rejected.
+    std::promise<std::string> value_error;
+    loop.sync([&] {
+        auto request{bar1->valueRequest()};
+        request.initContext();
+        loop.m_task_set->add(request.send().then(
+            [&](auto&&) { value_error.set_value(""); },
+            [&](kj::Exception&& e) { value_error.set_value(e.getDescription().cStr()); }));
+    });
+    KJ_EXPECT(value_error.get_future().get().find("method called after destroy") != std::string::npos);
+
+    // Release bar1.
+    loop.sync([&] { bar1.reset(); });
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Case 2: destroy called while another call is running.
+    ////////////////////////////////////////////////////////////////////////////
+
+    // Block the next async request, the value() call, before it calls m_impl.
+    std::promise<void> value_started;
+    std::promise<void> value_release;
+    std::atomic<bool> blocked{false};
+    loop.testing_hook_async_request_start = [&] {
+        if (blocked.exchange(true)) return;
+        value_started.set_value();
+        value_release.get_future().wait();
+    };
+    std::promise<int> value;
+    loop.sync([&] {
+        auto request{bar2->valueRequest()};
+        request.initContext();
+        loop.m_task_set->add(request.send().then([&](auto&& results) { value.set_value(results.getResult()); }));
+    });
+    value_started.get_future().get();
+
+    // Destroy fails if value() request is being executed.
+    std::promise<std::string> destroy_error;
+    loop.sync([&] {
+        auto request{bar2->destroyRequest()};
+        request.initContext();
+        loop.m_task_set->add(request.send().then(
+            [&](auto&&) { destroy_error.set_value(""); },
+            [&](kj::Exception&& e) { destroy_error.set_value(e.getDescription().cStr()); }));
+    });
+    KJ_EXPECT(destroy_error.get_future().get().find("destroy called while other calls are in progress") != std::string::npos);
+
+    value_release.set_value();
+    KJ_EXPECT(value.get_future().get() == 1);
+
+    // Destroy succeeds after the value() call has finished.
+    std::promise<std::string> destroy_result;
+    loop.sync([&] {
+        auto request{bar2->destroyRequest()};
+        request.initContext();
+        loop.m_task_set->add(request.send().then(
+            [&](auto&&) { destroy_result.set_value(""); },
+            [&](kj::Exception&& e) { destroy_result.set_value(e.getDescription().cStr()); }));
+    });
+    KJ_EXPECT(destroy_result.get_future().get() == "");
+
+    // Release bar2.
+    loop.sync([&] { bar2.reset(); });
 }
 
 } // namespace test
