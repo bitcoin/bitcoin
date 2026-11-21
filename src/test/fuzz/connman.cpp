@@ -20,6 +20,8 @@
 #include <util/translation.h>
 
 #include <cstdint>
+#include <memory>
+#include <tuple>
 #include <vector>
 
 namespace {
@@ -41,6 +43,7 @@ void initialize_connman()
 FUZZ_TARGET(connman, .init = initialize_connman)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
+    ResetFuzzedSockets();
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
     FakeSteadyClock steady_clock;
@@ -286,7 +289,56 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 connman.InitBindsPublic(options);
             },
             [&] {
+                // Record test nodes along with their cast socket, and a boolean representing
+                // whether recv is paused for that peer.
+                std::vector<std::tuple<CNode*, std::shared_ptr<const FuzzedSock>, bool>> nodes_info;
+                for (CNode* node : connman.TestNodes()) {
+                    LOCK(node->m_sock_mutex);
+                    if (!node->m_sock) continue;
+
+                    auto sock{Assert(std::dynamic_pointer_cast<const FuzzedSock>(node->m_sock))};
+                    sock->m_last_requested = 0;
+                    sock->m_last_occurred = 0;
+                    sock->m_last_recv.reset();
+                    sock->m_recv_twice = false;
+                    sock->m_last_send.reset();
+                    sock->m_send_after_short = false;
+
+                    // The message handler pauses receiving from peers whose queue of received messages
+                    // is too large, and resumes it, from its own thread.
+                    node->fPauseRecv = fuzzed_data_provider.ConsumeBool();
+                    nodes_info.emplace_back(node, std::move(sock), node->fPauseRecv);
+                }
+
                 connman.SocketHandlerPublic();
+
+                // Assert some invariants on the SocketHandler run.
+                for (const auto& [node, sock, is_paused] : nodes_info) {
+                    // Check we only ever read (/send) data when Recv (/send) was reported. The converse
+                    // does not always hold (for instance we may skip a recv() when we have too much to
+                    // send).
+                    Assert(!sock->m_last_recv || (sock->m_last_occurred & (Sock::RecvEvent | Sock::ErrorEvent)));
+                    Assert(!sock->m_last_send || (sock->m_last_occurred & Sock::SendEvent));
+
+                    // Check that we never request a Recv for fPauseRecv peers.
+                    Assert(!is_paused || !(sock->m_last_requested & Sock::RecvEvent));
+
+                    // Check we only ever read once per wakeup, and we never retry a send on a socket
+                    // that signaled it can't take any more.
+                    Assert(!sock->m_recv_twice);
+                    Assert(!sock->m_send_after_short);
+
+                    // Check that we "fail closed": if the last read or write failed with a fatal error,
+                    // we should no longer hold the socket after the handler ran.
+                    const auto fatal{[](ssize_t ret, int err) {
+                        return ret < 0 && err != WSAEWOULDBLOCK && err != WSAEMSGSIZE && err != WSAEINTR && err != WSAEINPROGRESS;
+                    }};
+                    if ((sock->m_last_recv && (sock->m_last_recv->ret == 0 || fatal(sock->m_last_recv->ret, sock->m_last_recv->err)))
+                        || (sock->m_last_send && fatal(sock->m_last_send->ret, sock->m_last_send->err))) {
+                        LOCK(node->m_sock_mutex);
+                        Assert(!node->m_sock);
+                    }
+                }
             });
     }
     connman.ForEachNode([](CNode* pnode) {

@@ -25,6 +25,7 @@ void initialize_i2p()
 FUZZ_TARGET(i2p, .init = initialize_i2p)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
+    ResetFuzzedSockets();
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
     FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
