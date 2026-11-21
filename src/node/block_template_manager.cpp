@@ -117,7 +117,10 @@ std::unique_ptr<CBlockTemplate> BlockTemplateManager::WaitAndCreateNewBlock(
     // Alternate waiting for a new tip and checking if fees have risen.
     // The latter check is expensive so we only run it once per second.
     auto now{NodeClock::now()};
-    const auto deadline = now + wait_options.timeout;
+    // Timeout can come from an IPC client, so handle negative and NaN values.
+    MillisecondsDouble timeout{wait_options.timeout};
+    if (!(timeout >= 0ms)) timeout = 0ms;
+    const auto deadline = now + timeout;
     const MillisecondsDouble tick{1000};
     const bool allow_min_difficulty{m_chainman.GetParams().GetConsensus().fPowAllowMinDifficultyBlocks};
 
@@ -229,8 +232,9 @@ std::optional<BlockRef> BlockTemplateManager::WaitTipChanged(const uint256& curr
 
 std::optional<BlockRef> BlockTemplateManager::WaitTipChanged(const uint256& current_tip, MillisecondsDouble& timeout, bool& interrupt)
 {
-    Assume(timeout >= 0ms); // No internal callers should use a negative timeout
-    if (timeout < 0ms) timeout = 0ms;
+    // Timeout can come from an IPC client, so handle negative and NaN values
+    // instead of asserting.
+    if (!(timeout >= 0ms)) timeout = 0ms;
     if (timeout > std::chrono::years{100}) timeout = std::chrono::years{100}; // Upper bound to avoid UB in std::chrono
     auto deadline{std::chrono::steady_clock::now() + timeout};
     {

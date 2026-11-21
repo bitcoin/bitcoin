@@ -124,7 +124,8 @@ public:
      *
      * @param[in] current_tip block hash of the current chain tip. Function waits
      *                        for the chain tip to differ from this.
-     * @param[in] timeout     how long to wait for a new tip (default is forever)
+     * @param[in] timeout     how long to wait for a new tip (default is forever).
+     *                        Negative or NaN values are treated as zero.
      *
      * @retval BlockRef hash and height of the current chain tip after this call.
      * @retval std::nullopt if the node is shut down or interrupt() is called.

@@ -97,7 +97,7 @@ struct BlockCreateOptions {
 struct BlockWaitOptions {
     /**
      * How long to wait before returning nullptr instead of a new template.
-     * Default is to wait forever.
+     * Default is to wait forever. Negative or NaN values are treated as zero.
      */
     MillisecondsDouble timeout{MillisecondsDouble::max()};
 
