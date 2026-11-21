@@ -80,7 +80,16 @@ public:
     friend CFeeRate operator*(const CFeeRate& f, int a) { return CFeeRate(a * f.m_feerate.fee, f.m_feerate.size); }
     friend CFeeRate operator*(int a, const CFeeRate& f) { return CFeeRate(a * f.m_feerate.fee, f.m_feerate.size); }
 
-    SERIALIZE_METHODS(CFeeRate, obj) { READWRITE(obj.m_feerate.fee, obj.m_feerate.size); }
+    SERIALIZE_METHODS(CFeeRate, obj)
+    {
+        READWRITE(obj.m_feerate.fee, obj.m_feerate.size);
+        // Reject values the constructors cannot produce. A negative size
+        // violates the FeeFrac::EvaluateFee precondition, and a zero size with
+        // a nonzero fee compares as an infinite feerate.
+        SER_READ(obj, if (obj.m_feerate.size < 0 || (obj.m_feerate.size == 0 && obj.m_feerate.fee != 0)) {
+            throw std::ios_base::failure("CFeeRate::Unserialize: invalid fee and size");
+        });
+    }
 };
 
 #endif // BITCOIN_POLICY_FEERATE_H
