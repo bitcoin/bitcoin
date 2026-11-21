@@ -105,7 +105,9 @@ class TxDownloadTest(BitcoinTestFramework):
         tx = self.wallet.create_self_transfer()
         wtxid = int(tx['wtxid'], 16)
 
-        self.nodes[0].setmocktime(int(time.time()))
+        now = int(time.time())
+        self.nodes[0].setmocktime(now)
+        self.nodes[1].setmocktime(now)
 
         self.log.info(
             "Announce the transaction to all nodes from all {} incoming peers, but never send it".format(NUM_INBOUND))
@@ -137,6 +139,7 @@ class TxDownloadTest(BitcoinTestFramework):
         self.sync_mempools()
 
         self.nodes[0].setmocktime(0)
+        self.nodes[1].setmocktime(0)
 
     def test_in_flight_max(self):
         self.log.info("Test that we don't load peers with more than {} transaction requests immediately".format(MAX_PEER_TX_REQUEST_IN_FLIGHT))
