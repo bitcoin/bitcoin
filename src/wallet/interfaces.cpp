@@ -13,6 +13,8 @@
 #include <pubkey.h>
 #include <rpc/server.h>
 #include <scheduler.h>
+#include <script/descriptor.h>
+#include <script/signingprovider.h>
 #include <support/allocators/secure.h>
 #include <sync.h>
 #include <uint256.h>
@@ -21,6 +23,7 @@
 #include <util/ui_change_type.h>
 #include <wallet/coincontrol.h>
 #include <wallet/context.h>
+#include <wallet/descriptor_analyzer.h>
 #include <wallet/export.h>
 #include <wallet/feebumper.h>
 #include <wallet/fees.h>
@@ -175,6 +178,15 @@ public:
     util::Expected<CExtPubKey, wallet::WalletError> addHDKey(const std::optional<CExtKey>& key) override
     {
         return m_wallet->AddHDKey(key);
+    }
+
+    util::Expected<WalletDescriptorAnalysis, WalletError> analyzeDescriptor(const std::string& descriptor) override
+    {
+        FlatSigningProvider provider;
+        std::string error;
+        const auto descriptors{Parse(descriptor, provider, error)};
+        if (descriptors.empty()) return util::Unexpected{WalletError{WalletErrorCode::GenericError, Untranslated(error)}};
+        return AnalyzeDescriptor(*m_wallet, descriptors, provider);
     }
 
     SigningResult signMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) override

@@ -11,12 +11,16 @@
 #include <core_io.h>
 #include <key.h>
 #include <key_io.h>
+#include <rpc/descriptor_util.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
+#include <script/descriptor.h>
+#include <script/signingprovider.h>
 #include <univalue.h>
 #include <util/bip32.h>
 #include <util/translation.h>
 #include <wallet/context.h>
+#include <wallet/descriptor_analyzer.h>
 #include <wallet/export.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/util.h>
@@ -1054,6 +1058,88 @@ RPCMethod derivehdkey()
     };
 }
 
+static std::string KeyMatchName(WalletDescriptorAnalysis::KeyMatch match)
+{
+    using KeyMatch = WalletDescriptorAnalysis::KeyMatch;
+    switch (match) {
+    case KeyMatch::NOT_MINE: return "not_mine";
+    case KeyMatch::MINE: return "mine";
+    case KeyMatch::WATCH_ONLY: return "watch_only";
+    case KeyMatch::UNKNOWN: return "unknown";
+    } // no default case, so the compiler can warn about missing cases
+    NONFATAL_UNREACHABLE();
+}
+
+static RPCMethod analyzedescriptor()
+{
+    std::vector<RPCResult> key_fields{DescriptorKeyResultFields()};
+    key_fields.emplace_back(RPCResult::Type::STR, "wallet", "Whether this wallet holds the key: \"mine\" (with its private key), "
+        "\"watch_only\" (without its private key), \"unknown\" (the wallet is locked, and checking needs a private key) or \"not_mine\". "
+        "A musig() aggregate is always \"not_mine\"; its participants are checked");
+
+    return RPCMethod{
+        "analyzedescriptor",
+        "Analyze any descriptor: which of its keys this wallet holds, whether it can sign, its first address, "
+        "and whether it is a recognized multisig setup.\n"
+        "A cosigner key is the wallet's if it is one of the wallet's HD keys, or if its origin fingerprint is one of theirs and deriving "
+        "the origin path gives the same key. That derivation is usually hardened, so it needs the private key: a locked wallet does not "
+        "return an error, but reports such keys as \"unknown\".\n"
+        "To analyze a descriptor without a wallet, use getdescriptorinfo with verbose set to true.\n",
+        {
+            {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor."},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::ARR, "keys", "The public key occurrences, in descriptor order. "
+                    "Array indices are the key IDs used in this result; equal keys remain separate occurrences.",
+                {
+                    {RPCResult::Type::OBJ, "", "", key_fields},
+                }},
+                {RPCResult::Type::OBJ, "analysis", HELP_DESCRIPTOR_ANALYSIS, DescriptorAnalysisResultFields()},
+                {RPCResult::Type::BOOL, "can_sign", /*optional=*/true, "Whether this wallet holds the private key for at least one key. "
+                    "Whether the descriptor is a safe k-of-n is analysis.recognized. Absent if it can't tell because the wallet is locked: see the keys marked \"unknown\""},
+                {RPCResult::Type::STR, "first_address", /*optional=*/true, "The first receive address (index 0 of the first path), "
+                    "which every participant should see. Absent if it can't be derived"},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("analyzedescriptor", "\"wsh(sortedmulti(2,[d34db33f/48h/0h/0h/2h]xpub.../<0;1>/*,...))\"")
+            + HelpExampleRpc("analyzedescriptor", "\"wsh(sortedmulti(2,[d34db33f/48h/0h/0h/2h]xpub.../<0;1>/*,...))\"")
+        },
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        {
+            const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
+            if (!wallet) return UniValue::VNULL;
+
+            FlatSigningProvider provider;
+            std::string error;
+            const auto descs{Parse(self.Arg<std::string_view>("descriptor"), provider, error)};
+            if (descs.empty()) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
+            }
+
+            // A locked wallet is not an error: keys it can't check are "unknown".
+            const WalletDescriptorAnalysis analysis{AnalyzeDescriptor(*wallet, descs, provider)};
+
+            UniValue keys(UniValue::VARR);
+            const UniValue key_objs{DescriptorKeysToUniv(analysis.analysis.policy.keys)};
+            for (size_t id{0}; id < key_objs.size(); ++id) {
+                UniValue key{key_objs[id]};
+                key.pushKV("wallet", KeyMatchName(analysis.keys.at(id)));
+                keys.push_back(std::move(key));
+            }
+
+            UniValue result(UniValue::VOBJ);
+            result.pushKV("keys", std::move(keys));
+            result.pushKV("analysis", DescriptorAnalysisToUniv(analysis.analysis));
+            if (const auto can_sign{analysis.CanSign()}) result.pushKV("can_sign", *can_sign);
+            if (analysis.first_address) result.pushKV("first_address", EncodeDestination(*analysis.first_address));
+            return result;
+        },
+    };
+}
+
 // addresses
 RPCMethod getaddressinfo();
 RPCMethod getnewaddress();
@@ -1122,6 +1208,7 @@ std::span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &abandontransaction},
         {"wallet", &abortrescan},
         {"wallet", &addhdkey},
+        {"wallet", &analyzedescriptor},
         {"wallet", &backupwallet},
         {"wallet", &bumpfee},
         {"wallet", &psbtbumpfee},

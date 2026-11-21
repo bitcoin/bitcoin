@@ -140,11 +140,13 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   pow.cpp
   protocol.cpp
   psbt.cpp
+  rpc/descriptor_util.cpp
   rpc/rawtransaction_util.cpp
   rpc/request.cpp
   rpc/util.cpp
   scheduler.cpp
   script/descriptor.cpp
+  script/descriptor_analyzer.cpp
   script/miniscript.cpp
   script/parsing.cpp
   script/sign.cpp

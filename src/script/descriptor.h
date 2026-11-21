@@ -7,6 +7,8 @@
 
 #include <outputtype.h>
 #include <pubkey.h>
+#include <script/descriptor_analysis.h>
+#include <script/keyorigin.h>
 #include <uint256.h>
 #include <util/expected.h>
 
@@ -23,6 +25,7 @@
 class CScript;
 class SigningProvider;
 struct FlatSigningProvider;
+class DescriptorKeyInfoBuilder;
 
 using ExtPubKeyMap = std::unordered_map<uint32_t, CExtPubKey>;
 
@@ -88,6 +91,103 @@ public:
      */
     DescriptorCache MergeAndDiff(const DescriptorCache& other);
 };
+
+/** Interface for public key objects in descriptors. */
+struct PubkeyProvider
+{
+public:
+    //! Index of this key expression in the descriptor
+    //! E.g. If this PubkeyProvider is key1 in multi(2, key1, key2, key3), then m_expr_index = 0
+    const uint32_t m_expr_index;
+
+    explicit PubkeyProvider(uint32_t exp_index) : m_expr_index(exp_index) {}
+
+    virtual ~PubkeyProvider() = default;
+
+    /** Derive a public key and put it into out.
+     *  read_cache is the cache to read keys from (if not nullptr)
+     *  write_cache is the cache to write keys to (if not nullptr)
+     *  Caches are not exclusive but this is not tested. Currently we use them exclusively
+     */
+    virtual std::optional<CPubKey> GetPubKey(int pos, const SigningProvider& arg, FlatSigningProvider& out, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) const = 0;
+
+    /** Whether this represent multiple public keys at different positions. */
+    virtual bool IsRange() const = 0;
+
+    /** Get the size of the generated public key(s) in bytes (33 or 65). */
+    virtual size_t GetSize() const = 0;
+
+    enum class StringType {
+        PUBLIC,
+        CANONICAL, // string calculation that always use h
+        COMPAT // string calculation that mustn't change over time to stay compatible with previous software versions
+    };
+
+    /** Get the descriptor string form. */
+    virtual std::string ToString(StringType type) const = 0;
+
+    /** Get the descriptor string form including private data (if available in arg).
+     *  If the private data is not available, the output string in the "out" parameter
+     *  will not contain any private key information,
+     *  and this function will return "false".
+     */
+    virtual bool ToPrivateString(const SigningProvider& arg, std::string& out) const = 0;
+
+    /** Get the descriptor string form with the xpub at the last hardened derivation,
+     *  and always use h for hardened derivation.
+     */
+    virtual bool ToNormalizedString(const SigningProvider& arg, std::string& out, const DescriptorCache* cache = nullptr) const = 0;
+
+    /** Derive a private key, if private data is available in arg and put it into out. */
+    virtual void GetPrivKey(int pos, const SigningProvider& arg, FlatSigningProvider& out) const = 0;
+
+    /** Whether private data for this provider is available in arg. */
+    virtual bool HavePrivateKeys(const SigningProvider& arg) const;
+
+    /** Return the non-extended public key for this PubkeyProvider, if it has one. */
+    virtual std::optional<CPubKey> GetRootPubKey() const = 0;
+    /** Return the extended public key for this PubkeyProvider, if it has one. */
+    virtual std::optional<CExtPubKey> GetRootExtPubKey() const = 0;
+
+    /** Return explicitly provided key origin information, if any. For musig(), this
+     * does not include its participants' origins.
+     */
+    virtual std::optional<KeyOriginInfo> GetOriginInfo() const { return std::nullopt; }
+
+    /** Inspect the public key program without derivation, key access, or cache mutation.
+     * Returns an owned result whose size is linear in this key expression.
+     */
+    DescriptorKeyInfo GetKeyInfo() const;
+
+    /** Make a deep copy of this PubkeyProvider */
+    virtual std::unique_ptr<PubkeyProvider> Clone() const = 0;
+
+    /** Whether this PubkeyProvider is a BIP 32 extended key that can be derived from */
+    virtual bool IsBIP32() const = 0;
+
+    /** Get the count of keys known by this PubkeyProvider. Usually one, but may be more for key aggregation schemes */
+    virtual size_t GetKeyCount() const { return 1; }
+
+    /** Whether this PubkeyProvider can always provide a public key without cache or private key arguments */
+    virtual bool CanSelfExpand() const = 0;
+
+private:
+    friend class DescriptorKeyInfoBuilder;
+    virtual size_t AppendKeyInfo(DescriptorKeyInfoBuilder& builder) const = 0;
+
+protected:
+    static bool DetermineApostropheUse(StringType type, bool normalized, bool public_apostrophe);
+};
+
+/** Parse a key expression using P2TR key rules
+ *  - compressed, x-only, extended and musig() key expressions are accepted
+ *  - uncompressed keys are rejected
+ *  - WIF private keys are serialized as x-only
+ *
+ *  Any private keys in the expression are added to `out`.
+ *  If parsing fails, `error` is set and an empty vector is returned.
+ */
+std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(std::string_view key_expression, FlatSigningProvider& out, std::string& error);
 
 /** \brief Interface for parsed descriptor objects.
  *
@@ -197,6 +297,21 @@ struct Descriptor {
      * @param[out] ext_pubs Any extended public keys
      */
     virtual void GetPubKeys(std::set<CPubKey>& pubkeys, std::set<CExtPubKey>& ext_pubs) const = 0;
+
+    /** Inspect every key occurrence and its role, without expansion or key access.
+     * Returns an owned inventory whose size is linear in this descriptor.
+     * Opaque descriptors such as raw() and addr() have no inspectable key
+     * expressions; an empty inventory does not assert that their scripts
+     * contain no keys.
+     */
+    virtual DescriptorKeyInventory GetKeyInventory() const = 0;
+
+    /** Inspect policy structure and public key occurrences without key derivation.
+     * Returns a complete owned result, including explicit opaque forms, whose
+     * size is linear in this descriptor. Does not consult signing providers or
+     * access caches. Policy node data is local; no node holds a serialized subtree.
+     */
+    virtual DescriptorPolicy GetPolicy() const = 0;
 
     /** Whether this descriptor produces any scripts with the Expand functions */
     virtual bool HasScripts() const = 0;

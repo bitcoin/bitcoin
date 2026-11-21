@@ -2,8 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <key_io.h>
 #include <pubkey.h>
 #include <script/descriptor.h>
+#include <script/miniscript.h>
 #include <script/sign.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
@@ -15,7 +17,9 @@
 
 #include <optional>
 #include <regex>
+#include <set>
 #include <string>
+#include <variant>
 #include <vector>
 
 using namespace util::hex_literals;
@@ -123,6 +127,103 @@ static size_t CountUniqueXpubs(const std::string& desc)
 
 const std::set<std::vector<uint32_t>> ONLY_EMPTY{{}};
 
+void CheckKeyInventory(const Descriptor& descriptor)
+{
+    const size_t count{descriptor.GetKeyCount()};
+    auto inventory{descriptor.GetKeyInventory()};
+    BOOST_REQUIRE_EQUAL(inventory.occurrences.size(), count);
+    std::vector<size_t> parents(count, 0);
+    for (size_t i = 0; i < count; ++i) {
+        const auto& occurrence{inventory.occurrences[i]};
+        if (const auto* musig = std::get_if<DescriptorKeyInfo::MuSigKey>(&occurrence.expression.key)) {
+            for (const auto participant : musig->participants) {
+                BOOST_REQUIRE(participant > i && participant < count);
+                ++parents[participant];
+            }
+        }
+    }
+    for (size_t i = 0; i < count; ++i) {
+        BOOST_CHECK_EQUAL(parents[i], inventory.occurrences[i].role == DescriptorKeyInventory::Role::MUSIG_PARTICIPANT ? 1U : 0U);
+    }
+}
+
+/** Check that two forms of the same public descriptor have the same key inventory. */
+void CheckSameKeyInventory(const Descriptor& a, const Descriptor& b)
+{
+    const auto left{a.GetKeyInventory()};
+    const auto right{b.GetKeyInventory()};
+    BOOST_REQUIRE_EQUAL(left.occurrences.size(), right.occurrences.size());
+    for (size_t i = 0; i < left.occurrences.size(); ++i) {
+        const auto& x{left.occurrences[i]};
+        const auto& y{right.occurrences[i]};
+        BOOST_CHECK(x.role == y.role);
+        BOOST_CHECK(x.expression.origin == y.expression.origin);
+        BOOST_REQUIRE_EQUAL(x.expression.key.index(), y.expression.key.index());
+        if (const auto* constant = std::get_if<DescriptorKeyInfo::ConstKey>(&x.expression.key)) {
+            const auto& other{std::get<DescriptorKeyInfo::ConstKey>(y.expression.key)};
+            BOOST_CHECK(constant->pubkey == other.pubkey);
+            BOOST_CHECK_EQUAL(constant->xonly, other.xonly);
+        } else if (const auto* bip32 = std::get_if<DescriptorKeyInfo::BIP32Key>(&x.expression.key)) {
+            const auto& other{std::get<DescriptorKeyInfo::BIP32Key>(y.expression.key)};
+            BOOST_CHECK(bip32->root == other.root);
+            BOOST_CHECK(bip32->derivation.path == other.derivation.path);
+            BOOST_CHECK(bip32->derivation.type == other.derivation.type);
+        } else {
+            const auto& musig{std::get<DescriptorKeyInfo::MuSigKey>(x.expression.key)};
+            const auto& other{std::get<DescriptorKeyInfo::MuSigKey>(y.expression.key)};
+            BOOST_CHECK(musig.participants == other.participants);
+            BOOST_CHECK(musig.derivation.path == other.derivation.path);
+            BOOST_CHECK(musig.derivation.type == other.derivation.type);
+        }
+    }
+}
+
+void CheckPolicy(const DescriptorPolicy& policy)
+{
+    BOOST_REQUIRE(!policy.nodes.empty());
+    std::vector<size_t> parents(policy.nodes.size(), 0);
+    std::vector<size_t> key_uses(policy.keys.occurrences.size(), 0);
+    for (size_t i = 0; i < policy.nodes.size(); ++i) {
+        for (const auto& child : policy.nodes[i].children) {
+            BOOST_REQUIRE(child.node > i && child.node < policy.nodes.size());
+            ++parents[child.node];
+            if (std::holds_alternative<DescriptorPolicy::TapLeaf>(child.role)) {
+                const auto* kind{std::get_if<DescriptorPolicy::Kind>(&policy.nodes[i].kind)};
+                BOOST_REQUIRE(kind);
+                BOOST_CHECK(*kind == DescriptorPolicy::Kind::TR);
+            }
+        }
+        for (const auto key : policy.nodes[i].keys) {
+            BOOST_REQUIRE(key < key_uses.size());
+            ++key_uses[key];
+        }
+        BOOST_CHECK_EQUAL(parents[i], i == 0 ? 0U : 1U);
+    }
+    for (size_t i = 0; i < key_uses.size(); ++i) {
+        BOOST_CHECK_EQUAL(key_uses[i], policy.keys.occurrences[i].role == DescriptorKeyInventory::Role::MUSIG_PARTICIPANT ? 0U : 1U);
+    }
+}
+
+void CheckDescriptorPolicy(const Descriptor& descriptor)
+{
+    auto policy{descriptor.GetPolicy()};
+    BOOST_CHECK_EQUAL(policy.keys.occurrences.size(), descriptor.GetKeyCount());
+    CheckPolicy(policy);
+}
+
+DescriptorPolicy InspectPolicy(const std::string& expression, size_t expected_nodes)
+{
+    FlatSigningProvider keys;
+    std::string error;
+    auto descriptors{Parse(expression, keys, error)};
+    BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+    auto policy{descriptors[0]->GetPolicy()};
+    BOOST_REQUIRE_EQUAL(policy.nodes.size(), expected_nodes);
+    BOOST_CHECK_EQUAL(policy.keys.occurrences.size(), descriptors[0]->GetKeyCount());
+    CheckPolicy(policy);
+    return policy;
+}
+
 std::set<CPubKey> GetKeyData(const FlatSigningProvider& provider, int flags) {
     std::set<CPubKey> ret;
     for (const auto& [_, pubkey] : provider.pubkeys) {
@@ -200,6 +301,16 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
 
     auto& parse_priv = parse_privs.at(desc_index);
     auto& parse_pub = parse_pubs.at(desc_index);
+    CheckKeyInventory(*parse_priv);
+    CheckKeyInventory(*parse_pub);
+    // Private keys, and the public form's own serialization, must not change the inventory.
+    CheckSameKeyInventory(*parse_priv, *parse_pub);
+    FlatSigningProvider round_trip_keys;
+    const auto round_trip{Parse(parse_pub->ToString(), round_trip_keys, error)};
+    BOOST_REQUIRE_MESSAGE(round_trip.size() == 1, error);
+    CheckSameKeyInventory(*parse_pub, *round_trip[0]);
+    CheckDescriptorPolicy(*parse_priv);
+    CheckDescriptorPolicy(*parse_pub);
 
     // We must be able to estimate the max satisfaction size for any solvable descriptor top descriptor (but combo).
     const bool is_nontop_or_nonsolvable{!parse_priv->IsSolvable() || !parse_priv->GetOutputType()};
@@ -476,6 +587,8 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
 
                 /* Infer a descriptor from the generated script, and verify its solvability and that it roundtrips. */
                 auto inferred = InferDescriptor(spks[n], script_provider);
+                CheckKeyInventory(*inferred);
+                CheckDescriptorPolicy(*inferred);
                 BOOST_CHECK_EQUAL(inferred->IsSolvable(), !(flags & UNSOLVABLE));
                 std::vector<CScript> spks_inferred;
                 FlatSigningProvider provider_inferred;
@@ -1312,6 +1425,7 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     CheckUnparsable("tr(musig(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/<0;1>,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/<2;3>)/<3;4>)","tr(musig(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/<0;1>,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/<2;3>)/<3;4>)", "tr(): musig(): Cannot have multipath participant keys if musig() is also multipath");
     CheckUnparsable("tr(musig()/0)", "tr(musig()/0)", "tr(): musig(): Must contain key expressions");
     CheckUnparsable("tr(musig(xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc/*,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/*)/0)","tr(musig(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/*,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/*)/0)", "tr(): musig(): Cannot have ranged participant keys if musig() also has derivation");
+    CheckUnparsable("","rawtr(musig(02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9,03dff1d77f2a671c5f36183726db2341be58feae1da2deced843240f7b502ba659)unexpected_chars)","rawtr(): Unexpected characters after musig() expression");
 
     // Fuzzer crash test cases
     CheckUnparsable("pk(musig(dd}uue/00/)k(", "pk(musig(dd}uue/00/)k(", "'pk(musig(dd}uue/00/)k(' is not a valid descriptor function");
@@ -1366,6 +1480,901 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     CheckUnparsable("sh(rawtr(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1))", "sh(rawtr(03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd))", "Can only have rawtr at top level");
     // raw() is not allowed inside sh()
     CheckUnparsable("sh(raw(00))", "sh(raw(00))", "Can only have raw() at top level");
+}
+
+BOOST_AUTO_TEST_CASE(parse_pubkey_extended_keys)
+{
+    const std::string xpub{"xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL"};
+    {
+        FlatSigningProvider keys;
+        std::string error;
+        const auto providers{ParsePubkey(xpub, keys, error)};
+
+        BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+        BOOST_CHECK(providers.front()->IsBIP32());
+        BOOST_CHECK_EQUAL(providers.front()->GetKeyCount(), 1U);
+        BOOST_CHECK(!providers.front()->IsRange());
+        BOOST_CHECK(keys.keys.empty());
+        BOOST_CHECK_EQUAL(providers.front()->ToString(PubkeyProvider::StringType::PUBLIC), xpub);
+        BOOST_CHECK(!providers.front()->GetRootPubKey().has_value());
+        BOOST_CHECK(providers.front()->GetRootExtPubKey().has_value());
+        BOOST_CHECK(!providers.front()->GetOriginInfo().has_value());
+    }
+
+    {
+        const std::string xprv{"xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc"};
+        FlatSigningProvider keys;
+        std::string error;
+        const auto providers{ParsePubkey(xprv, keys, error)};
+
+        BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+        BOOST_CHECK(providers.front()->IsBIP32());
+        BOOST_CHECK_EQUAL(providers.front()->GetKeyCount(), 1U);
+        BOOST_CHECK(!providers.front()->IsRange());
+        BOOST_CHECK(!keys.keys.empty());
+        BOOST_CHECK_EQUAL(providers.front()->ToString(PubkeyProvider::StringType::PUBLIC), xpub);
+
+        std::string private_string;
+        BOOST_CHECK(providers.front()->ToPrivateString(keys, private_string));
+        BOOST_CHECK_EQUAL(private_string, xprv);
+    }
+
+    {
+        const std::string xpub_with_origin{"[deadbeef/0h/0h/0]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0/*"};
+        FlatSigningProvider keys;
+        std::string error;
+        const auto providers{ParsePubkey(xpub_with_origin, keys, error)};
+
+        BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+        BOOST_CHECK(providers.front()->IsBIP32());
+        BOOST_CHECK(providers.front()->IsRange());
+        BOOST_CHECK(providers.front()->GetRootExtPubKey().has_value());
+        BOOST_CHECK(keys.keys.empty());
+        BOOST_CHECK_EQUAL(providers.front()->ToString(PubkeyProvider::StringType::PUBLIC), xpub_with_origin);
+
+        const auto origin_info{providers.front()->GetOriginInfo()};
+        BOOST_REQUIRE(origin_info.has_value());
+        BOOST_CHECK_EQUAL(HexStr(origin_info->fingerprint), "deadbeef");
+        BOOST_REQUIRE_EQUAL(origin_info->path.size(), 3U);
+        BOOST_CHECK_EQUAL(origin_info->path[0], 0x80000000U);
+        BOOST_CHECK_EQUAL(origin_info->path[1], 0x80000000U);
+        BOOST_CHECK_EQUAL(origin_info->path[2], 0U);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(parse_pubkey_raw_keys)
+{
+    {
+        const std::string compressed_pubkey{"03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd"};
+        FlatSigningProvider keys;
+        std::string error;
+        const auto providers{ParsePubkey(compressed_pubkey, keys, error)};
+
+        BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+        BOOST_CHECK(!providers.front()->IsBIP32());
+        BOOST_CHECK_EQUAL(providers.front()->GetKeyCount(), 1U);
+        BOOST_CHECK(keys.keys.empty());
+        BOOST_CHECK_EQUAL(providers.front()->ToString(PubkeyProvider::StringType::PUBLIC), compressed_pubkey);
+    }
+
+    const std::string xonly_pubkey{"a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd"};
+    {
+        FlatSigningProvider keys;
+        std::string error;
+        const auto providers{ParsePubkey(xonly_pubkey, keys, error)};
+
+        BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+        BOOST_CHECK(!providers.front()->IsBIP32());
+        BOOST_CHECK_EQUAL(providers.front()->GetKeyCount(), 1U);
+        BOOST_CHECK(providers.front()->GetRootPubKey().has_value());
+        BOOST_CHECK(!providers.front()->GetRootExtPubKey().has_value());
+        BOOST_CHECK(keys.keys.empty());
+        BOOST_CHECK_EQUAL(providers.front()->ToString(PubkeyProvider::StringType::PUBLIC), xonly_pubkey);
+    }
+
+    {
+        const std::string wif_private_key{"L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1"};
+        FlatSigningProvider keys;
+        std::string error;
+        const auto providers{ParsePubkey(wif_private_key, keys, error)};
+
+        BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+        BOOST_CHECK(!providers.front()->IsBIP32());
+        BOOST_CHECK_EQUAL(providers.front()->GetKeyCount(), 1U);
+        BOOST_CHECK(!keys.keys.empty());
+        BOOST_CHECK_EQUAL(providers.front()->ToString(PubkeyProvider::StringType::PUBLIC), xonly_pubkey);
+    }
+
+    {
+        const std::string pubkey_with_origin{"[deadbeef/0h/0h/0]03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd"};
+        FlatSigningProvider keys;
+        std::string error;
+        const auto providers{ParsePubkey(pubkey_with_origin, keys, error)};
+
+        BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+        BOOST_CHECK(!providers.front()->IsBIP32());
+        BOOST_CHECK(providers.front()->GetRootPubKey().has_value());
+        BOOST_CHECK(keys.keys.empty());
+        BOOST_CHECK_EQUAL(providers.front()->ToString(PubkeyProvider::StringType::PUBLIC), pubkey_with_origin);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(parse_pubkey_musig)
+{
+    const std::string musig{"musig(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y)"};
+
+    FlatSigningProvider keys;
+    std::string error;
+    const auto providers{ParsePubkey(musig, keys, error)};
+
+    BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+    BOOST_CHECK(providers.front()->IsBIP32());
+    BOOST_CHECK_EQUAL(providers.front()->GetKeyCount(), 3U);
+    BOOST_CHECK(keys.keys.empty());
+    BOOST_CHECK(!providers.front()->GetRootPubKey().has_value());
+    BOOST_CHECK(!providers.front()->GetRootExtPubKey().has_value());
+}
+
+BOOST_AUTO_TEST_CASE(parse_pubkey_multipath)
+{
+    FlatSigningProvider keys;
+    std::string error;
+    const auto providers{ParsePubkey("[deadbeef/0h/0h/0]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/<0;1>/*", keys, error)};
+
+    BOOST_REQUIRE_MESSAGE(providers.size() == 2, error);
+    BOOST_CHECK(keys.keys.empty());
+
+    BOOST_CHECK(providers[0]->IsBIP32());
+    BOOST_CHECK(providers[0]->IsRange());
+    BOOST_CHECK_EQUAL(providers[0]->ToString(PubkeyProvider::StringType::PUBLIC), "[deadbeef/0h/0h/0]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0/*");
+
+    BOOST_CHECK(providers[1]->IsBIP32());
+    BOOST_CHECK(providers[1]->IsRange());
+    BOOST_CHECK_EQUAL(providers[1]->ToString(PubkeyProvider::StringType::PUBLIC), "[deadbeef/0h/0h/0]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/1/*");
+}
+
+BOOST_AUTO_TEST_CASE(parse_pubkey_invalid_keys)
+{
+    {
+        FlatSigningProvider keys;
+        std::string error;
+        const auto providers{ParsePubkey("04a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd5b8dec5235a0fa8722476c7709c02559e3aa73aa03918ba2d492eea75abea235", keys, error)};
+
+        BOOST_CHECK(providers.empty());
+        BOOST_CHECK(keys.keys.empty());
+        BOOST_CHECK_EQUAL(error, "Uncompressed keys are not allowed");
+    }
+
+    {
+        FlatSigningProvider keys;
+        std::string error;
+        const auto providers{ParsePubkey("5KYZdUEo39z3FPrtuX2QbbwGnNP5zTd7yyr2SC1j299sBCnWjss", keys, error)};
+
+        BOOST_CHECK(providers.empty());
+        BOOST_CHECK(keys.keys.empty());
+        BOOST_CHECK_EQUAL(error, "Uncompressed keys are not allowed");
+    }
+
+    {
+        FlatSigningProvider keys;
+        std::string error;
+        const auto providers{ParsePubkey("L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY2", keys, error)};
+
+        BOOST_CHECK(providers.empty());
+        BOOST_CHECK(keys.keys.empty());
+        BOOST_CHECK_EQUAL(error, "key 'L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY2' is not valid");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(inspect_pubkey_constants)
+{
+    // The encoding flag describes the provider, not the eventual signing context.
+    const std::string compressed{"03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd"};
+    const std::string xonly{compressed.substr(2)};
+    const std::string wif{"L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1"};
+    for (const auto& expression : {compressed, xonly, wif}) {
+        FlatSigningProvider keys;
+        std::string error;
+        auto providers{ParsePubkey(expression, keys, error)};
+        BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+        keys.keys.clear();
+        auto info{providers[0]->GetKeyInfo()};
+        providers.clear(); // The inspection must own its public data.
+        BOOST_REQUIRE_EQUAL(info.nodes.size(), 1U);
+        BOOST_CHECK(!info.nodes[0].origin);
+        const auto& key{std::get<DescriptorKeyInfo::ConstKey>(info.nodes[0].key)};
+        // X-only keys, including the WIF, report the even key their serialization denotes.
+        BOOST_CHECK(key.pubkey == CPubKey(ParseHex(expression == compressed ? compressed : "02" + xonly)));
+        BOOST_CHECK_EQUAL(key.xonly, expression != compressed);
+    }
+
+    FlatSigningProvider keys;
+    std::string error;
+    auto providers{ParsePubkey("[deadbeef]" + compressed, keys, error)};
+    BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+    auto info{providers[0]->GetKeyInfo()};
+    BOOST_REQUIRE(info.nodes[0].origin);
+    BOOST_CHECK_EQUAL(HexStr(info.nodes[0].origin->fingerprint), "deadbeef");
+    BOOST_CHECK(info.nodes[0].origin->path.empty());
+}
+
+BOOST_AUTO_TEST_CASE(inspect_pubkey_bip32)
+{
+    using DeriveType = DescriptorKeyInfo::DeriveType;
+    const std::string xpub{"xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL"};
+    const std::string xprv{"xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc"};
+    for (const auto& root : {xpub, xprv}) {
+        FlatSigningProvider root_keys;
+        std::string root_error;
+        auto root_providers{ParsePubkey(root, root_keys, root_error)};
+        BOOST_REQUIRE_MESSAGE(root_providers.size() == 1, root_error);
+        auto root_info{root_providers[0]->GetKeyInfo()};
+        BOOST_CHECK(!root_info.nodes[0].origin);
+        const auto& root_key{std::get<DescriptorKeyInfo::BIP32Key>(root_info.nodes[0].key)};
+        BOOST_CHECK(root_key.root == DecodeExtPubKey(xpub));
+        BOOST_CHECK(root_key.derivation.path.empty());
+        BOOST_CHECK(root_key.derivation.type == DeriveType::NON_RANGED);
+        for (const auto& marker : {"h", "'"}) {
+            for (const auto& suffix : {"", "/*", "/*h", "/*'"}) {
+                const std::string expression{"[deadbeef/7h/8]" + root + "/0" + marker + "/1/2147483647" + marker + suffix};
+                FlatSigningProvider keys;
+                std::string error;
+                auto providers{ParsePubkey(expression, keys, error)};
+                BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+                keys.keys.clear();
+                auto info{providers[0]->GetKeyInfo()};
+                BOOST_REQUIRE_EQUAL(info.nodes.size(), 1U);
+                const auto& node{info.nodes[0]};
+                BOOST_REQUIRE(node.origin);
+                BOOST_CHECK_EQUAL(HexStr(node.origin->fingerprint), "deadbeef");
+                BOOST_CHECK(node.origin->path == std::vector<uint32_t>({0x80000007U, 8}));
+                const auto& key{std::get<DescriptorKeyInfo::BIP32Key>(node.key)};
+                BOOST_CHECK(key.root == DecodeExtPubKey(xpub));
+                BOOST_CHECK(key.derivation.path == std::vector<uint32_t>({0x80000000U, 1, 0xffffffffU}));
+                const DeriveType expected{std::string{suffix}.empty() ? DeriveType::NON_RANGED :
+                                          std::string{suffix} == "/*" ? DeriveType::UNHARDENED_RANGED :
+                                                                        DeriveType::HARDENED_RANGED};
+                BOOST_CHECK(key.derivation.type == expected);
+                FlatSigningProvider out;
+                // Inspection does not try to derive these unavailable hardened keys.
+                BOOST_CHECK(!providers[0]->GetPubKey(0, keys, out));
+                // Mutating a result must not change the provider or subsequent results.
+                std::get<DescriptorKeyInfo::BIP32Key>(info.nodes[0].key).derivation.path.clear();
+                auto again{providers[0]->GetKeyInfo()};
+                BOOST_CHECK_EQUAL(std::get<DescriptorKeyInfo::BIP32Key>(again.nodes[0].key).derivation.path.size(), 3U);
+            }
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(inspect_pubkey_multipath)
+{
+    const std::string xpub{"xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y"};
+    FlatSigningProvider keys;
+    std::string error;
+    auto providers{ParsePubkey(xpub + "/<0;1h>/2/*", keys, error)};
+    BOOST_REQUIRE_MESSAGE(providers.size() == 2, error);
+    for (size_t branch = 0; branch < providers.size(); ++branch) {
+        auto info{providers[branch]->GetKeyInfo()};
+        const auto& key{std::get<DescriptorKeyInfo::BIP32Key>(info.nodes[0].key)};
+        BOOST_CHECK(key.root == DecodeExtPubKey(xpub));
+        BOOST_CHECK(key.derivation.path == std::vector<uint32_t>({branch == 0 ? 0U : 0x80000001U, 2}));
+        BOOST_CHECK(key.derivation.type == DescriptorKeyInfo::DeriveType::UNHARDENED_RANGED);
+    }
+
+    // Multipath on the aggregate and on participants are distinct programs.
+    for (const bool aggregate : {false, true}) {
+        const std::string participant{xpub + (aggregate ? "/4" : "/<0;1>/4")};
+        providers = ParsePubkey("musig(" + participant + "," + xpub + ")" + (aggregate ? "/<0;1>/4/*" : ""), keys, error);
+        BOOST_REQUIRE_MESSAGE(providers.size() == 2, error);
+        for (size_t branch = 0; branch < providers.size(); ++branch) {
+            auto info{providers[branch]->GetKeyInfo()};
+            BOOST_REQUIRE_EQUAL(info.nodes.size(), 3U);
+            const auto& musig{std::get<DescriptorKeyInfo::MuSigKey>(info.nodes[0].key)};
+            const auto& first{std::get<DescriptorKeyInfo::BIP32Key>(info.nodes[1].key)};
+            const std::vector<uint32_t> branch_path{static_cast<uint32_t>(branch), 4};
+            BOOST_CHECK(musig.participants == std::vector<size_t>({1, 2}));
+            BOOST_CHECK(musig.derivation.path == (aggregate ? branch_path : std::vector<uint32_t>{}));
+            BOOST_CHECK(first.derivation.path == (aggregate ? std::vector<uint32_t>{4} : branch_path));
+            BOOST_CHECK(musig.derivation.type == (aggregate ? DescriptorKeyInfo::DeriveType::UNHARDENED_RANGED : DescriptorKeyInfo::DeriveType::NON_RANGED));
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(inspect_pubkey_musig)
+{
+    const std::string xpub{"xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL"};
+    const std::string other{"xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y"};
+    FlatSigningProvider keys;
+    std::string error;
+    auto providers{ParsePubkey("musig([deadbeef/7]" + xpub + "/0h,[abcdef01/8h]" + other + "/1)/2/3/*", keys, error)};
+    BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+    auto info{providers[0]->GetKeyInfo()};
+    BOOST_REQUIRE_EQUAL(info.nodes.size(), 3U);
+    const auto& musig{std::get<DescriptorKeyInfo::MuSigKey>(info.nodes[0].key)};
+    BOOST_CHECK(!info.nodes[0].origin);
+    BOOST_CHECK(musig.participants == std::vector<size_t>({1, 2}));
+    BOOST_CHECK(musig.derivation.path == std::vector<uint32_t>({2, 3}));
+    BOOST_CHECK(musig.derivation.type == DescriptorKeyInfo::DeriveType::UNHARDENED_RANGED);
+    for (size_t i = 1; i < 3; ++i) {
+        const auto& key{std::get<DescriptorKeyInfo::BIP32Key>(info.nodes[i].key)};
+        BOOST_CHECK(key.root == DecodeExtPubKey(i == 1 ? xpub : other));
+        BOOST_CHECK(key.derivation.path == std::vector<uint32_t>({i == 1 ? 0x80000000U : 1U}));
+        BOOST_CHECK(key.derivation.type == DescriptorKeyInfo::DeriveType::NON_RANGED);
+        BOOST_REQUIRE(info.nodes[i].origin);
+        BOOST_CHECK_EQUAL(HexStr(info.nodes[i].origin->fingerprint), i == 1 ? "deadbeef" : "abcdef01");
+        BOOST_CHECK(info.nodes[i].origin->path == std::vector<uint32_t>({i == 1 ? 7U : 0x80000008U}));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(inspect_pubkey_size)
+{
+    const std::string pubkey{"0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    const std::string xpub{"xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL"};
+    FlatSigningProvider keys;
+    std::string error;
+
+    // The result holds one node per key expression and copies each path once.
+    std::string long_path{xpub};
+    for (size_t i = 0; i < 4096; ++i)
+        long_path += "/0";
+    auto providers{ParsePubkey(long_path, keys, error)};
+    BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+    auto info{providers[0]->GetKeyInfo()};
+    BOOST_REQUIRE_EQUAL(info.nodes.size(), 1U);
+    BOOST_CHECK_EQUAL(std::get<DescriptorKeyInfo::BIP32Key>(info.nodes[0].key).derivation.path.size(), 4096U);
+
+    // Participant multiplicity survives inspection.
+    std::string wide{"musig(" + pubkey};
+    for (size_t i = 1; i < 128; ++i)
+        wide += "," + pubkey;
+    wide += ')';
+    providers = ParsePubkey(wide, keys, error);
+    BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+    info = providers[0]->GetKeyInfo();
+    BOOST_CHECK_EQUAL(info.nodes.size(), 129U);
+    const auto& participants{std::get<DescriptorKeyInfo::MuSigKey>(info.nodes[0].key).participants};
+    BOOST_REQUIRE_EQUAL(participants.size(), 128U);
+    for (size_t i = 0; i < participants.size(); ++i) {
+        BOOST_CHECK_EQUAL(participants[i], i + 1);
+        BOOST_CHECK(std::get<DescriptorKeyInfo::ConstKey>(info.nodes[participants[i]].key).pubkey == CPubKey(ParseHex(pubkey)));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(inspect_pubkey_preserves_derivation)
+{
+    const std::string xpub{"xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL"};
+    const std::string other{"xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y"};
+    // Private keys are needed for hardened steps, which fill the other caches.
+    const std::string xprv{"xprv9s21ZrQH143K31xYSDQpPDxsXRTUcvj2iNHm5NUtrGiGG5e2DtALGdso3pGz6ssrdK4PFmM8NSpSBHNqPqm55Qn3LqFtT2emdEXVYsCzC2U"};
+    for (const std::string& expression : {xpub + "/0/*", xprv + "/0h/*", xprv + "/1/*h", "musig(" + other + "," + xpub + ")/2/*", "musig(" + other + "/0/*," + xpub + "/1/*)"}) {
+        FlatSigningProvider keys;
+        std::string error;
+        auto providers{ParsePubkey(expression, keys, error)};
+        BOOST_REQUIRE_MESSAGE(providers.size() == 1, error);
+        auto reference{providers[0]->Clone()};
+        BOOST_CHECK(!providers[0]->GetKeyInfo().nodes.empty());
+        DescriptorCache expected_cache, cache;
+        FlatSigningProvider expected_out, out;
+        const auto expected{reference->GetPubKey(5, keys, expected_out, nullptr, &expected_cache)};
+        const auto actual{providers[0]->GetPubKey(5, keys, out, nullptr, &cache)};
+        BOOST_REQUIRE(expected);
+        BOOST_CHECK(actual == expected);
+        BOOST_CHECK(EqualSigningProviders(out, expected_out));
+        BOOST_CHECK(out.aggregate_pubkeys == expected_out.aggregate_pubkeys);
+        BOOST_CHECK(cache.GetCachedParentExtPubKeys() == expected_cache.GetCachedParentExtPubKeys());
+        BOOST_CHECK(cache.GetCachedLastHardenedExtPubKeys() == expected_cache.GetCachedLastHardenedExtPubKeys());
+        BOOST_CHECK(cache.GetCachedDerivedExtPubKeys() == expected_cache.GetCachedDerivedExtPubKeys());
+        auto info{providers[0]->GetKeyInfo()};
+        if (info.nodes.size() == 3) {
+            // Internal cached aggregate providers must not replace the original expression.
+            const auto& musig{std::get<DescriptorKeyInfo::MuSigKey>(info.nodes[0].key)};
+            BOOST_CHECK(musig.participants == std::vector<size_t>({1, 2}));
+            BOOST_CHECK(std::get<DescriptorKeyInfo::BIP32Key>(info.nodes[1].key).root == DecodeExtPubKey(other));
+            BOOST_CHECK(std::get<DescriptorKeyInfo::BIP32Key>(info.nodes[2].key).root == DecodeExtPubKey(xpub));
+        }
+        FlatSigningProvider cached_out;
+        BOOST_CHECK(providers[0]->GetPubKey(5, keys, cached_out, &cache) == expected);
+        BOOST_CHECK(EqualSigningProviders(cached_out, expected_out));
+        BOOST_CHECK(cached_out.aggregate_pubkeys == expected_out.aggregate_pubkeys);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_key_inventory_roles)
+{
+    using Role = DescriptorKeyInventory::Role;
+    const std::string pubkey{"0379be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    const std::string xonly{pubkey.substr(2)};
+    struct Test {
+        std::string descriptor;
+        std::vector<Role> roles;
+        bool xonly{false};
+    };
+    const std::vector<Test> tests{
+        {"pk(" + pubkey + ")", {Role::ECDSA}},
+        {"pkh(" + pubkey + ")", {Role::ECDSA}},
+        {"wpkh(" + pubkey + ")", {Role::ECDSA}},
+        {"combo(" + pubkey + ")", {Role::ECDSA}},
+        {"sh(pk(" + pubkey + "))", {Role::ECDSA}},
+        {"sh(wpkh(" + pubkey + "))", {Role::ECDSA}},
+        {"wsh(pk(" + pubkey + "))", {Role::ECDSA}},
+        {"wsh(and_v(v:pk(" + pubkey + "),after(1)))", {Role::ECDSA}},
+        {"wsh(multi(2," + pubkey + "," + pubkey + "))", {Role::ECDSA, Role::ECDSA}},
+        {"sh(wsh(sortedmulti(2," + pubkey + "," + pubkey + ")))", {Role::ECDSA, Role::ECDSA}},
+        {"tr(" + pubkey + ")", {Role::TAPROOT_INTERNAL}},
+        {"rawtr(" + pubkey + ")", {Role::TAPROOT_OUTPUT}},
+        {"tr(" + pubkey + ",pk(" + pubkey + "))", {Role::TAPROOT_INTERNAL, Role::TAPSCRIPT}},
+        {"tr(" + pubkey + ",and_v(v:pk(" + pubkey + "),after(1)))", {Role::TAPROOT_INTERNAL, Role::TAPSCRIPT}},
+        {"tr(" + pubkey + ",multi_a(2," + pubkey + "," + pubkey + "))", {Role::TAPROOT_INTERNAL, Role::TAPSCRIPT, Role::TAPSCRIPT}},
+        {"tr(" + pubkey + ",sortedmulti_a(2," + pubkey + "," + pubkey + "))", {Role::TAPROOT_INTERNAL, Role::TAPSCRIPT, Role::TAPSCRIPT}},
+        {"tr(" + xonly + ",pk(" + xonly + "))", {Role::TAPROOT_INTERNAL, Role::TAPSCRIPT}, true},
+        {"rawtr(" + xonly + ")", {Role::TAPROOT_OUTPUT}, true},
+        {"unused(" + pubkey + ")", {Role::UNUSED}},
+    };
+    for (const auto& test : tests) {
+        BOOST_TEST_CONTEXT(test.descriptor)
+        {
+            FlatSigningProvider keys;
+            std::string error;
+            auto descriptors{Parse(test.descriptor, keys, error)};
+            BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+            auto inventory{descriptors[0]->GetKeyInventory()};
+            BOOST_REQUIRE_EQUAL(inventory.occurrences.size(), test.roles.size());
+            for (size_t i = 0; i < test.roles.size(); ++i) {
+                const auto& occurrence{inventory.occurrences[i]};
+                BOOST_CHECK(occurrence.role == test.roles[i]);
+                BOOST_CHECK(!occurrence.expression.origin);
+                const auto& key{std::get<DescriptorKeyInfo::ConstKey>(occurrence.expression.key)};
+                BOOST_CHECK(key.pubkey == CPubKey(ParseHex(test.xonly ? "02" + xonly : pubkey)));
+                BOOST_CHECK_EQUAL(key.xonly, test.xonly);
+            }
+        }
+    }
+
+    // Legacy contexts accept uncompressed keys without changing the standalone parser.
+    const std::string uncompressed{"04a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd5b8dec5235a0fa8722476c7709c02559e3aa73aa03918ba2d492eea75abea235"};
+    for (const auto& expression : {"pk(" + uncompressed + ")", "sh(pk(" + uncompressed + "))"}) {
+        FlatSigningProvider keys;
+        std::string error;
+        auto descriptors{Parse(expression, keys, error)};
+        BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+        auto inventory{descriptors[0]->GetKeyInventory()};
+        BOOST_REQUIRE_EQUAL(inventory.occurrences.size(), 1U);
+        BOOST_CHECK(inventory.occurrences[0].role == Role::ECDSA);
+        BOOST_CHECK(std::get<DescriptorKeyInfo::ConstKey>(inventory.occurrences[0].expression.key).pubkey == CPubKey(ParseHex(uncompressed)));
+        BOOST_CHECK(ParsePubkey(uncompressed, keys, error).empty());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_key_inventory_musig)
+{
+    using Role = DescriptorKeyInventory::Role;
+    const std::string first{"0379be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    const std::string second{"02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9"};
+    const std::string aggregate{"musig(" + first + "," + second + ")"};
+    FlatSigningProvider keys;
+    std::string error;
+    auto descriptors{Parse("tr(" + aggregate + ",multi_a(2,musig(" + second + "," + first + ")," + aggregate + "))", keys, error)};
+    BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+    auto inventory{descriptors[0]->GetKeyInventory()};
+    BOOST_REQUIRE_EQUAL(inventory.occurrences.size(), 9U);
+    for (const size_t root : {0U, 3U, 6U}) {
+        const auto& occurrence{inventory.occurrences[root]};
+        BOOST_CHECK(occurrence.role == (root == 0 ? Role::TAPROOT_INTERNAL : Role::TAPSCRIPT));
+        const auto& aggregate_key{std::get<DescriptorKeyInfo::MuSigKey>(occurrence.expression.key)};
+        BOOST_CHECK(aggregate_key.participants == std::vector<size_t>({root + 1, root + 2}));
+        for (size_t i = 1; i <= 2; ++i) {
+            const auto& participant{inventory.occurrences[root + i]};
+            BOOST_CHECK(participant.role == Role::MUSIG_PARTICIPANT);
+            const auto& key{std::get<DescriptorKeyInfo::ConstKey>(participant.expression.key)};
+            BOOST_CHECK(key.pubkey == CPubKey(ParseHex((root == 3) == (i == 1) ? second : first)));
+            BOOST_CHECK(!key.xonly);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_key_inventory_inferred)
+{
+    using Role = DescriptorKeyInventory::Role;
+    const std::string first{"0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    const std::string second{"02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9"};
+    for (const auto& expression : {
+             "wsh(multi(2," + first + "," + second + "))",
+             "wsh(multi(2," + first + "," + first + "))",
+             "wsh(and_v(v:pk(" + first + "),pk(" + second + ")))",
+             "tr(" + first + ",multi_a(2," + second + "," + second + "))"}) {
+        BOOST_TEST_CONTEXT(expression)
+        {
+            FlatSigningProvider keys;
+            std::string error;
+            auto descriptors{Parse(expression, keys, error)};
+            BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+            std::vector<CScript> scripts;
+            FlatSigningProvider expanded;
+            BOOST_REQUIRE(descriptors[0]->Expand(0, keys, scripts, expanded));
+            BOOST_REQUIRE_EQUAL(scripts.size(), 1U);
+            const auto inferred{InferDescriptor(scripts[0], expanded)};
+            // Inference's cache indices are deliberately unchanged and all zero.
+            BOOST_CHECK_EQUAL(inferred->GetMaxKeyExpr(), 0U);
+            const bool taproot{expression.starts_with("tr(")};
+            auto inventory{inferred->GetKeyInventory()};
+            BOOST_REQUIRE_EQUAL(inventory.occurrences.size(), taproot ? 3U : 2U);
+            std::multiset<CPubKey> actual;
+            for (size_t i = 0; i < inventory.occurrences.size(); ++i) {
+                const auto& occurrence{inventory.occurrences[i]};
+                BOOST_CHECK(occurrence.role == (taproot ? (i == 0 ? Role::TAPROOT_INTERNAL : Role::TAPSCRIPT) : Role::ECDSA));
+                actual.insert(std::get<DescriptorKeyInfo::ConstKey>(occurrence.expression.key).pubkey);
+            }
+            const std::multiset<CPubKey> expected{taproot ? std::multiset<CPubKey>{CPubKey(ParseHex(first)), CPubKey(ParseHex(second)), CPubKey(ParseHex(second))} :
+                                                            std::multiset<CPubKey>{CPubKey(ParseHex(first)), CPubKey(ParseHex(expression.find(second) == std::string::npos ? first : second))}};
+            BOOST_CHECK(actual == expected);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_key_inventory_clones)
+{
+    using Role = DescriptorKeyInventory::Role;
+    const std::string xpub{"xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL"};
+    const std::vector<std::string> leaves{
+        "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+        "03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd",
+        "02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9",
+    };
+    FlatSigningProvider keys;
+    std::string error;
+    // The second multipath branch clones both a pk leaf and a Miniscript leaf.
+    auto descriptors{Parse("tr([deadbeef/5]" + xpub + "/<0;1>/*,{pk(" + leaves[0] + "),and_v(v:pk(" + leaves[1] + "),pk(" + leaves[2] + "))})", keys, error)};
+    BOOST_REQUIRE_MESSAGE(descriptors.size() == 2, error);
+    for (size_t branch = 0; branch < descriptors.size(); ++branch) {
+        auto inventory{descriptors[branch]->GetKeyInventory()};
+        BOOST_REQUIRE_EQUAL(inventory.occurrences.size(), 4U);
+        const auto& internal{inventory.occurrences[0]};
+        BOOST_CHECK(internal.role == Role::TAPROOT_INTERNAL);
+        BOOST_REQUIRE(internal.expression.origin);
+        BOOST_CHECK_EQUAL(HexStr(internal.expression.origin->fingerprint), "deadbeef");
+        BOOST_CHECK(internal.expression.origin->path == std::vector<uint32_t>{5});
+        const auto& key{std::get<DescriptorKeyInfo::BIP32Key>(internal.expression.key)};
+        BOOST_CHECK(key.root == DecodeExtPubKey(xpub));
+        BOOST_CHECK(key.derivation.path == std::vector<uint32_t>{static_cast<uint32_t>(branch)});
+        BOOST_CHECK(key.derivation.type == DescriptorKeyInfo::DeriveType::UNHARDENED_RANGED);
+        for (size_t i = 0; i < leaves.size(); ++i) {
+            const auto& leaf{inventory.occurrences[i + 1]};
+            BOOST_CHECK(leaf.role == Role::TAPSCRIPT);
+            BOOST_CHECK(std::get<DescriptorKeyInfo::ConstKey>(leaf.expression.key).pubkey == CPubKey(ParseHex(leaves[i])));
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_key_inventory_opaque)
+{
+    const std::string xpub{"xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL"};
+    FlatSigningProvider keys;
+    std::string error;
+    // Opaque scripts have no inspectable expressions; unused() still has one.
+    for (const auto& expression : {"raw(51)", "addr(1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa)"}) {
+        auto descriptors{Parse(expression, keys, error)};
+        BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+        BOOST_CHECK(descriptors[0]->GetKeyInventory().occurrences.empty());
+    }
+    auto descriptors{Parse("unused(" + xpub + ")", keys, error)};
+    BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+    const auto inventory{descriptors[0]->GetKeyInventory()};
+    BOOST_REQUIRE_EQUAL(inventory.occurrences.size(), 1U);
+    BOOST_CHECK(inventory.occurrences[0].role == DescriptorKeyInventory::Role::UNUSED);
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_key_inventory_private)
+{
+    const std::string xpub{"xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL"};
+    const std::string xprv{"xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc"};
+    FlatSigningProvider keys;
+    std::string error;
+    auto descriptors{Parse("tr([deadbeef/7h]" + xprv + "/1h,pk(L4rK1yDtCWekvXuE6oXD9jCYfFNV2cWRpVuPLBcCU2z8TrisoyY1))", keys, error)};
+    BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+    keys.keys.clear();
+    auto inventory{descriptors[0]->GetKeyInventory()};
+    auto policy{descriptors[0]->GetPolicy()};
+    descriptors.clear(); // Results retain public values, without providers or secrets.
+    BOOST_REQUIRE_EQUAL(inventory.occurrences.size(), 2U);
+    const auto& internal{inventory.occurrences[0]};
+    BOOST_CHECK(internal.role == DescriptorKeyInventory::Role::TAPROOT_INTERNAL);
+    BOOST_REQUIRE(internal.expression.origin);
+    BOOST_CHECK(internal.expression.origin->path == std::vector<uint32_t>{0x80000007U});
+    const auto& key{std::get<DescriptorKeyInfo::BIP32Key>(internal.expression.key)};
+    BOOST_CHECK(key.root == DecodeExtPubKey(xpub));
+    BOOST_CHECK(key.derivation.path == std::vector<uint32_t>{0x80000001U});
+    const auto& leaf{inventory.occurrences[1]};
+    BOOST_CHECK(leaf.role == DescriptorKeyInventory::Role::TAPSCRIPT);
+    // The leaf key is x-only, so the odd-parity WIF reports its even form.
+    BOOST_CHECK(std::get<DescriptorKeyInfo::ConstKey>(leaf.expression.key).pubkey == CPubKey(ParseHex("02a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd")));
+    BOOST_CHECK(std::get<DescriptorKeyInfo::BIP32Key>(policy.keys.occurrences[0].expression.key).root == DecodeExtPubKey(xpub));
+    BOOST_CHECK(std::get<DescriptorKeyInfo::ConstKey>(policy.keys.occurrences[1].expression.key).pubkey == std::get<DescriptorKeyInfo::ConstKey>(leaf.expression.key).pubkey);
+    BOOST_CHECK(policy.nodes[0].keys == std::vector<size_t>{0});
+    BOOST_CHECK(policy.nodes[1].keys == std::vector<size_t>{1});
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_key_inventory_large)
+{
+    const std::string pubkey{"0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    const std::string leaf{"pk(" + pubkey + ")"};
+    FlatSigningProvider keys;
+    std::string error;
+    std::string deep;
+    for (size_t i = 0; i < 3200; ++i)
+        deep += "and_v(v:after(1),";
+    deep += leaf;
+    deep.append(3200, ')');
+    auto descriptors{Parse("tr(" + pubkey + "," + deep + ")", keys, error)};
+    BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+    // Timelock subtrees do not enlarge a key inventory or require serialization.
+    auto inventory{descriptors[0]->GetKeyInventory()};
+    BOOST_CHECK_EQUAL(inventory.occurrences.size(), 2U);
+
+    std::string wide{leaf};
+    for (size_t i = 0; i < 10; ++i)
+        wide = "{" + wide + "," + wide + "}";
+    descriptors = Parse("tr(" + pubkey + "," + wide + ")", keys, error);
+    BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+    inventory = descriptors[0]->GetKeyInventory();
+    BOOST_REQUIRE_EQUAL(inventory.occurrences.size(), 1025U);
+    BOOST_CHECK(inventory.occurrences[0].role == DescriptorKeyInventory::Role::TAPROOT_INTERNAL);
+    for (size_t i = 1; i < inventory.occurrences.size(); ++i) {
+        BOOST_CHECK(inventory.occurrences[i].role == DescriptorKeyInventory::Role::TAPSCRIPT);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_policy_forms)
+{
+    using Kind = DescriptorPolicy::Kind;
+    const std::string first{"0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    const std::string second{"02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9"};
+    for (const auto& [name, kind] : std::vector<std::pair<std::string, Kind>>{
+             {"pk", Kind::PK}, {"pkh", Kind::PKH}, {"wpkh", Kind::WPKH}, {"combo", Kind::COMBO}, {"tr", Kind::TR}, {"rawtr", Kind::RAWTR}, {"unused", Kind::UNUSED}}) {
+        auto policy{InspectPolicy(name + "(" + first + ")", 1)};
+        BOOST_REQUIRE_EQUAL(policy.nodes.size(), 1U);
+        BOOST_CHECK(std::get<Kind>(policy.nodes[0].kind) == kind);
+        BOOST_CHECK(policy.nodes[0].keys == std::vector<size_t>{0});
+        BOOST_CHECK_EQUAL(policy.nodes[0].value, 0U);
+        BOOST_CHECK(policy.nodes[0].data.empty());
+        BOOST_CHECK(policy.nodes[0].children.empty());
+    }
+    for (const bool sorted : {false, true}) {
+        auto policy{InspectPolicy("sh(wsh(" + std::string{sorted ? "sortedmulti" : "multi"} + "(2," + second + "," + first + ")))", 3)};
+        BOOST_REQUIRE_EQUAL(policy.nodes.size(), 3U);
+        BOOST_CHECK(std::get<Kind>(policy.nodes[0].kind) == Kind::SH);
+        BOOST_CHECK(std::get<Kind>(policy.nodes[1].kind) == Kind::WSH);
+        BOOST_CHECK(std::get<Kind>(policy.nodes[2].kind) == (sorted ? Kind::SORTEDMULTI : Kind::MULTI));
+        for (size_t i = 0; i < 2; ++i) {
+            BOOST_REQUIRE_EQUAL(policy.nodes[i].children.size(), 1U);
+            BOOST_CHECK_EQUAL(policy.nodes[i].children[0].node, i + 1);
+            BOOST_CHECK(std::get<DescriptorPolicy::ChildRole>(policy.nodes[i].children[0].role) == DescriptorPolicy::ChildRole::SCRIPT);
+        }
+        BOOST_CHECK_EQUAL(policy.nodes[2].value, 2U);
+        BOOST_CHECK(policy.nodes[2].keys == std::vector<size_t>({0, 1}));
+        // Inspection preserves expression order even when expansion sorts keys.
+        BOOST_CHECK(std::get<DescriptorKeyInfo::ConstKey>(policy.keys.occurrences[0].expression.key).pubkey == CPubKey(ParseHex(second)));
+        BOOST_CHECK(std::get<DescriptorKeyInfo::ConstKey>(policy.keys.occurrences[1].expression.key).pubkey == CPubKey(ParseHex(first)));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_policy_taproot)
+{
+    using Kind = DescriptorPolicy::Kind;
+    using Fragment = miniscript::Fragment;
+    const std::string first{"0379be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    const std::string second{"02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9"};
+    const std::string third{"03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd"};
+    for (const bool sorted : {false, true}) {
+        auto policy{InspectPolicy("tr(musig(" + first + "," + second + "),{pk(" + first + "),{" + std::string{sorted ? "sortedmulti_a" : "multi_a"} + "(2," + second + "," + first + "),and_v(v:pk(" + third + "),after(10))}})", 8)};
+        BOOST_REQUIRE_EQUAL(policy.nodes.size(), 8U);
+        BOOST_CHECK(std::get<Kind>(policy.nodes[0].kind) == Kind::TR);
+        BOOST_CHECK(policy.nodes[0].keys == std::vector<size_t>{0});
+        BOOST_REQUIRE_EQUAL(policy.nodes[0].children.size(), 3U);
+        for (size_t i = 0; i < 3; ++i) {
+            const auto& child{policy.nodes[0].children[i]};
+            BOOST_CHECK_EQUAL(child.node, i + 1);
+            const auto& leaf{std::get<DescriptorPolicy::TapLeaf>(child.role)};
+            BOOST_CHECK_EQUAL(leaf.depth, i == 0 ? 1U : 2U);
+        }
+        BOOST_CHECK(policy.nodes[1].keys == std::vector<size_t>{3});
+        BOOST_CHECK(std::get<Kind>(policy.nodes[2].kind) == (sorted ? Kind::SORTEDMULTI_A : Kind::MULTI_A));
+        BOOST_CHECK_EQUAL(policy.nodes[2].value, 2U);
+        BOOST_CHECK(policy.nodes[2].keys == std::vector<size_t>({4, 5}));
+        BOOST_CHECK(std::get<Fragment>(policy.nodes[3].kind) == Fragment::AND_V);
+        BOOST_CHECK(std::get<Fragment>(policy.nodes[6].kind) == Fragment::PK_K);
+        BOOST_CHECK(policy.nodes[6].keys == std::vector<size_t>{6});
+        BOOST_CHECK(std::get<Fragment>(policy.nodes[7].kind) == Fragment::AFTER);
+        BOOST_CHECK_EQUAL(policy.nodes[7].value, 10U);
+        BOOST_CHECK(std::get<DescriptorKeyInfo::MuSigKey>(policy.keys.occurrences[0].expression.key).participants == std::vector<size_t>({1, 2}));
+    }
+    const auto single{InspectPolicy("tr(" + first + ",pk(" + second + "))", 2)};
+    BOOST_CHECK_EQUAL(std::get<DescriptorPolicy::TapLeaf>(single.nodes[0].children[0].role).depth, 0U);
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_policy_miniscript)
+{
+    using Fragment = miniscript::Fragment;
+    using Role = DescriptorPolicy::ChildRole;
+    const std::string first{"0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    const std::string second{"02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9"};
+    const std::string third{"03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd"};
+    const auto conditional{InspectPolicy("wsh(andor(pk(" + first + "),pk(" + second + "),pk(" + third + ")))", 8)};
+    BOOST_CHECK(std::get<Fragment>(conditional.nodes[1].kind) == Fragment::ANDOR);
+    BOOST_REQUIRE_EQUAL(conditional.nodes[1].children.size(), 3U);
+    const std::vector<Role> roles{Role::CONDITION, Role::IF_TRUE, Role::IF_FALSE};
+    for (size_t i = 0; i < 3; ++i) {
+        const auto& child{conditional.nodes[1].children[i]};
+        BOOST_CHECK_EQUAL(child.node, 2 + 2 * i);
+        BOOST_CHECK(std::get<Role>(child.role) == roles[i]);
+        BOOST_CHECK(std::get<Fragment>(conditional.nodes[child.node].kind) == Fragment::WRAP_C);
+        BOOST_CHECK(std::get<Role>(conditional.nodes[child.node].children[0].role) == Role::WRAPPED);
+        BOOST_CHECK(conditional.nodes[child.node + 1].keys == std::vector<size_t>{i});
+    }
+    const auto threshold{InspectPolicy("wsh(thresh(2,pk(" + first + "),s:pk(" + second + "),s:pk(" + third + ")))", 10)};
+    BOOST_CHECK(std::get<Fragment>(threshold.nodes[1].kind) == Fragment::THRESH);
+    BOOST_CHECK_EQUAL(threshold.nodes[1].value, 2U);
+    BOOST_REQUIRE_EQUAL(threshold.nodes[1].children.size(), 3U);
+    const std::vector<size_t> operands{2, 4, 7};
+    for (size_t i = 0; i < 3; ++i) {
+        BOOST_CHECK_EQUAL(threshold.nodes[1].children[i].node, operands[i]);
+        BOOST_CHECK(std::get<Role>(threshold.nodes[1].children[i].role) == Role::THRESHOLD_INPUT);
+    }
+
+    // Aliases expose the existing parsed operators, including constant operands.
+    const auto aliases{InspectPolicy("wsh(tv:or_i(pk(" + first + "),and_n(pk(" + second + "),pk(" + third + "))))", 13)};
+    const std::vector<Fragment> expected{
+        Fragment::AND_V,
+        Fragment::WRAP_V,
+        Fragment::OR_I,
+        Fragment::WRAP_C,
+        Fragment::PK_K,
+        Fragment::ANDOR,
+        Fragment::WRAP_C,
+        Fragment::PK_K,
+        Fragment::WRAP_C,
+        Fragment::PK_K,
+        Fragment::JUST_0,
+        Fragment::JUST_1,
+    };
+    BOOST_REQUIRE_EQUAL(aliases.nodes.size(), expected.size() + 1);
+    for (size_t i = 0; i < expected.size(); ++i)
+        BOOST_CHECK(std::get<Fragment>(aliases.nodes[i + 1].kind) == expected[i]);
+    BOOST_CHECK(std::get<Role>(aliases.nodes[1].children[0].role) == Role::LEFT);
+    BOOST_CHECK(std::get<Role>(aliases.nodes[1].children[1].role) == Role::RIGHT);
+    BOOST_CHECK(std::get<Role>(aliases.nodes[3].children[0].role) == Role::IF_TRUE);
+    BOOST_CHECK(std::get<Role>(aliases.nodes[3].children[1].role) == Role::IF_FALSE);
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_policy_data)
+{
+    using Fragment = miniscript::Fragment;
+    const std::string pubkey{"0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    for (const auto& [name, fragment] : std::vector<std::pair<std::string, Fragment>>{
+             {"sha256", Fragment::SHA256}, {"hash256", Fragment::HASH256}, {"ripemd160", Fragment::RIPEMD160}, {"hash160", Fragment::HASH160}}) {
+        const std::string hash{fragment == Fragment::SHA256 || fragment == Fragment::HASH256 ?
+                                   "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f" :
+                                   "000102030405060708090a0b0c0d0e0f10111213"};
+        const auto policy{InspectPolicy("wsh(and_v(v:pk(" + pubkey + "),and_v(v:" + name + "(" + hash + "),older(123))))", 9)};
+        bool found_hash{false}, found_time{false};
+        for (const auto& node : policy.nodes) {
+            if (const auto* kind = std::get_if<Fragment>(&node.kind)) {
+                if (*kind == fragment) {
+                    BOOST_CHECK(node.data == ParseHex(hash));
+                    found_hash = true;
+                } else if (*kind == Fragment::OLDER) {
+                    BOOST_CHECK_EQUAL(node.value, 123U);
+                    found_time = true;
+                }
+            }
+        }
+        BOOST_CHECK(found_hash && found_time);
+    }
+    for (const auto& [expression, bytes] : std::vector<std::pair<std::string, std::string>>{
+             {"raw(21" + pubkey + "ac)", "21" + pubkey + "ac"},
+             {"addr(1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa)", "76a914"
+                                                          "62e907b15cbf27d5425399ebf6f0fb50ebb88f18"
+                                                          "88ac"}}) {
+        auto policy{InspectPolicy(expression, 1)};
+        BOOST_REQUIRE_EQUAL(policy.nodes.size(), 1U);
+        BOOST_CHECK(std::get<DescriptorPolicy::Kind>(policy.nodes[0].kind) == (expression.starts_with("raw(") ? DescriptorPolicy::Kind::RAW : DescriptorPolicy::Kind::ADDR));
+        BOOST_CHECK(policy.nodes[0].data == ParseHex(bytes));
+        BOOST_CHECK(policy.nodes[0].keys.empty());
+        BOOST_CHECK(policy.nodes[0].children.empty());
+        BOOST_CHECK(policy.keys.occurrences.empty());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_policy_inferred_and_cloned)
+{
+    const std::string first{"0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    const std::string second{"02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9"};
+    FlatSigningProvider keys;
+    std::string error;
+    auto descriptors{Parse("wsh(and_v(v:pk([deadbeef/7]" + first + "),pk([abcdef01/8]" + second + ")))", keys, error)};
+    BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+    std::vector<CScript> scripts;
+    FlatSigningProvider expanded;
+    BOOST_REQUIRE(descriptors[0]->Expand(0, keys, scripts, expanded));
+    BOOST_REQUIRE_EQUAL(scripts.size(), 1U);
+    const auto inferred{InferDescriptor(scripts[0], expanded)};
+    BOOST_CHECK_EQUAL(inferred->GetMaxKeyExpr(), 0U);
+    for (const auto* descriptor : {descriptors[0].get(), inferred.get()}) {
+        auto policy{descriptor->GetPolicy()};
+        BOOST_REQUIRE_EQUAL(policy.nodes.size(), 7U);
+        CheckPolicy(policy);
+        std::vector<CPubKey> policy_order;
+        for (const auto& node : policy.nodes) {
+            if (const auto* fragment = std::get_if<miniscript::Fragment>(&node.kind); fragment && *fragment == miniscript::Fragment::PK_K) {
+                BOOST_REQUIRE_EQUAL(node.keys.size(), 1U);
+                const auto& key{policy.keys.occurrences[node.keys[0]].expression};
+                policy_order.push_back(std::get<DescriptorKeyInfo::ConstKey>(key.key).pubkey);
+                BOOST_REQUIRE(key.origin);
+                BOOST_CHECK(key.origin->path == std::vector<uint32_t>{policy_order.size() == 1 ? 7U : 8U});
+            }
+        }
+        // Inference stores providers in reverse script order. Policy operands must
+        // still refer to the correct key, without reindexing descriptor caches.
+        BOOST_CHECK(policy_order == std::vector<CPubKey>({CPubKey(ParseHex(first)), CPubKey(ParseHex(second))}));
+    }
+
+    const std::string xpub{"xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL"};
+    descriptors = Parse("tr([deadbeef/5]" + xpub + "/<0;1>/*,{pk(" + first + "),and_v(v:pk(" + second + "),after(10))})", keys, error);
+    BOOST_REQUIRE_MESSAGE(descriptors.size() == 2, error);
+    for (size_t branch = 0; branch < descriptors.size(); ++branch) {
+        auto policy{descriptors[branch]->GetPolicy()};
+        BOOST_REQUIRE_EQUAL(policy.nodes.size(), 7U);
+        CheckPolicy(policy);
+        BOOST_CHECK(std::get<DescriptorKeyInfo::BIP32Key>(policy.keys.occurrences[0].expression.key).derivation.path == std::vector<uint32_t>{static_cast<uint32_t>(branch)});
+        BOOST_CHECK_EQUAL(policy.nodes[0].children[0].node, 1U);
+        BOOST_CHECK_EQUAL(policy.nodes[0].children[1].node, 2U);
+        BOOST_CHECK(policy.nodes[1].keys == std::vector<size_t>{1});
+        BOOST_CHECK(policy.nodes[5].keys == std::vector<size_t>{2});
+        BOOST_CHECK_EQUAL(policy.nodes[6].value, 10U);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(descriptor_policy_large)
+{
+    const std::string pubkey{"0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"};
+    FlatSigningProvider keys;
+    std::string error;
+    for (const size_t depth : {1U, 3200U}) {
+        std::string expression;
+        for (size_t i = 0; i < depth; ++i)
+            expression += "and_v(v:after(1),";
+        expression += "pk(" + pubkey + ")";
+        expression.append(depth, ')');
+        auto descriptors{Parse("tr(" + pubkey + "," + expression + ")", keys, error)};
+        BOOST_REQUIRE_MESSAGE(descriptors.size() == 1, error);
+        const size_t nodes{3 * depth + 3};
+        auto policy{descriptors[0]->GetPolicy()};
+        BOOST_REQUIRE_EQUAL(policy.nodes.size(), nodes);
+        CheckPolicy(policy);
+        size_t edges{0}, key_refs{0};
+        for (const auto& node : policy.nodes) {
+            BOOST_CHECK(node.data.empty());
+            edges += node.children.size();
+            key_refs += node.keys.size();
+        }
+        // Local fields and links grow linearly; no repeated subtree expressions.
+        BOOST_CHECK_EQUAL(edges, nodes - 1);
+        BOOST_CHECK_EQUAL(key_refs, 2U);
+        BOOST_CHECK_EQUAL(policy.keys.occurrences.size(), 2U);
+    }
+
+    std::string tree{"pk(" + pubkey + ")"};
+    for (size_t i = 0; i < 10; ++i)
+        tree = "{" + tree + "," + tree + "}";
+    const auto policy{InspectPolicy("tr(" + pubkey + "," + tree + ")", 1025)};
+    BOOST_REQUIRE_EQUAL(policy.nodes.size(), 1025U);
+    BOOST_REQUIRE_EQUAL(policy.nodes[0].children.size(), 1024U);
+    for (size_t i = 0; i < 1024; ++i) {
+        const auto& child{policy.nodes[0].children[i]};
+        BOOST_CHECK_EQUAL(child.node, i + 1);
+        BOOST_CHECK_EQUAL(std::get<DescriptorPolicy::TapLeaf>(child.role).depth, 10U);
+        BOOST_CHECK(policy.nodes[child.node].keys == std::vector<size_t>{i + 1});
+    }
 }
 
 BOOST_AUTO_TEST_CASE(descriptor_literal_null_byte)
