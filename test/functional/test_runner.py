@@ -186,6 +186,7 @@ BASE_SCRIPTS = [
     'feature_bind_extra.py',
     'feature_maxtipage.py',
     'feature_csv_activation.py',
+    'feature_legacy_script.py',
     'feature_segwit.py --v2transport',
     'feature_segwit.py --v1transport',
     'mempool_resurrect.py',
