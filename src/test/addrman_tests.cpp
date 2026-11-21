@@ -454,6 +454,18 @@ BOOST_AUTO_TEST_CASE(addrman_new_multiplicity)
     BOOST_CHECK_EQUAL(addr_pos.multiplicity, 1U);
     BOOST_CHECK_EQUAL(addrman->Size(), 1U);
 
+    // the same holds if a time penalty is applied (e.g. when the same announcement
+    // is received from several peers due to addr gossip relay)
+    CAddress addr_penalty{CAddress(ResolveService("253.4.4.4", 8333), NODE_NONE)};
+    addr_penalty.nTime = start_time;
+    for (unsigned int i = 1; i < 20; ++i) {
+        CNetAddr source{ResolveIP(ToString(i) + ".2.2.2")};
+        addrman->Add({addr_penalty}, source, /*time_penalty=*/2h);
+    }
+    AddressPosition addr_pos_penalty = addrman->FindAddressEntry(addr_penalty).value();
+    BOOST_CHECK_EQUAL(addr_pos_penalty.multiplicity, 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(), 2U);
+
     // if nTime increases, an addr can occur in up to 8 buckets
     // The acceptance probability decreases exponentially with existing multiplicity -
     // choose number of iterations such that it gets to 8 with deterministic addrman.
@@ -466,7 +478,7 @@ BOOST_AUTO_TEST_CASE(addrman_new_multiplicity)
     AddressPosition addr_pos_multi = addrman->FindAddressEntry(addr).value();
     BOOST_CHECK_EQUAL(addr_pos_multi.multiplicity, 8U);
     // multiplicity doesn't affect size
-    BOOST_CHECK_EQUAL(addrman->Size(), 1U);
+    BOOST_CHECK_EQUAL(addrman->Size(), 2U);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_tried_collisions)
@@ -1258,6 +1270,43 @@ BOOST_AUTO_TEST_CASE(addrman_update_address)
     std::vector<CAddress> vAddr6{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt)};
     BOOST_CHECK_EQUAL(vAddr6.size(), 1U);
     BOOST_CHECK_EQUAL(vAddr6.at(0).nServices, NODE_NETWORK | NODE_P2P_V2);
+}
+
+BOOST_AUTO_TEST_CASE(addrman_update_time)
+{
+    // Tests updating nTime of an existing entry via Add()
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+    const auto stored_time{[&] {
+        const std::vector<CAddress> addrs{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt)};
+        BOOST_REQUIRE_EQUAL(addrs.size(), 1U);
+        return addrs.at(0).nTime;
+    }};
+    const auto time_penalty{2h};
+    const auto start_time{Now<NodeSeconds>() - 24h};
+
+    CAddress addr{CAddress(ResolveService("250.1.1.1", 8333), NODE_NONE)};
+    addr.nTime = start_time;
+    BOOST_CHECK(addrman->Add({addr}, ResolveIP("1.2.2.2"), time_penalty));
+    BOOST_CHECK(stored_time() == start_time - time_penalty);
+
+    // Receiving the same announcement from another peer doesn't change nTime
+    addrman->Add({addr}, ResolveIP("2.2.2.2"), time_penalty);
+    BOOST_CHECK(stored_time() == start_time - time_penalty);
+
+    // A newer announcement updates nTime
+    addr.nTime = start_time + 1s;
+    addrman->Add({addr}, ResolveIP("3.2.2.2"), time_penalty);
+    BOOST_CHECK(stored_time() == start_time + 1s - time_penalty);
+
+    // An older announcement doesn't decrease nTime
+    CAddress addr_old{addr};
+    addr_old.nTime = start_time - 10h;
+    BOOST_CHECK(!addrman->Add({addr_old}, ResolveIP("4.2.2.2"), time_penalty));
+    BOOST_CHECK(stored_time() == start_time + 1s - time_penalty);
+
+    // No penalty is applied to a self-announcement
+    addrman->Add({addr}, addr, time_penalty);
+    BOOST_CHECK(stored_time() == start_time + 1s);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_size)
