@@ -27,9 +27,7 @@ static inline CTransactionRef make_tx(const std::vector<CTransactionRef>& inputs
         tx.vin[i].prevout.hash = inputs[i]->GetHash();
         tx.vin[i].prevout.n = 0;
         // Add a witness so wtxid != txid
-        CScriptWitness witness;
-        witness.stack.emplace_back(i + 10);
-        tx.vin[i].scriptWitness = witness;
+        tx.vin[i].scriptWitness = CScriptWitness{{std::vector<unsigned char>(i + 10)}};
     }
     for (size_t i = 0; i < output_values.size(); ++i) {
         tx.vout[i].scriptPubKey = CScript() << OP_11 << OP_EQUAL;

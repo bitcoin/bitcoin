@@ -32,8 +32,7 @@ static CTransactionRef MakeDummyTx(uint32_t id, size_t num_witness)
     mtx.vin.resize(1);
     mtx.vin[0].nSequence = id;
     if (num_witness > 0) {
-        mtx.vin[0].scriptWitness = CScriptWitness{};
-        mtx.vin[0].scriptWitness.stack.resize(num_witness);
+        mtx.vin[0].scriptWitness = CScriptWitness{std::vector<std::vector<unsigned char>>(num_witness)};
     }
     return MakeTransactionRef(mtx);
 }
