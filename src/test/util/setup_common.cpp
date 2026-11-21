@@ -273,7 +273,13 @@ BasicTestingSetup::~BasicTestingSetup()
 ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
     : BasicTestingSetup(chainType, opts)
 {
-    const CChainParams& chainparams = Params();
+    if (opts.snapshot_commitment) {
+        struct SnapshotParams : CChainParams {
+            SnapshotParams(const CChainParams& params, const AssumeutxoData& snapshot) : CChainParams{params} { m_assumeutxo_data = {snapshot}; }
+        };
+        m_chainparams = std::make_unique<const CChainParams>(SnapshotParams{Params(), *opts.snapshot_commitment});
+    }
+    const CChainParams& chainparams = m_chainparams ? *m_chainparams : Params();
 
     // A task runner is required to prevent ActivateBestChain
     // from blocking due to queue overrun.
@@ -421,10 +427,20 @@ TestingSetup::TestingSetup(
     }
 }
 
+const AssumeutxoData TestChain100Setup::SNAPSHOT_DATA{
+    .height = 110,
+    .hash_serialized = AssumeutxoHash{uint256{"86e9a1205b418b16dde3a18a78c730e30137e28466bda5dbf6b33ab8fc05447c"}},
+    .m_chain_tx_count = 111,
+    .blockhash = uint256{"135eec25a6fb277884e5824e7aa7d052c4868161c99a5122170b5266f86c273d"},
+};
+
 TestChain100Setup::TestChain100Setup(
     const ChainType chain_type,
     TestOpts opts)
-    : TestingSetup{ChainType::REGTEST, opts}
+    : TestingSetup{ChainType::REGTEST, [&] {
+          if (!opts.snapshot_commitment) opts.snapshot_commitment = SNAPSHOT_DATA;
+          return opts;
+      }()}
 {
     constexpr std::array<unsigned char, 32> vchKey = {
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}};

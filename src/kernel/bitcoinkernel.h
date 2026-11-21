@@ -361,6 +361,7 @@ typedef uint8_t btck_SynchronizationState;
 typedef uint8_t btck_Warning;
 #define btck_Warning_UNKNOWN_NEW_RULES_ACTIVATED ((btck_Warning)(0))
 #define btck_Warning_LARGE_WORK_INVALID_CHAIN ((btck_Warning)(1))
+#define btck_Warning_ASSUMEUTXO_CHECK_FAILED ((btck_Warning)(2))
 
 /**
  * A collection of logging categories that may be encountered by kernel code.
