@@ -14,8 +14,6 @@ BITCOIND_CONFIGFILE=${BITCOIND_CONFIGFILE:-/etc/bitcoin/bitcoin.conf}
 BITCOIND_PIDDIR=${BITCOIND_PIDDIR:-/run/bitcoind}
 BITCOIND_PIDFILE=${BITCOIND_PIDFILE:-${BITCOIND_PIDDIR}/bitcoind.pid}
 BITCOIND_DATADIR=${BITCOIND_DATADIR:-${BITCOIND_DEFAULT_DATADIR}}
-BITCOIND_USER=${BITCOIND_USER:-${BITCOIN_USER:-bitcoin}}
-BITCOIND_GROUP=${BITCOIND_GROUP:-bitcoin}
 BITCOIND_BIN=${BITCOIND_BIN:-/usr/bin/bitcoind}
 
 name="Bitcoin Core Daemon"
@@ -27,11 +25,10 @@ command_args="-pid=\"${BITCOIND_PIDFILE}\" \
 		-datadir=\"${BITCOIND_DATADIR}\" \
 		-daemon \
 		${BITCOIND_OPTS:-${BITCOIN_OPTS}}"
+command_user="${BITCOIND_USER:-bitcoin}:${BITCOIND_GROUP:-bitcoin}"
 
 required_files="${BITCOIND_CONFIGFILE}"
-start_stop_daemon_args="-u ${BITCOIND_USER} \
-			-g ${BITCOIND_GROUP} \
-			-w 2000"
+start_stop_daemon_args="--wait 2000"
 pidfile="${BITCOIND_PIDFILE}"
 
 # The retry schedule to use when stopping the daemon. Could be either
@@ -52,17 +49,17 @@ start_pre() {
 	checkpath \
 	-d \
 	--mode 0750 \
-	--owner "${BITCOIND_USER}:${BITCOIND_GROUP}" \
+	--owner ${command_user} \
 	"${BITCOIND_DATADIR}"
 
 	checkpath \
 	-d \
 	--mode 0755 \
-	--owner "${BITCOIND_USER}:${BITCOIND_GROUP}" \
+	--owner ${command_user} \
 	"${BITCOIND_PIDDIR}"
 
 	checkpath -f \
-	-o "${BITCOIND_USER}:${BITCOIND_GROUP}" \
+	--owner ${command_user} \
 	-m 0660 \
 	"${BITCOIND_CONFIGFILE}"
 
