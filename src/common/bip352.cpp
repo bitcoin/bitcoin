@@ -14,9 +14,7 @@
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/script.h>
-#include <script/sign.h>
 #include <script/solver.h>
-#include <script/verify_flags.h>
 #include <secp256k1.h>
 #include <secp256k1_extrakeys.h>
 #include <secp256k1_silentpayments.h>
@@ -207,16 +205,11 @@ std::optional<PubKey> GetPubKeyFromInput(const CTxIn& txin, const CScript& spk)
     }
 
     if (type == TxoutType::SCRIPTHASH) {
-        // P2SH-P2WPKH only: eval scriptSig, verify redeem script is P2WPKH. Unlike P2PKH above,
-        // evaluating is safe here, as consensus (BIP-141) requires the scriptSig to be a single
-        // push of the redeem script.
-        std::vector<std::vector<unsigned char>> stack;
-        if (!EvalScript(stack, txin.scriptSig, SCRIPT_VERIFY_NONE, DUMMY_CHECKER, SigVersion::BASE)) {
-            return std::nullopt;
-        }
-        if (stack.empty()) return std::nullopt;
-        CScript redeem{stack.back().begin(), stack.back().end()};
-        if (Solver(redeem, solutions) != TxoutType::WITNESS_V0_KEYHASH) return std::nullopt;
+        // P2SH-P2WPKH only.
+        const CScript& script_sig{txin.scriptSig};
+        // A single direct push: the first byte is the length of the rest of the scriptSig.
+        if (script_sig.empty() || script_sig[0] != script_sig.size() - 1) return std::nullopt;
+        if (!CScript{script_sig.begin() + 1, script_sig.end()}.IsPayToWitnessPubKeyHash()) return std::nullopt;
         if (txin.scriptWitness.stack.empty()) return std::nullopt;
         CPubKey key{txin.scriptWitness.stack.back()};
         if (!key.IsCompressed() || !key.IsFullyValid()) return std::nullopt;

@@ -544,6 +544,7 @@ public:
     static bool IsPayToAnchor(int version, const std::vector<unsigned char>& program);
 
     bool IsPayToScriptHash() const;
+    bool IsPayToWitnessPubKeyHash() const;
     bool IsPayToWitnessScriptHash() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
