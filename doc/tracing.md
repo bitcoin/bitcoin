@@ -476,3 +476,21 @@ b'net':b'outbound_message' [sema 0xd29bd0]
   6 argument(s)
 …
 ```
+
+## Testing tracepoints
+
+The `interface_usdt_*` functional tests use GDB with Python and SystemTap probe
+support, plus `readelf` from binutils. Build with `-DWITH_USDT=ON`, then run:
+
+```sh
+build/test/functional/test_runner.py --filter=interface_usdt
+```
+
+GDB launches each tested node as its child, enables probe semaphores, and copies
+probe arguments before resuming execution. These tests run as an ordinary user
+without BCC, BPF permissions, or kernel headers. The build still needs the USDT
+headers described above. Containers must allow child tracing, for example with
+`--cap-add SYS_PTRACE` in Docker.
+
+LeakSanitizer leak checks are disabled only for the traced nodes because LSan
+cannot run under ptrace. Other sanitizer checks remain enabled.
