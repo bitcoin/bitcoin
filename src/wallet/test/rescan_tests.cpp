@@ -226,7 +226,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_reorged_block, TestChain100
         BOOST_CHECK_EQUAL(result.last_failed_block, stale_hash);
         BOOST_CHECK(result.last_scanned_block.IsNull());
         BOOST_CHECK(!result.last_scanned_height);
-        BOOST_CHECK(WITH_LOCK(wallet.cs_wallet, return wallet.mapWallet.empty()));
+        BOOST_CHECK(WITH_LOCK(wallet.cs_wallet, return wallet.m_txs.empty()));
     }
 
     // Prune the stale block's file — the block is now not active AND unreadable.
@@ -254,7 +254,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_reorged_block, TestChain100
         BOOST_CHECK_EQUAL(result.last_failed_block, stale_hash);
         BOOST_CHECK(result.last_scanned_block.IsNull());
         BOOST_CHECK(!result.last_scanned_height);
-        BOOST_CHECK(WITH_LOCK(wallet.cs_wallet, return wallet.mapWallet.empty()));
+        BOOST_CHECK(WITH_LOCK(wallet.cs_wallet, return wallet.m_txs.empty()));
     }
 
     StopIndex(filter_index, m_node);
@@ -355,7 +355,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_bounded, TestChain100Setup)
         BOOST_CHECK_EQUAL(result.last_scanned_block, max_hash);
         BOOST_CHECK_EQUAL(*result.last_scanned_height, max_height);
         // One coinbase per block from height 1 through max_height.
-        BOOST_CHECK_EQUAL(WITH_LOCK(wallet.cs_wallet, return wallet.mapWallet.size()), static_cast<size_t>(max_height));
+        BOOST_CHECK_EQUAL(WITH_LOCK(wallet.cs_wallet, return wallet.m_txs.size()), static_cast<size_t>(max_height));
     }
 
     // A single-block range (start == max_height == tip) scans exactly that
@@ -375,7 +375,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_bounded, TestChain100Setup)
         BOOST_CHECK(result.last_failed_block.IsNull());
         BOOST_CHECK_EQUAL(result.last_scanned_block, tip_hash);
         BOOST_CHECK_EQUAL(*result.last_scanned_height, tip_height);
-        BOOST_CHECK_EQUAL(WITH_LOCK(wallet.cs_wallet, return wallet.mapWallet.size()), 1U);
+        BOOST_CHECK_EQUAL(WITH_LOCK(wallet.cs_wallet, return wallet.m_txs.size()), 1U);
     }
 }
 
@@ -541,7 +541,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_missing_filter, TestChain10
         BOOST_CHECK_EQUAL(result.last_scanned_block, tip_hash);
         BOOST_CHECK_EQUAL(*result.last_scanned_height, tip_height);
         // One coinbase per block from height 1 through the tip.
-        BOOST_CHECK_EQUAL(WITH_LOCK(wallet.cs_wallet, return wallet.mapWallet.size()), static_cast<size_t>(tip_height));
+        BOOST_CHECK_EQUAL(WITH_LOCK(wallet.cs_wallet, return wallet.m_txs.size()), static_cast<size_t>(tip_height));
     }
 
     StopIndex(filter_index, m_node);
@@ -587,7 +587,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_attach_chain, TestChain100S
         BOOST_CHECK_EQUAL(wallet->GetLastBlockHash(), tip_hash);
         // The extension's coinbases plus the one of the recorded best block:
         // the load rescan starts mid-chain, at that block inclusive.
-        BOOST_CHECK_EQUAL(wallet->mapWallet.size(), static_cast<size_t>(NEW_BLOCKS + 1));
+        BOOST_CHECK_EQUAL(wallet->m_txs.size(), static_cast<size_t>(NEW_BLOCKS + 1));
     }
     TestUnloadWallet(std::move(wallet));
 }
