@@ -66,6 +66,8 @@ export PREVIOUS_RELEASES_DIR=${PREVIOUS_RELEASES_DIR:-$BASE_ROOT_DIR/prev_releas
 export CI_BASE_PACKAGES=${CI_BASE_PACKAGES:-build-essential pkgconf curl ca-certificates ccache python3-dev rsync git procps bison e2fsprogs cmake ninja-build}
 export BUILD_TARGETS=${BUILD_TARGETS:-"all install"}
 export DIR_QA_ASSETS=${DIR_QA_ASSETS:-${BASE_SCRATCH_DIR}/qa-assets}
+export QA_ASSETS_DIR=${QA_ASSETS_DIR:-}
+export QA_ASSETS_REVISION=${QA_ASSETS_REVISION:-}
 export CI_RETRY_EXE=${CI_RETRY_EXE:-"retry"}
 
 # The --platform argument used with `docker build` and `docker run`.

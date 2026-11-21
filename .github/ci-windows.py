@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent / "test"))
-from download_utils import download_script_assets
+from download_utils import download_fuzz_assets, download_script_assets
 
 
 def run(cmd, **kwargs):
@@ -147,17 +147,7 @@ def prepare_tests(ci_type):
         dest = workspace / "unit_test_data"
         download_script_assets(dest)
     elif ci_type == "fuzz":
-        repo_dir = str(workspace / "qa-assets")
-        clone_cmd = [
-            "git",
-            "clone",
-            "--depth=1",
-            "https://github.com/bitcoin-core/qa-assets",
-            repo_dir,
-        ]
-        run(clone_cmd)
-        print("Using qa-assets repo from commit ...")
-        run(["git", "-C", repo_dir, "log", "-1"])
+        download_fuzz_assets(workspace / "qa-assets")
 
 
 def run_tests(ci_type):

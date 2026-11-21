@@ -105,6 +105,7 @@ jobs:
 
   macos-native-arm64:
     name: ${{ matrix.job-name }}
+    needs: test-assets
     # Use any image to support the xcode-select below, but hardcode version to avoid silent upgrades (and breaks).
     # See: https://github.com/actions/runner-images#available-images.
     runs-on: macos-15
@@ -143,6 +144,13 @@ jobs:
         with:
           # Ensure the latest merged pull request state is used, even on re-runs.
           ref: &CHECKOUT_REF_TMPL ${{ github.event_name == 'pull_request' && github.ref || '' }}
+
+      - &RESTORE_TEST_ASSETS
+        name: Restore shared test inputs
+        uses: ./.github/actions/restore-test-assets
+        with:
+          kind: ${{ (matrix.job-type == 'fuzz' || contains(matrix.file-env, 'fuzz')) && 'fuzz_corpora' || 'unit_test_data' }}
+          revision: ${{ needs.test-assets.outputs.revision }}
 
       - name: Clang version
         run: |
@@ -193,6 +201,7 @@ jobs:
 
   windows-native-dll:
     name: ${{ matrix.job-name }}
+    needs: test-assets
     runs-on: windows-2025-vs2026
 
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
@@ -219,6 +228,8 @@ jobs:
       - &IMPORT_VS_ENV
         name: Import Visual Studio env vars
         run: py -3 .github/ci-windows.py "standard" github_import_vs_env
+
+      - *RESTORE_TEST_ASSETS
 
       - name: Get tool information
         run: |
@@ -355,7 +366,7 @@ jobs:
   windows-native-test:
     name: 'Windows, test cross-built'
     runs-on: windows-2022
-    needs: [windows-cross, record-frozen-commit]
+    needs: [windows-cross, record-frozen-commit, test-assets]
 
     env:
       PYTHONUTF8: 1
@@ -373,6 +384,8 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: x86_64-w64-mingw32ucrt-executables-${{ github.run_id }}
+
+      - *RESTORE_TEST_ASSETS
 
       - name: Run bitcoind.exe
         run: py -3 .github/ci-windows-cross.py print_version
@@ -399,6 +412,7 @@ jobs:
 
   ci-matrix:
     name: ${{ matrix.name }}
+    needs: test-assets
     runs-on: ${{ github.repository == 'bitcoin/bitcoin' && matrix.warp-runner || matrix.fallback-runner }}
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
     timeout-minutes: ${{ matrix.timeout-minutes }}
@@ -547,6 +561,8 @@ jobs:
         if: ${{ github.repository != 'bitcoin/bitcoin' || matrix.provider == 'gha' }} # Only needed on GHA runners
         uses: ./.github/actions/clear-files
 
+      - *RESTORE_TEST_ASSETS
+
       - name: Enable bpfcc script
         if: ${{ env.CONTAINER_NAME == 'ci_native_asan' }}
         # In the image build step, no external environment variables are available,
@@ -565,6 +581,58 @@ jobs:
         uses: ./.github/actions/cache/save
         with:
           provider: ${{ matrix.provider || (github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha') }}
+
+  test-assets:
+    name: Shared test inputs
+    needs: record-frozen-commit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+    timeout-minutes: 30
+    outputs:
+      revision: ${{ steps.prepare.outputs.revision }}
+    steps:
+      - *ANNOTATION_PR_NUMBER
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.record-frozen-commit.outputs.commit }}
+          persist-credentials: false
+      - name: Acquire qa-assets once
+        uses: actions/checkout@v6
+        with:
+          repository: bitcoin-core/qa-assets
+          path: qa-assets-inputs
+          persist-credentials: false
+          sparse-checkout: |
+            unit_test_data
+            fuzz_corpora
+      - name: Prepare shared inputs
+        id: prepare
+        run: |
+          echo "revision=$(git -C qa-assets-inputs rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          # Keep the many small corpus files out of the artifact ZIP extractor.
+          for kind in unit_test_data fuzz_corpora; do
+            python3 test/download_utils.py prepare qa-assets-inputs "$kind"
+            tar -cf "$RUNNER_TEMP/$kind.tar" -C qa-assets-inputs "$kind"
+          done
+      - name: Share unit inputs
+        uses: actions/upload-artifact@v7
+        with:
+          name: qa-assets-unit_test_data
+          path: ${{ runner.temp }}/unit_test_data.tar
+          overwrite: true
+          if-no-files-found: error
+          retention-days: 3
+      - name: Share fuzz inputs
+        uses: actions/upload-artifact@v7
+        with:
+          name: qa-assets-fuzz_corpora
+          path: ${{ runner.temp }}/fuzz_corpora.tar
+          overwrite: true
+          if-no-files-found: error
+          retention-days: 3
 
   lint:
     name: 'lint'
