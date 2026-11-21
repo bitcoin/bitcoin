@@ -429,8 +429,9 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     std::unique_ptr<node::TxOrphanage> orphanage{node::MakeTxOrphanage()};
     CKey key;
     MakeNewKeyWithFastRandomContext(key, m_rng);
-    FillableSigningProvider keystore;
-    BOOST_CHECK(keystore.AddKey(key));
+    FlatSigningProvider keystore;
+    BOOST_CHECK(keystore.keys.emplace(key.GetPubKey().GetID(), key).second);
+    BOOST_CHECK(keystore.pubkeys.emplace(key.GetPubKey().GetID(), key.GetPubKey()).second);
 
     FakeNodeClock clock{};
 
