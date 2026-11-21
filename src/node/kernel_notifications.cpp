@@ -104,7 +104,7 @@ std::optional<uint256> KernelNotifications::TipBlock()
 {
     AssertLockHeld(m_tip_block_mutex);
     return m_state.tip_block;
-};
+}
 
 
 void ReadNotificationArgs(const ArgsManager& args, KernelNotifications& notifications)

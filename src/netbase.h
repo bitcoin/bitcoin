@@ -157,7 +157,7 @@ private:
             NET_CJDNS,
             NET_INTERNAL
         };
-    };
+    }
 
     mutable Mutex m_mutex;
     std::unordered_set<Network> m_reachable GUARDED_BY(m_mutex){DefaultNets()};

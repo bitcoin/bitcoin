@@ -27,7 +27,7 @@ struct ImportError {
     ImportError(WalletErrorCode r, bilingual_str e, bool is_wallet_error)
         : wallet_error{r, std::move(e)},
         is_general_error{is_wallet_error}
-    {};
+    {}
 };
 
 struct ImportResult {

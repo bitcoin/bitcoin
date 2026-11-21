@@ -117,7 +117,7 @@ static void CheckValues(const common::Settings& settings, const std::string& sin
     }
     BOOST_CHECK_EQUAL(single_value.write().c_str(), single_val);
     BOOST_CHECK_EQUAL(list_value.write().c_str(), list_val);
-};
+}
 
 // Simple settings merge test case.
 BOOST_AUTO_TEST_CASE(Simple)

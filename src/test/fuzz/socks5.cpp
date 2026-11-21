@@ -20,7 +20,7 @@ extern std::chrono::milliseconds g_socks5_recv_timeout;
 
 namespace {
 decltype(g_socks5_recv_timeout) default_socks5_recv_timeout;
-};
+}
 
 void initialize_socks5()
 {
