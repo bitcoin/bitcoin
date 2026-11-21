@@ -5,6 +5,7 @@
 #include <core_io.h>
 #include <interfaces/chain.h>
 #include <node/context.h>
+#include <policy/feerate.h>
 #include <rpc/blockchain.h>
 #include <rpc/client.h>
 #include <rpc/server.h>
@@ -13,12 +14,20 @@
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <univalue.h>
+#include <util/check.h>
 #include <util/time.h>
 
 #include <any>
 #include <string_view>
 
 #include <boost/test/unit_test.hpp>
+
+#ifndef WIN32
+#include <cerrno>
+#include <csignal>
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
 
 using util::SplitString;
 
@@ -303,6 +312,56 @@ BOOST_AUTO_TEST_CASE(rpc_format_monetary_values)
     BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::min() + 2).write(), "-92233720368.54775806");
     BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::min() + 1).write(), "-92233720368.54775807");
     BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::min()).write(), "-92233720368.54775808");
+}
+
+BOOST_AUTO_TEST_CASE(rpc_format_feerate_values)
+{
+
+    const auto write_as_btc_kvb = [](const CFeeRate& rate) {
+        return ValueFromFeeRate(rate, FeeRateFormat::BTC_KVB).write();
+    };
+    const auto write_as_sat_vb = [](const CFeeRate& rate) {
+        return ValueFromFeeRate(rate, FeeRateFormat::SAT_VB).write();
+    };
+
+    // 1 sat/kvB
+    BOOST_CHECK_EQUAL(write_as_btc_kvb(CFeeRate{1}), "0.00000001");
+    BOOST_CHECK_EQUAL(write_as_sat_vb(CFeeRate{1}), "0.001");
+    BOOST_CHECK_EQUAL(write_as_btc_kvb(CFeeRate{-1}), "-0.00000001");
+    BOOST_CHECK_EQUAL(write_as_sat_vb(CFeeRate{-1}), "-0.001");
+    // 1 sat/vb
+    BOOST_CHECK_EQUAL(write_as_btc_kvb(CFeeRate{1, 1}), "0.00001000");
+    BOOST_CHECK_EQUAL(write_as_sat_vb(CFeeRate{1, 1}), "1.000");
+    BOOST_CHECK_EQUAL(write_as_btc_kvb(CFeeRate{-1, 1}), "-0.00001000");
+    BOOST_CHECK_EQUAL(write_as_sat_vb(CFeeRate{-1, 1}), "-1.000");
+
+    // (COIN + 1) sat/kvB
+    BOOST_CHECK_EQUAL(write_as_btc_kvb(CFeeRate{COIN + 1}), "1.00000001");
+    BOOST_CHECK_EQUAL(write_as_sat_vb(CFeeRate{COIN + 1}), "100000.001");
+    BOOST_CHECK_EQUAL(write_as_btc_kvb(CFeeRate{-COIN - 1}), "-1.00000001");
+    BOOST_CHECK_EQUAL(write_as_sat_vb(CFeeRate{-COIN - 1}), "-100000.001");
+    // (COIN + 1) sat/vB
+    BOOST_CHECK_EQUAL(write_as_btc_kvb(CFeeRate{COIN + 1, 1}), "1000.00001000");
+    BOOST_CHECK_EQUAL(write_as_sat_vb(CFeeRate{COIN + 1, 1}), "100000001.000");
+    BOOST_CHECK_EQUAL(write_as_btc_kvb(CFeeRate{-COIN - 1, 1}), "-1000.00001000");
+    BOOST_CHECK_EQUAL(write_as_sat_vb(CFeeRate{-COIN - 1, 1}), "-100000001.000");
+
+    // MAX_MONEY sat/kvB
+    BOOST_CHECK_EQUAL(write_as_btc_kvb(CFeeRate{MAX_MONEY}), "21000000.00000000");
+    BOOST_CHECK_EQUAL(write_as_sat_vb(CFeeRate{MAX_MONEY}), "2100000000000.000");
+    BOOST_CHECK_EQUAL(write_as_btc_kvb(CFeeRate{-MAX_MONEY}), "-21000000.00000000");
+    BOOST_CHECK_EQUAL(write_as_sat_vb(CFeeRate{-MAX_MONEY}), "-2100000000000.000");
+    // MAX_MONEY sat/vB
+    BOOST_CHECK_EQUAL(write_as_btc_kvb(CFeeRate{MAX_MONEY, 1}), "21000000000.00000000");
+    BOOST_CHECK_EQUAL(write_as_sat_vb(CFeeRate{MAX_MONEY, 1}), "2100000000000000.000");
+    BOOST_CHECK_EQUAL(write_as_btc_kvb(CFeeRate{-MAX_MONEY, 1}), "-21000000000.00000000");
+    BOOST_CHECK_EQUAL(write_as_sat_vb(CFeeRate{-MAX_MONEY, 1}), "-2100000000000000.000");
+
+    // Rounding down
+    BOOST_CHECK_EQUAL(write_as_btc_kvb(CFeeRate{1, 1001}), "0.00000000");
+    BOOST_CHECK_EQUAL(write_as_sat_vb(CFeeRate{1, 1001}), "0.000");
+    BOOST_CHECK_EQUAL(write_as_btc_kvb(CFeeRate{2, 1001}), "0.00000001");
+    BOOST_CHECK_EQUAL(write_as_sat_vb(CFeeRate{2, 1001}), "0.001");
 }
 
 static UniValue ValueFromString(const std::string& str) noexcept

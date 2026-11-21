@@ -61,6 +61,9 @@ extern const std::string UNIX_EPOCH_TIME;
  */
 extern const std::string EXAMPLE_ADDRESS[2];
 
+/// Default for RPCs that accept the "sat_vb" boolean option.
+inline constexpr bool DEFAULT_SAT_VB{false};
+
 struct Sections;
 
 struct HelpResult : std::runtime_error {
