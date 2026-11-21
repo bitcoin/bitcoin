@@ -66,9 +66,11 @@ Descriptors consist of several types of expressions. The top level expression is
 - `multi_a(k,KEY_1,KEY_2,...,KEY_N)` (only inside `tr`): k-of-n multisig script using OP_CHECKSIG, OP_CHECKSIGADD, and OP_NUMEQUAL, defined in [BIP 387](https://github.com/bitcoin/bips/blob/master/bip-0387.mediawiki).
 - `sortedmulti_a(k,KEY_1,KEY_2,...,KEY_N)` (only inside `tr`): similar to `multi_a`, but the (x-only) public keys in it will be sorted lexicographically, defined in [BIP 387](https://github.com/bitcoin/bips/blob/master/bip-0387.mediawiki).
 - `tr(KEY)` or `tr(KEY,TREE)` (top level only): P2TR output with the specified key as internal key, and optionally a tree of script paths, defined in [BIP 386](https://github.com/bitcoin/bips/blob/master/bip-0386.mediawiki).
+- `cisa(KEY)` or `cisa(KEY,TREE)` (top level only): like `tr`, but with a witness version 2 output ([BIP 460](https://github.com/bitcoin/bips/pull/2212)). Everything allowed inside `tr` is allowed inside `cisa`.
 - `addr(ADDR)` (top level only): the script which ADDR expands to, defined in [BIP 385](https://github.com/bitcoin/bips/blob/master/bip-0385.mediawiki).
 - `raw(HEX)` (top level only): the script whose hex encoding is HEX, defined in [BIP 385](https://github.com/bitcoin/bips/blob/master/bip-0385.mediawiki).
 - `rawtr(KEY)` (top level only): P2TR output with the specified key as output key. NOTE: while it's possible to use this to construct wallets, it has several downsides, like being unable to prove no hidden script path exists. Use at your own risk.
+- `rawcisa(KEY)` (top level only): like `rawtr`, but with a witness version 2 output.
 - The miniscript expressions `0`, `1`, `pk_k(KEY)`, `pk_h(KEY)`, `older(k)`, `after(k)`, `sha256(HEX)`, `hash256(HEX)`, `ripemd160(HEX)`, `hash160(HEX)`, `andor(SCRIPT,SCRIPT,SCRIPT)`, `and_v(SCRIPT,SCRIPT)`, `and_b(SCRIPT,SCRIPT)`, `and_n(SCRIPT,SCRIPT)`, `or_b(SCRIPT,SCRIPT)`, `or_c(SCRIPT,SCRIPT)`, `or_d(SCRIPT,SCRIPT)`, `or_i(SCRIPT,SCRIPT)`, `thresh(k,SCRIPT,SCRIPT,...)`, `a:SCRIPT`, `s:SCRIPT`, `c:SCRIPT`, `t:SCRIPT`, `d:SCRIPT`, `v:SCRIPT`, `j:SCRIPT`, `n:SCRIPT`, `l:SCRIPT`, and `u:SCRIPT`, all only inside `wsh()` and `tr()`. Various rules apply that control how these can be combined. For details, see [BIP 379](https://github.com/bitcoin/bips/blob/master/bip-0379.md).
 
 `KEY` expressions, defined in [BIP 380](https://github.com/bitcoin/bips/blob/master/bip-0380.mediawiki):
@@ -80,7 +82,7 @@ Descriptors consist of several types of expressions. The top level expression is
 - Followed by the actual key, which is either:
   - Hex encoded public keys (either 66 characters starting with `02` or `03` for a compressed pubkey, or 130 characters starting with `04` for an uncompressed pubkey).
     - Inside `wpkh` and `wsh`, only compressed public keys are permitted.
-    - Inside `tr` and `rawtr`, x-only pubkeys are also permitted (64 hex characters).
+    - Inside `tr`, `rawtr`, `cisa` and `rawcisa`, x-only pubkeys are also permitted (64 hex characters).
   - [WIF](https://en.bitcoin.it/wiki/Wallet_import_format) encoded private keys may be specified instead of the corresponding public key, with the same meaning.
   - `xpub` encoded extended public key or `xprv` encoded extended private key (as defined in [BIP 32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)).
     - Followed by zero or more `/NUM` unhardened and `/NUM'` hardened BIP32 derivation steps.

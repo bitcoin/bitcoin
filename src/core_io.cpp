@@ -349,6 +349,25 @@ std::string SighashToStr(int32_t sighash_type)
     return it->second;
 }
 
+std::string CISAModeToStr(uint8_t mode)
+{
+    switch (mode) {
+    case 0: return "optout";
+    case CISA_MARKER_HALFAGG: return "halfagg";
+    case CISA_MARKER_FULLAGG: return "fullagg";
+    }
+    return "";
+}
+
+util::Result<uint8_t> CISAModeFromStr(const std::string& mode)
+{
+    static constexpr uint8_t modes[]{0, CISA_MARKER_HALFAGG, CISA_MARKER_FULLAGG};
+    for (const uint8_t value : modes) {
+        if (CISAModeToStr(value) == mode) return value;
+    }
+    return util::Error{Untranslated("'" + mode + "' is not a valid aggregation mode.")};
+}
+
 /**
  * Create the assembly string representation of a CScript object.
  * @param[in] script    CScript object to convert into the asm string representation.
