@@ -35,7 +35,7 @@ inline constexpr DatabaseFormat DATABASE_FORMATS[] = {
 
 inline const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj";
 
-std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cchain, const CKey& key);
+std::shared_ptr<CWallet> CreateSyncedWallet(WalletContext& chain, const CKey& key);
 
 void AddKey(CWallet& wallet, const CKey& key);
 
