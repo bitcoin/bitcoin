@@ -22,18 +22,13 @@ const CAmount high_fee{CENT/10}; // 100_000 ṩ
 
 static inline CTransactionRef make_tx(const std::vector<COutPoint>& inputs, size_t num_outputs)
 {
-    CMutableTransaction tx = CMutableTransaction();
-    tx.vin.resize(inputs.size());
-    tx.vout.resize(num_outputs);
-    for (size_t i = 0; i < inputs.size(); ++i) {
-        tx.vin[i].prevout = inputs[i];
+    CMutableTransaction tx;
+    for (const auto& input : inputs) {
+        tx.vin.emplace_back(input);
     }
-    for (size_t i = 0; i < num_outputs; ++i) {
-        tx.vout[i].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
-        // The actual input and output values of these transactions don't really
-        // matter, since all accounting will use the entries' cached fees.
-        tx.vout[i].nValue = COIN;
-    }
+    // The actual input and output values of these transactions don't really
+    // matter, since all accounting will use the entries' cached fees.
+    tx.vout.assign(num_outputs, CTxOut{COIN, CScript{} << OP_11 << OP_EQUAL});
     return MakeTransactionRef(tx);
 }
 
