@@ -22,6 +22,7 @@ bugprone-unused-raii,
 bugprone-unused-return-value,
 bugprone-use-after-move,
 bugprone-virtual-near-miss,
+clang-analyzer-optin.performance.Padding,
 fuchsia-header-anon-namespaces,
 misc-definitions-in-headers,
 misc-no-recursion,
@@ -61,3 +62,5 @@ CheckOptions:
    value: '^::std::error_code$;^::std::error_condition$;^::std::errc$;^::std::expected$;^::util::Result$;^::util::Expected$'
  - key: bugprone-unused-return-value.AllowCastToVoid
    value: true  # Can be removed with C++26 once the _ placeholder exists.
+ - key: clang-analyzer-optin.performance.Padding:AllowedPad
+   value: 23  # Warn when reordering would save 24 or more bytes of padding.
