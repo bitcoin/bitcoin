@@ -19,6 +19,9 @@
 #include <span>
 #include <vector>
 
+struct secp256k1_context_struct;
+typedef struct secp256k1_context_struct secp256k1_context;
+
 inline constexpr unsigned int BIP32_EXTKEY_SIZE = 74;
 inline constexpr unsigned int BIP32_EXTKEY_WITH_VERSION_SIZE = 78;
 
@@ -391,5 +394,10 @@ struct CExtPubKey {
     }
     [[nodiscard]] bool Derive(CExtPubKey& out, unsigned int nChild, uint256* bip32_tweak_out = nullptr) const;
 };
+
+/** Access the secp256k1 context for operations on public data only (parsing,
+ *  serialization, signature verification, public tweaks). It is created on first
+ *  use. Thread-safe. */
+const secp256k1_context* GetSecp256k1PublicContext();
 
 #endif // BITCOIN_PUBKEY_H

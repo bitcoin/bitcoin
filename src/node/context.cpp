@@ -8,7 +8,6 @@
 #include <banman.h>
 #include <interfaces/chain.h>
 #include <kernel/context.h>
-#include <key.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netgroup.h>

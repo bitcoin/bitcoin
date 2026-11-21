@@ -28,8 +28,6 @@ enum class InputType {
 
 static void SignTransactionSingleInput(benchmark::Bench& bench, InputType input_type)
 {
-    ECC_Context ecc_context{};
-
     FlatSigningProvider keystore;
     std::vector<CScript> prev_spks;
 
@@ -79,7 +77,6 @@ static void SignTransactionSchnorr(benchmark::Bench& bench) { SignTransactionSin
 static void SignSchnorrTapTweakBenchmark(benchmark::Bench& bench, bool use_null_merkle_root)
 {
     FastRandomContext rng;
-    ECC_Context ecc_context{};
 
     auto key = GenerateRandomKey();
     auto msg = rng.rand256();

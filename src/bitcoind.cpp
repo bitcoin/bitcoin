@@ -199,7 +199,6 @@ static bool AppInit(NodeContext& node)
         node.warnings = std::make_unique<node::Warnings>();
 
         node.kernel = std::make_unique<kernel::Context>();
-        node.ecc_context = std::make_unique<ECC_Context>();
         if (!AppInitSanityChecks(*node.kernel))
         {
             // InitError will have been called with detailed error, which ends up on console

@@ -22,7 +22,6 @@ class ValidationSignals;
 class CScheduler;
 class CTxMemPool;
 class ChainstateManager;
-class ECC_Context;
 class NetGroupManager;
 class PeerManager;
 class TorController;
@@ -57,7 +56,6 @@ class Warnings;
 struct NodeContext {
     //! libbitcoin_kernel context
     std::unique_ptr<kernel::Context> kernel;
-    std::unique_ptr<ECC_Context> ecc_context;
     //! Init interface for initializing current process and connecting to other processes.
     interfaces::Init* init{nullptr};
     //! Function to request a shutdown.

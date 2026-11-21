@@ -107,14 +107,14 @@ util::Expected<SilentPaymentsDestination, std::string> DecodeSilentPaymentsAddre
 
 SilentPaymentsLabel::SilentPaymentsLabel(const secp256k1_silentpayments_label& label) {
     m_label = std::make_unique<secp256k1_silentpayments_label>(label);
-    int ret = secp256k1_silentpayments_recipient_label_serialize(secp256k1_context_static, m_vch, m_label.get());
+    int ret = secp256k1_silentpayments_recipient_label_serialize(GetSecp256k1PublicContext(), m_vch, m_label.get());
     assert(ret);
 }
 
 std::optional<SilentPaymentsLabel> SilentPaymentsLabel::FromBytes(std::span<const unsigned char, CPubKey::COMPRESSED_SIZE> vch)
 {
     secp256k1_silentpayments_label label_obj;
-    if (!secp256k1_silentpayments_recipient_label_parse(secp256k1_context_static, &label_obj, vch.data())) {
+    if (!secp256k1_silentpayments_recipient_label_parse(GetSecp256k1PublicContext(), &label_obj, vch.data())) {
         return std::nullopt;
     }
     return SilentPaymentsLabel(label_obj);
@@ -237,7 +237,7 @@ static std::optional<PrevoutsSummary> CreateInputPubkeysTweak(
     plain_pubkey_objs.reserve(plain_pubkeys.size());
     plain_pubkey_ptrs.reserve(plain_pubkeys.size());
     for (const CPubKey& pubkey : plain_pubkeys) {
-        bool ret = secp256k1_ec_pubkey_parse(secp256k1_context_static,
+        bool ret = secp256k1_ec_pubkey_parse(GetSecp256k1PublicContext(),
             &plain_pubkey_objs.emplace_back(), pubkey.data(), pubkey.size());
         // This pubkey is expected to be valid because GetPubKeyFromInput()
         // already called IsFullyValid() before including it here
@@ -250,7 +250,7 @@ static std::optional<PrevoutsSummary> CreateInputPubkeysTweak(
     taproot_pubkey_objs.reserve(taproot_pubkeys.size());
     taproot_pubkey_ptrs.reserve(taproot_pubkeys.size());
     for (const XOnlyPubKey& pubkey : taproot_pubkeys) {
-        bool ret = secp256k1_xonly_pubkey_parse(secp256k1_context_static,
+        bool ret = secp256k1_xonly_pubkey_parse(GetSecp256k1PublicContext(),
             &taproot_pubkey_objs.emplace_back(), pubkey.data());
         // This xonlypubkey is expected to be valid because
         // GetPubKeyFromInput() already called IsFullyValid()
@@ -261,7 +261,7 @@ static std::optional<PrevoutsSummary> CreateInputPubkeysTweak(
 
     std::array<std::byte, 36> smallest_outpoint_ser;
     SpanWriter{smallest_outpoint_ser} << smallest_outpoint;
-    bool ret = secp256k1_silentpayments_recipient_prevouts_summary_create(secp256k1_context_static,
+    bool ret = secp256k1_silentpayments_recipient_prevouts_summary_create(GetSecp256k1PublicContext(),
         &prevouts_summary,
         UCharCast(smallest_outpoint_ser.data()),
         taproot_pubkey_ptrs.data(), taproot_pubkey_ptrs.size(),
@@ -332,9 +332,9 @@ static std::optional<std::vector<secp256k1_xonly_pubkey>> CreateOutputs(
 
     for (size_t i = 0; i < recipients.size(); i++) {
         secp256k1_silentpayments_recipient recipient_obj;
-        ret = secp256k1_ec_pubkey_parse(secp256k1_context_static, &recipient_obj.scan_pubkey, recipients[i].GetScanPubKey().data(), recipients[i].GetScanPubKey().size());
+        ret = secp256k1_ec_pubkey_parse(GetSecp256k1PublicContext(), &recipient_obj.scan_pubkey, recipients[i].GetScanPubKey().data(), recipients[i].GetScanPubKey().size());
         assert(ret);
-        ret = secp256k1_ec_pubkey_parse(secp256k1_context_static, &recipient_obj.spend_pubkey, recipients[i].GetSpendPubKey().data(), recipients[i].GetSpendPubKey().size());
+        ret = secp256k1_ec_pubkey_parse(GetSecp256k1PublicContext(), &recipient_obj.spend_pubkey, recipients[i].GetSpendPubKey().data(), recipients[i].GetSpendPubKey().size());
         assert(ret);
         recipient_obj.index = i;
         recipient_objs.push_back(recipient_obj);
@@ -391,7 +391,7 @@ std::optional<std::map<size_t, WitnessV1Taproot>> GenerateSilentPaymentsTaprootD
     size_t output_i{0};
     for (const auto& [i, _] : sp_dests) {
         unsigned char xonly_pubkey_bytes[32];
-        ret = secp256k1_xonly_pubkey_serialize(secp256k1_context_static, xonly_pubkey_bytes, &outputs.value()[output_i]);
+        ret = secp256k1_xonly_pubkey_serialize(GetSecp256k1PublicContext(), xonly_pubkey_bytes, &outputs.value()[output_i]);
         assert(ret);
         tr_dests[i] = WitnessV1Taproot{XOnlyPubKey{xonly_pubkey_bytes}};
         output_i++;
@@ -418,13 +418,13 @@ static std::pair<SilentPaymentsLabel, uint256> CreateLabel(const CKey& scan_key,
 
 static CPubKey CreateLabeledSpendPubKey(const CPubKey& spend_pubkey, const SilentPaymentsLabel& label) {
     secp256k1_pubkey spend_obj, labeled_spend_obj;
-    bool ret = secp256k1_ec_pubkey_parse(secp256k1_context_static, &spend_obj, spend_pubkey.data(), spend_pubkey.size());
+    bool ret = secp256k1_ec_pubkey_parse(GetSecp256k1PublicContext(), &spend_obj, spend_pubkey.data(), spend_pubkey.size());
     assert(ret);
-    ret = secp256k1_silentpayments_recipient_create_labeled_spend_pubkey(secp256k1_context_static, &labeled_spend_obj, &spend_obj, label.Get());
+    ret = secp256k1_silentpayments_recipient_create_labeled_spend_pubkey(GetSecp256k1PublicContext(), &labeled_spend_obj, &spend_obj, label.Get());
     assert(ret);
     size_t pubkeylen = CPubKey::COMPRESSED_SIZE;
     CPubKey labeled_spend_pubkey;
-    ret = secp256k1_ec_pubkey_serialize(secp256k1_context_static, (unsigned char*)labeled_spend_pubkey.begin(), &pubkeylen, &labeled_spend_obj, SECP256K1_EC_COMPRESSED);
+    ret = secp256k1_ec_pubkey_serialize(GetSecp256k1PublicContext(), (unsigned char*)labeled_spend_pubkey.begin(), &pubkeylen, &labeled_spend_obj, SECP256K1_EC_COMPRESSED);
     assert(ret);
     return labeled_spend_pubkey;
 }
@@ -434,7 +434,7 @@ SilentPaymentsReceiver::SilentPaymentsReceiver(const CKey& scan_key, const CPubK
 {
     m_change_it = m_labels.emplace(CreateLabel(scan_key, 0)).first;
     m_spend_pubkey_obj = std::make_unique<secp256k1_pubkey>();
-    int ret = secp256k1_ec_pubkey_parse(secp256k1_context_static, m_spend_pubkey_obj.get(), m_spend_pubkey.data(), m_spend_pubkey.size());
+    int ret = secp256k1_ec_pubkey_parse(GetSecp256k1PublicContext(), m_spend_pubkey_obj.get(), m_spend_pubkey.data(), m_spend_pubkey.size());
     assert(ret);
 }
 
@@ -480,7 +480,7 @@ std::optional<std::vector<SilentPaymentsOutput>> SilentPaymentsReceiver::Scan(
 
     for (const XOnlyPubKey& tx_output : tx_outputs) {
         secp256k1_xonly_pubkey tx_output_obj;
-        ret = secp256k1_xonly_pubkey_parse(secp256k1_context_static, &tx_output_obj, tx_output.data());
+        ret = secp256k1_xonly_pubkey_parse(GetSecp256k1PublicContext(), &tx_output_obj, tx_output.data());
         if (!ret) {
             // It is possible that a P2TR output encodes an invalid x-only pubkey.
             continue;
@@ -494,7 +494,7 @@ std::optional<std::vector<SilentPaymentsOutput>> SilentPaymentsReceiver::Scan(
 
     // Scan the outputs!
     uint32_t n_found_outputs = 0;
-    ret = secp256k1_silentpayments_recipient_scan_outputs(secp256k1_context_static,
+    ret = secp256k1_silentpayments_recipient_scan_outputs(GetSecp256k1SignContext(),
         found_output_ptrs.data(), &n_found_outputs,
         tx_output_ptrs.data(), tx_output_ptrs.size(),
         UCharCast(m_scan_key.begin()),
@@ -508,7 +508,7 @@ std::optional<std::vector<SilentPaymentsOutput>> SilentPaymentsReceiver::Scan(
     std::vector<SilentPaymentsOutput> outputs;
     for (size_t i = 0; i < n_found_outputs; i++) {
         SilentPaymentsOutput sp_output;
-        ret = secp256k1_xonly_pubkey_serialize(secp256k1_context_static, sp_output.output.begin(), &found_output_objs[i].output);
+        ret = secp256k1_xonly_pubkey_serialize(GetSecp256k1PublicContext(), sp_output.output.begin(), &found_output_objs[i].output);
         assert(ret);
         sp_output.tweak = uint256{found_output_objs[i].tweak};
         if (found_output_objs[i].found_with_label) {
