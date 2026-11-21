@@ -35,14 +35,15 @@
 #include <algorithm>
 #include <compare>
 #include <array>
-#include <iterator>
 #include <map>
 #include <memory>
 #include <numeric>
 #include <optional>
+#include <ranges>
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <unordered_set>
 #include <utility>
@@ -1920,7 +1921,7 @@ enum class ParseScriptContext {
         // Check if element contains multipath specifier
         if (!elem.empty() && elem.front() == '<' && elem.back() == '>') {
             if (!allow_multipath) {
-                error = strprintf("Key path value '%s' specifies multipath in a section where multipath is not allowed", std::string(elem.begin(), elem.end()));
+                error = "Key path value specifies multipath in a section where multipath is not allowed";
                 return false;
             }
             if (substitutes) {
@@ -2002,7 +2003,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t& key_exp_
         return {};
     }
     if (IsSpace(str.front()) || IsSpace(str.back())) {
-        error = strprintf("Key '%s' is invalid due to whitespace", str);
+        error = "Key is invalid due to whitespace";
         return {};
     }
     if (split.size() == 1) {
@@ -2032,7 +2033,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t& key_exp_
                     return ret;
                 }
             }
-            error = strprintf("Pubkey '%s' is invalid", str);
+            error = "Pubkey is invalid";
             return {};
         }
         CKey key = DecodeSecret(str);
@@ -2051,7 +2052,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t& key_exp_
     }
     auto [extkey, extpubkey] = DecodeExtKeyOrPubKey(str);
     if (!extkey.key.IsValid() && !extpubkey.pubkey.IsValid()) {
-        error = strprintf("key '%s' is not valid", str);
+        error = "key is not valid";
         return {};
     }
     std::vector<KeyPath> paths;
@@ -2111,7 +2112,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
             auto arg = Expr(expr);
             auto pk = ParsePubkey(key_exp_index, arg, ParseScriptContext::MUSIG, out, error);
             if (pk.empty()) {
-                error = strprintf("musig(): %s", error);
+                error = strprintf("musig(): key %u: %s", providers.size() + 1, error);
                 return {};
             }
             any_key_parsed = true;
@@ -2228,8 +2229,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
         return ParsePubkeyInner(key_exp_index, origin_split[0], ctx, out, apostrophe, error);
     }
     if (origin_split[0].empty() || origin_split[0][0] != '[') {
-        error = strprintf("Key origin start '[ character expected but not found, got '%c' instead",
-                          origin_split[0].empty() ? /** empty, implies split char */ ']' : origin_split[0][0]);
+        error = "Key origin start '[ character expected but not found";
         return {};
     }
     auto slash_split = Split(origin_split[0].subspan(1), '/');
@@ -2239,7 +2239,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
     }
     std::string fpr_hex = std::string(slash_split[0].begin(), slash_split[0].end());
     if (!IsHex(fpr_hex)) {
-        error = strprintf("Fingerprint '%s' is not hex", fpr_hex);
+        error = "Fingerprint is not hex";
         return {};
     }
     auto fpr_bytes = ParseHex(fpr_hex);
@@ -2340,7 +2340,10 @@ struct KeyParser {
         assert(m_out);
         Key key = m_keys.size();
         auto pk = ParsePubkey(m_expr_index, in, ParseContext(), *m_out, m_key_parsing_error);
-        if (pk.empty()) return {};
+        if (pk.empty()) {
+            m_key_parsing_error = strprintf("Miniscript: key %u: %s", key + 1, m_key_parsing_error);
+            return {};
+        }
         m_keys.emplace_back(std::move(pk));
         return key;
     }
@@ -2395,6 +2398,14 @@ struct KeyParser {
     miniscript::MiniscriptContext MsContext() const {
         return m_script_ctx;
     }
+};
+
+/** The descriptor and miniscript functions that ParseScript accepts, the names an error may quote. */
+constexpr std::array<std::string_view, 32> SCRIPT_FUNCTION_NAMES{
+    "addr", "after", "and_b", "and_n", "and_v", "andor", "combo", "hash160",
+    "hash256", "multi", "multi_a", "older", "or_b", "or_c", "or_d", "or_i",
+    "pk", "pk_h", "pk_k", "pkh", "raw", "rawtr", "ripemd160", "sh",
+    "sha256", "sortedmulti", "sortedmulti_a", "thresh", "tr", "unused", "wpkh", "wsh",
 };
 
 /** Parse a script in a particular context. */
@@ -2453,7 +2464,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         if (const auto maybe_thres{ToIntegral<uint32_t>(std::string_view{threshold.begin(), threshold.end()})}) {
             thres = *maybe_thres;
         } else {
-            error = strprintf("Multi threshold '%s' is not valid", std::string(threshold.begin(), threshold.end()));
+            error = "Multi threshold is not valid";
             return {};
         }
         size_t script_size = 0;
@@ -2466,7 +2477,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
             auto arg = Expr(expr);
             auto pks = ParsePubkey(key_exp_index, arg, ctx, out, error);
             if (pks.empty()) {
-                error = strprintf("Multi: %s", error);
+                error = strprintf("Multi: key %u: %s", providers.size() + 1, error);
                 return {};
             }
             script_size += pks.at(0)->GetSize() + 1;
@@ -2818,7 +2829,28 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         error = "A function is needed within P2WSH";
         return {};
     }
-    error = strprintf("'%s' is not a valid descriptor function", std::string(expr.begin(), expr.end()));
+    // Quote no text here but a known function name: a stray '(' or ')' inside a key leaves part of it on either side
+    const std::string_view expr_text{expr.begin(), expr.end()};
+    const size_t open{expr_text.find('(')};
+    std::string_view name{expr_text.substr(0, open)};
+    const size_t colon{name.rfind(':')};
+    if (colon != std::string_view::npos) name.remove_prefix(colon + 1); // miniscript wrappers
+    const bool known{open != std::string_view::npos && std::ranges::find(SCRIPT_FUNCTION_NAMES, name) != SCRIPT_FUNCTION_NAMES.end()};
+    int depth{0};
+    for (size_t i{0}; i < expr.size(); ++i) {
+        if (expr[i] == '(') {
+            ++depth;
+        } else if (expr[i] == ')' && --depth == 0 && i + 1 < expr.size()) {
+            error = known ? strprintf("Unexpected text after the closing ')' of %s()", name) : "Unexpected text after the closing ')'";
+            return {};
+        }
+    }
+    if (colon != std::string_view::npos) {
+        // The wrappers may be what is invalid, so do not blame the function they wrap
+        error = "Not a valid miniscript expression";
+    } else {
+        error = known ? strprintf("Not a valid %s() expression", name) : "Not a valid descriptor expression";
+    }
     return {};
 }
 
@@ -3009,7 +3041,7 @@ bool CheckChecksum(std::span<const char>& sp, bool require_checksum, std::string
     }
     if (check_split.size() == 2) {
         if (!std::equal(checksum.begin(), checksum.end(), check_split[1].begin())) {
-            error = strprintf("Provided checksum '%s' does not match computed checksum '%s'", std::string(check_split[1].begin(), check_split[1].end()), checksum);
+            error = strprintf("Provided checksum does not match computed checksum '%s'", checksum);
             return false;
         }
     }
