@@ -9,6 +9,8 @@
 #include <interfaces/chain.h>
 #include <key.h>
 #include <node/blockstorage.h>
+#include <node/context.h>
+#include <node/indexes.h>
 #include <primitives/block.h>
 #include <script/script.h>
 #include <sync.h>
@@ -227,41 +229,19 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
     StopIndex(filter_index, m_node);
 }
 
-BOOST_FIXTURE_TEST_CASE(blockfilter_index_init_destroy, BasicTestingSetup)
+BOOST_FIXTURE_TEST_CASE(blockfilter_index_lookup, BasicTestingSetup)
 {
-    BlockFilterIndex* filter_index;
+    BOOST_CHECK(node::GetBlockFilterIndex(m_node, BlockFilterType::BASIC) == nullptr);
 
-    filter_index = GetBlockFilterIndex(BlockFilterType::BASIC);
-    BOOST_CHECK(filter_index == nullptr);
+    m_node.block_filter_indexes.emplace_back(
+        node::MakeIndex<BlockFilterIndex>(interfaces::MakeChain(m_node), BlockFilterType::BASIC, 1_MiB, /*f_memory=*/true));
 
-    BOOST_CHECK(InitBlockFilterIndex([&]{ return interfaces::MakeChain(m_node); }, BlockFilterType::BASIC, 1_MiB, true, false));
-
-    filter_index = GetBlockFilterIndex(BlockFilterType::BASIC);
-    BOOST_CHECK(filter_index != nullptr);
+    BlockFilterIndex* filter_index{node::GetBlockFilterIndex(m_node, BlockFilterType::BASIC)};
+    BOOST_REQUIRE(filter_index != nullptr);
     BOOST_CHECK(filter_index->GetFilterType() == BlockFilterType::BASIC);
 
-    // Initialize returns false if index already exists.
-    BOOST_CHECK(!InitBlockFilterIndex([&]{ return interfaces::MakeChain(m_node); }, BlockFilterType::BASIC, 1_MiB, true, false));
-
-    int iter_count = 0;
-    ForEachBlockFilterIndex([&iter_count](BlockFilterIndex& _index) { iter_count++; });
-    BOOST_CHECK_EQUAL(iter_count, 1);
-
-    BOOST_CHECK(DestroyBlockFilterIndex(BlockFilterType::BASIC));
-
-    // Destroy returns false because index was already destroyed.
-    BOOST_CHECK(!DestroyBlockFilterIndex(BlockFilterType::BASIC));
-
-    filter_index = GetBlockFilterIndex(BlockFilterType::BASIC);
-    BOOST_CHECK(filter_index == nullptr);
-
-    // Reinitialize index.
-    BOOST_CHECK(InitBlockFilterIndex([&]{ return interfaces::MakeChain(m_node); }, BlockFilterType::BASIC, 1_MiB, true, false));
-
-    DestroyAllBlockFilterIndexes();
-
-    filter_index = GetBlockFilterIndex(BlockFilterType::BASIC);
-    BOOST_CHECK(filter_index == nullptr);
+    m_node.block_filter_indexes.clear();
+    BOOST_CHECK(node::GetBlockFilterIndex(m_node, BlockFilterType::BASIC) == nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
