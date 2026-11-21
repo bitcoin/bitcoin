@@ -35,7 +35,7 @@ static void RpcMempool(benchmark::Bench& bench)
         CMutableTransaction tx = CMutableTransaction();
         tx.vin.resize(1);
         tx.vin[0].scriptSig = CScript() << OP_1;
-        tx.vin[0].scriptWitness.stack.push_back({1});
+        tx.vin[0].scriptWitness = CScriptWitness{{{1}}};
         tx.vout.resize(1);
         tx.vout[0].scriptPubKey = CScript() << OP_1 << OP_EQUAL;
         tx.vout[0].nValue = i;

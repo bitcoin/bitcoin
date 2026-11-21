@@ -80,6 +80,14 @@ T& SpanPopBack(std::span<T>& span)
     return back;
 }
 
+/** Whether two spans refer to the same range of memory: the same start and the same number of
+ *  elements. Spans with equal contents in different places are not the same. */
+template <typename T>
+constexpr bool SameSpan(std::span<T> a, std::span<T> b) noexcept
+{
+    return a.data() == b.data() && a.size() == b.size();
+}
+
 template <typename V>
 auto MakeByteSpan(const V& v) noexcept
 {
