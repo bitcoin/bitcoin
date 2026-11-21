@@ -209,6 +209,28 @@ class MempoolTRUC(BitcoinTestFramework):
         self.trigger_reorg(fork_blocks)
         self.check_mempool([tx_v3_block["txid"], tx_v2_block["txid"], tx_v3_block2["txid"], tx_v2_from_v3["txid"], tx_v3_from_v2["txid"], tx_v3_child_large["txid"], tx_chain_1["txid"], tx_chain_2["txid"], tx_chain_3["txid"], tx_chain_4["txid"]])
 
+    @cleanup()
+    def test_truc_reorg_no_sibling_eviction(self):
+        node = self.nodes[0]
+        fork_blocks = create_empty_fork(node)
+        self.log.info("Test that a reorg doesn't sibling-evict a TRUC child that has a descendant")
+        self.check_mempool([])
+
+        # The parent confirms first; a child and grandchild enter the mempool after it.
+        parent = self.wallet.send_self_transfer_multi(from_node=node, num_outputs=2, version=3)
+        self.generate(node, 1)
+        child_low = self.wallet.send_self_transfer(from_node=node, utxo_to_spend=parent["new_utxos"][0], fee_rate=DEFAULT_FEE, version=3)
+        grandchild = self.wallet.send_self_transfer(from_node=node, utxo_to_spend=child_low["new_utxo"], version=3)
+
+        # A block confirms the child together with a higher-fee sibling, which the mempool would not allow.
+        child_high = self.wallet.create_self_transfer(utxo_to_spend=parent["new_utxos"][1], fee_rate=DEFAULT_FEE * 10, version=3)
+        self.generateblock(node, output="raw(42)", transactions=[child_low["hex"], child_high["hex"]])
+        self.check_mempool([grandchild["txid"]])
+
+        # Re-adding the high-fee child must not evict its sibling, which would strand the grandchild.
+        self.trigger_reorg(fork_blocks)
+        self.check_mempool([parent["txid"], child_low["txid"], child_high["txid"], grandchild["txid"]])
+
     @cleanup(extra_args=["-limitclustercount=1"])
     def test_nondefault_package_limits(self):
         """
@@ -668,6 +690,7 @@ class MempoolTRUC(BitcoinTestFramework):
         self.test_truc_acceptance()
         self.test_truc_replacement()
         self.test_truc_reorg()
+        self.test_truc_reorg_no_sibling_eviction()
         self.test_nondefault_package_limits()
         self.test_truc_ancestors_package()
         self.test_truc_ancestors_package_and_mempool()

@@ -293,6 +293,32 @@ static bool IsCurrentForFeeEstimation(Chainstate& active_chainstate) EXCLUSIVE_L
     return true;
 }
 
+/** Whether a transaction from a disconnected block may fail to re-enter the mempool for this reason:
+ * it can't be in the next block, it is non-standard on its own, or it exceeds the cluster limit.
+ * Rules that depend on other mempool transactions (TRUC, ephemeral dust, replacement) don't apply. */
+static bool IsExpectedReorgRejection(const TxValidationState& state)
+{
+    switch (state.GetResult()) {
+    case TxValidationResult::TX_CONSENSUS:
+    case TxValidationResult::TX_INPUTS_NOT_STANDARD:
+    case TxValidationResult::TX_NOT_STANDARD:
+    case TxValidationResult::TX_MISSING_INPUTS:
+    case TxValidationResult::TX_PREMATURE_SPEND:
+    case TxValidationResult::TX_WITNESS_MUTATED:
+    case TxValidationResult::TX_WITNESS_STRIPPED:
+        return true;
+    case TxValidationResult::TX_MEMPOOL_POLICY:
+        return state.GetRejectReason() == "too-large-cluster";
+    case TxValidationResult::TX_RESULT_UNSET:
+    case TxValidationResult::TX_CONFLICT:
+    case TxValidationResult::TX_NO_MEMPOOL:
+    case TxValidationResult::TX_RECONSIDERABLE:
+    case TxValidationResult::TX_UNKNOWN:
+        return false;
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+
 void Chainstate::MaybeUpdateMempoolForReorg(
     DisconnectedBlockTransactions& disconnectpool,
     bool fAddToMempool)
@@ -312,10 +338,17 @@ void Chainstate::MaybeUpdateMempoolForReorg(
         auto it = queuedTx.rbegin();
         while (it != queuedTx.rend()) {
             // ignore validation errors in resurrected transactions
-            if (!fAddToMempool || (*it)->IsCoinBase() ||
-                AcceptToMemoryPool(*this, *it, GetTime(),
-                    /*bypass_limits=*/true, /*test_accept=*/false).m_result_type !=
-                        MempoolAcceptResult::ResultType::VALID) {
+            bool accepted{false};
+            if (fAddToMempool && !(*it)->IsCoinBase()) {
+                const auto size_before{m_mempool->size()};
+                const auto result{AcceptToMemoryPool(*this, *it, GetTime(), /*bypass_limits=*/true, /*test_accept=*/false)};
+                accepted = result.m_result_type == MempoolAcceptResult::ResultType::VALID;
+                // A transaction from a disconnected block doesn't conflict with the mempool and
+                // bypasses its limits, so re-adding it never removes anything.
+                Assume(m_mempool->size() == size_before + accepted);
+                Assume(accepted || IsExpectedReorgRejection(result.m_state));
+            }
+            if (!accepted) {
                 // If the transaction doesn't make it in to the mempool, remove any
                 // transactions that depend on it (which would now be orphans).
                 m_mempool->removeRecursive(**it, MemPoolRemovalReason::REORG);
