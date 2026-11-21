@@ -6,8 +6,8 @@
 #include <univalue.h>
 #include <univalue_utffilter.h>
 
+#include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -97,21 +97,23 @@ enum jtokentype getJsonToken(std::string& tokenVal, unsigned int& consumed,
 
     case 'n':
     case 't':
-    case 'f':
-        if (!strncmp(raw, "null", 4)) {
+    case 'f': {
+        const std::string_view raw_view{raw, end};
+        if (raw_view.starts_with("null")) {
             raw += 4;
             consumed = (raw - rawStart);
             return JTOK_KW_NULL;
-        } else if (!strncmp(raw, "true", 4)) {
+        } else if (raw_view.starts_with("true")) {
             raw += 4;
             consumed = (raw - rawStart);
             return JTOK_KW_TRUE;
-        } else if (!strncmp(raw, "false", 5)) {
+        } else if (raw_view.starts_with("false")) {
             raw += 5;
             consumed = (raw - rawStart);
             return JTOK_KW_FALSE;
         } else
             return JTOK_ERR;
+        }
 
     case '-':
     case '0':
@@ -132,7 +134,10 @@ enum jtokentype getJsonToken(std::string& tokenVal, unsigned int& consumed,
         const char *firstDigit = first;
         if (!json_isdigit(*firstDigit))
             firstDigit++;
-        if ((*firstDigit == '0') && json_isdigit(firstDigit[1]))
+        if (firstDigit >= end)
+            return JTOK_ERR;
+        if ((*firstDigit == '0') && (firstDigit + 1 < end) &&
+            json_isdigit(firstDigit[1]))
             return JTOK_ERR;
 
         numStr += *raw;                       // copy first char
