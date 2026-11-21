@@ -18,6 +18,7 @@ from test_framework.messages import (
     COIN,
     deser_block_spent_outputs,
 )
+from test_framework.netutil import HTTPConnection
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -76,7 +77,7 @@ class RESTTest(BitcoinTestFramework):
             else:
                 rest_uri += f'?{urllib.parse.urlencode(query_params)}'
 
-        conn = http.client.HTTPConnection(self.url.hostname, self.url.port, timeout=self.rpc_timeout)
+        conn = HTTPConnection(self.url.hostname, self.url.port, timeout=self.rpc_timeout)
         self.log.debug(f'{http_method} {rest_uri} {body}')
         if http_method == 'GET':
             conn.request('GET', rest_uri)
