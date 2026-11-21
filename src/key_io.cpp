@@ -324,7 +324,7 @@ CTxDestination DecodeDestination(const std::string& str)
     return DecodeDestination(str, error_msg);
 }
 
-bool IsValidDestinationString(const std::string& str, const CChainParams& params)
+static bool IsValidDestinationString(const std::string& str, const CChainParams& params)
 {
     std::string error_msg;
     return IsValidDestination(DecodeDestination(str, params, error_msg, nullptr));

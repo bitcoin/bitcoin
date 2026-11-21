@@ -118,7 +118,7 @@ bool EncryptSecret(const CKeyingMaterial& vMasterKey, const CKeyingMaterial &vch
     return cKeyCrypter.Encrypt(vchPlaintext, vchCiphertext);
 }
 
-bool DecryptSecret(const CKeyingMaterial& master_key, const std::span<const unsigned char> ciphertext, const uint256& iv, CKeyingMaterial& plaintext)
+[[nodiscard]] static bool DecryptSecret(const CKeyingMaterial& master_key, const std::span<const unsigned char> ciphertext, const uint256& iv, CKeyingMaterial& plaintext)
 {
     CCrypter key_crypter;
     static_assert(WALLET_CRYPTO_IV_SIZE <= std::remove_reference_t<decltype(iv)>::size());

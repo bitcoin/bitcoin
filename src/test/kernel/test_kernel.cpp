@@ -51,7 +51,7 @@ std::string random_string(uint32_t length)
     return random;
 }
 
-std::vector<std::byte> hex_string_to_byte_vec(std::string_view hex)
+static std::vector<std::byte> hex_string_to_byte_vec(std::string_view hex)
 {
     std::vector<std::byte> bytes;
     bytes.reserve(hex.length() / 2);

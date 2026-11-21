@@ -12,6 +12,7 @@
 #include <core_io.h>
 #include <crypto/hex_base.h>
 #include <flatfile.h>
+#include <httprpc.h>
 #include <httpserver.h>
 #include <index/blockfilterindex.h>
 #include <index/txindex.h>
@@ -756,9 +757,6 @@ static bool rest_block_filter(const std::any& context, HTTPRequest* req, const s
     }
 }
 
-// A bit of a hack - dependency on a function defined in rpc/blockchain.cpp
-RPCMethod getblockchaininfo();
-
 static bool rest_chaininfo(const std::any& context, HTTPRequest* req, const std::string& uri_part)
 {
     if (!CheckWarmup(req))
@@ -784,8 +782,6 @@ static bool rest_chaininfo(const std::any& context, HTTPRequest* req, const std:
     }
 }
 
-
-RPCMethod getdeploymentinfo();
 
 static bool rest_deploymentinfo(const std::any& context, HTTPRequest* req, const std::string& str_uri_part)
 {

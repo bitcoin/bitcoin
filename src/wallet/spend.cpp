@@ -142,7 +142,7 @@ static std::optional<int64_t> GetSignedTxinWeight(const CWallet* wallet, const C
 }
 
 // txouts needs to be in the order of tx.vin
-TxSize CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts, const CCoinControl* coin_control)
+static TxSize CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts, const CCoinControl* coin_control)
 {
     // version + nLockTime + input count + output count
     int64_t weight = (4 + 4 + GetSizeOfCompactSize(tx.vin.size()) + GetSizeOfCompactSize(tx.vout.size())) * WITNESS_SCALE_FACTOR;

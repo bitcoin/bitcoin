@@ -1261,7 +1261,7 @@ BOOST_AUTO_TEST_CASE(script_size_and_capacity_test)
 }
 
 /* Wrapper around ProduceSignature to combine two scriptsigs */
-SignatureData CombineSignatures(const CTxOut& txout, const CMutableTransaction& tx, const SignatureData& scriptSig1, const SignatureData& scriptSig2)
+static SignatureData CombineSignatures(const CTxOut& txout, const CMutableTransaction& tx, const SignatureData& scriptSig1, const SignatureData& scriptSig2)
 {
     SignatureData data;
     data.MergeSignatureData(scriptSig1);

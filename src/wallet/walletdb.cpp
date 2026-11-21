@@ -308,7 +308,7 @@ bool WalletBatch::EraseLockedUTXO(const COutPoint& output)
     return EraseIC(std::make_pair(DBKeys::LOCKED_UTXO, std::make_pair(output.hash, output.n)));
 }
 
-bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
+static bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
 {
     LOCK(pwallet->cs_wallet);
     try {
@@ -371,7 +371,7 @@ bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::stri
     return true;
 }
 
-bool LoadCryptedKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
+static bool LoadCryptedKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
 {
     LOCK(pwallet->cs_wallet);
     try {
@@ -410,7 +410,7 @@ bool LoadCryptedKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, st
     return true;
 }
 
-bool LoadEncryptionKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
+static bool LoadEncryptionKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr)
 {
     LOCK(pwallet->cs_wallet);
     try {
@@ -437,7 +437,7 @@ bool LoadEncryptionKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue,
     return true;
 }
 
-bool LoadHDChain(CWallet* pwallet, DataStream& ssValue, std::string& strErr)
+static bool LoadHDChain(CWallet* pwallet, DataStream& ssValue, std::string& strErr)
 {
     LOCK(pwallet->cs_wallet);
     try {

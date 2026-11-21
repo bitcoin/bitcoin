@@ -37,7 +37,7 @@ CAmount OutputGetCredit(const CWallet& wallet, const CTxOut& txout)
     return (wallet.IsMine(txout) ? txout.nValue : 0);
 }
 
-CAmount TxGetCredit(const CWallet& wallet, const CTransaction& tx)
+static CAmount TxGetCredit(const CWallet& wallet, const CTransaction& tx)
 {
     CAmount nCredit = 0;
     for (const CTxOut& txout : tx.vout)
@@ -84,7 +84,7 @@ CAmount OutputGetChange(const CWallet& wallet, const CTxOut& txout)
     return (OutputIsChange(wallet, txout) ? txout.nValue : 0);
 }
 
-CAmount TxGetChange(const CWallet& wallet, const CTransaction& tx)
+static CAmount TxGetChange(const CWallet& wallet, const CTransaction& tx)
 {
     LOCK(wallet.cs_wallet);
     CAmount nChange = 0;

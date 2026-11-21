@@ -106,31 +106,6 @@ using node::NodeContext;
 using node::SnapshotMetadata;
 using util::MakeUnorderedList;
 
-std::tuple<std::unique_ptr<CCoinsViewCursor>, CCoinsStats, const CBlockIndex*>
-PrepareUTXOSnapshot(
-    Chainstate& chainstate,
-    const std::function<void()>& interruption_point = {})
-    EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
-UniValue WriteUTXOSnapshot(
-    Chainstate& chainstate,
-    CCoinsViewCursor* pcursor,
-    CCoinsStats* maybe_stats,
-    const CBlockIndex* tip,
-    AutoFile&& afile,
-    const fs::path& path,
-    const fs::path& temppath,
-    const std::function<void()>& interruption_point = {});
-
-UniValue CreateRolledBackUTXOSnapshot(
-    NodeContext& node,
-    Chainstate& chainstate,
-    const CBlockIndex* target,
-    AutoFile&& afile,
-    const fs::path& path,
-    const fs::path& tmppath,
-    bool in_memory);
-
 /* Calculate the difficulty for a given block index.
  */
 double GetDifficulty(const CBlockIndex& blockindex)
@@ -3058,6 +3033,299 @@ static RPCMethod getblockfilter()
     };
 }
 
+static std::tuple<std::unique_ptr<CCoinsViewCursor>, CCoinsStats, const CBlockIndex*>
+PrepareUTXOSnapshot(
+    Chainstate& chainstate,
+    const std::function<void()>& interruption_point)
+    EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+{
+    std::unique_ptr<CCoinsViewCursor> pcursor;
+    std::optional<CCoinsStats> maybe_stats;
+    const CBlockIndex* tip;
+
+    {
+        // We need to lock cs_main to ensure that the coinsdb isn't written to
+        // between (i) flushing coins cache to disk (coinsdb), (ii) getting stats
+        // based upon the coinsdb, and (iii) constructing a cursor to the
+        // coinsdb for use in WriteUTXOSnapshot.
+        //
+        // Cursors returned by leveldb iterate over snapshots, so the contents
+        // of the pcursor will not be affected by simultaneous writes during
+        // use below this block.
+        //
+        // See discussion here:
+        //   https://github.com/bitcoin/bitcoin/pull/15606#discussion_r274479369
+        //
+        AssertLockHeld(::cs_main);
+
+        chainstate.ForceFlushStateToDisk(/*wipe_cache=*/false);
+
+        maybe_stats = GetUTXOStats(chainstate.CoinsDB(), chainstate.m_blockman, CoinStatsHashType::HASH_SERIALIZED, interruption_point);
+        if (!maybe_stats) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
+        }
+
+        pcursor = chainstate.CoinsDB().Cursor();
+        tip = CHECK_NONFATAL(chainstate.m_blockman.LookupBlockIndex(maybe_stats->hashBlock));
+    }
+
+    return {std::move(pcursor), *CHECK_NONFATAL(maybe_stats), tip};
+}
+
+static UniValue WriteUTXOSnapshot(
+    Chainstate& chainstate,
+    CCoinsViewCursor* pcursor,
+    CCoinsStats* maybe_stats,
+    const CBlockIndex* tip,
+    AutoFile&& afile,
+    const fs::path& path,
+    const fs::path& temppath,
+    const std::function<void()>& interruption_point)
+{
+    LOG_TIME_SECONDS(strprintf("writing UTXO snapshot at height %s (%s) to file %s (via %s)",
+        tip->nHeight, tip->GetBlockHash().ToString(),
+        fs::PathToString(path), fs::PathToString(temppath)));
+
+    SnapshotMetadata metadata{chainstate.m_chainman.GetParams().MessageStart(), tip->GetBlockHash(), maybe_stats->coins_count};
+
+    afile << metadata;
+
+    COutPoint key;
+    Txid last_hash;
+    Coin coin;
+    unsigned int iter{0};
+    size_t written_coins_count{0};
+    std::vector<std::pair<uint32_t, Coin>> coins;
+
+    // To reduce space the serialization format of the snapshot avoids
+    // duplication of tx hashes. The code takes advantage of the guarantee by
+    // leveldb that keys are lexicographically sorted.
+    // In the coins vector we collect all coins that belong to a certain tx hash
+    // (key.hash) and when we have them all (key.hash != last_hash) we write
+    // them to file using the below lambda function.
+    // See also https://github.com/bitcoin/bitcoin/issues/25675
+    auto write_coins_to_file = [&](AutoFile& afile, const Txid& last_hash, const std::vector<std::pair<uint32_t, Coin>>& coins, size_t& written_coins_count) {
+        afile << last_hash;
+        WriteCompactSize(afile, coins.size());
+        for (const auto& [n, coin] : coins) {
+            WriteCompactSize(afile, n);
+            afile << coin;
+            ++written_coins_count;
+        }
+    };
+
+    pcursor->GetKey(key);
+    last_hash = key.hash;
+    while (pcursor->Valid()) {
+        if (iter % 5000 == 0) interruption_point();
+        ++iter;
+        if (pcursor->GetKey(key) && pcursor->GetValue(coin)) {
+            if (key.hash != last_hash) {
+                write_coins_to_file(afile, last_hash, coins, written_coins_count);
+                last_hash = key.hash;
+                coins.clear();
+            }
+            coins.emplace_back(key.n, coin);
+        }
+        pcursor->Next();
+    }
+
+    if (!coins.empty()) {
+        write_coins_to_file(afile, last_hash, coins, written_coins_count);
+    }
+
+    CHECK_NONFATAL(written_coins_count == maybe_stats->coins_count);
+
+    if (afile.fclose() != 0) {
+        throw std::ios_base::failure(
+            strprintf("Error closing %s: %s", fs::PathToString(temppath), SysErrorString(errno)));
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("coins_written", written_coins_count);
+    result.pushKV("base_hash", tip->GetBlockHash().ToString());
+    result.pushKV("base_height", tip->nHeight);
+    result.pushKV("path", path.utf8string());
+    result.pushKV("txoutset_hash", maybe_stats->hashSerialized.ToString());
+    result.pushKV("nchaintx", tip->m_chain_tx_count);
+    return result;
+}
+
+UniValue CreateUTXOSnapshot(
+    node::NodeContext& node,
+    Chainstate& chainstate,
+    AutoFile&& afile,
+    const fs::path& path,
+    const fs::path& tmppath)
+{
+    auto [cursor, stats, tip]{WITH_LOCK(::cs_main, return PrepareUTXOSnapshot(chainstate, node.rpc_interruption_point))};
+    return WriteUTXOSnapshot(chainstate,
+                             cursor.get(),
+                             &stats,
+                             tip,
+                             std::move(afile),
+                             path,
+                             tmppath,
+                             node.rpc_interruption_point);
+}
+
+/**
+ * RAII class that creates a temporary database directory in its constructor
+ * and removes it in its destructor.
+ */
+class TemporaryUTXODatabase
+{
+    fs::path m_path;
+public:
+    TemporaryUTXODatabase(const fs::path& path) : m_path(path) {
+        fs::create_directories(m_path);
+    }
+    ~TemporaryUTXODatabase() {
+        if (!DestroyDB(fs::PathToString(m_path))) {
+            LogInfo("Failed to clean up temporary UTXO database at %s, please remove it manually.",
+                    fs::PathToString(m_path));
+        }
+    }
+};
+
+static UniValue CreateRolledBackUTXOSnapshot(
+    NodeContext& node,
+    Chainstate& chainstate,
+    const CBlockIndex* target,
+    AutoFile&& afile,
+    const fs::path& path,
+    const fs::path& tmppath,
+    const bool in_memory)
+{
+    // Create a temporary leveldb to store the UTXO set that is being rolled back
+    std::string temp_db_name{strprintf("temp_utxo_%d", target->nHeight)};
+    fs::path temp_db_path{fsbridge::AbsPathJoin(tmppath.parent_path(), fs::u8path(temp_db_name))};
+
+    // Only create the on-disk temp directory when not using in-memory mode
+    std::optional<TemporaryUTXODatabase> temp_db_cleaner;
+    if (!in_memory) {
+        temp_db_cleaner.emplace(temp_db_path);
+    } else {
+        LogInfo("Using in-memory database for UTXO-set rollback (this may require significant RAM).");
+    }
+
+    // Create temporary database
+    DBParams db_params{
+        .path = temp_db_path,
+        .cache_bytes = 0,
+        .memory_only = in_memory,
+        .wipe_data = true,
+        .obfuscate = false,
+        .options = DBOptions{}
+    };
+
+    std::unique_ptr<CCoinsViewDB> temp_db = std::make_unique<CCoinsViewDB>(
+        std::move(db_params),
+        CoinsViewOptions{}
+    );
+
+    const CBlockIndex* tip = nullptr;
+    LogInfo("Copying current UTXO set to temporary database.");
+    {
+        CCoinsViewCache temp_cache(temp_db.get());
+        std::unique_ptr<CCoinsViewCursor> cursor;
+        {
+            LOCK(::cs_main);
+            tip = chainstate.m_chain.Tip();
+            chainstate.ForceFlushStateToDisk(/*wipe_cache=*/false);
+            cursor = chainstate.CoinsDB().Cursor();
+        }
+        temp_cache.SetBestBlock(tip->GetBlockHash());
+
+        size_t coins_count = 0;
+        while (cursor->Valid()) {
+            node.rpc_interruption_point();
+
+            COutPoint key;
+            Coin coin;
+            if (cursor->GetKey(key) && cursor->GetValue(coin)) {
+                temp_cache.AddCoin(key, std::move(coin), false);
+                coins_count++;
+
+                // Log every 10M coins (optimized for mainnet)
+                if (coins_count % 10'000'000 == 0) {
+                    LogInfo("Copying UTXO set: %uM coins copied.", coins_count / 1'000'000);
+                }
+
+                // Flush periodically
+                if (coins_count % 100'000 == 0) {
+                    temp_cache.Flush();
+                }
+            }
+            cursor->Next();
+        }
+
+        temp_cache.Flush();
+        LogInfo("UTXO set copy complete: %u coins total", coins_count);
+    }
+
+    LogInfo("Rolling back from height %d to %d", tip->nHeight, target->nHeight);
+
+    const CBlockIndex* block_index{tip};
+    const size_t total_blocks{static_cast<size_t>(block_index->nHeight - target->nHeight)};
+    CCoinsViewCache rollback_cache(temp_db.get());
+    rollback_cache.SetBestBlock(block_index->GetBlockHash());
+    size_t blocks_processed = 0;
+    int last_progress{0};
+    DisconnectResult res;
+
+    while (block_index->nHeight > target->nHeight) {
+        node.rpc_interruption_point();
+
+        CBlock block;
+        if (!node.chainman->m_blockman.ReadBlock(block, *block_index)) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR,
+                strprintf("Failed to read block at height %d", block_index->nHeight));
+        }
+
+        WITH_LOCK(::cs_main, res = chainstate.DisconnectBlock(block, block_index, rollback_cache));
+        if (res == DISCONNECT_FAILED) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR,
+                strprintf("Failed to roll back block at height %d", block_index->nHeight));
+        }
+
+        blocks_processed++;
+        int progress{static_cast<int>(blocks_processed * 100 / total_blocks)};
+        if (progress >= last_progress + 5) {
+            LogInfo("Rolled back %d%% of blocks.", progress);
+            last_progress = progress;
+            rollback_cache.Flush();
+        }
+
+        block_index = block_index->pprev;
+    }
+
+    CHECK_NONFATAL(rollback_cache.GetBestBlock() == target->GetBlockHash());
+    rollback_cache.Flush();
+
+    LogInfo("Rollback complete. Computing UTXO statistics for created txoutset dump.");
+    std::optional<CCoinsStats> maybe_stats = GetUTXOStats(*temp_db,
+                                                          chainstate.m_blockman,
+                                                          CoinStatsHashType::HASH_SERIALIZED,
+                                                          node.rpc_interruption_point);
+
+    if (!maybe_stats) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to compute UTXO statistics");
+    }
+
+    std::unique_ptr<CCoinsViewCursor> pcursor{temp_db->Cursor()};
+
+    LogInfo("Writing snapshot to disk.");
+    return WriteUTXOSnapshot(chainstate,
+                             pcursor.get(),
+                             &(*maybe_stats),
+                             target,
+                             std::move(afile),
+                             path,
+                             tmppath,
+                             node.rpc_interruption_point);
+}
+
 /**
  * RAII class that registers a prune lock in its constructor to prevent
  * block data from being pruned, and removes it in its destructor.
@@ -3203,298 +3471,6 @@ static RPCMethod dumptxoutset()
     return result;
 },
     };
-}
-
-/**
- * RAII class that creates a temporary database directory in its constructor
- * and removes it in its destructor.
- */
-class TemporaryUTXODatabase
-{
-    fs::path m_path;
-public:
-    TemporaryUTXODatabase(const fs::path& path) : m_path(path) {
-        fs::create_directories(m_path);
-    }
-    ~TemporaryUTXODatabase() {
-        if (!DestroyDB(fs::PathToString(m_path))) {
-            LogInfo("Failed to clean up temporary UTXO database at %s, please remove it manually.",
-                    fs::PathToString(m_path));
-        }
-    }
-};
-
-UniValue CreateRolledBackUTXOSnapshot(
-    NodeContext& node,
-    Chainstate& chainstate,
-    const CBlockIndex* target,
-    AutoFile&& afile,
-    const fs::path& path,
-    const fs::path& tmppath,
-    const bool in_memory)
-{
-    // Create a temporary leveldb to store the UTXO set that is being rolled back
-    std::string temp_db_name{strprintf("temp_utxo_%d", target->nHeight)};
-    fs::path temp_db_path{fsbridge::AbsPathJoin(tmppath.parent_path(), fs::u8path(temp_db_name))};
-
-    // Only create the on-disk temp directory when not using in-memory mode
-    std::optional<TemporaryUTXODatabase> temp_db_cleaner;
-    if (!in_memory) {
-        temp_db_cleaner.emplace(temp_db_path);
-    } else {
-        LogInfo("Using in-memory database for UTXO-set rollback (this may require significant RAM).");
-    }
-
-    // Create temporary database
-    DBParams db_params{
-        .path = temp_db_path,
-        .cache_bytes = 0,
-        .memory_only = in_memory,
-        .wipe_data = true,
-        .obfuscate = false,
-        .options = DBOptions{}
-    };
-
-    std::unique_ptr<CCoinsViewDB> temp_db = std::make_unique<CCoinsViewDB>(
-        std::move(db_params),
-        CoinsViewOptions{}
-    );
-
-    const CBlockIndex* tip = nullptr;
-    LogInfo("Copying current UTXO set to temporary database.");
-    {
-        CCoinsViewCache temp_cache(temp_db.get());
-        std::unique_ptr<CCoinsViewCursor> cursor;
-        {
-            LOCK(::cs_main);
-            tip = chainstate.m_chain.Tip();
-            chainstate.ForceFlushStateToDisk(/*wipe_cache=*/false);
-            cursor = chainstate.CoinsDB().Cursor();
-        }
-        temp_cache.SetBestBlock(tip->GetBlockHash());
-
-        size_t coins_count = 0;
-        while (cursor->Valid()) {
-            node.rpc_interruption_point();
-
-            COutPoint key;
-            Coin coin;
-            if (cursor->GetKey(key) && cursor->GetValue(coin)) {
-                temp_cache.AddCoin(key, std::move(coin), false);
-                coins_count++;
-
-                // Log every 10M coins (optimized for mainnet)
-                if (coins_count % 10'000'000 == 0) {
-                    LogInfo("Copying UTXO set: %uM coins copied.", coins_count / 1'000'000);
-                }
-
-                // Flush periodically
-                if (coins_count % 100'000 == 0) {
-                    temp_cache.Flush();
-                }
-            }
-            cursor->Next();
-        }
-
-        temp_cache.Flush();
-        LogInfo("UTXO set copy complete: %u coins total", coins_count);
-    }
-
-    LogInfo("Rolling back from height %d to %d", tip->nHeight, target->nHeight);
-
-    const CBlockIndex* block_index{tip};
-    const size_t total_blocks{static_cast<size_t>(block_index->nHeight - target->nHeight)};
-    CCoinsViewCache rollback_cache(temp_db.get());
-    rollback_cache.SetBestBlock(block_index->GetBlockHash());
-    size_t blocks_processed = 0;
-    int last_progress{0};
-    DisconnectResult res;
-
-    while (block_index->nHeight > target->nHeight) {
-        node.rpc_interruption_point();
-
-        CBlock block;
-        if (!node.chainman->m_blockman.ReadBlock(block, *block_index)) {
-            throw JSONRPCError(RPC_INTERNAL_ERROR,
-                strprintf("Failed to read block at height %d", block_index->nHeight));
-        }
-
-        WITH_LOCK(::cs_main, res = chainstate.DisconnectBlock(block, block_index, rollback_cache));
-        if (res == DISCONNECT_FAILED) {
-            throw JSONRPCError(RPC_INTERNAL_ERROR,
-                strprintf("Failed to roll back block at height %d", block_index->nHeight));
-        }
-
-        blocks_processed++;
-        int progress{static_cast<int>(blocks_processed * 100 / total_blocks)};
-        if (progress >= last_progress + 5) {
-            LogInfo("Rolled back %d%% of blocks.", progress);
-            last_progress = progress;
-            rollback_cache.Flush();
-        }
-
-        block_index = block_index->pprev;
-    }
-
-    CHECK_NONFATAL(rollback_cache.GetBestBlock() == target->GetBlockHash());
-    rollback_cache.Flush();
-
-    LogInfo("Rollback complete. Computing UTXO statistics for created txoutset dump.");
-    std::optional<CCoinsStats> maybe_stats = GetUTXOStats(*temp_db,
-                                                          chainstate.m_blockman,
-                                                          CoinStatsHashType::HASH_SERIALIZED,
-                                                          node.rpc_interruption_point);
-
-    if (!maybe_stats) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to compute UTXO statistics");
-    }
-
-    std::unique_ptr<CCoinsViewCursor> pcursor{temp_db->Cursor()};
-
-    LogInfo("Writing snapshot to disk.");
-    return WriteUTXOSnapshot(chainstate,
-                             pcursor.get(),
-                             &(*maybe_stats),
-                             target,
-                             std::move(afile),
-                             path,
-                             tmppath,
-                             node.rpc_interruption_point);
-}
-
-std::tuple<std::unique_ptr<CCoinsViewCursor>, CCoinsStats, const CBlockIndex*>
-PrepareUTXOSnapshot(
-    Chainstate& chainstate,
-    const std::function<void()>& interruption_point)
-{
-    std::unique_ptr<CCoinsViewCursor> pcursor;
-    std::optional<CCoinsStats> maybe_stats;
-    const CBlockIndex* tip;
-
-    {
-        // We need to lock cs_main to ensure that the coinsdb isn't written to
-        // between (i) flushing coins cache to disk (coinsdb), (ii) getting stats
-        // based upon the coinsdb, and (iii) constructing a cursor to the
-        // coinsdb for use in WriteUTXOSnapshot.
-        //
-        // Cursors returned by leveldb iterate over snapshots, so the contents
-        // of the pcursor will not be affected by simultaneous writes during
-        // use below this block.
-        //
-        // See discussion here:
-        //   https://github.com/bitcoin/bitcoin/pull/15606#discussion_r274479369
-        //
-        AssertLockHeld(::cs_main);
-
-        chainstate.ForceFlushStateToDisk(/*wipe_cache=*/false);
-
-        maybe_stats = GetUTXOStats(chainstate.CoinsDB(), chainstate.m_blockman, CoinStatsHashType::HASH_SERIALIZED, interruption_point);
-        if (!maybe_stats) {
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
-        }
-
-        pcursor = chainstate.CoinsDB().Cursor();
-        tip = CHECK_NONFATAL(chainstate.m_blockman.LookupBlockIndex(maybe_stats->hashBlock));
-    }
-
-    return {std::move(pcursor), *CHECK_NONFATAL(maybe_stats), tip};
-}
-
-UniValue WriteUTXOSnapshot(
-    Chainstate& chainstate,
-    CCoinsViewCursor* pcursor,
-    CCoinsStats* maybe_stats,
-    const CBlockIndex* tip,
-    AutoFile&& afile,
-    const fs::path& path,
-    const fs::path& temppath,
-    const std::function<void()>& interruption_point)
-{
-    LOG_TIME_SECONDS(strprintf("writing UTXO snapshot at height %s (%s) to file %s (via %s)",
-        tip->nHeight, tip->GetBlockHash().ToString(),
-        fs::PathToString(path), fs::PathToString(temppath)));
-
-    SnapshotMetadata metadata{chainstate.m_chainman.GetParams().MessageStart(), tip->GetBlockHash(), maybe_stats->coins_count};
-
-    afile << metadata;
-
-    COutPoint key;
-    Txid last_hash;
-    Coin coin;
-    unsigned int iter{0};
-    size_t written_coins_count{0};
-    std::vector<std::pair<uint32_t, Coin>> coins;
-
-    // To reduce space the serialization format of the snapshot avoids
-    // duplication of tx hashes. The code takes advantage of the guarantee by
-    // leveldb that keys are lexicographically sorted.
-    // In the coins vector we collect all coins that belong to a certain tx hash
-    // (key.hash) and when we have them all (key.hash != last_hash) we write
-    // them to file using the below lambda function.
-    // See also https://github.com/bitcoin/bitcoin/issues/25675
-    auto write_coins_to_file = [&](AutoFile& afile, const Txid& last_hash, const std::vector<std::pair<uint32_t, Coin>>& coins, size_t& written_coins_count) {
-        afile << last_hash;
-        WriteCompactSize(afile, coins.size());
-        for (const auto& [n, coin] : coins) {
-            WriteCompactSize(afile, n);
-            afile << coin;
-            ++written_coins_count;
-        }
-    };
-
-    pcursor->GetKey(key);
-    last_hash = key.hash;
-    while (pcursor->Valid()) {
-        if (iter % 5000 == 0) interruption_point();
-        ++iter;
-        if (pcursor->GetKey(key) && pcursor->GetValue(coin)) {
-            if (key.hash != last_hash) {
-                write_coins_to_file(afile, last_hash, coins, written_coins_count);
-                last_hash = key.hash;
-                coins.clear();
-            }
-            coins.emplace_back(key.n, coin);
-        }
-        pcursor->Next();
-    }
-
-    if (!coins.empty()) {
-        write_coins_to_file(afile, last_hash, coins, written_coins_count);
-    }
-
-    CHECK_NONFATAL(written_coins_count == maybe_stats->coins_count);
-
-    if (afile.fclose() != 0) {
-        throw std::ios_base::failure(
-            strprintf("Error closing %s: %s", fs::PathToString(temppath), SysErrorString(errno)));
-    }
-
-    UniValue result(UniValue::VOBJ);
-    result.pushKV("coins_written", written_coins_count);
-    result.pushKV("base_hash", tip->GetBlockHash().ToString());
-    result.pushKV("base_height", tip->nHeight);
-    result.pushKV("path", path.utf8string());
-    result.pushKV("txoutset_hash", maybe_stats->hashSerialized.ToString());
-    result.pushKV("nchaintx", tip->m_chain_tx_count);
-    return result;
-}
-
-UniValue CreateUTXOSnapshot(
-    node::NodeContext& node,
-    Chainstate& chainstate,
-    AutoFile&& afile,
-    const fs::path& path,
-    const fs::path& tmppath)
-{
-    auto [cursor, stats, tip]{WITH_LOCK(::cs_main, return PrepareUTXOSnapshot(chainstate, node.rpc_interruption_point))};
-    return WriteUTXOSnapshot(chainstate,
-                             cursor.get(),
-                             &stats,
-                             tip,
-                             std::move(afile),
-                             path,
-                             tmppath,
-                             node.rpc_interruption_point);
 }
 
 static RPCMethod loadtxoutset()
