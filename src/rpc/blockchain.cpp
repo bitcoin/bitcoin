@@ -1131,7 +1131,7 @@ static RPCMethod gettxoutsetinfo()
             // If a specific block was requested and the index has already synced past that height, we can return the
             // data already even though the index is not fully synced yet.
             if (pindex && pindex->nHeight > summary.best_block_height) {
-                throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Unable to get data because coinstatsindex is still syncing. Current height: %d", summary.best_block_height));
+                throw JSONRPCError(RPC_MISC_ERROR, strprintf("Unable to get data because coinstatsindex is still syncing. Current height: %d", summary.best_block_height));
             }
         }
     }
@@ -3465,7 +3465,7 @@ UniValue WriteUTXOSnapshot(
     CHECK_NONFATAL(written_coins_count == maybe_stats->coins_count);
 
     if (afile.fclose() != 0) {
-        throw std::ios_base::failure(
+        throw JSONRPCError(RPC_MISC_ERROR,
             strprintf("Error closing %s: %s", fs::PathToString(temppath), SysErrorString(errno)));
     }
 
