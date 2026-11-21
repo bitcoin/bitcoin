@@ -93,6 +93,19 @@ private:
 
     uint256 GetCanonicalHash() const;
 
+    // The SPKM IDs of the multipath relatives for multipath reconstruction
+    // Includes the SPKM ID for this descriptor, in its position in the multipath
+    std::vector<uint256> m_relative_ids;
+
+    WalletDescriptor(std::shared_ptr<Descriptor> descriptor, uint64_t creation_time, int32_t range_start, int32_t range_end, int32_t next_index, const std::vector<uint256>& relative_ids)
+    : range_start(descriptor->IsRange() ? range_start : 0),
+      next_index(next_index),
+      range_end(descriptor->IsRange() ? range_end : 1),
+      m_relative_ids(relative_ids),
+      descriptor(descriptor),
+      creation_time(creation_time)
+    {}
+
 public:
     const std::shared_ptr<const Descriptor> descriptor;
     uint64_t creation_time = 0;
@@ -127,7 +140,7 @@ public:
     void Serialize(Stream& s) const
     {
         std::string descriptor_str = descriptor->ToString();
-        s << descriptor_str << creation_time << next_index << range_start << range_end;
+        s << descriptor_str << creation_time << next_index << range_start << range_end << m_relative_ids;
     }
 
     template <typename Stream>
@@ -136,27 +149,28 @@ public:
         std::string descriptor_str;
         uint64_t creation_time;
         int32_t next_index, range_start, range_end;
+        std::vector<uint256> relative_ids;
         s >> descriptor_str >> creation_time >> next_index >> range_start >> range_end;
+
+        if (!s.empty()) {
+            s >> relative_ids;
+        }
 
         std::string error;
         FlatSigningProvider keys;
-        auto descs = Parse(descriptor_str, keys, error, true);
-        if (descs.empty()) {
+        auto desc = Parse(descriptor_str, keys, error, true);
+        if (!desc) {
             throw std::ios_base::failure("Invalid descriptor: " + error);
         }
-        if (descs.size() > 1) {
+        if (desc->IsMultipath()) {
             throw std::ios_base::failure("Can't load a multipath descriptor from databases");
         }
-        return WalletDescriptor(std::move(descs.at(0)), creation_time, range_start, range_end, next_index);
+        return WalletDescriptor(std::move(desc), creation_time, range_start, range_end, next_index, relative_ids);
     }
 
     WalletDescriptor() = delete;
     WalletDescriptor(std::shared_ptr<Descriptor> descriptor, uint64_t creation_time, int32_t range_start, int32_t range_end, int32_t next_index)
-    : range_start(descriptor->IsRange() ? range_start : 0),
-      next_index(next_index),
-      range_end(descriptor->IsRange() ? range_end : 1),
-      descriptor(descriptor),
-      creation_time(creation_time)
+    : WalletDescriptor(descriptor, creation_time, range_start, range_end, next_index, {})
     {}
 
     /** Replaces all metadata (range, start, end, creation time), and cache from another WalletDescriptor if it has the same canonical descriptor string.
@@ -167,6 +181,12 @@ public:
 
     // Compare by using the canonical string to make the hardened indicators consistent for comparison
     bool IsCanonicallyEquivalent(const WalletDescriptor& other) const;
+
+    // Add the id of a multipath relative
+    // Note that this does not validate whether the relative is actually a relative.
+    // Callers must be sure that the multipath can be reconstructed before calling this function.
+    void SetMultipathRelatives(const std::vector<uint256>& ids) { m_relative_ids = ids; }
+    std::vector<uint256> GetMultipathRelativesIDs() const { return m_relative_ids; }
 };
 
 WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& output_type, bool internal);

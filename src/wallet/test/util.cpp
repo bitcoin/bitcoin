@@ -47,9 +47,8 @@ void AddKey(CWallet& wallet, const CKey& key)
     LOCK(wallet.cs_wallet);
     FlatSigningProvider provider;
     std::string error;
-    auto descs = Parse("combo(" + EncodeSecret(key) + ")", provider, error, /* require_checksum=*/ false);
-    assert(descs.size() == 1);
-    auto& desc = descs.at(0);
+    auto desc = Parse("combo(" + EncodeSecret(key) + ")", provider, error, /* require_checksum=*/ false);
+    assert(desc);
     WalletDescriptor w_desc(std::move(desc), /*creation_time=*/0, /*range_start=*/0, /*range_end=*/1, /*next_index=*/1);
     Assert(wallet.AddWalletDescriptor(w_desc, provider, /*label=*/"", /*internal=*/false));
 }
@@ -134,10 +133,9 @@ wallet::DescriptorScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std
 
     FlatSigningProvider keys;
     std::string error;
-    auto parsed_descs = Parse(desc_str, keys, error, false);
-    Assert(success == (!parsed_descs.empty()));
+    auto desc = Parse(desc_str, keys, error, false);
+    Assert(success == bool(desc));
     if (!success) return nullptr;
-    auto& desc = parsed_descs.at(0);
 
     const int64_t range_start = 0, range_end = 1, next_index = 0, timestamp = 1;
 

@@ -24,7 +24,7 @@ class DescriptorTest(BitcoinTestFramework):
         info = self.nodes[0].getdescriptorinfo(desc)
         assert_equal(info, self.nodes[0].getdescriptorinfo(descsum_create(desc)))
         if expanded_descs is not None:
-            assert_equal(info["descriptor"], descsum_create(expanded_descs[0]))
+            assert_equal(info["descriptor"], descsum_create(desc))
             assert_equal(info["multipath_expansion"], [descsum_create(x) for x in expanded_descs])
         else:
             assert_equal(info['descriptor'], descsum_create(desc))
