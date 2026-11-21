@@ -40,7 +40,8 @@ pidfile="${BITCOIND_PIDFILE}"
 retry="${BITCOIND_SIGTERM_TIMEOUT}"
 
 depend() {
-	need localmount net
+	need localmount
+	use net
 }
 
 # verify
