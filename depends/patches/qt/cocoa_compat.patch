@@ -12,11 +12,11 @@ resize cursors.
 
 --- a/qtbase/src/plugins/platforms/cocoa/qcocoacursor.mm
 +++ b/qtbase/src/plugins/platforms/cocoa/qcocoacursor.mm
-@@ -138,7 +138,7 @@ NSCursor *QCocoaCursor::convertCursor(QCursor *cursor)
+@@ -155,7 +155,7 @@ NSCursor *QCocoaCursor::convertCursor(QCursor *cursor)
      case Qt::SizeHorCursor:
      case Qt::SizeBDiagCursor:
      case Qt::SizeFDiagCursor: {
--#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(150000)
+-#if QT_APPLE_SDK_EQUAL_OR_ABOVE(MACOS(15))
 +#if 0
          if (@available(macOS 15, *)) {
              auto position = [newShape]{

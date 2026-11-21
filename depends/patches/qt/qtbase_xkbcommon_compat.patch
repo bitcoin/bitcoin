@@ -1,0 +1,17 @@
+Keep compatibility with the current libxkbcommon package
+
+Can be dropped if the libxkbcommon package was updated,
+as that would require a different build system (Meson).
+
+
+--- a/qtbase/src/gui/configure.cmake
++++ b/qtbase/src/gui/configure.cmake
+@@ -213,7 +213,7 @@ if((X11_SUPPORTED) OR QT_FIND_ALL_PACKAGES_ALWAYS)
+ endif()
+ qt_add_qmake_lib_dependency(xcb_xinput xcb)
+ if((X11_SUPPORTED) OR QT_FIND_ALL_PACKAGES_ALWAYS)
+-    qt_find_package(XKB 0.9.0 MODULE PROVIDED_TARGETS XKB::XKB MODULE_NAME gui QMAKE_LIB xkbcommon)
++    qt_find_package(XKB 0.8.4 MODULE PROVIDED_TARGETS XKB::XKB MODULE_NAME gui QMAKE_LIB xkbcommon)
+ endif()
+ if((X11_SUPPORTED) OR QT_FIND_ALL_PACKAGES_ALWAYS)
+     qt_find_package(XKB_COMMON_X11 0.9.0 MODULE
