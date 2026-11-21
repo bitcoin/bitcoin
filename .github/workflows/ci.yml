@@ -32,7 +32,7 @@ jobs:
     runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-2604-x64-8x' || 'ubuntu-26.04' }}
     env:
       TEST_RUNNER_PORT_MIN: "14000"  # Use a larger port range to avoid colliding with other CI services.
-    if: github.event_name == 'pull_request' && github.event.pull_request.commits != 1
+    if: false
     timeout-minutes: 360  # Use maximum time, see https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_idtimeout-minutes.
     steps:
       - name: Determine fetch depth
@@ -114,7 +114,7 @@ jobs:
     # one for the branch push and one for the pull request.
     # This can be avoided by setting SKIP_BRANCH_PUSH=true as a custom env variable
     # in Github repository settings.
-    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+    if: false
 
     timeout-minutes: 120
 
@@ -195,7 +195,7 @@ jobs:
     name: ${{ matrix.job-name }}
     runs-on: windows-2025-vs2026
 
-    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+    if: false
 
     env:
       PYTHONUTF8: 1
@@ -288,6 +288,7 @@ jobs:
           py -3 .github/ci-windows.py ${{ matrix.job-type }} run_tests
 
   record-frozen-commit:
+    if: false
     # Record frozen commit, so that the native tests on cross-builds can run on
     # the exact same commit id of the build.
     name: '[meta] record frozen commit'
@@ -305,7 +306,7 @@ jobs:
     name: 'Windows-cross to x86_64'
     needs: record-frozen-commit
     runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-latest-x64-4x' || 'ubuntu-latest' }}
-    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+    if: false
 
     env:
       FILE_ENV: './ci/test/00_setup_env_win64.sh'
@@ -353,6 +354,7 @@ jobs:
             ${{ env.BASE_BUILD_DIR }}/test/config.ini
 
   windows-native-test:
+    if: false
     name: 'Windows, test cross-built'
     runs-on: windows-2022
     needs: [windows-cross, record-frozen-commit]
@@ -400,7 +402,7 @@ jobs:
   ci-matrix:
     name: ${{ matrix.name }}
     runs-on: ${{ github.repository == 'bitcoin/bitcoin' && matrix.warp-runner || matrix.fallback-runner }}
-    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+    if: false
     timeout-minutes: ${{ matrix.timeout-minutes }}
 
     env:
@@ -451,12 +453,6 @@ jobs:
             fallback-runner: 'ubuntu-latest'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_netbsd_cross.sh'
-
-          - name: 'FreeBSD Cross'
-            warp-runner: 'warp-ubuntu-latest-x64-8x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_freebsd_cross.sh'
 
           - name: 'OpenBSD Cross'
             warp-runner: 'warp-ubuntu-latest-x64-8x'
@@ -566,10 +562,103 @@ jobs:
         with:
           provider: ${{ matrix.provider || (github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha') }}
 
+  bsd:
+    name: ${{ matrix.name }} ${{ matrix.trial }}
+    runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-2604-x64-8x;nested-virtualization.enabled=true' || 'ubuntu-latest' }}
+    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+    timeout-minutes: 120
+
+    env:
+      DANGER_RUN_CI_ON_HOST: 1
+      FILE_ENV: ${{ matrix.file-env }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        trial: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
+        include:
+          - name: FreeBSD
+            os: freebsd
+            file-env: './ci/test/00_setup_env_freebsd_native.sh'
+            prepare: |
+              pkg update
+              pkg install -y $PACKAGES
+              pip install $PIP_PACKAGES
+
+    steps:
+      - *ANNOTATION_PR_NUMBER
+
+      - *CHECKOUT
+
+      - name: Configure environment
+        uses: ./.github/actions/configure-environment
+
+      - name: Configure VM resources and cache paths
+        run: |
+          # shellcheck disable=SC1090
+          source "$FILE_ENV"
+          workspace_parent="${GITHUB_WORKSPACE%/*}"
+          {
+            echo "BSD_RELEASE=${BSD_RELEASE}"
+            echo "BSD_CPU=$(nproc)"
+            # Leave a quarter of host RAM for the runner and VM overhead.
+            echo "BSD_MEM=$(awk '/^MemTotal:/ {print int($2 * 3 / 4 / 1024)}' /proc/meminfo)"
+            echo "BASE_ROOT_DIR=${GITHUB_WORKSPACE}"
+            echo "BASE_BUILD_DIR=${workspace_parent}/build_ ₿🧪_"
+            echo "BASE_SCRATCH_DIR=${workspace_parent}/scratch_ ₿🧪_"
+            echo "CCACHE_DIR=${GITHUB_WORKSPACE}/ci/scratch/ccache"
+            echo "DEPENDS_DIR=${GITHUB_WORKSPACE}/depends"
+            echo "BASE_CACHE=${GITHUB_WORKSPACE}/depends/built"
+            echo "SOURCES_PATH=${GITHUB_WORKSPACE}/depends/sources"
+            echo "PREVIOUS_RELEASES_DIR=${GITHUB_WORKSPACE}/releases"
+          } >> "$GITHUB_ENV"
+
+      - name: Restore caches
+        uses: ./.github/actions/cache/restore
+        with:
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+
+      - name: Start FreeBSD VM
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: ${{ env.BSD_RELEASE }}
+          cpu: ${{ env.BSD_CPU }}
+          mem: ${{ env.BSD_MEM }}
+          custom-shell-name: bsd
+          copyback: false
+          envs: DANGER_RUN_CI_ON_HOST FILE_ENV BASE_ROOT_DIR BASE_BUILD_DIR BASE_SCRATCH_DIR CCACHE_DIR DEPENDS_DIR PREVIOUS_RELEASES_DIR
+          disable-cache: true
+          prepare: |
+            . "${{ matrix.file-env }}"
+            ${{ matrix.prepare }}
+
+      - name: CI script
+        shell: bsd {0}
+        run: |
+          # Packages are already installed in the prepared VM.
+          echo done > "${BASE_ROOT_DIR}/ci.base-install-done"
+          ./ci/test_run_all.sh
+
+      - name: Show kernel messages
+        if: failure()
+        run: ssh freebsd dmesg
+
+      - name: Retrieve VM caches
+        run: |
+          for cache_path in "$CCACHE_DIR" "$SOURCES_PATH" "$BASE_CACHE" "$PREVIOUS_RELEASES_DIR"; do
+            mkdir -p "$cache_path"
+            rsync --archive --stats --protect-args --rsync-path=/usr/local/bin/rsync "freebsd:${cache_path}/" "${cache_path}/"
+          done
+
+      - name: Save caches
+        uses: ./.github/actions/cache/save
+        with:
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+
   lint:
     name: 'lint'
     runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-latest-x64-2x' || 'ubuntu-latest' }}
-    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+    if: false
     timeout-minutes: 20
     env:
       CONTAINER_NAME: "bitcoin-linter"

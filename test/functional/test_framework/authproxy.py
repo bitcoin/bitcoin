@@ -44,6 +44,7 @@ import socket
 import time
 import urllib.parse
 
+from .netutil import HTTPConnection
 from .util import JSONRPCException, assert_equal
 
 HTTP_TIMEOUT = 30
@@ -214,4 +215,4 @@ class AuthServiceProxy():
         elif self.__url.scheme == 'https':
             self.__conn = http.client.HTTPSConnection(self.__url.hostname, port, timeout=self.timeout)
         else:
-            self.__conn = http.client.HTTPConnection(self.__url.hostname, port, timeout=self.timeout)
+            self.__conn = HTTPConnection(self.__url.hostname, port, timeout=self.timeout)

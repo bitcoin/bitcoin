@@ -5,7 +5,7 @@
 """Test the HTTP server basics."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.netutil import NETWORK_ERRORS
+from test_framework.netutil import HTTPConnection, NETWORK_ERRORS
 from test_framework.util import (
     assert_equal,
     assert_raises,
@@ -38,7 +38,7 @@ class BitcoinHTTPConnection:
         self.reset_conn()
 
     def reset_conn(self):
-        self.conn = http.client.HTTPConnection(self.url.hostname, self.url.port, timeout=self.timeout)
+        self.conn = HTTPConnection(self.url.hostname, self.url.port, timeout=self.timeout)
         self.conn.connect()
 
     def sock_closed(self):

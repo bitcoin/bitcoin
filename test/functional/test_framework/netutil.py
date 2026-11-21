@@ -14,6 +14,8 @@ import socket
 import struct
 import array
 import os
+import unittest
+from unittest.mock import Mock, patch
 
 # Easily unreachable address. Attempts to connect to it will stay within the machine.
 # Used to avoid non-loopback traffic or DNS queries.
@@ -112,7 +114,7 @@ def get_bind_addrs(pid):
         import subprocess
         output = subprocess.check_output(["lsof",
             *(["-Di"] if sys.platform.startswith(("freebsd", "netbsd", "sunos5")) else []), # Ignore device cache to avoid stderr warnings.
-            *(["-w"] if sys.platform.startswith("netbsd") else []), # Ignore point release mismatch warnings.
+            *(["-w"] if sys.platform.startswith(("freebsd", "netbsd")) else []), # Ignore lsof warnings.
             "-nP",          # Keep hosts and ports numeric.
             "-a",           # Require all filters to match.
             "-p", str(pid), # Limit results to the target pid.
@@ -241,8 +243,8 @@ def set_ephemeral_port_range(sock):
     The default ephemeral port ranges on FreeBSD (10000-65535) and
     OpenBSD (1024-49151) overlap with the test framework's static port
     range starting at TEST_RUNNER_PORT_MIN (default=11000).
-    Using IP_PORTRANGE_HIGH avoids this overlap when binding to port 0 for dynamic
-    port allocation.
+    Using IP_PORTRANGE_HIGH avoids this overlap when binding to port 0 or
+    connecting without an explicit source port.
     '''
     if sys.platform.startswith(("freebsd", "openbsd")):
         # Constants from FreeBSD/OpenBSD's netinet/in.h and netinet6/in6.h
@@ -253,3 +255,53 @@ def set_ephemeral_port_range(sock):
             sock.setsockopt(socket.IPPROTO_IPV6, IPV6_PORTRANGE, IP_PORTRANGE_HIGH)
         else:
             sock.setsockopt(socket.IPPROTO_IP, IP_PORTRANGE, IP_PORTRANGE_HIGH)
+
+
+def _create_connection(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, source_address=None):
+    """Like socket.create_connection(), but keep BSD source ports out of the test range."""
+    host, port = address
+    last_error = None
+    for family, socktype, proto, _, sockaddr in socket.getaddrinfo(host, port, 0, socket.SOCK_STREAM):
+        sock = None
+        try:
+            sock = socket.socket(family, socktype, proto)
+            set_ephemeral_port_range(sock)
+            if timeout is not socket._GLOBAL_DEFAULT_TIMEOUT:
+                sock.settimeout(timeout)
+            if source_address:
+                sock.bind(source_address)
+            sock.connect(sockaddr)
+            return sock
+        except OSError as e:
+            last_error = e
+            if sock is not None:
+                sock.close()
+    if last_error is not None:
+        raise last_error
+    raise OSError("getaddrinfo returns an empty list")
+
+
+class HTTPConnection(http.client.HTTPConnection):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._create_connection = _create_connection
+
+
+class TestHTTPConnection(unittest.TestCase):
+    def test_bsd_port_range_before_connect(self):
+        for platform in ("freebsd15", "openbsd7"):
+            for family, sockaddr, option in (
+                (socket.AF_INET, ("127.0.0.1", 16072), (socket.IPPROTO_IP, 19, 1)),
+                (socket.AF_INET6, ("::1", 16072, 0, 0), (socket.IPPROTO_IPV6, 14, 1)),
+            ):
+                with self.subTest(platform=platform, family=family):
+                    sock = Mock(family=family)
+                    # The option must be set before the kernel picks a source port.
+                    sock.connect.side_effect = lambda _: sock.setsockopt.assert_any_call(*option)
+                    with patch.object(sys, "platform", platform), \
+                         patch.object(socket, "getaddrinfo", return_value=[(family, socket.SOCK_STREAM, 0, "", sockaddr)]), \
+                         patch.object(socket, "socket", return_value=sock):
+                        conn = HTTPConnection("localhost", 16072, timeout=3)
+                        conn.connect()
+                    sock.connect.assert_called_once_with(sockaddr)
+                    sock.settimeout.assert_called_once_with(3)
