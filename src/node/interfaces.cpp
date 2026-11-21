@@ -1077,7 +1077,7 @@ std::unique_ptr<Mining> MakeMining(const node::NodeContext& context, bool wait_l
         util::SignalInterrupt& interrupt(*Assert(context.shutdown_signal));
         WAIT_LOCK(kernel_notifications.m_tip_block_mutex, lock);
         kernel_notifications.m_tip_block_cv.wait(lock, [&]() EXCLUSIVE_LOCKS_REQUIRED(kernel_notifications.m_tip_block_mutex) {
-            return kernel_notifications.m_state.chainstate_loaded || interrupt;
+            return (kernel_notifications.m_state.chainstate_loaded && kernel_notifications.TipBlock()) || interrupt;
         });
         if (interrupt) return nullptr;
     }
