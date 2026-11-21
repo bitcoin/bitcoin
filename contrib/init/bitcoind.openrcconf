@@ -16,9 +16,6 @@
 #BITCOIND_USER="bitcoin"
 #BITCOIND_GROUP="bitcoin"
 
-# Path to bitcoind executable
-#BITCOIND_BIN="/usr/bin/bitcoind"
-
 # Nice value to run bitcoind under
 #BITCOIND_NICE=0
 
