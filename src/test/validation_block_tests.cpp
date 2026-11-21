@@ -6,6 +6,7 @@
 #include <chainparams.h>
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
+#include <consensus/params.h>
 #include <consensus/validation.h>
 #include <node/block_template_manager.h>
 #include <node/blockstorage.h>
@@ -17,6 +18,7 @@
 #include <script/script.h>
 #include <sync.h>
 #include <test/util/common.h>
+#include <test/util/mining.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
 #include <txmempool.h>
@@ -39,6 +41,10 @@ using kernel::ChainstateRole;
 
 namespace validation_block_tests {
 struct MinerTestingSetup : public RegTestingSetup {
+    /// Prepare a coinbase-only block extending the known header at `prev_hash`.
+    /// The coinbase has a unique zero-value output and a reward output spendable with OP_TRUE.
+    /// Call FinalizeBlock() after any further edits to update commitments, mine the block,
+    /// and submit its header.
     std::shared_ptr<CBlock> Block(const uint256& prev_hash);
     std::shared_ptr<const CBlock> GoodBlock(const uint256& prev_hash);
     std::shared_ptr<const CBlock> BadBlock(const uint256& prev_hash);
@@ -78,16 +84,18 @@ struct TestSubscriber final : public CValidationInterface {
 
 std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
 {
+    const auto& chainman{*Assert(m_node.chainman)};
     static int i = 0;
-    static uint64_t time = Params().GenesisBlock().nTime;
+    static uint64_t time{chainman.GetParams().GenesisBlock().nTime};
 
     auto& block_template_manager{*Assert(m_node.block_template_manager)};
     auto block_template{block_template_manager.CreateNewTemplate({
+        .use_mempool = false,
         .coinbase_output_script = CScript{} << i++ << OP_TRUE,
     })};
     auto pblock = std::make_shared<CBlock>(block_template->block);
-    pblock->hashPrevBlock = prev_hash;
-    pblock->nTime = ++time;
+    const auto& parent{*Assert(WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(prev_hash)))};
+    SwitchBlockParent(*pblock, parent, /*new_time=*/++time, chainman.GetConsensus());
 
     // Make the coinbase transaction with two outputs:
     // One zero-value one that has a unique pubkey to make sure that blocks at the same height can have a different hash
@@ -98,10 +106,6 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
     txCoinbase.vout[1].nValue = txCoinbase.vout[0].nValue;
     txCoinbase.vout[0].nValue = 0;
     txCoinbase.vin[0].scriptWitness.SetNull();
-    // Always pad with OP_0 as dummy extraNonce (also avoids bad-cb-length error for block <=16)
-    const int prev_height{WITH_LOCK(::cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(prev_hash)->nHeight)};
-    txCoinbase.vin[0].scriptSig = CScript{} << prev_height + 1 << OP_0;
-    txCoinbase.nLockTime = static_cast<uint32_t>(prev_height);
     pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
 
     return pblock;
@@ -381,5 +385,43 @@ BOOST_AUTO_TEST_CASE(witness_commitment_index)
     pblock.vtx[0] = MakeTransactionRef(std::move(txCoinbase));
 
     BOOST_CHECK_EQUAL(GetWitnessCommitmentIndex(pblock), 2);
+}
+
+BOOST_FIXTURE_TEST_CASE(switch_block_parent_target, RegTestingSetup)
+{
+    const auto& params{m_node.chainman->GetParams()};
+    const auto& consensus{params.GetConsensus()};
+    const auto& genesis{params.GenesisBlock()};
+    const auto parent_hash{genesis.GetHash()};
+    CBlockIndex parent{genesis};
+    parent.phashBlock = &parent_hash;
+    // Regtest disables retargeting, so this synthetic target cannot occur in a real regtest chain.
+    // Its testnet-style 20-minute min-difficulty rule still applies, restoring the pow limit only above the threshold.
+    --parent.nBits;
+
+    const auto threshold{parent.nTime + uint32_t(2 * consensus.nPowTargetSpacing)};
+    CBlock block{genesis};
+    SwitchBlockParent(block, parent, threshold, consensus);
+    BOOST_CHECK_EQUAL(block.nBits, parent.nBits);
+    SwitchBlockParent(block, parent, threshold + 1, consensus);
+    BOOST_CHECK_EQUAL(block.nBits, genesis.nBits);
+}
+
+BOOST_FIXTURE_TEST_CASE(switch_block_parent_coinbase, RegTestingSetup)
+{
+    auto& chainman{*Assert(m_node.chainman)};
+    const auto& consensus{chainman.GetConsensus()};
+    const CBlockIndex* genesis{WITH_LOCK(::cs_main, return chainman.ActiveChain().Genesis())};
+    const int length{consensus.nSubsidyHalvingInterval};
+    std::vector<std::shared_ptr<CBlock>> chain;
+    BOOST_REQUIRE(BuildChain(m_node, genesis, CScript{} << OP_TRUE, length, chain));
+    BOOST_CHECK_EQUAL(chain[0]->vtx[0]->vin[0].scriptSig.size(), 2);
+    for (int i{0}; i < length; ++i) {
+        const auto& block{chain[i]};
+        BOOST_CHECK_EQUAL(block->vtx[0]->nLockTime, i);
+        BOOST_CHECK_EQUAL(block->vtx[0]->vout[0].nValue, GetBlockSubsidy(i + 1, consensus));
+        BOOST_REQUIRE(chainman.ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
+    }
+    BOOST_CHECK_EQUAL(WITH_LOCK(::cs_main, return chainman.ActiveChain().Height()), length);
 }
 BOOST_AUTO_TEST_SUITE_END()
