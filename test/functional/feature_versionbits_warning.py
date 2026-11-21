@@ -103,8 +103,17 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # is cleared. This will move the versionbit state to ACTIVE.
         self.generatetoaddress(node, VB_PERIOD, node_deterministic_address)
 
+        # The versionbit state is ACTIVE now, so the node has already raised the
+        # unknown rules warning and run -alertnotify.
+        self.wait_until(lambda: self.versionbits_in_alert_file())
+
         # Stop-start the node. This is required because bitcoind will only warn once about unknown versions or unknown rules activating.
-        self.restart_node(0)
+        # Empty the alert file while the node is down, so that the check at the
+        # end of the test can only be satisfied by the alert raised after the restart.
+        self.stop_node(0)
+        with open(self.alert_filename, 'w'):
+            pass
+        self.start_node(0)
 
         # Generating one block guarantees that we'll get out of IBD
         self.generatetoaddress(node, 1, node_deterministic_address)
