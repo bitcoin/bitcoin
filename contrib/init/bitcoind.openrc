@@ -29,10 +29,7 @@ command_user="${BITCOIND_USER:-bitcoin}:${BITCOIND_GROUP:-bitcoin}"
 required_files="${BITCOIND_CONFIGFILE}"
 start_stop_daemon_args="--wait 2000"
 
-# The retry schedule to use when stopping the daemon. Could be either
-# a timeout in seconds or multiple signal/timeout pairs (like
-# "SIGKILL/180 SIGTERM/300")
-retry="${BITCOIND_SIGTERM_TIMEOUT}"
+: ${retry:-600}
 
 depend() {
 	need localmount
