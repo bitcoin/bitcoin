@@ -46,12 +46,14 @@ considered active. This is the "traditional" mode of operation for bitcoind.
 | number of chainstates | 1 |
 | active chainstate | ibd |
 
-### User loads a UTXO snapshot via `loadtxoutset` RPC
+### Node loads a UTXO snapshot at startup
 
 `ChainstateManager` initializes a new chainstate (see `ActivateSnapshot()`) to load the
 snapshot contents into. During snapshot load and validation (see
 `PopulateAndValidateSnapshot()`), the new chainstate is not considered active and the
-original chainstate remains in use as active.
+original chainstate remains active, at genesis or without a tip.
+The snapshot's base header must already be in the block index.
+Networking and mempool loading begin after the import finishes.
 
 |    |    |
 | ---------- | ----------- |

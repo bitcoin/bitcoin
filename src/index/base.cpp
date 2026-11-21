@@ -368,7 +368,7 @@ void BaseIndex::BlockConnected(const ChainstateRole& role, const std::shared_ptr
         // m_synced. Consider the case where there is a reorg and the blocks on the stale branch are
         // in the ValidationInterface queue backlog even after the sync thread has caught up to the
         // new chain tip. In this unlikely event, log a warning and let the queue clear.
-        if (best_block_index->GetAncestor(pindex->nHeight - 1) != pindex->pprev) {
+        if (!pindex->pprev || best_block_index->GetAncestor(pindex->nHeight - 1) != pindex->pprev) {
             LogWarning("Block %s does not connect to an ancestor of "
                       "known best chain (tip=%s); not updating index",
                       pindex->GetBlockHash().ToString(),
