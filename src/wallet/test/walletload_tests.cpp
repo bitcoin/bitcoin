@@ -55,6 +55,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)
     {
         // Write unknown active descriptor
         WalletBatch batch(*database);
+        BOOST_CHECK(batch.WriteWalletFlags(WALLET_FLAG_DESCRIPTORS));
         std::string unknown_desc = "trx(tpubD6NzVbkrYhZ4Y4S7m6Y5s9GD8FqEMBy56AGphZXuagajudVZEnYyBahZMgHNCTJc2at82YX6s8JiL1Lohu5A3v1Ur76qguNH4QVQ7qYrBQx/86'/1'/0'/0/*)#8pn8tzdt";
         WalletDescriptor wallet_descriptor(std::make_shared<DummyDescriptor>(unknown_desc), 0, 0, 0, 0);
         BOOST_CHECK(batch.WriteDescriptor(uint256(), wallet_descriptor));
@@ -74,6 +75,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)
     {
         // Write valid descriptor with arbitrary ID
         WalletBatch batch(*database);
+        BOOST_CHECK(batch.WriteWalletFlags(WALLET_FLAG_DESCRIPTORS));
         std::string desc = "wpkh([d34db33f/84h/0h/0h]xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY/0/*)#cjjspncu";
         WalletDescriptor wallet_descriptor(std::make_shared<DummyDescriptor>(desc), 0, 0, 0, 0);
         BOOST_CHECK(batch.WriteDescriptor(uint256::ONE, wallet_descriptor));
@@ -105,6 +107,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_descriptor_cache_invalid_xpub_size, TestingS
         std::unique_ptr<WalletDatabase> database = CreateMockableWalletDatabase();
         {
             WalletBatch batch(*database);
+            BOOST_CHECK(batch.WriteWalletFlags(WALLET_FLAG_DESCRIPTORS));
             WalletDescriptor wallet_descriptor(descriptor, 0, 0, 0, 0);
             BOOST_CHECK(batch.WriteDescriptor(desc_id, wallet_descriptor));
         }

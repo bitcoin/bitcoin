@@ -25,8 +25,17 @@ static void WalletToolReleaseWallet(CWallet* wallet)
     delete wallet;
 }
 
-static void WalletCreate(CWallet* wallet_instance, uint64_t wallet_creation_flags)
+static bool WalletCreate(CWallet* wallet_instance, uint64_t wallet_creation_flags)
 {
+    // Initialize version metadata as CWallet::CreateNew does
+    {
+        WalletBatch batch(wallet_instance->GetDatabase());
+        if (!batch.WriteLastOpenedVersion() || !batch.WriteLastOpenedFeatures()) {
+            tfm::format(std::cerr, "Error creating %s: Could not write version metadata.\n", wallet_instance->GetName());
+            return false;
+        }
+    }
+
     LOCK(wallet_instance->cs_wallet);
 
     wallet_instance->InitWalletFlags(wallet_creation_flags);
@@ -36,6 +45,7 @@ static void WalletCreate(CWallet* wallet_instance, uint64_t wallet_creation_flag
 
     tfm::format(std::cout, "Topping up keypool...\n");
     wallet_instance->TopUpKeyPool();
+    return true;
 }
 
 static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::path& path, DatabaseOptions options)
@@ -51,6 +61,12 @@ static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::pa
 
     // dummy chain interface
     std::shared_ptr<CWallet> wallet_instance{new CWallet(/*chain=*/nullptr, name, std::move(database)), WalletToolReleaseWallet};
+    if (options.require_create) {
+        // A newly created database has no records to load
+        if (!WalletCreate(wallet_instance.get(), options.create_flags)) return nullptr;
+        return wallet_instance;
+    }
+
     DBErrors load_wallet_ret;
     try {
         load_wallet_ret = wallet_instance->PopulateWalletFromDB(error, warnings);
@@ -70,8 +86,6 @@ static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::pa
     if (load_wallet_ret != DBErrors::LOAD_OK && load_wallet_ret != DBErrors::NONCRITICAL_ERROR && load_wallet_ret != DBErrors::NEED_RESCAN) {
         return nullptr;
     }
-
-    if (options.require_create) WalletCreate(wallet_instance.get(), options.create_flags);
 
     return wallet_instance;
 }
