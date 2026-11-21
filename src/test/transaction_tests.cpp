@@ -376,6 +376,18 @@ BOOST_AUTO_TEST_CASE(tx_oversized)
     }
 }
 
+BOOST_AUTO_TEST_CASE(tx_negative_output_after_positive)
+{
+    CMutableTransaction tx;
+    tx.vin.resize(1);
+    tx.vout.emplace_back(1, CScript{});
+    tx.vout.emplace_back(-1, CScript{});
+
+    TxValidationState state;
+    BOOST_CHECK(!CheckTransaction(CTransaction{tx}, state));
+    BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-txns-vout-negative");
+}
+
 BOOST_AUTO_TEST_CASE(basic_transaction_tests)
 {
     // Random real transaction (e2769b09e784f32f62ef849763d4f45b98e07ba658647343b915ff832b110436)
