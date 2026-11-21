@@ -550,7 +550,7 @@ bool HasLegacyRecords(CWallet& wallet, DatabaseBatch& batch)
     return false;
 }
 
-static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, int last_client) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     AssertLockHeld(pwallet->cs_wallet);
     DBErrors result = DBErrors::LOAD_OK;
@@ -1184,7 +1184,7 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
 #endif
 
         // Load legacy wallet keys
-        result = std::max(LoadLegacyWalletRecords(pwallet, *m_batch, last_client), result);
+        result = std::max(LoadLegacyWalletRecords(pwallet, *m_batch), result);
 
         // Load descriptors
         result = std::max(LoadDescriptorWalletRecords(pwallet, *m_batch, last_client), result);

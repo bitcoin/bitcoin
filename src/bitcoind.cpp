@@ -30,7 +30,6 @@
 #include <util/tokenpipe.h>
 #include <util/translation.h>
 
-#include <any>
 #include <functional>
 #include <optional>
 
@@ -179,7 +178,6 @@ static bool AppInit(NodeContext& node)
     // end, which is interpreted as failure to start.
     TokenPipeEnd daemon_ep;
 #endif
-    std::any context{&node};
     try
     {
         // -server defaults to true for bitcoind but not for the GUI so do this here

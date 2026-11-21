@@ -45,7 +45,7 @@ private:
         Error
     };
 
-    size_t couldSignInputs(const PartiallySignedTransaction &psbtx);
+    size_t couldSignInputs();
     void updateTransactionDisplay();
     QString renderTransaction(const PartiallySignedTransaction &psbtx);
     void showStatus(const QString &msg, StatusLevel level);

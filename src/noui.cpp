@@ -19,25 +19,22 @@ btcsignals::connection noui_InitMessageConn;
 
 void noui_ThreadSafeMessageBox(const bilingual_str& message, unsigned int style)
 {
-    bool fSecure = style & CClientUIInterface::SECURE;
-    style &= ~CClientUIInterface::SECURE;
-
     std::string strCaption;
     switch (style) {
     case CClientUIInterface::MSG_ERROR:
         strCaption = "Error: ";
-        if (!fSecure) LogError("%s\n", message.original);
+        LogError("%s\n", message.original);
         break;
     case CClientUIInterface::MSG_WARNING:
         strCaption = "Warning: ";
-        if (!fSecure) LogWarning("%s\n", message.original);
+        LogWarning("%s\n", message.original);
         break;
     case CClientUIInterface::MSG_INFORMATION:
         strCaption = "Information: ";
-        if (!fSecure) LogInfo("%s\n", message.original);
+        LogInfo("%s\n", message.original);
         break;
     default:
-        if (!fSecure) LogInfo("%s%s\n", strCaption, message.original);
+        LogInfo("%s%s\n", strCaption, message.original);
     }
 
     tfm::format(std::cerr, "%s%s\n", strCaption, message.original);

@@ -394,7 +394,6 @@ BOOST_AUTO_TEST_CASE(peer_dos_limits)
         }
 
         for (unsigned int i{0}; i < 10; ++i) {
-            CMutableTransaction tx;
             std::shuffle(outpoints_50.begin(), outpoints_50.end(), m_rng);
             auto ptx = MakeTransactionSpending(outpoints_50, m_rng);
             BOOST_CHECK(orphanage->AddTx(ptx, 0));
