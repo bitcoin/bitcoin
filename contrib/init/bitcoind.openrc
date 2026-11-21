@@ -12,14 +12,14 @@ export SSD_NICELEVEL="${BITCOIND_NICE:-0}"
 
 BITCOIND_CONFIGFILE=${BITCOIND_CONFIGFILE:-/etc/bitcoin/bitcoin.conf}
 BITCOIND_PIDDIR=${BITCOIND_PIDDIR:-/run/bitcoind}
-BITCOIND_PIDFILE=${BITCOIND_PIDFILE:-${BITCOIND_PIDDIR}/bitcoind.pid}
 BITCOIND_DATADIR=${BITCOIND_DATADIR:-${BITCOIND_DEFAULT_DATADIR}}
 
 name="Bitcoin Core Daemon"
 description="Bitcoin cryptocurrency P2P network daemon"
+pidfile=${BITCOIND_PIDFILE:-${BITCOIND_PIDDIR}/${RC_SVCNAME}.pid}
 
 command=/usr/bin/bitcoind
-command_args="-pid=\"${BITCOIND_PIDFILE}\" \
+command_args="-pid=${pidfile} \
 		-conf=\"${BITCOIND_CONFIGFILE}\" \
 		-datadir=\"${BITCOIND_DATADIR}\" \
 		-daemon \
@@ -28,7 +28,6 @@ command_user="${BITCOIND_USER:-bitcoin}:${BITCOIND_GROUP:-bitcoin}"
 
 required_files="${BITCOIND_CONFIGFILE}"
 start_stop_daemon_args="--wait 2000"
-pidfile="${BITCOIND_PIDFILE}"
 
 # The retry schedule to use when stopping the daemon. Could be either
 # a timeout in seconds or multiple signal/timeout pairs (like
