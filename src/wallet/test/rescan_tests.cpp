@@ -2,11 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/license/mit.
 
+#include <addresstype.h>
 #include <blockfilter.h>
 #include <chain.h>
 #include <index/blockfilterindex.h>
 #include <interfaces/chain.h>
+#include <key_io.h>
 #include <node/blockstorage.h>
+#include <script/descriptor.h>
+#include <script/signingprovider.h>
 #include <test/util/common.h>
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
@@ -289,6 +293,91 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_abort, TestChain100Setup)
     BOOST_CHECK(result.last_scanned_block.IsNull());
     BOOST_CHECK(!result.last_scanned_height);
     BOOST_CHECK(result.last_failed_block.IsNull());
+}
+
+BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_abort_mid_block, TestChain100Setup)
+{
+    // An abort requested between retry passes within a single block (as
+    // opposed to between blocks) must stop ScanBlock before it starts
+    // another pass, and must be reported as USER_ABORT rather than a
+    // block-read FAILURE.
+    constexpr int KEYPOOL_SIZE = 2;
+    CExtKey ext_key;
+    ext_key.SetSeed(std::array<std::byte, 32>{std::byte{3}});
+    const std::string desc_str = "wpkh(" + EncodeExtKey(ext_key) + "/0/*)";
+    auto script_at_index = [&](int index) {
+        FlatSigningProvider provider;
+        std::string error;
+        auto descs{Parse(desc_str, provider, error, /*require_checksum=*/false)};
+        std::vector<CScript> scripts;
+        FlatSigningProvider out;
+        Assert(descs.at(0)->Expand(index, provider, scripts, out));
+        return scripts.at(0);
+    };
+    // idx_e is the last key in the initial pool (triggers TopUp when found);
+    // idx_a is just past it, invisible until idx_e's TopUp fires.
+    const int idx_e = KEYPOOL_SIZE - 1;
+    const int idx_a = KEYPOOL_SIZE;
+    const CScript script_e{script_at_index(idx_e)};
+    const CScript script_a{script_at_index(idx_a)};
+
+    // Fund both transactions from a single mature coinbase output (only
+    // m_coinbase_txns[0] is mature at this height; spending a second,
+    // later coinbase output in the same block would be a premature-spend
+    // consensus violation). The funding tx pays a disposable key; tx_a and
+    // tx_e then each spend one of its outputs and pay the wallet's
+    // look-ahead addresses.
+    const CKey funding_key{GenerateRandomKey()};
+    const CScript funding_spk{GetScriptForDestination(WitnessV0KeyHash(funding_key.GetPubKey()))};
+    auto [funding_tx, _f]{CreateValidTransaction(
+        {m_coinbase_txns[0]}, {COutPoint(m_coinbase_txns[0]->GetHash(), 0)},
+        /*input_height=*/1, {coinbaseKey}, {CTxOut(COIN, funding_spk), CTxOut(COIN, funding_spk)}, std::nullopt, std::nullopt)};
+    const CTransactionRef funding_tx_ref{MakeTransactionRef(funding_tx)};
+    const int funding_height{WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return m_node.chainman->ActiveChain().Height()) + 1};
+    auto [tx_a, _a]{CreateValidTransaction(
+        {funding_tx_ref}, {COutPoint(funding_tx_ref->GetHash(), 0)},
+        funding_height, {funding_key}, {CTxOut(COIN - 1000, script_a)}, std::nullopt, std::nullopt)};
+    auto [tx_e, _e]{CreateValidTransaction(
+        {funding_tx_ref}, {COutPoint(funding_tx_ref->GetHash(), 1)},
+        funding_height, {funding_key}, {CTxOut(COIN - 1000, script_e)}, std::nullopt, std::nullopt)};
+
+    // vtx order [funding, A, E]: a single pass only matches E (A isn't
+    // visible until E's TopUp fires), so recognizing A needs a second pass.
+    const CBlock block{CreateAndProcessBlock({funding_tx, tx_a, tx_e}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()))};
+    const uint256 block_hash{block.GetHash()};
+    const int block_height{WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return m_node.chainman->ActiveChain().Height())};
+
+    CWallet wallet(m_node.chain.get(), "", CreateMockableWalletDatabase());
+    {
+        LOCK(wallet.cs_wallet);
+        LOCK(Assert(m_node.chainman)->GetMutex());
+        wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+        wallet.SetLastBlockProcessed(m_node.chainman->ActiveChain().Height(), m_node.chainman->ActiveChain().Tip()->GetBlockHash());
+        wallet.m_keypool_size = KEYPOOL_SIZE;
+        FlatSigningProvider provider;
+        std::string error;
+        auto descs{Parse(desc_str, provider, error, /*require_checksum=*/false)};
+        WalletDescriptor w_desc(std::move(descs.at(0)), /*creation_time=*/0, /*range_start=*/0, /*range_end=*/0, /*next_index=*/0);
+        Assert(wallet.AddWalletDescriptor(w_desc, provider, "", /*internal=*/false));
+    }
+
+    // NotifyTransactionChanged fires synchronously from AddToWallet, so this
+    // deterministically requests an abort the moment E is recognized in the
+    // first pass -- before ScanBlock would start a second pass to find A.
+    auto connection = wallet.NotifyTransactionChanged.connect([&wallet](const Txid&, ChangeType) {
+        wallet.Scanner().Abort();
+    });
+
+    WalletRescanReserver reserver(wallet);
+    BOOST_CHECK(reserver.reserve());
+    ScanResult result = wallet.Scanner().Scan(block_hash, block_height, /*max_height=*/block_height, reserver, /*save_progress=*/false);
+    connection.disconnect();
+
+    BOOST_CHECK_EQUAL(result.status, ScanResult::USER_ABORT);
+    BOOST_CHECK(result.last_failed_block.IsNull());
+    BOOST_CHECK_EQUAL(WITH_LOCK(wallet.cs_wallet, return wallet.mapWallet.size()), 1U);
+    BOOST_CHECK(WITH_LOCK(wallet.cs_wallet, return wallet.GetWalletTx(tx_e.GetHash())) != nullptr);
+    BOOST_CHECK(WITH_LOCK(wallet.cs_wallet, return wallet.GetWalletTx(tx_a.GetHash())) == nullptr);
 }
 
 BOOST_FIXTURE_TEST_CASE(wallet_rescan_reserver, TestingSetup)
