@@ -2375,6 +2375,17 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
+    // Manage IPv4/IPv6 reachability automatically if:
+    // - automatic outbound connections are made (no -connect, -maxconnections > 0)
+    // - the user didn't explicitly manage networks (-onlynet), and
+    // - the network isn't reached through a proxy (in which case the local routing table is
+    //   irrelevant).
+    if (connOptions.m_use_addrman_outgoing && connOptions.m_max_automatic_connections > 0 && onlynets.empty()) {
+        for (const Network net : {NET_IPV4, NET_IPV6}) {
+            if (!GetProxy(net)) connOptions.m_reachability_check_nets.push_back(net);
+        }
+    }
+
     const std::string& i2psam_arg = args.GetArg("-i2psam", "");
     if (!i2psam_arg.empty()) {
         const std::optional<CService> addr{Lookup(i2psam_arg, 7656, fNameLookup)};
