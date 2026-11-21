@@ -164,8 +164,7 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
             "-logsourcelocations",
             "-logtimemicros",
             "-logthreadnames",
-            "-loglevel=trace",
-            "-debug",
+            "-trace",
             "-debugexclude=leveldb",
         },
         opts.extra_args);
