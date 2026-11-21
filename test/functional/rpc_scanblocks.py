@@ -19,13 +19,68 @@ from test_framework.wallet import (
     getnewdestination,
 )
 
+START_HEIGHT = 199
+# Hardcoded in regtest chainparams
+SNAPSHOT_BASE_HEIGHT = 299
+
 
 class ScanblocksTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 2
-        self.extra_args = [["-blockfilterindex=1"], []]
+        self.num_nodes = 3
+        self.extra_args = [["-blockfilterindex=1"], [], ["-blockfilterindex=1"]]
+
+    def setup_network(self):
+        """Keep node2 disconnected, so that it cannot download the blocks above
+        the cached chain before it has loaded a snapshot."""
+        self.add_nodes(self.num_nodes, self.extra_args)
+        self.start_nodes()
+        self.connect_nodes(0, 1)
+
+    def test_unindexed_range(self):
+        self.log.info("Test scanning a range that the filter index has not reached yet")
+        miner, node = self.nodes[0], self.nodes[2]
+
+        # Mine the chain of the regtest snapshot and give node2 only the headers
+        miner.setmocktime(miner.getblockheader(miner.getbestblockhash())["time"])
+        wallet = MiniWallet(miner)
+        for i in range(SNAPSHOT_BASE_HEIGHT - START_HEIGHT):
+            if i % 3 == 0:
+                wallet.send_self_transfer(from_node=miner)
+            block_hash = self.generate(miner, nblocks=1, sync_fun=self.no_op)[0]
+            node.submitheader(miner.getblock(block_hash, 0))
+        miner.setmocktime(0)
+        snapshot = miner.dumptxoutset("utxos.dat", "latest")
+
+        # The index follows the fully validated chainstate, which cannot get
+        # past START_HEIGHT while node2 has no peer to download blocks from
+        node.loadtxoutset(snapshot["path"])
+        assert_equal(node.getindexinfo()["basic block filter index"], {"synced": True, "best_block_height": START_HEIGHT})
+
+        _, _, addr = getnewdestination()
+        assert_raises_rpc_error(-1, "Block filters are still in the process of being indexed.", node.scanblocks, "start", [f"addr({addr})"])
+        out = node.scanblocks("start", [f"addr({addr})"], stop_height=START_HEIGHT)
+        assert_equal(out["to_height"], START_HEIGHT)
+        assert_equal(out["completed"], True)
+
+        # Let node2 download the missing blocks and index them
+        self.connect_nodes(0, 2)
+        self.sync_all()
+
+    def test_unreadable_range(self):
+        self.log.info("Test scanning a range that the synced filter index cannot read")
+        node = self.nodes[0]
+        self.stop_node(0)
+        # The index database still points into the deleted filter file
+        (node.chain_path / "indexes" / "blockfilter" / "basic" / "fltr00000.dat").unlink()
+        self.start_node(0)
+
+        _, _, addr = getnewdestination()
+        assert_raises_rpc_error(-32603, "Failed to read block filter range. This error is unexpected and indicates index corruption.", node.scanblocks, "start", [f"addr({addr})"])
 
     def run_test(self):
+        # Needs the cached chain, so it runs before any other block is mined
+        self.test_unindexed_range()
+
         node = self.nodes[0]
         wallet = MiniWallet(node)
 
@@ -135,6 +190,8 @@ class ScanblocksTest(BitcoinTestFramework):
 
         # test that null scanobjects is rejected for start
         assert_raises_rpc_error(-1, "scanobjects argument is required for the start action", node.scanblocks, "start", None)
+
+        self.test_unreadable_range()
 
 
 if __name__ == '__main__':
