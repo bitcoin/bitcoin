@@ -155,15 +155,6 @@ inline std::vector<OutputGroup>& KnapsackGroupOutputs(const CoinsResult& availab
     return static_groups.all_groups.mixed_group;
 }
 
-static std::unique_ptr<CWallet> NewWallet(const node::NodeContext& m_node, const std::string& wallet_name = "")
-{
-    std::unique_ptr<CWallet> wallet = std::make_unique<CWallet>(m_node.chain.get(), wallet_name, CreateMockableWalletDatabase());
-    LOCK(wallet->cs_wallet);
-    wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
-    wallet->SetupDescriptorScriptPubKeyMans();
-    return wallet;
-}
-
 // Branch and bound coin selection tests
 BOOST_AUTO_TEST_CASE(bnb_search_test)
 {
@@ -1319,7 +1310,7 @@ BOOST_AUTO_TEST_CASE(SelectCoins_effective_value_test)
 
     CoinsResult available_coins;
     {
-        std::unique_ptr<CWallet> dummyWallet = NewWallet(m_node, /*wallet_name=*/"dummy");
+        std::unique_ptr<CWallet> dummyWallet = NewWallet(m_node);
         add_coin(available_coins, *dummyWallet, 100000); // 0.001 BTC
     }
 
@@ -1356,7 +1347,7 @@ BOOST_FIXTURE_TEST_CASE(wallet_coinsresult_test, BasicTestingSetup)
     // Test case to verify CoinsResult object sanity.
     CoinsResult available_coins;
     {
-        std::unique_ptr<CWallet> dummyWallet = NewWallet(m_node, /*wallet_name=*/"dummy");
+        std::unique_ptr<CWallet> dummyWallet = NewWallet(m_node);
 
         // Add some coins to 'available_coins'
         for (int i=0; i<10; i++) {
