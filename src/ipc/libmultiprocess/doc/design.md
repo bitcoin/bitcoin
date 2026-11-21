@@ -108,7 +108,7 @@ Each `ServerField` invokes `PassField`, which:
 
 `ServerRet` invokes the next layer (typically `ServerCall`), stores the result, and calls `BuildField` to serialize it into the `Results::Builder`.
 
-`ServerCall` uses the generated `ProxyMethod<MethodParams>::impl` pointer-to-member to invoke the actual C++ method on the wrapped implementation object.
+`ServerCall` uses the generated `ProxyMethod<Interface, MethodParams>::impl` pointer-to-member to invoke the actual C++ method on the wrapped implementation object.
 
 ```mermaid
 sequenceDiagram

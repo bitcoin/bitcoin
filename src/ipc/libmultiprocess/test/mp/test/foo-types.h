@@ -37,6 +37,7 @@ namespace mp {
 namespace test {
 namespace messages {
 struct ExtendedCallback; // IWYU pragma: export
+struct FlatCallback; // IWYU pragma: export
 struct FooCallback; // IWYU pragma: export
 struct FooFn; // IWYU pragma: export
 struct FooInterface; // IWYU pragma: export

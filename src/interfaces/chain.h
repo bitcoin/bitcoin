@@ -58,7 +58,7 @@ public:
     FoundBlock& mtpTime(int64_t& mtp_time) { m_mtp_time = &mtp_time; return *this; }
     //! Return whether block is in the active (most-work) chain.
     FoundBlock& inActiveChain(bool& in_active_chain) { m_in_active_chain = &in_active_chain; return *this; }
-    //! Return locator if block is in the active chain.
+    //! Return locator for the block.
     FoundBlock& locator(CBlockLocator& locator) { m_locator = &locator; return *this; }
     //! Return next block in the active chain if current block is in the active chain.
     FoundBlock& nextBlock(const FoundBlock& next_block) { m_next_block = &next_block; return *this; }
@@ -146,10 +146,10 @@ public:
     //! or contents.
     virtual bool findBlock(const uint256& hash, const FoundBlock& block={}) = 0;
 
-    //! Find first block in the chain with timestamp >= the given time
-    //! and height >= than the given height, return false if there is no block
-    //! with a high enough timestamp and height. Optionally return block
-    //! information.
+    //! Find first block in the chain with maximum timestamp (the highest
+    //! timestamp of the block and its ancestors) >= the given time and height
+    //! >= the given height, return false if there is no block with a high
+    //! enough timestamp and height. Optionally return block information.
     virtual bool findFirstBlockWithTimeAndHeight(int64_t min_time, int min_height, const FoundBlock& block={}) = 0;
 
     //! Find ancestor of block at specified height and optionally return
@@ -258,10 +258,10 @@ public:
     virtual util::Result<void> checkChainLimits(const CTransactionRef& tx) = 0;
 
     //! Estimate a fee rate.
-    virtual util::Expected<FeeRateEstimation, FeeRateEstimationError> getFeeRateEstimate(int num_blocks, bool conservative) const = 0;
+    virtual util::Expected<FeeRateEstimation, FeeRateEstimationError> getFeeRateEstimate(int num_blocks, bool conservative) = 0;
 
     //! Fee estimator max target.
-    virtual unsigned int maximumFeeEstimationTargetBlocks() const = 0;
+    virtual unsigned int maximumFeeEstimationTargetBlocks() = 0;
 
     //! Mempool minimum fee.
     virtual CFeeRate mempoolMinFee() = 0;
@@ -363,7 +363,7 @@ public:
     //! Returns false if the update function returned no action, or if the
     //! settings could not be written to disk, including when settings are
     //! disabled with -nosettings. In-memory changes are kept either way.
-    virtual bool updateRwSetting(const std::string& name, const SettingsUpdate& update_function) = 0;
+    virtual bool updateRwSetting(const std::string& name, SettingsUpdate update_function) = 0;
 
     //! Replace a setting in <datadir>/settings.json with a new value.
     //! Null can be passed to erase the setting.
