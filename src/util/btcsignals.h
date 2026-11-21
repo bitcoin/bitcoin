@@ -222,7 +222,12 @@ public:
     using result_type = Combiner::result_type;
 
     constexpr signal() noexcept = default;
-    ~signal() = default;
+    ~signal()
+    {
+        for (const auto& holder : m_connections) {
+            btcsignals::connection{holder}.disconnect();
+        }
+    }
 
     /*
      * For simplicity, disable all moving/copying/assigning.

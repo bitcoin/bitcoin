@@ -90,7 +90,8 @@ BOOST_AUTO_TEST_CASE(disconnects)
  */
 BOOST_AUTO_TEST_CASE(callback_destruction)
 {
-    // With no disconnect, callbacks are destroyed with the signal.
+    // With no disconnect, callbacks are destroyed with the signal even if the
+    // connection handle is dropped.
     std::weak_ptr<int> weak0;
     {
         btcsignals::signal<void()> sig0;
@@ -110,6 +111,20 @@ BOOST_AUTO_TEST_CASE(callback_destruction)
     BOOST_CHECK(!weak1.expired());
     conn1.disconnect();
     BOOST_CHECK(weak1.expired());
+
+    // Destroying the signal without disconnect() also destroys its idle
+    // callback and disconnects the held connection handle.
+    std::weak_ptr<int> weak2;
+    btcsignals::connection conn2;
+    {
+        btcsignals::signal<void()> sig2;
+        auto state2{std::make_shared<int>(0)};
+        weak2 = state2;
+        conn2 = sig2.connect([state2 = std::move(state2)] {});
+        BOOST_CHECK(!weak2.expired());
+    }
+    BOOST_CHECK(weak2.expired());
+    BOOST_CHECK(!conn2.connected());
 }
 
 /* A callback that disconnects itself during emission remains valid until its
