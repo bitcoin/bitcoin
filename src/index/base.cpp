@@ -416,20 +416,10 @@ void BaseIndex::ChainStateFlushed(const ChainstateRole& role, const CBlockLocato
         return;
     }
 
-    // This checks that ChainStateFlushed callbacks are received after BlockConnected. The check may fail
-    // immediately after the sync thread catches up and sets m_synced. Consider the case where
-    // there is a reorg and the blocks on the stale branch are in the ValidationInterface queue
-    // backlog even after the sync thread has caught up to the new chain tip. In this unlikely
-    // event, log a warning and let the queue clear.
-    const CBlockIndex* best_block_index = m_best_block_index.load();
-    if (best_block_index->GetAncestor(locator_tip_index->nHeight) != locator_tip_index) {
-        LogWarning("Locator contains block (hash=%s) not on known best "
-                  "chain (tip=%s); not writing index locator",
-                  locator_tip_hash.ToString(),
-                  best_block_index->GetBlockHash().ToString());
-        return;
-    }
-
+    // The locator can be ahead of the index, because a flush during ConnectTip() is notified
+    // before the BlockConnected notification for the same block. Commit() only writes the
+    // index's own best block, and skips it if it is ahead of the flushed chainstate.
+    //
     // No need to handle errors in Commit. If it fails, the error will be already be logged. The
     // best way to recover is to continue, as index cannot be corrupted by a missed commit to disk
     // for an advanced index state.

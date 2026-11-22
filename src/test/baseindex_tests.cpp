@@ -143,12 +143,11 @@ BOOST_FIXTURE_TEST_CASE(baseindex_commit_when_flush_ahead_of_index, TestChain100
         signals.SyncWithValidationInterfaceQueue();
         BOOST_CHECK_EQUAL(index->GetSummary().best_block_height, tip_height + 1);
 
-        // Reload the index to see which block was committed. The index ignores
-        // the flush notification, so its committed block is still the one from
-        // the sync.
+        // Reload the index to see which block was committed. The index commits
+        // its best block, which the chainstate has flushed past.
         index->Stop();
         BOOST_REQUIRE(index->Init());
-        BOOST_CHECK_EQUAL(index->GetSummary().best_block_height, tip_height);
+        BOOST_CHECK_EQUAL(index->GetSummary().best_block_height, tip_height + 1);
         StopIndex(*index, m_node);
     }
 }
