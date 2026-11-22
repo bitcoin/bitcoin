@@ -290,6 +290,95 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         BOOST_CHECK(CheckInputScripts(CTransaction(invalid_with_csv_tx), state, &m_node.chainman->ActiveChainstate().CoinsTip(), SCRIPT_VERIFY_CHECKSEQUENCEVERIFY, CheckInputScriptsFor::Mempool, true, true, txdata, m_node.chainman->m_validation_cache, nullptr));
     }
 
+    // Test NULLDUMMY: witness stack item must be empty for OP_CHECKSIG in P2WSH/P2WPKH
+    {
+        CMutableTransaction invalid_with_null_dummy_tx;
+        invalid_with_null_dummy_tx.version = 1;
+        invalid_with_null_dummy_tx.vin = {CTxIn{spend_tx.GetHash(), 1}};
+        invalid_with_null_dummy_tx.vout = {CTxOut{11*CENT, p2pk_scriptPubKey}};
+
+        // Sign with a non-empty witness stack item (dummy)
+        SignatureData sigdata;
+        BOOST_CHECK(ProduceSignature(keystore, MutableTransactionSignatureCreator(invalid_with_null_dummy_tx, 0, 11 * CENT, {.sighash_type = SIGHASH_DEFAULT}), spend_tx.vout[1].scriptPubKey, sigdata));
+        UpdateInput(invalid_with_null_dummy_tx.vin[0], sigdata);
+        // Add a dummy witness item (non-empty before the signature)
+        invalid_with_null_dummy_tx.vin[0].scriptWitness.stack.insert(invalid_with_null_dummy_tx.vin[0].scriptWitness.stack.begin(), std::vector<unsigned char>{0x01});
+
+        ValidateCheckInputsForAllFlags(CTransaction(invalid_with_null_dummy_tx), SCRIPT_VERIFY_NULLDUMMY, true, m_node.chainman->ActiveChainstate().CoinsTip(), m_node.chainman->m_validation_cache);
+
+        // Fix by removing dummy, should be valid
+        invalid_with_null_dummy_tx.vin[0].scriptWitness.stack.erase(invalid_with_null_dummy_tx.vin[0].scriptWitness.stack.begin());
+        ValidateCheckInputsForAllFlags(CTransaction(invalid_with_null_dummy_tx), 0, true, m_node.chainman->ActiveChainstate().CoinsTip(), m_node.chainman->m_validation_cache);
+    }
+
+    // Test MINIMALDATA: requires minimal push encoding
+    {
+        CMutableTransaction invalid_with_non_minimal_tx;
+        invalid_with_non_minimal_tx.version = 1;
+        invalid_with_non_minimal_tx.vin = {CTxIn{spend_tx.GetHash(), 0}};
+        invalid_with_non_minimal_tx.vout = {CTxOut{11*CENT, p2pk_scriptPubKey}};
+
+        // Sign with a non-minimal push (OP_PUSHDATA1 for 1 byte instead of direct push)
+        std::vector<unsigned char> vchSig;
+        uint256 hash = SignatureHash(p2pk_scriptPubKey, invalid_with_non_minimal_tx, 0, SIGHASH_ALL, 0, SigVersion::BASE);
+        BOOST_CHECK(coinbaseKey.Sign(hash, vchSig));
+        vchSig.push_back((unsigned char)SIGHASH_ALL);
+        // Use non-minimal push: OP_PUSHDATA1 (0x4c) + 1 byte length + signature
+        CScript non_minimal_sig;
+        non_minimal_sig << OP_PUSHDATA1 << vchSig;
+        invalid_with_non_minimal_tx.vin[0].scriptSig = non_minimal_sig;
+
+        ValidateCheckInputsForAllFlags(CTransaction(invalid_with_non_minimal_tx), SCRIPT_VERIFY_MINIMALDATA, true, m_node.chainman->ActiveChainstate().CoinsTip(), m_node.chainman->m_validation_cache);
+
+        // Fix with minimal push
+        invalid_with_non_minimal_tx.vin[0].scriptSig = CScript() << vchSig;
+        ValidateCheckInputsForAllFlags(CTransaction(invalid_with_non_minimal_tx), 0, true, m_node.chainman->ActiveChainstate().CoinsTip(), m_node.chainman->m_validation_cache);
+    }
+
+    // Test DISCOURAGE_UPGRADABLE_NOPS: discourages NOP codes that could be reassigned
+    {
+        CMutableTransaction invalid_with_nop_tx;
+        invalid_with_nop_tx.version = 1;
+        invalid_with_nop_tx.vin = {CTxIn{spend_tx.GetHash(), 0}};
+        invalid_with_nop_tx.vout = {CTxOut{11*CENT, p2pk_scriptPubKey}};
+
+        // Sign with a script containing OP_NOP3 (which is CHECKSEQUENCEVERIFY, but without the flag it's just a NOP)
+        std::vector<unsigned char> vchSig;
+        uint256 hash = SignatureHash(p2pk_scriptPubKey, invalid_with_nop_tx, 0, SIGHASH_ALL, 0, SigVersion::BASE);
+        BOOST_CHECK(coinbaseKey.Sign(hash, vchSig));
+        vchSig.push_back((unsigned char)SIGHASH_ALL);
+        // Script with OP_NOP3 before CHECKSIG - this is discouraged without CHECKSEQUENCEVERIFY flag
+        invalid_with_nop_tx.vin[0].scriptSig = CScript() << vchSig << OP_NOP3;
+
+        ValidateCheckInputsForAllFlags(CTransaction(invalid_with_nop_tx), SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS, true, m_node.chainman->ActiveChainstate().CoinsTip(), m_node.chainman->m_validation_cache);
+
+        // Without the flag, it should pass (NOP3 is just a NOP)
+        ValidateCheckInputsForAllFlags(CTransaction(invalid_with_nop_tx), 0, true, m_node.chainman->ActiveChainstate().CoinsTip(), m_node.chainman->m_validation_cache);
+    }
+
+    // Test CLEANSTACK: requires only one non-zero stack element after execution
+    {
+        CMutableTransaction invalid_with_clean_stack_tx;
+        invalid_with_clean_stack_tx.version = 1;
+        invalid_with_clean_stack_tx.vin = {CTxIn{spend_tx.GetHash(), 0}};
+        invalid_with_clean_stack_tx.vout = {CTxOut{11*CENT, p2pk_scriptPubKey}};
+
+        // Sign normally but add extra stack element (leaving 2 elements on stack)
+        std::vector<unsigned char> vchSig;
+        uint256 hash = SignatureHash(p2pk_scriptPubKey, invalid_with_clean_stack_tx, 0, SIGHASH_ALL, 0, SigVersion::BASE);
+        BOOST_CHECK(coinbaseKey.Sign(hash, vchSig));
+        vchSig.push_back((unsigned char)SIGHASH_ALL);
+        // Push an extra element that stays on stack
+        invalid_with_clean_stack_tx.vin[0].scriptSig = CScript() << vchSig << OP_1;
+
+        // CLEANSTACK requires P2SH and WITNESS per validation logic
+        ValidateCheckInputsForAllFlags(CTransaction(invalid_with_clean_stack_tx), SCRIPT_VERIFY_CLEANSTACK | SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, true, m_node.chainman->ActiveChainstate().CoinsTip(), m_node.chainman->m_validation_cache);
+
+        // Fix: remove extra element
+        invalid_with_clean_stack_tx.vin[0].scriptSig = CScript() << vchSig;
+        ValidateCheckInputsForAllFlags(CTransaction(invalid_with_clean_stack_tx), 0, true, m_node.chainman->ActiveChainstate().CoinsTip(), m_node.chainman->m_validation_cache);
+    }
+
     // TODO: add tests for remaining script flags
 
     // Test that passing CheckInputScripts with a valid witness doesn't imply success
