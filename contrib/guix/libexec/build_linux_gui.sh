@@ -62,7 +62,7 @@ mkdir -p "$DISTSRC"
           -DCMAKE_SKIP_RPATH=TRUE \
           -DREDUCE_EXPORTS=ON \
           -DWITH_CCACHE=OFF \
-          -Werror=dev
+          -Werror=author
 
     # Build Bitcoin Core
     cmake --build build -j "$JOBS" --target bitcoin-gui bitcoin-qt

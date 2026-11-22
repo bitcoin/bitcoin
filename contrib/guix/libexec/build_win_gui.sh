@@ -57,7 +57,7 @@ mkdir -p "$DISTSRC"
           -DCMAKE_INSTALL_PREFIX="${INSTALLPATH}" \
           -DREDUCE_EXPORTS=ON \
           -DWITH_CCACHE=OFF \
-          -Werror=dev
+          -Werror=author
 
     # Build Bitcoin Core
     cmake --build build -j "$JOBS" --target bitcoin-qt
