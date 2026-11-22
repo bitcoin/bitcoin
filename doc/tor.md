@@ -228,6 +228,8 @@ your address. To mitigate this, additionally bind the address of your Tor proxy:
 
     bitcoind ... -bind=127.0.0.1:8334=onion
 
+> **Warning**: If you use `-bind` to specify custom listen addresses while `-listenonion=1` (the default), you **must** include `=onion` on at least one `-bind` address (e.g., `-bind=127.0.0.1:8334=onion`) to create a dedicated Tor socket. Without it, the automatic Tor hidden service will route incoming Tor connections through your first `-bind` address, and `-netinfo` / `getnetworkinfo` will miscount those Tor connections as regular IPv4/IPv6 connections.
+
 If you don't care too much about hiding your node, and want to be reachable on IPv4
 as well, use `discover` instead:
 
