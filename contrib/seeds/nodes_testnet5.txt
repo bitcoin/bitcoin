@@ -1,0 +1,6 @@
+x5ct526ffpcrsdqod6hodek4k3s2qcobnhavgsfjasf6rvcyrzya.b32.i2p:0
+148.51.196.40:18353 # AS12025
+175.45.182.145:18353 # AS133159
+198.206.204.50:18353 # AS402106
+[2602:f480:ac:c010::50]:18353 # AS402106
+lvcwfp42eyk4wsigvqp3z7yjisbetffod4mpceevd3bnkn2dpvdlmuid.onion:18353

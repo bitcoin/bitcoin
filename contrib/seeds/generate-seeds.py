@@ -5,13 +5,14 @@
 '''
 Script to generate list of seed nodes for kernel/chainparams.cpp.
 
-This script expects three text files in the directory that is passed as an
+This script expects five text files in the directory that is passed as an
 argument:
 
     nodes_main.txt
     nodes_signet.txt
     nodes_test.txt
     nodes_testnet4.txt
+    nodes_testnet5.txt
 
 These files must consist of lines in the format
 
@@ -22,7 +23,7 @@ These files must consist of lines in the format
 
 The output will be several data structures with the peers in binary format:
 
-   inline constexpr uint8_t chainparams_seed_{main,signet,test,testnet4}[]{
+   inline constexpr uint8_t chainparams_seed_{main,signet,test,testnet4,testnet5}[]{
        ...
    };
 
@@ -182,6 +183,9 @@ def main():
     g.write('\n')
     with open(os.path.join(indir,'nodes_testnet4.txt'), 'r') as f:
         process_nodes(g, f, 'chainparams_seed_testnet4')
+    g.write('\n')
+    with open(os.path.join(indir,'nodes_testnet5.txt'), 'r') as f:
+        process_nodes(g, f, 'chainparams_seed_testnet5')
     g.write('#endif // BITCOIN_CHAINPARAMSSEEDS_H\n')
 
 if __name__ == '__main__':
