@@ -38,7 +38,6 @@
 #include <utility>
 #include <vector>
 
-using util::ReplaceAll;
 using util::SplitString;
 using util::ToString;
 
@@ -293,7 +292,7 @@ std::map<std::string,std::string> ParseTorReplyMapping(const std::string &s)
             if (ptr == s.size()) // unexpected end of line
                 return std::map<std::string,std::string>();
             ++ptr; // skip closing '"'
-            /**
+            /*
              * Unescape value. Per https://spec.torproject.org/control-spec section 2.1.1:
              *
              *   For future-proofing, controller implementers MAY use the following
@@ -686,14 +685,14 @@ void TorController::protocolinfo_cb(TorControlConnection& _conn, const TorContro
         // Prefer NULL, otherwise SAFECOOKIE. If a password is provided, use HASHEDPASSWORD
         /* Authentication:
          *   cookie:   hex-encoded ~/.tor/control_auth_cookie
-         *   password: "password"
+         *   password: hex-encoded password
          */
         std::string torpassword = gArgs.GetArg("-torpassword", "");
         if (!torpassword.empty()) {
             if (methods.contains("HASHEDPASSWORD")) {
                 LogDebug(BCLog::TOR, "Using HASHEDPASSWORD authentication");
-                ReplaceAll(torpassword, "\"", "\\\"");
-                _conn.Command("AUTHENTICATE \"" + torpassword + "\"", std::bind_front(&TorController::auth_cb, this));
+                // Send the password hex-encoded rather than as a QuotedString, so it never needs escaping.
+                _conn.Command("AUTHENTICATE " + HexStr(torpassword), std::bind_front(&TorController::auth_cb, this));
             } else {
                 LogWarning("tor: Password provided with -torpassword, but HASHEDPASSWORD authentication is not available");
             }

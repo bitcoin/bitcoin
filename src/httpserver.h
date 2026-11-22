@@ -110,10 +110,10 @@ public:
     /**
      * @param[in] reader A LineReader instance initialized with the client's receive buffer.
      * @param[in] write  Whether or not to write the parsed data to the object after validation.
-     * @returns false if LineReader hits the end of the buffer before reading an
-     *                \n, meaning that we are still waiting on more data from the client.
+     * @returns false if LineReader hits the end of the buffer before reading a
+     *                newline, meaning that we are still waiting on more data from the client.
      *          true  after reading an entire HTTP headers section, terminated
-     *                by an empty line and \n.
+     *                by an empty line and a newline.
      * @throws on exceeded read limit and on bad headers syntax (e.g. no ":" in a line)
      */
     bool Read(util::LineReader& reader, bool write = true);

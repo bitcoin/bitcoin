@@ -226,8 +226,7 @@ uint32_t Interpret(const std::span<const std::byte> asmap, const std::span<const
     }
     // Reached EOF without RETURN, or aborted (see any of the breaks above)
     // - should have been caught by SanityCheckAsmap below
-    assert(false);
-    return 0; // 0 is not a valid ASN
+    AssertUnreachable();
 }
 
 /**

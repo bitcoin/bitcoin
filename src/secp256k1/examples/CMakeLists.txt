@@ -5,6 +5,7 @@ function(add_example name)
     ${PROJECT_SOURCE_DIR}/include
   )
   target_link_libraries(${target_name}
+    secp256k1_common
     secp256k1
     $<$<PLATFORM_ID:Windows>:bcrypt>
   )

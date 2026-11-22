@@ -8,11 +8,13 @@
 #include <test/util/logging.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
 #include <util/overflow.h>
 #include <util/string.h>
 #include <util/threadpool.h>
 
 #include <boost/test/unit_test.hpp>
+
 #include <memory>
 
 using util::LineReader;
@@ -782,8 +784,7 @@ BOOST_AUTO_TEST_CASE(http_should_disconnect_tests)
             }
         private:
             SlowSocket& operator=(Sock&&) override {
-                assert(false && "Move of Sock into SlowSocket not allowed.");
-                return *this;
+                AssertUnreachable(); // Move of Sock into SlowSocket not allowed.
             }
         };
 
@@ -1031,7 +1032,7 @@ BOOST_AUTO_TEST_CASE(http_socket_error_tests)
     {
     public:
         explicit ErrorSock(std::shared_ptr<Pipes> pipes) : DynSock{std::move(pipes)} {}
-        DynSock& operator=(Sock&&) override { assert(false); return *this; }
+        DynSock& operator=(Sock&&) override { AssertUnreachable(); }
 
         ssize_t Send(const void* buf, size_t len, int flags) const override
         {

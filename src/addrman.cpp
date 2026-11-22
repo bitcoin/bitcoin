@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h>
 
 #include <addrman.h>
 #include <addrman_impl.h>
@@ -1045,7 +1045,7 @@ void AddrManImpl::Check() const
     const int err{CheckAddrman()};
     if (err) {
         LogError("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i", err);
-        assert(false);
+        AssertUnreachable();
     }
 }
 

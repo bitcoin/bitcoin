@@ -242,7 +242,7 @@ struct LevelDBContext {
 };
 
 CDBWrapper::CDBWrapper(const DBParams& params)
-    : m_db_context{std::make_unique<LevelDBContext>()}, m_name{fs::PathToString(params.path.stem())}
+    : m_db_context{std::make_unique<LevelDBContext>()}, m_path{params.path}
 {
     DBContext().penv = nullptr;
     DBContext().readoptions.verify_checksums = true;
@@ -278,11 +278,7 @@ CDBWrapper::CDBWrapper(const DBParams& params)
     HandleError(status);
     LogInfo("Opened LevelDB successfully");
 
-    if (params.options.force_compact) {
-        LogInfo("Starting database compaction of %s", fs::PathToString(params.path));
-        CompactFull();
-        LogInfo("Finished database compaction of %s", fs::PathToString(params.path));
-    }
+    if (params.options.force_compact) CompactFull();
 
     if (!Read(OBFUSCATION_KEY, m_obfuscation) && params.obfuscate && IsEmpty()) {
         // Generate and write the new obfuscation key.
@@ -321,7 +317,7 @@ void CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
     if (log_memory) {
         double mem_after{DynamicMemoryUsage() / double(1_MiB)};
         LogDebug(BCLog::LEVELDB, "WriteBatch memory usage: db=%s, before=%.1fMiB, after=%.1fMiB\n",
-                 m_name, mem_before, mem_after);
+                 fs::PathToString(m_path.stem()), mem_before, mem_after);
     }
 }
 
@@ -331,7 +327,12 @@ std::optional<std::string> CDBWrapper::GetProperty(const std::string& property) 
     return std::nullopt;
 }
 
-void CDBWrapper::CompactFull() { DBContext().pdb->CompactRange(nullptr, nullptr); }
+void CDBWrapper::CompactFull()
+{
+    LogInfo("Starting database compaction of %s", fs::PathToString(m_path));
+    DBContext().pdb->CompactRange(nullptr, nullptr);
+    LogInfo("Finished database compaction of %s", fs::PathToString(m_path));
+}
 
 size_t CDBWrapper::DynamicMemoryUsage() const
 {
@@ -395,15 +396,16 @@ struct CDBIterator::IteratorImpl {
     explicit IteratorImpl(leveldb::Iterator* _iter) : iter{_iter} {}
 };
 
-CDBIterator::CDBIterator(const CDBWrapper& _parent, std::unique_ptr<IteratorImpl> _piter) : parent(_parent),
-                                                                                            m_impl_iter(std::move(_piter))
+CDBIterator::CDBIterator(const CDBWrapper& _parent, util::NotNullUniquePtr<IteratorImpl> _piter)
+    : parent(_parent),
+      m_impl_iter(std::move(_piter))
 {
     m_scratch.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
 }
 
 CDBIterator* CDBWrapper::NewIterator()
 {
-    return new CDBIterator{*this, std::make_unique<CDBIterator::IteratorImpl>(DBContext().pdb->NewIterator(DBContext().iteroptions))};
+    return new CDBIterator{*this, util::MakeNotNullUnique<CDBIterator::IteratorImpl>(DBContext().pdb->NewIterator(DBContext().iteroptions))};
 }
 
 void CDBIterator::SeekImpl(std::span<const std::byte> key)

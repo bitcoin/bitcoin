@@ -24,7 +24,7 @@ CERTFILE="win-codesign.cert"
 
 stty -echo
 printf "Enter the passphrase for %s: " "$1"
-read cs_key_pass
+read -r cs_key_pass
 printf "\n"
 stty echo
 

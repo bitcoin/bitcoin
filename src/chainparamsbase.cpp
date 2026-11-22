@@ -10,9 +10,9 @@
 #include <kernel/signet.h>
 #include <tinyformat.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 
-#include <cassert>
 
 void SetupChainParamsBaseOptions(ArgsManager& argsman)
 {
@@ -72,7 +72,7 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const ArgsManager& args,
     case ChainType::REGTEST:
         return std::make_unique<CBaseChainParams>("regtest", 18443);
     }
-    assert(false);
+    AssertUnreachable();
 }
 
 void SelectBaseParams(const ChainType chain)

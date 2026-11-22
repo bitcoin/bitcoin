@@ -13,11 +13,11 @@
 #include <serialize.h>
 #include <uint256.h>
 #include <util/byte_units.h>
+#include <util/check.h>
 #include <util/log.h>
 #include <util/threadnames.h>
 #include <util/vector.h>
 
-#include <cassert>
 #include <chrono>
 #include <cstdlib>
 #include <exception>
@@ -97,7 +97,7 @@ std::optional<Coin> CCoinsViewDB::GetCoin(const COutPoint& outpoint) const
             case CDBWrapper::ReadFailure::Code::DatabaseError:
                 throw dbwrapper_error{strprintf("Coin DB read failure: %s", err_msg)};
         } // no default case, so the compiler can warn about missing cases
-        std::abort(); // unreachable
+        AssertUnreachable();
     }
 
     // Check whether the coin exists
@@ -217,9 +217,7 @@ std::shared_future<void> CCoinsViewDB::CompactFullAsync()
             util::ThreadRename("utxocompact");
             LOCK(m_db_mutex);
 
-            LogDebug(BCLog::COINDB, "Starting chainstate compaction of %s", fs::PathToString(m_db_params.path));
             m_db->CompactFull();
-            LogDebug(BCLog::COINDB, "Finished chainstate compaction of %s", fs::PathToString(m_db_params.path));
         } catch (const std::exception& e) {
             LogWarning("Failed chainstate compaction (%s)", e.what());
         }

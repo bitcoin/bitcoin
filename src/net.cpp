@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h>
 
 #include <net.h>
 
@@ -4001,13 +4001,13 @@ bool CConnman::DisconnectNode(std::string_view strNode)
     return false;
 }
 
-bool CConnman::DisconnectNode(const CSubNet& subnet, bool disconnect_private_broadcast)
+bool CConnman::DisconnectNode(const CSubNet& subnet)
 {
     AssertLockNotHeld(m_nodes_mutex);
     bool disconnected = false;
     LOCK(m_nodes_mutex);
     for (CNode* pnode : m_nodes) {
-        if (subnet.Match(pnode->addr) && (disconnect_private_broadcast || !pnode->IsPrivateBroadcastConn())) {
+        if (subnet.Match(pnode->addr)) {
             LogDebug(BCLog::NET, "disconnect by subnet%s match, %s", (fLogIPs ? strprintf("=%s", subnet.ToString()) : ""), pnode->DisconnectMsg());
             pnode->fDisconnect = true;
             disconnected = true;
@@ -4143,9 +4143,9 @@ ServiceFlags CConnman::GetLocalServices() const
 static util::NotNullUniquePtr<Transport> MakeTransport(NodeId id, bool use_v2transport, bool inbound) noexcept
 {
     if (use_v2transport) {
-        return util::NotNull{std::make_unique<V2Transport>(id, /*initiating=*/!inbound)};
+        return util::MakeNotNullUnique<V2Transport>(id, /*initiating=*/!inbound);
     } else {
-        return util::NotNull{std::make_unique<V1Transport>(id)};
+        return util::MakeNotNullUnique<V1Transport>(id);
     }
 }
 

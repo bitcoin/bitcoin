@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_BITCOINGUI_H
 #define BITCOIN_QT_BITCOINGUI_H
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h>
 
 #include <qt/bitcoinunits.h>
 #include <qt/clientmodel.h>
@@ -240,7 +240,7 @@ public Q_SLOTS:
        @param[in] message           the displayed text
        @param[in] style             modality and style definitions (icon and used buttons - buttons only for message boxes)
                                     @see CClientUIInterface::MessageBoxFlags
-       @param[in] ret               pointer to a bool that will be modified to whether Ok was clicked (modal only)
+       @param[out] ret              pointer to a bool that will be modified to whether Ok was clicked (modal only)
        @param[in] detailed_message  the text to be displayed in the details area
     */
     void message(const QString& title, QString message, unsigned int style, bool* ret = nullptr, const QString& detailed_message = QString());

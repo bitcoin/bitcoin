@@ -180,7 +180,7 @@ constexpr util::log::Level to_util(btck_LogLevel level)
         return util::log::Level::Error;
     }
     }
-    assert(false);
+    AssertUnreachable();
 }
 
 btck_SynchronizationState cast_state(SynchronizationState state)
@@ -193,7 +193,7 @@ btck_SynchronizationState cast_state(SynchronizationState state)
     case SynchronizationState::POST_INIT:
         return btck_SynchronizationState_POST_INIT;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 btck_Warning cast_btck_warning(kernel::Warning warning)
@@ -204,7 +204,7 @@ btck_Warning cast_btck_warning(kernel::Warning warning)
     case kernel::Warning::LARGE_WORK_INVALID_CHAIN:
         return btck_Warning_LARGE_WORK_INVALID_CHAIN;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 constexpr btck_LogLevel to_btck(util::log::Level level)
@@ -226,7 +226,7 @@ constexpr btck_LogLevel to_btck(util::log::Level level)
         return btck_LogLevel_ERROR;
     }
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 constexpr btck_StringView to_btck(std::string_view str)
@@ -1067,7 +1067,7 @@ btck_ChainParameters* btck_chain_parameters_create(const btck_ChainType chain_ty
         return btck_ChainParameters::ref(const_cast<CChainParams*>(CChainParams::RegTest().release()));
     }
     }
-    assert(false);
+    AssertUnreachable();
 }
 
 btck_ChainParameters* btck_chain_parameters_create_signet(const void* challenge, size_t challenge_len)
@@ -1215,7 +1215,7 @@ btck_BlockValidationResult btck_block_validation_state_get_block_validation_resu
     case BlockValidationResult::BLOCK_HEADER_LOW_WORK:
         return btck_BlockValidationResult_HEADER_LOW_WORK;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 btck_ChainstateManagerOptions* btck_chainstate_manager_options_create(const btck_Context* context, const char* data_dir, size_t data_dir_len, const char* blocks_dir, size_t blocks_dir_len)
@@ -1750,7 +1750,7 @@ btck_TxValidationResult btck_tx_validation_state_get_tx_validation_result(const 
     case TxValidationResult::TX_RECONSIDERABLE:      return btck_TxValidationResult_RECONSIDERABLE;
     case TxValidationResult::TX_UNKNOWN:             return btck_TxValidationResult_UNKNOWN;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 void btck_tx_validation_state_destroy(btck_TxValidationState* state)

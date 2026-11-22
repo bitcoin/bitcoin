@@ -94,7 +94,7 @@ private:
     const CDBWrapper &parent;
 
     struct WriteBatchImpl;
-    const std::unique_ptr<WriteBatchImpl> m_impl_batch;
+    const util::NotNullUniquePtr<WriteBatchImpl> m_impl_batch;
 
     DataStream m_key_scratch{};
     DataStream m_value_scratch{};
@@ -137,7 +137,7 @@ public:
 
 private:
     const CDBWrapper &parent;
-    const std::unique_ptr<IteratorImpl> m_impl_iter;
+    const util::NotNullUniquePtr<IteratorImpl> m_impl_iter;
     DataStream m_scratch{};
 
     void SeekImpl(std::span<const std::byte> key);
@@ -150,7 +150,7 @@ public:
      * @param[in] _parent          Parent CDBWrapper instance.
      * @param[in] _piter           The original leveldb iterator.
      */
-    CDBIterator(const CDBWrapper& _parent, std::unique_ptr<IteratorImpl> _piter);
+    CDBIterator(const CDBWrapper& _parent, util::NotNullUniquePtr<IteratorImpl> _piter);
     ~CDBIterator();
 
     bool Valid() const;
@@ -197,8 +197,8 @@ private:
     //! holds all leveldb-specific fields of this class
     util::NotNullUniquePtr<LevelDBContext> m_db_context;
 
-    //! the name of this database
-    std::string m_name;
+    //! the path of this database
+    fs::path m_path;
 
     //! optional XOR-obfuscation of the database
     Obfuscation m_obfuscation;
@@ -293,7 +293,7 @@ public:
             case ReadFailure::Code::DeserializationError: return false;
             case ReadFailure::Code::DatabaseError: throw dbwrapper_error(err_msg);
         } // no default case, so the compiler can warn about missing cases
-        std::abort(); // unreachable
+        AssertUnreachable();
     }
 
     template <typename K, typename V>

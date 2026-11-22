@@ -993,7 +993,7 @@ static bool IsCurrentForAntiFeeSniping(interfaces::Chain& chain, const uint256& 
 }
 
 void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
-                                 interfaces::Chain& chain, const uint256& block_hash, int block_height)
+                                 interfaces::Chain& chain, const uint256& block_hash, int block_height, uint32_t minimum_height)
 {
     // All inputs must be added by now
     assert(!tx.vin.empty());
@@ -1024,13 +1024,21 @@ void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
         // that transactions that are delayed after signing for whatever reason,
         // e.g. high-latency mix networks and some CoinJoin implementations, have
         // better privacy.
-        if (rng_fast.randrange(10) == 0) {
-            tx.nLockTime = std::max(0, int(tx.nLockTime) - int(rng_fast.randrange(100)));
+        if (rng_fast.randrange(10) == 0 && tx.nLockTime > minimum_height) {
+            // If a minimum_height is passed, the backdating is limited between
+            // the current height and the minimum_height.
+            int range = std::min(100, int(block_height - static_cast<int>(minimum_height) + 1));
+            tx.nLockTime = int(tx.nLockTime) - int(rng_fast.randrange(range));
         }
     } else {
         // If our chain is lagging behind, we can't discourage fee sniping nor help
-        // the privacy of high-latency transactions. To avoid leaking a potentially
-        // unique "nLockTime fingerprint", set nLockTime to a constant.
+        // the privacy of high-latency transactions. Use minimum_height so new
+        // sends still get a constant 0 fingerprint.
+        tx.nLockTime = minimum_height;
+    }
+    // If minimum_height is ahead of the local tip, use 0 so the tx stays final
+    // and we do not fingerprint the lagging tip.
+    if (minimum_height > static_cast<uint32_t>(block_height)) {
         tx.nLockTime = 0;
     }
     // Sanity check all values
@@ -1044,7 +1052,7 @@ void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
         // May be MAX BIP125 to disable BIP68 and enable BIP125
         if (in.nSequence == MAX_BIP125_RBF_SEQUENCE) continue;
         // The wallet does not support any other sequence-use right now.
-        assert(false);
+        AssertUnreachable();
     }
 }
 
@@ -1091,6 +1099,9 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     ReserveDestination reservedest(&wallet, change_type);
     unsigned int outputs_to_subtract_fee_from = 0; // The number of outputs which we are subtracting the fee from
     for (const auto& recipient : vecSend) {
+        if (!MoneyRange(recipient.nAmount) || !MoneyRange(recipients_sum + recipient.nAmount)) {
+            return util::Error{_("Transaction output amount must be valid")};
+        }
         if (IsDust(recipient, wallet.chain().relayDustFee())) {
             return util::Error{_("Transaction amount too small")};
         }
@@ -1325,7 +1336,11 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         use_anti_fee_sniping = false;
     }
     if (use_anti_fee_sniping) {
-        DiscourageFeeSniping(txNew, rng_fast, wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight());
+        uint32_t minimum_height = 0;
+        if (coin_control.m_minimum_locktime.has_value() && coin_control.m_minimum_locktime < LOCKTIME_THRESHOLD) {
+            minimum_height = coin_control.m_minimum_locktime.value();
+        }
+        DiscourageFeeSniping(txNew, rng_fast, wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight(), minimum_height);
     }
 
     // Calculate the transaction fee
@@ -1454,10 +1469,6 @@ util::Result<CreatedTransactionResult> CreateTransaction(
 {
     if (vecSend.empty()) {
         return util::Error{_("Transaction must have at least one recipient")};
-    }
-
-    if (std::any_of(vecSend.cbegin(), vecSend.cend(), [](const auto& recipient){ return recipient.nAmount < 0; })) {
-        return util::Error{_("Transaction amounts must not be negative")};
     }
 
     LOCK(wallet.cs_wallet);

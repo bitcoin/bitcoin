@@ -714,7 +714,7 @@ private:
     /**
      * Reconsider orphan transactions after a parent has been accepted to the mempool.
      *
-     * @peer[in]  peer     The peer whose orphan transactions we will reconsider. At most
+     * @param[in] peer     The peer whose orphan transactions we will reconsider. At most
      *                     one orphan will be reconsidered on each call of this function. If an
      *                     accepted orphan has orphaned children, those will need to be
      *                     reconsidered, creating more work, possibly for other peers.
@@ -2505,7 +2505,7 @@ node::TransactionError PeerManagerImpl::InitiateTxBroadcastPrivate(const CTransa
         LogDebug(BCLog::PRIVBROADCAST, "Rejecting private broadcast, queue full (cap=%u): %s", PrivateBroadcast::MAX_TRANSACTIONS, txstr);
         return node::TransactionError::PRIVATE_BROADCAST_FULL;
     } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    AssertUnreachable();
 }
 
 void PeerManagerImpl::RelayAddress(NodeId originator,
@@ -5398,10 +5398,10 @@ bool PeerManagerImpl::MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer)
         return true;
     }
 
-    // Normal case: Disconnect the peer and discourage all nodes sharing the address
+    // Normal case: Disconnect the peer only, but discourage all nodes sharing the address
     LogDebug(BCLog::NET, "Disconnecting and discouraging peer %d!\n", peer.m_id);
     if (m_banman) m_banman->Discourage(pnode.addr);
-    m_connman.DisconnectNode(CSubNet{pnode.addr}, /*disconnect_private_broadcast=*/false);
+    pnode.fDisconnect = true;
     return true;
 }
 

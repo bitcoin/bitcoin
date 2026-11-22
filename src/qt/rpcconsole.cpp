@@ -2,10 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h>
 
 #include <qt/rpcconsole.h>
-#include <qt/forms/ui_debugwindow.h>
 
 #include <chainparams.h>
 #include <common/system.h>
@@ -13,9 +12,11 @@
 #include <node/connection_types.h>
 #include <qt/bantablemodel.h>
 #include <qt/clientmodel.h>
+#include <qt/forms/ui_debugwindow.h>
 #include <qt/guiutil.h>
 #include <qt/peertablesortproxy.h>
 #include <qt/platformstyle.h>
+#include <util/check.h>
 #ifdef ENABLE_WALLET
 #include <qt/walletmodel.h>
 #endif // ENABLE_WALLET
@@ -1365,7 +1366,7 @@ QKeySequence RPCConsole::tabShortcut(TabTypes tab_type) const
     case TabTypes::PEERS: return QKeySequence(tr("Ctrl+P"));
     } // no default case, so the compiler can warn about missing cases
 
-    assert(false);
+    AssertUnreachable();
 }
 
 void RPCConsole::updateAlerts(const QString& warnings)

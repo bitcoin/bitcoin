@@ -83,7 +83,7 @@ int StateRank(HTTPRequest::State s)
     case HTTPRequest::State::Complete: return 3;
     case HTTPRequest::State::Error: return 4;
     }
-    assert(false);
+    AssertUnreachable();
 }
 
 struct ParsedRequest {

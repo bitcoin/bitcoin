@@ -122,10 +122,10 @@ check_disallowed() {
     local result=0
 
     # Loop over symbol names exported by dst and imported by src
-    while read symbol; do
+    while read -r symbol; do
         local dst_obj
         dst_obj=$(obj_names "$symbol" "${temp_dir}/${dst}_exports.txt")
-        while read src_obj; do
+        while read -r src_obj; do
             if ! check_suppress "$src_obj" "$dst_obj" "$symbol"; then
                 echo "Error: $src_obj depends on $dst_obj symbol '$(c++filt "$symbol")', can suppress with:"
                 echo "    SUPPRESS[\"$src_obj $dst_obj $symbol\"]=1"
@@ -146,7 +146,7 @@ check_suppress() {
     local dst_obj="$2"
     local symbol="$3"
     for suppress in "${!SUPPRESS[@]}"; do
-        read suppress_src suppress_dst suppress_pattern <<<"$suppress"
+        read -r suppress_src suppress_dst suppress_pattern <<<"$suppress"
         if [[ "$src_obj" == "$suppress_src" && "$dst_obj" == "$suppress_dst" && "$symbol" =~ $suppress_pattern ]]; then
             SUPPRESSED["$suppress"]=1
             return 0

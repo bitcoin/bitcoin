@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h>
 
 #include <clientversion.h>
 #include <common/args.h>
@@ -202,7 +202,10 @@ static void ExecCommand(const std::vector<const char*>& args, std::string_view w
         exec_args[0] = exe_path_str.c_str();
         if (util::ExecVp(exec_args[0], (char*const*)exec_args.data()) == -1) {
             if (allow_notfound && errno == ENOENT) return false;
-            throw std::system_error(errno, std::system_category(), strprintf("execvp failed to execute '%s'", exec_args[0]));
+            // Throw an exception with the errno value from ExecVp. Use
+            // generic_category because it expects a POSIX errno on all
+            // platforms.
+            throw std::system_error(errno, std::generic_category(), strprintf("execvp failed to execute '%s'", exec_args[0]));
         }
         throw std::runtime_error("execvp returned unexpectedly");
     };

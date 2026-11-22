@@ -123,7 +123,7 @@ class TorControlTest(BitcoinTestFramework):
     def private_key_path(self):
         return self.nodes[0].chain_path / "onion_v3_private_key"
 
-    def restart_with_mock(self, mock_tor, cached_private_key=None):
+    def restart_with_mock(self, mock_tor, cached_private_key=None, extra_args=None):
         self.stop_node(0)
         key_path = self.private_key_path()
         if cached_private_key is None:
@@ -136,7 +136,7 @@ class TorControlTest(BitcoinTestFramework):
             f"-torcontrol=127.0.0.1:{mock_tor.port}",
             "-listenonion=1",
             "-debug=tor",
-        ])
+        ] + (extra_args or []))
 
         # Wait for connection and PROTOCOLINFO command
         mock_tor.conn_ready.wait(timeout=10)
@@ -211,6 +211,42 @@ class TorControlTest(BitcoinTestFramework):
         # Should now process the complete response and send AUTHENTICATE
         self.wait_until(lambda: len(mock_tor.received_commands) >= 2, timeout=5)
         assert_equal(mock_tor.received_commands[1], "AUTHENTICATE")
+
+        # Clean up
+        mock_tor.stop()
+
+    def test_password_auth(self):
+        self.log.info("Test that -torpassword is sent hex-encoded, so special characters survive")
+
+        class HashedPasswordServer(MockTorControlServer):
+            def __init__(self, port, expected_password):
+                self.expected_hex = expected_password.encode().hex()
+                super().__init__(port)
+
+            def _get_response(self, command):
+                if command == "PROTOCOLINFO 1":
+                    return (
+                        "250-PROTOCOLINFO 1\r\n"
+                        "250-AUTH METHODS=HASHEDPASSWORD\r\n"
+                        "250-VERSION Tor=\"0.1.2.3\"\r\n"
+                        "250 OK\r\n"
+                    )
+                elif command.startswith("AUTHENTICATE "):
+                    sent_hex = command.removeprefix("AUTHENTICATE ")
+                    if sent_hex != self.expected_hex:
+                        return "515 Bad authentication\r\n"
+                    return "250 OK\r\n"
+                return super()._get_response(command)
+
+        password = 'pa\\ss"word\\'
+        mock_tor = HashedPasswordServer(self.next_port(), password)
+        self.restart_with_mock(mock_tor, extra_args=[f"-torpassword={password}"])
+
+        self.wait_until(lambda: len(mock_tor.received_commands) >= 2, timeout=10)
+        assert_equal(mock_tor.received_commands[1], f"AUTHENTICATE {password.encode().hex()}")
+
+        # Authentication succeeded, so the node goes on to create the onion service
+        self.wait_until(lambda: any(c.startswith("ADD_ONION ") for c in mock_tor.received_commands), timeout=10)
 
         # Clean up
         mock_tor.stop()
@@ -362,6 +398,7 @@ class TorControlTest(BitcoinTestFramework):
     def run_test(self):
         self.test_basic()
         self.test_partial_data()
+        self.test_password_auth()
         self.test_pow_fallback()
         self.test_oversized_line()
         self.test_overmany_lines()

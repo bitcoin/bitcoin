@@ -767,7 +767,7 @@ def modinv_var(M, Mi, x):
         eta, t = divsteps_n_matrix_var(eta, f % 2**N, g % 2**N)
         f, g = update_fg(f, g, t)
         d, e = update_de(d, e, t, M, Mi)
-    return normalize(f, d, Mi)
+    return normalize(f, d, M)
 ```
 
 ## 8. From GCDs to Jacobi symbol

@@ -18,6 +18,7 @@ from test_framework.messages import (
 )
 from test_framework.script import (
     CScript,
+    CScriptOp,
     OP_0,
     OP_1,
     OP_15,
@@ -205,6 +206,29 @@ def build_malleated_tx_package(*, parent: CTransaction, rebalance_parent_output_
     child_two = deepcopy(child_one)
     child_two.wit.vtxinwit[0].scriptWitness.stack = [b'', witness_script]
     return parent, child_one, child_two
+
+def is_p2tr_script(script: bytes) -> bool:
+    """Returns if an array of bytes is a P2TR script."""
+    return len(script) == 34 and script[0] == OP_1 and script[1] == 32
+
+def is_p2wpkh_script(script: bytes) -> bool:
+    """Returns if an array of bytes is a P2WPKH script."""
+    return len(script) == 22 and script[0] == OP_0 and script[1] == 20
+
+def is_p2pkh_script(script: bytes) -> bool:
+    """Returns if an array of bytes is a P2PKH script."""
+    return (len(script) == 25 and script[0] == OP_DUP and script[1] == OP_HASH160 and script[2] == 20
+            and script[23] == OP_EQUALVERIFY and script[24] == OP_CHECKSIG)
+
+def is_p2sh_script(script: bytes) -> bool:
+    """Returns if an array of bytes is a P2SH script."""
+    return len(script) == 23 and script[0] == OP_HASH160 and script[1] == 20 and script[22] == OP_EQUAL
+
+def script_witness_version(script: bytes) -> int | None:
+    """Returns the witness version of a script, or None if it is not a witness program."""
+    if CScript(script).IsWitnessProgram():
+        return CScriptOp(script[0]).decode_op_n()
+    return None
 
 
 class TestFrameworkScriptUtil(unittest.TestCase):

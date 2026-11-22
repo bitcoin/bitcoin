@@ -150,5 +150,5 @@ int main(void) {
      * Here we are preventing these writes from being optimized out, as any good compiler
      * will remove any writes that aren't used. */
     secure_erase(seckey, sizeof(seckey));
-    return EXIT_SUCCESS;
+    return is_signature_valid ? EXIT_SUCCESS : EXIT_FAILURE;
 }

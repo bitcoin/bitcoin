@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
+#include <bitcoin-build-config.h>
 
 #include <validation.h>
 
@@ -1845,7 +1845,7 @@ void CoinsViews::InitCache(int32_t prevoutfetch_threads)
 {
     AssertLockHeld(::cs_main);
     m_cacheview = std::make_unique<CCoinsViewCache>(&m_catcherview);
-    util::NotNull thread_pool{std::make_shared<ThreadPool>("prevout")};
+    auto thread_pool{util::MakeNotNullShared<ThreadPool>("prevout")};
     if (prevoutfetch_threads > 0) {
         thread_pool->Start(prevoutfetch_threads);
         LogInfo("Block input prevout fetching uses %d additional threads", prevoutfetch_threads);
@@ -2111,7 +2111,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
             case CheckInputScriptsFor::Block:
                 return state.Invalid(TxValidationResult::TX_CONSENSUS, strprintf("block-script-verify-flag-failed (%s)", ScriptErrorString(result->first)), result->second);
             }
-            assert(false); // unreachable
+            AssertUnreachable();
         }
     }
 
@@ -2904,9 +2904,16 @@ bool Chainstate::FlushStateToDisk(
             m_chainman.m_options.signals->ChainStateFlushed(this->GetRole(), GetLocator(m_last_flushed_block));
         }
 
-        if (!m_chainman.m_interrupt && ShouldCompactChainstate(m_chainman.IsInitialBlockDownload())) {
+        if (!m_chainman.m_interrupt && !CoinsDB().IsMemoryOnly() && ShouldCompactChainstate(m_chainman.IsInitialBlockDownload())) {
             try {
-                CoinsDB().CompactFullAsync();
+                const fs::path path{StoragePath()};
+                const uint64_t min_free_space{m_chainman.GetParams().AssumedChainStateSize() * 1_GiB};
+                if (CheckDiskSpace(path, min_free_space)) {
+                    CoinsDB().CompactFullAsync();
+                } else {
+                    LogWarning("Deferring chainstate compaction of %s: %.2f GiB free, %u GiB needed. Free up some space so compaction can run.",
+                               fs::PathToString(path), fs::space(path).available / double{1_GiB}, CeilDiv(min_free_space, 1_GiB));
+                }
             } catch (const std::exception& e) {
                 LogWarning("Failed to start chainstate compaction (%s)", e.what());
             }

@@ -210,7 +210,7 @@ bool LegacyDataSPKM::IsMine(const CScript& script) const
     case IsMineResult::SPENDABLE:
         return true;
     }
-    assert(false);
+    AssertUnreachable();
 }
 
 bool LegacyDataSPKM::CheckDecryptionKey(const CKeyingMaterial& master_key)
@@ -580,9 +580,7 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
     // keyids is now all non-HD keys. Each key will have its own combo descriptor
     for (const CKeyID& keyid : keyids) {
         CKey key;
-        if (!GetKey(keyid, key)) {
-            assert(false);
-        }
+        Assert(GetKey(keyid, key));
 
         // Get birthdate from key meta
         uint64_t creation_time = 0;
@@ -635,9 +633,7 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
 
         // Get the master xprv
         CKey seed_key;
-        if (!GetKey(chain.seed_id, seed_key)) {
-            assert(false);
-        }
+        Assert(GetKey(chain.seed_id, seed_key));
         CExtKey master_key;
         master_key.SetSeed(seed_key);
 
@@ -680,9 +676,7 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
     // Add the current master seed to the migration data
     if (!m_hd_chain.seed_id.IsNull()) {
         CKey seed_key;
-        if (!GetKey(m_hd_chain.seed_id, seed_key)) {
-            assert(false);
-        }
+        Assert(GetKey(m_hd_chain.seed_id, seed_key));
         out.master_key.SetSeed(seed_key);
     }
 
@@ -717,9 +711,7 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
         // Get the private keys for this descriptor
         std::vector<CScript> scripts;
         FlatSigningProvider keys;
-        if (!desc->Expand(0, DUMMY_SIGNING_PROVIDER, scripts, keys)) {
-            assert(false);
-        }
+        Assert(desc->Expand(0, DUMMY_SIGNING_PROVIDER, scripts, keys));
         std::set<CKeyID> privkeyids;
         for (const auto& key_orig_pair : keys.origins) {
             privkeyids.insert(key_orig_pair.first);

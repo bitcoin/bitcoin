@@ -98,7 +98,7 @@ private:
         for (size_t i = 0; i < OUTPUT_TYPES.size(); ++i) {
             if (OUTPUT_TYPES.at(i) == type) return i;
         }
-        assert(false);
+        AssertUnreachable();
     }
 
     std::vector<DescriptorScriptPubKeyMan*> m_spkms;

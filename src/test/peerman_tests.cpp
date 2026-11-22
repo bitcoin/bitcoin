@@ -34,7 +34,6 @@ static void mineBlock(node::NodeContext& node, FakeNodeClock& clock, std::chrono
     clock.set(block_time); // update time so the block is created with it
     auto& block_template_manager{*Assert(node.block_template_manager)};
     auto block_template{block_template_manager.CreateNewTemplate({})};
-    BOOST_REQUIRE(block_template);
     CBlock block{block_template->block};
     while (!CheckProofOfWork(block.GetHash(), block.nBits, node.chainman->GetConsensus())) ++block.nNonce;
     block.fChecked = true; // little speedup
