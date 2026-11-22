@@ -52,6 +52,7 @@ PATTERN_AGENT = re.compile(
     r"|29\.(0|1|2|3|99)\.0"
     r"|30\.(0|1|2|3|99)\.0"
     r"|31\.(0|1|99)\.0"
+    r"|32\.(0|1|99)\.0"
     r")")
 
 def parseline(line: str) -> Union[dict, None]:

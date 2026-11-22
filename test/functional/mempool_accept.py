@@ -421,7 +421,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         assert_greater_than(len(tx.serialize()), 64)
 
         self.check_mempool_result(
-            result_expected=[{'txid': tx.txid_hex, 'allowed': False, 'reject-reason': 'tx-size-small'}],
+            result_expected=[{'txid': tx.txid_hex, 'allowed': False, 'reject-reason': 'txn-size-64'}],
             rawtxs=[tx.serialize().hex()],
             maxfeerate=0,
         )

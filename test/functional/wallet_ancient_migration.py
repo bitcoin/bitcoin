@@ -47,6 +47,9 @@ class WalletAncientMigrationTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 8
+        # Disable the consensus cleanup for this test as it creates block with an old node, which
+        # does not set nLockTime in coinbase to block height - 1.
+        self.extra_args = [["-vbparams=consensuscleanup:0:0"]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -111,7 +114,7 @@ class WalletAncientMigrationTest(BitcoinTestFramework):
         assert_greater_than(len(all_addresses), 0)
 
         # Sync blocks to modern node via RPC (avoids filesystem copy and reindex)
-        self.start_node(new_node_idx)
+        self.start_node(new_node_idx, extra_args=self.extra_args[new_node_idx])
         dumb_sync_blocks(src=old_node, dst=new_node)
 
         if passphrase is None:
