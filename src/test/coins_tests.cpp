@@ -857,6 +857,19 @@ BOOST_AUTO_TEST_CASE(ccoins_write)
             CheckWriteCoins(parent, child, expected);
         }
     }
+
+    // Test failure cases: EX_OVERWRITE_UNSPENT and EX_FRESH_MISAPPLIED
+    // EX_OVERWRITE_UNSPENT: parent has unspent coin, child has unspent coin (non-DIRTY)
+    CheckWriteCoins(VALUE1_CLEAN, VALUE2_CLEAN, EX_OVERWRITE_UNSPENT);
+    CheckWriteCoins(VALUE1_FRESH, VALUE2_CLEAN, EX_OVERWRITE_UNSPENT);
+    CheckWriteCoins(VALUE1_DIRTY, VALUE2_CLEAN, EX_OVERWRITE_UNSPENT);
+    CheckWriteCoins(VALUE1_DIRTY_FRESH, VALUE2_CLEAN, EX_OVERWRITE_UNSPENT);
+
+    // EX_FRESH_MISAPPLIED: parent has unspent coin, child has FRESH spent coin
+    CheckWriteCoins(VALUE1_CLEAN, SPENT_DIRTY_FRESH, EX_FRESH_MISAPPLIED);
+    CheckWriteCoins(VALUE1_FRESH, SPENT_DIRTY_FRESH, EX_FRESH_MISAPPLIED);
+    CheckWriteCoins(VALUE1_DIRTY, SPENT_DIRTY_FRESH, EX_FRESH_MISAPPLIED);
+    CheckWriteCoins(VALUE1_DIRTY_FRESH, SPENT_DIRTY_FRESH, EX_FRESH_MISAPPLIED);
 }
 
 struct FlushTest : BasicTestingSetup {
