@@ -142,7 +142,7 @@ private:
 
                 FlatSigningProvider keys;
                 std::string error;
-                auto parsed_desc = std::move(Parse(descriptor, keys, error, /*require_checksum=*/false).at(0));
+                auto parsed_desc = Parse(descriptor, keys, error, /*require_checksum=*/false);
                 assert(parsed_desc);
                 assert(error.empty());
                 assert(parsed_desc->IsRange());
