@@ -33,7 +33,7 @@ Wallet encryption may prevent unauthorized access. However, this significantly i
 
 Wallet encryption may also not protect against more sophisticated attacks. An attacker can, for example, obtain the password by installing a keylogger on the user's machine.
 
-Encrypting an existing wallet is deprecated and not recommended, if encryption is desired, creating a new wallet that is encrypted from creation is recommended. This is accompolished by invoking the `createwallet` RPC with a passphrase argument, for example:
+Encrypting an existing wallet is deprecated and not recommended, if encryption is desired, creating a new wallet that is encrypted from creation is recommended. This is accomplished by invoking the `createwallet` RPC with a passphrase argument, for example:
 
 ```
 $ bitcoin-cli -named createwallet wallet_name="phillip" passphrase="dontlosethispassphrase"
