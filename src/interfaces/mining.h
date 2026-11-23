@@ -211,7 +211,8 @@ public:
 
 //! Return implementation of Mining interface.
 //!
-//! @param[in] wait_loaded waits for chainstate data to be loaded before
+//! @param[in] wait_loaded waits for chainstate data to be loaded and a
+//!                        chain tip to be connected before
 //!                        returning. Used to prevent external clients from
 //!                        being able to crash the node during startup.
 std::unique_ptr<Mining> MakeMining(const node::NodeContext& node, bool wait_loaded=true);

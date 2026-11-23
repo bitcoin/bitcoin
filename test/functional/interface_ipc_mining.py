@@ -17,6 +17,7 @@ from test_framework.blocktools import (
     WITNESS_COMMITMENT_HEADER,
 )
 from test_framework.messages import (
+    CBlock,
     CBlockHeader,
     COIN,
     CTransaction,
@@ -169,13 +170,17 @@ class IPCMiningTest(BitcoinTestFramework):
         asyncio.run(capnp.run(async_routine()))
 
     def run_early_startup_test(self):
-        """Make sure mining.createNewBlock safely returns on early startup as
-        soon as mining interface is available """
+        """Make sure mining.createNewBlock and mining.checkBlock safely return on
+        early startup as soon as mining interface is available """
         self.log.info("Running Mining interface early startup test")
 
         node = self.nodes[0]
         self.stop_node(node.index)
-        node.start()
+        # Start with -reindex to recreate the window where the chainstate is
+        # loaded but no tip is connected yet. The mining interface
+        # used to be handed out as soon as the chainstate was loaded, so a
+        # checkBlock call in this window could crash the node.
+        node.start(node.extra_args + ["-reindex"])
 
         async def async_routine():
             while True:
@@ -187,6 +192,8 @@ class IPCMiningTest(BitcoinTestFramework):
                     # available but without using a lot of CPU
                     await asyncio.sleep(0.005)
 
+            opts = self.capnp_modules['mining'].BlockCheckOptions()
+            await mining.checkBlock(ctx, CBlock().serialize(), opts)
             opts = self.capnp_modules['mining'].BlockCreateOptions()
             await mining.createNewBlock(ctx, opts)
 
