@@ -2291,7 +2291,7 @@ util::Result<void> CWallet::RemoveTxs(WalletBatch& batch, std::vector<Txid>& txs
         }
 
         MarkDirty();
-    }, .on_abort={}});
+    }, .on_abort= []() {}});
 
     return {};
 }
@@ -4068,14 +4068,6 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         }
     }
 
-    // If there was no key material in the main wallet, there should be no records on it anymore.
-    // This wallet will be discarded at the end of the process. Only wallets that contain the
-    // migrated records will be presented to the user.
-    if (!has_spendable_material) {
-        if (!m_address_book.empty()) return util::Error{_("Error: Not all address book records were migrated")};
-        if (!mapWallet.empty()) return util::Error{_("Error: Not all transaction records were migrated")};
-    }
-
     return {}; // all good
 }
 
@@ -4201,15 +4193,34 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
         }
     }
 
-    // Add the descriptors to the wallet, remove the LegacyDataSPKM, and clean up transactions and address book data
-    return RunWithinTxn(wallet.GetDatabase(), /*process_desc=*/"apply migration process", [&](WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet){
-        if (auto res_migration = wallet.ApplyMigrationData(batch, *data); !res_migration) {
-            error = util::ErrorString(res_migration);
+    const bool has_spendable_material = !data->desc_spkms.empty() || data->master_key.key.IsValid();
+
+    // Add the descriptors to the wallet, remove the LegacyDataSPKM, and clean up transactions and address book data.
+    if (!RunWithinTxn(wallet.GetDatabase(), /*process_desc=*/"apply migration process", [&](WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet) {
+        auto res_migration = wallet.ApplyMigrationData(batch, *data);
+        if (!res_migration) error = util::ErrorString(res_migration);
+        return res_migration.has_value();
+    })) {
+        return false;
+    }
+
+    // If there was no key material in the main wallet, there should be no records on it anymore.
+    // This wallet will be discarded at the end of the process. Only wallets that contain the
+    // migrated records will be presented to the user.
+    if (!has_spendable_material) {
+        if (!wallet.m_address_book.empty()) {
+            error = _("Error: Not all address book records were migrated");
             return false;
         }
-        wallet.WalletLogPrintf("Wallet migration complete.");
-        return true;
-    });
+
+        if (!wallet.mapWallet.empty()) {
+            error = _("Error: Not all transaction records were migrated");
+            return false;
+        }
+    }
+
+    wallet.WalletLogPrintf("Wallet migration complete.");
+    return true;
 }
 
 util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& wallet_name, const SecureString& passphrase, WalletContext& context, bool load_wallet)
