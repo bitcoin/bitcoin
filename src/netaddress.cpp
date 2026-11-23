@@ -897,12 +897,30 @@ bool CService::GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const
     return false;
 }
 
-/**
- * @returns An identifier unique to this service's address and port number.
- */
-std::vector<unsigned char> CService::GetKey() const
+std::vector<unsigned char> CService::GetKey(bool include_network) const
 {
-    auto key = GetAddrBytes();
+    std::vector<unsigned char> key;
+
+    if (include_network) {
+        // Do not typecast `m_net` to `unsigned char` because the values
+        // returned by this function would better be stable as they may end up
+        // in an on-disk format and it would be undesirable if that breaks if
+        // the values of `enum Network` are re-enumerated.
+        switch (m_net) {
+        case NET_IPV4: key.push_back(1); break;
+        case NET_IPV6: key.push_back(2); break;
+        case NET_ONION: key.push_back(3); break;
+        case NET_I2P: key.push_back(4); break;
+        case NET_CJDNS: key.push_back(5); break;
+        case NET_INTERNAL: key.push_back(6); break;
+        case NET_UNROUTABLE: // m_net is never and should not be set to NET_UNROUTABLE
+        case NET_MAX:        // m_net is never and should not be set to NET_MAX
+            AssertUnreachable();
+        } // no default case, so the compiler can warn about missing cases
+    }
+
+    const auto addr_bytes{GetAddrBytes()};
+    key.insert(key.end(), addr_bytes.begin(), addr_bytes.end()); // C++23: key.append_range(addr_bytes);
     key.push_back(port / 0x100); // most significant byte of our port
     key.push_back(port & 0x0FF); // least significant byte of our port
     return key;

@@ -555,7 +555,13 @@ public:
     [[nodiscard]] sa_family_t GetSAFamily() const;
     friend bool operator==(const CService& a, const CService& b);
     friend bool operator<(const CService& a, const CService& b);
-    std::vector<unsigned char> GetKey() const;
+    /**
+     * Get an identifier that is unique to this service within its network, or
+     * optionally also include the network itself, making it globally unique.
+     * @param[in] include_network Also include the network in the output.
+     * @return Network or globally unique bytes.
+     */
+    std::vector<unsigned char> GetKey(bool include_network = true) const;
     std::string ToStringAddrPort() const;
 
     CService(const struct in6_addr& ipv6Addr, uint16_t port);
