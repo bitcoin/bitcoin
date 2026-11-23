@@ -140,14 +140,14 @@ public:
 
         std::string error;
         FlatSigningProvider keys;
-        auto descs = Parse(descriptor_str, keys, error, true);
-        if (descs.empty()) {
+        auto desc = Parse(descriptor_str, keys, error, true);
+        if (!desc) {
             throw std::ios_base::failure("Invalid descriptor: " + error);
         }
-        if (descs.size() > 1) {
+        if (desc->IsMultipath()) {
             throw std::ios_base::failure("Can't load a multipath descriptor from databases");
         }
-        return WalletDescriptor(std::move(descs.at(0)), creation_time, range_start, range_end, next_index);
+        return WalletDescriptor(std::move(desc), creation_time, range_start, range_end, next_index);
     }
 
     WalletDescriptor() = delete;

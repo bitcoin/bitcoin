@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(bip32_deserialize_invalid)
 BOOST_AUTO_TEST_CASE(bip32_derive_ext_key)
 {
     const CExtKey master{DecodeExtKey(test1.vDerive[0].prv)};
-    const std::vector<uint32_t> path{test1.vDerive[0].nChild, test1.vDerive[1].nChild};
+    const KeyPath path{test1.vDerive[0].nChild, test1.vDerive[1].nChild};
     const auto derived{DeriveExtKey(master, path)};
     BOOST_REQUIRE(derived);
     BOOST_CHECK(EncodeExtKey(derived->first) == test1.vDerive[2].prv);
@@ -327,14 +327,14 @@ BOOST_AUTO_TEST_CASE(bip32_derive_ext_key)
 
 BOOST_AUTO_TEST_CASE(bip32_has_hardened_derivation)
 {
-    const std::vector<uint32_t> empty;
-    const std::vector<uint32_t> unhardened{0, 1, 2};
-    const std::vector<uint32_t> hardened{BIP32_HARDENED_FLAG};
-    const std::vector<uint32_t> mixed{0, BIP32_HARDENED_FLAG | 1, 2};
-    BOOST_CHECK(!HasHardenedDerivation(empty));
-    BOOST_CHECK(!HasHardenedDerivation(unhardened));
-    BOOST_CHECK(HasHardenedDerivation(hardened));
-    BOOST_CHECK(HasHardenedDerivation(mixed));
+    const KeyPath empty;
+    const KeyPath unhardened{0, 1, 2};
+    const KeyPath hardened{BIP32_HARDENED_FLAG};
+    const KeyPath mixed{0, BIP32_HARDENED_FLAG | 1, 2};
+    BOOST_CHECK(!empty.HasHardenedDerivation());
+    BOOST_CHECK(!unhardened.HasHardenedDerivation());
+    BOOST_CHECK(hardened.HasHardenedDerivation());
+    BOOST_CHECK(mixed.HasHardenedDerivation());
 }
 
 BOOST_AUTO_TEST_CASE(bip32_max_depth) {
@@ -450,31 +450,31 @@ BOOST_AUTO_TEST_CASE(parse_hd_keypath)
     };
 
     for (const auto& [is_valid, keypath_str, expected] : tests) {
-        std::vector<uint32_t> keypath_num;
-        const bool res1{ParseHDKeypath(keypath_str, keypath_num)};
+        BOOST_TEST_INFO_SCOPE(keypath_str);
+        const std::optional<KeyPath> res1{ParseHDKeypath(keypath_str)};
         if (!is_valid) {
-            BOOST_CHECK_EQUAL(res1, false);
+            BOOST_CHECK_EQUAL(res1.has_value(), false);
         } else {
-            BOOST_CHECK_EQUAL(res1, true);
-            BOOST_REQUIRE_EQUAL(keypath_num.size(), expected.size());
-            for (size_t i{0}; i < keypath_num.size(); ++i) {
-                BOOST_CHECK_EQUAL(keypath_num[i], expected[i]);
+            BOOST_CHECK_EQUAL(res1.has_value(), true);
+            BOOST_REQUIRE_EQUAL(res1->size(), expected.size());
+            for (size_t i{0}; i < res1->size(); ++i) {
+                BOOST_CHECK_EQUAL(res1->at(i).ChildNumber(), expected[i]);
             }
 
             // Round-trip test:
-            const std::string keypath_str2{FormatHDKeypath(keypath_num, /*apostrophe=*/true)};
+            const std::string keypath_str2{FormatHDKeypath(*res1, /*hardened_char=*/'\'')};
             // Note keypath_str2 may differ from keypath_str. Leading '/' is not parsed, it is removed
             std::string keypath_str2_adjusted{keypath_str2};
             if (keypath_str2_adjusted.starts_with('/')) {
                 keypath_str2_adjusted.erase(0, 1);
             }
-            std::vector<uint32_t> keypath_num2;
-            BOOST_CHECK(ParseHDKeypath(keypath_str2_adjusted, keypath_num2));
-            BOOST_REQUIRE_EQUAL(keypath_num2.size(), keypath_num.size());
-            for (size_t i{0}; i < keypath_num2.size(); ++i) {
-                BOOST_CHECK_EQUAL(keypath_num2[i], keypath_num[i]);
+            const std::optional<KeyPath> res2{ParseHDKeypath(keypath_str2_adjusted)};
+            BOOST_CHECK(res2.has_value());
+            BOOST_REQUIRE_EQUAL(res2->size(), res1->size());
+            for (size_t i{0}; i < res2->size(); ++i) {
+                BOOST_CHECK_EQUAL(res2->at(i).ChildNumber(), res2->at(i).ChildNumber());
             }
-            const std::string keypath_str3{FormatHDKeypath(keypath_num2, /*apostrophe=*/true)};
+            const std::string keypath_str3{FormatHDKeypath(*res2, /*hardened_char=*/'\'')};
             BOOST_CHECK_EQUAL(keypath_str3, keypath_str2);
         }
     }

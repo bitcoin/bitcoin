@@ -213,12 +213,11 @@ static UniValue generateBlocks(ChainstateManager& chainman, node::BlockTemplateM
 static bool getScriptFromDescriptor(std::string_view descriptor, CScript& script, std::string& error)
 {
     FlatSigningProvider key_provider;
-    const auto descs = Parse(descriptor, key_provider, error, /* require_checksum = */ false);
-    if (descs.empty()) return false;
-    if (descs.size() > 1) {
+    const auto desc = Parse(descriptor, key_provider, error, /* require_checksum = */ false);
+    if (!desc) return false;
+    if (desc->IsMultipath()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Multipath descriptor not accepted");
     }
-    const auto& desc = descs.at(0);
     if (desc->IsRange()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Ranged descriptor not accepted. Maybe pass through deriveaddresses first?");
     }
