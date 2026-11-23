@@ -360,18 +360,15 @@ ProxyClient<Thread>::~ProxyClient()
 {
     // If thread is being destroyed before connection is destroyed, remove the
     // cleanup callback that was registered to handle the connection being
-    // destroyed before the thread being destroyed.
-    if (m_disconnect_cb) {
-        // Remove disconnect callback on the event loop thread with
-        // loop->sync(), so if the connection is broken there is not a race
-        // between this thread trying to remove the callback and the disconnect
-        // handler attempting to call it.
-        m_context.loop->sync([&]() {
-            if (m_disconnect_cb) {
-                m_context.connection->removeSyncCleanup(*m_disconnect_cb);
-            }
-        });
-    }
+    // destroyed before the thread being destroyed. Check and remove the
+    // callback on the event loop thread with loop->sync(), so if the
+    // connection is broken there is not a race between this thread trying to
+    // remove the callback and the disconnect handler attempting to call it.
+    m_context.loop->sync([&]() {
+        if (m_disconnect_cb) {
+            m_context.connection->removeSyncCleanup(*m_disconnect_cb);
+        }
+    });
 }
 
 ProxyServer<Thread>::ProxyServer(Connection& connection, ThreadContext& thread_context, std::thread&& thread)
