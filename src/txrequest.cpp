@@ -254,7 +254,7 @@ bool operator==(const PeerInfo& a, const PeerInfo& b)
 {
     return std::tie(a.m_total, a.m_completed, a.m_requested) ==
            std::tie(b.m_total, b.m_completed, b.m_requested);
-};
+}
 
 /** (Re)compute the PeerInfo map from the index. Only used for sanity checking. */
 std::unordered_map<NodeId, PeerInfo> RecomputePeerInfo(const Index& index)

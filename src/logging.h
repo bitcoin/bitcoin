@@ -254,7 +254,7 @@ namespace BCLog {
         std::string LogCategoriesString() const
         {
             return util::Join(LogCategoriesList(), ", ", [&](const LogCategory& i) { return i.category; });
-        };
+        }
 
         //! Returns a string with all user-selectable log levels.
         std::string LogLevelsString() const;

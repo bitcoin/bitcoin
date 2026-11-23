@@ -360,7 +360,7 @@ RPCFuzzTestingSetup* InitializeRPCFuzzTestingSetup()
     SetRPCWarmupFinished();
     return setup.get();
 }
-}; // namespace
+} // namespace
 
 void initialize_rpc()
 {

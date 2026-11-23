@@ -161,7 +161,7 @@ public:
         }
         Interrupt(*m_context);
     }
-    bool shutdownRequested() override { return ShutdownRequested(*Assert(m_context)); };
+    bool shutdownRequested() override { return ShutdownRequested(*Assert(m_context)); }
     bool isSettingIgnored(const std::string& name) override
     {
         bool ignored = false;

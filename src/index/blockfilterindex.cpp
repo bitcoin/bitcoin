@@ -77,7 +77,7 @@ struct DBVal {
     SERIALIZE_METHODS(DBVal, obj) { READWRITE(obj.hash, obj.header, obj.pos); }
 };
 
-}; // namespace
+} // namespace
 
 BlockFilterIndex::BlockFilterIndex(std::unique_ptr<interfaces::Chain> chain, BlockFilterType filter_type,
                                    size_t n_cache_size, bool f_memory, bool f_wipe)

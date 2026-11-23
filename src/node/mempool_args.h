@@ -12,7 +12,7 @@ class CChainParams;
 struct bilingual_str;
 namespace kernel {
 struct MemPoolOptions;
-};
+}
 
 /**
  * Overlay the options set in \p argsman on top of corresponding members in \p mempool_opts.
