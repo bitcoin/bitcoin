@@ -89,7 +89,7 @@ Descriptors consist of several types of expressions. The top level expression is
 - `tr(KEY)` or `tr(KEY,TREE)` (top level only): P2TR output with the specified key as internal key, and optionally a tree of script paths.
 - `addr(ADDR)` (top level only): the script which ADDR expands to.
 - `raw(HEX)` (top level only): the script whose hex encoding is HEX.
-- `rawtr(KEY)` (top level only): P2TR output with the specified key as output key. NOTE: while it's possible to use this to construct wallets, it has several downsides, like being unable to prove no hidden script path exists. Use at your own risk.
+- `rawtr(KEY)` (top level only): P2TR output with the specified key as output key, defined in [BIP 394](https://github.com/bitcoin/bips/blob/master/bip-0394.mediawiki). NOTE: while it's possible to use this to construct wallets, it has several downsides, like being unable to prove no hidden script path exists. Use at your own risk.
 
 `KEY` expressions:
 - Optionally, key origin information, consisting of:

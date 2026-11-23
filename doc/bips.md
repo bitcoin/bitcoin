@@ -73,6 +73,8 @@ BIPs that are implemented by Bitcoin Core:
   Output Script Descriptors, and most of Script Expressions are implemented as of **v0.17.0** ([PR 13697](https://github.com/bitcoin/bitcoin/pull/13697)).
 * [`BIP 386`](https://github.com/bitcoin/bips/blob/master/bip-0386.mediawiki): tr() Output Script Descriptors are implemented as of **v22.0** ([PR 22051](https://github.com/bitcoin/bitcoin/pull/22051)).
 * [`BIP 387`](https://github.com/bitcoin/bips/blob/master/bip-0387.mediawiki): Tapscript Multisig Output Script Descriptors are implemented as of **v24.0** ([PR 24043](https://github.com/bitcoin/bitcoin/pull/24043)).
+* [`BIP 389`](https://github.com/bitcoin/bips/blob/master/bip-0389.mediawiki): Multipath Descriptor Key Expressions are implemented as of **v29.0** ([PR 22838](https://github.com/bitcoin/bitcoin/pull/22838)).
+* [`BIP 394`](https://github.com/bitcoin/bips/blob/master/bip-0394.mediawiki): rawtr() Output Script Descriptors are implemented as of **v24.0** ([PR 23480](https://github.com/bitcoin/bitcoin/pull/23480)).
 * [`BIP 431`](https://github.com/bitcoin/bips/blob/master/bip-0431.mediawiki): transactions with nVersion=3 are standard and treated as Topologically Restricted Until Confirmation as of **v28.0** ([PR 29496](https://github.com/bitcoin/bitcoin/pull/29496)).
 * [`BIP 433`](https://github.com/bitcoin/bips/blob/master/bip-0433.mediawiki): Spending of Pay to Anchor (P2A) outputs is standard as of **v28.0** ([PR 30352](https://github.com/bitcoin/bitcoin/pull/30352)).
 * [`BIP 461`](https://github.com/bitcoin/bips/blob/master/bip-0461.md): Deterministic ECDSA signatures with low-R grinding (at most 70 bytes when DER encoded) as of **v0.17.0** ([PR 13666](https://github.com/bitcoin/bitcoin/pull/13666)).
