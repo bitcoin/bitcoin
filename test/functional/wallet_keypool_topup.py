@@ -4,12 +4,14 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test HD Wallet keypool restore function.
 
-Two nodes. Node1 is under test. Node0 is providing transactions and generating blocks.
+Node0 is providing transactions and generating blocks. Nodes 1-4 are under test,
+one for each output type (legacy, p2sh-segwit, bech32 and bech32m).
 
-- Start node1, shutdown and backup wallet.
-- Generate 110 keys (enough to drain the keypool). Store key 90 (in the initial keypool) and key 110 (beyond the initial keypool). Send funds to key 90 and key 110.
-- Stop node1, clear the datadir, move wallet file back into the datadir and restart node1.
-- connect node1 to node0. Verify that they sync and node1 receives its funds."""
+- Back up the wallet of each node under test.
+- For each node under test:
+  - Generate 110 keys (enough to drain the keypool). Store key 90 (in the initial keypool) and key 110 (beyond the initial keypool). Send funds to key 90 and key 110.
+  - Stop the node, restore its wallet backup and restart it.
+  - Connect it to node0. Verify that they sync, the node receives its funds and the keys up to key 110 are marked as used."""
 import shutil
 
 from test_framework.blocktools import COINBASE_MATURITY
@@ -31,14 +33,11 @@ class KeypoolRestoreTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        wallet_path = self.nodes[1].wallets_path / self.default_wallet_name / self.wallet_data_filename
-        wallet_backup_path = self.nodes[1].datadir_path / "wallet.bak"
         self.generate(self.nodes[0], COINBASE_MATURITY + 1)
 
-        self.log.info("Make backup of wallet")
-        self.stop_node(1)
-        shutil.copyfile(wallet_path, wallet_backup_path)
-        self.start_node(1, self.extra_args[1])
+        self.log.info("Make backup of each wallet")
+        for node in self.nodes[1:]:
+            node.backupwallet(node.datadir_path / "wallet.bak")
         for i in [1, 2, 3, 4]:
             self.connect_nodes(0, i)
 
@@ -69,9 +68,12 @@ class KeypoolRestoreTest(BitcoinTestFramework):
             self.generate(self.nodes[0], 1)
 
             self.log.info("Restart node with wallet backup")
+            node = self.nodes[idx]
             self.stop_node(idx)
-            shutil.copyfile(wallet_backup_path, wallet_path)
-            self.start_node(idx, self.extra_args[idx])
+            shutil.copyfile(node.datadir_path / "wallet.bak", node.wallets_path / self.default_wallet_name / self.wallet_data_filename)
+            # The backup predates the funding transactions, so the restored wallet can only find them by rescanning
+            with node.assert_debug_log(expected_msgs=["Rescanning last"]):
+                self.start_node(idx, self.extra_args[idx])
             self.connect_nodes(0, idx)
             self.sync_all()
 
