@@ -100,14 +100,14 @@ class P2PCompactBlocksBlocksOnly(BitcoinTestFramework):
         p2p_conn_blocksonly.send_and_ping(msg_block(block0))
         assert_equal(self.nodes[0].getbestblockhash(), block0.hash_hex)
         assert_equal(p2p_conn_blocksonly.message_count['sendcmpct'], 1)
-        assert_equal(p2p_conn_blocksonly.last_message['sendcmpct'].announce, False)
+        assert_false(p2p_conn_blocksonly.last_message['sendcmpct'].announce)
 
         # A normal node participating in transaction relay should request BIP152
         # high bandwidth mode upon receiving a new valid block at the tip.
         p2p_conn_high_bw.send_and_ping(msg_block(block0))
         assert_equal(self.nodes[1].getbestblockhash(), block0.hash_hex)
         p2p_conn_high_bw.wait_until(lambda: p2p_conn_high_bw.message_count['sendcmpct'] == 2)
-        assert_equal(p2p_conn_high_bw.last_message['sendcmpct'].announce, True)
+        assert_true(p2p_conn_high_bw.last_message['sendcmpct'].announce)
 
         # Don't send a block from the p2p_conn_low_bw so the low bandwidth node
         # doesn't select it for BIP152 high bandwidth relay.

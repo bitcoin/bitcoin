@@ -38,7 +38,7 @@ class DiscoverTest(BitcoinTestFramework):
             self.log.info(f"Validating {address}")
             valid = (is_valid_ipv4_address(address)
                      or is_valid_ipv6_address(address))
-            assert_equal(valid, True)
+            assert_true(valid)
 
     def test_local_addresses(self, test_case, *, expect_empty=False):
         self.log.info(f"Restart node with {test_case}")

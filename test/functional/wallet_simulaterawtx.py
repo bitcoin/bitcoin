@@ -47,7 +47,7 @@ class SimulateTxTest(BitcoinTestFramework):
 
         # Add address1 as watch-only to w2
         import_res = w2.importdescriptors([{"desc": w1.getaddressinfo(address1)["desc"], "timestamp": "now"}])
-        assert_equal(import_res[0]["success"], True)
+        assert_true(import_res[0]["success"])
 
         tx1 = node.createrawtransaction([], [{address1: 5.0}])
         tx2 = node.createrawtransaction([], [{address2: 10.0}])

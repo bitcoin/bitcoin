@@ -65,7 +65,7 @@ class MinimumChainWorkTest(BitcoinTestFramework):
         # that it stays in IBD and its own chain has insufficient work.
         self.restart_node(2, extra_args=["-minimumchainwork=0x1000"])
         node = self.nodes[2]
-        assert_equal(node.getblockchaininfo()['initialblockdownload'], True)
+        assert_true(node.getblockchaininfo()['initialblockdownload'])
         # Headers already in node2's block index (ancestors of its tip) skip the
         # low-work headers sync, so they reach the insufficient work check.
         headers = [from_hex(CBlockHeader(), node.getblockheader(node.getblockhash(height), False))
@@ -139,7 +139,7 @@ class MinimumChainWorkTest(BitcoinTestFramework):
 
         # Verify that node2 is in fact still in IBD (otherwise this test may
         # not be exercising the logic we want!)
-        assert_equal(self.nodes[2].getblockchaininfo()['initialblockdownload'], True)
+        assert_true(self.nodes[2].getblockchaininfo()['initialblockdownload'])
 
         self.log.info("Test -minimumchainwork with a non-hex value")
         self.stop_node(0)

@@ -90,7 +90,7 @@ class AddressTypeTest(BitcoinTestFramework):
         """Run sanity checks on an address."""
         info = self.nodes[node].getaddressinfo(address)
         assert self.nodes[node].validateaddress(address)['isvalid']
-        assert_equal(info.get('solvable'), True)
+        assert_true(info.get('solvable'))
 
         if typ == 'legacy':
             # P2PKH

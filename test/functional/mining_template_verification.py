@@ -231,8 +231,8 @@ class MiningTemplateVerificationTest(BitcoinTestFramework):
         tx_2 = copy.deepcopy(tx)
         tx_2_hex = tx_2["tx"].serialize().hex()
         # Nothing wrong with these transactions individually
-        assert_equal(node.testmempoolaccept([tx_hex])[0]["allowed"], True)
-        assert_equal(node.testmempoolaccept([tx_2_hex])[0]["allowed"], True)
+        assert_true(node.testmempoolaccept([tx_hex])[0]["allowed"])
+        assert_true(node.testmempoolaccept([tx_2_hex])[0]["allowed"])
         # But can't be combined
         assert_equal(
             node.testmempoolaccept([tx_hex, tx_2_hex])[0]["package-error"],
