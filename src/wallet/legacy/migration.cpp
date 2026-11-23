@@ -12,7 +12,6 @@ namespace legacy_migration {
 DBErrors LegacyWallet::ReorderTransactions()
 {
     LOCK(cs_wallet);
-    WalletBatch batch(GetDatabase());
 
     // Old wallets didn't have any defined order for transactions
     // Probably a bad idea to change the output of this
@@ -38,9 +37,6 @@ DBErrors LegacyWallet::ReorderTransactions()
         {
             nOrderPos = nOrderPosNext++;
             nOrderPosOffsets.push_back(nOrderPos);
-
-            if (!batch.WriteTxMetadata(*pwtx))
-                return DBErrors::LOAD_FAIL;
         }
         else
         {
@@ -55,14 +51,8 @@ DBErrors LegacyWallet::ReorderTransactions()
 
             if (!nOrderPosOff)
                 continue;
-
-            // Since we're changing the order, write it back
-            if (!batch.WriteTxMetadata(*pwtx))
-                return DBErrors::LOAD_FAIL;
         }
     }
-    batch.WriteOrderPosNext(nOrderPosNext);
-
     return DBErrors::LOAD_OK;
 }
 
