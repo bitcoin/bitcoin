@@ -364,36 +364,6 @@ You can then use the `-debug=lock` configuration option at bitcoind startup or
 `bitcoin-cli logging '["lock"]'` at runtime to turn on lock contention logging.
 It can be toggled off again with `bitcoin-cli logging [] '["lock"]'`.
 
-### Assertions and Checks
-
-The util file `src/util/check.h` offers helpers to protect against coding and
-internal logic bugs. They must never be used to validate user, network or any
-other input.
-
-* `assert` or `Assert` should be used to document assumptions when any
-  violation would mean that it is not safe to continue program execution. The
-  code is always compiled with assertions enabled.
-   - For example, a nullptr dereference or any other logic bug in validation
-     code means the program code is faulty and must terminate immediately.
-* `CHECK_NONFATAL` should be used for recoverable internal logic bugs. On
-  failure, it will throw an exception, which can be caught to recover from the
-  error.
-   - For example, a nullptr dereference or any other logic bug in RPC code
-     means that the RPC code is faulty and cannot be executed. However, the
-     logic bug can be shown to the user and the program can continue to run.
-* `Assume` should be used to document assumptions when program execution can
-  safely continue even if the assumption is violated. In debug builds it
-  behaves like `Assert`/`assert` to notify developers and testers about
-  nonfatal errors. In production it doesn't warn or log anything, though the
-  expression is always evaluated. However, if the compiler can prove that
-  an expression inside `Assume` is side-effect-free, it may optimize the call away,
-  skipping its evaluation in production. This enables a lower-cost way of
-  making explicit statements about the code, aiding review.
-   - For example it can be assumed that a variable is only initialized once,
-     but a failed assumption does not result in a fatal bug. A failed
-     assumption may or may not result in a slightly degraded user experience,
-     but it is safe to continue program execution.
-
 ### Compiling for test coverage
 
 #### Using LCOV
@@ -693,6 +663,40 @@ Test placement depends on existing coverage and the type of change:
   change with `TODO` comments so they are not mistaken for intended behavior.
   Remove the comments when updating those assertions in the behavior-changing
   commit.
+
+## Assertions and Checks
+
+The util file `src/util/check.h` offers helpers to protect against coding and
+internal logic bugs. They must never be used to validate user, network or any
+other input.
+
+* `assert` or `Assert` should be used to document assumptions when any
+  violation would mean that it is not safe to continue program execution. The
+  code is always compiled with assertions enabled.
+   - For example, a nullptr dereference or any other logic bug in validation
+     code means the program code is faulty and must terminate immediately.
+* `CHECK_NONFATAL` should be used for recoverable internal logic bugs. On
+  failure, it will throw an exception, which can be caught to recover from the
+  error.
+   - For example, a nullptr dereference or any other logic bug in RPC code
+     means that the RPC code is faulty and cannot be executed. However, the
+     logic bug can be shown to the user and the program can continue to run.
+* `Assume` should be used to document assumptions when program execution can
+  safely continue even if the assumption is violated. In debug builds it
+  behaves like `Assert`/`assert` to notify developers and testers about
+  nonfatal errors. In production it doesn't warn or log anything, though the
+  expression is always evaluated. However, if the compiler can prove that
+  an expression inside `Assume` is side-effect-free, it may optimize the call away,
+  skipping its evaluation in production. This enables a lower-cost way of
+  making explicit statements about the code, aiding review.
+   - For example it can be assumed that a variable is only initialized once,
+     but a failed assumption does not result in a fatal bug. A failed
+     assumption may or may not result in a slightly degraded user experience,
+     but it is safe to continue program execution.
+* `AssertUnreachable()` should be used to mark code that can never be reached,
+  for example after a `switch` that handles every enum value. Like `Assert`, it
+  aborts if it is reached. `NONFATAL_UNREACHABLE()` is the counterpart for code
+  where `CHECK_NONFATAL` would be used.
 
 ## Locking/mutex usage notes
 
