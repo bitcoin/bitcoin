@@ -457,9 +457,12 @@ void DoCheck(std::string prv, std::string pub, const std::string& norm_pub, int 
                 if (flags & (SIGNABLE | SIGNABLE_FAILS)) {
                     CMutableTransaction spend;
                     spend.nLockTime = spender_nlocktime;
-                    spend.vin.resize(1);
-                    spend.vin[0].nSequence = spender_nsequence;
-                    spend.vout.resize(1);
+                    spend.vin = {
+                        CTxIn{COutPoint{}, CScript{}, spender_nsequence},
+                    };
+                    spend.vout = {
+                        CTxOut{},
+                    };
                     std::vector<CTxOut> utxos(1);
                     PrecomputedTransactionData txdata;
                     txdata.Init(spend, std::move(utxos), /*force=*/true);
