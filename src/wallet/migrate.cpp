@@ -781,6 +781,8 @@ DatabaseCursor::Status BerkeleyROCursor::Next(DataStream& ssKey, DataStream& ssV
     if (m_cursor == m_cursor_end) {
         return DatabaseCursor::Status::DONE;
     }
+    ssKey.clear();
+    ssValue.clear();
     ssKey.write(std::span(m_cursor->first));
     ssValue.write(std::span(m_cursor->second));
     m_cursor++;
