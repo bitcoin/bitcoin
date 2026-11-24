@@ -870,8 +870,8 @@ HTTPClient HTTPClient::Connect(const std::string& host, uint16_t port, std::chro
         const auto time_left{std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::steady_clock::now())};
         if (time_left.count() <= 0) break;
 
-        auto sock = ConnectDirectly(service, /*manual_connection=*/true, time_left);
-        if (sock) return HTTPClient{std::move(sock), host, timeout};
+        auto sock = ConnectDirectly(service, time_left);
+        if (sock) return HTTPClient{std::move(*sock), host, timeout};
     }
 
     throw CConnectionFailed{"Could not connect to the server"};

@@ -36,6 +36,7 @@
 #include <span.h>
 #include <tinyformat.h>
 #include <util/btcsignals.h>
+#include <util/expected.h>
 #include <util/fs.h>
 #include <util/overflow.h>
 #include <util/sock.h>
@@ -509,7 +510,15 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                 // No proxy needed (none set for target network). Private broadcast connections
                 // must always use a proxy, otherwise they would leak the originator's IP address.
                 if (Assume(conn_type != ConnectionType::PRIVATE_BROADCAST)) {
-                    sock = ConnectDirectly(target_addr, conn_type == ConnectionType::MANUAL);
+                    auto direct_sock{ConnectDirectly(target_addr)};
+                    if (direct_sock) {
+                        sock = std::move(*direct_sock);
+                    } else if (conn_type == ConnectionType::MANUAL) {
+                        // The user asked for this connection, so always report why it failed
+                        LogInfo("%s", direct_sock.error());
+                    } else {
+                        LogDebug(BCLog::NET, "%s", direct_sock.error());
+                    }
                 }
             }
             if (!proxyConnectionFailed) {

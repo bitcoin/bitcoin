@@ -105,11 +105,13 @@ bool TorControlConnection::Connect(const std::string& tor_control_center)
         return false;
     }
 
-    m_sock = ConnectDirectly(control_service.value(), /*manual_connection=*/true);
-    if (!m_sock) {
+    auto sock{ConnectDirectly(control_service.value())};
+    if (!sock) {
+        LogInfo("%s", sock.error());
         LogWarning("tor: Error connecting to address %s", tor_control_center);
         return false;
     }
+    m_sock = std::move(*sock);
 
     m_recv_buffer.clear();
     m_message.Clear();

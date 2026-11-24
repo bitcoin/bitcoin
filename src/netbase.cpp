@@ -577,23 +577,11 @@ std::unique_ptr<Sock> CreateSockOS(int domain, int type, int protocol)
 
 std::function<std::unique_ptr<Sock>(int, int, int)> CreateSock = CreateSockOS;
 
-template <typename... Args>
-static void LogConnectFailure(bool manual_connection, util::log::FormatString<sizeof...(Args)> fmt, const Args&... args)
-{
-    std::string error_message = tfm::format(fmt, args...);
-    if (manual_connection) {
-        LogInfo("%s", error_message);
-    } else {
-        LogDebug(BCLog::NET, "%s", error_message);
-    }
-}
-
-static bool ConnectToSocket(const Sock& sock,
-                            struct sockaddr* sockaddr,
-                            socklen_t len,
-                            const std::string& dest_str,
-                            bool manual_connection,
-                            std::chrono::milliseconds timeout)
+static util::Expected<void, std::string> ConnectToSocket(const Sock& sock,
+                                                         struct sockaddr* sockaddr,
+                                                         socklen_t len,
+                                                         const std::string& dest_str,
+                                                         std::chrono::milliseconds timeout)
 {
     // Connect to `sockaddr` using `sock`.
     if (sock.Connect(sockaddr, len) == SOCKET_ERROR) {
@@ -607,13 +595,11 @@ static bool ConnectToSocket(const Sock& sock,
             const Sock::Event requested = Sock::RecvEvent | Sock::SendEvent;
             Sock::Event occurred;
             if (!sock.Wait(timeout, requested, &occurred)) {
-                LogDebug(BCLog::NET, "wait for connect to %s failed: %s",
-                          dest_str,
-                          NetworkErrorString(WSAGetLastError()));
-                return false;
+                return util::Unexpected{strprintf("wait for connect to %s failed: %s",
+                                                  dest_str,
+                                                  NetworkErrorString(WSAGetLastError()))};
             } else if (occurred == 0) {
-                LogDebug(BCLog::NET, "connection attempt to %s timed out\n", dest_str);
-                return false;
+                return util::Unexpected{strprintf("connection attempt to %s timed out", dest_str)};
             }
 
             // Even if the wait was successful, the connect might not
@@ -625,14 +611,12 @@ static bool ConnectToSocket(const Sock& sock,
             if (sock.GetSockOpt(SOL_SOCKET, SO_ERROR, &sockerr, &sockerr_len) ==
                 SOCKET_ERROR) {
                 LogWarnThenDebug(BCLog::NET, "getsockopt() for %s failed: %s", dest_str, NetworkErrorString(WSAGetLastError()));
-                return false;
+                return util::Unexpected{strprintf("getsockopt() for %s failed", dest_str)};
             }
             if (sockerr != 0) {
-                LogConnectFailure(manual_connection,
-                                  "connect() to %s failed after wait: %s",
-                                  dest_str,
-                                  NetworkErrorString(sockerr));
-                return false;
+                return util::Unexpected{strprintf("connect() to %s failed after wait: %s",
+                                                  dest_str,
+                                                  NetworkErrorString(sockerr))};
             }
         }
 #ifdef WIN32
@@ -641,38 +625,34 @@ static bool ConnectToSocket(const Sock& sock,
         else
 #endif
         {
-            LogConnectFailure(manual_connection, "connect() to %s failed: %s", dest_str, NetworkErrorString(WSAGetLastError()));
-            return false;
+            return util::Unexpected{strprintf("connect() to %s failed: %s", dest_str, NetworkErrorString(WSAGetLastError()))};
         }
     }
-    return true;
+    return {};
 }
 
-std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connection)
+util::Expected<std::unique_ptr<Sock>, std::string> ConnectDirectly(const CService& dest)
 {
-    return ConnectDirectly(dest, manual_connection, std::chrono::milliseconds{nConnectTimeout});
+    return ConnectDirectly(dest, std::chrono::milliseconds{nConnectTimeout});
 }
 
-std::unique_ptr<Sock> ConnectDirectly(const CService& dest,
-                                      bool manual_connection,
-                                      std::chrono::milliseconds timeout)
+util::Expected<std::unique_ptr<Sock>, std::string> ConnectDirectly(const CService& dest,
+                                                                   std::chrono::milliseconds timeout)
 {
     auto sock = CreateSock(dest.GetSAFamily(), SOCK_STREAM, IPPROTO_TCP);
     if (!sock) {
-        LogDebug(BCLog::NET, "Cannot create a socket for connecting to %s", dest.ToStringAddrPort());
-        return {};
+        return util::Unexpected{strprintf("Cannot create a socket for connecting to %s", dest.ToStringAddrPort())};
     }
 
     // Create a sockaddr from the specified service.
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
     if (!dest.GetSockAddr((struct sockaddr*)&sockaddr, &len)) {
-        LogDebug(BCLog::NET, "Cannot get sockaddr for %s: unsupported network", dest.ToStringAddrPort());
-        return {};
+        return util::Unexpected{strprintf("Cannot get sockaddr for %s: unsupported network", dest.ToStringAddrPort())};
     }
 
-    if (!ConnectToSocket(*sock, (struct sockaddr*)&sockaddr, len, dest.ToStringAddrPort(), manual_connection, timeout)) {
-        return {};
+    if (auto connected{ConnectToSocket(*sock, (struct sockaddr*)&sockaddr, len, dest.ToStringAddrPort(), timeout)}; !connected) {
+        return util::Unexpected{std::move(connected.error())};
     }
 
     return sock;
@@ -682,7 +662,12 @@ std::unique_ptr<Sock> Proxy::Connect() const
 {
     if (!IsValid()) return {};
 
-    if (!m_is_unix_socket) return ConnectDirectly(proxy, /*manual_connection=*/false);
+    if (!m_is_unix_socket) {
+        auto sock{ConnectDirectly(proxy)};
+        if (sock) return std::move(*sock);
+        LogDebug(BCLog::NET, "%s", sock.error());
+        return {};
+    }
 
 #ifdef HAVE_SOCKADDR_UN
     auto sock = CreateSock(AF_UNIX, SOCK_STREAM, 0);
@@ -700,12 +685,13 @@ std::unique_ptr<Sock> Proxy::Connect() const
     memcpy(addrun.sun_path, path.c_str(), std::min(sizeof(addrun.sun_path) - 1, path.length()));
     socklen_t len = sizeof(addrun);
 
-    if (!ConnectToSocket(*sock,
-                         (struct sockaddr*)&addrun,
-                         len,
-                         path,
-                         /*manual_connection=*/false,
-                         std::chrono::milliseconds{nConnectTimeout})) {
+    const auto connected{ConnectToSocket(*sock,
+                                         (struct sockaddr*)&addrun,
+                                         len,
+                                         path,
+                                         std::chrono::milliseconds{nConnectTimeout})};
+    if (!connected) {
+        LogDebug(BCLog::NET, "%s", connected.error());
         return {};
     }
 
