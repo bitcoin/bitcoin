@@ -9,6 +9,17 @@
 
 namespace wallet {
 namespace legacy_migration {
+/** struct containing information needed for migrating legacy wallets to descriptor wallets */
+struct MigrationData
+{
+    CExtKey master_key;
+    std::vector<std::pair<std::string, int64_t>> watch_descs;
+    std::vector<std::pair<std::string, int64_t>> solvable_descs;
+    std::vector<std::unique_ptr<DescriptorScriptPubKeyMan>> desc_spkms;
+    std::shared_ptr<CWallet> watchonly_wallet{nullptr};
+    std::shared_ptr<CWallet> solvable_wallet{nullptr};
+};
+
 /** Output types associated with LegacyDataSPKM. */
 inline const std::unordered_set<OutputType> LEGACY_OUTPUT_TYPES {
     OutputType::LEGACY,
