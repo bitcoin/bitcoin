@@ -656,6 +656,7 @@ bool BlockManager::CheckBlockDataAvailability(const CBlockIndex& upper_block, co
     // Special case: the genesis block has no undo data
     const BlockStatus lower_status{lower_block.nHeight == 0 ? block_status & ~BLOCK_HAVE_UNDO : block_status};
     if (lower_status & ~lower_block.nStatus) return false;
+    if (&upper_block == &lower_block) return true;
     if (!(upper_block.nStatus & block_status)) return false;
     const auto& first_block = GetFirstBlock(upper_block, block_status, &lower_block);
     if (block_status & BLOCK_HAVE_UNDO && lower_block.nHeight == 0 && first_block.nHeight == 1) {
