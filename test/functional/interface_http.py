@@ -915,7 +915,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         # platform where the node uses poll(), which still reports the reset,
         # unless it is a Windows binary running under Wine.
         uses_poll = self.linux_host and not self.windows_target
-        expected_msgs = ["Error sending HTTP response data"] if uses_poll else []
+        expected_msgs = ["HTTP socket error or hangup"] if uses_poll else []
         conn.conn.sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, pack_linger(enabled=True, timeout=0))
         with self.node.assert_debug_log(expected_msgs, timeout=10):
             conn.close_sock()
