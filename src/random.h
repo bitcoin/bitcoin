@@ -28,7 +28,7 @@
  * The following (classes of) functions interact with that state by mixing in new
  * entropy, and optionally extracting random output from it:
  *
- * - GetRandBytes, GetRandHash, GetRandDur, as well as construction of FastRandomContext
+ * - GetRandBytes, GetRandHash, as well as construction of FastRandomContext
  *   objects, perform 'fast' seeding, consisting of mixing in:
  *   - A stack pointer (indirectly committing to calling thread and call stack)
  *   - A high-precision timestamp (rdtsc when available, c++ high_resolution_clock otherwise)
