@@ -6,7 +6,7 @@
 from contextlib import suppress
 from pathlib import Path
 import json
-import os.path
+import os
 import random
 import shutil
 import stat
@@ -115,6 +115,11 @@ class WalletMigrationTest(BitcoinTestFramework):
         else:
             assert_equal(addr_info['labels'], []),
 
+    def assert_no_tmp_db(self, path):
+        """Assert that no temporary migration database was left behind under 'path'"""
+        for _, dirs, files in os.walk(path):
+            assert not [f for f in dirs + files if "_sqlite_" in f and f.endswith(".tmp")]
+
     def migrate_and_get_rpc(self, wallet_name, **kwargs):
         # Since we may rescan on loading of a wallet, make sure that the best block
         # is written before beginning migration
@@ -163,6 +168,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         expected_backup_path = self.master_node.wallets_path / backup_filename
         assert_equal(str(expected_backup_path), migrate_info['backup_path'])
         assert {"name": backup_filename} not in self.master_node.listwalletdir()["wallets"]
+        self.assert_no_tmp_db(self.master_node.wallets_path)
 
         # Open the wallet with sqlite and verify that the wallet has the last hardened cache flag
         # set and the last hardened cache entries
@@ -199,9 +205,10 @@ class WalletMigrationTest(BitcoinTestFramework):
         if is_dir_writable(wallet_path):
             self.log.warning("Skipping migration non-writable directory test: unable to enforce read-only permissions")
         else:
-            assert_raises_rpc_error(-4, f"Error: Wallet db file cannot be modified. Path: {wallet_path / 'wallet.dat'}, Error: Permission denied. Adjust directory or file permissions and try again.", self.master_node.migratewallet, wallet_name)
+            assert_raises_rpc_error(-4, "Error: Unable to create the new database for wallet 'bad_permissions'.", self.master_node.migratewallet, wallet_name)
         # Reset directory permissions
         wallet_path.chmod(original_dir_perms)
+        self.assert_no_tmp_db(self.master_node.wallets_path)
 
         # Check the wallet we tried to migrate is still BDB
         self.assert_is_bdb(wallet_name)
