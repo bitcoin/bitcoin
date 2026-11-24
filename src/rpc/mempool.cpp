@@ -160,7 +160,7 @@ static RPCMethod sendrawtransaction()
             const TransactionError err = BroadcastTransaction(node,
                                                               tx,
                                                               err_string,
-                                                              /*max_tx_fee=*/0,
+                                                              /*max_tx_fee=*/CAmount{0},
                                                               max_raw_tx_fee_rate,
                                                               method,
                                                               /*wait_callback=*/true);
@@ -1506,7 +1506,7 @@ static RPCMethod submitpackage()
 
                 // We do not expect an error here; we are only broadcasting things already/still in mempool
                 std::string err_string;
-                const auto err = BroadcastTransaction(node, tx, err_string, /*max_tx_fee=*/0, /*max_tx_fee_rate=*/CFeeRate(CAmount{0}), /*broadcast_method=*/node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL, /*wait_callback=*/true);
+                const auto err = BroadcastTransaction(node, tx, err_string, /*max_tx_fee=*/CAmount{0}, /*max_tx_fee_rate=*/CFeeRate(CAmount{0}), /*broadcast_method=*/node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL, /*wait_callback=*/true);
                 if (err != TransactionError::OK) {
                     throw JSONRPCTransactionError(err,
                         strprintf("transaction broadcast failed: %s (%d transactions were broadcast successfully)",

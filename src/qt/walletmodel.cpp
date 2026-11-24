@@ -175,7 +175,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             {
                 return InvalidAddress;
             }
-            if(rcp.amount <= 0)
+            if(rcp.amount <= CAmount{0})
             {
                 return InvalidAmount;
             }

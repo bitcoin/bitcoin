@@ -282,15 +282,15 @@ util::Result<int> SighashFromStr(const std::string& sighash)
 
 UniValue ValueFromAmount(const CAmount amount)
 {
-    static_assert(COIN > 1);
+    static_assert(COIN > CAmount{1});
     int64_t quotient = amount / COIN;
     int64_t remainder = amount % COIN;
-    if (amount < 0) {
+    if (amount < CAmount{0}) {
         quotient = -quotient;
         remainder = -remainder;
     }
     return UniValue(UniValue::VNUM,
-            strprintf("%s%d.%08d", amount < 0 ? "-" : "", quotient, remainder));
+            strprintf("%s%d.%08d", amount < CAmount{0} ? "-" : "", quotient, remainder));
 }
 
 std::string FormatScript(const CScript& script)

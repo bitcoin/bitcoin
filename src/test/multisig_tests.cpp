@@ -23,7 +23,7 @@ BOOST_FIXTURE_TEST_SUITE(multisig_tests, BasicTestingSetup)
 static CScript
 sign_multisig(const CScript& scriptPubKey, const std::vector<CKey>& keys, const CTransaction& transaction, int whichIn)
 {
-    uint256 hash = SignatureHash(scriptPubKey, transaction, whichIn, SIGHASH_ALL, 0, SigVersion::BASE);
+    uint256 hash = SignatureHash(scriptPubKey, transaction, whichIn, SIGHASH_ALL, CAmount{0}, SigVersion::BASE);
 
     CScript result;
     result << OP_0; // CHECKMULTISIG bug workaround
