@@ -32,6 +32,17 @@ class BlockTemplate
 public:
     virtual ~BlockTemplate() = default;
 
+    /**
+    * Block header. Its nTime is a suggested timestamp; submitSolution()
+    * takes the final one.
+    *
+    * @note On testnet3 and testnet4 a block more than 20 minutes after the
+    *       previous block MUST use the minimum difficulty. Never roll more
+    *       than 20 minutes past the previous block's time on these networks,
+    *       or the block is invalid (bad-diffbits).
+    *       waitNext() returns a minimum difficulty template once that point
+    *       is reached.
+    */
     virtual CBlockHeader getBlockHeader() = 0;
     // Block contains a dummy coinbase transaction that should not be used and
     // it may not match a transaction constructed from getCoinbaseTx().
