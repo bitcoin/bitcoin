@@ -238,6 +238,15 @@ KJ_TEST("Call FooInterface methods")
     KJ_EXPECT(saved.use_count() == 1);
     KJ_EXPECT(foo->callbackExtended(callback, 11) == 12);
 
+    class FlatCallbackImpl : public FlatCallback
+    {
+    public:
+        int call(int arg) override { return arg + 1; }
+        int callExtended(int arg) override { return arg * 10; }
+    };
+    FlatCallbackImpl flat_callback;
+    KJ_EXPECT(foo->callbackFlat(flat_callback, 2) == 23);
+
     FooCustom custom_in;
     custom_in.v1 = "v1";
     custom_in.v2 = 5;

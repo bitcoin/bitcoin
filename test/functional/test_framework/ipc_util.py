@@ -88,6 +88,7 @@ def load_capnp_modules(config):
     imports = [str(mp_dir), str(capnp_dir), str(src_dir)]
     return {
         "proxy": capnp.load(str(mp_dir / "mp" / "proxy.capnp"), imports=imports),
+        "chain": capnp.load(str(src_dir / "ipc" / "capnp" / "chain.capnp"), imports=imports),
         "init": capnp.load(str(src_dir / "ipc" / "capnp" / "init.capnp"), imports=imports),
         "echo": capnp.load(str(src_dir / "ipc" / "capnp" / "echo.capnp"), imports=imports),
         "mining": capnp.load(str(src_dir / "ipc" / "capnp" / "mining.capnp"), imports=imports),
