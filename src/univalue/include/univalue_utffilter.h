@@ -1,6 +1,8 @@
 // Copyright 2016 Wladimir J. van der Laan
+// Copyright (c) The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or https://opensource.org/licenses/mit-license.php.
+// file COPYING or https://opensource.org/license/mit.
+
 #ifndef BITCOIN_UNIVALUE_INCLUDE_UNIVALUE_UTFFILTER_H
 #define BITCOIN_UNIVALUE_INCLUDE_UNIVALUE_UTFFILTER_H
 

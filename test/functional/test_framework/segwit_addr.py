@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # Copyright (c) 2017 Pieter Wuille
+# Copyright (c) The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file COPYING or https://opensource.org/license/mit/.
 """Reference implementation for Bech32/Bech32m and segwit addresses."""
 import unittest
 from enum import Enum
