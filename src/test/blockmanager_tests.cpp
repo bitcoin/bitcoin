@@ -137,7 +137,7 @@ BOOST_FIXTURE_TEST_CASE(blockmanager_block_data_availability, TestChain100Setup)
     BOOST_CHECK( blockman.CheckBlockDataAvailability(*genesis, *genesis, BLOCK_HAVE_MASK));
     // Compare undo-only and combined requests when genesis has no block data
     genesis->nStatus &= ~BLOCK_HAVE_DATA;
-    BOOST_CHECK(!blockman.CheckBlockDataAvailability(*chainman->ActiveChain()[1], *genesis, BLOCK_HAVE_UNDO)); // TODO: Only block 1 needs undo data
+    BOOST_CHECK( blockman.CheckBlockDataAvailability(*chainman->ActiveChain()[1], *genesis, BLOCK_HAVE_UNDO));
     BOOST_CHECK( blockman.CheckBlockDataAvailability(*genesis, *genesis, BLOCK_HAVE_UNDO));
     BOOST_REQUIRE(genesis->nStatus & BLOCK_OPT_WITNESS);
     BOOST_CHECK(!blockman.CheckBlockDataAvailability(*upper_block, *genesis, BlockStatus{BLOCK_HAVE_MASK | BLOCK_OPT_WITNESS}));
