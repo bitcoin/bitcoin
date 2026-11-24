@@ -11,6 +11,7 @@
 #include <script/solver.h>
 #include <primitives/block.h>
 #include <util/chaintype.h>
+#include <util/check.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -132,8 +133,22 @@ BOOST_FIXTURE_TEST_CASE(blockmanager_block_data_availability, TestChain100Setup)
     CBlockIndex* upper_block = chainman->ActiveChain()[2];
     CBlockIndex* genesis = chainman->ActiveChain()[0];
     BOOST_CHECK(blockman.CheckBlockDataAvailability(*upper_block, *genesis, BlockStatus{BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO}));
+    BOOST_REQUIRE_EQUAL(genesis->nStatus & BLOCK_HAVE_MASK, BLOCK_HAVE_DATA);
+    test_only_CheckFailuresAreExceptionsNotAborts mock_checks{}; // TODO: Remove once partial masks no longer reach the walker assertion
+    BOOST_CHECK_THROW(blockman.CheckBlockDataAvailability(*genesis, *genesis, BLOCK_HAVE_MASK), NonFatalCheckError); // TODO: Genesis with block data should satisfy BLOCK_HAVE_MASK
+    // Compare undo-only and combined requests when genesis has no block data
+    genesis->nStatus &= ~BLOCK_HAVE_DATA;
+    BOOST_CHECK(!blockman.CheckBlockDataAvailability(*chainman->ActiveChain()[1], *genesis, BLOCK_HAVE_UNDO)); // TODO: Only block 1 needs undo data
+    BOOST_CHECK(!blockman.CheckBlockDataAvailability(*genesis, *genesis, BLOCK_HAVE_UNDO)); // TODO: Genesis does not need undo data
+    BOOST_REQUIRE(genesis->nStatus & BLOCK_OPT_WITNESS);
+    BOOST_CHECK( blockman.CheckBlockDataAvailability(*upper_block, *genesis, BlockStatus{BLOCK_HAVE_MASK | BLOCK_OPT_WITNESS})); // TODO: Genesis is missing block data
+    BOOST_CHECK(!blockman.CheckBlockDataAvailability(*upper_block, *genesis, BLOCK_HAVE_MASK));
+    BOOST_CHECK(!blockman.CheckBlockDataAvailability(*genesis, *genesis, BLOCK_HAVE_MASK));
+    genesis->nStatus |= BLOCK_HAVE_DATA;
     // Ensure we detect absence of undo data in the first block
     chainman->ActiveChain()[1]->nStatus &= ~BLOCK_HAVE_UNDO;
+    BOOST_REQUIRE_EQUAL(chainman->ActiveChain()[1]->nStatus & BLOCK_HAVE_MASK, BLOCK_HAVE_DATA);
+    BOOST_CHECK_THROW(blockman.CheckBlockDataAvailability(*chainman->ActiveChain()[1], *genesis, BLOCK_HAVE_MASK), NonFatalCheckError); // TODO: Block 1 is missing undo data
     BOOST_CHECK(!blockman.CheckBlockDataAvailability(tip, *genesis, BlockStatus{BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO}));
 
     // Prune half of the blocks
@@ -146,6 +161,8 @@ BOOST_FIXTURE_TEST_CASE(blockmanager_block_data_availability, TestChain100Setup)
     BOOST_CHECK_EQUAL(&blockman.GetFirstBlock(tip, BLOCK_HAVE_DATA), first_available_block);
     BOOST_CHECK(blockman.CheckBlockDataAvailability(tip, *first_available_block));
     BOOST_CHECK(!blockman.CheckBlockDataAvailability(tip, *last_pruned_block));
+    BOOST_REQUIRE_EQUAL(last_pruned_block->nStatus & BLOCK_HAVE_MASK, BLOCK_HAVE_UNDO);
+    BOOST_CHECK_THROW(blockman.CheckBlockDataAvailability(*last_pruned_block, *last_pruned_block, BLOCK_HAVE_MASK), NonFatalCheckError); // TODO: The pruned block is missing block data
 
     // Simulate that the first available block is missing undo data and
     // detect this by using a status mask.

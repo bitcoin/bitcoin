@@ -635,7 +635,7 @@ const CBlockIndex& BlockManager::GetFirstBlock(const CBlockIndex& upper_block, u
 {
     AssertLockHeld(::cs_main);
     const CBlockIndex* last_block = &upper_block;
-    assert((last_block->nStatus & status_mask) == status_mask); // 'upper_block' must satisfy the status mask
+    Assert((last_block->nStatus & status_mask) == status_mask); // 'upper_block' must satisfy the status mask
     while (last_block->pprev && ((last_block->pprev->nStatus & status_mask) == status_mask)) {
         if (lower_block) {
             // Return if we reached the lower_block
