@@ -16,6 +16,7 @@ import itertools
 import os
 import pathlib
 import re
+from string import Template
 import sys
 import tempfile
 
@@ -39,7 +40,7 @@ def main():
         help=('temporary test directory to combine logs from. '
               'Defaults to the most recent'))
     parser.add_argument('-c', '--color', dest='color', action='store_true', help='outputs the combined log with events colored by source (requires posix terminal colors. Use less -r for viewing)')
-    parser.add_argument('--html', dest='html', action='store_true', help='outputs the combined log as html. Requires jinja2. pip install jinja2')
+    parser.add_argument('--html', dest='html', action='store_true', help='outputs the combined log as html')
     args = parser.parse_args()
 
     if args.html and args.color:
@@ -189,14 +190,9 @@ def print_logs_plain(log_events, colors):
 
 def print_logs_html(log_events):
     """Renders the iterator of log events into html."""
-    try:
-        import jinja2 #type:ignore
-    except ImportError:
-        print("jinja2 not found. Try `pip install jinja2`")
-        sys.exit(1)
-    print(jinja2.Environment(loader=jinja2.FileSystemLoader('./'))
-                    .get_template('combined_log_template.html')
-                    .render(title="Combined Logs from testcase", log_events=[event._asdict() for event in log_events]))
+    template = Template(pathlib.Path(__file__).with_name('combined_log_template.html').read_text())
+    items = [f'<li class="log-{e.source}"> {e.source} {e.timestamp} {e.event}</li>' for e in log_events]
+    print(template.substitute(title="Combined Logs from testcase", log_events="\n".join(items)))
 
 
 if __name__ == '__main__':

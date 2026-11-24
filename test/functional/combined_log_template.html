@@ -1,6 +1,6 @@
 <html lang="en">
 <head>
-    <title> {{ title }} </title>
+    <title> $title </title>
     <style>
         ul {
             list-style-type: none;
@@ -32,9 +32,7 @@
 </head>
 <body>
 <ul>
-{% for event in log_events %}
-<li class="log-{{ event.source }}"> {{ event.source }} {{ event.timestamp }} {{event.event}}</li>
-{% endfor %}
+$log_events
 </ul>
 </body>
 </html>
