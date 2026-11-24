@@ -31,6 +31,18 @@ class I2PPorts(BitcoinTestFramework):
         with node.assert_debug_log(expected_msgs=[f"Error connecting to {addr}: Cannot connect to {self.proxy}"]):
             node.addnode(node=addr, command="onetry")
 
+        self.log.info("Ensure the missing I2P proxy is warned about once and logged at debug level afterwards")
+        with node.assert_debug_log(expected_msgs=[
+            f"[warning] i2p: Cannot connect to SAM proxy {self.proxy}",
+            f"[warning] i2p: Couldn't listen: Cannot connect to {self.proxy}",
+        ], timeout=10):
+            self.restart_node(0)
+        with node.assert_debug_log(
+            expected_msgs=[f"[i2p] i2p: Cannot connect to SAM proxy {self.proxy}"],
+            unexpected_msgs=["[warning] i2p:"],
+        ):
+            node.addnode(node=addr, command="onetry")
+
 
 if __name__ == '__main__':
     I2PPorts(__file__).main()

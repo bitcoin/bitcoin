@@ -149,7 +149,7 @@ bool Session::Listen(Connection& conn)
         conn.sock = StreamAccept();
         return true;
     } catch (const std::runtime_error& e) {
-        LogError("Couldn't listen: %s\n", e.what());
+        LogWarnThenDebug(BCLog::I2P, "i2p: Couldn't listen: %s", e.what());
         CheckControlSock();
     }
     return false;
@@ -331,6 +331,7 @@ std::unique_ptr<Sock> Session::Hello() const
     auto sock = m_control_host.Connect();
 
     if (!sock) {
+        LogWarnThenDebug(BCLog::I2P, "i2p: Cannot connect to SAM proxy %s", m_control_host.ToString());
         throw std::runtime_error(strprintf("Cannot connect to %s", m_control_host.ToString()));
     }
 
