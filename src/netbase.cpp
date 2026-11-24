@@ -682,7 +682,7 @@ std::unique_ptr<Sock> Proxy::Connect() const
 {
     if (!IsValid()) return {};
 
-    if (!m_is_unix_socket) return ConnectDirectly(proxy, /*manual_connection=*/true);
+    if (!m_is_unix_socket) return ConnectDirectly(proxy, /*manual_connection=*/false);
 
 #ifdef HAVE_SOCKADDR_UN
     auto sock = CreateSock(AF_UNIX, SOCK_STREAM, 0);
@@ -704,7 +704,7 @@ std::unique_ptr<Sock> Proxy::Connect() const
                          (struct sockaddr*)&addrun,
                          len,
                          path,
-                         /*manual_connection=*/true,
+                         /*manual_connection=*/false,
                          std::chrono::milliseconds{nConnectTimeout})) {
         return {};
     }
@@ -810,6 +810,7 @@ std::unique_ptr<Sock> ConnectThroughProxy(const Proxy& proxy,
     // first connect to proxy server
     auto sock = proxy.Connect();
     if (!sock) {
+        LogWarnThenDebug(BCLog::PROXY, "Cannot connect to proxy %s", proxy.ToString());
         proxy_connection_failed = true;
         return {};
     }
