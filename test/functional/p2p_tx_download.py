@@ -97,7 +97,6 @@ class TxDownloadTest(BitcoinTestFramework):
                 if getdata_found(i):
                     outstanding_peer_index.remove(i)
 
-        self.nodes[0].setmocktime(0)
         self.log.info("All outstanding peers received a getdata")
 
     def test_inv_block(self):
@@ -135,8 +134,6 @@ class TxDownloadTest(BitcoinTestFramework):
         self.nodes[0].p2ps[0].sync_with_ping()
         assert_equal(self.nodes[0].getpeerinfo()[0]['inv_to_send'], 0)  # May fail rarely, retry the test
         self.sync_mempools()
-
-        self.nodes[0].setmocktime(0)
 
     def test_in_flight_max(self):
         self.log.info("Test that we don't load peers with more than {} transaction requests immediately".format(MAX_PEER_TX_REQUEST_IN_FLIGHT))
