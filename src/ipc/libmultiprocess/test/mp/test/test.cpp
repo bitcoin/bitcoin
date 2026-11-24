@@ -601,6 +601,86 @@ KJ_TEST("Calling async IPC method, with server disconnect after cleanup")
     EXPECT_EXCEPTION(foo->callFnAsync(), "IPC client method call interrupted by disconnect.");
 }
 
+KJ_TEST("Waiting for in-flight server call to finish after disconnect")
+{
+    // Regression test for bitcoin/bitcoin#35845. Disconnecting a connection
+    // cancels the KJ promise of an in-flight call, but a C++ server method
+    // body already dispatched to a worker thread runs to completion. Verify
+    // that waitDrained() on the tracker returned by disconnect() blocks until
+    // such a body finishes and its server object is destroyed, so shutdown code
+    // can wait for a disconnected connection to become quiescent before freeing
+    // state the body accesses. Also verify that disconnect() removes the
+    // connection from the incoming connection list without the caller erasing
+    // it, so it does not keep the event loop running.
+
+    std::promise<void> body_started, release_body;
+    TestSetup setup;
+    ProxyClient<messages::FooInterface>* foo = setup.client.get();
+    foo->initThreadMap();
+
+    // A server call body that signals when it starts and then blocks until the
+    // test releases it, so the in-flight state can be observed
+    // deterministically.
+    setup.server->m_impl->m_fn = [&] {
+        body_started.set_value();
+        release_body.get_future().get();
+    };
+
+    // Grab the server Connection object on the event loop thread before
+    // disconnecting. It is only used before disconnect() below, after which it
+    // may be freed.
+    Connection* connection{nullptr};
+    foo->m_context.loop->sync([&] { connection = setup.server->m_context.connection; });
+    EventLoop& loop{*foo->m_context.loop};
+
+    // Invoke the async method on a separate thread so its body blocks there
+    // while this thread makes assertions. callFnAsync() takes an mp.Context,
+    // so its body runs on a worker thread via ProxyServer<Thread>::post().
+    std::thread call_thread([&] {
+        EXPECT_EXCEPTION(foo->callFnAsync(), "IPC client method call interrupted by disconnect.");
+    });
+    body_started.get_future().get();
+
+    // Disconnect. This cancels the call's promise (the client above sees the
+    // disconnect error), but the body is still blocked on the worker thread,
+    // so its server object must still be alive. The FooInterface server object
+    // is the connection's only counted server object.
+    Connection::Tracker tracker;
+    loop.sync([&] { tracker = connection->disconnect(); });
+    KJ_EXPECT(tracker->pendingServerObjects() == 1);
+
+    // A drain must block while the body runs and return only once it
+    // finishes, which is what Ipc::disconnectIncoming relies on during
+    // shutdown.
+    std::promise<void> drain_waiting;
+    tracker->testing_hook_wait = [&] { drain_waiting.set_value(); };
+    std::atomic<bool> drained{false};
+    std::thread drain_thread([&] {
+        tracker->waitDrained();
+        drained = true;
+    });
+
+    // Wait until waitDrained() has observed the live server object and is
+    // about to block, then verify it does not return while the body is blocked.
+    drain_waiting.get_future().get();
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    KJ_EXPECT(!drained);
+
+    // Let the body finish; the drain should now complete.
+    release_body.set_value();
+    drain_thread.join();
+    KJ_EXPECT(drained);
+    KJ_EXPECT(tracker->pendingServerObjects() == 0);
+    call_thread.join();
+
+    // disconnect() left the connection's onDisconnect handler to remove it from
+    // the incoming connection list, which destroys it (~Connection notices
+    // disconnect() has already run and does not tear things down twice). The
+    // handler runs on an event loop turn after disconnect() returns, so by now
+    // it has run.
+    loop.sync([&] { KJ_EXPECT(loop.m_incoming_connections.empty()); });
+}
+
 KJ_TEST("Destroying ProxyClient<> with destroy method after peer disconnect")
 {
     // Regression test for bitcoin-core/libmultiprocess#219 where
