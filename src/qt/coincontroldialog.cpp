@@ -523,7 +523,7 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
     }
 
     // how many satoshis the estimated fee can vary per byte we guess wrong
-    double dFeeVary = (nBytes != 0) ? (double)nPayFee / nBytes : 0;
+    double dFeeVary = (nBytes != 0) ? (double)nPayFee.Int() / nBytes : 0;
 
     QString toolTip4 = tr("Can vary +/- %1 satoshi(s) per input.").arg(dFeeVary);
 
@@ -630,7 +630,7 @@ void CoinControlDialog::updateView()
 
             // amount
             itemOutput->setText(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, out.txout.nValue));
-            itemOutput->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)out.txout.nValue)); // padding so that sorting works correctly
+            itemOutput->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant{qlonglong{out.txout.nValue.Int()}}); // padding so that sorting works correctly
 
             // date
             itemOutput->setText(COLUMN_DATE, GUIUtil::dateTimeStr(out.time));
@@ -664,7 +664,7 @@ void CoinControlDialog::updateView()
         {
             itemWalletAddress->setText(COLUMN_CHECKBOX, "(" + QString::number(nChildren) + ")");
             itemWalletAddress->setText(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, nSum));
-            itemWalletAddress->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)nSum));
+            itemWalletAddress->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant{qlonglong{nSum.Int()}});
         }
     }
 

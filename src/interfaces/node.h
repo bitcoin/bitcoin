@@ -6,7 +6,6 @@
 #define BITCOIN_INTERFACES_NODE_H
 
 #include <common/settings.h>
-#include <consensus/amount.h>
 #include <net.h>
 #include <net_types.h>
 #include <netaddress.h>
@@ -26,6 +25,7 @@
 #include <tuple>
 #include <vector>
 
+class CAmount;
 class CFeeRate;
 class Coin;
 class UniValue;

@@ -30,6 +30,7 @@
 #include <util/translation.h>
 
 #include <algorithm>
+#include <compare>
 #include <memory>
 #include <ranges>
 #include <set>

@@ -6,6 +6,7 @@
 #define BITCOIN_UTIL_FEES_H
 
 #include <attributes.h>
+#include <consensus/amount.h>
 #include <util/expected.h>
 #include <util/feefrac.h>
 

@@ -247,7 +247,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     // below the block min tx fee (assuming 1 child tx of the same size).
     CAmount feeToUse = blockMinFeeRate.GetFee(2*freeTxSize) - 1;
 
-    tx = MakeTx(COutPoint{hashFreeTx, 0}, 5000000000LL - 1000 - 50000 - feeToUse);
+    tx = MakeTx(COutPoint{hashFreeTx, 0}, CAmount{5000000000LL - 1000 - 50000} - feeToUse);
     Txid hashLowFeeTx = tx.GetHash();
     TryAddToMempool(tx_mempool, entry.Fee(feeToUse).FromTx(tx));
 
@@ -266,7 +266,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     // of the transactions is below the min relay fee
     // Remove the low fee transaction and replace with a higher fee transaction
     tx_mempool.removeRecursive(CTransaction(tx), MemPoolRemovalReason::REPLACED);
-    tx = MakeTx(COutPoint{hashFreeTx, 0}, 5000000000LL - 1000 - 50000 - feeToUse - 2); // Now we should be just over the min relay fee
+    tx = MakeTx(COutPoint{hashFreeTx, 0}, CAmount{5000000000LL - 1000 - 50000} - feeToUse - CAmount{2}); // Now we should be just over the min relay fee
     hashLowFeeTx = tx.GetHash();
     TryAddToMempool(tx_mempool, entry.Fee(feeToUse + 2).FromTx(tx));
 
@@ -303,7 +303,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
 
     // This tx can't be mined by itself
     feeToUse = blockMinFeeRate.GetFee(freeTxSize);
-    tx = MakeTx(COutPoint{hashFreeTx2, 0}, 5000000000LL - 100000000 - feeToUse, bulked_script_pub_key);
+    tx = MakeTx(COutPoint{hashFreeTx2, 0}, CAmount{5000000000LL - 100000000} - feeToUse, bulked_script_pub_key);
     Txid hashLowFeeTx2 = tx.GetHash();
     TryAddToMempool(tx_mempool, entry.Fee(feeToUse).SpendsCoinbase(false).FromTx(tx));
     block_template = mining->createNewBlock(options, /*cooldown=*/false);

@@ -680,13 +680,13 @@ void CTxMemPool::PrioritiseTransaction(const Txid& hash, const CAmount& nFeeDelt
     {
         LOCK(cs);
         CAmount &delta = mapDeltas[hash];
-        delta = SaturatingAdd(delta, nFeeDelta);
+        delta = CAmount{SaturatingAdd(delta.Int(), nFeeDelta.Int())};
         txiter it = mapTx.find(hash);
         if (it != mapTx.end()) {
             // PrioritiseTransaction calls stack on previous ones. Set the new
             // transaction fee to be current modified fee + feedelta.
             it->UpdateModifiedFee(nFeeDelta);
-            m_txgraph->SetTransactionFee(*it, it->GetModifiedFee());
+            m_txgraph->SetTransactionFee(*it, it->GetModifiedFee().Int());
             ++nTransactionsUpdated;
         }
         if (delta == 0) {
@@ -890,7 +890,7 @@ CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
         rollingMinimumFeeRate = rollingMinimumFeeRate / pow(2.0, (time - lastRollingFeeUpdate) / halflife);
         lastRollingFeeUpdate = time;
 
-        if (rollingMinimumFeeRate < (double)m_opts.incremental_relay_feerate.GetFeePerK() / 2) {
+        if (rollingMinimumFeeRate < (double)m_opts.incremental_relay_feerate.GetFeePerK().Int() / 2) {
             rollingMinimumFeeRate = 0;
             return CFeeRate(0);
         }
@@ -900,8 +900,8 @@ CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
 
 void CTxMemPool::trackPackageRemoved(const CFeeRate& rate) {
     AssertLockHeld(cs);
-    if (rate.GetFeePerK() > rollingMinimumFeeRate) {
-        rollingMinimumFeeRate = rate.GetFeePerK();
+    if (rate.GetFeePerK().Int() > rollingMinimumFeeRate) {
+        rollingMinimumFeeRate = rate.GetFeePerK().Int();
         blockSinceLastRollingFeeBump = false;
     }
 }
@@ -1065,9 +1065,9 @@ CTxMemPool::ChangeSet::TxHandle CTxMemPool::ChangeSet::StageAddition(const CTran
     FeePerWeight feerate(fee, GetSigOpsAdjustedWeight(GetTransactionWeight(*tx), sigops_cost, ::nBytesPerSigOp));
     auto newit = m_to_add.emplace(tx, fee, time, entry_height, entry_sequence, spends_coinbase, sigops_cost, lp).first;
     m_pool->m_txgraph->AddTransaction(const_cast<CTxMemPoolEntry&>(*newit), feerate);
-    if (delta) {
+    if (delta != CAmount{0}) {
         newit->UpdateModifiedFee(delta);
-        m_pool->m_txgraph->SetTransactionFee(*newit, newit->GetModifiedFee());
+        m_pool->m_txgraph->SetTransactionFee(*newit, newit->GetModifiedFee().Int());
     }
 
     m_entry_vec.push_back(newit);

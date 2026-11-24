@@ -19,6 +19,7 @@
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
 
+#include <compare>
 #include <cstddef>
 #include <cstdint>
 #include <map>
@@ -102,7 +103,7 @@ static void CoinSelection(benchmark::Bench& bench)
     std::vector<CAmount> targets;
     targets.reserve(NUM_TARGETS);
     for (size_t i{0}; i < NUM_TARGETS; ++i) {
-        targets.push_back(10'000'000 + det_rand.randrange(90'000'000));
+        targets.emplace_back(10'000'000 + det_rand.randrange(90'000'000));
     }
 
     std::optional<FastRandomContext> rng;
@@ -151,9 +152,9 @@ static CAmount make_hard_case(int utxos, std::vector<OutputGroup>& utxo_pool)
     utxo_pool.clear();
     CAmount target = 0;
     for (int i = 0; i < utxos; ++i) {
-        target += CAmount{1} << (utxos+i);
-        add_coin(CAmount{1} << (utxos+i), 2*i, utxo_pool);
-        add_coin((CAmount{1} << (utxos+i)) + (CAmount{1} << (utxos-1-i)), 2*i + 1, utxo_pool);
+        target += CAmount{1LL << (utxos + i)};
+        add_coin(CAmount{1LL << (utxos + i)}, 2 * i, utxo_pool);
+        add_coin(CAmount{1LL << (utxos + i)} + CAmount{1LL << (utxos - 1 - i)}, 2 * i + 1, utxo_pool);
     }
     return target;
 }
