@@ -20,10 +20,10 @@ void util::TraceThread(std::string_view thread_name, std::function<void()> threa
         thread_func();
         LogInfo("%s thread exit", thread_name);
     } catch (const std::exception& e) {
-        PrintExceptionContinue(&e, thread_name);
+        PrintExceptionContinue(&e);
         throw;
     } catch (...) {
-        PrintExceptionContinue(nullptr, thread_name);
+        PrintExceptionContinue(nullptr);
         throw;
     }
 }

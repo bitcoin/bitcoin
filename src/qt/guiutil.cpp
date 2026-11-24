@@ -977,7 +977,7 @@ void PrintSlotException(
     } else {
         description += "anonymous function";
     }
-    PrintExceptionContinue(exception, description);
+    PrintExceptionContinue(exception, /*context=*/description);
 }
 
 void ShowModalDialogAsynchronously(QDialog* dialog)

@@ -223,10 +223,10 @@ MAIN_FUNCTION
             return ret;
         }
     } catch (const std::exception& e) {
-        PrintExceptionContinue(&e, "AppInitUtil()");
+        PrintExceptionContinue(&e);
         return EXIT_FAILURE;
     } catch (...) {
-        PrintExceptionContinue(nullptr, "AppInitUtil()");
+        PrintExceptionContinue(nullptr);
         return EXIT_FAILURE;
     }
 

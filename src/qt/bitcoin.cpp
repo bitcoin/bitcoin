@@ -676,10 +676,10 @@ int GuiMain(int argc, char* argv[])
             return EXIT_FAILURE;
         }
     } catch (const std::exception& e) {
-        PrintExceptionContinue(&e, "Runaway exception");
+        PrintExceptionContinue(&e);
         app.handleRunawayException(QString::fromStdString(app.node().getWarnings().translated));
     } catch (...) {
-        PrintExceptionContinue(nullptr, "Runaway exception");
+        PrintExceptionContinue(nullptr);
         app.handleRunawayException(QString::fromStdString(app.node().getWarnings().translated));
     }
     return app.node().getExitStatus();

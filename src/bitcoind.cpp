@@ -242,11 +242,10 @@ static bool AppInit(NodeContext& node)
             return false;
         }
         fRet = AppInitInterfaces(node) && AppInitMain(node);
-    }
-    catch (const std::exception& e) {
-        PrintExceptionContinue(&e, "AppInit()");
+    } catch (const std::exception& e) {
+        PrintExceptionContinue(&e);
     } catch (...) {
-        PrintExceptionContinue(nullptr, "AppInit()");
+        PrintExceptionContinue(nullptr);
     }
 
 #if HAVE_DECL_FORK
