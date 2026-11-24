@@ -5,7 +5,7 @@
 """Test the HTTP server basics."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.netutil import HTTPConnection, NETWORK_ERRORS
+from test_framework.netutil import HTTPConnection, NETWORK_ERRORS, pack_linger
 from test_framework.util import (
     assert_equal,
     assert_raises,
@@ -16,6 +16,7 @@ from test_framework.wallet import MiniWallet
 
 import concurrent.futures
 import http.client
+import json
 import re
 import socket
 import threading
@@ -160,6 +161,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         self.check_request_smuggling_cl_te()
         self.check_duplicate_content_length()
         self.check_null_byte_in_uri()
+        self.check_urgent_data()
         self.check_invalid_http_version()
         self.check_whitespace_in_headers()
         self.check_connection_limit()
@@ -607,6 +609,17 @@ class HTTPBasicsTest (BitcoinTestFramework):
         assert response.startswith("HTTP/1.1 400")
 
 
+    def check_urgent_data(self):
+        self.log.info("Check that TCP urgent data does not disturb an HTTP request")
+        conn = BitcoinHTTPConnection(self.node)
+        # The urgent byte is not part of the HTTP stream.
+        assert_equal(conn.conn.sock.send(b"U", socket.MSG_OOB), 1)
+        response = conn.post('/', '{"method": "getblockcount"}')
+        assert_equal(response.status, http.client.OK)
+        assert_equal(json.loads(response.read())["result"], self.node.getblockcount())
+        conn.close_sock()
+
+
     def check_invalid_http_version(self):
         self.log.info("Check that requests with invalid HTTP versions are safely rejected")
         cases = [
@@ -891,6 +904,21 @@ class HTTPBasicsTest (BitcoinTestFramework):
             response = conn.conn.sock.recv(10 * 1024 * 1024)
             num_res += response.count(b"HTTP/1.1 200")
         self.log.info(f"Drained {num_res} responses")
+
+        self.log.info("Check reset while the server has unsent responses")
+        conn = BitcoinHTTPConnection(self.node)
+        dl_start_size = self.node.debug_log_size(encoding="utf-8")
+        conn.send_raw(batch.encode("ascii"))
+        count, prev_count = 0, -1
+        self.wait_until(progress_stalled, check_interval=5)
+        # Reads are paused while responses are queued. Linux is the only
+        # platform where the node uses poll(), which still reports the reset,
+        # unless it is a Windows binary running under Wine.
+        uses_poll = self.linux_host and not self.windows_target
+        expected_msgs = ["Error sending HTTP response data"] if uses_poll else []
+        conn.conn.sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, pack_linger(enabled=True, timeout=0))
+        with self.node.assert_debug_log(expected_msgs, timeout=10):
+            conn.close_sock()
 
 if __name__ == '__main__':
     HTTPBasicsTest(__file__).main()
