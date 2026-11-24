@@ -21,10 +21,12 @@
 #include <span>
 #include <vector>
 
+namespace {
 enum class InputType {
     P2WPKH, // segwitv0, witness-pubkey-hash (ECDSA signature)
     P2TR,   // segwitv1, taproot key-path spend (Schnorr signature)
 };
+} // namespace
 
 static void SignTransactionSingleInput(benchmark::Bench& bench, InputType input_type)
 {
