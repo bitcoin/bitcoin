@@ -5,7 +5,6 @@
 #ifndef BITCOIN_RPC_BLOCKCHAIN_H
 #define BITCOIN_RPC_BLOCKCHAIN_H
 
-#include <consensus/amount.h>
 #include <sync.h>
 #include <util/fs.h>
 #include <validation.h>
@@ -15,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+class CAmount;
 class CBlock;
 class CBlockIndex;
 class CChain;

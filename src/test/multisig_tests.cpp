@@ -23,7 +23,7 @@ BOOST_FIXTURE_TEST_SUITE(multisig_tests, BasicTestingSetup)
 static CScript
 sign_multisig(const CScript& scriptPubKey, const std::vector<CKey>& keys, const CTransaction& transaction, int whichIn)
 {
-    uint256 hash = SignatureHash(scriptPubKey, transaction, whichIn, SIGHASH_ALL, 0, SigVersion::BASE);
+    uint256 hash = SignatureHash(scriptPubKey, transaction, whichIn, SIGHASH_ALL, 0*sats, SigVersion::BASE);
 
     CScript result;
     result << OP_0; // CHECKMULTISIG bug workaround
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
 
     ScriptError err;
     CKey key[4];
-    CAmount amount = 0;
+    CAmount amount{0};
     for (int i = 0; i < 4; i++)
         key[i].MakeNewKey(true);
 
@@ -58,9 +58,9 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
 
     CMutableTransaction txFrom;  // Funding transaction
     txFrom.vout = {
-        CTxOut{-1, a_and_b},
-        CTxOut{-1, a_or_b},
-        CTxOut{-1, escrow},
+        CTxOut{-1*sats, a_and_b},
+        CTxOut{-1*sats, a_or_b},
+        CTxOut{-1*sats, escrow},
     };
 
     CMutableTransaction txTo[3]; // Spending transaction
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
             CTxIn{COutPoint{txFrom.GetHash(), i}},
         };
         txTo[i].vout = {
-            CTxOut{1, CScript{}},
+            CTxOut{1*sats, CScript{}},
         };
     }
 
@@ -205,9 +205,9 @@ BOOST_AUTO_TEST_CASE(multisig_Sign)
 
     CMutableTransaction txFrom;  // Funding transaction
     txFrom.vout = {
-        CTxOut{-1, a_and_b},
-        CTxOut{-1, a_or_b},
-        CTxOut{-1, escrow},
+        CTxOut{-1*sats, a_and_b},
+        CTxOut{-1*sats, a_or_b},
+        CTxOut{-1*sats, escrow},
     };
 
     CMutableTransaction txTo[3]; // Spending transaction
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(multisig_Sign)
             CTxIn{COutPoint{txFrom.GetHash(), i}},
         };
         txTo[i].vout = {
-            CTxOut{1, CScript{}},
+            CTxOut{1*sats, CScript{}},
         };
     }
 

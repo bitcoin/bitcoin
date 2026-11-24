@@ -65,7 +65,7 @@ void PopulateView(const CBlock& block, CCoinsView& view, bool spent = false)
                 BOOST_CHECK(cache.SpendCoin(in.prevout));
             } else {
                 Coin coin{};
-                coin.out.nValue = 1;
+                coin.out.nValue = 1*sats;
                 cache.AddCoin(in.prevout, std::move(coin), /*possible_overwrite=*/true);
             }
         }
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(access_non_input_coins)
     CCoinsViewDB db{{.path = "", .cache_bytes = 1_MiB, .memory_only = true}, {}};
     CCoinsViewCache main_cache{&db};
     Coin coin{};
-    coin.out.nValue = 1;
+    coin.out.nValue = 1*sats;
     const COutPoint outpoint{Txid::FromUint256(uint256::ZERO), 0};
     main_cache.AddCoin(outpoint, std::move(coin), /*possible_overwrite=*/true);
 
