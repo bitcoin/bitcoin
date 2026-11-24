@@ -104,7 +104,7 @@ Connection::~Connection() noexcept(false)
     disconnect();
 }
 
-void Connection::disconnect()
+Connection::Tracker Connection::disconnect()
 {
     // Disconnecting triggers I/O and tears down capnp state, so it must run on
     // the event loop thread, like the destructor.
@@ -113,7 +113,7 @@ void Connection::disconnect()
     // m_network is reset at the end of teardown below, so treat it being null
     // as the "already disconnected" state: a second call (including the one
     // from the destructor) is a no-op.
-    if (!m_network) return;
+    if (!m_network) return m_server_objects;
 
     // Unlike the destructor, leave m_alive set, so onDisconnect handlers run
     // after a local disconnect the same way they do after a remote one: on a
@@ -121,7 +121,9 @@ void Connection::disconnect()
     // EventLoop::m_incoming_connections (or delete the connection, if a
     // ProxyClient owns it), freeing it. This way a caller only needs to call
     // disconnect(), and does not need to remove the connection itself, which
-    // it could not safely do anyway while iterating over the list.
+    // it could not safely do anyway while iterating over the list. Callers
+    // that want to wait for in-flight calls to finish wait on the returned
+    // tracker, which outlives the connection.
 
     // Try to cancel any calls that may be executing.
     m_canceler.cancel("Interrupted by disconnect");
@@ -236,6 +238,7 @@ void Connection::disconnect()
     // references the stream.
     m_network.reset();
     m_stream = nullptr;
+    return m_server_objects;
 }
 
 CleanupIt Connection::addSyncCleanup(std::function<void()> fn)
