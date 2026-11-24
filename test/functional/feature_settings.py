@@ -97,11 +97,17 @@ class SettingsTest(BitcoinTestFramework):
             self.start_node(0)
             self.stop_node(0)
 
-        # Test alternate settings path
+        # Test alternate settings path and masking of sensitive settings
         altsettings = node.datadir_path / "altsettings.json"
         with altsettings.open("w") as fp:
-            fp.write('{"key": "value"}')
-        with node.assert_debug_log(expected_msgs=['Setting file arg: key = "value"']):
+            json.dump({"key": "value", "torpassword": "secret_tor_password"}, fp)
+        with node.assert_debug_log(
+            expected_msgs=[
+                'Setting file arg: key = "value"',
+                'Setting file arg: torpassword = ****',
+            ],
+            unexpected_msgs=['secret_tor_password'],
+        ):
             self.start_node(0, extra_args=[f"-settings={altsettings}"])
             self.stop_node(0)
 

@@ -988,7 +988,10 @@ void ArgsManager::LogArgs() const
         logArgsPrefix("Config file arg:", section.first, section.second);
     }
     for (const auto& setting : m_settings.rw_settings) {
-        LogInfo("Setting file arg: %s = %s\n", setting.first, setting.second.write());
+        const KeyInfo key = InterpretKey(setting.first);
+        const std::optional<unsigned int> flags = GetArgFlags_('-' + key.name);
+        const std::string value_str = (flags && (*flags & SENSITIVE)) ? "****" : setting.second.write();
+        LogInfo("Setting file arg: %s = %s\n", setting.first, value_str);
     }
     logArgsPrefix("Command-line arg:", "", m_settings.command_line_options);
 }
