@@ -835,7 +835,7 @@ KJ_TEST("onDisconnect handler does not run after the connection is destroyed")
         // bounced handler task E_f. It schedules the destroy on a *separate*
         // task, so the connection is not torn down from inside an onDisconnect
         // continuation.
-        loop.m_task_set->add(server_conn->m_network.onDisconnect().then([&] {
+        loop.m_task_set->add(server_conn->m_network->onDisconnect().then([&] {
             loop.m_task_set->add(kj::evalLater([&] {
                 server_conn.reset();
                 connection_destroyed = true;
