@@ -37,7 +37,7 @@ public:
         ST_ERROR
     };
 
-public Q_SLOTS:
+public Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void check();
 
 Q_SIGNALS:

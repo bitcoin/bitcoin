@@ -195,7 +195,7 @@ private:
 
     void updateWindowTitle();
 
-private Q_SLOTS:
+private Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void updateAlerts(const QString& warnings);
 };
 

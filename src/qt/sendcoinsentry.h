@@ -49,7 +49,7 @@ public:
 
     void setFocus();
 
-public Q_SLOTS:
+public Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void clear();
     void checkSubtractFeeFromAmount();
 

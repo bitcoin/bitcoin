@@ -32,7 +32,7 @@ public:
     void showHide(bool hide = false, bool userRequested = false);
     bool isLayerVisible() const { return layerIsVisible; }
 
-public Q_SLOTS:
+public Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void toggleVisibility();
     void closeClicked();
 

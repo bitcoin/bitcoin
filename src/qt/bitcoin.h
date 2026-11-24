@@ -68,7 +68,7 @@ public:
 
     interfaces::Node& node() const { assert(m_node); return *m_node; }
 
-public Q_SLOTS:
+public Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info);
     /// Request core shutdown
     void requestShutdown();

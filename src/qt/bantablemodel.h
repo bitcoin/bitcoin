@@ -68,7 +68,7 @@ public:
 
     bool unban(const QModelIndex& index);
 
-public Q_SLOTS:
+public Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void refresh();
 
 private:

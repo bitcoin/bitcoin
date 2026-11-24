@@ -44,7 +44,7 @@ public:
 
     void setModel(WalletModel *model);
 
-public Q_SLOTS:
+public Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void clear();
     void reject() override;
     void accept() override;
@@ -61,7 +61,7 @@ private:
     QModelIndex selectedRow();
     void copyColumnToClipboard(int column);
 
-private Q_SLOTS:
+private Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void on_receiveButton_clicked();
     void on_showRequestButton_clicked();
     void on_removeRequestButton_clicked();

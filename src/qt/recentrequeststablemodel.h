@@ -83,7 +83,7 @@ public:
     void addNewRequest(const std::string &recipient);
     void addNewRequest(RecentRequestEntry &recipient);
 
-public Q_SLOTS:
+public Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void updateDisplayUnit();
 
 private:

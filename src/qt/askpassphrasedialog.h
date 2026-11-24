@@ -43,7 +43,7 @@ private:
     bool fCapsLock{false};
     SecureString* m_passphrase_out;
 
-private Q_SLOTS:
+private Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void textChanged();
     void secureClearPassFields();
     void toggleShowPassword(bool);

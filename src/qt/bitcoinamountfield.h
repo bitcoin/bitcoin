@@ -71,7 +71,7 @@ private:
     AmountSpinBox* amount{nullptr};
     QValueComboBox *unit;
 
-private Q_SLOTS:
+private Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void unitChanged(int idx);
 
 };

@@ -92,7 +92,7 @@ private:
 
     friend class CCoinControlWidgetItem;
 
-private Q_SLOTS:
+private Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void showMenu(const QPoint &);
     void copyAmount();
     void copyLabel();

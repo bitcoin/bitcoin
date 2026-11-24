@@ -53,7 +53,7 @@ public:
     // Only used for testing-purposes
     wallet::CCoinControl* getCoinControl() { return m_coin_control.get(); }
 
-public Q_SLOTS:
+public Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void clear();
     void reject() override;
     void accept() override;
@@ -95,7 +95,7 @@ private:
     void updateFeeMinimizedLabel();
     void updateCoinControlState();
 
-private Q_SLOTS:
+private Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void sendButtonClicked(bool checked);
     void on_buttonChooseFee_clicked();
     void on_buttonMinimizeFee_clicked();
@@ -143,7 +143,7 @@ private Q_SLOTS:
     void countDown();
     void updateButtons();
 
-private:
+private: // NOLINT(readability-redundant-access-specifiers)
     QAbstractButton *yesButton;
     QAbstractButton *m_psbt_button;
     QTimer countDownTimer;

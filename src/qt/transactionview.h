@@ -92,7 +92,7 @@ private:
 
     QList<TransactionDescDialog*> m_opened_dialogs;
 
-private Q_SLOTS:
+private Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void contextualMenu(const QPoint &);
     void dateRangeChanged();
     void showDetails();
