@@ -159,7 +159,7 @@ private:
      */
     CAmount parse(const QString &text, bool *valid_out=nullptr) const
     {
-        CAmount val = 0;
+        CAmount val{0};
         bool valid = BitcoinUnits::parse(currentUnit, text, &val);
         if(valid)
         {

@@ -63,9 +63,9 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
         CTxIn{COutPoint{}, CScript{} << OP_11},
     };
     txParent.vout = {
-        CTxOut{33000LL, CScript{} << OP_11 << OP_EQUAL},
-        CTxOut{33000LL, CScript{} << OP_11 << OP_EQUAL},
-        CTxOut{33000LL, CScript{} << OP_11 << OP_EQUAL},
+        CTxOut{CAmount{33000}, CScript{} << OP_11 << OP_EQUAL},
+        CTxOut{CAmount{33000}, CScript{} << OP_11 << OP_EQUAL},
+        CTxOut{CAmount{33000}, CScript{} << OP_11 << OP_EQUAL},
     };
     CMutableTransaction txChild[3];
     for (uint32_t i = 0; i < 3; i++)
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
             CTxIn{COutPoint{txParent.GetHash(), i}, CScript{} << OP_11},
         };
         txChild[i].vout = {
-            CTxOut{11000LL, CScript{} << OP_11 << OP_EQUAL},
+            CTxOut{CAmount{11000}, CScript{} << OP_11 << OP_EQUAL},
         };
     }
     CMutableTransaction txGrandChild[3];
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
             CTxIn{COutPoint{txChild[i].GetHash(), 0}, CScript{} << OP_11},
         };
         txGrandChild[i].vout = {
-            CTxOut{11000LL, CScript{} << OP_11 << OP_EQUAL},
+            CTxOut{CAmount{11000}, CScript{} << OP_11 << OP_EQUAL},
         };
     }
 

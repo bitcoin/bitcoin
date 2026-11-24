@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
 
     ScriptError err;
     CKey key[4];
-    CAmount amount = 0;
+    CAmount amount{0};
     for (int i = 0; i < 4; i++)
         key[i].MakeNewKey(true);
 
@@ -58,9 +58,9 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
 
     CMutableTransaction txFrom;  // Funding transaction
     txFrom.vout = {
-        CTxOut{-1, a_and_b},
-        CTxOut{-1, a_or_b},
-        CTxOut{-1, escrow},
+        CTxOut{CAmount{-1}, a_and_b},
+        CTxOut{CAmount{-1}, a_or_b},
+        CTxOut{CAmount{-1}, escrow},
     };
 
     CMutableTransaction txTo[3]; // Spending transaction
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(multisig_verify)
             CTxIn{COutPoint{txFrom.GetHash(), i}},
         };
         txTo[i].vout = {
-            CTxOut{1, CScript{}},
+            CTxOut{CAmount{1}, CScript{}},
         };
     }
 
@@ -205,9 +205,9 @@ BOOST_AUTO_TEST_CASE(multisig_Sign)
 
     CMutableTransaction txFrom;  // Funding transaction
     txFrom.vout = {
-        CTxOut{-1, a_and_b},
-        CTxOut{-1, a_or_b},
-        CTxOut{-1, escrow},
+        CTxOut{CAmount{-1}, a_and_b},
+        CTxOut{CAmount{-1}, a_or_b},
+        CTxOut{CAmount{-1}, escrow},
     };
 
     CMutableTransaction txTo[3]; // Spending transaction
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(multisig_Sign)
             CTxIn{COutPoint{txFrom.GetHash(), i}},
         };
         txTo[i].vout = {
-            CTxOut{1, CScript{}},
+            CTxOut{CAmount{1}, CScript{}},
         };
     }
 

@@ -184,10 +184,10 @@ BOOST_FIXTURE_TEST_CASE(miniminer_1p1c, TestChain100Setup)
                                               CFeeRate(entry.GetModifiedFee(), entry.GetTxSize())});
     }
 
-    const std::vector<CFeeRate> various_normal_feerates({CFeeRate(0), CFeeRate(500), CFeeRate(999),
-                                                         CFeeRate(1000), CFeeRate(2000), CFeeRate(2500),
-                                                         CFeeRate(3333), CFeeRate(7800), CFeeRate(11199),
-                                                         CFeeRate(23330), CFeeRate(50000), CFeeRate(5*CENT)});
+    const std::vector<CFeeRate> various_normal_feerates({CFeeRate(CAmount{0}), CFeeRate(CAmount{500}), CFeeRate(CAmount{999}),
+                                                         CFeeRate(CAmount{1000}), CFeeRate(CAmount{2000}), CFeeRate(CAmount{2500}),
+                                                         CFeeRate(CAmount{3333}), CFeeRate(CAmount{7800}), CFeeRate(CAmount{11199}),
+                                                         CFeeRate(CAmount{23330}), CFeeRate(CAmount{50000}), CFeeRate(5*CENT)});
 
     // All nonexistent entries have a bumpfee of zero, regardless of feerate
     std::vector<COutPoint> nonexistent_outpoints({ COutPoint{Txid::FromUint256(GetRandHash()), 0}, COutPoint{Txid::FromUint256(GetRandHash()), 3} });

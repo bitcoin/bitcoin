@@ -91,7 +91,7 @@ static void BuildTxs(CMutableTransaction& spendingTx, CCoinsViewCache& coins, CM
         CTxIn{COutPoint{}},
     };
     creationTx.vout = {
-        CTxOut{1, scriptPubKey},
+        CTxOut{CAmount{1}, scriptPubKey},
     };
 
     spendingTx.version = 1;
@@ -100,7 +100,7 @@ static void BuildTxs(CMutableTransaction& spendingTx, CCoinsViewCache& coins, CM
     };
     spendingTx.vin[0].scriptWitness = witness;
     spendingTx.vout = {
-        CTxOut{1, CScript{}},
+        CTxOut{CAmount{1}, CScript{}},
     };
 
     AddCoins(coins, CTransaction(creationTx), 0);

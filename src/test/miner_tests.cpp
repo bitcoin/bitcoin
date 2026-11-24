@@ -285,8 +285,8 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
         CTxIn{COutPoint{txFirst[2]->GetHash(), 0}, CScript{} << OP_1},
     };
     tx.vout = {
-        CTxOut{5000000000LL - 100000000, CScript{}},
-        CTxOut{100000000, CScript{}}, // 1BTC output
+        CTxOut{CAmount{5000000000LL - 100000000}, CScript{}},
+        CTxOut{CAmount{100000000}, CScript{}}, // 1BTC output
     };
     // Increase size to avoid rounding errors: when the feerate is extremely small (i.e. 1sat/kvB), evaluating the fee
     // at smaller sizes gives us rounded values that are equal to each other, which means we incorrectly include
@@ -335,7 +335,7 @@ static CMutableTransaction CreateBigSigOpsTx(const COutPoint& input, unsigned in
     tx.vin = {
         CTxIn{input, CScript{} << OP_1},
     };
-    tx.vout.assign(num_outputs, CTxOut{0, CScript{} << OP_0 << OP_0 << OP_0 << OP_NOP << OP_CHECKMULTISIG << OP_1});
+    tx.vout.assign(num_outputs, CTxOut{CAmount{0}, CScript{} << OP_0 << OP_0 << OP_0 << OP_NOP << OP_CHECKMULTISIG << OP_1});
     return tx;
 }
 
@@ -529,7 +529,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         tx.vin.resize(1);
         tx.vin[0].prevout.SetNull();
         tx.vin[0].scriptSig = CScript() << OP_0 << OP_1;
-        tx.vout[0].nValue = 0;
+        tx.vout[0].nValue = CAmount{0};
         hash = tx.GetHash();
         // give it a fee so it'll get mined
         TryAddToMempool(tx_mempool, entry.Fee(LOWFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(false).FromTx(tx));
