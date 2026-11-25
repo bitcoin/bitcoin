@@ -32,6 +32,7 @@ uint256 NetGroupManager::GetAsmapVersion() const
 std::vector<unsigned char> NetGroupManager::GetGroup(const CNetAddr& address) const
 {
     std::vector<unsigned char> vchRet;
+    vchRet.reserve(1 + ADDR_INTERNAL_SIZE);
     // If non-empty asmap is supplied and the address is IPv4/IPv6,
     // return ASN to be used for bucketing.
     uint32_t asn = GetMappedAS(address);
