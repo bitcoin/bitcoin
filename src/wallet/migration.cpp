@@ -415,13 +415,14 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
                 // Parse the descriptor
                 FlatSigningProvider keys;
                 std::string parse_err;
-                std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, parse_err, /*require_checksum=*/ true);
+                std::unique_ptr<Descriptor> desc = Parse(desc_str, keys, parse_err, /*require_checksum=*/ true);
                 // LegacyDataSPKM should not produce invalid, multipath, or ranged watch-only descriptors.
-                assert(descs.size() == 1);
-                assert(!descs.at(0)->IsRange());
+                assert(desc);
+                assert(!desc->IsMultipath());
+                assert(!desc->IsRange());
 
                 // Add to the wallet
-                WalletDescriptor w_desc(std::move(descs.at(0)), creation_time, 0, 0, 0);
+                WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
                 if (auto spkm_res = data->watchonly_wallet->AddWalletDescriptor(w_desc, keys, "", false); !spkm_res) {
                     throw std::runtime_error(util::ErrorString(spkm_res).original);
                 }
@@ -455,13 +456,14 @@ bool DoMigration(CWallet& wallet, WalletContext& context, bilingual_str& error, 
                 // Parse the descriptor
                 FlatSigningProvider keys;
                 std::string parse_err;
-                std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_str, keys, parse_err, /*require_checksum=*/ true);
+                std::unique_ptr<Descriptor> desc = Parse(desc_str, keys, parse_err, /*require_checksum=*/ true);
                 // LegacyDataSPKM should not produce invalid, multipath, or ranged watch-only descriptors.
-                assert(descs.size() == 1);
-                assert(!descs.at(0)->IsRange());
+                assert(desc);
+                assert(!desc->IsMultipath());
+                assert(!desc->IsRange());
 
                 // Add to the wallet
-                WalletDescriptor w_desc(std::move(descs.at(0)), creation_time, 0, 0, 0);
+                WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
                 if (auto spkm_res = data->solvable_wallet->AddWalletDescriptor(w_desc, keys, "", false); !spkm_res) {
                     throw std::runtime_error(util::ErrorString(spkm_res).original);
                 }
