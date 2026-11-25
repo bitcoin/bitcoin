@@ -187,13 +187,13 @@ class EstimateFeeTest(BitcoinTestFramework):
 
     def update_utxo(self, mined):
         # update which txouts are confirmed
-            newmem = []
-            for utx in self.memutxo:
-                if utx["txid"] in mined:
-                    self.confutxo.append(utx)
-                else:
-                    newmem.append(utx)
-            self.memutxo = newmem
+        newmem = []
+        for utx in self.memutxo:
+            if utx["txid"] in mined:
+                self.confutxo.append(utx)
+            else:
+                newmem.append(utx)
+        self.memutxo = newmem
 
     def transact_and_mine(self, numblocks, mining_node):
         min_fee = MIN_BUCKET_FEERATE
@@ -551,7 +551,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         utxos = [self.wallet.get_utxo(confirmed_only=True) for _ in range(num_txs)]
         insane_feerate = Decimal("0.01")
         self.send_transactions(utxos, insane_feerate, target_vsize)
-        estimate_after_spike = node0.estimatesmartfee(1, "economical", {"verbosity": 2, "fee_rate_estimator": "auto"})
+        estimate_after_spike = node0.estimatesmartfee(1, "economical", verbosity=2, fee_rate_estimator="auto")
         assert_equal(len(estimate_after_spike["mempool_health_statistics"]), 6)
         current_height = node0.getchaintips()[0]['height']
         for block_stat in estimate_after_spike["mempool_health_statistics"]:
