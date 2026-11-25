@@ -84,31 +84,22 @@ inline bool ConsumeBitBE(uint8_t& bitpos, std::span<const std::byte> bytes) noex
  */
 uint32_t DecodeBits(size_t& bitpos, const std::span<const std::byte> data, uint8_t minval, const std::span<const uint8_t> bit_sizes)
 {
+    if (bit_sizes.empty()) return INVALID;
     uint32_t val = minval;  // Start with minimum encodable value
-    bool bit;
-    for (auto bit_sizes_it = bit_sizes.begin(); bit_sizes_it != bit_sizes.end(); ++bit_sizes_it) {
-        // Read continuation bit to determine if we're in this class
-        if (bit_sizes_it + 1 != bit_sizes.end()) {  // Unless we're in the last class
-            if (bitpos >= data.size() * 8) break;
-            bit = ConsumeBitLE(bitpos, data);
-        } else {
-            bit = 0;  // Last class has no continuation bit
-        }
-        if (bit) {
-            // If the value will not fit in this class, subtract its range from val,
-            // emit a "1" bit and continue with the next class
-            val += (1 << *bit_sizes_it);  // Add size of this class
-        } else {
-            // Decode the position within this class in big endian
-            for (int b = 0; b < *bit_sizes_it; b++) {
-                if (bitpos >= data.size() * 8) return INVALID; // Reached EOF in mantissa
-                bit = ConsumeBitLE(bitpos, data);
-                val += bit << (*bit_sizes_it - 1 - b); // Big-endian within the class
-            }
-            return val;
-        }
+    auto bit_sizes_it = bit_sizes.begin();
+    // Last class has no continuation bit
+    for (; bit_sizes_it + 1 != bit_sizes.end(); ++bit_sizes_it) {
+        if (bitpos >= data.size() * 8) return INVALID; // Reached EOF while selecting the class
+        if (!ConsumeBitLE(bitpos, data)) break;
+        val += (1U << *bit_sizes_it); // Add size of this class
     }
-    return INVALID; // Reached EOF in exponent
+    // Decode the position within this class in big endian
+    uint32_t offset{0};
+    for (int b = 0; b < *bit_sizes_it; b++) {
+        if (bitpos >= data.size() * 8) return INVALID; // Reached EOF while reading the offset
+        offset = (offset << 1) | ConsumeBitLE(bitpos, data);
+    }
+    return val + offset;
 }
 
 /**
