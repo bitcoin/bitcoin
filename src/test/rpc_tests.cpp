@@ -137,6 +137,25 @@ BOOST_AUTO_TEST_CASE(rpc_namedonlyparams)
                           HasJSON(R"({"code":-8,"message":"Parameter options specified twice both as positional and named argument"})"));
 }
 
+BOOST_AUTO_TEST_CASE(rpc_namedonlyparams_positional_twin)
+{
+    // An options object in the position of the "flag" parameter it replaced,
+    // followed by the "opt" parameter it also replaced, kept for compatibility.
+    const std::vector<std::pair<std::string, bool>> arg_names{{"arg1", false}, {"flag", true}, {"opt", true}, {"options|flag", false}, {"opt", false}};
+
+    // Named options go to the options object.
+    BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"arg1": 1, "opt": 5})"), arg_names).write(), R"([1,{"opt":5}])");
+    BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"args": [1], "opt": 5})"), arg_names).write(), R"([1,{"opt":5}])");
+
+    // When positional arguments take the options position, a named option goes
+    // to the positional parameter of the same name.
+    BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"args": [1, true], "opt": 5})"), arg_names).write(), "[1,true,5]");
+
+    // Unless it is the parameter in that position.
+    BOOST_CHECK_EXCEPTION(TransformParams(JSON(R"({"args": [1, true], "flag": false})"), arg_names), UniValue,
+                          HasJSON(R"({"code":-8,"message":"Parameter options|flag specified twice both as positional and named argument"})"));
+}
+
 BOOST_AUTO_TEST_CASE(rpc_remove_command_cleans_up_empty_entry)
 {
     CRPCTable table;

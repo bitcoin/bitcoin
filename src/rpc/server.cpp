@@ -791,6 +791,20 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
     int initial_hole_size = 0;
     const std::string* initial_param = nullptr;
     UniValue options{UniValue::VOBJ};
+    // A named-only option that a positional parameter also accepts by the same
+    // name (RPCArgOptions::also_positional) is passed to that parameter instead
+    // of the options object when positional arguments from "args" already take
+    // the options object's position. This keeps calls that mix positional and
+    // named arguments working after positional parameters were moved into an
+    // options object.
+    const auto args_it{argsIn.find("args")};
+    const size_t num_positional{args_it != argsIn.end() && args_it->second->isArray() ? args_it->second->size() : 0};
+    std::set<std::string> positional_names;
+    for (const auto& [argNamePattern, named_only] : argNames) {
+        if (named_only) continue;
+        for (const std::string& name : SplitString(argNamePattern, '|')) positional_names.insert(name);
+    }
+    size_t position{0};
     for (const auto& [argNamePattern, named_only]: argNames) {
         std::vector<std::string> vargNames = SplitString(argNamePattern, '|');
         auto fr = argsIn.end();
@@ -806,6 +820,7 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
         // positional argument.
         if (named_only) {
             if (fr != argsIn.end()) {
+                if (position < num_positional && positional_names.contains(fr->first)) continue;
                 if (options.exists(fr->first)) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter " + fr->first + " specified multiple times");
                 }
@@ -843,6 +858,7 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
             out.params.push_back(std::move(options));
             options = UniValue{UniValue::VOBJ};
         }
+        ++position;
     }
     // If leftover "args" param was found, use it as a source of positional
     // arguments and add named arguments after. This is a convenience for
