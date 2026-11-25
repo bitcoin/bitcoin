@@ -19,6 +19,7 @@
 #include <variant>
 #include <vector>
 
+namespace {
 enum class InputType {
     P2PKH,           // legacy pubkey-hash
     P2SH_P2WPKH,     // nested segwitv0 witness-pubkey-hash
@@ -26,6 +27,7 @@ enum class InputType {
     P2TR,            // segwitv1, taproot script-path spend (covers more extraction logic than key-path)
     P2PKH_WorstCase, // legacy pubkey-hash, with scriptSig malleated for worst-case performance (see below)
 };
+} // namespace
 
 // The extraction doesn't verify signatures, so dummy ones with realistic sizes suffice.
 static const std::vector<unsigned char> DUMMY_ECDSA_SIG(71, 0x01);   // low-R/low-S DER signature (following BIP-461) + sighash byte

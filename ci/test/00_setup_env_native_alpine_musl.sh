@@ -13,7 +13,9 @@ export DEP_OPTS="DEBUG=1"
 printf -v BITCOIN_CONFIG "%q " \
  --preset=dev-mode \
  -DREDUCE_EXPORTS=ON \
- -DCMAKE_BUILD_TYPE=Debug
+ -DCMAKE_BUILD_TYPE=Debug \
+ -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
+ -DCMAKE_LINK_WARNING_AS_ERROR=ON
 export BITCOIN_CONFIG
 export TEST_RUNNER_EXTRA="--v2transport --usecli --extended --exclude feature_dbcrash"  # Run extended tests under --usecli and --v2transport, but exclude the very slow dbcrash
 export BITCOIN_CMD="bitcoin -m" # Used in functional tests
