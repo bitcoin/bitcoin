@@ -1140,6 +1140,18 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
           "wsh(or_i(pk(026116733562ba4df653e4ec6b98c904c8dd3c677428264d33f4ae0089b72abaa4),pk(036116733562ba4df653e4ec6b98c904c8dd3c677428264d33f4ae0089b72abaa4)))",
           "wsh(or_i(pk(026116733562ba4df653e4ec6b98c904c8dd3c677428264d33f4ae0089b72abaa4),pk(036116733562ba4df653e4ec6b98c904c8dd3c677428264d33f4ae0089b72abaa4)))",
           SIGNABLE, {{"00206d30950aa674b28b0fbf4cc43f70244c6bdbac4d8cd4ace43dc6fdf6d303d20e"}}, OutputType::BECH32);
+    // When require_sane is false (used when deserializing existing DB descriptors), legacy
+    // insane-but-well-typed Miniscript descriptors still parse while invalid top-level types do not.
+    {
+        FlatSigningProvider keys;
+        std::string error;
+        auto dup_tr = Parse("tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,or_i(pk(026116733562ba4df653e4ec6b98c904c8dd3c677428264d33f4ae0089b72abaa4),pk(036116733562ba4df653e4ec6b98c904c8dd3c677428264d33f4ae0089b72abaa4)))", keys, error, /*require_checksum=*/false, /*require_sane=*/false);
+        BOOST_CHECK_MESSAGE(dup_tr.size() == 1, error);
+        auto keyless_wsh = Parse("wsh(1)", keys, error, /*require_checksum=*/false, /*require_sane=*/false);
+        BOOST_CHECK_MESSAGE(keyless_wsh.size() == 1, error);
+        auto bad_toplevel = Parse("tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,v:pk(026116733562ba4df653e4ec6b98c904c8dd3c677428264d33f4ae0089b72abaa4))", keys, error, /*require_checksum=*/false, /*require_sane=*/false);
+        BOOST_CHECK(bad_toplevel.empty());
+    }
     // Valid with extended keys.
     Check("wsh(and_v(v:ripemd160(095ff41131e5946f3c85f79e44adbcf8e27e080e),multi(1,xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc,xprv9uPDJpEQgRQfDcW7BkF7eTya6RPxXeJCqCJGHuCJ4GiRVLzkTXBAJMu2qaMWPrS7AANYqdq6vcBcBUdJCVVFceUvJFjaPdGZ2y9WACViL4L/0)))", "wsh(and_v(v:ripemd160(095ff41131e5946f3c85f79e44adbcf8e27e080e),multi(1,xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/0)))", "wsh(and_v(v:ripemd160(095ff41131e5946f3c85f79e44adbcf8e27e080e),multi(1,xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL,xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/0)))", DEFAULT, {{"0020acf425291b98a1d7e0d4690139442abc289175be32ef1f75945e339924246d73"}}, OutputType::BECH32, /*op_compat_desc_hash=*/uint256{"0634b326edc66f9e2660562564d7a8fcca55f91dc4555ce0a51883cc72e0fa41"}, {{},{0}});
     // Valid under sh(wsh()) and with a mix of xpubs and raw keys.

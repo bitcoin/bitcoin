@@ -140,7 +140,7 @@ public:
 
         std::string error;
         FlatSigningProvider keys;
-        auto descs = Parse(descriptor_str, keys, error, true);
+        auto descs = Parse(descriptor_str, keys, error, /*require_checksum=*/true, /*require_sane=*/false);
         if (descs.empty()) {
             throw std::ios_base::failure("Invalid descriptor: " + error);
         }

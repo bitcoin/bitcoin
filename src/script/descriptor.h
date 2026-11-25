@@ -222,11 +222,14 @@ util::Expected<void, std::string> CheckDescriptorRangeBounds(int64_t low, int64_
  *
  * If the descriptor has a checksum, it must be valid. If `require_checksum`
  * is set, the checksum is mandatory - otherwise it is optional.
+ * If `require_sane` is unset, Miniscript sanity checks (`IsSane()` and
+ * `IsNotSatisfiable()`) are skipped while top-level type validity is still
+ * enforced (intended for deserializing previously persisted descriptors).
  *
  * If a parse error occurs, or the checksum is missing/invalid, or anything
  * else is wrong, an empty vector is returned.
  */
-std::vector<std::unique_ptr<Descriptor>> Parse(std::string_view descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum = false);
+std::vector<std::unique_ptr<Descriptor>> Parse(std::string_view descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum = false, bool require_sane = true);
 
 /** Get the checksum for a `descriptor`.
  *

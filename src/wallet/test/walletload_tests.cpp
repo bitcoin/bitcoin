@@ -84,6 +84,22 @@ BOOST_FIXTURE_TEST_CASE(wallet_load_descriptors, TestingSetup)
         const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(database)));
         BOOST_CHECK_EQUAL(wallet->PopulateWalletFromDB(_error, _warnings), DBErrors::LOAD_OK);
     }
+
+    // Test 3
+    // Descriptors that were valid when stored but fail Miniscript sanity checks under stricter rules
+    // (e.g. duplicate x-only keys in Tapscript Miniscript) must still load from database records.
+    database = CreateMockableWalletDatabase();
+    {
+        WalletBatch batch(*database);
+        std::string desc = "tr(a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd,or_i(pk(026116733562ba4df653e4ec6b98c904c8dd3c677428264d33f4ae0089b72abaa4),pk(036116733562ba4df653e4ec6b98c904c8dd3c677428264d33f4ae0089b72abaa4)))#9jmg6j07";
+        WalletDescriptor wallet_descriptor(std::make_shared<DummyDescriptor>(desc), 0, 0, 0, 0);
+        BOOST_CHECK(batch.WriteDescriptor(uint256{2}, wallet_descriptor));
+    }
+
+    {
+        const std::shared_ptr<CWallet> wallet(new CWallet(m_node.chain.get(), "", std::move(database)));
+        BOOST_CHECK_EQUAL(wallet->PopulateWalletFromDB(_error, _warnings), DBErrors::LOAD_OK);
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE(wallet_load_descriptor_cache_invalid_xpub_size, TestingSetup)
