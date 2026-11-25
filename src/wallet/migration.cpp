@@ -74,6 +74,8 @@ static bool CopyMigrationRecords(std::vector<std::pair<SerializeData, SerializeD
         DBKeys::ACTIVEEXTERNALSPK, DBKeys::ACTIVEINTERNALSPK, DBKeys::WALLETDESCRIPTOR, DBKeys::WALLETDESCRIPTORCACHE, DBKeys::WALLETDESCRIPTORLHCACHE, DBKeys::WALLETDESCRIPTORCKEY, DBKeys::WALLETDESCRIPTORKEY,
         // Transaction types that will be explicitly inserted
         DBKeys::TX, DBKeys::WTX_VARIANT,
+        // Address book types that will be explicitly inserted
+        DBKeys::DESTDATA, DBKeys::NAME, DBKeys::PURPOSE,
     });
 
     return RunWithinTxn(new_db, "migration: write records to new db", [&records, &had_legacy_records, &SKIP_TYPES](DatabaseBatch& in_batch) {
@@ -357,9 +359,10 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
     }
 
     // Pair external wallets with their corresponding db handler
-    std::vector<std::pair<std::shared_ptr<CWallet>, std::unique_ptr<WalletBatch>>> wallets_vec;
-    if (data.watchonly_wallet) wallets_vec.emplace_back(data.watchonly_wallet, std::move(watchonly_batch));
-    if (data.solvable_wallet) wallets_vec.emplace_back(data.solvable_wallet, std::move(solvables_batch));
+    std::vector<std::pair<CWallet*, WalletBatch*>> wallets_vec;
+    wallets_vec.emplace_back(this, &local_wallet_batch);
+    if (data.watchonly_wallet) wallets_vec.emplace_back(data.watchonly_wallet.get(), watchonly_batch.get());
+    if (data.solvable_wallet) wallets_vec.emplace_back(data.solvable_wallet.get(), solvables_batch.get());
 
     // Write address book entry to disk
     auto func_store_addr = [](WalletBatch& batch, const CTxDestination& dest, const CAddressBookData& entry) {
@@ -373,56 +376,36 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
     };
 
     // Check the address book data in the same way we did for transactions
-    std::vector<CTxDestination> dests_to_delete;
-    for (const auto& [dest, record] : m_address_book) {
+    std::map<CTxDestination, CAddressBookData> address_book = m_address_book;
+    m_address_book.clear();
+    for (const auto& [dest, record] : address_book) {
         // Ensure "receive" entries that are no longer part of the original wallet are transferred to another wallet
         // Entries for everything else ("send") will be cloned to all wallets.
-        bool require_transfer = record.purpose == AddressPurpose::RECEIVE && !IsMine(dest);
-        bool copied = false;
+        bool written = false;
         for (auto& [wallet, batch] : wallets_vec) {
             LOCK(wallet->cs_wallet);
-            if (require_transfer && !wallet->IsMine(dest)) continue;
+            if (record.purpose == AddressPurpose::RECEIVE && !wallet->IsMine(dest)) continue;
 
             // Copy the entire address book entry
-            wallet->m_address_book[dest] = record;
+            wallet->m_address_book.emplace(dest, record);
             func_store_addr(*batch, dest, record);
 
-            copied = true;
-            // Only delete 'receive' records that are no longer part of the original wallet
-            if (require_transfer) {
-                dests_to_delete.push_back(dest);
-                break;
-            }
+            written = true;
         }
 
-        // Fail immediately if we ever found an entry that was ours and cannot be transferred
-        // to any of the created wallets (watch-only, solvable).
+        // Fail immediately if we ever found an entry that could not be written into a wallet
         // Means that no inferred descriptor maps to the stored entry. Which mustn't happen.
-        if (require_transfer && !copied) {
-
-            // Skip invalid/non-watched scripts that will not be migrated
-            if (not_migrated_dests.contains(dest)) {
-                dests_to_delete.push_back(dest);
-                continue;
-            }
-
+        // However entires correspond to invalid or non-watched scripts that cannot be migrated
+        if (!written && !not_migrated_dests.contains(dest)) {
             return util::Error{_("Error: Address book data in wallet cannot be identified to belong to migrated wallets")};
         }
     }
 
     // Persist external wallets address book entries
     for (auto& [wallet, batch] : wallets_vec) {
+        if (batch == &local_wallet_batch) continue; // Committing local_wallet_batch is done by the caller
         if (!batch->TxnCommit()) {
             return util::Error{strprintf(_("Error: Unable to write data to disk for wallet %s"), wallet->GetName())};
-        }
-    }
-
-    // Remove the things to delete in this wallet
-    if (dests_to_delete.size() > 0) {
-        for (const auto& dest : dests_to_delete) {
-            if (!DelAddressBookWithDB(local_wallet_batch, dest)) {
-                return util::Error{_("Error: Unable to remove watchonly address book data")};
-            }
         }
     }
 
