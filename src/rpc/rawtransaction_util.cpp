@@ -125,7 +125,7 @@ std::vector<std::pair<CTxDestination, CAmount>> ParseOutputs(const UniValue& out
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, duplicate key: data");
             }
             has_data = true;
-            std::vector<unsigned char> data = ParseHexV(value.getValStr(), "Data");
+            std::vector<unsigned char> data = ParseHexV(value, "Data");
             CTxDestination destination{CNoDestination{CScript() << OP_RETURN << data}};
             CAmount amount{0};
             parsed_outputs.emplace_back(destination, amount);
