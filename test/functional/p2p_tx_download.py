@@ -104,7 +104,9 @@ class TxDownloadTest(BitcoinTestFramework):
         tx = self.wallet.create_self_transfer()
         wtxid = int(tx['wtxid'], 16)
 
-        self.nodes[0].setmocktime(int(time.time()))
+        now = int(time.time())
+        self.nodes[0].setmocktime(now)
+        self.nodes[1].setmocktime(now)
 
         self.log.info(
             "Announce the transaction to all nodes from all {} incoming peers, but never send it".format(NUM_INBOUND))
@@ -115,24 +117,42 @@ class TxDownloadTest(BitcoinTestFramework):
         self.log.info("Put the tx in node 0's mempool")
         self.nodes[0].sendrawtransaction(tx['hex'])
 
-        # Since node 1 is connected outbound to an honest peer (node 0), it
-        # should get the tx within a timeout.
-        # However, node 0 sees the same connection as inbound, so it may not
-        # announce the tx within the timeout.
-        # The timeout is the sum of
-        # * the worst case until the tx is first requested from an inbound
-        #   peer, plus
-        # * the first time it is re-requested from the outbound peer, plus
-        # * 2 seconds to avoid races
+        # Node 0 should put the tx in its inv_to_send queue for sending later.
         assert_equal(self.nodes[0].getpeerinfo()[0]["inbound"], True)
         assert_equal(self.nodes[0].getpeerinfo()[0]["inv_to_send"], 1)
         assert_equal(self.nodes[1].getpeerinfo()[0]['inbound'], False)
-        timeout = 2 + NONPREF_PEER_TX_DELAY + GETDATA_TX_INTERVAL
-        self.log.info("Tx should be received at node 1 after {} seconds".format(timeout))
-        self.nodes[0].bumpmocktime(timeout)
+
+        def bumptime(delta):
+            self.nodes[0].bumpmocktime(delta)
+            self.nodes[1].bumpmocktime(delta)
+
+        # Node 1 should request the tx from a "blocking" inbound peer. Since
+        # node 0 sees its connection with node 1 as inbound, it won't announce
+        # to node 1 until, on average, INBOUND_INVENTORY_BROADCAST_INTERVAL later.
+        bumptime(NONPREF_PEER_TX_DELAY)
+        # Make node 1 call `SendMessages`.
+        self.nodes[1].p2ps[0].sync_with_ping()
+
+        def requested_tx_from_inbound():
+            num_requested = 0
+            for p in self.nodes[1].p2ps:
+                with p2p_lock:
+                    num_requested += p.tx_getdata_count
+            return num_requested == 1
+
+        self.wait_until(lambda: requested_tx_from_inbound)
+
+        # Move time to just before node 1 times out the inbound peer. This should
+        # cause node 0 to announce the tx to node 1.
+        bumptime(GETDATA_TX_INTERVAL - 1)
         # Use an unrelated peer to ensure node 0 calls `SendMessages` at least once
         self.nodes[0].p2ps[0].sync_with_ping()
         assert_equal(self.nodes[0].getpeerinfo()[0]['inv_to_send'], 0)  # May fail rarely, retry the test
+
+        # Actually make node 1 time out its inbound peer.
+        bumptime(1)
+        self.log.info("Tx should be received at node 1 after {} seconds".format(GETDATA_TX_INTERVAL + NONPREF_PEER_TX_DELAY))
+
         self.sync_mempools()
 
     def test_in_flight_max(self):
