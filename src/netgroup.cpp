@@ -91,8 +91,9 @@ std::vector<unsigned char> NetGroupManager::GetGroup(const CNetAddr& address) co
 
 uint32_t NetGroupManager::GetMappedAS(const CNetAddr& address) const
 {
+    if (m_asmap.empty()) return 0;
     uint32_t net_class = address.GetNetClass();
-    if (m_asmap.empty() || (net_class != NET_IPV4 && net_class != NET_IPV6)) {
+    if (net_class != NET_IPV4 && net_class != NET_IPV6) {
         return 0; // Indicates not found, safe because AS0 is reserved per RFC7607.
     }
     std::vector<std::byte> ip_bytes(16);
