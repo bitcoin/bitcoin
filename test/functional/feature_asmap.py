@@ -163,9 +163,9 @@ class AsmapTest(BitcoinTestFramework):
         assert_equal(result["file_hash"], EMBEDDED_VERSION)
 
         os.truncate(export_path, 1)
-        self.node.exportasmap("asmap.dat")  # TODO: Refuse to overwrite the existing file
+        assert_raises_rpc_error(-1, "Failed to open asmap file", self.node.exportasmap, "asmap.dat")
         with open(export_path, 'rb') as f:
-            assert_equal(f.read(), data)  # TODO: Preserve the original contents
+            assert_equal(f.read(), data[:1])
 
         os.remove(export_path)
 

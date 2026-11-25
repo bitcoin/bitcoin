@@ -1183,7 +1183,7 @@ static RPCMethod exportasmap()
 {
     return RPCMethod{
         "exportasmap",
-        "Export the embedded ASMap data to a file. Any existing file at the path will be overwritten.\n",
+        "Export the embedded ASMap data to a file. Fails if the path already exists.\n",
         {
             {"path", RPCArg::Type::STR, RPCArg::Optional::NO, "Path to the output file. If relative, will be prefixed by datadir."},
         },
@@ -1208,7 +1208,7 @@ static RPCMethod exportasmap()
             const ArgsManager& args{EnsureAnyArgsman(request.context)};
             const fs::path export_path{fsbridge::AbsPathJoin(args.GetDataDirNet(), fs::u8path(self.Arg<std::string_view>("path")))};
 
-            AutoFile file{fsbridge::fopen(export_path, "wb")};
+            AutoFile file{fsbridge::fopen(export_path, "wbx")};
             if (file.IsNull()) {
                 throw JSONRPCError(RPC_MISC_ERROR, strprintf("Failed to open asmap file: %s", fs::PathToString(export_path)));
             }
