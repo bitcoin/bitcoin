@@ -13,7 +13,9 @@ from test_framework.util import (
     assert_greater_than,
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
+    assert_rpc_options_validation,
 )
+
 
 # Decorator to reset activewallet to zero utxos
 def cleanup(func):
@@ -301,10 +303,10 @@ class SendallTest(BitcoinTestFramework):
     @cleanup
     def sendall_fails_on_invalid_options(self):
         self.log.info("Test sendall fails on unknown options or options of the wrong type")
-        assert_raises_rpc_error(-3, "Unexpected key add_to_wllt",
-                self.wallet.sendall, recipients=[self.remainder_target], options={"add_to_wllt": "false"})
-        assert_raises_rpc_error(-3, "JSON value of type string for field add_to_wallet is not of expected type bool",
-                self.wallet.sendall, recipients=[self.remainder_target], options={"add_to_wallet": "false"})
+        assert_rpc_options_validation(
+            lambda **kwargs: self.wallet.sendall(recipients=[self.remainder_target], **kwargs),
+            reject_wrong_option_type=("add_to_wallet", 1),
+        )
 
     @cleanup
     def sendall_fails_on_high_fee(self):
