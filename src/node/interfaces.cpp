@@ -19,12 +19,14 @@
 #include <index/blockfilterindex.h>
 #include <init.h>
 #include <interfaces/chain.h>
+#include <interfaces/events.h>
 #include <interfaces/handler.h>
 #include <interfaces/mining.h>
 #include <interfaces/node.h>
 #include <interfaces/rpc.h>
 #include <interfaces/types.h>
 #include <kernel/context.h>
+#include <kernel/types.h>
 #include <key.h>
 #include <logging.h>
 #include <mapport.h>
@@ -56,15 +58,18 @@
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <rpc/server.h>
+#include <serialize.h>
 #include <sync.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <univalue.h>
 #include <util/btcsignals.h>
+#include <util/byte_units.h>
 #include <util/check.h>
 #include <util/expected.h>
 #include <util/fees.h>
 #include <util/not_null.h>
+#include <util/overloaded.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/string.h>
@@ -75,22 +80,31 @@
 
 #include <any>
 #include <atomic>
+#include <compare>
 #include <condition_variable>
 #include <cstdint>
 #include <cstdlib>
+#include <deque>
 #include <functional>
 #include <map>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
+#include <variant>
 #include <vector>
 
 using interfaces::BlockRef;
 using interfaces::BlockTemplate;
 using interfaces::BlockTip;
 using interfaces::Chain;
+using interfaces::Event;
+using interfaces::EventData;
+using interfaces::Events;
+using interfaces::EventsOptions;
+using interfaces::RemovalReason;
 using interfaces::FoundBlock;
 using interfaces::Handler;
 using interfaces::MakeSignalHandler;
@@ -1048,6 +1062,153 @@ public:
     const NodeContext& m_node;
 };
 
+size_t SerializedSize(const EventData& data)
+{
+    return std::visit(util::Overloaded{
+        [](const interfaces::BlockEvent& e) -> size_t { return e.data ? ::GetSerializeSize(TX_WITH_WITNESS(*e.data)) : 0; },
+        [](const interfaces::TxAddedToMempool& e) -> size_t { return e.data ? e.data->ComputeTotalSize() : 0; },
+        [](const interfaces::TxRemovedFromMempool& e) -> size_t { return e.data ? e.data->ComputeTotalSize() : 0; },
+    }, data);
+}
+
+//! Buffers validation events for one Events subscription.
+class EventsQueue final : public CValidationInterface
+{
+public:
+    EventsQueue(KernelNotifications& notifications, const EventsOptions& options, size_t max_buffered_bytes)
+        : m_notifications(notifications), m_options(options), m_max_buffered_bytes(max_buffered_bytes) {}
+
+    void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t mempool_sequence) override
+    {
+        if (!m_options.tx_added_to_mempool) return;
+        push(interfaces::TxAddedToMempool{m_options.tx_added_to_mempool->include_data ? tx.info.m_tx : nullptr, tx.info.m_tx->GetHash(), tx.info.m_tx->GetWitnessHash(), mempool_sequence, tx.info.m_fee, tx.info.m_virtual_transaction_size});
+    }
+    void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) override
+    {
+        if (!m_options.tx_removed_from_mempool) return;
+        push(interfaces::TxRemovedFromMempool{m_options.tx_removed_from_mempool->include_data ? tx : nullptr, tx->GetHash(), tx->GetWitnessHash(), mempool_sequence, ToRemovalReason(reason)});
+    }
+    void MempoolTransactionsRemovedForBlock(const std::shared_ptr<const CBlock>& block, const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int block_height) override
+    {
+        for (const auto& removed : txs_removed_for_block) {
+            TransactionRemovedFromMempool(removed.info.m_tx, MemPoolRemovalReason::BLOCK, removed.mempool_sequence);
+        }
+    }
+    void BlockConnected(const kernel::ChainstateRole& role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
+    {
+        if (!m_options.block_connected || role.historical) return;
+        push(interfaces::BlockConnected{{m_options.block_connected->include_data ? block : nullptr, index->GetBlockHash(), index->nHeight}});
+    }
+    void BlockDisconnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index) override
+    {
+        if (!m_options.block_disconnected) return;
+        push(interfaces::BlockDisconnected{{m_options.block_disconnected->include_data ? block : nullptr, index->GetBlockHash(), index->nHeight}});
+    }
+
+    static RemovalReason ToRemovalReason(MemPoolRemovalReason reason)
+    {
+        switch (reason) {
+        case MemPoolRemovalReason::EXPIRY: return RemovalReason::EXPIRY;
+        case MemPoolRemovalReason::SIZELIMIT: return RemovalReason::SIZELIMIT;
+        case MemPoolRemovalReason::REORG: return RemovalReason::REORG;
+        case MemPoolRemovalReason::CONFLICT: return RemovalReason::CONFLICT;
+        case MemPoolRemovalReason::REPLACED: return RemovalReason::REPLACED;
+        case MemPoolRemovalReason::BLOCK: return RemovalReason::BLOCK;
+        } // no default case, so the compiler can warn about missing cases
+        AssertUnreachable();
+    }
+
+    void push(EventData data) EXCLUSIVE_LOCKS_REQUIRED(!m_notifications.m_events_mutex)
+    {
+        const size_t size{sizeof(Event) + SerializedSize(data)};
+        LOCK(m_notifications.m_events_mutex);
+        m_events.push_back({Event{++m_last_sequence, std::move(data)}, size});
+        m_buffered_bytes += size;
+        while (m_events.size() > 1 && m_buffered_bytes > m_max_buffered_bytes) popFront();
+        m_notifications.m_events_cv.notify_all();
+    }
+
+    void popFront() EXCLUSIVE_LOCKS_REQUIRED(m_notifications.m_events_mutex)
+    {
+        m_buffered_bytes -= m_events.front().size;
+        m_events.pop_front();
+    }
+
+    struct Buffered {
+        Event event;
+        //! Estimated memory use: fixed per-event overhead plus serialized
+        //! transaction or block bytes.
+        size_t size;
+    };
+
+    KernelNotifications& m_notifications;
+    const EventsOptions m_options;
+    const size_t m_max_buffered_bytes;
+    std::deque<Buffered> m_events GUARDED_BY(m_notifications.m_events_mutex);
+    size_t m_buffered_bytes GUARDED_BY(m_notifications.m_events_mutex){0};
+    uint64_t m_last_sequence GUARDED_BY(m_notifications.m_events_mutex){0};
+};
+
+class EventsImpl : public Events
+{
+public:
+    EventsImpl(NodeContext& node, const EventsOptions& options)
+        : m_node(node), m_queue(std::make_shared<EventsQueue>(*Assert(m_node.notifications), options,
+            Assert(m_node.args)->GetIntArg("-ipceventsbuffer", interfaces::DEFAULT_EVENTS_BUFFER_MIB) * 1_MiB))
+    {
+        validation_signals().RegisterSharedValidationInterface(m_queue);
+    }
+    ~EventsImpl() override
+    {
+        validation_signals().UnregisterSharedValidationInterface(m_queue);
+    }
+
+    std::vector<Event> waitNext(uint64_t after, uint32_t max_events, MillisecondsDouble timeout) override
+    {
+        if (max_events == 0) throw std::runtime_error("max_events must be greater than 0");
+        if (timeout < 0ms) timeout = 0ms;
+        if (timeout > std::chrono::years{100}) timeout = std::chrono::years{100}; // Upper bound to avoid UB in std::chrono
+        const auto deadline{SteadyClock::now() + timeout};
+        const util::SignalInterrupt& shutdown{*Assert(m_node.shutdown_signal)};
+        auto& events{m_queue->m_events};
+
+        WAIT_LOCK(m_queue->m_notifications.m_events_mutex, lock);
+        if (after > m_queue->m_last_sequence) throw std::runtime_error("after must not be greater than the last event sequence");
+        // Discard events up to after.
+        while (!events.empty() && events.front().event.sequence <= after) m_queue->popFront();
+        m_queue->m_notifications.m_events_cv.wait_until(lock, deadline, [&]() EXCLUSIVE_LOCKS_REQUIRED(m_queue->m_notifications.m_events_mutex) {
+            return !events.empty() || m_interrupt || shutdown;
+        });
+        if (m_interrupt || shutdown) {
+            m_interrupt = false;
+            return {};
+        }
+        // Return up to max_events and MAX_BATCH_BYTES.
+        std::vector<Event> result;
+        size_t bytes{0};
+        for (auto it{events.begin()}; it != events.end() && result.size() < max_events; ++it) {
+            bytes += it->size;
+            if (bytes > interfaces::MAX_BATCH_BYTES) break;
+            result.push_back(it->event);
+        }
+        return result;
+    }
+
+    void interrupt() override
+    {
+        LOCK(notifications().m_events_mutex);
+        m_interrupt = true;
+        notifications().m_events_cv.notify_all();
+    }
+
+    KernelNotifications& notifications() { return *Assert(m_node.notifications); }
+    ValidationSignals& validation_signals() { return *Assert(m_node.validation_signals); }
+    NodeContext& m_node;
+    const std::shared_ptr<EventsQueue> m_queue;
+    // Treat as if guarded by notifications().m_events_mutex
+    bool m_interrupt{false};
+};
+
 class RpcImpl : public Rpc
 {
 public:
@@ -1085,4 +1246,11 @@ std::unique_ptr<Mining> MakeMining(const node::NodeContext& context, bool wait_l
     return std::make_unique<node::MinerImpl>(context);
 }
 std::unique_ptr<Rpc> MakeRpc(node::NodeContext& context) { return std::make_unique<node::RpcImpl>(context); }
+std::unique_ptr<Events> MakeEvents(node::NodeContext& context, const EventsOptions& options)
+{
+    if (!options.block_connected && !options.block_disconnected && !options.tx_added_to_mempool && !options.tx_removed_from_mempool) {
+        throw std::runtime_error("at least one event type must be enabled");
+    }
+    return std::make_unique<node::EventsImpl>(context, options);
+}
 } // namespace interfaces

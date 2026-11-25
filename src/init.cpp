@@ -31,6 +31,7 @@
 #include <index/txospenderindex.h>
 #include <init/common.h>
 #include <interfaces/chain.h>
+#include <interfaces/events.h>
 #include <interfaces/init.h>
 #include <interfaces/ipc.h>
 #include <interfaces/node.h>
@@ -295,6 +296,8 @@ void Interrupt(NodeContext& node)
 #endif
     // Wake any threads that may be waiting for the tip to change.
     if (node.notifications) WITH_LOCK(node.notifications->m_tip_block_mutex, node.notifications->m_tip_block_cv.notify_all());
+    // Wake any threads waiting in Events::waitNext.
+    if (node.notifications) WITH_LOCK(node.notifications->m_events_mutex, node.notifications->m_events_cv.notify_all());
     InterruptHTTPServer();
     InterruptHTTPRPC();
     InterruptRPC();
@@ -750,6 +753,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-server", "Accept command line and JSON-RPC commands", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     if (can_listen_ipc) {
         argsman.AddArg("-ipcbind=<address>", strprintf("Bind to Unix socket address and listen for incoming connections. Valid address values are \"unix\" to listen on the default path, <datadir>/node.sock, or \"unix:/custom/path\" to specify a custom path. Append \",max-connections=8\", for example \"unix:/custom/path,max-connections=8\", to limit the number of simultaneous connections on that address (default: %d, maximum: %d). Can be specified multiple times to listen on multiple paths. Default behavior is not to listen on any path. If relative paths are specified, they are interpreted relative to the network data directory. If paths include any parent directory components and the parent directories do not exist, they will be created. Enabling this gives local processes that can access the socket unauthenticated RPC access, so it's important to choose a path with secure permissions if customizing this.",ipc::DEFAULT_MAX_CONNECTIONS, ipc::MAX_CONNECTIONS), ArgsManager::ALLOW_ANY, OptionsCategory::IPC);
+        argsman.AddArg("-ipceventsbuffer=<n>", strprintf("Maximum MiB of chain and mempool events buffered per IPC Events subscription before the oldest are dropped (minimum 1, default: %d)", interfaces::DEFAULT_EVENTS_BUFFER_MIB), ArgsManager::ALLOW_ANY, OptionsCategory::IPC);
     }
 
 #if HAVE_DECL_FORK
@@ -1091,6 +1095,10 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 
     if (ipc_fds > MAX_IPC_FDS) {
         return InitError(Untranslated(strprintf("Too many IPC file descriptors requested: %d -ipcbind listeners and connection slots exceed the limit of %d. Reduce the number of -ipcbind addresses or their max-connections values", static_cast<int>(ipc_fds), static_cast<int>(MAX_IPC_FDS))));
+    }
+
+    if (args.GetIntArg("-ipceventsbuffer", interfaces::DEFAULT_EVENTS_BUFFER_MIB) < 1) {
+        return InitError(Untranslated("-ipceventsbuffer must be at least 1"));
     }
 
     if (ipc_addresses > 0) {
