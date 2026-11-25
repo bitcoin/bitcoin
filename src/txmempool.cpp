@@ -260,7 +260,7 @@ void CTxMemPool::addNewTransaction(CTxMemPool::txiter newit)
     );
 }
 
-void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
+uint64_t CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 {
     // We increment mempool sequence value no matter removal reason
     // even if not directly reported below.
@@ -303,6 +303,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     cachedInnerUsage -= it->DynamicMemoryUsage();
     mapTx.erase(it);
     nTransactionsUpdated++;
+    return mempool_sequence;
 }
 
 // Calculates descendants of given entry and adds to setDescendants.
@@ -413,8 +414,8 @@ std::vector<RemovedMempoolTransactionInfo> CTxMemPool::removeForBlock(const std:
         for (const auto& tx : vtx) {
             txiter it = mapTx.find(tx->GetHash());
             if (it != mapTx.end()) {
-                txs_removed_for_block.emplace_back(*it);
-                removeUnchecked(it, MemPoolRemovalReason::BLOCK);
+                auto& removed{txs_removed_for_block.emplace_back(*it)};
+                removed.mempool_sequence = removeUnchecked(it, MemPoolRemovalReason::BLOCK);
             }
             removeConflicts(*tx);
             ClearPrioritisation(tx->GetHash());
