@@ -1817,13 +1817,12 @@ BITCOINKERNEL_API uint32_t btck_transaction_input_get_sequence(
     const btck_TransactionInput* transaction_input) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
- * @brief Get the witness stack of a transaction input. The returned witness
- * stack is not owned and depends on the lifetime of the transaction input.
+ * @brief Get a copy of the witness stack of a transaction input.
  *
  * @param[in] transaction_input Non-null.
  * @return                      The witness stack.
  */
-BITCOINKERNEL_API const btck_WitnessStack* btck_transaction_input_get_witness_stack(
+BITCOINKERNEL_API btck_WitnessStack* BITCOINKERNEL_WARN_UNUSED_RESULT btck_transaction_input_get_witness_stack(
     const btck_TransactionInput* transaction_input) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
