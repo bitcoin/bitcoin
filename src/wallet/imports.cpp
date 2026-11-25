@@ -283,10 +283,10 @@ std::vector<ImportResult> ProcessDescriptorsImport(CWallet& wallet,
     }
 
     if (rescan) {
-        const int64_t scanned_time = wallet.Scanner().ScanFromTime(lowest_timestamp, reserver);
+        const std::optional<int64_t> scanned_time{wallet.Scanner().ScanFromTime(lowest_timestamp, reserver)};
         wallet.ResubmitWalletTransactions(node::TxBroadcast::MEMPOOL_NO_BROADCAST, /*force=*/true);
 
-        if (wallet.Scanner().IsAborting()) {
+        if (!scanned_time) {
             return {ImportResult{
                 WalletErrorCode::MiscError,
                 "Rescan aborted by user.",
@@ -295,7 +295,7 @@ std::vector<ImportResult> ProcessDescriptorsImport(CWallet& wallet,
             }};
         }
 
-        if (scanned_time > lowest_timestamp) {
+        if (*scanned_time > lowest_timestamp) {
             // Compose the response
             for (size_t i = 0; i < requests.size(); ++i) {
                 ImportResult& result = response.at(i);
@@ -305,12 +305,12 @@ std::vector<ImportResult> ProcessDescriptorsImport(CWallet& wallet,
                 // the result stand unmodified. Otherwise replace the result
                 // with an error message.
                 const int64_t timestamp{requests.at(i).timestamp.value()};
-                if (scanned_time > timestamp && !result.has_error()) {
+                if (*scanned_time > timestamp && !result.has_error()) {
                     std::string error_msg = strprintf("Rescan failed for descriptor with timestamp %d. There "
                         "was an error reading a block from time %d, which is after or within %d seconds "
                         "of key creation, and could contain transactions pertaining to the desc. As a "
                         "result, transactions and coins using this desc may not appear in the wallet.",
-                        timestamp, scanned_time - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW);
+                        timestamp, *scanned_time - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW);
                     if (wallet.chain().havePruned()) {
                         error_msg += strprintf(" This error could be caused by pruning or data corruption "
                             "(see bitcoind log for details) and could be dealt with by downloading and "

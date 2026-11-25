@@ -102,8 +102,9 @@ public:
      * be called whenever new keys are added to the wallet, with the oldest key
      * creation time.
      * @return Earliest timestamp that could be successfully scanned from. Timestamp
-     * returned will be higher than startTime if relevant blocks could not be read. */
-    int64_t ScanFromTime(int64_t startTime, const WalletRescanReserver& reserver);
+     * returned will be higher than startTime if relevant blocks could not be read.
+     * std::nullopt if the scan was aborted or interrupted by a shutdown request. */
+    std::optional<int64_t> ScanFromTime(int64_t startTime, const WalletRescanReserver& reserver);
 
     /**
      * Scan the block chain (starting in start_block) for transactions

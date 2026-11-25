@@ -15,7 +15,7 @@ using interfaces::FoundBlock;
 
 namespace wallet {
 
-int64_t ChainScanner::ScanFromTime(int64_t startTime, const WalletRescanReserver& reserver)
+std::optional<int64_t> ChainScanner::ScanFromTime(int64_t startTime, const WalletRescanReserver& reserver)
 {
     // Find starting block. May be null if nCreateTime is greater than the
     // highest blockchain timestamp, in which case there is nothing that needs
@@ -26,8 +26,8 @@ int64_t ChainScanner::ScanFromTime(int64_t startTime, const WalletRescanReserver
     m_wallet.WalletLogPrintf("%s: Rescanning last %i blocks", __func__, start ? WITH_LOCK(m_wallet.cs_wallet, return m_wallet.GetLastBlockHeight()) - start_height + 1 : 0);
 
     if (start) {
-        // TODO: this should take into account failure by ScanResult::USER_ABORT
         ScanResult result = Scan(start_block, start_height, /*max_height=*/{}, reserver, /*save_progress=*/false);
+        if (result.status == ScanResult::USER_ABORT) return std::nullopt;
         if (result.status == ScanResult::FAILURE) {
             int64_t time_max;
             CHECK_NONFATAL(m_wallet.chain().findBlock(result.last_failed_block, FoundBlock().maxTime(time_max)));
