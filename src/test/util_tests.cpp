@@ -1648,6 +1648,10 @@ BOOST_AUTO_TEST_CASE(util_ParseByteUnits)
     // overflow
     BOOST_CHECK(!ParseByteUnits("18446744073709551615g", noop));
 
+    // overflow boundary
+    BOOST_CHECK_EQUAL(ParseByteUnits("18014398509481983K", noop).value(), 18'446'744'073'709'550'592ULL);
+    BOOST_CHECK(!ParseByteUnits("18014398509481984K", noop));
+
     // invalid unit
     BOOST_CHECK(!ParseByteUnits("1x", noop));
 }
