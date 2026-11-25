@@ -69,7 +69,7 @@ class OrphanRPCsTest(BitcoinTestFramework):
 
         self.log.info("Check that orphanage only contains child 2")
         orphanage = node.getorphantxs()
-        assert_equal(len(orphanage), 1)
+        assert_equal(orphanage, [tx_child_2["txid"]])
         assert tx_in_orphanage(node, tx_child_2["tx"])
 
         peer.send_and_ping(msg_tx(tx_parent_2["tx"]))
@@ -116,7 +116,7 @@ class OrphanRPCsTest(BitcoinTestFramework):
         self.log.info("Check that additional announcers are reflected in RPC result")
         peer_2.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=int(tx_child_1["wtxid"], 16))]))
 
-        orphanage = node.getorphantxs(verbosity=2)
+        orphanage = node.getorphantxs(verbosity=1)
         assert_equal(set(orphanage[0]["from"]), set(peer_ids))
 
         self.log.info("Checking orphan details")
@@ -142,11 +142,13 @@ class OrphanRPCsTest(BitcoinTestFramework):
         if verbosity == 2:
             self.log.info("Check the transaction hex of orphan")
             assert_equal(orphan["hex"], tx["hex"])
+        else:
+            assert "hex" not in orphan
 
     def test_misc(self):
         node = self.nodes[0]
-        assert_raises_rpc_error(-3, "Verbosity was boolean but only integer allowed", node.getorphantxs, verbosity=True)
-        assert_raises_rpc_error(-3, "Verbosity was boolean but only integer allowed", node.getorphantxs, verbosity=False)
+        for verbosity in (True, False):
+            assert_raises_rpc_error(-3, "Verbosity was boolean but only integer allowed", node.getorphantxs, verbosity=verbosity)  # TODO: Expect the standard RPC type error
         help_output = node.help()
         self.log.info("Check that getorphantxs is a hidden RPC")
         assert "getorphantxs" not in help_output
