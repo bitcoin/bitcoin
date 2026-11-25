@@ -306,6 +306,7 @@ class SendallTest(BitcoinTestFramework):
         assert_rpc_options_validation(
             lambda **kwargs: self.wallet.sendall(recipients=[self.remainder_target], **kwargs),
             reject_wrong_option_type=("add_to_wallet", 1),
+            reject_duplicate_option=("add_to_wallet", True),
         )
 
     @cleanup

@@ -199,12 +199,14 @@ def assert_rpc_options_validation(
     rpc: Callable,
     *,
     reject_wrong_option_type: Optional[tuple[str, object]] = None,
+    reject_duplicate_option: Optional[tuple[str, object]] = None,
 ):
     """Check common validation behavior for an RPC with an options object.
 
     `rpc` should be a callable that accepts keyword arguments, typically a
     lambda which supplies the RPC's required arguments.
-    Set `reject_wrong_option_type` to an (option name, value) pair to test that case.
+    Set `reject_wrong_option_type` and `reject_duplicate_option` to an
+    (option name, value) pair to test those cases, or None to skip them.
     """
     assert_raises_rpc_error(-3, "Unexpected key unknown_option", rpc, options={"unknown_option": 1})
     assert_raises_rpc_error(-8, "Unknown named parameter unknown_option", rpc, unknown_option=1)
@@ -214,6 +216,10 @@ def assert_rpc_options_validation(
         err_msg = f"field {key} is not of expected type"
         assert_raises_rpc_error(-3, err_msg, rpc, options={key: val})
         assert_raises_rpc_error(-3, err_msg, rpc, **{key: val})
+    if reject_duplicate_option:
+        key, val = reject_duplicate_option
+        err_msg = f"Parameter options conflicts with parameter {key}"
+        assert_raises_rpc_error(-8, err_msg, rpc, **{key: val}, options={key: val})
 
 
 def assert_is_hex_string(string):

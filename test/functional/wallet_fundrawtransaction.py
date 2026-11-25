@@ -324,6 +324,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_rpc_options_validation(
             lambda **kwargs: self.nodes[2].fundrawtransaction(rawtx, **kwargs),
             reject_wrong_option_type=("add_inputs", 1),
+            reject_duplicate_option=("add_inputs", True),
         )
 
         # reserveChangeKey was deprecated and is now removed
