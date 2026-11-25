@@ -13,7 +13,6 @@ $Proxy.include("interfaces/mining.h");
 $Proxy.includeTypes("ipc/capnp/mining-types.h");
 
 const maxMoney :Int64 = 2100000000000000;
-const maxDouble :Float64 = 1.7976931348623157e308;
 const defaultBlockReservedWeight :UInt32 = 8000;
 const defaultCoinbaseOutputMaxAdditionalSigops :UInt32 = 400;
 
@@ -21,7 +20,7 @@ interface Mining $Proxy.wrap("interfaces::Mining") {
     isTestChain @0 (context :Proxy.Context) -> (result: Bool);
     isInitialBlockDownload @1 (context :Proxy.Context) -> (result: Bool);
     getTip @2 (context :Proxy.Context) -> (result: Common.BlockRef, hasResult: Bool);
-    waitTipChanged @3 (context :Proxy.Context, currentTip: Data, timeout: Float64 = .maxDouble) -> (result: Common.BlockRef);
+    waitTipChanged @3 (context :Proxy.Context, currentTip: Data, timeout: Float64 = Common.maxDouble) -> (result: Common.BlockRef);
     createNewBlock @4 (context :Proxy.Context, options: BlockCreateOptions, cooldown: Bool = true) -> (result: BlockTemplate);
     checkBlock @5 (context :Proxy.Context, block: Data, options: BlockCheckOptions) -> (reason: Text, debug: Text, result: Bool);
     interrupt @6 () -> ();
@@ -53,7 +52,7 @@ struct BlockCreateOptions $Proxy.wrap("node::BlockCreateOptions") {
 }
 
 struct BlockWaitOptions $Proxy.wrap("node::BlockWaitOptions") {
-    timeout @0 : Float64 = .maxDouble $Proxy.name("timeout");
+    timeout @0 : Float64 = Common.maxDouble $Proxy.name("timeout");
     feeThreshold @1 : Int64 = .maxMoney $Proxy.name("fee_threshold");
 }
 
