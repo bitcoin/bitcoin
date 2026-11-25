@@ -11,6 +11,8 @@
 #include <netbase.h>
 #include <netgroup.h>
 #include <random.h>
+#include <span.h>
+#include <streams.h>
 #include <test/data/asmap.raw.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
@@ -864,9 +866,14 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
     CAddress addr = CAddress(ResolveService("250.1.1.1"), NODE_NONE);
     CNetAddr default_source;
 
+    const auto mapped_tag{netgroupman.GetGroup(addr).at(0)};
+    BOOST_CHECK_LT(mapped_tag, NET_MAX); // TODO: Give AS numbers a tag outside the network classes
+    BOOST_CHECK_EQUAL(mapped_tag, netgroupman.GetGroup(ResolveIP("2001:2001::1")).at(0)); // TODO: Give mapped AS numbers a distinct tag from IPv6 prefixes
     addrman_asmap1->Add({addr}, default_source);
 
     stream << *addrman_asmap1;
+    BOOST_REQUIRE_GE(stream.size(), uint256::size());
+    const uint256 bucketing_version{MakeUCharSpan(stream).last(uint256::size())};
     // serizalizing/deserializing addrman with the same asmap
     stream >> *addrman_asmap1_dup;
 
@@ -890,6 +897,19 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
     addrman_noasmap = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, ratio);
     addrman_noasmap->Add({addr}, default_source);
     stream << *addrman_noasmap;
+    BOOST_REQUIRE_GE(stream.size(), uint256::size());
+    BOOST_CHECK(uint256{MakeUCharSpan(stream).last(uint256::size())}.IsNull());
+    // A position saved without ASMap distinguishes restoring the bucket from recalculating it
+    const auto load_position{[&](const uint256& version) {
+        DataStream snapshot{stream};
+        SpanWriter{MakeWritableByteSpan(snapshot).last(uint256::size()), version};
+        AddrMan restored{netgroupman, DETERMINISTIC, ratio};
+        snapshot >> restored;
+        return restored.GetEntries(/*from_tried=*/false).at(0).second;
+    }};
+    BOOST_CHECK_EQUAL(load_position(bucketing_version), addr_pos3);
+    BOOST_CHECK_EQUAL(load_position(netgroupman.GetAsmapVersion()), addr_pos3); // TODO: Rebucket entries stored with the legacy ASMap version
+
     stream >> *addrman_asmap1;
 
     AddressPosition addr_pos4 = addrman_asmap1->FindAddressEntry(addr).value();
