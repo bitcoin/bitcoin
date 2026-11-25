@@ -86,19 +86,11 @@ void RPCTypeCheckObj(const UniValue& o,
     }
 }
 
-int ParseVerbosity(const UniValue& arg, int default_verbosity, bool allow_bool)
+int ParseVerbosity(const UniValue& arg, int default_verbosity)
 {
-    if (!arg.isNull()) {
-        if (arg.isBool()) {
-            if (!allow_bool) {
-                throw JSONRPCError(RPC_TYPE_ERROR, "Verbosity was boolean but only integer allowed");
-            }
-            return arg.get_bool(); // true = 1
-        } else {
-            return arg.getInt<int>();
-        }
-    }
-    return default_verbosity;
+    if (arg.isNull()) return default_verbosity;
+    if (arg.isBool()) return arg.get_bool();
+    return arg.getInt<int>();
 }
 
 CAmount AmountFromValue(const UniValue& value, int decimals)

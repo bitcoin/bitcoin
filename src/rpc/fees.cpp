@@ -119,7 +119,7 @@ static RPCMethod estimatesmartfee()
             }
             const FeeRateEstimatorType fee_rate_estimator{*parsed_fee_rate_estimator};
             bool conservative{fee_mode == FeeEstimateMode::CONSERVATIVE};
-            int verbosity{ParseVerbosity(options["verbosity"], /*default_verbosity=*/1, /*allow_bool=*/false)};
+            int verbosity{ParseVerbosity(options["verbosity"], /*default_verbosity=*/1)};
             UniValue result(UniValue::VOBJ);
             UniValue errors(UniValue::VARR);
             const auto estimate{fee_estimator_man.GetFeeRateEstimate(fee_rate_estimator, conf_target, conservative)};

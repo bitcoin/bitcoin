@@ -1353,7 +1353,7 @@ A few guidelines for introducing and reviewing new RPC interfaces:
     true to 1 in this case.
 
 - For new RPC methods, if implementing a `verbosity` argument, use integer verbosity rather than boolean.
-  Disallow usage of boolean verbosity (see `ParseVerbosity()` in [util.h](/src/rpc/util.h)).
+  For a top-level argument with a default, use `RPCArg::Type::NUM` and `self.Arg<int>("verbosity")` as in [`getorphantxs`](/src/rpc/mempool.cpp).
 
   - *Rationale*: Integer verbosity allows for multiple values. Undocumented boolean verbosity is deprecated
     and new RPC methods should prevent its use.
