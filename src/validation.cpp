@@ -3692,14 +3692,8 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* const
         PropagateBlockInvalidity(to_mark_failed);
 
         InvalidChainFound(to_mark_failed);
-        LogInfo("%s: invalid block=%s height=%d log2_work=%f date=%s", __func__,
-                to_mark_failed->GetBlockHash().ToString(), to_mark_failed->nHeight,
-                log(to_mark_failed->nChainWork.getdouble()) / log(2.0), FormatISO8601DateTime(to_mark_failed->GetBlockTime()));
-        CBlockIndex* tip = m_chain.Tip();
-        assert(tip);
-        LogInfo("%s: current best=%s height=%d log2_work=%f date=%s", __func__,
-                tip->GetBlockHash().ToString(), m_chain.Height(), log(tip->nChainWork.getdouble()) / log(2.0),
-                FormatISO8601DateTime(tip->GetBlockTime()));
+        LogInfo("Invalidated block: hash=%s height=%d",
+                to_mark_failed->GetBlockHash().ToString(), to_mark_failed->nHeight);
         CheckForkWarningConditions();
     }
 
