@@ -35,9 +35,9 @@ static void addCoin(CoinsResult& coins,
 {
     CMutableTransaction tx;
     tx.nLockTime = nextLockTime++;        // so all transactions get different hashes
-    tx.vout.resize(1);
-    tx.vout[0].nValue = nValue;
-    tx.vout[0].scriptPubKey = GetScriptForDestination(dest);
+    tx.vout = {
+        CTxOut{nValue, GetScriptForDestination(dest)},
+    };
 
     const auto txid{tx.GetHash()};
     LOCK(wallet.cs_wallet);
