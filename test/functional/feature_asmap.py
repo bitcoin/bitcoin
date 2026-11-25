@@ -113,11 +113,17 @@ class AsmapTest(BitcoinTestFramework):
         with self.node.assert_debug_log(expected_msgs=[rebucket_msg]):
             self.restart_node(0, ["-checkaddrman=1", "-test=addrman"])
 
-    def test_asmap_with_missing_file(self):
-        self.log.info('Test bitcoind -asmap with missing map file')
+    def test_asmap_with_invalid_paths(self):
         self.stop_node(0)
-        msg = f"Error: Could not find asmap file \"{self.datadir}{os.sep}missing\""
-        self.node.assert_start_raises_init_error(extra_args=['-asmap=missing'], expected_msg=msg)
+        long_name = 'a' * 300
+        missing = self.datadir / 'missing'
+        for path, msg in [
+            (missing.name, f'Error: Could not find asmap file "{missing}"'),
+            (long_name, None),  # TODO: Report the missing-file error when the path lookup fails
+            # (self.datadir, f'Error: Could not parse asmap file "{self.datadir}"'),  # TODO: Reject directories before trying to read them
+        ]:
+            self.log.info(f'Test bitcoind -asmap={path}')
+            self.node.assert_start_raises_init_error(extra_args=[f'-asmap={path}'], expected_msg=msg)
 
     def test_empty_asmap(self):
         self.log.info('Test bitcoind -asmap with empty map file')
@@ -183,7 +189,7 @@ class AsmapTest(BitcoinTestFramework):
         self.test_asmap_with_absolute_path()
         self.test_asmap_sources()
         self.test_asmap_interaction_with_addrman_containing_entries()
-        self.test_asmap_with_missing_file()
+        self.test_asmap_with_invalid_paths()
         self.test_empty_asmap()
         self.test_asmap_health_check()
         self.test_export_embedded_asmap()
