@@ -162,6 +162,11 @@ class AsmapTest(BitcoinTestFramework):
         assert_equal(hashlib.sha256(data).hexdigest(), EMBEDDED_VERSION)
         assert_equal(result["file_hash"], EMBEDDED_VERSION)
 
+        os.truncate(export_path, 1)
+        self.node.exportasmap("asmap.dat")  # TODO: Refuse to overwrite the existing file
+        with open(export_path, 'rb') as f:
+            assert_equal(f.read(), data)  # TODO: Preserve the original contents
+
         os.remove(export_path)
 
     def run_test(self):
