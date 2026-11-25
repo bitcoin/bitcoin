@@ -603,7 +603,7 @@ static bool ConnectToSocket(const Sock& sock,
             // Connection didn't actually fail, but is being established
             // asynchronously. Thus, use async I/O api (select/poll)
             // synchronously to check for successful connection with a timeout.
-            const Sock::Event requested = Sock::RecvEvent | Sock::SendEvent;
+            const Sock::Event requested = Sock::RecvEvent | Sock::SendEvent | Sock::ErrorEvent;
             Sock::Event occurred;
             if (!sock.Wait(timeout, requested, &occurred)) {
                 LogDebug(BCLog::NET, "wait for connect to %s failed: %s",
