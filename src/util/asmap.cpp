@@ -14,8 +14,10 @@
 #include <bit>
 #include <cstddef>
 #include <cstdio>
+#include <ios>
 #include <span>
 #include <string>
+#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -318,18 +320,28 @@ bool CheckStandardAsmap(const std::span<const std::byte> data)
  */
 std::vector<std::byte> DecodeAsmap(fs::path path)
 {
+    if (std::error_code ec; !fs::is_regular_file(path, ec)) {
+        LogWarning("Expected a regular file at asmap path %s", fs::quoted(fs::PathToString(path)));
+        return {};
+    }
     FILE *filestr = fsbridge::fopen(path, "rb");
     AutoFile file{filestr};
     if (file.IsNull()) {
         LogWarning("Failed to open asmap file from disk");
         return {};
     }
-    int64_t length{file.size()};
-    LogInfo("Opened asmap file %s (%d bytes) from disk", fs::quoted(fs::PathToString(path)), length);
+    std::vector<std::byte> buffer;
+    try {
+        int64_t length{file.size()};
+        LogInfo("Opened asmap file %s (%d bytes) from disk", fs::quoted(fs::PathToString(path)), length);
 
-    // Read entire file into memory
-    std::vector<std::byte> buffer(length);
-    file.read(buffer);
+        // Read entire file into memory
+        buffer.resize(length);
+        file.read(buffer);
+    } catch (const std::ios_base::failure& e) {
+        LogWarning("Failed to read asmap file %s: %s", fs::quoted(fs::PathToString(path)), e.what());
+        return {};
+    }
 
     if (!CheckStandardAsmap(buffer)) {
         LogWarning("Sanity check of asmap file %s failed", fs::quoted(fs::PathToString(path)));

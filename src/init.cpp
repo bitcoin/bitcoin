@@ -1703,7 +1703,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
                 // If a specific path was passed with the asmap argument check if
                 // the file actually exists in that location
-                if (!fs::exists(asmap_path)) {
+                if (std::error_code ec; !fs::exists(fs::status(asmap_path, ec))) {
                     InitError(strprintf(_("Could not find asmap file %s"), fs::quoted(fs::PathToString(asmap_path))));
                     return false;
                 }

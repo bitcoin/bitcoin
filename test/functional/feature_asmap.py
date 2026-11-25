@@ -119,8 +119,8 @@ class AsmapTest(BitcoinTestFramework):
         missing = self.datadir / 'missing'
         for path, msg in [
             (missing.name, f'Error: Could not find asmap file "{missing}"'),
-            (long_name, None),  # TODO: Report the missing-file error when the path lookup fails
-            # (self.datadir, f'Error: Could not parse asmap file "{self.datadir}"'),  # TODO: Reject directories before trying to read them
+            (long_name, f'Error: Could not find asmap file "{self.datadir / long_name}"'),
+            (self.datadir, f'Error: Could not parse asmap file "{self.datadir}"'),
         ]:
             self.log.info(f'Test bitcoind -asmap={path}')
             self.node.assert_start_raises_init_error(extra_args=[f'-asmap={path}'], expected_msg=msg)
