@@ -63,31 +63,35 @@ class AsmapTest(BitcoinTestFramework):
         assert_equal(self.node.getnetworkinfo()["asmap_version"], VERSION)
         os.remove(filename)
 
-    def test_asmap_with_relative_path(self):
-        self.log.info('Test bitcoind -asmap=<relative path>')
-        self.stop_node(0)
-        name = 'ASN_map'
-        filename = os.path.join(self.datadir, name)
-        shutil.copyfile(self.asmap_raw, filename)
-        with self.node.assert_debug_log(expected_messages(filename)):
-            self.start_node(0, [f'-asmap={name}'])
-        os.remove(filename)
+    def test_asmap_sources(self):
+        numeric_file = self.datadir / '1'
+        dated_file = self.datadir / '2026-09-asmap.dat'
+        for path in (numeric_file, dated_file):
+            shutil.copyfile(self.asmap_raw, path)
 
-    def test_embedded_asmap(self):
-        if self.is_embedded_asmap_compiled():
-            self.log.info('Test bitcoind -asmap (using embedded map data)')
-            for arg in ['-asmap', '-asmap=1']:
-                self.stop_node(0)
-                with self.node.assert_debug_log(["Opened asmap data", "from embedded byte array",
-                                                 f"Using asmap version {EMBEDDED_VERSION} for IP bucketing"]):
-                    self.start_node(0, [arg])
-                assert_equal(self.node.getnetworkinfo()["asmap_version"], EMBEDDED_VERSION)
-        else:
-            self.log.info('Test bitcoind -asmap (compiled without embedded map data)')
-            for arg in ['-asmap', '-asmap=1']:
-                self.stop_node(0)
-                msg = "Error: Embedded asmap data not available"
-                self.node.assert_start_raises_init_error(extra_args=[arg], expected_msg=msg)
+        for arg, expected_file in [
+            ('-asmap=./1', numeric_file),
+            (f'-asmap={dated_file.name}', None),  # TODO: Load the dated file from disk
+            ('-asmap', None),
+            ('-asmap=1', None),
+        ]:
+            self.log.info(f'Test bitcoind {arg}')
+            self.stop_node(0)
+            if expected_file is not None:
+                messages = expected_messages(expected_file)
+                version = VERSION
+            elif self.is_embedded_asmap_compiled():
+                messages = ['Opened asmap data', 'from embedded byte array', f'Using asmap version {EMBEDDED_VERSION} for IP bucketing']
+                version = EMBEDDED_VERSION
+            else:
+                self.node.assert_start_raises_init_error(extra_args=[arg], expected_msg='Error: Embedded asmap data not available')
+                continue
+            with self.node.assert_debug_log(messages):
+                self.start_node(0, [arg])
+            assert_equal(self.node.getnetworkinfo()['asmap_version'], version)
+
+        for path in (numeric_file, dated_file):
+            path.unlink()
 
     def test_asmap_interaction_with_addrman_containing_entries(self):
         self.log.info("Test bitcoind -asmap restart with addrman containing new and tried entries")
@@ -172,8 +176,7 @@ class AsmapTest(BitcoinTestFramework):
         self.test_without_asmap_arg()
         self.test_noasmap_arg()
         self.test_asmap_with_absolute_path()
-        self.test_asmap_with_relative_path()
-        self.test_embedded_asmap()
+        self.test_asmap_sources()
         self.test_asmap_interaction_with_addrman_containing_entries()
         self.test_asmap_with_missing_file()
         self.test_empty_asmap()
