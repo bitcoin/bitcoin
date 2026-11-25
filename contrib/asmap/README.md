@@ -37,7 +37,7 @@ and do not intend to diff the file at a later time.
 
 The `decode` command takes an encoded ASmap and an output file.
 As with `encode`, the `--fill`/`-f` flag reduces the output file size
-by reassigning subnets. Conversely, the `--non-overlapping`/`-n` flag
+by reassigning subnets. Conversely, the `--nonoverlapping`/`-n` flag
 increases output size by outputting strictly non-overlapping network ranges.
 
 ### Comparing ASmaps
@@ -69,9 +69,8 @@ which ignores networks present in the second but not the first.
 a node's known peers.
 The command takes two ASmap files, and a file of IP addresses as output by
 the `bitcoin-cli getnodeaddresses` command.
-It returns the changes between the two ASmaps for the peer IPs provided in
-the `getnodeaddresses` output.
-The resulting file is in the same format as the `diff` command shown above.
+It groups the peer addresses that changed by their old and new AS assignments,
+prints a count for each group, and ends with a summary.
 
 You can output address data to a file:
 ```
