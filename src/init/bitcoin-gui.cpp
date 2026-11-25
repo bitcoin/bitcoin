@@ -7,6 +7,7 @@
 #include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/echo.h>
+#include <interfaces/events.h>
 #include <interfaces/ipc.h>
 #include <interfaces/mining.h>
 #include <interfaces/node.h>
@@ -38,6 +39,7 @@ public:
     }
     std::unique_ptr<interfaces::Echo> makeEcho() override { return interfaces::MakeEcho(); }
     std::unique_ptr<interfaces::Rpc> makeRpc() override { return interfaces::MakeRpc(m_node); }
+    std::unique_ptr<interfaces::Events> makeEvents(const interfaces::EventsOptions& options) override { return interfaces::MakeEvents(m_node, options); }
     interfaces::Ipc* ipc() override { return m_ipc.get(); }
     // bitcoin-gui accepts -ipcbind option even though it does not use it
     // directly. It just returns true here to accept the option because

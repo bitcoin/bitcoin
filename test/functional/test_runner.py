@@ -373,6 +373,7 @@ BASE_SCRIPTS = [
     'mempool_cluster.py',
     'feature_logging.py',
     'interface_ipc.py',
+    'interface_ipc_events.py',
     'interface_ipc_mining.py',
     'interface_gui.py',
     'feature_anchors.py',

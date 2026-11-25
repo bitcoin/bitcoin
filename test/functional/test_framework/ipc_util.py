@@ -90,6 +90,7 @@ def load_capnp_modules(config):
         "proxy": capnp.load(str(mp_dir / "mp" / "proxy.capnp"), imports=imports),
         "init": capnp.load(str(src_dir / "ipc" / "capnp" / "init.capnp"), imports=imports),
         "echo": capnp.load(str(src_dir / "ipc" / "capnp" / "echo.capnp"), imports=imports),
+        "events": capnp.load(str(src_dir / "ipc" / "capnp" / "events.capnp"), imports=imports),
         "mining": capnp.load(str(src_dir / "ipc" / "capnp" / "mining.capnp"), imports=imports),
     }
 

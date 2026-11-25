@@ -7,6 +7,7 @@
 #include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/echo.h>
+#include <interfaces/events.h>
 #include <interfaces/ipc.h>
 #include <interfaces/mining.h>
 #include <interfaces/node.h>
@@ -40,6 +41,7 @@ public:
     }
     std::unique_ptr<interfaces::Echo> makeEcho() override { return interfaces::MakeEcho(); }
     std::unique_ptr<interfaces::Rpc> makeRpc() override { return interfaces::MakeRpc(m_node); }
+    std::unique_ptr<interfaces::Events> makeEvents(const interfaces::EventsOptions& options) override { return interfaces::MakeEvents(m_node, options); }
     interfaces::Ipc* ipc() override { return m_ipc.get(); }
     bool canListenIpc() override { return true; }
     const char* exeName() override { return EXE_NAME; }
