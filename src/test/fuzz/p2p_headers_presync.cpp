@@ -4,20 +4,44 @@
 
 #include <arith_uint256.h>
 #include <blockencodings.h>
+#include <chain.h>
+#include <kernel/chainparams.h>
 #include <net.h>
 #include <net_processing.h>
+#include <net_types.h>
 #include <netmessagemaker.h>
+#include <node/blockstorage.h>
+#include <node/connection_types.h>
 #include <node/peerman_args.h>
+#include <node/protocol_version.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <protocol.h>
+#include <script/script.h>
+#include <serialize.h>
+#include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/net.h>
-#include <test/util/script.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/time.h>
 #include <validation.h>
+
+#include <compare>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <ios>
+#include <memory>
+#include <span>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace {
 constexpr uint32_t FUZZ_MAX_HEADERS_RESULTS{16};

@@ -2,41 +2,47 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <addrdb.h>
-#include <addrman.h>
 #include <addrman_impl.h>
 #include <blockencodings.h>
 #include <blockfilter.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
-#include <common/args.h>
 #include <common/bloom.h>
 #include <compressor.h>
 #include <consensus/merkle.h>
-#include <key.h>
+#include <flatfile.h>
 #include <merkleblock.h>
-#include <net.h>
-#include <netbase.h>
-#include <netgroup.h>
+#include <netaddress.h>
 #include <node/blockstorage.h>
 #include <node/utxo_snapshot.h>
+#include <policy/feerate.h>
 #include <primitives/block.h>
+#include <primitives/transaction.h>
 #include <protocol.h>
 #include <psbt.h>
 #include <pubkey.h>
 #include <script/keyorigin.h>
+#include <script/script.h>
+#include <serialize.h>
 #include <streams.h>
+#include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
+#include <tinyformat.h>
+#include <uint256.h>
 #include <undo.h>
 #include <util/check.h>
 
-#include <cstdint>
 #include <exception>
+#include <functional>
+#include <ios>
 #include <optional>
-#include <stdexcept>
+
+namespace {
+struct invalid_fuzzing_input_exception;
+}
 
 using kernel::CBlockFileInfo;
 using node::SnapshotMetadata;

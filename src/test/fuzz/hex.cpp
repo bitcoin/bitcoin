@@ -3,9 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <core_io.h>
+#include <crypto/hex_base.h>
 #include <primitives/block.h>
 #include <primitives/transaction_identifier.h>
-#include <pubkey.h>
 #include <rpc/util.h>
 #include <test/fuzz/fuzz.h>
 #include <uint256.h>
@@ -14,7 +14,9 @@
 #include <util/strencodings.h>
 
 #include <algorithm>
-#include <cstdint>
+#include <cstddef>
+#include <optional>
+#include <span>
 #include <string>
 #include <vector>
 

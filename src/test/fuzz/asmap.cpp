@@ -10,8 +10,17 @@
 #include <util/check.h>
 #include <util/strencodings.h>
 
+#include <algorithm>
+#include <cstddef>
 #include <cstdint>
+#include <cstring>
+#include <iterator>
+#include <span>
 #include <vector>
+
+#ifndef WIN32
+#include <netinet/in.h>
+#endif
 
 using namespace util::hex_literals;
 

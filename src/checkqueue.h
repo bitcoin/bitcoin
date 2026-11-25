@@ -11,8 +11,12 @@
 #include <util/threadnames.h>
 
 #include <algorithm>
+#include <condition_variable>
 #include <iterator>
 #include <optional>
+#include <thread>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 /**

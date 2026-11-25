@@ -7,6 +7,7 @@
 
 #include <logging/timer.h>
 #include <netaddress.h>
+#include <netgroup.h>
 #include <protocol.h>
 #include <serialize.h>
 #include <sync.h>
@@ -21,6 +22,8 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+struct AddressPosition;
 
 /** Total number of buckets for tried addresses */
 inline constexpr int32_t ADDRMAN_TRIED_BUCKET_COUNT_LOG2{8};

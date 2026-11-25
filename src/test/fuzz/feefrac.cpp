@@ -5,16 +5,17 @@
 #include <util/feefrac.h>
 
 #include <arith_uint256.h>
+#include <consensus/amount.h>
 #include <policy/feerate.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
-#include <test/fuzz/util.h>
 #include <util/check.h>
 
 #include <cmath>
 #include <compare>
 #include <cstdint>
-#include <iostream>
+#include <limits>
+#include <utility>
 
 namespace {
 

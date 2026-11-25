@@ -5,12 +5,20 @@
 #include <util/vecdeque.h>
 
 #include <random.h>
-#include <span.h>
-#include <test/fuzz/util.h>
+#include <test/fuzz/FuzzedDataProvider.h>
+#include <test/fuzz/fuzz.h>
 #include <util/check.h>
 
+#include <algorithm>
+#include <compare>
 #include <cstdint>
 #include <deque>
+#include <map>
+#include <optional>
+#include <span>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace {
 

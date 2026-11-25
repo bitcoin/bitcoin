@@ -3,29 +3,32 @@
 // file COPYING or https://opensource.org/license/mit.
 
 #include <blockencodings.h>
-#include <consensus/merkle.h>
-#include <consensus/validation.h>
+#include <kernel/cs_main.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/mempool.h>
 #include <test/fuzz/util/reachability.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
+#include <uint256.h>
 #include <util/check.h>
-#include <util/time.h>
 #include <util/translation.h>
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <optional>
 #include <set>
+#include <utility>
 #include <vector>
 
 namespace {

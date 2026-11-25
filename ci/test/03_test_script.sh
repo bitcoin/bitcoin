@@ -248,7 +248,7 @@ if [[ "${RUN_IWYU}" == true ]]; then
   IWYU_SRC_REGEX="$(IFS='|'; echo "${IWYU_SRC_FILES[*]//./\\.}")"
   # FILES_WITH_ENFORCED_IWYU represents source files where IWYU warnings are treated as errors.
   # TODO: Consider enforcing IWYU across the entire codebase.
-  FILES_WITH_ENFORCED_IWYU="/src/(((bench|common|consensus|crypto|index|init|kernel|primitives|rpc|script|univalue/(lib|test)|util|zmq)/.*|node/(block_template_manager|blockstorage|eviction|interfaces|miner|mining_args|utxo_snapshot)|test/fuzz/(kitchen_sink|minisketch|parse_univalue))\.cpp|${IWYU_SRC_REGEX})"
+  FILES_WITH_ENFORCED_IWYU="/src/(((bench|common|consensus|crypto|index|init|kernel|primitives|rpc|script|test/fuzz|test/fuzz/util|univalue/(lib|test)|util|zmq)/.*|node/(block_template_manager|blockstorage|eviction|interfaces|miner|mining_args|utxo_snapshot)|test/fuzz/(kitchen_sink|minisketch|parse_univalue))\.cpp|${IWYU_SRC_REGEX})"
   jq --arg patterns "$FILES_WITH_ENFORCED_IWYU" 'map(select(.file | test($patterns)))' "${BASE_BUILD_DIR}/compile_commands.json" > "${BASE_BUILD_DIR}/compile_commands_iwyu_errors.json"
   jq --arg patterns "$FILES_WITH_ENFORCED_IWYU" 'map(select(.file | test($patterns) | not))' "${BASE_BUILD_DIR}/compile_commands.json" > "${BASE_BUILD_DIR}/compile_commands_iwyu_warnings.json"
 
@@ -268,6 +268,7 @@ if [[ "${RUN_IWYU}" == true ]]; then
              -Xiwyu --check_also='*/interfaces/*\.h' \
              -Xiwyu --check_also='*/primitives/transaction_identifier\.h' \
              -Xiwyu --check_also='*/rpc/protocol\.h' \
+             -Xiwyu --check_also='*/test/fuzz/util/wallet\.h' \
              2>&1 | tee /tmp/iwyu_ci.out
     python3 "/include-what-you-use/fix_includes.py" --nosafe_headers < /tmp/iwyu_ci.out
     # Undo edits to subtree headers. Subtree sources are filtered out of the

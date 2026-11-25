@@ -8,22 +8,26 @@
 #define BITCOIN_KEY_H
 
 #include <attributes.h>
+#include <crypto/sha256.h>
+#include <hash.h>
 #include <pubkey.h>
 #include <script/keyorigin.h>
 #include <serialize.h>
+#include <span.h>
 #include <support/allocators/secure.h>
-#include <support/cleanse.h>
-#include <uint256.h>
+#include <util/check.h>
 
 #include <array>
-#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
 #include <optional>
 #include <span>
-#include <stdexcept>
 #include <utility>
 #include <vector>
 
-struct secp256k1_context_struct;
+class uint256;
+
 typedef struct secp256k1_context_struct secp256k1_context;
 struct secp256k1_keypair;
 

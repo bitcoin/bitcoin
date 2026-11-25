@@ -10,29 +10,35 @@
 #include <coins.h>
 #include <compat/compat.h>
 #include <consensus/amount.h>
-#include <consensus/consensus.h>
+#include <kernel/chainparams.h>
 #include <key.h>
-#include <merkleblock.h>
 #include <pow.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
-#include <test/fuzz/fuzz.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/time.h>
 #include <validation.h>
 
 #include <algorithm>
 #include <array>
+#include <cerrno>
+#include <compare>
 #include <cstdint>
 #include <cstdio>
+#include <ios>
+#include <iterator>
+#include <limits>
+#include <map>
 #include <optional>
+#include <span>
 #include <string>
+#include <type_traits>
 #include <vector>
-
-class PeerManager;
 
 template <typename... Callables>
 size_t CallOneOf(FuzzedDataProvider& fuzzed_data_provider, Callables... callables)

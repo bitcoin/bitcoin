@@ -2,20 +2,28 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <pow.h>
+
+#include <arith_uint256.h>
 #include <chain.h>
 #include <chainparams.h>
-#include <pow.h>
+#include <consensus/params.h>
 #include <primitives/block.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <uint256.h>
 #include <util/chaintype.h>
 #include <util/check.h>
 #include <util/overflow.h>
 
+#include <compare>
 #include <cstdint>
+#include <functional>
+#include <limits>
+#include <memory>
 #include <optional>
-#include <string>
+#include <utility>
 #include <vector>
 
 void initialize_pow()

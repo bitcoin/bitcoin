@@ -7,10 +7,10 @@
 #include <test/util/random.h>
 #include <util/time.h>
 
+#include <atomic>
+#include <cstdlib>
 #include <iostream>
 #include <memory>
-#include <optional>
-#include <string>
 
 struct CheckGlobalsImpl {
     CheckGlobalsImpl()

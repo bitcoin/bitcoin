@@ -6,8 +6,12 @@
 #include <random.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
+#include <uint256.h>
 #include <util/check.h>
 
+#include <cstddef>
+#include <ios>
+#include <span>
 #include <vector>
 
 FUZZ_TARGET(difference_formatter)

@@ -6,7 +6,6 @@
 #include <key.h>
 #include <pubkey.h>
 #include <random.h>
-#include <span.h>
 
 #include <algorithm>
 #include <array>

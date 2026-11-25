@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <base58.h>
+#include <crypto/hex_base.h>
 #include <key.h>
 #include <key_io.h>
 #include <primitives/block.h>
@@ -10,11 +11,13 @@
 #include <psbt.h>
 #include <rpc/request.h>
 #include <rpc/server.h>
+#include <serialize.h>
 #include <span.h>
 #include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <tinyformat.h>
@@ -22,21 +25,20 @@
 #include <univalue.h>
 #include <util/check.h>
 #include <util/strencodings.h>
-#include <util/string.h>
-#include <util/time.h>
 
 #include <algorithm>
+#include <any>
 #include <cstdint>
 #include <cstdlib>
 #include <exception>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <optional>
-#include <stdexcept>
+#include <span>
+#include <string>
 #include <utility>
 #include <vector>
-
-enum class ChainType;
 
 namespace {
 struct RPCFuzzTestingSetup : public TestingSetup {

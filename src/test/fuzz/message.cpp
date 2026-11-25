@@ -2,20 +2,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <addresstype.h>
 #include <chainparams.h>
 #include <common/signmessage.h>
+#include <key.h>
 #include <key_io.h>
+#include <pubkey.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <util/chaintype.h>
 #include <util/check.h>
-#include <util/strencodings.h>
 
-#include <cstdint>
-#include <iostream>
+#include <functional>
 #include <string>
-#include <vector>
 
 void initialize_message()
 {
