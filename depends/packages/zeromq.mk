@@ -18,6 +18,7 @@ define $(package)_set_vars
   $(package)_config_opts += -DWITH_LIBBSD=OFF -DENABLE_CURVE=OFF -DENABLE_CPACK=OFF
   $(package)_config_opts += -DBUILD_SHARED=OFF -DBUILD_TESTS=OFF -DZMQ_BUILD_TESTS=OFF
   $(package)_config_opts += -DENABLE_DRAFTS=OFF -DZMQ_BUILD_TESTS=OFF
+  $(package)_config_opts += -DZMQ_HAVE_SO_PEERCRED=OFF -DZMQ_HAVE_LOCAL_PEERCRED=OFF
   $(package)_cxxflags += -fdebug-prefix-map=$($(package)_extract_dir)=/usr -fmacro-prefix-map=$($(package)_extract_dir)=/usr
   $(package)_config_opts_mingw32 += -DZMQ_WIN32_WINNT=0x0A00 -DZMQ_HAVE_IPC=OFF
 endef
