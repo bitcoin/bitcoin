@@ -722,6 +722,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket_legacy)
 // 101.6.0.0/16 AS6
 // 101.7.0.0/16 AS7
 // 101.8.0.0/16 AS8
+// If a change to the AS group encoding alters the expected buckets, bump ASMAP_GROUPING_REVISION in netgroup.cpp
 BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
 {
     auto ngm_asmap{NetGroupManager::WithEmbeddedAsmap(test::data::asmap)};
@@ -737,7 +738,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
     uint256 nKey1 = (HashWriter{} << 1).GetHash();
     uint256 nKey2 = (HashWriter{} << 2).GetHash();
 
-    BOOST_CHECK_EQUAL(info1.GetTriedBucket(nKey1, ngm_asmap), 236);
+    BOOST_CHECK_EQUAL(info1.GetTriedBucket(nKey1, ngm_asmap), 186);
 
     // Test: Make sure key actually randomizes bucket placement. A fail on
     //  this test could be a security issue.
@@ -790,8 +791,8 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
     uint256 nKey2 = (HashWriter{} << 2).GetHash();
 
     // Test: Make sure the buckets are what we expect
-    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, ngm_asmap), 795);
-    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, source1, ngm_asmap), 795);
+    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, ngm_asmap), 457);
+    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, source1, ngm_asmap), 457);
 
     // Test: Make sure key actually randomizes bucket placement. A fail on
     //  this test could be a security issue.
@@ -867,8 +868,8 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
     CNetAddr default_source;
 
     const auto mapped_tag{netgroupman.GetGroup(addr).at(0)};
-    BOOST_CHECK_LT(mapped_tag, NET_MAX); // TODO: Give AS numbers a tag outside the network classes
-    BOOST_CHECK_EQUAL(mapped_tag, netgroupman.GetGroup(ResolveIP("2001:2001::1")).at(0)); // TODO: Give mapped AS numbers a distinct tag from IPv6 prefixes
+    BOOST_CHECK_GE(mapped_tag, NET_MAX);
+    BOOST_CHECK_NE(mapped_tag, netgroupman.GetGroup(ResolveIP("2001:2001::1")).at(0));
     addrman_asmap1->Add({addr}, default_source);
 
     stream << *addrman_asmap1;
@@ -908,7 +909,7 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
         return restored.GetEntries(/*from_tried=*/false).at(0).second;
     }};
     BOOST_CHECK_EQUAL(load_position(bucketing_version), addr_pos3);
-    BOOST_CHECK_EQUAL(load_position(netgroupman.GetAsmapVersion()), addr_pos3); // TODO: Rebucket entries stored with the legacy ASMap version
+    BOOST_CHECK_EQUAL(load_position(netgroupman.GetAsmapVersion()), addr_pos2);
 
     stream >> *addrman_asmap1;
 
