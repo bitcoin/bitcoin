@@ -71,7 +71,7 @@ class AsmapTest(BitcoinTestFramework):
 
         for arg, expected_file in [
             ('-asmap=./1', numeric_file),
-            (f'-asmap={dated_file.name}', None),  # TODO: Load the dated file from disk
+            (f'-asmap={dated_file.name}', dated_file),
             ('-asmap', None),
             ('-asmap=1', None),
         ]:
