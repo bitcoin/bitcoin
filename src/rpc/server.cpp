@@ -249,6 +249,7 @@ static RPCMethod getrpcinfo()
 
 namespace {
 UniValue OpenRPCArgSchema(const RPCArg& arg, bool include_hidden, bool in_skip_type_check);
+UniValue OpenRPCTypeSchema(const RPCArg& arg, RPCArg::Type type, bool include_hidden, bool in_skip_type_check);
 UniValue OpenRPCResultSchema(const RPCResult& result);
 
 UniValue MakeObject(std::initializer_list<std::pair<std::string, UniValue>> entries)
@@ -355,7 +356,31 @@ UniValue OpenRPCArgSchema(const RPCArg& arg, bool include_hidden, bool in_skip_t
         return schema;
     }
 
-    switch (arg.m_type) {
+    if (arg.m_type_per_name.size() > 1) {
+        // Accept the type declared for any of the argument's names
+        UniValue one_of{UniValue::VARR};
+        std::unordered_set<std::string> seen;
+        for (const RPCArg::Type type : arg.m_type_per_name) {
+            PushUniqueSchema(one_of, seen, OpenRPCTypeSchema(arg, type, include_hidden, in_skip_type_check));
+        }
+        if (one_of.size() == 1) {
+            schema = one_of[0];
+        } else {
+            schema.pushKV("oneOf", std::move(one_of));
+        }
+    } else {
+        schema = OpenRPCTypeSchema(arg, arg.m_type, include_hidden, in_skip_type_check);
+    }
+    ApplyTypeStrOverride(schema, arg);
+    ApplyArgFallback(schema, arg);
+    return schema;
+}
+
+// NOLINTNEXTLINE(misc-no-recursion)
+UniValue OpenRPCTypeSchema(const RPCArg& arg, RPCArg::Type type, bool include_hidden, bool in_skip_type_check)
+{
+    UniValue schema{UniValue::VOBJ};
+    switch (type) {
     case RPCArg::Type::STR:
         schema = MakeObject({{"type", "string"}});
         break;
@@ -429,8 +454,6 @@ UniValue OpenRPCArgSchema(const RPCArg& arg, bool include_hidden, bool in_skip_t
         break;
     }
     } // no default case, so the compiler can warn about missing cases
-    ApplyTypeStrOverride(schema, arg);
-    ApplyArgFallback(schema, arg);
     return schema;
 }
 

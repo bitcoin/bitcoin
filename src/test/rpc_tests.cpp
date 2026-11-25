@@ -15,6 +15,7 @@
 #include <univalue.h>
 #include <util/time.h>
 
+#include <algorithm>
 #include <any>
 #include <string_view>
 
@@ -709,6 +710,34 @@ BOOST_AUTO_TEST_CASE(rpc_arg_type_per_name)
     BOOST_CHECK_THROW((RPCArg{"options", {RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Type::BOOL}, RPCArg::Optional::OMITTED, ""}), NonFatalCheckError);
     // An object of named options has to be the first type.
     BOOST_CHECK_THROW((RPCArg{"flag|options", {RPCArg::Type::BOOL, RPCArg::Type::OBJ_NAMED_PARAMS}, RPCArg::Optional::OMITTED, ""}), NonFatalCheckError);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_openrpc_type_per_name)
+{
+    CRPCTable table;
+    CRPCCommand command{"test", []() -> RPCMethod {
+        return RPCMethod{
+            "typepername",
+            "Test RPC method.",
+            {
+                {"options|flag", {RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Type::BOOL}, RPCArg::Optional::OMITTED, "",
+                    {
+                        {"flag", RPCArg::Type::BOOL, RPCArg::Default{true}, "", RPCArgOptions{.also_positional = true}},
+                    }},
+            },
+            RPCResult{RPCResult::Type::NONE, "", ""},
+            RPCExamples{""},
+            [](const RPCMethod&, const JSONRPCRequest&) -> UniValue { return UniValue{}; },
+        };
+    }};
+    table.appendCommand(command.name, &command);
+
+    // The schema of an argument with a type per name accepts each of them.
+    const UniValue doc{table.buildOpenRPCDoc()};
+    const auto& methods{doc["methods"].getValues()};
+    const auto method{std::ranges::find_if(methods, [](const UniValue& m) { return m["name"].get_str() == "typepername"; })};
+    BOOST_REQUIRE(method != methods.end());
+    BOOST_CHECK_EQUAL((*method)["params"][0].write(), R"({"name":"options","required":false,"schema":{"oneOf":[{"type":"object","properties":{"flag":{"type":"boolean","default":true,"x-bitcoin-also-positional":true}},"additionalProperties":false},{"type":"boolean"}]},"x-bitcoin-aliases":["flag"]})");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
