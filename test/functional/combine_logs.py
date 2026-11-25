@@ -16,7 +16,6 @@ import itertools
 import os
 import pathlib
 import re
-from string import Template
 import sys
 import tempfile
 
@@ -32,7 +31,7 @@ TIMESTAMP_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{6})?Z
 LogEvent = namedtuple('LogEvent', ['timestamp', 'source', 'event'])
 
 def main():
-    """Main function. Parses args, reads the log files and renders them as text or html."""
+    """Main function. Parses args, reads the log files and renders them as text."""
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument(
@@ -40,12 +39,7 @@ def main():
         help=('temporary test directory to combine logs from. '
               'Defaults to the most recent'))
     parser.add_argument('-c', '--color', dest='color', action='store_true', help='outputs the combined log with events colored by source (requires posix terminal colors. Use less -r for viewing)')
-    parser.add_argument('--html', dest='html', action='store_true', help='outputs the combined log as html')
     args = parser.parse_args()
-
-    if args.html and args.color:
-        print("Only one out of --color or --html should be specified")
-        sys.exit(1)
 
     testdir = args.testdir or find_latest_test_dir()
 
@@ -67,11 +61,8 @@ def main():
 
     log_events = read_logs(testdir)
 
-    if args.html:
-        print_logs_html(log_events)
-    else:
-        print_logs_plain(log_events, colors)
-        print_node_warnings(testdir, colors)
+    print_logs_plain(log_events, colors)
+    print_node_warnings(testdir, colors)
 
 
 def read_logs(tmp_dir):
@@ -186,13 +177,6 @@ def print_logs_plain(log_events, colors):
         if len(lines) > 1:
             for line in lines[1:]:
                 print("{0}{1}{2}".format(colors[event.source.rstrip()], line, colors["reset"]))
-
-
-def print_logs_html(log_events):
-    """Renders the iterator of log events into html."""
-    template = Template(pathlib.Path(__file__).with_name('combined_log_template.html').read_text())
-    items = [f'<li class="log-{e.source}"> {e.source} {e.timestamp} {e.event}</li>' for e in log_events]
-    print(template.substitute(title="Combined Logs from testcase", log_events="\n".join(items)))
 
 
 if __name__ == '__main__':
