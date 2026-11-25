@@ -195,6 +195,17 @@ def try_rpc(code, message, fun, *args, **kwds):
         return False
 
 
+def assert_rpc_options_validation(rpc: Callable):
+    """Check common validation behavior for an RPC with an options object.
+
+    `rpc` should be a callable that accepts keyword arguments, typically a
+    lambda which supplies the RPC's required arguments.
+    """
+    assert_raises_rpc_error(-3, "Unexpected key unknown_option", rpc, options={"unknown_option": 1})
+    assert_raises_rpc_error(-8, "Unknown named parameter unknown_option", rpc, unknown_option=1)
+    assert_raises_rpc_error(-3, "type array is not of expected type object", rpc, options=[])
+
+
 def assert_is_hex_string(string):
     try:
         int(string, 16)
