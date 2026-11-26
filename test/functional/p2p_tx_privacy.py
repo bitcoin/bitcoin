@@ -20,6 +20,7 @@ if it was received after spy's version handshake completed.
 5. tx_originator sends tx2
 6. We check that only tx2 is announced on the spy interface
 """
+import time
 from test_framework.messages import (
     msg_wtxidrelay,
     msg_verack,
@@ -54,6 +55,7 @@ class TxPrivacyTest(BitcoinTestFramework):
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
 
+        self.nodes[0].setmocktime(int(time.time()))
         tx_originator = self.nodes[0].add_p2p_connection(P2PInterface())
         spy = self.nodes[0].add_p2p_connection(P2PTxSpy(), wait_for_verack=False)
         spy.wait_for_verack()
@@ -68,6 +70,11 @@ class TxPrivacyTest(BitcoinTestFramework):
         # tx_originator sends tx2
         tx2 = self.wallet.create_self_transfer()["tx"]
         tx_originator.send_and_ping(msg_tx(tx2))
+        
+        # The announcement is after a random delay before the node sends it
+        # This delay has no upper bound
+        # 3600 is chosen to be far beyond any realistic draw but not beyond every possible one
+        self.nodes[0].bumpmocktime(3600)
 
         # Spy should only get an inv for the second transaction as the first
         # one was received pre-verack with the spy
