@@ -26,7 +26,7 @@
 #include <wallet/fees.h>
 #include <wallet/imports.h>
 #include <wallet/load.h>
-#include <wallet/migration.h>
+#include <wallet/legacy/migration.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/wallet.h>
 #include <wallet/spend.h>
@@ -624,7 +624,7 @@ public:
     }
     util::Result<WalletMigrationResult> migrateWallet(const std::string& name, const SecureString& passphrase, bool load_wallet) override
     {
-        auto res = wallet::MigrateLegacyToDescriptor(name, passphrase, m_context, load_wallet);
+        auto res = wallet::legacy_migration::MigrateLegacyToDescriptor(name, passphrase, m_context, load_wallet);
         if (!res) return util::Error{util::ErrorString(res)};
         WalletMigrationResult out{
             .wallet = MakeWallet(m_context, res->wallet),

@@ -12,7 +12,7 @@
 #include <util/translation.h>
 #include <wallet/db.h>
 #include <wallet/dump.h>
-#include <wallet/legacybdb.h>
+#include <wallet/legacy/bdbro.h>
 
 #include <fstream>
 #include <iostream>
@@ -50,7 +50,7 @@ FUZZ_TARGET(wallet_bdb_parser, .init = initialize_wallet_bdb_parser)
     }
     g_setup->m_args.ForceSetArg("-dumpfile", fs::PathToString(bdb_ro_dumpfile));
 
-    auto db{MakeBerkeleyRODatabase(wallet_path, options, status, error)};
+    auto db{wallet::legacy_migration::MakeBerkeleyRODatabase(wallet_path, options, status, error)};
     if (db) {
         assert(DumpWallet(g_setup->m_args, *db, error));
     } else {

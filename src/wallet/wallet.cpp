@@ -435,9 +435,9 @@ std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& b
 
 CWallet::CWallet(interfaces::Chain* chain, const std::string& name, std::unique_ptr<WalletDatabase> database)
     : m_chain(chain),
+      m_scanner(std::make_unique<ChainScanner>(*this)),
       m_name(name),
-      m_database(std::move(database)),
-      m_scanner(std::make_unique<ChainScanner>(*this))
+      m_database(std::move(database))
 {
 }
 
@@ -853,63 +853,6 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
     NotifyStatusChanged(this);
 
     return true;
-}
-
-DBErrors CWallet::ReorderTransactions()
-{
-    LOCK(cs_wallet);
-    WalletBatch batch(GetDatabase());
-
-    // Old wallets didn't have any defined order for transactions
-    // Probably a bad idea to change the output of this
-
-    // First: get all CWalletTx into a sorted-by-time multimap.
-    typedef std::multimap<int64_t, CWalletTx*> TxItems;
-    TxItems txByTime;
-
-    for (auto& entry : mapWallet)
-    {
-        CWalletTx* wtx = &entry.second;
-        txByTime.insert(std::make_pair(wtx->nTimeReceived, wtx));
-    }
-
-    nOrderPosNext = 0;
-    std::vector<int64_t> nOrderPosOffsets;
-    for (TxItems::iterator it = txByTime.begin(); it != txByTime.end(); ++it)
-    {
-        CWalletTx *const pwtx = (*it).second;
-        int64_t& nOrderPos = pwtx->nOrderPos;
-
-        if (nOrderPos == -1)
-        {
-            nOrderPos = nOrderPosNext++;
-            nOrderPosOffsets.push_back(nOrderPos);
-
-            if (!batch.WriteTxMetadata(*pwtx))
-                return DBErrors::LOAD_FAIL;
-        }
-        else
-        {
-            int64_t nOrderPosOff = 0;
-            for (const int64_t& nOffsetStart : nOrderPosOffsets)
-            {
-                if (nOrderPos >= nOffsetStart)
-                    ++nOrderPosOff;
-            }
-            nOrderPos += nOrderPosOff;
-            nOrderPosNext = std::max(nOrderPosNext, nOrderPos + 1);
-
-            if (!nOrderPosOff)
-                continue;
-
-            // Since we're changing the order, write it back
-            if (!batch.WriteTxMetadata(*pwtx))
-                return DBErrors::LOAD_FAIL;
-        }
-    }
-    batch.WriteOrderPosNext(nOrderPosNext);
-
-    return DBErrors::LOAD_OK;
 }
 
 int64_t CWallet::IncOrderPosNext(WalletBatch* batch)
@@ -2185,67 +2128,6 @@ DBErrors CWallet::PopulateWalletFromDB(bilingual_str& error, std::vector<bilingu
         break;
     } // no default case, so the compiler can warn about missing cases
     return nLoadWalletRet;
-}
-
-util::Result<void> CWallet::RemoveTxs(std::vector<Txid>& txs_to_remove)
-{
-    AssertLockHeld(cs_wallet);
-    bilingual_str str_err;  // future: make RunWithinTxn return a util::Result
-    bool was_txn_committed = RunWithinTxn(GetDatabase(), /*process_desc=*/"remove transactions", [&](WalletBatch& batch) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
-        util::Result<void> result{RemoveTxs(batch, txs_to_remove)};
-        if (!result) str_err = util::ErrorString(result);
-        return result.has_value();
-    });
-    if (!str_err.empty()) return util::Error{str_err};
-    if (!was_txn_committed) return util::Error{_("Error starting/committing db txn for wallet transactions removal process")};
-    return {}; // all good
-}
-
-util::Result<void> CWallet::RemoveTxs(WalletBatch& batch, std::vector<Txid>& txs_to_remove)
-{
-    AssertLockHeld(cs_wallet);
-    if (!batch.HasActiveTxn()) return util::Error{strprintf(_("The transactions removal process can only be executed within a db txn"))};
-
-    // Check for transaction existence and remove entries from disk
-    std::vector<decltype(mapWallet)::const_iterator> erased_txs;
-    bilingual_str str_err;
-    for (const Txid& hash : txs_to_remove) {
-        auto it_wtx = mapWallet.find(hash);
-        if (it_wtx == mapWallet.end()) {
-            return util::Error{strprintf(_("Transaction %s does not belong to this wallet"), hash.GetHex())};
-        }
-        if (!batch.EraseTx(hash)) {
-            return util::Error{strprintf(_("Failure removing transaction: %s"), hash.GetHex())};
-        }
-        erased_txs.emplace_back(it_wtx);
-    }
-
-    // Register callback to update the memory state only when the db txn is actually dumped to disk
-    batch.RegisterTxnListener({.on_commit=[&, erased_txs]() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
-        // Update the in-memory state and notify upper layers about the removals
-        for (const auto& it : erased_txs) {
-            const Txid hash{it->first};
-            wtxOrdered.erase(it->second.m_it_wtxOrdered);
-            for (const auto& txin : it->second.GetTx()->vin) {
-                auto range = mapTxSpends.equal_range(txin.prevout);
-                for (auto iter = range.first; iter != range.second; ++iter) {
-                    if (iter->second == hash) {
-                        mapTxSpends.erase(iter);
-                        break;
-                    }
-                }
-            }
-            for (unsigned int i = 0; i < it->second.GetTx()->vout.size(); ++i) {
-                m_txos.erase(COutPoint(hash, i));
-            }
-            mapWallet.erase(it);
-            NotifyTransactionChanged(hash, CT_DELETED);
-        }
-
-        MarkDirty();
-    }, .on_abort={}});
-
-    return {};
 }
 
 void CWallet::ClearInMemoryTxStateForTest()

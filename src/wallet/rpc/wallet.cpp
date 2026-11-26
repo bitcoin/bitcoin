@@ -18,7 +18,7 @@
 #include <util/translation.h>
 #include <wallet/context.h>
 #include <wallet/export.h>
-#include <wallet/migration.h>
+#include <wallet/legacy/migration.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/util.h>
 #include <wallet/scan.h>
@@ -632,7 +632,7 @@ static RPCMethod migratewallet()
             const bool loadwallet = self.Arg<bool>("load_wallet");
 
             WalletContext& context = EnsureWalletContext(request.context);
-            util::Result<MigrationResult> res = MigrateLegacyToDescriptor(wallet_name, wallet_pass, context, loadwallet);
+            util::Result<legacy_migration::MigrationResult> res = legacy_migration::MigrateLegacyToDescriptor(wallet_name, wallet_pass, context, loadwallet);
             if (!res) {
                 throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(res).original);
             }

@@ -9,7 +9,7 @@
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/translation.h>
-#include <wallet/legacybdb.h>
+#include <wallet/legacy/bdbro.h>
 #include <wallet/sqlite.h>
 #include <wallet/test/util.h>
 #include <wallet/walletutil.h>
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(erase_prefix)
     auto make_key = [](std::string type, std::string id) { return std::make_pair(type, id); };
 
     for (const auto& database : TestDatabases(m_path_root)) {
-        if (dynamic_cast<BerkeleyRODatabase*>(database.get())) {
+        if (dynamic_cast<legacy_migration::BerkeleyRODatabase*>(database.get())) {
             // Skip this test if BerkeleyRO
             continue;
         }
