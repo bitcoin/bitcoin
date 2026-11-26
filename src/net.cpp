@@ -358,7 +358,7 @@ bool IsLocal(const CService& addr)
 bool CConnman::AlreadyConnectedToHost(std::string_view host) const
 {
     LOCK(m_nodes_mutex);
-    return std::ranges::any_of(m_nodes, [&host](CNode* node) { return node->m_addr_name == host; });
+    return std::ranges::contains(m_nodes, host, &CNode::m_addr_name);
 }
 
 bool CConnman::AlreadyConnectedToAddressPort(const CService& addr_port) const
@@ -1809,7 +1809,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
 
     int nInbound = 0;
 
-    const bool inbound_onion = std::find(m_onion_binds.begin(), m_onion_binds.end(), addr_bind) != m_onion_binds.end();
+    const bool inbound_onion = std::ranges::contains(m_onion_binds, addr_bind);
 
     // Tor inbound connections do not reveal the peer's actual network address.
     // Therefore do not apply address-based whitelist permissions to them.

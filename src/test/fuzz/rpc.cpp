@@ -367,8 +367,8 @@ void initialize_rpc()
     rpc_testing_setup = InitializeRPCFuzzTestingSetup();
     const std::vector<std::string> supported_rpc_commands = rpc_testing_setup->GetRPCCommands();
     for (const std::string& rpc_command : supported_rpc_commands) {
-        const bool safe_for_fuzzing = std::find(RPC_COMMANDS_SAFE_FOR_FUZZING.begin(), RPC_COMMANDS_SAFE_FOR_FUZZING.end(), rpc_command) != RPC_COMMANDS_SAFE_FOR_FUZZING.end();
-        const bool not_safe_for_fuzzing = std::find(RPC_COMMANDS_NOT_SAFE_FOR_FUZZING.begin(), RPC_COMMANDS_NOT_SAFE_FOR_FUZZING.end(), rpc_command) != RPC_COMMANDS_NOT_SAFE_FOR_FUZZING.end();
+        const bool safe_for_fuzzing = std::ranges::contains(RPC_COMMANDS_SAFE_FOR_FUZZING, rpc_command);
+        const bool not_safe_for_fuzzing = std::ranges::contains(RPC_COMMANDS_NOT_SAFE_FOR_FUZZING, rpc_command);
         if (!(safe_for_fuzzing || not_safe_for_fuzzing)) {
             std::cerr << "Error: RPC command \"" << rpc_command << "\" not found in RPC_COMMANDS_SAFE_FOR_FUZZING or RPC_COMMANDS_NOT_SAFE_FOR_FUZZING. Please update " << __FILE__ << ".\n";
             std::terminate();
@@ -394,7 +394,7 @@ FUZZ_TARGET(rpc, .init = initialize_rpc)
     if (!g_limit_to_rpc_command.empty() && rpc_command != g_limit_to_rpc_command) {
         return;
     }
-    const bool safe_for_fuzzing = std::find(RPC_COMMANDS_SAFE_FOR_FUZZING.begin(), RPC_COMMANDS_SAFE_FOR_FUZZING.end(), rpc_command) != RPC_COMMANDS_SAFE_FOR_FUZZING.end();
+    const bool safe_for_fuzzing = std::ranges::contains(RPC_COMMANDS_SAFE_FOR_FUZZING, rpc_command);
     if (!safe_for_fuzzing) {
         return;
     }

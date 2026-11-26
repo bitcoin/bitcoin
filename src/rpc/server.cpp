@@ -716,7 +716,7 @@ bool IsDeprecatedRPCEnabled(const std::string& method)
 {
     const std::vector<std::string> enabled_methods = gArgs.GetArgs("-deprecatedrpc");
 
-    return find(enabled_methods.begin(), enabled_methods.end(), method) != enabled_methods.end();
+    return std::ranges::contains(enabled_methods, method);
 }
 
 UniValue JSONRPCExec(const JSONRPCRequest& jreq, bool catch_errors)

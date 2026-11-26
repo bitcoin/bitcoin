@@ -90,7 +90,7 @@ FUZZ_TARGET(mini_miner, .init = initialize_miner)
             // Add some random outpoint (will be interpreted as confirmed or not yet submitted
             // to mempool).
             auto outpoint = ConsumeDeserializable<COutPoint>(fuzzed_data_provider);
-            if (outpoint.has_value() && std::find(outpoints.begin(), outpoints.end(), *outpoint) == outpoints.end()) {
+            if (outpoint.has_value() && !std::ranges::contains(outpoints, *outpoint)) {
                 outpoints.push_back(*outpoint);
             }
         }

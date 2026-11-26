@@ -132,7 +132,7 @@ std::vector<uint8_t> MutableTransactionSignatureCreator::CreateMuSig2Nonce(const
     auto it = sigdata.musig2_pubkeys.find(aggregate_pubkey);
     if (it == sigdata.musig2_pubkeys.end()) return {};
     const std::vector<CPubKey>& pubkeys = it->second;
-    if (std::find(pubkeys.begin(), pubkeys.end(), part_pubkey) == pubkeys.end()) return {};
+    if (!std::ranges::contains(pubkeys, part_pubkey)) return {};
 
     // Compute sighash
     std::optional<uint256> sighash = ComputeSchnorrSignatureHash(leaf_hash, sigversion);
@@ -160,7 +160,7 @@ bool MutableTransactionSignatureCreator::CreateMuSig2PartialSig(const SigningPro
     auto it = sigdata.musig2_pubkeys.find(aggregate_pubkey);
     if (it == sigdata.musig2_pubkeys.end()) return false;
     const std::vector<CPubKey>& pubkeys = it->second;
-    if (std::find(pubkeys.begin(), pubkeys.end(), part_pubkey) == pubkeys.end()) return {};
+    if (!std::ranges::contains(pubkeys, part_pubkey)) return {};
 
     // Retrieve pubnonces
     auto this_leaf_aggkey = std::make_pair(script_pubkey, leaf_hash ? *leaf_hash : uint256());

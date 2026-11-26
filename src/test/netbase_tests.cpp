@@ -15,8 +15,9 @@
 #include <util/strencodings.h>
 #include <util/translation.h>
 
-#include <string>
+#include <algorithm>
 #include <numeric>
+#include <string>
 
 #include <boost/test/unit_test.hpp>
 
@@ -477,13 +478,13 @@ BOOST_AUTO_TEST_CASE(netpermissions_test)
 
     const auto strings = NetPermissions::ToStrings(NetPermissionFlags::All);
     BOOST_CHECK_EQUAL(strings.size(), 7U);
-    BOOST_CHECK(std::find(strings.begin(), strings.end(), "bloomfilter") != strings.end());
-    BOOST_CHECK(std::find(strings.begin(), strings.end(), "forcerelay") != strings.end());
-    BOOST_CHECK(std::find(strings.begin(), strings.end(), "relay") != strings.end());
-    BOOST_CHECK(std::find(strings.begin(), strings.end(), "noban") != strings.end());
-    BOOST_CHECK(std::find(strings.begin(), strings.end(), "mempool") != strings.end());
-    BOOST_CHECK(std::find(strings.begin(), strings.end(), "download") != strings.end());
-    BOOST_CHECK(std::find(strings.begin(), strings.end(), "addr") != strings.end());
+    BOOST_CHECK(std::ranges::contains(strings, "bloomfilter"));
+    BOOST_CHECK(std::ranges::contains(strings, "forcerelay"));
+    BOOST_CHECK(std::ranges::contains(strings, "relay"));
+    BOOST_CHECK(std::ranges::contains(strings, "noban"));
+    BOOST_CHECK(std::ranges::contains(strings, "mempool"));
+    BOOST_CHECK(std::ranges::contains(strings, "download"));
+    BOOST_CHECK(std::ranges::contains(strings, "addr"));
 }
 
 BOOST_AUTO_TEST_CASE(netbase_dont_resolve_strings_with_embedded_nul_characters)
