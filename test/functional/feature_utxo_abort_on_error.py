@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) The Bitcoin Core developers
-# Distributed under the MIT software license.
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or https://opensource.org/license/mit.
 
 """
 Ensures that UTXO unserialization errors abort the node, and does not

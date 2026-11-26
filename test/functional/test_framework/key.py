@@ -1,6 +1,7 @@
 # Copyright (c) 2019-2020 Pieter Wuille
+# Copyright (c) The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file COPYING or https://opensource.org/license/mit/.
 """Test-only secp256k1 elliptic curve protocols implementation
 
 WARNING: This code is slow, uses bad randomness, does not properly protect

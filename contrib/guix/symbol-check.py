@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014 Wladimir J. van der Laan
+# Copyright (c) The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file COPYING or https://opensource.org/license/mit/.
 '''
 A script to check that release executables only contain certain symbols
 and are only linked against allowed libraries.

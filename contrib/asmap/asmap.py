@@ -1,6 +1,8 @@
+#!/usr/bin/env python3
 # Copyright (c) 2022 Pieter Wuille
+# Copyright (c) The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
-# file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+# file COPYING or https://opensource.org/license/mit/.
 
 """
 This module provides the ASNEntry and ASMap classes.

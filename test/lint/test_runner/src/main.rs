@@ -17,7 +17,7 @@ use lint_cpp::{
     lint_assert_falsy, lint_boost_assert, lint_includes_build_config, lint_remove_all,
     lint_rpc_assert, lint_std_filesystem,
 };
-use lint_docs::{lint_doc_args, lint_doc_release_note_snippets, lint_markdown};
+use lint_docs::{lint_copyright_doc, lint_doc_args, lint_doc_release_note_snippets, lint_markdown};
 use lint_py::{lint_py_lint, lint_rmtree};
 use lint_repo_hygiene::{lint_scripted_diff, lint_subtree};
 use lint_text_format::{
@@ -33,6 +33,11 @@ struct Linter {
 
 fn get_linter_list() -> Vec<&'static Linter> {
     vec![
+        &Linter {
+            description: "Check that files contain the copyright header.",
+            name: "copyright_doc",
+            lint_fn: lint_copyright_doc,
+        },
         &Linter {
             description: "Check that all command line arguments are documented.",
             name: "doc",
