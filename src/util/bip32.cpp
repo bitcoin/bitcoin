@@ -16,7 +16,7 @@
 
 util::Expected<KeyPathElement, std::string> ParseKeyPathElement(std::span<const char> elem)
 {
-    const std::string_view raw{elem.begin(), elem.end()};
+    const std::string_view raw{elem};
     if (elem.empty()) {
         return util::Unexpected{strprintf("Key path value '%s' is not valid", raw)};
     }
@@ -28,7 +28,7 @@ util::Expected<KeyPathElement, std::string> ParseKeyPathElement(std::span<const 
         is_hardened = true;
     }
 
-    const auto number{ToIntegral<uint32_t>(std::string_view{elem.begin(), elem.end()})};
+    const auto number{ToIntegral<uint32_t>(std::string_view{elem})};
     if (!number) {
         return util::Unexpected{strprintf("Key path value '%s' is not a valid uint32", raw)};
     }

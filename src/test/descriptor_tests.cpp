@@ -596,7 +596,7 @@ void CheckInferDescriptor(const std::string& script_hex, const std::string& expe
                         hardened = true;
                     }
                 }
-                const uint32_t p{*Assert(ToIntegral<uint32_t>(std::string_view{elem.begin(), elem.end()}))};
+                const uint32_t p{*Assert(ToIntegral<uint32_t>(std::string_view{elem}))};
                 info.path.push_back(p | (((uint32_t)hardened) << 31));
             }
 
