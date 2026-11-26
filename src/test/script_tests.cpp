@@ -15,6 +15,7 @@
 #include <script/signingprovider.h>
 #include <script/solver.h>
 #include <secp256k1.h>
+#include <serialize.h>
 #include <streams.h>
 #include <test/data/bip341_wallet_vectors.json.h>
 #include <test/data/script_tests.json.h>
@@ -31,7 +32,11 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
+#include <cstddef>
 #include <cstdint>
+#include <ios>
+#include <iterator>
 #include <string>
 #include <vector>
 
@@ -383,7 +388,9 @@ public:
     TestBuilder& AsWit()
     {
         assert(havePush);
-        scriptWitness.stack.push_back(push);
+        auto stack = scriptWitness.ToVectors();
+        stack.push_back(push);
+        scriptWitness = CScriptWitness{stack};
         havePush = false;
         return *this;
     }
@@ -392,10 +399,10 @@ public:
     {
         DoPush();
         UniValue array(UniValue::VARR);
-        if (!scriptWitness.stack.empty()) {
+        if (!scriptWitness.empty()) {
             UniValue wit(UniValue::VARR);
-            for (unsigned i = 0; i < scriptWitness.stack.size(); i++) {
-                wit.push_back(HexStr(scriptWitness.stack[i]));
+            for (const auto element : scriptWitness) {
+                wit.push_back(HexStr(element));
             }
             wit.push_back(ValueFromAmount(nValue));
             array.push_back(std::move(wit));
@@ -921,7 +928,7 @@ BOOST_AUTO_TEST_CASE(script_json_test)
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         const UniValue& test = tests[idx];
         std::string strTest = test.write();
-        CScriptWitness witness;
+        std::vector<std::vector<unsigned char>> witness_stack;
         TaprootBuilder taprootBuilder;
         CAmount nValue = 0;
         unsigned int pos = 0;
@@ -934,20 +941,20 @@ BOOST_AUTO_TEST_CASE(script_json_test)
                 static const std::string SCRIPT_FLAG{"#SCRIPT#"};
                 if (element.starts_with(SCRIPT_FLAG)) {
                     CScript script = ParseScript(element.substr(SCRIPT_FLAG.size()));
-                    witness.stack.push_back(ToByteVector(script));
+                    witness_stack.push_back(ToByteVector(script));
                 } else if (element == "#CONTROLBLOCK#") {
                     // Taproot script control block - second from the last element in witness stack
                     // If #CONTROLBLOCK# we auto-generate the control block
-                    taprootBuilder.Add(/*depth=*/0, witness.stack.back(), TAPROOT_LEAF_TAPSCRIPT, /*track=*/true);
+                    taprootBuilder.Add(/*depth=*/0, witness_stack.back(), TAPROOT_LEAF_TAPSCRIPT, /*track=*/true);
                     taprootBuilder.Finalize(XOnlyPubKey(keys.key0.GetPubKey()));
-                    auto controlblocks = taprootBuilder.GetSpendData().scripts[{witness.stack.back(), TAPROOT_LEAF_TAPSCRIPT}];
-                    witness.stack.push_back(*(controlblocks.begin()));
+                    auto controlblocks = taprootBuilder.GetSpendData().scripts[{witness_stack.back(), TAPROOT_LEAF_TAPSCRIPT}];
+                    witness_stack.push_back(*(controlblocks.begin()));
                 } else {
                     const auto witness_value{TryParseHex<unsigned char>(element)};
                     if (!witness_value.has_value()) {
                         BOOST_ERROR("Bad witness in test: " << strTest << " witness is not hex: " << element);
                     }
-                    witness.stack.push_back(witness_value.value());
+                    witness_stack.push_back(witness_value.value());
                 }
             }
             nValue = AmountFromValue(test[pos][i]);
@@ -974,7 +981,7 @@ BOOST_AUTO_TEST_CASE(script_json_test)
         script_verify_flags scriptflags = ParseScriptFlags(test[pos++].get_str());
         int scriptError = ParseScriptError(test[pos++].get_str());
 
-        DoTest(scriptPubKey, scriptSig, witness, scriptflags, strTest, scriptError, nValue);
+        DoTest(scriptPubKey, scriptSig, CScriptWitness{witness_stack}, scriptflags, strTest, scriptError, nValue);
     }
 }
 
@@ -1731,6 +1738,203 @@ BOOST_AUTO_TEST_CASE(formatscriptflags)
     BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_TAPROOT | script_verify_flags::from_int(1u<<27)), "TAPROOT,0x08000000");
     BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_TAPROOT | script_verify_flags::from_int((1u<<28) | (1ull<<58))), "TAPROOT,0x400000010000000");
     BOOST_CHECK_EQUAL(FormatScriptFlags(script_verify_flags::from_int(1u<<26)), "0x04000000");
+}
+
+BOOST_AUTO_TEST_CASE(script_witness_representation)
+{
+    // Witnesses with different stacks are not equal, also when those stacks serialize to the same size.
+    BOOST_CHECK(CScriptWitness{{{0x01}}} != CScriptWitness{{{0x02}}});
+    BOOST_CHECK(CScriptWitness{} != CScriptWitness{{{}}});
+
+    // Element counts and sizes around CompactSize encoding boundaries.
+    static constexpr size_t COUNTS[]{0, 1, 2, 3, 252, 253, 254};
+    static constexpr size_t SIZES[]{0, 1, 32, 252, 253, 65535, 65536};
+    // Every size as the first and as the last element.
+    for (const size_t size : SIZES) {
+        const std::vector<unsigned char> first(size, 0x01);
+        const std::vector<unsigned char> last(size, 0x02);
+        const CScriptWitness witness{{first, {0xff}, last}};
+        BOOST_CHECK(std::ranges::equal(witness.front(), first));
+        BOOST_CHECK(std::ranges::equal(witness.back(), last));
+    }
+    for (const size_t count : COUNTS) {
+        for (int iter = 0; iter < 3; ++iter) {
+            std::vector<std::vector<unsigned char>> stack(count);
+            for (auto& element : stack) {
+                // Mostly small elements, as large ones make big stacks slow.
+                const auto size = m_rng.randrange(8) == 0 ? SIZES[m_rng.randrange(std::size(SIZES))] : m_rng.randrange(40);
+                element = m_rng.randbytes(size);
+            }
+            const CScriptWitness witness{stack};
+
+            BOOST_CHECK(witness.ToVectors() == stack);
+            BOOST_CHECK(CScriptWitness{witness.ToVectors()} == witness);
+            BOOST_CHECK_EQUAL(witness.size(), stack.size());
+            BOOST_CHECK_EQUAL(witness.empty(), stack.empty());
+            BOOST_CHECK_EQUAL(std::distance(witness.begin(), witness.end()), (std::ptrdiff_t)stack.size());
+            if (!stack.empty()) {
+                BOOST_CHECK(std::ranges::equal(witness.front(), stack.front()));
+                BOOST_CHECK(std::ranges::equal(witness.back(), stack.back()));
+                // Postfix increment advances the iterator, and returns where it was.
+                auto it = witness.begin();
+                BOOST_CHECK(std::ranges::equal(*it++, stack.front()));
+                BOOST_CHECK_EQUAL(std::distance(it, witness.end()), (std::ptrdiff_t)stack.size() - 1);
+                for (size_t i = 0; i < stack.size(); ++i) BOOST_CHECK(std::ranges::equal(witness[i], stack[i]));
+            }
+            // Iterating over the witness yields its elements, in order.
+            BOOST_CHECK(std::ranges::equal(witness, stack, [](auto a, const auto& b) { return std::ranges::equal(a, b); }));
+
+            // Serialization matches that of the vector of vectors, in both directions.
+            std::vector<unsigned char> ser_vec, ser_wit;
+            VectorWriter{ser_vec, 0, stack};
+            VectorWriter{ser_wit, 0, witness};
+            BOOST_CHECK(ser_vec == ser_wit);
+            BOOST_CHECK_EQUAL(::GetSerializeSize(witness), ser_vec.size());
+            // Deserialize into a non-empty witness, to check that the stack that was there is replaced.
+            CScriptWitness deser{{{0xff}}};
+            SpanReader{ser_vec} >> deser;
+            BOOST_CHECK(deser == witness);
+            if (!stack.empty()) BOOST_CHECK(std::ranges::equal(deser.back(), stack.back()));
+
+            // Moving leaves the source empty.
+            CScriptWitness moved{std::move(deser)};
+            BOOST_CHECK(moved == witness);
+            BOOST_CHECK(deser.empty() && deser.size() == 0 && deser.begin() == deser.end()); // NOLINT(bugprone-use-after-move)
+
+            // Self-assignment (through a reference, as compilers warn about a literal one) changes nothing.
+            CScriptWitness copy{witness};
+            const auto& alias = copy;
+            copy = alias;
+            BOOST_CHECK(copy == witness);
+
+            // Copy and move assignment replace the stack that was there.
+            CScriptWitness assigned{{{0xff}}};
+            assigned = copy;
+            copy = {};
+            BOOST_CHECK(copy.empty());
+            BOOST_CHECK(copy.begin() == copy.end());
+            BOOST_CHECK(assigned == witness);
+
+            CScriptWitness move_assigned{{{0xff}}};
+            move_assigned = std::move(assigned);
+            BOOST_CHECK(move_assigned == witness);
+            BOOST_CHECK(assigned.empty() && assigned.begin() == assigned.end()); // NOLINT(bugprone-use-after-move)
+            if (!stack.empty()) BOOST_CHECK(std::ranges::equal(move_assigned.back(), stack.back()));
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(script_witness_large_count)
+{
+    // Element counts on both sides of the boundary between the 3-byte and 5-byte CompactSize encodings. Elements are
+    // small, and only a few are accessed by index, as indexing may take time linear in the index.
+    for (const size_t count : {size_t{0xffff}, size_t{0x10000}}) {
+        std::vector<std::vector<unsigned char>> stack(count);
+        for (auto& element : stack) element = m_rng.randbytes(m_rng.randrange(3));
+        const CScriptWitness witness{stack};
+
+        BOOST_CHECK_EQUAL(witness.size(), count);
+        BOOST_CHECK_EQUAL(std::distance(witness.begin(), witness.end()), (std::ptrdiff_t)count);
+        BOOST_CHECK(witness.ToVectors() == stack);
+        BOOST_CHECK(std::ranges::equal(witness.front(), stack.front()));
+        BOOST_CHECK(std::ranges::equal(witness.back(), stack.back()));
+        for (const size_t i : {size_t{1}, count / 2, count - 2}) BOOST_CHECK(std::ranges::equal(witness[i], stack[i]));
+
+        std::vector<unsigned char> ser_vec, ser_wit;
+        VectorWriter{ser_vec, 0, stack};
+        VectorWriter{ser_wit, 0, witness};
+        BOOST_CHECK(ser_vec == ser_wit);
+        // The count is encoded as 0xfd followed by 2 bytes, or 0xfe followed by 4.
+        BOOST_CHECK_EQUAL(int{ser_wit.at(0)}, count <= 0xffff ? 0xfd : 0xfe);
+        CScriptWitness deser;
+        SpanReader{ser_vec} >> deser;
+        BOOST_CHECK(deser == witness);
+        BOOST_CHECK_EQUAL(deser.size(), count);
+        BOOST_CHECK(std::ranges::equal(deser.back(), stack.back()));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(script_witness_empty)
+{
+    // Every way of producing a witness without elements gives the same witness. A transaction is serialized with
+    // witness data exactly when one of its inputs has a non-empty witness, so this determines its wtxid and whether its
+    // serialization round-trips.
+    using Stack = std::vector<std::vector<unsigned char>>;
+    const std::vector<unsigned char> ser_empty{0x00};
+    const CScriptWitness from_default;
+    const CScriptWitness from_vector{Stack{}};
+    CScriptWitness from_deser{{{0x01}}};
+    SpanReader{ser_empty} >> from_deser;
+    CScriptWitness moved_from{{{0x01}}};
+    const CScriptWitness moved_to{std::move(moved_from)};
+    BOOST_CHECK_EQUAL(moved_to.size(), 1U);
+    CScriptWitness reset{{{0x01}}};
+    reset = {};
+    const CScriptWitness copied{from_default}; // NOLINT(performance-unnecessary-copy-initialization)
+    CScriptWitness copy_assigned{{{0x01}}};
+    copy_assigned = from_default;
+
+    const std::vector<const CScriptWitness*> empties{&from_default, &from_vector, &from_deser, &moved_from, &reset, &copied, &copy_assigned}; // NOLINT(bugprone-use-after-move)
+    for (const CScriptWitness* witness : empties) {
+        BOOST_CHECK(witness->empty());
+        BOOST_CHECK_EQUAL(witness->size(), 0U);
+        BOOST_CHECK(witness->begin() == witness->end());
+        BOOST_CHECK(witness->ToVectors().empty());
+        BOOST_CHECK(*witness == from_default);
+        std::vector<unsigned char> ser;
+        VectorWriter{ser, 0, *witness};
+        BOOST_CHECK(ser == ser_empty);
+        CMutableTransaction tx;
+        tx.vin.resize(1);
+        tx.vin[0].scriptWitness = *witness;
+        BOOST_CHECK(!tx.HasWitness());
+    }
+
+    // A single empty element is a different stack.
+    const CScriptWitness one_empty{Stack(1)};
+    BOOST_CHECK(!one_empty.empty());
+    BOOST_CHECK_EQUAL(one_empty.size(), 1U);
+    BOOST_CHECK(one_empty.back().empty());
+    BOOST_CHECK(one_empty != from_default);
+    std::vector<unsigned char> ser;
+    VectorWriter{ser, 0, one_empty};
+    BOOST_CHECK(ser == (std::vector<unsigned char>{0x01, 0x00}));
+    CScriptWitness deser;
+    SpanReader{ser} >> deser;
+    BOOST_CHECK(deser == one_empty);
+    CMutableTransaction tx;
+    tx.vin.resize(1);
+    tx.vin[0].scriptWitness = one_empty;
+    BOOST_CHECK(tx.HasWitness());
+}
+
+BOOST_AUTO_TEST_CASE(script_witness_to_string)
+{
+    // Elements are shown in hex, separated by commas, with nothing for an empty element.
+    BOOST_CHECK_EQUAL(CScriptWitness{}.ToString(), "CScriptWitness()");
+    BOOST_CHECK_EQUAL(CScriptWitness{{{0xaa}}}.ToString(), "CScriptWitness(aa)");
+    const CScriptWitness with_empty{{{}, {0xbb, 0xcc}, {}}};
+    BOOST_CHECK_EQUAL(with_empty.ToString(), "CScriptWitness(, bbcc, )");
+}
+
+BOOST_AUTO_TEST_CASE(script_witness_large_element)
+{
+    // A stack constructed from vectors can have an element larger than MAX_SIZE, and its accessors work.
+    std::vector<std::vector<unsigned char>> stack(2);
+    stack[0].resize(MAX_SIZE + 1);
+    stack[1] = {0x01};
+    const CScriptWitness witness{stack};
+    BOOST_CHECK_EQUAL(witness.size(), 2U);
+    BOOST_CHECK(std::ranges::equal(witness.front(), stack.front()));
+    BOOST_CHECK(std::ranges::equal(witness.back(), stack.back()));
+    BOOST_CHECK_EQUAL(std::distance(witness.begin(), witness.end()), 2);
+
+    // Deserialization does not accept such an element. It fails on the size, so the element itself is left out here.
+    DataStream stream;
+    WriteCompactSize(stream, 1);
+    WriteCompactSize(stream, MAX_SIZE + 1);
+    CScriptWitness deser;
+    BOOST_CHECK_EXCEPTION(stream >> deser, std::ios_base::failure, HasReason{"ReadCompactSize(): size too large"});
 }
 
 BOOST_AUTO_TEST_SUITE_END()

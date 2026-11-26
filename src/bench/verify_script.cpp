@@ -86,7 +86,7 @@ static void VerifyScriptBench(benchmark::Bench& bench, ScriptType script_type)
         bool complete = SignTransaction(txSpend, &keystore, coins, {.sighash_type = SIGHASH_ALL}, input_errors);
         assert(complete);
         // Weak sanity check on witness data to ensure we produced the intended spending type
-        assert(txSpend.vin[0].scriptWitness.stack.size() == ExpectedWitnessStackSize(script_type));
+        assert(txSpend.vin[0].scriptWitness.size() == ExpectedWitnessStackSize(script_type));
         txdata.Init(txSpend, /*spent_outputs=*/{txCredit.vout[0]});
     }
 

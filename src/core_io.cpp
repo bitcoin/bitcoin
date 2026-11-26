@@ -463,10 +463,10 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
             o.pushKV("hex", HexStr(txin.scriptSig));
             in.pushKV("scriptSig", std::move(o));
         }
-        if (!tx.vin[i].scriptWitness.IsNull()) {
+        if (!tx.vin[i].scriptWitness.empty()) {
             UniValue txinwitness(UniValue::VARR);
-            txinwitness.reserve(tx.vin[i].scriptWitness.stack.size());
-            for (const auto& item : tx.vin[i].scriptWitness.stack) {
+            txinwitness.reserve(tx.vin[i].scriptWitness.size());
+            for (const auto item : tx.vin[i].scriptWitness) {
                 txinwitness.push_back(HexStr(item));
             }
             in.pushKV("txinwitness", std::move(txinwitness));
