@@ -635,6 +635,10 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
         "Additional flags \"in\" and \"out\" control whether permissions apply to incoming connections and/or manual (default: incoming only). "
         "Can be specified multiple times.", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
 
+#ifdef ENABLE_EXTERNAL_SIGNER
+    // Registered here instead of in AddWalletOptions() because the node also reads it in builds without the wallet
+    argsman.AddArg("-signer=<cmd>", "External signing tool, see doc/external-signer.md", ArgsManager::ALLOW_ANY, OptionsCategory::WALLET);
+#endif
     g_wallet_init_interface.AddWalletOptions(argsman);
 
 #ifdef ENABLE_ZMQ
