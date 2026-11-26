@@ -306,22 +306,22 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
             return util::Error{_("Error: Unable to write solvable wallet best block locator record")};
         }
     }
-    for (const auto& [_pos, wtx] : wtxOrdered) {
+    for (const auto& wtx : m_txs_by_pos) {
         // Check it is the watchonly wallet's
         // solvable_wallet doesn't need to be checked because transactions for those scripts weren't being watched for
-        bool is_mine = IsMine(*wtx->GetTx()) || IsFromMe(*wtx->GetTx());
+        bool is_mine = IsMine(*wtx.GetTx()) || IsFromMe(*wtx.GetTx());
         if (data.watchonly_wallet) {
             LOCK(data.watchonly_wallet->cs_wallet);
-            if (data.watchonly_wallet->IsMine(*wtx->GetTx()) || data.watchonly_wallet->IsFromMe(*wtx->GetTx())) {
+            if (data.watchonly_wallet->IsMine(*wtx.GetTx()) || data.watchonly_wallet->IsFromMe(*wtx.GetTx())) {
                 // Add to watchonly wallet
-                const Txid& hash = wtx->GetHash();
+                const Txid& hash = wtx.GetHash();
                 DataStream wtx_ser;
-                wtx_ser << *wtx;
-                CWalletTx copy_wtx(deserialize, wtx_ser, wtx->GetTxs());
+                wtx_ser << wtx;
+                CWalletTx copy_wtx(deserialize, wtx_ser, wtx.GetTxs());
                 if (!data.watchonly_wallet->LoadToWallet(std::move(copy_wtx))) {
-                    return util::Error{strprintf(_("Error: Could not add watchonly tx %s to watchonly wallet"), wtx->GetHash().GetHex())};
+                    return util::Error{strprintf(_("Error: Could not add watchonly tx %s to watchonly wallet"), wtx.GetHash().GetHex())};
                 }
-                watchonly_batch->WriteFullTx(data.watchonly_wallet->mapWallet.at(hash));
+                watchonly_batch->WriteFullTx(*data.watchonly_wallet->GetWalletTx(hash));
                 // Mark as to remove from the migrated wallet only if it does not also belong to it
                 if (!is_mine) {
                     txids_to_delete.push_back(hash);
@@ -331,10 +331,10 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         }
         if (!is_mine) {
             // Both not ours and not in the watchonly wallet
-            return util::Error{strprintf(_("Error: Transaction %s in wallet cannot be identified to belong to migrated wallets"), wtx->GetHash().GetHex())};
+            return util::Error{strprintf(_("Error: Transaction %s in wallet cannot be identified to belong to migrated wallets"), wtx.GetHash().GetHex())};
         }
         // Rewrite the transaction so that anything that may have changed about it in memory also persists to disk
-        local_wallet_batch.WriteTxMetadata(*wtx);
+        local_wallet_batch.WriteTxMetadata(wtx);
     }
 
     // Do the removes
@@ -419,7 +419,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
     // migrated records will be presented to the user.
     if (!has_spendable_material) {
         if (!m_address_book.empty()) return util::Error{_("Error: Not all address book records were migrated")};
-        if (!mapWallet.empty()) return util::Error{_("Error: Not all transaction records were migrated")};
+        if (!m_txs.empty()) return util::Error{_("Error: Not all transaction records were migrated")};
     }
 
     return {}; // all good
