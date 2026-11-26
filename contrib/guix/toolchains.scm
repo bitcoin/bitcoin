@@ -1,5 +1,4 @@
 (define-module (toolchains)
-  #:use-module (gnu packages)
   #:use-module (gnu packages base)
   #:use-module (gnu packages cross-base)
   #:use-module (gnu packages gcc)
@@ -16,13 +15,6 @@
             linux-base-gcc-minimal
             make-bitcoin-cross-toolchain
             make-mingw-pthreads-cross-toolchain))
-
-(define-syntax-rule (search-our-patches file-name ...)
-  "Return the list of absolute file names corresponding to each
-FILE-NAME found in ./patches relative to the current file."
-  (parameterize
-      ((%patch-path (list (string-append (dirname (current-filename)) "/patches"))))
-    (list (search-patch file-name) ...)))
 
 (define (building-on) (string-append "--build=" (list-ref (string-split (%current-system) #\-) 0) "-guix-linux-gnu"))
 
@@ -102,7 +94,8 @@ chain for " target " development."))
 
 (define base-gcc
   (package-with-extra-patches gcc-14
-    (search-our-patches "gcc-remap-guix-store.patch" "gcc-ssa-generation.patch")))
+    (list (local-file "patches/gcc-remap-guix-store.patch")
+          (local-file "patches/gcc-ssa-generation.patch"))))
 
 (define base-linux-kernel-headers linux-libre-headers-6.1)
 
@@ -122,11 +115,11 @@ desirable for building Bitcoin Core release binaries."
 
 (define (binutils-mingw-patches binutils)
   (package-with-extra-patches binutils
-    (search-our-patches "binutils-unaligned-default.patch")))
+    (list (local-file "patches/binutils-unaligned-default.patch"))))
 
 (define (winpthreads-patches mingw-w64-x86_64-winpthreads)
   (package-with-extra-patches mingw-w64-x86_64-winpthreads
-    (search-our-patches "winpthreads-remap-guix-store.patch")))
+    (list (local-file "patches/winpthreads-remap-guix-store.patch"))))
 
 (define (mingw-force-ucrt mingw)
   (package
@@ -263,8 +256,8 @@ chain for " target " development."))
               (sha256
                (base32
                 "07arjrc1smqy8wrhg38apr1s9ji7xv1rpzdapk4k2ps2n07irp58"))
-              (patches (search-our-patches "glibc-guix-prefix.patch"
-                                           "glibc-riscv-jumptarget.patch"))))
+              (patches (list (local-file "patches/glibc-guix-prefix.patch")
+                            (local-file "patches/glibc-riscv-jumptarget.patch")))))
     (arguments
       (substitute-keyword-arguments (package-arguments glibc)
         ((#:configure-flags flags)
