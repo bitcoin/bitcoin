@@ -44,9 +44,8 @@ static inline bool sanity_check(const std::vector<CTransactionRef>& transactions
     for (const auto& [outpoint, fee] : bumpfees) {
         if (fee < 0) return false;
         if (fee == 0) continue;
-        auto outpoint_ = outpoint; // structured bindings can't be captured in C++17, so we need to use a variable
         const bool found = std::any_of(transactions.cbegin(), transactions.cend(), [&](const auto& tx) {
-            return outpoint_.hash == tx->GetHash() && outpoint_.n < tx->vout.size();
+            return outpoint.hash == tx->GetHash() && outpoint.n < tx->vout.size();
         });
         if (!found) return false;
     }
