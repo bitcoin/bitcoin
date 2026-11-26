@@ -7,6 +7,8 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import descsum_create
+from test_framework.extendedkey import ExtendedPrivateKey, ExtendedPublicKey
+from test_framework.key import ECPubKey, H_POINT
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -45,10 +47,10 @@ class DescriptorTest(BitcoinTestFramework):
 
         desc = f"wsh(or_d(pk([deadbeef/48h/1h/0h/2h]{xpub}/0/*),and_v(v:pk({pk_b}),older(144))))"
         info = node.getdescriptorinfo(desc)
-        assert "keys" not in info and "policy" not in info
+        assert "keys" not in info and "policy" not in info and "analysis" not in info
         assert_equal(node.getdescriptorinfo(desc, False), info)
         verbose = node.getdescriptorinfo(desc, True)
-        assert_equal({k: v for k, v in verbose.items() if k not in ("keys", "policy")}, info)
+        assert_equal({k: v for k, v in verbose.items() if k not in ("keys", "policy", "analysis")}, info)
         assert_equal(verbose["keys"], [
             {"role": "ecdsa", "type": "bip32", "xpub": xpub, "derivation": "/0/*", "origin": {"master_fingerprint": "deadbeef", "path": "m/48h/1h/0h/2h"}},
             {"role": "ecdsa", "type": "pubkey", "pubkey": pk_b},
@@ -131,6 +133,115 @@ class DescriptorTest(BitcoinTestFramework):
         verbose = node.getdescriptorinfo(f"wpkh({xpub}/<0;1>/*)", True)
         assert_equal(verbose["keys"], node.getdescriptorinfo(f"wpkh({xpub}/0/*)", True)["keys"])
 
+    def test_analysis(self):
+        node = self.nodes[0]
+
+        def analyze(desc):
+            return node.getdescriptorinfo(desc, True)["analysis"]
+
+        def recognized(shape, cosigners=(0, 1, 2), **fields):
+            """A recognized 2-of-3 setup, unless fields say otherwise."""
+            return {"recognized": True, "shape": shape, "sorted": True, "threshold": 2, "cosigners": list(cosigners), "issues": [], **fields}
+
+        def unrecognized(*issues):
+            """An unrecognized setup: only its issues, as (type, key IDs) pairs."""
+            return {"recognized": False, "issues": [{"type": kind, "keys": keys} for kind, keys in issues]}
+
+        # Cosigner account keys with their origins, as exported for a multisig setup.
+        masters = [ExtendedPrivateKey.from_seed(bytes([i + 1]) * 32) for i in range(4)]
+        a, b, c, outsider = (f"[{m._fingerprint().hex()}/48h/1h/0h/2h]{m.derive_path('m/48h/1h/0h/2h').pubkey().to_string()}" for m in masters)
+        r = "/<0;1>/*"
+        paths = f"{a}{r},{b}{r},{c}{r}"
+        # The NUMS point H as an xpub at a given depth, as some tools write the key path.
+        nums_key = ECPubKey()
+        nums_key.set(bytes.fromhex(f"02{H_POINT}"))
+        def nums_xpub(depth=0):
+            return ExtendedPublicKey(nums_key, bytes(32), depth, bytes(4), child_num=0).to_string()
+
+        self.log.info("Test multisig analysis of P2WSH setups")
+        assert_equal(analyze(f"wsh(sortedmulti(2,{paths}))"), recognized("wsh_multi"))
+        info = node.getdescriptorinfo(f"wsh(sortedmulti(2,{paths}))", True)
+        assert_equal([info["keys"][id]["origin"]["path"] for id in info["analysis"]["cosigners"]], ["m/48h/1h/0h/2h"] * 3)
+        # Unlike the multisig wizard, unsorted keys and a single path are recognized:
+        # both are valid k-of-n setups, and multipath_expansion shows the paths.
+        assert_equal(analyze(f"wsh(multi(2,{paths}))"), recognized("wsh_multi", sorted=False))
+        assert_equal(analyze(f"wsh(sortedmulti(2,{a}/0/*,{b}/0/*,{c}/0/*))"), recognized("wsh_multi"))
+
+        self.log.info("Test multisig analysis of Taproot setups")
+        leaf = f"sortedmulti_a(2,{paths})"
+        assert_equal(analyze(f"tr({H_POINT},{leaf})"), recognized("tr_multi_a", cosigners=[1, 2, 3], key_path="nums"))
+        musig = analyze(f"tr(musig({a},{b},{c}){r},{leaf})")
+        assert_equal(musig, recognized("tr_multi_a", cosigners=[4, 5, 6], key_path="musig"))
+        # The order of musig() participants changes neither the analysis nor the addresses.
+        assert_equal(analyze(f"tr(musig({c},{b},{a}){r},{leaf})"), musig)
+        assert_equal(node.deriveaddresses(descsum_create(f"tr(musig({c},{b},{a}){r},{leaf})"), 0),
+                     node.deriveaddresses(descsum_create(f"tr(musig({a},{b},{c}){r},{leaf})"), 0))
+        # Unlike the multisig wizard, a musig() of `threshold` cosigners is recognized:
+        # any two of them can already spend through the leaf. With a 3-of-3 leaf it can't.
+        assert_equal(analyze(f"tr(musig({a},{b}){r},{leaf})"), recognized("tr_multi_a", cosigners=[3, 4, 5], key_path="musig"))
+        assert_equal(analyze(f"tr(musig({a},{b}){r},sortedmulti_a(3,{paths}))"), unrecognized(("key_path_spendable", [0])))
+        # A key path that an outsider, or one cosigner alone, can spend.
+        assert_equal(analyze(f"tr({outsider}{r},{leaf})"), unrecognized(("key_path_spendable", [0])))
+        assert_equal(analyze(f"tr({a}{r},{leaf})"), unrecognized(("key_path_spendable", [0])))
+        # A musig() participant that only its holder can derive.
+        assert_equal(analyze(f"tr(musig({a}/0h,{b},{c}){r},{leaf})"), unrecognized(("hardened_derivation", [1])))
+        # A repeated musig() participant: A and B can already spend through the leaf, but not through a 3-of-3 one.
+        assert_equal(analyze(f"tr(musig({a},{a},{b}){r},{leaf})"), unrecognized(("repeated_key", [1, 2])))
+        assert_equal(analyze(f"tr(musig({a},{a},{b}){r},sortedmulti_a(3,{paths}))"), unrecognized(("repeated_key", [1, 2]), ("key_path_spendable", [0])))
+        # musig() participants with the same root key, deriving different keys.
+        assert_equal(analyze(f"tr(musig({a}/0/*,{a}/1/*,{b}/0/*),{leaf})"), unrecognized(("repeated_key", [1, 2])))
+        # musig() participants that derive the same key: A and its grandchild xpub,
+        # which the leaf can't link to A.
+        a00 = masters[0].derive_path('m/48h/1h/0h/2h/0/0').pubkey().to_string()
+        assert_equal(analyze(f"tr(musig({a}/0/0/*,{a00}/*),sortedmulti_a(2,{a}/1/*,{a00}/1/*,{c}/0/*))"), unrecognized(("repeated_key", [1, 2])))
+        # An internal key past the maximum BIP32 depth has no addresses. A musig()
+        # aggregate starts at depth 0, so it derives 255 steps at most.
+        for internal, derivable in [(f"{nums_xpub(254)}/*", True), (f"{nums_xpub(255)}/*", False),
+                                    (f"musig({a},{b},{c})" + "/0" * 254 + "/*", True), (f"musig({a},{b},{c})" + "/0" * 255 + "/*", False)]:
+            desc = f"tr({internal},{leaf})"
+            if derivable:
+                assert_equal(analyze(desc)["recognized"], True)
+                node.deriveaddresses(descsum_create(desc), 0)
+            else:
+                assert_equal(analyze(desc), unrecognized(("not_derivable", [0])))
+                assert_raises_rpc_error(-5, "Cannot derive script without private keys", node.deriveaddresses, descsum_create(desc), range=0)
+
+        self.log.info("Test multisig analysis of unsupported shapes")
+        for desc in [f"wpkh({a}{r})",
+                     f"sh(sortedmulti(2,{paths}))",
+                     f"tr(musig({a},{b},{c}){r},{{{leaf},pk({a}{r})}})"]:
+            assert_equal(analyze(desc), unrecognized(("unsupported_shape", [])))
+
+        self.log.info("Test multisig analysis of repeated and unusable cosigner keys")
+        # The same key twice lets its holder alone meet a threshold of 2.
+        assert_equal(analyze(f"wsh(sortedmulti(2,{a}{r},{a}{r},{c}{r}))"), unrecognized(("repeated_key", [0, 1])))
+        assert_equal(analyze(f"wsh(sortedmulti(2,{a}/0/*,{a}/1/*,{c}/0/*))"), unrecognized(("repeated_key", [0, 1])))
+        # A's own child xpub at /0 is A's key too, even with a different suffix.
+        a0 = f"[{masters[0]._fingerprint().hex()}/48h/1h/0h/2h/0]{masters[0].derive_path('m/48h/1h/0h/2h/0').pubkey().to_string()}"
+        assert_equal(analyze(f"wsh(sortedmulti(2,{a}/0/*,{a0}/1/*,{c}/0/*))"), unrecognized(("repeated_key", [0, 1])))
+        # A's account key is a hardened child of its parent xpub, which can't be derived without the private key.
+        a_parent = f"[{masters[0]._fingerprint().hex()}/48h/1h/0h]{masters[0].derive_path('m/48h/1h/0h').pubkey().to_string()}"
+        assert_equal(analyze(f"wsh(sortedmulti(2,{a_parent}/0/*,{a}/0/*,{c}/0/*))"), recognized("wsh_multi"))
+        # Slots linked through a chain are one group: the first and last share a root,
+        # the last two derive the same key, the first two have nothing in common.
+        a12 = f"[{masters[0]._fingerprint().hex()}/48h/1h/0h/2h/1/2]{masters[0].derive_path('m/48h/1h/0h/2h/1/2').pubkey().to_string()}"
+        assert_equal(analyze(f"wsh(sortedmulti(2,{a}/5/*,{a12}/*,{a}/1/2/*))"), unrecognized(("repeated_key", [0, 1, 2])))
+        assert_equal(analyze(f"tr({H_POINT},sortedmulti_a(2,{a}{r},{b}{r},{a}{r}))"), unrecognized(("repeated_key", [1, 3])))
+        pubkey = "02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9"
+        assert_equal(analyze(f"wsh(sortedmulti(2,{a}{r},[deadbeef/48h/1h/0h/2h]{pubkey},{c}{r}))"), unrecognized(("not_extended_key", [1])))
+        assert_equal(analyze(f"wsh(sortedmulti(2,{a}{r},{b}/0/5,{c}{r}))"), unrecognized(("not_ranged", [1])))
+        assert_equal(analyze(f"wsh(sortedmulti(2,{a}{r},{b}/0/*h,{c}{r}))"), unrecognized(("hardened_derivation", [1])))
+        # B's xpub claiming the maximum BIP32 depth, from which no address can be derived.
+        b_key = masters[1].derive_path('m/48h/1h/0h/2h').pubkey()
+        b_deep = ExtendedPublicKey(b_key.pubkey, b_key.chaincode, depth=255, parent_fingerprint_bytes=b_key.parent_fingerprint_bytes, child_num=b_key.child_num).to_string()
+        assert_equal(analyze(f"wsh(sortedmulti(2,{a}{r},{b_deep}{r},{c}{r}))"), unrecognized(("not_derivable", [1])))
+        # No one can sign for H, which would leave a 2-of-2 unspendable.
+        assert_equal(analyze(f"wsh(sortedmulti(2,{a}{r},{nums_xpub()}{r}))"), unrecognized(("unspendable_key", [1])))
+        # One path is a recognized setup, but the other needs a private key. The issue
+        # is returned whichever path comes first.
+        for path in ["/<0;1h>/*", "/<0h;1>/*"]:
+            assert_equal(analyze(f"wsh(sortedmulti(2,{a}{r},{b}{path},{c}{r}))"), unrecognized(("hardened_derivation", [1]), ("branches_differ", [])))
+
     def run_test(self):
         assert_raises_rpc_error(-1, 'getdescriptorinfo', self.nodes[0].getdescriptorinfo)
         # cli handles wrong types differently
@@ -179,6 +290,7 @@ class DescriptorTest(BitcoinTestFramework):
             expanded_descs=["wsh(multi(1,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/1/0/*,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/2/0/*))", "wsh(multi(1,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/2/0/*,tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B/3/0/*))"])
 
         self.test_verbose()
+        self.test_analysis()
 
 
 if __name__ == '__main__':

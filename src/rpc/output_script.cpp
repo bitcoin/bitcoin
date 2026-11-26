@@ -18,6 +18,7 @@
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/descriptor_analysis.h>
+#include <script/descriptor_analyzer.h>
 #include <script/miniscript.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
@@ -293,8 +294,8 @@ static RPCMethod getdescriptorinfo()
         "Analyses a descriptor.\n",
         {
             {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor."},
-            {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, also return the descriptor's key occurrences and policy structure. "
-                "For a multipath descriptor, only the first path is described.\n"
+            {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, also return the descriptor's key occurrences, policy structure and multisig analysis. "
+                "For a multipath descriptor, the keys and policy describe only the first path, while the analysis checks every path.\n"
                 "EXPERIMENTAL warning: the format of these fields may be changed in future releases."},
         },
         RPCResult{
@@ -340,13 +341,14 @@ static RPCMethod getdescriptorinfo()
                         }},
                     }},
                 }},
+                {RPCResult::Type::OBJ, "analysis", /*optional=*/true, "Only if verbose is true. " + HELP_DESCRIPTOR_ANALYSIS, DescriptorAnalysisResultFields()},
             }
         },
         RPCExamples{
             "Analyse a descriptor\n" +
             HelpExampleCli("getdescriptorinfo", "\"" + EXAMPLE_DESCRIPTOR + "\"") +
             HelpExampleRpc("getdescriptorinfo", "\"" + EXAMPLE_DESCRIPTOR + "\"") +
-            "Analyse a descriptor, including its keys and policy\n" +
+            "Analyse a descriptor, including its keys, policy and multisig analysis\n" +
             HelpExampleCli("getdescriptorinfo", "\"" + EXAMPLE_DESCRIPTOR + "\" true")
         },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
@@ -375,9 +377,11 @@ static RPCMethod getdescriptorinfo()
             result.pushKV("hasprivatekeys", provider.keys.size() > 0);
 
             if (self.Arg<bool>("verbose")) {
-                const DescriptorPolicy policy{descs.at(0)->GetPolicy()};
-                result.pushKV("keys", DescriptorKeysToUniv(policy.keys));
-                result.pushKV("policy", DescriptorPolicyToUniv(policy));
+                // The analysis refers to the first path's keys and policy.
+                const DescriptorAnalysis analysis{AnalyzeDescriptor(descs)};
+                result.pushKV("keys", DescriptorKeysToUniv(analysis.policy.keys));
+                result.pushKV("policy", DescriptorPolicyToUniv(analysis.policy));
+                result.pushKV("analysis", DescriptorAnalysisToUniv(analysis));
             }
             return result;
         },

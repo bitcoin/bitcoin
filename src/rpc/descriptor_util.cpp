@@ -9,6 +9,7 @@
 #include <pubkey.h>
 #include <rpc/util.h>
 #include <script/descriptor_analysis.h>
+#include <script/descriptor_analyzer.h>
 #include <script/keyorigin.h>
 #include <univalue.h>
 #include <util/bip32.h>
@@ -21,6 +22,15 @@
 #include <utility>
 #include <variant>
 #include <vector>
+
+const std::string HELP_DESCRIPTOR_ANALYSIS{"Whether the descriptor is a recognized k-of-n multisig setup: "
+    "one where any threshold of the cosigners can spend, and nothing else can. Recognized shapes are wsh(multi) and wsh(sortedmulti), "
+    "and tr(K,multi_a) and tr(K,sortedmulti_a) with a single leaf, where K is the BIP 341 NUMS point H or a musig() of at least threshold distinct cosigners. "
+    "Every cosigner must be an extended key other than H, with an unhardened ranged derivation that can derive addresses, and no two cosigners may be found to be the same key: "
+    "the same public key in two xpubs (whatever their chain codes, ignoring parity), the same key at the first address, or an xpub and its unhardened child xpub (whatever its chain code or parity), as named by the child's parent fingerprint and child number. "
+    "Other related keys, like a grandchild xpub or a child with that metadata changed, can't be found. "
+    "This looks at the descriptor only: it does not say which keys belong to whom. Each cosigner can check their own key with analyzedescriptor. "
+    "Private keys in the descriptor are not looked at: whoever holds one can also sign for its key (see hasprivatekeys)."};
 
 std::vector<RPCResult> DescriptorKeyResultFields()
 {
@@ -38,6 +48,40 @@ std::vector<RPCResult> DescriptorKeyResultFields()
         {
             {RPCResult::Type::STR_HEX, "master_fingerprint", "The fingerprint of the master key"},
             {RPCResult::Type::STR, "path", "The derivation path from the master key"},
+        }},
+    };
+}
+
+std::vector<RPCResult> DescriptorAnalysisResultFields()
+{
+    return {
+        {RPCResult::Type::BOOL, "recognized", "Whether the descriptor is a recognized setup. If false, only the issues are returned"},
+        {RPCResult::Type::STR, "shape", /*optional=*/true, "The setup: \"wsh_multi\" or \"tr_multi_a\""},
+        {RPCResult::Type::BOOL, "sorted", /*optional=*/true, "Whether the keys are sorted (sortedmulti or sortedmulti_a)"},
+        {RPCResult::Type::STR, "key_path", /*optional=*/true, "For \"tr_multi_a\": the Taproot internal key, \"nums\" (unspendable) or \"musig\" (an aggregate of cosigners)"},
+        {RPCResult::Type::NUM, "threshold", /*optional=*/true, "The number of cosigners needed to spend"},
+        {RPCResult::Type::ARR, "cosigners", /*optional=*/true, "The key IDs of the cosigner slots, in expression order",
+        {
+            {RPCResult::Type::NUM, "", "Key ID"},
+        }},
+        {RPCResult::Type::ARR, "issues", "Why the descriptor is not recognized. Empty if it is",
+        {
+            {RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "type", "\"unsupported_shape\" (not a recognized shape), "
+                    "\"repeated_key\" (cosigner slots, or musig() participants, held by the same key), "
+                    "\"key_path_spendable\" (the Taproot internal key may let fewer than threshold cosigners spend), "
+                    "\"not_extended_key\" (a cosigner is not an extended key), "
+                    "\"not_ranged\" (a cosigner does not end in an unhardened wildcard), "
+                    "\"hardened_derivation\" (a cosigner or musig() participant needs a private key to derive addresses), "
+                    "\"not_derivable\" (a cosigner, musig() participant or Taproot internal key can't derive addresses, e.g. past the maximum BIP32 depth), "
+                    "\"unspendable_key\" (a cosigner is the NUMS point H, which no one can sign for), or "
+                    "\"branches_differ\" (the paths of a multipath descriptor are not the same setup)"},
+                {RPCResult::Type::ARR, "keys", "The key IDs involved, if any",
+                {
+                    {RPCResult::Type::NUM, "", "Key ID"},
+                }},
+            }},
         }},
     };
 }
@@ -112,4 +156,66 @@ UniValue DescriptorKeysToUniv(const DescriptorKeyInventory& inventory)
         keys.push_back(std::move(key));
     }
     return keys;
+}
+
+static std::string ShapeName(DescriptorAnalysis::Shape shape)
+{
+    using Shape = DescriptorAnalysis::Shape;
+    switch (shape) {
+    case Shape::UNRECOGNIZED: return "unrecognized";
+    case Shape::WSH_MULTI: return "wsh_multi";
+    case Shape::TR_MULTI_A: return "tr_multi_a";
+    } // no default case, so the compiler can warn about missing cases
+    NONFATAL_UNREACHABLE();
+}
+
+static std::string KeyPathName(DescriptorAnalysis::KeyPath key_path)
+{
+    using KeyPath = DescriptorAnalysis::KeyPath;
+    switch (key_path) {
+    case KeyPath::NONE: return "none";
+    case KeyPath::NUMS: return "nums";
+    case KeyPath::MUSIG: return "musig";
+    } // no default case, so the compiler can warn about missing cases
+    NONFATAL_UNREACHABLE();
+}
+
+static std::string IssueName(DescriptorAnalysis::Issue::Kind kind)
+{
+    using Kind = DescriptorAnalysis::Issue::Kind;
+    switch (kind) {
+    case Kind::UNSUPPORTED_SHAPE: return "unsupported_shape";
+    case Kind::REPEATED_KEY: return "repeated_key";
+    case Kind::KEY_PATH_SPENDABLE: return "key_path_spendable";
+    case Kind::NOT_EXTENDED_KEY: return "not_extended_key";
+    case Kind::NOT_RANGED: return "not_ranged";
+    case Kind::HARDENED_DERIVATION: return "hardened_derivation";
+    case Kind::NOT_DERIVABLE: return "not_derivable";
+    case Kind::UNSPENDABLE_KEY: return "unspendable_key";
+    case Kind::BRANCHES_DIFFER: return "branches_differ";
+    } // no default case, so the compiler can warn about missing cases
+    NONFATAL_UNREACHABLE();
+}
+
+UniValue DescriptorAnalysisToUniv(const DescriptorAnalysis& analysis)
+{
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("recognized", analysis.IsRecognized());
+    // An unrecognized descriptor claims no setup, only the issues.
+    if (analysis.IsRecognized()) {
+        result.pushKV("shape", ShapeName(analysis.shape));
+        result.pushKV("sorted", analysis.sorted);
+        if (analysis.key_path != DescriptorAnalysis::KeyPath::NONE) result.pushKV("key_path", KeyPathName(analysis.key_path));
+        result.pushKV("threshold", analysis.threshold);
+        result.pushKV("cosigners", IdsToUniv(analysis.cosigners));
+    }
+    UniValue issues(UniValue::VARR);
+    for (const auto& issue : analysis.issues) {
+        UniValue issue_obj(UniValue::VOBJ);
+        issue_obj.pushKV("type", IssueName(issue.kind));
+        issue_obj.pushKV("keys", IdsToUniv(issue.keys));
+        issues.push_back(std::move(issue_obj));
+    }
+    result.pushKV("issues", std::move(issues));
+    return result;
 }
