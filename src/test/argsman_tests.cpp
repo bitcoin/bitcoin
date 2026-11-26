@@ -111,7 +111,7 @@ public:
 
         if (expect.error) {
             BOOST_CHECK(!success);
-            BOOST_CHECK_NE(error.find(expect.error), std::string::npos);
+            BOOST_CHECK(error.contains(expect.error));
         } else {
             BOOST_CHECK(success);
             BOOST_CHECK_EQUAL(error, "");
