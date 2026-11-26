@@ -12,6 +12,12 @@ from test_framework.address import address_to_scriptpubkey
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECPubKey
 from test_framework.messages import COIN
+from test_framework.rpc_error_codes import (
+    RPC_DESERIALIZATION_ERROR,
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_INVALID_PARAMETER,
+    RPC_VERIFY_ERROR,
+)
 from test_framework.script_util import keys_to_multisig_script
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -56,7 +62,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         self.test_sortedmulti_descriptors_bip67()
 
         # Check that bech32m is currently not allowed
-        assert_raises_rpc_error(-5, "createmultisig cannot create bech32m multisig addresses", self.nodes[0].createmultisig, 2, self.pub, "bech32m")
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "createmultisig cannot create bech32m multisig addresses", self.nodes[0].createmultisig, 2, self.pub, "bech32m")
 
         self.log.info('Check correct encoding of multisig script for all n (1..20)')
         for nkeys in range(1, 20+1):
@@ -73,15 +79,15 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         pubkeys = self.pub[0:20]
 
         self.log.info('Test legacy redeem script max size limit')
-        assert_raises_rpc_error(-8, "redeemScript exceeds size limit: 684 > 520", node1.createmultisig, 16, pubkeys, 'legacy')
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "redeemScript exceeds size limit: 684 > 520", node1.createmultisig, 16, pubkeys, 'legacy')
 
         self.log.info('Test valid 16-20 multisig p2sh-legacy and bech32 (no wallet)')
         self.do_multisig(nkeys=20, nsigs=16, output_type="p2sh-segwit")
         self.do_multisig(nkeys=20, nsigs=16, output_type="bech32")
 
         self.log.info('Test invalid 16-21 multisig p2sh-legacy and bech32 (no wallet)')
-        assert_raises_rpc_error(-8, "Number of keys involved in the multisignature address creation > 20", node1.createmultisig, 16, self.pub, 'p2sh-segwit')
-        assert_raises_rpc_error(-8, "Number of keys involved in the multisignature address creation > 20", node1.createmultisig, 16, self.pub, 'bech32')
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Number of keys involved in the multisignature address creation > 20", node1.createmultisig, 16, self.pub, 'p2sh-segwit')
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Number of keys involved in the multisignature address creation > 20", node1.createmultisig, 16, self.pub, 'bech32')
 
     def test_combinerawtransaction_preconditions(self):
         self.log.info('Test combinerawtransaction preconditions')
@@ -125,7 +131,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         prevtx_err = dict(prevtxs[0])
         del prevtx_err["redeemScript"]
 
-        assert_raises_rpc_error(-8, "Missing redeemScript/witnessScript", node2.signrawtransactionwithkey, rawtx, priv_keys[0:nsigs-1], [prevtx_err])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Missing redeemScript/witnessScript", node2.signrawtransactionwithkey, rawtx, priv_keys[0:nsigs-1], [prevtx_err])
 
         # if witnessScript specified, all ok
         prevtx_err["witnessScript"] = prevtxs[0]["redeemScript"]
@@ -137,16 +143,16 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
         # redeemScript mismatch to witnessScript
         prevtx_err["redeemScript"] = "6a" # OP_RETURN
-        assert_raises_rpc_error(-8, "redeemScript does not correspond to witnessScript", node2.signrawtransactionwithkey, rawtx, priv_keys[0:nsigs-1], [prevtx_err])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "redeemScript does not correspond to witnessScript", node2.signrawtransactionwithkey, rawtx, priv_keys[0:nsigs-1], [prevtx_err])
 
         # redeemScript does not match scriptPubKey
         del prevtx_err["witnessScript"]
-        assert_raises_rpc_error(-8, "redeemScript/witnessScript does not match scriptPubKey", node2.signrawtransactionwithkey, rawtx, priv_keys[0:nsigs-1], [prevtx_err])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "redeemScript/witnessScript does not match scriptPubKey", node2.signrawtransactionwithkey, rawtx, priv_keys[0:nsigs-1], [prevtx_err])
 
         # witnessScript does not match scriptPubKey
         prevtx_err["witnessScript"] = prevtx_err["redeemScript"]
         del prevtx_err["redeemScript"]
-        assert_raises_rpc_error(-8, "redeemScript/witnessScript does not match scriptPubKey", node2.signrawtransactionwithkey, rawtx, priv_keys[0:nsigs-1], [prevtx_err])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "redeemScript/witnessScript does not match scriptPubKey", node2.signrawtransactionwithkey, rawtx, priv_keys[0:nsigs-1], [prevtx_err])
 
         rawtx2 = node2.signrawtransactionwithkey(rawtx, priv_keys[0:nsigs - 1], prevtxs)
         assert_equal(rawtx2["complete"], False)
@@ -155,9 +161,9 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
         if assert_mergeability:
             # Test boundary conditions
-            assert_raises_rpc_error(-22, "TX decode failed", node2.combinerawtransaction, [rawtx2['hex'], rawtx3['hex'] + "00"])
-            assert_raises_rpc_error(-22, "Missing transactions. At least two transactions required.", node2.combinerawtransaction, [])
-            assert_raises_rpc_error(-22, "Missing transactions. At least two transactions required.", node2.combinerawtransaction, [rawtx2['hex']])
+            assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "TX decode failed", node2.combinerawtransaction, [rawtx2['hex'], rawtx3['hex'] + "00"])
+            assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "Missing transactions. At least two transactions required.", node2.combinerawtransaction, [])
+            assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "Missing transactions. At least two transactions required.", node2.combinerawtransaction, [rawtx2['hex']])
 
             out_addr2 = getnewdestination('bech32')[2]
             unmergeable_transaction_args = [
@@ -171,7 +177,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
 
             for rpc_args, rpc_kwargs in unmergeable_transaction_args:
                 unrelated_tx = node2.createrawtransaction(*rpc_args, **rpc_kwargs)
-                assert_raises_rpc_error(-8, "Transaction number 2 not compatible with first transaction", node0.combinerawtransaction, [rawtx2['hex'], unrelated_tx])
+                assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Transaction number 2 not compatible with first transaction", node0.combinerawtransaction, [rawtx2['hex'], unrelated_tx])
 
             # Accept duplicate transactions in combinerawtransaction
             dupe_merged_tx = node2.combinerawtransaction([rawtx2['hex'], rawtx2['hex']])
@@ -182,7 +188,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         blk = self.generate(node0, 1)[0]
         assert tx in node0.getblock(blk)["tx"]
 
-        assert_raises_rpc_error(-25, "Input not found or already spent", node2.combinerawtransaction, [rawtx2['hex'], rawtx3['hex']])
+        assert_raises_rpc_error(RPC_VERIFY_ERROR, "Input not found or already spent", node2.combinerawtransaction, [rawtx2['hex'], rawtx3['hex']])
 
         txinfo = node0.getrawtransaction(tx, True, blk)
         self.log.info("n/m=%d/%d %s size=%d vsize=%d weight=%d" % (nsigs, nkeys, output_type, txinfo["size"], txinfo["vsize"], txinfo["weight"]))

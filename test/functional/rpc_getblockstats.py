@@ -10,6 +10,11 @@
 from test_framework.address import address_to_scriptpubkey
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import COIN
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_INVALID_PARAMETER,
+    RPC_MISC_ERROR,
+)
 from test_framework.script import (
     CScript,
     OP_RETURN,
@@ -148,9 +153,9 @@ class GetblockstatsTest(BitcoinTestFramework):
 
         # Test invalid parameters raise the proper json exceptions
         tip = self.start_height + self.max_stat_pos
-        assert_raises_rpc_error(-8, 'Target block height %d after current tip %d' % (tip+1, tip),
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, 'Target block height %d after current tip %d' % (tip+1, tip),
                                 self.nodes[0].getblockstats, hash_or_height=tip+1)
-        assert_raises_rpc_error(-8, 'Target block height %d is negative' % (-1),
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, 'Target block height %d is negative' % (-1),
                                 self.nodes[0].getblockstats, hash_or_height=-1)
 
         # Make sure not valid stats aren't allowed
@@ -162,19 +167,19 @@ class GetblockstatsTest(BitcoinTestFramework):
             ['minfee', inv_sel_stat, 'maxfee'],
         ]
         for inv_stat in inv_stats:
-            assert_raises_rpc_error(-8, f"Invalid selected statistic '{inv_sel_stat}'",
+            assert_raises_rpc_error(RPC_INVALID_PARAMETER, f"Invalid selected statistic '{inv_sel_stat}'",
                                     self.nodes[0].getblockstats, hash_or_height=1, stats=inv_stat)
 
         # Make sure we aren't always returning inv_sel_stat as the culprit stat
-        assert_raises_rpc_error(-8, f"Invalid selected statistic 'aaa{inv_sel_stat}'",
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, f"Invalid selected statistic 'aaa{inv_sel_stat}'",
                                 self.nodes[0].getblockstats, hash_or_height=1, stats=['minfee', f'aaa{inv_sel_stat}'])
         # Mainchain's genesis block shouldn't be found on regtest
-        assert_raises_rpc_error(-5, 'Block not found', self.nodes[0].getblockstats,
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, 'Block not found', self.nodes[0].getblockstats,
                                 hash_or_height='000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f')
 
         # Invalid number of args
-        assert_raises_rpc_error(-1, 'getblockstats hash_or_height ( stats )', self.nodes[0].getblockstats, '00', 1, 2)
-        assert_raises_rpc_error(-1, 'getblockstats hash_or_height ( stats )', self.nodes[0].getblockstats)
+        assert_raises_rpc_error(RPC_MISC_ERROR, 'getblockstats hash_or_height ( stats )', self.nodes[0].getblockstats, '00', 1, 2)
+        assert_raises_rpc_error(RPC_MISC_ERROR, 'getblockstats hash_or_height ( stats )', self.nodes[0].getblockstats)
 
         self.log.info('Test block height 0')
         genesis_stats = self.nodes[0].getblockstats(0)
@@ -194,11 +199,11 @@ class GetblockstatsTest(BitcoinTestFramework):
         self.log.info("Test when only header is known")
         block = self.generateblock(self.nodes[0], output="raw(55)", transactions=[], submit=False)
         self.nodes[0].submitheader(block["hex"])
-        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", lambda: self.nodes[0].getblockstats(block['hash']))
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Block not available (not fully downloaded)", lambda: self.nodes[0].getblockstats(block['hash']))
 
         self.log.info('Test when block is missing')
         (self.nodes[0].blocks_path / 'blk00000.dat').rename(self.nodes[0].blocks_path / 'blk00000.dat.backup')
-        assert_raises_rpc_error(-1, 'Block not found on disk', self.nodes[0].getblockstats, hash_or_height=1)
+        assert_raises_rpc_error(RPC_MISC_ERROR, 'Block not found on disk', self.nodes[0].getblockstats, hash_or_height=1)
         (self.nodes[0].blocks_path / 'blk00000.dat.backup').rename(self.nodes[0].blocks_path / 'blk00000.dat')
 
 

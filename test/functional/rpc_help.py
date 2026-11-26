@@ -4,6 +4,10 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test RPC help output."""
 
+from test_framework.rpc_error_codes import (
+    RPC_MISC_ERROR,
+    RPC_TYPE_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
@@ -124,11 +128,11 @@ class HelpRpcTest(BitcoinTestFramework):
         node = self.nodes[0]
 
         # wrong argument count
-        assert_raises_rpc_error(-1, 'help', node.help, 'foo', 'bar')
+        assert_raises_rpc_error(RPC_MISC_ERROR, 'help', node.help, 'foo', 'bar')
 
         # invalid argument
         if not self.options.usecli:
-            assert_raises_rpc_error(-3, "JSON value of type number is not of expected type string", node.help, 0)
+            assert_raises_rpc_error(RPC_TYPE_ERROR, "JSON value of type number is not of expected type string", node.help, 0)
 
         # help of unknown command
         assert_equal(node.help('foo'), 'help: unknown command: foo')

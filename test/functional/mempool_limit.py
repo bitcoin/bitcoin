@@ -11,6 +11,7 @@ from test_framework.mempool_util import (
     fill_mempool,
 )
 from test_framework.p2p import P2PTxInvStore
+from test_framework.rpc_error_codes import RPC_VERIFY_REJECTED
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -213,7 +214,7 @@ class MempoolLimitTest(BitcoinTestFramework):
 
         # Deliberately try to create a tx with a fee less than the minimum mempool fee to assert that it does not get added to the mempool
         self.log.info('Create a mempool tx that will not pass mempoolminfee')
-        assert_raises_rpc_error(-26, "mempool min fee not met", miniwallet.send_self_transfer, from_node=node, fee_rate=relayfee)
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "mempool min fee not met", miniwallet.send_self_transfer, from_node=node, fee_rate=relayfee)
 
         self.log.info("Check that submitpackage allows cpfp of a parent below mempool min feerate")
         node = self.nodes[0]

@@ -17,6 +17,7 @@ from test_framework.messages import (
     msg_getdata,
 )
 from test_framework.p2p import P2PInterface
+from test_framework.rpc_error_codes import RPC_MISC_ERROR
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -99,7 +100,7 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
         self.wait_until(lambda: not try_rpc(-1, "Block not available (not fully downloaded)", full_node.getblock, pruned_node.getbestblockhash()))
         for height in range(start_height_full_node + 1, tip_height + 1):
             if height <= tip_height - (NODE_NETWORK_LIMITED_MIN_BLOCKS - limit_buffer):
-                assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", full_node.getblock, pruned_node.getblockhash(height))
+                assert_raises_rpc_error(RPC_MISC_ERROR, "Block not available (not fully downloaded)", full_node.getblock, pruned_node.getblockhash(height))
             else:
                 full_node.getblock(pruned_node.getblockhash(height))  # just assert it does not throw an exception
 

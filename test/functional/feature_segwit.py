@@ -24,6 +24,7 @@ from test_framework.messages import (
     CTxOut,
     tx_from_hex,
 )
+from test_framework.rpc_error_codes import RPC_VERIFY_REJECTED
 from test_framework.script import (
     CScript,
     OP_DROP,
@@ -103,7 +104,7 @@ class SegWitTest(BitcoinTestFramework):
         self.sync_blocks()
 
     def fail_accept(self, node, error_msg, txid, sign, redeem_script=""):
-        assert_raises_rpc_error(-26, error_msg, send_to_witness, use_p2wsh=1, node=node, utxo=getutxo(txid), pubkey=self.pubkey[0], encode_p2sh=False, amount=Decimal("49.998"), sign=sign, insert_redeem_script=redeem_script)
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, error_msg, send_to_witness, use_p2wsh=1, node=node, utxo=getutxo(txid), pubkey=self.pubkey[0], encode_p2sh=False, amount=Decimal("49.998"), sign=sign, insert_redeem_script=redeem_script)
 
     def run_test(self):
         self.generate(self.nodes[0], 161)  # block 161

@@ -16,6 +16,11 @@ from test_framework.messages import (
     tx_from_hex,
 )
 from test_framework.p2p import P2PTxInvStore
+from test_framework.rpc_error_codes import (
+    RPC_DESERIALIZATION_ERROR,
+    RPC_INVALID_PARAMETER,
+    RPC_VERIFY_ERROR,
+)
 from test_framework.script_util import build_malleated_tx_package
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -426,7 +431,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         valid_tx_list = self.wallet.create_self_transfer_chain(chain_length=2)
         hex_list = [valid_tx_list[0]["hex"][:-1] + 'X', valid_tx_list[1]["hex"]]
         txid_list = [valid_tx_list[0]["txid"], valid_tx_list[1]["txid"]]
-        assert_raises_rpc_error(-22, "TX decode failed:", node.submitpackage, hex_list)
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "TX decode failed:", node.submitpackage, hex_list)
         assert txid_list[0] not in node.getrawmempool()
         assert txid_list[1] not in node.getrawmempool()
 
@@ -439,12 +444,12 @@ class RPCPackagesTest(BitcoinTestFramework):
         # Chain of 3 transactions has too many generations
         legacy_pool = node.getrawmempool()
         chain_hex = [t["hex"] for t in self.wallet.create_self_transfer_chain(chain_length=3)]
-        assert_raises_rpc_error(-25, "package topology disallowed", node.submitpackage, chain_hex)
+        assert_raises_rpc_error(RPC_VERIFY_ERROR, "package topology disallowed", node.submitpackage, chain_hex)
         assert_equal(legacy_pool, node.getrawmempool())
 
-        assert_raises_rpc_error(-8, f"Array must contain between 1 and {MAX_PACKAGE_COUNT} transactions.", node.submitpackage, [])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, f"Array must contain between 1 and {MAX_PACKAGE_COUNT} transactions.", node.submitpackage, [])
         assert_raises_rpc_error(
-            -8, f"Array must contain between 1 and {MAX_PACKAGE_COUNT} transactions.",
+            RPC_INVALID_PARAMETER, f"Array must contain between 1 and {MAX_PACKAGE_COUNT} transactions.",
             node.submitpackage, [chain_hex[0]] * (MAX_PACKAGE_COUNT + 1)
         )
 
@@ -536,7 +541,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         tx.vout[-1].scriptPubKey = b'a' * 10001 # scriptPubKey bigger than 10k IsUnspendable
         chained_burn_hex = [chained_burn_hex[0], tx.serialize().hex()]
         # burn test is run before any package evaluation; nothing makes it in and we get broader exception
-        assert_raises_rpc_error(-25, "Unspendable output exceeds maximum configured by user", node.submitpackage, chained_burn_hex, 0, chained_txns_burn[1]["new_utxo"]["value"] - Decimal("0.00000001"))
+        assert_raises_rpc_error(RPC_VERIFY_ERROR, "Unspendable output exceeds maximum configured by user", node.submitpackage, chained_burn_hex, 0, chained_txns_burn[1]["new_utxo"]["value"] - Decimal("0.00000001"))
         assert_equal(node.getrawmempool(), [])
 
         minrate_btc_kvb_burn = min([chained_txn_burn["fee"] / chained_txn_burn["tx"].get_vsize() * 1000 for chained_txn_burn in chained_txns_burn])
@@ -558,7 +563,7 @@ class RPCPackagesTest(BitcoinTestFramework):
         ggrandchild_tx = self.wallet.create_self_transfer(utxo_to_spend=grandchild_tx["new_utxo"])
 
         # Submitting them all together doesn't work, as the topology is not child-with-parents
-        assert_raises_rpc_error(-25, "package topology disallowed", node.submitpackage, [parent_tx["hex"], child_tx["hex"], grandchild_tx["hex"], ggrandchild_tx["hex"]])
+        assert_raises_rpc_error(RPC_VERIFY_ERROR, "package topology disallowed", node.submitpackage, [parent_tx["hex"], child_tx["hex"], grandchild_tx["hex"], ggrandchild_tx["hex"]])
 
         # Submit older package and check acceptance
         result_submit_older = node.submitpackage(package=[parent_tx["hex"], child_tx["hex"]])

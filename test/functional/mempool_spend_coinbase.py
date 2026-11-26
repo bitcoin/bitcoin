@@ -12,6 +12,7 @@ in the next block are accepted into the memory pool,
 but less mature coinbase spends are NOT.
 """
 
+from test_framework.rpc_error_codes import RPC_VERIFY_REJECTED
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.wallet import MiniWallet
@@ -41,7 +42,7 @@ class MempoolSpendCoinbaseTest(BitcoinTestFramework):
 
         # other coinbase should be too immature to spend
         immature_tx = wallet.create_self_transfer(utxo_to_spend=utxo_immature)
-        assert_raises_rpc_error(-26,
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED,
                                 "bad-txns-premature-spend-of-coinbase",
                                 lambda: self.nodes[0].sendrawtransaction(immature_tx['hex']))
 

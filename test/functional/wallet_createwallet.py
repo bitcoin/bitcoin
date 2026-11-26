@@ -9,6 +9,13 @@ import stat
 
 from test_framework.descriptors import descsum_create
 from test_framework.extendedkey import ExtendedPrivateKey
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_PARAMETER,
+    RPC_WALLET_ENCRYPTION_FAILED,
+    RPC_WALLET_ERROR,
+    RPC_WALLET_UNLOCK_NEEDED,
+    RPC_WALLET_WRONG_ENC_STATE,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -42,7 +49,7 @@ class CreateWalletTest(BitcoinTestFramework):
             self.log.warning("Skipping non-writable directory test: unable to enforce read-only permissions")
         else:
             # Run actual test
-            assert_raises_rpc_error(-4, f"SQLiteDatabase: Failed to open database in directory '{str(dir_path)}': directory is not writable", node.createwallet, wallet_name=wallet_name)
+            assert_raises_rpc_error(RPC_WALLET_ERROR, f"SQLiteDatabase: Failed to open database in directory '{str(dir_path)}': directory is not writable", node.createwallet, wallet_name=wallet_name)
         # Reset directory permissions for cleanup
         dir_path.chmod(original_dir_perms)
 
@@ -54,9 +61,9 @@ class CreateWalletTest(BitcoinTestFramework):
 
         self.log.info("Run createwallet with invalid parameters.")
         # Run createwallet with invalid parameters. This must not prevent a new wallet with the same name from being created with the correct parameters.
-        assert_raises_rpc_error(-4, "Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.",
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.",
             self.nodes[0].createwallet, wallet_name='w0', disable_private_keys=True, passphrase="passphrase")
-        assert_raises_rpc_error(-8, "Wallet name cannot be empty", self.nodes[0].createwallet, "")
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Wallet name cannot be empty", self.nodes[0].createwallet, "")
 
         self.nodes[0].createwallet(wallet_name='w0')
         w0 = node.get_wallet_rpc('w0')
@@ -65,8 +72,8 @@ class CreateWalletTest(BitcoinTestFramework):
         self.log.info("Test disableprivatekeys creation.")
         self.nodes[0].createwallet(wallet_name='w1', disable_private_keys=True)
         w1 = node.get_wallet_rpc('w1')
-        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w1.getnewaddress)
-        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w1.getrawchangeaddress)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: This wallet has no available keys", w1.getnewaddress)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: This wallet has no available keys", w1.getrawchangeaddress)
         import_res = w1.importdescriptors([{"desc": w0.getaddressinfo(address1)['desc'], "timestamp": "now"}])
         assert_equal(import_res[0]["success"], True)
         assert_equal(sorted(w1.getwalletinfo()["flags"]), sorted(["last_hardened_xpub_cached", "descriptor_wallet", "disable_private_keys"]))
@@ -82,8 +89,8 @@ class CreateWalletTest(BitcoinTestFramework):
         self.log.info("Test blank creation with private keys disabled.")
         self.nodes[0].createwallet(wallet_name='w2', disable_private_keys=True, blank=True)
         w2 = node.get_wallet_rpc('w2')
-        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w2.getnewaddress)
-        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w2.getrawchangeaddress)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: This wallet has no available keys", w2.getnewaddress)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: This wallet has no available keys", w2.getrawchangeaddress)
         import_res = w2.importdescriptors([{"desc": w0.getaddressinfo(address1)['desc'], "timestamp": "now"}])
         assert_equal(import_res[0]["success"], True)
 
@@ -91,13 +98,13 @@ class CreateWalletTest(BitcoinTestFramework):
         self.nodes[0].createwallet(wallet_name='w3', disable_private_keys=False, blank=True)
         w3 = node.get_wallet_rpc('w3')
         assert_equal(w3.getwalletinfo()['keypoolsize'], 0)
-        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w3.getnewaddress)
-        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w3.getrawchangeaddress)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: This wallet has no available keys", w3.getnewaddress)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: This wallet has no available keys", w3.getrawchangeaddress)
         # Import private key
         wallet_importprivkey(w3, generate_keypair(wif=True)[0], "now")
         # Imported private keys are currently ignored by the keypool
         assert_equal(w3.getwalletinfo()['keypoolsize'], 0)
-        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w3.getnewaddress)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: This wallet has no available keys", w3.getnewaddress)
         # Set the seed
         w3.importdescriptors([{
             'desc': descsum_create(f'wpkh({ExtendedPrivateKey.generate().to_string()}/0h/*)'),
@@ -118,12 +125,12 @@ class CreateWalletTest(BitcoinTestFramework):
         self.nodes[0].createwallet(wallet_name='w4', disable_private_keys=False, blank=True)
         w4 = node.get_wallet_rpc('w4')
         assert_equal(w4.getwalletinfo()['keypoolsize'], 0)
-        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w4.getnewaddress)
-        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w4.getrawchangeaddress)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: This wallet has no available keys", w4.getnewaddress)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: This wallet has no available keys", w4.getrawchangeaddress)
         # Encrypt the wallet. Nothing should change about the keypool
         w4.encryptwallet('pass')
-        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w4.getnewaddress)
-        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w4.getrawchangeaddress)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: This wallet has no available keys", w4.getnewaddress)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: This wallet has no available keys", w4.getrawchangeaddress)
         with WalletUnlock(w4, "pass"):
             # Now set a seed and it should work. Wallet should also be encrypted
             w4.importdescriptors([{
@@ -144,26 +151,26 @@ class CreateWalletTest(BitcoinTestFramework):
         self.nodes[0].createwallet(wallet_name='w5', disable_private_keys=True, blank=True)
         w5 = node.get_wallet_rpc('w5')
         assert_equal(w5.getwalletinfo()['keypoolsize'], 0)
-        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w5.getnewaddress)
-        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w5.getrawchangeaddress)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: This wallet has no available keys", w5.getnewaddress)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: This wallet has no available keys", w5.getrawchangeaddress)
         # Encrypt the wallet
-        assert_raises_rpc_error(-16, "Error: wallet does not contain private keys, nothing to encrypt.", w5.encryptwallet, 'pass')
-        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w5.getnewaddress)
-        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w5.getrawchangeaddress)
+        assert_raises_rpc_error(RPC_WALLET_ENCRYPTION_FAILED, "Error: wallet does not contain private keys, nothing to encrypt.", w5.encryptwallet, 'pass')
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: This wallet has no available keys", w5.getnewaddress)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: This wallet has no available keys", w5.getrawchangeaddress)
 
         self.log.info('New blank and encrypted wallets can be created')
         self.nodes[0].createwallet(wallet_name='wblank', disable_private_keys=False, blank=True, passphrase='thisisapassphrase')
         wblank = node.get_wallet_rpc('wblank')
-        assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.", wblank.signmessage, "needanargument", "test")
+        assert_raises_rpc_error(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.", wblank.signmessage, "needanargument", "test")
         with WalletUnlock(wblank, "thisisapassphrase"):
-            assert_raises_rpc_error(-4, "Error: This wallet has no available keys", wblank.getnewaddress)
-            assert_raises_rpc_error(-4, "Error: This wallet has no available keys", wblank.getrawchangeaddress)
+            assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: This wallet has no available keys", wblank.getnewaddress)
+            assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: This wallet has no available keys", wblank.getrawchangeaddress)
 
         self.log.info('Test creating a new encrypted wallet.')
         # Born encrypted wallet is created (has keys)
         self.nodes[0].createwallet(wallet_name='w6', disable_private_keys=False, blank=False, passphrase='thisisapassphrase')
         w6 = node.get_wallet_rpc('w6')
-        assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.", w6.signmessage, "needanargument", "test")
+        assert_raises_rpc_error(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.", w6.signmessage, "needanargument", "test")
         with WalletUnlock(w6, "thisisapassphrase"):
             w6.signmessage(w6.getnewaddress('', 'legacy'), "test")
             w6.keypoolrefill(1)
@@ -177,19 +184,19 @@ class CreateWalletTest(BitcoinTestFramework):
         assert_equal(resp["warnings"], [EMPTY_PASSPHRASE_MSG])
 
         w7 = node.get_wallet_rpc('w7')
-        assert_raises_rpc_error(-15, 'Error: running with an unencrypted wallet, but walletpassphrase was called.', w7.walletpassphrase, '', 60)
+        assert_raises_rpc_error(RPC_WALLET_WRONG_ENC_STATE, 'Error: running with an unencrypted wallet, but walletpassphrase was called.', w7.walletpassphrase, '', 60)
 
         self.log.info('Test making a wallet with avoid reuse flag')
         self.nodes[0].createwallet('w8', False, False, '', True) # Use positional arguments to check for bug where avoid_reuse could not be set for wallets without needing them to be encrypted
         w8 = node.get_wallet_rpc('w8')
-        assert_raises_rpc_error(-15, 'Error: running with an unencrypted wallet, but walletpassphrase was called.', w8.walletpassphrase, '', 60)
+        assert_raises_rpc_error(RPC_WALLET_WRONG_ENC_STATE, 'Error: running with an unencrypted wallet, but walletpassphrase was called.', w8.walletpassphrase, '', 60)
         assert_equal(w8.getwalletinfo()["avoid_reuse"], True)
 
         self.log.info('Using a passphrase with private keys disabled returns error')
-        assert_raises_rpc_error(-4, 'Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.', self.nodes[0].createwallet, wallet_name='w9', disable_private_keys=True, passphrase='thisisapassphrase')
+        assert_raises_rpc_error(RPC_WALLET_ERROR, 'Passphrase provided but private keys are disabled. A passphrase is only used to encrypt private keys, so cannot be used for wallets with private keys disabled.', self.nodes[0].createwallet, wallet_name='w9', disable_private_keys=True, passphrase='thisisapassphrase')
 
         self.log.info("Test that legacy wallets cannot be created")
-        assert_raises_rpc_error(-4, 'descriptors argument must be set to "true"; it is no longer possible to create a legacy wallet.', self.nodes[0].createwallet, wallet_name="legacy", descriptors=False)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, 'descriptors argument must be set to "true"; it is no longer possible to create a legacy wallet.', self.nodes[0].createwallet, wallet_name="legacy", descriptors=False)
 
         self.log.info("Check that the version number is being logged correctly")
 

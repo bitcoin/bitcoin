@@ -12,6 +12,11 @@ import threading
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.netutil import test_ipv6_local
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_PARAMETER,
+    RPC_WALLET_NOT_FOUND,
+    RPC_WALLET_NOT_SPECIFIED,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -154,12 +159,12 @@ class TestBitcoinCli(BitcoinTestFramework):
 
         self.log.info("Test named arguments")
         assert_equal(self.nodes[0].cli.echo(0, 1, arg3=3, arg5=5), ['0', '1', None, '3', None, '5'])
-        assert_raises_rpc_error(-8, "Parameter arg1 specified twice both as positional and named argument", self.nodes[0].cli.echo, 0, 1, arg1=1)
-        assert_raises_rpc_error(-8, "Parameter arg1 specified twice both as positional and named argument", self.nodes[0].cli.echo, 0, None, 2, arg1=1)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Parameter arg1 specified twice both as positional and named argument", self.nodes[0].cli.echo, 0, 1, arg1=1)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Parameter arg1 specified twice both as positional and named argument", self.nodes[0].cli.echo, 0, None, 2, arg1=1)
 
         self.log.info("Test that later cli named arguments values silently overwrite earlier ones")
         assert_equal(self.nodes[0].cli("-named", "echo", "arg0=0", "arg1=1", "arg2=2", "arg1=3").send_cli(), ['0', '3', '2'])
-        assert_raises_rpc_error(-8, "Parameter args specified multiple times", self.nodes[0].cli("-named", "echo", "args=[0,1,2,3]", "4", "5", "6", ).send_cli)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Parameter args specified multiple times", self.nodes[0].cli("-named", "echo", "args=[0,1,2,3]", "4", "5", "6", ).send_cli)
 
         user, password = get_auth_cookie(self.nodes[0].datadir_path, self.chain)
 
@@ -400,10 +405,10 @@ class TestBitcoinCli(BitcoinTestFramework):
             assert_equal(self.nodes[0].getblockcount(), blocks + 2 + n1 + n2)
 
             self.log.info('Test -generate -rpcwallet=unloaded wallet raises RPC error')
-            assert_raises_rpc_error(-18, WALLET_NOT_LOADED, self.nodes[0].cli(rpcwallet3, '-generate').echo)
-            assert_raises_rpc_error(-18, WALLET_NOT_LOADED, self.nodes[0].cli(rpcwallet3, '-generate', 'foo').echo)
-            assert_raises_rpc_error(-18, WALLET_NOT_LOADED, self.nodes[0].cli(rpcwallet3, '-generate', 0).echo)
-            assert_raises_rpc_error(-18, WALLET_NOT_LOADED, self.nodes[0].cli(rpcwallet3, '-generate', 1, 2, 3).echo)
+            assert_raises_rpc_error(RPC_WALLET_NOT_FOUND, WALLET_NOT_LOADED, self.nodes[0].cli(rpcwallet3, '-generate').echo)
+            assert_raises_rpc_error(RPC_WALLET_NOT_FOUND, WALLET_NOT_LOADED, self.nodes[0].cli(rpcwallet3, '-generate', 'foo').echo)
+            assert_raises_rpc_error(RPC_WALLET_NOT_FOUND, WALLET_NOT_LOADED, self.nodes[0].cli(rpcwallet3, '-generate', 0).echo)
+            assert_raises_rpc_error(RPC_WALLET_NOT_FOUND, WALLET_NOT_LOADED, self.nodes[0].cli(rpcwallet3, '-generate', 1, 2, 3).echo)
 
             # Test bitcoin-cli -generate with -rpcwallet in multiwallet mode.
             self.nodes[0].loadwallet(wallets[2])
@@ -413,7 +418,7 @@ class TestBitcoinCli(BitcoinTestFramework):
 
             self.log.info('Test -generate -rpcwallet=<filename> raise RPC error')
             wallet2_path = f'-rpcwallet={self.nodes[0].wallets_path / wallets[2] / self.wallet_data_filename}'
-            assert_raises_rpc_error(-18, WALLET_NOT_LOADED, self.nodes[0].cli(wallet2_path, '-generate').echo)
+            assert_raises_rpc_error(RPC_WALLET_NOT_FOUND, WALLET_NOT_LOADED, self.nodes[0].cli(wallet2_path, '-generate').echo)
 
             self.log.info('Test -generate -rpcwallet with no args')
             generate = self.nodes[0].cli(rpcwallet2, '-generate').send_cli()
@@ -439,10 +444,10 @@ class TestBitcoinCli(BitcoinTestFramework):
             assert_equal(self.nodes[0].getblockcount(), blocks + 1 + n3 + n4)
 
             self.log.info('Test -generate without -rpcwallet in multiwallet mode raises RPC error')
-            assert_raises_rpc_error(-19, WALLET_NOT_SPECIFIED, self.nodes[0].cli('-generate').echo)
-            assert_raises_rpc_error(-19, WALLET_NOT_SPECIFIED, self.nodes[0].cli('-generate', 'foo').echo)
-            assert_raises_rpc_error(-19, WALLET_NOT_SPECIFIED, self.nodes[0].cli('-generate', 0).echo)
-            assert_raises_rpc_error(-19, WALLET_NOT_SPECIFIED, self.nodes[0].cli('-generate', 1, 2, 3).echo)
+            assert_raises_rpc_error(RPC_WALLET_NOT_SPECIFIED, WALLET_NOT_SPECIFIED, self.nodes[0].cli('-generate').echo)
+            assert_raises_rpc_error(RPC_WALLET_NOT_SPECIFIED, WALLET_NOT_SPECIFIED, self.nodes[0].cli('-generate', 'foo').echo)
+            assert_raises_rpc_error(RPC_WALLET_NOT_SPECIFIED, WALLET_NOT_SPECIFIED, self.nodes[0].cli('-generate', 0).echo)
+            assert_raises_rpc_error(RPC_WALLET_NOT_SPECIFIED, WALLET_NOT_SPECIFIED, self.nodes[0].cli('-generate', 1, 2, 3).echo)
         else:
             self.log.info("*** Wallet not compiled; cli getwalletinfo and -getinfo wallet tests skipped")
             self.generate(self.nodes[0], 25)  # maintain block parity with the wallet_compiled conditional branch

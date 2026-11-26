@@ -6,6 +6,10 @@
 
 from decimal import Decimal
 
+from test_framework.rpc_error_codes import (
+    RPC_WALLET_ERROR,
+    RPC_WALLET_KEYPOOL_RAN_OUT,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import descsum_create
 from test_framework.extendedkey import ExtendedPrivateKey
@@ -41,7 +45,7 @@ class KeyPoolTest(BitcoinTestFramework):
         # The refill cannot be satisfied, so it is reported as an error and the range is left
         # as it was. Without the bound this addition is undefined behavior, detected by UBSan.
         info_before = overflow_wallet.getwalletinfo()
-        assert_raises_rpc_error(-4, "Error refreshing keypool.", overflow_wallet.keypoolrefill, 2**31 - 1)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error refreshing keypool.", overflow_wallet.keypoolrefill, 2**31 - 1)
         info_after = overflow_wallet.getwalletinfo()
         assert_equal(info_after["keypoolsize"], info_before["keypoolsize"])
         assert_equal(info_after["keypoolsize_hd_internal"], info_before["keypoolsize_hd_internal"])
@@ -101,7 +105,7 @@ class KeyPoolTest(BitcoinTestFramework):
         addr = nodes[0].getnewaddress()
         addr_data = nodes[0].getaddressinfo(addr)
         assert_not_equal(addr_before_encrypting_data['hdmasterfingerprint'], addr_data['hdmasterfingerprint'])
-        assert_raises_rpc_error(-12, "Error: Keypool ran out, please call keypoolrefill first", nodes[0].getnewaddress)
+        assert_raises_rpc_error(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first", nodes[0].getnewaddress)
 
         # put six (plus 2) new keys in the keypool (100% external-, +100% internal-keys, 1 in min)
         with WalletUnlock(nodes[0], 'test'):
@@ -121,7 +125,7 @@ class KeyPoolTest(BitcoinTestFramework):
         wi = nodes[0].getwalletinfo()
         kp_size_before = [wi['keypoolsize_hd_internal'], wi['keypoolsize']]
         # the next one should fail
-        assert_raises_rpc_error(-12, "Keypool ran out", nodes[0].getrawchangeaddress)
+        assert_raises_rpc_error(RPC_WALLET_KEYPOOL_RAN_OUT, "Keypool ran out", nodes[0].getrawchangeaddress)
         # check that keypool sizes did not change
         wi = nodes[0].getwalletinfo()
         kp_size_after = [wi['keypoolsize_hd_internal'], wi['keypoolsize']]
@@ -140,7 +144,7 @@ class KeyPoolTest(BitcoinTestFramework):
         wi = nodes[0].getwalletinfo()
         kp_size_before = [wi['keypoolsize_hd_internal'], wi['keypoolsize']]
         # the next one should fail
-        assert_raises_rpc_error(-12, "Error: Keypool ran out, please call keypoolrefill first", nodes[0].getnewaddress)
+        assert_raises_rpc_error(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first", nodes[0].getnewaddress)
         # check that keypool sizes did not change
         wi = nodes[0].getwalletinfo()
         kp_size_after = [wi['keypoolsize_hd_internal'], wi['keypoolsize']]
@@ -159,7 +163,7 @@ class KeyPoolTest(BitcoinTestFramework):
         # drain the keypool
         for _ in range(3):
             nodes[0].getnewaddress()
-        assert_raises_rpc_error(-12, "Keypool ran out", nodes[0].getnewaddress)
+        assert_raises_rpc_error(RPC_WALLET_KEYPOOL_RAN_OUT, "Keypool ran out", nodes[0].getnewaddress)
 
         with WalletUnlock(nodes[0], 'test'):
             nodes[0].keypoolrefill(100)
@@ -187,7 +191,7 @@ class KeyPoolTest(BitcoinTestFramework):
 
         # Using a fee rate (10 sat / byte) well above the minimum relay rate
         # creating a 5,000 sat transaction with change should not be possible
-        assert_raises_rpc_error(-4, "Transaction needs a change address, but we can't generate it.", w2.walletcreatefundedpsbt, inputs=[], outputs=[{addr.pop(): 0.00005000}], subtractFeeFromOutputs=[0], feeRate=0.00010)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Transaction needs a change address, but we can't generate it.", w2.walletcreatefundedpsbt, inputs=[], outputs=[{addr.pop(): 0.00005000}], subtractFeeFromOutputs=[0], feeRate=0.00010)
 
         # creating a 10,000 sat transaction without change, with a manual input, should still be possible
         res = w2.walletcreatefundedpsbt(inputs=w2.listunspent(), outputs=[{destination: 0.00010000}], subtract_fee_from_outputs=[0], feeRate=0.00010)

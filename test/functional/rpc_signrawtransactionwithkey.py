@@ -12,6 +12,11 @@ from test_framework.address import (
     p2a,
     script_to_p2sh,
 )
+from test_framework.rpc_error_codes import (
+    RPC_DESERIALIZATION_ERROR,
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_INVALID_PARAMETER,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -129,16 +134,16 @@ class SignRawTransactionWithKeyTest(BitcoinTestFramework):
         self.log.info("Test signing transaction with invalid sighashtype")
         tx = self.nodes[0].createrawtransaction(INPUTS, OUTPUTS)
         privkeys = [self.nodes[0].get_deterministic_priv_key().key]
-        assert_raises_rpc_error(-8, "'all' is not a valid sighash parameter.", self.nodes[0].signrawtransactionwithkey, tx, privkeys, sighashtype="all")
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "'all' is not a valid sighash parameter.", self.nodes[0].signrawtransactionwithkey, tx, privkeys, sighashtype="all")
 
     def invalid_private_key_and_tx(self):
         self.log.info("Test signing transaction with an invalid private key")
         tx = self.nodes[0].createrawtransaction(INPUTS, OUTPUTS)
         privkeys = ["123"]
-        assert_raises_rpc_error(-5, "Invalid private key", self.nodes[0].signrawtransactionwithkey, tx, privkeys)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key", self.nodes[0].signrawtransactionwithkey, tx, privkeys)
         self.log.info("Test signing transaction with an invalid tx hex")
         privkeys = [self.nodes[0].get_deterministic_priv_key().key]
-        assert_raises_rpc_error(-22, "TX decode failed. Make sure the tx has at least one input.", self.nodes[0].signrawtransactionwithkey, tx + "00", privkeys)
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "TX decode failed. Make sure the tx has at least one input.", self.nodes[0].signrawtransactionwithkey, tx + "00", privkeys)
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])

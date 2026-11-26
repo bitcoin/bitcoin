@@ -21,6 +21,10 @@ import time
 
 from test_framework.address import key_to_p2pkh, key_to_p2sh_p2wpkh, key_to_p2wpkh, script_to_p2wsh
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.rpc_error_codes import (
+    RPC_WALLET_ERROR,
+    RPC_WALLET_UNLOCK_NEEDED,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import descsum_create
 from test_framework.extendedkey import ExtendedPrivateKey
@@ -596,7 +600,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.log.info("Check we can change descriptor internal flag")
         self.test_importdesc({**range_request, "range": [0, 20], "internal": True}, wallet=wpriv, success=True)
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 0)
-        assert_raises_rpc_error(-4, 'This wallet has no available keys', wpriv.getnewaddress, '', 'p2sh-segwit')
+        assert_raises_rpc_error(RPC_WALLET_ERROR, 'This wallet has no available keys', wpriv.getnewaddress, '', 'p2sh-segwit')
         assert_equal(wpriv.getwalletinfo()['keypoolsize_hd_internal'], 21)
         wpriv.getrawchangeaddress('p2sh-segwit')
 
@@ -604,7 +608,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 21)
         wpriv.getnewaddress('', 'p2sh-segwit')
         assert_equal(wpriv.getwalletinfo()['keypoolsize_hd_internal'], 0)
-        assert_raises_rpc_error(-4, 'This wallet has no available keys', wpriv.getrawchangeaddress, 'p2sh-segwit')
+        assert_raises_rpc_error(RPC_WALLET_ERROR, 'This wallet has no available keys', wpriv.getrawchangeaddress, 'p2sh-segwit')
 
         # Make sure ranged imports import keys in order
         w1 = self.nodes[1].get_wallet_rpc('w1')
@@ -636,7 +640,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(w1.getwalletinfo()['keypoolsize'], 5 * 3)
         for i, expected_addr in enumerate(addresses):
             received_addr = w1.getnewaddress('', 'bech32')
-            assert_raises_rpc_error(-4, 'This wallet has no available keys', w1.getrawchangeaddress, 'bech32')
+            assert_raises_rpc_error(RPC_WALLET_ERROR, 'This wallet has no available keys', w1.getrawchangeaddress, 'bech32')
             assert_equal(received_addr, expected_addr)
 
             key_origin = f'[{root_fingerprint}/0h/0h/{i}]'
@@ -695,7 +699,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               'internal': True
                              },
                              success=True)
-        assert_raises_rpc_error(-4, 'This wallet has no available keys', w1.getrawchangeaddress, 'legacy')
+        assert_raises_rpc_error(RPC_WALLET_ERROR, 'This wallet has no available keys', w1.getrawchangeaddress, 'legacy')
 
         self.log.info('Check can activate inactive descriptor')
         self.test_importdesc({'desc': descsum_create('pkh([12345678]' + xpub + '/*)'),
@@ -716,12 +720,12 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               'internal': True
                               },
                              success=True)
-        assert_raises_rpc_error(-4, 'This wallet has no available keys', w1.getrawchangeaddress, 'legacy')
+        assert_raises_rpc_error(RPC_WALLET_ERROR, 'This wallet has no available keys', w1.getrawchangeaddress, 'legacy')
 
         self.log.info('Verify activation state is persistent')
         w1.unloadwallet()
         self.nodes[1].loadwallet('w1')
-        assert_raises_rpc_error(-4, 'This wallet has no available keys', w1.getrawchangeaddress, 'legacy')
+        assert_raises_rpc_error(RPC_WALLET_ERROR, 'This wallet has no available keys', w1.getrawchangeaddress, 'legacy')
 
         # # Test importing a descriptor containing a WIF private key
         wif_priv = "cTe1f5rdT8A8DFgVWTjyPwACsDPJM9ff4QngFxUixCSvvbg1x6sh"
@@ -1043,11 +1047,11 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         encrypted_wallet = self.nodes[0].get_wallet_rpc("encrypted_wallet")
 
         self.log.info("Wallet must be unlocked to import a descriptor")
-        assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.",
+        assert_raises_rpc_error(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.",
             encrypted_wallet.importdescriptors, [descriptor])
 
         self.log.info("A locked wallet rejects an empty importdescriptors request")
-        assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.",
+        assert_raises_rpc_error(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.",
             encrypted_wallet.importdescriptors, [])
 
         self.log.info("An unlocked wallet accepts an empty importdescriptors request")

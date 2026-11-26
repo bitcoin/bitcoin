@@ -17,6 +17,14 @@ from test_framework.p2p import (
     P2PInterface,
     P2P_SERVICES,
 )
+from test_framework.rpc_error_codes import (
+    RPC_CLIENT_INVALID_IP_OR_SUBNET,
+    RPC_CLIENT_NODE_ALREADY_ADDED,
+    RPC_CLIENT_NODE_NOT_ADDED,
+    RPC_INVALID_PARAMETER,
+    RPC_MISC_ERROR,
+    RPC_TYPE_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_approx,
@@ -257,7 +265,7 @@ class NetTest(BitcoinTestFramework):
         self.log.debug("(note that OpenBSD doesn't support the IPv4 shorthand notation with omitted zero-bytes)")
         if platform.system() != "OpenBSD":
             ip_port2 = "127.1:{}".format(p2p_port(2))
-            assert_raises_rpc_error(-23, "Node already added", self.nodes[0].addnode, node=ip_port2, command='add')
+            assert_raises_rpc_error(RPC_CLIENT_NODE_ALREADY_ADDED, "Node already added", self.nodes[0].addnode, node=ip_port2, command='add')
         self.log.info("Check that the node has indeed been added")
         added_nodes = self.nodes[0].getaddednodeinfo()
         assert_equal(len(added_nodes), 1)
@@ -268,23 +276,23 @@ class NetTest(BitcoinTestFramework):
         assert_equal(added_nodes, first_added_node)
         assert_equal(len(self.nodes[0].getaddednodeinfo()), 2)
         self.log.info("Check that node cannot be added again")
-        assert_raises_rpc_error(-23, "Node already added", self.nodes[0].addnode, node=ip_port, command='add')
+        assert_raises_rpc_error(RPC_CLIENT_NODE_ALREADY_ADDED, "Node already added", self.nodes[0].addnode, node=ip_port, command='add')
         self.log.info("Check that node can be removed")
         self.nodes[0].addnode(node=ip_port, command='remove')
         added_nodes = self.nodes[0].getaddednodeinfo()
         assert_equal(len(added_nodes), 1)
         assert_equal(added_nodes[0]['addednode'], "11.22.33.44")
         self.log.info("Check that an invalid command returns an error")
-        assert_raises_rpc_error(-1, 'addnode "node" "command"', self.nodes[0].addnode, node=ip_port, command='abc')
+        assert_raises_rpc_error(RPC_MISC_ERROR, 'addnode "node" "command"', self.nodes[0].addnode, node=ip_port, command='abc')
         self.log.info("Check that an empty node address returns an error")
         for command in ['add', 'remove', 'onetry']:
-            assert_raises_rpc_error(-8, "Node address cannot be empty", self.nodes[0].addnode, node="", command=command)
-            assert_raises_rpc_error(-8, "Node address cannot be empty", self.nodes[0].addnode, node=" ", command=command)
+            assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Node address cannot be empty", self.nodes[0].addnode, node="", command=command)
+            assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Node address cannot be empty", self.nodes[0].addnode, node=" ", command=command)
         assert_equal(len(self.nodes[0].getaddednodeinfo()), 1)
         self.log.info("Check that trying to remove the node again returns an error")
-        assert_raises_rpc_error(-24, "Node could not be removed", self.nodes[0].addnode, node=ip_port, command='remove')
+        assert_raises_rpc_error(RPC_CLIENT_NODE_NOT_ADDED, "Node could not be removed", self.nodes[0].addnode, node=ip_port, command='remove')
         self.log.info("Check that a non-existent node returns an error")
-        assert_raises_rpc_error(-24, "Node has not been added", self.nodes[0].getaddednodeinfo, '1.1.1.1')
+        assert_raises_rpc_error(RPC_CLIENT_NODE_NOT_ADDED, "Node has not been added", self.nodes[0].getaddednodeinfo, '1.1.1.1')
 
     def test_service_flags(self):
         self.log.info("Test service flags")
@@ -342,9 +350,9 @@ class NetTest(BitcoinTestFramework):
             assert_equal(self.nodes[0].getnodeaddresses(0, network), [])
 
         # Test invalid arguments.
-        assert_raises_rpc_error(-8, "Address count out of range", self.nodes[0].getnodeaddresses, -1)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Address count out of range", self.nodes[0].getnodeaddresses, -1)
         for network in ["Foo", "tor"]:
-            assert_raises_rpc_error(-8, f"Network not recognized: {network}", self.nodes[0].getnodeaddresses, 1, network)
+            assert_raises_rpc_error(RPC_INVALID_PARAMETER, f"Network not recognized: {network}", self.nodes[0].getnodeaddresses, 1, network)
 
     def test_addpeeraddress(self):
         self.log.info("Test addpeeraddress")
@@ -359,18 +367,18 @@ class NetTest(BitcoinTestFramework):
         assert "unknown command: addpeeraddress" not in node.help("addpeeraddress")
 
         self.log.debug("Test that adding an empty address fails")
-        assert_raises_rpc_error(-30, "Invalid IP address", node.addpeeraddress, address="", port=8333)
+        assert_raises_rpc_error(RPC_CLIENT_INVALID_IP_OR_SUBNET, "Invalid IP address", node.addpeeraddress, address="", port=8333)
         assert_equal(node.getnodeaddresses(count=0), [])
 
         self.log.debug("Test that adding a non-IP/hostname fails (no DNS lookup allowed)")
-        assert_raises_rpc_error(-30, "Invalid IP address", node.addpeeraddress, address="not_an_ip", port=8333)
+        assert_raises_rpc_error(RPC_CLIENT_INVALID_IP_OR_SUBNET, "Invalid IP address", node.addpeeraddress, address="not_an_ip", port=8333)
 
         self.log.debug("Test that non-bool tried fails")
-        assert_raises_rpc_error(-3, "JSON value of type string is not of expected type bool", self.nodes[0].addpeeraddress, address="1.2.3.4", tried="True", port=1234)
+        assert_raises_rpc_error(RPC_TYPE_ERROR, "JSON value of type string is not of expected type bool", self.nodes[0].addpeeraddress, address="1.2.3.4", tried="True", port=1234)
 
         self.log.debug("Test that adding an address with invalid port fails")
-        assert_raises_rpc_error(-1, "JSON integer out of range", self.nodes[0].addpeeraddress, address="1.2.3.4", port=-1)
-        assert_raises_rpc_error(-1, "JSON integer out of range", self.nodes[0].addpeeraddress, address="1.2.3.4", port=65536)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "JSON integer out of range", self.nodes[0].addpeeraddress, address="1.2.3.4", port=-1)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "JSON integer out of range", self.nodes[0].addpeeraddress, address="1.2.3.4", port=65536)
 
         self.log.debug("Test that adding a valid address to the new table succeeds")
         assert_equal(node.addpeeraddress(address="1.0.0.0", tried=False, port=8333), {"success": True})
@@ -436,13 +444,13 @@ class NetTest(BitcoinTestFramework):
             self.wait_until(lambda: node.getpeerinfo()[0]["bytesrecv_per_msg"]["pong"] > msg_bytes_before)
 
         self.log.debug("Test error for sending to non-existing peer")
-        assert_raises_rpc_error(-1, "Error: Could not send message to peer", node.sendmsgtopeer, peer_id=100, msg_type="addr", msg="FF")
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Error: Could not send message to peer", node.sendmsgtopeer, peer_id=100, msg_type="addr", msg="FF")
 
         self.log.debug("Test that zero-length msg_type is allowed")
         node.sendmsgtopeer(peer_id=0, msg_type="addr", msg="")
 
         self.log.debug("Test error for msg_type that is too long")
-        assert_raises_rpc_error(-8, "Error: msg_type too long, max length is 12", node.sendmsgtopeer, peer_id=0, msg_type="long_msg_type", msg="FF")
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Error: msg_type too long, max length is 12", node.sendmsgtopeer, peer_id=0, msg_type="long_msg_type", msg="FF")
 
         self.log.debug("Test that unknown msg_type is allowed")
         node.sendmsgtopeer(peer_id=0, msg_type="unknown", msg="FF")

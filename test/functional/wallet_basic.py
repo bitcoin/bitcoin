@@ -10,6 +10,12 @@ from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.descriptors import descsum_create
 from test_framework.mempool_util import DEFAULT_ANCESTOR_LIMIT
 from test_framework.messages import COIN
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_INVALID_PARAMETER,
+    RPC_TYPE_ERROR,
+    RPC_WALLET_INSUFFICIENT_FUNDS,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_array_result,
@@ -122,11 +128,11 @@ class WalletTest(BitcoinTestFramework):
         unspent_0 = self.nodes[2].listunspent()[0]
         unspent_0 = {"txid": unspent_0["txid"], "vout": unspent_0["vout"]}
         # Trying to unlock an output which isn't locked should error
-        assert_raises_rpc_error(-8, "Invalid parameter, expected locked output", self.nodes[2].lockunspent, True, [unspent_0])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid parameter, expected locked output", self.nodes[2].lockunspent, True, [unspent_0])
 
         # Locking an already-locked output should error
         self.nodes[2].lockunspent(False, [unspent_0])
-        assert_raises_rpc_error(-8, "Invalid parameter, output already locked", self.nodes[2].lockunspent, False, [unspent_0])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid parameter, output already locked", self.nodes[2].lockunspent, False, [unspent_0])
 
         # Restarting the node should clear the lock
         self.restart_node(2)
@@ -144,15 +150,15 @@ class WalletTest(BitcoinTestFramework):
 
         # Restarting the node with the lock written to the wallet should keep the lock
         self.restart_node(2, ["-walletrejectlongchains=0"])
-        assert_raises_rpc_error(-8, "Invalid parameter, output already locked", self.nodes[2].lockunspent, False, [unspent_0])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid parameter, output already locked", self.nodes[2].lockunspent, False, [unspent_0])
 
         # Unloading and reloading the wallet with a persistent lock should keep the lock
         self.nodes[2].unloadwallet(self.default_wallet_name)
         self.nodes[2].loadwallet(self.default_wallet_name)
-        assert_raises_rpc_error(-8, "Invalid parameter, output already locked", self.nodes[2].lockunspent, False, [unspent_0])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid parameter, output already locked", self.nodes[2].lockunspent, False, [unspent_0])
 
         # Locked outputs should not be used, even if they are the only available funds
-        assert_raises_rpc_error(-6, "Insufficient funds", self.nodes[2].sendtoaddress, self.nodes[2].getnewaddress(), 20)
+        assert_raises_rpc_error(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds", self.nodes[2].sendtoaddress, self.nodes[2].getnewaddress(), 20)
         assert_equal([unspent_0], self.nodes[2].listlockunspent())
 
         # Unlocking should remove the persistent lock
@@ -164,16 +170,16 @@ class WalletTest(BitcoinTestFramework):
         self.connect_nodes(1, 2)
         self.connect_nodes(0, 2)
 
-        assert_raises_rpc_error(-8, "txid must be of length 64 (not 34, for '0000000000000000000000000000000000')",
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "txid must be of length 64 (not 34, for '0000000000000000000000000000000000')",
                                 self.nodes[2].lockunspent, False,
                                 [{"txid": "0000000000000000000000000000000000", "vout": 0}])
-        assert_raises_rpc_error(-8, "txid must be hexadecimal string (not 'ZZZ0000000000000000000000000000000000000000000000000000000000000')",
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "txid must be hexadecimal string (not 'ZZZ0000000000000000000000000000000000000000000000000000000000000')",
                                 self.nodes[2].lockunspent, False,
                                 [{"txid": "ZZZ0000000000000000000000000000000000000000000000000000000000000", "vout": 0}])
-        assert_raises_rpc_error(-8, "Invalid parameter, unknown transaction",
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid parameter, unknown transaction",
                                 self.nodes[2].lockunspent, False,
                                 [{"txid": "0000000000000000000000000000000000000000000000000000000000000000", "vout": 0}])
-        assert_raises_rpc_error(-8, "Invalid parameter, vout index out of bounds",
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid parameter, vout index out of bounds",
                                 self.nodes[2].lockunspent, False,
                                 [{"txid": unspent_0["txid"], "vout": 999}])
 
@@ -230,7 +236,7 @@ class WalletTest(BitcoinTestFramework):
 
         # Verify that a spent output cannot be locked anymore
         spent_0 = {"txid": node0utxos[0]["txid"], "vout": node0utxos[0]["vout"]}
-        assert_raises_rpc_error(-8, "Invalid parameter, expected unspent output", self.nodes[0].lockunspent, False, [spent_0])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid parameter, expected unspent output", self.nodes[0].lockunspent, False, [spent_0])
 
         # Send 10 BTC normal
         address = self.nodes[0].getnewaddress("test")
@@ -302,37 +308,37 @@ class WalletTest(BitcoinTestFramework):
         node_0_bal += amount
         assert_equal(self.nodes[0].getbalance(), node_0_bal)
 
-        assert_raises_rpc_error(-8, "Unknown named parameter feeRate", self.nodes[2].sendtoaddress, address=address, amount=1, fee_rate=1, feeRate=1)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Unknown named parameter feeRate", self.nodes[2].sendtoaddress, address=address, amount=1, fee_rate=1, feeRate=1)
 
         # Test setting explicit fee rate just below the minimum.
         self.log.info("Test sendmany raises 'fee rate too low' if fee_rate of 0.99999999 is passed")
-        assert_raises_rpc_error(-6, "Fee rate (0.999 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)",
+        assert_raises_rpc_error(RPC_WALLET_INSUFFICIENT_FUNDS, "Fee rate (0.999 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)",
             self.nodes[2].sendmany, amounts={address: 10}, fee_rate=0.999)
 
         self.log.info("Test sendmany raises if an invalid fee_rate is passed")
         # Test fee_rate with zero values.
         msg = "Fee rate (0.000 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)"
         for zero_value in [0, 0.000, 0.00000000, "0", "0.000", "0.00000000"]:
-            assert_raises_rpc_error(-6, msg, self.nodes[2].sendmany, amounts={address: 1}, fee_rate=zero_value)
+            assert_raises_rpc_error(RPC_WALLET_INSUFFICIENT_FUNDS, msg, self.nodes[2].sendmany, amounts={address: 1}, fee_rate=zero_value)
         msg = "Invalid amount"
         # Test fee_rate values that don't pass fixed-point parsing checks.
         for invalid_value in ["", 0.000000001, 1e-09, 1.111111111, 1111111111111111, "31.999999999999999999999"]:
-            assert_raises_rpc_error(-3, msg, self.nodes[2].sendmany, amounts={address: 1.0}, fee_rate=invalid_value)
+            assert_raises_rpc_error(RPC_TYPE_ERROR, msg, self.nodes[2].sendmany, amounts={address: 1.0}, fee_rate=invalid_value)
         # Test fee_rate values that cannot be represented in sat/vB.
         for invalid_value in [0.0001, 0.00000001, 0.00099999, 31.99999999]:
-            assert_raises_rpc_error(-3, msg, self.nodes[2].sendmany, amounts={address: 10}, fee_rate=invalid_value)
+            assert_raises_rpc_error(RPC_TYPE_ERROR, msg, self.nodes[2].sendmany, amounts={address: 10}, fee_rate=invalid_value)
         # Test fee_rate out of range (negative number).
-        assert_raises_rpc_error(-3, OUT_OF_RANGE, self.nodes[2].sendmany, amounts={address: 10}, fee_rate=-1)
+        assert_raises_rpc_error(RPC_TYPE_ERROR, OUT_OF_RANGE, self.nodes[2].sendmany, amounts={address: 10}, fee_rate=-1)
         # Test type error.
         for invalid_value in [True, {"foo": "bar"}]:
-            assert_raises_rpc_error(-3, NOT_A_NUMBER_OR_STRING, self.nodes[2].sendmany, amounts={address: 10}, fee_rate=invalid_value)
+            assert_raises_rpc_error(RPC_TYPE_ERROR, NOT_A_NUMBER_OR_STRING, self.nodes[2].sendmany, amounts={address: 10}, fee_rate=invalid_value)
 
         self.log.info("Test sendmany raises if an invalid conf_target or estimate_mode is passed")
         for target, mode in product([-1, 0, 1009], ["economical", "conservative"]):
-            assert_raises_rpc_error(-8, "Invalid conf_target, must be between 1 and 1008",  # max value of 1008 per src/policy/fees/block_policy_estimator.h
+            assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid conf_target, must be between 1 and 1008",  # max value of 1008 per src/policy/fees/block_policy_estimator.h
                 self.nodes[2].sendmany, amounts={address: 1}, conf_target=target, estimate_mode=mode)
         for target, mode in product([-1, 0], ["btc/kb", "sat/b"]):
-            assert_raises_rpc_error(-8, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"',
+            assert_raises_rpc_error(RPC_INVALID_PARAMETER, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"',
                 self.nodes[2].sendmany, amounts={address: 1}, conf_target=target, estimate_mode=mode)
 
         # check if we can list zero value tx as available coins
@@ -418,13 +424,13 @@ class WalletTest(BitcoinTestFramework):
 
         # General checks for errors from incorrect inputs
         # This will raise an exception because the amount is negative
-        assert_raises_rpc_error(-3, OUT_OF_RANGE, self.nodes[0].sendtoaddress, self.nodes[2].getnewaddress(), "-1")
+        assert_raises_rpc_error(RPC_TYPE_ERROR, OUT_OF_RANGE, self.nodes[0].sendtoaddress, self.nodes[2].getnewaddress(), "-1")
 
         # This will raise an exception because the amount type is wrong
-        assert_raises_rpc_error(-3, "Invalid amount", self.nodes[0].sendtoaddress, self.nodes[2].getnewaddress(), "1f-4")
+        assert_raises_rpc_error(RPC_TYPE_ERROR, "Invalid amount", self.nodes[0].sendtoaddress, self.nodes[2].getnewaddress(), "1f-4")
 
         # This will raise an exception since generate does not accept a string
-        assert_raises_rpc_error(-3, "not of expected type number", self.generate, self.nodes[0], "2")
+        assert_raises_rpc_error(RPC_TYPE_ERROR, "not of expected type number", self.generate, self.nodes[0], "2")
 
         # Mine a block from node0 to an address from node1
         coinbase_addr = self.nodes[1].getnewaddress()
@@ -512,13 +518,13 @@ class WalletTest(BitcoinTestFramework):
 
         node0_balance = self.nodes[0].getbalance()
         # With walletrejectlongchains we will not create the tx and store it in our wallet.
-        assert_raises_rpc_error(-6, "too many unconfirmed transactions in cluster", self.nodes[0].sendtoaddress, sending_addr, node0_balance - Decimal('0.01'))
+        assert_raises_rpc_error(RPC_WALLET_INSUFFICIENT_FUNDS, "too many unconfirmed transactions in cluster", self.nodes[0].sendtoaddress, sending_addr, node0_balance - Decimal('0.01'))
 
         # Verify nothing new in wallet
         assert_equal(total_txs, len(self.nodes[0].listtransactions("*", 99999)))
 
         # Test getaddressinfo on external address. Note that these addresses are taken from disablewallet.py
-        assert_raises_rpc_error(-5, "Invalid or unsupported Base58-encoded address.", self.nodes[0].getaddressinfo, "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy")
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or unsupported Base58-encoded address.", self.nodes[0].getaddressinfo, "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy")
         address_info = self.nodes[0].getaddressinfo("mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ")
         assert_equal(address_info['address'], "mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ")
         assert_equal(address_info["scriptPubKey"], "76a9144e3854046c7bd1594ac904e4793b6a45b36dea0988ac")
@@ -650,7 +656,7 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(bal['mine']['untrusted_pending'], utxos[0]['amount'])
 
         # spending an unconfirmed UTXO sent to ourselves should fail
-        assert_raises_rpc_error(-6, "Insufficient funds", zeroconf_wallet.sendtoaddress, zeroconf_wallet.getnewaddress(), Decimal('0.5'))
+        assert_raises_rpc_error(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds", zeroconf_wallet.sendtoaddress, zeroconf_wallet.getnewaddress(), Decimal('0.5'))
 
         # check that it works again with -spendzeroconfchange set (=default)
         self.restart_node(0, ["-spendzeroconfchange=1"])

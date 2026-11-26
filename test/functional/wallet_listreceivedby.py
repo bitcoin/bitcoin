@@ -6,6 +6,10 @@
 from decimal import Decimal
 
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_WALLET_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_array_result,
@@ -74,7 +78,7 @@ class ReceivedByTest(BitcoinTestFramework):
         assert_array_result(cli_res, {"address": addr}, expected)
         assert_equal(len(cli_res), 1)
         # Error on invalid address
-        assert_raises_rpc_error(-4, "address_filter parameter was invalid", self.nodes[1].listreceivedbyaddress, minconf=0, include_empty=True, address_filter="bamboozling")
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "address_filter parameter was invalid", self.nodes[1].listreceivedbyaddress, minconf=0, include_empty=True, address_filter="bamboozling")
         # Another address receive money
         res = self.nodes[1].listreceivedbyaddress(0, True, True)
         assert_equal(len(res), 2 + num_cb_reward_addresses)  # Right now 2 entries
@@ -132,7 +136,7 @@ class ReceivedByTest(BitcoinTestFramework):
         assert_equal(balance, Decimal("0.1"))
 
         # Trying to getreceivedby for an address the wallet doesn't own should return an error
-        assert_raises_rpc_error(-4, "Address not found in wallet", self.nodes[0].getreceivedbyaddress, addr)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Address not found in wallet", self.nodes[0].getreceivedbyaddress, addr)
 
         # Test multiple transactions to the same address
         addr_with_multiple_txs = self.nodes[1].getnewaddress()
@@ -143,7 +147,7 @@ class ReceivedByTest(BitcoinTestFramework):
         assert_equal(balance, Decimal("0.3"))
 
         # Test invalid address format error
-        assert_raises_rpc_error(-5, "Invalid Bitcoin address", self.nodes[1].getreceivedbyaddress, "invalid_address")
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address", self.nodes[1].getreceivedbyaddress, "invalid_address")
 
         self.log.info("listreceivedbylabel + getreceivedbylabel Test")
 
@@ -158,7 +162,7 @@ class ReceivedByTest(BitcoinTestFramework):
         self.sync_all()
 
         # getreceivedbylabel returns an error if the wallet doesn't own the label
-        assert_raises_rpc_error(-4, "Label not found in wallet", self.nodes[0].getreceivedbylabel, "dummy")
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Label not found in wallet", self.nodes[0].getreceivedbylabel, "dummy")
 
         # listreceivedbylabel should return received_by_label_json because of 0 confirmations
         assert_array_result(self.nodes[1].listreceivedbylabel(),

@@ -30,6 +30,11 @@ from test_framework.messages import (
 from test_framework.p2p import (
     P2PInterface,
 )
+from test_framework.rpc_error_codes import (
+    RPC_INTERNAL_ERROR,
+    RPC_INVALID_PARAMETER,
+    RPC_MISC_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_approx,
@@ -85,7 +90,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         node = self.nodes[1]
 
         def expected_error(msg):
-            assert_raises_rpc_error(-32603, f"Unable to load UTXO snapshot: Population failed: {msg}", node.loadtxoutset, bad_snapshot_path)
+            assert_raises_rpc_error(RPC_INTERNAL_ERROR, f"Unable to load UTXO snapshot: Population failed: {msg}", node.loadtxoutset, bad_snapshot_path)
 
         self.log.info("  - snapshot file with invalid file magic")
         parsing_error_code = -22
@@ -125,7 +130,7 @@ class AssumeutxoTest(BitcoinTestFramework):
                 f.write(valid_snapshot_contents[:11] + bytes.fromhex(bad_block_hash)[::-1] + valid_snapshot_contents[43:])
 
             msg = f"Unable to load UTXO snapshot: assumeutxo block hash in snapshot metadata not recognized (hash: {bad_block_hash}). The following snapshot heights are available: 110, 200, 299."
-            assert_raises_rpc_error(-32603, msg, node.loadtxoutset, bad_snapshot_path)
+            assert_raises_rpc_error(RPC_INTERNAL_ERROR, msg, node.loadtxoutset, bad_snapshot_path)
 
         self.log.info("  - snapshot file with wrong number of coins")
         valid_num_coins = int.from_bytes(valid_snapshot_contents[43:43 + 8], "little")
@@ -169,7 +174,7 @@ class AssumeutxoTest(BitcoinTestFramework):
     def test_headers_not_synced(self, valid_snapshot_path):
         for node in self.nodes[1:]:
             msg = "Unable to load UTXO snapshot: The base block header (0c552ced4721c249a389eb9b08cb8da261cd46f0e7b5f9d064d48f3113406853) must appear in the headers chain. Make sure all headers are syncing, and call loadtxoutset again."
-            assert_raises_rpc_error(-32603, msg, node.loadtxoutset, valid_snapshot_path)
+            assert_raises_rpc_error(RPC_INTERNAL_ERROR, msg, node.loadtxoutset, valid_snapshot_path)
 
     def test_invalid_chainstate_scenarios(self):
         self.log.info("Test different scenarios of invalid snapshot chainstate in datadir")
@@ -203,7 +208,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         # Attempt to load the snapshot on Node 2 and expect it to fail
         msg = "Unable to load UTXO snapshot: Can't activate a snapshot when mempool not empty"
-        assert_raises_rpc_error(-32603, msg, node.loadtxoutset, dump_output_path)
+        assert_raises_rpc_error(RPC_INTERNAL_ERROR, msg, node.loadtxoutset, dump_output_path)
 
         self.restart_node(2, extra_args=self.extra_args[2])
 
@@ -211,13 +216,13 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.log.info("Test bitcoind should fail when file path is invalid.")
         node = self.nodes[0]
         path = node.datadir_path / node.chain / "invalid" / "path"
-        assert_raises_rpc_error(-8, "Couldn't open file {} for reading.".format(path), node.loadtxoutset, path)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Couldn't open file {} for reading.".format(path), node.loadtxoutset, path)
 
     def test_snapshot_with_less_work(self, dump_output_path):
         self.log.info("Test bitcoind should fail when snapshot has less accumulated work than this node.")
         node = self.nodes[0]
         msg = "Unable to load UTXO snapshot: Population failed: Work does not exceed active chainstate."
-        assert_raises_rpc_error(-32603, msg, node.loadtxoutset, dump_output_path)
+        assert_raises_rpc_error(RPC_INTERNAL_ERROR, msg, node.loadtxoutset, dump_output_path)
 
     def test_snapshot_block_invalidated(self, dump_output_path):
         self.log.info("Test snapshot is not loaded when base block is invalid.")
@@ -229,7 +234,7 @@ class AssumeutxoTest(BitcoinTestFramework):
             node.invalidateblock(block_hash)
             assert_equal(node.getblockcount(), height - 1)
             msg = "Unable to load UTXO snapshot: The base block header (0c552ced4721c249a389eb9b08cb8da261cd46f0e7b5f9d064d48f3113406853) is part of an invalid chain."
-            assert_raises_rpc_error(-32603, msg, node.loadtxoutset, dump_output_path)
+            assert_raises_rpc_error(RPC_INTERNAL_ERROR, msg, node.loadtxoutset, dump_output_path)
             node.reconsiderblock(block_hash)
 
     def test_snapshot_in_a_divergent_chain(self, dump_output_path):
@@ -277,7 +282,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         node1.submitheader(fork_block1.serialize().hex())
         node1.submitheader(fork_block2.serialize().hex())
         msg = "A forked headers-chain with more work than the chain with the snapshot base block header exists. Please proceed to sync without AssumeUtxo."
-        assert_raises_rpc_error(-32603, msg, node1.loadtxoutset, dump_output_path)
+        assert_raises_rpc_error(RPC_INTERNAL_ERROR, msg, node1.loadtxoutset, dump_output_path)
         # Cleanup: submit two more headers of the snapshot chain to node 1, so that it is the most-work chain again and loading
         # the snapshot in future subtests succeeds
         main_block1 = node0.getblock(node0.getblockhash(SNAPSHOT_BASE_HEIGHT + 1), 0)
@@ -568,7 +573,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         # find coinbase output at snapshot height on node0 and scan for it on node1,
         # where the block is not available, but the snapshot was loaded successfully
         coinbase_tx = n0.getblock(snapshot_hash, verbosity=2)['tx'][0]
-        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", n1.getblock, snapshot_hash)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Block not available (not fully downloaded)", n1.getblock, snapshot_hash)
         coinbase_output_descriptor = coinbase_tx['vout'][0]['scriptPubKey']['desc']
         scan_result = n1.scantxoutset('start', [coinbase_output_descriptor])
         assert_equal(scan_result['success'], True)
@@ -640,7 +645,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.log.info("Submit a spending transaction for a snapshot chainstate coin to the mempool")
         # spend the coinbase output of the first block that is not available on node1
         spend_coin_blockhash = n1.getblockhash(START_HEIGHT + 1)
-        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", n1.getblock, spend_coin_blockhash)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Block not available (not fully downloaded)", n1.getblock, spend_coin_blockhash)
         prev_tx = n0.getblock(spend_coin_blockhash, 3)['tx'][0]
         prevout = {"txid": prev_tx['txid'], "vout": 0, "scriptPubKey": prev_tx['vout'][0]['scriptPubKey']['hex']}
         privkey = n0.get_deterministic_priv_key().key
@@ -754,7 +759,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         self.log.info("Check that loading the snapshot again will fail because there is already an active snapshot.")
         msg = "Unable to load UTXO snapshot: Can't activate a snapshot-based chainstate more than once"
-        assert_raises_rpc_error(-32603, msg, n2.loadtxoutset, dump_output['path'])
+        assert_raises_rpc_error(RPC_INTERNAL_ERROR, msg, n2.loadtxoutset, dump_output['path'])
 
         # Upon restart, the node must stay in 'limited' mode until the background
         # chain sync completes.

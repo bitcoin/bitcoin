@@ -26,6 +26,14 @@ from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
     MAX_SEQUENCE_NONFINAL,
 )
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_INVALID_PARAMETER,
+    RPC_MISC_ERROR,
+    RPC_TYPE_ERROR,
+    RPC_WALLET_ERROR,
+    RPC_WALLET_UNLOCK_NEEDED,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -122,71 +130,71 @@ class BumpFeeTest(BitcoinTestFramework):
         assert rbfid in rbf_node.getrawmempool() and rbfid in peer_node.getrawmempool()
 
         for key in ["totalFee", "feeRate"]:
-            assert_raises_rpc_error(-3, "Unexpected key {}".format(key), rbf_node.bumpfee, rbfid, {key: NORMAL})
+            assert_raises_rpc_error(RPC_TYPE_ERROR, "Unexpected key {}".format(key), rbf_node.bumpfee, rbfid, {key: NORMAL})
 
         # Bumping to just above minrelay should fail to increase the total fee enough.
-        assert_raises_rpc_error(-8, "Insufficient total fee 0.00000141", rbf_node.bumpfee, rbfid, fee_rate=INSUFFICIENT)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Insufficient total fee 0.00000141", rbf_node.bumpfee, rbfid, fee_rate=INSUFFICIENT)
 
         self.log.info("Test invalid fee rate settings")
 
         # Bumping to a very high fee rate above the default -maxfeerate should fail
-        assert_raises_rpc_error(-4, "New fee rate 1.00 BTC/kvB is too high (cannot be higher than -maxfeerate 0.10 BTC/kvB)",
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "New fee rate 1.00 BTC/kvB is too high (cannot be higher than -maxfeerate 0.10 BTC/kvB)",
             rbf_node.bumpfee, rbfid, fee_rate=TOO_HIGH)
 
         # Test fee_rate with zero values.
         msg = "Insufficient total fee 0.00"
         for zero_value in [0, 0.000, 0.00000000, "0", "0.000", "0.00000000"]:
-            assert_raises_rpc_error(-8, msg, rbf_node.bumpfee, rbfid, fee_rate=zero_value)
+            assert_raises_rpc_error(RPC_INVALID_PARAMETER, msg, rbf_node.bumpfee, rbfid, fee_rate=zero_value)
         msg = "Invalid amount"
         # Test fee_rate values that don't pass fixed-point parsing checks.
         if not self.options.usecli:
             for invalid_value in ["", 0.000000001, 1e-09, 1.111111111, 1111111111111111, "31.999999999999999999999"]:
-                assert_raises_rpc_error(-3, msg, rbf_node.bumpfee, rbfid, fee_rate=invalid_value)
+                assert_raises_rpc_error(RPC_TYPE_ERROR, msg, rbf_node.bumpfee, rbfid, fee_rate=invalid_value)
         # Test fee_rate values that cannot be represented in sat/vB.
         for invalid_value in [0.0001, 0.00000001, 0.00099999, 31.99999999]:
-            assert_raises_rpc_error(-3, msg, rbf_node.bumpfee, rbfid, fee_rate=invalid_value)
+            assert_raises_rpc_error(RPC_TYPE_ERROR, msg, rbf_node.bumpfee, rbfid, fee_rate=invalid_value)
         # Test fee_rate out of range (negative number).
-        assert_raises_rpc_error(-3, "Amount out of range", rbf_node.bumpfee, rbfid, fee_rate=-1)
+        assert_raises_rpc_error(RPC_TYPE_ERROR, "Amount out of range", rbf_node.bumpfee, rbfid, fee_rate=-1)
         # Test type error.
         for value in [{"foo": "bar"}, True]:
-            assert_raises_rpc_error(-3, "Amount is not a number or string", rbf_node.bumpfee, rbfid, fee_rate=value)
+            assert_raises_rpc_error(RPC_TYPE_ERROR, "Amount is not a number or string", rbf_node.bumpfee, rbfid, fee_rate=value)
 
         self.log.info("Test explicit fee rate raises RPC error if both fee_rate and conf_target are passed")
-        assert_raises_rpc_error(-8, "Cannot specify both conf_target and fee_rate. Please provide either a confirmation "
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and fee_rate. Please provide either a confirmation "
             "target in blocks for automatic fee estimation, or an explicit fee rate.",
             rbf_node.bumpfee, rbfid, conf_target=NORMAL, fee_rate=NORMAL)
 
         self.log.info("Test explicit fee rate raises RPC error if both fee_rate and estimate_mode are passed")
-        assert_raises_rpc_error(-8, "Cannot specify both estimate_mode and fee_rate",
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and fee_rate",
             rbf_node.bumpfee, rbfid, estimate_mode="economical", fee_rate=NORMAL)
 
         self.log.info("Test invalid conf_target settings")
-        assert_raises_rpc_error(-8, "confTarget and conf_target options should not both be set",
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "confTarget and conf_target options should not both be set",
             rbf_node.bumpfee, rbfid, {"confTarget": 123, "conf_target": 456})
 
         self.log.info("Test invalid estimate_mode settings")
         if not self.options.usecli:
             for k, v in {"number": 42, "object": {"foo": "bar"}}.items():
-                assert_raises_rpc_error(-3, f"JSON value of type {k} for field estimate_mode is not of expected type string",
+                assert_raises_rpc_error(RPC_TYPE_ERROR, f"JSON value of type {k} for field estimate_mode is not of expected type string",
                     rbf_node.bumpfee, rbfid, estimate_mode=v)
         for mode in ["foo", Decimal("3.1415"), "sat/B", "BTC/kB"]:
-            assert_raises_rpc_error(-8, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"',
+            assert_raises_rpc_error(RPC_INVALID_PARAMETER, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"',
                 rbf_node.bumpfee, rbfid, estimate_mode=mode)
 
         self.log.info("Test invalid outputs values")
-        assert_raises_rpc_error(-8, "Invalid parameter, output argument cannot be an empty array",
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid parameter, output argument cannot be an empty array",
                 rbf_node.bumpfee, rbfid, {"outputs": []})
-        assert_raises_rpc_error(-8, "Invalid parameter, duplicated address: " + dest_address,
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid parameter, duplicated address: " + dest_address,
                 rbf_node.bumpfee, rbfid, {"outputs": [{dest_address: 0.1}, {dest_address: 0.2}]})
-        assert_raises_rpc_error(-8, "Invalid parameter, duplicate key: data",
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid parameter, duplicate key: data",
                 rbf_node.bumpfee, rbfid, {"outputs": [{"data": "deadbeef"}, {"data": "deadbeef"}]})
 
         self.log.info("Test original_change_index option")
-        assert_raises_rpc_error(-1, "JSON integer out of range", rbf_node.bumpfee, rbfid, {"original_change_index": -1})
-        assert_raises_rpc_error(-8, "Change position is out of range", rbf_node.bumpfee, rbfid, {"original_change_index": 2})
+        assert_raises_rpc_error(RPC_MISC_ERROR, "JSON integer out of range", rbf_node.bumpfee, rbfid, {"original_change_index": -1})
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Change position is out of range", rbf_node.bumpfee, rbfid, {"original_change_index": 2})
 
         self.log.info("Test outputs and original_change_index cannot both be provided")
-        assert_raises_rpc_error(-8, "The options 'outputs' and 'original_change_index' are incompatible. You can only either specify a new set of outputs, or designate a change output to be recycled.", rbf_node.bumpfee, rbfid, {"original_change_index": 2, "outputs": [{dest_address: 0.1}]})
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "The options 'outputs' and 'original_change_index' are incompatible. You can only either specify a new set of outputs, or designate a change output to be recycled.", rbf_node.bumpfee, rbfid, {"original_change_index": 2, "outputs": [{dest_address: 0.1}]})
 
         self.clear_mempool()
 
@@ -258,7 +266,7 @@ class BumpFeeTest(BitcoinTestFramework):
         # fee_rate equals the default -maxfeerate (10000 sat/vB); the ancestor bump fee pushes the
         # bumped tx's actual fee rate above the limit, so bumpfee must fail instead of silently
         # creating a tx that the broadcast-time -maxfeerate check rejects.
-        assert_raises_rpc_error(-4, "is too high (cannot be higher than -maxfeerate", wallet.bumpfee, child, fee_rate=10000)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "is too high (cannot be higher than -maxfeerate", wallet.bumpfee, child, fee_rate=10000)
 
         node.unloadwallet("bumpfee_maxfeerate")
 
@@ -309,7 +317,7 @@ class BumpFeeTest(BitcoinTestFramework):
         tx = wallet.sendall(recipients=[wallet.getnewaddress()], fee_rate=2, options={"inputs": [utxos[0]]})
 
         # Set the only output with a crazy high feerate as change, should fail as the output would be dust
-        assert_raises_rpc_error(-4, "The transaction amount is too small to pay the fee", wallet.bumpfee, txid=tx["txid"], options={"fee_rate": 1100, "original_change_index": 0})
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "The transaction amount is too small to pay the fee", wallet.bumpfee, txid=tx["txid"], options={"fee_rate": 1100, "original_change_index": 0})
 
         # Specify single output as change successfully
         bumped = wallet.bumpfee(txid=tx["txid"], options={"fee_rate": 10, "original_change_index": 0})
@@ -423,7 +431,7 @@ def test_notmine_bumpfee(self, rbf_node, peer_node, dest_address):
     entry = rbf_node.getmempoolentry(rbfid)
     old_fee = entry["fees"]["base"]
     old_feerate = int(old_fee / entry["vsize"] * Decimal(1e8))
-    assert_raises_rpc_error(-4, "Transaction contains inputs that don't belong to this wallet",
+    assert_raises_rpc_error(RPC_WALLET_ERROR, "Transaction contains inputs that don't belong to this wallet",
                             rbf_node.bumpfee, rbfid)
 
     def finish_psbtbumpfee(psbt):
@@ -450,7 +458,7 @@ def test_bumpfee_with_descendant_fails(self, rbf_node, rbf_node_address, dest_ad
     tx = rbf_node.createrawtransaction([{"txid": parent_id, "vout": 0}], {dest_address: 0.00020000})
     tx = rbf_node.signrawtransactionwithwallet(tx)
     rbf_node.sendrawtransaction(tx["hex"])
-    assert_raises_rpc_error(-8, "Transaction has descendants in the wallet", rbf_node.bumpfee, parent_id)
+    assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Transaction has descendants in the wallet", rbf_node.bumpfee, parent_id)
 
     # create tx with descendant in the mempool by using MiniWallet
     miniwallet = MiniWallet(rbf_node)
@@ -458,7 +466,7 @@ def test_bumpfee_with_descendant_fails(self, rbf_node, rbf_node_address, dest_ad
     tx = rbf_node.gettransaction(txid=parent_id, verbose=True)['decoded']
     miniwallet.scan_tx(tx)
     miniwallet.send_self_transfer(from_node=rbf_node)
-    assert_raises_rpc_error(-8, "Transaction has descendants in the mempool", rbf_node.bumpfee, parent_id)
+    assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Transaction has descendants in the mempool", rbf_node.bumpfee, parent_id)
     self.clear_mempool()
 
 
@@ -477,7 +485,7 @@ def test_bumpfee_with_abandoned_descendant_succeeds(self, rbf_node, rbf_node_add
     assert parent_id in rbf_node.getrawmempool()
     assert child_id not in rbf_node.getrawmempool()
     # Should still raise an error even if not in mempool
-    assert_raises_rpc_error(-8, "Transaction has descendants in the wallet", rbf_node.bumpfee, parent_id)
+    assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Transaction has descendants in the wallet", rbf_node.bumpfee, parent_id)
     # Now abandon the child transaction and bump the original
     rbf_node.abandontransaction(child_id)
     bumped_result = rbf_node.bumpfee(parent_id, {"fee_rate": HIGH})
@@ -562,7 +570,7 @@ def test_maxtxfee_fails(self, rbf_node, dest_address):
     self.restart_node(1, ['-maxtxfee=0.000025'] + self.extra_args[1])
     rbfid = spend_one_input(rbf_node, dest_address)
     # When user passed fee rate causes base fee to be above maxtxfee we fail early
-    assert_raises_rpc_error(-4, "Specified or calculated fee 0.0000282 is too high (cannot be higher than -maxtxfee 0.000025)", rbf_node.bumpfee, rbfid, fee_rate=20)
+    assert_raises_rpc_error(RPC_WALLET_ERROR, "Specified or calculated fee 0.0000282 is too high (cannot be higher than -maxtxfee 0.000025)", rbf_node.bumpfee, rbfid, fee_rate=20)
     self.log.info("Test that a low -maxtxfee, which may prevent tx fee rate from reaching -minrelaytxfee triggers a warning.")
     low_max_tx_fee = '0.00000100'
     high_max_tx_fee = '0.001'
@@ -663,7 +671,7 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
     assert_equal(len(watcher.decodepsbt(psbt)["inputs"]), 1)
 
     # bumpfee can't be used on watchonly wallets
-    assert_raises_rpc_error(-4, "bumpfee is not available with wallets that have private keys disabled. Use psbtbumpfee instead.", watcher.bumpfee, original_txid)
+    assert_raises_rpc_error(RPC_WALLET_ERROR, "bumpfee is not available with wallets that have private keys disabled. Use psbtbumpfee instead.", watcher.bumpfee, original_txid)
 
     # Bump fee, obnoxiously high to add additional watchonly input
     bumped_psbt = watcher.psbtbumpfee(original_txid, fee_rate=HIGH)
@@ -690,7 +698,7 @@ def test_rebumping(self, rbf_node, dest_address):
     self.log.info('Test that re-bumping the original tx fails, but bumping successor works')
     rbfid = spend_one_input(rbf_node, dest_address)
     bumped = rbf_node.bumpfee(rbfid, fee_rate=ECONOMICAL)
-    assert_raises_rpc_error(-4, f"Cannot bump transaction {rbfid} which was already bumped by transaction {bumped['txid']}",
+    assert_raises_rpc_error(RPC_WALLET_ERROR, f"Cannot bump transaction {rbfid} which was already bumped by transaction {bumped['txid']}",
                             rbf_node.bumpfee, rbfid, fee_rate=NORMAL)
     rbf_node.bumpfee(bumped["txid"], fee_rate=NORMAL)
     self.clear_mempool()
@@ -719,7 +727,7 @@ def test_bumpfee_already_spent(self, rbf_node, dest_address):
     txid = spend_one_input(rbf_node, dest_address)
     self.generate(rbf_node, 1)  # spend coin simply by mining block with tx
     spent_input = rbf_node.gettransaction(txid=txid, verbose=True)['decoded']['vin'][0]
-    assert_raises_rpc_error(-1, f"{spent_input['txid']}:{spent_input['vout']} is already spent",
+    assert_raises_rpc_error(RPC_MISC_ERROR, f"{spent_input['txid']}:{spent_input['vout']} is already spent",
                             rbf_node.bumpfee, txid, fee_rate=NORMAL)
 
 
@@ -742,7 +750,7 @@ def test_unconfirmed_not_spendable(self, rbf_node, rbf_node_address):
     # spendable before the rbf tx is confirmed.
     block = self.generateblock(rbf_node, output="raw(51)", transactions=[rbftx])
     # Can not abandon conflicted tx
-    assert_raises_rpc_error(-5, 'Transaction not eligible for abandonment', lambda: rbf_node.abandontransaction(txid=bumpid))
+    assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, 'Transaction not eligible for abandonment', lambda: rbf_node.abandontransaction(txid=bumpid))
     rbf_node.invalidateblock(block["hash"])
     # Call abandon to make sure the wallet doesn't attempt to resubmit
     # the bump tx and hope the wallet does not rebroadcast before we call.
@@ -793,7 +801,7 @@ def test_locked_wallet_fails(self, rbf_node, dest_address):
 
     self.log.info('Test that a locked wallet cannot bump txn')
     encrypted_wallet.walletlock()
-    assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first.",
+    assert_raises_rpc_error(RPC_WALLET_UNLOCK_NEEDED, "Please enter the wallet passphrase with walletpassphrase first.",
                             encrypted_wallet.bumpfee, rbfid)
 
     self.log.info('Test that an unlocked wallet can bump txn')
@@ -842,7 +850,7 @@ def test_no_more_inputs_fails(self, rbf_node, dest_address):
     self.generatetoaddress(rbf_node, 1, dest_address)
     # spend all funds, no change output
     rbfid = rbf_node.sendall(recipients=[rbf_node.getnewaddress()])['txid']
-    assert_raises_rpc_error(-4, "Unable to create transaction. The total exceeds your balance when the 0.00001051 transaction fee is included.", rbf_node.bumpfee, rbfid)
+    assert_raises_rpc_error(RPC_WALLET_ERROR, "Unable to create transaction. The total exceeds your balance when the 0.00001051 transaction fee is included.", rbf_node.bumpfee, rbfid)
     self.clear_mempool()
 
 
@@ -869,7 +877,7 @@ def test_feerate_checks_replaced_outputs(self, rbf_node, peer_node):
 
     # Attempt to bumpfee and replace all outputs with a single one using a feerate slightly less than the minimum
     new_outputs = [{rbf_node.getnewaddress(address_type="bech32"): 49}]
-    assert_raises_rpc_error(-8, "Insufficient total fee", rbf_node.bumpfee, tx_res["txid"], {"fee_rate": min_fee_rate - 1, "outputs": new_outputs})
+    assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Insufficient total fee", rbf_node.bumpfee, tx_res["txid"], {"fee_rate": min_fee_rate - 1, "outputs": new_outputs})
 
     # Bumpfee and replace all outputs with a single one using the minimum feerate
     rbf_node.bumpfee(tx_res["txid"], {"fee_rate": min_fee_rate, "outputs": new_outputs})
@@ -886,12 +894,12 @@ def test_bumpfee_with_feerate_ignores_walletincrementalrelayfee(self, rbf_node, 
     tx = rbf_node.send(outputs=[{dest_address: 1}], fee_rate=2)
 
     # Ensure you can not fee bump with a fee_rate below or equal to the original fee_rate
-    assert_raises_rpc_error(-8, "Insufficient total fee", rbf_node.bumpfee, tx["txid"], {"fee_rate": 1})
-    assert_raises_rpc_error(-8, "Insufficient total fee", rbf_node.bumpfee, tx["txid"], {"fee_rate": 2})
+    assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Insufficient total fee", rbf_node.bumpfee, tx["txid"], {"fee_rate": 1})
+    assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Insufficient total fee", rbf_node.bumpfee, tx["txid"], {"fee_rate": 2})
 
     # Ensure you can not fee bump if the fee_rate is more than original fee_rate but the additional fee does
     # not cover incrementalrelayfee for the size of the replacement transaction
-    assert_raises_rpc_error(-8, "Insufficient total fee", rbf_node.bumpfee, tx["txid"], {"fee_rate": 2.09})
+    assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Insufficient total fee", rbf_node.bumpfee, tx["txid"], {"fee_rate": 2.09})
 
     # You can fee bump as long as the new fee set from fee_rate is at least (original fee + incrementalrelayfee)
     rbf_node.bumpfee(tx["txid"], {"fee_rate": 2.1})
@@ -1003,7 +1011,7 @@ def test_bumpfee_uncomputable_cluster(self, rbf_node, dest_address):
     # Make sure the setup worked, so the check below can't pass for the wrong reason.
     assert_equal(len(rbf_node.getrawmempool()), NUM_CLUSTERS * CLUSTER_SIZE)
 
-    assert_raises_rpc_error(-4,
+    assert_raises_rpc_error(RPC_WALLET_ERROR,
                             "Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.",
                             rbf_node.bumpfee, original_txid, {"fee_rate": NORMAL})
 

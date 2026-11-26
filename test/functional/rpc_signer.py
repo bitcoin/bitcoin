@@ -11,6 +11,7 @@ import os
 import platform
 import sys
 
+from test_framework.rpc_error_codes import RPC_MISC_ERROR
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -46,13 +47,13 @@ class RPCSignerTest(BitcoinTestFramework):
     def run_test(self):
         self.log.debug(f"-signer={self.mock_signer_path()}")
 
-        assert_raises_rpc_error(-1, 'Error: restart bitcoind with -signer=<cmd>',
+        assert_raises_rpc_error(RPC_MISC_ERROR, 'Error: restart bitcoind with -signer=<cmd>',
             self.nodes[0].enumeratesigners
         )
 
         # Handle script missing:
         assert_raises_rpc_error(
-            -1,
+            RPC_MISC_ERROR,
             "CreateProcess failed: The system cannot find the file specified."
             if platform.system() == "Windows"
             else "execve failed: No such file or directory",
@@ -61,13 +62,13 @@ class RPCSignerTest(BitcoinTestFramework):
 
         # Handle error thrown by script
         self.set_mock_result(self.nodes[1], "2")
-        assert_raises_rpc_error(-1, 'RunCommandParseJSON error',
+        assert_raises_rpc_error(RPC_MISC_ERROR, 'RunCommandParseJSON error',
             self.nodes[1].enumeratesigners
         )
         self.clear_mock_result(self.nodes[1])
 
         self.set_mock_result(self.nodes[1], '0 [{"type": "trezor", "model": "trezor_t", "error": "fingerprint not found"}]')
-        assert_raises_rpc_error(-1, 'fingerprint not found',
+        assert_raises_rpc_error(RPC_MISC_ERROR, 'fingerprint not found',
             self.nodes[1].enumeratesigners
         )
         self.clear_mock_result(self.nodes[1])
@@ -88,7 +89,7 @@ class RPCSignerTest(BitcoinTestFramework):
         # Invalid fingerprints are rejected
         for fingerprint in ["", "0000001", "000000001", "0000000g", "zzzzzzzz"]:
             self.set_mock_result(self.nodes[1], '0 [{"type": "trezor", "model": "trezor_t", "fingerprint": "%s"}]' % fingerprint)
-            assert_raises_rpc_error(-1, 'invalid fingerprint', self.nodes[1].enumeratesigners)
+            assert_raises_rpc_error(RPC_MISC_ERROR, 'invalid fingerprint', self.nodes[1].enumeratesigners)
             self.clear_mock_result(self.nodes[1])
 
         assert_equal({'fingerprint': '00000001', 'name': 'trezor_t'} in self.nodes[1].enumeratesigners()['signers'], True)

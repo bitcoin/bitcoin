@@ -6,6 +6,7 @@
 
 from decimal import Decimal
 
+from test_framework.rpc_error_codes import RPC_INVALID_PARAMETER
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -32,8 +33,8 @@ class ListRawTransactionsTest(BitcoinTestFramework):
 
     def test_invalid_parameters(self):
         self.log.info("Test listrawtransactions RPC parameter validity")
-        assert_raises_rpc_error(-8, "Negative count", self.nodes[0].listrawtransactions, -1)
-        assert_raises_rpc_error(-8, "Negative skip", self.nodes[0].listrawtransactions, 10, -1)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Negative count", self.nodes[0].listrawtransactions, -1)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Negative skip", self.nodes[0].listrawtransactions, 10, -1)
 
     def test_one_entry_per_tx(self):
         self.log.info("Test that each tx appears exactly once, unlike listtransactions which shows one entry per output")

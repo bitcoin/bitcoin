@@ -14,6 +14,11 @@ from test_framework.p2p import (
     P2P_SERVICES,
     P2PInterface,
 )
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_PARAMETER,
+    RPC_MISC_ERROR,
+    RPC_TYPE_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -58,7 +63,7 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         self.log.info("Node 0 should only have the header for node 1's block 3")
         x = next(filter(lambda x: x['hash'] == short_tip, self.nodes[0].getchaintips()))
         assert_equal(x['status'], "headers-only")
-        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", self.nodes[0].getblock, short_tip)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Block not available (not fully downloaded)", self.nodes[0].getblock, short_tip)
 
         self.log.info("Fetch block from node 1")
         peers = self.nodes[0].getpeerinfo()
@@ -66,26 +71,26 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         peer_0_peer_1_id = peers[0]["id"]
 
         self.log.info("Arguments must be valid")
-        assert_raises_rpc_error(-8, "hash must be of length 64 (not 4, for '1234')", self.nodes[0].getblockfrompeer, "1234", peer_0_peer_1_id)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "hash must be of length 64 (not 4, for '1234')", self.nodes[0].getblockfrompeer, "1234", peer_0_peer_1_id)
 
         # cli handles wrong types differently
         if not self.options.usecli:
-            assert_raises_rpc_error(-3, "JSON value of type number is not of expected type string", self.nodes[0].getblockfrompeer, 1234, peer_0_peer_1_id)
-            assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", self.nodes[0].getblockfrompeer, short_tip, "0")
+            assert_raises_rpc_error(RPC_TYPE_ERROR, "JSON value of type number is not of expected type string", self.nodes[0].getblockfrompeer, 1234, peer_0_peer_1_id)
+            assert_raises_rpc_error(RPC_TYPE_ERROR, "JSON value of type string is not of expected type number", self.nodes[0].getblockfrompeer, short_tip, "0")
 
         self.log.info("We must already have the header")
-        assert_raises_rpc_error(-1, "Block header missing", self.nodes[0].getblockfrompeer, "00" * 32, 0)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Block header missing", self.nodes[0].getblockfrompeer, "00" * 32, 0)
 
         self.log.info("Non-existent peer generates error")
         for peer_id in [-1, peer_0_peer_1_id + 1]:
-            assert_raises_rpc_error(-1, "Peer does not exist", self.nodes[0].getblockfrompeer, short_tip, peer_id)
+            assert_raises_rpc_error(RPC_MISC_ERROR, "Peer does not exist", self.nodes[0].getblockfrompeer, short_tip, peer_id)
 
         self.log.info("Fetching from pre-segwit peer generates error")
         self.nodes[0].add_p2p_connection(P2PInterface(), services=P2P_SERVICES & ~NODE_WITNESS)
         peers = self.nodes[0].getpeerinfo()
         assert_equal(len(peers), 2)
         presegwit_peer_id = peers[1]["id"]
-        assert_raises_rpc_error(-1, "Pre-SegWit peer", self.nodes[0].getblockfrompeer, short_tip, presegwit_peer_id)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Pre-SegWit peer", self.nodes[0].getblockfrompeer, short_tip, presegwit_peer_id)
 
         self.log.info("Successful fetch")
         result = self.nodes[0].getblockfrompeer(short_tip, peer_0_peer_1_id)
@@ -93,7 +98,7 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         assert_equal(result, {})
 
         self.log.info("Don't fetch blocks we already have")
-        assert_raises_rpc_error(-1, "Block already downloaded", self.nodes[0].getblockfrompeer, short_tip, peer_0_peer_1_id)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Block already downloaded", self.nodes[0].getblockfrompeer, short_tip, peer_0_peer_1_id)
 
         self.log.info("Don't fetch blocks while the node has not synced past it yet")
         # For this test we need node 1 in prune mode and as a side effect this also disconnects
@@ -117,7 +122,7 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
 
         # Trying to fetch this block from the P2PInterface should not be possible
         error_msg = "In prune mode, only blocks that the node has already synced previously can be fetched from a peer"
-        assert_raises_rpc_error(-1, error_msg, self.nodes[1].getblockfrompeer, blockhash, node1_interface_id)
+        assert_raises_rpc_error(RPC_MISC_ERROR, error_msg, self.nodes[1].getblockfrompeer, blockhash, node1_interface_id)
 
         self.log.info("Connect pruned node")
         self.connect_nodes(0, 2)
@@ -131,7 +136,7 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         assert_equal(pruneheight, 249)
         # Ensure the block is actually pruned
         pruned_block = self.nodes[0].getblockhash(2)
-        assert_raises_rpc_error(-1, "Block not available (pruned data)", pruned_node.getblock, pruned_block)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Block not available (pruned data)", pruned_node.getblock, pruned_block)
 
         self.log.info("Fetch pruned block")
         peers = pruned_node.getpeerinfo()
@@ -153,7 +158,7 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         self.sync_blocks([self.nodes[0], pruned_node])
         pruneheight += 251
         assert_equal(pruned_node.pruneblockchain(1000), pruneheight)
-        assert_raises_rpc_error(-1, "Block not available (pruned data)", pruned_node.getblock, pruned_block)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Block not available (pruned data)", pruned_node.getblock, pruned_block)
 
 
 if __name__ == '__main__':

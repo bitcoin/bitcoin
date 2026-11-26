@@ -12,6 +12,12 @@ from test_framework.messages import (
     COIN,
     MAX_BLOCK_WEIGHT,
 )
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_PARAMETER,
+    RPC_MISC_ERROR,
+    RPC_TYPE_ERROR,
+    RPC_VERIFY_REJECTED,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -203,28 +209,28 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         self.wallet = MiniWallet(self.nodes[0])
 
         # Test `prioritisetransaction` required parameters
-        assert_raises_rpc_error(-1, "prioritisetransaction", self.nodes[0].prioritisetransaction)
-        assert_raises_rpc_error(-1, "prioritisetransaction", self.nodes[0].prioritisetransaction, '')
-        assert_raises_rpc_error(-1, "prioritisetransaction", self.nodes[0].prioritisetransaction, '', 0)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "prioritisetransaction", self.nodes[0].prioritisetransaction)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "prioritisetransaction", self.nodes[0].prioritisetransaction, '')
+        assert_raises_rpc_error(RPC_MISC_ERROR, "prioritisetransaction", self.nodes[0].prioritisetransaction, '', 0)
 
         # Test `prioritisetransaction` invalid extra parameters
-        assert_raises_rpc_error(-1, "prioritisetransaction", self.nodes[0].prioritisetransaction, '', 0, 0, 0)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "prioritisetransaction", self.nodes[0].prioritisetransaction, '', 0, 0, 0)
 
         # Test `getprioritisedtransactions` invalid parameters
-        assert_raises_rpc_error(-1, "getprioritisedtransactions",
+        assert_raises_rpc_error(RPC_MISC_ERROR, "getprioritisedtransactions",
                 self.nodes[0].getprioritisedtransactions, True)
 
         # Test `prioritisetransaction` invalid `txid`
-        assert_raises_rpc_error(-8, "txid must be of length 64 (not 3, for 'foo')", self.nodes[0].prioritisetransaction, txid='foo', fee_delta=0)
-        assert_raises_rpc_error(-8, "txid must be hexadecimal string (not 'Zd1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000')", self.nodes[0].prioritisetransaction, txid='Zd1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000', fee_delta=0)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "txid must be of length 64 (not 3, for 'foo')", self.nodes[0].prioritisetransaction, txid='foo', fee_delta=0)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "txid must be hexadecimal string (not 'Zd1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000')", self.nodes[0].prioritisetransaction, txid='Zd1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000', fee_delta=0)
 
         # Test `prioritisetransaction` invalid `dummy`
         txid = '1d1d4e24ed99057e84c3f80fd8fbec79ed9e1acee37da269356ecea000000000'
-        assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", self.nodes[0].prioritisetransaction, txid, 'foo', 0)
-        assert_raises_rpc_error(-8, "Priority is no longer supported, dummy argument to prioritisetransaction must be 0.", self.nodes[0].prioritisetransaction, txid, 1, 0)
+        assert_raises_rpc_error(RPC_TYPE_ERROR, "JSON value of type string is not of expected type number", self.nodes[0].prioritisetransaction, txid, 'foo', 0)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Priority is no longer supported, dummy argument to prioritisetransaction must be 0.", self.nodes[0].prioritisetransaction, txid, 1, 0)
 
         # Test `prioritisetransaction` invalid `fee_delta`
-        assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", self.nodes[0].prioritisetransaction, txid=txid, fee_delta='foo')
+        assert_raises_rpc_error(RPC_TYPE_ERROR, "JSON value of type string is not of expected type number", self.nodes[0].prioritisetransaction, txid=txid, fee_delta='foo')
 
         self.test_large_fee_bump()
         self.test_replacement()
@@ -334,7 +340,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         tx_id = tx_res['txid']
 
         # This will raise an exception due to min relay fee not being met
-        assert_raises_rpc_error(-26, "min relay fee not met", self.nodes[0].sendrawtransaction, tx_hex)
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "min relay fee not met", self.nodes[0].sendrawtransaction, tx_hex)
         assert tx_id not in self.nodes[0].getrawmempool()
 
         # This is a less than 1000-byte transaction, so just set the fee

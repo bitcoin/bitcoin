@@ -5,6 +5,10 @@
 """Test indices in conjunction with prune."""
 import concurrent.futures
 import os
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_PARAMETER,
+    RPC_MISC_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import TestNode
 from test_framework.util import (
@@ -109,10 +113,10 @@ class FeatureIndexPruneTest(BitcoinTestFramework):
         self.log.info("make sure trying to access the indices throws errors")
         for node in filter_nodes:
             msg = "Index is not enabled for filtertype basic"
-            assert_raises_rpc_error(-1, msg, node.getblockfilter, height_hash)
+            assert_raises_rpc_error(RPC_MISC_ERROR, msg, node.getblockfilter, height_hash)
         for node in stats_nodes:
             msg = "Querying specific block heights requires coinstatsindex"
-            assert_raises_rpc_error(-8, msg, node.gettxoutsetinfo, "muhash", height_hash)
+            assert_raises_rpc_error(RPC_INVALID_PARAMETER, msg, node.gettxoutsetinfo, "muhash", height_hash)
 
         self.generate(self.nodes[0], 746)
 

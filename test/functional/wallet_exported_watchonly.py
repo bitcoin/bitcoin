@@ -7,6 +7,10 @@ import os
 
 from test_framework.descriptors import descsum_create
 from test_framework.key import H_POINT
+from test_framework.rpc_error_codes import (
+    RPC_WALLET_ERROR,
+    RPC_WALLET_KEYPOOL_RAN_OUT,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -44,9 +48,9 @@ class WalletExportedWatchOnly(BitcoinTestFramework):
         offline_wallet = self.offline.get_wallet_rpc("basic")
 
         # Bad RPC args
-        assert_raises_rpc_error(-4, "Error: Export ", offline_wallet.exportwatchonlywallet, "")
-        assert_raises_rpc_error(-4, "Error: Export destination '.' already exists", offline_wallet.exportwatchonlywallet, ".")
-        assert_raises_rpc_error(-4, f"Error: Export destination '{self.export_path}' already exists", offline_wallet.exportwatchonlywallet, self.export_path)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: Export ", offline_wallet.exportwatchonlywallet, "")
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: Export destination '.' already exists", offline_wallet.exportwatchonlywallet, ".")
+        assert_raises_rpc_error(RPC_WALLET_ERROR, f"Error: Export destination '{self.export_path}' already exists", offline_wallet.exportwatchonlywallet, self.export_path)
 
         # Export the watchonly wallet file and load onto online node
         online_wallet = self.export_and_restore(offline_wallet, "basic_watchonly")
@@ -201,7 +205,7 @@ class WalletExportedWatchOnly(BitcoinTestFramework):
         # The hardened derivation should have KEYPOOL_SIZE - 1 remaining addresses
         for _ in range(KEYPOOL_SIZE - 1):
             online_wallet.getnewaddress(address_type="p2sh-segwit")
-        assert_raises_rpc_error(-12, "No addresses available", online_wallet.getnewaddress, address_type="p2sh-segwit")
+        assert_raises_rpc_error(RPC_WALLET_KEYPOOL_RAN_OUT, "No addresses available", online_wallet.getnewaddress, address_type="p2sh-segwit")
 
         # Verify that the offline wallet can sign and send
         send_res = online_wallet.sendall([self.funder.getnewaddress()])
@@ -269,14 +273,14 @@ class WalletExportedWatchOnly(BitcoinTestFramework):
         blank_wallet = self.offline.get_wallet_rpc("blank_no_keys")
         assert_equal(blank_wallet.listdescriptors()["descriptors"], [])
         export_path = os.path.join(self.export_path, "blank_export.dat")
-        assert_raises_rpc_error(-4, "Wallet has no descriptors to export", blank_wallet.exportwatchonlywallet, export_path)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Wallet has no descriptors to export", blank_wallet.exportwatchonlywallet, export_path)
         blank_wallet.unloadwallet()
 
         # disable_private_keys only also results in a blank wallet (no descriptors)
         self.offline.createwallet(wallet_name="no_keys_only", disable_private_keys=True)
         no_keys_wallet = self.offline.get_wallet_rpc("no_keys_only")
         assert_equal(no_keys_wallet.listdescriptors()["descriptors"], [])
-        assert_raises_rpc_error(-4, "Wallet has no descriptors to export", no_keys_wallet.exportwatchonlywallet, export_path)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Wallet has no descriptors to export", no_keys_wallet.exportwatchonlywallet, export_path)
         no_keys_wallet.unloadwallet()
 
     def run_test(self):

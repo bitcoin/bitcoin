@@ -11,6 +11,10 @@ from test_framework.messages import (
     CTransaction,
     CTxOut,
 )
+from test_framework.rpc_error_codes import (
+    RPC_WALLET_ERROR,
+    RPC_WALLET_INSUFFICIENT_FUNDS,
+)
 from test_framework.script import (
     CScript,
     OP_RETURN
@@ -146,7 +150,7 @@ class WalletV3Test(BitcoinTestFramework):
         raw_tx_v2 = self.bob.createrawtransaction(inputs=[], outputs=outputs, version=version_b)
 
         assert_raises_rpc_error(
-            -4,
+            RPC_WALLET_ERROR,
             "Insufficient funds",
             self.bob.fundrawtransaction,
             raw_tx_v2, {'include_unsafe': True}
@@ -194,7 +198,7 @@ class WalletV3Test(BitcoinTestFramework):
         bob_tx = self.bob.createrawtransaction(inputs=[], outputs=outputs, version=3)
 
         assert_raises_rpc_error(
-            -4,
+            RPC_WALLET_ERROR,
             "Insufficient funds",
             self.bob.fundrawtransaction,
             bob_tx, {'include_unsafe': True}
@@ -223,7 +227,7 @@ class WalletV3Test(BitcoinTestFramework):
         alice_tx = self.alice.createrawtransaction(inputs=[], outputs=outputs, version=3)
 
         assert_raises_rpc_error(
-            -4,
+            RPC_WALLET_ERROR,
             "Insufficient funds",
             self.alice.fundrawtransaction,
             alice_tx, {'include_unsafe': True}
@@ -242,7 +246,7 @@ class WalletV3Test(BitcoinTestFramework):
         alice_tx = self.alice.createrawtransaction(inputs=[alice_unspent], outputs=outputs, version=version_b)
 
         assert_raises_rpc_error(
-            -4,
+            RPC_WALLET_ERROR,
             f"Can't spend unconfirmed version {version_a} pre-selected input with a version {version_b} tx",
             self.alice.fundrawtransaction,
             alice_tx
@@ -261,7 +265,7 @@ class WalletV3Test(BitcoinTestFramework):
         alice_tx = self.alice.createrawtransaction(inputs=[alice_unspent], outputs=outputs) # don't set the version here
 
         assert_raises_rpc_error(
-            -4,
+            RPC_WALLET_ERROR,
             "Can't spend unconfirmed version 3 pre-selected input with a version 2 tx",
             self.alice.fundrawtransaction,
             alice_tx
@@ -316,7 +320,7 @@ class WalletV3Test(BitcoinTestFramework):
         bob_tx = self.bob.createrawtransaction(inputs=[], outputs=outputs, version=3)
 
         assert_raises_rpc_error(
-            -4,
+            RPC_WALLET_ERROR,
             "Insufficient funds",
             self.bob.fundrawtransaction,
             bob_tx, {'include_unsafe': True}
@@ -368,7 +372,7 @@ class WalletV3Test(BitcoinTestFramework):
         self.bulk_tx(tx, 5, TRUC_MAX_VSIZE - 100)
 
         assert_raises_rpc_error(
-            -4,
+            RPC_WALLET_ERROR,
             "The inputs size exceeds the maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs",
             self.charlie.fundrawtransaction,
             tx.serialize_with_witness().hex(),
@@ -391,7 +395,7 @@ class WalletV3Test(BitcoinTestFramework):
         self.bulk_tx(tx, 5, TRUC_CHILD_MAX_VSIZE - 100)
 
         assert_raises_rpc_error(
-            -4,
+            RPC_WALLET_ERROR,
             "The inputs size exceeds the maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs",
             self.alice.fundrawtransaction,
             tx.serialize_with_witness().hex(),
@@ -411,7 +415,7 @@ class WalletV3Test(BitcoinTestFramework):
         self.bulk_tx(tx, 5, int(TRUC_MAX_VSIZE/2))
 
         assert_raises_rpc_error(
-            -4,
+            RPC_WALLET_ERROR,
             "Maximum transaction weight is less than transaction weight without inputs",
             self.charlie.fundrawtransaction,
             tx.serialize_with_witness().hex(),
@@ -431,7 +435,7 @@ class WalletV3Test(BitcoinTestFramework):
         self.bulk_tx(tx, 5, int(TRUC_CHILD_MAX_VSIZE/2))
 
         assert_raises_rpc_error(
-            -4,
+            RPC_WALLET_ERROR,
             "Maximum transaction weight is less than transaction weight without inputs",
             self.alice.fundrawtransaction,
             tx.serialize_with_witness().hex(),
@@ -534,7 +538,7 @@ class WalletV3Test(BitcoinTestFramework):
 
         # check that error is only raised if version is 3
         assert_raises_rpc_error(
-                -4,
+                RPC_WALLET_ERROR,
                 "Transaction too large" ,
                 self.charlie.sendall,
                 [self.alice.getnewaddress() for _ in range(300)],
@@ -550,7 +554,7 @@ class WalletV3Test(BitcoinTestFramework):
         self.charlie.sendall([self.alice.getnewaddress() for _ in range(50)], add_to_wallet=False)
 
         assert_raises_rpc_error(
-                -4,
+                RPC_WALLET_ERROR,
                 "Transaction too large" ,
                 self.charlie.sendall,
                 [self.alice.getnewaddress() for _ in range(50)],
@@ -589,7 +593,7 @@ class WalletV3Test(BitcoinTestFramework):
         raw_tx = self.alice.createrawtransaction(inputs=[], outputs=outputs, version=3)
 
         assert_raises_rpc_error(
-                -4,
+                RPC_WALLET_ERROR,
                 "Insufficient funds",
                 self.alice.fundrawtransaction,
                 raw_tx,
@@ -614,7 +618,7 @@ class WalletV3Test(BitcoinTestFramework):
         # Generation 3: try to send half of total amount to Alice
         outputs = {self.alice.getnewaddress(): total_amount / 2}
         assert_raises_rpc_error(
-                -4,
+                RPC_WALLET_ERROR,
                 "Insufficient funds",
                 self.charlie.send,
                 outputs,
@@ -624,7 +628,7 @@ class WalletV3Test(BitcoinTestFramework):
         # Also doesn't work with fundrawtransaction
         raw_tx = self.charlie.createrawtransaction(inputs=[], outputs=outputs, version=3)
         assert_raises_rpc_error(
-                -4,
+                RPC_WALLET_ERROR,
                 "Insufficient funds",
                 self.charlie.fundrawtransaction,
                 raw_tx,
@@ -633,7 +637,7 @@ class WalletV3Test(BitcoinTestFramework):
 
         # Also doesn't work with sendall
         assert_raises_rpc_error(
-                -6,
+                RPC_WALLET_INSUFFICIENT_FUNDS,
                 "Total value of UTXO pool too low to pay for transaction",
                 self.charlie.sendall,
                 [self.alice.getnewaddress()],
@@ -712,7 +716,7 @@ class WalletV3Test(BitcoinTestFramework):
         for version in [2, 3]:
             raw_output_too_high = self.alice.createrawtransaction(inputs=[], outputs=output_too_high, version=version)
             assert_raises_rpc_error(
-                    -4,
+                    RPC_WALLET_ERROR,
                     "Insufficient funds",
                     self.alice.fundrawtransaction,
                     raw_output_too_high,

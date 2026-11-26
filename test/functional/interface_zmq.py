@@ -16,6 +16,7 @@ from test_framework.blocktools import (
     add_witness_commitment,
     create_block,
 )
+from test_framework.rpc_error_codes import RPC_INVALID_PARAMETER
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import (
     CBlock,
@@ -379,7 +380,7 @@ class ZMQTest (BitcoinTestFramework):
         assert type(self.nodes[0].getrawmempool()) is list
         assert type(self.nodes[0].getrawmempool(mempool_sequence=False)) is list
         assert "mempool_sequence" not in self.nodes[0].getrawmempool(verbose=True)
-        assert_raises_rpc_error(-8, "Verbose results cannot contain mempool sequence values.", self.nodes[0].getrawmempool, True, True)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Verbose results cannot contain mempool sequence values.", self.nodes[0].getrawmempool, True, True)
         assert_equal(self.nodes[0].getrawmempool(mempool_sequence=True)["mempool_sequence"], seq_num)
 
         self.log.info("Testing reorg notifications")

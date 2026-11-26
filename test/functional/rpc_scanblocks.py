@@ -9,6 +9,11 @@ from test_framework.blockfilter import (
     bip158_relevant_scriptpubkeys,
 )
 from test_framework.messages import COIN
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_INVALID_PARAMETER,
+    RPC_MISC_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -107,21 +112,21 @@ class ScanblocksTest(BitcoinTestFramework):
             "start", [{"desc": f"raw({false_positive_spk.hex()})"}], 0, 0, "basic", {"filter_false_positives": True})['relevant_blocks']
 
         # test node with disabled blockfilterindex
-        assert_raises_rpc_error(-1, "Index is not enabled for filtertype basic",
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Index is not enabled for filtertype basic",
                                 self.nodes[1].scanblocks, "start", [f"addr({addr_1})"])
 
         # test unknown filtertype
-        assert_raises_rpc_error(-5, "Unknown filtertype",
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Unknown filtertype",
                                 node.scanblocks, "start", [f"addr({addr_1})"], 0, 10, "extended")
 
         # test invalid start_height
-        assert_raises_rpc_error(-1, "Invalid start_height",
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Invalid start_height",
                                 node.scanblocks, "start", [f"addr({addr_1})"], 100000000)
 
         # test invalid stop_height
-        assert_raises_rpc_error(-1, "Invalid stop_height",
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Invalid stop_height",
                                 node.scanblocks, "start", [f"addr({addr_1})"], 10, 0)
-        assert_raises_rpc_error(-1, "Invalid stop_height",
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Invalid stop_height",
                                 node.scanblocks, "start", [f"addr({addr_1})"], 10, 100000000)
 
         # test accessing the status (must be empty)
@@ -131,10 +136,10 @@ class ScanblocksTest(BitcoinTestFramework):
         assert_equal(node.scanblocks("abort"), False)
 
         # test invalid command
-        assert_raises_rpc_error(-8, "Invalid action 'foobar'", node.scanblocks, "foobar")
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid action 'foobar'", node.scanblocks, "foobar")
 
         # test that null scanobjects is rejected for start
-        assert_raises_rpc_error(-1, "scanobjects argument is required for the start action", node.scanblocks, "start", None)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "scanobjects argument is required for the start action", node.scanblocks, "start", None)
 
 
 if __name__ == '__main__':

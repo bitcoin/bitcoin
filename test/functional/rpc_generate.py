@@ -6,6 +6,13 @@
 
 from concurrent.futures import ThreadPoolExecutor
 
+from test_framework.rpc_error_codes import (
+    RPC_DESERIALIZATION_ERROR,
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_INVALID_PARAMETER,
+    RPC_METHOD_NOT_FOUND,
+    RPC_VERIFY_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.wallet import MiniWallet
 from test_framework.util import (
@@ -25,7 +32,7 @@ class RPCGenerateTest(BitcoinTestFramework):
 
     def test_generatetoaddress(self):
         self.generatetoaddress(self.nodes[0], 1, 'mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ')
-        assert_raises_rpc_error(-5, "Invalid address", self.generatetoaddress, self.nodes[0], 1, '3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy')
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address", self.generatetoaddress, self.nodes[0], 1, '3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy')
 
     def test_generateblock(self):
         node = self.nodes[0]
@@ -98,26 +105,26 @@ class RPCGenerateTest(BitcoinTestFramework):
         txid1 = miniwallet.send_self_transfer(from_node=node)['txid']
         utxo1 = miniwallet.get_utxo(txid=txid1)
         rawtx2 = miniwallet.create_self_transfer(utxo_to_spend=utxo1)['hex']
-        assert_raises_rpc_error(-25, 'TestBlockValidity failed: bad-txns-inputs-missingorspent', self.generateblock, node, address, [rawtx2, txid1])
+        assert_raises_rpc_error(RPC_VERIFY_ERROR, 'TestBlockValidity failed: bad-txns-inputs-missingorspent', self.generateblock, node, address, [rawtx2, txid1])
 
         self.log.info('Fail to generate block with txid not in mempool')
         missing_txid = '0000000000000000000000000000000000000000000000000000000000000000'
-        assert_raises_rpc_error(-5, 'Transaction ' + missing_txid + ' not in mempool.', self.generateblock, node, address, [missing_txid])
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, 'Transaction ' + missing_txid + ' not in mempool.', self.generateblock, node, address, [missing_txid])
 
         self.log.info('Fail to generate block with invalid raw tx')
         invalid_raw_tx = '0000'
-        assert_raises_rpc_error(-22, 'Transaction decode failed for ' + invalid_raw_tx, self.generateblock, node, address, [invalid_raw_tx])
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, 'Transaction decode failed for ' + invalid_raw_tx, self.generateblock, node, address, [invalid_raw_tx])
 
         self.log.info('Fail to generate block with invalid address/descriptor')
-        assert_raises_rpc_error(-5, 'Invalid address or descriptor', self.generateblock, node, '1234', [])
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, 'Invalid address or descriptor', self.generateblock, node, '1234', [])
 
         self.log.info('Fail to generate block with a ranged descriptor')
         ranged_descriptor = 'pkh(tpubD6NzVbkrYhZ4XgiXtGrdW5XDAPFCL9h7we1vwNCpn8tGbBcgfVYjXyhWo4E1xkh56hjod1RhGjxbaTLV3X4FyWuejifB9jusQ46QzG87VKp/0/*)'
-        assert_raises_rpc_error(-8, 'Ranged descriptor not accepted. Maybe pass through deriveaddresses first?', self.generateblock, node, ranged_descriptor, [])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, 'Ranged descriptor not accepted. Maybe pass through deriveaddresses first?', self.generateblock, node, ranged_descriptor, [])
 
         self.log.info('Fail to generate block with a descriptor missing a private key')
         child_descriptor = 'pkh(tpubD6NzVbkrYhZ4XgiXtGrdW5XDAPFCL9h7we1vwNCpn8tGbBcgfVYjXyhWo4E1xkh56hjod1RhGjxbaTLV3X4FyWuejifB9jusQ46QzG87VKp/0\'/0)'
-        assert_raises_rpc_error(-5, 'Cannot derive script without private keys', self.generateblock, node, child_descriptor, [])
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, 'Cannot derive script without private keys', self.generateblock, node, child_descriptor, [])
 
     def test_generate(self):
         message = (
@@ -128,7 +135,7 @@ class RPCGenerateTest(BitcoinTestFramework):
 
         if not self.options.usecli:
             self.log.info("Test rpc generate raises with message to use cli option")
-            assert_raises_rpc_error(-32601, message, self.nodes[0]._rpc.generate)
+            assert_raises_rpc_error(RPC_METHOD_NOT_FOUND, message, self.nodes[0]._rpc.generate)
 
             self.log.info("Test rpc generate help prints message to use cli option")
             assert_equal(message, self.nodes[0].help("generate"))

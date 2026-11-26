@@ -39,6 +39,12 @@ from test_framework.messages import (
     WITNESS_SCALE_FACTOR,
 )
 from test_framework.p2p import P2PDataStore
+from test_framework.rpc_error_codes import (
+    RPC_DESERIALIZATION_ERROR,
+    RPC_INVALID_PARAMETER,
+    RPC_MISC_ERROR,
+    RPC_VERIFY_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -242,12 +248,12 @@ class MiningTest(BitcoinTestFramework):
         bad_block = copy.deepcopy(block)
         bad_block.nTime = t
         bad_block.solve()
-        assert_raises_rpc_error(-25, 'time-timewarp-attack', lambda: node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex()))
+        assert_raises_rpc_error(RPC_VERIFY_ERROR, 'time-timewarp-attack', lambda: node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex()))
 
         self.log.info("Test timewarp protection boundary")
         bad_block.nTime = t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP - 1
         bad_block.solve()
-        assert_raises_rpc_error(-25, 'time-timewarp-attack', lambda: node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex()))
+        assert_raises_rpc_error(RPC_VERIFY_ERROR, 'time-timewarp-attack', lambda: node.submitheader(hexdata=CBlockHeader(bad_block).serialize().hex()))
 
         bad_block.nTime = t + MAX_FUTURE_BLOCK_TIME - MAX_TIMEWARP
         bad_block.solve()
@@ -299,7 +305,7 @@ class MiningTest(BitcoinTestFramework):
         assert_greater_than_or_equal(pruned_height, 2)
         pruned_blockhash = prune_node.getblockhash(2)
 
-        assert_raises_rpc_error(-1, 'Block not available (pruned data)', prune_node.getblock, pruned_blockhash)
+        assert_raises_rpc_error(RPC_MISC_ERROR, 'Block not available (pruned data)', prune_node.getblock, pruned_blockhash)
 
         result = prune_node.submitblock(pruned_block)
         assert_equal(result, "inconclusive")
@@ -485,24 +491,24 @@ class MiningTest(BitcoinTestFramework):
         block.hashMerkleRoot = block.calc_merkle_root()
 
         self.log.info("getblocktemplate: segwit rule must be set")
-        assert_raises_rpc_error(-8, "getblocktemplate must be called with the segwit rule set", node.getblocktemplate, {})
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "getblocktemplate must be called with the segwit rule set", node.getblocktemplate, {})
 
         self.log.info("getblocktemplate: result should set the right rules")
         assert_equal(['csv', '!segwit', 'taproot'], self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['rules'])
 
         self.log.info("submitblock: Test block decode failure")
-        assert_raises_rpc_error(-22, "Block decode failed", node.submitblock, block.serialize()[:-15].hex())
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "Block decode failed", node.submitblock, block.serialize()[:-15].hex())
 
         self.log.info("submitblock: Test empty block")
         assert_equal('high-hash', node.submitblock(hexdata=CBlock().serialize().hex()))
 
         self.log.info('submitheader tests')
-        assert_raises_rpc_error(-22, 'Block header decode failed', lambda: node.submitheader(hexdata='xx' * BLOCK_HEADER_SIZE))
-        assert_raises_rpc_error(-22, 'Block header decode failed', lambda: node.submitheader(hexdata='ff' * (BLOCK_HEADER_SIZE-2)))
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, 'Block header decode failed', lambda: node.submitheader(hexdata='xx' * BLOCK_HEADER_SIZE))
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, 'Block header decode failed', lambda: node.submitheader(hexdata='ff' * (BLOCK_HEADER_SIZE-2)))
 
         missing_ancestor_block = copy.deepcopy(block)
         missing_ancestor_block.hashPrevBlock = 123
-        assert_raises_rpc_error(-25, 'Must submit previous header', lambda: node.submitheader(hexdata=super(CBlock, missing_ancestor_block).serialize().hex()))
+        assert_raises_rpc_error(RPC_VERIFY_ERROR, 'Must submit previous header', lambda: node.submitheader(hexdata=super(CBlock, missing_ancestor_block).serialize().hex()))
 
         block.nTime += 1
         block.solve()
@@ -540,13 +546,13 @@ class MiningTest(BitcoinTestFramework):
         bad_block2 = copy.deepcopy(block)
         bad_block2.hashPrevBlock = bad_block_lock.hash_int
         bad_block2.solve()
-        assert_raises_rpc_error(-25, 'bad-prevblk', lambda: node.submitheader(hexdata=CBlockHeader(bad_block2).serialize().hex()))
+        assert_raises_rpc_error(RPC_VERIFY_ERROR, 'bad-prevblk', lambda: node.submitheader(hexdata=CBlockHeader(bad_block2).serialize().hex()))
 
         # Should reject invalid header right away
         bad_block_time = copy.deepcopy(block)
         bad_block_time.nTime = 1
         bad_block_time.solve()
-        assert_raises_rpc_error(-25, 'time-too-old', lambda: node.submitheader(hexdata=CBlockHeader(bad_block_time).serialize().hex()))
+        assert_raises_rpc_error(RPC_VERIFY_ERROR, 'time-too-old', lambda: node.submitheader(hexdata=CBlockHeader(bad_block_time).serialize().hex()))
 
         # Should ask for the block from a p2p node, if they announce the header as well:
         peer = node.add_p2p_connection(P2PDataStore())
@@ -557,8 +563,8 @@ class MiningTest(BitcoinTestFramework):
 
         # Building a few blocks should give the same results
         self.generatetoaddress(node, 10, node.get_deterministic_priv_key().address)
-        assert_raises_rpc_error(-25, 'time-too-old', lambda: node.submitheader(hexdata=CBlockHeader(bad_block_time).serialize().hex()))
-        assert_raises_rpc_error(-25, 'bad-prevblk', lambda: node.submitheader(hexdata=CBlockHeader(bad_block2).serialize().hex()))
+        assert_raises_rpc_error(RPC_VERIFY_ERROR, 'time-too-old', lambda: node.submitheader(hexdata=CBlockHeader(bad_block_time).serialize().hex()))
+        assert_raises_rpc_error(RPC_VERIFY_ERROR, 'bad-prevblk', lambda: node.submitheader(hexdata=CBlockHeader(bad_block2).serialize().hex()))
         node.submitheader(hexdata=CBlockHeader(block).serialize().hex())
         node.submitheader(hexdata=CBlockHeader(bad_block_root).serialize().hex())
         assert_equal(node.submitblock(hexdata=block.serialize().hex()), 'duplicate')  # valid

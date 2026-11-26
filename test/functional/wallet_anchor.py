@@ -13,6 +13,10 @@ from test_framework.messages import (
     CTxInWitness,
     CTxOut,
 )
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_WALLET_ERROR,
+)
 from test_framework.script_util import (
     ANCHOR_ADDRESS,
     PAY_TO_ANCHOR,
@@ -62,8 +66,8 @@ class WalletAnchorTest(BitcoinTestFramework):
 
         # The wallet should have no UTXOs, and not know of the anchor tx or its spend
         assert_equal(wallet.listunspent(), [])
-        assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", wallet.gettransaction, anchor_txid)
-        assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", wallet.gettransaction, anchor_spend_txid)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id", wallet.gettransaction, anchor_txid)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id", wallet.gettransaction, anchor_spend_txid)
 
         # Rescanning the block containing the anchor so that listunspent will list the output
         wallet.rescanblockchain(0, anchor_tx_height)
@@ -73,7 +77,7 @@ class WalletAnchorTest(BitcoinTestFramework):
         assert_equal(utxos[0]["address"], ANCHOR_ADDRESS)
         assert_equal(utxos[0]["amount"], 0)
         wallet.gettransaction(anchor_txid)
-        assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", wallet.gettransaction, anchor_spend_txid)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id", wallet.gettransaction, anchor_spend_txid)
 
         # Rescan the rest of the blockchain to see the anchor was spent
         wallet.rescanblockchain()
@@ -102,10 +106,10 @@ class WalletAnchorTest(BitcoinTestFramework):
         assert_equal(utxos[0]["address"], ANCHOR_ADDRESS)
         assert_equal(utxos[0]["amount"], 1)
 
-        assert_raises_rpc_error(-4, "Missing solving data for estimating transaction size", wallet.send, [{self.default_wallet.getnewaddress(): 0.9999}])
-        assert_raises_rpc_error(-4, "Error: Private keys are disabled for this wallet", wallet.sendtoaddress, self.default_wallet.getnewaddress(), 0.9999)
-        assert_raises_rpc_error(-4, "Unable to determine the size of the transaction, the wallet contains unsolvable descriptors", wallet.sendall, recipients=[self.default_wallet.getnewaddress()], inputs=utxos)
-        assert_raises_rpc_error(-4, "Unable to determine the size of the transaction, the wallet contains unsolvable descriptors", wallet.sendall, recipients=[self.default_wallet.getnewaddress()])
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Missing solving data for estimating transaction size", wallet.send, [{self.default_wallet.getnewaddress(): 0.9999}])
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: Private keys are disabled for this wallet", wallet.sendtoaddress, self.default_wallet.getnewaddress(), 0.9999)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Unable to determine the size of the transaction, the wallet contains unsolvable descriptors", wallet.sendall, recipients=[self.default_wallet.getnewaddress()], inputs=utxos)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Unable to determine the size of the transaction, the wallet contains unsolvable descriptors", wallet.sendall, recipients=[self.default_wallet.getnewaddress()])
 
     def run_test(self):
         self.default_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)

@@ -25,6 +25,7 @@ from test_framework.messages import (
     TX_MAX_STANDARD_VERSION,
     WITNESS_SCALE_FACTOR,
 )
+from test_framework.rpc_error_codes import RPC_VERIFY_REJECTED
 from test_framework.script import (
     ANNEX_TAG,
     BIP341_sha_amounts,
@@ -1646,7 +1647,7 @@ class TaprootTest(BitcoinTestFramework):
                     node.sendrawtransaction(tx.serialize().hex(), 0)
                     assert node.getmempoolentry(tx.txid_hex) is not None, "Failed to accept into mempool: " + msg
                 else:
-                    assert_raises_rpc_error(-26, None, node.sendrawtransaction, tx.serialize().hex(), 0)
+                    assert_raises_rpc_error(RPC_VERIFY_REJECTED, None, node.sendrawtransaction, tx.serialize().hex(), 0)
                 # Submit in a block
                 self.block_submit(node, [tx], msg, witness=True, accept=fail_input is None, cb_pubkey=cb_pubkey, fees=fee, sigops_weight=sigops_weight, err_msg=expected_fail_msg)
 

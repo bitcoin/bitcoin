@@ -47,6 +47,13 @@ from test_framework.messages import (
     msg_block,
 )
 from test_framework.p2p import P2PInterface
+from test_framework.rpc_error_codes import (
+    RPC_INTERNAL_ERROR,
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_INVALID_PARAMETER,
+    RPC_MISC_ERROR,
+    RPC_TYPE_ERROR,
+)
 from test_framework.script import hash256, OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -290,8 +297,8 @@ class BlockchainTest(BitcoinTestFramework):
         self.log.info("Check that block timestamps work until year 2106")
         self.generate(self.nodes[0], 8)[-1]
         time_2106 = 2**32 - 1
-        assert_raises_rpc_error(-8, f"Mocktime must be in the range [0, {time_2106}], not -1.", self.nodes[0].setmocktime, -1)
-        assert_raises_rpc_error(-8, f"Mocktime must be in the range [0, {time_2106}], not {time_2106 + 1}.", self.nodes[0].setmocktime, time_2106 + 1)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, f"Mocktime must be in the range [0, {time_2106}], not -1.", self.nodes[0].setmocktime, -1)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, f"Mocktime must be in the range [0, {time_2106}], not {time_2106 + 1}.", self.nodes[0].setmocktime, time_2106 + 1)
         self.nodes[0].setmocktime(time_2106)
         last = self.generate(self.nodes[0], 6)[-1]
         assert_equal(self.nodes[0].getblockheader(last)["mediantime"], time_2106)
@@ -300,21 +307,21 @@ class BlockchainTest(BitcoinTestFramework):
         self.log.info("Test getchaintxstats")
 
         # Test `getchaintxstats` invalid extra parameters
-        assert_raises_rpc_error(-1, 'getchaintxstats', self.nodes[0].getchaintxstats, 0, '', 0)
+        assert_raises_rpc_error(RPC_MISC_ERROR, 'getchaintxstats', self.nodes[0].getchaintxstats, 0, '', 0)
 
         # Test `getchaintxstats` invalid `nblocks`
-        assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", self.nodes[0].getchaintxstats, '')
-        assert_raises_rpc_error(-8, "Invalid block count: should be between 0 and the block's height - 1", self.nodes[0].getchaintxstats, -1)
-        assert_raises_rpc_error(-8, "Invalid block count: should be between 0 and the block's height - 1", self.nodes[0].getchaintxstats, self.nodes[0].getblockcount())
+        assert_raises_rpc_error(RPC_TYPE_ERROR, "JSON value of type string is not of expected type number", self.nodes[0].getchaintxstats, '')
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid block count: should be between 0 and the block's height - 1", self.nodes[0].getchaintxstats, -1)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid block count: should be between 0 and the block's height - 1", self.nodes[0].getchaintxstats, self.nodes[0].getblockcount())
 
         # Test `getchaintxstats` invalid `blockhash`
-        assert_raises_rpc_error(-3, "JSON value of type number is not of expected type string", self.nodes[0].getchaintxstats, blockhash=0)
-        assert_raises_rpc_error(-8, "blockhash must be of length 64 (not 1, for '0')", self.nodes[0].getchaintxstats, blockhash='0')
-        assert_raises_rpc_error(-8, "blockhash must be hexadecimal string (not 'ZZZ0000000000000000000000000000000000000000000000000000000000000')", self.nodes[0].getchaintxstats, blockhash='ZZZ0000000000000000000000000000000000000000000000000000000000000')
-        assert_raises_rpc_error(-5, "Block not found", self.nodes[0].getchaintxstats, blockhash='0000000000000000000000000000000000000000000000000000000000000000')
+        assert_raises_rpc_error(RPC_TYPE_ERROR, "JSON value of type number is not of expected type string", self.nodes[0].getchaintxstats, blockhash=0)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "blockhash must be of length 64 (not 1, for '0')", self.nodes[0].getchaintxstats, blockhash='0')
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "blockhash must be hexadecimal string (not 'ZZZ0000000000000000000000000000000000000000000000000000000000000')", self.nodes[0].getchaintxstats, blockhash='ZZZ0000000000000000000000000000000000000000000000000000000000000')
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Block not found", self.nodes[0].getchaintxstats, blockhash='0000000000000000000000000000000000000000000000000000000000000000')
         blockhash = self.nodes[0].getblockhash(HEIGHT)
         self.nodes[0].invalidateblock(blockhash)
-        assert_raises_rpc_error(-8, "Block is not in main chain", self.nodes[0].getchaintxstats, blockhash=blockhash)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Block is not in main chain", self.nodes[0].getchaintxstats, blockhash=blockhash)
         self.nodes[0].reconsiderblock(blockhash)
 
         chaintxstats = self.nodes[0].getchaintxstats(nblocks=1)
@@ -409,7 +416,7 @@ class BlockchainTest(BitcoinTestFramework):
             assert 'muhash' not in r
 
         # Unknown hash_type raises an error
-        assert_raises_rpc_error(-8, "'foo hash' is not a valid hash_type", node.gettxoutsetinfo, "foo hash")
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "'foo hash' is not a valid hash_type", node.gettxoutsetinfo, "foo hash")
 
     def _test_gettxout(self):
         self.log.info("Validating gettxout RPC response")
@@ -442,9 +449,9 @@ class BlockchainTest(BitcoinTestFramework):
         self.log.info("Test getblockheader")
         node = self.nodes[0]
 
-        assert_raises_rpc_error(-8, "hash must be of length 64 (not 8, for 'nonsense')", node.getblockheader, "nonsense")
-        assert_raises_rpc_error(-8, "hash must be hexadecimal string (not 'ZZZ7bb8b1697ea987f3b223ba7819250cae33efacb068d23dc24859824a77844')", node.getblockheader, "ZZZ7bb8b1697ea987f3b223ba7819250cae33efacb068d23dc24859824a77844")
-        assert_raises_rpc_error(-5, "Block not found", node.getblockheader, "0cf7bb8b1697ea987f3b223ba7819250cae33efacb068d23dc24859824a77844")
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "hash must be of length 64 (not 8, for 'nonsense')", node.getblockheader, "nonsense")
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "hash must be hexadecimal string (not 'ZZZ7bb8b1697ea987f3b223ba7819250cae33efacb068d23dc24859824a77844')", node.getblockheader, "ZZZ7bb8b1697ea987f3b223ba7819250cae33efacb068d23dc24859824a77844")
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Block not found", node.getblockheader, "0cf7bb8b1697ea987f3b223ba7819250cae33efacb068d23dc24859824a77844")
 
         besthash = node.getbestblockhash()
         secondbesthash = node.getblockhash(HEIGHT - 1)
@@ -488,7 +495,7 @@ class BlockchainTest(BitcoinTestFramework):
     def _test_getnetworkhashps(self):
         self.log.info("Test getnetworkhashps")
         assert_raises_rpc_error(
-            -3,
+            RPC_TYPE_ERROR,
             textwrap.dedent("""
             Wrong type passed:
             {
@@ -499,22 +506,22 @@ class BlockchainTest(BitcoinTestFramework):
             lambda: self.nodes[0].getnetworkhashps("a", []),
         )
         assert_raises_rpc_error(
-            -8,
+            RPC_INVALID_PARAMETER,
             "Block does not exist at specified height",
             lambda: self.nodes[0].getnetworkhashps(100, self.nodes[0].getblockcount() + 1),
         )
         assert_raises_rpc_error(
-            -8,
+            RPC_INVALID_PARAMETER,
             "Block does not exist at specified height",
             lambda: self.nodes[0].getnetworkhashps(100, -10),
         )
         assert_raises_rpc_error(
-            -8,
+            RPC_INVALID_PARAMETER,
             "Invalid nblocks. Must be a positive number or -1.",
             lambda: self.nodes[0].getnetworkhashps(-100),
         )
         assert_raises_rpc_error(
-            -8,
+            RPC_INVALID_PARAMETER,
             "Invalid nblocks. Must be a positive number or -1.",
             lambda: self.nodes[0].getnetworkhashps(0),
         )
@@ -572,7 +579,7 @@ class BlockchainTest(BitcoinTestFramework):
 
         self.log.debug("waitforblock should return the same block after its timeout")
         assert_equal(node.waitforblock(blockhash=current_hash, timeout=1)['hash'], rollback_header['previousblockhash'])
-        assert_raises_rpc_error(-1, "Negative timeout", node.waitforblock, current_hash, -1)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Negative timeout", node.waitforblock, current_hash, -1)
 
         node.reconsiderblock(rollback_hash)
         # The chain has probably already been restored by the time reconsiderblock returns,
@@ -588,7 +595,7 @@ class BlockchainTest(BitcoinTestFramework):
         # but poll anyway.
         self.wait_until(lambda: node.waitfornewblock(current_tip=rollback_header['previousblockhash'])['hash'] == current_hash)
 
-        assert_raises_rpc_error(-1, "Negative timeout", node.waitfornewblock, -1)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Negative timeout", node.waitfornewblock, -1)
 
     def _test_waitforblockheight(self):
         self.log.info("Test waitforblockheight")
@@ -628,7 +635,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_waitforheight(current_height - 1)
         assert_waitforheight(current_height)
         assert_waitforheight(current_height + 1)
-        assert_raises_rpc_error(-1, "Negative timeout", node.waitforblockheight, current_height, -1)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Negative timeout", node.waitforblockheight, current_height, -1)
 
     def _test_getblock(self):
         node = self.nodes[0]
@@ -719,7 +726,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_vin_contains_prevout(3)
 
         self.log.info("Test getblock with invalid verbosity type returns proper error message")
-        assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", node.getblock, blockhash, "2")
+        assert_raises_rpc_error(RPC_TYPE_ERROR, "JSON value of type string is not of expected type number", node.getblock, blockhash, "2")
 
         self.log.info("Test that getblock doesn't work with deleted Undo data")
 
@@ -731,8 +738,8 @@ class BlockchainTest(BitcoinTestFramework):
         # Move instead of deleting so we can restore chain state afterwards
         move_block_file('rev00000.dat', 'rev_wrong')
 
-        assert_raises_rpc_error(-32603, "Undo data expected but can't be read. This could be due to disk corruption or a conflict with a pruning event.", lambda: node.getblock(blockhash, 2))
-        assert_raises_rpc_error(-32603, "Undo data expected but can't be read. This could be due to disk corruption or a conflict with a pruning event.", lambda: node.getblock(blockhash, 3))
+        assert_raises_rpc_error(RPC_INTERNAL_ERROR, "Undo data expected but can't be read. This could be due to disk corruption or a conflict with a pruning event.", lambda: node.getblock(blockhash, 2))
+        assert_raises_rpc_error(RPC_INTERNAL_ERROR, "Undo data expected but can't be read. This could be due to disk corruption or a conflict with a pruning event.", lambda: node.getblock(blockhash, 3))
 
         # Restore chain state
         move_block_file('rev_wrong', 'rev00000.dat')
@@ -746,7 +753,7 @@ class BlockchainTest(BitcoinTestFramework):
         block = create_block(int(blockhash, 16), create_coinbase(current_height + 1, nValue=100), ntime=block_time)
         block.solve()
         node.submitheader(block.serialize().hex())
-        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", lambda: node.getblock(block.hash_hex))
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Block not available (not fully downloaded)", lambda: node.getblock(block.hash_hex))
 
         self.log.info("Test getblock when block data is available but undo data isn't")
         # Submits a block building on the header-only block, so it can't be connected and has no undo data
@@ -762,7 +769,7 @@ class BlockchainTest(BitcoinTestFramework):
 
         self.log.info("Test getblock when block is missing")
         move_block_file('blk00000.dat', 'blk00000.dat.bak')
-        assert_raises_rpc_error(-1, "Block not found on disk", node.getblock, blockhash)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Block not found on disk", node.getblock, blockhash)
         move_block_file('blk00000.dat.bak', 'blk00000.dat')
 
 

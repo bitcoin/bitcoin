@@ -13,6 +13,13 @@ import shutil
 import stat
 
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_PARAMETER,
+    RPC_WALLET_ALREADY_LOADED,
+    RPC_WALLET_ERROR,
+    RPC_WALLET_NOT_FOUND,
+    RPC_WALLET_NOT_SPECIFIED,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import ErrorMatch
 from test_framework.util import (
@@ -280,10 +287,10 @@ class MultiWalletTest(BitcoinTestFramework):
             assert_equal(info['walletname'], wallet_name)
 
         # accessing invalid wallet fails
-        assert_raises_rpc_error(-18, "Requested wallet does not exist or is not loaded", wallet_bad.getwalletinfo)
+        assert_raises_rpc_error(RPC_WALLET_NOT_FOUND, "Requested wallet does not exist or is not loaded", wallet_bad.getwalletinfo)
 
         # accessing wallet RPC without using wallet endpoint fails
-        assert_raises_rpc_error(-19, "Multiple wallets are loaded. Please select which wallet", node.getwalletinfo)
+        assert_raises_rpc_error(RPC_WALLET_NOT_SPECIFIED, "Multiple wallets are loaded. Please select which wallet", node.getwalletinfo)
 
         w1, w2, w3, w4, *_ = wallets
         self.generatetoaddress(node, nblocks=COINBASE_MATURITY + 1, address=w1.getnewaddress(), sync_fun=self.no_op)
@@ -309,7 +316,7 @@ class MultiWalletTest(BitcoinTestFramework):
 
         self.restart_node(0, ['-nowallet'])
         assert_equal(node.listwallets(), [])
-        assert_raises_rpc_error(-18, "No wallet is loaded. Load a wallet using loadwallet or create a new one with createwallet. (Note: A default wallet is no longer automatically created)", node.getwalletinfo)
+        assert_raises_rpc_error(RPC_WALLET_NOT_FOUND, "No wallet is loaded. Load a wallet using loadwallet or create a new one with createwallet. (Note: A default wallet is no longer automatically created)", node.getwalletinfo)
 
         self.log.info("Load first wallet")
         loadwallet_name = node.loadwallet(wallet_names[0])
@@ -323,7 +330,7 @@ class MultiWalletTest(BitcoinTestFramework):
         loadwallet_name = node.loadwallet(wallet_names[1])
         assert_equal(loadwallet_name['name'], wallet_names[1])
         assert_equal(node.listwallets(), wallet_names[0:2])
-        assert_raises_rpc_error(-19, "Multiple wallets are loaded. Please select which wallet", node.getwalletinfo)
+        assert_raises_rpc_error(RPC_WALLET_NOT_SPECIFIED, "Multiple wallets are loaded. Please select which wallet", node.getwalletinfo)
         w2 = get_wallet(node, wallet_names[1])
         w2.getwalletinfo()
 
@@ -348,18 +355,18 @@ class MultiWalletTest(BitcoinTestFramework):
 
         # Fail to load if wallet doesn't exist
         path = wallet_dir(node, "wallets")
-        assert_raises_rpc_error(-18, "Wallet file verification failed. Failed to load database path '{}'. Path does not exist.".format(path), node.loadwallet, 'wallets')
+        assert_raises_rpc_error(RPC_WALLET_NOT_FOUND, "Wallet file verification failed. Failed to load database path '{}'. Path does not exist.".format(path), node.loadwallet, 'wallets')
 
         # Fail to load duplicate wallets
-        assert_raises_rpc_error(-35, "Wallet \"w1\" is already loaded.", node.loadwallet, wallet_names[0])
+        assert_raises_rpc_error(RPC_WALLET_ALREADY_LOADED, "Wallet \"w1\" is already loaded.", node.loadwallet, wallet_names[0])
         # Fail to load if wallet file is a symlink
         if self.check_symlinks:
-            assert_raises_rpc_error(-4, "Wallet file verification failed. Invalid -wallet path 'w8_symlink'", node.loadwallet, 'w8_symlink')
+            assert_raises_rpc_error(RPC_WALLET_ERROR, "Wallet file verification failed. Invalid -wallet path 'w8_symlink'", node.loadwallet, 'w8_symlink')
 
         # Fail to load if a directory is specified that doesn't contain a wallet
         os.mkdir(wallet_dir(node, 'empty_wallet_dir'))
         path = wallet_dir(node, "empty_wallet_dir")
-        assert_raises_rpc_error(-18, "Wallet file verification failed. Failed to load database path '{}'. Data is not in recognized format.".format(path), node.loadwallet, 'empty_wallet_dir')
+        assert_raises_rpc_error(RPC_WALLET_NOT_FOUND, "Wallet file verification failed. Failed to load database path '{}'. Data is not in recognized format.".format(path), node.loadwallet, 'empty_wallet_dir')
 
         return w1, w2
 
@@ -372,7 +379,7 @@ class MultiWalletTest(BitcoinTestFramework):
 
         # Fail to create a wallet if it already exists.
         path = wallet_dir(node, "w2")
-        assert_raises_rpc_error(-4, "Failed to create database path '{}'. Database already exists.".format(path), node.createwallet, 'w2')
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Failed to create database path '{}'. Database already exists.".format(path), node.createwallet, 'w2')
 
         # Successfully create a wallet with a new name
         loadwallet_name = node.createwallet('w9')
@@ -397,10 +404,10 @@ class MultiWalletTest(BitcoinTestFramework):
         self.log.info("Test dynamic wallet unloading")
 
         # Test `unloadwallet` errors
-        assert_raises_rpc_error(-8, "Either the RPC endpoint wallet or the wallet name parameter must be provided", node.unloadwallet)
-        assert_raises_rpc_error(-18, "Requested wallet does not exist or is not loaded", node.unloadwallet, "dummy")
-        assert_raises_rpc_error(-18, "Requested wallet does not exist or is not loaded", get_wallet(node, "dummy").unloadwallet)
-        assert_raises_rpc_error(-8, "The RPC endpoint wallet and the wallet name parameter specify different wallets", w1.unloadwallet, "w2"),
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Either the RPC endpoint wallet or the wallet name parameter must be provided", node.unloadwallet)
+        assert_raises_rpc_error(RPC_WALLET_NOT_FOUND, "Requested wallet does not exist or is not loaded", node.unloadwallet, "dummy")
+        assert_raises_rpc_error(RPC_WALLET_NOT_FOUND, "Requested wallet does not exist or is not loaded", get_wallet(node, "dummy").unloadwallet)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "The RPC endpoint wallet and the wallet name parameter specify different wallets", w1.unloadwallet, "w2"),
 
         # Successfully unload the specified wallet name
         node.unloadwallet("w1")
@@ -424,7 +431,7 @@ class MultiWalletTest(BitcoinTestFramework):
         for wallet_name in node.listwallets():
             node.unloadwallet(wallet_name)
         assert_equal(node.listwallets(), [])
-        assert_raises_rpc_error(-18, "No wallet is loaded. Load a wallet using loadwallet or create a new one with createwallet. (Note: A default wallet is no longer automatically created)", node.getwalletinfo)
+        assert_raises_rpc_error(RPC_WALLET_NOT_FOUND, "No wallet is loaded. Load a wallet using loadwallet or create a new one with createwallet. (Note: A default wallet is no longer automatically created)", node.getwalletinfo)
 
         # Successfully load a previously unloaded wallet
         node.loadwallet('w1')
@@ -459,7 +466,7 @@ class MultiWalletTest(BitcoinTestFramework):
         self.start_node(1)
         wallet = os.path.join(self.options.tmpdir, 'my_wallet')
         node.createwallet(wallet)
-        assert_raises_rpc_error(-4, "Unable to obtain an exclusive lock", self.nodes[1].loadwallet, wallet)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Unable to obtain an exclusive lock", self.nodes[1].loadwallet, wallet)
         node.unloadwallet(wallet)
         self.nodes[1].loadwallet(wallet)
 
@@ -467,17 +474,17 @@ class MultiWalletTest(BitcoinTestFramework):
         self.log.info("Test weird paths are not allowed as wallet names")
         NON_NORMALIZED = ["bad/./path", "bad/../path", "/bad/./path", "/bad/../path", "../", "./", "./wallet", "../wallets/../wallets/wallet"]
         for name in NON_NORMALIZED:
-            assert_raises_rpc_error(-4, "Wallet name given as a path must be normalized", self.nodes[0].createwallet, name)
+            assert_raises_rpc_error(RPC_WALLET_ERROR, "Wallet name given as a path must be normalized", self.nodes[0].createwallet, name)
 
         INVALID_RELPATH = ["../wallets/wallet", "..", "."]
         for name in INVALID_RELPATH:
-            assert_raises_rpc_error(-4, "Wallet name given as a relative path cannot begin with ./ or ../", self.nodes[0].createwallet, name)
+            assert_raises_rpc_error(RPC_WALLET_ERROR, "Wallet name given as a relative path cannot begin with ./ or ../", self.nodes[0].createwallet, name)
 
         INVALID_ROOT = ["/"]
         if platform.system() == "Windows":
             INVALID_ROOT.extend(["C:\\", "C:"])
         for name in INVALID_ROOT:
-            assert_raises_rpc_error(-4, "Wallet name cannot be the root path", self.nodes[0].createwallet, name)
+            assert_raises_rpc_error(RPC_WALLET_ERROR, "Wallet name cannot be the root path", self.nodes[0].createwallet, name)
 
 if __name__ == '__main__':
     MultiWalletTest(__file__).main()

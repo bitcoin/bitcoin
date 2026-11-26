@@ -8,6 +8,7 @@
 - Test that it is not possible to mine to an invalid address.
 """
 
+from test_framework.rpc_error_codes import RPC_METHOD_NOT_FOUND
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_raises_rpc_error, assert_equal
 
@@ -20,7 +21,7 @@ class DisableWalletTest (BitcoinTestFramework):
 
     def run_test (self):
         # Make sure wallet is really disabled
-        assert_raises_rpc_error(-32601, 'Method not found', self.nodes[0].getwalletinfo)
+        assert_raises_rpc_error(RPC_METHOD_NOT_FOUND, 'Method not found', self.nodes[0].getwalletinfo)
         x = self.nodes[0].validateaddress('3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy')
         assert_equal(x['isvalid'], False)
         x = self.nodes[0].validateaddress('mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ')

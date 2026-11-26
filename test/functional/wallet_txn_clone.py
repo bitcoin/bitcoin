@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet accounts properly when there are cloned transactions with malleated scriptsigs."""
 
+from test_framework.rpc_error_codes import RPC_WALLET_ERROR
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -210,7 +211,7 @@ class TxnMallTest(BitcoinTestFramework):
                 assert_equal(original_txinfo["replaced_by_txid"], bumped["txid"])
                 assert_equal(malleated_txinfo["replaced_by_txid"], bumped["txid"])
 
-                assert_raises_rpc_error(-4, f"Cannot bump transaction {other_bump} which was already bumped by transaction", wallet.bumpfee, other_bump, fee_rate=20)
+                assert_raises_rpc_error(RPC_WALLET_ERROR, f"Cannot bump transaction {other_bump} which was already bumped by transaction", wallet.bumpfee, other_bump, fee_rate=20)
 
             check_metadata()
 

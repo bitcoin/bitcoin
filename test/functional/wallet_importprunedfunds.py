@@ -11,6 +11,10 @@ from test_framework.messages import (
     CMerkleBlock,
     from_hex,
 )
+from test_framework.rpc_error_codes import (
+    RPC_DESERIALIZATION_ERROR,
+    RPC_INVALID_ADDRESS_OR_KEY,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -82,7 +86,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         self.sync_all()
 
         # Import with no affiliated address
-        assert_raises_rpc_error(-5, "No addresses", self.nodes[1].importprunedfunds, rawtxn1, proof1)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "No addresses", self.nodes[1].importprunedfunds, rawtxn1, proof1)
 
         balance1 = self.nodes[1].getbalance()
         assert_equal(balance1, Decimal(0))
@@ -133,16 +137,16 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         assert [tx for tx in fresh_wallet.listtransactions() if tx['txid'] == spend_txid]
 
         # Check various RPC parameter validation errors
-        assert_raises_rpc_error(-22, "TX decode failed", w1.importprunedfunds, b'invalid tx'.hex(), proof1)
-        assert_raises_rpc_error(-5, "Transaction given doesn't exist in proof", w1.importprunedfunds, rawtxn2, proof1)
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "TX decode failed", w1.importprunedfunds, b'invalid tx'.hex(), proof1)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Transaction given doesn't exist in proof", w1.importprunedfunds, rawtxn2, proof1)
 
         mb = from_hex(CMerkleBlock(), proof1)
         mb.header.hashMerkleRoot = 0xdeadbeef  # cause mismatch between merkle root and merkle block
-        assert_raises_rpc_error(-5, "Something wrong with merkleblock", w1.importprunedfunds, rawtxn1, mb.serialize().hex())
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Something wrong with merkleblock", w1.importprunedfunds, rawtxn1, mb.serialize().hex())
 
         mb = from_hex(CMerkleBlock(), proof1)
         mb.header.nTime += 1  # modify arbitrary block header field to change block hash
-        assert_raises_rpc_error(-5, "Block not found in chain", w1.importprunedfunds, rawtxn1, mb.serialize().hex())
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain", w1.importprunedfunds, rawtxn1, mb.serialize().hex())
 
 
 if __name__ == '__main__':

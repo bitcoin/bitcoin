@@ -51,6 +51,14 @@ from test_framework.psbt import (
     PSBT_OUT_TAP_TREE,
     PSBT_OUT_SCRIPT,
 )
+from test_framework.rpc_error_codes import (
+    RPC_DESERIALIZATION_ERROR,
+    RPC_INVALID_PARAMETER,
+    RPC_TYPE_ERROR,
+    RPC_VERIFY_REJECTED,
+    RPC_WALLET_ERROR,
+    RPC_WALLET_UNLOCK_NEEDED,
+)
 from test_framework.script import CScript, LEAF_VERSION_TAPSCRIPT, OP_TRUE, SIGHASH_ALL, SIGHASH_ANYONECANPAY, hash160
 from test_framework.script_util import MIN_STANDARD_TX_NONWITNESS_SIZE, output_key_to_p2tr_script
 from test_framework.test_framework import BitcoinTestFramework
@@ -211,15 +219,15 @@ class PSBTTest(BitcoinTestFramework):
         assert txid1 in mempool
 
         self.log.info("Fail to craft a new PSBT that sends more funds with add_inputs = False")
-        assert_raises_rpc_error(-4, "The preselected coins total amount does not cover the transaction target. Please allow other inputs to be automatically selected or include more coins manually", wallet.walletcreatefundedpsbt, [{'txid': utxo1['previous_txid'], 'vout': utxo1['previous_vout']}], {target_address: 1}, 0, {'add_inputs': False})
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "The preselected coins total amount does not cover the transaction target. Please allow other inputs to be automatically selected or include more coins manually", wallet.walletcreatefundedpsbt, [{'txid': utxo1['previous_txid'], 'vout': utxo1['previous_vout']}], {target_address: 1}, 0, {'add_inputs': False})
 
         self.log.info("Fail to craft a new PSBT with minconf above highest one")
-        assert_raises_rpc_error(-4, "Insufficient funds", wallet.walletcreatefundedpsbt, [{'txid': utxo1['previous_txid'], 'vout': utxo1['previous_vout']}], {target_address: 1}, 0, {'add_inputs': True, 'minconf': 3, 'fee_rate': 10})
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Insufficient funds", wallet.walletcreatefundedpsbt, [{'txid': utxo1['previous_txid'], 'vout': utxo1['previous_vout']}], {target_address: 1}, 0, {'add_inputs': True, 'minconf': 3, 'fee_rate': 10})
 
         self.log.info("Fail to broadcast a new PSBT with maxconf 0 due to BIP125 rules to verify it actually chose unconfirmed outputs")
         psbt_invalid = wallet.walletcreatefundedpsbt([{'txid': utxo1['previous_txid'], 'vout': utxo1['previous_vout']}], {target_address: 1}, 0, {'add_inputs': True, 'maxconf': 0, 'fee_rate': 10})['psbt']
         signed_invalid = wallet.walletprocesspsbt(psbt_invalid)
-        assert_raises_rpc_error(-26, "bad-txns-spends-conflicting-tx", self.nodes[0].sendrawtransaction, signed_invalid['hex'])
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "bad-txns-spends-conflicting-tx", self.nodes[0].sendrawtransaction, signed_invalid['hex'])
 
         self.log.info("Craft a replacement adding inputs with highest confs possible")
         psbtx2 = wallet.walletcreatefundedpsbt([{'txid': utxo1['previous_txid'], 'vout': utxo1['previous_vout']}], {target_address: 1}, 0, {'add_inputs': True, 'minconf': 2, 'fee_rate': 10})['psbt']
@@ -251,7 +259,7 @@ class PSBTTest(BitcoinTestFramework):
 
         self.log.info("- Does not work when sign = true (default) and the wallet is locked.")
         encrypted_wallet_psbt = encrypted_wallet.walletcreatefundedpsbt([], {self.nodes[2].getnewaddress():0.9})['psbt']
-        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", encrypted_wallet.walletprocesspsbt, encrypted_wallet_psbt)
+        assert_raises_rpc_error(RPC_WALLET_UNLOCK_NEEDED, "Please enter the wallet passphrase with walletpassphrase first", encrypted_wallet.walletprocesspsbt, encrypted_wallet_psbt)
         self.log.info("- Works when sign = false and the wallet is locked.")
         processed = encrypted_wallet.walletprocesspsbt(psbt=encrypted_wallet_psbt, sign=False)
         assert_equal(processed['complete'], False)
@@ -673,7 +681,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Mismatching sighash type fails, including when no type is specified
         for sighash in ["DEFAULT", "ALL", "NONE", "SINGLE", "NONE|ANYONECANPAY", "SINGLE|ANYONECANPAY", None]:
-            assert_raises_rpc_error(-22, "Specified sighash value does not match value stored in PSBT", wallet.walletprocesspsbt, psbt, True, sighash)
+            assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "Specified sighash value does not match value stored in PSBT", wallet.walletprocesspsbt, psbt, True, sighash)
 
         # Matching sighash type succeeds
         proc = wallet.walletprocesspsbt(psbt, True, "ALL|ANYONECANPAY")
@@ -682,7 +690,7 @@ class PSBTTest(BitcoinTestFramework):
         # Repeat with descriptorprocesspsbt
         # Mismatching sighash type fails, including when no type is specified
         for sighash in ["DEFAULT", "ALL", "NONE", "SINGLE", "NONE|ANYONECANPAY", "SINGLE|ANYONECANPAY", None]:
-            assert_raises_rpc_error(-22, "Specified sighash value does not match value stored in PSBT", self.nodes[0].descriptorprocesspsbt, psbt, descs, sighash)
+            assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "Specified sighash value does not match value stored in PSBT", self.nodes[0].descriptorprocesspsbt, psbt, descs, sighash)
 
         # Matching sighash type succeeds
         proc = self.nodes[0].descriptorprocesspsbt(psbt, descs, "ALL|ANYONECANPAY")
@@ -840,7 +848,7 @@ class PSBTTest(BitcoinTestFramework):
         # Test that unknown parameter with '=' gets treated as positional and return error
         unknown_psbt_param = "unknown_param_data=more_data="
         # This should be treated as positional and fail with decode error, not parameter error
-        assert_raises_rpc_error(-22, "TX decode failed invalid base64", node.cli("-named", "finalizepsbt", unknown_psbt_param).send_cli)
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "TX decode failed invalid base64", node.cli("-named", "finalizepsbt", unknown_psbt_param).send_cli)
 
         self.log.info("PSBT parameter handling test completed successfully")
 
@@ -884,10 +892,10 @@ class PSBTTest(BitcoinTestFramework):
             dec = self.nodes[0].decodepsbt(psbt["psbt"])
             assert_equal(ver, dec["psbt_version"])
 
-        assert_raises_rpc_error(-8, "The PSBT version can only be 2 or 0", self.nodes[0].createpsbt, inputs=[utxo], outputs=outputs, psbt_version=1)
-        assert_raises_rpc_error(-8, "The PSBT version can only be 2 or 0", self.nodes[0].walletcreatefundedpsbt, inputs=[utxo], outputs=outputs, psbt_version=1)
-        assert_raises_rpc_error(-8, "The PSBT version can only be 2 or 0", self.nodes[0].converttopsbt, hexstring=rawtx, psbt_version=1)
-        assert_raises_rpc_error(-8, "The PSBT version can only be 2 or 0", self.nodes[0].psbtbumpfee, txid=tobump, psbt_version=1)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "The PSBT version can only be 2 or 0", self.nodes[0].createpsbt, inputs=[utxo], outputs=outputs, psbt_version=1)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "The PSBT version can only be 2 or 0", self.nodes[0].walletcreatefundedpsbt, inputs=[utxo], outputs=outputs, psbt_version=1)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "The PSBT version can only be 2 or 0", self.nodes[0].converttopsbt, hexstring=rawtx, psbt_version=1)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "The PSBT version can only be 2 or 0", self.nodes[0].psbtbumpfee, txid=tobump, psbt_version=1)
 
     def test_psbt_with_invalid_signature(self):
         self.log.info("Test descriptorprocesspsbt with invalid signature in signed PSBT")
@@ -937,9 +945,9 @@ class PSBTTest(BitcoinTestFramework):
         self.log.info("Test for invalid maximum transaction weights")
         dest_arg = [{self.nodes[0].getnewaddress(): 1}]
         min_tx_weight = MIN_STANDARD_TX_NONWITNESS_SIZE * WITNESS_SCALE_FACTOR
-        assert_raises_rpc_error(-4, f"Maximum transaction weight must be between {min_tx_weight} and {MAX_STANDARD_TX_WEIGHT}", self.nodes[0].walletcreatefundedpsbt, [], dest_arg, 0, {"max_tx_weight": -1})
-        assert_raises_rpc_error(-4, f"Maximum transaction weight must be between {min_tx_weight} and {MAX_STANDARD_TX_WEIGHT}", self.nodes[0].walletcreatefundedpsbt, [], dest_arg, 0, {"max_tx_weight": 0})
-        assert_raises_rpc_error(-4, f"Maximum transaction weight must be between {min_tx_weight} and {MAX_STANDARD_TX_WEIGHT}", self.nodes[0].walletcreatefundedpsbt, [], dest_arg, 0, {"max_tx_weight": MAX_STANDARD_TX_WEIGHT + 1})
+        assert_raises_rpc_error(RPC_WALLET_ERROR, f"Maximum transaction weight must be between {min_tx_weight} and {MAX_STANDARD_TX_WEIGHT}", self.nodes[0].walletcreatefundedpsbt, [], dest_arg, 0, {"max_tx_weight": -1})
+        assert_raises_rpc_error(RPC_WALLET_ERROR, f"Maximum transaction weight must be between {min_tx_weight} and {MAX_STANDARD_TX_WEIGHT}", self.nodes[0].walletcreatefundedpsbt, [], dest_arg, 0, {"max_tx_weight": 0})
+        assert_raises_rpc_error(RPC_WALLET_ERROR, f"Maximum transaction weight must be between {min_tx_weight} and {MAX_STANDARD_TX_WEIGHT}", self.nodes[0].walletcreatefundedpsbt, [], dest_arg, 0, {"max_tx_weight": MAX_STANDARD_TX_WEIGHT + 1})
 
         # Base transaction vsize: version (4) + locktime (4) + input count (1) + witness overhead (1) = 10 vbytes
         base_tx_vsize = 10
@@ -958,15 +966,15 @@ class PSBTTest(BitcoinTestFramework):
         large_tx_weight_without_inputs = large_tx_vsize_without_inputs * WITNESS_SCALE_FACTOR
         assert_greater_than(large_tx_weight_without_inputs, min_tx_weight)
         # Test for max_tx_weight less than Transaction weight without inputs
-        assert_raises_rpc_error(-4, "Maximum transaction weight is less than transaction weight without inputs", self.nodes[0].walletcreatefundedpsbt, [], dest_arg_large, 0, {"max_tx_weight": min_tx_weight})
-        assert_raises_rpc_error(-4, "Maximum transaction weight is less than transaction weight without inputs", self.nodes[0].walletcreatefundedpsbt, [], dest_arg_large, 0, {"max_tx_weight": large_tx_weight_without_inputs})
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Maximum transaction weight is less than transaction weight without inputs", self.nodes[0].walletcreatefundedpsbt, [], dest_arg_large, 0, {"max_tx_weight": min_tx_weight})
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Maximum transaction weight is less than transaction weight without inputs", self.nodes[0].walletcreatefundedpsbt, [], dest_arg_large, 0, {"max_tx_weight": large_tx_weight_without_inputs})
 
         # Test for max_tx_weight just enough to include inputs but not change output
-        assert_raises_rpc_error(-4, "Maximum transaction weight is too low, can not accommodate change output", self.nodes[0].walletcreatefundedpsbt, [], dest_arg_large, 0, {"max_tx_weight": (large_tx_vsize_without_inputs + 1) * WITNESS_SCALE_FACTOR})
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Maximum transaction weight is too low, can not accommodate change output", self.nodes[0].walletcreatefundedpsbt, [], dest_arg_large, 0, {"max_tx_weight": (large_tx_vsize_without_inputs + 1) * WITNESS_SCALE_FACTOR})
         self.log.info("Test that a funded PSBT is always faithful to max_tx_weight option")
         large_tx_vsize_with_change = large_tx_vsize_without_inputs + p2wpkh_output_vsize
         # It's enough but won't accommodate selected input size
-        assert_raises_rpc_error(-4, "The inputs size exceeds the maximum weight", self.nodes[0].walletcreatefundedpsbt, [], dest_arg_large, 0, {"max_tx_weight": (large_tx_vsize_with_change) * WITNESS_SCALE_FACTOR})
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "The inputs size exceeds the maximum weight", self.nodes[0].walletcreatefundedpsbt, [], dest_arg_large, 0, {"max_tx_weight": (large_tx_vsize_with_change) * WITNESS_SCALE_FACTOR})
 
         max_tx_weight_sufficient = 1000 # 1k vbytes is enough
         psbt = self.nodes[0].walletcreatefundedpsbt(outputs=dest_arg,locktime=0, options={"max_tx_weight": max_tx_weight_sufficient})["psbt"]
@@ -978,7 +986,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # If inputs are specified, do not automatically add more:
         utxo1 = self.nodes[0].listunspent()[0]
-        assert_raises_rpc_error(-4, "The preselected coins total amount does not cover the transaction target. "
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "The preselected coins total amount does not cover the transaction target. "
                                     "Please allow other inputs to be automatically selected or include more coins manually",
                                 self.nodes[0].walletcreatefundedpsbt, [{"txid": utxo1['txid'], "vout": utxo1['vout']}], {self.nodes[2].getnewaddress():90})
 
@@ -1110,63 +1118,63 @@ class PSBTTest(BitcoinTestFramework):
 
         self.log.info("Test invalid fee rate settings")
         for param, value in {("fee_rate", 100000), ("feeRate", 1)}:
-            assert_raises_rpc_error(-4, "Fee exceeds maximum configured by user (maxtxfee)",
+            assert_raises_rpc_error(RPC_WALLET_ERROR, "Fee exceeds maximum configured by user (maxtxfee)",
                 self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {param: value, "add_inputs": True})
-            assert_raises_rpc_error(-3, "Amount out of range",
+            assert_raises_rpc_error(RPC_TYPE_ERROR, "Amount out of range",
                 self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {param: -1, "add_inputs": True})
-            assert_raises_rpc_error(-3, "Amount is not a number or string",
+            assert_raises_rpc_error(RPC_TYPE_ERROR, "Amount is not a number or string",
                 self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {param: {"foo": "bar"}, "add_inputs": True})
             # Test fee rate values that don't pass fixed-point parsing checks.
             for invalid_value in ["", 0.000000001, 1e-09, 1.111111111, 1111111111111111, "31.999999999999999999999"]:
-                assert_raises_rpc_error(-3, "Invalid amount",
+                assert_raises_rpc_error(RPC_TYPE_ERROR, "Invalid amount",
                     self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {param: invalid_value, "add_inputs": True})
         # Test fee_rate values that cannot be represented in sat/vB.
         for invalid_value in [0.0001, 0.00000001, 0.00099999, 31.99999999]:
-            assert_raises_rpc_error(-3, "Invalid amount",
+            assert_raises_rpc_error(RPC_TYPE_ERROR, "Invalid amount",
                 self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {"fee_rate": invalid_value, "add_inputs": True})
 
         self.log.info("- raises RPC error if both feeRate and fee_rate are passed")
-        assert_raises_rpc_error(-8, "Cannot specify both fee_rate (sat/vB) and feeRate (BTC/kvB)",
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Cannot specify both fee_rate (sat/vB) and feeRate (BTC/kvB)",
             self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {"fee_rate": 0.1, "feeRate": 0.1, "add_inputs": True})
 
         self.log.info("- raises RPC error if both feeRate and estimate_mode passed")
-        assert_raises_rpc_error(-8, "Cannot specify both estimate_mode and feeRate",
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and feeRate",
             self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {"estimate_mode": "economical", "feeRate": 0.1, "add_inputs": True})
 
         for param in ["feeRate", "fee_rate"]:
             self.log.info("- raises RPC error if both {} and conf_target are passed".format(param))
-            assert_raises_rpc_error(-8, "Cannot specify both conf_target and {}. Please provide either a confirmation "
+            assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and {}. Please provide either a confirmation "
                 "target in blocks for automatic fee estimation, or an explicit fee rate.".format(param),
                 self.nodes[1].walletcreatefundedpsbt ,inputs, outputs, 0, {param: 1, "conf_target": 1, "add_inputs": True})
 
         self.log.info("- raises RPC error if both fee_rate and estimate_mode are passed")
-        assert_raises_rpc_error(-8, "Cannot specify both estimate_mode and fee_rate",
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and fee_rate",
             self.nodes[1].walletcreatefundedpsbt ,inputs, outputs, 0, {"fee_rate": 1, "estimate_mode": "economical", "add_inputs": True})
 
         self.log.info("- raises RPC error with invalid estimate_mode settings")
         for k, v in {"number": 42, "object": {"foo": "bar"}}.items():
-            assert_raises_rpc_error(-3, f"JSON value of type {k} for field estimate_mode is not of expected type string",
+            assert_raises_rpc_error(RPC_TYPE_ERROR, f"JSON value of type {k} for field estimate_mode is not of expected type string",
                 self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {"estimate_mode": v, "conf_target": 0.1, "add_inputs": True})
         for mode in ["", "foo", Decimal("3.141592")]:
-            assert_raises_rpc_error(-8, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"',
+            assert_raises_rpc_error(RPC_INVALID_PARAMETER, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"',
                 self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {"estimate_mode": mode, "conf_target": 0.1, "add_inputs": True})
 
         self.log.info("- raises RPC error with invalid conf_target settings")
         for mode in ["unset", "economical", "conservative"]:
             self.log.debug("{}".format(mode))
             for k, v in {"string": "", "object": {"foo": "bar"}}.items():
-                assert_raises_rpc_error(-3, f"JSON value of type {k} for field conf_target is not of expected type number",
+                assert_raises_rpc_error(RPC_TYPE_ERROR, f"JSON value of type {k} for field conf_target is not of expected type number",
                     self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {"estimate_mode": mode, "conf_target": v, "add_inputs": True})
             for n in [-1, 0, 1009]:
-                assert_raises_rpc_error(-8, "Invalid conf_target, must be between 1 and 1008",  # max value of 1008 per src/policy/fees/block_policy_estimator.h
+                assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid conf_target, must be between 1 and 1008",  # max value of 1008 per src/policy/fees/block_policy_estimator.h
                     self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {"estimate_mode": mode, "conf_target": n, "add_inputs": True})
 
         self.log.info("Test walletcreatefundedpsbt with too-high fee rate produces total fee well above -maxtxfee and raises RPC error")
         # previously this was silently capped at -maxtxfee
         for bool_add, outputs_array in {True: outputs, False: [{self.nodes[1].getnewaddress(): 1}]}.items():
             msg = "Fee exceeds maximum configured by user (maxtxfee)"
-            assert_raises_rpc_error(-4, msg, self.nodes[1].walletcreatefundedpsbt, inputs, outputs_array, 0, {"fee_rate": 1000000, "add_inputs": bool_add})
-            assert_raises_rpc_error(-4, msg, self.nodes[1].walletcreatefundedpsbt, inputs, outputs_array, 0, {"feeRate": 1, "add_inputs": bool_add})
+            assert_raises_rpc_error(RPC_WALLET_ERROR, msg, self.nodes[1].walletcreatefundedpsbt, inputs, outputs_array, 0, {"fee_rate": 1000000, "add_inputs": bool_add})
+            assert_raises_rpc_error(RPC_WALLET_ERROR, msg, self.nodes[1].walletcreatefundedpsbt, inputs, outputs_array, 0, {"feeRate": 1, "add_inputs": bool_add})
 
         self.log.info("Test various PSBT operations")
         # partially sign multisig things with node 1
@@ -1185,7 +1193,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # check that walletprocesspsbt fails to decode a non-psbt
         rawtx = self.nodes[1].createrawtransaction([{"txid":txid,"vout":p2wpkh_pos}], {self.nodes[1].getnewaddress():9.99})
-        assert_raises_rpc_error(-22, "TX decode failed", self.nodes[1].walletprocesspsbt, rawtx)
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "TX decode failed", self.nodes[1].walletprocesspsbt, rawtx)
 
         # Convert a non-psbt to psbt and make sure we can decode it
         rawtx = self.nodes[0].createrawtransaction([], {self.nodes[1].getnewaddress():10})
@@ -1195,11 +1203,11 @@ class PSBTTest(BitcoinTestFramework):
 
         # Make sure that a non-psbt with signatures cannot be converted
         signedtx = self.nodes[0].signrawtransactionwithwallet(rawtx['hex'])
-        assert_raises_rpc_error(-22, "Inputs must not have scriptSigs and scriptWitnesses",
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "Inputs must not have scriptSigs and scriptWitnesses",
                                 self.nodes[0].converttopsbt, hexstring=signedtx['hex'])  # permitsigdata=False by default
-        assert_raises_rpc_error(-22, "Inputs must not have scriptSigs and scriptWitnesses",
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "Inputs must not have scriptSigs and scriptWitnesses",
                                 self.nodes[0].converttopsbt, hexstring=signedtx['hex'], permitsigdata=False)
-        assert_raises_rpc_error(-22, "Inputs must not have scriptSigs and scriptWitnesses",
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "Inputs must not have scriptSigs and scriptWitnesses",
                                 self.nodes[0].converttopsbt, hexstring=signedtx['hex'], permitsigdata=False, iswitness=True)
         # Unless we allow it to convert and strip signatures
         self.nodes[0].converttopsbt(hexstring=signedtx['hex'], permitsigdata=True)
@@ -1290,7 +1298,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Make sure the change type cannot be specified if a change address is given
         invalid_options = {"change_type":"legacy","changeAddress":self.nodes[0].getnewaddress()}
-        assert_raises_rpc_error(-8, "both change address and address type options", self.nodes[0].walletcreatefundedpsbt, [], [small_output], 0, invalid_options)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "both change address and address type options", self.nodes[0].walletcreatefundedpsbt, [], [small_output], 0, invalid_options)
 
         # Regression test for 14473 (mishandling of already-signed witness transaction):
         psbtx_info = self.nodes[0].walletcreatefundedpsbt([{"txid":unspent["txid"], "vout":unspent["vout"]}], [{self.nodes[2].getnewaddress():unspent["amount"]+1}], 0, {"add_inputs": True})
@@ -1305,7 +1313,7 @@ class PSBTTest(BitcoinTestFramework):
         wunsafe = self.nodes[2].get_wallet_rpc("unsafe")
         self.nodes[0].sendtoaddress(wunsafe.getnewaddress(), 2)
         self.sync_mempools()
-        assert_raises_rpc_error(-4, "Insufficient funds", wunsafe.walletcreatefundedpsbt, [], [{self.nodes[0].getnewaddress(): 1}])
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Insufficient funds", wunsafe.walletcreatefundedpsbt, [], [{self.nodes[0].getnewaddress(): 1}])
         wunsafe.walletcreatefundedpsbt([], [{self.nodes[0].getnewaddress(): 1}], 0, {"include_unsafe": True})
 
         self.test_unknown_fields_passthrough()
@@ -1326,10 +1334,10 @@ class PSBTTest(BitcoinTestFramework):
 
         # Invalid PSBTs
         for invalid in invalids:
-            assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].decodepsbt, invalid)
+            assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "TX decode failed", self.nodes[0].decodepsbt, invalid)
         for invalid in invalid_with_msgs:
             psbt, msg = invalid
-            assert_raises_rpc_error(-22, f"TX decode failed {msg}", self.nodes[0].decodepsbt, psbt)
+            assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, f"TX decode failed {msg}", self.nodes[0].decodepsbt, psbt)
 
         # Valid PSBTs
         for valid in valids:
@@ -1356,7 +1364,7 @@ class PSBTTest(BitcoinTestFramework):
                 assert_equal(combined, combiner['result'])
 
         # Empty combiner test
-        assert_raises_rpc_error(-8, "Parameter 'txs' cannot be empty", self.nodes[0].combinepsbt, [])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Parameter 'txs' cannot be empty", self.nodes[0].combinepsbt, [])
 
         # Finalizer test
         for finalizer in finalizers:
@@ -1383,7 +1391,7 @@ class PSBTTest(BitcoinTestFramework):
         self.nodes[0].decodepsbt(psbt['psbt'])
 
         # Test decoding error: invalid base64
-        assert_raises_rpc_error(-22, "TX decode failed invalid base64", self.nodes[0].decodepsbt, ";definitely not base64;")
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "TX decode failed invalid base64", self.nodes[0].decodepsbt, ";definitely not base64;")
 
         # Send to all types of addresses
         addr1 = self.nodes[1].getnewaddress("", "bech32")
@@ -1425,11 +1433,11 @@ class PSBTTest(BitcoinTestFramework):
         # Cannot join PSBTv2s
         psbt1 = self.nodes[1].createpsbt(inputs=[utxo1], outputs={self.nodes[0].getnewaddress():Decimal('10.999')}, psbt_version=0)
         psbt2 = self.nodes[1].createpsbt(inputs=[utxo1], outputs={self.nodes[0].getnewaddress():Decimal('10.999')}, psbt_version=2)
-        assert_raises_rpc_error(-8, "joinpsbts only operates on version 0 PSBTs", self.nodes[1].joinpsbts, [psbt1, psbt2])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "joinpsbts only operates on version 0 PSBTs", self.nodes[1].joinpsbts, [psbt1, psbt2])
 
         # Two PSBTs with a common input should not be joinable
         psbt2 = self.nodes[1].createpsbt([utxo1], {self.nodes[0].getnewaddress():Decimal('10.999')}, psbt_version=0)
-        assert_raises_rpc_error(-8, "exists in multiple PSBTs", self.nodes[1].joinpsbts, [psbt1, psbt2])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "exists in multiple PSBTs", self.nodes[1].joinpsbts, [psbt1, psbt2])
 
         # Join two distinct PSBTs
         psbt1 = self.nodes[1].createpsbt(inputs=[utxo1, utxo2, utxo3], outputs={self.nodes[0].getnewaddress():32.999}, psbt_version=0)
@@ -1547,9 +1555,9 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(analysis['next'], 'creator')
         assert_equal(analysis['error'], 'PSBT is not valid. Output amount invalid')
 
-        assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].analyzepsbt, "cHNidP8BAJoCAAAAAkvEW8NnDtdNtDpsmze+Ht2LH35IJcKv00jKAlUs21RrAwAAAAD/////S8Rbw2cO1020OmybN74e3Ysffkglwq/TSMoCVSzbVGsBAAAAAP7///8CwLYClQAAAAAWABSNJKzjaUb3uOxixsvh1GGE3fW7zQD5ApUAAAAAFgAUKNw0x8HRctAgmvoevm4u1SbN7XIAAAAAAAEAnQIAAAACczMa321tVHuN4GKWKRncycI22aX3uXgwSFUKM2orjRsBAAAAAP7///9zMxrfbW1Ue43gYpYpGdzJwjbZpfe5eDBIVQozaiuNGwAAAAAA/v///wIA+QKVAAAAABl2qRT9zXUVA8Ls5iVqynLHe5/vSe1XyYisQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAAAAAQEfQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAA==")
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "TX decode failed", self.nodes[0].analyzepsbt, "cHNidP8BAJoCAAAAAkvEW8NnDtdNtDpsmze+Ht2LH35IJcKv00jKAlUs21RrAwAAAAD/////S8Rbw2cO1020OmybN74e3Ysffkglwq/TSMoCVSzbVGsBAAAAAP7///8CwLYClQAAAAAWABSNJKzjaUb3uOxixsvh1GGE3fW7zQD5ApUAAAAAFgAUKNw0x8HRctAgmvoevm4u1SbN7XIAAAAAAAEAnQIAAAACczMa321tVHuN4GKWKRncycI22aX3uXgwSFUKM2orjRsBAAAAAP7///9zMxrfbW1Ue43gYpYpGdzJwjbZpfe5eDBIVQozaiuNGwAAAAAA/v///wIA+QKVAAAAABl2qRT9zXUVA8Ls5iVqynLHe5/vSe1XyYisQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAAAAAQEfQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAA==")
 
-        assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].walletprocesspsbt, "cHNidP8BAJoCAAAAAkvEW8NnDtdNtDpsmze+Ht2LH35IJcKv00jKAlUs21RrAwAAAAD/////S8Rbw2cO1020OmybN74e3Ysffkglwq/TSMoCVSzbVGsBAAAAAP7///8CwLYClQAAAAAWABSNJKzjaUb3uOxixsvh1GGE3fW7zQD5ApUAAAAAFgAUKNw0x8HRctAgmvoevm4u1SbN7XIAAAAAAAEAnQIAAAACczMa321tVHuN4GKWKRncycI22aX3uXgwSFUKM2orjRsBAAAAAP7///9zMxrfbW1Ue43gYpYpGdzJwjbZpfe5eDBIVQozaiuNGwAAAAAA/v///wIA+QKVAAAAABl2qRT9zXUVA8Ls5iVqynLHe5/vSe1XyYisQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAAAAAQEfQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAA==")
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "TX decode failed", self.nodes[0].walletprocesspsbt, "cHNidP8BAJoCAAAAAkvEW8NnDtdNtDpsmze+Ht2LH35IJcKv00jKAlUs21RrAwAAAAD/////S8Rbw2cO1020OmybN74e3Ysffkglwq/TSMoCVSzbVGsBAAAAAP7///8CwLYClQAAAAAWABSNJKzjaUb3uOxixsvh1GGE3fW7zQD5ApUAAAAAFgAUKNw0x8HRctAgmvoevm4u1SbN7XIAAAAAAAEAnQIAAAACczMa321tVHuN4GKWKRncycI22aX3uXgwSFUKM2orjRsBAAAAAP7///9zMxrfbW1Ue43gYpYpGdzJwjbZpfe5eDBIVQozaiuNGwAAAAAA/v///wIA+QKVAAAAABl2qRT9zXUVA8Ls5iVqynLHe5/vSe1XyYisQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAAAAAQEfQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAA==")
 
         self.log.info("Test that we can fund psbts with external inputs specified")
 
@@ -1571,7 +1579,7 @@ class PSBTTest(BitcoinTestFramework):
         ext_utxo = self.nodes[0].listunspent(addresses=[addr])[0]
 
         # An external input without solving data should result in an error
-        assert_raises_rpc_error(-4, "Not solvable pre-selected input COutPoint(%s, %s)" % (ext_utxo["txid"][0:10], ext_utxo["vout"]), wallet.walletcreatefundedpsbt, [ext_utxo], {self.nodes[0].getnewaddress(): 15})
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Not solvable pre-selected input COutPoint(%s, %s)" % (ext_utxo["txid"][0:10], ext_utxo["vout"]), wallet.walletcreatefundedpsbt, [ext_utxo], {self.nodes[0].getnewaddress(): 15})
 
         # But funding should work when the solving data is provided
         psbt = wallet.walletcreatefundedpsbt([ext_utxo], {self.nodes[0].getnewaddress(): 15}, 0, {"add_inputs": True, "solving_data": {"pubkeys": [addr_info['pubkey']], "scripts": [addr_info["embedded"]["scriptPubKey"], addr_info["embedded"]["embedded"]["scriptPubKey"]]}})
@@ -1599,7 +1607,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Input weight error conditions
         assert_raises_rpc_error(
-            -8,
+            RPC_INVALID_PARAMETER,
             "Input weights should be specified in inputs rather than in options.",
             wallet.walletcreatefundedpsbt,
             inputs=[ext_utxo],
@@ -1710,7 +1718,7 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(comb_psbt, psbt)
 
         self.log.info("Test walletprocesspsbt raises if an invalid sighashtype is passed")
-        assert_raises_rpc_error(-8, "'all' is not a valid sighash parameter.", self.nodes[0].walletprocesspsbt, psbt=psbt, sighashtype="all")
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "'all' is not a valid sighash parameter.", self.nodes[0].walletprocesspsbt, psbt=psbt, sighashtype="all")
 
         self.log.info("Test decoding PSBT with per-input preimage types")
         # note that the decodepsbt RPC doesn't check whether preimages and hashes match
@@ -1758,7 +1766,7 @@ class PSBTTest(BitcoinTestFramework):
         psbt1 = PSBT(g=PSBTMap({PSBT_GLOBAL_UNSIGNED_TX: tx.serialize()}), i=[PSBTMap()], o=[PSBTMap()]).to_base64()
         tx.vout[0].nValue += 1  # slightly modify tx
         psbt2 = PSBT(g=PSBTMap({PSBT_GLOBAL_UNSIGNED_TX: tx.serialize()}), i=[PSBTMap()], o=[PSBTMap()]).to_base64()
-        assert_raises_rpc_error(-8, "PSBTs not compatible (different transactions)", self.nodes[0].combinepsbt, [psbt1, psbt2])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "PSBTs not compatible (different transactions)", self.nodes[0].combinepsbt, [psbt1, psbt2])
         assert_equal(self.nodes[0].combinepsbt([psbt1, psbt1]), psbt1)
 
         self.log.info("Test that PSBT inputs are being checked via script execution")
@@ -1774,7 +1782,7 @@ class PSBTTest(BitcoinTestFramework):
             {'hex': '0200000001dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd0000000000000000000100000000000000000000000000', 'complete': True})
 
         self.log.info("Test we don't crash when making a 0-value funded transaction at 0 fee without forcing an input selection")
-        assert_raises_rpc_error(-4, "Transaction requires one destination of non-zero value, a non-zero feerate, or a pre-selected input", self.nodes[0].walletcreatefundedpsbt, [], [{"data": "deadbeef"}], 0, {"fee_rate": "0"})
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Transaction requires one destination of non-zero value, a non-zero feerate, or a pre-selected input", self.nodes[0].walletcreatefundedpsbt, [], [{"data": "deadbeef"}], 0, {"fee_rate": "0"})
 
         self.log.info("Test descriptorprocesspsbt updates and signs a psbt with descriptors")
 
@@ -1832,7 +1840,7 @@ class PSBTTest(BitcoinTestFramework):
         self.nodes[2].sendrawtransaction(processed_psbt['hex'])
 
         self.log.info("Test descriptorprocesspsbt raises if an invalid sighashtype is passed")
-        assert_raises_rpc_error(-8, "'all' is not a valid sighash parameter.", self.nodes[2].descriptorprocesspsbt, psbt=psbt, descriptors=[descriptor], sighashtype="all")
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "'all' is not a valid sighash parameter.", self.nodes[2].descriptorprocesspsbt, psbt=psbt, descriptors=[descriptor], sighashtype="all")
 
         if not self.options.usecli:
             self.test_sighash_mismatch()

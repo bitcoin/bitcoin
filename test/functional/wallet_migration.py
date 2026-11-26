@@ -23,6 +23,12 @@ from test_framework.address import (
 )
 from test_framework.descriptors import descsum_create
 from test_framework.key import ECPubKey
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_INVALID_PARAMETER,
+    RPC_MISC_ERROR,
+    RPC_WALLET_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import COIN, CTransaction, CTxOut, ser_string
 from test_framework.script import hash160
@@ -206,7 +212,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         if is_dir_writable(wallet_path):
             self.log.warning("Skipping migration non-writable directory test: unable to enforce read-only permissions")
         else:
-            assert_raises_rpc_error(-4, "Error: Unable to create the new database for wallet 'bad_permissions'.", self.master_node.migratewallet, wallet_name)
+            assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: Unable to create the new database for wallet 'bad_permissions'.", self.master_node.migratewallet, wallet_name)
         # Reset directory permissions
         wallet_path.chmod(original_dir_perms)
         self.assert_no_tmp_db(self.master_node.wallets_path)
@@ -245,7 +251,7 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         # Migration must fail and keep the journal. Otherwise, SQLite rolls it back into the migrated wallet when opening
         # it, and corrupts it.
-        assert_raises_rpc_error(-4, f"Migration failed: Error: Unable to move the wallet db, unexpected file {journal_path} found at the destination. Move it elsewhere and try again.", self.master_node.migratewallet, wallet_name)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, f"Migration failed: Error: Unable to move the wallet db, unexpected file {journal_path} found at the destination. Move it elsewhere and try again.", self.master_node.migratewallet, wallet_name)
         assert journal_path.exists()
         self.assert_no_tmp_db(self.master_node.wallets_path)
         self.assert_is_bdb(wallet_name)
@@ -260,7 +266,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         journal_path = wallet_path / "wallet.dat-journal"
         shutil.copyfile(wallet_path / "wallet.dat", journal_path)
 
-        assert_raises_rpc_error(-4, f"Migration failed: Error: Unable to move the wallet db, unexpected file {journal_path} found at the destination. Move it elsewhere and try again.", self.master_node.migratewallet, wallet_name)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, f"Migration failed: Error: Unable to move the wallet db, unexpected file {journal_path} found at the destination. Move it elsewhere and try again.", self.master_node.migratewallet, wallet_name)
         assert journal_path.exists()
         self.assert_no_tmp_db(self.master_node.wallets_path)
         self.assert_is_bdb(wallet_name)
@@ -391,11 +397,11 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         # Now test migration on a descriptor wallet
         self.log.info("Test \"nothing to migrate\" when the user tries to migrate a loaded wallet with no legacy data")
-        assert_raises_rpc_error(-4, "Error: This wallet is already a descriptor wallet", basic2.migratewallet)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: This wallet is already a descriptor wallet", basic2.migratewallet)
 
         self.log.info("Test \"nothing to migrate\" when the user tries to migrate an unloaded wallet with no legacy data")
         basic2.unloadwallet()
-        assert_raises_rpc_error(-4, "Error: This wallet is already a descriptor wallet", self.master_node.migratewallet, "basic2")
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: This wallet is already a descriptor wallet", self.master_node.migratewallet, "basic2")
 
     def test_multisig(self):
         default = self.master_node.get_wallet_rpc(self.default_wallet_name)
@@ -445,7 +451,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         _, multisig1 = self.migrate_and_get_rpc("multisig1")
         assert_equal(multisig1.getaddressinfo(addr1)["ismine"], False)
         assert_equal(multisig1.getaddressinfo(addr1)["solvable"], False)
-        assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", multisig1.gettransaction, txid)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id", multisig1.gettransaction, txid)
         assert_equal(multisig1.getbalance(), 0)
         assert_equal(multisig1.listtransactions(), [])
 
@@ -526,9 +532,9 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         # Migrate
         _, imports0 = self.migrate_and_get_rpc("imports0")
-        assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", imports0.gettransaction, received_watchonly_txid)
-        assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", imports0.gettransaction, received_sent_watchonly_utxo['txid'])
-        assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", imports0.gettransaction, sent_watchonly_txid)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id", imports0.gettransaction, received_watchonly_txid)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id", imports0.gettransaction, received_sent_watchonly_utxo['txid'])
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id", imports0.gettransaction, sent_watchonly_txid)
         assert_equal(len(imports0.listtransactions()), 2)
         imports0.gettransaction(received_txid)
         imports0.gettransaction(watchonly_spendable_txid)
@@ -549,7 +555,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         watchonly.gettransaction(sent_watchonly_txid)
         watchonly.gettransaction(watchonly_spendable_txid)
         assert_equal(watchonly.getbalance(), watchonly_bal)
-        assert_raises_rpc_error(-5, "Invalid or non-wallet transaction id", watchonly.gettransaction, received_txid)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id", watchonly.gettransaction, received_txid)
         assert_equal(len(watchonly.listtransactions(include_watchonly=True)), 4)
 
         # Check that labels were migrated and persisted to watchonly wallet
@@ -616,7 +622,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         assert_equal(info["private_keys_enabled"], False)
         self.assert_is_sqlite("watchonly1")
         # After migrating, the "keypool" is empty
-        assert_raises_rpc_error(-4, "Error: This wallet has no available keys", watchonly1.getnewaddress)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: This wallet has no available keys", watchonly1.getnewaddress)
 
         self.log.info("Test migration of a watch-only empty wallet")
         for idx, is_blank in enumerate([True, False], start=1):
@@ -657,14 +663,14 @@ class WalletMigrationTest(BitcoinTestFramework):
         bals["mine"]["nonmempool"] = Decimal('0.0')
 
         # Use self.migrate_and_get_rpc to test this error to get everything copied over to the master node
-        assert_raises_rpc_error(-4, "Error: The wallet passphrase was not provided", self.migrate_and_get_rpc, "encrypted")
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: The wallet passphrase was not provided", self.migrate_and_get_rpc, "encrypted")
 
         # Use the RPC directly on the master node for the rest of these checks
         self.master_node.bumpmocktime(1) # Prevents filename duplication on wallet backups which is a problem on Windows
-        assert_raises_rpc_error(-4, "Error: The wallet passphrase entered was incorrect.", self.master_node.migratewallet, "encrypted", "badpass")
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: The wallet passphrase entered was incorrect.", self.master_node.migratewallet, "encrypted", "badpass")
 
         self.master_node.bumpmocktime(1) # Prevents filename duplication on wallet backups which is a problem on Windows
-        assert_raises_rpc_error(-4, "Error: The wallet passphrase entered is incorrect. It contains a null character (ie - a zero byte).", self.master_node.migratewallet, "encrypted", "pass\0with\0null")
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: The wallet passphrase entered is incorrect. It contains a null character (ie - a zero byte).", self.master_node.migratewallet, "encrypted", "pass\0with\0null")
 
         # Verify we can properly migrate the encrypted wallet
         self.master_node.bumpmocktime(1) # Prevents filename duplication on wallet backups which is a problem on Windows
@@ -682,9 +688,9 @@ class WalletMigrationTest(BitcoinTestFramework):
     def test_nonexistent(self):
         self.log.info("Check migratewallet errors for nonexistent wallets")
         default = self.master_node.get_wallet_rpc(self.default_wallet_name)
-        assert_raises_rpc_error(-8, "The RPC endpoint wallet and the wallet name parameter specify different wallets", default.migratewallet, "someotherwallet")
-        assert_raises_rpc_error(-8, "Either the RPC endpoint wallet or the wallet name parameter must be provided", self.master_node.migratewallet)
-        assert_raises_rpc_error(-4, "Error: Wallet does not exist", self.master_node.migratewallet, "notawallet")
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "The RPC endpoint wallet and the wallet name parameter specify different wallets", default.migratewallet, "someotherwallet")
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Either the RPC endpoint wallet or the wallet name parameter must be provided", self.master_node.migratewallet)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Error: Wallet does not exist", self.master_node.migratewallet, "notawallet")
 
     def test_unloaded_by_path(self):
         self.log.info("Test migration of a wallet that isn't loaded, specified by path")
@@ -810,7 +816,7 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         mocked_time = int(time.time())
         self.master_node.setmocktime(mocked_time)
-        assert_raises_rpc_error(-4, "Failed to create database", self.master_node.migratewallet, wallet_name)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Failed to create database", self.master_node.migratewallet, wallet_name)
         self.master_node.setmocktime(0)
 
         # Verify the /wallets/ path exists.
@@ -1171,7 +1177,7 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         self.old_node.unloadwallet("failed")
         shutil.copytree(self.old_node.wallets_path / "failed", self.master_node.wallets_path / "failed")
-        assert_raises_rpc_error(-4, "Failed to create database", self.master_node.migratewallet, "failed")
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Failed to create database", self.master_node.migratewallet, "failed")
 
         assert all(wallet not in self.master_node.listwallets() for wallet in ["failed", "failed_watchonly", "failed_solvables"])
 
@@ -1773,7 +1779,7 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         wallet_name = "failed_load_after_migrate"
         self.create_legacy_wallet(wallet_name)
-        assert_raises_rpc_error(-4, "Wallet loading failed. Wallet files should not be reused across chains.", lambda: self.migrate_and_get_rpc(wallet_name))
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Wallet loading failed. Wallet files should not be reused across chains.", lambda: self.migrate_and_get_rpc(wallet_name))
 
         # Check the wallet we tried to migrate is still BDB
         self.assert_is_bdb(wallet_name)
@@ -1798,12 +1804,12 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.generate(self.master_node, 450, sync_fun=self.no_op)
         self.master_node.pruneblockchain(250)
         # Ensure next block to sync is unavailable
-        assert_raises_rpc_error(-1, "Block not available (pruned data)", self.master_node.getblock, self.master_node.getblockhash(last_wallet_synced_block + 1))
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Block not available (pruned data)", self.master_node.getblock, self.master_node.getblockhash(last_wallet_synced_block + 1))
 
         # Check migration failure
         mocked_time = int(time.time())
         self.master_node.setmocktime(mocked_time)
-        assert_raises_rpc_error(-4, "last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of a pruned node)", self.master_node.migratewallet, wallet_name="")
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of a pruned node)", self.master_node.migratewallet, wallet_name="")
         self.master_node.setmocktime(0)
 
         # Verify the /wallets/ path exists, the wallet is still BDB and the backup file is there.
@@ -1817,7 +1823,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         # The wallet should NOT be loaded after migration
         assert "" not in self.master_node.listwallets()
         # Load the wallet should fail
-        assert_raises_rpc_error(-4, "last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of a pruned node)", self.master_node.loadwallet, filename="")
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of a pruned node)", self.master_node.loadwallet, filename="")
 
         self.clear_default_wallet(backup_path)
 

@@ -12,6 +12,10 @@ import shutil
 from test_framework.blocktools import MAX_FUTURE_BLOCK_TIME
 from test_framework.descriptors import descsum_create
 from test_framework.extendedkey import ExtendedPrivateKey
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_PARAMETER,
+    RPC_MISC_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
@@ -184,10 +188,10 @@ class ListTransactionsTest(BitcoinTestFramework):
 
     def run_invalid_parameters_test(self):
         self.log.info("Test listtransactions RPC parameter validity")
-        assert_raises_rpc_error(-8, 'Label argument must be a valid label name or "*".', self.nodes[0].listtransactions, label="")
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, 'Label argument must be a valid label name or "*".', self.nodes[0].listtransactions, label="")
         self.nodes[0].listtransactions(label="*")
-        assert_raises_rpc_error(-1, "JSON integer out of range", self.nodes[0].listtransactions, count=-1)
-        assert_raises_rpc_error(-1, "JSON integer out of range", self.nodes[0].listtransactions, skip=-1)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "JSON integer out of range", self.nodes[0].listtransactions, count=-1)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "JSON integer out of range", self.nodes[0].listtransactions, skip=-1)
 
         self.log.info("Test listtransactions with large count and skip")
         INT_MAX = 2**31 - 1
@@ -198,7 +202,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].listtransactions(count=INT_MAX, skip=INT_MAX), [])
         assert_equal(self.nodes[0].listtransactions(count=1, skip=INT_MAX), [])
         assert_equal(self.nodes[0].listtransactions(count=UINT32_MAX, skip=UINT32_MAX), [])
-        assert_raises_rpc_error(-1, "JSON integer out of range", self.nodes[0].listtransactions, count=UINT32_MAX + 1)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "JSON integer out of range", self.nodes[0].listtransactions, count=UINT32_MAX + 1)
 
     def test_op_return(self):
         """Test if OP_RETURN outputs will be displayed correctly."""

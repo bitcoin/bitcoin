@@ -6,6 +6,7 @@
 rejected (the queue is not modified), rather than evicting existing entries.
 """
 
+from test_framework.rpc_error_codes import RPC_LIMIT_EXCEEDED
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.wallet import MiniWallet
@@ -71,7 +72,7 @@ class PrivateBroadcastCapTest(BitcoinTestFramework):
         # queue is left unchanged (nothing evicted to make room).
         self.log.info(f"Submitting {OVER_CAP} more; each should be rejected (queue full)")
         for child in children[MAX_TRANSACTIONS:]:
-            assert_raises_rpc_error(-37, "Private broadcast queue is full",
+            assert_raises_rpc_error(RPC_LIMIT_EXCEEDED, "Private broadcast queue is full",
                                     node.sendrawtransaction, child["hex"])
 
         assert_equal(pbinfo["transactions"], node.getprivatebroadcastinfo()["transactions"])

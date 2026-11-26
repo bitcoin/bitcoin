@@ -20,6 +20,12 @@ import shutil
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.extendedkey import ExtendedPrivateKey
+from test_framework.rpc_error_codes import (
+    RPC_MISC_ERROR,
+    RPC_WALLET_ERROR,
+    RPC_WALLET_KEYPOOL_RAN_OUT,
+    RPC_WALLET_NOT_FOUND,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import descsum_create
 from test_framework.messages import ser_string
@@ -372,7 +378,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
                     # result in wallets that cannot be loaded into 31.0 and 31.1.
                     # These wallets will emit a "Wallet corrupted" error.
                     if wallet_name == "miniscript" and n.version in (310000, 310100):
-                        assert_raises_rpc_error(-4, "Wallet corrupted", n.loadwallet, wallet_name)
+                        assert_raises_rpc_error(RPC_WALLET_ERROR, "Wallet corrupted", n.loadwallet, wallet_name)
                         continue
 
                     n.loadwallet(wallet_name)
@@ -418,11 +424,11 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         # Descriptor wallets appear to be corrupted wallets to old software
         assert self.major_version_equals(node_v20, 20)
         for wallet_name in ["w1", "w2", "w3"]:
-            assert_raises_rpc_error(-4, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node_v20.loadwallet, wallet_name)
+            assert_raises_rpc_error(RPC_WALLET_ERROR, "Wallet file verification failed: wallet.dat corrupt, salvage failed", node_v20.loadwallet, wallet_name)
 
         # w1 cannot be opened by 0.21 since it contains a taproot descriptor
         self.log.info("Test that 0.21 cannot open wallet containing tr() descriptors")
-        assert_raises_rpc_error(-1, "map::at", node_v21.loadwallet, "w1")
+        assert_raises_rpc_error(RPC_MISC_ERROR, "map::at", node_v21.loadwallet, "w1")
 
         self.log.info("Test that a wallet can upgrade to and downgrade from master, from:")
         for node in descriptors_nodes:
@@ -477,7 +483,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             # This must be done after the backup is created so that 0.21 can still load
             # the backup
             if self.major_version_equals(node, 21):
-                assert_raises_rpc_error(-12, "No bech32m addresses available", wallet.getnewaddress, address_type="bech32m")
+                assert_raises_rpc_error(RPC_WALLET_KEYPOOL_RAN_OUT, "No bech32m addresses available", wallet.getnewaddress, address_type="bech32m")
                 xpubs = wallet.gethdkeys(active_only=True)
                 assert_equal(len(xpubs), 1)
                 assert_equal(len(xpubs[0]["descriptors"]), 6)
@@ -541,7 +547,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
             # Restore the wallet to master
             # Legacy wallets are no longer supported. Trying to load these should result in an error
-            assert_raises_rpc_error(-18, "The wallet appears to be a Legacy wallet, please use the wallet migration tool (migratewallet RPC or the GUI option)", node_master.restorewallet, wallet_name, backup_path)
+            assert_raises_rpc_error(RPC_WALLET_NOT_FOUND, "The wallet appears to be a Legacy wallet, please use the wallet migration tool (migratewallet RPC or the GUI option)", node_master.restorewallet, wallet_name, backup_path)
 
         self.test_v22_inactivehdchain_path()
         self.test_ignore_legacy_during_startup(legacy_nodes, node_master)

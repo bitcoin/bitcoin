@@ -8,6 +8,11 @@ import shutil
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.descriptors import descsum_create
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_WALLET_ERROR,
+    RPC_WALLET_UNLOCK_NEEDED,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -46,8 +51,8 @@ class WalletHDTest(BitcoinTestFramework):
         imp_xpub = imp_xpub_info["xpub"]
         imp_xprv = imp_xpub_info["xprv"]
 
-        assert_raises_rpc_error(-5, "Extended public key (xpub) provided, but extended private key (xprv) is required", wallet.addhdkey, imp_xpub)
-        assert_raises_rpc_error(-5, "Could not parse HD key", wallet.addhdkey, "not_an_extended_key")
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Extended public key (xpub) provided, but extended private key (xprv) is required", wallet.addhdkey, imp_xpub)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Could not parse HD key", wallet.addhdkey, "not_an_extended_key")
         add_res = wallet.addhdkey(imp_xprv)
         expected_unused_desc = descsum_create(f"unused({imp_xpub})")
         assert_equal(add_res["xpub"], imp_xpub)
@@ -68,20 +73,20 @@ class WalletHDTest(BitcoinTestFramework):
         else:
             assert False, "Added HD key's descriptor was not found in wallet"
 
-        assert_raises_rpc_error(-4, "HD key already exists", wallet.addhdkey, imp_xprv)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "HD key already exists", wallet.addhdkey, imp_xprv)
 
     def test_addhdkey_noprivs(self):
         self.log.info("Test addhdkey is not available for wallets without privkeys")
         self.nodes[0].createwallet("hdkey_noprivs", disable_private_keys=True)
         wallet = self.nodes[0].get_wallet_rpc("hdkey_noprivs")
-        assert_raises_rpc_error(-4, "addhdkey is not available for wallets without private keys", wallet.addhdkey)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "addhdkey is not available for wallets without private keys", wallet.addhdkey)
 
     def test_addhdkey_locked(self):
         self.log.info("Test addhdkey requires an unlocked wallet")
         self.nodes[0].createwallet(wallet_name="hdkey_locked", passphrase="passphrase")
         wallet = self.nodes[0].get_wallet_rpc("hdkey_locked")
         wallet.walletlock()
-        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", wallet.addhdkey)
+        assert_raises_rpc_error(RPC_WALLET_UNLOCK_NEEDED, "Please enter the wallet passphrase with walletpassphrase first", wallet.addhdkey)
         # Once unlocked, adding an HD key succeeds
         wallet.walletpassphrase("passphrase", 100)
         add_res = wallet.addhdkey()

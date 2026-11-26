@@ -10,6 +10,12 @@ from test_framework.blocktools import (
 from test_framework.address import (
     script_to_p2wsh,
 )
+from test_framework.rpc_error_codes import (
+    RPC_DESERIALIZATION_ERROR,
+    RPC_INVALID_PARAMETER,
+    RPC_TYPE_ERROR,
+    RPC_WALLET_UNLOCK_NEEDED,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -48,14 +54,14 @@ class SignRawTransactionWithWalletTest(BitcoinTestFramework):
         self.log.info("Test correct error reporting when trying to sign a locked output")
         self.nodes[0].createwallet("encrypted", passphrase=self.default_wallet_pass)
         encrypted_wallet = self.nodes[0].get_wallet_rpc("encrypted")
-        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", encrypted_wallet.signrawtransactionwithwallet, RAW_TX)
+        assert_raises_rpc_error(RPC_WALLET_UNLOCK_NEEDED, "Please enter the wallet passphrase with walletpassphrase first", encrypted_wallet.signrawtransactionwithwallet, RAW_TX)
 
         # Clean up
         encrypted_wallet.unloadwallet()
 
     def test_with_invalid_sighashtype(self):
         self.log.info("Test signrawtransactionwithwallet raises if an invalid sighashtype is passed")
-        assert_raises_rpc_error(-8, "'all' is not a valid sighash parameter.", self.nodes[0].signrawtransactionwithwallet, hexstring=RAW_TX, sighashtype="all")
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "'all' is not a valid sighash parameter.", self.nodes[0].signrawtransactionwithwallet, hexstring=RAW_TX, sighashtype="all")
 
     def script_verification_error_test(self):
         """Create and sign a raw transaction with valid (vin 0), invalid (vin 1) and one missing (vin 2) input script.
@@ -98,7 +104,7 @@ class SignRawTransactionWithWalletTest(BitcoinTestFramework):
             assert_equal(decodedRawTx["vin"][i]["vout"], inp["vout"])
 
         # Make sure decoderawtransaction throws if there is extra data
-        assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].decoderawtransaction, rawTx + "00")
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "TX decode failed", self.nodes[0].decoderawtransaction, rawTx + "00")
 
         rawTxSigned = self.nodes[0].signrawtransactionwithkey(rawTx, privKeys, scripts)
 
@@ -264,7 +270,7 @@ class SignRawTransactionWithWalletTest(BitcoinTestFramework):
                 succ = self.nodes[0].signrawtransactionwithwallet(rawtx, [prevtx])
                 assert succ["complete"]
             else:
-                assert_raises_rpc_error(-3, "Missing amount", self.nodes[0].signrawtransactionwithwallet, rawtx, [
+                assert_raises_rpc_error(RPC_TYPE_ERROR, "Missing amount", self.nodes[0].signrawtransactionwithwallet, rawtx, [
                     {
                         "txid": txid,
                         "scriptPubKey": pubkey,
@@ -272,21 +278,21 @@ class SignRawTransactionWithWalletTest(BitcoinTestFramework):
                     }
                 ])
 
-            assert_raises_rpc_error(-3, "Missing vout", self.nodes[0].signrawtransactionwithwallet, rawtx, [
+            assert_raises_rpc_error(RPC_TYPE_ERROR, "Missing vout", self.nodes[0].signrawtransactionwithwallet, rawtx, [
                 {
                     "txid": txid,
                     "scriptPubKey": pubkey,
                     "amount": 1,
                 }
             ])
-            assert_raises_rpc_error(-3, "Missing txid", self.nodes[0].signrawtransactionwithwallet, rawtx, [
+            assert_raises_rpc_error(RPC_TYPE_ERROR, "Missing txid", self.nodes[0].signrawtransactionwithwallet, rawtx, [
                 {
                     "scriptPubKey": pubkey,
                     "vout": 3,
                     "amount": 1,
                 }
             ])
-            assert_raises_rpc_error(-3, "Missing scriptPubKey", self.nodes[0].signrawtransactionwithwallet, rawtx, [
+            assert_raises_rpc_error(RPC_TYPE_ERROR, "Missing scriptPubKey", self.nodes[0].signrawtransactionwithwallet, rawtx, [
                 {
                     "txid": txid,
                     "vout": 3,

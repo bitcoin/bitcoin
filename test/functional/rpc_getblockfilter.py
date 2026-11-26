@@ -4,6 +4,10 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the getblockfilter RPC."""
 
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_MISC_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal, assert_is_hex_string, assert_raises_rpc_error,
@@ -48,7 +52,7 @@ class GetBlockFilterTest(BitcoinTestFramework):
 
         # Test getblockfilter with unknown block
         bad_block_hash = "0123456789abcdef" * 4
-        assert_raises_rpc_error(-5, "Block not found", self.nodes[0].getblockfilter, bad_block_hash, "basic")
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Block not found", self.nodes[0].getblockfilter, bad_block_hash, "basic")
 
         # Test getblockfilter for a known header before connecting its block
         block = self.generateblock(self.nodes[1], output="raw(55)", transactions=[], submit=False)
@@ -56,18 +60,18 @@ class GetBlockFilterTest(BitcoinTestFramework):
 
         # The header is known, but the block has never been connected
         assert_raises_rpc_error(
-            -5, "Filter not found. Block was not connected to active chain.",
+            RPC_INVALID_ADDRESS_OR_KEY, "Filter not found. Block was not connected to active chain.",
             self.nodes[0].getblockfilter, block["hash"], "basic",
         )
 
         # Test getblockfilter with undefined filter type
         genesis_hash = self.nodes[0].getblockhash(0)
-        assert_raises_rpc_error(-5, "Unknown filtertype", self.nodes[0].getblockfilter, genesis_hash, "unknown")
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Unknown filtertype", self.nodes[0].getblockfilter, genesis_hash, "unknown")
 
         # Test getblockfilter fails on node without compact block filter index
         self.restart_node(0, extra_args=["-blockfilterindex=0"])
         for filter_type in FILTER_TYPES:
-            assert_raises_rpc_error(-1, "Index is not enabled for filtertype {}".format(filter_type),
+            assert_raises_rpc_error(RPC_MISC_ERROR, "Index is not enabled for filtertype {}".format(filter_type),
                                     self.nodes[0].getblockfilter, genesis_hash, filter_type)
 
 if __name__ == '__main__':

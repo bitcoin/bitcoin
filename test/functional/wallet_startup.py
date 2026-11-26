@@ -13,6 +13,7 @@ import stat
 import uuid
 
 
+from test_framework.rpc_error_codes import RPC_WALLET_ERROR
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -60,7 +61,7 @@ class WalletStartupTest(BitcoinTestFramework):
         else:
             # Ensure we don't load a wallet located in a non-writable directory.
             # The node will crash later on if we cannot write to disk.
-            assert_raises_rpc_error(-4, f"SQLiteDatabase: Failed to open database in directory '{str(dir_path)}': directory is not writable", node.loadwallet, wallet_name)
+            assert_raises_rpc_error(RPC_WALLET_ERROR, f"SQLiteDatabase: Failed to open database in directory '{str(dir_path)}': directory is not writable", node.loadwallet, wallet_name)
 
         # Reset directory permissions for cleanup
         dir_path.chmod(original_dir_perms)

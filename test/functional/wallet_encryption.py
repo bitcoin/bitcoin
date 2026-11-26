@@ -8,6 +8,13 @@ import time
 import subprocess
 
 from test_framework.messages import hash256
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_PARAMETER,
+    RPC_WALLET_ENCRYPTION_FAILED,
+    RPC_WALLET_PASSPHRASE_INCORRECT,
+    RPC_WALLET_UNLOCK_NEEDED,
+    RPC_WALLET_WRONG_ENC_STATE,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_raises_rpc_error,
@@ -34,23 +41,23 @@ class WalletEncryptionTest(BitcoinTestFramework):
         address = self.nodes[0].getnewaddress(address_type='legacy')
         sig = self.nodes[0].signmessage(address, msg)
         assert self.nodes[0].verifymessage(address, sig, msg)
-        assert_raises_rpc_error(-15, "Error: running with an unencrypted wallet, but walletpassphrase was called", self.nodes[0].walletpassphrase, 'ff', 1)
-        assert_raises_rpc_error(-15, "Error: running with an unencrypted wallet, but walletpassphrasechange was called.", self.nodes[0].walletpassphrasechange, 'ff', 'ff')
+        assert_raises_rpc_error(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletpassphrase was called", self.nodes[0].walletpassphrase, 'ff', 1)
+        assert_raises_rpc_error(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletpassphrasechange was called.", self.nodes[0].walletpassphrasechange, 'ff', 'ff')
 
         # Encrypt the wallet
-        assert_raises_rpc_error(-8, "passphrase cannot be empty", self.nodes[0].encryptwallet, '')
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "passphrase cannot be empty", self.nodes[0].encryptwallet, '')
         self.nodes[0].encryptwallet(passphrase)
 
         # Test that the wallet is encrypted
-        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].signmessage, address, msg)
-        assert_raises_rpc_error(-15, "Error: running with an encrypted wallet, but encryptwallet was called.", self.nodes[0].encryptwallet, 'ff')
-        assert_raises_rpc_error(-8, "passphrase cannot be empty", self.nodes[0].walletpassphrase, '', 1)
-        assert_raises_rpc_error(-8, "passphrase cannot be empty", self.nodes[0].walletpassphrasechange, '', 'ff')
+        assert_raises_rpc_error(RPC_WALLET_UNLOCK_NEEDED, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].signmessage, address, msg)
+        assert_raises_rpc_error(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an encrypted wallet, but encryptwallet was called.", self.nodes[0].encryptwallet, 'ff')
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "passphrase cannot be empty", self.nodes[0].walletpassphrase, '', 1)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "passphrase cannot be empty", self.nodes[0].walletpassphrasechange, '', 'ff')
 
         self.log.info("Test encryptwallet persistence")
         self.nodes[0].unloadwallet(self.default_wallet_name)
         self.nodes[0].loadwallet(self.default_wallet_name)
-        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].signmessage, address, msg)
+        assert_raises_rpc_error(RPC_WALLET_UNLOCK_NEEDED, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].signmessage, address, msg)
 
         # Check that walletpassphrase works
         self.nodes[0].walletpassphrase(passphrase, 2)
@@ -59,26 +66,26 @@ class WalletEncryptionTest(BitcoinTestFramework):
 
         # Check that the timeout is right
         time.sleep(3)
-        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].signmessage, address, msg)
+        assert_raises_rpc_error(RPC_WALLET_UNLOCK_NEEDED, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].signmessage, address, msg)
 
         # Test wrong passphrase
-        assert_raises_rpc_error(-14, "wallet passphrase entered was incorrect", self.nodes[0].walletpassphrase, passphrase + "wrong", 10)
+        assert_raises_rpc_error(RPC_WALLET_PASSPHRASE_INCORRECT, "wallet passphrase entered was incorrect", self.nodes[0].walletpassphrase, passphrase + "wrong", 10)
 
         # Test walletlock
         with WalletUnlock(self.nodes[0], passphrase):
             sig = self.nodes[0].signmessage(address, msg)
             assert self.nodes[0].verifymessage(address, sig, msg)
-        assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].signmessage, address, msg)
+        assert_raises_rpc_error(RPC_WALLET_UNLOCK_NEEDED, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].signmessage, address, msg)
 
         # Test passphrase changes
         self.nodes[0].walletpassphrasechange(passphrase, passphrase2)
-        assert_raises_rpc_error(-14, "wallet passphrase entered was incorrect", self.nodes[0].walletpassphrase, passphrase, 10)
+        assert_raises_rpc_error(RPC_WALLET_PASSPHRASE_INCORRECT, "wallet passphrase entered was incorrect", self.nodes[0].walletpassphrase, passphrase, 10)
         with WalletUnlock(self.nodes[0], passphrase2):
             sig = self.nodes[0].signmessage(address, msg)
             assert self.nodes[0].verifymessage(address, sig, msg)
 
         # Test timeout bounds
-        assert_raises_rpc_error(-8, "Timeout cannot be negative.", self.nodes[0].walletpassphrase, passphrase2, -10)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Timeout cannot be negative.", self.nodes[0].walletpassphrase, passphrase2, -10)
 
         self.log.info('Check a timeout less than the limit')
         MAX_VALUE = 100000000
@@ -101,10 +108,10 @@ class WalletEncryptionTest(BitcoinTestFramework):
             passphrase_with_nulls = "Phrase\0With\0Nulls"
             self.nodes[0].walletpassphrasechange(passphrase2, passphrase_with_nulls)
             # walletpassphrasechange should not stop at null characters
-            assert_raises_rpc_error(-14, "wallet passphrase entered was incorrect", self.nodes[0].walletpassphrase, passphrase_with_nulls.partition("\0")[0], 10)
-            assert_raises_rpc_error(-14, "The wallet passphrase entered was incorrect", self.nodes[0].walletpassphrasechange, passphrase_with_nulls.partition("\0")[0], "abc")
-            assert_raises_rpc_error(-14, "wallet passphrase entered is incorrect. It contains a null character (ie - a zero byte)", self.nodes[0].walletpassphrase, passphrase_with_nulls + "\0", 10)
-            assert_raises_rpc_error(-14, "The wallet passphrase entered is incorrect. It contains a null character (ie - a zero byte)", self.nodes[0].walletpassphrasechange, passphrase_with_nulls + "\0", "abc")
+            assert_raises_rpc_error(RPC_WALLET_PASSPHRASE_INCORRECT, "wallet passphrase entered was incorrect", self.nodes[0].walletpassphrase, passphrase_with_nulls.partition("\0")[0], 10)
+            assert_raises_rpc_error(RPC_WALLET_PASSPHRASE_INCORRECT, "The wallet passphrase entered was incorrect", self.nodes[0].walletpassphrasechange, passphrase_with_nulls.partition("\0")[0], "abc")
+            assert_raises_rpc_error(RPC_WALLET_PASSPHRASE_INCORRECT, "wallet passphrase entered is incorrect. It contains a null character (ie - a zero byte)", self.nodes[0].walletpassphrase, passphrase_with_nulls + "\0", 10)
+            assert_raises_rpc_error(RPC_WALLET_PASSPHRASE_INCORRECT, "The wallet passphrase entered is incorrect. It contains a null character (ie - a zero byte)", self.nodes[0].walletpassphrasechange, passphrase_with_nulls + "\0", "abc")
             with WalletUnlock(self.nodes[0], passphrase_with_nulls):
                 sig = self.nodes[0].signmessage(address, msg)
                 assert self.nodes[0].verifymessage(address, sig, msg)
@@ -112,7 +119,7 @@ class WalletEncryptionTest(BitcoinTestFramework):
         self.log.info("Test that wallets without private keys cannot be encrypted")
         self.nodes[0].createwallet(wallet_name="noprivs", disable_private_keys=True)
         noprivs_wallet = self.nodes[0].get_wallet_rpc("noprivs")
-        assert_raises_rpc_error(-16, "Error: wallet does not contain private keys, nothing to encrypt.", noprivs_wallet.encryptwallet, "pass")
+        assert_raises_rpc_error(RPC_WALLET_ENCRYPTION_FAILED, "Error: wallet does not contain private keys, nothing to encrypt.", noprivs_wallet.encryptwallet, "pass")
 
         if self.is_wallet_tool_compiled():
             self.log.info("Test that encryption keys in wallets without privkeys are removed")
@@ -158,7 +165,7 @@ class WalletEncryptionTest(BitcoinTestFramework):
             with self.nodes[0].assert_debug_log(["Detected extraneous encryption keys in this wallet without private keys. Removing extraneous encryption keys."]):
                 self.nodes[0].loadwallet("noprivs_enc")
             noprivs_wallet = self.nodes[0].get_wallet_rpc("noprivs_enc")
-            assert_raises_rpc_error(-15, "Error: running with an unencrypted wallet, but walletpassphrase was called.", noprivs_wallet.walletpassphrase, "pass", 1)
+            assert_raises_rpc_error(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletpassphrase was called.", noprivs_wallet.walletpassphrase, "pass", 1)
             noprivs_wallet.unloadwallet()
 
             # Make a new dump and check that there are no mkeys

@@ -8,6 +8,10 @@
 import time
 
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_PARAMETER,
+    RPC_WALLET_UNLOCK_NEEDED,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -179,14 +183,14 @@ class TransactionTimeRescanTest(BitcoinTestFramework):
 
 
         self.log.info('Test handling of invalid parameters for rescanblockchain')
-        assert_raises_rpc_error(-8, "Invalid start_height", restorewo_wallet.rescanblockchain, -1, 10)
-        assert_raises_rpc_error(-8, "Invalid stop_height", restorewo_wallet.rescanblockchain, 1, -1)
-        assert_raises_rpc_error(-8, "stop_height must be greater than start_height", restorewo_wallet.rescanblockchain, 20, 10)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid start_height", restorewo_wallet.rescanblockchain, -1, 10)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid stop_height", restorewo_wallet.rescanblockchain, 1, -1)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "stop_height must be greater than start_height", restorewo_wallet.rescanblockchain, 20, 10)
 
         self.log.info("Test `rescanblockchain` fails when wallet is encrypted and locked")
         usernode.createwallet(wallet_name="enc_wallet", passphrase="passphrase")
         enc_wallet = usernode.get_wallet_rpc("enc_wallet")
-        assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.", enc_wallet.rescanblockchain)
+        assert_raises_rpc_error(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.", enc_wallet.rescanblockchain)
 
 
 if __name__ == '__main__':

@@ -17,6 +17,7 @@ from test_framework.blocktools import (
     NORMAL_GBT_REQUEST_PARAMS,
 )
 
+from test_framework.rpc_error_codes import RPC_DESERIALIZATION_ERROR
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -78,7 +79,7 @@ class MiningTemplateVerificationTest(BitcoinTestFramework):
 
     def truncated_final_transaction_test(self, node, block):
         self.log.info("Truncated final transaction")
-        assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate,
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "Block decode failed", node.getblocktemplate,
             template_request={
                 "data": block.serialize()[:-1].hex(),
                 "mode": "proposal",
@@ -112,7 +113,7 @@ class MiningTemplateVerificationTest(BitcoinTestFramework):
         bad_block_sn = bytearray(block.serialize())
         assert_equal(bad_block_sn[BLOCK_HEADER_SIZE], 1)
         bad_block_sn[BLOCK_HEADER_SIZE] += 1
-        assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate, {
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "Block decode failed", node.getblocktemplate, {
             'data': bad_block_sn.hex(),
             'mode': 'proposal',
             **NORMAL_GBT_REQUEST_PARAMS,

@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test deprecation of RPC calls."""
+from test_framework.rpc_error_codes import RPC_METHOD_DEPRECATED
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_raises_rpc_error
 
@@ -35,11 +36,11 @@ class DeprecatedRpcTest(BitcoinTestFramework):
 
             self.log.info("Test confTarget option deprecation")
             for rpc in (wallet.bumpfee, wallet.psbtbumpfee):
-                assert_raises_rpc_error(-32, "start the RPC server with the `-deprecatedrpc=confTarget`", rpc, "0" * 64, {"confTarget": 1})
+                assert_raises_rpc_error(RPC_METHOD_DEPRECATED, "start the RPC server with the `-deprecatedrpc=confTarget`", rpc, "0" * 64, {"confTarget": 1})
 
             self.log.info("Test encryptwallet deprecation")
             assert_raises_rpc_error(
-                -32, "Start bitcoind with the `-deprecatedrpc=encryptwallet`",
+                RPC_METHOD_DEPRECATED, "Start bitcoind with the `-deprecatedrpc=encryptwallet`",
                 wallet.encryptwallet,
                 "passphrase"
             )

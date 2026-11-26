@@ -11,6 +11,11 @@ from test_framework.descriptors import (
     descsum_create,
 )
 from test_framework.extendedkey import ExtendedPrivateKey
+from test_framework.rpc_error_codes import (
+    RPC_WALLET_ERROR,
+    RPC_WALLET_NOT_FOUND,
+    RPC_WALLET_UNLOCK_NEEDED,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
@@ -45,7 +50,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
             assert all("tprv" not in d for d in encrypted_unlocked_output)
 
         self.log.info('- With private=true, errors when the wallet is locked.')
-        assert_raises_rpc_error(-13, 'Please enter the wallet passphrase with walletpassphrase first.', encrypted_wallet.listdescriptors, True)
+        assert_raises_rpc_error(RPC_WALLET_UNLOCK_NEEDED, 'Please enter the wallet passphrase with walletpassphrase first.', encrypted_wallet.listdescriptors, True)
         self.log.info("- With private=true, works when unlocked and matches the public descriptors.")
         with WalletUnlock(encrypted_wallet, self.default_wallet_pass):
             private_output = encrypted_wallet.listdescriptors(True)
@@ -58,7 +63,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
 
     def run_test(self):
         node = self.nodes[0]
-        assert_raises_rpc_error(-18, 'No wallet is loaded.', node.listdescriptors)
+        assert_raises_rpc_error(RPC_WALLET_NOT_FOUND, 'No wallet is loaded.', node.listdescriptors)
 
         self.log.info('Test the command for empty descriptors wallet.')
         node.createwallet(wallet_name='w2', blank=True)
@@ -129,7 +134,7 @@ class ListDescriptorsTest(BitcoinTestFramework):
             'desc': descsum_create('wpkh(' + xpub_acc + ')'),
             'timestamp': TIME_GENESIS_BLOCK,
         }])
-        assert_raises_rpc_error(-4, 'Can\'t get private descriptor string for watch-only wallets', watch_only_wallet.listdescriptors, True)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, 'Can\'t get private descriptor string for watch-only wallets', watch_only_wallet.listdescriptors, True)
 
         self.log.info('Test non-active non-range combo descriptor')
         node.createwallet(wallet_name='w4', blank=True)

@@ -40,6 +40,7 @@ import os
 import time
 
 from test_framework.p2p import P2PTxInvStore
+from test_framework.rpc_error_codes import RPC_MISC_ERROR
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -192,7 +193,7 @@ class MempoolPersistTest(BitcoinTestFramework):
         # which is an implementation detail that could change and break this test
         mempooldotnew1 = mempooldat1 + '.new'
         os.mkdir(mempooldotnew1)
-        assert_raises_rpc_error(-1, "Unable to dump mempool to disk", self.nodes[1].savemempool)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Unable to dump mempool to disk", self.nodes[1].savemempool)
         os.rmdir(mempooldotnew1)
 
         self.test_importmempool_union()
@@ -205,7 +206,7 @@ class MempoolPersistTest(BitcoinTestFramework):
         mempooldat_malformed = os.path.join(self.options.tmpdir, "mempool_malformed.dat")
         with open(node0.savemempool()["filename"], "rb") as src, open(mempooldat_malformed, "wb") as dst:
             dst.write(src.read()[:-1])
-        assert_raises_rpc_error(-1, "Unable to import mempool file", node0.importmempool, mempooldat_malformed)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Unable to import mempool file", node0.importmempool, mempooldat_malformed)
 
     def test_persist_unbroadcast(self):
         node0 = self.nodes[0]

@@ -5,6 +5,10 @@
 """Test the scantxoutset rpc call."""
 from test_framework.address import address_to_scriptpubkey
 from test_framework.messages import COIN
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_PARAMETER,
+    RPC_MISC_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.wallet import (
@@ -75,11 +79,11 @@ class ScantxoutsetTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].scantxoutset("start", ["addr(" + addr_P2SH_SEGWIT + ")", "addr(" + addr_LEGACY + ")", "combo(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.007"))
 
         self.log.info("Test range validation.")
-        assert_raises_rpc_error(-8, "End of range is too high", self.nodes[0].scantxoutset, "start", [{"desc": "desc", "range": -1}])
-        assert_raises_rpc_error(-8, "Range should be greater or equal than 0", self.nodes[0].scantxoutset, "start", [{"desc": "desc", "range": [-1, 10]}])
-        assert_raises_rpc_error(-8, "End of range is too high", self.nodes[0].scantxoutset, "start", [{"desc": "desc", "range": [(2 << 31 + 1) - 1000000, (2 << 31 + 1)]}])
-        assert_raises_rpc_error(-8, "Range specified as [begin,end] must not have begin after end", self.nodes[0].scantxoutset, "start", [{"desc": "desc", "range": [2, 1]}])
-        assert_raises_rpc_error(-8, "Range is too large", self.nodes[0].scantxoutset, "start", [{"desc": "desc", "range": [0, 1000001]}])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "End of range is too high", self.nodes[0].scantxoutset, "start", [{"desc": "desc", "range": -1}])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Range should be greater or equal than 0", self.nodes[0].scantxoutset, "start", [{"desc": "desc", "range": [-1, 10]}])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "End of range is too high", self.nodes[0].scantxoutset, "start", [{"desc": "desc", "range": [(2 << 31 + 1) - 1000000, (2 << 31 + 1)]}])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Range specified as [begin,end] must not have begin after end", self.nodes[0].scantxoutset, "start", [{"desc": "desc", "range": [2, 1]}])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Range is too large", self.nodes[0].scantxoutset, "start", [{"desc": "desc", "range": [0, 1000001]}])
         range_end = 2**31 - 1
         assert_equal(self.nodes[0].scantxoutset("start", [{"desc": "combo(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0h/0'/*)", "range": [range_end, range_end]}])['success'], True)
 
@@ -132,14 +136,14 @@ class ScantxoutsetTest(BitcoinTestFramework):
         assert_equal(unspent["confirmations"], 3)
 
         # Check that first arg is needed
-        assert_raises_rpc_error(-1, "scantxoutset \"action\" ( [scanobjects,...] )", self.nodes[0].scantxoutset)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "scantxoutset \"action\" ( [scanobjects,...] )", self.nodes[0].scantxoutset)
 
         # Check that second arg is needed for start
-        assert_raises_rpc_error(-1, "scanobjects argument is required for the start action", self.nodes[0].scantxoutset, "start")
-        assert_raises_rpc_error(-1, "scanobjects argument is required for the start action", self.nodes[0].scantxoutset, "start", None)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "scanobjects argument is required for the start action", self.nodes[0].scantxoutset, "start")
+        assert_raises_rpc_error(RPC_MISC_ERROR, "scanobjects argument is required for the start action", self.nodes[0].scantxoutset, "start", None)
 
         # Check that invalid command give error
-        assert_raises_rpc_error(-8, "Invalid action 'invalid_command'", self.nodes[0].scantxoutset, "invalid_command")
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid action 'invalid_command'", self.nodes[0].scantxoutset, "invalid_command")
 
 
 if __name__ == "__main__":

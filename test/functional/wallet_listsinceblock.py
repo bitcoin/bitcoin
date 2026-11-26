@@ -7,6 +7,11 @@
 from test_framework.address import key_to_p2wpkh
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.descriptors import descsum_create
+from test_framework.rpc_error_codes import (
+    RPC_INTERNAL_ERROR,
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_INVALID_PARAMETER,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import MAX_BIP125_RBF_SEQUENCE
 from test_framework.util import (
@@ -85,13 +90,13 @@ class ListSinceBlockTest(BitcoinTestFramework):
 
     def test_invalid_blockhash(self):
         self.log.info("Test invalid blockhash")
-        assert_raises_rpc_error(-5, "Block not found", self.nodes[0].listsinceblock,
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Block not found", self.nodes[0].listsinceblock,
                                 "42759cde25462784395a337460bde75f58e73d3f08bd31fdc3507cbac856a2c4")
-        assert_raises_rpc_error(-5, "Block not found", self.nodes[0].listsinceblock,
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Block not found", self.nodes[0].listsinceblock,
                                 "0000000000000000000000000000000000000000000000000000000000000000")
-        assert_raises_rpc_error(-8, "blockhash must be of length 64 (not 11, for 'invalid-hex')", self.nodes[0].listsinceblock,
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "blockhash must be of length 64 (not 11, for 'invalid-hex')", self.nodes[0].listsinceblock,
                                 "invalid-hex")
-        assert_raises_rpc_error(-8, "blockhash must be hexadecimal string (not 'Z000000000000000000000000000000000000000000000000000000000000000')", self.nodes[0].listsinceblock,
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "blockhash must be hexadecimal string (not 'Z000000000000000000000000000000000000000000000000000000000000000')", self.nodes[0].listsinceblock,
                                 "Z000000000000000000000000000000000000000000000000000000000000000")
 
     def test_targetconfirmations(self):
@@ -111,7 +116,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         assert_equal(
             self.nodes[0].getblockhash(0),
             self.nodes[0].listsinceblock(blockhash, blockheight + 1000)['lastblock'])
-        assert_raises_rpc_error(-8, "Invalid parameter",
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid parameter",
             self.nodes[0].listsinceblock, blockhash, 0)
 
     def test_reorg(self):
@@ -182,7 +187,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
         assert not blk_dat.exists()
 
         # listsinceblock(nodes1_last_blockhash) should now fail as blocks are not accessible
-        assert_raises_rpc_error(-32603, "Can't read block from disk",
+        assert_raises_rpc_error(RPC_INTERNAL_ERROR, "Can't read block from disk",
             self.nodes[0].listsinceblock, nodes1_last_blockhash)
 
         # Restoring block file

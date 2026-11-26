@@ -25,6 +25,7 @@ from test_framework.messages import (
     CTransaction,
     tx_from_hex,
 )
+from test_framework.rpc_error_codes import RPC_VERIFY_REJECTED
 from test_framework.script import (
     OP_0,
     OP_TRUE,
@@ -104,7 +105,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
                                           addr=self.ms_address, amount=47,
                                           privkey=self.privkey)
         invalidate_nulldummy_tx(test2tx)
-        assert_raises_rpc_error(-26, NULLDUMMY_TX_ERROR, self.nodes[0].sendrawtransaction, test2tx.serialize_with_witness().hex(), 0)
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, NULLDUMMY_TX_ERROR, self.nodes[0].sendrawtransaction, test2tx.serialize_with_witness().hex(), 0)
 
         self.log.info(f"Test 3: Non-NULLDUMMY base transactions should be accepted in a block before activation [{COINBASE_MATURITY + 4}]")
         self.block_submit(self.nodes[0], [test2tx], accept=True)
@@ -115,7 +116,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
                                           privkey=self.privkey)
         test6txs = [CTransaction(test4tx)]
         invalidate_nulldummy_tx(test4tx)
-        assert_raises_rpc_error(-26, NULLDUMMY_TX_ERROR, self.nodes[0].sendrawtransaction, test4tx.serialize_with_witness().hex(), 0)
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, NULLDUMMY_TX_ERROR, self.nodes[0].sendrawtransaction, test4tx.serialize_with_witness().hex(), 0)
         self.block_submit(self.nodes[0], [test4tx], accept=False)
 
         self.log.info("Test 5: Non-NULLDUMMY P2WSH multisig transaction invalid after activation")
@@ -125,7 +126,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
                                           privkey=self.privkey)
         test6txs.append(CTransaction(test5tx))
         test5tx.wit.vtxinwit[0].scriptWitness.stack[0] = b'\x01'
-        assert_raises_rpc_error(-26, NULLDUMMY_TX_ERROR, self.nodes[0].sendrawtransaction, test5tx.serialize_with_witness().hex(), 0)
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, NULLDUMMY_TX_ERROR, self.nodes[0].sendrawtransaction, test5tx.serialize_with_witness().hex(), 0)
         self.block_submit(self.nodes[0], [test5tx], with_witness=True, accept=False)
 
         self.log.info(f"Test 6: NULLDUMMY compliant base/witness transactions should be accepted to mempool and in block after activation [{COINBASE_MATURITY + 5}]")

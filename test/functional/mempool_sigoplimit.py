@@ -16,6 +16,7 @@ from test_framework.messages import (
     WITNESS_SCALE_FACTOR,
     tx_from_hex,
 )
+from test_framework.rpc_error_codes import RPC_VERIFY_REJECTED
 from test_framework.script import (
     CScript,
     OP_2DUP,
@@ -228,7 +229,7 @@ class BytesPerSigOpTest(BitcoinTestFramework):
         nonstd_tx = CTransaction()
         nonstd_tx.vin = [CTxIn(op, CScript([b"", packed_redeem_script])) for op in outpoints]
         nonstd_tx.vout = [CTxOut(0, CScript([OP_RETURN, b""]))]
-        assert_raises_rpc_error(-26, "bad-txns-nonstandard-inputs, non-witness sigops exceed bip54 limit",
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "bad-txns-nonstandard-inputs, non-witness sigops exceed bip54 limit",
                                         self.nodes[0].sendrawtransaction, nonstd_tx.serialize().hex())
 
         # Spending one less accounts for 2490 legacy sigops and is standard.

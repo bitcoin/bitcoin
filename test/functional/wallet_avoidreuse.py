@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the avoid_reuse and setwalletflag features."""
 
+from test_framework.rpc_error_codes import RPC_INVALID_PARAMETER
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
@@ -115,10 +116,10 @@ class AvoidReuseTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getwalletinfo()["avoid_reuse"], True)
 
         # Attempting to set flag to its current state should throw
-        assert_raises_rpc_error(-8, "Wallet flag is already set to false", self.nodes[0].setwalletflag, 'avoid_reuse', False)
-        assert_raises_rpc_error(-8, "Wallet flag is already set to true", self.nodes[1].setwalletflag, 'avoid_reuse', True)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Wallet flag is already set to false", self.nodes[0].setwalletflag, 'avoid_reuse', False)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Wallet flag is already set to true", self.nodes[1].setwalletflag, 'avoid_reuse', True)
 
-        assert_raises_rpc_error(-8, "Unknown wallet flag: abc", self.nodes[0].setwalletflag, 'abc', True)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Unknown wallet flag: abc", self.nodes[0].setwalletflag, 'abc', True)
 
         # Create a wallet with avoid reuse, and test that disabling it afterwards persists
         self.nodes[1].createwallet(wallet_name="avoid_reuse_persist", avoid_reuse=True)
@@ -136,7 +137,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         self.log.info("Test immutable wallet flags")
 
         # Attempt to set the disable_private_keys flag; this should not work
-        assert_raises_rpc_error(-8, "Wallet flag is immutable", self.nodes[1].setwalletflag, 'disable_private_keys')
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Wallet flag is immutable", self.nodes[1].setwalletflag, 'disable_private_keys')
 
         tempwallet = ".wallet_avoidreuse.py_test_immutable_wallet.dat"
 
@@ -145,7 +146,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         w = self.nodes[1].get_wallet_rpc(tempwallet)
 
         # Attempt to unset the disable_private_keys flag; this should not work
-        assert_raises_rpc_error(-8, "Wallet flag is immutable", w.setwalletflag, 'disable_private_keys', False)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Wallet flag is immutable", w.setwalletflag, 'disable_private_keys', False)
 
         # Unload temp wallet
         self.nodes[1].unloadwallet(tempwallet)

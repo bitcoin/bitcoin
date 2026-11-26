@@ -46,6 +46,7 @@ from test_framework.p2p import (
     p2p_lock,
     P2P_SERVICES,
 )
+from test_framework.rpc_error_codes import RPC_DESERIALIZATION_ERROR
 from test_framework.script import (
     CScript,
     CScriptNum,
@@ -1991,11 +1992,11 @@ class SegWitTest(BitcoinTestFramework):
                 return serialize_with_bogus_witness(self.tx)
 
         tx = self.wallet.create_self_transfer()['tx']
-        assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].decoderawtransaction, hexstring=serialize_with_bogus_witness(tx).hex(), iswitness=True)
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "TX decode failed", self.nodes[0].decoderawtransaction, hexstring=serialize_with_bogus_witness(tx).hex(), iswitness=True)
         with self.nodes[0].assert_debug_log(['Unknown transaction optional data']):
             self.test_node.send_and_ping(msg_bogus_tx(tx))
         tx.wit.vtxinwit = []  # drop witness
-        assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].decoderawtransaction, hexstring=serialize_with_bogus_witness(tx).hex(), iswitness=True)
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "TX decode failed", self.nodes[0].decoderawtransaction, hexstring=serialize_with_bogus_witness(tx).hex(), iswitness=True)
         with self.nodes[0].assert_debug_log(['Superfluous witness record']):
             self.test_node.send_and_ping(msg_bogus_tx(tx))
 

@@ -26,6 +26,13 @@ from test_framework.messages import (
 from test_framework.netutil import (
     format_addr_port
 )
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_METHOD_NOT_FOUND,
+    RPC_MISC_ERROR,
+    RPC_VERIFY_ERROR,
+    RPC_VERIFY_REJECTED,
+)
 from test_framework.script_util import build_malleated_tx_package
 from test_framework.socks5 import (
     start_socks5_server,
@@ -237,9 +244,9 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         far_observer = tx_receiver.add_p2p_connection(P2PInterface())
 
         self.log.info("Test getprivatebroadcastinfo and abortprivatebroadcast fails if the node is running without -privatebroadcast set")
-        assert_raises_rpc_error(-32601, "Private broadcast is not enabled. Ensure you're running Bitcoin Core with -privatebroadcast=1.",
+        assert_raises_rpc_error(RPC_METHOD_NOT_FOUND, "Private broadcast is not enabled. Ensure you're running Bitcoin Core with -privatebroadcast=1.",
             tx_receiver.getprivatebroadcastinfo)
-        assert_raises_rpc_error(-32601, "Private broadcast is not enabled. Ensure you're running Bitcoin Core with -privatebroadcast=1.",
+        assert_raises_rpc_error(RPC_METHOD_NOT_FOUND, "Private broadcast is not enabled. Ensure you're running Bitcoin Core with -privatebroadcast=1.",
             tx_receiver.abortprivatebroadcast, "00" * 32)
 
         self.fill_node_addrman(node_index=0, address_types_to_add=[CAddress.NET_IPV4, CAddress.NET_IPV6, CAddress.NET_TORV3, CAddress.NET_I2P, CAddress.NET_CJDNS])
@@ -268,7 +275,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
 
         self.log.info("Sending a malleated transaction with an invalid witness via RPC")
         malleated_invalid = malleate_tx_to_invalid_witness(txs[0])
-        assert_raises_rpc_error(-26, "mempool-script-verify-flag-failed",
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "mempool-script-verify-flag-failed",
                                 tx_originator.sendrawtransaction,
                                 hexstring=malleated_invalid.serialize_with_witness().hex(),
                                 maxfeerate=0.1)
@@ -333,9 +340,9 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
 
         self.log.info("Sending a transaction with a dependency not in the mempool (should be rejected)")
         assert_equal(len(tx_originator.getrawmempool()), 1)
-        assert_raises_rpc_error(-25, "bad-txns-inputs-missingorspent",
+        assert_raises_rpc_error(RPC_VERIFY_ERROR, "bad-txns-inputs-missingorspent",
                                 tx_originator.sendrawtransaction, hexstring=txs[2]["hex"], maxfeerate=0.1)
-        assert_raises_rpc_error(-25, "bad-txns-inputs-missingorspent",
+        assert_raises_rpc_error(RPC_VERIFY_ERROR, "bad-txns-inputs-missingorspent",
                                 tx_originator.sendrawtransaction, hexstring=txs[2]["hex"], maxfeerate=0)
 
         # Since txs[1] has not been received back by tx_originator,
@@ -386,7 +393,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
 
         self.log.info("Checking abortprivatebroadcast fails for non-existent transaction")
         assert_raises_rpc_error(
-            -5,
+            RPC_INVALID_ADDRESS_OR_KEY,
             "Transaction not in private broadcast queue",
             tx_originator.abortprivatebroadcast,
             "0" * 64,
@@ -421,7 +428,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
             "-torcontrol=127.0.0.1:1",
             "-listenonion",
         ])
-        assert_raises_rpc_error(-1, "none of the Tor or I2P networks is reachable",
+        assert_raises_rpc_error(RPC_MISC_ERROR, "none of the Tor or I2P networks is reachable",
                                 tx_originator.sendrawtransaction, hexstring=txs[0]["hex"], maxfeerate=0.1)
 
 

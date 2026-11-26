@@ -7,6 +7,7 @@ from test_framework.messages import (
     CTxOut,
     MAX_OP_RETURN_RELAY,
 )
+from test_framework.rpc_error_codes import RPC_VERIFY_REJECTED
 from test_framework.script import (
     CScript,
     OP_RETURN,
@@ -46,7 +47,7 @@ class DataCarrierTest(BitcoinTestFramework):
             self.wallet.sendrawtransaction(from_node=node, tx_hex=tx_hex)
             assert tx.txid_hex in node.getrawmempool(True), f'{tx_hex} not in mempool'
         else:
-            assert_raises_rpc_error(-26, "datacarrier", self.wallet.sendrawtransaction, from_node=node, tx_hex=tx_hex)
+            assert_raises_rpc_error(RPC_VERIFY_REJECTED, "datacarrier", self.wallet.sendrawtransaction, from_node=node, tx_hex=tx_hex)
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])

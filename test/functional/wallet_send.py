@@ -9,6 +9,13 @@ from itertools import product
 
 from test_framework.descriptors import descsum_create
 from test_framework.extendedkey import ExtendedPrivateKey
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_INVALID_PARAMETER,
+    RPC_TYPE_ERROR,
+    RPC_WALLET_ERROR,
+    RPC_WALLET_INSUFFICIENT_FUNDS,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
@@ -168,7 +175,7 @@ class WalletSendTest(BitcoinTestFramework):
             tx = from_wallet.gettransaction(res["txid"])
             assert tx
             if nonmempool:
-                assert_raises_rpc_error(-5, "No such mempool transaction", from_wallet.getrawtransaction, res["txid"])
+                assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "No such mempool transaction", from_wallet.getrawtransaction, res["txid"])
                 assert from_wallet.getbalances()["mine"]["nonmempool"] < 0
             else:
                 # Ensure transaction exists in the mempool:
@@ -200,7 +207,7 @@ class WalletSendTest(BitcoinTestFramework):
         # -maxfeerate drops below -minrelaytxfee.
         self.nodes[0].unloadwallet(self.default_wallet_name, load_on_startup=False)
         self.restart_node(0, extra_args=['-minrelaytxfee=0.00020000', '-maxfeerate=0.0001'])
-        assert_raises_rpc_error(-4,
+        assert_raises_rpc_error(RPC_WALLET_ERROR,
                                 "Invalid amount for -maxfeerate=<amount>: '0.0001' "
                                 "(must be at least the minrelay fee of 0.00020000 BTC/kvB "
                                 "to prevent stuck transactions)",
@@ -211,12 +218,12 @@ class WalletSendTest(BitcoinTestFramework):
         self.log.info("test -maxfeerate enforcement on wallet transactions.")
         # Default maxfeerate is 10,000 sat/vB
         # Wallet will reject all transactions with fee rate above 10,000 sat/vB.
-        assert_raises_rpc_error(-6, "Fee rate exceeds maximum configured by user (maxfeerate)",
+        assert_raises_rpc_error(RPC_WALLET_INSUFFICIENT_FUNDS, "Fee rate exceeds maximum configured by user (maxfeerate)",
                                     self.nodes[0].sendtoaddress, address=self.nodes[0].getnewaddress(), amount=1, fee_rate=10001)
 
         self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), amount=1, fee_rate=9900)
         self.restart_node(0, extra_args=['-maxfeerate=0.00010'])
-        assert_raises_rpc_error(-6, "Fee rate exceeds maximum configured by user (maxfeerate)",
+        assert_raises_rpc_error(RPC_WALLET_INSUFFICIENT_FUNDS, "Fee rate exceeds maximum configured by user (maxfeerate)",
                                     self.nodes[0].sendtoaddress, address=self.nodes[0].getnewaddress(), amount=1, fee_rate=11)
         self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), amount=1, fee_rate=9)
 
@@ -339,9 +346,9 @@ class WalletSendTest(BitcoinTestFramework):
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=1, fee_rate=1, add_to_wallet=False,
                        expect_error=(-8, "Pass the fee_rate either as an argument, or in the options object, but not both"))
 
-        assert_raises_rpc_error(-8, "Use fee_rate (sat/vB) instead of feeRate", w0.send, {w1.getnewaddress(): 1}, 6, "conservative", 1, {"feeRate": 0.01})
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Use fee_rate (sat/vB) instead of feeRate", w0.send, {w1.getnewaddress(): 1}, 6, "conservative", 1, {"feeRate": 0.01})
 
-        assert_raises_rpc_error(-3, "Unexpected key totalFee", w0.send, {w1.getnewaddress(): 1}, 6, "conservative", 1, {"totalFee": 0.01})
+        assert_raises_rpc_error(RPC_TYPE_ERROR, "Unexpected key totalFee", w0.send, {w1.getnewaddress(): 1}, 6, "conservative", 1, {"totalFee": 0.01})
 
         for target, mode in product([-1, 0, 1009], ["economical", "conservative"]):
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=target, estimate_mode=mode,
@@ -352,7 +359,7 @@ class WalletSendTest(BitcoinTestFramework):
         for mode in ["", "foo", Decimal("3.141592")]:
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.1, estimate_mode=mode, expect_error=(-8, msg))
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_conf_target=0.1, arg_estimate_mode=mode, expect_error=(-8, msg))
-            assert_raises_rpc_error(-8, msg, w0.send, {w1.getnewaddress(): 1}, 0.1, mode)
+            assert_raises_rpc_error(RPC_INVALID_PARAMETER, msg, w0.send, {w1.getnewaddress(): 1}, 0.1, mode)
 
         for mode in ["economical", "conservative"]:
             for k, v in {"string": "true", "bool": True, "object": {"foo": "bar"}}.items():
@@ -525,7 +532,7 @@ class WalletSendTest(BitcoinTestFramework):
 
         # Input weight error conditions
         assert_raises_rpc_error(
-            -8,
+            RPC_INVALID_PARAMETER,
             "Input weights should be specified in inputs rather than in options.",
             ext_wallet.send,
             outputs={self.nodes[0].getnewaddress(): 15},
@@ -574,16 +581,16 @@ class WalletSendTest(BitcoinTestFramework):
 
         # 1) Try to fund transaction only using the preset inputs
         inputs = wallet.listunspent()
-        assert_raises_rpc_error(-4, "Transaction too large",
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Transaction too large",
                                 wallet.send, outputs=[{wallet.getnewaddress(): 0.1 * 1471}], options={"inputs": inputs, "add_inputs": False})
 
         # 2) Let the wallet fund the transaction
-        assert_raises_rpc_error(-4, "The inputs size exceeds the maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs",
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "The inputs size exceeds the maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs",
                                 wallet.send, outputs=[{wallet.getnewaddress(): 0.1 * 1471}])
 
         # 3) Pre-select some inputs and let the wallet fill-up the remaining amount
         inputs = inputs[0:1000]
-        assert_raises_rpc_error(-4, "The combination of the pre-selected inputs and the wallet automatic inputs selection exceeds the transaction maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs",
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "The combination of the pre-selected inputs and the wallet automatic inputs selection exceeds the transaction maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs",
                                 wallet.send, outputs=[{wallet.getnewaddress(): 0.1 * 1471}], options={"inputs": inputs, "add_inputs": True})
 
         self.nodes[1].unloadwallet("test_weight_limits")
