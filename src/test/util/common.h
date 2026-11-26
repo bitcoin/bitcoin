@@ -56,7 +56,7 @@ inline std::ostream& operator<<(std::ostream& os, const std::chrono::time_point<
 template <typename T> requires std::is_enum_v<T>
 inline std::ostream& operator<<(std::ostream& os, const T& e)
 {
-    return os << static_cast<std::underlying_type_t<T>>(e);
+    return os << std::to_underlying(e);
 }
 
 template <typename T>
