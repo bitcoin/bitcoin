@@ -12,6 +12,7 @@
 #include <outputtype.h>
 #include <pubkey.h>
 #include <rpc/protocol.h>
+#include <rpc/descriptor_util.h>
 #include <rpc/request.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
@@ -22,7 +23,6 @@
 #include <script/signingprovider.h>
 #include <tinyformat.h>
 #include <univalue.h>
-#include <util/bip32.h>
 #include <util/check.h>
 #include <util/overloaded.h>
 
@@ -176,20 +176,6 @@ static RPCMethod createmultisig()
     };
 }
 
-static std::string KeyRoleName(DescriptorKeyInventory::Role role)
-{
-    using Role = DescriptorKeyInventory::Role;
-    switch (role) {
-    case Role::ECDSA: return "ecdsa";
-    case Role::TAPROOT_INTERNAL: return "taproot_internal";
-    case Role::TAPROOT_OUTPUT: return "taproot_output";
-    case Role::TAPSCRIPT: return "tapscript";
-    case Role::MUSIG_PARTICIPANT: return "musig_participant";
-    case Role::UNUSED: return "unused";
-    } // no default case, so the compiler can warn about missing cases
-    NONFATAL_UNREACHABLE();
-}
-
 static std::string FunctionName(DescriptorPolicy::Kind kind)
 {
     using Kind = DescriptorPolicy::Kind;
@@ -264,64 +250,6 @@ static std::string ChildRoleName(DescriptorPolicy::ChildRole role)
     NONFATAL_UNREACHABLE();
 }
 
-//! Format a derivation in descriptor syntax, e.g. "/1/*". Empty if there is none.
-static std::string FormatDerivation(const DescriptorKeyInfo::Derivation& derivation)
-{
-    std::string result{FormatHDKeypath(derivation.path)};
-    switch (derivation.type) {
-    case DescriptorKeyInfo::DeriveType::NON_RANGED: return result;
-    case DescriptorKeyInfo::DeriveType::UNHARDENED_RANGED: return result + "/*";
-    case DescriptorKeyInfo::DeriveType::HARDENED_RANGED: return result + "/*h";
-    } // no default case, so the compiler can warn about missing cases
-    NONFATAL_UNREACHABLE();
-}
-
-static UniValue IdsToUniv(const std::vector<size_t>& ids)
-{
-    UniValue result(UniValue::VARR);
-    for (const size_t id : ids) {
-        result.push_back(id);
-    }
-    return result;
-}
-
-static UniValue DescriptorKeysToUniv(const DescriptorKeyInventory& inventory)
-{
-    UniValue keys(UniValue::VARR);
-    for (const auto& occurrence : inventory.occurrences) {
-        UniValue key(UniValue::VOBJ);
-        key.pushKV("role", KeyRoleName(occurrence.role));
-        std::string derivation;
-        std::visit(util::Overloaded{
-            [&](const DescriptorKeyInfo::ConstKey& constant) {
-                key.pushKV("type", "pubkey");
-                key.pushKV("pubkey", constant.xonly ? HexStr(XOnlyPubKey{constant.pubkey}) : HexStr(constant.pubkey));
-            },
-            [&](const DescriptorKeyInfo::BIP32Key& bip32) {
-                key.pushKV("type", "bip32");
-                key.pushKV("xpub", EncodeExtPubKey(bip32.root));
-                derivation = FormatDerivation(bip32.derivation);
-            },
-            [&](const DescriptorKeyInfo::MuSigKey& musig) {
-                key.pushKV("type", "musig");
-                key.pushKV("participants", IdsToUniv(musig.participants));
-                derivation = FormatDerivation(musig.derivation);
-            },
-        }, occurrence.expression.key);
-        if (!derivation.empty()) {
-            key.pushKV("derivation", derivation);
-        }
-        if (const auto& origin{occurrence.expression.origin}) {
-            UniValue origin_obj(UniValue::VOBJ);
-            origin_obj.pushKV("master_fingerprint", HexStr(origin->fingerprint));
-            origin_obj.pushKV("path", WriteHDKeypath(origin->path));
-            key.pushKV("origin", std::move(origin_obj));
-        }
-        keys.push_back(std::move(key));
-    }
-    return keys;
-}
-
 static UniValue DescriptorPolicyToUniv(const DescriptorPolicy& policy)
 {
     UniValue nodes(UniValue::VARR);
@@ -384,23 +312,7 @@ static RPCMethod getdescriptorinfo()
                 {RPCResult::Type::ARR, "keys", /*optional=*/true, "Only if verbose is true. The public key occurrences, in descriptor order. "
                     "Array indices are the key IDs used in this result; equal keys remain separate occurrences.",
                 {
-                    {RPCResult::Type::OBJ, "", "",
-                    {
-                        {RPCResult::Type::STR, "role", "How the key is used: \"ecdsa\", \"taproot_internal\", \"taproot_output\", \"tapscript\", \"musig_participant\" or \"unused\""},
-                        {RPCResult::Type::STR, "type", "The kind of key expression: \"pubkey\", \"bip32\" or \"musig\""},
-                        {RPCResult::Type::STR_HEX, "pubkey", /*optional=*/true, "For a \"pubkey\": the public key, as 32 bytes if x-only"},
-                        {RPCResult::Type::STR, "xpub", /*optional=*/true, "For a \"bip32\": the extended public key"},
-                        {RPCResult::Type::ARR, "participants", /*optional=*/true, "For a \"musig\": the key IDs of its participants, in expression order",
-                        {
-                            {RPCResult::Type::NUM, "", "Key ID"},
-                        }},
-                        {RPCResult::Type::STR, "derivation", /*optional=*/true, "For a \"bip32\" or \"musig\": the derivation applied to it, if any, e.g. \"/1/*\""},
-                        {RPCResult::Type::OBJ, "origin", /*optional=*/true, "The key origin, if given",
-                        {
-                            {RPCResult::Type::STR_HEX, "master_fingerprint", "The fingerprint of the master key"},
-                            {RPCResult::Type::STR, "path", "The derivation path from the master key"},
-                        }},
-                    }},
+                    {RPCResult::Type::OBJ, "", "", DescriptorKeyResultFields()},
                 }},
                 {RPCResult::Type::ARR, "policy", /*optional=*/true, "Only if verbose is true. The policy nodes in preorder, with the root first. "
                     "Array indices are the node IDs used in this result. This is the structure of the descriptor, not an analysis of how it can be satisfied. "
