@@ -164,9 +164,9 @@ template <typename WeakEnumType, size_t size>
 template <class Dur>
 // Having the compiler infer the template argument from the function argument
 // is dangerous, because the desired return value generally has a different
-// type than the function argument. So std::common_type is used to force the
+// type than the function argument. So std::type_identity is used to force the
 // call site to specify the type of the return value.
-[[nodiscard]] Dur ConsumeDuration(FuzzedDataProvider& fuzzed_data_provider, std::common_type_t<Dur> min, std::common_type_t<Dur> max) noexcept
+[[nodiscard]] Dur ConsumeDuration(FuzzedDataProvider& fuzzed_data_provider, std::type_identity_t<Dur> min, std::type_identity_t<Dur> max) noexcept
 {
     return Dur{fuzzed_data_provider.ConsumeIntegralInRange(min.count(), max.count())};
 }
