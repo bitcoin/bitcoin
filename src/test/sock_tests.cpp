@@ -57,8 +57,6 @@ BOOST_AUTO_TEST_CASE(move_constructor)
     BOOST_CHECK(SocketIsClosed(s));
 }
 
-// This test sets up its own sockets and sits above the socket pair tests.
-// That keeps it easy to backport: older branches build those for POSIX only.
 BOOST_AUTO_TEST_CASE(wait_ignores_urgent_data)
 {
     sockaddr_in addr{};
