@@ -46,6 +46,7 @@ inline std::string_view HTTPStatusReasonString(HTTPStatusCode code)
 }
 
 //! Bitcoin RPC error codes
+//! Keep test/functional/test_framework/rpc_error_codes.py in sync with this enum.
 enum RPCErrorCode
 {
     //! Standard JSON-RPC 2.0 errors
