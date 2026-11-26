@@ -22,6 +22,10 @@ import time
 from test_framework.address import key_to_p2pkh, key_to_p2sh_p2wpkh, key_to_p2wpkh, script_to_p2wsh
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_INVALID_PARAMETER,
+    RPC_MISC_ERROR,
+    RPC_TYPE_ERROR,
     RPC_WALLET_ERROR,
     RPC_WALLET_UNLOCK_NEEDED,
 )
@@ -95,7 +99,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.test_importdesc({"desc":descsum_create(f"unused({xpub})"),
                               "timestamp": "now"},
                               success=False,
-                              error_code=-4,
+                              error_code=RPC_WALLET_ERROR,
                               error_message='Cannot import descriptor without private keys to a wallet with private keys enabled',
                               wallet=wallet)
         self.test_importdesc({"timestamp": "now", "desc": descsum_create(f"unused({xprv})")},
@@ -117,7 +121,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
 
         self.test_importdesc({"timestamp": "now", "desc": descsum_create(f"unused({xprv})")},
                              success=False,
-                             error_code=-4,
+                             error_code=RPC_WALLET_ERROR,
                              error_message="Cannot import an unused() descriptor when its private key is already in the wallet",
                              wallet=wallet)
         wallet.unloadwallet()
@@ -130,7 +134,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         xpub = ExtendedPrivateKey.generate().pubkey().to_string()
         self.test_importdesc({"timestamp": "now", "desc": descsum_create(f"unused({xpub})")},
                              success=False,
-                             error_code=-4,
+                             error_code=RPC_WALLET_ERROR,
                              error_message="Cannot import unused() to wallet without private keys enabled",
                              wallet=wallet)
         wallet.unloadwallet()
@@ -185,7 +189,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         wrpc = node.get_wallet_rpc("keypool_bound")
         desc = descsum_create("wpkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0h/0h/*)")
         self.test_importdesc({"desc": desc, "timestamp": "now"},
-                             success=False, error_code=-8, error_message='End of range is too high',
+                             success=False, error_code=RPC_INVALID_PARAMETER, error_message='End of range is too high',
                              warnings=['Range not given, using default keypool range'], wallet=wrpc)
         # The node survived and no descriptor was added to the wallet.
         assert_equal(wrpc.listdescriptors()['descriptors'], [])
@@ -235,7 +239,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                     assert_equal(future.result(), [{'success': True}])
                     num_success += 1
                 except JSONRPCException as e:
-                    assert_equal(e.error["code"], -4)
+                    assert_equal(e.error["code"], RPC_WALLET_ERROR)
                     assert_equal(e.error["message"], "Wallet is currently rescanning. Abort existing rescan or wait.")
                     num_errors += 1
 
@@ -270,7 +274,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                 importing.result(timeout=30 * self.options.timeout_factor)
                 raise AssertionError("importdescriptors unexpectedly succeeded")
             except JSONRPCException as e:
-                assert_equal(e.error["code"], -1)
+                assert_equal(e.error["code"], RPC_MISC_ERROR)
                 assert_equal(e.error["message"], "Rescan aborted by user.")
 
     def test_musig_private_key_warnings(self, xprv1, acc_xprv2, acc_xpub2, derivation_path):
@@ -330,7 +334,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.log.info("Import should fail if a descriptor is not provided")
         self.test_importdesc({"timestamp": "now"},
                              success=False,
-                             error_code=-8,
+                             error_code=RPC_INVALID_PARAMETER,
                              error_message='Descriptor not found.')
 
         # Test import fails if one timestamp is invalid or missing
@@ -340,7 +344,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.test_importdesc(import_request,
             success=False,
             global_error=True,
-            error_code=-3,
+            error_code=RPC_TYPE_ERROR,
             error_message="Missing required timestamp field for key")
 
         import_request = {"desc": descsum_create("pkh(" + key.pubkey + ")"),
@@ -349,7 +353,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.test_importdesc(import_request,
             success=False,
             global_error=True,
-            error_code=-3,
+            error_code=RPC_TYPE_ERROR,
             error_message='Expected number or "now" timestamp value for key. got type string')
 
         import_request = {"desc": descsum_create("pkh(" + key.pubkey + ")"),
@@ -358,7 +362,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.test_importdesc(import_request,
             success=False,
             global_error=True,
-            error_code=-8,
+            error_code=RPC_INVALID_PARAMETER,
             error_message="Timestamp must not be negative")
 
         # # Test importing of a P2PKH descriptor
@@ -388,7 +392,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.log.info("Internal addresses cannot have labels")
         self.test_importdesc({**import_request, "internal": True},
                              success=False,
-                             error_code=-8,
+                             error_code=RPC_INVALID_PARAMETER,
                              error_message="Internal addresses should not have a label")
 
         self.log.info("External non-ranged addresses can have labels")
@@ -408,13 +412,13 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.test_importdesc({"desc": descsum_create("pkh( " + key.pubkey + ")"),
                                     "timestamp": "now",
                                     "internal": True},
-                                    error_code=-5,
+                                    error_code=RPC_INVALID_ADDRESS_OR_KEY,
                                     error_message=f"pkh(): Key ' {key.pubkey}' is invalid due to whitespace",
                                     success=False)
         self.test_importdesc({"desc": descsum_create("pkh(" + key.pubkey + " )"),
                                     "timestamp": "now",
                                     "internal": True},
-                                    error_code=-5,
+                                    error_code=RPC_INVALID_ADDRESS_OR_KEY,
                                     error_message=f"pkh(): Key '{key.pubkey} ' is invalid due to whitespace",
                                     success=False)
 
@@ -425,7 +429,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               "timestamp": "now"
                               },
                              success=False,
-                             error_code=-5,
+                             error_code=RPC_INVALID_ADDRESS_OR_KEY,
                              error_message="Missing checksum")
 
         self.log.info("Should not import a p2sh-p2wpkh descriptor that has range specified")
@@ -434,7 +438,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                                "range": 1,
                               },
                               success=False,
-                              error_code=-8,
+                              error_code=RPC_INVALID_PARAMETER,
                               error_message="Range should not be specified for an un-ranged descriptor")
 
         self.log.info("Should not import a p2sh-p2wpkh descriptor and have it set to active")
@@ -443,7 +447,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                                "active": True,
                               },
                               success=False,
-                              error_code=-8,
+                              error_code=RPC_INVALID_PARAMETER,
                               error_message="Active descriptors must be ranged")
 
         self.log.info("Should import a (non-active) p2sh-p2wpkh descriptor")
@@ -494,7 +498,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               "range": [0, 100],
                               "label": "test"},
                               success=False,
-                              error_code=-8,
+                              error_code=RPC_INVALID_PARAMETER,
                               error_message='Ranged descriptors should not have a label')
 
         self.log.info("Ranged descriptors can have an explicitly empty label")
@@ -511,7 +515,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               "active": True},
                               success=False,
                               warnings=['Range not given, using default keypool range'],
-                              error_code=-8,
+                              error_code=RPC_INVALID_PARAMETER,
                               error_message='Ranged descriptors should not have a label')
 
         self.log.info("Private keys required for private keys enabled wallet")
@@ -519,7 +523,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               "timestamp": "now",
                               "range": [0, 100]},
                               success=False,
-                              error_code=-4,
+                              error_code=RPC_WALLET_ERROR,
                               error_message='Cannot import descriptor without private keys to a wallet with private keys enabled',
                               wallet=wpriv)
 
@@ -537,7 +541,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               "timestamp": "now",
                               "range": 1},
                              success=False,
-                             error_code=-4,
+                             error_code=RPC_WALLET_ERROR,
                              error_message='Cannot import private keys to a wallet with private keys disabled')
 
         self.log.info("Should not import a descriptor with hardened derivations when private keys are disabled")
@@ -545,7 +549,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               "timestamp": "now",
                               "range": 1},
                              success=False,
-                             error_code=-4,
+                             error_code=RPC_WALLET_ERROR,
                              error_message='Cannot expand descriptor. Probably because of hardened derivations without private keys provided')
 
         for address in addresses:
@@ -555,19 +559,19 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                          solvable=False)
 
         self.test_importdesc({"desc": descsum_create(desc), "timestamp": "now", "range": -1},
-                              success=False, error_code=-8, error_message='End of range is too high')
+                              success=False, error_code=RPC_INVALID_PARAMETER, error_message='End of range is too high')
 
         self.test_importdesc({"desc": descsum_create(desc), "timestamp": "now", "range": [-1, 10]},
-                              success=False, error_code=-8, error_message='Range should be greater or equal than 0')
+                              success=False, error_code=RPC_INVALID_PARAMETER, error_message='Range should be greater or equal than 0')
 
         self.test_importdesc({"desc": descsum_create(desc), "timestamp": "now", "range": [(2 << 31 + 1) - 1000000, (2 << 31 + 1)]},
-                              success=False, error_code=-8, error_message='End of range is too high')
+                              success=False, error_code=RPC_INVALID_PARAMETER, error_message='End of range is too high')
 
         self.test_importdesc({"desc": descsum_create(desc), "timestamp": "now", "range": [2, 1]},
-                              success=False, error_code=-8, error_message='Range specified as [begin,end] must not have begin after end')
+                              success=False, error_code=RPC_INVALID_PARAMETER, error_message='Range specified as [begin,end] must not have begin after end')
 
         self.test_importdesc({"desc": descsum_create(desc), "timestamp": "now", "range": [0, 1000001]},
-                              success=False, error_code=-8, error_message='Range is too large')
+                              success=False, error_code=RPC_INVALID_PARAMETER, error_message='Range is too large')
 
         # The wallet stores the descriptor range as int32_t and range_end is exclusive,
         # so an inclusive endpoint of 2^31-1 has no representable end. It used to be
@@ -575,7 +579,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         # Use an xpub: w1 rejects the xpriv above before the descriptor is added.
         self.test_importdesc({"desc": descsum_create("wpkh(" + xpub + "/0/*)"), "timestamp": "now",
                               "range": [2**31 - 1, 2**31 - 1]},
-                              success=False, error_code=-8, error_message='End of range is too high')
+                              success=False, error_code=RPC_INVALID_PARAMETER, error_message='End of range is too high')
 
         self.log.info("Verify we can only extend descriptor's range")
         range_request = {"desc": descsum_create(desc), "timestamp": "now", "range": [5, 10], 'active': True}
@@ -590,11 +594,11 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 21)
 
         self.test_importdesc({**range_request, "range": [5, 10]}, wallet=wpriv, success=False,
-                             error_code=-4, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
+                             error_code=RPC_WALLET_ERROR, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
         self.test_importdesc({**range_request, "range": [0, 10]}, wallet=wpriv, success=False,
-                             error_code=-4, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
+                             error_code=RPC_WALLET_ERROR, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
         self.test_importdesc({**range_request, "range": [5, 20]}, wallet=wpriv, success=False,
-                             error_code=-4, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
+                             error_code=RPC_WALLET_ERROR, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 21)
 
         self.log.info("Check we can change descriptor internal flag")
@@ -1018,7 +1022,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               "range": 1,
                               "timestamp": "now"},
                               success=False,
-                              error_code=-4,
+                              error_code=RPC_WALLET_ERROR,
                               error_message="Combo descriptors cannot be set to active")
 
         self.log.info("Descriptors with no type cannot be active")
@@ -1073,13 +1077,13 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             try:
                 self.nodes[0].cli("-rpcwallet=encrypted_wallet").walletlock()
             except JSONRPCException as e:
-                assert_equal(e.error["code"], -4)
+                assert_equal(e.error["code"], RPC_WALLET_ERROR)
                 assert "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before locking the wallet." in e.error["message"]
 
             try:
                 self.nodes[0].cli("-rpcwallet=encrypted_wallet").walletpassphrasechange("passphrase", "newpassphrase")
             except JSONRPCException as e:
-                assert_equal(e.error["code"], -4)
+                assert_equal(e.error["code"], RPC_WALLET_ERROR)
                 assert "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before changing the passphrase." in e.error["message"]
 
             assert_equal(importing.result(), [{"success": True}])
@@ -1099,7 +1103,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               "timestamp": "now",
                               "label": "some label"},
                               success=False,
-                              error_code=-8,
+                              error_code=RPC_INVALID_PARAMETER,
                               error_message="Multipath descriptors should not have a label",
                               wallet=w_multipath)
         self.test_importdesc({"desc": descsum_create(f"wpkh({xpriv}/<10;20>/0/*)"),
@@ -1108,7 +1112,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               "timestamp": timestamp,
                               "internal": True},
                               success=False,
-                              error_code=-5,
+                              error_code=RPC_INVALID_ADDRESS_OR_KEY,
                               error_message="Cannot have multipath descriptor while also specifying \'internal\'",
                               wallet=w_multipath)
 

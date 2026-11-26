@@ -31,6 +31,7 @@ from test_framework.p2p import (
     P2PInterface,
 )
 from test_framework.rpc_error_codes import (
+    RPC_DESERIALIZATION_ERROR,
     RPC_INTERNAL_ERROR,
     RPC_INVALID_PARAMETER,
     RPC_MISC_ERROR,
@@ -93,17 +94,16 @@ class AssumeutxoTest(BitcoinTestFramework):
             assert_raises_rpc_error(RPC_INTERNAL_ERROR, f"Unable to load UTXO snapshot: Population failed: {msg}", node.loadtxoutset, bad_snapshot_path)
 
         self.log.info("  - snapshot file with invalid file magic")
-        parsing_error_code = -22
         bad_magic = 0xf00f00f000
         with open(bad_snapshot_path, 'wb') as f:
             f.write(bad_magic.to_bytes(5, "big") + valid_snapshot_contents[5:])
-        assert_raises_rpc_error(parsing_error_code, "Unable to parse metadata: Invalid UTXO set snapshot magic bytes. Please check if this is indeed a snapshot file or if you are using an outdated snapshot format.", node.loadtxoutset, bad_snapshot_path)
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "Unable to parse metadata: Invalid UTXO set snapshot magic bytes. Please check if this is indeed a snapshot file or if you are using an outdated snapshot format.", node.loadtxoutset, bad_snapshot_path)
 
         self.log.info("  - snapshot file with unsupported version")
         for version in [0, 1, 3]:
             with open(bad_snapshot_path, 'wb') as f:
                 f.write(valid_snapshot_contents[:5] + version.to_bytes(2, "little") + valid_snapshot_contents[7:])
-            assert_raises_rpc_error(parsing_error_code, f"Unable to parse metadata: Version of snapshot {version} does not match any of the supported versions.", node.loadtxoutset, bad_snapshot_path)
+            assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, f"Unable to parse metadata: Version of snapshot {version} does not match any of the supported versions.", node.loadtxoutset, bad_snapshot_path)
 
         self.log.info("  - snapshot file with mismatching network magic")
         invalid_magics = [
@@ -118,9 +118,9 @@ class AssumeutxoTest(BitcoinTestFramework):
             with open(bad_snapshot_path, 'wb') as f:
                 f.write(valid_snapshot_contents[:7] + magic + valid_snapshot_contents[11:])
             if real:
-                assert_raises_rpc_error(parsing_error_code, f"Unable to parse metadata: The network of the snapshot ({name}) does not match the network of this node (regtest).", node.loadtxoutset, bad_snapshot_path)
+                assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, f"Unable to parse metadata: The network of the snapshot ({name}) does not match the network of this node (regtest).", node.loadtxoutset, bad_snapshot_path)
             else:
-                assert_raises_rpc_error(parsing_error_code, "Unable to parse metadata: This snapshot has been created for an unrecognized network. This could be a custom signet, a new testnet or possibly caused by data corruption.", node.loadtxoutset, bad_snapshot_path)
+                assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, "Unable to parse metadata: This snapshot has been created for an unrecognized network. This could be a custom signet, a new testnet or possibly caused by data corruption.", node.loadtxoutset, bad_snapshot_path)
 
         self.log.info("  - snapshot file referring to a block that is not in the assumeutxo parameters")
         prev_block_hash = self.nodes[0].getblockhash(SNAPSHOT_BASE_HEIGHT - 1)
@@ -344,7 +344,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.connect_nodes(snapshot_node.index, miner.index)
         self.sync_blocks(nodes=(miner, snapshot_node))
         # Check the base snapshot block was stored and ensure node signals full-node service support
-        self.wait_until(lambda: not try_rpc(-1, "Block not available (not fully downloaded)", snapshot_node.getblock, snapshot_block_hash))
+        self.wait_until(lambda: not try_rpc(RPC_MISC_ERROR, "Block not available (not fully downloaded)", snapshot_node.getblock, snapshot_block_hash))
         self.wait_until(lambda: 'NETWORK' in snapshot_node.getnetworkinfo()['localservicesnames'])
 
         # Now that the snapshot_node is synced, verify the ibd_node can sync from it

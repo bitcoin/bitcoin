@@ -97,7 +97,7 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
         tip_height = pruned_node.getblockcount()
         limit_buffer = 2
         # Prevent races by waiting for the tip to arrive first
-        self.wait_until(lambda: not try_rpc(-1, "Block not available (not fully downloaded)", full_node.getblock, pruned_node.getbestblockhash()))
+        self.wait_until(lambda: not try_rpc(RPC_MISC_ERROR, "Block not available (not fully downloaded)", full_node.getblock, pruned_node.getbestblockhash()))
         for height in range(start_height_full_node + 1, tip_height + 1):
             if height <= tip_height - (NODE_NETWORK_LIMITED_MIN_BLOCKS - limit_buffer):
                 assert_raises_rpc_error(RPC_MISC_ERROR, "Block not available (not fully downloaded)", full_node.getblock, pruned_node.getblockhash(height))

@@ -103,8 +103,8 @@ class ListSinceBlockTest(BitcoinTestFramework):
         '''
         This tests when the value of target_confirmations exceeds the number of
         blocks in the main chain. In this case, the genesis block hash should be
-        given for the `lastblock` property. If target_confirmations is < 1, then
-        a -8 invalid parameter error is thrown.
+        given for the `lastblock` property. If target_confirmations is < 1, the
+        RPC returns `RPC_INVALID_PARAMETER`.
         '''
         self.log.info("Test target_confirmations")
         blockhash, = self.generate(self.nodes[2], 1)

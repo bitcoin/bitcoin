@@ -5,7 +5,10 @@
 """Test RPC misc output."""
 import xml.etree.ElementTree as ET
 
-from test_framework.rpc_error_codes import RPC_INVALID_PARAMETER
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_PARAMETER,
+    RPC_MISC_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_raises_rpc_error,
@@ -42,7 +45,7 @@ class RpcMiscTest(BitcoinTestFramework):
             assert_equal(-6, node.process.wait(timeout=10))
             self.start_node(0)
         except JSONRPCException as e:
-            assert_equal(e.error["code"], -1)
+            assert_equal(e.error["code"], RPC_MISC_ERROR)
             assert f"Internal bug detected: {msg_failed_check}" in e.error["message"]
 
         self.log.info("test max arg size")

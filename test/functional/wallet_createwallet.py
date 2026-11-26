@@ -83,7 +83,7 @@ class CreateWalletTest(BitcoinTestFramework):
         result = w1.importdescriptors([{'desc': descsum_create('wpkh(' + privkey + ')'), 'timestamp': 'now'}])
         assert not result[0]['success']
         assert 'warnings' not in result[0]
-        assert_equal(result[0]['error']['code'], -4)
+        assert_equal(result[0]['error']['code'], RPC_WALLET_ERROR)
         assert_equal(result[0]['error']['message'], 'Cannot import private keys to a wallet with private keys disabled')
 
         self.log.info("Test blank creation with private keys disabled.")

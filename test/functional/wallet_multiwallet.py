@@ -41,7 +41,7 @@ def test_load_unload(node, name):
             node.loadwallet(name)
             node.unloadwallet(name)
         except JSONRPCException as e:
-            if e.error['code'] == -4 and 'Wallet already loading' in e.error['message']:
+            if e.error['code'] == RPC_WALLET_ERROR and 'Wallet already loading' in e.error['message']:
                 got_loading_error = True
                 return
 
@@ -374,8 +374,7 @@ class MultiWalletTest(BitcoinTestFramework):
         self.log.info("Test dynamic wallet creation")
 
         # should raise rpc error if wallet path can't be created
-        err_code = -4
-        assert_raises_rpc_error(err_code, "Wallet file verification failed. ", node.createwallet, "w8/bad")
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Wallet file verification failed. ", node.createwallet, "w8/bad")
 
         # Fail to create a wallet if it already exists.
         path = wallet_dir(node, "w2")

@@ -7,11 +7,13 @@
 #include <node/context.h>
 #include <rpc/blockchain.h>
 #include <rpc/client.h>
+#include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
+#include <tinyformat.h>
 #include <univalue.h>
 #include <util/time.h>
 
@@ -96,18 +98,18 @@ BOOST_AUTO_TEST_CASE(rpc_namedparams)
 
     // Make sure named argument specified multiple times raises an exception
     BOOST_CHECK_EXCEPTION(TransformParams(JSON(R"({"arg2": 2, "arg2": 4})"), arg_names), UniValue,
-                          HasJSON(R"({"code":-8,"message":"Parameter arg2 specified multiple times"})"));
+                          HasJSON(strprintf(R"({"code":%d,"message":"Parameter arg2 specified multiple times"})", RPC_INVALID_PARAMETER)));
 
     // Make sure named and positional arguments can be combined.
     BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"arg5": 5, "args": [1, 2], "arg4": 4})"), arg_names).write(), "[1,2,null,4,5]");
 
     // Make sure a unknown named argument raises an exception
     BOOST_CHECK_EXCEPTION(TransformParams(JSON(R"({"arg2": 2, "unknown": 6})"), arg_names), UniValue,
-                          HasJSON(R"({"code":-8,"message":"Unknown named parameter unknown"})"));
+                          HasJSON(strprintf(R"({"code":%d,"message":"Unknown named parameter unknown"})", RPC_INVALID_PARAMETER)));
 
     // Make sure an overlap between a named argument and positional argument raises an exception
     BOOST_CHECK_EXCEPTION(TransformParams(JSON(R"({"args": [1,2,3], "arg4": 4, "arg2": 2})"), arg_names), UniValue,
-                          HasJSON(R"({"code":-8,"message":"Parameter arg2 specified twice both as positional and named argument"})"));
+                          HasJSON(strprintf(R"({"code":%d,"message":"Parameter arg2 specified twice both as positional and named argument"})", RPC_INVALID_PARAMETER)));
 
     // Make sure extra positional arguments can be passed through to the method implementation, as long as they don't overlap with named arguments.
     BOOST_CHECK_EQUAL(TransformParams(JSON(R"({"args": [1,2,3,4,5,6,7,8,9,10]})"), arg_names).write(), "[1,2,3,4,5,6,7,8,9,10]");
@@ -129,11 +131,11 @@ BOOST_AUTO_TEST_CASE(rpc_namedonlyparams)
 
     // Make sure options and named parameters conflict.
     BOOST_CHECK_EXCEPTION(TransformParams(JSON(R"({"arg1": 1, "arg2": 2, "opt1": 10, "options":{"opt1": 10}})"), arg_names), UniValue,
-                          HasJSON(R"({"code":-8,"message":"Parameter options conflicts with parameter opt1"})"));
+                          HasJSON(strprintf(R"({"code":%d,"message":"Parameter options conflicts with parameter opt1"})", RPC_INVALID_PARAMETER)));
 
     // Make sure options object specified through args array conflicts.
     BOOST_CHECK_EXCEPTION(TransformParams(JSON(R"({"args": [1, 2, {"opt1": 10}], "opt2": 20})"), arg_names), UniValue,
-                          HasJSON(R"({"code":-8,"message":"Parameter options specified twice both as positional and named argument"})"));
+                          HasJSON(strprintf(R"({"code":%d,"message":"Parameter options specified twice both as positional and named argument"})", RPC_INVALID_PARAMETER)));
 }
 
 BOOST_AUTO_TEST_CASE(rpc_remove_command_cleans_up_empty_entry)
@@ -339,7 +341,7 @@ BOOST_AUTO_TEST_CASE(rpc_parse_monetary_values)
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.00000001000000")), 1LL); //should pass, cut trailing 0
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("19e-9")), UniValue); //should fail
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.19e-6")), 19); //should pass, leading 0 is present
-    BOOST_CHECK_EXCEPTION(AmountFromValue(".19e-6"), UniValue, HasJSON(R"({"code":-3,"message":"Invalid amount"})")); //should fail, no leading 0
+    BOOST_CHECK_EXCEPTION(AmountFromValue(".19e-6"), UniValue, HasJSON(strprintf(R"({"code":%d,"message":"Invalid amount"})", RPC_TYPE_ERROR))); //should fail, no leading 0
 
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("92233720368.54775808")), UniValue); //overflow error
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("1e+11")), UniValue); //overflow error

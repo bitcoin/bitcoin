@@ -14,6 +14,7 @@ from collections import defaultdict
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.descriptors import descsum_create
 from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
     RPC_INVALID_PARAMETER,
     RPC_WALLET_INVALID_LABEL_NAME,
 )
@@ -48,7 +49,7 @@ class WalletLabelsTest(BitcoinTestFramework):
         }])
 
         assert_equal(response[0]['success'], False)
-        assert_equal(response[0]['error']['code'], -11)
+        assert_equal(response[0]['error']['code'], RPC_WALLET_INVALID_LABEL_NAME)
         assert_equal(response[0]['error']['message'], "Invalid label name")
 
         for rpc_call in rpc_calls:
@@ -210,7 +211,7 @@ class WalletLabelsTest(BitcoinTestFramework):
             ad = BECH32_INVALID[l]
             import_res = wallet_watch_only.importdescriptors([{"desc": descsum_create(f"addr({ad})"), "timestamp": "now", "label": l}])
             assert_equal(import_res[0]["success"], False)
-            assert_equal(import_res[0]["error"]["code"], -5)
+            assert_equal(import_res[0]["error"]["code"], RPC_INVALID_ADDRESS_OR_KEY)
             assert_equal(import_res[0]["error"]["message"], "Address is not valid")
 
 

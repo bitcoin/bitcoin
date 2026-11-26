@@ -302,7 +302,7 @@ class WalletSendTest(BitcoinTestFramework):
         for mode in ["unset", "economical", "conservative"]:
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_conf_target=1, arg_estimate_mode="economical",
                 conf_target=1, estimate_mode=mode, add_to_wallet=False,
-                expect_error=(-8, "Pass conf_target and estimate_mode either as arguments or in the options object, but not both"))
+                expect_error=(RPC_INVALID_PARAMETER, "Pass conf_target and estimate_mode either as arguments or in the options object, but not both"))
 
         self.log.info("Create PSBT from watch-only wallet w3, sign with w2...")
         res = self.test_send(from_wallet=w3, to_wallet=w1, amount=1)
@@ -311,7 +311,7 @@ class WalletSendTest(BitcoinTestFramework):
 
         self.log.info("Create OP_RETURN...")
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1)
-        self.test_send(from_wallet=w0, data="Hello World", expect_error=(-8, "Data must be hexadecimal string (not 'Hello World')"))
+        self.test_send(from_wallet=w0, data="Hello World", expect_error=(RPC_INVALID_PARAMETER, "Data must be hexadecimal string (not 'Hello World')"))
         self.test_send(from_wallet=w0, data="23")
         res = self.test_send(from_wallet=w3, data="23")
         res = w2.walletprocesspsbt(res["psbt"])
@@ -344,7 +344,7 @@ class WalletSendTest(BitcoinTestFramework):
 
         # Test that passing fee_rate as both an argument and an option raises.
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=1, fee_rate=1, add_to_wallet=False,
-                       expect_error=(-8, "Pass the fee_rate either as an argument, or in the options object, but not both"))
+                       expect_error=(RPC_INVALID_PARAMETER, "Pass the fee_rate either as an argument, or in the options object, but not both"))
 
         assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Use fee_rate (sat/vB) instead of feeRate", w0.send, {w1.getnewaddress(): 1}, 6, "conservative", 1, {"feeRate": 0.01})
 
@@ -352,50 +352,50 @@ class WalletSendTest(BitcoinTestFramework):
 
         for target, mode in product([-1, 0, 1009], ["economical", "conservative"]):
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=target, estimate_mode=mode,
-                expect_error=(-8, "Invalid conf_target, must be between 1 and 1008"))  # max value of 1008 per src/policy/fees/block_policy_estimator.h
+                expect_error=(RPC_INVALID_PARAMETER, "Invalid conf_target, must be between 1 and 1008"))  # max value of 1008 per src/policy/fees/block_policy_estimator.h
         msg = 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"'
         for target, mode in product([-1, 0], ["btc/kb", "sat/b"]):
-            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=target, estimate_mode=mode, expect_error=(-8, msg))
+            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=target, estimate_mode=mode, expect_error=(RPC_INVALID_PARAMETER, msg))
         for mode in ["", "foo", Decimal("3.141592")]:
-            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.1, estimate_mode=mode, expect_error=(-8, msg))
-            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_conf_target=0.1, arg_estimate_mode=mode, expect_error=(-8, msg))
+            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.1, estimate_mode=mode, expect_error=(RPC_INVALID_PARAMETER, msg))
+            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_conf_target=0.1, arg_estimate_mode=mode, expect_error=(RPC_INVALID_PARAMETER, msg))
             assert_raises_rpc_error(RPC_INVALID_PARAMETER, msg, w0.send, {w1.getnewaddress(): 1}, 0.1, mode)
 
         for mode in ["economical", "conservative"]:
             for k, v in {"string": "true", "bool": True, "object": {"foo": "bar"}}.items():
                 self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=v, estimate_mode=mode,
-                    expect_error=(-3, f"JSON value of type {k} for field conf_target is not of expected type number"))
+                    expect_error=(RPC_TYPE_ERROR, f"JSON value of type {k} for field conf_target is not of expected type number"))
 
         # Test setting explicit fee rate just below the minimum of 1 sat/vB.
         self.log.info("Explicit fee rate raises RPC error 'fee rate too low' if fee_rate of 0.99999999 is passed")
         msg = "Fee rate (0.999 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)"
-        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=0.999, expect_error=(-4, msg))
-        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=0.999, expect_error=(-4, msg))
+        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=0.999, expect_error=(RPC_WALLET_ERROR, msg))
+        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=0.999, expect_error=(RPC_WALLET_ERROR, msg))
 
         self.log.info("Explicit fee rate raises if invalid fee_rate is passed")
         # Test fee_rate with zero values.
         msg = "Fee rate (0.000 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)"
         for zero_value in [0, 0.000, 0.00000000, "0", "0.000", "0.00000000"]:
-            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=zero_value, expect_error=(-4, msg))
-            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=zero_value, expect_error=(-4, msg))
+            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=zero_value, expect_error=(RPC_WALLET_ERROR, msg))
+            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=zero_value, expect_error=(RPC_WALLET_ERROR, msg))
         msg = "Invalid amount"
         # Test fee_rate values that don't pass fixed-point parsing checks.
         for invalid_value in ["", 0.000000001, 1e-09, 1.111111111, 1111111111111111, "31.999999999999999999999"]:
-            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=invalid_value, expect_error=(-3, msg))
-            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=invalid_value, expect_error=(-3, msg))
+            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=invalid_value, expect_error=(RPC_TYPE_ERROR, msg))
+            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=invalid_value, expect_error=(RPC_TYPE_ERROR, msg))
         # Test fee_rate values that cannot be represented in sat/vB.
         for invalid_value in [0.0001, 0.00000001, 0.00099999, 31.99999999]:
-            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=invalid_value, expect_error=(-3, msg))
-            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=invalid_value, expect_error=(-3, msg))
+            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=invalid_value, expect_error=(RPC_TYPE_ERROR, msg))
+            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=invalid_value, expect_error=(RPC_TYPE_ERROR, msg))
         # Test fee_rate out of range (negative number).
         msg = "Amount out of range"
-        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=-1, expect_error=(-3, msg))
-        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=-1, expect_error=(-3, msg))
+        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=-1, expect_error=(RPC_TYPE_ERROR, msg))
+        self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=-1, expect_error=(RPC_TYPE_ERROR, msg))
         # Test type error.
         msg = "Amount is not a number or string"
         for invalid_value in [True, {"foo": "bar"}]:
-            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=invalid_value, expect_error=(-3, msg))
-            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=invalid_value, expect_error=(-3, msg))
+            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=invalid_value, expect_error=(RPC_TYPE_ERROR, msg))
+            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=invalid_value, expect_error=(RPC_TYPE_ERROR, msg))
 
         # TODO: Return hex if fee rate is below -maxmempool
         # res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.1, estimate_mode="sat/b", add_to_wallet=False)
@@ -414,15 +414,15 @@ class WalletSendTest(BitcoinTestFramework):
         ERR_NOT_ENOUGH_PRESET_INPUTS = "The preselected coins total amount does not cover the transaction target. " \
                                        "Please allow other inputs to be automatically selected or include more coins manually"
         self.test_send(from_wallet=w0, to_wallet=w1, amount=51, inputs=[utxo1],
-                       expect_error=(-4, ERR_NOT_ENOUGH_PRESET_INPUTS))
+                       expect_error=(RPC_WALLET_ERROR, ERR_NOT_ENOUGH_PRESET_INPUTS))
         self.test_send(from_wallet=w0, to_wallet=w1, amount=51, inputs=[utxo1], add_inputs=False,
-                       expect_error=(-4, ERR_NOT_ENOUGH_PRESET_INPUTS))
+                       expect_error=(RPC_WALLET_ERROR, ERR_NOT_ENOUGH_PRESET_INPUTS))
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=51, inputs=[utxo1], add_inputs=True, add_to_wallet=False)
         assert res["complete"]
 
         self.log.info("Manual change address and position...")
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, change_address="not an address",
-                       expect_error=(-5, "Change address must be a valid bitcoin address"))
+                       expect_error=(RPC_INVALID_ADDRESS_OR_KEY, "Change address must be a valid bitcoin address"))
         change_address = w0.getnewaddress()
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False, change_address=change_address)
         assert res["complete"]
@@ -474,7 +474,7 @@ class WalletSendTest(BitcoinTestFramework):
         self.nodes[1].createwallet(wallet_name="w5")
         w5 = self.nodes[1].get_wallet_rpc("w5")
         self.test_send(from_wallet=w0, to_wallet=w5, amount=2)
-        self.test_send(from_wallet=w5, to_wallet=w0, amount=1, expect_error=(-4, "Insufficient funds"))
+        self.test_send(from_wallet=w5, to_wallet=w0, amount=1, expect_error=(RPC_WALLET_ERROR, "Insufficient funds"))
         res = self.test_send(from_wallet=w5, to_wallet=w0, amount=1, include_unsafe=True)
         assert res["complete"]
 
@@ -483,8 +483,8 @@ class WalletSendTest(BitcoinTestFramework):
         minconfw= self.nodes[1].get_wallet_rpc("minconfw")
         self.test_send(from_wallet=w0, to_wallet=minconfw, amount=2)
         self.generate(self.nodes[0], 3)
-        self.test_send(from_wallet=minconfw, to_wallet=w0, amount=1, minconf=4, expect_error=(-4, "Insufficient funds"))
-        self.test_send(from_wallet=minconfw, to_wallet=w0, amount=1, minconf=-4, expect_error=(-8, "Negative minconf"))
+        self.test_send(from_wallet=minconfw, to_wallet=w0, amount=1, minconf=4, expect_error=(RPC_WALLET_ERROR, "Insufficient funds"))
+        self.test_send(from_wallet=minconfw, to_wallet=w0, amount=1, minconf=-4, expect_error=(RPC_INVALID_PARAMETER, "Negative minconf"))
         res = self.test_send(from_wallet=minconfw, to_wallet=w0, amount=1, minconf=3)
         assert res["complete"]
 
@@ -509,7 +509,7 @@ class WalletSendTest(BitcoinTestFramework):
         ext_utxo = ext_fund.listunspent(addresses=[addr])[0]
 
         # An external input without solving data should result in an error
-        self.test_send(from_wallet=ext_wallet, to_wallet=self.nodes[0], amount=15, inputs=[ext_utxo], add_inputs=True, psbt=True, expect_error=(-4, "Not solvable pre-selected input COutPoint(%s, %s)" % (ext_utxo["txid"][0:10], ext_utxo["vout"])))
+        self.test_send(from_wallet=ext_wallet, to_wallet=self.nodes[0], amount=15, inputs=[ext_utxo], add_inputs=True, psbt=True, expect_error=(RPC_WALLET_ERROR, "Not solvable pre-selected input COutPoint(%s, %s)" % (ext_utxo["txid"][0:10], ext_utxo["vout"])))
 
         # But funding should work when the solving data is provided
         res = self.test_send(from_wallet=ext_wallet, to_wallet=self.nodes[0], amount=15, inputs=[ext_utxo], add_inputs=True, psbt=True, solving_data={"pubkeys": [addr_info['pubkey']], "scripts": [addr_info["embedded"]["scriptPubKey"], addr_info["embedded"]["embedded"]["scriptPubKey"]]})

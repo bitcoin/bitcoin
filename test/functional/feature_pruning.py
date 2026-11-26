@@ -516,7 +516,7 @@ class PruneTest(BitcoinTestFramework):
         self.connect_nodes(1, 5)
         peers = node.getpeerinfo()
         node.getblockfrompeer(fetch_block, peers[0]["id"])
-        self.wait_until(lambda: not try_rpc(-1, "Block not available (pruned data)", node.getblock, fetch_block), timeout=5)
+        self.wait_until(lambda: not try_rpc(RPC_MISC_ERROR, "Block not available (pruned data)", node.getblock, fetch_block), timeout=5)
 
         new_pruneheight = node.getblockchaininfo()["pruneheight"]
         assert_equal(pruneheight, new_pruneheight)
