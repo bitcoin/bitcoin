@@ -57,7 +57,7 @@ static const char* SettingName(OptionsModel::OptionID option)
 }
 
 /** Call node.updateRwSetting() with Bitcoin 22.x workaround. */
-static void UpdateRwSetting(interfaces::Node& node, OptionsModel::OptionID option, const std::string& suffix, const common::SettingsValue& value)
+static bool UpdateRwSetting(interfaces::Node& node, OptionsModel::OptionID option, const std::string& suffix, const common::SettingsValue& value)
 {
     if (value.isNum() &&
         (option == OptionsModel::DatabaseCache ||
@@ -71,9 +71,9 @@ static void UpdateRwSetting(interfaces::Node& node, OptionsModel::OptionID optio
         // in later releases by https://github.com/bitcoin/bitcoin/pull/24498.
         // If new numeric settings are added, they can be written as numbers
         // instead of strings, because bitcoin 22.x will not try to read these.
-        node.updateRwSetting(SettingName(option) + suffix, value.getValStr());
+        return node.updateRwSetting(SettingName(option) + suffix, value.getValStr());
     } else {
-        node.updateRwSetting(SettingName(option) + suffix, value);
+        return node.updateRwSetting(SettingName(option) + suffix, value);
     }
 }
 
@@ -386,7 +386,7 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 // write QSettings values
 bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, int role)
 {
-    bool successful = true; /* set to false on parse error */
+    bool successful = true; /* set to false on parse error or failed write */
     if(role == Qt::EditRole)
     {
         successful = setOption(OptionID(index.row()), value);
@@ -503,10 +503,16 @@ QFont OptionsModel::getFontForMoney() const
 // NOLINTNEXTLINE(misc-no-recursion)
 bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::string& suffix)
 {
+    bool successful = true; /* set to false on parse error or failed write */
+    bool restart_required = false;
     auto changed = [&] { return value.isValid() && value != getOption(option, suffix); };
-    auto update = [&](const common::SettingsValue& value) { return UpdateRwSetting(node(), option, suffix, value); };
+    auto update = [&](const common::SettingsValue& value) {
+        const bool ok{UpdateRwSetting(node(), option, suffix, value)};
+        if (!ok) m_write_failed = true;
+        successful &= ok;
+        return ok;
+    };
 
-    bool successful = true; /* set to false on parse error */
     QSettings settings;
 
     switch (option) {
@@ -539,7 +545,7 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             if (suffix.empty() && !value.toBool()) setOption(option, true, "-prev");
             update(ProxyString(value.toBool(), getOption(ProxyIP).toString(), getOption(ProxyPort).toString()));
             if (suffix.empty() && value.toBool()) UpdateRwSetting(node(), option, "-prev", {});
-            if (suffix.empty()) setRestartRequired(true);
+            if (suffix.empty()) restart_required = true;
         }
         break;
     case ProxyIP:
@@ -549,7 +555,7 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             } else {
                 update(ProxyString(true, value.toString(), getOption(ProxyPort).toString()));
             }
-            if (suffix.empty() && getOption(ProxyUse).toBool()) setRestartRequired(true);
+            if (suffix.empty() && getOption(ProxyUse).toBool()) restart_required = true;
         }
         break;
     case ProxyPort:
@@ -559,7 +565,7 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             } else {
                 update(ProxyString(true, getOption(ProxyIP).toString(), value.toString()));
             }
-            if (suffix.empty() && getOption(ProxyUse).toBool()) setRestartRequired(true);
+            if (suffix.empty() && getOption(ProxyUse).toBool()) restart_required = true;
         }
         break;
 
@@ -569,7 +575,7 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             if (suffix.empty() && !value.toBool()) setOption(option, true, "-prev");
             update(ProxyString(value.toBool(), getOption(ProxyIPTor).toString(), getOption(ProxyPortTor).toString()));
             if (suffix.empty() && value.toBool()) UpdateRwSetting(node(), option, "-prev", {});
-            if (suffix.empty()) setRestartRequired(true);
+            if (suffix.empty()) restart_required = true;
         }
         break;
     case ProxyIPTor:
@@ -579,7 +585,7 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             } else {
                 update(ProxyString(true, value.toString(), getOption(ProxyPortTor).toString()));
             }
-            if (suffix.empty() && getOption(ProxyUseTor).toBool()) setRestartRequired(true);
+            if (suffix.empty() && getOption(ProxyUseTor).toBool()) restart_required = true;
         }
         break;
     case ProxyPortTor:
@@ -589,7 +595,7 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             } else {
                 update(ProxyString(true, getOption(ProxyIPTor).toString(), value.toString()));
             }
-            if (suffix.empty() && getOption(ProxyUseTor).toBool()) setRestartRequired(true);
+            if (suffix.empty() && getOption(ProxyUseTor).toBool()) restart_required = true;
         }
         break;
 
@@ -597,13 +603,13 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
     case SpendZeroConfChange:
         if (changed()) {
             update(value.toBool());
-            setRestartRequired(true);
+            restart_required = true;
         }
         break;
     case ExternalSignerPath:
         if (changed()) {
             update(value.toString().toStdString());
-            setRestartRequired(true);
+            restart_required = true;
         }
         break;
     case SubFeeFromAmount:
@@ -618,13 +624,13 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         if (strThirdPartyTxUrls != value.toString()) {
             strThirdPartyTxUrls = value.toString();
             settings.setValue("strThirdPartyTxUrls", strThirdPartyTxUrls);
-            setRestartRequired(true);
+            restart_required = true;
         }
         break;
     case Language:
         if (changed()) {
             update(value.toString().toStdString());
-            setRestartRequired(true);
+            restart_required = true;
         }
         break;
     case FontForMoney:
@@ -650,7 +656,7 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             if (suffix.empty() && !value.toBool()) setOption(option, true, "-prev");
             update(PruneSetting(value.toBool(), getOption(PruneSize).toInt()));
             if (suffix.empty() && value.toBool()) UpdateRwSetting(node(), option, "-prev", {});
-            if (suffix.empty()) setRestartRequired(true);
+            if (suffix.empty()) restart_required = true;
         }
         break;
     case PruneSize:
@@ -660,26 +666,26 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             } else {
                 update(PruneSetting(true, ParsePruneSizeGB(value)));
             }
-            if (suffix.empty() && getOption(Prune).toBool()) setRestartRequired(true);
+            if (suffix.empty() && getOption(Prune).toBool()) restart_required = true;
         }
         break;
     case DatabaseCache:
         if (changed()) {
             update(static_cast<int64_t>(value.toLongLong()));
-            setRestartRequired(true);
+            restart_required = true;
         }
         break;
     case ThreadsScriptVerif:
         if (changed()) {
             update(static_cast<int64_t>(value.toLongLong()));
-            setRestartRequired(true);
+            restart_required = true;
         }
         break;
     case Listen:
     case Server:
         if (changed()) {
             update(value.toBool());
-            setRestartRequired(true);
+            restart_required = true;
         }
         break;
     case MaskValues:
@@ -689,6 +695,10 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
     default:
         break;
     }
+
+    // Only ask for a restart if the value actually landed on disk, since a
+    // restart would otherwise drop the in-memory change instead of applying it.
+    if (restart_required && successful) setRestartRequired(true);
 
     return successful;
 }
@@ -750,7 +760,10 @@ void OptionsModel::checkAndMigrate()
     }
 
     // Migrate and delete legacy GUI settings that have now moved to <datadir>/settings.json.
+    // With -nosettings there is nowhere to migrate them to, so leave them in
+    // place instead of dropping them.
     auto migrate_setting = [&](OptionID option, const QString& qt_name) {
+        if (!gArgs.GetSettingsPath()) return;
         if (!settings.contains(qt_name)) return;
         QVariant value = settings.value(qt_name);
         if (node().getPersistentSetting(SettingName(option)).isNull()) {
