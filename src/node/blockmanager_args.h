@@ -9,10 +9,16 @@
 #include <node/blockstorage.h>
 #include <util/result.h>
 
+#include <string_view>
+
 class ArgsManager;
 
 namespace node {
 [[nodiscard]] util::Result<void> ApplyArgsManOptions(const ArgsManager& args, BlockManager::Options& opts);
+
+/** Whether id can be used for a prune lock set by the user. The allowed characters
+ *  can all be written in a config file and leave ':' free as a separator. */
+bool IsValidPruneLockId(std::string_view id);
 } // namespace node
 
 #endif // BITCOIN_NODE_BLOCKMANAGER_ARGS_H
