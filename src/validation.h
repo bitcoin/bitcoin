@@ -801,9 +801,6 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_chainstate_mutex)
         LOCKS_EXCLUDED(::cs_main);
 
-    /** Set invalidity status to all descendants of a block */
-    void SetBlockFailureFlags(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-
     /** Remove invalidity status from a block, its descendants and ancestors and reconsider them for activation */
     void ResetBlockFailureFlags(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -870,6 +867,9 @@ protected:
 
     void CheckForkWarningConditions() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void InvalidChainFound(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    /** Set invalidity status to all descendants of an already invalid block,
+     *  and recalculate the best header if it was in that subtree */
+    void PropagateBlockInvalidity(CBlockIndex* invalid_block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /**
      * Make mempool consistent after a reorg, by re-adding or recursively erasing
