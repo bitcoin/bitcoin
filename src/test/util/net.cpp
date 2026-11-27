@@ -332,13 +332,8 @@ bool DynSock::Wait(std::chrono::milliseconds timeout,
                    Event requested,
                    Event* occurred) const
 {
-    EventsPerSock ev;
-    ev.emplace(this, Events{requested});
-    const bool ret{WaitMany(timeout, ev)};
-    if (occurred != nullptr) {
-        *occurred = ev.begin()->second.occurred;
-    }
-    return ret;
+    // Skip ZeroSock::Wait(), which reports all requested events without waiting.
+    return Sock::Wait(timeout, requested, occurred);
 }
 
 bool DynSock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const
