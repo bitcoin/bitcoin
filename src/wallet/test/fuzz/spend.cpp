@@ -5,6 +5,7 @@
 #include <wallet/spend.h>
 
 #include <addresstype.h>
+#include <policy/truc_policy.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -78,6 +79,7 @@ FUZZ_TARGET(wallet_create_transaction, .init = initialize_setup)
     LIMITED_WHILE (fuzzed_data_provider.ConsumeBool(), 10000) {
         CMutableTransaction tx;
         tx.nLockTime = next_locktime++;
+        tx.version = fuzzed_data_provider.ConsumeBool() ? TRUC_VERSION : CTransaction::CURRENT_VERSION;
         tx.vout.resize(1);
         CAmount n_value{ConsumeMoney(fuzzed_data_provider)};
         all_values += n_value;
@@ -86,9 +88,25 @@ FUZZ_TARGET(wallet_create_transaction, .init = initialize_setup)
         tx.vout[0].scriptPubKey = GetScriptForDestination(fuzzed_wallet.GetDestination(fuzzed_data_provider));
         LOCK(fuzzed_wallet.wallet->cs_wallet);
         auto txid{tx.GetHash()};
-        auto ret{fuzzed_wallet.wallet->mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(txid), std::forward_as_tuple(MakeTransactionRef(std::move(tx)), TxStateConfirmed{chainstate.m_chain.Tip()->GetBlockHash(), chainstate.m_chain.Height(), /*index=*/0}))};
+        const TxState state{fuzzed_data_provider.ConsumeBool() ?
+                                TxState{TxStateInMempool{}} :
+                                TxState{TxStateConfirmed{chainstate.m_chain.Tip()->GetBlockHash(), chainstate.m_chain.Height(), /*index=*/0}}};
+        auto ret{fuzzed_wallet.wallet->mapWallet.emplace(std::piecewise_construct, std::forward_as_tuple(txid), std::forward_as_tuple(MakeTransactionRef(std::move(tx)), state))};
         assert(ret.second);
         fuzzed_wallet.wallet->RefreshTXOsFromTx(ret.first->second);
+    }
+
+    {
+        LOCK(fuzzed_wallet.wallet->cs_wallet);
+        CoinFilterParams params;
+        params.check_version_trucness = fuzzed_data_provider.ConsumeBool();
+        params.include_immature_coinbase = fuzzed_data_provider.ConsumeBool();
+        if (fuzzed_data_provider.ConsumeBool()) params.min_sum_amount = ConsumeMoney(fuzzed_data_provider);
+        if (fuzzed_data_provider.ConsumeBool()) params.max_count = fuzzed_data_provider.ConsumeIntegralInRange<uint64_t>(0, 10'000);
+        std::optional<CFeeRate> feerate;
+        if (fuzzed_data_provider.ConsumeBool()) feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
+        (void)AvailableCoins(*fuzzed_wallet.wallet, fuzzed_data_provider.ConsumeBool() ? &coin_control : nullptr,
+                             feerate, params);
     }
 
     std::vector<CRecipient> recipients;
