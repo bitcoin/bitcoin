@@ -166,6 +166,7 @@ struct TransactionInfo {
 
 struct RemovedMempoolTransactionInfo {
     TransactionInfo info;
+    uint64_t mempool_sequence{0};
     explicit RemovedMempoolTransactionInfo(const CTxMemPoolEntry& entry)
         : info{entry.GetSharedTx(), entry.GetFee(), entry.GetTxSize(), entry.GetHeight()} {}
 };

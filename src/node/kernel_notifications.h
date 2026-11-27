@@ -80,6 +80,10 @@ public:
     //! Might be unset during an early shutdown.
     std::optional<uint256> TipBlock() EXCLUSIVE_LOCKS_REQUIRED(m_tip_block_mutex);
 
+    //! Used by IPC Events subscriptions.
+    Mutex m_events_mutex;
+    std::condition_variable m_events_cv GUARDED_BY(m_events_mutex);
+
 private:
     const std::function<bool()>& m_shutdown_request;
     std::atomic<int>& m_exit_status;

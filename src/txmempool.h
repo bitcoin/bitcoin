@@ -618,7 +618,8 @@ private:
     void removeRecursive(txiter to_remove, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /* Removal from the mempool also triggers removal of the entry's Ref from txgraph. */
-    void removeUnchecked(txiter entry, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    //! Returns the mempool sequence consumed by this removal.
+    uint64_t removeUnchecked(txiter entry, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
 public:
     /*
      * CTxMemPool::ChangeSet:

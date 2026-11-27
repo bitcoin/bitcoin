@@ -9,11 +9,13 @@ $Cxx.namespace("ipc::capnp::messages");
 
 using Proxy = import "/mp/proxy.capnp";
 $Proxy.include("interfaces/echo.h");
+$Proxy.include("interfaces/events.h");
 $Proxy.include("interfaces/init.h");
 $Proxy.include("interfaces/mining.h");
 $Proxy.includeTypes("ipc/capnp/init-types.h");
 
 using Echo = import "echo.capnp";
+using Events = import "events.capnp";
 using Mining = import "mining.capnp";
 using Rpc = import "rpc.capnp";
 
@@ -22,6 +24,7 @@ interface Init $Proxy.wrap("interfaces::Init") {
     makeEcho @1 (context :Proxy.Context) -> (result :Echo.Echo);
     makeMining @3 (context :Proxy.Context) -> (result :Mining.Mining);
     makeRpc @4 (context :Proxy.Context) -> (result :Rpc.Rpc);
+    makeEvents @5 (context :Proxy.Context, options :Events.EventsOptions) -> (result :Events.Events);
 
     # DEPRECATED: no longer supported; server returns an error.
     makeMiningOld2 @2 () -> ();

@@ -10,6 +10,8 @@ $Cxx.namespace("ipc::capnp::messages");
 using Proxy = import "/mp/proxy.capnp";
 $Proxy.includeTypes("ipc/capnp/common-types.h");
 
+const maxDouble :Float64 = 1.7976931348623157e308;
+
 struct BlockRef $Proxy.wrap("interfaces::BlockRef") {
     hash @0 :Data;
     height @1 :Int32;
