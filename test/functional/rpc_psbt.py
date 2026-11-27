@@ -27,7 +27,12 @@ from test_framework.messages import (
 from test_framework.psbt import (
     PSBT,
     PSBTMap,
+    PSBT_GLOBAL_FALLBACK_LOCKTIME,
+    PSBT_GLOBAL_INPUT_COUNT,
+    PSBT_GLOBAL_OUTPUT_COUNT,
     PSBT_GLOBAL_PROPRIETARY,
+    PSBT_GLOBAL_TX_MODIFIABLE,
+    PSBT_GLOBAL_TX_VERSION,
     PSBT_GLOBAL_UNSIGNED_TX,
     PSBT_GLOBAL_VERSION,
     PSBT_GLOBAL_XPUB,
@@ -72,6 +77,7 @@ from test_framework.wallet_util import (
     get_generate_key,
 )
 
+import base64
 import json
 import os
 
@@ -888,6 +894,49 @@ class PSBTTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "The PSBT version can only be 2 or 0", self.nodes[0].walletcreatefundedpsbt, inputs=[utxo], outputs=outputs, psbt_version=1)
         assert_raises_rpc_error(-8, "The PSBT version can only be 2 or 0", self.nodes[0].converttopsbt, hexstring=rawtx, psbt_version=1)
         assert_raises_rpc_error(-8, "The PSBT version can only be 2 or 0", self.nodes[0].psbtbumpfee, txid=tobump, psbt_version=1)
+
+    def test_psbt_global_fields(self):
+        self.log.info("Test the global PSBT version on decode")
+
+        psbt = PSBT.from_base64(self.nodes[0].createpsbt([{"txid": "00" * 32, "vout": 0}], [{"data": "00"}], psbt_version=2))
+        for version, msg in [
+            (3, "Unsupported version number"),
+            (1, "There is no PSBT version 1"),
+        ]:
+            psbt.g.map[PSBT_GLOBAL_VERSION] = version.to_bytes(4, "little")
+            assert_raises_rpc_error(-22, f"TX decode failed {msg}", self.nodes[0].decodepsbt, psbt.to_base64())
+
+        self.log.info("Test that a PSBT without the global version is interpreted as v0")
+
+        del psbt.g.map[PSBT_GLOBAL_VERSION]
+        assert_raises_rpc_error(-22, "TX decode failed No unsigned transaction was provided", self.nodes[0].decodepsbt, psbt.to_base64())
+
+        self.log.info("Test PSBTv2 fields that are not supported in PSBTv0")
+
+        base_v0 = self.nodes[0].createpsbt([{"txid": "00" * 32, "vout": 0}], [{"data": "00"}], psbt_version=0)
+        for field, value, msg in [
+            (PSBT_GLOBAL_TX_VERSION, (2).to_bytes(4, "little"), "PSBT_GLOBAL_TX_VERSION is not allowed in PSBTv0"),
+            (PSBT_GLOBAL_FALLBACK_LOCKTIME, (0).to_bytes(4, "little"), "PSBT_GLOBAL_FALLBACK_LOCKTIME is not allowed in PSBTv0"),
+            (PSBT_GLOBAL_INPUT_COUNT, ser_compact_size(1), "PSBT_GLOBAL_INPUT_COUNT is not allowed in PSBTv0"),
+            (PSBT_GLOBAL_OUTPUT_COUNT, ser_compact_size(1), "PSBT_GLOBAL_OUTPUT_COUNT is not allowed in PSBTv0"),
+            (PSBT_GLOBAL_TX_MODIFIABLE, (1).to_bytes(1, "little"), "PSBT_GLOBAL_TX_MODIFIABLE is not allowed in PSBTv0"),
+        ]:
+            psbt = PSBT.from_base64(base_v0)
+            psbt.g.map[field] = value
+            assert_raises_rpc_error(-22, f"TX decode failed {msg}", self.nodes[0].decodepsbt, psbt.to_base64())
+
+        self.log.info("Test that the input and output counts are required in a PSBTv2")
+
+        for field, msg in [
+            (PSBT_GLOBAL_INPUT_COUNT, "PSBT_GLOBAL_INPUT_COUNT is required in PSBTv2"),
+            (PSBT_GLOBAL_OUTPUT_COUNT, "PSBT_GLOBAL_OUTPUT_COUNT is required in PSBTv2"),
+        ]:
+            psbt = PSBT.from_base64(self.nodes[0].createpsbt([{"txid": "00" * 32, "vout": 0}], [{"data": "00"}], psbt_version=2))
+            del psbt.g.map[field]
+            # PSBT.serialize() called by to_base64() adds both count fields
+            # back. To avoid that, serialize the PSBT by hand.
+            raw = b"psbt\xff" + psbt.g.serialize() + b"".join(m.serialize() for m in psbt.i) + b"".join(m.serialize() for m in psbt.o)
+            assert_raises_rpc_error(-22, f"TX decode failed {msg}", self.nodes[0].decodepsbt, base64.b64encode(raw).decode())
 
     def test_psbt_with_invalid_signature(self):
         self.log.info("Test descriptorprocesspsbt with invalid signature in signed PSBT")
@@ -1843,6 +1892,7 @@ class PSBTTest(BitcoinTestFramework):
         self.test_psbt_named_parameter_handling()
         self.test_psbt_roundtrip()
         self.test_psbt_version()
+        self.test_psbt_global_fields()
         self.test_psbt_with_invalid_signature()
         self.test_musig2_untrusted_derivation()
 
