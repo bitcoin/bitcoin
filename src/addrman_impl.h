@@ -130,7 +130,7 @@ public:
 
     void ResolveCollisions() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    std::pair<CAddress, NodeSeconds> SelectTriedCollision() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    std::pair<CAddress, NodeSeconds> SelectTriedCollision(const std::unordered_set<Network>& networks) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     std::pair<CAddress, NodeSeconds> Select(bool new_only, const std::unordered_set<Network>& networks) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
@@ -277,7 +277,7 @@ private:
 
     void ResolveCollisions_() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    std::pair<CAddress, NodeSeconds> SelectTriedCollision_() EXCLUSIVE_LOCKS_REQUIRED(cs);
+    std::pair<CAddress, NodeSeconds> SelectTriedCollision_(const std::unordered_set<Network>& networks) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     std::optional<AddressPosition> FindAddressEntry_(const CAddress& addr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
