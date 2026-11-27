@@ -74,7 +74,6 @@ static void TestDescriptor(const Descriptor& desc, FlatSigningProvider& sig_prov
 
 void initialize_descriptor_parse()
 {
-    static ECC_Context ecc_context{};
     SelectParams(ChainType::MAIN);
 }
 

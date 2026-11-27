@@ -5,9 +5,11 @@
 #include <key.h>
 
 #include <common/system.h>
+#include <crypto/sha256.h>
 #include <key_io.h>
 #include <span.h>
 #include <streams.h>
+#include <secp256k1.h>
 #include <secp256k1_extrakeys.h>
 #include <test/util/common.h>
 #include <test/util/random.h>
@@ -16,6 +18,8 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -393,6 +397,46 @@ BOOST_AUTO_TEST_CASE(key_schnorr_tweak_smoke_test)
     BOOST_CHECK_EQUAL(tweak_old, tweak_new);
 
     secp256k1_context_destroy(secp256k1_context_sign);
+}
+
+static int g_sha256_transform_calls{0};
+static void CountingSHA256Transform(uint32_t* state, const unsigned char* blocks64, size_t n_blocks)
+{
+    ++g_sha256_transform_calls;
+    SHA256Transform(state, blocks64, n_blocks);
+}
+
+BOOST_AUTO_TEST_CASE(secp256k1_contexts)
+{
+    const secp256k1_context* sign_ctx{GetSecp256k1SignContext()};
+    const secp256k1_context* public_ctx{GetSecp256k1PublicContext()};
+    BOOST_CHECK(sign_ctx != nullptr);
+    BOOST_CHECK(public_ctx != nullptr);
+    BOOST_CHECK(sign_ctx != public_ctx);
+    BOOST_CHECK(sign_ctx != secp256k1_context_static);
+    BOOST_CHECK(public_ctx != secp256k1_context_static);
+    BOOST_CHECK(GetSecp256k1SignContext() == sign_ctx);
+    BOOST_CHECK(GetSecp256k1PublicContext() == public_ctx);
+
+    const CKey key{GenerateRandomKey()};
+    std::vector<unsigned char> sig(64);
+    BOOST_REQUIRE(key.SignSchnorr(uint256::ONE, sig, /*merkle_root=*/nullptr, uint256::ZERO));
+
+    // Check that both contexts use our SHA256 implementation, by temporarily wrapping it with a
+    // call counter. They were not created const, so casting that away is fine. Installing the
+    // function self-tests it, so only start counting afterwards.
+    secp256k1_context_set_sha256_compression(const_cast<secp256k1_context*>(sign_ctx), CountingSHA256Transform);
+    g_sha256_transform_calls = 0;
+    std::vector<unsigned char> ecdsa_sig;
+    BOOST_CHECK(key.Sign(uint256::ONE, ecdsa_sig));
+    BOOST_CHECK_GT(g_sha256_transform_calls, 0);
+    secp256k1_context_set_sha256_compression(const_cast<secp256k1_context*>(sign_ctx), SHA256Transform);
+
+    secp256k1_context_set_sha256_compression(const_cast<secp256k1_context*>(public_ctx), CountingSHA256Transform);
+    g_sha256_transform_calls = 0;
+    BOOST_CHECK(XOnlyPubKey{key.GetPubKey()}.VerifySchnorr(uint256::ONE, sig));
+    BOOST_CHECK_GT(g_sha256_transform_calls, 0);
+    secp256k1_context_set_sha256_compression(const_cast<secp256k1_context*>(public_ctx), SHA256Transform);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -13,7 +13,6 @@
 #include <compat/compat.h>
 #include <crypto/sha256.h>
 #include <interfaces/init.h>
-#include <key.h>
 #include <logging.h>
 #include <pubkey.h>
 #include <tinyformat.h>
@@ -126,7 +125,6 @@ MAIN_FUNCTION
         return EXIT_FAILURE;
     }
 
-    ECC_Context ecc_context{};
     if (!wallet::WalletTool::ExecuteWalletToolFunc(args, command->command)) {
         return EXIT_FAILURE;
     }
