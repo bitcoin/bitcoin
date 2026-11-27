@@ -825,6 +825,7 @@ public:
     std::vector<Ref*> Trim() noexcept final;
 
     std::unique_ptr<BlockBuilder> GetBlockBuilder() noexcept final;
+    std::vector<Ref*> GetMainOrder() noexcept final;
     std::pair<std::vector<Ref*>, FeePerWeight> GetWorstMainChunk() noexcept final;
 
     size_t GetMainMemoryUsage() noexcept final;
@@ -3261,6 +3262,30 @@ void BlockBuilderImpl::Skip() noexcept
 std::unique_ptr<TxGraph::BlockBuilder> TxGraphImpl::GetBlockBuilder() noexcept
 {
     return std::make_unique<BlockBuilderImpl>(*this);
+}
+
+std::vector<TxGraph::Ref*> TxGraphImpl::GetMainOrder() noexcept
+{
+    // Make sure all clusters in main are up to date, and acceptable.
+    MakeAllAcceptable(0);
+    // There cannot remain any inapplicable dependencies (only possible if main is oversized).
+    Assume(m_main_clusterset.m_deps_to_add.empty());
+    std::vector<Ref*> ret;
+    ret.reserve(GetTransactionCount(Level::MAIN));
+    for (const auto& chunk_data : m_main_chunkindex) {
+        const auto& chunk_end_entry = m_entries[chunk_data.m_graph_index];
+        if (chunk_data.m_chunk_count == LinearizationIndex(-1)) {
+            // Singleton chunk at the end of its cluster.
+            Assume(chunk_end_entry.m_ref != nullptr);
+            ret.push_back(chunk_end_entry.m_ref);
+        } else {
+            const size_t old_size = ret.size();
+            ret.resize(old_size + chunk_data.m_chunk_count);
+            auto start_pos = chunk_end_entry.m_main_lin_index + 1 - chunk_data.m_chunk_count;
+            chunk_end_entry.m_locator[0].cluster->GetClusterRefs(*this, std::span{ret}.subspan(old_size), start_pos);
+        }
+    }
+    return ret;
 }
 
 std::pair<std::vector<TxGraph::Ref*>, FeePerWeight> TxGraphImpl::GetWorstMainChunk() noexcept

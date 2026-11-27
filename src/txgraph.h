@@ -199,6 +199,9 @@ public:
      *  oversized. While the returned object exists, no mutators on the main graph are allowed.
      *  The BlockBuilder object must not outlive the TxGraph it was created with. */
     virtual std::unique_ptr<BlockBuilder> GetBlockBuilder() noexcept = 0;
+    /** Get all transactions in the main graph, in the order defined by CompareMainOrder. The main
+     *  graph must not be oversized. */
+    virtual std::vector<Ref*> GetMainOrder() noexcept = 0;
     /** Get the last chunk in the main graph, i.e., the last chunk that would be returned by a
      *  BlockBuilder created now, together with its feerate. The chunk is returned in
      *  reverse-topological order, so every element is preceded by all its descendants. The main

@@ -1224,6 +1224,15 @@ FUZZ_TARGET(txgraph)
             }
         }
 
+        // GetMainOrder should return the transactions in the order implied by CompareMainOrder.
+        std::vector<SimTxGraph::Pos> vec_main_order;
+        for (TxGraph::Ref* ref : real->GetMainOrder()) {
+            auto simpos = sims[0].Find(ref);
+            assert(simpos != SimTxGraph::MISSING);
+            vec_main_order.push_back(simpos);
+        }
+        assert(vec_main_order == vec1);
+
         // The same order should be obtained through a BlockBuilder as implied by CompareMainOrder,
         // if nothing is skipped.
         auto builder = real->GetBlockBuilder();
