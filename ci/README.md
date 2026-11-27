@@ -72,6 +72,20 @@ packages on each run. For faster incremental builds, there are also container
 volumes to hold the results of the dependency-generator from `./depends` and
 to hold `ccache` results.
 
+## Shared test inputs
+
+GitHub Actions checks out `bitcoin-core/qa-assets` once per workflow run and
+shares the unit vectors and fuzz corpus as tar archives through artifacts to
+avoid extracting many small files with the artifact downloader. Consumers verify
+the recorded revision and file hashes before using them. Linux containers
+mount the shared inputs read-only; fuzz jobs use separate writable copies.
+Missing or corrupt prepared inputs fail without another network download.
+
+Outside Actions, the shell and Windows scripts use `test/download_utils.py`
+to acquire inputs directly. To reuse a prepared checkout locally, run its
+`prepare` command and set `QA_ASSETS_DIR` and `QA_ASSETS_REVISION` for consumers.
+The snapshot is selected afresh each run, not permanently pinned.
+
 ## Pinning dependencies
 
 For direct downloads, checksums are generally used to protect against transport

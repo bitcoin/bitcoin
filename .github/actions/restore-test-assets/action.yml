@@ -1,0 +1,30 @@
+# Distributed under the MIT software license, see the accompanying file COPYING.
+
+name: Restore shared test inputs
+description: Verify and use the inputs prepared by this workflow run
+inputs:
+  kind:
+    default: unit_test_data
+    description: unit_test_data or fuzz_corpora
+  revision:
+    required: true
+    description: qa-assets revision prepared by this workflow run
+runs:
+  using: composite
+  steps:
+    - name: Restore prepared inputs
+      uses: actions/download-artifact@v8
+      with:
+        name: qa-assets-${{ inputs.kind }}
+        path: ${{ runner.temp }}/qa-assets
+    - name: Verify prepared inputs
+      shell: bash
+      env:
+        KIND: ${{ inputs.kind }}
+        QA_ASSETS_REVISION: ${{ inputs.revision }}
+        PYTHON: ${{ runner.os == 'Windows' && 'python' || 'python3' }}
+      run: |
+        (cd "$RUNNER_TEMP/qa-assets" && tar -xf "$KIND.tar")
+        "$PYTHON" test/download_utils.py verify "$RUNNER_TEMP/qa-assets" "$KIND"
+        echo "QA_ASSETS_DIR=$RUNNER_TEMP/qa-assets" >> "$GITHUB_ENV"
+        echo "QA_ASSETS_REVISION=$QA_ASSETS_REVISION" >> "$GITHUB_ENV"
