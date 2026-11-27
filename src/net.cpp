@@ -2682,6 +2682,12 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
     }
 
     while (!m_interrupt_net->interrupted()) {
+        if (!fNetworkActive) {
+            // Do nothing while network is inactive.
+            m_interrupt_net->sleep_for(500ms);
+            continue;
+        }
+
         if (add_addr_fetch) {
             add_addr_fetch = false;
             const auto& seed{SpanPopBack(seed_nodes)};
