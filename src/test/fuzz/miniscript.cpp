@@ -17,6 +17,7 @@
 #include <util/strencodings.h>
 
 #include <algorithm>
+#include <limits>
 #include <map>
 #include <optional>
 #include <vector>
@@ -370,7 +371,7 @@ std::vector<unsigned char> ConsumeHash160(FuzzedDataProvider& provider) {
 
 std::optional<uint32_t> ConsumeTimeLock(FuzzedDataProvider& provider) {
     const uint32_t k = provider.ConsumeIntegral<uint32_t>();
-    if (k == 0 || k >= 0x80000000) return {};
+    if (k == 0 || k > std::numeric_limits<int32_t>::max()) return {};
     return k;
 }
 
@@ -794,7 +795,7 @@ std::optional<NodeInfo> ConsumeNodeSmart(MsCtx script_ctx, FuzzedDataProvider& p
         }
         case Fragment::OLDER:
         case Fragment::AFTER:
-            return {{frag, provider.ConsumeIntegralInRange<uint32_t>(1, 0x7FFFFFF)}};
+            return {{frag, provider.ConsumeIntegralInRange<uint32_t>(1, std::numeric_limits<int32_t>::max())}};
         case Fragment::SHA256:
             return {{frag, PickValue(provider, TEST_DATA.sha256)}};
         case Fragment::HASH256:
