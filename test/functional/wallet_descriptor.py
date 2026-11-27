@@ -272,6 +272,19 @@ class WalletDescriptorTest(BitcoinTestFramework):
         conn.close()
         assert_raises_rpc_error(-4, "Unexpected legacy entry in descriptor wallet found.", self.nodes[0].loadwallet, "crashme")
 
+        self.log.info("Test that loading a wallet without a flags record throws error")
+        for wallet_name, legacy_record in [("noflags", False), ("noflags_legacy", True)]:
+            self.nodes[0].createwallet(wallet_name)
+            self.nodes[0].unloadwallet(wallet_name)
+            wallet_db = self.nodes[0].wallets_path / wallet_name / self.wallet_data_filename
+            conn = sqlite3.connect(wallet_db)
+            with conn:
+                conn.execute('DELETE FROM main WHERE key = ?', (ser_string(b"flags"),))
+                if legacy_record:
+                    conn.execute('INSERT INTO main VALUES(?, ?)', (b'\x07cscript' + b'\x00'*20, b'\x00'))
+            conn.close()
+            assert_raises_rpc_error(-4, "Wallet is a legacy wallet.", self.nodes[0].loadwallet, wallet_name)
+
         self.log.info("Test that loading descriptor wallet containing both unencrypted and encrypted keys for same descriptor fails to load")
         wallet_name = "mixed_crypt"
         self.nodes[0].createwallet(wallet_name)
