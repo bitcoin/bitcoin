@@ -1,6 +1,6 @@
 # Validation
 
-AssumeUTXO snapshot loading and background validation have been removed.
+AssumeUTXO snapshot loading and background validation have been removed. (#36598)
 The `loadtxoutset` RPC reports that snapshot loading is no longer supported.
 The `getchainstates` RPC is no longer available, and `getblockchaininfo` no longer returns `backgroundvalidation`.
 
