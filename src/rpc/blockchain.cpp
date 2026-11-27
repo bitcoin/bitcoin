@@ -2301,8 +2301,8 @@ public:
 
     ~CoinsViewScanReserver() {
         if (m_could_reserve) {
-            g_scan_in_progress = false;
             g_scan_progress = 0;
+            g_scan_in_progress = false;
         }
     }
 };
