@@ -23,9 +23,7 @@ template <typename Clock>
 class TokenBucket
 {
 public:
-    using clock = Clock;
     using time_point = typename Clock::time_point;
-    using duration = typename Clock::duration;
 
     const double m_rate{1};     //!< Tokens added per second
     const double m_cap{0};      //!< Maximum token balance

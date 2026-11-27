@@ -1333,7 +1333,6 @@ void RPCConsole::unbanSelectedNode()
 void RPCConsole::clearSelectedNode()
 {
     ui->peerWidget->selectionModel()->clearSelection();
-    cachedNodeids.clear();
     updateDetailWidget();
 }
 

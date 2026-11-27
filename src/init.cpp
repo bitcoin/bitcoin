@@ -298,7 +298,6 @@ void Interrupt(NodeContext& node)
     InterruptHTTPServer();
     InterruptHTTPRPC();
     InterruptRPC();
-    InterruptREST();
     if (node.tor_controller) {
         node.tor_controller->Interrupt();
     }

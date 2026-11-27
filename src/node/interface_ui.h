@@ -26,11 +26,6 @@ public:
         ICON_INFORMATION    = 0,
         ICON_WARNING        = (1U << 0),
         ICON_ERROR          = (1U << 1),
-        /**
-         * Mask of all available icons in CClientUIInterface::MessageBoxFlags
-         * This needs to be updated, when icons are changed there!
-         */
-        ICON_MASK = (ICON_INFORMATION | ICON_WARNING | ICON_ERROR),
 
         /** These values are taken from qmessagebox.h "enum StandardButton" to be directly usable */
         BTN_OK      = 0x00000400U, // QMessageBox::Ok
@@ -54,9 +49,6 @@ public:
 
         /** Force blocking, modal message box dialog (not just OS notification) */
         MODAL               = 0x10000000U,
-
-        /** Do not print contents of message to debug log */
-        SECURE              = 0x40000000U,
 
         /** Predefined combinations for certain default usage cases */
         MSG_INFORMATION = ICON_INFORMATION,

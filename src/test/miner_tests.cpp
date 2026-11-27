@@ -417,7 +417,6 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         // Just to make sure we can still make simple blocks
         auto block_template{mining->createNewBlock(options, /*cooldown=*/false)};
         BOOST_REQUIRE(block_template);
-        CBlock block{block_template->getBlock()};
 
         auto txs = CreateBigSigOpsCluster(txFirst[0]);
 
@@ -444,7 +443,6 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         // Just to make sure we can still make simple blocks
         auto block_template{mining->createNewBlock(options, /*cooldown=*/false)};
         BOOST_REQUIRE(block_template);
-        CBlock block{block_template->getBlock()};
 
         auto txs = CreateBigSigOpsCluster(txFirst[0]);
 
