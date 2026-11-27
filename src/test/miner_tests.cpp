@@ -9,6 +9,7 @@
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
+#include <consensus/validation.h>
 #include <interfaces/mining.h>
 #include <interfaces/types.h>
 #include <kernel/chainparams.h>
@@ -949,6 +950,54 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     TestPrioritisedMining(scriptPubKey, txFirst);
 
     TestSigOpsAdjustedWeightChunkLimit(scriptPubKey, txFirst);
+
+    {
+        // Each kind of failure in TestBlockValidity sets its own result
+        const std::unique_ptr<BlockTemplate> block_template{mining->createNewBlock(options, /*cooldown=*/false)};
+        BOOST_REQUIRE(block_template);
+        const CBlock template_block{block_template->getBlock()};
+        const auto invalid{[](BlockValidationResult result, const std::string& reason) {
+            BlockValidationState state;
+            state.Invalid(result, reason);
+            return state;
+        }};
+        const auto check_result{[&](auto mutate, const BlockValidationState& expected, bool check_merkle_root = false) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+            CBlock block{template_block};
+            mutate(block);
+            const BlockValidationState state{TestBlockValidity(m_node.chainman->ActiveChainstate(), block,
+                                                               /*check_pow=*/false, check_merkle_root)};
+            BOOST_CHECK_EQUAL(state.IsValid(), expected.IsValid());
+            BOOST_CHECK_EQUAL(state.GetResult(), expected.GetResult());
+            BOOST_CHECK_EQUAL(state.GetRejectReason(), expected.GetRejectReason());
+        }};
+        check_result([](CBlock&) {}, BlockValidationState{});
+        check_result([](CBlock& block) { block.vtx.push_back(block.vtx.at(0)); },
+                     invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-multiple"));
+        check_result([](CBlock& block) { block.nBits ^= 1; },
+                     invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits"));
+        check_result([](CBlock& block) { block.hashMerkleRoot = uint256::ONE; },
+                     invalid(BlockValidationResult::BLOCK_MUTATED, "bad-txnmrklroot"), /*check_merkle_root=*/true);
+        check_result([](CBlock& block) { block.nTime = TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()) + MAX_FUTURE_BLOCK_TIME + 1; },
+                     invalid(BlockValidationResult::BLOCK_TIME_FUTURE, "time-too-new"));
+    }
+
+    {
+        // A block whose parent is not the current tip is rejected by TestBlockValidity
+        const std::unique_ptr<BlockTemplate> stale_template{mining->createNewBlock(options, /*cooldown=*/false)};
+        BOOST_REQUIRE(stale_template);
+        CBlock stale_block{stale_template->getBlock()};
+        // Ensure the tip is not genesis
+        const auto& genesis_hash{m_node.chainman->GetParams().GetConsensus().hashGenesisBlock};
+        BOOST_REQUIRE_NE(stale_block.hashPrevBlock, genesis_hash);
+        // Point the block at genesis, so its parent is not the tip
+        stale_block.hashPrevBlock = genesis_hash;
+        BOOST_REQUIRE_NE(stale_block.hashPrevBlock, m_node.chainman->ActiveChain().Tip()->GetBlockHash());
+        const BlockValidationState state{TestBlockValidity(m_node.chainman->ActiveChainstate(), stale_block,
+                                                           /*check_pow=*/false, /*check_merkle_root=*/false)};
+        BOOST_CHECK(state.IsInvalid());
+        BOOST_CHECK_EQUAL(state.GetResult(), BlockValidationResult::BLOCK_PREV_NOT_TIP);
+        BOOST_CHECK_EQUAL(state.GetRejectReason(), "inconclusive-not-best-prevblk");
+    }
 }
 
 BOOST_AUTO_TEST_CASE(block_template_manager)

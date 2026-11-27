@@ -189,6 +189,9 @@ public:
             case BlockValidationResult::TIME_FUTURE:
                 std::cout << "block timestamp was > 2 hours in the future (or our clock is bad)" << std::endl;
                 break;
+            case BlockValidationResult::PREV_NOT_TIP:
+                std::cout << "the previous block is not the current tip" << std::endl;
+                break;
             }
             return;
         }

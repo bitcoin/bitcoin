@@ -2064,6 +2064,9 @@ void PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidati
         return;
     case BlockValidationResult::BLOCK_TIME_FUTURE:
         break;
+    case BlockValidationResult::BLOCK_PREV_NOT_TIP:
+        // Not possible for blocks received from peers (only produced by TestBlockValidity).
+        break;
     }
     if (message != "") {
         LogDebug(BCLog::NET, "peer=%d: %s\n", nodeid, message);
