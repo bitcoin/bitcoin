@@ -237,6 +237,20 @@ class PackageRBFTest(BitcoinTestFramework):
         assert_equal(f"too many potential replacements, rejecting replacement {package_parent['txid']}; too many conflicting clusters ({num_coins} > {MAX_REPLACEMENT_CANDIDATES})", pkg_results["tx-results"][package_parent["wtxid"]]["error"])
         self.assert_mempool_contents(expected=expected_txns)
 
+        self.log.info("Check package RBF enforces MAX_REPLACEMENT_CANDIDATES across both parent and child conflicts")
+        # A 0-fee parent fails on its own for min relay fee, so the package is evaluated together and the
+        # limit is checked in PackageRBFChecks. The parent conflicts with MAX_REPLACEMENT_CANDIDATES clusters
+        # and the child adds one more by double-spending the singleton.
+        package_parent = self.wallet.create_self_transfer_multi(utxos_to_spend=parent_coins[:-1], fee_per_output=0)
+        package_child = self.wallet.create_self_transfer_multi(utxos_to_spend=[package_parent["new_utxos"][0], singleton_coin], fee_per_output=COIN)
+        pkg_results = node.submitpackage([package_parent["hex"], package_child["hex"]], maxfeerate=0)
+        assert_equal(f"package RBF failed: too many potential replacements, rejecting replacement {package_child['txid']}; too many conflicting clusters ({num_coins} > {MAX_REPLACEMENT_CANDIDATES})", pkg_results["package_msg"])
+        # The parent's own result shows it was rejected on feerate, not by the single-transaction RBF checks
+        min_relay_sat_per_kvb = int(node.getnetworkinfo()["relayfee"] * COIN)
+        parent_min_relay_fee = -(-min_relay_sat_per_kvb * package_parent["tx"].get_vsize() // 1000)
+        assert_equal(f"min relay fee not met, 0 < {parent_min_relay_fee}", pkg_results["tx-results"][package_parent["wtxid"]]["error"])
+        self.assert_mempool_contents(expected=expected_txns)
+
         # Finally, conflict with MAX_REPLACEMENT_CANDIDATES clusters
         package_parent = self.wallet.create_self_transfer_multi(utxos_to_spend=parent_coins[:-1], fee_per_output=parent_fee_per_conflict)
         package_child = self.wallet.create_self_transfer(fee_rate=child_feerate, utxo_to_spend=package_parent["new_utxos"][0])
