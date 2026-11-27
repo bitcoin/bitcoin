@@ -237,10 +237,15 @@ BOOST_AUTO_TEST_CASE(bip352_skips_transactions_spending_unknown_segwit_versions)
 
     std::map<COutPoint, Coin> coins;
     coins[eligible_outpoint] = Coin{CTxOut{{}, GetScriptForDestination(WitnessV0KeyHash{pubkey})}, 0, false};
-    coins[unknown_segwit_outpoint] = Coin{CTxOut{{}, GetScriptForDestination(WitnessUnknown{2, std::vector<unsigned char>(32, 1)})}, 0, false};
 
     BOOST_REQUIRE(GetSilentPaymentsPrevoutsSummary({eligible_input}, coins).has_value());
-    BOOST_CHECK(!GetSilentPaymentsPrevoutsSummary({eligible_input, CTxIn{unknown_segwit_outpoint}}, coins).has_value());
+    for (unsigned int version = 2; version <= 16; ++version) {
+        const CScript unknown_spk{GetScriptForDestination(WitnessUnknown{version, std::vector<unsigned char>(32, 1)})};
+        coins[unknown_segwit_outpoint] = Coin{CTxOut{{}, unknown_spk}, 0, false};
+        const auto result{GetSilentPaymentsPrevoutsSummary({eligible_input, CTxIn{unknown_segwit_outpoint}}, coins)};
+        BOOST_REQUIRE(!result.has_value());
+        BOOST_CHECK(result.error() == PrevoutsSummaryError::NOT_ELIGIBLE);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(bip352_scan_skips_invalid_taproot_outputs)
@@ -274,6 +279,11 @@ BOOST_AUTO_TEST_CASE(bip352_scan_skips_invalid_taproot_outputs)
     BOOST_REQUIRE(found_outputs.has_value());
     BOOST_REQUIRE_EQUAL(found_outputs->size(), 1);
     BOOST_CHECK_EQUAL(found_outputs->front().output, expected_output);
+
+    // Finding nothing is not an error, even when no output is a valid x-only key.
+    const auto none{receiver.Scan(*prevouts_summary, {output_pub_keys[0]})};
+    BOOST_REQUIRE(none.has_value());
+    BOOST_CHECK(none->empty());
 }
 
 BOOST_AUTO_TEST_CASE(bip352_p2pkh_pubkey_extraction_with_checksig_in_scriptsig)
@@ -412,6 +422,8 @@ BOOST_AUTO_TEST_CASE(bip352_decode_address)
          "Silent Payments address must use Bech32m checksum", std::nullopt, /*chain_independent=*/true}, // bad checksum
         {"sprt1qqgqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq2qu4kvg0nm62d5jtmqp54lkc7tul0dzt25ejtn4f80505z3u0h5jagf9zkp5",
          "Invalid Silent payments address", ChainType::REGTEST}, // invalid scan pubkey
+        {"sp1qqtrqglu5g8kh6mfsg4qxa9wq0nv9cauwfwxw70984wkqnw2uwz0w2qhexz9qryjccvgyjdz0shuf653fk5cus3vrd7vmppsp7yfmecpklyqqanq9zg",
+         "Silent payments version is v0 but data is not the correct size (expected 66, got 67).", ChainType::MAIN}, // v0 with one extra byte
     };
 
     for (const auto& vec : invalid_vectors) {
@@ -428,6 +440,263 @@ BOOST_AUTO_TEST_CASE(bip352_decode_address)
     }
 
     SelectParams(ChainType::MAIN);
+}
+
+static COutPoint TestOutpoint(uint8_t n)
+{
+    return COutPoint{Txid::FromUint256(uint256{n}), 0};
+}
+
+//! A P2WPKH input spending `key`, with a dummy signature, and the matching coin.
+static CTxIn P2WPKHInput(const COutPoint& outpoint, const CKey& key, std::map<COutPoint, Coin>& coins)
+{
+    CTxIn txin{outpoint};
+    const CPubKey pubkey{key.GetPubKey()};
+    txin.scriptWitness = CScriptWitness{{std::vector<unsigned char>(64, 0), ToByteVector(pubkey)}};
+    coins[outpoint] = Coin{CTxOut{{}, GetScriptForDestination(WitnessV0KeyHash{pubkey})}, 0, false};
+    return txin;
+}
+
+BOOST_AUTO_TEST_CASE(bip352_scan_reports_labels)
+{
+    const CKey sender_key = ParseHexToCKey("0000000000000000000000000000000000000000000000000000000000000001");
+    const CKey scan_key = ParseHexToCKey("0000000000000000000000000000000000000000000000000000000000000002");
+    const CPubKey spend_pubkey = ParseHexToCKey("0000000000000000000000000000000000000000000000000000000000000003").GetPubKey();
+
+    SilentPaymentsReceiver receiver{scan_key, spend_pubkey};
+    BOOST_REQUIRE_EQUAL(receiver.GetLabels().size(), 1);
+    const SilentPaymentsLabel change_label{receiver.GetLabels().begin()->first};
+    const SilentPaymentsDestination labeled_dest{receiver.GenerateLabeledAddress(1)};
+    BOOST_REQUIRE_EQUAL(receiver.GetLabels().size(), 2);
+    std::optional<SilentPaymentsLabel> label_1;
+    for (const auto& [label, _] : receiver.GetLabels()) {
+        if (label != change_label) label_1 = label;
+    }
+    BOOST_REQUIRE(label_1.has_value());
+
+    // Assigning a label copies both its key bytes and its secp256k1 object.
+    SilentPaymentsLabel assigned{change_label};
+    assigned = *label_1;
+    BOOST_CHECK(assigned == *label_1);
+    BOOST_CHECK(SilentPaymentsLabel{*assigned.Get()} == *label_1);
+
+    std::map<COutPoint, Coin> coins;
+    const COutPoint outpoint{TestOutpoint(1)};
+    const CTxIn txin{P2WPKHInput(outpoint, sender_key, coins)};
+    const auto prevouts_summary{GetSilentPaymentsPrevoutsSummary({txin}, coins)};
+    BOOST_REQUIRE(prevouts_summary.has_value());
+
+    // Pay the base address, the labeled address and the change address in the same transaction.
+    const SilentPaymentsDestination base_dest{SilentPaymentsDestination::From(scan_key.GetPubKey(), spend_pubkey).value()};
+    const std::map<size_t, SilentPaymentsDestination> sp_dests{
+        {0, base_dest},
+        {1, labeled_dest},
+        {2, receiver.GetChangeDestination()},
+    };
+    const auto tr_dests{GenerateSilentPaymentsTaprootDestinations(sp_dests, {sender_key}, {}, outpoint)};
+    BOOST_REQUIRE(tr_dests.has_value());
+    BOOST_REQUIRE_EQUAL(tr_dests->size(), 3);
+    std::vector<XOnlyPubKey> tx_outputs;
+    for (const auto& [_, dest] : *tr_dests) {
+        tx_outputs.emplace_back(dest);
+    }
+
+    const auto found{receiver.Scan(*prevouts_summary, tx_outputs)};
+    BOOST_REQUIRE(found.has_value());
+    BOOST_REQUIRE_EQUAL(found->size(), 3);
+    int matched{0};
+    for (const auto& output : *found) {
+        if (output.output == XOnlyPubKey{tr_dests->at(0)}) {
+            BOOST_CHECK(!output.label.has_value());
+            ++matched;
+        } else if (output.output == XOnlyPubKey{tr_dests->at(1)}) {
+            BOOST_REQUIRE(output.label.has_value());
+            BOOST_CHECK(*output.label == *label_1);
+            ++matched;
+        } else if (output.output == XOnlyPubKey{tr_dests->at(2)}) {
+            BOOST_REQUIRE(output.label.has_value());
+            BOOST_CHECK(*output.label == change_label);
+            ++matched;
+        }
+    }
+    BOOST_CHECK_EQUAL(matched, 3);
+}
+
+BOOST_AUTO_TEST_CASE(bip352_p2pkh_pubkey_extraction_skips_unrelated_pushes)
+{
+    // A third party can malleate a P2PKH scriptSig by prepending a push of another (valid) pubkey
+    // followed by OP_DROP. The spend stays valid and the pubkey matching the output must be used.
+    const CKey key = ParseHexToCKey("0000000000000000000000000000000000000000000000000000000000000001");
+    const CPubKey pubkey = key.GetPubKey();
+    const CPubKey wrong_pubkey = ParseHexToCKey("0000000000000000000000000000000000000000000000000000000000000002").GetPubKey();
+    const CScript spk{GetScriptForDestination(PKHash{pubkey})};
+
+    CMutableTransaction tx;
+    tx.vin.emplace_back(TestOutpoint(1));
+    std::vector<unsigned char> sig;
+    BOOST_REQUIRE(key.Sign(SignatureHash(spk, tx, /*nIn=*/0, SIGHASH_ALL, /*amount=*/0, SigVersion::BASE), sig));
+    sig.push_back(SIGHASH_ALL);
+    tx.vin[0].scriptSig = CScript() << ToByteVector(wrong_pubkey) << OP_DROP << sig << ToByteVector(pubkey);
+    const CTxIn& txin{tx.vin[0]};
+
+    ScriptError serror = SCRIPT_ERR_OK;
+    const MutableTransactionSignatureChecker checker{&tx, /*nInIn=*/0, /*amountIn=*/0, MissingDataBehavior::ASSERT_FAIL};
+    BOOST_CHECK_MESSAGE(VerifyScript(txin.scriptSig, spk, nullptr, MANDATORY_SCRIPT_VERIFY_FLAGS, checker, &serror),
+                        ScriptErrorString(serror));
+
+    const auto extracted_pubkey = GetPubKeyFromInput(txin, spk);
+    BOOST_REQUIRE(extracted_pubkey.has_value());
+    BOOST_CHECK_EQUAL(std::get<CPubKey>(*extracted_pubkey), pubkey);
+}
+
+BOOST_AUTO_TEST_CASE(bip352_invalid_pubkeys_are_not_extracted)
+{
+    // 0x02 || x with x = 0 is not on the curve, so spending any of these outputs is consensus-invalid.
+    // Such a key must never be returned: callers expect every extracted key to parse, and the prevouts
+    // summary asserts on it.
+    const std::vector<unsigned char> invalid_bytes(ParseHex("020000000000000000000000000000000000000000000000000000000000000000"));
+    const CPubKey invalid_pubkey{invalid_bytes};
+    BOOST_REQUIRE(!invalid_pubkey.IsFullyValid());
+    const std::vector<unsigned char> dummy_sig(64, 0);
+
+    // P2PKH whose hash commits to the invalid key.
+    CTxIn p2pkh_in{TestOutpoint(1)};
+    p2pkh_in.scriptSig = CScript() << dummy_sig << invalid_bytes;
+    BOOST_CHECK(!GetPubKeyFromInput(p2pkh_in, GetScriptForDestination(PKHash{invalid_pubkey})).has_value());
+
+    // P2WPKH with the invalid key on the witness.
+    CTxIn p2wpkh_in{TestOutpoint(2)};
+    p2wpkh_in.scriptWitness = CScriptWitness{{dummy_sig, invalid_bytes}};
+    BOOST_CHECK(!GetPubKeyFromInput(p2wpkh_in, GetScriptForDestination(WitnessV0KeyHash{invalid_pubkey})).has_value());
+
+    // P2SH-P2WPKH with the invalid key on the witness.
+    const CScript invalid_redeem{GetScriptForDestination(WitnessV0KeyHash{invalid_pubkey})};
+    CTxIn p2sh_in{TestOutpoint(3)};
+    p2sh_in.scriptSig = CScript() << ToByteVector(invalid_redeem);
+    p2sh_in.scriptWitness = CScriptWitness{{dummy_sig, invalid_bytes}};
+    BOOST_CHECK(!GetPubKeyFromInput(p2sh_in, GetScriptForDestination(ScriptHash{invalid_redeem})).has_value());
+
+    // P2TR key-path spend of an output key that is not on the curve.
+    CTxIn p2tr_in{TestOutpoint(4)};
+    p2tr_in.scriptWitness = CScriptWitness{{dummy_sig}};
+    const CScript invalid_p2tr{CScript() << OP_1 << std::vector<unsigned char>(32, 0)};
+    BOOST_CHECK(!GetPubKeyFromInput(p2tr_in, invalid_p2tr).has_value());
+}
+
+BOOST_AUTO_TEST_CASE(bip352_p2sh_must_wrap_p2wpkh)
+{
+    const CKey key = ParseHexToCKey("0000000000000000000000000000000000000000000000000000000000000001");
+    const CPubKey pubkey = key.GetPubKey();
+    const std::vector<unsigned char> dummy_sig(64, 0);
+
+    // P2SH-P2WPKH is eligible.
+    const CScript p2wpkh_redeem{GetScriptForDestination(WitnessV0KeyHash{pubkey})};
+    CTxIn nested_in{TestOutpoint(1)};
+    nested_in.scriptSig = CScript() << ToByteVector(p2wpkh_redeem);
+    nested_in.scriptWitness = CScriptWitness{{dummy_sig, ToByteVector(pubkey)}};
+    const auto nested_pubkey{GetPubKeyFromInput(nested_in, GetScriptForDestination(ScriptHash{p2wpkh_redeem}))};
+    BOOST_REQUIRE(nested_pubkey.has_value());
+    BOOST_CHECK_EQUAL(std::get<CPubKey>(*nested_pubkey), pubkey);
+
+    // Any other P2SH redeem script is not, even if the last witness item is a valid pubkey.
+    const CScript p2wsh_redeem{GetScriptForDestination(WitnessV0ScriptHash{CScript{} << OP_TRUE})};
+    CTxIn p2wsh_in{TestOutpoint(2)};
+    p2wsh_in.scriptSig = CScript() << ToByteVector(p2wsh_redeem);
+    p2wsh_in.scriptWitness = CScriptWitness{{dummy_sig, ToByteVector(pubkey)}};
+    BOOST_CHECK(!GetPubKeyFromInput(p2wsh_in, GetScriptForDestination(ScriptHash{p2wsh_redeem})).has_value());
+
+    // A scriptSig that fails to evaluate is not eligible either, even if it pushes a P2WPKH redeem script.
+    CTxIn failing_in{TestOutpoint(3)};
+    failing_in.scriptSig = CScript() << ToByteVector(p2wpkh_redeem) << OP_RETURN;
+    failing_in.scriptWitness = CScriptWitness{{dummy_sig, ToByteVector(pubkey)}};
+    BOOST_CHECK(!GetPubKeyFromInput(failing_in, GetScriptForDestination(ScriptHash{p2wpkh_redeem})).has_value());
+}
+
+BOOST_AUTO_TEST_CASE(bip352_taproot_script_path_spends)
+{
+    const CKey key = ParseHexToCKey("0000000000000000000000000000000000000000000000000000000000000001");
+    const XOnlyPubKey output_key{key.GetPubKey()};
+    const CScript spk{GetScriptForDestination(WitnessV1Taproot{output_key})};
+    const std::vector<unsigned char> leaf_script{OP_TRUE};
+    const XOnlyPubKey other_internal_key{ParseHexToCKey("0000000000000000000000000000000000000000000000000000000000000002").GetPubKey()};
+
+    const auto control_block = [](const XOnlyPubKey& internal_key, size_t path_bytes) {
+        std::vector<unsigned char> control{TAPROOT_LEAF_TAPSCRIPT};
+        control.insert(control.end(), internal_key.begin(), internal_key.end());
+        control.resize(TAPROOT_CONTROL_BASE_SIZE + path_bytes, 0x01);
+        return control;
+    };
+    const auto extract = [&](const std::vector<std::vector<unsigned char>>& stack) {
+        CTxIn txin{TestOutpoint(1)};
+        txin.scriptWitness = CScriptWitness{stack};
+        return GetPubKeyFromInput(txin, spk);
+    };
+
+    // A script-path spend with a two-item witness (script, control block) is eligible unless its
+    // internal key is NUMS_H.
+    const auto eligible{extract({leaf_script, control_block(other_internal_key, 0)})};
+    BOOST_REQUIRE(eligible.has_value());
+    BOOST_CHECK(std::get<XOnlyPubKey>(*eligible) == output_key);
+    BOOST_CHECK(!extract({leaf_script, control_block(XOnlyPubKey::NUMS_H, 0)}).has_value());
+
+    // An annex (a last witness item starting with ANNEX_TAG, in a witness of at least two items) is
+    // ignored, for key-path and script-path spends alike.
+    const std::vector<unsigned char> annex{ANNEX_TAG};
+    BOOST_CHECK(extract({std::vector<unsigned char>(64, 0), annex}).has_value());
+    BOOST_CHECK(extract({leaf_script, control_block(other_internal_key, 0), annex}).has_value());
+    BOOST_CHECK(!extract({leaf_script, control_block(XOnlyPubKey::NUMS_H, 0), annex}).has_value());
+
+    // A control block with the longest valid path is eligible.
+    const size_t max_path{TAPROOT_CONTROL_MAX_NODE_COUNT * TAPROOT_CONTROL_NODE_SIZE};
+    BOOST_CHECK(extract({leaf_script, control_block(other_internal_key, max_path)}).has_value());
+
+    // Control blocks that are too short, not 33 + 32 * m bytes, or too long make the spend
+    // consensus-invalid (BIP341). Such inputs are not eligible, and no key is read from them.
+    BOOST_CHECK(!extract({leaf_script, {TAPROOT_LEAF_TAPSCRIPT}}).has_value());
+    BOOST_CHECK(!extract({leaf_script, control_block(other_internal_key, 1)}).has_value());
+    const size_t too_long{max_path + TAPROOT_CONTROL_NODE_SIZE};
+    BOOST_CHECK(!extract({leaf_script, control_block(other_internal_key, too_long)}).has_value());
+}
+
+BOOST_AUTO_TEST_CASE(bip352_prevouts_summary_errors)
+{
+    const CKey key = ParseHexToCKey("0000000000000000000000000000000000000000000000000000000000000001");
+    std::map<COutPoint, Coin> coins;
+    const CTxIn eligible_input{P2WPKHInput(TestOutpoint(1), key, coins)};
+    BOOST_REQUIRE(GetSilentPaymentsPrevoutsSummary({eligible_input}, coins).has_value());
+
+    // An input whose coin is missing makes the whole lookup fail.
+    const auto missing{GetSilentPaymentsPrevoutsSummary({eligible_input, CTxIn{TestOutpoint(2)}}, coins)};
+    BOOST_REQUIRE(!missing.has_value());
+    BOOST_CHECK(missing.error() == PrevoutsSummaryError::MISSING_COIN);
+
+    // Input public keys that sum to the point at infinity make the transaction ineligible.
+    // n - 1, whose public key is -G, the negation of the public key of 1.
+    const CKey negated_key = ParseHexToCKey("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140");
+    const CTxIn negated_input{P2WPKHInput(TestOutpoint(3), negated_key, coins)};
+    const auto infinity{GetSilentPaymentsPrevoutsSummary({eligible_input, negated_input}, coins)};
+    BOOST_REQUIRE(!infinity.has_value());
+    BOOST_CHECK(infinity.error() == PrevoutsSummaryError::NOT_ELIGIBLE);
+}
+
+BOOST_AUTO_TEST_CASE(bip352_destination_from_rejects_invalid)
+{
+    const CPubKey scan_pubkey = ParseHexToCKey("0000000000000000000000000000000000000000000000000000000000000002").GetPubKey();
+    const CPubKey spend_pubkey = ParseHexToCKey("0000000000000000000000000000000000000000000000000000000000000003").GetPubKey();
+    const std::vector<unsigned char> extension{0xde, 0xad};
+
+    BOOST_CHECK(SilentPaymentsDestination::From(scan_pubkey, spend_pubkey, /*version=*/30, extension).has_value());
+    BOOST_CHECK(!SilentPaymentsDestination::From(scan_pubkey, spend_pubkey, /*version=*/31).has_value());
+    BOOST_CHECK(!SilentPaymentsDestination::From(scan_pubkey, spend_pubkey, /*version=*/0, extension).has_value());
+
+    const std::vector<unsigned char> scan_secret{ParseHex("0000000000000000000000000000000000000000000000000000000000000002")};
+    CKey uncompressed_key;
+    uncompressed_key.Set(scan_secret.begin(), scan_secret.end(), /*fCompressedIn=*/false);
+    BOOST_REQUIRE(!uncompressed_key.GetPubKey().IsCompressed());
+    BOOST_CHECK(!SilentPaymentsDestination::From(uncompressed_key.GetPubKey(), spend_pubkey).has_value());
+    BOOST_CHECK(!SilentPaymentsDestination::From(scan_pubkey, uncompressed_key.GetPubKey()).has_value());
+    const CPubKey invalid_pubkey{ParseHex("020000000000000000000000000000000000000000000000000000000000000000")};
+    BOOST_CHECK(!SilentPaymentsDestination::From(scan_pubkey, invalid_pubkey).has_value());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
