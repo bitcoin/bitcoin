@@ -1008,7 +1008,7 @@ protected:
 public:
     using Options = kernel::ChainstateManagerOpts;
 
-    explicit ChainstateManager(const util::SignalInterrupt& interrupt, Options options, node::BlockManager::Options blockman_options);
+    explicit ChainstateManager(const util::SignalInterrupt& interrupt, Options options, node::BlockManager& blockman);
 
     //! Function to restart active indexes; set dynamically to avoid a circular
     //! dependency on `base/index.cpp`.
@@ -1044,8 +1044,9 @@ public:
     const util::SignalInterrupt& m_interrupt;
     const Options m_options;
     //! A single BlockManager instance is shared across each constructed
-    //! chainstate to avoid duplicating block metadata.
-    node::BlockManager m_blockman;
+    //! chainstate to avoid duplicating block metadata. It must outlive the
+    //! ChainstateManager.
+    node::BlockManager& m_blockman;
 
     /** Determine the potential consensus script flags for blocks in a chain */
     static script_verify_flags GetAllConsensusScriptFlags(const Consensus::Params& params);
