@@ -784,10 +784,6 @@ public:
 
     DBErrors PopulateWalletFromDB(bilingual_str& error, std::vector<bilingual_str>& warnings);
 
-    /** Erases the provided transactions from the wallet. */
-    util::Result<void> RemoveTxs(std::vector<Txid>& txs_to_remove) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    util::Result<void> RemoveTxs(WalletBatch& batch, std::vector<Txid>& txs_to_remove) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-
     /**
      * Drop all in-memory transaction state: the transactions themselves, the
      * outputs derived from them, the spends index and any coin locks. The
@@ -1058,7 +1054,7 @@ public:
      * Returns false, with the original database untouched, if the new one can't be built. Once the original
      * database may have been erased or replaced, failures throw instead, so the caller restores the backup.
      */
-    bool MigrateToSQLite(bilingual_str& error) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool MigrateToSQLite(bilingual_str& error, bool& had_legacy_records) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Get all of the descriptors from a legacy wallet
     std::optional<MigrationData> GetDescriptorsForLegacy(bilingual_str& error) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);

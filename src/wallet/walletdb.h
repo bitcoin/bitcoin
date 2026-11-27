@@ -86,6 +86,8 @@ extern const std::string WTX_VARIANT;
 extern const std::string VERSION;
 extern const std::string WALLETDESCRIPTOR;
 extern const std::string WALLETDESCRIPTORCKEY;
+extern const std::string WALLETDESCRIPTORCACHE;
+extern const std::string WALLETDESCRIPTORLHCACHE;
 extern const std::string WALLETDESCRIPTORKEY;
 extern const std::string WATCHMETA;
 extern const std::string WATCHS;
@@ -232,7 +234,6 @@ public:
 
     // Write a CWalletTx and all variant witness txs (single tx record and multiple wtxvariant records)
     bool WriteFullTx(const CWalletTx& wtx);
-    bool EraseTx(Txid hash);
     // Write a single witness variant of CWalletTx (single wtxvariant record)
     bool WriteWtxVariant(const Txid& txid, const CTransactionRef& tx);
     // Write only the canonical witness tx and all of the tx metadata (single tx record)
@@ -282,9 +283,6 @@ public:
     //! Write the current wallet client features to the LAST_DECRYPTED_FEATURES record
     [[nodiscard]] bool WriteLastDecryptedFeatures();
 
-    //! Delete records of the given types
-    bool EraseRecords(const std::unordered_set<std::string>& types);
-
     bool WriteWalletFlags(uint64_t flags);
 
     //! Begin a new transaction
@@ -325,10 +323,6 @@ bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::stri
 bool LoadCryptedKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr);
 bool LoadEncryptionKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr);
 bool LoadHDChain(CWallet* pwallet, DataStream& ssValue, std::string& strErr);
-
-//! Returns true if there are any DBKeys::LEGACY_TYPES record in the wallet db
-bool HasLegacyRecords(CWallet& wallet);
-bool HasLegacyRecords(CWallet& wallet, DatabaseBatch& batch);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_WALLETDB_H
