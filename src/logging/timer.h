@@ -9,7 +9,6 @@
 #include <util/log.h>
 #include <util/macros.h>
 #include <util/time.h>
-#include <util/types.h>
 
 #include <chrono>
 #include <optional>
@@ -74,7 +73,7 @@ public:
         } else if constexpr (std::is_same_v<TimeType, std::chrono::seconds>) {
             return strprintf("%s: %s (%.2fs)", m_prefix, msg, Ticks<SecondsDouble>(duration));
         } else {
-            static_assert(ALWAYS_FALSE<TimeType>, "Error: unexpected time type");
+            static_assert(false, "Error: unexpected time type");
         }
     }
 

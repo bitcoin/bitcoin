@@ -6,7 +6,6 @@
 #define BITCOIN_UTIL_VECTOR_H
 
 #include <functional>
-#include <initializer_list>
 #include <optional>
 #include <type_traits>
 #include <utility>
@@ -24,8 +23,7 @@ inline std::vector<std::common_type_t<Args...>> Vector(Args&&... args)
 {
     std::vector<std::common_type_t<Args...>> ret;
     ret.reserve(sizeof...(args));
-    // The line below uses the trick from https://www.experts-exchange.com/articles/32502/None-recursive-variadic-templates-with-std-initializer-list.html
-    (void)std::initializer_list<int>{(ret.emplace_back(std::forward<Args>(args)), 0)...};
+    (ret.emplace_back(std::forward<Args>(args)), ...);
     return ret;
 }
 
