@@ -825,8 +825,8 @@ void CCoinsViewMemPool::Reset()
 
 size_t CTxMemPool::DynamicMemoryUsage() const {
     LOCK(cs);
-    // Estimate the overhead of mapTx to be 9 pointers (3 pointers per index) + an allocation, as no exact formula for boost::multi_index_contained is implemented.
-    return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 9 * sizeof(void*)) * mapTx.size() + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + memusage::DynamicUsage(txns_randomized) + memusage::DynamicUsage(m_unbroadcast_txids) + m_txgraph->GetMainMemoryUsage() + cachedInnerUsage;
+    // Estimate the overhead of mapTx to be 6 pointers (3 pointers per index) + an allocation, as no exact formula for boost::multi_index_contained is implemented.
+    return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 6 * sizeof(void*)) * mapTx.size() + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + memusage::DynamicUsage(txns_randomized) + memusage::DynamicUsage(m_unbroadcast_txids) + m_txgraph->GetMainMemoryUsage() + cachedInnerUsage;
 }
 
 void CTxMemPool::RemoveUnbroadcastTx(const Txid& txid, const bool unchecked) {
@@ -854,24 +854,6 @@ bool CTxMemPool::CheckPolicyLimits(const CTransactionRef& tx)
     auto changeset = GetChangeSet();
     (void) changeset->StageAddition(tx, /*fee=*/0, /*time=*/0, /*entry_height=*/0, /*entry_sequence=*/0, /*spends_coinbase=*/false, /*sigops_cost=*/0, LockPoints{});
     return changeset->CheckMemPoolPolicyLimits();
-}
-
-int CTxMemPool::Expire(std::chrono::seconds time)
-{
-    AssertLockHeld(cs);
-    Assume(!m_have_changeset);
-    indexed_transaction_set::index<entry_time>::type::iterator it = mapTx.get<entry_time>().begin();
-    setEntries toremove;
-    while (it != mapTx.get<entry_time>().end() && it->GetTime() < time) {
-        toremove.insert(mapTx.project<0>(it));
-        it++;
-    }
-    setEntries stage;
-    for (txiter removeit : toremove) {
-        CalculateDescendants(removeit, stage);
-    }
-    RemoveStaged(stage, MemPoolRemovalReason::EXPIRY);
-    return stage.size();
 }
 
 CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {

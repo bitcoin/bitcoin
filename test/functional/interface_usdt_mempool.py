@@ -17,7 +17,7 @@ except ImportError:
     pass
 
 from test_framework.blocktools import COINBASE_MATURITY
-from test_framework.messages import COIN, DEFAULT_MEMPOOL_EXPIRY_HOURS
+from test_framework.messages import COIN
 from test_framework.p2p import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -198,8 +198,8 @@ class MempoolTracepointTest(BitcoinTestFramework):
         self.generate(self.wallet, 1)
 
     def removed_test(self):
-        """Expire a transaction from the mempool and make sure the tracepoint returns
-        the expected txid, expiry reason, vsize, and fee."""
+        """Remove a transaction from the mempool via RBF replacement and make sure
+        the tracepoint returns the expected txid, removal reason, vsize, and fee."""
 
         events = []
 
@@ -215,18 +215,14 @@ class MempoolTracepointTest(BitcoinTestFramework):
         bpf["removed_events"].open_perf_buffer(handle_removed_event)
 
         self.log.info("Sending transaction...")
+        utxo = self.wallet.get_utxo(mark_as_spent=True)
         fee = Decimal(31200)
-        tx = self.wallet.send_self_transfer(from_node=node, fee=fee / COIN)
+        tx = self.wallet.send_self_transfer(from_node=node, utxo_to_spend=utxo, fee=fee / COIN)
         txid = tx["txid"]
-
-        self.log.info("Fast-forwarding time to mempool expiry...")
         entry_time = node.getmempoolentry(txid)["time"]
-        expiry_time = entry_time + 60 * 60 * DEFAULT_MEMPOOL_EXPIRY_HOURS + 5
-        node.setmocktime(expiry_time)
 
-        self.log.info("Triggering expiry...")
-        self.wallet.get_utxo(txid=txid)
-        self.wallet.send_self_transfer(from_node=node)
+        self.log.info("Replacing transaction to trigger removal...")
+        self.wallet.send_self_transfer(from_node=node, utxo_to_spend=utxo, fee=fee * 2 / COIN)
 
         self.log.info("Polling buffer...")
         bpf.perf_buffer_poll(timeout=200)
@@ -235,7 +231,7 @@ class MempoolTracepointTest(BitcoinTestFramework):
         assert_equal(1, len(events))
         event = events[0]
         assert_equal(bytes(event.hash)[::-1].hex(), txid)
-        assert_equal(event.reason.decode("UTF-8"), "expiry")
+        assert_equal(event.reason.decode("UTF-8"), "replaced")
         assert_equal(event.vsize, tx["tx"].get_vsize())
         assert_equal(event.fee, fee)
         assert_equal(event.entry_time, entry_time)

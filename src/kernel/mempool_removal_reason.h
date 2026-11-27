@@ -11,7 +11,6 @@
  * this is passed to the notification signal.
  */
 enum class MemPoolRemovalReason {
-    EXPIRY,      //!< Expired from mempool
     SIZELIMIT,   //!< Removed in size limiting
     REORG,       //!< Removed for reorganization
     BLOCK,       //!< Removed for block
