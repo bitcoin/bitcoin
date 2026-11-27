@@ -20,6 +20,8 @@ struct CheckGlobalsImpl {
         g_used_system_time = false;
         SetMockTime(0s);
         MockableSteadyClock::ClearMockTime();
+        g_used_fuzzed_socket = false;
+        g_reset_fuzzed_sockets = false;
     }
     ~CheckGlobalsImpl()
     {
@@ -50,6 +52,19 @@ struct CheckGlobalsImpl {
 
                          "Without setting mock time, time-dependent behavior can lead \n"
                          "to non-reproducible bugs or inefficient fuzzing.\n\n"
+                      << std::endl;
+            std::abort();
+        }
+
+        if (g_used_fuzzed_socket && !g_reset_fuzzed_sockets) {
+            std::cerr << "\n\n"
+                         "The current fuzz target created a FuzzedSock.\n\n"
+
+                         "This requires the fuzz target to call ResetFuzzedSockets() at\n"
+                         "the beginning of processing the fuzz input.\n\n"
+
+                         "Without it, socket descriptors depend on the inputs run before, \n"
+                         "which can lead to non-reproducible bugs or inefficient fuzzing.\n\n"
                       << std::endl;
             std::abort();
         }
