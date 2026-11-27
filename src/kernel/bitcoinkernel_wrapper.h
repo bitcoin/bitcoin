@@ -176,27 +176,27 @@ template <BitmaskEnum T>
 constexpr T operator|(T lhs, T rhs)
 {
     return static_cast<T>(
-        static_cast<std::underlying_type_t<T>>(lhs) | static_cast<std::underlying_type_t<T>>(rhs));
+        std::to_underlying(lhs) | std::to_underlying(rhs));
 }
 
 template <BitmaskEnum T>
 constexpr T operator&(T lhs, T rhs)
 {
     return static_cast<T>(
-        static_cast<std::underlying_type_t<T>>(lhs) & static_cast<std::underlying_type_t<T>>(rhs));
+        std::to_underlying(lhs) & std::to_underlying(rhs));
 }
 
 template <BitmaskEnum T>
 constexpr T operator^(T lhs, T rhs)
 {
     return static_cast<T>(
-        static_cast<std::underlying_type_t<T>>(lhs) ^ static_cast<std::underlying_type_t<T>>(rhs));
+        std::to_underlying(lhs) ^ std::to_underlying(rhs));
 }
 
 template <BitmaskEnum T>
 constexpr T operator~(T value)
 {
-    return static_cast<T>(~static_cast<std::underlying_type_t<T>>(value));
+    return static_cast<T>(~std::to_underlying(value));
 }
 
 template <BitmaskEnum T>

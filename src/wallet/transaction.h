@@ -16,6 +16,7 @@
 #include <util/string.h>
 #include <wallet/types.h>
 
+#include <algorithm>
 #include <bitset>
 #include <cstdint>
 #include <map>
@@ -445,7 +446,7 @@ public:
     : m_wtx(wtx),
     m_output(output)
     {
-        Assume(std::ranges::find(wtx.GetTx()->vout, output) != wtx.GetTx()->vout.end());
+        Assume(std::ranges::contains(wtx.GetTx()->vout, output));
     }
 
     const CWalletTx& GetWalletTx() const { return m_wtx; }

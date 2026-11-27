@@ -105,7 +105,7 @@ std::string CRPCTable::help(std::string_view strCommand, const JSONRPCRequest& h
             std::string strHelp{e.what()};
             if (strCommand == "")
             {
-                if (strHelp.find('\n') != std::string::npos)
+                if (strHelp.contains('\n'))
                     strHelp = strHelp.substr(0, strHelp.find('\n'));
 
                 if (category != pcmd->category)
@@ -716,7 +716,7 @@ bool IsDeprecatedRPCEnabled(const std::string& method)
 {
     const std::vector<std::string> enabled_methods = gArgs.GetArgs("-deprecatedrpc");
 
-    return find(enabled_methods.begin(), enabled_methods.end(), method) != enabled_methods.end();
+    return std::ranges::contains(enabled_methods, method);
 }
 
 UniValue JSONRPCExec(const JSONRPCRequest& jreq, bool catch_errors)

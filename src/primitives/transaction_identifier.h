@@ -42,9 +42,7 @@ public:
     constexpr void SetNull() { m_wrapped.SetNull(); }
     static std::optional<transaction_identifier> FromHex(std::string_view hex)
     {
-        auto u{uint256::FromHex(hex)};
-        if (!u) return std::nullopt;
-        return FromUint256(*u);
+        return uint256::FromHex(hex).transform(FromUint256);
     }
     std::string GetHex() const { return m_wrapped.GetHex(); }
     std::string ToString() const { return m_wrapped.ToString(); }

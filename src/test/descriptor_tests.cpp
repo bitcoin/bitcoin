@@ -520,7 +520,7 @@ void Check(const std::string& prv, const std::string& pub, const std::string& no
             expected_prv, expected_pub, desc_index);
 
     // Replace apostrophes with 'h' both in prv and in pub, if apostrophes are found in both
-    if (prv.find('\'') != std::string::npos && pub.find('\'') != std::string::npos) {
+    if (prv.contains('\'') && pub.contains('\'')) {
         DoCheck(prv, pub, norm_pub, flags, scripts, type, op_compat_desc_hash, paths, /*replace_apostrophe_with_h_in_prv=*/true,
                 /*replace_apostrophe_with_h_in_pub=*/true, /*spender_nlocktime=*/spender_nlocktime,
                 /*spender_nsequence=*/spender_nsequence, /*preimages=*/preimages,
@@ -599,7 +599,7 @@ void CheckInferDescriptor(const std::string& script_hex, const std::string& expe
                         hardened = true;
                     }
                 }
-                const uint32_t p{*Assert(ToIntegral<uint32_t>(std::string_view{elem.begin(), elem.end()}))};
+                const uint32_t p{*Assert(ToIntegral<uint32_t>(std::string_view{elem}))};
                 info.path.push_back(p | (((uint32_t)hardened) << 31));
             }
 

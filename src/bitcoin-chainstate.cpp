@@ -20,6 +20,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 using namespace btck;
@@ -130,7 +131,7 @@ public:
 
     void WarningUnsetHandler(Warning warning) override
     {
-        std::cout << "Warning unset: " << static_cast<std::underlying_type_t<Warning>>(warning) << std::endl;
+        std::cout << "Warning unset: " << std::to_underlying(warning) << std::endl;
     }
 
     void FlushErrorHandler(std::string_view error) override

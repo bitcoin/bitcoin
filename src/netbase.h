@@ -17,8 +17,8 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <type_traits>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 extern int nConnectTimeout;
@@ -39,13 +39,11 @@ enum class ConnectionDirection {
     Both = (In | Out),
 };
 static inline ConnectionDirection& operator|=(ConnectionDirection& a, ConnectionDirection b) {
-    using underlying = std::underlying_type_t<ConnectionDirection>;
-    a = ConnectionDirection(underlying(a) | underlying(b));
+    a = ConnectionDirection(std::to_underlying(a) | std::to_underlying(b));
     return a;
 }
 static inline bool operator&(ConnectionDirection a, ConnectionDirection b) {
-    using underlying = std::underlying_type_t<ConnectionDirection>;
-    return (underlying(a) & underlying(b));
+    return std::to_underlying(a) & std::to_underlying(b);
 }
 
 /**

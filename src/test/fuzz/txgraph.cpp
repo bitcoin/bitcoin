@@ -271,7 +271,7 @@ struct SimTxGraph
         // deduplication as it'd rely on non-deterministic pointer comparison).
         arg.clear();
         for (auto ptr : ret) {
-            if (std::find(arg.begin(), arg.end(), ptr) == arg.end()) {
+            if (!std::ranges::contains(arg, ptr)) {
                 arg.push_back(ptr);
             }
         }

@@ -24,6 +24,8 @@
 #include <util/strencodings.h>
 #include <streams.h>
 
+#include <algorithm>
+
 namespace bip352 {
 BOOST_FIXTURE_TEST_SUITE(bip352_tests, BasicTestingSetup)
 
@@ -113,7 +115,7 @@ BOOST_AUTO_TEST_CASE(bip352_send_and_receive_test_vectors)
                     expected_spks.push_back(tap);
                 }
                 match = std::all_of(sp_tr_dests->begin(), sp_tr_dests->end(), [&](const auto& entry) {
-                    return std::find(expected_spks.begin(), expected_spks.end(), entry.second) != expected_spks.end();
+                    return std::ranges::contains(expected_spks, entry.second);
                 });
                 if (match) break;
             }

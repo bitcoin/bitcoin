@@ -38,7 +38,7 @@ class HasReason
 {
 public:
     explicit HasReason(std::string_view reason) : m_reason(reason) {}
-    bool operator()(std::string_view s) const { return s.find(m_reason) != std::string_view::npos; }
+    bool operator()(std::string_view s) const { return s.contains(m_reason); }
     bool operator()(const std::exception& e) const { return (*this)(e.what()); }
 
 private:
@@ -56,7 +56,7 @@ inline std::ostream& operator<<(std::ostream& os, const std::chrono::time_point<
 template <typename T> requires std::is_enum_v<T>
 inline std::ostream& operator<<(std::ostream& os, const T& e)
 {
-    return os << static_cast<std::underlying_type_t<T>>(e);
+    return os << std::to_underlying(e);
 }
 
 template <typename T>

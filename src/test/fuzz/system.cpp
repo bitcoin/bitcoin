@@ -8,6 +8,7 @@
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <set>
 #include <string>
@@ -76,7 +77,7 @@ FUZZ_TARGET(system, .init = initialize_system)
             },
             [&] {
                 auto cmd = fuzzed_data_provider.ConsumeRandomLengthString(16);
-                if (cmd.empty() || cmd[0] == '-' || cmd.find('=') != std::string::npos) return;
+                if (cmd.empty() || cmd[0] == '-' || cmd.contains('=')) return;
                 if (args_manager.GetArgFlags(cmd) != std::nullopt) return;
                 auto help = fuzzed_data_provider.ConsumeRandomLengthString(16);
                 std::set<std::string> options;
@@ -97,7 +98,7 @@ FUZZ_TARGET(system, .init = initialize_system)
                     if (args_manager.GetArgFlags(hidden_argument) != std::nullopt) {
                         continue;
                     }
-                    if (std::find(hidden_arguments.begin(), hidden_arguments.end(), hidden_argument) != hidden_arguments.end()) {
+                    if (std::ranges::contains(hidden_arguments, hidden_argument)) {
                         continue;
                     }
                     hidden_arguments.push_back(hidden_argument);

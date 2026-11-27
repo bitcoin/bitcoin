@@ -23,7 +23,6 @@
 #include <univalue.h>
 #include <util/bip32.h>
 #include <util/check.h>
-#include <util/expected.h>
 #include <util/result.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -52,8 +51,7 @@ const std::string EXAMPLE_ADDRESS[2] = {"bc1q09vm5lfy0j5reeulh4x5752q25uqqvz34hu
 std::string GetAllOutputTypes()
 {
     std::vector<std::string> ret;
-    using U = std::underlying_type_t<TxoutType>;
-    for (U i = (U)TxoutType::NONSTANDARD; i <= (U)TxoutType::WITNESS_UNKNOWN; ++i) {
+    for (auto i = std::to_underlying(TxoutType::NONSTANDARD); i <= std::to_underlying(TxoutType::WITNESS_UNKNOWN); ++i) {
         ret.emplace_back(GetTxnOutputType(static_cast<TxoutType>(i)));
     }
     return Join(ret, ", ");
@@ -516,7 +514,7 @@ struct Sections {
         for (const auto& s : m_sections) {
             // The left part of a section is assumed to be a single line, usually it is the name of the JSON struct or a
             // brace like {, }, [, or ]
-            CHECK_NONFATAL(s.m_left.find('\n') == std::string::npos);
+            CHECK_NONFATAL(!s.m_left.contains('\n'));
             if (s.m_right.empty()) {
                 ret += s.m_left;
                 ret += '\n';
@@ -927,7 +925,7 @@ std::string RPCArg::GetFirstName() const
 
 std::string RPCArg::GetName() const
 {
-    CHECK_NONFATAL(std::string::npos == m_names.find('|'));
+    CHECK_NONFATAL(!m_names.contains('|'));
     return m_names;
 }
 

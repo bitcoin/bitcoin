@@ -60,7 +60,6 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -830,7 +829,7 @@ static RPCMethod setban()
     CSubNet subNet;
     CNetAddr netAddr;
     std::string subnet_arg{help.Arg<std::string_view>("subnet")};
-    const bool isSubnet{subnet_arg.find('/') != subnet_arg.npos};
+    const bool isSubnet{subnet_arg.contains('/')};
 
     if (!isSubnet) {
         const std::optional<CNetAddr> addr{LookupHost(subnet_arg, false)};
@@ -1020,7 +1019,7 @@ static RPCMethod getnodeaddresses()
     for (const CAddress& addr : vAddr) {
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("time", TicksSinceEpoch<std::chrono::seconds>(addr.nTime));
-        obj.pushKV("services", static_cast<std::underlying_type_t<decltype(addr.nServices)>>(addr.nServices));
+        obj.pushKV("services", std::to_underlying(addr.nServices));
         obj.pushKV("address", addr.ToStringAddr());
         obj.pushKV("port", addr.GetPort());
         obj.pushKV("network", GetNetworkName(addr.GetNetClass()));
@@ -1238,7 +1237,7 @@ UniValue AddrmanEntryToJSON(const AddrInfo& info, const CConnman& connman)
         ret.pushKV("mapped_as", mapped_as);
     }
     ret.pushKV("port", info.GetPort());
-    ret.pushKV("services", static_cast<std::underlying_type_t<decltype(info.nServices)>>(info.nServices));
+    ret.pushKV("services", std::to_underlying(info.nServices));
     ret.pushKV("time", TicksSinceEpoch<std::chrono::seconds>(info.nTime));
     ret.pushKV("network", GetNetworkName(info.GetNetClass()));
     ret.pushKV("source", info.source.ToStringAddr());

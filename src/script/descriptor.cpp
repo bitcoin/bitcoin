@@ -27,7 +27,6 @@
 #include <uint256.h>
 #include <util/bip32.h>
 #include <util/check.h>
-#include <util/expected.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/vector.h>
@@ -2450,7 +2449,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         auto threshold = Expr(expr);
         uint32_t thres;
         std::vector<std::vector<std::unique_ptr<PubkeyProvider>>> providers; // List of multipath expanded pubkeys
-        if (const auto maybe_thres{ToIntegral<uint32_t>(std::string_view{threshold.begin(), threshold.end()})}) {
+        if (const auto maybe_thres{ToIntegral<uint32_t>(std::string_view{threshold})}) {
             thres = *maybe_thres;
         } else {
             error = strprintf("Multi threshold '%s' is not valid", std::string(threshold.begin(), threshold.end()));
