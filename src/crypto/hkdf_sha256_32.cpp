@@ -5,18 +5,33 @@
 #include <crypto/hkdf_sha256_32.h>
 
 #include <crypto/hmac_sha256.h>
+#include <span.h>
+#include <support/cleanse.h>
 
+#include <array>
 #include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <span>
 
-CHKDF_HMAC_SHA256_L32::CHKDF_HMAC_SHA256_L32(const unsigned char* ikm, size_t ikmlen, const std::string& salt)
+static CHMAC_SHA256 PrepareHMAC(std::span<const std::byte> ikm, const std::string& salt)
 {
-    CHMAC_SHA256((const unsigned char*)salt.data(), salt.size()).Write(ikm, ikmlen).Finalize(m_prk);
+    std::array<uint8_t, CHMAC_SHA256::OUTPUT_SIZE> prk;
+    CHMAC_SHA256{UCharCast(salt.data()), salt.size()}.Write(UCharCast(ikm.data()), ikm.size()).Finalize(prk.data());
+    const CHMAC_SHA256 hmac{prk.data(), prk.size()};
+    memory_cleanse(prk.data(), prk.size());
+    return hmac;
 }
 
-void CHKDF_HMAC_SHA256_L32::Expand32(const std::string& info, unsigned char hash[OUTPUT_SIZE])
+CHKDF_HMAC_SHA256_L32::CHKDF_HMAC_SHA256_L32(std::span<const std::byte> ikm, const std::string& salt)
+    : m_hmac{PrepareHMAC(ikm, salt)}
 {
-    // expand a 32byte key (single round)
+}
+
+void CHKDF_HMAC_SHA256_L32::Expand32(const std::string& info, std::span<std::byte, OUTPUT_SIZE> hash) const
+{
+    // The fixed output length needs only one HKDF expansion block
     assert(info.size() <= 128);
-    static const unsigned char one[1] = {1};
-    CHMAC_SHA256(m_prk, 32).Write((const unsigned char*)info.data(), info.size()).Write(one, 1).Finalize(hash);
+    static constexpr uint8_t one[]{1};
+    CHMAC_SHA256{m_hmac}.Write(UCharCast(info.data()), info.size()).Write(one, 1).Finalize(UCharCast(hash.data()));
 }
