@@ -88,6 +88,7 @@ public:
      *
      * @param[in] options   Control the timeout (default forever) and by how much total fees
      *                      for the next block should rise (default infinite).
+     *                      Throws std::runtime_error if the timeout is negative or NaN.
      *
      * @returns a new BlockTemplate or nothing if the timeout occurs.
      *
@@ -124,7 +125,8 @@ public:
      *
      * @param[in] current_tip block hash of the current chain tip. Function waits
      *                        for the chain tip to differ from this.
-     * @param[in] timeout     how long to wait for a new tip (default is forever)
+     * @param[in] timeout     how long to wait for a new tip (default is forever).
+     *                        Throws std::runtime_error if negative or NaN.
      *
      * @retval BlockRef hash and height of the current chain tip after this call.
      * @retval std::nullopt if the node is shut down or interrupt() is called.

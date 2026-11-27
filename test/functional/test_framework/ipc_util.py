@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
 import shutil
+import time
 from typing import Optional
 
 from test_framework.messages import CBlock
@@ -45,20 +46,31 @@ async def destroying(obj, ctx):
         await obj.destroy(ctx)
 
 
-async def wait_and_do(wait_fn, do_fn, sleep_time=0.1):
+async def wait_and_do(wait_fn, do_fn, sleep_time=0.1, check_order=False):
     """Call wait_fn, then sleep, then call do_fn in a parallel task. Wait for
-    both tasks to complete."""
+    both tasks to complete.
+
+    With check_order, assert that wait_fn finishes after do_fn is called, to
+    catch waits that return early instead of being ended by do_fn. Pass do_fn
+    as a callable for this: pycapnp sends an IPC request when the method is
+    called, so cap.method() passed directly reaches the server before the
+    wait starts."""
     wait_started = asyncio.Event()
     result = None
+    wait_done = None
+    do_called = None
 
     async def wait():
-        nonlocal result
+        nonlocal result, wait_done
         wait_started.set()
         result = await wait_fn
+        wait_done = time.monotonic()
 
     async def do():
+        nonlocal do_called
         await wait_started.wait()
         await asyncio.sleep(sleep_time)
+        do_called = time.monotonic()
         # Let do_fn be either a callable or an awaitable object
         if inspect.isawaitable(do_fn):
             await do_fn
@@ -66,6 +78,8 @@ async def wait_and_do(wait_fn, do_fn, sleep_time=0.1):
             do_fn()
 
     await asyncio.gather(wait(), do())
+    if check_order:
+        assert wait_done >= do_called, f"wait finished {do_called - wait_done:.3f}s before do_fn was called"
     return result
 
 
