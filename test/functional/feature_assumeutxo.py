@@ -85,7 +85,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         node = self.nodes[1]
 
         def expected_error(msg):
-            assert_raises_rpc_error(-32603, f"Unable to load UTXO snapshot: Population failed: {msg}", node.loadtxoutset, bad_snapshot_path)
+            assert_raises_rpc_error(-32603, f"Unable to load UTXO snapshot: {msg}", node.loadtxoutset, bad_snapshot_path)
 
         self.log.info("  - snapshot file with invalid file magic")
         parsing_error_code = -22
@@ -139,7 +139,8 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.log.info("  - snapshot file with alternated but parsable UTXO data results in different hash")
         cases = [
             # (content, offset, wrong_hash, custom_message)
-            [b"\xff" * 32, 0, "43bb0fcc50f3789d50ce41891810bbc571d549a32e2bbaabfc036f73ae2a23f9", None],  # wrong outpoint hash
+            # A 0xff txid sorts last, so putting it first breaks key order.
+            [b"\xff" * 32, 0, None, "Bad snapshot - txids are not in key order"],  # wrong outpoint hash
             [(2).to_bytes(1, "little"), 32, None, "Bad snapshot data after deserializing 2 coins."],  # wrong txid coins count
             [b"\xfd\xff\xff", 32, None, "Mismatch in coins count in snapshot metadata and actual snapshot data"],  # txid coins count exceeds coins left
             [b"\x01", 33, "0b0e96fd9a556157a68d9e6fe6e2c7562169c730347565ce0725032f824bea34", None],  # wrong outpoint index
@@ -216,7 +217,7 @@ class AssumeutxoTest(BitcoinTestFramework):
     def test_snapshot_with_less_work(self, dump_output_path):
         self.log.info("Test bitcoind should fail when snapshot has less accumulated work than this node.")
         node = self.nodes[0]
-        msg = "Unable to load UTXO snapshot: Population failed: Work does not exceed active chainstate."
+        msg = "Unable to load UTXO snapshot: Work does not exceed active chainstate."
         assert_raises_rpc_error(-32603, msg, node.loadtxoutset, dump_output_path)
 
     def test_snapshot_block_invalidated(self, dump_output_path):

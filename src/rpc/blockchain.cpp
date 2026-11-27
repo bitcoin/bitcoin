@@ -35,7 +35,6 @@
 #include <node/blockstorage.h>
 #include <node/context.h>
 #include <node/indexes.h>
-#include <node/utxo_snapshot.h>
 #include <node/warnings.h>
 #include <policy/feerate.h>
 #include <prevector.h>
@@ -72,6 +71,7 @@
 #include <util/syserror.h>
 #include <util/time.h>
 #include <util/translation.h>
+#include <utxo_snapshot.h>
 #include <validation.h>
 #include <validationinterface.h>
 #include <versionbits.h>
@@ -105,7 +105,6 @@ using interfaces::BlockRef;
 using node::BlockManager;
 using node::GetBlockFilterIndex;
 using node::NodeContext;
-using node::SnapshotMetadata;
 using util::MakeUnorderedList;
 
 std::tuple<std::unique_ptr<CCoinsViewCursor>, CCoinsStats, const CBlockIndex*>
@@ -3552,9 +3551,10 @@ static RPCMethod loadtxoutset()
             "Couldn't open file " + path.utf8string() + " for reading.");
     }
 
-    SnapshotMetadata metadata{chainman.GetParams().MessageStart()};
+    SnapshotMetadata metadata;
     try {
         afile >> metadata;
+        metadata.CheckNetwork(chainman.GetParams().MessageStart());
     } catch (const std::ios_base::failure& e) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Unable to parse metadata: %s", e.what()));
     }

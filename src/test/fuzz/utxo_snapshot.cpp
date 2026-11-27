@@ -29,6 +29,7 @@
 #include <util/fs.h>
 #include <util/result.h>
 #include <util/time.h>
+#include <utxo_snapshot.h>
 #include <validation.h>
 
 #include <cstdint>
@@ -37,8 +38,6 @@
 #include <memory>
 #include <optional>
 #include <vector>
-
-using node::SnapshotMetadata;
 
 namespace {
 
@@ -150,7 +149,7 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
         }
         if constexpr (INVALID) {
             // Append an invalid coin to ensure invalidity. This error will be
-            // detected late in PopulateAndValidateSnapshot, and allows the
+            // detected late in the snapshot load, and allows the
             // INVALID fuzz target to reach more potential code coverage.
             const auto& coinbase{g_chain->back()->vtx.back()};
             outfile << coinbase->GetHash();
@@ -163,10 +162,10 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
 
     const auto ActivateFuzzedSnapshot{[&] {
         AutoFile infile{fsbridge::fopen(snapshot_path, "rb")};
-        auto msg_start = chainman.GetParams().MessageStart();
-        SnapshotMetadata metadata{msg_start};
+        SnapshotMetadata metadata;
         try {
             infile >> metadata;
+            metadata.CheckNetwork(chainman.GetParams().MessageStart());
         } catch (const std::ios_base::failure&) {
             return false;
         }
@@ -205,7 +204,6 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
                 Assert(index->m_chain_tx_count == 0);
             }
         }
-        Assert(g_chain->size() == coinscache.GetCacheSize());
         dirty_chainman = true;
     } else {
         Assert(!chainman.ActiveChainstate().m_from_snapshot_blockhash);

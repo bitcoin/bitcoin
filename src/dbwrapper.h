@@ -59,6 +59,12 @@ struct DBParams {
     //! If non-null, use this as the leveldb::Env instead of the default.
     //! Caller retains ownership.
     leveldb::Env* testing_env = nullptr;
+    //! If true, wrap leveldb's files so that Sync does nothing. Only
+    //! for a database written once whose half-written contents can be
+    //! thrown away: the per-file and manifest syncs otherwise dominate
+    //! a large write. A caller that keeps the result has to commit the
+    //! files itself, with DirectoryFilesCommit().
+    bool nosync = false;
     //! Maximum LevelDB SST file size. Larger values reduce the frequency
     //! of compactions but increase their duration.
     size_t max_file_size = DBWRAPPER_MAX_FILE_SIZE;
