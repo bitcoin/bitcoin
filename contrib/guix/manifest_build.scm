@@ -1,8 +1,8 @@
 (use-modules ((gnu packages bash) #:select (bash-minimal))
-             ((gnu packages cmake) #:select (cmake-minimal))
+             ((gnu packages cmake) #:select (cmake-minimal-4))
              ((gnu packages commencement) #:select (gcc-toolchain-14))
              ((gnu packages compression) #:select (gzip))
-             ((gnu packages llvm) #:select (clang-toolchain-19 libcxx lld-19))
+             ((gnu packages llvm) #:select (clang-toolchain-22 libcxx lld-22))
              ((gnu packages version-control) #:select (git-minimal))
              (toolchains))
 
@@ -22,7 +22,7 @@
         tar
         gzip
         ;; Build tools
-        cmake-minimal
+        cmake-minimal-4
         gnu-make
         ;; Git
         git-minimal)
@@ -34,7 +34,7 @@
            (list gcc-toolchain-14
                  (list gcc-toolchain-14 "static")))
           ((string-contains target "darwin")
-           (list clang-toolchain-19
-                 libcxx ;; 19.1.7
-                 lld-19))
+           (list clang-toolchain-22
+                 libcxx ;; 22.1.8
+                 lld-22))
           (else '())))))
