@@ -119,12 +119,14 @@ class CoinSelectionTracepointTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
         self.skip_if_running_under_valgrind()
 
-    def get_tracepoints(self, expected_types):
+    def get_tracepoints(self, expected_types, wallet_name=None):
+        if wallet_name is None:
+            wallet_name = self.default_wallet_name
         events = []
         try:
             for i in range(0, len(expected_types) + 1):
                 event = self.bpf["coin_selection_events"].pop()
-                assert_equal(event.wallet_name.decode(), self.default_wallet_name)
+                assert_equal(event.wallet_name.decode(), wallet_name)
                 assert_equal(event.type, expected_types[i])
                 events.append(event)
             else:
@@ -180,18 +182,59 @@ class CoinSelectionTracepointTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 101)
         wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
 
-        self.log.info("Sending a transaction should result in all tracepoints")
+        self.log.info("Sending a transaction skips APS when no partial spend exists")
+        # Only one coinbase is mature, so the wallet has a single available UTXO.
+        # We should have 2 tracepoints in the order:
+        # 1. selected_coins (type 1)
+        # 2. normal_create_tx_internal (type 2)
+        wallet.sendtoaddress(wallet.getnewaddress(), 10)
+        events = self.get_tracepoints([1, 2])
+        success, use_aps, _algo, _waste, change_pos = self.determine_selection_from_usdt(events)
+        assert_equal(success, True)
+        assert_greater_than(change_pos, -1)
+
+        self.log.info("APS is attempted when a partial spend exists")
+        # Create a wallet with multiple UTXOs at the same address to trigger APS.
+        self.nodes[0].createwallet("aps_test")
+        aps_wallet = self.nodes[0].get_wallet_rpc("aps_test")
+        addr = aps_wallet.getnewaddress()
+        for _ in range(3):
+            wallet.sendtoaddress(addr, 5)
+            self.get_tracepoints([1, 2])  # Consume tracepoints from funding tx
+        self.generate(self.nodes[0], 1)
+        # The payment needs only one of the three UTXOs at addr, leaving a partial spend.
         # We should have 5 tracepoints in the order:
         # 1. selected_coins (type 1)
         # 2. normal_create_tx_internal (type 2)
         # 3. attempting_aps_create_tx (type 3)
         # 4. selected_coins (type 1)
         # 5. aps_create_tx_internal (type 4)
-        wallet.sendtoaddress(wallet.getnewaddress(), 10)
-        events = self.get_tracepoints([1, 2, 3, 1, 4])
+        aps_wallet.sendtoaddress(wallet.getnewaddress(), 2)
+        events = self.get_tracepoints([1, 2, 3, 1, 4], "aps_test")
         success, use_aps, _algo, _waste, change_pos = self.determine_selection_from_usdt(events)
         assert_equal(success, True)
         assert_greater_than(change_pos, -1)
+
+        self.log.info("Change position is -1 if no change is created with APS")
+        # The fee comes out of the output, so the preselected UTXO alone covers the
+        # target: both passes select just it, pay the same fee and create no change,
+        # so the APS result is used. The other UTXO left at addr is the partial spend.
+        # We should have 5 tracepoints in the order:
+        # 1. selected_coins (type 1)
+        # 2. normal_create_tx_internal (type 2)
+        # 3. attempting_aps_create_tx (type 3)
+        # 4. selected_coins (type 1)
+        # 5. aps_create_tx_internal (type 4)
+        preset = next(utxo for utxo in aps_wallet.listunspent() if utxo["address"] == addr)
+        raw_tx = aps_wallet.createrawtransaction(
+            [{"txid": preset["txid"], "vout": preset["vout"]}],
+            [{wallet.getnewaddress(): preset["amount"]}])
+        aps_wallet.fundrawtransaction(raw_tx, options={"add_inputs": True, "subtractFeeFromOutputs": [0]})
+        events = self.get_tracepoints([1, 2, 3, 1, 4], "aps_test")
+        success, use_aps, _algo, _waste, change_pos = self.determine_selection_from_usdt(events)
+        assert_equal(success, True)
+        assert_equal(use_aps, True)
+        assert_equal(change_pos, -1)
 
         self.log.info("Failing to fund results in 1 tracepoint")
         # We should have 1 tracepoints in the order
@@ -212,15 +255,12 @@ class CoinSelectionTracepointTest(BitcoinTestFramework):
         assert_equal(success, True)
         assert_equal(use_aps, None)
 
-        self.log.info("Change position is -1 if no change is created with APS when APS was initially not used")
+        self.log.info("Sending entire balance skips APS (no partial spend)")
         # We should have 2 tracepoints in the order:
         # 1. selected_coins (type 1)
         # 2. normal_create_tx_internal (type 2)
-        # 3. attempting_aps_create_tx (type 3)
-        # 4. selected_coins (type 1)
-        # 5. aps_create_tx_internal (type 4)
         wallet.sendtoaddress(address=wallet.getnewaddress(), amount=wallet.getbalance(), subtractfeefromamount=True, avoid_reuse=False)
-        events = self.get_tracepoints([1, 2, 3, 1, 4])
+        events = self.get_tracepoints([1, 2])
         success, use_aps, _algo, _waste, change_pos = self.determine_selection_from_usdt(events)
         assert_equal(success, True)
         assert_equal(change_pos, -1)
