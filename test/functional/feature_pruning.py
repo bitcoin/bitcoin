@@ -123,8 +123,9 @@ class PruneTest(BitcoinTestFramework):
             expected_msg='Error: Prune configured below the minimum of 550 MiB.  Please use a higher number.',
             extra_args=['-prune=549'],
         )
-        self.nodes[0].assert_start_raises_init_error(
-            expected_msg='Error: Prune mode is incompatible with -txindex.',
+        self.stop_node(2)
+        self.nodes[2].assert_start_raises_init_error(
+            expected_msg='Error: Cannot build a new txindex because historical blocks have been pruned. The transaction index must be built from genesis. Restart with -reindex to rebuild the index and redownload the blockchain.',
             extra_args=['-prune=550', '-txindex'],
         )
         self.nodes[0].assert_start_raises_init_error(
@@ -470,8 +471,8 @@ class PruneTest(BitcoinTestFramework):
         self.connect_nodes(0, 5)
         self.sync_blocks([self.nodes[0], self.nodes[5]], wait=5, timeout=300)
 
-        self.log.info("Test prune with a new index")
-        self.restart_node(0, extra_args=["-prune=550", "-blockfilterindex=1"])
+        self.log.info("Test prune with new indexes")
+        self.restart_node(0, extra_args=["-prune=550", "-blockfilterindex=1", "-txindex=1"])
         node = self.nodes[0]
         self.wait_until(lambda: node.getindexinfo()["basic block filter index"]["best_block_height"] >= 10, timeout=300)
 

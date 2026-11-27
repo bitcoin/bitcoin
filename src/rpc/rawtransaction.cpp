@@ -22,6 +22,7 @@
 #include <node/context.h>
 #include <node/psbt.h>
 #include <node/transaction.h>
+#include <node/tx_lookup_result.h>
 #include <policy/feerate.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -163,6 +164,7 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
 
     const NodeContext& node = EnsureAnyNodeContext(context);
     if (node.txindex) node.txindex->BlockUntilSyncedToCurrentChain();
+    ChainstateManager& chainman{EnsureChainman(node)};
 
     // If we can't find the corresponding full transaction for all of our inputs,
     // this will be used to find just the utxos for the segwit inputs for which
@@ -175,10 +177,8 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
         // The `non_witness_utxo` is the whole previous transaction
         if (psbt_input.non_witness_utxo) continue;
 
-        uint256 block_hash;
-        CTransactionRef tx{GetTransaction(/*block_index=*/nullptr, node.mempool.get(), node.txindex.get(), psbt_input.prev_txid, node.chainman->m_blockman, block_hash)};
-        if (tx) {
-            psbt_input.non_witness_utxo = tx;
+        if (auto result{GetTransaction(/*block_index=*/nullptr, node.mempool.get(), node.txindex.get(), psbt_input.prev_txid, chainman.m_blockman)}; auto* found{result.GetFound()}) {
+            psbt_input.non_witness_utxo = std::move(found->tx);
         } else {
             coins[psbt_input.GetOutPoint()]; // Create empty map entry keyed by prevout
         }
@@ -254,9 +254,13 @@ static RPCMethod getrawtransaction()
                 "getrawtransaction",
 
                 "By default, this call only returns a transaction if it is in the mempool. If -txindex is enabled\n"
-                "and no blockhash argument is passed, it will return the transaction if it is in the mempool or any block.\n"
+                "and no blockhash argument is passed, it will return the transaction if it is in the mempool or any block that is available.\n"
                 "If a blockhash argument is passed, it will return the transaction if\n"
                 "the specified block is available and the transaction is in that block.\n\n"
+                "If pruning is enabled, this call may return error -1 indicating that the transaction may be found\n"
+                "in one or more pruned blocks. The block hashes are included in the error message and the\n"
+                "error.data.pruned_block_hashes array. These blocks are not guaranteed to contain the transaction.\n"
+                "Use getblockfrompeer to fetch the blocks, then retry the lookup.\n\n"
                 "Hint: Use gettransaction for wallet transactions.\n\n"
 
                 "If verbosity is 0 or omitted, returns the serialized transaction as a hex-encoded string.\n"
@@ -304,6 +308,13 @@ static RPCMethod getrawtransaction()
 
     int verbosity{ParseVerbosity(request.params[1], /*default_verbosity=*/0, /*allow_bool=*/true)};
 
+    const auto check_block_data{[&](const CBlockIndex& index) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+        if (chainman.m_blockman.IsBlockPruned(index)) {
+            throw JSONRPCPrunedBlocksError({index.GetBlockHash()});
+        }
+        CheckBlockDataAvailability(chainman.m_blockman, index, /*check_for_undo=*/false);
+    }};
+
     if (!request.params[2].isNull()) {
         LOCK(cs_main);
 
@@ -312,6 +323,7 @@ static RPCMethod getrawtransaction()
         if (!blockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
         }
+        check_block_data(*blockindex);
     }
 
     bool f_txindex_ready = false;
@@ -319,15 +331,17 @@ static RPCMethod getrawtransaction()
         f_txindex_ready = node.txindex->BlockUntilSyncedToCurrentChain();
     }
 
-    uint256 hash_block;
-    CTransactionRef tx;
+    TxLookupResult tx_result;
     try {
-        tx = GetTransaction(blockindex, node.mempool.get(), node.txindex.get(), txid, chainman.m_blockman, hash_block);
+        tx_result = GetTransaction(blockindex, node.mempool.get(), node.txindex.get(), txid, chainman.m_blockman);
     } catch (const std::runtime_error&) {
-        if (blockindex) WITH_LOCK(::cs_main, CheckBlockDataAvailability(chainman.m_blockman, *blockindex, /*check_for_undo=*/false));
+        if (blockindex) WITH_LOCK(::cs_main, check_block_data(*blockindex));
         throw;
     }
-    if (!tx) {
+    if (const auto* miss{tx_result.GetMiss()}) {
+        if (!miss->pruned_block_hashes.empty()) {
+            throw JSONRPCPrunedBlocksError(miss->pruned_block_hashes);
+        }
         std::string errmsg;
         if (blockindex) {
             errmsg = "No such transaction found in the provided block";
@@ -340,6 +354,7 @@ static RPCMethod getrawtransaction()
         }
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errmsg + ". Use gettransaction for wallet transactions.");
     }
+    const auto& [tx, hash_block]{*tx_result.GetFound()};
 
     if (verbosity <= 0) {
         return EncodeHexTx(*tx);
@@ -372,7 +387,7 @@ static RPCMethod getrawtransaction()
     CBlockUndo blockUndo;
     CBlock block;
 
-    if (tx->IsCoinBase() || !blockindex || WITH_LOCK(::cs_main, return !(blockindex->nStatus & BLOCK_HAVE_MASK))) {
+    if (tx->IsCoinBase() || !blockindex || WITH_LOCK(::cs_main, return (blockindex->nStatus & BLOCK_HAVE_MASK) != BLOCK_HAVE_MASK)) {
         TxToJSON(*tx, hash_block, result, chainman.ActiveChainstate());
         return result;
     }
