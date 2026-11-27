@@ -94,6 +94,7 @@ using interfaces::Chain;
 using interfaces::FoundBlock;
 using interfaces::Handler;
 using interfaces::MakeSignalHandler;
+using interfaces::MemoryLoad;
 using interfaces::Mining;
 using interfaces::Node;
 using interfaces::Rpc;
@@ -881,8 +882,18 @@ public:
                                util::NotNullUniquePtr<CBlockTemplate> block_template,
                                const NodeContext& node) : m_create_options(std::move(create_options)),
                                                           m_block_template(std::move(block_template)),
+                                                          m_manager(node.block_template_manager),
                                                           m_node(node)
     {
+        // Register here because the template's memory footprint is tied to
+        // this object's lifetime.
+        block_template_manager().RegisterTemplate(m_block_template.get());
+    }
+
+    ~BlockTemplateImpl() override
+    {
+        // IPC cleanup can run after shutdown has reset the node's manager.
+        if (auto manager{m_manager.lock()}) manager->UnregisterTemplate(m_block_template.get());
     }
 
     CBlockHeader getBlockHeader() override
@@ -937,7 +948,12 @@ public:
 
     const BlockCreateOptions m_create_options;
 
-    const util::NotNullUniquePtr<CBlockTemplate> m_block_template;
+    // Shared so that BlockTemplateManager can hold a non-owning reference
+    // for memory accounting.
+    const util::NotNullSharedPtr<CBlockTemplate> m_block_template;
+
+    // Unregister from the original manager, if it is still alive.
+    const std::weak_ptr<node::BlockTemplateManager> m_manager;
 
     bool m_interrupt_wait{false};
     node::BlockTemplateManager& block_template_manager() { return *Assert(m_node.block_template_manager); }
@@ -1037,6 +1053,11 @@ public:
             results.emplace_back(m_node.mempool->get(wtxid));
         }
         return results;
+    }
+
+    MemoryLoad getMemoryLoad() override
+    {
+        return {.usage = block_template_manager().GetTemplateMemoryUsage()};
     }
 
     const NodeContext* context() override { return &m_node; }
