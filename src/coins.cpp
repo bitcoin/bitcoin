@@ -4,8 +4,8 @@
 
 #include <coins.h>
 
-#include <consensus/consensus.h>
 #include <primitives/block.h>
+#include <primitives/transaction.h>
 #include <random.h>
 #include <uint256.h>
 #include <util/log.h>
@@ -411,9 +411,6 @@ CCoinsViewCache::ResetGuard CoinsViewOverlay::StartFetching(const CBlock& block 
     }
     return CreateResetGuard();
 }
-
-static const uint64_t MIN_TRANSACTION_OUTPUT_WEIGHT{WITNESS_SCALE_FACTOR * ::GetSerializeSize(CTxOut())};
-static const uint64_t MAX_OUTPUTS_PER_BLOCK{MAX_BLOCK_WEIGHT / MIN_TRANSACTION_OUTPUT_WEIGHT};
 
 const Coin& AccessByTxid(const CCoinsViewCache& view, const Txid& txid)
 {

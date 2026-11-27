@@ -1431,4 +1431,91 @@ BOOST_AUTO_TEST_CASE(tx_malformed_serialization)
     BOOST_CHECK_EXCEPTION(bad_flag >> TX_WITH_WITNESS(tx), std::ios_base::failure, HasReason{"Unknown transaction optional data"});
 }
 
+BOOST_AUTO_TEST_CASE(too_many_inputs_or_outputs)
+{
+    // Deserialization fails as soon as a count of inputs or outputs is read that is more than fit in a block, before
+    // reading them. So it fails here, rather than running out of data, in either format.
+    const auto check{[](bool extended, bool outputs, uint64_t count, const std::string& reason) {
+        DataStream s;
+        s << uint32_t{2};
+        if (extended) s << uint8_t{0} << uint8_t{1};
+        if (outputs) s << std::vector<CTxIn>(1);
+        WriteCompactSize(s, count);
+        CMutableTransaction tx;
+        BOOST_CHECK_EXCEPTION(s >> TX_WITH_WITNESS(tx), std::ios_base::failure, HasReason(reason));
+    }};
+    // The limits are based on the weight of an input and an output that are as small as possible.
+    BOOST_CHECK_EQUAL(MIN_WEIGHT_PER_TXIN, WITNESS_SCALE_FACTOR * ::GetSerializeSize(CTxIn{}));
+    BOOST_CHECK_EQUAL(MIN_WEIGHT_PER_TXOUT, WITNESS_SCALE_FACTOR * ::GetSerializeSize(CTxOut{}));
+    for (const bool extended : {false, true}) {
+        check(extended, /*outputs=*/false, MAX_BLOCK_WEIGHT / MIN_WEIGHT_PER_TXIN, "end of data");
+        check(extended, /*outputs=*/false, MAX_BLOCK_WEIGHT / MIN_WEIGHT_PER_TXIN + 1, "Too many transaction inputs");
+        check(extended, /*outputs=*/true, MAX_BLOCK_WEIGHT / MIN_WEIGHT_PER_TXOUT, "end of data");
+        check(extended, /*outputs=*/true, MAX_BLOCK_WEIGHT / MIN_WEIGHT_PER_TXOUT + 1, "Too many transaction outputs");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(reject_empty)
+{
+    const auto deser_tx{[](const auto& data, const TransactionSerParams& params) {
+        CMutableTransaction tx;
+        SpanReader{data} >> params(tx);
+        return tx;
+    }};
+
+    CMutableTransaction valid;
+    valid.vin.resize(1);
+    valid.vout.resize(1);
+    CMutableTransaction no_outputs;
+    no_outputs.vin.resize(1);
+    const CMutableTransaction empty;
+
+    // A transaction with inputs and outputs is accepted either way.
+    BOOST_CHECK(CTransaction{deser_tx(DataStream{} << TX_WITH_WITNESS(valid), TX_WITH_WITNESS_P2P)}.GetWitnessHash() == CTransaction{valid}.GetWitnessHash());
+
+    // A transaction without inputs or outputs (version, 0x00, 0x00, locktime) deserializes normally, but not with
+    // TX_WITH_WITNESS_P2P.
+    const auto empty_ser{DataStream{} << TX_WITH_WITNESS(empty)};
+    BOOST_CHECK_EQUAL(empty_ser.size(), 10U);
+    BOOST_CHECK(deser_tx(empty_ser, TX_WITH_WITNESS).vin.empty());
+    BOOST_CHECK_EXCEPTION(deser_tx(empty_ser, TX_WITH_WITNESS_P2P), std::ios_base::failure, HasReason("Transaction without inputs"));
+
+    // A legacy transaction with outputs but no inputs can be read for funding.
+    CMutableTransaction no_inputs;
+    no_inputs.vout.emplace_back(1, CScript{} << OP_TRUE);
+    const auto no_inputs_ser{DataStream{} << TX_NO_WITNESS(no_inputs)};
+    const auto unfunded{deser_tx(no_inputs_ser, TX_NO_WITNESS)};
+    BOOST_CHECK(unfunded.vin.empty());
+    BOOST_CHECK(unfunded.vout == no_inputs.vout);
+
+    // A transaction without outputs.
+    const auto no_outputs_ser{DataStream{} << TX_WITH_WITNESS(no_outputs)};
+    BOOST_CHECK(deser_tx(no_outputs_ser, TX_WITH_WITNESS).vout.empty());
+    BOOST_CHECK_EXCEPTION(deser_tx(no_outputs_ser, TX_WITH_WITNESS_P2P), std::ios_base::failure, HasReason("Transaction without outputs"));
+
+    // The extended format with no inputs is rejected before the outputs are read (otherwise it fails later, for
+    // having a superfluous witness record).
+    std::vector<unsigned char> ext_no_inputs{0x02, 0, 0, 0, /*marker=*/0, /*flag=*/1, /*inputs=*/0, /*outputs=*/1,
+                                             /*value=*/0, 0, 0, 0, 0, 0, 0, 0, /*empty scriptPubKey=*/0, /*lock time=*/0, 0, 0, 0};
+    BOOST_CHECK_EXCEPTION(deser_tx(ext_no_inputs, TX_WITH_WITNESS), std::ios_base::failure, HasReason("Superfluous witness record"));
+    BOOST_CHECK_EXCEPTION(deser_tx(ext_no_inputs, TX_WITH_WITNESS_P2P), std::ios_base::failure, HasReason("Transaction without inputs"));
+    // Ordinary decoding reports the truncated output or its missing count, ...
+    ext_no_inputs.resize(9);
+    BOOST_CHECK_EXCEPTION(deser_tx(ext_no_inputs, TX_WITH_WITNESS), std::ios_base::failure, HasReason("end of data"));
+    ext_no_inputs.resize(7);
+    BOOST_CHECK_EXCEPTION(deser_tx(ext_no_inputs, TX_WITH_WITNESS), std::ios_base::failure, HasReason("end of data"));
+    // ... while TX_WITH_WITNESS_P2P rejects it before reading them.
+    BOOST_CHECK_EXCEPTION(deser_tx(ext_no_inputs, TX_WITH_WITNESS_P2P), std::ios_base::failure, HasReason("Transaction without inputs"));
+
+    // The flag applies to transactions inside blocks too.
+    CBlock block;
+    block.vtx.push_back(MakeTransactionRef(valid));
+    block.vtx.push_back(MakeTransactionRef(empty));
+    const auto block_ser{DataStream{} << TX_WITH_WITNESS(block)};
+    CBlock block_deser;
+    SpanReader{block_ser} >> TX_WITH_WITNESS(block_deser);
+    BOOST_CHECK_EQUAL(block_deser.vtx.size(), 2U);
+    BOOST_CHECK_EXCEPTION(SpanReader{block_ser} >> TX_WITH_WITNESS_P2P(block_deser), std::ios_base::failure, HasReason("Transaction without inputs"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
