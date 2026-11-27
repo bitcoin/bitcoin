@@ -28,6 +28,7 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <serialize.h>
+#include <span.h>
 #include <streams.h>
 #include <sync.h>
 #include <tinyformat.h>
@@ -1007,8 +1008,9 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
     switch (rf) {
     case RESTResponseFormat::HEX: {
         // convert hex to bin, continue then with bin part
-        std::vector<unsigned char> strRequestV = ParseHex(strRequestMutable);
-        strRequestMutable.assign(strRequestV.begin(), strRequestV.end());
+        const auto strRequestV{TryParseHex<unsigned char>(strRequestMutable)};
+        if (!strRequestV) return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
+        strRequestMutable.assign(strRequestV->begin(), strRequestV->end());
         [[fallthrough]];
     }
 
@@ -1020,10 +1022,9 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
                 if (fInputParsed) //don't allow sending input over URI and HTTP RAW DATA
                     return RESTERR(req, HTTP_BAD_REQUEST, "Combination of URI scheme inputs and raw post data is not allowed");
 
-                DataStream oss{};
-                oss << strRequestMutable;
-                oss >> fCheckMemPool;
-                oss >> vOutPoints;
+                SpanReader reader{MakeByteSpan(strRequestMutable)};
+                reader >> fCheckMemPool >> LIMITED_VECTOR(vOutPoints, MAX_GETUTXOS_OUTPOINTS);
+                if (reader.size()) return RESTERR(req, HTTP_BAD_REQUEST, "Parse error");
             }
         } catch (const std::ios_base::failure&) {
             // abort in case of unreadable binary data
@@ -1041,6 +1042,8 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
         return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: " + AvailableDataFormatsString() + ")");
     }
     }
+
+    if (vOutPoints.empty()) return RESTERR(req, HTTP_BAD_REQUEST, "Error: empty request");
 
     // limit max outpoints
     if (vOutPoints.size() > MAX_GETUTXOS_OUTPOINTS)
