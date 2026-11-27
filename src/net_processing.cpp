@@ -252,6 +252,10 @@ struct Peer {
 
     //! Whether this peer is an inbound connection
     const bool m_is_inbound;
+    //! Whether this peer has the bip152hb permission. We request high-bandwidth
+    //! compact block announcements from such peers for the whole connection,
+    //! outside of the automatic selection in lNodesAnnouncingHeaderAndIDs.
+    const bool m_bip152_hb_permission;
 
     /** Protects misbehavior data members */
     Mutex m_misbehavior_mutex;
@@ -418,10 +422,11 @@ struct Peer {
      * timestamp the peer sent in the version message. */
     std::atomic<std::chrono::seconds> m_time_offset{0s};
 
-    explicit Peer(NodeId id, ServiceFlags our_services, bool is_inbound)
+    explicit Peer(NodeId id, ServiceFlags our_services, bool is_inbound, bool bip152_hb_permission)
         : m_id{id}
         , m_our_services{our_services}
         , m_is_inbound{is_inbound}
+        , m_bip152_hb_permission{bip152_hb_permission}
     {}
 
 private:
@@ -1067,7 +1072,8 @@ private:
      * When a peer sends us a valid block, instruct it to announce blocks to us
      * using CMPCTBLOCK if possible by adding its nodeid to the end of
      * lNodesAnnouncingHeaderAndIDs, and keeping that list under a certain size by
-     * removing the first element if necessary.
+     * removing the first element if necessary. Peers with the bip152hb
+     * permission are skipped, as they are already high-bandwidth.
      */
     void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main, !m_peer_mutex);
 
@@ -1382,6 +1388,10 @@ void PeerManagerImpl::MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid)
         // Don't request compact blocks if the peer has not signalled support
         return;
     }
+    // Peers with the bip152hb permission were asked for high-bandwidth mode
+    // when the connection was established. They are additional to the
+    // automatically selected peers and must not take one of their slots.
+    if (peer && peer->m_bip152_hb_permission) return;
 
     int num_outbound_hb_peers = 0;
     for (std::list<NodeId>::iterator it = lNodesAnnouncingHeaderAndIDs.begin(); it != lNodesAnnouncingHeaderAndIDs.end(); it++) {
@@ -1712,7 +1722,8 @@ void PeerManagerImpl::InitializeNode(const CNode& node, ServiceFlags our_service
         our_services = static_cast<ServiceFlags>(our_services | NODE_BLOOM);
     }
 
-    PeerRef peer = std::make_shared<Peer>(nodeid, our_services, node.IsInboundConn());
+    PeerRef peer = std::make_shared<Peer>(nodeid, our_services, node.IsInboundConn(),
+                                          node.HasPermission(NetPermissionFlags::Bip152HighBandwidth));
     {
         LOCK(m_peer_mutex);
         m_peer_map.emplace_hint(m_peer_map.end(), nodeid, peer);
@@ -4126,11 +4137,16 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
 
         if (pfrom.GetCommonVersion() >= SHORT_IDS_BLOCKS_VERSION) {
             // Tell our peer we are willing to provide version 2 cmpctblocks.
-            // However, we do not request new block announcements using
-            // cmpctblock messages.
+            // Request new block announcements using cmpctblock messages right
+            // away only from peers with the bip152hb permission. Other peers
+            // may be selected later in MaybeSetPeerAsAnnouncingHeaderAndIDs(),
+            // which, like here, never requests them in -blocksonly mode.
             // We send this to non-NODE NETWORK peers as well, because
             // they may wish to request compact blocks from us
-            MakeAndPushMessage(pfrom, NetMsgType::SENDCMPCT, /*high_bandwidth=*/false, /*version=*/CMPCTBLOCKS_VERSION);
+            const bool high_bandwidth{peer.m_bip152_hb_permission && !m_opts.ignore_incoming_txs};
+            MakeAndPushMessage(pfrom, NetMsgType::SENDCMPCT, high_bandwidth, /*version=*/CMPCTBLOCKS_VERSION);
+            // save BIP152 bandwidth state
+            pfrom.m_bip152_highbandwidth_to = high_bandwidth;
         }
 
         if (m_txreconciliation) {
