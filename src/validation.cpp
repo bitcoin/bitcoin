@@ -1970,28 +1970,18 @@ void Chainstate::CheckForkWarningConditions()
     }
 }
 
-// Called both upon regular invalid block discovery *and* InvalidateBlock
+// Update m_best_invalid to track the invalid block with the most work
 void Chainstate::InvalidChainFound(CBlockIndex* pindexNew)
 {
     AssertLockHeld(cs_main);
     if (!m_chainman.m_best_invalid || pindexNew->nChainWork > m_chainman.m_best_invalid->nChainWork) {
         m_chainman.m_best_invalid = pindexNew;
     }
-    PropagateBlockInvalidity(pindexNew);
-
-    LogInfo("%s: invalid block=%s height=%d log2_work=%f date=%s", __func__,
-      pindexNew->GetBlockHash().ToString(), pindexNew->nHeight,
-      log(pindexNew->nChainWork.getdouble())/log(2.0), FormatISO8601DateTime(pindexNew->GetBlockTime()));
-    CBlockIndex *tip = m_chain.Tip();
-    assert (tip);
-    LogInfo("%s: current best=%s height=%d log2_work=%f date=%s", __func__,
-      tip->GetBlockHash().ToString(), m_chain.Height(), log(tip->nChainWork.getdouble())/log(2.0),
-      FormatISO8601DateTime(tip->GetBlockTime()));
-    CheckForkWarningConditions();
 }
 
-// Same as InvalidChainFound, above, except not called directly from InvalidateBlock,
-// which does its own setBlockIndexCandidates management.
+// Mark block as failed, flag descendants as having an invalid ancestor,
+// and update best header/invalid tracking. Not called from InvalidateBlock,
+// which handles these updates itself.
 void Chainstate::InvalidBlockFound(CBlockIndex* pindex, const BlockValidationState& state)
 {
     AssertLockHeld(cs_main);
@@ -1999,7 +1989,18 @@ void Chainstate::InvalidBlockFound(CBlockIndex* pindex, const BlockValidationSta
         pindex->nStatus |= BLOCK_FAILED_VALID;
         m_blockman.m_dirty_blockindex.insert(pindex);
         setBlockIndexCandidates.erase(pindex);
+        PropagateBlockInvalidity(pindex);
         InvalidChainFound(pindex);
+
+        LogInfo("%s: invalid block=%s height=%d log2_work=%f date=%s", __func__,
+                pindex->GetBlockHash().ToString(), pindex->nHeight,
+                log(pindex->nChainWork.getdouble()) / log(2.0), FormatISO8601DateTime(pindex->GetBlockTime()));
+        CBlockIndex* tip = m_chain.Tip();
+        assert(tip);
+        LogInfo("%s: current best=%s height=%d log2_work=%f date=%s", __func__,
+                tip->GetBlockHash().ToString(), m_chain.Height(), log(tip->nChainWork.getdouble()) / log(2.0),
+                FormatISO8601DateTime(tip->GetBlockTime()));
+        CheckForkWarningConditions();
     }
 }
 
@@ -3248,6 +3249,9 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex&
                 if (state.IsInvalid()) {
                     // The block violates a consensus rule.
                     if (state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
+                        // InvalidBlockFound (called from ConnectTip) has already marked the
+                        // failed block and all of its descendants as invalid.
+                        Assume(vpindexToConnect.front()->nStatus & BLOCK_FAILED_VALID);
                         InvalidChainFound(vpindexToConnect.front());
                     }
                     state = BlockValidationState();
@@ -3648,7 +3652,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* const
             ++candidate_it;
         }
 
-        // Track the last disconnected block to call InvalidChainFound on it.
+        // Track the last disconnected block for the final invalidation updates and tip notification
         to_mark_failed = disconnected_tip;
     }
 
@@ -3681,7 +3685,22 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* const
             }
         }
 
+        // Flag the remaining descendants as invalid and update the best header: The marking in
+        // the disconnect loop only covers blocks that were already present in
+        // highpow_outofchain_headers when it was built, and it doesn't run at all if pindex
+        // never was in the active chain.
+        PropagateBlockInvalidity(to_mark_failed);
+
         InvalidChainFound(to_mark_failed);
+        LogInfo("%s: invalid block=%s height=%d log2_work=%f date=%s", __func__,
+                to_mark_failed->GetBlockHash().ToString(), to_mark_failed->nHeight,
+                log(to_mark_failed->nChainWork.getdouble()) / log(2.0), FormatISO8601DateTime(to_mark_failed->GetBlockTime()));
+        CBlockIndex* tip = m_chain.Tip();
+        assert(tip);
+        LogInfo("%s: current best=%s height=%d log2_work=%f date=%s", __func__,
+                tip->GetBlockHash().ToString(), m_chain.Height(), log(tip->nChainWork.getdouble()) / log(2.0),
+                FormatISO8601DateTime(tip->GetBlockTime()));
+        CheckForkWarningConditions();
     }
 
     // Only notify about a new block tip if the active chain was modified.
