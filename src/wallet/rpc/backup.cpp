@@ -358,9 +358,9 @@ RPCMethod backupwallet()
 {
     return RPCMethod{
         "backupwallet",
-        "Safely copies the current wallet file to the specified destination, which can either be a directory or a path with a filename.\n",
+        "Backs up the current wallet to the specified file.\n",
                 {
-                    {"destination", RPCArg::Type::STR, RPCArg::Optional::NO, "The destination directory or file"},
+                    {"destination", RPCArg::Type::STR, RPCArg::Optional::NO, "Path to the backup file, including its filename"},
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
