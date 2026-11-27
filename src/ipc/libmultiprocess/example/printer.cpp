@@ -10,7 +10,6 @@
 #include <cstring> // IWYU pragma: keep
 #include <fstream>
 #include <iostream>
-#include <kj/async.h>
 #include <kj/common.h>
 #include <kj/memory.h>
 #include <memory>

@@ -542,9 +542,14 @@ static void Generate(kj::StringPtr src_prefix,
                 }
                 fields.mergeFields();
 
-                if (!is_construct && !is_destroy && (&method_interface == &interface)) {
+                // Generate a ProxyMethod specialization for every method,
+                // including inherited methods, so each wrapped interface maps
+                // the methods it handles to its own C++ class. The interface
+                // declaring an inherited method may be wrapped by a different
+                // C++ class, or not be wrapped at all.
+                if (!is_construct && !is_destroy) {
                     methods << "template<>\n";
-                    methods << "struct ProxyMethod<" << method_prefix << "Params>\n";
+                    methods << "struct ProxyMethod<" << message_namespace << "::" << node_name << ", " << method_prefix << "Params>\n";
                     methods << "{\n";
                     methods << "    static constexpr auto impl = &" << proxied_class_type
                             << "::" << proxied_method_name << ";\n";
@@ -611,8 +616,8 @@ static void Generate(kj::StringPtr src_prefix,
                 const std::string super_str{is_construct || is_destroy ? "Super& super" : ""};
                 const std::string self_str{is_construct || is_destroy ? "super" : "*this"};
 
-                client << "    using M" << method_ordinal << " = ProxyClientMethodTraits<" << method_prefix
-                       << "Params>;\n";
+                client << "    using M" << method_ordinal << " = ProxyClientMethodTraits<" << message_namespace
+                       << "::" << node_name << ", " << method_prefix << "Params>;\n";
                 client << "    " << static_str << "typename M" << method_ordinal << "::Result " << method_name << "("
                        << super_str << client_args.str() << ")";
                 client << ";\n";

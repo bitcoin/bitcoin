@@ -80,6 +80,17 @@ public:
     virtual int callExtended(int arg) = 0;
 };
 
+//! C++ class wrapped by the FlatCallback capnp interface, which inherits its
+//! call method from the CallbackBase capnp interface. Unlike ExtendedCallback,
+//! there is no C++ base class corresponding to the capnp base interface.
+class FlatCallback
+{
+public:
+    virtual ~FlatCallback() = default;
+    virtual int call(int arg) = 0;
+    virtual int callExtended(int arg) = 0;
+};
+
 class FooInit
 {
 };
@@ -117,6 +128,7 @@ public:
     void saveCallback(std::shared_ptr<FooCallback> callback) { m_callback = std::move(callback); }
     int callbackSaved(int arg) { return m_callback->call(arg); }
     int callbackExtended(ExtendedCallback& callback, int arg) { return callback.callExtended(arg); }
+    int callbackFlat(FlatCallback& callback, int arg) { return callback.call(arg) + callback.callExtended(arg); }
     FooCustom passCustom(FooCustom foo) { return foo; }
     FooEmpty passEmpty(FooEmpty foo) { return foo; }
     FooData passData(FooData foo) { return foo; }
