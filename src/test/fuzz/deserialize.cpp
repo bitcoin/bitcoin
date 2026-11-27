@@ -11,6 +11,7 @@
 #include <chainparams.h>
 #include <coins.h>
 #include <common/args.h>
+#include <common/bloom.h>
 #include <compressor.h>
 #include <consensus/merkle.h>
 #include <key.h>
