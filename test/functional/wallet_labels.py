@@ -13,6 +13,11 @@ from collections import defaultdict
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.descriptors import descsum_create
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_INVALID_PARAMETER,
+    RPC_WALLET_INVALID_LABEL_NAME,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.wallet_util import test_address
@@ -44,11 +49,11 @@ class WalletLabelsTest(BitcoinTestFramework):
         }])
 
         assert_equal(response[0]['success'], False)
-        assert_equal(response[0]['error']['code'], -11)
+        assert_equal(response[0]['error']['code'], RPC_WALLET_INVALID_LABEL_NAME)
         assert_equal(response[0]['error']['message'], "Invalid label name")
 
         for rpc_call in rpc_calls:
-            assert_raises_rpc_error(-11, "Invalid label name", *rpc_call, label="*")
+            assert_raises_rpc_error(RPC_WALLET_INVALID_LABEL_NAME, "Invalid label name", *rpc_call, label="*")
 
     def test_label_named_parameter_handling(self):
         """Test that getnewaddress with labels containing '=' characters is handled correctly in -named mode"""
@@ -77,8 +82,8 @@ class WalletLabelsTest(BitcoinTestFramework):
         assert_equal(len(node.listunspent()), 0)
 
         self.log.info("Checking listlabels' invalid parameters")
-        assert_raises_rpc_error(-8, "Invalid 'purpose' argument, must be a known purpose string, typically 'send', or 'receive'.", node.listlabels, "notavalidpurpose")
-        assert_raises_rpc_error(-8, "Invalid 'purpose' argument, must be a known purpose string, typically 'send', or 'receive'.", node.listlabels, "unknown")
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid 'purpose' argument, must be a known purpose string, typically 'send', or 'receive'.", node.listlabels, "notavalidpurpose")
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid 'purpose' argument, must be a known purpose string, typically 'send', or 'receive'.", node.listlabels, "unknown")
 
         # Note each time we call generate, all generated coins go into
         # the same address, so we call twice to get two addresses w/50 each
@@ -169,7 +174,7 @@ class WalletLabelsTest(BitcoinTestFramework):
             node.setlabel(address, label.name)
             label.add_address(address)
             label.verify(node)
-            assert_raises_rpc_error(-11, "No addresses with label", node.getaddressesbylabel, "")
+            assert_raises_rpc_error(RPC_WALLET_INVALID_LABEL_NAME, "No addresses with label", node.getaddressesbylabel, "")
 
         # Check that setlabel can change the label of an address from a
         # different label.
@@ -206,7 +211,7 @@ class WalletLabelsTest(BitcoinTestFramework):
             ad = BECH32_INVALID[l]
             import_res = wallet_watch_only.importdescriptors([{"desc": descsum_create(f"addr({ad})"), "timestamp": "now", "label": l}])
             assert_equal(import_res[0]["success"], False)
-            assert_equal(import_res[0]["error"]["code"], -5)
+            assert_equal(import_res[0]["error"]["code"], RPC_INVALID_ADDRESS_OR_KEY)
             assert_equal(import_res[0]["error"]["message"], "Address is not valid")
 
 

@@ -7,6 +7,12 @@
 from decimal import Decimal, getcontext
 
 from test_framework.messages import SEQUENCE_FINAL
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_PARAMETER,
+    RPC_TYPE_ERROR,
+    RPC_WALLET_ERROR,
+    RPC_WALLET_INSUFFICIENT_FUNDS,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -138,7 +144,7 @@ class SendallTest(BitcoinTestFramework):
         self.add_utxos([12, 9])
 
         assert_raises_rpc_error(
-                -8,
+                RPC_INVALID_PARAMETER,
                 "Must provide at least one address without a specified amount" ,
                 self.wallet.sendall,
                 [{self.recipient: 5}]
@@ -150,7 +156,7 @@ class SendallTest(BitcoinTestFramework):
         self.add_utxos([1, 8, 3, 9])
 
         assert_raises_rpc_error(
-                -8,
+                RPC_INVALID_PARAMETER,
                 "Invalid parameter, duplicated address: {}".format(self.remainder_target),
                 self.wallet.sendall,
                 [self.remainder_target, self.remainder_target]
@@ -165,15 +171,15 @@ class SendallTest(BitcoinTestFramework):
         tx = self.wallet.decoderawtransaction(expected_tx['hex'])
         fee = 21 - sum([o["value"] for o in tx["vout"]])
 
-        assert_raises_rpc_error(-6, "Assigned more value to outputs than available funds.", self.wallet.sendall,
+        assert_raises_rpc_error(RPC_WALLET_INSUFFICIENT_FUNDS, "Assigned more value to outputs than available funds.", self.wallet.sendall,
                 [{self.recipient: pre_sendall_balance + 1}, self.remainder_target])
-        assert_raises_rpc_error(-6, "Insufficient funds for fees after creating specified outputs.", self.wallet.sendall,
+        assert_raises_rpc_error(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds for fees after creating specified outputs.", self.wallet.sendall,
                 [{self.recipient: pre_sendall_balance}, self.remainder_target])
-        assert_raises_rpc_error(-8, "Specified output amount to {} is below dust threshold".format(self.recipient),
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Specified output amount to {} is below dust threshold".format(self.recipient),
                 self.wallet.sendall, [{self.recipient: 0.00000001}, self.remainder_target])
-        assert_raises_rpc_error(-6, "Dynamically assigned remainder results in dust output.", self.wallet.sendall,
+        assert_raises_rpc_error(RPC_WALLET_INSUFFICIENT_FUNDS, "Dynamically assigned remainder results in dust output.", self.wallet.sendall,
                 [{self.recipient: pre_sendall_balance - fee}, self.remainder_target])
-        assert_raises_rpc_error(-6, "Dynamically assigned remainder results in dust output.", self.wallet.sendall,
+        assert_raises_rpc_error(RPC_WALLET_INSUFFICIENT_FUNDS, "Dynamically assigned remainder results in dust output.", self.wallet.sendall,
                 [{self.recipient: pre_sendall_balance - fee - Decimal(0.00000010)}, self.remainder_target])
 
     # @cleanup not needed because different wallet used
@@ -188,7 +194,7 @@ class SendallTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1)
         assert_greater_than(dust_wallet.getbalances()["mine"]["trusted"], 0)
 
-        assert_raises_rpc_error(-6, "Total value of UTXO pool too low to pay for transaction."
+        assert_raises_rpc_error(RPC_WALLET_INSUFFICIENT_FUNDS, "Total value of UTXO pool too low to pay for transaction."
                 + " Try using lower feerate or excluding uneconomic UTXOs with 'send_max' option.",
                 dust_wallet.sendall, recipients=[self.remainder_target], fee_rate=300)
 
@@ -235,26 +241,26 @@ class SendallTest(BitcoinTestFramework):
         spent_utxo = self.wallet.listunspent()[0]
 
         # fails on out of bounds vout
-        assert_raises_rpc_error(-8,
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER,
                 "Input not found. UTXO ({}:{}) is not part of wallet.".format(spent_utxo["txid"], 1000),
                 self.wallet.sendall, recipients=[self.remainder_target], inputs=[{"txid": spent_utxo["txid"], "vout": 1000}])
 
         # fails on unconfirmed spent UTXO
         self.wallet.sendall(recipients=[self.remainder_target])
-        assert_raises_rpc_error(-8,
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER,
                 "Input not available. UTXO ({}:{}) was already spent.".format(spent_utxo["txid"], spent_utxo["vout"]),
                 self.wallet.sendall, recipients=[self.remainder_target], inputs=[spent_utxo])
 
         # fails on specific previously spent UTXO, while other UTXOs exist
         self.generate(self.nodes[0], 1)
         self.add_utxos([19, 2])
-        assert_raises_rpc_error(-8,
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER,
                 "Input not available. UTXO ({}:{}) was already spent.".format(spent_utxo["txid"], spent_utxo["vout"]),
                 self.wallet.sendall, recipients=[self.remainder_target], inputs=[spent_utxo])
 
         # fails because UTXO is unknown, while other UTXOs exist
         foreign_utxo = self.def_wallet.listunspent()[0]
-        assert_raises_rpc_error(-8, "Input not found. UTXO ({}:{}) is not part of wallet.".format(foreign_utxo["txid"],
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Input not found. UTXO ({}:{}) is not part of wallet.".format(foreign_utxo["txid"],
             foreign_utxo["vout"]), self.wallet.sendall, recipients=[self.remainder_target],
             inputs=[foreign_utxo])
 
@@ -266,7 +272,7 @@ class SendallTest(BitcoinTestFramework):
         txcount_before = self.wallet.getwalletinfo()["txcount"]
         nonmempool_before = self.wallet.getbalances()["mine"]["nonmempool"]
 
-        assert_raises_rpc_error(-8,
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER,
                 "Invalid parameter, duplicated input: {}:{}".format(utxo["txid"], utxo["vout"]),
                 self.wallet.sendall, recipients=[self.remainder_target], inputs=[utxo, utxo])
         assert_equal(self.wallet.getwalletinfo()["txcount"], txcount_before)
@@ -280,7 +286,7 @@ class SendallTest(BitcoinTestFramework):
         self.add_utxos([19, 2])
 
         assert_raises_rpc_error(
-                -8,
+                RPC_INVALID_PARAMETER,
                 "Must provide at least one address without a specified amount" ,
                 self.wallet.sendall,
                 []
@@ -292,7 +298,7 @@ class SendallTest(BitcoinTestFramework):
         self.add_utxos([15, 6])
         utxo = self.wallet.listunspent()[0]
 
-        assert_raises_rpc_error(-8,
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER,
             "Cannot combine send_max with specific inputs.",
             self.wallet.sendall,
             recipients=[self.remainder_target],
@@ -301,9 +307,9 @@ class SendallTest(BitcoinTestFramework):
     @cleanup
     def sendall_fails_on_invalid_options(self):
         self.log.info("Test sendall fails on unknown options or options of the wrong type")
-        assert_raises_rpc_error(-3, "Unexpected key add_to_wllt",
+        assert_raises_rpc_error(RPC_TYPE_ERROR, "Unexpected key add_to_wllt",
                 self.wallet.sendall, recipients=[self.remainder_target], options={"add_to_wllt": "false"})
-        assert_raises_rpc_error(-3, "JSON value of type string for field add_to_wallet is not of expected type bool",
+        assert_raises_rpc_error(RPC_TYPE_ERROR, "JSON value of type string for field add_to_wallet is not of expected type bool",
                 self.wallet.sendall, recipients=[self.remainder_target], options={"add_to_wallet": "false"})
 
     @cleanup
@@ -312,7 +318,7 @@ class SendallTest(BitcoinTestFramework):
         self.add_utxos([21])
 
         assert_raises_rpc_error(
-                -4,
+                RPC_WALLET_ERROR,
                 "Fee exceeds maximum configured by user",
                 self.wallet.sendall,
                 recipients=[self.remainder_target],
@@ -321,7 +327,7 @@ class SendallTest(BitcoinTestFramework):
     @cleanup
     def sendall_fails_on_low_fee(self):
         self.log.info("Test sendall fails if the transaction fee is lower than the minimum fee rate setting")
-        assert_raises_rpc_error(-8, "Fee rate (0.999 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)",
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Fee rate (0.999 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)",
         self.wallet.sendall, recipients=[self.recipient], fee_rate=0.999)
 
     @cleanup
@@ -358,7 +364,7 @@ class SendallTest(BitcoinTestFramework):
 
         self.log.info("Test sendall fails because minconf is negative")
 
-        assert_raises_rpc_error(-8,
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER,
             "Invalid minconf (minconf cannot be negative): -2",
             self.wallet.sendall,
             recipients=[self.remainder_target],
@@ -366,7 +372,7 @@ class SendallTest(BitcoinTestFramework):
         self.log.info("Test sendall fails because minconf is used while specific inputs are provided")
 
         utxo = self.wallet.listunspent()[0]
-        assert_raises_rpc_error(-8,
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER,
             "Cannot combine minconf or maxconf with specific inputs.",
             self.wallet.sendall,
             recipients=[self.remainder_target],
@@ -374,7 +380,7 @@ class SendallTest(BitcoinTestFramework):
 
         self.log.info("Test sendall fails because there are no utxos with enough confirmations specified by minconf")
 
-        assert_raises_rpc_error(-6,
+        assert_raises_rpc_error(RPC_WALLET_INSUFFICIENT_FUNDS,
             "Total value of UTXO pool too low to pay for transaction. Try using lower feerate or excluding uneconomic UTXOs with 'send_max' option.",
             self.wallet.sendall,
             recipients=[self.remainder_target],
@@ -399,7 +405,7 @@ class SendallTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 2)
 
         self.log.info("Test sendall fails because there are no utxos with enough confirmations specified by maxconf")
-        assert_raises_rpc_error(-6,
+        assert_raises_rpc_error(RPC_WALLET_INSUFFICIENT_FUNDS,
             "Total value of UTXO pool too low to pay for transaction. Try using lower feerate or excluding uneconomic UTXOs with 'send_max' option.",
             self.wallet.sendall,
             recipients=[self.remainder_target],
@@ -483,7 +489,7 @@ class SendallTest(BitcoinTestFramework):
         self.wallet.syncwithvalidationinterfacequeue()
         unspent = self.wallet.listunspent(minconf=0)[0]
         assert_equal(self.wallet.gettransaction(unspent["txid"])["confirmations"], 0)
-        assert_raises_rpc_error(-4, error, self.wallet.sendall,
+        assert_raises_rpc_error(RPC_WALLET_ERROR, error, self.wallet.sendall,
                                 recipients=[self.remainder_target], inputs=[unspent], fee_rate=fee_rate)
         self.generate(self.nodes[0], 1)
 
@@ -538,7 +544,7 @@ class SendallTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1)
 
         assert_raises_rpc_error(
-                -4,
+                RPC_WALLET_ERROR,
                 "Transaction too large.",
                 self.wallet.sendall,
                 recipients=[self.remainder_target])

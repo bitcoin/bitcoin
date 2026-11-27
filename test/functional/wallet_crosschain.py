@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+from test_framework.rpc_error_codes import RPC_WALLET_NOT_FOUND
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_raises_rpc_error
 
@@ -40,10 +41,10 @@ class WalletCrossChain(BitcoinTestFramework):
 
         self.log.info("Loading/restoring wallets into nodes with a different genesis block")
 
-        assert_raises_rpc_error(-18, 'Wallet file verification failed.', self.nodes[0].loadwallet, node1_wallet)
-        assert_raises_rpc_error(-18, 'Wallet file verification failed.', self.nodes[1].loadwallet, node0_wallet)
-        assert_raises_rpc_error(-18, 'Wallet file verification failed.', self.nodes[0].restorewallet, 'w', node1_wallet_backup)
-        assert_raises_rpc_error(-18, 'Wallet file verification failed.', self.nodes[1].restorewallet, 'w', node0_wallet_backup)
+        assert_raises_rpc_error(RPC_WALLET_NOT_FOUND, 'Wallet file verification failed.', self.nodes[0].loadwallet, node1_wallet)
+        assert_raises_rpc_error(RPC_WALLET_NOT_FOUND, 'Wallet file verification failed.', self.nodes[1].loadwallet, node0_wallet)
+        assert_raises_rpc_error(RPC_WALLET_NOT_FOUND, 'Wallet file verification failed.', self.nodes[0].restorewallet, 'w', node1_wallet_backup)
+        assert_raises_rpc_error(RPC_WALLET_NOT_FOUND, 'Wallet file verification failed.', self.nodes[1].restorewallet, 'w', node0_wallet_backup)
 
 
 if __name__ == '__main__':

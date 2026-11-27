@@ -45,6 +45,7 @@ from decimal import Decimal
 import itertools
 
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.rpc_error_codes import RPC_INVALID_ADDRESS_OR_KEY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import (
     descsum_create,
@@ -292,11 +293,11 @@ class AddressTypeTest(BitcoinTestFramework):
         self.test_address(3, self.nodes[3].getrawchangeaddress(), typ='bech32')
 
         self.log.info('test invalid address type arguments')
-        assert_raises_rpc_error(-5, "Unknown address type ''", self.nodes[3].createmultisig, 2, [compressed_1, compressed_2], address_type="")
-        assert_raises_rpc_error(-5, "Unknown address type ''", self.nodes[3].getnewaddress, None, '')
-        assert_raises_rpc_error(-5, "Unknown address type ''", self.nodes[3].getrawchangeaddress, '')
-        assert_raises_rpc_error(-5, "Unknown address type 'bech23'", self.nodes[3].getrawchangeaddress, 'bech23')
-        assert_raises_rpc_error(-5, "Unknown address type 'bech23'", self.nodes[3].createwalletdescriptor, "bech23")
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type ''", self.nodes[3].createmultisig, 2, [compressed_1, compressed_2], address_type="")
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type ''", self.nodes[3].getnewaddress, None, '')
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type ''", self.nodes[3].getrawchangeaddress, '')
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type 'bech23'", self.nodes[3].getrawchangeaddress, 'bech23')
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type 'bech23'", self.nodes[3].createwalletdescriptor, "bech23")
 
         self.log.info("Nodes with changetype=p2sh-segwit never use a P2WPKH change output")
         self.test_change_output_type(4, [to_address_bech32_1], 'p2sh-segwit')

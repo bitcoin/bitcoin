@@ -7,6 +7,10 @@
 from decimal import Decimal
 
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.rpc_error_codes import (
+    RPC_WALLET_ERROR,
+    RPC_WALLET_INSUFFICIENT_FUNDS,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
@@ -34,9 +38,9 @@ class WalletFallbackFeeTest(BitcoinTestFramework):
         )
 
     def sending_fails(self, node):
-        assert_raises_rpc_error(-6, "Fee estimation failed", lambda: node.sendtoaddress(node.getnewaddress(), 1))
-        assert_raises_rpc_error(-4, "Fee estimation failed", lambda: node.fundrawtransaction(node.createrawtransaction([], {node.getnewaddress(): 1})))
-        assert_raises_rpc_error(-6, "Fee estimation failed", lambda: node.sendmany("", {node.getnewaddress(): 1}))
+        assert_raises_rpc_error(RPC_WALLET_INSUFFICIENT_FUNDS, "Fee estimation failed", lambda: node.sendtoaddress(node.getnewaddress(), 1))
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Fee estimation failed", lambda: node.fundrawtransaction(node.createrawtransaction([], {node.getnewaddress(): 1})))
+        assert_raises_rpc_error(RPC_WALLET_INSUFFICIENT_FUNDS, "Fee estimation failed", lambda: node.sendmany("", {node.getnewaddress(): 1}))
 
     def run_test(self):
         node = self.nodes[0]

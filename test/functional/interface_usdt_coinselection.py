@@ -12,6 +12,7 @@ try:
     from bcc import BPF, USDT # type: ignore[import]
 except ImportError:
     pass
+from test_framework.rpc_error_codes import RPC_WALLET_INSUFFICIENT_FUNDS
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -196,7 +197,7 @@ class CoinSelectionTracepointTest(BitcoinTestFramework):
         self.log.info("Failing to fund results in 1 tracepoint")
         # We should have 1 tracepoints in the order
         # 1. normal_create_tx_internal (type 2)
-        assert_raises_rpc_error(-6, "Insufficient funds", wallet.sendtoaddress, wallet.getnewaddress(), 102 * 50)
+        assert_raises_rpc_error(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds", wallet.sendtoaddress, wallet.getnewaddress(), 102 * 50)
         events = self.get_tracepoints([2])
         success, use_aps, _algo, _waste, change_pos = self.determine_selection_from_usdt(events)
         assert_equal(success, False)

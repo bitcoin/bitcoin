@@ -4,6 +4,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test gettxspendingprevout RPC."""
 
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_PARAMETER,
+    RPC_MISC_ERROR,
+    RPC_TYPE_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -108,22 +113,22 @@ class GetTxSpendingPrevoutTest(BitcoinTestFramework):
                               unspent_out(txidG, vout=3)])
 
         self.log.info("Unknown input fields")
-        assert_raises_rpc_error(-3, "Unexpected key unknown", node0.gettxspendingprevout, [{'txid' : txidC, 'vout' : 1, 'unknown' : 42}])
+        assert_raises_rpc_error(RPC_TYPE_ERROR, "Unexpected key unknown", node0.gettxspendingprevout, [{'txid' : txidC, 'vout' : 1, 'unknown' : 42}])
 
         self.log.info("Invalid vout provided")
-        assert_raises_rpc_error(-8, "Invalid parameter, vout cannot be negative", node0.gettxspendingprevout, [prevout(txidA, vout=-1)])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid parameter, vout cannot be negative", node0.gettxspendingprevout, [prevout(txidA, vout=-1)])
 
         self.log.info("Invalid txid provided")
-        assert_raises_rpc_error(-3, "JSON value of type number for field txid is not of expected type string", node0.gettxspendingprevout, [prevout(42, vout=0)])
+        assert_raises_rpc_error(RPC_TYPE_ERROR, "JSON value of type number for field txid is not of expected type string", node0.gettxspendingprevout, [prevout(42, vout=0)])
 
         self.log.info("Missing outputs")
-        assert_raises_rpc_error(-8, "Invalid parameter, outputs are missing", node0.gettxspendingprevout, [])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid parameter, outputs are missing", node0.gettxspendingprevout, [])
 
         self.log.info("Missing vout")
-        assert_raises_rpc_error(-3, "Missing vout", node0.gettxspendingprevout, [{'txid' : txidA}])
+        assert_raises_rpc_error(RPC_TYPE_ERROR, "Missing vout", node0.gettxspendingprevout, [{'txid' : txidA}])
 
         self.log.info("Missing txid")
-        assert_raises_rpc_error(-3, "Missing txid", node0.gettxspendingprevout, [{'vout' : 3}])
+        assert_raises_rpc_error(RPC_TYPE_ERROR, "Missing txid", node0.gettxspendingprevout, [{'vout' : 3}])
 
         blockhash = self.generate(self.wallet, 1)[0]
         # spending transactions are found in the index of nodes 0 and 1 but not node 2
@@ -136,7 +141,7 @@ class GetTxSpendingPrevoutTest(BitcoinTestFramework):
         assert_equal(result, [unspent_out(txid_root_utxo, vout=0), unspent_out(txidA, vout=1)])
 
         self.log.info("Explicit mempool_only=false without txospenderindex")
-        assert_raises_rpc_error(-1, "Mempool lacks a relevant spend, and txospenderindex is unavailable.",
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Mempool lacks a relevant spend, and txospenderindex is unavailable.",
                                 node2.gettxspendingprevout, [prevout(txid_root_utxo, vout=0)], mempool_only=False)
 
         # spending transaction is not found if we only search the mempool

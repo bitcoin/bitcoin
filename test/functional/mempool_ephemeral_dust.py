@@ -9,6 +9,10 @@ from test_framework.messages import (
     COIN,
     CTxOut,
 )
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_PARAMETER,
+    RPC_VERIFY_REJECTED,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.mempool_util import assert_mempool_contents
 from test_framework.util import (
@@ -99,7 +103,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         assert_equal(test_res[0]["reject-reason"], "min relay fee not met")
 
         # And doesn't work on its own
-        assert_raises_rpc_error(-26, "min relay fee not met", self.nodes[0].sendrawtransaction, dusty_tx["hex"])
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "min relay fee not met", self.nodes[0].sendrawtransaction, dusty_tx["hex"])
 
         # If we add modified fees, it is still not allowed due to dust check
         self.nodes[0].prioritisetransaction(txid=dusty_tx["txid"], dummy=0, fee_delta=COIN)
@@ -117,7 +121,7 @@ class EphemeralDustTest(BitcoinTestFramework):
 
         # Entry is denied when non-0-fee, either base or unmodified.
         # If in-mempool, we're not allowed to prioritise due to detected dust output
-        assert_raises_rpc_error(-8, "Priority is not supported for transactions with dust outputs.", self.nodes[0].prioritisetransaction, dusty_tx["txid"], 0, 1)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Priority is not supported for transactions with dust outputs.", self.nodes[0].prioritisetransaction, dusty_tx["txid"], 0, 1)
         assert_equal(self.nodes[0].getprioritisedtransactions(), {})
 
         self.generate(self.nodes[0], 1)
@@ -240,7 +244,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         assert_greater_than(unspent_sweep_tx["fee"], sweep_tx["fee"])
         res = self.nodes[0].submitpackage([dusty_tx["hex"], unspent_sweep_tx["hex"]])
         assert_equal(res["tx-results"][unspent_sweep_tx["wtxid"]]["error"], f"missing-ephemeral-spends, tx {unspent_sweep_tx['txid']} (wtxid={unspent_sweep_tx['wtxid']}) did not spend parent's ephemeral dust")
-        assert_raises_rpc_error(-26, f"missing-ephemeral-spends, tx {unspent_sweep_tx['txid']} (wtxid={unspent_sweep_tx['wtxid']}) did not spend parent's ephemeral dust", self.nodes[0].sendrawtransaction, unspent_sweep_tx["hex"])
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, f"missing-ephemeral-spends, tx {unspent_sweep_tx['txid']} (wtxid={unspent_sweep_tx['wtxid']}) did not spend parent's ephemeral dust", self.nodes[0].sendrawtransaction, unspent_sweep_tx["hex"])
         assert_mempool_contents(self, self.nodes[0], expected=[dusty_tx["tx"], sweep_tx["tx"]])
 
         # Spend works with dust spent
@@ -333,7 +337,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         fork_blocks = create_empty_fork(self.nodes[0])
 
         dusty_tx, _ = self.create_ephemeral_dust_package(tx_version=3)
-        assert_raises_rpc_error(-26, "min relay fee not met", self.nodes[0].sendrawtransaction, dusty_tx["hex"])
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "min relay fee not met", self.nodes[0].sendrawtransaction, dusty_tx["hex"])
 
         self.generateblock(self.nodes[0], self.wallet.get_address(), [dusty_tx["hex"]], sync_fun=self.no_op)
         self.trigger_reorg(fork_blocks)
@@ -342,7 +346,7 @@ class EphemeralDustTest(BitcoinTestFramework):
         # Create a sweep that has dust of its own and leaves dusty_tx's dust unspent
         sweep_tx = self.wallet.create_self_transfer_multi(fee_per_output=0, utxos_to_spend=[dusty_tx["new_utxos"][0]], version=3)
         self.add_output_to_create_multi_result(sweep_tx)
-        assert_raises_rpc_error(-26, "min relay fee not met", self.nodes[0].sendrawtransaction, sweep_tx["hex"])
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "min relay fee not met", self.nodes[0].sendrawtransaction, sweep_tx["hex"])
 
         # Prep for fork with empty blocks
         fork_blocks = create_empty_fork(self.nodes[0])

@@ -7,16 +7,16 @@
 import json
 import os
 from dataclasses import dataclass
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_PARAMETER,
+    RPC_INVALID_REQUEST,
+    RPC_METHOD_NOT_FOUND,
+    RPC_PARSE_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import JSONRPCException, assert_equal, assert_greater_than_or_equal
 from threading import Thread
 from typing import Optional
-
-
-RPC_INVALID_PARAMETER      = -8
-RPC_METHOD_NOT_FOUND       = -32601
-RPC_INVALID_REQUEST        = -32600
-RPC_PARSE_ERROR            = -32700
 
 
 @dataclass

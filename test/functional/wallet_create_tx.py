@@ -6,6 +6,10 @@
 from test_framework.messages import (
     tx_from_hex,
 )
+from test_framework.rpc_error_codes import (
+    RPC_WALLET_ERROR,
+    RPC_WALLET_INSUFFICIENT_FUNDS,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -60,12 +64,12 @@ class CreateTxWalletTest(BitcoinTestFramework):
             self.log.info('Check maxtxfee in combination with {}'.format(fee_setting))
             self.restart_node(0, extra_args=[fee_setting])
             assert_raises_rpc_error(
-                -6,
+                RPC_WALLET_INSUFFICIENT_FUNDS,
                 "Fee exceeds maximum configured by user (maxtxfee)",
                 lambda: self.nodes[0].sendmany(dummy="", amounts=outputs),
             )
             assert_raises_rpc_error(
-                -4,
+                RPC_WALLET_ERROR,
                 "Fee exceeds maximum configured by user (maxtxfee)",
                 lambda: self.nodes[0].fundrawtransaction(hexstring=raw_tx),
             )
@@ -76,12 +80,12 @@ class CreateTxWalletTest(BitcoinTestFramework):
         fee_rate_sats_per_vb = Decimal('0.01') * Decimal(1e8) / 1000  # Convert 0.01 BTC/kvB to sat/vB
 
         assert_raises_rpc_error(
-            -6,
+            RPC_WALLET_INSUFFICIENT_FUNDS,
             "Fee exceeds maximum configured by user (maxtxfee)",
             lambda: self.nodes[0].sendmany(dummy="", amounts=outputs, fee_rate=fee_rate_sats_per_vb),
         )
         assert_raises_rpc_error(
-            -4,
+            RPC_WALLET_ERROR,
             "Fee exceeds maximum configured by user (maxtxfee)",
             lambda: self.nodes[0].fundrawtransaction(hexstring=raw_tx, options={'fee_rate': fee_rate_sats_per_vb}),
         )
@@ -106,7 +110,7 @@ class CreateTxWalletTest(BitcoinTestFramework):
 
         # Sending one more chained transaction will fail
         options = {"minconf": 0, "include_unsafe": True, 'add_inputs': True}
-        assert_raises_rpc_error(-4, "Unconfirmed UTXOs are available, but spending them creates a chain of transactions that will be rejected by the mempool",
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Unconfirmed UTXOs are available, but spending them creates a chain of transactions that will be rejected by the mempool",
                                 test_wallet.send, outputs=[{test_wallet.getnewaddress(): 0.3}], options=options)
 
         test_wallet.unloadwallet()

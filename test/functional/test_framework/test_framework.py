@@ -27,6 +27,7 @@ from .address import create_deterministic_address_bcrt1_p2tr_op_true
 from . import coverage
 from .messages import CAddress
 from .p2p import NetworkThread
+from .rpc_error_codes import RPC_CLIENT_NODE_NOT_CONNECTED
 from .test_node import TestNode
 from .util import (
     Binaries,
@@ -643,7 +644,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     # If this node is disconnected between calculating the peer id
                     # and issuing the disconnect, don't worry about it.
                     # This avoids a race condition if we're mass-disconnecting peers.
-                    if e.error['code'] != -29:  # RPC_CLIENT_NODE_NOT_CONNECTED
+                    if e.error['code'] != RPC_CLIENT_NODE_NOT_CONNECTED:
                         raise
 
             # wait to disconnect

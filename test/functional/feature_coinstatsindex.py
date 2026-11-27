@@ -20,6 +20,10 @@ from test_framework.messages import (
     COIN,
     CTxOut,
 )
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_INVALID_PARAMETER,
+)
 from test_framework.script import (
     CScript,
     OP_FALSE,
@@ -109,7 +113,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
             assert_equal(res0, res3)
 
             # It does not work without coinstatsindex
-            assert_raises_rpc_error(-8, "Querying specific block heights requires coinstatsindex", node.gettxoutsetinfo, hash_option, 102)
+            assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Querying specific block heights requires coinstatsindex", node.gettxoutsetinfo, hash_option, 102)
 
         self.log.info("Test gettxoutsetinfo() with index and verbose flag")
 
@@ -240,7 +244,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         assert_equal(res12, res10)
 
         self.log.info("Test obtaining info for a non-existent block hash")
-        assert_raises_rpc_error(-5, "Block not found", index_node.gettxoutsetinfo, hash_type="none", hash_or_height="ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", use_index=True)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Block not found", index_node.gettxoutsetinfo, hash_type="none", hash_or_height="ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", use_index=True)
 
     def _test_use_index_option(self):
         self.log.info("Test use_index option for nodes running the index")
@@ -293,10 +297,10 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self.log.info("Test that the rpc raises if the legacy hash is passed with the index")
 
         msg = "hash_serialized_3 hash type cannot be queried for a specific block"
-        assert_raises_rpc_error(-8, msg, self.nodes[1].gettxoutsetinfo, hash_type='hash_serialized_3', hash_or_height=111)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, msg, self.nodes[1].gettxoutsetinfo, hash_type='hash_serialized_3', hash_or_height=111)
 
         for use_index in {True, False, None}:
-            assert_raises_rpc_error(-8, msg, self.nodes[1].gettxoutsetinfo, hash_type='hash_serialized_3', hash_or_height=111, use_index=use_index)
+            assert_raises_rpc_error(RPC_INVALID_PARAMETER, msg, self.nodes[1].gettxoutsetinfo, hash_type='hash_serialized_3', hash_or_height=111, use_index=use_index)
 
     def _test_init_index_after_reorg(self):
         self.log.info("Test a reorg while the index is deactivated")

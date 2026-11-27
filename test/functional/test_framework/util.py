@@ -162,8 +162,9 @@ def assert_raises_rpc_error(code: Optional[int], message: Optional[str], fun: Ca
     no JSONRPCException was raised or if the error code/message are not as expected.
 
     Args:
-        code: the error code returned by the RPC call (defined in src/rpc/protocol.h).
-            Set to None if checking the error code is not required.
+        code: the expected RPC error code.
+            Use `test_framework.rpc_error_codes` for codes returned by the node.
+            Set to None to skip the error code check.
         message: [a substring of] the error string returned by the RPC call.
             Set to None if checking the error string is not required.
         fun: the function to call. This should be the name of an RPC.

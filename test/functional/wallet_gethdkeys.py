@@ -5,6 +5,7 @@
 """Test wallet gethdkeys RPC."""
 
 from test_framework.descriptors import descsum_create
+from test_framework.rpc_error_codes import RPC_WALLET_UNLOCK_NEEDED
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -64,7 +65,7 @@ class WalletGetHDKeyTest(BitcoinTestFramework):
         assert_equal(xpub_info[0]["has_private"], True)
 
         self.log.info("HD privkey can be retrieved from encrypted wallets")
-        assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first", wallet.gethdkeys, private=True)
+        assert_raises_rpc_error(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first", wallet.gethdkeys, private=True)
         with WalletUnlock(wallet, "pass"):
             xpub_info = wallet.gethdkeys(active_only=True, private=True)[0]
             assert_not_equal(xpub_info["xprv"], xprv)

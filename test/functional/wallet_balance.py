@@ -9,6 +9,7 @@ import time
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE as ADDRESS_WATCHONLY
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.descriptors import descsum_create
+from test_framework.rpc_error_codes import RPC_METHOD_DEPRECATED
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -98,7 +99,7 @@ class WalletTest(BitcoinTestFramework):
         self.sync_all()
 
         # First argument of getbalance must be set to "*"
-        assert_raises_rpc_error(-32, "dummy first argument must be excluded or set to \"*\"", self.nodes[1].getbalance, "")
+        assert_raises_rpc_error(RPC_METHOD_DEPRECATED, "dummy first argument must be excluded or set to \"*\"", self.nodes[1].getbalance, "")
 
         self.log.info("Test balances with unconfirmed inputs")
 

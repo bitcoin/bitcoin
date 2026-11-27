@@ -22,6 +22,7 @@ from test_framework.messages import (
     CTxOut,
     tx_from_hex,
 )
+from test_framework.rpc_error_codes import RPC_VERIFY_REJECTED
 from test_framework.script import (
     CScript,
     OP_TRUE,
@@ -111,7 +112,7 @@ class BIP68Test(BitcoinTestFramework):
         tx2.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
         tx2.vout = [CTxOut(int(value - self.relayfee * COIN), SCRIPT_W0_SH_OP_TRUE)]
 
-        assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.wallet.sendrawtransaction, from_node=self.nodes[0], tx_hex=tx2.serialize().hex())
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, NOT_FINAL_ERROR, self.wallet.sendrawtransaction, from_node=self.nodes[0], tx_hex=tx2.serialize().hex())
 
         # Setting the version back down to 1 should disable the sequence lock,
         # so this should be accepted.
@@ -202,7 +203,7 @@ class BIP68Test(BitcoinTestFramework):
 
             if (using_sequence_locks and not should_pass):
                 # This transaction should be rejected
-                assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.wallet.sendrawtransaction, from_node=self.nodes[0], tx_hex=tx.serialize().hex())
+                assert_raises_rpc_error(RPC_VERIFY_REJECTED, NOT_FINAL_ERROR, self.wallet.sendrawtransaction, from_node=self.nodes[0], tx_hex=tx.serialize().hex())
             else:
                 # This raw transaction should be accepted
                 self.wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=tx.serialize().hex())
@@ -249,7 +250,7 @@ class BIP68Test(BitcoinTestFramework):
 
             if (orig_tx.txid_hex in node.getrawmempool()):
                 # sendrawtransaction should fail if the tx is in the mempool
-                assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.wallet.sendrawtransaction, from_node=node, tx_hex=tx.serialize().hex())
+                assert_raises_rpc_error(RPC_VERIFY_REJECTED, NOT_FINAL_ERROR, self.wallet.sendrawtransaction, from_node=node, tx_hex=tx.serialize().hex())
             else:
                 # sendrawtransaction should succeed if the tx is not in the mempool
                 self.wallet.sendrawtransaction(from_node=node, tx_hex=tx.serialize().hex())
@@ -304,7 +305,7 @@ class BIP68Test(BitcoinTestFramework):
         tx5.vout[0].nValue += int(utxo["value"]*COIN)
         self.wallet.sign_tx(tx=tx5)
 
-        assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.wallet.sendrawtransaction, from_node=self.nodes[0], tx_hex=tx5.serialize().hex())
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, NOT_FINAL_ERROR, self.wallet.sendrawtransaction, from_node=self.nodes[0], tx_hex=tx5.serialize().hex())
 
         # Test mempool-BIP68 consistency after reorg
         #
@@ -374,7 +375,7 @@ class BIP68Test(BitcoinTestFramework):
         tx3.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
         tx3.vout = [CTxOut(int(tx2.vout[0].nValue - self.relayfee * COIN), SCRIPT_W0_SH_OP_TRUE)]
 
-        assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.wallet.sendrawtransaction, from_node=self.nodes[0], tx_hex=tx3.serialize().hex())
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, NOT_FINAL_ERROR, self.wallet.sendrawtransaction, from_node=self.nodes[0], tx_hex=tx3.serialize().hex())
 
         # make a block that violates bip68; ensure that the tip updates
         block = create_block(tmpl=self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS), txlist=[tx1, tx2, tx3])

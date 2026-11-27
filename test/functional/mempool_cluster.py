@@ -13,6 +13,10 @@ from test_framework.mempool_util import (
 from test_framework.messages import (
     COIN,
 )
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_VERIFY_REJECTED,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.wallet import (
     MiniWallet,
@@ -97,7 +101,7 @@ class MempoolClusterTest(BitcoinTestFramework):
 
         # Test that adding one more transaction to the cluster will fail.
         bad_tx = self.wallet.create_self_transfer(utxo_to_spend=last_result["new_utxo"], target_vsize=target_vsize_per_tx)
-        assert_raises_rpc_error(-26, "too-large-cluster", node.sendrawtransaction, bad_tx["hex"])
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "too-large-cluster", node.sendrawtransaction, bad_tx["hex"])
 
         # It should also limit cluster sizes during replacement
         utxo_to_double_spend = self.wallet.get_utxo(confirmed_only=True)
@@ -114,7 +118,7 @@ class MempoolClusterTest(BitcoinTestFramework):
             target_vsize=target_vsize_per_tx,
             fee_per_output=fee_to_use,
         )
-        assert_raises_rpc_error(-26, "too-large-cluster", node.sendrawtransaction, bad_tx_also_replacement["hex"])
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "too-large-cluster", node.sendrawtransaction, bad_tx_also_replacement["hex"])
 
         # Replace the last transaction. We are extending the cluster by one, but also removing one: 64 + 1 - 1 = 64
         # In the case of vsize, it should similarly cancel out.
@@ -211,7 +215,7 @@ class MempoolClusterTest(BitcoinTestFramework):
 
             # Now create a transaction that spends from both clusters, which would merge them.
             tx_merger = self.wallet.create_self_transfer_multi(utxos_to_spend=[utxo_from_cluster1, utxo_from_cluster2])
-            assert_raises_rpc_error(-26, "too-large-cluster", node.sendrawtransaction, tx_merger["hex"])
+            assert_raises_rpc_error(RPC_VERIFY_REJECTED, "too-large-cluster", node.sendrawtransaction, tx_merger["hex"])
 
             # Spending from the clusters independently should work
             tx_spending_cluster1 = self.wallet.send_self_transfer(from_node=node, utxo_to_spend=utxo_from_cluster1)
@@ -230,7 +234,7 @@ class MempoolClusterTest(BitcoinTestFramework):
 
         assert_equal(len(utxos_to_merge), max_cluster_count)
         tx_merger = self.wallet.create_self_transfer_multi(utxos_to_spend=utxos_to_merge)
-        assert_raises_rpc_error(-26, "too-large-cluster", node.sendrawtransaction, tx_merger["hex"])
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "too-large-cluster", node.sendrawtransaction, tx_merger["hex"])
 
         # Spending from 1 fewer cluster should work
         tx_merger_all_but_one = self.wallet.create_self_transfer_multi(utxos_to_spend=utxos_to_merge[:-1])
@@ -257,7 +261,7 @@ class MempoolClusterTest(BitcoinTestFramework):
 
         # Create a transaction spending from all clusters that exceeds the cluster size limit.
         tx_merger_too_big = self.wallet.create_self_transfer_multi(utxos_to_spend=utxos_to_merge, target_vsize=vsize_remaining + 4, fee_per_output=10000)
-        assert_raises_rpc_error(-26, "too-large-cluster", node.sendrawtransaction, tx_merger_too_big["hex"])
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "too-large-cluster", node.sendrawtransaction, tx_merger_too_big["hex"])
 
         # A transaction that is slightly smaller should work.
         tx_merger_small = self.wallet.create_self_transfer_multi(utxos_to_spend=utxos_to_merge[:-1], target_vsize=vsize_remaining - 4, fee_per_output=10000)
@@ -320,7 +324,7 @@ class MempoolClusterTest(BitcoinTestFramework):
 
         # Not in-mempool
         not_mempool_tx = self.wallet.create_self_transfer()
-        assert_raises_rpc_error(-5, "Transaction not in mempool", node.getmempoolcluster, not_mempool_tx["txid"])
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in mempool", node.getmempoolcluster, not_mempool_tx["txid"])
 
         # Test that chunks are being recomputed properly
 

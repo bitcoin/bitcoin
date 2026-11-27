@@ -10,6 +10,7 @@ from test_framework.blocktools import (
 )
 from test_framework.messages import DEFAULT_MEMPOOL_EXPIRY_HOURS
 from test_framework.p2p import P2PTxInvStore
+from test_framework.rpc_error_codes import RPC_INVALID_ADDRESS_OR_KEY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -106,8 +107,8 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
             # Evict these txs from the mempool
             indep_send = node.send(outputs=[{node.getnewaddress(): 1}], inputs=[indep_utxo])
             node.getmempoolentry(indep_send["txid"])
-            assert_raises_rpc_error(-5, "Transaction not in mempool", node.getmempoolentry, txid)
-            assert_raises_rpc_error(-5, "Transaction not in mempool", node.getmempoolentry, child_txid)
+            assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in mempool", node.getmempoolentry, txid)
+            assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in mempool", node.getmempoolentry, child_txid)
 
             # Rebroadcast and check that parent and child are both in the mempool
             with node.assert_debug_log(['resubmit 2 unconfirmed transactions'], timeout=2):

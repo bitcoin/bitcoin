@@ -9,6 +9,7 @@ This is similar to `test/functional/wallet_multisig_descriptor_psbt.py`.
 """
 
 import random
+from test_framework.rpc_error_codes import RPC_VERIFY_REJECTED
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_approx,
@@ -104,7 +105,7 @@ class WalletMiniscriptDecayingMultisigDescriptorPSBTTest(BitcoinTestFramework):
             if self.M < self.N:
                 self.log.info(f"Check that the time-locked transaction is too immature to spend with {self.M}-of-{self.N} at block height {current_height}...")
                 assert_equal(current_height >= locktime, False)
-                assert_raises_rpc_error(-26, "non-final", multisig.sendrawtransaction, psbt["hex"])
+                assert_raises_rpc_error(RPC_VERIFY_REJECTED, "non-final", multisig.sendrawtransaction, psbt["hex"])
 
                 self.log.info(f"Generate blocks to reach the time-lock block height {locktime} and broadcast the transaction...")
                 self.generate(self.node, locktime - current_height)

@@ -14,6 +14,10 @@ from test_framework.blocktools import (
     create_block,
     create_coinbase,
 )
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_PARAMETER,
+    RPC_MISC_ERROR,
+)
 from test_framework.script import (
     CScript,
     OP_NOP,
@@ -134,7 +138,7 @@ class PruneTest(BitcoinTestFramework):
 
     def test_rescan_blockchain(self):
         self.restart_node(0, ["-prune=550"])
-        assert_raises_rpc_error(-1, "Can't rescan beyond pruned data. Use RPC call getblockchaininfo to determine your pruned height.", self.nodes[0].rescanblockchain)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Can't rescan beyond pruned data. Use RPC call getblockchaininfo to determine your pruned height.", self.nodes[0].rescanblockchain)
 
     def test_height_min(self):
         assert os.path.isfile(os.path.join(self.prunedir, "blk00000.dat")), "blk00000.dat is missing, pruning too early"
@@ -223,7 +227,7 @@ class PruneTest(BitcoinTestFramework):
 
     def reorg_back(self):
         # Verify that a block on the old main chain fork has been pruned away
-        assert_raises_rpc_error(-1, "Block not available (pruned data)", self.nodes[2].getblock, self.forkhash)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Block not available (pruned data)", self.nodes[2].getblock, self.forkhash)
         with self.nodes[2].assert_debug_log(expected_msgs=["Block verification stopping at height", "(no data)"]):
             assert not self.nodes[2].verifychain(checklevel=4, nblocks=0)
         self.log.info(f"Will need to redownload block {self.forkheight}")
@@ -269,7 +273,7 @@ class PruneTest(BitcoinTestFramework):
         self.start_node(node_number)
         node = self.nodes[node_number]
         assert_equal(node.getblockcount(), 995)
-        assert_raises_rpc_error(-1, "Cannot prune blocks because node is not in prune mode", node.pruneblockchain, 500)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Cannot prune blocks because node is not in prune mode", node.pruneblockchain, 500)
 
         # now re-start in manual pruning mode
         self.restart_node(node_number, extra_args=["-prune=1"])
@@ -290,7 +294,7 @@ class PruneTest(BitcoinTestFramework):
             return os.path.isfile(os.path.join(self.nodes[node_number].blocks_path, f"blk{index:05}.dat"))
 
         # should not prune because chain tip of node 3 (995) < PruneAfterHeight (1000)
-        assert_raises_rpc_error(-1, "Blockchain is too short for pruning", node.pruneblockchain, height(500))
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Blockchain is too short for pruning", node.pruneblockchain, height(500))
 
         # Save block transaction count before pruning, assert value
         block1_details = node.getblock(node.getblockhash(1))
@@ -303,15 +307,15 @@ class PruneTest(BitcoinTestFramework):
         # prune parameter in the future (block or timestamp) should raise an exception
         future_parameter = height(1001) + 5
         if use_timestamp:
-            assert_raises_rpc_error(-8, "Could not find block with at least the specified timestamp", node.pruneblockchain, future_parameter)
+            assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Could not find block with at least the specified timestamp", node.pruneblockchain, future_parameter)
         else:
-            assert_raises_rpc_error(-8, "Blockchain is shorter than the attempted prune height", node.pruneblockchain, future_parameter)
+            assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Blockchain is shorter than the attempted prune height", node.pruneblockchain, future_parameter)
 
         # Pruned block should still know the number of transactions
         assert_equal(node.getblockheader(node.getblockhash(1))["nTx"], block1_details["nTx"])
 
         # negative heights should raise an exception
-        assert_raises_rpc_error(-8, "Negative block height", node.pruneblockchain, -10)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Negative block height", node.pruneblockchain, -10)
 
         # height=100 too low to prune first block file so this is a no-op
         prune(100)
@@ -501,7 +505,7 @@ class PruneTest(BitcoinTestFramework):
         assert genesis_blockhash in node.scanblocks(
             "start", [{"desc": f"raw({false_positive_spk.hex()})"}], 0, 0)['relevant_blocks']
 
-        assert_raises_rpc_error(-1, "Block not available (pruned data)", node.scanblocks,
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Block not available (pruned data)", node.scanblocks,
             "start", [{"desc": f"raw({false_positive_spk.hex()})"}], 0, 0, "basic", {"filter_false_positives": True})
 
     def test_pruneheight_undo_presence(self):
@@ -512,7 +516,7 @@ class PruneTest(BitcoinTestFramework):
         self.connect_nodes(1, 5)
         peers = node.getpeerinfo()
         node.getblockfrompeer(fetch_block, peers[0]["id"])
-        self.wait_until(lambda: not try_rpc(-1, "Block not available (pruned data)", node.getblock, fetch_block), timeout=5)
+        self.wait_until(lambda: not try_rpc(RPC_MISC_ERROR, "Block not available (pruned data)", node.getblock, fetch_block), timeout=5)
 
         new_pruneheight = node.getblockchaininfo()["pruneheight"]
         assert_equal(pruneheight, new_pruneheight)

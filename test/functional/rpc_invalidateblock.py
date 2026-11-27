@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the invalidateblock RPC."""
 
+from test_framework.rpc_error_codes import RPC_INVALID_ADDRESS_OR_KEY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR
 from test_framework.blocktools import (
@@ -136,7 +137,7 @@ class InvalidateTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getblockchaininfo()["headers"], self.nodes[1].getblockchaininfo()["blocks"])
 
         self.log.info("Verify that invalidating an unknown block throws an error")
-        assert_raises_rpc_error(-5, "Block not found", self.nodes[1].invalidateblock, "00" * 32)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Block not found", self.nodes[1].invalidateblock, "00" * 32)
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
 
 

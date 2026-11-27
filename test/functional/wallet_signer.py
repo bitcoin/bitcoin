@@ -10,6 +10,12 @@ See also rpc_signer.py for tests without wallet context.
 import os
 import sys
 
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_PARAMETER,
+    RPC_MISC_ERROR,
+    RPC_VERIFY_ERROR,
+    RPC_WALLET_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -68,7 +74,7 @@ class WalletSignerTest(BitcoinTestFramework):
 
         # Create new wallets for an external signer.
         # disable_private_keys and descriptors must be true:
-        assert_raises_rpc_error(-4, "Private keys must be disabled when using an external signer", self.nodes[1].createwallet, wallet_name='not_hww', disable_private_keys=False, external_signer=True)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Private keys must be disabled when using an external signer", self.nodes[1].createwallet, wallet_name='not_hww', disable_private_keys=False, external_signer=True)
         self.nodes[1].createwallet(wallet_name='hww', disable_private_keys=True, external_signer=True)
         hww = self.nodes[1].get_wallet_rpc('hww')
         assert_equal(hww.getwalletinfo()["external_signer"], True)
@@ -77,11 +83,11 @@ class WalletSignerTest(BitcoinTestFramework):
         self.nodes[1].createwallet(wallet_name='not_hww', disable_private_keys=True, external_signer=False)
         not_hww = self.nodes[1].get_wallet_rpc('not_hww')
         assert_equal(not_hww.getwalletinfo()["external_signer"], False)
-        assert_raises_rpc_error(-8, "Wallet flag is immutable: external_signer", not_hww.setwalletflag, "external_signer", True)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Wallet flag is immutable: external_signer", not_hww.setwalletflag, "external_signer", True)
 
 
         self.set_mock_result(self.nodes[1], '0 {"invalid json"}')
-        assert_raises_rpc_error(-1, 'Unable to parse JSON',
+        assert_raises_rpc_error(RPC_MISC_ERROR, 'Unable to parse JSON',
             self.nodes[1].createwallet, wallet_name='hww2', disable_private_keys=True, external_signer=True
         )
         self.clear_mock_result(self.nodes[1])
@@ -122,14 +128,14 @@ class WalletSignerTest(BitcoinTestFramework):
             assert_equal(result, {"address": address})
 
         assert_raises_rpc_error(
-            -4,
+            RPC_WALLET_ERROR,
             "Error: sendtoaddress and sendmany are not supported for wallets with external signers; use send instead",
             hww.sendtoaddress,
             self.nodes[0].getnewaddress(),
             0.01,
         )
         assert_raises_rpc_error(
-            -4,
+            RPC_WALLET_ERROR,
             "Error: sendtoaddress and sendmany are not supported for wallets with external signers; use send instead",
             hww.sendmany,
             "",
@@ -138,7 +144,7 @@ class WalletSignerTest(BitcoinTestFramework):
 
         # Handle error thrown by script
         self.set_mock_result(self.nodes[1], "2")
-        assert_raises_rpc_error(-1, 'RunCommandParseJSON error',
+        assert_raises_rpc_error(RPC_MISC_ERROR, 'RunCommandParseJSON error',
             hww.walletdisplayaddress, address1
         )
         self.clear_mock_result(self.nodes[1])
@@ -146,7 +152,7 @@ class WalletSignerTest(BitcoinTestFramework):
         # Returned address MUST match:
         address_fail = hww.getnewaddress(address_type="bech32")
         assert_equal(address_fail, "bcrt1ql7zg7ukh3dwr25ex2zn9jse926f27xy2jz58tm")
-        assert_raises_rpc_error(-1, 'Signer echoed unexpected address wrong_address',
+        assert_raises_rpc_error(RPC_MISC_ERROR, 'Signer echoed unexpected address wrong_address',
             hww.walletdisplayaddress, address_fail
         )
 
@@ -242,18 +248,18 @@ class WalletSignerTest(BitcoinTestFramework):
 
         # Try to spend
         dest = hww.getrawchangeaddress()
-        assert_raises_rpc_error(-25, "External signer not found", hww.send, outputs=[{dest:0.5}])
+        assert_raises_rpc_error(RPC_VERIFY_ERROR, "External signer not found", hww.send, outputs=[{dest:0.5}])
 
     def test_invalid_signer(self):
         self.log.debug(f"-signer={self.mock_invalid_signer_path()}")
         self.log.info('Test invalid external signer')
-        assert_raises_rpc_error(-1, "Invalid descriptor", self.nodes[1].createwallet, wallet_name='hww_invalid', disable_private_keys=True, external_signer=True)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Invalid descriptor", self.nodes[1].createwallet, wallet_name='hww_invalid', disable_private_keys=True, external_signer=True)
 
     def test_multiple_signers(self):
         self.log.debug(f"-signer={self.mock_multi_signers_path()}")
         self.log.info('Test multiple external signers')
 
-        assert_raises_rpc_error(-1, "More than one external signer found", self.nodes[1].createwallet, wallet_name='multi_hww', disable_private_keys=True, external_signer=True)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "More than one external signer found", self.nodes[1].createwallet, wallet_name='multi_hww', disable_private_keys=True, external_signer=True)
 
 if __name__ == '__main__':
     WalletSignerTest(__file__).main()

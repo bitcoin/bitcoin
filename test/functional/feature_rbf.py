@@ -10,6 +10,7 @@ from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
     COIN,
 )
+from test_framework.rpc_error_codes import RPC_VERIFY_REJECTED
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -113,7 +114,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         res = self.nodes[0].testmempoolaccept(rawtxs=[tx_hex])[0]
         assert_equal(res["reject-reason"], reject_reason)
         assert_equal(res["reject-details"], reject_details)
-        assert_raises_rpc_error(-26, f"{reject_details}", self.nodes[0].sendrawtransaction, tx_hex, 0)
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, f"{reject_details}", self.nodes[0].sendrawtransaction, tx_hex, 0)
 
 
         # Extra 0.1 BTC fee
@@ -165,7 +166,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         res = self.nodes[0].testmempoolaccept(rawtxs=[dbl_tx_hex])[0]
         assert_equal(res["reject-reason"], reject_reason)
         assert_equal(res["reject-details"], reject_details)
-        assert_raises_rpc_error(-26, f"{reject_details}", self.nodes[0].sendrawtransaction, dbl_tx_hex, 0)
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, f"{reject_details}", self.nodes[0].sendrawtransaction, dbl_tx_hex, 0)
 
 
 
@@ -224,7 +225,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             fee=(Decimal(fee) / COIN) * n,
         )["hex"]
         # This will raise an exception due to insufficient fee
-        assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, dbl_tx_hex, 0)
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "insufficient fee", self.nodes[0].sendrawtransaction, dbl_tx_hex, 0)
 
         # 0.1 BTC fee is enough
         dbl_tx_hex = self.wallet.create_self_transfer(
@@ -260,7 +261,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         )["hex"]
 
         # This will raise an exception due to insufficient fee
-        assert_raises_rpc_error(-26, "does not improve feerate diagram", self.nodes[0].sendrawtransaction, tx1b_hex, 0)
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "does not improve feerate diagram", self.nodes[0].sendrawtransaction, tx1b_hex, 0)
 
     def test_spends_of_conflicting_outputs(self):
         """Replacements that spend conflicting tx outputs are rejected"""
@@ -289,7 +290,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         res = self.nodes[0].testmempoolaccept(rawtxs=[tx2_hex])[0]
         assert_equal(res["reject-reason"], reject_reason)
         assert_equal(res["reject-details"], reject_details)
-        assert_raises_rpc_error(-26, f"{reject_details}", self.nodes[0].sendrawtransaction, tx2_hex, 0)
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, f"{reject_details}", self.nodes[0].sendrawtransaction, tx2_hex, 0)
 
 
         # Spend tx1a's output to test the indirect case.
@@ -307,7 +308,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         )["hex"]
 
         # This will raise an exception
-        assert_raises_rpc_error(-26, "bad-txns-spends-conflicting-tx", self.nodes[0].sendrawtransaction, tx2_hex, 0)
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "bad-txns-spends-conflicting-tx", self.nodes[0].sendrawtransaction, tx2_hex, 0)
 
     def test_new_unconfirmed_inputs(self):
         """Replacements that add new unconfirmed inputs may be accepted"""
@@ -345,7 +346,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         assert_greater_than(tx_replacement['fee']*tx_to_replace['tx'].get_vsize(), tx_to_replace['fee']*tx_replacement['tx'].get_vsize())
 
         self.nodes[0].sendrawtransaction(tx_to_replace['hex'])
-        assert_raises_rpc_error(-26, "insufficient feerate: does not improve feerate diagram", self.nodes[0].sendrawtransaction, tx_replacement['hex'])
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "insufficient feerate: does not improve feerate diagram", self.nodes[0].sendrawtransaction, tx_replacement['hex'])
 
 
     def test_too_many_replacements(self):
@@ -395,7 +396,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         res = self.nodes[0].testmempoolaccept(rawtxs=[double_tx_hex])[0]
         assert_equal(res["reject-reason"], reject_reason)
         assert_equal(res["reject-details"], reject_details)
-        assert_raises_rpc_error(-26, f"{reject_details}", self.nodes[0].sendrawtransaction, double_tx_hex, 0)
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, f"{reject_details}", self.nodes[0].sendrawtransaction, double_tx_hex, 0)
 
 
         # If we remove an input, it should pass
@@ -426,7 +427,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         )["hex"]
 
         # Verify tx1b cannot replace tx1a.
-        assert_raises_rpc_error(-26, "does not improve feerate diagram", self.nodes[0].sendrawtransaction, tx1b_hex, 0)
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "does not improve feerate diagram", self.nodes[0].sendrawtransaction, tx1b_hex, 0)
 
         # Use prioritisetransaction to set tx1a's fee to 0.
         self.nodes[0].prioritisetransaction(txid=tx1a_txid, fee_delta=int(-0.1 * COIN))
@@ -455,7 +456,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         )
 
         # Verify tx2b cannot replace tx2a.
-        assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx2b["hex"], 0)
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "insufficient fee", self.nodes[0].sendrawtransaction, tx2b["hex"], 0)
 
         # Now prioritise tx2b to have a higher modified fee
         self.nodes[0].prioritisetransaction(txid=tx2b["txid"], fee_delta=int(0.1 * COIN))
@@ -494,7 +495,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # fee conforming to node's `incrementalrelayfee` policy of 100 sat per KB.
         assert_equal(self.nodes[0].getmempoolinfo()["incrementalrelayfee"], Decimal("0.000001"))
         tx.vout[0].nValue -= 1
-        assert_raises_rpc_error(-26, "insufficient fee", self.nodes[0].sendrawtransaction, tx.serialize().hex())
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "insufficient fee", self.nodes[0].sendrawtransaction, tx.serialize().hex())
 
     def test_incremental_relay_feerates(self):
         self.log.info("Test that incremental relay fee is applied correctly in RBF for various settings...")
@@ -521,12 +522,12 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
             # Show that replacement fails when paying 1 satoshi shy of the required fee
             failed_replacement_tx = self.wallet.create_self_transfer(utxo_to_spend=confirmed_utxo, fee=replacement_required_fee - Decimal("0.00000001"), version=2, target_vsize=200)
-            assert_raises_rpc_error(-26, "insufficient fee", node.sendrawtransaction, failed_replacement_tx['hex'])
+            assert_raises_rpc_error(RPC_VERIFY_REJECTED, "insufficient fee", node.sendrawtransaction, failed_replacement_tx['hex'])
             replacement_tx = self.wallet.create_self_transfer(utxo_to_spend=confirmed_utxo, fee=replacement_required_fee, version=2, target_vsize=200)
 
             if incremental_setting == 0:
                 # When incremental relay feerate is 0, additional fees are not required, but higher feerate is still required.
-                assert_raises_rpc_error(-26, "insufficient fee", node.sendrawtransaction, replacement_tx['hex'])
+                assert_raises_rpc_error(RPC_VERIFY_REJECTED, "insufficient fee", node.sendrawtransaction, replacement_tx['hex'])
                 replacement_tx_smaller = self.wallet.create_self_transfer(utxo_to_spend=confirmed_utxo, fee=replacement_required_fee, version=2, target_vsize=199)
                 node.sendrawtransaction(replacement_tx_smaller['hex'])
             else:

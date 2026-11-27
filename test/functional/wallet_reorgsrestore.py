@@ -16,6 +16,7 @@ disconnected.
 from decimal import Decimal
 import shutil
 
+from test_framework.rpc_error_codes import RPC_INVALID_ADDRESS_OR_KEY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
         assert_equal,
@@ -80,7 +81,7 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         self.start_node(0)
         wallet0 = self.nodes[0].get_wallet_rpc("w0")
         assert_equal(wallet0.getbestblockhash(), block1_best_hash)
-        assert_raises_rpc_error(-5, "Block not found", wallet0.getblock, block0_best_hash)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Block not found", wallet0.getblock, block0_best_hash)
 
         # Verify the coinbase tx was marked as abandoned and balance correctly computed
         tx_info = wallet0.gettransaction(node0_coinbase_tx_hash)['details'][0]

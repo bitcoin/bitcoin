@@ -13,6 +13,7 @@
 from decimal import Decimal
 
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.rpc_error_codes import RPC_INVALID_ADDRESS_OR_KEY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -43,14 +44,14 @@ class AbandonConflictTest(BitcoinTestFramework):
         self.sync_mempools()
 
         # Can not abandon transaction in mempool
-        assert_raises_rpc_error(-5, 'Transaction not eligible for abandonment', lambda: alice.abandontransaction(txid=txA))
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, 'Transaction not eligible for abandonment', lambda: alice.abandontransaction(txid=txA))
 
         self.generate(self.nodes[1], 1)
 
         # Can not abandon non-wallet transaction
-        assert_raises_rpc_error(-5, 'Invalid or non-wallet transaction id', lambda: alice.abandontransaction(txid='ff' * 32))
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, 'Invalid or non-wallet transaction id', lambda: alice.abandontransaction(txid='ff' * 32))
         # Can not abandon confirmed transaction
-        assert_raises_rpc_error(-5, 'Transaction not eligible for abandonment', lambda: alice.abandontransaction(txid=txA))
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, 'Transaction not eligible for abandonment', lambda: alice.abandontransaction(txid=txA))
 
         newbalance = alice.getbalance()
         assert balance - newbalance < Decimal("0.001")  #no more than fees lost

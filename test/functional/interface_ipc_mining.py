@@ -32,6 +32,7 @@ from test_framework.messages import (
     msg_headers,
     ser_uint256,
 )
+from test_framework.rpc_error_codes import RPC_MISC_ERROR
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -813,7 +814,7 @@ class IPCMiningTest(BitcoinTestFramework):
         assert_equal(victim.getblockchaininfo()["mediantime"], attacker_time)
 
         # Check template creation failure over RPC, followed by IPC.
-        assert_raises_rpc_error(-1, error, victim.getblocktemplate, NORMAL_GBT_REQUEST_PARAMS)
+        assert_raises_rpc_error(RPC_MISC_ERROR, error, victim.getblocktemplate, NORMAL_GBT_REQUEST_PARAMS)
 
         async def assert_ipc_failure_and_recovery():
             ctx, mining = await make_mining_ctx(self)

@@ -16,6 +16,7 @@ from test_framework.messages import (
     MAX_BLOCK_WEIGHT,
     WITNESS_SCALE_FACTOR,
 )
+from test_framework.rpc_error_codes import RPC_INTERNAL_ERROR
 from test_framework.script import (
     CScript,
     OP_TRUE,
@@ -768,7 +769,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.log.info("Testing that fee estimation is disabled in blocksonly.")
         self.restart_node(0, ["-blocksonly"])
         assert_raises_rpc_error(
-            -32603, "Fee estimation disabled", self.nodes[0].estimatesmartfee, 2
+            RPC_INTERNAL_ERROR, "Fee estimation disabled", self.nodes[0].estimatesmartfee, 2
         )
 
 

@@ -5,6 +5,7 @@
 """Test node restart with a pruned stale-fork block whose parent has no transactions."""
 
 from test_framework.blocktools import create_empty_fork
+from test_framework.rpc_error_codes import RPC_MISC_ERROR
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
@@ -28,7 +29,7 @@ class FeaturePruneStaleForkTest(BitcoinTestFramework):
         self.log.info("Advance and prune so the stale-fork child's block data is removed from disk")
         self.generate(node, 500)
         node.pruneblockchain(node.getblockcount() - 100)
-        assert_raises_rpc_error(-1, "Block not available (pruned data)", node.getblock, side_child.hash_hex)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Block not available (pruned data)", node.getblock, side_child.hash_hex)
 
         self.log.info("Restart and mine; node must reload cleanly after the stale-fork child was pruned")
         self.restart_node(0)

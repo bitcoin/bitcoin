@@ -12,6 +12,7 @@ from math import ceil
 import time
 
 from test_framework.blocktools import create_empty_fork
+from test_framework.rpc_error_codes import RPC_VERIFY_REJECTED
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_greater_than_or_equal, assert_raises_rpc_error
 from test_framework.wallet import MiniWallet
@@ -186,7 +187,7 @@ class MempoolUpdateFromBlockTest(BitcoinTestFramework):
         for tx in chain[:-2]:
             self.nodes[0].sendrawtransaction(tx["hex"])
 
-        assert_raises_rpc_error(-26, "too-large-cluster", self.nodes[0].sendrawtransaction, chain[-2]["hex"])
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "too-large-cluster", self.nodes[0].sendrawtransaction, chain[-2]["hex"])
 
         # Mine a block with all but last transaction, non-standardly long chain
         self.generateblock(self.nodes[0], output="raw(42)", transactions=[tx["hex"] for tx in chain[:-1]])

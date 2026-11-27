@@ -14,6 +14,10 @@ from test_framework.messages import (
     MSG_WTX,
 )
 from test_framework.p2p import P2PInterface
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_PARAMETER,
+    RPC_TYPE_ERROR,
+)
 from test_framework.util import (
     assert_equal,
     assert_not_equal,
@@ -53,8 +57,8 @@ class OrphanRPCsTest(BitcoinTestFramework):
         self.log.info("Check the size of the orphanage")
         assert_equal(len(orphanage), 2)
         self.log.info("Check that undefined verbosity is disallowed")
-        assert_raises_rpc_error(-8, "Invalid verbosity value -1", node.getorphantxs, verbosity=-1)
-        assert_raises_rpc_error(-8, "Invalid verbosity value 3", node.getorphantxs, verbosity=3)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid verbosity value -1", node.getorphantxs, verbosity=-1)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Invalid verbosity value 3", node.getorphantxs, verbosity=3)
         self.log.info("Check that both children are in the orphanage")
         assert tx_in_orphanage(node, tx_child_1["tx"])
         assert tx_in_orphanage(node, tx_child_2["tx"])
@@ -145,8 +149,8 @@ class OrphanRPCsTest(BitcoinTestFramework):
 
     def test_misc(self):
         node = self.nodes[0]
-        assert_raises_rpc_error(-3, "Verbosity was boolean but only integer allowed", node.getorphantxs, verbosity=True)
-        assert_raises_rpc_error(-3, "Verbosity was boolean but only integer allowed", node.getorphantxs, verbosity=False)
+        assert_raises_rpc_error(RPC_TYPE_ERROR, "Verbosity was boolean but only integer allowed", node.getorphantxs, verbosity=True)
+        assert_raises_rpc_error(RPC_TYPE_ERROR, "Verbosity was boolean but only integer allowed", node.getorphantxs, verbosity=False)
         help_output = node.help()
         self.log.info("Check that getorphantxs is a hidden RPC")
         assert "getorphantxs" not in help_output

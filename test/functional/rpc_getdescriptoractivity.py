@@ -5,6 +5,10 @@
 
 from decimal import Decimal
 
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_MISC_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.messages import COIN
@@ -127,7 +131,7 @@ class GetBlocksActivityTest(BitcoinTestFramework):
         invalid_blockhash = "0000000000000000000000000000000000000000000000000000000000000000"
 
         assert_raises_rpc_error(
-            -5, "Block not found",
+            RPC_INVALID_ADDRESS_OR_KEY, "Block not found",
             node.getdescriptoractivity, [invalid_blockhash], [f"addr({addr_1})"], True)
 
     def test_invalid_descriptor(self, node, wallet):
@@ -136,7 +140,7 @@ class GetBlocksActivityTest(BitcoinTestFramework):
         _, _, addr_1 = getnewdestination()
 
         assert_raises_rpc_error(
-            -5, "is not a valid descriptor",
+            RPC_INVALID_ADDRESS_OR_KEY, "is not a valid descriptor",
             node.getdescriptoractivity, [blockhash], [f"addrx({addr_1})"], True)
 
     def test_confirmed_and_unconfirmed(self, node, wallet):
@@ -235,8 +239,8 @@ class GetBlocksActivityTest(BitcoinTestFramework):
 
     def test_required_args(self, node):
         self.log.info("Test that required arguments must be passed")
-        assert_raises_rpc_error(-1, "getdescriptoractivity", node.getdescriptoractivity)
-        assert_raises_rpc_error(-1, "getdescriptoractivity", node.getdescriptoractivity, [])
+        assert_raises_rpc_error(RPC_MISC_ERROR, "getdescriptoractivity", node.getdescriptoractivity)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "getdescriptoractivity", node.getdescriptoractivity, [])
 
 
 if __name__ == '__main__':

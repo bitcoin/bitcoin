@@ -4,6 +4,10 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Wallet commands for signing and verifying messages."""
 
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_MISC_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_raises_rpc_error,
@@ -36,9 +40,9 @@ class SignMessagesWithAddressTest(BitcoinTestFramework):
         # signmessage has two required parameters
         for num_params in [0, 1, 3, 4, 5]:
             param_list = ["dummy"]*num_params
-            assert_raises_rpc_error(-1, "signmessage", self.nodes[0].signmessage, *param_list)
+            assert_raises_rpc_error(RPC_MISC_ERROR, "signmessage", self.nodes[0].signmessage, *param_list)
         # invalid key or address provided
-        assert_raises_rpc_error(-5, "Invalid address", self.nodes[0].signmessage, "invalid_addr", message)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address", self.nodes[0].signmessage, "invalid_addr", message)
 
 
 if __name__ == '__main__':

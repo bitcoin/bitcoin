@@ -11,6 +11,7 @@ from pathlib import Path
 import shutil
 
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.rpc_error_codes import RPC_WALLET_UNLOCK_NEEDED
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -175,7 +176,7 @@ class WalletAncientMigrationTest(BitcoinTestFramework):
         # Test post-migration functionality
         new_addr = new_wallet.getnewaddress()
         if passphrase is not None:
-            assert_raises_rpc_error(-13, "Please enter the wallet passphrase", new_wallet.sendtoaddress, new_addr, 0.1)
+            assert_raises_rpc_error(RPC_WALLET_UNLOCK_NEEDED, "Please enter the wallet passphrase", new_wallet.sendtoaddress, new_addr, 0.1)
             new_wallet.walletpassphrase(passphrase, 60)
         txid = new_wallet.sendtoaddress(new_addr, 0.1)
         assert_is_hash_string(txid)

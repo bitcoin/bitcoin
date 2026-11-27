@@ -4,6 +4,12 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test wallet derivehdkey RPC."""
 
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_INVALID_PARAMETER,
+    RPC_WALLET_ERROR,
+    RPC_WALLET_UNLOCK_NEEDED,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -34,13 +40,13 @@ class WalletDeriveHDKeyTest(BitcoinTestFramework):
         self.nodes[0].createwallet("basic", blank=True)
         wallet = self.nodes[0].get_wallet_rpc("basic")
         assert_raises_rpc_error(
-            -8,
+            RPC_INVALID_PARAMETER,
             "Derivation path requires at least one hardened step",
             wallet.derivehdkey,
             "m",
         )
         assert_raises_rpc_error(
-            -8,
+            RPC_INVALID_PARAMETER,
             "Derivation path requires at least one hardened step",
             wallet.derivehdkey,
             "m/87/0/0",
@@ -49,13 +55,13 @@ class WalletDeriveHDKeyTest(BitcoinTestFramework):
         # value 2^31 (2147483648 == 0x80000000) is out of range.
         for path in ["m/2147483648", "m/2147483648h", "m/2147483648'"]:
             assert_raises_rpc_error(
-                -8,
+                RPC_INVALID_PARAMETER,
                 "Invalid BIP32 keypath",
                 wallet.derivehdkey,
                 path,
             )
         assert_raises_rpc_error(
-            -5,
+            RPC_INVALID_ADDRESS_OR_KEY,
             "No active or unused(KEY) descriptor found",
             wallet.derivehdkey,
             "m/87h",
@@ -68,7 +74,7 @@ class WalletDeriveHDKeyTest(BitcoinTestFramework):
         assert_equal(xpub_info["origin"], f"[{root_fingerprint}/87h]")
         too_deep_path = "m/" + "/".join(["0h"] * 256)
         assert_raises_rpc_error(
-            -8,
+            RPC_INVALID_PARAMETER,
             "Unable to derive HD key at the requested path",
             wallet.derivehdkey,
             too_deep_path,
@@ -83,7 +89,7 @@ class WalletDeriveHDKeyTest(BitcoinTestFramework):
         prev_xprv = xprv
         wallet.encryptwallet("pass")
         assert_raises_rpc_error(
-            -13,
+            RPC_WALLET_UNLOCK_NEEDED,
             "Error: Please enter the wallet passphrase with walletpassphrase first",
             wallet.derivehdkey,
             "m/87h",
@@ -97,7 +103,7 @@ class WalletDeriveHDKeyTest(BitcoinTestFramework):
 
         self.log.info("HD privkey can be retrieved from encrypted wallets")
         assert_raises_rpc_error(
-            -13,
+            RPC_WALLET_UNLOCK_NEEDED,
             "Error: Please enter the wallet passphrase with walletpassphrase first",
             wallet.derivehdkey,
             "m/87h/0h/0h/0",
@@ -116,7 +122,7 @@ class WalletDeriveHDKeyTest(BitcoinTestFramework):
         master_xpub_1 = wallet.addhdkey()['xpub']
         master_xpub_2 = wallet.addhdkey()['xpub']
         assert_raises_rpc_error(
-            -5,
+            RPC_INVALID_ADDRESS_OR_KEY,
             "Unable to determine which HD key to use. Please specify with 'hdkey'",
             wallet.derivehdkey,
             "m/87h",
@@ -126,7 +132,7 @@ class WalletDeriveHDKeyTest(BitcoinTestFramework):
         assert xpub_info_1["xpub"] != xpub_info_2["xpub"]
 
         assert_raises_rpc_error(
-            -5,
+            RPC_INVALID_ADDRESS_OR_KEY,
             "Unable to parse HD key. Please provide a valid xpub",
             wallet.derivehdkey,
             "m/87h",
@@ -180,7 +186,7 @@ class WalletDeriveHDKeyTest(BitcoinTestFramework):
         # its HD key is no longer a candidate.
         assert_equal(wallet.importdescriptors([{**request, "active": False}])[0]["success"], True)
         assert_raises_rpc_error(
-            -5,
+            RPC_INVALID_ADDRESS_OR_KEY,
             "HD key is not used by an active or unused(KEY) descriptor",
             wallet.derivehdkey,
             "m/87h",
@@ -192,7 +198,7 @@ class WalletDeriveHDKeyTest(BitcoinTestFramework):
         self.nodes[0].createwallet(wallet_name="noprivs", disable_private_keys=True)
         wallet = self.nodes[0].get_wallet_rpc("noprivs")
         assert_raises_rpc_error(
-            -4,
+            RPC_WALLET_ERROR,
             "derivehdkey is not available for watch-only wallets",
             wallet.derivehdkey,
             "m/87h",
@@ -202,7 +208,7 @@ class WalletDeriveHDKeyTest(BitcoinTestFramework):
         self.nodes[0].createwallet(wallet_name="blank", blank=True)
         wallet = self.nodes[0].get_wallet_rpc("blank")
         assert_raises_rpc_error(
-            -5,
+            RPC_INVALID_ADDRESS_OR_KEY,
             "No active or unused(KEY) descriptor found",
             wallet.derivehdkey,
             "m/87h",

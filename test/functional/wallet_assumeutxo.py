@@ -7,6 +7,10 @@ See feature_assumeutxo.py for background.
 """
 from test_framework.address import address_to_scriptpubkey
 from test_framework.descriptors import descsum_create
+from test_framework.rpc_error_codes import (
+    RPC_MISC_ERROR,
+    RPC_WALLET_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import COIN
 from test_framework.util import (
@@ -87,7 +91,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         n3.unloadwallet("w")
         self.log.info("Backup from before the snapshot height can't be loaded during background sync (pruned node)")
-        assert_raises_rpc_error(-4, expected_error_message, n3.restorewallet, "w2", "backup_w2.dat")
+        assert_raises_rpc_error(RPC_WALLET_ERROR, expected_error_message, n3.restorewallet, "w2", "backup_w2.dat")
 
     def test_restore_wallet_pruneheight(self, n3):
         self.log.info("Ensuring wallet can't be restored from a backup that was created before the pruneheight (pruned node)")
@@ -98,7 +102,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(n3.pruneblockchain(FINAL_HEIGHT), 298)  # 298 is the height of the last block pruned (pruneheight 299)
         error_message = "Wallet loading failed. Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of a pruned node)"
         # This backup (backup_w2.dat) was created at height 199, so it can't be restored in a node with a pruneheight of 299
-        assert_raises_rpc_error(-4, error_message, n3.restorewallet, "w2_pruneheight", "backup_w2.dat")
+        assert_raises_rpc_error(RPC_WALLET_ERROR, error_message, n3.restorewallet, "w2_pruneheight", "backup_w2.dat")
 
         self.log.info("Ensuring wallet can be restored from a backup that was created at the pruneheight (pruned node)")
         # This backup (backup_w.dat) was created at height 299, so it can be restored in a node with a pruneheight of 299
@@ -207,7 +211,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         def loading_error(height):
             return f"Wallet loading failed. Error loading wallet. Wallet requires blocks to be downloaded, and software does not currently support loading wallets while blocks are being downloaded out of order when using assumeutxo snapshots. Wallet should be able to load successfully after node sync reaches height {height}"
         # The target height is SNAPSHOT_BASE_HEIGHT because that's when background sync completes.
-        assert_raises_rpc_error(-4, loading_error(SNAPSHOT_BASE_HEIGHT), n1.restorewallet, "w2", "backup_w2.dat")
+        assert_raises_rpc_error(RPC_WALLET_ERROR, loading_error(SNAPSHOT_BASE_HEIGHT), n1.restorewallet, "w2", "backup_w2.dat")
 
         self.test_backup_during_background_sync_pruned_node(n3, dump_output, loading_error(SNAPSHOT_BASE_HEIGHT))
 
@@ -221,16 +225,16 @@ class AssumeutxoTest(BitcoinTestFramework):
             return f"Rescan failed for descriptor with timestamp {timestamp}. There was an error reading a block from time {time}, which is after or within 7200 seconds of key creation, and could contain transactions pertaining to the desc. As a result, transactions and coins using this desc may not appear in the wallet. This error is likely caused by an in-progress assumeutxo background sync. Check logs or getchainstates RPC for assumeutxo background sync progress and try again later."
         timestamp = 0
         result = self.import_descriptor(n1, wallet_name, key, timestamp)
-        assert_equal(result[0]['error']['code'], -1)
+        assert_equal(result[0]['error']['code'], RPC_MISC_ERROR)
         assert_equal(result[0]['error']['message'], expected_rescan_error(timestamp))
         now_timestamp = block_info["mediantime"]
         result = self.import_descriptor(n1, wallet_name, get_generate_key(), "now")
-        assert_equal(result[0]['error']['code'], -1)
+        assert_equal(result[0]['error']['code'], RPC_MISC_ERROR)
         assert_equal(result[0]['error']['message'], expected_rescan_error(now_timestamp))
 
         self.log.info("Test that rescanning blocks from before the snapshot fails when blocks are not available from the background sync yet")
         w1 = n1.get_wallet_rpc(wallet_name)
-        assert_raises_rpc_error(-1, "Failed to rescan unavailable blocks likely due to an in-progress assumeutxo background sync. Check logs or getchainstates RPC for assumeutxo background sync progress and try again later.", w1.rescanblockchain, 100)
+        assert_raises_rpc_error(RPC_MISC_ERROR, "Failed to rescan unavailable blocks likely due to an in-progress assumeutxo background sync. Check logs or getchainstates RPC for assumeutxo background sync progress and try again later.", w1.rescanblockchain, 100)
 
         PAUSE_HEIGHT = FINAL_HEIGHT - 40
 
@@ -252,11 +256,11 @@ class AssumeutxoTest(BitcoinTestFramework):
         # rescanning. During assumeutxo background sync, blocks before the
         # snapshot are not available, so wallet loading fails.
         # After restart, the required height is SNAPSHOT_BASE_HEIGHT + 1 for all wallets.
-        assert_raises_rpc_error(-4, loading_error(SNAPSHOT_BASE_HEIGHT + 1), n1.loadwallet, "w")
-        assert_raises_rpc_error(-4, loading_error(SNAPSHOT_BASE_HEIGHT + 1), n1.loadwallet, wallet_name)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, loading_error(SNAPSHOT_BASE_HEIGHT + 1), n1.loadwallet, "w")
+        assert_raises_rpc_error(RPC_WALLET_ERROR, loading_error(SNAPSHOT_BASE_HEIGHT + 1), n1.loadwallet, wallet_name)
 
         # Verify backup from before snapshot height still can't be restored
-        assert_raises_rpc_error(-4, loading_error(SNAPSHOT_BASE_HEIGHT + 1), n1.restorewallet, "w2_test", "backup_w2.dat")
+        assert_raises_rpc_error(RPC_WALLET_ERROR, loading_error(SNAPSHOT_BASE_HEIGHT + 1), n1.restorewallet, "w2_test", "backup_w2.dat")
 
         self.complete_background_validation(n1)
 

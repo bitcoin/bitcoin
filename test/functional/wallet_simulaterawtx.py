@@ -7,6 +7,7 @@
 
 from decimal import Decimal
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.rpc_error_codes import RPC_INVALID_PARAMETER
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_approx,
@@ -79,7 +80,7 @@ class SimulateTxTest(BitcoinTestFramework):
         assert_equal(w1.simulaterawtransaction([tx1])["balance_change"], 5.0)
 
         # same inputs (tx) more than once should error
-        assert_raises_rpc_error(-8, "Transaction(s) are spending the same output more than once", w0.simulaterawtransaction, [tx1,tx1])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Transaction(s) are spending the same output more than once", w0.simulaterawtransaction, [tx1,tx1])
 
         tx1ob = node.decoderawtransaction(tx1)
         tx1hex = tx1ob["txid"]
@@ -90,10 +91,10 @@ class SimulateTxTest(BitcoinTestFramework):
         tx4 = node.createrawtransaction([{"txid": tx1hex, "vout": tx1vout}], {w1.getnewaddress(): 4.9999})
 
         # on their own, both should fail due to missing input(s)
-        assert_raises_rpc_error(-8, "One or more transaction inputs are missing or have been spent already", w0.simulaterawtransaction, [tx3])
-        assert_raises_rpc_error(-8, "One or more transaction inputs are missing or have been spent already", w1.simulaterawtransaction, [tx3])
-        assert_raises_rpc_error(-8, "One or more transaction inputs are missing or have been spent already", w0.simulaterawtransaction, [tx4])
-        assert_raises_rpc_error(-8, "One or more transaction inputs are missing or have been spent already", w1.simulaterawtransaction, [tx4])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "One or more transaction inputs are missing or have been spent already", w0.simulaterawtransaction, [tx3])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "One or more transaction inputs are missing or have been spent already", w1.simulaterawtransaction, [tx3])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "One or more transaction inputs are missing or have been spent already", w0.simulaterawtransaction, [tx4])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "One or more transaction inputs are missing or have been spent already", w1.simulaterawtransaction, [tx4])
 
         # they should succeed when including tx1:
         #       wallet                  tx3                             tx4
@@ -105,8 +106,8 @@ class SimulateTxTest(BitcoinTestFramework):
         assert_approx(w1.simulaterawtransaction([tx1, tx4])["balance_change"], Decimal("4.9999"))
 
         # they should fail if attempting to include both tx3 and tx4
-        assert_raises_rpc_error(-8, "Transaction(s) are spending the same output more than once", w0.simulaterawtransaction, [tx1, tx3, tx4])
-        assert_raises_rpc_error(-8, "Transaction(s) are spending the same output more than once", w1.simulaterawtransaction, [tx1, tx3, tx4])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Transaction(s) are spending the same output more than once", w0.simulaterawtransaction, [tx1, tx3, tx4])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Transaction(s) are spending the same output more than once", w1.simulaterawtransaction, [tx1, tx3, tx4])
 
         # send tx1 to avoid reusing same UTXO below
         node.sendrawtransaction(w0.signrawtransactionwithwallet(tx1)["hex"])
@@ -122,9 +123,9 @@ class SimulateTxTest(BitcoinTestFramework):
         assert_approx(w2.simulaterawtransaction([tx2])["balance_change"], 0)
 
         # w0-w2 error due to tx1 already being mined
-        assert_raises_rpc_error(-8, "One or more transaction inputs are missing or have been spent already", w0.simulaterawtransaction, [tx1, tx2])
-        assert_raises_rpc_error(-8, "One or more transaction inputs are missing or have been spent already", w1.simulaterawtransaction, [tx1, tx2])
-        assert_raises_rpc_error(-8, "One or more transaction inputs are missing or have been spent already", w2.simulaterawtransaction, [tx1, tx2])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "One or more transaction inputs are missing or have been spent already", w0.simulaterawtransaction, [tx1, tx2])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "One or more transaction inputs are missing or have been spent already", w1.simulaterawtransaction, [tx1, tx2])
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "One or more transaction inputs are missing or have been spent already", w2.simulaterawtransaction, [tx1, tx2])
 
 if __name__ == '__main__':
     SimulateTxTest(__file__).main()

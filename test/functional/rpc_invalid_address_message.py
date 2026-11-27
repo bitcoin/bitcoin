@@ -4,6 +4,11 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test error messages for 'getaddressinfo' and 'validateaddress' RPC commands."""
 
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_MISC_ERROR,
+    RPC_TYPE_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 
 from test_framework.util import (
@@ -100,17 +105,17 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
 
         if not self.options.usecli:
             # Missing arg returns the help text
-            assert_raises_rpc_error(-1, "Return information about the given bitcoin address.", node.validateaddress)
+            assert_raises_rpc_error(RPC_MISC_ERROR, "Return information about the given bitcoin address.", node.validateaddress)
             # Explicit None is not allowed for required parameters
-            assert_raises_rpc_error(-3, "JSON value of type null is not of expected type string", node.validateaddress, None)
+            assert_raises_rpc_error(RPC_TYPE_ERROR, "JSON value of type null is not of expected type string", node.validateaddress, None)
 
     def test_getaddressinfo(self):
         node = self.nodes[0]
 
-        assert_raises_rpc_error(-5, "Invalid Bech32 address program size (41 bytes)", node.getaddressinfo, BECH32_INVALID_SIZE)
-        assert_raises_rpc_error(-5, "Invalid or unsupported Segwit (Bech32) or Base58 encoding.", node.getaddressinfo, BECH32_INVALID_PREFIX)
-        assert_raises_rpc_error(-5, "Invalid or unsupported Base58-encoded address.", node.getaddressinfo, BASE58_INVALID_PREFIX)
-        assert_raises_rpc_error(-5, "Invalid or unsupported Segwit (Bech32) or Base58 encoding.", node.getaddressinfo, INVALID_ADDRESS)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bech32 address program size (41 bytes)", node.getaddressinfo, BECH32_INVALID_SIZE)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or unsupported Segwit (Bech32) or Base58 encoding.", node.getaddressinfo, BECH32_INVALID_PREFIX)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or unsupported Base58-encoded address.", node.getaddressinfo, BASE58_INVALID_PREFIX)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or unsupported Segwit (Bech32) or Base58 encoding.", node.getaddressinfo, INVALID_ADDRESS)
         assert "isscript" not in node.getaddressinfo(BECH32_VALID_UNKNOWN_WITNESS)
 
     def run_test(self):

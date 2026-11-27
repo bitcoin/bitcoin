@@ -7,6 +7,11 @@
 from test_framework.descriptors import (
     descsum_create,
 )
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_ADDRESS_OR_KEY,
+    RPC_MISC_ERROR,
+    RPC_TYPE_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -41,22 +46,22 @@ class SignMessagesWithPrivTest(BitcoinTestFramework):
 
         self.log.info('test that verifying with non-P2PKH addresses throws error')
         for non_p2pkh_address in addresses[1:]:
-            assert_raises_rpc_error(-3, "Address does not refer to key", self.nodes[0].verifymessage, non_p2pkh_address, signature, message)
+            assert_raises_rpc_error(RPC_TYPE_ERROR, "Address does not refer to key", self.nodes[0].verifymessage, non_p2pkh_address, signature, message)
 
         self.log.info('test parameter validity and error codes')
         # signmessagewithprivkey has two required parameters
         for num_params in [0, 1, 3, 4, 5]:
             param_list = ["dummy"]*num_params
-            assert_raises_rpc_error(-1, "signmessagewithprivkey", self.nodes[0].signmessagewithprivkey, *param_list)
+            assert_raises_rpc_error(RPC_MISC_ERROR, "signmessagewithprivkey", self.nodes[0].signmessagewithprivkey, *param_list)
         # verifymessage has three required parameters
         for num_params in [0, 1, 2, 4, 5]:
             param_list = ["dummy"]*num_params
-            assert_raises_rpc_error(-1, "verifymessage", self.nodes[0].verifymessage, *param_list)
+            assert_raises_rpc_error(RPC_MISC_ERROR, "verifymessage", self.nodes[0].verifymessage, *param_list)
         # invalid key or address provided
-        assert_raises_rpc_error(-5, "Invalid private key", self.nodes[0].signmessagewithprivkey, "invalid_key", message)
-        assert_raises_rpc_error(-5, "Invalid address", self.nodes[0].verifymessage, "invalid_addr", signature, message)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key", self.nodes[0].signmessagewithprivkey, "invalid_key", message)
+        assert_raises_rpc_error(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address", self.nodes[0].verifymessage, "invalid_addr", signature, message)
         # malformed signature provided
-        assert_raises_rpc_error(-3, "Malformed base64 encoding", self.nodes[0].verifymessage, 'mpLQjfK79b7CCV4VMJWEWAj5Mpx8Up5zxB', "invalid_sig", message)
+        assert_raises_rpc_error(RPC_TYPE_ERROR, "Malformed base64 encoding", self.nodes[0].verifymessage, 'mpLQjfK79b7CCV4VMJWEWAj5Mpx8Up5zxB', "invalid_sig", message)
 
 
 if __name__ == '__main__':

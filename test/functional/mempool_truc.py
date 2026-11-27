@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 from decimal import Decimal
 
+from test_framework.rpc_error_codes import RPC_VERIFY_REJECTED
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
@@ -66,7 +67,7 @@ class MempoolTRUC(BitcoinTestFramework):
         tx_v3_heavy = self.wallet.create_self_transfer(target_vsize=TRUC_MAX_VSIZE + 1, version=3)
         assert_greater_than_or_equal(tx_v3_heavy["tx"].get_vsize(), TRUC_MAX_VSIZE)
         expected_error_heavy = f"TRUC-violation, version=3 tx {tx_v3_heavy['txid']} (wtxid={tx_v3_heavy['wtxid']}) is too big"
-        assert_raises_rpc_error(-26, expected_error_heavy, node.sendrawtransaction, tx_v3_heavy["hex"])
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, expected_error_heavy, node.sendrawtransaction, tx_v3_heavy["hex"])
         self.check_mempool([])
 
         # Ensure we are hitting the TRUC-specific limit and not something else
@@ -86,7 +87,7 @@ class MempoolTRUC(BitcoinTestFramework):
         )
         assert_greater_than_or_equal(tx_v3_child_heavy["tx"].get_vsize(), TRUC_CHILD_MAX_VSIZE)
         expected_error_child_heavy = f"TRUC-violation, version=3 child tx {tx_v3_child_heavy['txid']} (wtxid={tx_v3_child_heavy['wtxid']}) is too big"
-        assert_raises_rpc_error(-26, expected_error_child_heavy, node.sendrawtransaction, tx_v3_child_heavy["hex"])
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, expected_error_child_heavy, node.sendrawtransaction, tx_v3_child_heavy["hex"])
         self.check_mempool([tx_v3_parent_normal["txid"]])
         # tx has no descendants
         assert_equal(node.getmempoolentry(tx_v3_parent_normal["txid"])["descendantcount"], 1)
@@ -166,7 +167,7 @@ class MempoolTRUC(BitcoinTestFramework):
             version=2
         )
         expected_error_v2_v3 = f"TRUC-violation, non-version=3 tx {tx_v3_child_rbf_v2['txid']} (wtxid={tx_v3_child_rbf_v2['wtxid']}) cannot spend from version=3 tx {tx_v3_parent['txid']} (wtxid={tx_v3_parent['wtxid']})"
-        assert_raises_rpc_error(-26, expected_error_v2_v3, node.sendrawtransaction, tx_v3_child_rbf_v2["hex"])
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, expected_error_v2_v3, node.sendrawtransaction, tx_v3_child_rbf_v2["hex"])
         self.check_mempool([tx_v3_bip125_rbf_v2["txid"], tx_v3_parent["txid"], tx_v3_child["txid"]])
 
 
@@ -235,7 +236,7 @@ class MempoolTRUC(BitcoinTestFramework):
         assert_greater_than_or_equal(TRUC_MAX_VSIZE, tx_v3_parent_large1["tx"].get_vsize())
         assert_greater_than_or_equal(TRUC_CHILD_MAX_VSIZE, tx_v3_child_large1["tx"].get_vsize())
 
-        assert_raises_rpc_error(-26, "too-large-cluster", node.sendrawtransaction, tx_v3_child_large1["hex"])
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "too-large-cluster", node.sendrawtransaction, tx_v3_child_large1["hex"])
         self.check_mempool([tx_v3_parent_large1["txid"]])
         assert_equal(node.getmempoolentry(tx_v3_parent_large1["txid"])["descendantcount"], 1)
         self.generate(node, 1)
@@ -247,10 +248,10 @@ class MempoolTRUC(BitcoinTestFramework):
         # Parent and child are within TRUC limits
         assert_greater_than_or_equal(TRUC_MAX_VSIZE, tx_v3_parent_large2["tx"].get_vsize())
         assert_greater_than_or_equal(TRUC_CHILD_MAX_VSIZE, tx_v3_child_large2["tx"].get_vsize())
-        assert_raises_rpc_error(-26, "too-large-cluster", node.sendrawtransaction, tx_v3_child_large2["hex"])
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "too-large-cluster", node.sendrawtransaction, tx_v3_child_large2["hex"])
         self.log.info("Test that a decreased limitclustercount also applies to TRUC transactions")
         self.restart_node(0, extra_args=["-limitclustercount=1", "-acceptnonstdtxn=1"])
-        assert_raises_rpc_error(-26, "too-large-cluster", node.sendrawtransaction, tx_v3_child_large2["hex"])
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "too-large-cluster", node.sendrawtransaction, tx_v3_child_large2["hex"])
         self.check_mempool([tx_v3_parent_large2["txid"]])
 
     @cleanup()
@@ -523,7 +524,7 @@ class MempoolTRUC(BitcoinTestFramework):
             utxo_to_spend=tx_v3_parent["new_utxos"][1], fee_rate=DEFAULT_FEE, version=3
         )
         rule6_str = f"insufficient fee (including sibling eviction), rejecting replacement {tx_v3_child_2_rule6['txid']}"
-        assert_raises_rpc_error(-26, rule6_str, node.sendrawtransaction, tx_v3_child_2_rule6["hex"])
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, rule6_str, node.sendrawtransaction, tx_v3_child_2_rule6["hex"])
         self.check_mempool([tx_v3_parent['txid'], tx_v3_child_1['txid']])
 
         self.log.info("Test tx must meet absolute fee rules to evict sibling")
@@ -531,7 +532,7 @@ class MempoolTRUC(BitcoinTestFramework):
             utxo_to_spend=tx_v3_parent["new_utxos"][1], fee_rate=2 * DEFAULT_FEE + Decimal("0.00000001"), version=3
         )
         rule4_str = f"insufficient fee (including sibling eviction), rejecting replacement {tx_v3_child_2_rule4['txid']}, not enough additional fees to relay"
-        assert_raises_rpc_error(-26, rule4_str, node.sendrawtransaction, tx_v3_child_2_rule4["hex"])
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, rule4_str, node.sendrawtransaction, tx_v3_child_2_rule4["hex"])
         self.check_mempool([tx_v3_parent['txid'], tx_v3_child_1['txid']])
 
         self.log.info("Test tx cannot cause more than 100 evictions including RBF and sibling eviction")
@@ -604,7 +605,7 @@ class MempoolTRUC(BitcoinTestFramework):
             fee_rate=DEFAULT_FEE*50
         )
         expected_error_2siblings = f"TRUC-violation, tx {tx_with_multi_children['txid']} (wtxid={tx_with_multi_children['wtxid']}) would exceed descendant count limit"
-        assert_raises_rpc_error(-26, expected_error_2siblings, node.sendrawtransaction, tx_with_sibling3["hex"])
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, expected_error_2siblings, node.sendrawtransaction, tx_with_sibling3["hex"])
 
         # However, an RBF (with conflicting inputs) is possible even if the resulting cluster size exceeds 2
         tx_with_sibling3_rbf = self.wallet.send_self_transfer(

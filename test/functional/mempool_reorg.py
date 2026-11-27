@@ -19,6 +19,7 @@ from test_framework.p2p import (
     P2PTxInvStore,
     p2p_lock,
 )
+from test_framework.rpc_error_codes import RPC_VERIFY_REJECTED
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.wallet import MiniWallet
@@ -147,7 +148,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         )['hex']
 
         self.log.info("Check that the time-locked transaction is too immature to spend")
-        assert_raises_rpc_error(-26, "non-final", self.nodes[0].sendrawtransaction, timelock_tx)
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, "non-final", self.nodes[0].sendrawtransaction, timelock_tx)
 
         self.log.info("Broadcast and mine spend_2 and spend_3")
         spend_2_id = wallet.sendrawtransaction(from_node=self.nodes[0], tx_hex=spend_2['hex'])
@@ -155,7 +156,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         self.log.info("Generate a block")
         self.generate(self.nodes[0], 1)
         self.log.info("Check that time-locked transaction is still too immature to spend")
-        assert_raises_rpc_error(-26, 'non-final', self.nodes[0].sendrawtransaction, timelock_tx)
+        assert_raises_rpc_error(RPC_VERIFY_REJECTED, 'non-final', self.nodes[0].sendrawtransaction, timelock_tx)
 
         self.log.info("Create spend_2_1 and spend_3_1")
         spend_2_1 = wallet.create_self_transfer(utxo_to_spend=spend_2["new_utxo"], version=1)

@@ -5,6 +5,10 @@
 """Test RPC misc output."""
 import xml.etree.ElementTree as ET
 
+from test_framework.rpc_error_codes import (
+    RPC_INVALID_PARAMETER,
+    RPC_MISC_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_raises_rpc_error,
@@ -41,7 +45,7 @@ class RpcMiscTest(BitcoinTestFramework):
             assert_equal(-6, node.process.wait(timeout=10))
             self.start_node(0)
         except JSONRPCException as e:
-            assert_equal(e.error["code"], -1)
+            assert_equal(e.error["code"], RPC_MISC_ERROR)
             assert f"Internal bug detected: {msg_failed_check}" in e.error["message"]
 
         self.log.info("test max arg size")
@@ -70,9 +74,9 @@ class RpcMiscTest(BitcoinTestFramework):
             assert_equal(tree.tag, 'malloc')
         except JSONRPCException:
             self.log.info('getmemoryinfo(mode="mallocinfo") not available')
-            assert_raises_rpc_error(-8, 'mallocinfo mode not available', node.getmemoryinfo, mode="mallocinfo")
+            assert_raises_rpc_error(RPC_INVALID_PARAMETER, 'mallocinfo mode not available', node.getmemoryinfo, mode="mallocinfo")
 
-        assert_raises_rpc_error(-8, "unknown mode foobar", node.getmemoryinfo, mode="foobar")
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "unknown mode foobar", node.getmemoryinfo, mode="foobar")
 
         self.log.info("test logging rpc and help")
 

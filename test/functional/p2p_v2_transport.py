@@ -8,6 +8,7 @@ Test v2 transport
 import socket
 
 from test_framework.messages import MAGIC_BYTES, NODE_P2P_V2
+from test_framework.rpc_error_codes import RPC_INVALID_PARAMETER
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
@@ -64,7 +65,7 @@ class V2TransportTest(BitcoinTestFramework):
 
         # addnode rpc error when v2transport requested but not enabled
         ip_port = "127.0.0.1:{}".format(p2p_port(3))
-        assert_raises_rpc_error(-8, "Error: v2transport requested but not enabled (see -v2transport)", self.nodes[2].addnode, node=ip_port, command='add', v2transport=True)
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Error: v2transport requested but not enabled (see -v2transport)", self.nodes[2].addnode, node=ip_port, command='add', v2transport=True)
 
         with self.nodes[2].assert_debug_log(expected_msgs=[],
                                             unexpected_msgs=[sending_handshake, downgrading_to_v1]):

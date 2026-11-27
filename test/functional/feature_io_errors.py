@@ -8,6 +8,10 @@ from contextlib import closing
 import urllib.parse
 
 from test_framework.netutil import HTTPConnection
+from test_framework.rpc_error_codes import (
+    RPC_INTERNAL_ERROR,
+    RPC_MISC_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -37,11 +41,11 @@ class IOErrorTest(BitcoinTestFramework):
 
         self.log.info("Check tx RPCs throw on I/O errors")
         msg = "Can't read block from disk"
-        assert_raises_rpc_error(-32603, msg, node.gettxoutproof, [tx2["txid"]])
+        assert_raises_rpc_error(RPC_INTERNAL_ERROR, msg, node.gettxoutproof, [tx2["txid"]])
         msg = "txindex: Failed to open block file"
-        assert_raises_rpc_error(-1, msg, node.gettxoutproof, [txid])
-        assert_raises_rpc_error(-1, msg, node.getrawtransaction, txid)
-        assert_raises_rpc_error(-1, msg, node.utxoupdatepsbt, psbt)
+        assert_raises_rpc_error(RPC_MISC_ERROR, msg, node.gettxoutproof, [txid])
+        assert_raises_rpc_error(RPC_MISC_ERROR, msg, node.getrawtransaction, txid)
+        assert_raises_rpc_error(RPC_MISC_ERROR, msg, node.utxoupdatepsbt, psbt)
 
         self.log.info("Check REST /tx/ on I/O errors")
         url = urllib.parse.urlparse(node.url)

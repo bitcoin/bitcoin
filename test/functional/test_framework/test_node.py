@@ -25,11 +25,13 @@ from pathlib import Path
 from .authproxy import (
     AuthServiceProxy,
     JSONRPCException,
+    RPC_HTTP_ERROR,
     serialization_fallback,
 )
 from . import coverage
 from .messages import NODE_P2P_V2
 from .p2p import P2P_SERVICES, P2P_SUBVERSION
+from .rpc_error_codes import RPC_IN_WARMUP
 from .util import (
     MAX_NODES,
     assert_equal,
@@ -410,10 +412,8 @@ class TestNode():
                 self._rpc = rpc
                 return
             except JSONRPCException as e:
-                # Suppress these as they are expected during initialization.
-                # -28 RPC in warmup
-                # -342 Service unavailable, could be starting up or shutting down
-                if e.error['code'] not in [-28, -342]:
+                # The node may still be warming up, or its HTTP server may be starting or stopping.
+                if e.error['code'] not in [RPC_IN_WARMUP, RPC_HTTP_ERROR]:
                     raise  # unknown JSON RPC exception
                 latest_error = suppress_error(f"JSONRPCException {e.error['code']}", e)
             except OSError as e:
@@ -1019,7 +1019,7 @@ class TestNodeCLI():
             if match:
                 message = match.group(1)
                 raise JSONRPCException(dict(
-                    code=-342,
+                    code=RPC_HTTP_ERROR,
                     message=f"non-JSON HTTP response with '503 Service Unavailable' from server: {message}",
                 ), http_status=503)
             # Ignore cli_stdout, raise with cli_stderr

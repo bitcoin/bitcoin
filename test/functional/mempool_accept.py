@@ -8,6 +8,11 @@ from copy import deepcopy
 from decimal import Decimal
 import math
 
+from test_framework.rpc_error_codes import (
+    RPC_DESERIALIZATION_ERROR,
+    RPC_INVALID_PARAMETER,
+    RPC_TYPE_ERROR,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.blocktools import MAX_STANDARD_TX_WEIGHT
 from test_framework.mempool_util import (
@@ -94,10 +99,10 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         assert_equal(node.getmempoolinfo()['incrementalrelayfee'], Decimal(DEFAULT_INCREMENTAL_RELAY_FEE) / COIN)
 
         self.log.info('Should not accept garbage to testmempoolaccept')
-        assert_raises_rpc_error(-3, 'JSON value of type string is not of expected type array', lambda: node.testmempoolaccept(rawtxs='ff00baar'))
-        assert_raises_rpc_error(-8, 'Array must contain between 1 and 25 transactions.', lambda: node.testmempoolaccept(rawtxs=['ff22']*26))
-        assert_raises_rpc_error(-8, 'Array must contain between 1 and 25 transactions.', lambda: node.testmempoolaccept(rawtxs=[]))
-        assert_raises_rpc_error(-22, 'TX decode failed', lambda: node.testmempoolaccept(rawtxs=['ff00baar']))
+        assert_raises_rpc_error(RPC_TYPE_ERROR, 'JSON value of type string is not of expected type array', lambda: node.testmempoolaccept(rawtxs='ff00baar'))
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, 'Array must contain between 1 and 25 transactions.', lambda: node.testmempoolaccept(rawtxs=['ff22']*26))
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, 'Array must contain between 1 and 25 transactions.', lambda: node.testmempoolaccept(rawtxs=[]))
+        assert_raises_rpc_error(RPC_DESERIALIZATION_ERROR, 'TX decode failed', lambda: node.testmempoolaccept(rawtxs=['ff00baar']))
 
         self.log.info('A transaction already in the blockchain')
         tx = self.wallet.create_self_transfer()['tx']  # Pick a random coin(base) to spend
@@ -109,13 +114,13 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.generate(node, 1)
         self.mempool_size = 0
         # Also check feerate. 1BTC/kvB fails
-        assert_raises_rpc_error(-8, "Fee rates larger than or equal to 1BTC/kvB are not accepted", lambda: self.check_mempool_result(
+        assert_raises_rpc_error(RPC_INVALID_PARAMETER, "Fee rates larger than or equal to 1BTC/kvB are not accepted", lambda: self.check_mempool_result(
             result_expected=None,
             rawtxs=[raw_tx_in_block],
             maxfeerate=1,
         ))
         # Check negative feerate
-        assert_raises_rpc_error(-3, "Amount out of range", lambda: self.check_mempool_result(
+        assert_raises_rpc_error(RPC_TYPE_ERROR, "Amount out of range", lambda: self.check_mempool_result(
             result_expected=None,
             rawtxs=[raw_tx_in_block],
             maxfeerate=-0.01,

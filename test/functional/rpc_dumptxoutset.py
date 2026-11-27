@@ -6,6 +6,7 @@
 """
 
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.rpc_error_codes import RPC_INVALID_PARAMETER
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -81,14 +82,14 @@ class DumptxoutsetTest(BitcoinTestFramework):
 
         # Specifying a path to an existing or invalid file will fail.
         assert_raises_rpc_error(
-            -8, '{} already exists'.format(FILENAME),  node.dumptxoutset, FILENAME, "latest")
+            RPC_INVALID_PARAMETER, '{} already exists'.format(FILENAME),  node.dumptxoutset, FILENAME, "latest")
         invalid_path = node.datadir_path / "invalid" / "path"
         assert_raises_rpc_error(
-            -8, "Couldn't open file {}.incomplete for writing".format(invalid_path), node.dumptxoutset, invalid_path, "latest")
+            RPC_INVALID_PARAMETER, "Couldn't open file {}.incomplete for writing".format(invalid_path), node.dumptxoutset, invalid_path, "latest")
 
         self.log.info("Test that dumptxoutset with unknown dump type fails")
         assert_raises_rpc_error(
-            -8, 'Invalid snapshot type "bogus" specified. Please specify "rollback" or "latest"', node.dumptxoutset, 'utxos.dat', "bogus")
+            RPC_INVALID_PARAMETER, 'Invalid snapshot type "bogus" specified. Please specify "rollback" or "latest"', node.dumptxoutset, 'utxos.dat', "bogus")
 
         self.log.info("Testing dumptxoutset with chain fork at target height")
         self.test_dumptxoutset_with_fork()

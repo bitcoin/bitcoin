@@ -15,6 +15,10 @@ from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.descriptors import descsum_create
 from test_framework.extendedkey import ExtendedPrivateKey
 from test_framework.messages import ser_string
+from test_framework.rpc_error_codes import (
+    RPC_WALLET_ERROR,
+    RPC_WALLET_KEYPOOL_RAN_OUT,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
@@ -185,7 +189,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
         for _ in range(100):
             send_wrpc.getnewaddress(address_type='bech32')
         # This should now error
-        assert_raises_rpc_error(-12, "Keypool ran out, please call keypoolrefill first", send_wrpc.getnewaddress, '', 'bech32')
+        assert_raises_rpc_error(RPC_WALLET_KEYPOOL_RAN_OUT, "Keypool ran out, please call keypoolrefill first", send_wrpc.getnewaddress, '', 'bech32')
 
         self.log.info("Test born encrypted wallets")
         self.nodes[0].createwallet('desc_enc', False, False, 'pass', False, True)
@@ -195,12 +199,12 @@ class WalletDescriptorTest(BitcoinTestFramework):
         self.log.info("Test blank descriptor wallets")
         self.nodes[0].createwallet(wallet_name='desc_blank', blank=True)
         blank_rpc = self.nodes[0].get_wallet_rpc('desc_blank')
-        assert_raises_rpc_error(-4, 'This wallet has no available keys', blank_rpc.getnewaddress)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, 'This wallet has no available keys', blank_rpc.getnewaddress)
 
         self.log.info("Test descriptor wallet with disabled private keys")
         self.nodes[0].createwallet(wallet_name='desc_no_priv', disable_private_keys=True)
         nopriv_rpc = self.nodes[0].get_wallet_rpc('desc_no_priv')
-        assert_raises_rpc_error(-4, 'This wallet has no available keys', nopriv_rpc.getnewaddress)
+        assert_raises_rpc_error(RPC_WALLET_ERROR, 'This wallet has no available keys', nopriv_rpc.getnewaddress)
 
         self.log.info("Test descriptor exports")
         self.nodes[0].createwallet(wallet_name='desc_export')
@@ -270,7 +274,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
             # add "cscript" entry: key type is uint160 (20 bytes), value type is CScript (zero-length here)
             conn.execute('INSERT INTO main VALUES(?, ?)', (b'\x07cscript' + b'\x00'*20, b'\x00'))
         conn.close()
-        assert_raises_rpc_error(-4, "Unexpected legacy entry in descriptor wallet found.", self.nodes[0].loadwallet, "crashme")
+        assert_raises_rpc_error(RPC_WALLET_ERROR, "Unexpected legacy entry in descriptor wallet found.", self.nodes[0].loadwallet, "crashme")
 
         self.log.info("Test that loading descriptor wallet containing both unencrypted and encrypted keys for same descriptor fails to load")
         wallet_name = "mixed_crypt"
@@ -289,7 +293,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
             conn.execute('INSERT INTO main VALUES(?, ?)', (k.replace(key_prefix, ckey_prefix), v))
         conn.close()
         with self.nodes[0].assert_debug_log(["Wallet contains both unencrypted and encrypted keys"]):
-            assert_raises_rpc_error(-4, "Wallet corrupted", self.nodes[0].loadwallet, wallet_name)
+            assert_raises_rpc_error(RPC_WALLET_ERROR, "Wallet corrupted", self.nodes[0].loadwallet, wallet_name)
 
         self.test_parent_descriptors()
 
