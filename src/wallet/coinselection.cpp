@@ -976,6 +976,7 @@ void SelectionResult::Clear()
     m_selected_inputs.clear();
     m_waste.reset();
     m_weight = 0;
+    bump_fee_group_discount = 0;
 }
 
 void SelectionResult::AddInput(const OutputGroup& group)
