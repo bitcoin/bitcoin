@@ -12,7 +12,7 @@ Previous releases are required by this test, see test/README.md.
 
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_true
 from test_framework.wallet import MiniWallet
 
 
@@ -59,7 +59,7 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
         self.log.info("Add unbroadcasted tx to mempool on new node and shutdown")
         unbroadcasted_tx_hash = new_wallet.send_self_transfer(from_node=new_node)['txid']
         assert unbroadcasted_tx_hash in new_node.getrawmempool()
-        assert_equal(new_node.getmempoolentry(unbroadcasted_tx_hash)["unbroadcast"], True)
+        assert_true(new_node.getmempoolentry(unbroadcasted_tx_hash)["unbroadcast"])
         self.stop_node(1)
 
         self.log.info("Move mempool.dat from new to old node")
@@ -69,7 +69,7 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
         self.start_node(0)
         assert old_tx_hash in old_node.getrawmempool()
         assert unbroadcasted_tx_hash in old_node.getrawmempool()
-        assert_equal(old_node.getmempoolentry(unbroadcasted_tx_hash)["unbroadcast"], True)
+        assert_true(old_node.getmempoolentry(unbroadcasted_tx_hash)["unbroadcast"])
 
 
 if __name__ == "__main__":

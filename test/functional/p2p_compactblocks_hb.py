@@ -5,7 +5,7 @@
 """Test compact blocks HB selection logic."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_true
 
 
 class CompactBlocksConnectionTest(BitcoinTestFramework):
@@ -76,7 +76,7 @@ class CompactBlocksConnectionTest(BitcoinTestFramework):
         # Now relay one block through peer 2 (outbound from node 1), so it should take HB status
         # from one of the inbounds.
         status = self.relay_block_through(2)
-        assert_equal(status[0], True)
+        assert_true(status[0])
         assert_equal(sum(status), 3)
 
         # Now relay again through nodes 3,4,5. Since 2 is outbound, it should remain HB.

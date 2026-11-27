@@ -12,6 +12,7 @@ from test_framework.util import (
     assert_greater_than,
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
+    assert_true,
 )
 
 
@@ -64,7 +65,7 @@ class ListRawTransactionsTest(BitcoinTestFramework):
 
         # Coinbase is flagged via "generated", not via a "category" field —
         # listrawtransactions intentionally omits category assignment.
-        assert_equal(entry["generated"], True)
+        assert_true(entry["generated"])
         assert "category" not in entry
 
         # Wallet received the block reward (positive amount, no fee).
@@ -96,7 +97,7 @@ class ListRawTransactionsTest(BitcoinTestFramework):
 
         raw_hex = self.nodes[0].createrawtransaction(inputs, outputs)
         signed = self.nodes[0].signrawtransactionwithwallet(raw_hex)
-        assert_equal(signed["complete"], True)
+        assert_true(signed["complete"])
         consolidation_txid = self.nodes[0].sendrawtransaction(signed["hex"])
         self.generate(self.nodes[0], 1)
 

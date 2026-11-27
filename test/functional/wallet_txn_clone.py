@@ -9,6 +9,7 @@ from test_framework.util import (
     assert_equal,
     assert_not_equal,
     assert_raises_rpc_error,
+    assert_true,
 )
 from test_framework.messages import (
     COIN,
@@ -88,7 +89,7 @@ class TxnMallTest(BitcoinTestFramework):
         # Use a different signature hash type to sign.  This creates an equivalent but malleated clone.
         # Don't send the clone anywhere yet
         tx1_clone = self.nodes[0].signrawtransactionwithwallet(clone_tx.serialize().hex(), None, "ALL|ANYONECANPAY")
-        assert_equal(tx1_clone["complete"], True)
+        assert_true(tx1_clone["complete"])
 
         # Have node0 mine a block, if requested:
         if (self.options.mine_block):

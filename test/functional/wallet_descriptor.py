@@ -17,9 +17,11 @@ from test_framework.extendedkey import ExtendedPrivateKey
 from test_framework.messages import ser_string
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_not_equal,
     assert_equal,
-    assert_raises_rpc_error
+    assert_false,
+    assert_not_equal,
+    assert_raises_rpc_error,
+    assert_true,
 )
 from test_framework.wallet_util import WalletUnlock
 
@@ -57,8 +59,8 @@ class WalletDescriptorTest(BitcoinTestFramework):
         # We don't need to check for aspostrophe as normalization will not output aspostrophe
         found_hardened_in_origin = "h" in origin_part
         found_hardened_after_origin = "h" in after_origin
-        assert_equal(found_hardened_in_origin, True)
-        assert_equal(found_hardened_after_origin, False)
+        assert_true(found_hardened_in_origin)
+        assert_false(found_hardened_after_origin)
 
         # Send some coins so we can check listunspent, listtransactions, listunspent, and gettransaction
         since_block = self.nodes[0].getbestblockhash()
@@ -104,7 +106,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
         addr_info = wallet.getaddressinfo(addr)
         assert addr_info['desc'].startswith('pkh(')
         assert_equal(addr_info['hdkeypath'], 'm/44h/1h/0h/0/0')
-        assert_equal(addr_info['iswatchonly'], False)
+        assert_false(addr_info['iswatchonly'])
 
         addr = wallet.getnewaddress("", "p2sh-segwit")
         addr_info = wallet.getaddressinfo(addr)

@@ -11,8 +11,10 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import COIN
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_greater_than,
     assert_raises_rpc_error,
+    assert_true,
     dumb_sync_blocks,
     ensure_for,
 )
@@ -59,10 +61,10 @@ class AssumeutxoTest(BitcoinTestFramework):
         normal, snapshot = node.getchainstates()["chainstates"]
         assert_equal(normal['blocks'], START_HEIGHT)
         assert 'snapshot_blockhash' not in normal
-        assert_equal(normal['validated'], True)
+        assert_true(normal['validated'])
         assert_equal(snapshot['blocks'], SNAPSHOT_BASE_HEIGHT)
         assert_equal(snapshot['snapshot_blockhash'], base_hash)
-        assert_equal(snapshot['validated'], False)
+        assert_false(snapshot['validated'])
 
         assert_equal(node.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
 
@@ -280,7 +282,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         self.log.info("Ensuring descriptors can be loaded after background sync")
         n1.loadwallet(wallet_name)
         result = self.import_descriptor(n1, wallet_name, key, timestamp)
-        assert_equal(result[0]['success'], True)
+        assert_true(result[0]['success'])
 
         self.test_restore_wallet_pruneheight(n3)
 

@@ -10,6 +10,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    assert_true,
 )
 
 class DisconnectBanTest(BitcoinTestFramework):
@@ -109,7 +110,7 @@ class DisconnectBanTest(BitcoinTestFramework):
         assert_equal("127.0.0.0/24", listAfterShutdown[0]['address'])
         assert_equal("127.0.0.0/32", listAfterShutdown[1]['address'])
         assert_equal("192.168.0.2/32", listAfterShutdown[2]['address'])
-        assert_equal("/19" in listAfterShutdown[3]['address'], True)
+        assert_true("/19" in listAfterShutdown[3]['address'])
         assert_equal("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion", listAfterShutdown[4]['address'])
 
         # Clear ban lists

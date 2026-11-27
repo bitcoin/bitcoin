@@ -26,8 +26,10 @@ from test_framework.p2p import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_greater_than,
-    assert_greater_than_or_equal
+    assert_greater_than_or_equal,
+    assert_true,
 )
 
 ONE_MINUTE  = 60
@@ -215,9 +217,9 @@ class AddrTest(BitcoinTestFramework):
         initial_addrs_received = receiver_peer.num_ipv4_received
 
         peerinfo = self.nodes[0].getpeerinfo()
-        assert_equal(peerinfo[0]['addr_relay_enabled'], True)  # addr_source
-        assert_equal(peerinfo[1]['addr_relay_enabled'], True)  # receiver_peer
-        assert_equal(peerinfo[2]['addr_relay_enabled'], False)  # blackhole_peer
+        assert_true(peerinfo[0]['addr_relay_enabled'])  # addr_source
+        assert_true(peerinfo[1]['addr_relay_enabled'])  # receiver_peer
+        assert_false(peerinfo[2]['addr_relay_enabled'])  # blackhole_peer
 
         # addr_source sends 2 addresses to node0
         msg = self.setup_addr_msg(2)
@@ -245,7 +247,7 @@ class AddrTest(BitcoinTestFramework):
         # Confirm node has now received addr-related messages from blackhole peer
         peerinfo = self.nodes[0].getpeerinfo()
         assert_greater_than(self.sum_addr_messages(peerinfo[2]['bytesrecv_per_msg']), 0)
-        assert_equal(peerinfo[2]['addr_relay_enabled'], True)
+        assert_true(peerinfo[2]['addr_relay_enabled'])
 
         msg = self.setup_addr_msg(2)
         self.send_addr_msg(addr_source, msg, [receiver_peer, blackhole_peer])
@@ -275,18 +277,18 @@ class AddrTest(BitcoinTestFramework):
         self.log.info('Check that we do not send a getaddr message to a block-relay-only, feeler or inbound peer')
         block_relay_peer = self.nodes[0].add_outbound_p2p_connection(AddrReceiver(), p2p_idx=1, connection_type="block-relay-only")
         block_relay_peer.sync_with_ping()
-        assert_equal(block_relay_peer.getaddr_received(), False)
+        assert_false(block_relay_peer.getaddr_received())
         block_relay_peer.send_and_ping(msg_headers([tip_header]))
 
         feeler_peer = self.nodes[0].add_outbound_p2p_connection(AddrReceiver(), p2p_idx=2, connection_type="feeler")
         # bitcoind closes feeler connections as soon as it receives a version message
-        assert_equal(feeler_peer.is_connected, False)
-        assert_equal(feeler_peer.getaddr_received(), False)
+        assert_false(feeler_peer.is_connected)
+        assert_false(feeler_peer.getaddr_received())
 
         inbound_peer = self.nodes[0].add_p2p_connection(AddrReceiver(send_getaddr=False))
         inbound_peer.sync_with_ping()
-        assert_equal(inbound_peer.getaddr_received(), False)
-        assert_equal(inbound_peer.addr_received(), False)
+        assert_false(inbound_peer.getaddr_received())
+        assert_false(inbound_peer.addr_received())
 
         self.log.info('Check that we answer getaddr messages only from inbound peers')
         # Add some addresses to addrman

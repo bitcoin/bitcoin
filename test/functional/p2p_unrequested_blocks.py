@@ -59,6 +59,7 @@ from test_framework.p2p import p2p_lock, P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
     assert_raises_rpc_error,
 )
 
@@ -104,7 +105,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getblockcount(), 1)
 
         # Ensure that the header of the second block was also not accepted by node1
-        assert_equal(self.check_hash_in_chaintips(self.nodes[1], blocks_h2[1].hash_hex), False)
+        assert_false(self.check_hash_in_chaintips(self.nodes[1], blocks_h2[1].hash_hex))
         self.log.info("First height 2 block accepted by node0; correctly rejected by node1")
 
         # 3. Send another block that builds on genesis.

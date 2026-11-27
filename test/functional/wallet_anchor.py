@@ -21,6 +21,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    assert_true,
 )
 from test_framework.wallet import MiniWallet
 
@@ -58,7 +59,7 @@ class WalletAnchorTest(BitcoinTestFramework):
         self.nodes[0].createwallet(wallet_name="anchor", disable_private_keys=True)
         wallet = self.nodes[0].get_wallet_rpc("anchor")
         import_res = wallet.importdescriptors([{"desc": descsum_create(f"addr({ANCHOR_ADDRESS})"), "timestamp": "now"}])
-        assert_equal(import_res[0]["success"], True)
+        assert_true(import_res[0]["success"])
 
         # The wallet should have no UTXOs, and not know of the anchor tx or its spend
         assert_equal(wallet.listunspent(), [])

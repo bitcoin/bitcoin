@@ -33,6 +33,8 @@ from test_framework.p2p import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_false,
+    assert_true,
 )
 from test_framework.wallet import MiniWallet
 
@@ -125,9 +127,9 @@ class TxDownloadTest(BitcoinTestFramework):
         #   peer, plus
         # * the first time it is re-requested from the outbound peer, plus
         # * 2 seconds to avoid races
-        assert_equal(self.nodes[0].getpeerinfo()[0]["inbound"], True)
+        assert_true(self.nodes[0].getpeerinfo()[0]["inbound"])
         assert_equal(self.nodes[0].getpeerinfo()[0]["inv_to_send"], 1)
-        assert_equal(self.nodes[1].getpeerinfo()[0]['inbound'], False)
+        assert_false(self.nodes[1].getpeerinfo()[0]['inbound'])
         timeout = 2 + NONPREF_PEER_TX_DELAY + GETDATA_TX_INTERVAL
         self.log.info("Tx should be received at node 1 after {} seconds".format(timeout))
         self.nodes[0].bumpmocktime(timeout)

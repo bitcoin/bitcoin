@@ -54,6 +54,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
+    assert_true,
 )
 
 class AddressTypeTest(BitcoinTestFramework):
@@ -89,7 +90,7 @@ class AddressTypeTest(BitcoinTestFramework):
         """Run sanity checks on an address."""
         info = self.nodes[node].getaddressinfo(address)
         assert self.nodes[node].validateaddress(address)['isvalid']
-        assert_equal(info.get('solvable'), True)
+        assert_true(info.get('solvable'))
 
         if typ == 'legacy':
             # P2PKH

@@ -6,7 +6,7 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_false, assert_true
 
 INVALID_DATA = [
     # BIP 173
@@ -183,14 +183,14 @@ class ValidateAddressMainTest(BitcoinTestFramework):
 
     def check_valid(self, addr, spk):
         info = self.nodes[0].validateaddress(addr)
-        assert_equal(info["isvalid"], True)
+        assert_true(info["isvalid"])
         assert_equal(info["scriptPubKey"], spk)
         assert "error" not in info
         assert "error_locations" not in info
 
     def check_invalid(self, addr, error_str, error_locations):
         res = self.nodes[0].validateaddress(addr)
-        assert_equal(res["isvalid"], False)
+        assert_false(res["isvalid"])
         assert_equal(res["error"], error_str)
         assert_equal(res["error_locations"], error_locations)
 

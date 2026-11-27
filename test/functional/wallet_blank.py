@@ -10,6 +10,7 @@ from test_framework.address import (
 )
 from test_framework.util import (
     assert_equal,
+    assert_true,
 )
 
 
@@ -26,13 +27,13 @@ class WalletBlankTest(BitcoinTestFramework):
         self.nodes[0].createwallet(wallet_name="idesc", disable_private_keys=True, blank=True)
         wallet = self.nodes[0].get_wallet_rpc("idesc")
         info = wallet.getwalletinfo()
-        assert_equal(info["descriptors"], True)
-        assert_equal(info["blank"], True)
+        assert_true(info["descriptors"])
+        assert_true(info["blank"])
         wallet.importdescriptors([{
             "desc": ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR,
             "timestamp": "now",
         }])
-        assert_equal(wallet.getwalletinfo()["blank"], True)
+        assert_true(wallet.getwalletinfo()["blank"])
 
     # This test will be deleted when `encryptwallet` is removed.
     def test_encrypt_descriptors(self):
@@ -41,12 +42,12 @@ class WalletBlankTest(BitcoinTestFramework):
         wallet = self.nodes[0].get_wallet_rpc("encblankdesc")
 
         info = wallet.getwalletinfo()
-        assert_equal(info["descriptors"], True)
-        assert_equal(info["blank"], True)
+        assert_true(info["descriptors"])
+        assert_true(info["blank"])
         descs = wallet.listdescriptors()
 
         wallet.encryptwallet("pass")
-        assert_equal(wallet.getwalletinfo()["blank"], True)
+        assert_true(wallet.getwalletinfo()["blank"])
         assert_equal(descs, wallet.listdescriptors())
 
     def run_test(self):
