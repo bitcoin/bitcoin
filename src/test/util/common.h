@@ -92,6 +92,7 @@ std::ostream& operator<<(std::ostream& os, const WitnessV0ScriptHash& h);
 std::ostream& operator<<(std::ostream& os, const WitnessUnknown& w);
 std::ostream& operator<<(std::ostream& os, const PayToAnchor& p);
 std::ostream& operator<<(std::ostream& os, const WitnessV1Taproot& t);
+std::ostream& operator<<(std::ostream& os, const WitnessV2Cisa& c);
 std::ostream& operator<<(std::ostream& os, const CTxDestination& dest);
 std::ostream& operator<<(std::ostream& os, const CPubKey& pk);
 std::ostream& operator<<(std::ostream& os, const KeyOriginInfo& info);

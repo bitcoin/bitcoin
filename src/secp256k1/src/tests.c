@@ -7989,6 +7989,13 @@ static void run_ecdsa_wycheproof(void) {
 # include "modules/schnorrsig/tests_impl.h"
 #endif
 
+#ifdef ENABLE_MODULE_FULLAGG
+# include "modules/fullagg/tests_impl.h"
+#endif
+#ifdef ENABLE_MODULE_SCHNORRSIG_HALFAGG
+# include "modules/schnorrsig_halfagg/tests_impl.h"
+#endif
+
 #ifdef ENABLE_MODULE_MUSIG
 # include "modules/musig/tests_impl.h"
 #endif
@@ -8337,6 +8344,12 @@ static const struct tf_test_module registry_modules[] = {
 #endif
 #ifdef ENABLE_MODULE_SCHNORRSIG
     MAKE_TEST_MODULE(schnorrsig),
+#endif
+#ifdef ENABLE_MODULE_FULLAGG
+    MAKE_TEST_MODULE(fullagg),
+#endif
+#ifdef ENABLE_MODULE_SCHNORRSIG_HALFAGG
+    MAKE_TEST_MODULE(schnorrsig_halfagg),
 #endif
 #ifdef ENABLE_MODULE_MUSIG
     MAKE_TEST_MODULE(musig),

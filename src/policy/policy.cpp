@@ -318,10 +318,11 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             }
         }
 
-        // Check policy limits for Taproot spends:
+        // Check policy limits for Taproot (v1) and CISA (v2) spends:
         // - MAX_STANDARD_TAPSCRIPT_STACK_ITEM_SIZE limit for stack item size
         // - No annexes
-        if (witnessversion == 1 && witnessprogram.size() == WITNESS_V1_TAPROOT_SIZE && !p2sh) {
+        // Witness v2 spends follow the same rules here, see BIP460.
+        if ((witnessversion == 1 || witnessversion == 2) && witnessprogram.size() == WITNESS_V1_TAPROOT_SIZE && !p2sh) {
             // Taproot spend (non-P2SH-wrapped, version 1, witness program size 32; see BIP 341)
             const auto& stack = tx.vin[i].scriptWitness;
             // The last element (the stack is not empty), which is looked up only once.
