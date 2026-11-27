@@ -4,12 +4,15 @@
 
 #include <netgroup.h>
 
+#include <compat/compat.h>
+#include <crypto/common.h>
 #include <hash.h>
 #include <uint256.h>
 #include <util/asmap.h>
+#include <util/check.h>
 #include <util/log.h>
 
-#include <cassert>
+#include <algorithm>
 #include <cstddef>
 #include <utility>
 
@@ -29,6 +32,7 @@ uint256 NetGroupManager::GetAsmapVersion() const
 std::vector<unsigned char> NetGroupManager::GetGroup(const CNetAddr& address) const
 {
     std::vector<unsigned char> vchRet;
+    vchRet.reserve(1 + ADDR_INTERNAL_SIZE);
     // If non-empty asmap is supplied and the address is IPv4/IPv6,
     // return ASN to be used for bucketing.
     uint32_t asn = GetMappedAS(address);
@@ -91,28 +95,21 @@ std::vector<unsigned char> NetGroupManager::GetGroup(const CNetAddr& address) co
 
 uint32_t NetGroupManager::GetMappedAS(const CNetAddr& address) const
 {
+    if (m_asmap.empty()) return 0;
     uint32_t net_class = address.GetNetClass();
-    if (m_asmap.empty() || (net_class != NET_IPV4 && net_class != NET_IPV6)) {
+    if (net_class != NET_IPV4 && net_class != NET_IPV6) {
         return 0; // Indicates not found, safe because AS0 is reserved per RFC7607.
     }
-    std::vector<std::byte> ip_bytes(16);
-    if (address.HasLinkedIPv4()) {
+    in6_addr ip{};
+    if (net_class == NET_IPV4) {
         // For lookup, treat as if it was just an IPv4 address (IPV4_IN_IPV6_PREFIX + IPv4 bits)
-        std::copy_n(std::as_bytes(std::span{IPV4_IN_IPV6_PREFIX}).begin(),
-                    IPV4_IN_IPV6_PREFIX.size(), ip_bytes.begin());
-        uint32_t ipv4 = address.GetLinkedIPv4();
-        for (int i = 0; i < 4; ++i) {
-            ip_bytes[12 + i] = std::byte((ipv4 >> (24 - i * 8)) & 0xFF);
-        }
+        std::ranges::copy(IPV4_IN_IPV6_PREFIX, ip.s6_addr);
+        WriteBE32(ip.s6_addr + IPV4_IN_IPV6_PREFIX.size(), address.GetLinkedIPv4());
     } else {
         // Use all 128 bits of the IPv6 address otherwise
-        assert(address.IsIPv6());
-        auto addr_bytes = address.GetAddrBytes();
-        assert(addr_bytes.size() == ip_bytes.size());
-        std::copy_n(std::as_bytes(std::span{addr_bytes}).begin(),
-                    addr_bytes.size(), ip_bytes.begin());
+        Assert(address.GetIn6Addr(&ip));
     }
-    uint32_t mapped_as = Interpret(m_asmap, ip_bytes);
+    uint32_t mapped_as = Interpret(m_asmap, std::as_bytes(std::span{ip.s6_addr}));
     return mapped_as;
 }
 

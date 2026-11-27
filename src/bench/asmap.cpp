@@ -155,6 +155,31 @@ static void ASMapGetMappedASMulti(benchmark::Bench& bench)
     BenchGetMappedAS(bench, addrs, /*check=*/true);
 }
 
+static void ASMapCheckStandard(benchmark::Bench& bench)
+{
+    bench.run([&] { assert(CheckStandardAsmap(node::data::ip_asn)); });
+}
+
+static void BenchGetGroup(benchmark::Bench& bench, const NetGroupManager& netgroupman)
+{
+    const auto addr{LookupAddr("9.9.9.9")};
+    assert(!!netgroupman.GetMappedAS(addr) == netgroupman.UsingASMap());
+    bench.run([&] { assert(netgroupman.GetGroup(addr).size()); });
+}
+
+static void ASMapGetGroupMapped(benchmark::Bench& bench)
+{
+    BenchGetGroup(bench, NetGroupManager::WithEmbeddedAsmap(node::data::ip_asn));
+}
+
+static void ASMapGetGroupNoMap(benchmark::Bench& bench)
+{
+    BenchGetGroup(bench, NetGroupManager::NoAsmap());
+}
+
+BENCHMARK(ASMapCheckStandard);
+BENCHMARK(ASMapGetGroupMapped);
+BENCHMARK(ASMapGetGroupNoMap);
 BENCHMARK(ASMapGetMappedASQuad9v4);
 BENCHMARK(ASMapGetMappedASQuad9v6);
 BENCHMARK(ASMapGetMappedASCloudflarev4);

@@ -12,9 +12,11 @@
 #include <streams.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
+#include <util/asmap.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 
+#include <span>
 #include <string>
 #include <numeric>
 
@@ -661,6 +663,26 @@ BOOST_AUTO_TEST_CASE(asmap_test_vectors)
     BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("dff5:8021:61d:b17d:406d:7888:fdac:4a20", false)), 969411);
     BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("e888:6791:2960:d723:bcfd:47e1:2d8c:599f", false)), 824019);
     BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("ffff:d499:8c4b:4941:bc81:d5b9:b51e:85a8", false)), 824019);
+}
+
+BOOST_AUTO_TEST_CASE(asmap_ipv4)
+{
+    // Map only 1.2.3.4 to AS 0x01020304, which uses the last ASN encoding class.
+    constexpr auto asmap{"fb03ec0fb03fc0fe00fb03ec0fb03fc0fe00fb03ec0fb0fffffefffb03ee0fb43ff0fe20fe03050303"_hex};
+    BOOST_REQUIRE(CheckStandardAsmap(asmap));
+    BOOST_CHECK(!CheckStandardAsmap(std::span{asmap}.first(asmap.size() - 1)));
+    const auto netgroup{NetGroupManager::WithEmbeddedAsmap(asmap)};
+    for (const char* ip : {
+             "::ffff:0:102:304",                      // RFC 6145
+             "64:ff9b::102:304",                      // RFC 6052
+             "2002:102:304:9999:9999:9999:9999:9999", // 6to4
+             "2001:0:9999:9999:9999:9999:fefd:fcfb",  // Teredo
+         }) {
+        BOOST_TEST_INFO(ip);
+        BOOST_CHECK_EQUAL(netgroup.GetMappedAS(ResolveIP(ip)), 0x01020304U);
+    }
+    // The group tag is followed by the four ASN bytes in little-endian order.
+    BOOST_CHECK_EQUAL(HexStr(netgroup.GetGroup(ResolveIP("1.2.3.4"))).substr(2), "04030201");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
