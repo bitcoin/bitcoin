@@ -169,6 +169,7 @@ PE_ALLOWED_LIBRARIES = {
 'GDI32.dll', # graphics device interface
 'IMM32.dll', # input method editor
 'NETAPI32.dll', # network management
+'ntdll.dll', # native system services
 'ole32.dll', # component object model
 'OLEAUT32.dll', # OLE Automation API
 'SHLWAPI.dll', # light weight shell API

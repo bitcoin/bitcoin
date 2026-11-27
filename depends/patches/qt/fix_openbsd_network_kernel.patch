@@ -9,7 +9,7 @@ For the reference, see:
 
 --- a/qtbase/src/network/kernel/qnetworkinterface_unix.cpp
 +++ b/qtbase/src/network/kernel/qnetworkinterface_unix.cpp
-@@ -392,6 +392,9 @@ QT_BEGIN_INCLUDE_NAMESPACE
+@@ -393,6 +393,9 @@ QT_BEGIN_INCLUDE_NAMESPACE
  #  include <net/if_media.h>
  #  include <net/if_types.h>
  #  include <netinet/in_var.h>
@@ -19,7 +19,7 @@ For the reference, see:
  #endif // QT_PLATFORM_UIKIT
  QT_END_INCLUDE_NAMESPACE
  
-@@ -419,7 +422,9 @@ static QNetworkInterface::InterfaceType probeIfType(int socket, int iftype, stru
+@@ -420,7 +423,9 @@ static QNetworkInterface::InterfaceType probeIfType(int socket, int iftype, stru
          return QNetworkInterface::Ieee1394;
  
      case IFT_GIF:
