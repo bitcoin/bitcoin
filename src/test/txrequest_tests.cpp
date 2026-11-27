@@ -27,6 +27,7 @@ struct TxRequestTest : BasicTestingSetup {
     void BuildBigPriorityTest(Scenario& scenario, int peers);
     void BuildRequestOrderTest(Scenario& scenario, int config);
     void BuildWtxidTest(Scenario& scenario, int config);
+    void BuildTypedForgetTest(Scenario& scenario, int config);
     void BuildTimeBackwardsTest(Scenario& scenario);
     void BuildWeirdRequestsTest(Scenario& scenario);
     void TestInterleavedScenarios();
@@ -109,6 +110,16 @@ public:
         });
     }
 
+    /** Schedule a ForgetTxHash call for only the announcements of gtxid's type at the Scheduler's current time. */
+    void ForgetTxHash(const GenTxid& gtxid)
+    {
+        auto& runner = m_runner;
+        runner.actions.emplace_back(m_now, [=, &runner]() {
+            runner.txrequest.ForgetTxHash(gtxid);
+            runner.txrequest.SanityCheck();
+        });
+    }
+
     /** Schedule a ReceivedInv call at the Scheduler's current time. */
     void ReceivedInv(NodeId peer, const GenTxid& gtxid, bool pref, std::chrono::microseconds reqtime)
     {
@@ -184,6 +195,20 @@ public:
             BOOST_CHECK_MESSAGE(real_inflight == inflight, strprintf("[%s] inflight %i (%i expected)", comment, real_inflight, inflight));
             BOOST_CHECK_MESSAGE(real_candidates == candidates, strprintf("[%s] candidates %i (%i expected)", comment, real_candidates, candidates));
             BOOST_CHECK_MESSAGE(ret == expected, strprintf("[%s] mismatching requestables", comment));
+        });
+    }
+
+    /** Schedule a check that GetCandidatePeers for gtxid (only announcements of its type) returns expected. */
+    void CheckCandidatePeers(const GenTxid& gtxid, std::vector<NodeId> expected, const std::string& checkname)
+    {
+        const auto comment = m_testname + " " + checkname;
+        auto& runner = m_runner;
+        std::sort(expected.begin(), expected.end());
+        runner.actions.emplace_back(m_now, [=, &runner]() {
+            std::vector<NodeId> peers;
+            runner.txrequest.GetCandidatePeers(gtxid, peers);
+            std::sort(peers.begin(), peers.end());
+            BOOST_CHECK_MESSAGE(peers == expected, strprintf("[%s] mismatching candidate peers", comment));
         });
     }
 
@@ -575,6 +600,62 @@ void TxRequestTest::BuildWtxidTest(Scenario& scenario, int config)
     scenario.Check(peerW, {}, 0, 0, 0, "w14");
 }
 
+/** Add to scenario a test that verifies that forgetting a txid or a wtxid only deletes announcements of that type,
+ *  when both a txid and a wtxid with the same hash are announced.
+ *
+ *  config is an integer in [0, 4) inclusive, and selects the variant of the test used.
+ */
+void TxRequestTest::BuildTypedForgetTest(Scenario& scenario, int config)
+{
+    scenario.SetTestName(strprintf("TypedForget(config=%i)", config));
+
+    auto peerT = scenario.NewPeer();
+    auto peerW = scenario.NewPeer();
+    const bool forget_wtxid = config & 1;
+    // The announcement to be forgotten has priority, so forgetting it must hand the selection to the other one.
+    auto txhash = forget_wtxid ? scenario.NewTxHash({{peerW, peerT}}) : scenario.NewTxHash({{peerT, peerW}});
+    const GenTxid txid{Txid::FromUint256(txhash)};
+    const GenTxid wtxid{Wtxid::FromUint256(txhash)};
+    const GenTxid forgotten = forget_wtxid ? wtxid : txid;
+    const GenTxid kept = forget_wtxid ? txid : wtxid;
+    const NodeId peer_forgotten = forget_wtxid ? peerW : peerT;
+    const NodeId peer_kept = forget_wtxid ? peerT : peerW;
+
+    scenario.ReceivedInv(peerT, txid, /*pref=*/true, MIN_TIME);
+    scenario.ReceivedInv(peerW, wtxid, /*pref=*/true, MIN_TIME);
+    scenario.Check(peer_forgotten, {forgotten}, /*candidates=*/1, /*inflight=*/0, /*completed=*/0, "f1");
+    scenario.Check(peer_kept, {}, /*candidates=*/1, /*inflight=*/0, /*completed=*/0, "f2");
+    scenario.CheckCandidatePeers(txid, {peerT}, "f3");
+    scenario.CheckCandidatePeers(wtxid, {peerW}, "f4");
+
+    // Possibly request it from the selected peer first.
+    if (config & 2) {
+        if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
+        scenario.RequestedTx(peer_forgotten, txhash, MAX_TIME);
+        scenario.Check(peer_forgotten, {}, /*candidates=*/0, /*inflight=*/1, /*completed=*/0, "f5");
+        scenario.Check(peer_kept, {}, /*candidates=*/1, /*inflight=*/0, /*completed=*/0, "f6");
+    }
+
+    // Forgetting one type deletes only the announcement of that type, and the other one becomes requestable.
+    if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
+    scenario.ForgetTxHash(forgotten);
+    scenario.Check(peer_forgotten, {}, /*candidates=*/0, /*inflight=*/0, /*completed=*/0, "f7");
+    scenario.Check(peer_kept, {kept}, /*candidates=*/1, /*inflight=*/0, /*completed=*/0, "f8");
+    scenario.CheckCandidatePeers(forgotten, {}, "f9");
+    scenario.CheckCandidatePeers(kept, {peer_kept}, "f10");
+
+    // Forgetting a type of which no announcements remain is a no-op.
+    if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
+    scenario.ForgetTxHash(forgotten);
+    scenario.Check(peer_kept, {kept}, /*candidates=*/1, /*inflight=*/0, /*completed=*/0, "f11");
+
+    // Forgetting the other type deletes the remaining announcement.
+    if (m_rng.randbool()) scenario.AdvanceTime(RandomTime8s());
+    scenario.ForgetTxHash(kept);
+    scenario.Check(peer_forgotten, {}, /*candidates=*/0, /*inflight=*/0, /*completed=*/0, "f12");
+    scenario.Check(peer_kept, {}, /*candidates=*/0, /*inflight=*/0, /*completed=*/0, "f13");
+}
+
 /** Add to scenario a test that exercises clocks that go backwards. */
 void TxRequestTest::BuildTimeBackwardsTest(Scenario& scenario)
 {
@@ -706,6 +787,7 @@ void TxRequestTest::TestInterleavedScenarios()
     // Add instances of every test, for every configuration.
     for (int n = 0; n < 64; ++n) {
         builders.emplace_back([this, n](Scenario& scenario) { BuildWtxidTest(scenario, n); });
+        builders.emplace_back([this, n](Scenario& scenario) { BuildTypedForgetTest(scenario, n & 3); });
         builders.emplace_back([this, n](Scenario& scenario) { BuildRequestOrderTest(scenario, n & 3); });
         builders.emplace_back([this, n](Scenario& scenario) { BuildSingleTest(scenario, n & 31); });
         builders.emplace_back([this, n](Scenario& scenario) { BuildPriorityTest(scenario, n & 31); });
