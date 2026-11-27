@@ -28,6 +28,7 @@ from test_framework.messages import COIN, CTransaction, CTxOut, ser_string
 from test_framework.script import hash160
 from test_framework.script_util import key_to_p2pkh_script, key_to_p2pk_script, script_to_p2sh_script, script_to_p2wsh_script
 from test_framework.util import (
+    assert_array_result,
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
@@ -137,11 +138,15 @@ class WalletMigrationTest(BitcoinTestFramework):
             dst = os.path.abspath(self.master_node.wallets_path / wallet_name)
             if src != dst :
                 shutil.copytree(self.old_node.wallets_path / wallet_name, self.master_node.wallets_path / wallet_name, dirs_exist_ok=True)
-        # Check that the wallet shows up in listwalletdir with a warning about migration
-        wallets = self.master_node.listwalletdir()
-        for w in wallets["wallets"]:
-            if w["name"] == wallet_name:
-                assert_equal(w["warnings"], ["This wallet is a legacy wallet and will need to be migrated with migratewallet before it can be loaded"])
+        # listwalletdir only reports wallets under the wallet directory.
+        wallet_dir = self.master_node.wallets_path
+        wallet_path = Path(os.path.normpath(wallet_dir / wallet_name))
+        if wallet_path.is_relative_to(wallet_dir):
+            assert_array_result(
+                self.master_node.listwalletdir()["wallets"],
+                {"name": str(wallet_path.relative_to(wallet_dir)) if wallet_path != wallet_dir else ""},
+                {"warnings": ["This wallet is a legacy wallet and will need to be migrated with migratewallet before it can be loaded"]},
+            )
 
         # migratewallet uses current time in naming the backup file, set a mock time
         # to check that this works correctly.
@@ -168,7 +173,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         backup_filename = f"{backup_prefix}_{mocked_time}.legacy.bak"
         expected_backup_path = self.master_node.wallets_path / backup_filename
         assert_equal(str(expected_backup_path), migrate_info['backup_path'])
-        assert {"name": backup_filename} not in self.master_node.listwalletdir()["wallets"]
+        assert backup_filename not in [w["name"] for w in self.master_node.listwalletdir()["wallets"]]
         self.assert_no_tmp_db(self.master_node.wallets_path)
 
         # Open the wallet with sqlite and verify that the wallet has the last hardened cache flag
@@ -1399,6 +1404,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         comp_wsh_pkh_script = script_to_p2wsh_script(comp_pkh_script).hex()
         comp_sh_wsh_pkh_script = script_to_p2sh_script(comp_wsh_pkh_script).hex()
         comp_wsh_pkh_addr = script_to_p2wsh(comp_pkh_script)
+        comp_sh_wsh_pkh_addr = script_to_p2sh(comp_wsh_pkh_script)
 
         uncomp_wif, uncomp_pubkey = generate_keypair(compressed=False, wif=True)
         uncomp_pkh_script = key_to_p2pkh_script(uncomp_pubkey).hex()
@@ -1478,11 +1484,11 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         assert_equal(wallet.getbalances()["mine"]["trusted"], 1)
 
-        # After migration, the wsh(pkh()) with a compressed key is still valid and the descriptor wallet will have
-        # information about the witnessScript
-        comp_wsh_pkh_addr_info = wallet.getaddressinfo(comp_wsh_pkh_addr)
-        assert_equal(comp_wsh_pkh_addr_info["ismine"], True)
-        assert "embedded" in comp_wsh_pkh_addr_info
+        # The migrated wallet should own both forms of the compressed-key output and report their embedded scripts.
+        for addr in [comp_wsh_pkh_addr, comp_sh_wsh_pkh_addr]:
+            addr_info = wallet.getaddressinfo(addr)
+            assert_equal(addr_info["ismine"], True)
+            assert "embedded" in addr_info
 
         # After migration, the invalid addresses should still not be detected as ismine and not watchonly.
         # The descriptor wallet should not have migrated these at all, so there should additionally be no
