@@ -3177,17 +3177,15 @@ static RPCMethod dumptxoutset()
         // Dump the txoutset of the current tip
         result = CreateUTXOSnapshot(node, chainstate, std::move(afile), path, temppath);
     } else {
-        // Check pruning constraints before attempting rollback and prevent
-        // pruning of the necessary blocks with a temporary prune lock
+        // Check that the blocks to disconnect are available and protect them from pruning
+        BlockManager& blockman{node.chainman->m_blockman};
         std::optional<TemporaryPruneLock> temp_prune_lock;
-        if (node.chainman->m_blockman.IsPruneMode()) {
+        if (const bool prune_mode{blockman.IsPruneMode()}; prune_mode || chainstate.m_from_snapshot_blockhash) {
             LOCK(node.chainman->GetMutex());
-            const CBlockIndex* current_tip{node.chainman->ActiveChain().Tip()};
-            const CBlockIndex& first_block{node.chainman->m_blockman.GetFirstBlock(*current_tip, /*status_mask=*/BLOCK_HAVE_MASK)};
-            if (first_block.nHeight > target_index->nHeight) {
-                throw JSONRPCError(RPC_MISC_ERROR, "Could not roll back to requested height since necessary block data is already pruned.");
+            if (GetPruneHeight(blockman, chainstate.m_chain).value_or(0) > target_index->nHeight) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Could not roll back to requested height because required block or undo data is unavailable.");
             }
-            temp_prune_lock.emplace(node.chainman->m_blockman, target_index->nHeight);
+            if (prune_mode) temp_prune_lock.emplace(blockman, target_index->nHeight);
         }
 
         const bool in_memory{options.exists("in_memory") ? options["in_memory"].get_bool() : false};
