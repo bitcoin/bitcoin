@@ -635,7 +635,7 @@ const CBlockIndex& BlockManager::GetFirstBlock(const CBlockIndex& upper_block, u
 {
     AssertLockHeld(::cs_main);
     const CBlockIndex* last_block = &upper_block;
-    assert((last_block->nStatus & status_mask) == status_mask); // 'upper_block' must satisfy the status mask
+    Assert((last_block->nStatus & status_mask) == status_mask); // 'upper_block' must satisfy the status mask
     while (last_block->pprev && ((last_block->pprev->nStatus & status_mask) == status_mask)) {
         if (lower_block) {
             // Return if we reached the lower_block
@@ -652,16 +652,15 @@ const CBlockIndex& BlockManager::GetFirstBlock(const CBlockIndex& upper_block, u
 
 bool BlockManager::CheckBlockDataAvailability(const CBlockIndex& upper_block, const CBlockIndex& lower_block, BlockStatus block_status)
 {
-    if (!(upper_block.nStatus & block_status)) return false;
-    const auto& first_block = GetFirstBlock(upper_block, block_status, &lower_block);
+    AssertLockHeld(::cs_main);
     // Special case: the genesis block has no undo data
-    if (block_status & BLOCK_HAVE_UNDO && lower_block.nHeight == 0 && first_block.nHeight == 1) {
-        // This might indicate missing data, or it could simply reflect the expected absence of undo data for the genesis block.
-        // To distinguish between the two, check if all required block data *except* undo is available up to the genesis block.
-        BlockStatus flags{block_status & ~BLOCK_HAVE_UNDO};
-        return first_block.pprev && first_block.pprev->nStatus & flags;
-    }
-    return &first_block == &lower_block;
+    const BlockStatus lower_status{lower_block.nHeight == 0 ? block_status & ~BLOCK_HAVE_UNDO : block_status};
+    if (lower_status & ~lower_block.nStatus) return false;
+    if (&upper_block == &lower_block) return true;
+    if (block_status & ~upper_block.nStatus) return false;
+    const auto& first_block = GetFirstBlock(upper_block, block_status, &lower_block);
+    // If the walk stops at block 1 for missing genesis undo data, genesis has already passed its check
+    return &first_block == &lower_block || first_block.pprev == &lower_block;
 }
 
 // If we're using -prune with -reindex, then delete block files that will be ignored by the
