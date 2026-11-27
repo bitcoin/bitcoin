@@ -337,4 +337,66 @@ BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
     }
 }
 
+/** Add n children of parent to the orphanage, all announced by peer, in creation order (oldest first). */
+static std::vector<CTransactionRef> AddChildrenFromPeer(node::TxDownloadManagerImpl& manager, const CTransactionRef& parent, NodeId peer, size_t n)
+{
+    std::vector<CTransactionRef> children;
+    for (size_t i{0}; i < n; ++i) {
+        CMutableTransaction child;
+        child.vin.emplace_back(parent->GetHash(), 0);
+        child.vin[0].scriptWitness.stack.push_back({1});
+        child.vout.emplace_back(CENT, CScript());
+        child.nLockTime = i;
+        children.push_back(MakeTransactionRef(child));
+        BOOST_REQUIRE(manager.m_orphanage->AddTx(children.back(), peer));
+    }
+    return children;
+}
+
+BOOST_FIXTURE_TEST_CASE(find_1p1c_selection_order, TestChain100Setup)
+{
+    CTxMemPool& pool{*Assert(m_node.mempool)};
+    node::TxDownloadOptions opts{.m_mempool = pool, .m_deterministic_txrequest = true};
+    node::TxDownloadManagerImpl manager{opts};
+    const auto parent{CreatePlaceholderTx(true)};
+    manager.RecentRejectsReconsiderableFilter().insert(parent->GetWitnessHash().ToUint256());
+    const auto children{AddChildrenFromPeer(manager, parent, /*peer=*/0, /*n=*/3)};
+
+    // The most recently announced child is selected first.
+    const auto selected{manager.Find1P1CPackage(parent, 0)};
+    BOOST_REQUIRE(selected);
+    BOOST_REQUIRE_EQUAL(selected->m_txns.size(), 2);
+    BOOST_CHECK(selected->m_txns.front()->GetWitnessHash() == parent->GetWitnessHash());
+    BOOST_CHECK(selected->m_txns.back()->GetWitnessHash() == children[2]->GetWitnessHash());
+
+    // Only children announced by the same peer are considered.
+    BOOST_CHECK(!manager.Find1P1CPackage(parent, 1));
+}
+
+BOOST_FIXTURE_TEST_CASE(find_1p1c_reject_filters, TestChain100Setup)
+{
+    CTxMemPool& pool{*Assert(m_node.mempool)};
+    node::TxDownloadOptions opts{.m_mempool = pool, .m_deterministic_txrequest = true};
+    node::TxDownloadManagerImpl manager{opts};
+    const auto parent{CreatePlaceholderTx(true)};
+    manager.RecentRejectsReconsiderableFilter().insert(parent->GetWitnessHash().ToUint256());
+    const auto children{AddChildrenFromPeer(manager, parent, /*peer=*/0, /*n=*/3)};
+
+    // A child whose package with this parent was already rejected is skipped in favor of the next one.
+    manager.MempoolRejectedPackage({parent, children[2]});
+    auto selected{manager.Find1P1CPackage(parent, 0)};
+    BOOST_REQUIRE(selected);
+    BOOST_CHECK(selected->m_txns.back()->GetWitnessHash() == children[1]->GetWitnessHash());
+
+    // A child whose txid was rejected is skipped as well.
+    manager.RecentRejectsFilter().insert(children[1]->GetHash().ToUint256());
+    selected = manager.Find1P1CPackage(parent, 0);
+    BOOST_REQUIRE(selected);
+    BOOST_CHECK(selected->m_txns.back()->GetWitnessHash() == children[0]->GetWitnessHash());
+
+    // Nothing is returned once every child is rejected.
+    manager.MempoolRejectedPackage({parent, children[0]});
+    BOOST_CHECK(!manager.Find1P1CPackage(parent, 0));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

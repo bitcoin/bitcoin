@@ -177,8 +177,8 @@ bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid,
     // - exists in orphanage
     // - peer can be an orphan resolution candidate
     if (const auto* wtxid = std::get_if<Wtxid>(&gtxid)) {
-        if (auto orphan_tx{m_orphanage->GetTx(*wtxid)}) {
-            auto unique_parents{GetUniqueParents(*orphan_tx)};
+        if (auto unique_parents_opt{m_orphanage->GetParentTxids(*wtxid)}) {
+            auto& unique_parents{*unique_parents_opt};
             std::erase_if(unique_parents, [&](const auto& txid) {
                 return AlreadyHaveTx(txid, /*include_reconsiderable=*/false);
             });
@@ -190,7 +190,7 @@ bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid,
             }
 
             if (MaybeAddOrphanResolutionCandidate(unique_parents, *wtxid, peer, now)) {
-                m_orphanage->AddAnnouncer(orphan_tx->GetWitnessHash(), peer);
+                m_orphanage->AddAnnouncer(*wtxid, peer);
             }
 
             // Return even if the peer isn't an orphan resolution candidate. This would be caught by AlreadyHaveTx.
@@ -317,14 +317,17 @@ std::optional<PackageToValidate> TxDownloadManagerImpl::Find1P1CPackage(const CT
         // The orphan is left in the orphanage when it enters the mempool other than through peer
         // relay (e.g. by RPC), or when a version with a different witness enters. Either way it
         // cannot enter the mempool.
-        if (m_mempool.exists(child->GetHash())) {
-            m_orphanage->EraseTx(child->GetWitnessHash());
+        if (m_mempool.exists(child.txid)) {
+            m_orphanage->EraseTx(child.wtxid);
             continue;
         }
-        Package maybe_cpfp_package{ptx, child};
-        if (!RecentRejectsReconsiderableFilter().contains(GetPackageHash(maybe_cpfp_package)) &&
-            !RecentRejectsFilter().contains(child->GetHash().ToUint256())) {
-            return PackageToValidate{ptx, child, nodeid, nodeid};
+        if (!RecentRejectsFilter().contains(child.txid.ToUint256()) &&
+            !RecentRejectsReconsiderableFilter().contains(GetPackageHashFromWtxids({parent_wtxid, child.wtxid}))) {
+            // Only materialize the selected child, so that rejected candidates cost no
+            // more than a few filter lookups.
+            auto child_tx{m_orphanage->GetTx(child.wtxid)};
+            if (!Assume(child_tx)) continue;
+            return PackageToValidate{ptx, child_tx, nodeid, nodeid};
         }
     }
     return std::nullopt;
