@@ -544,20 +544,17 @@ bool AddrManImpl::AddSingle(const CAddress& addr, const CNetAddr& source, std::c
     }
 
     if (pinfo) {
-        // periodically update nTime
-        const bool currently_online{NodeClock::now() - addr.nTime < 24h};
-        const auto update_interval{currently_online ? 1h : 24h};
-        if (pinfo->nTime < addr.nTime - update_interval - time_penalty) {
-            pinfo->nTime = std::max(NodeSeconds{0s}, addr.nTime - time_penalty);
-        }
-
         // add services
         pinfo->nServices = ServiceFlags(pinfo->nServices | addr.nServices);
 
         // do not update if no new information is present
-        if (addr.nTime <= pinfo->nTime) {
+        // (the stored nTime already had the time penalty applied, so apply it here too)
+        if (addr.nTime - time_penalty <= pinfo->nTime) {
             return false;
         }
+
+        // update nTime
+        pinfo->nTime = std::max(pinfo->nTime, addr.nTime - time_penalty);
 
         // do not update if the entry was already in the "tried" table
         if (pinfo->fInTried)
