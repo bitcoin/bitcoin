@@ -827,7 +827,7 @@ std::vector<CAddress> AddrManImpl::GetAddr_(size_t max_addresses, size_t max_pct
         const AddrInfo& ai{it->second};
 
         // Filter by network (optional)
-        if (network != std::nullopt && ai.GetNetClass() != network) continue;
+        if (network != std::nullopt && ai.GetNetwork() != network) continue;
 
         // Filter for quality
         if (ai.IsTerrible(now) && filtered) continue;

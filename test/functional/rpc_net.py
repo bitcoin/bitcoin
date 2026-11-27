@@ -93,6 +93,7 @@ class NetTest(BitcoinTestFramework):
         self.test_sendmsgtopeer()
         self.test_getaddrmaninfo()
         self.test_getrawaddrman()
+        self.test_linked_ipv4_network()
 
     def test_connection_count(self):
         self.log.info("Test getconnectioncount")
@@ -596,6 +597,34 @@ class NetTest(BitcoinTestFramework):
 
         self.log.debug("Test that getrawaddrman contains information about newly added addresses in each addrman table")
         check_getrawaddrman_entries(expected)
+
+    def test_linked_ipv4_network(self):
+        self.log.info("Test network of IPv6 addresses with an embedded IPv4 address")
+        self.restart_node(1, extra_args=["-test=addrman"], clear_addrman=True)
+        node = self.nodes[1]
+        # 6to4 and Teredo addresses are IPv6, even though they embed an IPv4 address
+        linked_ipv4_addrs = ["2002:c000:201::1", "2001:0:4136:e378:8000:63bf:3fff:fdd2"]
+        for address in linked_ipv4_addrs:
+            assert_equal(node.addpeeraddress(address=address, port=8333), {"success": True})
+
+        self.log.debug("Test that getaddrmaninfo counts them as ipv6")
+        res = node.getaddrmaninfo()
+        assert_equal(res["ipv6"]["total"], 2)
+        assert_equal(res["ipv4"]["total"], 0)
+
+        self.log.debug("Test that getnodeaddresses returns and labels them as ipv6")
+        res = node.getnodeaddresses(0, "ipv6")
+        assert_equal(sorted(a["address"] for a in res), sorted(linked_ipv4_addrs))
+        for a in res:
+            assert_equal(a["network"], "ipv6")
+        assert_equal(node.getnodeaddresses(0, "ipv4"), [])
+
+        self.log.debug("Test that getrawaddrman labels them as ipv6")
+        entries = list(node.getrawaddrman()["new"].values())
+        assert_equal(sorted(e["address"] for e in entries), sorted(linked_ipv4_addrs))
+        for e in entries:
+            assert_equal(e["network"], "ipv6")
+            assert_equal(e["source_network"], "ipv6")
 
 
 if __name__ == '__main__':

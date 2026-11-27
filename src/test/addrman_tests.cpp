@@ -595,6 +595,29 @@ BOOST_AUTO_TEST_CASE(getaddr_unfiltered)
     BOOST_CHECK_EQUAL(addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt, /*filtered=*/false).size(), 4U);
 }
 
+BOOST_AUTO_TEST_CASE(getaddr_linked_ipv4_network)
+{
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+
+    // IPv6 addresses with an embedded IPv4 address: 6to4 and Teredo
+    CAddress addr_6to4{ResolveService("2002:c000:201::1", 8333), NODE_NONE};
+    CAddress addr_teredo{ResolveService("2001:0:4136:e378:8000:63bf:3fff:fdd2", 8333), NODE_NONE};
+    for (const auto& addr : {addr_6to4, addr_teredo}) {
+        BOOST_REQUIRE(addr.HasLinkedIPv4());
+        BOOST_REQUIRE_EQUAL(addr.GetNetwork(), NET_IPV6);
+        BOOST_REQUIRE_EQUAL(addr.GetNetClass(), NET_IPV4);
+    }
+
+    CNetAddr source = ResolveIP("250.1.2.1");
+    BOOST_CHECK(addrman->Add({addr_6to4, addr_teredo}, source));
+
+    // GetAddr filtered by network must agree with the per-network counts
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/NET_IPV6, /*in_new=*/std::nullopt), 2U);
+    BOOST_CHECK_EQUAL(addrman->Size(/*net=*/NET_IPV4, /*in_new=*/std::nullopt), 0U);
+    BOOST_CHECK_EQUAL(addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/NET_IPV6, /*filtered=*/false).size(), 2U);
+    BOOST_CHECK(addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/NET_IPV4, /*filtered=*/false).empty());
+}
+
 BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket_legacy)
 {
     CAddress addr1 = CAddress(ResolveService("250.1.1.1", 8333), NODE_NONE);
