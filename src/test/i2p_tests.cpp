@@ -12,11 +12,13 @@
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <util/readwritefile.h>
+#include <util/strencodings.h>
 #include <util/threadinterrupt.h>
 
 #include <boost/test/unit_test.hpp>
 
 #include <memory>
+#include <optional>
 #include <string>
 
 /// Save the log level and the value of CreateSock and restore them when the test ends.
@@ -170,6 +172,90 @@ BOOST_AUTO_TEST_CASE(damaged_private_key)
             BOOST_CHECK(!session.Connect(CService{}, conn, proxy_error));
         }
     }
+}
+
+BOOST_AUTO_TEST_CASE(connect_direct_b32)
+{
+    const std::string b32{"udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p"};
+    CService peer;
+    BOOST_REQUIRE(peer.SetSpecial(b32));
+    BOOST_REQUIRE_EQUAL(peer.GetPort(), I2P_SAM31_PORT);
+
+    // Minimal valid private key: 385 bytes of keys followed by a zero certificate length.
+    const auto i2p_private_key_file = m_args.GetDataDirNet() / "test_i2p_private_key_connect";
+    BOOST_REQUIRE(WriteBinaryFile(i2p_private_key_file, std::string(387, '\0')));
+
+    // Reply to STREAM CONNECT that the next connect socket will deliver.
+    std::string stream_connect_result;
+    // Captures what Connect() sends on the most recent connect socket.
+    std::shared_ptr<DynSock::Pipes> connect_pipes;
+    size_t num_sockets{0};
+
+    CreateSock = [&](int, int, int) -> std::unique_ptr<Sock> {
+        ++num_sockets;
+        // First socket is the control socket for creating the session.
+        if (num_sockets == 1) {
+            return std::make_unique<StaticContentsSock>(
+                // reply to HELLO
+                "HELLO REPLY RESULT=OK VERSION=3.1\n"
+                // reply to SESSION CREATE
+                "SESSION STATUS RESULT=OK\n"
+                // dummy to avoid reporting EOF on the socket
+                "a");
+        }
+        // Subsequent sockets are used by Connect().
+        connect_pipes = std::make_shared<DynSock::Pipes>();
+        const std::string replies{"HELLO REPLY RESULT=OK VERSION=3.1\n"
+                                  "STREAM STATUS RESULT=" + stream_connect_result + "\n"};
+        connect_pipes->recv.PushBytes(replies.data(), replies.size());
+        return std::make_unique<DynSock>(connect_pipes);
+    };
+
+    auto interrupt{std::make_shared<CThreadInterrupt>()};
+    const CService addr{in6_addr(COMPAT_IN6ADDR_LOOPBACK_INIT), /*port=*/7656};
+    const Proxy sam_proxy{addr, /*tor_stream_isolation=*/false};
+    i2p::sam::Session session(i2p_private_key_file, sam_proxy, interrupt);
+
+    // The peer's base32 address must be passed directly to STREAM CONNECT, without a prior NAMING LOOKUP.
+    const auto check_sent = [&] {
+        BOOST_REQUIRE(connect_pipes);
+        std::string sent;
+        char buf[1024];
+        ssize_t n;
+        while ((n = connect_pipes->send.GetBytes(buf, sizeof(buf))) > 0) {
+            sent.append(buf, n);
+        }
+        const std::string prefix{"HELLO VERSION MIN=3.1 MAX=3.1\nSTREAM CONNECT ID="};
+        const std::string suffix{" DESTINATION=" + b32 + " SILENT=false\n"};
+        BOOST_REQUIRE_MESSAGE(sent.starts_with(prefix) && sent.ends_with(suffix) &&
+                                  sent.size() > prefix.size() + suffix.size(),
+                              "Unexpected requests sent: " << sent);
+        const std::string session_id{sent.substr(prefix.size(), sent.size() - prefix.size() - suffix.size())};
+        BOOST_CHECK_EQUAL(session_id.size(), 10U);
+        BOOST_CHECK(IsHex(session_id));
+    };
+
+    for (const std::string result : {"CANT_REACH_PEER", "TIMEOUT"}) {
+        stream_connect_result = result;
+        ASSERT_DEBUG_LOG("Error connecting to " + b32 + ":0: \"STREAM STATUS RESULT=" + result + "\"");
+
+        i2p::Connection conn;
+        bool proxy_error{true};
+        BOOST_CHECK(!session.Connect(peer, conn, proxy_error));
+        // An unreachable peer is not a proxy error, so the attempt is recorded in addrman.
+        BOOST_CHECK(!proxy_error);
+        check_sent();
+    }
+
+    stream_connect_result = "OK";
+    i2p::Connection conn;
+    bool proxy_error{false};
+    BOOST_CHECK(session.Connect(peer, conn, proxy_error));
+    BOOST_CHECK(conn.sock);
+    BOOST_CHECK(conn.peer == peer);
+    check_sent();
+
+    BOOST_CHECK_EQUAL(num_sockets, 4U);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
