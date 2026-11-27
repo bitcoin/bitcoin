@@ -43,7 +43,7 @@ public:
         DONE,
     };
 
-    virtual Status Next(DataStream& key, DataStream& value) { return Status::FAIL; }
+    virtual Status Next(DataStream&, DataStream&) { return Status::FAIL; }
 };
 
 /** RAII class that provides access to a WalletDatabase */

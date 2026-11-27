@@ -239,7 +239,7 @@ struct LFSR {
 template<typename I, int N, typename L, typename F, int K> struct GFMulHelper;
 template<typename I, int N, typename L, typename F> struct GFMulHelper<I, N, L, F, 0>
 {
-    static inline constexpr I Run(const I& a, const I& b) { return I(0); }
+    static inline constexpr I Run(const I&, const I&) { return I(0); }
 };
 template<typename I, int N, typename L, typename F, int K> struct GFMulHelper
 {
