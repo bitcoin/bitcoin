@@ -205,8 +205,7 @@ class SegWitTest(BitcoinTestFramework):
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
         self.extra_args = [
             # -par=1 should not affect validation outcome or logging/reported failures. It is kept
-            # here to exercise the code path still (as it is distinct for multithread script
-            # validation).
+            # here to exercise script validation without checkqueue worker threads.
             ["-acceptnonstdtxn=1", f"-testactivationheight=segwit@{SEGWIT_HEIGHT}", "-par=1"],
             ["-acceptnonstdtxn=0", f"-testactivationheight=segwit@{SEGWIT_HEIGHT}"],
         ]
