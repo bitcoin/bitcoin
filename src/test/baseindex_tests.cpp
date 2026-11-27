@@ -30,6 +30,7 @@
 #include <util/check.h>
 #include <util/fs.h>
 #include <validation.h>
+#include <validationinterface.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -105,6 +106,49 @@ BOOST_FIXTURE_TEST_CASE(baseindex_no_commit_ahead_of_flush, TestChain100Setup)
         // race state deterministic.
         CreateAndProcessBlock({}, CScript() << OP_TRUE);
         sync_index(false, tip_height + 1, tip_height);
+    }
+}
+
+// A chainstate flush during ConnectTip() is notified before the BlockConnected
+// notification for the same block, so the index receives a ChainStateFlushed
+// locator that is ahead of its best block.
+BOOST_FIXTURE_TEST_CASE(baseindex_commit_when_flush_ahead_of_index, TestChain100Setup)
+{
+    Chainstate& chainstate = Assert(m_node.chainman)->ActiveChainstate();
+    ValidationSignals& signals{*Assert(m_node.validation_signals)};
+    for (const auto& [index_name, make_index] : INDEX_FACTORIES) {
+        BOOST_TEST_INFO_SCOPE(index_name);
+        chainstate.ForceFlushStateToDisk();
+        signals.SyncWithValidationInterfaceQueue();
+        const int tip_height{WITH_LOCK(cs_main, return chainstate.m_chain.Height())};
+
+        // The index syncs to the flushed tip and commits it.
+        auto index{make_index(m_node)};
+        BOOST_REQUIRE(index->Init());
+        index->Sync();
+
+        // The index connects the next block, which isn't flushed yet.
+        CreateAndProcessBlock({}, CScript() << OP_TRUE);
+        signals.SyncWithValidationInterfaceQueue();
+        BOOST_CHECK_EQUAL(index->GetSummary().best_block_height, tip_height + 1);
+
+        // Connect and flush another block, and notify the index of the flush
+        // before it has connected that block.
+        signals.UnregisterValidationInterface(index.get());
+        CreateAndProcessBlock({}, CScript() << OP_TRUE);
+        chainstate.ForceFlushStateToDisk();
+        signals.SyncWithValidationInterfaceQueue();
+        signals.RegisterValidationInterface(index.get());
+        signals.ChainStateFlushed(ChainstateRole{}, WITH_LOCK(cs_main, return GetLocator(chainstate.m_chain.Tip())));
+        signals.SyncWithValidationInterfaceQueue();
+        BOOST_CHECK_EQUAL(index->GetSummary().best_block_height, tip_height + 1);
+
+        // Reload the index to see which block was committed. The index commits
+        // its best block, which the chainstate has flushed past.
+        index->Stop();
+        BOOST_REQUIRE(index->Init());
+        BOOST_CHECK_EQUAL(index->GetSummary().best_block_height, tip_height + 1);
+        StopIndex(*index, m_node);
     }
 }
 
