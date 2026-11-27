@@ -21,3 +21,4 @@ printf -v BITCOIN_CONFIG "%q " \
   -DCMAKE_LINK_WARNING_AS_ERROR=ON
 export BITCOIN_CONFIG
 export BITCOIN_CMD="bitcoin -m" # Used in functional tests
+export CI_LIMIT_FD_COUNT=256    # Same as FD_SETSIZE on NetBSD, see test_framework/util.py
