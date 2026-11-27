@@ -18,6 +18,7 @@
 #include <kernel/chainparams.h>
 #include <kernel/chainstatemanager_opts.h>
 #include <kernel/cs_main.h> // IWYU pragma: export
+#include <kernel/fatal_error.h> // IWYU pragma: export
 #include <node/blockstorage.h>
 #include <policy/feerate.h>
 #include <policy/packages.h>
@@ -103,8 +104,6 @@ enum class SynchronizationState {
 extern const std::vector<std::string> CHECKLEVEL_DOC;
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
-
-bool FatalError(kernel::Notifications& notifications, BlockValidationState& state, const bilingual_str& message);
 
 /** Prune block files up to a given height */
 void PruneBlockFilesManual(Chainstate& active_chainstate, int nManualPruneHeight);
@@ -754,7 +753,7 @@ public:
 
     //! Prune blockfiles from the disk if necessary and then flush chainstate changes
     //! if we pruned.
-    void PruneAndFlush();
+    void PruneAndFlush() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /**
      * Find the best known block, and make it the tip of the block chain. The
