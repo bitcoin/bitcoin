@@ -46,6 +46,7 @@
 #include <cstddef>
 #include <cstdio>
 #include <exception>
+#include <ios>
 #include <map>
 #include <optional>
 #include <ostream>
@@ -999,9 +1000,8 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
             LogError("OpenUndoFile failed for %s while writing block undo", pos.ToString());
             return FatalError(m_opts.notifications, state, _("Failed to write undo data."));
         }
-        {
-            BufferedWriter fileout{file};
-
+        BufferedWriter fileout{file};
+        try {
             // Write index header
             fileout << GetParams().MessageStart() << blockundo_size;
             pos.nPos += STORAGE_HEADER_BYTES;
@@ -1012,7 +1012,12 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
                 // Write undo data & checksum
                 fileout << blockundo << hasher.GetHash();
             }
-            // BufferedWriter will flush pending data to file when fileout goes out of scope.
+            fileout.flush();
+        } catch (const std::ios_base::failure& e) {
+            fileout.discard();
+            LogError("Failed to write block undo file %s: %s", pos.ToString(), e.what());
+            (void)file.fclose();
+            return FatalError(m_opts.notifications, state, _("Failed to write undo data."));
         }
 
         // Make sure that the file is closed before we call `FlushUndoFile`.
@@ -1160,14 +1165,20 @@ FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
         m_opts.notifications.fatalError(_("Failed to write block."));
         return FlatFilePos();
     }
-    {
-        BufferedWriter fileout{file};
-
+    BufferedWriter fileout{file};
+    try {
         // Write index header
         fileout << GetParams().MessageStart() << block_size;
         pos.nPos += STORAGE_HEADER_BYTES;
         // Write block
         fileout << TX_WITH_WITNESS(block);
+        fileout.flush();
+    } catch (const std::ios_base::failure& e) {
+        fileout.discard();
+        LogError("Failed to write block file %s: %s", pos.ToString(), e.what());
+        (void)file.fclose();
+        m_opts.notifications.fatalError(_("Failed to write block."));
+        return FlatFilePos();
     }
 
     if (file.fclose() != 0) {
