@@ -258,6 +258,7 @@ BASE_SCRIPTS = [
     'p2p_invalid_tx.py --v1transport',
     'p2p_invalid_tx.py --v2transport',
     'p2p_v2_transport.py',
+    'p2p_socket_errors.py',
     'p2p_v2_encrypted.py',
     'p2p_v2_misbehaving.py',
     'example_test.py',

@@ -691,12 +691,14 @@ def create_lots_of_big_transactions(mini_wallet, node, fee, tx_batch_size, txout
 
 
 def mine_large_block(test_framework, mini_wallet, node):
+    """Mine a block close to the 1MB block limit. Return its hash and its size in bytes."""
     # generate a 66k transaction,
     # and 14 of them is close to the 1MB block limit
     txouts = gen_return_txouts()
     fee = 100 * node.getnetworkinfo()["relayfee"]
     create_lots_of_big_transactions(mini_wallet, node, fee, 14, txouts)
-    test_framework.generate(node, 1)
+    block_hash = test_framework.generate(node, 1)[0]
+    return block_hash, node.getblock(block_hash)["size"]
 
 
 def find_vout_for_address(node, txid, addr):

@@ -80,6 +80,7 @@ from test_framework.messages import (
     sha256,
 )
 from test_framework.netutil import (
+    pack_linger,
     set_ephemeral_port_range,
 )
 from test_framework.util import (
@@ -218,9 +219,17 @@ class P2PConnection(asyncio.Protocol):
         logger.debug('Listening for Bitcoin Node with id: {}'.format(connect_id))
         return lambda: NetworkThread.listen(self, connect_cb, idx=connect_id)
 
-    def peer_disconnect(self):
-        # Connection could have already been closed by other end.
-        NetworkThread.network_event_loop.call_soon_threadsafe(lambda: self._transport and self._transport.abort())
+    def peer_disconnect(self, *, reset=False):
+        """Close the connection. With reset, send a TCP reset and discard unsent data."""
+        def disconnect():
+            # Connection could have already been closed by other end.
+            if not self._transport:
+                return
+            if reset:
+                sock = self._transport.get_extra_info("socket")
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, pack_linger(enabled=True, timeout=0))
+            self._transport.abort()
+        NetworkThread.network_event_loop.call_soon_threadsafe(disconnect)
 
     # Connection and disconnection methods
 
