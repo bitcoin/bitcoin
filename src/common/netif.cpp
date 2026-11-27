@@ -7,16 +7,18 @@
 #include <common/netif.h>
 
 #include <compat/compat.h>
+#include <logging.h>
 #include <netbase.h>
 #include <util/check.h>
-#include <util/log.h>
 #include <util/sock.h>
 
+#include <array>
 #include <cerrno>
 #include <cstdint>
 #include <cstring>
 #include <functional>
 #include <memory>
+#include <span>
 #include <string>
 #include <type_traits>
 
@@ -381,4 +383,111 @@ std::vector<CNetAddr> GetLocalAddresses()
     }
 #endif
     return addresses;
+}
+
+namespace {
+
+//! Whether a socket error means that the network (or the route to the destination) is not
+//! available, as opposed to some unrelated failure (e.g. lack of permissions or resources).
+//! The address/protocol family not being supported (e.g. IPv6 disabled in the kernel) counts as
+//! not available.
+bool IsNoRouteError(int err)
+{
+#ifdef WIN32
+    return err == WSAENETUNREACH || err == WSAEHOSTUNREACH || err == WSAEADDRNOTAVAIL ||
+           err == WSAEAFNOSUPPORT || err == WSAEPROTONOSUPPORT;
+#else
+    return err == ENETUNREACH || err == EHOSTUNREACH || err == EADDRNOTAVAIL ||
+           err == EAFNOSUPPORT || err == EPROTONOSUPPORT;
+#endif
+}
+
+//! Whether `src` is a source address that can be used to reach the global internet: not
+//! unspecified, loopback or link-local. Private (RFC1918) and ULA (RFC4193) source addresses are
+//! accepted, since they are usually NAT-ed.
+bool IsUsableSourceAddress(const CNetAddr& src)
+{
+    return !src.IsBindAny() && !src.IsLocal() && !src.IsRFC3927() && !src.IsRFC4862();
+}
+
+//! Perform the route check towards a single destination. See HasGlobalRoute().
+std::optional<bool> CheckRouteTo(const CService& dest)
+{
+    // CreateSock() can fail without setting the error code (e.g. if the socket is not
+    // selectable), so reset it to not misinterpret a stale value.
+#ifdef WIN32
+    WSASetLastError(0);
+#else
+    errno = 0;
+#endif
+    // A connect()ed UDP socket keeps its source address, so it can't be reused for other destinations.
+    const std::unique_ptr<Sock> sock{CreateSock(dest.GetSAFamily(), SOCK_DGRAM, IPPROTO_UDP)};
+    if (!sock) {
+        const int err{WSAGetLastError()};
+        LogDebug(BCLog::NET, "Route check: cannot create UDP socket: %s", NetworkErrorString(err));
+        return IsNoRouteError(err) ? std::optional{false} : std::nullopt;
+    }
+
+    struct sockaddr_storage dest_storage;
+    socklen_t dest_len{sizeof(dest_storage)};
+    if (!Assume(dest.GetSockAddr(reinterpret_cast<struct sockaddr*>(&dest_storage), &dest_len))) return std::nullopt;
+
+    // For UDP, connect() does not send anything. It fails immediately (with e.g. ENETUNREACH)
+    // if there is no route to the destination.
+    if (sock->Connect(reinterpret_cast<const struct sockaddr*>(&dest_storage), dest_len) == SOCKET_ERROR) {
+        const int err{WSAGetLastError()};
+        LogDebug(BCLog::NET, "Route check: connect() to %s failed: %s", dest.ToStringAddr(), NetworkErrorString(err));
+        return IsNoRouteError(err) ? std::optional{false} : std::nullopt;
+    }
+
+    // Check the source address the OS picked for this route.
+    struct sockaddr_storage src_storage;
+    socklen_t src_len{sizeof(src_storage)};
+    CService src;
+    if (sock->GetSockName(reinterpret_cast<struct sockaddr*>(&src_storage), &src_len) == SOCKET_ERROR ||
+        !src.SetSockAddr(reinterpret_cast<const struct sockaddr*>(&src_storage), src_len)) {
+        LogDebug(BCLog::NET, "Route check: cannot determine source address for %s", dest.ToStringAddr());
+        return std::nullopt;
+    }
+    if (!IsUsableSourceAddress(src)) {
+        LogDebug(BCLog::NET, "Route check: unusable source address%s for %s",
+                 fLogIPs ? " " + src.ToStringAddr() : "", dest.ToStringAddr());
+        return false;
+    }
+    return true;
+}
+
+} // namespace
+
+std::optional<bool> HasGlobalRoute(Network network)
+{
+    // No packets are sent to these addresses, they are only used for the route lookup. Any
+    // global unicast address would do. Several well-known, stable addresses from unrelated
+    // prefixes are used, so that a specific route (e.g. a blackhole or filter) for one of them
+    // does not cause a wrong result.
+    static constexpr std::array DESTINATIONS_IPV4{"8.8.8.8", "1.1.1.1", "9.9.9.9"};
+    static constexpr std::array DESTINATIONS_IPV6{"2001:4860:4860::8888", "2606:4700:4700::1111", "2620:fe::fe"};
+
+    std::span<const char* const> destinations;
+    switch (network) {
+    case NET_IPV4: destinations = DESTINATIONS_IPV4; break;
+    case NET_IPV6: destinations = DESTINATIONS_IPV6; break;
+    default: Assume(false); return std::nullopt;
+    }
+
+    // Report a route if there is one to any of the destinations. Otherwise report no route if
+    // that was determined for at least one of them, and "unknown" if none of the checks were
+    // conclusive.
+    std::optional<bool> result;
+    for (const char* dest_str : destinations) {
+        const std::optional<CNetAddr> dest_addr{LookupHost(dest_str, /*fAllowLookup=*/false)};
+        if (!Assume(dest_addr)) continue;
+        // Use a typical P2P port, in case there are port-specific routing rules.
+        // This is the mainnet default port, which is not exact for other chains or for peers on
+        // non-default ports, but that only matters with port-specific policy routing, which is rare.
+        const std::optional<bool> res{CheckRouteTo(CService{*dest_addr, 8333})};
+        if (res == true) return true;
+        if (res == false) result = false;
+    }
+    return result;
 }
