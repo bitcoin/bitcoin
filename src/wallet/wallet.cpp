@@ -722,13 +722,15 @@ void CWallet::SyncMalleatedTxMetadata(WalletBatch& batch, const CWalletTx& wtx)
     const auto metadata = [](auto& tx) {
         return std::tie(tx.m_from, tx.m_message, tx.m_comment, tx.m_comment_to,
                         tx.m_replaces_txid, tx.m_replaced_by_txid,
-                        tx.m_messages, tx.m_payment_requests, tx.nTimeSmart);
+                        tx.m_messages, tx.m_payment_requests, tx.nTimeSmart,
+                        tx.m_sprecipients, tx.m_rbf_needs_sp_outputs);
     };
 
     // Now copy data from copyFrom to rest:
     for (CWalletTx* copyTo : txs) {
         if (copyTo == copyFrom) continue;
         metadata(*copyTo) = metadata(*copyFrom);
+        if (!copyTo->m_sprecipients.empty()) (void)batch.WriteSpRecipients(copyTo->GetHash(), copyTo->m_sprecipients);
         (void)batch.WriteTxMetadata(*copyTo);
     }
 }
@@ -949,6 +951,11 @@ bool CWallet::MarkReplaced(const Txid& originalHash, const Txid& newHash)
 
     wtx.m_replaced_by_txid = newHash;
 
+    // A replaced tx can no longer be bumped, so it no longer needs its SP recipients
+    const bool had_sp_recipients{wtx.RBFNeedsSilentPayments()};
+    wtx.m_rbf_needs_sp_outputs = false;
+    wtx.m_sprecipients.clear();
+
     // Refresh mempool status without waiting for transactionRemovedFromMempool or transactionAddedToMempool
     RefreshMempoolStatus(wtx, chain());
 
@@ -960,14 +967,27 @@ bool CWallet::MarkReplaced(const Txid& originalHash, const Txid& newHash)
         success = false;
     }
 
+    // Erased after the tx is written without its SP flag, so the tx is never stored as a
+    // silent payments tx without its recipients. A record left behind is harmless, since
+    // the tx can no longer be bumped.
+    if (had_sp_recipients && !batch.EraseSpRecipients(wtx.GetHash())) {
+        WalletLogPrintf("%s: Erasing SP recipients for replaced tx %s failed", __func__, wtx.GetHash().ToString());
+    }
+
     // The new transaction also replaces any malleated variants of wtx,
     // so bumpfee refuses to bump them afterwards
     for (CWalletTx* variant : GetMalleatedVariants(wtx)) {
         if (variant == &wtx) continue;
         variant->m_replaced_by_txid = newHash;
+        const bool variant_had_sp_recipients{variant->RBFNeedsSilentPayments()};
+        variant->m_rbf_needs_sp_outputs = false;
+        variant->m_sprecipients.clear();
         if (!batch.WriteTxMetadata(*variant)) {
             WalletLogPrintf("%s: Updating variant tx %s failed", __func__, variant->GetHash().ToString());
             success = false;
+        }
+        if (variant_had_sp_recipients && !batch.EraseSpRecipients(variant->GetHash())) {
+            WalletLogPrintf("%s: Erasing SP recipients for replaced variant tx %s failed", __func__, variant->GetHash().ToString());
         }
     }
 
@@ -2043,13 +2063,14 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
     bool any_pkh{false};
 
     for (const auto& recipient : vecSend) {
-        if (std::get_if<WitnessV1Taproot>(&recipient.dest)) {
+        const CTxDestination dest{recipient.dest.GetTxDestination()};
+        if (std::get_if<WitnessV1Taproot>(&dest)) {
             any_tr = true;
-        } else if (std::get_if<WitnessV0KeyHash>(&recipient.dest)) {
+        } else if (std::get_if<WitnessV0KeyHash>(&dest)) {
             any_wpkh = true;
-        } else if (std::get_if<ScriptHash>(&recipient.dest)) {
+        } else if (std::get_if<ScriptHash>(&dest)) {
             any_sh = true;
-        } else if (std::get_if<PKHash>(&recipient.dest)) {
+        } else if (std::get_if<PKHash>(&dest)) {
             any_pkh = true;
         }
     }
@@ -2092,7 +2113,8 @@ void CWallet::CommitTransaction(
     std::optional<std::string> comment,
     std::optional<std::string> comment_to,
     const std::vector<std::string>& messages,
-    const std::vector<std::string>& payment_requests
+    const std::vector<std::string>& payment_requests,
+    const std::vector<bip352::SilentPaymentsDestination>& sp_recipients
 )
 {
     LOCK(cs_wallet);
@@ -2106,6 +2128,12 @@ void CWallet::CommitTransaction(
         if (comment_to) wtx.m_comment_to = comment_to;
         if (!messages.empty()) wtx.m_messages = messages;
         if (!payment_requests.empty()) wtx.m_payment_requests = payment_requests;
+        if (!sp_recipients.empty()) {
+            // The recipients are only written with a new tx, see WalletBatch::WriteFullTx
+            Assume(new_tx);
+            wtx.m_rbf_needs_sp_outputs = true;
+            wtx.m_sprecipients = sp_recipients;
+        }
         return true;
     });
 
@@ -2514,6 +2542,17 @@ void CWallet::LoadLockedCoin(const COutPoint& coin, bool persistent)
 {
     AssertLockHeld(cs_wallet);
     m_locked_coins.emplace(coin, persistent);
+}
+
+void CWallet::LoadSpRecipients(const Txid& txid, std::vector<bip352::SilentPaymentsDestination> recipients)
+{
+    AssertLockHeld(cs_wallet);
+    auto it = mapWallet.find(txid);
+    if (it == mapWallet.end()) {
+        WalletLogPrintf("Ignoring orphaned sprecipients record for tx %s", txid.ToString());
+        return;
+    }
+    it->second.m_sprecipients = std::move(recipients);
 }
 
 bool CWallet::LockCoin(const COutPoint& output, bool persist)
