@@ -158,7 +158,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     // Block template should only have a coinbase when there's nothing in the mempool
     std::unique_ptr<BlockTemplate> block_template = mining->createNewBlock(options, /*cooldown=*/false);
     BOOST_REQUIRE(block_template);
-    CBlock block{block_template->getBlock()};
+    CBlock block{block_template->block()->data()};
     BOOST_REQUIRE_EQUAL(block.vtx.size(), 1U);
 
     // waitNext() on an empty mempool should return nullptr because there is no better template
@@ -215,7 +215,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     BOOST_CHECK(!raw_txs[1]);
     block_template = mining->createNewBlock(options, /*cooldown=*/false);
     BOOST_REQUIRE(block_template);
-    block = block_template->getBlock();
+    block = block_template->block()->data();
     BOOST_REQUIRE_EQUAL(block.vtx.size(), 4U);
     BOOST_CHECK(block.vtx[1]->GetHash() == hashParentTx);
     BOOST_CHECK(block.vtx[2]->GetHash() == hashHighFeeTx);
@@ -255,7 +255,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     should_be_nullptr = block_template->waitNext({.timeout = MillisecondsDouble{0}, .fee_threshold = 1});
     BOOST_REQUIRE(should_be_nullptr == nullptr);
 
-    block = block_template->getBlock();
+    block = block_template->block()->data();
     // Verify that the free tx and the low fee tx didn't get selected
     for (size_t i=0; i<block.vtx.size(); ++i) {
         BOOST_CHECK(block.vtx[i]->GetHash() != hashFreeTx);
@@ -273,7 +273,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     // waitNext() should return if fees for the new template are at least 1 sat up
     block_template = block_template->waitNext({.fee_threshold = 1});
     BOOST_REQUIRE(block_template);
-    block = block_template->getBlock();
+    block = block_template->block()->data();
     BOOST_REQUIRE_EQUAL(block.vtx.size(), 6U);
     BOOST_CHECK(block.vtx[4]->GetHash() == hashFreeTx);
     BOOST_CHECK(block.vtx[5]->GetHash() == hashLowFeeTx);
@@ -308,7 +308,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     TryAddToMempool(tx_mempool, entry.Fee(feeToUse).SpendsCoinbase(false).FromTx(tx));
     block_template = mining->createNewBlock(options, /*cooldown=*/false);
     BOOST_REQUIRE(block_template);
-    block = block_template->getBlock();
+    block = block_template->block()->data();
 
     // Verify that this tx isn't selected.
     for (size_t i=0; i<block.vtx.size(); ++i) {
@@ -322,7 +322,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     TryAddToMempool(tx_mempool, entry.Fee(10000).FromTx(tx));
     block_template = mining->createNewBlock(options, /*cooldown=*/false);
     BOOST_REQUIRE(block_template);
-    block = block_template->getBlock();
+    block = block_template->block()->data();
     BOOST_REQUIRE_EQUAL(block.vtx.size(), 9U);
     BOOST_CHECK(block.vtx[8]->GetHash() == hashLowFeeTx2);
 }
@@ -383,7 +383,7 @@ void MinerTestingSetup::TestSigOpsAdjustedWeightChunkLimit(const CScript& script
         .block_max_weight = DEFAULT_BLOCK_RESERVED_WEIGHT + sigop_entry.GetTxWeight() + 1,
         .coinbase_output_script = scriptPubKey,
     };
-    const CBlock block{mining->createNewBlock(options, /*cooldown=*/false)->getBlock()};
+    const CBlock block{mining->createNewBlock(options, /*cooldown=*/false)->block()->data()};
     BOOST_CHECK_EQUAL(block.vtx.size(), 2U);
     BOOST_CHECK(block.vtx[1]->GetHash() == tx.GetHash());
 }
@@ -417,7 +417,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         // Just to make sure we can still make simple blocks
         auto block_template{mining->createNewBlock(options, /*cooldown=*/false)};
         BOOST_REQUIRE(block_template);
-        CBlock block{block_template->getBlock()};
+        CBlock block{block_template->block()->data()};
 
         auto txs = CreateBigSigOpsCluster(txFirst[0]);
 
@@ -444,7 +444,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         // Just to make sure we can still make simple blocks
         auto block_template{mining->createNewBlock(options, /*cooldown=*/false)};
         BOOST_REQUIRE(block_template);
-        CBlock block{block_template->getBlock()};
+        CBlock block{block_template->block()->data()};
 
         auto txs = CreateBigSigOpsCluster(txFirst[0]);
 
@@ -713,7 +713,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     // it into the template because we still check IsFinalTx in CreateNewBlock,
     // but relative locked txs will if inconsistently added to mempool.
     // For now these will still generate a valid template until BIP68 soft fork
-    CBlock block{block_template->getBlock()};
+    CBlock block{block_template->block()->data()};
     BOOST_CHECK_EQUAL(block.vtx.size(), 3U);
     // However if we advance height by 1 and time by SEQUENCE_LOCK_TIME, all of them should be mined
     for (int i = 0; i < CBlockIndex::nMedianTimeSpan; ++i) {
@@ -725,7 +725,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
 
     block_template = mining->createNewBlock(options, /*cooldown=*/false);
     BOOST_REQUIRE(block_template);
-    block = block_template->getBlock();
+    block = block_template->block()->data();
     BOOST_CHECK_EQUAL(block.vtx.size(), 5U);
 }
 
@@ -788,7 +788,7 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
 
     auto block_template = mining->createNewBlock(options, /*cooldown=*/false);
     BOOST_REQUIRE(block_template);
-    CBlock block{block_template->getBlock()};
+    CBlock block{block_template->block()->data()};
     BOOST_REQUIRE_EQUAL(block.vtx.size(), 6U);
     BOOST_CHECK(block.vtx[1]->GetHash() == hashFreeParent);
     BOOST_CHECK(block.vtx[2]->GetHash() == hashFreePrioritisedTx);
@@ -826,7 +826,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
                           HasReason("block_reserved_weight (8000) exceeds block_max_weight (7999)"));
 
     {
-        CBlock block{block_template->getBlock()};
+        CBlock block{block_template->block()->data()};
         {
             std::string reason;
             std::string debug;
@@ -878,7 +878,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             BOOST_REQUIRE(block_template);
         }
 
-        CBlock block{block_template->getBlock()};
+        CBlock block{block_template->block()->data()};
         CMutableTransaction txCoinbase(*block.vtx[0]);
         {
             LOCK(cs_main);
@@ -901,19 +901,25 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         std::string reason{"stale reason"};
         std::string debug{"stale debug"};
         if (current_height % 2 == 0) {
-            BOOST_REQUIRE(mining->submitBlock(block, reason, debug));
+            bool accepted{false};
+            BOOST_CHECK(mining->submitBlock(block, accepted, reason, debug)->data().GetHash() == block.GetHash());
+            BOOST_REQUIRE(accepted);
             BOOST_REQUIRE_EQUAL(reason, "");
             BOOST_REQUIRE_EQUAL(debug, "");
 
             reason = "stale reason";
             debug = "stale debug";
-            BOOST_REQUIRE(!mining->submitBlock(block, reason, debug));
+            mining->submitBlock(block, accepted, reason, debug);
+            BOOST_REQUIRE(!accepted);
             BOOST_REQUIRE_EQUAL(reason, "duplicate");
             BOOST_REQUIRE_EQUAL(debug, "");
         } else {
             reason = "stale reason";
             debug = "stale debug";
-            BOOST_REQUIRE(block_template->submitSolution(block.nVersion, block.nTime, block.nNonce, MakeTransactionRef(txCoinbase), reason, debug));
+            bool accepted{false};
+            const CBlock submitted{block_template->submitSolution(block.nVersion, block.nTime, block.nNonce, MakeTransactionRef(txCoinbase), accepted, reason, debug)->data()};
+            BOOST_REQUIRE(accepted);
+            BOOST_CHECK(submitted.GetHash() == block.GetHash());
             BOOST_REQUIRE_EQUAL(reason, "");
             BOOST_REQUIRE_EQUAL(debug, "");
             BOOST_CHECK_THROW(block_template->submitSolutionOld7(block.nVersion, block.nTime, block.nNonce,

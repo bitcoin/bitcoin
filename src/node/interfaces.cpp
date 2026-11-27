@@ -82,6 +82,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -874,6 +875,30 @@ public:
     NodeContext& m_node;
 };
 
+class BlockImpl : public interfaces::Block
+{
+public:
+    explicit BlockImpl(std::shared_ptr<const CBlock> block) : m_block(std::move(block)) {}
+
+    CBlockHeader header() override
+    {
+        return *m_block;
+    }
+
+    CBlock data() override
+    {
+        return *m_block;
+    }
+
+    std::vector<uint256> coinbaseMerklePath() override
+    {
+        return TransactionMerklePath(*m_block, 0);
+    }
+
+private:
+    const std::shared_ptr<const CBlock> m_block;
+};
+
 class BlockTemplateImpl : public BlockTemplate
 {
 public:
@@ -885,14 +910,10 @@ public:
     {
     }
 
-    CBlockHeader getBlockHeader() override
+    std::unique_ptr<interfaces::Block> block() override
     {
-        return m_block_template->block;
-    }
-
-    CBlock getBlock() override
-    {
-        return m_block_template->block;
+        // Share ownership of the template, so the handle can outlive it without a copy.
+        return std::make_unique<BlockImpl>(std::shared_ptr<const CBlock>{m_block_template.get(), &m_block_template->block});
     }
 
     std::vector<CAmount> getTxFees() override
@@ -910,16 +931,13 @@ public:
         return m_block_template->m_coinbase_tx;
     }
 
-    std::vector<uint256> getCoinbaseMerklePath() override
+    std::unique_ptr<interfaces::Block> submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase, bool& accepted, std::string& reason, std::string& debug) override
     {
-        return TransactionMerklePath(m_block_template->block, 0);
-    }
-
-    bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase, std::string& reason, std::string& debug) override
-    {
-        if (!coinbase) return false;
-        AddMerkleRootAndCoinbase(m_block_template->block, std::move(coinbase), version, timestamp, nonce);
-        return block_template_manager().SubmitBlock(std::make_shared<const CBlock>(m_block_template->block), reason, debug);
+        if (!coinbase) throw std::invalid_argument("Coinbase transaction must not be null");
+        auto block{std::make_shared<CBlock>(m_block_template->block)};
+        AddMerkleRootAndCoinbase(*block, std::move(coinbase), version, timestamp, nonce);
+        accepted = block_template_manager().SubmitBlock(block, reason, debug);
+        return std::make_unique<BlockImpl>(std::move(block));
     }
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
@@ -937,7 +955,7 @@ public:
 
     const BlockCreateOptions m_create_options;
 
-    const util::NotNullUniquePtr<CBlockTemplate> m_block_template;
+    const util::NotNullSharedPtr<const CBlockTemplate> m_block_template;
 
     bool m_interrupt_wait{false};
     node::BlockTemplateManager& block_template_manager() { return *Assert(m_node.block_template_manager); }
@@ -1008,9 +1026,11 @@ public:
         return state.IsValid();
     }
 
-    bool submitBlock(const CBlock& block_in, std::string& reason, std::string& debug) override
+    std::unique_ptr<interfaces::Block> submitBlock(const CBlock& block_in, bool& accepted, std::string& reason, std::string& debug) override
     {
-        return block_template_manager().SubmitBlock(std::make_shared<const CBlock>(block_in), reason, debug);
+        auto block{std::make_shared<const CBlock>(block_in)};
+        accepted = block_template_manager().SubmitBlock(block, reason, debug);
+        return std::make_unique<BlockImpl>(std::move(block));
     }
 
     std::vector<CTransactionRef> getTransactionsByTxID(const std::vector<Txid>& txids) override

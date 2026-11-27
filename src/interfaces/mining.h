@@ -26,16 +26,51 @@ struct NodeContext;
 
 namespace interfaces {
 
+//! Handle to a block.
+//!
+//! The handle keeps the block and its transactions in memory until it is
+//! destroyed, also after the transactions leave the mempool and after any
+//! template it came from is destroyed. Clients should destroy handles they
+//! no longer need.
+class Block
+{
+public:
+    virtual ~Block() = default;
+
+    //! Return the block header.
+    virtual CBlockHeader header() = 0;
+
+    //! Return the full block.
+    virtual CBlock data() = 0;
+
+    /**
+     * Compute merkle path to the coinbase transaction
+     *
+     * @return merkle path ordered from the deepest
+     */
+    virtual std::vector<uint256> coinbaseMerklePath() = 0;
+};
+
 //! Block template interface
 class BlockTemplate
 {
 public:
     virtual ~BlockTemplate() = default;
 
-    virtual CBlockHeader getBlockHeader() = 0;
-    // Block contains a dummy coinbase transaction that should not be used and
-    // it may not match a transaction constructed from getCoinbaseTx().
-    virtual CBlock getBlock() = 0;
+    /**
+     * Return the template block. It contains a dummy coinbase transaction
+     * that should not be used and may not match a transaction constructed from
+     * getCoinbaseTx(). The template is unchanged by submitSolution().
+     *
+     * The handle remains valid after the template is destroyed.
+     */
+    virtual std::unique_ptr<Block> block() = 0;
+
+    //! Deprecated: no longer supported, returns an error.
+    virtual CBlockHeader getBlockHeaderOld1() { throw std::runtime_error("Old getBlockHeader (@1) not supported. Please update your client!"); }
+
+    //! Deprecated: no longer supported, returns an error.
+    virtual CBlock getBlockOld2() { throw std::runtime_error("Old getBlock (@2) not supported. Please update your client!"); }
 
     // Fees per transaction, not including coinbase transaction.
     virtual std::vector<CAmount> getTxFees() = 0;
@@ -45,21 +80,19 @@ public:
     /** Return fields needed to construct a coinbase transaction */
     virtual node::CoinbaseTx getCoinbaseTx() = 0;
 
-    /**
-     * Compute merkle path to the coinbase transaction
-     *
-     * @return merkle path ordered from the deepest
-     */
-    virtual std::vector<uint256> getCoinbaseMerklePath() = 0;
+    //! Deprecated: no longer supported, returns an error.
+    virtual std::vector<uint256> getCoinbaseMerklePathOld6() { throw std::runtime_error("Old getCoinbaseMerklePath (@6) not supported. Please update your client!"); }
 
     /**
-     * Construct and broadcast the block. Modifies the template in place,
+     * Construct and broadcast a block from a copy of the template,
      * updating the fields listed below as well as the merkle root.
+     * The template itself is unchanged.
      *
      * @param[in] version version block header field
      * @param[in] timestamp time block header field (unix timestamp)
      * @param[in] nonce nonce block header field
      * @param[in] coinbase complete coinbase transaction (including witness)
+     * @param[out] accepted true if accepted as a new block
      * @param[out] reason failure reason (BIP22)
      * @param[out] debug  more detailed rejection reason
      *
@@ -72,9 +105,13 @@ public:
      *       is only one byte long, so the coinbase scriptSig needs at least
      *       one additional byte of data to avoid bad-cb-length.
      *
-     * @returns true if the block was accepted as a new block
+     * @returns a handle to the submitted block, including on rejection
+     * @throws std::invalid_argument if coinbase is null
+     *
+     * The handle is returned regardless of the validation result, so callers
+     * can preserve rejected blocks for investigation.
      */
-    virtual bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase, std::string& reason, std::string& debug) = 0;
+    virtual std::unique_ptr<Block> submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase, bool& accepted, std::string& reason, std::string& debug) = 0;
 
     //! Deprecated older method preserved to return an explicit error for IPC
     //! clients using mining.capnp @7.
@@ -82,6 +119,9 @@ public:
     {
         throw std::runtime_error("Old submitSolution (@7) not supported. Please update your client!");
     }
+
+    //! Deprecated: no longer supported, returns an error.
+    virtual bool submitSolutionOld10(uint32_t, uint32_t, uint32_t, CTransactionRef, std::string&, std::string&) { throw std::runtime_error("Old submitSolution (@10) not supported. Please update your client!"); }
 
     /**
      * Waits for fees in the next block to rise, a new tip or the timeout.
@@ -173,18 +213,22 @@ public:
      * blocks may then be announced to peers through normal validation signals.
      *
      * @param[in]  block  the complete block to submit
+     * @param[out] accepted true if the block was accepted as a new block. Set
+     *                    to false, with reason set, if the block is a duplicate
+     *                    or the validation result is inconclusive.
      * @param[out] reason failure reason (BIP22)
      * @param[out] debug  more detailed rejection reason
-     * @returns           true if the block was accepted as a new block. Returns
-     *                    false and sets reason if the block is a duplicate or
-     *                    the validation result is inconclusive.
+     * @returns           a handle to the submitted block, including on rejection
      *
      * @note Unlike the submitblock RPC, this method does not call
      *       UpdateUncommittedBlockStructures to add a missing coinbase witness
      *       reserved value. Callers must submit a fully formed block, including
      *       the coinbase witness when a witness commitment is present.
      */
-    virtual bool submitBlock(const CBlock& block, std::string& reason, std::string& debug) = 0;
+    virtual std::unique_ptr<Block> submitBlock(const CBlock& block, bool& accepted, std::string& reason, std::string& debug) = 0;
+
+    //! Deprecated: no longer supported, returns an error.
+    virtual bool submitBlockOld7(const CBlock&, std::string&, std::string&) { throw std::runtime_error("Old submitBlock (@7) not supported. Please update your client!"); }
 
     /**
      * Fetch raw transactions from the mempool by txid.

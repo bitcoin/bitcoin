@@ -25,25 +25,45 @@ interface Mining $Proxy.wrap("interfaces::Mining") {
     createNewBlock @4 (context :Proxy.Context, options: BlockCreateOptions, cooldown: Bool = true) -> (result: BlockTemplate);
     checkBlock @5 (context :Proxy.Context, block: Data, options: BlockCheckOptions) -> (reason: Text, debug: Text, result: Bool);
     interrupt @6 () -> ();
-    submitBlock @7 (context :Proxy.Context, block: Data) -> (reason: Text, debug: Text, result: Bool);
     getTransactionsByTxID @8 (context :Proxy.Context, txids: List(Data)) -> (result: List(Data));
     getTransactionsByWitnessID @9 (context :Proxy.Context, wtxids: List(Data)) -> (result: List(Data));
+    submitBlock @10 (context :Proxy.Context, block: Data) -> (accepted: Bool, reason: Text, debug: Text, result: Block);
+
+    # DEPRECATED: older version of submitBlock which returns an error.
+    submitBlockOld7 @7 (context :Proxy.Context, block: Data) -> (reason: Text, debug: Text, result: Bool);
+}
+
+interface Block $Proxy.wrap("interfaces::Block") {
+    destroy @0 (context :Proxy.Context) -> ();
+    data @1 (context :Proxy.Context) -> (result :Data);
+    header @2 (context :Proxy.Context) -> (result :Data);
+    coinbaseMerklePath @3 (context :Proxy.Context) -> (result :List(Data));
 }
 
 interface BlockTemplate $Proxy.wrap("interfaces::BlockTemplate") {
     destroy @0 (context :Proxy.Context) -> ();
-    getBlockHeader @1 (context: Proxy.Context) -> (result: Data);
-    getBlock @2 (context: Proxy.Context) -> (result: Data);
     getTxFees @3 (context: Proxy.Context) -> (result: List(Int64));
     getTxSigops @4 (context: Proxy.Context) -> (result: List(Int64));
     getCoinbaseTx @5 (context: Proxy.Context) -> (result: CoinbaseTx);
-    getCoinbaseMerklePath @6 (context: Proxy.Context) -> (result: List(Data));
-    submitSolution @10 (context: Proxy.Context, version: UInt32, timestamp: UInt32, nonce: UInt32, coinbase :Data) -> (reason: Text, debug: Text, result: Bool);
     waitNext @8 (context: Proxy.Context, options: BlockWaitOptions) -> (result: BlockTemplate);
     interruptWait @9() -> ();
+    block @11 (context: Proxy.Context) -> (result: Block);
+    submitSolution @12 (context: Proxy.Context, version: UInt32, timestamp: UInt32, nonce: UInt32, coinbase :Data) -> (accepted: Bool, reason: Text, debug: Text, result: Block);
+
+    # DEPRECATED: older version of Block.header which returns an error.
+    getBlockHeaderOld1 @1 (context: Proxy.Context) -> (result: Data);
+
+    # DEPRECATED: older version of block which returns an error.
+    getBlockOld2 @2 (context: Proxy.Context) -> (result: Data);
+
+    # DEPRECATED: older version of Block.coinbaseMerklePath which returns an error.
+    getCoinbaseMerklePathOld6 @6 (context: Proxy.Context) -> (result: List(Data));
 
     # DEPRECATED: older version of submitSolution which returns an error.
     submitSolutionOld7 @7 (context: Proxy.Context, version: UInt32, timestamp: UInt32, nonce: UInt32, coinbase :Data) -> (result: Bool);
+
+    # DEPRECATED: older version of submitSolution which returns an error.
+    submitSolutionOld10 @10 (context: Proxy.Context, version: UInt32, timestamp: UInt32, nonce: UInt32, coinbase :Data) -> (reason: Text, debug: Text, result: Bool);
 }
 
 struct BlockCreateOptions $Proxy.wrap("node::BlockCreateOptions") {
