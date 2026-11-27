@@ -9,12 +9,13 @@
 #include <dbwrapper.h>
 #include <interfaces/chain.h>
 #include <interfaces/types.h>
+#include <kernel/notifications_interface.h>
 #include <kernel/types.h>
-#include <node/abort.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
 #include <node/database_args.h>
 #include <node/interface_ui.h>
+#include <node/kernel_notifications.h>
 #include <primitives/block.h>
 #include <sync.h>
 #include <tinyformat.h>
@@ -48,11 +49,9 @@ constexpr uint8_t DB_BEST_BLOCK{'B'};
 constexpr auto SYNC_LOG_INTERVAL{30s};
 constexpr auto SYNC_LOCATOR_WRITE_INTERVAL{30s};
 
-template <typename... Args>
-void BaseIndex::FatalErrorf(util::log::FormatString<sizeof...(Args)> fmt, const Args&... args)
+kernel::Notifications* BaseIndex::GetNotifications() const
 {
-    auto message = tfm::format(fmt, args...);
-    node::AbortNode(m_chain->context()->shutdown_request, m_chain->context()->exit_status, Untranslated(message), m_chain->context()->warnings.get());
+    return m_chain->context()->notifications.get();
 }
 
 CBlockLocator GetLocator(interfaces::Chain& chain, const uint256& block_hash)
@@ -64,7 +63,8 @@ CBlockLocator GetLocator(interfaces::Chain& chain, const uint256& block_hash)
     return locator;
 }
 
-BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool f_wipe, bool f_obfuscate, bool f_bloom) :
+BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool f_wipe,
+                  bool f_obfuscate, bool f_bloom, kernel::Notifications* notifications) :
     CDBWrapper{DBParams{
         .path = path,
         .cache_bytes = n_cache_size,
@@ -72,6 +72,7 @@ BaseIndex::DB::DB(const fs::path& path, size_t n_cache_size, bool f_memory, bool
         .wipe_data = f_wipe,
         .obfuscate = f_obfuscate,
         .bloom_filter = f_bloom,
+        .notifications = notifications,
         .options = [] { DBOptions options; node::ReadDatabaseArgs(gArgs, options); return options; }()}}
 {}
 
@@ -178,8 +179,7 @@ bool BaseIndex::ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data
     CBlock block;
     if (!block_data) { // disk lookup if block data wasn't provided
         if (!m_chainstate->m_blockman.ReadBlock(block, *pindex)) {
-            FatalErrorf("Failed to read block %s from disk",
-                        pindex->GetBlockHash().ToString());
+            FatalError("Failed to read block %s from disk", pindex->GetBlockHash().ToString());
             return false;
         }
         block_info.data = &block;
@@ -188,16 +188,14 @@ bool BaseIndex::ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data
     CBlockUndo block_undo;
     if (CustomOptions().connect_undo_data) {
         if (pindex->nHeight > 0 && !m_chainstate->m_blockman.ReadBlockUndo(block_undo, *pindex)) {
-            FatalErrorf("Failed to read undo block data %s from disk",
-                        pindex->GetBlockHash().ToString());
+            FatalError("Failed to read undo block data %s from disk", pindex->GetBlockHash().ToString());
             return false;
         }
         block_info.undo_data = &block_undo;
     }
 
     if (!CustomAppend(block_info)) {
-        FatalErrorf("Failed to write block %s to index database",
-                    pindex->GetBlockHash().ToString());
+        FatalError("Failed to write block %s to index database", pindex->GetBlockHash().ToString());
         return false;
     }
 
@@ -243,7 +241,7 @@ void BaseIndex::Sync()
                 }
             }
             if (pindex_next->pprev != pindex && !Rewind(pindex, pindex_next->pprev)) {
-                FatalErrorf("Failed to rewind %s to a previous chain tip", GetName());
+                FatalError("Failed to rewind %s to a previous chain tip", GetName());
                 return;
             }
             pindex = pindex_next;
@@ -358,8 +356,7 @@ void BaseIndex::BlockConnected(const ChainstateRole& role, const std::shared_ptr
     const CBlockIndex* best_block_index = m_best_block_index.load();
     if (!best_block_index) {
         if (pindex->nHeight != 0) {
-            FatalErrorf("First block connected is not the genesis block (height=%d)",
-                       pindex->nHeight);
+            FatalError("First block connected is not the genesis block (height=%d)", pindex->nHeight);
             return;
         }
     } else {
@@ -376,8 +373,7 @@ void BaseIndex::BlockConnected(const ChainstateRole& role, const std::shared_ptr
             return;
         }
         if (best_block_index != pindex->pprev && !Rewind(best_block_index, pindex->pprev)) {
-            FatalErrorf("Failed to rewind %s to a previous chain tip",
-                       GetName());
+            FatalError("Failed to rewind %s to a previous chain tip", GetName());
             return;
         }
     }
@@ -411,8 +407,7 @@ void BaseIndex::ChainStateFlushed(const ChainstateRole& role, const CBlockLocato
     }
 
     if (!locator_tip_index) {
-        FatalErrorf("First block (hash=%s) in locator was not found",
-                   locator_tip_hash.ToString());
+        FatalError("First block (hash=%s) in locator was not found", locator_tip_hash.ToString());
         return;
     }
 

@@ -1238,7 +1238,9 @@ BlockManager::BlockManager(const util::SignalInterrupt& interrupt, Options opts)
       m_undo_file_seq{FlatFileSeq{m_opts.blocks_dir, "rev", UNDOFILE_CHUNK_SIZE}},
       m_interrupt{interrupt}
 {
-    m_block_tree_db = std::make_unique<BlockTreeDB>(m_opts.block_tree_db_params);
+    auto block_tree_db_params{m_opts.block_tree_db_params};
+    block_tree_db_params.notifications = &m_opts.notifications; // Report fatal read errors like the other block manager failures
+    m_block_tree_db = std::make_unique<BlockTreeDB>(block_tree_db_params);
 
     if (m_opts.block_tree_db_params.wipe_data) {
         m_block_tree_db->WriteReindexing(true);
