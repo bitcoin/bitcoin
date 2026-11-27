@@ -9,17 +9,15 @@
 #include <primitives/transaction.h>
 #include <sync.h>
 #include <txmempool.h>
-#include <util/feefrac.h>
 
-#include <compare>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <set>
 #include <string>
+#include <utility>
 
 class CFeeRate;
-class uint256;
 
 /** Maximum number of unique clusters that can be affected by an RBF (Rule #5);
  * see GetEntriesForConflicts() */

@@ -2,10 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <span.h>
 #include <streams.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/FuzzedDataProvider.h>
+#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <util/obfuscation.h>
 
@@ -14,6 +13,7 @@
 #include <cstdint>
 #include <iostream>
 #include <optional>
+#include <span>
 #include <vector>
 
 FUZZ_TARGET(buffered_file)

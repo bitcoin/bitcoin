@@ -9,6 +9,7 @@
 #include <util/check.h>
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 FUZZ_TARGET(parse_hd_keypath)

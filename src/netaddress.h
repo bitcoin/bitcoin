@@ -12,12 +12,13 @@
 #include <serialize.h>
 #include <tinyformat.h>
 #include <util/check.h>
-#include <util/strencodings.h>
 #include <util/string.h>
 
 #include <array>
 #include <cstdint>
+#include <cstring>
 #include <ios>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>

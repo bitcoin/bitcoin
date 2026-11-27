@@ -5,15 +5,16 @@
 #ifndef BITCOIN_TXGRAPH_H
 #define BITCOIN_TXGRAPH_H
 
-#include <compare>
+#include <util/feefrac.h>
+
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <optional>
+#include <span>
 #include <utility>
 #include <vector>
-
-#include <util/feefrac.h>
 
 inline constexpr unsigned MAX_CLUSTER_COUNT_LIMIT{64};
 

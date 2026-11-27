@@ -10,8 +10,14 @@
 #include <util/check.h>
 
 #include <atomic>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
 #include <future>
 #include <queue>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 struct ExpectedException : std::runtime_error {
     explicit ExpectedException(const std::string& msg) : std::runtime_error(msg) {}

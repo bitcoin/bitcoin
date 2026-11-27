@@ -10,6 +10,7 @@
 #include <util/check.h>
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 

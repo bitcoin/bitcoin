@@ -5,26 +5,38 @@
 #include <addrman.h>
 
 #include <addrdb.h>
-#include <addrman_impl.h>
-#include <chainparams.h>
-#include <common/args.h>
-#include <merkleblock.h>
+#include <netaddress.h>
+#include <netgroup.h>
+#include <protocol.h>
 #include <random.h>
+#include <streams.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
+#include <test/util/net.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
-#include <util/asmap.h>
-#include <util/chaintype.h>
 #include <util/check.h>
+#include <util/time.h>
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
-#include <ctime>
+#include <exception>
+#include <functional>
+#include <ios>
+#include <memory>
 #include <optional>
+#include <span>
 #include <string>
+#include <unordered_set>
 #include <vector>
+
+#ifndef WIN32
+#include <netinet/in.h>
+#endif
 
 namespace {
 const BasicTestingSetup* g_setup;

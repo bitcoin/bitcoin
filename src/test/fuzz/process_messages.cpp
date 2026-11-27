@@ -4,13 +4,9 @@
 
 #include <addrman.h>
 #include <banman.h>
-#include <blockfilter.h>
-#include <kernel/chainparams.h>
 #include <net.h>
 #include <net_processing.h>
 #include <node/indexes.h>
-#include <primitives/block.h>
-#include <primitives/transaction.h>
 #include <protocol.h>
 #include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -23,19 +19,20 @@
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <test/util/validation.h>
+#include <txmempool.h>
 #include <uint256.h>
-#include <util/check.h>
 #include <util/time.h>
-#include <validation.h>
 #include <validationinterface.h>
 
+#include <cstdint>
 #include <functional>
 #include <ios>
 #include <memory>
-#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
+
+enum class BlockFilterType : uint8_t;
 
 namespace {
 TestingSetup* g_setup;

@@ -5,9 +5,16 @@
 #ifndef BITCOIN_NODE_PSBT_H
 #define BITCOIN_NODE_PSBT_H
 
+#include <consensus/amount.h>
+#include <policy/feerate.h>
 #include <psbt.h>
+#include <pubkey.h>
+#include <uint256.h>
 
+#include <cstddef>
 #include <optional>
+#include <string>
+#include <vector>
 
 namespace node {
 /**

@@ -2,9 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <common/args.h>
-#include <compat/compat.h>
 #include <i2p.h>
+
+#include <compat/compat.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -12,10 +12,18 @@
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
 #include <test/fuzz/util/threadinterrupt.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
-#include <util/fs_helpers.h>
-#include <util/threadinterrupt.h>
+#include <util/fs.h>
+#include <util/sock.h>
+#include <util/time.h>
+
+#include <functional>
+#include <memory>
+#include <span>
+#include <stdexcept>
+#include <string>
 
 void initialize_i2p()
 {

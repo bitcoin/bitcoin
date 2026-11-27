@@ -4,16 +4,24 @@
 
 #include <txrequest.h>
 
-#include <crypto/common.h>
 #include <crypto/sha256.h>
 #include <crypto/siphash.h>
 #include <primitives/transaction.h>
 #include <test/fuzz/fuzz.h>
+#include <uint256.h>
 #include <util/check.h>
+#include <util/time.h>
 
+#include <algorithm>
 #include <bitset>
+#include <compare>
+#include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <queue>
+#include <tuple>
+#include <utility>
+#include <variant>
 #include <vector>
 
 namespace {

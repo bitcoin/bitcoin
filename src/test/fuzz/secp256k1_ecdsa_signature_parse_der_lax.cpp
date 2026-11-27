@@ -9,6 +9,7 @@
 #include <test/fuzz/util.h>
 #include <test/util/random.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 

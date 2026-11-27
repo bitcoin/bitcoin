@@ -4,25 +4,26 @@
 
 #include <private_broadcast.h>
 
-#include <consensus/tx_check.h>
-#include <consensus/validation.h>
-#include <net.h>
+#include <netaddress.h>
 #include <primitives/transaction.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
-#include <test/util/setup_common.h>
 #include <test/util/time.h>
+#include <uint256.h>
 #include <util/check.h>
-#include <util/overflow.h>
-#include <util/time.h>
 
 #include <algorithm>
+#include <compare>
+#include <functional>
+#include <memory>
 #include <optional>
 #include <ranges>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
+#include <vector>
 
 struct CTransactionRefHash {
     size_t operator()(const CTransactionRef& tx) const

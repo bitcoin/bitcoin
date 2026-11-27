@@ -2,16 +2,25 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/pcp.h>
+
+#include <compat/compat.h>
+#include <logging.h>
+#include <netaddress.h>
+#include <netbase.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
-#include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
 #include <test/util/time.h>
-
-#include <common/pcp.h>
-#include <logging.h>
 #include <util/check.h>
+#include <util/sock.h>
 #include <util/threadinterrupt.h>
+
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <string>
+#include <variant>
 
 using namespace std::literals;
 
