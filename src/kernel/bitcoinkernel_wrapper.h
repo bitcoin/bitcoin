@@ -1025,11 +1025,6 @@ public:
     }
 };
 
-inline void logging_set_min_level(LogLevel level)
-{
-    btck_logging_set_min_level(static_cast<btck_LogLevel>(level));
-}
-
 //! Non-owning view over a btck_LogEntry. The referenced entry is only valid for the duration of the
 //! logging callback, so a LogEntry (and any string_view obtained from it) must not be stored or
 //! used after the callback returns.
@@ -1057,21 +1052,29 @@ public:
     LogCategory Category() const { return static_cast<LogCategory>(btck_log_entry_get_category(get())); }
 };
 
+//! LogMessage() may be called from multiple threads at the same time, so it must be thread-safe.
 template <typename T>
 concept Log = requires(T a, const LogEntry& entry) {
     { a.LogMessage(entry) } -> std::same_as<void>;
 };
 
+//! Owns the process-wide logging connection. Throws if creating it fails, e.g. because one already
+//! exists.
 template <Log T>
 class Logger : UniqueHandle<btck_LoggingConnection, btck_logging_connection_destroy>
 {
 public:
     Logger(std::unique_ptr<T> log)
-        : UniqueHandle{btck_logging_connection_create(
+        : UniqueHandle{btck_global_logging_connection_create(
               +[](void* user_data, const btck_LogEntry* entry) { static_cast<T*>(user_data)->LogMessage(LogEntry{entry}); },
               log.release(),
               +[](void* user_data) { delete static_cast<T*>(user_data); })}
     {
+    }
+
+    void SetMinLevel(LogLevel level)
+    {
+        btck_logging_connection_set_min_level(get(), static_cast<btck_LogLevel>(level));
     }
 };
 
