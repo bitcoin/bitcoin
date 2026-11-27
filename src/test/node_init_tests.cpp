@@ -13,12 +13,13 @@
 #include <rpc/server.h>
 #include <scheduler.h>
 #include <streams.h>
+#include <test/util/common.h>
+#include <test/util/setup_common.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <validationinterface.h>
 
 #include <boost/test/unit_test.hpp>
-#include <test/util/common.h>
-#include <test/util/setup_common.h>
 
 #include <memory>
 

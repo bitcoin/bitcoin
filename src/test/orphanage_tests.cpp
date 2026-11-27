@@ -15,11 +15,12 @@
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <test/util/transaction_utils.h>
+#include <util/check.h>
+
+#include <boost/test/unit_test.hpp>
 
 #include <array>
 #include <cstdint>
-
-#include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(orphanage_tests, BasicTestingSetup)
 

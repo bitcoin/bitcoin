@@ -10,6 +10,7 @@
 #include <script/solver.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/time.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>

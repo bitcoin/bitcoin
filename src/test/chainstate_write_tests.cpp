@@ -7,6 +7,7 @@
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <txdb.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <validation.h>
 #include <validationinterface.h>

@@ -4,9 +4,9 @@
 
 #include <consensus/validation.h>
 #include <key_io.h>
+#include <policy/ephemeral_policy.h>
 #include <policy/packages.h>
 #include <policy/policy.h>
-#include <policy/ephemeral_policy.h>
 #include <policy/truc_policy.h>
 #include <primitives/transaction.h>
 #include <random.h>
@@ -14,6 +14,7 @@
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <test/util/txmempool.h>
+#include <util/check.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>

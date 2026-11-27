@@ -13,10 +13,11 @@
 #include <script/solver.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
-
-#include <vector>
+#include <util/check.h>
 
 #include <boost/test/unit_test.hpp>
+
+#include <vector>
 
 // Helpers:
 static std::vector<unsigned char>
