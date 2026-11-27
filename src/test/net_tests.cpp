@@ -1842,4 +1842,22 @@ BOOST_AUTO_TEST_CASE(addlocal_onlynet_externalip)
     fDiscover = discover_orig;
 }
 
+BOOST_AUTO_TEST_CASE(tor_i2p_same_bytes)
+{
+    CNetAddr addr_i2p;
+    BOOST_REQUIRE(addr_i2p.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p"));
+    BOOST_REQUIRE(addr_i2p.IsI2P());
+    const CService service_i2p{addr_i2p, 8333};
+
+    CNetAddr addr_tor;
+    BOOST_REQUIRE(addr_tor.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jncleid.onion"));
+    BOOST_REQUIRE(addr_tor.IsTor());
+    const CService service_tor{addr_tor, 8333};
+
+    BOOST_CHECK(service_i2p != service_tor);
+    BOOST_CHECK(service_i2p.GetKey(/*include_network=*/false) == service_tor.GetKey(/*include_network=*/false));
+    BOOST_CHECK(service_i2p.GetKey(/*include_network=*/true) != service_tor.GetKey(/*include_network=*/true));
+    BOOST_CHECK(service_i2p.GetKey() != service_tor.GetKey());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
