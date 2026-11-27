@@ -649,47 +649,26 @@ public:
         : Handle(view) {}
 };
 
-template <typename Derived>
-class WitnessStackApi
+class WitnessStack : public Handle<btck_WitnessStack, btck_witness_stack_copy, btck_witness_stack_destroy>
 {
-private:
-    auto impl() const
-    {
-        return static_cast<const Derived*>(this)->get();
-    }
-
-    friend Derived;
-    WitnessStackApi() = default;
-
 public:
+    explicit WitnessStack(btck_WitnessStack* ptr) : Handle{ptr} {}
+
     size_t CountItems() const
     {
-        return btck_witness_stack_count_items(impl());
+        return btck_witness_stack_count_items(get());
     }
 
     std::vector<std::byte> GetItem(size_t index) const
     {
         struct Item { const btck_WitnessStack* stack; size_t index; };
-        Item item{impl(), index};
+        Item item{get(), index};
         return write_bytes(&item, +[](const Item* c, btck_WriteBytes w, void* ud) {
             return btck_witness_stack_get_item_at(c->stack, c->index, w, ud);
         });
     }
 
-    MAKE_RANGE_METHOD(Items, Derived, &WitnessStackApi<Derived>::CountItems, &WitnessStackApi<Derived>::GetItem, *static_cast<const Derived*>(this))
-};
-
-class WitnessStackView : public View<btck_WitnessStack>, public WitnessStackApi<WitnessStackView>
-{
-public:
-    explicit WitnessStackView(const btck_WitnessStack* ptr) : View{ptr} {}
-};
-
-class WitnessStack : public Handle<btck_WitnessStack, btck_witness_stack_copy, btck_witness_stack_destroy>, public WitnessStackApi<WitnessStack>
-{
-public:
-    WitnessStack(const WitnessStackView& view)
-        : Handle(view) {}
+    MAKE_RANGE_METHOD(Items, WitnessStack, &WitnessStack::CountItems, &WitnessStack::GetItem, *this)
 };
 
 template <typename Derived>
@@ -715,9 +694,9 @@ public:
         return btck_transaction_input_get_sequence(impl());
     }
 
-    WitnessStackView GetWitnessStack() const
+    WitnessStack GetWitnessStack() const
     {
-        return WitnessStackView{btck_transaction_input_get_witness_stack(impl())};
+        return WitnessStack{btck_transaction_input_get_witness_stack(impl())};
     }
 
     std::vector<std::byte> GetScriptSig() const

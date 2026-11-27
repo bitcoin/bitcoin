@@ -605,6 +605,15 @@ void KernelLogger::Log(const util::log::Entry& entry) const
     }
 }
 
+struct WitnessStack {
+    const CScriptWitness witness;
+    const std::vector<std::span<const unsigned char>> items;
+
+    explicit WitnessStack(const CScriptWitness& w) : witness{w}, items(witness.begin(), witness.end()) {}
+    // Copied spans would point into other.witness.
+    WitnessStack(const WitnessStack& other) : WitnessStack{other.witness} {}
+};
+
 } // namespace
 
 struct btck_Transaction : Handle<btck_Transaction, std::shared_ptr<const CTransaction>> {};
@@ -622,7 +631,7 @@ struct btck_TransactionSpentOutputs : Handle<btck_TransactionSpentOutputs, CTxUn
 struct btck_Coin : Handle<btck_Coin, Coin> {};
 struct btck_BlockHash : Handle<btck_BlockHash, uint256> {};
 struct btck_TransactionInput : Handle<btck_TransactionInput, CTxIn> {};
-struct btck_WitnessStack : Handle<btck_WitnessStack, CScriptWitness> {};
+struct btck_WitnessStack : Handle<btck_WitnessStack, WitnessStack> {};
 struct btck_TransactionOutPoint: Handle<btck_TransactionOutPoint, COutPoint> {};
 struct btck_Txid: Handle<btck_Txid, Txid> {};
 struct btck_Wtxid: Handle<btck_Wtxid, Wtxid> {};
@@ -846,9 +855,9 @@ uint32_t btck_transaction_input_get_sequence(const btck_TransactionInput* input)
     return btck_TransactionInput::get(input).nSequence;
 }
 
-const btck_WitnessStack* btck_transaction_input_get_witness_stack(const btck_TransactionInput* input)
+btck_WitnessStack* btck_transaction_input_get_witness_stack(const btck_TransactionInput* input)
 {
-    return btck_WitnessStack::ref(&btck_TransactionInput::get(input).scriptWitness);
+    return btck_WitnessStack::create(btck_TransactionInput::get(input).scriptWitness);
 }
 
 int btck_transaction_input_get_script_sig(const btck_TransactionInput* input, btck_WriteBytes writer, void* user_data)
@@ -864,16 +873,14 @@ void btck_transaction_input_destroy(btck_TransactionInput* input)
 
 size_t btck_witness_stack_count_items(const btck_WitnessStack* witness_stack)
 {
-    return btck_WitnessStack::get(witness_stack).size();
+    return btck_WitnessStack::get(witness_stack).items.size();
 }
 
 int btck_witness_stack_get_item_at(const btck_WitnessStack* witness_stack, size_t index, btck_WriteBytes writer, void* user_data)
 {
-    const auto& stack{btck_WitnessStack::get(witness_stack)};
-    assert(index < stack.size());
-    // Look up the element once.
-    const auto element = stack[index];
-    return writer(element.data(), element.size(), user_data);
+    const auto& items{btck_WitnessStack::get(witness_stack).items};
+    assert(index < items.size());
+    return writer(items[index].data(), items[index].size(), user_data);
 }
 
 btck_WitnessStack* btck_witness_stack_copy(const btck_WitnessStack* witness_stack)
