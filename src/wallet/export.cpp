@@ -92,7 +92,7 @@ util::Result<std::string> ExportWatchOnlyWallet(const CWallet& wallet, const fs:
             // Parse the descriptor
             FlatSigningProvider dummy_keys;
             std::string dummy_err;
-            std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_info.descriptor, dummy_keys, dummy_err, /*require_checksum=*/true);
+            std::vector<std::unique_ptr<Descriptor>> descs = Parse(desc_info.descriptor, dummy_keys, dummy_err, /*require_checksum=*/true, /*require_sane=*/false);
             CHECK_NONFATAL(descs.size() == 1); // All of our descriptors should be valid, and not multipath
             CHECK_NONFATAL(dummy_keys.keys.size() == 0); // No private keys should be present in our exported descriptors
 

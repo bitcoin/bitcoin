@@ -2320,7 +2320,12 @@ struct KeyParser {
         FlatSigningProvider out_a, out_b;
         const std::optional<CPubKey> pub_a{key_a.GetPubKey(0, provider, out_a)};
         const std::optional<CPubKey> pub_b{key_b.GetPubKey(0, provider, out_b)};
-        if (pub_a && pub_b) return *pub_a < *pub_b;
+        if (pub_a && pub_b) {
+            if (miniscript::IsTapscript(m_script_ctx)) {
+                return XOnlyPubKey{*pub_a} < XOnlyPubKey{*pub_b};
+            }
+            return *pub_a < *pub_b;
+        }
         // Keys that cannot be derived sort before the ones that can, and are compared by their
         // expression so that two different keys are not taken for duplicates.
         if (pub_a.has_value() != pub_b.has_value()) return !pub_a.has_value();
@@ -2399,7 +2404,7 @@ struct KeyParser {
 
 /** Parse a script in a particular context. */
 // NOLINTNEXTLINE(misc-no-recursion)
-std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index, std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
+std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index, std::span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error, bool require_sane = true)
 {
     using namespace script;
     Assume(ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH || ctx == ParseScriptContext::P2WSH || ctx == ParseScriptContext::P2TR);
@@ -2550,7 +2555,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         return {};
     }
     if (ctx == ParseScriptContext::TOP && Func("sh", expr)) {
-        auto descs = ParseScript(key_exp_index, expr, ParseScriptContext::P2SH, out, error);
+        auto descs = ParseScript(key_exp_index, expr, ParseScriptContext::P2SH, out, error, require_sane);
         if (descs.empty() || expr.size()) return {};
         std::vector<std::unique_ptr<DescriptorImpl>> ret;
         ret.reserve(descs.size());
@@ -2563,7 +2568,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
         return {};
     }
     if ((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH) && Func("wsh", expr)) {
-        auto descs = ParseScript(key_exp_index, expr, ParseScriptContext::P2WSH, out, error);
+        auto descs = ParseScript(key_exp_index, expr, ParseScriptContext::P2WSH, out, error, require_sane);
         if (descs.empty() || expr.size()) return {};
         for (auto& desc : descs) {
             ret.emplace_back(std::make_unique<WSHDescriptor>(std::move(desc)));
@@ -2617,7 +2622,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
                 }
                 // Process the actual script expression.
                 auto sarg = Expr(expr);
-                subscripts.emplace_back(ParseScript(key_exp_index, sarg, ParseScriptContext::P2TR, out, error));
+                subscripts.emplace_back(ParseScript(key_exp_index, sarg, ParseScriptContext::P2TR, out, error, require_sane));
                 if (subscripts.back().empty()) return {};
                 max_providers_len = std::max(max_providers_len, subscripts.back().size());
                 depths.push_back(branches.size());
@@ -2752,7 +2757,7 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
                 error = "Miniscript expressions can only be used in wsh or tr.";
                 return {};
             }
-            if (!node->IsSane() || node->IsNotSatisfiable()) {
+            if (!node->IsValidTopLevel() || (require_sane && (!node->IsSane() || node->IsNotSatisfiable()))) {
                 // Try to find the first insane sub for better error reporting.
                 const auto* insane_node = &node.value();
                 if (const auto sub = node->FindInsaneSub()) insane_node = sub;
@@ -2779,13 +2784,12 @@ std::vector<std::unique_ptr<DescriptorImpl>> ParseScript(uint32_t& key_exp_index
             }
             // A signature check is required for a miniscript to be sane. Therefore no sane miniscript
             // may have an empty list of public keys.
-            CHECK_NONFATAL(!parser.m_keys.empty());
+            if (require_sane) CHECK_NONFATAL(!parser.m_keys.empty());
             // Make sure all vecs are of the same length, or exactly length 1
             // For length 1 vectors, clone subdescs until vector is the same length
-            size_t num_multipath = std::max_element(parser.m_keys.begin(), parser.m_keys.end(),
-                    [](const std::vector<std::unique_ptr<PubkeyProvider>>& a, const std::vector<std::unique_ptr<PubkeyProvider>>& b) {
-                        return a.size() < b.size();
-                    })->size();
+            size_t num_multipath = parser.m_keys.empty() ? 1 : std::max_element(parser.m_keys.begin(), parser.m_keys.end(), [](const std::vector<std::unique_ptr<PubkeyProvider>>& a, const std::vector<std::unique_ptr<PubkeyProvider>>& b) {
+                                                                   return a.size() < b.size();
+                                                               })->size();
 
             for (auto& vec : parser.m_keys) {
                 if (vec.size() == 1) {
@@ -3018,12 +3022,12 @@ bool CheckChecksum(std::span<const char>& sp, bool require_checksum, std::string
     return true;
 }
 
-std::vector<std::unique_ptr<Descriptor>> Parse(std::string_view descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum)
+std::vector<std::unique_ptr<Descriptor>> Parse(std::string_view descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum, bool require_sane)
 {
     std::span<const char> sp{descriptor};
     if (!CheckChecksum(sp, require_checksum, error)) return {};
     uint32_t key_exp_index = 0;
-    auto ret = ParseScript(key_exp_index, sp, ParseScriptContext::TOP, out, error);
+    auto ret = ParseScript(key_exp_index, sp, ParseScriptContext::TOP, out, error, require_sane);
     if (sp.empty() && !ret.empty()) {
         std::vector<std::unique_ptr<Descriptor>> descs;
         descs.reserve(ret.size());
