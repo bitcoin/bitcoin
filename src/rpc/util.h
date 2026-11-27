@@ -16,6 +16,7 @@
 #include <univalue.h>
 #include <util/check.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -170,7 +171,7 @@ struct RPCArgOptions {
     std::string oneline_description{};   //!< Should be empty unless it is supposed to override the auto-generated summary line
     std::vector<std::string> type_str{}; //!< Should be empty unless it is supposed to override the auto-generated type strings. Vector length is either 0 or 2, m_opts.type_str.at(0) will override the type of the value in a key-value pair, m_opts.type_str.at(1) will override the type in the argument description.
     bool placeholder{false};             //!< If set, the argument is retained only for compatibility and should generally be omitted.
-    bool hidden{false};                  //!< For testing only
+    bool hidden{false};                  //!< For testing only, or for parameters kept only for backwards compatibility
     bool also_positional{false};         //!< If set allows a named-parameter field in an OBJ_NAMED_PARAM options object
                                          //!< to have the same name as a top-level parameter. By default the RPC
                                          //!< framework disallows this, because if an RPC request passes the value by
@@ -224,6 +225,7 @@ struct RPCArg {
 
     const std::string m_names; //!< The name of the arg (can be empty for inner args, can contain multiple aliases separated by | for named request arguments)
     const Type m_type;
+    const std::vector<Type> m_type_per_name; //!< If not empty, the type of each alias in m_names, in the same order. m_type is the first one.
     const std::vector<RPCArg> m_inner; //!< Only used for arrays or dicts
     const Fallback m_fallback;
     const std::string m_description;
@@ -242,6 +244,26 @@ struct RPCArg {
           m_opts{std::move(opts)}
     {
         CHECK_NONFATAL(type != Type::ARR && type != Type::OBJ && type != Type::OBJ_NAMED_PARAMS && type != Type::OBJ_USER_KEYS);
+    }
+
+    RPCArg(
+        std::string name,
+        std::vector<Type> types,
+        Fallback fallback,
+        std::string description,
+        std::vector<RPCArg> inner = {},
+        RPCArgOptions opts = {})
+        : m_names{std::move(name)},
+          m_type{types.at(0)},
+          m_type_per_name{std::move(types)},
+          m_inner{std::move(inner)},
+          m_fallback{std::move(fallback)},
+          m_description{std::move(description)},
+          m_opts{std::move(opts)}
+    {
+        CHECK_NONFATAL(m_type_per_name.size() == size_t(std::count(m_names.begin(), m_names.end(), '|')) + 1);
+        // Named options are only registered for m_type, the first type.
+        CHECK_NONFATAL(std::count(m_type_per_name.begin() + 1, m_type_per_name.end(), Type::OBJ_NAMED_PARAMS) == 0);
     }
 
     RPCArg(
@@ -265,9 +287,11 @@ struct RPCArg {
 
     /**
      * Check whether the request JSON type matches.
+     * If param_name is set, the parameter was passed by that name and must
+     * have the type declared for it.
      * Returns true if type matches, or object describing error(s) if not.
      */
-    UniValue MatchesType(const UniValue& request) const;
+    UniValue MatchesType(const UniValue& request, const std::optional<std::string>& param_name) const;
 
     /** Return the first of all aliases */
     std::string GetFirstName() const;

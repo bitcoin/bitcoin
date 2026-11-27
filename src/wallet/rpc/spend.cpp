@@ -1637,17 +1637,25 @@ RPCMethod walletprocesspsbt()
         HELP_REQUIRING_PASSPHRASE,
                 {
                     {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction base64 string"},
-                    {"sign", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also sign the transaction when updating (requires wallet to be unlocked)"},
-                    {"sighashtype", RPCArg::Type::STR, RPCArg::DefaultHint{"DEFAULT for Taproot, ALL otherwise"}, "The signature hash type to sign with if not specified by the PSBT. Must be one of\n"
-            "       \"DEFAULT\"\n"
-            "       \"ALL\"\n"
-            "       \"NONE\"\n"
-            "       \"SINGLE\"\n"
-            "       \"ALL|ANYONECANPAY\"\n"
-            "       \"NONE|ANYONECANPAY\"\n"
-            "       \"SINGLE|ANYONECANPAY\""},
-                    {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
-                    {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible"},
+                    {"options|sign", {RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Type::BOOL}, RPCArg::Optional::OMITTED, "",
+                        {
+                            {"sign", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also sign the transaction when updating (requires wallet to be unlocked)", RPCArgOptions{.also_positional = true}},
+                            {"sighashtype", RPCArg::Type::STR, RPCArg::DefaultHint{"DEFAULT for Taproot, ALL otherwise"}, "The signature hash type to sign with if not specified by the PSBT. Must be one of\n"
+                    "       \"DEFAULT\"\n"
+                    "       \"ALL\"\n"
+                    "       \"NONE\"\n"
+                    "       \"SINGLE\"\n"
+                    "       \"ALL|ANYONECANPAY\"\n"
+                    "       \"NONE|ANYONECANPAY\"\n"
+                    "       \"SINGLE|ANYONECANPAY\"",
+                                RPCArgOptions{.also_positional = true}},
+                            {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them", RPCArgOptions{.also_positional = true}},
+                            {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible", RPCArgOptions{.also_positional = true}},
+                        },
+                        RPCArgOptions{.oneline_description="options"}},
+                    {"sighashtype", RPCArg::Type::STR, RPCArg::DefaultHint{"DEFAULT for Taproot, ALL otherwise"}, "for backwards compatibility", RPCArgOptions{.hidden=true}},
+                    {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "for backwards compatibility", RPCArgOptions{.hidden=true}},
+                    {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "for backwards compatibility", RPCArgOptions{.hidden=true}},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -1665,6 +1673,32 @@ RPCMethod walletprocesspsbt()
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
 
+    // Get options, from the options object or from the positional parameters
+    // it replaced, which are still accepted for backwards compatibility
+    const UniValue& options{request.params[1]};
+    if (options.isObject() && request.params.size() > 2) {
+        // Same behaviour as too many args passed normally
+        throw HelpResult{self.ToString()};
+    }
+    bool sign{options.isBool() ? options.get_bool() : true};
+    std::optional<int> nHashType{ParseSighashString(request.params[2])};
+    bool bip32derivs{self.Arg<bool>("bip32derivs")};
+    bool finalize{self.Arg<bool>("finalize")};
+    if (options.isObject()) {
+        RPCTypeCheckObj(options,
+            {
+                {"sign", UniValueType(UniValue::VBOOL)},
+                {"sighashtype", UniValueType(UniValue::VSTR)},
+                {"bip32derivs", UniValueType(UniValue::VBOOL)},
+                {"finalize", UniValueType(UniValue::VBOOL)},
+            },
+            /*fAllowNull=*/true, /*fStrict=*/true);
+        if (!options["sign"].isNull()) sign = options["sign"].get_bool();
+        if (!options["sighashtype"].isNull()) nHashType = ParseSighashString(options["sighashtype"]);
+        if (!options["bip32derivs"].isNull()) bip32derivs = options["bip32derivs"].get_bool();
+        if (!options["finalize"].isNull()) finalize = options["finalize"].get_bool();
+    }
+
     const CWallet& wallet{*pwallet};
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -1677,13 +1711,7 @@ RPCMethod walletprocesspsbt()
     }
     PartiallySignedTransaction psbtx = *psbt_res;
 
-    // Get the sighash type
-    std::optional<int> nHashType = ParseSighashString(request.params[2]);
-
     // Fill transaction with our data and also sign
-    const bool sign{self.Arg<bool>("sign")};
-    const bool bip32derivs{self.Arg<bool>("bip32derivs")};
-    const bool finalize{self.Arg<bool>("finalize")};
     bool complete = true;
 
     if (sign) EnsureWalletIsUnlocked(*pwallet);

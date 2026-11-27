@@ -249,6 +249,7 @@ static RPCMethod getrpcinfo()
 
 namespace {
 UniValue OpenRPCArgSchema(const RPCArg& arg, bool include_hidden, bool in_skip_type_check);
+UniValue OpenRPCTypeSchema(const RPCArg& arg, RPCArg::Type type, bool include_hidden, bool in_skip_type_check);
 UniValue OpenRPCResultSchema(const RPCResult& result);
 
 UniValue MakeObject(std::initializer_list<std::pair<std::string, UniValue>> entries)
@@ -355,7 +356,31 @@ UniValue OpenRPCArgSchema(const RPCArg& arg, bool include_hidden, bool in_skip_t
         return schema;
     }
 
-    switch (arg.m_type) {
+    if (arg.m_type_per_name.size() > 1) {
+        // Accept the type declared for any of the argument's names
+        UniValue one_of{UniValue::VARR};
+        std::unordered_set<std::string> seen;
+        for (const RPCArg::Type type : arg.m_type_per_name) {
+            PushUniqueSchema(one_of, seen, OpenRPCTypeSchema(arg, type, include_hidden, in_skip_type_check));
+        }
+        if (one_of.size() == 1) {
+            schema = one_of[0];
+        } else {
+            schema.pushKV("oneOf", std::move(one_of));
+        }
+    } else {
+        schema = OpenRPCTypeSchema(arg, arg.m_type, include_hidden, in_skip_type_check);
+    }
+    ApplyTypeStrOverride(schema, arg);
+    ApplyArgFallback(schema, arg);
+    return schema;
+}
+
+// NOLINTNEXTLINE(misc-no-recursion)
+UniValue OpenRPCTypeSchema(const RPCArg& arg, RPCArg::Type type, bool include_hidden, bool in_skip_type_check)
+{
+    UniValue schema{UniValue::VOBJ};
+    switch (type) {
     case RPCArg::Type::STR:
         schema = MakeObject({{"type", "string"}});
         break;
@@ -429,8 +454,6 @@ UniValue OpenRPCArgSchema(const RPCArg& arg, bool include_hidden, bool in_skip_t
         break;
     }
     } // no default case, so the compiler can warn about missing cases
-    ApplyTypeStrOverride(schema, arg);
-    ApplyArgFallback(schema, arg);
     return schema;
 }
 
@@ -768,12 +791,28 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
     int initial_hole_size = 0;
     const std::string* initial_param = nullptr;
     UniValue options{UniValue::VOBJ};
+    // A named-only option that a positional parameter also accepts by the same
+    // name (RPCArgOptions::also_positional) is passed to that parameter instead
+    // of the options object when positional arguments from "args" already take
+    // the options object's position. This keeps calls that mix positional and
+    // named arguments working after positional parameters were moved into an
+    // options object.
+    const auto args_it{argsIn.find("args")};
+    const size_t num_positional{args_it != argsIn.end() && args_it->second->isArray() ? args_it->second->size() : 0};
+    std::set<std::string> positional_names;
+    for (const auto& [argNamePattern, named_only] : argNames) {
+        if (named_only) continue;
+        for (const std::string& name : SplitString(argNamePattern, '|')) positional_names.insert(name);
+    }
+    size_t position{0};
     for (const auto& [argNamePattern, named_only]: argNames) {
         std::vector<std::string> vargNames = SplitString(argNamePattern, '|');
         auto fr = argsIn.end();
+        std::string fr_name;
         for (const std::string & argName : vargNames) {
             fr = argsIn.find(argName);
             if (fr != argsIn.end()) {
+                fr_name = argName;
                 break;
             }
         }
@@ -783,6 +822,7 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
         // positional argument.
         if (named_only) {
             if (fr != argsIn.end()) {
+                if (position < num_positional && positional_names.contains(fr->first)) continue;
                 if (options.exists(fr->first)) {
                     throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter " + fr->first + " specified multiple times");
                 }
@@ -798,6 +838,7 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
                 // but not at the end (for backwards compatibility with calls
                 // that act based on number of specified parameters).
                 out.params.push_back(UniValue());
+                out.param_names.emplace_back(std::nullopt);
             }
             hole = 0;
             if (!initial_param) initial_param = &argNamePattern;
@@ -814,12 +855,16 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Parameter " + fr->first + " conflicts with parameter " + options.getKeys().front());
             }
             out.params.push_back(*fr->second);
+            out.param_names.emplace_back(fr_name);
             argsIn.erase(fr);
         }
         if (!options.empty()) {
             out.params.push_back(std::move(options));
+            // Not passed under a name of this parameter, so not checked by name
+            out.param_names.emplace_back(std::nullopt);
             options = UniValue{UniValue::VOBJ};
         }
+        ++position;
     }
     // If leftover "args" param was found, use it as a source of positional
     // arguments and add named arguments after. This is a convenience for
