@@ -27,6 +27,7 @@
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
 #include <test/util/txmempool.h>
+#include <test/util/validation.h>
 #include <txmempool.h>
 #include <util/check.h>
 #include <util/string.h>
@@ -302,6 +303,8 @@ FUZZ_TARGET(tx_pool_standard, .init = initialize_tx_pool_standard)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const auto& node = g_setup->m_node;
     auto& chainstate{static_cast<DummyChainState&>(node.chainman->ActiveChainstate())};
+    auto& chainman{static_cast<TestChainstateManager&>(*node.chainman)};
+    chainman.DisableNextWrite();
 
     MockTime(fuzzed_data_provider, chainstate);
 
@@ -492,6 +495,8 @@ FUZZ_TARGET(tx_pool, .init = initialize_tx_pool)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const auto& node = g_setup->m_node;
     auto& chainstate{static_cast<DummyChainState&>(node.chainman->ActiveChainstate())};
+    auto& chainman{static_cast<TestChainstateManager&>(*node.chainman)};
+    chainman.DisableNextWrite();
 
     MockTime(fuzzed_data_provider, chainstate);
 

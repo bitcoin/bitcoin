@@ -14,6 +14,7 @@
 #include <test/fuzz/util/reachability.h>
 #include <test/util/setup_common.h>
 #include <test/util/txmempool.h>
+#include <test/util/validation.h>
 #include <txmempool.h>
 #include <util/check.h>
 #include <util/time.h>
@@ -52,6 +53,8 @@ FUZZ_TARGET(validation_load_mempool, .init = initialize_validation_load_mempool)
     Assert(error.empty());
 
     auto& chainstate{static_cast<DummyChainState&>(g_setup->m_node.chainman->ActiveChainstate())};
+    auto& chainman{static_cast<TestChainstateManager&>(*g_setup->m_node.chainman)};
+    chainman.DisableNextWrite();
     chainstate.SetMempool(&pool);
 
     auto fuzzed_fopen = [&](const fs::path&, const char*) {
