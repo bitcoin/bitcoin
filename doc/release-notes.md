@@ -40,9 +40,19 @@ unsupported systems.
 Notable changes
 ===============
 
+### Net
+
+- #36818 seeds: drop 21.ninja as a makeseeds source
+
 ### Build
 
+- #35765 depends: keep local source archives in WORK_PATH
 - #36889 cmake: Switch include_directories -> target_include_directories
+- #36927 build: remove *dev* errors from dev-mode
+
+### Doc
+
+- #36957 doc: add 389 (multipath) and 394 (rawtr) to bips.md
 
 ### Misc
 
@@ -53,7 +63,11 @@ Credits
 
 Thanks to everyone who directly contributed to this release:
 
+- 0xB10C
+- fanquake
 - hebasto
+- jeanpablo
+- Ryan Ofsky
 
 As well as to everyone that helped with translations on
 [Transifex](https://explore.transifex.com/bitcoin/bitcoin/).
