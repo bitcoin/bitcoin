@@ -11,6 +11,7 @@
 #include <consensus/validation.h>
 #include <crypto/hex_base.h>
 #include <key_io.h>
+#include <policy/feerate.h>
 #include <prevector.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -34,6 +35,7 @@
 #include <algorithm>
 #include <compare>
 #include <cstdint>
+#include <cstdlib>
 #include <exception>
 #include <functional>
 #include <map>
@@ -291,6 +293,22 @@ UniValue ValueFromAmount(const CAmount amount)
     }
     return UniValue(UniValue::VNUM,
             strprintf("%s%d.%08d", amount < 0 ? "-" : "", quotient, remainder));
+}
+
+UniValue ValueFromFeeRate(const CFeeRate& fee_rate, FeeRateFormat fee_rate_unit)
+{
+    const auto format_feerate = [sat_per_kvb = fee_rate.GetFeePerK()](CAmount divisor, int decimals) {
+        const char* sign{sat_per_kvb < 0 ? "-" : ""};
+        const CAmount quotient{std::abs(sat_per_kvb / divisor)};
+        const CAmount remainder{std::abs(sat_per_kvb % divisor)};
+        return UniValue{UniValue::VNUM, strprintf("%s%d.%0*d", sign, quotient, decimals, remainder)};
+    };
+
+    switch (fee_rate_unit) {
+    case FeeRateFormat::BTC_KVB: return format_feerate(COIN, 8);
+    case FeeRateFormat::SAT_VB: return format_feerate(1000, 3);
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 std::string FormatScript(const CScript& script)
