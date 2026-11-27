@@ -924,6 +924,9 @@ enum class SnapshotCompletionResult {
     // The UTXO set hash of the validated chainstate does not match the one
     // expected by assumeutxo chainparams.
     HASH_MISMATCH,
+
+    // UTXO hashing was interrupted.
+    INTERRUPTED,
 };
 
 /**
@@ -954,6 +957,9 @@ private:
     CBlockIndex* m_last_notified_header GUARDED_BY(GetMutex()){nullptr};
 
     bool NotifyHeaderTip() LOCKS_EXCLUDED(GetMutex());
+
+    //! Compute and verify the UTXO hash, logging the result.
+    [[nodiscard]] SnapshotCompletionResult VerifyAssumeutxoData(const CCoinsViewDB& coins_db, const AssumeutxoHash& expected_hash);
 
     //! Internal helper for ActivateSnapshot().
     //!
