@@ -5,12 +5,12 @@
 """
 A test for RPC users with restricted permissions
 """
+from test_framework.netutil import HTTPConnection
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     str_to_b64str,
 )
-import http.client
 import json
 import urllib.parse
 
@@ -19,7 +19,7 @@ def rpccall(node, user, method, *, batch=False):
     url = urllib.parse.urlparse(node.url)
     headers = {"Authorization": "Basic " + str_to_b64str('{}:{}'.format(user[0], user[3]))}
     request = {"method": method}
-    conn = http.client.HTTPConnection(url.hostname, url.port, timeout=node.rpc_timeout)
+    conn = HTTPConnection(url.hostname, url.port, timeout=node.rpc_timeout)
     conn.connect()
     conn.request('POST', '/', json.dumps([request] if batch else request), headers)
     resp = conn.getresponse()
