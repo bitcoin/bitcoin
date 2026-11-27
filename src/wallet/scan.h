@@ -6,11 +6,13 @@
 #define BITCOIN_WALLET_SCAN_H
 
 #include <uint256.h>
+#include <util/expected.h>
 #include <util/time.h>
 
 #include <atomic>
 #include <functional>
 #include <optional>
+#include <vector>
 
 namespace wallet {
 class CWallet;
@@ -64,23 +66,49 @@ private:
     std::atomic<SteadyClock::time_point> m_scanning_start{SteadyClock::time_point{}};
     std::atomic<double> m_scanning_progress{0};
 
-    //! Progress window and tip tracked across Scan loop iterations. The
-    //! current block's progress is a plain local in Scan; only the window
-    //! bounds are shared with the helpers, and UpdateTipIfChanged is the
-    //! sole mutator.
-    struct LoopState {
-        double progress_begin{0};
-        double progress_end{0};
-        uint256 tip_hash;
+public:
+    //! A block queued for filtering and scanning.
+    struct QueuedBlock {
+        uint256 hash;
+        int height;
     };
 
-    //! Locate block_hash in the chain, queueing its active-chain successor
-    //! into next_block if it exists and is within the scan range. Returns
-    //! whether the block itself is still in the active chain.
-    bool QueueNextBlock(const uint256& block_hash, int block_height, std::optional<std::pair<uint256, int>>& next_block, std::optional<int> max_height);
-    bool ScanBlock(const uint256& block_hash, int block_height, bool save_progress);
-    void UpdateProgress(const LoopState& state, double progress_current, int block_height);
-    void UpdateTipIfChanged(LoopState& state);
+private:
+    enum class ScanBlockError {
+        //! The block data could not be read (e.g. pruned or corrupt).
+        READ_FAILED,
+        //! The block left the active chain, so its transactions were not synced.
+        NOT_ACTIVE,
+    };
+
+    //! State of a single Scan() call, local to Scan() and passed through the
+    //! scan helpers. Defined in scan.cpp.
+    struct ScanContext;
+
+    //! Consume ctx.next_block and queue its active-chain successor into
+    //! ctx.next_block if it exists and is within the scan range.
+    std::optional<QueuedBlock> ReadNextBlock(ScanContext& ctx);
+    //! The active-chain successor of a block, if it exists and is within range.
+    std::optional<QueuedBlock> FindNextBlock(const ScanContext& ctx, const uint256& block_hash, int block_height);
+    //! Record a block skipped by the filter as the most recent successfully
+    //! scanned block, and set ctx.done if it is at the wallet's tip.
+    void RecordSkipped(ScanContext& ctx, const QueuedBlock& block);
+    //! Set ctx.done once a processed block reaches the wallet's tip.
+    void StopAtWalletTip(ScanContext& ctx, int block_height);
+    //! Read and filter the next block, recording a skipped block as scanned.
+    //! @return the block to scan, if any
+    std::vector<QueuedBlock> NextBlocksSerial(ScanContext& ctx);
+    //! Read and filter the next blocks on ctx.checker, recording skipped
+    //! blocks as scanned.
+    //! @return the blocks to scan
+    std::vector<QueuedBlock> NextBlocksParallel(ScanContext& ctx);
+    //! Whether blocks remain to be read or delivered by the filter checker.
+    static bool HasPendingBlocks(const ScanContext& ctx);
+    //! Read a block and sync its transactions as confirmed in it.
+    //! May be called with or without cs_wallet held.
+    util::Expected<void, ScanBlockError> ScanBlock(const uint256& block_hash, int block_height, bool save_progress);
+    void UpdateProgress(const ScanContext& ctx, int block_height);
+    void UpdateTipIfChanged(ScanContext& ctx);
 
     //! Only WalletRescanReserver may reserve and release scans, so that
     //! reservations are always managed RAII-style.

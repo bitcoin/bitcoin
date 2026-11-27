@@ -2853,6 +2853,15 @@ bool CWallet::LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContex
     wallet->m_notify_tx_changed_script = args.GetArg("-walletnotify", "");
     wallet->SetBroadcastTransactions(args.GetBoolArg("-walletbroadcast", DEFAULT_WALLETBROADCAST));
 
+    int64_t wallet_par{args.GetIntArg("-walletpar", DEFAULT_WALLETPAR)};
+    if (wallet_par <= 0) {
+        // '0' means 'autodetect'
+        // '<0' means leave that many cores free
+        wallet_par += GetNumCores();
+    }
+    // The calling thread counts towards -walletpar, as for -par.
+    wallet->m_wallet_par = static_cast<int>(std::clamp<int64_t>(wallet_par, 1, MAX_WALLETPAR + 1));
+
     return true;
 }
 
