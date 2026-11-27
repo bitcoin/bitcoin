@@ -1299,21 +1299,20 @@ static RPCMethod getorphantxs()
         "Shows transactions in the tx orphanage.\n"
         "\nEXPERIMENTAL warning: this call may be changed in future releases.\n",
         {
-            {"verbosity", RPCArg::Type::NUM, RPCArg::Default{0}, "0 for an array of txids (may contain duplicates), 1 for an array of objects with tx details, and 2 for details from (1) and tx hex",
-             RPCArgOptions{.skip_type_check = true}},
+            {"verbosity", RPCArg::Type::NUM, RPCArg::Default{0}, "0 for an array of txids (may contain duplicates), 1 for an array of objects with tx details, and 2 for details from (1) and tx hex"},
         },
         {
-            RPCResult{"for verbose = 0",
+            RPCResult{"for verbosity = 0",
                 RPCResult::Type::ARR, "", "",
                 {
                     {RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
                 }},
-            RPCResult{"for verbose = 1",
+            RPCResult{"for verbosity = 1",
                 RPCResult::Type::ARR, "", "",
                 {
                     {RPCResult::Type::OBJ, "", "", OrphanDescription()},
                 }},
-            RPCResult{"for verbose = 2",
+            RPCResult{"for verbosity = 2",
                 RPCResult::Type::ARR, "", "",
                 {
                     {RPCResult::Type::OBJ, "", "",
@@ -1334,7 +1333,7 @@ static RPCMethod getorphantxs()
             PeerManager& peerman = EnsurePeerman(node);
             std::vector<node::TxOrphanage::OrphanInfo> orphanage = peerman.GetOrphanTransactions();
 
-            int verbosity{ParseVerbosity(request.params[0], /*default_verbosity=*/0, /*allow_bool=*/false)};
+            int verbosity{self.Arg<int>("verbosity")};
 
             UniValue ret(UniValue::VARR);
 
