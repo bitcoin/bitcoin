@@ -4,8 +4,12 @@
 
 #include <consensus/amount.h>
 #include <policy/feerate.h>
+#include <streams.h>
+#include <test/util/common.h>
 
+#include <ios>
 #include <limits>
+#include <utility>
 
 #include <boost/test/unit_test.hpp>
 
@@ -176,6 +180,28 @@ BOOST_AUTO_TEST_CASE(ToStringTest)
     feeRate = CFeeRate(-COIN - 1);
     BOOST_CHECK_EQUAL(feeRate.ToString(), "-1.00000001 BTC/kvB");
     BOOST_CHECK_EQUAL(feeRate.ToString(FeeRateFormat::SAT_VB), "-100000.001 sat/vB");
+}
+
+BOOST_AUTO_TEST_CASE(SerializeTest)
+{
+    // Values the constructors produce round-trip unchanged.
+    for (const CFeeRate& feerate : {CFeeRate{}, CFeeRate{1000}, CFeeRate{-1000}, CFeeRate{CAmount{5}, 3}}) {
+        DataStream stream;
+        stream << feerate;
+        CFeeRate result{1};
+        stream >> result;
+        BOOST_CHECK(result.GetFeePerVSize() == feerate.GetFeePerVSize());
+        BOOST_CHECK(stream.empty());
+    }
+
+    // Values the constructors cannot produce are rejected instead of reaching
+    // FeeFrac::EvaluateFee with a non-positive size.
+    for (const auto& [fee, size] : {std::pair<int64_t, int32_t>{1000, -1}, {0, -1}, {5, 0}, {-5, 0}}) {
+        DataStream stream;
+        stream << fee << size;
+        CFeeRate result;
+        BOOST_CHECK_EXCEPTION(stream >> result, std::ios_base::failure, HasReason{"CFeeRate::Unserialize: invalid fee and size"});
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
