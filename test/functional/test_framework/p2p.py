@@ -273,8 +273,9 @@ class P2PConnection(asyncio.Protocol):
         `connection_made()`. The rest of the initial v2 handshake functions are handled here.
         """
         if not self.v2_state.peer:
-            if not self.v2_state.initiating and not self.v2_state.sent_garbage:
-                # if the responder hasn't sent garbage yet, the responder is still reading ellswift bytes
+            if not self.v2_state.initiating and self.v2_state.ellswift_ours is None:
+                # if the responder hasn't sent its ellswift bytes yet, the responder is still reading ellswift bytes
+                # (sent_garbage can't be used for this check, as the garbage may be empty)
                 # reads ellswift bytes till the first mismatch from 12 bytes V1_PREFIX
                 length, send_handshake_bytes = self.v2_state.respond_v2_handshake(BytesIO(self.recvbuf))
                 self.recvbuf = self.recvbuf[length:]
@@ -356,12 +357,11 @@ class P2PConnection(asyncio.Protocol):
                         msg = msg[1:]
                 else:
                     # v1 P2P messages are read
-                    if len(self.recvbuf) < 4:
+                    # Like bitcoind, wait for the full header before checking the magic bytes
+                    if len(self.recvbuf) < 4 + 12 + 4 + 4:
                         return
                     if self.recvbuf[:4] != self.magic_bytes:
                         raise ValueError("magic bytes mismatch: {} != {}".format(repr(self.magic_bytes), repr(self.recvbuf)))
-                    if len(self.recvbuf) < 4 + 12 + 4 + 4:
-                        return
                     msgtype = self.recvbuf[4:4+12].split(b"\x00", 1)[0]
                     msglen = struct.unpack("<i", self.recvbuf[4+12:4+12+4])[0]
                     checksum = self.recvbuf[4+12+4:4+12+4+4]
