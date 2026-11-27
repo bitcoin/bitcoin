@@ -308,6 +308,9 @@ void SQLiteDatabase::Open(int additional_flags)
         SetPragma(m_db, "synchronous", "OFF", "Failed to set synchronous mode to OFF");
     }
 
+    // Enable secure_delete
+    SetPragma(m_db, "secure_delete", "ON", "Failed to enable secure_delete");
+
     // Make the table for our key-value pairs
     // First check that the main table exists
     sqlite3_stmt* check_main_stmt{nullptr};
@@ -344,13 +347,6 @@ void SQLiteDatabase::Open(int additional_flags)
         SetPragma(m_db, "user_version", strprintf("%d", WALLET_SCHEMA_VERSION),
                   "Failed to set the wallet schema version");
     }
-}
-
-bool SQLiteDatabase::Rewrite()
-{
-    // Rewrite the database using the VACUUM command: https://sqlite.org/lang_vacuum.html
-    int ret = sqlite3_exec(m_db, "VACUUM", nullptr, nullptr, nullptr);
-    return ret == SQLITE_OK;
 }
 
 bool SQLiteDatabase::Backup(const std::string& dest) const
