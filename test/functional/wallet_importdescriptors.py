@@ -269,6 +269,20 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                 assert_equal(e.error["code"], -1)
                 assert_equal(e.error["message"], "Rescan aborted by user.")
 
+        self.log.info("Shutting down during an importdescriptors rescan should fail the RPC call")
+        wallet_name = "shutdown_import_wallet"
+        self.nodes[0].createwallet(wallet_name, blank=True)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as thread:
+            w_import = self.nodes[0].create_new_rpc_connection(mode="AUTHPROXY") / f"wallet/{wallet_name}"
+            with self.nodes[0].assert_debug_log(["method=importdescriptors"], timeout=30):
+                importing = thread.submit(w_import.importdescriptors, slow_desc)
+            self.stop_node(0)
+            assert_raises_rpc_error(-1, "Rescan aborted by user.", importing.result, timeout=30 * self.options.timeout_factor)
+
+        self.start_node(0)
+        self.connect_nodes(0, 1)
+
     def test_musig_private_key_warnings(self, xprv1, acc_xprv2, acc_xpub2, derivation_path):
         self.log.info("Testing importdescriptors MuSig private key warnings")
 
