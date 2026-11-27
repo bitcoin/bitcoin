@@ -189,31 +189,14 @@ BOOST_AUTO_TEST_CASE(varints_bitpatterns)
 BOOST_AUTO_TEST_CASE(compactsize)
 {
     DataStream ss{};
-    std::vector<char>::size_type i, j;
-
-    for (i = 1; i <= MAX_SIZE; i *= 2)
-    {
-        WriteCompactSize(ss, i-1);
+    for (uint64_t i = 1; i <= MAX_SIZE; i *= 2) {
+        WriteCompactSize(ss, i - 1);
         WriteCompactSize(ss, i);
     }
-    for (i = 1; i <= MAX_SIZE; i *= 2)
-    {
-        j = ReadCompactSize(ss);
-        BOOST_CHECK_MESSAGE((i-1) == j, "decoded:" << j << " expected:" << (i-1));
-        j = ReadCompactSize(ss);
-        BOOST_CHECK_MESSAGE(i == j, "decoded:" << j << " expected:" << i);
+    for (uint64_t i = 1; i <= MAX_SIZE; i *= 2) {
+        BOOST_CHECK_EQUAL(ReadCompactSize(ss), i - 1);
+        BOOST_CHECK_EQUAL(ReadCompactSize(ss), i);
     }
-}
-
-static bool isCanonicalException(const std::ios_base::failure& ex)
-{
-    std::ios_base::failure expectedException("non-canonical ReadCompactSize()");
-
-    // The string returned by what() can be different for different platforms.
-    // Instead of directly comparing the ex.what() with an expected string,
-    // create an instance of exception to see if ex.what() matches
-    // the expected explanatory string returned by the exception instance.
-    return strcmp(expectedException.what(), ex.what()) == 0;
 }
 
 BOOST_AUTO_TEST_CASE(vector_bool)
@@ -235,12 +218,27 @@ BOOST_AUTO_TEST_CASE(array)
     BOOST_CHECK(array1 == array2);
 }
 
+BOOST_AUTO_TEST_CASE(compactsize_value_range)
+{
+    const auto ser_deser = [](uint64_t value, bool range_check = true) {
+        DataStream ss{};
+        WriteCompactSize(ss, value);
+        return ReadCompactSize(ss, range_check);
+    };
+
+    BOOST_CHECK_EQUAL(ser_deser(MAX_SIZE), MAX_SIZE);
+    for (const uint64_t value : {MAX_SIZE + 1, std::numeric_limits<uint64_t>::max()}) {
+        BOOST_CHECK_EXCEPTION(ser_deser(value), std::ios_base::failure, HasReason{"ReadCompactSize(): size too large"});
+        BOOST_CHECK_EQUAL(ser_deser(value, /*range_check=*/false), value);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(noncanonical)
 {
+    const HasReason isCanonicalException{"non-canonical ReadCompactSize()"};
     // Write some non-canonical CompactSize encodings, and
     // make sure an exception is thrown when read back.
     DataStream ss{};
-    std::vector<char>::size_type n;
 
     // zero encoded with three bytes:
     ss << std::span{"\xfd\x00\x00"}.first(3);
@@ -252,8 +250,7 @@ BOOST_AUTO_TEST_CASE(noncanonical)
 
     // 0xfd encoded with three bytes is OK:
     ss << std::span{"\xfd\xfd\x00"}.first(3);
-    n = ReadCompactSize(ss);
-    BOOST_CHECK(n == 0xfd);
+    BOOST_CHECK_EQUAL(ReadCompactSize(ss), 0xfd);
 
     // zero encoded with five bytes:
     ss << std::span{"\xfe\x00\x00\x00\x00"}.first(5);
