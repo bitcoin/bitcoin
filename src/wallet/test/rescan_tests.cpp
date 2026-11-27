@@ -23,7 +23,7 @@
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <cassert>
 #include <chrono>

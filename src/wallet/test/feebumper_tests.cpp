@@ -11,7 +11,7 @@
 #include <wallet/test/util.h>
 #include <wallet/test/wallet_test_fixture.h>
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 namespace wallet {
 namespace feebumper {

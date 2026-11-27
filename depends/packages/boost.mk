@@ -4,15 +4,8 @@ $(package)_download_path = https://github.com/boostorg/boost/releases/download/b
 $(package)_file_name = boost-$($(package)_version)-cmake.tar.gz
 $(package)_sha256_hash = f51707c27359a0df0cac1beada86de31bb5eed5e8285592dadec384df99c2984
 $(package)_build_subdir = build
-$(package)_patches += drop_wcrtomb_wchar_t.patch
-
-define $(package)_preprocess_cmds
-  patch -p1 < $($(package)_patch_dir)/drop_wcrtomb_wchar_t.patch
-endef
-
 define $(package)_set_vars
-  $(package)_config_opts = -DBOOST_INCLUDE_LIBRARIES="multi_index;test"
-  $(package)_config_opts += -DBOOST_TEST_HEADERS_ONLY=ON
+  $(package)_config_opts = -DBOOST_INCLUDE_LIBRARIES="multi_index"
   $(package)_config_opts += -DBOOST_ENABLE_MPI=OFF
   $(package)_config_opts += -DBOOST_ENABLE_PYTHON=OFF
   $(package)_config_opts += -DBOOST_INSTALL_LAYOUT=system

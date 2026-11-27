@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/license/mit.
 
-#include <boost/test/unit_test.hpp>
+#include <test/util/framework.h>
 
 #include <map>
 #include <string>
