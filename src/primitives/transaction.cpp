@@ -23,18 +23,17 @@ std::string COutPoint::ToString() const
     return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10), n);
 }
 
-CTxIn::CTxIn(COutPoint prevoutIn, CScript scriptSigIn, uint32_t nSequenceIn)
+CTxIn::CTxIn(COutPoint prevoutIn, CScript scriptSigIn, uint32_t nSequenceIn, CScriptWitness scriptWitnessIn)
+    : prevout{std::move(prevoutIn)},
+      scriptSig{std::move(scriptSigIn)},
+      nSequence{nSequenceIn},
+      scriptWitness{std::move(scriptWitnessIn)}
 {
-    prevout = prevoutIn;
-    scriptSig = scriptSigIn;
-    nSequence = nSequenceIn;
 }
 
-CTxIn::CTxIn(Txid hashPrevTx, uint32_t nOut, CScript scriptSigIn, uint32_t nSequenceIn)
+CTxIn::CTxIn(Txid hashPrevTx, uint32_t nOut, CScript scriptSigIn, uint32_t nSequenceIn, CScriptWitness scriptWitnessIn)
+    : CTxIn{COutPoint{hashPrevTx, nOut}, std::move(scriptSigIn), nSequenceIn, std::move(scriptWitnessIn)}
 {
-    prevout = COutPoint(hashPrevTx, nOut);
-    scriptSig = scriptSigIn;
-    nSequence = nSequenceIn;
 }
 
 std::string CTxIn::ToString() const
@@ -92,8 +91,26 @@ Wtxid CTransaction::ComputeWitnessHash() const
     return Wtxid::FromUint256((HashWriter{} << TX_WITH_WITNESS(*this)).GetHash());
 }
 
-CTransaction::CTransaction(const CMutableTransaction& tx) : vin(tx.vin), vout(tx.vout), version{tx.version}, nLockTime{tx.nLockTime}, m_has_witness{ComputeHasWitness()}, hash{ComputeHash()}, m_witness_hash{ComputeWitnessHash()} {}
-CTransaction::CTransaction(CMutableTransaction&& tx) : vin(std::move(tx.vin)), vout(std::move(tx.vout)), version{tx.version}, nLockTime{tx.nLockTime}, m_has_witness{ComputeHasWitness()}, hash{ComputeHash()}, m_witness_hash{ComputeWitnessHash()} {}
+CTransaction::CTransaction(std::vector<CTxIn> inputs, std::vector<CTxOut> outputs, uint32_t version, uint32_t locktime)
+    : vin(std::move(inputs)),
+      vout(std::move(outputs)),
+      version{version},
+      nLockTime{locktime},
+      m_has_witness{ComputeHasWitness()},
+      hash{ComputeHash()},
+      m_witness_hash{ComputeWitnessHash()}
+{
+}
+
+CTransaction::CTransaction(const CMutableTransaction& tx)
+    : CTransaction{tx.vin, tx.vout, tx.version, tx.nLockTime}
+{
+}
+
+CTransaction::CTransaction(CMutableTransaction&& tx)
+    : CTransaction{std::move(tx.vin), std::move(tx.vout), tx.version, tx.nLockTime}
+{
+}
 
 CAmount CTransaction::GetValueOut() const
 {

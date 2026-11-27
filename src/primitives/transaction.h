@@ -119,8 +119,8 @@ public:
         nSequence = SEQUENCE_FINAL;
     }
 
-    explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
-    CTxIn(Txid hashPrevTx, uint32_t nOut, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
+    explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn = {}, uint32_t nSequenceIn = SEQUENCE_FINAL, CScriptWitness scriptWitnessIn = {});
+    CTxIn(Txid hashPrevTx, uint32_t nOut, CScript scriptSigIn = {}, uint32_t nSequenceIn = SEQUENCE_FINAL, CScriptWitness scriptWitnessIn = {});
 
     SERIALIZE_METHODS(CTxIn, obj) { READWRITE(obj.prevout, obj.scriptSig, obj.nSequence); }
 
@@ -311,6 +311,8 @@ private:
     bool ComputeHasWitness() const;
 
 public:
+    CTransaction(std::vector<CTxIn> inputs, std::vector<CTxOut> outputs, uint32_t version = CURRENT_VERSION, uint32_t locktime = 0);
+
     /** Convert a CMutableTransaction into a CTransaction. */
     explicit CTransaction(const CMutableTransaction& tx);
     explicit CTransaction(CMutableTransaction&& tx);
