@@ -12,6 +12,8 @@
 #include <serialize.h>
 #include <span.h>
 
+#include <ios>
+
 /**
  * This saves us from making many heap allocations when serializing
  * and deserializing compressed scripts.
@@ -23,9 +25,9 @@
 using CompressedScript = prevector<33, unsigned char>;
 
 
-bool CompressScript(const CScript& script, CompressedScript& out);
+[[nodiscard]] bool CompressScript(const CScript& script, CompressedScript& out);
 unsigned int GetSpecialScriptSize(unsigned int nSize);
-bool DecompressScript(CScript& script, unsigned int nSize, const CompressedScript& in);
+[[nodiscard]] bool DecompressScript(CScript& script, unsigned int nSize, const CompressedScript& in);
 
 /**
  * Compress amount.
@@ -80,7 +82,9 @@ struct ScriptCompression
         if (nSize < nSpecialScripts) {
             CompressedScript vch(GetSpecialScriptSize(nSize), 0x00);
             s >> std::span{vch};
-            DecompressScript(script, nSize, vch);
+            if (!DecompressScript(script, nSize, vch)) {
+                throw std::ios_base::failure("Non-decodable compressed script");
+            }
             return;
         }
         nSize -= nSpecialScripts;
