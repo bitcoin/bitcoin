@@ -174,7 +174,6 @@ public:
     };
 
     CCoinsCacheEntry() noexcept = default;
-    explicit CCoinsCacheEntry(Coin&& coin_) noexcept : coin(std::move(coin_)) {}
     ~CCoinsCacheEntry()
     {
         SetClean();
@@ -226,9 +225,6 @@ public:
  * Missing-input lookups may contain arbitrary claimed prevouts, but FetchCoin() immediately
  * erases their temporary entries when the backend lookup fails, so non-hash keys cannot
  * accumulate.
- *
- * The assumeutxo loader assumes snapshot txids are valid while loading and verifies the
- * complete snapshot's content hash before activation.
  *
  * Hash values are process-local and must not be persisted, serialized, or compared across
  * processes.
@@ -438,9 +434,8 @@ class CCoinsViewCache : public CCoinsViewBacked
 private:
     const bool m_deterministic;
 
-    //! Force a reallocation of the cache map. This is required when downsizing
-    //! the cache because the map's allocator may be hanging onto a lot of
-    //! memory despite having called .clear().
+    //! Force a reallocation of the cache map, because the map's allocator may be
+    //! hanging onto a lot of memory despite having called .clear().
     //!
     //! See: https://stackoverflow.com/questions/42114044/how-to-release-unordered-map-memory
     void ReallocateCache();
@@ -516,15 +511,6 @@ public:
      * already exist in the cache.
      */
     void AddCoin(const COutPoint& outpoint, Coin&& coin, bool possible_overwrite);
-
-    /**
-     * Emplace a coin into cacheCoins without performing any checks, marking
-     * the emplaced coin as dirty.
-     *
-     * NOT FOR GENERAL USE. Used only when loading coins from a UTXO snapshot.
-     * @sa ChainstateManager::PopulateAndValidateSnapshot()
-     */
-    void EmplaceCoinInternalDANGER(const COutPoint& outpoint, Coin&& coin);
 
     /**
      * Spend a coin. Pass moveto in order to get the deleted data.

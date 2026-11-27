@@ -9,7 +9,6 @@
 #include <consensus/validation.h>
 #include <kernel/mempool_entry.h>
 #include <kernel/mempool_removal_reason.h>
-#include <kernel/types.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <util/check.h>
@@ -20,8 +19,6 @@
 #include <memory>
 #include <unordered_map>
 #include <utility>
-
-using kernel::ChainstateRole;
 
 /**
  * ValidationSignalsImpl manages a list of shared_ptr<CValidationInterface> callbacks.
@@ -219,13 +216,13 @@ void ValidationSignals::TransactionRemovedFromMempool(const CTransactionRef& tx,
     ENQUEUE_AND_LOG_EVENT(std::move(event), std::move(log_msg));
 }
 
-void ValidationSignals::BlockConnected(const ChainstateRole& role, std::shared_ptr<const CBlock> pblock, const CBlockIndex* pindex)
+void ValidationSignals::BlockConnected(std::shared_ptr<const CBlock> pblock, const CBlockIndex* pindex)
 {
     auto log_msg = LOG_MSG("%s: block hash=%s block height=%d", __func__,
                           pblock->GetHash().ToString(),
                           pindex->nHeight);
-    auto event = [role, pblock = std::move(pblock), pindex, this] {
-        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BlockConnected(role, pblock, pindex); });
+    auto event = [pblock = std::move(pblock), pindex, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BlockConnected(pblock, pindex); });
     };
     ENQUEUE_AND_LOG_EVENT(std::move(event), std::move(log_msg));
 }
@@ -255,12 +252,12 @@ void ValidationSignals::BlockDisconnected(std::shared_ptr<const CBlock> pblock, 
     ENQUEUE_AND_LOG_EVENT(std::move(event), std::move(log_msg));
 }
 
-void ValidationSignals::ChainStateFlushed(const ChainstateRole& role, const CBlockLocator& locator)
+void ValidationSignals::ChainStateFlushed(const CBlockLocator& locator)
 {
     auto log_msg = LOG_MSG("%s: block hash=%s", __func__,
                           locator.IsNull() ? "null" : locator.vHave.front().ToString());
-    auto event = [role, locator, this] {
-        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.ChainStateFlushed(role, locator); });
+    auto event = [locator, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.ChainStateFlushed(locator); });
     };
     ENQUEUE_AND_LOG_EVENT(std::move(event), std::move(log_msg));
 }

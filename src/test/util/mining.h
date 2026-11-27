@@ -13,7 +13,6 @@
 
 class CBlock;
 class CBlockIndex;
-class CChainParams;
 class COutPoint;
 class CScript;
 namespace Consensus {
@@ -23,9 +22,6 @@ namespace node {
 struct BlockCreateOptions;
 struct NodeContext;
 } // namespace node
-
-/** Create a blockchain, starting from genesis */
-std::vector<std::shared_ptr<CBlock>> CreateBlockChain(size_t total_height, const CChainParams& params);
 
 /// Switch a coinbase-only block template to a different parent and timestamp, then recompute its merkle root.
 void SwitchBlockParent(CBlock& block, const CBlockIndex& parent, uint32_t new_time, const Consensus::Params& params);

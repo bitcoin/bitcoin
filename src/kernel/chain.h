@@ -8,7 +8,6 @@
 #include <attributes.h>
 
 #include <cstdint>
-#include <iostream>
 
 class CBlock;
 class CBlockIndex;
@@ -34,10 +33,8 @@ struct BlockInfo {
 } // namespace interfaces
 
 namespace kernel {
-struct ChainstateRole;
 //! Return data from block index.
 interfaces::BlockInfo MakeBlockInfo(const CBlockIndex* block_index, const CBlock* data = nullptr);
-std::ostream& operator<<(std::ostream& os, const ChainstateRole& role);
 } // namespace kernel
 
 #endif // BITCOIN_KERNEL_CHAIN_H

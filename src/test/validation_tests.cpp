@@ -127,29 +127,6 @@ BOOST_AUTO_TEST_CASE(signet_parse_tests)
     BOOST_CHECK(!CheckSignetBlockSolution(block, signet_params->GetConsensus()));
 }
 
-//! Test retrieval of valid assumeutxo values.
-BOOST_AUTO_TEST_CASE(test_assumeutxo)
-{
-    const auto params = CreateChainParams(*m_node.args, ChainType::REGTEST);
-
-    // These heights don't have assumeutxo configurations associated, per the contents
-    // of kernel/chainparams.cpp.
-    std::vector<int> bad_heights{0, 100, 111, 115, 209, 211};
-
-    for (auto empty : bad_heights) {
-        const auto out = params->AssumeutxoForHeight(empty);
-        BOOST_CHECK(!out);
-    }
-
-    const auto out110 = *params->AssumeutxoForHeight(110);
-    BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "86e9a1205b418b16dde3a18a78c730e30137e28466bda5dbf6b33ab8fc05447c");
-    BOOST_CHECK_EQUAL(out110.m_chain_tx_count, 111U);
-
-    const auto out110_2 = *params->AssumeutxoForBlockhash(uint256{"135eec25a6fb277884e5824e7aa7d052c4868161c99a5122170b5266f86c273d"});
-    BOOST_CHECK_EQUAL(out110_2.hash_serialized.ToString(), "86e9a1205b418b16dde3a18a78c730e30137e28466bda5dbf6b33ab8fc05447c");
-    BOOST_CHECK_EQUAL(out110_2.m_chain_tx_count, 111U);
-}
-
 BOOST_AUTO_TEST_CASE(block_malleation)
 {
     // Test utilities that calls `IsBlockMutated` and then clears the validity
