@@ -31,6 +31,7 @@
 #include <util/translation.h>
 
 #include <any>
+#include <cstdlib>
 #include <functional>
 #include <optional>
 
@@ -81,13 +82,13 @@ int fork_daemon(bool nochdir, bool noclose, TokenPipeEnd& endpoint)
 
 #if HAVE_DECL_SETSID
     if (setsid() < 0) {
-        exit(1); // setsid failed.
+        std::exit(1); // setsid failed.
     }
 #endif
 
     if (!nochdir) {
         if (chdir("/") != 0) {
-            exit(1); // chdir failed.
+            std::exit(1); // chdir failed.
         }
     }
     if (!noclose) {
@@ -99,10 +100,10 @@ int fork_daemon(bool nochdir, bool noclose, TokenPipeEnd& endpoint)
             // Don't close if fd<=2 to try to handle the case where the program was invoked without any file descriptors open.
             if (fd > 2) close(fd);
             if (err) {
-                exit(1); // dup2 failed.
+                std::exit(1); // dup2 failed.
             }
         } else {
-            exit(1); // open /dev/null failed.
+            std::exit(1); // open /dev/null failed.
         }
     }
     endpoint.TokenWrite(0); // Success
@@ -224,10 +225,10 @@ static bool AppInit(NodeContext& node)
             default: { // Parent: wait and exit.
                 int token = daemon_ep.TokenRead();
                 if (token) { // Success
-                    exit(EXIT_SUCCESS);
+                    std::exit(EXIT_SUCCESS);
                 } else { // fRet = false or token read error (premature exit).
                     tfm::format(std::cerr, "Error during initialization - check %s for details\n", fs::PathToString(LogInstance().m_file_path.filename()));
-                    exit(EXIT_FAILURE);
+                    std::exit(EXIT_FAILURE);
                 }
             }
             }

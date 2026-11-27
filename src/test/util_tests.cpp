@@ -31,6 +31,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <limits>
 #include <map>
@@ -1040,7 +1041,7 @@ enum : char {
             break;
         case ExitCommand:
             close(fd);
-            exit(0);
+            std::exit(0);
         default:
             AssertUnreachable();
         }
