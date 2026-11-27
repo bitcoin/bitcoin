@@ -102,7 +102,7 @@ def main():
     parser_decode.add_argument('-f', '--fill', dest="fill", default=False, action="store_true",
                                help="permit reassigning undefined network ranges arbitrarily to reduce length")
     parser_decode.add_argument('-n', '--nonoverlapping', dest="overlapping", default=True, action="store_false",
-                               help="output strictly non-overall ping network ranges (increases output size)")
+                               help="output strictly non-overlapping network ranges (increases output size)")
     parser_decode.add_argument('infile', nargs='?', type=argparse.FileType('rb'), default=sys.stdin.buffer,
                                help="input asmap file (text or binary); default is stdin")
     parser_decode.add_argument('outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout,

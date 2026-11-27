@@ -36,6 +36,9 @@ public:
     /** Get the asmap version, a checksum identifying the asmap being used. */
     uint256 GetAsmapVersion() const;
 
+    /** Identifies the map and grouping rules used for stored addrman buckets. Null when ASMap is disabled. */
+    uint256 GetBucketingVersion() const;
+
     /**
      * Get the canonical identifier of the network group for address.
      *

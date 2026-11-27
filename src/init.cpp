@@ -558,7 +558,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-addnode=<ip>", strprintf("Add a node to connect to and attempt to keep the connection open (see the addnode RPC help for more info). This option can be specified multiple times to add multiple nodes; connections are limited to %u at a time and are counted separately from the -maxconnections limit.", MAX_ADDNODE_CONNECTIONS), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-asmap=<file>", strprintf("Specify asn mapping used for bucketing of the peers. Relative paths will be prefixed by the net-specific datadir location.%s",
                 #ifdef ENABLE_EMBEDDED_ASMAP
-                    " If a bool arg is given (-asmap or -asmap=1), the embedded mapping data in the binary will be used."
+                    " Use -asmap or -asmap=1 to load the embedded map."
                 #else
                     ""
                 #endif
@@ -1695,7 +1695,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         // Netgroupman with or without it
         assert(!node.netgroupman);
         if (args.IsArgSet("-asmap") && !args.IsArgNegated("-asmap")) {
-            if (!args.GetBoolArg("-asmap", false)) {
+            if (const auto value{args.GetArg("-asmap", "")}; value.size() && value != "1") {
                 fs::path asmap_path = args.GetPathArg("-asmap");
                 if (!asmap_path.is_absolute()) {
                     asmap_path = args.GetDataDirNet() / asmap_path;
@@ -1703,7 +1703,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
                 // If a specific path was passed with the asmap argument check if
                 // the file actually exists in that location
-                if (!fs::exists(asmap_path)) {
+                if (std::error_code ec; !fs::exists(fs::status(asmap_path, ec))) {
                     InitError(strprintf(_("Could not find asmap file %s"), fs::quoted(fs::PathToString(asmap_path))));
                     return false;
                 }

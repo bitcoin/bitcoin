@@ -11,6 +11,8 @@
 #include <netbase.h>
 #include <netgroup.h>
 #include <random.h>
+#include <span.h>
+#include <streams.h>
 #include <test/data/asmap.raw.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
@@ -720,6 +722,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket_legacy)
 // 101.6.0.0/16 AS6
 // 101.7.0.0/16 AS7
 // 101.8.0.0/16 AS8
+// If a change to the AS group encoding alters the expected buckets, bump ASMAP_GROUPING_REVISION in netgroup.cpp
 BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
 {
     auto ngm_asmap{NetGroupManager::WithEmbeddedAsmap(test::data::asmap)};
@@ -735,7 +738,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
     uint256 nKey1 = (HashWriter{} << 1).GetHash();
     uint256 nKey2 = (HashWriter{} << 2).GetHash();
 
-    BOOST_CHECK_EQUAL(info1.GetTriedBucket(nKey1, ngm_asmap), 236);
+    BOOST_CHECK_EQUAL(info1.GetTriedBucket(nKey1, ngm_asmap), 186);
 
     // Test: Make sure key actually randomizes bucket placement. A fail on
     //  this test could be a security issue.
@@ -788,8 +791,8 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
     uint256 nKey2 = (HashWriter{} << 2).GetHash();
 
     // Test: Make sure the buckets are what we expect
-    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, ngm_asmap), 795);
-    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, source1, ngm_asmap), 795);
+    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, ngm_asmap), 457);
+    BOOST_CHECK_EQUAL(info1.GetNewBucket(nKey1, source1, ngm_asmap), 457);
 
     // Test: Make sure key actually randomizes bucket placement. A fail on
     //  this test could be a security issue.
@@ -864,9 +867,14 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
     CAddress addr = CAddress(ResolveService("250.1.1.1"), NODE_NONE);
     CNetAddr default_source;
 
+    const auto mapped_tag{netgroupman.GetGroup(addr).at(0)};
+    BOOST_CHECK_GE(mapped_tag, NET_MAX);
+    BOOST_CHECK_NE(mapped_tag, netgroupman.GetGroup(ResolveIP("2001:2001::1")).at(0));
     addrman_asmap1->Add({addr}, default_source);
 
     stream << *addrman_asmap1;
+    BOOST_REQUIRE_GE(stream.size(), uint256::size());
+    const uint256 bucketing_version{MakeUCharSpan(stream).last(uint256::size())};
     // serizalizing/deserializing addrman with the same asmap
     stream >> *addrman_asmap1_dup;
 
@@ -890,6 +898,19 @@ BOOST_AUTO_TEST_CASE(addrman_serialization)
     addrman_noasmap = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, ratio);
     addrman_noasmap->Add({addr}, default_source);
     stream << *addrman_noasmap;
+    BOOST_REQUIRE_GE(stream.size(), uint256::size());
+    BOOST_CHECK(uint256{MakeUCharSpan(stream).last(uint256::size())}.IsNull());
+    // A position saved without ASMap distinguishes restoring the bucket from recalculating it
+    const auto load_position{[&](const uint256& version) {
+        DataStream snapshot{stream};
+        SpanWriter{MakeWritableByteSpan(snapshot).last(uint256::size()), version};
+        AddrMan restored{netgroupman, DETERMINISTIC, ratio};
+        snapshot >> restored;
+        return restored.GetEntries(/*from_tried=*/false).at(0).second;
+    }};
+    BOOST_CHECK_EQUAL(load_position(bucketing_version), addr_pos3);
+    BOOST_CHECK_EQUAL(load_position(netgroupman.GetAsmapVersion()), addr_pos2);
+
     stream >> *addrman_asmap1;
 
     AddressPosition addr_pos4 = addrman_asmap1->FindAddressEntry(addr).value();

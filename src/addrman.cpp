@@ -137,7 +137,7 @@ void AddrManImpl::Serialize(Stream& s_) const
      * * for each new bucket:
      *   * number of elements
      *   * for each element: index in the serialized "all new addresses"
-     * * asmap version
+     * * bucketing version
      *
      * 2**30 is xorred with the number of buckets to make addrman deserializer v0 detect it
      * as incompatible. This is necessary because it did not check the version number on
@@ -203,9 +203,9 @@ void AddrManImpl::Serialize(Stream& s_) const
             }
         }
     }
-    // Store asmap version after bucket entries so that it
+    // Store bucketing version after bucket entries so that it
     // can be ignored by older clients for backward compatibility.
-    s << m_netgroupman.GetAsmapVersion();
+    s << m_netgroupman.GetBucketingVersion();
 }
 
 template <typename Stream>
@@ -311,16 +311,15 @@ void AddrManImpl::Unserialize(Stream& s_)
         }
     }
 
-    // If the bucket count and asmap version haven't changed, then attempt
+    // If the bucket count and bucketing version haven't changed, then attempt
     // to restore the entries to the buckets/positions they were in before
     // serialization.
-    uint256 supplied_asmap_version{m_netgroupman.GetAsmapVersion()};
-    uint256 serialized_asmap_version;
+    uint256 serialized_bucketing_version;
     if (format >= Format::V2_ASMAP) {
-        s >> serialized_asmap_version;
+        s >> serialized_bucketing_version;
     }
     const bool restore_bucketing{nUBuckets == ADDRMAN_NEW_BUCKET_COUNT &&
-        serialized_asmap_version == supplied_asmap_version};
+        serialized_bucketing_version == m_netgroupman.GetBucketingVersion()};
 
     if (!restore_bucketing) {
         LogDebug(BCLog::ADDRMAN, "Bucketing method was updated, re-bucketing addrman entries from disk\n");
@@ -345,7 +344,7 @@ void AddrManImpl::Unserialize(Stream& s_)
             vvNew[bucket][bucket_position] = entry_index;
             ++info.nRefCount;
         } else {
-            // In case the new table data cannot be used (bucket count wrong or new asmap),
+            // In case the new table data cannot be used (bucket count or grouping changed),
             // try to give them a reference based on their primary source address.
             bucket = info.GetNewBucket(nKey, m_netgroupman);
             bucket_position = info.GetBucketPosition(nKey, true, bucket);
