@@ -126,7 +126,8 @@ BOOST_FIXTURE_TEST_CASE(invalidate_block, TestChain100Setup)
     auto* orig_tip = active.Tip();
     int height_to_invalidate = orig_tip->nHeight - 10;
     auto* tip_to_invalidate = active[height_to_invalidate];
-    m_node.chainman->ActiveChainstate().InvalidateBlock(state, tip_to_invalidate);
+    BOOST_CHECK(m_node.chainman->ActiveChainstate().InvalidateBlock(state, tip_to_invalidate));
+    BOOST_CHECK(state.IsValid());
 
     // tip_to_invalidate just got invalidated, so it's BLOCK_FAILED_VALID
     WITH_LOCK(::cs_main, assert(tip_to_invalidate->nStatus & BLOCK_FAILED_VALID));
@@ -145,6 +146,14 @@ BOOST_FIXTURE_TEST_CASE(invalidate_block, TestChain100Setup)
         WITH_LOCK(::cs_main, assert(pindex->nStatus & BLOCK_FAILED_VALID));
         pindex = pindex->pprev;
     }
+
+    // Rollback stops at a block without undo data and leaves the chain partially disconnected
+    auto* no_undo{active.Tip()->pprev};
+    WITH_LOCK(::cs_main, no_undo->nStatus &= ~BLOCK_HAVE_UNDO);
+    state = {};
+    BOOST_CHECK(!m_node.chainman->ActiveChainstate().InvalidateBlock(state, no_undo->pprev));
+    BOOST_CHECK(state.IsError());
+    BOOST_CHECK_EQUAL(active.Tip(), no_undo);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

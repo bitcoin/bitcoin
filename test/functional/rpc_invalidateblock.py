@@ -139,6 +139,10 @@ class InvalidateTest(BitcoinTestFramework):
         assert_raises_rpc_error(-5, "Block not found", self.nodes[1].invalidateblock, "00" * 32)
         assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
 
+        self.log.info("Verify that invalidating the genesis block throws an error")
+        assert_raises_rpc_error(-8, "Cannot invalidate genesis block", self.nodes[1].invalidateblock, self.nodes[1].getblockhash(0))
+        assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
+
 
 if __name__ == '__main__':
     InvalidateTest(__file__).main()
