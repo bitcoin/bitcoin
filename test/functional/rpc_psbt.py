@@ -40,6 +40,7 @@ from test_framework.psbt import (
     PSBT_IN_MUSIG2_PARTICIPANT_PUBKEYS,
     PSBT_IN_MUSIG2_PUB_NONCE,
     PSBT_IN_NON_WITNESS_UTXO,
+    PSBT_IN_PARTIAL_SIG,
     PSBT_IN_PROPRIETARY,
     PSBT_IN_TAP_BIP32_DERIVATION,
     PSBT_IN_TAP_INTERNAL_KEY,
@@ -1351,9 +1352,19 @@ class PSBTTest(BitcoinTestFramework):
 
         # Combiner test
         for combiner in combiners:
+            expected_psbt = combiner['result']
             for psbts in (combiner['combine'], combiner['combine'][::-1]):
                 combined = self.nodes[2].combinepsbt(psbts)
-                assert_equal(combined, combiner['result'])
+                assert_equal(combined, expected_psbt)
+
+            decoded_inputs = self.nodes[2].decodepsbt(expected_psbt)["inputs"]
+            for psbt_input, decoded_input in zip(PSBT.from_base64(expected_psbt).i, decoded_inputs, strict=True):
+                expected_sigs = {
+                    key[1:].hex(): value.hex()
+                    for key, value in psbt_input.map.items()
+                    if isinstance(key, bytes) and key[0] == PSBT_IN_PARTIAL_SIG
+                }
+                assert_equal(decoded_input["partial_signatures"], expected_sigs)
 
         # Empty combiner test
         assert_raises_rpc_error(-8, "Parameter 'txs' cannot be empty", self.nodes[0].combinepsbt, [])
