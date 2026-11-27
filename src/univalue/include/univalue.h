@@ -147,7 +147,7 @@ Int UniValue::getInt() const
     Int result;
     const auto [first_nonmatching, error_condition] = std::from_chars(val.data(), val.data() + val.size(), result);
     if (first_nonmatching != val.data() + val.size() || error_condition != std::errc{}) {
-        throw std::runtime_error("JSON integer out of range");
+        throw type_error{"JSON integer out of range"};
     }
     return result;
 }
