@@ -19,6 +19,7 @@
 #include <validationinterface.h>
 
 #include <stdexcept>
+#include <utility>
 
 namespace node {
 static TransactionError HandleATMPError(const TxValidationState& state, std::string& err_string_out)
@@ -34,7 +35,7 @@ static TransactionError HandleATMPError(const TxValidationState& state, std::str
     }
 }
 
-TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, const CFeeRate& max_tx_fee_rate, TxBroadcast broadcast_method, bool wait_callback)
+TransactionError BroadcastTransaction(NodeContext& node, CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, const CFeeRate& max_tx_fee_rate, TxBroadcast broadcast_method, bool wait_callback)
 {
     // BroadcastTransaction can be called by RPC or by the wallet.
     // chainman, mempool and peerman are initialized before the RPC server and wallet are started
@@ -44,7 +45,6 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     assert(node.peerman);
 
     Txid txid = tx->GetHash();
-    Wtxid wtxid = tx->GetWitnessHash();
     bool callback_set = false;
 
     {
@@ -67,8 +67,8 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
             // transaction if broadcast_method is not TxBroadcast::MEMPOOL_NO_BROADCAST.
             //
             // The mempool transaction may have the same or different witness (and
-            // wtxid) as this transaction. Use the mempool's wtxid for reannouncement.
-            wtxid = mempool_tx->GetWitnessHash();
+            // wtxid) as this transaction. Use the mempool's transaction for reannouncement.
+            tx = std::move(mempool_tx);
         } else {
             // Transaction is not already in the mempool.
             const bool check_max_fee{max_tx_fee > 0};
@@ -133,7 +133,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     case TxBroadcast::MEMPOOL_NO_BROADCAST:
         break;
     case TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL:
-        node.peerman->InitiateTxBroadcastToAll(wtxid);
+        node.peerman->InitiateTxBroadcastToAll(tx->GetWitnessHash());
         break;
     case TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST:
         return node.peerman->InitiateTxBroadcastPrivate(tx);
