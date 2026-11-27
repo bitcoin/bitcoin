@@ -397,6 +397,95 @@ jobs:
         run: |
           py -3 .github/ci-windows-cross.py run_functional_tests
 
+  macos-cross-arm64:
+    name: 'macOS-cross to arm64'
+    needs: record-frozen-commit
+    runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-ubuntu-latest-x64-4x' || 'ubuntu-latest' }}
+    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+    timeout-minutes: 120
+
+    env:
+      DANGER_CI_ON_HOST_FOLDERS: 1
+      FILE_ENV: './ci/test/00_setup_env_mac_cross.sh'
+
+    steps:
+      - *ANNOTATION_PR_NUMBER
+
+      - *CHECKOUT
+
+      - name: Configure environment
+        uses: ./.github/actions/configure-environment
+
+      - name: Restore caches
+        id: restore-cache
+        uses: ./.github/actions/cache/restore
+        with:
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+
+      - name: Configure Docker
+        uses: ./.github/actions/configure-docker
+        with:
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+
+      - name: CI script
+        run: ./ci/test_run_all.sh
+
+      - name: Prepare macOS arm64 tests
+        run: |
+          mkdir unit_test_data
+          ./ci/retry/retry curl --location --fail \
+            https://github.com/bitcoin-core/qa-assets/raw/main/unit_test_data/script_assets_test.json \
+            -o unit_test_data/script_assets_test.json
+          tar -cf macos-arm64-binaries.tar \
+            -C "${BASE_BUILD_DIR}" \
+            bin/test_bitcoin \
+            bin/test_bitcoin-qt \
+            dist/Bitcoin-Qt.app/Contents/MacOS/Bitcoin-Qt \
+            -C "${GITHUB_WORKSPACE}" \
+            unit_test_data/script_assets_test.json
+
+      - name: Upload macOS arm64 binaries
+        uses: actions/upload-artifact@v7
+        with:
+          name: macos-arm64-binaries-${{ github.run_id }}
+          path: macos-arm64-binaries.tar
+          if-no-files-found: error
+
+      - name: Save caches
+        uses: ./.github/actions/cache/save
+        with:
+          provider: ${{ github.repository == 'bitcoin/bitcoin' && 'warp' || 'gha' }}
+
+  macos-cross-arm64-native:
+    name: 'macOS arm64, run cross-built'
+    needs: [macos-cross-arm64, record-frozen-commit]
+    runs-on: ${{ github.repository == 'bitcoin/bitcoin' && 'warp-macos-26-arm64-6x' || 'macos-26' }}
+    timeout-minutes: 120
+
+    steps:
+      - *ANNOTATION_PR_NUMBER
+
+      - *CHECKOUT
+
+      - name: Download macOS arm64 binaries
+        uses: actions/download-artifact@v8
+        with:
+          name: macos-arm64-binaries-${{ github.run_id }}
+
+      - name: Unpack cross-built binaries
+        run: |
+          mkdir macos-arm64-binaries
+          tar -xf macos-arm64-binaries.tar -C macos-arm64-binaries
+          macos-arm64-binaries/dist/Bitcoin-Qt.app/Contents/MacOS/Bitcoin-Qt -version
+
+      - name: Run cross-built test_bitcoin
+        env:
+          DIR_UNIT_TEST_DATA: ${{ github.workspace }}/macos-arm64-binaries/unit_test_data
+        run: macos-arm64-binaries/bin/test_bitcoin -l test_suite
+
+      - name: Run cross-built test_bitcoin-qt
+        run: macos-arm64-binaries/bin/test_bitcoin-qt
+
   ci-matrix:
     name: ${{ matrix.name }}
     runs-on: ${{ github.repository == 'bitcoin/bitcoin' && matrix.warp-runner || matrix.fallback-runner }}
@@ -433,12 +522,6 @@ jobs:
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_asan.sh'
-
-          - name: 'macOS-cross to arm64'
-            warp-runner: 'warp-ubuntu-latest-x64-4x'
-            fallback-runner: 'ubuntu-latest'
-            timeout-minutes: 120
-            file-env: './ci/test/00_setup_env_mac_cross.sh'
 
           - name: 'macOS-cross to x86_64'
             warp-runner: 'warp-ubuntu-latest-x64-4x'
