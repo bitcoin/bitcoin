@@ -17,6 +17,7 @@
 #include <deque>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <thread>
 #include <vector>
@@ -116,14 +117,14 @@ private:
 
 /****** Bitcoin specific TorController implementation ********/
 
-/** Controller that connects to Tor control socket, authenticate, then create
- * and maintain an ephemeral onion service.
+/** Controller that connects to the Tor control socket and discovers the onion proxy.
+ * If a target is provided, also creates and maintains an ephemeral onion service.
  */
 class TorController
 {
 public:
-    TorController(const std::string& tor_control_center, const CService& target);
-    TorController() : m_conn(m_interrupt) {
+    TorController(const std::string& tor_control_center, const std::optional<CService>& target);
+    TorController() : m_conn(m_interrupt), m_target{CService{}} {
         // Used for testing only.
     }
     ~TorController();
@@ -145,7 +146,7 @@ private:
     std::atomic<bool> m_reconnect;
     std::chrono::duration<double> m_reconnect_timeout;
     CService m_service;
-    const CService m_target;
+    const std::optional<CService> m_target;
     /** Cookie for SAFECOOKIE auth */
     std::vector<uint8_t> m_cookie;
     /** ClientNonce for SAFECOOKIE auth */
