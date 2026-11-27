@@ -10,12 +10,11 @@ to addrman with).
 
 Update `MIN_BLOCKS` in  `makeseeds.py` and the `-m`/`--minblocks` arguments below, as needed.
 
-The seeds compiled into the release are created from sipa's and achow101's
-DNS seed, virtu's crawler, and asmap community AS map data. Run the following commands
-from the `/contrib/seeds` directory:
+The seeds compiled into the release are created from achow101's DNS seed
+and asmap community AS map data. Run the following commands from the
+`/contrib/seeds` directory:
 
 ```
-curl https://21.ninja/seeds.txt.gz | gzip -dc > seeds_main.txt
 curl https://mainnet.achownodes.xyz/seeds.txt.gz | gzip -dc >> seeds_main.txt
 curl https://signet.achownodes.xyz/seeds.txt.gz | gzip -dc > seeds_signet.txt
 curl https://testnet.achownodes.xyz/seeds.txt.gz | gzip -dc > seeds_test.txt
