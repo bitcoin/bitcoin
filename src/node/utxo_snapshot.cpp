@@ -57,8 +57,9 @@ std::optional<uint256> ReadSnapshotBaseBlockhash(fs::path chaindir)
 
     if (!fs::exists(read_from)) {
         LogWarning("[snapshot] snapshot chainstate dir is malformed! no base blockhash file "
-            "exists at path %s. Try deleting %s and calling loadtxoutset again?",
-            fs::PathToString(chaindir), read_from_str);
+            "exists at path %s. A failed or uncleanly stopped snapshot import can leave %s behind. "
+            "Delete that directory before loading the snapshot again.",
+            read_from_str, fs::PathToString(chaindir));
         return std::nullopt;
     }
 

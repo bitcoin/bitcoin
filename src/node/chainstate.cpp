@@ -231,7 +231,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
     } else {
         return {ChainstateLoadStatus::FAILURE_FATAL, _(
            "UTXO snapshot failed to validate. "
-           "Restart to resume normal initial block download, or try loading a different snapshot.")};
+           "Restart to resume normal initial block download, or use a separate datadir to load a different snapshot.")};
     }
 
     return {ChainstateLoadStatus::SUCCESS, {}};

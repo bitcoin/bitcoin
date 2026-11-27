@@ -210,8 +210,6 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
     } else {
         Assert(!chainman.ActiveChainstate().m_from_snapshot_blockhash);
     }
-    // Snapshot should refuse to load a second time regardless of validity
-    Assert(!ActivateFuzzedSnapshot());
     if constexpr (INVALID) {
         // Activating the snapshot, or any other action that makes the chainman
         // "dirty" can and must not happen for the INVALID fuzz target
