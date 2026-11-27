@@ -2,8 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <batchverify.h>
 #include <checkqueue.h>
 #include <common/args.h>
+#include <key.h>
+#include <script/script_error.h>
 #include <sync.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
@@ -62,6 +65,14 @@ struct FixedCheck
     std::optional<int> m_result;
     FixedCheck(std::optional<int> result) : m_result(result){};
     std::optional<int> operator()() const { return m_result; }
+};
+
+struct BatchedCheck {
+    BatchableResult m_result;
+    BatchableResult operator()() const
+    {
+        return m_result;
+    }
 };
 
 struct UniqueCheck {
@@ -151,6 +162,7 @@ typedef CCheckQueue<FixedCheck> Fixed_Queue;
 typedef CCheckQueue<UniqueCheck> Unique_Queue;
 typedef CCheckQueue<MemoryCheck> Memory_Queue;
 typedef CCheckQueue<FrozenCleanupCheck> FrozenCleanup_Queue;
+typedef CCheckQueue<BatchedCheck, ScriptFailureResult> Batched_Queue;
 
 
 /** This test case checks that the CCheckQueue works properly
@@ -256,6 +268,53 @@ BOOST_AUTO_TEST_CASE(test_CheckQueue_Recovers_From_Failure)
             }
             bool r = !control.Complete().has_value();
             BOOST_REQUIRE(r != end_fails);
+        }
+    }
+}
+
+// Test that the signatures returned by batched checks are verified and that
+// a failed round, including one where several threads fail at once, does not
+// interfere with future rounds.
+BOOST_AUTO_TEST_CASE(test_CheckQueue_Batched)
+{
+    const CKey key{GenerateRandomKey()};
+    SchnorrSignatureToVerify valid{{}, XOnlyPubKey{key.GetPubKey()}, m_rng.rand256()};
+    BOOST_REQUIRE(key.SignSchnorr(valid.sighash, valid.sig, nullptr, m_rng.rand256()));
+    SchnorrSignatureToVerify invalid{valid};
+    invalid.sig[63] ^= 1;
+
+    const BatchedCheck valid_sig{std::vector{valid}};
+    const BatchedCheck invalid_sig{std::vector{invalid}};
+    const BatchedCheck script_failure{ScriptFailureResult{SCRIPT_ERR_EVAL_FALSE, "test"}};
+
+    // Small batches so that every thread gets to process some of the checks
+    auto queue = std::make_unique<Batched_Queue>(/*batch_size=*/4, SCRIPT_CHECK_THREADS);
+    auto run = [&](size_t count, const BatchedCheck& fill, const BatchedCheck& last) {
+        CCheckQueueControl<BatchedCheck, ScriptFailureResult> control(*queue);
+        if (count > 0) {
+            std::vector<BatchedCheck> checks(count, fill);
+            checks.back() = last;
+            control.Add(std::move(checks));
+        }
+        return control.Complete();
+    };
+    auto check_recovered = [&] {
+        BOOST_REQUIRE(!run(0, valid_sig, valid_sig).has_value());
+        BOOST_REQUIRE(!run(100, valid_sig, valid_sig).has_value());
+    };
+
+    check_recovered();
+    for (auto times = 0; times < 10; ++times) {
+        for (const auto& [fill, last, expected] : {
+                 std::tuple{valid_sig, invalid_sig, SCRIPT_ERR_BATCH_VALIDATION_FAILED},
+                 std::tuple{invalid_sig, invalid_sig, SCRIPT_ERR_BATCH_VALIDATION_FAILED},
+                 std::tuple{valid_sig, script_failure, SCRIPT_ERR_EVAL_FALSE},
+                 std::tuple{script_failure, script_failure, SCRIPT_ERR_EVAL_FALSE},
+             }) {
+            const auto result{run(100, fill, last)};
+            BOOST_REQUIRE(result.has_value());
+            BOOST_REQUIRE_EQUAL(result->first, expected);
+            check_recovered();
         }
     }
 }
