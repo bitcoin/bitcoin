@@ -332,7 +332,9 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
         node_master.createwallet(wallet_name="miniscript")
         wallet = node_master.get_wallet_rpc("miniscript")
-        miniscript_desc = "wsh(or_b(pk([deadbeef/0h/1h/2h]tprv8ZgxMBicQKsPerQj6m35no46amfKQdjY7AhLnmatHYXs8S4MTgeZYkWAn4edSGwwL3vkSiiGqSZQrmy5D3P5gBoqgvYP2fCUpBwbKTMTAkL/3h/*),s:pk([beefdead/4h/5h]tpubD6NzVbkrYhZ4YU9vM1s53UhD75UyJatx8EMzMZ3VUjR2FciNfLLkAw6a4pWACChzobTseNqdWk4G7ZdBqRDLtLSACKykTScmqibb1ZrCvJu/6/7/*)))"
+        xprv = ExtendedPrivateKey.generate().to_string()
+        xpub = ExtendedPrivateKey.generate().pubkey().to_string()
+        miniscript_desc = f"wsh(or_b(pk([deadbeef/0h/1h/2h]{xprv}/3h/*),s:pk([beefdead/4h/5h]{xpub}/6/7/*)))"
         miniscript_apos = miniscript_desc.replace("[beefdead/4h/5h]", "[beefdead/4'/5']")
         assert miniscript_apos != miniscript_desc
         for desc in [miniscript_desc, miniscript_apos]:

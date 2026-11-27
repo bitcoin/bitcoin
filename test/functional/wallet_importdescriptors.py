@@ -179,7 +179,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         node = self.nodes[1]
         node.createwallet(wallet_name="keypool_bound", blank=True)
         wrpc = node.get_wallet_rpc("keypool_bound")
-        desc = descsum_create("wpkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/0h/0h/*)")
+        desc = descsum_create(f"wpkh({ExtendedPrivateKey.generate().to_string()}/0h/0h/*)")
         self.test_importdesc({"desc": desc, "timestamp": "now"},
                              success=False, error_code=-8, error_message='End of range is too high',
                              warnings=['Range not given, using default keypool range'], wallet=wrpc)
