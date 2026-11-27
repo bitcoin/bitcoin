@@ -138,6 +138,8 @@ class SigData:
     """GPG signature data as parsed from GPG stdout."""
     def __init__(self):
         self.key = None
+        self.primary_fingerprint = None
+        self.signing_fingerprint = None
         self.name = ""
         self.trusted = False
         self.status = ""
@@ -203,6 +205,13 @@ def parse_gpg_result(
         elif line_begins_with(r"ERRSIG(?:\s|$)", line):
             curr_sigdata.key, _, _, _, _, _ = line.split()[2:8]
             curr_sigs = unknown_sigs
+
+        elif line_begins_with(r"VALIDSIG(?:\s|$)", line):
+            fields = line.split()
+            if len(fields) >= 11:
+                curr_sigdata.signing_fingerprint = fields[2]
+                # The primary fingerprint is optional in VALIDSIG.
+                curr_sigdata.primary_fingerprint = fields[11] if len(fields) > 11 else fields[2]
 
         elif line_begins_with(r"TRUST_(UNDEFINED|NEVER)(?:\s|$)", line):
             curr_sigdata.trusted = False
@@ -367,35 +376,46 @@ def verify_shasums_signature(
     # binary verification?
     trusted_keys = set()
     if args.trusted_keys:
-        trusted_keys |= set(args.trusted_keys.split(','))
+        trusted_keys.update(filter(None, ''.join(args.trusted_keys.split()).upper().split(',')))
 
     # Tally signatures and make sure we have enough goods to fulfill
     # our threshold.
     good_trusted: list[SigData] = []
     good_untrusted: list[SigData] = []
     expired: list[SigData] = []
+    trusted_signers = set()
+    untrusted: list[SigData] = []
     for sig in good:
+        identifiers = (sig.key, sig.signing_fingerprint, sig.primary_fingerprint)
+        trusted = sig.trusted or any(key in trusted_keys for key in identifiers)
         if not sig.status:
-            (good_trusted if sig.trusted or sig.key in trusted_keys else good_untrusted).append(sig)
+            (good_trusted if trusted else good_untrusted).append(sig)
         elif sig.status == 'revoked':
             log.warning(f"REVOKED SIGNATURE: {sig}")
+            continue
         else:
             assert sig.status == 'expired', sig
             expired.append(sig)
             log.warning(f"EXPIRED SIGNATURE: {sig}")
-    num_trusted = len(good_trusted) + len(good_untrusted)
-    if args.allow_expired:
-        num_trusted += len(expired)
-    log.info(f"got {num_trusted} good signatures")
+            if not args.allow_expired:
+                continue
+        if trusted:
+            trusted_signers.add(sig.primary_fingerprint or sig.key)
+        else:
+            untrusted.append(sig)
+
+    num_trusted = len(trusted_signers)
+    log.info(f"got {num_trusted} distinct trusted signers")
 
     if num_trusted < min_good_sigs:
-        log.info("Maybe you need to import "
-                  f"(`gpg --keyserver {args.keyserver} --recv-keys <key-id>`) "
-                  "some of the following keys: ")
-        log.info('')
-        for sig in unknown:
-            log.info(f"    {sig.key} ({sig.name})")
-        log.info('')
+        if unknown:
+            log.info(f"Import missing keys with `gpg --keyserver {args.keyserver} --recv-keys <key-id>`:")
+            for sig in unknown:
+                log.info(f"    {sig.key} ({sig.name})")
+        for sig in untrusted:
+            log.info(f"Untrusted key: {sig.primary_fingerprint or sig.key} ({sig.name})")
+        if unknown or untrusted:
+            log.info("Trust verified keys in GPG or pass full fingerprints via --trusted-keys.")
         log.error(
             "not enough trusted sigs to meet threshold "
             f"({num_trusted} vs. {min_good_sigs})")
@@ -645,12 +665,12 @@ def build_parser() -> argparse.ArgumentParser:
         '--min-good-sigs', type=int, action='store', nargs='?',
         default=int(os.environ.get('BINVERIFY_MIN_GOOD_SIGS', 3)),
         help=(
-            'The minimum number of good signatures to require successful termination.'),
+            'The minimum number of distinct trusted signers required for success.'),
     )
     parser.add_argument(
         '--allow-expired', action='store_true',
         default=bool_from_env('BINVERIFY_ALLOW_EXPIRED'),
-        help='Count signatures from expired keys toward the threshold when verifying older releases; revoked keys remain excluded',
+        help='Count signatures from trusted expired keys toward the threshold when verifying older releases; revoked keys remain excluded',
     )
     parser.add_argument(
         '--keyserver', action='store', nargs='?',
@@ -660,7 +680,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         '--trusted-keys', action='store', nargs='?',
         default=os.environ.get('BINVERIFY_TRUSTED_KEYS', ''),
-        help='A list of trusted signer GPG keys, separated by commas. Not "trusted keys" in the GPG sense.',
+        help='Comma-separated primary key or signing subkey fingerprints. Long signing key IDs are also accepted.',
     )
     parser.add_argument(
         '--json', action='store_true',

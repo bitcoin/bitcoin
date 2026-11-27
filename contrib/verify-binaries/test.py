@@ -20,6 +20,7 @@ def main():
     expect_code(run_verify("", "pub", '0.32.awefa.12f9h'), 11, "Malformed version should fail")
     expect_code(run_verify('--min-good-sigs 20', "pub", "22.0"), 9, "--min-good-sigs 20 should fail")
 
+    # With the default threshold, trust three 22.0 signers in GPG or list their verified fingerprints in BINVERIFY_TRUSTED_KEYS.
     print("- testing verification (22.0-x86_64-linux-gnu.tar.gz)", flush=True)
     _220_x86_64_linux_gnu = run_verify("--json", "pub", "22.0-x86_64-linux-gnu.tar.gz")
     try:
@@ -68,16 +69,16 @@ def test_inactive_signature_quorum():
         assert verify.parse_gpg_result(gpg_output(sig).splitlines())[0][0].status == 'revoked'
 
     def verify_fake_gpg(parser, options: list[str], *sigs: str, min_good_sigs: int = 1):
-        # Every key is explicitly trusted, so only its inactive status can exclude it
         args = parser.parse_args([
             *options,
             '--min-good-sigs', str(min_good_sigs),
-            '--trusted-keys', ','.join(sig.split()[1] for sig in (active, expired, revoked, revoked_expired)),
             'bin', verify.SUMS_FILENAME,
         ])
         with mock.patch.object(verify, 'verify_with_gpg', return_value=(0, gpg_output(*sigs))):
             return verify.verify_shasums_signature(verify.SIGNATUREFILENAME, verify.SUMS_FILENAME, args)
 
+    # Every key is explicitly trusted, so only its inactive status can exclude it
+    trusted_keys = ','.join(sig.split()[1] for sig in (active, expired, revoked, revoked_expired))
     for env, options, allow_expired in (
         ({}, [], False),
         ({}, ['--allow-expired'], True),
@@ -89,6 +90,7 @@ def test_inactive_signature_quorum():
         with mock.patch.dict(os.environ, env, clear=True):
             parser = verify.build_parser()
 
+        options = [*options, '--trusted-keys', trusted_keys]
         result, good_trusted, good_untrusted, _, _, expired_sigs = verify_fake_gpg(parser, options, expired)
         assert result == (verify.ReturnCode.SUCCESS if allow_expired else verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS)
         assert good_trusted == []
@@ -115,6 +117,45 @@ def test_inactive_signature_quorum():
 
         result, *_ = verify_fake_gpg(parser, options, active, expired, revoked, min_good_sigs=3)
         assert result == verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS
+
+    primary = 'A' * 40
+    subkey = 'B' * 24 + active.split()[1]
+    other_subkey = 'C' * 24 + expired.split()[1]
+
+    def validsig(fingerprint, primary_key=''):
+        return f'\n[GNUPG:] VALIDSIG {fingerprint} 2026-01-01 1 0 4 0 1 8 00 {primary_key}'
+
+    active += validsig(subkey, primary)
+    expired += validsig(other_subkey, primary)
+    with mock.patch.dict(os.environ, {'BINVERIFY_ALLOW_EXPIRED': '1'}, clear=True):
+        parser = verify.build_parser()
+
+    # Two copies of the active signature and the expired signing subkey share one primary.
+    undefined = active + '\n[GNUPG:] TRUST_UNDEFINED 0 pgp'
+    sigs = (undefined, undefined, expired)
+    for options, threshold, expected in (
+        ([], 1, verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS),
+        (['--trusted-keys'], 1, verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS),
+        (['--trusted-keys', ','], 1, verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS),
+        (['--trusted-keys', 'D' * 40], 1, verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS),
+        (['--trusted-keys', f'{primary[:20]}\t{primary[20:]}'.lower()], 1, verify.ReturnCode.SUCCESS),
+        (['--trusted-keys', f'{subkey},'], 1, verify.ReturnCode.SUCCESS),
+        (['--trusted-keys', f'{subkey}, {other_subkey}'], 2, verify.ReturnCode.NOT_ENOUGH_GOOD_SIGS),
+    ):
+        result, _, good_untrusted, *_ = verify_fake_gpg(parser, options, *sigs, min_good_sigs=threshold)
+        assert result == expected
+        assert not any(sig.status for sig in good_untrusted)
+
+    # Trust just the expired subkey. Its active sibling stays untrusted.
+    active += '\n[GNUPG:] TRUST_NEVER 0 pgp'
+    local_key = '1' * 40
+    gpg_trusted = f'GOODSIG {local_key[-16:]} Other Builder' + validsig(local_key) + '\n[GNUPG:] TRUST_FULLY 0 pgp'
+    result, good_trusted, good_untrusted, _, _, expired_sigs = verify_fake_gpg(
+        parser, ['--trusted-keys', other_subkey], active, expired, gpg_trusted, min_good_sigs=2)
+    assert result == verify.ReturnCode.SUCCESS
+    assert [sig.primary_fingerprint for sig in good_trusted] == [local_key]
+    assert [sig.key for sig in good_untrusted] == [subkey[-16:]]
+    assert [sig.key for sig in expired_sigs] == [other_subkey[-16:]]
 
     print("✓ 'Inactive signature quorum' passed")
 
