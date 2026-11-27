@@ -687,7 +687,6 @@ public:
   explicit Buffer(size_t cap) { buf.resize(cap); }
   void add_cap(size_t cap) { buf.resize(cap); }
 
-public:
   std::vector<char> buf;
   size_t length = 0;
 };
@@ -769,7 +768,7 @@ public:
   Communication& operator=(const Communication&) = delete;
   Communication(Communication&&) = default;
   Communication& operator=(Communication&&) = default;
-public:
+
   int send(const char* msg, size_t length);
   int send(const std::vector<char>& msg);
 
@@ -784,7 +783,6 @@ private:
   std::pair<OutBuffer, ErrBuffer> communicate_threaded(
       const char* msg, size_t length);
 
-private:
   Streams* stream_;
   size_t out_buf_cap_ = DEFAULT_BUF_CAP_BYTES;
   size_t err_buf_cap_ = DEFAULT_BUF_CAP_BYTES;
@@ -810,7 +808,6 @@ public:
   Streams(Streams&&) = default;
   Streams& operator=(Streams&&) = default;
 
-public:
   void setup_comm_channels();
 
   void cleanup_fds()
@@ -851,7 +848,7 @@ public:
   void set_out_buf_cap(size_t cap) { comm_.set_out_buf_cap(cap); }
   void set_err_buf_cap(size_t cap) { comm_.set_err_buf_cap(cap); }
 
-public: /* Communication forwarding API's */
+  /* Communication forwarding API's */
   int send(const char* msg, size_t length)
   { return comm_.send(msg, length); }
 
@@ -863,9 +860,6 @@ public: /* Communication forwarding API's */
 
   std::pair<OutBuffer, ErrBuffer> communicate(const std::vector<char>& msg)
   { return comm_.communicate(msg); }
-
-
-public:// Yes they are public
 
   std::shared_ptr<FILE> input_  = nullptr;
   std::shared_ptr<FILE> output_ = nullptr;
@@ -996,7 +990,6 @@ private:
   void populate_c_argv();
   void execute_process() noexcept(false);
 
-private:
   detail::Streams stream_;
 
 #ifdef WIN32

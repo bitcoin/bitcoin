@@ -32,7 +32,7 @@ private:
     Ui::HelpMessageDialog *ui;
     QString text;
 
-private Q_SLOTS:
+private Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void on_okButton_accepted();
 };
 

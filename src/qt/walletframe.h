@@ -65,7 +65,7 @@ public:
     WalletView* currentWalletView() const;
     WalletModel* currentWalletModel() const;
 
-public Q_SLOTS:
+public Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     /** Switch to overview (home) page */
     void gotoOverviewPage();
     /** Switch to history (transactions) page */

@@ -25,7 +25,7 @@ private Q_SLOTS:
     void guiTests(BitcoinGUI* window);
     void consoleTests(RPCConsole* console);
 
-private:
+private: // NOLINT(readability-redundant-access-specifiers)
     //! Add expected callback name to list of pending callbacks.
     void expectCallback(std::string callback) { m_callbacks.emplace(std::move(callback)); }
 

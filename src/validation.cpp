@@ -711,7 +711,6 @@ private:
         return m_active_chainstate.m_chainman.m_validation_cache;
     }
 
-private:
     CTxMemPool& m_pool;
 
     /** Holds a cached view of available coins from the UTXO set, mempool, and artificial temporary coins (to enable package validation).

@@ -26,7 +26,7 @@ public:
     explicit InitExecutor(interfaces::Node& node);
     ~InitExecutor();
 
-public Q_SLOTS:
+public Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void initialize();
     void shutdown();
 

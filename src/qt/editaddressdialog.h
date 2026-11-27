@@ -39,7 +39,7 @@ public:
     QString getAddress() const;
     void setAddress(const QString &address);
 
-public Q_SLOTS:
+public Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void accept() override;
 
 private:

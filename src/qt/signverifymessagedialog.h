@@ -38,7 +38,7 @@ private:
     WalletModel* model{nullptr};
     const PlatformStyle *platformStyle;
 
-private Q_SLOTS:
+private Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     /* sign message */
     void on_addressBookButton_SM_clicked();
     void on_pasteButton_SM_clicked();

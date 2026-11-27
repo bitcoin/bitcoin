@@ -70,7 +70,7 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const override;
     /*@}*/
 
-public Q_SLOTS:
+public Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void refresh();
 
 private:

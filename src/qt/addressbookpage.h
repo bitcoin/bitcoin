@@ -44,7 +44,7 @@ public:
     void setModel(AddressTableModel *model);
     const QString &getReturnValue() const { return returnValue; }
 
-public Q_SLOTS:
+public Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void done(int retval) override;
 
 private:
@@ -58,7 +58,7 @@ private:
     QString newAddressToSelect;
     void updateWindowsTitleWithWalletName();
 
-private Q_SLOTS:
+private Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     /** Delete currently selected address entry */
     void on_deleteAddress_clicked();
     /** Create a new address for receiving coins and / or add a new address book entry */

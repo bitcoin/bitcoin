@@ -24,7 +24,7 @@ private Q_SLOTS:
     void parametersInteraction();
     void extractFilter();
 
-private:
+private: // NOLINT(readability-redundant-access-specifiers)
     interfaces::Node& m_node;
     common::Settings m_previous_settings;
 };

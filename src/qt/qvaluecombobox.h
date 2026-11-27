@@ -27,7 +27,7 @@ Q_SIGNALS:
 private:
     int role{Qt::UserRole};
 
-private Q_SLOTS:
+private Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void handleSelectionChanged(int idx);
 };
 

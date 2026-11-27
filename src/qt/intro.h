@@ -62,7 +62,7 @@ private Q_SLOTS:
     void on_dataDirDefault_clicked();
     void on_dataDirCustom_clicked();
 
-private:
+private: // NOLINT(readability-redundant-access-specifiers)
     Ui::Intro *ui;
     bool m_prune_checkbox_is_default{true};
     QThread* thread{nullptr};

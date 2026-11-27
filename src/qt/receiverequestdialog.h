@@ -31,7 +31,7 @@ private Q_SLOTS:
     void on_btnCopyAddress_clicked();
     void updateDisplayUnit();
 
-private:
+private: // NOLINT(readability-redundant-access-specifiers)
     Ui::ReceiveRequestDialog *ui;
     WalletModel* model{nullptr};
     SendCoinsRecipient info;

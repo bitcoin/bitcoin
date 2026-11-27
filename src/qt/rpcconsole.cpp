@@ -94,7 +94,7 @@ class RPCExecutor : public QObject
 public:
     explicit RPCExecutor(interfaces::Node& node) : m_node(node) {}
 
-public Q_SLOTS:
+public Q_SLOTS: // NOLINT(readability-redundant-access-specifiers)
     void request(const QString &command, const QString& wallet_name);
 
 Q_SIGNALS:
