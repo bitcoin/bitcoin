@@ -72,7 +72,6 @@
 #include <deque>
 #include <exception>
 #include <functional>
-#include <future>
 #include <initializer_list>
 #include <iterator>
 #include <limits>
@@ -948,9 +947,13 @@ private:
     // All of the following cache a recent block, and are protected by m_most_recent_block_mutex
     Mutex m_most_recent_block_mutex;
     std::shared_ptr<const CBlock> m_most_recent_block GUARDED_BY(m_most_recent_block_mutex);
-    std::shared_ptr<const CBlockHeaderAndShortTxIDs> m_most_recent_compact_block GUARDED_BY(m_most_recent_block_mutex);
+    std::map<uint64_t, std::shared_ptr<const CBlockHeaderAndShortTxIDs>> m_most_recent_compact_blocks GUARDED_BY(m_most_recent_block_mutex);
     uint256 m_most_recent_block_hash GUARDED_BY(m_most_recent_block_mutex);
     std::unique_ptr<const std::map<GenTxid, CTransactionRef>> m_most_recent_block_txs GUARDED_BY(m_most_recent_block_mutex);
+    /** Compact block for the given block hash to be used for peers with the given network key.
+      * Creates it if it doesn't exist yet. Returns nullptr if the block is not the most recent block. */
+    std::shared_ptr<const CBlockHeaderAndShortTxIDs> GetMostRecentCompactBlock(const uint256& block_hash, uint64_t network_key)
+        EXCLUSIVE_LOCKS_REQUIRED(m_most_recent_block_mutex);
 
     // Data about the low-work headers synchronization, aggregated from all peers' HeadersSyncStates.
     /** Mutex guarding the other m_headers_presync_* variables. */
@@ -2224,14 +2227,23 @@ void PeerManagerImpl::BlockDisconnected(const std::shared_ptr<const CBlock> &blo
     m_txdownloadman.BlockDisconnected();
 }
 
+std::shared_ptr<const CBlockHeaderAndShortTxIDs> PeerManagerImpl::GetMostRecentCompactBlock(const uint256& block_hash, uint64_t network_key)
+{
+    AssertLockHeld(m_most_recent_block_mutex);
+    if (!m_most_recent_block || m_most_recent_block_hash != block_hash) return nullptr;
+    auto [it, inserted] = m_most_recent_compact_blocks.try_emplace(network_key);
+    if (inserted) {
+        it->second = std::make_shared<const CBlockHeaderAndShortTxIDs>(*m_most_recent_block, FastRandomContext().rand64());
+    }
+    return it->second;
+}
+
 /**
  * Maintain state about the best-seen block and fast-announce a compact block
  * to compatible peers.
  */
 void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock)
 {
-    auto pcmpctblock = std::make_shared<const CBlockHeaderAndShortTxIDs>(*pblock, FastRandomContext().rand64());
-
     LOCK(cs_main);
 
     if (pindex->nHeight <= m_highest_fast_announce)
@@ -2241,8 +2253,9 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
     if (!DeploymentActiveAt(*pindex, m_chainman, Consensus::DEPLOYMENT_SEGWIT)) return;
 
     uint256 hashBlock(pblock->GetHash());
-    const std::shared_future<CSerializedNetMsg> lazy_ser{
-        std::async(std::launch::deferred, [&] { return NetMsg::Make(NetMsgType::CMPCTBLOCK, *pcmpctblock); })};
+    // Serialized compact blocks by network key. Peers with different network keys
+    // are sent compact blocks with different nonces to prevent fingerprinting.
+    std::map<uint64_t, CSerializedNetMsg> ser_cmpctblocks;
 
     {
         auto most_recent_block_txs = std::make_unique<std::map<GenTxid, CTransactionRef>>();
@@ -2254,11 +2267,11 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
         LOCK(m_most_recent_block_mutex);
         m_most_recent_block_hash = hashBlock;
         m_most_recent_block = pblock;
-        m_most_recent_compact_block = pcmpctblock;
+        m_most_recent_compact_blocks.clear();
         m_most_recent_block_txs = std::move(most_recent_block_txs);
     }
 
-    m_connman.ForEachNode([this, pindex, &lazy_ser, &hashBlock](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+    m_connman.ForEachNode([this, pindex, &ser_cmpctblocks, &hashBlock](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, !m_most_recent_block_mutex) {
         AssertLockHeld(::cs_main);
 
         if (pnode->GetCommonVersion() < INVALID_CB_NO_BAN_VERSION || pnode->fDisconnect)
@@ -2272,8 +2285,14 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
             LogDebug(BCLog::NET, "%s sending header-and-ids %s to peer=%d\n", "PeerManager::NewPoWValidBlock",
                     hashBlock.ToString(), pnode->GetId());
 
-            const CSerializedNetMsg& ser_cmpctblock{lazy_ser.get()};
-            PushMessage(*pnode, ser_cmpctblock.Copy());
+            auto it{ser_cmpctblocks.find(pnode->m_network_key)};
+            if (it == ser_cmpctblocks.end()) {
+                const auto cmpctblock{WITH_LOCK(m_most_recent_block_mutex, return GetMostRecentCompactBlock(hashBlock, pnode->m_network_key))};
+                // The block was cached above, and can't have been replaced since because we hold cs_main.
+                if (!Assume(cmpctblock)) return;
+                it = ser_cmpctblocks.emplace(pnode->m_network_key, NetMsg::Make(NetMsgType::CMPCTBLOCK, *cmpctblock)).first;
+            }
+            PushMessage(*pnode, it->second.Copy());
             state.pindexBestHeaderSent = pindex;
         }
     });
@@ -2568,11 +2587,9 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
     }
 
     std::shared_ptr<const CBlock> a_recent_block;
-    std::shared_ptr<const CBlockHeaderAndShortTxIDs> a_recent_compact_block;
     {
         LOCK(m_most_recent_block_mutex);
         a_recent_block = m_most_recent_block;
-        a_recent_compact_block = m_most_recent_compact_block;
     }
 
     bool need_activate_chain = false;
@@ -2706,7 +2723,8 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
             // and we don't feel like constructing the object for them, so
             // instead we respond with the full, non-compact block.
             if (can_direct_fetch && pindex->nHeight >= tip->nHeight - MAX_CMPCTBLOCK_DEPTH) {
-                if (a_recent_compact_block && a_recent_compact_block->header.GetHash() == inv.hash) {
+                const auto a_recent_compact_block{WITH_LOCK(m_most_recent_block_mutex, return GetMostRecentCompactBlock(inv.hash, pfrom.m_network_key))};
+                if (a_recent_compact_block) {
                     MakeAndPushMessage(pfrom, NetMsgType::CMPCTBLOCK, *a_recent_compact_block);
                 } else {
                     CBlockHeaderAndShortTxIDs cmpctblock{*pblock, m_rng.rand64()};
@@ -6236,8 +6254,8 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                     std::optional<CSerializedNetMsg> cached_cmpctblock_msg;
                     {
                         LOCK(m_most_recent_block_mutex);
-                        if (m_most_recent_block_hash == pBestIndex->GetBlockHash()) {
-                            cached_cmpctblock_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, *m_most_recent_compact_block);
+                        if (const auto cmpctblock{GetMostRecentCompactBlock(pBestIndex->GetBlockHash(), node.m_network_key)}) {
+                            cached_cmpctblock_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, *cmpctblock);
                         }
                     }
                     if (cached_cmpctblock_msg.has_value()) {

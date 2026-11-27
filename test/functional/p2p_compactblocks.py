@@ -61,6 +61,7 @@ from test_framework.test_node import TestNode
 from test_framework.util import (
     assert_not_equal,
     assert_equal,
+    p2p_port,
     softfork_active,
 )
 from test_framework.wallet import MiniWallet
@@ -146,8 +147,10 @@ class CompactBlocksTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
+        self.extra_bind_port = p2p_port(self.num_nodes)
         self.extra_args = [[
             "-acceptnonstdtxn=1",
+            f"-bind=127.0.0.1:{self.extra_bind_port}",
         ]]
         self.utxos = []
 
@@ -1104,6 +1107,51 @@ class CompactBlocksTest(BitcoinTestFramework):
         hb_peer = self.nodes[0].p2ps[hb_peer_idx]
         assert not ignores_compact_block(hb_peer, solicited=False)
 
+    def test_compactblock_nonce_per_network(self):
+        """Compact block nonces are shared only between peers with the
+        same network key (to prevent fingerprinting)"""
+        node = self.nodes[0]
+        same_bind_peers = [node.add_p2p_connection(TestP2PConn()) for _ in range(2)]
+        other_bind_peer = node.add_p2p_connection(TestP2PConn(), dstport=self.extra_bind_port)
+        peers = same_bind_peers + [other_bind_peer]
+
+        def check_nonces():
+            with p2p_lock:
+                nonces = [peer.last_message["cmpctblock"].header_and_shortids.nonce for peer in peers]
+            assert_equal(nonces[0], nonces[1])
+            assert_not_equal(nonces[0], nonces[2])
+
+        def request_cmpctblock(peer, block_hash):
+            peer.clear_block_announcement()
+            peer.send_and_ping(msg_getdata([CInv(MSG_CMPCT_BLOCK, block_hash)]))
+            with p2p_lock:
+                assert_equal(peer.last_message["cmpctblock"].header_and_shortids.header.hash_int, block_hash)
+                return peer.last_message["cmpctblock"].header_and_shortids.nonce
+
+        self.log.info("Check nonces of compact blocks requested via getdata by non-high-bandwidth peers")
+        # New block - the compact block for it is created when it is requested.
+        tip = int(self.generate(node, 1)[0], 16)
+        for peer in peers:
+            request_cmpctblock(peer, tip)
+        check_nonces()
+        # A repeated request is served the same cached compact block
+        with p2p_lock:
+            nonce = other_bind_peer.last_message["cmpctblock"].header_and_shortids.nonce
+        assert_equal(request_cmpctblock(other_bind_peer, tip), nonce)
+
+        self.log.info("Check nonces of compact blocks announced to high-bandwidth peers")
+        for peer in peers:
+            self.request_cb_announcements(peer)
+        for _ in range(3):
+            for peer in peers:
+                peer.clear_block_announcement()
+            tip = int(self.generate(node, 1)[0], 16)
+            for peer in peers:
+                peer.wait_until(lambda: "cmpctblock" in peer.last_message)
+                with p2p_lock:
+                    assert_equal(peer.last_message["cmpctblock"].header_and_shortids.header.hash_int, tip)
+            check_nonces()
+
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
 
@@ -1186,6 +1234,9 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         self.log.info("Testing CMPCTBLOCK messages are ignored when expected...")
         self.test_compact_blocks_ignored()
+
+        self.log.info("Testing that the compact block nonce differs between networks...")
+        self.test_compactblock_nonce_per_network()
 
 
 if __name__ == '__main__':
