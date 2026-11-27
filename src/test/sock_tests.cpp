@@ -57,6 +57,37 @@ BOOST_AUTO_TEST_CASE(move_constructor)
     BOOST_CHECK(SocketIsClosed(s));
 }
 
+// This test sets up its own sockets and sits above the socket pair tests.
+// That keeps it easy to backport: older branches build those for POSIX only.
+BOOST_AUTO_TEST_CASE(wait_ignores_urgent_data)
+{
+    sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    socklen_t addr_len{sizeof(addr)};
+
+    const Sock listener{CreateSocket()};
+    BOOST_REQUIRE_EQUAL(listener.Bind(reinterpret_cast<sockaddr*>(&addr), addr_len), 0);
+    BOOST_REQUIRE_EQUAL(listener.Listen(1), 0);
+    BOOST_REQUIRE_EQUAL(listener.GetSockName(reinterpret_cast<sockaddr*>(&addr), &addr_len), 0);
+
+    const Sock sender{CreateSocket()};
+    BOOST_REQUIRE_EQUAL(sender.Connect(reinterpret_cast<sockaddr*>(&addr), addr_len), 0);
+
+    const auto receiver{listener.Accept(nullptr, nullptr)};
+    BOOST_REQUIRE(receiver);
+
+    BOOST_REQUIRE_EQUAL(sender.Send("U", 1, MSG_OOB), 1);
+    BOOST_REQUIRE_EQUAL(sender.Send("x", 1, 0), 1);
+
+    // Wait for the regular byte sent after the urgent byte. Once it is
+    // readable, the urgent byte has arrived too. Readiness is level-triggered,
+    // so if the urgent byte is ever reported as an error, it is by now.
+    Sock::Event occurred;
+    BOOST_REQUIRE(receiver->Wait(1min, Sock::RecvEvent, &occurred));
+    BOOST_CHECK(occurred == Sock::RecvEvent);
+}
+
 BOOST_AUTO_TEST_CASE(move_assignment)
 {
     const SOCKET s1 = CreateSocket();

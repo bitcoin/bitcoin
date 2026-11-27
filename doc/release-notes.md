@@ -53,6 +53,8 @@ Notable changes
 
 ### Net
 
+- #36716 net: only use the select error set while connecting
+- #36818 seeds: drop 21.ninja as a makeseeds source
 - #36894 net_processing: set fDisconnect instead of calling DisconnectNode
 
 ### Gui
@@ -62,16 +64,25 @@ Notable changes
 ### Guix
 
 - #36615 guix: add --no-same-owner to codesign.sh TAR_OPTIONS
+- #36709 guix: compute --build triplet when lowering, not at load time
 
 ### Build
 
+- #35765 depends: keep local source archives in WORK_PATH
 - #36889 cmake: Switch include_directories -> target_include_directories
+- #36927 build: remove *dev* errors from dev-mode
 
 ### Test
 
 - #36405 test: look for the wtxid in p2p_blocksonly
 - #36406 test: make p2p_orphan_handling's never-requested checks able to fail
 - #36617 test: Fix intermittent issue in p2p_orphan_handling.py
+- #36982 test: handle mainnet logs in combine_logs.py
+
+### Doc
+
+- #36957 doc: add 389 (multipath) and 394 (rawtr) to bips.md
+- #37000 docs: update asmap-data URL with new github org
 
 ### CI
 
@@ -86,12 +97,23 @@ Credits
 
 Thanks to everyone who directly contributed to this release:
 
+- 0xB10C
+- Antoine Poinsot
+- Cory Fields
 - David Gumberg
 - Eugene Siegel
 - fametrano
+- fanquake
 - Hennadii Stepanov
+- jeanpablo
+- Jorge Espada
+- jurraca
 - maflcko
 - marcofleon
+- Lőrinc
+- Ryan Ofsky
+- Sjors Provoost
+- Vasil Dimov
 
 As well as to everyone that helped with translations on
 [Transifex](https://explore.transifex.com/bitcoin/bitcoin/).

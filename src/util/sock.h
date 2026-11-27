@@ -156,18 +156,25 @@ public:
     static constexpr Event SendEvent = 0b010;
 
     /**
-     * Ignored if passed to `Wait()`, but could be set in the occurred events if an
-     * exceptional condition has occurred on the socket or if it has been disconnected.
+     * Could be set in the occurred events. On Linux this happens when the
+     * socket has an error or has been disconnected, whichever events were
+     * requested. On other platforms (Windows, macOS, BSDs) this only happens
+     * when it was passed to `Wait()` and an exceptional condition has occurred
+     * on the socket.
+     *
+     * Only pass it to `Wait()` while waiting for a non-blocking connect() to
+     * complete: Windows does not report a failed connect otherwise.
      */
     static constexpr Event ErrorEvent = 0b100;
 
     /**
      * Wait for readiness for input (recv) or output (send).
      * @param[in] timeout Wait this much for at least one of the requested events to occur.
-     * @param[in] requested Wait for those events, bitwise-or of `RecvEvent` and `SendEvent`.
+     * @param[in] requested Wait for those events, bitwise-or of `RecvEvent` and `SendEvent`,
+     * optionally with `ErrorEvent`.
      * @param[out] occurred If not nullptr and the function returns `true`, then this
-     * indicates which of the requested events occurred (`ErrorEvent` will be added, even if
-     * not requested, if an exceptional event occurs on the socket).
+     * indicates which of the requested events occurred. On Linux, `ErrorEvent` may be
+     * added without being requested.
      * A timeout is indicated by return value of `true` and `occurred` being set to 0.
      * @return true on success (or timeout, if `occurred` of 0 is returned), false otherwise
      */
