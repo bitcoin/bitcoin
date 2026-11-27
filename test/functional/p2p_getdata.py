@@ -6,11 +6,28 @@
 from collections import defaultdict
 
 from test_framework.messages import (
+    CBlock,
     CInv,
+    MSG_BLOCK,
+    MSG_WITNESS_FLAG,
+    from_binary,
+    msg_block,
     msg_getdata,
 )
-from test_framework.p2p import P2PInterface
+from test_framework.p2p import MESSAGEMAP, P2PInterface, p2p_lock
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_equal, assert_greater_than
+
+
+class RawBlockMessage(msg_block):
+    def deserialize(self, stream):
+        self.raw = stream.getvalue()
+        super().deserialize(stream)
+
+
+class P2PNoInv(P2PInterface):
+    # Only request blocks explicitly so tip announcements cannot overwrite the checked reply.
+    def on_inv(self, message): pass
 
 
 class P2PStoreBlock(P2PInterface):
@@ -43,9 +60,29 @@ class GetdataTest(BitcoinTestFramework):
         p2p_block_store.send_and_ping(good_getdata)
         p2p_block_store.wait_until(lambda: p2p_block_store.blocks[best_block] == 1)
 
+    def test_block_serialization(self):
+        self.log.info("Check exact witness and non-witness block payloads from cache and disk")
+        node = self.nodes[0]
+        blockhash = self.generate(node, 1)[0]  # Generated blocks have a coinbase witness
+        full = bytes.fromhex(node.getblock(blockhash, 0))
+        stripped = from_binary(CBlock, full).serialize(with_witness=False)
+        assert_greater_than(len(full), len(stripped))
+        MESSAGEMAP[b"block"] = RawBlockMessage
+        peer = node.add_p2p_connection(P2PNoInv())
+
+        def check_payloads():
+            for inv_type, expected in ((MSG_BLOCK, stripped), (MSG_BLOCK | MSG_WITNESS_FLAG, full)):
+                peer.send_and_ping(msg_getdata([CInv(inv_type, int(blockhash, 16))]))
+                with p2p_lock:
+                    assert_equal(peer.last_message.pop("block").raw, expected)
+
+        check_payloads()
+        self.generate(node, 1)  # Evict the requested block from the most-recent-block cache
+        check_payloads()
 
     def run_test(self):
         self.test_invalid_getdata()
+        self.test_block_serialization()
 
 
 if __name__ == '__main__':
