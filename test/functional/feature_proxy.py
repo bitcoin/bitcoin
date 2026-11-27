@@ -46,7 +46,10 @@ import tempfile
 
 from test_framework.socks5 import Socks5Configuration, Socks5Command, Socks5Server, AddressType
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    p2p_port,
+)
 from test_framework.netutil import test_ipv6_local, test_unix_socket
 
 # Networks returned by RPC getpeerinfo.
@@ -496,6 +499,19 @@ class ProxyTest(BitcoinTestFramework):
             unexpected_msgs=["SOCKS5 connecting example.invalid"],
         ):
             self.nodes[1].addnode("example.invalid:8333", "onetry", v2transport=False)
+        self.stop_node(1)
+
+        self.log.info("Test that an unreachable proxy is warned about once and logged at debug level afterwards")
+        # Use the p2p port of the non-existing next node, nothing is listening there.
+        proxy = f"127.0.0.1:{p2p_port(self.num_nodes)}"
+        self.start_node(1, extra_args=[f"-proxy={proxy}"])
+        with self.nodes[1].assert_debug_log(expected_msgs=[f"[warning] Cannot connect to proxy {proxy}"]):
+            self.nodes[1].addnode("15.61.23.23:1234", "onetry", v2transport=False)
+        with self.nodes[1].assert_debug_log(
+            expected_msgs=[f"[proxy] Cannot connect to proxy {proxy}"],
+            unexpected_msgs=["[warning] Cannot connect to proxy"],
+        ):
+            self.nodes[1].addnode("15.61.23.23:1234", "onetry", v2transport=False)
         self.stop_node(1)
 
         self.log.info("Test passing too-long unix path to -proxy raises init error")

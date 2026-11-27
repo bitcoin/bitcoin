@@ -8,6 +8,7 @@
 #include <compat/compat.h>
 #include <netaddress.h>
 #include <serialize.h>
+#include <util/expected.h>
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
 
@@ -294,16 +295,15 @@ extern std::function<std::unique_ptr<Sock>(int, int, int)> CreateSock;
  * Create a socket and try to connect to the specified service.
  *
  * @param[in] dest The service to which to connect.
- * @param[in] manual_connection Whether or not the connection was manually requested (e.g. through the addnode RPC)
  *
- * @returns the connected socket if the operation succeeded, empty unique_ptr otherwise
+ * @returns the connected socket if the operation succeeded, the reason for the failure otherwise.
+ *          The failure is not logged, the caller decides if and how to report it.
  */
-std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connection);
+util::Expected<std::unique_ptr<Sock>, std::string> ConnectDirectly(const CService& dest);
 
 /** Create a socket and try to connect to the specified service, using the provided timeout. */
-std::unique_ptr<Sock> ConnectDirectly(const CService& dest,
-                                      bool manual_connection,
-                                      std::chrono::milliseconds timeout);
+util::Expected<std::unique_ptr<Sock>, std::string> ConnectDirectly(const CService& dest,
+                                                                   std::chrono::milliseconds timeout);
 
 /**
  * Connect to a specified destination service through a SOCKS5 proxy by first
