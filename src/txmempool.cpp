@@ -8,6 +8,7 @@
 #include <chain.h>
 #include <coins.h>
 #include <common/system.h>
+#include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
@@ -680,12 +681,15 @@ void CTxMemPool::PrioritiseTransaction(const Txid& hash, const CAmount& nFeeDelt
     {
         LOCK(cs);
         CAmount &delta = mapDeltas[hash];
-        delta = SaturatingAdd(delta, nFeeDelta);
+        const CAmount old_delta{delta};
+        // Keep the total delta within the money range, so that fee sums over
+        // chunks and clusters can't overflow.
+        delta = std::clamp(SaturatingAdd(delta, nFeeDelta), -MAX_MONEY, MAX_MONEY);
         txiter it = mapTx.find(hash);
         if (it != mapTx.end()) {
             // PrioritiseTransaction calls stack on previous ones. Set the new
-            // transaction fee to be current modified fee + feedelta.
-            it->UpdateModifiedFee(nFeeDelta);
+            // transaction fee to be current modified fee + the change in delta.
+            it->UpdateModifiedFee(delta - old_delta);
             m_txgraph->SetTransactionFee(*it, it->GetModifiedFee());
             ++nTransactionsUpdated;
         }
