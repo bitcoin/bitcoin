@@ -1971,11 +1971,11 @@ void Chainstate::CheckForkWarningConditions()
 }
 
 // Update m_best_invalid to track the invalid block with the most work
-void Chainstate::UpdateBestInvalid(CBlockIndex* pindexNew)
+void Chainstate::UpdateBestInvalid(CBlockIndex* invalid_block)
 {
     AssertLockHeld(cs_main);
-    if (!m_chainman.m_best_invalid || pindexNew->nChainWork > m_chainman.m_best_invalid->nChainWork) {
-        m_chainman.m_best_invalid = pindexNew;
+    if (!m_chainman.m_best_invalid || invalid_block->nChainWork > m_chainman.m_best_invalid->nChainWork) {
+        m_chainman.m_best_invalid = invalid_block;
     }
 }
 

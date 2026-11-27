@@ -76,16 +76,16 @@ void TestChainstateManager::InvalidBlockFound(CBlockIndex* pindex, const BlockVa
     static_cast<TestChainstate*>(&ActiveChainstate())->CallInvalidBlockFound(pindex, state);
 }
 
-void TestChainstateManager::UpdateBestInvalid(CBlockIndex* pindexNew)
+void TestChainstateManager::UpdateBestInvalid(CBlockIndex* invalid_block)
 {
     struct TestChainstate : public Chainstate {
-        void CallUpdateBestInvalid(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+        void CallUpdateBestInvalid(CBlockIndex* invalid_block) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         {
-            UpdateBestInvalid(pindexNew);
+            UpdateBestInvalid(invalid_block);
         }
     };
 
-    static_cast<TestChainstate*>(&ActiveChainstate())->CallUpdateBestInvalid(pindexNew);
+    static_cast<TestChainstate*>(&ActiveChainstate())->CallUpdateBestInvalid(invalid_block);
 }
 
 CBlockIndex* TestChainstateManager::FindMostWorkChain()
