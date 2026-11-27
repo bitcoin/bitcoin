@@ -22,6 +22,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
         self.miniwallet = MiniWallet(self.nodes[0])
 
         self.blocksonly_mode_tests()
+        self.blocksonly_peer_tests()
         self.blocks_relay_conn_tests()
 
     def blocksonly_mode_tests(self):
@@ -77,6 +78,47 @@ class P2PBlocksOnly(BitcoinTestFramework):
 
         self.nodes[0].disconnect_p2ps()
         self.generate(self.nodes[0], 1)
+
+    def blocksonly_peer_tests(self):
+        self.log.info("Tests with outbound peers that set txrelay to false, as peers in blocksonly mode do")
+        self.restart_node(0, ["-noblocksonly"])
+        self.log.info("Check that we sustain full-relay outbound connections to blocksonly peers when not at the full outbound limit")
+        peers = self.add_blocksonly_peers()
+        self.trigger_eviction_check()
+        self.check_connected(peers)
+        self.nodes[0].disconnect_p2ps()
+
+        self.log.info("Check that we request a replacement instead of evicting full-relay outbound connections to blocksonly peers at the full outbound limit")
+        # Simulate the situation of being at the max limit of full-outbound connections by setting -maxconnections to a low value
+        self.restart_node(0, ["-noblocksonly", "-maxconnections=2"])
+        peers = self.add_blocksonly_peers()
+        with self.nodes[0].assert_debug_log(["setting replace no-tx-relay peer=true"]):
+            self.trigger_eviction_check()
+        self.check_connected(peers)
+        self.nodes[0].disconnect_p2ps()
+
+        self.log.info("Check that we don't request a replacement for full-relay outbound connections to blocksonly peers if we are blocksonly ourselves")
+        self.restart_node(0, ["-blocksonly", "-maxconnections=2"])
+        peers = self.add_blocksonly_peers()
+        with self.nodes[0].assert_debug_log([], unexpected_msgs=["setting replace no-tx-relay peer=true"]):
+            self.trigger_eviction_check()
+        self.check_connected(peers)
+        self.nodes[0].disconnect_p2ps()
+
+    def add_blocksonly_peers(self):
+        # The only peer on a network is never evicted or replaced, so add two
+        return [self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=i, txrelay=False) for i in (1, 2)]
+
+    def trigger_eviction_check(self):
+        # Peers connected for less than 30s (MINIMUM_CONNECT_TIME) are never evicted
+        self.nodes[0].setmocktime(int(time.time()) + 31)
+        # Trigger CheckForStaleTipAndEvictPeers, which is scheduled every 45s (EXTRA_PEER_CHECK_INTERVAL)
+        self.nodes[0].mockscheduler(46)
+        self.nodes[0].setmocktime(0)
+
+    def check_connected(self, peers):
+        for peer in peers:
+            peer.sync_with_ping()
 
     def blocks_relay_conn_tests(self):
         self.log.info('Tests with node in normal mode with block-relay-only connections')
