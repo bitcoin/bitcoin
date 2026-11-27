@@ -103,6 +103,8 @@ struct ConnmanTestMsg : public CConnman {
 
     bool ProcessMessagesOnce(CNode& node) EXCLUSIVE_LOCKS_REQUIRED(NetEventsInterface::g_msgproc_mutex)
     {
+        // The test send buffer limit is 0. Clear the pause so the next message can be processed.
+        WITH_LOCK(node.cs_vSend, node.SetPauseSend(false));
         return m_msgproc->ProcessMessages(node, flagInterruptMsgProc);
     }
 
