@@ -37,6 +37,16 @@ class StartupNotifyTest(BitcoinTestFramework):
         self.log.info("Test node is fully started")
         assert_equal(self.nodes[0].getblockcount(), 200)
 
+        self.log.info("Test -nostartupnotify disables an earlier -startupnotify")
+        # Before NEGATE_TO_EMPTY, -nostartupnotify ran the command "0", which
+        # fails, printing "0: command not found" to stderr (which stop_node()
+        # checks) and logging a runCommand error. The command runs in a
+        # detached thread, so the test stops the node before checking.
+        with self.nodes[0].assert_debug_log(expected_msgs=[], unexpected_msgs=["runCommand error"]):
+            self.restart_node(0, extra_args=[f"-startupnotify=echo '{FILE_NAME}' >> {NODE_DIR}/{FILE_NAME}", "-nostartupnotify"])
+            self.stop_node(0)
+        assert_equal(get_count(), 1)
+
 
 if __name__ == '__main__':
     StartupNotifyTest(__file__).main()

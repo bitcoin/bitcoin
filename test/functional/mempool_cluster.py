@@ -412,6 +412,13 @@ class MempoolClusterTest(BitcoinTestFramework):
             if cluster_count_limit > 10:
                 self.test_cluster_merging(cluster_count_limit)
 
+        self.log.info("Test that cluster limits below 1 are rejected")
+        self.stop_node(0)
+        for arg in ["-limitclustercount=0", "-nolimitclustercount"]:
+            self.nodes[0].assert_start_raises_init_error([arg], "Error: limitclustercount must be between 1 and 64")
+        for arg in ["-limitclustersize=0", "-nolimitclustersize"]:
+            self.nodes[0].assert_start_raises_init_error([arg], "Error: limitclustersize must be greater than 0")
+
 
 if __name__ == '__main__':
     MempoolClusterTest(__file__).main()

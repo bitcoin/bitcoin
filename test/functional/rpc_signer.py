@@ -93,5 +93,14 @@ class RPCSignerTest(BitcoinTestFramework):
 
         assert_equal({'fingerprint': '00000001', 'name': 'trezor_t'} in self.nodes[1].enumeratesigners()['signers'], True)
 
+        self.log.info('Test -nosigner disables an earlier -signer')
+        # Before NEGATE_TO_EMPTY, -nosigner ran "0" as the signer command
+        # and enumeratesigners failed with a RunCommandParseJSON error.
+        self.restart_node(1, extra_args=[f"-signer={self.mock_signer_path()}", "-nosigner"])
+        assert_raises_rpc_error(-1, 'Error: restart bitcoind with -signer=<cmd>',
+            self.nodes[1].enumeratesigners
+        )
+
+
 if __name__ == '__main__':
     RPCSignerTest(__file__).main()

@@ -330,6 +330,25 @@ class TorControlTest(BitcoinTestFramework):
 
         mock_tor.stop()
 
+    def test_notorpassword(self):
+        self.log.info("Test -notorpassword disables an earlier -torpassword")
+        # The mock only offers NULL authentication. Before NEGATE_TO_EMPTY,
+        # the password was "0", so bitcoind logged that HASHEDPASSWORD wasn't
+        # available and never sent AUTHENTICATE.
+        mock_tor = MockTorControlServer(self.next_port())
+        with self.nodes[0].assert_debug_log(["Using NULL authentication"], timeout=10):
+            self.restart_with_mock(mock_tor, extra_args=["-torpassword=secret", "-notorpassword"])
+        self.wait_until(lambda: len(mock_tor.received_commands) >= 2, timeout=10)
+        assert_equal(mock_tor.received_commands[1], "AUTHENTICATE")
+        mock_tor.stop()
+
+    def test_notorcontrol(self):
+        self.log.info("Test that -notorcontrol requires -nolistenonion")
+        self.stop_node(0)
+        self.nodes[0].replace_in_config([("listenonion=0\n", "")])
+        self.nodes[0].assert_start_raises_init_error(["-notorcontrol"], "Error: -notorcontrol cannot be used while -listenonion is enabled (the default). Use -nolistenonion to stop connecting to the Tor control port.")
+        self.start_node(0, extra_args=["-notorcontrol", "-nolistenonion"])
+
     def test_invalid_service_id(self):
         invalid_service_id = "a" + SERVICE_ID[1:]
         key_path = self.private_key_path()
@@ -405,6 +424,8 @@ class TorControlTest(BitcoinTestFramework):
         self.test_invalid_service_id()
         self.test_private_key_tor_command_injection()
         self.test_reconnect_backoff()
+        self.test_notorpassword()
+        self.test_notorcontrol()
 
 
 if __name__ == '__main__':

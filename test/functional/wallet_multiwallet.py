@@ -219,6 +219,10 @@ class MultiWalletTest(BitcoinTestFramework):
         node.assert_start_raises_init_error(['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" does not exist')
         node.assert_start_raises_init_error(['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" is a relative path', cwd=data_dir(node))
         node.assert_start_raises_init_error(['-walletdir=debug.log'], 'Error: Specified -walletdir "debug.log" is not a directory', cwd=data_dir(node))
+        node.assert_start_raises_init_error(['-nowalletdir'], 'Error: Error parsing command line arguments: Negating of -walletdir is meaningless and therefore forbidden')
+        self.start_node(0, ['-walletdir=', '-wallet=w1'])
+        assert 'w1' in node.listwallets()
+        self.stop_node(0)
 
         self.start_node(0, ['-wallet=w1', '-wallet=w1'])
         self.stop_node(0, 'Warning: Ignoring duplicate -wallet w1.')
