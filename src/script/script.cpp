@@ -15,7 +15,6 @@
 #include <util/hash_type.h>
 #include <util/string.h>
 
-#include <cassert>
 #include <compare>
 #include <limits>
 #include <memory>
@@ -303,16 +302,21 @@ std::string CScriptWitness::ToString() const
 CScriptWitness::CScriptWitness(const std::vector<std::vector<unsigned char>>& stack)
 {
     if (stack.empty()) return;
-    SpanWriter{Allocate(::GetSerializeSize(stack)), stack};
+    const auto size = ::GetSerializeSize(stack);
+    // The last element (with its size prefix) ends the serialization.
+    const auto& last = stack.back();
+    SpanWriter{Allocate(size, size - GetSizeOfCompactSize(last.size()) - last.size()), stack};
 }
 
-std::span<std::byte> CScriptWitness::Allocate(uint64_t size)
+std::span<std::byte> CScriptWitness::Allocate(uint64_t size, uint64_t last_offset)
 {
     // The header stores the size of the serialization in 32 bits. Together with the header, it must also fit in a
     // size_t, which may be 32 bits too.
     if (size > std::numeric_limits<uint32_t>::max() - HEADER_SIZE) throw std::length_error("CScriptWitness too large");
+    Assume(last_offset < size);
     m_data = std::make_unique_for_overwrite<std::byte[]>(HEADER_SIZE + size);
     WriteLE32(m_data.get(), size);
+    WriteLE32(m_data.get() + 4, last_offset);
     return {m_data.get() + HEADER_SIZE, static_cast<size_t>(size)};
 }
 
@@ -326,7 +330,9 @@ CScriptWitness::CScriptWitness(const CScriptWitness& other)
 
 std::span<const unsigned char> CScriptWitness::operator[](size_t index) const noexcept
 {
-    Assume(index < size());
+    const auto count = size();
+    Assume(index < count);
+    if (index + 1 == count) return back();
     auto it = begin();
     for (size_t i = 0; i < index; ++i) ++it;
     return *it;
