@@ -133,12 +133,7 @@ constexpr T&& inline_assertion_check(LIFETIMEBOUND T&& val, [[maybe_unused]] con
 /// Mark unreachable code. Aborts if called.
 #define AssertUnreachable() internal_abort_helper(std::source_location::current(), "unreachable")
 
-/**
- * NONFATAL_UNREACHABLE() is a macro that is used to mark unreachable code. It throws a NonFatalCheckError.
- * Control flow will not continue past this macro.
- *
- * In debug builds an abort is triggered.
- */
+/// Mark unreachable code. Throws a NonFatalCheckError (or aborts in debug builds).
 #define NONFATAL_UNREACHABLE() \
     internal_non_fatal_helper(std::source_location::current(), "unreachable")
 
