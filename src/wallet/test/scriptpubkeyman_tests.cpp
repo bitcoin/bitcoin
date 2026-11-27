@@ -7,6 +7,8 @@
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <script/solver.h>
+#include <wallet/context.h>
+#include <wallet/external_signer_scriptpubkeyman.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/wallet.h>
 #include <wallet/test/util.h>
@@ -48,6 +50,34 @@ BOOST_AUTO_TEST_CASE(desc_spkm_topup_fail)
     BOOST_CHECK_EXCEPTION(
         CreateDescriptor(keystore, "wpkh(" + EncodeExtPubKey(extkey.Neuter()) + "/*h)", /*success=*/true),
         std::runtime_error, HasReason("Could not top up scriptPubKeys"));
+}
+
+BOOST_AUTO_TEST_CASE(external_signer_command_required)
+{
+    // With no command configured (empty -signer), GetExternalSigner reports that one is
+    // needed and returns before attempting to launch any external process.
+    const auto res = ExternalSignerScriptPubKeyMan::GetExternalSigner(/*command=*/"", /*chain=*/"regtest");
+    BOOST_CHECK(!res);
+    BOOST_CHECK_EQUAL(util::ErrorString(res).original, "restart bitcoind with -signer=<cmd>");
+}
+
+BOOST_AUTO_TEST_CASE(external_signer_args_captured)
+{
+    // The -signer command and chain are read from the wallet's injected ArgsManager
+    // when the wallet is loaded, rather than from globals at signing time.
+    WalletContext context;
+    context.args = &m_args;
+
+    auto wallet{TestCreateWallet(CreateMockableWalletDatabase(), context, WALLET_FLAG_DESCRIPTORS)};
+    BOOST_CHECK_EQUAL(wallet->m_external_signer_command, "");
+
+    // Use a chain that differs from the globally selected Params() (main), so the
+    // check fails if the value is taken from anywhere other than context.args.
+    m_args.ForceSetArg("-signer", "mock_signer");
+    m_args.ForceSetArg("-chain", "signet");
+    wallet = TestCreateWallet(CreateMockableWalletDatabase(), context, WALLET_FLAG_DESCRIPTORS);
+    BOOST_CHECK_EQUAL(wallet->m_external_signer_command, "mock_signer");
+    BOOST_CHECK_EQUAL(wallet->m_external_signer_chain, "signet");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

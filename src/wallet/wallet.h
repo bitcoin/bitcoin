@@ -728,6 +728,12 @@ public:
 
     /** Maximum transaction fee rate used for the wallet */
     CFeeRate m_max_tx_fee_rate{DEFAULT_MAX_TRANSACTION_FEERATE};
+
+    /** Command used to invoke an external signer (the -signer arg), or empty if none configured. */
+    std::string m_external_signer_command;
+    /** Chain argument passed to an external signer. */
+    std::string m_external_signer_chain;
+
     /** Number of pre-generated keys/scripts by each spkm (part of the look-ahead process, used to detect payments) */
     int64_t m_keypool_size{DEFAULT_KEYPOOL_SIZE};
 
