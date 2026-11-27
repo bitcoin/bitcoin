@@ -10,7 +10,11 @@ Test the following RPCs:
 """
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_raises_rpc_error
+from test_framework.util import (
+    assert_raises_rpc_error,
+    assert_rpc_options_validation,
+)
+
 
 class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -23,23 +27,26 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # cli handles wrong types differently
         if not self.options.usecli:
-            # wrong type for conf_target
-            assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", self.nodes[0].estimatesmartfee, 'foo')
-            assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", self.nodes[0].estimaterawfee, 'foo')
             # wrong type for estimatesmartfee(estimate_mode)
             assert_raises_rpc_error(-3, "JSON value of type number is not of expected type string", self.nodes[0].estimatesmartfee, 1, 1)
-            # wrong type for estimatesmartfee(options.fee_rate_estimator)
-            assert_raises_rpc_error(-3, "JSON value of type number for field fee_rate_estimator is not of expected type string", self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', {'fee_rate_estimator': 1})
             # wrong type for estimatesmartfee(options.verbosity)
             assert_raises_rpc_error(-3, "JSON value of type string for field verbosity is not of expected type number", self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', {'verbosity': 'foo'})
             # wrong type for estimaterawfee(threshold)
             assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", self.nodes[0].estimaterawfee, 1, 'foo')
+        # wrong type for conf_target
+        assert_raises_rpc_error(-3, "JSON value of type bool is not of expected type number", self.nodes[0].estimatesmartfee, False)
+        assert_raises_rpc_error(-3, "JSON value of type bool is not of expected type number", self.nodes[0].estimaterawfee, False)
+
+        assert_rpc_options_validation(
+            lambda **kwargs: self.nodes[0].estimatesmartfee(1, 'ECONOMICAL', **kwargs),
+            reject_wrong_option_type=("verbosity", False),
+            reject_duplicate_option=("fee_rate_estimator", "auto"),
+        )
 
         assert_raises_rpc_error(-8, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"', self.nodes[0].estimatesmartfee, 1, 'foo')
         for fee_rate_estimator in ["foo", "none", ""]:
             assert_raises_rpc_error(-8, 'Invalid fee_rate_estimator parameter, must be one of: "auto", "block_policy", "mempool_policy"',
                                     self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', {'fee_rate_estimator': fee_rate_estimator})
-        assert_raises_rpc_error(-8, "Unknown named parameter fee_rate_estimator", self.nodes[0].estimatesmartfee, 1, fee_rate_estimator=True)
         assert_raises_rpc_error(-3, "Unexpected key block_policy_only", self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', {'block_policy_only': True})
         # extra params
         assert_raises_rpc_error(-1, "estimatesmartfee", self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', {}, 1)

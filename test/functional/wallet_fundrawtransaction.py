@@ -27,6 +27,7 @@ from test_framework.util import (
     assert_greater_than,
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
+    assert_rpc_options_validation,
     count_bytes,
     get_fee,
 )
@@ -320,8 +321,11 @@ class RawTransactionsTest(BitcoinTestFramework):
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
 
-        assert_raises_rpc_error(-8, "Unknown named parameter foo", self.nodes[2].fundrawtransaction, rawtx, foo='bar')
-        assert_raises_rpc_error(-3, "JSON value of type bool is not of expected type object", self.nodes[2].fundrawtransaction, rawtx, True)
+        assert_rpc_options_validation(
+            lambda **kwargs: self.nodes[2].fundrawtransaction(rawtx, **kwargs),
+            reject_wrong_option_type=("add_inputs", 1),
+            reject_duplicate_option=("add_inputs", True),
+        )
 
         # reserveChangeKey was deprecated and is now removed
         assert_raises_rpc_error(-8, "Unknown named parameter reserveChangeKey", lambda: self.nodes[2].fundrawtransaction(hexstring=rawtx, reserveChangeKey=True))

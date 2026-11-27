@@ -105,8 +105,9 @@ std::string CRPCTable::help(std::string_view strCommand, const JSONRPCRequest& h
             std::string strHelp{e.what()};
             if (strCommand == "")
             {
-                if (strHelp.find('\n') != std::string::npos)
-                    strHelp = strHelp.substr(0, strHelp.find('\n'));
+                const auto newline_pos{strHelp.find('\n')};
+                CHECK_NONFATAL(newline_pos != std::string::npos); // The one-line summary is followed by a newline.
+                strHelp.resize(newline_pos);
 
                 if (category != pcmd->category)
                 {

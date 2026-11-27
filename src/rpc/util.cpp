@@ -1296,7 +1296,7 @@ std::string RPCArg::ToString(const bool oneline) const
     case Type::OBJ_USER_KEYS: {
         // NOLINTNEXTLINE(misc-no-recursion)
         const std::string res = Join(m_inner, ",", [&](const RPCArg& i) { return i.ToStringObj(oneline); });
-        if (m_type == Type::OBJ) {
+        if (m_type == Type::OBJ || m_type == Type::OBJ_NAMED_PARAMS) {
             return "{" + res + "}";
         } else {
             return "{" + res + ",...}";
