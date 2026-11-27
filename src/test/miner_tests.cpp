@@ -1011,7 +1011,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         const BlockValidationState state{TestBlockValidity(m_node.chainman->ActiveChainstate(), stale_block,
                                                            /*check_pow=*/false, /*check_merkle_root=*/false)};
         BOOST_CHECK(state.IsInvalid());
-        BOOST_CHECK_EQUAL(state.GetResult(), BlockValidationResult::BLOCK_RESULT_UNSET);
+        BOOST_CHECK_EQUAL(state.GetResult(), BlockValidationResult::BLOCK_PREV_NOT_TIP);
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "inconclusive-not-best-prevblk");
     }
 }
