@@ -1,0 +1,281 @@
+#!/usr/bin/env python3
+# Copyright (c) 2026-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+"""Test the analyzedescriptor RPC."""
+
+from test_framework.descriptors import descsum_create
+from test_framework.extendedkey import ExtendedPrivateKey
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (
+    assert_equal,
+    assert_not_equal,
+    assert_raises_rpc_error,
+)
+from test_framework.wallet_util import (
+    bytes_to_wif,
+    generate_keypair,
+)
+
+MULTIPATH = "/<0;1>/*"
+# A private key that none of the cosigner wallets hold.
+TPRV = "tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK"
+
+
+class WalletAnalyzeDescriptorTest(BitcoinTestFramework):
+    def set_test_params(self):
+        self.num_nodes = 1
+        self.wallet_names = []
+
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
+    def create_cosigner(self, name):
+        """Create a wallet with a new HD key, and return it with its cosigner key expression."""
+        self.nodes[0].createwallet(wallet_name=name, blank=True)
+        wallet = self.nodes[0].get_wallet_rpc(name)
+        wallet.addhdkey()
+        key = wallet.derivehdkey("m/48h/1h/0h/2h")
+        return wallet, f"{key['origin']}{key['xpub']}"
+
+    def wallet_matches(self, wallet, desc):
+        return [key["wallet"] for key in wallet.analyzedescriptor(desc)["keys"]]
+
+    def test_errors(self):
+        node = self.nodes[0]
+        self.log.info("Test that analyzedescriptor needs a wallet")
+        desc = descsum_create(f"wpkh({self.keys[0]}/0/*)")
+        node.unloadwallet("Alice")
+        node.unloadwallet("Bob")
+        node.unloadwallet("Carol")
+        assert_raises_rpc_error(-18, "No wallet is loaded", node.analyzedescriptor, desc)
+        node.loadwallet("Alice")
+        node.loadwallet("Bob")
+        assert_raises_rpc_error(-19, "Multiple wallets are loaded", node.analyzedescriptor, desc)
+        node.loadwallet("Carol")
+        assert_raises_rpc_error(-5, "is not a valid descriptor function", self.alice.analyzedescriptor, "foo()")
+
+    def test_cosigners(self):
+        node = self.nodes[0]
+        self.log.info("Test that each cosigner finds its own slot")
+        desc = descsum_create(f"wsh(sortedmulti(2,{','.join(key + MULTIPATH for key in self.keys)}))")
+        info = node.getdescriptorinfo(desc, True)
+        for i, wallet in enumerate(self.cosigners):
+            result = wallet.analyzedescriptor(desc)
+            assert_equal([key["wallet"] for key in result["keys"]], ["mine" if j == i else "not_mine" for j in range(3)])
+            assert_equal(result["can_sign"], True)
+            # The same keys and analysis as getdescriptorinfo, which needs no wallet.
+            assert_equal([{k: v for k, v in key.items() if k != "wallet"} for key in result["keys"]], info["keys"])
+            assert_equal(result["analysis"], info["analysis"])
+            # Index 0 of the receive and change paths.
+            assert_equal(result["first_addresses"], [addresses[0] for addresses in node.deriveaddresses(desc, [0, 0])])
+
+        self.log.info("Test that a different change path shows in the first addresses")
+        other_change = descsum_create(f"wsh(sortedmulti(2,{self.keys[0]}{MULTIPATH},{self.keys[1]}{MULTIPATH},{self.keys[2]}/<0;2>/*))")
+        expected, result = self.alice.analyzedescriptor(desc), self.alice.analyzedescriptor(other_change)
+        # The same setup, with the same receive address: only the change address tells them apart.
+        assert_equal({k: v for k, v in result.items() if k != "first_addresses"}, {k: v for k, v in expected.items() if k != "first_addresses"})
+        assert_equal(result["first_addresses"][0], expected["first_addresses"][0])
+        assert_not_equal(result["first_addresses"][1], expected["first_addresses"][1])
+
+        outsider, _ = self.create_cosigner("Dave")
+        assert_equal(self.wallet_matches(outsider, desc), ["not_mine"] * 3)
+        assert_equal(outsider.analyzedescriptor(desc)["can_sign"], False)
+
+        self.log.info("Test MuSig participants and Taproot leaf keys")
+        leaf = f"sortedmulti_a(2,{','.join(key + MULTIPATH for key in self.keys)})"
+        desc = descsum_create(f"tr(musig({','.join(self.keys)}){MULTIPATH},{leaf})")
+        # The musig() aggregate itself is never matched, only its participants.
+        assert_equal(self.wallet_matches(self.alice, desc), ["not_mine", "mine", "not_mine", "not_mine", "mine", "not_mine", "not_mine"])
+
+        self.log.info("Test that the wallet can sign for an unrecognized setup it holds a key of")
+        desc = descsum_create(f"wsh(sortedmulti(2,{self.keys[0]}{MULTIPATH},{self.keys[0]}{MULTIPATH},{self.keys[1]}{MULTIPATH}))")
+        result = self.alice.analyzedescriptor(desc)
+        assert_equal(result["analysis"]["recognized"], False)
+        assert_equal([key["wallet"] for key in result["keys"]], ["mine", "mine", "not_mine"])
+        assert_equal(result["can_sign"], True)
+
+        self.log.info("Test a single-sig descriptor")
+        desc = descsum_create(f"wpkh({self.keys[0]}/0/*)")
+        result = self.alice.analyzedescriptor(desc)
+        assert_equal(result["analysis"], {"recognized": False, "issues": [{"type": "unsupported_shape", "keys": []}]})
+        assert_equal([key["wallet"] for key in result["keys"]], ["mine"])
+        assert_equal(result["can_sign"], True)
+        assert_equal(result["first_addresses"], self.nodes[0].deriveaddresses(desc, [0, 0]))
+        assert_equal(result["hasprivatekeys"], False)
+        assert_equal(self.cosigners[1].analyzedescriptor(desc)["can_sign"], False)
+        # combo() starts with a P2PK script, which has no address: its first address
+        # is the first one deriveaddresses lists.
+        desc = descsum_create(f"combo({self.keys[0]}/0/*)")
+        assert_equal(self.alice.analyzedescriptor(desc)["first_addresses"], self.nodes[0].deriveaddresses(desc, [0, 0])[:1])
+
+        self.log.info("Test that private keys in the descriptor derive the first address")
+        desc = descsum_create(f"wpkh({TPRV}/84h/1h/0h/0/*)")
+        result = self.alice.analyzedescriptor(desc)
+        assert_equal(result["first_addresses"], self.nodes[0].deriveaddresses(desc, [0, 0]))
+        # They are reported, and don't make the key the wallet's.
+        assert_equal(result["hasprivatekeys"], True)
+        assert_equal([key["wallet"] for key in result["keys"]], ["not_mine"])
+        assert_equal(result["can_sign"], False)
+
+    def test_locked_wallet(self):
+        self.log.info("Test that a locked wallet reports its cosigner key as unknown")
+        node = self.nodes[0]
+        node.createwallet(wallet_name="Heidi", blank=True, passphrase="passphrase")
+        heidi = node.get_wallet_rpc("Heidi")
+        heidi.walletpassphrase("passphrase", 60)
+        heidi.addhdkey()
+        account = heidi.derivehdkey("m/48h/1h/0h/2h")
+        heidi_key = f"{account['origin']}{account['xpub']}"
+        heidi.walletlock()
+        desc = descsum_create(f"wsh(sortedmulti(2,{heidi_key}{MULTIPATH},{self.keys[1]}{MULTIPATH},{self.keys[2]}{MULTIPATH}))")
+        result = heidi.analyzedescriptor(desc)
+        assert_equal([key["wallet"] for key in result["keys"]], ["unknown", "not_mine", "not_mine"])
+        assert "can_sign" not in result
+        # Everything that needs no private key is still returned.
+        assert_equal(result["analysis"]["recognized"], True)
+        assert "first_addresses" in result
+
+        heidi.walletpassphrase("passphrase", 60)
+        assert_equal(self.wallet_matches(heidi, desc), ["mine", "not_mine", "not_mine"])
+
+        self.log.info("Test that a locked wallet still reports unknown when it also holds the key without its private key")
+        # Importing Heidi's account xpub next to another private key adds it without its private key.
+        wif, _ = generate_keypair(wif=True)
+        partial = descsum_create(f"wsh(multi(1,{wif},{heidi_key}/0/*))")
+        assert_equal(heidi.importdescriptors([{"desc": partial, "timestamp": "now"}])[0]["success"], True)
+        heidi.walletlock()
+        result = heidi.analyzedescriptor(desc)
+        assert_equal([key["wallet"] for key in result["keys"]], ["unknown", "not_mine", "not_mine"])
+        assert "can_sign" not in result
+
+    def test_generated_address(self):
+        self.log.info("Test a public key from one of the wallet's own addresses")
+        node = self.nodes[0]
+        node.createwallet(wallet_name="Erin")
+        erin = node.get_wallet_rpc("Erin")
+        info = erin.getaddressinfo(erin.getnewaddress(address_type="bech32"))
+        other = "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5"
+        desc = descsum_create(f"wsh(multi(1,{info['pubkey']},{other}))")
+        result = erin.analyzedescriptor(desc)
+        assert_equal([key["wallet"] for key in result["keys"]], ["mine", "not_mine"])
+        assert_equal(result["can_sign"], True)
+        # Also with the origin that getaddressinfo shows.
+        assert_equal(self.wallet_matches(erin, info["desc"]), ["mine"])
+        assert_equal(self.wallet_matches(self.cosigners[1], desc), ["not_mine", "not_mine"])
+
+    def test_account_key(self):
+        self.log.info("Test keys below an account xprv imported without its master")
+        node = self.nodes[0]
+        node.createwallet(wallet_name="Ivan", blank=True)
+        ivan = node.get_wallet_rpc("Ivan")
+        master = ExtendedPrivateKey.generate()
+        origin = f"{master._fingerprint().hex()}/84h/1h/0h"
+        account = master.derive_path("84h/1h/0h")
+        desc = descsum_create(f"wpkh([{origin}]{account.to_string()}/0/*)")
+        assert_equal(ivan.importdescriptors([{"desc": desc, "timestamp": "now", "active": True}])[0]["success"], True)
+        # The origin the wallet recorded for its address starts at the master.
+        info = ivan.getaddressinfo(ivan.getnewaddress(address_type="bech32"))
+        assert_equal(info["hdkeypath"], "m/84h/1h/0h/0/0")
+        result = ivan.analyzedescriptor(descsum_create(f"wpkh({info['pubkey']})"))
+        assert_equal([key["wallet"] for key in result["keys"]], ["mine"])
+        assert_equal(result["can_sign"], True)
+        # So does an xpub's origin below the account.
+        child = account.derive_path("0").pubkey().to_string()
+        assert_equal(self.wallet_matches(ivan, descsum_create(f"wpkh([{origin}/0]{child}/*)")), ["mine"])
+
+    def test_musig_only(self):
+        self.log.info("Test a key the wallet holds only as a musig() participant")
+        node = self.nodes[0]
+        node.createwallet(wallet_name="Frank", blank=True)
+        frank = node.get_wallet_rpc("Frank")
+        private = descsum_create(f"tr(musig({TPRV},{self.keys[1]}){MULTIPATH})")
+        assert_equal(frank.importdescriptors([{"desc": private, "timestamp": "now"}])[0]["success"], True)
+        # gethdkeys doesn't list musig() participants.
+        assert_equal(frank.gethdkeys(), [])
+        result = frank.analyzedescriptor(node.getdescriptorinfo(private)["descriptor"])
+        assert_equal([key["wallet"] for key in result["keys"]], ["not_mine", "mine", "watch_only"])
+        assert_equal(result["can_sign"], True)
+
+    def test_taproot_parity(self):
+        self.log.info("Test that a Taproot key matches with either prefix, an ECDSA key only exactly")
+        node = self.nodes[0]
+        node.createwallet(wallet_name="Grace", blank=True)
+        grace = node.get_wallet_rpc("Grace")
+        # A private key whose public key has an odd Y (03 prefix).
+        while True:
+            wif, pubkey = generate_keypair(wif=True)
+            if pubkey[0] == 3:
+                break
+        assert_equal(grace.importdescriptors([{"desc": descsum_create(f"wpkh({wif})"), "timestamp": "now"}])[0]["success"], True)
+        x = pubkey[1:].hex()
+        # Taproot uses only x: both prefixes are the wallet's key.
+        assert_equal(self.wallet_matches(grace, descsum_create(f"tr(02{x})")), ["mine"])
+        assert_equal(self.wallet_matches(grace, descsum_create(f"tr(03{x})")), ["mine"])
+        # ECDSA uses the full key: the other prefix is a different key.
+        assert_equal(self.wallet_matches(grace, descsum_create(f"wsh(multi(1,02{x}))")), ["not_mine"])
+        assert_equal(self.wallet_matches(grace, descsum_create(f"wsh(multi(1,03{x}))")), ["mine"])
+
+    def test_watch_only(self):
+        self.log.info("Test a watch-only wallet with the multisig descriptor")
+        node = self.nodes[0]
+        node.createwallet(wallet_name="Watcher", disable_private_keys=True)
+        watcher = node.get_wallet_rpc("Watcher")
+        desc = descsum_create(f"wsh(sortedmulti(2,{','.join(key + MULTIPATH for key in self.keys)}))")
+        assert_equal(watcher.importdescriptors([{"desc": desc, "timestamp": "now"}])[0]["success"], True)
+        result = watcher.analyzedescriptor(desc)
+        assert_equal([key["wallet"] for key in result["keys"]], ["watch_only"] * 3)
+        assert_equal(result["can_sign"], False)
+        # A plain public key too.
+        _, pubkey = generate_keypair()
+        assert_equal(watcher.importdescriptors([{"desc": descsum_create(f"wpkh({pubkey.hex()})"), "timestamp": "now"}])[0]["success"], True)
+        result = watcher.analyzedescriptor(descsum_create(f"wsh(multi(1,{pubkey.hex()}))"))
+        assert_equal([key["wallet"] for key in result["keys"]], ["watch_only"])
+        assert_equal(result["can_sign"], False)
+
+        self.log.info("Test a key whose private key the wallet holds only in another descriptor")
+        node.createwallet(wallet_name="Split", blank=True)
+        split = node.get_wallet_rpc("Split")
+        own, other = ExtendedPrivateKey.generate(), ExtendedPrivateKey.generate()
+        # A 2-of-2 with the wallet's own key, and an xpub whose private key is imported alone.
+        desc = descsum_create(f"wsh(multi(2,{own.to_string()}/0/*,{other.pubkey().to_string()}/0/*))")
+        public = node.getdescriptorinfo(desc)["descriptor"]
+        wif = descsum_create(f"pk({bytes_to_wif(other.key.get_bytes())})")
+        assert_equal([r["success"] for r in split.importdescriptors([{"desc": desc, "timestamp": "now", "range": 1}, {"desc": wif, "timestamp": "now"}])], [True, True])
+        assert_equal(self.wallet_matches(split, public), ["mine", "watch_only"])
+        # Indeed it can't sign with it: each descriptor signs with its own keys,
+        # and none has both the private key and the chain code.
+        address, change = node.deriveaddresses(public, [0, 1])
+        self.generatetoaddress(node, 101, address, sync_fun=self.no_op)
+        psbt = split.walletcreatefundedpsbt(outputs=[{address: 1}], options={"changeAddress": change})["psbt"]
+        assert_equal(split.walletprocesspsbt(psbt)["complete"], False)
+        # With the xprv in a descriptor, it can.
+        tprv = descsum_create(f"pk({other.to_string()}/0/*)")
+        assert_equal(split.importdescriptors([{"desc": tprv, "timestamp": "now", "range": 1}])[0]["success"], True)
+        assert_equal(self.wallet_matches(split, public), ["mine", "mine"])
+        assert_equal(split.walletprocesspsbt(psbt)["complete"], True)
+
+    def test_disabled_wallet(self):
+        self.log.info("Test that analyzedescriptor is not available with -disablewallet")
+        self.restart_node(0, extra_args=["-disablewallet"])
+        assert_raises_rpc_error(-32601, "Method not found", self.nodes[0].analyzedescriptor, "foo()")
+
+    def run_test(self):
+        cosigners = [self.create_cosigner(name) for name in ("Alice", "Bob", "Carol")]
+        self.cosigners = [wallet for wallet, _ in cosigners]
+        self.keys = [key for _, key in cosigners]
+        self.alice = self.cosigners[0]
+
+        self.test_errors()
+        self.test_cosigners()
+        self.test_locked_wallet()
+        self.test_generated_address()
+        self.test_account_key()
+        self.test_musig_only()
+        self.test_taproot_parity()
+        self.test_watch_only()
+        self.test_disabled_wallet()
+
+
+if __name__ == "__main__":
+    WalletAnalyzeDescriptorTest(__file__).main()

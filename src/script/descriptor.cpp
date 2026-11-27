@@ -46,9 +46,35 @@
 #include <tuple>
 #include <unordered_set>
 #include <utility>
+#include <variant>
 #include <vector>
 
 using util::Split;
+
+/** Internal construction state shared by all nodes of a key inspection. */
+class DescriptorKeyInfoBuilder
+{
+    DescriptorKeyInfo m_info;
+
+public:
+    template <typename Key>
+    size_t AddNode(Key key)
+    {
+        const size_t index{m_info.nodes.size()};
+        m_info.nodes.push_back({std::move(key), std::nullopt});
+        return index;
+    }
+
+    DescriptorKeyInfo::Node& GetNode(size_t index) { return m_info.nodes[index]; }
+
+    size_t Append(const PubkeyProvider& provider) { return provider.AppendKeyInfo(*this); }
+
+    DescriptorKeyInfo Build(const PubkeyProvider& provider)
+    {
+        Append(provider);
+        return std::move(m_info);
+    }
+};
 
 util::Expected<void, std::string> CheckDescriptorRangeBounds(int64_t low, int64_t high)
 {
@@ -204,101 +230,6 @@ std::string AddChecksum(const std::string& str) { return str + "#" + DescriptorC
 
 typedef std::vector<uint32_t> KeyPath;
 
-/** Interface for public key objects in descriptors. */
-struct PubkeyProvider
-{
-public:
-    //! Index of this key expression in the descriptor
-    //! E.g. If this PubkeyProvider is key1 in multi(2, key1, key2, key3), then m_expr_index = 0
-    const uint32_t m_expr_index;
-
-    explicit PubkeyProvider(uint32_t exp_index) : m_expr_index(exp_index) {}
-
-    virtual ~PubkeyProvider() = default;
-
-    /** Derive a public key and put it into out.
-     *  read_cache is the cache to read keys from (if not nullptr)
-     *  write_cache is the cache to write keys to (if not nullptr)
-     *  Caches are not exclusive but this is not tested. Currently we use them exclusively
-     */
-    virtual std::optional<CPubKey> GetPubKey(int pos, const SigningProvider& arg, FlatSigningProvider& out, const DescriptorCache* read_cache = nullptr, DescriptorCache* write_cache = nullptr) const = 0;
-
-    /** Whether this represent multiple public keys at different positions. */
-    virtual bool IsRange() const = 0;
-
-    /** Get the size of the generated public key(s) in bytes (33 or 65). */
-    virtual size_t GetSize() const = 0;
-
-    enum class StringType {
-        PUBLIC,
-        CANONICAL, // string calculation that always use h
-        COMPAT // string calculation that mustn't change over time to stay compatible with previous software versions
-    };
-
-    /** Get the descriptor string form. */
-    virtual std::string ToString(StringType type) const = 0;
-
-    /** Get the descriptor string form including private data (if available in arg).
-     *  If the private data is not available, the output string in the "out" parameter
-     *  will not contain any private key information,
-     *  and this function will return "false".
-     */
-    virtual bool ToPrivateString(const SigningProvider& arg, std::string& out) const = 0;
-
-    /** Get the descriptor string form with the xpub at the last hardened derivation,
-     *  and always use h for hardened derivation.
-     */
-    virtual bool ToNormalizedString(const SigningProvider& arg, std::string& out, const DescriptorCache* cache = nullptr) const = 0;
-
-    /** Derive a private key, if private data is available in arg and put it into out. */
-    virtual void GetPrivKey(int pos, const SigningProvider& arg, FlatSigningProvider& out) const = 0;
-
-    /** Whether private data for this provider is available in arg. */
-    virtual bool HavePrivateKeys(const SigningProvider& arg) const
-    {
-        FlatSigningProvider tmp_provider;
-        GetPrivKey(/*pos=*/0, arg, tmp_provider);
-        return !tmp_provider.keys.empty();
-    }
-
-    /** Return the non-extended public key for this PubkeyProvider, if it has one. */
-    virtual std::optional<CPubKey> GetRootPubKey() const = 0;
-    /** Return the extended public key for this PubkeyProvider, if it has one. */
-    virtual std::optional<CExtPubKey> GetRootExtPubKey() const = 0;
-
-    /** Make a deep copy of this PubkeyProvider */
-    virtual std::unique_ptr<PubkeyProvider> Clone() const = 0;
-
-    /** Whether this PubkeyProvider is a BIP 32 extended key that can be derived from */
-    virtual bool IsBIP32() const = 0;
-
-    /** Get the count of keys known by this PubkeyProvider. Usually one, but may be more for key aggregation schemes */
-    virtual size_t GetKeyCount() const { return 1; }
-
-    /** Whether this PubkeyProvider can always provide a public key without cache or private key arguments */
-    virtual bool CanSelfExpand() const = 0;
-
-protected:
-    static bool DetermineApostropheUse(StringType type, bool normalized, bool public_apostrophe)
-    {
-        bool use_apostrophe{false};
-        switch (type) {
-        case StringType::COMPAT:
-            // COMPAT always uses apostrophe to stay compatible with previous versions
-            use_apostrophe = true;
-            break;
-        case StringType::CANONICAL:
-            // CANONICAL always uses h
-            use_apostrophe = false;
-            break;
-        case StringType::PUBLIC:
-            use_apostrophe = !normalized && public_apostrophe;
-            break;
-        } // no default case, so the compiler can warn about missing cases
-        return use_apostrophe;
-    }
-};
-
 class OriginPubkeyProvider final : public PubkeyProvider
 {
     KeyOriginInfo m_origin;
@@ -370,11 +301,23 @@ public:
     {
         return m_provider->GetRootExtPubKey();
     }
+    std::optional<KeyOriginInfo> GetOriginInfo() const override
+    {
+        return m_origin;
+    }
     std::unique_ptr<PubkeyProvider> Clone() const override
     {
         return std::make_unique<OriginPubkeyProvider>(m_expr_index, m_origin, m_provider->Clone(), m_apostrophe);
     }
     bool CanSelfExpand() const override { return m_provider->CanSelfExpand(); }
+
+private:
+    size_t AppendKeyInfo(DescriptorKeyInfoBuilder& builder) const override
+    {
+        const size_t index{builder.Append(*m_provider)};
+        builder.GetNode(index).origin = GetOriginInfo();
+        return index;
+    }
 };
 
 /** An object representing a parsed constant public key in a descriptor. */
@@ -440,13 +383,17 @@ public:
         return std::make_unique<ConstPubkeyProvider>(m_expr_index, m_pubkey, m_xonly);
     }
     bool CanSelfExpand() const final { return true; }
+
+private:
+    size_t AppendKeyInfo(DescriptorKeyInfoBuilder& builder) const override
+    {
+        // An x-only key has no parity; report the even form, as its serialization does.
+        const CPubKey pubkey{m_xonly ? XOnlyPubKey{m_pubkey}.GetEvenCorrespondingCPubKey() : m_pubkey};
+        return builder.AddNode(DescriptorKeyInfo::ConstKey{pubkey, m_xonly});
+    }
 };
 
-enum class DeriveType {
-    NON_RANGED,
-    UNHARDENED_RANGED,
-    HARDENED_RANGED,
-};
+using DeriveType = DescriptorKeyInfo::DeriveType;
 
 /** An object representing a parsed extended public key in a descriptor. */
 class BIP32PubkeyProvider final : public PubkeyProvider
@@ -660,6 +607,12 @@ public:
         return std::make_unique<BIP32PubkeyProvider>(m_expr_index, m_root_extkey, m_path, m_derive, m_apostrophe);
     }
     bool CanSelfExpand() const override { return !IsHardened(); }
+
+private:
+    size_t AppendKeyInfo(DescriptorKeyInfoBuilder& builder) const override
+    {
+        return builder.AddNode(DescriptorKeyInfo::BIP32Key{m_root_extkey, {m_path, m_derive}});
+    }
 };
 
 /** PubkeyProvider for a musig() expression */
@@ -877,20 +830,53 @@ public:
         }
         return true;
     }
+
+private:
+    size_t AppendKeyInfo(DescriptorKeyInfoBuilder& builder) const override
+    {
+        const size_t index{builder.AddNode(DescriptorKeyInfo::MuSigKey{{}, {m_path, m_derive}})};
+        std::get<DescriptorKeyInfo::MuSigKey>(builder.GetNode(index).key).participants.reserve(m_participants.size());
+        for (const auto& participant : m_participants) {
+            const size_t child{builder.Append(*participant)};
+            // Appending a participant can invalidate references into the node vector.
+            std::get<DescriptorKeyInfo::MuSigKey>(builder.GetNode(index).key).participants.push_back(child);
+        }
+        return index;
+    }
+};
+
+/** Construction state for a complete policy inspection. */
+class DescriptorPolicyBuilder
+{
+    DescriptorPolicy m_policy;
+
+public:
+    size_t AddNode(std::variant<DescriptorPolicy::Kind, miniscript::Fragment> kind,
+                   std::span<const size_t> keys = {}, uint32_t value = 0,
+                   std::span<const unsigned char> data = {})
+    {
+        const size_t index{m_policy.nodes.size()};
+        m_policy.nodes.push_back({kind, value, {data.begin(), data.end()}, {keys.begin(), keys.end()}, {}});
+        return index;
+    }
+
+    DescriptorKeyInventory& Keys() { return m_policy.keys; }
+    DescriptorPolicy::Node& Node(size_t index) { return m_policy.nodes[index]; }
+    DescriptorPolicy Take() { return std::move(m_policy); }
 };
 
 /** Base class for all Descriptor implementations. */
 class DescriptorImpl : public Descriptor
 {
 protected:
-    //! Public key arguments for this descriptor (size 1 for PK, PKH, WPKH; any size for WSH and Multisig).
+    //! Public key arguments in provider-storage order, including Miniscript keys.
     const std::vector<std::unique_ptr<PubkeyProvider>> m_pubkey_args;
     //! The string name of the descriptor function.
     const std::string m_name;
     //! Warnings (not including subdescriptors).
     std::vector<std::string> m_warnings;
 
-    //! The sub-descriptor arguments (empty for everything but SH and WSH).
+    //! Sub-descriptor arguments for script wrappers and Taproot leaves.
     //! In doc/descriptors.md this is referred to as SCRIPT expressions sh(SCRIPT)
     //! and wsh(SCRIPT), and distinct from KEY expressions and ADDR expressions.
     //! Subdescriptors can only ever generate a single script.
@@ -910,6 +896,40 @@ protected:
      *  @return A vector with scriptPubKeys for this descriptor.
      */
     virtual std::vector<CScript> MakeScripts(const std::vector<CPubKey>& pubkeys, std::span<const CScript> scripts, FlatSigningProvider& out) const = 0;
+
+    //! Signing role of this descriptor's own key arguments.
+    virtual DescriptorKeyInventory::Role KeyRole() const = 0;
+
+    //! Append occurrences for this descriptor's own key arguments, in storage order.
+    //! Returns the occurrence ID of each argument's root expression.
+    std::vector<size_t> AppendKeyOccurrences(DescriptorKeyInventory& inventory) const
+    {
+        std::vector<size_t> roots;
+        roots.reserve(m_pubkey_args.size());
+        for (const auto& provider : m_pubkey_args) {
+            auto info{provider->GetKeyInfo()};
+            const size_t offset{inventory.occurrences.size()};
+            roots.push_back(offset);
+            for (size_t i = 0; i < info.nodes.size(); ++i) {
+                auto& node{info.nodes[i]};
+                if (auto* musig = std::get_if<DescriptorKeyInfo::MuSigKey>(&node.key)) {
+                    // Provider-local links become descriptor-inventory IDs.
+                    for (auto& participant : musig->participants)
+                        participant += offset;
+                }
+                inventory.occurrences.push_back({std::move(node), i == 0 ? KeyRole() : DescriptorKeyInventory::Role::MUSIG_PARTICIPANT});
+            }
+        }
+        return roots;
+    }
+
+    //! Append this descriptor's local policy, with keys mapped to inventory IDs.
+    virtual size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const = 0;
+
+    virtual std::variant<DescriptorPolicy::ChildRole, DescriptorPolicy::TapLeaf> PolicyChildRole(size_t) const
+    {
+        return DescriptorPolicy::ChildRole::SCRIPT;
+    }
 
 public:
     DescriptorImpl(std::vector<std::unique_ptr<PubkeyProvider>> pubkeys, const std::string& name) : m_pubkey_args(std::move(pubkeys)), m_name(name), m_subdescriptor_args() {}
@@ -1129,6 +1149,43 @@ public:
 
     virtual std::unique_ptr<DescriptorImpl> Clone() const = 0;
 
+    DescriptorKeyInventory GetKeyInventory() const final { return GetPolicy().keys; }
+
+    DescriptorPolicy GetPolicy() const final
+    {
+        DescriptorPolicyBuilder builder;
+        builder.Keys().occurrences.reserve(GetKeyCount());
+        const auto append = [&](const DescriptorImpl& descriptor) {
+            // Roots follow provider storage order, which can differ from
+            // Miniscript traversal order after script inference.
+            const auto roots{descriptor.AppendKeyOccurrences(builder.Keys())};
+            return descriptor.AppendPolicy(builder, roots);
+        };
+
+        // Keep only the current ancestry, rather than queueing every Taproot leaf.
+        struct Frame {
+            const DescriptorImpl* descriptor;
+            size_t node;
+            size_t next_child{0};
+        };
+        std::vector<Frame> stack{{this, append(*this)}};
+        while (!stack.empty()) {
+            // Invalidated by the push_back below; do not use it after that.
+            auto& frame{stack.back()};
+            const auto& children{frame.descriptor->m_subdescriptor_args};
+            if (frame.next_child == children.size()) {
+                stack.pop_back();
+                continue;
+            }
+            const size_t pos{frame.next_child++};
+            const DescriptorImpl* child{children[pos].get()};
+            const size_t child_node{append(*child)};
+            builder.Node(frame.node).children.push_back({child_node, frame.descriptor->PolicyChildRole(pos)});
+            stack.push_back({child, child_node});
+        }
+        return builder.Take();
+    }
+
     bool HasScripts() const override { return true; }
 
     // NOLINTNEXTLINE(misc-no-recursion)
@@ -1193,6 +1250,15 @@ class AddressDescriptor final : public DescriptorImpl
 {
     const CTxDestination m_destination;
 protected:
+    //! No key arguments, so no role is ever requested.
+    DescriptorKeyInventory::Role KeyRole() const override { NONFATAL_UNREACHABLE(); }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t>) const override
+    {
+        // A destination script is bounded independently of the descriptor input.
+        const auto script{GetScriptForDestination(m_destination)};
+        return builder.AddNode(DescriptorPolicy::Kind::ADDR, {}, /*value=*/0, script);
+    }
+
     std::string ToStringExtra() const override { return EncodeDestination(m_destination); }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, std::span<const CScript>, FlatSigningProvider&) const override { return Vector(GetScriptForDestination(m_destination)); }
 public:
@@ -1218,6 +1284,13 @@ class RawDescriptor final : public DescriptorImpl
 {
     const CScript m_script;
 protected:
+    //! No key arguments, so no role is ever requested.
+    DescriptorKeyInventory::Role KeyRole() const override { NONFATAL_UNREACHABLE(); }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t>) const override
+    {
+        return builder.AddNode(DescriptorPolicy::Kind::RAW, {}, /*value=*/0, m_script);
+    }
+
     std::string ToStringExtra() const override { return HexStr(m_script); }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, std::span<const CScript>, FlatSigningProvider&) const override { return Vector(m_script); }
 public:
@@ -1247,6 +1320,12 @@ class PKDescriptor final : public DescriptorImpl
 private:
     const bool m_xonly;
 protected:
+    DescriptorKeyInventory::Role KeyRole() const override { return m_xonly ? DescriptorKeyInventory::Role::TAPSCRIPT : DescriptorKeyInventory::Role::ECDSA; }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const override
+    {
+        return builder.AddNode(DescriptorPolicy::Kind::PK, keys);
+    }
+
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript>, FlatSigningProvider&) const override
     {
         if (m_xonly) {
@@ -1285,6 +1364,12 @@ public:
 class PKHDescriptor final : public DescriptorImpl
 {
 protected:
+    DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::ECDSA; }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const override
+    {
+        return builder.AddNode(DescriptorPolicy::Kind::PKH, keys);
+    }
+
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript>, FlatSigningProvider&) const override
     {
         CKeyID id = keys[0].GetID();
@@ -1318,6 +1403,12 @@ public:
 class WPKHDescriptor final : public DescriptorImpl
 {
 protected:
+    DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::ECDSA; }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const override
+    {
+        return builder.AddNode(DescriptorPolicy::Kind::WPKH, keys);
+    }
+
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript>, FlatSigningProvider&) const override
     {
         CKeyID id = keys[0].GetID();
@@ -1351,6 +1442,12 @@ public:
 class ComboDescriptor final : public DescriptorImpl
 {
 protected:
+    DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::ECDSA; }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const override
+    {
+        return builder.AddNode(DescriptorPolicy::Kind::COMBO, keys);
+    }
+
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript>, FlatSigningProvider& out) const override
     {
         std::vector<CScript> ret;
@@ -1380,6 +1477,12 @@ class MultisigDescriptor final : public DescriptorImpl
     const int m_threshold;
     const bool m_sorted;
 protected:
+    DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::ECDSA; }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const override
+    {
+        return builder.AddNode(m_sorted ? DescriptorPolicy::Kind::SORTEDMULTI : DescriptorPolicy::Kind::MULTI, keys, static_cast<uint32_t>(m_threshold));
+    }
+
     std::string ToStringExtra() const override { return strprintf("%i", m_threshold); }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript>, FlatSigningProvider&) const override {
         if (m_sorted) {
@@ -1426,6 +1529,12 @@ class MultiADescriptor final : public DescriptorImpl
     const int m_threshold;
     const bool m_sorted;
 protected:
+    DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::TAPSCRIPT; }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const override
+    {
+        return builder.AddNode(m_sorted ? DescriptorPolicy::Kind::SORTEDMULTI_A : DescriptorPolicy::Kind::MULTI_A, keys, static_cast<uint32_t>(m_threshold));
+    }
+
     std::string ToStringExtra() const override { return strprintf("%i", m_threshold); }
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript>, FlatSigningProvider&) const override {
         CScript ret;
@@ -1470,6 +1579,13 @@ public:
 class SHDescriptor final : public DescriptorImpl
 {
 protected:
+    //! No key arguments, so no role is ever requested.
+    DescriptorKeyInventory::Role KeyRole() const override { NONFATAL_UNREACHABLE(); }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t>) const override
+    {
+        return builder.AddNode(DescriptorPolicy::Kind::SH);
+    }
+
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, std::span<const CScript> scripts, FlatSigningProvider& out) const override
     {
         auto ret = Vector(GetScriptForDestination(ScriptHash(scripts[0])));
@@ -1520,6 +1636,13 @@ public:
 class WSHDescriptor final : public DescriptorImpl
 {
 protected:
+    //! No key arguments, so no role is ever requested.
+    DescriptorKeyInventory::Role KeyRole() const override { NONFATAL_UNREACHABLE(); }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t>) const override
+    {
+        return builder.AddNode(DescriptorPolicy::Kind::WSH);
+    }
+
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, std::span<const CScript> scripts, FlatSigningProvider& out) const override
     {
         auto ret = Vector(GetScriptForDestination(WitnessV0ScriptHash(scripts[0])));
@@ -1562,6 +1685,17 @@ class TRDescriptor final : public DescriptorImpl
 {
     std::vector<int> m_depths;
 protected:
+    DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::TAPROOT_INTERNAL; }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const override
+    {
+        return builder.AddNode(DescriptorPolicy::Kind::TR, keys);
+    }
+
+    std::variant<DescriptorPolicy::ChildRole, DescriptorPolicy::TapLeaf> PolicyChildRole(size_t pos) const override
+    {
+        return DescriptorPolicy::TapLeaf{static_cast<uint32_t>(m_depths[pos])};
+    }
+
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> scripts, FlatSigningProvider& out) const override
     {
         TaprootBuilder builder;
@@ -1738,7 +1872,81 @@ class MiniscriptDescriptor final : public DescriptorImpl
 private:
     miniscript::Node<uint32_t> m_node;
 
+    static DescriptorPolicy::ChildRole MiniscriptChildRole(miniscript::Fragment fragment, size_t pos)
+    {
+        using Role = DescriptorPolicy::ChildRole;
+        using Fragment = miniscript::Fragment;
+        switch (fragment) {
+        case Fragment::WRAP_A:
+        case Fragment::WRAP_S:
+        case Fragment::WRAP_C:
+        case Fragment::WRAP_D:
+        case Fragment::WRAP_V:
+        case Fragment::WRAP_J:
+        case Fragment::WRAP_N: return Role::WRAPPED;
+        case Fragment::AND_V:
+        case Fragment::AND_B:
+        case Fragment::OR_B:
+        case Fragment::OR_C:
+        case Fragment::OR_D: return pos == 0 ? Role::LEFT : Role::RIGHT;
+        case Fragment::OR_I: return pos == 0 ? Role::IF_TRUE : Role::IF_FALSE;
+        case Fragment::ANDOR: return pos == 0 ? Role::CONDITION : pos == 1 ? Role::IF_TRUE :
+                                                                             Role::IF_FALSE;
+        case Fragment::THRESH: return Role::THRESHOLD_INPUT;
+        case Fragment::JUST_0:
+        case Fragment::JUST_1:
+        case Fragment::PK_K:
+        case Fragment::PK_H:
+        case Fragment::OLDER:
+        case Fragment::AFTER:
+        case Fragment::SHA256:
+        case Fragment::HASH256:
+        case Fragment::RIPEMD160:
+        case Fragment::HASH160:
+        case Fragment::MULTI:
+        case Fragment::MULTI_A: NONFATAL_UNREACHABLE();
+        }
+        NONFATAL_UNREACHABLE();
+    }
+
 protected:
+    DescriptorKeyInventory::Role KeyRole() const override { return miniscript::IsTapscript(m_node.GetMsCtx()) ? DescriptorKeyInventory::Role::TAPSCRIPT : DescriptorKeyInventory::Role::ECDSA; }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const override
+    {
+        const auto append = [&](const miniscript::Node<uint32_t>& node) {
+            const size_t index{builder.AddNode(node.Fragment(), {}, node.K(), node.Data())};
+            auto& result{builder.Node(index)};
+            result.keys.reserve(node.Keys().size());
+            for (const auto key : node.Keys()) {
+                CHECK_NONFATAL(key < keys.size());
+                result.keys.push_back(keys[key]);
+            }
+            return index;
+        };
+        const size_t root{append(m_node)};
+        struct Frame {
+            const miniscript::Node<uint32_t>* source;
+            size_t node;
+            size_t next_child{0};
+        };
+        std::vector<Frame> stack{{&m_node, root}};
+        while (!stack.empty()) {
+            // Invalidated by the push_back below; do not use it after that.
+            auto& frame{stack.back()};
+            const auto& children{frame.source->Subs()};
+            if (frame.next_child == children.size()) {
+                stack.pop_back();
+                continue;
+            }
+            const size_t pos{frame.next_child++};
+            const auto* child{&children[pos]};
+            const size_t child_node{append(*child)};
+            builder.Node(frame.node).children.push_back({child_node, MiniscriptChildRole(frame.source->Fragment(), pos)});
+            stack.push_back({child, child_node});
+        }
+        return root;
+    }
+
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> scripts,
                                      FlatSigningProvider& provider) const override
     {
@@ -1819,6 +2027,12 @@ public:
 class RawTRDescriptor final : public DescriptorImpl
 {
 protected:
+    DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::TAPROOT_OUTPUT; }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const override
+    {
+        return builder.AddNode(DescriptorPolicy::Kind::RAWTR, keys);
+    }
+
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> scripts, FlatSigningProvider& out) const override
     {
         assert(keys.size() == 1);
@@ -1854,6 +2068,12 @@ public:
 class UnusedDescriptor final : public DescriptorImpl
 {
 protected:
+    DescriptorKeyInventory::Role KeyRole() const override { return DescriptorKeyInventory::Role::UNUSED; }
+    size_t AppendPolicy(DescriptorPolicyBuilder& builder, std::span<const size_t> keys) const override
+    {
+        return builder.AddNode(DescriptorPolicy::Kind::UNUSED, keys);
+    }
+
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, std::span<const CScript> scripts, FlatSigningProvider& out) const override { return {}; }
 public:
     UnusedDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), "unused") {}
@@ -2089,6 +2309,10 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(uint32_t& key_exp_index
         auto split = Split(sp, ')', /*include_sep=*/true);
         if (split.size() > 2) {
             error = "Too many ')' in musig() expression";
+            return {};
+        }
+        if (split.size() == 2 && !split.at(1).empty() && !Const("/", split.at(1), /*skip=*/false)) {
+            error = "Unexpected characters after musig() expression";
             return {};
         }
         std::span<const char> expr(split.at(0).begin(), split.at(0).end());
@@ -2983,6 +3207,44 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
 
 
 } // namespace
+
+DescriptorKeyInfo PubkeyProvider::GetKeyInfo() const
+{
+    return DescriptorKeyInfoBuilder{}.Build(*this);
+}
+
+bool PubkeyProvider::HavePrivateKeys(const SigningProvider& arg) const
+{
+    FlatSigningProvider tmp_provider;
+    GetPrivKey(/*pos=*/0, arg, tmp_provider);
+    return !tmp_provider.keys.empty();
+}
+
+bool PubkeyProvider::DetermineApostropheUse(StringType type, bool normalized, bool public_apostrophe)
+{
+    bool use_apostrophe{false};
+    switch (type) {
+    case StringType::COMPAT:
+        // COMPAT always uses apostrophe to stay compatible with previous versions
+        use_apostrophe = true;
+        break;
+    case StringType::CANONICAL:
+        // CANONICAL always uses h
+        use_apostrophe = false;
+        break;
+    case StringType::PUBLIC:
+        use_apostrophe = !normalized && public_apostrophe;
+        break;
+    } // no default case, so the compiler can warn about missing cases
+    return use_apostrophe;
+}
+
+std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkey(std::string_view key_expression, FlatSigningProvider& out, std::string& error)
+{
+    uint32_t key_exp_index{0};
+    const std::span<const char> expression{key_expression};
+    return ParsePubkey(key_exp_index, expression, ParseScriptContext::P2TR, out, error);
+}
 
 /** Check a descriptor checksum, and update desc to be the checksum-less part. */
 bool CheckChecksum(std::span<const char>& sp, bool require_checksum, std::string& error, std::string* out_checksum = nullptr)
