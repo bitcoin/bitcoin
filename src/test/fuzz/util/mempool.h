@@ -19,6 +19,8 @@ public:
     {
         m_mempool = mempool;
     }
+
+    using Chainstate::MaybeUpdateMempoolForReorg;
 };
 
 [[nodiscard]] CTxMemPoolEntry ConsumeTxMemPoolEntry(FuzzedDataProvider& fuzzed_data_provider, const CTransaction& tx, uint32_t max_height=std::numeric_limits<uint32_t>::max()) noexcept;
