@@ -436,7 +436,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
 
     AssertLockHeld(::cs_main);
     LOCK(cs);
-    LogDebug(BCLog::MEMPOOL, "Checking mempool with %u transactions and %u inputs\n", (unsigned int)mapTx.size(), (unsigned int)mapNextTx.size());
+    LogDebug(BCLog::MEMPOOL, "Checking mempool with %u transactions and %u inputs", (unsigned int)mapTx.size(), (unsigned int)mapNextTx.size());
 
     uint64_t checkTotal = 0;
     CAmount check_total_fee{0};
@@ -691,9 +691,9 @@ void CTxMemPool::PrioritiseTransaction(const Txid& hash, const CAmount& nFeeDelt
         }
         if (delta == 0) {
             mapDeltas.erase(hash);
-            LogInfo("PrioritiseTransaction: %s (%sin mempool) delta cleared\n", hash.ToString(), it == mapTx.end() ? "not " : "");
+            LogInfo("PrioritiseTransaction: %s (%sin mempool) delta cleared", hash.ToString(), it == mapTx.end() ? "not " : "");
         } else {
-            LogInfo("PrioritiseTransaction: %s (%sin mempool) fee += %s, new delta=%s\n",
+            LogInfo("PrioritiseTransaction: %s (%sin mempool) fee += %s, new delta=%s",
                       hash.ToString(),
                       it == mapTx.end() ? "not " : "",
                       FormatMoney(nFeeDelta),
@@ -954,7 +954,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
     }
 
     if (maxFeeRateRemoved > CFeeRate(0)) {
-        LogDebug(BCLog::MEMPOOL, "Removed %u txn, rolling minimum fee bumped to %s\n", nTxnRemoved, maxFeeRateRemoved.ToString());
+        LogDebug(BCLog::MEMPOOL, "Removed %u txn, rolling minimum fee bumped to %s", nTxnRemoved, maxFeeRateRemoved.ToString());
     }
 }
 

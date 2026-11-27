@@ -846,9 +846,8 @@ static int CommandLineRawTx(int argc, char* argv[])
     catch (const std::exception& e) {
         strPrint = std::string("error: ") + e.what();
         nRet = EXIT_FAILURE;
-    }
-    catch (...) {
-        PrintExceptionContinue(nullptr, "CommandLineRawTx()");
+    } catch (...) {
+        PrintExceptionContinue(nullptr);
         throw;
     }
 
@@ -867,23 +866,21 @@ MAIN_FUNCTION
         int ret = AppInitRawTx(argc, argv);
         if (ret != CONTINUE_EXECUTION)
             return ret;
-    }
-    catch (const std::exception& e) {
-        PrintExceptionContinue(&e, "AppInitRawTx()");
+    } catch (const std::exception& e) {
+        PrintExceptionContinue(&e);
         return EXIT_FAILURE;
     } catch (...) {
-        PrintExceptionContinue(nullptr, "AppInitRawTx()");
+        PrintExceptionContinue(nullptr);
         return EXIT_FAILURE;
     }
 
     int ret = EXIT_FAILURE;
     try {
         ret = CommandLineRawTx(argc, argv);
-    }
-    catch (const std::exception& e) {
-        PrintExceptionContinue(&e, "CommandLineRawTx()");
+    } catch (const std::exception& e) {
+        PrintExceptionContinue(&e);
     } catch (...) {
-        PrintExceptionContinue(nullptr, "CommandLineRawTx()");
+        PrintExceptionContinue(nullptr);
     }
     return ret;
 }

@@ -12,6 +12,7 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <tinyformat.h>
+#include <util/string.h>
 
 #include <algorithm>
 #include <cassert>
@@ -114,18 +115,14 @@ unsigned int CTransaction::ComputeTotalSize() const
 
 std::string CTransaction::ToString() const
 {
-    std::string str;
-    str += strprintf("CTransaction(hash=%s, ver=%u, vin.size=%u, vout.size=%u, nLockTime=%u)\n",
-        GetHash().ToString().substr(0,10),
+    return strprintf("CTransaction(txid=%s, version=%u, locktime=%u, input_count=%u, output_count=%u,    inputs=[%s],    outputs=[%s])",
+        GetHash().ToString(),
         version,
+        nLockTime,
         vin.size(),
         vout.size(),
-        nLockTime);
-    for (const auto& tx_in : vin)
-        str += "    " + tx_in.ToString() + "\n";
-    for (const auto& tx_in : vin)
-        str += "    " + tx_in.scriptWitness.ToString() + "\n";
-    for (const auto& tx_out : vout)
-        str += "    " + tx_out.ToString() + "\n";
-    return str;
+        util::Join(vin, ",    ", [](const CTxIn& tx_in) {
+            return strprintf("{%s, %s}", tx_in.ToString(), tx_in.scriptWitness.ToString());
+        }),
+        util::Join(vout, ",    ", [](const CTxOut& tx_out) { return tx_out.ToString(); }));
 }

@@ -312,7 +312,7 @@ bool TxOrphanageImpl::AddTx(const CTransactionRef& tx, NodeId peer)
     // Ignore transactions above max standard size to avoid a send-big-orphans memory exhaustion attack.
     TxOrphanage::Usage sz = GetTransactionWeight(*tx);
     if (sz > MAX_STANDARD_TX_WEIGHT) {
-        LogDebug(BCLog::TXPACKAGES, "ignoring large orphan tx (size: %u, txid: %s, wtxid: %s)\n", sz, txid.ToString(), wtxid.ToString());
+        LogDebug(BCLog::TXPACKAGES, "ignoring large orphan tx (size: %u, txid: %s, wtxid: %s)", sz, txid.ToString(), wtxid.ToString());
         return false;
     }
 
@@ -338,11 +338,11 @@ bool TxOrphanageImpl::AddTx(const CTransactionRef& tx, NodeId peer)
         m_unique_orphan_usage += iter->GetMemUsage();
         m_unique_rounded_input_scores += iter->GetLatencyScore() - 1;
 
-        LogDebug(BCLog::TXPACKAGES, "stored orphan tx %s (wtxid=%s), weight: %u (mapsz %u outsz %u)\n",
+        LogDebug(BCLog::TXPACKAGES, "stored orphan tx %s (wtxid=%s), weight: %u (mapsz %u outsz %u)",
                     txid.ToString(), wtxid.ToString(), sz, m_orphans.size(), m_outpoint_to_orphan_wtxids.size());
         Assume(IsUnique(iter));
     } else {
-        LogDebug(BCLog::TXPACKAGES, "added peer=%d as announcer of orphan tx %s (wtxid=%s)\n",
+        LogDebug(BCLog::TXPACKAGES, "added peer=%d as announcer of orphan tx %s (wtxid=%s)",
                     peer, txid.ToString(), wtxid.ToString());
         Assume(!IsUnique(iter));
     }
@@ -373,7 +373,7 @@ bool TxOrphanageImpl::AddAnnouncer(const Wtxid& wtxid, NodeId peer)
     peer_info.Add(*iter);
 
     const auto& txid = ptx->GetHash();
-    LogDebug(BCLog::TXPACKAGES, "added peer=%d as announcer of orphan tx %s (wtxid=%s)\n",
+    LogDebug(BCLog::TXPACKAGES, "added peer=%d as announcer of orphan tx %s (wtxid=%s)",
                 peer, txid.ToString(), wtxid.ToString());
 
     Assume(!IsUnique(iter));
@@ -398,7 +398,7 @@ bool TxOrphanageImpl::EraseTxInternal(const Wtxid& wtxid)
         Erase<ByWtxid>(it++);
         num_ann += 1;
     }
-    LogDebug(BCLog::TXPACKAGES, "removed orphan tx %s (wtxid=%s) (%u announcements)\n", txid.ToString(), wtxid.ToString(), num_ann);
+    LogDebug(BCLog::TXPACKAGES, "removed orphan tx %s (wtxid=%s) (%u announcements)", txid.ToString(), wtxid.ToString(), num_ann);
 
     return true;
 }
@@ -428,7 +428,7 @@ void TxOrphanageImpl::EraseForPeer(NodeId peer)
     }
     Assume(!m_peer_orphanage_info.contains(peer));
 
-    if (num_ann > 0) LogDebug(BCLog::TXPACKAGES, "Erased %d orphan transaction(s) from peer=%d\n", num_ann, peer);
+    if (num_ann > 0) LogDebug(BCLog::TXPACKAGES, "Erased %d orphan transaction(s) from peer=%d", num_ann, peer);
 
     // Deletions can cause the orphanage's MaxGlobalUsage to decrease, so we may need to trim here.
     LimitOrphans();
@@ -513,7 +513,7 @@ void TxOrphanageImpl::LimitOrphans()
             if (it_worst_peer == m_peer_orphanage_info.end() ||
                 ByRatioNegSize{it_worst_peer->second.GetDosScore(max_lat, max_mem)} <= ByRatioNegSize{dos_threshold}) break;
         }
-        LogDebug(BCLog::TXPACKAGES, "peer=%d orphanage overflow, removed %u of %u announcements\n", worst_peer, num_erased_this_round, starting_num_ann);
+        LogDebug(BCLog::TXPACKAGES, "peer=%d orphanage overflow, removed %u of %u announcements", worst_peer, num_erased_this_round, starting_num_ann);
 
         if (!NeedsTrim()) break;
 
@@ -526,7 +526,7 @@ void TxOrphanageImpl::LimitOrphans()
     } while (true);
 
     const auto remaining_unique_orphans{CountUniqueOrphans()};
-    LogDebug(BCLog::TXPACKAGES, "orphanage overflow, removed %u tx (%u announcements)\n", original_unique_txns - remaining_unique_orphans, num_erased);
+    LogDebug(BCLog::TXPACKAGES, "orphanage overflow, removed %u tx (%u announcements)", original_unique_txns - remaining_unique_orphans, num_erased);
 }
 
 std::vector<std::pair<Wtxid, NodeId>> TxOrphanageImpl::AddChildrenToWorkSet(const CTransaction& tx, FastRandomContext& rng)
@@ -563,7 +563,7 @@ std::vector<std::pair<Wtxid, NodeId>> TxOrphanageImpl::AddChildrenToWorkSet(cons
                 ret.emplace_back(wtxid, it->m_announcer);
                 m_reconsiderable_wtxids.insert(wtxid);
 
-                LogDebug(BCLog::TXPACKAGES, "added %s (wtxid=%s) to peer %d workset\n",
+                LogDebug(BCLog::TXPACKAGES, "added %s (wtxid=%s) to peer %d workset",
                             it->m_tx->GetHash().ToString(), it->m_tx->GetWitnessHash().ToString(), it->m_announcer);
             }
         }
@@ -641,7 +641,7 @@ void TxOrphanageImpl::EraseForBlock(const CBlock& block)
     }
 
     if (num_erased != 0) {
-        LogDebug(BCLog::TXPACKAGES, "Erased %d orphan transaction(s) included or conflicted by block\n", num_erased);
+        LogDebug(BCLog::TXPACKAGES, "Erased %d orphan transaction(s) included or conflicted by block", num_erased);
     }
     Assume(wtxids_to_erase.size() == num_erased);
 

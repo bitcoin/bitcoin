@@ -106,7 +106,7 @@ std::optional<PSBTError> ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySigned
 
     std::string failure_reason;
     if(!signer->SignTransaction(psbt, failure_reason)) {
-        LogWarning("Failed to sign: %s\n", failure_reason);
+        LogWarning("Failed to sign: %s", failure_reason);
         return PSBTError::EXTERNAL_SIGNER_FAILED;
     }
     if (options.finalize) FinalizePSBT(psbt); // This won't work in a multisig setup

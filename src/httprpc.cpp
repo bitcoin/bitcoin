@@ -300,7 +300,7 @@ static bool InitRPCAuthentication()
     }
 
     if (!gArgs.GetArgs("-rpcauth").empty()) {
-        LogInfo("Using rpcauth authentication.\n");
+        LogInfo("Using rpcauth authentication.");
         for (const std::string& rpcauth : gArgs.GetArgs("-rpcauth")) {
             std::vector<std::string> fields{SplitString(rpcauth, ':')};
             const std::vector<std::string> salt_hmac{SplitString(fields.back(), '$')};
@@ -342,7 +342,7 @@ static bool InitRPCAuthentication()
 
 bool StartHTTPRPC(const std::any& context)
 {
-    LogDebug(BCLog::RPC, "Starting HTTP RPC server\n");
+    LogDebug(BCLog::RPC, "Starting HTTP RPC server");
     if (!InitRPCAuthentication())
         return false;
 
@@ -356,12 +356,12 @@ bool StartHTTPRPC(const std::any& context)
 
 void InterruptHTTPRPC()
 {
-    LogDebug(BCLog::RPC, "Interrupting HTTP RPC server\n");
+    LogDebug(BCLog::RPC, "Interrupting HTTP RPC server");
 }
 
 void StopHTTPRPC()
 {
-    LogDebug(BCLog::RPC, "Stopping HTTP RPC server\n");
+    LogDebug(BCLog::RPC, "Stopping HTTP RPC server");
     UnregisterHTTPHandler("/", true);
     if (g_wallet_init_interface.HasWalletSupport()) {
         UnregisterHTTPHandler("/wallet/", false);

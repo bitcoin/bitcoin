@@ -53,7 +53,7 @@ static const int NUM_OS_RANDOM_BYTES = 32;
 
 [[noreturn]] void RandFailure()
 {
-    LogError("Failed to read randomness, aborting\n");
+    LogError("Failed to read randomness, aborting");
     std::abort();
 }
 
@@ -527,7 +527,7 @@ void SeedPeriodic(CSHA512& hasher, RNGState& rng) noexcept
     // Dynamic environment data (clocks, resource usage, ...)
     auto old_size = hasher.Size();
     RandAddDynamicEnv(hasher);
-    LogDebug(BCLog::RAND, "Feeding %i bytes of dynamic environment data into RNG\n", hasher.Size() - old_size);
+    LogDebug(BCLog::RAND, "Feeding %i bytes of dynamic environment data into RNG", hasher.Size() - old_size);
 
     // Strengthen for 10 ms
     SeedStrengthen(hasher, rng, 10ms);
@@ -547,7 +547,7 @@ void SeedStartup(CSHA512& hasher, RNGState& rng) noexcept
 
     // Static environment data
     RandAddStaticEnv(hasher);
-    LogDebug(BCLog::RAND, "Feeding %i bytes of environment data into RNG\n", hasher.Size() - old_size);
+    LogDebug(BCLog::RAND, "Feeding %i bytes of environment data into RNG", hasher.Size() - old_size);
 
     // Strengthen for 100 ms
     SeedStrengthen(hasher, rng, 100ms);

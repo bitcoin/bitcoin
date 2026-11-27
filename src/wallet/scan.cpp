@@ -133,13 +133,13 @@ static bool ShouldFetchBlock(const FastWalletRescanFilter& filter, const uint256
     auto matches_block{filter.MatchesBlock(block_hash)};
     if (matches_block.has_value()) {
         if (*matches_block) {
-            LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (filter matched)\n", block_height, block_hash.ToString());
+            LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (filter matched)", block_height, block_hash.ToString());
             return true;
         } else {
             return false;
         }
     } else {
-        LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (WARNING: block filter not found!)\n", block_height, block_hash.ToString());
+        LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (WARNING: block filter not found!)", block_height, block_hash.ToString());
         return true;
     }
 }

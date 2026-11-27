@@ -787,7 +787,7 @@ static DBErrors LoadDescriptorWalletRecords(CWallet* pwallet, DatabaseBatch& bat
                     "The database might be corrupted or the software version is not compatible with one of your wallet descriptors. ";
             strErr += "Please try running the latest software version";
             // Also include error details
-            strErr = strprintf("%s\nDetails: %s", strErr, e.what());
+            strErr = strprintf("%s [Details: %s]", strErr, e.what());
             return DBErrors::UNKNOWN_DESCRIPTOR;
         }
 
@@ -1280,19 +1280,19 @@ template <typename T>
 static bool RunWithinTxn(T& batch, std::string_view process_desc, const std::function<bool(T&)>& func)
 {
     if (!batch.TxnBegin()) {
-        LogDebug(BCLog::WALLETDB, "Error: cannot create db txn for %s\n", process_desc);
+        LogDebug(BCLog::WALLETDB, "Error: cannot create db txn for %s", process_desc);
         return false;
     }
 
     // Run procedure
     if (!func(batch)) {
-        LogDebug(BCLog::WALLETDB, "Error: %s failed\n", process_desc);
+        LogDebug(BCLog::WALLETDB, "Error: %s failed", process_desc);
         batch.TxnAbort();
         return false;
     }
 
     if (!batch.TxnCommit()) {
-        LogDebug(BCLog::WALLETDB, "Error: cannot commit db txn for %s\n", process_desc);
+        LogDebug(BCLog::WALLETDB, "Error: cannot commit db txn for %s", process_desc);
         return false;
     }
 

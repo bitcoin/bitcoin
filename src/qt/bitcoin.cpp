@@ -189,7 +189,7 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
 {
     Q_UNUSED(context);
     if (type == QtDebugMsg) {
-        LogDebug(BCLog::QT, "GUI: %s\n", msg.toStdString());
+        LogDebug(BCLog::QT, "GUI: %s", msg.toStdString());
     } else {
         LogInfo("GUI: %s", msg.toStdString());
     }
@@ -676,10 +676,10 @@ int GuiMain(int argc, char* argv[])
             return EXIT_FAILURE;
         }
     } catch (const std::exception& e) {
-        PrintExceptionContinue(&e, "Runaway exception");
+        PrintExceptionContinue(&e);
         app.handleRunawayException(QString::fromStdString(app.node().getWarnings().translated));
     } catch (...) {
-        PrintExceptionContinue(nullptr, "Runaway exception");
+        PrintExceptionContinue(nullptr);
         app.handleRunawayException(QString::fromStdString(app.node().getWarnings().translated));
     }
     return app.node().getExitStatus();

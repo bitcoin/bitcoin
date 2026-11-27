@@ -89,9 +89,9 @@ bool CZMQNotificationInterface::Initialize()
 {
     int major = 0, minor = 0, patch = 0;
     zmq_version(&major, &minor, &patch);
-    LogDebug(BCLog::ZMQ, "version %d.%d.%d\n", major, minor, patch);
+    LogDebug(BCLog::ZMQ, "version %d.%d.%d", major, minor, patch);
 
-    LogDebug(BCLog::ZMQ, "Initialize notification interface\n");
+    LogDebug(BCLog::ZMQ, "Initialize notification interface");
     assert(!pcontext);
 
     pcontext = zmq_ctx_new();
@@ -104,9 +104,9 @@ bool CZMQNotificationInterface::Initialize()
 
     for (auto& notifier : notifiers) {
         if (notifier->Initialize(pcontext)) {
-            LogDebug(BCLog::ZMQ, "Notifier %s ready (address = %s)\n", notifier->GetType(), notifier->GetAddress());
+            LogDebug(BCLog::ZMQ, "Notifier %s ready (address = %s)", notifier->GetType(), notifier->GetAddress());
         } else {
-            LogDebug(BCLog::ZMQ, "Notifier %s failed (address = %s)\n", notifier->GetType(), notifier->GetAddress());
+            LogDebug(BCLog::ZMQ, "Notifier %s failed (address = %s)", notifier->GetType(), notifier->GetAddress());
             return false;
         }
     }
@@ -117,11 +117,11 @@ bool CZMQNotificationInterface::Initialize()
 // Called during shutdown sequence
 void CZMQNotificationInterface::Shutdown()
 {
-    LogDebug(BCLog::ZMQ, "Shutdown notification interface\n");
+    LogDebug(BCLog::ZMQ, "Shutdown notification interface");
     if (pcontext)
     {
         for (auto& notifier : notifiers) {
-            LogDebug(BCLog::ZMQ, "Shutdown notifier %s at %s\n", notifier->GetType(), notifier->GetAddress());
+            LogDebug(BCLog::ZMQ, "Shutdown notifier %s at %s", notifier->GetType(), notifier->GetAddress());
             notifier->Shutdown();
         }
         zmq_ctx_term(pcontext);

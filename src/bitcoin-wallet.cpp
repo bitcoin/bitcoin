@@ -109,10 +109,10 @@ MAIN_FUNCTION
     try {
         if (const auto maybe_exit{WalletAppInit(args, argc, argv)}) return *maybe_exit;
     } catch (const std::exception& e) {
-        PrintExceptionContinue(&e, "WalletAppInit()");
+        PrintExceptionContinue(&e);
         return EXIT_FAILURE;
     } catch (...) {
-        PrintExceptionContinue(nullptr, "WalletAppInit()");
+        PrintExceptionContinue(nullptr);
         return EXIT_FAILURE;
     }
 

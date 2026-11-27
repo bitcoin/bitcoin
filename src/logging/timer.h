@@ -53,9 +53,9 @@ public:
         const std::string full_msg = this->LogMsg(msg);
 
         if (m_log_category == BCLog::LogFlags::ALL) {
-            LogInfo("%s\n", full_msg);
+            LogInfo("%s", full_msg);
         } else {
-            LogDebug(m_log_category, "%s\n", full_msg);
+            LogDebug(m_log_category, "%s", full_msg);
         }
     }
 

@@ -92,7 +92,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
                 /*in_memory=*/options.coins_db_in_memory,
                 /*should_wipe=*/options.wipe_chainstate_db);
         } catch (dbwrapper_error& err) {
-            LogError("%s\n", err.what());
+            LogError("%s", err.what());
             return {ChainstateLoadStatus::FAILURE, _("Error opening coins database")};
         }
 

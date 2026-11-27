@@ -74,7 +74,7 @@ std::optional<CNetAddr> QueryDefaultGatewayImpl(sa_family_t family)
     // Create a netlink socket.
     auto sock{CreateSock(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE)};
     if (!sock) {
-        LogError("socket(AF_NETLINK): %s\n", NetworkErrorString(errno));
+        LogError("socket(AF_NETLINK): %s", NetworkErrorString(errno));
         return std::nullopt;
     }
 
@@ -111,7 +111,7 @@ std::optional<CNetAddr> QueryDefaultGatewayImpl(sa_family_t family)
     request.dst_hdr.nla_len = sizeof(nlattr) + dst_data_len;
 
     if (sock->Send(&request, request.hdr.nlmsg_len, 0) != static_cast<ssize_t>(request.hdr.nlmsg_len)) {
-        LogError("send() to netlink socket: %s\n", NetworkErrorString(errno));
+        LogError("send() to netlink socket: %s", NetworkErrorString(errno));
         return std::nullopt;
     }
 
@@ -125,13 +125,13 @@ std::optional<CNetAddr> QueryDefaultGatewayImpl(sa_family_t family)
             recv_result = sock->Recv(response, sizeof(response), 0);
         } while (recv_result < 0 && (errno == EINTR || errno == EAGAIN));
         if (recv_result < 0) {
-            LogError("recv() from netlink socket: %s\n", NetworkErrorString(errno));
+            LogError("recv() from netlink socket: %s", NetworkErrorString(errno));
             return std::nullopt;
         }
 
         total_bytes_read += recv_result;
         if (total_bytes_read > NETLINK_MAX_RESPONSE_SIZE) {
-            LogWarning("Netlink response exceeded size limit (%zu bytes, family=%d)\n", NETLINK_MAX_RESPONSE_SIZE, family);
+            LogWarning("Netlink response exceeded size limit (%zu bytes, family=%d)", NETLINK_MAX_RESPONSE_SIZE, family);
             return std::nullopt;
         }
 
@@ -203,7 +203,7 @@ std::optional<CNetAddr> QueryDefaultGatewayImpl(sa_family_t family)
     destination_address.si_family = family;
     status = GetBestInterfaceEx((sockaddr*)&destination_address, &best_if_idx);
     if (status != NO_ERROR) {
-        LogError("Could not get best interface for default route: %s\n", NetworkErrorString(status));
+        LogError("Could not get best interface for default route: %s", NetworkErrorString(status));
         return std::nullopt;
     }
 
@@ -211,7 +211,7 @@ std::optional<CNetAddr> QueryDefaultGatewayImpl(sa_family_t family)
     // Leave interface_luid at all-zeros to use interface index instead.
     status = GetBestRoute2(&interface_luid, best_if_idx, nullptr, &destination_address, 0, &best_route, &best_source_address);
     if (status != NO_ERROR) {
-        LogError("Could not get best route for default route for interface index %d: %s\n",
+        LogError("Could not get best route for default route for interface index %d: %s",
                 best_if_idx, NetworkErrorString(status));
         return std::nullopt;
     }
@@ -238,12 +238,12 @@ std::optional<CNetAddr> QueryDefaultGatewayImpl(sa_family_t family)
     // The size of the available data is determined by calling sysctl() with oldp=nullptr. See sysctl(3).
     size_t l = 0;
     if (sysctl(/*name=*/mib, /*namelen=*/sizeof(mib) / sizeof(int), /*oldp=*/nullptr, /*oldlenp=*/&l, /*newp=*/nullptr, /*newlen=*/0) < 0) {
-        LogError("Could not get sysctl length of routing table: %s\n", NetworkErrorString(errno));
+        LogError("Could not get sysctl length of routing table: %s", NetworkErrorString(errno));
         return std::nullopt;
     }
     std::vector<std::byte> buf(l);
     if (sysctl(/*name=*/mib, /*namelen=*/sizeof(mib) / sizeof(int), /*oldp=*/buf.data(), /*oldlenp=*/&l, /*newp=*/nullptr, /*newlen=*/0) < 0) {
-        LogError("Could not get sysctl data of routing table: %s\n", NetworkErrorString(errno));
+        LogError("Could not get sysctl data of routing table: %s", NetworkErrorString(errno));
         return std::nullopt;
     }
     // Iterate over messages (each message is a routing table entry).
@@ -343,7 +343,7 @@ std::vector<CNetAddr> GetLocalAddresses()
     if (status != NO_ERROR) {
         // This includes ERROR_NO_DATA if there are no addresses and thus there's not even one PIP_ADAPTER_ADDRESSES
         // record in the returned structure.
-        LogError("Could not get local adapter addresses: %s\n", NetworkErrorString(status));
+        LogError("Could not get local adapter addresses: %s", NetworkErrorString(status));
         return addresses;
     }
 

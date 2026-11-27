@@ -435,7 +435,7 @@ static ReturnType ExecuteBackedWrapper(Func func, const std::vector<std::functio
         for (const auto& f : err_callbacks) {
             f();
         }
-        LogError("Error reading from database: %s\n", e.what());
+        LogError("Error reading from database: %s", e.what());
         // Starting the shutdown sequence and returning false to the caller would be
         // interpreted as 'entry not found' (as opposed to unable to read data), and
         // could lead to invalid interpretation. Just exit immediately, as we can't
