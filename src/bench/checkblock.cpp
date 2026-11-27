@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <bench/data/block413567.raw.h>
+#include <bench/block_generator.h>
 #include <consensus/validation.h>
 #include <kernel/chainparams.h>
 #include <primitives/block.h>
@@ -21,27 +21,27 @@
 // a block off the wire, but before we can relay the block on to peers using
 // compact block relay.
 
-static void DeserializeBlockTest(benchmark::Bench& bench)
+static void DeserializeBlock(benchmark::Bench& bench, const benchmark::ScriptRecipe& recipe)
 {
-    const auto block_data{benchmark::data::block413567};
+    const auto block_data{benchmark::GenerateBlockData(*CChainParams::RegTest(), recipe)};
     bench.unit("block").run([&] {
         CBlock block;
         SpanReader{block_data} >> TX_WITH_WITNESS(block);
-        assert(block.vtx.size() == 1557);
+        assert(block.vtx.size() == recipe.tx_count + 1);
     });
 }
 
-static void CheckBlockTest(benchmark::Bench& bench)
+static void CheckBlock(benchmark::Bench& bench, const benchmark::ScriptRecipe& recipe)
 {
-    const auto& chain_params{CChainParams::Main()};
-    const auto block_data{benchmark::data::block413567};
+    const auto& chain_params{CChainParams::RegTest(CChainParams::RegTestOptions{})};
+    auto block_data{benchmark::GenerateBlockData(*chain_params, recipe)};
 
     CBlock block;
     bench.unit("block")
         .setup([&] {
             block = CBlock{};
             SpanReader{block_data} >> TX_WITH_WITNESS(block);
-            assert(block.vtx.size() == 1557);
+            assert(block.vtx.size() == recipe.tx_count + 1);
         })
         .run([&] {
             BlockValidationState validationState;
@@ -50,5 +50,27 @@ static void CheckBlockTest(benchmark::Bench& bench)
         });
 }
 
+static void DeserializeBlockTest(benchmark::Bench& bench)
+{
+    DeserializeBlock(bench, benchmark::WITNESS_RECIPE);
+}
+
+static void DeserializeBlockLegacy(benchmark::Bench& bench)
+{
+    DeserializeBlock(bench, benchmark::LEGACY_RECIPE);
+}
+
+static void CheckBlockTest(benchmark::Bench& bench)
+{
+    CheckBlock(bench, benchmark::WITNESS_RECIPE);
+}
+
+static void CheckBlockLegacy(benchmark::Bench& bench)
+{
+    CheckBlock(bench, benchmark::LEGACY_RECIPE);
+}
+
 BENCHMARK(DeserializeBlockTest);
+BENCHMARK(DeserializeBlockLegacy);
 BENCHMARK(CheckBlockTest);
+BENCHMARK(CheckBlockLegacy);
