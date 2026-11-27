@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <arith_uint256.h>
 #include <chain.h>
 #include <node/blockstorage.h>
 #include <rpc/blockchain.h>
@@ -11,7 +12,10 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <array>
+#include <cstdint>
 #include <cstdlib>
+#include <iterator>
 
 using util::ToString;
 
@@ -115,6 +119,36 @@ BOOST_AUTO_TEST_CASE(num_chain_tx_max)
     CBlockIndex block_index{};
     block_index.m_chain_tx_count = std::numeric_limits<uint64_t>::max();
     BOOST_CHECK_EQUAL(block_index.m_chain_tx_count, std::numeric_limits<uint64_t>::max());
+}
+
+BOOST_AUTO_TEST_CASE(cblockindex_comparator)
+{
+    // Pin best-to-worst ordering independently, since chain selection and CheckBlockIndex() share this comparator
+    constexpr struct {
+        uint64_t work;
+        int32_t sequence_id;
+    } keys[]{
+        {2, -1},
+        {2, SEQ_ID_BEST_CHAIN_FROM_DISK},
+        {2, SEQ_ID_BEST_CHAIN_FROM_DISK},
+        {2, 10},
+        {2, 20},
+        {1, 10},
+        {1, 20},
+    };
+
+    std::array<CBlockIndex, std::size(keys)> blocks{};
+    for (size_t i{0}; i < blocks.size(); ++i) {
+        blocks[i].nChainWork = arith_uint256{keys[i].work};
+        blocks[i].nSequenceId = keys[i].sequence_id;
+    }
+
+    constexpr node::CBlockIndexWorkComparator comparator;
+    for (size_t i{0}; i < blocks.size(); ++i) {
+        for (size_t j{0}; j < blocks.size(); ++j) {
+            BOOST_CHECK_EQUAL(comparator(&blocks[i], &blocks[j]), i > j);
+        }
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE(invalidate_block, TestChain100Setup)
