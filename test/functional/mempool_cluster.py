@@ -6,6 +6,9 @@
 
 from decimal import Decimal
 
+from test_framework.blocktools import (
+    create_empty_fork,
+)
 from test_framework.mempool_util import (
     DEFAULT_CLUSTER_LIMIT,
     DEFAULT_CLUSTER_SIZE_LIMIT_KVB,
@@ -308,6 +311,42 @@ class MempoolClusterTest(BitcoinTestFramework):
         assert_equal(node.getmempoolcluster(tx_replacer["txid"])['txcount'], 2)
 
     @cleanup
+    def test_reorg_trims_cluster(self, max_cluster_count):
+        """A reorg can create a cluster over the count limit, because a resurrected transaction's
+        in-mempool children are only linked up (in UpdateTransactionsFromBlock) after it has been
+        accepted. Check that the cluster is then trimmed back within the limit."""
+        node = self.nodes[0]
+        self.log.info("Test that a reorg trims a cluster that grows past the count limit")
+
+        num_mined = max_cluster_count // 2
+        # One more than fits in a cluster together with the mined transactions.
+        num_unconfirmed = max_cluster_count - num_mined + 1
+
+        fork_blocks = create_empty_fork(node)
+
+        # Give the mined transactions a higher feerate, so that trimming evicts unconfirmed ones.
+        chain = []
+        utxo = self.wallet.get_utxo(confirmed_only=True)
+        for i in range(num_mined + num_unconfirmed):
+            fee_rate = Decimal("0.001") if i < num_mined else Decimal("0.0001")
+            chain.append(self.wallet.create_self_transfer(utxo_to_spend=utxo, fee_rate=fee_rate))
+            utxo = chain[-1]["new_utxo"]
+        self.generateblock(node, output="raw(42)", transactions=[tx["hex"] for tx in chain[:num_mined]])
+        for tx in chain[num_mined:]:
+            node.sendrawtransaction(tx["hex"])
+
+        for block in fork_blocks:
+            node.submitblock(block.serialize().hex())
+        assert_equal(node.getbestblockhash(), fork_blocks[-1].hash_hex)
+
+        # All the mined transactions were re-added, and the cluster was trimmed from the end
+        # of the chain to get back within the limit.
+        remaining = node.getrawmempool()
+        assert_greater_than_or_equal(len(remaining), num_mined)
+        assert_greater_than_or_equal(max_cluster_count, len(remaining))
+        assert_equal(sorted(remaining), sorted(tx["txid"] for tx in chain[:len(remaining)]))
+
+    @cleanup
     def test_getmempoolcluster(self):
         node = self.nodes[0]
 
@@ -395,6 +434,7 @@ class MempoolClusterTest(BitcoinTestFramework):
         self.test_getmempoolcluster()
 
         self.test_cluster_limit_rbf(DEFAULT_CLUSTER_LIMIT)
+        self.test_reorg_trims_cluster(DEFAULT_CLUSTER_LIMIT)
 
         for cluster_size_limit_kvb in [10, 20, 33, 100, DEFAULT_CLUSTER_SIZE_LIMIT_KVB]:
             self.log.info(f"-> Resetting node with -limitclustersize={cluster_size_limit_kvb}")
