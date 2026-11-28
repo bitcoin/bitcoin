@@ -30,6 +30,7 @@ class NetGroupManager;
 class PeerManager;
 class TorController;
 class TxIndex;
+class TxoScriptIndex;
 class TxoSpenderIndex;
 namespace interfaces {
 class Chain;
@@ -56,6 +57,7 @@ struct IndexDeleter {
     void operator()(BlockFilterIndex* index) const noexcept;
     void operator()(CoinStatsIndex* index) const noexcept;
     void operator()(TxIndex* index) const noexcept;
+    void operator()(TxoScriptIndex* index) const noexcept;
     void operator()(TxoSpenderIndex* index) const noexcept;
 };
 
@@ -117,6 +119,7 @@ struct NodeContext {
     std::vector<std::unique_ptr<BlockFilterIndex, IndexDeleter>> block_filter_indexes;
     std::unique_ptr<TxIndex, IndexDeleter> txindex;
     std::unique_ptr<TxoSpenderIndex, IndexDeleter> txospenderindex;
+    std::unique_ptr<TxoScriptIndex, IndexDeleter> txoscriptindex;
     std::unique_ptr<CoinStatsIndex, IndexDeleter> coin_stats_index;
     std::thread background_init_thread;
 

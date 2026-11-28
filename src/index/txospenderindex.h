@@ -26,6 +26,8 @@ inline constexpr bool DEFAULT_TXOSPENDERINDEX{false};
 struct TxoSpender {
     CTransactionRef tx;
     uint256 block_hash;
+    //! Transaction byte offset from the start of the block, including its header.
+    uint32_t tx_offset{0};
 };
 
 /**
