@@ -931,12 +931,14 @@ void HTTPRemoteClient::Receive()
 {
     char buf[0x10000]; // typical socket buffer is 8K-64K
 
-    const ssize_t nrecv{WITH_LOCK(
+    int err{0};
+    const ssize_t nrecv { WITH_LOCK(
         m_sock_mutex,
-        return m_sock->Recv(buf, sizeof(buf), MSG_DONTWAIT);)};
+        const auto result{m_sock->Recv(buf, sizeof(buf), MSG_DONTWAIT)};
+        if (result < 0) err = WSAGetLastError();
+        return result;) };
 
     if (nrecv < 0) {
-        const int err = WSAGetLastError();
         if (IOErrorIsPermanent(err)) {
             LogDebug(
                 BCLog::HTTP,
@@ -1274,17 +1276,17 @@ bool HTTPRemoteClient::MaybeSendBytesFromBuffer()
         int flags{MSG_NOSIGNAL | MSG_DONTWAIT};
 
         // Try to send bytes through socket
+        int err{0};
         ssize_t bytes_sent;
         {
             LOCK(m_sock_mutex);
             bytes_sent = m_sock->Send(m_send_buffer.data(),
                                       m_send_buffer.size(),
                                       flags);
+            if (bytes_sent < 0) err = WSAGetLastError();
         }
 
         if (bytes_sent < 0) {
-            // Something went wrong
-            const int err{WSAGetLastError()};
             if (!IOErrorIsPermanent(err)) {
                 // The error can be safely ignored, try the send again on the next I/O loop.
                 m_send_ready = true;
